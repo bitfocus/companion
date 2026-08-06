@@ -244,3 +244,8 @@ type _VerifyPageVariablesDropdownIsComplete = Expect<
 export const DeferredParsingContextVariables: DropdownChoiceInt[] = [
 	{ value: 'this:current', label: 'Current value of this variable' },
 ]
+
+/** Variable picker entry injected when editing a value-feedback's style override expression. */
+export const FeedbackValueContextVariables: DropdownChoiceInt[] = [
+	{ value: 'this:value', label: 'Current value of this feedback' },
+]

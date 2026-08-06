@@ -1,6 +1,6 @@
-import type { JsonValue } from 'type-fest'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
+import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import { CompanionFieldVariablesSupport, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
 	ButtonGraphicsBoxDrawElement,
@@ -1346,9 +1346,11 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		test('applies feedback overrides to element', async () => {
 			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Original') })]
 
-			// feedbackOverrides is Map<elementId, Map<propertyName, ExpressionOrValue>>
-			const text1Overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([['text', val('Overridden')]])
-			const globalReferences = new Map<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>([
+			// feedbackOverrides is Map<elementId, Map<propertyName, ResolvedFeedbackStyleOverride>>
+			const text1Overrides = new Map<string, ResolvedFeedbackStyleOverride>([
+				['text', { value: val('Overridden'), thisContext: null }],
+			])
+			const globalReferences = new Map<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>([
 				['text1', text1Overrides],
 			])
 
@@ -1365,6 +1367,32 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			)
 
 			expect((result.elements[0] as { text: string }).text).toBe('Overridden')
+		})
+
+		test('applies a value-feedback override as an expression transform of $(this:value)', async () => {
+			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Original') })]
+
+			// A value feedback binds its value to $(this:value); the override is an expression transform of it
+			const text1Overrides = new Map<string, ResolvedFeedbackStyleOverride>([
+				['text', { value: { isExpression: true, value: '$(this:value) * 2' }, thisContext: { value: 21 } }],
+			])
+			const globalReferences = new Map<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>([
+				['text1', text1Overrides],
+			])
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				globalReferences,
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect((result.elements[0] as { text: string }).text).toBe('42')
 		})
 	})
 

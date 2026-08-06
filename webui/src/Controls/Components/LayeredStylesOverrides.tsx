@@ -1,4 +1,5 @@
-import { faPencil, faTrash } from '@fortawesome/free-solid-svg-icons'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { faPalette, faPencil, faSquareRootVariable, faToggleOn, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { nanoid } from 'nanoid'
@@ -14,15 +15,22 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { ButtonStylePropertiesWithBuffer } from '@companion-app/shared/Style.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import { Button } from '~/Components/Button.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
+import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
+import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { Table } from '~/Components/Table.js'
 import { useComputed } from '~/Resources/util.js'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService'
-import type { LocalVariablesStore } from '../LocalVariablesStore.js'
+import {
+	EntityListActionContext,
+	FeedbackValueContextVariables,
+	type LocalVariablesStore,
+} from '../LocalVariablesStore.js'
 import { OptionsInputControl } from '../OptionsInputControl.js'
 import { AddElementPickerModal } from './AddElementPickerModal.js'
 import { ElementPickerModal } from './ElementPickerModal.js'
@@ -34,6 +42,78 @@ interface LayeredStylesOverridesProps {
 	service: IEntityEditorActionService
 	localVariablesStore: LocalVariablesStore | null
 }
+
+/**
+ * The value a freshly-added style override starts from. Value feedbacks override via an expression
+ * transform of `$(this:value)` (the feedback's current value), so their overrides are seeded as that
+ * expression. Other feedback types start from an empty plain value.
+ */
+export function defaultStyleOverrideValue(
+	feedbackType: FeedbackEntitySubType | null | undefined
+): ExpressionOrValue<JsonValue | undefined> {
+	return feedbackType === FeedbackEntitySubType.Value
+		? { isExpression: true, value: '$(this:value)' }
+		: { isExpression: false, value: '' }
+}
+
+/**
+ * Describe how a feedback of the given type interacts with the style overrides below it, shown as the
+ * hover text on the style-overrides indicator icon. Returns null for types with no style-override editor.
+ *
+ * Note: the module-api name for the legacy style feedback is "advanced", but that is not surfaced to
+ * users - it is the oldest/most basic feedback type, and calling it "advanced" is misleading.
+ */
+export function feedbackTypeInteractionHelp(
+	feedbackType: FeedbackEntitySubType | null | undefined
+): { icon: IconDefinition; title: string; description: string } | null {
+	switch (feedbackType) {
+		case FeedbackEntitySubType.Value:
+			return {
+				icon: faSquareRootVariable,
+				title: 'Value feedback',
+				description:
+					'Each override is an expression that can transform the feedback value with $(this:value). The property is overridden unless the expression returns undefined.',
+			}
+		case FeedbackEntitySubType.Boolean:
+			return {
+				icon: faToggleOn,
+				title: 'Boolean feedback',
+				description: 'The overrides below are applied whenever the feedback is active.',
+			}
+		case FeedbackEntitySubType.Advanced:
+			return {
+				icon: faPalette,
+				title: 'Legacy style feedback',
+				description:
+					'An older style-based feedback. Each override copies one of the style properties it produces onto an element property.',
+			}
+		default:
+			return null
+	}
+}
+
+const FeedbackTypeIndicator = observer(function FeedbackTypeIndicator({
+	feedbackType,
+}: {
+	feedbackType: FeedbackEntitySubType | null | undefined
+}) {
+	const info = feedbackTypeInteractionHelp(feedbackType)
+	if (!info) return null
+
+	return (
+		<InlineHelpCustom
+			help={
+				<>
+					<strong>{info.title}</strong>
+					<br />
+					{info.description}
+				</>
+			}
+		>
+			<FontAwesomeIcon icon={info.icon} className="text-info" />
+		</InlineHelpCustom>
+	)
+})
 
 export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 	feedback,
@@ -97,18 +177,20 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 		(elementId: string, properties: string[]) => {
 			console.log('AddElementPickerModal save:', { elementId, properties })
 
+			const defaultOverride = defaultStyleOverrideValue(feedbackType)
+
 			// Create multiple overrides, one for each selected property
 			properties.forEach((propertyId) => {
 				const newOverride: FeedbackEntityStyleOverride = {
 					overrideId: nanoid(),
 					elementId,
 					elementProperty: propertyId,
-					override: { isExpression: false, value: '' },
+					override: defaultOverride,
 				}
 				service.replaceStyleOverride(newOverride)
 			})
 		},
-		[service]
+		[service, feedbackType]
 	)
 
 	return (
@@ -116,7 +198,10 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 			<hr />
 
 			<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-				<strong>Style Overrides</strong>
+				<span className="d-flex align-items-center gap-2">
+					<strong>Style Overrides</strong>
+					<FeedbackTypeIndicator feedbackType={feedbackType} />
+				</span>
 				<div></div>
 			</div>
 
@@ -304,8 +389,18 @@ const PropertyValueInput = observer(function PropertyValueInput({
 					/>
 				</FieldOrExpression>
 			)
-		case FeedbackEntitySubType.StyleOverride:
 		case FeedbackEntitySubType.Value:
+			// Value feedbacks always override via an expression, transforming `$(this:value)` (the feedback's
+			// current value). An expression returning `undefined` means "no override".
+			return (
+				<ValueFeedbackOverrideInput
+					inputId={inputId}
+					value={row.override.isExpression ? (stringifyVariableValue(row.override.value) ?? '') : ''}
+					setValue={(value) => setOverride({ isExpression: true, value })}
+					localVariablesStore={localVariablesStore}
+				/>
+			)
+		case FeedbackEntitySubType.StyleOverride:
 		case undefined:
 		case null:
 			return <p>Unsupported feedback type</p>
@@ -313,4 +408,34 @@ const PropertyValueInput = observer(function PropertyValueInput({
 			assertNever(feedbackType)
 			return <p>Unsupported feedback type</p>
 	}
+})
+
+const ValueFeedbackOverrideInput = observer(function ValueFeedbackOverrideInput({
+	inputId,
+	value,
+	setValue,
+	localVariablesStore,
+}: {
+	inputId: string | undefined
+	value: string
+	setValue: (value: string) => void
+	localVariablesStore: LocalVariablesStore | null
+}) {
+	// Offer the control's local variables plus the `$(this:value)` context variable in the picker
+	const expressionLocalVariables = useComputed(
+		() => [
+			...(localVariablesStore?.getOptions({
+				entityType: EntityModelType.Feedback,
+				internalParser: true,
+				isLocatedInGrid: true,
+				actionContext: EntityListActionContext.NotActions,
+			}) ?? []),
+			...FeedbackValueContextVariables,
+		],
+		[localVariablesStore]
+	)
+
+	return (
+		<ExpressionInputField id={inputId} value={value} setValue={setValue} localVariables={expressionLocalVariables} />
+	)
 })

@@ -1,5 +1,6 @@
 import type { JsonValue } from 'type-fest'
 import { describe, expect, test, vi } from 'vitest'
+import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
@@ -25,6 +26,16 @@ function val<T>(value: T): ExpressionOrValue<T> {
 
 function expr<T>(value: string): ExpressionOrValue<T> {
 	return { isExpression: true, value }
+}
+
+/** A boolean/advanced style override (applied as-is, no `this:value` binding). */
+function staticOverride(value: ExpressionOrValue<JsonValue | undefined>): ResolvedFeedbackStyleOverride {
+	return { value, thisContext: null }
+}
+
+/** A value-feedback style override: an expression transform of `$(this:value)`. */
+function valueOverride(expression: string, thisValue: JsonValue | undefined): ResolvedFeedbackStyleOverride {
+	return { value: { isExpression: true, value: expression }, thisContext: { value: thisValue } }
 }
 
 function createMockParser(
@@ -93,7 +104,7 @@ function makeEl(overrides: Partial<TestEl> = {}): TestEl {
 function makeHelper(
 	element: TestEl,
 	variableValues: Record<string, Record<string, string | number | boolean>> = {},
-	overrides?: ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>
+	overrides?: ReadonlyMap<string, ResolvedFeedbackStyleOverride>
 ): { helper: ElementExpressionHelper<TestEl>; usedVariables: Set<string> } {
 	const references = createElementReferences()
 	const parser = createMockParser(variableValues)
@@ -127,7 +138,7 @@ function makeCtx(
 	options: {
 		compositeElements?: Record<string, Record<string, CompositeElementDefinition>>
 		variableValues?: Record<string, Record<string, string | number | boolean>>
-		feedbackOverrides?: ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>
+		feedbackOverrides?: ReadonlyMap<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>
 	} = {}
 ) {
 	return createParseElementsContext(
@@ -271,6 +282,24 @@ describe('ElementExpressionHelper', () => {
 		test('parses variables in non-expression string value', () => {
 			const { helper } = makeHelper(makeEl({ strProp: val('$(ns:name)') }), { ns: { name: 'World' } })
 			expect(helper.getParsedString('strProp', '')).toBe('World')
+		})
+
+		test('value-feedback override transforms $(this:value) for a string property', () => {
+			const overrides = new Map<string, ResolvedFeedbackStyleOverride>([
+				['strProp', valueOverride('$(this:value)', 'Hello')],
+			])
+			const { helper } = makeHelper(makeEl({ strProp: val('base') }), {}, overrides)
+			expect(helper.getParsedString('strProp', 'default')).toBe('Hello')
+		})
+
+		test('value-feedback override resolving to undefined uses the element value, still interpolating variables', () => {
+			// `$(ns:missing)` is unknown -> the override resolves to undefined ("no override"), so the element's
+			// own template `$(ns:name)` must be rendered AND variable-interpolated.
+			const overrides = new Map<string, ResolvedFeedbackStyleOverride>([
+				['strProp', valueOverride('$(ns:missing)', 'ignored')],
+			])
+			const { helper } = makeHelper(makeEl({ strProp: val('$(ns:name)') }), { ns: { name: 'World' } }, overrides)
+			expect(helper.getParsedString('strProp', 'default')).toBe('World')
 		})
 
 		test('evaluates expression and stringifies result', () => {
@@ -1028,22 +1057,22 @@ describe('ElementExpressionHelper', () => {
 	describe('elementOverrides', () => {
 		test('override takes precedence over element property value', () => {
 			const element = makeEl({ strProp: val('original') })
-			const overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([['strProp', val('overridden')]])
+			const overrides = new Map<string, ResolvedFeedbackStyleOverride>([['strProp', staticOverride(val('overridden'))]])
 			const { helper } = makeHelper(element, {}, overrides)
 			expect(helper.getString('strProp', '')).toBe('overridden')
 		})
 
 		test('non-overridden properties use the element value', () => {
 			const element = makeEl({ strProp: val('original'), numProp: val(42) })
-			const overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([['strProp', val('overridden')]])
+			const overrides = new Map<string, ResolvedFeedbackStyleOverride>([['strProp', staticOverride(val('overridden'))]])
 			const { helper } = makeHelper(element, {}, overrides)
 			expect(helper.getNumber('numProp', 0)).toBe(42)
 		})
 
 		test('override can itself be an expression', () => {
 			const element = makeEl({ strProp: val('original') })
-			const overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([
-				['strProp', expr<JsonValue>('"computed"')],
+			const overrides = new Map<string, ResolvedFeedbackStyleOverride>([
+				['strProp', staticOverride(expr<JsonValue>('"computed"'))],
 			])
 			const { helper } = makeHelper(element, {}, overrides)
 			expect(helper.getString('strProp', '')).toBe('computed')
@@ -1051,8 +1080,8 @@ describe('ElementExpressionHelper', () => {
 
 		test('override expression tracks its variable IDs', () => {
 			const element = makeEl({ strProp: val('original') })
-			const overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([
-				['strProp', expr<JsonValue>('$(ns:x)')],
+			const overrides = new Map<string, ResolvedFeedbackStyleOverride>([
+				['strProp', staticOverride(expr<JsonValue>('$(ns:x)'))],
 			])
 			const { helper, usedVariables } = makeHelper(element, { ns: { x: 'value' } }, overrides)
 			helper.getString('strProp', '')
@@ -1072,8 +1101,8 @@ describe('createParseElementsContext', () => {
 		})
 
 		test('applies feedback overrides to the matching element ID only', () => {
-			const feedbackOverrides = new Map<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>([
-				['el1', new Map([['strProp', val('overridden')]])],
+			const feedbackOverrides = new Map<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>([
+				['el1', new Map([['strProp', staticOverride(val('overridden'))]])],
 			])
 			const ctx = makeCtx({ feedbackOverrides })
 
@@ -1085,12 +1114,57 @@ describe('createParseElementsContext', () => {
 		})
 
 		test('element without matching feedback override uses its own property', () => {
-			const feedbackOverrides = new Map<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>([
-				['other-id', new Map([['strProp', val('overridden')]])],
+			const feedbackOverrides = new Map<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>([
+				['other-id', new Map([['strProp', staticOverride(val('overridden'))]])],
 			])
 			const ctx = makeCtx({ feedbackOverrides })
 			const { helper } = ctx.createHelper({ id: 'el1', strProp: val('original') })
 			expect(helper.getString('strProp', '')).toBe('original')
+		})
+
+		test('value-feedback override transforms $(this:value) into the property', () => {
+			const feedbackOverrides = new Map<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>([
+				['el1', new Map([['numProp', valueOverride('$(this:value) * 2', 21)]])],
+			])
+			const ctx = makeCtx({ feedbackOverrides })
+			const { helper } = ctx.createHelper({ id: 'el1', numProp: val(0) })
+			expect(helper.getNumber('numProp', -1)).toBe(42)
+		})
+
+		test('value-feedback override returning undefined falls back to the base value', () => {
+			const feedbackOverrides = new Map<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>([
+				// `$(ns:missing)` is unknown, so the expression resolves to undefined -> no override
+				['el1', new Map([['strProp', valueOverride('$(ns:missing)', 'ignored')]])],
+			])
+			const ctx = makeCtx({ feedbackOverrides })
+			const { helper } = ctx.createHelper({ id: 'el1', strProp: val('base') })
+			expect(helper.getString('strProp', '')).toBe('base')
+		})
+
+		test('value-feedback override tracks variables referenced alongside $(this:value)', () => {
+			const feedbackOverrides = new Map<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>([
+				['el1', new Map([['numProp', valueOverride('$(this:value) + $(ns:x)', 10)]])],
+			])
+			const ctx = makeCtx({ feedbackOverrides, variableValues: { ns: { x: 5 } } })
+			const { helper, references } = ctx.createHelper({ id: 'el1', numProp: val(0) })
+			expect(helper.getNumber('numProp', -1)).toBe(15)
+			expect(references.usedVariables.has('ns:x')).toBe(true)
+		})
+
+		test('a value-feedback override is not evaluated or tracked until its property is read', () => {
+			const feedbackOverrides = new Map<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>([
+				['el1', new Map([['strProp', valueOverride('$(ns:x)', 1)]])],
+			])
+			const ctx = makeCtx({ feedbackOverrides, variableValues: { ns: { x: 5 } } })
+			const { helper, references } = ctx.createHelper({ id: 'el1', strProp: val('base'), numProp: val(0) })
+
+			// Reading a different property must not evaluate the strProp override or register its variables
+			helper.getNumber('numProp', -1)
+			expect(references.usedVariables.has('ns:x')).toBe(false)
+
+			// Reading the overridden property now evaluates it and registers the dependency
+			helper.getString('strProp', '')
+			expect(references.usedVariables.has('ns:x')).toBe(true)
 		})
 	})
 
