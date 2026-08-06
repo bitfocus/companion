@@ -55,8 +55,7 @@ const finite = (v: unknown, fallback: number): number => {
 	return Number.isFinite(n) ? n : fallback
 }
 
-// A stop color, like every other element color, may be authored as a Companion color number or a css
-// color string. Normalise both forms to the numeric encoding the model works in; anything else is black.
+// A stop color may be a Companion color number or a css color string; other JsonValue types are not colors.
 const stopColor = (v: unknown): number => (typeof v === 'number' || typeof v === 'string' ? colorToNumber(v) : 0)
 
 /**

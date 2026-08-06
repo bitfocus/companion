@@ -114,8 +114,6 @@ describe('buildGaugeColorModel origin handling', () => {
 
 describe('buildGaugeColorModel stop color parsing', () => {
 	test('css color string stops parse to the same runs/fill as the numeric equivalent', () => {
-		// The reported bug: a stop authored as a css color string (e.g. an expression returning '#fff')
-		// stayed black because the color was coerced with Number(), which is NaN for a css string.
 		const css = buildGaugeColorModel(
 			makeGauge({
 				value: 90,
@@ -139,7 +137,6 @@ describe('buildGaugeColorModel stop color parsing', () => {
 			})
 		)!
 		expect(css.runs.map((r) => r.colorStart)).toEqual(numeric.runs.map((r) => r.colorStart))
-		// The value sits above the top stop, so the single fill color is the highest stop (red).
 		expect(css.singleColor).toBe(RED)
 		expect(css.singleColor).toBe(numeric.singleColor)
 	})
