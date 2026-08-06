@@ -1,7 +1,7 @@
 /* App shell, the two-column page layout (primary/secondary panels), and a few generic layout
-   utilities. Component-specific chrome lives with its component: the header in Layout/header.css,
-   the panel close/help icons in Layout/panel-icons.css, and the dropdown/context menus in
-   Components/context-menu.css. */
+   utilities. Component-specific chrome lives with its component: the header in Layout/Header.css,
+   the panel close/help icons in Layout/PanelIcons.css, and the dropdown/context menus in
+   Components/ContextMenu.css. */
 
 body {
 	-webkit-text-size-adjust: 100%;
@@ -328,6 +328,33 @@ hr.slim {
 
 		.nav-icon {
 			margin-right: 2px;
+		}
+	}
+}
+
+.float_right {
+	float: right;
+}
+
+.float_inline {
+	display: inline;
+}
+
+.float_right,
+.float_inline {
+	cursor: pointer;
+	cursor: hand;
+
+	svg {
+		margin-right: 4px;
+	}
+
+	> * {
+		display: inline-block;
+
+		color: inherit;
+		&:hover {
+			color: inherit;
 		}
 	}
 }

@@ -1,5 +1,4 @@
 import { faLayerGroup, faPlug } from '@fortawesome/free-solid-svg-icons'
-import '../../Components/connections-list-header.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
@@ -88,9 +87,9 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 
 	return (
 		<div className="connections-list-container flex-column-layout">
-			<div className="connections-list-header fixed-header">
+			<div className="fixed-header">
 				<h4 className="button-inline">
-					Connections <ContextHelpButton action="/user-guide/config/connections" />
+					Connections <ContextHelpButton action="/user-guide/config/connections" className="pe-2" />
 				</h4>
 
 				<p>

@@ -1,32 +1,5 @@
 @import './breakpoints.css';
 
-.float_right {
-	float: right;
-}
-
-.float_inline {
-	display: inline;
-}
-
-.float_right,
-.float_inline {
-	cursor: pointer;
-	cursor: hand;
-
-	svg {
-		margin-right: 4px;
-	}
-
-	> * {
-		display: inline-block;
-
-		color: inherit;
-		&:hover {
-			color: inherit;
-		}
-	}
-}
-
 .connectionlist-selected {
 	background-color: var(--color-row-selected);
 
