@@ -111,3 +111,48 @@ describe('buildGaugeColorModel origin handling', () => {
 		expect(model.fillEnd).toBe(75)
 	})
 })
+
+describe('buildGaugeColorModel stop color parsing', () => {
+	test('css color string stops parse to the same runs/fill as the numeric equivalent', () => {
+		// The reported bug: a stop authored as a css color string (e.g. an expression returning '#fff')
+		// stayed black because the color was coerced with Number(), which is NaN for a css string.
+		const css = buildGaugeColorModel(
+			makeGauge({
+				value: 90,
+				multiColour: true,
+				stops: [
+					{ value: 0, color: '#00ff00', gradient: false },
+					{ value: 66, color: 'rgb(255, 255, 0)', gradient: false },
+					{ value: 85, color: '#ff0000', gradient: false },
+				],
+			})
+		)!
+		const numeric = buildGaugeColorModel(
+			makeGauge({
+				value: 90,
+				multiColour: true,
+				stops: [
+					{ value: 0, color: GREEN, gradient: false },
+					{ value: 66, color: YELLOW, gradient: false },
+					{ value: 85, color: RED, gradient: false },
+				],
+			})
+		)!
+		expect(css.runs.map((r) => r.colorStart)).toEqual(numeric.runs.map((r) => r.colorStart))
+		// The value sits above the top stop, so the single fill color is the highest stop (red).
+		expect(css.singleColor).toBe(RED)
+		expect(css.singleColor).toBe(numeric.singleColor)
+	})
+
+	test('shorthand hex css strings are accepted', () => {
+		const model = buildGaugeColorModel(makeGauge({ value: 0, stops: [{ value: 0, color: '#fff', gradient: false }] }))!
+		expect(model.singleColor).toBe(0xffffff)
+	})
+
+	test('an invalid color string falls back to black rather than NaN', () => {
+		const model = buildGaugeColorModel(
+			makeGauge({ value: 0, stops: [{ value: 0, color: 'not-a-color', gradient: false }] })
+		)!
+		expect(model.singleColor).toBe(0)
+	})
+})

@@ -1,5 +1,5 @@
 import type { ButtonGraphicsGaugeDrawElement } from '../Model/StyleLayersModel.js'
-import { rgbRev } from './Util.js'
+import { colorToNumber, rgbRev } from './Util.js'
 
 export interface GaugeRGBA {
 	r: number
@@ -55,6 +55,10 @@ const finite = (v: unknown, fallback: number): number => {
 	return Number.isFinite(n) ? n : fallback
 }
 
+// A stop color, like every other element color, may be authored as a Companion color number or a css
+// color string. Normalise both forms to the numeric encoding the model works in; anything else is black.
+const stopColor = (v: unknown): number => (typeof v === 'number' || typeof v === 'string' ? colorToNumber(v) : 0)
+
 /**
  * Resolve a gauge's value + color stops into the shared {@link GaugeColorModel}. Returns `null` when
  * there is nothing to draw (no color stops / no runs), matching the renderer's early-out.
@@ -93,7 +97,7 @@ export function buildGaugeColorModel(element: ButtonGraphicsGaugeDrawElement): G
 	// --- Color stops → runs between consecutive stops, with the first anchored to position 0
 	//     and the last extended to 100 so the track never has an uncolored gap. ---
 	const stops = [...element.stops]
-		.map((s) => ({ pos: norm(finite(s.value, 0)), color: finite(s.color, 0), gradient: !!s.gradient }))
+		.map((s) => ({ pos: norm(finite(s.value, 0)), color: stopColor(s.color), gradient: !!s.gradient }))
 		.sort((a, b) => a.pos - b.pos)
 	if (stops.length === 0) return null
 
