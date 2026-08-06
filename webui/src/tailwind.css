@@ -69,6 +69,16 @@
 	--color-drop-neutral-bg: #eee; /* button drop target, awaiting a drop */
 	--color-drop-hover-bg: #daffab; /* button drop target, with a drag hovering over it */
 
+	/* Button layer (wysiwyg) editor toolbar */
+	--color-canvas-workspace: rgb(228, 228, 228); /* darker fill behind the layer canvas */
+	--color-toolbar-bg: rgb(245, 245, 245); /* quick-actions / canvas footer strips */
+	--color-toolbar-fg: #4a4a4a; /* toolbar icon & label text */
+	--color-toolbar-accent: #2276d2; /* active aspect / quick-action */
+	--color-toolbar-accent-hover: #1a5ea3;
+	--color-resize-bar-bg-hover: #dedede; /* panel resize bar hover (base is --color-surface-muted-hover) */
+	--color-mode-toggle-bg: #ececec;
+	--color-mode-toggle-border: #c8c8c8;
+
 	/* Selected list item (button editor element pickers) */
 	--color-selected-item-bg: #e3f2fd;
 	--color-selected-accent: #1976d2;
@@ -98,6 +108,8 @@
 	/* Drop-shadow / dark-tint scale. The alpha for each weight lives here (one place to retune when
 	   --color-shadow changes) rather than being spread through the components as inline color-mix. */
 	--color-shadow: #000;
+	--color-shadow-4: color-mix(in srgb, var(--color-shadow) 4%, transparent);
+	--color-shadow-6: color-mix(in srgb, var(--color-shadow) 6%, transparent);
 	--color-shadow-10: color-mix(in srgb, var(--color-shadow) 10%, transparent);
 	--color-shadow-15: color-mix(in srgb, var(--color-shadow) 15%, transparent);
 	--color-shadow-20: color-mix(in srgb, var(--color-shadow) 20%, transparent);
