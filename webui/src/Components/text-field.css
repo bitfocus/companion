@@ -1,6 +1,7 @@
+/* The base input styling comes from the CoreUI `form-control` class in the markup; only the
+   text-field-specific tweaks live here. (Unlike number/dropdown fields, this hasn't yet been moved
+   onto our own `form-input` base — future: replace form-control with css we control.) */
 .text-input-field {
-	/* Future: replace this with css we control */
-
 	&:focus {
 		/* Dont change background color on focus */
 		background-color: var(--color-input-bg);
