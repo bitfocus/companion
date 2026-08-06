@@ -14,7 +14,7 @@ import { assertNever } from '../Util.js'
 import { ButtonDecorationRenderer } from './ButtonDecorationRenderer.js'
 import { buildSelectionMarker, computeSelectionMarkerLines, type SelectedElementMarker } from './Geometry.js'
 import type { ImageBase, LineStyle } from './ImageBase.js'
-import { DrawBounds, parseColor, parseColorAlpha, rgbRev } from './Util.js'
+import { colorToNumber, DrawBounds, parseColor, parseColorAlpha, rgbRev } from './Util.js'
 
 /**
  * Text outline width as a fraction of the font size. Proportional (rather than a fixed pixel value) so
@@ -486,6 +486,9 @@ export class GraphicsLayeredButtonRenderer {
 			return Number.isFinite(n) ? n : fallback
 		}
 
+		// A stop color may be a Companion color number or a css color string; other JsonValue types are not colors.
+		const stopColor = (v: unknown): number => (typeof v === 'number' || typeof v === 'string' ? colorToNumber(v) : 0)
+
 		// --- Value mapping (authored Min..Max domain → 0–100 track position) ---
 		const min = finite(element.min, 0)
 		const max = finite(element.max, 100)
@@ -520,7 +523,7 @@ export class GraphicsLayeredButtonRenderer {
 		// --- Color stops → runs between consecutive stops, with the first anchored to position 0
 		//     and the last extended to 100 so the track never has an uncolored gap. ---
 		const stops = [...element.stops]
-			.map((s) => ({ pos: norm(finite(s.value, 0)), color: finite(s.color, 0), gradient: !!s.gradient }))
+			.map((s) => ({ pos: norm(finite(s.value, 0)), color: stopColor(s.color), gradient: !!s.gradient }))
 			.sort((a, b) => a.pos - b.pos)
 		if (stops.length === 0) return drawBounds
 
