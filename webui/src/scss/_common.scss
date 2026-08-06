@@ -221,6 +221,10 @@ code {
 	}
 }
 
+// TODO: these `.form-control` overrides (and the read-only one above) should be merged into our own
+// `form-input` base class (see Components/form.css) once the remaining consumers — TextInputField and
+// the date/time pickers that `@extend .form-control` — are moved onto it, so we can drop the reliance
+// on the vendored CoreUI `.form-control`.
 .form-control,
 .form-control:focus,
 .form-select {
