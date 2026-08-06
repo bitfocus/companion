@@ -9,6 +9,7 @@ import {
 	type SomeEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
+import { exprExpr } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { IPageStore } from '../../Page/Store.js'
@@ -293,13 +294,13 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 					break
 				}
 				case FeedbackEntitySubType.Value: {
-					// For value feedbacks, the override is an expression transform of the feedback's value.
-					// The feedback value is bound to `$(this:value)` and the expression is evaluated at draw time
-					// (see ElementExpressionHelper), where an `undefined` result means "no override".
+					// The override is an expression transform of the feedback value, bound to `$(this:value)` and
+					// evaluated at draw time (undefined result = no override). Always coerce to an expression: an
+					// override from an untrusted source (module preset, imported config) could be a plain value.
 					const thisContext = { value: feedback.feedbackValue as JsonValue | undefined }
 					for (const override of overrides) {
 						pushOverride(override.elementId, override.elementProperty, {
-							value: override.override,
+							value: exprExpr(stringifyVariableValue(override.override.value) ?? ''),
 							thisContext,
 						})
 					}

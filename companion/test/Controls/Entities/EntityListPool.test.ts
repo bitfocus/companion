@@ -394,6 +394,45 @@ describe('EntityListPool - getFeedbackStyleOverrides (layered button)', () => {
 			thisContext: { value: 41 },
 		})
 	})
+
+	test('a value feedback coerces a non-expression override into an expression', () => {
+		const valueFeedbackDefinition = (entityType: EntityModelType) =>
+			entityType === EntityModelType.Feedback
+				? ({ entityType, feedbackType: FeedbackEntitySubType.Value } as any)
+				: ({ entityType } as any)
+
+		const { pool } = createPool({ isLayered: true, getEntityDefinition: valueFeedbackDefinition })
+		// A plain-value override (from a module preset/imported config) must still be treated as an expression
+		const feedback = feedbackModel({
+			styleOverrides: [styleOverride({ override: { isExpression: false, value: '$(this:value) * 2' } })],
+		})
+		pool.entityAdd('feedbacks', null, feedback)
+		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: 21 }))
+
+		expect(pool.getFeedbackStyleOverrides().get('el1')?.get('color')).toEqual({
+			value: { isExpression: true, value: '$(this:value) * 2' },
+			thisContext: { value: 21 },
+		})
+	})
+
+	test('a value feedback stringifies a non-expression literal override into an expression', () => {
+		const valueFeedbackDefinition = (entityType: EntityModelType) =>
+			entityType === EntityModelType.Feedback
+				? ({ entityType, feedbackType: FeedbackEntitySubType.Value } as any)
+				: ({ entityType } as any)
+
+		const { pool } = createPool({ isLayered: true, getEntityDefinition: valueFeedbackDefinition })
+		const feedback = feedbackModel({
+			styleOverrides: [styleOverride({ override: { isExpression: false, value: 5 } })],
+		})
+		pool.entityAdd('feedbacks', null, feedback)
+		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: 41 }))
+
+		expect(pool.getFeedbackStyleOverrides().get('el1')?.get('color')).toEqual({
+			value: { isExpression: true, value: '5' },
+			thisContext: { value: 41 },
+		})
+	})
 })
 
 describe('EntityListPool - storage round-trip (button)', () => {

@@ -480,6 +480,32 @@ describe('PresetInternalEntities', () => {
 
 			expect(entities[0].options).toEqual({ x: { value: '$(foo) + 1', isExpression: true } })
 		})
+
+		it('round-trips a value feedback, preserving its `$(this:value)` override expression', () => {
+			// Value feedbacks are converted like any other type; the override expression must survive unchanged
+			const valueOverride = {
+				elementId: 'el1',
+				elementProperty: 'text',
+				override: { value: '`abc ${$(this:value)}`', isExpression: true },
+			}
+			const entities = ConvertLayeredPresetFeedbacksToEntities(
+				[{ feedbackId: 'mod_value_fb', options: {}, styleOverrides: [valueOverride] }] as any[],
+				ctx
+			)
+
+			expect(entities).toHaveLength(1)
+			expect(entities[0]).toMatchObject({
+				definitionId: 'mod_value_fb',
+				connectionId: 'conn01',
+				upgradeIndex: 5,
+			})
+			expect(entities[0].styleOverrides).toHaveLength(1)
+			expect(entities[0].styleOverrides?.[0]).toMatchObject({
+				elementId: 'el1',
+				elementProperty: 'text',
+				override: { value: '`abc ${$(this:value)}`', isExpression: true },
+			})
+		})
 	})
 
 	describe('unknown internal ids', () => {
