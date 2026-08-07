@@ -73,6 +73,45 @@
 	}
 }
 
+.button-grid-copy-increment-settings {
+	display: grid;
+	gap: 0.75rem;
+}
+
+.button-grid-copy-increment-icon {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.15rem;
+}
+
+.button-grid-copy-increment-icon-badge {
+	font-size: 0.72em;
+	font-weight: 700;
+	line-height: 1;
+}
+
+.button-grid-copy-increment-toolbar {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.button-grid-copy-increment-fields {
+	display: grid;
+	gap: 0.4rem;
+	max-height: 42vh;
+	overflow: auto;
+	padding-right: 0.25rem;
+}
+
+.button-grid-copy-increment-field-label {
+	margin-right: 0.5rem;
+}
+
+.button-grid-copy-increment-field-value {
+	color: var(--cui-secondary-color);
+	font-family: var(--cui-font-monospace);
+}
+
 .c-sidebar-nav-link,
 .c-sidebar-nav-dropdown-toggle {
 	transition: none;
