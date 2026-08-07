@@ -139,7 +139,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ id, value, setV
 				<Input
 					id={id}
 					type="text"
-					className={classNames('form-control text-input-field no-focus', { 'invalid-value': !isValueValid })}
+					className={classNames('form-input text-input-field no-focus', { 'invalid-value': !isValueValid })}
 					// render={multiline ? <textarea rows={2} /> : undefined}
 					disabled={disabled}
 					value={localValue}
