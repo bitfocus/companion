@@ -20,7 +20,7 @@ Entry points currently referenced from our SCSS:
 - `variables`, `variables-dark`, `root`, `reboot`, `type`, `containers`,
   `grid`, `tables`, `transitions`, `close`, `header`,
   `helpers`, `utilities/api`
-- `mixins/ltr-rtl`, `mixins/breakpoints`, `mixins/transition`
+- `mixins/ltr-rtl`, `mixins/breakpoints`
 
 Pruned as entirely unused (no matching class rendered anywhere in the webui):
 - Forms: the whole `forms` module is gone — `.form-control` was replaced by our
@@ -32,7 +32,10 @@ Pruned as entirely unused (no matching class rendered anywhere in the webui):
   `clearfix` and `visually-hidden` are kept. (`.text-truncate` was replaced by
   Tailwind's `.truncate` utility in the markup.)
 - The now-orphaned `mixins/_forms.scss` and `mixins/_focus-ring.scss` (only used
-  by the pruned modules) were removed too.
+  by the pruned modules) were removed too — as were `mixins/_transition.scss`,
+  `mixins/_box-shadow.scss`, `mixins/_gradients.scss` and
+  `functions/_escape-svg.scss` once their only consumers (form-control, nav,
+  buttons) had been converted to plain CSS.
 
 The compiled CSS shrank by ~28 KB with these removals. Structural forwards
 (`grid`, `utilities/api`, …) still generate far more classes than the app uses,
