@@ -10,9 +10,11 @@ copied; the internal relative imports are unchanged.
 
 This is **not** the full CoreUI SCSS: sub-modules that produced no CSS the app
 actually uses have been pruned (see below). App.scss `@forward`s only the reduced
-set below; every vendored file is a byte-identical upstream copy — **do not
-hand-edit those.** The eventual aim is to replace every rule here with
-first-party CSS/SCSS under `webui/src/` and then delete this directory.
+set below. Every vendored file is a byte-identical upstream copy — **do not
+hand-edit those** — with one exception: `_variables.scss` has been pruned to only
+the variables still read by the forwarded modules (see below). The eventual aim
+is to replace every rule here with first-party CSS/SCSS under `webui/src/` and
+then delete this directory.
 
 Entry points still forwarded from App.scss (plus `variables`, used by
 `scss/_variables.scss`):
@@ -39,6 +41,14 @@ Pruned as entirely unused (no matching class rendered anywhere in the webui):
 The compiled CSS shrank by ~28 KB with these removals. Structural forwards
 (`grid`, `utilities/api`, …) still generate far more classes than the app uses,
 but those are Bootstrap-style config-driven and were left intact.
+
+`_variables.scss` is the one vendored file that has been hand-pruned rather than
+kept byte-identical: it went from ~1325 to ~460 lines by dropping every variable
+not read (transitively) by a forwarded module, plus the upstream `scss-docs-*` /
+`fusv-*` / `stylelint-*` marker comments and the headers of now-empty sections.
+The prune was verified by compiling `App.scss` before and after and confirming
+byte-identical output. Keep overriding defaults from `scss/_variables.scss`; if a
+future forward needs a variable that was dropped, re-copy it from upstream.
 
 `grid` and `containers` are **deliberately deferred** — do NOT convert them in
 isolation. Bootstrap's 12-column grid cannot be expressed cleanly in Tailwind:
