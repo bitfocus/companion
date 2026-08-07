@@ -1,5 +1,4 @@
 @use '../variables' as *;
-@use '../common'; // updates .form-control background-color (rearranging the @use lines in App.scss doesn't work)
 @use '../vendor/coreui/forms/form-control';
 
 @import 'react-date-picker/dist/DatePicker.css';
