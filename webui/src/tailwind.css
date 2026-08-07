@@ -50,6 +50,7 @@
 	--color-icon: #333;
 	--color-text-secondary: #666;
 	--color-text-muted: #6c757d;
+	--color-text-faint: #999; /* fainter than -muted: dropdown group headings, empty/placeholder labels */
 	--color-text-disabled: #ccc;
 
 	/* Row interaction states (dark mode overrides these to light overlays) */
@@ -83,6 +84,12 @@
 	--color-selected-item-bg: #e3f2fd;
 	--color-selected-accent: #1976d2;
 	--color-step-highlight: #2eb85c; /* green glow pulsing on the current step selector */
+
+	/* Dropdown / select field popups */
+	--color-dropdown-item-hover-bg: #deebff; /* highlighted (hovered/keyboard-active) option */
+	--color-dropdown-item-selected-bg: #c7deff; /* selected option */
+	--color-pill-bg: #e6e6e6; /* multi-select value pill */
+	--color-pill-remove-bg: #d7d7d7; /* pill remove button */
 
 	/* Drag & drop / grid tiles */
 	--color-drop-target: rgb(0, 123, 255); /* blue "drop here"/active accent */
