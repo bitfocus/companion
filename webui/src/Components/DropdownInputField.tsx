@@ -201,7 +201,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 					return strId
 				}}
 			>
-				<Combobox.InputGroup className="dropdown-field-input-group">
+				<Combobox.InputGroup className="form-input dropdown-field-input-group">
 					<Combobox.Input
 						className={classNames('dropdown-field-input', {
 							'dropdown-field-input-value-placeholder': inputPlaceholder !== undefined,
