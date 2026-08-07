@@ -1,4 +1,5 @@
 import { faAdd, faArrowLeft, faClone, faLayerGroup, faList, faTrash } from '@fortawesome/free-solid-svg-icons'
+import '../../Components/VariablesTable.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'

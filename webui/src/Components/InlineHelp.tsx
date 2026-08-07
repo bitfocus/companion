@@ -1,4 +1,5 @@
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import './InlineHelp.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classnames from 'classnames'
 import { Tooltip } from '~/Components/Tooltip.js'
