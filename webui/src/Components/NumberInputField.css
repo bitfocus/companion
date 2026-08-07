@@ -1,6 +1,6 @@
 .number-field {
-	--border-left-radius: var(--cui-border-radius);
-	--border-right-radius: var(--cui-border-radius);
+	--border-left-radius: var(--radius);
+	--border-right-radius: var(--radius);
 
 	.number-field-group {
 		display: grid;
@@ -17,7 +17,7 @@
 		padding: 0 0.5rem;
 		color: var(--color-text);
 		background-color: var(--color-surface-subtle);
-		border: var(--cui-border-width) solid var(--color-border);
+		border: var(--border-width) solid var(--color-border);
 		border-left: 0;
 		cursor: pointer;
 		transition: background-color 0.15s ease-in-out;
