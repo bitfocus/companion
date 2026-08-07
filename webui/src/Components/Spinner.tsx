@@ -54,7 +54,7 @@ export function Spinner({
 			role="status"
 			{...props}
 		>
-			<span className="visually-hidden">{visuallyHiddenLabel}</span>
+			<span className="sr-only">{visuallyHiddenLabel}</span>
 		</Component>
 	)
 }
