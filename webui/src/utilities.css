@@ -1,0 +1,47 @@
+/* Small generic utility classes and a few global misc rules that have no more specific home. */
+
+/* A dnd overlay that is not actively being dragged must not display, as it can otherwise cause
+   unexpected layout shifts for a frame or two. */
+[data-dnd-overlay]:not([data-dnd-dragging]) {
+	display: none !important;
+}
+
+.p-no-margin {
+	margin: 0;
+}
+
+.mt-10 {
+	margin-top: 10px;
+}
+
+.no-break {
+	white-space: nowrap;
+}
+
+.autowrap {
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.auto-ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.section {
+	border: 0.5px solid var(--cui-border-color);
+	border-left: 2px solid var(--cui-border-color);
+	padding: 1rem;
+	border-radius: 4px;
+	padding-bottom: 1rem;
+	margin-bottom: 1rem;
+	margin-top: 0.5rem;
+}
+
+.action-description {
+	border-left: 5px solid #ddd;
+	padding-left: 10;
+}

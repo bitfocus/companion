@@ -27,6 +27,7 @@ body {
 	font-feature-settings: normal;
 	min-width: 350px;
 	font-size: 0.9rem;
+	overflow: hidden;
 }
 
 .wrapper {
