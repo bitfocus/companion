@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import './WhatsNew.css'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useState } from 'react'
 import semver from 'semver'

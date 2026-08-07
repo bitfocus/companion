@@ -1,0 +1,48 @@
+@import './breakpoints.css';
+
+/* Scrollable container with sticky header styles */
+.scrollable-container,
+.flex-column-layout .scrollable-content {
+	/* Scrollable area styles */
+	overflow: auto;
+	min-height: 0; /* This is important for flex containers to allow proper scrolling */
+
+	/* General sticky header style, shared with the collections nesting table header */
+	.sticky-header,
+	.collections-nesting-table .collections-nesting-table-header {
+		position: sticky;
+		top: 0;
+		z-index: 10;
+		background-color: var(--color-surface-muted); /* Ensure the background is opaque */
+		box-shadow: 0 1px 2px var(--color-shadow-10); /* Add subtle shadow to separate header */
+	}
+
+	/* Styles for standard tables */
+	table {
+		thead,
+		th {
+			position: sticky;
+			top: 0;
+			z-index: 10;
+			background-color: var(--color-surface-muted);
+			box-shadow: 0 1px 2px var(--color-shadow-10);
+		}
+	}
+}
+
+/* For pages using a flex column layout */
+.flex-column-layout {
+	display: flex;
+	flex-direction: column;
+
+	/* Header content that stays fixed */
+	.fixed-header {
+		flex-shrink: 0;
+	}
+}
+
+@media (--bp-xl-down) {
+	.flex-column-layout.collapse-under-xl {
+		height: unset;
+	}
+}

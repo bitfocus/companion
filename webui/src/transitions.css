@@ -1,0 +1,14 @@
+/* `.fade` cross-fades an element between hidden and shown: opacity 0 until the `.show` class is
+   added. Used by the Alert component and the mobile Sidebar overlay. */
+
+.fade {
+	transition: opacity 0.15s linear;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+
+	&:not(.show) {
+		opacity: 0;
+	}
+}

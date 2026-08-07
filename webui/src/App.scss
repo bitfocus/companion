@@ -12,9 +12,7 @@
 @forward 'scss/vendor/coreui/containers';
 @forward 'scss/vendor/coreui/forms';
 @forward 'scss/vendor/coreui/grid';
-@forward 'scss/vendor/coreui/transitions';
 @forward 'scss/vendor/coreui/nav';
-@forward 'scss/vendor/coreui/close';
 
 // Helpers
 @forward 'scss/vendor/coreui/helpers';
@@ -24,61 +22,13 @@
 
 // note: if a variable is defined in the following imports, they will need to be reference below by module name.
 
-@use 'scss/components/accordion';
-@use 'scss/components/alert';
 @use 'scss/components/button';
-@use 'scss/components/callout';
-@use 'scss/components/collapse';
-@use 'scss/components/checkbox-field';
 @use 'scss/components/date-picker';
 @use 'scss/components/dropdown-field';
-@use 'scss/components/form';
-@use 'scss/components/modal';
-@use 'scss/components/notifications';
-@use 'scss/components/number-field';
-@use 'scss/components/popover';
-@use 'scss/components/progress';
-@use 'scss/components/spinner';
-@use 'scss/components/step-selector';
-@use 'scss/components/tooltip';
-@use 'scss/components/image-input-field';
-@use 'scss/components/number-range';
-@use 'scss/components/switch-field';
-@use 'scss/components/tab-area';
-@use 'scss/components/table';
-@use 'scss/components/text-field';
 @use 'scss/components/time-picker';
 
-@use 'scss/layout';
 @use 'scss/common';
-@use 'scss/tablet';
-@use 'scss/emulator';
-@use 'scss/standalone-status';
-@use 'scss/modules-manage';
-@use 'scss/header';
 @use 'scss/sidebar';
-
-@use 'scss/action-recorder';
-@use 'scss/button-control';
-@use 'scss/button-edit';
-@use 'scss/button-grid';
-@use 'scss/page-list';
-@use 'scss/cloud';
-@use 'scss/controls';
-@use 'scss/instances';
-@use 'scss/variables-table';
-@use 'scss/loading';
-@use 'scss/log';
-@use 'scss/presets';
-@use 'scss/settings';
-@use 'scss/surfaces';
-@use 'scss/import-export';
-@use 'scss/collections-nesting-table';
-@use 'scss/collapsible-tree';
-@use 'scss/sticky-tables';
-@use 'scss/expression';
-@use 'scss/image-library';
-@use 'scss/wizard';
 
 // ensure a dnd overlay that is not being dragged is not displayed, as this can cause unexpected layout shifts for a frame or two
 [data-dnd-overlay]:not([data-dnd-dragging]) {

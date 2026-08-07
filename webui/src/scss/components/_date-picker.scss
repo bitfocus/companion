@@ -28,9 +28,9 @@
 }
 .react-calendar__tile--active {
 	color: white;
-	background-color: $primary;
+	background-color: var(--color-primary);
 	&:enabled:hover {
-		background: $primary;
+		background: var(--color-primary);
 	}
 }
 .react-calendar__month-view__days__day--weekend {
@@ -38,8 +38,8 @@
 }
 .react-calendar__tile--now {
 	color: white;
-	background-color: $info;
+	background-color: var(--color-info);
 	&:enabled:hover {
-		background: $info;
+		background: var(--color-info);
 	}
 }

@@ -1,4 +1,5 @@
 import { Input } from '@base-ui/react'
+import './text-field.css'
 import { faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'
@@ -23,7 +24,7 @@ export function SearchBox({ className, placeholder, filter, setFilter }: SearchB
 		<InputGroup className={className}>
 			<Input
 				type="text"
-				className="text-input-field"
+				className="form-control text-input-field"
 				placeholder={placeholder || 'Search ...'}
 				onChange={updateFilter}
 				value={filter}

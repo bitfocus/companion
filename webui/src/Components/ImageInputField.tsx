@@ -1,5 +1,6 @@
 import { faDownload, faExclamationTriangle, faFolderOpen, faImage, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import './ImageInputField.css'
 import { useQuery } from '@tanstack/react-query'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useEffect, useRef } from 'react'

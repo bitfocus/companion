@@ -1,4 +1,5 @@
 import { observer } from 'mobx-react-lite'
+import './EntityList.css'
 import { useRef } from 'react'
 import { useResizeObserver } from 'usehooks-ts'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'

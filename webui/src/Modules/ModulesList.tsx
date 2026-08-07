@@ -1,3 +1,4 @@
+import './modules-manage.css'
 import {
 	faEyeSlash,
 	faGamepad,

@@ -1,5 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Dialog } from '@base-ui/react/dialog'
+import './Modal.css'
+import './close-button.css'
 import classNames from 'classnames'
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type HTMLAttributes } from 'react'
 import type { ButtonColor } from './Button'

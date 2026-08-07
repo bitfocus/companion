@@ -1,4 +1,5 @@
 import { faExclamationTriangle, faSearch } from '@fortawesome/free-solid-svg-icons'
+import './VariablesTable.css'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { prepare as fuzzyPrepare } from 'fuzzysort'
 import { toJS } from 'mobx'

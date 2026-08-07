@@ -1,0 +1,33 @@
+.variable-dropdown-option {
+	overflow-wrap: break-word;
+}
+
+/* Style for variable-name autocomplete in text inputs as well as options in regular dropdowns */
+.variable-dropdown-option span {
+	display: block;
+
+	&.var-name {
+		font-weight: bold;
+	}
+
+	&.var-label {
+		font-weight: normal;
+		white-space: normal;
+	}
+}
+
+/* note that using `span` instead of `div` doesn't format correctly for the ellipsis */
+.variable-dropdown-single div {
+	&.var-name {
+		font-weight: bold;
+	}
+
+	&.var-label {
+		overflow: hidden;
+		font-weight: inherit;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-weight: normal;
+		padding-bottom: 0.2em;
+	}
+}

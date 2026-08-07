@@ -1,4 +1,5 @@
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
+import './modules-manage.css'
 import { faExternalLink } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'

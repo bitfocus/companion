@@ -1,6 +1,7 @@
 import { reaction, toJS } from 'mobx'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import './wizard.css'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { StaticAlert } from '~/Components/Alert.js'

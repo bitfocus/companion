@@ -1,4 +1,5 @@
 import { Checkbox } from '@base-ui/react/checkbox'
+import './CheckboxInputField.css'
 import { useId } from 'react'
 import type { SetOptional } from 'type-fest'
 import { FormLabel } from '~/Components/Form.js'

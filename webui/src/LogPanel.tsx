@@ -1,4 +1,5 @@
 import { faFileExport } from '@fortawesome/free-solid-svg-icons'
+import './log.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
 import { useVirtualizer } from '@tanstack/react-virtual'

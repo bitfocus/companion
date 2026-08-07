@@ -1,0 +1,27 @@
+/* The base input styling comes from the CoreUI `form-control` class in the markup; only the
+   text-field-specific tweaks live here. (Unlike number/dropdown fields, this hasn't yet been moved
+   onto our own `form-input` base — future: replace form-control with css we control.) */
+.text-input-field {
+	&:focus {
+		/* Dont change background color on focus */
+		background-color: var(--color-input-bg);
+	}
+
+	&:read-only {
+		background-color: var(--color-input-readonly-bg);
+	}
+
+	&.invalid-value {
+		color: var(--color-input-invalid);
+	}
+
+	&.has-validity-icon {
+		/* Leave room for the validity tick/cross overlay */
+		padding-right: 1.75rem;
+	}
+
+	&.no-focus {
+		outline: none;
+		box-shadow: none;
+	}
+}

@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Popover as BasePopover } from '@base-ui/react/popover'
+import './Popover.css'
 import classNames from 'classnames'
 import type { ButtonColor } from './Button'
 

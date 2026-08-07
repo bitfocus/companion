@@ -1,4 +1,5 @@
 import classNames from 'classnames'
+import './Spinner.css'
 import type { CSSProperties, ElementType, HTMLAttributes } from 'react'
 
 const spinnerSemanticColors: Record<string, string> = {

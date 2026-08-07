@@ -1,4 +1,5 @@
 import { Input } from '@base-ui/react'
+import './text-field.css'
 import classNames from 'classnames'
 import JSON5 from 'json5'
 import { useEffect, useRef, useState } from 'react'
@@ -138,7 +139,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ id, value, setV
 				<Input
 					id={id}
 					type="text"
-					className={classNames('text-input-field no-focus', { 'invalid-value': !isValueValid })}
+					className={classNames('form-control text-input-field no-focus', { 'invalid-value': !isValueValid })}
 					// render={multiline ? <textarea rows={2} /> : undefined}
 					disabled={disabled}
 					value={localValue}

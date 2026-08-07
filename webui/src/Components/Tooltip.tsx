@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Tooltip as BaseTooltip } from '@base-ui/react/tooltip'
+import './Tooltip.css'
 import classNames from 'classnames'
 
 // ─── Root ─────────────────────────────────────────────────────────────────────

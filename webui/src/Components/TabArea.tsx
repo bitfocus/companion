@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Tabs } from '@base-ui/react/tabs'
+import './TabArea.css'
 import classNames from 'classnames'
 import { useEffect, useRef } from 'react'
 

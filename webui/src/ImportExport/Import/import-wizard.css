@@ -1,0 +1,29 @@
+.import-wizard {
+	&.import-full {
+		display: grid;
+		grid-template-rows: auto 1fr;
+		overflow-y: hidden;
+	}
+
+	&.single-page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		overflow-y: scroll;
+		overflow-x: hidden;
+	}
+
+	.import-page-row {
+		margin-bottom: 1rem;
+		flex-grow: 1;
+	}
+	.import-page-grid {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.buttongrid {
+		flex: 1;
+		min-height: 0;
+	}
+}

@@ -1,4 +1,5 @@
 import { Combobox } from '@base-ui/react/combobox'
+import './variable-dropdown.css'
 import classNames from 'classnames'
 import { ChevronDownIcon } from 'lucide-react'
 import { observer } from 'mobx-react-lite'

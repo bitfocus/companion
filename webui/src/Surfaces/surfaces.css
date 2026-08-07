@@ -1,0 +1,164 @@
+.surfaces-tab-content {
+	display: grid;
+	grid-auto-flow: row;
+	grid-template-rows: auto 1fr auto;
+}
+
+/* Grid-based surfaces table styles */
+.surfaces-grid-container {
+	display: grid;
+	grid-template-columns: min-content 1fr min-content;
+	margin-top: 1rem;
+	border: 1px solid var(--color-border);
+	box-shadow: 0px 2px 21px -10px var(--color-shadow-20);
+	color: var(--color-text);
+	width: 100%;
+
+	.grid-header-cell {
+		padding: 6px 10px;
+		font-weight: 600;
+		background-color: var(--color-surface-muted);
+		border-bottom: 1px solid var(--color-border);
+		white-space: nowrap;
+		position: sticky;
+		top: 0;
+		z-index: 1;
+	}
+
+	.grid-row {
+		display: contents;
+
+		&:hover .grid-cell {
+			background-color: var(--color-row-hover);
+		}
+
+		&.grid-row-selected .grid-cell {
+			background-color: var(--color-row-selected);
+		}
+
+		/* Remove bottom border from last row */
+		&:last-of-type .grid-cell {
+			border-bottom: none;
+		}
+
+		/* Handle noBorder class for grouped surfaces */
+		&.grid-row-no-border .grid-cell {
+			border-bottom: none;
+		}
+	}
+
+	.surface-disabled {
+		/* whole line (except for the word "disabled", which overrides this below)
+		   the copy and delete icon escape this, but that seems ok. */
+		color: var(--cui-disabled);
+	}
+
+	.grid-cell {
+		padding: 5px 10px;
+		display: flex;
+		align-items: center;
+		min-width: 0;
+		border-bottom: 1px solid var(--color-border);
+		transition: background-color 0.15s ease-in-out;
+		cursor: pointer;
+
+		/* First column - NO column */
+		&:nth-child(3n + 1) {
+			white-space: nowrap;
+			justify-content: center;
+		}
+
+		/* Second column - Info column (flexible, can wrap) */
+		&:nth-child(3n + 2) {
+			flex-direction: column;
+			align-items: flex-start;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+			min-width: 200px;
+
+			b {
+				margin-bottom: 2px;
+			}
+
+			.surface-id-row {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				width: 100%;
+				min-width: 0;
+			}
+
+			.surface-id {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				min-width: 0;
+				font-family: monospace;
+				font-size: 0.9em;
+				max-width: fit-content;
+			}
+
+			.surface-status {
+				white-space: nowrap;
+				font-size: 0.9em;
+				color: var(--color-text-secondary);
+				margin-left: auto;
+			}
+
+			/* note: this is needed to override the .surface-status rule, immediately above,
+			         to make it consistent with the disabled row. */
+			.surface-disabled {
+				color: var(--cui-disabled);
+			}
+		}
+
+		/* Third column - Actions column */
+		&:nth-child(3n) {
+			text-align: right;
+			justify-content: flex-end;
+			white-space: nowrap;
+
+			.button {
+				text-transform: uppercase;
+				padding: 4px;
+
+				&:disabled {
+					opacity: 0.2;
+				}
+			}
+
+			.button-primary.disabled {
+				opacity: 0.5;
+			}
+		}
+	}
+
+	.grid-no-results {
+		grid-column: 1 / -1;
+		padding: 2rem;
+		text-align: center;
+	}
+
+	/* Responsive design for smaller screens */
+	@media (max-width: 768px) {
+		.grid-cell {
+			padding: 4px 6px;
+			font-size: 0.875rem;
+		}
+
+		.grid-header-cell {
+			padding: 4px 6px;
+		}
+	}
+}
+
+.elgato-plugin {
+	td {
+		border-bottom: none;
+	}
+	td:last-of-type {
+		/* override default padding so it better aligns with the integrations table */
+		padding-left: 0 !important;
+		padding-right: 0.2rem !important;
+	}
+}

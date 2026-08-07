@@ -1,9 +1,11 @@
 import fs from 'fs'
 import path from 'path'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
+import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import legacyPlugin from '@vitejs/plugin-legacy'
 import reactPlugin from '@vitejs/plugin-react'
+import postcssCustomMedia from 'postcss-custom-media'
 import { defaultClientConditions, defineConfig, loadEnv } from 'vite'
 import { normalizeBasePath } from '../tools/webui-dev-utils'
 
@@ -50,6 +52,7 @@ export default defineConfig(({ mode }) => {
 			outDir: 'build',
 			chunkSizeWarningLimit: 1 * 1000 * 1000, // Disable warning about large chunks
 			sourcemap: true,
+			cssCodeSplit: false, // emit a single stylesheet rather than per-chunk CSS
 			cssMinify: 'esbuild', // default (lightningcss) downlevels properties in a way that breaks backwards compatibility
 		},
 		resolve: {
@@ -115,16 +118,23 @@ export default defineConfig(({ mode }) => {
 			},
 		},
 		plugins: [
+			tailwindcss(),
 			tanstackRouter({
 				virtualRouteConfig: './src/routes/-routes.ts',
 				addExtensions: true,
 			}),
 			reactPlugin(),
 			legacyPlugin({
-				targets: ['defaults', 'not IE 11', 'safari >= 12.1'],
-				// Safari 12.1 / old Edge support ES modules, so they load the MODERN bundle, not the legacy one.
-				// Without this, the modern bundle ships to them with no polyfills (missing Object.fromEntries,
-				// String.replaceAll, Array.at, etc). true = usage-based detection against the modern targets.
+				// Browser floor: Safari 16.4+, Chrome 111+, Firefox 128+.
+				targets: [
+					'defaults',
+					'not dead',
+					'not safari < 16.4',
+					'not ios_saf < 16.4',
+					'not chrome < 111',
+					'not edge < 111',
+					'not firefox < 128',
+				],
 				modernPolyfills: true,
 			}),
 			env.VITE_SENTRY_DSN
@@ -141,6 +151,11 @@ export default defineConfig(({ mode }) => {
 				scss: {
 					quietDeps: true,
 				},
+			},
+			// Resolve @custom-media (shared responsive breakpoints in breakpoints.css) at build time, so
+			// component CSS can @media (--bp-*) instead of repeating hard-coded pixel values.
+			postcss: {
+				plugins: [postcssCustomMedia()],
 			},
 		},
 	}

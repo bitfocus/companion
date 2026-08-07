@@ -1,4 +1,5 @@
 import classNames from 'classnames'
+import './Callout.css'
 import { forwardRef, type HTMLAttributes } from 'react'
 
 export interface CalloutProps extends HTMLAttributes<HTMLDivElement> {

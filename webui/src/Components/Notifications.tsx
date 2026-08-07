@@ -1,4 +1,6 @@
 import { Toast } from '@base-ui/react/toast'
+import './Notifications.css'
+import './close-button.css'
 import { nanoid } from 'nanoid'
 import { forwardRef, useImperativeHandle } from 'react'
 

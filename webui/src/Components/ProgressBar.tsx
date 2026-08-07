@@ -1,4 +1,5 @@
 import { Progress } from '@base-ui/react/progress'
+import './ProgressBar.css'
 import classNames from 'classnames'
 import { forwardRef, type HTMLAttributes } from 'react'
 

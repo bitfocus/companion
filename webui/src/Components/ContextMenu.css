@@ -1,0 +1,86 @@
+/* Dropdown/context menu popovers: the help menu in the header (.help-menu-positioner) and the
+   right-click context menus used across the app (.context-menu, e.g. on buttons and the sidebar).
+   Both render a .popover2-popup, so they share the styling here. */
+.help-menu-positioner,
+.context-menu {
+	z-index: 1070; /* above CoreUI sidebar (1035) and modals (1055); matches CoreUI's $zindex-popover */
+
+	/* gather the color scheme up front: */
+	--menu-color: var(--color-text-strong);
+	--menu-bg: var(--cui-tertiary-bg); /* or just use white? */
+	--menu-hover-color: var(--color-on-dark);
+	--menu-hover-bg: var(--cui-info);
+
+	.popover2-popup {
+		--popover2-bg: var(--menu-bg);
+		--popover2-link-color: var(--menu-color);
+		--popover2-link-hover-bg: var(--menu-hover-bg);
+		--popover2-link-hover-color: var(--menu-hover-color);
+
+		min-width: 240px;
+		border: 1px solid var(--color-shadow-20); /* Subtle dark border to the dropdown */
+		box-shadow: 0 4px 16px var(--color-shadow-30); /* Professional shadow to the dropdown */
+
+		.popover2-item {
+			display: flex;
+			align-items: center;
+			font-size: 0.95rem; /* Slightly smaller, more refined */
+			padding: 0.4em 0.75em; /* More vertical padding, balanced horizontal */
+			transition: background-color 0.15s ease-in-out; /* Smooth hover transition */
+
+			&:focus-visible {
+				/* override button focus behavior (when "to" is a function), so it highlights the same way as the other items */
+				outline: none;
+			}
+
+			.dropdown-item-icon {
+				/* let the rules above and below control its padding */
+				flex-shrink: 0;
+				padding-left: 0;
+				padding-right: 0;
+			}
+
+			.dropdown-item-label {
+				padding-left: 0.75em;
+				padding-right: 1.5em;
+			}
+		}
+
+		.dropdown-divider {
+			border: none;
+			border-top: 1px solid var(--color-shadow-25); /* Light divider */
+			margin: 0.4em 0.6em;
+		}
+
+		.dropdown-group-label {
+			cursor: default;
+			padding-left: 0.75em;
+			color: color-mix(in srgb, var(--color-text-strong) 50%, transparent);
+		}
+
+		.dropdown-item-version {
+			white-space: pre; /* or pre-wrap to keep narrow but show all? */
+
+			.dropdown-item-label {
+				display: block;
+				font-size: 0.85em;
+				min-width: 0;
+				max-width: 20em; /* 16em will prevent widening the menu, but most likely the version string on releases doesn't even have a second line? */
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+		}
+	}
+}
+
+/* override parts that differ from (dropdown) help-menus */
+.context-menu {
+	--menu-bg: var(--color-menu-bg); /* sidebar appears to override var(--cui-tertiary-bg);, so fix --menu-bg here. */
+	.popover2-popup {
+		min-width: 0;
+
+		.popover2-item {
+			font-size: 0.85rem;
+		}
+	}
+}

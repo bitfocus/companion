@@ -1,4 +1,5 @@
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
+import './modules-manage.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
 import { useSubscription } from '@trpc/tanstack-react-query'

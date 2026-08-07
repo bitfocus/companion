@@ -1,4 +1,5 @@
 import { DragDropProvider } from '@dnd-kit/react'
+import './loading.css'
 import { Outlet } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
