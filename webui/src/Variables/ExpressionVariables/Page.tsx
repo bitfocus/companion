@@ -229,7 +229,7 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 	const fullname = item.variableName ? `$(expression:${item.variableName})` : null
 
 	return (
-		<div onClick={doEdit} className="flex flex-row align-items-center gap-2 hand">
+		<div onClick={doEdit} className="flex flex-row align-items-center gap-2 cursor-pointer">
 			<div className="flex flex-column grow">
 				{fullname ? (
 					<span className="variable-style">

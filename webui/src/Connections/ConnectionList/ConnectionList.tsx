@@ -158,7 +158,7 @@ function ConnectionListTableHeading() {
 	return (
 		<div className="flex flex-row">
 			<div className="grow">Connection</div>
-			<div className="no-break">
+			<div className="whitespace-nowrap">
 				<ButtonGroup className="table-header-buttons">
 					<VisibilityButton {...visibleConnections} keyId="disabled" color="secondary" label="Disabled" />
 					<VisibilityButton {...visibleConnections} keyId="ok" color="success" label="OK" />

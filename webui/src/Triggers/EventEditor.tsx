@@ -80,7 +80,7 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 			<h5 className="mt-2">
 				{heading}
 				{events.length > 1 && (
-					<ButtonGroup className="right">
+					<ButtonGroup className="float-right">
 						{panelCollapseHelper.canExpandAll() && (
 							<Button size="sm" onClick={panelCollapseHelper.setAllExpanded} title="Expand all events">
 								<FontAwesomeIcon icon={faExpandArrowsAlt} />

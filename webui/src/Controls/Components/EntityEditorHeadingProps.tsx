@@ -26,7 +26,7 @@ export const EntityEditorHeading = observer(function EntityEditorHeading({
 	return (
 		<h5 className="my-1">
 			{heading}&nbsp;
-			<ButtonGroup className="right">
+			<ButtonGroup className="float-right">
 				{childEntityIds.length >= 1 && panelCollapseHelper.canExpandAll(ownerIdString, childEntityIds) && (
 					<Button
 						size="sm"

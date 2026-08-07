@@ -317,14 +317,14 @@ const ModulesListRow = observer(function ModulesListRow({
 				'connectionlist-selected': isSelected,
 			})}
 		>
-			<td onClick={doEdit} className="hand compact">
+			<td onClick={doEdit} className="cursor-pointer compact">
 				{icon && (
 					<span title={iconTitle ?? ''}>
 						<FontAwesomeIcon icon={icon} />
 					</span>
 				)}
 			</td>
-			<td onClick={doEdit} className="hand">
+			<td onClick={doEdit} className="cursor-pointer">
 				{!!moduleInfo.storeInfo?.deprecationReason && (
 					<InlineHelpCustom help="Deprecated" className="me-1">
 						<FontAwesomeIcon icon={faWarning} aria-label="Deprecated" />
