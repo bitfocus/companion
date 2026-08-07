@@ -155,10 +155,6 @@ code {
 	color: #222;
 }
 
-.form-control[type='text']:read-only {
-	background-color: #eeeeee;
-}
-
 .markdown {
 	video {
 		width: 100%;
@@ -221,13 +217,12 @@ code {
 	}
 }
 
-// TODO: these `.form-control` overrides (and the read-only one above) should be merged into our own
-// `form-input` base class (see Components/form.css) once the remaining consumers — TextInputField and
-// the date/time pickers that `@extend .form-control` — are moved onto it, so we can drop the reliance
-// on the vendored CoreUI `.form-control`.
+// CoreUI's $input-bg is var(--cui-body-bg), which is #333 here, so force form inputs back to white.
+// Our own text inputs no longer need this — they use the `form-input` base (Components/form.css) — but
+// the date/time pickers (excluded from the CSS migration) still `@extend .form-control`. Drop this
+// once they are migrated off `.form-control`.
 .form-control,
-.form-control:focus,
-.form-select {
+.form-control:focus {
 	background-color: #fff;
 }
 

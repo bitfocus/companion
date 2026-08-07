@@ -70,7 +70,7 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 					id={id}
 					type={showSecretValue ? 'text' : 'password'}
 					className={classNames(
-						'form-control text-input-field',
+						'form-input text-input-field',
 						{
 							'invalid-value': valueIsInvalid,
 							'has-validity-icon': validity !== 'unknown',

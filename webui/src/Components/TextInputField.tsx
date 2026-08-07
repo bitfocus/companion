@@ -161,7 +161,7 @@ export function TextInputFieldSimple({
 			ref={inputRef}
 			type="text"
 			className={classNames(
-				'form-control text-input-field',
+				'form-input text-input-field',
 				{ 'invalid-value': valueIsInvalid, 'has-validity-icon': validity !== 'unknown' },
 				className
 			)}
