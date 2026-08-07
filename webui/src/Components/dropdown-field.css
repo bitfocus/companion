@@ -1,4 +1,6 @@
-@use '../variables' as *;
+/* Styling for the base-ui Combobox/Select based dropdown fields (DropdownInputField and friends).
+   The `.form-input` class (Components/form.css) in the markup supplies the input chrome (padding,
+   border, focus ring, disabled look); only the dropdown-specific layout lives here. */
 
 .dropdown-field {
 	display: block;
@@ -6,29 +8,17 @@
 
 	&.dropdown-field-invalid {
 		.dropdown-field-select-value {
-			color: red;
+			color: var(--color-input-invalid);
 		}
 	}
 
 	.dropdown-field-input-group {
-		@include form-input-base;
-
 		position: relative;
 		display: flex;
 		align-items: center;
 		width: 100%;
 		min-width: 0;
 		cursor: text;
-
-		&[data-popup-open],
-		&[data-focused] {
-			@include form-input-focus;
-		}
-
-		&[data-disabled] {
-			@include form-input-disabled;
-			cursor: default;
-		}
 	}
 
 	.dropdown-field-input {
@@ -49,13 +39,14 @@
 		cursor: pointer;
 
 		&::placeholder {
-			@include form-input-placeholder;
+			color: var(--cui-input-placeholder-color, var(--cui-secondary-color));
+			opacity: 1;
 			font-weight: bold;
 			font-size: 0.9rem;
 		}
 
-		// When the placeholder is actually the current value (disableEditingCustom mode),
-		// style it identically to real text so it looks seamless.
+		/* When the placeholder is actually the current value (disableEditingCustom mode),
+		   style it identically to real text so it looks seamless. */
 		&.dropdown-field-input-value-placeholder::placeholder {
 			color: var(--cui-body-color);
 			font-weight: inherit;
@@ -67,8 +58,8 @@
 		}
 	}
 
-	// Fancy (2-line) display overlay shown when the field is not focused.
-	// The actual input is hidden below it; clicking passes through to focus the input.
+	/* Fancy (2-line) display overlay shown when the field is not focused.
+	   The actual input is hidden below it; clicking passes through to focus the input. */
 	.dropdown-field-fancy-display {
 		flex: 1;
 		min-width: 0;
@@ -91,7 +82,7 @@
 		}
 	}
 
-	// When focused or popup is open: show the real input, hide the fancy overlay (but keep its space so height stays consistent)
+	/* When focused or popup is open: show the real input, hide the fancy overlay (but keep its space so height stays consistent) */
 	.dropdown-field-input-group:is([data-focused], [data-popup-open]) {
 		.dropdown-field-fancy-display {
 			visibility: hidden;
@@ -103,9 +94,9 @@
 		}
 	}
 
-	// The fancyFormat input always sits absolutely over the container;
-	// overlay always takes layout space and defines the height.
-	// Padding matches form-input-base so text aligns with the container's padding.
+	/* The fancyFormat input always sits absolutely over the container;
+	   overlay always takes layout space and defines the height.
+	   Padding matches .form-input so text aligns with the container's padding. */
 	.variable-dropdown-edit {
 		position: absolute;
 		top: 0;
@@ -141,27 +132,11 @@
 	}
 
 	.dropdown-field-select-trigger {
-		@include form-input-base;
-
 		display: flex;
 		align-items: center;
 		width: 100%;
 		cursor: default;
 		text-align: left;
-
-		&[data-popup-open] {
-			@include form-input-focus;
-		}
-
-		&:focus,
-		&:focus-visible {
-			@include form-input-focus;
-			outline: none;
-		}
-
-		&[data-disabled] {
-			@include form-input-disabled;
-		}
 	}
 
 	.dropdown-field-select-value {
@@ -234,7 +209,7 @@
 		padding-right: 0.1em;
 
 		&:hover:not(:disabled) {
-			background: rgba(0, 0, 0, 0.15);
+			background: var(--color-shadow-15);
 		}
 
 		&:disabled {
@@ -249,8 +224,25 @@
 	}
 }
 
+/* base-ui exposes the focused/open/disabled state as data-attributes rather than the native
+   :focus-visible / :disabled that `.form-input` keys off, so mirror `.form-input`'s focus and disabled
+   look for those states here. (The select trigger's keyboard :focus-visible is already covered by
+   `.form-input` itself.) */
+.dropdown-field-input-group[data-focused],
+.dropdown-field-input-group[data-popup-open],
+.dropdown-field-select-trigger[data-popup-open] {
+	border-color: var(--color-primary-soft);
+	outline: 0;
+	box-shadow: 0 0 0 0.25rem var(--color-focus-ring);
+}
+
+.dropdown-field-input-group[data-disabled],
+.dropdown-field-select-trigger[data-disabled] {
+	background-color: var(--cui-secondary-bg);
+}
+
 .dropdown-field-positioner {
-	// Ensure variable dropdowns appear above other UI elements
+	/* Ensure variable dropdowns appear above other UI elements */
 	z-index: 1200;
 	width: var(--anchor-width);
 
@@ -263,19 +255,19 @@
 		--popup-max-height: min(300px, var(--available-height, 300px));
 
 		background-color: var(--popup-bg);
-		border: 1px solid rgba(0, 0, 0, 0.2);
+		border: 1px solid var(--color-shadow-20);
 		border-radius: var(--cui-border-radius);
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+		box-shadow: 0 4px 16px var(--color-shadow-30);
 		padding: 0.25rem 0;
 		max-height: var(--popup-max-height);
 		overflow: hidden;
 		display: flex;
 		flex-direction: column;
 
-		// Hide the popup for the first animation frame so the virtualizer can measure
-		// actual item heights before the popup becomes visible. Without this, the popup
-		// briefly appears at the estimated height then snaps to the measured height.
-		// base-ui sets data-starting-style for exactly one RAF after opening.
+		/* Hide the popup for the first animation frame so the virtualizer can measure
+		   actual item heights before the popup becomes visible. Without this, the popup
+		   briefly appears at the estimated height then snaps to the measured height.
+		   base-ui sets data-starting-style for exactly one RAF after opening. */
 		&[data-starting-style] {
 			opacity: 0;
 		}
@@ -362,7 +354,7 @@
 		justify-content: center;
 		width: 1.25rem;
 		flex-shrink: 0;
-		// color: #000;
+		/* color: #000; */
 		visibility: hidden;
 		margin-left: -0.5rem;
 		margin-right: 0.125rem;
@@ -389,7 +381,7 @@
 		text-align: center;
 	}
 
-	// Two-line content layout for fancyFormat items
+	/* Two-line content layout for fancyFormat items */
 	.dropdown-field-item-content {
 		flex: 1;
 		min-width: 0;

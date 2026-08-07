@@ -87,7 +87,7 @@ export const SimpleDropdownInputField = observer(function SimpleDropdownInputFie
 				items={itemsForLookup}
 				disabled={disabled}
 			>
-				<Select.Trigger className="dropdown-field-select-trigger" onBlur={onBlur}>
+				<Select.Trigger className="form-input dropdown-field-select-trigger" onBlur={onBlur}>
 					<Select.Value
 						className="dropdown-field-select-value"
 						placeholder={options.length === 0 ? noOptionsMessageFull : 'Select...'}
