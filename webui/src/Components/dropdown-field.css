@@ -148,13 +148,13 @@
 
 	&.dropdown-field-invalid {
 		.dropdown-field-input-group {
-			border-color: var(--cui-danger);
+			border-color: var(--color-danger);
 		}
 	}
 
 	&.dropdown-field-warning {
 		.dropdown-field-input-group {
-			border-color: var(--cui-warning);
+			border-color: var(--color-warning);
 		}
 	}
 

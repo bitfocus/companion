@@ -72,12 +72,12 @@
 
 		&.wizard-review-badge-add {
 			background-color: var(--cui-success-bg-subtle, #d1e7dd);
-			color: var(--cui-success, #2eb85c);
+			color: var(--color-success);
 		}
 
 		&.wizard-review-badge-remove {
 			background-color: var(--cui-danger-bg-subtle, #f8d7da);
-			color: var(--cui-danger, #e55353);
+			color: var(--color-danger);
 		}
 
 		&.wizard-review-badge-info {
