@@ -13,9 +13,9 @@
 	--modal2-padding: 1rem;
 	--modal2-margin: 0.5rem;
 	--modal2-top-margin: 4vh;
-	--modal2-color: var(--cui-body-color);
+	--modal2-color: var(--color-text);
 	--modal2-bg: var(--cui-modal-bg, #fff);
-	--modal2-border-color: var(--cui-border-color-translucent);
+	--modal2-border-color: var(--color-border-subtle);
 	--modal2-border-width: var(--cui-border-width, 1px);
 	--modal2-border-radius: var(--cui-border-radius-lg, 0.5rem);
 	--modal2-box-shadow: var(--cui-box-shadow-sm);
@@ -23,12 +23,12 @@
 	--modal2-header-padding-x: 1rem;
 	--modal2-header-padding-y: 1rem;
 	--modal2-header-padding: var(--modal2-header-padding-y) var(--modal2-header-padding-x);
-	--modal2-header-border-color: var(--cui-border-color);
+	--modal2-header-border-color: var(--color-border);
 	--modal2-header-border-width: var(--cui-border-width, 1px);
 	--modal2-title-line-height: 1.5;
 	--modal2-footer-gap: 0.5rem;
 	--modal2-footer-bg: transparent;
-	--modal2-footer-border-color: var(--cui-border-color);
+	--modal2-footer-border-color: var(--color-border);
 	--modal2-footer-border-width: var(--cui-border-width, 1px);
 	--modal2-backdrop-bg: var(--color-backdrop);
 	--modal2-backdrop-opacity: 0.5;

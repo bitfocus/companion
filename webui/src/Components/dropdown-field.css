@@ -34,12 +34,12 @@
 		font-size: inherit;
 		font-weight: inherit;
 		line-height: inherit;
-		color: var(--cui-body-color);
+		color: var(--color-text);
 		min-width: 0;
 		cursor: pointer;
 
 		&::placeholder {
-			color: var(--cui-input-placeholder-color, var(--cui-secondary-color));
+			color: var(--cui-input-placeholder-color, var(--color-text-muted));
 			opacity: 1;
 			font-weight: bold;
 			font-size: 0.9rem;
@@ -48,7 +48,7 @@
 		/* When the placeholder is actually the current value (disableEditingCustom mode),
 		   style it identically to real text so it looks seamless. */
 		&.dropdown-field-input-value-placeholder::placeholder {
-			color: var(--cui-body-color);
+			color: var(--color-text);
 			font-weight: inherit;
 			font-size: inherit;
 		}
@@ -121,7 +121,7 @@
 		border: none;
 		background: transparent;
 		cursor: pointer;
-		color: var(--cui-secondary-color);
+		color: var(--color-text-muted);
 		position: relative;
 		z-index: 1;
 	}
@@ -238,7 +238,7 @@
 
 .dropdown-field-input-group[data-disabled],
 .dropdown-field-select-trigger[data-disabled] {
-	background-color: var(--cui-secondary-bg);
+	background-color: var(--color-surface-muted);
 }
 
 .dropdown-field-positioner {
@@ -248,9 +248,9 @@
 
 	.dropdown-field-popup {
 		--popup-bg: var(--color-surface);
-		--popup-color: var(--cui-body-color);
+		--popup-color: var(--color-text);
 		--popup-hover-bg: var(--color-dropdown-item-hover-bg);
-		--popup-hover-color: var(--cui-body-color);
+		--popup-hover-color: var(--color-text);
 		--popup-selected-bg: var(--color-dropdown-item-selected-bg);
 		--popup-max-height: min(300px, var(--available-height, 300px));
 

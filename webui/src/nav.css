@@ -6,7 +6,7 @@
 	--cui-nav-link-padding-y: 0.5rem;
 	--cui-nav-link-color: var(--cui-link-color);
 	--cui-nav-link-hover-color: var(--cui-link-hover-color);
-	--cui-nav-link-disabled-color: var(--cui-secondary-color);
+	--cui-nav-link-disabled-color: var(--color-text-muted);
 
 	display: flex;
 	flex-wrap: wrap;

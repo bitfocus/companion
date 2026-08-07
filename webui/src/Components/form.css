@@ -79,7 +79,7 @@ label.disabled {
 .form-text {
 	margin-top: 0.25rem;
 	font-size: 0.875em;
-	color: var(--cui-secondary-color);
+	color: var(--color-text-muted);
 }
 
 /* Shared base for our custom text-style inputs (the number field, and the text inputs via
@@ -90,11 +90,11 @@ label.disabled {
 	font-size: 1rem;
 	font-weight: 400;
 	line-height: 1.5;
-	color: var(--cui-body-color);
+	color: var(--color-text);
 	appearance: none;
 	background-color: var(--color-input-bg);
 	background-clip: padding-box;
-	border: var(--cui-border-width) solid var(--cui-border-color);
+	border: var(--cui-border-width) solid var(--color-border);
 	border-radius: var(--cui-border-radius);
 	transition:
 		border-color 0.15s ease-in-out,
@@ -109,7 +109,7 @@ label.disabled {
 	}
 
 	&:focus-visible {
-		color: var(--cui-body-color);
+		color: var(--color-text);
 		background-color: var(--color-input-bg);
 		border-color: var(--color-primary-soft);
 		outline: 0;
@@ -121,12 +121,12 @@ label.disabled {
 	}
 
 	&::placeholder {
-		color: var(--cui-input-placeholder-color, var(--cui-secondary-color));
+		color: var(--cui-input-placeholder-color, var(--color-text-muted));
 		opacity: 1;
 	}
 
 	&:disabled {
-		background-color: var(--cui-secondary-bg);
+		background-color: var(--color-surface-muted);
 		opacity: 1;
 	}
 }
@@ -159,11 +159,11 @@ label.disabled {
 		font-size: 1rem;
 		font-weight: 400;
 		line-height: 1.5;
-		color: var(--cui-input-group-addon-color, var(--cui-body-color));
+		color: var(--cui-input-group-addon-color, var(--color-text));
 		text-align: center;
 		white-space: nowrap;
-		background-color: var(--cui-input-group-addon-bg, var(--cui-tertiary-bg));
-		border: var(--cui-border-width) solid var(--cui-input-group-addon-border-color, var(--cui-border-color));
+		background-color: var(--cui-input-group-addon-bg, var(--color-surface-subtle));
+		border: var(--cui-border-width) solid var(--cui-input-group-addon-border-color, var(--color-border));
 		border-radius: var(--cui-border-radius);
 	}
 
