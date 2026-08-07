@@ -121,7 +121,7 @@ label.disabled {
 	}
 
 	&::placeholder {
-		color: var(--cui-input-placeholder-color, var(--color-text-muted));
+		color: var(--color-text-muted);
 		opacity: 1;
 	}
 
@@ -159,11 +159,11 @@ label.disabled {
 		font-size: 1rem;
 		font-weight: 400;
 		line-height: 1.5;
-		color: var(--cui-input-group-addon-color, var(--color-text));
+		color: var(--color-text);
 		text-align: center;
 		white-space: nowrap;
-		background-color: var(--cui-input-group-addon-bg, var(--color-surface-subtle));
-		border: var(--cui-border-width) solid var(--cui-input-group-addon-border-color, var(--color-border));
+		background-color: var(--color-surface-subtle);
+		border: var(--cui-border-width) solid var(--color-border);
 		border-radius: var(--cui-border-radius);
 	}
 
