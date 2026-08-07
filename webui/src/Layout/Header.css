@@ -6,7 +6,7 @@
 	justify-content: space-between;
 	padding: 0.5rem;
 	background: var(--color-header-bg); /* the brand-red bar */
-	border-bottom: 1px solid var(--cui-border-color);
+	border-bottom: 1px solid var(--color-border);
 
 	/* The header lays out its single full-width container child as a flex row */
 	> .container,

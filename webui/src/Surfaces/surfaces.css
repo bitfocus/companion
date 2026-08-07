@@ -50,7 +50,7 @@
 	.surface-disabled {
 		/* whole line (except for the word "disabled", which overrides this below)
 		   the copy and delete icon escape this, but that seems ok. */
-		color: var(--cui-disabled);
+		color: var(--color-text-disabled);
 	}
 
 	.grid-cell {
@@ -108,7 +108,7 @@
 			/* note: this is needed to override the .surface-status rule, immediately above,
 			         to make it consistent with the disabled row. */
 			.surface-disabled {
-				color: var(--cui-disabled);
+				color: var(--color-text-disabled);
 			}
 		}
 

@@ -7,7 +7,7 @@
 
 	/* gather the color scheme up front: */
 	--menu-color: var(--color-text-strong);
-	--menu-bg: var(--cui-tertiary-bg); /* or just use white? */
+	--menu-bg: var(--color-surface-subtle); /* or just use white? */
 	--menu-hover-color: var(--color-on-dark);
 	--menu-hover-bg: var(--color-info);
 
@@ -75,7 +75,9 @@
 
 /* override parts that differ from (dropdown) help-menus */
 .context-menu {
-	--menu-bg: var(--color-menu-bg); /* sidebar appears to override var(--cui-tertiary-bg);, so fix --menu-bg here. */
+	--menu-bg: var(
+		--color-menu-bg
+	); /* sidebar appears to override var(--color-surface-subtle);, so fix --menu-bg here. */
 	.popover2-popup {
 		min-width: 0;
 

@@ -71,7 +71,7 @@
 
 	flex-grow: 1;
 
-	border: var(--cui-border-width) solid var(--cui-border-color);
+	border: var(--cui-border-width) solid var(--color-border);
 	transition:
 		border-color 0.15s ease-in-out,
 		box-shadow 0.15s ease-in-out;
@@ -100,8 +100,8 @@
 			/* Visible diagonal grip lines in the corner, mimicking the native resizer */
 			background-image: repeating-linear-gradient(
 				-45deg,
-				var(--cui-border-color) 0,
-				var(--cui-border-color) 1px,
+				var(--color-border) 0,
+				var(--color-border) 1px,
 				transparent 1px,
 				transparent 3px
 			);

@@ -10,9 +10,9 @@ h5 {
 blockquote {
 	margin: 0 0 1rem;
 	padding: 0.5rem 1rem;
-	border-left: 4px solid var(--cui-border-color);
+	border-left: 4px solid var(--color-border);
 	border-radius: 0 4px 4px 0;
-	background-color: var(--cui-tertiary-bg);
+	background-color: var(--color-surface-subtle);
 
 	> :last-child {
 		margin-bottom: 0;
