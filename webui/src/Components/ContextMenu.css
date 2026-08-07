@@ -9,7 +9,7 @@
 	--menu-color: var(--color-text-strong);
 	--menu-bg: var(--cui-tertiary-bg); /* or just use white? */
 	--menu-hover-color: var(--color-on-dark);
-	--menu-hover-bg: var(--cui-info);
+	--menu-hover-bg: var(--color-info);
 
 	.popover2-popup {
 		--popover2-bg: var(--menu-bg);
