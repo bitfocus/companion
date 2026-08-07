@@ -1,17 +1,68 @@
-/* Small generic utility classes and a few global misc rules that have no more specific home. */
+/* Small generic utility classes, and a few global misc rules that have no more specific home. */
 
-/* A dnd overlay that is not actively being dragged must not display, as it can otherwise cause
-   unexpected layout shifts for a frame or two. */
-[data-dnd-overlay]:not([data-dnd-dragging]) {
-	display: none !important;
+/* ── Display / layout ─────────────────────────────────────────────────────── */
+.flex {
+	display: flex;
 }
 
+.flex-wrap {
+	flex-wrap: wrap;
+}
+
+.w-full {
+	width: 100%;
+}
+
+.grow {
+	flex-grow: 1;
+}
+
+.h-fit-content {
+	height: fit-content;
+}
+
+.min-h-0 {
+	min-height: 0;
+}
+
+.min-w-0 {
+	min-width: 0;
+}
+
+.displayNone {
+	display: none;
+}
+
+/* ── Spacing ──────────────────────────────────────────────────────────────── */
 .p-no-margin {
 	margin: 0;
 }
 
 .mt-10 {
 	margin-top: 10px;
+}
+
+.gap-1rem {
+	gap: 1rem;
+}
+
+.gap-2rem {
+	gap: 2rem;
+}
+
+.column-gap-1rem {
+	column-gap: 1rem;
+}
+
+/* ── Float ────────────────────────────────────────────────────────────────── */
+.right,
+.float-right {
+	float: right;
+}
+
+/* ── Text ─────────────────────────────────────────────────────────────────── */
+.text-right {
+	text-align: right;
 }
 
 .no-break {
@@ -29,6 +80,34 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.text-decoration-none {
+	--cui-link-decoration: none;
+}
+
+/* ── Cursor ───────────────────────────────────────────────────────────────── */
+.widget-clickable,
+.hand {
+	cursor: pointer;
+}
+
+/* ── Border radius ────────────────────────────────────────────────────────── */
+.rounded-start-0 {
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+}
+
+.rounded-end-0 {
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+/* ── Misc ─────────────────────────────────────────────────────────────────── */
+/* A dnd overlay that is not actively being dragged must not display, as it can otherwise cause
+   unexpected layout shifts for a frame or two. */
+[data-dnd-overlay]:not([data-dnd-dragging]) {
+	display: none !important;
 }
 
 .section {
