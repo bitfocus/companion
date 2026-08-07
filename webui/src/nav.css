@@ -2,11 +2,11 @@
    (The no-op font-size/font-weight declarations, which referenced undefined/empty custom properties,
    were dropped.) */
 .nav {
-	--cui-nav-link-padding-x: 1rem;
-	--cui-nav-link-padding-y: 0.5rem;
-	--cui-nav-link-color: var(--cui-link-color);
-	--cui-nav-link-hover-color: var(--cui-link-hover-color);
-	--cui-nav-link-disabled-color: var(--color-text-muted);
+	--nav-link-padding-x: 1rem;
+	--nav-link-padding-y: 0.5rem;
+	--nav-link-color: var(--color-primary);
+	--nav-link-hover-color: color-mix(in srgb, var(--color-primary) 80%, black);
+	--nav-link-disabled-color: var(--color-text-muted);
 
 	display: flex;
 	flex-wrap: wrap;
@@ -17,8 +17,8 @@
 
 .nav-link {
 	display: block;
-	padding: var(--cui-nav-link-padding-y) var(--cui-nav-link-padding-x);
-	color: var(--cui-nav-link-color);
+	padding: var(--nav-link-padding-y) var(--nav-link-padding-x);
+	color: var(--nav-link-color);
 	text-decoration: none;
 	background: none;
 	border: 0;
@@ -33,7 +33,7 @@
 
 	&:hover,
 	&:focus {
-		color: var(--cui-nav-link-hover-color);
+		color: var(--nav-link-hover-color);
 	}
 
 	&:focus-visible {
@@ -43,7 +43,7 @@
 
 	&.disabled,
 	&:disabled {
-		color: var(--cui-nav-link-disabled-color);
+		color: var(--nav-link-disabled-color);
 		pointer-events: none;
 		cursor: default;
 	}
