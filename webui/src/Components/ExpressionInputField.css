@@ -199,7 +199,7 @@
 
 	.header {
 		padding: 0.5em;
-		background-color: var(--cui-info-bg-subtle);
+		background-color: var(--color-info-bg-subtle);
 
 		.type {
 			padding-top: 0 !important;

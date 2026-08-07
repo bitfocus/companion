@@ -72,7 +72,6 @@
 
 	&:hover {
 		text-decoration: none;
-		/* make the colour similar to --cui-btn-hover-bg, which is not accessible here */
 		background-color: var(--color-header-hover);
 	}
 

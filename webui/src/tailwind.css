@@ -22,6 +22,33 @@
 	--color-light: #e9e9e9;
 	--color-dark: #212631;
 
+	/* Subtle/emphasis tints per severity (used by Alert, and a few wizard/expression badges).
+	   Adopted from CoreUI's *-bg-subtle / *-border-subtle / *-text-emphasis values. */
+	--color-primary-bg-subtle: #cfc7f3;
+	--color-primary-border-subtle: #9d92e6;
+	--color-primary-text-emphasis: #3634a3;
+	--color-secondary-bg-subtle: #ced2d8;
+	--color-secondary-border-subtle: #9da5b1;
+	--color-secondary-text-emphasis: #212233;
+	--color-success-bg-subtle: #cbedd6;
+	--color-success-border-subtle: #96dbad;
+	--color-success-text-emphasis: #0f5722;
+	--color-info-bg-subtle: #c0e6ff;
+	--color-info-border-subtle: #80c6ff;
+	--color-info-text-emphasis: #184c77;
+	--color-warning-bg-subtle: #feecc5;
+	--color-warning-border-subtle: #fcd88a;
+	--color-warning-text-emphasis: #764705;
+	--color-danger-bg-subtle: #f9d4d4;
+	--color-danger-border-subtle: #f2a9a9;
+	--color-danger-text-emphasis: #671414;
+	--color-light-bg-subtle: rgb(249, 249.5, 251);
+	--color-light-border-subtle: #e7eaee;
+	--color-light-text-emphasis: #4a566d;
+	--color-dark-bg-subtle: #cfd4de;
+	--color-dark-border-subtle: #aab3c5;
+	--color-dark-text-emphasis: #323a49;
+
 	/* Status row/background tints */
 	--color-status-ok-bg: #cfc;
 	--color-status-warn-bg: #fea;

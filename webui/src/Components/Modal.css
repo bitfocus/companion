@@ -2,7 +2,7 @@
 
 /* ─── Variables ────────────────────────────────────────────────────────────────
  *
- * Mapped from CoreUI's --cui-modal-* to --modal2-* with the same defaults.
+ * The --modal2-* custom properties drive the modal chrome, sourced from our theme tokens.
  * Parts that have no current usage are commented out below each section. */
 
 .modal2-viewport,
