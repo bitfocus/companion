@@ -427,7 +427,7 @@
 
 .sidebar-narrow-unfoldable {
 	&:hover {
-		box-shadow: var(--cui-box-shadow);
+		box-shadow: 0 0.5rem 1rem var(--color-shadow-15);
 		box-shadow: 0 0.5rem 1rem rgba(8, 10, 12, 0.15);
 
 		.sidebar-toggler::before {

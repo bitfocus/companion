@@ -39,7 +39,7 @@
 		cursor: pointer;
 
 		&::placeholder {
-			color: var(--cui-input-placeholder-color, var(--color-text-muted));
+			color: var(--color-text-muted);
 			opacity: 1;
 			font-weight: bold;
 			font-size: 0.9rem;

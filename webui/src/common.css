@@ -179,10 +179,6 @@ svg.pad-left {
 	}
 }
 
-.list-group {
-	--cui-list-group-bg: #f7f7f7;
-}
-
 .form-range {
 	align-self: center;
 }
