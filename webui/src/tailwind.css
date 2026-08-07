@@ -213,7 +213,7 @@
 }
 
 /* Non-colour sizing tokens. Deliberately in a plain :root rather than @theme, so they don't
-   regenerate Tailwind's rounded-*/border utility scales. Values inherited from CoreUI's defaults. */
+   regenerate Tailwind's rounded-border utility scales. Values inherited from CoreUI's defaults. */
 :root {
 	--radius: 0.375rem;
 	--radius-sm: 0.25rem;

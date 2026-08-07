@@ -30,7 +30,7 @@ describe('toDateInputValue', () => {
 		expect(toDateInputValue('')).toBe('')
 	})
 
-	it('returns an empty string for an unparseable value', () => {
+	it('returns an empty string for an unparsable value', () => {
 		expect(toDateInputValue('not-a-date')).toBe('')
 	})
 })
