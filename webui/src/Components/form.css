@@ -75,9 +75,16 @@ label.disabled {
 	color: var(--color-text-disabled);
 }
 
+/* Small helper/description text shown beneath a field. */
+.form-text {
+	margin-top: 0.25rem;
+	font-size: 0.875em;
+	color: var(--cui-secondary-color);
+}
+
 /* Shared base for our custom text-style inputs (the number field, and the text inputs via
-   `text-input-field`) so they all match the CoreUI .form-control look without each re-declaring it. Add
-   `form-input` in the markup, then layer the component's own rules on top. */
+   `text-input-field`) so they share one input base rather than each re-declaring it. Add `form-input`
+   in the markup, then layer the component's own rules on top. */
 .form-input {
 	padding: 0.375rem 0.75rem;
 	font-size: 1rem;

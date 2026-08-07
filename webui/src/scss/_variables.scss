@@ -24,12 +24,7 @@ $_private-header-bg: #d50215; // note: this is currently used for $primary as we
 	$btn-font-size: 0.9rem,
 
 	$modal-content-bg: #fff,
-	$table-bg: #fff,
-
-	// $body-bg is #333, but form inputs must be white. Set the input background here (also used for
-	// $input-focus-bg) rather than overriding .form-control after the fact. Uses the same token as our
-	// `form-input` base, for theme-readiness.
-	$input-bg: var(--color-input-bg)
+	$table-bg: #fff
 );
 
 // PART 2:
