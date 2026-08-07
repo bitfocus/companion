@@ -1,4 +1,5 @@
 import { faFacebook, faGithub, faSlack } from '@fortawesome/free-brands-svg-icons'
+import './Sidebar.css'
 import {
 	faArrowsDownToLine,
 	faArrowsUpToLine,

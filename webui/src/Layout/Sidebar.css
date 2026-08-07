@@ -1,71 +1,45 @@
-@use 'sass:color';
-@use 'variables' as *;
-@use 'vendor/coreui/mixins/breakpoints' as *;
-@use 'vendor/coreui/mixins/transition' as *;
+@import '../breakpoints.css';
 
-// Sidebar styles.
-//
-// This file consolidates the parts of CoreUI's sidebar SCSS that we actually use
-// (previously three vendored partials: _sidebar, _sidebar-nav, _sidebar-narrow)
-// together with our own heavy customisations, which used to live further down in
-// this same file.
-//
-// CoreUI defined ~90 `$sidebar-*` variables, each emitted as a `--cui-sidebar-*`
-// CSS custom property, to make every dimension and colour runtime-configurable.
-// We don't want that configurability, so those values have been inlined directly
-// into the rules below. Only the custom properties that are read from elsewhere
-// are kept:
-//   --cui-sidebar-occupy-start        (read by _layout.scss to pad the main content)
-//   --cui-sidebar-narrow-width        (read by the narrow-mode rules)
-//   --cui-sidebar-nav-link-bg / -active-bg / -border-radius / -icon-color / -padding-x
-//                                     (set/overridden by our own rules further down)
-// Theming still flows through --cui-body-color / --cui-tertiary-* / --cui-emphasis-color,
-// which `.sidebar-dark` overrides.
-//
-// Dead CoreUI sidebar features that we never render have been dropped:
-//   .sidebar-end (+ RTL branches), .sidebar-overlaid, the .sidebar-{sm,md,lg,…}
-//   width loop, .sidebar-body, CoreUI's .sidebar-footer, .nav-title, .compact,
-//   .hide, and the inert `.nav-icon-bullet` active/hover/disabled rules (which
-//   referenced undefined `--cui-sidebar-link-*` custom properties in CoreUI).
-
-// A few tweakable dimensions kept named for readability; everything else is inlined.
-$sb-width: 16rem;
-$sb-narrow-width: 4rem;
-$sb-bg: #111;
-
-// =====================================================================
-// CoreUI base (used parts, values inlined)
-// =====================================================================
+/* Sidebar styles. The sidebar's CoreUI dimensions and colours are inlined as fixed values below; only
+   the `--cui-sidebar-*` custom properties read from elsewhere are kept live:
+     --cui-sidebar-occupy-start   read by layout.css to pad the main content
+     --cui-sidebar-narrow-width   read by the narrow-mode rules
+     --cui-sidebar-nav-link-bg / -active-bg / -border-radius / -icon-color / -padding-x
+   Theming flows through --cui-body-color / --cui-tertiary-* / --cui-emphasis-color, which
+   `.sidebar-dark` overrides. */
 
 .sidebar {
 	position: relative;
 	display: flex;
-	flex: 0 0 $sb-width;
+	flex: 0 0 16rem;
 	flex-direction: column;
-	// put the nav on the left
+	/* put the nav on the left */
 	order: -1;
-	width: $sb-width;
+	width: 16rem;
 	color: var(--cui-body-color);
-	background: $sb-bg;
+	background: #111;
 	box-shadow: none;
 	margin-inline-start: 0;
-	@include transition(
+	transition:
 		margin-left 0.15s,
 		margin-right 0.15s,
 		box-shadow 0.075s,
 		transform 0.15s,
 		width 0.15s,
-		z-index 0s ease 0.15s
-	);
+		z-index 0s ease 0.15s;
 
-	@include media-breakpoint-up(lg) {
-		// push sibling content across by our width (consumed by _layout.scss)
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+
+	@media (--bp-lg-up) {
+		/* push sibling content across by our width (consumed by _layout.scss) */
 		&:not(.sidebar-narrow):not(.sidebar-narrow-unfoldable) ~ * {
-			--cui-sidebar-occupy-start: #{$sb-width};
+			--cui-sidebar-occupy-start: 16rem;
 		}
 	}
 
-	@include media-breakpoint-down(lg) {
+	@media (--bp-lg-down) {
 		position: fixed;
 		top: 0;
 		bottom: 0;
@@ -73,25 +47,19 @@ $sb-bg: #111;
 		inset-inline-start: 0;
 
 		&:not(.show) {
-			margin-inline-start: calc(-1 * #{$sb-width});
+			margin-inline-start: calc(-1 * 16rem);
 		}
 	}
 }
 
-// Placeholder so the `@extend`s on `.sidebar-narrow-unfoldable` only pull in these
-// CoreUI base rules — not our own `.sidebar-narrow` customisations further down. (Those
-// used to be a separate SCSS module, which @extend could not reach; consolidating into
-// one file would otherwise widen the extend to them and change the generated selectors.)
-%sidebar-fixed {
+/* Fixed positioning, shared by the standalone .sidebar-fixed and the unfoldable narrow sidebar. */
+.sidebar-fixed,
+.sidebar-narrow-unfoldable {
 	position: fixed;
 	top: 0;
 	bottom: 0;
 	z-index: 1035;
 	inset-inline-start: 0;
-}
-
-.sidebar-fixed {
-	@extend %sidebar-fixed;
 }
 
 .sidebar-brand {
@@ -137,10 +105,14 @@ $sb-bg: #111;
 		background-color: var(--cui-tertiary-color);
 		mask: url("data:image/svg+xml,%0A%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cg xmlns='http://www.w3.org/2000/svg' transform='matrix%28-1 0 0 -1 512 512%29'%3E%3Cpath fill='%23000' d='M472,16H40A24.028,24.028,0,0,0,16,40V200H48V48H464V464H48V304H16V472a24.028,24.028,0,0,0,24,24H472a24.028,24.028,0,0,0,24-24V40A24.028,24.028,0,0,0,472,16Z'/%3E%3Cpolygon fill='%23000' points='209.377 363.306 232.004 385.933 366.627 251.31 232.004 116.687 209.377 139.313 305.374 235.311 16 235.311 16 267.311 305.372 267.311 209.377 363.306'/%3E%3C/g%3E%3C/svg%3E")
 			no-repeat center;
-		@include transition(transform 0.15s);
+		transition: transform 0.15s;
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+		}
 	}
 
-	// Override <a>'s hover style
+	/* Override <a>'s hover style */
 	&:hover {
 		text-decoration: none;
 		&::before {
@@ -158,18 +130,18 @@ $sb-bg: #111;
 		}
 	}
 
-	@include media-breakpoint-down(lg) {
+	@media (--bp-lg-down) {
 		display: none;
 	}
 }
 
-// Backdrop background (mobile overlay)
+/* Backdrop background (mobile overlay) */
 .sidebar-backdrop {
 	--cui-backdrop-zindex: 1034;
 	--cui-backdrop-bg: #080a0c;
 	--cui-backdrop-opacity: 0.5;
 
-	@include media-breakpoint-down(lg) {
+	@media (--bp-lg-down) {
 		position: fixed;
 		top: 0;
 		left: 0;
@@ -187,8 +159,8 @@ $sb-bg: #111;
 	}
 }
 
-// The sidebar is always dark (see Sidebar.tsx). These were CoreUI's dark-theme body values; inlined
-// here now that we no longer vendor _variables-dark / support CoreUI dark mode.
+/* The sidebar is always dark (see Sidebar.tsx). These were CoreUI's dark-theme body values; inlined */
+/* here now that we no longer vendor _variables-dark / support CoreUI dark mode. */
 .sidebar-dark {
 	--cui-body-color: rgba(255, 255, 255, 0.87);
 	--cui-body-bg: #212631;
@@ -199,7 +171,7 @@ $sb-bg: #111;
 	--cui-secondary-bg: #323a49;
 
 	--cui-tertiary-color: rgba(255, 255, 255, 0.38);
-	--cui-tertiary-bg: #{color.mix(#323a49, #212631, 50%)};
+	--cui-tertiary-bg: rgb(41.5, 48, 61);
 
 	--cui-border-color: #323a49;
 
@@ -209,7 +181,7 @@ $sb-bg: #111;
 }
 
 .sidebar-nav {
-	// Kept custom properties (set/overridden by our own rules below):
+	/* Kept custom properties (set/overridden by our own rules below): */
 	--cui-sidebar-nav-link-bg: transparent;
 	--cui-sidebar-nav-link-active-bg: var(--cui-tertiary-bg);
 	--cui-sidebar-nav-link-border-radius: var(--cui-border-radius);
@@ -243,7 +215,14 @@ $sb-bg: #111;
 		background: var(--cui-sidebar-nav-link-bg);
 		border: 0 solid transparent;
 		border-radius: var(--cui-sidebar-nav-link-border-radius);
-		@include transition(background 0.15s ease, color 0.15s ease, gap 0.15s ease);
+		transition:
+			background 0.15s ease,
+			color 0.15s ease,
+			gap 0.15s ease;
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+		}
 
 		&.active {
 			color: var(--cui-emphasis-color);
@@ -308,7 +287,11 @@ $sb-bg: #111;
 		text-align: center;
 		pointer-events: none;
 		fill: currentcolor;
-		@include transition(inherit);
+		transition: inherit;
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+		}
 	}
 
 	.nav-icon-bullet {
@@ -317,24 +300,32 @@ $sb-bg: #111;
 		height: 0.3125rem;
 		background: transparent;
 		border: 1px solid var(--cui-tertiary-color);
-		border-radius: 50rem; // stylelint-disable-line property-disallowed-list
+		border-radius: 50rem; /* stylelint-disable-line property-disallowed-list */
 	}
 
-	// stylelint-disable-next-line selector-no-qualifying-type
+	/* stylelint-disable-next-line selector-no-qualifying-type */
 	svg.nav-icon {
-		overflow: hidden; // fix chrome 105+ width issue
+		overflow: hidden; /* fix chrome 105+ width issue */
 	}
 
 	.nav-group {
 		position: relative;
 		border: 0 solid transparent;
 		border-radius: var(--cui-border-radius);
-		@include transition(background 0.15s ease-in-out);
+		transition: background 0.15s ease-in-out;
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+		}
 
 		.nav-group-items {
 			padding: 0 0;
 			overflow: hidden;
-			@include transition(height 0.15s ease);
+			transition: height 0.15s ease;
+
+			@media (prefers-reduced-motion: reduce) {
+				transition: none;
+			}
 		}
 
 		&:not(.show) .nav-group-items {
@@ -369,7 +360,11 @@ $sb-bg: #111;
 			content: '';
 			background-color: var(--cui-tertiary-color);
 			mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708'/%3e%3c/svg%3e");
-			@include transition(transform 0.15s);
+			transition: transform 0.15s;
+
+			@media (prefers-reduced-motion: reduce) {
+				transition: none;
+			}
 		}
 	}
 
@@ -380,19 +375,20 @@ $sb-bg: #111;
 		.nav-link {
 			padding-inline-start: calc(
 				var(--cui-sidebar-nav-link-padding-x) + 1.25rem + 0.75rem
-			); // stylelint-disable-line function-disallowed-list
+			); /* stylelint-disable-line function-disallowed-list */
 		}
 
 		.nav-icon {
-			margin-inline-start: calc(-1 * (1.25rem + 0.75rem)); // stylelint-disable-line function-disallowed-list
+			margin-inline-start: calc(-1 * (1.25rem + 0.75rem)); /* stylelint-disable-line function-disallowed-list */
 		}
 	}
 }
 
-%sidebar-narrow {
-	--cui-sidebar-narrow-width: #{$sb-narrow-width};
+.sidebar-narrow,
+.sidebar-narrow-unfoldable:not(:hover) {
+	--cui-sidebar-narrow-width: 4rem;
 
-	@include media-breakpoint-up(lg) {
+	@media (--bp-lg-up) {
 		flex: 0 0 var(--cui-sidebar-narrow-width);
 		width: var(--cui-sidebar-narrow-width);
 		padding-bottom: 0.5rem;
@@ -417,14 +413,14 @@ $sb-bg: #111;
 		}
 
 		.nav-icon {
-			flex: 0 0 calc(var(--cui-sidebar-narrow-width) - (0.5rem * 2) - (var(--cui-sidebar-nav-link-padding-x) * 2)); // stylelint-disable-line function-disallowed-list
+			flex: 0 0 calc(var(--cui-sidebar-narrow-width) - (0.5rem * 2) - (var(--cui-sidebar-nav-link-padding-x) * 2)); /* stylelint-disable-line function-disallowed-list */
 		}
 
 		.nav-group-items,
 		.nav-group.show .nav-group-items {
-			height: 0 !important; // stylelint-disable-line declaration-no-important
-			padding: 0 !important; // stylelint-disable-line declaration-no-important
-			margin: 0 !important; // stylelint-disable-line declaration-no-important
+			height: 0 !important; /* stylelint-disable-line declaration-no-important */
+			padding: 0 !important; /* stylelint-disable-line declaration-no-important */
+			margin: 0 !important; /* stylelint-disable-line declaration-no-important */
 			visibility: hidden;
 			opacity: 0;
 		}
@@ -435,20 +431,10 @@ $sb-bg: #111;
 	}
 }
 
-.sidebar-narrow {
-	@extend %sidebar-narrow;
-}
-
 .sidebar-narrow-unfoldable {
-	@extend %sidebar-fixed;
-
-	&:not(:hover) {
-		@extend %sidebar-narrow;
-	}
-
 	&:hover {
 		box-shadow: var(--cui-box-shadow);
-		box-shadow: $box-shadow;
+		box-shadow: 0 0.5rem 1rem rgba(8, 10, 12, 0.15);
 
 		.sidebar-toggler::before {
 			transform: rotate(-180deg);
@@ -458,16 +444,16 @@ $sb-bg: #111;
 
 .sidebar-narrow,
 .sidebar-narrow-unfoldable {
-	@include media-breakpoint-up(lg) {
+	@media (--bp-lg-up) {
 		& ~ * {
-			--cui-sidebar-occupy-start: #{$sb-narrow-width};
+			--cui-sidebar-occupy-start: 4rem;
 		}
 	}
 }
 
-// =====================================================================
-// Companion customisations
-// =====================================================================
+/* ===================================================================== */
+/* Companion customisations */
+/* ===================================================================== */
 
 .sidebar {
 	will-change: contents;
@@ -492,9 +478,9 @@ $sb-bg: #111;
 	}
 
 	.sidebar-header {
-		min-height: calc(4rem + 1px); // stylelint-disable-line function-disallowed-list
+		min-height: calc(4rem + 1px); /* stylelint-disable-line function-disallowed-list */
 
-		background-color: $sidebar-brand-bg;
+		background-color: #a20210;
 		justify-content: left;
 		padding-left: 11px;
 	}
@@ -502,7 +488,7 @@ $sb-bg: #111;
 	.nav-link {
 		--cui-sidebar-nav-link-bg: #191919;
 
-		// note: .nav-group-toggle, below, overrides these three lines.
+		/* note: .nav-group-toggle, below, overrides these three lines. */
 		margin-bottom: 0.15rem;
 		padding-top: 0.7rem;
 		padding-bottom: 0.7rem;
@@ -515,8 +501,8 @@ $sb-bg: #111;
 		.nav-icon-wrapper {
 			width: 32px;
 			min-width: 32px;
-			min-height: calc(var(--cui-body-line-height) * 1em); // so nav-link height doesn't change when we hide the text
-			margin: 0; // let .full-label handle the margin so the icon can be on its own in narrow sidebars
+			min-height: calc(var(--cui-body-line-height) * 1em); /* so nav-link height doesn't change when we hide the text */
+			margin: 0; /* let .full-label handle the margin so the icon can be on its own in narrow sidebars */
 			text-align: center;
 			justify-content: center;
 
@@ -539,10 +525,10 @@ $sb-bg: #111;
 		line-height: calc(var(--cui-body-line-height) * 0.85);
 	}
 
-	// specific mobile-mode overrides for narrow mode. The .show is not necessary but makes the intent clearer.
-	// i.e., .sidebar.show indicates mobile-mode. In all other modes, CUI correctly handles these properties already.
+	/* specific mobile-mode overrides for narrow mode. The .show is not necessary but makes the intent clearer. */
+	/* i.e., .sidebar.show indicates mobile-mode. In all other modes, CUI correctly handles these properties already. */
 	&.sidebar-narrow.show {
-		// CoreUI CSS only allows narrow width for "non-mobile" mode (@media (min-width: 992px)), so make it universal here:
+		/* CoreUI CSS only allows narrow width for "non-mobile" mode (@media (min-width: 992px)), so make it universal here: */
 		width: var(--cui-sidebar-narrow-width);
 
 		.sidebar-brand-narrow {
@@ -553,16 +539,16 @@ $sb-bg: #111;
 		}
 	}
 
-	// note: in .sidebar, .show is present in mobile mode, during which we ignore sidebar-narrow-unfoldable but not sidebar-narrow
+	/* note: in .sidebar, .show is present in mobile mode, during which we ignore sidebar-narrow-unfoldable but not sidebar-narrow */
 	&.sidebar-narrow-unfoldable:not(.show, :hover),
 	&.sidebar-narrow {
-		// when sidebar is narrow hide things including the label and toggler
+		/* when sidebar is narrow hide things including the label and toggler */
 		.nav-group-toggle::after,
 		.full-label {
 			display: none;
 		}
 
-		// if there's a notification, cozy it up to the icon when the sidebar is narrow.
+		/* if there's a notification, cozy it up to the icon when the sidebar is narrow. */
 		.notification-count {
 			margin-left: -0.75rem;
 			margin-top: -0.25rem;
@@ -573,7 +559,7 @@ $sb-bg: #111;
 		}
 	}
 
-	// In unfolding mode (but not narrow- or mobile-mode), hide the context menu when the sidebar folds
+	/* In unfolding mode (but not narrow- or mobile-mode), hide the context menu when the sidebar folds */
 	&.sidebar-narrow-unfoldable:not(.show, :hover, .sidebar-narrow) {
 		.context-menu {
 			display: none;
@@ -595,33 +581,33 @@ $sb-bg: #111;
 		}
 	}
 
-	// Sidebar groups, DOM:
-	//    .nav-group (".show" = when open)
-	//       .nav-link.nav-group-toggle
-	//           .nav-link
-	//       .nav-group-items
+	/* Sidebar groups, DOM: */
+	/*    .nav-group (".show" = when open) */
+	/*       .nav-link.nav-group-toggle */
+	/*           .nav-link */
+	/*       .nav-group-items */
 	.nav-group {
-		// border to include the toggler. A subsequent rule thickens the border for the group items section.
+		/* border to include the toggler. A subsequent rule thickens the border for the group items section. */
 		border-left: 1px solid var(--cui-sidebar-nav-link-icon-color);
-		//border-bottom: 1px solid var(--cui-sidebar-nav-link-icon-color); //optional bottom edge
+		/* border-bottom: 1px solid var(--cui-sidebar-nav-link-icon-color); optional bottom edge */
 
 		> .nav-link > .nav-link {
-			// compensate for the border, so the icons stays centered relative to non-group items
+			/* compensate for the border, so the icons stays centered relative to non-group items */
 			padding-left: calc(var(--cui-sidebar-nav-link-padding-x) - 1px);
 		}
 
 		&.show > .nav-link {
-			// make the toggler "active" when open (this only affects the caret in the "split-button", i.e. label is in a separate div)
+			/* make the toggler "active" when open (this only affects the caret in the "split-button", i.e. label is in a separate div) */
 			background: var(--cui-sidebar-nav-link-active-bg);
 		}
 	}
 
 	.nav-group-toggle {
-		// override the default padding so we don't double-pad: only the nested nav-link is padded (see Sidebar groups, DOM comment, above)
+		/* override the default padding so we don't double-pad: only the nested nav-link is padded (see Sidebar groups, DOM comment, above) */
 		padding: 0;
 
 		&::after {
-			// affects the caret
+			/* affects the caret */
 			margin-left: 16px;
 			margin-right: 16px;
 			background-color: white;
@@ -632,36 +618,36 @@ $sb-bg: #111;
 		}
 	}
 
-	// highlighting for the group-items container (contains all the items excluding the group-toggler line)
-	// we need specificity here to override padding and margin on .nav-group-items when sidebar is narrow (CUI wants them 0)
-	&.sidebar-narrow .nav-group.show .nav-group-items, // override CUI in narrow mode
-	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items, // override CUI
+	/* highlighting for the group-items container (contains all the items excluding the group-toggler line) */
+	/* we need specificity here to override padding and margin on .nav-group-items when sidebar is narrow (CUI wants them 0) */
+	&.sidebar-narrow .nav-group.show .nav-group-items, /* override CUI in narrow mode */
+	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items, /* override CUI */
 	.nav-group-items {
-		// the box underneath and containing the expanded group
-		padding-left: 1px !important; // to separate nested groups
-		border-left: 2px solid var(--cui-sidebar-nav-link-icon-color); // to visually group the items in a group
+		/* the box underneath and containing the expanded group */
+		padding-left: 1px !important; /* to separate nested groups */
+		border-left: 2px solid var(--cui-sidebar-nav-link-icon-color); /* to visually group the items in a group */
 		border-bottom-left-radius: var(--cui-sidebar-nav-link-border-radius);
 	}
 
-	// override CUI so nav-group-items show when sidebar is narrow (CoreUI tries to override these with !important, so we have to as well)
-	&.sidebar-narrow .nav-group.show .nav-group-items, // override CUI so nav-group-items show in narrow mode
+	/* override CUI so nav-group-items show when sidebar is narrow (CoreUI tries to override these with !important, so we have to as well) */
+	&.sidebar-narrow .nav-group.show .nav-group-items, /* override CUI so nav-group-items show in narrow mode */
 	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items {
 		height: auto !important;
-		visibility: visible !important; // !important is not currently necessary on this, but CUI could change it
-		opacity: 1 !important; // !important is not currently necessary on this, but CUI could change it
+		visibility: visible !important; /* !important is not currently necessary on this, but CUI could change it */
+		opacity: 1 !important; /* !important is not currently necessary on this, but CUI could change it */
 
 		.nav-link {
-			// when narrow, remove the default padding set in the next rule.
-			// the borders defined above still provide a bit of offset in this case.
+			/* when narrow, remove the default padding set in the next rule. */
+			/* the borders defined above still provide a bit of offset in this case. */
 			padding-left: 0;
 		}
 	}
 
-	// the individual buttons in a group (overrides something CUI? - spacing is odd when narrow otherwise)
+	/* the individual buttons in a group (overrides something CUI? - spacing is odd when narrow otherwise) */
 	.sidebar-nav .nav-group-items .nav-link {
-		// even though this is the default padding, CUI does something strange to it with `padding-inline-start` so we need to override it here
+		/* even though this is the default padding, CUI does something strange to it with `padding-inline-start` so we need to override it here */
 		padding-left: var(--cui-sidebar-nav-link-padding-x);
-		// smoother transition for icons when expanding the sidebar. The exact number isn't critical.
+		/* smoother transition for icons when expanding the sidebar. The exact number isn't critical. */
 		transition: padding-left 0.1s;
 		justify-content: center;
 
@@ -719,12 +705,12 @@ $sb-bg: #111;
 		}
 	}
 
-	// the scrolling container in the sidebar:
+	/* the scrolling container in the sidebar: */
 	.nav-main-scroller {
 		padding-bottom: 20px;
 	}
 
-	// when the sidebar is narrow, make more space for the contents and let centering create what margins there will be.
+	/* when the sidebar is narrow, make more space for the contents and let centering create what margins there will be. */
 	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-main-scroller,
 	&.sidebar-narrow .nav-main-scroller {
 		scrollbar-width: thin;
