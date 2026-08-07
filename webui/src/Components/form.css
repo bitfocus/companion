@@ -190,19 +190,6 @@ label.disabled {
 	}
 }
 
-/*
-.input-group > .form-control,
-.react-date-picker .input-group > .react-date-picker__wrapper,
-.react-time-picker .input-group > .react-time-picker__wrapper,
-.input-group > .form-select,
-.input-group > .form-floating {
-	position: relative;
-	flex: 1 1 auto;
-	width: 1%;
-	min-width: 0;
-}
-*/
-
 /* Shared chrome for the connection/instance/surface edit and list panels (used across the
    Connections, Instances, Surfaces and Modules features). */
 .edit-connection {
