@@ -1,12 +1,12 @@
 @import '../breakpoints.css';
 
-/* Sidebar styles. The sidebar's CoreUI dimensions and colours are inlined as fixed values below; only
-   the `--cui-sidebar-*` custom properties read from elsewhere are kept live:
-     --cui-sidebar-occupy-start   read by layout.css to pad the main content
-     --cui-sidebar-narrow-width   read by the narrow-mode rules
-     --cui-sidebar-nav-link-bg / -active-bg / -border-radius / -icon-color / -padding-x
-   Theming flows through --cui-body-color / --cui-tertiary-* / --cui-emphasis-color, which
-   `.sidebar-dark` overrides. */
+/* Sidebar styles. The sidebar's dimensions and colours are inlined as fixed values below; the
+   `--sidebar-*` custom properties are our own layout knobs:
+     --sidebar-occupy-start   read by layout.css to pad the main content
+     --sidebar-narrow-width   read by the narrow-mode rules
+     --sidebar-nav-link-bg / -active-bg / -border-radius / -icon-color / -padding-x
+   Theming flows through the theme's --color-text / -text-strong / -text-faint / -surface-subtle
+   tokens, which `.sidebar-dark` overrides with dark values for the sidebar subtree. */
 
 .sidebar {
 	position: relative;
@@ -16,7 +16,7 @@
 	/* put the nav on the left */
 	order: -1;
 	width: 16rem;
-	color: var(--cui-body-color);
+	color: var(--color-text);
 	background: #111;
 	box-shadow: none;
 	margin-inline-start: 0;
@@ -35,7 +35,7 @@
 	@media (--bp-lg-up) {
 		/* push sibling content across by our width (consumed by _layout.scss) */
 		&:not(.sidebar-narrow):not(.sidebar-narrow-unfoldable) ~ * {
-			--cui-sidebar-occupy-start: 16rem;
+			--sidebar-occupy-start: 16rem;
 		}
 	}
 
@@ -63,7 +63,7 @@
 }
 
 .sidebar-brand {
-	color: var(--cui-body-color);
+	color: var(--color-text);
 	white-space: nowrap;
 
 	.sidebar-brand-narrow {
@@ -102,7 +102,7 @@
 		width: 100%;
 		height: 100%;
 		content: '';
-		background-color: var(--cui-tertiary-color);
+		background-color: var(--color-text-faint);
 		mask: url("data:image/svg+xml,%0A%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cg xmlns='http://www.w3.org/2000/svg' transform='matrix%28-1 0 0 -1 512 512%29'%3E%3Cpath fill='%23000' d='M472,16H40A24.028,24.028,0,0,0,16,40V200H48V48H464V464H48V304H16V472a24.028,24.028,0,0,0,24,24H472a24.028,24.028,0,0,0,24-24V40A24.028,24.028,0,0,0,472,16Z'/%3E%3Cpolygon fill='%23000' points='209.377 363.306 232.004 385.933 366.627 251.31 232.004 116.687 209.377 139.313 305.374 235.311 16 235.311 16 267.311 305.372 267.311 209.377 363.306'/%3E%3C/g%3E%3C/svg%3E")
 			no-repeat center;
 		transition: transform 0.15s;
@@ -116,7 +116,7 @@
 	&:hover {
 		text-decoration: none;
 		&::before {
-			background-color: var(--cui-secondary-color);
+			background-color: var(--color-text-muted);
 		}
 	}
 
@@ -126,7 +126,7 @@
 		box-shadow: 0 0 0 0.25rem rgba(213, 2, 21, 0.25);
 
 		&::before {
-			background-color: var(--cui-secondary-color);
+			background-color: var(--color-text-muted);
 		}
 	}
 
@@ -137,56 +137,50 @@
 
 /* Backdrop background (mobile overlay) */
 .sidebar-backdrop {
-	--cui-backdrop-zindex: 1034;
-	--cui-backdrop-bg: #080a0c;
-	--cui-backdrop-opacity: 0.5;
+	--sidebar-backdrop-zindex: 1034;
+	--sidebar-backdrop-bg: #080a0c;
+	--sidebar-backdrop-opacity: 0.5;
 
 	@media (--bp-lg-down) {
 		position: fixed;
 		top: 0;
 		left: 0;
-		z-index: var(--cui-backdrop-zindex);
+		z-index: var(--sidebar-backdrop-zindex);
 		width: 100vw;
 		height: 100vh;
-		background-color: var(--cui-backdrop-bg);
+		background-color: var(--sidebar-backdrop-bg);
 
 		&.fade {
 			opacity: 0;
 		}
 		&.show {
-			opacity: var(--cui-backdrop-opacity);
+			opacity: var(--sidebar-backdrop-opacity);
 		}
 	}
 }
 
-/* The sidebar is always dark (see Sidebar.tsx). These were CoreUI's dark-theme body values; inlined */
-/* here now that we no longer vendor _variables-dark / support CoreUI dark mode. */
+/* The sidebar is always dark (see Sidebar.tsx), so it redefines the theme's text/surface tokens with
+   dark values for its subtree. These were CoreUI's dark-theme body values, kept now that we no longer
+   support a CoreUI dark mode. */
 .sidebar-dark {
-	--cui-body-color: rgba(255, 255, 255, 0.87);
-	--cui-body-bg: #212631;
-
-	--cui-emphasis-color: #fff;
-
-	--cui-secondary-color: rgba(255, 255, 255, 0.6);
-	--cui-secondary-bg: #323a49;
-
-	--cui-tertiary-color: rgba(255, 255, 255, 0.38);
-	--cui-tertiary-bg: rgb(41.5, 48, 61);
-
-	--cui-border-color: #323a49;
+	--color-text: rgba(255, 255, 255, 0.87);
+	--color-text-strong: #fff;
+	--color-text-muted: rgba(255, 255, 255, 0.6);
+	--color-text-faint: rgba(255, 255, 255, 0.38);
+	--color-surface-subtle: rgb(41.5, 48, 61);
 
 	.sidebar-toggler {
-		filter: var(--cui-sidebar-toggler-white-filter);
+		filter: var(--sidebar-toggler-white-filter);
 	}
 }
 
 .sidebar-nav {
 	/* Kept custom properties (set/overridden by our own rules below): */
-	--cui-sidebar-nav-link-bg: transparent;
-	--cui-sidebar-nav-link-active-bg: var(--cui-tertiary-bg);
-	--cui-sidebar-nav-link-border-radius: var(--cui-border-radius);
-	--cui-sidebar-nav-link-icon-color: var(--cui-tertiary-color);
-	--cui-sidebar-nav-link-padding-x: 0.5rem;
+	--sidebar-nav-link-bg: transparent;
+	--sidebar-nav-link-active-bg: var(--color-surface-subtle);
+	--sidebar-nav-link-border-radius: var(--cui-border-radius);
+	--sidebar-nav-link-icon-color: var(--color-text-faint);
+	--sidebar-nav-link-padding-x: 0.5rem;
 
 	position: relative;
 	display: flex;
@@ -208,13 +202,13 @@
 		display: flex;
 		flex: 1;
 		align-items: center;
-		padding: 0.75rem var(--cui-sidebar-nav-link-padding-x);
-		color: var(--cui-body-color);
+		padding: 0.75rem var(--sidebar-nav-link-padding-x);
+		color: var(--color-text);
 		text-decoration: none;
 		white-space: nowrap;
-		background: var(--cui-sidebar-nav-link-bg);
+		background: var(--sidebar-nav-link-bg);
 		border: 0 solid transparent;
-		border-radius: var(--cui-sidebar-nav-link-border-radius);
+		border-radius: var(--sidebar-nav-link-border-radius);
 		transition:
 			background 0.15s ease,
 			color 0.15s ease,
@@ -225,33 +219,33 @@
 		}
 
 		&.active {
-			color: var(--cui-emphasis-color);
-			background: var(--cui-sidebar-nav-link-active-bg);
+			color: var(--color-text-strong);
+			background: var(--sidebar-nav-link-active-bg);
 
 			.nav-icon {
-				color: var(--cui-emphasis-color);
+				color: var(--color-text-strong);
 			}
 		}
 
 		&.disabled {
-			color: var(--cui-tertiary-color);
+			color: var(--color-text-faint);
 			pointer-events: none;
 			cursor: not-allowed;
 			background: transparent;
 
 			.nav-icon {
-				color: var(--cui-tertiary-color);
+				color: var(--color-text-faint);
 			}
 
 			&:hover {
-				color: var(--cui-tertiary-color);
+				color: var(--color-text-faint);
 
 				.nav-icon {
-					color: var(--cui-tertiary-color);
+					color: var(--color-text-faint);
 				}
 
 				&.nav-dropdown-toggle::after {
-					background-color: var(--cui-emphasis-color);
+					background-color: var(--color-text-strong);
 					mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708'/%3e%3c/svg%3e");
 				}
 			}
@@ -259,16 +253,16 @@
 
 		@media (hover: hover), (-ms-high-contrast: none) {
 			&:hover {
-				color: var(--cui-emphasis-color);
+				color: var(--color-text-strong);
 				text-decoration: none;
-				background: var(--cui-tertiary-bg);
+				background: var(--color-surface-subtle);
 
 				.nav-icon {
-					color: var(--cui-body-color);
+					color: var(--color-text);
 				}
 
 				&.nav-group-toggle::after {
-					background-color: var(--cui-emphasis-color);
+					background-color: var(--color-text-strong);
 					mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708'/%3e%3c/svg%3e");
 				}
 			}
@@ -283,7 +277,7 @@
 		height: 1.25rem;
 		margin-inline-end: 0.75rem;
 		font-size: 1.25rem;
-		color: var(--cui-sidebar-nav-link-icon-color);
+		color: var(--sidebar-nav-link-icon-color);
 		text-align: center;
 		pointer-events: none;
 		fill: currentcolor;
@@ -299,7 +293,7 @@
 		width: 0.3125rem;
 		height: 0.3125rem;
 		background: transparent;
-		border: 1px solid var(--cui-tertiary-color);
+		border: 1px solid var(--color-text-faint);
 		border-radius: 50rem; /* stylelint-disable-line property-disallowed-list */
 	}
 
@@ -336,7 +330,7 @@
 			background: transparent;
 
 			.nav-group-toggle {
-				color: var(--cui-body-color);
+				color: var(--color-text);
 			}
 
 			> .nav-group-toggle::after {
@@ -358,7 +352,7 @@
 			height: 12px;
 			margin-inline-start: auto;
 			content: '';
-			background-color: var(--cui-tertiary-color);
+			background-color: var(--color-text-faint);
 			mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708'/%3e%3c/svg%3e");
 			transition: transform 0.15s;
 
@@ -374,7 +368,7 @@
 
 		.nav-link {
 			padding-inline-start: calc(
-				var(--cui-sidebar-nav-link-padding-x) + 1.25rem + 0.75rem
+				var(--sidebar-nav-link-padding-x) + 1.25rem + 0.75rem
 			); /* stylelint-disable-line function-disallowed-list */
 		}
 
@@ -386,11 +380,11 @@
 
 .sidebar-narrow,
 .sidebar-narrow-unfoldable:not(:hover) {
-	--cui-sidebar-narrow-width: 4rem;
+	--sidebar-narrow-width: 4rem;
 
 	@media (--bp-lg-up) {
-		flex: 0 0 var(--cui-sidebar-narrow-width);
-		width: var(--cui-sidebar-narrow-width);
+		flex: 0 0 var(--sidebar-narrow-width);
+		width: var(--sidebar-narrow-width);
 		padding-bottom: 0.5rem;
 		overflow: visible;
 
@@ -413,7 +407,7 @@
 		}
 
 		.nav-icon {
-			flex: 0 0 calc(var(--cui-sidebar-narrow-width) - (0.5rem * 2) - (var(--cui-sidebar-nav-link-padding-x) * 2)); /* stylelint-disable-line function-disallowed-list */
+			flex: 0 0 calc(var(--sidebar-narrow-width) - (0.5rem * 2) - (var(--sidebar-nav-link-padding-x) * 2)); /* stylelint-disable-line function-disallowed-list */
 		}
 
 		.nav-group-items,
@@ -446,7 +440,7 @@
 .sidebar-narrow-unfoldable {
 	@media (--bp-lg-up) {
 		& ~ * {
-			--cui-sidebar-occupy-start: 4rem;
+			--sidebar-occupy-start: 4rem;
 		}
 	}
 }
@@ -486,7 +480,7 @@
 	}
 
 	.nav-link {
-		--cui-sidebar-nav-link-bg: #191919;
+		--sidebar-nav-link-bg: #191919;
 
 		/* note: .nav-group-toggle, below, overrides these three lines. */
 		margin-bottom: 0.15rem;
@@ -529,7 +523,7 @@
 	/* i.e., .sidebar.show indicates mobile-mode. In all other modes, CUI correctly handles these properties already. */
 	&.sidebar-narrow.show {
 		/* CoreUI CSS only allows narrow width for "non-mobile" mode (@media (min-width: 992px)), so make it universal here: */
-		width: var(--cui-sidebar-narrow-width);
+		width: var(--sidebar-narrow-width);
 
 		.sidebar-brand-narrow {
 			display: block;
@@ -588,17 +582,17 @@
 	/*       .nav-group-items */
 	.nav-group {
 		/* border to include the toggler. A subsequent rule thickens the border for the group items section. */
-		border-left: 1px solid var(--cui-sidebar-nav-link-icon-color);
-		/* border-bottom: 1px solid var(--cui-sidebar-nav-link-icon-color); optional bottom edge */
+		border-left: 1px solid var(--sidebar-nav-link-icon-color);
+		/* border-bottom: 1px solid var(--sidebar-nav-link-icon-color); optional bottom edge */
 
 		> .nav-link > .nav-link {
 			/* compensate for the border, so the icons stays centered relative to non-group items */
-			padding-left: calc(var(--cui-sidebar-nav-link-padding-x) - 1px);
+			padding-left: calc(var(--sidebar-nav-link-padding-x) - 1px);
 		}
 
 		&.show > .nav-link {
 			/* make the toggler "active" when open (this only affects the caret in the "split-button", i.e. label is in a separate div) */
-			background: var(--cui-sidebar-nav-link-active-bg);
+			background: var(--sidebar-nav-link-active-bg);
 		}
 	}
 
@@ -625,8 +619,8 @@
 	.nav-group-items {
 		/* the box underneath and containing the expanded group */
 		padding-left: 1px !important; /* to separate nested groups */
-		border-left: 2px solid var(--cui-sidebar-nav-link-icon-color); /* to visually group the items in a group */
-		border-bottom-left-radius: var(--cui-sidebar-nav-link-border-radius);
+		border-left: 2px solid var(--sidebar-nav-link-icon-color); /* to visually group the items in a group */
+		border-bottom-left-radius: var(--sidebar-nav-link-border-radius);
 	}
 
 	/* override CUI so nav-group-items show when sidebar is narrow (CoreUI tries to override these with !important, so we have to as well) */
@@ -646,7 +640,7 @@
 	/* the individual buttons in a group (overrides something CUI? - spacing is odd when narrow otherwise) */
 	.sidebar-nav .nav-group-items .nav-link {
 		/* even though this is the default padding, CUI does something strange to it with `padding-inline-start` so we need to override it here */
-		padding-left: var(--cui-sidebar-nav-link-padding-x);
+		padding-left: var(--sidebar-nav-link-padding-x);
 		/* smoother transition for icons when expanding the sidebar. The exact number isn't critical. */
 		transition: padding-left 0.1s;
 		justify-content: center;
