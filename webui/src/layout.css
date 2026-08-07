@@ -320,7 +320,7 @@ hr.slim {
 	justify-content: center;
 
 	.nav-link {
-		color: var(--cui-gray-600);
+		color: var(--color-text-muted);
 
 		.nav-icon {
 			margin-right: 2px;
