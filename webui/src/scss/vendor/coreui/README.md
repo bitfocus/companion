@@ -18,7 +18,7 @@ delete this directory.
 
 Entry points currently referenced from our SCSS:
 - `variables`, `variables-dark`, `root`, `reboot`, `type`, `containers`,
-  `forms`, `grid`, `tables`, `transitions`, `nav`, `close`, `header`,
+  `forms`, `grid`, `tables`, `transitions`, `close`, `header`,
   `helpers`, `utilities/api`
 - `forms/form-control`
 - `mixins/ltr-rtl`, `mixins/breakpoints`, `mixins/transition`
@@ -28,8 +28,9 @@ Pruned as entirely unused (no matching class rendered anywhere in the webui):
   `input-group`, `validation` — Companion ships its own form components, so
   only `form-control`, `form-check`, `labels` and `form-text` are kept.
 - Helpers: `color-bg`, `colored-links`, `focus-ring`, `icon-link`, `ratio`,
-  `position`, `stacks`, `stretched-link`, `vr` — only `clearfix`,
-  `visually-hidden` and `text-truncation` are kept.
+  `position`, `stacks`, `stretched-link`, `vr`, `text-truncation` — only
+  `clearfix` and `visually-hidden` are kept. (`.text-truncate` was replaced by
+  Tailwind's `.truncate` utility in the markup.)
 - The now-orphaned `mixins/_forms.scss` and `mixins/_focus-ring.scss` (only used
   by the pruned modules) were removed too.
 

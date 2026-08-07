@@ -309,7 +309,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 						</span>
 					) : null}
 				</b>
-				<span className="auto-ellipsis" dangerouslySetInnerHTML={descriptionHtml} />
+				<span className="truncate" dangerouslySetInnerHTML={descriptionHtml} />
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</div>
 			<div className="action-buttons w-auto">

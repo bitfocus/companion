@@ -50,7 +50,7 @@ export const SidebarFooter = observer(function SidebarFooter({ onContextMenu }: 
 					</span>
 				)}
 
-				<span className="flex-fill text-truncate">
+				<span className="flex-fill truncate">
 					<span className="version">{versionName || 'Unknown'}</span>
 					{/* <br /> */}
 					<span className="version-sub">{versionSubheading}</span>

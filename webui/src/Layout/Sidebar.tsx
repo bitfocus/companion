@@ -147,7 +147,7 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 				)}
 			</span>
 
-			<span className="flex-fill text-truncate full-label">
+			<span className="flex-fill truncate full-label">
 				<span>{item.name}</span>
 				{!!item.subheading && (
 					<>

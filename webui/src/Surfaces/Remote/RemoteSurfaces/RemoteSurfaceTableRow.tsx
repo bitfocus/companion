@@ -74,7 +74,7 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 				style={{ minWidth: 0 }}
 			>
 				<b>{remoteConnection.displayName}</b>
-				<span className="auto-ellipsis" title={surfaceInstanceDisplayName}>
+				<span className="truncate" title={surfaceInstanceDisplayName}>
 					{surfaceInstanceDisplayName}
 				</span>
 			</div>

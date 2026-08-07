@@ -88,7 +88,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 		<div className="flex flex-row align-items-center gap-2 hand" title={`Click to configure the ${moduleDisplayName}.`}>
 			<div onClick={doEdit} className="flex flex-column grow" style={{ minWidth: 0 }}>
 				<b>{instance.label}</b>
-				<span className="auto-ellipsis">{moduleDisplayName}</span>
+				<span className="truncate">{moduleDisplayName}</span>
 			</div>
 
 			<div onClick={doEdit} className="no-break">
