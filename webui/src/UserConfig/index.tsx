@@ -15,7 +15,7 @@ export function SettingsSelectPage(): React.JSX.Element {
 						<h4>Settings</h4>
 					</div>
 				</div>
-				<div className="h-fit-content">
+				<div className="h-fit">
 					<Grid.Row>
 						<SettingsLinkCard label="General" to="/settings/general" icon={faCog} />
 						<SettingsLinkCard label="Buttons" to="/settings/buttons" icon={faTh} />

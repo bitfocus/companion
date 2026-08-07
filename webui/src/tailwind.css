@@ -5,6 +5,14 @@
 @import 'tailwindcss/utilities.css' layer(utilities);
 
 @theme static {
+	/* Align Tailwind's responsive breakpoints with the CoreUI grid breakpoints we use everywhere else
+	   (mirrored by the @custom-media in breakpoints.css), so `sm:`/`lg:`/… match `@media (--bp-*)`. */
+	--breakpoint-sm: 576px;
+	--breakpoint-md: 768px;
+	--breakpoint-lg: 992px;
+	--breakpoint-xl: 1200px;
+	--breakpoint-2xl: 1400px;
+
 	--color-primary: #d50215;
 	--color-secondary: #ccc;
 	--color-success: #1b9e3e;

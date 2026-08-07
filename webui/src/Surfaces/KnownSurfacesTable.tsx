@@ -296,7 +296,7 @@ const SurfaceRow = observer(function SurfaceRow({
 			</div>
 			<div className="grid-cell">
 				{surface.isConnected ? (
-					<ButtonGroup className="no-break">
+					<ButtonGroup className="whitespace-nowrap">
 						{surface.integrationType === 'emulator' && (
 							<>
 								<LinkButtonExternal

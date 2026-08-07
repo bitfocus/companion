@@ -150,7 +150,7 @@ function SurfaceInstancesListTableHeading() {
 	return (
 		<div className="flex flex-row">
 			<div className="grow">Surface Integrations </div>
-			<div className="no-break">
+			<div className="whitespace-nowrap">
 				<ButtonGroup className="table-header-buttons">
 					<VisibilityButton {...visibleInstances} keyId="disabled" color="secondary" label="Disabled" />
 					<VisibilityButton {...visibleInstances} keyId="ok" color="success" label="OK" />
