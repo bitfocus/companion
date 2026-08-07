@@ -217,15 +217,6 @@ code {
 	}
 }
 
-// CoreUI's $input-bg is var(--cui-body-bg), which is #333 here, so force form inputs back to white.
-// Our own text inputs no longer need this — they use the `form-input` base (Components/form.css) — but
-// the date/time pickers (excluded from the CSS migration) still `@extend .form-control`. Drop this
-// once they are migrated off `.form-control`.
-.form-control,
-.form-control:focus {
-	background-color: #fff;
-}
-
 .float-right {
 	float: right;
 }
