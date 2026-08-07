@@ -94,8 +94,8 @@ label.disabled {
 	appearance: none;
 	background-color: var(--color-input-bg);
 	background-clip: padding-box;
-	border: var(--cui-border-width) solid var(--color-border);
-	border-radius: var(--cui-border-radius);
+	border: var(--border-width) solid var(--color-border);
+	border-radius: var(--radius);
 	transition:
 		border-color 0.15s ease-in-out,
 		box-shadow 0.15s ease-in-out;
@@ -163,8 +163,8 @@ label.disabled {
 		text-align: center;
 		white-space: nowrap;
 		background-color: var(--color-surface-subtle);
-		border: var(--cui-border-width) solid var(--color-border);
-		border-radius: var(--cui-border-radius);
+		border: var(--border-width) solid var(--color-border);
+		border-radius: var(--radius);
 	}
 
 	> :focus {

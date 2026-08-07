@@ -17,7 +17,7 @@
 	width: 22px;
 	height: 22px;
 	vertical-align: top;
-	border: var(--cui-border-width) solid var(--color-border-strong);
+	border: var(--border-width) solid var(--color-border-strong);
 	border-radius: 0.25em;
 
 	&:active {

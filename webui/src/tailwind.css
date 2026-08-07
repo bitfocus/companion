@@ -185,6 +185,15 @@
 	--variable-pill-padding: 1px 3px 0px;
 }
 
+/* Non-colour sizing tokens. Deliberately in a plain :root rather than @theme, so they don't
+   regenerate Tailwind's rounded-*/border utility scales. Values inherited from CoreUI's defaults. */
+:root {
+	--radius: 0.375rem;
+	--radius-sm: 0.25rem;
+	--radius-lg: 0.5rem;
+	--border-width: 1px;
+}
+
 @source '../index.html';
 @source './**/*.{ts,tsx}';
 @source not './**/*.{test,spec}.{ts,tsx}';

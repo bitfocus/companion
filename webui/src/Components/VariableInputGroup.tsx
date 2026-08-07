@@ -120,7 +120,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ id, value, setV
 				style={{
 					boxShadow: isEditing && !disabled ? 'rgba(213, 2, 21, 0.25) 0px 0px 0px 0.25rem' : 'none',
 					transition: 'box-shadow 0.15s ease-in-out',
-					borderRadius: 'var(--cui-border-radius)',
+					borderRadius: 'var(--radius)',
 					outline: 'none',
 					marginBottom: '0.5rem',
 				}}

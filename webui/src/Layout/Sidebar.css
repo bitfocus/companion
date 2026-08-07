@@ -178,7 +178,7 @@
 	/* Kept custom properties (set/overridden by our own rules below): */
 	--sidebar-nav-link-bg: transparent;
 	--sidebar-nav-link-active-bg: var(--color-surface-subtle);
-	--sidebar-nav-link-border-radius: var(--cui-border-radius);
+	--sidebar-nav-link-border-radius: var(--radius);
 	--sidebar-nav-link-icon-color: var(--color-text-faint);
 	--sidebar-nav-link-padding-x: 0.5rem;
 
@@ -305,7 +305,7 @@
 	.nav-group {
 		position: relative;
 		border: 0 solid transparent;
-		border-radius: var(--cui-border-radius);
+		border-radius: var(--radius);
 		transition: background 0.15s ease-in-out;
 
 		@media (prefers-reduced-motion: reduce) {
@@ -495,7 +495,7 @@
 		.nav-icon-wrapper {
 			width: 32px;
 			min-width: 32px;
-			min-height: calc(var(--cui-body-line-height) * 1em); /* so nav-link height doesn't change when we hide the text */
+			min-height: calc(1.5 * 1em); /* so nav-link height doesn't change when we hide the text */
 			margin: 0; /* let .full-label handle the margin so the icon can be on its own in narrow sidebars */
 			text-align: center;
 			justify-content: center;
@@ -516,7 +516,7 @@
 		padding-top: 0.5rem;
 		padding-bottom: 0.5rem;
 
-		line-height: calc(var(--cui-body-line-height) * 0.85);
+		line-height: calc(1.5 * 0.85);
 	}
 
 	/* specific mobile-mode overrides for narrow mode. The .show is not necessary but makes the intent clearer. */

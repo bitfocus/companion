@@ -5,8 +5,8 @@
 	--alert-elm-margin-bottom: 1rem;
 	--alert-elm-color: inherit;
 	--alert-elm-border-color: transparent;
-	--alert-elm-border: var(--cui-border-width) solid var(--alert-elm-border-color);
-	--alert-elm-border-radius: var(--cui-border-radius);
+	--alert-elm-border: var(--border-width) solid var(--alert-elm-border-color);
+	--alert-elm-border-radius: var(--radius);
 	--alert-elm-link-color: inherit;
 	position: relative;
 	padding: var(--alert-elm-padding-y) var(--alert-elm-padding-x);

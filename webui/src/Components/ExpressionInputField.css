@@ -71,7 +71,7 @@
 
 	flex-grow: 1;
 
-	border: var(--cui-border-width) solid var(--color-border);
+	border: var(--border-width) solid var(--color-border);
 	transition:
 		border-color 0.15s ease-in-out,
 		box-shadow 0.15s ease-in-out;
