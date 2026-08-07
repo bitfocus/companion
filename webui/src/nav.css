@@ -1,0 +1,50 @@
+/* Base nav container and links, converted from the vendored CoreUI nav.
+   (The no-op font-size/font-weight declarations, which referenced undefined/empty custom properties,
+   were dropped.) */
+.nav {
+	--cui-nav-link-padding-x: 1rem;
+	--cui-nav-link-padding-y: 0.5rem;
+	--cui-nav-link-color: var(--cui-link-color);
+	--cui-nav-link-hover-color: var(--cui-link-hover-color);
+	--cui-nav-link-disabled-color: var(--cui-secondary-color);
+
+	display: flex;
+	flex-wrap: wrap;
+	padding-inline-start: 0;
+	margin-bottom: 0;
+	list-style: none;
+}
+
+.nav-link {
+	display: block;
+	padding: var(--cui-nav-link-padding-y) var(--cui-nav-link-padding-x);
+	color: var(--cui-nav-link-color);
+	text-decoration: none;
+	background: none;
+	border: 0;
+	transition:
+		color 0.15s ease-in-out,
+		background-color 0.15s ease-in-out,
+		border-color 0.15s ease-in-out;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+
+	&:hover,
+	&:focus {
+		color: var(--cui-nav-link-hover-color);
+	}
+
+	&:focus-visible {
+		outline: 0;
+		box-shadow: 0 0 0 0.25rem var(--color-focus-ring);
+	}
+
+	&.disabled,
+	&:disabled {
+		color: var(--cui-nav-link-disabled-color);
+		pointer-events: none;
+		cursor: default;
+	}
+}
