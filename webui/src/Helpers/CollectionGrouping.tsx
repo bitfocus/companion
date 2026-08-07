@@ -13,7 +13,7 @@ import type { DropdownChoiceGroup } from '~/Components/DropdownChoices.js'
  * @param ungroupedLabel - Label for the ungrouped items group (default: "Ungrouped")
  * @returns Array of DropdownChoiceGroups, or flat array if no groups exist
  */
-export function groupItemsByCollection<TItem extends { collectionId: string | null, sortOrder?: number }>(
+export function groupItemsByCollection<TItem extends { collectionId: string | null; sortOrder?: number }>(
 	rootCollections: CollectionBase<any>[],
 	items: TItem[],
 	getItemChoice: (item: TItem) => DropdownChoice,
