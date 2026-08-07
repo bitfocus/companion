@@ -9,28 +9,27 @@ the entry points we `@use`/`@forward` (and their transitive dependencies) were
 copied; the internal relative imports are unchanged.
 
 This is **not** the full CoreUI SCSS: sub-modules that produced no CSS the app
-actually uses have been pruned (see below). Because of that pruning, the two
-aggregators `_forms.scss` and `_helpers.scss` are the only files that diverge
-from upstream — they now `@forward` a reduced list. Everything else is a
-byte-identical upstream copy; **do not hand-edit those.** The eventual aim is to
-replace every rule here with first-party SCSS under `webui/src/scss/` and then
-delete this directory.
+actually uses have been pruned (see below). App.scss `@forward`s only the reduced
+set below; every vendored file is a byte-identical upstream copy — **do not
+hand-edit those.** The eventual aim is to replace every rule here with
+first-party CSS/SCSS under `webui/src/` and then delete this directory.
 
-Entry points currently referenced from our SCSS:
-- `variables`, `variables-dark`, `root`, `reboot`, `type`, `containers`,
-  `grid`, `tables`, `transitions`, `close`, `header`,
-  `helpers`, `utilities/api`
-- `mixins/ltr-rtl`, `mixins/breakpoints`
+Entry points still forwarded from App.scss (plus `variables`, used by
+`scss/_variables.scss`):
+- `root`, `reboot`, `type`, `containers`, `grid`, `utilities/api`
+- everything else reachable is a transitive dependency of those (`maps`,
+  `functions/*`, `mixins/*`, `vendor/rfs`)
 
 Pruned as entirely unused (no matching class rendered anywhere in the webui):
 - Forms: the whole `forms` module is gone — `.form-control` was replaced by our
   own `form-input` (Components/form.css) and `.form-text` was adopted there too;
   `chip-input`, `form-select`, `form-range`, `floating-labels`, `input-group`,
   `validation`, `form-check` and `labels` were never used.
-- Helpers: `color-bg`, `colored-links`, `focus-ring`, `icon-link`, `ratio`,
-  `position`, `stacks`, `stretched-link`, `vr`, `text-truncation` — only
-  `clearfix` and `visually-hidden` are kept. (`.text-truncate` was replaced by
-  Tailwind's `.truncate` utility in the markup.)
+- Helpers: the whole `helpers` module is gone. `.text-truncate` and
+  `.visually-hidden` were replaced by Tailwind's `.truncate` / `.sr-only`, and
+  `.clearfix` moved to Components/App.css; `color-bg`, `colored-links`,
+  `focus-ring`, `icon-link`, `ratio`, `position`, `stacks`, `stretched-link` and
+  `vr` were never used.
 - The now-orphaned `mixins/_forms.scss` and `mixins/_focus-ring.scss` (only used
   by the pruned modules) were removed too — as were `mixins/_transition.scss`,
   `mixins/_box-shadow.scss`, `mixins/_gradients.scss` and
