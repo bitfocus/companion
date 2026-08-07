@@ -1,4 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
+// This still emits the vendored CoreUI/Bootstrap grid classes (.row / .col-N / offset / order /
+// .container). Migrating to a Tailwind-native grid is deliberately deferred to a future reskin — pure
+// Tailwind can't express the 12-column grid cleanly (flex+gap wraps, CSS-grid can't do col-auto), and
+// there are 600+ call-sites. See scss/vendor/coreui/README.md.
 import classNames from 'classnames'
 import { forwardRef, type HTMLAttributes } from 'react'
 

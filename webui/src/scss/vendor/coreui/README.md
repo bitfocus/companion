@@ -41,6 +41,17 @@ The compiled CSS shrank by ~28 KB with these removals. Structural forwards
 (`grid`, `utilities/api`, …) still generate far more classes than the app uses,
 but those are Bootstrap-style config-driven and were left intact.
 
+`grid` and `containers` are **deliberately deferred** — do NOT convert them in
+isolation. Bootstrap's 12-column grid cannot be expressed cleanly in Tailwind:
+flex + `w-N/12` + `gap` wraps (percentage widths + gap exceed 100%); CSS grid +
+`gap` fixes that but can't reproduce `col-auto` content-width columns; and a
+faithful flex grid needs Bootstrap's `--gutter` variable + column padding, i.e.
+re-implementing Bootstrap rather than using Tailwind utilities. With 600+
+`Grid.Row`/`Grid.Col` call-sites, the right time to move to a Tailwind-native
+grid is during a reskin that is already reworking layouts — porting each layout
+to the new grid should be a requirement of that work. `containers` goes with it
+(container max-widths key off the grid breakpoints).
+
 The **sidebar** is no longer vendored here: CoreUI's `_sidebar`, `sidebar/*`
 partials were consolidated into our own `webui/src/scss/_sidebar.scss` (which
 already carried heavy customisations), with the ~90 sidebar configuration
