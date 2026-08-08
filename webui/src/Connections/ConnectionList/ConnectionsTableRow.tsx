@@ -1,4 +1,4 @@
-import { faDollarSign } from '@fortawesome/free-solid-svg-icons'
+import { faClone, faDollarSign } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
@@ -23,7 +23,17 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	const id = connection.id
 
 	const deleteMutation = useMutationExt(trpc.instances.connections.delete.mutationOptions())
+	const duplicateMutation = useMutationExt(trpc.instances.connections.duplicate.mutationOptions())
 	const setEnabledMutation = useMutationExt(trpc.instances.connections.setEnabled.mutationOptions())
+
+	const doDuplicate = useCallback(() => {
+		duplicateMutation
+			.mutateAsync({ connectionId: id })
+			.then((connectionId) => configureConnection(connectionId))
+			.catch((e) => {
+				console.error('Duplicate failed', e)
+			})
+	}, [duplicateMutation, id, configureConnection])
 
 	const doDelete = useCallback(() => {
 		deleteModalRef.current?.show(
@@ -62,14 +72,20 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			instance={connection}
 			instanceStatus={connection.status}
 			extraMenuItems={
-				<Popover.Item
-					onClick={doShowVariables}
-					title="Variables"
-					disabled={!isEnabled || !(connectionVariables && connectionVariables.size > 0)}
-				>
-					<FontAwesomeIcon icon={faDollarSign} className="me-2" />
-					Variables
-				</Popover.Item>
+				<>
+					<Popover.Item onClick={doDuplicate} title="Duplicate">
+						<FontAwesomeIcon icon={faClone} className="me-2" />
+						Duplicate
+					</Popover.Item>
+					<Popover.Item
+						onClick={doShowVariables}
+						title="Variables"
+						disabled={!isEnabled || !(connectionVariables && connectionVariables.size > 0)}
+					>
+						<FontAwesomeIcon icon={faDollarSign} className="me-2" />
+						Variables
+					</Popover.Item>
+				</>
 			}
 			labelStr="connection"
 			doDelete={doDelete}
