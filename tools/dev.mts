@@ -30,7 +30,7 @@ const repoRoot = path.join(import.meta.dirname, '..')
 let node: ChildProcess | null = null
 const nodeArgs: string[] = []
 
-const rawDevModulesPath = process.env.COMPANION_DEV_MODULES || argv['extra-module-path']
+const rawDevModulesPath = process.env.COMPANION_DEV_MODULES || argv['extra-module-path'] || './module-local-dev'
 const devModulesPath = rawDevModulesPath ? path.resolve(repoRoot, rawDevModulesPath) : undefined
 
 if (devModulesPath) {
