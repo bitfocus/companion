@@ -46,7 +46,8 @@ export const SimpleDropdownInputField = observer(function SimpleDropdownInputFie
 
 	const onChange = useCallback(
 		(v: DropdownChoiceId | null) => {
-			setValue(v as DropdownChoiceId)
+			// Base UI can emit null (e.g. deselect, or value={null} after choices become empty) — ignore it
+			if (v !== null) setValue(v)
 		},
 		[setValue]
 	)
