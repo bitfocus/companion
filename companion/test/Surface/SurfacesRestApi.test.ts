@@ -146,6 +146,17 @@ describe('Surfaces REST API', () => {
 			expect(res.body.data[0].page).toBeNull()
 		})
 
+		test('returns a null page name when the page is no longer in the page list', async () => {
+			const service = createService()
+			service.surfaceController.getDevicesList.mockReturnValue(createDevicesList())
+			service.pageStore.getPageNumber.mockReturnValue(null)
+
+			const res = await supertest(service.app).get(SURFACES_PATH).set('Authorization', `Bearer ${tokens.read}`).send()
+
+			expect(res.status).toBe(200)
+			expect(res.body.data[0].page).toEqual({ id: 'page-id-1', number: null, name: null })
+		})
+
 		test('returns 401 without a token', async () => {
 			const service = createService()
 

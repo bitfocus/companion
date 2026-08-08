@@ -28,7 +28,7 @@ const SurfacePageSchema = z.object({
 		.nullable()
 		.describe('Position of the page in the page list, or null if the page is no longer in the list.')
 		.meta({ example: 1 }),
-	name: z.string().describe('Display name of the page.').meta({ example: 'Main' }),
+	name: z.string().nullable().describe('Display name of the page.').meta({ example: 'Main' }),
 })
 
 /** Schema for the grid size of a surface */
@@ -71,7 +71,7 @@ const SurfaceResponseSchema = z
 		brightness: z
 			.number()
 			.nullable()
-			.describe('Brightness of the surface in percent, or null if the surface has no brightness control.')
+			.describe('Brightness of the surface in percent, or null if it is not set in the surface config.')
 			.meta({ example: 80 }),
 		page: SurfacePageSchema.nullable().describe(
 			'Page the surface is currently showing, or null if it is not showing one.'
@@ -242,7 +242,7 @@ function buildSurfacePage(
 	return {
 		id: pageId,
 		number,
-		name: (number !== null ? pageStore.getPageName(number) : undefined) ?? '',
+		name: (number !== null ? pageStore.getPageName(number) : undefined) ?? null,
 	}
 }
 
