@@ -20,3 +20,4 @@ webui/public/_deps
 webui/public/whatsnew
 docs/.docusaurus/
 launcher/assets/*.icon/
+launcher-ui/src/shadcn-tailwind.css
