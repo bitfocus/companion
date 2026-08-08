@@ -55,7 +55,7 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 })
 
 function useInstanceEditPanelService(
-	confirmModalRef: React.RefObject<GenericConfirmModalRef>,
+	confirmModalRef: React.RefObject<GenericConfirmModalRef | null>,
 	instanceId: string
 ): InstanceEditPanelService<ClientConnectionConfig> {
 	const navigate = useNavigate({ from: `/connections/$connectionId` })

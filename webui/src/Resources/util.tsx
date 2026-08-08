@@ -62,7 +62,7 @@ export function useDebounced<T>(value: T, delayMs: number): T {
  * Slight modification of useClickoutside from usehooks-ts, which expects an array of refs to check
  */
 export function useOnClickOutsideExt(
-	refs: React.RefObject<HTMLElement>[],
+	refs: React.RefObject<HTMLElement | null>[],
 	handler: (e: MouseEvent) => void,
 	mouseEvent: 'mousedown' | 'mouseup' = 'mousedown'
 ): void {

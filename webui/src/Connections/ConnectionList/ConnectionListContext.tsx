@@ -7,7 +7,7 @@ import type { VisibleConnectionsState } from './ConnectionList.js'
 export interface ConnectionListContextType {
 	visibleConnections: TableVisibilityHelper<VisibleConnectionsState>
 	showVariables: (label: string) => void
-	deleteModalRef: RefObject<GenericConfirmModalRef>
+	deleteModalRef: RefObject<GenericConfirmModalRef | null>
 	configureConnection: (connectionId: string | null) => void
 }
 

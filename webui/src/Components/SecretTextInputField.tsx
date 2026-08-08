@@ -48,7 +48,7 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 		[storeValue]
 	)
 
-	const currentValueRef = useRef<string>()
+	const currentValueRef = useRef<string>(value ?? '')
 	currentValueRef.current = value ?? ''
 	const focusStoreValue = useCallback(() => {
 		if (!immediateValue) setTmpValue(currentValueRef.current ?? '')

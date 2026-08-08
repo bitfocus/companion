@@ -62,7 +62,7 @@ export function TextInputFieldSimple({
 	const [cursorPosition, setCursorPosition] = useState<number | null>(null)
 	const [focusedIndex, setFocusedIndex] = useState(0)
 
-	const currentValueRef = useRef<string>()
+	const currentValueRef = useRef<string>(value ?? '')
 	currentValueRef.current = value ?? ''
 
 	const storeValue = useCallback(
@@ -105,10 +105,10 @@ export function TextInputFieldSimple({
 		setFocusedIndex(0)
 	}, [searchValue])
 
-	const valueRef = useRef<string>()
+	const valueRef = useRef<string>(showValue)
 	valueRef.current = showValue
 
-	const cursorPositionRef = useRef<number | null>()
+	const cursorPositionRef = useRef<number | null>(cursorPosition)
 	cursorPositionRef.current = cursorPosition
 
 	const inputRef = useRef<HTMLInputElement | null>(null)

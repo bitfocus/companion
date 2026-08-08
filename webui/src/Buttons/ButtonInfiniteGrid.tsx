@@ -116,7 +116,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		}, [scrollerRef, minColumn, minRow, tileSize])
 
 		// Make the scroll position sticky when zooming
-		const tmpScrollerPosition = useRef<{ left: number; top: number }>()
+		const tmpScrollerPosition = useRef<{ left: number; top: number }>({ left: 0, top: 0 })
 		useEffect(() => {
 			if (!scrollerRef) return
 			const scrollerRef2 = scrollerRef

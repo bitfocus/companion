@@ -23,8 +23,8 @@ export const RootAppStoreContext = createContext<RootAppStore>(null as any) // T
 
 export interface RootAppStore {
 	readonly notifier: NotificationsManagerRef
-	readonly helpViewer: React.RefObject<HelpModalRef> // TODO - this is not good
-	readonly whatsNewModal: React.RefObject<WhatsNewModalRef> // TODO - this is not good
+	readonly helpViewer: React.RefObject<HelpModalRef | null> // TODO - this is not good
+	readonly whatsNewModal: React.RefObject<WhatsNewModalRef | null> // TODO - this is not good
 
 	readonly modules: ModuleInfoStore
 

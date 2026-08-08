@@ -38,7 +38,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 	runtimeProps: Record<string, any> | false
 	location: ControlLocation
 }) {
-	const configRef = useRef<SomeButtonModel>()
+	const configRef = useRef<SomeButtonModel>(config || undefined)
 	configRef.current = config || undefined // update the ref every render
 
 	const [styleStore] = useState(() => {

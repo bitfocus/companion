@@ -91,7 +91,7 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 })
 
 interface EditButtonContentProps {
-	resetModalRef: React.RefObject<GenericConfirmModalRef>
+	resetModalRef: React.RefObject<GenericConfirmModalRef | null>
 	controlId: string
 	location: ControlLocation
 	previewImage: string | null
