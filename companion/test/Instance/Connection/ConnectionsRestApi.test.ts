@@ -12,6 +12,7 @@ import type { InstanceConfigStore } from '../../../lib/Instance/ConfigStore.js'
 import { ConnectionCreateBodySchema } from '../../../lib/Instance/Connection/ConnectionsRestApi.js'
 import type { InstanceController } from '../../../lib/Instance/Controller.js'
 import { createInstanceRestApiRouter } from '../../../lib/Instance/RestApi.js'
+import type { Logger } from '../../../lib/Log/Controller.js'
 import type { Registry } from '../../../lib/Registry.js'
 import { REST_API_BASE_PATH } from '../../../lib/Service/RestApi/constants.js'
 import { createRestApiRouter } from '../../../lib/Service/RestApi/RestApiRouter.js'
@@ -50,9 +51,12 @@ type TestService = {
 function createTestRegistry(instanceController: InstanceController, configStore: InstanceConfigStore): Registry {
 	return {
 		instance: {
-			createRestApiRouter: (logger) => createInstanceRestApiRouter(logger, instanceController, configStore),
+			createRestApiRouter: (logger: Logger) => createInstanceRestApiRouter(logger, instanceController, configStore),
 		},
-	} as Registry
+		surfaces: {
+			createRestApiRouter: () => express.Router(),
+		},
+	} as unknown as Registry
 }
 
 function createService(): TestService {

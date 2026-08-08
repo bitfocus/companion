@@ -34,6 +34,7 @@ export function createRestApiRouter(
 	// Mount resource routers — each versioned independently
 	router.use(createAuthMiddleware(logger, tokenStore))
 	router.use(registry.instance.createRestApiRouter(logger))
+	router.use(registry.surfaces.createRestApiRouter(logger))
 
 	// Do not allow unknown v2 routes to fall through into the legacy /api router.
 	router.use((_req, _res, next) => next(RestApiError.notFound()))
