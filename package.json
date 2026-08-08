@@ -93,6 +93,7 @@
     "bare-path": "npm:empty-npm-package@1.0.0",
     "@types/express-serve-static-core": "^5.1.0",
     "node-gyp": "^12.3.0",
+    "serialize-javascript": "^7.0.3",
     "monaco-editor/dompurify": "npm:dompurify@^3.3.3",
     "webpack-bundle-analyzer": "^5.0.0",
     "@companion-surface/base": "1.4.0-nightly-main-20260802-210833-c2d781c",

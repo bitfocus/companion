@@ -128,7 +128,7 @@ function start() {
 			COMPANION_DEV_MODULES_PATH: devModulesPath ?? '',
 			COMPANION_DEV_THREAD_DIR: devThreadOutDir,
 		},
-	})`tsx watch --clear-screen=false --include ${threadBundleGlob} ${nodeArgs} lib/main-dev.ts ${process.argv.slice(3)}`
+	})`tsx watch --clear-screen=false --include ${threadBundleGlob} ${nodeArgs} lib/main-dev.ts ${process.argv.slice(2)}`
 
 	node = proc.child ?? null
 
