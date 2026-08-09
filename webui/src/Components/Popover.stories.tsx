@@ -78,7 +78,7 @@ export const WithArrow: Story = {
 export const WithArrowTop: Story = {
 	args: { defaultOpen: true },
 	decorators: [
-		(Story: () => JSX.Element): JSX.Element => (
+		(Story: () => React.JSX.Element): React.JSX.Element => (
 			<div style={{ padding: 80, paddingTop: 160, display: 'flex', justifyContent: 'center' }}>
 				<Story />
 			</div>
@@ -99,7 +99,7 @@ export const WithArrowTop: Story = {
 export const SideRight: Story = {
 	args: { defaultOpen: true },
 	decorators: [
-		(Story: () => JSX.Element): JSX.Element => (
+		(Story: () => React.JSX.Element): React.JSX.Element => (
 			<div style={{ padding: 80, display: 'flex', justifyContent: 'flex-start' }}>
 				<Story />
 			</div>

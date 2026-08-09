@@ -9,7 +9,7 @@ interface ImageThumbnailProps {
 	onClick: () => void
 }
 
-export function ImageThumbnail({ image, selected, onClick }: ImageThumbnailProps): JSX.Element {
+export function ImageThumbnail({ image, selected, onClick }: ImageThumbnailProps): React.JSX.Element {
 	const onKeyDown = useCallback(
 		(e: React.KeyboardEvent) => {
 			if (e.key === 'Enter' || e.key === ' ') {

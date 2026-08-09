@@ -67,11 +67,11 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 		(p) => storeModulesOfTypeCount === 0 || !!p.installedInfo || typeFilter.visibility.available
 	)
 
-	let candidates: JSX.Element[] = []
+	let candidates: React.JSX.Element[] = []
 	try {
 		const searchResults = filterProducts(typeProducts, filter, false)
 
-		const candidatesObj: Record<string, JSX.Element> = {}
+		const candidatesObj: Record<string, React.JSX.Element> = {}
 		for (const moduleInfo of searchResults) {
 			candidatesObj[moduleInfo.name] = (
 				<AddInstanceEntry key={moduleInfo.name} moduleInfo={moduleInfo} addInstance={addInstance} />

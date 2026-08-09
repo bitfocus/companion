@@ -38,7 +38,7 @@ export function Spinner({
 	visuallyHiddenLabel = 'Loading...',
 	style,
 	...props
-}: SpinnerProps): JSX.Element {
+}: SpinnerProps): React.JSX.Element {
 	const Component = as ?? 'div'
 	const resolvedColor = resolveSpinnerColor(color)
 

@@ -11,7 +11,7 @@ export const InlineHelpCustom = ({
 	help: string | React.ReactNode
 	children: React.ReactNode
 	className?: string
-}): JSX.Element => {
+}): React.JSX.Element => {
 	return (
 		<Tooltip.Root>
 			<Tooltip.Trigger
@@ -36,7 +36,7 @@ export const InlineHelpIcon = ({
 }: {
 	children: React.ReactNode
 	className?: string
-}): JSX.Element => {
+}): React.JSX.Element => {
 	return (
 		<InlineHelpCustom help={children} className={className}>
 			<FontAwesomeIcon icon={faQuestionCircle} />

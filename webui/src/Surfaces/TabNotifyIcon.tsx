@@ -5,7 +5,7 @@ import { useUdevRulesStatus } from '~/Hooks/useUdevRulesStatus'
 import { useMissingVersionsCount } from '~/Instances/MissingVersionsWarning'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
-export const SurfacesTabNotifyIcon = observer(function SurfacesTabNotifyIcon(): JSX.Element | null {
+export const SurfacesTabNotifyIcon = observer(function SurfacesTabNotifyIcon(): React.JSX.Element | null {
 	const { surfaces, surfaceInstances } = useContext(RootAppStoreContext)
 
 	const updateCount = surfaces.countFirmwareUpdates()
@@ -30,7 +30,7 @@ export const SurfacesTabNotifyIcon = observer(function SurfacesTabNotifyIcon(): 
 	)
 })
 
-export const ConnectionsTabNotifyIcon = observer(function ConnectionsTabNotifyIcon(): JSX.Element | null {
+export const ConnectionsTabNotifyIcon = observer(function ConnectionsTabNotifyIcon(): React.JSX.Element | null {
 	const { connections } = useContext(RootAppStoreContext)
 
 	const missingCount = useMissingVersionsCount(ModuleInstanceType.Connection, connections.connections)

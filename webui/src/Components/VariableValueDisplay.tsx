@@ -97,7 +97,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 			? compactValue
 			: valueStr
 
-	const elms: Array<string | JSX.Element> = []
+	const elms: Array<string | React.JSX.Element> = []
 	const lines = displayValue.split('\\n')
 	lines.forEach((l, i) => {
 		elms.push(l)

@@ -180,7 +180,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		const drawMinRow = Math.max(Math.floor(visibleMinY - visibleRows / 2), minRow)
 		const drawMaxRow = Math.min(Math.ceil(visibleMaxY + visibleRows / 2), maxRow)
 
-		const visibleButtons: JSX.Element[] = []
+		const visibleButtons: React.JSX.Element[] = []
 		for (let row = drawMinRow; row <= drawMaxRow; row++) {
 			for (let column = drawMinColumn; column <= drawMaxColumn; column++) {
 				visibleButtons.push(

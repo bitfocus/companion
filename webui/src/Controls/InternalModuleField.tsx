@@ -29,7 +29,7 @@ export function InternalModuleField(
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	value: any,
 	setValue: (value: any) => void
-): JSX.Element | null {
+): React.JSX.Element | null {
 	switch (option.type) {
 		case 'internal:connection_id':
 			return (

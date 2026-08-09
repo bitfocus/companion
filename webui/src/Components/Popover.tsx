@@ -8,7 +8,7 @@ import type { ButtonColor } from './Button'
 
 type PopoverRootProps = BasePopover.Root.Props
 
-function PopoverRoot(props: PopoverRootProps): JSX.Element {
+function PopoverRoot(props: PopoverRootProps): React.JSX.Element {
 	return <BasePopover.Root {...props} />
 }
 
@@ -21,7 +21,7 @@ export interface PopoverTriggerProps extends Omit<BasePopover.Trigger.Props, 'cl
 	caret?: boolean
 }
 
-function PopoverTrigger({ className, color, size, caret, ...props }: PopoverTriggerProps): JSX.Element {
+function PopoverTrigger({ className, color, size, caret, ...props }: PopoverTriggerProps): React.JSX.Element {
 	return (
 		<BasePopover.Trigger
 			className={classNames(
@@ -59,7 +59,7 @@ function PopoverPopup({
 	side = 'bottom',
 	align = 'start',
 	anchor,
-}: PopoverPopupProps): JSX.Element {
+}: PopoverPopupProps): React.JSX.Element {
 	return (
 		<BasePopover.Portal>
 			<BasePopover.Positioner
@@ -84,7 +84,7 @@ export interface PopoverItemProps extends Omit<BasePopover.Close.Props, 'classNa
 	className?: string
 }
 
-function PopoverItem({ className, ...props }: PopoverItemProps): JSX.Element {
+function PopoverItem({ className, ...props }: PopoverItemProps): React.JSX.Element {
 	return <BasePopover.Close className={classNames('popover2-item', className)} {...props} />
 }
 

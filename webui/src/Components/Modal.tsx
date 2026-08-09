@@ -17,7 +17,7 @@ export interface ModalRootProps extends Omit<Dialog.Root.Props, 'disablePointerD
 	disableDismiss?: boolean
 }
 
-function ModalRoot({ disableDismiss, onOpenChange, open, ...props }: ModalRootProps): JSX.Element {
+function ModalRoot({ disableDismiss, onOpenChange, open, ...props }: ModalRootProps): React.JSX.Element {
 	const [pulseKey, setPulseKey] = useState(0)
 
 	// When a modal is opened programmatically (not via <Dialog.Trigger>), Base UI can't associate the
@@ -70,7 +70,7 @@ export interface ModalTriggerProps extends Omit<Dialog.Trigger.Props, 'className
 	color?: ButtonColor | null
 }
 
-function ModalTrigger({ className, color, size, ...props }: ModalTriggerProps): JSX.Element {
+function ModalTrigger({ className, color, size, ...props }: ModalTriggerProps): React.JSX.Element {
 	return (
 		<Dialog.Trigger
 			className={classNames(
@@ -89,7 +89,7 @@ function ModalTrigger({ className, color, size, ...props }: ModalTriggerProps): 
 
 export type ModalPortalProps = Dialog.Portal.Props
 
-function ModalPortal(props: ModalPortalProps): JSX.Element {
+function ModalPortal(props: ModalPortalProps): React.JSX.Element {
 	return <Dialog.Portal {...props} />
 }
 
@@ -99,7 +99,7 @@ export interface ModalBackdropProps extends Omit<Dialog.Backdrop.Props, 'classNa
 	className?: string
 }
 
-function ModalBackdrop({ className, ...props }: ModalBackdropProps): JSX.Element {
+function ModalBackdrop({ className, ...props }: ModalBackdropProps): React.JSX.Element {
 	return <Dialog.Backdrop className={classNames('modal2-backdrop', className)} {...props} />
 }
 
@@ -109,7 +109,7 @@ export interface ModalViewportProps extends Omit<Dialog.Viewport.Props, 'classNa
 	className?: string
 }
 
-function ModalViewport({ className, ...props }: ModalViewportProps): JSX.Element {
+function ModalViewport({ className, ...props }: ModalViewportProps): React.JSX.Element {
 	return <Dialog.Viewport className={classNames('modal2-viewport', className)} {...props} />
 }
 
@@ -123,7 +123,14 @@ export interface ModalPopupProps extends Omit<Dialog.Popup.Props, 'className'> {
 	scrollable?: boolean
 }
 
-function ModalPopup({ className, size, scrollable, children, onAnimationEnd, ...props }: ModalPopupProps): JSX.Element {
+function ModalPopup({
+	className,
+	size,
+	scrollable,
+	children,
+	onAnimationEnd,
+	...props
+}: ModalPopupProps): React.JSX.Element {
 	const [ref, setRef] = useState<HTMLElement | null>(null)
 	const { pulseKey } = useContext(ModalStaticPulseContext)
 	const [pulsing, setPulsing] = useState(false)
@@ -163,7 +170,7 @@ export interface ModalTitleProps extends Omit<Dialog.Title.Props, 'className'> {
 	className?: string
 }
 
-function ModalTitle({ className, ...props }: ModalTitleProps): JSX.Element {
+function ModalTitle({ className, ...props }: ModalTitleProps): React.JSX.Element {
 	return <Dialog.Title className={classNames('modal2-title', className)} {...props} />
 }
 
@@ -173,7 +180,7 @@ export interface ModalDescriptionProps extends Omit<Dialog.Description.Props, 'c
 	className?: string
 }
 
-function ModalDescription({ className, ...props }: ModalDescriptionProps): JSX.Element {
+function ModalDescription({ className, ...props }: ModalDescriptionProps): React.JSX.Element {
 	return <Dialog.Description className={classNames('modal2-description', className)} {...props} />
 }
 
@@ -186,7 +193,7 @@ export interface ModalCloseProps extends Omit<Dialog.Close.Props, 'className'> {
 	color?: ButtonColor
 }
 
-function ModalClose({ className, color, size, ...props }: ModalCloseProps): JSX.Element {
+function ModalClose({ className, color, size, ...props }: ModalCloseProps): React.JSX.Element {
 	return (
 		<Dialog.Close
 			className={classNames('button', `button-${color || 'secondary'}`, size && `button-${size}`, className)}
@@ -201,7 +208,7 @@ export interface ModalHeaderProps extends HTMLAttributes<HTMLDivElement> {
 	closeButton?: boolean
 }
 
-function ModalHeader({ className, children, closeButton, ...props }: ModalHeaderProps): JSX.Element {
+function ModalHeader({ className, children, closeButton, ...props }: ModalHeaderProps): React.JSX.Element {
 	return (
 		<div className={classNames('modal2-header', className)} {...props}>
 			{children}
@@ -214,7 +221,7 @@ function ModalHeader({ className, children, closeButton, ...props }: ModalHeader
 
 export type ModalBodyProps = HTMLAttributes<HTMLDivElement>
 
-function ModalBody({ className, ...props }: ModalBodyProps): JSX.Element {
+function ModalBody({ className, ...props }: ModalBodyProps): React.JSX.Element {
 	return <div className={classNames('modal2-body', className)} {...props} />
 }
 
@@ -222,7 +229,7 @@ function ModalBody({ className, ...props }: ModalBodyProps): JSX.Element {
 
 export type ModalFooterProps = HTMLAttributes<HTMLDivElement>
 
-function ModalFooter({ className, ...props }: ModalFooterProps): JSX.Element {
+function ModalFooter({ className, ...props }: ModalFooterProps): React.JSX.Element {
 	return <div className={classNames('modal2-footer', className)} {...props} />
 }
 

@@ -42,7 +42,7 @@ export const EntityTableRow = observer(function EntityTableRow({
 	entityType,
 	entityTypeLabel,
 	feedbackListType,
-}: EntityTableRowProps): JSX.Element | null {
+}: EntityTableRowProps): React.JSX.Element | null {
 	const { serviceFactory, readonly } = useEntityEditorContext()
 	const nestingLevel = useContext(EntityNestingLevelContext)
 

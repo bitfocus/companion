@@ -20,7 +20,11 @@ interface ControlOptionsEditorProps {
 	configRef: MutableRefObject<any> // TODO
 }
 
-export function ControlOptionsEditor({ controlId, options, configRef }: ControlOptionsEditorProps): JSX.Element | null {
+export function ControlOptionsEditor({
+	controlId,
+	options,
+	configRef,
+}: ControlOptionsEditorProps): React.JSX.Element | null {
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
 	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())

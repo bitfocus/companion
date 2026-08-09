@@ -227,7 +227,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 	)
 })
 
-function SeparatorInteractive({ children }: PropsWithChildren): JSX.Element {
+function SeparatorInteractive({ children }: PropsWithChildren): React.JSX.Element {
 	const ref = useRef<HTMLDivElement>(null)
 
 	useEffect(() => {

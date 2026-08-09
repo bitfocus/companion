@@ -5,7 +5,7 @@ import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { useConfig } from '~/hooks/useConfig'
 
-export function DangerousFeaturesSection(): JSX.Element {
+export function DangerousFeaturesSection(): React.JSX.Element {
 	const { state, updateConfig } = useConfig()
 
 	// Assume data is available since loading/error states are handled elsewhere

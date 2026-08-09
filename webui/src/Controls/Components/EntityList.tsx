@@ -13,9 +13,9 @@ import { EntityDropPlaceholderZone } from './EntityListDropZone.js'
 import { EntityListHeightCacheProvider, useEntityListHeightCache } from './EntityListHeightCacheContext.js'
 
 interface EditableEntityListProps {
-	heading: JSX.Element | string | null
-	headingActions?: JSX.Element[]
-	subheading?: JSX.Element | string | null
+	heading: React.JSX.Element | string | null
+	headingActions?: React.JSX.Element[]
+	subheading?: React.JSX.Element | string | null
 	entities: SomeEntityModel[] | undefined
 	ownerId: EntityOwner | null
 	entityType: EntityModelType

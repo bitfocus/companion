@@ -17,7 +17,7 @@ export function ImagePreviewBox({
 	dragOverMessage = 'Drop image here',
 	className,
 	backgroundColor,
-}: ImagePreviewBoxProps): JSX.Element {
+}: ImagePreviewBoxProps): React.JSX.Element {
 	const [isDragOver, setIsDragOver] = useState(false)
 
 	const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {

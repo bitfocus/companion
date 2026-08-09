@@ -7,7 +7,7 @@ import classNames from 'classnames'
 
 type TooltipRootProps = BaseTooltip.Root.Props
 
-function TooltipRoot(props: TooltipRootProps): JSX.Element {
+function TooltipRoot(props: TooltipRootProps): React.JSX.Element {
 	return <BaseTooltip.Root {...props} />
 }
 
@@ -15,7 +15,7 @@ function TooltipRoot(props: TooltipRootProps): JSX.Element {
 
 type TooltipTriggerProps = BaseTooltip.Trigger.Props
 
-function TooltipTrigger(props: TooltipTriggerProps): JSX.Element {
+function TooltipTrigger(props: TooltipTriggerProps): React.JSX.Element {
 	return <BaseTooltip.Trigger {...props} />
 }
 
@@ -43,7 +43,7 @@ function TooltipPopup({
 	arrow = false,
 	size,
 	noPadding = false,
-}: TooltipPopupProps): JSX.Element {
+}: TooltipPopupProps): React.JSX.Element {
 	const resolvedSideOffset = sideOffset ?? (arrow ? 10 : 4)
 	return (
 		<BaseTooltip.Portal>
