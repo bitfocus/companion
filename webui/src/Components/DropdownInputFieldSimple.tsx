@@ -1,4 +1,5 @@
 import { Select } from '@base-ui/react/select'
+import './dropdown-field.css'
 import classNames from 'classnames'
 import { ChevronDownIcon } from 'lucide-react'
 import { observer } from 'mobx-react-lite'

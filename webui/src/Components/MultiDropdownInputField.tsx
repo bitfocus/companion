@@ -1,4 +1,5 @@
 import { Combobox } from '@base-ui/react/combobox'
+import './dropdown-field.css'
 import classNames from 'classnames'
 import { prepare as fuzzyPrepare } from 'fuzzysort'
 import { ChevronDownIcon, XIcon } from 'lucide-react'
