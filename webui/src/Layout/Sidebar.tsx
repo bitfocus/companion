@@ -554,7 +554,7 @@ const SidebarVariablesGroups = observer(function SidebarVariablesGroups() {
 	)
 
 	// Recursive render
-	const renderCollection = (collection: ConnectionCollection): React.ReactNode => {
+	const renderCollection = (collection: ConnectionCollection): React.ReactElement | null => {
 		const childConnections = connectionsByCollection.get(collection.id)
 
 		const childCollectionsRendered = (collection.children || [])
