@@ -6,12 +6,12 @@ const meta = {
 	component: DateInputField,
 	args: {
 		id: undefined,
-		value: new Date(),
+		value: '2026-08-07',
 		setValue: () => {},
 		disabled: false,
 	},
 	render: function Render(args) {
-		const [, setArgs] = useArgs<{ value: Date | null }>()
+		const [, setArgs] = useArgs<{ value: string | null }>()
 		return <DateInputField {...args} setValue={(v) => setArgs({ value: v })} />
 	},
 } satisfies Meta<typeof DateInputField>

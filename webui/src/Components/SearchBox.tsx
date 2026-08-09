@@ -24,7 +24,7 @@ export function SearchBox({ className, placeholder, filter, setFilter }: SearchB
 		<InputGroup className={className}>
 			<Input
 				type="text"
-				className="form-control text-input-field"
+				className="form-input text-input-field"
 				placeholder={placeholder || 'Search ...'}
 				onChange={updateFilter}
 				value={filter}

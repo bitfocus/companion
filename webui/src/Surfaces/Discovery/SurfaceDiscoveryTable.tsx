@@ -113,7 +113,7 @@ function SatelliteRow({ surfaceInfo, showSetupSatellite }: SatelliteRowProps) {
 			<td>
 				<div className="flex flex-column">
 					<b>{surfaceInfo.name}</b>
-					<span className="auto-ellipsis" title="Companion Satellite">
+					<span className="truncate" title="Companion Satellite">
 						Companion Satellite
 					</span>
 				</div>
@@ -212,7 +212,7 @@ const PluginSurfaceRow = observer(function PluginSurfaceRow({ surfaceInfo, addCo
 			<td>
 				<div className="flex flex-column">
 					<b>{surfaceInfo.name}</b>
-					<span className="auto-ellipsis" title={surfaceInfo.description}>
+					<span className="truncate" title={surfaceInfo.description}>
 						{surfaceInfo.description}
 					</span>
 				</div>

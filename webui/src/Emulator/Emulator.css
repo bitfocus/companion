@@ -255,7 +255,7 @@
 	padding: 4vh 2vw;
 
 	code {
-		color: var(--cui-warning);
+		color: var(--color-warning);
 	}
 
 	.emulator-back-button {

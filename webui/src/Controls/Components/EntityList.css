@@ -65,7 +65,7 @@
 	.entity-row.entity-disabled {
 		.cell-name,
 		.form-label {
-			color: var(--cui-disabled);
+			color: var(--color-text-disabled);
 		}
 	}
 

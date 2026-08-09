@@ -52,10 +52,10 @@
 
 		.disabled {
 			/* the following is applied to the text. The buttons need more specific selectors */
-			color: var(--cui-disabled);
+			color: var(--color-text-disabled);
 
 			.button {
-				--btn-color: var(--cui-disabled);
+				--btn-color: var(--color-text-disabled);
 			}
 		}
 	}

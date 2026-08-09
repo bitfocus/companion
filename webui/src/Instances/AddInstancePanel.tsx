@@ -282,11 +282,7 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 					params={{ moduleType: moduleInfo.moduleType, moduleId: moduleInfo.moduleId }}
 					className="text-decoration-none"
 				>
-					<div
-						className="m-0"
-						style={{ display: 'inline-block', color: 'var(--cui-body-color)' }}
-						title={'Manage module'}
-					>
+					<div className="m-0" style={{ display: 'inline-block', color: 'var(--color-text)' }} title={'Manage module'}>
 						<FontAwesomeIcon icon={faCog} />
 					</div>
 				</Link>

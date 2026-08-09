@@ -1,4 +1,5 @@
 import { Combobox } from '@base-ui/react/combobox'
+import './dropdown-field.css'
 import classNames from 'classnames'
 import { ChevronDownIcon } from 'lucide-react'
 import { observable, runInAction } from 'mobx'
@@ -201,7 +202,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 					return strId
 				}}
 			>
-				<Combobox.InputGroup className="dropdown-field-input-group">
+				<Combobox.InputGroup className="form-input dropdown-field-input-group">
 					<Combobox.Input
 						className={classNames('dropdown-field-input', {
 							'dropdown-field-input-value-placeholder': inputPlaceholder !== undefined,

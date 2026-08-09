@@ -1,4 +1,4 @@
-// ---- Base ----
+/* ---- Base ---- */
 
 .button {
 	--btn-padding-x: 0.75rem;
@@ -11,7 +11,7 @@
 	--btn-disabled-opacity: 0.65;
 	--btn-focus-shadow-rgb: 213, 2, 21;
 
-	// defaults — overridden by color variants below
+	/* defaults — overridden by color variants below */
 	--btn-color: inherit;
 	--btn-bg: transparent;
 	--btn-border-color: transparent;
@@ -88,14 +88,14 @@
 	}
 }
 
-// ---- Special states ----
+/* ---- Special states ---- */
 
 .button.disabled.with-tooltip {
 	cursor: inherit;
 	pointer-events: inherit;
 }
 
-// ---- Size modifiers ----
+/* ---- Size modifiers ---- */
 
 .button-sm {
 	--btn-padding-y: 0.25rem;
@@ -111,7 +111,7 @@
 	--btn-border-radius: 0.5rem;
 }
 
-// ---- Solid color variants ----
+/* ---- Solid color variants ---- */
 
 .button-primary {
 	--btn-color: #fff;
@@ -325,7 +325,7 @@
 	}
 }
 
-// ---- Outline variant ----
+/* ---- Outline variant ---- */
 
 .button-outline {
 	--btn-color: #4a4a4a;
@@ -486,7 +486,7 @@
 	--btn-disabled-border-color: #0000c8;
 }
 
-// ---- Ghost variant ----
+/* ---- Ghost variant ---- */
 
 .button-ghost {
 	--btn-color: #6d7d9c;
@@ -638,7 +638,7 @@
 	--btn-disabled-border-color: transparent;
 }
 
-// ---- Dark mode overrides ----
+/* ---- Dark mode overrides ---- */
 
 [data-coreui-theme='dark'] {
 	.button-primary {
@@ -862,7 +862,7 @@
 	}
 }
 
-// ---- Animations ----
+/* ---- Animations ---- */
 
 @keyframes blinker {
 	50% {
@@ -870,12 +870,10 @@
 	}
 }
 
-// ---- Button Group ----
+/* ---- Button Group ---- */
 
-// base-ui inserts invisible focus-guard spans before and after a popup trigger while its
-// popup is open, so first/last in a group must be determined ignoring those elements
-$group-first: ':nth-child(1 of :not([data-base-ui-focus-guard]))';
-$group-last: ':nth-last-child(1 of :not([data-base-ui-focus-guard]))';
+/* base-ui inserts invisible focus-guard spans before and after a popup trigger while its popup is
+   open, so first/last in a group must be determined ignoring those elements. */
 
 .button-group,
 .button-group-vertical {
@@ -899,15 +897,15 @@ $group-last: ':nth-last-child(1 of :not([data-base-ui-focus-guard]))';
 .button-group {
 	border-radius: 0.375rem;
 
-	> :not(#{$group-first}) > .button,
-	> .button:not(#{$group-first}) {
+	> :not(:nth-child(1 of :not([data-base-ui-focus-guard]))) > .button,
+	> .button:not(:nth-child(1 of :not([data-base-ui-focus-guard]))) {
 		border-start-start-radius: 0;
 		border-end-start-radius: 0;
 		border-inline-start-color: color-mix(in srgb, var(--btn-bg, currentColor) 75%, black);
 	}
 
-	> :not(#{$group-last}) > .button,
-	> .button:not(#{$group-last}):not(.dropdown-toggle) {
+	> :not(:nth-last-child(1 of :not([data-base-ui-focus-guard]))) > .button,
+	> .button:not(:nth-last-child(1 of :not([data-base-ui-focus-guard]))):not(.dropdown-toggle) {
 		border-start-end-radius: 0;
 		border-end-end-radius: 0;
 		border-inline-end-width: 0;
@@ -924,15 +922,15 @@ $group-last: ':nth-last-child(1 of :not([data-base-ui-focus-guard]))';
 		width: 100%;
 	}
 
-	> :not(#{$group-first}) > .button,
-	> .button:not(#{$group-first}) {
+	> :not(:nth-child(1 of :not([data-base-ui-focus-guard]))) > .button,
+	> .button:not(:nth-child(1 of :not([data-base-ui-focus-guard]))) {
 		border-start-start-radius: 0;
 		border-start-end-radius: 0;
 		border-block-start-color: color-mix(in srgb, var(--btn-bg, currentColor) 75%, black);
 	}
 
-	> :not(#{$group-last}) > .button,
-	> .button:not(#{$group-last}) {
+	> :not(:nth-last-child(1 of :not([data-base-ui-focus-guard]))) > .button,
+	> .button:not(:nth-last-child(1 of :not([data-base-ui-focus-guard]))) {
 		border-end-start-radius: 0;
 		border-end-end-radius: 0;
 		border-block-end-width: 0;

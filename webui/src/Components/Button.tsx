@@ -1,4 +1,5 @@
 import { Button as ButtonBase } from '@base-ui/react'
+import './Button.css'
 import { Link, type RegisteredRouter, type ToPathOption } from '@tanstack/react-router'
 import classNames from 'classnames'
 import * as React from 'react'

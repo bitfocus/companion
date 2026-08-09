@@ -1,4 +1,5 @@
-import TimePicker from 'react-time-picker'
+import { Input } from '@base-ui/react'
+import './datetime-field.css'
 
 interface TimeInputFieldProps {
 	id: string | undefined
@@ -9,15 +10,15 @@ interface TimeInputFieldProps {
 
 export function TimeInputField({ id, value, setValue, disabled }: TimeInputFieldProps): React.JSX.Element {
 	return (
-		<TimePicker
+		<Input
 			id={id}
-			disabled={disabled}
-			format="HH:mm:ss"
-			maxDetail="second"
+			type="time"
+			step="1" // show + require the seconds segment, so the value is "HH:mm:ss"
 			required
-			value={value}
-			onChange={setValue}
-			openClockOnFocus={false}
+			disabled={disabled}
+			className="form-input datetime-input-field"
+			value={value ?? ''}
+			onChange={(e) => setValue(e.currentTarget.value === '' ? null : e.currentTarget.value)}
 		/>
 	)
 }

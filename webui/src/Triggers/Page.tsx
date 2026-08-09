@@ -146,7 +146,7 @@ export const TriggersPage = observer(function Triggers() {
 								<CreateCollectionButton />
 							</ButtonGroup>
 
-							<Button color="secondary" className="right" size="sm" onClick={showExportModal}>
+							<Button color="secondary" className="float-right" size="sm" onClick={showExportModal}>
 								<FontAwesomeIcon icon={faFileExport} /> Export all
 							</Button>
 						</div>
@@ -292,7 +292,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 	const triggerOrCollectionDisabled = !item.enabled || collectionDisabled
 
 	return (
-		<div className="flex flex-row align-items-center gap-2 hand">
+		<div className="flex flex-row align-items-center gap-2 cursor-pointer">
 			<div
 				className={classnames('flex flex-column grow', { disabled: triggerOrCollectionDisabled })}
 				style={{ minWidth: 0 }}
@@ -309,7 +309,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 						</span>
 					) : null}
 				</b>
-				<span className="auto-ellipsis" dangerouslySetInnerHTML={descriptionHtml} />
+				<span className="truncate" dangerouslySetInnerHTML={descriptionHtml} />
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</div>
 			<div className="action-buttons w-auto">
