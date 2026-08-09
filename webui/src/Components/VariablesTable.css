@@ -107,7 +107,7 @@
 	color: var(--color-primary);
 	font-weight: 600;
 	font-size: 16px;
-	letter-spacing: -0.15;
-	border-radius: 6;
+	letter-spacing: -0.15px;
+	border-radius: 6px;
 	display: inline-block;
 }

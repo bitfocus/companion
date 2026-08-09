@@ -156,7 +156,7 @@ function RegionsList({ regionIds, cloudActive, canActivate }: RegionsListProps) 
 
 	return (
 		<Grid.Col sm={12}>
-			<div className="section cloud-regions-section">
+			<div className="cloud-regions-section">
 				<h5 className="cloud-regions-heading">Cloud regions</h5>
 
 				{!cloudActive && (

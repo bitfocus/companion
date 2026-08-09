@@ -37,14 +37,14 @@
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--color-text-muted, #768192);
+		color: var(--color-text-muted);
 	}
 
 	.wizard-review-list {
 		list-style: none;
 		padding-left: 0;
 		margin-bottom: 0;
-		border: 1px solid var(--color-border, #c4c9d0);
+		border: 1px solid var(--color-border);
 		border-radius: 0.5rem;
 		overflow: hidden;
 	}
@@ -81,8 +81,8 @@
 		}
 
 		&.wizard-review-badge-info {
-			background-color: var(--color-surface-subtle, #ebedef);
-			color: var(--color-text-muted, #768192);
+			background-color: var(--color-surface-subtle);
+			color: var(--color-text-muted);
 		}
 	}
 }

@@ -147,7 +147,8 @@
 	}
 
 	&.dropdown-field-invalid {
-		.dropdown-field-input-group {
+		.dropdown-field-input-group,
+		.dropdown-field-select-trigger {
 			border-color: var(--color-danger);
 		}
 	}

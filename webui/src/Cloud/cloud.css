@@ -73,8 +73,8 @@
 	}
 }
 
-/* Generic bordered section box (used by the cloud regions block). */
-.section {
+/* Bordered section box for the cloud regions block. */
+.cloud-regions-section {
 	border: 0.5px solid var(--color-border);
 	border-left: 2px solid var(--color-border);
 	padding: 1rem;

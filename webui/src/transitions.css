@@ -27,4 +27,8 @@
 .fadeIn {
 	animation-duration: 1s;
 	animation-name: fadeIn;
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+	}
 }

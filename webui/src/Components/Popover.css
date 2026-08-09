@@ -11,7 +11,7 @@
 	--popover2-link-hover-color: var(--color-text);
 	--popover2-link-hover-bg: var(--color-surface-hover);
 	--popover2-transition-duration: 0.15s;
-	--popover2-arrow-color: var(--color-text, #000);
+	--popover2-arrow-color: var(--popover2-bg);
 }
 
 /* ─── Positioner ─────────────────────────────────────────────────────────────── */

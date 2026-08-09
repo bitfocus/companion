@@ -43,7 +43,7 @@
 	}
 
 	@media (--bp-lg-up) {
-		/* push sibling content across by our width (consumed by _layout.scss) */
+		/* push sibling content across by our width (consumed by layout.css) */
 		&:not(.sidebar-narrow):not(.sidebar-narrow-unfoldable) ~ * {
 			--sidebar-occupy-start: 16rem;
 		}
@@ -423,7 +423,6 @@
 .sidebar-narrow-unfoldable {
 	&:hover {
 		box-shadow: 0 0.5rem 1rem var(--color-shadow-15);
-		box-shadow: 0 0.5rem 1rem rgba(8, 10, 12, 0.15);
 
 		.sidebar-toggler::before {
 			transform: rotate(-180deg);
