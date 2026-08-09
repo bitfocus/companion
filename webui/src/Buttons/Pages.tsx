@@ -117,14 +117,14 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 
 					<div className="collections-nesting-table pages-list-table">
 						<div className="collections-nesting-table-row-item">
-							<div className="collections-nesting-table-row-item-grid fw-bold">
+							<div className="collections-nesting-table-row-item-grid cui-fw-bold">
 								<div className="row-reorder-handle invisible">
 									<FontAwesomeIcon icon={faSort} />
 								</div>
-								<div className="grow d-flex align-items-center gap-2">
+								<div className="grow cui-d-flex cui-align-items-center cui-gap-2">
 									<div className="pages-list-number">Number</div>
 									<div className="grow">Name</div>
-									<div className="ms-auto">
+									<div className="cui-ms-auto">
 										<ButtonGroup className="pages-list-actions">
 											<Button
 												color="warning"
@@ -205,8 +205,8 @@ const PageListRow = observer(function PageListRow({
 				<div ref={handleRef} className="row-reorder-handle">
 					<FontAwesomeIcon icon={faSort} />
 				</div>
-				<div className="grow d-flex align-items-center gap-2">
-					<div className="pages-list-number fw-bold">{pageNumber}</div>
+				<div className="grow cui-d-flex cui-align-items-center cui-gap-2">
+					<div className="pages-list-number cui-fw-bold">{pageNumber}</div>
 					<div className="grow">
 						<TextInputFieldSimple
 							id={undefined}
@@ -215,7 +215,7 @@ const PageListRow = observer(function PageListRow({
 							placeholder="Unnamed page"
 						/>
 					</div>
-					<ButtonGroup className="pages-list-actions ms-auto">
+					<ButtonGroup className="pages-list-actions cui-ms-auto">
 						<Button color="secondary" size="sm" onClick={goToPage} title="Jump to page" data-page={pageNumber}>
 							<FontAwesomeIcon icon={faShareFromSquare} />
 						</Button>

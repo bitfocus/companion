@@ -153,7 +153,7 @@ export const GridSizeModal = observer(function GridSizeModal() {
 
 	return (
 		<Modal.Root open={show} onOpenChange={onOpenChange}>
-			<Modal.Trigger color="secondary" size="sm" className="mt-1">
+			<Modal.Trigger color="secondary" size="sm" className="cui-mt-1">
 				Edit size
 			</Modal.Trigger>
 
@@ -167,16 +167,16 @@ export const GridSizeModal = observer(function GridSizeModal() {
 						<Modal.Body>
 							<Form onSubmit={doAction} className="row">
 								{newGridSize && (
-									<Grid.Col sm={12} className="mb-3">
+									<Grid.Col sm={12} className="cui-mb-3">
 										New Grid Size: {newGridSize.maxRow - newGridSize.minRow + 1} rows x{' '}
 										{newGridSize.maxColumn - newGridSize.minColumn + 1} columns
 									</Grid.Col>
 								)}
 
-								<FormLabel htmlFor={minRowFieldId} sm={3} column="sm" className="mb-2">
+								<FormLabel htmlFor={minRowFieldId} sm={3} column="sm" className="cui-mb-2">
 									Min Row
 								</FormLabel>
-								<Grid.Col sm={9} className="mb-2">
+								<Grid.Col sm={9} className="cui-mb-2">
 									<NumberInputField
 										id={minRowFieldId}
 										value={newGridSize?.minRow}
@@ -187,10 +187,10 @@ export const GridSizeModal = observer(function GridSizeModal() {
 									/>
 								</Grid.Col>
 
-								<FormLabel htmlFor={maxRowFieldId} sm={3} column="sm" className="mb-2">
+								<FormLabel htmlFor={maxRowFieldId} sm={3} column="sm" className="cui-mb-2">
 									Max Row
 								</FormLabel>
-								<Grid.Col sm={9} className="mb-2">
+								<Grid.Col sm={9} className="cui-mb-2">
 									<NumberInputField
 										id={maxRowFieldId}
 										value={newGridSize?.maxRow}
@@ -201,10 +201,10 @@ export const GridSizeModal = observer(function GridSizeModal() {
 									/>
 								</Grid.Col>
 
-								<FormLabel htmlFor={minColumnFieldId} sm={3} column="sm" className="mb-2">
+								<FormLabel htmlFor={minColumnFieldId} sm={3} column="sm" className="cui-mb-2">
 									Min Column
 								</FormLabel>
-								<Grid.Col sm={9} className="mb-2">
+								<Grid.Col sm={9} className="cui-mb-2">
 									<NumberInputField
 										id={minColumnFieldId}
 										value={newGridSize?.minColumn}
@@ -215,10 +215,10 @@ export const GridSizeModal = observer(function GridSizeModal() {
 									/>
 								</Grid.Col>
 
-								<FormLabel htmlFor={maxColumnFieldId} sm={3} column="sm" className="mb-2">
+								<FormLabel htmlFor={maxColumnFieldId} sm={3} column="sm" className="cui-mb-2">
 									Max Column
 								</FormLabel>
-								<Grid.Col sm={9} className="mb-2">
+								<Grid.Col sm={9} className="cui-mb-2">
 									<NumberInputField
 										id={maxColumnFieldId}
 										value={newGridSize?.maxColumn}
@@ -230,12 +230,12 @@ export const GridSizeModal = observer(function GridSizeModal() {
 								</Grid.Col>
 							</Form>
 							{isInvalidRange && (
-								<StaticAlert color="danger" className="mb-0 mt-2">
+								<StaticAlert color="danger" className="cui-mb-0 cui-mt-2">
 									Min Row must be ≤ Max Row and Min Column must be ≤ Max Column.
 								</StaticAlert>
 							)}
 							{isReducingSize && (
-								<StaticAlert color="danger" className="mb-0 mt-2">
+								<StaticAlert color="danger" className="cui-mb-0 cui-mt-2">
 									By reducing the grid size, any buttons outside of the new boundaries will be deleted.
 								</StaticAlert>
 							)}

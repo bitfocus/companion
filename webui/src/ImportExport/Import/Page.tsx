@@ -165,7 +165,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										gridZoomController={gridZoomController}
 									/>
 
-									<Button color="light" className="ms-1" title="Home Position" onClick={resetDestinationPosition}>
+									<Button color="light" className="cui-ms-1" title="Home Position" onClick={resetDestinationPosition}>
 										<FontAwesomeIcon icon={faHome} />
 									</Button>
 								</ButtonGridHeader>
@@ -190,7 +190,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										}}
 									>
 										<FontAwesomeIcon icon={faFileCirclePlus} size="4x" />
-										<p className="mt-1">The buttons will be imported to a new page.</p>
+										<p className="cui-mt-1">The buttons will be imported to a new page.</p>
 									</div>
 								)}
 							</div>

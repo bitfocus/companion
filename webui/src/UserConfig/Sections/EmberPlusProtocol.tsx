@@ -68,7 +68,7 @@ export const EmberPlusProtocol = observer(function EmberPlusProtocol() {
 				<strong>Provider Restarts</strong>
 			</p>
 
-			<div className="my-3">
+			<div className="cui-my-3">
 				The Ember Plus provider will automatically restart to rebuild the ember tree under the following conditions:
 				<br />
 				<ul>

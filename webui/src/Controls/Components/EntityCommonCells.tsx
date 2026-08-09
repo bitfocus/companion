@@ -88,13 +88,13 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 							<MyErrorBoundary>
 								<FormLabel htmlFor={variableNameId} sm={4} column="sm">
 									Variable name
-									<InlineHelpIcon className="ms-1">
+									<InlineHelpIcon className="cui-ms-1">
 										The name to give this value as a {localVariablePrefix} variable
 									</InlineHelpIcon>
 									<CopyButton
 										size="sm"
 										title="Copy variable name"
-										className="ps-0 py-0 align-middle"
+										className="cui-ps-0 cui-py-0 cui-align-middle"
 										color="primary"
 										variant="ghost"
 										text={`$(${localVariablePrefix}:${entity.variableName ?? ''})`}
@@ -148,7 +148,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 
 					{!entityDefinition && (
 						<NonIdealState
-							className="pt-2 pb-0"
+							className="cui-pt-2 cui-pb-0"
 							icon={faQuestionCircle}
 							text={
 								!isConnectionEnabled

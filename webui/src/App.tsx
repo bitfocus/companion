@@ -64,12 +64,12 @@ export default function App(): React.JSX.Element {
 			{(loadingProgress, loadingComplete) => (
 				<>
 					<div id="error-container" className={wasConnected ? 'show-error' : ''}>
-						<div className="row justify-content-center">
+						<div className="row cui-justify-content-center">
 							<div className="col-md-6">
 								<div className="clearfix">
-									<h4 className="pt-3">Houston, we have a problem!</h4>
-									<p className="text-muted">It seems that we have lost connection to the companion app.</p>
-									<ul className="text-muted">
+									<h4 className="cui-pt-3">Houston, we have a problem!</h4>
+									<p className="cui-text-muted">It seems that we have lost connection to the companion app.</p>
+									<ul className="cui-text-muted">
 										<li>Check that the application is still running</li>
 										<li>If you're using the Admin GUI over a network - check your connection</li>
 									</ul>
@@ -78,10 +78,10 @@ export default function App(): React.JSX.Element {
 						</div>
 					</div>
 					<div id="current-import-container" className={!wasConnected && currentImportTask ? 'show-error' : ''}>
-						<div className="row justify-content-center">
+						<div className="row cui-justify-content-center">
 							<div className="col-md-6">
 								<div className="clearfix">
-									<h4 className="pt-3">Stand by, the config is being updated!</h4>
+									<h4 className="cui-pt-3">Stand by, the config is being updated!</h4>
 									{/* <p className="text-muted">It seems that we have lost connection to the companion app.</p> */}
 								</div>
 							</div>
@@ -177,9 +177,9 @@ const AppMain = observer(function AppMain({ connected, loadingComplete, loadingP
 					''
 				)}
 				<MySidebar />
-				<div className="wrapper d-flex flex-column min-vh-100 bg-body-tertiary">
+				<div className="wrapper cui-d-flex cui-flex-column cui-min-vh-100 cui-bg-body-tertiary">
 					<MyHeader setLocked={setLocked} canLock={canLock && unlocked} />
-					<div className="body flex-grow-1">
+					<div className="body cui-flex-grow-1">
 						{connected && loadingComplete ? (
 							!canLock || unlocked ? (
 								<AppContent />
@@ -290,9 +290,9 @@ function AppLoading({ progress, connected }: AppLoadingProps) {
 				<Grid.Col xxl={4} md={6} sm={8} xs={10}>
 					<h3>{message}</h3>
 					{connected ? (
-						<ProgressBar className="mt-4" value={progress} />
+						<ProgressBar className="cui-mt-4" value={progress} />
 					) : (
-						<div className="mt-4" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+						<div className="cui-mt-4" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
 							<PuffLoader loading={true} size={80} color={PRIMARY_COLOR} />
 						</div>
 					)}

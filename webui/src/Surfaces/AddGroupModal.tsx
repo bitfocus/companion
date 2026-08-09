@@ -100,7 +100,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 											<>
 												<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
 													Name
-													<InlineHelpIcon className="ms-1">
+													<InlineHelpIcon className="cui-ms-1">
 														Display name for the group. This can be changed later
 													</InlineHelpIcon>
 												</FormLabel>
@@ -133,7 +133,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 											<>
 												<FormLabel htmlFor={idFieldId} sm={4} column="sm">
 													Id
-													<InlineHelpIcon className="ms-1">
+													<InlineHelpIcon className="cui-ms-1">
 														Id for the group, this is used for internal references. This cannot be changed once set.
 													</InlineHelpIcon>
 												</FormLabel>
@@ -147,7 +147,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 														immediateValue
 													/>
 													{field.state.meta.errors.length > 0 && (
-														<StaticAlert color="warning" className="mt-2">
+														<StaticAlert color="warning" className="cui-mt-2">
 															{field.state.meta.errors}
 														</StaticAlert>
 													)}
@@ -163,7 +163,12 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 									children={([canSubmit, isSubmitting]) => (
 										<>
 											<Modal.Close disabled={isSubmitting}>Cancel</Modal.Close>
-											<Button color="primary" className="me-md-1" disabled={!canSubmit || isSubmitting} type="submit">
+											<Button
+												color="primary"
+												className="cui-me-md-1"
+												disabled={!canSubmit || isSubmitting}
+												type="submit"
+											>
 												Add {isSubmitting ? '...' : ''}
 											</Button>
 										</>

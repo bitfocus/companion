@@ -73,7 +73,7 @@ export function PropertyFieldRow({
 			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames(labelClassName, { displayNone: hidden })}>
 				{label}
 				{activeFeatures && <InputFeatureIcons {...activeFeatures} />}
-				{tooltip && <InlineHelpIcon className="ms-1">{tooltip}</InlineHelpIcon>}
+				{tooltip && <InlineHelpIcon className="cui-ms-1">{tooltip}</InlineHelpIcon>}
 				{isOverridden && (
 					<span title="Value has a linked feedback override">
 						<FontAwesomeIcon icon={faLayerGroup} />

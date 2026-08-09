@@ -86,20 +86,20 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 
 	return (
 		<div className="connections-list-container flex-column-layout">
-			<div className="fixed-header d-flex flex-column">
+			<div className="fixed-header cui-d-flex cui-flex-column">
 				<MissingVersionsWarning moduleType={ModuleInstanceType.Surface} instances={surfaceInstances.instances} />
 
 				<GenericConfirmModal ref={confirmModalRef} />
 
-				<div className="d-flex align-items-center help-button-float">
-					<ButtonGroup className="connection-group-actions m-1 me-auto">
+				<div className="cui-d-flex cui-align-items-center help-button-float">
+					<ButtonGroup className="connection-group-actions cui-m-1 cui-me-auto">
 						<Button color="primary" size="sm" onClick={() => void navigate({ to: '/surfaces/integrations/add' })}>
-							<FontAwesomeIcon icon={faPlug} className="me-1" />
+							<FontAwesomeIcon icon={faPlug} className="cui-me-1" />
 							Add Surface Integration
 						</Button>
 						<CreateCollectionButton />
 					</ButtonGroup>
-					<ContextHelpButton action="/user-guide/surfaces" className="pe-2">
+					<ContextHelpButton action="/user-guide/surfaces" className="cui-pe-2">
 						<p>
 							Surface integrations are like connections but for input surfaces: they provide the ability to use
 							different hardware or virtual surfaces to trigger buttons in Companion.
@@ -109,7 +109,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 				</div>
 			</div>
 
-			<div className="connections-list-table-container scrollable-content mt-2">
+			<div className="connections-list-table-container scrollable-content cui-mt-2">
 				<PanelCollapseHelperProvider
 					storageId="connection-collections"
 					knownPanelIds={surfaceInstances.allCollectionIds}
@@ -148,7 +148,7 @@ function SurfaceInstancesListTableHeading() {
 	const { visibleInstances } = useSurfaceInstancesListContext()
 
 	return (
-		<div className="flex flex-row">
+		<div className="flex cui-flex-row">
 			<div className="grow">Surface Integrations </div>
 			<div className="whitespace-nowrap">
 				<ButtonGroup className="table-header-buttons">
@@ -166,8 +166,8 @@ function SurfaceInstancesListNoInstances() {
 	return (
 		<NonIdealState icon={faPlug}>
 			You haven't set up any surfaces yet. <br />
-			Try adding something from the list <span className="d-xl-none">below</span>
-			<span className="d-none d-xl-inline">to the right</span>.
+			Try adding something from the list <span className="cui-d-xl-none">below</span>
+			<span className="cui-d-none cui-d-xl-inline">to the right</span>.
 		</NonIdealState>
 	)
 }
@@ -185,7 +185,7 @@ function SurfaceInstancesGroupHeaderContent({ collection }: { collection: Surfac
 	)
 
 	return (
-		<div className="ms-1">
+		<div className="cui-ms-1">
 			<SwitchInputField
 				id={undefined}
 				value={collection.metaData.enabled}

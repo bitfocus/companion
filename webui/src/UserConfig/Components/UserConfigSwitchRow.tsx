@@ -40,7 +40,7 @@ export const UserConfigSwitchRow = observer(function UserConfigSwitchRow({
 					/>
 				</div>
 			</td>
-			<td className="pe-3">
+			<td className="cui-pe-3">
 				<ResetButton userConfig={userConfig} field={field} />
 			</td>
 		</tr>

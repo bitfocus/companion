@@ -79,7 +79,8 @@ function PopoverMenuItemContents({ data }: { data: MenuActionItemProps }): React
 				</span>
 			)}
 			<span className="dropdown-item-label">{data.label}</span>
-			{!data.fullWidth && (data.inNewTab ? <FontAwesomeIcon className="ms-auto" icon={faExternalLinkSquare} /> : ' ')}
+			{!data.fullWidth &&
+				(data.inNewTab ? <FontAwesomeIcon className="cui-ms-auto" icon={faExternalLinkSquare} /> : ' ')}
 		</>
 	)
 }

@@ -260,7 +260,7 @@ const ElementListItem = observer(function ElementListItem({
 
 				<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedElementId(element.id)}>
 					<span title={elementType}>
-						<FontAwesomeIcon icon={getElementTypeIcon(element.type)} className="me-1" fixedWidth />
+						<FontAwesomeIcon icon={getElementTypeIcon(element.type)} className="cui-me-1" fixedWidth />
 					</span>
 					{element.name || elementType}
 				</div>
@@ -312,7 +312,7 @@ const CanvasElementRow = observer(function CanvasElementRow({
 
 			<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedElementId(element.id)}>
 				<span title="Canvas Settings">
-					<FontAwesomeIcon icon={faCog} className="me-1" fixedWidth />
+					<FontAwesomeIcon icon={faCog} className="cui-me-1" fixedWidth />
 				</span>
 				{element.name || 'Canvas'}
 			</div>

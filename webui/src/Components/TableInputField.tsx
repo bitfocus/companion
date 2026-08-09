@@ -81,11 +81,11 @@ export function TableInputField({
 	return (
 		<div>
 			{sortedRows.length > 0 && (
-				<Table size="sm" responsive={false} className="mb-1">
+				<Table size="sm" responsive={false} className="cui-mb-1">
 					<thead>
 						<tr>
 							{columns.map((col) => (
-								<th key={col.id} className="fw-normal text-muted ps-0">
+								<th key={col.id} className="cui-fw-normal cui-text-muted cui-ps-0">
 									{col.label}
 								</th>
 							))}
@@ -96,7 +96,7 @@ export function TableInputField({
 						{sortedRows.map((row, rowIndex) => (
 							<tr key={(row['_id'] as string | undefined) ?? rowIndex}>
 								{columns.map((col) => (
-									<td key={col.id} className="ps-0">
+									<td key={col.id} className="cui-ps-0">
 										<OptionsInputControl
 											inputId={undefined}
 											allowInternalFields={false}
@@ -111,7 +111,7 @@ export function TableInputField({
 										/>
 									</td>
 								))}
-								<td className="ps-1" style={{ width: 1 }}>
+								<td className="cui-ps-1" style={{ width: 1 }}>
 									<Button
 										color="danger"
 										size="sm"
@@ -128,7 +128,7 @@ export function TableInputField({
 				</Table>
 			)}
 			<Button color="primary" size="sm" onClick={addRow} disabled={disabled}>
-				<FontAwesomeIcon icon={faPlus} className="me-1" />
+				<FontAwesomeIcon icon={faPlus} className="cui-me-1" />
 				Add row
 			</Button>
 		</div>

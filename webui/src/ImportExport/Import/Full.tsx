@@ -199,7 +199,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 				A full import will replace the current system configuration of the selected components with the imported
 				configuration of the components.
 			</p>
-			<StaticAlert color="info" className="mb-0">
+			<StaticAlert color="info" className="cui-mb-0">
 				<FontAwesomeIcon icon={faCircleInfo} /> Want to import specific buttons or triggers instead? Use the{' '}
 				<strong>Buttons</strong> or <strong>Triggers</strong> tabs at the top.
 			</StaticAlert>
@@ -244,29 +244,29 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 						/>
 					</div> */}
 
-					<div className="ms-2">
+					<div className="cui-ms-2">
 						<form.AppField name="buttons">
 							{(field) => <field.ImportToggleField label="Buttons" disabled={!snapshot.buttons} />}
 						</form.AppField>
 					</div>
-					<div className="ms-2">
+					<div className="cui-ms-2">
 						<form.AppField name="triggers">
 							{(field) => <field.ImportToggleField label="Triggers" disabled={!snapshot.triggers} />}
 						</form.AppField>
 					</div>
-					<div className="ms-2">
+					<div className="cui-ms-2">
 						<form.AppField name="customVariables">
 							{(field) => <field.ImportToggleField label="Custom Variables" disabled={!snapshot.customVariables} />}
 						</form.AppField>
 					</div>
-					<div className="ms-2">
+					<div className="cui-ms-2">
 						<form.AppField name="expressionVariables">
 							{(field) => (
 								<field.ImportToggleField label="Expression Variables" disabled={!snapshot.expressionVariables} />
 							)}
 						</form.AppField>
 					</div>
-					<div className="ms-2">
+					<div className="cui-ms-2">
 						<form.AppField name="surfaces">
 							{(field) => (
 								<field.ImportToggleGroup
@@ -291,48 +291,50 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 						</form.AppField>
 					</div>
 
-					<div className="ms-2">
+					<div className="cui-ms-2">
 						<form.AppField name="surfaces.known">
 							{(field) => (
 								<field.ImportToggleField
-									className="ms-4"
+									className="cui-ms-4"
 									disabled={!snapshot.surfacesKnown}
 									label={
 										<>
 											Known Surfaces
-											<InlineHelpIcon className="ms-1">The list of known surfaces, and their settings</InlineHelpIcon>
+											<InlineHelpIcon className="cui-ms-1">
+												The list of known surfaces, and their settings
+											</InlineHelpIcon>
 										</>
 									}
 								/>
 							)}
 						</form.AppField>
 					</div>
-					<div className="ms-2">
+					<div className="cui-ms-2">
 						<form.AppField name="surfaces.instances">
 							{(field) => (
 								<field.ImportToggleField
-									className="ms-4"
+									className="cui-ms-4"
 									disabled={!snapshot.surfacesInstances}
 									label={
 										<>
 											Surface Integrations
-											<InlineHelpIcon className="ms-1">The configured surface integrations</InlineHelpIcon>
+											<InlineHelpIcon className="cui-ms-1">The configured surface integrations</InlineHelpIcon>
 										</>
 									}
 								/>
 							)}
 						</form.AppField>
 					</div>
-					<div className="ms-2">
+					<div className="cui-ms-2">
 						<form.AppField name="surfaces.remote">
 							{(field) => (
 								<field.ImportToggleField
-									className="ms-4"
+									className="cui-ms-4"
 									disabled={!snapshot.surfacesRemote}
 									label={
 										<>
 											Remote Surfaces
-											<InlineHelpIcon className="ms-1">
+											<InlineHelpIcon className="cui-ms-1">
 												Connections for surfaces that are connected remotely
 											</InlineHelpIcon>
 										</>
@@ -342,7 +344,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 						</form.AppField>
 					</div>
 
-					<div className="ms-2">
+					<div className="cui-ms-2">
 						<form.AppField name="imageLibrary">
 							{(field) => <field.ImportToggleField label="Image Library" disabled={!snapshot.imageLibrary} />}
 						</form.AppField>
@@ -354,7 +356,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 								</form.AppField>
 							</div> */}
 
-					<StaticAlert color="info" className="mt-3">
+					<StaticAlert color="info" className="cui-mt-3">
 						<FontAwesomeIcon icon={faPlug} /> All connections will be imported, as they are required to be able to
 						import any actions and feedbacks.
 					</StaticAlert>

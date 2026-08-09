@@ -52,10 +52,10 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 
 	return (
 		<Grid.Row className="split-panels">
-			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
+			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'cui-d-xl-block cui-d-none'}`}>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
-						<div className="d-flex justify-content-between">
+						<div className="cui-d-flex cui-justify-content-between">
 							<div>
 								<h4 className="button-inline">
 									Settings - Backups
@@ -68,7 +68,7 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 							</div>
 						</div>
 
-						<div className="mb-2">
+						<div className="cui-mb-2">
 							<ButtonGroup>
 								<Button color="primary" onClick={doAddNew} size="sm">
 									<FontAwesomeIcon icon={faAdd} /> Add Backup Rule
@@ -83,7 +83,7 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 				</div>
 			</Grid.Col>
 
-			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
+			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'cui-d-xl-block cui-d-none'}`}>
 				<div className="secondary-panel-simple">
 					<Outlet />
 				</div>
@@ -130,7 +130,7 @@ const BackupsTable = observer(function BackupsTable({ editRule }: BackupsTablePr
 	})
 
 	return (
-		<div className="collections-nesting-table mb-2">
+		<div className="collections-nesting-table cui-mb-2">
 			{backupRules.length > 0 ? (
 				backupRules.map((rule, index) => (
 					<BackupsTableRow key={rule.id} rule={rule} index={index} editRule={editRule} />

@@ -67,10 +67,10 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 	}
 
 	return (
-		<div className="flex flex-row align-items-center gap-2 cursor-pointer">
+		<div className="flex cui-flex-row cui-align-items-center cui-gap-2 cursor-pointer">
 			<div
 				onClick={doEdit}
-				className={classNames('flex flex-column grow', { disabled: !isEnabled })}
+				className={classNames('flex cui-flex-column grow', { disabled: !isEnabled })}
 				style={{ minWidth: 0 }}
 			>
 				<b>{remoteConnection.displayName}</b>
@@ -79,7 +79,7 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 				</span>
 			</div>
 
-			<div className="flex align-items-center ps-2">
+			<div className="flex cui-align-items-center cui-ps-2">
 				<SwitchInputField
 					id={undefined}
 					// disabled={!moduleInfo || !moduleVersion}
@@ -88,7 +88,7 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 					tooltip={isEnabled ? `Disable surface connection` : `Enable surface connection`}
 				/>
 
-				<Button onClick={doDelete} title="Delete" className="p-1">
+				<Button onClick={doDelete} title="Delete" className="cui-p-1">
 					<FontAwesomeIcon icon={faTrash} />
 				</Button>
 			</div>

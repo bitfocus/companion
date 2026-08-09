@@ -48,7 +48,7 @@ function OptionLabel({ option, features }: { option: SomeCompanionInputField; fe
 		<>
 			{option.label}
 			<InputFeatureIcons {...features} />
-			{option.tooltip && <InlineHelpIcon className="ms-1">{option.tooltip}</InlineHelpIcon>}
+			{option.tooltip && <InlineHelpIcon className="cui-ms-1">{option.tooltip}</InlineHelpIcon>}
 		</>
 	)
 }

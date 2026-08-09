@@ -14,9 +14,9 @@ describe('ContextHelpButton', () => {
 		})
 
 		it('applies a caller-provided className alongside the default', () => {
-			render(<ContextHelpButton action="/user-guide/config/connections" className="pe-2" />)
+			render(<ContextHelpButton action="/user-guide/config/connections" className="cui-pe-2" />)
 			const el = document.querySelector('.context-help-button')
-			expect(el).toHaveClass('context-help-button', 'pe-2')
+			expect(el).toHaveClass('context-help-button', 'cui-pe-2')
 		})
 
 		it('omitting className leaves only the default class', () => {
@@ -28,12 +28,12 @@ describe('ContextHelpButton', () => {
 	describe('with help children (InlineHelpCustom path)', () => {
 		it('applies both the default and caller-provided className to the trigger', () => {
 			render(
-				<ContextHelpButton action="/user-guide/config/connections" className="pe-2">
+				<ContextHelpButton action="/user-guide/config/connections" className="cui-pe-2">
 					Some help text
 				</ContextHelpButton>
 			)
 			const trigger = document.querySelector('.inline-help-outer')
-			expect(trigger).toHaveClass('context-help-button', 'pe-2')
+			expect(trigger).toHaveClass('context-help-button', 'cui-pe-2')
 		})
 
 		it('omitting className leaves only the default class on the trigger', () => {

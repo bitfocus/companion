@@ -160,7 +160,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 					Manage Modules
 					<ContextHelpButton action="/user-guide/config/modules" />
 				</h4>
-				<p className="mb-2">
+				<p className="cui-mb-2">
 					<strong>
 						Companion can work with over {modulesCount} different{filterName}modules
 					</strong>{' '}
@@ -169,12 +169,12 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 				<p>
 					View and manage your installed modules, or search for new ones to support additional devices. Can't find your
 					device?{' '}
-					<a target="_blank" href={makeAbsolutePath('/user-guide/config/modules')} className="text-decoration-none">
+					<a target="_blank" href={makeAbsolutePath('/user-guide/config/modules')} className="cui-text-decoration-none">
 						Check our guidance for getting device support
 					</a>
 					.<br />
 					For offline systems, download module bundles from the{' '}
-					<a href="https://l.companion.free/q/lp68nsiV4" target="_blank" className="text-decoration-none">
+					<a href="https://l.companion.free/q/lp68nsiV4" target="_blank" className="cui-text-decoration-none">
 						Bitfocus website
 					</a>
 					.
@@ -187,7 +187,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 					<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
 				</div>
 
-				<SearchBox filter={filter} setFilter={setFilter} className="mb-2" />
+				<SearchBox filter={filter} setFilter={setFilter} className="cui-mb-2" />
 			</div>
 
 			<FilterTypeTabs filterType={filterType} setFilterType={setFilterType} />
@@ -231,8 +231,8 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 								<td colSpan={4}>
 									<NonIdealState icon={faPlug}>
 										You don't have any modules installed yet. <br />
-										Try adding something from the list <span className="d-xl-none">below</span>
-										<span className="d-none d-xl-inline">to the right</span>.
+										Try adding something from the list <span className="cui-d-xl-none">below</span>
+										<span className="cui-d-none cui-d-xl-inline">to the right</span>.
 									</NonIdealState>
 								</td>
 							</tr>
@@ -326,7 +326,7 @@ const ModulesListRow = observer(function ModulesListRow({
 			</td>
 			<td onClick={doEdit} className="cursor-pointer">
 				{!!moduleInfo.storeInfo?.deprecationReason && (
-					<InlineHelpCustom help="Deprecated" className="me-1">
+					<InlineHelpCustom help="Deprecated" className="cui-me-1">
 						<FontAwesomeIcon icon={faWarning} aria-label="Deprecated" />
 					</InlineHelpCustom>
 				)}

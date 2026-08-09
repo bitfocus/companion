@@ -97,7 +97,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 						Custom Variables
 						<ContextHelpButton action="/user-guide/config/variables#custom-variables" />
 					</h4>
-					<p className="mb-2">
+					<p className="cui-mb-2">
 						Here you can create some variables which you can define the values of, and update with actions
 					</p>
 
@@ -116,7 +116,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 					</ButtonGroup>
 				</div>
 
-				<SearchBox placeholder="Filter ..." filter={filter} setFilter={setFilter} className="mb-1 mt-2" />
+				<SearchBox placeholder="Filter ..." filter={filter} setFilter={setFilter} className="cui-mb-1 cui-mt-2" />
 
 				<div className="variables-table-scroller ">
 					<CustomVariablesTableContextProvider
@@ -140,8 +140,8 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 					</CustomVariablesTableContextProvider>
 				</div>
 
-				<h5 className="mt-2">Create custom variable</h5>
-				<div className="mx-1 mb-1">
+				<h5 className="cui-mt-2">Create custom variable</h5>
+				<div className="cui-mx-1 cui-mb-1">
 					<AddVariablePanel />
 				</div>
 

@@ -58,7 +58,7 @@ const AddEntityLeaf = observer(function AddEntityLeaf({ leaf }: { leaf: EntityLe
 	return (
 		<>
 			<div className="collapsible-tree-leaf-text">
-				<span className="collapsible-tree-leaf-label fw-semibold">{leaf.label}</span>
+				<span className="collapsible-tree-leaf-label cui-fw-semibold">{leaf.label}</span>
 				{leaf.description && (
 					<>
 						<span className="collapsible-tree-leaf-description">{leaf.description}</span>
@@ -154,7 +154,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 		<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
 			<Modal.Trigger
 				color="primary"
-				className="rounded-start-0"
+				className="cui-rounded-start-0"
 				disabled={disabled}
 				aria-label={`Browse ${capitalize(entityTypeLabel)}s`}
 				title={`Browse ${capitalize(entityTypeLabel)}s`}
@@ -170,7 +170,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 							<Modal.Title>Browse {capitalize(entityTypeLabel)}s</Modal.Title>
 						</Modal.Header>
 						<Modal.Header>
-							<SearchBox filter={filter} setFilter={setFilter} className="mb-2" />
+							<SearchBox filter={filter} setFilter={setFilter} className="cui-mb-2" />
 						</Modal.Header>
 						<Modal.Body>
 							<EntityTypeLabelContext.Provider value={entityTypeLabel}>

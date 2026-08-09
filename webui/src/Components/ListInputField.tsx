@@ -122,13 +122,13 @@ export function ListRowControls({
 	return (
 		<>
 			<div
-				className={classNames('form-label col-sm-4 col-form-label col-form-label-sm text-muted', {
+				className={classNames('form-label col-sm-4 col-form-label col-form-label-sm cui-text-muted', {
 					displayNone: hidden,
 				})}
 			>
 				Item {rowIndex + 1}
 			</div>
-			<Grid.Col sm={8} className={classNames('d-flex gap-1', { displayNone: hidden })}>
+			<Grid.Col sm={8} className={classNames('cui-d-flex cui-gap-1', { displayNone: hidden })}>
 				<Button
 					color="secondary"
 					variant="outline"
@@ -195,11 +195,11 @@ export const ListInputField = observer(function ListInputField({
 		<>
 			<FormLabel htmlFor={undefined} sm={4} column="sm" className={classNames({ displayNone: hidden })}>
 				{definition.label}
-				{definition.tooltip && <InlineHelpIcon className="ms-1">{definition.tooltip}</InlineHelpIcon>}
+				{definition.tooltip && <InlineHelpIcon className="cui-ms-1">{definition.tooltip}</InlineHelpIcon>}
 			</FormLabel>
 			<Grid.Col sm={8} className={classNames({ displayNone: hidden })}>
 				<Button color="primary" size="sm" onClick={addRow} disabled={disabled}>
-					<FontAwesomeIcon icon={faPlus} className="me-1" />
+					<FontAwesomeIcon icon={faPlus} className="cui-me-1" />
 					{definition.addLabel ?? 'Add item'}
 				</Button>
 				{definition.description && <div className="form-text">{definition.description}</div>}
@@ -244,7 +244,12 @@ export const ListInputField = observer(function ListInputField({
 
 						return (
 							<Fragment key={field.id}>
-								<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames('ps-4', { displayNone: hidden })}>
+								<FormLabel
+									htmlFor={inputId}
+									sm={4}
+									column="sm"
+									className={classNames('cui-ps-4', { displayNone: hidden })}
+								>
 									{field.label}
 									<InputFeatureIcons
 										{...(cell.isExpression ? ExpressionModeFeatures : (getInputFeatures(field) ?? {}))}

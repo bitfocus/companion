@@ -243,14 +243,14 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 	const canUpload = !!imageSource && isLabelValid(imageName) && !isUploading
 
 	return (
-		<div className="d-flex flex-column gap-3">
+		<div className="cui-d-flex cui-flex-column cui-gap-3">
 			<DismissableAlert color="warning" visible={!!errorMessage} onClose={() => setErrorMessage(null)}>
 				{errorMessage}
 			</DismissableAlert>
 
 			<ImageNameInput value={imageName} onChange={setImageName} disabled={isUploading} />
 
-			<div className="mb-3 row">
+			<div className="cui-mb-3 row">
 				<FormLabel htmlFor="upload-description" sm={3} column>
 					Description
 				</FormLabel>
@@ -272,7 +272,7 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 					ref={fileInputRef}
 					type="file"
 					accept="image/*"
-					className="d-none"
+					className="cui-d-none"
 					onChange={handleFileChange}
 					disabled={isUploading}
 				/>
@@ -398,8 +398,8 @@ function CustomImageTab({
 	}, [sharedDataUrl, onComplete])
 
 	return (
-		<div className="d-flex flex-column gap-3">
-			<p className="text-muted mb-0">
+		<div className="cui-d-flex cui-flex-column cui-gap-3">
+			<p className="cui-text-muted cui-mb-0">
 				This image will be stored only for this field and will not appear in the image library.
 			</p>
 
@@ -415,7 +415,7 @@ function CustomImageTab({
 					ref={fileInputRef}
 					type="file"
 					accept="image/*"
-					className="d-none"
+					className="cui-d-none"
 					onChange={handleFileChange}
 					disabled={!apiIsSupported}
 				/>

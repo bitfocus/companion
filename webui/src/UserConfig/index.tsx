@@ -10,7 +10,7 @@ export function SettingsSelectPage(): React.JSX.Element {
 	return (
 		<Grid.Row className="split-panels">
 			<Grid.Col xxl={6} xl={8} lg={10} md={12} className="primary-panel">
-				<div className="d-flex justify-content-between">
+				<div className="cui-d-flex cui-justify-content-between">
 					<div>
 						<h4>Settings</h4>
 					</div>
@@ -51,9 +51,9 @@ function SettingsLinkCard<const TFrom extends string = string, const TTo extends
 	center,
 }: SettingsLinkCardProps<TFrom, TTo>) {
 	return (
-		<Grid.Col sm={center ? { span: 6, offset: 3 } : 6} className="mb-4">
-			<Link to={to} className="text-decoration-none grid h-100 settings-grid-card">
-				<Callout color="info" className="h-100 flex align-items-center justify-content-center">
+		<Grid.Col sm={center ? { span: 6, offset: 3 } : 6} className="cui-mb-4">
+			<Link to={to} className="cui-text-decoration-none grid cui-h-100 settings-grid-card">
+				<Callout color="info" className="cui-h-100 flex cui-align-items-center cui-justify-content-center">
 					<NonIdealState icon={icon} style={{ padding: '5vh 1rem' }}>
 						<h3>{label}</h3>
 						{sublabel}

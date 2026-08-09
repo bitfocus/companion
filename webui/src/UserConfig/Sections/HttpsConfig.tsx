@@ -118,8 +118,8 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 											</td>
 											<td>
 												{props.config.https_self_cert && props.config.https_self_cert.length > 0 ? (
-													<div className="my-3">
-														<Button onClick={renewSslCertificate} color="success" className="mb-2">
+													<div className="cui-my-3">
+														<Button onClick={renewSslCertificate} color="success" className="cui-mb-2">
 															<FontAwesomeIcon icon={faSync} />
 															&nbsp;Renew
 														</Button>

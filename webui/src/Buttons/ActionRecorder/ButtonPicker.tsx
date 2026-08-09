@@ -195,7 +195,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 								disabled={!controlInfo}
 							/>
 						</Grid.Col>
-						<Grid.Col className="py-1" sm={10} xs={9}>
+						<Grid.Col className="cui-py-1" sm={10} xs={9}>
 							<ButtonGroup>
 								<Button
 									color="primary"

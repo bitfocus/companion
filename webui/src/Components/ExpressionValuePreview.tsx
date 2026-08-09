@@ -92,7 +92,7 @@ export function ExpressionValuePreview({
 		const invalidWarning = (
 			<StaticAlert
 				color="warning"
-				className="mt-2 mb-0"
+				className="cui-mt-2 cui-mb-0"
 				style={{ display: 'inline-block', border: 'none', fontWeight: '500', padding: '0.375rem 1rem' }}
 			>
 				Invalid expression
@@ -127,7 +127,7 @@ export function ExpressionPreviewResult({
 }: ExpressionPreviewResultProps): React.JSX.Element | null {
 	if (!data.ok) {
 		return (
-			<StaticAlert color="danger" className="mt-1 mb-0 py-1 px-2" style={{ fontSize: '0.85em' }}>
+			<StaticAlert color="danger" className="cui-mt-1 cui-mb-0 cui-py-1 cui-px-2" style={{ fontSize: '0.85em' }}>
 				Error: {data.error}
 			</StaticAlert>
 		)
@@ -140,7 +140,7 @@ export function ExpressionPreviewResult({
 		return (
 			<StaticAlert
 				color="success"
-				className="mt-2 mb-0"
+				className="cui-mt-2 cui-mb-0"
 				style={{ display: 'inline-block', border: 'none', fontWeight: '500', padding: '0.375rem 1rem' }}
 			>
 				Valid expression
@@ -151,7 +151,7 @@ export function ExpressionPreviewResult({
 	const validationResult = validateExpressionResult(fieldDefinition, data.value)
 
 	return (
-		<div className="mt-1">
+		<div className="cui-mt-1">
 			<VariableValueDisplayPopover value={data.value} showCopy={false} invalidReason={validationResult} />
 		</div>
 	)
@@ -208,7 +208,7 @@ function ExpressionValuePreviewInner({
 		// In status-only mode there is no value to wait for, so don't show a loading spinner
 		content =
 			showSpinner && !statusOnly ? (
-				<div className="mt-1">
+				<div className="cui-mt-1">
 					<PulseLoader size="0.5rem" title="Loading preview" />
 				</div>
 			) : null

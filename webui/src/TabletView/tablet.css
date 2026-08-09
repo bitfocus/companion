@@ -19,7 +19,7 @@
 		margin-top: 0.5rem;
 	}
 
-	.text-muted {
+	.cui-text-muted {
 		color: var(--remote-accent-muted) !important;
 		font-size: 0.93em;
 	}

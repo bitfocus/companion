@@ -18,7 +18,7 @@ export function SurfaceDiscoveryPanel(): React.JSX.Element {
 					</p>
 				</div>
 
-				<div className="scrollable-content mt-2">
+				<div className="scrollable-content cui-mt-2">
 					<MyErrorBoundary>
 						<SurfaceDiscoveryTable />
 					</MyErrorBoundary>

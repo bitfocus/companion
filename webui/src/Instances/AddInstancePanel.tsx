@@ -118,14 +118,14 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 				<h4 className="panel-title">{title}</h4>
 				<div className="header-buttons">
 					<ContextHelpButton action={helpAction} />
-					<CloseButton closeFn={service.closeAddInstance} visibilityClass={isSubpanel ? '' : 'd-xl-none'} />
+					<CloseButton closeFn={service.closeAddInstance} visibilityClass={isSubpanel ? '' : 'cui-d-xl-none'} />
 				</div>
 			</div>
 
 			<div className="secondary-panel-simple-body">
 				<AddInstanceModal ref={addRef} service={service} openConfigureInstance={service.openConfigureInstance} />
 				<div style={{ clear: 'both' }} className="sticky-heading">
-					<div className="add-connection-intro-section mb-3">
+					<div className="add-connection-intro-section cui-mb-3">
 						{storeModulesOfTypeCount > 0 ? (
 							<div className="intro-grid">
 								{description(storeModulesOfTypeCount)}
@@ -153,9 +153,9 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 								</div>
 							</div>
 						) : (
-							<StaticAlert color="info" className="mb-0">
-								<div className="d-flex align-items-center gap-2">
-									<FontAwesomeIcon icon={faPlug} className="text-info" />
+							<StaticAlert color="info" className="cui-mb-0">
+								<div className="cui-d-flex cui-align-items-center cui-gap-2">
+									<FontAwesomeIcon icon={faPlug} className="cui-text-info" />
 									{description(0)}
 								</div>
 							</StaticAlert>
@@ -163,12 +163,12 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 					</div>
 
 					<div>
-						<div className="refresh-and-last-updated mb-3">
+						<div className="refresh-and-last-updated cui-mb-3">
 							<RefreshModulesList btnSize="sm" />
 							<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
 						</div>
 
-						<SearchBox filter={filter} setFilter={setFilter} className="mb-2" />
+						<SearchBox filter={filter} setFilter={setFilter} className="cui-mb-2" />
 					</div>
 				</div>
 				<div id="connection_add_search_results">
@@ -280,24 +280,28 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 				<Link
 					to={`/modules/$moduleType/$moduleId`}
 					params={{ moduleType: moduleInfo.moduleType, moduleId: moduleInfo.moduleId }}
-					className="text-decoration-none"
+					className="cui-text-decoration-none"
 				>
-					<div className="m-0" style={{ display: 'inline-block', color: 'var(--color-text)' }} title={'Manage module'}>
+					<div
+						className="cui-m-0"
+						style={{ display: 'inline-block', color: 'var(--color-text)' }}
+						title={'Manage module'}
+					>
 						<FontAwesomeIcon icon={faCog} />
 					</div>
 				</Link>
 				{!!moduleInfo.storeInfo && (
-					<WindowLinkOpen className="m-0" title="Open Store Page" href={moduleInfo.storeInfo.storeUrl}>
+					<WindowLinkOpen className="cui-m-0" title="Open Store Page" href={moduleInfo.storeInfo.storeUrl}>
 						<FontAwesomeIcon icon={faExternalLink} />
 					</WindowLinkOpen>
 				)}
 				{!!moduleInfo.storeInfo?.githubUrl && (
-					<WindowLinkOpen className="m-0" title="Open GitHub Page" href={moduleInfo.storeInfo.githubUrl}>
+					<WindowLinkOpen className="cui-m-0" title="Open GitHub Page" href={moduleInfo.storeInfo.githubUrl}>
 						<FontAwesomeIcon icon={faGithub} />
 					</WindowLinkOpen>
 				)}
 				{showHelpForVersion?.helpPath && (
-					<div className="m-0" style={{ cursor: 'pointer' }} onClick={showHelpClick}>
+					<div className="cui-m-0" style={{ cursor: 'pointer' }} onClick={showHelpClick}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
 					</div>
 				)}

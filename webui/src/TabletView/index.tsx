@@ -190,7 +190,7 @@ export const TabletView = observer(function TabletView() {
 	return (
 		<div className="page-tablet">
 			<div className="scroller">
-				<Grid.Container fluid className="d-flex flex-column">
+				<Grid.Container fluid className="cui-d-flex cui-flex-column">
 					{pagesReady && userConfigReady && rawGridSize ? (
 						<>
 							<ConfigurePanel updateQueryUrl={updateQueryUrl} query={parsedQuery} gridSize={rawGridSize} />
@@ -221,7 +221,7 @@ export const TabletView = observer(function TabletView() {
 							</div>
 						</>
 					) : (
-						<Grid.Row className="flex-grow-1">
+						<Grid.Row className="cui-flex-grow-1">
 							<StandalonePageError dataReady={false} error={loadError} doRetry={doRetryLoad} />
 						</Grid.Row>
 					)}

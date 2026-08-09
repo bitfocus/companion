@@ -98,7 +98,7 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 	return (
 		<>
 			<Form onSubmit={PreventDefaultHandler}>
-				<Grid.Row className="flex-form m-0" style={{ clear: 'both' }}>
+				<Grid.Row className="flex-form cui-m-0" style={{ clear: 'both' }}>
 					<div className="flex w-full gap-2rem">
 						<div className="w-full">
 							<FormLabel htmlFor={connectionsFieldId}>Connections</FormLabel>
@@ -118,7 +118,7 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 					</div>
 				</Grid.Row>
 
-				<Grid.Row className="m-0" style={{ clear: 'both' }}>
+				<Grid.Row className="cui-m-0" style={{ clear: 'both' }}>
 					<div>
 						<ButtonGroup className="margin-bottom">
 							<Button onClick={doClearActions} color="secondary" disabled={!sessionInfo.actions?.length}>

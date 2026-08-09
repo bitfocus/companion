@@ -110,7 +110,7 @@ const FeedbackTypeIndicator = observer(function FeedbackTypeIndicator({
 				</>
 			}
 		>
-			<FontAwesomeIcon icon={info.icon} className="text-info" />
+			<FontAwesomeIcon icon={info.icon} className="cui-text-info" />
 		</InlineHelpCustom>
 	)
 })
@@ -198,7 +198,7 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 			<hr />
 
 			<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-				<span className="d-flex align-items-center gap-2">
+				<span className="cui-d-flex cui-align-items-center cui-gap-2">
 					<strong>Style Overrides</strong>
 					<FeedbackTypeIndicator feedbackType={feedbackType} />
 				</span>
@@ -218,7 +218,7 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 				<tbody>
 					{overrides.length === 0 && (
 						<tr>
-							<td colSpan={3} className="text-center p-2">
+							<td colSpan={3} className="cui-text-center cui-p-2">
 								This feedback has no effect. Try adding an override
 							</td>
 						</tr>
@@ -267,8 +267,8 @@ const LayeredStylesOverridesRow = observer(function LayeredStylesOverridesRow({
 		<>
 			<tr key={row.overrideId}>
 				<td>
-					<div className="d-flex align-items-center cursor-pointer" onClick={() => setIsModalOpen(true)}>
-						<div className="flex-grow-1">
+					<div className="cui-d-flex cui-align-items-center cursor-pointer" onClick={() => setIsModalOpen(true)}>
+						<div className="cui-flex-grow-1">
 							<SelectedElementProperty row={row} />
 						</div>
 						<Button size="sm" title="Edit element and property">
@@ -308,15 +308,15 @@ const SelectedElementProperty = observer(function SelectedElementProperty({
 }) {
 	const { styleStore } = useLayeredStyleElementsContext()
 
-	if (!row.elementId || !row.elementProperty) return <div className="text-muted">No element selected</div>
+	if (!row.elementId || !row.elementProperty) return <div className="cui-text-muted">No element selected</div>
 
 	const selectedElement = row.elementId ? styleStore.findElementById(row.elementId) : null
 	const selectedProperty = getElementSchemaProperty(selectedElement?.type, row.elementProperty)
 
 	return (
 		<>
-			<div className="fw-semibold">{selectedElement?.name || row.elementId}</div>
-			<div className="text-muted small">{selectedProperty?.label || row.elementProperty}</div>
+			<div className="cui-fw-semibold">{selectedElement?.name || row.elementId}</div>
+			<div className="cui-text-muted small">{selectedProperty?.label || row.elementProperty}</div>
 		</>
 	)
 })

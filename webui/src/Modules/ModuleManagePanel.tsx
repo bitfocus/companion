@@ -85,11 +85,11 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 						</WindowLinkOpen>
 					)}
 					{!!moduleStoreBaseInfo && (
-						<WindowLinkOpen className="ms-1" title="Open Store Page" href={moduleStoreBaseInfo.storeUrl}>
+						<WindowLinkOpen className="cui-ms-1" title="Open Store Page" href={moduleStoreBaseInfo.storeUrl}>
 							<FontAwesomeIcon icon={faExternalLink} size="xl" />
 						</WindowLinkOpen>
 					)}
-					<CloseButton closeFn={doCloseModule} visibilityClass=" d-xl-none" />
+					<CloseButton closeFn={doCloseModule} visibilityClass=" cui-d-xl-none" />
 				</div>
 			</div>
 			<div className="secondary-panel-simple-body">

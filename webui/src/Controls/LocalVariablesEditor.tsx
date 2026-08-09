@@ -34,7 +34,7 @@ export function LocalVariablesEditor({
 				className={className}
 				heading={heading}
 				subheading={
-					<StaticAlert color="info" className="mb-2 py-2">
+					<StaticAlert color="info" className="cui-mb-2 cui-py-2">
 						Local variables are not supported by all modules or fields. Fields which support local variables can be
 						identified by the <FontAwesomeIcon icon={faGlobe} /> icon.
 					</StaticAlert>

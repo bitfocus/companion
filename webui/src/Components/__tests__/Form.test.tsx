@@ -67,11 +67,17 @@ describe('FormLabel', () => {
 
 	it('appends passthrough className', () => {
 		const { container } = render(
-			<FormLabel htmlFor="x" sm={4} column="sm" className="mb-2">
+			<FormLabel htmlFor="x" sm={4} column="sm" className="cui-mb-2">
 				Name
 			</FormLabel>
 		)
-		expect(container.firstChild).toHaveClass('form-label', 'col-sm-4', 'col-form-label', 'col-form-label-sm', 'mb-2')
+		expect(container.firstChild).toHaveClass(
+			'form-label',
+			'col-sm-4',
+			'col-form-label',
+			'col-form-label-sm',
+			'cui-mb-2'
+		)
 	})
 
 	it('passes through htmlFor and other label attributes', () => {

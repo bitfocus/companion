@@ -55,7 +55,7 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 								setValue={(val) => updateQueryUrl('pages', val)}
 								placeholder={'1..99'}
 							/>
-							<p className="text-muted">
+							<p className="cui-text-muted">
 								use 1..6 for ranges, and commas for multiple selections. Follows provided order
 							</p>
 
@@ -97,20 +97,20 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 						</Grid.Col>
 						<Grid.Col sm={6} xs={12}>
 							<CheckboxInputFieldWithLabel
-								className="my-1"
+								className="cui-my-1"
 								label="Hide configure button"
 								value={!!query['noconfigure']}
 								setValue={(val) => updateQueryUrl('noconfigure', val)}
 							/>
 							<CheckboxInputFieldWithLabel
-								className="my-1"
+								className="cui-my-1"
 								label="Hide fullscreen button"
 								value={!!query['nofullscreen']}
 								setValue={(val) => updateQueryUrl('nofullscreen', val)}
 							/>
 
 							<CheckboxInputFieldWithLabel
-								className="my-1"
+								className="cui-my-1"
 								label="Show page headings"
 								value={!!query['showpages']}
 								setValue={(val) => updateQueryUrl('showpages', val)}

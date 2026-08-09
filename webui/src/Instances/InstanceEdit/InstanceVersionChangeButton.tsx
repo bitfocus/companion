@@ -132,12 +132,12 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 							<Modal.Body>
 								<Grid.Row className="g-sm-2">
 									<Grid.Col sm={12}>
-										<StaticAlert color="warning" className="mb-3">
+										<StaticAlert color="warning" className="cui-mb-3">
 											Be careful when downgrading the module version. Some features may not be available in older
 											versions.
 										</StaticAlert>
 										{!!saveError && (
-											<StaticAlert color="danger" className="mb-3">
+											<StaticAlert color="danger" className="cui-mb-3">
 												Save failed: {saveError}
 											</StaticAlert>
 										)}
@@ -154,8 +154,8 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 													name="versionId"
 													children={(field) => (
 														<>
-															<div className="col-sm-3 d-flex align-items-center">
-																<FormLabel htmlFor={versionFieldId} column="sm" className="mb-0 flex-grow-1">
+															<div className="col-sm-3 cui-d-flex cui-align-items-center">
+																<FormLabel htmlFor={versionFieldId} column="sm" className="cui-mb-0 cui-flex-grow-1">
 																	Version
 																</FormLabel>
 																{!!modules.getStoreInfo(service.moduleType, effectiveModuleId) && (
@@ -182,17 +182,17 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 									<Collapse.Root
 										open={advancedMode}
 										onOpenChange={handleAdvancedModeChange}
-										className="col-sm-12 mt-3 mb-2 p-0"
+										className="col-sm-12 cui-mt-3 cui-mb-2 cui-p-0"
 									>
-										<hr className="my-2" />
-										<Collapse.Trigger className="button button-link button-sm p-0 text-decoration-none">
-											<span className="me-1">{advancedMode ? '▼' : '▶'}</span>
+										<hr className="cui-my-2" />
+										<Collapse.Trigger className="button button-link button-sm cui-p-0 cui-text-decoration-none">
+											<span className="cui-me-1">{advancedMode ? '▼' : '▶'}</span>
 											Advanced Options
 										</Collapse.Trigger>
 
-										<Collapse.Panel keepMounted className="row g-sm-2 p-0">
+										<Collapse.Panel keepMounted className="row g-sm-2 cui-p-0">
 											<Grid.Col sm={12}>
-												<StaticAlert color="danger" className="mt-2 mb-3">
+												<StaticAlert color="danger" className="cui-mt-2 cui-mb-3">
 													{changeModuleDangerMessage}
 												</StaticAlert>
 											</Grid.Col>

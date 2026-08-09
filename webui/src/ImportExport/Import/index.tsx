@@ -49,7 +49,7 @@ export function ImportWizard({ importInfo, clearImport }: ImportWizardProps): Re
 	)
 
 	return snapshot.type === 'page' ? (
-		<div className="import-wizard single-page px-1">
+		<div className="import-wizard single-page cui-px-1">
 			<h4>
 				Import Single Page
 				<Button color="danger" size="sm" onClick={clearImport}>

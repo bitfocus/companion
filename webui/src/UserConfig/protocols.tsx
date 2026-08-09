@@ -28,7 +28,7 @@ export const SettingsProtocolsPage = memo(function UserConfig() {
 			<Grid.Col xl={6} className="primary-panel">
 				<div className="flex-column-layout">
 					<div className="fixed-header">
-						<div className="d-flex justify-content-between">
+						<div className="cui-d-flex cui-justify-content-between">
 							<div>
 								<h4 className="button-inline">
 									Settings - Protocols

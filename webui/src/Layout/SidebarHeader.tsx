@@ -33,15 +33,15 @@ export const SidebarFooter = observer(function SidebarFooter({ onContextMenu }: 
 	const { mobileMode } = useSidebarState()
 
 	return (
-		<div className="sidebar-footer2 d-flex">
+		<div className="sidebar-footer2 cui-d-flex">
 			<div className="nav-link sidebar-footer-toggler">
 				{mobileMode ? (
-					<span className={'nav-icon-wrapper d-flex block-collapse'} onMouseUp={onContextMenu}>
-						<FontAwesomeIcon className="nav-icon opacity-50" icon={faCog} />
+					<span className={'nav-icon-wrapper cui-d-flex block-collapse'} onMouseUp={onContextMenu}>
+						<FontAwesomeIcon className="nav-icon cui-opacity-50" icon={faCog} />
 					</span>
 				) : (
 					<span
-						className={classNames('nav-icon-wrapper', mobileMode ? 'd-none' : 'd-flex')}
+						className={classNames('nav-icon-wrapper', mobileMode ? 'cui-d-none' : 'cui-d-flex')}
 						onClick={onContextMenu}
 						onContextMenu={onContextMenu}
 						title="Click for more sidebar options"
@@ -50,7 +50,7 @@ export const SidebarFooter = observer(function SidebarFooter({ onContextMenu }: 
 					</span>
 				)}
 
-				<span className="flex-fill truncate">
+				<span className="cui-flex-fill truncate">
 					<span className="version">{versionName || 'Unknown'}</span>
 					{/* <br /> */}
 					<span className="version-sub">{versionSubheading}</span>

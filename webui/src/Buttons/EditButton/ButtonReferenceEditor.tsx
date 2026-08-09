@@ -61,9 +61,9 @@ export const ButtonReferenceEditor = observer(function ButtonReferenceEditor({
 
 	return (
 		<>
-			<Callout color="info" className="my-2">
-				<div className="d-flex gap-2">
-					<FontAwesomeIcon icon={faClone} className="mt-1" />
+			<Callout color="info" className="cui-my-2">
+				<div className="cui-d-flex cui-gap-2">
+					<FontAwesomeIcon icon={faClone} className="cui-mt-1" />
 					<div>
 						This button <strong>mirrors</strong> another button. It shows that button's appearance and forwards presses
 						to it.
@@ -143,8 +143,8 @@ function ResolvedLocationRow({ controlId, location, navigateToControl }: Resolve
 
 	return (
 		<Grid.Col sm={{ span: 8, offset: 4 }}>
-			<div className="d-flex align-items-center gap-2">
-				<span className="form-text m-0 flex-shrink-0">Resolves to</span>
+			<div className="cui-d-flex cui-align-items-center cui-gap-2">
+				<span className="form-text cui-m-0 cui-flex-shrink-0">Resolves to</span>
 				<div className="input-validity-wrapper">
 					<input
 						className={classNames('form-input text-input-field', {
@@ -158,7 +158,7 @@ function ResolvedLocationRow({ controlId, location, navigateToControl }: Resolve
 					<InputValidityIcon validity={validity} />
 				</div>
 				<Button
-					className="flex-shrink-0 text-nowrap"
+					className="cui-flex-shrink-0 cui-text-nowrap"
 					color="secondary"
 					variant="outline"
 					disabled={!targetLocation || !navigateToControl}
@@ -173,7 +173,7 @@ function ResolvedLocationRow({ controlId, location, navigateToControl }: Resolve
 				</Button>
 			</div>
 			{validity === 'invalid' && error === undefined && (
-				<div className="text-danger mt-1" style={{ fontSize: '0.875em' }}>
+				<div className="cui-text-danger cui-mt-1" style={{ fontSize: '0.875em' }}>
 					Not a valid button location — expected <code>page/row/column</code>
 				</div>
 			)}

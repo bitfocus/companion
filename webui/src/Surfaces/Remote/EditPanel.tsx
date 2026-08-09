@@ -98,7 +98,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 
 	return (
 		<Form
-			className="secondary-panel-simple-body d-flex flex-column pb-0"
+			className="secondary-panel-simple-body cui-d-flex cui-flex-column cui-pb-0"
 			onSubmit={(e) => {
 				e.preventDefault()
 				e.stopPropagation()
@@ -107,7 +107,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 				})
 			}}
 		>
-			<div className="flex-fill">
+			<div className="cui-flex-fill">
 				<div className="row g-sm-2">
 					{saveError && (
 						<Grid.Col className="fieldtype-textinput" sm={12}>
@@ -138,7 +138,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 										immediateValue
 									/>
 									{field.state.meta.errors.length > 0 && (
-										<StaticAlert color="warning" className="mt-2">
+										<StaticAlert color="warning" className="cui-mt-2">
 											{field.state.meta.errors}
 										</StaticAlert>
 									)}
@@ -150,8 +150,8 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 					<FormLabel htmlFor={integrationFieldId} sm={4} column="sm">
 						Surface Integration
 					</FormLabel>
-					<Grid.Col sm={8} className="flex px-2">
-						<span className="text-muted align-self-center">{instanceInfo?.label ?? remoteInfo.instanceId}</span>
+					<Grid.Col sm={8} className="flex cui-px-2">
+						<span className="cui-text-muted cui-align-self-center">{instanceInfo?.label ?? remoteInfo.instanceId}</span>
 					</Grid.Col>
 
 					<form.Subscribe
@@ -182,7 +182,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 																		sm={{ offset: 4, span: 8 }}
 																		className={classNames({ displayNone: !isVisible })}
 																	>
-																		<StaticAlert color="warning" className="mt-2">
+																		<StaticAlert color="warning" className="cui-mt-2">
 																			{field.state.meta.errors}
 																		</StaticAlert>
 																	</Grid.Col>
@@ -204,13 +204,13 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 			<form.Subscribe
 				selector={(state) => [state.isDirty, state.isValid, state.isSubmitting]}
 				children={([isDirty, isValid, isSubmitting]) => (
-					<div className="row connection-form-buttons border-top">
+					<div className="row connection-form-buttons cui-border-top">
 						<Grid.Col sm={12}>
-							<div className="flex flex-row">
+							<div className="flex cui-flex-row">
 								<div className="grow">
 									<Button
 										color="success"
-										className="me-md-1"
+										className="cui-me-md-1"
 										disabled={!isDirty || !isValid || isSubmitting}
 										type="submit"
 									>

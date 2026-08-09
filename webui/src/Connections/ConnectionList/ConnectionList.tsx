@@ -89,7 +89,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 		<div className="connections-list-container flex-column-layout">
 			<div className="fixed-header">
 				<h4 className="button-inline">
-					Connections <ContextHelpButton action="/user-guide/config/connections" className="pe-2" />
+					Connections <ContextHelpButton action="/user-guide/config/connections" className="cui-pe-2" />
 				</h4>
 
 				<p>
@@ -102,14 +102,14 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 				<GenericConfirmModal ref={confirmModalRef} />
 				<ConnectionVariablesModal ref={variablesModalRef} />
 
-				<ButtonGroup className="connection-group-actions mb-2">
+				<ButtonGroup className="connection-group-actions cui-mb-2">
 					<Button
 						color="primary"
 						size="sm"
-						className="d-xl-none"
+						className="cui-d-xl-none"
 						onClick={() => void navigate({ to: '/connections/add' })}
 					>
-						<FontAwesomeIcon icon={faPlug} className="me-1" />
+						<FontAwesomeIcon icon={faPlug} className="cui-me-1" />
 						Add Connection
 					</Button>
 					<CreateCollectionButton />
@@ -156,7 +156,7 @@ function ConnectionListTableHeading() {
 	const { visibleConnections } = useConnectionListContext()
 
 	return (
-		<div className="flex flex-row">
+		<div className="flex cui-flex-row">
 			<div className="grow">Connection</div>
 			<div className="whitespace-nowrap">
 				<ButtonGroup className="table-header-buttons">
@@ -174,8 +174,8 @@ function ConnectionListNoConnections() {
 	return (
 		<NonIdealState icon={faPlug}>
 			You haven't set up any connections yet. <br />
-			Try adding something from the list <span className="d-xl-none">below</span>
-			<span className="d-none d-xl-inline">to the right</span>.
+			Try adding something from the list <span className="cui-d-xl-none">below</span>
+			<span className="cui-d-none cui-d-xl-inline">to the right</span>.
 		</NonIdealState>
 	)
 }
@@ -193,7 +193,7 @@ function ConnectionGroupHeaderContent({ collection }: { collection: ConnectionCo
 	)
 
 	return (
-		<div className="ms-1">
+		<div className="cui-ms-1">
 			<SwitchInputField
 				id={undefined}
 				value={collection.metaData.enabled}

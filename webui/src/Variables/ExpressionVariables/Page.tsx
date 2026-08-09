@@ -121,14 +121,14 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 		<Grid.Row className="triggers-page split-panels">
 			<GenericConfirmModal ref={confirmModalRef} />
 
-			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
+			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'cui-d-xl-block cui-d-none'}`}>
 				<h4 className="button-inline">
 					Expression Variables
 					<ContextHelpButton action="/user-guide/config/variables#expression-variables" />
 				</h4>
-				<p className="mb-2">Here you can create some variables from live computed expressions</p>
+				<p className="cui-mb-2">Here you can create some variables from live computed expressions</p>
 
-				<div className="mb-2">
+				<div className="cui-mb-2">
 					<ButtonGroup>
 						<LinkButton color="primary" to="/variables" size="sm">
 							<FontAwesomeIcon icon={faArrowLeft} />
@@ -140,7 +140,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 						<CreateCollectionButton />
 					</ButtonGroup>
 
-					<SearchBox placeholder="Filter ..." filter={filter} setFilter={setFilter} className="mb-1 mt-2" />
+					<SearchBox placeholder="Filter ..." filter={filter} setFilter={setFilter} className="cui-mb-1 cui-mt-2" />
 				</div>
 
 				<PanelCollapseHelperProvider
@@ -167,7 +167,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 				</PanelCollapseHelperProvider>
 			</Grid.Col>
 
-			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
+			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'cui-d-xl-block cui-d-none'}`}>
 				<div className="secondary-panel-simple">
 					{!!selectedVariableId && <ExpressionVariableEditPanelHeading doCloseVariable={doCloseVariable} />}
 					<Outlet />
@@ -229,8 +229,8 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 	const fullname = item.variableName ? `$(expression:${item.variableName})` : null
 
 	return (
-		<div onClick={doEdit} className="flex flex-row align-items-center gap-2 cursor-pointer">
-			<div className="flex flex-column grow">
+		<div onClick={doEdit} className="flex cui-flex-row cui-align-items-center cui-gap-2 cursor-pointer">
+			<div className="flex cui-flex-column grow">
 				{fullname ? (
 					<span className="variable-style">
 						{fullname}
@@ -243,7 +243,7 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 				<span>{item.description ?? ''}</span>
 			</div>
 
-			<div className="action-buttons w-auto">
+			<div className="action-buttons cui-w-auto">
 				<ButtonGroup>
 					<Button onClick={doClone} title="Clone">
 						<FontAwesomeIcon icon={faClone} />

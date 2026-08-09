@@ -146,15 +146,15 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 						</Button>
 					</ButtonGroup>
 				</div>
-				<SearchBox filter={searchQuery} setFilter={setSearchQuery} className="mb-2" />
+				<SearchBox filter={searchQuery} setFilter={setSearchQuery} className="cui-mb-2" />
 				{allSections.length === 0 ? (
 					<StaticAlert color="primary">Connection has no presets.</StaticAlert>
 				) : visibleSections.length === 0 && searchQuery ? (
 					<NonIdealState icon={faSearch} text="No matching presets" />
 				) : (
 					<>
-						<Callout color="info" className="my-2">
-							<div className="d-flex align-items-center justify-content-between gap-3">
+						<Callout color="info" className="cui-my-2">
+							<div className="cui-d-flex cui-align-items-center cui-justify-content-between cui-gap-3">
 								<div>
 									<strong>Drag and drop</strong> the preset buttons below into your buttons-configuration.
 								</div>
@@ -179,10 +179,10 @@ function PresetPlacementModeToggle({ supportsReferences }: { supportsReferences:
 
 	return (
 		<div
-			className="d-flex align-items-center gap-2 flex-shrink-0"
+			className="cui-d-flex cui-align-items-center cui-gap-2 cui-flex-shrink-0"
 			title={!supportsReferences ? unsupportedTitle : undefined}
 		>
-			<span className="text-muted small text-nowrap">When placed:</span>
+			<span className="cui-text-muted small cui-text-nowrap">When placed:</span>
 			<ButtonGroup>
 				<Button
 					size="sm"
@@ -195,7 +195,7 @@ function PresetPlacementModeToggle({ supportsReferences }: { supportsReferences:
 							: unsupportedTitle
 					}
 				>
-					<FontAwesomeIcon icon={faLink} className="me-1" />
+					<FontAwesomeIcon icon={faLink} className="cui-me-1" />
 					Linked
 				</Button>
 				<Button
@@ -205,7 +205,7 @@ function PresetPlacementModeToggle({ supportsReferences }: { supportsReferences:
 					onClick={() => setMode('copy')}
 					title={supportsReferences ? 'Newly placed presets are a one-off copy you can freely edit' : unsupportedTitle}
 				>
-					<FontAwesomeIcon icon={faClone} className="me-1" />
+					<FontAwesomeIcon icon={faClone} className="cui-me-1" />
 					Copy
 				</Button>
 			</ButtonGroup>

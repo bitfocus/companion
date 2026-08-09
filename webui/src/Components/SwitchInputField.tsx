@@ -56,7 +56,7 @@ export function SwitchInputFieldWithLabel({
 	return (
 		<div className={`switch-input-with-label ${className}`}>
 			<SwitchInputField {...props} id={props.id || id} />
-			<FormLabel title={props.tooltip} className="m-0 ms-1" htmlFor={props.id || id}>
+			<FormLabel title={props.tooltip} className="cui-m-0 cui-ms-1" htmlFor={props.id || id}>
 				{label}
 			</FormLabel>
 		</div>

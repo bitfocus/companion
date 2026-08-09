@@ -21,13 +21,13 @@ export function BeginStep({ prevVersion, newStepTitles, showAll, onReviewAll }: 
 		return (
 			<div className="wizard-centered-step">
 				<NonIdealState icon={faRocket}>
-					<h4 className="mb-2">Welcome back!</h4>
+					<h4 className="cui-mb-2">Welcome back!</h4>
 					<p>
 						Since you last set up Companion, a few settings are new or have changed. We'll quickly walk you through them
 						- use the steps above to navigate.
 					</p>
-					<p className="mb-0">
-						<Button color="link" className="p-0 align-baseline" onClick={onReviewAll}>
+					<p className="cui-mb-0">
+						<Button color="link" className="cui-p-0 cui-align-baseline" onClick={onReviewAll}>
 							Review all settings instead
 						</Button>
 					</p>
@@ -40,8 +40,8 @@ export function BeginStep({ prevVersion, newStepTitles, showAll, onReviewAll }: 
 	return (
 		<div className="wizard-centered-step">
 			<NonIdealState icon={faRocket}>
-				<h4 className="mb-2">{isUpgrade ? 'Review your settings' : 'Welcome to Companion'}</h4>
-				<p className="mb-0">
+				<h4 className="cui-mb-2">{isUpgrade ? 'Review your settings' : 'Welcome to Companion'}</h4>
+				<p className="cui-mb-0">
 					{isUpgrade
 						? 'These are the settings we recommend you review. Use the steps above to jump between them.'
 						: "Let's get you set up. We'll walk through a few settings worth reviewing before you start - use the steps above to navigate."}

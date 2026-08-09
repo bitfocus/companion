@@ -57,7 +57,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables, location.pageNumber)
 
 	return (
-		<div className="grow flex flex-column min-h-0">
+		<div className="grow flex cui-flex-column min-h-0">
 			{runtimeProps && (
 				<MyErrorBoundary>
 					<ButtonEditorTabs
@@ -73,7 +73,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 						{(currentTab) => {
 							if (currentTab === 'style') {
 								return (
-									<div className="mt-10 h-100">
+									<div className="mt-10 cui-h-100">
 										{/* Wrap the entity-category, for :first-child to work */}
 										<MyErrorBoundary>
 											<LayeredButtonEditorStyle
@@ -170,7 +170,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 	return (
 		<Group
 			orientation="vertical"
-			className="button-layer-style-editor h-100"
+			className="button-layer-style-editor cui-h-100"
 			defaultLayout={savedPanelLayout}
 			onLayoutChanged={savePanelLayout}
 		>

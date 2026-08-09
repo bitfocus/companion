@@ -29,7 +29,7 @@ export const UserConfigSwitchValueRow = observer(function UserConfigSwitchValueR
 					setValue={(value) => userConfig.setValue(field, value ? activeValue : inactiveValue)}
 				/>
 			</td>
-			<td className="pe-3">
+			<td className="cui-pe-3">
 				<ResetButton userConfig={userConfig} field={field} />
 			</td>
 		</tr>

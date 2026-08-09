@@ -78,7 +78,7 @@ export function ControlOptionsEditor({
 			<Form className="row g-2 grow" onSubmit={PreventDefaultHandler}>
 				<FormLabel htmlFor={stepProgressionId} sm={4} column="sm">
 					Step Progression
-					<InlineHelpIcon className="ms-1">
+					<InlineHelpIcon className="cui-ms-1">
 						When this button has multiple steps, control how the next step changes
 					</InlineHelpIcon>
 				</FormLabel>
@@ -109,7 +109,7 @@ export function ControlOptionsEditor({
 
 				<FormLabel htmlFor={rotaryActionsId} sm={4} column="sm">
 					Rotary Actions
-					<InlineHelpIcon className="ms-1">Make this button compatible with rotation events</InlineHelpIcon>
+					<InlineHelpIcon className="cui-ms-1">Make this button compatible with rotation events</InlineHelpIcon>
 				</FormLabel>
 				<Grid.Col sm={8}>
 					<SwitchInputField id={rotaryActionsId} value={options.rotaryActions} setValue={setRotaryActions} />
@@ -117,7 +117,7 @@ export function ControlOptionsEditor({
 
 				<FormLabel htmlFor={canModifyStyleInApisId} sm={4} column="sm">
 					Allow style changes
-					<InlineHelpIcon className="ms-1">
+					<InlineHelpIcon className="cui-ms-1">
 						Allow the external APIs and internal actions to modify the style of this button
 					</InlineHelpIcon>
 				</FormLabel>

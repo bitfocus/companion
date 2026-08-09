@@ -71,7 +71,7 @@ export const ImageLibrarySelector = observer(function ImageLibrarySelector({
 
 	return (
 		<div className="image-library-selector">
-			<div className="pb-2">
+			<div className="cui-pb-2">
 				<SearchBox placeholder="Search images..." filter={searchQuery} setFilter={setSearchQuery} />
 			</div>
 

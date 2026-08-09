@@ -29,14 +29,14 @@ export function UsageDataModal(): React.JSX.Element {
 							<Modal.Title>Usage Statistics Data</Modal.Title>
 						</Modal.Header>
 						<Modal.Body>
-							<p className="mb-3">
+							<p className="cui-mb-3">
 								This is a live preview of the data transmitted for the usage statistics.
 								<br />
 								The id field is a randomly generated identifier for your Companion instance when you first launched it.
 								It helps us distinguish between different users while ensuring your anonymity.
 							</p>
 							{isLoading && (
-								<div className="text-center py-5">
+								<div className="cui-text-center cui-py-5">
 									<FontAwesomeIcon icon={faSpinner} spin size="2x" />
 								</div>
 							)}

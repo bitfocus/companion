@@ -76,7 +76,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 	})
 
 	if (variableDefinitions.length === 0) {
-		return <NonIdealState icon={faExclamationTriangle} text="Connection has no variables" className="mt-2" />
+		return <NonIdealState icon={faExclamationTriangle} text="Connection has no variables" className="cui-mt-2" />
 	}
 
 	const totalCount = variableDefinitions.length
@@ -84,7 +84,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 
 	return (
 		<>
-			<SearchBox placeholder="Filter ..." filter={filter} setFilter={setFilter} className="mb-1 mt-2" />
+			<SearchBox placeholder="Filter ..." filter={filter} setFilter={setFilter} className="cui-mb-1 cui-mt-2" />
 			<p className="variables-table-count">
 				{filter ? (
 					<>
@@ -165,7 +165,7 @@ const VariablesTableRow = observer(function VariablesTableRow({
 		<div className="variables-table-row">
 			<div className="variables-table-cell">
 				<div className="grid grid-col">
-					<div className="flex flex-row min-w-0">
+					<div className="flex cui-flex-row min-w-0">
 						<span className="variable-style truncate min-w-0" title={variableId}>
 							{variableId}
 						</span>

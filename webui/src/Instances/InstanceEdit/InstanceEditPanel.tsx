@@ -85,14 +85,14 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 	return (
 		<>
 			<Form
-				className="secondary-panel-simple-body d-flex flex-column pb-0"
+				className="secondary-panel-simple-body cui-d-flex cui-flex-column cui-pb-0"
 				onSubmit={(e) => {
 					e.preventDefault()
 					e.stopPropagation()
 					performSave()
 				}}
 			>
-				<div className="flex-fill">
+				<div className="cui-flex-fill">
 					<div className="row edit-connection">
 						{saveError && (
 							<Grid.Col className="fieldtype-textinput" sm={12}>
@@ -125,7 +125,7 @@ function InstanceFieldLabel({ fieldInfo }: { fieldInfo: SomeCompanionInputField 
 	return (
 		<>
 			{fieldInfo.label}
-			{fieldInfo.tooltip && <InlineHelpIcon className="ms-1">{fieldInfo.tooltip}</InlineHelpIcon>}
+			{fieldInfo.tooltip && <InlineHelpIcon className="cui-ms-1">{fieldInfo.tooltip}</InlineHelpIcon>}
 		</>
 	)
 }
@@ -176,8 +176,8 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 				Module Version
 			</FormLabel>
 			<Grid.Col className={`fieldtype-textinput`} sm={8}>
-				<div className="d-flex align-items-center gap-2">
-					<span className="fw-medium">{moduleVersion?.displayName ?? panelStore.instanceInfo.moduleVersionId}</span>
+				<div className="cui-d-flex cui-align-items-center cui-gap-2">
+					<span className="cui-fw-medium">{moduleVersion?.displayName ?? panelStore.instanceInfo.moduleVersionId}</span>
 
 					<InstanceVersionChangeButton
 						id={moduleVersionId}
@@ -221,7 +221,7 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 				/>
 
 				{cannotEnableReason && !isEnabled && (
-					<div className="text-danger mt-1" style={{ fontSize: '0.875em' }}>
+					<div className="cui-text-danger cui-mt-1" style={{ fontSize: '0.875em' }}>
 						{cannotEnableReason}
 					</div>
 				)}
@@ -245,7 +245,7 @@ const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionU
 		<>
 			<FormLabel htmlFor={updatePolicyId} sm={4} column="sm">
 				Update Policy
-				<InlineHelpIcon className="ms-1">
+				<InlineHelpIcon className="cui-ms-1">
 					How to check whether there are updates available for this {panelStore.service.moduleTypeDisplayName}
 				</InlineHelpIcon>
 			</FormLabel>
@@ -356,7 +356,7 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 
 	return (
 		<>
-			<hr className="my-3" />
+			<hr className="cui-my-3" />
 			{configData.fields.map((fieldInfo) => {
 				const isVisible = panelStore.isVisible(fieldInfo)
 				if (!isVisible) return null
@@ -411,13 +411,13 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 	const doDelete = useCallback(() => panelStore.service.deleteInstance(panelStore.labelValue), [panelStore])
 
 	return (
-		<div className="row connection-form-buttons border-top">
+		<div className="row connection-form-buttons cui-border-top">
 			<Grid.Col sm={12}>
-				<div className="flex flex-row">
+				<div className="flex cui-flex-row">
 					<div className="grow">
 						<Button
 							color="success"
-							className="me-md-1"
+							className="cui-me-md-1"
 							disabled={isLoading || isSaving || !isValid || !panelStore.isDirty()}
 							type="submit"
 							title={!isValid ? 'Please fix the errors before saving' : undefined}
@@ -477,7 +477,7 @@ const InstanceFormRow = observer(function InstanceFormRow({
 				<FormLabel htmlFor={inputId} sm={4} column="sm" style={{ display: !isVisible ? 'none' : undefined }}>
 					<InstanceFieldLabel fieldInfo={fieldInfo} />
 				</FormLabel>
-				<Grid.Col sm={8} style={{ display: !isVisible ? 'none' : undefined }} className="align-self-center">
+				<Grid.Col sm={8} style={{ display: !isVisible ? 'none' : undefined }} className="cui-align-self-center">
 					{children}
 				</Grid.Col>
 			</React.Fragment>
@@ -488,7 +488,7 @@ const InstanceFormRow = observer(function InstanceFormRow({
 
 		return (
 			<Grid.Col
-				className={classNames(`fieldtype-${fieldInfo.type}`, { 'd-none': hideInXs, 'd-sm-block': hideInXs })}
+				className={classNames(`fieldtype-${fieldInfo.type}`, { 'cui-d-none': hideInXs, 'cui-d-sm-block': hideInXs })}
 				sm={fieldInfo.width}
 				style={{ display: !isVisible ? 'none' : undefined }}
 			>

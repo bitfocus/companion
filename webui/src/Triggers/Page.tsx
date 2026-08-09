@@ -125,7 +125,7 @@ export const TriggersPage = observer(function Triggers() {
 
 			<Grid.Col
 				xs={twoPanelMode ? 6 : 12}
-				className={classnames('primary-panel', showPrimaryPanel ? 'd-block' : 'd-none')}
+				className={classnames('primary-panel', showPrimaryPanel ? 'cui-d-block' : 'cui-d-none')}
 			>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
@@ -138,7 +138,7 @@ export const TriggersPage = observer(function Triggers() {
 							variable updates.
 						</p>
 
-						<div className="mb-2">
+						<div className="cui-mb-2">
 							<ButtonGroup>
 								<Button color="primary" onClick={doAddNew} size="sm">
 									<FontAwesomeIcon icon={faAdd} /> Add Trigger
@@ -151,7 +151,7 @@ export const TriggersPage = observer(function Triggers() {
 							</Button>
 						</div>
 
-						<SearchBox placeholder="Filter ..." filter={filter} setFilter={setFilter} className="mb-1 mt-2" />
+						<SearchBox placeholder="Filter ..." filter={filter} setFilter={setFilter} className="cui-mb-1 cui-mt-2" />
 					</div>
 
 					<div className="scrollable-content">
@@ -179,7 +179,10 @@ export const TriggersPage = observer(function Triggers() {
 				</div>
 			</Grid.Col>
 
-			<Grid.Col xs={twoPanelMode ? 6 : 12} className={`secondary-panel ${showSecondaryPanel ? 'd-block' : 'd-none'}`}>
+			<Grid.Col
+				xs={twoPanelMode ? 6 : 12}
+				className={`secondary-panel ${showSecondaryPanel ? 'cui-d-block' : 'cui-d-none'}`}
+			>
 				<div className="secondary-panel-simple">
 					{!!selectedTriggerId && (
 						<TriggerEditPanelHeading doCloseTrigger={doCloseTrigger} twoPanelMode={twoPanelMode} />
@@ -217,7 +220,7 @@ function TriggerGroupHeaderContent({ collection }: { collection: TriggerCollecti
 	)
 
 	return (
-		<div className="ms-1">
+		<div className="cui-ms-1">
 			<SwitchInputField
 				id={undefined}
 				value={collection.metaData.enabled}
@@ -292,9 +295,9 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 	const triggerOrCollectionDisabled = !item.enabled || collectionDisabled
 
 	return (
-		<div className="flex flex-row align-items-center gap-2 cursor-pointer">
+		<div className="flex cui-flex-row cui-align-items-center cui-gap-2 cursor-pointer">
 			<div
-				className={classnames('flex flex-column grow', { disabled: triggerOrCollectionDisabled })}
+				className={classnames('flex cui-flex-column grow', { disabled: triggerOrCollectionDisabled })}
 				style={{ minWidth: 0 }}
 				onClick={doEdit}
 			>
@@ -302,7 +305,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 					{item.name}
 					{item.isRateLimited ? (
 						<span
-							className="ms-2 text-warning"
+							className="cui-ms-2 cui-text-warning"
 							title="This trigger is firing very rapidly and is being rate-limited. This is often caused by an accidental feedback loop, where the trigger's actions change a variable that re-triggers it."
 						>
 							<FontAwesomeIcon icon={faTriangleExclamation} /> Rate limited
@@ -312,8 +315,8 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 				<span className="truncate" dangerouslySetInnerHTML={descriptionHtml} />
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</div>
-			<div className="action-buttons w-auto">
-				<ButtonGroup className="ms-1">
+			<div className="action-buttons cui-w-auto">
+				<ButtonGroup className="cui-ms-1">
 					<SwitchInputField
 						id={undefined}
 						value={item.enabled}

@@ -49,7 +49,7 @@ export const ColumnRow: Story = {
 export const ColumnSizes: Story = {
 	render: () => (
 		<>
-			<Grid.Row className="mb-2">
+			<Grid.Row className="cui-mb-2">
 				<FormLabel htmlFor="c-base" sm={4} column>
 					column (base)
 				</FormLabel>
@@ -57,7 +57,7 @@ export const ColumnSizes: Story = {
 					<SampleInput id="c-base" />
 				</Grid.Col>
 			</Grid.Row>
-			<Grid.Row className="mb-2">
+			<Grid.Row className="cui-mb-2">
 				<FormLabel htmlFor="c-sm" sm={4} column="sm">
 					column="sm"
 				</FormLabel>

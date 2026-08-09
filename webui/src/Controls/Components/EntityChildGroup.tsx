@@ -87,7 +87,7 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 						groupInfo.label ? (
 							<>
 								{groupInfo.label}
-								{groupInfo.hint ? <InlineHelpIcon className="ms-1">{groupInfo.hint}</InlineHelpIcon> : null}
+								{groupInfo.hint ? <InlineHelpIcon className="cui-ms-1">{groupInfo.hint}</InlineHelpIcon> : null}
 							</>
 						) : null
 					}

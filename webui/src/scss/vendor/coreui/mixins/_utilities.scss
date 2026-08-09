@@ -6,6 +6,11 @@
 @use "../vendor/rfs" as *;
 @use "ltr-rtl" as *;
 
+// Companion: namespace for the generated CoreUI utility classes. Prefixing them (e.g. `.cui-p-3`)
+// keeps CoreUI's `!important` utilities from colliding with Tailwind's same-named utilities
+// (`.p-3`, …), so pages can be migrated from CoreUI utilities to Tailwind one at a time.
+$_cui-utility-prefix: "cui-";
+
 // Generate selectors for theme variants
 @function theme-prefix($theme, $selector) {
   @return #{"[data" + $data-infix + "theme="$theme + "] ." + $theme + "\\:" + $selector + ", [data" + $data-infix + "theme="$theme + "] ." + $theme + "\\:" + $selector + ":not([class*='#{$theme}:'])"};
@@ -34,6 +39,11 @@
     $property-class: if(sass(map.has-key($utility, class)): map.get($utility, class); else: list.nth($properties, 1));
     // stylelint-disable-next-line scss/at-function-named-arguments
     $property-class: if(sass($property-class == null): ""; else: $property-class);
+
+    // Companion: apply the `cui-` namespace to every non-empty utility class. Empty-class utilities
+    // (e.g. `visibility` → `.visible`/`.invisible`) are left unprefixed so they keep their names.
+    // stylelint-disable-next-line scss/at-function-named-arguments
+    $property-class: if(sass($property-class == ""): $property-class; else: $_cui-utility-prefix + $property-class);
 
     // Use custom CSS variable name if present, otherwise default to `class`
     // stylelint-disable-next-line scss/at-function-named-arguments, @stylistic/function-whitespace-after

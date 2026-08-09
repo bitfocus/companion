@@ -152,7 +152,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames({ displayNone: !isVisible })}>
 				{definition.label}
 				<InputFeatureIcons {...features} />
-				{definition.tooltip && <InlineHelpIcon className="ms-1">{definition.tooltip}</InlineHelpIcon>}
+				{definition.tooltip && <InlineHelpIcon className="cui-ms-1">{definition.tooltip}</InlineHelpIcon>}
 			</FormLabel>
 			<Grid.Col sm={8} className={classNames({ displayNone: !isVisible })}>
 				{control}

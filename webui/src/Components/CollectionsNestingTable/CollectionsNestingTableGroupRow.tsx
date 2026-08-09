@@ -79,8 +79,8 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 			index={index}
 			nestingLevel={nestingLevel}
 		>
-			<div className="d-flex align-items-center justify-content-between" onClick={toggleExpanded2}>
-				<div className="d-flex align-items-center flex-grow-1">
+			<div className="cui-d-flex cui-align-items-center cui-justify-content-between" onClick={toggleExpanded2}>
+				<div className="cui-d-flex cui-align-items-center cui-flex-grow-1">
 					{isEditing ? (
 						<TextInputFieldSimple
 							id={undefined}
@@ -93,12 +93,12 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 						/>
 					) : (
 						<>
-							<FontAwesomeIcon icon={isCollapsed ? faCaretRight : faCaretDown} className="caret-icon me-1" />
+							<FontAwesomeIcon icon={isCollapsed ? faCaretRight : faCaretDown} className="caret-icon cui-me-1" />
 							<span className="collection-name">{collection.label}</span>
 						</>
 					)}
 				</div>
-				<div className="d-flex align-items-center" onClick={(e) => e.stopPropagation()}>
+				<div className="cui-d-flex cui-align-items-center" onClick={(e) => e.stopPropagation()}>
 					{children}
 
 					{!!collectionsApi && (

@@ -119,7 +119,7 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 				})}
 
 				{simpleModeFieldIds ? (
-					<div className="text-center text-muted mt-3" style={{ fontSize: '0.875rem' }}>
+					<div className="cui-text-center cui-text-muted cui-mt-3" style={{ fontSize: '0.875rem' }}>
 						Some fields are hidden in simple mode
 					</div>
 				) : null}
@@ -135,10 +135,10 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 					return (
 						<Accordion.Item key={section.id} value={section.id}>
 							<Accordion.Header>
-								<Accordion.Trigger className="fw-bold">{section.label}</Accordion.Trigger>
+								<Accordion.Trigger className="cui-fw-bold">{section.label}</Accordion.Trigger>
 							</Accordion.Header>
 							<Accordion.Panel>
-								<div className="row g-2 p-2">
+								<div className="row g-2 cui-p-2">
 									{section.fields.map((field) => (
 										<SchemaFieldWrapper
 											key={field.id}
@@ -262,7 +262,7 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 				{() => (
 					<>
 						<Button color="primary" size="sm" onClick={addRow}>
-							<FontAwesomeIcon icon={faPlus} className="me-1" />
+							<FontAwesomeIcon icon={faPlus} className="cui-me-1" />
 							{field.addLabel ?? 'Add item'}
 						</Button>
 						{field.description && <div className="form-text">{field.description}</div>}
@@ -297,7 +297,7 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 								entityType={null}
 								isLocatedInGrid={false}
 								disabled={false}
-								labelClassName="ps-2"
+								labelClassName="cui-ps-2"
 							>
 								{(fieldValue, setInnerValue, inputId) => (
 									<OptionsInputControl

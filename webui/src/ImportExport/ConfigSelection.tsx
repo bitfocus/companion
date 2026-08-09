@@ -113,7 +113,7 @@ export const SURFACE_CHILD_OPTIONS: ReadonlyArray<{
 		label: (
 			<>
 				Known Surfaces
-				<InlineHelpIcon className="ms-1">The list of known surfaces, and their settings</InlineHelpIcon>
+				<InlineHelpIcon className="cui-ms-1">The list of known surfaces, and their settings</InlineHelpIcon>
 			</>
 		),
 	},
@@ -123,7 +123,7 @@ export const SURFACE_CHILD_OPTIONS: ReadonlyArray<{
 		label: (
 			<>
 				Surface Integrations
-				<InlineHelpIcon className="ms-1">The configured surface integrations</InlineHelpIcon>
+				<InlineHelpIcon className="cui-ms-1">The configured surface integrations</InlineHelpIcon>
 			</>
 		),
 	},
@@ -133,7 +133,7 @@ export const SURFACE_CHILD_OPTIONS: ReadonlyArray<{
 		label: (
 			<>
 				Remote Surfaces
-				<InlineHelpIcon className="ms-1">Connections for surfaces that are connected remotely</InlineHelpIcon>
+				<InlineHelpIcon className="cui-ms-1">Connections for surfaces that are connected remotely</InlineHelpIcon>
 			</>
 		),
 	},

@@ -106,12 +106,12 @@ export const ConfirmExportModal = observer(
 
 									<FormLabel htmlFor={exportSecretsId} sm={4} column="sm">
 										Include secrets
-										<InlineHelpIcon className="ms-1">
+										<InlineHelpIcon className="cui-ms-1">
 											Some connections have secret values that can be omitted from the export. Not all modules are
 											compatible with this
 										</InlineHelpIcon>
 									</FormLabel>
-									<div className="col-sm-8 d-flex align-items-center">
+									<div className="col-sm-8 cui-d-flex cui-align-items-center">
 										<SwitchInputField id={exportSecretsId} value={includeSecrets} setValue={setIncludeSecrets} />
 									</div>
 								</Form>

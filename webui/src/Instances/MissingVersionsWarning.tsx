@@ -69,7 +69,7 @@ export const MissingVersionsWarning = observer(function MissingVersionsWarning({
 		<StaticAlert color="info">
 			Some modules do not have versions specified, or are not installed.
 			<br />
-			<Button color="info" className="mt-2" onClick={doInstallAllMissing}>
+			<Button color="info" className="cui-mt-2" onClick={doInstallAllMissing}>
 				<FontAwesomeIcon icon={faDownload} />
 				&nbsp;Download &amp; Install missing versions
 			</Button>

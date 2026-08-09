@@ -45,7 +45,7 @@ export function ControlHotPressButtons({
 		<>
 			<ButtonGroup>
 				<Button
-					className="ms-1"
+					className="cui-ms-1"
 					color="warning"
 					onMouseDown={hotPressDown}
 					onMouseUp={hotPressUp}

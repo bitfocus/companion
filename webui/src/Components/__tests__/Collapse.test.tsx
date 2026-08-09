@@ -98,11 +98,11 @@ describe('Collapse.Panel class names', () => {
 	it('applies additional className', () => {
 		const { container } = render(
 			<Collapse.Root defaultOpen>
-				<Collapse.Panel className="row g-sm-2 p-0">Content</Collapse.Panel>
+				<Collapse.Panel className="row g-sm-2 cui-p-0">Content</Collapse.Panel>
 			</Collapse.Root>
 		)
 		const panel = container.querySelector('.collapse2-panel')
-		expect(panel).toHaveClass('collapse2-panel', 'row', 'g-sm-2', 'p-0')
+		expect(panel).toHaveClass('collapse2-panel', 'row', 'g-sm-2', 'cui-p-0')
 	})
 })
 

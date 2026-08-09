@@ -159,13 +159,16 @@ const UngroupedSection = observer(function UngroupedSection<TItem extends Collec
 			{showHeader &&
 				(showCollapseButtons ? (
 					<div className="collections-nesting-table-row-group">
-						<div className="d-flex align-items-center justify-content-between" onClick={collapseHelper.toggleCollapsed}>
-							<div className="d-flex align-items-center">
-								<FontAwesomeIcon icon={isCollapsed ? faCaretRight : faCaretDown} className="caret-icon me-1" />
+						<div
+							className="cui-d-flex cui-align-items-center cui-justify-content-between"
+							onClick={collapseHelper.toggleCollapsed}
+						>
+							<div className="cui-d-flex cui-align-items-center">
+								<FontAwesomeIcon icon={isCollapsed ? faCaretRight : faCaretDown} className="caret-icon cui-me-1" />
 								<span className="collection-name">Ungrouped {capitalize(itemName)}s</span>
 							</div>
 							{!isCollapsed && ungroupedItems.length > 1 && (
-								<div className="d-flex align-items-center" onClick={(e) => e.stopPropagation()}>
+								<div className="cui-d-flex cui-align-items-center" onClick={(e) => e.stopPropagation()}>
 									<CollectionItemsCollapseButtons itemIds={ungroupedItems.map((item) => item.id)} />
 								</div>
 							)}

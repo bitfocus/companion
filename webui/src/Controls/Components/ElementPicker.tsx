@@ -103,7 +103,7 @@ export function ElementPicker({
 		<>
 			<div className="element-modal-col">
 				<FormLabel htmlFor={undefined}>Element</FormLabel>
-				<div className="element-picker-list border rounded">
+				<div className="element-picker-list cui-border cui-rounded">
 					{styleStore.elements
 						.map((element) => (
 							<ElementTreeItem
@@ -122,10 +122,10 @@ export function ElementPicker({
 				<FormLabel htmlFor={undefined}>
 					{allowMultipleProperties ? 'Properties (select multiple)' : 'Property'}
 				</FormLabel>
-				<div className="element-picker-list border rounded">
-					{!selectedElementId && <div className="text-muted text-center p-3">Select an element first</div>}
+				<div className="element-picker-list cui-border cui-rounded">
+					{!selectedElementId && <div className="cui-text-muted cui-text-center cui-p-3">Select an element first</div>}
 					{selectedElementId && (!selectedSchema || selectedSchema.length === 0) && (
-						<div className="text-muted text-center p-3">No properties available for this element</div>
+						<div className="cui-text-muted cui-text-center cui-p-3">No properties available for this element</div>
 					)}
 					{selectedSchema?.map((option) => (
 						<PropertyListItem

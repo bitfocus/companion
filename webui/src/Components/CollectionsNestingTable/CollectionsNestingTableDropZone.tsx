@@ -20,7 +20,10 @@ export function CollectionsNestingTableDropZone({
 
 	return (
 		<div ref={ref} className={classNames('collections-nesting-table-dropzone', { 'is-drop-target': isDropTarget })}>
-			<CollectionsNestingTableNestingRow className="flex flex-row align-items-center" nestingLevel={nestingLevel}>
+			<CollectionsNestingTableNestingRow
+				className="flex cui-flex-row cui-align-items-center"
+				nestingLevel={nestingLevel}
+			>
 				<p>Drop {itemName} here</p>
 			</CollectionsNestingTableNestingRow>
 		</div>

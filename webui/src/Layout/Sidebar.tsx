@@ -147,7 +147,7 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 				)}
 			</span>
 
-			<span className="flex-fill truncate full-label">
+			<span className="cui-flex-fill truncate full-label">
 				<span>{item.name}</span>
 				{!!item.subheading && (
 					<>
@@ -157,7 +157,7 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 				)}
 			</span>
 
-			{item.target === '_blank' && <FontAwesomeIcon icon={faExternalLinkSquare} className="ms-1 full-label" />}
+			{item.target === '_blank' && <FontAwesomeIcon icon={faExternalLinkSquare} className="cui-ms-1 full-label" />}
 			{!!item.notifications && <item.notifications />}
 		</>
 	)

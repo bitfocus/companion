@@ -169,7 +169,7 @@ export const AddInstanceModal = observer(
 											/>
 										</Grid.Col>
 
-										<FormLabel htmlFor={versionFieldId} sm={4} column="sm" className="pe-0">
+										<FormLabel htmlFor={versionFieldId} sm={4} column="sm" className="cui-pe-0">
 											<div className="flex">
 												<span className="grow">Module Version&nbsp;</span>
 												{moduleInfo && selectedVersionInfo && (
@@ -191,13 +191,13 @@ export const AddInstanceModal = observer(
 												choices={versionChoices}
 											/>
 										</Grid.Col>
-										<Grid.Col sm={{ span: 8, offset: 4 }} className="mt-0">
+										<Grid.Col sm={{ span: 8, offset: 4 }} className="cui-mt-0">
 											<div className="form-text">Additional versions can be installed in the Modules Manager page.</div>
 										</Grid.Col>
 
 										{hasIncompatibleNewerVersion && (
 											<Grid.Col xs={12}>
-												<StaticAlert color="warning" className="mt-2 mb-0">
+												<StaticAlert color="warning" className="cui-mt-2 cui-mb-0">
 													There is a newer version of this module on the store, but it requires a newer version of
 													Companion.
 												</StaticAlert>

@@ -21,7 +21,7 @@ export function TimezoneStep({ config, setValue }: TimezoneStepProps): React.JSX
 				</p>
 			</Grid.Col>
 
-			<Grid.Col sm={12} className="mb-2">
+			<Grid.Col sm={12} className="cui-mb-2">
 				<DropdownInputField
 					htmlName="timezone"
 					choices={TIMEZONE_CHOICES}
@@ -32,7 +32,7 @@ export function TimezoneStep({ config, setValue }: TimezoneStepProps): React.JSX
 			</Grid.Col>
 
 			<Grid.Col sm={12}>
-				<p className="text-muted mt-3" style={{ fontSize: '0.875rem' }}>
+				<p className="cui-text-muted cui-mt-3" style={{ fontSize: '0.875rem' }}>
 					You can change this later on the 'Settings' tab in the GUI.
 				</p>
 			</Grid.Col>

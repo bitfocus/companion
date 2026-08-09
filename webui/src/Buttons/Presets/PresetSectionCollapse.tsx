@@ -189,7 +189,7 @@ interface PresetTextProps {
 }
 function PresetText({ grp }: Readonly<PresetTextProps>) {
 	return (
-		<div className="m-2">
+		<div className="cui-m-2">
 			<h5>{grp.name}</h5>
 			{grp.description ? <p>{grp.description}</p> : null}
 		</div>

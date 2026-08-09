@@ -196,7 +196,7 @@ export const ImportExportPage = observer(function ImportExport() {
 							{loadError ? <StaticAlert color="warning">{loadError}</StaticAlert> : ''}
 
 							<label className="button button-warning button-file">
-								<FontAwesomeIcon icon={faFileImport} className="me-2" />
+								<FontAwesomeIcon icon={faFileImport} className="cui-me-2" />
 								Import configuration
 								<input
 									type="file"
