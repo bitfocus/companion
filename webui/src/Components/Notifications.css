@@ -13,12 +13,12 @@
 	--notification-font-size: 0.875rem;
 	--notification-bg: color-mix(in srgb, var(--color-surface-dark) 85%, transparent);
 	--notification-border-width: var(--border-width);
-	--notification-border-color: var(--color-border-subtle);
+	--notification-border-color: var(--color-border-translucent);
 	--notification-border-radius: var(--radius);
 	--notification-box-shadow: 0 0.5rem 1rem var(--color-shadow-15);
 	--notification-header-color: var(--color-on-dark-muted);
 	--notification-header-bg: color-mix(in srgb, var(--color-surface-dark) 85%, transparent);
-	--notification-header-border-color: var(--color-border-subtle);
+	--notification-header-border-color: var(--color-border-translucent);
 }
 
 /* ─── Viewport (replaces .toast-container) ──────────────────────────────────── */

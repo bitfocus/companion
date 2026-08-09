@@ -15,7 +15,7 @@
 	--modal2-top-margin: 4vh;
 	--modal2-color: var(--color-text);
 	--modal2-bg: var(--color-surface);
-	--modal2-border-color: var(--color-border-subtle);
+	--modal2-border-color: var(--color-border-translucent);
 	--modal2-border-width: var(--border-width);
 	--modal2-border-radius: var(--radius-lg);
 	--modal2-box-shadow: 0 0.125rem 0.25rem color-mix(in srgb, var(--color-shadow) 7.5%, transparent);

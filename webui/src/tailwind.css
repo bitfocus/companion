@@ -73,6 +73,7 @@
 	/* Borders */
 	--color-border: #ddd;
 	--color-border-subtle: #e9ecef; /* faint divider (lighter than --color-border) */
+	--color-border-translucent: color-mix(in srgb, var(--color-shadow) 17.5%, transparent); /* translucent hairline that darkens against its backdrop (modals, toasts, separators) */
 	--color-border-muted: #dddfe2;
 	--color-border-medium: #bbb; /* stronger than --color-border (e.g. tab bar underline) */
 	--color-border-strong: #999;
