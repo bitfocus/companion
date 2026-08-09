@@ -167,7 +167,10 @@
 	--color-text-strong: #fff;
 	--color-text-muted: rgba(255, 255, 255, 0.6);
 	--color-text-faint: rgba(255, 255, 255, 0.38);
+	--color-surface-dark: #212631;
+	--color-surface-muted: #323a49;
 	--color-surface-subtle: rgb(41.5, 48, 61);
+	--color-border: #323a49;
 
 	.sidebar-toggler {
 		filter: var(--sidebar-toggler-white-filter);
