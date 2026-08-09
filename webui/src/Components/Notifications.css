@@ -106,23 +106,3 @@
 	padding: var(--notification-padding-x);
 	word-wrap: break-word;
 }
-
-/* Legacy CoreUI toast classes (still used by the app-level toast markup). */
-.toast {
-	color: white;
-	margin-left: 10px;
-	margin-top: 5px;
-}
-
-.toast-header {
-	color: #eee;
-	font-weight: bold;
-	font-size: 16px;
-
-	padding: 10px 15px;
-}
-
-.toast-body {
-	padding: 10px 15px 15px 15px;
-	font-size: 14px;
-}
