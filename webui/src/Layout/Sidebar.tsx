@@ -475,7 +475,7 @@ export const MySidebar = memo(function MySidebar() {
 					<div className="sidebar-bottom-shadow" />
 				</div>
 				{showHelpButtons && (
-					<ul className="sidebar-nav nav-secondary border-top">
+					<ul className="sidebar-nav nav-secondary">
 						<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
 						<SidebarMenuItem name="User Guide" icon={faInfo} path="/user-guide/" target="_blank" />
 						<SidebarMenuItemGroup
@@ -718,8 +718,7 @@ function SidebarRoot({
 	return (
 		<>
 			<div
-				className={classNames('sidebar sidebar-dark sidebar-fixed', {
-					// [`sidebar-${colorScheme}`]: colorScheme,
+				className={classNames('sidebar sidebar-fixed', {
 					'sidebar-narrow': narrow,
 					//'no-transition-all': narrow, // optional, but this works only after very long transitions (modules page)
 					// 'sidebar-overlaid': overlaid,

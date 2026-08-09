@@ -5,10 +5,20 @@
      --sidebar-occupy-start   read by layout.css to pad the main content
      --sidebar-narrow-width   read by the narrow-mode rules
      --sidebar-nav-link-bg / -active-bg / -border-radius / -icon-color / -padding-x
-   Theming flows through the theme's --color-text / -text-strong / -text-faint / -surface-subtle
-   tokens, which `.sidebar-dark` overrides with dark values for the sidebar subtree. */
+   The sidebar is always dark (see Sidebar.tsx), so `.sidebar` overrides the theme's text/surface/
+   border tokens with dark values for its whole subtree. */
 
 .sidebar {
+	/* Always-dark: override the theme's text/surface/border tokens for the whole sidebar subtree. */
+	--color-text: rgba(255, 255, 255, 0.87);
+	--color-text-strong: #fff;
+	--color-text-muted: rgba(255, 255, 255, 0.6);
+	--color-text-faint: rgba(255, 255, 255, 0.38);
+	--color-surface-dark: #212631;
+	--color-surface-muted: #323a49;
+	--color-surface-subtle: rgb(41.5, 48, 61);
+	--color-border: #323a49;
+
 	position: relative;
 	display: flex;
 	flex: 0 0 16rem;
@@ -156,24 +166,6 @@
 		&.show {
 			opacity: var(--sidebar-backdrop-opacity);
 		}
-	}
-}
-
-/* The sidebar is always dark (see Sidebar.tsx), so it redefines the theme's text/surface tokens with
-   dark values for its subtree. These were CoreUI's dark-theme body values, kept now that we no longer
-   support a CoreUI dark mode. */
-.sidebar-dark {
-	--color-text: rgba(255, 255, 255, 0.87);
-	--color-text-strong: #fff;
-	--color-text-muted: rgba(255, 255, 255, 0.6);
-	--color-text-faint: rgba(255, 255, 255, 0.38);
-	--color-surface-dark: #212631;
-	--color-surface-muted: #323a49;
-	--color-surface-subtle: rgb(41.5, 48, 61);
-	--color-border: #323a49;
-
-	.sidebar-toggler {
-		filter: var(--sidebar-toggler-white-filter);
 	}
 }
 
@@ -569,6 +561,7 @@
 
 	.nav-secondary {
 		flex: none;
+		border-top: var(--border-width) solid var(--color-border);
 
 		.nav-group-toggle::after {
 			transform: rotate(180deg);
@@ -656,6 +649,7 @@
 	.sidebar-footer2 {
 		justify-content: left;
 		padding: 0.5rem 1rem;
+		border-top: var(--border-width) solid var(--color-border);
 
 		.sidebar-footer-toggler {
 			display: flex;
