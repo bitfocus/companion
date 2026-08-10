@@ -243,14 +243,14 @@ describe('ButtonPreviewBase', () => {
 			expect(container.firstElementChild).not.toHaveClass('clickable')
 		})
 
-		it('maps fixedSize to the fixed / fixed-100 classes', () => {
+		it('maps fixedSize to the fixed-72 / fixed-100 classes', () => {
 			const { root: fixed } = setupBase({ fixedSize: true })
-			expect(fixed).toHaveClass('fixed')
+			expect(fixed).toHaveClass('fixed-72')
 			expect(fixed).not.toHaveClass('fixed-100')
 
 			const { root: fixed100 } = setupBase({ fixedSize: 100 })
 			expect(fixed100).toHaveClass('fixed-100')
-			expect(fixed100).not.toHaveClass('fixed')
+			expect(fixed100).not.toHaveClass('fixed-72')
 		})
 
 		it('reflects draggable / selected / right / custom className', () => {
