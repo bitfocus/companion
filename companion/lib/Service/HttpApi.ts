@@ -319,7 +319,9 @@ export class ServiceHttpApi {
 		this.#apiRouter.route('/variable/:label/:name/value').get(this.#moduleVariableGetValue)
 
 		// surfaces
+		this.#apiRouter.get('/surfaces', this.#surfacesList)
 		this.#apiRouter.post('/surfaces/rescan', this.#surfacesRescan)
+		this.#apiRouter.post('/surfaces/:id/brightness', this.#surfaceSetBrightness)
 
 		// connections
 		this.#apiRouter.get('/connections', this.#connectionsList)
@@ -347,6 +349,62 @@ export class ServiceHttpApi {
 				res.status(500).send('fail')
 			}
 		)
+	}
+
+	/**
+	 * List all surfaces
+	 */
+	#surfacesList = (_req: Express.Request, res: Express.Response): void => {
+		this.logger.debug('Got HTTP GET /api/surfaces')
+
+		const surfaces = this.#serviceApi.getSurfacesList().flatMap((group) => {
+			// All surfaces in a group share the same page, so resolve it once per group
+			const page = this.#serviceApi.getSurfacePage(group.id)
+			return group.surfaces.map((surface) => ({
+				id: surface.id,
+				type: surface.type,
+				integrationType: surface.integrationType,
+				name: surface.name,
+				displayName: surface.displayName,
+				isConnected: surface.isConnected,
+				size: surface.size,
+				brightness: surface.brightness,
+				page,
+			}))
+		})
+
+		res.json(surfaces)
+	}
+
+	/**
+	 * Set the brightness of a surface
+	 */
+	#surfaceSetBrightness = (req: Express.Request, res: Express.Response): void => {
+		const surfaceId = req.params.id
+
+		const rawValue = req.query.brightness
+		const brightnessText = typeof rawValue === 'string' ? rawValue.trim() : undefined
+		const brightness = Number(brightnessText)
+
+		this.logger.debug(`Got HTTP surface set brightness "${surfaceId}" to ${JSON.stringify(rawValue)}`)
+
+		if (
+			brightnessText === undefined ||
+			brightnessText === '' ||
+			!Number.isFinite(brightness) ||
+			brightness < 0 ||
+			brightness > 100
+		) {
+			res.status(400).send('Invalid brightness')
+			return
+		}
+
+		if (!this.#serviceApi.surfaceSetBrightness(surfaceId, brightness)) {
+			res.status(404).send('Not found')
+			return
+		}
+
+		res.send('ok')
 	}
 
 	/**
