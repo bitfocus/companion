@@ -23,6 +23,19 @@ export function groupItemsByCollection<TItem extends { collectionId: string | nu
 	// Track which items have been assigned to collections
 	const assignedItemIds = new Set<TItem>()
 
+	const sortedItems = [...items].sort((a, b) => {
+		let sortA = a.sortOrder ?? 0
+		let sortB = b.sortOrder ?? 0
+
+		if (sortA < sortB) {
+			return -1
+		} else if (sortA > sortB) {
+			return 1
+		}
+
+		return 0
+	})
+
 	/**
 	 * Recursively builds a group for a collection and its direct children
 	 */
@@ -32,18 +45,6 @@ export function groupItemsByCollection<TItem extends { collectionId: string | nu
 	): DropdownChoiceGroup | null => {
 		const groupLabel = [...parentPath, collection.label || `Collection #${collection.id}`].join(' / ')
 		const groupOptions: DropdownChoice[] = []
-
-		const sortedItems = [...items].sort((a, b) => {
-			if (a.sortOrder === undefined || b.sortOrder === undefined) return 0
-
-			if (a?.sortOrder < b?.sortOrder) {
-				return -1
-			} else if (a.sortOrder > b.sortOrder) {
-				return 1
-			}
-
-			return 0
-		})
 
 		// Add direct children items of this collection
 		for (const item of sortedItems) {
