@@ -1,0 +1,16 @@
+.container-fluid.loading {
+	h3 {
+		/* color: white; */
+		text-align: center;
+
+		margin-bottom: 1rem;
+	}
+
+	.progress2 {
+		background-color: var(--color-loading-track);
+	}
+
+	.row {
+		margin-top: 15vh;
+	}
+}

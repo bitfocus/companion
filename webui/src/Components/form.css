@@ -1,0 +1,242 @@
+@import '../breakpoints.css';
+
+.flex-form {
+	/* The modal2 parts manage their own padding and borders, so exclude them from the generic child margin
+	   (the same way .button-group is) — otherwise the body's margin adds an unwanted gap before the footer. */
+	& > div:not(.button-group):not(.modal2-body):not(.modal2-footer) {
+		/* column */
+		margin-bottom: 10px;
+	}
+
+	label {
+		justify-content: left;
+		font-weight: bold;
+		font-size: 0.95em;
+		margin-bottom: 0.15rem;
+
+		svg {
+			margin-left: 5px;
+		}
+	}
+}
+
+.form-label {
+	margin-bottom: 0.5rem;
+	font-weight: bold;
+	align-content: center;
+
+	&.disabled {
+		color: var(--color-text-disabled);
+	}
+
+	/* Column label for horizontal forms: vertical padding aligns the label with the adjacent input
+	   (input padding-y + 1px border). */
+	&.col-form-label {
+		padding-top: calc(0.375rem + 1px);
+		padding-bottom: calc(0.375rem + 1px);
+		margin-bottom: 0;
+		line-height: 1.5;
+
+		&.col-form-label-lg {
+			padding-top: calc(0.5rem + 1px);
+			padding-bottom: calc(0.5rem + 1px);
+			font-size: 1.25rem;
+		}
+
+		&.col-form-label-sm {
+			padding-top: calc(0.25rem + 1px);
+			padding-bottom: calc(0.25rem + 1px);
+			font-size: 0.875rem;
+		}
+	}
+
+	.feature-icons {
+		display: inline-flex;
+		align-items: center;
+
+		background-color: var(--color-border);
+		border-radius: 100px; /* as much as possible */
+
+		margin-left: 3px;
+
+		padding-left: 3px;
+		padding-right: 3px;
+
+		svg {
+			margin-left: 1px;
+			margin-right: 1px;
+
+			font-size: 0.8rem !important;
+		}
+	}
+}
+
+label.disabled {
+	color: var(--color-text-disabled);
+}
+
+/* Small helper/description text shown beneath a field. */
+.form-text {
+	margin-top: 0.25rem;
+	font-size: 0.875em;
+	color: var(--color-text-muted);
+}
+
+/* Shared base for our custom text-style inputs (the number field, and the text inputs via
+   `text-input-field`) so they share one input base rather than each re-declaring it. Add `form-input`
+   in the markup, then layer the component's own rules on top. */
+.form-input {
+	padding: 0.375rem 0.75rem;
+	font-size: 1rem;
+	font-weight: 400;
+	line-height: 1.5;
+	color: var(--color-text);
+	appearance: none;
+	background-color: var(--color-input-bg);
+	background-clip: padding-box;
+	border: var(--border-width) solid var(--color-border);
+	border-radius: var(--radius);
+	transition:
+		border-color 0.15s ease-in-out,
+		box-shadow 0.15s ease-in-out;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+
+	&.invalid-value {
+		color: var(--color-input-invalid);
+	}
+
+	&:focus-visible {
+		color: var(--color-text);
+		background-color: var(--color-input-bg);
+		border-color: var(--color-primary-soft);
+		outline: 0;
+		box-shadow: 0 0 0 0.25rem var(--color-focus-ring);
+
+		&.invalid-value {
+			color: var(--color-input-invalid);
+		}
+	}
+
+	&::placeholder {
+		color: var(--color-text-muted);
+		opacity: 1;
+	}
+
+	&:disabled {
+		background-color: var(--color-surface-muted);
+		opacity: 1;
+	}
+}
+
+/* HACK: stopgap for the legacy .input-group until its remaining consumers move to .input-group2 */
+.input-group {
+	flex-wrap: nowrap;
+}
+
+.input-group2 {
+	position: relative;
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: stretch;
+	width: 100%;
+
+	> .button {
+		/* Allow other elements to border on top of buttons */
+		z-index: 2;
+		position: relative;
+
+		/* Avoid text wrapping */
+		white-space: nowrap;
+	}
+
+	> .input-group2-text {
+		display: flex;
+		align-items: center;
+		padding: 0.375rem 0.75rem;
+		font-size: 1rem;
+		font-weight: 400;
+		line-height: 1.5;
+		color: var(--color-text);
+		text-align: center;
+		white-space: nowrap;
+		background-color: var(--color-surface-subtle);
+		border: var(--border-width) solid var(--color-border);
+		border-radius: var(--radius);
+	}
+
+	> :focus {
+		/* Allow other elements to border on top of focused inputs */
+		z-index: 5;
+	}
+
+	/* Base UI's NumberField renders a visually-hidden <input aria-hidden> as a trailing
+	   sibling, so :last-child would wrongly target it and strip the real last element's
+	   rounding. Match "has a following visible sibling" instead. */
+	> :has(~ :not([aria-hidden])),
+	> :has(~ :not([aria-hidden])) .input-group-borders {
+		--border-right-radius: 0;
+		border-top-right-radius: 0;
+		border-bottom-right-radius: 0;
+
+		&.input-group2-text {
+			border-right: 0;
+		}
+	}
+	> :not(:first-child),
+	> :not(:first-child) .input-group-borders {
+		--border-left-radius: 0;
+		border-top-left-radius: 0;
+		border-bottom-left-radius: 0;
+
+		&.input-group2-text {
+			border-left: 0;
+		}
+	}
+}
+
+/* Shared chrome for the connection/instance/surface edit and list panels (used across the
+   Connections, Instances, Surfaces and Modules features). */
+.edit-connection {
+	margin-bottom: 1em;
+
+	& > div {
+		/* column */
+		margin-bottom: 0.5rem;
+	}
+
+	label {
+		justify-content: left;
+		font-weight: bold;
+		font-size: 1em;
+		margin-bottom: 0.5rem;
+
+		&.col-form-label {
+			margin-bottom: 0.5rem;
+		}
+
+		@media (--bp-sm-down) {
+			&.col-form-label {
+				/* Respect the override */
+				margin-bottom: 0;
+			}
+		}
+	}
+}
+
+.connection-form-buttons {
+	position: sticky;
+	bottom: 0;
+	flex-shrink: 0;
+	padding-top: 1rem;
+	margin-top: auto;
+	background-color: var(--color-surface);
+	padding-bottom: 1.5rem;
+}
+
+.connection-group-actions {
+	overflow: hidden; /* workaround for a coreui "bug" that counts hidden elements as present and therefore applies the wrong border-radius */
+	margin-bottom: 1rem;
+}

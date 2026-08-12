@@ -60,7 +60,7 @@ export const SurfaceInstanceEditPanel = observer(function SurfaceInstanceEditPan
 })
 
 function useInstanceEditPanelService(
-	confirmModalRef: React.RefObject<GenericConfirmModalRef>,
+	confirmModalRef: React.RefObject<GenericConfirmModalRef | null>,
 	instanceId: string
 ): InstanceEditPanelService<ClientSurfaceInstanceConfig> {
 	const navigate = useNavigate()

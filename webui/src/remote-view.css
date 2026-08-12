@@ -1,0 +1,29 @@
+/* Standalone remote surface views — the tablet page, the emulator, and their shared status overlay.
+ *
+ * These pages are always dark and are deliberately NOT wired into the app theme: we don't want to
+ * re-theme them along with the rest of the app (at most some small, limited overrides later). So they
+ * get their own isolated `--remote-*` variable set, scoped to their page roots, rather than reusing the
+ * app's `--color-*` tokens. `:where()` keeps the definitions at zero specificity so page rules win. */
+:where(.page-tablet, .page-emulator-base, .page-emulator, .page-emulator-list, .standalone-overlay) {
+	--remote-bg: #181818;
+	--remote-surface: #222; /* raised panel (e.g. the tablet configure box) */
+	--remote-border: #555;
+
+	--remote-fg: #f7f7f7; /* primary text/icons */
+	--remote-fg-strong: #fff; /* emphasis + base for the translucent overlays below */
+	--remote-fg-muted: color-mix(in srgb, var(--remote-fg-strong) 60%, transparent);
+
+	--remote-accent: #d69e2e; /* gold chrome accent */
+	--remote-accent-muted: #af8022;
+
+	--remote-armed: rgba(255, 0, 0, 0.5); /* an "armed"/live button overlay */
+	--remote-shadow: rgba(0, 0, 0, 0.35);
+
+	/* Neutral button on the dark status overlay (see standalone-status.css) */
+	--remote-btn-bg: color-mix(in srgb, var(--remote-fg-strong) 8%, transparent);
+	--remote-btn-bg-hover: color-mix(in srgb, var(--remote-fg-strong) 16%, transparent);
+	--remote-btn-bg-active: color-mix(in srgb, var(--remote-fg-strong) 22%, transparent);
+	--remote-btn-border: color-mix(in srgb, var(--remote-fg-strong) 25%, transparent);
+	--remote-btn-border-hover: color-mix(in srgb, var(--remote-fg-strong) 40%, transparent);
+	--remote-btn-border-active: color-mix(in srgb, var(--remote-fg-strong) 50%, transparent);
+}

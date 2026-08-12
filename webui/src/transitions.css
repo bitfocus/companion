@@ -1,0 +1,34 @@
+/* `.fade` cross-fades an element between hidden and shown: opacity 0 until the `.show` class is
+   added. Used by the Alert component and the mobile Sidebar overlay. */
+
+.fade {
+	transition: opacity 0.15s linear;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+
+	&:not(.show) {
+		opacity: 0;
+	}
+}
+
+/* `fadeIn` fades an element in once on mount (used by the app-level loading/error transitions). */
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
+
+.fadeIn {
+	animation-duration: 1s;
+	animation-name: fadeIn;
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+	}
+}

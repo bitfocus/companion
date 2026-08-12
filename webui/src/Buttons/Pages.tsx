@@ -1,4 +1,5 @@
 import { useDragDropMonitor } from '@dnd-kit/react'
+import './Pages.css'
 import { isSortable, useSortable } from '@dnd-kit/react/sortable'
 import { faPlus, faShareFromSquare, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -17,7 +18,7 @@ interface PagesListProps {
 	setPageNumber: (page: number) => void
 }
 
-export const PagesList = observer(function PagesList({ setPageNumber }: PagesListProps): JSX.Element {
+export const PagesList = observer(function PagesList({ setPageNumber }: PagesListProps): React.JSX.Element {
 	const { pages } = useContext(RootAppStoreContext)
 
 	const deleteRef = useRef<GenericConfirmModalRef>(null)

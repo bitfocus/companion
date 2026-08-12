@@ -138,7 +138,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				value: { value: 0, isExpression: false },
 				min: { value: 0, isExpression: false },
 				max: { value: 100, isExpression: false },
-				origin: { value: 0, isExpression: false },
+				origin: { value: null, isExpression: false },
 				symmetric: { value: false, isExpression: false },
 				orientation: { value: 'horizontal', isExpression: false },
 				reverse: { value: false, isExpression: false },
@@ -149,6 +149,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				roundedEnds: { value: true, isExpression: false },
 				fillEnabled: { value: true, isExpression: false },
 				multiColour: { value: true, isExpression: false },
+				fillWidth: { value: 100, isExpression: false },
 				stops: {
 					value: [
 						{

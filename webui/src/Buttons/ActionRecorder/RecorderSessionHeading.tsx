@@ -13,7 +13,7 @@ import { PreventDefaultHandler, useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface RecorderSessionHeadingProps {
-	confirmRef: RefObject<GenericConfirmModalRef>
+	confirmRef: RefObject<GenericConfirmModalRef | null>
 	sessionInfo: RecordSessionInfo
 	doFinish: () => void
 }

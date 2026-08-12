@@ -1,4 +1,5 @@
 import { faFacebook, faGithub, faSlack } from '@fortawesome/free-brands-svg-icons'
+import './Sidebar.css'
 import {
 	faArrowsDownToLine,
 	faArrowsUpToLine,
@@ -146,7 +147,7 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 				)}
 			</span>
 
-			<span className="flex-fill text-truncate full-label">
+			<span className="flex-fill truncate full-label">
 				<span>{item.name}</span>
 				{!!item.subheading && (
 					<>
@@ -474,7 +475,7 @@ export const MySidebar = memo(function MySidebar() {
 					<div className="sidebar-bottom-shadow" />
 				</div>
 				{showHelpButtons && (
-					<ul className="sidebar-nav nav-secondary border-top">
+					<ul className="sidebar-nav nav-secondary">
 						<SidebarMenuItem name="What's New" icon={faStar} onClick={whatsNewOpen} />
 						<SidebarMenuItem name="User Guide" icon={faInfo} path="/user-guide/" target="_blank" />
 						<SidebarMenuItemGroup
@@ -554,7 +555,7 @@ const SidebarVariablesGroups = observer(function SidebarVariablesGroups() {
 	)
 
 	// Recursive render
-	const renderCollection = (collection: ConnectionCollection): React.ReactNode => {
+	const renderCollection = (collection: ConnectionCollection): React.ReactElement | null => {
 		const childConnections = connectionsByCollection.get(collection.id)
 
 		const childCollectionsRendered = (collection.children || [])
@@ -717,8 +718,7 @@ function SidebarRoot({
 	return (
 		<>
 			<div
-				className={classNames('sidebar sidebar-dark sidebar-fixed', {
-					// [`sidebar-${colorScheme}`]: colorScheme,
+				className={classNames('sidebar sidebar-fixed', {
 					'sidebar-narrow': narrow,
 					//'no-transition-all': narrow, // optional, but this works only after very long transitions (modules page)
 					// 'sidebar-overlaid': overlaid,

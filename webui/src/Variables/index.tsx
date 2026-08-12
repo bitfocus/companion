@@ -1,6 +1,7 @@
 import { faArrowLeft, faArrowRight, faDollarSign, faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate, useParams } from '@tanstack/react-router'
+import './variables-category-grid.css'
 import { observer } from 'mobx-react-lite'
 import { memo, useCallback, useContext } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'

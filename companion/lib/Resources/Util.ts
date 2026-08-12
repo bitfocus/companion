@@ -68,6 +68,7 @@ export const rgb = (r: number | string, g: number | string, b: number | string, 
 
 /**
  * Parse a css color string to a number
+ * Note: alpha is not preserved, and will be ignored
  */
 export const parseColorToNumber = (color: string | number | Uint8Array): number | false => {
 	if (typeof color === 'string') {

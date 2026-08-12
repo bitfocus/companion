@@ -1,0 +1,52 @@
+.settings-category-spacer:not(:first-child) {
+	height: 20px;
+}
+
+.settings-category-row {
+	th {
+		font-weight: bold;
+		font-size: 18px;
+		padding-top: 10px !important;
+		padding-bottom: 10px !important;
+		/* background-color: #fff !important; */
+		border-bottom: 1px solid var(--color-border-muted) !important;
+	}
+}
+
+.remote-control-tabs .nav-link {
+	cursor: pointer;
+}
+
+.settings-grid-card {
+	color: inherit;
+	display: block;
+
+	> :hover {
+		background-color: var(--color-surface-hover);
+	}
+}
+
+/* Layout for the contents of a backup rule row */
+.backup-rule-content {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	width: 100%;
+	min-width: 0;
+
+	.backup-rule-info,
+	.backup-rule-cron {
+		flex: 1 1 0;
+		min-width: 0;
+	}
+
+	.backup-rule-actions {
+		flex: 0 0 auto;
+		margin-left: auto;
+
+		.button {
+			padding-left: 0.25rem;
+			padding-right: 0.25rem;
+		}
+	}
+}

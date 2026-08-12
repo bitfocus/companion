@@ -42,7 +42,7 @@ function Button({
 	variant = 'default',
 	size = 'default',
 	...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>): JSX.Element {
+}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>): React.JSX.Element {
 	return <ButtonPrimitive data-slot="button" className={cn(buttonVariants({ variant, size, className }))} {...props} />
 }
 

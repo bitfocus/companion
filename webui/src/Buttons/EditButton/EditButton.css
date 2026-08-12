@@ -1,0 +1,644 @@
+@import '../../breakpoints.css';
+
+.edit-button-panel {
+	height: 100%;
+
+	display: flex;
+	flex-direction: column;
+
+	h4 {
+		margin-top: 1rem;
+	}
+
+	svg:not(.non-ideal-svg) {
+		/* This is a hack, but fixing it properly is a messy task */
+		font-size: 1rem;
+	}
+
+	.button-zero-display-height {
+		margin-bottom: -100%;
+	}
+}
+
+.empty-button-type-picker {
+	container-type: inline-size; /* respond to panel width, not viewport */
+	max-width: 360px;
+	margin: 1.5rem auto 0;
+}
+
+.empty-button-type-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0.5rem;
+
+	.empty-button-type-tile {
+		display: flex;
+		flex-direction: column; /* page tiles: icon above label */
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem;
+		padding: 0.85rem 0.5rem;
+		height: 100%; /* equal-height tiles in the row */
+		text-align: center;
+		line-height: 1.1;
+
+		/* override `.edit-button-panel svg:not(.non-ideal-svg){font-size:1rem}` hack */
+		svg {
+			font-size: 1.6rem;
+		}
+	}
+
+	.empty-button-type-tile-primary {
+		grid-column: 1 / -1; /* full-width row 1 */
+		flex-direction: row; /* regular: icon beside label */
+
+		svg {
+			font-size: 1.3rem;
+		}
+	}
+
+	@container (max-width: 280px) {
+		grid-template-columns: 1fr; /* stack all four vertically */
+
+		.empty-button-type-tile,
+		.empty-button-type-tile-primary {
+			flex-direction: row; /* consistent compact icon-beside-label */
+			justify-content: flex-start;
+			text-align: left;
+
+			svg {
+				font-size: 1.3rem;
+			}
+		}
+	}
+}
+
+.nav-steps-special {
+	margin-bottom: 0px !important;
+
+	&.highlight-current {
+		animation: rotor 0.25s infinite alternate ease-in-out;
+	}
+}
+
+@keyframes rotor {
+	0% {
+		box-shadow: inset 0 10px 15px -10px var(--color-step-highlight);
+	}
+
+	100% {
+		box-shadow: inset 0 10px 10px -10px color-mix(in srgb, var(--color-step-highlight) 0%, transparent);
+	}
+}
+
+.add-dropdown-wrapper {
+	display: grid;
+	grid-auto-flow: column;
+	grid-template-columns: 1fr auto;
+}
+
+.presets-section-content {
+	padding: 4px 6px;
+	border-bottom: 1px solid var(--color-border);
+
+	h5 {
+		margin-bottom: 0.25rem;
+	}
+
+	p {
+		margin-bottom: 0;
+		font-size: 0.96em;
+	}
+}
+
+.presets-section-row {
+	font-size: 1.1em;
+}
+
+.presets-section-description {
+	display: block;
+	font-size: 0.8em;
+	font-weight: 400;
+	opacity: 0.7;
+	margin-top: 2px;
+	padding-left: 14px; /* align with section name text (past caret) */
+}
+
+.presets-icon-grid {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 3px;
+	padding: 5px;
+	background-color: var(--color-surface-dark);
+}
+
+.button-layer-resize-handle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 28px;
+	background-color: var(--color-surface-muted-hover);
+	cursor: row-resize;
+	flex-shrink: 0;
+	border-block: 1px solid var(--color-border);
+	/* Lift the bar slightly so it reads as a distinct divider between panels */
+	box-shadow:
+		0 1px 3px var(--color-shadow-10),
+		0 -1px 2px var(--color-shadow-4);
+	z-index: 1;
+
+	&:hover {
+		background-color: var(--color-resize-bar-bg-hover);
+	}
+
+	/* Keep pointer cursor on the toggle while the separator forces ns-resize on hover/drag */
+	&[data-separator='hover'],
+	&[data-separator='inactive'] {
+		[data-separator-button],
+		[data-separator-button] * {
+			cursor: pointer !important;
+		}
+	}
+
+	.button-layer-separator-interactive {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.button-layer-mode-toggle.button-group {
+		background: var(--color-mode-toggle-bg);
+		border: 1px solid var(--color-mode-toggle-border);
+		border-radius: 6px;
+		box-shadow: 0 1px 2px var(--color-shadow-6);
+		padding: 2px;
+		gap: 2px;
+
+		> .button {
+			min-width: 5.5rem;
+			padding-block: 0.15rem;
+			font-size: 0.8rem;
+			box-shadow: none;
+
+			border-radius: 4px;
+			border-start-start-radius: 4px;
+			border-end-start-radius: 4px;
+			border-start-end-radius: 4px;
+			border-end-end-radius: 4px;
+			border-inline-width: var(--btn-border-width);
+			border-inline-start-color: transparent;
+			border-inline-end-color: transparent;
+
+			--btn-color: var(--color-toolbar-fg);
+			--btn-bg: var(--color-surface);
+			--btn-border-color: transparent;
+			--btn-hover-color: var(--color-text-strong);
+			--btn-hover-bg: var(--color-toolbar-bg);
+			--btn-hover-border-color: transparent;
+			--btn-active-color: var(--color-on-dark);
+			--btn-active-bg: var(--color-primary);
+			--btn-active-border-color: var(--color-primary);
+
+			&.active {
+				box-shadow: 0 1px 2px color-mix(in srgb, var(--color-primary) 35%, transparent);
+			}
+		}
+	}
+}
+
+.button-layer-style-editor {
+	/* PanelGroup sets display:flex; flex-direction:column internally */
+
+	.button-layer-top {
+		height: 100%;
+		overflow: hidden;
+		background-color: var(--color-surface);
+
+		display: grid;
+		/* minmax(0, …) so the canvas column can't grow past its half and squeeze the element list */
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		grid-template-rows: minmax(0, 1fr) auto;
+		column-gap: 1rem;
+	}
+
+	.button-layer-preview {
+		display: flex;
+		flex-direction: column;
+		grid-row: 1 / span 2;
+		margin-bottom: 0.75rem;
+		min-height: 0;
+
+		/* Toolbar down the left edge, canvas filling the rest - keeps the layout from growing taller */
+		.button-layer-preview-main {
+			display: flex;
+			flex: 1 1 0;
+			min-height: 0;
+		}
+
+		/* The canvas and the aspect-ratio control share one bordered box, so the ratio control reads as part
+		   of the preview area rather than a loose block below it. A darker workspace fill sets it off from the
+		   white element list and the lighter toolbar. */
+		.button-layer-canvas-section {
+			display: flex;
+			flex-direction: column;
+			flex: 1 1 0;
+			min-width: 0;
+			min-height: 0;
+			overflow: hidden;
+
+			background-color: var(--color-canvas-workspace);
+			border: 1px solid var(--color-border);
+			border-radius: 4px;
+		}
+
+		.button-layer-canvas-container {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			/* Basis 0, not auto: the canvas is sized from this container's measured size, so letting the
+			   container size itself from its content instead would feed back into that measurement. */
+			flex: 1 1 0;
+			min-width: 0;
+			min-height: 0;
+			/* Safety net for the frame between a container resize and the canvas being re-sized to match */
+			overflow: hidden;
+		}
+
+		/* A compact control strip at the bottom of the canvas box */
+		.button-layer-canvas-footer {
+			flex: 0 0 auto;
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			padding: 2px 6px;
+			border-top: 1px solid var(--color-border);
+			background-color: var(--color-toolbar-bg);
+
+			/* Truncates rather than pushing the buttons out of the strip when the panel is narrow */
+			.button-layer-footer-label {
+				white-space: nowrap;
+				font-size: 0.85em;
+				color: var(--color-toolbar-fg);
+				min-width: 0;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+
+			.button-layer-aspect-options {
+				display: flex;
+				gap: 2px;
+				margin-left: auto;
+				flex: 0 0 auto;
+			}
+
+			.button-layer-aspect-option {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex: 0 0 auto;
+				width: 24px;
+				height: 24px;
+				padding: 0;
+				border: 1px solid transparent;
+				border-radius: 3px;
+				background: transparent;
+				color: var(--color-toolbar-fg);
+				cursor: pointer;
+
+				&:hover:not(.active) {
+					background: var(--color-surface-hover);
+					border-color: var(--color-border);
+				}
+
+				&.active {
+					background: var(--color-toolbar-accent);
+					border-color: var(--color-toolbar-accent);
+					color: var(--color-on-dark);
+				}
+			}
+
+			/* The custom option is a popover trigger, which always carries the `btn` class - undo its metrics
+			   so it keeps the same 24x24 box as the preset buttons */
+			.button-layer-aspect-option.btn {
+				line-height: 1;
+				font-size: inherit;
+				min-width: 0;
+			}
+
+			/* Outlined rectangle drawn to the option's ratio; currentColor flips to white when active */
+			.button-layer-aspect-glyph {
+				display: block;
+				border: 1.5px solid currentColor;
+				border-radius: 1px;
+			}
+		}
+
+		/* Must shrink-wrap the canvas exactly: the selection overlay positions its handles and snap guides as
+		   percentages of this box, so any difference between it and the canvas's displayed box offsets them. */
+		.button-layer-canvas-wrapper {
+			position: relative;
+			display: inline-block;
+		}
+
+		.button-layer-canvas {
+			display: block;
+		}
+
+		.button-layer-quick-actions {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 2px;
+			padding: 4px;
+
+			/* Hold its own width beside the canvas rather than being squeezed */
+			flex: 0 0 auto;
+
+			/* Set it off from the canvas as a distinct toolbar area */
+			margin-right: 0.5rem;
+			background-color: var(--color-toolbar-bg);
+			border: 1px solid var(--color-border);
+			border-radius: 4px;
+
+			.button-layer-quick-actions-separator {
+				align-self: stretch;
+				height: 1px;
+				background: var(--color-border);
+				margin: 3px 0;
+			}
+
+			/* Wraps a disabled button so its tooltip can still fire on hover */
+			.button-layer-quick-action-tooltip {
+				display: flex;
+			}
+
+			.button-layer-quick-action {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 24px;
+				height: 24px;
+				padding: 0;
+				border: 1px solid transparent;
+				border-radius: 3px;
+				background: transparent;
+				color: var(--color-toolbar-fg);
+				cursor: pointer;
+
+				&:hover:not(:disabled):not(.active) {
+					background: var(--color-surface-hover);
+					border-color: var(--color-border);
+				}
+
+				&.active {
+					background: var(--color-toolbar-accent);
+					border-color: var(--color-toolbar-accent);
+					color: var(--color-on-dark);
+
+					&:hover:not(:disabled) {
+						background: var(--color-toolbar-accent-hover);
+						border-color: var(--color-toolbar-accent-hover);
+					}
+				}
+
+				&:disabled {
+					opacity: 0.3;
+					cursor: default;
+					/* Let the wrapping tooltip trigger receive the hover instead */
+					pointer-events: none;
+				}
+			}
+		}
+	}
+
+	.button-layer-elementlist {
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+
+		/* Only the rows scroll; the heading is a static sibling above them */
+		> .heading {
+			flex: 0 0 auto;
+		}
+
+		.button-layer-elementlist-body {
+			flex: 1 1 auto;
+			overflow-y: auto;
+			min-height: 0;
+		}
+
+		.button-layer-elementlist-table-row {
+			display: grid;
+			grid-template-columns: auto 1fr auto auto;
+
+			background-color: var(--color-surface);
+			border-bottom: 1px solid var(--color-border);
+
+			align-items: center;
+			column-gap: 0.2rem;
+
+			--elementlist-depth: 0;
+			margin-left: calc(var(--elementlist-depth) * 1.75em);
+
+			.td-reorder,
+			.td-reorder-placeholder {
+				text-align: center;
+
+				/* as narrow as possible */
+				width: 1.75em;
+			}
+
+			.td-reorder {
+				cursor: ns-resize;
+				background-color: var(--color-surface-alt);
+
+				height: 100%;
+				align-content: center;
+
+				svg {
+					color: var(--color-icon);
+				}
+			}
+
+			&.heading {
+				font-weight: bold;
+				padding-right: 0.2rem;
+			}
+
+			/* Reorders on hover: dim the in-place source row; the floating preview clone gets the lifted look */
+			&.row-dragging {
+				opacity: 0.4;
+			}
+			&.dnd-drag-preview {
+				background-color: var(--color-surface);
+				box-shadow: 0 4px 12px var(--color-shadow-30);
+				outline: 2px solid var(--color-shadow-50);
+				outline-offset: -2px;
+
+				/* Blend the reorder handle into the lifted card */
+				.td-reorder {
+					background-color: transparent;
+				}
+			}
+
+			&.last-row {
+				border-bottom: none;
+			}
+			&.selected-row {
+				background-color: var(--color-surface-hover);
+			}
+
+			.element-name {
+				cursor: pointer;
+
+				padding: 0.1rem 0;
+
+				overflow: hidden;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+			}
+
+			.element-buttons {
+				text-align: right;
+				white-space: nowrap;
+				padding: 0 0.25rem;
+
+				.button {
+					--btn-padding-x: 0.15rem;
+				}
+			}
+		}
+	}
+
+	.button-layer-options {
+		height: 100%;
+		overflow-y: scroll;
+
+		padding: 0.5rem;
+	}
+}
+
+/* Portaled to the body, so it can't live inside the .button-layer-preview block */
+.button-layer-aspect-custom {
+	/* Sized for the two-digit values these ratios realistically use */
+	width: 135px;
+	min-width: 0;
+	padding: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.add-layered-element-popover {
+	max-width: 300px;
+	width: 300px;
+
+	.button {
+		width: 100%;
+
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	.button-group-vertical {
+		width: 100%;
+	}
+}
+
+.layered-style-element-picker-modal {
+	.modal2-content {
+		/* height: 65vh; */
+		overflow: hidden;
+		max-height: 55vh;
+	}
+
+	.modal2-body {
+		overflow-y: hidden;
+		max-height: 100%;
+
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		column-gap: 1rem;
+		/* allow percentage-height children to resolve when used inside flex/grid parents */
+		min-height: 0;
+
+		@media (--bp-md-down) {
+			overflow-y: auto;
+			display: block;
+		}
+	}
+
+	.element-modal-col {
+		overflow-y: hidden;
+		/* layout container so header + list split the column and the list can flex/scroll */
+		display: flex;
+		flex-direction: column;
+		/* allow children with percentage heights or flex to shrink properly */
+		min-height: 0;
+
+		@media (--bp-md-down) {
+			&:not(:first-child) {
+				margin-top: 0.5rem;
+			}
+		}
+	}
+
+	.element-picker-list {
+		overflow-y: auto;
+		/* take remaining space inside .element-modal-col and be able to shrink */
+		flex: 1 1 auto;
+		min-height: 0;
+		background-color: var(--color-surface-subtle);
+	}
+
+	.element-picker-item {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		padding: 0.25rem 0.5rem;
+		border-bottom: 1px solid var(--color-border-subtle);
+		align-items: center;
+		cursor: pointer;
+		transition: background-color 0.15s ease;
+
+		--elementlist-depth: 0;
+		margin-left: calc(var(--elementlist-depth) * 1rem);
+
+		border-left: 3px solid transparent;
+
+		&.selected {
+			background-color: var(--color-selected-item-bg);
+			border-left-color: var(--color-selected-accent);
+		}
+
+		.element-name {
+			font-weight: 500;
+		}
+
+		.element-icon {
+			color: var(--color-selected-accent);
+		}
+	}
+}
+
+.layered-overrides-table {
+	/* Fixed layout so the value control (esp. the expression editor for value feedbacks) can't gobble
+	   the row width and squash the element/property column - all feedback types then line up the same. */
+	table-layout: fixed;
+
+	> thead > tr > th,
+	> tbody > tr > td {
+		/* Element & Property column */
+		&:first-child {
+			width: 40%;
+		}
+		/* Trailing add/delete action column */
+		&:last-child {
+			width: 3rem;
+		}
+	}
+
+	> tbody > tr {
+		border-color: var(--color-line);
+	}
+}

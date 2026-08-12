@@ -202,12 +202,12 @@ function BackupsTableRow({ rule, index, editRule }: BackupsTableRowProps) {
 					<GenericConfirmModal ref={confirmRef} />
 				</div>
 				<div className="grow backup-rule-content">
-					<div onClick={doEdit} className="hand backup-rule-info">
+					<div onClick={doEdit} className="cursor-pointer backup-rule-info">
 						<b>{rule.name}</b>
 						<br />
 						<small>Format: {backupTypeLabel}</small>
 					</div>
-					<div onClick={doEdit} className="hand backup-rule-cron">
+					<div onClick={doEdit} className="cursor-pointer backup-rule-cron">
 						<small>Cron: {rule.cron}</small>
 						<br />
 						{rule.lastRan ? <small>Last run: {dayjs(rule.lastRan).format('MM/DD HH:mm:ss')}</small> : ''}

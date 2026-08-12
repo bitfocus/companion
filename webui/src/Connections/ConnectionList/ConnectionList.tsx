@@ -87,9 +87,9 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 
 	return (
 		<div className="connections-list-container flex-column-layout">
-			<div className="connections-list-header fixed-header">
+			<div className="fixed-header">
 				<h4 className="button-inline">
-					Connections <ContextHelpButton action="/user-guide/config/connections" />
+					Connections <ContextHelpButton action="/user-guide/config/connections" className="pe-2" />
 				</h4>
 
 				<p>
@@ -158,7 +158,7 @@ function ConnectionListTableHeading() {
 	return (
 		<div className="flex flex-row">
 			<div className="grow">Connection</div>
-			<div className="no-break">
+			<div className="whitespace-nowrap">
 				<ButtonGroup className="table-header-buttons">
 					<VisibilityButton {...visibleConnections} keyId="disabled" color="secondary" label="Disabled" />
 					<VisibilityButton {...visibleConnections} keyId="ok" color="success" label="OK" />

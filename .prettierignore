@@ -10,6 +10,8 @@ webui/public/legacy
 webui/src/routeTree.gen.ts
 # Vendored CoreUI SCSS - kept byte-identical to upstream, do not reformat
 webui/src/scss/vendor/
+# Tailwind entry: prettier's CSS parser can't parse the v4 @source/@theme at-rules
+webui/src/tailwind.css
 /LICENSE.md
 
 module-local-dev
@@ -20,3 +22,4 @@ webui/public/_deps
 webui/public/whatsnew
 docs/.docusaurus/
 launcher/assets/*.icon/
+launcher-ui/src/shadcn-tailwind.css

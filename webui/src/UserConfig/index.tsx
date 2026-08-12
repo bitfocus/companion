@@ -1,4 +1,5 @@
 import type { IconProp } from '@fortawesome/fontawesome-svg-core'
+import './settings.css'
 import { faCog, faFloppyDisk, faGamepad, faNetworkWired, faTh, faWarning } from '@fortawesome/free-solid-svg-icons'
 import { Link, type RegisteredRouter, type ToPathOption } from '@tanstack/react-router'
 import { Callout } from '~/Components/Callout'
@@ -14,7 +15,7 @@ export function SettingsSelectPage(): React.JSX.Element {
 						<h4>Settings</h4>
 					</div>
 				</div>
-				<div className="h-fit-content">
+				<div className="h-fit">
 					<Grid.Row>
 						<SettingsLinkCard label="General" to="/settings/general" icon={faCog} />
 						<SettingsLinkCard label="Buttons" to="/settings/buttons" icon={faTh} />

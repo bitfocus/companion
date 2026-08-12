@@ -12,7 +12,7 @@ import {
 import { useSectionVisibility } from './contexts/SectionVisibilityContext'
 import { SectionDefinitions } from './Sections'
 
-export function AppSidebar(): JSX.Element {
+export function AppSidebar(): React.JSX.Element {
 	const { activeSectionId } = useSectionVisibility()
 
 	return (

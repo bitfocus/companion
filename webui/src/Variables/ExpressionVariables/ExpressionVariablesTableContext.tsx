@@ -3,7 +3,7 @@ import { createContext, useContext, useMemo, type RefObject } from 'react'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 
 export interface ExpressionVariablesTableContextType {
-	deleteModalRef: RefObject<GenericConfirmModalRef>
+	deleteModalRef: RefObject<GenericConfirmModalRef | null>
 	selectExpressionVariable: (expressionVariableId: string | null) => void
 }
 

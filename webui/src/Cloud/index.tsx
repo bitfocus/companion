@@ -1,4 +1,5 @@
 import { useSubscription } from '@trpc/tanstack-react-query'
+import './cloud.css'
 import { memo, useId, useState } from 'react'
 import type { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
 import { StaticAlert } from '~/Components/Alert.js'
@@ -155,7 +156,7 @@ function RegionsList({ regionIds, cloudActive, canActivate }: RegionsListProps) 
 
 	return (
 		<Grid.Col sm={12}>
-			<div className="section cloud-regions-section">
+			<div className="cloud-regions-section">
 				<h5 className="cloud-regions-heading">Cloud regions</h5>
 
 				{!cloudActive && (

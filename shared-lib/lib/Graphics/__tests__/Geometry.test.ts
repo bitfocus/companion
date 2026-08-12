@@ -1,8 +1,11 @@
 import { describe, expect, test } from 'vitest'
 import {
-	buildSelectionMarker,
+	appendRotation,
 	clipLineToRect,
 	computeSelectionMarkerLines,
+	inverseRotatePointThroughRotations,
+	resolveMarkerTransform,
+	rotatePointThroughRotations,
 	type MarkerLine,
 	type SelectedElementMarker,
 } from '../Geometry.js'
@@ -46,35 +49,96 @@ describe('clipLineToRect', () => {
 	})
 })
 
-describe('buildSelectionMarker', () => {
-	const bounds = new DrawBounds(0, 0, 4, 4)
-	const pivot = new DrawBounds(0, 0, 10, 10)
+describe('appendRotation', () => {
+	const outerPivot = new DrawBounds(0, 0, 10, 10)
+	const innerPivot = new DrawBounds(0, 0, 4, 4)
 
-	test('a zero angle adds no rotation', () => {
-		expect(buildSelectionMarker(bounds, pivot, 0)).toEqual({ bounds, rotations: [] })
+	test('a zero angle adds nothing', () => {
+		expect(appendRotation([], innerPivot, 0)).toEqual([])
 	})
 
-	test('a non-zero angle prepends a rotation about the pivot', () => {
-		expect(buildSelectionMarker(bounds, pivot, 30)).toEqual({
-			bounds,
-			rotations: [{ pivot, angle: 30 }],
+	test('a non-zero angle appends a rotation about the pivot', () => {
+		expect(appendRotation([], innerPivot, 30)).toEqual([{ pivot: innerPivot, angle: 30 }])
+	})
+
+	test('the parent chain stays outermost-first', () => {
+		const parent = appendRotation([], outerPivot, 30)
+		expect(appendRotation(parent, innerPivot, 10)).toEqual([
+			{ pivot: outerPivot, angle: 30 },
+			{ pivot: innerPivot, angle: 10 },
+		])
+	})
+
+	test('a zero angle leaves the parent chain untouched', () => {
+		const parent = appendRotation([], outerPivot, 30)
+		expect(appendRotation(parent, innerPivot, 0)).toBe(parent)
+	})
+})
+
+describe('rotatePointThroughRotations', () => {
+	const bounds = new DrawBounds(2, 2, 4, 4) // centre (4, 4)
+	const outer = new DrawBounds(0, 0, 20, 20) // centre (10, 10)
+
+	test('an empty chain leaves the point where it is', () => {
+		expect(rotatePointThroughRotations([], 3, 7)).toEqual([3, 7])
+	})
+
+	test('rotating 90° clockwise about a centre', () => {
+		const [x, y] = rotatePointThroughRotations([{ pivot: bounds, angle: 90 }], 6, 4)
+		expect(x).toBeCloseTo(4, 6)
+		expect(y).toBeCloseTo(6, 6)
+	})
+
+	test('inverse undoes a nested chain exactly', () => {
+		const rotations = [
+			{ pivot: outer, angle: 37 },
+			{ pivot: bounds, angle: -12 },
+		]
+		const [x, y] = rotatePointThroughRotations(rotations, 3, 7)
+		const [bx, by] = inverseRotatePointThroughRotations(rotations, x, y)
+
+		expect(bx).toBeCloseTo(3, 6)
+		expect(by).toBeCloseTo(7, 6)
+	})
+})
+
+describe('resolveMarkerTransform', () => {
+	const bounds = new DrawBounds(2, 2, 4, 6) // centre (4, 5)
+
+	test('an unrotated marker keeps its own centre and size', () => {
+		expect(resolveMarkerTransform({ bounds, rotations: [] })).toEqual({
+			centerX: 4,
+			centerY: 5,
+			width: 4,
+			height: 6,
+			angle: 0,
 		})
 	})
 
-	test('an outer rotation is prepended before inner rotations (outermost-first)', () => {
-		const inner = [{ pivot: bounds, angle: 10 }]
-		expect(buildSelectionMarker(bounds, pivot, 30, inner)).toEqual({
+	test('rotating about its own centre changes only the angle', () => {
+		const transform = resolveMarkerTransform({ bounds, rotations: [{ pivot: bounds, angle: 30 }] })
+
+		expect(transform.centerX).toBeCloseTo(4, 6)
+		expect(transform.centerY).toBeCloseTo(5, 6)
+		expect(transform.angle).toBe(30)
+	})
+
+	test('a nested chain sums the angles and moves the centre to where the outer pivot puts it', () => {
+		// A group rotated 90° about (10, 10) carries the element's centre from (4, 5) to (15, 4)
+		const group = new DrawBounds(0, 0, 20, 20)
+		const transform = resolveMarkerTransform({
 			bounds,
 			rotations: [
-				{ pivot, angle: 30 },
-				{ pivot: bounds, angle: 10 },
+				{ pivot: group, angle: 90 },
+				{ pivot: bounds, angle: 45 },
 			],
 		})
-	})
 
-	test('a zero angle keeps the inner rotations unchanged', () => {
-		const inner = [{ pivot: bounds, angle: 10 }]
-		expect(buildSelectionMarker(bounds, pivot, 0, inner)).toEqual({ bounds, rotations: inner })
+		expect(transform.centerX).toBeCloseTo(15, 6)
+		expect(transform.centerY).toBeCloseTo(4, 6)
+		expect(transform.angle).toBe(135)
+		expect(transform.width).toBe(4)
+		expect(transform.height).toBe(6)
 	})
 })
 

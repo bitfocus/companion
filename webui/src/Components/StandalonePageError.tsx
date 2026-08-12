@@ -1,4 +1,5 @@
 import type { TRPCClientErrorLike } from '@trpc/client'
+import './StandalonePageError.css'
 import { useEffect, useState } from 'react'
 import { PuffLoader } from 'react-spinners'
 import { Button } from '~/Components/Button.js'

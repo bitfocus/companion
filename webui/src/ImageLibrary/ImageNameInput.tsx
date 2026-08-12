@@ -26,7 +26,7 @@ export function ImageNameInput({
 	warningText,
 	errorMessage,
 	className,
-}: ImageNameInputProps): JSX.Element {
+}: ImageNameInputProps): React.JSX.Element {
 	// Generate tooltip based on validation state
 	const tooltip = !isLabelValid(value) ? 'Invalid name: Use only letters, numbers, hyphens, and underscores' : undefined
 

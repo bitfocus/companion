@@ -1,4 +1,5 @@
 import { useDragOperation } from '@dnd-kit/react'
+import './CollectionsNestingTable.css'
 import { faCaretDown, faCaretRight } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'

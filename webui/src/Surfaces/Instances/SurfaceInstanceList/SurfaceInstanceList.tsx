@@ -86,7 +86,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 
 	return (
 		<div className="connections-list-container flex-column-layout">
-			<div className="connections-list-header fixed-header d-flex flex-column">
+			<div className="fixed-header d-flex flex-column">
 				<MissingVersionsWarning moduleType={ModuleInstanceType.Surface} instances={surfaceInstances.instances} />
 
 				<GenericConfirmModal ref={confirmModalRef} />
@@ -99,7 +99,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 						</Button>
 						<CreateCollectionButton />
 					</ButtonGroup>
-					<ContextHelpButton action="/user-guide/surfaces">
+					<ContextHelpButton action="/user-guide/surfaces" className="pe-2">
 						<p>
 							Surface integrations are like connections but for input surfaces: they provide the ability to use
 							different hardware or virtual surfaces to trigger buttons in Companion.
@@ -150,7 +150,7 @@ function SurfaceInstancesListTableHeading() {
 	return (
 		<div className="flex flex-row">
 			<div className="grow">Surface Integrations </div>
-			<div className="no-break">
+			<div className="whitespace-nowrap">
 				<ButtonGroup className="table-header-buttons">
 					<VisibilityButton {...visibleInstances} keyId="disabled" color="secondary" label="Disabled" />
 					<VisibilityButton {...visibleInstances} keyId="ok" color="success" label="OK" />

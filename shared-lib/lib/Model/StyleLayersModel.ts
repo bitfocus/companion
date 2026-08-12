@@ -226,7 +226,7 @@ export interface ButtonGraphicsGaugeDrawElement
 	value: number
 	min: number
 	max: number
-	origin: number
+	origin: number | null
 	symmetric: boolean
 	orientation: 'horizontal' | 'vertical' | 'ring'
 	reverse: boolean
@@ -236,6 +236,7 @@ export interface ButtonGraphicsGaugeDrawElement
 	roundedEnds: boolean
 	fillEnabled: boolean
 	multiColour: boolean
+	fillWidth: number
 	stops: Record<string, JsonValue>[]
 	markerEnabled: boolean
 	markerColor: ColorValue
@@ -251,7 +252,7 @@ export interface ButtonGraphicsGaugeElement
 	value: ExpressionOrValue<number>
 	min: ExpressionOrValue<number>
 	max: ExpressionOrValue<number>
-	origin: ExpressionOrValue<number>
+	origin: ExpressionOrValue<number | null>
 	symmetric: ExpressionOrValue<boolean>
 	orientation: ExpressionOrValue<'horizontal' | 'vertical' | 'ring'>
 	reverse: ExpressionOrValue<boolean>
@@ -261,6 +262,7 @@ export interface ButtonGraphicsGaugeElement
 	roundedEnds: ExpressionOrValue<boolean>
 	fillEnabled: ExpressionOrValue<boolean>
 	multiColour: ExpressionOrValue<boolean>
+	fillWidth: ExpressionOrValue<number>
 	stops: ExpressionOrValue<Record<string, JsonValue>[]>
 	markerEnabled: ExpressionOrValue<boolean>
 	markerColor: ExpressionOrValue<ColorValue>

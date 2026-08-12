@@ -1,0 +1,222 @@
+@import '../../breakpoints.css';
+
+/* dnd-kit sortable feedback for event rows (which use optimistic sorting, so the dragged row renders
+   in the top-layer popover). No `filter: blur()` - a filter on a popover element breaks its rendering. */
+.entity-row {
+	&[data-dnd-placeholder] {
+		opacity: 0.4;
+	}
+
+	/* Native-dragged event rows ([data-dnd-dragging]) and the entity DragOverlay preview clone
+	   (.dnd-drag-preview) share the same lifted look: a solid background, a drop shadow, and an inset
+	   outline (negative offset so it doesn't shift surrounding elements). */
+	&[data-dnd-dragging],
+	&.dnd-drag-preview {
+		background-color: var(--color-surface);
+		box-shadow: 0 4px 12px var(--color-shadow-30);
+		outline: 2px solid var(--color-shadow-50);
+		outline-offset: -2px;
+
+		/* On the lifted/floating feedback the reorder handle's grey background reads as an odd stripe
+		   against the lifted card - blend it in so the floating row looks like one clean surface. */
+		.entity-row-reorder {
+			background-color: transparent;
+		}
+	}
+
+	/* Entities have no drag clone in the list (the preview is a DragOverlay), so the in-place source row
+	   is just dimmed while it reorders on hover. */
+	&.entity-row-grabbing {
+		opacity: 0.4;
+	}
+}
+
+.entity-list {
+	/* Entity list - plain stacked divs (no layout on draggable element to avoid DnD preview issues) */
+	.entity-row {
+		background-color: var(--color-surface);
+		margin-bottom: 0.25rem;
+		display: flex;
+		flex-direction: row;
+		align-items: stretch;
+		width: 100%;
+
+		&:last-child {
+			margin-bottom: 0;
+		}
+	}
+
+	.entity-row-reorder {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 10px;
+		cursor: ns-resize;
+		flex-shrink: 0;
+		background-color: var(--color-surface-alt);
+	}
+
+	.entity-row-content {
+		flex: 1;
+		padding: 0.5rem;
+		min-width: 0;
+	}
+
+	.entity-row.entity-disabled {
+		.cell-name,
+		.form-label {
+			color: var(--color-text-disabled);
+		}
+	}
+
+	.entitylist-dropzone {
+		background-color: var(--color-surface);
+
+		p {
+			border: 2px dashed var(--color-dropzone-border);
+			border-radius: 5px;
+			text-align: center;
+			margin: 0;
+			padding: 0.75rem;
+		}
+	}
+
+	.editor-grid-header {
+		display: flex;
+		flex-direction: row;
+		margin-right: -0.75rem;
+		min-width: 0;
+
+		.cell-name {
+			flex-grow: 1;
+			min-width: 0;
+
+			font-weight: bold;
+			align-self: center;
+
+			/* Long headlines/names (including unbreakable strings) wrap instead of overflowing the row,
+			   and anything that still can't fit is clipped here rather than spilling under the controls */
+			overflow-wrap: anywhere;
+			overflow: hidden;
+
+			input {
+				font-weight: bold;
+				margin-bottom: 5px;
+			}
+
+			/* A collapsed local variable shows its name alongside a compact preview of its current value */
+			.cell-name-local-variable {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				gap: 0.5rem;
+				min-width: 0;
+
+				.cell-name-local-variable-label {
+					/* Fixed-basis column so the value previews line up across rows. A name longer than the
+					   column is truncated with an ellipsis (full text on hover) rather than overflowing, and
+					   the column shrinks gracefully when the panel is too narrow to fit it. */
+					flex: 0 1 14rem;
+					min-width: 0;
+					overflow: hidden;
+					text-overflow: ellipsis;
+					white-space: nowrap;
+				}
+
+				.cell-name-local-variable-value {
+					/* Takes the remaining space; clips its own overflow so a long value can't slide under
+					   the controls on a narrow panel */
+					flex: 1 1 auto;
+					min-width: 0;
+					overflow: hidden;
+				}
+			}
+		}
+		.cell-controls {
+			text-align: right;
+			align-self: center;
+			/* Never shrink the buttons - otherwise they get squeezed and overlap the name/value */
+			flex-shrink: 0;
+		}
+	}
+	.editor-grid {
+		display: flex;
+		flex-direction: column;
+
+		.entity-cells-wrapper {
+			display: flex;
+			flex-direction: row;
+			column-gap: 0.5rem;
+
+			> * {
+				/* Avoid blowout when content is too wide */
+				min-width: 0;
+			}
+		}
+
+		.cell-name {
+			font-weight: bold;
+		}
+
+		.cell-description {
+			display: flex;
+
+			margin-top: 0.5rem;
+			margin-bottom: 0.75rem;
+
+			.name {
+				font-weight: bold;
+				margin-bottom: 0;
+			}
+
+			.description {
+				color: var(--color-text-secondary);
+				line-height: 1.25em;
+				font-size: 12px;
+				/* margin-bottom: 10px; */
+			}
+		}
+
+		.cell-button-preview {
+			align-content: center;
+			flex-shrink: 0;
+
+			.button-control {
+				padding: 0;
+
+				&.fixed-72 .button-border {
+					@media (--bp-xl-up) and (--bp-xxl-down), (--bp-md-down) {
+						width: 48px;
+						height: 48px;
+					}
+				}
+			}
+		}
+
+		.cell-children {
+			margin-top: 0.5rem;
+
+			h4 {
+				margin-top: 0 !important;
+			}
+
+			> form:not(:first-child) {
+				margin-top: 0.5rem;
+			}
+		}
+	}
+}
+
+.entity-list {
+	background-color: var(--color-surface-muted);
+	padding: 0.25rem 0;
+}
+
+/* The entity DragOverlay reuses `.entity-list` so the cloned drag preview row inherits its styling, but
+   that overlay element is always in the DOM (empty when idle, floating during a drag). Drop the list's
+   page padding/background on it so it adds no height at the document root and shows no grey box behind
+   the floating preview. */
+.entity-list[data-dnd-overlay] {
+	padding: 0;
+	background-color: transparent;
+}

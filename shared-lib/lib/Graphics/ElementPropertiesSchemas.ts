@@ -559,8 +559,9 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 				id: 'origin',
 				label: 'Origin (0-point)',
 				tooltip:
-					'The value the fill grows from. Set to the Minimum for a normal bar, or to the midpoint for a bipolar (pan/centre) gauge.',
-				default: 0,
+					'The value the fill grows from. Leave as "auto" to grow from the Minimum (a normal bar), or set to the midpoint for a bipolar (pan/centre) gauge.',
+				default: null,
+				allowNull: true,
 				min: -1000000,
 				max: 1000000,
 				step: 1,
@@ -664,6 +665,17 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 				default: true,
 			},
 			{
+				type: 'number',
+				id: 'fillWidth',
+				label: 'Fill width (%)',
+				tooltip: 'Width of the fill relative to the available space, centred.',
+				default: 100,
+				min: 0,
+				max: 100,
+				step: 1,
+				range: true,
+			},
+			{
 				type: 'internal:list',
 				id: 'stops',
 				label: 'Color stops',
@@ -686,7 +698,7 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 						type: 'colorpicker',
 						label: 'Color',
 						default: 0x00ff00,
-						enableAlpha: false,
+						enableAlpha: true,
 						returnType: 'number',
 					},
 					{

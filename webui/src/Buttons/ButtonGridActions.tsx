@@ -3,11 +3,11 @@ import { faArrowsAlt, faArrowsLeftRight, faCompass, faCopy, faEraser, faTrash } 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classnames from 'classnames'
 import { forwardRef, useCallback, useImperativeHandle, useRef, useState } from 'react'
-import { useResizeObserver } from 'usehooks-ts'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { Button, type ButtonColor } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
+import { useResizeObserver } from '~/Hooks/useResizeObserver.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface ButtonGridActionsRef {
@@ -56,8 +56,8 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 		setActiveFunctionButton(null)
 	}, [])
 
-	const setSizeRef = useRef(null)
-	const holderSize = useResizeObserver({ ref: setSizeRef })
+	const setSizeRef = useRef<HTMLDivElement>(null)
+	const holderSize = useResizeObserver<HTMLDivElement>({ ref: setSizeRef })
 	const useCompactButtons = (holderSize.width ?? 0) < 670 // Cutoff for what of the action buttons fit in their large mode
 
 	const getButton = (label: string, icon: IconProp, func: string) => {

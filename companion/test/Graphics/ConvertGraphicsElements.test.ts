@@ -1,6 +1,6 @@
-import type { JsonValue } from 'type-fest'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
+import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import { CompanionFieldVariablesSupport, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
 	ButtonGraphicsBoxDrawElement,
@@ -220,6 +220,7 @@ function makeGaugeEl(overrides: Partial<ButtonGraphicsGaugeElement> = {}): Butto
 		roundedEnds: val(true),
 		fillEnabled: val(true),
 		multiColour: val(true),
+		fillWidth: val(100),
 		stops: val([
 			{ value: 0, color: 0x00ff00, gradient: false },
 			{ value: 66, color: 0xffff00, gradient: false },
@@ -1346,9 +1347,11 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		test('applies feedback overrides to element', async () => {
 			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Original') })]
 
-			// feedbackOverrides is Map<elementId, Map<propertyName, ExpressionOrValue>>
-			const text1Overrides = new Map<string, ExpressionOrValue<JsonValue | undefined>>([['text', val('Overridden')]])
-			const globalReferences = new Map<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>([
+			// feedbackOverrides is Map<elementId, Map<propertyName, ResolvedFeedbackStyleOverride>>
+			const text1Overrides = new Map<string, ResolvedFeedbackStyleOverride>([
+				['text', { value: val('Overridden'), thisContext: null }],
+			])
+			const globalReferences = new Map<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>([
 				['text1', text1Overrides],
 			])
 
@@ -1365,6 +1368,32 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			)
 
 			expect((result.elements[0] as { text: string }).text).toBe('Overridden')
+		})
+
+		test('applies a value-feedback override as an expression transform of $(this:value)', async () => {
+			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Original') })]
+
+			// A value feedback binds its value to $(this:value); the override is an expression transform of it
+			const text1Overrides = new Map<string, ResolvedFeedbackStyleOverride>([
+				['text', { value: { isExpression: true, value: '$(this:value) * 2' }, thisContext: { value: 21 } }],
+			])
+			const globalReferences = new Map<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>([
+				['text1', text1Overrides],
+			])
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				globalReferences,
+				true,
+				null,
+				null,
+				null
+			)
+
+			expect((result.elements[0] as { text: string }).text).toBe('42')
 		})
 	})
 
@@ -2811,6 +2840,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(el.roundedEnds).toBe(true)
 			expect(el.fillEnabled).toBe(true)
 			expect(el.multiColour).toBe(true)
+			expect(el.fillWidth).toBe(100)
 			expect(el.markerEnabled).toBe(false)
 			expect(el.markerColor).toBe(0xffffff)
 			expect(el.markerWidth).toBe(15)
@@ -2828,6 +2858,15 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(el.min).toBe(-232)
 			expect(el.max).toBe(24)
 			expect(el.origin).toBe(-100)
+		})
+
+		test('origin resolves an empty/"auto" value to null (grow from minimum), keeping real numbers', async () => {
+			// null (the new default) and an empty string both mean "auto" and pass through as null.
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ origin: val(null) }))).origin).toBe(null)
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ origin: val('' as unknown as number) }))).origin).toBe(null)
+			// A real number (including 0) is preserved.
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ origin: val(0) }))).origin).toBe(0)
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ origin: val(50) }))).origin).toBe(50)
 		})
 
 		test('value resolved from expression', async () => {
@@ -2898,6 +2937,12 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		test('trackWidth clamped to 0–100', async () => {
 			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ trackWidth: val(150) }))).trackWidth).toBe(100)
 			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ trackWidth: val(-5) }))).trackWidth).toBe(0)
+		})
+
+		test('fillWidth clamped to 0–100', async () => {
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ fillWidth: val(150) }))).fillWidth).toBe(100)
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ fillWidth: val(-5) }))).fillWidth).toBe(0)
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ fillWidth: val(40) }))).fillWidth).toBe(40)
 		})
 
 		test('trackAmount clamped to 0–100', async () => {
@@ -2978,6 +3023,14 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 		test('empty stops produce empty array', async () => {
 			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ stops: val([]) }))).stops).toEqual([])
+		})
+
+		test('stop colors preserve alpha', async () => {
+			// 0x8000ff00 is 50%-transparent green (alpha packed into the top byte, inverted).
+			const el = gaugeDrawEl(
+				await convertGauge(makeGaugeEl({ stops: val([{ value: 0, color: 0x8000ff00, gradient: false }]) }))
+			)
+			expect(el.stops[0].color).toBe(0x8000ff00)
 		})
 
 		test('enabled=false with onlyEnabled=true filters element out', async () => {

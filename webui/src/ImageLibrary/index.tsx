@@ -1,4 +1,5 @@
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
+import './image-library.css'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'

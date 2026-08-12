@@ -29,8 +29,8 @@ export function getInputFeatures(option: SomeCompanionInputField): InputFeatureI
 	return undefined
 }
 
-export function InputFeatureIcons(props: InputFeatureIconsProps): JSX.Element | null {
-	const featureIcons: JSX.Element[] = []
+export function InputFeatureIcons(props: InputFeatureIconsProps): React.JSX.Element | null {
+	const featureIcons: React.JSX.Element[] = []
 	if (props.variables)
 		featureIcons.push(
 			<InlineHelpCustom key="variables" help="Supports global variables">

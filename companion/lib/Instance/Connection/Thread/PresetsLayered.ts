@@ -277,7 +277,7 @@ function convertLayeredPresetElement(
 				value: convertModuleExpressionOrValue(element.value, { value: 0, isExpression: false }),
 				min: convertModuleExpressionOrValue(element.min, { value: 0, isExpression: false }),
 				max: convertModuleExpressionOrValue(element.max, { value: 100, isExpression: false }),
-				origin: convertModuleExpressionOrValue(element.origin, { value: 0, isExpression: false }),
+				origin: convertModuleExpressionOrValue<number | null>(element.origin, { value: null, isExpression: false }),
 				symmetric: convertModuleExpressionOrValue(element.symmetric, { value: false, isExpression: false }),
 				orientation: convertModuleExpressionOrValue(element.orientation, { value: 'horizontal', isExpression: false }),
 				reverse: convertModuleExpressionOrValue(element.reverse, { value: false, isExpression: false }),
@@ -287,6 +287,11 @@ function convertLayeredPresetElement(
 				roundedEnds: convertModuleExpressionOrValue(element.roundedEnds, { value: true, isExpression: false }),
 				fillEnabled: convertModuleExpressionOrValue(element.fillEnabled, { value: true, isExpression: false }),
 				multiColour: convertModuleExpressionOrValue(element.multiColour, { value: true, isExpression: false }),
+				fillWidth: convertModuleExpressionOrValue(
+					// @ts-expect-error `fillWidth` is newer than the module host schema, so read it defensively until the SDK exposes it.
+					element.fillWidth,
+					{ value: 100, isExpression: false }
+				),
 				stops: { isExpression: false, value: convertedStops },
 				markerEnabled: convertModuleExpressionOrValue(element.markerEnabled, { value: false, isExpression: false }),
 				markerColor: convertModuleExpressionOrValue(element.markerColor, { value: 0xffffff, isExpression: false }),

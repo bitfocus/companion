@@ -1,0 +1,11 @@
+/* The hover/focus help bubble content, and the cursor for its trigger. */
+.inline-help {
+	color: white;
+	font-size: 14px;
+	font-weight: normal;
+	border-radius: 3px;
+}
+
+.inline-help-outer {
+	cursor: help;
+}

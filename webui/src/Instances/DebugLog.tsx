@@ -1,4 +1,5 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
+import '../log.css'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { stringify as csvStringify } from 'csv-stringify/browser/esm/sync'
 import dayjs from 'dayjs'
@@ -134,7 +135,7 @@ export function InstanceDebugLog({
 	const doToggleConsole = useCallback(() => doToggleConfig('console'), [doToggleConfig])
 
 	return (
-		<Grid.Container style={{ height: 'calc(100vh - 10px)', padding: '10px', background: '#eee' }}>
+		<Grid.Container fluid style={{ height: 'calc(100vh - 10px)', padding: '10px', background: '#eee' }}>
 			<div className="log-page">
 				<Grid.Row className="px-3">
 					<Grid.Col>

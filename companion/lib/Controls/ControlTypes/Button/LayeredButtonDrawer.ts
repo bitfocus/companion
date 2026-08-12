@@ -1,8 +1,7 @@
 import debounceFn from 'debounce-fn'
-import type { JsonValue } from 'type-fest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import {
 	ButtonGraphicsShowStatusIcons,
@@ -18,6 +17,7 @@ import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
 import LogController, { type Logger } from '../../../Log/Controller.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlEntityInstance } from '../../Entities/EntityInstance.js'
+import type { IButtonDrawer } from '../../IButtonDrawer.js'
 import { CreateElementOfType } from './LayerDefaults.js'
 
 /** Anything that can visit the draw elements (e.g. the reference collector/updater visitors). */
@@ -31,7 +31,7 @@ export interface DrawElementsVisitor {
  */
 export interface LayeredButtonDrawerEntitySource {
 	getLocalVariableEntities(): ControlEntityInstance[]
-	getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>
+	getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>
 }
 
 /**
@@ -56,7 +56,7 @@ const emptyFeedbackOverrides: ReadonlyMap<string, never> = new Map<string, never
  *
  * The `protected` element/cache/deps members are the surface that subclass exposes its editing operations on.
  */
-export class LayeredButtonDrawer {
+export class LayeredButtonDrawer implements IButtonDrawer {
 	protected readonly logger: Logger
 	protected readonly deps: ControlDependencies
 	protected readonly controlId: string
@@ -90,13 +90,11 @@ export class LayeredButtonDrawer {
 		this.controlId = controlId
 		this.#host = host
 		this.#drawType = drawType
-
-		// Own the 'other control finished rendering' invalidation source, needed for reference elements
-		this.deps.graphics.on('button_drawn', this.#onReferencedButtonDrawn)
 	}
 
 	dispose(): void {
-		this.deps.graphics.off('button_drawn', this.#onReferencedButtonDrawn)
+		// Cancel any redraw still queued so it can't fire after the owning control is gone
+		this.invalidate.cancel()
 		this.elementConversionCache.clear()
 	}
 
@@ -286,7 +284,7 @@ export class LayeredButtonDrawer {
 	}
 
 	/** Another located control finished rendering; if we reference it, invalidate and redraw. */
-	#onReferencedButtonDrawn = (location: ControlLocation, render: ImageResult): void => {
+	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
 		const locStr = formatLocation(location)
 		if (!this.#lastDrawReferencedLocations?.has(locStr)) return
 

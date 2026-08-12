@@ -3,7 +3,7 @@ import { useCallback, useContext } from 'react'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import type { InternalInputField } from '@companion-app/shared/Model/Options.js'
+import type { InternalInputField, InternalInputFieldSurfaceSerial } from '@companion-app/shared/Model/Options.js'
 import { HorizontalAlignmentInputField, VerticalAlignmentInputField } from '~/Components/AlignmentInputField.js'
 import { DateInputField } from '~/Components/DateInputField.js'
 import type { DropdownChoicesOrGroups } from '~/Components/DropdownChoices.js'
@@ -29,7 +29,7 @@ export function InternalModuleField(
 	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 	value: any,
 	setValue: (value: any) => void
-): JSX.Element | null {
+): React.JSX.Element | null {
 	switch (option.type) {
 		case 'internal:connection_id':
 			return (
@@ -87,7 +87,7 @@ export function InternalModuleField(
 					value={value}
 					setValue={setValue}
 					includeSelf={option.includeSelf}
-					useRawSurfaces={option.useRawSurfaces}
+					listMode={option.listMode}
 				/>
 			)
 		case 'internal:outbound_surface_id':
@@ -440,7 +440,7 @@ interface InternalSurfaceBySerialDropdownProps {
 	setValue: (value: any) => void
 	disabled: boolean
 	includeSelf: boolean | undefined
-	useRawSurfaces: boolean | undefined
+	listMode: InternalInputFieldSurfaceSerial['listMode']
 }
 
 const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySerialDropdown({
@@ -450,7 +450,7 @@ const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySeria
 	setValue,
 	disabled,
 	includeSelf,
-	useRawSurfaces,
+	listMode,
 }: InternalSurfaceBySerialDropdownProps) {
 	const { surfaces } = useContext(RootAppStoreContext)
 
@@ -460,16 +460,7 @@ const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySeria
 			choices.push({ id: 'self', label: 'Current surface' })
 		}
 
-		if (!useRawSurfaces) {
-			for (const group of surfaces.store.values()) {
-				if (!group) continue
-
-				choices.push({
-					label: group.displayName,
-					id: group.id,
-				})
-			}
-		} else {
+		if (listMode === 'surfaces') {
 			for (const group of surfaces.store.values()) {
 				if (!group) continue
 
@@ -480,10 +471,30 @@ const InternalSurfaceBySerialDropdown = observer(function InternalSurfaceBySeria
 					})
 				}
 			}
+		} else {
+			for (const group of surfaces.store.values()) {
+				if (!group) continue
+
+				choices.push({
+					label: group.displayName,
+					id: group.id,
+				})
+
+				// Also offer the individual member surfaces. Auto-groups are skipped as their id is the
+				// same as their sole surface, which would produce a duplicate entry.
+				if (listMode === 'groups-and-surfaces' && !group.isAutoGroup) {
+					for (const surface of group.surfaces) {
+						choices.push({
+							label: `${group.displayName} - ${surface.displayName}`,
+							id: surface.id,
+						})
+					}
+				}
+			}
 		}
 
 		return choices
-	}, [surfaces, isLocatedInGrid, includeSelf, useRawSurfaces])
+	}, [surfaces, isLocatedInGrid, includeSelf, listMode])
 
 	return <DropdownInputField htmlName={id} disabled={disabled} value={value} choices={choices} setValue={setValue} />
 })

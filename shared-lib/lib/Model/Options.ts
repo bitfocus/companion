@@ -166,7 +166,13 @@ export interface InternalInputFieldSurfaceSerial extends CompanionInputFieldBase
 	type: 'internal:surface_serial'
 	includeSelf: boolean
 	default: string
-	useRawSurfaces?: boolean
+	/**
+	 * Which entries to offer in the picker:
+	 * - `groups`: surface groups only (group-level actions, e.g. lock, set page)
+	 * - `surfaces`: individual surfaces only (per-surface actions where a group makes no sense)
+	 * - `groups-and-surfaces`: both, so either a whole group or a single surface can be targeted
+	 */
+	listMode: 'groups' | 'surfaces' | 'groups-and-surfaces'
 }
 export interface InternalInputFieldOutboundSurfaceId extends CompanionInputFieldBaseExtended {
 	type: 'internal:outbound_surface_id'
@@ -319,8 +325,8 @@ export interface CompanionInputFieldMultiDropdownExtended extends CompanionInput
 }
 export interface CompanionInputFieldNumberExtended extends CompanionInputFieldBaseExtended {
 	type: 'number'
-	/** The default value */
-	default: number
+	/** The default value. `null` is only valid together with `allowNull` and represents the "auto" state. */
+	default: number | null
 	/**
 	 * The minimum value to allow
 	 * Note: values may not conform to this
@@ -344,6 +350,11 @@ export interface CompanionInputFieldNumberExtended extends CompanionInputFieldBa
 	clampValues?: boolean
 	/** Whether to only allow integer values */
 	asInteger?: boolean
+	/**
+	 * When true, the field can be cleared to `null`, shown in the UI as "auto". The consumer decides what
+	 * "auto" resolves to. Requires the value type to permit `null`.
+	 */
+	allowNull?: boolean
 }
 export interface CompanionInputFieldCheckboxExtended extends CompanionInputFieldBaseExtended {
 	type: 'checkbox'

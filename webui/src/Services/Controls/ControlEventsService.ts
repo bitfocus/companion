@@ -26,7 +26,7 @@ export interface IEventEditorEventService {
 
 export function useControlEventsEditorService(
 	controlId: string,
-	confirmModal: React.RefObject<GenericConfirmModalRef>
+	confirmModal: React.RefObject<GenericConfirmModalRef | null>
 ): IEventEditorService {
 	const addMutation = useMutationExt(trpc.controls.events.add.mutationOptions())
 	const reorderMutation = useMutationExt(trpc.controls.events.reorder.mutationOptions())
@@ -101,7 +101,7 @@ export function useControlEventService(
 	serviceFactory: IEventEditorService,
 	event: EventInstance
 ): IEventEditorEventService {
-	const eventRef = useRef<EventInstance>()
+	const eventRef = useRef<EventInstance>(event)
 	eventRef.current = event
 
 	const eventId = event.id

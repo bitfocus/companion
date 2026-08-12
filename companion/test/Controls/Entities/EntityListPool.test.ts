@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { ButtonModelBase } from '@companion-app/shared/Model/ButtonModel.js'
+import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityListChangeProps } from '../../../lib/Controls/Entities/EntityListPoolBase.js'
 import {
 	ControlEntityListPoolButton,
@@ -357,7 +358,11 @@ describe('EntityListPool - getFeedbackStyleOverrides (layered button)', () => {
 
 		const overrides = pool.getFeedbackStyleOverrides()
 
-		expect(overrides.get('el1')?.get('color')).toEqual({ isExpression: false, value: 0xff0000 })
+		// Boolean/advanced overrides carry no `this:value` binding
+		expect(overrides.get('el1')?.get('color')).toEqual({
+			value: { isExpression: false, value: 0xff0000 },
+			thisContext: null,
+		})
 	})
 
 	test('a boolean feedback that is false contributes no overrides', () => {
@@ -367,6 +372,66 @@ describe('EntityListPool - getFeedbackStyleOverrides (layered button)', () => {
 		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: false }))
 
 		expect(pool.getFeedbackStyleOverrides().size).toBe(0)
+	})
+
+	test('a value feedback binds its value to thisContext for the override expression', () => {
+		const valueFeedbackDefinition = (entityType: EntityModelType) =>
+			entityType === EntityModelType.Feedback
+				? ({ entityType, feedbackType: FeedbackEntitySubType.Value } as any)
+				: ({ entityType } as any)
+
+		const { pool } = createPool({ isLayered: true, getEntityDefinition: valueFeedbackDefinition })
+		const feedback = feedbackModel({
+			styleOverrides: [styleOverride({ override: { isExpression: true, value: '$(this:value) + 1' } })],
+		})
+		pool.entityAdd('feedbacks', null, feedback)
+		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: 41 }))
+
+		// The pool does not evaluate the expression here - it carries the raw expression plus the feedback
+		// value as `thisContext` for the drawer to evaluate.
+		expect(pool.getFeedbackStyleOverrides().get('el1')?.get('color')).toEqual({
+			value: { isExpression: true, value: '$(this:value) + 1' },
+			thisContext: { value: 41 },
+		})
+	})
+
+	test('a value feedback coerces a non-expression override into an expression', () => {
+		const valueFeedbackDefinition = (entityType: EntityModelType) =>
+			entityType === EntityModelType.Feedback
+				? ({ entityType, feedbackType: FeedbackEntitySubType.Value } as any)
+				: ({ entityType } as any)
+
+		const { pool } = createPool({ isLayered: true, getEntityDefinition: valueFeedbackDefinition })
+		// A plain-value override (from a module preset/imported config) must still be treated as an expression
+		const feedback = feedbackModel({
+			styleOverrides: [styleOverride({ override: { isExpression: false, value: '$(this:value) * 2' } })],
+		})
+		pool.entityAdd('feedbacks', null, feedback)
+		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: 21 }))
+
+		expect(pool.getFeedbackStyleOverrides().get('el1')?.get('color')).toEqual({
+			value: { isExpression: true, value: '$(this:value) * 2' },
+			thisContext: { value: 21 },
+		})
+	})
+
+	test('a value feedback stringifies a non-expression literal override into an expression', () => {
+		const valueFeedbackDefinition = (entityType: EntityModelType) =>
+			entityType === EntityModelType.Feedback
+				? ({ entityType, feedbackType: FeedbackEntitySubType.Value } as any)
+				: ({ entityType } as any)
+
+		const { pool } = createPool({ isLayered: true, getEntityDefinition: valueFeedbackDefinition })
+		const feedback = feedbackModel({
+			styleOverrides: [styleOverride({ override: { isExpression: false, value: 5 } })],
+		})
+		pool.entityAdd('feedbacks', null, feedback)
+		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: 41 }))
+
+		expect(pool.getFeedbackStyleOverrides().get('el1')?.get('color')).toEqual({
+			value: { isExpression: true, value: '5' },
+			thisContext: { value: 41 },
+		})
 	})
 })
 

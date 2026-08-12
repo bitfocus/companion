@@ -123,6 +123,25 @@ export const schemaFeedbackEntityStyleOverride: z.ZodType<FeedbackEntityStyleOve
 	override: ExpressionOrJsonValueSchema,
 })
 
+/**
+ * A style override resolved from a feedback, ready to be applied to a button element property.
+ * This is a computed (non-persisted) shape produced when merging a control's feedbacks into the
+ * per-element overrides used at draw time.
+ */
+export interface ResolvedFeedbackStyleOverride {
+	/** The value/expression to apply for this override. */
+	value: ExpressionOrValue<JsonValue | undefined>
+	/**
+	 * When non-null, this override is a value-feedback transform: `value` is evaluated as an expression
+	 * with `$(this:value)` bound to `thisContext.value`, and an `undefined` result means "no override"
+	 * (the element's base value is used instead).
+	 *
+	 * A nested object (rather than a bare `JsonValue | undefined`) so that a value-feedback whose value
+	 * is `undefined` stays distinguishable from a boolean/advanced override, which uses `thisContext: null`.
+	 */
+	thisContext: { value: JsonValue | undefined } | null
+}
+
 export interface EntityModelBase {
 	readonly type: EntityModelType
 

@@ -1,4 +1,5 @@
 import { faCancel, faExpand, faGamepad } from '@fortawesome/free-solid-svg-icons'
+import './Emulator.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate, useParams } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
@@ -66,7 +67,7 @@ interface ConfigurePanelProps {
 	config: EmulatorConfig
 }
 
-function ConfigurePanel({ config }: ConfigurePanelProps): JSX.Element | null {
+function ConfigurePanel({ config }: ConfigurePanelProps): React.JSX.Element | null {
 	const [show, setShow] = useState(true)
 	const [fullscreen, setFullscreen] = useState(document.fullscreenElement !== null)
 
@@ -120,7 +121,7 @@ function EmulatorNotFound({ emulatorId }: { emulatorId: string }) {
 
 	return (
 		<div className="emulator-not-found">
-			<NonIdealState icon={faGamepad} className="emulator-nonideal" style={{ color: '#f7f7f7' }}>
+			<NonIdealState icon={faGamepad} className="emulator-nonideal">
 				<div>
 					The emulator with ID <code>{emulatorId}</code> was not found.
 				</div>

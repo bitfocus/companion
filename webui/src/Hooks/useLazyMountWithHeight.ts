@@ -1,7 +1,7 @@
 import { useCallback, useRef } from 'react'
 import { useInView } from 'react-intersection-observer'
-import { useResizeObserver } from 'usehooks-ts'
 import { useEntityListHeightCache } from '~/Controls/Components/EntityListHeightCacheContext.js'
+import { useResizeObserver } from './useResizeObserver.js'
 
 export interface LazyMountWithHeight {
 	/** Attach to the element whose mounting is gated and whose height should be measured. */

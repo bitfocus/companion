@@ -2,12 +2,14 @@ import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
 import type {
 	ButtonModelBase,
+	ButtonReferenceButtonModel,
 	LayeredButtonModel,
 	PresetReferenceButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExportControlv6, ExportTriggerContentv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { InternalController } from '../Internal/Controller.js'
 import type { Logger } from '../Log/Controller.js'
@@ -186,6 +188,25 @@ export function fixupPresetReferenceControl(
 	referencesUpdater.visitDrawElements(result.style.layers)
 
 	return result
+}
+
+export function fixupButtonReferenceControl(
+	control: ExportControlv6,
+	referencesUpdater: VisitorReferencesUpdater
+): ButtonReferenceButtonModel {
+	const options = structuredClone(control.options) ?? {}
+
+	if (!isExpressionOrValue(options.location)) options.location = { value: '', isExpression: false }
+
+	// Remap connection labels used in the location the same way other element expressions are remapped.
+	// Note: an absolute location (e.g. "3/0/0") is NOT page-remapped, so it may point at the wrong page after a
+	// partial import that renumbers pages; expression/relative locations are offset-safe.
+	referencesUpdater.visitExpressionOrValue(options.location, true)
+
+	return {
+		type: 'button-reference',
+		options,
+	}
 }
 
 function fixupButtonControlBase(

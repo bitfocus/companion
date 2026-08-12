@@ -1,4 +1,5 @@
 import { faCalendarAlt, faClock } from '@fortawesome/free-solid-svg-icons'
+import './RecorderSessionFinishModal.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useState } from 'react'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'

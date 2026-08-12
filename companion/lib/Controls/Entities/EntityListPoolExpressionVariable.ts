@@ -1,11 +1,10 @@
-import type { JsonValue } from 'type-fest'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
+	type ResolvedFeedbackStyleOverride,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type {
 	ExpressionParserOptions,
@@ -99,10 +98,7 @@ export class EntityListPoolExpressionVariable extends WithEntityEditing(ControlE
 		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
 	}
 
-	public getFeedbackStyleOverrides(): ReadonlyMap<
-		string,
-		ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>
-	> {
+	public getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>> {
 		return new Map()
 	}
 

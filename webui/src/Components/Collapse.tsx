@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { Collapsible } from '@base-ui/react/collapsible'
+import './Collapse.css'
 import classNames from 'classnames'
 import type { HTMLAttributes } from 'react'
 
@@ -14,7 +15,7 @@ export interface CollapseRootProps {
 	className?: string
 }
 
-function CollapseRoot({ className, ...props }: CollapseRootProps): JSX.Element {
+function CollapseRoot({ className, ...props }: CollapseRootProps): React.JSX.Element {
 	return <Collapsible.Root className={classNames('collapse2-root', className)} {...props} />
 }
 
@@ -25,7 +26,7 @@ export interface CollapseTriggerProps extends Omit<HTMLAttributes<HTMLButtonElem
 	children?: React.ReactNode
 }
 
-function CollapseTrigger({ className, ...props }: CollapseTriggerProps): JSX.Element {
+function CollapseTrigger({ className, ...props }: CollapseTriggerProps): React.JSX.Element {
 	return <Collapsible.Trigger className={classNames('collapse2-trigger', className)} {...props} />
 }
 
@@ -36,7 +37,7 @@ export interface CollapsePanelProps extends Pick<HTMLAttributes<HTMLDivElement>,
 	keepMounted?: boolean
 }
 
-function CollapsePanel({ className, keepMounted, ...props }: CollapsePanelProps): JSX.Element {
+function CollapsePanel({ className, keepMounted, ...props }: CollapsePanelProps): React.JSX.Element {
 	return <Collapsible.Panel keepMounted={keepMounted} className={classNames('collapse2-panel', className)} {...props} />
 }
 

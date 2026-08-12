@@ -3,6 +3,7 @@ import type { JsonValue } from 'type-fest'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import { isExpressionOrValue, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import {
@@ -53,6 +54,27 @@ export function mergeElementReferences(global: ExpressionReferences, element: El
 	if (element.clockSensitive) global.clockSensitive = true
 }
 
+/** Shared empty override map, so the common (no-override) path allocates nothing. */
+const NO_VARIABLE_OVERRIDES: VariableValues = Object.freeze({})
+const EMPTY_VARIABLE_IDS: ReadonlySet<string> = new Set()
+
+/**
+ * The raw (unparsed) value for an element property, plus the context needed to parse it. Callers parse
+ * `value` themselves - injecting `variableOverrides` (e.g. `$(this:value)` for value feedbacks) - so the
+ * expression is parsed in exactly one place, with the getter's own required type.
+ */
+interface ResolvedElementValue {
+	/** The value/expression to use: the feedback override if one is present, otherwise the element's own value. */
+	value: ExpressionOrValue<JsonValue | undefined>
+	/** Variables to inject while parsing `value` as an expression (e.g. `this:value`); empty for the common case. */
+	variableOverrides: VariableValues
+	/**
+	 * For value-feedback overrides only: the element's own value, applied when the override expression
+	 * resolves to `undefined` ("no override"). `null` for every other case.
+	 */
+	undefinedFallback: ExpressionOrValue<JsonValue | undefined> | null
+}
+
 export class ElementExpressionHelper<T> {
 	readonly #parser: VariablesAndExpressionParser
 
@@ -60,13 +82,13 @@ export class ElementExpressionHelper<T> {
 	readonly #references: ElementReferences
 
 	readonly #element: T
-	readonly #elementOverrides: ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>> | undefined
+	readonly #elementOverrides: ReadonlyMap<string, ResolvedFeedbackStyleOverride> | undefined
 
 	constructor(
 		parser: VariablesAndExpressionParser,
 		references: ElementReferences,
 		element: T,
-		elementOverrides: ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>> | undefined
+		elementOverrides: ReadonlyMap<string, ResolvedFeedbackStyleOverride> | undefined
 	) {
 		this.#parser = parser
 		this.#references = references
@@ -76,7 +98,16 @@ export class ElementExpressionHelper<T> {
 	}
 
 	executeExpressionAndTrackVariables(str: string, requiredType: string | undefined): ExecuteExpressionResult {
-		const result = this.#parser.executeExpression(str, requiredType)
+		return this.#trackExpression(this.#parser, str, requiredType)
+	}
+
+	/** Execute an expression with the given parser, recording its variable/clock dependencies. */
+	#trackExpression(
+		parser: VariablesAndExpressionParser,
+		str: string,
+		requiredType: string | undefined
+	): ExecuteExpressionResult {
+		const result = parser.executeExpression(str, requiredType)
 
 		// Track the variables used in the expression, even when it failed
 		for (const variable of result.variableIds) {
@@ -85,6 +116,32 @@ export class ElementExpressionHelper<T> {
 
 		// Track clock sensitivity, even when the expression failed
 		if (result.clockSensitive) this.#references.clockSensitive = true
+
+		return result
+	}
+
+	/**
+	 * Parse a property's override expression: evaluate `str` (with `variableOverrides` injected, e.g.
+	 * `$(this:value)`), and for value-feedback overrides fall back to the element's own value when the
+	 * expression fails or resolves to `undefined` ("no override"). This is the single place override
+	 * expressions are parsed - the getters route their expression branch through here.
+	 */
+	#resolveOverrideExpression(
+		str: string,
+		requiredType: string | undefined,
+		variableOverrides: VariableValues,
+		undefinedFallback: ExpressionOrValue<JsonValue | undefined> | null
+	): ExecuteExpressionResult {
+		const parser =
+			Object.keys(variableOverrides).length > 0 ? this.#parser.createChildParser(variableOverrides) : this.#parser
+		const result = this.#trackExpression(parser, str, requiredType)
+
+		if (undefinedFallback && (!result.ok || result.value === undefined)) {
+			if (!undefinedFallback.isExpression) {
+				return { ok: true, value: undefinedFallback.value, variableIds: EMPTY_VARIABLE_IDS, clockSensitive: false }
+			}
+			return this.#trackExpression(this.#parser, undefinedFallback.value, requiredType)
+		}
 
 		return result
 	}
@@ -105,17 +162,40 @@ export class ElementExpressionHelper<T> {
 		}
 	}
 
-	#getValue(propertyName: keyof T): ExpressionOrValue<JsonValue | undefined> {
+	/**
+	 * Resolve which raw value a property should use - the feedback override if present, otherwise the
+	 * element's own value - WITHOUT parsing any expression. The caller parses `value`, injecting the
+	 * returned `variableOverrides`, so nothing is evaluated for a property that is never read.
+	 */
+	#getValue(propertyName: keyof T): ResolvedElementValue {
+		const base = ((this.#element as any)[propertyName] as ExpressionOrValue<JsonValue | undefined>) ?? {
+			isExpression: false,
+			value: undefined,
+		}
+
 		const override = this.#elementOverrides?.get(String(propertyName))
-		return override ?? (this.#element as any)[propertyName] ?? { isExpression: false, value: undefined }
+		if (!override) return { value: base, variableOverrides: NO_VARIABLE_OVERRIDES, undefinedFallback: null }
+
+		// Boolean/advanced overrides apply directly, parsed like any element value
+		if (override.thisContext === null) {
+			return { value: override.value, variableOverrides: NO_VARIABLE_OVERRIDES, undefinedFallback: null }
+		}
+
+		// Value-feedback override: an expression transform of the feedback value. Expose the value as
+		// `$(this:value)` while parsing, and fall back to the element's own value if it resolves to undefined.
+		return {
+			value: override.value,
+			variableOverrides: { 'this:value': override.thisContext.value },
+			undefinedFallback: base,
+		}
 	}
 
 	getUnknown(propertyName: keyof T, defaultValue: VariableValue): VariableValue | undefined {
-		const value = this.#getValue(propertyName)
+		const { value, variableOverrides, undefinedFallback } = this.#getValue(propertyName)
 
 		if (!value.isExpression) return value.value
 
-		const result = this.executeExpressionAndTrackVariables(value.value, undefined)
+		const result = this.#resolveOverrideExpression(value.value, undefined, variableOverrides, undefinedFallback)
 		if (!result.ok) {
 			return defaultValue
 		}
@@ -124,23 +204,42 @@ export class ElementExpressionHelper<T> {
 	}
 
 	getParsedString(propertyName: keyof T, defaultValue: string): string {
-		const value = this.#getValue(propertyName)
-		if (value.isExpression) {
-			return stringifyVariableValue(this.getUnknown(propertyName, defaultValue)) ?? defaultValue
-		} else {
+		const { value, variableOverrides, undefinedFallback } = this.#getValue(propertyName)
+
+		// A plain string (the element's own value, or a boolean/advanced override) is a template: interpolate
+		// its variables.
+		if (!value.isExpression) {
 			return this.parseVariablesInString(stringifyVariableValue(value.value) ?? '', defaultValue)
 		}
+
+		// An expression (an expression element value, or a value-feedback transform). Evaluate it - but pass
+		// `null` for the fallback: a value-feedback override that resolves to `undefined` means "no override",
+		// and the element's own value is a template that must be variable-interpolated, not stringified raw.
+		const result = this.#resolveOverrideExpression(value.value, undefined, variableOverrides, null)
+		if (result.ok && result.value !== undefined) {
+			return stringifyVariableValue(result.value) ?? defaultValue
+		}
+
+		if (undefinedFallback) {
+			if (!undefinedFallback.isExpression) {
+				return this.parseVariablesInString(stringifyVariableValue(undefinedFallback.value) ?? '', defaultValue)
+			}
+			const fallback = this.executeExpressionAndTrackVariables(undefinedFallback.value, undefined)
+			return fallback.ok ? (stringifyVariableValue(fallback.value) ?? defaultValue) : defaultValue
+		}
+
+		return defaultValue
 	}
 
 	getNumber(propertyName: keyof T, defaultValue: number, scale = 1): number {
-		const value = this.#getValue(propertyName)
+		const { value, variableOverrides, undefinedFallback } = this.#getValue(propertyName)
 
 		if (!value.isExpression) {
 			const num = Number(value.value)
 			return isNaN(num) ? defaultValue : num * scale
 		}
 
-		const result = this.executeExpressionAndTrackVariables(value.value, 'number')
+		const result = this.#resolveOverrideExpression(value.value, 'number', variableOverrides, undefinedFallback)
 		if (!result.ok) {
 			return defaultValue
 		}
@@ -152,6 +251,29 @@ export class ElementExpressionHelper<T> {
 	}
 
 	/**
+	 * Like {@link getNumber}, but for a nullable ("auto") number field: an explicitly empty value (`null`,
+	 * `undefined` or an empty string, or an expression resolving to one) yields `null` rather than the
+	 * default. A non-empty but unparsable value falls back to `defaultValue`.
+	 */
+	getNumberOrNull(propertyName: keyof T, defaultValue: number | null): number | null {
+		const { value, variableOverrides, undefinedFallback } = this.#getValue(propertyName)
+
+		if (!value.isExpression) {
+			if (value.value === null || value.value === undefined || value.value === '') return null
+			const num = Number(value.value)
+			return isNaN(num) ? defaultValue : num
+		}
+
+		// Deliberately do NOT request the 'number' type, as we need to receive null too
+		const result = this.#resolveOverrideExpression(value.value, undefined, variableOverrides, undefinedFallback)
+		if (!result.ok) return defaultValue
+
+		if (result.value === null || result.value === undefined || result.value === '') return null
+		const num = Number(result.value)
+		return isNaN(num) ? defaultValue : num
+	}
+
+	/**
 	 * Resolve a color property, preserving css color strings. A numeric (or numeric-string) value becomes a number;
 	 * a valid css color string is kept as-is; anything else falls back to the default. Mirrors the number/string
 	 * semantics of parseColor so the value renders correctly downstream.
@@ -160,14 +282,14 @@ export class ElementExpressionHelper<T> {
 	 * forced fully opaque.
 	 */
 	getColor(propertyName: keyof T, defaultValue: number | string, allowAlpha = true): number | string {
-		const value = this.#getValue(propertyName)
+		const { value, variableOverrides, undefinedFallback } = this.#getValue(propertyName)
 
 		let raw: unknown
 		if (!value.isExpression) {
 			raw = value.value
 		} else {
 			// Do not force a 'number' result type, otherwise a css color string would be rejected
-			const result = this.executeExpressionAndTrackVariables(value.value, undefined)
+			const result = this.#resolveOverrideExpression(value.value, undefined, variableOverrides, undefinedFallback)
 			raw = result.ok ? result.value : undefined
 		}
 
@@ -191,14 +313,14 @@ export class ElementExpressionHelper<T> {
 	}
 
 	getString<TVal extends string | null | undefined>(propertyName: keyof T, defaultValue: TVal): TVal {
-		const value = this.#getValue(propertyName)
+		const { value, variableOverrides, undefinedFallback } = this.#getValue(propertyName)
 
 		if (!value.isExpression) {
 			if (value.value === null || value.value === undefined) return value.value as TVal
 			return stringifyVariableValue(value.value) as TVal
 		}
 
-		const result = this.executeExpressionAndTrackVariables(value.value, undefined)
+		const result = this.#resolveOverrideExpression(value.value, undefined, variableOverrides, undefinedFallback)
 		if (!result.ok) {
 			return defaultValue
 		}
@@ -210,13 +332,15 @@ export class ElementExpressionHelper<T> {
 	}
 
 	getEnum<TVal extends string | number>(propertyName: keyof T, values: TVal[], defaultValue: TVal): TVal {
-		const value = this.#getValue(propertyName)
+		const { value, variableOverrides, undefinedFallback } = this.#getValue(propertyName)
 
 		let actualValue: TVal = value.value as TVal
 		if (value.isExpression) {
-			const result = this.executeExpressionAndTrackVariables(
+			const result = this.#resolveOverrideExpression(
 				value.value,
-				typeof defaultValue === 'number' ? 'number' : 'string'
+				typeof defaultValue === 'number' ? 'number' : 'string',
+				variableOverrides,
+				undefinedFallback
 			)
 			if (!result.ok) {
 				return defaultValue
@@ -236,11 +360,11 @@ export class ElementExpressionHelper<T> {
 	 * Resolves an expression if present, requires an array result, and filters to the allowed values.
 	 */
 	getEnumArray<TVal extends string>(propertyName: keyof T, values: readonly TVal[], defaultValue: TVal[]): TVal[] {
-		const value = this.#getValue(propertyName)
+		const { value, variableOverrides, undefinedFallback } = this.#getValue(propertyName)
 
 		let actualValue: unknown = value.value
 		if (value.isExpression) {
-			const result = this.executeExpressionAndTrackVariables(value.value, undefined)
+			const result = this.#resolveOverrideExpression(value.value, undefined, variableOverrides, undefinedFallback)
 			if (!result.ok) {
 				return defaultValue
 			}
@@ -268,7 +392,7 @@ export class ElementExpressionHelper<T> {
 	}
 
 	getBoolean(propertyName: keyof T, defaultValue: boolean): boolean {
-		const value = this.#getValue(propertyName)
+		const { value, variableOverrides, undefinedFallback } = this.#getValue(propertyName)
 
 		if (!value.isExpression) {
 			// A missing property (added to the schema after an element was saved) surfaces as
@@ -278,7 +402,7 @@ export class ElementExpressionHelper<T> {
 			return Boolean(value.value)
 		}
 
-		const result = this.executeExpressionAndTrackVariables(value.value, 'boolean')
+		const result = this.#resolveOverrideExpression(value.value, 'boolean', variableOverrides, undefinedFallback)
 		if (!result.ok) {
 			return defaultValue
 		}
@@ -287,13 +411,13 @@ export class ElementExpressionHelper<T> {
 	}
 
 	getHorizontalAlignment(propertyName: keyof T): HorizontalAlignment {
-		const value = this.#getValue(propertyName)
+		const { value, variableOverrides, undefinedFallback } = this.#getValue(propertyName)
 
 		if (!value.isExpression) {
 			return this.getEnum<HorizontalAlignment>(propertyName, ['left', 'center', 'right'], 'center')
 		}
 
-		const result = this.executeExpressionAndTrackVariables(value.value, 'string')
+		const result = this.#resolveOverrideExpression(value.value, 'string', variableOverrides, undefinedFallback)
 		if (!result.ok) return 'center'
 
 		const firstChar = (stringifyVariableValue(result.value) ?? '').trim().toLowerCase()[0]
@@ -326,13 +450,13 @@ export class ElementExpressionHelper<T> {
 	}
 
 	getVerticalAlignment(propertyName: keyof T): VerticalAlignment {
-		const value = this.#getValue(propertyName)
+		const { value, variableOverrides, undefinedFallback } = this.#getValue(propertyName)
 
 		if (!value.isExpression) {
 			return this.getEnum<VerticalAlignment>(propertyName, ['top', 'center', 'bottom'], 'center')
 		}
 
-		const result = this.executeExpressionAndTrackVariables(value.value, 'string')
+		const result = this.#resolveOverrideExpression(value.value, 'string', variableOverrides, undefinedFallback)
 		if (!result.ok) return 'center'
 
 		const firstChar = (stringifyVariableValue(result.value) ?? '').trim().toLowerCase()[0]
@@ -407,7 +531,7 @@ export function createParseElementsContext(
 	compositeElementStore: InstanceDefinitions,
 	parser: VariablesAndExpressionParser,
 	drawPixelBuffers: DrawPixelBuffers,
-	feedbackOverrides: ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>,
+	feedbackOverrides: ReadonlyMap<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>,
 	onlyEnabled: boolean,
 	cache: ElementConversionCache | null,
 	globalReferences: ExpressionReferences,

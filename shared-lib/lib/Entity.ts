@@ -19,9 +19,12 @@ export function canAddEntityToFeedbackList(
 			)
 		case FeedbackEntitySubType.Advanced:
 		case FeedbackEntitySubType.StyleOverride:
+			// A feedback can opt out of being used as a style override entirely, regardless of its type
+			if (definition.feedbackStyleOverridesUnsupported) return false
 			return (
 				definition.feedbackType === FeedbackEntitySubType.Advanced ||
-				definition.feedbackType === FeedbackEntitySubType.Boolean
+				definition.feedbackType === FeedbackEntitySubType.Boolean ||
+				definition.feedbackType === FeedbackEntitySubType.Value
 			)
 		default:
 			assertNever(feedbackListType)

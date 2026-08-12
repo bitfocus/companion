@@ -1,0 +1,125 @@
+.header {
+	position: relative;
+	display: flex;
+	flex-wrap: wrap; /* allow the collapsing content to line-break */
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.5rem;
+	background: var(--color-header-bg); /* the brand-red bar */
+	border-bottom: 1px solid var(--color-border);
+
+	/* The header lays out its single full-width container child as a flex row */
+	> .container,
+	> .container-fluid {
+		display: flex;
+		flex-wrap: inherit;
+		align-items: center;
+		justify-content: space-between;
+	}
+}
+
+/* Brand / product name (shown on mobile) */
+.header-brand {
+	padding-top: 0.3125rem;
+	padding-bottom: 0.3125rem;
+	margin-inline-end: 1rem;
+	font-size: 1.25rem;
+	color: var(--color-header-text);
+	text-decoration: none;
+	white-space: nowrap;
+
+	&:hover,
+	&:focus {
+		color: var(--color-header-text);
+		text-decoration: none;
+	}
+}
+
+/* Nav list inside the header (uses .nav-link but not .nav) */
+.header-nav {
+	display: flex;
+	flex-direction: row;
+	padding-inline-start: 0;
+	margin-bottom: 0;
+	list-style: none;
+
+	.nav-link {
+		padding: 0.5rem;
+		color: var(--color-header-text);
+	}
+}
+
+/* The installation name shown as a header nav item */
+.install-name {
+	padding: 0 0.5rem; /* header-nav-link-padding-x */
+	color: var(--color-header-text); /* header text colour */
+
+	align-content: center;
+	font-size: 1.25em;
+	font-weight: bold;
+}
+
+/* Hamburger toggler (mobile). The icon itself is a FontAwesome glyph in Header.tsx. */
+.header-toggler {
+	/* 0.25rem all round (overrides .ps-1, just in case) keeps the hover highlight uniform */
+	padding: 0.25rem !important;
+	margin-right: 0.5rem; /* toggler-padding-x - toggler-padding-y */
+	font-size: 1.25rem;
+	color: var(--color-header-text);
+	background-color: transparent;
+	border: 0;
+	border-radius: var(--radius);
+
+	&:hover {
+		text-decoration: none;
+		background-color: var(--color-header-hover);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--color-header-text);
+		outline-offset: 2px;
+	}
+
+	&:not(:disabled) {
+		cursor: pointer;
+	}
+}
+
+.header-right {
+	margin-right: 5px;
+}
+
+.header > .container-fluid {
+	min-height: calc(4rem + 1px); /* stylelint-disable-line function-disallowed-list */
+}
+
+.header .nav-link:hover {
+	color: var(--color-header-text-muted);
+}
+/* ensure .header-notification-item text doesn't disappear on focus */
+.header .nav-link:focus {
+	color: var(--color-header-text-muted);
+}
+
+.header-notification-item {
+	border-radius: 0.5em;
+	margin-left: 1em;
+	background-color: var(--color-header-notification-bg);
+}
+
+.header-update-icon {
+	margin-right: 0.5em;
+}
+
+.help-menu {
+	/* note: <CDropdownToggle color="primary"...> set a group of color properties. Here we extend or override as needed. */
+	.help-toggle {
+		color: var(--color-header-text); /* Keep toggle white on red header */
+		margin-left: 1em; /* buffer between this and the lock icon */
+		/* the following line makes the focus/hover-highlight a square that is the same size as the notification */
+		padding: 0.2em 0em;
+		/* CDropdownToggle is not assigned class dropdown-toggle because we're not using the caret, so we manually override */
+		/* override "middle-of-group" rule (this appears to be a recent bug in CoreUI: https://github.com/coreui/coreui-react/issues/455) */
+		border-radius: var(--radius) !important;
+	}
+}

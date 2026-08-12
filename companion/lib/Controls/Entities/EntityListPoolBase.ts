@@ -1,12 +1,11 @@
 import debounceFn from 'debounce-fn'
-import type { JsonValue } from 'type-fest'
 import {
 	EntityModelType,
 	type FeedbackEntityStyleOverride,
+	type ResolvedFeedbackStyleOverride,
 	type SomeReplaceableEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { InstanceProcessManager } from '../../Instance/ProcessManager.js'
 import type { InternalController } from '../../Internal/Controller.js'
@@ -223,12 +222,9 @@ export abstract class ControlEntityListPoolBase {
 
 	/**
 	 * Get all the style overrides for the layered drawing elements
-	 * @returns A map of elementId -> elementProperty -> override value
+	 * @returns A map of elementId -> elementProperty -> resolved override
 	 */
-	abstract getFeedbackStyleOverrides(): ReadonlyMap<
-		string,
-		ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>
-	>
+	abstract getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>
 
 	getLocalVariableValues(): VariableValues {
 		const entities = this.getLocalVariableEntities()

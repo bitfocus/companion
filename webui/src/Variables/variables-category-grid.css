@@ -1,0 +1,25 @@
+@import '../breakpoints.css';
+
+.variables-category-grid {
+	display: grid;
+
+	column-gap: 10px;
+	row-gap: 10px;
+
+	grid-template-columns: repeat(4, 1fr);
+	grid-auto-rows: 1fr;
+
+	align-content: stretch;
+
+	@media (--bp-lg-down) {
+		grid-template-columns: repeat(3, 1fr);
+	}
+
+	@media (--bp-md-down) {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	@media (--bp-sm-down) {
+		grid-template-columns: 1fr;
+	}
+}

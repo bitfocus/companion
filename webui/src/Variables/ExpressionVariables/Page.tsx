@@ -1,4 +1,5 @@
 import { faAdd, faArrowLeft, faClone, faLayerGroup, faList, faTrash } from '@fortawesome/free-solid-svg-icons'
+import '../../Components/VariablesTable.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
@@ -228,7 +229,7 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 	const fullname = item.variableName ? `$(expression:${item.variableName})` : null
 
 	return (
-		<div onClick={doEdit} className="flex flex-row align-items-center gap-2 hand">
+		<div onClick={doEdit} className="flex flex-row align-items-center gap-2 cursor-pointer">
 			<div className="flex flex-column grow">
 				{fullname ? (
 					<span className="variable-style">

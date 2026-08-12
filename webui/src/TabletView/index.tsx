@@ -1,4 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
+import './tablet.css'
 import { observer } from 'mobx-react-lite'
 import rangeParser from 'parse-numeric-range'
 import queryString from 'query-string'

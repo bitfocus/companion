@@ -1,4 +1,5 @@
 import { Combobox } from '@base-ui/react/combobox'
+import './dropdown-field.css'
 import classNames from 'classnames'
 import { prepare as fuzzyPrepare } from 'fuzzysort'
 import { ChevronDownIcon, XIcon } from 'lucide-react'
@@ -175,7 +176,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 				onValueChange={onValueChange}
 				onInputValueChange={setInputValue}
 			>
-				<Combobox.InputGroup className="dropdown-field-input-group dropdown-field-multi-input-group">
+				<Combobox.InputGroup className="form-input dropdown-field-input-group dropdown-field-multi-input-group">
 					{currentValue.map((item) => (
 						<span className="dropdown-field-pill" key={String(item.id)}>
 							<span className="dropdown-field-pill-label">{item.label}</span>

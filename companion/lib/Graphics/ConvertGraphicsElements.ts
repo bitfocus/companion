@@ -6,6 +6,7 @@ import {
 	getElementSchemaProperty,
 } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
 	ButtonGraphicsBorder,
@@ -96,7 +97,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 	parser: VariablesAndExpressionParser,
 	drawPixelBuffers: DrawPixelBuffers,
 	elements: SomeButtonGraphicsElement[],
-	feedbackOverrides: ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>>,
+	feedbackOverrides: ReadonlyMap<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>,
 	onlyEnabled: boolean,
 	cache: ElementConversionCache | null,
 	currentLocationStr: string | null = null,
@@ -410,7 +411,7 @@ async function convertReferenceElementForDrawing(
 	return { drawElement, references, compositeElement: null, referencedLocation: referencedLocationStr }
 }
 
-function makeReferencePlaceholder(
+export function makeReferencePlaceholder(
 	parentId: string,
 	text: string
 ): [ButtonGraphicsBoxDrawElement, ButtonGraphicsTextDrawElement] {
@@ -841,7 +842,7 @@ function convertGaugeElementForDrawing(
 				const rowHelper = helper.forRow(row)
 				return {
 					value: rowHelper.getNumber('value', 0),
-					color: rowHelper.getColor('color', 0, false), // gauge stop color field disables alpha
+					color: rowHelper.getColor('color', 0),
 					gradient: rowHelper.getBoolean('gradient', false),
 				}
 			})
@@ -859,7 +860,7 @@ function convertGaugeElementForDrawing(
 		value: helper.getNumber('value', 0),
 		min: helper.getNumber('min', 0),
 		max: helper.getNumber('max', 100),
-		origin: helper.getNumber('origin', 0),
+		origin: helper.getNumberOrNull('origin', null),
 		symmetric: helper.getBoolean('symmetric', false),
 		orientation: helper.getTolerantEnum('orientation', GAUGE_ORIENTATION_CHOICES, 'horizontal'),
 		reverse: helper.getBoolean('reverse', false),
@@ -870,6 +871,7 @@ function convertGaugeElementForDrawing(
 		roundedEnds: helper.getBoolean('roundedEnds', true),
 		fillEnabled: helper.getBoolean('fillEnabled', true),
 		multiColour: helper.getBoolean('multiColour', true),
+		fillWidth: Math.max(0, Math.min(100, helper.getNumber('fillWidth', 100))),
 		stops: stops,
 		markerEnabled: helper.getBoolean('markerEnabled', false),
 		markerColor: helper.getColor('markerColor', 0xffffff),

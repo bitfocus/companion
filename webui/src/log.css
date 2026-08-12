@@ -1,0 +1,47 @@
+.log-page {
+	display: grid;
+	grid-template-rows: auto 1fr;
+	height: 100%;
+	overflow: hidden;
+
+	.log-panel {
+		margin-top: 10px;
+		font-size: 0.85em;
+		overflow: hidden;
+		line-height: 1.25em;
+
+		.log-line {
+			margin-top: 0px;
+			margin-bottom: 1px;
+			padding-top: 1px;
+			padding-bottom: 1px;
+			padding-left: 6px;
+			padding-right: 5px;
+			border-radius: 4px;
+			font-family: 'Fira Code', monospace;
+			white-space: pre-wrap;
+			overflow-wrap: break-word;
+
+			&.log-type-fatal {
+				background-color: var(--color-text-strong);
+				color: var(--color-on-dark);
+			}
+			&.log-type-error {
+				background-color: var(--color-log-error-bg);
+				color: var(--color-log-error-text);
+				border: 1px solid var(--color-log-error);
+			}
+			&.log-type-warn {
+				background-color: var(--color-log-warn-bg);
+				color: var(--color-log-warn);
+			}
+			&.log-type-info {
+				background-color: var(--color-log-info-bg);
+				color: var(--color-log-info-text);
+			}
+			&.log-type-debug {
+				color: var(--color-log-debug-text);
+			}
+		}
+	}
+}

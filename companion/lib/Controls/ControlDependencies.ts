@@ -18,8 +18,18 @@ import type { VariablesValues } from '../Variables/Values.js'
 import type { ActionRunner } from './ActionRunner.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
+import type { SomeControl } from './IControlFragments.js'
 import type { RenderClock } from './RenderClock.js'
 import type { TriggerEvents } from './TriggerEvents.js'
+
+/**
+ * A narrow accessor letting one control reach other controls (to press/rotate a target, or read its model).
+ */
+export interface ControlsAccessor {
+	getControl(controlId: string): SomeControl<any> | undefined
+	pressControl(controlId: string, pressed: boolean, surfaceId: string | undefined, force?: boolean): boolean
+	rotateControl(controlId: string, delta: number, surfaceId: string | undefined): boolean
+}
 
 export interface ControlExternalDependencies {
 	readonly surfaces: SurfaceController
@@ -38,6 +48,9 @@ export interface ControlExternalDependencies {
 
 export interface ControlDependencies extends ControlExternalDependencies {
 	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
+
+	/** Narrow access to other controls (for controls that forward to or read a target control). */
+	readonly controlsAccessor: ControlsAccessor
 
 	readonly events: EventEmitter<ControlCommonEvents>
 

@@ -3,7 +3,7 @@ import { createContext, useContext, useMemo, type RefObject } from 'react'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 
 export interface TriggersTableContextType {
-	deleteModalRef: RefObject<GenericConfirmModalRef>
+	deleteModalRef: RefObject<GenericConfirmModalRef | null>
 	selectTrigger: (triggerId: string | null) => void
 }
 

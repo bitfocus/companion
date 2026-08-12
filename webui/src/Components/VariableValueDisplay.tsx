@@ -1,4 +1,5 @@
 import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import './VariableValueDisplay.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef, useState } from 'react'
 import type { PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
@@ -97,7 +98,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 			? compactValue
 			: valueStr
 
-	const elms: Array<string | JSX.Element> = []
+	const elms: Array<string | React.JSX.Element> = []
 	const lines = displayValue.split('\\n')
 	lines.forEach((l, i) => {
 		elms.push(l)

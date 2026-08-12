@@ -1,4 +1,5 @@
 import { faCircleUp, faFolderOpen, faPowerOff, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
+import './surfaces.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
@@ -295,7 +296,7 @@ const SurfaceRow = observer(function SurfaceRow({
 			</div>
 			<div className="grid-cell">
 				{surface.isConnected ? (
-					<ButtonGroup className="no-break">
+					<ButtonGroup className="whitespace-nowrap">
 						{surface.integrationType === 'emulator' && (
 							<>
 								<LinkButtonExternal

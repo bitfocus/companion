@@ -5,10 +5,11 @@ import type { ButtonModelBase, ButtonOptionsBase, NormalButtonSteps } from '@com
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
+	type ResolvedFeedbackStyleOverride,
 	type SomeEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { exprExpr } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { IPageStore } from '../../Page/Store.js'
@@ -202,29 +203,30 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 		return entityLists
 	}
 
-	getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ExpressionOrValue<JsonValue | undefined>>> {
-		const result = new Map<string, Map<string, ExpressionOrValue<JsonValue | undefined>>>()
+	getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>> {
+		const result = new Map<string, Map<string, ResolvedFeedbackStyleOverride>>()
 
-		const pushOverride = (
-			elementId: string,
-			elementProperty: string,
-			override: ExpressionOrValue<JsonValue | undefined>
-		) => {
-			const targetMap = result.get(elementId) ?? new Map<string, ExpressionOrValue<JsonValue | undefined>>()
+		const pushOverride = (elementId: string, elementProperty: string, override: ResolvedFeedbackStyleOverride) => {
+			const targetMap = result.get(elementId) ?? new Map<string, ResolvedFeedbackStyleOverride>()
 
 			// Hack: merge imageBuffers so that they stack instead of replacing
-			if (elementProperty === 'base64Image') {
+			// Only applies to plain (boolean/advanced) overrides, not value-feedback transforms
+			if (elementProperty === 'base64Image' && override.thisContext === null) {
 				const existing = targetMap.get(elementProperty)
 				if (
 					existing &&
-					!existing.isExpression &&
-					!override.isExpression &&
-					Array.isArray(existing.value) &&
-					Array.isArray(override.value)
+					existing.thisContext === null &&
+					!existing.value.isExpression &&
+					!override.value.isExpression &&
+					Array.isArray(existing.value.value) &&
+					Array.isArray(override.value.value)
 				) {
 					override = {
-						isExpression: false,
-						value: [...existing.value, ...override.value],
+						thisContext: null,
+						value: {
+							isExpression: false,
+							value: [...existing.value.value, ...override.value.value],
+						},
 					}
 				}
 			}
@@ -264,7 +266,10 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 					// And the override stores the value to be applied
 					if (feedback.getBooleanFeedbackValue(null)) {
 						for (const override of overrides) {
-							pushOverride(override.elementId, override.elementProperty, override.override)
+							pushOverride(override.elementId, override.elementProperty, {
+								value: override.override,
+								thisContext: null,
+							})
 						}
 					}
 					break
@@ -282,15 +287,25 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 							override.elementProperty
 						)
 						if (newValue) {
-							pushOverride(override.elementId, override.elementProperty, newValue)
+							pushOverride(override.elementId, override.elementProperty, { value: newValue, thisContext: null })
 						}
 					}
 
 					break
 				}
-				case FeedbackEntitySubType.Value:
-					// Not compatible here
+				case FeedbackEntitySubType.Value: {
+					// The override is an expression transform of the feedback value, bound to `$(this:value)` and
+					// evaluated at draw time (undefined result = no override). Always coerce to an expression: an
+					// override from an untrusted source (module preset, imported config) could be a plain value.
+					const thisContext = { value: feedback.feedbackValue as JsonValue | undefined }
+					for (const override of overrides) {
+						pushOverride(override.elementId, override.elementProperty, {
+							value: exprExpr(stringifyVariableValue(override.override.value) ?? ''),
+							thisContext,
+						})
+					}
 					break
+				}
 				case FeedbackEntitySubType.StyleOverride:
 				case null:
 					// Not a real feedback

@@ -1,5 +1,6 @@
 import { faDownload, faExclamationTriangle, faFolderOpen, faImage, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import './ImageInputField.css'
 import { useQuery } from '@tanstack/react-query'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useEffect, useRef } from 'react'
@@ -132,7 +133,7 @@ export const ImageInputField = observer(function ImageInputField({
 				>
 					{thumbnail}
 				</div>
-				<div className="image-input-field__label flex-grow-1 text-truncate">{label}</div>
+				<div className="image-input-field__label flex-grow-1 truncate">{label}</div>
 				<ButtonGroup>
 					<Button
 						color="primary"

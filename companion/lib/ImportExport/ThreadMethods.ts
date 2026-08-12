@@ -1,7 +1,7 @@
 /*
  * This file is part of the Companion project
  * Copyright (c) 2018 Bitfocus AS
- * Authors: William Viker <william@bitfocus.io>, Håkon Nessjøen <haakon@bitfocus.io>
+ * Authors: Julian Waller <git@julusian.co.uk>
  *
  * This program is free software.
  * You should have received a copy of the MIT licence as well as the Bitfocus
@@ -13,104 +13,62 @@ import { promisify } from 'node:util'
 import zlib from 'node:zlib'
 import yaml from 'yaml'
 import { MAX_DECOMPRESSED_FILE_SIZE } from './Constants.js'
+import type { ParseImportResult } from './ParseImport.js'
 
 const gunzipAsync = promisify(zlib.gunzip)
 
-export interface ParseImportDataResult {
-	error: string | null
-	/** The parsed object, or null if parsing failed */
-	data: unknown
-	/** Timing information for debugging IPC overhead */
-	timing: {
-		workerStartTime: number
-		gunzipStartTime: number
-		gunzipEndTime: number
-		parseStartTime: number
-		parseEndTime: number
-		workerEndTime: number
-	}
-}
+const YAML_TOO_LARGE_MESSAGE = 'This file is too large to import as YAML. Please re-export it as JSON and try again.'
+const CORRUPTED_MESSAGE = 'File is corrupted or unknown format'
 
 /**
- * Parse import data in a worker thread.
- * This handles gunzip decompression (if needed) and YAML/JSON parsing.
+ * Parse an import file as YAML in a worker thread.
  *
- * @param rawData - The raw ArrayBuffer data (potentially gzip compressed, transferred from main thread)
- * @returns The parsed object or error information, with timing data
+ * YAML has no streaming parser, so a large file must be read into a single string and parsed
+ * synchronously. Doing that on the main thread would block the event loop long enough to time out
+ * websocket/tRPC connections, so it runs here instead. The YAML parser handles JSON too, so this
+ * also serves as the fallback for `{`-flow-style maps and hand-gzipped YAML that are not valid JSON
+ * (JSON proper is stream-parsed on the main thread and never reaches here).
+ *
+ * @param rawData - The raw file bytes (transferred from the main thread)
+ * @param isGzip - Whether the bytes are gzip compressed
  */
-async function parseImportData(rawData: ArrayBuffer): Promise<ParseImportDataResult> {
-	const timing = {
-		workerStartTime: performance.now(),
-		gunzipStartTime: 0,
-		gunzipEndTime: 0,
-		parseStartTime: 0,
-		parseEndTime: 0,
-		workerEndTime: 0,
-	}
-
-	// Convert Uint8Array back to Buffer for zlib compatibility
-
+async function parseImportData(rawData: ArrayBuffer, isGzip: boolean): Promise<ParseImportResult> {
 	let dataStr: string
-
-	// Try to gunzip the data
-	timing.gunzipStartTime = performance.now()
-	try {
-		const unzipped = await gunzipAsync(rawData, { maxOutputLength: MAX_DECOMPRESSED_FILE_SIZE })
-		dataStr = unzipped.toString('utf-8')
-	} catch (e) {
-		// If the decompressed output exceeded the size limit, fail loudly rather than treating
-		// the (still compressed) bytes as raw data and surfacing a misleading "corrupted" error.
-		if (e && typeof e === 'object' && 'code' in e && e.code === 'ERR_BUFFER_TOO_LARGE') {
-			timing.gunzipEndTime = performance.now()
-			timing.workerEndTime = performance.now()
-			return {
-				error: 'File is too large',
-				data: null,
-				timing,
+	if (isGzip) {
+		try {
+			const unzipped = await gunzipAsync(rawData, { maxOutputLength: MAX_DECOMPRESSED_FILE_SIZE })
+			dataStr = unzipped.toString('utf-8')
+		} catch (e) {
+			// The decompressed output exceeded the string limit - fail loudly rather than mislabelling
+			// it as corrupted.
+			if (e && typeof e === 'object' && 'code' in e && (e as { code?: string }).code === 'ERR_BUFFER_TOO_LARGE') {
+				return { error: YAML_TOO_LARGE_MESSAGE, data: null }
 			}
+			return { error: CORRUPTED_MESSAGE, data: null }
 		}
-
-		// Otherwise assume it was not gzip compressed and use the raw data
-		dataStr = Buffer.from(rawData).toString('utf-8')
+	} else {
+		const buffer = Buffer.from(rawData)
+		// toString('utf-8') throws for a buffer larger than MAX_STRING_LENGTH; reject cleanly first.
+		if (buffer.length > MAX_DECOMPRESSED_FILE_SIZE) return { error: YAML_TOO_LARGE_MESSAGE, data: null }
+		dataStr = buffer.toString('utf-8')
 	}
-	timing.gunzipEndTime = performance.now()
 
-	// Parse YAML/JSON
-	timing.parseStartTime = performance.now()
 	let parsedData: unknown
 	try {
-		// YAML parser will handle JSON too
+		// The YAML parser handles JSON too
 		parsedData = yaml.parse(dataStr)
-	} catch (_e) {
-		timing.parseEndTime = performance.now()
-		timing.workerEndTime = performance.now()
-		return {
-			error: 'File is corrupted or unknown format',
-			data: null,
-			timing,
-		}
+	} catch {
+		return { error: CORRUPTED_MESSAGE, data: null }
 	}
-	timing.parseEndTime = performance.now()
 
 	// A valid export is always an object. Reject primitives/null - YAML leniently parses an empty
 	// file as `null` and arbitrary text/binary as a scalar string, neither of which is a usable
 	// export and would otherwise crash the downstream upgrade step.
 	if (!parsedData || typeof parsedData !== 'object') {
-		timing.workerEndTime = performance.now()
-		return {
-			error: 'File is corrupted or unknown format',
-			data: null,
-			timing,
-		}
+		return { error: CORRUPTED_MESSAGE, data: null }
 	}
 
-	timing.workerEndTime = performance.now()
-
-	return {
-		error: null,
-		data: parsedData,
-		timing,
-	}
+	return { error: null, data: parsedData }
 }
 
 export const ImportExportThreadMethods = {

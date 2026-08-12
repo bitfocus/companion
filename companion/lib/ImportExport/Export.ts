@@ -50,7 +50,7 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import { compileUpdatePayload } from '../UI/UpdatePayload.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import { FILE_VERSION } from './Constants.js'
-import { formatAttachmentFilename, stringifyExport, type StringifiedExportData } from './Util.js'
+import { formatAttachmentFilename, prepareExport, streamExport, type PreparedExport } from './Util.js'
 
 export class ExportController {
 	readonly #logger = LogController.createLogger('ImportExport/Export')
@@ -94,7 +94,7 @@ export class ExportController {
 		apiRouter.get('/export/support', this.#exportSupportBundleHandler)
 	}
 
-	#exportTriggerListHandler: RequestHandler = (req, res, next) => {
+	#exportTriggerListHandler: RequestHandler = async (req, res, next) => {
 		const triggerControls = this.#controlsController.getAllTriggers()
 		const includeSecrets = req.query.includeSecrets !== 'false'
 		const exp = this.#generateTriggersExport(triggerControls, {
@@ -104,10 +104,10 @@ export class ExportController {
 
 		const filename = this.#generateFilename(String(req.query.filename as any), 'trigger_list', 'companionconfig')
 
-		downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
+		await downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
 	}
 
-	#exportTriggerSingleHandler: RequestHandler = (req, res, next) => {
+	#exportTriggerSingleHandler: RequestHandler = async (req, res, next) => {
 		const control = this.#controlsController.getTrigger(req.params.id)
 		if (control) {
 			const exp = this.#generateTriggersExport([control], {
@@ -122,13 +122,13 @@ export class ExportController {
 				'companionconfig'
 			)
 
-			downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
+			await downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
 		} else {
 			next()
 		}
 	}
 
-	#exportPageSingleHandler: RequestHandler = (req, res, next) => {
+	#exportPageSingleHandler: RequestHandler = async (req, res, next) => {
 		const page = Number(req.params.page)
 		if (isNaN(page)) {
 			next()
@@ -188,11 +188,11 @@ export class ExportController {
 
 			const filename = this.#generateFilename(String(req.query.filename as any), `page${page}`, 'companionconfig')
 
-			downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
+			await downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
 		}
 	}
 
-	#exportCustomHandler: RequestHandler = (req, res, next) => {
+	#exportCustomHandler: RequestHandler = async (req, res, next) => {
 		try {
 			// Convert flat dot-notation query params back to nested object
 			const unflattened = unflattenQueryParams(req.query)
@@ -204,7 +204,7 @@ export class ExportController {
 
 			const filename = this.#generateFilename(config.filename ?? '', 'custom_config', 'companionconfig')
 
-			downloadBlob(this.#logger, res, next, exp, filename, config.format)
+			await downloadBlob(this.#logger, res, next, exp, filename, config.format)
 		} catch (error) {
 			if (error instanceof ZodError) {
 				res.status(400).json({
@@ -217,7 +217,7 @@ export class ExportController {
 		}
 	}
 
-	#exportFullHandler: RequestHandler = (req, res, next) => {
+	#exportFullHandler: RequestHandler = async (req, res, next) => {
 		const exp = this.generateCustomExport(null)
 
 		const filename = this.#generateFilename(
@@ -226,7 +226,7 @@ export class ExportController {
 			'companionconfig'
 		)
 
-		downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
+		await downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
 	}
 
 	#exportLogHandler: RequestHandler = (_req, res, _next) => {
@@ -243,10 +243,8 @@ export class ExportController {
 			...logs.map((line) => [new Date(line.time).toISOString(), line.source, line.level, line.message]),
 		])
 
-		sendExportData(res, {
-			data: csvOut,
-			...formatAttachmentFilename(filename),
-		})
+		setExportHeaders(res, filename)
+		res.end(csvOut)
 	}
 
 	#exportSupportBundleHandler: RequestHandler = async (_req, res, next) => {
@@ -713,33 +711,49 @@ function parseDownloadFormat(raw: ParsedQs[0]): ExportFormat | undefined {
 	return undefined
 }
 
-function sendExportData(res: express.Response, data: StringifiedExportData) {
+function setExportHeaders(res: express.Response, filename: string): void {
+	const { asciiFilename, utf8Filename } = formatAttachmentFilename(filename)
 	res.status(200)
 	res.set({
 		'Content-Type': 'application/octet-stream', // Force it to have a 'download' mime, to avoid safari changing the extension
-		'Content-Disposition': `attachment; filename=${data.asciiFilename}; filename*=UTF-8''${data.utf8Filename}`,
+		'Content-Disposition': `attachment; filename=${asciiFilename}; filename*=UTF-8''${utf8Filename}`,
 	})
-	res.end(data.data)
 }
 
-function downloadBlob(
+async function downloadBlob(
 	logger: Logger,
 	res: express.Response,
 	next: express.NextFunction,
 	data: SomeExportv6,
 	filename: string,
 	formatStr: string
-): void {
-	stringifyExport(logger, data, filename, parseDownloadFormat(formatStr))
-		.then((data) => {
-			if (data) {
-				sendExportData(res, data)
-			} else {
-				next(new Error(`Unknown format: ${formatStr}`))
-			}
-		})
-		.catch((err) => {
-			logger.error(`Failed to stringify export data: ${err}`)
-			next(err)
-		})
+): Promise<void> {
+	// An undefined/unrecognised format defaults to json-gz (matching the historic behaviour).
+	const format = parseDownloadFormat(formatStr)
+
+	let prepared: PreparedExport
+	try {
+		prepared = prepareExport(data, format)
+	} catch (err) {
+		// e.g. oversized YAML - nothing has been written to res yet, so this is a clean 500.
+		next(err)
+		return
+	}
+
+	// Headers must be set before any bytes are written. After this point a failure can only be a
+	// mid-stream error, which can no longer change the status code.
+	setExportHeaders(res, filename)
+
+	if (prepared.kind === 'buffer') {
+		res.end(prepared.data)
+		return
+	}
+
+	try {
+		await streamExport(data, prepared.format, res)
+	} catch (err) {
+		// Headers are already sent, so we cannot switch to a 500 - abort the socket and log.
+		logger.error(`Failed to stream export data: ${err}`)
+		res.destroy()
+	}
 }

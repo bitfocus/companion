@@ -1,4 +1,6 @@
 import { Input } from '@base-ui/react'
+import './text-field.css'
+import './input-validity.css'
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
@@ -46,7 +48,7 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 		[storeValue]
 	)
 
-	const currentValueRef = useRef<string>()
+	const currentValueRef = useRef<string>(value ?? '')
 	currentValueRef.current = value ?? ''
 	const focusStoreValue = useCallback(() => {
 		if (!immediateValue) setTmpValue(currentValueRef.current ?? '')
@@ -68,7 +70,7 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 					id={id}
 					type={showSecretValue ? 'text' : 'password'}
 					className={classNames(
-						'text-input-field',
+						'form-input text-input-field',
 						{
 							'invalid-value': valueIsInvalid,
 							'has-validity-icon': validity !== 'unknown',
