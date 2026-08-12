@@ -43,7 +43,7 @@ const CHOICES_SURFACE_ID: SomeCompanionInputField = {
 	id: 'surfaceId',
 	default: 'self',
 	includeSelf: true,
-	useRawSurfaces: true,
+	listMode: 'surfaces',
 }
 
 const CHOICES_SURFACE_GROUP: SomeCompanionInputField = {
@@ -52,6 +52,18 @@ const CHOICES_SURFACE_GROUP: SomeCompanionInputField = {
 	id: 'surfaceId',
 	default: 'self',
 	includeSelf: true,
+	listMode: 'groups',
+}
+
+// Brightness is a per-surface setting, so offer both groups (applies to every member surface) and
+// individual surfaces (applies to just that surface).
+const CHOICES_SURFACE_GROUP_OR_SURFACE: SomeCompanionInputField = {
+	type: 'internal:surface_serial',
+	label: 'Surface / group',
+	id: 'surfaceId',
+	default: 'self',
+	includeSelf: true,
+	listMode: 'groups-and-surfaces',
 }
 
 const CHOICES_OUTBOUND_SURFACE_ID: SomeCompanionInputField = {
@@ -285,7 +297,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				label: 'Surface: Set to brightness',
 				description: undefined,
 				options: [
-					CHOICES_SURFACE_GROUP,
+					CHOICES_SURFACE_GROUP_OR_SURFACE,
 
 					{
 						type: 'number',
@@ -307,7 +319,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				label: 'Surface: Adjust brightness',
 				description: undefined,
 				options: [
-					CHOICES_SURFACE_GROUP,
+					CHOICES_SURFACE_GROUP_OR_SURFACE,
 
 					{
 						type: 'number',
@@ -700,6 +712,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						id: 'surfaceId',
 						includeSelf: false,
 						default: '',
+						listMode: 'groups',
 					},
 					{
 						type: 'internal:page',

@@ -1924,29 +1924,39 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	/**
-	 * Set the brightness of a surface
-	 * @param surfaceId
+	 * Set the brightness of a surface or every surface in a group
+	 * @param surfaceOrGroupId
 	 * @param brightness 0-100
 	 * @param looseIdMatching
 	 */
-	setDeviceBrightness(surfaceId: string, brightness: number, looseIdMatching = false): void {
-		const device = this.#getSurfaceHandlerForId(surfaceId, looseIdMatching)
-		if (device) {
+	setDeviceBrightness(surfaceOrGroupId: string, brightness: number, looseIdMatching = false): void {
+		for (const device of this.#getSurfaceHandlersForBrightness(surfaceOrGroupId, looseIdMatching)) {
 			device.setBrightness(brightness)
 		}
 	}
 
 	/**
-	 * Adjust the brightness of a surface by a relative amount
-	 * @param surfaceId
+	 * Adjust the brightness of a surface, or every surface in a group, by a relative amount
+	 * @param surfaceOrGroupId
 	 * @param adjustment -100 to 100
 	 * @param looseIdMatching
 	 */
-	adjustDeviceBrightness(surfaceId: string, adjustment: number, looseIdMatching = false): void {
-		const device = this.#getSurfaceHandlerForId(surfaceId, looseIdMatching)
-		if (device) {
+	adjustDeviceBrightness(surfaceOrGroupId: string, adjustment: number, looseIdMatching = false): void {
+		for (const device of this.#getSurfaceHandlersForBrightness(surfaceOrGroupId, looseIdMatching)) {
 			device.adjustBrightness(adjustment)
 		}
+	}
+
+	/**
+	 * Resolve the surfaces that a brightness action should target. A group id targets every surface
+	 * in that group, while a surface id targets only that surface.
+	 */
+	#getSurfaceHandlersForBrightness(surfaceOrGroupId: string, looseIdMatching: boolean): SurfaceHandler[] {
+		const surfaceGroup = this.#surfaceGroups.get(surfaceOrGroupId)
+		if (surfaceGroup) return surfaceGroup.surfaceHandlers
+
+		const device = this.#getSurfaceHandlerForId(surfaceOrGroupId, looseIdMatching)
+		return device ? [device] : []
 	}
 
 	/**
