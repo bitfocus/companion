@@ -287,6 +287,11 @@ function convertLayeredPresetElement(
 				roundedEnds: convertModuleExpressionOrValue(element.roundedEnds, { value: true, isExpression: false }),
 				fillEnabled: convertModuleExpressionOrValue(element.fillEnabled, { value: true, isExpression: false }),
 				multiColour: convertModuleExpressionOrValue(element.multiColour, { value: true, isExpression: false }),
+				fillWidth: convertModuleExpressionOrValue(
+					// @ts-expect-error `fillWidth` is newer than the module host schema, so read it defensively until the SDK exposes it.
+					element.fillWidth,
+					{ value: 100, isExpression: false }
+				),
 				stops: { isExpression: false, value: convertedStops },
 				markerEnabled: convertModuleExpressionOrValue(element.markerEnabled, { value: false, isExpression: false }),
 				markerColor: convertModuleExpressionOrValue(element.markerColor, { value: 0xffffff, isExpression: false }),

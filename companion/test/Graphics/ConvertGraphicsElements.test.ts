@@ -220,6 +220,7 @@ function makeGaugeEl(overrides: Partial<ButtonGraphicsGaugeElement> = {}): Butto
 		roundedEnds: val(true),
 		fillEnabled: val(true),
 		multiColour: val(true),
+		fillWidth: val(100),
 		stops: val([
 			{ value: 0, color: 0x00ff00, gradient: false },
 			{ value: 66, color: 0xffff00, gradient: false },
@@ -2839,6 +2840,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(el.roundedEnds).toBe(true)
 			expect(el.fillEnabled).toBe(true)
 			expect(el.multiColour).toBe(true)
+			expect(el.fillWidth).toBe(100)
 			expect(el.markerEnabled).toBe(false)
 			expect(el.markerColor).toBe(0xffffff)
 			expect(el.markerWidth).toBe(15)
@@ -2937,6 +2939,12 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ trackWidth: val(-5) }))).trackWidth).toBe(0)
 		})
 
+		test('fillWidth clamped to 0–100', async () => {
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ fillWidth: val(150) }))).fillWidth).toBe(100)
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ fillWidth: val(-5) }))).fillWidth).toBe(0)
+			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ fillWidth: val(40) }))).fillWidth).toBe(40)
+		})
+
 		test('trackAmount clamped to 0–100', async () => {
 			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ trackAmount: val(200) }))).trackAmount).toBe(100)
 			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ trackAmount: val(-5) }))).trackAmount).toBe(0)
@@ -3015,6 +3023,14 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 		test('empty stops produce empty array', async () => {
 			expect(gaugeDrawEl(await convertGauge(makeGaugeEl({ stops: val([]) }))).stops).toEqual([])
+		})
+
+		test('stop colors preserve alpha', async () => {
+			// 0x8000ff00 is 50%-transparent green (alpha packed into the top byte, inverted).
+			const el = gaugeDrawEl(
+				await convertGauge(makeGaugeEl({ stops: val([{ value: 0, color: 0x8000ff00, gradient: false }]) }))
+			)
+			expect(el.stops[0].color).toBe(0x8000ff00)
 		})
 
 		test('enabled=false with onlyEnabled=true filters element out', async () => {

@@ -842,7 +842,7 @@ function convertGaugeElementForDrawing(
 				const rowHelper = helper.forRow(row)
 				return {
 					value: rowHelper.getNumber('value', 0),
-					color: rowHelper.getColor('color', 0, false), // gauge stop color field disables alpha
+					color: rowHelper.getColor('color', 0),
 					gradient: rowHelper.getBoolean('gradient', false),
 				}
 			})
@@ -871,6 +871,7 @@ function convertGaugeElementForDrawing(
 		roundedEnds: helper.getBoolean('roundedEnds', true),
 		fillEnabled: helper.getBoolean('fillEnabled', true),
 		multiColour: helper.getBoolean('multiColour', true),
+		fillWidth: Math.max(0, Math.min(100, helper.getNumber('fillWidth', 100))),
 		stops: stops,
 		markerEnabled: helper.getBoolean('markerEnabled', false),
 		markerColor: helper.getColor('markerColor', 0xffffff),
