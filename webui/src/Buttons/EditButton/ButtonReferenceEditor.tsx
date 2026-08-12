@@ -136,8 +136,7 @@ function ResolvedLocationRow({ controlId, location, navigateToControl }: Resolve
 	const error = data && !data.ok ? data.error : undefined
 	const targetLocation = resolved !== undefined ? tryParseLocation(resolved) : null
 
-	// Red when the expression errored or resolves to something that isn't a `page/row/column` location;
-	// unknown (no icon) until the first result arrives.
+	// Red when the expression errored or didn't resolve to a valid location; unknown (no icon) until the first result
 	const validity: InputValidity = !data ? 'unknown' : error !== undefined || !targetLocation ? 'invalid' : 'valid'
 
 	const displayValue = error !== undefined ? `Error: ${error}` : (resolved ?? '')
@@ -185,12 +184,11 @@ function ResolvedLocationRow({ controlId, location, navigateToControl }: Resolve
 /** Parse a resolved `page/row/column` string into a location. Returns null for relative/invalid forms. */
 function tryParseLocation(str: string): ControlLocation | null {
 	const parts = str.trim().split('/')
-	if (parts.length !== 3 || parts.some((part) => part.trim() === '')) return null
+	if (parts.length !== 3) return null
+	const [page, row, column] = parts.map((part) => part.trim())
 
-	const pageNumber = Number(parts[0])
-	const row = Number(parts[1])
-	const column = Number(parts[2])
-	if (![pageNumber, row, column].every((n) => Number.isInteger(n))) return null
+	// Page is absolute; row/column may be negative. Reject relative (`+1`) and exponent (`1e2`) forms Number() accepts.
+	if (!/^\d+$/.test(page) || !/^-?\d+$/.test(row) || !/^-?\d+$/.test(column)) return null
 
-	return { pageNumber, row, column }
+	return { pageNumber: Number(page), row: Number(row), column: Number(column) }
 }

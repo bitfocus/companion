@@ -63,11 +63,19 @@ export function createControlsTrpcRouter(
 				})
 			)
 			.mutation(async ({ input }) => {
+				const fromStr = formatLocation(input.fromLocation)
+
+				// Don't create a circular reference
+				if (fromStr === formatLocation(input.toLocation)) return null
+
+				// Don't place at an unreachable location
+				if (!pageStore.isPageValid(input.toLocation.pageNumber)) return null
+
 				// Place a button that mirrors `fromLocation`. Stored as a plain (non-expression) location string.
 				const model: ButtonReferenceButtonModel = {
 					type: 'button-reference',
 					options: {
-						location: { value: formatLocation(input.fromLocation), isExpression: false },
+						location: { value: fromStr, isExpression: false },
 					},
 				}
 				return controlsController.importControl(input.toLocation, model)

@@ -179,8 +179,7 @@ export class ControlStore implements IControlStore {
 		if (control && control.supportsEntities)
 			return control.entities.createVariablesAndExpressionParser(overrideVariableValues, options)
 
-		// Otherwise create a generic one. It still gets the control's grid location so `$(this:page)` and the
-		// other `this:*` variables resolve for located controls without an entity pool (e.g. a button reference).
+		// Generic parser, but with the control's grid location so `$(this:page)` resolves for located non-entity controls
 		const location = controlId ? this.#pageStore.getLocationOfControlId(controlId) : null
 		return this.#variablesValues.createVariablesAndExpressionParser(
 			location,

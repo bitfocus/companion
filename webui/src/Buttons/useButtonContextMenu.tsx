@@ -136,6 +136,8 @@ export function useButtonContextMenu({
 						createReferenceControlMutation
 							.mutateAsync({ fromLocation: copyFromButton[0], toLocation: location })
 							.catch((e) => console.error(`Paste reference failed: ${e}`))
+						// A reference leaves the source in place, so clear a pending cut - it never completes otherwise
+						if (copyFromButton[1] === 'cut') setCopyFromButton(null)
 						setTabResetToken(nanoid())
 					},
 				}
