@@ -1711,15 +1711,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@companion-app/expressions@npm:^0.7.0":
-  version: 0.7.0
-  resolution: "@companion-app/expressions@npm:0.7.0"
+"@companion-app/expressions@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@companion-app/expressions@npm:1.0.0"
   dependencies:
     acorn: "npm:^8.17.0"
     jsonpath-plus: "npm:^10.4.0"
     type-fest: "npm:^5.8.0"
     unicode-segmenter: "npm:^0.17.2"
-  checksum: 10c0/c93507c7a0e928e3b06deee200ab5da712901717c938678ab2b90414799a3dabb07e82c64787170adcb3e8149b03d21d2699a04cf5bc737414b993cbc8db13d6
+  checksum: 10c0/ccd9aab9f1d20182ad0d6e8081ae028e4984aee5bb68adce99c9259f0e25385ccbd45542f8f1c66443fb6014ab9bacdbf90d24676b6e85e1a6e9ebb5ff6fecf5
   languageName: node
   linkType: hard
 
@@ -1779,7 +1779,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@companion-app/shared@workspace:shared-lib"
   dependencies:
-    "@companion-app/expressions": "npm:^0.7.0"
+    "@companion-app/expressions": "npm:^1.0.0"
     "@types/semver": "npm:^7.8.0"
     colord: "npm:^2.9.3"
     quick-lru: "npm:^7.3.0"
