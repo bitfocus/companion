@@ -1,6 +1,7 @@
 import { faArrowUpRightFromSquare, faClone } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useId } from 'react'
 import type { JsonValue } from 'type-fest'
@@ -15,6 +16,7 @@ import { Callout } from '~/Components/Callout.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
+import { InputValidityIcon, type InputValidity } from '~/Components/InputValidity.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { EntityListActionContext, useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -94,9 +96,9 @@ export const ButtonReferenceEditor = observer(function ButtonReferenceEditor({
 							placeholder="page/row/column, e.g. 1/0/0"
 						/>
 					</FieldOrExpression>
-
-					<ResolvedLocationRow controlId={controlId} location={location} navigateToControl={navigateToControl} />
 				</Grid.Col>
+
+				<ResolvedLocationRow controlId={controlId} location={location} navigateToControl={navigateToControl} />
 			</Form>
 		</>
 	)
@@ -132,33 +134,51 @@ function ResolvedLocationRow({ controlId, location, navigateToControl }: Resolve
 	const data = sub.data as ExpressionStreamResult | undefined
 	const resolved = data?.ok ? (stringifyVariableValue(data.value) ?? '') : undefined
 	const error = data && !data.ok ? data.error : undefined
-	const targetLocation = resolved ? tryParseLocation(resolved) : null
+	const targetLocation = resolved !== undefined ? tryParseLocation(resolved) : null
+
+	// Red when the expression errored or resolves to something that isn't a `page/row/column` location;
+	// unknown (no icon) until the first result arrives.
+	const validity: InputValidity = !data ? 'unknown' : error !== undefined || !targetLocation ? 'invalid' : 'valid'
+
+	const displayValue = error !== undefined ? `Error: ${error}` : (resolved ?? '')
 
 	return (
-		<div className="d-flex align-items-end gap-2 mt-2">
-			<div className="flex-grow-1">
-				<div className="form-text mb-1 mt-0">Resolves to</div>
-				<input
-					className="form-control form-control-sm"
-					readOnly
-					value={error !== undefined ? `Error: ${error}` : (resolved ?? '')}
-					title={error !== undefined ? error : undefined}
-				/>
+		<Grid.Col sm={{ span: 8, offset: 4 }}>
+			<div className="d-flex align-items-center gap-2">
+				<span className="form-text m-0 flex-shrink-0">Resolves to</span>
+				<div className="input-validity-wrapper">
+					<input
+						className={classNames('form-input text-input-field', {
+							'invalid-value': validity === 'invalid',
+							'has-validity-icon': validity !== 'unknown',
+						})}
+						readOnly
+						value={displayValue}
+						title={error !== undefined ? error : displayValue}
+					/>
+					<InputValidityIcon validity={validity} />
+				</div>
+				<Button
+					className="flex-shrink-0 text-nowrap"
+					color="secondary"
+					variant="outline"
+					disabled={!targetLocation || !navigateToControl}
+					onClick={() => targetLocation && navigateToControl?.(targetLocation)}
+					title={
+						targetLocation
+							? `Open the editor for ${formatLocation(targetLocation)}`
+							: 'The mirrored location is not a plain button location'
+					}
+				>
+					<FontAwesomeIcon icon={faArrowUpRightFromSquare} /> Go to source
+				</Button>
 			</div>
-			<Button
-				color="secondary"
-				variant="outline"
-				disabled={!targetLocation || !navigateToControl}
-				onClick={() => targetLocation && navigateToControl?.(targetLocation)}
-				title={
-					targetLocation
-						? `Open the editor for ${formatLocation(targetLocation)}`
-						: 'The mirrored location is not a plain button location'
-				}
-			>
-				<FontAwesomeIcon icon={faArrowUpRightFromSquare} /> Go to source
-			</Button>
-		</div>
+			{validity === 'invalid' && error === undefined && (
+				<div className="text-danger mt-1" style={{ fontSize: '0.875em' }}>
+					Not a valid button location — expected <code>page/row/column</code>
+				</div>
+			)}
+		</Grid.Col>
 	)
 }
 

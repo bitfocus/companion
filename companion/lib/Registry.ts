@@ -216,7 +216,7 @@ export class Registry {
 		const pageStore = new PageStore(this.db.getTableView('pages'))
 
 		this.variables = new VariablesController(this.db, this.userconfig)
-		const controlStore = new ControlStore(this.db, this.variables.values)
+		const controlStore = new ControlStore(this.db, this.variables.values, pageStore)
 
 		this.#renderClock = new RenderClock()
 

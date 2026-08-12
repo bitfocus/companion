@@ -2,6 +2,7 @@ import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type {
 	ExpressionParserOptions,
@@ -31,10 +32,12 @@ export class ControlStore implements IControlStore {
 	readonly triggerEvents: TriggerEvents
 
 	readonly #variablesValues: VariablesValues
+	readonly #pageStore: IPageStore
 
-	constructor(db: DataDatabase, variablesValues: VariablesValues) {
+	constructor(db: DataDatabase, variablesValues: VariablesValues, pageStore: IPageStore) {
 		this.triggerEvents = new TriggerEvents()
 		this.#variablesValues = variablesValues
+		this.#pageStore = pageStore
 
 		this.dbTable = db.getTableView('controls')
 	}
@@ -176,7 +179,9 @@ export class ControlStore implements IControlStore {
 		if (control && control.supportsEntities)
 			return control.entities.createVariablesAndExpressionParser(overrideVariableValues, options)
 
-		// Otherwise create a generic one
-		return this.#variablesValues.createVariablesAndExpressionParser(null, null, overrideVariableValues, null, options)
+		// Otherwise create a generic one. It still gets the control's grid location so `$(this:page)` and the
+		// other `this:*` variables resolve for located controls without an entity pool (e.g. a button reference).
+		const location = controlId ? this.#pageStore.getLocationOfControlId(controlId) : null
+		return this.#variablesValues.createVariablesAndExpressionParser(location, null, overrideVariableValues, null, options)
 	}
 }

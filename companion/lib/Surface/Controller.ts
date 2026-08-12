@@ -1953,6 +1953,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * in that group, while a surface id targets only that surface.
 	 */
 	#getSurfaceHandlersForBrightness(surfaceOrGroupId: string, looseIdMatching: boolean): SurfaceHandler[] {
+		surfaceOrGroupId = stripReferenceSurfaceId(surfaceOrGroupId)
+
 		const surfaceGroup = this.#surfaceGroups.get(surfaceOrGroupId)
 		if (surfaceGroup) return surfaceGroup.surfaceHandlers
 

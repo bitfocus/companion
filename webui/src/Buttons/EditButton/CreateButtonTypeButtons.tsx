@@ -33,6 +33,16 @@ export function CreateButtonTypeButtons({ location }: { location: ControlLocatio
 
 				<Button
 					variant="outline"
+					className="empty-button-type-tile empty-button-type-tile-primary"
+					onClick={() => setButtonType('button-reference')}
+					title="Create a button that mirrors another button."
+				>
+					<FontAwesomeIcon icon={faClone} />
+					<span>Button reference</span>
+				</Button>
+
+				<Button
+					variant="outline"
 					className="empty-button-type-tile"
 					onClick={() => setButtonType('pageup')}
 					title="Create a page up button."
@@ -57,15 +67,6 @@ export function CreateButtonTypeButtons({ location }: { location: ControlLocatio
 				>
 					<FontAwesomeIcon icon={faFileArrowDown} />
 					<span>Page down</span>
-				</Button>
-				<Button
-					variant="outline"
-					className="empty-button-type-tile"
-					onClick={() => setButtonType('button-reference')}
-					title="Create a button that mirrors another button."
-				>
-					<FontAwesomeIcon icon={faClone} />
-					<span>Button reference</span>
 				</Button>
 			</div>
 		</div>
