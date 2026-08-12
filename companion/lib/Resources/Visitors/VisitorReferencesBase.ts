@@ -46,6 +46,18 @@ export class VisitorReferencesBase<T extends InternalVisitor> {
 		return this
 	}
 
+	/**
+	 * Visit a standalone {@link ExpressionOrValue} (e.g. a control option not held as a draw element). Expressions
+	 * are always visited; pass `visitPlainValue` to also rename variables inside a plain string value.
+	 */
+	visitExpressionOrValue(value: ExpressionOrValue<JsonValue | undefined>, visitPlainValue = false): this {
+		if (value.isExpression || (visitPlainValue && typeof value.value === 'string')) {
+			this.visitor.visitString(value, 'value')
+		}
+
+		return this
+	}
+
 	visitDrawElements(elements: SomeButtonGraphicsElement[]): this {
 		for (const element of elements) {
 			for (const key in element) {

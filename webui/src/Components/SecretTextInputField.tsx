@@ -48,7 +48,7 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 		[storeValue]
 	)
 
-	const currentValueRef = useRef<string>()
+	const currentValueRef = useRef<string>(value ?? '')
 	currentValueRef.current = value ?? ''
 	const focusStoreValue = useCallback(() => {
 		if (!immediateValue) setTmpValue(currentValueRef.current ?? '')
@@ -70,7 +70,7 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 					id={id}
 					type={showSecretValue ? 'text' : 'password'}
 					className={classNames(
-						'form-control text-input-field',
+						'form-input text-input-field',
 						{
 							'invalid-value': valueIsInvalid,
 							'has-validity-icon': validity !== 'unknown',

@@ -236,6 +236,7 @@ export interface ButtonGraphicsGaugeDrawElement
 	roundedEnds: boolean
 	fillEnabled: boolean
 	multiColour: boolean
+	fillWidth: number
 	stops: Record<string, JsonValue>[]
 	markerEnabled: boolean
 	markerColor: ColorValue
@@ -261,6 +262,7 @@ export interface ButtonGraphicsGaugeElement
 	roundedEnds: ExpressionOrValue<boolean>
 	fillEnabled: ExpressionOrValue<boolean>
 	multiColour: ExpressionOrValue<boolean>
+	fillWidth: ExpressionOrValue<number>
 	stops: ExpressionOrValue<Record<string, JsonValue>[]>
 	markerEnabled: ExpressionOrValue<boolean>
 	markerColor: ExpressionOrValue<ColorValue>

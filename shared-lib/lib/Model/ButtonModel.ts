@@ -1,10 +1,16 @@
 import type { ActionSetsModel, ActionStepOptions } from './ActionModel.js'
 import type { SomeEntityModel } from './EntityModel.js'
+import type { ExpressionOrValue } from './Options.js'
 import type { SomeButtonGraphicsElement } from './StyleLayersModel.js'
 import type { VariableValues } from './Variables.js'
 
 export type SomeButtonModel =
-	PageNumberButtonModel | PageUpButtonModel | PageDownButtonModel | LayeredButtonModel | PresetReferenceButtonModel
+	| PageNumberButtonModel
+	| PageUpButtonModel
+	| PageDownButtonModel
+	| LayeredButtonModel
+	| PresetReferenceButtonModel
+	| ButtonReferenceButtonModel
 
 export interface PageNumberButtonModel {
 	readonly type: 'pagenum'
@@ -33,6 +39,13 @@ export interface PresetButtonModel extends ButtonModelBase {
 	style: {
 		layers: SomeButtonGraphicsElement[]
 	}
+
+	/**
+	 * Content-based checksum of the source preset this was resolved from, produced atomically with the model
+	 * so the two cannot drift. The preview control uses it to skip rebuilding on a `updatePresets` that didn't
+	 * actually change the preset. Optional: absent on older/imported data (treated as "unknown" → rebuild once).
+	 */
+	checksum?: string
 }
 
 export interface LayeredButtonModel extends ButtonModelBase {
@@ -74,6 +87,29 @@ export interface PresetReferenceButtonModel extends ButtonModelBase {
 		moduleId: string
 		presetId: string
 		variableValues: VariableValues | null
+	}
+
+	/**
+	 * Content-based checksum of the source preset this cache was resolved from, produced atomically with the
+	 * model so the two cannot drift. Used to skip rebuilding on a `updatePresets` that didn't actually change
+	 * the preset. Optional: absent on older/imported data (treated as "unknown" → rebuild once).
+	 */
+	checksum?: string
+}
+
+/**
+ * A button that mirrors another button at a grid location. It has no style/entities of its own: it renders the
+ * target button's full draw output (canvas, layers and runtime state) and forwards presses/rotation to the target.
+ * The `location` is a page/row/column string, editable as plain text or an expression. Editing it in the UI
+ * snapshots the target into a normal `button-layered` control (breaking the link).
+ */
+export interface ButtonReferenceButtonModel {
+	readonly type: 'button-reference'
+
+	options: {
+		/** The grid location (page/row/column) of the button to mirror. */
+		location: ExpressionOrValue<string>
+		notes?: string
 	}
 }
 

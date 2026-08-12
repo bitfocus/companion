@@ -14,7 +14,7 @@ export function StaticTextFieldText({
 	label?: string
 	tooltip?: string
 	allowImages?: boolean
-}): JSX.Element | null {
+}): React.JSX.Element | null {
 	if (value && value != label) {
 		const descriptionHtml = {
 			__html: sanitizeHtmlString(parse(value?.trim() ?? '') as string, { allowImages }),

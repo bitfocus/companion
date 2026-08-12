@@ -30,7 +30,7 @@ const repoRoot = path.join(import.meta.dirname, '..')
 let node: ChildProcess | null = null
 const nodeArgs: string[] = []
 
-const rawDevModulesPath = process.env.COMPANION_DEV_MODULES || argv['extra-module-path']
+const rawDevModulesPath = process.env.COMPANION_DEV_MODULES || argv['extra-module-path'] || './module-local-dev'
 const devModulesPath = rawDevModulesPath ? path.resolve(repoRoot, rawDevModulesPath) : undefined
 
 if (devModulesPath) {
@@ -128,7 +128,7 @@ function start() {
 			COMPANION_DEV_MODULES_PATH: devModulesPath ?? '',
 			COMPANION_DEV_THREAD_DIR: devThreadOutDir,
 		},
-	})`tsx watch --clear-screen=false --include ${threadBundleGlob} ${nodeArgs} lib/main-dev.ts ${process.argv.slice(3)}`
+	})`tsx watch --clear-screen=false --include ${threadBundleGlob} ${nodeArgs} lib/main-dev.ts ${process.argv.slice(2)}`
 
 	node = proc.child ?? null
 

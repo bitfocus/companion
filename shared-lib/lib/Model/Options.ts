@@ -166,7 +166,13 @@ export interface InternalInputFieldSurfaceSerial extends CompanionInputFieldBase
 	type: 'internal:surface_serial'
 	includeSelf: boolean
 	default: string
-	useRawSurfaces?: boolean
+	/**
+	 * Which entries to offer in the picker:
+	 * - `groups`: surface groups only (group-level actions, e.g. lock, set page)
+	 * - `surfaces`: individual surfaces only (per-surface actions where a group makes no sense)
+	 * - `groups-and-surfaces`: both, so either a whole group or a single surface can be targeted
+	 */
+	listMode: 'groups' | 'surfaces' | 'groups-and-surfaces'
 }
 export interface InternalInputFieldOutboundSurfaceId extends CompanionInputFieldBaseExtended {
 	type: 'internal:outbound_surface_id'

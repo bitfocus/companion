@@ -65,7 +65,7 @@
 	.entity-row.entity-disabled {
 		.cell-name,
 		.form-label {
-			color: var(--cui-disabled);
+			color: var(--color-text-disabled);
 		}
 	}
 
@@ -184,7 +184,7 @@
 			.button-control {
 				padding: 0;
 
-				&.fixed .button-border {
+				&.fixed-72 .button-border {
 					@media (--bp-xl-up) and (--bp-xxl-down), (--bp-md-down) {
 						width: 48px;
 						height: 48px;

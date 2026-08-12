@@ -20,7 +20,7 @@ export function CopyButton({
 	className,
 	color,
 	variant,
-}: CopyButtonProps): JSX.Element {
+}: CopyButtonProps): React.JSX.Element {
 	const [copied, setCopied] = useState(false)
 
 	const handleClick = useCallback(() => {

@@ -42,6 +42,14 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 	readonly #currentUpgradeIndex: number
 
 	/**
+	 * The `affectedProperties` most recently declared by each feedback definition (keyed by feedback id).
+	 * Retained from `setFeedbackDefinitions` so that `setPresetDefinitions` can limit the style overrides it
+	 * generates for advanced feedbacks to the properties the feedback declares. Empty until the module reports
+	 * its feedbacks (which, in practice, happens before it reports presets).
+	 */
+	#feedbackAffectedProperties: ReadonlyMap<string, string[] | undefined> = new Map()
+
+	/**
 	 * Coalesce variable value updates before sending them over IPC, to avoid a flood of tiny messages
 	 * when a module pushes values very frequently (e.g. a stopwatch).
 	 */
@@ -96,8 +104,11 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 	/** The feedbacks available in the connection have changed */
 	setFeedbackDefinitions(rawFeedbacks: HostFeedbackDefinition[]): void {
 		const feedbacks: Record<string, ClientEntityDefinition> = {}
+		const affectedProperties = new Map<string, string[] | undefined>()
 
 		for (const rawFeedback of rawFeedbacks) {
+			affectedProperties.set(rawFeedback.id, rawFeedback.affectedProperties)
+
 			if (!isValidFeedbackEntitySubType(rawFeedback.type)) continue
 
 			feedbacks[rawFeedback.id] = {
@@ -126,6 +137,8 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 			} satisfies Complete<ClientEntityDefinition>
 		}
 
+		this.#feedbackAffectedProperties = affectedProperties
+
 		this.#ipcWrapper.sendWithNoCb('setFeedbackDefinitions', { feedbacks })
 	}
 	/** The variables available in the connection have changed */
@@ -142,7 +155,8 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 			this.#connectionId,
 			this.#currentUpgradeIndex,
 			rawSections,
-			rawPresets
+			rawPresets,
+			this.#feedbackAffectedProperties
 		)
 
 		this.#ipcWrapper.sendWithNoCb('setPresetDefinitions', {

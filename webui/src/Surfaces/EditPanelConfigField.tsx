@@ -57,7 +57,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 
 	const inputId = useId()
 
-	let control: JSX.Element | string | undefined = undefined
+	let control: React.JSX.Element | string | undefined = undefined
 	let features: InputFeatureIconsProps | undefined
 
 	const fieldType = definition.type

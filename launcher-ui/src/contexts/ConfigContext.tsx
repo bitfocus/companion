@@ -81,7 +81,7 @@ interface ConfigProviderProps {
 	children: ReactNode
 }
 
-export function ConfigProvider({ children }: ConfigProviderProps): JSX.Element {
+export function ConfigProvider({ children }: ConfigProviderProps): React.JSX.Element {
 	const [state, dispatch] = useReducer(configReducer, initialState)
 	const [originalConfig, setOriginalConfig] = useState<ConfigData['config'] | null>(null)
 

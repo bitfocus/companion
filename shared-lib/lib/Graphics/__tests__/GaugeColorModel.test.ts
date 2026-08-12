@@ -34,6 +34,7 @@ function makeGauge(overrides: Partial<ButtonGraphicsGaugeDrawElement> = {}): But
 		roundedEnds: false,
 		fillEnabled: true,
 		multiColour: false,
+		fillWidth: 100,
 		stops: [{ value: 0, color: GREEN, gradient: false }],
 		markerEnabled: false,
 		markerColor: 0xffffff,

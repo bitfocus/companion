@@ -1,4 +1,5 @@
 import { Combobox } from '@base-ui/react/combobox'
+import './dropdown-field.css'
 import './variable-dropdown.css'
 import classNames from 'classnames'
 import { ChevronDownIcon } from 'lucide-react'
@@ -154,7 +155,7 @@ export const VariablePickerField = observer(function VariablePickerField({
 				inputValue={isEditingMode ? (controlledInputValue ?? String(localDisplayValue)) : undefined}
 				itemToStringLabel={(id: DropdownChoiceId) => String(id)}
 			>
-				<Combobox.InputGroup className="dropdown-field-input-group">
+				<Combobox.InputGroup className="form-input dropdown-field-input-group">
 					{' '}
 					<div className="dropdown-field-fancy-display" aria-hidden="true">
 						<div className="var-name">{String(localDisplayValue) || '\u00A0'}</div>

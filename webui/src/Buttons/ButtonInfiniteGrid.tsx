@@ -116,7 +116,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		}, [scrollerRef, minColumn, minRow, tileSize])
 
 		// Make the scroll position sticky when zooming
-		const tmpScrollerPosition = useRef<{ left: number; top: number }>()
+		const tmpScrollerPosition = useRef<{ left: number; top: number }>({ left: 0, top: 0 })
 		useEffect(() => {
 			if (!scrollerRef) return
 			const scrollerRef2 = scrollerRef
@@ -180,7 +180,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		const drawMinRow = Math.max(Math.floor(visibleMinY - visibleRows / 2), minRow)
 		const drawMaxRow = Math.min(Math.ceil(visibleMaxY + visibleRows / 2), maxRow)
 
-		const visibleButtons: JSX.Element[] = []
+		const visibleButtons: React.JSX.Element[] = []
 		for (let row = drawMinRow; row <= drawMaxRow; row++) {
 			for (let column = drawMinColumn; column <= drawMaxColumn; column++) {
 				visibleButtons.push(

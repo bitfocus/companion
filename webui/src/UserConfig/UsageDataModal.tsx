@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { Modal } from '~/Components/Modal'
 import { trpc } from '~/Resources/TRPC.js'
 
-export function UsageDataModal(): JSX.Element {
+export function UsageDataModal(): React.JSX.Element {
 	const [show, setShow] = useState(false)
 	const { data, isLoading, error } = useQuery({
 		...trpc.usageStatistics.getCurrentPayload.queryOptions(),

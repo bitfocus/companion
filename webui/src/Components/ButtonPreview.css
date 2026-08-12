@@ -27,7 +27,7 @@
 		filter: brightness(0.55);
 	}
 
-	&.fixed .button-border {
+	&.fixed-72 .button-border {
 		width: 72px;
 		height: 72px;
 	}

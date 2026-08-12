@@ -7,7 +7,7 @@ import legacyPlugin from '@vitejs/plugin-legacy'
 import reactPlugin from '@vitejs/plugin-react'
 import postcssCustomMedia from 'postcss-custom-media'
 import { defaultClientConditions, defineConfig, loadEnv } from 'vite'
-import { normalizeBasePath } from '../tools/webui-dev-utils'
+import { normalizeBasePath } from '../tools/webui-dev-utils.js'
 
 const buildFile = fs
 	.readFileSync(path.join(import.meta.dirname, '../BUILD'))

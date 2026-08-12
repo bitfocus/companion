@@ -1,8 +1,8 @@
 /* ─── Accordion ─────────────────────────────────────────────────────────────── */
 
 .accordion2 {
-	--accordion2-trigger-bg: var(--cui-tertiary-bg, #f8f9fa);
-	--accordion2-trigger-border: var(--popover2-border-color, var(--cui-border-color, rgba(0, 0, 21, 0.175)));
+	--accordion2-trigger-bg: var(--color-surface-subtle, #f8f9fa);
+	--accordion2-trigger-border: var(--popover2-border-color, var(--color-border, rgba(0, 0, 21, 0.175)));
 
 	background-color: transparent;
 	border: 0;
@@ -25,7 +25,7 @@
 		font-size: 0.95rem;
 		line-height: 1.5;
 		background-color: var(--accordion2-trigger-bg);
-		color: var(--popover2-link-color, var(--cui-dropdown-link-color, #212529));
+		color: var(--popover2-link-color, var(--color-text));
 		font-weight: 400;
 		text-align: left;
 		border: 0;
@@ -38,8 +38,8 @@
 
 		&:hover,
 		&:focus-visible {
-			background-color: var(--popover2-link-hover-bg, var(--cui-dropdown-link-hover-bg, #e9ecef));
-			color: var(--popover2-link-hover-color, var(--cui-dropdown-link-hover-color, #1e2125));
+			background-color: var(--popover2-link-hover-bg, var(--color-surface-hover));
+			color: var(--popover2-link-hover-color, var(--color-text));
 			outline: none;
 		}
 
@@ -48,8 +48,8 @@
 		}
 
 		&[data-panel-open] {
-			background-color: var(--popover2-link-hover-bg, var(--cui-dropdown-link-hover-bg, #e9ecef));
-			color: var(--popover2-link-hover-color, var(--cui-dropdown-link-hover-color, #1e2125));
+			background-color: var(--popover2-link-hover-bg, var(--color-surface-hover));
+			color: var(--popover2-link-hover-color, var(--color-text));
 			box-shadow: none;
 		}
 

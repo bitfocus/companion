@@ -6,7 +6,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC'
 export type CustomVariablesCollectionsApi = NestingCollectionsApi
 
 export function useCustomVariablesCollectionsApi(
-	confirmModalRef: React.RefObject<GenericConfirmModalRef>
+	confirmModalRef: React.RefObject<GenericConfirmModalRef | null>
 ): CustomVariablesCollectionsApi {
 	const renameMutation = useMutationExt(trpc.customVariables.collections.setName.mutationOptions())
 	const deleteMutation = useMutationExt(trpc.customVariables.collections.remove.mutationOptions())

@@ -33,7 +33,7 @@ export const SidebarFooter = observer(function SidebarFooter({ onContextMenu }: 
 	const { mobileMode } = useSidebarState()
 
 	return (
-		<div className="sidebar-footer2 border-top d-flex">
+		<div className="sidebar-footer2 d-flex">
 			<div className="nav-link sidebar-footer-toggler">
 				{mobileMode ? (
 					<span className={'nav-icon-wrapper d-flex block-collapse'} onMouseUp={onContextMenu}>
@@ -50,7 +50,7 @@ export const SidebarFooter = observer(function SidebarFooter({ onContextMenu }: 
 					</span>
 				)}
 
-				<span className="flex-fill text-truncate">
+				<span className="flex-fill truncate">
 					<span className="version">{versionName || 'Unknown'}</span>
 					{/* <br /> */}
 					<span className="version-sub">{versionSubheading}</span>

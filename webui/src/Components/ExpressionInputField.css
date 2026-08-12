@@ -71,7 +71,7 @@
 
 	flex-grow: 1;
 
-	border: var(--cui-border-width) solid var(--cui-border-color);
+	border: var(--border-width) solid var(--color-border);
 	transition:
 		border-color 0.15s ease-in-out,
 		box-shadow 0.15s ease-in-out;
@@ -100,8 +100,8 @@
 			/* Visible diagonal grip lines in the corner, mimicking the native resizer */
 			background-image: repeating-linear-gradient(
 				-45deg,
-				var(--cui-border-color) 0,
-				var(--cui-border-color) 1px,
+				var(--color-border) 0,
+				var(--color-border) 1px,
 				transparent 1px,
 				transparent 3px
 			);
@@ -199,7 +199,7 @@
 
 	.header {
 		padding: 0.5em;
-		background-color: var(--cui-info-bg-subtle);
+		background-color: var(--color-info-bg-subtle);
 
 		.type {
 			padding-top: 0 !important;

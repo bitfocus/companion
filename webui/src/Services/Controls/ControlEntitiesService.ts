@@ -16,7 +16,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface IEntityEditorService {
 	readonly listId: SomeSocketEntityLocation
-	readonly confirmModal: React.RefObject<GenericConfirmModalRef>
+	readonly confirmModal: React.RefObject<GenericConfirmModalRef | null>
 
 	addEntity: (
 		connectionId: string,
@@ -76,7 +76,7 @@ export interface IEntityEditorActionService {
 export function useControlEntitiesEditorService(
 	controlId: string,
 	listId: SomeSocketEntityLocation,
-	confirmModal: React.RefObject<GenericConfirmModalRef>
+	confirmModal: React.RefObject<GenericConfirmModalRef | null>
 ): IEntityEditorService {
 	const addMutation = useMutationExt(trpc.controls.entities.add.mutationOptions())
 	const moveMutation = useMutationExt(trpc.controls.entities.move.mutationOptions())
@@ -338,7 +338,7 @@ export function useControlEntityService(
 	entity: SomeEntityModel,
 	entityTypeLabel: string
 ): IEntityEditorActionService {
-	const entityRef = useRef<SomeEntityModel>()
+	const entityRef = useRef<SomeEntityModel>(entity)
 	entityRef.current = entity
 
 	const entityId = entity.id

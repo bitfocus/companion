@@ -2,7 +2,7 @@
 
 /* ─── Variables ────────────────────────────────────────────────────────────────
  *
- * Mapped from CoreUI's --cui-modal-* to --modal2-* with the same defaults.
+ * The --modal2-* custom properties drive the modal chrome, sourced from our theme tokens.
  * Parts that have no current usage are commented out below each section. */
 
 .modal2-viewport,
@@ -13,23 +13,23 @@
 	--modal2-padding: 1rem;
 	--modal2-margin: 0.5rem;
 	--modal2-top-margin: 4vh;
-	--modal2-color: var(--cui-body-color);
-	--modal2-bg: var(--cui-modal-bg, #fff);
-	--modal2-border-color: var(--cui-border-color-translucent);
-	--modal2-border-width: var(--cui-border-width, 1px);
-	--modal2-border-radius: var(--cui-border-radius-lg, 0.5rem);
-	--modal2-box-shadow: var(--cui-box-shadow-sm);
+	--modal2-color: var(--color-text);
+	--modal2-bg: var(--color-surface);
+	--modal2-border-color: var(--color-border-translucent);
+	--modal2-border-width: var(--border-width);
+	--modal2-border-radius: var(--radius-lg);
+	--modal2-box-shadow: 0 0.125rem 0.25rem color-mix(in srgb, var(--color-shadow) 7.5%, transparent);
 	--modal2-inner-border-radius: calc(var(--modal2-border-radius) - var(--modal2-border-width));
 	--modal2-header-padding-x: 1rem;
 	--modal2-header-padding-y: 1rem;
 	--modal2-header-padding: var(--modal2-header-padding-y) var(--modal2-header-padding-x);
-	--modal2-header-border-color: var(--cui-border-color);
-	--modal2-header-border-width: var(--cui-border-width, 1px);
+	--modal2-header-border-color: var(--color-border);
+	--modal2-header-border-width: var(--border-width);
 	--modal2-title-line-height: 1.5;
 	--modal2-footer-gap: 0.5rem;
 	--modal2-footer-bg: transparent;
-	--modal2-footer-border-color: var(--cui-border-color);
-	--modal2-footer-border-width: var(--cui-border-width, 1px);
+	--modal2-footer-border-color: var(--color-border);
+	--modal2-footer-border-width: var(--border-width);
 	--modal2-backdrop-bg: var(--color-backdrop);
 	--modal2-backdrop-opacity: 0.5;
 	--modal2-transition-duration: 0.2s;
@@ -151,7 +151,7 @@
 
 @media (--bp-sm-up) {
 	.modal2-dialog {
-		--modal2-box-shadow: var(--cui-box-shadow);
+		--modal2-box-shadow: 0 0.5rem 1rem var(--color-shadow-15);
 	}
 
 	.modal2-sm {

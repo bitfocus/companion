@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PresetReferenceButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlDependencies } from '../../../../lib/Controls/ControlDependencies.js'
 import { ControlButtonPresetReference } from '../../../../lib/Controls/ControlTypes/Button/PresetReference.js'
 
@@ -79,6 +79,11 @@ describe('ControlButtonPresetReference', () => {
 			events: new EventEmitter() as any,
 			changeEvents: new EventEmitter() as any,
 			renderClock: { subscribe: vi.fn(() => () => {}) } as any,
+			controlsAccessor: {
+				getControl: vi.fn(() => undefined),
+				pressControl: vi.fn(() => false),
+				rotateControl: vi.fn(() => false),
+			},
 		}
 	})
 
@@ -263,7 +268,90 @@ describe('ControlButtonPresetReference', () => {
 		})
 	})
 
+	describe('advanced feedback value across a preset refresh', () => {
+		/** An advanced feedback that maps the module's returned imageBuffer onto the dedicated buffer element */
+		function makeAdvancedFeedback() {
+			return {
+				id: 'fb-adv',
+				type: EntityModelType.Feedback,
+				definitionId: 'adv-fb',
+				connectionId: 'conn1',
+				options: {},
+				isInverted: { isExpression: false, value: false },
+				styleOverrides: [
+					{
+						overrideId: 'ov1',
+						elementId: 'imageBuffers',
+						elementProperty: 'base64Image',
+						override: { isExpression: false, value: 'imageBuffers' },
+					},
+				],
+			} as any
+		}
+		const makeAdvancedModel = (checksum?: string) => makeModel({ feedbacks: [makeAdvancedFeedback()], checksum })
+
+		/** Simulate the module reporting an advanced feedback result carrying an imageBuffer */
+		function reportImageBuffer(control: ControlButtonPresetReference) {
+			control.entities.updateFeedbackValues(
+				'conn1',
+				new Map([['fb-adv', { entityId: 'fb-adv', controlId: 'bank:test01', value: { imageBuffer: 'QUJD' } as any }]])
+			)
+		}
+
+		beforeEach(() => {
+			// The pool only treats a feedback as advanced (reading its runtime value) if its definition says so
+			;(definitions as any).getEntityDefinition = vi.fn((_type: any, _conn: any, defId: string) =>
+				defId === 'adv-fb'
+					? { entityType: EntityModelType.Feedback, feedbackType: FeedbackEntitySubType.Advanced }
+					: undefined
+			)
+		})
+
+		it('renders the imageBuffer once the module reports its value', () => {
+			const control = createControl(makeAdvancedModel())
+
+			reportImageBuffer(control)
+
+			const overrides = control.entities.getFeedbackStyleOverrides()
+			expect(overrides.get('imageBuffers')?.get('base64Image')).toBeDefined()
+		})
+
+		it('ignores an unchanged preset re-report, keeping the cached advanced value (issue #4410)', () => {
+			// The re-resolved model carries the same checksum the control was built from (identical preset)
+			definitions.convertPresetToReferenceControlModel.mockReturnValue(makeAdvancedModel('stable-checksum'))
+			const control = createControl(makeAdvancedModel('stable-checksum'))
+
+			reportImageBuffer(control)
+			expect(control.entities.getFeedbackStyleOverrides().get('imageBuffers')?.get('base64Image')).toBeDefined()
+
+			definitions.emit('updatePresets', 'conn1')
+
+			// The reference was not rebuilt, so the imageBuffer is retained
+			expect(control.entities.getFeedbackStyleOverrides().get('imageBuffers')?.get('base64Image')).toBeDefined()
+		})
+
+		it('rebuilds and re-subscribes when the preset actually changed', () => {
+			// The re-resolved model carries a different checksum, i.e. the preset content changed
+			definitions.convertPresetToReferenceControlModel.mockReturnValue(makeAdvancedModel('v2'))
+			const control = createControl(makeAdvancedModel('v1'))
+
+			reportImageBuffer(control)
+			expect(control.entities.getFeedbackStyleOverrides().get('imageBuffers')?.get('base64Image')).toBeDefined()
+
+			const processManager = deps.instance.processManager as any
+			processManager.connectionEntityUpdate.mockClear()
+
+			definitions.emit('updatePresets', 'conn1')
+
+			// The preset changed, so the reference rebuilt: the imageBuffer is cleared until refetched...
+			expect(control.entities.getFeedbackStyleOverrides().get('imageBuffers')).toBeUndefined()
+			// ...and the refreshed feedback was re-subscribed so the module provides it again
+			expect(processManager.connectionEntityUpdate).toHaveBeenCalled()
+		})
+	})
+
 	it('keeps the last-known data when the source preset disappears', () => {
+		// The preset is gone, so it cannot be re-resolved
 		definitions.convertPresetToReferenceControlModel.mockReturnValue(null)
 		const control = createControl()
 

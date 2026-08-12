@@ -99,11 +99,11 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 		[visibleModules]
 	)
 
-	let components: JSX.Element[] = []
+	let components: React.JSX.Element[] = []
 	try {
 		const searchResults = filterProducts(typeProducts, filter, true)
 
-		const candidatesObj: Record<string, JSX.Element> = {}
+		const candidatesObj: Record<string, React.JSX.Element> = {}
 		for (const moduleInfo of searchResults) {
 			candidatesObj[moduleInfo.moduleId] = (
 				<ModulesListRow
@@ -317,14 +317,14 @@ const ModulesListRow = observer(function ModulesListRow({
 				'connectionlist-selected': isSelected,
 			})}
 		>
-			<td onClick={doEdit} className="hand compact">
+			<td onClick={doEdit} className="cursor-pointer compact">
 				{icon && (
 					<span title={iconTitle ?? ''}>
 						<FontAwesomeIcon icon={icon} />
 					</span>
 				)}
 			</td>
-			<td onClick={doEdit} className="hand">
+			<td onClick={doEdit} className="cursor-pointer">
 				{!!moduleInfo.storeInfo?.deprecationReason && (
 					<InlineHelpCustom help="Deprecated" className="me-1">
 						<FontAwesomeIcon icon={faWarning} aria-label="Deprecated" />

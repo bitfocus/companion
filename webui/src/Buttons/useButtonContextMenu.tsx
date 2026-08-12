@@ -49,6 +49,7 @@ export function useButtonContextMenu({
 	const moveControlMutation = useMutationExt(trpc.controls.moveControl.mutationOptions())
 	const swapControlMutation = useMutationExt(trpc.controls.swapControl.mutationOptions())
 	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())
+	const createReferenceControlMutation = useMutationExt(trpc.controls.createReferenceControl.mutationOptions())
 
 	const contextMenuItems = useMemo((): MenuItemProps[] => {
 		if (!contextMenuLocation) return []
@@ -96,7 +97,8 @@ export function useButtonContextMenu({
 		if (!copyFromButton) {
 			items.push(
 				{ label: 'Paste here', disabled: true, do: () => {} },
-				{ label: 'Swap here', disabled: true, do: () => {} }
+				{ label: 'Swap here', disabled: true, do: () => {} },
+				{ label: 'Paste as reference', disabled: true, do: () => {} }
 			)
 		} else {
 			items.push(
@@ -124,6 +126,18 @@ export function useButtonContextMenu({
 							.mutateAsync({ fromLocation: copyFromButton[0], toLocation: location })
 							.catch((e) => console.error(`Swap failed: ${e}`))
 						setCopyFromButton(null)
+						setTabResetToken(nanoid())
+					},
+				},
+				{
+					label: 'Paste as reference',
+					do: () => {
+						// Place a button that mirrors the copied button, rather than a full copy
+						createReferenceControlMutation
+							.mutateAsync({ fromLocation: copyFromButton[0], toLocation: location })
+							.catch((e) => console.error(`Paste reference failed: ${e}`))
+						// A reference leaves the source in place, so clear a pending cut - it never completes otherwise
+						if (copyFromButton[1] === 'cut') setCopyFromButton(null)
 						setTabResetToken(nanoid())
 					},
 				}
@@ -161,6 +175,7 @@ export function useButtonContextMenu({
 		moveControlMutation,
 		swapControlMutation,
 		resetControlMutation,
+		createReferenceControlMutation,
 		setCopyFromButton,
 		setTabResetToken,
 		clearModalRef,

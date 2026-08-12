@@ -156,7 +156,7 @@ function CollectionsNestingTableGridContainer({
 	nestingLevel: number
 	isItemDragging: boolean
 	itemCount: number
-}>): JSX.Element {
+}>): React.JSX.Element {
 	const containerRef = useRef<HTMLDivElement | null>(null)
 	const [columnCount, setColumnCount] = useState<number | null>(null)
 
@@ -208,7 +208,7 @@ function CollectionsNestingTableGridEndDropZone({
 	collectionId: string | null
 	accept: string
 	span: number
-}): JSX.Element {
+}): React.JSX.Element {
 	const { ref } = useDroppable({
 		id: emptyCollectionItemDropId(collectionId),
 		accept,

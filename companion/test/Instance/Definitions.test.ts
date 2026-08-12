@@ -359,6 +359,40 @@ describe('InstanceDefinitions', () => {
 		})
 	})
 
+	// ── preset checksum (carried on the resolved model) ──────────────────
+
+	describe('preset checksum', () => {
+		it('is stable for identical preset content, and differs when the content changes', () => {
+			const { defs } = createInstanceDefinitions()
+			const model = makeButtonPresetModel({ style: { layers: [makeTextLayer('t1', 'Hello')] } })
+
+			defs.setPresetDefinitions('conn1', new Map([['p1', makeButtonPreset('p1', { model })]]), {}, false)
+			const first = defs.convertPresetToReferenceControlModel('conn1', 'p1', null)?.checksum
+			expect(first).toBeTruthy()
+
+			// Re-report byte-identical presets (fresh objects) - the checksum must not change
+			const sameModel = makeButtonPresetModel({ style: { layers: [makeTextLayer('t1', 'Hello')] } })
+			defs.setPresetDefinitions('conn1', new Map([['p1', makeButtonPreset('p1', { model: sameModel })]]), {}, false)
+			expect(defs.convertPresetToReferenceControlModel('conn1', 'p1', null)?.checksum).toBe(first)
+
+			// Change the content - the checksum must change
+			const changedModel = makeButtonPresetModel({ style: { layers: [makeTextLayer('t1', 'Goodbye')] } })
+			defs.setPresetDefinitions('conn1', new Map([['p1', makeButtonPreset('p1', { model: changedModel })]]), {}, false)
+			expect(defs.convertPresetToReferenceControlModel('conn1', 'p1', null)?.checksum).not.toBe(first)
+		})
+
+		it('is the same for the reference and preview models of a preset', () => {
+			const { defs } = createInstanceDefinitions()
+			defs.setPresetDefinitions('conn1', new Map([['p1', makeButtonPreset('p1')]]), {}, false)
+
+			const referenceChecksum = defs.convertPresetToReferenceControlModel('conn1', 'p1', null)?.checksum
+			const previewChecksum = defs.convertPresetToPreviewControlModel('conn1', 'p1')?.checksum
+
+			expect(referenceChecksum).toBeTruthy()
+			expect(previewChecksum).toBe(referenceChecksum)
+		})
+	})
+
 	// ── forgetConnection ─────────────────────────────────────────────────
 
 	describe('forgetConnection', () => {

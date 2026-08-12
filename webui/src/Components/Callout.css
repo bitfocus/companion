@@ -1,10 +1,10 @@
 .callout2-element {
 	padding: 1rem 1rem;
 	margin: 1rem 0;
-	border: var(--cui-border-width) solid var(--cui-border-color);
+	border: var(--border-width) solid var(--color-border);
 	border-inline-start-color: var(--callout2-border-left-color);
-	border-inline-start-width: calc(var(--cui-border-width) * 4);
-	border-radius: var(--cui-border-radius);
+	border-inline-start-width: calc(var(--border-width) * 4);
+	border-radius: var(--radius);
 }
 
 .callout2-primary {

@@ -1,27 +1,25 @@
-import DatePicker from 'react-date-picker'
+import { Input } from '@base-ui/react'
+import './datetime-field.css'
+import { formatLocalDate, toDateInputValue } from './DateInputValue.js'
 
 interface DateInputFieldProps {
 	id: string | undefined
-	value: Date | null
-	setValue: (value: Date | null) => void
+	value: string | null
+	setValue: (value: string | null) => void
 	disabled: boolean
 }
 
 export function DateInputField({ id, value, setValue, disabled }: DateInputFieldProps): React.JSX.Element {
 	return (
-		<DatePicker
+		<Input
 			id={id}
-			disabled={disabled}
-			format="yyyy-M-dd"
-			minDate={new Date()}
+			type="date"
 			required
-			value={value}
-			onChange={setValue as any} // We don't enable ranges
-			showLeadingZeros={true}
-			calendarIcon={null}
-			yearPlaceholder="yyyy"
-			monthPlaceholder="mm"
-			dayPlaceholder="dd"
+			disabled={disabled}
+			min={formatLocalDate(new Date())}
+			className="form-input datetime-input-field"
+			value={toDateInputValue(value)}
+			onChange={(e) => setValue(e.currentTarget.value === '' ? null : e.currentTarget.value)}
 		/>
 	)
 }

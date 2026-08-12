@@ -1,4 +1,5 @@
 import { faCompressArrowsAlt, faExpandArrowsAlt, faTrash } from '@fortawesome/free-solid-svg-icons'
+import '../Components/VariablesTable.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'

@@ -67,11 +67,11 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 		(p) => storeModulesOfTypeCount === 0 || !!p.installedInfo || typeFilter.visibility.available
 	)
 
-	let candidates: JSX.Element[] = []
+	let candidates: React.JSX.Element[] = []
 	try {
 		const searchResults = filterProducts(typeProducts, filter, false)
 
-		const candidatesObj: Record<string, JSX.Element> = {}
+		const candidatesObj: Record<string, React.JSX.Element> = {}
 		for (const moduleInfo of searchResults) {
 			candidatesObj[moduleInfo.name] = (
 				<AddInstanceEntry key={moduleInfo.name} moduleInfo={moduleInfo} addInstance={addInstance} />
@@ -282,11 +282,7 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 					params={{ moduleType: moduleInfo.moduleType, moduleId: moduleInfo.moduleId }}
 					className="text-decoration-none"
 				>
-					<div
-						className="m-0"
-						style={{ display: 'inline-block', color: 'var(--cui-body-color)' }}
-						title={'Manage module'}
-					>
+					<div className="m-0" style={{ display: 'inline-block', color: 'var(--color-text)' }} title={'Manage module'}>
 						<FontAwesomeIcon icon={faCog} />
 					</div>
 				</Link>

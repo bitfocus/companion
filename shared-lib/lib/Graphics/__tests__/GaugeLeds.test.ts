@@ -32,6 +32,7 @@ function makeGauge(overrides: Partial<ButtonGraphicsGaugeDrawElement> = {}): But
 		roundedEnds: false,
 		fillEnabled: true,
 		multiColour: false,
+		fillWidth: 100,
 		// Single green stop → the whole track is green; fill vs track distinguished by brightness.
 		stops: [{ value: 0, color: GREEN, gradient: false }],
 		markerEnabled: false,

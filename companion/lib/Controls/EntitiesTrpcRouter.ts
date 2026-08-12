@@ -358,7 +358,8 @@ export function createEntitiesTrpcRouter(
 				const control = controlsMap.get(input.controlId)
 				if (!control) return {}
 
-				if (!control.supportsEntities) throw new Error(`Control "${input.controlId}" does not support entities`)
+				// A control without an entity pool (e.g. a button reference) simply has no local variable values
+				if (!control.supportsEntities) return {}
 
 				return control.entities.getLocalVariableValues()
 			}),

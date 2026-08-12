@@ -352,9 +352,8 @@ export abstract class ButtonControlRuntimeBase<
 	 * @param delta Signed rotation amount - sign is the direction, magnitude is the number of steps
 	 * @param surfaceId The surface that initiated this rotate
 	 */
-	rotateControl(delta: number, surfaceId: string | undefined): void {
-		const rightward = delta > 0
-		const actions = this.entities.getActionsToExecuteForSet(rightward ? 'rotate_right' : 'rotate_left')
+	override rotateControl(delta: number, surfaceId: string | undefined): boolean {
+		const actions = this.entities.getActionsToExecuteForSet(delta > 0 ? 'rotate_right' : 'rotate_left')
 
 		const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
 
@@ -368,6 +367,8 @@ export abstract class ButtonControlRuntimeBase<
 			.catch((e) => {
 				this.logger.error(`action execution failed: ${e}`)
 			})
+
+		return true
 	}
 
 	/**
