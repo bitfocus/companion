@@ -7,8 +7,10 @@
 // drop the @coreui/coreui dependency while we progressively replace these styles with our own.
 // Layout & components
 @forward 'scss/vendor/coreui/root';
-@forward 'scss/vendor/coreui/reboot';
-@forward 'scss/vendor/coreui/type';
+// NOTE: the vendored `reboot` + `type` base styles are no longer forwarded here. They are compiled
+// into the first-party webui/src/reboot.css and imported into the `coreui-reboot` cascade layer (see
+// tailwind.css) so Tailwind utilities and the opt-in Preflight reset can layer correctly beneath the
+// app's own CSS. They remain one replaceable unit to be rewritten as first-party base styles.
 @forward 'scss/vendor/coreui/containers';
 @forward 'scss/vendor/coreui/grid';
 

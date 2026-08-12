@@ -1,7 +1,22 @@
-@layer theme, utilities;
+@layer theme, tw-base, coreui-reboot, utilities;
 
-/* Utilities only; preflight is off (the app ships its own reset). */
+/*
+  Cascade layers, low -> high priority:
+    theme          Tailwind design tokens (@theme).
+    tw-base        Tailwind Preflight, the reset we are migrating towards. Enabled but currently
+                   masked: every declaration it introduces is overridden by the coreui-reboot layer
+                   above (see the "Preflight neutralizers" section in reboot.css), so turning it on
+                   has no visual effect today. As the CoreUI reboot is replaced piece by piece, the
+                   corresponding neutralizers are removed and Preflight takes over underneath.
+    coreui-reboot  The vendored CoreUI/Bootstrap reboot, kept authoritative just above Preflight.
+    utilities      Tailwind utilities; sit above the reset so a plain `p-3`/`flex` wins over reboot
+                   without needing !important.
+  App component CSS stays unlayered (above all these layers). CoreUI's own generated utilities are
+  `cui-`-prefixed, unlayered and !important, and sit at the very top during the migration.
+*/
 @import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(tw-base);
+@import './reboot.css' layer(coreui-reboot);
 @import 'tailwindcss/utilities.css' layer(utilities);
 
 @theme static {
