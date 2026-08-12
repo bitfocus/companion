@@ -52,7 +52,7 @@ body {
 	/* height: calc(100% - #{$header-height}); // nocommit */
 
 	/* Force to fill the screen and scroll internally */
-	> .container-fluid {
+	> .cui-container-fluid {
 		height: 100%;
 		max-height: 100%;
 		overflow-y: hidden;
@@ -263,7 +263,7 @@ form.row > * {
 		max-width: 100%;
 	}
 
-	.col-xl-6 {
+	.cui-col-xl-6 {
 		max-width: 100%;
 	}
 

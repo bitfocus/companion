@@ -9,8 +9,8 @@
 	border-bottom: 1px solid var(--color-border);
 
 	/* The header lays out its single full-width container child as a flex row */
-	> .container,
-	> .container-fluid {
+	> .cui-container,
+	> .cui-container-fluid {
 		display: flex;
 		flex-wrap: inherit;
 		align-items: center;
@@ -61,7 +61,7 @@
 
 /* Hamburger toggler (mobile). The icon itself is a FontAwesome glyph in Header.tsx. */
 .header-toggler {
-	/* 0.25rem all round (overrides .ps-1, just in case) keeps the hover highlight uniform */
+	/* 0.25rem all round (overrides .cui-ps-1, just in case) keeps the hover highlight uniform */
 	padding: 0.25rem !important;
 	margin-right: 0.5rem; /* toggler-padding-x - toggler-padding-y */
 	font-size: 1.25rem;
@@ -89,7 +89,7 @@
 	margin-right: 5px;
 }
 
-.header > .container-fluid {
+.header > .cui-container-fluid {
 	min-height: calc(4rem + 1px); /* stylelint-disable-line function-disallowed-list */
 }
 
