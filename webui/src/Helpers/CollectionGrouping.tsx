@@ -24,8 +24,8 @@ export function groupItemsByCollection<TItem extends { collectionId: string | nu
 	const assignedItemIds = new Set<TItem>()
 
 	const sortedItems = [...items].sort((a, b) => {
-		let sortA = a.sortOrder ?? 0
-		let sortB = b.sortOrder ?? 0
+		const sortA = a.sortOrder ?? 0
+		const sortB = b.sortOrder ?? 0
 
 		if (sortA < sortB) {
 			return -1
