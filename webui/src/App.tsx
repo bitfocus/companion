@@ -65,7 +65,7 @@ export default function App(): React.JSX.Element {
 				<>
 					<div id="error-container" className={wasConnected ? 'show-error' : ''}>
 						<div className="row cui-justify-content-center">
-							<div className="col-md-6">
+							<div className="cui-col-md-6">
 								<div className="clearfix">
 									<h4 className="cui-pt-3">Houston, we have a problem!</h4>
 									<p className="cui-text-muted">It seems that we have lost connection to the companion app.</p>
@@ -79,7 +79,7 @@ export default function App(): React.JSX.Element {
 					</div>
 					<div id="current-import-container" className={!wasConnected && currentImportTask ? 'show-error' : ''}>
 						<div className="row cui-justify-content-center">
-							<div className="col-md-6">
+							<div className="cui-col-md-6">
 								<div className="clearfix">
 									<h4 className="cui-pt-3">Stand by, the config is being updated!</h4>
 									{/* <p className="text-muted">It seems that we have lost connection to the companion app.</p> */}

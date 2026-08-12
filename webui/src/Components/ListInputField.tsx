@@ -122,7 +122,7 @@ export function ListRowControls({
 	return (
 		<>
 			<div
-				className={classNames('form-label col-sm-4 col-form-label col-form-label-sm cui-text-muted', {
+				className={classNames('form-label cui-col-sm-4 col-form-label col-form-label-sm cui-text-muted', {
 					displayNone: hidden,
 				})}
 			>

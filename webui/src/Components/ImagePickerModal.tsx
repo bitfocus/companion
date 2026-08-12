@@ -254,7 +254,7 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 				<FormLabel htmlFor="upload-description" sm={3} column>
 					Description
 				</FormLabel>
-				<div className="col-sm-9">
+				<div className="cui-col-sm-9">
 					<TextInputFieldSimple
 						id="upload-description"
 						value={description}

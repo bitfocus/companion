@@ -58,7 +58,7 @@ export function ImageNameInput({
 				<FormLabel htmlFor={labelInputId} sm={3} column>
 					Image name
 				</FormLabel>
-				<div className="col-sm-9">
+				<div className="cui-col-sm-9">
 					<TextInputFieldSimple
 						id={labelInputId}
 						value={value}
@@ -70,7 +70,7 @@ export function ImageNameInput({
 						immediateValue
 					/>
 				</div>
-				<div className="col-sm-12 cui-mt-2 cui-text-muted small">{helpText || defaultHelpText}</div>
+				<div className="cui-col-sm-12 cui-mt-2 cui-text-muted small">{helpText || defaultHelpText}</div>
 			</div>
 		</>
 	)

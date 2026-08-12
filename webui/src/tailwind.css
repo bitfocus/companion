@@ -1,4 +1,4 @@
-@layer theme, tw-base, coreui-reboot, utilities;
+@layer theme, tw-base, coreui-reboot, coreui-layout, utilities;
 
 /*
   Cascade layers, low -> high priority:
@@ -9,14 +9,19 @@
                    has no visual effect today. As the CoreUI reboot is replaced piece by piece, the
                    corresponding neutralizers are removed and Preflight takes over underneath.
     coreui-reboot  The vendored CoreUI/Bootstrap reboot, kept authoritative just above Preflight.
-    utilities      Tailwind utilities; sit above the reset so a plain `p-3`/`flex` wins over reboot
-                   without needing !important.
+    coreui-layout  The vendored CoreUI containers + grid (`.cui-container*`, `.row`, `.row > *`
+                   gutters, `.cui-col*`). Below utilities so a plain `px-4`/`gap-2` wins over the grid
+                   gutter without !important. The container/col classes are `cui-`-prefixed because
+                   they collide with Tailwind's own container/col-* utilities.
+    utilities      Tailwind utilities; sit above the reset and the layout so a plain `p-3`/`flex`/`px-4`
+                   wins over reboot and the grid without needing !important.
   App component CSS stays unlayered (above all these layers). CoreUI's own generated utilities are
   `cui-`-prefixed, unlayered and !important, and sit at the very top during the migration.
 */
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/preflight.css' layer(tw-base);
 @import './reboot.css' layer(coreui-reboot);
+@import './coreui-layout.css' layer(coreui-layout);
 @import 'tailwindcss/utilities.css' layer(utilities);
 
 @theme static {

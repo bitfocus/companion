@@ -87,14 +87,14 @@ export const ConfirmExportModal = observer(
 									<FormLabel htmlFor={exportFormatId} sm={4} column="sm">
 										File format
 									</FormLabel>
-									<div className="col-sm-8">
+									<div className="cui-col-sm-8">
 										<SelectExportFormat id={exportFormatId} value={format} setValue={setFormat} />
 									</div>
 
 									<FormLabel htmlFor={exportNameId} sm={4} column="sm">
 										File name
 									</FormLabel>
-									<div className="col-sm-8">
+									<div className="cui-col-sm-8">
 										<TextInputField
 											id={exportNameId}
 											value={filename}
@@ -111,7 +111,7 @@ export const ConfirmExportModal = observer(
 											compatible with this
 										</InlineHelpIcon>
 									</FormLabel>
-									<div className="col-sm-8 cui-d-flex cui-align-items-center">
+									<div className="cui-col-sm-8 cui-d-flex cui-align-items-center">
 										<SwitchInputField id={exportSecretsId} value={includeSecrets} setValue={setIncludeSecrets} />
 									</div>
 								</Form>

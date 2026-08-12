@@ -154,7 +154,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 													name="versionId"
 													children={(field) => (
 														<>
-															<div className="col-sm-3 cui-d-flex cui-align-items-center">
+															<div className="cui-col-sm-3 cui-d-flex cui-align-items-center">
 																<FormLabel htmlFor={versionFieldId} column="sm" className="cui-mb-0 cui-flex-grow-1">
 																	Version
 																</FormLabel>
@@ -182,7 +182,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 									<Collapse.Root
 										open={advancedMode}
 										onOpenChange={handleAdvancedModeChange}
-										className="col-sm-12 cui-mt-3 cui-mb-2 cui-p-0"
+										className="cui-col-sm-12 cui-mt-3 cui-mb-2 cui-p-0"
 									>
 										<hr className="cui-my-2" />
 										<Collapse.Trigger className="button button-link button-sm cui-p-0 cui-text-decoration-none">

@@ -46,9 +46,9 @@ describe('FormLabel', () => {
 				Name
 			</FormLabel>
 		)
-		expect(container.firstChild).toHaveClass('col-sm-4')
+		expect(container.firstChild).toHaveClass('cui-col-sm-4')
 		// unlike Grid.Col, FormLabel must NOT fall back to a bare `col`
-		expect(container.firstChild).not.toHaveClass('col')
+		expect(container.firstChild).not.toHaveClass('cui-col')
 	})
 
 	it('supports the offset object form', () => {
@@ -57,12 +57,12 @@ describe('FormLabel', () => {
 				Name
 			</FormLabel>
 		)
-		expect(container.firstChild).toHaveClass('col-sm-4', 'offset-sm-1', 'col-form-label', 'col-form-label-sm')
+		expect(container.firstChild).toHaveClass('cui-col-sm-4', 'offset-sm-1', 'col-form-label', 'col-form-label-sm')
 	})
 
 	it('does not emit a bare col when no breakpoint props are given', () => {
 		const { container } = render(<FormLabel htmlFor="x">Name</FormLabel>)
-		expect(container.firstChild).not.toHaveClass('col')
+		expect(container.firstChild).not.toHaveClass('cui-col')
 	})
 
 	it('appends passthrough className', () => {
@@ -73,7 +73,7 @@ describe('FormLabel', () => {
 		)
 		expect(container.firstChild).toHaveClass(
 			'form-label',
-			'col-sm-4',
+			'cui-col-sm-4',
 			'col-form-label',
 			'col-form-label-sm',
 			'cui-mb-2'
