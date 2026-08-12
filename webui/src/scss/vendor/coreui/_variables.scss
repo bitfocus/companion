@@ -1,9 +1,9 @@
-// Vendored CoreUI variable defaults (v5.6.1). Pruned from the upstream file to only the variables read
-// by the vendored modules still in use (root, containers, grid, utilities/api — plus reboot/type,
-// which are no longer forwarded from App.scss but are still compiled from here into reboot.css) and
-// their transitive dependencies; the defaults for removed components (buttons, forms, tables,
-// nav, navbar, modals, header, footer, close, …) were dropped. Override defaults from
-// scss/_variables.scss, not here. See scss/vendor/coreui/README.md.
+// Vendored CoreUI variable defaults (v5.6.1). Pruned from the upstream file to the variables read by
+// the vendored modules that were in use; the defaults for removed components (buttons, forms, tables,
+// nav, navbar, modals, header, footer, close, …) were dropped. Only `root` and `utilities/api` are
+// still forwarded from App.scss now (reboot/type/containers/grid were compiled to first-party CSS and
+// their SCSS deleted), so some defaults here are no longer read — harmless, not re-pruned. Override
+// defaults from scss/_variables.scss, not here. See scss/vendor/coreui/README.md.
 @use "sass:color";
 @use "functions/assert-ascending" as *;
 @use "functions/assert-starts-at-zero" as *;

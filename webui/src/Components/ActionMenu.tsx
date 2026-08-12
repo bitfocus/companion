@@ -73,7 +73,7 @@ function PopoverMenuItemContents({ data }: { data: MenuActionItemProps }): React
 					) : (
 						<FontAwesomeIcon
 							icon={data.icon ? data.icon : faOpenCircle}
-							className={data.icon ? 'visible' : 'invisible'}
+							className={data.icon ? 'cui-visible' : 'cui-invisible'}
 						/>
 					)}
 				</span>

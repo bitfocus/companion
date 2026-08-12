@@ -41,7 +41,8 @@ $_cui-utility-prefix: "cui-";
     $property-class: if(sass($property-class == null): ""; else: $property-class);
 
     // Companion: apply the `cui-` namespace to every non-empty utility class. Empty-class utilities
-    // (e.g. `visibility` → `.visible`/`.invisible`) are left unprefixed so they keep their names.
+    // (class: null — only `visibility`) can't be prefixed here without a dangling dash, so they carry
+    // the `cui-` prefix in their value keys instead (see the visibility utility in _utilities.scss).
     // stylelint-disable-next-line scss/at-function-named-arguments
     $property-class: if(sass($property-class == ""): $property-class; else: $_cui-utility-prefix + $property-class);
 
