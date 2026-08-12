@@ -264,25 +264,51 @@ describe('GetLegacyStyleProperty', () => {
 
 describe('ConvertLegacyStyleToElements', () => {
 	test('always produces 4 base layers', () => {
-		const { layers } = ConvertLegacyStyleToElements(minimalStyle, [], null)
+		const { layers } = ConvertLegacyStyleToElements(minimalStyle, [], null, null)
 		expect(layers).toHaveLength(4)
 		expect(layers.map((l) => l.id)).toEqual(['canvas', 'box0', 'image0', 'text0'])
 	})
 
 	test('advanced feedback adds a 5th bufferElement layer', () => {
-		const { layers } = ConvertLegacyStyleToElements(minimalStyle, [makeAdvancedFeedback()], null)
+		const { layers } = ConvertLegacyStyleToElements(minimalStyle, [makeAdvancedFeedback()], null, null)
 		expect(layers).toHaveLength(5)
 		expect(layers[4].id).toBe('imageBuffers')
 	})
 
+	test('advanced feedback with no affectedProperties info produces overrides for all properties', () => {
+		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [makeAdvancedFeedback()], null, null)
+		const props = (feedbacks[0] as FeedbackEntityModel).styleOverrides!.map((o) => o.elementProperty)
+		// The dedicated buffer element receives the imageBuffer, plus every text/image/background property
+		expect(props).toContain('text')
+		expect(props).toContain('color')
+		expect(props).toContain('base64Image')
+		expect(props.length).toBeGreaterThan(1)
+	})
+
+	test('advanced feedback overrides are limited to the definition affectedProperties', () => {
+		// The module declares this advanced feedback only affects the imageBuffer (as it returns an imageBuffer)
+		const affectedProperties = new Map<string, string[] | undefined>([['advanced-feedback', ['imageBuffer']]])
+		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [makeAdvancedFeedback()], null, affectedProperties)
+		const overrides = (feedbacks[0] as FeedbackEntityModel).styleOverrides!
+		// Only the imageBuffer override (base64Image on the dedicated buffer element) should be present
+		expect(overrides).toHaveLength(1)
+		expect(overrides[0].elementProperty).toBe('base64Image')
+		expect(overrides[0].elementId).toBe('imageBuffers')
+	})
+
 	test('boolean feedback with style sets styleOverrides and removes style', () => {
-		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [makeBooleanFeedback()], null)
+		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [makeBooleanFeedback()], null, null)
 		expect(feedbacks[0]).toHaveProperty('styleOverrides')
 		expect((feedbacks[0] as any).style).toBeUndefined()
 	})
 
 	test('boolean feedback styleOverrides include a color override', () => {
-		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [makeBooleanFeedback({ bgcolor: 0xff0000 })], null)
+		const { feedbacks } = ConvertLegacyStyleToElements(
+			minimalStyle,
+			[makeBooleanFeedback({ bgcolor: 0xff0000 })],
+			null,
+			null
+		)
 		const overrides = (feedbacks[0] as FeedbackEntityModel).styleOverrides!
 		const colorOverride = overrides.find((o) => o.elementProperty === 'color' && o.elementId === 'box0')
 		expect(colorOverride?.override).toEqual({ isExpression: false, value: 0xff0000 })
@@ -300,24 +326,24 @@ describe('ConvertLegacyStyleToElements', () => {
 				{ overrideId: 'existing', elementId: 'x', elementProperty: 'y', override: { isExpression: false, value: 'z' } },
 			],
 		}
-		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [feedback], null)
+		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [feedback], null, null)
 		expect((feedbacks[0] as FeedbackEntityModel).styleOverrides).toHaveLength(1)
 		expect((feedbacks[0] as FeedbackEntityModel).styleOverrides![0].overrideId).toBe('existing')
 	})
 
 	test('non-feedback entity is passed through unchanged', () => {
 		const action = makeAction()
-		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [action], null)
+		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [action], null, null)
 		expect(feedbacks[0]).toEqual(action)
 	})
 
 	test('previewStyle null results in empty previewStyleFeedbacks', () => {
-		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], null)
+		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], null, null)
 		expect(previewStyleFeedbacks).toEqual([])
 	})
 
 	test('previewStyle with a property creates a previewStyleFeedback entry', () => {
-		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], { bgcolor: 0x0000ff })
+		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], { bgcolor: 0x0000ff }, null)
 		expect(previewStyleFeedbacks).toHaveLength(1)
 		expect(previewStyleFeedbacks[0].type).toBe(EntityModelType.Feedback)
 		expect((previewStyleFeedbacks[0] as FeedbackEntityModel).styleOverrides).toBeDefined()
@@ -325,24 +351,29 @@ describe('ConvertLegacyStyleToElements', () => {
 
 	test('previewStyle with no overridable properties gives empty previewStyleFeedbacks', () => {
 		// Empty partial style → parsedStyle has nothing set → overrides.length === 0
-		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], {})
+		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], {}, null)
 		expect(previewStyleFeedbacks).toHaveLength(0)
 	})
 
 	test('style properties are applied to the canvas decoration layer', () => {
-		const { layers } = ConvertLegacyStyleToElements({ ...minimalStyle, show_topbar: true }, [], null)
+		const { layers } = ConvertLegacyStyleToElements({ ...minimalStyle, show_topbar: true }, [], null, null)
 		const canvas = layers[0] as any
 		expect(canvas.decoration.value).toBe(ButtonGraphicsDecorationType.TopBar)
 	})
 
 	test('style text is applied to the text element', () => {
-		const { layers } = ConvertLegacyStyleToElements({ ...minimalStyle, text: 'hi', textExpression: false }, [], null)
+		const { layers } = ConvertLegacyStyleToElements(
+			{ ...minimalStyle, text: 'hi', textExpression: false },
+			[],
+			null,
+			null
+		)
 		const textEl = layers.find((l) => l.id === 'text0') as any
 		expect(textEl.text).toEqual({ isExpression: false, value: 'hi' })
 	})
 
 	test('style bgcolor is applied to the background element', () => {
-		const { layers } = ConvertLegacyStyleToElements({ ...minimalStyle, bgcolor: 0xaabbcc }, [], null)
+		const { layers } = ConvertLegacyStyleToElements({ ...minimalStyle, bgcolor: 0xaabbcc }, [], null, null)
 		const boxEl = layers.find((l) => l.id === 'box0') as any
 		expect(boxEl.color.value).toBe(0xaabbcc)
 	})
@@ -359,7 +390,7 @@ describe('ConvertLegacyStyleToElements', () => {
 			children: { feedbacks: [childFeedback] },
 		}
 
-		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [conditionalFeedback], null)
+		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [conditionalFeedback], null, null)
 		const updatedCond = feedbacks[0] as FeedbackEntityModel
 		const children = updatedCond.children!['feedbacks']!
 		expect((children[0] as FeedbackEntityModel).styleOverrides).toBeDefined()

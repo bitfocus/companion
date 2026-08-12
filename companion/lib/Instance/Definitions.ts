@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
@@ -41,6 +42,7 @@ import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/Styl
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
 import type { Complete } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
 import {
@@ -115,7 +117,6 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 * The preset definitions, as viewed by the ui
 	 */
 	#uiPresetDefinitions: Record<string, UIPresetSections> = {}
-
 	/**
 	 * The composite element definitions
 	 */
@@ -389,6 +390,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			type: 'preset:button',
 			steps: {},
 			feedbacks: [...definition.model.feedbacks, ...definition.presetExtraFeedbacks],
+			checksum: this.#getPresetChecksum(definition),
 		}
 
 		// Omit actions, as they can't be executed in the preview. By doing this we avoid bothering the module with lifecycle methods for them
@@ -468,7 +470,27 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				presetId,
 				variableValues: appliedVariableValues,
 			},
+			checksum: this.#getPresetChecksum(definition),
 		}
+	}
+
+	/**
+	 * Get a stable, content-based checksum of a preset definition, memoised on the definition itself so it is
+	 * computed at most once per stored definition (the memo resets naturally when the connection re-reports its
+	 * presets, since the whole definition object is replaced). Produced here, alongside the resolved model, so a
+	 * caller always gets a checksum that matches the model it was handed - the two cannot drift apart. Covers the
+	 * button `model` and the preview-only `presetExtraFeedbacks`; it is derived from content, so it is stable
+	 * across module restarts.
+	 */
+	#getPresetChecksum(definition: PresetDefinition): string {
+		return (definition.checksum ??= createHash('sha1')
+			.update(
+				createStableObjectHash({
+					model: definition.model,
+					presetExtraFeedbacks: definition.presetExtraFeedbacks,
+				})
+			)
+			.digest('hex'))
 	}
 
 	/**

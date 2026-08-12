@@ -39,6 +39,13 @@ export interface PresetButtonModel extends ButtonModelBase {
 	style: {
 		layers: SomeButtonGraphicsElement[]
 	}
+
+	/**
+	 * Content-based checksum of the source preset this was resolved from, produced atomically with the model
+	 * so the two cannot drift. The preview control uses it to skip rebuilding on a `updatePresets` that didn't
+	 * actually change the preset. Optional: absent on older/imported data (treated as "unknown" → rebuild once).
+	 */
+	checksum?: string
 }
 
 export interface LayeredButtonModel extends ButtonModelBase {
@@ -81,6 +88,13 @@ export interface PresetReferenceButtonModel extends ButtonModelBase {
 		presetId: string
 		variableValues: VariableValues | null
 	}
+
+	/**
+	 * Content-based checksum of the source preset this cache was resolved from, produced atomically with the
+	 * model so the two cannot drift. Used to skip rebuilding on a `updatePresets` that didn't actually change
+	 * the preset. Optional: absent on older/imported data (treated as "unknown" → rebuild once).
+	 */
+	checksum?: string
 }
 
 /**
