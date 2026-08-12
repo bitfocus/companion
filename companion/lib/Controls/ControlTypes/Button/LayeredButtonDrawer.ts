@@ -90,13 +90,11 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 		this.controlId = controlId
 		this.#host = host
 		this.#drawType = drawType
-
-		// Own the 'other control finished rendering' invalidation source, needed for reference elements
-		this.deps.graphics.on('button_drawn', this.#onReferencedButtonDrawn)
 	}
 
 	dispose(): void {
-		this.deps.graphics.off('button_drawn', this.#onReferencedButtonDrawn)
+		// Cancel any redraw still queued so it can't fire after the owning control is gone
+		this.invalidate.cancel()
 		this.elementConversionCache.clear()
 	}
 
@@ -286,7 +284,7 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 	}
 
 	/** Another located control finished rendering; if we reference it, invalidate and redraw. */
-	#onReferencedButtonDrawn = (location: ControlLocation, render: ImageResult): void => {
+	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
 		const locStr = formatLocation(location)
 		if (!this.#lastDrawReferencedLocations?.has(locStr)) return
 

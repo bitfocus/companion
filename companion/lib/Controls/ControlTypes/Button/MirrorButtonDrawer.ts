@@ -37,12 +37,11 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 		this.#deps = deps
 		this.#controlId = controlId
 		this.#getTargetLocation = getTargetLocation
-
-		this.#deps.graphics.on('button_drawn', this.#onReferencedButtonDrawn)
 	}
 
 	dispose(): void {
-		this.#deps.graphics.off('button_drawn', this.#onReferencedButtonDrawn)
+		// Cancel any redraw still queued so it can't fire after the owning control is gone
+		this.invalidate.cancel()
 	}
 
 	#placeholder(text: string): DrawStyleLayeredButtonModel {
@@ -126,7 +125,7 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 	#pendingDraw = false
 
 	/** Redraw when a location our last draw referenced finishes rendering. */
-	#onReferencedButtonDrawn = (location: ControlLocation, _render: ImageResult): void => {
+	onButtonDrawn(location: ControlLocation, _render: ImageResult): void {
 		if (!this.#lastReferencedLocations?.has(formatLocation(location))) return
 
 		this.#logger.silly('referenced control rendered')

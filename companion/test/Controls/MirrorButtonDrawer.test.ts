@@ -132,7 +132,7 @@ describe('MirrorButtonDrawer', () => {
 		events.on('invalidateControlRender', invalidateSpy)
 
 		// A draw at the mirrored location should schedule a redraw
-		graphics.emit('button_drawn', TARGET_LOCATION, {} as any)
+		drawer.onButtonDrawn(TARGET_LOCATION, {} as any)
 		await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith('bank:2-0-0'))
 	})
 
@@ -149,12 +149,12 @@ describe('MirrorButtonDrawer', () => {
 		const invalidateSpy = vi.fn()
 		events.on('invalidateControlRender', invalidateSpy)
 
-		graphics.emit('button_drawn', { pageNumber: 9, row: 9, column: 9 }, {} as any)
+		drawer.onButtonDrawn({ pageNumber: 9, row: 9, column: 9 }, {} as any)
 		await new Promise((resolve) => setTimeout(resolve, 30))
 		expect(invalidateSpy).not.toHaveBeenCalled()
 	})
 
-	it('stops redrawing after dispose', async () => {
+	it('cancels a queued redraw on dispose', async () => {
 		getControlIdAt.mockReturnValue('bank:1-0-0')
 		const targetStyle = makeStyle()
 		getControl.mockReturnValue({
@@ -167,8 +167,9 @@ describe('MirrorButtonDrawer', () => {
 		const invalidateSpy = vi.fn()
 		events.on('invalidateControlRender', invalidateSpy)
 
+		// Queue a redraw, then dispose before the debounce fires - it must be cancelled
+		drawer.onButtonDrawn(TARGET_LOCATION, {} as any)
 		drawer.dispose()
-		graphics.emit('button_drawn', TARGET_LOCATION, {} as any)
 		await new Promise((resolve) => setTimeout(resolve, 30))
 		expect(invalidateSpy).not.toHaveBeenCalled()
 	})

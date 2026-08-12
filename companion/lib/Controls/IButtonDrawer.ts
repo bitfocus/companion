@@ -1,4 +1,6 @@
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { CompositeElementIdString } from '../Instance/Definitions.js'
 
 /**
@@ -15,4 +17,9 @@ export interface IButtonDrawer {
 	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void
 	/** A composite element definition changed: invalidate and redraw if relevant. */
 	onCompositeElementsChanged(allChangedElementIds: ReadonlySet<CompositeElementIdString>): void
+	/**
+	 * Another located control finished rendering: invalidate and redraw if this button mirrors or references it.
+	 * Dispatched by the controls controller rather than each drawer subscribing to `button_drawn` itself.
+	 */
+	onButtonDrawn(location: ControlLocation, render: ImageResult): void
 }

@@ -419,6 +419,7 @@ export class Registry {
 		})
 
 		this.graphics.on('button_drawn', (location, render) => {
+			this.controls.onButtonDrawn(location, render)
 			this.services.onButtonDrawn(location, render)
 		})
 	}
