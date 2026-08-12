@@ -98,7 +98,8 @@
     "webpack-bundle-analyzer": "^5.0.0",
     "@companion-surface/base": "1.4.0-nightly-main-20260802-210833-c2d781c",
     "@companion-surface/host": "1.4.0-nightly-main-20260803-170424-c2d781c",
-    "@companion-module/base": "2.1.2-nightly-main-20260722-105828-99d8e81"
+    "@companion-module/host": "1.2.0-nightly-main-20260812-184540-2c49abe",
+    "@companion-module/base": "2.2.0-nightly-main-20260812-184310-2c49abe"
   },
   "dependenciesMeta": {
     "@sentry/cli": {
