@@ -13,6 +13,7 @@
 import { createHash } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
+import type express from 'express'
 import jsonPatch from 'fast-json-patch'
 import HID from 'node-hid'
 import pDebounce from 'p-debounce'
@@ -45,7 +46,7 @@ import {
 	type SurfaceOpener,
 } from '../Instance/Surface/DiscoveredSurfaceRegistry.js'
 import type { CheckDeviceInfo } from '../Instance/Surface/IpcTypes.js'
-import LogController from '../Log/Controller.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { createOrSanitizeSurfaceHandlerConfig, PanelDefaults } from './Config.js'
 import { SurfaceGroup, validateGroupConfigValue } from './Group.js'
@@ -54,6 +55,7 @@ import { EmulatorRoom, SurfaceIPElgatoEmulator } from './IP/ElgatoEmulator.js'
 import { SurfaceIPSatellite, type SatelliteDeviceInfo } from './IP/Satellite.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import type { SurfacePluginPanel } from './PluginPanel.js'
+import { createSurfacesRestApiRouter } from './SurfacesRestApi.js'
 import type { SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
 
 /**
@@ -411,6 +413,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#attachSurfaceToGroup(handler)
 
 		return handler
+	}
+
+	createRestApiRouter(logger: Logger): express.Router {
+		return createSurfacesRestApiRouter(logger, this, this.#handlerDependencies.pageStore)
 	}
 
 	createTrpcRouter() {

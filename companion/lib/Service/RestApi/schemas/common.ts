@@ -20,6 +20,14 @@ export const ErrorResponseSchema = z
 	})
 	.meta({ example: { error: { code: 'unauthorized', message: 'Missing bearer token' } } })
 
+/** Error responses returned by every endpoint, for OpenAPI docs */
+export const errorResponses = {
+	400: { description: 'Bad request', content: { 'application/json': { schema: ErrorResponseSchema } } },
+	401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorResponseSchema } } },
+	403: { description: 'Forbidden', content: { 'application/json': { schema: ErrorResponseSchema } } },
+	404: { description: 'Not found', content: { 'application/json': { schema: ErrorResponseSchema } } },
+}
+
 /** Create a typed single-item success envelope schema for OpenAPI docs */
 export function createSuccessSchema<T extends z.ZodType>(itemSchema: T): z.ZodObject<{ data: T }> {
 	const schema = z.object({ data: itemSchema })
