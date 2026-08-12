@@ -12,12 +12,12 @@ export function SidebarHeader(): React.JSX.Element {
 		<div className="sidebar-header brand">
 			<div className="sidebar-brand">
 				<div className="sidebar-brand-full">
-					<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" />
+					<img src={makeAbsolutePath('/img/icons/48x48.png')} style={{ height: 30 }} alt="logo" />
 					&nbsp; Bitfocus&nbsp;
 					<span style={{ fontWeight: 'bold' }}>Companion</span>
 				</div>
 				<div className="sidebar-brand-narrow">
-					<img src={makeAbsolutePath('/img/icons/48x48.png')} height="42px" alt="logo" />
+					<img src={makeAbsolutePath('/img/icons/48x48.png')} style={{ height: 42 }} alt="logo" />
 				</div>
 			</div>
 		</div>

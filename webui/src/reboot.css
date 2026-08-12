@@ -600,6 +600,14 @@ canvas,
 iframe {
 	vertical-align: revert;
 }
+/* Images/videos are not width-constrained (Preflight adds max-width: 100%). NOTE: Preflight's
+   `height: auto` overrides the `height`/`width` HTML presentation attributes and cannot be undone here
+   (`revert` rolls back past presentation hints to the UA `auto`), so elements that were sized via those
+   attributes are given explicit CSS sizing at the call site instead. */
+img,
+video {
+	max-width: revert;
+}
 
 /* Bare form controls keep their native chrome (Preflight strips padding/border/background/colour). */
 input,

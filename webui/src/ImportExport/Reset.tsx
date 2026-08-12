@@ -191,7 +191,12 @@ export const ResetWizardModal = observer(function ResetWizardModal() {
 					<Modal.Popup initialFocus={buttonRef}>
 						<Modal.Header closeButton>
 							<Modal.Title>
-								<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" className="cui-me-2" />
+								<img
+									src={makeAbsolutePath('/img/icons/48x48.png')}
+									style={{ height: 30 }}
+									alt="logo"
+									className="cui-me-2"
+								/>
 								Reset Configuration
 							</Modal.Title>
 						</Modal.Header>
