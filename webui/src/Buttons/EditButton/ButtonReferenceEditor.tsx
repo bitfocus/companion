@@ -16,7 +16,7 @@ import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { TextInputField } from '~/Components/TextInputField.js'
-import { useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import { EntityListActionContext, useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 
@@ -47,7 +47,12 @@ export const ButtonReferenceEditor = observer(function ButtonReferenceEditor({
 	)
 
 	const localVariablesStore = useLocalVariablesStore(controlId, null)
-	const localVariables = localVariablesStore.getOptions(null, true, true)
+	const localVariables = localVariablesStore.getOptions({
+		entityType: null,
+		internalParser: true,
+		isLocatedInGrid: true,
+		actionContext: EntityListActionContext.NotActions,
+	})
 
 	const location = config.options.location
 	const fieldId = useId()

@@ -28,7 +28,7 @@ import type { TriggerEvents } from './TriggerEvents.js'
 export interface ControlsAccessor {
 	getControl(controlId: string): SomeControl<any> | undefined
 	pressControl(controlId: string, pressed: boolean, surfaceId: string | undefined, force?: boolean): boolean
-	rotateControl(controlId: string, rightward: boolean, surfaceId: string | undefined): boolean
+	rotateControl(controlId: string, delta: number, surfaceId: string | undefined): boolean
 }
 
 export interface ControlExternalDependencies {

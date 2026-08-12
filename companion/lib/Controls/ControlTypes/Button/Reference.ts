@@ -151,7 +151,7 @@ export class ControlButtonReference
 		)
 	}
 
-	override rotateControl(rightward: boolean, surfaceId: string | undefined): boolean {
+	override rotateControl(delta: number, surfaceId: string | undefined): boolean {
 		if (referenceSurfaceIdDepth(surfaceId) >= MAX_REFERENCE_DEPTH) return false
 
 		const targetControlId = this.#resolveTargetControlId()
@@ -159,7 +159,7 @@ export class ControlButtonReference
 
 		return this.deps.controlsAccessor.rotateControl(
 			targetControlId,
-			rightward,
+			delta,
 			mangleReferenceSurfaceId(surfaceId, this.controlId)
 		)
 	}
