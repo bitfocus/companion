@@ -411,7 +411,7 @@ async function convertReferenceElementForDrawing(
 	return { drawElement, references, compositeElement: null, referencedLocation: referencedLocationStr }
 }
 
-function makeReferencePlaceholder(
+export function makeReferencePlaceholder(
 	parentId: string,
 	text: string
 ): [ButtonGraphicsBoxDrawElement, ButtonGraphicsTextDrawElement] {

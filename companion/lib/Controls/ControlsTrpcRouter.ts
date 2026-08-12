@@ -2,6 +2,7 @@ import type EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 import z from 'zod'
 import { CreateBankControlId, formatLocation } from '@companion-app/shared/ControlId.js'
+import type { ButtonReferenceButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { Logger } from '../Log/Controller.js'
@@ -52,6 +53,32 @@ export function createControlsTrpcRouter(
 				if (!model) return null
 
 				return controlsController.importControl(input.location, model)
+			}),
+
+		createReferenceControl: publicProcedure
+			.input(
+				z.object({
+					fromLocation: zodLocation,
+					toLocation: zodLocation,
+				})
+			)
+			.mutation(async ({ input }) => {
+				const fromStr = formatLocation(input.fromLocation)
+
+				// Don't create a circular reference
+				if (fromStr === formatLocation(input.toLocation)) return null
+
+				// Don't place at an unreachable location
+				if (!pageStore.isPageValid(input.toLocation.pageNumber)) return null
+
+				// Place a button that mirrors `fromLocation`. Stored as a plain (non-expression) location string.
+				const model: ButtonReferenceButtonModel = {
+					type: 'button-reference',
+					options: {
+						location: { value: fromStr, isExpression: false },
+					},
+				}
+				return controlsController.importControl(input.toLocation, model)
 			}),
 
 		setPresetReferenceVariable: publicProcedure

@@ -2,6 +2,7 @@ import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type {
 	ExpressionParserOptions,
@@ -31,10 +32,12 @@ export class ControlStore implements IControlStore {
 	readonly triggerEvents: TriggerEvents
 
 	readonly #variablesValues: VariablesValues
+	readonly #pageStore: IPageStore
 
-	constructor(db: DataDatabase, variablesValues: VariablesValues) {
+	constructor(db: DataDatabase, variablesValues: VariablesValues, pageStore: IPageStore) {
 		this.triggerEvents = new TriggerEvents()
 		this.#variablesValues = variablesValues
+		this.#pageStore = pageStore
 
 		this.dbTable = db.getTableView('controls')
 	}
@@ -117,13 +120,7 @@ export class ControlStore implements IControlStore {
 		// accidentally run the `rotate_left` set (chosen when `delta > 0` is false) for a zero delta.
 		if (!Number.isFinite(delta) || delta === 0) return false
 
-		const control = this.getControl(controlId)
-		if (control && control.supportsActionSets) {
-			control.rotateControl(delta, surfaceId)
-			return true
-		}
-
-		return false
+		return this.getControl(controlId)?.rotateControl(delta, surfaceId) ?? false
 	}
 
 	/**
@@ -182,7 +179,14 @@ export class ControlStore implements IControlStore {
 		if (control && control.supportsEntities)
 			return control.entities.createVariablesAndExpressionParser(overrideVariableValues, options)
 
-		// Otherwise create a generic one
-		return this.#variablesValues.createVariablesAndExpressionParser(null, null, overrideVariableValues, null, options)
+		// Generic parser, but with the control's grid location so `$(this:page)` resolves for located non-entity controls
+		const location = controlId ? this.#pageStore.getLocationOfControlId(controlId) : null
+		return this.#variablesValues.createVariablesAndExpressionParser(
+			location,
+			null,
+			overrideVariableValues,
+			null,
+			options
+		)
 	}
 }

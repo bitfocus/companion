@@ -216,7 +216,7 @@ export class Registry {
 		const pageStore = new PageStore(this.db.getTableView('pages'))
 
 		this.variables = new VariablesController(this.db, this.userconfig)
-		const controlStore = new ControlStore(this.db, this.variables.values)
+		const controlStore = new ControlStore(this.db, this.variables.values, pageStore)
 
 		this.#renderClock = new RenderClock()
 
@@ -419,6 +419,7 @@ export class Registry {
 		})
 
 		this.graphics.on('button_drawn', (location, render) => {
+			this.controls.onButtonDrawn(location, render)
 			this.services.onButtonDrawn(location, render)
 		})
 	}
