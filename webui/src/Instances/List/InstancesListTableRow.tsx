@@ -86,10 +86,10 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 
 	return (
 		<div
-			className="flex cui-flex-row cui-align-items-center gap-2 cursor-pointer"
+			className="flex flex-row items-center gap-2 cursor-pointer"
 			title={`Click to configure the ${moduleDisplayName}.`}
 		>
-			<div onClick={doEdit} className="flex cui-flex-column grow" style={{ minWidth: 0 }}>
+			<div onClick={doEdit} className="flex flex-col grow" style={{ minWidth: 0 }}>
 				<b>{instance.label}</b>
 				<span className="truncate">{moduleDisplayName}</span>
 			</div>

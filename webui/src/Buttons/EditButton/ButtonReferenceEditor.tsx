@@ -62,7 +62,7 @@ export const ButtonReferenceEditor = observer(function ButtonReferenceEditor({
 	return (
 		<>
 			<Callout color="info" className="my-2">
-				<div className="cui-d-flex gap-2">
+				<div className="flex gap-2">
 					<FontAwesomeIcon icon={faClone} className="mt-1" />
 					<div>
 						This button <strong>mirrors</strong> another button. It shows that button's appearance and forwards presses
@@ -143,8 +143,8 @@ function ResolvedLocationRow({ controlId, location, navigateToControl }: Resolve
 
 	return (
 		<Grid.Col sm={{ span: 8, offset: 4 }}>
-			<div className="cui-d-flex cui-align-items-center cui-gap-2">
-				<span className="form-text m-0 cui-flex-shrink-0">Resolves to</span>
+			<div className="flex items-center gap-2">
+				<span className="form-text m-0 shrink-0">Resolves to</span>
 				<div className="input-validity-wrapper">
 					<input
 						className={classNames('form-input text-input-field', {
@@ -158,7 +158,7 @@ function ResolvedLocationRow({ controlId, location, navigateToControl }: Resolve
 					<InputValidityIcon validity={validity} />
 				</div>
 				<Button
-					className="cui-flex-shrink-0 cui-text-nowrap"
+					className="shrink-0 cui-text-nowrap"
 					color="secondary"
 					variant="outline"
 					disabled={!targetLocation || !navigateToControl}

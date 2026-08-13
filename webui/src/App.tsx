@@ -64,7 +64,7 @@ export default function App(): React.JSX.Element {
 			{(loadingProgress, loadingComplete) => (
 				<>
 					<div id="error-container" className={wasConnected ? 'show-error' : ''}>
-						<div className="row cui-justify-content-center">
+						<div className="row justify-center">
 							<div className="cui-col-md-6">
 								<div className="clearfix">
 									<h4 className="pt-4">Houston, we have a problem!</h4>
@@ -78,7 +78,7 @@ export default function App(): React.JSX.Element {
 						</div>
 					</div>
 					<div id="current-import-container" className={!wasConnected && currentImportTask ? 'show-error' : ''}>
-						<div className="row cui-justify-content-center">
+						<div className="row justify-center">
 							<div className="cui-col-md-6">
 								<div className="clearfix">
 									<h4 className="pt-4">Stand by, the config is being updated!</h4>
@@ -177,9 +177,9 @@ const AppMain = observer(function AppMain({ connected, loadingComplete, loadingP
 					''
 				)}
 				<MySidebar />
-				<div className="wrapper cui-d-flex cui-flex-column cui-min-vh-100 cui-bg-body-tertiary">
+				<div className="wrapper flex flex-col cui-min-vh-100 cui-bg-body-tertiary">
 					<MyHeader setLocked={setLocked} canLock={canLock && unlocked} />
-					<div className="body cui-flex-grow-1">
+					<div className="body grow">
 						{connected && loadingComplete ? (
 							!canLock || unlocked ? (
 								<AppContent />

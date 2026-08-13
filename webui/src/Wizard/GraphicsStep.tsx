@@ -24,7 +24,7 @@ export function GraphicsStep({ config, setValue }: GraphicsStepProps): React.JSX
 				overridden on individual buttons later.
 			</p>
 
-			<div className="cui-d-flex cui-align-items-start" style={{ gap: '1.5rem', flexWrap: 'wrap' }}>
+			<div className="flex items-start" style={{ gap: '1.5rem', flexWrap: 'wrap' }}>
 				<div style={{ flex: '1 1 220px', minWidth: 200 }}>
 					<div className="cui-mb-3">
 						<FormLabel htmlFor="buttons_decoration">Default decoration</FormLabel>
@@ -43,8 +43,8 @@ export function GraphicsStep({ config, setValue }: GraphicsStepProps): React.JSX
 					/>
 				</div>
 
-				<div className="cui-d-flex cui-flex-column cui-align-items-center" style={{ gap: '0.5rem' }}>
-					<div className="cui-d-flex" style={{ gap: '0.75rem' }}>
+				<div className="flex flex-col items-center" style={{ gap: '0.5rem' }}>
+					<div className="flex" style={{ gap: '0.75rem' }}>
 						<GraphicsPreviewButton decoration={decoration} statusIcons={statusIcons} buttonStatus="warning" />
 						<GraphicsPreviewButton decoration={decoration} statusIcons={statusIcons} pushed buttonStatus="error" />
 					</div>

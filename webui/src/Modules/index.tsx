@@ -29,7 +29,7 @@ export const ModulesPage = memo(function ConnectionsPage() {
 			<Grid.Col
 				xs={12}
 				xl={6}
-				className={`connections-panel primary-panel ${showPrimaryPanel ? '' : 'cui-d-xl-block cui-d-none'}`}
+				className={`connections-panel primary-panel ${showPrimaryPanel ? '' : 'cui-d-xl-block hidden'}`}
 			>
 				<ModulesList doManageModule={doManageModule} selectedModuleInfo={selectedModuleInfo} />
 			</Grid.Col>
@@ -37,7 +37,7 @@ export const ModulesPage = memo(function ConnectionsPage() {
 			<Grid.Col
 				xs={12}
 				xl={6}
-				className={`connections-panel secondary-panel add-connections-panel ${showSecondaryPanel ? '' : 'cui-d-xl-block cui-d-none'}`}
+				className={`connections-panel secondary-panel add-connections-panel ${showSecondaryPanel ? '' : 'cui-d-xl-block hidden'}`}
 			>
 				<div className="secondary-panel-simple">
 					<Outlet />

@@ -12,7 +12,7 @@ export const SettingsGeneralPage = memo(function UserConfig() {
 			<Grid.Col xl={6} className="primary-panel">
 				<div className="flex-column-layout">
 					<div className="fixed-header">
-						<div className="cui-d-flex cui-justify-content-between">
+						<div className="flex justify-between">
 							<div>
 								<h4>Settings - General</h4>
 								<p>Settings apply instantaneously, don't worry about it!</p>

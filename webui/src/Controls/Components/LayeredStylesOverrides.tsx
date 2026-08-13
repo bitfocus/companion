@@ -198,7 +198,7 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 			<hr />
 
 			<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-				<span className="cui-d-flex cui-align-items-center cui-gap-2">
+				<span className="flex items-center gap-2">
 					<strong>Style Overrides</strong>
 					<FeedbackTypeIndicator feedbackType={feedbackType} />
 				</span>
@@ -267,8 +267,8 @@ const LayeredStylesOverridesRow = observer(function LayeredStylesOverridesRow({
 		<>
 			<tr key={row.overrideId}>
 				<td>
-					<div className="cui-d-flex cui-align-items-center cursor-pointer" onClick={() => setIsModalOpen(true)}>
-						<div className="cui-flex-grow-1">
+					<div className="flex items-center cursor-pointer" onClick={() => setIsModalOpen(true)}>
+						<div className="grow">
 							<SelectedElementProperty row={row} />
 						</div>
 						<Button size="sm" title="Edit element and property">

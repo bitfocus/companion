@@ -59,7 +59,7 @@ export const PresetReferenceEditor = observer(function PresetReferenceEditor({
 	return (
 		<>
 			<Callout color="info" className="my-2">
-				<div className="cui-d-flex gap-2">
+				<div className="flex gap-2">
 					<FontAwesomeIcon icon={faLink} className="mt-1" />
 					<div>
 						This button is <strong>linked</strong> to a preset. It updates automatically when the preset changes.

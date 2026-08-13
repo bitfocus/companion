@@ -81,7 +81,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 					Bitfocus&nbsp;<span style={{ fontWeight: 'bold' }}>Companion</span>
 				</a>
 
-				<HeaderNav className="cui-d-none cui-d-md-flex cui-me-auto">
+				<HeaderNav className="hidden cui-d-md-flex cui-me-auto">
 					{userConfig.properties?.installName && userConfig.properties?.installName.length > 0 && (
 						<li className="nav-item install-name">{userConfig.properties?.installName}</li>
 					)}
@@ -95,7 +95,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 								rel="noopener noreferrer"
 							>
 								<div className="flex">
-									<div className="cui-align-self-center">
+									<div className="self-center">
 										<FontAwesomeIcon icon={faTriangleExclamation} className="header-update-icon" />
 									</div>
 									<div>

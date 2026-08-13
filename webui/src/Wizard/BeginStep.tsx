@@ -27,7 +27,7 @@ export function BeginStep({ prevVersion, newStepTitles, showAll, onReviewAll }: 
 						- use the steps above to navigate.
 					</p>
 					<p className="mb-0">
-						<Button color="link" className="p-0 cui-align-baseline" onClick={onReviewAll}>
+						<Button color="link" className="p-0 align-baseline" onClick={onReviewAll}>
 							Review all settings instead
 						</Button>
 					</p>

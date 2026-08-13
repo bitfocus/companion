@@ -158,7 +158,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 			<GenericConfirmModal ref={confirmModalRef} />
 
 			<div className="cui-mb-3">
-				<div className="cui-d-flex cui-flex-wrap cui-gap-2">
+				<div className="flex flex-wrap gap-2">
 					<Button color="danger" onClick={handleDelete} title="Delete Image">
 						<FontAwesomeIcon icon={faTrashAlt} />
 					</Button>
@@ -186,8 +186,8 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 				<FormLabel htmlFor={imageNameFieldId} sm={4} column="sm">
 					Name
 				</FormLabel>
-				<Grid.Col sm={8} className="cui-d-flex cui-align-items-center cui-justify-content-between">
-					<div className="cui-d-flex cui-align-items-center">
+				<Grid.Col sm={8} className="flex items-center justify-between">
+					<div className="flex items-center">
 						<span id={imageNameFieldId} className="cui-font-monospace">
 							{imageInfo.name}
 						</span>
@@ -217,7 +217,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 				<FormLabel htmlFor={backgroundColorFieldId} sm={4} column="sm">
 					Preview background
 				</FormLabel>
-				<Grid.Col sm={8} className="cui-d-flex cui-align-items-center">
+				<Grid.Col sm={8} className="flex items-center">
 					<ImageBackgroundColorEditor
 						id={backgroundColorFieldId}
 						imageName={selectedImageName}

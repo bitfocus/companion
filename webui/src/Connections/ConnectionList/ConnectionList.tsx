@@ -156,7 +156,7 @@ function ConnectionListTableHeading() {
 	const { visibleConnections } = useConnectionListContext()
 
 	return (
-		<div className="flex cui-flex-row">
+		<div className="flex flex-row">
 			<div className="grow">Connection</div>
 			<div className="whitespace-nowrap">
 				<ButtonGroup className="table-header-buttons">
@@ -175,7 +175,7 @@ function ConnectionListNoConnections() {
 		<NonIdealState icon={faPlug}>
 			You haven't set up any connections yet. <br />
 			Try adding something from the list <span className="cui-d-xl-none">below</span>
-			<span className="cui-d-none cui-d-xl-inline">to the right</span>.
+			<span className="hidden cui-d-xl-inline">to the right</span>.
 		</NonIdealState>
 	)
 }

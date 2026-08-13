@@ -98,7 +98,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 
 	return (
 		<Form
-			className="secondary-panel-simple-body cui-d-flex cui-flex-column pb-0"
+			className="secondary-panel-simple-body flex flex-col pb-0"
 			onSubmit={(e) => {
 				e.preventDefault()
 				e.stopPropagation()
@@ -107,7 +107,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 				})
 			}}
 		>
-			<div className="cui-flex-fill">
+			<div className="flex-auto">
 				<div className="row g-sm-2">
 					{saveError && (
 						<Grid.Col className="fieldtype-textinput" sm={12}>
@@ -151,7 +151,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						Surface Integration
 					</FormLabel>
 					<Grid.Col sm={8} className="flex px-2">
-						<span className="cui-text-muted cui-align-self-center">{instanceInfo?.label ?? remoteInfo.instanceId}</span>
+						<span className="cui-text-muted self-center">{instanceInfo?.label ?? remoteInfo.instanceId}</span>
 					</Grid.Col>
 
 					<form.Subscribe
@@ -203,7 +203,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 				children={([isDirty, isValid, isSubmitting]) => (
 					<div className="row connection-form-buttons cui-border-top">
 						<Grid.Col sm={12}>
-							<div className="flex cui-flex-row">
+							<div className="flex flex-row">
 								<div className="grow">
 									<Button
 										color="success"

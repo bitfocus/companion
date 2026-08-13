@@ -111,7 +111,7 @@ export const ConfirmExportModal = observer(
 											compatible with this
 										</InlineHelpIcon>
 									</FormLabel>
-									<div className="cui-col-sm-8 cui-d-flex cui-align-items-center">
+									<div className="cui-col-sm-8 flex items-center">
 										<SwitchInputField id={exportSecretsId} value={includeSecrets} setValue={setIncludeSecrets} />
 									</div>
 								</Form>

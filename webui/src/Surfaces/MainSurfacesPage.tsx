@@ -92,7 +92,7 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 		<Grid.Row className="surfaces-page split-panels">
 			<Grid.Col
 				xs={twoPanelMode ? 6 : 12}
-				className={`primary-panel ${showPrimaryPanel ? 'cui-d-flex' : 'cui-d-none'} flex-column-layout`}
+				className={`primary-panel ${showPrimaryPanel ? 'flex' : 'hidden'} flex-column-layout`}
 			>
 				<div className="fixed-header">
 					<h4 className="button-inline">
@@ -162,7 +162,7 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 
 			<Grid.Col
 				xs={twoPanelMode ? 6 : 12}
-				className={`secondary-panel ${showSecondaryPanel ? 'cui-d-block' : 'cui-d-none'}`}
+				className={`secondary-panel ${showSecondaryPanel ? 'cui-d-block' : 'hidden'}`}
 			>
 				<div className="secondary-panel-simple">
 					<MyErrorBoundary>

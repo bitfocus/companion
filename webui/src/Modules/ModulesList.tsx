@@ -232,7 +232,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 									<NonIdealState icon={faPlug}>
 										You don't have any modules installed yet. <br />
 										Try adding something from the list <span className="cui-d-xl-none">below</span>
-										<span className="cui-d-none cui-d-xl-inline">to the right</span>.
+										<span className="hidden cui-d-xl-inline">to the right</span>.
 									</NonIdealState>
 								</td>
 							</tr>

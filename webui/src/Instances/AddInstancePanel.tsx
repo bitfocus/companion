@@ -154,7 +154,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 							</div>
 						) : (
 							<StaticAlert color="info" className="mb-0">
-								<div className="cui-d-flex cui-align-items-center cui-gap-2">
+								<div className="flex items-center gap-2">
 									<FontAwesomeIcon icon={faPlug} className="cui-text-info" />
 									{description(0)}
 								</div>

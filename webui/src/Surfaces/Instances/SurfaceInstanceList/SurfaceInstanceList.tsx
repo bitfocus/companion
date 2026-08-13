@@ -86,12 +86,12 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 
 	return (
 		<div className="connections-list-container flex-column-layout">
-			<div className="fixed-header cui-d-flex cui-flex-column">
+			<div className="fixed-header flex flex-col">
 				<MissingVersionsWarning moduleType={ModuleInstanceType.Surface} instances={surfaceInstances.instances} />
 
 				<GenericConfirmModal ref={confirmModalRef} />
 
-				<div className="cui-d-flex cui-align-items-center help-button-float">
+				<div className="flex items-center help-button-float">
 					<ButtonGroup className="connection-group-actions m-1 cui-me-auto">
 						<Button color="primary" size="sm" onClick={() => void navigate({ to: '/surfaces/integrations/add' })}>
 							<FontAwesomeIcon icon={faPlug} className="me-1" />
@@ -148,7 +148,7 @@ function SurfaceInstancesListTableHeading() {
 	const { visibleInstances } = useSurfaceInstancesListContext()
 
 	return (
-		<div className="flex cui-flex-row">
+		<div className="flex flex-row">
 			<div className="grow">Surface Integrations </div>
 			<div className="whitespace-nowrap">
 				<ButtonGroup className="table-header-buttons">
@@ -167,7 +167,7 @@ function SurfaceInstancesListNoInstances() {
 		<NonIdealState icon={faPlug}>
 			You haven't set up any surfaces yet. <br />
 			Try adding something from the list <span className="cui-d-xl-none">below</span>
-			<span className="cui-d-none cui-d-xl-inline">to the right</span>.
+			<span className="hidden cui-d-xl-inline">to the right</span>.
 		</NonIdealState>
 	)
 }

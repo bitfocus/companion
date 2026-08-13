@@ -147,7 +147,7 @@ export function NumberInputField({
 
 	if (range) {
 		return (
-			<div className="cui-d-grid grid-col">
+			<div className="grid grid-col">
 				<div>{input}</div>
 				<div>
 					<SliderInputField

@@ -52,10 +52,10 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 
 	return (
 		<Grid.Row className="split-panels">
-			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'cui-d-xl-block cui-d-none'}`}>
+			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'cui-d-xl-block hidden'}`}>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
-						<div className="cui-d-flex cui-justify-content-between">
+						<div className="flex justify-between">
 							<div>
 								<h4 className="button-inline">
 									Settings - Backups
@@ -83,7 +83,7 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 				</div>
 			</Grid.Col>
 
-			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'cui-d-xl-block cui-d-none'}`}>
+			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'cui-d-xl-block hidden'}`}>
 				<div className="secondary-panel-simple">
 					<Outlet />
 				</div>

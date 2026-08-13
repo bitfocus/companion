@@ -45,7 +45,7 @@ export const ImageLibraryPage = observer(function ImageLibraryPage() {
 		<Grid.Row className="image-library-page split-panels">
 			<Grid.Col
 				xs={twoPanelMode ? 6 : 12}
-				className={classNames('primary-panel', showPrimaryPanel ? 'cui-d-block' : 'cui-d-none')}
+				className={classNames('primary-panel', showPrimaryPanel ? 'cui-d-block' : 'hidden')}
 			>
 				<MyErrorBoundary>
 					<ImageLibraryGrid selectedImageName={selectedImageName} onSelectImage={handleSelectImage} />
@@ -54,7 +54,7 @@ export const ImageLibraryPage = observer(function ImageLibraryPage() {
 
 			<Grid.Col
 				xs={twoPanelMode ? 6 : 12}
-				className={`secondary-panel ${showSecondaryPanel ? 'cui-d-block' : 'cui-d-none'}`}
+				className={`secondary-panel ${showSecondaryPanel ? 'cui-d-block' : 'hidden'}`}
 			>
 				<div className="secondary-panel-simple">
 					{!!selectedImageName && <ImageEditPanelHeading doClose={doCloseImage} twoPanelMode={twoPanelMode} />}

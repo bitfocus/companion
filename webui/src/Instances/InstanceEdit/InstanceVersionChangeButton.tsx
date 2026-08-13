@@ -154,8 +154,8 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 													name="versionId"
 													children={(field) => (
 														<>
-															<div className="cui-col-sm-3 cui-d-flex cui-align-items-center">
-																<FormLabel htmlFor={versionFieldId} column="sm" className="mb-0 cui-flex-grow-1">
+															<div className="cui-col-sm-3 flex items-center">
+																<FormLabel htmlFor={versionFieldId} column="sm" className="mb-0 grow">
 																	Version
 																</FormLabel>
 																{!!modules.getStoreInfo(service.moduleType, effectiveModuleId) && (

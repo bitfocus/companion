@@ -57,7 +57,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables, location.pageNumber)
 
 	return (
-		<div className="grow flex cui-flex-column min-h-0">
+		<div className="grow flex flex-col min-h-0">
 			{runtimeProps && (
 				<MyErrorBoundary>
 					<ButtonEditorTabs

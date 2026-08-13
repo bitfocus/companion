@@ -121,7 +121,7 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 								<div className="row-reorder-handle cui-invisible">
 									<FontAwesomeIcon icon={faSort} />
 								</div>
-								<div className="grow cui-d-flex cui-align-items-center cui-gap-2">
+								<div className="grow flex items-center gap-2">
 									<div className="pages-list-number">Number</div>
 									<div className="grow">Name</div>
 									<div className="ms-auto">
@@ -205,7 +205,7 @@ const PageListRow = observer(function PageListRow({
 				<div ref={handleRef} className="row-reorder-handle">
 					<FontAwesomeIcon icon={faSort} />
 				</div>
-				<div className="grow cui-d-flex cui-align-items-center cui-gap-2">
+				<div className="grow flex items-center gap-2">
 					<div className="pages-list-number cui-fw-bold">{pageNumber}</div>
 					<div className="grow">
 						<TextInputFieldSimple

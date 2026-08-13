@@ -128,7 +128,7 @@ export function ListRowControls({
 			>
 				Item {rowIndex + 1}
 			</div>
-			<Grid.Col sm={8} className={classNames('cui-d-flex cui-gap-1', { hidden: hidden })}>
+			<Grid.Col sm={8} className={classNames('flex gap-1', { hidden: hidden })}>
 				<Button
 					color="secondary"
 					variant="outline"

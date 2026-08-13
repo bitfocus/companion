@@ -125,7 +125,7 @@ export const TriggersPage = observer(function Triggers() {
 
 			<Grid.Col
 				xs={twoPanelMode ? 6 : 12}
-				className={classnames('primary-panel', showPrimaryPanel ? 'cui-d-block' : 'cui-d-none')}
+				className={classnames('primary-panel', showPrimaryPanel ? 'cui-d-block' : 'hidden')}
 			>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
@@ -181,7 +181,7 @@ export const TriggersPage = observer(function Triggers() {
 
 			<Grid.Col
 				xs={twoPanelMode ? 6 : 12}
-				className={`secondary-panel ${showSecondaryPanel ? 'cui-d-block' : 'cui-d-none'}`}
+				className={`secondary-panel ${showSecondaryPanel ? 'cui-d-block' : 'hidden'}`}
 			>
 				<div className="secondary-panel-simple">
 					{!!selectedTriggerId && (
@@ -295,9 +295,9 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 	const triggerOrCollectionDisabled = !item.enabled || collectionDisabled
 
 	return (
-		<div className="flex cui-flex-row cui-align-items-center cui-gap-2 cursor-pointer">
+		<div className="flex flex-row items-center gap-2 cursor-pointer">
 			<div
-				className={classnames('flex cui-flex-column grow', { disabled: triggerOrCollectionDisabled })}
+				className={classnames('flex flex-col grow', { disabled: triggerOrCollectionDisabled })}
 				style={{ minWidth: 0 }}
 				onClick={doEdit}
 			>

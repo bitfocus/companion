@@ -165,7 +165,7 @@ const VariablesTableRow = observer(function VariablesTableRow({
 		<div className="variables-table-row">
 			<div className="variables-table-cell">
 				<div className="grid grid-col">
-					<div className="flex cui-flex-row min-w-0">
+					<div className="flex flex-row min-w-0">
 						<span className="variable-style truncate min-w-0" title={variableId}>
 							{variableId}
 						</span>

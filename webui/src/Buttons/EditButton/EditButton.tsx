@@ -74,8 +74,8 @@ export const EditButton = observer(function EditButton({ location, onKeyUp, navi
 			) : (
 				<>
 					<Grid.Col sm={12}>
-						<div className="cui-d-flex mb-0">
-							<div className="cui-flex-grow-1 min-w-0 cui-d-flex cui-flex-column cui-gap-1"></div>
+						<div className="flex mb-0">
+							<div className="grow min-w-0 flex flex-col gap-1"></div>
 							<ButtonPreviewBase fixedSize={100} preview={previewImage} />
 						</div>
 
@@ -113,9 +113,9 @@ const EditButtonContent = observer(function EditButton({
 }: EditButtonContentProps) {
 	return (
 		<>
-			<div className="cui-d-flex mb-0">
-				<div className="cui-flex-grow-1 min-w-0 cui-d-flex cui-flex-column cui-gap-1">
-					<div className="cui-d-flex cui-flex-wrap cui-align-items-center cui-gap-1">
+			<div className="flex mb-0">
+				<div className="grow min-w-0 flex flex-col gap-1">
+					<div className="flex flex-wrap items-center gap-1">
 						<ControlClearButton location={location} resetModalRef={resetModalRef} />
 						<MyErrorBoundary>
 							{(config.type === 'pageup' ||

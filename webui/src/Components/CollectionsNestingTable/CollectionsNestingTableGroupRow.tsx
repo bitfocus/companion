@@ -79,8 +79,8 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 			index={index}
 			nestingLevel={nestingLevel}
 		>
-			<div className="cui-d-flex cui-align-items-center cui-justify-content-between" onClick={toggleExpanded2}>
-				<div className="cui-d-flex cui-align-items-center cui-flex-grow-1">
+			<div className="flex items-center justify-between" onClick={toggleExpanded2}>
+				<div className="flex items-center grow">
 					{isEditing ? (
 						<TextInputFieldSimple
 							id={undefined}
@@ -98,7 +98,7 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 						</>
 					)}
 				</div>
-				<div className="cui-d-flex cui-align-items-center" onClick={(e) => e.stopPropagation()}>
+				<div className="flex items-center" onClick={(e) => e.stopPropagation()}>
 					{children}
 
 					{!!collectionsApi && (

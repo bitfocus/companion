@@ -154,7 +154,7 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 				) : (
 					<>
 						<Callout color="info" className="my-2">
-							<div className="cui-d-flex cui-align-items-center cui-justify-content-between cui-gap-3">
+							<div className="flex items-center justify-between gap-4">
 								<div>
 									<strong>Drag and drop</strong> the preset buttons below into your buttons-configuration.
 								</div>
@@ -178,10 +178,7 @@ function PresetPlacementModeToggle({ supportsReferences }: { supportsReferences:
 	const unsupportedTitle = 'Linked presets require a module built for the 2.0 (or newer) module api'
 
 	return (
-		<div
-			className="cui-d-flex cui-align-items-center cui-gap-2 cui-flex-shrink-0"
-			title={!supportsReferences ? unsupportedTitle : undefined}
-		>
+		<div className="flex items-center gap-2 shrink-0" title={!supportsReferences ? unsupportedTitle : undefined}>
 			<span className="cui-text-muted small cui-text-nowrap">When placed:</span>
 			<ButtonGroup>
 				<Button
