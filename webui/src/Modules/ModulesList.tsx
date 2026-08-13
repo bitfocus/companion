@@ -160,7 +160,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 					Manage Modules
 					<ContextHelpButton action="/user-guide/config/modules" />
 				</h4>
-				<p className="cui-mb-2">
+				<p className="mb-2">
 					<strong>
 						Companion can work with over {modulesCount} different{filterName}modules
 					</strong>{' '}
@@ -187,7 +187,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 					<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
 				</div>
 
-				<SearchBox filter={filter} setFilter={setFilter} className="cui-mb-2" />
+				<SearchBox filter={filter} setFilter={setFilter} className="mb-2" />
 			</div>
 
 			<FilterTypeTabs filterType={filterType} setFilterType={setFilterType} />
@@ -326,7 +326,7 @@ const ModulesListRow = observer(function ModulesListRow({
 			</td>
 			<td onClick={doEdit} className="cursor-pointer">
 				{!!moduleInfo.storeInfo?.deprecationReason && (
-					<InlineHelpCustom help="Deprecated" className="cui-me-1">
+					<InlineHelpCustom help="Deprecated" className="me-1">
 						<FontAwesomeIcon icon={faWarning} aria-label="Deprecated" />
 					</InlineHelpCustom>
 				)}

@@ -74,14 +74,14 @@ export const EditButton = observer(function EditButton({ location, onKeyUp, navi
 			) : (
 				<>
 					<Grid.Col sm={12}>
-						<div className="cui-d-flex cui-mb-0">
+						<div className="cui-d-flex mb-0">
 							<div className="cui-flex-grow-1 min-w-0 cui-d-flex cui-flex-column cui-gap-1"></div>
 							<ButtonPreviewBase fixedSize={100} preview={previewImage} />
 						</div>
 
-						<NonIdealState icon={faSquarePlus} className="cui-px-3">
-							<h4 className="cui-mt-1">Empty button</h4>
-							<p className="cui-mt-3">Choose a button type to get started.</p>
+						<NonIdealState icon={faSquarePlus} className="px-4">
+							<h4 className="my-1">Empty button</h4>
+							<p className="my-3">Choose a button type to get started.</p>
 							<MyErrorBoundary>
 								<CreateButtonTypeButtons location={location} />
 							</MyErrorBoundary>
@@ -113,7 +113,7 @@ const EditButtonContent = observer(function EditButton({
 }: EditButtonContentProps) {
 	return (
 		<>
-			<div className="cui-d-flex cui-mb-0">
+			<div className="cui-d-flex mb-0">
 				<div className="cui-flex-grow-1 min-w-0 cui-d-flex cui-flex-column cui-gap-1">
 					<div className="cui-d-flex cui-flex-wrap cui-align-items-center cui-gap-1">
 						<ControlClearButton location={location} resetModalRef={resetModalRef} />
@@ -137,7 +137,7 @@ const EditButtonContent = observer(function EditButton({
 						config.type === 'preset-reference' ||
 						config.type === 'button-reference') && (
 						<MyErrorBoundary>
-							<ControlNotesEditor controlId={controlId} notes={config.options.notes} className="cui-w-100 cui-mt-1" />
+							<ControlNotesEditor controlId={controlId} notes={config.options.notes} className="cui-w-100 mt-1" />
 						</MyErrorBoundary>
 					)}
 				</div>
@@ -146,22 +146,22 @@ const EditButtonContent = observer(function EditButton({
 
 			{config.type === 'pageup' && (
 				<NonIdealState icon={faFileArrowUp}>
-					<h4 className="cui-mt-1">Page up button</h4>
-					<p className="cui-mt-3">No configuration available for page up buttons</p>
+					<h4 className="my-1">Page up button</h4>
+					<p className="my-3">No configuration available for page up buttons</p>
 				</NonIdealState>
 			)}
 
 			{config.type === 'pagenum' && (
 				<NonIdealState icon={faFileLines}>
-					<h4 className="cui-mt-1">Page number button</h4>
-					<p className="cui-mt-3">No configuration available for page number buttons</p>
+					<h4 className="my-1">Page number button</h4>
+					<p className="my-3">No configuration available for page number buttons</p>
 				</NonIdealState>
 			)}
 
 			{config.type === 'pagedown' && (
 				<NonIdealState icon={faFileArrowDown}>
-					<h4 className="cui-mt-1">Page down button</h4>
-					<p className="cui-mt-3">No configuration available for page down buttons</p>
+					<h4 className="my-1">Page down button</h4>
+					<p className="my-3">No configuration available for page down buttons</p>
 				</NonIdealState>
 			)}
 

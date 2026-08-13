@@ -90,7 +90,7 @@ export const ExportWizardModal = observer(function ExportWizardModal() {
 	return (
 		<Modal.Root open={show} onOpenChange={onOpenChange} onOpenChangeComplete={onOpenChangeComplete}>
 			<Modal.Trigger color="success">
-				<FontAwesomeIcon icon={faDownload} className="cui-me-2" />
+				<FontAwesomeIcon icon={faDownload} className="me-2" />
 				Export configuration
 			</Modal.Trigger>
 
@@ -104,7 +104,7 @@ export const ExportWizardModal = observer(function ExportWizardModal() {
 									src={makeAbsolutePath('/img/icons/48x48.png')}
 									style={{ height: 30 }}
 									alt="logo"
-									className="cui-me-2"
+									className="me-2"
 								/>
 								Export Configuration
 							</Modal.Title>
@@ -154,7 +154,7 @@ export const ExportWizardModal = observer(function ExportWizardModal() {
 																label={
 																	<>
 																		Include secrets
-																		<InlineHelpIcon className="cui-ms-1">
+																		<InlineHelpIcon className="ms-1">
 																			Some connections have secret values that can be omitted from the export. Not all
 																			modules are compatible with this.
 																		</InlineHelpIcon>

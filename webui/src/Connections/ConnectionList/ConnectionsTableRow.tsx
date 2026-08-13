@@ -67,7 +67,7 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 					title="Variables"
 					disabled={!isEnabled || !(connectionVariables && connectionVariables.size > 0)}
 				>
-					<FontAwesomeIcon icon={faDollarSign} className="cui-me-2" />
+					<FontAwesomeIcon icon={faDollarSign} className="me-2" />
 					Variables
 				</Popover.Item>
 			}

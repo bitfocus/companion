@@ -137,15 +137,15 @@ export function InstanceDebugLog({
 	return (
 		<Grid.Container fluid style={{ height: 'calc(100vh - 10px)', padding: '10px', background: '#eee' }}>
 			<div className="log-page">
-				<Grid.Row className="cui-px-3">
+				<Grid.Row className="px-4">
 					<Grid.Col>
-						<ButtonGroup className="cui-me-2">
+						<ButtonGroup className="me-2">
 							<Button color={isConnected ? 'success' : 'warning'} size="sm" disabled>
 								{isConnected ? 'Connected' : 'Reconnecting'}
 							</Button>
 						</ButtonGroup>
 
-						<ButtonGroup className="cui-me-2">
+						<ButtonGroup className="me-2">
 							<Button color="danger" size="sm" onClick={doClearLog}>
 								Clear log
 							</Button>
@@ -154,7 +154,7 @@ export function InstanceDebugLog({
 							</Button>
 						</ButtonGroup>
 
-						<ButtonGroup className="cui-me-2">
+						<ButtonGroup className="me-2">
 							<Button color="danger" size="sm" onClick={doStopInstance}>
 								Stop {instanceTypeStr}
 							</Button>

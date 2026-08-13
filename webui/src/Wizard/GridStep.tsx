@@ -63,18 +63,18 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 				</p>
 			</Grid.Col>
 
-			<FormLabel htmlFor={rowFieldId} sm={4} column="sm" className="cui-mb-2">
+			<FormLabel htmlFor={rowFieldId} sm={4} column="sm" className="mb-2">
 				Rows
 			</FormLabel>
-			<Grid.Col sm={5} className="cui-mb-2">
+			<Grid.Col sm={5} className="mb-2">
 				<NumberInputField id={rowFieldId} value={totalRows} min={0} step={1} setValue={setMaxRow} immediateValue />
 			</Grid.Col>
 			<Grid.Col sm={3}></Grid.Col>
 
-			<FormLabel htmlFor={columnFieldId} sm={4} column="sm" className="cui-mb-2">
+			<FormLabel htmlFor={columnFieldId} sm={4} column="sm" className="mb-2">
 				Columns
 			</FormLabel>
-			<Grid.Col sm={5} className="cui-mb-2">
+			<Grid.Col sm={5} className="mb-2">
 				<NumberInputField
 					id={columnFieldId}
 					value={totalColumns}
@@ -87,7 +87,7 @@ export function GridStep({ rows, columns, setValue }: GridStepProps): React.JSX.
 			<Grid.Col sm={3}></Grid.Col>
 
 			<Grid.Col sm={12}>
-				<p className="cui-text-muted cui-mt-3" style={{ fontSize: '0.875rem' }}>
+				<p className="cui-text-muted mt-4" style={{ fontSize: '0.875rem' }}>
 					You can change this at any time on the 'Settings' tab in the GUI.
 				</p>
 			</Grid.Col>

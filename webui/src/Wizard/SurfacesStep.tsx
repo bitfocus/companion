@@ -15,14 +15,14 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps): React.JSX
 				Companion can automatically detect USB surfaces (such as Stream Decks) as they are plugged in. Choose how you'd
 				like newly connected devices to be handled:
 			</p>
-			<div className="cui-ms-2 cui-mb-1">
+			<div className="ms-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="Watch for newly connected USB devices"
 					value={!!config.usb_hotplug}
 					setValue={(val) => setValue('usb_hotplug', val)}
 				/>
 			</div>
-			<div className="cui-ms-2 cui-mb-1">
+			<div className="ms-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="Auto-enable newly discovered surfaces"
 					value={!!config.auto_enable_discovered_surfaces}

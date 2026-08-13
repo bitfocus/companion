@@ -28,7 +28,7 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 				<StaticAlert color="danger">This does not make an installation more secure!</StaticAlert>
 			</Grid.Col>
 
-			<Grid.Col xs={12} className="cui-ms-2 cui-mb-1">
+			<Grid.Col xs={12} className="ms-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="Enable Admin Password"
 					value={!!config.admin_lockout}
@@ -38,10 +38,10 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 
 			{config.admin_lockout && (
 				<>
-					<FormLabel htmlFor={passwordFieldId} sm={{ span: 4, offset: 1 }} column="sm" className="cui-mb-2">
+					<FormLabel htmlFor={passwordFieldId} sm={{ span: 4, offset: 1 }} column="sm" className="mb-2">
 						Password
 					</FormLabel>
-					<Grid.Col sm={5} className="cui-mb-2">
+					<Grid.Col sm={5} className="mb-2">
 						<SecretTextInputField
 							id={passwordFieldId}
 							value={config.admin_password || ''}
@@ -51,10 +51,10 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 					</Grid.Col>
 					<Grid.Col sm={2}></Grid.Col>
 
-					<FormLabel htmlFor={timeoutFieldId} sm={{ span: 4, offset: 1 }} column="sm" className="cui-mb-2">
+					<FormLabel htmlFor={timeoutFieldId} sm={{ span: 4, offset: 1 }} column="sm" className="mb-2">
 						Session Timeout
 					</FormLabel>
-					<Grid.Col sm={5} className="cui-mb-2">
+					<Grid.Col sm={5} className="mb-2">
 						<NumberInputField
 							id={timeoutFieldId}
 							value={config.admin_timeout}

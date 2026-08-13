@@ -162,7 +162,7 @@ function AddElementDropdownPopoverButton({
 
 	return (
 		<Popover.Item onClick={addCallback} title={`Add ${label}`}>
-			<FontAwesomeIcon icon={getElementTypeIcon(elementType)} className="cui-me-2" />
+			<FontAwesomeIcon icon={getElementTypeIcon(elementType)} className="me-2" />
 			{label}
 		</Popover.Item>
 	)

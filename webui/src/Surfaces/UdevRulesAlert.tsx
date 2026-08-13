@@ -40,7 +40,7 @@ export const UdevRulesAlert = observer(function UdevRulesAlert(): React.JSX.Elem
 
 			{status.canAutoApply ? (
 				<>
-					<p className="cui-mb-1">Apply them automatically below, or run this command manually:</p>
+					<p className="mb-1">Apply them automatically below, or run this command manually:</p>
 					<pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', marginBottom: '0.5rem' }}>
 						{status.applyCommand}
 					</pre>
@@ -53,7 +53,7 @@ export const UdevRulesAlert = observer(function UdevRulesAlert(): React.JSX.Elem
 				</>
 			) : (
 				<>
-					<p className="cui-mb-1">Run the following command, then reconnect your surfaces:</p>
+					<p className="mb-1">Run the following command, then reconnect your surfaces:</p>
 					<pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', marginBottom: '0.5rem' }}>
 						{status.applyCommand}
 					</pre>

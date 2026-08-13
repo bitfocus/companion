@@ -126,9 +126,9 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 					Expression Variables
 					<ContextHelpButton action="/user-guide/config/variables#expression-variables" />
 				</h4>
-				<p className="cui-mb-2">Here you can create some variables from live computed expressions</p>
+				<p className="mb-2">Here you can create some variables from live computed expressions</p>
 
-				<div className="cui-mb-2">
+				<div className="mb-2">
 					<ButtonGroup>
 						<LinkButton color="primary" to="/variables" size="sm">
 							<FontAwesomeIcon icon={faArrowLeft} />
@@ -140,7 +140,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 						<CreateCollectionButton />
 					</ButtonGroup>
 
-					<SearchBox placeholder="Filter ..." filter={filter} setFilter={setFilter} className="cui-mb-1 cui-mt-2" />
+					<SearchBox placeholder="Filter ..." filter={filter} setFilter={setFilter} className="mb-1 mt-2" />
 				</div>
 
 				<PanelCollapseHelperProvider

@@ -31,7 +31,7 @@ export function ConvertToNormalButton({ location }: ConvertToNormalButtonProps):
 		<>
 			<GenericConfirmModal ref={convertModalRef} />
 			<Button color="secondary" onClick={doConvertControl} title="Convert to Normal Button">
-				<FontAwesomeIcon icon={faPencil} className="cui-me-1" />
+				<FontAwesomeIcon icon={faPencil} className="me-1" />
 				Edit
 			</Button>
 		</>

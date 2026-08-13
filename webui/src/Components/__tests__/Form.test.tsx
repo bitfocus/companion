@@ -67,7 +67,7 @@ describe('FormLabel', () => {
 
 	it('appends passthrough className', () => {
 		const { container } = render(
-			<FormLabel htmlFor="x" sm={4} column="sm" className="cui-mb-2">
+			<FormLabel htmlFor="x" sm={4} column="sm" className="mb-2">
 				Name
 			</FormLabel>
 		)
@@ -76,7 +76,7 @@ describe('FormLabel', () => {
 			'cui-col-sm-4',
 			'col-form-label',
 			'col-form-label-sm',
-			'cui-mb-2'
+			'mb-2'
 		)
 	})
 

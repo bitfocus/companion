@@ -69,15 +69,15 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 		// note: position="sticky" is not necessary since the header is never part of a scrolling element.
 		//  if position is sticky, the header is assigned z-index: 1020, which interferes with popups (monaco suggest-details, for example)
 		//  and would likely have to be overridden anyway (to be no more than 40, in the monaco case).
-		<div className="header cui-p-0">
+		<div className="header p-0">
 			<Grid.Container fluid>
 				{mobileMode && (
-					<button type="button" className="header-toggler cui-ps-1" onClick={handleShowSidebar}>
+					<button type="button" className="header-toggler ps-1" onClick={handleShowSidebar}>
 						<FontAwesomeIcon icon={faBars} />
 					</button>
 				)}
 
-				<a className="header-brand cui-mx-auto cui-d-md-none">
+				<a className="header-brand mx-auto cui-d-md-none">
 					Bitfocus&nbsp;<span style={{ fontWeight: 'bold' }}>Companion</span>
 				</a>
 
@@ -106,7 +106,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 												{updateData.data.message2}
 											</>
 										)}
-										<FontAwesomeIcon icon={faExternalLinkSquare} className="cui-ms-2" />
+										<FontAwesomeIcon icon={faExternalLinkSquare} className="ms-2" />
 									</div>
 								</div>
 							</a>

@@ -77,7 +77,7 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 		<>
 			<GenericConfirmModal ref={confirmModal} />
 
-			<h5 className="cui-mt-2">
+			<h5 className="mt-2">
 				{heading}
 				{events.length > 1 && (
 					<ButtonGroup className="float-right">
@@ -266,7 +266,7 @@ const EventEditor = observer(function EventEditor({
 				</div>
 
 				<div className="cell-controls">
-					<ButtonGroup className="cui-me-1">
+					<ButtonGroup className="me-1">
 						{canSetHeadline && !headlineExpanded && (
 							<Button size="sm" onClick={doEditHeadline} title="Set headline">
 								<FontAwesomeIcon icon={faPencil} />

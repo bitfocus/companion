@@ -70,14 +70,14 @@ export const RemoteSurfacesList = observer(function RemoteSurfacesList({
 
 				<GenericConfirmModal ref={confirmModalRef} />
 
-				<ButtonGroup className="connection-group-actions cui-mb-2">
+				<ButtonGroup className="connection-group-actions mb-2">
 					<AddRemoteSurfaceButton />
 					<Button
 						color="warning"
 						className="cui-d-xl-none"
 						onClick={() => void navigate({ to: '/surfaces/remote/discover' })}
 					>
-						<FontAwesomeIcon icon={faPlug} className="cui-me-1" />
+						<FontAwesomeIcon icon={faPlug} className="me-1" />
 						Discover Remote Surfaces
 					</Button>
 					<CreateCollectionButton />
@@ -129,7 +129,7 @@ function RemoteSurfacesGroupHeaderContent({ collection }: { collection: Outbound
 	)
 
 	return (
-		<div className="cui-ms-1">
+		<div className="ms-1">
 			<SwitchInputField
 				id={undefined}
 				value={collection.metaData.enabled}

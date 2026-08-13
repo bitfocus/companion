@@ -110,7 +110,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 											<>
 												<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
 													Name
-													<InlineHelpIcon className="cui-ms-1">
+													<InlineHelpIcon className="ms-1">
 														Display name for the emulator. This can be changed later
 													</InlineHelpIcon>
 												</FormLabel>
@@ -145,7 +145,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 											<>
 												<FormLabel htmlFor={idFieldId} sm={4} column="sm">
 													Id
-													<InlineHelpIcon className="cui-ms-1">
+													<InlineHelpIcon className="ms-1">
 														Id for the emulator, this is used in the url and internally. This cannot be changed once
 														set.
 													</InlineHelpIcon>
@@ -161,7 +161,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 													/>
 
 													{field.state.meta.errors.length > 0 && (
-														<StaticAlert color="warning" className="cui-mt-2">
+														<StaticAlert color="warning" className="mt-2">
 															{field.state.meta.errors}
 														</StaticAlert>
 													)}
@@ -197,7 +197,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 														immediateValue
 													/>
 													{field.state.meta.errors.length > 0 && (
-														<StaticAlert color="warning" className="cui-mt-2">
+														<StaticAlert color="warning" className="mt-2">
 															{field.state.meta.errors}
 														</StaticAlert>
 													)}
@@ -233,7 +233,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 														immediateValue
 													/>
 													{field.state.meta.errors.length > 0 && (
-														<StaticAlert color="warning" className="cui-mt-2">
+														<StaticAlert color="warning" className="mt-2">
 															{field.state.meta.errors}
 														</StaticAlert>
 													)}

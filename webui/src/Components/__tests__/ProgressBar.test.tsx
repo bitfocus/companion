@@ -14,8 +14,8 @@ describe('ProgressBar rendering', () => {
 	})
 
 	it('applies additional className', () => {
-		const { container } = render(<ProgressBar className="cui-mt-4" />)
-		expect(container.firstChild).toHaveClass('progress2', 'cui-mt-4')
+		const { container } = render(<ProgressBar className="mt-4" />)
+		expect(container.firstChild).toHaveClass('progress2', 'mt-4')
 	})
 
 	it('defaults to 0 when value is undefined', () => {

@@ -85,7 +85,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 	return (
 		<>
 			<Form
-				className="secondary-panel-simple-body cui-d-flex cui-flex-column cui-pb-0"
+				className="secondary-panel-simple-body cui-d-flex cui-flex-column pb-0"
 				onSubmit={(e) => {
 					e.preventDefault()
 					e.stopPropagation()
@@ -125,7 +125,7 @@ function InstanceFieldLabel({ fieldInfo }: { fieldInfo: SomeCompanionInputField 
 	return (
 		<>
 			{fieldInfo.label}
-			{fieldInfo.tooltip && <InlineHelpIcon className="cui-ms-1">{fieldInfo.tooltip}</InlineHelpIcon>}
+			{fieldInfo.tooltip && <InlineHelpIcon className="ms-1">{fieldInfo.tooltip}</InlineHelpIcon>}
 		</>
 	)
 }
@@ -221,7 +221,7 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 				/>
 
 				{cannotEnableReason && !isEnabled && (
-					<div className="cui-text-danger cui-mt-1" style={{ fontSize: '0.875em' }}>
+					<div className="cui-text-danger mt-1" style={{ fontSize: '0.875em' }}>
 						{cannotEnableReason}
 					</div>
 				)}
@@ -245,7 +245,7 @@ const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionU
 		<>
 			<FormLabel htmlFor={updatePolicyId} sm={4} column="sm">
 				Update Policy
-				<InlineHelpIcon className="cui-ms-1">
+				<InlineHelpIcon className="ms-1">
 					How to check whether there are updates available for this {panelStore.service.moduleTypeDisplayName}
 				</InlineHelpIcon>
 			</FormLabel>
@@ -356,7 +356,7 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 
 	return (
 		<>
-			<hr className="cui-my-3" />
+			<hr className="my-4" />
 			{configData.fields.map((fieldInfo) => {
 				const isVisible = panelStore.isVisible(fieldInfo)
 				if (!isVisible) return null

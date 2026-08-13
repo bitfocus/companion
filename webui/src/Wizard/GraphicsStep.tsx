@@ -52,7 +52,7 @@ export function GraphicsStep({ config, setValue }: GraphicsStepProps): React.JSX
 				</div>
 			</div>
 
-			<p className="cui-text-muted cui-mt-3" style={{ fontSize: '0.875rem' }}>
+			<p className="cui-text-muted mt-4" style={{ fontSize: '0.875rem' }}>
 				You can change these later on the 'Settings' tab under Buttons.
 			</p>
 		</div>

@@ -119,10 +119,10 @@ function SurfaceEnabledToggle({ surfaceId, enabled, canChangeEnabled }: SurfaceE
 		<>
 			<FormLabel htmlFor={inputId} sm={4} column="sm">
 				Enabled
-				<InlineHelpIcon className="cui-ms-1">When disabled, Companion will not open this surface.</InlineHelpIcon>
+				<InlineHelpIcon className="ms-1">When disabled, Companion will not open this surface.</InlineHelpIcon>
 			</FormLabel>
 			<Grid.Col sm={8}>
-				<div className="cui-mx-2">
+				<div className="mx-2">
 					<SwitchInputField id={inputId} value={enabled} setValue={handleToggle} disabled={!canChangeEnabled} />
 				</div>
 				<div className="form-text">Only surfaces connected locally can be disabled here</div>
@@ -373,7 +373,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 
 						<FormLabel htmlFor={groupFieldId} sm={4} column="sm">
 							Surface Group
-							<InlineHelpIcon className="cui-ms-1">
+							<InlineHelpIcon className="ms-1">
 								When in a group, surfaces will follow the page number of that group
 							</InlineHelpIcon>
 						</FormLabel>
@@ -409,7 +409,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							Use Last Page At Startup
 						</FormLabel>
 						<Grid.Col sm={8}>
-							<div className="cui-mx-2">
+							<div className="mx-2">
 								<SwitchInputField
 									id={useLastPageFieldId}
 									value={!!groupConfig.config.use_last_page}
@@ -454,7 +454,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							Restrict pages accessible to this {surfaceId === null ? 'group' : 'surface'}
 						</FormLabel>
 						<Grid.Col sm={8}>
-							<div className="cui-mx-2">
+							<div className="mx-2">
 								<SwitchInputField
 									id={restrictPagesFieldId}
 									value={!!groupConfig.config.restrict_pages}
@@ -486,7 +486,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							Never pin code lock
 						</FormLabel>
 						<Grid.Col sm={8}>
-							<div className="cui-mx-2">
+							<div className="mx-2">
 								<SwitchInputField
 									id={neverLockFieldId}
 									value={!!groupConfig.config.never_lock}

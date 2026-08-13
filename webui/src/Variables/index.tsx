@@ -97,16 +97,16 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 				</div>
 
 				<div className="scrollable-content">
-					<div className="variables-category-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-						<LinkButton color="info" to="/variables/custom" className="cui-mb-3">
-							<h6 className="cui-mb-0 cui-py-1">
-								<FontAwesomeIcon icon={faDollarSign} className="cui-me-1" />
+					<div className="variables-category-grid">
+						<LinkButton color="info" to="/variables/custom" className="mb-4">
+							<h6 className="mb-0 py-1">
+								<FontAwesomeIcon icon={faDollarSign} className="me-1" />
 								Custom Variables
 							</h6>
 						</LinkButton>
-						<LinkButton color="info" to="/variables/expression" className="cui-mb-3">
-							<h6 className="cui-mb-0 cui-py-1">
-								<FontAwesomeIcon icon={faSquareRootVariable} className="cui-me-1" /> Expression Variables
+						<LinkButton color="info" to="/variables/expression" className="mb-4">
+							<h6 className="mb-0 py-1">
+								<FontAwesomeIcon icon={faSquareRootVariable} className="me-1" /> Expression Variables
 							</h6>
 						</LinkButton>
 					</div>

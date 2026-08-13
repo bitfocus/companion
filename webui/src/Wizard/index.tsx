@@ -286,7 +286,7 @@ export const WizardModal = observer(function WizardModal(): React.JSX.Element {
 										src={makeAbsolutePath('/img/icons/48x48.png')}
 										style={{ height: 30 }}
 										alt="logo"
-										className="cui-me-2"
+										className="me-2"
 									/>
 									Welcome to Companion
 								</Modal.Title>

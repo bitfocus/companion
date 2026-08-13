@@ -22,7 +22,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 				moduleCount > 0 ? (
 					<>
 						<div className="intro-text">
-							<p className="cui-mb-2">
+							<p className="mb-2">
 								<strong>Companion supports over {moduleCount} different devices</strong>, and the list grows every day.
 							</p>
 						</div>

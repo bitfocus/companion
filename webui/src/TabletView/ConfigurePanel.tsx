@@ -97,20 +97,20 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 						</Grid.Col>
 						<Grid.Col sm={6} xs={12}>
 							<CheckboxInputFieldWithLabel
-								className="cui-my-1"
+								className="my-1"
 								label="Hide configure button"
 								value={!!query['noconfigure']}
 								setValue={(val) => updateQueryUrl('noconfigure', val)}
 							/>
 							<CheckboxInputFieldWithLabel
-								className="cui-my-1"
+								className="my-1"
 								label="Hide fullscreen button"
 								value={!!query['nofullscreen']}
 								setValue={(val) => updateQueryUrl('nofullscreen', val)}
 							/>
 
 							<CheckboxInputFieldWithLabel
-								className="cui-my-1"
+								className="my-1"
 								label="Show page headings"
 								value={!!query['showpages']}
 								setValue={(val) => updateQueryUrl('showpages', val)}

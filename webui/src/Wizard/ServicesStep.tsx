@@ -28,7 +28,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 				</p>
 			</Grid.Col>
 
-			<Grid.Col xs={12} className="cui-ms-2 cui-mb-1">
+			<Grid.Col xs={12} className="mt-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="TCP Raw Socket"
 					value={!!config.tcp_enabled}
@@ -37,10 +37,10 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 			</Grid.Col>
 			{config.tcp_enabled && (
 				<>
-					<FormLabel htmlFor={tcpListenPortId} sm={{ span: 4, offset: 1 }} column="sm" className="cui-mb-2">
+					<FormLabel htmlFor={tcpListenPortId} sm={{ span: 4, offset: 1 }} column="sm" className="mb-2">
 						Listen Port
 					</FormLabel>
-					<Grid.Col sm={5} className="cui-mb-2">
+					<Grid.Col sm={5} className="mb-2">
 						<NumberInputField
 							id={tcpListenPortId}
 							value={config.tcp_listen_port}
@@ -52,7 +52,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 				</>
 			)}
 
-			<Grid.Col xs={12} className="cui-ms-2 cui-mb-1">
+			<Grid.Col xs={12} className="mt-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="UDP Raw Socket"
 					value={!!config.udp_enabled}
@@ -61,10 +61,10 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 			</Grid.Col>
 			{config.udp_enabled && (
 				<>
-					<FormLabel htmlFor={udpListenPortId} sm={{ span: 4, offset: 1 }} column="sm" className="cui-mb-2">
+					<FormLabel htmlFor={udpListenPortId} sm={{ span: 4, offset: 1 }} column="sm" className="mb-2">
 						Listen Port
 					</FormLabel>
-					<Grid.Col sm={5} className="cui-mb-2">
+					<Grid.Col sm={5} className="mb-2">
 						<NumberInputField
 							id={udpListenPortId}
 							value={config.udp_listen_port}
@@ -76,7 +76,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 				</>
 			)}
 
-			<Grid.Col xs={12} className="cui-ms-2 cui-mb-1">
+			<Grid.Col xs={12} className="mt-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="Open Sound Control (OSC)"
 					value={!!config.osc_enabled}
@@ -85,10 +85,10 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 			</Grid.Col>
 			{config.osc_enabled && (
 				<>
-					<FormLabel htmlFor={oscListenPortId} sm={{ span: 4, offset: 1 }} column="sm" className="cui-mb-2">
+					<FormLabel htmlFor={oscListenPortId} sm={{ span: 4, offset: 1 }} column="sm" className="mb-2">
 						Listen Port
 					</FormLabel>
-					<Grid.Col sm={5} className="cui-mb-2">
+					<Grid.Col sm={5} className="mb-2">
 						<NumberInputField
 							id={oscListenPortId}
 							value={config.osc_listen_port}
@@ -100,14 +100,14 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 				</>
 			)}
 
-			<Grid.Col xs={12} className="cui-ms-2 cui-mb-1">
+			<Grid.Col xs={12} className="mt-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="RossTalk"
 					value={!!config.rosstalk_enabled}
 					setValue={(val) => setValue('rosstalk_enabled', val)}
 				/>
 			</Grid.Col>
-			<Grid.Col xs={12} className="cui-ms-2 cui-mb-1">
+			<Grid.Col xs={12} className="mt-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="Ember+"
 					value={!!config.emberplus_enabled}
@@ -115,7 +115,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 				/>
 			</Grid.Col>
 
-			<Grid.Col xs={12} className="cui-ms-2 cui-mb-1">
+			<Grid.Col xs={12} className="mt-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="Artnet"
 					value={!!config.artnet_enabled}
@@ -124,10 +124,10 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 			</Grid.Col>
 			{config.artnet_enabled && (
 				<>
-					<FormLabel htmlFor={artnetUniveriseId} sm={{ span: 4, offset: 1 }} column="sm" className="cui-mb-2">
+					<FormLabel htmlFor={artnetUniveriseId} sm={{ span: 4, offset: 1 }} column="sm" className="mb-2">
 						Universe (first is 0)
 					</FormLabel>
-					<Grid.Col sm={5} className="cui-mb-2">
+					<Grid.Col sm={5} className="mb-2">
 						<NumberInputField
 							id={artnetUniveriseId}
 							value={config.artnet_universe}
@@ -139,10 +139,10 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 					</Grid.Col>
 					<Grid.Col sm={2}></Grid.Col>
 
-					<FormLabel htmlFor={artnetChannelId} sm={{ span: 4, offset: 1 }} column="sm" className="cui-mb-2">
+					<FormLabel htmlFor={artnetChannelId} sm={{ span: 4, offset: 1 }} column="sm" className="mb-2">
 						Channel
 					</FormLabel>
-					<Grid.Col sm={5} className="cui-mb-2">
+					<Grid.Col sm={5} className="mb-2">
 						<NumberInputField
 							id={artnetChannelId}
 							value={config.artnet_channel}
@@ -157,7 +157,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 			)}
 
 			<Grid.Col sm={12}>
-				<p className="cui-text-muted cui-mt-3" style={{ fontSize: '0.875rem' }}>
+				<p className="cui-text-muted mt-4" style={{ fontSize: '0.875rem' }}>
 					You can change these later and review how to use them on the 'Settings' tab in the GUI.
 				</p>
 			</Grid.Col>

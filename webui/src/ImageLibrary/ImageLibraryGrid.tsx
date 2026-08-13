@@ -88,7 +88,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 			<GenericConfirmModal ref={confirmModalRef} />
 			<ImageAddModal ref={addModalRef} onImageCreated={onSelectImage} />
 
-			<div className="image-library-header cui-pb-2">
+			<div className="image-library-header pb-2">
 				<h4>Image Library</h4>
 				<p>
 					Here you can store images to be reused in your buttons. They get exposed as variables, and can be used

@@ -164,7 +164,7 @@ const UngroupedSection = observer(function UngroupedSection<TItem extends Collec
 							onClick={collapseHelper.toggleCollapsed}
 						>
 							<div className="cui-d-flex cui-align-items-center">
-								<FontAwesomeIcon icon={isCollapsed ? faCaretRight : faCaretDown} className="caret-icon cui-me-1" />
+								<FontAwesomeIcon icon={isCollapsed ? faCaretRight : faCaretDown} className="caret-icon me-1" />
 								<span className="collection-name">Ungrouped {capitalize(itemName)}s</span>
 							</div>
 							{!isCollapsed && ungroupedItems.length > 1 && (

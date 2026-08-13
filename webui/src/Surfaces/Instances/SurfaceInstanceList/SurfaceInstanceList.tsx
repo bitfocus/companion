@@ -92,14 +92,14 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 				<GenericConfirmModal ref={confirmModalRef} />
 
 				<div className="cui-d-flex cui-align-items-center help-button-float">
-					<ButtonGroup className="connection-group-actions cui-m-1 cui-me-auto">
+					<ButtonGroup className="connection-group-actions m-1 cui-me-auto">
 						<Button color="primary" size="sm" onClick={() => void navigate({ to: '/surfaces/integrations/add' })}>
-							<FontAwesomeIcon icon={faPlug} className="cui-me-1" />
+							<FontAwesomeIcon icon={faPlug} className="me-1" />
 							Add Surface Integration
 						</Button>
 						<CreateCollectionButton />
 					</ButtonGroup>
-					<ContextHelpButton action="/user-guide/surfaces" className="cui-pe-2">
+					<ContextHelpButton action="/user-guide/surfaces" className="pe-2">
 						<p>
 							Surface integrations are like connections but for input surfaces: they provide the ability to use
 							different hardware or virtual surfaces to trigger buttons in Companion.
@@ -109,7 +109,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 				</div>
 			</div>
 
-			<div className="connections-list-table-container scrollable-content cui-mt-2">
+			<div className="connections-list-table-container scrollable-content mt-2">
 				<PanelCollapseHelperProvider
 					storageId="connection-collections"
 					knownPanelIds={surfaceInstances.allCollectionIds}
@@ -185,7 +185,7 @@ function SurfaceInstancesGroupHeaderContent({ collection }: { collection: Surfac
 	)
 
 	return (
-		<div className="cui-ms-1">
+		<div className="ms-1">
 			<SwitchInputField
 				id={undefined}
 				value={collection.metaData.enabled}

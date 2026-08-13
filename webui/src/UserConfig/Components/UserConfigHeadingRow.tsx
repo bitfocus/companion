@@ -15,7 +15,7 @@ export function UserConfigHeadingRow({ label, helpMessage, helpAction }: UserCon
 					<span className="cui-d-flex cui-justify-content-start">
 						{label}
 						{(helpMessage || helpAction) && (
-							<span className="cui-ms-auto cui-px-2">
+							<span className="ms-auto px-2">
 								<ContextHelpButton action={helpAction}>{helpMessage}</ContextHelpButton>
 							</span>
 						)}

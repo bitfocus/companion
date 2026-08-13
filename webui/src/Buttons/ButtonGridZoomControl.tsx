@@ -39,7 +39,7 @@ export function ButtonGridZoomControl({
 						<FontAwesomeIcon icon={faPlus} />
 					</Button>
 				</InputGroup>
-				<InputGroup className="cui-py-2 cui-px-2">
+				<InputGroup className="py-2 px-2">
 					<NumberInputField
 						id={undefined}
 						value={gridZoomValue}

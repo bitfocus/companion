@@ -39,7 +39,7 @@ export function ImageThumbnail({ image, selected, onClick }: ImageThumbnailProps
 					alt={image.description}
 				/>
 			</div>
-			<div className="cui-p-2">
+			<div className="p-2">
 				<div className="image-name" title={image.description}>
 					{image.description}
 				</div>

@@ -85,7 +85,7 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 						</WindowLinkOpen>
 					)}
 					{!!moduleStoreBaseInfo && (
-						<WindowLinkOpen className="cui-ms-1" title="Open Store Page" href={moduleStoreBaseInfo.storeUrl}>
+						<WindowLinkOpen className="ms-1" title="Open Store Page" href={moduleStoreBaseInfo.storeUrl}>
 							<FontAwesomeIcon icon={faExternalLink} size="xl" />
 						</WindowLinkOpen>
 					)}

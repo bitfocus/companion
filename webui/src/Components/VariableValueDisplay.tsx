@@ -327,7 +327,7 @@ export const VariableValueDisplayPopover: React.FC<VariableValueDisplayPopoverPr
 					}}
 				>
 					{invalidReason && (
-						<StaticAlert color="danger" className="cui-mb-2">
+						<StaticAlert color="danger" className="mb-2">
 							<FontAwesomeIcon icon={faTriangleExclamation} /> {invalidReason}
 						</StaticAlert>
 					)}

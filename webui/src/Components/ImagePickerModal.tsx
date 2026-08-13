@@ -399,7 +399,7 @@ function CustomImageTab({
 
 	return (
 		<div className="cui-d-flex cui-flex-column cui-gap-3">
-			<p className="cui-text-muted cui-mb-0">
+			<p className="cui-text-muted mb-0">
 				This image will be stored only for this field and will not appear in the image library.
 			</p>
 

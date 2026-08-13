@@ -53,7 +53,7 @@ export function ControlActionStepTab({
 	return (
 		<>
 			{stepKeys.length > 1 && (
-				<ButtonGroup className="cui-mt-2">
+				<ButtonGroup className="mt-2">
 					<Button
 						color="primary"
 						title="Move step before"
@@ -98,9 +98,9 @@ export function ControlActionStepTab({
 				</ButtonGroup>
 			)}
 
-			<div className="mt-10">
+			<div className="mt-2">
+				{' '}
 				{/* Wrap the entity-category, for :first-child to work */}
-
 				{rotaryActions && selectedStepProps && (
 					<>
 						<MyErrorBoundary>
@@ -134,7 +134,6 @@ export function ControlActionStepTab({
 						</MyErrorBoundary>
 					</>
 				)}
-
 				{selectedStepProps && (
 					<>
 						<MyErrorBoundary>
@@ -165,7 +164,7 @@ export function ControlActionStepTab({
 				)}
 			</div>
 
-			<div className="cui-my-3">
+			<div className="my-4">
 				<Button onClick={() => service.appendSet(selectedKey)} color="primary">
 					<FontAwesomeIcon icon={faPlus} /> Add duration group
 				</Button>

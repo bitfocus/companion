@@ -121,15 +121,15 @@ function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps)
 
 	return (
 		<Grid.Col sm={6} className="cloud-auth-state">
-			<FormLabel htmlFor={userId} className="cui-mb-1">
+			<FormLabel htmlFor={userId} className="mb-1">
 				Logged in as
 			</FormLabel>
-			<div id={userId} className="cui-text-muted cui-px-3">
+			<div id={userId} className="cui-text-muted px-4">
 				{authenticatedAs}
 			</div>
 
 			{!cloudActive && (
-				<div className="cui-my-3">
+				<div className="my-4">
 					<Button
 						color="success"
 						onClick={() => {
@@ -206,7 +206,7 @@ const SecretKeyPanel = memo(function SecretKeyPanel({ uuid }: { uuid: string }) 
 
 			<StaticAlert color="success">{uuid}</StaticAlert>
 
-			<div className="cui-my-3">
+			<div className="my-4">
 				<Button color="primary" onClick={() => regenerateUUIDMutation.mutate()}>
 					Regenerate secret key
 				</Button>

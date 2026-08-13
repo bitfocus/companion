@@ -89,7 +89,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 		<div className="connections-list-container flex-column-layout">
 			<div className="fixed-header">
 				<h4 className="button-inline">
-					Connections <ContextHelpButton action="/user-guide/config/connections" className="cui-pe-2" />
+					Connections <ContextHelpButton action="/user-guide/config/connections" className="pe-2" />
 				</h4>
 
 				<p>
@@ -102,14 +102,14 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 				<GenericConfirmModal ref={confirmModalRef} />
 				<ConnectionVariablesModal ref={variablesModalRef} />
 
-				<ButtonGroup className="connection-group-actions cui-mb-2">
+				<ButtonGroup className="connection-group-actions mb-2">
 					<Button
 						color="primary"
 						size="sm"
 						className="cui-d-xl-none"
 						onClick={() => void navigate({ to: '/connections/add' })}
 					>
-						<FontAwesomeIcon icon={faPlug} className="cui-me-1" />
+						<FontAwesomeIcon icon={faPlug} className="me-1" />
 						Add Connection
 					</Button>
 					<CreateCollectionButton />
@@ -193,7 +193,7 @@ function ConnectionGroupHeaderContent({ collection }: { collection: ConnectionCo
 	)
 
 	return (
-		<div className="cui-ms-1">
+		<div className="ms-1">
 			<SwitchInputField
 				id={undefined}
 				value={collection.metaData.enabled}

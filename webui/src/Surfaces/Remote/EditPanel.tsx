@@ -98,7 +98,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 
 	return (
 		<Form
-			className="secondary-panel-simple-body cui-d-flex cui-flex-column cui-pb-0"
+			className="secondary-panel-simple-body cui-d-flex cui-flex-column pb-0"
 			onSubmit={(e) => {
 				e.preventDefault()
 				e.stopPropagation()
@@ -138,7 +138,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 										immediateValue
 									/>
 									{field.state.meta.errors.length > 0 && (
-										<StaticAlert color="warning" className="cui-mt-2">
+										<StaticAlert color="warning" className="mt-2">
 											{field.state.meta.errors}
 										</StaticAlert>
 									)}
@@ -150,7 +150,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 					<FormLabel htmlFor={integrationFieldId} sm={4} column="sm">
 						Surface Integration
 					</FormLabel>
-					<Grid.Col sm={8} className="flex cui-px-2">
+					<Grid.Col sm={8} className="flex px-2">
 						<span className="cui-text-muted cui-align-self-center">{instanceInfo?.label ?? remoteInfo.instanceId}</span>
 					</Grid.Col>
 
@@ -178,11 +178,8 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 																	isVisible={isVisible}
 																/>
 																{field.state.meta.errors.length > 0 && (
-																	<Grid.Col
-																		sm={{ offset: 4, span: 8 }}
-																		className={classNames({ displayNone: !isVisible })}
-																	>
-																		<StaticAlert color="warning" className="cui-mt-2">
+																	<Grid.Col sm={{ offset: 4, span: 8 }} className={classNames({ hidden: !isVisible })}>
+																		<StaticAlert color="warning" className="mt-2">
 																			{field.state.meta.errors}
 																		</StaticAlert>
 																	</Grid.Col>

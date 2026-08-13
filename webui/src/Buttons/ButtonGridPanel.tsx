@@ -134,13 +134,13 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 								gridZoomValue={gridZoomValue}
 								gridZoomController={gridZoomController}
 							/>
-							<Button color="light" onClick={resetPosition} title="Home Position" className="cui-ms-1">
+							<Button color="light" onClick={resetPosition} title="Home Position" className="ms-1">
 								<FontAwesomeIcon icon={faHome} />
 							</Button>
-							<Button color="light" onClick={configurePage} title="Edit Page" className="cui-ms-1">
+							<Button color="light" onClick={configurePage} title="Edit Page" className="ms-1">
 								<FontAwesomeIcon icon={faPencil} />
 							</Button>
-							<Button color="light" onClick={showExportModal} title="Export Page" className="cui-ms-1">
+							<Button color="light" onClick={showExportModal} title="Export Page" className="ms-1">
 								<FontAwesomeIcon icon={faFileExport} />
 							</Button>
 						</ButtonGridHeader>
@@ -173,7 +173,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 					clearSelectedButton={clearSelectedButton}
 				/>
 
-				<StaticAlert color="info" className="cui-mb-2">
+				<StaticAlert color="info" className="mb-2">
 					You can use the arrow keys, pageup and pagedown to navigate with the keyboard, and use common key commands
 					such as copy, paste, and cut to rearrange buttons. You can also press the delete or backspace key with any
 					button highlighted to delete it.

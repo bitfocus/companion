@@ -79,7 +79,7 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 				</span>
 			</div>
 
-			<div className="flex cui-align-items-center cui-ps-2">
+			<div className="flex cui-align-items-center ps-2">
 				<SwitchInputField
 					id={undefined}
 					// disabled={!moduleInfo || !moduleVersion}
@@ -88,7 +88,7 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 					tooltip={isEnabled ? `Disable surface connection` : `Enable surface connection`}
 				/>
 
-				<Button onClick={doDelete} title="Delete" className="cui-p-1">
+				<Button onClick={doDelete} title="Delete" className="p-1">
 					<FontAwesomeIcon icon={faTrash} />
 				</Button>
 			</div>

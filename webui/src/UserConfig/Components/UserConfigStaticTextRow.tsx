@@ -16,7 +16,7 @@ export const UserConfigStaticTextRow = observer(function UserConfigStaticTextRow
 			<td>{label}</td>
 			<td colSpan={2} style={{ textAlign: 'center' }}>
 				{text}
-				{textHelp && <InlineHelpIcon className="cui-ms-1">{textHelp}</InlineHelpIcon>}
+				{textHelp && <InlineHelpIcon className="ms-1">{textHelp}</InlineHelpIcon>}
 			</td>
 		</tr>
 	)

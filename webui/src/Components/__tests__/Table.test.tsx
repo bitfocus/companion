@@ -27,9 +27,9 @@ describe('Table', () => {
 	})
 
 	it('composes props with a passthrough className', () => {
-		const { container } = render(<Table size="sm" striped responsive={false} className="table-settings cui-mb-1" />)
+		const { container } = render(<Table size="sm" striped responsive={false} className="table-settings mb-1" />)
 		const el = container.firstChild as HTMLElement
-		expect(el).toHaveClass('table', 'table-sm', 'table-striped', 'table-settings', 'cui-mb-1')
+		expect(el).toHaveClass('table', 'table-sm', 'table-striped', 'table-settings', 'mb-1')
 		expect(el).not.toHaveClass('table-responsive-sm')
 	})
 

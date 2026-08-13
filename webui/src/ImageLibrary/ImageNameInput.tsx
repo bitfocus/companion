@@ -70,7 +70,7 @@ export function ImageNameInput({
 						immediateValue
 					/>
 				</div>
-				<div className="cui-col-sm-12 cui-mt-2 cui-text-muted small">{helpText || defaultHelpText}</div>
+				<div className="cui-col-sm-12 mt-2 cui-text-muted small">{helpText || defaultHelpText}</div>
 			</div>
 		</>
 	)

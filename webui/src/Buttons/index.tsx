@@ -466,7 +466,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 								<ConnectionPresets resetToken={tabResetToken} />
 							</MyErrorBoundary>
 						</TabArea.Panel>
-						<TabArea.Panel value="action-recorder" className="cui-pt-0">
+						<TabArea.Panel value="action-recorder" className="pt-0">
 							<MyErrorBoundary>
 								<ActionRecorder />
 							</MyErrorBoundary>

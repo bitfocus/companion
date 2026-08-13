@@ -92,7 +92,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 				<MyErrorBoundary>
 					<TriggerEventEditor
 						heading="Events"
-						subheading={<div className="cui-mb-2">This trigger will be executed when any of the events happens</div>}
+						subheading={<div className="mb-2">This trigger will be executed when any of the events happens</div>}
 						controlId={controlId}
 						events={config.events}
 						localVariablesStore={localVariablesStore}
@@ -103,9 +103,9 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 			{activeTab === 'conditions' && (
 				<MyErrorBoundary>
 					<ControlEntitiesEditor
-						className="cui-mt-2"
+						className="mt-2"
 						heading="Conditions"
-						subheading={<div className="cui-mb-2">Only execute when all of these conditions are true</div>}
+						subheading={<div className="mb-2">Only execute when all of these conditions are true</div>}
 						controlId={controlId}
 						entities={config.condition}
 						listId="feedbacks"
@@ -122,9 +122,9 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 			{activeTab === 'actions' && (
 				<MyErrorBoundary>
 					<ControlEntitiesEditor
-						className="cui-mt-2"
+						className="mt-2"
 						heading="Actions"
-						subheading={<div className="cui-mb-2">What should happen when executed</div>}
+						subheading={<div className="mb-2">What should happen when executed</div>}
 						controlId={controlId}
 						location={undefined}
 						listId="trigger_actions"
@@ -141,7 +141,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 			{activeTab === 'variables' && (
 				<MyErrorBoundary>
 					<LocalVariablesEditor
-						className="cui-mt-2"
+						className="mt-2"
 						controlId={controlId}
 						location={undefined}
 						variables={config.localVariables}
@@ -182,7 +182,7 @@ function TriggerConfig({ controlId, options }: TriggerConfigProps) {
 	const nameFieldId = useId()
 
 	return (
-		<Grid.Col sm={12} className="cui-p-0">
+		<Grid.Col sm={12} className="p-0">
 			<Form onSubmit={PreventDefaultHandler} className="row flex-form">
 				<Grid.Col xs={12}>
 					<FormLabel htmlFor={nameFieldId}>Name</FormLabel>

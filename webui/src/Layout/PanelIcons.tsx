@@ -25,7 +25,7 @@ export function CloseButton({ closeFn, visibilityClass }: CloseButtonProps): Rea
 	return (
 		<Button
 			color="dark"
-			className={`float_right${visibilityClass ? ' ' + visibilityClass : ''} cui-p-1 cui-ms-2 panel-close-button`}
+			className={`float_right${visibilityClass ? ' ' + visibilityClass : ''} p-1 ms-2 panel-close-button`}
 			onClick={closeFn}
 			title="Close"
 			aria-label="Close"
@@ -77,7 +77,7 @@ export function ContextHelpButton({ children, action, className }: ContextHelpBu
 					// note: string is currently typed to link to /user-guide/, which is not a Tanstack route
 					<LinkButtonExternal
 						variant="ghost"
-						className="context-help-button-btn cui-p-0"
+						className="context-help-button-btn p-0"
 						href={makeAbsolutePath(action)}
 						target="_blank"
 						rel="noopener noreferrer"
@@ -88,7 +88,7 @@ export function ContextHelpButton({ children, action, className }: ContextHelpBu
 						<FontAwesomeIcon icon={faQuestionCircle} aria-label="context help" />
 					</LinkButtonExternal>
 				) : (
-					<Button variant="ghost" className="context-help-button-btn cui-p-0" onClick={onClickAction}>
+					<Button variant="ghost" className="context-help-button-btn p-0" onClick={onClickAction}>
 						<FontAwesomeIcon icon={faQuestionCircle} aria-label="context help" />
 					</Button>
 				)}

@@ -84,7 +84,7 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 
 							{!!controlConfig.config.entity && !isInternalUserValueFeedback(controlConfig.config.entity) && (
 								<MyErrorBoundary>
-									<div className="cui-mt-3 cui-pt-3 cui-border-top">
+									<div className="mt-4 pt-2 cui-border-top">
 										<ExpressionVariableLocalVariablesEditor
 											controlId={controlId}
 											localVariables={controlConfig.config.localVariables}
@@ -139,11 +139,11 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 	const notesFieldId = useId()
 
 	return (
-		<Grid.Col sm={12} className="cui-p-0">
+		<Grid.Col sm={12} className="p-0">
 			<Form onSubmit={PreventDefaultHandler} className="row flex-form">
 				<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
 					Name
-					<InlineHelpIcon className="cui-ms-1">
+					<InlineHelpIcon className="ms-1">
 						The name for the variable. It will get wrapped with <code>$(expression:X)</code> for you
 					</InlineHelpIcon>
 				</FormLabel>
@@ -167,7 +167,7 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 					Notes
 				</FormLabel>
 				<Grid.Col xs={8}>
-					<ControlNotesEditor id={notesFieldId} controlId={controlId} notes={options.notes} className="cui-mb-2" />
+					<ControlNotesEditor id={notesFieldId} controlId={controlId} notes={options.notes} className="mb-2" />
 				</Grid.Col>
 			</Form>
 		</Grid.Col>
@@ -256,7 +256,7 @@ const ExpressionVariableSoleEntityEditor = observer(function ExpressionVariableS
 
 	return (
 		<>
-			<Grid.Col sm={12} className="cui-p-0">
+			<Grid.Col sm={12} className="p-0">
 				<Form onSubmit={PreventDefaultHandler} className="row flex-form">
 					<FormLabel htmlFor={undefined} sm={4} column="sm">
 						Current Value
@@ -326,14 +326,14 @@ const ExpressionVariableLocalVariablesEditor = observer(function ExpressionVaria
 						heading={
 							<>
 								Local Variables
-								<InlineHelpIcon className="cui-ms-1">
+								<InlineHelpIcon className="ms-1">
 									You can use local variables inside of this expression variable to create some dynamic values based on
 									feedbacks
 								</InlineHelpIcon>
 							</>
 						}
 						subheading={
-							<StaticAlert color="info" className="cui-mb-2">
+							<StaticAlert color="info" className="mb-2">
 								Local variables are not supported by all modules or fields. Fields which support local variables can be
 								identified by the <FontAwesomeIcon icon={faGlobe} /> icon.
 							</StaticAlert>

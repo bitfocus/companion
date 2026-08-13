@@ -11,9 +11,9 @@ export function FinishStep(_props: FinishStepProps): React.JSX.Element {
 	return (
 		<div className="wizard-centered-step">
 			<NonIdealState icon={faCircleCheck}>
-				<h4 className="cui-mb-2">You're all set!</h4>
+				<h4 className="mb-2">You're all set!</h4>
 				<p>Companion is configured and ready to use. Here's where to go next:</p>
-				<ul className="cui-text-start cui-d-inline-block cui-mb-0">
+				<ul className="cui-text-start cui-d-inline-block mb-0">
 					<li>
 						Check the <b>Surfaces</b> tab to confirm your USB devices are detected.
 					</li>

@@ -123,9 +123,9 @@ export function ElementPicker({
 					{allowMultipleProperties ? 'Properties (select multiple)' : 'Property'}
 				</FormLabel>
 				<div className="element-picker-list cui-border cui-rounded">
-					{!selectedElementId && <div className="cui-text-muted cui-text-center cui-p-3">Select an element first</div>}
+					{!selectedElementId && <div className="cui-text-muted text-center p-4">Select an element first</div>}
 					{selectedElementId && (!selectedSchema || selectedSchema.length === 0) && (
-						<div className="cui-text-muted cui-text-center cui-p-3">No properties available for this element</div>
+						<div className="cui-text-muted text-center p-4">No properties available for this element</div>
 					)}
 					{selectedSchema?.map((option) => (
 						<PropertyListItem

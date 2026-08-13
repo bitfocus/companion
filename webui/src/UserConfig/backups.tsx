@@ -68,7 +68,7 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 							</div>
 						</div>
 
-						<div className="cui-mb-2">
+						<div className="mb-2">
 							<ButtonGroup>
 								<Button color="primary" onClick={doAddNew} size="sm">
 									<FontAwesomeIcon icon={faAdd} /> Add Backup Rule
@@ -130,7 +130,7 @@ const BackupsTable = observer(function BackupsTable({ editRule }: BackupsTablePr
 	})
 
 	return (
-		<div className="collections-nesting-table cui-mb-2">
+		<div className="collections-nesting-table mb-2">
 			{backupRules.length > 0 ? (
 				backupRules.map((rule, index) => (
 					<BackupsTableRow key={rule.id} rule={rule} index={index} editRule={editRule} />

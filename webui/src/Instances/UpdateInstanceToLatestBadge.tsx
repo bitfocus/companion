@@ -66,7 +66,7 @@ const UpdateInstanceToLatestBadgeInner = observer(function UpdateInstanceToLates
 	if (!message) return null
 
 	return (
-		<InlineHelpCustom help={message} className="cui-ms-1">
+		<InlineHelpCustom help={message} className="ms-1">
 			<FontAwesomeIcon icon={faCircleUp} aria-label={message} />
 		</InlineHelpCustom>
 	)

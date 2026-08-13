@@ -124,7 +124,7 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 								<div className="grow cui-d-flex cui-align-items-center cui-gap-2">
 									<div className="pages-list-number">Number</div>
 									<div className="grow">Name</div>
-									<div className="cui-ms-auto">
+									<div className="ms-auto">
 										<ButtonGroup className="pages-list-actions">
 											<Button
 												color="warning"
@@ -215,7 +215,7 @@ const PageListRow = observer(function PageListRow({
 							placeholder="Unnamed page"
 						/>
 					</div>
-					<ButtonGroup className="pages-list-actions cui-ms-auto">
+					<ButtonGroup className="pages-list-actions ms-auto">
 						<Button color="secondary" size="sm" onClick={goToPage} title="Jump to page" data-page={pageNumber}>
 							<FontAwesomeIcon icon={faShareFromSquare} />
 						</Button>

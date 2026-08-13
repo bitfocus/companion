@@ -72,7 +72,7 @@ export const LogPanel = memo(function LogPanel() {
 			<GenericConfirmModal ref={exportRef} />
 			<div className="log-page">
 				<Grid.Row>
-					<Grid.Col lg={12} className="cui-px-3">
+					<Grid.Col lg={12} className="px-4">
 						<ButtonGroup>
 							<Button color="warning" size="sm" onClick={doToggleWarn} variant={config.warn ? undefined : 'outline'}>
 								Warning
@@ -94,15 +94,10 @@ export const LogPanel = memo(function LogPanel() {
 							<Button color="primary" size="sm" onClick={doClearLog}>
 								Clear log
 							</Button>
-							<LinkButtonExternal
-								color="light"
-								className="cui-ms-2"
-								size="sm"
-								href={makeAbsolutePath(`/int/export/log`)}
-							>
+							<LinkButtonExternal color="light" className="ms-2" size="sm" href={makeAbsolutePath(`/int/export/log`)}>
 								<FontAwesomeIcon icon={faFileExport} /> Export log
 							</LinkButtonExternal>
-							<Button color="light" className="cui-ms-2" onClick={exportSupportModal} size="sm">
+							<Button color="light" className="ms-2" onClick={exportSupportModal} size="sm">
 								<FontAwesomeIcon icon={faFileExport} /> Export support bundle
 							</Button>
 						</div>

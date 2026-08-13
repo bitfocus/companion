@@ -4,6 +4,7 @@ import { useCallback } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { Button } from '~/Components/Button'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
+import './CreateButtonTypeButtons.css'
 
 export function CreateButtonTypeButtons({ location }: { location: ControlLocation }): React.JSX.Element {
 	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())

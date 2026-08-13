@@ -218,7 +218,7 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 				<tbody>
 					{overrides.length === 0 && (
 						<tr>
-							<td colSpan={3} className="cui-text-center cui-p-2">
+							<td colSpan={3} className="text-center p-2">
 								This feedback has no effect. Try adding an override
 							</td>
 						</tr>

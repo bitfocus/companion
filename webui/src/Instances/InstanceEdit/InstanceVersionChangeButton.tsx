@@ -155,7 +155,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 													children={(field) => (
 														<>
 															<div className="cui-col-sm-3 cui-d-flex cui-align-items-center">
-																<FormLabel htmlFor={versionFieldId} column="sm" className="cui-mb-0 cui-flex-grow-1">
+																<FormLabel htmlFor={versionFieldId} column="sm" className="mb-0 cui-flex-grow-1">
 																	Version
 																</FormLabel>
 																{!!modules.getStoreInfo(service.moduleType, effectiveModuleId) && (
@@ -182,17 +182,17 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 									<Collapse.Root
 										open={advancedMode}
 										onOpenChange={handleAdvancedModeChange}
-										className="cui-col-sm-12 cui-mt-3 cui-mb-2 cui-p-0"
+										className="cui-col-sm-12 mt-4 mb-2 p-0"
 									>
-										<hr className="cui-my-2" />
-										<Collapse.Trigger className="button button-link button-sm cui-p-0 cui-text-decoration-none">
-											<span className="cui-me-1">{advancedMode ? '▼' : '▶'}</span>
+										<hr className="my-2" />
+										<Collapse.Trigger className="button button-link button-sm p-0 cui-text-decoration-none">
+											<span className="me-1">{advancedMode ? '▼' : '▶'}</span>
 											Advanced Options
 										</Collapse.Trigger>
 
-										<Collapse.Panel keepMounted className="row g-sm-2 cui-p-0">
+										<Collapse.Panel keepMounted className="row g-sm-2 p-0">
 											<Grid.Col sm={12}>
-												<StaticAlert color="danger" className="cui-mt-2 cui-mb-3">
+												<StaticAlert color="danger" className="mt-2 mb-4">
 													{changeModuleDangerMessage}
 												</StaticAlert>
 											</Grid.Col>

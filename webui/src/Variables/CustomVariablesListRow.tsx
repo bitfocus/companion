@@ -86,7 +86,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 						<div>
 							<FormLabel htmlFor={persistFieldId}>
 								Persist value
-								<InlineHelpIcon className="cui-ms-1">
+								<InlineHelpIcon className="ms-1">
 									If enabled, variable value will be saved and restored when Companion restarts.
 								</InlineHelpIcon>
 							</FormLabel>
@@ -116,7 +116,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 									id={descriptionFieldId}
 									value={info.description}
 									setValue={(description) => customVariablesApi.setDescription(info.id, description)}
-									className="cui-mb-2"
+									className="mb-2"
 								/>
 							</Grid.Col>
 

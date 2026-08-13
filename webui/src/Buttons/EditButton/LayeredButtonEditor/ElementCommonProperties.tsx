@@ -37,7 +37,7 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 				<>
 					<FormLabel htmlFor={usageFieldId} sm={4} column="sm">
 						External Usage
-						<InlineHelpIcon className="cui-ms-1">
+						<InlineHelpIcon className="ms-1">
 							Some surfaces do not have full rgb displays and require specific elements for providing feedback in
 							alternate ways.
 							<br />

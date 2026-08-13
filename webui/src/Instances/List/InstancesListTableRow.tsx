@@ -86,7 +86,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 
 	return (
 		<div
-			className="flex cui-flex-row cui-align-items-center cui-gap-2 cursor-pointer"
+			className="flex cui-flex-row cui-align-items-center gap-2 cursor-pointer"
 			title={`Click to configure the ${moduleDisplayName}.`}
 		>
 			<div onClick={doEdit} className="flex cui-flex-column grow" style={{ minWidth: 0 }}>
@@ -111,11 +111,11 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 					<UpdateInstanceToLatestBadge instance={instance} />
 				</MyErrorBoundary>
 			</div>
-			<div onClick={doEdit} className="cui-ms-2">
+			<div onClick={doEdit} className="ms-2">
 				<InstanceTableStatusCell isEnabled={showAsEnabled} status={instanceStatus} />
 			</div>
 			<div className="flex">
-				<div className="cui-ms-2" title={toggleEnabledTitle}>
+				<div className="ms-2" title={toggleEnabledTitle}>
 					<SwitchInputField
 						id={undefined}
 						value={isEnabled}
@@ -126,7 +126,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 				<Popover.Root>
 					<Popover.Trigger
 						color="secondary"
-						className="cui-py-1 cui-px-2"
+						className="py-1 px-2"
 						title="Click for additional options."
 						aria-label="Click for additional options."
 					>
@@ -134,12 +134,12 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 					</Popover.Trigger>
 					<Popover.Popup arrow side="right" align="center">
 						<Popover.Item onClick={doShowHelp} title="Help" disabled={!moduleVersion?.helpPath}>
-							<FontAwesomeIcon icon={faQuestionCircle} className="cui-me-2" />
+							<FontAwesomeIcon icon={faQuestionCircle} className="me-2" />
 							Help
 						</Popover.Item>
 
 						<Popover.Item onClick={openBugUrl} title="Issue Tracker" disabled={!moduleInfo?.display?.bugUrl}>
-							<FontAwesomeIcon icon={faBug} className="cui-me-2" />
+							<FontAwesomeIcon icon={faBug} className="me-2" />
 							Known issues
 						</Popover.Item>
 
@@ -150,13 +150,13 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 								onClick={() => windowLinkOpen({ href: makeAbsolutePath(debugLogUrl), title: 'View debug log' })}
 								title="Logs"
 							>
-								<FontAwesomeIcon icon={faTerminal} className="cui-me-2" />
+								<FontAwesomeIcon icon={faTerminal} className="me-2" />
 								View logs
 							</Popover.Item>
 						)}
 
 						<Popover.Item onClick={doDelete} title="Delete">
-							<FontAwesomeIcon icon={faTrash} className="cui-me-2" />
+							<FontAwesomeIcon icon={faTrash} className="me-2" />
 							Delete
 						</Popover.Item>
 					</Popover.Popup>

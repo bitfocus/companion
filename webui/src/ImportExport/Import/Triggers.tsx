@@ -97,7 +97,7 @@ export function ImportTriggersTab({
 				<tbody>
 					{Object.entries(snapshot.triggers || {}).map(([id, info]) => (
 						<tr key={id}>
-							<td className="compact cui-text-center">
+							<td className="compact text-center">
 								<CheckboxInputField
 									id={undefined} // TODO - link up with a label
 									value={selectedTriggers.includes(id)}

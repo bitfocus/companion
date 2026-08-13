@@ -181,7 +181,7 @@ export const ResetWizardModal = observer(function ResetWizardModal() {
 	return (
 		<Modal.Root open={show} onOpenChange={onOpenChange} onOpenChangeComplete={onOpenChangeComplete} disableDismiss>
 			<Modal.Trigger color="danger">
-				<FontAwesomeIcon icon={faTrashAlt} className="cui-me-2" />
+				<FontAwesomeIcon icon={faTrashAlt} className="me-2" />
 				Reset configuration
 			</Modal.Trigger>
 
@@ -195,7 +195,7 @@ export const ResetWizardModal = observer(function ResetWizardModal() {
 									src={makeAbsolutePath('/img/icons/48x48.png')}
 									style={{ height: 30 }}
 									alt="logo"
-									className="cui-me-2"
+									className="me-2"
 								/>
 								Reset Configuration
 							</Modal.Title>
@@ -240,7 +240,7 @@ function ResetBeginStep() {
 	return (
 		<div>
 			<NonIdealState icon={faTriangleExclamation} style={{ paddingLeft: 0, paddingRight: 0 }}>
-				<h4 className="cui-mb-2">Before you reset</h4>
+				<h4 className="mb-2">Before you reset</h4>
 				<p>
 					This lets you reset some or all major components of this Companion installation. Use the steps above to choose
 					what to reset and review before applying.
@@ -277,7 +277,7 @@ const ResetOptionsStep = withForm({
 						selector={(state: any) => [state.values.connections, state.values.buttons, state.values.triggers]}
 						children={([connections, buttons, triggers]: any[]) =>
 							connections !== 'unchanged' && !(buttons !== 'unchanged' && triggers !== 'unchanged') ? (
-								<StaticAlert color="warning" className="cui-mt-2 cui-mb-0">
+								<StaticAlert color="warning" className="mt-2 mb-0">
 									Resetting 'Connections' will remove all actions, feedbacks, and triggers associated with the
 									connections even if 'Buttons' and/or 'Triggers' are not also reset.
 								</StaticAlert>
@@ -301,7 +301,7 @@ const ResetOptionsStep = withForm({
 						selector={(state: any) => [state.values.customVariables, state.values.buttons, state.values.triggers]}
 						children={([customVariables, buttons, triggers]: any[]) =>
 							customVariables !== 'unchanged' && !(buttons !== 'unchanged' && triggers !== 'unchanged') ? (
-								<StaticAlert color="warning" className="cui-mt-2 cui-mb-0">
+								<StaticAlert color="warning" className="mt-2 mb-0">
 									Resetting 'Custom Variables' without also resetting 'Buttons', and 'Triggers' that may utilize them
 									can create an unstable environment.
 								</StaticAlert>

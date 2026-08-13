@@ -153,7 +153,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 								</div>
 							</div>
 						) : (
-							<StaticAlert color="info" className="cui-mb-0">
+							<StaticAlert color="info" className="mb-0">
 								<div className="cui-d-flex cui-align-items-center cui-gap-2">
 									<FontAwesomeIcon icon={faPlug} className="cui-text-info" />
 									{description(0)}
@@ -168,7 +168,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 							<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
 						</div>
 
-						<SearchBox filter={filter} setFilter={setFilter} className="cui-mb-2" />
+						<SearchBox filter={filter} setFilter={setFilter} className="mb-2" />
 					</div>
 				</div>
 				<div id="connection_add_search_results">
@@ -282,26 +282,22 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 					params={{ moduleType: moduleInfo.moduleType, moduleId: moduleInfo.moduleId }}
 					className="cui-text-decoration-none"
 				>
-					<div
-						className="cui-m-0"
-						style={{ display: 'inline-block', color: 'var(--color-text)' }}
-						title={'Manage module'}
-					>
+					<div className="m-0" style={{ display: 'inline-block', color: 'var(--color-text)' }} title={'Manage module'}>
 						<FontAwesomeIcon icon={faCog} />
 					</div>
 				</Link>
 				{!!moduleInfo.storeInfo && (
-					<WindowLinkOpen className="cui-m-0" title="Open Store Page" href={moduleInfo.storeInfo.storeUrl}>
+					<WindowLinkOpen className="m-0" title="Open Store Page" href={moduleInfo.storeInfo.storeUrl}>
 						<FontAwesomeIcon icon={faExternalLink} />
 					</WindowLinkOpen>
 				)}
 				{!!moduleInfo.storeInfo?.githubUrl && (
-					<WindowLinkOpen className="cui-m-0" title="Open GitHub Page" href={moduleInfo.storeInfo.githubUrl}>
+					<WindowLinkOpen className="m-0" title="Open GitHub Page" href={moduleInfo.storeInfo.githubUrl}>
 						<FontAwesomeIcon icon={faGithub} />
 					</WindowLinkOpen>
 				)}
 				{showHelpForVersion?.helpPath && (
-					<div className="cui-m-0" style={{ cursor: 'pointer' }} onClick={showHelpClick}>
+					<div className="m-0" style={{ cursor: 'pointer' }} onClick={showHelpClick}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
 					</div>
 				)}

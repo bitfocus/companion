@@ -65,7 +65,7 @@ export function AddElementPickerModal({ onSave }: AddElementPickerModalProps): R
 
 	return (
 		<Modal.Root open={isOpen} onOpenChange={setIsOpen} onOpenChangeComplete={onOpenChangeComplete}>
-			<Modal.Trigger size="sm" title="Add override" className="cui-py-0" color={null}>
+			<Modal.Trigger size="sm" title="Add override" className="py-0" color={null}>
 				<FontAwesomeIcon icon={faPlus} />
 			</Modal.Trigger>
 

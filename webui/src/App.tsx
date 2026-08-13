@@ -67,7 +67,7 @@ export default function App(): React.JSX.Element {
 						<div className="row cui-justify-content-center">
 							<div className="cui-col-md-6">
 								<div className="clearfix">
-									<h4 className="cui-pt-3">Houston, we have a problem!</h4>
+									<h4 className="pt-4">Houston, we have a problem!</h4>
 									<p className="cui-text-muted">It seems that we have lost connection to the companion app.</p>
 									<ul className="cui-text-muted">
 										<li>Check that the application is still running</li>
@@ -81,7 +81,7 @@ export default function App(): React.JSX.Element {
 						<div className="row cui-justify-content-center">
 							<div className="cui-col-md-6">
 								<div className="clearfix">
-									<h4 className="cui-pt-3">Stand by, the config is being updated!</h4>
+									<h4 className="pt-4">Stand by, the config is being updated!</h4>
 									{/* <p className="text-muted">It seems that we have lost connection to the companion app.</p> */}
 								</div>
 							</div>
@@ -290,9 +290,9 @@ function AppLoading({ progress, connected }: AppLoadingProps) {
 				<Grid.Col xxl={4} md={6} sm={8} xs={10}>
 					<h3>{message}</h3>
 					{connected ? (
-						<ProgressBar className="cui-mt-4" value={progress} />
+						<ProgressBar className="mt-6" value={progress} />
 					) : (
-						<div className="cui-mt-4" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+						<div className="flex items-center justify-center mt-6">
 							<PuffLoader loading={true} size={80} color={PRIMARY_COLOR} />
 						</div>
 					)}
