@@ -84,7 +84,7 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 
 							{!!controlConfig.config.entity && !isInternalUserValueFeedback(controlConfig.config.entity) && (
 								<MyErrorBoundary>
-									<div className="mt-3 pt-3 border-top">
+									<div className="mt-4 pt-2 cui-border-top">
 										<ExpressionVariableLocalVariablesEditor
 											controlId={controlId}
 											localVariables={controlConfig.config.localVariables}
@@ -377,7 +377,7 @@ function ExpressionVariableCurrentValue({ name }: { name: string }) {
 
 	if (!hasLastGoodValue.current) {
 		// Errored before ever producing a value - the error itself is shown at the field
-		return <small className="text-muted">No value</small>
+		return <small className="cui-text-muted">No value</small>
 	}
 
 	return <VariableValueDisplay value={lastGoodValue.current} />

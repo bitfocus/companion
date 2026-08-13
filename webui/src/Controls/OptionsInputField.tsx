@@ -159,7 +159,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 
 	return (
 		<>
-			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames({ displayNone: !visibility })}>
+			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames({ hidden: !visibility })}>
 				<OptionLabel option={option} features={isInExpressionMode ? ExpressionModeFeatures : features} />
 				{isInExpressionMode && (
 					<ExpressionValuePreview
@@ -171,7 +171,7 @@ export const OptionsInputField = observer(function OptionsInputField({
 					/>
 				)}
 			</FormLabel>
-			<Grid.Col sm={8} className={classNames({ displayNone: !visibility })}>
+			<Grid.Col sm={8} className={classNames({ hidden: !visibility })}>
 				{control}
 				{description && <div className="form-text">{description}</div>}
 			</Grid.Col>

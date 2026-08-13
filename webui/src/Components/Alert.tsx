@@ -51,7 +51,7 @@ export const StaticAlert = forwardRef<HTMLDivElement, StaticAlertProps>(
 			<div
 				className={classNames(
 					'alert-element',
-					variant === 'solid' ? `bg-${color} text-white` : `alert-${color}`,
+					variant === 'solid' ? `cui-bg-${color} cui-text-white` : `alert-${color}`,
 					className
 				)}
 				role="alert"

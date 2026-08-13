@@ -847,9 +847,13 @@ $utilities: map.merge(
     "visibility": (
       property: visibility,
       class: null,
+      // Companion: this is an empty-class utility (class: null), so the generator can't add the `cui-`
+      // namespace via its prefix logic (that would leave a dangling dash). Bake the prefix into the
+      // value keys instead so the classes come out as `.cui-visible` / `.cui-invisible`, consistent
+      // with every other CoreUI utility (they otherwise collide with Tailwind's own visibility utils).
       values: (
-        visible: visible,
-        invisible: hidden,
+        cui-visible: visible,
+        cui-invisible: hidden,
       )
     ),
     // scss-docs-end utils-visibility

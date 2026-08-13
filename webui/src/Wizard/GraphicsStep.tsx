@@ -24,9 +24,9 @@ export function GraphicsStep({ config, setValue }: GraphicsStepProps): React.JSX
 				overridden on individual buttons later.
 			</p>
 
-			<div className="d-flex align-items-start" style={{ gap: '1.5rem', flexWrap: 'wrap' }}>
+			<div className="flex items-start" style={{ gap: '1.5rem', flexWrap: 'wrap' }}>
 				<div style={{ flex: '1 1 220px', minWidth: 200 }}>
-					<div className="mb-3">
+					<div className="cui-mb-3">
 						<FormLabel htmlFor="buttons_decoration">Default decoration</FormLabel>
 						<DropdownInputField
 							htmlName="buttons_decoration"
@@ -43,16 +43,16 @@ export function GraphicsStep({ config, setValue }: GraphicsStepProps): React.JSX
 					/>
 				</div>
 
-				<div className="d-flex flex-column align-items-center" style={{ gap: '0.5rem' }}>
-					<div className="d-flex" style={{ gap: '0.75rem' }}>
+				<div className="flex flex-col items-center" style={{ gap: '0.5rem' }}>
+					<div className="flex" style={{ gap: '0.75rem' }}>
 						<GraphicsPreviewButton decoration={decoration} statusIcons={statusIcons} buttonStatus="warning" />
 						<GraphicsPreviewButton decoration={decoration} statusIcons={statusIcons} pushed buttonStatus="error" />
 					</div>
-					<small className="text-muted">Preview (idle &amp; pressed)</small>
+					<small className="cui-text-muted">Preview (idle &amp; pressed)</small>
 				</div>
 			</div>
 
-			<p className="text-muted mt-3" style={{ fontSize: '0.875rem' }}>
+			<p className="cui-text-muted mt-4" style={{ fontSize: '0.875rem' }}>
 				You can change these later on the 'Settings' tab under Buttons.
 			</p>
 		</div>

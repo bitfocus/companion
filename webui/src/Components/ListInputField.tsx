@@ -122,13 +122,13 @@ export function ListRowControls({
 	return (
 		<>
 			<div
-				className={classNames('form-label col-sm-4 col-form-label col-form-label-sm text-muted', {
-					displayNone: hidden,
+				className={classNames('form-label cui-col-sm-4 col-form-label col-form-label-sm cui-text-muted', {
+					hidden: hidden,
 				})}
 			>
 				Item {rowIndex + 1}
 			</div>
-			<Grid.Col sm={8} className={classNames('d-flex gap-1', { displayNone: hidden })}>
+			<Grid.Col sm={8} className={classNames('flex gap-1', { hidden: hidden })}>
 				<Button
 					color="secondary"
 					variant="outline"
@@ -193,11 +193,11 @@ export const ListInputField = observer(function ListInputField({
 
 	return (
 		<>
-			<FormLabel htmlFor={undefined} sm={4} column="sm" className={classNames({ displayNone: hidden })}>
+			<FormLabel htmlFor={undefined} sm={4} column="sm" className={classNames({ hidden: hidden })}>
 				{definition.label}
 				{definition.tooltip && <InlineHelpIcon className="ms-1">{definition.tooltip}</InlineHelpIcon>}
 			</FormLabel>
-			<Grid.Col sm={8} className={classNames({ displayNone: hidden })}>
+			<Grid.Col sm={8} className={classNames({ hidden: hidden })}>
 				<Button color="primary" size="sm" onClick={addRow} disabled={disabled}>
 					<FontAwesomeIcon icon={faPlus} className="me-1" />
 					{definition.addLabel ?? 'Add item'}
@@ -244,13 +244,13 @@ export const ListInputField = observer(function ListInputField({
 
 						return (
 							<Fragment key={field.id}>
-								<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames('ps-4', { displayNone: hidden })}>
+								<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames('ps-6', { hidden: hidden })}>
 									{field.label}
 									<InputFeatureIcons
 										{...(cell.isExpression ? ExpressionModeFeatures : (getInputFeatures(field) ?? {}))}
 									/>
 								</FormLabel>
-								<Grid.Col sm={8} className={classNames({ displayNone: hidden })}>
+								<Grid.Col sm={8} className={classNames({ hidden: hidden })}>
 									{canExpression ? (
 										<FieldOrExpression
 											inputId={inputId}

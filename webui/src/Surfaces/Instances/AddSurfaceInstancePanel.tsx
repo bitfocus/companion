@@ -31,12 +31,12 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 							</p>
 						</div>
 						<div>
-							<span className="text-muted">
+							<span className="cui-text-muted">
 								Can't find your surface?{' '}
 								<a
 									target="_blank"
 									href={makeAbsolutePath('/user-guide/config/modules')}
-									className="text-decoration-none"
+									className="cui-text-decoration-none"
 								>
 									Check our guidance for getting device support
 								</a>
@@ -48,7 +48,7 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 					<div>
 						<strong>You can use many different surfaces to control</strong> Companion. Ensure you have an internet
 						connection to search and install modules, or{' '}
-						<a target="_blank" href="https://l.companion.free/q/lp68nsiV4" className="text-decoration-none">
+						<a target="_blank" href="https://l.companion.free/q/lp68nsiV4" className="cui-text-decoration-none">
 							download a module bundle
 						</a>
 					</div>

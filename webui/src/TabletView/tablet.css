@@ -19,12 +19,12 @@
 		margin-top: 0.5rem;
 	}
 
-	.text-muted {
+	.cui-text-muted {
 		color: var(--remote-accent-muted) !important;
 		font-size: 0.93em;
 	}
 
-	.container-fluid {
+	.cui-container-fluid {
 		/* max-width: 1200px; */
 		height: 100%;
 		margin: 0 auto;

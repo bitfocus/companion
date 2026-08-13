@@ -16,13 +16,13 @@ export const RemoteSurfacesPage = observer(function RemoteSurfacesPage(): React.
 
 	return (
 		<Grid.Row className="split-panels">
-			<Grid.Col xl={6} className={`primary-panel ${showPrimaryPanel ? 'd-block' : 'd-xl-block d-none'}`}>
+			<Grid.Col xl={6} className={`primary-panel ${showPrimaryPanel ? 'cui-d-block' : 'cui-d-xl-block hidden'}`}>
 				<MyErrorBoundary>
 					<RemoteSurfacesList selectedRemoteConnectionId={selectedRemoteConnectionId} />
 				</MyErrorBoundary>
 			</Grid.Col>
 
-			<Grid.Col xl={6} className={`secondary-panel ${showSecondaryPanel ? 'd-block' : 'd-xl-block d-none'}`}>
+			<Grid.Col xl={6} className={`secondary-panel ${showSecondaryPanel ? 'cui-d-block' : 'cui-d-xl-block hidden'}`}>
 				<div className="secondary-panel-simple">
 					<SurfaceDiscoveryContextProvider>
 						<Outlet />

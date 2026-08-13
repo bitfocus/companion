@@ -274,7 +274,7 @@ const SurfaceRow = observer(function SurfaceRow({
 					</span>
 				)}
 			</div>
-			<div className={classNames('grid-cell', { 'ps-4': isInGroup })}>
+			<div className={classNames('grid-cell', { 'ps-6': isInGroup })}>
 				<div>
 					<b>{surface.name ? `${surface.name} - (${surface.type})` : surface.type}</b>
 					{!!surface.hasFirmwareUpdates && (

@@ -119,7 +119,7 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 				})}
 
 				{simpleModeFieldIds ? (
-					<div className="text-center text-muted mt-3" style={{ fontSize: '0.875rem' }}>
+					<div className="text-center cui-text-muted mt-4" style={{ fontSize: '0.875rem' }}>
 						Some fields are hidden in simple mode
 					</div>
 				) : null}
@@ -135,7 +135,7 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 					return (
 						<Accordion.Item key={section.id} value={section.id}>
 							<Accordion.Header>
-								<Accordion.Trigger className="fw-bold">{section.label}</Accordion.Trigger>
+								<Accordion.Trigger className="cui-fw-bold">{section.label}</Accordion.Trigger>
 							</Accordion.Header>
 							<Accordion.Panel>
 								<div className="row g-2 p-2">

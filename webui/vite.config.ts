@@ -8,6 +8,7 @@ import reactPlugin from '@vitejs/plugin-react'
 import postcssCustomMedia from 'postcss-custom-media'
 import { defaultClientConditions, defineConfig, loadEnv } from 'vite'
 import { normalizeBasePath } from '../tools/webui-dev-utils.js'
+import postcssWrapLayer from './postcss-wrap-layer.mjs'
 
 const buildFile = fs
 	.readFileSync(path.join(import.meta.dirname, '../BUILD'))
@@ -155,7 +156,9 @@ export default defineConfig(({ mode }) => {
 			// Resolve @custom-media (shared responsive breakpoints in breakpoints.css) at build time, so
 			// component CSS can @media (--bp-*) instead of repeating hard-coded pixel values.
 			postcss: {
-				plugins: [postcssCustomMedia()],
+				// postcssCustomMedia first (resolve @media (--bp-*)), then assign each app CSS file to its
+				// cascade layer so Tailwind utilities win without !important (see postcss-wrap-layer.mjs).
+				plugins: [postcssCustomMedia(), postcssWrapLayer()],
 			},
 		},
 	}

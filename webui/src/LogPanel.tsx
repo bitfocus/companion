@@ -72,7 +72,7 @@ export const LogPanel = memo(function LogPanel() {
 			<GenericConfirmModal ref={exportRef} />
 			<div className="log-page">
 				<Grid.Row>
-					<Grid.Col lg={12} className="px-3">
+					<Grid.Col lg={12} className="px-4">
 						<ButtonGroup>
 							<Button color="warning" size="sm" onClick={doToggleWarn} variant={config.warn ? undefined : 'outline'}>
 								Warning

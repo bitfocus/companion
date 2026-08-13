@@ -43,7 +43,7 @@ export function ControlActionStepTab({
 	const rotaryHeading = (label: string): React.JSX.Element => (
 		<>
 			{label}{' '}
-			<InlineHelpIcon className="text-muted">
+			<InlineHelpIcon className="cui-text-muted">
 				In an expression here, use $(this:delta) to read this turn's rotation amount and direction (positive =
 				right/clockwise, negative = left/counter-clockwise; some surfaces report a larger value for faster spins).
 			</InlineHelpIcon>
@@ -73,7 +73,7 @@ export function ControlActionStepTab({
 
 					<Button
 						color="success"
-						className="fw-medium"
+						className="cui-fw-medium"
 						variant={runtimeProps.current_step_id === selectedKey || disabledSetStep ? 'outline' : undefined}
 						disabled={runtimeProps.current_step_id === selectedKey || disabledSetStep}
 						onClick={() => service.setCurrentStep(selectedKey)}
@@ -98,9 +98,9 @@ export function ControlActionStepTab({
 				</ButtonGroup>
 			)}
 
-			<div className="mt-10">
+			<div className="mt-2">
+				{' '}
 				{/* Wrap the entity-category, for :first-child to work */}
-
 				{rotaryActions && selectedStepProps && (
 					<>
 						<MyErrorBoundary>
@@ -134,7 +134,6 @@ export function ControlActionStepTab({
 						</MyErrorBoundary>
 					</>
 				)}
-
 				{selectedStepProps && (
 					<>
 						<MyErrorBoundary>
@@ -165,7 +164,7 @@ export function ControlActionStepTab({
 				)}
 			</div>
 
-			<div className="my-3">
+			<div className="my-4">
 				<Button onClick={() => service.appendSet(selectedKey)} color="primary">
 					<FontAwesomeIcon icon={faPlus} /> Add duration group
 				</Button>

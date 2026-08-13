@@ -37,30 +37,33 @@ const BREAKPOINTS = ['xs', 'sm', 'md', 'lg', 'xl', 'xxl'] as const
 type Breakpoint = (typeof BREAKPOINTS)[number]
 
 function getColClasses(bp: Breakpoint, value: ColBreakpointValue): string[] {
-	// xs has no infix in Bootstrap 5 (col-6, not col-xs-6); others use the breakpoint name
+	// xs has no infix in Bootstrap 5 (col-6, not col-xs-6); others use the breakpoint name.
+	// `col-*` is `cui-`-prefixed (it collides with Tailwind's own col-* utilities and lives in the
+	// coreui-layout layer); `order-*` is `cui-`-prefixed too (it comes from the prefixed CoreUI
+	// utilities). `offset-*` stays unprefixed — it has no Tailwind equivalent.
 	const infix = bp === 'xs' ? '' : `-${bp}`
 	const classes: string[] = []
 
 	if (typeof value === 'boolean') {
-		if (value) classes.push(`col${infix}`)
+		if (value) classes.push(`cui-col${infix}`)
 	} else if (value === 'auto') {
-		classes.push(`col${infix}-auto`)
+		classes.push(`cui-col${infix}-auto`)
 	} else if (typeof value === 'number') {
-		classes.push(`col${infix}-${value}`)
+		classes.push(`cui-col${infix}-${value}`)
 	} else {
 		const { span, offset, order } = value
 		if (span === undefined || span === true) {
-			classes.push(`col${infix}`)
+			classes.push(`cui-col${infix}`)
 		} else if (span === 'auto') {
-			classes.push(`col${infix}-auto`)
+			classes.push(`cui-col${infix}-auto`)
 		} else if (typeof span === 'number') {
-			classes.push(`col${infix}-${span}`)
+			classes.push(`cui-col${infix}-${span}`)
 		}
 		if (offset !== undefined) {
 			classes.push(`offset${infix}-${offset}`)
 		}
 		if (order !== undefined) {
-			classes.push(`order${infix}-${order}`)
+			classes.push(`cui-order${infix}-${order}`)
 		}
 	}
 
@@ -79,8 +82,8 @@ export function getGridColClasses(props: GridBreakpointProps): string[] {
 const Col = forwardRef<HTMLDivElement, ColProps>(function Col({ className, xs, sm, md, lg, xl, xxl, ...rest }, ref) {
 	const bpClasses = getGridColClasses({ xs, sm, md, lg, xl, xxl })
 
-	// If no breakpoint props provided, fall back to a plain 'col'
-	const colClasses = bpClasses.length > 0 ? bpClasses : ['col']
+	// If no breakpoint props provided, fall back to a plain 'cui-col'
+	const colClasses = bpClasses.length > 0 ? bpClasses : ['cui-col']
 
 	return <div className={classNames(...colClasses, className)} {...rest} ref={ref} />
 })
@@ -93,7 +96,7 @@ export interface ContainerProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const Container = forwardRef<HTMLDivElement, ContainerProps>(function Container({ className, fluid, ...rest }, ref) {
-	return <div className={classNames(fluid ? 'container-fluid' : 'container', className)} {...rest} ref={ref} />
+	return <div className={classNames(fluid ? 'cui-container-fluid' : 'cui-container', className)} {...rest} ref={ref} />
 })
 
 // ─── Namespace export ─────────────────────────────────────────────────────────

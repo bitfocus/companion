@@ -113,7 +113,7 @@ export function ButtonEditorTabs({
 						)}
 
 						{stepKeys.length === 1 && (
-							<div className="tab-end-area align-self-center">
+							<div className="tab-end-area self-center">
 								<Button title="Add step" size="sm" onClick={service.appendStep}>
 									<FontAwesomeIcon icon={faPlus} />
 								</Button>

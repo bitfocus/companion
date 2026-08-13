@@ -137,7 +137,7 @@ export function InstanceDebugLog({
 	return (
 		<Grid.Container fluid style={{ height: 'calc(100vh - 10px)', padding: '10px', background: '#eee' }}>
 			<div className="log-page">
-				<Grid.Row className="px-3">
+				<Grid.Row className="px-4">
 					<Grid.Col>
 						<ButtonGroup className="me-2">
 							<Button color={isConnected ? 'success' : 'warning'} size="sm" disabled>

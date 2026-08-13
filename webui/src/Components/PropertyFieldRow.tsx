@@ -70,7 +70,7 @@ export function PropertyFieldRow({
 
 	return (
 		<>
-			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames(labelClassName, { displayNone: hidden })}>
+			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames(labelClassName, { hidden: hidden })}>
 				{label}
 				{activeFeatures && <InputFeatureIcons {...activeFeatures} />}
 				{tooltip && <InlineHelpIcon className="ms-1">{tooltip}</InlineHelpIcon>}
@@ -80,7 +80,7 @@ export function PropertyFieldRow({
 					</span>
 				)}
 			</FormLabel>
-			<Grid.Col sm={8} className={classNames({ displayNone: hidden })}>
+			<Grid.Col sm={8} className={classNames({ hidden: hidden })}>
 				{disableAutoExpression ? (
 					children({ value: value.value }, setInnerValue, inputId)
 				) : (

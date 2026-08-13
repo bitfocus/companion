@@ -74,7 +74,7 @@ export const RemoteSurfacesList = observer(function RemoteSurfacesList({
 					<AddRemoteSurfaceButton />
 					<Button
 						color="warning"
-						className="d-xl-none"
+						className="cui-d-xl-none"
 						onClick={() => void navigate({ to: '/surfaces/remote/discover' })}
 					>
 						<FontAwesomeIcon icon={faPlug} className="me-1" />

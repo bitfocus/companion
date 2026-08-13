@@ -121,7 +121,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 		<Grid.Row className="triggers-page split-panels">
 			<GenericConfirmModal ref={confirmModalRef} />
 
-			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
+			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'cui-d-xl-block hidden'}`}>
 				<h4 className="button-inline">
 					Expression Variables
 					<ContextHelpButton action="/user-guide/config/variables#expression-variables" />
@@ -167,7 +167,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 				</PanelCollapseHelperProvider>
 			</Grid.Col>
 
-			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
+			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'cui-d-xl-block hidden'}`}>
 				<div className="secondary-panel-simple">
 					{!!selectedVariableId && <ExpressionVariableEditPanelHeading doCloseVariable={doCloseVariable} />}
 					<Outlet />
@@ -229,8 +229,8 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 	const fullname = item.variableName ? `$(expression:${item.variableName})` : null
 
 	return (
-		<div onClick={doEdit} className="flex flex-row align-items-center gap-2 cursor-pointer">
-			<div className="flex flex-column grow">
+		<div onClick={doEdit} className="flex flex-row items-center gap-2 cursor-pointer">
+			<div className="flex flex-col grow">
 				{fullname ? (
 					<span className="variable-style">
 						{fullname}
@@ -243,7 +243,7 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 				<span>{item.description ?? ''}</span>
 			</div>
 
-			<div className="action-buttons w-auto">
+			<div className="action-buttons cui-w-auto">
 				<ButtonGroup>
 					<Button onClick={doClone} title="Clone">
 						<FontAwesomeIcon icon={faClone} />

@@ -125,7 +125,7 @@ export const TriggersPage = observer(function Triggers() {
 
 			<Grid.Col
 				xs={twoPanelMode ? 6 : 12}
-				className={classnames('primary-panel', showPrimaryPanel ? 'd-block' : 'd-none')}
+				className={classnames('primary-panel', showPrimaryPanel ? 'cui-d-block' : 'hidden')}
 			>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
@@ -179,7 +179,10 @@ export const TriggersPage = observer(function Triggers() {
 				</div>
 			</Grid.Col>
 
-			<Grid.Col xs={twoPanelMode ? 6 : 12} className={`secondary-panel ${showSecondaryPanel ? 'd-block' : 'd-none'}`}>
+			<Grid.Col
+				xs={twoPanelMode ? 6 : 12}
+				className={`secondary-panel ${showSecondaryPanel ? 'cui-d-block' : 'hidden'}`}
+			>
 				<div className="secondary-panel-simple">
 					{!!selectedTriggerId && (
 						<TriggerEditPanelHeading doCloseTrigger={doCloseTrigger} twoPanelMode={twoPanelMode} />
@@ -292,9 +295,9 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 	const triggerOrCollectionDisabled = !item.enabled || collectionDisabled
 
 	return (
-		<div className="flex flex-row align-items-center gap-2 cursor-pointer">
+		<div className="flex flex-row items-center gap-2 cursor-pointer">
 			<div
-				className={classnames('flex flex-column grow', { disabled: triggerOrCollectionDisabled })}
+				className={classnames('flex flex-col grow', { disabled: triggerOrCollectionDisabled })}
 				style={{ minWidth: 0 }}
 				onClick={doEdit}
 			>
@@ -302,7 +305,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 					{item.name}
 					{item.isRateLimited ? (
 						<span
-							className="ms-2 text-warning"
+							className="ms-2 cui-text-warning"
 							title="This trigger is firing very rapidly and is being rate-limited. This is often caused by an accidental feedback loop, where the trigger's actions change a variable that re-triggers it."
 						>
 							<FontAwesomeIcon icon={faTriangleExclamation} /> Rate limited
@@ -312,7 +315,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 				<span className="truncate" dangerouslySetInnerHTML={descriptionHtml} />
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</div>
-			<div className="action-buttons w-auto">
+			<div className="action-buttons cui-w-auto">
 				<ButtonGroup className="ms-1">
 					<SwitchInputField
 						id={undefined}

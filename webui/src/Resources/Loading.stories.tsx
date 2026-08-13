@@ -5,7 +5,7 @@ const meta = {
 	component: LoadingRetryOrError,
 	decorators: [
 		(Story) => (
-			<div className="container-fluid" style={{ maxWidth: 640, padding: 24 }}>
+			<div className="cui-container-fluid" style={{ maxWidth: 640, padding: 24 }}>
 				<div className="row">
 					<Story />
 				</div>

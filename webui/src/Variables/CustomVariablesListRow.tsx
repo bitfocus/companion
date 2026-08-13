@@ -59,7 +59,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 					</div>
 				)}
 				<div className="cell-header-item">
-					<ButtonGroup className="float-end">
+					<ButtonGroup className="cui-float-end">
 						{isCollapsed ? (
 							<Button onClick={doExpand} size="sm" title="Expand variable view">
 								<FontAwesomeIcon icon={faExpandArrowsAlt} />

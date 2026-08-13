@@ -1,7 +1,33 @@
-@layer theme, utilities;
+@layer theme, tw-base, coreui-reboot, coreui-layout, app-base, components, features, utilities;
 
-/* Utilities only; preflight is off (the app ships its own reset). */
+/*
+  Cascade layers, low -> high priority:
+    theme          Tailwind design tokens (@theme).
+    tw-base        Tailwind Preflight, the reset we are migrating towards. Enabled but currently
+                   masked: every declaration it introduces is overridden by the coreui-reboot layer
+                   above (see the "Preflight neutralizers" section in reboot.css), so turning it on
+                   has no visual effect today. As the CoreUI reboot is replaced piece by piece, the
+                   corresponding neutralizers are removed and Preflight takes over underneath.
+    coreui-reboot  The vendored CoreUI/Bootstrap reboot, kept authoritative just above Preflight.
+    coreui-layout  The vendored CoreUI containers + grid (`.cui-container*`, `.row`, `.row > *`
+                   gutters, `.cui-col*`). Below utilities so a plain `px-4`/`gap-2` wins over the grid
+                   gutter without !important. The container/col classes are `cui-`-prefixed because
+                   they collide with Tailwind's own container/col-* utilities.
+    app-base       Global app chrome / resets (common.css, nav.css, layout.css, …) that anything above
+                   may override.
+    components     Reusable design-system components (src/Components/**).
+    features       Page/feature CSS (everything else). Above `components` so a page can override a
+                   shared component's defaults in-context without specificity fights or !important.
+    utilities      Tailwind utilities; sit above everything so a plain `p-3`/`flex`/`px-4`/`pt-0` wins
+                   over app CSS, the reset and the grid without needing !important.
+  App CSS is assigned to app-base/components/features by path at build time (postcss-wrap-layer.mjs).
+  CoreUI's own generated utilities are `cui-`-prefixed, unlayered and !important, and sit at the very
+  top during the migration.
+*/
 @import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/preflight.css' layer(tw-base);
+@import './reboot.css' layer(coreui-reboot);
+@import './coreui-layout.css' layer(coreui-layout);
 @import 'tailwindcss/utilities.css' layer(utilities);
 
 @theme static {

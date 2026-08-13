@@ -27,7 +27,7 @@ export function ButtonGridZoomControl({
 						<FontAwesomeIcon icon={faMinus} />
 					</Button>
 					<SliderInputField
-						className="w-full align-self-center"
+						className="w-full self-center"
 						min={ZOOM_MIN}
 						max={ZOOM_MAX}
 						step={ZOOM_STEP}

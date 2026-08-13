@@ -244,29 +244,29 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 						/>
 					</div> */}
 
-					<div className="ms-2">
+					<div className="mt-2">
 						<form.AppField name="buttons">
 							{(field) => <field.ImportToggleField label="Buttons" disabled={!snapshot.buttons} />}
 						</form.AppField>
 					</div>
-					<div className="ms-2">
+					<div className="mt-2">
 						<form.AppField name="triggers">
 							{(field) => <field.ImportToggleField label="Triggers" disabled={!snapshot.triggers} />}
 						</form.AppField>
 					</div>
-					<div className="ms-2">
+					<div className="mt-2">
 						<form.AppField name="customVariables">
 							{(field) => <field.ImportToggleField label="Custom Variables" disabled={!snapshot.customVariables} />}
 						</form.AppField>
 					</div>
-					<div className="ms-2">
+					<div className="mt-2">
 						<form.AppField name="expressionVariables">
 							{(field) => (
 								<field.ImportToggleField label="Expression Variables" disabled={!snapshot.expressionVariables} />
 							)}
 						</form.AppField>
 					</div>
-					<div className="ms-2">
+					<div className="mt-2">
 						<form.AppField name="surfaces">
 							{(field) => (
 								<field.ImportToggleGroup
@@ -291,11 +291,11 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 						</form.AppField>
 					</div>
 
-					<div className="ms-2">
+					<div className="mt-2">
 						<form.AppField name="surfaces.known">
 							{(field) => (
 								<field.ImportToggleField
-									className="ms-4"
+									className="ms-8"
 									disabled={!snapshot.surfacesKnown}
 									label={
 										<>
@@ -311,7 +311,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 						<form.AppField name="surfaces.instances">
 							{(field) => (
 								<field.ImportToggleField
-									className="ms-4"
+									className="ms-8"
 									disabled={!snapshot.surfacesInstances}
 									label={
 										<>
@@ -327,7 +327,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 						<form.AppField name="surfaces.remote">
 							{(field) => (
 								<field.ImportToggleField
-									className="ms-4"
+									className="ms-8"
 									disabled={!snapshot.surfacesRemote}
 									label={
 										<>
@@ -354,7 +354,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 								</form.AppField>
 							</div> */}
 
-					<StaticAlert color="info" className="mt-3">
+					<StaticAlert color="info" className="mt-4">
 						<FontAwesomeIcon icon={faPlug} /> All connections will be imported, as they are required to be able to
 						import any actions and feedbacks.
 					</StaticAlert>

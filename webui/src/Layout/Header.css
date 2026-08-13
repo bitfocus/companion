@@ -9,8 +9,8 @@
 	border-bottom: 1px solid var(--color-border);
 
 	/* The header lays out its single full-width container child as a flex row */
-	> .container,
-	> .container-fluid {
+	> .cui-container,
+	> .cui-container-fluid {
 		display: flex;
 		flex-wrap: inherit;
 		align-items: center;
@@ -89,7 +89,7 @@
 	margin-right: 5px;
 }
 
-.header > .container-fluid {
+.header > .cui-container-fluid {
 	min-height: calc(4rem + 1px); /* stylelint-disable-line function-disallowed-list */
 }
 

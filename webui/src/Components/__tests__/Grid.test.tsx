@@ -37,63 +37,68 @@ describe('Grid.Col', () => {
 		const { container } = render(<Grid.Col />)
 		const el = container.firstChild as HTMLElement
 		expect(el.tagName).toBe('DIV')
-		expect(el).toHaveClass('col')
+		expect(el).toHaveClass('cui-col')
 	})
 
 	it('xs={6} → col-6', () => {
 		const { container } = render(<Grid.Col xs={6} />)
-		expect(container.firstChild).toHaveClass('col-6')
-		expect(container.firstChild).not.toHaveClass('col')
+		expect(container.firstChild).toHaveClass('cui-col-6')
+		expect(container.firstChild).not.toHaveClass('cui-col')
 	})
 
 	it('sm={8} → col-sm-8', () => {
 		const { container } = render(<Grid.Col sm={8} />)
-		expect(container.firstChild).toHaveClass('col-sm-8')
+		expect(container.firstChild).toHaveClass('cui-col-sm-8')
 	})
 
 	it('md={6} lg={4} → col-md-6 col-lg-4', () => {
 		const { container } = render(<Grid.Col md={6} lg={4} />)
-		expect(container.firstChild).toHaveClass('col-md-6', 'col-lg-4')
+		expect(container.firstChild).toHaveClass('cui-col-md-6', 'cui-col-lg-4')
 	})
 
 	it('multiple breakpoints produce correct classes', () => {
 		const { container } = render(<Grid.Col xs={12} sm={8} md={6} xxl={4} />)
-		expect(container.firstChild).toHaveClass('col-12', 'col-sm-8', 'col-md-6', 'col-xxl-4')
+		expect(container.firstChild).toHaveClass('cui-col-12', 'cui-col-sm-8', 'cui-col-md-6', 'cui-col-xxl-4')
 	})
 
 	it('sm={{ span: 8, offset: 4 }} → col-sm-8 offset-sm-4', () => {
 		const { container } = render(<Grid.Col sm={{ span: 8, offset: 4 }} />)
-		expect(container.firstChild).toHaveClass('col-sm-8', 'offset-sm-4')
+		expect(container.firstChild).toHaveClass('cui-col-sm-8', 'offset-sm-4')
+	})
+
+	it('sm={{ order: 2 }} → cui-order-sm-2 (order is a prefixed utility; offset is not)', () => {
+		const { container } = render(<Grid.Col sm={{ order: 2 }} />)
+		expect(container.firstChild).toHaveClass('cui-order-sm-2')
 	})
 
 	it('xs={{ span: 10, offset: 1 }} → col-10 offset-1 (no infix for xs)', () => {
 		const { container } = render(<Grid.Col xs={{ span: 10, offset: 1 }} />)
-		expect(container.firstChild).toHaveClass('col-10', 'offset-1')
+		expect(container.firstChild).toHaveClass('cui-col-10', 'offset-1')
 	})
 
 	it('xs={true} → col', () => {
 		const { container } = render(<Grid.Col xs={true} />)
-		expect(container.firstChild).toHaveClass('col')
+		expect(container.firstChild).toHaveClass('cui-col')
 	})
 
 	it('sm={true} → col-sm', () => {
 		const { container } = render(<Grid.Col sm={true} />)
-		expect(container.firstChild).toHaveClass('col-sm')
+		expect(container.firstChild).toHaveClass('cui-col-sm')
 	})
 
 	it("xs='auto' → col-auto", () => {
 		const { container } = render(<Grid.Col xs="auto" />)
-		expect(container.firstChild).toHaveClass('col-auto')
+		expect(container.firstChild).toHaveClass('cui-col-auto')
 	})
 
 	it("sm='auto' → col-sm-auto", () => {
 		const { container } = render(<Grid.Col sm="auto" />)
-		expect(container.firstChild).toHaveClass('col-sm-auto')
+		expect(container.firstChild).toHaveClass('cui-col-sm-auto')
 	})
 
 	it('merges additional className', () => {
 		const { container } = render(<Grid.Col xs={6} className="my-class" />)
-		expect(container.firstChild).toHaveClass('col-6', 'my-class')
+		expect(container.firstChild).toHaveClass('cui-col-6', 'my-class')
 	})
 
 	it('passes through HTML attributes', () => {
@@ -110,19 +115,19 @@ describe('Grid.Container', () => {
 		const { container } = render(<Grid.Container />)
 		const el = container.firstChild as HTMLElement
 		expect(el.tagName).toBe('DIV')
-		expect(el).toHaveClass('container')
-		expect(el).not.toHaveClass('container-fluid')
+		expect(el).toHaveClass('cui-container')
+		expect(el).not.toHaveClass('cui-container-fluid')
 	})
 
 	it('fluid renders container-fluid', () => {
 		const { container } = render(<Grid.Container fluid />)
-		expect(container.firstChild).toHaveClass('container-fluid')
-		expect(container.firstChild).not.toHaveClass('container')
+		expect(container.firstChild).toHaveClass('cui-container-fluid')
+		expect(container.firstChild).not.toHaveClass('cui-container')
 	})
 
 	it('merges additional className', () => {
 		const { container } = render(<Grid.Container className="my-class" />)
-		expect(container.firstChild).toHaveClass('container', 'my-class')
+		expect(container.firstChild).toHaveClass('cui-container', 'my-class')
 	})
 
 	it('passes through HTML attributes', () => {

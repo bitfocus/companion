@@ -27,12 +27,12 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 							</p>
 						</div>
 						<div>
-							<span className="text-muted">
+							<span className="cui-text-muted">
 								Can't find your device?{' '}
 								<a
 									target="_blank"
 									href={makeAbsolutePath('/user-guide/config/modules')}
-									className="text-decoration-none"
+									className="cui-text-decoration-none"
 								>
 									Check our guidance for getting device support
 								</a>
@@ -44,7 +44,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 					<div>
 						<strong>Connect to hundreds of devices</strong> with Companion modules. Ensure you have an internet
 						connection to search and install modules, or{' '}
-						<a target="_blank" href="https://l.companion.free/q/lp68nsiV4" className="text-decoration-none">
+						<a target="_blank" href="https://l.companion.free/q/lp68nsiV4" className="cui-text-decoration-none">
 							download a module bundle
 						</a>
 					</div>

@@ -59,7 +59,7 @@ function StatefulList({
 				isLocatedInGrid={false}
 				fieldSupportsExpression={fieldSupportsExpression ?? false}
 			/>
-			<div className="col-12">
+			<div className="cui-col-12">
 				<pre style={{ marginTop: 8, fontSize: 11 }}>{JSON.stringify(value, null, 2)}</pre>
 			</div>
 		</>

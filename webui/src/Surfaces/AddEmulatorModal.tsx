@@ -250,7 +250,12 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 										<>
 											<Modal.Close disabled={isSubmitting}>Cancel</Modal.Close>
 
-											<Button color="primary" className="me-md-1" disabled={!canSubmit || isSubmitting} type="submit">
+											<Button
+												color="primary"
+												className="cui-me-md-1"
+												disabled={!canSubmit || isSubmitting}
+												type="submit"
+											>
 												Add {isSubmitting ? '...' : ''}
 											</Button>
 										</>

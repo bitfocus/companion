@@ -109,7 +109,7 @@ export const WhatsNewModal = observer(
 								<Modal.Title>What's New in Companion</Modal.Title>
 							</Modal.Header>
 							<Modal.Body>
-								{isPending && <div className="p-3">Loading...</div>}
+								{isPending && <div className="p-4">Loading...</div>}
 								{error && (
 									<StaticAlert color="danger">
 										Failed to load What's New content: {error instanceof Error ? error.message : 'Unknown error'}

@@ -412,15 +412,15 @@ describe('ListInputField', () => {
 	})
 
 	describe('Visibility', () => {
-		it('hides content with displayNone class when visibility is false', () => {
+		it('hides content with hidden class when visibility is false', () => {
 			const { container } = render(<Controlled definition={definition} initialValue={[]} visibility={false} />)
-			const hidden = container.querySelectorAll('.displayNone')
+			const hidden = container.querySelectorAll('.hidden')
 			expect(hidden.length).toBeGreaterThan(0)
 		})
 
 		it('shows content normally when visibility is true', () => {
 			const { container } = render(<Controlled definition={definition} initialValue={[]} visibility={true} />)
-			expect(container.querySelectorAll('.displayNone')).toHaveLength(0)
+			expect(container.querySelectorAll('.hidden')).toHaveLength(0)
 		})
 	})
 

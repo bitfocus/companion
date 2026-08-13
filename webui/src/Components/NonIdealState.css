@@ -1,0 +1,15 @@
+/* Defaults live here (in the `components` cascade layer) rather than as inline styles, so a consumer
+   can override them with a Tailwind utility className — inline styles would beat every layer. */
+.non-ideal-state {
+	padding: 5vh;
+	text-align: center;
+}
+
+.non-ideal-state-icon {
+	opacity: 0.6;
+}
+
+.non-ideal-state-text {
+	padding: 10px;
+	font-weight: 400;
+}
