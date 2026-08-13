@@ -1,4 +1,4 @@
-@layer theme, tw-base, coreui-reboot, coreui-layout, utilities;
+@layer theme, tw-base, coreui-reboot, coreui-layout, app-base, components, features, utilities;
 
 /*
   Cascade layers, low -> high priority:
@@ -13,10 +13,16 @@
                    gutters, `.cui-col*`). Below utilities so a plain `px-4`/`gap-2` wins over the grid
                    gutter without !important. The container/col classes are `cui-`-prefixed because
                    they collide with Tailwind's own container/col-* utilities.
-    utilities      Tailwind utilities; sit above the reset and the layout so a plain `p-3`/`flex`/`px-4`
-                   wins over reboot and the grid without needing !important.
-  App component CSS stays unlayered (above all these layers). CoreUI's own generated utilities are
-  `cui-`-prefixed, unlayered and !important, and sit at the very top during the migration.
+    app-base       Global app chrome / resets (common.css, nav.css, layout.css, …) that anything above
+                   may override.
+    components     Reusable design-system components (src/Components/**).
+    features       Page/feature CSS (everything else). Above `components` so a page can override a
+                   shared component's defaults in-context without specificity fights or !important.
+    utilities      Tailwind utilities; sit above everything so a plain `p-3`/`flex`/`px-4`/`pt-0` wins
+                   over app CSS, the reset and the grid without needing !important.
+  App CSS is assigned to app-base/components/features by path at build time (postcss-wrap-layer.mjs).
+  CoreUI's own generated utilities are `cui-`-prefixed, unlayered and !important, and sit at the very
+  top during the migration.
 */
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/preflight.css' layer(tw-base);
