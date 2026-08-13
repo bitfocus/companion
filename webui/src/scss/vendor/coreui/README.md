@@ -13,10 +13,16 @@ utilities and Preflight (see `tailwind.css`). Their vendored SCSS sources (and t
 `lists`, `grid` and `container` mixins only they used) have been deleted; edit the compiled first-party
 CSS directly, or re-copy the module from upstream if you ever need the SCSS again.
 
-**Do not hand-edit the remaining files** — they are byte-identical upstream copies, with one
-exception: `_variables.scss` has been pruned to just the variables the forwarded modules read (verified
-by diffing compiled `App.scss` output before/after). If a change here needs a variable that was pruned,
-re-copy it from upstream.
+**Do not hand-edit the remaining files** — they are byte-identical upstream copies, with these
+exceptions:
+
+- `_variables.scss` has been pruned to just the variables the forwarded modules read (verified by
+  diffing compiled `App.scss` output before/after). If a change here needs a variable that was pruned,
+  re-copy it from upstream.
+- `_utilities.scss` and `mixins/_utilities.scss` carry the `cui-` namespacing changes (the prefix
+  injection in the generator, and the `cui-visible` / `cui-invisible` value keys for the empty-class
+  visibility utility). Re-copying either file from upstream reintroduces the collisions with Tailwind's
+  utilities.
 
 Converting the grid to a **Tailwind-native** grid is still deferred — do not attempt it in isolation.
 Bootstrap's 12-column grid doesn't map cleanly to Tailwind (flex + `w-N/12` + `gap` wraps; CSS grid
