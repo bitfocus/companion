@@ -6,9 +6,9 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import legacyPlugin from '@vitejs/plugin-legacy'
 import reactPlugin from '@vitejs/plugin-react'
 import postcssCustomMedia from 'postcss-custom-media'
-import postcssWrapLayer from './postcss-wrap-layer.mjs'
 import { defaultClientConditions, defineConfig, loadEnv } from 'vite'
 import { normalizeBasePath } from '../tools/webui-dev-utils.js'
+import postcssWrapLayer from './postcss-wrap-layer.mjs'
 
 const buildFile = fs
 	.readFileSync(path.join(import.meta.dirname, '../BUILD'))

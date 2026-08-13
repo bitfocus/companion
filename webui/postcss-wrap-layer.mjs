@@ -43,7 +43,9 @@ function resolveLayer(from) {
 	if (!from) return null
 	const path = from.split('?')[0].replace(/\\/g, '/')
 
-	const srcIdx = path.indexOf('/src/')
+	// lastIndexOf, not indexOf: a checkout path may contain an earlier `/src/` segment, and we want the
+	// app's own `webui/src/` root so the `Components/` and app-base checks below match.
+	const srcIdx = path.lastIndexOf('/src/')
 	if (srcIdx === -1) return null // only app source under webui/src
 	const rel = path.slice(srcIdx + '/src/'.length)
 
