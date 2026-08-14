@@ -21,7 +21,7 @@ export const UserConfigSwitchValueRow = observer(function UserConfigSwitchValueR
 }: UserConfigSwitchValueRowProps<TKey>) {
 	return (
 		<tr title={title}>
-			<td style={{ width: '100%' }}>{label}</td>
+			<td className="w-full">{label}</td>
 			<td>
 				<SwitchInputField
 					id={undefined} // Future: set this for better accessibility

@@ -43,7 +43,7 @@ export const AllColors: Story = {
 			'link',
 		] as const
 		return (
-			<div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+			<div className="flex gap-2 flex-wrap">
 				{colors.map((color) => (
 					<Button key={color} color={color} variant={variant} size={size} disabled={disabled}>
 						{color}

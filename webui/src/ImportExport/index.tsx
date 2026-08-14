@@ -201,7 +201,7 @@ export const ImportExportPage = observer(function ImportExport() {
 								<input
 									type="file"
 									onChange={loadSnapshot}
-									style={{ display: 'none' }}
+									className="hidden"
 									accept={isMobileSafari ? undefined : '.companionconfig,.yaml'} // Mobile safari doesn't support custom file extensions https://github.com/bitfocus/companion/issues/3676
 								/>
 							</label>

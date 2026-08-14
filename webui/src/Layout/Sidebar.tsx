@@ -194,12 +194,7 @@ function SidebarMenuItem(item: SidebarMenuItemProps) {
 						<SidebarMenuItemLabel {...item} />
 					</Link>
 				) : (
-					<a
-						className="nav-link"
-						onClick={onClick2}
-						style={{ cursor: 'pointer' }}
-						title={isNarrow ? undefined : item.title}
-					>
+					<a className="nav-link cursor-pointer" onClick={onClick2} title={isNarrow ? undefined : item.title}>
 						<SidebarMenuItemLabel {...item} />
 					</a>
 				)}

@@ -1,6 +1,7 @@
 import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId, useMemo, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
@@ -67,7 +68,7 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={reloadConfig} design="pulse" />
 			{controlConfig ? (
-				<div style={{ display: dataReady ? '' : 'none' }}>
+				<div className={classNames({ hidden: !dataReady })}>
 					{controlConfig.config.type === 'expression-variable' ? (
 						<>
 							<MyErrorBoundary>

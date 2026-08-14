@@ -38,9 +38,9 @@ export const MetricsConfig = observer(function MetricsConfig(props: UserConfigPr
 					<tr>
 						<td colSpan={3}>
 							{/* This is ugly, but it works well enough for now */}
-							<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-								<span style={{ flex: '0 0 auto' }}>Scrape token</span>
-								<div style={{ flex: 1, minWidth: 0 }}>
+							<div className="flex items-center gap-2">
+								<span className="flex-none">Scrape token</span>
+								<div className="flex-1 min-w-0">
 									<TextInputField
 										id={undefined}
 										value={props.config.prometheus_token}
@@ -57,7 +57,7 @@ export const MetricsConfig = observer(function MetricsConfig(props: UserConfigPr
 					<tr>
 						<td colSpan={3}>
 							<p>Example Prometheus scrape config:</p>
-							<pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+							<pre className="whitespace-pre-wrap break-all">
 								{`scrape_configs:
   - job_name: companion
     metrics_path: /api/metrics

@@ -14,7 +14,7 @@ export function SidebarHeader(): React.JSX.Element {
 				<div className="sidebar-brand-full">
 					<img src={makeAbsolutePath('/img/icons/48x48.png')} style={{ height: 30 }} alt="logo" />
 					&nbsp; Bitfocus&nbsp;
-					<span style={{ fontWeight: 'bold' }}>Companion</span>
+					<span className="font-bold">Companion</span>
 				</div>
 				<div className="sidebar-brand-narrow">
 					<img src={makeAbsolutePath('/img/icons/48x48.png')} style={{ height: 42 }} alt="logo" />

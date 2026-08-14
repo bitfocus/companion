@@ -22,7 +22,7 @@ export const UserConfigSwitchRow = observer(function UserConfigSwitchRow({
 	const invertIfNeeded = (value: boolean) => (inverted ? !value : value)
 	return (
 		<tr title={title}>
-			<td style={{ width: '100%' }}>
+			<td className="w-full">
 				{label}
 				{requiresRestart && (
 					<>

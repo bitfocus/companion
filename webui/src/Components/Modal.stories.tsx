@@ -88,7 +88,7 @@ export const WithCallbacks: Story = {
 						</Modal.Viewport>
 					</Modal.Portal>
 				</Modal.Root>
-				<ul style={{ marginTop: '1rem', fontFamily: 'monospace' }}>
+				<ul className="mt-4 font-mono">
 					{log.map((entry, i) => (
 						<li key={i}>{entry}</li>
 					))}
@@ -193,7 +193,7 @@ const sizeVariants: Array<{ label: string; size: 'sm' | 'lg' | 'xl' | undefined 
 export const Sizes: Story = {
 	render: function Render(args) {
 		return (
-			<div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+			<div className="flex gap-2 flex-wrap">
 				{sizeVariants.map(({ label, size }) => (
 					<Modal.Root key={label} {...args}>
 						<Modal.Trigger>{label}</Modal.Trigger>

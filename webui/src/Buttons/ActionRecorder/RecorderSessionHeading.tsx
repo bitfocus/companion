@@ -120,7 +120,7 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 
 				<Grid.Row className="m-0 clear-both">
 					<div>
-						<ButtonGroup className="margin-bottom">
+						<ButtonGroup className="mb-4">
 							<Button onClick={doClearActions} color="secondary" disabled={!sessionInfo.actions?.length}>
 								Clear Actions
 							</Button>

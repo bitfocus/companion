@@ -935,3 +935,58 @@
 		border-block-end-width: 0;
 	}
 }
+
+.table-header-buttons {
+	float: right;
+	margin: 0;
+
+	button {
+		padding: 1px 5px;
+		opacity: 0.4;
+
+		&.active {
+			opacity: 1;
+		}
+
+		&.button-secondary {
+			background-color: white;
+			color: black;
+		}
+	}
+}
+
+/* ── Buttons & button groups ──────────────────────────────────────────────── */
+.action-buttons {
+	text-align: center;
+
+	/* make compact */
+	width: 1px;
+
+	.button {
+		text-transform: uppercase;
+
+		padding: 4px;
+
+		&:disabled {
+			opacity: 0.2;
+		}
+	}
+
+	.button-primary.disabled {
+		opacity: 0.5;
+	}
+}
+
+.button-group {
+	.switch-input {
+		margin-top: 0.3rem;
+	}
+}
+
+/* Context-help / inline buttons in an <h4>/<h5> heading. Here (components layer) rather than
+   common.css (app-base) so it wins over .button's own display/padding. */
+.button-inline .button {
+	display: inline-flex;
+	align-items: center;
+	padding-left: 0.75em;
+}

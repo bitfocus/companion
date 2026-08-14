@@ -68,7 +68,7 @@ export function InstanceEditField({
 			)
 		case 'checkbox':
 			return (
-				<div style={{ marginRight: 40, marginTop: 2 }}>
+				<div className="me-10 mt-0.5">
 					<SwitchInputField id={inputId} value={!!value} setValue={setValue} tooltip={definition.tooltip} />
 				</div>
 			)

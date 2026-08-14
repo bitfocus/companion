@@ -32,11 +32,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 								<a target="_blank" href={makeAbsolutePath('/user-guide/config/modules')}>
 									Check our guidance for getting device support
 								</a>
-								.<br /> To import an offline module, go to the{' '}
-								<Link to="/modules">
-									Modules page
-								</Link>
-								.
+								.<br /> To import an offline module, go to the <Link to="/modules">Modules page</Link>.
 							</span>
 						</div>
 					</>

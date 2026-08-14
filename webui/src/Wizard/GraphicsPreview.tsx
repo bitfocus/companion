@@ -216,5 +216,5 @@ export function GraphicsPreviewButton({
 		}
 	}, [canvas, decoration, statusIcons, pushed, buttonStatus])
 
-	return <canvas ref={setCanvas} width={size + PAD * 2} height={size + PAD * 2} style={{ borderRadius: 4 }} />
+	return <canvas ref={setCanvas} width={size + PAD * 2} height={size + PAD * 2} className="rounded" />
 }

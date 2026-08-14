@@ -17,7 +17,7 @@ function WithEventLog(props: TextInputFieldProps): React.JSX.Element {
 	}
 
 	return (
-		<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+		<div className="flex flex-col gap-2">
 			<TextInputField
 				{...props}
 				value={value}

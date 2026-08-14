@@ -215,25 +215,13 @@ export function ImportModules(): React.JSX.Element {
 			<label className="button button-warning button-file" title={importDisabledTooltip} style={disabledButtonStyle}>
 				<FontAwesomeIcon icon={faFileImport} style={{ marginRight: 8, marginLeft: -3 }} />
 				Import module package
-				<input
-					type="file"
-					onChange={loadModuleFile}
-					style={{ display: 'none' }}
-					accept=".tgz"
-					disabled={!importAllowed}
-				/>
+				<input type="file" onChange={loadModuleFile} className="hidden" accept=".tgz" disabled={!importAllowed} />
 			</label>
 			&nbsp;
 			<label className="button button-info button-file" title={importDisabledTooltip} style={disabledButtonStyle}>
 				<FontAwesomeIcon icon={faFileImport} style={{ marginRight: 8, marginLeft: -3 }} />
 				Import offline module bundle
-				<input
-					type="file"
-					onChange={loadModuleBundle}
-					style={{ display: 'none' }}
-					accept=".tgz,.gz"
-					disabled={!importAllowed}
-				/>
+				<input type="file" onChange={loadModuleBundle} className="hidden" accept=".tgz,.gz" disabled={!importAllowed} />
 			</label>
 			{importError ? (
 				<DismissableAlert color="warning" onClose={() => setImportError(null)}>

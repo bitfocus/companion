@@ -93,7 +93,7 @@ export function ImportFullWizard({
 				</MyErrorBoundary>
 			</TabArea.Panel>
 			<TabArea.Panel value="buttons" style={{ height: '100%' }}>
-				<div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+				<div className="flex flex-col h-full">
 					<h4>Buttons</h4>
 					<MyErrorBoundary>
 						{snapshot.buttons ? (

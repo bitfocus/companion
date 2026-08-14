@@ -197,7 +197,7 @@ export const LayeredStylesOverrides = observer(function LayeredStylesOverrides({
 		<>
 			<hr />
 
-			<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+			<div className="flex justify-between items-center mb-2">
 				<span className="flex items-center gap-2">
 					<strong>Style Overrides</strong>
 					<FeedbackTypeIndicator feedbackType={feedbackType} />

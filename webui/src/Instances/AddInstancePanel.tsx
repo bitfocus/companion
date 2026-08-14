@@ -273,10 +273,8 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 					&nbsp;
 				</InlineHelpCustom>
 			)}
-			<div className="grow" style={{ alignContent: 'center' }}>
-				{moduleInfo.name}
-			</div>
-			<div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+			<div className="grow content-center">{moduleInfo.name}</div>
+			<div className="flex items-center gap-1">
 				<Link
 					to={`/modules/$moduleType/$moduleId`}
 					params={{ moduleType: moduleInfo.moduleType, moduleId: moduleInfo.moduleId }}
@@ -296,7 +294,7 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 					</WindowLinkOpen>
 				)}
 				{showHelpForVersion?.helpPath && (
-					<div className="m-0" style={{ cursor: 'pointer' }} onClick={showHelpClick}>
+					<div className="m-0 cursor-pointer" onClick={showHelpClick}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
 					</div>
 				)}

@@ -133,7 +133,7 @@ export const TriggersPage = observer(function Triggers() {
 							Triggers
 							<ContextHelpButton action="/user-guide/config/triggers" />
 						</h4>
-						<p style={{ marginBottom: '0.5rem' }}>
+						<p className="mb-2">
 							Triggers allow you to automate Companion by running actions when certain events occur, such as feedback or
 							variable updates.
 						</p>
@@ -294,8 +294,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 	return (
 		<div className="flex flex-row items-center gap-2 cursor-pointer">
 			<div
-				className={classnames('flex flex-col grow', { disabled: triggerOrCollectionDisabled })}
-				style={{ minWidth: 0 }}
+				className={classnames('flex flex-col grow min-w-0', { disabled: triggerOrCollectionDisabled })}
 				onClick={doEdit}
 			>
 				<b>

@@ -231,7 +231,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 
 	return (
 		<div className="variable-value-display" {...props}>
-			<div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
+			<div className="flex items-center min-w-0">
 				{valuePill}
 				{showCopy && (
 					<CopyButton size="sm" title="Copy variable value" text={valueStr} color="variable" variant="ghost" />
@@ -301,7 +301,7 @@ export const VariableValueDisplayPopover: React.FC<VariableValueDisplayPopoverPr
 					setExpanded(true)
 				}}
 				onMouseLeave={scheduleClose}
-				style={{ minWidth: 0 }}
+				className="min-w-0"
 			>
 				<VariableValueDisplay
 					value={value}

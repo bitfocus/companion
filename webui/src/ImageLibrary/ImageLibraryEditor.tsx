@@ -173,13 +173,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					</Button>
 				</div>
 
-				<input
-					ref={fileInputRef}
-					type="file"
-					accept="image/*"
-					onChange={handleReplaceImage}
-					style={{ display: 'none' }}
-				/>
+				<input ref={fileInputRef} type="file" accept="image/*" onChange={handleReplaceImage} className="hidden" />
 			</div>
 
 			<Form className="row mb-4">

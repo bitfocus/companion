@@ -45,7 +45,7 @@ export const MultipleButtons: Story = {
 			setArgs({ visibility: next })
 		}
 		return (
-			<div style={{ display: 'flex', gap: '4px' }}>
+			<div className="flex gap-1">
 				<VisibilityButton {...args} keyId="name" label="Name" color="primary" toggleVisibility={toggleVisibility} />
 				<VisibilityButton {...args} keyId="status" label="Status" color="success" toggleVisibility={toggleVisibility} />
 				<VisibilityButton
@@ -70,7 +70,7 @@ export const AllColors: Story = {
 			setArgs({ visibility: next })
 		}
 		return (
-			<div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+			<div className="flex flex-wrap gap-1">
 				{allColors.map((color) => (
 					<VisibilityButton
 						key={color}

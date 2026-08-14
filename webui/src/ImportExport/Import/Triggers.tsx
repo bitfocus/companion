@@ -85,8 +85,8 @@ export function ImportTriggersTab({
 			<p>Select the triggers you want to import.</p>
 			<Table className="mb-4">
 				<colgroup>
-					<col style={{ width: '5rem' }}></col>
-					<col style={{ width: 'auto' }}></col>
+					<col className="w-20"></col>
+					<col className="w-auto"></col>
 				</colgroup>
 				<thead>
 					<tr>

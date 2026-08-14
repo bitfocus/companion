@@ -11,7 +11,7 @@ export const Tuck = ({ children }: { children: React.ReactNode }): React.JSX.Ele
 				textAlign: 'center',
 			}}
 		>
-			<div style={{ margin: '0 auto' }}>{children}</div>
+			<div className="mx-auto">{children}</div>
 		</div>
 	)
 }

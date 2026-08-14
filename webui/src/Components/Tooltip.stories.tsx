@@ -9,7 +9,7 @@ const meta = {
 	component: Tooltip.Root,
 	decorators: [
 		(Story) => (
-			<div style={{ padding: 80, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+			<div className="p-20 flex justify-center items-center">
 				<Story />
 			</div>
 		),

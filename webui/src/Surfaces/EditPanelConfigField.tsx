@@ -120,7 +120,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 			break
 		case 'checkbox':
 			control = (
-				<div style={{ marginRight: 40, marginTop: 2 }}>
+				<div className="me-10 mt-0.5">
 					<SwitchInputField id={inputId} value={!!value} setValue={setValue2} tooltip={definition.tooltip} />
 				</div>
 			)

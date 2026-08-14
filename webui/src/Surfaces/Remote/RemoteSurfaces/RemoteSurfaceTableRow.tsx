@@ -68,11 +68,7 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 
 	return (
 		<div className="flex flex-row items-center gap-2 cursor-pointer">
-			<div
-				onClick={doEdit}
-				className={classNames('flex flex-col grow', { disabled: !isEnabled })}
-				style={{ minWidth: 0 }}
-			>
+			<div onClick={doEdit} className={classNames('flex flex-col grow min-w-0', { disabled: !isEnabled })}>
 				<b>{remoteConnection.displayName}</b>
 				<span className="truncate" title={surfaceInstanceDisplayName}>
 					{surfaceInstanceDisplayName}

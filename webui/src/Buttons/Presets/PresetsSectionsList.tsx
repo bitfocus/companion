@@ -135,7 +135,7 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 		>
 			<div>
 				<h5>Presets</h5>
-				<div style={{ marginBottom: 10 }}>
+				<div className="mb-2">
 					<ButtonGroup>
 						<Button color="primary" size="sm" onClick={clearSelectedConnectionId}>
 							<FontAwesomeIcon icon={faArrowLeft} />
