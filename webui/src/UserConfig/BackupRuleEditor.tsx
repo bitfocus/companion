@@ -145,7 +145,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				<TextInputFieldSimple id={cronFieldId} value={rule.cron} setValue={(value) => updateField('cron', value)} />
 			</Grid.Col>
 			<Grid.Col className={`fieldtype-textinput mt-0`} sm={{ offset: 4, span: 8 }}>
-				<small className="form-text cui-text-muted">
+				<small className="form-text text-muted">
 					Use cron syntax (e.g., "0 0 * * *" for daily at midnight). You can use{' '}
 					<a href="https://crontab.guru" target="_blank" rel="noopener noreferrer">
 						crontab guru
@@ -185,7 +185,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				/>
 			</Grid.Col>
 			<Grid.Col className={`fieldtype-textinput mt-0`} sm={{ offset: 4, span: 8 }}>
-				<small className="form-text cui-text-muted">
+				<small className="form-text text-muted">
 					Directory path where backups will be saved. Leave empty for default location.
 				</small>
 			</Grid.Col>
@@ -209,9 +209,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				<NumberInputField id={keepFieldId} value={rule.keep} min={1} setValue={(value) => updateField('keep', value)} />
 			</Grid.Col>
 			<Grid.Col className={`fieldtype-textinput mt-0`} sm={{ offset: 4, span: 8 }}>
-				<small className="form-text cui-text-muted">
-					How many backup files to retain before deleting the oldest ones
-				</small>
+				<small className="form-text text-muted">How many backup files to retain before deleting the oldest ones</small>
 			</Grid.Col>
 
 			<Grid.Col sm={12}>
@@ -230,7 +228,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				)}
 
 				{(!rule.previousBackups || rule.previousBackups.length === 0) && (
-					<div className="cui-text-muted">
+					<div className="text-muted">
 						<small>No backup files found. Backups may have been manually deleted or moved.</small>
 					</div>
 				)}

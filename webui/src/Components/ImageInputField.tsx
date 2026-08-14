@@ -113,14 +113,14 @@ export const ImageInputField = observer(function ImageInputField({
 			label = libraryImage.description || libraryImage.name
 		} else {
 			thumbnail = <FontAwesomeIcon icon={faImage} className="image-input-field__placeholder-icon" />
-			label = <span className="cui-text-muted">Unknown library image</span>
+			label = <span className="text-muted">Unknown library image</span>
 		}
 	} else if (parsed.type === 'inline') {
 		thumbnail = <img src={parsed.dataUrl} alt="Custom image" className="image-input-field__thumbnail" />
 		label = 'Custom image'
 	} else {
 		thumbnail = <FontAwesomeIcon icon={faImage} className="image-input-field__placeholder-icon" />
-		label = <span className="cui-text-muted">No image selected</span>
+		label = <span className="text-muted">No image selected</span>
 	}
 
 	return (

@@ -377,7 +377,7 @@ function ExpressionVariableCurrentValue({ name }: { name: string }) {
 
 	if (!hasLastGoodValue.current) {
 		// Errored before ever producing a value - the error itself is shown at the field
-		return <small className="cui-text-muted">No value</small>
+		return <small className="text-muted">No value</small>
 	}
 
 	return <VariableValueDisplay value={lastGoodValue.current} />

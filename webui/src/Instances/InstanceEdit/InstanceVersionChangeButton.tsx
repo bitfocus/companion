@@ -132,12 +132,12 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 							<Modal.Body>
 								<Grid.Row className="g-sm-2">
 									<Grid.Col sm={12}>
-										<StaticAlert color="warning" className="cui-mb-3">
+										<StaticAlert color="warning" className="mb-4">
 											Be careful when downgrading the module version. Some features may not be available in older
 											versions.
 										</StaticAlert>
 										{!!saveError && (
-											<StaticAlert color="danger" className="cui-mb-3">
+											<StaticAlert color="danger" className="mb-4">
 												Save failed: {saveError}
 											</StaticAlert>
 										)}

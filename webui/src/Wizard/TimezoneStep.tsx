@@ -32,7 +32,7 @@ export function TimezoneStep({ config, setValue }: TimezoneStepProps): React.JSX
 			</Grid.Col>
 
 			<Grid.Col sm={12}>
-				<p className="cui-text-muted mt-4" style={{ fontSize: '0.875rem' }}>
+				<p className="text-muted mt-4" style={{ fontSize: '0.875rem' }}>
 					You can change this later on the 'Settings' tab in the GUI.
 				</p>
 			</Grid.Col>

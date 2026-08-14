@@ -55,7 +55,7 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 								setValue={(val) => updateQueryUrl('pages', val)}
 								placeholder={'1..99'}
 							/>
-							<p className="cui-text-muted">
+							<p className="text-muted">
 								use 1..6 for ranges, and commas for multiple selections. Follows provided order
 							</p>
 

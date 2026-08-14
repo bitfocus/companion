@@ -111,7 +111,7 @@
 	--color-text-strong: #000;
 	--color-icon: #333;
 	--color-text-secondary: #666;
-	--color-text-muted: #6c757d;
+	--color-muted: #6c757d; /* deliberately un-prefixed (not --color-text-muted) so the utility reads `text-muted` */
 	--color-text-faint: #999; /* fainter than -muted: dropdown group headings, empty/placeholder labels */
 	--color-text-disabled: #ccc;
 

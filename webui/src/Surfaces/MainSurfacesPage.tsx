@@ -141,7 +141,7 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 					<AddEmulatorModal ref={addEmulatorModalRef} />
 
 					{!twoPanelMode && (
-						<Button color="info" className="cui-float-end" size="sm" onClick={handleShowSettings}>
+						<Button color="info" className="float-right" size="sm" onClick={handleShowSettings}>
 							<FontAwesomeIcon icon={faCog} /> Show Settings
 						</Button>
 					)}

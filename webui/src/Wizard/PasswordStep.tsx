@@ -63,7 +63,7 @@ export function PasswordStep({ config, setValue }: PasswordStepProps): React.JSX
 							setValue={(val) => setValue('admin_timeout', val)}
 							immediateValue
 						/>
-						<span className="cui-text-muted">(minutes, 0 for none)</span>
+						<span className="text-muted">(minutes, 0 for none)</span>
 					</Grid.Col>
 					<Grid.Col sm={2}></Grid.Col>
 				</>

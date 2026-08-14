@@ -12,7 +12,7 @@
 	/* Always-dark: override the theme's text/surface/border tokens for the whole sidebar subtree. */
 	--color-text: rgba(255, 255, 255, 0.87);
 	--color-text-strong: #fff;
-	--color-text-muted: rgba(255, 255, 255, 0.6);
+	--color-muted: rgba(255, 255, 255, 0.6);
 	--color-text-faint: rgba(255, 255, 255, 0.38);
 	--color-surface-dark: #212631;
 	--color-surface-muted: #323a49;
@@ -126,7 +126,7 @@
 	&:hover {
 		text-decoration: none;
 		&::before {
-			background-color: var(--color-text-muted);
+			background-color: var(--color-muted);
 		}
 	}
 
@@ -136,7 +136,7 @@
 		box-shadow: 0 0 0 0.25rem rgba(213, 2, 21, 0.25);
 
 		&::before {
-			background-color: var(--color-text-muted);
+			background-color: var(--color-muted);
 		}
 	}
 

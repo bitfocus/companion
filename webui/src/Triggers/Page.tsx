@@ -315,7 +315,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 				<span className="truncate" dangerouslySetInnerHTML={descriptionHtml} />
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</div>
-			<div className="action-buttons cui-w-auto">
+			<div className="action-buttons w-auto">
 				<ButtonGroup className="ms-1">
 					<SwitchInputField
 						id={undefined}

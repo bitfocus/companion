@@ -92,7 +92,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 				<GenericConfirmModal ref={confirmModalRef} />
 
 				<div className="flex items-center help-button-float">
-					<ButtonGroup className="connection-group-actions m-1 cui-me-auto">
+					<ButtonGroup className="connection-group-actions m-1 me-auto">
 						<Button color="primary" size="sm" onClick={() => void navigate({ to: '/surfaces/integrations/add' })}>
 							<FontAwesomeIcon icon={faPlug} className="me-1" />
 							Add Surface Integration

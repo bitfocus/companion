@@ -39,7 +39,7 @@
 		cursor: pointer;
 
 		&::placeholder {
-			color: var(--color-text-muted);
+			color: var(--color-muted);
 			opacity: 1;
 			font-weight: bold;
 			font-size: 0.9rem;
@@ -121,7 +121,7 @@
 		border: none;
 		background: transparent;
 		cursor: pointer;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		position: relative;
 		z-index: 1;
 	}

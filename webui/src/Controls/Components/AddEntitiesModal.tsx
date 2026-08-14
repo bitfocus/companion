@@ -58,7 +58,7 @@ const AddEntityLeaf = observer(function AddEntityLeaf({ leaf }: { leaf: EntityLe
 	return (
 		<>
 			<div className="collapsible-tree-leaf-text">
-				<span className="collapsible-tree-leaf-label cui-fw-semibold">{leaf.label}</span>
+				<span className="collapsible-tree-leaf-label font-semibold">{leaf.label}</span>
 				{leaf.description && (
 					<>
 						<span className="collapsible-tree-leaf-description">{leaf.description}</span>

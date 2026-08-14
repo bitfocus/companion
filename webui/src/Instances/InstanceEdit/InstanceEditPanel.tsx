@@ -177,7 +177,7 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 			</FormLabel>
 			<Grid.Col className={`fieldtype-textinput`} sm={8}>
 				<div className="flex items-center gap-2">
-					<span className="cui-fw-medium">{moduleVersion?.displayName ?? panelStore.instanceInfo.moduleVersionId}</span>
+					<span className="font-medium">{moduleVersion?.displayName ?? panelStore.instanceInfo.moduleVersionId}</span>
 
 					<InstanceVersionChangeButton
 						id={moduleVersionId}
@@ -417,7 +417,7 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 					<div className="grow">
 						<Button
 							color="success"
-							className="cui-me-md-1"
+							className="md:me-1"
 							disabled={isLoading || isSaving || !isValid || !panelStore.isDirty()}
 							type="submit"
 							title={!isValid ? 'Please fix the errors before saving' : undefined}

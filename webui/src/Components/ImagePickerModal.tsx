@@ -250,7 +250,7 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 
 			<ImageNameInput value={imageName} onChange={setImageName} disabled={isUploading} />
 
-			<div className="cui-mb-3 row">
+			<div className="mb-4 row">
 				<FormLabel htmlFor="upload-description" sm={3} column>
 					Description
 				</FormLabel>
@@ -399,7 +399,7 @@ function CustomImageTab({
 
 	return (
 		<div className="flex flex-col gap-4">
-			<p className="cui-text-muted mb-0">
+			<p className="text-muted mb-0">
 				This image will be stored only for this field and will not appear in the image library.
 			</p>
 

@@ -26,7 +26,7 @@ export function GraphicsStep({ config, setValue }: GraphicsStepProps): React.JSX
 
 			<div className="flex items-start" style={{ gap: '1.5rem', flexWrap: 'wrap' }}>
 				<div style={{ flex: '1 1 220px', minWidth: 200 }}>
-					<div className="cui-mb-3">
+					<div className="mb-4">
 						<FormLabel htmlFor="buttons_decoration">Default decoration</FormLabel>
 						<DropdownInputField
 							htmlName="buttons_decoration"
@@ -48,11 +48,11 @@ export function GraphicsStep({ config, setValue }: GraphicsStepProps): React.JSX
 						<GraphicsPreviewButton decoration={decoration} statusIcons={statusIcons} buttonStatus="warning" />
 						<GraphicsPreviewButton decoration={decoration} statusIcons={statusIcons} pushed buttonStatus="error" />
 					</div>
-					<small className="cui-text-muted">Preview (idle &amp; pressed)</small>
+					<small className="text-muted">Preview (idle &amp; pressed)</small>
 				</div>
 			</div>
 
-			<p className="cui-text-muted mt-4" style={{ fontSize: '0.875rem' }}>
+			<p className="text-muted mt-4" style={{ fontSize: '0.875rem' }}>
 				You can change these later on the 'Settings' tab under Buttons.
 			</p>
 		</div>

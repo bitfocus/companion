@@ -117,7 +117,7 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 
 					<div className="collections-nesting-table pages-list-table">
 						<div className="collections-nesting-table-row-item">
-							<div className="collections-nesting-table-row-item-grid cui-fw-bold">
+							<div className="collections-nesting-table-row-item-grid font-bold">
 								<div className="row-reorder-handle cui-invisible">
 									<FontAwesomeIcon icon={faSort} />
 								</div>
@@ -206,7 +206,7 @@ const PageListRow = observer(function PageListRow({
 					<FontAwesomeIcon icon={faSort} />
 				</div>
 				<div className="grow flex items-center gap-2">
-					<div className="pages-list-number cui-fw-bold">{pageNumber}</div>
+					<div className="pages-list-number font-bold">{pageNumber}</div>
 					<div className="grow">
 						<TextInputFieldSimple
 							id={undefined}

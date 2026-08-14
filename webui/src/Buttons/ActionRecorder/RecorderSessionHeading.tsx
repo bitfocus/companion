@@ -99,7 +99,7 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 		<>
 			<Form onSubmit={PreventDefaultHandler}>
 				<Grid.Row className="flex-form m-0" style={{ clear: 'both' }}>
-					<div className="flex w-full gap-2rem">
+					<div className="flex w-full gap-6">
 						<div className="w-full">
 							<FormLabel htmlFor={connectionsFieldId}>Connections</FormLabel>
 							<MultiDropdownInputField

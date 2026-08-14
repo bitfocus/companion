@@ -68,8 +68,8 @@ export default function App(): React.JSX.Element {
 							<div className="cui-col-md-6">
 								<div className="clearfix">
 									<h4 className="pt-4">Houston, we have a problem!</h4>
-									<p className="cui-text-muted">It seems that we have lost connection to the companion app.</p>
-									<ul className="cui-text-muted">
+									<p className="text-muted">It seems that we have lost connection to the companion app.</p>
+									<ul className="text-muted">
 										<li>Check that the application is still running</li>
 										<li>If you're using the Admin GUI over a network - check your connection</li>
 									</ul>

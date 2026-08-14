@@ -151,7 +151,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						Surface Integration
 					</FormLabel>
 					<Grid.Col sm={8} className="flex px-2">
-						<span className="cui-text-muted self-center">{instanceInfo?.label ?? remoteInfo.instanceId}</span>
+						<span className="text-muted self-center">{instanceInfo?.label ?? remoteInfo.instanceId}</span>
 					</Grid.Col>
 
 					<form.Subscribe
@@ -207,7 +207,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 								<div className="grow">
 									<Button
 										color="success"
-										className="cui-me-md-1"
+										className="md:me-1"
 										disabled={!isDirty || !isValid || isSubmitting}
 										type="submit"
 									>

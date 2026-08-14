@@ -7,7 +7,7 @@
 .config-selection {
 	.config-selection-intro {
 		margin-bottom: 0.75rem;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 	}
 
 	.config-selection-section {
@@ -24,7 +24,7 @@
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 	}
 
 	.config-selection-list {
@@ -50,7 +50,7 @@
 
 			.config-selection-icon {
 				background-color: var(--color-surface-subtle);
-				color: var(--color-text-muted);
+				color: var(--color-muted);
 			}
 		}
 

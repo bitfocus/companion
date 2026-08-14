@@ -73,7 +73,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 						{(currentTab) => {
 							if (currentTab === 'style') {
 								return (
-									<div className="mt-2 cui-h-100">
+									<div className="mt-2 h-full">
 										{/* Wrap the entity-category, for :first-child to work */}
 										<MyErrorBoundary>
 											<LayeredButtonEditorStyle
@@ -170,7 +170,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 	return (
 		<Group
 			orientation="vertical"
-			className="button-layer-style-editor cui-h-100"
+			className="button-layer-style-editor h-full"
 			defaultLayout={savedPanelLayout}
 			onLayoutChanged={savePanelLayout}
 		>

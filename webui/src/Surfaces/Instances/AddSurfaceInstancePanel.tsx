@@ -31,7 +31,7 @@ export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel
 							</p>
 						</div>
 						<div>
-							<span className="cui-text-muted">
+							<span className="text-muted">
 								Can't find your surface?{' '}
 								<a
 									target="_blank"

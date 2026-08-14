@@ -25,7 +25,7 @@ export function DataCollectionStep({ config, setValue }: DataCollectionStepProps
 					setValue={(val) => setValue('detailed_data_collection', val)}
 				/>
 			</div>
-			<p className="cui-text-muted mt-4" style={{ fontSize: '0.875rem' }}>
+			<p className="text-muted mt-4" style={{ fontSize: '0.875rem' }}>
 				You can change this setting at any time in Settings → Data Collection, where you can also view exactly what data
 				is being collected.
 			</p>

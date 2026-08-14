@@ -125,7 +125,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 			<div className="secondary-panel-simple-body">
 				<AddInstanceModal ref={addRef} service={service} openConfigureInstance={service.openConfigureInstance} />
 				<div style={{ clear: 'both' }} className="sticky-heading">
-					<div className="add-connection-intro-section cui-mb-3">
+					<div className="add-connection-intro-section mb-4">
 						{storeModulesOfTypeCount > 0 ? (
 							<div className="intro-grid">
 								{description(storeModulesOfTypeCount)}
@@ -163,7 +163,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 					</div>
 
 					<div>
-						<div className="refresh-and-last-updated cui-mb-3">
+						<div className="refresh-and-last-updated mb-4">
 							<RefreshModulesList btnSize="sm" />
 							<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
 						</div>

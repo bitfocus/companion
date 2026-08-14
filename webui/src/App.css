@@ -14,16 +14,14 @@
 	padding-top: 100px;
 	background-color: rgba(0, 0, 0, 0.8);
 	color: white;
+	/* Muted text (the `text-muted` utility reads this) is lightened against the dark overlay. */
+	--color-muted: #ccc;
 
 	transition: opacity 0.3s ease-in-out;
 
 	&.show-error {
 		display: block;
 		opacity: 1;
-	}
-
-	.cui-text-muted {
-		color: #ccc !important;
 	}
 }
 

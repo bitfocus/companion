@@ -45,7 +45,7 @@
 		padding: 0;
 		border: 0;
 		background: transparent;
-		color: var(--color-text-muted, #768192);
+		color: var(--color-muted, #768192);
 		cursor: pointer;
 
 		&:hover .step-selector-marker {

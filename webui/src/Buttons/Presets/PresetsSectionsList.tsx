@@ -179,7 +179,7 @@ function PresetPlacementModeToggle({ supportsReferences }: { supportsReferences:
 
 	return (
 		<div className="flex items-center gap-2 shrink-0" title={!supportsReferences ? unsupportedTitle : undefined}>
-			<span className="cui-text-muted small cui-text-nowrap">When placed:</span>
+			<span className="text-muted small cui-text-nowrap">When placed:</span>
 			<ButtonGroup>
 				<Button
 					size="sm"

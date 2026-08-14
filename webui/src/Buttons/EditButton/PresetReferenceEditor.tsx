@@ -95,7 +95,7 @@ export const PresetReferenceEditor = observer(function PresetReferenceEditor({
 			{templateVariableNames.length > 0 && (
 				<>
 					<h5 className="mt-4">Preset variables</h5>
-					<p className="cui-text-muted small">
+					<p className="text-muted small">
 						These values came from the preset template and can be customised. Other settings are managed by the preset.
 					</p>
 					<Form className="row g-2" onSubmit={PreventDefaultHandler}>

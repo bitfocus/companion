@@ -27,7 +27,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 							</p>
 						</div>
 						<div>
-							<span className="cui-text-muted">
+							<span className="text-muted">
 								Can't find your device?{' '}
 								<a
 									target="_blank"

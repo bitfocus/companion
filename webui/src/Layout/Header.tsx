@@ -81,7 +81,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 					Bitfocus&nbsp;<span style={{ fontWeight: 'bold' }}>Companion</span>
 				</a>
 
-				<HeaderNav className="hidden cui-d-md-flex cui-me-auto">
+				<HeaderNav className="hidden cui-d-md-flex me-auto">
 					{userConfig.properties?.installName && userConfig.properties?.installName.length > 0 && (
 						<li className="nav-item install-name">{userConfig.properties?.installName}</li>
 					)}

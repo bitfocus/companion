@@ -308,15 +308,15 @@ const SelectedElementProperty = observer(function SelectedElementProperty({
 }) {
 	const { styleStore } = useLayeredStyleElementsContext()
 
-	if (!row.elementId || !row.elementProperty) return <div className="cui-text-muted">No element selected</div>
+	if (!row.elementId || !row.elementProperty) return <div className="text-muted">No element selected</div>
 
 	const selectedElement = row.elementId ? styleStore.findElementById(row.elementId) : null
 	const selectedProperty = getElementSchemaProperty(selectedElement?.type, row.elementProperty)
 
 	return (
 		<>
-			<div className="cui-fw-semibold">{selectedElement?.name || row.elementId}</div>
-			<div className="cui-text-muted small">{selectedProperty?.label || row.elementProperty}</div>
+			<div className="font-semibold">{selectedElement?.name || row.elementId}</div>
+			<div className="text-muted small">{selectedProperty?.label || row.elementProperty}</div>
 		</>
 	)
 })

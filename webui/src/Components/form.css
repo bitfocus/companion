@@ -79,7 +79,7 @@ label.disabled {
 .form-text {
 	margin-top: 0.25rem;
 	font-size: 0.875em;
-	color: var(--color-text-muted);
+	color: var(--color-muted);
 }
 
 /* Shared base for our custom text-style inputs (the number field, and the text inputs via
@@ -121,7 +121,7 @@ label.disabled {
 	}
 
 	&::placeholder {
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		opacity: 1;
 	}
 

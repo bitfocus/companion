@@ -154,7 +154,7 @@
 		}
 
 		&[data-disabled] {
-			background-color: var(--color-text-muted);
+			background-color: var(--color-muted);
 		}
 	}
 }

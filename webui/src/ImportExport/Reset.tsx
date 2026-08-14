@@ -245,7 +245,7 @@ function ResetBeginStep() {
 					This lets you reset some or all major components of this Companion installation. Use the steps above to choose
 					what to reset and review before applying.
 				</p>
-				<p className="cui-mb-3">It is strongly recommended to export your configuration first.</p>
+				<p className="mb-4">It is strongly recommended to export your configuration first.</p>
 				<LinkButtonExternal color="success" href={makeAbsolutePath('/int/export/full')}>
 					<FontAwesomeIcon icon={faDownload} /> Export
 				</LinkButtonExternal>

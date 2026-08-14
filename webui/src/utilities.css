@@ -10,10 +10,6 @@
 	margin: 0;
 }
 
-.gap-2rem {
-	gap: 2rem;
-}
-
 /* Sets the CoreUI link-decoration custom property (which `a`/`.link` read); Tailwind's `.no-underline`
    sets text-decoration-line directly and, being layered, would lose to CoreUI's unlayered `a` rule. */
 .cui-text-decoration-none {

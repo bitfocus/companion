@@ -6,7 +6,7 @@
 	--nav-link-padding-y: 0.5rem;
 	--nav-link-color: var(--color-primary);
 	--nav-link-hover-color: color-mix(in srgb, var(--color-primary) 80%, black);
-	--nav-link-disabled-color: var(--color-text-muted);
+	--nav-link-disabled-color: var(--color-muted);
 
 	display: flex;
 	flex-wrap: wrap;

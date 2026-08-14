@@ -43,13 +43,13 @@ export function ImageNameInput({
 	return (
 		<>
 			{errorMessage && (
-				<StaticAlert color="danger" className="cui-mb-3">
+				<StaticAlert color="danger" className="mb-4">
 					{errorMessage}
 				</StaticAlert>
 			)}
 
 			{showWarning && warningText && (
-				<StaticAlert color="warning" className="cui-mb-3">
+				<StaticAlert color="warning" className="mb-4">
 					{warningText}
 				</StaticAlert>
 			)}
@@ -70,7 +70,7 @@ export function ImageNameInput({
 						immediateValue
 					/>
 				</div>
-				<div className="cui-col-sm-12 mt-2 cui-text-muted small">{helpText || defaultHelpText}</div>
+				<div className="cui-col-sm-12 mt-2 text-muted small">{helpText || defaultHelpText}</div>
 			</div>
 		</>
 	)

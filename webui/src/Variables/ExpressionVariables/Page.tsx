@@ -243,7 +243,7 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 				<span>{item.description ?? ''}</span>
 			</div>
 
-			<div className="action-buttons cui-w-auto">
+			<div className="action-buttons w-auto">
 				<ButtonGroup>
 					<Button onClick={doClone} title="Clone">
 						<FontAwesomeIcon icon={faClone} />
