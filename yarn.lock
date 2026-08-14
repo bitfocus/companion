@@ -1958,16 +1958,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:1.2.0-nightly-main-20260812-184540-2c49abe":
-  version: 1.2.0-nightly-main-20260812-184540-2c49abe
-  resolution: "@companion-module/host@npm:1.2.0-nightly-main-20260812-184540-2c49abe"
+"@companion-module/host@npm:1.2.0-nightly-main-20260814-181016-eedfd69":
+  version: 1.2.0-nightly-main-20260814-181016-eedfd69
+  resolution: "@companion-module/host@npm:1.2.0-nightly-main-20260814-181016-eedfd69"
   dependencies:
     "@companion-module/base": "npm:~2.1.3"
+    colord: "npm:^2.9.3"
     debounce-fn: "npm:^6.0.0"
+    fast-deep-equal: "npm:^3.1.3"
     p-queue: "npm:^9.3.3"
     semver: "npm:^7.8.5"
     zod: "npm:^4.4.3"
-  checksum: 10c0/3d071919042307699b720a3c7dcebfbaf398870658707fbf9b157851e419591abca9fd57e5efdde45c099067ae021e88a99933ec121b4b392212343988bcd626
+  checksum: 10c0/12b1e1ea6f2fc3374b99392119322ae74a40d5aa0032bcd5d12860aa1c85caa0c7fb2e677bcf0b07d5df1554ca6fb9e9c4a52f124ccd72c0abec11b7d637ba0b
   languageName: node
   linkType: hard
 
