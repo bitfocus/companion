@@ -1,6 +1,7 @@
 import type { IRange, languages } from 'monaco-editor'
 import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api.d.ts' // In theory importable with import type { Monaco } from '@monaco-editor/react'
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
+import { companionExpressionColorProvider } from './Expression.colors.js'
 
 export const COMPANION_EXPRESSION_LANGUAGE_ID = 'companionExpression'
 
@@ -14,6 +15,8 @@ export function registerCompanionExpressionLanguage(monaco: typeof Monaco): void
 		COMPANION_EXPRESSION_LANGUAGE_ID,
 		companionExpressionCompletionItemProvider
 	)
+	// Replaces Monaco's built-in colour detection, which is unsafe here - see Expression.colors.ts
+	monaco.languages.registerColorProvider(COMPANION_EXPRESSION_LANGUAGE_ID, companionExpressionColorProvider)
 
 	// Define custom theme for Companion Expression language (based on JavaScript colors)
 	monaco.editor.defineTheme('companion-expression-light', {
