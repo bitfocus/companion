@@ -8,10 +8,10 @@
 // Layout & components
 @forward 'scss/vendor/coreui/root';
 // NOTE: the vendored `reboot` + `type` base styles and the `containers` + `grid` layout styles are no
-// longer forwarded here. They are compiled into first-party CSS (webui/src/reboot.css and
-// webui/src/coreui-layout.css) and imported into the `coreui-reboot` and `coreui-layout` cascade
-// layers (see tailwind.css) so Tailwind utilities and the opt-in Preflight reset sit above them — a
-// plain `p-3`/`px-4` now beats the reboot's element styles and the grid's `.row > *` gutter without
+// longer forwarded here. They are compiled into first-party CSS (webui/src/base.css and
+// webui/src/coreui-layout.css) and imported into the `base` and `coreui-layout` cascade layers (see
+// tailwind.css) so Tailwind utilities and the opt-in Preflight reset sit above them — a plain
+// `p-3`/`px-4` now beats the base's element styles and the grid's `.row > *` gutter without
 // `!important`. The grid's `container`/`col-*` classes are `cui-`-prefixed (they collide with
 // Tailwind's own container/col-* utilities). These remain replaceable units to be rewritten as
 // first-party CSS.

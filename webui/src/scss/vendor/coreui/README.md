@@ -7,11 +7,12 @@ dependencies remain. The goal is to eventually replace everything here with firs
 `webui/src/` and delete this directory.
 
 The `reboot` + `type` and the `containers` + `grid` modules are no longer here: each was compiled once
-into first-party CSS — `webui/src/reboot.css` (the `coreui-reboot` cascade layer) and
-`webui/src/coreui-layout.css` (the `coreui-layout` layer) — so they can be layered beneath Tailwind's
-utilities and Preflight (see `tailwind.css`). Their vendored SCSS sources (and the `border-radius`,
-`lists`, `grid` and `container` mixins only they used) have been deleted; edit the compiled first-party
-CSS directly, or re-copy the module from upstream if you ever need the SCSS again.
+into first-party CSS — `webui/src/base.css` (the `base` cascade layer, holding the element-only base
+styles derived from the reboot) and `webui/src/coreui-layout.css` (the `coreui-layout` layer) — so they
+can be layered beneath Tailwind's utilities and Preflight (see `tailwind.css`). Their vendored SCSS
+sources (and the `border-radius`, `lists`, `grid` and `container` mixins only they used) have been
+deleted; edit the compiled first-party CSS directly, or re-copy the module from upstream if you ever
+need the SCSS again.
 
 **Do not hand-edit the remaining files** — they are byte-identical upstream copies, with these
 exceptions:

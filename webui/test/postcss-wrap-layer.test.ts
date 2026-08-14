@@ -63,7 +63,7 @@ describe('postcss-wrap-layer: source-path → layer mapping', () => {
 describe('postcss-wrap-layer: files left unlayered', () => {
 	for (const [name, from] of [
 		['tailwind.css', '/repo/webui/src/tailwind.css'],
-		['reboot.css', '/repo/webui/src/reboot.css'],
+		['base.css', '/repo/webui/src/base.css'],
 		['coreui-layout.css', '/repo/webui/src/coreui-layout.css'],
 		['breakpoints.css', '/repo/webui/src/breakpoints.css'],
 		['a CSS module', '/repo/webui/src/Thing.module.css'],

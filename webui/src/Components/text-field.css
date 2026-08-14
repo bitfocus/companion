@@ -28,3 +28,9 @@
 		box-shadow: none;
 	}
 }
+
+/* The multiline variant renders a <textarea> (single-line renders an <input>). Only the textarea is
+   resizable, and constrain it to vertical so it can't break the row layout. */
+textarea.text-input-field {
+	resize: vertical;
+}

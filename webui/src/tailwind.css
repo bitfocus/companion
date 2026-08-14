@@ -1,14 +1,16 @@
-@layer theme, tw-base, coreui-reboot, coreui-layout, app-base, components, features, utilities;
+@layer theme, tw-base, base, coreui-layout, app-base, components, features, utilities;
 
 /*
   Cascade layers, low -> high priority:
     theme          Tailwind design tokens (@theme).
     tw-base        Tailwind Preflight, the reset we are migrating towards. Enabled but currently
-                   masked: every declaration it introduces is overridden by the coreui-reboot layer
-                   above (see the "Preflight neutralizers" section in reboot.css), so turning it on
-                   has no visual effect today. As the CoreUI reboot is replaced piece by piece, the
-                   corresponding neutralizers are removed and Preflight takes over underneath.
-    coreui-reboot  The vendored CoreUI/Bootstrap reboot, kept authoritative just above Preflight.
+                   masked: every declaration it introduces is overridden by the `base` layer above
+                   (see the "Preflight neutralizers" section in base.css), so turning it on has no
+                   visual effect today. As the base is replaced piece by piece, the corresponding
+                   neutralizers are removed and Preflight takes over underneath.
+    base           First-party, element-only base styles layered on top of Preflight (base.css). Holds
+                   the app's deliberate element defaults (still derived from the CoreUI/Bootstrap
+                   reboot for now). Element selectors only — no class rules.
     coreui-layout  The vendored CoreUI containers + grid (`.cui-container*`, `.row`, `.row > *`
                    gutters, `.cui-col*`). Below utilities so a plain `px-4`/`gap-2` wins over the grid
                    gutter without !important. The container/col classes are `cui-`-prefixed because
@@ -26,7 +28,7 @@
 */
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/preflight.css' layer(tw-base);
-@import './reboot.css' layer(coreui-reboot);
+@import './base.css' layer(base);
 @import './coreui-layout.css' layer(coreui-layout);
 @import 'tailwindcss/utilities.css' layer(utilities);
 
