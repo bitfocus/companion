@@ -12,7 +12,7 @@ import {
 	type NumberValidationOptions,
 	type TextValidationOptions,
 	type ValueValidationResult,
-} from '@companion-module/host'
+} from '@companion-module/host/validate'
 import { ParseExpression } from './Expressions.js'
 import { isExpressionOrValue, type SomeCompanionInputField } from './Model/Options.js'
 import { stringifyVariableValue } from './Model/Variables.js'
