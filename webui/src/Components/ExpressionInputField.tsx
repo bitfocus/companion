@@ -182,6 +182,10 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 						// The find widget is reparented to float above the editor box (see handleEditorDidMount),
 						// so it no longer overlaps the code - don't reserve space at the top for it.
 						find: { addExtraSpaceOnTop: false },
+						// Only decorate colours reported by our own provider (colours inside strings), never
+						// Monaco's built-in detector - see Expression.colors.ts. This is Monaco's default,
+						// but it matters enough here to be explicit about it.
+						defaultColorDecorators: 'auto',
 						fontSize: 15,
 						// set suggestFontSize to 16 to make menu font and row height more like the other variable suggestion menus.
 						suggestFontSize: 14,
