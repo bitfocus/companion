@@ -212,14 +212,14 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						{getButton('Delete', faTrash, 'delete')}
 						&nbsp;
 					</div>
-					<div style={{ display: activeFunction ? '' : 'none' }}>
+					<div className={classnames({ hidden: !activeFunction })}>
 						<Button color="danger" onClick={() => stopFunction()} title="Cancel">
 							Cancel
 						</Button>
 						&nbsp;
 						<Button color="disabled">{hintText}</Button>
 					</div>
-					<div style={{ display: activeFunction ? 'none' : undefined }} title="Reset page buttons">
+					<div className={classnames({ hidden: activeFunction })} title="Reset page buttons">
 						<Button color="light" onClick={() => resetPageNav()}>
 							<FontAwesomeIcon icon={faCompass} /> {useCompactButtons ? '' : 'Reset page buttons'}
 						</Button>

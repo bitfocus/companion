@@ -30,7 +30,7 @@ export const DataCollectionConfig = observer(function DataCollectionConfig(props
 
 			<tr>
 				<td>View data being collected</td>
-				<td className="cui-text-start" colSpan={2}>
+				<td className="text-start" colSpan={2}>
 					<UsageDataModal />
 				</td>
 			</tr>

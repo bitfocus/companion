@@ -51,8 +51,8 @@ export function UsageDataModal(): React.JSX.Element {
 										backgroundColor: '#f5f5f5',
 										padding: '1rem',
 										borderRadius: '4px',
-										fontSize: '0.875rem',
 									}}
+									className="text-sm"
 								>
 									<code>{jsonData}</code>
 								</pre>

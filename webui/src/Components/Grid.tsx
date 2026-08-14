@@ -19,7 +19,6 @@ export type ColBreakpointValue =
 	| {
 			span?: number | boolean | 'auto'
 			offset?: number
-			order?: number | 'first' | 'last'
 	  }
 
 export interface GridBreakpointProps {
@@ -39,8 +38,7 @@ type Breakpoint = (typeof BREAKPOINTS)[number]
 function getColClasses(bp: Breakpoint, value: ColBreakpointValue): string[] {
 	// xs has no infix in Bootstrap 5 (col-6, not col-xs-6); others use the breakpoint name.
 	// `col-*` is `cui-`-prefixed (it collides with Tailwind's own col-* utilities and lives in the
-	// coreui-layout layer); `order-*` is `cui-`-prefixed too (it comes from the prefixed CoreUI
-	// utilities). `offset-*` stays unprefixed — it has no Tailwind equivalent.
+	// coreui-layout layer). `offset-*` stays unprefixed — it has no Tailwind equivalent.
 	const infix = bp === 'xs' ? '' : `-${bp}`
 	const classes: string[] = []
 
@@ -51,7 +49,7 @@ function getColClasses(bp: Breakpoint, value: ColBreakpointValue): string[] {
 	} else if (typeof value === 'number') {
 		classes.push(`cui-col${infix}-${value}`)
 	} else {
-		const { span, offset, order } = value
+		const { span, offset } = value
 		if (span === undefined || span === true) {
 			classes.push(`cui-col${infix}`)
 		} else if (span === 'auto') {
@@ -61,9 +59,6 @@ function getColClasses(bp: Breakpoint, value: ColBreakpointValue): string[] {
 		}
 		if (offset !== undefined) {
 			classes.push(`offset${infix}-${offset}`)
-		}
-		if (order !== undefined) {
-			classes.push(`cui-order${infix}-${order}`)
 		}
 	}
 

@@ -137,7 +137,7 @@ const EditButtonContent = observer(function EditButton({
 						config.type === 'preset-reference' ||
 						config.type === 'button-reference') && (
 						<MyErrorBoundary>
-							<ControlNotesEditor controlId={controlId} notes={config.options.notes} className="cui-w-100 mt-1" />
+							<ControlNotesEditor controlId={controlId} notes={config.options.notes} className="w-full mt-1" />
 						</MyErrorBoundary>
 					)}
 				</div>

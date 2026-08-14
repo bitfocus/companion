@@ -166,8 +166,8 @@ function SurfaceInstancesListNoInstances() {
 	return (
 		<NonIdealState icon={faPlug}>
 			You haven't set up any surfaces yet. <br />
-			Try adding something from the list <span className="cui-d-xl-none">below</span>
-			<span className="hidden cui-d-xl-inline">to the right</span>.
+			Try adding something from the list <span className="xl:hidden">below</span>
+			<span className="hidden xl:inline">to the right</span>.
 		</NonIdealState>
 	)
 }

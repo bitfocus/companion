@@ -5,9 +5,9 @@
  *
  * These rules originate from the CoreUI/Bootstrap `reboot` element reset (the `type` module's class
  * helpers have been dropped, and the element rules kept), compiled once from the vendored SCSS
- * (webui/src/scss/vendor/coreui/_reboot.scss) and now maintained here as first-party CSS. They still
- * read root's `--cui-*` custom properties; those move to the theme's `--color-*` tokens when the root
- * module is retired.
+ * (webui/src/scss/vendor/coreui/_reboot.scss) and now maintained here as first-party CSS. They read
+ * the theme's own tokens (`--color-*`, `--font-sans`/`--font-mono`, `--border-width`) from
+ * tailwind.css.
  *
  * The "Preflight neutralizers" section at the end masks the differences introduced by enabling
  * Tailwind's Preflight in the lower `tw-base` layer, so turning Preflight on has no visual effect
@@ -15,7 +15,6 @@
  * Preflight, letting Preflight take over underneath.
  */
 
-@charset "UTF-8";
 *,
 *::before,
 *::after {
@@ -30,13 +29,12 @@
 
 body {
 	margin: 0;
-	font-family: var(--cui-body-font-family);
-	font-size: var(--cui-body-font-size);
-	font-weight: var(--cui-body-font-weight);
-	line-height: var(--cui-body-line-height);
-	color: var(--cui-body-color);
-	text-align: var(--cui-body-text-align);
-	background-color: var(--cui-body-bg);
+	font-family: var(--font-sans);
+	font-size: 1rem;
+	font-weight: 400;
+	line-height: 1.5;
+	color: var(--color-body-text);
+	background-color: var(--color-body-bg);
 	-webkit-text-size-adjust: 100%;
 	-webkit-tap-highlight-color: rgba(8, 10, 12, 0);
 }
@@ -45,7 +43,7 @@ hr {
 	margin: 1rem 0;
 	color: inherit;
 	border: 0;
-	border-top: var(--cui-border-width) solid;
+	border-top: var(--border-width) solid;
 	opacity: 0.25;
 }
 
@@ -59,7 +57,7 @@ h1 {
 	margin-bottom: 0.5rem;
 	font-weight: 500;
 	line-height: 1.2;
-	color: var(--cui-heading-color);
+	color: inherit;
 }
 
 h1 {
@@ -143,22 +141,21 @@ small {
 }
 
 a {
-	color: rgba(var(--cui-link-color-rgb), var(--cui-link-opacity, 1));
-	text-decoration: underline;
+	color: var(--color-primary);
+	text-decoration: none;
 }
 a:hover {
-	--cui-link-color-rgb: var(--cui-link-hover-color-rgb);
+	color: var(--color-link-hover);
 }
 
 a:not([href]):not([class]),
 a:not([href]):not([class]):hover {
 	color: inherit;
-	text-decoration: none;
 }
 
 pre,
 code {
-	font-family: var(--cui-font-monospace);
+	font-family: var(--font-mono);
 	font-size: 1em;
 }
 
@@ -168,7 +165,6 @@ pre {
 	margin-bottom: 1rem;
 	overflow: auto;
 	font-size: 0.875em;
-	color: var(--cui-pre-color,);
 }
 pre code {
 	font-size: inherit;
@@ -178,7 +174,7 @@ pre code {
 
 code {
 	font-size: 0.875em;
-	color: var(--cui-code-color);
+	color: var(--color-code);
 	word-wrap: break-word;
 }
 a > code {

@@ -89,7 +89,7 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 							<FontAwesomeIcon icon={faExternalLink} size="xl" />
 						</WindowLinkOpen>
 					)}
-					<CloseButton closeFn={doCloseModule} visibilityClass=" cui-d-xl-none" />
+					<CloseButton closeFn={doCloseModule} visibilityClass="xl:hidden" />
 				</div>
 			</div>
 			<div className="secondary-panel-simple-body">

@@ -201,7 +201,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 			<form.Subscribe
 				selector={(state) => [state.isDirty, state.isValid, state.isSubmitting]}
 				children={([isDirty, isValid, isSubmitting]) => (
-					<div className="row connection-form-buttons cui-border-top">
+					<div className="row connection-form-buttons border-t border-border-alt">
 						<Grid.Col sm={12}>
 							<div className="flex flex-row">
 								<div className="grow">

@@ -33,7 +33,7 @@
 	/*
 	&[aria-checked='true'] {
 		background-color: #fff;
-		border-color: var(--cui-form-check-input-checked-border-color, var(--cui-primary));
+		border-color: var(--color-primary);
 	}
 	*/
 

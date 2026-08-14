@@ -18,8 +18,7 @@ import postcss from 'postcss'
  *   - base.css / coreui-layout.css        already imported into their own layers by tailwind.css.
  *   - breakpoints.css                     only @custom-media definitions, no rules.
  *   - *.module.css                        CSS Modules are scoped; no collision with utilities.
- *   - *.scss (App.scss)                   the vendored CoreUI utilities/api (`cui-*`, !important) that
- *                                         intentionally sit at the top until the migration retires them.
+ *   - anything that isn't a plain .css    (images, etc.) — left untouched.
  */
 
 const APP_BASE = new Set([
@@ -49,7 +48,7 @@ function resolveLayer(from) {
 	if (srcIdx === -1) return null // only app source under webui/src
 	const rel = path.slice(srcIdx + '/src/'.length)
 
-	if (!rel.endsWith('.css')) return null // skip scss (App.scss) and anything else
+	if (!rel.endsWith('.css')) return null // only plain .css files
 	if (rel.endsWith('.module.css')) return null
 
 	const base = rel.slice(rel.lastIndexOf('/') + 1)

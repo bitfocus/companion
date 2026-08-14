@@ -177,7 +177,7 @@ const AppMain = observer(function AppMain({ connected, loadingComplete, loadingP
 					''
 				)}
 				<MySidebar />
-				<div className="wrapper flex flex-col cui-min-vh-100 cui-bg-body-tertiary">
+				<div className="wrapper flex flex-col min-h-screen bg-app-frame-bg">
 					<MyHeader setLocked={setLocked} canLock={canLock && unlocked} />
 					<div className="body grow">
 						{connected && loadingComplete ? (

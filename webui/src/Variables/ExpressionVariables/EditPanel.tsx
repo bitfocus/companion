@@ -84,7 +84,7 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 
 							{!!controlConfig.config.entity && !isInternalUserValueFeedback(controlConfig.config.entity) && (
 								<MyErrorBoundary>
-									<div className="mt-4 pt-2 cui-border-top">
+									<div className="mt-4 pt-2 border-t border-border-alt">
 										<ExpressionVariableLocalVariablesEditor
 											controlId={controlId}
 											localVariables={controlConfig.config.localVariables}

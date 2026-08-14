@@ -69,7 +69,6 @@
     "react-transition-group": "^4.4.5",
     "remark-gfm": "^4.0.1",
     "sanitize-html": "^2.17.6",
-    "sass-embedded": "^1.100.0",
     "terser": "^5.49.2",
     "type-fest": "^5.8.0",
     "typescript": "npm:@typescript/typescript6@^6.0.2",

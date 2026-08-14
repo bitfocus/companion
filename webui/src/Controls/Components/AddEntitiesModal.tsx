@@ -154,7 +154,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 		<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
 			<Modal.Trigger
 				color="primary"
-				className="cui-rounded-start-0"
+				className="rounded-s-none"
 				disabled={disabled}
 				aria-label={`Browse ${capitalize(entityTypeLabel)}s`}
 				title={`Browse ${capitalize(entityTypeLabel)}s`}

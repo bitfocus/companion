@@ -12,30 +12,6 @@
 	font-size: 0.875em;
 }
 
-/* Spacing — CoreUI's utilities/api and Tailwind use different spacing scales, so these explicit values
-   are kept rather than mapping onto either scale. */
-.p-no-margin {
-	margin: 0;
-}
-
-/* Sets the CoreUI link-decoration custom property (which `a`/`.link` read); Tailwind's `.no-underline`
-   sets text-decoration-line directly and, being layered, would lose to CoreUI's unlayered `a` rule. */
-.cui-text-decoration-none {
-	--cui-link-decoration: none;
-}
-
-/* Squares off one side's corners; kept over `.rounded-s-none`/`.rounded-e-none` because those are
-   layered and would lose to the unlayered `.form-input` border-radius on the dropdown input groups. */
-.cui-rounded-start-0 {
-	border-top-left-radius: 0;
-	border-bottom-left-radius: 0;
-}
-
-.cui-rounded-end-0 {
-	border-top-right-radius: 0;
-	border-bottom-right-radius: 0;
-}
-
 /* A dnd overlay that is not actively being dragged must not display, as it can otherwise cause
    unexpected layout shifts for a frame or two. */
 [data-dnd-overlay]:not([data-dnd-dragging]) {

@@ -118,7 +118,7 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 					<div className="collections-nesting-table pages-list-table">
 						<div className="collections-nesting-table-row-item">
 							<div className="collections-nesting-table-row-item-grid font-bold">
-								<div className="row-reorder-handle cui-invisible">
+								<div className="row-reorder-handle invisible">
 									<FontAwesomeIcon icon={faSort} />
 								</div>
 								<div className="grow flex items-center gap-2">

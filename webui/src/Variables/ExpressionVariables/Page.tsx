@@ -121,7 +121,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 		<Grid.Row className="triggers-page split-panels">
 			<GenericConfirmModal ref={confirmModalRef} />
 
-			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'cui-d-xl-block hidden'}`}>
+			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'xl:block hidden'}`}>
 				<h4 className="button-inline">
 					Expression Variables
 					<ContextHelpButton action="/user-guide/config/variables#expression-variables" />
@@ -167,7 +167,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 				</PanelCollapseHelperProvider>
 			</Grid.Col>
 
-			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'cui-d-xl-block hidden'}`}>
+			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'xl:block hidden'}`}>
 				<div className="secondary-panel-simple">
 					{!!selectedVariableId && <ExpressionVariableEditPanelHeading doCloseVariable={doCloseVariable} />}
 					<Outlet />

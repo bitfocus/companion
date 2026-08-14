@@ -37,7 +37,7 @@ export const SidebarFooter = observer(function SidebarFooter({ onContextMenu }: 
 			<div className="nav-link sidebar-footer-toggler">
 				{mobileMode ? (
 					<span className={'nav-icon-wrapper flex block-collapse'} onMouseUp={onContextMenu}>
-						<FontAwesomeIcon className="nav-icon cui-opacity-50" icon={faCog} />
+						<FontAwesomeIcon className="nav-icon opacity-50" icon={faCog} />
 					</span>
 				) : (
 					<span

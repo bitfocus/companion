@@ -125,7 +125,7 @@ function SatelliteRow({ surfaceInfo, showSetupSatellite }: SatelliteRowProps) {
 					const linkAddress = address.includes(':') ? `[${address}]` : address
 
 					return (
-						<p key={address} className="p-no-margin">
+						<p key={address} className="m-0">
 							{surfaceInfo.apiEnabled ? (
 								<a href={`http://${linkAddress}:${surfaceInfo.port}`} target="_blank">
 									{address}
@@ -218,7 +218,7 @@ const PluginSurfaceRow = observer(function PluginSurfaceRow({ surfaceInfo, addCo
 				</div>
 			</td>
 			<td>
-				<p className="p-no-margin">{surfaceInfo.address ?? '-'}</p>
+				<p className="m-0">{surfaceInfo.address ?? '-'}</p>
 			</td>
 			<td>
 				<ButtonGroup>

@@ -149,7 +149,7 @@ export function VariablesListPage(): React.JSX.Element {
 			</div>
 
 			<VariablesTable label={label} />
-			<br style={{ clear: 'both' }} />
+			<br className="clear-both" />
 		</div>
 	)
 }

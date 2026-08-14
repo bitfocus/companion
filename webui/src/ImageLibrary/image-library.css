@@ -97,12 +97,6 @@
 		flex-direction: column;
 	}
 
-	.image-library-controls {
-		.cui-d-flex {
-			gap: 0.5rem;
-		}
-	}
-
 	.image-library-dropzone {
 		margin: 1rem 0;
 		padding: 1.5rem 2rem;

@@ -80,7 +80,7 @@ export function getWizardChanges(oldConfig: UserConfigModel, newConfig: UserConf
 				{oldConfig.setup_wizard !== 0 && isReducingSize && (
 					<>
 						<br />
-						<span className="cui-text-danger">
+						<span className="text-danger">
 							By reducing the grid size, any buttons outside of the new boundaries will be deleted.
 						</span>
 					</>

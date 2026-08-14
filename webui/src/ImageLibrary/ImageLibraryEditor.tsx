@@ -188,7 +188,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 				</FormLabel>
 				<Grid.Col sm={8} className="flex items-center justify-between">
 					<div className="flex items-center">
-						<span id={imageNameFieldId} className="cui-font-monospace">
+						<span id={imageNameFieldId} className="font-mono">
 							{imageInfo.name}
 						</span>
 						<CopyButton size="sm" title="Copy variable name" text={`$(image:${imageInfo.name})`} />

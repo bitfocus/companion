@@ -129,6 +129,7 @@
 /* ─── Trigger caret ──────────────────────────────────────────────────────────── */
 
 .popover2-trigger-caret::after {
+	margin-left: 0.5em;
 	display: inline-block;
 	vertical-align: 0.255em;
 	content: '';

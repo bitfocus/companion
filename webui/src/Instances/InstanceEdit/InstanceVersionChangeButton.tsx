@@ -185,7 +185,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 										className="cui-col-sm-12 mt-4 mb-2 p-0"
 									>
 										<hr className="my-2" />
-										<Collapse.Trigger className="button button-link button-sm p-0 cui-text-decoration-none">
+										<Collapse.Trigger className="button button-link button-sm p-0">
 											<span className="me-1">{advancedMode ? '▼' : '▶'}</span>
 											Advanced Options
 										</Collapse.Trigger>

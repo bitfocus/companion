@@ -116,7 +116,7 @@
 
 	.number-range-indicator {
 		height: 100%;
-		/* background-color: var(--cui-primary); */
+		/* background-color: var(--color-primary); */
 		border-radius: 1rem;
 
 		/*

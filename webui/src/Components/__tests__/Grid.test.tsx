@@ -66,11 +66,6 @@ describe('Grid.Col', () => {
 		expect(container.firstChild).toHaveClass('cui-col-sm-8', 'offset-sm-4')
 	})
 
-	it('sm={{ order: 2 }} → cui-order-sm-2 (order is a prefixed utility; offset is not)', () => {
-		const { container } = render(<Grid.Col sm={{ order: 2 }} />)
-		expect(container.firstChild).toHaveClass('cui-order-sm-2')
-	})
-
 	it('xs={{ span: 10, offset: 1 }} → col-10 offset-1 (no infix for xs)', () => {
 		const { container } = render(<Grid.Col xs={{ span: 10, offset: 1 }} />)
 		expect(container.firstChild).toHaveClass('cui-col-10', 'offset-1')

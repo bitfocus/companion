@@ -132,7 +132,7 @@ export const WithValidationValid: Story = {
 }
 
 export const WithStyle: Story = {
-	args: { value: 'Custom styled', className: 'cui-font-monospace cui-bg-light' },
+	args: { value: 'Custom styled', className: 'font-mono bg-light' },
 }
 
 export const WithCallbacks: Story = {

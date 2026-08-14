@@ -125,7 +125,7 @@ export const TriggersPage = observer(function Triggers() {
 
 			<Grid.Col
 				xs={twoPanelMode ? 6 : 12}
-				className={classnames('primary-panel', showPrimaryPanel ? 'cui-d-block' : 'hidden')}
+				className={classnames('primary-panel', showPrimaryPanel ? 'block' : 'hidden')}
 			>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
@@ -179,10 +179,7 @@ export const TriggersPage = observer(function Triggers() {
 				</div>
 			</Grid.Col>
 
-			<Grid.Col
-				xs={twoPanelMode ? 6 : 12}
-				className={`secondary-panel ${showSecondaryPanel ? 'cui-d-block' : 'hidden'}`}
-			>
+			<Grid.Col xs={twoPanelMode ? 6 : 12} className={`secondary-panel ${showSecondaryPanel ? 'block' : 'hidden'}`}>
 				<div className="secondary-panel-simple">
 					{!!selectedTriggerId && (
 						<TriggerEditPanelHeading doCloseTrigger={doCloseTrigger} twoPanelMode={twoPanelMode} />
@@ -305,7 +302,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 					{item.name}
 					{item.isRateLimited ? (
 						<span
-							className="ms-2 cui-text-warning"
+							className="ms-2 text-warning"
 							title="This trigger is firing very rapidly and is being rate-limited. This is often caused by an accidental feedback loop, where the trigger's actions change a variable that re-triggers it."
 						>
 							<FontAwesomeIcon icon={faTriangleExclamation} /> Rate limited

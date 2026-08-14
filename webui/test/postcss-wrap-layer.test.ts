@@ -67,7 +67,7 @@ describe('postcss-wrap-layer: files left unlayered', () => {
 		['coreui-layout.css', '/repo/webui/src/coreui-layout.css'],
 		['breakpoints.css', '/repo/webui/src/breakpoints.css'],
 		['a CSS module', '/repo/webui/src/Thing.module.css'],
-		['a .scss entry', '/repo/webui/src/App.scss'],
+		['a .scss entry', '/repo/webui/src/styles.scss'],
 		['a file outside src/', '/repo/webui/build/index.css'],
 	] as const) {
 		it(`does not wrap ${name}`, async () => {

@@ -16,16 +16,13 @@ export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.El
 
 	return (
 		<Grid.Row className="connections-page split-panels">
-			<Grid.Col
-				xl={6}
-				className={`connections-panel primary-panel ${showPrimaryPanel ? 'cui-d-block' : 'cui-d-xl-block hidden'}`}
-			>
+			<Grid.Col xl={6} className={`connections-panel primary-panel ${showPrimaryPanel ? 'block' : 'hidden xl:block'}`}>
 				<ConnectionsList selectedConnectionId={selectedConnectionId} />
 			</Grid.Col>
 
 			<Grid.Col
 				xl={6}
-				className={`connections-panel secondary-panel ${showSecondaryPanel ? 'cui-d-block' : 'cui-d-xl-block hidden'}`}
+				className={`connections-panel secondary-panel ${showSecondaryPanel ? 'block' : 'hidden xl:block'}`}
 			>
 				<div className="secondary-panel-simple">
 					<MyErrorBoundary>

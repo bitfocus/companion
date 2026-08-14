@@ -110,7 +110,7 @@ const FeedbackTypeIndicator = observer(function FeedbackTypeIndicator({
 				</>
 			}
 		>
-			<FontAwesomeIcon icon={info.icon} className="cui-text-info" />
+			<FontAwesomeIcon icon={info.icon} className="text-info" />
 		</InlineHelpCustom>
 	)
 })

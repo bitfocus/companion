@@ -158,7 +158,7 @@ function ResolvedLocationRow({ controlId, location, navigateToControl }: Resolve
 					<InputValidityIcon validity={validity} />
 				</div>
 				<Button
-					className="shrink-0 cui-text-nowrap"
+					className="shrink-0 whitespace-nowrap"
 					color="secondary"
 					variant="outline"
 					disabled={!targetLocation || !navigateToControl}
@@ -173,7 +173,7 @@ function ResolvedLocationRow({ controlId, location, navigateToControl }: Resolve
 				</Button>
 			</div>
 			{validity === 'invalid' && error === undefined && (
-				<div className="cui-text-danger mt-1" style={{ fontSize: '0.875em' }}>
+				<div className="text-danger mt-1 small">
 					Not a valid button location — expected <code>page/row/column</code>
 				</div>
 			)}

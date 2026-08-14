@@ -220,11 +220,7 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 					tooltip={cannotEnableReason || undefined}
 				/>
 
-				{cannotEnableReason && !isEnabled && (
-					<div className="cui-text-danger mt-1" style={{ fontSize: '0.875em' }}>
-						{cannotEnableReason}
-					</div>
-				)}
+				{cannotEnableReason && !isEnabled && <div className="text-danger mt-1 small">{cannotEnableReason}</div>}
 			</Grid.Col>
 		</>
 	)
@@ -411,7 +407,7 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 	const doDelete = useCallback(() => panelStore.service.deleteInstance(panelStore.labelValue), [panelStore])
 
 	return (
-		<div className="row connection-form-buttons cui-border-top">
+		<div className="row connection-form-buttons border-t border-border-alt">
 			<Grid.Col sm={12}>
 				<div className="flex flex-row">
 					<div className="grow">
@@ -488,7 +484,7 @@ const InstanceFormRow = observer(function InstanceFormRow({
 
 		return (
 			<Grid.Col
-				className={classNames(`fieldtype-${fieldInfo.type}`, { hidden: hideInXs, 'cui-d-sm-block': hideInXs })}
+				className={classNames(`fieldtype-${fieldInfo.type}`, { hidden: hideInXs, 'sm:block': hideInXs })}
 				sm={fieldInfo.width}
 				style={{ display: !isVisible ? 'none' : undefined }}
 			>

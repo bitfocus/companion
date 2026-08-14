@@ -145,7 +145,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 					<AddVariablePanel />
 				</div>
 
-				<br style={{ clear: 'both' }} />
+				<br className="clear-both" />
 			</PanelCollapseHelperProvider>
 		</div>
 	)

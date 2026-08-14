@@ -160,10 +160,7 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 				</div>
 			</Grid.Col>
 
-			<Grid.Col
-				xs={twoPanelMode ? 6 : 12}
-				className={`secondary-panel ${showSecondaryPanel ? 'cui-d-block' : 'hidden'}`}
-			>
+			<Grid.Col xs={twoPanelMode ? 6 : 12} className={`secondary-panel ${showSecondaryPanel ? 'block' : 'hidden'}`}>
 				<div className="secondary-panel-simple">
 					<MyErrorBoundary>
 						<Outlet />

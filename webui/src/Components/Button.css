@@ -318,7 +318,6 @@
 	--btn-active-border-color: transparent;
 	--btn-disabled-color: #6d7d9c;
 	--btn-disabled-border-color: transparent;
-	text-decoration: underline;
 
 	&:focus-visible {
 		color: var(--btn-color);

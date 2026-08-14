@@ -52,7 +52,7 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 
 	return (
 		<Grid.Row className="split-panels">
-			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'cui-d-xl-block hidden'}`}>
+			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'xl:block hidden'}`}>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
 						<div className="flex justify-between">
@@ -83,7 +83,7 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 				</div>
 			</Grid.Col>
 
-			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'cui-d-xl-block hidden'}`}>
+			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'xl:block hidden'}`}>
 				<div className="secondary-panel-simple">
 					<Outlet />
 				</div>

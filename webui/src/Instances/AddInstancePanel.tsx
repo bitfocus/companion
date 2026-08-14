@@ -118,13 +118,13 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 				<h4 className="panel-title">{title}</h4>
 				<div className="header-buttons">
 					<ContextHelpButton action={helpAction} />
-					<CloseButton closeFn={service.closeAddInstance} visibilityClass={isSubpanel ? '' : 'cui-d-xl-none'} />
+					<CloseButton closeFn={service.closeAddInstance} visibilityClass={isSubpanel ? '' : 'xl:hidden'} />
 				</div>
 			</div>
 
 			<div className="secondary-panel-simple-body">
 				<AddInstanceModal ref={addRef} service={service} openConfigureInstance={service.openConfigureInstance} />
-				<div style={{ clear: 'both' }} className="sticky-heading">
+				<div className="sticky-heading clear-both">
 					<div className="add-connection-intro-section mb-4">
 						{storeModulesOfTypeCount > 0 ? (
 							<div className="intro-grid">
@@ -155,7 +155,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 						) : (
 							<StaticAlert color="info" className="mb-0">
 								<div className="flex items-center gap-2">
-									<FontAwesomeIcon icon={faPlug} className="cui-text-info" />
+									<FontAwesomeIcon icon={faPlug} className="text-info" />
 									{description(0)}
 								</div>
 							</StaticAlert>
@@ -280,7 +280,6 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 				<Link
 					to={`/modules/$moduleType/$moduleId`}
 					params={{ moduleType: moduleInfo.moduleType, moduleId: moduleInfo.moduleId }}
-					className="cui-text-decoration-none"
 				>
 					<div className="m-0" style={{ display: 'inline-block', color: 'var(--color-text)' }} title={'Manage module'}>
 						<FontAwesomeIcon icon={faCog} />

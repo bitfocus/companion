@@ -24,7 +24,7 @@ export function GraphicsStep({ config, setValue }: GraphicsStepProps): React.JSX
 				overridden on individual buttons later.
 			</p>
 
-			<div className="flex items-start" style={{ gap: '1.5rem', flexWrap: 'wrap' }}>
+			<div className="flex items-start gap-6 flex-wrap">
 				<div style={{ flex: '1 1 220px', minWidth: 200 }}>
 					<div className="mb-4">
 						<FormLabel htmlFor="buttons_decoration">Default decoration</FormLabel>
@@ -43,8 +43,8 @@ export function GraphicsStep({ config, setValue }: GraphicsStepProps): React.JSX
 					/>
 				</div>
 
-				<div className="flex flex-col items-center" style={{ gap: '0.5rem' }}>
-					<div className="flex" style={{ gap: '0.75rem' }}>
+				<div className="flex flex-col items-center gap-2">
+					<div className="flex gap-3">
 						<GraphicsPreviewButton decoration={decoration} statusIcons={statusIcons} buttonStatus="warning" />
 						<GraphicsPreviewButton decoration={decoration} statusIcons={statusIcons} pushed buttonStatus="error" />
 					</div>
@@ -52,9 +52,7 @@ export function GraphicsStep({ config, setValue }: GraphicsStepProps): React.JSX
 				</div>
 			</div>
 
-			<p className="text-muted mt-4" style={{ fontSize: '0.875rem' }}>
-				You can change these later on the 'Settings' tab under Buttons.
-			</p>
+			<p className="text-muted mt-4 text-sm">You can change these later on the 'Settings' tab under Buttons.</p>
 		</div>
 	)
 }

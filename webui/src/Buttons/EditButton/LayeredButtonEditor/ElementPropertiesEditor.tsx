@@ -119,9 +119,7 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 				})}
 
 				{simpleModeFieldIds ? (
-					<div className="text-center text-muted mt-4" style={{ fontSize: '0.875rem' }}>
-						Some fields are hidden in simple mode
-					</div>
+					<div className="text-center text-muted mt-4 text-sm">Some fields are hidden in simple mode</div>
 				) : null}
 			</>
 		)

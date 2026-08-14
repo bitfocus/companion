@@ -169,12 +169,12 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 				<p>
 					View and manage your installed modules, or search for new ones to support additional devices. Can't find your
 					device?{' '}
-					<a target="_blank" href={makeAbsolutePath('/user-guide/config/modules')} className="cui-text-decoration-none">
+					<a target="_blank" href={makeAbsolutePath('/user-guide/config/modules')}>
 						Check our guidance for getting device support
 					</a>
 					.<br />
 					For offline systems, download module bundles from the{' '}
-					<a href="https://l.companion.free/q/lp68nsiV4" target="_blank" className="cui-text-decoration-none">
+					<a href="https://l.companion.free/q/lp68nsiV4" target="_blank">
 						Bitfocus website
 					</a>
 					.
@@ -231,8 +231,8 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 								<td colSpan={4}>
 									<NonIdealState icon={faPlug}>
 										You don't have any modules installed yet. <br />
-										Try adding something from the list <span className="cui-d-xl-none">below</span>
-										<span className="hidden cui-d-xl-inline">to the right</span>.
+										Try adding something from the list <span className="xl:hidden">below</span>
+										<span className="hidden xl:inline">to the right</span>.
 									</NonIdealState>
 								</td>
 							</tr>

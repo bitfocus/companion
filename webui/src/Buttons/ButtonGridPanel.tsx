@@ -119,7 +119,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 					Buttons
 					<ContextHelpButton action="/user-guide/config/buttons/" />
 				</h4>
-				<p style={{ marginBottom: '0.5rem' }}>
+				<p className="mb-2">
 					The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,
 					and what they should do when you press or click on them.
 				</p>

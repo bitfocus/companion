@@ -106,7 +106,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 					<Button
 						color="primary"
 						size="sm"
-						className="cui-d-xl-none"
+						className="xl:hidden"
 						onClick={() => void navigate({ to: '/connections/add' })}
 					>
 						<FontAwesomeIcon icon={faPlug} className="me-1" />
@@ -174,8 +174,8 @@ function ConnectionListNoConnections() {
 	return (
 		<NonIdealState icon={faPlug}>
 			You haven't set up any connections yet. <br />
-			Try adding something from the list <span className="cui-d-xl-none">below</span>
-			<span className="hidden cui-d-xl-inline">to the right</span>.
+			Try adding something <span className="xl:hidden">with the button above</span>
+			<span className="hidden xl:inline">from the list to the right</span>.
 		</NonIdealState>
 	)
 }

@@ -148,11 +148,6 @@ export default defineConfig(({ mode }) => {
 				: undefined,
 		],
 		css: {
-			preprocessorOptions: {
-				scss: {
-					quietDeps: true,
-				},
-			},
 			// Resolve @custom-media (shared responsive breakpoints in breakpoints.css) at build time, so
 			// component CSS can @media (--bp-*) instead of repeating hard-coded pixel values.
 			postcss: {

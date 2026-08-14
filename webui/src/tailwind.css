@@ -1,3 +1,5 @@
+@charset "UTF-8";
+
 @layer theme, tw-base, base, coreui-layout, app-base, components, features, utilities;
 
 /*
@@ -40,6 +42,11 @@
 	--breakpoint-lg: 992px;
 	--breakpoint-xl: 1200px;
 	--breakpoint-2xl: 1400px;
+
+	/* Fonts — the app's canonical UI and monospace stacks. Declared here so base.css and the
+	   font-sans/font-mono utilities all read one source. */
+	--font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+	--font-mono: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
 	--color-primary: #d50215;
 	--color-secondary: #ccc;
@@ -96,10 +103,13 @@
 	--color-surface-subtle: #f8f9fa; /* very light neutral stage (preview stages, list backgrounds) */
 	--color-surface-dark: #222; /* dark panel/inset surface (tablet, emulator, button editor) */
 	--color-app-bg: #f9f9f9; /* main content area background */
+	--color-app-frame-bg: #f3f4f7; /* outer app frame behind the sidebar/header/body */
+	--color-body-bg: #333; /* <body> element backing, behind the app chrome */
 	--color-loading-track: #3c4b64;
 
 	/* Borders */
 	--color-border: #ddd;
+	--color-border-alt: #dbdfe6; /* CoreUI gray-300; the legacy .cui-border/.cui-border-top colour, kept exactly pending reconciliation with --color-border */
 	--color-border-subtle: #e9ecef; /* faint divider (lighter than --color-border) */
 	--color-border-translucent: color-mix(in srgb, var(--color-shadow) 17.5%, transparent); /* translucent hairline that darkens against its backdrop (modals, toasts, separators) */
 	--color-border-muted: #dddfe2;
@@ -110,6 +120,8 @@
 
 	/* Text */
 	--color-text: #111;
+	--color-body-text: rgba(37, 42.92, 54.02, 0.95); /* inherited <body> default text colour */
+	--color-code: #d63384; /* inline <code> text */
 	--color-text-strong: #000;
 	--color-icon: #333;
 	--color-text-secondary: #666;
@@ -173,6 +185,7 @@
 
 	/* Primary tints */
 	--color-primary-soft: #ea818a;
+	--color-link-hover: rgb(170.4, 1.6, 16.8); /* darkened brand red for a:hover */
 	--color-primary-softer: #f2b3b9;
 	--color-focus-ring: color-mix(in srgb, var(--color-primary) 25%, transparent);
 

@@ -52,7 +52,7 @@ function SettingsLinkCard<const TFrom extends string = string, const TTo extends
 }: SettingsLinkCardProps<TFrom, TTo>) {
 	return (
 		<Grid.Col sm={center ? { span: 6, offset: 3 } : 6} className="mb-6">
-			<Link to={to} className="cui-text-decoration-none grid h-full settings-grid-card">
+			<Link to={to} className="grid h-full settings-grid-card">
 				<Callout color="info" className="h-full flex items-center justify-center">
 					<NonIdealState icon={icon} style={{ padding: '5vh 1rem' }}>
 						<h3>{label}</h3>

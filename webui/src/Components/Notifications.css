@@ -4,7 +4,6 @@
 
 .notification-viewport,
 .notification {
-	/* Mapped from CoreUI's --cui-toast-* CSS custom properties */
 	--notification-zindex: 1090;
 	--notification-max-width: 350px;
 	--notification-padding-x: 0.75rem;
