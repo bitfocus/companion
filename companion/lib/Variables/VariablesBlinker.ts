@@ -55,11 +55,15 @@ export class VariablesBlinker {
 
 		this.#logger.debug(`Starting new blinker interval: ${onPeriod}ms/${offPeriod}ms`)
 
+		const now = Date.now()
+		const phase = now % interval
+		const isCurrentlyOn = onPeriod > 0 && phase < onPeriod
+
 		const newEntry: BlinkingInterval = {
 			interval: interval,
 			onPeriod: onPeriod,
 			offPeriod: offPeriod,
-			lastProbed: Date.now(),
+			lastProbed: now,
 			name: {
 				variableId: `internal:__interval_${onPeriod}_${offPeriod}`,
 				label: 'internal',
@@ -67,56 +71,69 @@ export class VariablesBlinker {
 			},
 			aborted: false,
 			handle: null,
-			value: false,
+			value: isCurrentlyOn,
 		}
 		this.#intervals.set(intervalId, newEntry)
 
-		// Calculate the time until the next aligned tick. Do this relative to unix epoch to keep all intervals aligned amongst each other and across restarts
-		const timeToNextTick = interval - (Date.now() % interval)
+		// Calculate time until next phase transition
+		const timeToNextTick =
+			onPeriod === 0 || offPeriod === 0
+				? interval - phase
+				: isCurrentlyOn
+					? onPeriod - phase
+					: interval - phase
 
-		// Start the interval after the calculated delay
-		setTimeout(() => {
+		// Schedule ticks
+		const scheduleNextTick = () => {
 			if (newEntry.aborted) return
 
-			// First tick (respect 0/1 duty)
-			newEntry.value = newEntry.onPeriod > 0
-			this.#emitChange([
-				{
-					id: newEntry.name.name,
-					value: newEntry.value,
-				},
-			])
+			// Perform bounded notification loop to catch up with current epoch phase
+			let iterations = 0
+			while (iterations < 3) {
+				iterations++
+				const currentNow = Date.now()
+				const currentPhase = currentNow % newEntry.interval
+				const targetValue = newEntry.onPeriod > 0 && currentPhase < newEntry.onPeriod
+
+				if (newEntry.value === targetValue) break
+
+				newEntry.value = targetValue
+				this.#emitChange([
+					{
+						id: newEntry.name.name,
+						value: newEntry.value,
+					},
+				])
+
+				if (newEntry.aborted) return
+			}
 
 			// If dutyCycle is 0 or 1, keep a constant state (no toggling)
 			if (newEntry.onPeriod === 0 || newEntry.offPeriod === 0) return
 
-			// Subsequent ticks
-			const scheduleNextTick = () => {
-				if (newEntry.aborted) return
+			const finalNow = Date.now()
+			const finalPhase = finalNow % newEntry.interval
+			const finalIsOn = newEntry.onPeriod > 0 && finalPhase < newEntry.onPeriod
 
-				// If currently true, wait onPeriod before turning off
-				// If currently false, wait offPeriod before turning on
-				const delay = newEntry.value ? newEntry.onPeriod : newEntry.offPeriod
-
-				newEntry.handle = setTimeout(() => {
-					if (newEntry.aborted) return
-
-					newEntry.value = !newEntry.value
-
-					// TODO - could/should these be batched? to make it cheaper when timers align
-					this.#emitChange([
-						{
-							id: newEntry.name.name,
-							value: newEntry.value,
-						},
-					])
-
-					scheduleNextTick()
-				}, delay)
+			// If still out of phase after exhausting iterations, yield event loop with a positive deferred tick
+			// so subscribers are reliably notified of the phase change without blocking the process
+			if (newEntry.value !== finalIsOn) {
+				newEntry.handle = setTimeout(scheduleNextTick, 1)
+				return
 			}
 
-			scheduleNextTick()
-		}, timeToNextTick)
+			// Otherwise, schedule for the next future phase boundary
+			const delay = finalIsOn
+				? newEntry.onPeriod - finalPhase
+				: newEntry.interval - finalPhase
+
+			newEntry.handle = setTimeout(
+				scheduleNextTick,
+				delay > 0 ? delay : newEntry.interval
+			)
+		}
+
+		newEntry.handle = setTimeout(scheduleNextTick, timeToNextTick)
 
 		return newEntry.name
 	}
