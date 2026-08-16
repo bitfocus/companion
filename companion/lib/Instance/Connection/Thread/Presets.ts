@@ -461,7 +461,7 @@ function ConvertStepsForPreset(
 
 function ConvertLocalVariablesForPreset(
 	logger: ModuleLogger,
-	type: CompanionPresetDefinition['type'],
+	_type: CompanionPresetDefinition['type'],
 	rawLocalVariables: CompanionPresetLocalVariable[] | undefined,
 	connectionId: string,
 	connectionUpgradeIndex: number | undefined
@@ -474,13 +474,6 @@ function ConvertLocalVariablesForPreset(
 		const localVariableType = localVariable.variableType
 		switch (localVariable.variableType) {
 			case 'feedback':
-				if (type !== 'layered') {
-					logger.warn(
-						`Local variable "${localVariable.variableName}" is of type "feedback", which is only supported for layered presets. It will be ignored.`
-					)
-					continue
-				}
-
 				result.push({
 					type: EntityModelType.Feedback,
 					id: nanoid(),
