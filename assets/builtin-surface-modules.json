@@ -1,12 +1,12 @@
 {
 	"elgato-stream-deck": {
 		"version": "v1.4.6",
-		"tarUrl": "https://s4.bitfocus.io/developer-module-builds/surface/elgato-stream-deck/v1.4.6-c7ea9961c73fc6bf184b563d03c64b5607312d8d/elgato-stream-deck-v1.4.6.tgz",
+		"tarUrl": "https://developer-module-builds.s4.bitfocus.io/surface/elgato-stream-deck/v1.4.6-c7ea9961c73fc6bf184b563d03c64b5607312d8d/elgato-stream-deck-v1.4.6.tgz",
 		"tarSha": "d336209f66a8db2872dc24a51db76a7d5f58596c14890e6489b0e34f8baa3a7f"
 	},
 	"xkeys": {
 		"version": "v1.0.2",
-		"tarUrl": "https://s4.bitfocus.io/developer-module-builds/surface/xkeys/v1.0.2-876f00ee194faa57ec14468b7019bbaa516a9e6d/xkeys-v1.0.2.tgz",
+		"tarUrl": "https://developer-module-builds.s4.bitfocus.io/surface/xkeys/v1.0.2-876f00ee194faa57ec14468b7019bbaa516a9e6d/xkeys-v1.0.2.tgz",
 		"tarSha": "2d8243d166fdd21208b3c008899a2a2f1c4ab4c5a4a3daebc8f49db3d65809a7"
 	}
 }
