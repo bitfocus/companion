@@ -152,7 +152,7 @@ describe('findColorsInLine', () => {
 		expect(findColorsInLine(line, [{ start: 0, end: line.length }])).toEqual([])
 	})
 
-	test('unparseable candidate is ignored', () => {
+	test('unparsable candidate is ignored', () => {
 		const line = `'rgb(300, 0)'`
 		expect(findColorsInLine(line, [{ start: 0, end: line.length }])).toEqual([])
 	})
