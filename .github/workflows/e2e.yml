@@ -1,0 +1,47 @@
+name: E2E tests
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Use Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: ".node-version"
+      - name: yarn install
+        run: |
+          npm install -g corepack --force
+
+          # try and avoid timeout errors
+          yarn config set httpTimeout 100000
+
+          yarn install --immutable
+      - name: build webui
+        run: |
+          yarn workspace @companion-app/webui build
+      - name: install browser
+        run: |
+          yarn playwright install --with-deps chromium
+      - name: run e2e tests
+        run: |
+          yarn test:e2e
+
+      - name: upload playwright report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            e2e/playwright-report/
+            e2e/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
