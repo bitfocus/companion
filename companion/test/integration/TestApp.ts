@@ -53,6 +53,8 @@ export interface TestApp {
 	readonly configDir: string
 	/** supertest agent driving the real express app (no listening socket needed) */
 	readonly http: ReturnType<typeof supertest>
+	/** The port the real http server is listening on (for tests that need a real browser/socket) */
+	readonly httpPort: number
 
 	/**
 	 * Build an in-process caller for the real trpc router, to drive the app the way the webui does.
@@ -137,6 +139,9 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 			detailed_data_collection: false,
 			// Don't announce over mdns
 			mdns_announcements_enabled: false,
+			// Mark the setup wizard as already completed (WIZARD_CURRENT_VERSION in
+			// webui/src/Wizard/Constants.ts), so it doesn't block the ui in browser tests
+			setup_wizard: 50,
 		})
 		seedDb.close()
 	}
@@ -175,9 +180,23 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 	registry.ui.update.startCycle = () => {}
 
 	// The http port is bound for real, so randomise it to keep parallel test files from colliding.
-	// Tests should drive `http` (supertest against the express app) rather than this socket
-	const httpPort = 20000 + Math.floor(Math.random() * 40000)
-	await registry.ready('', '127.0.0.1', httpPort)
+	// Most tests should drive `http` (supertest against the express app) rather than this socket
+	const requestedPort = 20000 + Math.floor(Math.random() * 40000)
+	await registry.ready('', '127.0.0.1', requestedPort)
+
+	// ready() does not await the listen call, so wait for the server before reading the bound port
+	const httpPort = await new Promise<number>((resolve, reject) => {
+		const readPort = () => {
+			const address = registry.ui.server.address()
+			if (address && typeof address === 'object') resolve(address.port)
+			else reject(new Error('Failed to determine bound http port'))
+		}
+		if (registry.ui.server.listening) readPort()
+		else {
+			registry.ui.server.once('listening', readPort)
+			registry.ui.server.once('error', reject)
+		}
+	})
 
 	// Building a second router for in-process calls is safe - ready() already bound its own copy to
 	// the websocket handler, and the router builders are side-effect free
@@ -222,6 +241,7 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 		registry,
 		configDir,
 		http: supertest(registry.ui.express.app),
+		httpPort,
 
 		trpc(ctx?: TrpcContext) {
 			return trpcCallerFactory(ctx ?? createMockTrpcContext())
