@@ -1,0 +1,15 @@
+{
+	"include": ["playwright.config.ts", "support/**/*", "tests/**/*"],
+	"compilerOptions": {
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
+		"target": "es2024",
+		"lib": ["es2024", "ESNext.Collection", "ESNext.Iterator", "ESNext.TypedArrays", "dom", "dom.iterable"],
+		"strict": true,
+		"noEmit": true,
+		"skipLibCheck": true,
+		"esModuleInterop": true,
+		"types": ["node"],
+		"customConditions": ["companion:source"]
+	}
+}

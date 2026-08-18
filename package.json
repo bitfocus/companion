@@ -33,6 +33,7 @@
     "rpidist": "run dist linux-arm7",
     "format": "prettier --write .",
     "test": "vitest",
+    "test:e2e": "playwright test -c e2e",
     "build:writefile": "tsx ./tools/build_writefile.mts",
     "build:openapi": "zx ./tools/generate_openapi.mjs",
     "build:graphics-types": "tsx ./tools/generate_graphics_types.mts",
@@ -54,6 +55,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@ianvs/prettier-plugin-sort-imports": "patch:@ianvs/prettier-plugin-sort-imports@npm%3A4.7.1#~/.yarn/patches/@ianvs-prettier-plugin-sort-imports-npm-4.7.1-0d71bdf6a7.patch",
+    "@playwright/test": "^1.62.1",
     "@tanstack/eslint-plugin-query": "^5.102.8",
     "@types/express-serve-static-core": "^5.1.3",
     "@types/node": "^26.4.0",

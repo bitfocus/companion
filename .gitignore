@@ -117,3 +117,7 @@ typings/
 !.claude/settings.json
 !.claude/hooks/
 .claude/settings.local.json
+
+# playwright e2e artifacts
+/e2e/test-results/
+/e2e/playwright-report/
