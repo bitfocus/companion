@@ -226,33 +226,36 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 	const isEnvTruthy = (value: string | undefined): boolean =>
 		['1', 'true', 'yes'].includes((value ?? '').toLowerCase().trim())
 
-	const registry = new Registry({
-		configDir,
-		// The launcher writes rotated log files into `logs` alongside the config dirs.
-		// Only populated when running under the launcher, as that is the only case where these files exist.
-		logsDir: isRunningUnderLauncher() ? path.join(rootConfigDir, 'logs') : undefined,
-		modulesDirs: {
-			[ModuleInstanceType.Connection]: path.join(rootConfigDir, 'modules'), // Naming for backwards compatibility
-			[ModuleInstanceType.Surface]: path.join(rootConfigDir, 'surfaces'),
+	const registry = new Registry(
+		{
+			configDir,
+			// The launcher writes rotated log files into `logs` alongside the config dirs.
+			// Only populated when running under the launcher, as that is the only case where these files exist.
+			logsDir: isRunningUnderLauncher() ? path.join(rootConfigDir, 'logs') : undefined,
+			modulesDirs: {
+				[ModuleInstanceType.Connection]: path.join(rootConfigDir, 'modules'), // Naming for backwards compatibility
+				[ModuleInstanceType.Surface]: path.join(rootConfigDir, 'surfaces'),
+			},
+			builtinModuleDirs: {
+				[ModuleInstanceType.Connection]: null,
+				[ModuleInstanceType.Surface]: isPackaged()
+					? path.join(import.meta.dirname, 'builtin-surfaces')
+					: path.join(import.meta.dirname, '../../.cache/builtin-surfaces'),
+			},
+			udevRulesDir: path.join(rootConfigDir, 'udev-rules'),
+			machineId,
+			options: {
+				notifications: options.notifications ?? true, // options magically generates notifications rather than noNotifications (and will make it true if CL flag is omitted)
+				enableShellCommandSupport:
+					!!options.enableShellCommandSupport || isEnvTruthy(process.env.COMPANION_ENABLE_SHELL_COMMAND_SUPPORT),
+				enableRestrictedModules:
+					!!options.enableRestrictedModules || isEnvTruthy(process.env.COMPANION_ENABLE_RESTRICTED_MODULES),
+				trustedProxies: options.trustedProxies ?? process.env.COMPANION_TRUSTED_PROXIES,
+				installNameOverride: (options.installName ?? process.env.COMPANION_INSTALL_NAME)?.trim() || undefined,
+			},
 		},
-		builtinModuleDirs: {
-			[ModuleInstanceType.Connection]: null,
-			[ModuleInstanceType.Surface]: isPackaged()
-				? path.join(import.meta.dirname, 'builtin-surfaces')
-				: path.join(import.meta.dirname, '../../.cache/builtin-surfaces'),
-		},
-		udevRulesDir: path.join(rootConfigDir, 'udev-rules'),
-		machineId,
-		options: {
-			notifications: options.notifications ?? true, // options magically generates notifications rather than noNotifications (and will make it true if CL flag is omitted)
-			enableShellCommandSupport:
-				!!options.enableShellCommandSupport || isEnvTruthy(process.env.COMPANION_ENABLE_SHELL_COMMAND_SUPPORT),
-			enableRestrictedModules:
-				!!options.enableRestrictedModules || isEnvTruthy(process.env.COMPANION_ENABLE_RESTRICTED_MODULES),
-			trustedProxies: options.trustedProxies ?? process.env.COMPANION_TRUSTED_PROXIES,
-			installNameOverride: (options.installName ?? process.env.COMPANION_INSTALL_NAME)?.trim() || undefined,
-		},
-	})
+		(restart) => process.exit(restart ? 1 : 0)
+	)
 
 	registry
 		.ready(options.extraModulePath, adminIp, Number(options.adminPort))

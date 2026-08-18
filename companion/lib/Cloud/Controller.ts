@@ -126,6 +126,9 @@ export class CloudController {
 
 	readonly #uiEvents = new EventEmitter<CloudUIEvents>()
 
+	#periodicRefreshInterval: NodeJS.Timeout | undefined
+	#tickInterval: NodeJS.Timeout | undefined
+
 	constructor(
 		appInfo: AppInfo,
 		db: DataDatabase,
@@ -202,10 +205,10 @@ export class CloudController {
 		this.#handleCloudInfrastructureRefresh()
 
 		// Refresh every 24 hours
-		setInterval(this.#handlePeriodicRefresh.bind(this), 3600e3 * 24)
+		this.#periodicRefreshInterval = setInterval(this.#handlePeriodicRefresh.bind(this), 3600e3 * 24)
 
 		// Ping every second, if someone is watching
-		setInterval(this.#timerTick.bind(this), 1000)
+		this.#tickInterval = setInterval(this.#timerTick.bind(this), 1000)
 
 		this.#graphics.on('button_drawn', this.#updateBank.bind(this))
 
@@ -297,6 +300,23 @@ export class CloudController {
 					this.#setState({ canActivate: activeRegions >= 2 })
 				}),
 		})
+	}
+
+	/**
+	 * Stop the controller for application shutdown: clear the timers and cleanup the regions.
+	 * Unlike `destroy` this is terminal - the controller cannot be reactivated afterwards.
+	 */
+	stop(): void {
+		if (this.#periodicRefreshInterval) {
+			clearInterval(this.#periodicRefreshInterval)
+			this.#periodicRefreshInterval = undefined
+		}
+		if (this.#tickInterval) {
+			clearInterval(this.#tickInterval)
+			this.#tickInterval = undefined
+		}
+
+		this.destroy()
 	}
 
 	/**
