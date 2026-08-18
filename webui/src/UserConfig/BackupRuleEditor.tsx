@@ -117,7 +117,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 	const previousBackups = [...(rule.previousBackups || [])].sort((a, b) => b.createdAt - a.createdAt)
 
 	return (
-		<Form className="p-4 row g-sm-2">
+		<Form row className="p-4 sm:gap-2">
 			<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
 				Rule Name
 			</FormLabel>

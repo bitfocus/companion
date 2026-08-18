@@ -2,6 +2,7 @@
    utilities. Component-specific chrome lives with its component: the header in Layout/Header.css,
    the panel close/help icons in Layout/PanelIcons.css, and the dropdown/context menus in
    Components/ContextMenu.css. */
+@import './breakpoints.css';
 
 body {
 	-webkit-text-size-adjust: 100%;
@@ -52,7 +53,7 @@ body {
 	/* height: calc(100% - #{$header-height}); // nocommit */
 
 	/* Force to fill the screen and scroll internally */
-	> .cui-container-fluid {
+	> .page-container {
 		height: 100%;
 		max-height: 100%;
 		overflow-y: hidden;
@@ -61,10 +62,28 @@ body {
 		display: grid;
 		grid-template-rows: 1fr;
 
-		> .row {
+		/* The page area spans the body's content box; what sits in it pads its own edges, so that the
+		   secondary panel can sit hard against the right of the frame. */
+		padding-inline: 0;
+
+		> .row,
+		> .split-panels {
 			overflow-y: auto;
 			height: 100%;
 			position: relative;
+
+			/* A single track the height of the page area, rather than of its content, so that panels
+			   filling it (and scrolling inside) measure against the viewport. */
+			grid-template-rows: minmax(0, 1fr);
+		}
+
+		> .row {
+			padding-inline: 0.75rem;
+		}
+
+		/* Only on the left: the primary panel is inset from the frame, the secondary hugs its right. */
+		> .split-panels {
+			padding-left: 0.75rem;
 		}
 	}
 }
@@ -112,8 +131,16 @@ form.row > * {
 	}
 }
 
+/* The settings index puts a primary panel in a plain grid row rather than a split, so this is not
+   scoped to `.split-panels`. */
+.primary-panel {
+	height: 100%;
+	overflow-y: auto;
+}
+
 .secondary-panel {
-	padding-left: 15px;
+	/* No padding-left: the split's column gap separates the panels, and in single-panel mode this
+	   should line up with the primary panel. */
 	padding-right: 5px;
 	padding-bottom: 5px;
 	padding-top: 5px;
@@ -155,7 +182,9 @@ form.row > * {
 	height: 100%;
 	display: flex;
 	flex-direction: column;
-	grid-row: 2;
+	/* The card is the whole panel, header and all, so it spans both of the panel's rows rather than
+	   sitting in the body row below an empty header row and its gap. */
+	grid-row: 1 / -1;
 	margin-right: 12px;
 
 	.secondary-panel-simple-header {
@@ -205,14 +234,19 @@ form.row > * {
 	}
 }
 
-/* Scrollable split-panels layout, applied at all widths: gating it behind a min-width breakpoint
-   broke single-panel-mode scrolling on the buttons page. */
+/* Two panels side by side once there is room, one at a time below that (see Layout/SplitPanels.tsx,
+   which owns the markup and hides a panel while there is only room for one). Deliberately not built on the
+   12-column grid: the split is only ever half-and-half or full width, and a standalone layout leaves
+   room to make the divide draggable (a `grid-template-columns` of its own).
+   The scrolling half applies at all widths: gating it behind a min-width breakpoint broke
+   single-panel-mode scrolling on the buttons page. */
 .split-panels {
+	display: grid;
+	grid-template-columns: 1fr;
 	height: 100%;
 
-	> .primary-panel {
-		height: 100%;
-		overflow-y: auto;
+	> * {
+		min-width: 0;
 	}
 
 	> .secondary-panel {
@@ -242,7 +276,13 @@ form.row > * {
 		}
 	}
 }
-/* } */
+
+@media (--bp-xl-up) {
+	.split-panels {
+		grid-template-columns: 1fr 1fr;
+		column-gap: 1.5rem;
+	}
+}
 
 .sticky-tabs {
 	position: sticky;
@@ -263,18 +303,9 @@ form.row > * {
 		max-width: 100%;
 	}
 
-	.cui-col-xl-6 {
-		max-width: 100%;
-	}
-
+	/* Give the secondary panel more of the extra width. */
 	.split-panels {
-		> .primary-panel {
-			flex: 0 0 40%;
-		}
-
-		> .secondary-panel {
-			flex: 0 0 60%;
-		}
+		grid-template-columns: 2fr 3fr;
 	}
 }
 

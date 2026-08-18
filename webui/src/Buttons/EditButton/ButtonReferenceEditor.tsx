@@ -73,8 +73,8 @@ export const ButtonReferenceEditor = observer(function ButtonReferenceEditor({
 				</div>
 			</Callout>
 
-			<Form className="row g-2" onSubmit={PreventDefaultHandler}>
-				<FormLabel htmlFor={fieldId} className="cui-col-sm-4 col-form-label col-form-label-sm">
+			<Form row className="gap-2" onSubmit={PreventDefaultHandler}>
+				<FormLabel htmlFor={fieldId} sm={4} column="sm">
 					Mirrored location
 				</FormLabel>
 				<Grid.Col sm={8}>

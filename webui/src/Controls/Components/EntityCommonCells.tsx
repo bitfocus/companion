@@ -82,7 +82,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 					</div>
 				)}
 
-				<Form className="row g-sm-2 grow" onSubmit={PreventDefaultHandler}>
+				<Form row className="sm:gap-2 grow" onSubmit={PreventDefaultHandler}>
 					{entity.type === EntityModelType.Feedback && localVariablePrefix && (
 						<>
 							<MyErrorBoundary>

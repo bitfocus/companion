@@ -135,7 +135,7 @@ export function InstanceDebugLog({
 	const doToggleConsole = useCallback(() => doToggleConfig('console'), [doToggleConfig])
 
 	return (
-		<Grid.Container fluid style={{ height: 'calc(100vh - 10px)', padding: '10px', background: '#eee' }}>
+		<Grid.Container style={{ height: 'calc(100vh - 10px)', padding: '10px', background: '#eee' }}>
 			<div className="log-page">
 				<Grid.Row className="px-4">
 					<Grid.Col>

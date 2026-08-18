@@ -108,7 +108,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 			}}
 		>
 			<div className="flex-auto">
-				<div className="row g-sm-2">
+				<Grid.Row className="sm:gap-2">
 					{saveError && (
 						<Grid.Col className="fieldtype-textinput" sm={12}>
 							<StaticAlert color="danger">{saveError}</StaticAlert>
@@ -195,13 +195,13 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							</OptionsVisibility>
 						)}
 					/>
-				</div>
+				</Grid.Row>
 			</div>
 
 			<form.Subscribe
 				selector={(state) => [state.isDirty, state.isValid, state.isSubmitting]}
 				children={([isDirty, isValid, isSubmitting]) => (
-					<div className="row connection-form-buttons border-t border-border-alt">
+					<Grid.Row className="connection-form-buttons border-t border-border-alt">
 						<Grid.Col sm={12}>
 							<div className="flex flex-row">
 								<div className="grow">
@@ -220,7 +220,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 								</div>
 							</div>
 						</Grid.Col>
-					</div>
+					</Grid.Row>
 				)}
 			/>
 		</Form>

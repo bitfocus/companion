@@ -121,13 +121,16 @@ export function ListRowControls({
 }: ListRowControlsProps): React.ReactNode {
 	return (
 		<>
-			<div
-				className={classNames('form-label cui-col-sm-4 col-form-label col-form-label-sm text-muted', {
+			<FormLabel
+				sm={4}
+				column="sm"
+				className={classNames('text-muted', {
 					hidden: hidden,
 				})}
+				htmlFor={undefined}
 			>
 				Item {rowIndex + 1}
-			</div>
+			</FormLabel>
 			<Grid.Col sm={8} className={classNames('flex gap-1', { hidden: hidden })}>
 				<Button
 					color="secondary"

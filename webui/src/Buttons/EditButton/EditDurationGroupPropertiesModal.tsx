@@ -69,7 +69,7 @@ export const EditDurationGroupPropertiesModal = forwardRef<EditDurationGroupProp
 								<Modal.Title>Change delay group properties</Modal.Title>
 							</Modal.Header>
 							<Modal.Body>
-								<Form className="row g-sm-2" onSubmit={doAction}>
+								<Form row className="sm:gap-2" onSubmit={doAction}>
 									<FormLabel htmlFor={pressDurationFieldId} sm={4} column="sm">
 										Press duration
 									</FormLabel>

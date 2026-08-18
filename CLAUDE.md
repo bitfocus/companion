@@ -91,7 +91,18 @@ commit will fail if types or lint don't pass — expect that and fix it rather t
 - **Colours and fonts come from theme tokens** in `webui/src/tailwind.css` (`@theme` `--color-*`,
   `--font-sans`/`--font-mono`). Reference those (or the generated `bg-*`/`text-*` utilities); don't
   hardcode hex. Add a new `--color-*` token there when one is genuinely missing.
-- **Cascade layers** (low → high): `base < coreui-layout < app-base < components < features <
+- **Layout grid.** Use the `Grid` components (`webui/src/Components/Grid.tsx`), not grid classes in
+  markup: `Grid.Container`, `Grid.Row` (a 12-column CSS grid; `columns={n}` for a different count) and
+  `Grid.Col` (`xs`…`xxl`, each a span or `{ span, offset }`); `Form` and `Collapse.Panel` take a `row`
+  prop to act as the row themselves. A column with no span fills the row. The gutter is a real `gap` —
+  override it with `gap-2`/`sm:gap-2`/`gap-x-0`, not a gutter class. `.row`/`.page-container` live in
+  `webui/src/layout-grid.css`; the `col-span-*`/`col-start-*` utilities `Grid.Col` emits are built by
+  interpolation, so `tailwind.css` safelists them with `@source inline(...)`.
+- **Page layout.** A page that is a list plus what it opens uses `SplitPanels`
+  (`webui/src/Layout/SplitPanels.tsx`), not the 12-column grid: `SplitPanels.Root` takes
+  `showing="primary" | "secondary" | null` for which panel wins when there is only room for one, and
+  `.Primary`/`.Secondary` are the panels. The split is half-and-half above `xl` and one panel below.
+- **Cascade layers** (low → high): `base < layout-grid < app-base < components < features <
 utilities` (declared in `tailwind.css`). App CSS is assigned to a layer by path at build time
   (`postcss-wrap-layer.mjs`): `src/Components/**` → `components`, a fixed set (`common.css`, `nav.css`,
   `layout.css`, …) → `app-base`, everything else → `features`. Layer order beats specificity, so a

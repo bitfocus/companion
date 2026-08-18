@@ -87,7 +87,7 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 							}}
 						>
 							<Modal.Body>
-								<Grid.Row className="g-sm-2">
+								<Grid.Row className="sm:gap-2">
 									{saveError && (
 										<Grid.Col className={`fieldtype-textinput`} sm={12}>
 											<StaticAlert color="danger">{saveError}</StaticAlert>

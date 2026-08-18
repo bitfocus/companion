@@ -22,13 +22,13 @@ import { Button, ButtonGroup, LinkButtonExternal } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { Grid } from '~/Components/Grid'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
+import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { sanitizeHtmlString } from '~/Resources/SanitizeHtml.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
@@ -115,18 +115,12 @@ export const TriggersPage = observer(function Triggers() {
 		void navigate({ to: '/triggers' })
 	}, [navigate])
 
-	const showPrimaryPanel = twoPanelMode || !selectedTriggerId
-	const showSecondaryPanel = twoPanelMode || !!selectedTriggerId
-
 	return (
-		<Grid.Row className="triggers-page split-panels">
+		<SplitPanels.Root showing={selectedTriggerId ? 'secondary' : 'primary'} className="triggers-page">
 			<GenericConfirmModal ref={confirmModalRef} />
 			<ConfirmExportModal ref={exportModalRef} title="Export Triggers" />
 
-			<Grid.Col
-				xs={twoPanelMode ? 6 : 12}
-				className={classnames('primary-panel', showPrimaryPanel ? 'block' : 'hidden')}
-			>
+			<SplitPanels.Primary>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
 						<h4 className="button-inline">
@@ -177,17 +171,17 @@ export const TriggersPage = observer(function Triggers() {
 						</PanelCollapseHelperProvider>
 					</div>
 				</div>
-			</Grid.Col>
+			</SplitPanels.Primary>
 
-			<Grid.Col xs={twoPanelMode ? 6 : 12} className={`secondary-panel ${showSecondaryPanel ? 'block' : 'hidden'}`}>
+			<SplitPanels.Secondary>
 				<div className="secondary-panel-simple">
 					{!!selectedTriggerId && (
 						<TriggerEditPanelHeading doCloseTrigger={doCloseTrigger} twoPanelMode={twoPanelMode} />
 					)}
 					<Outlet />
 				</div>
-			</Grid.Col>
-		</Grid.Row>
+			</SplitPanels.Secondary>
+		</SplitPanels.Root>
 	)
 })
 

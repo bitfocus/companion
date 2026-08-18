@@ -7,8 +7,9 @@ import { Grid } from '~/Components/Grid'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 
 export function SettingsSelectPage(): React.JSX.Element {
+	// Not a split: one readable-width column of cards, so this stays on the 12-column grid.
 	return (
-		<Grid.Row className="split-panels">
+		<Grid.Row>
 			<Grid.Col xxl={6} xl={8} lg={10} md={12} className="primary-panel">
 				<div className="flex justify-between">
 					<div>

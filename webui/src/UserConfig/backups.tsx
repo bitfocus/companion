@@ -9,9 +9,9 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import type { BackupRulesConfig } from '@companion-app/shared/Model/UserConfigModel.js'
 import { Button, ButtonGroup } from '~/Components/Button'
-import { Grid } from '~/Components/Grid'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
+import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { NonIdealState } from '../Components/NonIdealState.js'
@@ -47,12 +47,9 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 	const routeMatch = matchRoute({ to: '/settings/backups/$ruleId' })
 	const selectedRuleId = routeMatch ? routeMatch.ruleId : null
 
-	const showPrimaryPanel = !selectedRuleId
-	const showSecondaryPanel = !!selectedRuleId
-
 	return (
-		<Grid.Row className="split-panels">
-			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'xl:block hidden'}`}>
+		<SplitPanels.Root showing={selectedRuleId ? 'secondary' : 'primary'}>
+			<SplitPanels.Primary>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
 						<div className="flex justify-between">
@@ -81,14 +78,14 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 						<BackupsTable editRule={doEditRule} />
 					</div>
 				</div>
-			</Grid.Col>
+			</SplitPanels.Primary>
 
-			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'xl:block hidden'}`}>
+			<SplitPanels.Secondary>
 				<div className="secondary-panel-simple">
 					<Outlet />
 				</div>
-			</Grid.Col>
-		</Grid.Row>
+			</SplitPanels.Secondary>
+		</SplitPanels.Root>
 	)
 })
 

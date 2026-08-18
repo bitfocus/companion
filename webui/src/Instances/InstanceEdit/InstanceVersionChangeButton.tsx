@@ -1,6 +1,7 @@
 import { faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm } from '@tanstack/react-form'
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId, useRef, useState } from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
@@ -11,7 +12,7 @@ import { Collapse } from '~/Components/Collapse'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
 import { Form, FormLabel } from '~/Components/Form.js'
-import { Grid } from '~/Components/Grid'
+import { getGridColClasses, Grid } from '~/Components/Grid'
 import { Modal } from '~/Components/Modal'
 import { useAllModuleProducts } from '~/Hooks/useFilteredProducts.js'
 import { ModuleVersionsRefresh } from '~/Instances/ModuleVersionsRefresh.js'
@@ -130,7 +131,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 							}}
 						>
 							<Modal.Body>
-								<Grid.Row className="g-sm-2">
+								<Grid.Row className="sm:gap-2">
 									<Grid.Col sm={12}>
 										<StaticAlert color="warning" className="mb-4">
 											Be careful when downgrading the module version. Some features may not be available in older
@@ -154,14 +155,14 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 													name="versionId"
 													children={(field) => (
 														<>
-															<div className="cui-col-sm-3 flex items-center">
+															<Grid.Col sm={3} className="flex items-center">
 																<FormLabel htmlFor={versionFieldId} column="sm" className="mb-0 grow">
 																	Version
 																</FormLabel>
 																{!!modules.getStoreInfo(service.moduleType, effectiveModuleId) && (
 																	<ModuleVersionsRefresh moduleType={service.moduleType} moduleId={effectiveModuleId} />
 																)}
-															</div>
+															</Grid.Col>
 															<Grid.Col sm={9}>
 																<SelectedVersionDropdown
 																	moduleType={service.moduleType}
@@ -182,7 +183,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 									<Collapse.Root
 										open={advancedMode}
 										onOpenChange={handleAdvancedModeChange}
-										className="cui-col-sm-12 mt-4 mb-2 p-0"
+										className={classNames(getGridColClasses({ sm: 12 }), 'mt-4 mb-2 p-0')}
 									>
 										<hr className="my-2" />
 										<Collapse.Trigger className="button button-link button-sm p-0">
@@ -190,7 +191,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 											Advanced Options
 										</Collapse.Trigger>
 
-										<Collapse.Panel keepMounted className="row g-sm-2 p-0">
+										<Collapse.Panel keepMounted row className="sm:gap-2 p-0">
 											<Grid.Col sm={12}>
 												<StaticAlert color="danger" className="mt-2 mb-4">
 													{changeModuleDangerMessage}

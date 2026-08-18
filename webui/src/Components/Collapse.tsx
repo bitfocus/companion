@@ -35,10 +35,18 @@ function CollapseTrigger({ className, ...props }: CollapseTriggerProps): React.J
 export interface CollapsePanelProps extends Pick<HTMLAttributes<HTMLDivElement>, 'className' | 'style'> {
 	children?: React.ReactNode
 	keepMounted?: boolean
+	/** Lay the panel out as a grid row, so its own `Grid.Col` children don't need a `Grid.Row`. */
+	row?: boolean
 }
 
-function CollapsePanel({ className, keepMounted, ...props }: CollapsePanelProps): React.JSX.Element {
-	return <Collapsible.Panel keepMounted={keepMounted} className={classNames('collapse2-panel', className)} {...props} />
+function CollapsePanel({ className, keepMounted, row, ...props }: CollapsePanelProps): React.JSX.Element {
+	return (
+		<Collapsible.Panel
+			keepMounted={keepMounted}
+			className={classNames('collapse2-panel', row && 'row', className)}
+			{...props}
+		/>
+	)
 }
 
 // ─── Export ───────────────────────────────────────────────────────────────────

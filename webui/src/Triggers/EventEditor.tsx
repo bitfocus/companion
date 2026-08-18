@@ -310,7 +310,7 @@ const EventEditor = observer(function EventEditor({
 						{eventSpec?.description || ''}
 					</Grid.Col>
 
-					<Form className="row g-sm-2" onSubmit={PreventDefaultHandler}>
+					<Form row className="sm:gap-2" onSubmit={PreventDefaultHandler}>
 						{eventSpec?.options.map((opt, i) => (
 							<MyErrorBoundary key={i}>
 								<OptionsInputField

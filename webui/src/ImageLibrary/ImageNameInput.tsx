@@ -2,6 +2,7 @@ import React, { useId } from 'react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { StaticAlert } from '~/Components/Alert'
 import { FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 
 interface ImageNameInputProps {
@@ -54,11 +55,11 @@ export function ImageNameInput({
 				</StaticAlert>
 			)}
 
-			<div className={`row ${className || ''}`}>
+			<Grid.Row className={className}>
 				<FormLabel htmlFor={labelInputId} sm={3} column>
 					Image name
 				</FormLabel>
-				<div className="cui-col-sm-9">
+				<Grid.Col sm={9}>
 					<TextInputFieldSimple
 						id={labelInputId}
 						value={value}
@@ -69,9 +70,11 @@ export function ImageNameInput({
 						disabled={disabled}
 						immediateValue
 					/>
-				</div>
-				<div className="cui-col-sm-12 mt-2 text-muted small">{helpText || defaultHelpText}</div>
-			</div>
+				</Grid.Col>
+				<Grid.Col sm={12} className="mt-2 text-muted small">
+					{helpText || defaultHelpText}
+				</Grid.Col>
+			</Grid.Row>
 		</>
 	)
 }

@@ -348,7 +348,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 
 	return (
 		<>
-			<Form className="row g-sm-2" onSubmit={PreventDefaultHandler}>
+			<Form row className="sm:gap-2" onSubmit={PreventDefaultHandler}>
 				{surfaceInfo && (
 					<>
 						<FormLabel htmlFor={nameFieldId} sm={4} column="sm">

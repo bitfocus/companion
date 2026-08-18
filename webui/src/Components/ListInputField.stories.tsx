@@ -2,15 +2,16 @@ import type { Decorator, Meta, StoryObj } from '@storybook/react'
 import { useState } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { ExpressionOrValue, InternalInputFieldList } from '@companion-app/shared/Model/Options.js'
+import { Grid } from '~/Components/Grid'
 import { withMockStore } from '../../.storybook/mockRootAppStore.js'
 import { ListInputField } from './ListInputField.js'
 import { MenuPortalContext } from './MenuPortalContext.js'
 
 const withPortal: Decorator = (Story) => (
 	<MenuPortalContext.Provider value={document.body}>
-		<div className="row g-2" style={{ padding: 16, maxWidth: 600 }}>
+		<Grid.Row className="gap-2" style={{ padding: 16, maxWidth: 600 }}>
 			<Story />
-		</div>
+		</Grid.Row>
 	</MenuPortalContext.Provider>
 )
 
@@ -59,9 +60,9 @@ function StatefulList({
 				isLocatedInGrid={false}
 				fieldSupportsExpression={fieldSupportsExpression ?? false}
 			/>
-			<div className="cui-col-12">
+			<Grid.Col xs={12}>
 				<pre style={{ marginTop: 8, fontSize: 11 }}>{JSON.stringify(value, null, 2)}</pre>
-			</div>
+			</Grid.Col>
 		</>
 	)
 }

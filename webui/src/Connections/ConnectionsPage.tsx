@@ -1,6 +1,6 @@
 import { Outlet, useMatchRoute } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
-import { Grid } from '~/Components/Grid'
+import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { ConnectionsList } from './ConnectionList/ConnectionList.js'
 
@@ -10,26 +10,22 @@ export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.El
 	const addConnectionsMatch = matchRoute({ to: '/connections/add' })
 	const selectedConnectionId = routeMatch ? routeMatch.connectionId : null
 
-	// On narrow screens, show only one panel at a time
-	const showPrimaryPanel = !routeMatch && !addConnectionsMatch
-	const showSecondaryPanel = !!routeMatch || !!addConnectionsMatch
-
 	return (
-		<Grid.Row className="connections-page split-panels">
-			<Grid.Col xl={6} className={`connections-panel primary-panel ${showPrimaryPanel ? 'block' : 'hidden xl:block'}`}>
+		<SplitPanels.Root
+			showing={routeMatch || addConnectionsMatch ? 'secondary' : 'primary'}
+			className="connections-page"
+		>
+			<SplitPanels.Primary className="connections-panel">
 				<ConnectionsList selectedConnectionId={selectedConnectionId} />
-			</Grid.Col>
+			</SplitPanels.Primary>
 
-			<Grid.Col
-				xl={6}
-				className={`connections-panel secondary-panel ${showSecondaryPanel ? 'block' : 'hidden xl:block'}`}
-			>
+			<SplitPanels.Secondary className="connections-panel">
 				<div className="secondary-panel-simple">
 					<MyErrorBoundary>
 						<Outlet />
 					</MyErrorBoundary>
 				</div>
-			</Grid.Col>
-		</Grid.Row>
+			</SplitPanels.Secondary>
+		</SplitPanels.Root>
 	)
 })

@@ -165,7 +165,7 @@ export const GridSizeModal = observer(function GridSizeModal() {
 							<Modal.Title>Configure Grid Size</Modal.Title>
 						</Modal.Header>
 						<Modal.Body>
-							<Form onSubmit={doAction} className="row">
+							<Form row onSubmit={doAction}>
 								{newGridSize && (
 									<Grid.Col sm={12} className="mb-4">
 										New Grid Size: {newGridSize.maxRow - newGridSize.minRow + 1} rows x{' '}

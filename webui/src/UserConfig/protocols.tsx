@@ -1,9 +1,9 @@
 import { observer } from 'mobx-react-lite'
 import { memo, useState } from 'react'
-import { Grid } from '~/Components/Grid'
 import { TabArea } from '~/Components/TabArea.js'
 import { Table } from '~/Components/Table.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
+import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { useUserConfigProps } from './Context.js'
 import { ArtnetConfig } from './Sections/ArtnetConfig.js'
@@ -24,8 +24,8 @@ import { UdpConfig } from './Sections/UdpConfig.js'
 
 export const SettingsProtocolsPage = memo(function UserConfig() {
 	return (
-		<Grid.Row className="split-panels">
-			<Grid.Col xl={6} className="primary-panel">
+		<SplitPanels.Root showing={null}>
+			<SplitPanels.Primary>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
 						<div className="flex justify-between">
@@ -42,8 +42,8 @@ export const SettingsProtocolsPage = memo(function UserConfig() {
 						<UserConfigTable />
 					</div>
 				</div>
-			</Grid.Col>
-			<Grid.Col xs={12} xl={6} className="secondary-panel">
+			</SplitPanels.Primary>
+			<SplitPanels.Secondary>
 				<div className="secondary-panel-header">
 					<h4>Remote control</h4>
 					<p>Companion can be remote controlled in several ways. Below you'll find how to do it.</p>
@@ -51,8 +51,8 @@ export const SettingsProtocolsPage = memo(function UserConfig() {
 				<div className="secondary-panel-inner">
 					<RemoteControlInfo />
 				</div>
-			</Grid.Col>
-		</Grid.Row>
+			</SplitPanels.Secondary>
+		</SplitPanels.Root>
 	)
 })
 

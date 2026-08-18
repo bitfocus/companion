@@ -64,8 +64,8 @@ export default function App(): React.JSX.Element {
 			{(loadingProgress, loadingComplete) => (
 				<>
 					<div id="error-container" className={wasConnected ? 'show-error' : ''}>
-						<div className="row justify-center">
-							<div className="cui-col-md-6">
+						<Grid.Row>
+							<Grid.Col md={{ span: 6, offset: 3 }}>
 								<div className="clearfix">
 									<h4 className="pt-4">Houston, we have a problem!</h4>
 									<p className="text-muted">It seems that we have lost connection to the companion app.</p>
@@ -74,18 +74,18 @@ export default function App(): React.JSX.Element {
 										<li>If you're using the Admin GUI over a network - check your connection</li>
 									</ul>
 								</div>
-							</div>
-						</div>
+							</Grid.Col>
+						</Grid.Row>
 					</div>
 					<div id="current-import-container" className={!wasConnected && currentImportTask ? 'show-error' : ''}>
-						<div className="row justify-center">
-							<div className="cui-col-md-6">
+						<Grid.Row>
+							<Grid.Col md={{ span: 6, offset: 3 }}>
 								<div className="clearfix">
 									<h4 className="pt-4">Stand by, the config is being updated!</h4>
 									{/* <p className="text-muted">It seems that we have lost connection to the companion app.</p> */}
 								</div>
-							</div>
-						</div>
+							</Grid.Col>
+						</Grid.Row>
 					</div>
 					<Suspense
 						fallback={
@@ -284,7 +284,7 @@ interface AppLoadingProps {
 function AppLoading({ progress, connected }: AppLoadingProps) {
 	const message = connected ? 'Syncing' : 'Connecting'
 	return (
-		<Grid.Container fluid className="fadeIn loading">
+		<Grid.Container className="fadeIn loading">
 			<Grid.Row>
 				<Grid.Col xxl={4} md={3} sm={2} xs={1}></Grid.Col>
 				<Grid.Col xxl={4} md={6} sm={8} xs={10}>
@@ -339,7 +339,7 @@ const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuth
 	)
 
 	return (
-		<Grid.Container fluid className="fadeIn loading">
+		<Grid.Container className="fadeIn loading">
 			<Grid.Row>
 				<Grid.Col xxl={4} md={3} sm={2} xs={1}></Grid.Col>
 				<Grid.Col xxl={4} md={6} sm={8} xs={10}>
@@ -410,7 +410,7 @@ const AppContent = observer(function AppContent() {
 	}, [userConfig.properties?.installName])
 
 	return (
-		<Grid.Container fluid className="fadeIn">
+		<Grid.Container className="fadeIn">
 			<WizardModal />
 
 			<MyErrorBoundary>

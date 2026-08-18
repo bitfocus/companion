@@ -75,7 +75,7 @@ export function ControlOptionsEditor({
 	return (
 		<>
 			<GenericConfirmModal ref={confirmRef} />
-			<Form className="row g-2 grow" onSubmit={PreventDefaultHandler}>
+			<Form row className="gap-2 grow" onSubmit={PreventDefaultHandler}>
 				<FormLabel htmlFor={stepProgressionId} sm={4} column="sm">
 					Step Progression
 					<InlineHelpIcon className="ms-1">

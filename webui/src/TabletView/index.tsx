@@ -190,7 +190,7 @@ export const TabletView = observer(function TabletView() {
 	return (
 		<div className="page-tablet">
 			<div className="scroller">
-				<Grid.Container fluid className="flex flex-col">
+				<Grid.Container className="flex flex-col">
 					{pagesReady && userConfigReady && rawGridSize ? (
 						<>
 							<ConfigurePanel updateQueryUrl={updateQueryUrl} query={parsedQuery} gridSize={rawGridSize} />

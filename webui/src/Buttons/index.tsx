@@ -17,9 +17,9 @@ import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { ContextMenu } from '~/Components/ContextMenu.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { Grid } from '~/Components/Grid'
 import { TabArea } from '~/Components/TabArea.js'
 import { safeSetSessionStorage } from '~/Helpers/SafeStorage.js'
+import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -392,7 +392,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	)
 
 	return (
-		<Grid.Row className="buttons-page split-panels">
+		<SplitPanels.Root showing={null} className="buttons-page">
 			<GenericConfirmModal ref={clearModalRef} />
 			<ContextMenu
 				open={contextMenuOpen}
@@ -402,13 +402,9 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			/>
 
 			{/* On large screens, show the grid in its own column */}
-			{isLargeScreen && (
-				<Grid.Col xs={12} xl={6} className="primary-panel">
-					{gridPanel}
-				</Grid.Col>
-			)}
+			{isLargeScreen && <SplitPanels.Primary>{gridPanel}</SplitPanels.Primary>}
 
-			<Grid.Col xs={12} xl={6} className="secondary-panel">
+			<SplitPanels.Secondary>
 				<div className="secondary-panel-inner">
 					<TabArea.Root value={activeTab} onValueChange={setActiveTab}>
 						<TabArea.List>
@@ -473,7 +469,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 						</TabArea.Panel>
 					</TabArea.Root>
 				</div>
-			</Grid.Col>
-		</Grid.Row>
+			</SplitPanels.Secondary>
+		</SplitPanels.Root>
 	)
 })

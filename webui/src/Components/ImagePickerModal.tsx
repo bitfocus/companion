@@ -7,6 +7,7 @@ import { isLabelValid } from '@companion-app/shared/Label.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button.js'
 import { FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { Modal } from '~/Components/Modal.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
@@ -250,19 +251,19 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 
 			<ImageNameInput value={imageName} onChange={setImageName} disabled={isUploading} />
 
-			<div className="mb-4 row">
+			<Grid.Row className="mb-4">
 				<FormLabel htmlFor="upload-description" sm={3} column>
 					Description
 				</FormLabel>
-				<div className="cui-col-sm-9">
+				<Grid.Col sm={9}>
 					<TextInputFieldSimple
 						id="upload-description"
 						value={description}
 						setValue={setDescription}
 						disabled={isUploading}
 					/>
-				</div>
-			</div>
+				</Grid.Col>
+			</Grid.Row>
 
 			<div>
 				<Button color="primary" onClick={handleFileClick} disabled={isUploading}>

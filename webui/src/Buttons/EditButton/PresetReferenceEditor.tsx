@@ -76,7 +76,7 @@ export const PresetReferenceEditor = observer(function PresetReferenceEditor({
 				</Callout>
 			)}
 
-			<Form className="row g-2" onSubmit={PreventDefaultHandler}>
+			<Form row className="gap-2" onSubmit={PreventDefaultHandler}>
 				<FormLabel htmlFor={connectionFieldId} sm={4} column="sm">
 					Connection
 				</FormLabel>
@@ -98,7 +98,7 @@ export const PresetReferenceEditor = observer(function PresetReferenceEditor({
 					<p className="text-muted small">
 						These values came from the preset template and can be customised. Other settings are managed by the preset.
 					</p>
-					<Form className="row g-2" onSubmit={PreventDefaultHandler}>
+					<Form row className="gap-2" onSubmit={PreventDefaultHandler}>
 						{templateVariableNames.map((variableName) => (
 							<PresetReferenceVariableRow
 								key={variableName}

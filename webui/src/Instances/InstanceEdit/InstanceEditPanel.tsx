@@ -93,7 +93,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 				}}
 			>
 				<div className="flex-auto">
-					<div className="row edit-connection">
+					<Grid.Row className="edit-connection">
 						{saveError && (
 							<Grid.Col className="fieldtype-textinput" sm={12}>
 								<StaticAlert color="danger">{saveError}</StaticAlert>
@@ -112,7 +112,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 						<InstanceVersionUpdatePolicyInputField panelStore={panelStore} />
 
 						<InstanceConfigArea panelStore={panelStore} />
-					</div>
+					</Grid.Row>
 				</div>
 
 				<InstanceFormButtons panelStore={panelStore} isSaving={isSaving.get()} />
@@ -407,7 +407,7 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 	const doDelete = useCallback(() => panelStore.service.deleteInstance(panelStore.labelValue), [panelStore])
 
 	return (
-		<div className="row connection-form-buttons border-t border-border-alt">
+		<Grid.Row className="connection-form-buttons border-t border-border-alt">
 			<Grid.Col sm={12}>
 				<div className="flex flex-row">
 					<div className="grow">
@@ -433,7 +433,7 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 					</div>
 				</div>
 			</Grid.Col>
-		</div>
+		</Grid.Row>
 	)
 })
 

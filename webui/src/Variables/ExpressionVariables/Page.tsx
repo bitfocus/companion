@@ -13,11 +13,11 @@ import { Button, ButtonGroup, LinkButton } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { CopyButton } from '~/Components/CopyButton'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { Grid } from '~/Components/Grid'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
+import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useComputed } from '~/Resources/util'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -114,14 +114,11 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 		void navigate({ to: '/variables/expression' })
 	}, [navigate])
 
-	const showPrimaryPanel = !selectedVariableId
-	const showSecondaryPanel = !!selectedVariableId
-
 	return (
-		<Grid.Row className="triggers-page split-panels">
+		<SplitPanels.Root showing={selectedVariableId ? 'secondary' : 'primary'} className="triggers-page">
 			<GenericConfirmModal ref={confirmModalRef} />
 
-			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'xl:block hidden'}`}>
+			<SplitPanels.Primary>
 				<h4 className="button-inline">
 					Expression Variables
 					<ContextHelpButton action="/user-guide/config/variables#expression-variables" />
@@ -165,15 +162,15 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 						/>
 					</ExpressionVariablesTableContextProvider>
 				</PanelCollapseHelperProvider>
-			</Grid.Col>
+			</SplitPanels.Primary>
 
-			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'xl:block hidden'}`}>
+			<SplitPanels.Secondary>
 				<div className="secondary-panel-simple">
 					{!!selectedVariableId && <ExpressionVariableEditPanelHeading doCloseVariable={doCloseVariable} />}
 					<Outlet />
 				</div>
-			</Grid.Col>
-		</Grid.Row>
+			</SplitPanels.Secondary>
+		</SplitPanels.Root>
 	)
 })
 

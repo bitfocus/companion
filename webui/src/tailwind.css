@@ -12,10 +12,9 @@
     base           First-party, element-only base styles layered on top of Preflight (base.css). Holds
                    the app's deliberate element defaults (still derived from the CoreUI/Bootstrap
                    reboot for now). Element selectors only — no class rules.
-    coreui-layout  The vendored CoreUI containers + grid (`.cui-container*`, `.row`, `.row > *`
-                   gutters, `.cui-col*`). Below utilities so a plain `px-4`/`gap-2` wins over the grid
-                   gutter without !important. The container/col classes are `cui-`-prefixed because
-                   they collide with Tailwind's own container/col-* utilities.
+    layout-grid    The 12-column layout grid: `.row` and `.page-container` (layout-grid.css). Below
+                   app-base so a page can retune the grid, and below utilities so a plain `gap-2`/`px-4`
+                   wins over its default gutter without !important.
     app-base       Global app chrome / resets (common.css, nav.css, layout.css, …) that anything above
                    may override.
     components     Reusable design-system components (src/Components/**).
@@ -30,8 +29,15 @@
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/preflight.css' layer(tw-base);
 @import './base.css' layer(base);
-@import './coreui-layout.css' layer(coreui-layout);
+@import './layout-grid.css' layer(layout-grid);
 @import 'tailwindcss/utilities.css' layer(utilities);
+
+/* `Grid.Col` builds these by interpolation, so the source scanner cannot find them — safelist them
+   here. `col-start-*` starts at 2 because an offset of 0 emits `col-start-auto`. */
+@source inline("{,sm:,md:,lg:,xl:,2xl:}col-span-{1..12}");
+@source inline("{,sm:,md:,lg:,xl:,2xl:}col-start-{2..12}");
+@source inline("{,sm:,md:,lg:,xl:,2xl:}col-start-auto");
+@source inline("grid-cols-{1..12}");
 
 @theme static {
 	/* Align Tailwind's responsive breakpoints with the CoreUI grid breakpoints we use everywhere else

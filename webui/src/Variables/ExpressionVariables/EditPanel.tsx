@@ -141,7 +141,7 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 
 	return (
 		<Grid.Col sm={12} className="p-0">
-			<Form onSubmit={PreventDefaultHandler} className="row flex-form">
+			<Form row onSubmit={PreventDefaultHandler} className="flex-form">
 				<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
 					Name
 					<InlineHelpIcon className="ms-1">
@@ -258,7 +258,7 @@ const ExpressionVariableSoleEntityEditor = observer(function ExpressionVariableS
 	return (
 		<>
 			<Grid.Col sm={12} className="p-0">
-				<Form onSubmit={PreventDefaultHandler} className="row flex-form">
+				<Form row onSubmit={PreventDefaultHandler} className="flex-form">
 					<FormLabel htmlFor={undefined} sm={4} column="sm">
 						Current Value
 					</FormLabel>

@@ -156,7 +156,7 @@ export const AddInstanceModal = observer(
 											connection here.
 										</p>
 									)}
-									<Form className="row g-sm-2" onSubmit={PreventDefaultHandler}>
+									<Form row className="sm:gap-2" onSubmit={PreventDefaultHandler}>
 										<FormLabel htmlFor={labelFieldId} sm={4} column="sm">
 											Label&nbsp;
 										</FormLabel>

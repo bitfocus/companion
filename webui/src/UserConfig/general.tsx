@@ -1,15 +1,15 @@
 import { observer } from 'mobx-react-lite'
 import { memo } from 'react'
-import { Grid } from '~/Components/Grid'
 import { Table } from '~/Components/Table.js'
+import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { useUserConfigProps } from './Context.js'
 import { CompanionConfig } from './Sections/CompanionConfig.js'
 import { DataCollectionConfig } from './Sections/DataCollection.js'
 
 export const SettingsGeneralPage = memo(function UserConfig() {
 	return (
-		<Grid.Row className="split-panels">
-			<Grid.Col xl={6} className="primary-panel">
+		<SplitPanels.Root showing={null}>
+			<SplitPanels.Primary>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
 						<div className="flex justify-between">
@@ -23,8 +23,8 @@ export const SettingsGeneralPage = memo(function UserConfig() {
 						<UserConfigTable />
 					</div>
 				</div>
-			</Grid.Col>
-		</Grid.Row>
+			</SplitPanels.Primary>
+		</SplitPanels.Root>
 	)
 })
 
