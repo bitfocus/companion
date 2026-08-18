@@ -312,6 +312,13 @@ export class DataUsageStatistics {
 		}
 	}
 
+	/**
+	 * Stop the reporting cycle. Used during application shutdown.
+	 */
+	stop(): void {
+		this.#cycleStop?.()
+	}
+
 	updateUserConfig(key: keyof UserConfigModel, _value: boolean | number | string): void {
 		if (key === 'detailed_data_collection') {
 			this.startStopCycle()

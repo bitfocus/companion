@@ -19,6 +19,9 @@ export class UIController {
 	}
 
 	close(): void {
+		this.update.destroy()
 		this.io.close()
+		this.server.closeAllConnections()
+		this.server.close()
 	}
 }

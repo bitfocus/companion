@@ -163,6 +163,12 @@ export class Registry {
 
 	readonly #appInfo: AppInfo
 
+	/**
+	 * Terminate the process once a requested exit has completed. Supplied by the parent scope
+	 * (main.ts), so the Registry itself never calls process.exit
+	 */
+	readonly #requestProcessExit: (restart: boolean) => void
+
 	#isReady = false
 
 	/**
@@ -175,12 +181,15 @@ export class Registry {
 		baseAppInfo: Pick<
 			AppInfo,
 			'configDir' | 'logsDir' | 'modulesDirs' | 'builtinModuleDirs' | 'udevRulesDir' | 'machineId' | 'options'
-		>
+		>,
+		requestProcessExit: (restart: boolean) => void
 	) {
 		if (!baseAppInfo.configDir) throw new Error(`Missing configDir`)
 		if (!baseAppInfo.machineId) throw new Error(`Missing machineId`)
 		if (!baseAppInfo.modulesDirs) throw new Error(`Missing modulesDirs`)
 		if (!baseAppInfo.udevRulesDir) throw new Error(`Missing udevRulesDir`)
+
+		this.#requestProcessExit = requestProcessExit
 
 		this.#logger = LogController.createLogger('Registry')
 
@@ -553,6 +562,37 @@ export class Registry {
 	}
 
 	/**
+	 * Shutdown the application gracefully: stop the timers and services, close the sockets and
+	 * databases. This does not terminate the process; `exit` wraps this for the running app
+	 */
+	async close(): Promise<void> {
+		this.internalModule.destroy()
+		this.#renderClock.destroy()
+
+		this.services.close()
+		this.cloud.stop()
+		this.usageStatistics.stop()
+
+		this.ui.close()
+
+		// Save the db to disk
+		this.db.close()
+		this.#data.cache.close()
+
+		try {
+			this.surfaces.quit()
+		} catch (_e) {
+			//do nothing
+		}
+
+		try {
+			await this.instance.shutdownAllInstances()
+		} catch (_e) {
+			//do nothing
+		}
+	}
+
+	/**
 	 * Request application exit
 	 */
 	exit(fromInternal: boolean, restart: boolean): void {
@@ -564,26 +604,7 @@ export class Registry {
 		void Promise.resolve().then(async () => {
 			this.#logger.info('somewhere, the system wants to exit. kthxbai')
 
-			this.internalModule.destroy()
-			this.#renderClock.destroy()
-
-			this.ui.close()
-
-			// Save the db to disk
-			this.db.close()
-			this.#data.cache.close()
-
-			try {
-				this.surfaces.quit()
-			} catch (_e) {
-				//do nothing
-			}
-
-			try {
-				await this.instance.shutdownAllInstances()
-			} catch (_e) {
-				//do nothing
-			}
+			await this.close()
 
 			if (fromInternal) {
 				// Inform the parent that we are shutting down
@@ -593,8 +614,8 @@ export class Registry {
 				})
 			}
 
-			setImmediate(function () {
-				process.exit(restart ? 1 : 0)
+			setImmediate(() => {
+				this.#requestProcessExit(restart)
 			})
 		})
 	}

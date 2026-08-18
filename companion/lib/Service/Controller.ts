@@ -85,6 +85,24 @@ export class ServiceController {
 		this.mdnsAdvertise = new ServiceMdnsAdvertise(userconfig, appInfo)
 	}
 
+	/**
+	 * Stop all the services and close their sockets. Used during application shutdown.
+	 */
+	close(): void {
+		this.artnet.stop()
+		this.bonjourDiscovery.stop()
+		this.emberplus.stop()
+		this.https.stop()
+		this.mdnsAdvertise.stop()
+		this.oscListener.stop()
+		this.oscSender.stop()
+		this.rosstalk.stop()
+		this.satelliteTcp.stop()
+		this.satelliteWebsocket.stop()
+		this.tcp.stop()
+		this.udp.stop()
+	}
+
 	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
 		this.tcp.onButtonDrawn(location, render)
 		this.emberplus.onButtonDrawn(location, render)

@@ -72,6 +72,13 @@ export abstract class ServiceBase {
 	protected abstract close(): void
 
 	/**
+	 * Stop the service and close its socket, if running. Used during application shutdown.
+	 */
+	stop(): void {
+		this.disableModule()
+	}
+
+	/**
 	 * Kill the socket, if exists.
 	 */
 	protected disableModule(): void {
