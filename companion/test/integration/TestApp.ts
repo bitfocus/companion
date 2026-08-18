@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { initTRPC, type TRPCRouterCaller } from '@trpc/server'
 import supertest from 'supertest'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
@@ -12,11 +13,25 @@ import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { Registry } from '../../lib/Registry.js'
+import type { AppRouter, TrpcContext } from '../../lib/UI/TRPC.js'
+import { createMockTrpcContext } from '../Util.js'
 
 // The graphics controller reads this at module load, so it must be set before the Registry module
 // graph is imported - which is why the app modules below are imported dynamically inside
 // createTestApp rather than statically
 process.env.DEBUG_DISABLE_RENDER_THREADING = '1'
+
+// Explicit annotations - the inferred types are too large for declaration emit to serialize
+type AppRouterCallerFactory = TRPCRouterCaller<AppRouter['_def']['_config']['$types'], AppRouter['_def']['record']>
+
+// A local trpc instance is enough to build a caller for the real router - the middleware lives on
+// the procedures themselves (this mirrors how the unit tests call trpc routers)
+function createTrpcCallerFactory(trpcRouter: AppRouter): AppRouterCallerFactory {
+	const t = initTRPC.context<TrpcContext>().create()
+	return t.createCallerFactory(trpcRouter)
+}
+
+export type TestAppTrpcCaller = ReturnType<AppRouterCallerFactory>
 
 export interface TestAppOptions {
 	/**
@@ -39,6 +54,13 @@ export interface TestApp {
 	/** supertest agent driving the real express app (no listening socket needed) */
 	readonly http: ReturnType<typeof supertest>
 
+	/**
+	 * Build an in-process caller for the real trpc router, to drive the app the way the webui does.
+	 * Pass a ctx to share state between calls (e.g. `pendingImport` for imports); defaults to a fresh
+	 * local-client mock context
+	 */
+	trpc(ctx?: TrpcContext): TestAppTrpcCaller
+
 	/** Create a button control at a grid location, returning its controlId */
 	createButton(location: ControlLocation): string
 	/** Add an action from the internal connection to the first step's 'down' set of a button */
@@ -50,7 +72,16 @@ export interface TestApp {
 		definitionId: string,
 		options: Record<string, ExpressionOrValue<any>>
 	): string
-	/** Add a feedback from the internal connection to a button */
+	/** Add an action from the internal connection to the 'down' set of a specific step of a button */
+	addInternalActionToStep(
+		controlId: string,
+		stepId: string,
+		definitionId: string,
+		options: Record<string, ExpressionOrValue<any>>
+	): string
+	/** Add an action from the internal connection to a trigger's action list */
+	addTriggerAction(controlId: string, definitionId: string, options: Record<string, ExpressionOrValue<any>>): string
+	/** Add a feedback from the internal connection to a button (or a trigger, where it becomes a condition) */
 	addInternalFeedback(controlId: string, definitionId: string, options: Record<string, ExpressionOrValue<any>>): string
 	/** Add a child feedback under a parent entity (e.g. a logic_if condition) in the first step's 'down' set */
 	addInternalChildFeedback(
@@ -111,6 +142,7 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 	}
 
 	const { Registry } = await import('../../lib/Registry.js')
+	const { createTrpcRouter } = await import('../../lib/UI/TRPC.js')
 
 	const registry = new Registry(
 		{
@@ -146,6 +178,10 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 	// Tests should drive `http` (supertest against the express app) rather than this socket
 	const httpPort = 20000 + Math.floor(Math.random() * 40000)
 	await registry.ready('', '127.0.0.1', httpPort)
+
+	// Building a second router for in-process calls is safe - ready() already bound its own copy to
+	// the websocket handler, and the router builders are side-effect free
+	const trpcCallerFactory = createTrpcCallerFactory(createTrpcRouter(registry))
 
 	const getEditableEntities = (controlId: string) => {
 		const control = registry.controls.getControl(controlId)
@@ -187,6 +223,10 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 		configDir,
 		http: supertest(registry.ui.express.app),
 
+		trpc(ctx?: TrpcContext) {
+			return trpcCallerFactory(ctx ?? createMockTrpcContext())
+		},
+
 		createButton(location) {
 			const controlId = registry.controls.createButtonControl(location, 'button-layered')
 			if (!controlId)
@@ -200,6 +240,21 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 
 		addInternalChildAction(controlId, owner, definitionId, options) {
 			return addInternalEntity(controlId, firstDownSet(controlId), owner, EntityModelType.Action, definitionId, options)
+		},
+
+		addInternalActionToStep(controlId, stepId, definitionId, options) {
+			return addInternalEntity(
+				controlId,
+				{ stepId, setId: 'down' },
+				null,
+				EntityModelType.Action,
+				definitionId,
+				options
+			)
+		},
+
+		addTriggerAction(controlId, definitionId, options) {
+			return addInternalEntity(controlId, 'trigger_actions', null, EntityModelType.Action, definitionId, options)
 		},
 
 		addInternalFeedback(controlId, definitionId, options) {
