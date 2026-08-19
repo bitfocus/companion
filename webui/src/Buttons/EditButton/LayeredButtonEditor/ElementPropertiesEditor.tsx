@@ -179,6 +179,7 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 		<FormPropertyField
 			elementProps={elementProps}
 			property={field.id}
+			fieldDefinition={field}
 			label={field.label}
 			tooltip={field.tooltip}
 			description={field.description}
@@ -255,6 +256,9 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 				disableAutoExpression={true}
 				localVariablesStore={localVariablesStore}
 				entityType={null}
+				fieldDefinition={field}
+				controlId={controlId}
+				allRawOptions={undefined}
 				isLocatedInGrid={false}
 				disabled={false}
 			>
@@ -294,6 +298,9 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 								disableAutoExpression={!!cellField.disableAutoExpression}
 								localVariablesStore={localVariablesStore}
 								entityType={null}
+								fieldDefinition={cellField}
+								controlId={controlId}
+								allRawOptions={row}
 								isLocatedInGrid={false}
 								disabled={false}
 								labelClassName="ps-2"

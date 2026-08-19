@@ -1,7 +1,11 @@
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type {
+	ExpressionableOptionsObject,
+	ExpressionOrValue,
+	SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
 import { PropertyFieldRow } from '~/Components/PropertyFieldRow.js'
 import type { InputFeatureIconsProps } from '~/Controls/InputFeatures.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -17,6 +21,7 @@ export interface InputFieldCommonProps {
 interface FormPropertyFieldProps {
 	elementProps: Record<string, any>
 	property: string
+	fieldDefinition: SomeCompanionInputField
 	label: string
 	tooltip: string | undefined
 	description?: string
@@ -28,6 +33,7 @@ interface FormPropertyFieldProps {
 export const FormPropertyField = observer(function FormPropertyField({
 	elementProps,
 	property,
+	fieldDefinition,
 	label,
 	tooltip,
 	description,
@@ -69,6 +75,9 @@ export const FormPropertyField = observer(function FormPropertyField({
 			disableAutoExpression={disableAutoExpression}
 			localVariablesStore={localVariablesStore}
 			entityType={null}
+			fieldDefinition={fieldDefinition}
+			controlId={controlId}
+			allRawOptions={elementProps as ExpressionableOptionsObject}
 			isLocatedInGrid={true}
 			disabled={false}
 		>

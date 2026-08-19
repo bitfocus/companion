@@ -21,6 +21,7 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import { Button } from '~/Components/Button.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { ExpressionInputField } from '~/Components/ExpressionInputField.js'
+import { ExpressionValuePreview } from '~/Components/ExpressionValuePreview.js'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { Table } from '~/Components/Table.js'
@@ -34,6 +35,7 @@ import {
 import { OptionsInputControl } from '../OptionsInputControl.js'
 import { AddElementPickerModal } from './AddElementPickerModal.js'
 import { ElementPickerModal } from './ElementPickerModal.js'
+import { useEntityEditorContext } from './EntityEditorContext.js'
 import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 
 interface LayeredStylesOverridesProps {
@@ -275,6 +277,7 @@ const LayeredStylesOverridesRow = observer(function LayeredStylesOverridesRow({
 							<FontAwesomeIcon icon={faPencil} />
 						</Button>
 					</div>
+					<OverrideValuePreview row={row} />
 				</td>
 				<td>
 					<PropertyValueInput
@@ -318,6 +321,27 @@ const SelectedElementProperty = observer(function SelectedElementProperty({
 			<div className="font-semibold">{selectedElement?.name || row.elementId}</div>
 			<div className="text-muted small">{selectedProperty?.label || row.elementProperty}</div>
 		</>
+	)
+})
+
+// Live preview of the evaluated override value, shown under the element/property label (mirroring where
+// entity option fields show their expression preview). Only rendered when the override is an expression.
+const OverrideValuePreview = observer(function OverrideValuePreview({ row }: { row: FeedbackEntityStyleOverride }) {
+	const { styleStore } = useLayeredStyleElementsContext()
+	const { controlId } = useEntityEditorContext()
+
+	if (!row.override.isExpression) return null
+
+	const selectedElement = row.elementId ? styleStore.findElementById(row.elementId) : null
+	const selectedProperty = getElementSchemaProperty(selectedElement?.type, row.elementProperty)
+	if (!selectedProperty) return null
+
+	return (
+		<ExpressionValuePreview
+			expression={stringifyVariableValue(row.override.value) ?? ''}
+			controlId={controlId}
+			fieldDefinition={selectedProperty}
+		/>
 	)
 })
 
