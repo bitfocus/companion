@@ -108,4 +108,36 @@ describe('emulator surfaces', () => {
 			expect(app.getFeedbackValue(controlId, feedbackId)).toBe(false)
 		})
 	})
+
+	test('page history navigation redraws immediately, other page changes are deferred', async () => {
+		await app.trpc().pages.insert({ asPageNumber: 2, pageNames: ['Second'] })
+
+		const controlId = app.createButton({ pageNumber: 1, row: 2, column: 4 })
+		app.addInternalAction(controlId, 'set_page', {
+			surfaceId: exprVal(EMULATOR_ID),
+			page: exprVal(2),
+		})
+		app.addInternalAction(controlId, 'set_page', {
+			surfaceId: exprVal(EMULATOR_ID),
+			page: exprVal('back'),
+		})
+
+		const devicePageSetSpy = vi.spyOn(app.registry.surfaces, 'devicePageSet')
+
+		app.pressButton({ pageNumber: 1, row: 2, column: 4 }, true)
+
+		await vi.waitFor(() => {
+			expect(devicePageSetSpy).toHaveBeenCalledTimes(2)
+		})
+
+		// An absolute page change defers the redraw, history navigation ('back'/'forward') does not
+		expect(devicePageSetSpy).toHaveBeenNthCalledWith(1, EMULATOR_ID, expect.any(String), true, true)
+		expect(devicePageSetSpy).toHaveBeenNthCalledWith(2, EMULATOR_ID, 'back', true, false)
+	})
+
+	test('the rescanUsb mutation reports errors instead of throwing', async () => {
+		// In this environment the scan may find nothing or fail outright - either way the mutation
+		// must resolve (a failure is returned as an error string, not thrown)
+		await expect(app.trpc().surfaces.rescanUsb()).resolves.not.toThrow()
+	})
 })
