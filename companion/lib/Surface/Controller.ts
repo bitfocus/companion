@@ -524,7 +524,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 			rescanUsb: publicProcedure.mutation(async () => {
 				try {
-					return this.triggerRefreshDevices()
+					return await this.triggerRefreshDevices()
 				} catch (e) {
 					return stringifyError(e, true)
 				}
