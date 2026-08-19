@@ -20,6 +20,9 @@ import { createMockTrpcContext } from '../Util.js'
 // graph is imported - which is why the app modules below are imported dynamically inside
 // createTestApp rather than statically
 process.env.DEBUG_DISABLE_RENDER_THREADING = '1'
+// Bind the network services to ipv4 - tests connect via 127.0.0.1, and some sandboxed
+// environments have no ipv6 at all (binding '::' fails with EAFNOSUPPORT)
+process.env.DISABLE_IPV6 = '1'
 
 // Explicit annotations - the inferred types are too large for declaration emit to serialize
 type AppRouterCallerFactory = TRPCRouterCaller<AppRouter['_def']['_config']['$types'], AppRouter['_def']['record']>
