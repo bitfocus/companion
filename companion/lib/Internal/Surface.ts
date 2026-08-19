@@ -687,7 +687,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 	#changeSurfacePage(
 		surfaceId: string,
 		toPage: string | 'back' | 'forward' | '+1' | '-1',
-		defer = !(surfaceId in ['back', 'forward'])
+		defer = toPage !== 'back' && toPage !== 'forward'
 	): void {
 		const groupId = this.#surfaceController.getGroupIdFromDeviceId(surfaceId)
 		if (!groupId) return
