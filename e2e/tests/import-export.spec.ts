@@ -61,9 +61,13 @@ test('a config export can be imported back through the ui', async ({ page }) => 
 		const checkbox = page.getByRole('checkbox', { name: label, exact: true })
 		if ((await checkbox.count()) > 0) await checkbox.uncheck()
 	}
-	await page.getByRole('button', { name: 'Import Preserving Unselected' }).click()
-
-	// A successful import reloads the whole page
+	// A successful import reloads the whole page. The sidebar stays visible throughout the wizard,
+	// so it cannot signal the reload - wait for the load event itself, armed before the click, or a
+	// later navigation races the app-initiated reload (net::ERR_ABORTED)
+	await Promise.all([
+		page.waitForEvent('load', { timeout: 30_000 }),
+		page.getByRole('button', { name: 'Import Preserving Unselected' }).click(),
+	])
 	await expect(page.locator('.sidebar-nav').first()).toBeVisible({ timeout: 30_000 })
 
 	await gotoApp(page, '/variables/custom')
