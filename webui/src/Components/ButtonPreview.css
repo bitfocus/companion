@@ -13,6 +13,13 @@
 		cursor: pointer;
 	}
 
+	/* The editing grid must stay scrollable by touch - the browser pans and fires pointercancel, which
+	   the grid cell reads as "this gesture was not a tap". A physical-surface preview keeps the
+	   `touch-action: none` above instead, so a scroll can never steal a press. */
+	&.grid-pannable {
+		touch-action: pan-x pan-y;
+	}
+
 	&.selected .button-border {
 		border: 1px solid var(--color-primary) !important;
 		box-shadow: 0px 0px 0px 1px var(--color-primary) inset;

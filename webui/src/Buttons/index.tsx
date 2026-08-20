@@ -93,21 +93,19 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	}, [])
 
 	const hotPressMutation = useMutationExt(trpc.controls.hotPressControl.mutationOptions())
-	const doButtonGridClick = useCallback(
+	const doButtonGridPress = useCallback(
 		(location: ControlLocation, isDown: boolean) => {
-			if (viewControl.buttonGridHotPress) {
-				hotPressMutation
-					.mutateAsync({ location, direction: isDown, surfaceId: 'grid' })
-					.catch((e) => console.error(`Hot press failed: ${e}`))
-			} else if (isDown) {
-				setActiveTab('edit')
-				console.log('set selected', location)
-				setSelectedButton(location)
-				setTabResetToken(nanoid())
-			}
+			hotPressMutation
+				.mutateAsync({ location, direction: isDown, surfaceId: 'grid' })
+				.catch((e) => console.error(`Hot press failed: ${e}`))
 		},
-		[hotPressMutation, viewControl]
+		[hotPressMutation]
 	)
+	const doButtonGridTap = useCallback((location: ControlLocation) => {
+		setActiveTab('edit')
+		setSelectedButton(location)
+		setTabResetToken(nanoid())
+	}, [])
 	const navigateToControl = useCallback(
 		(location: ControlLocation) => {
 			setPageNumber(location.pageNumber)
@@ -375,7 +373,8 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	const gridPanel = (
 		<MyErrorBoundary>
 			<ButtonsGridPanel
-				buttonGridClick={doButtonGridClick}
+				buttonGridPress={doButtonGridPress}
+				buttonGridTap={doButtonGridTap}
 				isHot={viewControl.buttonGridHotPress}
 				selectedButton={selectedButton}
 				copySourceButton={copyFromButton?.[0] ?? null}
