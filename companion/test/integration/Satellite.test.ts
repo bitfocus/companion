@@ -28,7 +28,7 @@ describe('satellite surface protocol', () => {
 	let connection: SatelliteInitSocketResult
 
 	beforeEach(async () => {
-		app = await createTestApp({ configDir: null })
+		app = await createTestApp({ configDir: null, extraModulePath: null })
 
 		socket = new TestSocketWrapper()
 		connection = app.registry.services.satelliteApi.initSocket(LogController.createLogger('test/satellite'), socket)

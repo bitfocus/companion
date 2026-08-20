@@ -12,7 +12,7 @@ describe('button action execution', () => {
 	})
 
 	test('pressing a button runs an internal action', async () => {
-		app = await createTestApp({ configDir: null })
+		app = await createTestApp({ configDir: null, extraModulePath: null })
 
 		app.createCustomVariable('result', 'initial')
 
@@ -32,7 +32,7 @@ describe('button action execution', () => {
 	})
 
 	test('action options can be expressions evaluated against the real variable store', async () => {
-		app = await createTestApp({ configDir: null })
+		app = await createTestApp({ configDir: null, extraModulePath: null })
 
 		app.createCustomVariable('counter', 0)
 
@@ -58,7 +58,7 @@ describe('button action execution', () => {
 	})
 
 	test('the wait action splits the chain without blocking the earlier actions', async () => {
-		app = await createTestApp({ configDir: null })
+		app = await createTestApp({ configDir: null, extraModulePath: null })
 
 		app.createCustomVariable('before', 'initial')
 		app.createCustomVariable('after', 'initial')
@@ -96,7 +96,7 @@ describe('button action execution', () => {
 	})
 
 	test('logic_if only runs its children when the condition is true', async () => {
-		app = await createTestApp({ configDir: null })
+		app = await createTestApp({ configDir: null, extraModulePath: null })
 
 		app.createCustomVariable('flag', 'yes')
 		app.createCustomVariable('count', 0)
@@ -134,7 +134,7 @@ describe('button action execution', () => {
 	})
 
 	test('a button can press another button by location', async () => {
-		app = await createTestApp({ configDir: null })
+		app = await createTestApp({ configDir: null, extraModulePath: null })
 
 		app.createCustomVariable('result', 'initial')
 

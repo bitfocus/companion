@@ -9,7 +9,7 @@ vi.setConfig({ testTimeout: 30_000, hookTimeout: 30_000 })
 describe('export and import', () => {
 	let app: TestApp
 	beforeEach(async () => {
-		app = await createTestApp({ configDir: null })
+		app = await createTestApp({ configDir: null, extraModulePath: null })
 	})
 	afterEach(async () => {
 		await app.close()

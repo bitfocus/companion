@@ -10,7 +10,7 @@ const EMULATOR_ID = 'emulator:test'
 describe('emulator surfaces', () => {
 	let app: TestApp
 	beforeEach(async () => {
-		app = await createTestApp({ configDir: null })
+		app = await createTestApp({ configDir: null, extraModulePath: null })
 		app.registry.surfaces.addEmulator('test', 'Test')
 	})
 	afterEach(async () => {

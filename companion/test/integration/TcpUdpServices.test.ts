@@ -31,7 +31,7 @@ function collectLines(socket: net.Socket): () => string[] {
 describe('tcp/udp api services over real sockets', () => {
 	let app: TestApp
 	beforeEach(async () => {
-		app = await createTestApp({ configDir: null })
+		app = await createTestApp({ configDir: null, extraModulePath: null })
 	})
 	afterEach(async () => {
 		await app.close()

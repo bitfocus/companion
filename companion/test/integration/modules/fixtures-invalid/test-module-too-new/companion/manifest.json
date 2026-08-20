@@ -1,0 +1,21 @@
+{
+	"id": "test-module-too-new",
+	"name": "Test module (unsupported old api)",
+	"shortname": "test-module-too-new",
+	"description": "Integration test fixture with an api version above the supported range",
+	"version": "1.0.0",
+	"license": "MIT",
+	"repository": "https://github.com/bitfocus/companion",
+	"bugs": "https://github.com/bitfocus/companion/issues",
+	"maintainers": [{ "name": "Companion integration tests" }],
+	"legacyIds": [],
+	"runtime": {
+		"type": "node22",
+		"api": "nodejs-ipc",
+		"apiVersion": "99.0.0",
+		"entrypoint": "main.js"
+	},
+	"manufacturer": "Bitfocus",
+	"products": ["Test"],
+	"keywords": ["test"]
+}

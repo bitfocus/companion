@@ -24,7 +24,7 @@ describe('osc api service over a real udp socket', () => {
 	let port: number
 
 	beforeEach(async () => {
-		app = await createTestApp({ configDir: null })
+		app = await createTestApp({ configDir: null, extraModulePath: null })
 
 		port = 21000 + Math.floor(Math.random() * 20000)
 		app.registry.userconfig.setKey('osc_listen_port', port)
