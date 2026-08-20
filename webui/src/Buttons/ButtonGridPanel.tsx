@@ -2,7 +2,7 @@ import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icon
 import './ButtonGridPanel.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext, useRef, useState } from 'react'
+import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
@@ -15,16 +15,19 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ButtonGridActions, type ButtonGridActionsRef } from './ButtonGridActions.js'
 import { ButtonGridHeader } from './ButtonGridHeader.js'
 import { ButtonGridResizePrompt } from './ButtonGridResizePrompt.js'
+import { ButtonGridViewProvider, type ButtonGridView } from './ButtonGridViewContext.js'
 import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { ButtonInfiniteGrid, PrimaryButtonGridIcon, type ButtonInfiniteGridRef } from './ButtonInfiniteGrid.js'
 import { EditPagePropertiesModal, type EditPagePropertiesModalRef } from './EditPageProperties.js'
+import type { GridButtonModifiers } from './GridButtonPreview.js'
 import type { GridZoomController } from './GridZoom.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
 	onKeyDown: (event: React.KeyboardEvent) => void
 	isHot: boolean
-	buttonGridClick: (location: ControlLocation, pressed: boolean) => void
+	buttonGridPress: (location: ControlLocation, pressed: boolean) => void
+	buttonGridTap: (location: ControlLocation, modifiers: GridButtonModifiers) => void
 	changePage: (pageNumber: number) => void
 	selectedButton: ControlLocation | null
 	clearSelectedButton: () => void
@@ -39,7 +42,8 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	pageNumber,
 	onKeyDown,
 	isHot,
-	buttonGridClick,
+	buttonGridPress,
+	buttonGridTap,
 	changePage,
 	selectedButton,
 	clearSelectedButton,
@@ -53,13 +57,26 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 
 	const actionsRef = useRef<ButtonGridActionsRef>(null)
 
-	const buttonClick = useCallback(
-		(location: ControlLocation, isDown: boolean) => {
-			if (!actionsRef.current?.buttonClick(location, isDown)) {
-				buttonGridClick(location, isDown)
-			}
+	const doTap = useCallback(
+		(location: ControlLocation, modifiers: GridButtonModifiers) => {
+			// The copy/move/swap/delete bar gets first refusal. It is written against press/release
+			// pairs, so replay the tap as both edges - it advances on the down and acts on the up.
+			const consumed = actionsRef.current?.buttonClick(location, true) ?? false
+			actionsRef.current?.buttonClick(location, false)
+
+			if (!consumed) buttonGridTap(location, modifiers)
 		},
-		[buttonGridClick]
+		[buttonGridTap]
+	)
+
+	const gridView = useMemo<ButtonGridView>(
+		() => ({
+			pressMode: isHot,
+			onPress: buttonGridPress,
+			onTap: doTap,
+			onContextMenu: (location, x, y) => onButtonContextMenu?.(location, x, y),
+		}),
+		[isHot, buttonGridPress, doTap, onButtonContextMenu]
 	)
 
 	const setPage = useCallback(
@@ -149,20 +166,21 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 			</div>
 			<div className="button-grid-panel-content" style={{ minHeight: viewportMinHeight }}>
 				{hasBeenInView && gridSize && (
-					<ButtonInfiniteGrid
-						ref={gridRef}
-						isHot={isHot}
-						pageNumber={pageNumber}
-						buttonClick={buttonClick}
-						selectedButton={selectedButton}
-						copySourceButton={copySourceButton}
-						contextMenuButton={contextMenuButton}
-						onButtonContextMenu={onButtonContextMenu}
-						gridSize={gridSize}
-						ButtonIconFactory={PrimaryButtonGridIcon}
-						drawScale={gridZoomValue / 100}
-						setViewportMinHeight={setViewportMinHeight}
-					/>
+					<ButtonGridViewProvider value={gridView}>
+						<ButtonInfiniteGrid
+							ref={gridRef}
+							isHot={isHot}
+							pageNumber={pageNumber}
+							selectedButton={selectedButton}
+							copySourceButton={copySourceButton}
+							contextMenuButton={contextMenuButton}
+							onButtonContextMenu={onButtonContextMenu}
+							gridSize={gridSize}
+							ButtonIconFactory={PrimaryButtonGridIcon}
+							drawScale={gridZoomValue / 100}
+							setViewportMinHeight={setViewportMinHeight}
+						/>
+					</ButtonGridViewProvider>
 				)}
 			</div>
 			<div className="button-grid-panel-footer">

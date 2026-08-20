@@ -8,23 +8,28 @@ import { ButtonPreview } from '~/Components/ButtonPreview.js'
 import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import useElementInnerSize from '~/Hooks/useElementClientSize.js'
 import useScrollPosition from '~/Hooks/useScrollPosition.js'
+import { useButtonGridView } from './ButtonGridViewContext.js'
 import { makeGridButtonDroppableId } from './GridButtonDroppableId.js'
+import { GridButtonPreview } from './GridButtonPreview.js'
 
 export interface ButtonInfiniteGridRef {
 	resetPosition(): void
 }
 
+/** The props `ButtonInfiniteGrid` gives to whichever component is rendering each cell */
 export interface ButtonInfiniteGridButtonProps {
 	pageNumber: number
 	column: number
 	row: number
 
-	image: string | null
 	left: number
 	top: number
-	style: React.CSSProperties
-	onContextMenu?: (location: ControlLocation, x: number, y: number) => void
-	copySource?: boolean
+	fixedSize: boolean
+	onClick: ((location: ControlLocation, pressed: boolean) => void) | undefined
+	onContextMenu: ((location: ControlLocation, x: number, y: number) => void) | undefined
+	selected: boolean
+	copySource: boolean
+	contextMenuOpen: boolean
 }
 
 interface ButtonInfiniteGridProps {
@@ -250,9 +255,20 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 	}
 )
 
-export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({ ...props }: ButtonInfiniteGridButtonProps) {
+export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
+	pageNumber,
+	column,
+	row,
+	left,
+	top,
+	selected,
+	copySource,
+	contextMenuOpen,
+}: ButtonInfiniteGridButtonProps) {
+	const view = useButtonGridView()
+
 	const { ref: drop, isDropTarget } = useDroppable({
-		id: makeGridButtonDroppableId(props.pageNumber, props.column, props.row),
+		id: makeGridButtonDroppableId(pageNumber, column, row),
 		accept: 'preset',
 	})
 
@@ -260,7 +276,30 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({ ...pr
 	const { source } = useDragOperation()
 	const canDrop = source?.type === 'preset'
 
-	return <ButtonGridIcon {...props} dropRef={drop} dropHover={isDropTarget} canDrop={canDrop} />
+	const location: ControlLocation = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
+	const { image, isUsed } = useButtonImageForLocation(location)
+
+	const style = useMemo(() => ({ left, top }), [left, top])
+
+	return (
+		<GridButtonPreview
+			location={location}
+			image={isUsed ? image : null}
+			style={style}
+			title={formatLocation(location)}
+			placeholder={`${row}/${column}`}
+			pressMode={view.pressMode}
+			onPress={view.onPress}
+			onTap={view.onTap}
+			onContextMenu={view.onContextMenu}
+			selected={selected}
+			copySource={copySource}
+			contextMenuOpen={contextMenuOpen}
+			canDrop={canDrop}
+			dropHover={isDropTarget}
+			dropRef={drop}
+		/>
+	)
 })
 
 type ButtonGridIconProps = ButtonGridIconBaseProps
@@ -282,12 +321,14 @@ interface ButtonGridIconBaseProps {
 	image: string | null
 	left: number
 	top: number
-	style: React.CSSProperties
 
+	fixedSize?: boolean
 	dropRef?: React.RefCallback<HTMLDivElement>
 	dropHover?: boolean
 	canDrop?: boolean
+	onClick?: (location: ControlLocation, pressed: boolean) => void
 	onContextMenu?: (location: ControlLocation, x: number, y: number) => void
+	selected?: boolean
 	copySource?: boolean
 	contextMenuOpen?: boolean
 }
@@ -299,20 +340,16 @@ export const ButtonGridIconBase = memo(function ButtonGridIcon({
 	image,
 	left,
 	top,
-	style,
 	...props
 }: ButtonGridIconBaseProps) {
 	const location: ControlLocation = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
+	const style = useMemo(() => ({ left, top }), [left, top])
 
 	const title = formatLocation(location)
 	return (
 		<ButtonPreview
 			{...props}
-			style={{
-				...style,
-				left,
-				top,
-			}}
+			style={style}
 			location={location}
 			title={title}
 			placeholder={`${location.row}/${location.column}`}
