@@ -292,70 +292,10 @@
 			display: block;
 		}
 
+		/* Everything about how this looks now comes from the shared `.toolbar` in Components/Toolbar.css.
+		   All that is left here is where it sits relative to the canvas. */
 		.button-layer-quick-actions {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			gap: 2px;
-			padding: 4px;
-
-			/* Hold its own width beside the canvas rather than being squeezed */
-			flex: 0 0 auto;
-
-			/* Set it off from the canvas as a distinct toolbar area */
 			margin-right: 0.5rem;
-			background-color: var(--color-toolbar-bg);
-			border: 1px solid var(--color-border);
-			border-radius: 4px;
-
-			.button-layer-quick-actions-separator {
-				align-self: stretch;
-				height: 1px;
-				background: var(--color-border);
-				margin: 3px 0;
-			}
-
-			/* Wraps a disabled button so its tooltip can still fire on hover */
-			.button-layer-quick-action-tooltip {
-				display: flex;
-			}
-
-			.button-layer-quick-action {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				width: 24px;
-				height: 24px;
-				padding: 0;
-				border: 1px solid transparent;
-				border-radius: 3px;
-				background: transparent;
-				color: var(--color-toolbar-fg);
-				cursor: pointer;
-
-				&:hover:not(:disabled):not(.active) {
-					background: var(--color-surface-hover);
-					border-color: var(--color-border);
-				}
-
-				&.active {
-					background: var(--color-toolbar-accent);
-					border-color: var(--color-toolbar-accent);
-					color: var(--color-on-dark);
-
-					&:hover:not(:disabled) {
-						background: var(--color-toolbar-accent-hover);
-						border-color: var(--color-toolbar-accent-hover);
-					}
-				}
-
-				&:disabled {
-					opacity: 0.3;
-					cursor: default;
-					/* Let the wrapping tooltip trigger receive the hover instead */
-					pointer-events: none;
-				}
-			}
 		}
 	}
 

@@ -151,7 +151,7 @@
 	--color-drop-neutral-bg: #eee; /* button drop target, awaiting a drop */
 	--color-drop-hover-bg: #daffab; /* button drop target, with a drag hovering over it */
 
-	/* Button layer (wysiwyg) editor toolbar */
+	/* Toolbars - the layered button editor's quick actions and the button grid's tool palette */
 	--color-canvas-workspace: rgb(228, 228, 228); /* darker fill behind the layer canvas */
 	--color-toolbar-bg: rgb(245, 245, 245); /* quick-actions / canvas footer strips */
 	--color-toolbar-fg: #4a4a4a; /* toolbar icon & label text */

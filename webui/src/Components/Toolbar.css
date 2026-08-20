@@ -1,0 +1,126 @@
+/* A strip of icon buttons, set off from what it acts on. Shared by the layered button editor's
+   quick actions and the button grid's tool palette, so the two read as the same control. */
+.toolbar {
+	/* Buttons are square at this size unless a label widens them */
+	--toolbar-button-size: 38px;
+
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	padding: 4px;
+
+	background-color: var(--color-toolbar-bg);
+	border: 1px solid var(--color-border);
+	border-radius: 4px;
+}
+
+/* Small enough to sit alongside a canvas without competing with it */
+.toolbar-sm {
+	--toolbar-button-size: 24px;
+}
+
+.toolbar-vertical {
+	flex-direction: column;
+
+	/* Hold its own width beside whatever it sits next to, rather than being squeezed */
+	flex: 0 0 auto;
+}
+
+.toolbar-horizontal {
+	/* Wrapping is the last resort at widths where the buttons cannot fit one row. They stay
+	   full-size: a toolbar that is two rows tall beats one that cannot be hit. */
+	flex-flow: row wrap;
+}
+
+/* Keeps a set of buttons together, so a toolbar narrow enough to wrap breaks between groups rather
+   than between arbitrary buttons */
+.toolbar-group {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+
+.toolbar-horizontal > .toolbar-group {
+	flex-flow: row wrap;
+}
+
+.toolbar-vertical > .toolbar-group {
+	flex-direction: column;
+}
+
+.toolbar-separator {
+	align-self: stretch;
+
+	background: var(--color-border);
+}
+
+.toolbar-vertical > .toolbar-separator {
+	height: 1px;
+	margin: 3px 0;
+}
+
+.toolbar-horizontal > .toolbar-separator {
+	width: 1px;
+	margin: 0 3px;
+}
+
+.toolbar-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+
+	min-width: var(--toolbar-button-size);
+	height: var(--toolbar-button-size);
+	padding: 0 6px;
+
+	border: 1px solid transparent;
+	border-radius: 3px;
+	background: transparent;
+	color: var(--color-toolbar-fg);
+	cursor: pointer;
+
+	&:hover:not(:disabled):not(.active) {
+		background: var(--color-surface-hover);
+		border-color: var(--color-border);
+	}
+
+	&.active {
+		background: var(--color-toolbar-accent);
+		border-color: var(--color-toolbar-accent);
+		color: var(--color-on-dark);
+
+		&:hover:not(:disabled) {
+			background: var(--color-toolbar-accent-hover);
+			border-color: var(--color-toolbar-accent-hover);
+		}
+	}
+
+	/* For a tool that does something live or irreversible, so being in it is not just "the blue one" */
+	&.toolbar-button-danger.active {
+		background: var(--color-danger);
+		border-color: var(--color-danger);
+
+		&:hover:not(:disabled) {
+			background: var(--color-danger);
+			border-color: var(--color-danger);
+		}
+	}
+
+	&:disabled {
+		opacity: 0.3;
+		cursor: default;
+		/* Let the wrapping tooltip trigger receive the hover instead */
+		pointer-events: none;
+	}
+}
+
+.toolbar-sm .toolbar-button {
+	width: var(--toolbar-button-size);
+	padding: 0;
+}
+
+/* Wraps a disabled button so its tooltip can still fire on hover */
+.toolbar-button-tooltip {
+	display: flex;
+}

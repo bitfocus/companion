@@ -9,9 +9,8 @@ import {
 	faTrash,
 	faUpDownLeftRight,
 } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'
-import { Button } from '~/Components/Button.js'
+import { Toolbar } from '~/Components/Toolbar.js'
 import { useButtonGridView, useGridActiveToolId } from './ButtonGridViewContext.js'
 import type { GridToolId } from './GridTools/index.js'
 
@@ -74,28 +73,32 @@ export function ButtonGridToolbar(): React.JSX.Element {
 		const active = tool.id === activeToolId
 
 		return (
-			<Button
+			<Toolbar.Button
 				key={tool.id}
-				color={active ? (tool.dangerous ? 'danger' : 'primary') : 'light'}
-				active={active}
-				onClick={() => selectTool(tool.id)}
+				icon={tool.icon}
+				// Whether there is room for the label is a question about width, so the CSS decides it -
+				// see the container query in ButtonGridPanel.css
+				label={tool.label}
 				title={tool.title}
-				// The label is hidden when there is no room for it, so name the button explicitly
-				aria-label={tool.label}
-				aria-pressed={active}
-			>
-				<FontAwesomeIcon icon={tool.icon} />{' '}
-				{/* Whether this is shown is a question about the width available, so the CSS decides it -
-				    see the container query in ButtonGridPanel.css */}
-				<span className="button-grid-tool-label">{tool.label}</span>
-			</Button>
+				// Names the button for the widths where the label is not rendered
+				ariaLabel={tool.label}
+				active={active}
+				pressed={active}
+				tone={tool.dangerous ? 'danger' : undefined}
+				onClick={() => selectTool(tool.id)}
+			/>
 		)
 	}
 
 	return (
 		<div className="button-grid-toolbar">
-			<div className="button-grid-toolbar-group">{NAVIGATION_TOOLS.map(renderTool)}</div>
-			<div className="button-grid-toolbar-group">{TRANSFER_TOOLS.map(renderTool)}</div>
+			<Toolbar.Root orientation="horizontal">
+				{/* Grouped so that a toolbar narrow enough to wrap breaks between the modes and the
+				    pick-then-place tools, rather than mid-group */}
+				<Toolbar.Group>{NAVIGATION_TOOLS.map(renderTool)}</Toolbar.Group>
+				<Toolbar.Separator />
+				<Toolbar.Group>{TRANSFER_TOOLS.map(renderTool)}</Toolbar.Group>
+			</Toolbar.Root>
 		</div>
 	)
 }

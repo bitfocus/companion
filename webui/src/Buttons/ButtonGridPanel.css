@@ -60,46 +60,34 @@
 	height: 100%;
 }
 
-/* The toolbar sits inside a panel whose width does not track the viewport, so how much fits is a
-   question about this element, not about the screen - hence a container query rather than a media
-   query or a measured pixel threshold. */
+/* How the toolbar looks comes from the shared `.toolbar`; this is only about the width it has to
+   work with. That is a question about this element, not about the screen - the panel it sits in does
+   not track the viewport - hence a container query rather than a media query or a measured pixel
+   threshold. */
 .button-grid-toolbar {
 	container-type: inline-size;
 
 	display: flex;
-	flex-flow: row wrap;
-	align-items: center;
-
-	/* Wider than the gap within a group, so the two groups read as groups without a divider element -
-	   a divider becomes a dangling stray at whatever width the row happens to wrap at */
-	gap: 4px 14px;
-
 	padding-bottom: 8px;
-}
-
-.button-grid-toolbar-group {
-	display: flex;
-	flex-flow: row wrap;
-	gap: 4px;
 }
 
 /* Labels are the first thing to go, and the buttons stay full-size tap targets without them. The
    threshold is in rem so it scales with the reader's font size, rather than promising room for
    labels that a larger font no longer leaves. Where container queries are unsupported this simply
    stays collapsed, which is the safe direction to fail. */
-.button-grid-tool-label {
+.button-grid-toolbar .toolbar-button-label {
 	display: none;
 }
 
 @container (min-width: 48rem) {
-	.button-grid-tool-label {
+	.button-grid-toolbar .toolbar-button-label {
 		display: inline;
 	}
 }
 
 /* The active tool keeps its label after the others have gone, so which mode the grid is in is not
    left to be inferred from an icon */
-.button-grid-toolbar .active .button-grid-tool-label {
+.button-grid-toolbar .toolbar-button.active .toolbar-button-label {
 	display: inline;
 }
 
@@ -107,7 +95,7 @@
    active tool is already the only coloured one, and any tool with something to say has put it in the
    context bar below. */
 @container (max-width: 30rem) {
-	.button-grid-toolbar .active .button-grid-tool-label {
+	.button-grid-toolbar .toolbar-button.active .toolbar-button-label {
 		display: none;
 	}
 }
