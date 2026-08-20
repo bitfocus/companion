@@ -221,27 +221,98 @@ export class ButtonGridStore {
 		this.#notify()
 	}
 
+	/**
+	 * Select every cell in a rectangle, as dragged out on the grid. Additive keeps whatever was
+	 * already selected, for building up a selection in several sweeps.
+	 */
+	selectRectangle(from: ControlLocation, to: ControlLocation, additive: boolean): void {
+		const rectangle = locationsInRectangle(from, to)
+
+		const keepExisting = additive && (this.selectionPageNumber === null || this.selectionPageNumber === to.pageNumber)
+		const existing = keepExisting ? this.#selectionLocations : []
+
+		const merged = [...existing]
+		const seen = new Set(existing.map(formatLocation))
+		for (const location of rectangle) {
+			const key = formatLocation(location)
+			if (seen.has(key)) continue
+
+			seen.add(key)
+			merged.push(location)
+		}
+
+		this.#focus = to
+		this.#rangeAnchor = from
+		this.#applySelection(merged)
+	}
+
 	// ---- keyboard navigation ----
+
+	#nextFocus(rowDelta: number, columnDelta: number, gridSize: UserConfigGridSize): ControlLocation | null {
+		const from = this.#focus
+		if (!from) return null
+
+		return {
+			pageNumber: from.pageNumber,
+			row: wrap(from.row + rowDelta, gridSize.minRow, gridSize.maxRow),
+			column: wrap(from.column + columnDelta, gridSize.minColumn, gridSize.maxColumn),
+		}
+	}
 
 	/**
 	 * Move the focus by one cell, wrapping at the edges of the grid, and select where it lands.
 	 * Returns the new focus so the caller can scroll it into view.
 	 */
 	moveFocus(rowDelta: number, columnDelta: number, gridSize: UserConfigGridSize): ControlLocation | null {
-		const from = this.#focus
-		if (!from) return null
-
-		const next: ControlLocation = {
-			pageNumber: from.pageNumber,
-			row: wrap(from.row + rowDelta, gridSize.minRow, gridSize.maxRow),
-			column: wrap(from.column + columnDelta, gridSize.minColumn, gridSize.maxColumn),
-		}
+		const next = this.#nextFocus(rowDelta, columnDelta, gridSize)
+		if (!next) return null
 
 		this.#focus = next
 		this.#rangeAnchor = next
 		this.#applySelection([next])
 
 		return next
+	}
+
+	/** Move the focus, extending the selection from the anchor as it goes - shift with the arrows */
+	extendFocus(rowDelta: number, columnDelta: number, gridSize: UserConfigGridSize): ControlLocation | null {
+		const next = this.#nextFocus(rowDelta, columnDelta, gridSize)
+		if (!next || !this.#rangeAnchor) return null
+
+		this.#focus = next
+		this.#applySelection(locationsInRectangle(this.#rangeAnchor, next))
+
+		return next
+	}
+
+	/** Move the focus without disturbing the selection, so cells can be picked out one at a time */
+	moveFocusOnly(rowDelta: number, columnDelta: number, gridSize: UserConfigGridSize): ControlLocation | null {
+		const next = this.#nextFocus(rowDelta, columnDelta, gridSize)
+		if (!next) return null
+
+		this.#focus = next
+		this.#notify()
+
+		return next
+	}
+
+	/** Add or remove the focused cell, for building a selection from the keyboard */
+	toggleFocused(): void {
+		const focus = this.#focus
+		if (!focus) return
+
+		this.selectWithModifiers(focus, { range: false, toggle: true })
+		// selectWithModifiers moves the anchor to the toggled cell, but the focus should not jump
+		this.#focus = focus
+	}
+
+	selectAllOnPage(pageNumber: number, gridSize: UserConfigGridSize): void {
+		const from: ControlLocation = { pageNumber, row: gridSize.minRow, column: gridSize.minColumn }
+		const to: ControlLocation = { pageNumber, row: gridSize.maxRow, column: gridSize.maxColumn }
+
+		this.#focus = to
+		this.#rangeAnchor = from
+		this.#applySelection(locationsInRectangle(from, to))
 	}
 
 	/** Move the focus onto another page, keeping the same cell */

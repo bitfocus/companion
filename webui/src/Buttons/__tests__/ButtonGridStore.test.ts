@@ -155,6 +155,100 @@ describe('ButtonGridStore', () => {
 		})
 	})
 
+	describe('dragging out a rectangle', () => {
+		it('selects everything inside it', () => {
+			store.selectRectangle(at(1, 1), at(2, 2), false)
+
+			expect(store.selectionCount).toBe(4)
+			expect(store.isSelected('1/1/1')).toBe(true)
+			expect(store.isSelected('1/2/2')).toBe(true)
+		})
+
+		it('replaces the previous selection by default', () => {
+			store.selectWithModifiers(at(0, 0), NO_MODIFIERS)
+			store.selectRectangle(at(1, 1), at(1, 2), false)
+
+			expect(store.isSelected('1/0/0')).toBe(false)
+			expect(store.selectionCount).toBe(2)
+		})
+
+		it('adds to the previous selection when additive, without duplicating overlap', () => {
+			store.selectRectangle(at(1, 1), at(1, 2), false)
+			store.selectRectangle(at(1, 2), at(1, 3), true)
+
+			expect(store.selectionCount).toBe(3)
+			expect(store.isSelected('1/1/1')).toBe(true)
+			expect(store.isSelected('1/1/3')).toBe(true)
+		})
+
+		it('starts over when an additive sweep lands on another page', () => {
+			store.selectRectangle(at(1, 1, 1), at(1, 2, 1), false)
+			store.selectRectangle(at(1, 1, 2), at(1, 1, 2), true)
+
+			expect(store.selectedLocations).toEqual([at(1, 1, 2)])
+		})
+
+		it('leaves the anchor where the sweep began, so shift-click can extend it', () => {
+			store.selectRectangle(at(1, 1), at(2, 2), false)
+			store.selectWithModifiers(at(3, 3), RANGE)
+
+			expect(store.selectionCount).toBe(9)
+		})
+	})
+
+	describe('extending from the keyboard', () => {
+		it('grows the selection from the anchor with shift', () => {
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+
+			store.extendFocus(1, 0, GRID_SIZE)
+			expect(store.selectionCount).toBe(2)
+
+			store.extendFocus(1, 0, GRID_SIZE)
+			expect(store.selectionCount).toBe(3)
+		})
+
+		it('shrinks again when the focus comes back', () => {
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+			store.extendFocus(1, 0, GRID_SIZE)
+			store.extendFocus(-1, 0, GRID_SIZE)
+
+			expect(store.selectedLocations).toEqual([at(1, 1)])
+		})
+
+		it('moves the focus without touching the selection', () => {
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+
+			expect(store.moveFocusOnly(1, 0, GRID_SIZE)).toEqual(at(2, 1))
+			expect(store.selectedLocations).toEqual([at(1, 1)])
+			expect(store.focus).toEqual(at(2, 1))
+		})
+
+		it('picks out cells one at a time with focus moves and toggles', () => {
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+			store.moveFocusOnly(0, 2, GRID_SIZE)
+			store.toggleFocused()
+
+			expect(store.selectionCount).toBe(2)
+			expect(store.isSelected('1/1/3')).toBe(true)
+			// The focus stays where it was put, rather than jumping about as cells are picked
+			expect(store.focus).toEqual(at(1, 3))
+		})
+
+		it('toggles a cell back off', () => {
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+			store.toggleFocused()
+
+			expect(store.selectionCount).toBe(0)
+		})
+
+		it('selects the whole page', () => {
+			store.selectAllOnPage(2, GRID_SIZE)
+
+			expect(store.selectionCount).toBe(32)
+			expect(store.selectionPageNumber).toBe(2)
+		})
+	})
+
 	describe('clipboard', () => {
 		it('marks its contents as picked up, so the grid can show them', () => {
 			store.setClipboard([at(1, 1)], 'cut')

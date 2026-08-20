@@ -19,6 +19,22 @@ import { GridButtonPreview, type GridButtonModifiers } from './GridButtonPreview
 
 export interface ButtonInfiniteGridRef {
 	resetPosition(): void
+	/** Scroll the smallest amount that brings this cell fully into view */
+	revealLocation(location: ControlLocation): void
+}
+
+/** How far a pointer must travel across the grid before it is dragging out a selection */
+const MARQUEE_START_THRESHOLD = 6
+
+/** A rectangle being dragged out, in canvas pixels */
+interface MarqueeState {
+	pointerId: number
+	startX: number
+	startY: number
+	currentX: number
+	currentY: number
+	active: boolean
+	additive: boolean
 }
 
 /** The props `ButtonInfiniteGrid` gives to whichever component is rendering each cell */
@@ -47,6 +63,8 @@ interface ButtonInfiniteGridProps {
 	onButtonContextMenu?: (location: ControlLocation, x: number, y: number) => void
 	gridSize: UserConfigGridSize
 	ButtonIconFactory: React.ClassType<ButtonInfiniteGridButtonProps, any, any> // TODO - this type is flawed
+	/** Called when a rectangle is dragged out across the grid. Null for grids that are only picked from. */
+	onMarqueeSelect: ((from: ControlLocation, to: ControlLocation, additive: boolean) => void) | null
 	drawScale: number
 	maxHeightToMatchCanvas?: boolean
 	setViewportMinHeight?: React.Dispatch<React.SetStateAction<number>>
@@ -64,6 +82,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			onButtonContextMenu,
 			gridSize,
 			ButtonIconFactory,
+			onMarqueeSelect,
 			drawScale,
 			maxHeightToMatchCanvas,
 			setViewportMinHeight,
@@ -168,8 +187,105 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 				resetPosition() {
 					resetScrollPosition()
 				},
+				revealLocation(location) {
+					if (!scrollerRef) return
+
+					const left = (location.column - minColumn) * tileSize
+					const top = (location.row - minRow) * tileSize
+
+					// Scroll the least amount that brings the whole cell into view
+					if (left < scrollerRef.scrollLeft) {
+						scrollerRef.scrollLeft = left
+					} else if (left + tileSize > scrollerRef.scrollLeft + scrollerRef.clientWidth) {
+						scrollerRef.scrollLeft = left + tileSize - scrollerRef.clientWidth
+					}
+
+					if (top < scrollerRef.scrollTop) {
+						scrollerRef.scrollTop = top
+					} else if (top + tileSize > scrollerRef.scrollTop + scrollerRef.clientHeight) {
+						scrollerRef.scrollTop = top + tileSize - scrollerRef.clientHeight
+					}
+				},
 			}),
-			[resetScrollPosition]
+			[resetScrollPosition, scrollerRef, minColumn, minRow, tileSize]
+		)
+
+		// ---- dragging out a selection ----
+
+		const canvasRef = useRef<HTMLDivElement | null>(null)
+		const [marquee, setMarquee] = useState<MarqueeState | null>(null)
+
+		const canvasPoint = useCallback((clientX: number, clientY: number) => {
+			const rect = canvasRef.current?.getBoundingClientRect()
+			if (!rect) return null
+			return { x: clientX - rect.left, y: clientY - rect.top }
+		}, [])
+
+		const locationAtCanvasPoint = useCallback(
+			(x: number, y: number): ControlLocation => ({
+				pageNumber,
+				column: clamp(minColumn + Math.floor(x / tileSize), minColumn, maxColumn),
+				row: clamp(minRow + Math.floor(y / tileSize), minRow, maxRow),
+			}),
+			[pageNumber, minColumn, maxColumn, minRow, maxRow, tileSize]
+		)
+
+		const handleMarqueeDown = useCallback(
+			(e: React.PointerEvent<HTMLDivElement>) => {
+				// Touch belongs to the browser here - a drag scrolls the grid, which matters far more than
+				// being able to rubber-band with a finger
+				if (!onMarqueeSelect || e.pointerType === 'touch' || e.button !== 0) return
+
+				const point = canvasPoint(e.clientX, e.clientY)
+				if (!point) return
+
+				setMarquee({
+					pointerId: e.pointerId,
+					startX: point.x,
+					startY: point.y,
+					currentX: point.x,
+					currentY: point.y,
+					active: false,
+					additive: e.shiftKey || e.ctrlKey || e.metaKey,
+				})
+			},
+			[onMarqueeSelect, canvasPoint]
+		)
+
+		const handleMarqueeMove = useCallback(
+			(e: React.PointerEvent<HTMLDivElement>) => {
+				if (!marquee || marquee.pointerId !== e.pointerId) return
+
+				const point = canvasPoint(e.clientX, e.clientY)
+				if (!point) return
+
+				const travelled = Math.hypot(point.x - marquee.startX, point.y - marquee.startY)
+				const active = marquee.active || travelled > MARQUEE_START_THRESHOLD
+				if (!active) return
+
+				setMarquee({ ...marquee, currentX: point.x, currentY: point.y, active })
+			},
+			[marquee, canvasPoint]
+		)
+
+		const handleMarqueeUp = useCallback(
+			(e: React.PointerEvent<HTMLDivElement>) => {
+				if (!marquee || marquee.pointerId !== e.pointerId) {
+					setMarquee(null)
+					return
+				}
+				setMarquee(null)
+
+				// A pointer that never travelled was a click on a button, which the cell has already handled
+				if (!marquee.active || !onMarqueeSelect) return
+
+				onMarqueeSelect(
+					locationAtCanvasPoint(marquee.startX, marquee.startY),
+					locationAtCanvasPoint(marquee.currentX, marquee.currentY),
+					marquee.additive
+				)
+			},
+			[marquee, onMarqueeSelect, locationAtCanvasPoint]
 		)
 
 		const visibleColumns = windowSize.width / tileSize
@@ -251,9 +367,24 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 					'button-armed': isHot,
 				})}
 				style={gridWrapperStyle}
+				onPointerDown={handleMarqueeDown}
+				onPointerMove={handleMarqueeMove}
+				onPointerUp={handleMarqueeUp}
+				onPointerCancel={handleMarqueeUp}
 			>
-				<div className="button-grid-canvas" style={gridCanvasStyle}>
+				<div className="button-grid-canvas" style={gridCanvasStyle} ref={canvasRef}>
 					{visibleButtons}
+					{marquee?.active && (
+						<div
+							className="button-grid-marquee"
+							style={{
+								left: Math.min(marquee.startX, marquee.currentX),
+								top: Math.min(marquee.startY, marquee.currentY),
+								width: Math.abs(marquee.currentX - marquee.startX),
+								height: Math.abs(marquee.currentY - marquee.startY),
+							}}
+						/>
+					)}
 				</div>
 			</div>
 		)
@@ -377,3 +508,7 @@ export const ButtonGridIconBase = memo(function ButtonGridIcon({
 		/>
 	)
 })
+
+function clamp(value: number, min: number, max: number): number {
+	return Math.min(Math.max(value, min), max)
+}

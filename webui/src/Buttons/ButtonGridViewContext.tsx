@@ -87,6 +87,11 @@ export function useGridSelectionPageNumber(): number | null {
 	return useGridStoreValue(selectSelectionPageNumber)
 }
 
+const selectFocus = (store: ButtonGridStore) => store.focus
+export function useGridFocus(): ControlLocation | null {
+	return useGridStoreValue(selectFocus)
+}
+
 const selectClipboard = (store: ButtonGridStore) => store.clipboard
 export function useGridClipboard(): GridClipboard | null {
 	return useGridStoreValue(selectClipboard)

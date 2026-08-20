@@ -1,0 +1,31 @@
+.button-grid-selection-panel {
+	padding: 10px 0;
+}
+
+.button-grid-selection-summary {
+	color: var(--color-text-strong);
+}
+
+.button-grid-selection-preview {
+	display: grid;
+	gap: 2px;
+
+	/* Wide selections must not push the panel sideways */
+	max-width: 100%;
+	margin-bottom: 1rem;
+	overflow-x: auto;
+}
+
+/* A cell inside the region that is not part of the selection */
+.button-grid-selection-hole {
+	border: 1px dashed var(--color-button-border);
+	border-radius: Max(12%, 4px);
+
+	opacity: 0.4;
+}
+
+.button-grid-selection-actions {
+	display: flex;
+	flex-flow: row wrap;
+	gap: 4px;
+}
