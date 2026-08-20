@@ -5,6 +5,7 @@ import {
 	faArrowsLeftRight,
 	faCopy,
 	faHandPointer,
+	faSquareCheck,
 	faTrash,
 	faUpDownLeftRight,
 } from '@fortawesome/free-solid-svg-icons'
@@ -31,6 +32,12 @@ interface ToolDefinition {
 const NAVIGATION_TOOLS: ToolDefinition[] = [
 	{ id: 'select', label: 'Select', icon: faArrowPointer, title: 'Select buttons' },
 	{
+		id: 'multi-select',
+		label: 'Multi',
+		icon: faSquareCheck,
+		title: 'Tap buttons to add and remove them from the selection',
+	},
+	{
 		id: 'arrange',
 		label: 'Arrange',
 		icon: faUpDownLeftRight,
@@ -52,8 +59,13 @@ const TRANSFER_TOOLS: ToolDefinition[] = [
 	{ id: 'delete', label: 'Delete', icon: faTrash, title: 'Clear a button', dangerous: true },
 ]
 
-/** Below this the labels are dropped, but never the buttons - they stay full-size tap targets */
-const COMPACT_WIDTH = 620
+/**
+ * Below this the labels are dropped, but never the buttons - they stay full-size tap targets.
+ *
+ * Measured from how wide the fully labelled row actually gets. Set too low, the labels "fit" by
+ * wrapping onto a second row, which costs more vertical space than the labels are worth.
+ */
+const COMPACT_WIDTH = 780
 
 export function ButtonGridToolbar(): React.JSX.Element {
 	const { store, actions } = useButtonGridView()
@@ -73,6 +85,11 @@ export function ButtonGridToolbar(): React.JSX.Element {
 
 	const renderTool = (tool: ToolDefinition) => {
 		const active = tool.id === activeToolId
+
+		// The active tool keeps its label even when there is no room for the rest, so which mode the
+		// grid is in is never left to be inferred from an icon
+		const showLabel = !useCompactButtons || active
+
 		return (
 			<Button
 				key={tool.id}
@@ -80,11 +97,11 @@ export function ButtonGridToolbar(): React.JSX.Element {
 				active={active}
 				onClick={() => selectTool(tool.id)}
 				title={tool.title}
-				// The label collapses to nothing when the toolbar is narrow, so name the button explicitly
+				// The label is dropped when the toolbar is narrow, so name the button explicitly
 				aria-label={tool.label}
 				aria-pressed={active}
 			>
-				<FontAwesomeIcon icon={tool.icon} /> {useCompactButtons ? '' : tool.label}
+				<FontAwesomeIcon icon={tool.icon} /> {showLabel ? tool.label : ''}
 			</Button>
 		)
 	}

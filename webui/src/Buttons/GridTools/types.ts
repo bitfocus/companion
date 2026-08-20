@@ -2,7 +2,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ButtonGridStore } from '../ButtonGridStore.js'
 import type { GridButtonModifiers } from '../GridButtonPreview.js'
 
-export type GridToolId = 'select' | 'press' | 'arrange' | 'copy' | 'move' | 'swap' | 'delete'
+export type GridToolId = 'select' | 'multi-select' | 'press' | 'arrange' | 'copy' | 'move' | 'swap' | 'delete'
 
 /** The operations that move button content from one place to another */
 export type GridTransferOperation = 'copy' | 'move' | 'swap'

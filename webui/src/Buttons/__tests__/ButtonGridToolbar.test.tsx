@@ -118,25 +118,33 @@ describe('the grid toolbar and context bar', () => {
 		expect(screen.queryByText(/selected/)).not.toBeInTheDocument()
 	})
 
-	it('a selection action arms the matching tool at its destination step', () => {
+	it('picking a transfer tool with a selection skips straight to the destination', () => {
 		const { store } = setup()
 		act(() => store.selectRectangle(at(1, 1), at(1, 2), false))
 
-		// The Move in the selection bar, not the tool palette
-		const moveButtons = screen.getAllByRole('button', { name: /Move/ })
-		fireEvent.click(moveButtons[moveButtons.length - 1])
+		fireEvent.click(screen.getByRole('button', { name: 'Move' }))
 
 		expect(store.activeToolId).toBe('move')
 		expect(screen.getByText('Where do you want it?')).toBeInTheDocument()
 	})
 
-	it('deleting the selection asks before clearing', () => {
+	it('does not repeat the transfer tools in the selection bar', () => {
+		const { store } = setup()
+		act(() => store.selectRectangle(at(1, 1), at(1, 2), false))
+
+		// The palette above already acts on the selection; a second copy of it is just more chrome
+		expect(screen.getAllByRole('button', { name: /Copy/ })).toHaveLength(1)
+		expect(screen.getAllByRole('button', { name: /Swap/ })).toHaveLength(1)
+	})
+
+	it('offers delete next to the count, since the delete tool works tap-by-tap', () => {
 		const { store, actions } = setup()
 		act(() => store.selectRectangle(at(1, 1), at(1, 2), false))
 
 		const deleteButtons = screen.getAllByRole('button', { name: /Delete/ })
-		fireEvent.click(deleteButtons[deleteButtons.length - 1])
+		expect(deleteButtons).toHaveLength(2)
 
+		fireEvent.click(deleteButtons[deleteButtons.length - 1])
 		expect(actions.clearButtons).toHaveBeenCalledWith([at(1, 1), at(1, 2)])
 	})
 
