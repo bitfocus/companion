@@ -1,4 +1,4 @@
-import { faHandPointer, faHome } from '@fortawesome/free-solid-svg-icons'
+import { faHome } from '@fortawesome/free-solid-svg-icons'
 import './ButtonGridPanel.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -10,7 +10,6 @@ import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { KeyReceiver } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { ButtonGridContextBar } from './ButtonGridContextBar.js'
 import { ButtonGridHeader } from './ButtonGridHeader.js'
 import { ButtonGridPageMenu } from './ButtonGridPageMenu.js'
 import { ButtonGridResizePrompt } from './ButtonGridResizePrompt.js'
@@ -116,8 +115,6 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
 			<div className="button-grid-panel-header" ref={isInViewRef}>
-				<PressModeBanner />
-
 				<ButtonGridResizePrompt />
 
 				<Grid.Row>
@@ -138,7 +135,6 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 				</Grid.Row>
 
 				<ButtonGridToolbar />
-				<ButtonGridContextBar />
 			</div>
 			{/* Rendered inside the grid's own styles, so the ghost is drawn the way the grid draws buttons */}
 			<GridButtonDragOverlay />
@@ -162,24 +158,3 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 		</KeyReceiver>
 	)
 })
-
-/**
- * Press mode runs real actions on real hardware, so being in it must be impossible to miss. The dull
- * tint on the grid that used to signal it was far too easy to overlook.
- */
-function PressModeBanner(): React.JSX.Element | null {
-	const { store, actions } = useButtonGridView()
-	const pressMode = useGridPressMode()
-
-	if (!pressMode) return null
-
-	return (
-		<div className="button-grid-press-banner" role="alert">
-			<FontAwesomeIcon icon={faHandPointer} />
-			<span className="button-grid-press-banner-text">Press mode &mdash; clicking a button will run its actions</span>
-			<Button color="light" size="sm" onClick={() => store.setTool('select', actions)}>
-				Exit
-			</Button>
-		</div>
-	)
-}

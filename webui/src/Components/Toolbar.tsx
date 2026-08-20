@@ -27,8 +27,6 @@ function ToolbarRoot({ orientation, size, className, children }: ToolbarRootProp
 
 interface ToolbarButtonProps {
 	icon: Parameters<typeof FontAwesomeIcon>[0]['icon']
-	/** Shown beside the icon. Whether there is room for it is left to the surrounding CSS. */
-	label?: string
 	title: string
 	onClick: () => void
 	/** Highlighted, either because it is the current mode or because a toggle is on */
@@ -46,7 +44,6 @@ interface ToolbarButtonProps {
 
 function ToolbarButton({
 	icon,
-	label,
 	title,
 	onClick,
 	active,
@@ -66,8 +63,7 @@ function ToolbarButton({
 			onClick={onClick}
 			disabled={disabled}
 		>
-			<FontAwesomeIcon icon={icon} size="sm" />
-			{label !== undefined && <span className="toolbar-button-label">{label}</span>}
+			<FontAwesomeIcon icon={icon} />
 		</button>
 	)
 
@@ -95,9 +91,35 @@ function ToolbarGroup({ children }: { children: React.ReactNode }): React.JSX.El
 	return <div className="toolbar-group">{children}</div>
 }
 
+interface ToolbarStatusProps {
+	/** Rendered dimmed, for when the toolbar is only saying what mode it is in */
+	muted?: boolean
+	/** Marks a state that is live or irreversible, so the toolbar itself carries the warning */
+	tone?: 'danger'
+	children: React.ReactNode
+}
+
+/**
+ * What the toolbar has to say, filling the space left over by the buttons.
+ *
+ * It is always present, even when there is nothing to report, so the toolbar keeps one height and
+ * the content below it never moves.
+ */
+function ToolbarStatus({ muted, tone, children }: ToolbarStatusProps): React.JSX.Element {
+	return (
+		<div
+			className={classNames('toolbar-status', { 'toolbar-status-muted': muted, [`toolbar-status-${tone}`]: tone })}
+			role="status"
+		>
+			{children}
+		</div>
+	)
+}
+
 export const Toolbar = {
 	Root: ToolbarRoot,
 	Button: ToolbarButton,
 	Separator: ToolbarSeparator,
 	Group: ToolbarGroup,
+	Status: ToolbarStatus,
 }

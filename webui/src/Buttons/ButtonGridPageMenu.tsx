@@ -87,7 +87,7 @@ export function ButtonGridPageMenu({ pageNumber, pageInfo }: ButtonGridPageMenuP
 				<Popover.Trigger color="light" className="ms-1" title="Page actions">
 					<FontAwesomeIcon icon={faEllipsis} />
 				</Popover.Trigger>
-				<Popover.Popup>
+				<Popover.Popup positionerClassName="action-menu" align="end">
 					<PopoverActionMenu menuItems={menuItems} />
 				</Popover.Popup>
 			</Popover.Root>

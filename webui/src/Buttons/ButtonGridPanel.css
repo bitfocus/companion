@@ -60,110 +60,16 @@
 	height: 100%;
 }
 
-/* How the toolbar looks comes from the shared `.toolbar`; this is only about the width it has to
-   work with. That is a question about this element, not about the screen - the panel it sits in does
-   not track the viewport - hence a container query rather than a media query or a measured pixel
-   threshold. */
+/* How the toolbar looks comes from the shared `.toolbar`. It spans the panel, so it reads as a
+   toolbar rather than as a huddle of buttons. */
 .button-grid-toolbar {
-	container-type: inline-size;
-
 	display: flex;
 	padding-bottom: 8px;
 }
 
-/* Labels are the first thing to go, and the buttons stay full-size tap targets without them. The
-   threshold is in rem so it scales with the reader's font size, rather than promising room for
-   labels that a larger font no longer leaves. Where container queries are unsupported this simply
-   stays collapsed, which is the safe direction to fail. */
-.button-grid-toolbar .toolbar-button-label {
-	display: none;
-}
-
-@container (min-width: 48rem) {
-	.button-grid-toolbar .toolbar-button-label {
-		display: inline;
-	}
-}
-
-/* The active tool keeps its label after the others have gone, so which mode the grid is in is not
-   left to be inferred from an icon */
-.button-grid-toolbar .toolbar-button.active .toolbar-button-label {
-	display: inline;
-}
-
-/* Narrower still and even that one label is what tips the row into wrapping, so it goes too. The
-   active tool is already the only coloured one, and any tool with something to say has put it in the
-   context bar below. */
-@container (max-width: 30rem) {
-	.button-grid-toolbar .toolbar-button.active .toolbar-button-label {
-		display: none;
-	}
-}
-
-/* Holds its height whether or not it has anything to say, so the grid below never jumps as tools and
-   selections come and go */
-.button-grid-context-bar {
-	display: flex;
-	flex-flow: row wrap;
-	align-items: center;
-	gap: 4px;
-
-	min-height: 42px;
-	padding-bottom: 8px;
-}
-
-.button-grid-context-bar-hint {
-	flex-grow: 1;
-
-	color: var(--color-text-strong);
-}
-
-/* Press mode runs real actions on real hardware. The old signal for this was a muted tint on the
-   grid, which was far too easy to miss. */
-.button-grid-press-banner {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-
-	margin-bottom: 8px;
-	padding: 8px 12px;
-	border-radius: var(--radius);
-
-	background-color: var(--color-danger);
-	color: var(--color-on-dark);
-	font-weight: bold;
-}
-
-.button-grid-press-banner-text {
-	flex-grow: 1;
-}
-
-/* What follows the cursor while buttons are dragged around the grid */
-.grid-drag-ghost {
-	--grid-drag-ghost-cell: 44px;
-
-	display: grid;
-	gap: 2px;
-
-	opacity: 0.85;
-	pointer-events: none;
-}
-
-.grid-drag-ghost-hole {
-	border: 1px dashed var(--color-button-border);
-	border-radius: Max(12%, 4px);
-
-	opacity: 0.4;
-}
-
-.grid-drag-ghost-count {
-	padding: 8px 12px;
-	border-radius: var(--radius);
-
-	background-color: var(--color-surface-dark);
-	color: var(--color-text-strong);
-	font-weight: bold;
-	white-space: nowrap;
+.button-grid-toolbar > .toolbar {
+	flex: 1 1 auto;
+	min-width: 0;
 }
 
 .button-grid-panel-content {

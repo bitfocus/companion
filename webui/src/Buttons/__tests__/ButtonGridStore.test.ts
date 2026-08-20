@@ -347,14 +347,32 @@ describe('ButtonGridStore', () => {
 			expect(actions.transfer).toHaveBeenCalledTimes(2)
 		})
 
-		it('skips straight to the destination when something is already selected', () => {
-			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+		it('skips straight to the destination when several buttons are selected', () => {
+			store.selectRectangle(at(1, 1), at(1, 2), false)
 			store.setTool('move', actions)
 
 			expect(store.hint(actions)).toBe('Where do you want it?')
 
 			store.handleTap(at(2, 2), NO_MODIFIERS, actions)
-			expect(actions.transfer).toHaveBeenCalledWith('move', [{ fromLocation: at(1, 1), toLocation: at(2, 2) }])
+			expect(actions.transfer).toHaveBeenCalledWith('move', [
+				{ fromLocation: at(1, 1), toLocation: at(2, 2) },
+				{ fromLocation: at(1, 2), toLocation: at(2, 3) },
+			])
+		})
+
+		it('still asks for a source when only the button you were looking at is selected', () => {
+			// Clicking a button to see it selects it, so a single selection is not a statement of intent.
+			// Taking it as the source would silently turn the user's first tap into the destination.
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+			store.setTool('copy', actions)
+
+			expect(store.hint(actions)).toBe('Press the button you want to copy')
+
+			store.handleTap(at(3, 3), NO_MODIFIERS, actions)
+			expect(actions.transfer).not.toHaveBeenCalled()
+
+			store.handleTap(at(2, 2), NO_MODIFIERS, actions)
+			expect(actions.transfer).toHaveBeenCalledWith('copy', [{ fromLocation: at(3, 3), toLocation: at(2, 2) }])
 		})
 
 		it('keeps a region together, anchored at the tapped cell', () => {

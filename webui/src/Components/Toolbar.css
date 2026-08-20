@@ -2,7 +2,7 @@
    quick actions and the button grid's tool palette, so the two read as the same control. */
 .toolbar {
 	/* Buttons are square at this size unless a label widens them */
-	--toolbar-button-size: 38px;
+	--toolbar-button-size: 32px;
 
 	display: flex;
 	align-items: center;
@@ -48,20 +48,24 @@
 	flex-direction: column;
 }
 
+/* Deliberately shorter than the row. Stretched to full height it reads as if the toolbar has been
+   padded out, rather than as a divider between two sets of buttons. */
 .toolbar-separator {
-	align-self: stretch;
+	align-self: center;
 
 	background: var(--color-border);
 }
 
 .toolbar-vertical > .toolbar-separator {
+	width: 60%;
 	height: 1px;
 	margin: 3px 0;
 }
 
 .toolbar-horizontal > .toolbar-separator {
 	width: 1px;
-	margin: 0 3px;
+	height: 60%;
+	margin: 0 5px;
 }
 
 .toolbar-button {
@@ -72,7 +76,10 @@
 
 	min-width: var(--toolbar-button-size);
 	height: var(--toolbar-button-size);
-	padding: 0 6px;
+	padding: 0 5px;
+
+	/* The icon is sized from this, so it scales with the toolbar rather than each call site picking */
+	font-size: 1rem;
 
 	border: 1px solid transparent;
 	border-radius: 3px;
@@ -118,6 +125,59 @@
 .toolbar-sm .toolbar-button {
 	width: var(--toolbar-button-size);
 	padding: 0;
+
+	font-size: 0.875rem;
+}
+
+/* Fills whatever the buttons leave, so the toolbar is one full-width bar rather than a huddle of
+   buttons, and so it keeps one height whether or not there is anything to report */
+.toolbar-status {
+	/* Zero basis, so it takes what the buttons leave rather than claiming its content width and
+	   pushing itself onto a second row - which would make the toolbar change height as the message
+	   changes, the very thing it is here to prevent */
+	flex: 1 1 0;
+	min-width: 0;
+
+	padding: 0 10px;
+
+	color: var(--color-toolbar-fg);
+	font-size: 0.875rem;
+
+	/* It is the flexible item, so it is what gives when the buttons need the room. Clipping the tail
+	   of a sentence beats pushing the buttons out of the bar. */
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.toolbar-status-muted {
+	color: color-mix(in srgb, var(--color-toolbar-fg) 55%, transparent);
+}
+
+.toolbar-status-danger {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+
+	align-self: stretch;
+	border-radius: 3px;
+
+	background-color: var(--color-danger);
+	color: var(--color-on-dark);
+	font-weight: bold;
+
+	/* Laying it out as a flex row would otherwise stop it shrinking, and the toolbar would grow a
+	   second row the moment press mode was entered - the exact jump this status exists to avoid */
+	> * {
+		min-width: 0;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	> svg {
+		flex: 0 0 auto;
+	}
 }
 
 /* Wraps a disabled button so its tooltip can still fire on hover */
