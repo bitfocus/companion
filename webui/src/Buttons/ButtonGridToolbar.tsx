@@ -10,9 +10,8 @@ import {
 	faUpDownLeftRight,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useCallback, useRef } from 'react'
+import { useCallback } from 'react'
 import { Button } from '~/Components/Button.js'
-import { useResizeObserver } from '~/Hooks/useResizeObserver.js'
 import { useButtonGridView, useGridActiveToolId } from './ButtonGridViewContext.js'
 import type { GridToolId } from './GridTools/index.js'
 
@@ -59,21 +58,9 @@ const TRANSFER_TOOLS: ToolDefinition[] = [
 	{ id: 'delete', label: 'Delete', icon: faTrash, title: 'Clear a button', dangerous: true },
 ]
 
-/**
- * Below this the labels are dropped, but never the buttons - they stay full-size tap targets.
- *
- * Measured from how wide the fully labelled row actually gets. Set too low, the labels "fit" by
- * wrapping onto a second row, which costs more vertical space than the labels are worth.
- */
-const COMPACT_WIDTH = 780
-
 export function ButtonGridToolbar(): React.JSX.Element {
 	const { store, actions } = useButtonGridView()
 	const activeToolId = useGridActiveToolId()
-
-	const sizeRef = useRef<HTMLDivElement>(null)
-	const holderSize = useResizeObserver<HTMLDivElement>({ ref: sizeRef })
-	const useCompactButtons = (holderSize.width ?? 0) < COMPACT_WIDTH
 
 	const selectTool = useCallback(
 		(id: GridToolId) => {
@@ -86,10 +73,6 @@ export function ButtonGridToolbar(): React.JSX.Element {
 	const renderTool = (tool: ToolDefinition) => {
 		const active = tool.id === activeToolId
 
-		// The active tool keeps its label even when there is no room for the rest, so which mode the
-		// grid is in is never left to be inferred from an icon
-		const showLabel = !useCompactButtons || active
-
 		return (
 			<Button
 				key={tool.id}
@@ -97,19 +80,21 @@ export function ButtonGridToolbar(): React.JSX.Element {
 				active={active}
 				onClick={() => selectTool(tool.id)}
 				title={tool.title}
-				// The label is dropped when the toolbar is narrow, so name the button explicitly
+				// The label is hidden when there is no room for it, so name the button explicitly
 				aria-label={tool.label}
 				aria-pressed={active}
 			>
-				<FontAwesomeIcon icon={tool.icon} /> {showLabel ? tool.label : ''}
+				<FontAwesomeIcon icon={tool.icon} />{' '}
+				{/* Whether this is shown is a question about the width available, so the CSS decides it -
+				    see the container query in ButtonGridPanel.css */}
+				<span className="button-grid-tool-label">{tool.label}</span>
 			</Button>
 		)
 	}
 
 	return (
-		<div className="button-grid-toolbar" ref={sizeRef}>
+		<div className="button-grid-toolbar">
 			<div className="button-grid-toolbar-group">{NAVIGATION_TOOLS.map(renderTool)}</div>
-			<div className="button-grid-toolbar-separator" />
 			<div className="button-grid-toolbar-group">{TRANSFER_TOOLS.map(renderTool)}</div>
 		</div>
 	)
