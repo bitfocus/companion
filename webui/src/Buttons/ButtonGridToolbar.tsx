@@ -80,6 +80,8 @@ export function ButtonGridToolbar(): React.JSX.Element {
 				active={active}
 				onClick={() => selectTool(tool.id)}
 				title={tool.title}
+				// The label collapses to nothing when the toolbar is narrow, so name the button explicitly
+				aria-label={tool.label}
 				aria-pressed={active}
 			>
 				<FontAwesomeIcon icon={tool.icon} /> {useCompactButtons ? '' : tool.label}
