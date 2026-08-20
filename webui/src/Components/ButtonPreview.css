@@ -57,6 +57,12 @@
 	/* dnd-kit: blur the in-pool preset that is currently being dragged (a clone is what follows the
 	   cursor). The `:not([popover])` guard excludes the floating clone, which dnd-kit renders as a
 	   top-layer popover, so only the original in the pool is blurred. */
+	/* The button left behind while its ghost follows the cursor. `:not([popover])` excludes the
+	   floating ghost itself, which dnd-kit renders as a top-layer popover. */
+	&.grid-drag-source:not([popover]) {
+		opacity: 0.4;
+	}
+
 	&.preset-drag-source:not([popover]) {
 		opacity: 0.8;
 		filter: blur(1px);

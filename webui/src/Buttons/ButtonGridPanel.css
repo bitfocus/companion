@@ -121,6 +121,34 @@
 	flex-grow: 1;
 }
 
+/* What follows the cursor while buttons are dragged around the grid */
+.grid-drag-ghost {
+	--grid-drag-ghost-cell: 44px;
+
+	display: grid;
+	gap: 2px;
+
+	opacity: 0.85;
+	pointer-events: none;
+}
+
+.grid-drag-ghost-hole {
+	border: 1px dashed var(--color-button-border);
+	border-radius: Max(12%, 4px);
+
+	opacity: 0.4;
+}
+
+.grid-drag-ghost-count {
+	padding: 8px 12px;
+	border-radius: var(--radius);
+
+	background-color: var(--color-surface-dark);
+	color: var(--color-text-strong);
+	font-weight: bold;
+	white-space: nowrap;
+}
+
 .button-grid-panel-content {
 	overflow: hidden;
 	align-self: center;
@@ -155,6 +183,10 @@
 
 	&::-webkit-scrollbar-thumb {
 		background-color: var(--color-scrollbar-thumb); /* Webkit thumb color for compatibility */
+	}
+
+	&.button-grid-panning {
+		cursor: grabbing;
 	}
 
 	&.button-armed {

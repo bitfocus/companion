@@ -18,6 +18,7 @@ import { ButtonGridToolbar } from './ButtonGridToolbar.js'
 import { useButtonGridView, useGridFocus, useGridPressMode } from './ButtonGridViewContext.js'
 import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { ButtonInfiniteGrid, PrimaryButtonGridIcon, type ButtonInfiniteGridRef } from './ButtonInfiniteGrid.js'
+import { GridButtonDragOverlay } from './GridButtonDragOverlay.js'
 import type { GridZoomController } from './GridZoom.js'
 
 interface ButtonsGridPanelProps {
@@ -79,6 +80,26 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
 	const [viewportMinHeight, setViewportMinHeight] = useState(250) // arbitrary initial min-height
 
+	// Ctrl/cmd + wheel zooms, the way every canvas does. React attaches wheel passively at the root,
+	// where preventDefault is a no-op, so this has to be a native listener to stop the browser
+	// zooming the whole page instead.
+	const contentRef = useRef<HTMLDivElement>(null)
+	useEffect(() => {
+		const el = contentRef.current
+		if (!el) return
+
+		const handleWheel = (e: WheelEvent) => {
+			if (!e.ctrlKey && !e.metaKey) return // A plain wheel must still scroll the grid
+
+			e.preventDefault()
+			if (e.deltaY < 0) gridZoomController.zoomIn(true)
+			else if (e.deltaY > 0) gridZoomController.zoomOut(true)
+		}
+
+		el.addEventListener('wheel', handleWheel, { passive: false })
+		return () => el.removeEventListener('wheel', handleWheel)
+	}, [gridZoomController])
+
 	const pressMode = useGridPressMode()
 	const focus = useGridFocus()
 
@@ -119,7 +140,10 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 				<ButtonGridToolbar />
 				<ButtonGridContextBar />
 			</div>
-			<div className="button-grid-panel-content" style={{ minHeight: viewportMinHeight }}>
+			{/* Rendered inside the grid's own styles, so the ghost is drawn the way the grid draws buttons */}
+			<GridButtonDragOverlay />
+
+			<div className="button-grid-panel-content" style={{ minHeight: viewportMinHeight }} ref={contentRef}>
 				{hasBeenInView && gridSize && (
 					<ButtonInfiniteGrid
 						ref={gridRef}

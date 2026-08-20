@@ -6,6 +6,7 @@ import {
 	faCopy,
 	faHandPointer,
 	faTrash,
+	faUpDownLeftRight,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef } from 'react'
@@ -29,6 +30,12 @@ interface ToolDefinition {
  */
 const NAVIGATION_TOOLS: ToolDefinition[] = [
 	{ id: 'select', label: 'Select', icon: faArrowPointer, title: 'Select buttons' },
+	{
+		id: 'arrange',
+		label: 'Arrange',
+		icon: faUpDownLeftRight,
+		title: 'Drag any button to move it',
+	},
 	{
 		id: 'press',
 		label: 'Press',

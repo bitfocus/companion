@@ -67,6 +67,11 @@ export function useGridPressMode(): boolean {
 	return useGridStoreValue(selectPressMode)
 }
 
+const selectDragAnyButton = (store: ButtonGridStore) => store.dragAnyButton
+export function useGridDragAnyButton(): boolean {
+	return useGridStoreValue(selectDragAnyButton)
+}
+
 const selectActiveToolId = (store: ButtonGridStore) => store.activeToolId
 export function useGridActiveToolId(): GridToolId {
 	return useGridStoreValue(selectActiveToolId)

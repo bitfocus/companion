@@ -29,6 +29,8 @@ function setup(props: Partial<Props> = {}) {
 			canDrop={false}
 			dropHover={false}
 			dropRef={() => {}}
+			dragRef={() => {}}
+			isDragSource={false}
 			{...props}
 		/>
 	)

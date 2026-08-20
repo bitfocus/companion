@@ -425,6 +425,27 @@ describe('ButtonGridStore', () => {
 		})
 	})
 
+	describe('arrange tool', () => {
+		it('lets any button be dragged, unlike select', () => {
+			expect(store.dragAnyButton).toBe(false)
+
+			store.setTool('arrange', actions)
+			expect(store.dragAnyButton).toBe(true)
+		})
+
+		it('still selects on a tap, so a region can be picked up', () => {
+			store.setTool('arrange', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			expect(store.selectedLocations).toEqual([at(1, 1)])
+		})
+
+		it('is not a press mode', () => {
+			store.setTool('arrange', actions)
+			expect(store.pressMode).toBe(false)
+		})
+	})
+
 	describe('delete tool', () => {
 		it('confirms one button at a time', () => {
 			store.setTool('delete', actions)
