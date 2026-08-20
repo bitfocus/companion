@@ -4,6 +4,7 @@ import {
 	faDollarSign,
 	faGift,
 	faLayerGroup,
+	faObjectGroup,
 	faThLarge,
 	faVideoCamera,
 } from '@fortawesome/free-solid-svg-icons'
@@ -11,7 +12,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMatchRoute, useNavigate, type UseNavigateResult } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { nanoid } from 'nanoid'
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { useMediaQuery } from 'usehooks-ts'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -25,6 +26,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ActionRecorder } from './ActionRecorder/index.js'
 import { ButtonsGridPanel } from './ButtonGridPanel.js'
+import { ButtonGridSelectionPanel } from './ButtonGridSelectionPanel.js'
 import { ButtonGridStore } from './ButtonGridStore.js'
 import { ButtonGridViewProvider, type ButtonGridView } from './ButtonGridViewContext.js'
 import { EditButton } from './EditButton/EditButton.js'
@@ -79,13 +81,30 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	const [selectedButton, setSelectedButton] = useState<ControlLocation | null>(null)
 
 	const navigate = useNavigate({ from: '/buttons' })
-	let pageNumber = useUrlPageNumber()
+	const rawPageNumber = useUrlPageNumber()
+	const pageCount = pages.pageCount
+
+	// The URL is the source of truth, but it can name a page that does not exist. Resolve that to a
+	// real page for this render and correct the URL afterwards, rather than mutating as we go.
+	const pageNumber = useMemo(() => {
+		if (rawPageNumber === null) return null
+
+		const highestPage = Math.max(1, pageCount)
+		const wanted = rawPageNumber <= 0 ? getLastPageNumber() : rawPageNumber
+		return Math.min(Math.max(wanted, 1), highestPage)
+	}, [rawPageNumber, pageCount])
+
 	const setPageNumber = useCallback(
 		(pageNumber: number) => {
 			navigateToButtonsPage(navigate, pageNumber)
 		},
 		[navigate]
 	)
+
+	useEffect(() => {
+		if (rawPageNumber === null || pageNumber === null) return
+		if (rawPageNumber !== pageNumber) navigateToButtonsPage(navigate, pageNumber)
+	}, [rawPageNumber, pageNumber, navigate])
 
 	const gridSize = userConfig.properties?.gridSize
 
@@ -147,6 +166,11 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		[setPageNumber, gridStore, openEditor]
 	)
 
+	// A selection belongs to one page, while a half-finished copy deliberately outlives the change
+	useEffect(() => {
+		if (pageNumber !== null) gridStore.setViewPage(pageNumber, actions)
+	}, [pageNumber, gridStore, actions])
+
 	// When screen becomes large, switch away from grid tab since it's now in its own column
 	useEffect(() => {
 		if (isLargeScreen && activeTab === 'grid') {
@@ -194,6 +218,18 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		setTabResetToken,
 	})
 
+	const selectionCount = useSyncExternalStore(
+		gridStore.subscribe,
+		useCallback(() => gridStore.selectionCount, [gridStore])
+	)
+	const hasMultipleSelected = selectionCount > 1
+
+	// On a wide screen the grid stays visible, so showing what was just selected costs nothing. On a
+	// narrow one the panel would replace the grid mid-gesture, which would be maddening.
+	useEffect(() => {
+		if (hasMultipleSelected && isLargeScreen) setActiveTab('edit')
+	}, [hasMultipleSelected, isLargeScreen])
+
 	const gridView = useMemo<ButtonGridView>(
 		() => ({ store: gridStore, actions, onContextMenu: doButtonContextMenu }),
 		[gridStore, actions, doButtonContextMenu]
@@ -234,22 +270,37 @@ export const ButtonsPage = observer(function ButtonsPage() {
 
 			if (!gridSize) return
 
+			// Shift extends the selection as the focus moves, ctrl walks the focus without disturbing it,
+			// and a plain arrow selects wherever it lands - the same three behaviours as any file list
+			const navigate = (rowDelta: number, columnDelta: number) => {
+				e.preventDefault()
+
+				if (e.shiftKey) gridStore.extendFocus(rowDelta, columnDelta, gridSize)
+				else if (isControlOrCommandCombo) gridStore.moveFocusOnly(rowDelta, columnDelta, gridSize)
+				else gridStore.moveFocus(rowDelta, columnDelta, gridSize)
+			}
+
 			switch (e.key) {
 				case 'Escape':
 					// One step back through whatever is in progress, rather than straight to nothing
 					gridStore.goBack(actions)
 					return
 				case 'ArrowDown':
-					gridStore.moveFocus(1, 0, gridSize)
+					navigate(1, 0)
 					return
 				case 'ArrowUp':
-					gridStore.moveFocus(-1, 0, gridSize)
+					navigate(-1, 0)
 					return
 				case 'ArrowLeft':
-					gridStore.moveFocus(0, -1, gridSize)
+					navigate(0, -1)
 					return
 				case 'ArrowRight':
-					gridStore.moveFocus(0, 1, gridSize)
+					navigate(0, 1)
+					return
+				case ' ':
+					// Build up a scattered selection without needing a mouse
+					e.preventDefault()
+					gridStore.toggleFocused()
 					return
 				case 'PageUp': {
 					const focus = gridStore.focus
@@ -267,6 +318,12 @@ export const ButtonsPage = observer(function ButtonsPage() {
 					gridStore.moveFocusToPage(newPageNumber)
 					return
 				}
+			}
+
+			if (isControlOrCommandCombo && e.key.toLowerCase() === 'a' && pageNumber !== null) {
+				e.preventDefault()
+				gridStore.selectAllOnPage(pageNumber, gridSize)
+				return
 			}
 
 			const selection = gridStore.selectedLocations
@@ -293,20 +350,11 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				if (clipboard.mode === 'cut') gridStore.clearClipboard()
 			}
 		},
-		[gridStore, actions, gridSize, setPageNumber, gridZoomController, pages.data.length]
+		[gridStore, actions, gridSize, pageNumber, setPageNumber, gridZoomController, pages.data.length]
 	)
 
 	if (pageNumber === null) {
 		return <></>
-	} else if (pageNumber <= 0) {
-		setTimeout(() => navigateToButtonsPage(navigate, getLastPageNumber()), 0)
-		// Force the number and let it render
-		pageNumber = 1
-	} else if (pageNumber > pages.pageCount) {
-		const newPageNumber = pages.pageCount
-		setTimeout(() => navigateToButtonsPage(navigate, newPageNumber), 0)
-		// Force the number and let it render
-		pageNumber = newPageNumber
 	}
 
 	const gridPanel = (
@@ -346,10 +394,18 @@ export const ButtonsPage = observer(function ButtonsPage() {
 										<FontAwesomeIcon icon={faThLarge} /> Buttons
 									</TabArea.Tab>
 								)}
-								{selectedButton && (
+								{(selectedButton || hasMultipleSelected) && (
 									<TabArea.Tab value="edit">
-										<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
-										{selectedButton ? `${formatLocation(selectedButton)}` : '?'}
+										{hasMultipleSelected ? (
+											<>
+												<FontAwesomeIcon icon={faObjectGroup} /> Selection ({selectionCount})
+											</>
+										) : (
+											<>
+												<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
+												{selectedButton ? `${formatLocation(selectedButton)}` : '?'}
+											</>
+										)}
 									</TabArea.Tab>
 								)}
 								<TabArea.Tab value="pages">
@@ -370,13 +426,17 @@ export const ButtonsPage = observer(function ButtonsPage() {
 							{!isLargeScreen && <TabArea.Panel value="grid">{gridPanel}</TabArea.Panel>}
 							<TabArea.Panel value="edit">
 								<MyErrorBoundary>
-									{selectedButton && (
-										<EditButton
-											key={`${formatLocation(selectedButton)}-${tabResetToken}`}
-											location={selectedButton}
-											onKeyUp={handleKeyDownInButtons}
-											navigateToControl={navigateToControl}
-										/>
+									{hasMultipleSelected ? (
+										<ButtonGridSelectionPanel />
+									) : (
+										selectedButton && (
+											<EditButton
+												key={`${formatLocation(selectedButton)}-${tabResetToken}`}
+												location={selectedButton}
+												onKeyUp={handleKeyDownInButtons}
+												navigateToControl={navigateToControl}
+											/>
+										)
 									)}
 								</MyErrorBoundary>
 							</TabArea.Panel>

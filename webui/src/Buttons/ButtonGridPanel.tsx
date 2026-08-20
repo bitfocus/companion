@@ -2,7 +2,7 @@ import { faHandPointer, faHome } from '@fortawesome/free-solid-svg-icons'
 import './ButtonGridPanel.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext, useRef, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { Button } from '~/Components/Button.js'
 import { Grid } from '~/Components/Grid'
@@ -15,7 +15,7 @@ import { ButtonGridHeader } from './ButtonGridHeader.js'
 import { ButtonGridPageMenu } from './ButtonGridPageMenu.js'
 import { ButtonGridResizePrompt } from './ButtonGridResizePrompt.js'
 import { ButtonGridToolbar } from './ButtonGridToolbar.js'
-import { useButtonGridView, useGridPressMode } from './ButtonGridViewContext.js'
+import { useButtonGridView, useGridFocus, useGridPressMode } from './ButtonGridViewContext.js'
 import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { ButtonInfiniteGrid, PrimaryButtonGridIcon, type ButtonInfiniteGridRef } from './ButtonInfiniteGrid.js'
 import type { GridZoomController } from './GridZoom.js'
@@ -40,6 +40,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	onButtonContextMenu,
 }: ButtonsGridPanelProps) {
 	const { pages, userConfig } = useContext(RootAppStoreContext)
+	const { store } = useButtonGridView()
 
 	const setPage = useCallback(
 		(newPage: number) => {
@@ -79,6 +80,17 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	const [viewportMinHeight, setViewportMinHeight] = useState(250) // arbitrary initial min-height
 
 	const pressMode = useGridPressMode()
+	const focus = useGridFocus()
+
+	const selectRectangle = useCallback(
+		(from: ControlLocation, to: ControlLocation, additive: boolean) => store.selectRectangle(from, to, additive),
+		[store]
+	)
+
+	// Keyboard navigation is useless if it walks the focus off the edge of what you can see
+	useEffect(() => {
+		if (focus && focus.pageNumber === pageNumber) gridRef.current?.revealLocation(focus)
+	}, [focus, pageNumber])
 
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
@@ -117,6 +129,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 						onButtonContextMenu={onButtonContextMenu}
 						gridSize={gridSize}
 						ButtonIconFactory={PrimaryButtonGridIcon}
+						onMarqueeSelect={selectRectangle}
 						drawScale={gridZoomValue / 100}
 						setViewportMinHeight={setViewportMinHeight}
 					/>

@@ -166,6 +166,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 						selectedButton={selectedLocation}
 						gridSize={gridSize}
 						ButtonIconFactory={ButtonGridIcon}
+						onMarqueeSelect={null}
 						drawScale={1} // TODO
 					/>
 				)}
