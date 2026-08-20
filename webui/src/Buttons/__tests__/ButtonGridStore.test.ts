@@ -425,6 +425,68 @@ describe('ButtonGridStore', () => {
 		})
 	})
 
+	describe('multi-select tool', () => {
+		it('adds a button on a plain tap, with no modifier held', () => {
+			store.setTool('multi-select', actions)
+
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.handleTap(at(2, 2), NO_MODIFIERS, actions)
+
+			expect(store.selectionCount).toBe(2)
+		})
+
+		it('removes a button that is tapped again', () => {
+			store.setTool('multi-select', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.handleTap(at(2, 2), NO_MODIFIERS, actions)
+
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			expect(store.selectedLocations).toEqual([at(2, 2)])
+		})
+
+		it('keeps what was already selected when entered', () => {
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+			store.setTool('multi-select', actions)
+
+			expect(store.selectedLocations).toEqual([at(1, 1)])
+		})
+
+		it('still extends a range with shift', () => {
+			store.setTool('multi-select', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			store.handleTap(at(2, 2), RANGE, actions)
+
+			expect(store.selectionCount).toBe(4)
+		})
+
+		it('never opens the editor, since tapping means selecting here', () => {
+			store.setTool('multi-select', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			expect(actions.openEditor).not.toHaveBeenCalled()
+		})
+
+		it('explains itself until something is selected', () => {
+			store.setTool('multi-select', actions)
+			expect(store.hint(actions)).toBe('Tap buttons to add and remove them from the selection')
+
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			// The context bar shows the count from here on, which says more
+			expect(store.hint(actions)).toBeNull()
+		})
+
+		it('hands its selection to a transfer tool', () => {
+			store.setTool('multi-select', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.handleTap(at(1, 2), NO_MODIFIERS, actions)
+
+			store.setTool('copy', actions)
+			expect(store.hint(actions)).toBe('Where do you want it?')
+		})
+	})
+
 	describe('arrange tool', () => {
 		it('lets any button be dragged, unlike select', () => {
 			expect(store.dragAnyButton).toBe(false)
