@@ -12,7 +12,7 @@ describe('config persistence across restarts', () => {
 	})
 
 	test('controls and custom variables survive a restart', async () => {
-		app = await createTestApp({ configDir: null })
+		app = await createTestApp({ configDir: null, extraModulePath: null })
 
 		app.createCustomVariable('persisted', 'startup-value')
 		app.registry.variables.custom.setValue('persisted', 'changed-value')
@@ -29,7 +29,7 @@ describe('config persistence across restarts', () => {
 		await app.close()
 
 		// Boot a second app from the same config directory
-		app = await createTestApp({ configDir })
+		app = await createTestApp({ configDir, extraModulePath: null })
 
 		// The control rehydrated at its location with its entities
 		const rehydratedControlId = app.registry.page.store.getControlIdAt(location)

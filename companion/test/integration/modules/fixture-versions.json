@@ -1,0 +1,13 @@
+{
+	"comment": "Module-api versions the integration fixtures are built against. One entry per host behaviour gate (see companion/lib/Instance/Connection/ApiVersions.ts), covering both sides of each gate. Regenerate the fixtures with: yarn tsx companion/test/integration/modules/build-module-fixtures.mts",
+	"versions": [
+		{ "apiVersion": "1.0.2", "contract": "v1" },
+		{ "apiVersion": "1.2.1", "contract": "v1" },
+		{ "apiVersion": "1.11.3", "contract": "v1" },
+		{ "apiVersion": "1.12.1", "contract": "v1" },
+		{ "apiVersion": "1.13.6", "contract": "v1" },
+		{ "apiVersion": "1.14.1", "contract": "v1" },
+		{ "apiVersion": "2.0.4", "contract": "v2" },
+		{ "apiVersion": "2.1.3", "contract": "v2" }
+	]
+}

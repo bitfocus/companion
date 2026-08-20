@@ -22,7 +22,7 @@ const { createTestApp } = (await import(testAppModulePath)) as {
 	createTestApp: (options: { configDir: string | null }) => Promise<TestAppSlice>
 }
 
-const app = await createTestApp({ configDir: null })
+const app = await createTestApp({ configDir: null, extraModulePath: null })
 
 process.stdout.write(`COMPANION_READY ${JSON.stringify({ port: app.httpPort, configDir: app.configDir })}\n`)
 

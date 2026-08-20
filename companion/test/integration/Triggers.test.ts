@@ -13,7 +13,7 @@ const settle = async () => new Promise((resolve) => setImmediate(resolve))
 describe('trigger controls', () => {
 	let app: TestApp
 	beforeEach(async () => {
-		app = await createTestApp({ configDir: null })
+		app = await createTestApp({ configDir: null, extraModulePath: null })
 	})
 	afterEach(async () => {
 		await app.close()

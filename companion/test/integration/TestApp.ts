@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { initTRPC, type TRPCRouterCaller } from '@trpc/server'
+import type { BuildOptions } from 'esbuild'
 import supertest from 'supertest'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
@@ -42,6 +43,12 @@ export interface TestAppOptions {
 	 * restart/persistence behaviour, or null for a fresh temporary directory
 	 */
 	configDir: string | null
+	/**
+	 * Directory of dev connection/surface modules to load (each direct child a module directory),
+	 * or null for none. When set, the fixture also provisions the node runtimes and thread bundles
+	 * needed to spawn real module child processes
+	 */
+	extraModulePath: string | null
 }
 
 /**
@@ -109,12 +116,87 @@ export interface TestApp {
 }
 
 /**
+ * Provision what spawning real module child processes needs: node binaries at the paths the host
+ * resolves runtimes from (linked to the node running the tests), and the bundled thread entrypoints
+ * that api-2.x modules run under (built the same way `yarn dev` builds them)
+ */
+const prepareForModuleChildren = (() => {
+	let prepared: Promise<void> | null = null
+	return async (): Promise<void> => {
+		prepared ??= (async () => {
+			const repoRoot = path.join(import.meta.dirname, '../../..')
+
+			const nodeVersions = JSON.parse(
+				fs.readFileSync(path.join(repoRoot, 'assets/nodejs-versions.json'), 'utf8')
+			) as Record<string, string>
+			for (const versionNumber of Object.values(nodeVersions)) {
+				const runtimeDir = path.join(
+					repoRoot,
+					'.cache/node-runtime',
+					`${process.platform}-${process.arch}-${versionNumber}`
+				)
+				const nodePath =
+					process.platform === 'win32' ? path.join(runtimeDir, 'node.exe') : path.join(runtimeDir, 'bin/node')
+				if (fs.existsSync(nodePath)) continue
+
+				fs.mkdirSync(path.dirname(nodePath), { recursive: true })
+				try {
+					fs.symlinkSync(process.execPath, nodePath)
+				} catch (_e) {
+					// Symlinks can need privileges on windows - fall back to a copy
+					fs.copyFileSync(process.execPath, nodePath)
+				}
+			}
+
+			// Bundle the thread entrypoints exactly as `yarn dev` does (tools/build_dev_threads.mts),
+			// but as a one-shot build instead of a watcher. The tools workspace has its own tsconfig,
+			// so its config is imported opaquely rather than type-checked from this project
+			const esbuild = await import('esbuild')
+			const esbuildConfigPath = path.join(repoRoot, 'tools/companion-esbuild.mts')
+			const { companionEsbuildBaseOptions, companionThreadEntryPoints } = (await import(esbuildConfigPath)) as {
+				companionEsbuildBaseOptions: (opts: { packaged: boolean }) => BuildOptions
+				companionThreadEntryPoints: { in: string; out: string; target: 'node22' | 'node26' }[]
+			}
+			const companionDir = path.join(repoRoot, 'companion')
+			const outDir = path.join(companionDir, 'dist', 'threads')
+			for (const target of new Set(companionThreadEntryPoints.map((e) => e.target))) {
+				await esbuild.build({
+					...companionEsbuildBaseOptions({ packaged: false }),
+					absWorkingDir: companionDir,
+					outdir: outDir,
+					target,
+					entryPoints: companionThreadEntryPoints
+						.filter((e) => e.target === target)
+						.map(({ in: input, out }) => ({ in: input, out })),
+					plugins: [
+						{
+							name: 'externalize-node-modules',
+							setup(build) {
+								build.onResolve({ filter: /^[^./]/ }, (args) => {
+									if (args.path === '@companion-app/shared' || args.path.startsWith('@companion-app/shared/'))
+										return null
+									return { path: args.path, external: true }
+								})
+							},
+						},
+					],
+				})
+			}
+			process.env.COMPANION_DEV_THREAD_DIR = outDir
+		})()
+		await prepared
+	}
+})()
+
+/**
  * Boot a real Companion application for an integration test
  */
 export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 	// The webui static-file server refuses to start without a build output directory. An empty
 	// directory satisfies it (the directory is gitignored)
 	fs.mkdirSync(path.join(import.meta.dirname, '../../../webui/build'), { recursive: true })
+
+	if (options.extraModulePath) await prepareForModuleChildren()
 
 	const isFreshConfigDir = options.configDir === null
 	const configDir = options.configDir ?? fs.mkdtempSync(path.join(os.tmpdir(), 'companion-test-'))
@@ -185,7 +267,7 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 	// The http port is bound for real, so randomise it to keep parallel test files from colliding.
 	// Most tests should drive `http` (supertest against the express app) rather than this socket
 	const requestedPort = 20000 + Math.floor(Math.random() * 40000)
-	await registry.ready('', '127.0.0.1', requestedPort)
+	await registry.ready(options.extraModulePath ?? '', '127.0.0.1', requestedPort)
 
 	// ready() does not await the listen call, so wait for the server before reading the bound port
 	const httpPort = await new Promise<number>((resolve, reject) => {
