@@ -60,11 +60,19 @@
 	height: 100%;
 }
 
+/* The toolbar sits inside a panel whose width does not track the viewport, so how much fits is a
+   question about this element, not about the screen - hence a container query rather than a media
+   query or a measured pixel threshold. */
 .button-grid-toolbar {
+	container-type: inline-size;
+
 	display: flex;
 	flex-flow: row wrap;
 	align-items: center;
-	gap: 4px;
+
+	/* Wider than the gap within a group, so the two groups read as groups without a divider element -
+	   a divider becomes a dangling stray at whatever width the row happens to wrap at */
+	gap: 4px 14px;
 
 	padding-bottom: 8px;
 }
@@ -75,12 +83,33 @@
 	gap: 4px;
 }
 
-.button-grid-toolbar-separator {
-	width: 1px;
-	align-self: stretch;
-	margin: 2px 6px;
+/* Labels are the first thing to go, and the buttons stay full-size tap targets without them. The
+   threshold is in rem so it scales with the reader's font size, rather than promising room for
+   labels that a larger font no longer leaves. Where container queries are unsupported this simply
+   stays collapsed, which is the safe direction to fail. */
+.button-grid-tool-label {
+	display: none;
+}
 
-	background-color: var(--color-button-border);
+@container (min-width: 48rem) {
+	.button-grid-tool-label {
+		display: inline;
+	}
+}
+
+/* The active tool keeps its label after the others have gone, so which mode the grid is in is not
+   left to be inferred from an icon */
+.button-grid-toolbar .active .button-grid-tool-label {
+	display: inline;
+}
+
+/* Narrower still and even that one label is what tips the row into wrapping, so it goes too. The
+   active tool is already the only coloured one, and any tool with something to say has put it in the
+   context bar below. */
+@container (max-width: 30rem) {
+	.button-grid-toolbar .active .button-grid-tool-label {
+		display: none;
+	}
 }
 
 /* Holds its height whether or not it has anything to say, so the grid below never jumps as tools and
