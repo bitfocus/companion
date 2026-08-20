@@ -34,6 +34,17 @@ cp .env.example .env
 
 See `.env.example` for descriptions of available settings.
 
+### Running without network access
+
+`yarn dev` downloads the builtin surface modules from an external CDN on startup. They are only
+needed to talk to physical surfaces, so if that host is unreachable - offline, or behind a
+restrictive network policy - you can skip the download and still run everything else, including the
+emulator:
+
+```bash
+COMPANION_SKIP_BUILTIN_SURFACE_MODULES=1 yarn dev
+```
+
 ## Testing
 
 Unit tests are written with [Vitest](https://vitest.dev/).

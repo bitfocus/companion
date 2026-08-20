@@ -75,9 +75,19 @@ console.log('Ensuring nodejs binaries are available')
 const platformInfo = determinePlatformInfo(undefined)
 await fetchNodejs(platformInfo)
 
-console.log('Ensuring builtin modules are installed')
+// The builtin surface modules are downloaded from an external CDN, and are only needed to talk to
+// physical surfaces. A dev environment that cannot reach it - offline, or behind a restrictive
+// network policy - can opt out and still run everything else.
+if (['1', 'true', 'yes'].includes((process.env.COMPANION_SKIP_BUILTIN_SURFACE_MODULES ?? '').toLowerCase().trim())) {
+	console.log('Skipping builtin surface modules (COMPANION_SKIP_BUILTIN_SURFACE_MODULES is set)')
 
-await fetchBuiltinSurfaceModules()
+	// The backend expects the directory to exist even when there is nothing in it
+	fs.mkdirSync(path.join(repoRoot, '.cache/builtin-surfaces'), { recursive: true })
+} else {
+	console.log('Ensuring builtin modules are installed')
+
+	await fetchBuiltinSurfaceModules()
+}
 
 console.log('Ensuring bundled modules are synced')
 
