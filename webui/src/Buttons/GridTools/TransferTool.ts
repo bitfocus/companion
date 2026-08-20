@@ -16,10 +16,10 @@ const VERBS: Record<GridTransferOperation, string> = {
 /**
  * Copy, move and swap: pick what to act on, then pick where it goes.
  *
- * Activated with nothing selected this is the long-standing two-tap flow, hint text and all - no
- * modifiers, no drag precision, large targets, which is still the best way to do this on a
- * touchscreen. Activated with a selection already made it skips the first step, so the same tool
- * serves "select a region, then place it".
+ * Activated with nothing selected - or with just the one button you happen to have been looking at -
+ * this is the long-standing two-tap flow, hint text and all: no modifiers, no drag precision, large
+ * targets, which is still the best way to do this on a touchscreen. Only a deliberate multiple
+ * selection skips the first step, so the same tool also serves "select a region, then place it".
  *
  * It stays active after each transfer rather than dropping back to select, so repeated
  * source-then-destination work does not mean re-arming the tool every time.
@@ -51,8 +51,11 @@ export class TransferTool extends GridToolBase {
 	}
 
 	override onEnter(ctx: GridToolContext): void {
+		// Only a deliberate multiple selection is taken as "these are what I want to move". A single
+		// selected button is just the one you last looked at - clicking a button to see it selects it -
+		// so treating that as the source would silently make your first tap the destination.
 		const selection = ctx.store.selectedLocations
-		this.#sources = selection.length > 0 ? [...selection] : null
+		this.#sources = selection.length > 1 ? [...selection] : null
 	}
 
 	override onExit(_ctx: GridToolContext): void {

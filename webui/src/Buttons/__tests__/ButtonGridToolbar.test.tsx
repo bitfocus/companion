@@ -1,7 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { ButtonGridContextBar } from '../ButtonGridContextBar.js'
 import { ButtonGridStore } from '../ButtonGridStore.js'
 import { ButtonGridToolbar } from '../ButtonGridToolbar.js'
 import { ButtonGridViewProvider, type ButtonGridView } from '../ButtonGridViewContext.js'
@@ -12,8 +11,8 @@ function at(row: number, column: number, pageNumber = 1): ControlLocation {
 }
 
 /**
- * The toolbar and the context bar are two views of the same store, so they are rendered together -
- * the thing worth checking is that picking a tool in one is reflected in the other.
+ * The toolbar reports the grid's state as well as changing it, so what is worth checking is that
+ * arming a tool, stepping through it and cancelling all show up in what it says.
  */
 function setup() {
 	const store = new ButtonGridStore()
@@ -28,14 +27,13 @@ function setup() {
 	const utils = render(
 		<ButtonGridViewProvider value={view}>
 			<ButtonGridToolbar />
-			<ButtonGridContextBar />
 		</ButtonGridViewProvider>
 	)
 
 	return { store, actions, ...utils }
 }
 
-describe('the grid toolbar and context bar', () => {
+describe('the grid toolbar', () => {
 	it('offers every tool', () => {
 		setup()
 
@@ -55,7 +53,8 @@ describe('the grid toolbar and context bar', () => {
 		setup()
 
 		expect(screen.queryByText(/Press the button/)).not.toBeInTheDocument()
-		expect(screen.queryByRole('button', { name: /Cancel/ })).not.toBeInTheDocument()
+		// Cancel keeps its place rather than appearing and disappearing, so the bar does not reflow
+		expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled()
 	})
 
 	it('picking a tool asks for a source', () => {
@@ -137,23 +136,44 @@ describe('the grid toolbar and context bar', () => {
 		expect(screen.getAllByRole('button', { name: /Swap/ })).toHaveLength(1)
 	})
 
-	it('offers delete next to the count, since the delete tool works tap-by-tap', () => {
+	it('deleting offers to clear the selection, so touch has a way to do it', () => {
 		const { store, actions } = setup()
 		act(() => store.selectRectangle(at(1, 1), at(1, 2), false))
 
-		const deleteButtons = screen.getAllByRole('button', { name: /Delete/ })
-		expect(deleteButtons).toHaveLength(2)
+		fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
 
-		fireEvent.click(deleteButtons[deleteButtons.length - 1])
 		expect(actions.clearButtons).toHaveBeenCalledWith([at(1, 1), at(1, 2)])
 	})
 
-	it('deselecting drops the selection', () => {
+	it('cancel drops the selection', () => {
 		const { store } = setup()
 		act(() => store.selectRectangle(at(1, 1), at(1, 2), false))
 
-		fireEvent.click(screen.getByRole('button', { name: /Deselect/ }))
+		fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
 
 		expect(store.selectionCount).toBe(0)
+	})
+
+	it('offers cancel only when there is something to unwind', () => {
+		const { store } = setup()
+		expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled()
+
+		act(() => store.selectWithModifiers(at(1, 1), { range: false, toggle: false }))
+		expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled()
+	})
+
+	it('names the current mode when it has nothing else to report', () => {
+		setup()
+
+		// An empty status reads as a gap in the bar rather than as part of it
+		expect(screen.getByText('Select tool')).toBeInTheDocument()
+	})
+
+	it('carries the press mode warning itself, rather than a banner that shoves the grid down', () => {
+		setup()
+
+		fireEvent.click(screen.getByRole('button', { name: 'Press' }))
+
+		expect(screen.getByText(/clicking a button will run its actions/)).toBeInTheDocument()
 	})
 })

@@ -4,9 +4,12 @@ import { GridToolBase, type GridToolContext, type GridToolId } from './types.js'
 /**
  * Tap a button to clear it, confirming first.
  *
- * Unlike the transfer tools this deliberately ignores whatever is selected when it is activated:
- * arming a destructive tool should never be the thing that destroys something. Clearing a selection
- * in one go is offered by the selection bar instead, where the count is visible at the time.
+ * Armed with several buttons selected it offers to clear those, the same way the transfer tools take
+ * a deliberate multiple selection as their sources - otherwise there would be no way to clear a
+ * selection by touch, where there is no delete key. A single selected button is only the one you
+ * last looked at, so that goes back to picking a target by tapping.
+ *
+ * Nothing is destroyed without a confirmation naming the count either way.
  */
 export class DeleteTool extends GridToolBase {
 	readonly id: GridToolId = 'delete'
@@ -16,6 +19,9 @@ export class DeleteTool extends GridToolBase {
 	}
 
 	override onEnter(ctx: GridToolContext): void {
+		const selection = ctx.store.selectedLocations
+		if (selection.length > 1) ctx.actions.clearButtons([...selection])
+
 		ctx.store.clearSelection()
 	}
 
