@@ -25,14 +25,21 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 	readonly #logger: Logger
 	readonly #deps: ControlDependencies
 	readonly #controlId: string
-	readonly #getTargetLocation: () => ControlLocation | null
+	readonly #getTargetLocation: () => { location: ControlLocation | null; referencedVariableIds: ReadonlySet<string> }
 
 	/** Locations the last draw depended on, so we know which `button_drawn` events must trigger a redraw. */
 	#lastReferencedLocations: ReadonlySet<string> | null = null
 
+	/** Variables the last location-resolution depended on, so a change to any (e.g. `$(page:x)`) redraws us. */
+	#lastLocationVariables: ReadonlySet<string> | null = null
+
 	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null
 
-	constructor(deps: ControlDependencies, controlId: string, getTargetLocation: () => ControlLocation | null) {
+	constructor(
+		deps: ControlDependencies,
+		controlId: string,
+		getTargetLocation: () => { location: ControlLocation | null; referencedVariableIds: ReadonlySet<string> }
+	) {
 		this.#logger = LogController.createLogger(`Controls/Button/MirrorDrawer/${controlId}`)
 		this.#deps = deps
 		this.#controlId = controlId
@@ -55,7 +62,9 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 	}
 
 	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel> {
-		const targetLocation = this.#getTargetLocation()
+		const { location: targetLocation, referencedVariableIds } = this.#getTargetLocation()
+		this.#lastLocationVariables = referencedVariableIds.size > 0 ? referencedVariableIds : null
+
 		if (!targetLocation) {
 			this.#lastReferencedLocations = null
 			return this.#storeAndReturn(this.#placeholder('Unresolved\nReference'))
@@ -107,8 +116,15 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 		return this.#lastDrawStyle
 	}
 
-	// A mirror owns no variables/elements; it redraws off the target's render instead.
-	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {}
+	// A mirror owns no elements, but its `location` field can reference variables (e.g. `$(page:x)`): when one
+	// of those changes the mirrored target may change, so redraw. The target's own variables are handled by
+	// redrawing off its render (see onButtonDrawn), not here.
+	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
+		if (!this.#lastLocationVariables) return
+		if (this.#lastLocationVariables.isDisjointFrom(allChangedVariables)) return
+
+		this.invalidate()
+	}
 	onCompositeElementsChanged(_allChangedElementIds: ReadonlySet<CompositeElementIdString>): void {}
 
 	invalidate = debounceFn(

@@ -35,8 +35,8 @@ describe('ControlButtonReference', () => {
 
 		// Identity parser: a plain value passes through untouched, an expression evaluates to its raw text
 		const parser = {
-			parseVariables: vi.fn((value: string) => ({ text: String(value) })),
-			executeExpression: vi.fn((value: string) => ({ ok: true, value })),
+			parseVariables: vi.fn((value: string) => ({ text: String(value), variableIds: new Set<string>() })),
+			executeExpression: vi.fn((value: string) => ({ ok: true, value, variableIds: new Set<string>() })),
 		}
 
 		getControlIdAt = vi.fn(() => undefined)

@@ -1,3 +1,4 @@
+import { CreatePageControlId } from '@companion-app/shared/ControlId.js'
 import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { DataDatabase } from '../Data/Database.js'
@@ -8,6 +9,7 @@ import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
 } from '../Variables/VariablesAndExpressionParser.js'
+import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import type { SomeControl } from './IControlFragments.js'
 import type { IControlStore } from './IControlStore.js'
@@ -179,14 +181,26 @@ export class ControlStore implements IControlStore {
 		if (control && control.supportsEntities)
 			return control.entities.createVariablesAndExpressionParser(overrideVariableValues, options)
 
-		// Generic parser, but with the control's grid location so `$(this:page)` resolves for located non-entity controls
+		// Generic parser, but with the control's grid location so `$(this:page)` and the page's
+		// `$(page:x)` variables resolve for located non-entity controls (e.g. button-reference)
 		const location = controlId ? this.#pageStore.getLocationOfControlId(controlId) : null
 		return this.#variablesValues.createVariablesAndExpressionParser(
 			location,
 			null,
 			overrideVariableValues,
-			null,
+			location ? this.getPageVariableEntities(location.pageNumber) : null,
 			options
 		)
+	}
+
+	/** Resolve a page's local-variable entities (its `page:<pageId>` control), for `$(page:x)` injection. */
+	getPageVariableEntities(pageNumber: number): ControlEntityInstance[] | null {
+		const pageId = this.#pageStore.getPageId(pageNumber)
+		if (!pageId) return null
+
+		const control = this.getControl(CreatePageControlId(pageId))
+		if (!control || !control.supportsEntities) return null
+
+		return control.entities.getLocalVariableEntities()
 	}
 }

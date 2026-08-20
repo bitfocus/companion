@@ -109,8 +109,11 @@ export class ControlButtonReference
 		super.destroy()
 	}
 
-	/** Resolve the mirrored location, evaluating the expression/variables in the `location` field. */
-	#resolveTargetLocation(): ControlLocation | null {
+	/**
+	 * Resolve the mirrored location, evaluating the expression/variables in the `location` field. Also
+	 * returns the variables the resolution depends on, so the drawer can redraw when any of them change.
+	 */
+	#resolveTargetLocation(): { location: ControlLocation | null; referencedVariableIds: ReadonlySet<string> } {
 		const myLocation = this.deps.pageStore.getLocationOfControlId(this.controlId)
 		const parser = this.deps.variableValues.createVariablesAndExpressionParser(
 			myLocation,
@@ -121,18 +124,22 @@ export class ControlButtonReference
 
 		const location = this.options.location
 		let raw: string
+		let referencedVariableIds: ReadonlySet<string>
 		if (location.isExpression) {
 			const res = parser.executeExpression(location.value, 'string')
 			raw = res.ok ? (stringifyVariableValue(res.value) ?? '') : ''
+			referencedVariableIds = res.variableIds
 		} else {
-			raw = parser.parseVariables(location.value).text
+			const res = parser.parseVariables(location.value)
+			raw = res.text
+			referencedVariableIds = res.variableIds
 		}
 
-		return ParseLocationString(raw, myLocation ?? undefined)
+		return { location: ParseLocationString(raw, myLocation ?? undefined), referencedVariableIds }
 	}
 
 	#resolveTargetControlId(): string | undefined {
-		const location = this.#resolveTargetLocation()
+		const { location } = this.#resolveTargetLocation()
 		return (location ? this.deps.pageStore.getControlIdAt(location) : undefined) ?? undefined
 	}
 

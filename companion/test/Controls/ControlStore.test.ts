@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { CreatePageControlId } from '@companion-app/shared/ControlId.js'
 import { ControlStore } from '../../lib/Controls/ControlStore.js'
 
 /** A mock control exposing only what ControlStore touches, with vi.fn spies for the methods it calls. */
@@ -9,6 +10,7 @@ function makeControl(
 		supportsActions?: boolean
 		rotateResult?: boolean
 		entityParser?: object
+		localVariableEntities?: object[]
 	} = {}
 ) {
 	return {
@@ -24,6 +26,7 @@ function makeControl(
 			clearConnectionState: vi.fn(),
 			updateFeedbackValues: vi.fn(),
 			createVariablesAndExpressionParser: vi.fn(() => opts.entityParser ?? ({} as any)),
+			getLocalVariableEntities: vi.fn(() => opts.localVariableEntities ?? []),
 		},
 	}
 }
@@ -33,6 +36,7 @@ describe('ControlStore', () => {
 	let getTableView: ReturnType<typeof vi.fn>
 	let createParser: ReturnType<typeof vi.fn>
 	let getLocationOfControlId: ReturnType<typeof vi.fn>
+	let getPageId: ReturnType<typeof vi.fn>
 	let store: ControlStore
 
 	beforeEach(() => {
@@ -40,10 +44,11 @@ describe('ControlStore', () => {
 		getTableView = vi.fn(() => tableView)
 		createParser = vi.fn(() => ({}) as any)
 		getLocationOfControlId = vi.fn(() => null)
+		getPageId = vi.fn(() => undefined)
 
 		const db = { getTableView } as any
 		const variablesValues = { createVariablesAndExpressionParser: createParser } as any
-		const pageStore = { getLocationOfControlId } as any
+		const pageStore = { getLocationOfControlId, getPageId } as any
 
 		store = new ControlStore(db, variablesValues, pageStore)
 	})
@@ -254,6 +259,21 @@ describe('ControlStore', () => {
 			store.createVariablesAndExpressionParser('bank:9', null)
 
 			expect(createParser).toHaveBeenCalledWith(location, null, null, null, undefined)
+		})
+
+		it("injects the page's variable entities for a located control without an entity pool", () => {
+			const location = { pageNumber: 3, row: 1, column: 2 }
+			getLocationOfControlId.mockReturnValue(location)
+			getPageId.mockImplementation((pageNumber: number) => (pageNumber === 3 ? 'page-abc' : undefined))
+
+			const pageEntities = [{ id: 'pv1' }]
+			addControl(CreatePageControlId('page-abc'), { supportsEntities: true, localVariableEntities: pageEntities })
+			addControl('bank:1', { supportsEntities: false })
+
+			store.createVariablesAndExpressionParser('bank:1', null)
+
+			expect(getPageId).toHaveBeenCalledWith(3)
+			expect(createParser).toHaveBeenCalledWith(location, null, null, pageEntities, undefined)
 		})
 
 		it('forwards override values and parser options on the generic path', () => {

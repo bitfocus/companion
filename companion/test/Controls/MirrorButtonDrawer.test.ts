@@ -52,8 +52,14 @@ describe('MirrorButtonDrawer', () => {
 		}
 	})
 
-	function makeDrawer(getTargetLocation: () => ControlLocation | null): MirrorButtonDrawer {
-		return new MirrorButtonDrawer(deps, 'bank:2-0-0', getTargetLocation)
+	function makeDrawer(
+		getTargetLocation: () => ControlLocation | null,
+		referencedVariableIds: ReadonlySet<string> = new Set()
+	): MirrorButtonDrawer {
+		return new MirrorButtonDrawer(deps, 'bank:2-0-0', () => ({
+			location: getTargetLocation(),
+			referencedVariableIds,
+		}))
 	}
 
 	it('renders an unresolved placeholder when there is no target location', async () => {
@@ -170,6 +176,41 @@ describe('MirrorButtonDrawer', () => {
 		// Queue a redraw, then dispose before the debounce fires - it must be cancelled
 		drawer.onButtonDrawn(TARGET_LOCATION, {} as any)
 		drawer.dispose()
+		await new Promise((resolve) => setTimeout(resolve, 30))
+		expect(invalidateSpy).not.toHaveBeenCalled()
+	})
+
+	it('redraws when a variable its location depends on changes', async () => {
+		getControlIdAt.mockReturnValue('bank:1-0-0')
+		const targetStyle = makeStyle()
+		getControl.mockReturnValue({
+			drawing: { getLastDrawStyle: () => targetStyle, getDrawStyle: async () => targetStyle },
+		})
+
+		const drawer = makeDrawer(() => TARGET_LOCATION, new Set(['page:test']))
+		await drawer.getDrawStyle()
+
+		const invalidateSpy = vi.fn()
+		events.on('invalidateControlRender', invalidateSpy)
+
+		drawer.onVariablesChanged(new Set(['page:test']))
+		await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith('bank:2-0-0'))
+	})
+
+	it('does not redraw when an unrelated variable changes', async () => {
+		getControlIdAt.mockReturnValue('bank:1-0-0')
+		const targetStyle = makeStyle()
+		getControl.mockReturnValue({
+			drawing: { getLastDrawStyle: () => targetStyle, getDrawStyle: async () => targetStyle },
+		})
+
+		const drawer = makeDrawer(() => TARGET_LOCATION, new Set(['page:test']))
+		await drawer.getDrawStyle()
+
+		const invalidateSpy = vi.fn()
+		events.on('invalidateControlRender', invalidateSpy)
+
+		drawer.onVariablesChanged(new Set(['page:other']))
 		await new Promise((resolve) => setTimeout(resolve, 30))
 		expect(invalidateSpy).not.toHaveBeenCalled()
 	})
