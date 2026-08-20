@@ -11,7 +11,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMatchRoute, useNavigate, type UseNavigateResult } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { nanoid } from 'nanoid'
-import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useMediaQuery } from 'usehooks-ts'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -25,8 +25,11 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ActionRecorder } from './ActionRecorder/index.js'
 import { ButtonsGridPanel } from './ButtonGridPanel.js'
+import { ButtonGridStore } from './ButtonGridStore.js'
+import { ButtonGridViewProvider, type ButtonGridView } from './ButtonGridViewContext.js'
 import { EditButton } from './EditButton/EditButton.js'
 import { parseGridButtonDroppableId } from './GridButtonDroppableId.js'
+import { buildTransferPairs, type GridToolActions, type GridTransferPair } from './GridTools/index.js'
 import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
 import { PageVariablesPanel } from './PageVariablesPanel.js'
@@ -60,7 +63,7 @@ function getLastPageNumber(): number {
 }
 
 export const ButtonsPage = observer(function ButtonsPage() {
-	const { userConfig, pages, viewControl } = useContext(RootAppStoreContext)
+	const { userConfig, pages } = useContext(RootAppStoreContext)
 
 	const clearModalRef = useRef<GenericConfirmModalRef>(null)
 	const [gridZoomController, gridZoomValue] = useGridZoom('grid')
@@ -70,8 +73,10 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	const [tabResetToken, setTabResetToken] = useState(nanoid())
 	const [activeTab, setActiveTab] = useState('grid')
 
+	// Selection and the active tool live here rather than in component state, so the grid cells can
+	// each subscribe to just the part that concerns them
+	const [gridStore] = useState(() => new ButtonGridStore())
 	const [selectedButton, setSelectedButton] = useState<ControlLocation | null>(null)
-	const [copyFromButton, setCopyFromButton] = useState<[ControlLocation, string] | null>(null)
 
 	const navigate = useNavigate({ from: '/buttons' })
 	let pageNumber = useUrlPageNumber()
@@ -82,42 +87,68 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		[navigate]
 	)
 
-	const doChangeTab = useCallback((newTab: string) => {
-		setActiveTab((oldTab) => {
-			if (newTab !== 'edit' && newTab !== 'grid' && oldTab !== newTab) {
-				setSelectedButton(null)
-				setTabResetToken(nanoid())
-			}
-			return newTab
-		})
-	}, [])
+	const gridSize = userConfig.properties?.gridSize
 
+	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())
+	const copyControlMutation = useMutationExt(trpc.controls.copyControl.mutationOptions())
+	const moveControlMutation = useMutationExt(trpc.controls.moveControl.mutationOptions())
+	const swapControlMutation = useMutationExt(trpc.controls.swapControl.mutationOptions())
 	const hotPressMutation = useMutationExt(trpc.controls.hotPressControl.mutationOptions())
-	const doButtonGridPress = useCallback(
-		(location: ControlLocation, isDown: boolean) => {
-			hotPressMutation
-				.mutateAsync({ location, direction: isDown, surfaceId: 'grid' })
-				.catch((e) => console.error(`Hot press failed: ${e}`))
-		},
-		[hotPressMutation]
-	)
-	const doButtonGridTap = useCallback((location: ControlLocation) => {
+
+	const openEditor = useCallback((location: ControlLocation) => {
 		setActiveTab('edit')
 		setSelectedButton(location)
 		setTabResetToken(nanoid())
 	}, [])
+
+	const actions = useMemo<GridToolActions>(
+		() => ({
+			openEditor,
+			press: (location, isDown) => {
+				hotPressMutation
+					.mutateAsync({ location, direction: isDown, surfaceId: 'grid' })
+					.catch((e) => console.error(`Hot press failed: ${e}`))
+			},
+			transfer: (operation, pairs: GridTransferPair[]) => {
+				const mutation =
+					operation === 'copy' ? copyControlMutation : operation === 'move' ? moveControlMutation : swapControlMutation
+
+				for (const pair of pairs) {
+					mutation.mutateAsync(pair).catch((e) => console.error(`${operation} failed: ${e}`))
+				}
+				setTabResetToken(nanoid())
+			},
+			clearButtons: (locations) => {
+				if (locations.length === 0) return
+
+				const description =
+					locations.length === 1 ? `Clear button ${formatLocation(locations[0])}` : `Clear ${locations.length} buttons`
+
+				clearModalRef.current?.show(
+					description,
+					`This will clear the style, feedbacks and all actions`,
+					'Clear',
+					() => {
+						for (const location of locations) {
+							resetControlMutation.mutateAsync({ location }).catch((e) => {
+								console.error(`Reset failed: ${e}`)
+							})
+						}
+					}
+				)
+			},
+		}),
+		[openEditor, hotPressMutation, copyControlMutation, moveControlMutation, swapControlMutation, resetControlMutation]
+	)
+
 	const navigateToControl = useCallback(
 		(location: ControlLocation) => {
 			setPageNumber(location.pageNumber)
-			setActiveTab('edit')
-			setSelectedButton(location)
-			setTabResetToken(nanoid())
+			gridStore.setSelection([location])
+			openEditor(location)
 		},
-		[setPageNumber]
+		[setPageNumber, gridStore, openEditor]
 	)
-	const clearSelectedButton = useCallback(() => {
-		doChangeTab('pages')
-	}, [doChangeTab])
 
 	// When screen becomes large, switch away from grid tab since it's now in its own column
 	useEffect(() => {
@@ -125,13 +156,6 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			setActiveTab('pages')
 		}
 	}, [isLargeScreen, activeTab])
-
-	const gridSize = userConfig.properties?.gridSize
-
-	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())
-	const copyControlMutation = useMutationExt(trpc.controls.copyControl.mutationOptions())
-	const moveControlMutation = useMutationExt(trpc.controls.moveControl.mutationOptions())
-	const swapControlMutation = useMutationExt(trpc.controls.swapControl.mutationOptions())
 
 	// Dropping a preset (from the Presets tab) onto a grid button imports it at that location.
 	// Subscribed via the global dnd-kit provider; we filter to preset drags by `type`.
@@ -168,11 +192,15 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		contextMenuItems,
 		doButtonContextMenu,
 	} = useButtonContextMenu({
-		copyFromButton,
-		setCopyFromButton,
-		clearModalRef,
+		store: gridStore,
+		actions,
 		setTabResetToken,
 	})
+
+	const gridView = useMemo<ButtonGridView>(
+		() => ({ store: gridStore, actions, onContextMenu: doButtonContextMenu }),
+		[gridStore, actions, doButtonContextMenu]
+	)
 
 	const handleKeyDownInButtons = useCallback(
 		(e: React.KeyboardEvent) => {
@@ -194,167 +222,81 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			if (isControlOrCommandCombo && e.key === '=') {
 				e.preventDefault()
 				gridZoomController.zoomIn(true)
-			} else if (isControlOrCommandCombo && e.key === '-') {
+				return
+			}
+			if (isControlOrCommandCombo && e.key === '-') {
 				e.preventDefault()
 				gridZoomController.zoomOut(true)
-			} else if (isControlOrCommandCombo && e.key === '0') {
+				return
+			}
+			if (isControlOrCommandCombo && e.key === '0') {
 				e.preventDefault()
 				gridZoomController.zoomReset()
-			} else {
-				switch (e.key) {
-					case 'Escape':
-						setCopyFromButton(null)
-						break
-					case 'ArrowDown':
-						setSelectedButton((selectedButton) => {
-							if (selectedButton && gridSize) {
-								return {
-									...selectedButton,
-									row: selectedButton.row >= gridSize.maxRow ? gridSize.minRow : selectedButton.row + 1,
-								}
-							} else {
-								return selectedButton
-							}
-						})
-						// TODO - ensure kept in view
-						break
-					case 'ArrowUp':
-						setSelectedButton((selectedButton) => {
-							if (selectedButton && gridSize) {
-								return {
-									...selectedButton,
-									row: selectedButton.row <= gridSize.minRow ? gridSize.maxRow : selectedButton.row - 1,
-								}
-							} else {
-								return selectedButton
-							}
-						})
-						// TODO - ensure kept in view
-						break
-					case 'ArrowLeft':
-						setSelectedButton((selectedButton) => {
-							if (selectedButton && gridSize) {
-								return {
-									...selectedButton,
-									column: selectedButton.column <= gridSize.minColumn ? gridSize.maxColumn : selectedButton.column - 1,
-								}
-							} else {
-								return selectedButton
-							}
-						})
-						// TODO - ensure kept in view
-						break
-					case 'ArrowRight':
-						setSelectedButton((selectedButton) => {
-							if (selectedButton && gridSize) {
-								return {
-									...selectedButton,
-									column: selectedButton.column >= gridSize.maxColumn ? gridSize.minColumn : selectedButton.column + 1,
-								}
-							} else {
-								return selectedButton
-							}
-						})
-						// TODO - ensure kept in view
-						break
-					case 'PageUp':
-						setSelectedButton((selectedButton) => {
-							if (selectedButton) {
-								const newPageNumber = selectedButton.pageNumber >= pages.data.length ? 1 : selectedButton.pageNumber + 1
-								setPageNumber(newPageNumber)
-								return {
-									...selectedButton,
-									pageNumber: newPageNumber,
-								}
-							} else {
-								return selectedButton
-							}
-						})
-						break
-					case 'PageDown':
-						setSelectedButton((selectedButton) => {
-							if (selectedButton) {
-								const newPageNumber = selectedButton.pageNumber <= 1 ? pages.data.length : selectedButton.pageNumber - 1
-								setPageNumber(newPageNumber)
-								return {
-									...selectedButton,
-									pageNumber: newPageNumber,
-								}
-							} else {
-								return selectedButton
-							}
-						})
-						break
+				return
+			}
+
+			if (!gridSize) return
+
+			switch (e.key) {
+				case 'Escape':
+					// One step back through whatever is in progress, rather than straight to nothing
+					gridStore.goBack(actions)
+					return
+				case 'ArrowDown':
+					gridStore.moveFocus(1, 0, gridSize)
+					return
+				case 'ArrowUp':
+					gridStore.moveFocus(-1, 0, gridSize)
+					return
+				case 'ArrowLeft':
+					gridStore.moveFocus(0, -1, gridSize)
+					return
+				case 'ArrowRight':
+					gridStore.moveFocus(0, 1, gridSize)
+					return
+				case 'PageUp': {
+					const focus = gridStore.focus
+					if (!focus) return
+					const newPageNumber = focus.pageNumber >= pages.data.length ? 1 : focus.pageNumber + 1
+					setPageNumber(newPageNumber)
+					gridStore.moveFocusToPage(newPageNumber)
+					return
 				}
-
-				if (selectedButton) {
-					// keyup with button selected
-
-					if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'Backspace' || e.key === 'Delete')) {
-						clearModalRef.current?.show(
-							`Clear button ${formatLocation(selectedButton)}`,
-							`This will clear the style, feedbacks and all actions`,
-							'Clear',
-							() => {
-								resetControlMutation.mutateAsync({ location: selectedButton }).catch((e) => {
-									console.error(`Reset failed: ${e}`)
-								})
-							}
-						)
-					}
-					if (isControlOrCommandCombo && e.key.toLowerCase() === 'c') {
-						console.log('prepare copy', selectedButton)
-						setCopyFromButton([selectedButton, 'copy'])
-					}
-					if (isControlOrCommandCombo && e.key.toLowerCase() === 'x') {
-						console.log('prepare cut', selectedButton)
-						setCopyFromButton([selectedButton, 'cut'])
-					}
-					if (isControlOrCommandCombo && e.key.toLowerCase() === 'v' && copyFromButton) {
-						console.log('do paste', copyFromButton, selectedButton)
-
-						if (copyFromButton[1] === 'copy') {
-							copyControlMutation
-								.mutateAsync({ fromLocation: copyFromButton[0], toLocation: selectedButton })
-								.catch((e) => {
-									console.error(`copy failed: ${e}`)
-								})
-							setTabResetToken(nanoid())
-						} else if (copyFromButton[1] === 'cut') {
-							moveControlMutation
-								.mutateAsync({ fromLocation: copyFromButton[0], toLocation: selectedButton })
-								.catch((e) => {
-									console.error(`move failed: ${e}`)
-								})
-							setCopyFromButton(null)
-							setTabResetToken(nanoid())
-						} else if (copyFromButton[1] === 'swap') {
-							swapControlMutation
-								.mutateAsync({ fromLocation: copyFromButton[0], toLocation: selectedButton })
-								.catch((e) => {
-									console.error(`swap failed: ${e}`)
-								})
-							setCopyFromButton(null)
-							setTabResetToken(nanoid())
-						} else {
-							console.error('unknown paste operation:', copyFromButton[1])
-						}
-					}
+				case 'PageDown': {
+					const focus = gridStore.focus
+					if (!focus) return
+					const newPageNumber = focus.pageNumber <= 1 ? pages.data.length : focus.pageNumber - 1
+					setPageNumber(newPageNumber)
+					gridStore.moveFocusToPage(newPageNumber)
+					return
 				}
 			}
+
+			const selection = gridStore.selectedLocations
+			if (selection.length === 0) return
+
+			if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'Backspace' || e.key === 'Delete')) {
+				actions.clearButtons([...selection])
+				return
+			}
+			if (isControlOrCommandCombo && e.key.toLowerCase() === 'c') {
+				gridStore.setClipboard(selection, 'copy')
+				return
+			}
+			if (isControlOrCommandCombo && e.key.toLowerCase() === 'x') {
+				gridStore.setClipboard(selection, 'cut')
+				return
+			}
+			if (isControlOrCommandCombo && e.key.toLowerCase() === 'v') {
+				const clipboard = gridStore.clipboard
+				const focus = gridStore.focus
+				if (!clipboard || !focus) return
+
+				actions.transfer(clipboard.mode === 'cut' ? 'move' : 'copy', buildTransferPairs(clipboard.locations, focus))
+				if (clipboard.mode === 'cut') gridStore.clearClipboard()
+			}
 		},
-		[
-			resetControlMutation,
-			copyControlMutation,
-			moveControlMutation,
-			swapControlMutation,
-			selectedButton,
-			copyFromButton,
-			gridSize,
-			setPageNumber,
-			gridZoomController,
-			pages.data.length,
-		]
+		[gridStore, actions, gridSize, setPageNumber, gridZoomController, pages.data.length]
 	)
 
 	if (pageNumber === null) {
@@ -373,17 +315,11 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	const gridPanel = (
 		<MyErrorBoundary>
 			<ButtonsGridPanel
-				buttonGridPress={doButtonGridPress}
-				buttonGridTap={doButtonGridTap}
-				isHot={viewControl.buttonGridHotPress}
-				selectedButton={selectedButton}
-				copySourceButton={copyFromButton?.[0] ?? null}
-				contextMenuButton={contextMenuOpen ? contextMenuLocation : null}
-				onButtonContextMenu={doButtonContextMenu}
 				pageNumber={pageNumber}
 				changePage={setPageNumber}
 				onKeyDown={handleKeyDownInButtons}
-				clearSelectedButton={clearSelectedButton}
+				contextMenuButton={contextMenuOpen ? contextMenuLocation : null}
+				onButtonContextMenu={doButtonContextMenu}
 				gridZoomController={gridZoomController}
 				gridZoomValue={gridZoomValue}
 			/>
@@ -391,84 +327,86 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	)
 
 	return (
-		<SplitPanels.Root showing={null} className="buttons-page" resize={{ storageKey: 'buttons' }}>
-			<GenericConfirmModal ref={clearModalRef} />
-			<ContextMenu
-				open={contextMenuOpen}
-				onOpenChange={setContextMenuOpen}
-				position={contextMenuPosition}
-				menuItems={contextMenuItems}
-			/>
+		<ButtonGridViewProvider value={gridView}>
+			<SplitPanels.Root showing={null} className="buttons-page" resize={{ storageKey: 'buttons' }}>
+				<GenericConfirmModal ref={clearModalRef} />
+				<ContextMenu
+					open={contextMenuOpen}
+					onOpenChange={setContextMenuOpen}
+					position={contextMenuPosition}
+					menuItems={contextMenuItems}
+				/>
 
-			{/* On large screens, show the grid in its own column */}
-			{isLargeScreen && <SplitPanels.Primary>{gridPanel}</SplitPanels.Primary>}
+				{/* On large screens, show the grid in its own column */}
+				{isLargeScreen && <SplitPanels.Primary>{gridPanel}</SplitPanels.Primary>}
 
-			<SplitPanels.Secondary>
-				<div className="secondary-panel-inner">
-					<TabArea.Root value={activeTab} onValueChange={setActiveTab}>
-						<TabArea.List>
-							{!isLargeScreen && (
-								<TabArea.Tab value="grid">
-									<FontAwesomeIcon icon={faThLarge} /> Buttons
-								</TabArea.Tab>
-							)}
-							{selectedButton && (
-								<TabArea.Tab value="edit">
-									<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
-									{selectedButton ? `${formatLocation(selectedButton)}` : '?'}
-								</TabArea.Tab>
-							)}
-							<TabArea.Tab value="pages">
-								<FontAwesomeIcon icon={faLayerGroup} /> Pages
-							</TabArea.Tab>
-							<TabArea.Tab value="page-variables">
-								<FontAwesomeIcon icon={faDollarSign} /> Page Variables
-							</TabArea.Tab>
-							<TabArea.Tab value="presets">
-								<FontAwesomeIcon icon={faGift} /> Presets
-							</TabArea.Tab>
-							<TabArea.Tab value="action-recorder">
-								<FontAwesomeIcon icon={faVideoCamera} /> Recorder
-							</TabArea.Tab>
-						</TabArea.List>
-
-						{/* On small screens, show the grid in its own tab */}
-						{!isLargeScreen && <TabArea.Panel value="grid">{gridPanel}</TabArea.Panel>}
-						<TabArea.Panel value="edit">
-							<MyErrorBoundary>
-								{selectedButton && (
-									<EditButton
-										key={`${formatLocation(selectedButton)}-${tabResetToken}`}
-										location={selectedButton}
-										onKeyUp={handleKeyDownInButtons}
-										navigateToControl={navigateToControl}
-									/>
+				<SplitPanels.Secondary>
+					<div className="secondary-panel-inner">
+						<TabArea.Root value={activeTab} onValueChange={setActiveTab}>
+							<TabArea.List>
+								{!isLargeScreen && (
+									<TabArea.Tab value="grid">
+										<FontAwesomeIcon icon={faThLarge} /> Buttons
+									</TabArea.Tab>
 								)}
-							</MyErrorBoundary>
-						</TabArea.Panel>
-						<TabArea.Panel value="pages">
-							<MyErrorBoundary>
-								<PagesList setPageNumber={setPageNumber} />
-							</MyErrorBoundary>
-						</TabArea.Panel>
-						<TabArea.Panel value="page-variables">
-							<MyErrorBoundary>
-								<PageVariablesPanel pageNumber={pageNumber} />
-							</MyErrorBoundary>
-						</TabArea.Panel>
-						<TabArea.Panel value="presets">
-							<MyErrorBoundary>
-								<ConnectionPresets resetToken={tabResetToken} />
-							</MyErrorBoundary>
-						</TabArea.Panel>
-						<TabArea.Panel value="action-recorder" className="pt-0">
-							<MyErrorBoundary>
-								<ActionRecorder />
-							</MyErrorBoundary>
-						</TabArea.Panel>
-					</TabArea.Root>
-				</div>
-			</SplitPanels.Secondary>
-		</SplitPanels.Root>
+								{selectedButton && (
+									<TabArea.Tab value="edit">
+										<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
+										{selectedButton ? `${formatLocation(selectedButton)}` : '?'}
+									</TabArea.Tab>
+								)}
+								<TabArea.Tab value="pages">
+									<FontAwesomeIcon icon={faLayerGroup} /> Pages
+								</TabArea.Tab>
+								<TabArea.Tab value="page-variables">
+									<FontAwesomeIcon icon={faDollarSign} /> Page Variables
+								</TabArea.Tab>
+								<TabArea.Tab value="presets">
+									<FontAwesomeIcon icon={faGift} /> Presets
+								</TabArea.Tab>
+								<TabArea.Tab value="action-recorder">
+									<FontAwesomeIcon icon={faVideoCamera} /> Recorder
+								</TabArea.Tab>
+							</TabArea.List>
+
+							{/* On small screens, show the grid in its own tab */}
+							{!isLargeScreen && <TabArea.Panel value="grid">{gridPanel}</TabArea.Panel>}
+							<TabArea.Panel value="edit">
+								<MyErrorBoundary>
+									{selectedButton && (
+										<EditButton
+											key={`${formatLocation(selectedButton)}-${tabResetToken}`}
+											location={selectedButton}
+											onKeyUp={handleKeyDownInButtons}
+											navigateToControl={navigateToControl}
+										/>
+									)}
+								</MyErrorBoundary>
+							</TabArea.Panel>
+							<TabArea.Panel value="pages">
+								<MyErrorBoundary>
+									<PagesList setPageNumber={setPageNumber} />
+								</MyErrorBoundary>
+							</TabArea.Panel>
+							<TabArea.Panel value="page-variables">
+								<MyErrorBoundary>
+									<PageVariablesPanel pageNumber={pageNumber} />
+								</MyErrorBoundary>
+							</TabArea.Panel>
+							<TabArea.Panel value="presets">
+								<MyErrorBoundary>
+									<ConnectionPresets resetToken={tabResetToken} />
+								</MyErrorBoundary>
+							</TabArea.Panel>
+							<TabArea.Panel value="action-recorder" className="pt-0">
+								<MyErrorBoundary>
+									<ActionRecorder />
+								</MyErrorBoundary>
+							</TabArea.Panel>
+						</TabArea.Root>
+					</div>
+				</SplitPanels.Secondary>
+			</SplitPanels.Root>
+		</ButtonGridViewProvider>
 	)
 })

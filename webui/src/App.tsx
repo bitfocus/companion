@@ -365,42 +365,7 @@ const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuth
 })
 
 const AppContent = observer(function AppContent() {
-	const { userConfig, viewControl } = useContext(RootAppStoreContext)
-
-	const handleWindowBlur = useCallback(() => {
-		viewControl.setButtonGridHotPress(false)
-	}, [viewControl])
-
-	const handleKeyDown = useCallback(
-		(e: KeyboardEvent) => {
-			if (e.key === 'Shift') {
-				viewControl.setButtonGridHotPress(true)
-			}
-		},
-		[viewControl]
-	)
-	const handleKeyUp = useCallback(
-		(e: KeyboardEvent) => {
-			if (e.key === 'Shift') {
-				viewControl.setButtonGridHotPress(false)
-			}
-		},
-		[viewControl]
-	)
-
-	useMountEffect(() => {
-		document.addEventListener('keydown', handleKeyDown)
-		document.addEventListener('keyup', handleKeyUp)
-
-		window.addEventListener('blur', handleWindowBlur)
-
-		return () => {
-			document.removeEventListener('keydown', handleKeyDown)
-			document.removeEventListener('keyup', handleKeyUp)
-
-			window.removeEventListener('blur', handleWindowBlur)
-		}
-	})
+	const { userConfig } = useContext(RootAppStoreContext)
 
 	useEffect(() => {
 		document.title =

@@ -17,7 +17,6 @@ import type { SurfacesStore } from './SurfacesStore.js'
 import type { TriggersListStore } from './TriggersListStore.js'
 import type { UserConfigStore } from './UserConfigStore.js'
 import type { VariablesStore } from './VariablesStore.js'
-import type { ViewControlStore } from './ViewControlStore.js'
 
 export const RootAppStoreContext = createContext<RootAppStore>(null as any) // TODO - fix this?
 
@@ -57,6 +56,4 @@ export interface RootAppStore {
 	 * Doubles as the signal the What's New modal watches so it can wait its turn.
 	 */
 	readonly wizardOpen: IObservableValue<boolean>
-
-	readonly viewControl: ViewControlStore
 }
