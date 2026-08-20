@@ -24,7 +24,7 @@ import { UdpConfig } from './Sections/UdpConfig.js'
 
 export const SettingsProtocolsPage = memo(function UserConfig() {
 	return (
-		<SplitPanels.Root showing={null}>
+		<SplitPanels.Root showing={null} resize={{ storageKey: 'settings' }}>
 			<SplitPanels.Primary>
 				<div className="flex-column-layout">
 					<div className="fixed-header">

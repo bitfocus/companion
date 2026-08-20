@@ -1,0 +1,98 @@
+@import '../breakpoints.css'; /* makes @custom-media (--bp-*) resolvable in this file (see Sidebar.css) */
+
+/* Styles for the SplitPanels component (Layout/SplitPanels.tsx). Only the split *container* and its
+   draggable divide live here; the panel content classes (`.primary-panel`, `.secondary-panel`,
+   `.secondary-panel-simple`, …) stay in layout.css as they are shared/reused outside a split.
+
+   Registered in the `app-base` layer in postcss-wrap-layer.mjs (rather than defaulting to `features`
+   like other Layout/*.css) so page/feature CSS can still override `.split-panels` in-context, as it
+   did when these rules lived in layout.css. */
+
+/* Two panels side by side once there is room, one at a time below that (see Layout/SplitPanels.tsx,
+   which owns the markup and hides a panel while there is only room for one). Deliberately not built on the
+   12-column grid: the split is only ever half-and-half or full width, and a standalone layout leaves
+   room to make the divide draggable (a `grid-template-columns` of its own).
+   The scrolling half applies at all widths: gating it behind a min-width breakpoint broke
+   single-panel-mode scrolling on the buttons page. */
+.split-panels {
+	display: grid;
+	grid-template-columns: 1fr;
+	height: 100%;
+
+	> * {
+		min-width: 0;
+	}
+
+	> .secondary-panel {
+		height: 100%;
+
+		.secondary-panel-inner {
+			height: 100%;
+			display: grid;
+			grid-template-rows: auto 1fr;
+
+			.tab-content {
+				overflow-y: scroll;
+			}
+		}
+
+		.secondary-panel-simple {
+			margin-right: 0px;
+		}
+
+		.secondary-panel-simple-body {
+			overflow-y: scroll;
+
+			&.no-scroll {
+				/* don't allocate space ahead of time (mainly for nonIdealState?) */
+				overflow-y: auto;
+			}
+		}
+	}
+}
+
+@media (--bp-xl-up) {
+	.split-panels {
+		grid-template-columns: 1fr 1fr;
+		column-gap: 1.5rem;
+	}
+}
+
+/* For bigger screens, like 1440p and 4K, give the secondary panel more of the extra width. */
+@media only screen and (min-width: 2000px) {
+	.split-panels {
+		grid-template-columns: 2fr 3fr;
+	}
+}
+
+/* Draggable divide (opt-in via SplitPanels `resize`). Only rendered in the two-panel layout; the
+   column widths themselves are driven by an inline `grid-template-columns` from the stored percent. */
+.split-panels-resize-handle {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	/* `left` is set imperatively to the panel boundary; centre the strip on it. */
+	transform: translateX(-50%);
+	width: 1.5rem; /* generous hit area spanning the column gap */
+	z-index: 2;
+	cursor: col-resize;
+	touch-action: none;
+
+	/* A slim visible line down the middle of the hit area. */
+	&::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 2px;
+		border-radius: 1px;
+		background-color: var(--color-border);
+	}
+
+	&:hover::before,
+	&:active::before {
+		background-color: var(--color-border-hover);
+	}
+}

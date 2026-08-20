@@ -29,6 +29,9 @@ const APP_BASE = new Set([
 	'transitions.css',
 	'loading.css',
 	'App.css',
+	// Split out of layout.css into a file co-located with the component, but must stay in the layer
+	// it always sat in — page CSS (features) relies on being able to override it (see Layout/SplitPanels.css).
+	'Layout/SplitPanels.css',
 ])
 
 // Files that must not be wrapped, keyed by basename.

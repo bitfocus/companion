@@ -39,7 +39,11 @@ export const ImageLibraryPage = observer(function ImageLibraryPage() {
 	const twoPanelMode = useTwoPanelMode()
 
 	return (
-		<SplitPanels.Root showing={selectedImageName ? 'secondary' : 'primary'} className="image-library-page">
+		<SplitPanels.Root
+			showing={selectedImageName ? 'secondary' : 'primary'}
+			className="image-library-page"
+			resize={{ storageKey: 'image-library' }}
+		>
 			<SplitPanels.Primary>
 				<MyErrorBoundary>
 					<ImageLibraryGrid selectedImageName={selectedImageName} onSelectImage={handleSelectImage} />

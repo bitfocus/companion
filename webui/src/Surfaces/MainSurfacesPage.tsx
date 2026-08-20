@@ -85,7 +85,11 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 	)
 
 	return (
-		<SplitPanels.Root showing={selectedSurfaceId || showSettings ? 'secondary' : 'primary'} className="surfaces-page">
+		<SplitPanels.Root
+			showing={selectedSurfaceId || showSettings ? 'secondary' : 'primary'}
+			className="surfaces-page"
+			resize={{ storageKey: 'surfaces' }}
+		>
 			<SplitPanels.Primary className="flex-column-layout">
 				<div className="fixed-header">
 					<h4 className="button-inline">

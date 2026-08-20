@@ -9,7 +9,7 @@ import { HttpsConfig } from './Sections/HttpsConfig.js'
 
 export const SettingsAdvancedPage = memo(function UserConfig() {
 	return (
-		<SplitPanels.Root showing={null}>
+		<SplitPanels.Root showing={null} resize={null}>
 			<SplitPanels.Primary>
 				<div className="flex-column-layout">
 					<div className="fixed-header">

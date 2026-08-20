@@ -14,6 +14,7 @@ export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.El
 		<SplitPanels.Root
 			showing={routeMatch || addConnectionsMatch ? 'secondary' : 'primary'}
 			className="connections-page"
+			resize={{ storageKey: 'connections' }}
 		>
 			<SplitPanels.Primary className="connections-panel">
 				<ConnectionsList selectedConnectionId={selectedConnectionId} />

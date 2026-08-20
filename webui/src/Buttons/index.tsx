@@ -392,7 +392,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	)
 
 	return (
-		<SplitPanels.Root showing={null} className="buttons-page">
+		<SplitPanels.Root showing={null} className="buttons-page" resize={{ storageKey: 'buttons' }}>
 			<GenericConfirmModal ref={clearModalRef} />
 			<ContextMenu
 				open={contextMenuOpen}

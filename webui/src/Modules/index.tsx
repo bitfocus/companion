@@ -22,7 +22,11 @@ export const ModulesPage = memo(function ConnectionsPage() {
 	)
 
 	return (
-		<SplitPanels.Root showing={selectedModuleInfo ? 'secondary' : 'primary'} className="connections-page">
+		<SplitPanels.Root
+			showing={selectedModuleInfo ? 'secondary' : 'primary'}
+			className="connections-page"
+			resize={{ storageKey: 'modules' }}
+		>
 			<SplitPanels.Primary className="connections-panel">
 				<ModulesList doManageModule={doManageModule} selectedModuleInfo={selectedModuleInfo} />
 			</SplitPanels.Primary>

@@ -115,7 +115,11 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 	}, [navigate])
 
 	return (
-		<SplitPanels.Root showing={selectedVariableId ? 'secondary' : 'primary'} className="triggers-page">
+		<SplitPanels.Root
+			showing={selectedVariableId ? 'secondary' : 'primary'}
+			className="triggers-page"
+			resize={{ storageKey: 'expression-variables' }}
+		>
 			<GenericConfirmModal ref={confirmModalRef} />
 
 			<SplitPanels.Primary>

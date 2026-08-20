@@ -48,7 +48,7 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 	const selectedRuleId = routeMatch ? routeMatch.ruleId : null
 
 	return (
-		<SplitPanels.Root showing={selectedRuleId ? 'secondary' : 'primary'}>
+		<SplitPanels.Root showing={selectedRuleId ? 'secondary' : 'primary'} resize={{ storageKey: 'backups' }}>
 			<SplitPanels.Primary>
 				<div className="flex-column-layout">
 					<div className="fixed-header">

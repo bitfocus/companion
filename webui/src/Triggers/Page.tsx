@@ -116,7 +116,11 @@ export const TriggersPage = observer(function Triggers() {
 	}, [navigate])
 
 	return (
-		<SplitPanels.Root showing={selectedTriggerId ? 'secondary' : 'primary'} className="triggers-page">
+		<SplitPanels.Root
+			showing={selectedTriggerId ? 'secondary' : 'primary'}
+			className="triggers-page"
+			resize={{ storageKey: 'triggers' }}
+		>
 			<GenericConfirmModal ref={confirmModalRef} />
 			<ConfirmExportModal ref={exportModalRef} title="Export Triggers" />
 
