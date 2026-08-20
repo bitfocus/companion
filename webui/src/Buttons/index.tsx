@@ -30,7 +30,9 @@ import { ButtonGridSelectionPanel } from './ButtonGridSelectionPanel.js'
 import { ButtonGridStore } from './ButtonGridStore.js'
 import { ButtonGridViewProvider, type ButtonGridView } from './ButtonGridViewContext.js'
 import { EditButton } from './EditButton/EditButton.js'
+import { GRID_BUTTON_DRAG_TYPE, type GridButtonDragItem } from './GridButtonDragItem.js'
 import { parseGridButtonDroppableId } from './GridButtonDroppableId.js'
+import { planGridDrop } from './GridDragDrop.js'
 import { buildTransferPairs, type GridToolActions, type GridTransferPair } from './GridTools/index.js'
 import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
@@ -67,7 +69,7 @@ function getLastPageNumber(): number {
 export const ButtonsPage = observer(function ButtonsPage() {
 	const { userConfig, pages } = useContext(RootAppStoreContext)
 
-	const clearModalRef = useRef<GenericConfirmModalRef>(null)
+	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 	const [gridZoomController, gridZoomValue] = useGridZoom('grid')
 
 	const isLargeScreen = useMediaQuery('(min-width: 1200px)')
@@ -142,7 +144,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				const description =
 					locations.length === 1 ? `Clear button ${formatLocation(locations[0])}` : `Clear ${locations.length} buttons`
 
-				clearModalRef.current?.show(
+				confirmModalRef.current?.show(
 					description,
 					`This will clear the style, feedbacks and all actions`,
 					'Clear',
@@ -179,29 +181,62 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	}, [isLargeScreen, activeTab])
 
 	// Dropping a preset (from the Presets tab) onto a grid button imports it at that location.
-	// Subscribed via the global dnd-kit provider; we filter to preset drags by `type`.
+	// Subscribed via the global dnd-kit provider; we filter drags by `type`.
 	const importPresetMutation = useMutationExt(trpc.controls.importPreset.mutationOptions())
 	useDragDropMonitor({
 		onDragEnd(event) {
 			if (event.canceled) return
 			const { source, target } = event.operation
-			if (!source || !target || source.type !== 'preset') return
+			if (!source || !target) return
 
-			const location = parseGridButtonDroppableId(target.id)
-			if (!location) return
+			if (source.type === 'preset') {
+				const location = parseGridButtonDroppableId(target.id)
+				if (!location) return
 
-			const dropData = source.data as PresetDragItem
-			importPresetMutation
-				.mutateAsync({
-					connectionId: dropData.connectionId,
-					presetId: dropData.presetId,
-					location,
-					variableValues: dropData.variableValues,
-					mode: dropData.mode,
-				})
-				.catch(() => {
-					console.error('Preset import failed')
-				})
+				const dropData = source.data as PresetDragItem
+				importPresetMutation
+					.mutateAsync({
+						connectionId: dropData.connectionId,
+						presetId: dropData.presetId,
+						location,
+						variableValues: dropData.variableValues,
+						mode: dropData.mode,
+					})
+					.catch(() => {
+						console.error('Preset import failed')
+					})
+				return
+			}
+
+			if (source.type !== GRID_BUTTON_DRAG_TYPE || !gridSize) return
+
+			const destination = parseGridButtonDroppableId(target.id)
+			if (!destination) return
+
+			// Dragging a button that is part of the selection takes the whole selection with it
+			const origin = (source.data as GridButtonDragItem).location
+			const selection = gridStore.selectedLocations
+			const originKey = formatLocation(origin)
+			const sources = selection.some((l) => formatLocation(l) === originKey) ? [...selection] : [origin]
+
+			const plan = planGridDrop(origin, destination, sources, gridSize, (location) =>
+				Boolean(pages.getControlIdAtLocation(location))
+			)
+			if (!plan) return
+
+			if (plan.overwrittenLocations.length > 0 && plan.operation !== 'swap') {
+				confirmModalRef.current?.show(
+					`Overwrite ${plan.overwrittenLocations.length} button${plan.overwrittenLocations.length === 1 ? '' : 's'}`,
+					`Moving here will replace ${plan.overwrittenLocations.length} existing button${
+						plan.overwrittenLocations.length === 1 ? '' : 's'
+					}. There's no going back from this.`,
+					'Overwrite',
+					() => actions.transfer(plan.operation, plan.pairs)
+				)
+				return
+			}
+
+			actions.transfer(plan.operation, plan.pairs)
 		},
 	})
 
@@ -374,7 +409,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	return (
 		<ButtonGridViewProvider value={gridView}>
 			<SplitPanels.Root showing={null} className="buttons-page" resize={{ storageKey: 'buttons' }}>
-				<GenericConfirmModal ref={clearModalRef} />
+				<GenericConfirmModal ref={confirmModalRef} />
 				<ContextMenu
 					open={contextMenuOpen}
 					onOpenChange={setContextMenuOpen}

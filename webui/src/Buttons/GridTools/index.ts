@@ -1,3 +1,4 @@
+import { ArrangeTool } from './ArrangeTool.js'
 import { DeleteTool } from './DeleteTool.js'
 import { PressTool } from './PressTool.js'
 import { SelectTool } from './SelectTool.js'
@@ -13,6 +14,8 @@ export function createGridTool(id: GridToolId): GridTool {
 	switch (id) {
 		case 'select':
 			return new SelectTool()
+		case 'arrange':
+			return new ArrangeTool()
 		case 'press':
 			return new PressTool()
 		case 'copy':

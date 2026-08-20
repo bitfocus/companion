@@ -2,7 +2,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ButtonGridStore } from '../ButtonGridStore.js'
 import type { GridButtonModifiers } from '../GridButtonPreview.js'
 
-export type GridToolId = 'select' | 'press' | 'copy' | 'move' | 'swap' | 'delete'
+export type GridToolId = 'select' | 'press' | 'arrange' | 'copy' | 'move' | 'swap' | 'delete'
 
 /** The operations that move button content from one place to another */
 export type GridTransferOperation = 'copy' | 'move' | 'swap'
@@ -47,6 +47,9 @@ export interface GridTool {
 	/** Whether taps fire buttons for real rather than being interpreted */
 	readonly pressMode: boolean
 
+	/** Whether any button can be dragged, rather than only ones that are already selected */
+	readonly dragAnyButton: boolean
+
 	/** Buttons this tool has picked up and is about to act on, so the grid can mark them */
 	getSourceLocations(): readonly ControlLocation[]
 
@@ -70,6 +73,7 @@ export abstract class GridToolBase implements GridTool {
 	abstract readonly id: GridToolId
 
 	readonly pressMode: boolean = false
+	readonly dragAnyButton: boolean = false
 
 	hint(_ctx: GridToolContext): string | null {
 		return null

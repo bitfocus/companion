@@ -76,6 +76,10 @@ export class ButtonGridStore {
 		return this.#activeTool.pressMode
 	}
 
+	get dragAnyButton(): boolean {
+		return this.#activeTool.dragAnyButton
+	}
+
 	get selectedLocations(): readonly ControlLocation[] {
 		return this.#selectionLocations
 	}

@@ -39,6 +39,8 @@ export interface GridButtonPreviewProps {
 	canDrop: boolean
 	dropHover: boolean
 	dropRef: React.RefCallback<HTMLDivElement>
+	dragRef: React.RefCallback<HTMLDivElement>
+	isDragSource: boolean
 }
 
 /**
@@ -66,6 +68,8 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 	canDrop,
 	dropHover,
 	dropRef,
+	dragRef,
+	isDragSource,
 }: GridButtonPreviewProps) {
 	const preloadedImage = useImagePreloader(image)
 
@@ -145,9 +149,19 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 		[releaseIfPressed, onContextMenu, location]
 	)
 
+	// dnd-kit clones the element holding the drag ref as the drag feedback, so both refs go on the
+	// same outer element - it is the one carrying the sizing the clone needs
+	const setRefs = useCallback(
+		(el: HTMLDivElement | null) => {
+			dropRef(el)
+			dragRef(el)
+		},
+		[dropRef, dragRef]
+	)
+
 	return (
 		<div
-			ref={dropRef}
+			ref={setRefs}
 			className={classnames('button-control', 'clickable', 'fixed-72', {
 				// Let the browser scroll the grid, except in press mode where a scroll must not steal the press
 				'grid-pannable': !pressMode,
@@ -156,6 +170,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 				'context-menu-open': contextMenuOpen,
 				drophere: canDrop,
 				drophover: dropHover,
+				'grid-drag-source': isDragSource,
 			})}
 			style={style}
 			onPointerDown={handlePointerDown}

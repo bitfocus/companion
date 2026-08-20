@@ -1,4 +1,4 @@
-import { useDragOperation, useDroppable } from '@dnd-kit/react'
+import { useDraggable, useDragOperation, useDroppable } from '@dnd-kit/react'
 import classNames from 'classnames'
 import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
@@ -10,10 +10,12 @@ import useElementInnerSize from '~/Hooks/useElementClientSize.js'
 import useScrollPosition from '~/Hooks/useScrollPosition.js'
 import {
 	useButtonGridView,
+	useGridDragAnyButton,
 	useGridIsSelected,
 	useGridIsTransferSource,
 	useGridPressMode,
 } from './ButtonGridViewContext.js'
+import { GRID_BUTTON_DRAG_TYPE, type GridButtonDragItem } from './GridButtonDragItem.js'
 import { makeGridButtonDroppableId } from './GridButtonDroppableId.js'
 import { GridButtonPreview, type GridButtonModifiers } from './GridButtonPreview.js'
 
@@ -230,6 +232,40 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			[pageNumber, minColumn, maxColumn, minRow, maxRow, tileSize]
 		)
 
+		// ---- panning with the middle button ----
+
+		const panRef = useRef<{ pointerId: number; clientX: number; clientY: number } | null>(null)
+
+		const handlePanDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+			if (e.button !== 1) return false
+
+			// Otherwise the browser starts its own autoscroll widget
+			e.preventDefault()
+			panRef.current = { pointerId: e.pointerId, clientX: e.clientX, clientY: e.clientY }
+			e.currentTarget.setPointerCapture?.(e.pointerId)
+			return true
+		}, [])
+
+		const handlePanMove = useCallback(
+			(e: React.PointerEvent<HTMLDivElement>) => {
+				const pan = panRef.current
+				if (!pan || pan.pointerId !== e.pointerId || !scrollerRef) return false
+
+				scrollerRef.scrollLeft -= e.clientX - pan.clientX
+				scrollerRef.scrollTop -= e.clientY - pan.clientY
+				panRef.current = { ...pan, clientX: e.clientX, clientY: e.clientY }
+				return true
+			},
+			[scrollerRef]
+		)
+
+		const handlePanUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+			if (panRef.current?.pointerId !== e.pointerId) return false
+
+			panRef.current = null
+			return true
+		}, [])
+
 		const handleMarqueeDown = useCallback(
 			(e: React.PointerEvent<HTMLDivElement>) => {
 				// Touch belongs to the browser here - a drag scrolls the grid, which matters far more than
@@ -365,12 +401,21 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 				ref={setRef}
 				className={classNames('button-infinite-grid', {
 					'button-armed': isHot,
+					'button-grid-panning': !!panRef.current,
 				})}
 				style={gridWrapperStyle}
-				onPointerDown={handleMarqueeDown}
-				onPointerMove={handleMarqueeMove}
-				onPointerUp={handleMarqueeUp}
-				onPointerCancel={handleMarqueeUp}
+				onPointerDown={(e) => {
+					if (!handlePanDown(e)) handleMarqueeDown(e)
+				}}
+				onPointerMove={(e) => {
+					if (!handlePanMove(e)) handleMarqueeMove(e)
+				}}
+				onPointerUp={(e) => {
+					if (!handlePanUp(e)) handleMarqueeUp(e)
+				}}
+				onPointerCancel={(e) => {
+					if (!handlePanUp(e)) handleMarqueeUp(e)
+				}}
 			>
 				<div className="button-grid-canvas" style={gridCanvasStyle} ref={canvasRef}>
 					{visibleButtons}
@@ -403,12 +448,12 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 
 	const { ref: drop, isDropTarget } = useDroppable({
 		id: makeGridButtonDroppableId(pageNumber, column, row),
-		accept: 'preset',
+		accept: ['preset', GRID_BUTTON_DRAG_TYPE],
 	})
 
-	// A preset is being dragged somewhere within the provider - highlight all valid targets
+	// Something droppable is being dragged within the provider - highlight all valid targets
 	const { source } = useDragOperation()
-	const canDrop = source?.type === 'preset'
+	const canDrop = source?.type === 'preset' || source?.type === GRID_BUTTON_DRAG_TYPE
 
 	const location: ControlLocation = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
 	const locationKey = formatLocation(location)
@@ -418,6 +463,18 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 	const selected = useGridIsSelected(locationKey)
 	const isTransferSource = useGridIsTransferSource(locationKey)
 	const pressMode = useGridPressMode()
+	const dragAnyButton = useGridDragAnyButton()
+
+	// In select mode only an already-selected button drags, so dragging anywhere else can still
+	// rubber-band. Arrange lets any button drag. Press mode lets none - a drag must never swallow a
+	// press that is about to fire real actions.
+	const dragData: GridButtonDragItem = useMemo(() => ({ location }), [location])
+	const { ref: dragRef, isDragSource } = useDraggable<GridButtonDragItem>({
+		id: `griddrag:${locationKey}`,
+		type: GRID_BUTTON_DRAG_TYPE,
+		data: dragData,
+		disabled: pressMode || !(dragAnyButton || selected),
+	})
 
 	const { image, isUsed } = useButtonImageForLocation(location)
 
@@ -449,6 +506,8 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 			canDrop={canDrop}
 			dropHover={isDropTarget}
 			dropRef={drop}
+			dragRef={dragRef}
+			isDragSource={isDragSource}
 		/>
 	)
 })
