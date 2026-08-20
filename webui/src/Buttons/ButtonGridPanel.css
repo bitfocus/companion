@@ -49,28 +49,6 @@
 	}
 }
 
-.fadeinout {
-	transition: opacity 0.05s ease-in-out;
-	opacity: 1;
-
-	&.out {
-		opacity: 0;
-	}
-}
-
-.button-grid-controls {
-	display: flex;
-	flex-flow: row wrap;
-	justify-content: center;
-
-	margin-top: 1rem;
-
-	& > div {
-		white-space: nowrap;
-		margin-bottom: 1rem;
-	}
-}
-
 .c-sidebar-nav-link,
 .c-sidebar-nav-dropdown-toggle {
 	transition: none;
@@ -80,6 +58,67 @@
 	display: flex;
 	flex-direction: column;
 	height: 100%;
+}
+
+.button-grid-toolbar {
+	display: flex;
+	flex-flow: row wrap;
+	align-items: center;
+	gap: 4px;
+
+	padding-bottom: 8px;
+}
+
+.button-grid-toolbar-group {
+	display: flex;
+	flex-flow: row wrap;
+	gap: 4px;
+}
+
+.button-grid-toolbar-separator {
+	width: 1px;
+	align-self: stretch;
+	margin: 2px 6px;
+
+	background-color: var(--color-button-border);
+}
+
+/* Holds its height whether or not it has anything to say, so the grid below never jumps as tools and
+   selections come and go */
+.button-grid-context-bar {
+	display: flex;
+	flex-flow: row wrap;
+	align-items: center;
+	gap: 4px;
+
+	min-height: 42px;
+	padding-bottom: 8px;
+}
+
+.button-grid-context-bar-hint {
+	flex-grow: 1;
+
+	color: var(--color-text-strong);
+}
+
+/* Press mode runs real actions on real hardware. The old signal for this was a muted tint on the
+   grid, which was far too easy to miss. */
+.button-grid-press-banner {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+
+	margin-bottom: 8px;
+	padding: 8px 12px;
+	border-radius: var(--radius);
+
+	background-color: var(--color-danger);
+	color: var(--color-on-dark);
+	font-weight: bold;
+}
+
+.button-grid-press-banner-text {
+	flex-grow: 1;
 }
 
 .button-grid-panel-content {
@@ -120,6 +159,9 @@
 
 	&.button-armed {
 		background-color: var(--color-armed-surface);
+
+		/* Mark out exactly which area is live */
+		box-shadow: inset 0 0 0 3px var(--color-danger);
 	}
 
 	.button-grid-canvas {

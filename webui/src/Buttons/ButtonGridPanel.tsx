@@ -1,83 +1,45 @@
-import { faFileExport, faHome, faPencil } from '@fortawesome/free-solid-svg-icons'
+import { faHandPointer, faHome } from '@fortawesome/free-solid-svg-icons'
 import './ButtonGridPanel.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useContext, useRef, useState } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
-import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import { Grid } from '~/Components/Grid'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
-import { KeyReceiver, makeAbsolutePath } from '~/Resources/util.js'
+import { KeyReceiver } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { ButtonGridActions, type ButtonGridActionsRef } from './ButtonGridActions.js'
+import { ButtonGridContextBar } from './ButtonGridContextBar.js'
 import { ButtonGridHeader } from './ButtonGridHeader.js'
+import { ButtonGridPageMenu } from './ButtonGridPageMenu.js'
 import { ButtonGridResizePrompt } from './ButtonGridResizePrompt.js'
-import { ButtonGridViewProvider, type ButtonGridView } from './ButtonGridViewContext.js'
+import { ButtonGridToolbar } from './ButtonGridToolbar.js'
+import { useButtonGridView, useGridPressMode } from './ButtonGridViewContext.js'
 import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { ButtonInfiniteGrid, PrimaryButtonGridIcon, type ButtonInfiniteGridRef } from './ButtonInfiniteGrid.js'
-import { EditPagePropertiesModal, type EditPagePropertiesModalRef } from './EditPageProperties.js'
-import type { GridButtonModifiers } from './GridButtonPreview.js'
 import type { GridZoomController } from './GridZoom.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
 	onKeyDown: (event: React.KeyboardEvent) => void
-	isHot: boolean
-	buttonGridPress: (location: ControlLocation, pressed: boolean) => void
-	buttonGridTap: (location: ControlLocation, modifiers: GridButtonModifiers) => void
 	changePage: (pageNumber: number) => void
-	selectedButton: ControlLocation | null
-	clearSelectedButton: () => void
 	gridZoomValue: number
 	gridZoomController: GridZoomController
-	copySourceButton?: ControlLocation | null
-	contextMenuButton?: ControlLocation | null
-	onButtonContextMenu?: (location: ControlLocation, x: number, y: number) => void
+	contextMenuButton: ControlLocation | null
+	onButtonContextMenu: (location: ControlLocation, x: number, y: number) => void
 }
 
 export const ButtonsGridPanel = observer(function ButtonsPage({
 	pageNumber,
 	onKeyDown,
-	isHot,
-	buttonGridPress,
-	buttonGridTap,
 	changePage,
-	selectedButton,
-	clearSelectedButton,
 	gridZoomValue,
 	gridZoomController,
-	copySourceButton,
 	contextMenuButton,
 	onButtonContextMenu,
 }: ButtonsGridPanelProps) {
 	const { pages, userConfig } = useContext(RootAppStoreContext)
-
-	const actionsRef = useRef<ButtonGridActionsRef>(null)
-
-	const doTap = useCallback(
-		(location: ControlLocation, modifiers: GridButtonModifiers) => {
-			// The copy/move/swap/delete bar gets first refusal. It is written against press/release
-			// pairs, so replay the tap as both edges - it advances on the down and acts on the up.
-			const consumed = actionsRef.current?.buttonClick(location, true) ?? false
-			actionsRef.current?.buttonClick(location, false)
-
-			if (!consumed) buttonGridTap(location, modifiers)
-		},
-		[buttonGridTap]
-	)
-
-	const gridView = useMemo<ButtonGridView>(
-		() => ({
-			pressMode: isHot,
-			onPress: buttonGridPress,
-			onTap: doTap,
-			onContextMenu: (location, x, y) => onButtonContextMenu?.(location, x, y),
-		}),
-		[isHot, buttonGridPress, doTap, onButtonContextMenu]
-	)
 
 	const setPage = useCallback(
 		(newPage: number) => {
@@ -106,40 +68,22 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	const pageInfo = pages.get(pageNumber)
 
 	const gridRef = useRef<ButtonInfiniteGridRef>(null)
-	const editRef = useRef<EditPagePropertiesModalRef>(null)
-
-	const exportModalRef = useRef<ConfirmExportModalRef>(null)
-	const showExportModal = useCallback(() => {
-		exportModalRef.current?.show(makeAbsolutePath(`/int/export/page/${pageNumber}`))
-	}, [pageNumber])
 
 	const resetPosition = useCallback(() => {
 		gridRef.current?.resetPosition()
 	}, [gridRef])
-
-	const configurePage = useCallback(() => {
-		editRef.current?.show(Number(pageNumber), pageInfo)
-	}, [pageNumber, pageInfo])
 
 	const gridSize = userConfig.properties?.gridSize
 
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
 	const [viewportMinHeight, setViewportMinHeight] = useState(250) // arbitrary initial min-height
 
+	const pressMode = useGridPressMode()
+
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
 			<div className="button-grid-panel-header" ref={isInViewRef}>
-				<ConfirmExportModal ref={exportModalRef} title="Export Page" />
-				<EditPagePropertiesModal ref={editRef} includeName />
-
-				<h4 className="button-inline">
-					Buttons
-					<ContextHelpButton action="/user-guide/config/buttons/" />
-				</h4>
-				<p className="mb-2">
-					The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,
-					and what they should do when you press or click on them.
-				</p>
+				<PressModeBanner />
 
 				<ButtonGridResizePrompt />
 
@@ -154,49 +98,51 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 							<Button color="light" onClick={resetPosition} title="Home Position" className="ms-1">
 								<FontAwesomeIcon icon={faHome} />
 							</Button>
-							<Button color="light" onClick={configurePage} title="Edit Page" className="ms-1">
-								<FontAwesomeIcon icon={faPencil} />
-							</Button>
-							<Button color="light" onClick={showExportModal} title="Export Page" className="ms-1">
-								<FontAwesomeIcon icon={faFileExport} />
-							</Button>
+							<ButtonGridPageMenu pageNumber={pageNumber} pageInfo={pageInfo} />
+							<ContextHelpButton action="/user-guide/config/buttons/" />
 						</ButtonGridHeader>
 					</Grid.Col>
 				</Grid.Row>
+
+				<ButtonGridToolbar />
+				<ButtonGridContextBar />
 			</div>
 			<div className="button-grid-panel-content" style={{ minHeight: viewportMinHeight }}>
 				{hasBeenInView && gridSize && (
-					<ButtonGridViewProvider value={gridView}>
-						<ButtonInfiniteGrid
-							ref={gridRef}
-							isHot={isHot}
-							pageNumber={pageNumber}
-							selectedButton={selectedButton}
-							copySourceButton={copySourceButton}
-							contextMenuButton={contextMenuButton}
-							onButtonContextMenu={onButtonContextMenu}
-							gridSize={gridSize}
-							ButtonIconFactory={PrimaryButtonGridIcon}
-							drawScale={gridZoomValue / 100}
-							setViewportMinHeight={setViewportMinHeight}
-						/>
-					</ButtonGridViewProvider>
+					<ButtonInfiniteGrid
+						ref={gridRef}
+						isHot={pressMode}
+						pageNumber={pageNumber}
+						contextMenuButton={contextMenuButton}
+						onButtonContextMenu={onButtonContextMenu}
+						gridSize={gridSize}
+						ButtonIconFactory={PrimaryButtonGridIcon}
+						drawScale={gridZoomValue / 100}
+						setViewportMinHeight={setViewportMinHeight}
+					/>
 				)}
-			</div>
-			<div className="button-grid-panel-footer">
-				<ButtonGridActions
-					ref={actionsRef}
-					isHot={isHot}
-					pageNumber={pageNumber}
-					clearSelectedButton={clearSelectedButton}
-				/>
-
-				<StaticAlert color="info" className="mb-2">
-					You can use the arrow keys, pageup and pagedown to navigate with the keyboard, and use common key commands
-					such as copy, paste, and cut to rearrange buttons. You can also press the delete or backspace key with any
-					button highlighted to delete it.
-				</StaticAlert>
 			</div>
 		</KeyReceiver>
 	)
 })
+
+/**
+ * Press mode runs real actions on real hardware, so being in it must be impossible to miss. The dull
+ * tint on the grid that used to signal it was far too easy to overlook.
+ */
+function PressModeBanner(): React.JSX.Element | null {
+	const { store, actions } = useButtonGridView()
+	const pressMode = useGridPressMode()
+
+	if (!pressMode) return null
+
+	return (
+		<div className="button-grid-press-banner" role="alert">
+			<FontAwesomeIcon icon={faHandPointer} />
+			<span className="button-grid-press-banner-text">Press mode &mdash; clicking a button will run its actions</span>
+			<Button color="light" size="sm" onClick={() => store.setTool('select', actions)}>
+				Exit
+			</Button>
+		</div>
+	)
+}

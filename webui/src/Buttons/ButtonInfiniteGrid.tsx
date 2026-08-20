@@ -8,9 +8,14 @@ import { ButtonPreview } from '~/Components/ButtonPreview.js'
 import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import useElementInnerSize from '~/Hooks/useElementClientSize.js'
 import useScrollPosition from '~/Hooks/useScrollPosition.js'
-import { useButtonGridView } from './ButtonGridViewContext.js'
+import {
+	useButtonGridView,
+	useGridIsSelected,
+	useGridIsTransferSource,
+	useGridPressMode,
+} from './ButtonGridViewContext.js'
 import { makeGridButtonDroppableId } from './GridButtonDroppableId.js'
-import { GridButtonPreview } from './GridButtonPreview.js'
+import { GridButtonPreview, type GridButtonModifiers } from './GridButtonPreview.js'
 
 export interface ButtonInfiniteGridRef {
 	resetPosition(): void
@@ -261,11 +266,9 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 	row,
 	left,
 	top,
-	selected,
-	copySource,
 	contextMenuOpen,
 }: ButtonInfiniteGridButtonProps) {
-	const view = useButtonGridView()
+	const { store, actions, onContextMenu } = useButtonGridView()
 
 	const { ref: drop, isDropTarget } = useDroppable({
 		id: makeGridButtonDroppableId(pageNumber, column, row),
@@ -277,7 +280,24 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 	const canDrop = source?.type === 'preset'
 
 	const location: ControlLocation = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
+	const locationKey = formatLocation(location)
+
+	// Read straight from the store rather than taking these as props, so a selection change re-renders
+	// only the cells whose own answer changed
+	const selected = useGridIsSelected(locationKey)
+	const isTransferSource = useGridIsTransferSource(locationKey)
+	const pressMode = useGridPressMode()
+
 	const { image, isUsed } = useButtonImageForLocation(location)
+
+	const onTap = useCallback(
+		(tapLocation: ControlLocation, modifiers: GridButtonModifiers) => store.handleTap(tapLocation, modifiers, actions),
+		[store, actions]
+	)
+	const onPress = useCallback(
+		(pressLocation: ControlLocation, isDown: boolean) => store.handlePress(pressLocation, isDown, actions),
+		[store, actions]
+	)
 
 	const style = useMemo(() => ({ left, top }), [left, top])
 
@@ -286,14 +306,14 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 			location={location}
 			image={isUsed ? image : null}
 			style={style}
-			title={formatLocation(location)}
+			title={locationKey}
 			placeholder={`${row}/${column}`}
-			pressMode={view.pressMode}
-			onPress={view.onPress}
-			onTap={view.onTap}
-			onContextMenu={view.onContextMenu}
+			pressMode={pressMode}
+			onPress={onPress}
+			onTap={onTap}
+			onContextMenu={onContextMenu}
 			selected={selected}
-			copySource={copySource}
+			copySource={isTransferSource}
 			contextMenuOpen={contextMenuOpen}
 			canDrop={canDrop}
 			dropHover={isDropTarget}
