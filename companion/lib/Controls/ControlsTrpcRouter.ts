@@ -1,8 +1,8 @@
 import type EventEmitter from 'node:events'
-import { nanoid } from 'nanoid'
 import z from 'zod'
-import { CreateBankControlId, formatLocation } from '@companion-app/shared/ControlId.js'
-import type { ButtonReferenceButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
+import type { ButtonReferenceButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { Logger } from '../Log/Controller.js'
@@ -12,8 +12,11 @@ import { publicProcedure } from '../UI/TRPC.js'
 import type { ControlCommonEvents } from './ControlDependencies.js'
 import type { ControlsController } from './Controller.js'
 import { ControlButtonPresetReference } from './ControlTypes/Button/PresetReference.js'
-import type { ControlsFactory } from './Factory.js'
+import { GridTransferError, planGridTransfer } from './GridTransfer.js'
 import type { SomeControl } from './IControlFragments.js'
+
+/** A sanity bound on one batch. Far above any real selection, but stops a malformed request. */
+const MAX_BATCH_LOCATIONS = 4096
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createControlsTrpcRouter(
@@ -22,8 +25,7 @@ export function createControlsTrpcRouter(
 	pageStore: IPageStore,
 	instanceDefinitions: InstanceDefinitions,
 	controlEvents: EventEmitter<ControlCommonEvents>,
-	controlsController: ControlsController,
-	factory: ControlsFactory
+	controlsController: ControlsController
 ) {
 	return {
 		importPreset: publicProcedure
@@ -154,160 +156,141 @@ export function createControlsTrpcRouter(
 				}
 			}),
 
-		moveControl: publicProcedure
+		/**
+		 * Copy, move or swap any number of buttons in one go.
+		 *
+		 * The whole batch is planned against the state as it was before anything moved, so overlapping
+		 * source and destination regions are well defined - nudging a block one column across reads
+		 * every source before it writes anything. It is also all-or-nothing: an invalid page rejects
+		 * the request rather than leaving half of it applied.
+		 */
+		gridBatchTransfer: publicProcedure
 			.input(
 				z.object({
-					fromLocation: zodLocation,
-					toLocation: zodLocation,
+					operation: z.enum(['copy', 'move', 'swap']),
+					pairs: z
+						.array(
+							z.object({
+								fromLocation: zodLocation,
+								toLocation: zodLocation,
+							})
+						)
+						.min(1)
+						.max(MAX_BATCH_LOCATIONS),
 				})
 			)
 			.mutation(async ({ input }) => {
-				const { fromLocation, toLocation } = input
+				const { operation, pairs } = input
 
-				// Don't try moving over itself
-				if (
-					fromLocation.pageNumber === toLocation.pageNumber &&
-					fromLocation.column === toLocation.column &&
-					fromLocation.row === toLocation.row
-				)
-					return false
-
-				// Make sure target page number is valid
-				if (!pageStore.isPageValid(toLocation.pageNumber)) return false
-
-				// Make sure there is something to move
-				const fromControlId = pageStore.getControlIdAt(fromLocation)
-				if (!fromControlId) return false
-
-				// Delete the control at the destination
-				const toControlId = pageStore.getControlIdAt(toLocation)
-				if (toControlId) {
-					controlsController.deleteControl(toControlId)
+				for (const { fromLocation, toLocation } of pairs) {
+					if (!pageStore.isPageValid(fromLocation.pageNumber) || !pageStore.isPageValid(toLocation.pageNumber)) {
+						logger.warn(`Rejecting ${operation} of ${pairs.length} buttons: invalid page`)
+						return false
+					}
 				}
 
-				// Perform the move
-				controlEvents.emit('controlRemovedFrom', fromLocation)
-				controlEvents.emit('controlPlacedAt', toLocation, fromControlId)
+				let plan
+				try {
+					plan = planGridTransfer(operation, pairs, (location) => pageStore.getControlIdAt(location))
+				} catch (e) {
+					if (e instanceof GridTransferError) {
+						logger.warn(`Rejecting ${operation} of ${pairs.length} buttons: ${e.message}`)
+						return false
+					}
+					throw e
+				}
 
-				// Inform the control it was moved
-				const control = controlsMap.get(fromControlId)
-				if (control) control.triggerLocationHasChanged()
+				if (plan.placements.length === 0) return false
 
-				// If it changed page, re-evaluate its feedbacks that reference page variables
-				controlsController.notifyControlMovedPage(fromControlId, fromLocation.pageNumber, toLocation.pageNumber)
+				// Serialise everything being cloned before anything is deleted - a source can also be a
+				// destination, and it must be read as it was at the start
+				const clonedJson = new Map<string, SomeButtonModel>()
+				for (const placement of plan.placements) {
+					if (placement.kind !== 'clone' || clonedJson.has(placement.sourceControlId)) continue
 
-				// Force a redraw
-				controlEvents.emit('invalidateLocationRender', fromLocation)
-				controlEvents.emit('invalidateLocationRender', toLocation)
+					const control = controlsMap.get(placement.sourceControlId)
+					if (control) clonedJson.set(placement.sourceControlId, control.toJSON(true) as SomeButtonModel)
+				}
+
+				// Where each control being moved started, so a change of page can be reported to it
+				const previousLocations = new Map<string, ControlLocation>()
+				for (const placement of plan.placements) {
+					if (placement.kind !== 'existing') continue
+
+					const previous = pageStore.getLocationOfControlId(placement.controlId)
+					if (previous) previousLocations.set(placement.controlId, previous)
+				}
+
+				for (const controlId of plan.discardedControlIds) {
+					controlsController.deleteControl(controlId)
+				}
+
+				// Empty every affected slot before filling any of them, so overlapping regions cannot fight
+				for (const placement of plan.placements) {
+					controlEvents.emit('controlRemovedFrom', placement.location)
+				}
+
+				for (const placement of plan.placements) {
+					switch (placement.kind) {
+						case 'empty':
+							break
+						case 'existing':
+							controlEvents.emit('controlPlacedAt', placement.location, placement.controlId)
+							break
+						case 'clone': {
+							const json = clonedJson.get(placement.sourceControlId)
+							if (json) controlsController.importControl(placement.location, json)
+							break
+						}
+					}
+				}
+
+				// Tell the controls that moved where they have ended up
+				for (const placement of plan.placements) {
+					if (placement.kind !== 'existing') continue
+
+					const control = controlsMap.get(placement.controlId)
+					if (control) control.triggerLocationHasChanged()
+
+					const previous = previousLocations.get(placement.controlId)
+					if (previous) {
+						controlsController.notifyControlMovedPage(
+							placement.controlId,
+							previous.pageNumber,
+							placement.location.pageNumber
+						)
+					}
+				}
+
+				for (const placement of plan.placements) {
+					controlEvents.emit('invalidateLocationRender', placement.location)
+				}
+				for (const { fromLocation } of pairs) {
+					controlEvents.emit('invalidateLocationRender', fromLocation)
+				}
 
 				return true
 			}),
 
-		copyControl: publicProcedure
+		/** Clear any number of buttons, optionally recreating them as a given type */
+		resetControls: publicProcedure
 			.input(
 				z.object({
-					fromLocation: zodLocation,
-					toLocation: zodLocation,
+					locations: z.array(zodLocation).min(1).max(MAX_BATCH_LOCATIONS),
+					newType: z.string().nullable(),
 				})
 			)
 			.mutation(async ({ input }) => {
-				const { fromLocation, toLocation } = input
+				for (const location of input.locations) {
+					const controlId = pageStore.getControlIdAt(location)
+					if (controlId) {
+						controlsController.deleteControl(controlId)
+					}
 
-				// Don't try copying over itself
-				if (
-					fromLocation.pageNumber === toLocation.pageNumber &&
-					fromLocation.column === toLocation.column &&
-					fromLocation.row === toLocation.row
-				)
-					return false
-
-				// Make sure target page number is valid
-				if (!pageStore.isPageValid(toLocation.pageNumber)) return false
-
-				// Make sure there is something to copy
-				const fromControlId = pageStore.getControlIdAt(fromLocation)
-				if (!fromControlId) return false
-
-				const fromControl = controlsMap.get(fromControlId)
-				if (!fromControl) return false
-				const controlJson = fromControl.toJSON(true)
-
-				// Delete the control at the destination
-				const toControlId = pageStore.getControlIdAt(toLocation)
-				if (toControlId) {
-					controlsController.deleteControl(toControlId)
+					if (input.newType) {
+						controlsController.createButtonControl(location, input.newType)
+					}
 				}
-
-				const newControlId = CreateBankControlId(nanoid())
-				const newControl = factory.createClassForControl(newControlId, 'button', controlJson, true)
-				if (newControl) {
-					controlsMap.set(newControlId, newControl)
-
-					controlEvents.emit('controlPlacedAt', toLocation, newControlId)
-
-					// Ensure it is redrawn
-					newControl.commitChange(true)
-
-					return true
-				}
-
-				return false
-			}),
-
-		swapControl: publicProcedure
-			.input(
-				z.object({
-					fromLocation: zodLocation,
-					toLocation: zodLocation,
-				})
-			)
-			.mutation(async ({ input }) => {
-				const { fromLocation, toLocation } = input
-
-				// Don't try moving over itself
-				if (
-					fromLocation.pageNumber === toLocation.pageNumber &&
-					fromLocation.column === toLocation.column &&
-					fromLocation.row === toLocation.row
-				)
-					return false
-
-				// Make sure both page numbers are valid
-				if (!pageStore.isPageValid(toLocation.pageNumber) || !pageStore.isPageValid(fromLocation.pageNumber))
-					return false
-
-				// Find the ids to move
-				const fromControlId = pageStore.getControlIdAt(fromLocation)
-				const toControlId = pageStore.getControlIdAt(toLocation)
-
-				// Perform the swap
-				controlEvents.emit('controlRemovedFrom', toLocation)
-				if (toControlId) {
-					controlEvents.emit('controlPlacedAt', fromLocation, toControlId)
-				} else {
-					controlEvents.emit('controlRemovedFrom', fromLocation)
-				}
-				if (fromControlId) {
-					controlEvents.emit('controlPlacedAt', toLocation, fromControlId)
-				}
-
-				// Inform the controls they were moved
-				const controlA = fromControlId && controlsMap.get(fromControlId)
-				if (controlA) controlA.triggerLocationHasChanged()
-				const controlB = toControlId && controlsMap.get(toControlId)
-				if (controlB) controlB.triggerLocationHasChanged()
-
-				// If either changed page, re-evaluate its feedbacks that reference page variables
-				if (fromControlId)
-					controlsController.notifyControlMovedPage(fromControlId, fromLocation.pageNumber, toLocation.pageNumber)
-				if (toControlId)
-					controlsController.notifyControlMovedPage(toControlId, toLocation.pageNumber, fromLocation.pageNumber)
-
-				// Force a redraw
-				controlEvents.emit('invalidateLocationRender', fromLocation)
-				controlEvents.emit('invalidateLocationRender', toLocation)
-
-				return true
 			}),
 
 		hotPressControl: publicProcedure

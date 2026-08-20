@@ -255,8 +255,7 @@ export class ControlsController {
 				this.#deps.pageStore,
 				this.#deps.instance.definitions,
 				this.#controlEvents,
-				this,
-				this.#factory
+				this
 			),
 
 			watchControl: publicProcedure

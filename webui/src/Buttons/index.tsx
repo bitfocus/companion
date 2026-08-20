@@ -89,10 +89,8 @@ export const ButtonsPage = observer(function ButtonsPage() {
 
 	const gridSize = userConfig.properties?.gridSize
 
-	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())
-	const copyControlMutation = useMutationExt(trpc.controls.copyControl.mutationOptions())
-	const moveControlMutation = useMutationExt(trpc.controls.moveControl.mutationOptions())
-	const swapControlMutation = useMutationExt(trpc.controls.swapControl.mutationOptions())
+	const resetControlsMutation = useMutationExt(trpc.controls.resetControls.mutationOptions())
+	const gridBatchTransferMutation = useMutationExt(trpc.controls.gridBatchTransfer.mutationOptions())
 	const hotPressMutation = useMutationExt(trpc.controls.hotPressControl.mutationOptions())
 
 	const openEditor = useCallback((location: ControlLocation) => {
@@ -110,12 +108,13 @@ export const ButtonsPage = observer(function ButtonsPage() {
 					.catch((e) => console.error(`Hot press failed: ${e}`))
 			},
 			transfer: (operation, pairs: GridTransferPair[]) => {
-				const mutation =
-					operation === 'copy' ? copyControlMutation : operation === 'move' ? moveControlMutation : swapControlMutation
+				if (pairs.length === 0) return
 
-				for (const pair of pairs) {
-					mutation.mutateAsync(pair).catch((e) => console.error(`${operation} failed: ${e}`))
-				}
+				// One request for the whole lot, so overlapping regions are resolved against the state as
+				// it was before anything moved, and a rejection leaves nothing half-applied
+				gridBatchTransferMutation
+					.mutateAsync({ operation, pairs })
+					.catch((e) => console.error(`${operation} failed: ${e}`))
 				setTabResetToken(nanoid())
 			},
 			clearButtons: (locations) => {
@@ -129,16 +128,14 @@ export const ButtonsPage = observer(function ButtonsPage() {
 					`This will clear the style, feedbacks and all actions`,
 					'Clear',
 					() => {
-						for (const location of locations) {
-							resetControlMutation.mutateAsync({ location }).catch((e) => {
-								console.error(`Reset failed: ${e}`)
-							})
-						}
+						resetControlsMutation.mutateAsync({ locations: [...locations], newType: null }).catch((e) => {
+							console.error(`Reset failed: ${e}`)
+						})
 					}
 				)
 			},
 		}),
-		[openEditor, hotPressMutation, copyControlMutation, moveControlMutation, swapControlMutation, resetControlMutation]
+		[openEditor, hotPressMutation, gridBatchTransferMutation, resetControlsMutation]
 	)
 
 	const navigateToControl = useCallback(
