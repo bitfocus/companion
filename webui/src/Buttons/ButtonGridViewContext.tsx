@@ -72,6 +72,11 @@ export function useGridDragAnyButton(): boolean {
 	return useGridStoreValue(selectDragAnyButton)
 }
 
+const selectAllowsMarquee = (store: ButtonGridStore) => store.allowsMarquee
+export function useGridAllowsMarquee(): boolean {
+	return useGridStoreValue(selectAllowsMarquee)
+}
+
 const selectActiveToolId = (store: ButtonGridStore) => store.activeToolId
 export function useGridActiveToolId(): GridToolId {
 	return useGridStoreValue(selectActiveToolId)

@@ -217,6 +217,13 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		const canvasRef = useRef<HTMLDivElement | null>(null)
 		const [marquee, setMarquee] = useState<MarqueeState | null>(null)
 
+		// A drag of a button starts from the same pointerdown as a marquee would, so without this both
+		// happen at once: the button moves and a region gets selected behind it
+		const { source: dragSource } = useDragOperation()
+		useEffect(() => {
+			if (dragSource) setMarquee(null)
+		}, [dragSource])
+
 		const canvasPoint = useCallback((clientX: number, clientY: number) => {
 			const rect = canvasRef.current?.getBoundingClientRect()
 			if (!rect) return null
@@ -290,7 +297,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 
 		const handleMarqueeMove = useCallback(
 			(e: React.PointerEvent<HTMLDivElement>) => {
-				if (!marquee || marquee.pointerId !== e.pointerId) return
+				if (!marquee || marquee.pointerId !== e.pointerId || dragSource) return
 
 				const point = canvasPoint(e.clientX, e.clientY)
 				if (!point) return
@@ -301,7 +308,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 
 				setMarquee({ ...marquee, currentX: point.x, currentY: point.y, active })
 			},
-			[marquee, canvasPoint]
+			[marquee, canvasPoint, dragSource]
 		)
 
 		const handleMarqueeUp = useCallback(

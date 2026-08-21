@@ -80,6 +80,10 @@ export class ButtonGridStore {
 		return this.#activeTool.dragAnyButton
 	}
 
+	get allowsMarquee(): boolean {
+		return this.#activeTool.allowsMarquee
+	}
+
 	get selectedLocations(): readonly ControlLocation[] {
 		return this.#selectionLocations
 	}

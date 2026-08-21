@@ -14,7 +14,7 @@ import { ButtonGridHeader } from './ButtonGridHeader.js'
 import { ButtonGridPageMenu } from './ButtonGridPageMenu.js'
 import { ButtonGridResizePrompt } from './ButtonGridResizePrompt.js'
 import { ButtonGridToolbar } from './ButtonGridToolbar.js'
-import { useButtonGridView, useGridFocus, useGridPressMode } from './ButtonGridViewContext.js'
+import { useButtonGridView, useGridAllowsMarquee, useGridFocus, useGridPressMode } from './ButtonGridViewContext.js'
 import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { ButtonInfiniteGrid, PrimaryButtonGridIcon, type ButtonInfiniteGridRef } from './ButtonInfiniteGrid.js'
 import { GridButtonDragOverlay } from './GridButtonDragOverlay.js'
@@ -100,6 +100,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	}, [gridZoomController])
 
 	const pressMode = useGridPressMode()
+	const allowsMarquee = useGridAllowsMarquee()
 	const focus = useGridFocus()
 
 	const selectRectangle = useCallback(
@@ -115,6 +116,15 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
 			<div className="button-grid-panel-header" ref={isInViewRef}>
+				<h4 className="button-inline">
+					Buttons
+					<ContextHelpButton action="/user-guide/config/buttons/" />
+				</h4>
+				<p className="mb-2">
+					The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,
+					and what they should do when you press or click on them.
+				</p>
+
 				<ButtonGridResizePrompt />
 
 				<Grid.Row>
@@ -129,7 +139,6 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 								<FontAwesomeIcon icon={faHome} />
 							</Button>
 							<ButtonGridPageMenu pageNumber={pageNumber} pageInfo={pageInfo} />
-							<ContextHelpButton action="/user-guide/config/buttons/" />
 						</ButtonGridHeader>
 					</Grid.Col>
 				</Grid.Row>
@@ -149,7 +158,9 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 						onButtonContextMenu={onButtonContextMenu}
 						gridSize={gridSize}
 						ButtonIconFactory={PrimaryButtonGridIcon}
-						onMarqueeSelect={selectRectangle}
+						// A drag under a placing tool is not the start of a selection, so there is nothing to
+						// rubber-band and no stray box left behind
+						onMarqueeSelect={allowsMarquee ? selectRectangle : null}
 						drawScale={gridZoomValue / 100}
 						setViewportMinHeight={setViewportMinHeight}
 					/>

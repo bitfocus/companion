@@ -7,13 +7,24 @@
 }
 
 .button-grid-selection-preview {
+	/* The grid draws its buttons at 72px, and this is a picture of that grid - drawn any larger the
+	   previews are being upscaled past the size they were rendered at, and look it */
+	--selection-tile-size: 72px;
+
 	display: grid;
 	gap: 2px;
+	justify-content: start;
 
 	/* Wide selections must not push the panel sideways */
 	max-width: 100%;
 	margin-bottom: 1rem;
 	overflow-x: auto;
+}
+
+/* Square, like the buttons beside them, rather than collapsing to nothing in an empty row */
+.button-grid-selection-hole,
+.button-grid-selection-preview .button-control {
+	aspect-ratio: 1;
 }
 
 /* A cell inside the region that is not part of the selection */
