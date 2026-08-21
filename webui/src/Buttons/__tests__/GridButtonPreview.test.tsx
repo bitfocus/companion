@@ -28,7 +28,9 @@ function setup(props: Partial<Props> = {}) {
 			contextMenuOpen={false}
 			canDrop={false}
 			dropHover={false}
+			dropDestination={false}
 			dropInvalid={false}
+			ghostImage={null}
 			dropRef={() => {}}
 			dragRef={() => {}}
 			isDragSource={false}

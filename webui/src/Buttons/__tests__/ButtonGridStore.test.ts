@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { formatLocation as formatLocationKey } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { ButtonGridStore, locationsInRectangle } from '../ButtonGridStore.js'
@@ -20,6 +21,9 @@ function makeActions(): GridToolActions {
 		press: vi.fn(),
 		transfer: vi.fn(),
 		clearButtons: vi.fn(),
+		// Tests act on a grid where every cell holds a button unless they say otherwise
+		isOccupied: vi.fn(() => true),
+		pasteAt: vi.fn(),
 	}
 }
 
@@ -538,45 +542,60 @@ describe('ButtonGridStore', () => {
 	})
 
 	describe('drag preview', () => {
-		it('marks every cell the region would land on, not just the one under the cursor', () => {
-			store.setDragPreview({ keys: new Set(['1/1/1', '1/1/2']), valid: true })
+		const preview = (entries: [string, ControlLocation][], valid = true) => ({
+			placements: new Map(entries),
+			valid,
+		})
 
-			expect(store.isDropDestination('1/1/1')).toBe(true)
-			expect(store.isDropDestination('1/1/2')).toBe(true)
-			expect(store.isDropDestination('1/2/2')).toBe(false)
+		it('says which button would end up on each cell, not just that one would', () => {
+			store.setDragPreview(preview([['1/2/1', at(1, 1)]]))
+
+			// The cell can then draw that button's own image, which is what makes a block checkable
+			expect(store.dropGhostSource('1/2/1')).toEqual(at(1, 1))
+			expect(store.dropGhostSource('1/2/2')).toBeNull()
 		})
 
 		it('reports a drop that would be refused', () => {
 			expect(store.dragPreviewValid).toBe(true)
 
-			store.setDragPreview({ keys: new Set(['1/1/1']), valid: false })
+			store.setDragPreview(preview([['1/1/1', at(2, 2)]], false))
 			expect(store.dragPreviewValid).toBe(false)
 		})
 
 		it('clears when the drag ends', () => {
-			store.setDragPreview({ keys: new Set(['1/1/1']), valid: true })
+			store.setDragPreview(preview([['1/1/1', at(2, 2)]]))
 			store.setDragPreview(null)
 
-			expect(store.isDropDestination('1/1/1')).toBe(false)
+			expect(store.dropGhostSource('1/1/1')).toBeNull()
 		})
 
 		it('does not wake every cell for an unchanged answer', () => {
 			// This runs on every pointer move of a drag
-			store.setDragPreview({ keys: new Set(['1/1/1', '1/1/2']), valid: true })
+			store.setDragPreview(
+				preview([
+					['1/1/1', at(2, 1)],
+					['1/1/2', at(2, 2)],
+				])
+			)
 
 			const listener = vi.fn()
 			store.subscribe(listener)
-			store.setDragPreview({ keys: new Set(['1/1/2', '1/1/1']), valid: true })
+			store.setDragPreview(
+				preview([
+					['1/1/2', at(2, 2)],
+					['1/1/1', at(2, 1)],
+				])
+			)
 
 			expect(listener).not.toHaveBeenCalled()
 		})
 
-		it('does notify when the region moves', () => {
-			store.setDragPreview({ keys: new Set(['1/1/1']), valid: true })
+		it('notifies when the same cells would receive different buttons', () => {
+			store.setDragPreview(preview([['1/1/1', at(2, 1)]]))
 
 			const listener = vi.fn()
 			store.subscribe(listener)
-			store.setDragPreview({ keys: new Set(['1/1/2']), valid: true })
+			store.setDragPreview(preview([['1/1/1', at(3, 1)]]))
 
 			expect(listener).toHaveBeenCalled()
 		})
@@ -621,6 +640,45 @@ describe('ButtonGridStore', () => {
 		it('is not a press mode', () => {
 			store.setTool('arrange', actions)
 			expect(store.pressMode).toBe(false)
+		})
+	})
+
+	describe('clicking an empty cell', () => {
+		/** A grid where only 1/1/1 holds a button */
+		const onlyOneButton = () => {
+			actions.isOccupied = vi.fn((location) => formatLocationKey(location) === '1/1/1')
+		}
+
+		it('is ignored by delete, rather than asking about nothing', () => {
+			onlyOneButton()
+			store.setTool('delete', actions)
+
+			store.handleTap(at(2, 2), NO_MODIFIERS, actions)
+			expect(actions.clearButtons).not.toHaveBeenCalled()
+
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			expect(actions.clearButtons).toHaveBeenCalledWith([at(1, 1)])
+		})
+
+		it('is ignored when picking a source to copy or move', () => {
+			for (const tool of ['copy', 'move'] as const) {
+				onlyOneButton()
+				store.setTool('select', actions)
+				store.setTool(tool, actions)
+
+				store.handleTap(at(2, 2), NO_MODIFIERS, actions)
+				// Still waiting for a source, so nothing was picked up
+				expect(store.hint(actions), tool).toBe(`Press the button you want to ${tool}`)
+			}
+		})
+
+		it('is accepted by swap, which is how a button is moved into an empty cell', () => {
+			onlyOneButton()
+			store.setTool('swap', actions)
+
+			store.handleTap(at(2, 2), NO_MODIFIERS, actions)
+
+			expect(store.hint(actions)).toBe('Where do you want it?')
 		})
 	})
 

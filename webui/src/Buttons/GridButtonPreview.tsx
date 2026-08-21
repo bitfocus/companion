@@ -38,8 +38,12 @@ export interface GridButtonPreviewProps {
 	contextMenuOpen: boolean
 	canDrop: boolean
 	dropHover: boolean
+	/** A button is heading for this cell */
+	dropDestination: boolean
 	/** Marked as a landing spot, but releasing here would be refused */
 	dropInvalid: boolean
+	/** The button that would end up here, drawn over this cell's own so the landing can be checked */
+	ghostImage: string | null
 	dropRef: React.RefCallback<HTMLDivElement>
 	dragRef: React.RefCallback<HTMLDivElement>
 	isDragSource: boolean
@@ -69,7 +73,9 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 	contextMenuOpen,
 	canDrop,
 	dropHover,
+	dropDestination,
 	dropInvalid,
+	ghostImage,
 	dropRef,
 	dragRef,
 	isDragSource,
@@ -172,7 +178,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 				'copy-source': copySource,
 				'context-menu-open': contextMenuOpen,
 				drophere: canDrop,
-				drophover: dropHover && !dropInvalid,
+				drophover: (dropHover || dropDestination) && !dropInvalid,
 				dropinvalid: dropInvalid,
 				'grid-drag-source': isDragSource,
 			})}
@@ -189,6 +195,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 				title={title}
 			>
 				{!preloadedImage && <div className="button-placeholder">{placeholder}</div>}
+				{ghostImage && <div className="button-drop-ghost" style={{ backgroundImage: `url(${ghostImage})` }} />}
 			</div>
 		</div>
 	)

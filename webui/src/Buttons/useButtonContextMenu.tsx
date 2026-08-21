@@ -119,14 +119,8 @@ export function useButtonContextMenu({
 			items.push(
 				{
 					label: pasteLabel,
-					do: () => {
-						actions.transfer(
-							clipboard.mode === 'cut' ? 'move' : 'copy',
-							buildTransferPairs(clipboard.locations, location)
-						)
-						if (clipboard.mode === 'cut') store.clearClipboard()
-						setTabResetToken(nanoid())
-					},
+					// Same path as the keyboard, so a paste warns about the same things either way
+					do: () => actions.pasteAt(location),
 				},
 				{
 					label: 'Swap here',

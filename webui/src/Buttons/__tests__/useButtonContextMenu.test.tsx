@@ -43,6 +43,9 @@ function setup(occupied?: (location: ControlLocation) => boolean) {
 		press: vi.fn(),
 		transfer: vi.fn(),
 		clearButtons: vi.fn(),
+		// Tests act on a grid where every cell holds a button unless they say otherwise
+		isOccupied: vi.fn(() => true),
+		pasteAt: vi.fn(),
 	}
 
 	const { result } = renderHook(() => useButtonContextMenu({ store, actions, setTabResetToken: vi.fn() }), {
@@ -139,6 +142,16 @@ describe('useButtonContextMenu', () => {
 
 		expect(labels()).toContain('Copy')
 		expect(labels()).not.toContain('Copy 1 buttons')
+	})
+
+	it('pastes through the shared path, so it warns about the same things as the keyboard', () => {
+		const { store, actions, openAt, item } = setup()
+		act(() => store.setClipboard([at(2, 2)], 'copy'))
+
+		openAt(at(1, 1))
+		act(() => item('Paste here').do())
+
+		expect(actions.pasteAt).toHaveBeenCalledWith(at(1, 1))
 	})
 
 	it('disables the paste entries until something is on the clipboard', () => {

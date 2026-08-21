@@ -64,3 +64,21 @@ export function planGridDrop(
 
 	return { operation, pairs, overwrittenLocations, fitsOnGrid }
 }
+
+/**
+ * What the grid would look like with this plan applied: each cell that changes, and where the button
+ * arriving there is coming from.
+ *
+ * A swap moves buttons both ways, so both ends are described - otherwise the preview would show what
+ * you are placing but not what it is displacing.
+ */
+export function previewPlacements(plan: GridDropPlan): Map<string, ControlLocation> {
+	const placements = new Map<string, ControlLocation>()
+
+	for (const { fromLocation, toLocation } of plan.pairs) {
+		placements.set(formatLocation(toLocation), fromLocation)
+		if (plan.operation === 'swap') placements.set(formatLocation(fromLocation), toLocation)
+	}
+
+	return placements
+}

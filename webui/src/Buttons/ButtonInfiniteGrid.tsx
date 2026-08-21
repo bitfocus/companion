@@ -12,7 +12,7 @@ import {
 	useButtonGridView,
 	useGridDragAnyButton,
 	useGridDragPreviewValid,
-	useGridIsDropDestination,
+	useGridDropGhostSource,
 	useGridIsSelected,
 	useGridIsTransferSource,
 	useGridPressMode,
@@ -476,9 +476,13 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 	const pressMode = useGridPressMode()
 	const dragAnyButton = useGridDragAnyButton()
 
-	// Where the whole region being dragged would land, not just the cell under the cursor
-	const isDropDestination = useGridIsDropDestination(locationKey)
+	// Which button would end up here if the drag were released, so the cell can ghost it. Seeing the
+	// buttons themselves is what makes it possible to check a large block has lined up.
+	const ghostSource = useGridDropGhostSource(locationKey)
 	const dropWouldWork = useGridDragPreviewValid()
+
+	// Already subscribed by the cell the button actually lives on, and subscriptions are shared
+	const ghost = useButtonImageForLocation(ghostSource ?? location, !ghostSource)
 
 	// In select mode only an already-selected button drags, so dragging anywhere else can still
 	// rubber-band. Arrange lets any button drag. Press mode lets none - a drag must never swallow a
@@ -519,8 +523,10 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 			copySource={isTransferSource}
 			contextMenuOpen={contextMenuOpen}
 			canDrop={canDrop}
-			dropHover={isDropTarget || isDropDestination}
-			dropInvalid={isDropDestination && !dropWouldWork}
+			dropHover={isDropTarget}
+			ghostImage={ghostSource && ghost.isUsed ? ghost.image : null}
+			dropDestination={!!ghostSource}
+			dropInvalid={!!ghostSource && !dropWouldWork}
 			dropRef={drop}
 			dragRef={dragRef}
 			isDragSource={isDragSource}

@@ -115,11 +115,11 @@ export class ButtonGridStore {
 	// ---- drag preview ----
 
 	/**
-	 * Where the buttons being dragged would land if released now.
+	 * What the grid would look like if the drag were released now.
 	 *
-	 * Highlighting only the cell under the cursor says nothing about where the rest of a region ends
-	 * up, and nothing about whether the drop will be allowed at all - both of which are worth knowing
-	 * before letting go.
+	 * Keyed by the cell that changes, with the button that would end up there. Marking the cells is
+	 * not enough on its own - lining a large block up means seeing which button lands where, not just
+	 * that something does - and a swap changes two places at once, so both are described.
 	 */
 	get dragPreview(): GridDragPreview | null {
 		return this.#dragPreview
@@ -132,8 +132,10 @@ export class ButtonGridStore {
 			this.#dragPreview &&
 			preview &&
 			this.#dragPreview.valid === preview.valid &&
-			this.#dragPreview.keys.size === preview.keys.size &&
-			[...preview.keys].every((key) => this.#dragPreview?.keys.has(key))
+			this.#dragPreview.placements.size === preview.placements.size &&
+			[...preview.placements].every(
+				([key, from]) => formatLocation(this.#dragPreview?.placements.get(key) ?? NOWHERE) === formatLocation(from)
+			)
 		) {
 			return
 		}
@@ -142,9 +144,9 @@ export class ButtonGridStore {
 		this.#notify()
 	}
 
-	/** Whether a button being dragged would land on this cell */
-	isDropDestination(locationKey: string): boolean {
-		return this.#dragPreview?.keys.has(locationKey) ?? false
+	/** The button that would end up on this cell, or null if nothing is heading here */
+	dropGhostSource(locationKey: string): ControlLocation | null {
+		return this.#dragPreview?.placements.get(locationKey) ?? null
 	}
 
 	get dragPreviewValid(): boolean {
@@ -380,11 +382,14 @@ export class ButtonGridStore {
 }
 
 export interface GridDragPreview {
-	/** `formatLocation` keys of the cells the drag would land on */
-	keys: Set<string>
+	/** Cell key -> where the button that would end up there is coming from */
+	placements: Map<string, ControlLocation>
 	/** False when the region would hang off the grid, so releasing would do nothing */
 	valid: boolean
 }
+
+/** Stands in for "no location" when comparing two previews, so neither side needs a null check */
+const NOWHERE: ControlLocation = { pageNumber: -1, row: -1, column: -1 }
 
 export type GridClipboardMode = 'copy' | 'cut'
 

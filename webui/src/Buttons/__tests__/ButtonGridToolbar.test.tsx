@@ -21,6 +21,9 @@ function setup() {
 		press: vi.fn(),
 		transfer: vi.fn(),
 		clearButtons: vi.fn(),
+		// Tests act on a grid where every cell holds a button unless they say otherwise
+		isOccupied: vi.fn(() => true),
+		pasteAt: vi.fn(),
 	}
 	const view: ButtonGridView = { store, actions, onContextMenu: vi.fn() }
 

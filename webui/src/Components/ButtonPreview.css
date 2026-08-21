@@ -90,6 +90,20 @@
 		background-position: center;
 		background-repeat: no-repeat;
 
+		/* The button that would land here if the drag were released. Drawn over this cell's own content
+		   rather than beside it, so a block can be checked against the grid it is landing on. */
+		.button-drop-ghost {
+			position: absolute;
+			inset: 0;
+
+			border-radius: inherit;
+
+			background-size: contain;
+			background-position: center;
+			background-repeat: no-repeat;
+			opacity: 0.75;
+		}
+
 		.button-placeholder {
 			position: absolute;
 			top: 0;
