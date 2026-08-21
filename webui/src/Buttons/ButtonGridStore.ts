@@ -2,6 +2,7 @@ import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { GridButtonModifiers } from './GridButtonPreview.js'
+import { locationsInRectangle } from './GridGeometry.js'
 import {
 	createGridTool,
 	DEFAULT_GRID_TOOL_ID,
@@ -83,7 +84,7 @@ export class ButtonGridStore {
 	}
 
 	get allowsMarquee(): boolean {
-		return this.#activeTool.allowsMarquee
+		return this.#activeTool.allowsMarquee()
 	}
 
 	get selectedLocations(): readonly ControlLocation[] {
@@ -228,6 +229,11 @@ export class ButtonGridStore {
 
 	handleTap(location: ControlLocation, modifiers: GridButtonModifiers, actions: GridToolActions): void {
 		this.#activeTool.onTap(this.#context(actions), location, modifiers)
+	}
+
+	/** A box was dragged out across the grid. What it picks depends on the tool. */
+	handleMarquee(from: ControlLocation, to: ControlLocation, additive: boolean, actions: GridToolActions): void {
+		this.#activeTool.onMarquee(this.#context(actions), from, to, additive)
 	}
 
 	handlePress(location: ControlLocation, isDown: boolean, actions: GridToolActions): void {
@@ -409,20 +415,4 @@ function wrap(value: number, min: number, max: number): number {
 	if (value < min) return max
 	if (value > max) return min
 	return value
-}
-
-/** Every cell in the rectangle with these two locations at opposite corners */
-export function locationsInRectangle(from: ControlLocation, to: ControlLocation): ControlLocation[] {
-	const minRow = Math.min(from.row, to.row)
-	const maxRow = Math.max(from.row, to.row)
-	const minColumn = Math.min(from.column, to.column)
-	const maxColumn = Math.max(from.column, to.column)
-
-	const locations: ControlLocation[] = []
-	for (let row = minRow; row <= maxRow; row++) {
-		for (let column = minColumn; column <= maxColumn; column++) {
-			locations.push({ pageNumber: to.pageNumber, row, column })
-		}
-	}
-	return locations
 }

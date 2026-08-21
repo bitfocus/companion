@@ -54,8 +54,16 @@ export interface GridTool {
 	/** Whether any button can be dragged, rather than only ones that are already selected */
 	readonly dragAnyButton: boolean
 
-	/** Whether dragging across the grid rubber-bands a selection. Only the selecting tools want this. */
-	readonly allowsMarquee: boolean
+	/**
+	 * Whether dragging a box across the grid means anything right now.
+	 *
+	 * A method rather than a flag because it depends on where the tool has got to: a transfer wants a
+	 * box while it is asking which buttons to take, and not once it is asking where to put them.
+	 */
+	allowsMarquee(): boolean
+
+	/** A box was dragged out across the grid. What that picks is up to the tool. */
+	onMarquee(ctx: GridToolContext, from: ControlLocation, to: ControlLocation, additive: boolean): void
 
 	/** Buttons this tool has picked up and is about to act on, so the grid can mark them */
 	getSourceLocations(): readonly ControlLocation[]
@@ -81,7 +89,6 @@ export abstract class GridToolBase implements GridTool {
 
 	readonly pressMode: boolean = false
 	readonly dragAnyButton: boolean = false
-	readonly allowsMarquee: boolean = false
 
 	hint(_ctx: GridToolContext): string | null {
 		return null
@@ -89,6 +96,14 @@ export abstract class GridToolBase implements GridTool {
 
 	getSourceLocations(): readonly ControlLocation[] {
 		return []
+	}
+
+	allowsMarquee(): boolean {
+		return false
+	}
+
+	onMarquee(_ctx: GridToolContext, _from: ControlLocation, _to: ControlLocation, _additive: boolean): void {
+		// nothing by default
 	}
 
 	onEnter(_ctx: GridToolContext): void {

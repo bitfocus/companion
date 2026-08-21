@@ -1,4 +1,5 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { locationsInRectangle } from '../GridGeometry.js'
 import {
 	GridToolBase,
 	type GridToolContext,
@@ -51,6 +52,22 @@ export class TransferTool extends GridToolBase {
 
 	override getSourceLocations(): readonly ControlLocation[] {
 		return this.#sources ?? []
+	}
+
+	/** Only while it is asking what to take. Once it is asking where to put them, a box means nothing. */
+	override allowsMarquee(): boolean {
+		return this.#sources === null
+	}
+
+	override onMarquee(ctx: GridToolContext, from: ControlLocation, to: ControlLocation): void {
+		const region = locationsInRectangle(from, to)
+
+		// The gaps in a region are part of its shape and travel with it, but a box containing nothing
+		// at all is a stray drag rather than a choice
+		if (!region.some((location) => ctx.actions.isOccupied(location))) return
+
+		this.#sources = region
+		ctx.store.notifyToolChanged()
 	}
 
 	override onEnter(ctx: GridToolContext): void {

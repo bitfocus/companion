@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { formatLocation as formatLocationKey } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
-import { ButtonGridStore, locationsInRectangle } from '../ButtonGridStore.js'
+import { ButtonGridStore } from '../ButtonGridStore.js'
+import { locationsInRectangle } from '../GridGeometry.js'
 import type { GridToolActions } from '../GridTools/index.js'
 
 const GRID_SIZE: UserConfigGridSize = { minRow: 0, maxRow: 3, minColumn: 0, maxColumn: 7 }
@@ -623,24 +624,70 @@ describe('ButtonGridStore', () => {
 		})
 	})
 
-	describe('rubber-band selection', () => {
-		it('is offered by the selecting tools', () => {
-			expect(store.allowsMarquee).toBe(true)
+	describe('dragging a box', () => {
+		it('selects the region under the selecting tools', () => {
+			for (const tool of ['select', 'multi-select', 'arrange'] as const) {
+				store.setTool(tool, actions)
+				expect(store.allowsMarquee, tool).toBe(true)
+			}
 
-			store.setTool('multi-select', actions)
-			expect(store.allowsMarquee).toBe(true)
-
-			store.setTool('arrange', actions)
-			expect(store.allowsMarquee).toBe(true)
+			store.setTool('select', actions)
+			store.handleMarquee(at(1, 1), at(2, 2), false, actions)
+			expect(store.selectionCount).toBe(4)
 		})
 
-		it('is not offered by the tools that place buttons', () => {
-			// A drag under one of these is either moving something or nothing at all - drawing a
-			// selection box over it leaves a stray rectangle behind
-			for (const tool of ['copy', 'move', 'swap', 'delete', 'press'] as const) {
-				store.setTool(tool, actions)
-				expect(store.allowsMarquee, tool).toBe(false)
-			}
+		it('picks what a transfer should take, rather than selecting it', () => {
+			store.setTool('copy', actions)
+			expect(store.allowsMarquee).toBe(true)
+
+			store.handleMarquee(at(1, 1), at(2, 2), false, actions)
+
+			expect(store.selectionCount).toBe(0)
+			expect(store.isTransferSource('1/1/1')).toBe(true)
+			expect(store.hint(actions)).toBe('Where do you want it?')
+		})
+
+		it('carries the region to the destination in one go', () => {
+			store.setTool('move', actions)
+			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+
+			store.handleTap(at(3, 4), NO_MODIFIERS, actions)
+
+			expect(actions.transfer).toHaveBeenCalledWith('move', [
+				{ fromLocation: at(1, 1), toLocation: at(3, 4) },
+				{ fromLocation: at(1, 2), toLocation: at(3, 5) },
+			])
+		})
+
+		it('stops offering a box once the transfer is asking where to put them', () => {
+			store.setTool('copy', actions)
+			store.handleMarquee(at(1, 1), at(2, 2), false, actions)
+
+			// A box would mean nothing here, and drawing one would just leave a stray rectangle
+			expect(store.allowsMarquee).toBe(false)
+		})
+
+		it('ignores a box over nothing at all', () => {
+			actions.isOccupied = vi.fn(() => false)
+			store.setTool('copy', actions)
+
+			store.handleMarquee(at(1, 1), at(2, 2), false, actions)
+
+			expect(store.hint(actions)).toBe('Press the button you want to copy')
+		})
+
+		it('clears a region under the delete tool, counting only what is there', () => {
+			actions.isOccupied = vi.fn((location) => location.column === 1)
+			store.setTool('delete', actions)
+
+			store.handleMarquee(at(1, 1), at(2, 2), false, actions)
+
+			expect(actions.clearButtons).toHaveBeenCalledWith([at(1, 1), at(2, 1)])
+		})
+
+		it('is never offered in press mode', () => {
+			store.setTool('press', actions)
+			expect(store.allowsMarquee).toBe(false)
 		})
 	})
 

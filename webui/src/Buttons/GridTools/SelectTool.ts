@@ -8,9 +8,14 @@ import { GridToolBase, type GridToolContext, type GridToolId } from './types.js'
 export class SelectTool extends GridToolBase {
 	readonly id: GridToolId = 'select'
 
-	/** Dragging across the grid picks out a region. The tools that place buttons must not do this -
-	    a drag there is either moving something or nothing at all. */
-	override readonly allowsMarquee = true
+	/** Dragging a box across the grid picks out a region to select */
+	override allowsMarquee(): boolean {
+		return true
+	}
+
+	override onMarquee(ctx: GridToolContext, from: ControlLocation, to: ControlLocation, additive: boolean): void {
+		ctx.store.selectRectangle(from, to, additive)
+	}
 
 	override onTap(ctx: GridToolContext, location: ControlLocation, modifiers: GridButtonModifiers): void {
 		ctx.store.selectWithModifiers(location, modifiers)
