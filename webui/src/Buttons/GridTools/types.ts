@@ -26,6 +26,8 @@ export interface GridToolActions {
 	isOccupied: (location: ControlLocation) => boolean
 	/** Place whatever is on the clipboard here, warning first if that would cost anything */
 	pasteAt: (location: ControlLocation) => void
+	/** Whether every one of these lands on the grid, rather than off the edge of it */
+	fitsOnGrid: (locations: ControlLocation[]) => boolean
 }
 
 export interface GridToolContext {
@@ -65,6 +67,14 @@ export interface GridTool {
 	/** A box was dragged out across the grid. What that picks is up to the tool. */
 	onMarquee(ctx: GridToolContext, from: ControlLocation, to: ControlLocation, additive: boolean): void
 
+	/**
+	 * The pointer moved over this cell, or left the grid entirely.
+	 *
+	 * A tool that is about to place something uses this to show where it would go, so that is visible
+	 * before the click rather than after it.
+	 */
+	onHover(ctx: GridToolContext, location: ControlLocation | null): void
+
 	/** Buttons this tool has picked up and is about to act on, so the grid can mark them */
 	getSourceLocations(): readonly ControlLocation[]
 
@@ -103,6 +113,10 @@ export abstract class GridToolBase implements GridTool {
 	}
 
 	onMarquee(_ctx: GridToolContext, _from: ControlLocation, _to: ControlLocation, _additive: boolean): void {
+		// nothing by default
+	}
+
+	onHover(_ctx: GridToolContext, _location: ControlLocation | null): void {
 		// nothing by default
 	}
 

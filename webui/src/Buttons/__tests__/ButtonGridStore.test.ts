@@ -25,6 +25,7 @@ function makeActions(): GridToolActions {
 		// Tests act on a grid where every cell holds a button unless they say otherwise
 		isOccupied: vi.fn(() => true),
 		pasteAt: vi.fn(),
+		fitsOnGrid: vi.fn(() => true),
 	}
 }
 
@@ -621,6 +622,114 @@ describe('ButtonGridStore', () => {
 			store.setDragPreview(preview([['1/1/1', at(3, 1)]]))
 
 			expect(listener).toHaveBeenCalled()
+		})
+	})
+
+	describe('hovering with a tool armed', () => {
+		it('shows nothing until the tool has picked something up', () => {
+			store.setTool('move', actions)
+			store.handleHover(at(2, 2), actions)
+
+			expect(store.dropGhostSource('1/2/2')).toBeNull()
+		})
+
+		it('ghosts where the picked-up buttons would land', () => {
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			store.handleHover(at(3, 4), actions)
+
+			expect(store.dropGhostSource('1/3/4')).toEqual(at(1, 1))
+		})
+
+		it('anchors a region by its top-left, wherever the box was drawn from', () => {
+			store.setTool('copy', actions)
+			// Dragged out bottom-right to top-left, which is the case that is impossible to guess at
+			store.handleMarquee(at(2, 2), at(1, 1), false, actions)
+
+			store.handleHover(at(3, 5), actions)
+
+			expect(store.dropGhostSource('1/3/5')).toEqual(at(1, 1))
+			expect(store.dropGhostSource('1/4/6')).toEqual(at(2, 2))
+		})
+
+		it('shows both ends of a swap, so the displaced buttons are visible too', () => {
+			store.setTool('swap', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			store.handleHover(at(2, 2), actions)
+
+			expect(store.dropGhostSource('1/2/2')).toEqual(at(1, 1))
+			expect(store.dropGhostSource('1/1/1')).toEqual(at(2, 2))
+		})
+
+		it('marks a placement that would fall off the grid', () => {
+			actions.fitsOnGrid = vi.fn(() => false)
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			store.handleHover(at(3, 7), actions)
+
+			expect(store.dragPreviewValid).toBe(false)
+		})
+
+		it('refuses to place buttons that would land off the grid, keeping hold of them', () => {
+			actions.fitsOnGrid = vi.fn(() => false)
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			store.handleTap(at(3, 7), NO_MODIFIERS, actions)
+
+			expect(actions.transfer).not.toHaveBeenCalled()
+			// Still holding them, so the next tap can put them somewhere with more room
+			expect(store.hint(actions)).toBe('Where do you want it?')
+		})
+
+		it('clears when the pointer leaves the grid', () => {
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.handleHover(at(2, 2), actions)
+
+			store.handleHover(null, actions)
+
+			expect(store.dropGhostSource('1/2/2')).toBeNull()
+		})
+
+		it('clears once the buttons have been placed', () => {
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.handleHover(at(2, 2), actions)
+
+			store.handleTap(at(2, 2), NO_MODIFIERS, actions)
+
+			expect(store.dropGhostSource('1/2/2')).toBeNull()
+		})
+
+		it('clears when the tool is backed out of', () => {
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.handleHover(at(2, 2), actions)
+
+			store.goBack(actions)
+
+			expect(store.dropGhostSource('1/2/2')).toBeNull()
+		})
+
+		it('clears when a different tool is armed', () => {
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.handleHover(at(2, 2), actions)
+
+			store.setTool('select', actions)
+
+			expect(store.dropGhostSource('1/2/2')).toBeNull()
+		})
+
+		it('means nothing to the select tool', () => {
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+			store.handleHover(at(2, 2), actions)
+
+			expect(store.dropGhostSource('1/2/2')).toBeNull()
 		})
 	})
 

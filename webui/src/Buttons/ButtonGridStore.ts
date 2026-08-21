@@ -231,6 +231,11 @@ export class ButtonGridStore {
 		this.#activeTool.onTap(this.#context(actions), location, modifiers)
 	}
 
+	/** The pointer moved over a cell, or left the grid. Tools use it to preview what a click would do. */
+	handleHover(location: ControlLocation | null, actions: GridToolActions): void {
+		this.#activeTool.onHover(this.#context(actions), location)
+	}
+
 	/** A box was dragged out across the grid. What it picks depends on the tool. */
 	handleMarquee(from: ControlLocation, to: ControlLocation, additive: boolean, actions: GridToolActions): void {
 		this.#activeTool.onMarquee(this.#context(actions), from, to, additive)

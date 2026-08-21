@@ -32,8 +32,9 @@ import { ButtonGridViewProvider, type ButtonGridView } from './ButtonGridViewCon
 import { EditButton } from './EditButton/EditButton.js'
 import { GRID_BUTTON_DRAG_TYPE, type GridButtonDragItem } from './GridButtonDragItem.js'
 import { parseGridButtonDroppableId } from './GridButtonDroppableId.js'
-import { planGridDrop, previewPlacements } from './GridDragDrop.js'
-import { buildTransferPairs, type GridToolActions, type GridTransferPair } from './GridTools/index.js'
+import { planGridDrop } from './GridDragDrop.js'
+import { buildTransferPairs, previewPlacements } from './GridGeometry.js'
+import type { GridToolActions, GridTransferPair } from './GridTools/index.js'
 import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
 import { PageVariablesPanel } from './PageVariablesPanel.js'
@@ -120,9 +121,27 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		setTabResetToken(nanoid())
 	}, [])
 
+	// A button placed outside the grid is somewhere nothing can reach it, so the tools refuse a
+	// placement that would do that rather than clamping it to the edge
+	const fitsOnGrid = useCallback(
+		(locations: ControlLocation[]) => {
+			if (!gridSize) return false
+
+			return locations.every(
+				(location) =>
+					location.row >= gridSize.minRow &&
+					location.row <= gridSize.maxRow &&
+					location.column >= gridSize.minColumn &&
+					location.column <= gridSize.maxColumn
+			)
+		},
+		[gridSize]
+	)
+
 	const actions = useMemo<GridToolActions>(
 		() => ({
 			openEditor,
+			fitsOnGrid,
 			press: (location, isDown) => {
 				hotPressMutation
 					.mutateAsync({ location, direction: isDown, surfaceId: 'grid' })
@@ -162,7 +181,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				)
 			},
 		}),
-		[openEditor, hotPressMutation, gridBatchTransferMutation, resetControlsMutation, gridStore, pages]
+		[openEditor, fitsOnGrid, hotPressMutation, gridBatchTransferMutation, resetControlsMutation, gridStore, pages]
 	)
 
 	// Both the keyboard and the context menu paste through here, so a paste costs the same either way
@@ -177,13 +196,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			// Placing a button outside the grid puts it where nothing can reach it. Refusing the whole
 			// paste matches what dropping a region off the edge does, and means a cut can never destroy
 			// its source in exchange for nothing.
-			const offGrid = pairs.filter(
-				({ toLocation }) =>
-					toLocation.row < gridSize.minRow ||
-					toLocation.row > gridSize.maxRow ||
-					toLocation.column < gridSize.minColumn ||
-					toLocation.column > gridSize.maxColumn
-			)
+			const offGrid = pairs.filter(({ toLocation }) => !fitsOnGrid([toLocation]))
 
 			// A cell the clipboard is vacating is not being overwritten by its own contents
 			const vacated = new Set(operation === 'move' ? clipboard.locations.map(formatLocation) : [])
@@ -225,7 +238,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 
 			apply()
 		},
-		[gridStore, gridSize, pages, actions, setTabResetToken]
+		[gridStore, gridSize, fitsOnGrid, pages, actions, setTabResetToken]
 	)
 
 	const navigateToControl = useCallback(
@@ -258,7 +271,9 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			if (!source || source.type !== GRID_BUTTON_DRAG_TYPE) return
 
 			const plan = target ? resolveGridDrop(source, target.id) : null
-			gridStore.setDragPreview(plan ? { placements: previewPlacements(plan), valid: plan.fitsOnGrid } : null)
+			gridStore.setDragPreview(
+				plan ? { placements: previewPlacements(plan.operation, plan.pairs), valid: plan.fitsOnGrid } : null
+			)
 		},
 		onDragEnd(event) {
 			gridStore.setDragPreview(null)

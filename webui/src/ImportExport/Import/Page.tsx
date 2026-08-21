@@ -145,6 +145,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										gridSize={sourceGridSize}
 										ButtonIconFactory={ButtonImportPreview}
 										onMarqueeSelect={null}
+										onHoverLocation={null}
 										drawScale={gridZoomValue / 100}
 										maxHeightToMatchCanvas
 									/>
@@ -179,6 +180,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										gridSize={destinationGridSize}
 										ButtonIconFactory={ButtonGridIcon}
 										onMarqueeSelect={null}
+										onHoverLocation={null}
 										drawScale={gridZoomValue / 100}
 										maxHeightToMatchCanvas
 									/>
