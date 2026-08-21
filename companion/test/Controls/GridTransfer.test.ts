@@ -40,21 +40,30 @@ describe('planGridTransfer', () => {
 			expect(plan.discardedControlIds).toEqual(['control:1/1/1'])
 		})
 
-		it('carries the gaps in a region across, clearing the matching destinations', () => {
-			// A 2x1 region where only the first cell is occupied
+		it('leaves the destination of a gap alone, rather than clearing it', () => {
+			// A 2x1 region where only the first cell is occupied, copied over two existing buttons
 			const plan = planGridTransfer(
 				'copy',
 				[
 					{ fromLocation: at(0, 0), toLocation: at(2, 0) },
 					{ fromLocation: at(0, 1), toLocation: at(2, 1) },
 				],
-				gridWith(at(0, 0), at(2, 1))
+				gridWith(at(0, 0), at(2, 0), at(2, 1))
 			)
 
 			const placements = byLocation(plan.placements)
 			expect(placements['1/2/0']).toEqual({ location: at(2, 0), kind: 'clone', sourceControlId: 'control:1/0/0' })
-			expect(placements['1/2/1']).toEqual({ location: at(2, 1), kind: 'empty' })
-			expect(plan.discardedControlIds).toEqual(['control:1/2/1'])
+			// The gap set where the first button landed and then had nothing of its own to place, so the
+			// button it passed over keeps its place
+			expect(placements['1/2/1']).toBeUndefined()
+			expect(plan.discardedControlIds).toEqual(['control:1/2/0'])
+		})
+
+		it('does nothing at all when every source is empty', () => {
+			const plan = planGridTransfer('copy', [{ fromLocation: at(0, 0), toLocation: at(2, 0) }], gridWith(at(2, 0)))
+
+			expect(plan.placements).toEqual([])
+			expect(plan.discardedControlIds).toEqual([])
 		})
 
 		it('reads a source that is also a destination as it was at the start', () => {
@@ -126,18 +135,23 @@ describe('planGridTransfer', () => {
 			expect(plan.discardedControlIds).toEqual(['control:1/1/1'])
 		})
 
-		it('moves a gap along with the region', () => {
+		it('leaves the destination of a gap alone, rather than clearing it', () => {
 			const plan = planGridTransfer(
 				'move',
 				[
 					{ fromLocation: at(0, 0), toLocation: at(2, 0) },
 					{ fromLocation: at(0, 1), toLocation: at(2, 1) },
 				],
-				gridWith(at(0, 0))
+				gridWith(at(0, 0), at(2, 1))
 			)
 
 			const placements = byLocation(plan.placements)
-			expect(placements['1/2/1']).toEqual({ location: at(2, 1), kind: 'empty' })
+			expect(placements['1/2/0']).toEqual({ location: at(2, 0), kind: 'existing', controlId: 'control:1/0/0' })
+			expect(placements['1/2/1']).toBeUndefined()
+			// Only the cell the button actually left is vacated
+			expect(placements['1/0/0']).toEqual({ location: at(0, 0), kind: 'empty' })
+			expect(placements['1/0/1']).toBeUndefined()
+			expect(plan.discardedControlIds).toEqual([])
 		})
 	})
 

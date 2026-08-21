@@ -33,7 +33,7 @@ import { EditButton } from './EditButton/EditButton.js'
 import { GRID_BUTTON_DRAG_TYPE, type GridButtonDragItem } from './GridButtonDragItem.js'
 import { parseGridButtonDroppableId } from './GridButtonDroppableId.js'
 import { planGridDrop } from './GridDragDrop.js'
-import { buildTransferPairs, previewPlacements } from './GridGeometry.js'
+import { buildTransferPairs, previewPlacements, withoutEmptySources } from './GridGeometry.js'
 import type { GridToolActions, GridTransferPair } from './GridTools/index.js'
 import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
@@ -121,6 +121,11 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		setTabResetToken(nanoid())
 	}, [])
 
+	const isOccupied = useCallback(
+		(location: ControlLocation) => Boolean(pages.getControlIdAtLocation(location)),
+		[pages]
+	)
+
 	// A button placed outside the grid is somewhere nothing can reach it, so the tools refuse a
 	// placement that would do that rather than clamping it to the edge
 	const fitsOnGrid = useCallback(
@@ -147,21 +152,55 @@ export const ButtonsPage = observer(function ButtonsPage() {
 					.mutateAsync({ location, direction: isDown, surfaceId: 'grid' })
 					.catch((e) => console.error(`Hot press failed: ${e}`))
 			},
-			transfer: (operation, pairs: GridTransferPair[]) => {
-				if (pairs.length === 0) return
+			// Every way of moving buttons around the grid - the toolbar tools, dragging, pasting, the
+			// context menu - ends up here, so the things that must never happen quietly are checked in
+			// one place rather than in each of them.
+			transfer: (operation, pairs: GridTransferPair[], onApplied: () => void) => {
+				const carrying = withoutEmptySources(operation, pairs, isOccupied)
+				if (carrying.length === 0) return
 
-				// One request for the whole lot, so overlapping regions are resolved against the state as
-				// it was before anything moved, and a rejection leaves nothing half-applied
-				gridBatchTransferMutation
-					.mutateAsync({ operation, pairs })
-					.catch((e) => console.error(`${operation} failed: ${e}`))
+				// Off the grid is out of reach. Refusing the whole thing rather than the part that fits
+				// means a move can never destroy its source in exchange for nothing.
+				if (!fitsOnGrid(carrying.map((pair) => pair.toLocation))) return
 
-				// Follow the buttons to where they landed. Leaving the old positions selected points at
-				// where they used to be, which is no use for whatever you want to do next.
-				gridStore.setSelection(pairs.map((pair) => pair.toLocation))
-				setTabResetToken(nanoid())
+				const apply = () => {
+					// One request for the whole lot, so overlapping regions are resolved against the state
+					// as it was before anything moved, and a rejection leaves nothing half-applied
+					gridBatchTransferMutation
+						.mutateAsync({ operation, pairs: carrying })
+						.catch((e) => console.error(`${operation} failed: ${e}`))
+
+					// Follow the buttons to where they landed. Leaving the old positions selected points at
+					// where they used to be, which is no use for whatever you want to do next.
+					gridStore.setSelection(carrying.map((pair) => pair.toLocation))
+					setTabResetToken(nanoid())
+					onApplied()
+				}
+
+				// A swap trades rather than destroys, and a cell the buttons are vacating anyway is not
+				// being overwritten by them
+				const vacated = new Set(operation === 'move' ? carrying.map((pair) => formatLocation(pair.fromLocation)) : [])
+				const overwritten =
+					operation === 'swap'
+						? []
+						: carrying.filter(({ toLocation }) => !vacated.has(formatLocation(toLocation)) && isOccupied(toLocation))
+
+				if (overwritten.length > 0) {
+					confirmModalRef.current?.show(
+						`Overwrite ${describeButtons(overwritten.length)}`,
+						[
+							`This will replace ${describeButtons(overwritten.length)} already here.`,
+							`There's no going back from this.`,
+						],
+						'Overwrite',
+						apply
+					)
+					return
+				}
+
+				apply()
 			},
-			isOccupied: (location) => Boolean(pages.getControlIdAtLocation(location)),
+			isOccupied,
 			pasteAt: (location) => pasteClipboardAt(location),
 			clearButtons: (locations) => {
 				if (locations.length === 0) return
@@ -181,7 +220,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				)
 			},
 		}),
-		[openEditor, fitsOnGrid, hotPressMutation, gridBatchTransferMutation, resetControlsMutation, gridStore, pages]
+		[openEditor, fitsOnGrid, isOccupied, hotPressMutation, gridBatchTransferMutation, resetControlsMutation, gridStore]
 	)
 
 	// Both the keyboard and the context menu paste through here, so a paste costs the same either way
@@ -191,30 +230,16 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			if (!clipboard || !gridSize) return
 
 			const operation = clipboard.mode === 'cut' ? 'move' : 'copy'
-			const pairs = buildTransferPairs(clipboard.locations, location)
+			const pairs = withoutEmptySources(operation, buildTransferPairs(clipboard.locations, location), isOccupied)
 
-			// Placing a button outside the grid puts it where nothing can reach it. Refusing the whole
-			// paste matches what dropping a region off the edge does, and means a cut can never destroy
-			// its source in exchange for nothing.
+			// `transfer` refuses this anyway, but silently - and a paste that appears to do nothing at all
+			// is worth explaining, since there is no ghost under a keyboard paste to have shown it coming
 			const offGrid = pairs.filter(({ toLocation }) => !fitsOnGrid([toLocation]))
-
-			// A cell the clipboard is vacating is not being overwritten by its own contents
-			const vacated = new Set(operation === 'move' ? clipboard.locations.map(formatLocation) : [])
-			const overwritten = pairs
-				.map(({ toLocation }) => toLocation)
-				.filter((to) => !vacated.has(formatLocation(to)) && pages.getControlIdAtLocation(to))
-
-			const apply = () => {
-				actions.transfer(operation, pairs)
-				if (clipboard.mode === 'cut') gridStore.clearClipboard()
-				setTabResetToken(nanoid())
-			}
-
 			if (offGrid.length > 0) {
 				confirmModalRef.current?.show(
 					`Cannot paste here`,
 					[
-						`${offGrid.length} of the ${pairs.length} buttons would land outside the grid.`,
+						`${offGrid.length} of the ${describeButtons(pairs.length)} would land outside the grid.`,
 						`Nothing has been pasted. Try somewhere with more room, or make the grid bigger.`,
 					],
 					'OK',
@@ -223,22 +248,13 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				return
 			}
 
-			if (overwritten.length > 0) {
-				confirmModalRef.current?.show(
-					`Paste ${describeButtons(pairs.length)}`,
-					[
-						`This will replace ${describeButtons(overwritten.length)} already here.`,
-						`There's no going back from this.`,
-					],
-					'Paste',
-					apply
-				)
-				return
-			}
-
-			apply()
+			// Overwriting is confirmed inside `transfer`, so a cut is only spent once the paste has
+			// actually happened
+			actions.transfer(operation, pairs, () => {
+				if (clipboard.mode === 'cut') gridStore.clearClipboard()
+			})
 		},
-		[gridStore, gridSize, fitsOnGrid, pages, actions, setTabResetToken]
+		[gridStore, gridSize, fitsOnGrid, isOccupied, actions]
 	)
 
 	const navigateToControl = useCallback(
@@ -308,19 +324,9 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			// that happens to fit - the preview said as much while it was still being held
 			if (!plan || !plan.fitsOnGrid) return
 
-			if (plan.overwrittenLocations.length > 0 && plan.operation !== 'swap') {
-				confirmModalRef.current?.show(
-					`Overwrite ${plan.overwrittenLocations.length} button${plan.overwrittenLocations.length === 1 ? '' : 's'}`,
-					`Moving here will replace ${plan.overwrittenLocations.length} existing button${
-						plan.overwrittenLocations.length === 1 ? '' : 's'
-					}. There's no going back from this.`,
-					'Overwrite',
-					() => actions.transfer(plan.operation, plan.pairs)
-				)
-				return
-			}
-
-			actions.transfer(plan.operation, plan.pairs)
+			// Overwriting is confirmed inside `transfer`, the same way it is for every other way of
+			// moving buttons about
+			actions.transfer(plan.operation, plan.pairs, () => undefined)
 		},
 	})
 

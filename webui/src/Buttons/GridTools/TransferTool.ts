@@ -1,5 +1,5 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { buildTransferPairs, locationsInRectangle, previewPlacements } from '../GridGeometry.js'
+import { buildTransferPairs, locationsInRectangle, previewPlacements, withoutEmptySources } from '../GridGeometry.js'
 import { GridToolBase, type GridToolContext, type GridToolId, type GridTransferOperation } from './types.js'
 
 const VERBS: Record<GridTransferOperation, string> = {
@@ -56,8 +56,8 @@ export class TransferTool extends GridToolBase {
 	override onMarquee(ctx: GridToolContext, from: ControlLocation, to: ControlLocation): void {
 		const region = locationsInRectangle(from, to)
 
-		// The gaps in a region are part of its shape and travel with it, but a box containing nothing
-		// at all is a stray drag rather than a choice
+		// The gaps in a region are part of its shape - they set where the buttons around them land, and
+		// place nothing of their own - but a box containing nothing at all is a stray drag, not a choice
 		if (!region.some((location) => ctx.actions.isOccupied(location))) return
 
 		this.#sources = region
@@ -89,7 +89,7 @@ export class TransferTool extends GridToolBase {
 			return
 		}
 
-		const pairs = buildTransferPairs(this.#sources, location)
+		const pairs = this.#pairsFor(ctx, location)
 
 		// A region that would hang off the grid is refused outright rather than placing the part of it
 		// that happens to fit and losing the rest somewhere unreachable. The tool keeps hold of the
@@ -97,13 +97,31 @@ export class TransferTool extends GridToolBase {
 		// ghost has already been showing this as refused.
 		if (!ctx.actions.fitsOnGrid(pairs.map((pair) => pair.toLocation))) return
 
+		// Only once it has actually happened. Overwriting asks first, and backing out of that question
+		// should leave the buttons still in hand rather than dropped somewhere unasked for.
+		//
 		// The selection is left to follow the buttons to their destination, which `transfer` handles
-		ctx.actions.transfer(this.#operation, pairs)
+		ctx.actions.transfer(this.#operation, pairs, () => {
+			// Ready for the next one
+			this.#sources = null
+			ctx.store.setDragPreview(null)
+			ctx.store.notifyToolChanged()
+		})
+	}
 
-		// Ready for the next one
-		this.#sources = null
-		ctx.store.setDragPreview(null)
-		ctx.store.notifyToolChanged()
+	/**
+	 * Where each button would go, minus the gaps in the region.
+	 *
+	 * The gaps still decide where everything lands - they are part of the shape that was picked up -
+	 * but they have nothing of their own to place, so they are not shown as destinations and cannot
+	 * be counted as overwriting anything.
+	 */
+	#pairsFor(ctx: GridToolContext, location: ControlLocation) {
+		return withoutEmptySources(
+			this.#operation,
+			buildTransferPairs(this.#sources ?? [], location),
+			ctx.actions.isOccupied
+		)
 	}
 
 	/**
@@ -121,7 +139,7 @@ export class TransferTool extends GridToolBase {
 			return
 		}
 
-		const pairs = buildTransferPairs(this.#sources, location)
+		const pairs = this.#pairsFor(ctx, location)
 		ctx.store.setDragPreview({
 			placements: previewPlacements(this.#operation, pairs),
 			valid: ctx.actions.fitsOnGrid(pairs.map((pair) => pair.toLocation)),

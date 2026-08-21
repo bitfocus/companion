@@ -65,40 +65,52 @@ export function planGridTransfer(
 		}
 	}
 
+	// The gaps in a region are its shape, not its contents. They decide where the buttons around them
+	// land and then have nothing of their own to place, so they leave what they land on alone -
+	// copying a hole over a button is not a way to delete that button.
+	//
+	// A swap is the exception: trading with an empty cell is how a button is moved into one, and
+	// nothing is destroyed by it either way.
+	const carryingPairs =
+		operation === 'swap' ? realPairs : realPairs.filter(({ fromLocation }) => !!getControlIdAt(fromLocation))
+
 	/** What is at each location we are about to touch, read before anything moves */
 	const occupantBefore = new Map<string, string | null>()
 	const rememberOccupant = (location: ControlLocation) => {
 		const key = formatLocation(location)
 		if (!occupantBefore.has(key)) occupantBefore.set(key, getControlIdAt(location))
 	}
-	for (const { fromLocation, toLocation } of realPairs) {
+	for (const { fromLocation, toLocation } of carryingPairs) {
 		rememberOccupant(fromLocation)
 		rememberOccupant(toLocation)
 	}
 
 	const placementByKey = new Map<string, GridPlacement>()
 
-	for (const { fromLocation, toLocation } of realPairs) {
+	for (const { fromLocation, toLocation } of carryingPairs) {
 		const fromControlId = occupantBefore.get(formatLocation(fromLocation)) ?? null
 
 		switch (operation) {
+			// Both of these only ever see a source with something in it - an empty one was filtered out
+			// above - so there is no case here that empties a destination
 			case 'copy':
-				// An empty source clears its destination, so the gaps in a region survive the copy
-				placementByKey.set(
-					formatLocation(toLocation),
-					fromControlId
-						? { location: toLocation, kind: 'clone', sourceControlId: fromControlId }
-						: { location: toLocation, kind: 'empty' }
-				)
+				if (fromControlId) {
+					placementByKey.set(formatLocation(toLocation), {
+						location: toLocation,
+						kind: 'clone',
+						sourceControlId: fromControlId,
+					})
+				}
 				break
 
 			case 'move':
-				placementByKey.set(
-					formatLocation(toLocation),
-					fromControlId
-						? { location: toLocation, kind: 'existing', controlId: fromControlId }
-						: { location: toLocation, kind: 'empty' }
-				)
+				if (fromControlId) {
+					placementByKey.set(formatLocation(toLocation), {
+						location: toLocation,
+						kind: 'existing',
+						controlId: fromControlId,
+					})
+				}
 				break
 
 			case 'swap': {
@@ -123,7 +135,7 @@ export function planGridTransfer(
 
 	// A moved-from location that nothing is being placed into is left empty
 	if (operation === 'move') {
-		for (const { fromLocation } of realPairs) {
+		for (const { fromLocation } of carryingPairs) {
 			const key = formatLocation(fromLocation)
 			if (!placementByKey.has(key)) placementByKey.set(key, { location: fromLocation, kind: 'empty' })
 		}
