@@ -30,8 +30,11 @@ export class TransferTool extends GridToolBase {
 	readonly #operation: GridTransferOperation
 
 	/**
-	 * What is being transferred, once chosen. Held here rather than read from the selection so that
-	 * changing page mid-transfer cannot lose it - that is what makes copying between pages work.
+	 * What is being transferred, once chosen.
+	 *
+	 * Held here rather than read from the selection as we go, so that changing page mid-transfer
+	 * cannot lose it - that is what makes copying between pages work. While a tool holds buttons they
+	 * are not selected: one or the other owns them, never both.
 	 */
 	#sources: ControlLocation[] | null = null
 
@@ -55,7 +58,12 @@ export class TransferTool extends GridToolBase {
 		// selected button is just the one you last looked at - clicking a button to see it selects it -
 		// so treating that as the source would silently make your first tap the destination.
 		const selection = ctx.store.selectedLocations
-		this.#sources = selection.length > 1 ? [...selection] : null
+		if (selection.length <= 1) return
+
+		// Picked up, not selected. Leaving them selected as well means two copies of the same thing,
+		// and anything that clears one - deselecting, say - leaves the other behind still holding them.
+		this.#sources = [...selection]
+		ctx.store.clearSelection()
 	}
 
 	override onExit(_ctx: GridToolContext): void {
@@ -80,8 +88,11 @@ export class TransferTool extends GridToolBase {
 	override onBack(ctx: GridToolContext): boolean {
 		if (!this.#sources) return false
 
+		// Put them back where they came from rather than dropping them entirely. Backing out of a
+		// misclicked tool should not cost you the selection you built up to use it.
+		const released = this.#sources
 		this.#sources = null
-		ctx.store.notifyToolChanged()
+		ctx.store.setSelection(released)
 		return true
 	}
 }

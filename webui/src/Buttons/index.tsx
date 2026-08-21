@@ -297,6 +297,15 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		if (hasMultipleSelected && isLargeScreen) setActiveTab('edit')
 	}, [hasMultipleSelected, isLargeScreen])
 
+	// That tab only exists while there is something for it to show. Dropping the selection - or handing
+	// it to a tool that picks the buttons up - takes it away, and leaves the panel blank if it was the
+	// tab you were on.
+	useEffect(() => {
+		if (!selectedButton && !hasMultipleSelected) {
+			setActiveTab((oldTab) => (oldTab === 'edit' ? 'pages' : oldTab))
+		}
+	}, [selectedButton, hasMultipleSelected])
+
 	const gridView = useMemo<ButtonGridView>(
 		() => ({ store: gridStore, actions, onContextMenu: doButtonContextMenu }),
 		[gridStore, actions, doButtonContextMenu]
