@@ -7,18 +7,24 @@
 }
 
 .button-grid-selection-preview {
-	/* The grid draws its buttons at 72px, and this is a picture of that grid - drawn any larger the
-	   previews are being upscaled past the size they were rendered at, and look it */
-	--selection-tile-size: 72px;
+	/* Twice what the grid draws at. Past that the previews are upscaled well beyond their render
+	   size and go soft. */
+	--selection-tile-max: 144px;
+	--selection-tile-gap: 2px;
 
 	display: grid;
-	gap: 2px;
-	justify-content: start;
+	grid-template-columns: repeat(var(--selection-columns), minmax(0, 1fr));
+	gap: var(--selection-tile-gap);
 
-	/* Wide selections must not push the panel sideways */
-	max-width: 100%;
+	/* Whichever is smaller: the room available, or the point at which tiles stop growing. Capping the
+	   whole grid rather than each column is what keeps this from ever needing a scrollbar. */
+	max-width: min(
+		100%,
+		calc(
+			var(--selection-columns) * var(--selection-tile-max) + (var(--selection-columns) - 1) * var(--selection-tile-gap)
+		)
+	);
 	margin-bottom: 1rem;
-	overflow-x: auto;
 }
 
 /* Square, like the buttons beside them, rather than collapsing to nothing in an empty row */

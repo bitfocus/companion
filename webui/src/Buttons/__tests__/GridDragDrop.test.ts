@@ -24,6 +24,7 @@ describe('planGridDrop', () => {
 			operation: 'move',
 			pairs: [{ fromLocation: at(1, 1), toLocation: at(2, 3) }],
 			overwrittenLocations: [],
+			fitsOnGrid: true,
 		})
 	})
 
@@ -50,16 +51,23 @@ describe('planGridDrop', () => {
 		])
 	})
 
-	it('refuses a drop that would hang off the grid', () => {
+	it('reports a drop that would hang off the grid, rather than vanishing', () => {
+		// Still described, so the cells can be shown as a refused landing spot while it is being held
 		const sources = [at(1, 6), at(1, 7)]
+		const plan = planGridDrop(at(1, 6), at(1, 7), sources, GRID_SIZE, nothingOccupied)
 
-		expect(planGridDrop(at(1, 6), at(1, 7), sources, GRID_SIZE, nothingOccupied)).toBeNull()
+		expect(plan?.fitsOnGrid).toBe(false)
+		expect(plan?.pairs).toHaveLength(2)
 	})
 
-	it('refuses rather than dropping only the buttons that fit', () => {
+	it('will not drop only the buttons that fit', () => {
 		const sources = [at(0, 0), at(1, 0), at(2, 0), at(3, 0)]
 
-		expect(planGridDrop(at(0, 0), at(1, 0), sources, GRID_SIZE, nothingOccupied)).toBeNull()
+		expect(planGridDrop(at(0, 0), at(1, 0), sources, GRID_SIZE, nothingOccupied)?.fitsOnGrid).toBe(false)
+	})
+
+	it('fits when the whole region lands on the grid', () => {
+		expect(planGridDrop(at(1, 1), at(2, 3), [at(1, 1)], GRID_SIZE, nothingOccupied)?.fitsOnGrid).toBe(true)
 	})
 
 	it('reports what would be overwritten', () => {

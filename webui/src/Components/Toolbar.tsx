@@ -91,6 +91,16 @@ function ToolbarGroup({ children }: { children: React.ReactNode }): React.JSX.El
 	return <div className="toolbar-group">{children}</div>
 }
 
+/**
+ * The status and whatever sits after it, kept on the same row as each other.
+ *
+ * Without this the trailing buttons wrap on their own, leaving the message on one row and a lone
+ * button stranded on the next.
+ */
+function ToolbarTail({ children }: { children: React.ReactNode }): React.JSX.Element {
+	return <div className="toolbar-tail">{children}</div>
+}
+
 interface ToolbarStatusProps {
 	/** Rendered dimmed, for when the toolbar is only saying what mode it is in */
 	muted?: boolean
@@ -122,4 +132,5 @@ export const Toolbar = {
 	Separator: ToolbarSeparator,
 	Group: ToolbarGroup,
 	Status: ToolbarStatus,
+	Tail: ToolbarTail,
 }

@@ -106,21 +106,25 @@ export function ButtonGridToolbar(): React.JSX.Element {
 				<Toolbar.Separator />
 				<Toolbar.Group>{TRANSFER_TOOLS.map(renderTool)}</Toolbar.Group>
 
-				<GridToolbarStatus
-					pressMode={pressMode}
-					hint={hint}
-					selectionCount={selectionCount}
-					selectionPageNumber={selectionPageNumber}
-					activeToolId={activeToolId}
-				/>
+				{/* Kept together, so a bar too narrow to hold them beside the tools moves both to the next
+				    row rather than stranding the button on its own */}
+				<Toolbar.Tail>
+					<GridToolbarStatus
+						pressMode={pressMode}
+						hint={hint}
+						selectionCount={selectionCount}
+						selectionPageNumber={selectionPageNumber}
+						activeToolId={activeToolId}
+					/>
 
-				<Toolbar.Button
-					icon={faXmark}
-					title="Stop what the grid is in the middle of"
-					ariaLabel="Cancel"
-					onClick={cancel}
-					disabled={!canCancel}
-				/>
+					<Toolbar.Button
+						icon={faXmark}
+						title="Stop what the grid is in the middle of"
+						ariaLabel="Cancel"
+						onClick={cancel}
+						disabled={!canCancel}
+					/>
+				</Toolbar.Tail>
 			</Toolbar.Root>
 		</div>
 	)

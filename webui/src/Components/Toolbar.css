@@ -131,12 +131,22 @@
 
 /* Fills whatever the buttons leave, so the toolbar is one full-width bar rather than a huddle of
    buttons, and so it keeps one height whether or not there is anything to report */
+/* A fixed basis rather than its content width: below this much room the whole tail drops to its own
+   row and gets the full width, and above it it stretches to fill. Sizing from the content instead
+   would move the message between rows as the message changed, so the toolbar's height would depend
+   on what it happened to be saying. */
+.toolbar-tail {
+	flex: 1 1 14rem;
+	min-width: 0;
+
+	display: flex;
+	align-items: center;
+	align-self: stretch;
+	gap: 2px;
+}
+
 .toolbar-status {
-	/* A fixed basis rather than its content width: below this much room it drops to its own row and
-	   gets the full width, and above it it stretches to fill. Sizing from the content instead would
-	   move the message between rows as the message changed, so the toolbar's height would depend on
-	   what it happened to be saying. */
-	flex: 1 1 12rem;
+	flex: 1 1 auto;
 	min-width: 0;
 
 	padding: 0 10px;

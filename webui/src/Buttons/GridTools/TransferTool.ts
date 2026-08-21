@@ -69,11 +69,11 @@ export class TransferTool extends GridToolBase {
 			return
 		}
 
+		// The selection is left to follow the buttons to their destination, which `transfer` handles
 		ctx.actions.transfer(this.#operation, buildTransferPairs(this.#sources, location))
 
 		// Ready for the next one
 		this.#sources = null
-		ctx.store.clearSelection()
 		ctx.store.notifyToolChanged()
 	}
 

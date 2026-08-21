@@ -62,10 +62,11 @@ export function ButtonGridSelectionPanel(): React.JSX.Element {
 			{cellCount <= MAX_PREVIEW_CELLS ? (
 				<div
 					className="button-grid-selection-preview"
-					// Columns cap out at a normal button's size and shrink from there. Letting them share the
-					// panel width instead blew a single-column selection up to the full width of the panel,
-					// where the previews are upscaled past their render size and go soft.
-					style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, var(--selection-tile-size)))` }}
+					// Columns share the width available, but the whole thing is capped so a tile never grows
+					// past twice the size the grid draws at - beyond that the previews are being upscaled
+					// well past the size they were rendered for, and look it. Capping the container rather
+					// than each column means it can never need a scrollbar either.
+					style={{ '--selection-columns': columns } as React.CSSProperties}
 				>
 					{Array.from({ length: cellCount }, (_, index) => {
 						const location: ControlLocation = {

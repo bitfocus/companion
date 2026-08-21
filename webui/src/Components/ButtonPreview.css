@@ -54,6 +54,13 @@
 		background-color: var(--color-drop-hover-bg);
 	}
 
+	/* Marked as a landing spot, but releasing here would be refused - usually because the rest of the
+	   region would hang off the grid */
+	&.dropinvalid {
+		border: 1px solid var(--color-danger);
+		background-color: color-mix(in srgb, var(--color-danger) 25%, transparent);
+	}
+
 	/* dnd-kit: blur the in-pool preset that is currently being dragged (a clone is what follows the
 	   cursor). The `:not([popover])` guard excludes the floating clone, which dnd-kit renders as a
 	   top-layer popover, so only the original in the pool is blurred. */

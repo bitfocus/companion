@@ -333,6 +333,16 @@ describe('ButtonGridStore', () => {
 			expect(store.isTransferSource('1/1/1')).toBe(true)
 		})
 
+		it('leaves the selection where the buttons landed', () => {
+			// The transfer action moves the selection to the destinations; the tool must not undo that
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.setSelection([at(2, 2)])
+			store.handleTap(at(2, 2), NO_MODIFIERS, actions)
+
+			expect(store.selectedLocations).toEqual([at(2, 2)])
+		})
+
 		it('stays armed afterwards, ready for the next source', () => {
 			store.setTool('copy', actions)
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
@@ -502,6 +512,51 @@ describe('ButtonGridStore', () => {
 
 			store.setTool('copy', actions)
 			expect(store.hint(actions)).toBe('Where do you want it?')
+		})
+	})
+
+	describe('drag preview', () => {
+		it('marks every cell the region would land on, not just the one under the cursor', () => {
+			store.setDragPreview({ keys: new Set(['1/1/1', '1/1/2']), valid: true })
+
+			expect(store.isDropDestination('1/1/1')).toBe(true)
+			expect(store.isDropDestination('1/1/2')).toBe(true)
+			expect(store.isDropDestination('1/2/2')).toBe(false)
+		})
+
+		it('reports a drop that would be refused', () => {
+			expect(store.dragPreviewValid).toBe(true)
+
+			store.setDragPreview({ keys: new Set(['1/1/1']), valid: false })
+			expect(store.dragPreviewValid).toBe(false)
+		})
+
+		it('clears when the drag ends', () => {
+			store.setDragPreview({ keys: new Set(['1/1/1']), valid: true })
+			store.setDragPreview(null)
+
+			expect(store.isDropDestination('1/1/1')).toBe(false)
+		})
+
+		it('does not wake every cell for an unchanged answer', () => {
+			// This runs on every pointer move of a drag
+			store.setDragPreview({ keys: new Set(['1/1/1', '1/1/2']), valid: true })
+
+			const listener = vi.fn()
+			store.subscribe(listener)
+			store.setDragPreview({ keys: new Set(['1/1/2', '1/1/1']), valid: true })
+
+			expect(listener).not.toHaveBeenCalled()
+		})
+
+		it('does notify when the region moves', () => {
+			store.setDragPreview({ keys: new Set(['1/1/1']), valid: true })
+
+			const listener = vi.fn()
+			store.subscribe(listener)
+			store.setDragPreview({ keys: new Set(['1/1/2']), valid: true })
+
+			expect(listener).toHaveBeenCalled()
 		})
 	})
 

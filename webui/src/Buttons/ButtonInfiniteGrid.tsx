@@ -11,6 +11,8 @@ import useScrollPosition from '~/Hooks/useScrollPosition.js'
 import {
 	useButtonGridView,
 	useGridDragAnyButton,
+	useGridDragPreviewValid,
+	useGridIsDropDestination,
 	useGridIsSelected,
 	useGridIsTransferSource,
 	useGridPressMode,
@@ -458,9 +460,11 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 		accept: ['preset', GRID_BUTTON_DRAG_TYPE],
 	})
 
-	// Something droppable is being dragged within the provider - highlight all valid targets
+	// A preset can go on any button, which is worth saying while one is in flight. Dragging a button
+	// around the grid can also land anywhere, so marking every cell says nothing - what matters there
+	// is the landing region, which lights up on its own.
 	const { source } = useDragOperation()
-	const canDrop = source?.type === 'preset' || source?.type === GRID_BUTTON_DRAG_TYPE
+	const canDrop = source?.type === 'preset'
 
 	const location: ControlLocation = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
 	const locationKey = formatLocation(location)
@@ -471,6 +475,10 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 	const isTransferSource = useGridIsTransferSource(locationKey)
 	const pressMode = useGridPressMode()
 	const dragAnyButton = useGridDragAnyButton()
+
+	// Where the whole region being dragged would land, not just the cell under the cursor
+	const isDropDestination = useGridIsDropDestination(locationKey)
+	const dropWouldWork = useGridDragPreviewValid()
 
 	// In select mode only an already-selected button drags, so dragging anywhere else can still
 	// rubber-band. Arrange lets any button drag. Press mode lets none - a drag must never swallow a
@@ -511,7 +519,8 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 			copySource={isTransferSource}
 			contextMenuOpen={contextMenuOpen}
 			canDrop={canDrop}
-			dropHover={isDropTarget}
+			dropHover={isDropTarget || isDropDestination}
+			dropInvalid={isDropDestination && !dropWouldWork}
 			dropRef={drop}
 			dragRef={dragRef}
 			isDragSource={isDragSource}

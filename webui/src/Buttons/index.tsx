@@ -136,6 +136,10 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				gridBatchTransferMutation
 					.mutateAsync({ operation, pairs })
 					.catch((e) => console.error(`${operation} failed: ${e}`))
+
+				// Follow the buttons to where they landed. Leaving the old positions selected points at
+				// where they used to be, which is no use for whatever you want to do next.
+				gridStore.setSelection(pairs.map((pair) => pair.toLocation))
 				setTabResetToken(nanoid())
 			},
 			clearButtons: (locations) => {
@@ -156,7 +160,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				)
 			},
 		}),
-		[openEditor, hotPressMutation, gridBatchTransferMutation, resetControlsMutation]
+		[openEditor, hotPressMutation, gridBatchTransferMutation, resetControlsMutation, gridStore]
 	)
 
 	const navigateToControl = useCallback(
@@ -184,7 +188,20 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	// Subscribed via the global dnd-kit provider; we filter drags by `type`.
 	const importPresetMutation = useMutationExt(trpc.controls.importPreset.mutationOptions())
 	useDragDropMonitor({
+		onDragOver(event) {
+			const { source, target } = event.operation
+			if (!source || source.type !== GRID_BUTTON_DRAG_TYPE) return
+
+			const plan = target ? resolveGridDrop(source, target.id) : null
+			gridStore.setDragPreview(
+				plan
+					? { keys: new Set(plan.pairs.map((pair) => formatLocation(pair.toLocation))), valid: plan.fitsOnGrid }
+					: null
+			)
+		},
 		onDragEnd(event) {
+			gridStore.setDragPreview(null)
+
 			if (event.canceled) return
 			const { source, target } = event.operation
 			if (!source || !target) return
@@ -208,21 +225,12 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				return
 			}
 
-			if (source.type !== GRID_BUTTON_DRAG_TYPE || !gridSize) return
+			if (source.type !== GRID_BUTTON_DRAG_TYPE) return
 
-			const destination = parseGridButtonDroppableId(target.id)
-			if (!destination) return
-
-			// Dragging a button that is part of the selection takes the whole selection with it
-			const origin = (source.data as GridButtonDragItem).location
-			const selection = gridStore.selectedLocations
-			const originKey = formatLocation(origin)
-			const sources = selection.some((l) => formatLocation(l) === originKey) ? [...selection] : [origin]
-
-			const plan = planGridDrop(origin, destination, sources, gridSize, (location) =>
-				Boolean(pages.getControlIdAtLocation(location))
-			)
-			if (!plan) return
+			const plan = resolveGridDrop(source, target.id)
+			// A region that would hang off the grid is refused outright rather than dropping the part
+			// that happens to fit - the preview said as much while it was still being held
+			if (!plan || !plan.fitsOnGrid) return
 
 			if (plan.overwrittenLocations.length > 0 && plan.operation !== 'swap') {
 				confirmModalRef.current?.show(
@@ -239,6 +247,30 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			actions.transfer(plan.operation, plan.pairs)
 		},
 	})
+
+	// Resolving the drag the same way for the preview and for the drop is what stops the two
+	// disagreeing about where the buttons were going to land
+	const resolveGridDrop = useCallback(
+		(source: { data: unknown } | null, targetId: unknown) => {
+			if (!gridSize) return null
+
+			const destination = parseGridButtonDroppableId(targetId)
+			if (!destination) return null
+
+			const origin = (source?.data as GridButtonDragItem | undefined)?.location
+			if (!origin) return null
+
+			// Dragging a button that is part of the selection takes the whole selection with it
+			const selection = gridStore.selectedLocations
+			const originKey = formatLocation(origin)
+			const sources = selection.some((l) => formatLocation(l) === originKey) ? [...selection] : [origin]
+
+			return planGridDrop(origin, destination, sources, gridSize, (location) =>
+				Boolean(pages.getControlIdAtLocation(location))
+			)
+		},
+		[gridSize, gridStore, pages]
+	)
 
 	const {
 		contextMenuOpen,
