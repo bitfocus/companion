@@ -57,3 +57,27 @@ export function previewPlacements(
 
 	return placements
 }
+
+/**
+ * Drop the pairs that have nothing to carry.
+ *
+ * The gaps in a region are its shape, not its contents: they decide where the buttons around them
+ * land, and then they have nothing of their own to place. Letting them clear what they land on turns
+ * "copy these five buttons" into "and wipe whatever was in the gaps between them", which is never
+ * what drawing a box around a handful of buttons meant.
+ *
+ * A swap is the exception - trading with an empty cell is how a button is moved into one, and it
+ * destroys nothing either way.
+ *
+ * The backend applies the same rule, so this is about what the grid shows and warns about rather
+ * than what it is allowed to do.
+ */
+export function withoutEmptySources(
+	operation: GridTransferOperation,
+	pairs: GridTransferPair[],
+	isOccupied: (location: ControlLocation) => boolean
+): GridTransferPair[] {
+	if (operation === 'swap') return pairs
+
+	return pairs.filter(({ fromLocation }) => isOccupied(fromLocation))
+}

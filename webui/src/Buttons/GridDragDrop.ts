@@ -1,6 +1,7 @@
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { withoutEmptySources } from './GridGeometry.js'
 import type { GridTransferOperation, GridTransferPair } from './GridTools/types.js'
 
 export interface GridDropPlan {
@@ -34,14 +35,21 @@ export function planGridDrop(
 
 	if (rowOffset === 0 && columnOffset === 0 && destination.pageNumber === origin.pageNumber) return null
 
-	const pairs: GridTransferPair[] = sources.map((fromLocation) => ({
-		fromLocation,
-		toLocation: {
-			pageNumber: destination.pageNumber,
-			row: fromLocation.row + rowOffset,
-			column: fromLocation.column + columnOffset,
-		},
-	}))
+	// The gaps in a selection still set where everything lands, but carry nothing of their own, so
+	// they are dropped once the offsets have been worked out from them
+	const pairs: GridTransferPair[] = withoutEmptySources(
+		'move',
+		sources.map((fromLocation) => ({
+			fromLocation,
+			toLocation: {
+				pageNumber: destination.pageNumber,
+				row: fromLocation.row + rowOffset,
+				column: fromLocation.column + columnOffset,
+			},
+		})),
+		isOccupied
+	)
+	if (pairs.length === 0) return null
 
 	// All or nothing: dropping only the buttons that happen to fit would quietly lose the rest
 	const fitsOnGrid = pairs.every(
@@ -52,7 +60,7 @@ export function planGridDrop(
 			toLocation.column <= gridSize.maxColumn
 	)
 
-	const sourceKeys = new Set(sources.map(formatLocation))
+	const sourceKeys = new Set(pairs.map(({ fromLocation }) => formatLocation(fromLocation)))
 	const overwrittenLocations = pairs
 		.map(({ toLocation }) => toLocation)
 		// A cell the region is vacating anyway is not being overwritten

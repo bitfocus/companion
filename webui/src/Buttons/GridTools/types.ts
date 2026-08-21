@@ -19,7 +19,11 @@ export interface GridTransferPair {
 export interface GridToolActions {
 	openEditor: (location: ControlLocation) => void
 	press: (location: ControlLocation, isDown: boolean) => void
-	transfer: (operation: GridTransferOperation, pairs: GridTransferPair[]) => void
+	/**
+	 * Move buttons about. Refuses a placement that would fall off the grid and asks before replacing
+	 * anything, so `onApplied` runs only once the transfer has actually been sent.
+	 */
+	transfer: (operation: GridTransferOperation, pairs: GridTransferPair[], onApplied: () => void) => void
 	/** Asks the user to confirm, then clears */
 	clearButtons: (locations: ControlLocation[]) => void
 	/** Whether there is a button here at all */

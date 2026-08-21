@@ -20,7 +20,8 @@ function makeActions(): GridToolActions {
 	return {
 		openEditor: vi.fn(),
 		press: vi.fn(),
-		transfer: vi.fn(),
+		// The real one asks before replacing anything, and only reports back once it has happened
+		transfer: vi.fn((_operation, _pairs, onApplied: () => void) => onApplied()),
 		clearButtons: vi.fn(),
 		// Tests act on a grid where every cell holds a button unless they say otherwise
 		isOccupied: vi.fn(() => true),
@@ -351,7 +352,11 @@ describe('ButtonGridStore', () => {
 			expect(actions.transfer).not.toHaveBeenCalled()
 
 			store.handleTap(at(2, 2), NO_MODIFIERS, actions)
-			expect(actions.transfer).toHaveBeenCalledWith('copy', [{ fromLocation: at(1, 1), toLocation: at(2, 2) }])
+			expect(actions.transfer).toHaveBeenCalledWith(
+				'copy',
+				[{ fromLocation: at(1, 1), toLocation: at(2, 2) }],
+				expect.any(Function)
+			)
 		})
 
 		it('marks the picked-up button while waiting for a destination', () => {
@@ -414,10 +419,14 @@ describe('ButtonGridStore', () => {
 			expect(store.hint(actions)).toBe('Where do you want it?')
 
 			store.handleTap(at(2, 2), NO_MODIFIERS, actions)
-			expect(actions.transfer).toHaveBeenCalledWith('move', [
-				{ fromLocation: at(1, 1), toLocation: at(2, 2) },
-				{ fromLocation: at(1, 2), toLocation: at(2, 3) },
-			])
+			expect(actions.transfer).toHaveBeenCalledWith(
+				'move',
+				[
+					{ fromLocation: at(1, 1), toLocation: at(2, 2) },
+					{ fromLocation: at(1, 2), toLocation: at(2, 3) },
+				],
+				expect.any(Function)
+			)
 		})
 
 		it('still asks for a source when only the button you were looking at is selected', () => {
@@ -432,7 +441,11 @@ describe('ButtonGridStore', () => {
 			expect(actions.transfer).not.toHaveBeenCalled()
 
 			store.handleTap(at(2, 2), NO_MODIFIERS, actions)
-			expect(actions.transfer).toHaveBeenCalledWith('copy', [{ fromLocation: at(3, 3), toLocation: at(2, 2) }])
+			expect(actions.transfer).toHaveBeenCalledWith(
+				'copy',
+				[{ fromLocation: at(3, 3), toLocation: at(2, 2) }],
+				expect.any(Function)
+			)
 		})
 
 		it('keeps a region together, anchored at the tapped cell', () => {
@@ -442,12 +455,16 @@ describe('ButtonGridStore', () => {
 
 			store.handleTap(at(0, 5), NO_MODIFIERS, actions)
 
-			expect(actions.transfer).toHaveBeenCalledWith('copy', [
-				{ fromLocation: at(1, 1), toLocation: at(0, 5) },
-				{ fromLocation: at(1, 2), toLocation: at(0, 6) },
-				{ fromLocation: at(2, 1), toLocation: at(1, 5) },
-				{ fromLocation: at(2, 2), toLocation: at(1, 6) },
-			])
+			expect(actions.transfer).toHaveBeenCalledWith(
+				'copy',
+				[
+					{ fromLocation: at(1, 1), toLocation: at(0, 5) },
+					{ fromLocation: at(1, 2), toLocation: at(0, 6) },
+					{ fromLocation: at(2, 1), toLocation: at(1, 5) },
+					{ fromLocation: at(2, 2), toLocation: at(1, 6) },
+				],
+				expect.any(Function)
+			)
 		})
 
 		it('survives a page change, so a button can be copied to another page', () => {
@@ -460,7 +477,11 @@ describe('ButtonGridStore', () => {
 			expect(store.hint(actions)).toBe('Where do you want it?')
 
 			store.handleTap(at(1, 1, 2), NO_MODIFIERS, actions)
-			expect(actions.transfer).toHaveBeenCalledWith('copy', [{ fromLocation: at(1, 1, 1), toLocation: at(1, 1, 2) }])
+			expect(actions.transfer).toHaveBeenCalledWith(
+				'copy',
+				[{ fromLocation: at(1, 1, 1), toLocation: at(1, 1, 2) }],
+				expect.any(Function)
+			)
 		})
 	})
 
@@ -762,10 +783,14 @@ describe('ButtonGridStore', () => {
 
 			store.handleTap(at(3, 4), NO_MODIFIERS, actions)
 
-			expect(actions.transfer).toHaveBeenCalledWith('move', [
-				{ fromLocation: at(1, 1), toLocation: at(3, 4) },
-				{ fromLocation: at(1, 2), toLocation: at(3, 5) },
-			])
+			expect(actions.transfer).toHaveBeenCalledWith(
+				'move',
+				[
+					{ fromLocation: at(1, 1), toLocation: at(3, 4) },
+					{ fromLocation: at(1, 2), toLocation: at(3, 5) },
+				],
+				expect.any(Function)
+			)
 		})
 
 		it('stops offering a box once the transfer is asking where to put them', () => {
