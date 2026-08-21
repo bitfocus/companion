@@ -7,6 +7,7 @@ import {
 	type VariableValue,
 	type VariableValues,
 } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { CompanionOptionValues } from '@companion-module/base'
@@ -193,6 +194,25 @@ export class VariablesAndExpressionParser {
 			}
 
 			const parsedValue = this.parseEntityOption(optionValue, fieldType)
+
+			// Track the variables referenced in this field. This happens even when the expression failed,
+			// as it may have read variables before erroring - we want to re-evaluate (and recover) when
+			// they change. #4427
+			if (
+				!entityDefinition.optionsToMonitorForInvalidations ||
+				entityDefinition.optionsToMonitorForInvalidations.includes(field.id)
+			) {
+				for (const variable of parsedValue.variableIds) {
+					referencedVariableIds.add(variable)
+				}
+			}
+
+			if (!parsedValue.ok) {
+				// The expression failed to evaluate; record the error and fall back to the field default
+				parseErrors[field.id] = parsedValue.error
+				return 'default' in field ? structuredClone(field.default) : undefined
+			}
+
 			const { sanitisedValue, validationError } = validateInputValue(field, parsedValue.value, {
 				skipValidateExpression: true,
 			})
@@ -200,16 +220,6 @@ export class VariablesAndExpressionParser {
 			// Ensure values are valid, or report the error
 			if (!field.allowInvalidValues && validationError) {
 				parseErrors[field.id] = validationError
-			}
-
-			// Track the variables referenced in this field
-			if (
-				!entityDefinition.optionsToMonitorForInvalidations ||
-				entityDefinition.optionsToMonitorForInvalidations.includes(field.id)
-			) {
-				for (const variable of parsedValue.referencedVariableIds) {
-					referencedVariableIds.add(variable)
-				}
 			}
 
 			return sanitisedValue
@@ -223,50 +233,44 @@ export class VariablesAndExpressionParser {
 	}
 
 	/**
-	 * Parse a single option value for an entity
-	 * @param optionsValue The raw option value, either a plan value or an ExpressionOrValue
-	 * @param fieldType The type of field being parsed. This controls how the bare non-expression value is interpreted
-	 * @returns The value and the variables it references
+	 * Parse a single option value for an entity.
+	 *
+	 * This never throws: a failed expression is reported as `{ ok: false, error, variableIds }`, with
+	 * `variableIds` holding the variables referenced up until the failure. Callers can then still
+	 * register a dependency on those variables and re-evaluate (and potentially recover) when they
+	 * change - e.g. an expression that errors at startup before the variables it uses have a value. #4427
+	 *
+	 * @param rawValue The raw option value, either a plain value or an ExpressionOrValue
+	 * @param options The type of field being parsed. This controls how the bare non-expression value is interpreted
+	 * @returns The value (on success) and the variables it references
 	 */
 	parseEntityOption(
 		rawValue: ExpressionOrValue<JsonValue | undefined> | undefined,
 		options: VisitEntityOptionValueOptions
-	): {
-		value: JsonValue | undefined
-		referencedVariableIds: ReadonlySet<string>
-	} {
-		// No object, so just return undefined
-		if (!rawValue) {
-			return {
-				value: undefined,
-				referencedVariableIds: new Set(),
+	): ExecuteExpressionResult {
+		try {
+			// No object, so just return undefined
+			if (!rawValue) {
+				return { ok: true, value: undefined, variableIds: new Set() }
 			}
-		}
 
-		if ((rawValue.isExpression && options.allowExpression) || options.forceExpression) {
-			// Parse the expression
-			const parseResult = this.executeExpression(stringifyVariableValue(rawValue.value) ?? '', undefined)
-			if (!parseResult.ok) throw new Error(parseResult.error)
+			if ((rawValue.isExpression && options.allowExpression) || options.forceExpression) {
+				// Parse the expression. executeExpression already reports failures as a result (never throws)
+				// and carries the variables referenced up until any failure, so return it directly.
+				return this.executeExpression(stringifyVariableValue(rawValue.value) ?? '', undefined)
+			} else if ((!rawValue.isExpression || !options.allowExpression) && options.parseVariables) {
+				// Field needs parsing
+				// Note - we don't need to care about the granularity given in `useVariables`,
+				const parseResult = this.parseVariables(stringifyVariableValue(rawValue.value) ?? '')
 
-			return {
-				value: parseResult.value,
-				referencedVariableIds: parseResult.variableIds,
+				return { ok: true, value: parseResult.text, variableIds: parseResult.variableIds }
+			} else {
+				// 'expression-or-variables' with isExpression=false - just use the value as-is
+				return { ok: true, value: rawValue.value, variableIds: new Set() }
 			}
-		} else if ((!rawValue.isExpression || !options.allowExpression) && options.parseVariables) {
-			// Field needs parsing
-			// Note - we don't need to care about the granularity given in `useVariables`,
-			const parseResult = this.parseVariables(stringifyVariableValue(rawValue.value) ?? '')
-
-			return {
-				value: parseResult.text,
-				referencedVariableIds: parseResult.variableIds,
-			}
-		} else {
-			// 'expression-or-variables' with isExpression=false - just use the value as-is
-			return {
-				value: rawValue.value,
-				referencedVariableIds: new Set(),
-			}
+		} catch (e) {
+			// Backstop: parseEntityOption must never throw, so callers can always rely on the result shape
+			return { ok: false, error: stringifyError(e, true) || 'Unknown error', variableIds: new Set() }
 		}
 	}
 }

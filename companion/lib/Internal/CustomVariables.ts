@@ -112,12 +112,14 @@ export class InternalCustomVariables
 					const currentValue = this.#variableController.custom.getValue(variableName)
 					const childParser = parser.createChildParser({ 'this:current': currentValue })
 					const rawValue = action.rawEntity.rawOptions['value']
-					const { value } = childParser.parseEntityOption(rawValue, { allowExpression: true, parseVariables: true })
+					const parsed = childParser.parseEntityOption(rawValue, { allowExpression: true, parseVariables: true })
+					if (!parsed.ok)
+						throw new Error(`Failed to evaluate value for custom variable "${variableName}": ${parsed.error}`)
 
 					if (this.#variableController.custom.hasCustomVariable(variableName)) {
-						this.#variableController.custom.setValue(variableName, value)
+						this.#variableController.custom.setValue(variableName, parsed.value)
 					} else if (action.options.create) {
-						this.#variableController.custom.createVariable(variableName, value)
+						this.#variableController.custom.createVariable(variableName, parsed.value)
 					} else {
 						this.#logger.warn(`Custom variable "${variableName}" not found`)
 					}

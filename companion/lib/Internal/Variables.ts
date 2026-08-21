@@ -326,9 +326,13 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 				const context = this.#localVariables.getLocalVariableContextFor(localVariable) ?? {}
 				const childParser = parser.createChildParser(context)
 				const rawValue = action.rawEntity.rawOptions['value']
-				const { value } = childParser.parseEntityOption(rawValue, { allowExpression: true, parseVariables: true })
+				const parsed = childParser.parseEntityOption(rawValue, { allowExpression: true, parseVariables: true })
+				if (!parsed.ok)
+					throw new Error(
+						`Failed to evaluate value for local variable "${stringifyVariableValue(name)}": ${parsed.error}`
+					)
 
-				this.#localVariables.setLocalVariable(localVariable, value)
+				this.#localVariables.setLocalVariable(localVariable, parsed.value)
 
 				break
 			}

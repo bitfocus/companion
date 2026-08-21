@@ -321,6 +321,8 @@ export class InternalController {
 			let parsedOptions: CompanionOptionValues
 			if (entityDefinition.optionsSupportExpressions) {
 				const parseRes = parser.parseEntityOptions(entityDefinition, feedbackState.entityModel.options)
+				feedbackState.referencedVariables = parseRes.referencedVariableIds
+
 				if (!parseRes.ok) {
 					this.#logger.warn(
 						`Failed to parse options for feedback ${feedbackState.entityModel.definitionId} in control ${feedbackState.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
@@ -330,7 +332,6 @@ export class InternalController {
 					)
 				} else {
 					parsedOptions = parseRes.parsedOptions
-					feedbackState.referencedVariables = parseRes.referencedVariableIds
 				}
 			} else {
 				parsedOptions = convertExpressionOptionsWithoutParsing(feedbackState.entityModel.options)
