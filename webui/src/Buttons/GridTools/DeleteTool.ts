@@ -1,4 +1,5 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { locationsInRectangle } from '../GridGeometry.js'
 import { GridToolBase, type GridToolContext, type GridToolId } from './types.js'
 
 /**
@@ -23,6 +24,20 @@ export class DeleteTool extends GridToolBase {
 		if (selection.length > 1) ctx.actions.clearButtons([...selection])
 
 		ctx.store.clearSelection()
+	}
+
+	/** Dragging a box picks a region to clear, rather than tapping one button at a time */
+	override allowsMarquee(): boolean {
+		return true
+	}
+
+	override onMarquee(ctx: GridToolContext, from: ControlLocation, to: ControlLocation): void {
+		// Only the cells that hold something, so the count in the confirmation is the number of buttons
+		// actually about to go rather than the size of the box
+		const occupied = locationsInRectangle(from, to).filter((location) => ctx.actions.isOccupied(location))
+		if (occupied.length === 0) return
+
+		ctx.actions.clearButtons(occupied)
 	}
 
 	override onTap(ctx: GridToolContext, location: ControlLocation): void {

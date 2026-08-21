@@ -40,7 +40,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	onButtonContextMenu,
 }: ButtonsGridPanelProps) {
 	const { pages, userConfig } = useContext(RootAppStoreContext)
-	const { store } = useButtonGridView()
+	const { store, actions } = useButtonGridView()
 
 	const setPage = useCallback(
 		(newPage: number) => {
@@ -103,9 +103,11 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	const allowsMarquee = useGridAllowsMarquee()
 	const focus = useGridFocus()
 
-	const selectRectangle = useCallback(
-		(from: ControlLocation, to: ControlLocation, additive: boolean) => store.selectRectangle(from, to, additive),
-		[store]
+	// What a dragged box picks is the active tool's business: a region to select, the buttons a
+	// transfer should take, or the ones to clear
+	const handleMarquee = useCallback(
+		(from: ControlLocation, to: ControlLocation, additive: boolean) => store.handleMarquee(from, to, additive, actions),
+		[store, actions]
 	)
 
 	// Keyboard navigation is useless if it walks the focus off the edge of what you can see
@@ -160,7 +162,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 						ButtonIconFactory={PrimaryButtonGridIcon}
 						// A drag under a placing tool is not the start of a selection, so there is nothing to
 						// rubber-band and no stray box left behind
-						onMarqueeSelect={allowsMarquee ? selectRectangle : null}
+						onMarqueeSelect={allowsMarquee ? handleMarquee : null}
 						drawScale={gridZoomValue / 100}
 						setViewportMinHeight={setViewportMinHeight}
 					/>
