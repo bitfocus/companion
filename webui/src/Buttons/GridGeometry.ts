@@ -1,4 +1,6 @@
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { GridTransferOperation, GridTransferPair } from './GridTools/types.js'
 
 /** Every cell in the rectangle with these two locations at opposite corners */
 export function locationsInRectangle(from: ControlLocation, to: ControlLocation): ControlLocation[] {
@@ -14,4 +16,44 @@ export function locationsInRectangle(from: ControlLocation, to: ControlLocation)
 		}
 	}
 	return locations
+}
+
+/**
+ * Map each source onto the destination, anchoring the top-left of the sources' bounding box at the
+ * tapped cell. A single source therefore lands exactly where it was dropped, and a region keeps its
+ * shape.
+ */
+export function buildTransferPairs(sources: ControlLocation[], destination: ControlLocation): GridTransferPair[] {
+	const minRow = Math.min(...sources.map((l) => l.row))
+	const minColumn = Math.min(...sources.map((l) => l.column))
+
+	return sources.map((fromLocation) => ({
+		fromLocation,
+		toLocation: {
+			pageNumber: destination.pageNumber,
+			row: destination.row + (fromLocation.row - minRow),
+			column: destination.column + (fromLocation.column - minColumn),
+		},
+	}))
+}
+
+/**
+ * What the grid would look like with these pairs applied: each cell that changes, and where the
+ * button arriving there is coming from.
+ *
+ * A swap moves buttons both ways, so both ends are described - otherwise the preview would show what
+ * you are placing but not what it is displacing.
+ */
+export function previewPlacements(
+	operation: GridTransferOperation,
+	pairs: GridTransferPair[]
+): Map<string, ControlLocation> {
+	const placements = new Map<string, ControlLocation>()
+
+	for (const { fromLocation, toLocation } of pairs) {
+		placements.set(formatLocation(toLocation), fromLocation)
+		if (operation === 'swap') placements.set(formatLocation(fromLocation), toLocation)
+	}
+
+	return placements
 }

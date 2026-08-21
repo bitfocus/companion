@@ -69,6 +69,11 @@ interface ButtonInfiniteGridProps {
 	ButtonIconFactory: React.ClassType<ButtonInfiniteGridButtonProps, any, any> // TODO - this type is flawed
 	/** Called when a rectangle is dragged out across the grid. Null for grids that are only picked from. */
 	onMarqueeSelect: ((from: ControlLocation, to: ControlLocation, additive: boolean) => void) | null
+	/**
+	 * Called with the cell the pointer is over, or null once it leaves the grid. Null for grids that
+	 * have nothing to show under the cursor.
+	 */
+	onHoverLocation: ((location: ControlLocation | null) => void) | null
 	drawScale: number
 	maxHeightToMatchCanvas?: boolean
 	setViewportMinHeight?: React.Dispatch<React.SetStateAction<number>>
@@ -87,6 +92,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			gridSize,
 			ButtonIconFactory,
 			onMarqueeSelect,
+			onHoverLocation,
 			drawScale,
 			maxHeightToMatchCanvas,
 			setViewportMinHeight,
@@ -388,6 +394,23 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		const canvasWidth = countColumns * tileSize
 		const canvasHeight = countRows * tileSize
 
+		// A tool that is about to place something ghosts it under the cursor, so hovering has to be
+		// reported. Touch has no hover, and the padding around the canvas is not a cell, so both report
+		// nothing rather than the nearest edge.
+		const handleHoverMove = useCallback(
+			(e: React.PointerEvent<HTMLDivElement>) => {
+				// A drag in flight draws its own preview from where it is being dropped, which is the same
+				// state the hover ghost uses
+				if (!onHoverLocation || e.pointerType === 'touch' || dragSource) return
+
+				const point = canvasPoint(e.clientX, e.clientY)
+				const inside = !!point && point.x >= 0 && point.y >= 0 && point.x < canvasWidth && point.y < canvasHeight
+
+				onHoverLocation(inside ? locationAtCanvasPoint(point.x, point.y) : null)
+			},
+			[onHoverLocation, canvasPoint, canvasWidth, canvasHeight, locationAtCanvasPoint, dragSource]
+		)
+
 		const gridCanvasStyle = useMemo(
 			() => ({
 				width: canvasWidth,
@@ -417,8 +440,10 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 					if (!handlePanDown(e)) handleMarqueeDown(e)
 				}}
 				onPointerMove={(e) => {
+					handleHoverMove(e)
 					if (!handlePanMove(e)) handleMarqueeMove(e)
 				}}
+				onPointerLeave={() => onHoverLocation?.(null)}
 				onPointerUp={(e) => {
 					if (!handlePanUp(e)) handleMarqueeUp(e)
 				}}

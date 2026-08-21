@@ -46,6 +46,7 @@ function setup(occupied?: (location: ControlLocation) => boolean) {
 		// Tests act on a grid where every cell holds a button unless they say otherwise
 		isOccupied: vi.fn(() => true),
 		pasteAt: vi.fn(),
+		fitsOnGrid: vi.fn(() => true),
 	}
 
 	const { result } = renderHook(() => useButtonContextMenu({ store, actions, setTabResetToken: vi.fn() }), {

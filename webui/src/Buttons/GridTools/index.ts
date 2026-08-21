@@ -7,7 +7,6 @@ import { TransferTool } from './TransferTool.js'
 import type { GridTool, GridToolId } from './types.js'
 
 export * from './types.js'
-export { buildTransferPairs } from './TransferTool.js'
 
 export const DEFAULT_GRID_TOOL_ID: GridToolId = 'select'
 

@@ -6,7 +6,8 @@ import type { MenuItemProps } from '~/Components/ActionMenu.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { ButtonGridStore } from './ButtonGridStore.js'
-import { buildTransferPairs, type GridToolActions } from './GridTools/index.js'
+import { buildTransferPairs } from './GridGeometry.js'
+import type { GridToolActions } from './GridTools/index.js'
 
 interface UseButtonContextMenuOptions {
 	store: ButtonGridStore

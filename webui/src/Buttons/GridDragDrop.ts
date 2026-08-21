@@ -1,7 +1,7 @@
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
-import type { GridTransferOperation, GridTransferPair } from './GridTools/index.js'
+import type { GridTransferOperation, GridTransferPair } from './GridTools/types.js'
 
 export interface GridDropPlan {
 	operation: GridTransferOperation
@@ -63,22 +63,4 @@ export function planGridDrop(
 	const operation: GridTransferOperation = pairs.length === 1 && overwrittenLocations.length === 1 ? 'swap' : 'move'
 
 	return { operation, pairs, overwrittenLocations, fitsOnGrid }
-}
-
-/**
- * What the grid would look like with this plan applied: each cell that changes, and where the button
- * arriving there is coming from.
- *
- * A swap moves buttons both ways, so both ends are described - otherwise the preview would show what
- * you are placing but not what it is displacing.
- */
-export function previewPlacements(plan: GridDropPlan): Map<string, ControlLocation> {
-	const placements = new Map<string, ControlLocation>()
-
-	for (const { fromLocation, toLocation } of plan.pairs) {
-		placements.set(formatLocation(toLocation), fromLocation)
-		if (plan.operation === 'swap') placements.set(formatLocation(fromLocation), toLocation)
-	}
-
-	return placements
 }

@@ -1,12 +1,6 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { locationsInRectangle } from '../GridGeometry.js'
-import {
-	GridToolBase,
-	type GridToolContext,
-	type GridToolId,
-	type GridTransferOperation,
-	type GridTransferPair,
-} from './types.js'
+import { buildTransferPairs, locationsInRectangle, previewPlacements } from '../GridGeometry.js'
+import { GridToolBase, type GridToolContext, type GridToolId, type GridTransferOperation } from './types.js'
 
 const VERBS: Record<GridTransferOperation, string> = {
 	copy: 'copy',
@@ -83,10 +77,6 @@ export class TransferTool extends GridToolBase {
 		ctx.store.clearSelection()
 	}
 
-	override onExit(_ctx: GridToolContext): void {
-		this.#sources = null
-	}
-
 	override onTap(ctx: GridToolContext, location: ControlLocation): void {
 		if (!this.#sources) {
 			// Copying or moving an empty cell has nothing to carry, and would quietly wipe whatever it
@@ -99,12 +89,48 @@ export class TransferTool extends GridToolBase {
 			return
 		}
 
+		const pairs = buildTransferPairs(this.#sources, location)
+
+		// A region that would hang off the grid is refused outright rather than placing the part of it
+		// that happens to fit and losing the rest somewhere unreachable. The tool keeps hold of the
+		// buttons, so the only cost is another tap somewhere with more room - and with a pointer the
+		// ghost has already been showing this as refused.
+		if (!ctx.actions.fitsOnGrid(pairs.map((pair) => pair.toLocation))) return
+
 		// The selection is left to follow the buttons to their destination, which `transfer` handles
-		ctx.actions.transfer(this.#operation, buildTransferPairs(this.#sources, location))
+		ctx.actions.transfer(this.#operation, pairs)
 
 		// Ready for the next one
 		this.#sources = null
+		ctx.store.setDragPreview(null)
 		ctx.store.notifyToolChanged()
+	}
+
+	/**
+	 * Show where the region would land if it were placed here.
+	 *
+	 * The buttons are anchored by the top-left of what was picked up, which is not something anyone
+	 * can work out from a box they dragged bottom-up - so it is drawn instead of left to be guessed
+	 * at. It also means the click that commits the move is never the first sign of what it does.
+	 */
+	override onHover(ctx: GridToolContext, location: ControlLocation | null): void {
+		if (!this.#sources) return
+
+		if (!location) {
+			ctx.store.setDragPreview(null)
+			return
+		}
+
+		const pairs = buildTransferPairs(this.#sources, location)
+		ctx.store.setDragPreview({
+			placements: previewPlacements(this.#operation, pairs),
+			valid: ctx.actions.fitsOnGrid(pairs.map((pair) => pair.toLocation)),
+		})
+	}
+
+	override onExit(ctx: GridToolContext): void {
+		this.#sources = null
+		ctx.store.setDragPreview(null)
 	}
 
 	override onBack(ctx: GridToolContext): boolean {
@@ -114,26 +140,8 @@ export class TransferTool extends GridToolBase {
 		// misclicked tool should not cost you the selection you built up to use it.
 		const released = this.#sources
 		this.#sources = null
+		ctx.store.setDragPreview(null)
 		ctx.store.setSelection(released)
 		return true
 	}
-}
-
-/**
- * Map each source onto the destination, anchoring the top-left of the sources' bounding box at the
- * tapped cell. A single source therefore lands exactly where it was dropped, and a region keeps its
- * shape.
- */
-export function buildTransferPairs(sources: ControlLocation[], destination: ControlLocation): GridTransferPair[] {
-	const minRow = Math.min(...sources.map((l) => l.row))
-	const minColumn = Math.min(...sources.map((l) => l.column))
-
-	return sources.map((fromLocation) => ({
-		fromLocation,
-		toLocation: {
-			pageNumber: destination.pageNumber,
-			row: destination.row + (fromLocation.row - minRow),
-			column: destination.column + (fromLocation.column - minColumn),
-		},
-	}))
 }

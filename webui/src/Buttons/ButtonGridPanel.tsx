@@ -110,6 +110,12 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 		[store, actions]
 	)
 
+	// A tool that is holding buttons ghosts them under the cursor, so it knows before the click lands
+	const handleHover = useCallback(
+		(location: ControlLocation | null) => store.handleHover(location, actions),
+		[store, actions]
+	)
+
 	// Keyboard navigation is useless if it walks the focus off the edge of what you can see
 	useEffect(() => {
 		if (focus && focus.pageNumber === pageNumber) gridRef.current?.revealLocation(focus)
@@ -163,6 +169,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 						// A drag under a placing tool is not the start of a selection, so there is nothing to
 						// rubber-band and no stray box left behind
 						onMarqueeSelect={allowsMarquee ? handleMarquee : null}
+						onHoverLocation={handleHover}
 						drawScale={gridZoomValue / 100}
 						setViewportMinHeight={setViewportMinHeight}
 					/>
