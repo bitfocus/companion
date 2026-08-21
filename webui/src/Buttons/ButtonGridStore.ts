@@ -242,6 +242,13 @@ export class ButtonGridStore {
 	goBack(actions: GridToolActions): void {
 		if (this.#activeTool.onBack(this.#context(actions))) return
 
+		// A pending cut or copy is every bit as much "something in progress" as a half-finished tool -
+		// it holds buttons, it marks them on the grid, and until this it had no way out at all
+		if (this.#clipboard) {
+			this.clearClipboard()
+			return
+		}
+
 		this.setTool(DEFAULT_GRID_TOOL_ID, actions)
 	}
 

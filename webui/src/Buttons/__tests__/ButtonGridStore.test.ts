@@ -261,6 +261,28 @@ describe('ButtonGridStore', () => {
 			expect(store.isTransferSource('1/1/1')).toBe(true)
 		})
 
+		it('is unwound by going back, so a stray cut is not stuck on the grid forever', () => {
+			// Mixing the keyboard with the toolbar could leave buttons marked with nothing to clear them
+			store.setClipboard([at(1, 1)], 'cut')
+
+			store.goBack(actions)
+
+			expect(store.clipboard).toBeNull()
+			expect(store.isTransferSource('1/1/1')).toBe(false)
+		})
+
+		it('is unwound after the selection, so each press of escape does one visible thing', () => {
+			store.selectWithModifiers(at(2, 2), NO_MODIFIERS)
+			store.setClipboard([at(1, 1)], 'copy')
+
+			store.goBack(actions)
+			expect(store.selectionCount).toBe(0)
+			expect(store.clipboard).not.toBeNull()
+
+			store.goBack(actions)
+			expect(store.clipboard).toBeNull()
+		})
+
 		it('stops marking them once cleared', () => {
 			store.setClipboard([at(1, 1)], 'copy')
 			store.clearClipboard()

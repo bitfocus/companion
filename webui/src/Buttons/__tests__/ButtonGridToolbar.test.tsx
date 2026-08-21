@@ -183,6 +183,33 @@ describe('the grid toolbar', () => {
 		expect(store.activeToolId).toBe('select')
 	})
 
+	it('says when a cut or copy is waiting, rather than leaving the marks unexplained', () => {
+		const { store } = setup()
+
+		act(() => store.setClipboard([at(1, 1), at(1, 2)], 'cut'))
+
+		expect(screen.getByText(/2 buttons cut/)).toBeInTheDocument()
+		expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled()
+	})
+
+	it('reports the cut ahead of the selection it was made from', () => {
+		const { store } = setup()
+		act(() => store.selectRectangle(at(1, 1), at(1, 2), false))
+		act(() => store.setClipboard([at(1, 1), at(1, 2)], 'copy'))
+
+		// Otherwise the copy - the half you cannot see - stays hidden behind the selection count
+		expect(screen.getByText(/2 buttons copied/)).toBeInTheDocument()
+	})
+
+	it('cancel clears a pending cut', () => {
+		const { store } = setup()
+		act(() => store.setClipboard([at(1, 1)], 'cut'))
+
+		fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+		expect(store.clipboard).toBeNull()
+	})
+
 	it('names the current mode when it has nothing else to report', () => {
 		setup()
 
