@@ -49,22 +49,29 @@
 }
 
 /* Deliberately shorter than the row. Stretched to full height it reads as if the toolbar has been
-   padded out, rather than as a divider between two sets of buttons. */
+   padded out, rather than as a divider between two sets of buttons.
+
+   Sized from the button rather than as a percentage: a percentage resolves against the toolbar's own
+   height, which is what the toolbar is still trying to work out, and the answer it settled on made
+   its line taller than the space it had reserved for it. */
 .toolbar-separator {
+	--toolbar-separator-length: calc(var(--toolbar-button-size) * 0.6);
+
 	align-self: center;
+	flex: 0 0 auto;
 
 	background: var(--color-border);
 }
 
 .toolbar-vertical > .toolbar-separator {
-	width: 60%;
+	width: var(--toolbar-separator-length);
 	height: 1px;
 	margin: 3px 0;
 }
 
 .toolbar-horizontal > .toolbar-separator {
 	width: 1px;
-	height: 60%;
+	height: var(--toolbar-separator-length);
 	margin: 0 5px;
 }
 

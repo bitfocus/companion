@@ -94,8 +94,9 @@ export function ButtonGridToolbar(): React.JSX.Element {
 		)
 	}
 
-	// Something to unwind: a tool part-way through, or a selection to drop
-	const canCancel = hint !== null || selectionCount > 0
+	// Something to unwind: a tool part-way through, a selection to drop, or press mode to leave. Escape
+	// leaves press mode, so the button that does the same thing should not be greyed out.
+	const canCancel = hint !== null || selectionCount > 0 || pressMode
 
 	return (
 		<div className="button-grid-toolbar">
