@@ -162,6 +162,24 @@ describe('the grid toolbar', () => {
 		expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled()
 	})
 
+	it('offers cancel in press mode, which is the other way out of it', () => {
+		// Escape leaves press mode, so the button that does the same thing must not be greyed out
+		setup()
+
+		fireEvent.click(screen.getByRole('button', { name: 'Press' }))
+
+		expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled()
+	})
+
+	it('leaves press mode when cancelled', () => {
+		const { store } = setup()
+		fireEvent.click(screen.getByRole('button', { name: 'Press' }))
+
+		fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+		expect(store.activeToolId).toBe('select')
+	})
+
 	it('names the current mode when it has nothing else to report', () => {
 		setup()
 
