@@ -42,6 +42,8 @@ export class ButtonGridStore {
 
 	#clipboard: GridClipboard | null = null
 
+	#dragPreview: GridDragPreview | null = null
+
 	subscribe = (listener: () => void): (() => void) => {
 		this.#listeners.add(listener)
 		return () => {
@@ -108,6 +110,45 @@ export class ButtonGridStore {
 	/** Whether the active tool has picked this button up and is waiting to place it */
 	isTransferSource(locationKey: string): boolean {
 		return this.#transferSourceKeys.has(locationKey)
+	}
+
+	// ---- drag preview ----
+
+	/**
+	 * Where the buttons being dragged would land if released now.
+	 *
+	 * Highlighting only the cell under the cursor says nothing about where the rest of a region ends
+	 * up, and nothing about whether the drop will be allowed at all - both of which are worth knowing
+	 * before letting go.
+	 */
+	get dragPreview(): GridDragPreview | null {
+		return this.#dragPreview
+	}
+
+	setDragPreview(preview: GridDragPreview | null): void {
+		// Fires on every pointer move during a drag, so don't wake every cell up for an unchanged answer
+		if (this.#dragPreview === preview) return
+		if (
+			this.#dragPreview &&
+			preview &&
+			this.#dragPreview.valid === preview.valid &&
+			this.#dragPreview.keys.size === preview.keys.size &&
+			[...preview.keys].every((key) => this.#dragPreview?.keys.has(key))
+		) {
+			return
+		}
+
+		this.#dragPreview = preview
+		this.#notify()
+	}
+
+	/** Whether a button being dragged would land on this cell */
+	isDropDestination(locationKey: string): boolean {
+		return this.#dragPreview?.keys.has(locationKey) ?? false
+	}
+
+	get dragPreviewValid(): boolean {
+		return this.#dragPreview?.valid ?? true
 	}
 
 	// ---- selection ----
@@ -336,6 +377,13 @@ export class ButtonGridStore {
 
 		return next
 	}
+}
+
+export interface GridDragPreview {
+	/** `formatLocation` keys of the cells the drag would land on */
+	keys: Set<string>
+	/** False when the region would hang off the grid, so releasing would do nothing */
+	valid: boolean
 }
 
 export type GridClipboardMode = 'copy' | 'cut'

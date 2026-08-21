@@ -8,6 +8,8 @@ export interface GridDropPlan {
 	pairs: GridTransferPair[]
 	/** Occupied cells that will be overwritten, so the user can be asked first */
 	overwrittenLocations: ControlLocation[]
+	/** False when part of the region would land off the grid, so the drop must be refused */
+	fitsOnGrid: boolean
 }
 
 /**
@@ -16,8 +18,9 @@ export interface GridDropPlan {
  * The cell the drag started from lands under the cursor and everything else keeps its offset from
  * it, so what you see under the pointer is what you get - no separate anchoring rule to learn.
  *
- * Returns null when the drop should do nothing at all: it went nowhere, or part of the region would
- * land outside the grid.
+ * Returns null only when the drop went nowhere at all. A region that would hang off the edge still
+ * comes back described, flagged as not fitting, so the same call can both refuse the drop and show
+ * the user why while they are still holding it.
  */
 export function planGridDrop(
 	origin: ControlLocation,
@@ -40,7 +43,7 @@ export function planGridDrop(
 		},
 	}))
 
-	// Refuse the whole drop rather than silently dropping the buttons that happen to fit
+	// All or nothing: dropping only the buttons that happen to fit would quietly lose the rest
 	const fitsOnGrid = pairs.every(
 		({ toLocation }) =>
 			toLocation.row >= gridSize.minRow &&
@@ -48,7 +51,6 @@ export function planGridDrop(
 			toLocation.column >= gridSize.minColumn &&
 			toLocation.column <= gridSize.maxColumn
 	)
-	if (!fitsOnGrid) return null
 
 	const sourceKeys = new Set(sources.map(formatLocation))
 	const overwrittenLocations = pairs
@@ -60,5 +62,5 @@ export function planGridDrop(
 	// A whole region cannot do that without scattering whatever it displaced, so it overwrites.
 	const operation: GridTransferOperation = pairs.length === 1 && overwrittenLocations.length === 1 ? 'swap' : 'move'
 
-	return { operation, pairs, overwrittenLocations }
+	return { operation, pairs, overwrittenLocations, fitsOnGrid }
 }

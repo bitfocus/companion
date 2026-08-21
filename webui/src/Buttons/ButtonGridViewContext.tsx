@@ -53,6 +53,20 @@ export function useGridIsSelected(locationKey: string): boolean {
 	)
 }
 
+/** Whether a button being dragged would land on this cell */
+export function useGridIsDropDestination(locationKey: string): boolean {
+	const store = useButtonGridStore()
+	return useSyncExternalStore(
+		store.subscribe,
+		useCallback(() => store.isDropDestination(locationKey), [store, locationKey])
+	)
+}
+
+const selectDragPreviewValid = (store: ButtonGridStore) => store.dragPreviewValid
+export function useGridDragPreviewValid(): boolean {
+	return useGridStoreValue(selectDragPreviewValid)
+}
+
 /** Whether this one cell has been picked up by the active tool, waiting to be placed */
 export function useGridIsTransferSource(locationKey: string): boolean {
 	const store = useButtonGridStore()

@@ -38,6 +38,8 @@ export interface GridButtonPreviewProps {
 	contextMenuOpen: boolean
 	canDrop: boolean
 	dropHover: boolean
+	/** Marked as a landing spot, but releasing here would be refused */
+	dropInvalid: boolean
 	dropRef: React.RefCallback<HTMLDivElement>
 	dragRef: React.RefCallback<HTMLDivElement>
 	isDragSource: boolean
@@ -67,6 +69,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 	contextMenuOpen,
 	canDrop,
 	dropHover,
+	dropInvalid,
 	dropRef,
 	dragRef,
 	isDragSource,
@@ -169,7 +172,8 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 				'copy-source': copySource,
 				'context-menu-open': contextMenuOpen,
 				drophere: canDrop,
-				drophover: dropHover,
+				drophover: dropHover && !dropInvalid,
+				dropinvalid: dropInvalid,
 				'grid-drag-source': isDragSource,
 			})}
 			style={style}
