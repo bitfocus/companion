@@ -333,6 +333,28 @@ describe('ButtonGridStore', () => {
 			expect(store.isTransferSource('1/1/1')).toBe(true)
 		})
 
+		it('picks the buttons up rather than leaving them selected as well', () => {
+			// Two copies of the same thing is what let deselecting clear one and leave the tool holding
+			// the other, still asking where to put them
+			store.selectRectangle(at(1, 1), at(1, 2), false)
+			store.setTool('copy', actions)
+
+			expect(store.selectionCount).toBe(0)
+			expect(store.isTransferSource('1/1/1')).toBe(true)
+			expect(store.hint(actions)).toBe('Where do you want it?')
+		})
+
+		it('hands them back when you change your mind', () => {
+			store.selectRectangle(at(1, 1), at(1, 2), false)
+			store.setTool('copy', actions)
+
+			store.goBack(actions)
+
+			// Backing out of a misclicked tool should not cost the selection you built up to use it
+			expect(store.selectedLocations).toEqual([at(1, 1), at(1, 2)])
+			expect(store.isTransferSource('1/1/1')).toBe(false)
+		})
+
 		it('leaves the selection where the buttons landed', () => {
 			// The transfer action moves the selection to the destinations; the tool must not undo that
 			store.setTool('move', actions)
