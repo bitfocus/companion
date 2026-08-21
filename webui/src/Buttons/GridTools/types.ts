@@ -50,6 +50,9 @@ export interface GridTool {
 	/** Whether any button can be dragged, rather than only ones that are already selected */
 	readonly dragAnyButton: boolean
 
+	/** Whether dragging across the grid rubber-bands a selection. Only the selecting tools want this. */
+	readonly allowsMarquee: boolean
+
 	/** Buttons this tool has picked up and is about to act on, so the grid can mark them */
 	getSourceLocations(): readonly ControlLocation[]
 
@@ -74,6 +77,7 @@ export abstract class GridToolBase implements GridTool {
 
 	readonly pressMode: boolean = false
 	readonly dragAnyButton: boolean = false
+	readonly allowsMarquee: boolean = false
 
 	hint(_ctx: GridToolContext): string | null {
 		return null

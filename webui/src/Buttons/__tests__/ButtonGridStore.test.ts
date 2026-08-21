@@ -505,6 +505,27 @@ describe('ButtonGridStore', () => {
 		})
 	})
 
+	describe('rubber-band selection', () => {
+		it('is offered by the selecting tools', () => {
+			expect(store.allowsMarquee).toBe(true)
+
+			store.setTool('multi-select', actions)
+			expect(store.allowsMarquee).toBe(true)
+
+			store.setTool('arrange', actions)
+			expect(store.allowsMarquee).toBe(true)
+		})
+
+		it('is not offered by the tools that place buttons', () => {
+			// A drag under one of these is either moving something or nothing at all - drawing a
+			// selection box over it leaves a stray rectangle behind
+			for (const tool of ['copy', 'move', 'swap', 'delete', 'press'] as const) {
+				store.setTool(tool, actions)
+				expect(store.allowsMarquee, tool).toBe(false)
+			}
+		})
+	})
+
 	describe('arrange tool', () => {
 		it('lets any button be dragged, unlike select', () => {
 			expect(store.dragAnyButton).toBe(false)

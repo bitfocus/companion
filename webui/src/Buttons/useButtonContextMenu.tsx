@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import { useCallback, useContext, useMemo, useState, useSyncExternalStore } from 'react'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { MenuItemProps } from '~/Components/ActionMenu.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -39,6 +40,10 @@ export function useButtonContextMenu({
 		store.subscribe,
 		useCallback(() => store.clipboard, [store])
 	)
+	const selection = useSyncExternalStore(
+		store.subscribe,
+		useCallback(() => store.selectedLocations, [store])
+	)
 
 	const doButtonContextMenu = useCallback((location: ControlLocation, x: number, y: number) => {
 		setContextMenuLocation(location)
@@ -57,6 +62,14 @@ export function useButtonContextMenu({
 
 		const location = contextMenuLocation
 		const isEmpty = !contextControlId
+
+		// Right-clicking within a selection acts on the whole of it - that is what selecting it was for.
+		// Right-clicking outside one is about the button under the cursor, and leaves the selection be.
+		const locationKey = formatLocation(location)
+		const targets =
+			selection.length > 1 && selection.some((l) => formatLocation(l) === locationKey) ? [...selection] : [location]
+		const isMultiple = targets.length > 1
+		const forCount = (verb: string) => (isMultiple ? `${verb} ${targets.length} buttons` : verb)
 
 		const pasteLabel = clipboard?.mode === 'cut' ? 'Move here' : 'Paste here'
 
@@ -80,17 +93,18 @@ export function useButtonContextMenu({
 			},
 			{ isSeparator: true, label: 'Edit' },
 			{
-				label: 'Copy',
-				disabled: isEmpty,
+				label: forCount('Copy'),
+				// A selection is worth copying even if the button under the cursor happens to be empty
+				disabled: isEmpty && !isMultiple,
 				do: () => {
-					store.setClipboard([location], 'copy')
+					store.setClipboard(targets, 'copy')
 				},
 			},
 			{
-				label: 'Cut',
-				disabled: isEmpty,
+				label: forCount('Cut'),
+				disabled: isEmpty && !isMultiple,
 				do: () => {
-					store.setClipboard([location], 'cut')
+					store.setClipboard(targets, 'cut')
 				},
 			},
 		]
@@ -141,9 +155,9 @@ export function useButtonContextMenu({
 		items.push(
 			{ isSeparator: true },
 			{
-				label: 'Clear',
-				disabled: isEmpty,
-				do: () => actions.clearButtons([location]),
+				label: forCount('Clear'),
+				disabled: isEmpty && !isMultiple,
+				do: () => actions.clearButtons(targets),
 			}
 		)
 
@@ -152,6 +166,7 @@ export function useButtonContextMenu({
 		contextMenuLocation,
 		contextControlId,
 		clipboard,
+		selection,
 		store,
 		actions,
 		hotPressMutation,
