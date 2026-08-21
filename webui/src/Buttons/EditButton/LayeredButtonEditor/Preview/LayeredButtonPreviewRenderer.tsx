@@ -251,6 +251,7 @@ const ASPECT_RATIO_OPTIONS: DropdownChoice[] = [
 	{ id: '1:1', label: '1:1 (Square)' },
 	{ id: '9:7', label: '9:7 (Stream Deck Studio)' },
 	{ id: '2:1', label: '2:1 (Stream Deck Plus & Plus XL)' },
+	{ id: '124:29', label: '124:29 (Stream Deck Neo)' },
 ]
 
 const CUSTOM_RATIO_MIN = 1
