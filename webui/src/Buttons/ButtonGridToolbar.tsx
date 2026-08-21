@@ -13,9 +13,11 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'
 import { Toolbar } from '~/Components/Toolbar.js'
+import type { GridClipboard } from './ButtonGridStore.js'
 import {
 	useButtonGridView,
 	useGridActiveToolId,
+	useGridClipboard,
 	useGridHint,
 	useGridPressMode,
 	useGridSelectionCount,
@@ -65,6 +67,7 @@ export function ButtonGridToolbar(): React.JSX.Element {
 	const hint = useGridHint()
 	const selectionCount = useGridSelectionCount()
 	const selectionPageNumber = useGridSelectionPageNumber()
+	const clipboard = useGridClipboard()
 
 	const selectTool = useCallback(
 		(id: GridToolId) => {
@@ -94,9 +97,10 @@ export function ButtonGridToolbar(): React.JSX.Element {
 		)
 	}
 
-	// Something to unwind: a tool part-way through, a selection to drop, or press mode to leave. Escape
-	// leaves press mode, so the button that does the same thing should not be greyed out.
-	const canCancel = hint !== null || selectionCount > 0 || pressMode
+	// Something to unwind: a tool part-way through, a selection to drop, press mode to leave, or a cut
+	// or copy waiting to be pasted. Escape unwinds all of them, so the button that means the same
+	// thing should not be greyed out for any of them.
+	const canCancel = hint !== null || selectionCount > 0 || pressMode || clipboard !== null
 
 	return (
 		<div className="button-grid-toolbar">
@@ -115,6 +119,7 @@ export function ButtonGridToolbar(): React.JSX.Element {
 						hint={hint}
 						selectionCount={selectionCount}
 						selectionPageNumber={selectionPageNumber}
+						clipboard={clipboard}
 						activeToolId={activeToolId}
 					/>
 
@@ -136,6 +141,7 @@ interface GridToolbarStatusProps {
 	hint: string | null
 	selectionCount: number
 	selectionPageNumber: number | null
+	clipboard: GridClipboard | null
 	activeToolId: GridToolId
 }
 
@@ -148,6 +154,7 @@ function GridToolbarStatus({
 	hint,
 	selectionCount,
 	selectionPageNumber,
+	clipboard,
 	activeToolId,
 }: GridToolbarStatusProps): React.JSX.Element {
 	// Press mode runs real actions on real hardware, so the toolbar itself carries the warning rather
@@ -162,6 +169,19 @@ function GridToolbarStatus({
 	}
 
 	if (hint) return <Toolbar.Status>{hint}</Toolbar.Status>
+
+	// Ahead of the selection count: a pending cut or copy is an operation waiting to happen, where a
+	// selection is only a highlight. It is also the half that was invisible, which is how buttons
+	// ended up marked on the grid with nothing saying why.
+	if (clipboard) {
+		const count = clipboard.locations.length === 1 ? '1 button' : `${clipboard.locations.length} buttons`
+		return (
+			<Toolbar.Status>
+				{count} {clipboard.mode === 'cut' ? 'cut' : 'copied'} &mdash; paste to place{' '}
+				{clipboard.locations.length === 1 ? 'it' : 'them'}
+			</Toolbar.Status>
+		)
+	}
 
 	if (selectionCount > 1) {
 		return (
