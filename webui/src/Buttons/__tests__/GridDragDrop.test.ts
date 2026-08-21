@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
-import { planGridDrop } from '../GridDragDrop.js'
+import { planGridDrop, previewPlacements } from '../GridDragDrop.js'
 
 const GRID_SIZE: UserConfigGridSize = { minRow: 0, maxRow: 3, minColumn: 0, maxColumn: 7 }
 
@@ -97,5 +97,32 @@ describe('planGridDrop', () => {
 		const plan = planGridDrop(at(1, 1, 1), at(1, 1, 4), [at(1, 1, 1)], GRID_SIZE, nothingOccupied)
 
 		expect(plan?.pairs).toEqual([{ fromLocation: at(1, 1, 1), toLocation: at(1, 1, 4) }])
+	})
+})
+
+describe('previewPlacements', () => {
+	it('says which button lands on each destination', () => {
+		const plan = planGridDrop(at(1, 1), at(2, 3), [at(1, 1)], GRID_SIZE, nothingOccupied)!
+
+		expect(previewPlacements(plan)).toEqual(new Map([['1/2/3', at(1, 1)]]))
+	})
+
+	it('describes both ends of a swap, so the displaced button is shown too', () => {
+		const plan = planGridDrop(at(1, 1), at(2, 3), [at(1, 1)], GRID_SIZE, occupiedAt(at(2, 3)))!
+		expect(plan.operation).toBe('swap')
+
+		expect(previewPlacements(plan)).toEqual(
+			new Map([
+				['1/2/3', at(1, 1)],
+				['1/1/1', at(2, 3)],
+			])
+		)
+	})
+
+	it('covers every cell of a region', () => {
+		const sources = [at(1, 1), at(1, 2)]
+		const plan = planGridDrop(at(1, 1), at(3, 1), sources, GRID_SIZE, nothingOccupied)!
+
+		expect([...previewPlacements(plan).keys()].sort()).toEqual(['1/3/1', '1/3/2'])
 	})
 })

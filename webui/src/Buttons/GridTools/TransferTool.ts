@@ -72,6 +72,11 @@ export class TransferTool extends GridToolBase {
 
 	override onTap(ctx: GridToolContext, location: ControlLocation): void {
 		if (!this.#sources) {
+			// Copying or moving an empty cell has nothing to carry, and would quietly wipe whatever it
+			// was dropped on. A swap is symmetric - trading with an empty cell is how you move a button
+			// into one - so it accepts either end.
+			if (this.#operation !== 'swap' && !ctx.actions.isOccupied(location)) return
+
 			this.#sources = [location]
 			ctx.store.notifyToolChanged()
 			return

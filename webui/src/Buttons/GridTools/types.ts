@@ -22,6 +22,10 @@ export interface GridToolActions {
 	transfer: (operation: GridTransferOperation, pairs: GridTransferPair[]) => void
 	/** Asks the user to confirm, then clears */
 	clearButtons: (locations: ControlLocation[]) => void
+	/** Whether there is a button here at all */
+	isOccupied: (location: ControlLocation) => boolean
+	/** Place whatever is on the clipboard here, warning first if that would cost anything */
+	pasteAt: (location: ControlLocation) => void
 }
 
 export interface GridToolContext {

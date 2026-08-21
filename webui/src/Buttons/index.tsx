@@ -32,7 +32,7 @@ import { ButtonGridViewProvider, type ButtonGridView } from './ButtonGridViewCon
 import { EditButton } from './EditButton/EditButton.js'
 import { GRID_BUTTON_DRAG_TYPE, type GridButtonDragItem } from './GridButtonDragItem.js'
 import { parseGridButtonDroppableId } from './GridButtonDroppableId.js'
-import { planGridDrop } from './GridDragDrop.js'
+import { planGridDrop, previewPlacements } from './GridDragDrop.js'
 import { buildTransferPairs, type GridToolActions, type GridTransferPair } from './GridTools/index.js'
 import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
@@ -142,6 +142,8 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				gridStore.setSelection(pairs.map((pair) => pair.toLocation))
 				setTabResetToken(nanoid())
 			},
+			isOccupied: (location) => Boolean(pages.getControlIdAtLocation(location)),
+			pasteAt: (location) => pasteClipboardAt(location),
 			clearButtons: (locations) => {
 				if (locations.length === 0) return
 
@@ -160,7 +162,70 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				)
 			},
 		}),
-		[openEditor, hotPressMutation, gridBatchTransferMutation, resetControlsMutation, gridStore]
+		[openEditor, hotPressMutation, gridBatchTransferMutation, resetControlsMutation, gridStore, pages]
+	)
+
+	// Both the keyboard and the context menu paste through here, so a paste costs the same either way
+	const pasteClipboardAt = useCallback(
+		(location: ControlLocation) => {
+			const clipboard = gridStore.clipboard
+			if (!clipboard || !gridSize) return
+
+			const operation = clipboard.mode === 'cut' ? 'move' : 'copy'
+			const pairs = buildTransferPairs(clipboard.locations, location)
+
+			// Placing a button outside the grid puts it where nothing can reach it. Refusing the whole
+			// paste matches what dropping a region off the edge does, and means a cut can never destroy
+			// its source in exchange for nothing.
+			const offGrid = pairs.filter(
+				({ toLocation }) =>
+					toLocation.row < gridSize.minRow ||
+					toLocation.row > gridSize.maxRow ||
+					toLocation.column < gridSize.minColumn ||
+					toLocation.column > gridSize.maxColumn
+			)
+
+			// A cell the clipboard is vacating is not being overwritten by its own contents
+			const vacated = new Set(operation === 'move' ? clipboard.locations.map(formatLocation) : [])
+			const overwritten = pairs
+				.map(({ toLocation }) => toLocation)
+				.filter((to) => !vacated.has(formatLocation(to)) && pages.getControlIdAtLocation(to))
+
+			const apply = () => {
+				actions.transfer(operation, pairs)
+				if (clipboard.mode === 'cut') gridStore.clearClipboard()
+				setTabResetToken(nanoid())
+			}
+
+			if (offGrid.length > 0) {
+				confirmModalRef.current?.show(
+					`Cannot paste here`,
+					[
+						`${offGrid.length} of the ${pairs.length} buttons would land outside the grid.`,
+						`Nothing has been pasted. Try somewhere with more room, or make the grid bigger.`,
+					],
+					'OK',
+					() => undefined
+				)
+				return
+			}
+
+			if (overwritten.length > 0) {
+				confirmModalRef.current?.show(
+					`Paste ${describeButtons(pairs.length)}`,
+					[
+						`This will replace ${describeButtons(overwritten.length)} already here.`,
+						`There's no going back from this.`,
+					],
+					'Paste',
+					apply
+				)
+				return
+			}
+
+			apply()
+		},
+		[gridStore, gridSize, pages, actions, setTabResetToken]
 	)
 
 	const navigateToControl = useCallback(
@@ -193,11 +258,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			if (!source || source.type !== GRID_BUTTON_DRAG_TYPE) return
 
 			const plan = target ? resolveGridDrop(source, target.id) : null
-			gridStore.setDragPreview(
-				plan
-					? { keys: new Set(plan.pairs.map((pair) => formatLocation(pair.toLocation))), valid: plan.fitsOnGrid }
-					: null
-			)
+			gridStore.setDragPreview(plan ? { placements: previewPlacements(plan), valid: plan.fitsOnGrid } : null)
 		},
 		onDragEnd(event) {
 			gridStore.setDragPreview(null)
@@ -418,15 +479,11 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				return
 			}
 			if (isControlOrCommandCombo && e.key.toLowerCase() === 'v') {
-				const clipboard = gridStore.clipboard
 				const focus = gridStore.focus
-				if (!clipboard || !focus) return
-
-				actions.transfer(clipboard.mode === 'cut' ? 'move' : 'copy', buildTransferPairs(clipboard.locations, focus))
-				if (clipboard.mode === 'cut') gridStore.clearClipboard()
+				if (focus) pasteClipboardAt(focus)
 			}
 		},
-		[gridStore, actions, gridSize, pageNumber, setPageNumber, gridZoomController, pages.data.length]
+		[gridStore, actions, gridSize, pageNumber, setPageNumber, gridZoomController, pages.data.length, pasteClipboardAt]
 	)
 
 	if (pageNumber === null) {
@@ -543,3 +600,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		</ButtonGridViewProvider>
 	)
 })
+
+function describeButtons(count: number): string {
+	return count === 1 ? '1 button' : `${count} buttons`
+}

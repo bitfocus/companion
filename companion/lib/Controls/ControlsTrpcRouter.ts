@@ -4,6 +4,7 @@ import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ButtonReferenceButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
+import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import type { Logger } from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
@@ -25,8 +26,20 @@ export function createControlsTrpcRouter(
 	pageStore: IPageStore,
 	instanceDefinitions: InstanceDefinitions,
 	controlEvents: EventEmitter<ControlCommonEvents>,
-	controlsController: ControlsController
+	controlsController: ControlsController,
+	userconfig: DataUserConfig
 ) {
+	/**
+	 * The UI works out where buttons go, but a location off the grid puts a button somewhere nothing
+	 * can reach - so check here too rather than trusting the arithmetic that produced it.
+	 */
+	const isOnGrid = (location: ControlLocation): boolean => {
+		const { minColumn, maxColumn, minRow, maxRow } = userconfig.getKey('gridSize')
+		return (
+			location.row >= minRow && location.row <= maxRow && location.column >= minColumn && location.column <= maxColumn
+		)
+	}
+
 	return {
 		importPreset: publicProcedure
 			.input(
@@ -187,6 +200,12 @@ export function createControlsTrpcRouter(
 						logger.warn(`Rejecting ${operation} of ${pairs.length} buttons: invalid page`)
 						return false
 					}
+					if (!isOnGrid(toLocation)) {
+						logger.warn(
+							`Rejecting ${operation} of ${pairs.length} buttons: ${formatLocation(toLocation)} is off the grid`
+						)
+						return false
+					}
 				}
 
 				let plan
@@ -282,6 +301,11 @@ export function createControlsTrpcRouter(
 			)
 			.mutation(async ({ input }) => {
 				for (const location of input.locations) {
+					if (input.newType && !isOnGrid(location)) {
+						logger.warn(`Refusing to create a button at ${formatLocation(location)}: off the grid`)
+						continue
+					}
+
 					const controlId = pageStore.getControlIdAt(location)
 					if (controlId) {
 						controlsController.deleteControl(controlId)

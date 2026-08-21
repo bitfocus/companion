@@ -26,6 +26,9 @@ export class DeleteTool extends GridToolBase {
 	}
 
 	override onTap(ctx: GridToolContext, location: ControlLocation): void {
+		// Nothing to clear, so nothing to confirm. Asking about an empty cell is pure noise.
+		if (!ctx.actions.isOccupied(location)) return
+
 		ctx.actions.clearButtons([location])
 	}
 }

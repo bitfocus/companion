@@ -53,12 +53,17 @@ export function useGridIsSelected(locationKey: string): boolean {
 	)
 }
 
-/** Whether a button being dragged would land on this cell */
-export function useGridIsDropDestination(locationKey: string): boolean {
+/**
+ * The button that would end up on this cell if the drag in flight were released, or null.
+ *
+ * Returns the location rather than a boolean so the cell can draw that button's own image as a
+ * ghost - which is what makes it possible to check a large block has lined up.
+ */
+export function useGridDropGhostSource(locationKey: string): ControlLocation | null {
 	const store = useButtonGridStore()
 	return useSyncExternalStore(
 		store.subscribe,
-		useCallback(() => store.isDropDestination(locationKey), [store, locationKey])
+		useCallback(() => store.dropGhostSource(locationKey), [store, locationKey])
 	)
 }
 
