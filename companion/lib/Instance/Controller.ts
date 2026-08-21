@@ -838,6 +838,51 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		return [id, config]
 	}
 
+	duplicateConnection(sourceId: string): string | undefined {
+		const sourceConfig = this.#configStore.getConfigOfTypeForId(sourceId, ModuleInstanceType.Connection)
+		if (!sourceConfig) return undefined
+
+		const sourceIndex = this.#configStore
+			.getAllInstanceConfigs()
+			.entries()
+			.filter(
+				([, config]) =>
+					config.moduleInstanceType === ModuleInstanceType.Connection &&
+					config.collectionId === sourceConfig.collectionId
+			)
+			.toArray()
+			.sort(([, a], [, b]) => a.sortOrder - b.sortOrder)
+			.findIndex(([id]) => id === sourceId)
+
+		const [newId] = this.addConnectionWithLabel({ type: sourceConfig.moduleId }, sourceConfig.label, {
+			versionId: sourceConfig.moduleVersionId,
+			updatePolicy: sourceConfig.updatePolicy,
+			disabled: true,
+			collectionId: sourceConfig.collectionId,
+		})
+
+		const updateResult = this.setConnectionLabelAndConfig(newId, {
+			label: null,
+			enabled: null,
+			config: structuredClone(sourceConfig.config),
+			secrets: structuredClone(sourceConfig.secrets ?? {}),
+			updatePolicy: null,
+			upgradeIndex: sourceConfig.lastUpgradeIndex,
+		})
+		if (!updateResult.ok) throw new Error(updateResult.message)
+
+		this.#configStore.moveInstance(
+			sourceConfig.collectionId ?? null,
+			ModuleInstanceType.Connection,
+			newId,
+			sourceIndex + 1
+		)
+
+		if (sourceConfig.enabled !== false) this.enableDisableConnection(newId, true)
+
+		return newId
+	}
+
 	getLabelForConnection(id: string): string | undefined {
 		return this.#configStore.getConfigOfTypeForId(id, ModuleInstanceType.Connection)?.label
 	}
