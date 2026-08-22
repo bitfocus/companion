@@ -81,6 +81,15 @@ export function useGridIsTransferSource(locationKey: string): boolean {
 	)
 }
 
+/** Whether this one cell would be taken by the shift-click being lined up right now */
+export function useGridIsPendingSource(locationKey: string): boolean {
+	const store = useButtonGridStore()
+	return useSyncExternalStore(
+		store.subscribe,
+		useCallback(() => store.isPendingSource(locationKey), [store, locationKey])
+	)
+}
+
 const selectPressMode = (store: ButtonGridStore) => store.pressMode
 export function useGridPressMode(): boolean {
 	return useGridStoreValue(selectPressMode)

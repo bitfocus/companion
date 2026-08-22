@@ -41,6 +41,9 @@ export class ButtonGridStore {
 	/** Locations the active tool or the clipboard has picked up, so a cell can check itself in one lookup */
 	#transferSourceKeys = new Set<string>()
 
+	/** Locations a shift-click would take, while shift is held */
+	#pendingSourceKeys = new Set<string>()
+
 	#clipboard: GridClipboard | null = null
 
 	#dragPreview: GridDragPreview | null = null
@@ -122,6 +125,30 @@ export class ButtonGridStore {
 	/** Everything picked up and not yet put down, by key */
 	get transferSourceKeys(): ReadonlySet<string> {
 		return this.#transferSourceKeys
+	}
+
+	// ---- pending sources ----
+
+	/**
+	 * Cells a shift-click would take, drawn while shift is held.
+	 *
+	 * A rectangle measured from an anchor you cannot see is guesswork otherwise - the same problem the
+	 * landing ghost solves for placing, so it gets the same answer: show it before the click.
+	 */
+	isPendingSource(locationKey: string): boolean {
+		return this.#pendingSourceKeys.has(locationKey)
+	}
+
+	setPendingSources(locations: readonly ControlLocation[] | null): void {
+		const keys = new Set((locations ?? []).map(formatLocation))
+
+		// Fires on every pointer move with shift held, so don't wake every cell up for the same answer
+		if (keys.size === this.#pendingSourceKeys.size && [...keys].every((key) => this.#pendingSourceKeys.has(key))) {
+			return
+		}
+
+		this.#pendingSourceKeys = keys
+		this.#notify()
 	}
 
 	// ---- drag preview ----
@@ -232,9 +259,13 @@ export class ButtonGridStore {
 		if (this.#activeTool.id === id) return
 
 		const ctx = this.#context(actions)
+		// Read before the outgoing tool is asked to let go, so switching between copy, move and swap
+		// after picking the buttons is a change of mind rather than a fresh start
+		const carriedOver = [...this.#activeTool.getSourceLocations()]
+
 		this.#activeTool.onExit(ctx)
 		this.#activeTool = createGridTool(id)
-		this.#activeTool.onEnter(this.#context(actions))
+		this.#activeTool.onEnter(this.#context(actions), carriedOver)
 		this.#notify()
 	}
 

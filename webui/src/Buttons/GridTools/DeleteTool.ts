@@ -19,9 +19,11 @@ export class DeleteTool extends GridToolBase {
 		return `Press the button you want to delete`
 	}
 
-	override onEnter(ctx: GridToolContext): void {
-		const selection = ctx.store.selectedLocations
-		if (selection.length > 1) ctx.actions.clearButtons([...selection])
+	override onEnter(ctx: GridToolContext, carriedOver: readonly ControlLocation[]): void {
+		// Buttons in hand are treated exactly as a selection is - switching a copy you had lined up
+		// into a delete asks the same question about the same buttons
+		const targets = carriedOver.length > 0 ? carriedOver : ctx.store.selectedLocations
+		if (targets.length > 1) ctx.actions.clearButtons([...targets])
 
 		ctx.store.clearSelection()
 	}

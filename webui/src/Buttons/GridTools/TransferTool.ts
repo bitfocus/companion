@@ -86,7 +86,14 @@ export class TransferTool extends GridToolBase {
 		ctx.store.setDragPreview(null)
 	}
 
-	override onEnter(ctx: GridToolContext): void {
+	override onEnter(ctx: GridToolContext, carriedOver: readonly ControlLocation[]): void {
+		// Already picked up, by whichever transfer tool was active a moment ago. Taken on as-is,
+		// however few, since choosing them was a deliberate act that the switch is not undoing.
+		if (carriedOver.length > 0) {
+			this.#pickUp(ctx, [...carriedOver])
+			return
+		}
+
 		// Only a deliberate multiple selection is taken as "these are what I want to move". A single
 		// selected button is just the one you last looked at - clicking a button to see it selects it -
 		// so treating that as the source would silently make your first tap the destination.
@@ -153,6 +160,7 @@ export class TransferTool extends GridToolBase {
 			this.#sources = null
 			this.#rangeAnchor = null
 			ctx.store.setDragPreview(null)
+			ctx.store.setPendingSources(null)
 			ctx.store.notifyToolChanged()
 		})
 	}
@@ -178,6 +186,7 @@ export class TransferTool extends GridToolBase {
 
 		// What was in hand has changed, so anything drawn for the old set is now wrong
 		ctx.store.setDragPreview(null)
+		ctx.store.setPendingSources(null)
 		ctx.store.notifyToolChanged()
 	}
 
@@ -205,14 +214,22 @@ export class TransferTool extends GridToolBase {
 	 * anyone can guess from a box they dragged bottom-up. It also means the click that commits the
 	 * move is never the first sign of what it does.
 	 *
-	 * Shown whatever is held down. A modifier means the next click revises rather than places, so
-	 * this is briefly ahead of itself - but blanking it while shift or ctrl is held means it is gone
-	 * for the whole time a selection is being built up, which reads as the tool having lost its grip.
+	 * With a modifier held the next click revises what is in hand instead of placing it, so there is
+	 * no landing spot to show and drawing one would say the click does something it does not. Shift
+	 * gets its own preview instead: the cells it would take, which is a rectangle measured from an
+	 * anchor you cannot see and so is exactly as much guesswork as the landing spot was.
 	 */
-	override onHover(ctx: GridToolContext, location: ControlLocation | null, _modifiers: GridButtonModifiers): void {
+	override onHover(ctx: GridToolContext, location: ControlLocation | null, modifiers: GridButtonModifiers): void {
 		if (!this.#sources) return
 
-		if (!location) {
+		if (location && modifiers.range && this.#rangeAnchor) {
+			ctx.store.setDragPreview(null)
+			ctx.store.setPendingSources(locationsInRectangle(this.#rangeAnchor, location))
+			return
+		}
+		ctx.store.setPendingSources(null)
+
+		if (!location || modifiers.range || modifiers.toggle) {
 			ctx.store.setDragPreview(null)
 			return
 		}
@@ -228,6 +245,7 @@ export class TransferTool extends GridToolBase {
 		this.#sources = null
 		this.#rangeAnchor = null
 		ctx.store.setDragPreview(null)
+		ctx.store.setPendingSources(null)
 	}
 
 	override onBack(ctx: GridToolContext): boolean {
@@ -239,6 +257,7 @@ export class TransferTool extends GridToolBase {
 		this.#sources = null
 		this.#rangeAnchor = null
 		ctx.store.setDragPreview(null)
+		ctx.store.setPendingSources(null)
 		ctx.store.setSelection(released)
 		return true
 	}

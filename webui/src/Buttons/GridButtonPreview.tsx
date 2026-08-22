@@ -35,6 +35,8 @@ export interface GridButtonPreviewProps {
 
 	selected: boolean
 	copySource: boolean
+	/** A shift-click here would take this button, so it is shown as about to be picked up */
+	pendingSource: boolean
 	contextMenuOpen: boolean
 	canDrop: boolean
 	dropHover: boolean
@@ -71,6 +73,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 	onContextMenu,
 	selected,
 	copySource,
+	pendingSource,
 	contextMenuOpen,
 	canDrop,
 	dropHover,
@@ -177,6 +180,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 				'grid-pannable': !pressMode,
 				selected,
 				'copy-source': copySource,
+				'pending-source': pendingSource && !copySource,
 				'context-menu-open': contextMenuOpen,
 				drophere: canDrop,
 				drophover: (dropHover || dropDestination) && !dropInvalid,

@@ -10,6 +10,9 @@ import type { GridToolContext, GridToolId } from './types.js'
  * available to a finger: a touch drag has to stay as scrolling the grid, and there is no ctrl key.
  * So the behaviour becomes a mode you enter, which works the same way with a mouse for anyone who
  * would rather not hold a chord.
+ *
+ * Whatever is already selected is kept, so this can be entered part-way through picking things out
+ * rather than starting again.
  */
 export class MultiSelectTool extends SelectTool {
 	override readonly id: GridToolId = 'multi-select'
@@ -17,11 +20,6 @@ export class MultiSelectTool extends SelectTool {
 	override hint(ctx: GridToolContext): string | null {
 		// Once something is selected the context bar has a count to show instead, which is more useful
 		return ctx.store.selectionCount > 0 ? null : 'Tap buttons to add and remove them from the selection'
-	}
-
-	override onEnter(_ctx: GridToolContext): void {
-		// Deliberately keeps whatever is already selected, so this can be entered part-way through
-		// picking things out rather than starting again
 	}
 
 	override onTap(ctx: GridToolContext, location: ControlLocation, modifiers: GridButtonModifiers): void {

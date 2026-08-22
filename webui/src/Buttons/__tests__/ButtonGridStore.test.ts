@@ -596,6 +596,60 @@ describe('ButtonGridStore', () => {
 		})
 	})
 
+	describe('changing your mind about which transfer tool', () => {
+		const held = () => [...store.transferSourceKeys].sort()
+
+		it('keeps the buttons when switching between copy, move and swap', () => {
+			store.setTool('copy', actions)
+			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+			expect(held()).toEqual(['1/1/1', '1/1/2'])
+
+			store.setTool('move', actions)
+
+			expect(held()).toEqual(['1/1/1', '1/1/2'])
+			expect(store.hint(actions)).toBe('Where do you want it?')
+		})
+
+		it('keeps a single button too, which arming over a selection would not have taken', () => {
+			store.setTool('copy', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			store.setTool('swap', actions)
+
+			expect(held()).toEqual(['1/1/1'])
+			expect(store.hint(actions)).toBe('Where do you want it?')
+		})
+
+		it('hands them back as a selection when leaving for a tool with no use for them', () => {
+			store.setTool('move', actions)
+			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+
+			store.setTool('select', actions)
+
+			expect(held()).toEqual([])
+			expect(store.selectedLocations).toEqual([at(1, 1), at(1, 2)])
+		})
+
+		it('asks about the buttons in hand when switching to delete', () => {
+			store.setTool('move', actions)
+			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+
+			store.setTool('delete', actions)
+
+			expect(actions.clearButtons).toHaveBeenCalledWith([at(1, 1), at(1, 2)])
+		})
+
+		it('puts them down when switching to press mode, where a highlight only misleads', () => {
+			store.setTool('move', actions)
+			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+
+			store.setTool('press', actions)
+
+			expect(held()).toEqual([])
+			expect(store.selectionCount).toBe(0)
+		})
+	})
+
 	describe('going back', () => {
 		it('unwinds a half-finished transfer to its source step', () => {
 			store.setTool('copy', actions)
@@ -810,13 +864,69 @@ describe('ButtonGridStore', () => {
 			expect(pairs).toContainEqual({ fromLocation: at(0, 0), toLocation: at(1, 3) })
 		})
 
-		it('keeps showing the landing spot while a modifier is held', () => {
-			// Blanking it would mean no ghost at all for as long as a selection is being built up with
-			// shift or ctrl, which reads as the tool having lost its grip on the buttons
+		it('shows no landing spot while a modifier would revise the selection instead', () => {
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.handleHover(at(2, 2), NO_MODIFIERS, actions)
+
+			store.handleHover(at(2, 2), TOGGLE, actions)
+
+			expect(store.dropGhostSource('1/2/2')).toBeNull()
+		})
+
+		it('shows which buttons a shift-click would take instead', () => {
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			store.handleHover(at(2, 2), RANGE, actions)
+
+			// The rectangle from the anchor, which is otherwise guesswork - the same problem the landing
+			// ghost solves for placing
+			expect(store.isPendingSource('1/1/1')).toBe(true)
+			expect(store.isPendingSource('1/2/2')).toBe(true)
+			expect(store.isPendingSource('1/1/2')).toBe(true)
+			expect(store.isPendingSource('1/3/3')).toBe(false)
+			// And no landing spot, since the click would not place anything
+			expect(store.dropGhostSource('1/2/2')).toBeNull()
+		})
+
+		it('drops the shift preview once shift is released', () => {
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.handleHover(at(2, 2), RANGE, actions)
+
+			store.handleHover(at(2, 2), NO_MODIFIERS, actions)
+
+			expect(store.isPendingSource('1/2/2')).toBe(false)
+		})
+
+		it('drops the shift preview once the buttons are taken', () => {
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.handleHover(at(2, 2), RANGE, actions)
+
+			store.handleTap(at(2, 2), RANGE, actions)
+
+			expect(store.isPendingSource('1/2/2')).toBe(false)
+			expect([...store.transferSourceKeys].sort()).toEqual(['1/1/1', '1/1/2', '1/2/1', '1/2/2'])
+		})
+
+		it('shows nothing for a ctrl hover, which could be adding or taking away', () => {
 			store.setTool('move', actions)
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
 
 			store.handleHover(at(2, 2), TOGGLE, actions)
+
+			expect(store.isPendingSource('1/2/2')).toBe(false)
+			expect(store.dropGhostSource('1/2/2')).toBeNull()
+		})
+
+		it('brings it back once the modifier is released', () => {
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.handleHover(at(2, 2), TOGGLE, actions)
+
+			store.handleHover(at(2, 2), NO_MODIFIERS, actions)
 
 			expect(store.dropGhostSource('1/2/2')).toEqual(at(1, 1))
 		})
