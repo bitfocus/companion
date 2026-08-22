@@ -106,3 +106,25 @@ export function withoutEmptySources(
 
 	return pairs.filter(({ fromLocation }) => isOccupied(fromLocation))
 }
+
+/** What a click would do to a cell that is about to join or leave a set */
+export type GridPendingChange = 'add' | 'remove'
+
+/**
+ * Which cells these two sets differ by, and which way round.
+ *
+ * Drawn while a modifier is held, so a click that revises a set says what it would revise before it
+ * happens - the same answer the landing ghost gives for a click that places.
+ */
+export function pendingChanges(
+	before: readonly ControlLocation[],
+	after: readonly ControlLocation[]
+): Map<string, GridPendingChange> {
+	const beforeKeys = new Set(before.map(formatLocation))
+	const afterKeys = new Set(after.map(formatLocation))
+
+	const changes = new Map<string, GridPendingChange>()
+	for (const key of afterKeys) if (!beforeKeys.has(key)) changes.set(key, 'add')
+	for (const key of beforeKeys) if (!afterKeys.has(key)) changes.set(key, 'remove')
+	return changes
+}

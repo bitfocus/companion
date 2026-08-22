@@ -14,7 +14,12 @@ import { ButtonGridHeader } from './ButtonGridHeader.js'
 import { ButtonGridPageMenu } from './ButtonGridPageMenu.js'
 import { ButtonGridResizePrompt } from './ButtonGridResizePrompt.js'
 import { ButtonGridToolbar } from './ButtonGridToolbar.js'
-import { useButtonGridView, useGridFocus, useGridPressMode } from './ButtonGridViewContext.js'
+import {
+	useButtonGridView,
+	useGridFocus,
+	useGridPendingChangesJoin,
+	useGridPressMode,
+} from './ButtonGridViewContext.js'
 import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { ButtonInfiniteGrid, PrimaryButtonGridIcon, type ButtonInfiniteGridRef } from './ButtonInfiniteGrid.js'
 import { GridButtonDragOverlay } from './GridButtonDragOverlay.js'
@@ -101,6 +106,18 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	}, [gridZoomController])
 
 	const pressMode = useGridPressMode()
+	const pendingChangesJoin = useGridPendingChangesJoin()
+
+	// Inherited by every cell, so a dashed "about to change" outline is drawn in the colour of the set
+	// it would join - matching the solid outline already on the buttons that are in it
+	const contentStyle = useMemo(
+		() => ({
+			minHeight: viewportMinHeight,
+			'--pending-change-color':
+				pendingChangesJoin === 'held-buttons' ? 'var(--color-copy-source)' : 'var(--color-primary)',
+		}),
+		[viewportMinHeight, pendingChangesJoin]
+	)
 	const focus = useGridFocus()
 
 	// What a dragged box picks is the active tool's business: a region to select, the buttons a
@@ -161,7 +178,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 			{/* Rendered inside the grid's own styles, so the ghost is drawn the way the grid draws buttons */}
 			<GridButtonDragOverlay />
 
-			<div className="button-grid-panel-content" style={{ minHeight: viewportMinHeight }} ref={contentRef}>
+			<div className="button-grid-panel-content" style={contentStyle} ref={contentRef}>
 				{hasBeenInView && gridSize && (
 					<ButtonInfiniteGrid
 						ref={gridRef}

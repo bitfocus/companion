@@ -2,7 +2,7 @@ import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { GridButtonModifiers } from './GridButtonPreview.js'
-import { locationsInRectangle } from './GridGeometry.js'
+import { locationsInRectangle, type GridPendingChange } from './GridGeometry.js'
 import {
 	createGridTool,
 	DEFAULT_GRID_TOOL_ID,
@@ -94,6 +94,10 @@ export class ButtonGridStore {
 	 */
 	allowsMarquee = (additive: boolean): boolean => {
 		return this.#activeTool.allowsMarquee(additive)
+	}
+
+	get pendingChangesJoin(): 'selection' | 'held-buttons' {
+		return this.#activeTool.pendingChangesJoin
 	}
 
 	get selectedLocations(): readonly ControlLocation[] {
@@ -226,32 +230,42 @@ export class ButtonGridStore {
 	 * every file manager and grid editor behaves. Shift is only free to mean this because hot
 	 * pressing moved to its own tool.
 	 */
-	selectWithModifiers(location: ControlLocation, modifiers: GridButtonModifiers): void {
+	/**
+	 * What the selection would become if this cell were clicked with these modifiers.
+	 *
+	 * Pure, and shared with the preview drawn while a modifier is held, so what is shown and what the
+	 * click then does cannot be worked out two different ways.
+	 */
+	selectionAfter(location: ControlLocation, modifiers: GridButtonModifiers): ControlLocation[] {
 		const key = formatLocation(location)
 
 		// A selection only ever spans one page, so reaching another page starts again
 		const crossesPages = this.selectionPageNumber !== null && this.selectionPageNumber !== location.pageNumber
 
 		if (modifiers.range && this.#rangeAnchor && !crossesPages) {
-			this.#focus = location
-			this.#applySelection(locationsInRectangle(this.#rangeAnchor, location))
-			return
+			return locationsInRectangle(this.#rangeAnchor, location)
 		}
 
 		if (modifiers.toggle && !crossesPages) {
-			const next = this.#selectionKeys.has(key)
+			return this.#selectionKeys.has(key)
 				? this.#selectionLocations.filter((l) => formatLocation(l) !== key)
 				: [...this.#selectionLocations, location]
-
-			this.#focus = location
-			this.#rangeAnchor = location
-			this.#applySelection(next)
-			return
 		}
 
+		return [location]
+	}
+
+	selectWithModifiers(location: ControlLocation, modifiers: GridButtonModifiers): void {
+		// Worked out before the anchor moves, since a range measures from it
+		const next = this.selectionAfter(location, modifiers)
+
+		const crossesPages = this.selectionPageNumber !== null && this.selectionPageNumber !== location.pageNumber
+		const extendsRange = modifiers.range && !!this.#rangeAnchor && !crossesPages
+
 		this.#focus = location
-		this.#rangeAnchor = location
-		this.#applySelection([location])
+		// A range keeps measuring from where it started; anything else starts measuring from here
+		if (!extendsRange) this.#rangeAnchor = location
+		this.#applySelection(next)
 	}
 
 	// ---- tools ----
@@ -269,6 +283,8 @@ export class ButtonGridStore {
 		const carriedOver = [...this.#activeTool.getSourceLocations()]
 
 		this.#activeTool.onExit(ctx)
+		// Whatever the last tool was drawing under the cursor is its business, not the next one's
+		this.setPendingChanges(null)
 		this.#activeTool = createGridTool(id)
 		this.#activeTool.onEnter(this.#context(actions), carriedOver)
 		this.#notify()
@@ -455,9 +471,6 @@ export interface GridDragPreview {
 
 /** Stands in for "no location" when comparing two previews, so neither side needs a null check */
 const NOWHERE: ControlLocation = { pageNumber: -1, row: -1, column: -1 }
-
-/** What a modifier-click would do to a cell: take it into what is held, or put it back */
-export type GridPendingChange = 'add' | 'remove'
 
 const EMPTY_PENDING_CHANGES: ReadonlyMap<string, GridPendingChange> = new Map()
 

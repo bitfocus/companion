@@ -70,11 +70,10 @@ describe('planGridDrop', () => {
 		expect(planGridDrop(at(1, 1), at(2, 3), [at(1, 1)], GRID_SIZE, occupiedAt(at(1, 1)))?.fitsOnGrid).toBe(true)
 	})
 
-	it('reports what would be overwritten', () => {
+	it('reports the cells it would land on', () => {
 		const sources = [at(0, 0), at(0, 1)]
 		const plan = planGridDrop(at(0, 0), at(2, 0), sources, GRID_SIZE, occupiedAt(...sources, at(2, 0), at(2, 1)))
 
-		expect(plan?.operation).toBe('move')
 		expect(plan?.overwrittenLocations).toEqual([at(2, 0), at(2, 1)])
 	})
 
@@ -86,9 +85,25 @@ describe('planGridDrop', () => {
 		expect(plan?.overwrittenLocations).toEqual([])
 	})
 
-	it('never swaps a whole region, since the displaced buttons have nowhere sensible to go', () => {
+	it('swaps a whole region too - the displaced buttons go where the dragged ones came from', () => {
 		const sources = [at(0, 0), at(0, 1)]
 		const plan = planGridDrop(at(0, 0), at(2, 0), sources, GRID_SIZE, occupiedAt(...sources, at(2, 0)))
+
+		expect(plan?.operation).toBe('swap')
+	})
+
+	it('moves rather than swaps when a region is nudged onto part of itself', () => {
+		// A cell that is both a source and a destination cannot be both ends of a trade
+		const sources = [at(0, 0), at(0, 1)]
+		const plan = planGridDrop(at(0, 0), at(0, 1), sources, GRID_SIZE, occupiedAt(...sources, at(0, 2)))
+
+		expect(plan?.operation).toBe('move')
+		expect(plan?.overwrittenLocations).toEqual([at(0, 2)])
+	})
+
+	it('still moves onto empty cells, where there is nothing to trade with', () => {
+		const sources = [at(0, 0), at(0, 1)]
+		const plan = planGridDrop(at(0, 0), at(2, 0), sources, GRID_SIZE, occupiedAt(...sources))
 
 		expect(plan?.operation).toBe('move')
 	})

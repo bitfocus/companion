@@ -30,12 +30,13 @@
 		box-shadow: 0px 0px 0px 1px var(--color-copy-source) inset;
 	}
 
-	/* What the modifier-click being lined up would do. Dashed in the picked-up colour either way, so
-	   it reads as "would be" against the solid "is" - and dimmed when the button is on its way out
+	/* What the modifier-click being lined up would do. Dashed against the solid outline of what is
+	   already in the set, so it reads as "would be" rather than "is", in the colour of whichever set
+	   that is (the grid sets `--pending-change-color`) - and dimmed when the button is on its way out
 	   of the set rather than into it. */
 	&.pending-add .button-border,
 	&.pending-remove .button-border {
-		border: 1px dashed var(--color-copy-source) !important;
+		border: 1px dashed var(--pending-change-color, var(--color-copy-source)) !important;
 		box-shadow: none;
 	}
 

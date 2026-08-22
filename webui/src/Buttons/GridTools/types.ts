@@ -61,6 +61,14 @@ export interface GridTool {
 	readonly dragAnyButton: boolean
 
 	/**
+	 * Which set this tool's pending changes would join, so they can be drawn in that set's colour.
+	 *
+	 * A dashed outline says "about to change"; the colour says what it is about to become part of,
+	 * matching the solid outline already on the buttons that are there.
+	 */
+	readonly pendingChangesJoin: 'selection' | 'held-buttons'
+
+	/**
 	 * Whether dragging a box across the grid means anything right now.
 	 *
 	 * A method rather than a flag because it depends on where the tool has got to, and on what is
@@ -112,6 +120,7 @@ export abstract class GridToolBase implements GridTool {
 
 	readonly pressMode: boolean = false
 	readonly dragAnyButton: boolean = false
+	readonly pendingChangesJoin: 'selection' | 'held-buttons' = 'selection'
 
 	hint(_ctx: GridToolContext): string | null {
 		return null

@@ -22,8 +22,16 @@ export class MultiSelectTool extends SelectTool {
 		return ctx.store.selectionCount > 0 ? null : 'Tap buttons to add and remove them from the selection'
 	}
 
+	/** Shift still extends a range, which is the one thing worth keeping from the modifier version */
+	protected override tapModifiers(modifiers: GridButtonModifiers): GridButtonModifiers {
+		return { range: modifiers.range, toggle: !modifiers.range }
+	}
+
 	override onTap(ctx: GridToolContext, location: ControlLocation, modifiers: GridButtonModifiers): void {
-		// Shift still extends a range, which is the one thing worth keeping from the modifier version
-		ctx.store.selectWithModifiers(location, { range: modifiers.range, toggle: !modifiers.range })
+		ctx.store.selectWithModifiers(location, this.tapModifiers(modifiers))
+
+		// Every tap here adds or removes, so the cell under the cursor always has something to say and
+		// there is no plain-click case to keep quiet for
+		this.onHover(ctx, location, modifiers)
 	}
 }
