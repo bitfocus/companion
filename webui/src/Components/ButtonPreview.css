@@ -30,10 +30,17 @@
 		box-shadow: 0px 0px 0px 1px var(--color-copy-source) inset;
 	}
 
-	/* About to be picked up by the shift-click being lined up - the same colour, dashed and without
-	   the inset glow, so it reads as "would be" rather than "is" */
-	&.pending-source .button-border {
+	/* What the modifier-click being lined up would do. Dashed in the picked-up colour either way, so
+	   it reads as "would be" against the solid "is" - and dimmed when the button is on its way out
+	   of the set rather than into it. */
+	&.pending-add .button-border,
+	&.pending-remove .button-border {
 		border: 1px dashed var(--color-copy-source) !important;
+		box-shadow: none;
+	}
+
+	&.pending-remove .button-border {
+		filter: brightness(0.5);
 	}
 
 	&.context-menu-open .button-border {
@@ -79,6 +86,14 @@
 	&.preset-drag-source:not([popover]) {
 		opacity: 0.8;
 		filter: blur(1px);
+	}
+
+	/* The grid draws its own ghost in a DragOverlay, which mounts a couple of frames after dnd-kit has
+	   already put this clone under the cursor - long enough to see the plain button flash before the
+	   ghost replaces it. The clone still carries the position collision detection reads, so it is
+	   hidden rather than turned off; a preset, whose clone *is* its feedback, keeps showing. */
+	&.grid-button[popover] {
+		opacity: 0;
 	}
 
 	.button-border {
