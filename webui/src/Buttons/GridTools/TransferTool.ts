@@ -76,14 +76,14 @@ export class TransferTool extends GridToolBase {
 		if (additive && this.#sources) {
 			const held = new Set(this.#sources.map(formatLocation))
 			this.#sources = [...this.#sources, ...region.filter((location) => !held.has(formatLocation(location)))]
+			ctx.store.notifyToolChanged()
 		} else {
-			this.#sources = region
+			this.#pickUp(ctx, region)
 			this.#rangeAnchor = from
 		}
 
 		// Whatever was drawn for the old set is now wrong
 		ctx.store.setDragPreview(null)
-		ctx.store.notifyToolChanged()
 	}
 
 	override onEnter(ctx: GridToolContext): void {
@@ -91,26 +91,40 @@ export class TransferTool extends GridToolBase {
 		// selected button is just the one you last looked at - clicking a button to see it selects it -
 		// so treating that as the source would silently make your first tap the destination.
 		const selection = ctx.store.selectedLocations
-		if (selection.length <= 1) return
+		if (selection.length > 1) this.#pickUp(ctx, [...selection])
 
-		// Picked up, not selected. Leaving them selected as well means two copies of the same thing,
-		// and anything that clears one - deselecting, say - leaves the other behind still holding them.
-		this.#sources = [...selection]
-		this.#rangeAnchor = selection[0]
+		// Either way nothing is left selected. A highlighted button the tool is not holding is the
+		// confusing half of two copies of the same state: it looks picked up and behaves as though it
+		// is not, so the next modifier-click appears to ignore it.
 		ctx.store.clearSelection()
+	}
+
+	/** Held by the tool, and so no longer selected - one or the other owns them, never both */
+	#pickUp(ctx: GridToolContext, locations: ControlLocation[]): void {
+		this.#sources = locations
+		this.#rangeAnchor = locations[0]
+		ctx.store.clearSelection()
+		ctx.store.notifyToolChanged()
 	}
 
 	override onTap(ctx: GridToolContext, location: ControlLocation, modifiers: GridButtonModifiers): void {
 		if (!this.#sources) {
+			// A modifier means "and this one too", so it has to have something to add to. Anything
+			// selected is what that is - a selection handed back by Escape, or one made while the tool
+			// was already armed - rather than being quietly dropped in favour of the cell just clicked.
+			const selection = ctx.store.selectedLocations
+			if ((modifiers.range || modifiers.toggle) && selection.length > 0) {
+				this.#pickUp(ctx, [...selection])
+				this.#reviseSources(ctx, location, modifiers)
+				return
+			}
+
 			// Copying or moving an empty cell has nothing to carry, and would quietly wipe whatever it
 			// was dropped on. A swap is symmetric - trading with an empty cell is how you move a button
 			// into one - so it accepts either end.
 			if (this.#operation !== 'swap' && !ctx.actions.isOccupied(location)) return
 
-			// Nothing to extend or toggle against yet, so a modifier just starts the set off
-			this.#sources = [location]
-			this.#rangeAnchor = location
-			ctx.store.notifyToolChanged()
+			this.#pickUp(ctx, [location])
 			return
 		}
 
@@ -191,13 +205,14 @@ export class TransferTool extends GridToolBase {
 	 * anyone can guess from a box they dragged bottom-up. It also means the click that commits the
 	 * move is never the first sign of what it does.
 	 *
-	 * With a modifier held the next click revises what is in hand instead of placing it, so there is
-	 * no landing spot to show and drawing one would be a lie.
+	 * Shown whatever is held down. A modifier means the next click revises rather than places, so
+	 * this is briefly ahead of itself - but blanking it while shift or ctrl is held means it is gone
+	 * for the whole time a selection is being built up, which reads as the tool having lost its grip.
 	 */
-	override onHover(ctx: GridToolContext, location: ControlLocation | null, modifiers: GridButtonModifiers): void {
+	override onHover(ctx: GridToolContext, location: ControlLocation | null, _modifiers: GridButtonModifiers): void {
 		if (!this.#sources) return
 
-		if (!location || modifiers.range || modifiers.toggle) {
+		if (!location) {
 			ctx.store.setDragPreview(null)
 			return
 		}
