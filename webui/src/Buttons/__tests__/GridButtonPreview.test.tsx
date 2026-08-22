@@ -25,6 +25,7 @@ function setup(props: Partial<Props> = {}) {
 			onContextMenu={onContextMenu}
 			selected={false}
 			copySource={false}
+			pendingSource={false}
 			contextMenuOpen={false}
 			canDrop={false}
 			dropHover={false}

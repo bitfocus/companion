@@ -13,6 +13,7 @@ import {
 	useGridDragAnyButton,
 	useGridDragPreviewValid,
 	useGridDropGhostSource,
+	useGridIsPendingSource,
 	useGridIsSelected,
 	useGridIsTransferSource,
 	useGridPressMode,
@@ -523,6 +524,7 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 
 	// Which button would end up here if the drag were released, so the cell can ghost it. Seeing the
 	// buttons themselves is what makes it possible to check a large block has lined up.
+	const isPendingSource = useGridIsPendingSource(locationKey)
 	const ghostSource = useGridDropGhostSource(locationKey)
 	const dropWouldWork = useGridDragPreviewValid()
 
@@ -567,6 +569,7 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 			onContextMenu={onContextMenu}
 			selected={selected}
 			copySource={isTransferSource}
+			pendingSource={isPendingSource}
 			contextMenuOpen={contextMenuOpen}
 			canDrop={canDrop}
 			dropHover={isDropTarget}

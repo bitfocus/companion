@@ -17,9 +17,9 @@ export class PressTool extends GridToolBase {
 		ctx.actions.press(location, isDown)
 	}
 
-	override onEnter(ctx: GridToolContext): void {
+	override onEnter(ctx: GridToolContext, _carriedOver: readonly ControlLocation[]): void {
 		// Nothing here acts on a selection, and leaving buttons highlighted while the grid is live
-		// only muddles what is about to happen
+		// only muddles what is about to happen - so anything in hand is put down rather than handed on
 		ctx.store.clearSelection()
 	}
 }

@@ -87,7 +87,11 @@ export interface GridTool {
 	/** Buttons this tool has picked up and is about to act on, so the grid can mark them */
 	getSourceLocations(): readonly ControlLocation[]
 
-	onEnter(ctx: GridToolContext): void
+	/**
+	 * @param carriedOver what the tool being replaced had picked up and not yet put down, so changing
+	 * your mind about which tool should act on them does not cost you the picking
+	 */
+	onEnter(ctx: GridToolContext, carriedOver: readonly ControlLocation[]): void
 	onExit(ctx: GridToolContext): void
 
 	onTap(ctx: GridToolContext, location: ControlLocation, modifiers: GridButtonModifiers): void
@@ -129,8 +133,10 @@ export abstract class GridToolBase implements GridTool {
 		// nothing by default
 	}
 
-	onEnter(_ctx: GridToolContext): void {
-		// nothing by default
+	onEnter(ctx: GridToolContext, carriedOver: readonly ControlLocation[]): void {
+		// Handed back as a selection rather than dropped: a tool that has no use for buttons in hand
+		// should still not be where a set you built up quietly disappears
+		if (carriedOver.length > 0) ctx.store.setSelection([...carriedOver])
 	}
 
 	onExit(_ctx: GridToolContext): void {
