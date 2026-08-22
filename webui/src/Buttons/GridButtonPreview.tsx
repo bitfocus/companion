@@ -41,11 +41,14 @@ export interface GridButtonPreviewProps {
 	contextMenuOpen: boolean
 	canDrop: boolean
 	dropHover: boolean
-	/** A button is heading for this cell */
+	/** Something is heading for this cell - a button, or the empty half of a swap */
 	dropDestination: boolean
 	/** Marked as a landing spot, but releasing here would be refused */
 	dropInvalid: boolean
-	/** The button that would end up here, drawn over this cell's own so the landing can be checked */
+	/**
+	 * The button that would end up here, drawn over this cell's own so the landing can be checked.
+	 * Null when what lands here is nothing, which is drawn as an empty button rather than not at all.
+	 */
 	ghostImage: string | null
 	dropRef: React.RefCallback<HTMLDivElement>
 	/** Null when this button cannot be dragged right now, so nothing is marked up as draggable */
@@ -205,7 +208,15 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 				title={title}
 			>
 				{!preloadedImage && <div className="button-placeholder">{placeholder}</div>}
-				{ghostImage && <div className="button-drop-ghost" style={{ backgroundImage: `url(${ghostImage})` }} />}
+				{/* Drawn for any cell something is heading to, image or not: with no image it paints an
+				    empty button, which is how the end of a swap that empties is shown. Without it that
+				    cell would still be showing the button that is about to leave it. */}
+				{dropDestination && (
+					<div
+						className="button-drop-ghost"
+						style={ghostImage ? { backgroundImage: `url(${ghostImage})` } : undefined}
+					/>
+				)}
 			</div>
 		</div>
 	)

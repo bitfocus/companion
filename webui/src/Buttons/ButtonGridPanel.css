@@ -72,6 +72,46 @@
 	min-width: 0;
 }
 
+/* What follows the cursor while buttons are dragged around the grid. Solid, so a block reads as the
+   buttons themselves rather than as something being faded in or out. */
+.grid-drag-ghost {
+	--grid-drag-ghost-cell: 44px;
+
+	display: grid;
+	gap: 2px;
+	width: max-content;
+
+	/* Centred on the cell the drag was started from, which is the box dnd-kit sizes this to. The
+	   ghost draws a cell smaller than the real thing - a large region at full size would be a
+	   screenful following the cursor - so without this it sits up and to the left of the pointer. */
+	position: relative;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+
+	pointer-events: none;
+}
+
+/* A gap in the region being dragged. It takes up its place in the shape, and lands on nothing. */
+.grid-drag-ghost-hole {
+	border: 1px dashed var(--color-button-border);
+	border-radius: Max(12%, 4px);
+
+	opacity: 0.4;
+}
+
+/* Past a certain size a faithful ghost is a screenful of buttons following the cursor, so it becomes
+   a count instead */
+.grid-drag-ghost-count {
+	padding: 8px 12px;
+	border-radius: var(--radius);
+
+	background-color: var(--color-surface-dark);
+	color: var(--color-text-strong);
+	font-weight: bold;
+	white-space: nowrap;
+}
+
 .button-grid-panel-content {
 	overflow: hidden;
 	align-self: center;
