@@ -557,6 +557,45 @@ describe('ButtonGridStore', () => {
 		})
 	})
 
+	describe('what a transfer tool does with the selection it was armed over', () => {
+		it('adds to the selection when a modifier click arrives with nothing yet in hand', () => {
+			// Escape hands the buttons back to the selection, so this is the state after backing out
+			store.setTool('move', actions)
+			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+			store.goBack(actions)
+			expect(store.selectionCount).toBe(2)
+
+			store.handleTap(at(3, 3), TOGGLE, actions)
+
+			expect([...store.transferSourceKeys].sort()).toEqual(['1/1/1', '1/1/2', '1/3/3'])
+			// Held, not selected - one or the other owns them
+			expect(store.selectionCount).toBe(0)
+			expect(actions.transfer).not.toHaveBeenCalled()
+		})
+
+		it('leaves nothing selected when it declines to take a single button', () => {
+			// Clicking a button to look at it selects it, so this is where the tool is usually armed
+			// from. Leaving it highlighted makes it look picked up when it is not.
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+			store.setTool('copy', actions)
+
+			expect(store.selectionCount).toBe(0)
+			expect(store.hint(actions)).toBe('Press the button you want to copy')
+		})
+
+		it('drops the selection when a plain tap picks something up instead', () => {
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+			store.selectWithModifiers(at(2, 2), TOGGLE)
+			store.setTool('move', actions)
+			store.goBack(actions)
+
+			store.handleTap(at(3, 3), NO_MODIFIERS, actions)
+
+			expect([...store.transferSourceKeys]).toEqual(['1/3/3'])
+			expect(store.selectionCount).toBe(0)
+		})
+	})
+
 	describe('going back', () => {
 		it('unwinds a half-finished transfer to its source step', () => {
 			store.setTool('copy', actions)
@@ -771,14 +810,15 @@ describe('ButtonGridStore', () => {
 			expect(pairs).toContainEqual({ fromLocation: at(0, 0), toLocation: at(1, 3) })
 		})
 
-		it('shows no landing spot while a modifier would revise the selection instead', () => {
+		it('keeps showing the landing spot while a modifier is held', () => {
+			// Blanking it would mean no ghost at all for as long as a selection is being built up with
+			// shift or ctrl, which reads as the tool having lost its grip on the buttons
 			store.setTool('move', actions)
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
-			store.handleHover(at(2, 2), NO_MODIFIERS, actions)
 
 			store.handleHover(at(2, 2), TOGGLE, actions)
 
-			expect(store.dropGhostSource('1/2/2')).toBeNull()
+			expect(store.dropGhostSource('1/2/2')).toEqual(at(1, 1))
 		})
 
 		it('shows both ends of a swap, so the displaced buttons are visible too', () => {
