@@ -2,7 +2,7 @@ import classnames from 'classnames'
 import { memo, useCallback, useRef } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { useImagePreloader } from '~/Components/ButtonPreview.js'
-import type { GridPendingChange } from './ButtonGridStore.js'
+import type { GridPendingChange } from './GridGeometry.js'
 
 /**
  * How far (px) a pointer may travel before the gesture stops counting as a tap. Touch scrolling is

@@ -1,8 +1,13 @@
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { GridPendingChange } from '../ButtonGridStore.js'
 import type { GridButtonModifiers } from '../GridButtonPreview.js'
-import { buildTransferPairs, locationsInRectangle, previewPlacements, withoutEmptySources } from '../GridGeometry.js'
+import {
+	buildTransferPairs,
+	locationsInRectangle,
+	pendingChanges,
+	previewPlacements,
+	withoutEmptySources,
+} from '../GridGeometry.js'
 import { GridToolBase, type GridToolContext, type GridToolId, type GridTransferOperation } from './types.js'
 
 const VERBS: Record<GridTransferOperation, string> = {
@@ -26,6 +31,9 @@ export class TransferTool extends GridToolBase {
 	readonly id: GridToolId
 
 	readonly #operation: GridTransferOperation
+
+	/** Revising what a transfer holds, not what is selected - the tool took those out of it */
+	override readonly pendingChangesJoin = 'held-buttons' as const
 
 	/**
 	 * What is being transferred, once chosen.
@@ -191,21 +199,12 @@ export class TransferTool extends GridToolBase {
 		this.#sources = revised.length > 0 ? revised : null
 		if (!this.#sources) this.#rangeAnchor = null
 
-		// What was in hand has changed, so anything drawn for the old set is now wrong
+		// What was in hand has changed, so anything drawn for the old set is now wrong. Redrawn for the
+		// new one rather than just cleared: the pointer has not moved, and going blank until it does
+		// looks like the click failed - where "a second one would undo this" is the useful answer.
 		ctx.store.setDragPreview(null)
-		ctx.store.setPendingChanges(null)
 		ctx.store.notifyToolChanged()
-	}
-
-	/** Which cells this set differs from the held one by, and which way round */
-	#changesFrom(revised: readonly ControlLocation[]): Map<string, GridPendingChange> {
-		const heldKeys = new Set((this.#sources ?? []).map(formatLocation))
-		const revisedKeys = new Set(revised.map(formatLocation))
-
-		const changes = new Map<string, GridPendingChange>()
-		for (const key of revisedKeys) if (!heldKeys.has(key)) changes.set(key, 'add')
-		for (const key of heldKeys) if (!revisedKeys.has(key)) changes.set(key, 'remove')
-		return changes
+		this.onHover(ctx, location, modifiers)
 	}
 
 	/**
@@ -243,7 +242,7 @@ export class TransferTool extends GridToolBase {
 
 		if (location && (modifiers.range || modifiers.toggle)) {
 			ctx.store.setDragPreview(null)
-			ctx.store.setPendingChanges(this.#changesFrom(this.#revisedSources(location, modifiers)))
+			ctx.store.setPendingChanges(pendingChanges(this.#sources, this.#revisedSources(location, modifiers)))
 			return
 		}
 		ctx.store.setPendingChanges(null)

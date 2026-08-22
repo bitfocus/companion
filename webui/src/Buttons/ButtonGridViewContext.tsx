@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useSyncExternalStore } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ButtonGridStore, GridClipboard, GridPendingChange } from './ButtonGridStore.js'
+import type { ButtonGridStore, GridClipboard } from './ButtonGridStore.js'
+import type { GridPendingChange } from './GridGeometry.js'
 import type { GridToolActions, GridToolId } from './GridTools/index.js'
 
 /**
@@ -98,6 +99,11 @@ export function useGridPressMode(): boolean {
 const selectDragAnyButton = (store: ButtonGridStore) => store.dragAnyButton
 export function useGridDragAnyButton(): boolean {
 	return useGridStoreValue(selectDragAnyButton)
+}
+
+const selectPendingChangesJoin = (store: ButtonGridStore) => store.pendingChangesJoin
+export function useGridPendingChangesJoin(): 'selection' | 'held-buttons' {
+	return useGridStoreValue(selectPendingChangesJoin)
 }
 
 const selectActiveToolId = (store: ButtonGridStore) => store.activeToolId

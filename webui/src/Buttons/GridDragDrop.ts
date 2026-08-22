@@ -66,9 +66,17 @@ export function planGridDrop(
 		// A cell the region is vacating anyway is not being overwritten
 		.filter((location) => !sourceKeys.has(formatLocation(location)) && isOccupied(location))
 
-	// Dropping one button onto another trades places, the way rearranging icons does everywhere else.
-	// A whole region cannot do that without scattering whatever it displaced, so it overwrites.
-	const operation: GridTransferOperation = pairs.length === 1 && overwrittenLocations.length === 1 ? 'swap' : 'move'
+	// Dropping onto occupied cells trades places, the way rearranging icons does everywhere else: the
+	// buttons that were there go back to where the dragged ones came from, so nothing is lost and
+	// there is nothing to confirm. A region does this as readily as a single button - each cell
+	// trades with the one it landed on.
+	//
+	// Unless the region is being nudged onto part of itself, where a cell is both something's source
+	// and something else's destination and cannot be both ends of a trade. That is a move, and the
+	// couple of cells beyond the region that it lands on are overwritten - which is what nudging a
+	// block along has always meant.
+	const nudgesOntoItself = pairs.some(({ toLocation }) => sourceKeys.has(formatLocation(toLocation)))
+	const operation: GridTransferOperation = overwrittenLocations.length > 0 && !nudgesOntoItself ? 'swap' : 'move'
 
 	return { operation, pairs, overwrittenLocations, fitsOnGrid }
 }

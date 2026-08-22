@@ -650,6 +650,77 @@ describe('ButtonGridStore', () => {
 		})
 	})
 
+	describe('what a modifier-click would do to the selection', () => {
+		it('shows the button a ctrl-click would add', () => {
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+
+			store.handleHover(at(2, 2), TOGGLE, actions)
+
+			expect(store.pendingChange('1/2/2')).toBe('add')
+			expect(store.pendingChange('1/1/1')).toBeNull()
+		})
+
+		it('shows the button a ctrl-click would drop', () => {
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+			store.selectWithModifiers(at(2, 2), TOGGLE)
+
+			store.handleHover(at(2, 2), TOGGLE, actions)
+
+			expect(store.pendingChange('1/2/2')).toBe('remove')
+		})
+
+		it('shows the rectangle a shift-click would reach', () => {
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+
+			store.handleHover(at(2, 2), RANGE, actions)
+
+			expect(store.pendingChange('1/1/2')).toBe('add')
+			expect(store.pendingChange('1/2/1')).toBe('add')
+			expect(store.pendingChange('1/2/2')).toBe('add')
+		})
+
+		it('stays quiet for a plain hover, where the click replaces the lot', () => {
+			// Lighting up everything about to be dropped says more about what is being left behind
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+			store.selectWithModifiers(at(2, 2), TOGGLE)
+
+			store.handleHover(at(3, 3), NO_MODIFIERS, actions)
+
+			expect(store.pendingChange('1/1/1')).toBeNull()
+			expect(store.pendingChange('1/3/3')).toBeNull()
+		})
+
+		it('flips to "another click would put it back" without waiting for the pointer to move', () => {
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+			store.handleHover(at(2, 2), TOGGLE, actions)
+			expect(store.pendingChange('1/2/2')).toBe('add')
+
+			store.handleTap(at(2, 2), TOGGLE, actions)
+
+			expect(store.pendingChange('1/2/2')).toBe('remove')
+		})
+
+		it('speaks up for every hover in multi-select, where every tap does something', () => {
+			store.setTool('multi-select', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			store.handleHover(at(2, 2), NO_MODIFIERS, actions)
+			expect(store.pendingChange('1/2/2')).toBe('add')
+
+			store.handleHover(at(1, 1), NO_MODIFIERS, actions)
+			expect(store.pendingChange('1/1/1')).toBe('remove')
+		})
+
+		it('is dropped when the tool changes', () => {
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+			store.handleHover(at(2, 2), TOGGLE, actions)
+
+			store.setTool('multi-select', actions)
+
+			expect(store.pendingChange('1/2/2')).toBeNull()
+		})
+	})
+
 	describe('going back', () => {
 		it('unwinds a half-finished transfer to its source step', () => {
 			store.setTool('copy', actions)
