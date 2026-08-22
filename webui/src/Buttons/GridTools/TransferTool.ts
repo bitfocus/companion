@@ -1,5 +1,6 @@
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { GridPendingChange } from '../ButtonGridStore.js'
 import type { GridButtonModifiers } from '../GridButtonPreview.js'
 import { buildTransferPairs, locationsInRectangle, previewPlacements, withoutEmptySources } from '../GridGeometry.js'
 import { GridToolBase, type GridToolContext, type GridToolId, type GridTransferOperation } from './types.js'
@@ -160,24 +161,30 @@ export class TransferTool extends GridToolBase {
 			this.#sources = null
 			this.#rangeAnchor = null
 			ctx.store.setDragPreview(null)
-			ctx.store.setPendingSources(null)
+			ctx.store.setPendingChanges(null)
 			ctx.store.notifyToolChanged()
 		})
 	}
 
-	/** Shift extends from where the pick started, ctrl/cmd takes one button in or out */
-	#reviseSources(ctx: GridToolContext, location: ControlLocation, modifiers: GridButtonModifiers): void {
+	/**
+	 * What the held set would become if this cell were clicked with these modifiers.
+	 *
+	 * Shift extends from where the pick started, ctrl/cmd takes one button in or out. Worked out in
+	 * one place so that what is drawn under the cursor and what the click then does cannot disagree.
+	 */
+	#revisedSources(location: ControlLocation, modifiers: GridButtonModifiers): ControlLocation[] {
 		const current = this.#sources ?? []
 
-		let revised: ControlLocation[]
-		if (modifiers.range && this.#rangeAnchor) {
-			revised = locationsInRectangle(this.#rangeAnchor, location)
-		} else {
-			const key = formatLocation(location)
-			revised = current.some((held) => formatLocation(held) === key)
-				? current.filter((held) => formatLocation(held) !== key)
-				: [...current, location]
-		}
+		if (modifiers.range && this.#rangeAnchor) return locationsInRectangle(this.#rangeAnchor, location)
+
+		const key = formatLocation(location)
+		return current.some((held) => formatLocation(held) === key)
+			? current.filter((held) => formatLocation(held) !== key)
+			: [...current, location]
+	}
+
+	#reviseSources(ctx: GridToolContext, location: ControlLocation, modifiers: GridButtonModifiers): void {
+		const revised = this.#revisedSources(location, modifiers)
 
 		// Emptied out entirely - back to asking what to take, rather than holding nothing and still
 		// claiming to be waiting for a destination
@@ -186,8 +193,19 @@ export class TransferTool extends GridToolBase {
 
 		// What was in hand has changed, so anything drawn for the old set is now wrong
 		ctx.store.setDragPreview(null)
-		ctx.store.setPendingSources(null)
+		ctx.store.setPendingChanges(null)
 		ctx.store.notifyToolChanged()
+	}
+
+	/** Which cells this set differs from the held one by, and which way round */
+	#changesFrom(revised: readonly ControlLocation[]): Map<string, GridPendingChange> {
+		const heldKeys = new Set((this.#sources ?? []).map(formatLocation))
+		const revisedKeys = new Set(revised.map(formatLocation))
+
+		const changes = new Map<string, GridPendingChange>()
+		for (const key of revisedKeys) if (!heldKeys.has(key)) changes.set(key, 'add')
+		for (const key of heldKeys) if (!revisedKeys.has(key)) changes.set(key, 'remove')
+		return changes
 	}
 
 	/**
@@ -215,21 +233,22 @@ export class TransferTool extends GridToolBase {
 	 * move is never the first sign of what it does.
 	 *
 	 * With a modifier held the next click revises what is in hand instead of placing it, so there is
-	 * no landing spot to show and drawing one would say the click does something it does not. Shift
-	 * gets its own preview instead: the cells it would take, which is a rectangle measured from an
-	 * anchor you cannot see and so is exactly as much guesswork as the landing spot was.
+	 * no landing spot to show and drawing one would say the click does something it does not. The
+	 * revision is drawn instead - which cells would join what is held and which would leave it -
+	 * since a rectangle measured from an anchor you cannot see, or a ctrl-click that could mean
+	 * either, is exactly as much guesswork as the landing spot was.
 	 */
 	override onHover(ctx: GridToolContext, location: ControlLocation | null, modifiers: GridButtonModifiers): void {
 		if (!this.#sources) return
 
-		if (location && modifiers.range && this.#rangeAnchor) {
+		if (location && (modifiers.range || modifiers.toggle)) {
 			ctx.store.setDragPreview(null)
-			ctx.store.setPendingSources(locationsInRectangle(this.#rangeAnchor, location))
+			ctx.store.setPendingChanges(this.#changesFrom(this.#revisedSources(location, modifiers)))
 			return
 		}
-		ctx.store.setPendingSources(null)
+		ctx.store.setPendingChanges(null)
 
-		if (!location || modifiers.range || modifiers.toggle) {
+		if (!location) {
 			ctx.store.setDragPreview(null)
 			return
 		}
@@ -245,7 +264,7 @@ export class TransferTool extends GridToolBase {
 		this.#sources = null
 		this.#rangeAnchor = null
 		ctx.store.setDragPreview(null)
-		ctx.store.setPendingSources(null)
+		ctx.store.setPendingChanges(null)
 	}
 
 	override onBack(ctx: GridToolContext): boolean {
@@ -257,7 +276,7 @@ export class TransferTool extends GridToolBase {
 		this.#sources = null
 		this.#rangeAnchor = null
 		ctx.store.setDragPreview(null)
-		ctx.store.setPendingSources(null)
+		ctx.store.setPendingChanges(null)
 		ctx.store.setSelection(released)
 		return true
 	}

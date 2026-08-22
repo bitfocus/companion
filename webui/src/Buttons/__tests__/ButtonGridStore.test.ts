@@ -881,44 +881,82 @@ describe('ButtonGridStore', () => {
 			store.handleHover(at(2, 2), RANGE, actions)
 
 			// The rectangle from the anchor, which is otherwise guesswork - the same problem the landing
-			// ghost solves for placing
-			expect(store.isPendingSource('1/1/1')).toBe(true)
-			expect(store.isPendingSource('1/2/2')).toBe(true)
-			expect(store.isPendingSource('1/1/2')).toBe(true)
-			expect(store.isPendingSource('1/3/3')).toBe(false)
+			// ghost solves for placing. The one already in hand is not changing, so it is not marked.
+			expect(store.pendingChange('1/1/2')).toBe('add')
+			expect(store.pendingChange('1/2/1')).toBe('add')
+			expect(store.pendingChange('1/2/2')).toBe('add')
+			expect(store.pendingChange('1/1/1')).toBeNull()
+			expect(store.pendingChange('1/3/3')).toBeNull()
 			// And no landing spot, since the click would not place anything
 			expect(store.dropGhostSource('1/2/2')).toBeNull()
 		})
 
-		it('drops the shift preview once shift is released', () => {
+		it('shows the buttons a smaller shift-rectangle would give up', () => {
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.handleTap(at(1, 3), RANGE, actions)
+
+			// Back towards the anchor: the far end of what is held would drop out
+			store.handleHover(at(1, 2), RANGE, actions)
+
+			expect(store.pendingChange('1/1/3')).toBe('remove')
+			expect(store.pendingChange('1/1/1')).toBeNull()
+			expect(store.pendingChange('1/1/2')).toBeNull()
+		})
+
+		it('shows a ctrl hover taking a button in', () => {
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			store.handleHover(at(2, 2), TOGGLE, actions)
+
+			expect(store.pendingChange('1/2/2')).toBe('add')
+			expect(store.dropGhostSource('1/2/2')).toBeNull()
+		})
+
+		it('shows a ctrl hover putting one back, which is the other thing it can mean', () => {
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.handleTap(at(2, 2), TOGGLE, actions)
+
+			store.handleHover(at(2, 2), TOGGLE, actions)
+
+			expect(store.pendingChange('1/2/2')).toBe('remove')
+			expect(store.pendingChange('1/1/1')).toBeNull()
+		})
+
+		it('drops the preview once the modifier is released', () => {
 			store.setTool('move', actions)
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
 			store.handleHover(at(2, 2), RANGE, actions)
 
 			store.handleHover(at(2, 2), NO_MODIFIERS, actions)
 
-			expect(store.isPendingSource('1/2/2')).toBe(false)
+			expect(store.pendingChange('1/2/2')).toBeNull()
 		})
 
-		it('drops the shift preview once the buttons are taken', () => {
+		it('drops the preview once the buttons are taken', () => {
 			store.setTool('move', actions)
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
 			store.handleHover(at(2, 2), RANGE, actions)
 
 			store.handleTap(at(2, 2), RANGE, actions)
 
-			expect(store.isPendingSource('1/2/2')).toBe(false)
+			expect(store.pendingChange('1/2/2')).toBeNull()
 			expect([...store.transferSourceKeys].sort()).toEqual(['1/1/1', '1/1/2', '1/2/1', '1/2/2'])
 		})
 
-		it('shows nothing for a ctrl hover, which could be adding or taking away', () => {
+		it('does not wake every cell for an unchanged answer', () => {
+			// This runs on every pointer move with a modifier held
 			store.setTool('move', actions)
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
-
 			store.handleHover(at(2, 2), TOGGLE, actions)
 
-			expect(store.isPendingSource('1/2/2')).toBe(false)
-			expect(store.dropGhostSource('1/2/2')).toBeNull()
+			const listener = vi.fn()
+			store.subscribe(listener)
+			store.handleHover(at(2, 2), TOGGLE, actions)
+
+			expect(listener).not.toHaveBeenCalled()
 		})
 
 		it('brings it back once the modifier is released', () => {

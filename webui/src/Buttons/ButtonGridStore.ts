@@ -41,8 +41,8 @@ export class ButtonGridStore {
 	/** Locations the active tool or the clipboard has picked up, so a cell can check itself in one lookup */
 	#transferSourceKeys = new Set<string>()
 
-	/** Locations a shift-click would take, while shift is held */
-	#pendingSourceKeys = new Set<string>()
+	/** What a modifier-click would do to each cell it would touch, while the modifier is held */
+	#pendingChanges = new Map<string, GridPendingChange>()
 
 	#clipboard: GridClipboard | null = null
 
@@ -127,27 +127,32 @@ export class ButtonGridStore {
 		return this.#transferSourceKeys
 	}
 
-	// ---- pending sources ----
+	// ---- pending changes ----
 
 	/**
-	 * Cells a shift-click would take, drawn while shift is held.
+	 * What a modifier-click would do to this cell, drawn while the modifier is held.
 	 *
-	 * A rectangle measured from an anchor you cannot see is guesswork otherwise - the same problem the
-	 * landing ghost solves for placing, so it gets the same answer: show it before the click.
+	 * The landing ghost goes quiet under a modifier, because the click would revise what is in hand
+	 * rather than place it. This is the same answer to the same question, for what the click would
+	 * actually do: a rectangle measured from an anchor you cannot see is guesswork, and so is whether
+	 * ctrl on a given cell means taking it or putting it back.
 	 */
-	isPendingSource(locationKey: string): boolean {
-		return this.#pendingSourceKeys.has(locationKey)
+	pendingChange(locationKey: string): GridPendingChange | null {
+		return this.#pendingChanges.get(locationKey) ?? null
 	}
 
-	setPendingSources(locations: readonly ControlLocation[] | null): void {
-		const keys = new Set((locations ?? []).map(formatLocation))
+	setPendingChanges(changes: ReadonlyMap<string, GridPendingChange> | null): void {
+		const next = changes ?? EMPTY_PENDING_CHANGES
 
-		// Fires on every pointer move with shift held, so don't wake every cell up for the same answer
-		if (keys.size === this.#pendingSourceKeys.size && [...keys].every((key) => this.#pendingSourceKeys.has(key))) {
+		// Fires on every pointer move with a modifier held, so don't wake every cell for the same answer
+		if (
+			next.size === this.#pendingChanges.size &&
+			[...next].every(([key, kind]) => this.#pendingChanges.get(key) === kind)
+		) {
 			return
 		}
 
-		this.#pendingSourceKeys = keys
+		this.#pendingChanges = new Map(next)
 		this.#notify()
 	}
 
@@ -450,6 +455,11 @@ export interface GridDragPreview {
 
 /** Stands in for "no location" when comparing two previews, so neither side needs a null check */
 const NOWHERE: ControlLocation = { pageNumber: -1, row: -1, column: -1 }
+
+/** What a modifier-click would do to a cell: take it into what is held, or put it back */
+export type GridPendingChange = 'add' | 'remove'
+
+const EMPTY_PENDING_CHANGES: ReadonlyMap<string, GridPendingChange> = new Map()
 
 export type GridClipboardMode = 'copy' | 'cut'
 

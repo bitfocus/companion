@@ -2,6 +2,7 @@ import classnames from 'classnames'
 import { memo, useCallback, useRef } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { useImagePreloader } from '~/Components/ButtonPreview.js'
+import type { GridPendingChange } from './ButtonGridStore.js'
 
 /**
  * How far (px) a pointer may travel before the gesture stops counting as a tap. Touch scrolling is
@@ -35,8 +36,8 @@ export interface GridButtonPreviewProps {
 
 	selected: boolean
 	copySource: boolean
-	/** A shift-click here would take this button, so it is shown as about to be picked up */
-	pendingSource: boolean
+	/** What a modifier-click here would do to this button, while the modifier is held */
+	pendingChange: GridPendingChange | null
 	contextMenuOpen: boolean
 	canDrop: boolean
 	dropHover: boolean
@@ -73,7 +74,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 	onContextMenu,
 	selected,
 	copySource,
-	pendingSource,
+	pendingChange,
 	contextMenuOpen,
 	canDrop,
 	dropHover,
@@ -162,8 +163,9 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 		[releaseIfPressed, onContextMenu, location]
 	)
 
-	// dnd-kit clones the element holding the drag ref as the drag feedback, so both refs go on the
-	// same outer element - it is the one carrying the sizing the clone needs
+	// Both refs go on the same outer element. Grid buttons suppress dnd-kit's own feedback clone (the
+	// overlay draws the ghost instead), so this is about the drop target and the drag handle being
+	// one and the same cell.
 	const setRefs = useCallback(
 		(el: HTMLDivElement | null) => {
 			dropRef(el)
@@ -175,12 +177,15 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 	return (
 		<div
 			ref={setRefs}
-			className={classnames('button-control', 'clickable', 'fixed-72', {
+			// `grid-button` marks this as the grid's own cell rather than any other ButtonPreview, so a
+			// rule can apply to it and not to the preset pool or the emulator
+			className={classnames('button-control', 'clickable', 'fixed-72', 'grid-button', {
 				// Let the browser scroll the grid, except in press mode where a scroll must not steal the press
 				'grid-pannable': !pressMode,
 				selected,
 				'copy-source': copySource,
-				'pending-source': pendingSource && !copySource,
+				'pending-add': pendingChange === 'add',
+				'pending-remove': pendingChange === 'remove',
 				'context-menu-open': contextMenuOpen,
 				drophere: canDrop,
 				drophover: (dropHover || dropDestination) && !dropInvalid,

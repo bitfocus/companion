@@ -13,9 +13,9 @@ import {
 	useGridDragAnyButton,
 	useGridDragPreviewValid,
 	useGridDropGhostSource,
-	useGridIsPendingSource,
 	useGridIsSelected,
 	useGridIsTransferSource,
+	useGridPendingChange,
 	useGridPressMode,
 } from './ButtonGridViewContext.js'
 import { GRID_BUTTON_DRAG_TYPE, type GridButtonDragItem } from './GridButtonDragItem.js'
@@ -524,7 +524,7 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 
 	// Which button would end up here if the drag were released, so the cell can ghost it. Seeing the
 	// buttons themselves is what makes it possible to check a large block has lined up.
-	const isPendingSource = useGridIsPendingSource(locationKey)
+	const pendingChange = useGridPendingChange(locationKey)
 	const ghostSource = useGridDropGhostSource(locationKey)
 	const dropWouldWork = useGridDragPreviewValid()
 
@@ -569,7 +569,7 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 			onContextMenu={onContextMenu}
 			selected={selected}
 			copySource={isTransferSource}
-			pendingSource={isPendingSource}
+			pendingChange={pendingChange}
 			contextMenuOpen={contextMenuOpen}
 			canDrop={canDrop}
 			dropHover={isDropTarget}

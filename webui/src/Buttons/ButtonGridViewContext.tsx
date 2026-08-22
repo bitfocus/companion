@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useSyncExternalStore } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ButtonGridStore, GridClipboard } from './ButtonGridStore.js'
+import type { ButtonGridStore, GridClipboard, GridPendingChange } from './ButtonGridStore.js'
 import type { GridToolActions, GridToolId } from './GridTools/index.js'
 
 /**
@@ -81,12 +81,12 @@ export function useGridIsTransferSource(locationKey: string): boolean {
 	)
 }
 
-/** Whether this one cell would be taken by the shift-click being lined up right now */
-export function useGridIsPendingSource(locationKey: string): boolean {
+/** What the modifier-click being lined up right now would do to this one cell */
+export function useGridPendingChange(locationKey: string): GridPendingChange | null {
 	const store = useButtonGridStore()
 	return useSyncExternalStore(
 		store.subscribe,
-		useCallback(() => store.isPendingSource(locationKey), [store, locationKey])
+		useCallback(() => store.pendingChange(locationKey), [store, locationKey])
 	)
 }
 
