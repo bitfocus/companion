@@ -30,6 +30,20 @@ export interface ButtonInfiniteGridRef {
 /** How far a pointer must travel across the grid before it is dragging out a selection */
 const MARQUEE_START_THRESHOLD = 6
 
+export interface GridMarqueeHandling {
+	/**
+	 * Whether a box drawn with these modifiers held means anything right now.
+	 *
+	 * Asked as the drag begins, because what a box is worth depends on which tool is active and
+	 * where it has got to - so one that would mean nothing is never drawn in the first place.
+	 */
+	canStart: (additive: boolean) => boolean
+	onSelect: (from: ControlLocation, to: ControlLocation, additive: boolean) => void
+}
+
+/** Nothing is being held down - the pointer has simply gone */
+const NO_MODIFIERS: GridButtonModifiers = { range: false, toggle: false }
+
 /** A rectangle being dragged out, in canvas pixels */
 interface MarqueeState {
 	pointerId: number
@@ -67,13 +81,13 @@ interface ButtonInfiniteGridProps {
 	onButtonContextMenu?: (location: ControlLocation, x: number, y: number) => void
 	gridSize: UserConfigGridSize
 	ButtonIconFactory: React.ClassType<ButtonInfiniteGridButtonProps, any, any> // TODO - this type is flawed
-	/** Called when a rectangle is dragged out across the grid. Null for grids that are only picked from. */
-	onMarqueeSelect: ((from: ControlLocation, to: ControlLocation, additive: boolean) => void) | null
+	/** How a rectangle dragged out across the grid is handled. Null for grids that are only picked from. */
+	marquee: GridMarqueeHandling | null
 	/**
 	 * Called with the cell the pointer is over, or null once it leaves the grid. Null for grids that
 	 * have nothing to show under the cursor.
 	 */
-	onHoverLocation: ((location: ControlLocation | null) => void) | null
+	onHoverLocation: ((location: ControlLocation | null, modifiers: GridButtonModifiers) => void) | null
 	drawScale: number
 	maxHeightToMatchCanvas?: boolean
 	setViewportMinHeight?: React.Dispatch<React.SetStateAction<number>>
@@ -91,7 +105,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			onButtonContextMenu,
 			gridSize,
 			ButtonIconFactory,
-			onMarqueeSelect,
+			marquee: marqueeHandling,
 			onHoverLocation,
 			drawScale,
 			maxHeightToMatchCanvas,
@@ -285,7 +299,10 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			(e: React.PointerEvent<HTMLDivElement>) => {
 				// Touch belongs to the browser here - a drag scrolls the grid, which matters far more than
 				// being able to rubber-band with a finger
-				if (!onMarqueeSelect || e.pointerType === 'touch' || e.button !== 0) return
+				if (!marqueeHandling || e.pointerType === 'touch' || e.button !== 0) return
+
+				const additive = e.shiftKey || e.ctrlKey || e.metaKey
+				if (!marqueeHandling.canStart(additive)) return
 
 				const point = canvasPoint(e.clientX, e.clientY)
 				if (!point) return
@@ -297,10 +314,10 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 					currentX: point.x,
 					currentY: point.y,
 					active: false,
-					additive: e.shiftKey || e.ctrlKey || e.metaKey,
+					additive,
 				})
 			},
-			[onMarqueeSelect, canvasPoint]
+			[marqueeHandling, canvasPoint]
 		)
 
 		const handleMarqueeMove = useCallback(
@@ -328,15 +345,15 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 				setMarquee(null)
 
 				// A pointer that never travelled was a click on a button, which the cell has already handled
-				if (!marquee.active || !onMarqueeSelect) return
+				if (!marquee.active || !marqueeHandling) return
 
-				onMarqueeSelect(
+				marqueeHandling.onSelect(
 					locationAtCanvasPoint(marquee.startX, marquee.startY),
 					locationAtCanvasPoint(marquee.currentX, marquee.currentY),
 					marquee.additive
 				)
 			},
-			[marquee, onMarqueeSelect, locationAtCanvasPoint]
+			[marquee, marqueeHandling, locationAtCanvasPoint]
 		)
 
 		const visibleColumns = windowSize.width / tileSize
@@ -406,7 +423,10 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 				const point = canvasPoint(e.clientX, e.clientY)
 				const inside = !!point && point.x >= 0 && point.y >= 0 && point.x < canvasWidth && point.y < canvasHeight
 
-				onHoverLocation(inside ? locationAtCanvasPoint(point.x, point.y) : null)
+				onHoverLocation(inside ? locationAtCanvasPoint(point.x, point.y) : null, {
+					range: e.shiftKey,
+					toggle: e.ctrlKey || e.metaKey,
+				})
 			},
 			[onHoverLocation, canvasPoint, canvasWidth, canvasHeight, locationAtCanvasPoint, dragSource]
 		)
@@ -443,7 +463,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 					handleHoverMove(e)
 					if (!handlePanMove(e)) handleMarqueeMove(e)
 				}}
-				onPointerLeave={() => onHoverLocation?.(null)}
+				onPointerLeave={() => onHoverLocation?.(null, NO_MODIFIERS)}
 				onPointerUp={(e) => {
 					if (!handlePanUp(e)) handleMarqueeUp(e)
 				}}
@@ -513,11 +533,12 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 	// rubber-band. Arrange lets any button drag. Press mode lets none - a drag must never swallow a
 	// press that is about to fire real actions.
 	const dragData: GridButtonDragItem = useMemo(() => ({ location }), [location])
+	const dragDisabled = pressMode || !(dragAnyButton || selected)
 	const { ref: dragRef, isDragSource } = useDraggable<GridButtonDragItem>({
 		id: `griddrag:${locationKey}`,
 		type: GRID_BUTTON_DRAG_TYPE,
 		data: dragData,
-		disabled: pressMode || !(dragAnyButton || selected),
+		disabled: dragDisabled,
 	})
 
 	const { image, isUsed } = useButtonImageForLocation(location)
@@ -552,8 +573,11 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 			ghostImage={ghostSource && ghost.isUsed ? ghost.image : null}
 			dropDestination={!!ghostSource}
 			dropInvalid={!!ghostSource && !dropWouldWork}
+			// Withheld rather than passed disabled: dnd-kit marks whatever holds this ref as a draggable,
+			// and a disabled one as `aria-disabled`. A cell you cannot drag is still a cell you can click,
+			// so saying otherwise is wrong for anything reading the page rather than looking at it.
+			dragRef={dragDisabled ? null : dragRef}
 			dropRef={drop}
-			dragRef={dragRef}
 			isDragSource={isDragSource}
 		/>
 	)

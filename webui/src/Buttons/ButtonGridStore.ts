@@ -83,8 +83,14 @@ export class ButtonGridStore {
 		return this.#activeTool.dragAnyButton
 	}
 
-	get allowsMarquee(): boolean {
-		return this.#activeTool.allowsMarquee()
+	/**
+	 * Whether a box dragged out with these modifiers held means anything to the active tool.
+	 *
+	 * Bound, and asked at the moment the drag starts rather than subscribed to, so the grid does not
+	 * re-render every time a tool moves between its phases.
+	 */
+	allowsMarquee = (additive: boolean): boolean => {
+		return this.#activeTool.allowsMarquee(additive)
 	}
 
 	get selectedLocations(): readonly ControlLocation[] {
@@ -111,6 +117,11 @@ export class ButtonGridStore {
 	/** Whether the active tool has picked this button up and is waiting to place it */
 	isTransferSource(locationKey: string): boolean {
 		return this.#transferSourceKeys.has(locationKey)
+	}
+
+	/** Everything picked up and not yet put down, by key */
+	get transferSourceKeys(): ReadonlySet<string> {
+		return this.#transferSourceKeys
 	}
 
 	// ---- drag preview ----
@@ -232,8 +243,8 @@ export class ButtonGridStore {
 	}
 
 	/** The pointer moved over a cell, or left the grid. Tools use it to preview what a click would do. */
-	handleHover(location: ControlLocation | null, actions: GridToolActions): void {
-		this.#activeTool.onHover(this.#context(actions), location)
+	handleHover(location: ControlLocation | null, modifiers: GridButtonModifiers, actions: GridToolActions): void {
+		this.#activeTool.onHover(this.#context(actions), location, modifiers)
 	}
 
 	/** A box was dragged out across the grid. What it picks depends on the tool. */

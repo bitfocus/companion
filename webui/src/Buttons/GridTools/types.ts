@@ -63,10 +63,14 @@ export interface GridTool {
 	/**
 	 * Whether dragging a box across the grid means anything right now.
 	 *
-	 * A method rather than a flag because it depends on where the tool has got to: a transfer wants a
-	 * box while it is asking which buttons to take, and not once it is asking where to put them.
+	 * A method rather than a flag because it depends on where the tool has got to, and on what is
+	 * held: a transfer wants a box while it is asking which buttons to take, and once it is asking
+	 * where to put them only an additive one, which can add to what it is holding but never replace
+	 * it by accident.
+	 *
+	 * Asked as the drag starts, so a box that would mean nothing is never drawn in the first place.
 	 */
-	allowsMarquee(): boolean
+	allowsMarquee(additive: boolean): boolean
 
 	/** A box was dragged out across the grid. What that picks is up to the tool. */
 	onMarquee(ctx: GridToolContext, from: ControlLocation, to: ControlLocation, additive: boolean): void
@@ -75,9 +79,10 @@ export interface GridTool {
 	 * The pointer moved over this cell, or left the grid entirely.
 	 *
 	 * A tool that is about to place something uses this to show where it would go, so that is visible
-	 * before the click rather than after it.
+	 * before the click rather than after it. The modifiers come along because they can change what
+	 * the click would do, and so what there is to show.
 	 */
-	onHover(ctx: GridToolContext, location: ControlLocation | null): void
+	onHover(ctx: GridToolContext, location: ControlLocation | null, modifiers: GridButtonModifiers): void
 
 	/** Buttons this tool has picked up and is about to act on, so the grid can mark them */
 	getSourceLocations(): readonly ControlLocation[]
@@ -112,7 +117,7 @@ export abstract class GridToolBase implements GridTool {
 		return []
 	}
 
-	allowsMarquee(): boolean {
+	allowsMarquee(_additive: boolean): boolean {
 		return false
 	}
 
@@ -120,7 +125,7 @@ export abstract class GridToolBase implements GridTool {
 		// nothing by default
 	}
 
-	onHover(_ctx: GridToolContext, _location: ControlLocation | null): void {
+	onHover(_ctx: GridToolContext, _location: ControlLocation | null, _modifiers: GridButtonModifiers): void {
 		// nothing by default
 	}
 

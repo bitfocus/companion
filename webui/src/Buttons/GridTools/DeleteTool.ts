@@ -27,7 +27,7 @@ export class DeleteTool extends GridToolBase {
 	}
 
 	/** Dragging a box picks a region to clear, rather than tapping one button at a time */
-	override allowsMarquee(): boolean {
+	override allowsMarquee(_additive: boolean): boolean {
 		return true
 	}
 

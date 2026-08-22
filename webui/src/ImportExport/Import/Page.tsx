@@ -144,7 +144,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										pageNumber={isSinglePage ? (snapshot.oldPageNumber ?? 1) : importPageNumber}
 										gridSize={sourceGridSize}
 										ButtonIconFactory={ButtonImportPreview}
-										onMarqueeSelect={null}
+										marquee={null}
 										onHoverLocation={null}
 										drawScale={gridZoomValue / 100}
 										maxHeightToMatchCanvas
@@ -179,7 +179,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										pageNumber={pageNumber}
 										gridSize={destinationGridSize}
 										ButtonIconFactory={ButtonGridIcon}
-										onMarqueeSelect={null}
+										marquee={null}
 										onHoverLocation={null}
 										drawScale={gridZoomValue / 100}
 										maxHeightToMatchCanvas

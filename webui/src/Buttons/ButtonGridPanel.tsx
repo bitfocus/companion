@@ -2,7 +2,7 @@ import { faHome } from '@fortawesome/free-solid-svg-icons'
 import './ButtonGridPanel.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { Button } from '~/Components/Button.js'
 import { Grid } from '~/Components/Grid'
@@ -14,10 +14,11 @@ import { ButtonGridHeader } from './ButtonGridHeader.js'
 import { ButtonGridPageMenu } from './ButtonGridPageMenu.js'
 import { ButtonGridResizePrompt } from './ButtonGridResizePrompt.js'
 import { ButtonGridToolbar } from './ButtonGridToolbar.js'
-import { useButtonGridView, useGridAllowsMarquee, useGridFocus, useGridPressMode } from './ButtonGridViewContext.js'
+import { useButtonGridView, useGridFocus, useGridPressMode } from './ButtonGridViewContext.js'
 import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { ButtonInfiniteGrid, PrimaryButtonGridIcon, type ButtonInfiniteGridRef } from './ButtonInfiniteGrid.js'
 import { GridButtonDragOverlay } from './GridButtonDragOverlay.js'
+import type { GridButtonModifiers } from './GridButtonPreview.js'
 import type { GridZoomController } from './GridZoom.js'
 
 interface ButtonsGridPanelProps {
@@ -100,19 +101,23 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	}, [gridZoomController])
 
 	const pressMode = useGridPressMode()
-	const allowsMarquee = useGridAllowsMarquee()
 	const focus = useGridFocus()
 
 	// What a dragged box picks is the active tool's business: a region to select, the buttons a
-	// transfer should take, or the ones to clear
-	const handleMarquee = useCallback(
-		(from: ControlLocation, to: ControlLocation, additive: boolean) => store.handleMarquee(from, to, additive, actions),
+	// transfer should take, or the ones to clear - and whether it is worth drawing one at all
+	const marquee = useMemo(
+		() => ({
+			canStart: store.allowsMarquee,
+			onSelect: (from: ControlLocation, to: ControlLocation, additive: boolean) =>
+				store.handleMarquee(from, to, additive, actions),
+		}),
 		[store, actions]
 	)
 
 	// A tool that is holding buttons ghosts them under the cursor, so it knows before the click lands
 	const handleHover = useCallback(
-		(location: ControlLocation | null) => store.handleHover(location, actions),
+		(location: ControlLocation | null, modifiers: GridButtonModifiers) =>
+			store.handleHover(location, modifiers, actions),
 		[store, actions]
 	)
 
@@ -166,9 +171,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 						onButtonContextMenu={onButtonContextMenu}
 						gridSize={gridSize}
 						ButtonIconFactory={PrimaryButtonGridIcon}
-						// A drag under a placing tool is not the start of a selection, so there is nothing to
-						// rubber-band and no stray box left behind
-						onMarqueeSelect={allowsMarquee ? handleMarquee : null}
+						marquee={marquee}
 						onHoverLocation={handleHover}
 						drawScale={gridZoomValue / 100}
 						setViewportMinHeight={setViewportMinHeight}

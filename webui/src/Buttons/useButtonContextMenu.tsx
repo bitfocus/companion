@@ -126,7 +126,7 @@ export function useButtonContextMenu({
 				{
 					label: 'Swap here',
 					do: () => {
-						actions.transfer('swap', buildTransferPairs(clipboard.locations, location), () => {
+						actions.transfer('swap', buildTransferPairs(clipboard.locations, location, 'top-left'), () => {
 							store.clearClipboard()
 							setTabResetToken(nanoid())
 						})
