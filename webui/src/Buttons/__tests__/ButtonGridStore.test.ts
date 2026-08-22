@@ -1040,6 +1040,20 @@ describe('ButtonGridStore', () => {
 			expect(store.dropGhostSource('1/2/2')).toEqual(at(1, 1))
 		})
 
+		it('shows the end of a swap that empties, not just the one that fills', () => {
+			// Swapping with an empty cell is how a button is moved into one, and half of that is a cell
+			// becoming empty - which is only visible if the preview draws it
+			actions.isOccupied = vi.fn((location) => formatLocationKey(location) === '1/1/1')
+			store.setTool('swap', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			store.handleHover(at(2, 2), NO_MODIFIERS, actions)
+
+			expect(store.dropGhostSource('1/2/2')).toEqual(at(1, 1))
+			// The empty cell is heading back the other way, so the source is emptying
+			expect(store.dropGhostSource('1/1/1')).toEqual(at(2, 2))
+		})
+
 		it('shows both ends of a swap, so the displaced buttons are visible too', () => {
 			store.setTool('swap', actions)
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)

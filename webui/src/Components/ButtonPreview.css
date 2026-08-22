@@ -112,18 +112,20 @@
 		background-position: center;
 		background-repeat: no-repeat;
 
-		/* The button that would land here if the drag were released. Drawn over this cell's own content
-		   rather than beside it, so a block can be checked against the grid it is landing on. */
+		/* What would be here if the drag were released. Drawn over this cell's own content rather than
+		   beside it, so a block can be checked against the grid it is landing on - and solid, so what
+		   is drawn is what you would get rather than the two blended into something that is neither.
+		   With no image it paints an empty button, which is how a swap shows the end that empties. */
 		.button-drop-ghost {
 			position: absolute;
 			inset: 0;
 
 			border-radius: inherit;
 
+			background-color: var(--color-button-bg);
 			background-size: contain;
 			background-position: center;
 			background-repeat: no-repeat;
-			opacity: 0.75;
 		}
 
 		.button-placeholder {
