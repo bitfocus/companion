@@ -45,7 +45,8 @@ export interface GridButtonPreviewProps {
 	/** The button that would end up here, drawn over this cell's own so the landing can be checked */
 	ghostImage: string | null
 	dropRef: React.RefCallback<HTMLDivElement>
-	dragRef: React.RefCallback<HTMLDivElement>
+	/** Null when this button cannot be dragged right now, so nothing is marked up as draggable */
+	dragRef: React.RefCallback<HTMLDivElement> | null
 	isDragSource: boolean
 }
 
@@ -163,7 +164,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 	const setRefs = useCallback(
 		(el: HTMLDivElement | null) => {
 			dropRef(el)
-			dragRef(el)
+			dragRef?.(el)
 		},
 		[dropRef, dragRef]
 	)

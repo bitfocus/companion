@@ -3,7 +3,7 @@ import { formatLocation as formatLocationKey } from '@companion-app/shared/Contr
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { ButtonGridStore } from '../ButtonGridStore.js'
-import { locationsInRectangle } from '../GridGeometry.js'
+import { buildTransferPairs, locationsInRectangle } from '../GridGeometry.js'
 import type { GridToolActions } from '../GridTools/index.js'
 
 const GRID_SIZE: UserConfigGridSize = { minRow: 0, maxRow: 3, minColumn: 0, maxColumn: 7 }
@@ -485,6 +485,78 @@ describe('ButtonGridStore', () => {
 		})
 	})
 
+	describe('revising what a transfer tool is holding', () => {
+		const held = () => [...store.transferSourceKeys].sort()
+
+		it('adds a button that was left out', () => {
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			store.handleTap(at(2, 2), TOGGLE, actions)
+
+			expect(held()).toEqual(['1/1/1', '1/2/2'])
+			// Still holding, not placing - the tap revised the set rather than putting it down
+			expect(actions.transfer).not.toHaveBeenCalled()
+		})
+
+		it('drops a button that should not have been picked up', () => {
+			store.setTool('copy', actions)
+			store.handleMarquee(at(1, 1), at(1, 3), false, actions)
+
+			store.handleTap(at(1, 2), TOGGLE, actions)
+
+			expect(held()).toEqual(['1/1/1', '1/1/3'])
+		})
+
+		it('extends the region from where the pick started', () => {
+			store.setTool('copy', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			store.handleTap(at(2, 2), RANGE, actions)
+
+			expect(held()).toEqual(['1/1/1', '1/1/2', '1/2/1', '1/2/2'])
+		})
+
+		it('measures a shift-click from the corner a box was drawn from', () => {
+			store.setTool('move', actions)
+			// Bottom-right to top-left, so the anchor is not the first cell of the region
+			store.handleMarquee(at(2, 2), at(1, 1), false, actions)
+
+			store.handleTap(at(3, 2), RANGE, actions)
+
+			expect(held()).toEqual(['1/2/2', '1/3/2'])
+		})
+
+		it('goes back to asking for a source once the last one is taken away', () => {
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			store.handleTap(at(1, 1), TOGGLE, actions)
+
+			expect(held()).toEqual([])
+			expect(store.hint(actions)).toBe('Press the button you want to move')
+		})
+
+		it('drops a landing spot drawn for the old set', () => {
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.handleHover(at(3, 3), NO_MODIFIERS, actions)
+
+			store.handleTap(at(2, 2), TOGGLE, actions)
+
+			expect(store.dropGhostSource('1/3/3')).toBeNull()
+		})
+
+		it('starts the set off when there is nothing yet to revise', () => {
+			store.setTool('move', actions)
+
+			store.handleTap(at(1, 1), TOGGLE, actions)
+
+			expect(held()).toEqual(['1/1/1'])
+			expect(store.hint(actions)).toBe('Where do you want it?')
+		})
+	})
+
 	describe('going back', () => {
 		it('unwinds a half-finished transfer to its source step', () => {
 			store.setTool('copy', actions)
@@ -649,7 +721,7 @@ describe('ButtonGridStore', () => {
 	describe('hovering with a tool armed', () => {
 		it('shows nothing until the tool has picked something up', () => {
 			store.setTool('move', actions)
-			store.handleHover(at(2, 2), actions)
+			store.handleHover(at(2, 2), NO_MODIFIERS, actions)
 
 			expect(store.dropGhostSource('1/2/2')).toBeNull()
 		})
@@ -658,27 +730,62 @@ describe('ButtonGridStore', () => {
 			store.setTool('move', actions)
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
 
-			store.handleHover(at(3, 4), actions)
+			store.handleHover(at(3, 4), NO_MODIFIERS, actions)
 
 			expect(store.dropGhostSource('1/3/4')).toEqual(at(1, 1))
 		})
 
-		it('anchors a region by its top-left, wherever the box was drawn from', () => {
+		it('puts the region under the cursor, wherever the box was drawn from', () => {
 			store.setTool('copy', actions)
 			// Dragged out bottom-right to top-left, which is the case that is impossible to guess at
 			store.handleMarquee(at(2, 2), at(1, 1), false, actions)
 
-			store.handleHover(at(3, 5), actions)
+			store.handleHover(at(3, 5), NO_MODIFIERS, actions)
 
+			// An even-sided region has no middle cell, so the upper left of the two carries the cursor
 			expect(store.dropGhostSource('1/3/5')).toEqual(at(1, 1))
 			expect(store.dropGhostSource('1/4/6')).toEqual(at(2, 2))
+		})
+
+		it('centres an odd-sided region on the cursor, rather than hanging it below and right', () => {
+			store.setTool('copy', actions)
+			store.handleMarquee(at(0, 0), at(2, 2), false, actions)
+
+			store.handleHover(at(2, 4), NO_MODIFIERS, actions)
+
+			// The middle of the 3x3 is the cell being pointed at, and the rest sits around it
+			expect(store.dropGhostSource('1/2/4')).toEqual(at(1, 1))
+			expect(store.dropGhostSource('1/1/3')).toEqual(at(0, 0))
+			expect(store.dropGhostSource('1/3/5')).toEqual(at(2, 2))
+		})
+
+		it('places where the ghost said it would', () => {
+			store.setTool('copy', actions)
+			store.handleMarquee(at(0, 0), at(2, 2), false, actions)
+			store.handleHover(at(2, 4), NO_MODIFIERS, actions)
+
+			store.handleTap(at(2, 4), NO_MODIFIERS, actions)
+
+			const pairs = vi.mocked(actions.transfer).mock.calls[0][1]
+			expect(pairs).toContainEqual({ fromLocation: at(1, 1), toLocation: at(2, 4) })
+			expect(pairs).toContainEqual({ fromLocation: at(0, 0), toLocation: at(1, 3) })
+		})
+
+		it('shows no landing spot while a modifier would revise the selection instead', () => {
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.handleHover(at(2, 2), NO_MODIFIERS, actions)
+
+			store.handleHover(at(2, 2), TOGGLE, actions)
+
+			expect(store.dropGhostSource('1/2/2')).toBeNull()
 		})
 
 		it('shows both ends of a swap, so the displaced buttons are visible too', () => {
 			store.setTool('swap', actions)
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
 
-			store.handleHover(at(2, 2), actions)
+			store.handleHover(at(2, 2), NO_MODIFIERS, actions)
 
 			expect(store.dropGhostSource('1/2/2')).toEqual(at(1, 1))
 			expect(store.dropGhostSource('1/1/1')).toEqual(at(2, 2))
@@ -689,7 +796,7 @@ describe('ButtonGridStore', () => {
 			store.setTool('move', actions)
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
 
-			store.handleHover(at(3, 7), actions)
+			store.handleHover(at(3, 7), NO_MODIFIERS, actions)
 
 			expect(store.dragPreviewValid).toBe(false)
 		})
@@ -709,9 +816,9 @@ describe('ButtonGridStore', () => {
 		it('clears when the pointer leaves the grid', () => {
 			store.setTool('move', actions)
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
-			store.handleHover(at(2, 2), actions)
+			store.handleHover(at(2, 2), NO_MODIFIERS, actions)
 
-			store.handleHover(null, actions)
+			store.handleHover(null, NO_MODIFIERS, actions)
 
 			expect(store.dropGhostSource('1/2/2')).toBeNull()
 		})
@@ -719,7 +826,7 @@ describe('ButtonGridStore', () => {
 		it('clears once the buttons have been placed', () => {
 			store.setTool('move', actions)
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
-			store.handleHover(at(2, 2), actions)
+			store.handleHover(at(2, 2), NO_MODIFIERS, actions)
 
 			store.handleTap(at(2, 2), NO_MODIFIERS, actions)
 
@@ -729,7 +836,7 @@ describe('ButtonGridStore', () => {
 		it('clears when the tool is backed out of', () => {
 			store.setTool('move', actions)
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
-			store.handleHover(at(2, 2), actions)
+			store.handleHover(at(2, 2), NO_MODIFIERS, actions)
 
 			store.goBack(actions)
 
@@ -739,7 +846,7 @@ describe('ButtonGridStore', () => {
 		it('clears when a different tool is armed', () => {
 			store.setTool('move', actions)
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
-			store.handleHover(at(2, 2), actions)
+			store.handleHover(at(2, 2), NO_MODIFIERS, actions)
 
 			store.setTool('select', actions)
 
@@ -748,7 +855,7 @@ describe('ButtonGridStore', () => {
 
 		it('means nothing to the select tool', () => {
 			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
-			store.handleHover(at(2, 2), actions)
+			store.handleHover(at(2, 2), NO_MODIFIERS, actions)
 
 			expect(store.dropGhostSource('1/2/2')).toBeNull()
 		})
@@ -758,7 +865,7 @@ describe('ButtonGridStore', () => {
 		it('selects the region under the selecting tools', () => {
 			for (const tool of ['select', 'multi-select', 'arrange'] as const) {
 				store.setTool(tool, actions)
-				expect(store.allowsMarquee, tool).toBe(true)
+				expect(store.allowsMarquee(false), tool).toBe(true)
 			}
 
 			store.setTool('select', actions)
@@ -768,7 +875,7 @@ describe('ButtonGridStore', () => {
 
 		it('picks what a transfer should take, rather than selecting it', () => {
 			store.setTool('copy', actions)
-			expect(store.allowsMarquee).toBe(true)
+			expect(store.allowsMarquee(false)).toBe(true)
 
 			store.handleMarquee(at(1, 1), at(2, 2), false, actions)
 
@@ -797,8 +904,38 @@ describe('ButtonGridStore', () => {
 			store.setTool('copy', actions)
 			store.handleMarquee(at(1, 1), at(2, 2), false, actions)
 
-			// A box would mean nothing here, and drawing one would just leave a stray rectangle
-			expect(store.allowsMarquee).toBe(false)
+			// A plain box would mean nothing here, and drawing one would just leave a stray rectangle
+			expect(store.allowsMarquee(false)).toBe(false)
+			// An additive one adds to what is in hand, which is worth drawing
+			expect(store.allowsMarquee(true)).toBe(true)
+		})
+
+		it('adds to what a transfer is already holding', () => {
+			store.setTool('move', actions)
+			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+
+			store.handleMarquee(at(3, 3), at(3, 4), true, actions)
+
+			expect([...store.transferSourceKeys].sort()).toEqual(['1/1/1', '1/1/2', '1/3/3', '1/3/4'])
+		})
+
+		it('does not add the same button twice', () => {
+			store.setTool('move', actions)
+			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+
+			store.handleMarquee(at(1, 2), at(1, 3), true, actions)
+
+			expect([...store.transferSourceKeys].sort()).toEqual(['1/1/1', '1/1/2', '1/1/3'])
+		})
+
+		it('drops a landing spot drawn before the region grew', () => {
+			store.setTool('move', actions)
+			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+			store.handleHover(at(3, 3), NO_MODIFIERS, actions)
+
+			store.handleMarquee(at(2, 5), at(2, 6), true, actions)
+
+			expect(store.dropGhostSource('1/3/3')).toBeNull()
 		})
 
 		it('ignores a box over nothing at all', () => {
@@ -821,7 +958,8 @@ describe('ButtonGridStore', () => {
 
 		it('is never offered in press mode', () => {
 			store.setTool('press', actions)
-			expect(store.allowsMarquee).toBe(false)
+			expect(store.allowsMarquee(false)).toBe(false)
+			expect(store.allowsMarquee(true)).toBe(false)
 		})
 	})
 
@@ -914,5 +1052,59 @@ describe('locationsInRectangle', () => {
 
 	it('handles a single cell', () => {
 		expect(locationsInRectangle(at(1, 1), at(1, 1))).toEqual([at(1, 1)])
+	})
+})
+
+describe('buildTransferPairs', () => {
+	it('lands the top-left of a region on the destination', () => {
+		const pairs = buildTransferPairs([at(1, 1), at(1, 2)], at(3, 5), 'top-left')
+
+		expect(pairs).toEqual([
+			{ fromLocation: at(1, 1), toLocation: at(3, 5) },
+			{ fromLocation: at(1, 2), toLocation: at(3, 6) },
+		])
+	})
+
+	it('lands the middle of an odd region on the destination', () => {
+		const region = [at(0, 0), at(0, 1), at(0, 2), at(1, 0), at(1, 1), at(1, 2), at(2, 0), at(2, 1), at(2, 2)]
+
+		const pairs = buildTransferPairs(region, at(2, 4), 'center')
+
+		expect(pairs).toContainEqual({ fromLocation: at(1, 1), toLocation: at(2, 4) })
+		expect(pairs).toContainEqual({ fromLocation: at(0, 0), toLocation: at(1, 3) })
+		expect(pairs).toContainEqual({ fromLocation: at(2, 2), toLocation: at(3, 5) })
+	})
+
+	it('takes the upper left of the two middles when a region has an even side', () => {
+		const pairs = buildTransferPairs([at(0, 0), at(0, 1)], at(2, 4), 'center')
+
+		expect(pairs).toEqual([
+			{ fromLocation: at(0, 0), toLocation: at(2, 4) },
+			{ fromLocation: at(0, 1), toLocation: at(2, 5) },
+		])
+	})
+
+	it('agrees with itself for a single button, whichever anchor is asked for', () => {
+		for (const anchor of ['top-left', 'center'] as const) {
+			expect(buildTransferPairs([at(1, 1)], at(3, 5), anchor), anchor).toEqual([
+				{ fromLocation: at(1, 1), toLocation: at(3, 5) },
+			])
+		}
+	})
+
+	it('measures from the bounding box, not the order the cells came in', () => {
+		const pairs = buildTransferPairs([at(2, 2), at(1, 1)], at(3, 5), 'top-left')
+
+		expect(pairs).toEqual([
+			{ fromLocation: at(2, 2), toLocation: at(4, 6) },
+			{ fromLocation: at(1, 1), toLocation: at(3, 5) },
+		])
+	})
+
+	it('keeps the gaps in a region, so its shape survives the trip', () => {
+		// An L: the hole at 1/2 is what makes it an L rather than a square
+		const pairs = buildTransferPairs([at(1, 1), at(2, 1), at(2, 2)], at(0, 5), 'top-left')
+
+		expect(pairs.map((pair) => formatLocationKey(pair.toLocation))).toEqual(['1/0/5', '1/1/5', '1/1/6'])
 	})
 })

@@ -19,20 +19,45 @@ export function locationsInRectangle(from: ControlLocation, to: ControlLocation)
 }
 
 /**
- * Map each source onto the destination, anchoring the top-left of the sources' bounding box at the
- * tapped cell. A single source therefore lands exactly where it was dropped, and a region keeps its
- * shape.
+ * Which cell of a region the destination names.
+ *
+ * `center` reads as "put it here", and is right wherever the region is drawn under the cursor as it
+ * moves: what lands where is visible before the click, so there is no rule to know. Without that
+ * picture - pasting at a cell, where the destination was named rather than pointed at - `top-left`
+ * is the one that can be predicted, and the one that can reach the corners of the grid: centring a
+ * 3x3 on the top-left cell would need a row above the grid, and be refused.
+ *
+ * The two agree exactly for a single button, which is most of what either ever carries.
  */
-export function buildTransferPairs(sources: ControlLocation[], destination: ControlLocation): GridTransferPair[] {
+export type GridPlacementAnchor = 'top-left' | 'center'
+
+/**
+ * Map each source onto the destination, with the anchor cell of the sources' bounding box landing on
+ * the destination. A single source therefore lands exactly where it was put, and a region keeps its
+ * shape.
+ *
+ * A region with an even number of rows or columns has no middle cell, so `center` takes the upper
+ * left of the two - which is also what keeps it agreeing with `top-left` for a single button.
+ */
+export function buildTransferPairs(
+	sources: ControlLocation[],
+	destination: ControlLocation,
+	anchor: GridPlacementAnchor
+): GridTransferPair[] {
 	const minRow = Math.min(...sources.map((l) => l.row))
 	const minColumn = Math.min(...sources.map((l) => l.column))
+	const maxRow = Math.max(...sources.map((l) => l.row))
+	const maxColumn = Math.max(...sources.map((l) => l.column))
+
+	const rowAnchor = anchor === 'center' ? Math.floor((maxRow - minRow) / 2) : 0
+	const columnAnchor = anchor === 'center' ? Math.floor((maxColumn - minColumn) / 2) : 0
 
 	return sources.map((fromLocation) => ({
 		fromLocation,
 		toLocation: {
 			pageNumber: destination.pageNumber,
-			row: destination.row + (fromLocation.row - minRow),
-			column: destination.column + (fromLocation.column - minColumn),
+			row: destination.row + (fromLocation.row - minRow) - rowAnchor,
+			column: destination.column + (fromLocation.column - minColumn) - columnAnchor,
 		},
 	}))
 }

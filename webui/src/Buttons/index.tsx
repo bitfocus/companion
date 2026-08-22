@@ -230,7 +230,13 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			if (!clipboard || !gridSize) return
 
 			const operation = clipboard.mode === 'cut' ? 'move' : 'copy'
-			const pairs = withoutEmptySources(operation, buildTransferPairs(clipboard.locations, location), isOccupied)
+			// Top-left, not centred like the tools: a paste names its destination rather than pointing at
+			// it, with no ghost to show which cell of the region the answer was measured from
+			const pairs = withoutEmptySources(
+				operation,
+				buildTransferPairs(clipboard.locations, location, 'top-left'),
+				isOccupied
+			)
 
 			// `transfer` refuses this anyway, but silently - and a paste that appears to do nothing at all
 			// is worth explaining, since there is no ghost under a keyboard paste to have shown it coming

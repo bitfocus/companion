@@ -9,7 +9,7 @@ export class SelectTool extends GridToolBase {
 	readonly id: GridToolId = 'select'
 
 	/** Dragging a box across the grid picks out a region to select */
-	override allowsMarquee(): boolean {
+	override allowsMarquee(_additive: boolean): boolean {
 		return true
 	}
 
