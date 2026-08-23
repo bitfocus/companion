@@ -21,15 +21,19 @@ import {
 import { GRID_BUTTON_DRAG_TYPE, type GridButtonDragItem } from './GridButtonDragItem.js'
 import { makeGridButtonDroppableId } from './GridButtonDroppableId.js'
 import { GridButtonPreview, type GridButtonModifiers } from './GridButtonPreview.js'
+import {
+	locationAtCanvasPoint as cellAtCanvasPoint,
+	drawnCellRange,
+	gridTileGeometry,
+	MARQUEE_START_THRESHOLD,
+	revealScrollOffset,
+} from './GridCanvasGeometry.js'
 
 export interface ButtonInfiniteGridRef {
 	resetPosition(): void
 	/** Scroll the smallest amount that brings this cell fully into view */
 	revealLocation(location: ControlLocation): void
 }
-
-/** How far a pointer must travel across the grid before it is dragging out a selection */
-const MARQUEE_START_THRESHOLD = 6
 
 export interface GridMarqueeHandling {
 	/**
@@ -118,9 +122,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		const countColumns = maxColumn - minColumn + 1
 		const countRows = maxRow - minRow + 1
 
-		const tileInnerSize = 72 * (drawScale ?? 1)
-		const tilePadding = Math.min(6, tileInnerSize * 0.05)
-		const tileSize = tileInnerSize + tilePadding * 2
+		const { inner: tileInnerSize, size: tileSize } = gridTileGeometry(drawScale ?? 1)
 		const SCROLLBAR_PADDING = 15
 
 		const [setSizeElement, windowSizeRaw] = useElementInnerSize()
@@ -215,21 +217,18 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 				revealLocation(location) {
 					if (!scrollerRef) return
 
-					const left = (location.column - minColumn) * tileSize
-					const top = (location.row - minRow) * tileSize
-
-					// Scroll the least amount that brings the whole cell into view
-					if (left < scrollerRef.scrollLeft) {
-						scrollerRef.scrollLeft = left
-					} else if (left + tileSize > scrollerRef.scrollLeft + scrollerRef.clientWidth) {
-						scrollerRef.scrollLeft = left + tileSize - scrollerRef.clientWidth
-					}
-
-					if (top < scrollerRef.scrollTop) {
-						scrollerRef.scrollTop = top
-					} else if (top + tileSize > scrollerRef.scrollTop + scrollerRef.clientHeight) {
-						scrollerRef.scrollTop = top + tileSize - scrollerRef.clientHeight
-					}
+					scrollerRef.scrollLeft = revealScrollOffset(
+						scrollerRef.scrollLeft,
+						scrollerRef.clientWidth,
+						(location.column - minColumn) * tileSize,
+						tileSize
+					)
+					scrollerRef.scrollTop = revealScrollOffset(
+						scrollerRef.scrollTop,
+						scrollerRef.clientHeight,
+						(location.row - minRow) * tileSize,
+						tileSize
+					)
 				},
 			}),
 			[resetScrollPosition, scrollerRef, minColumn, minRow, tileSize]
@@ -254,12 +253,8 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		}, [])
 
 		const locationAtCanvasPoint = useCallback(
-			(x: number, y: number): ControlLocation => ({
-				pageNumber,
-				column: clamp(minColumn + Math.floor(x / tileSize), minColumn, maxColumn),
-				row: clamp(minRow + Math.floor(y / tileSize), minRow, maxRow),
-			}),
-			[pageNumber, minColumn, maxColumn, minRow, maxRow, tileSize]
+			(x: number, y: number): ControlLocation => cellAtCanvasPoint({ x, y }, gridSize, tileSize, pageNumber),
+			[pageNumber, gridSize, tileSize]
 		)
 
 		// ---- panning with the middle button ----
@@ -357,23 +352,11 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			[marquee, marqueeHandling, locationAtCanvasPoint]
 		)
 
-		const visibleColumns = windowSize.width / tileSize
-		const visibleRows = windowSize.height / tileSize
-
-		// Calculate the extents of what is visible
-		const scrollColumn = scrollX / tileSize
-		const scrollRow = scrollY / tileSize
-		const visibleMinX = minColumn + scrollColumn
-		const visibleMaxX = visibleMinX + visibleColumns
-		const visibleMinY = minRow + scrollRow
-		const visibleMaxY = visibleMinY + visibleRows
-
-		// Calculate the bounds of what to draw in the DOM
-		// Include some spill to make scrolling smoother, but not too much to avoid being a performance drain
-		const drawMinColumn = Math.max(Math.floor(visibleMinX - visibleColumns / 2), minColumn)
-		const drawMaxColumn = Math.min(Math.ceil(visibleMaxX + visibleColumns / 2), maxColumn)
-		const drawMinRow = Math.max(Math.floor(visibleMinY - visibleRows / 2), minRow)
-		const drawMaxRow = Math.min(Math.ceil(visibleMaxY + visibleRows / 2), maxRow)
+		// Only what is on screen, plus enough spill to make scrolling smooth
+		const drawColumns = drawnCellRange(minColumn, maxColumn, scrollX, windowSize.width, tileSize)
+		const drawRows = drawnCellRange(minRow, maxRow, scrollY, windowSize.height, tileSize)
+		const { first: drawMinColumn, last: drawMaxColumn } = drawColumns
+		const { first: drawMinRow, last: drawMaxRow } = drawRows
 
 		const visibleButtons: React.JSX.Element[] = []
 		for (let row = drawMinRow; row <= drawMaxRow; row++) {
@@ -642,7 +625,3 @@ export const ButtonGridIconBase = memo(function ButtonGridIcon({
 		/>
 	)
 })
-
-function clamp(value: number, min: number, max: number): number {
-	return Math.min(Math.max(value, min), max)
-}
