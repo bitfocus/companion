@@ -1,0 +1,208 @@
+/* A strip of icon buttons, set off from what it acts on. Shared by the layered button editor's
+   quick actions and the button grid's tool palette, so the two read as the same control.
+
+   Everything is scoped under `.toolbar` rather than left as loose `.toolbar-*` classes: the parts
+   only ever exist inside a toolbar, and nesting them keeps a generic name like `.toolbar-button`
+   from colliding with an unrelated class of the same name elsewhere. */
+.toolbar {
+	/* Buttons are square at this size unless a label widens them */
+	--toolbar-button-size: 32px;
+
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	padding: 4px;
+
+	background-color: var(--color-toolbar-bg);
+	border: 1px solid var(--color-border);
+	border-radius: 4px;
+
+	/* Small enough to sit alongside a canvas without competing with it */
+	&.toolbar-sm {
+		--toolbar-button-size: 24px;
+	}
+
+	&.toolbar-vertical {
+		flex-direction: column;
+
+		/* Hold its own width beside whatever it sits next to, rather than being squeezed */
+		flex: 0 0 auto;
+	}
+
+	&.toolbar-horizontal {
+		/* Wrapping is the last resort at widths where the buttons cannot fit one row. They stay
+		   full-size: a toolbar that is two rows tall beats one that cannot be hit. */
+		flex-flow: row wrap;
+	}
+
+	/* Keeps a set of buttons together, so a toolbar narrow enough to wrap breaks between groups rather
+	   than between arbitrary buttons */
+	.toolbar-group {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+	}
+
+	&.toolbar-horizontal > .toolbar-group {
+		flex-flow: row wrap;
+	}
+
+	&.toolbar-vertical > .toolbar-group {
+		flex-direction: column;
+	}
+
+	/* Deliberately shorter than the row. Stretched to full height it reads as if the toolbar has been
+	   padded out, rather than as a divider between two sets of buttons.
+
+	   Sized from the button rather than as a percentage: a percentage resolves against the toolbar's own
+	   height, which is what the toolbar is still trying to work out, and the answer it settled on made
+	   its line taller than the space it had reserved for it. */
+	.toolbar-separator {
+		--toolbar-separator-length: calc(var(--toolbar-button-size) * 0.6);
+
+		align-self: center;
+		flex: 0 0 auto;
+
+		background: var(--color-border);
+	}
+
+	&.toolbar-vertical > .toolbar-separator {
+		width: var(--toolbar-separator-length);
+		height: 1px;
+		margin: 3px 0;
+	}
+
+	&.toolbar-horizontal > .toolbar-separator {
+		width: 1px;
+		height: var(--toolbar-separator-length);
+		margin: 0 5px;
+	}
+
+	.toolbar-button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+
+		min-width: var(--toolbar-button-size);
+		height: var(--toolbar-button-size);
+		padding: 0 5px;
+
+		/* The icon is sized from this, so it scales with the toolbar rather than each call site picking */
+		font-size: 1rem;
+
+		border: 1px solid transparent;
+		border-radius: 3px;
+		background: transparent;
+		color: var(--color-toolbar-fg);
+		cursor: pointer;
+
+		&:hover:not(:disabled):not(.active) {
+			background: var(--color-surface-hover);
+			border-color: var(--color-border);
+		}
+
+		&.active {
+			background: var(--color-toolbar-accent);
+			border-color: var(--color-toolbar-accent);
+			color: var(--color-on-dark);
+
+			&:hover:not(:disabled) {
+				background: var(--color-toolbar-accent-hover);
+				border-color: var(--color-toolbar-accent-hover);
+			}
+		}
+
+		/* For a tool that does something live or irreversible, so being in it is not just "the blue one" */
+		&.toolbar-button-danger.active {
+			background: var(--color-danger);
+			border-color: var(--color-danger);
+
+			&:hover:not(:disabled) {
+				background: var(--color-danger);
+				border-color: var(--color-danger);
+			}
+		}
+
+		&:disabled {
+			opacity: 0.3;
+			cursor: default;
+			/* Let the wrapping tooltip trigger receive the hover instead */
+			pointer-events: none;
+		}
+	}
+
+	&.toolbar-sm .toolbar-button {
+		width: var(--toolbar-button-size);
+		padding: 0;
+
+		font-size: 0.875rem;
+	}
+
+	/* Fills whatever the buttons leave, so the toolbar is one full-width bar rather than a huddle of
+	   buttons, and so it keeps one height whether or not there is anything to report */
+	/* A fixed basis rather than its content width: below this much room the whole tail drops to its own
+	   row and gets the full width, and above it it stretches to fill. Sizing from the content instead
+	   would move the message between rows as the message changed, so the toolbar's height would depend
+	   on what it happened to be saying. */
+	.toolbar-tail {
+		flex: 1 1 14rem;
+		min-width: 0;
+
+		display: flex;
+		align-items: center;
+		align-self: stretch;
+		gap: 2px;
+	}
+
+	.toolbar-status {
+		flex: 1 1 auto;
+		min-width: 0;
+
+		padding: 0 10px;
+
+		color: var(--color-toolbar-fg);
+		font-size: 0.875rem;
+
+		/* It is the flexible item, so it is what gives when the buttons need the room. Clipping the tail
+		   of a sentence beats pushing the buttons out of the bar. */
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+
+		&.toolbar-status-muted {
+			color: color-mix(in srgb, var(--color-toolbar-fg) 55%, transparent);
+		}
+
+		&.toolbar-status-danger {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+
+			align-self: stretch;
+			border-radius: 3px;
+
+			background-color: var(--color-danger);
+			color: var(--color-on-dark);
+			font-weight: bold;
+
+			/* Laying it out as a flex row would otherwise stop it shrinking, and the toolbar would grow a
+			   second row the moment press mode was entered - the exact jump this status exists to avoid */
+			> * {
+				min-width: 0;
+				overflow: hidden;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+			}
+
+			> svg {
+				flex: 0 0 auto;
+			}
+		}
+	}
+
+	/* Wraps a disabled button so its tooltip can still fire on hover */
+	.toolbar-button-tooltip {
+		display: flex;
+	}
+}

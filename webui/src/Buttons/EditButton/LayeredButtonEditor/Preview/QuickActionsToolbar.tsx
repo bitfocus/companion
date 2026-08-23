@@ -7,8 +7,7 @@ import {
 	faMagnet,
 	faObjectGroup,
 } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { Tooltip } from '~/Components/Tooltip.js'
+import { Toolbar } from '~/Components/Toolbar.js'
 
 export interface QuickActionsToolbarProps {
 	onCenterHorizontal: () => void
@@ -52,29 +51,29 @@ export function QuickActionsToolbar({
 	// greyed out because it's already at the front/back is self-evident.
 	const reason = boundsDisabled ? boundsDisabledReason : null
 	return (
-		<div className="button-layer-quick-actions">
-			<ToolbarButton
+		<Toolbar.Root orientation="vertical" size="sm" className="me-2">
+			<Toolbar.Button
 				title="Center horizontally"
 				icon={faArrowsLeftRight}
 				onClick={onCenterHorizontal}
 				disabled={boundsDisabled}
 				disabledReason={reason}
 			/>
-			<ToolbarButton
+			<Toolbar.Button
 				title="Center vertically"
 				icon={faArrowsUpDown}
 				onClick={onCenterVertical}
 				disabled={boundsDisabled}
 				disabledReason={reason}
 			/>
-			<ToolbarButton
+			<Toolbar.Button
 				title="Fill (100% width and height)"
 				icon={faExpand}
 				onClick={onFill}
 				disabled={boundsDisabled}
 				disabledReason={reason}
 			/>
-			<ToolbarButton
+			<Toolbar.Button
 				title={linked ? 'Unlink: resize width and height independently' : 'Link: scale width and height together'}
 				icon={faLink}
 				active={linked}
@@ -84,56 +83,17 @@ export function QuickActionsToolbar({
 			/>
 			{/* A preference for the canvas as a whole rather than an action on the selection, so it stays
 			    usable no matter what (or whether anything) is selected */}
-			<ToolbarButton
+			<Toolbar.Button
 				title={snapEnabled ? 'Disable snapping' : 'Enable snapping'}
 				icon={faMagnet}
 				active={snapEnabled}
 				onClick={onToggleSnapEnabled}
 			/>
-			<div className="button-layer-quick-actions-separator" />
+			<Toolbar.Separator />
 			{/* Z-order applies to any top-level element, including ones with no editable bounds (eg lines),
 			    so it's gated on the can* flags alone */}
-			<ToolbarButton title="Bring to front" icon={faLayerGroup} onClick={onBringToFront} disabled={!canBringToFront} />
-			<ToolbarButton title="Send to back" icon={faObjectGroup} onClick={onSendToBack} disabled={!canSendToBack} />
-		</div>
-	)
-}
-
-function ToolbarButton({
-	title,
-	icon,
-	onClick,
-	active,
-	disabled,
-	disabledReason,
-}: {
-	title: string
-	icon: Parameters<typeof FontAwesomeIcon>[0]['icon']
-	onClick: () => void
-	active?: boolean
-	disabled?: boolean
-	disabledReason?: string | null
-}) {
-	const button = (
-		<button
-			type="button"
-			title={disabledReason ? undefined : title}
-			className={`button-layer-quick-action${active ? ' active' : ''}`}
-			onClick={onClick}
-			disabled={disabled}
-		>
-			<FontAwesomeIcon icon={icon} size="sm" />
-		</button>
-	)
-
-	// A disabled button doesn't emit hover events, so the trigger span (not the button) carries the tooltip
-	if (!disabledReason) return button
-	return (
-		<Tooltip.Root>
-			<Tooltip.Trigger render={<span className="button-layer-quick-action-tooltip">{button}</span>} delay={300} />
-			<Tooltip.Popup side="right" arrow size="md">
-				{disabledReason}
-			</Tooltip.Popup>
-		</Tooltip.Root>
+			<Toolbar.Button title="Bring to front" icon={faLayerGroup} onClick={onBringToFront} disabled={!canBringToFront} />
+			<Toolbar.Button title="Send to back" icon={faObjectGroup} onClick={onSendToBack} disabled={!canSendToBack} />
+		</Toolbar.Root>
 	)
 }
