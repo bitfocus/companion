@@ -140,7 +140,6 @@ if (process.env.ELECTRON !== '0') {
 				target: 'dmg',
 				category: 'no.bitfocus.companion',
 				extendInfo: {
-					LSBackgroundOnly: 1,
 					LSUIElement: 1,
 					NSAppleEventsUsageDescription: 'Companion uses AppleEvents to control local applications.',
 					NSLocalNetworkUsageDescription: 'Companion uses local network to communicate with devices.',
