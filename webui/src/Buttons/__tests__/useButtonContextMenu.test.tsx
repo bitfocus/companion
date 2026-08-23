@@ -1,12 +1,39 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, renderHook } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { MenuActionItemProps } from '~/Components/ActionMenu.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ButtonGridStore } from '../ButtonGridStore.js'
 import type { GridToolActions } from '../GridTools/index.js'
 import { useButtonContextMenu } from '../useButtonContextMenu.js'
+
+/** Every mutation the menu fires, by the trpc path it was built from */
+const sent: { path: string; input: unknown }[] = []
+
+/** Whether the server accepts what it is sent - only a test about failure says otherwise */
+let mutationsFail = false
+
+// The real `trpc` proxy is kept, so each mutation is still named by its real path - only the sending
+// is stood in for, which is also what lets a test decide whether it succeeds
+vi.mock('~/Resources/TRPC.js', async (importOriginal) => {
+	const original = await importOriginal<Record<string, unknown>>()
+	return {
+		...original,
+		useMutationExt: (options: { mutationKey?: unknown[][] }) => ({
+			...options,
+			mutateAsync: async (input: unknown) => {
+				sent.push({ path: (options.mutationKey?.[0] ?? []).join('.'), input })
+				if (mutationsFail) throw new Error('nope')
+			},
+		}),
+	}
+})
+
+beforeEach(() => {
+	sent.length = 0
+	mutationsFail = false
+})
 
 type ClickableMenuItem = Extract<MenuActionItemProps, { do: () => void }>
 
@@ -214,6 +241,33 @@ describe('useButtonContextMenu', () => {
 			expect(store.clipboard).toBeNull()
 		})
 
+		it('places a reference to the copied button, rather than a copy of it', async () => {
+			const { store, openAt, item } = setup()
+			act(() => store.setClipboard([at(1, 1)], 'copy'))
+			openAt(at(2, 2))
+
+			act(() => item('Paste as reference').do())
+
+			await vi.waitFor(() =>
+				expect(sent).toEqual([
+					{ path: 'controls.createReferenceControl', input: { fromLocation: at(1, 1), toLocation: at(2, 2) } },
+				])
+			)
+		})
+
+		it('reports a failed reference paste rather than letting the rejection escape', async () => {
+			mutationsFail = true
+			const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
+			const { store, openAt, item } = setup()
+			act(() => store.setClipboard([at(1, 1)], 'copy'))
+			openAt(at(2, 2))
+
+			act(() => item('Paste as reference').do())
+
+			await vi.waitFor(() => expect(errors).toHaveBeenCalledWith(expect.stringContaining('Paste reference failed')))
+			errors.mockRestore()
+		})
+
 		it('spends a cut when pasted as a reference, which never completes the move itself', () => {
 			const { store, openAt, item } = setup()
 			act(() => store.setClipboard([at(1, 1)], 'cut'))
@@ -234,14 +288,51 @@ describe('useButtonContextMenu', () => {
 			expect(store.clipboard).toEqual({ locations: [at(1, 1)], mode: 'copy' })
 		})
 
-		it('presses and aborts the button under the cursor', () => {
+		it('presses the button under the cursor down and back up again', async () => {
 			const { openAt, item } = setup()
 			openAt(at(1, 1))
 
-			// Nothing to assert beyond them running - the mutations go nowhere here, and a rejection
-			// must not escape as an unhandled one
-			expect(() => act(() => item('Press').do())).not.toThrow()
-			expect(() => act(() => item('Abort Actions').do())).not.toThrow()
+			act(() => item('Press').do())
+
+			// A press that never released would leave the button held down on real hardware
+			await vi.waitFor(() =>
+				expect(sent).toEqual([
+					{
+						path: 'controls.hotPressControl',
+						input: { location: at(1, 1), direction: true, surfaceId: 'context-menu' },
+					},
+					{
+						path: 'controls.hotPressControl',
+						input: { location: at(1, 1), direction: false, surfaceId: 'context-menu' },
+					},
+				])
+			)
+		})
+
+		it('aborts the actions of the button under the cursor', async () => {
+			const { openAt, item } = setup()
+			openAt(at(1, 1))
+
+			act(() => item('Abort Actions').do())
+
+			await vi.waitFor(() =>
+				expect(sent).toEqual([{ path: 'controls.hotAbortControl', input: { location: at(1, 1) } }])
+			)
+		})
+
+		it.each([
+			['Press', 'Hot press failed'],
+			['Abort Actions', 'Hot abort failed'],
+		] as const)('reports a failed %s rather than letting the rejection escape', async (label, message) => {
+			mutationsFail = true
+			const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
+			const { openAt, item } = setup()
+			openAt(at(1, 1))
+
+			act(() => item(label).do())
+
+			await vi.waitFor(() => expect(errors).toHaveBeenCalledWith(expect.stringContaining(message)))
+			errors.mockRestore()
 		})
 
 		it('offers nothing to do with an empty clipboard', () => {
