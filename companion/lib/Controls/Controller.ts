@@ -256,7 +256,7 @@ export class ControlsController {
 				this.#deps.instance.definitions,
 				this.#controlEvents,
 				this,
-				this.#factory
+				this.#deps.userconfig
 			),
 
 			watchControl: publicProcedure

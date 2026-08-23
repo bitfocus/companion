@@ -1,5 +1,6 @@
 import type { ActionSetId } from './Model/ActionModel.js'
 import type { ControlLocation } from './Model/Common.js'
+import type { UserConfigGridSize } from './Model/UserConfigModel.js'
 import { assertNever } from './Util.js'
 
 /**
@@ -7,6 +8,18 @@ import { assertNever } from './Util.js'
  */
 export function formatLocation(location: ControlLocation): string {
 	return `${location.pageNumber ?? '?'}/${location.row ?? '?'}/${location.column ?? '?'}`
+}
+
+/**
+ * Whether a location's row and column fall inside the grid bounds
+ */
+export function isLocationOnGrid(gridSize: UserConfigGridSize, location: ControlLocation): boolean {
+	return (
+		location.row >= gridSize.minRow &&
+		location.row <= gridSize.maxRow &&
+		location.column >= gridSize.minColumn &&
+		location.column <= gridSize.maxColumn
+	)
 }
 
 /**

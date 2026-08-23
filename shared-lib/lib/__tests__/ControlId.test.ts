@@ -6,6 +6,7 @@ import {
 	CreatePresetControlId,
 	CreateTriggerControlId,
 	formatLocation,
+	isLocationOnGrid,
 	oldBankIndexToXY,
 	ParseControlId,
 	validateActionSetId,
@@ -27,6 +28,41 @@ describe('formatLocation', () => {
 
 	test('replaces only missing components with "?"', () => {
 		expect(formatLocation({ pageNumber: 5, row: undefined as any, column: 1 })).toBe('5/?/1')
+	})
+})
+
+// ── isLocationOnGrid ──────────────────────────────────────────────────────────
+
+describe('isLocationOnGrid', () => {
+	const gridSize = { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 }
+
+	test('a location well inside the bounds is on the grid', () => {
+		expect(isLocationOnGrid(gridSize, { pageNumber: 1, row: 2, column: 3 })).toBe(true)
+	})
+
+	test('the corners of the grid are inclusive', () => {
+		expect(isLocationOnGrid(gridSize, { pageNumber: 1, row: 0, column: 0 })).toBe(true)
+		expect(isLocationOnGrid(gridSize, { pageNumber: 1, row: 3, column: 7 })).toBe(true)
+	})
+
+	test('a column past the right edge is off the grid', () => {
+		expect(isLocationOnGrid(gridSize, { pageNumber: 1, row: 0, column: 8 })).toBe(false)
+	})
+
+	test('a row past the bottom edge is off the grid', () => {
+		expect(isLocationOnGrid(gridSize, { pageNumber: 1, row: 4, column: 0 })).toBe(false)
+	})
+
+	test('negative components are off the grid', () => {
+		expect(isLocationOnGrid(gridSize, { pageNumber: 1, row: -1, column: 0 })).toBe(false)
+		expect(isLocationOnGrid(gridSize, { pageNumber: 1, row: 0, column: -1 })).toBe(false)
+	})
+
+	test('honours a non-zero grid origin', () => {
+		const offsetGrid = { minColumn: 2, maxColumn: 5, minRow: 1, maxRow: 4 }
+		expect(isLocationOnGrid(offsetGrid, { pageNumber: 1, row: 1, column: 2 })).toBe(true)
+		expect(isLocationOnGrid(offsetGrid, { pageNumber: 1, row: 0, column: 2 })).toBe(false)
+		expect(isLocationOnGrid(offsetGrid, { pageNumber: 1, row: 1, column: 1 })).toBe(false)
 	})
 })
 

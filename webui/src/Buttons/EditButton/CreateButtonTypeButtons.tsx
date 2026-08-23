@@ -7,16 +7,16 @@ import { trpc, useMutationExt } from '~/Resources/TRPC'
 import './CreateButtonTypeButtons.css'
 
 export function CreateButtonTypeButtons({ location }: { location: ControlLocation }): React.JSX.Element {
-	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())
+	const resetControlsMutation = useMutationExt(trpc.controls.resetControls.mutationOptions())
 
 	const setButtonType = useCallback(
 		(newType: string) => {
 			// On an empty slot there is no existing type to convert from, so no warning is needed
-			resetControlMutation.mutateAsync({ location, newType }).catch((e) => {
+			resetControlsMutation.mutateAsync({ locations: [location], newType }).catch((e) => {
 				console.error(`Set type failed: ${e}`)
 			})
 		},
-		[resetControlMutation, location]
+		[resetControlsMutation, location]
 	)
 
 	return (

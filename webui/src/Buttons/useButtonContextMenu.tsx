@@ -45,10 +45,8 @@ export function useButtonContextMenu({
 
 	const hotPressMutation = useMutationExt(trpc.controls.hotPressControl.mutationOptions())
 	const hotAbortMutation = useMutationExt(trpc.controls.hotAbortControl.mutationOptions())
-	const copyControlMutation = useMutationExt(trpc.controls.copyControl.mutationOptions())
-	const moveControlMutation = useMutationExt(trpc.controls.moveControl.mutationOptions())
-	const swapControlMutation = useMutationExt(trpc.controls.swapControl.mutationOptions())
-	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())
+	const gridTransferMutation = useMutationExt(trpc.controls.gridBatchTransfer.mutationOptions())
+	const resetControlsMutation = useMutationExt(trpc.controls.resetControls.mutationOptions())
 	const createReferenceControlMutation = useMutationExt(trpc.controls.createReferenceControl.mutationOptions())
 
 	const contextMenuItems = useMemo((): MenuItemProps[] => {
@@ -106,13 +104,19 @@ export function useButtonContextMenu({
 					label: pasteLabel,
 					do: () => {
 						if (copyFromButton[1] === 'copy') {
-							copyControlMutation
-								.mutateAsync({ fromLocation: copyFromButton[0], toLocation: location })
+							gridTransferMutation
+								.mutateAsync({
+									operation: 'copy',
+									pairs: [{ fromLocation: copyFromButton[0], toLocation: location }],
+								})
 								.catch((e) => console.error(`Copy failed: ${e}`))
 							setTabResetToken(nanoid())
 						} else if (copyFromButton[1] === 'cut') {
-							moveControlMutation
-								.mutateAsync({ fromLocation: copyFromButton[0], toLocation: location })
+							gridTransferMutation
+								.mutateAsync({
+									operation: 'move',
+									pairs: [{ fromLocation: copyFromButton[0], toLocation: location }],
+								})
 								.catch((e) => console.error(`Move failed: ${e}`))
 							setCopyFromButton(null)
 							setTabResetToken(nanoid())
@@ -122,8 +126,11 @@ export function useButtonContextMenu({
 				{
 					label: 'Swap here',
 					do: () => {
-						swapControlMutation
-							.mutateAsync({ fromLocation: copyFromButton[0], toLocation: location })
+						gridTransferMutation
+							.mutateAsync({
+								operation: 'swap',
+								pairs: [{ fromLocation: copyFromButton[0], toLocation: location }],
+							})
 							.catch((e) => console.error(`Swap failed: ${e}`))
 						setCopyFromButton(null)
 						setTabResetToken(nanoid())
@@ -155,7 +162,7 @@ export function useButtonContextMenu({
 						`This will clear the style, feedbacks and all actions`,
 						'Clear',
 						() => {
-							resetControlMutation.mutateAsync({ location }).catch((e) => {
+							resetControlsMutation.mutateAsync({ locations: [location], newType: null }).catch((e) => {
 								console.error(`Reset failed: ${e}`)
 							})
 						}
@@ -171,10 +178,8 @@ export function useButtonContextMenu({
 		copyFromButton,
 		hotPressMutation,
 		hotAbortMutation,
-		copyControlMutation,
-		moveControlMutation,
-		swapControlMutation,
-		resetControlMutation,
+		gridTransferMutation,
+		resetControlsMutation,
 		createReferenceControlMutation,
 		setCopyFromButton,
 		setTabResetToken,

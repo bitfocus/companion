@@ -118,10 +118,8 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 		)
 	}, [recreateNavMutation, pageNumber, clearSelectedButton])
 
-	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())
-	const copyControlMutation = useMutationExt(trpc.controls.copyControl.mutationOptions())
-	const moveControlMutation = useMutationExt(trpc.controls.moveControl.mutationOptions())
-	const swapControlMutation = useMutationExt(trpc.controls.swapControl.mutationOptions())
+	const resetControlsMutation = useMutationExt(trpc.controls.resetControls.mutationOptions())
+	const gridTransferMutation = useMutationExt(trpc.controls.gridBatchTransfer.mutationOptions())
 
 	useImperativeHandle(
 		ref,
@@ -134,9 +132,14 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						case 'copy':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								copyControlMutation.mutateAsync({ fromLocation: fromInfo, toLocation: location }).catch((e) => {
-									console.error(`copy failed: ${e}`)
-								})
+								gridTransferMutation
+									.mutateAsync({
+										operation: 'copy',
+										pairs: [{ fromLocation: fromInfo, toLocation: location }],
+									})
+									.catch((e) => {
+										console.error(`copy failed: ${e}`)
+									})
 								stopFunction()
 							} else {
 								setActiveFunctionButton(location)
@@ -145,9 +148,14 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						case 'move':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								moveControlMutation.mutateAsync({ fromLocation: fromInfo, toLocation: location }).catch((e) => {
-									console.error(`move failed: ${e}`)
-								})
+								gridTransferMutation
+									.mutateAsync({
+										operation: 'move',
+										pairs: [{ fromLocation: fromInfo, toLocation: location }],
+									})
+									.catch((e) => {
+										console.error(`move failed: ${e}`)
+									})
 								stopFunction()
 							} else {
 								setActiveFunctionButton(location)
@@ -156,9 +164,14 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 						case 'swap':
 							if (activeFunctionButton) {
 								const fromInfo = activeFunctionButton
-								swapControlMutation.mutateAsync({ fromLocation: fromInfo, toLocation: location }).catch((e) => {
-									console.error(`swap failed: ${e}`)
-								})
+								gridTransferMutation
+									.mutateAsync({
+										operation: 'swap',
+										pairs: [{ fromLocation: fromInfo, toLocation: location }],
+									})
+									.catch((e) => {
+										console.error(`swap failed: ${e}`)
+									})
 								stopFunction()
 							} else {
 								setActiveFunctionButton(location)
@@ -171,7 +184,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 				} else {
 					if (activeFunction === 'delete') {
 						resetRef.current?.show('Clear button', `Clear style and actions for this button?`, 'Clear', () => {
-							resetControlMutation.mutateAsync({ location }).catch((e) => {
+							resetControlsMutation.mutateAsync({ locations: [location], newType: null }).catch((e) => {
 								console.error(`Reset failed: ${e}`)
 							})
 						})
@@ -185,15 +198,7 @@ export const ButtonGridActions = forwardRef<ButtonGridActionsRef, ButtonGridActi
 				}
 			},
 		}),
-		[
-			resetControlMutation,
-			copyControlMutation,
-			moveControlMutation,
-			swapControlMutation,
-			activeFunction,
-			activeFunctionButton,
-			stopFunction,
-		]
+		[resetControlsMutation, gridTransferMutation, activeFunction, activeFunctionButton, stopFunction]
 	)
 
 	return (

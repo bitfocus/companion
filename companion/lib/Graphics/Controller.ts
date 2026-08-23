@@ -19,7 +19,7 @@ import debounceFn from 'debounce-fn'
 import type Express from 'express'
 import QuickLRU from 'quick-lru'
 import workerPool from 'workerpool'
-import { ParseControlId, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
+import { isLocationOnGrid, ParseControlId, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import {
 	resolveButtonStyleProperties,
 	type ResolveButtonStylePropertiesConfig,
@@ -339,13 +339,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					const { location } = args
 
 					const gridSize = this.#userConfigController.getKey('gridSize')
-					const locationIsInBounds =
-						location &&
-						gridSize &&
-						location.column <= gridSize.maxColumn &&
-						location.column >= gridSize.minColumn &&
-						location.row <= gridSize.maxRow &&
-						location.row >= gridSize.minRow
+					const locationIsInBounds = location && gridSize && isLocationOnGrid(gridSize, location)
 
 					const controlId = this.#pageStore.getControlIdAt(location)
 					const control = controlId ? this.controlsStore.getControl(controlId) : undefined

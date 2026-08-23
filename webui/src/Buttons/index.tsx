@@ -130,10 +130,8 @@ export const ButtonsPage = observer(function ButtonsPage() {
 
 	const gridSize = userConfig.properties?.gridSize
 
-	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())
-	const copyControlMutation = useMutationExt(trpc.controls.copyControl.mutationOptions())
-	const moveControlMutation = useMutationExt(trpc.controls.moveControl.mutationOptions())
-	const swapControlMutation = useMutationExt(trpc.controls.swapControl.mutationOptions())
+	const resetControlsMutation = useMutationExt(trpc.controls.resetControls.mutationOptions())
+	const gridTransferMutation = useMutationExt(trpc.controls.gridBatchTransfer.mutationOptions())
 
 	// Dropping a preset (from the Presets tab) onto a grid button imports it at that location.
 	// Subscribed via the global dnd-kit provider; we filter to preset drags by `type`.
@@ -298,7 +296,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 							`This will clear the style, feedbacks and all actions`,
 							'Clear',
 							() => {
-								resetControlMutation.mutateAsync({ location: selectedButton }).catch((e) => {
+								resetControlsMutation.mutateAsync({ locations: [selectedButton], newType: null }).catch((e) => {
 									console.error(`Reset failed: ${e}`)
 								})
 							}
@@ -316,23 +314,32 @@ export const ButtonsPage = observer(function ButtonsPage() {
 						console.log('do paste', copyFromButton, selectedButton)
 
 						if (copyFromButton[1] === 'copy') {
-							copyControlMutation
-								.mutateAsync({ fromLocation: copyFromButton[0], toLocation: selectedButton })
+							gridTransferMutation
+								.mutateAsync({
+									operation: 'copy',
+									pairs: [{ fromLocation: copyFromButton[0], toLocation: selectedButton }],
+								})
 								.catch((e) => {
 									console.error(`copy failed: ${e}`)
 								})
 							setTabResetToken(nanoid())
 						} else if (copyFromButton[1] === 'cut') {
-							moveControlMutation
-								.mutateAsync({ fromLocation: copyFromButton[0], toLocation: selectedButton })
+							gridTransferMutation
+								.mutateAsync({
+									operation: 'move',
+									pairs: [{ fromLocation: copyFromButton[0], toLocation: selectedButton }],
+								})
 								.catch((e) => {
 									console.error(`move failed: ${e}`)
 								})
 							setCopyFromButton(null)
 							setTabResetToken(nanoid())
 						} else if (copyFromButton[1] === 'swap') {
-							swapControlMutation
-								.mutateAsync({ fromLocation: copyFromButton[0], toLocation: selectedButton })
+							gridTransferMutation
+								.mutateAsync({
+									operation: 'swap',
+									pairs: [{ fromLocation: copyFromButton[0], toLocation: selectedButton }],
+								})
 								.catch((e) => {
 									console.error(`swap failed: ${e}`)
 								})
@@ -346,10 +353,8 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			}
 		},
 		[
-			resetControlMutation,
-			copyControlMutation,
-			moveControlMutation,
-			swapControlMutation,
+			resetControlsMutation,
+			gridTransferMutation,
 			selectedButton,
 			copyFromButton,
 			gridSize,
