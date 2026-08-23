@@ -399,22 +399,32 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		[gridStore, actions, doButtonContextMenu]
 	)
 
+	// Escape is the way out of whatever the grid has got itself into, so which corner of the page
+	// holds the focus should not decide whether it works: clicking a tab on the right is not a reason
+	// to be stuck holding a set of buttons, and something you press to be sure you are not about to
+	// do anything has to work when you press it.
+	//
+	// Bound to the document rather than to the grid, and stepping aside for anything with a nearer
+	// claim on the key - a text field, or an open dialog or menu that Escape closes.
+	useEffect(() => {
+		const handleEscape = (e: KeyboardEvent) => {
+			if (e.key !== 'Escape' || e.defaultPrevented) return
+			if (isTypingTarget(e.target)) return
+			if (document.querySelector('[role="dialog"], [role="menu"]')) return
+
+			gridStore.goBack(actions)
+		}
+
+		document.addEventListener('keydown', handleEscape)
+		return () => document.removeEventListener('keydown', handleEscape)
+	}, [gridStore, actions])
+
 	const handleKeyDownInButtons = useCallback(
 		(e: React.KeyboardEvent) => {
 			const isControlOrCommandCombo = (e.ctrlKey || e.metaKey) && !e.altKey
 
 			// e.target is the actual element where the event happened, e.currentTarget is the element where the event listener is attached
-			const targetElement = e.target as HTMLElement
-
-			// TODO - this feels messy, perhaps this can be done cleaner?
-			if (targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA') {
-				// Don't interfere with typing in inputs
-				return
-			}
-			if (targetElement.classList.contains('native-edit-context')) {
-				// Don't interfere with typing in the expression editor
-				return
-			}
+			if (isTypingTarget(e.target)) return
 
 			if (isControlOrCommandCombo && e.key === '=') {
 				e.preventDefault()
@@ -445,10 +455,8 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			}
 
 			switch (e.key) {
-				case 'Escape':
-					// One step back through whatever is in progress, rather than straight to nothing
-					gridStore.goBack(actions)
-					return
+				// Escape is deliberately not here - it is handled for the whole page rather than only
+				// wherever the focus happens to be
 				case 'ArrowDown':
 					navigate(1, 0)
 					return
@@ -627,6 +635,16 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		</ButtonGridViewProvider>
 	)
 })
+
+/** Whether this is somewhere text is being typed, where the keys belong to whatever is being typed in */
+function isTypingTarget(target: EventTarget | null): boolean {
+	if (!(target instanceof HTMLElement)) return false
+
+	if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return true
+
+	// The expression editor, which is neither
+	return target.classList.contains('native-edit-context')
+}
 
 function describeButtons(count: number): string {
 	return count === 1 ? '1 button' : `${count} buttons`

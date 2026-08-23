@@ -11,4 +11,9 @@ export class ArrangeTool extends SelectTool {
 	override readonly id: GridToolId = 'arrange'
 
 	override readonly dragAnyButton = true
+
+	// A tap here is for picking out what to drag, not for going somewhere. Opening the editor is a
+	// long way to be taken by a stray tap while rearranging - and on a single-column layout it
+	// replaces the grid you are rearranging with the button you did not mean to tap.
+	protected override readonly opensEditor = false
 }

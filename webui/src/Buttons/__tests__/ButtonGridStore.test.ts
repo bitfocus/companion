@@ -1237,6 +1237,15 @@ describe('ButtonGridStore', () => {
 	})
 
 	describe('arrange tool', () => {
+		it('selects without opening the editor, since a tap here is for picking what to drag', () => {
+			store.setTool('arrange', actions)
+
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			expect(store.selectedLocations).toEqual([at(1, 1)])
+			expect(actions.openEditor).not.toHaveBeenCalled()
+		})
+
 		it('lets any button be dragged, unlike select', () => {
 			expect(store.dragAnyButton).toBe(false)
 

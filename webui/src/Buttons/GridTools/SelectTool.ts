@@ -9,6 +9,9 @@ import { GridToolBase, type GridToolContext, type GridToolId } from './types.js'
 export class SelectTool extends GridToolBase {
 	readonly id: GridToolId = 'select'
 
+	/** Whether tapping a button also opens it for editing, as the default tool's tap does */
+	protected readonly opensEditor: boolean = true
+
 	/** Dragging a box across the grid picks out a region to select */
 	override allowsMarquee(_additive: boolean): boolean {
 		return true
@@ -23,7 +26,7 @@ export class SelectTool extends GridToolBase {
 
 		// Opening the editor for one of many would be arbitrary, so a multiple selection shows its own
 		// panel instead
-		if (ctx.store.selectionCount === 1) ctx.actions.openEditor(location)
+		if (this.opensEditor && ctx.store.selectionCount === 1) ctx.actions.openEditor(location)
 
 		// The pointer has not moved, so nothing else will redraw what a click here would now do - and
 		// after a ctrl-click that answer has flipped to "another one would put it back"
