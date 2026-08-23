@@ -24,6 +24,10 @@ const cacheDir = path.join(cacheRoot, 'builtin-surfaces')
 
 const cacheChecksumPath = path.join(cacheRoot, 'builtin-surfaces-checksum.txt')
 
+export async function ensureBuiltinSurfaceModulesDirExists() {
+	await fs.mkdirp(cacheDir)
+}
+
 export async function fetchBuiltinSurfaceModules() {
 	await fs.mkdirp(cacheDir)
 

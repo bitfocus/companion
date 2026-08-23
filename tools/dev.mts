@@ -6,7 +6,7 @@ import semver from 'semver'
 import { $, argv, usePowerShell } from 'zx'
 import { devThreadOutDir, startDevThreadBuild } from './build_dev_threads.mts'
 import { determinePlatformInfo } from './build/util.mts'
-import { fetchBuiltinSurfaceModules } from './fetch_builtin_modules.mts'
+import { ensureBuiltinSurfaceModulesDirExists, fetchBuiltinSurfaceModules } from './fetch_builtin_modules.mts'
 import { fetchNodejs } from './fetch_nodejs.mts'
 
 if (process.platform === 'win32') {
@@ -77,7 +77,13 @@ await fetchNodejs(platformInfo)
 
 console.log('Ensuring builtin modules are installed')
 
-await fetchBuiltinSurfaceModules()
+if (process.env.COMPANION_SKIP_BUILTIN_SURFACE_MODULES) {
+	console.log('Skipping builtin surface modules (COMPANION_SKIP_BUILTIN_SURFACE_MODULES is set)')
+	await ensureBuiltinSurfaceModulesDirExists()
+} else {
+	console.log('Ensuring builtin modules are installed')
+	await fetchBuiltinSurfaceModules()
+}
 
 console.log('Ensuring bundled modules are synced')
 
