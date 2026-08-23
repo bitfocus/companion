@@ -41,10 +41,16 @@ RUN apt update && apt install -y \
     libusb-1.0-0 \
     libudev1 \
     iputils-ping \
+    libcap2-bin \
     libasound2 \
     libfontconfig1 \
     libatomic1 \
     && rm -rf /var/lib/apt/lists/*
+
+# Debian trixie's ping no longer ships the cap_net_raw file capability (it relies on the
+# net.ipv4.ping_group_range sysctl instead). Re-add it so the generic-ping module works as the
+# non-root companion user on hosts that leave that sysctl at its restrictive default. #4365
+RUN setcap cap_net_raw+ep /usr/bin/ping
 
 # Don't run as root
 RUN useradd -ms /bin/bash companion
