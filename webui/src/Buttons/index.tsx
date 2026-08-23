@@ -33,8 +33,9 @@ import { EditButton } from './EditButton/EditButton.js'
 import { GRID_BUTTON_DRAG_TYPE, type GridButtonDragItem } from './GridButtonDragItem.js'
 import { parseGridButtonDroppableId } from './GridButtonDroppableId.js'
 import { planGridDrop } from './GridDragDrop.js'
-import { buildTransferPairs, previewPlacements, withoutEmptySources } from './GridGeometry.js'
+import { buildTransferPairs, previewPlacements } from './GridGeometry.js'
 import type { GridToolActions, GridTransferPair } from './GridTools/index.js'
+import { planGridTransferRequest } from './GridTransferRequest.js'
 import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
 import { PageVariablesPanel } from './PageVariablesPanel.js'
@@ -156,13 +157,12 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			// context menu - ends up here, so the things that must never happen quietly are checked in
 			// one place rather than in each of them.
 			transfer: (operation, pairs: GridTransferPair[], onApplied: () => void) => {
-				const carrying = withoutEmptySources(operation, pairs, isOccupied)
-				if (carrying.length === 0) return
+				const request = planGridTransferRequest(operation, pairs, { isOccupied, fitsOnGrid })
+				// Nothing to carry, or it would land off the grid. `pasteAt` explains the latter, since a
+				// keyboard paste has no ghost to have shown it coming; everywhere else it is a no-op.
+				if (request.outcome === 'nothing' || request.outcome === 'off-grid') return
 
-				// Off the grid is out of reach. Refusing the whole thing rather than the part that fits
-				// means a move can never destroy its source in exchange for nothing.
-				if (!fitsOnGrid(carrying.map((pair) => pair.toLocation))) return
-
+				const carrying = request.pairs
 				const apply = () => {
 					// One request for the whole lot, so overlapping regions are resolved against the state
 					// as it was before anything moved, and a rejection leaves nothing half-applied
@@ -177,21 +177,11 @@ export const ButtonsPage = observer(function ButtonsPage() {
 					onApplied()
 				}
 
-				// A swap trades rather than destroys, and a cell the buttons are vacating anyway is not
-				// being overwritten by them
-				const vacated = new Set(operation === 'move' ? carrying.map((pair) => formatLocation(pair.fromLocation)) : [])
-				const overwritten =
-					operation === 'swap'
-						? []
-						: carrying.filter(({ toLocation }) => !vacated.has(formatLocation(toLocation)) && isOccupied(toLocation))
-
-				if (overwritten.length > 0) {
+				if (request.outcome === 'overwrites') {
+					const count = request.overwritten.length
 					confirmModalRef.current?.show(
-						`Overwrite ${describeButtons(overwritten.length)}`,
-						[
-							`This will replace ${describeButtons(overwritten.length)} already here.`,
-							`There's no going back from this.`,
-						],
+						`Overwrite ${describeButtons(count)}`,
+						[`This will replace ${describeButtons(count)} already here.`, `There's no going back from this.`],
 						'Overwrite',
 						apply
 					)
@@ -232,20 +222,16 @@ export const ButtonsPage = observer(function ButtonsPage() {
 			const operation = clipboard.mode === 'cut' ? 'move' : 'copy'
 			// Top-left, not centred like the tools: a paste names its destination rather than pointing at
 			// it, with no ghost to show which cell of the region the answer was measured from
-			const pairs = withoutEmptySources(
-				operation,
-				buildTransferPairs(clipboard.locations, location, 'top-left'),
-				isOccupied
-			)
+			const pairs = buildTransferPairs(clipboard.locations, location, 'top-left')
 
 			// `transfer` refuses this anyway, but silently - and a paste that appears to do nothing at all
 			// is worth explaining, since there is no ghost under a keyboard paste to have shown it coming
-			const offGrid = pairs.filter(({ toLocation }) => !fitsOnGrid([toLocation]))
-			if (offGrid.length > 0) {
+			const request = planGridTransferRequest(operation, pairs, { isOccupied, fitsOnGrid })
+			if (request.outcome === 'off-grid') {
 				confirmModalRef.current?.show(
 					`Cannot paste here`,
 					[
-						`${offGrid.length} of the ${describeButtons(pairs.length)} would land outside the grid.`,
+						`${request.offGrid.length} of the ${describeButtons(request.pairs.length)} would land outside the grid.`,
 						`Nothing has been pasted. Try somewhere with more room, or make the grid bigger.`,
 					],
 					'OK',
