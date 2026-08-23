@@ -192,6 +192,7 @@ function GridToolbarStatus({
 		)
 	}
 
-	const activeTool = ALL_TOOLS.find((tool) => tool.id === activeToolId)
-	return <Toolbar.Status muted>{activeTool ? `${activeTool.label} tool` : ''}</Toolbar.Status>
+	// Every tool id has an entry, so this always finds one
+	const activeTool = ALL_TOOLS.find((tool) => tool.id === activeToolId)!
+	return <Toolbar.Status muted>{`${activeTool.label} tool`}</Toolbar.Status>
 }

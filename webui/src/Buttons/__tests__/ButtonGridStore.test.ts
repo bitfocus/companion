@@ -1323,6 +1323,113 @@ describe('ButtonGridStore', () => {
 	})
 })
 
+describe('ButtonGridStore, in the states nothing else reaches', () => {
+	let store: ButtonGridStore
+	let actions: GridToolActions
+
+	beforeEach(() => {
+		store = new ButtonGridStore()
+		actions = makeActions()
+	})
+
+	it('leaves the focus nowhere when the selection is emptied', () => {
+		store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+		expect(store.focus).toEqual(at(1, 1))
+
+		store.setSelection([])
+
+		expect(store.focus).toBeNull()
+	})
+
+	it('says nothing when asked to clear an already-empty clipboard', () => {
+		const listener = vi.fn()
+		store.subscribe(listener)
+
+		store.clearClipboard()
+
+		expect(listener).not.toHaveBeenCalled()
+	})
+
+	it('notices a preview of the same size that names different cells', () => {
+		store.setDragPreview({ placements: new Map([['1/1/1', at(2, 1)]]), valid: true })
+
+		const listener = vi.fn()
+		store.subscribe(listener)
+		store.setDragPreview({ placements: new Map([['1/2/2', at(2, 1)]]), valid: true })
+
+		expect(listener).toHaveBeenCalled()
+	})
+
+	describe('keyboard movement with nothing to move', () => {
+		it('extends nothing when there is no anchor to extend from', () => {
+			expect(store.extendFocus(1, 0, GRID_SIZE)).toBeNull()
+		})
+
+		it('walks nowhere when there is no focus to walk from', () => {
+			expect(store.moveFocusOnly(1, 0, GRID_SIZE)).toBeNull()
+			expect(store.moveFocus(1, 0, GRID_SIZE)).toBeNull()
+		})
+
+		it('toggles nothing when there is no focused cell', () => {
+			store.toggleFocused()
+
+			expect(store.selectionCount).toBe(0)
+		})
+
+		it('changes page on nothing when there is no focus to carry over', () => {
+			expect(store.moveFocusToPage(2)).toBeNull()
+		})
+
+		it('wraps around the edges of the grid rather than stopping at them', () => {
+			store.selectWithModifiers(at(GRID_SIZE.minRow, GRID_SIZE.minColumn), NO_MODIFIERS)
+
+			// Off the top edge comes back on at the bottom, and off the left at the right
+			expect(store.moveFocus(-1, 0, GRID_SIZE)).toEqual(at(GRID_SIZE.maxRow, GRID_SIZE.minColumn))
+			expect(store.moveFocus(0, -1, GRID_SIZE)).toEqual(at(GRID_SIZE.maxRow, GRID_SIZE.maxColumn))
+			// And back the other way
+			expect(store.moveFocus(1, 0, GRID_SIZE)).toEqual(at(GRID_SIZE.minRow, GRID_SIZE.maxColumn))
+			expect(store.moveFocus(0, 1, GRID_SIZE)).toEqual(at(GRID_SIZE.minRow, GRID_SIZE.minColumn))
+		})
+	})
+
+	describe('a tool that has no use for a gesture', () => {
+		it('ignores a box, a hover and a tap in press mode', () => {
+			store.setTool('press', actions)
+
+			store.handleMarquee(at(1, 1), at(2, 2), false, actions)
+			store.handleHover(at(1, 1), NO_MODIFIERS, actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+
+			expect(store.selectionCount).toBe(0)
+			expect(store.dropGhostSource('1/1/1')).toBeNull()
+			expect(actions.press).not.toHaveBeenCalled()
+		})
+
+		it('ignores a press under a tool that does not fire buttons', () => {
+			store.handlePress(at(1, 1), true, actions)
+
+			expect(actions.press).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('the delete tool', () => {
+		it('offers a box, since clearing a region beats clearing one at a time', () => {
+			store.setTool('delete', actions)
+
+			expect(store.allowsMarquee(false)).toBe(true)
+		})
+
+		it('ignores a box drawn over nothing at all', () => {
+			actions.isOccupied = vi.fn(() => false)
+			store.setTool('delete', actions)
+
+			store.handleMarquee(at(1, 1), at(2, 2), false, actions)
+
+			expect(actions.clearButtons).not.toHaveBeenCalled()
+		})
+	})
+})
+
 describe('locationsInRectangle', () => {
 	it('covers every cell between two corners', () => {
 		expect(locationsInRectangle(at(1, 1), at(2, 2))).toEqual([at(1, 1), at(1, 2), at(2, 1), at(2, 2)])

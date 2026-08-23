@@ -131,7 +131,7 @@ export class TransferTool extends GridToolBase {
 			const selection = ctx.store.selectedLocations
 			if ((modifiers.range || modifiers.toggle) && selection.length > 0) {
 				this.#pickUp(ctx, [...selection])
-				this.#reviseSources(ctx, location, modifiers)
+				this.#reviseSources(ctx, selection, location, modifiers)
 				return
 			}
 
@@ -148,11 +148,11 @@ export class TransferTool extends GridToolBase {
 		// built it still work on it, so a stray button can be dropped from what is in hand, or a
 		// forgotten row added, without putting anything down first.
 		if (modifiers.range || modifiers.toggle) {
-			this.#reviseSources(ctx, location, modifiers)
+			this.#reviseSources(ctx, this.#sources, location, modifiers)
 			return
 		}
 
-		const pairs = this.#pairsFor(ctx, location)
+		const pairs = this.#pairsFor(ctx, this.#sources, location)
 
 		// A region that would hang off the grid is refused outright rather than placing the part of it
 		// that happens to fit and losing the rest somewhere unreachable. The tool keeps hold of the
@@ -180,19 +180,26 @@ export class TransferTool extends GridToolBase {
 	 * Shift extends from where the pick started, ctrl/cmd takes one button in or out. Worked out in
 	 * one place so that what is drawn under the cursor and what the click then does cannot disagree.
 	 */
-	#revisedSources(location: ControlLocation, modifiers: GridButtonModifiers): ControlLocation[] {
-		const current = this.#sources ?? []
-
+	#revisedSources(
+		held: readonly ControlLocation[],
+		location: ControlLocation,
+		modifiers: GridButtonModifiers
+	): ControlLocation[] {
 		if (modifiers.range && this.#rangeAnchor) return locationsInRectangle(this.#rangeAnchor, location)
 
 		const key = formatLocation(location)
-		return current.some((held) => formatLocation(held) === key)
-			? current.filter((held) => formatLocation(held) !== key)
-			: [...current, location]
+		return held.some((one) => formatLocation(one) === key)
+			? held.filter((one) => formatLocation(one) !== key)
+			: [...held, location]
 	}
 
-	#reviseSources(ctx: GridToolContext, location: ControlLocation, modifiers: GridButtonModifiers): void {
-		const revised = this.#revisedSources(location, modifiers)
+	#reviseSources(
+		ctx: GridToolContext,
+		held: readonly ControlLocation[],
+		location: ControlLocation,
+		modifiers: GridButtonModifiers
+	): void {
+		const revised = this.#revisedSources(held, location, modifiers)
 
 		// Emptied out entirely - back to asking what to take, rather than holding nothing and still
 		// claiming to be waiting for a destination
@@ -214,12 +221,12 @@ export class TransferTool extends GridToolBase {
 	 * but they have nothing of their own to place, so they are not shown as destinations and cannot
 	 * be counted as overwriting anything.
 	 */
-	#pairsFor(ctx: GridToolContext, location: ControlLocation) {
+	#pairsFor(ctx: GridToolContext, held: readonly ControlLocation[], location: ControlLocation) {
 		return withoutEmptySources(
 			this.#operation,
 			// Centred, because the ghost draws the answer under the cursor as it moves - "put it here"
 			// needs no rule, where "its top-left corner goes here" does
-			buildTransferPairs(this.#sources ?? [], location, 'center'),
+			buildTransferPairs([...held], location, 'center'),
 			ctx.actions.isOccupied
 		)
 	}
@@ -242,7 +249,9 @@ export class TransferTool extends GridToolBase {
 
 		if (location && (modifiers.range || modifiers.toggle)) {
 			ctx.store.setDragPreview(null)
-			ctx.store.setPendingChanges(pendingChanges(this.#sources, this.#revisedSources(location, modifiers)))
+			ctx.store.setPendingChanges(
+				pendingChanges(this.#sources, this.#revisedSources(this.#sources, location, modifiers))
+			)
 			return
 		}
 		ctx.store.setPendingChanges(null)
@@ -252,7 +261,7 @@ export class TransferTool extends GridToolBase {
 			return
 		}
 
-		const pairs = this.#pairsFor(ctx, location)
+		const pairs = this.#pairsFor(ctx, this.#sources, location)
 		ctx.store.setDragPreview({
 			placements: previewPlacements(this.#operation, pairs),
 			valid: ctx.actions.fitsOnGrid(pairs.map((pair) => pair.toLocation)),

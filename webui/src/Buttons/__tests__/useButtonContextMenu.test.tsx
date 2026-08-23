@@ -164,4 +164,94 @@ describe('useButtonContextMenu', () => {
 		openAt(at(1, 1))
 		expect(item('Paste here').disabled).toBeFalsy()
 	})
+
+	describe('what each item does', () => {
+		it('copies and cuts the targets onto the clipboard', () => {
+			const { store, openAt, item } = setup()
+			openAt(at(1, 1))
+
+			act(() => item('Copy').do())
+			expect(store.clipboard).toEqual({ locations: [at(1, 1)], mode: 'copy' })
+
+			act(() => item('Cut').do())
+			expect(store.clipboard).toEqual({ locations: [at(1, 1)], mode: 'cut' })
+		})
+
+		it('pastes through the same path as the keyboard, so it warns about the same things', () => {
+			const { actions, store, openAt, item } = setup()
+			act(() => store.setClipboard([at(1, 1)], 'copy'))
+			openAt(at(2, 2))
+
+			act(() => item('Paste here').do())
+
+			expect(actions.pasteAt).toHaveBeenCalledWith(at(2, 2))
+		})
+
+		it('calls a pending cut a move, since that is what pasting it does', () => {
+			const { store, openAt, labels } = setup()
+			act(() => store.setClipboard([at(1, 1)], 'cut'))
+			openAt(at(2, 2))
+
+			expect(labels()).toContain('Move here')
+			expect(labels()).not.toContain('Paste here')
+		})
+
+		it('swaps with the clipboard, and spends it once that has happened', () => {
+			const { actions, store, openAt, item } = setup()
+			act(() => store.setClipboard([at(1, 1)], 'copy'))
+			openAt(at(2, 2))
+
+			act(() => item('Swap here').do())
+
+			expect(actions.transfer).toHaveBeenCalledWith(
+				'swap',
+				[{ fromLocation: at(1, 1), toLocation: at(2, 2) }],
+				expect.any(Function)
+			)
+			// The clipboard is only spent when the transfer reports back
+			expect(store.clipboard).not.toBeNull()
+			act(() => vi.mocked(actions.transfer).mock.calls[0][2]())
+			expect(store.clipboard).toBeNull()
+		})
+
+		it('spends a cut when pasted as a reference, which never completes the move itself', () => {
+			const { store, openAt, item } = setup()
+			act(() => store.setClipboard([at(1, 1)], 'cut'))
+			openAt(at(2, 2))
+
+			act(() => item('Paste as reference').do())
+
+			expect(store.clipboard).toBeNull()
+		})
+
+		it('leaves a copy on the clipboard when pasted as a reference', () => {
+			const { store, openAt, item } = setup()
+			act(() => store.setClipboard([at(1, 1)], 'copy'))
+			openAt(at(2, 2))
+
+			act(() => item('Paste as reference').do())
+
+			expect(store.clipboard).toEqual({ locations: [at(1, 1)], mode: 'copy' })
+		})
+
+		it('presses and aborts the button under the cursor', () => {
+			const { openAt, item } = setup()
+			openAt(at(1, 1))
+
+			// Nothing to assert beyond them running - the mutations go nowhere here, and a rejection
+			// must not escape as an unhandled one
+			expect(() => act(() => item('Press').do())).not.toThrow()
+			expect(() => act(() => item('Abort Actions').do())).not.toThrow()
+		})
+
+		it('offers nothing to do with an empty clipboard', () => {
+			const { openAt, item } = setup()
+			openAt(at(1, 1))
+
+			for (const label of ['Paste here', 'Swap here', 'Paste as reference']) {
+				expect(item(label).disabled).toBe(true)
+				expect(() => act(() => item(label).do())).not.toThrow()
+			}
+		})
+	})
 })

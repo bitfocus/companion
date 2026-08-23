@@ -70,10 +70,6 @@ export class ButtonGridStore {
 		this.#notify()
 	}
 
-	get activeTool(): GridTool {
-		return this.#activeTool
-	}
-
 	get activeToolId(): GridToolId {
 		return this.#activeTool.id
 	}
@@ -169,10 +165,6 @@ export class ButtonGridStore {
 	 * not enough on its own - lining a large block up means seeing which button lands where, not just
 	 * that something does - and a swap changes two places at once, so both are described.
 	 */
-	get dragPreview(): GridDragPreview | null {
-		return this.#dragPreview
-	}
-
 	setDragPreview(preview: GridDragPreview | null): void {
 		// Fires on every pointer move during a drag, so don't wake every cell up for an unchanged answer
 		if (this.#dragPreview === preview) return

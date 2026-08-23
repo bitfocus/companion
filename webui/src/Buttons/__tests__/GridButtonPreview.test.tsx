@@ -195,5 +195,98 @@ describe('GridButtonPreview', () => {
 
 			expect(onTap).not.toHaveBeenCalled()
 		})
+
+		it('lets the browser menu through when a modifier is held', () => {
+			const { root, onContextMenu } = setup()
+
+			for (const modifier of ['altKey', 'ctrlKey', 'metaKey', 'shiftKey']) {
+				fireEvent.contextMenu(root, { [modifier]: true, clientX: 50, clientY: 50 })
+			}
+
+			expect(onContextMenu).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('a pointer that is not the one being tracked', () => {
+		it('ignores movement before anything was pressed', () => {
+			const { root, onTap } = setup()
+
+			fireEvent.pointerMove(root, { pointerId: 1, clientX: 500, clientY: 500 })
+			fireEvent.pointerDown(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50 })
+			fireEvent.pointerUp(root, { pointerId: 1, clientX: 50, clientY: 50 })
+
+			// The stray move did not count against the tap that came after it
+			expect(onTap).toHaveBeenCalledWith(location, { range: false, toggle: false })
+		})
+
+		it('ignores a second pointer moving while the first is held', () => {
+			const { root, onTap } = setup()
+
+			fireEvent.pointerDown(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50 })
+			// A second finger dragging elsewhere is not this gesture moving
+			fireEvent.pointerMove(root, { pointerId: 2, clientX: 500, clientY: 500 })
+			fireEvent.pointerUp(root, { pointerId: 1, clientX: 50, clientY: 50 })
+
+			expect(onTap).toHaveBeenCalled()
+		})
+
+		it('stops measuring once the gesture has already travelled too far', () => {
+			const { root, onTap } = setup()
+
+			fireEvent.pointerDown(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50 })
+			fireEvent.pointerMove(root, { pointerId: 1, clientX: 500, clientY: 500 })
+			// Coming back does not turn a drag back into a tap
+			fireEvent.pointerMove(root, { pointerId: 1, clientX: 50, clientY: 50 })
+			fireEvent.pointerUp(root, { pointerId: 1, clientX: 50, clientY: 50 })
+
+			expect(onTap).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('what it draws', () => {
+		it('draws the placeholder while there is no image', () => {
+			const { root } = setup({ image: null })
+
+			expect(root.querySelector('.button-placeholder')).toHaveTextContent('2/3')
+			expect((root.querySelector('.button-border') as HTMLElement).style.backgroundImage).toBe('')
+		})
+
+		it('draws the button image in place of the placeholder', () => {
+			const { root } = setup({ image: 'data:image/png;base64,BBB' })
+
+			expect(root.querySelector('.button-placeholder')).toBeNull()
+			expect((root.querySelector('.button-border') as HTMLElement).style.backgroundImage).toContain(
+				'data:image/png;base64,BBB'
+			)
+		})
+
+		it('marks a cell a drag is hovering over', () => {
+			const { root } = setup({ dropHover: true })
+
+			expect(root.className).toContain('drophover')
+		})
+
+		it('does not mark a landing spot that would be refused as one that would work', () => {
+			const { root } = setup({ dropDestination: true, dropInvalid: true })
+
+			expect(root.className).toContain('dropinvalid')
+			expect(root.className).not.toContain('drophover')
+		})
+
+		it('draws the button that would land here', () => {
+			const { root } = setup({ dropDestination: true, ghostImage: 'data:image/png;base64,AAA' })
+
+			const ghost = root.querySelector('.button-drop-ghost') as HTMLElement
+			expect(ghost).toBeInTheDocument()
+			expect(ghost.style.backgroundImage).toContain('data:image/png;base64,AAA')
+		})
+
+		it('draws an empty button where a swap would leave nothing', () => {
+			const { root } = setup({ dropDestination: true, ghostImage: null })
+
+			const ghost = root.querySelector('.button-drop-ghost') as HTMLElement
+			expect(ghost).toBeInTheDocument()
+			expect(ghost.style.backgroundImage).toBe('')
+		})
 	})
 })
