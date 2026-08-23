@@ -36,7 +36,7 @@ export async function getNodeJsPath(runtimeType: string): Promise<string | null>
  * Resolve a path to its real on-disk location (following symlinks), falling back to the input if it
  * cannot be resolved. Needed because Node's permission model matches grants against canonicalised paths.
  */
-function realPathOrSelf(inputPath: string): string {
+export function realPathOrSelf(inputPath: string): string {
 	try {
 		return fs.realpathSync(inputPath)
 	} catch (_e) {
