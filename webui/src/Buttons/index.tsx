@@ -37,7 +37,8 @@ import { useGridDropMonitor } from './useGridDropMonitor.js'
 import { useGridKeyboard } from './useGridKeyboard.js'
 import { useGridToolActions } from './useGridToolActions.js'
 
-function useUrlPageNumber(): number | null {
+/** What the URL asks for, or 0 when it names no usable page - "wherever I was" */
+function useUrlPageNumber(): number {
 	const matchRoute = useMatchRoute()
 	const match = matchRoute({ to: '/buttons/$page' })
 
@@ -73,10 +74,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	const pageCount = pages.pageCount
 
 	// Resolved for this render, and the URL corrected afterwards, rather than mutating as we go
-	const pageNumber = useMemo(
-		() => (rawPageNumber === null ? null : resolveViewedPage(rawPageNumber, pageCount)),
-		[rawPageNumber, pageCount]
-	)
+	const pageNumber = useMemo(() => resolveViewedPage(rawPageNumber, pageCount), [rawPageNumber, pageCount])
 
 	const setPageNumber = useCallback(
 		(pageNumber: number) => {
@@ -86,7 +84,6 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	)
 
 	useEffect(() => {
-		if (rawPageNumber === null || pageNumber === null) return
 		if (rawPageNumber !== pageNumber) navigateToButtonsPage(navigate, pageNumber)
 	}, [rawPageNumber, pageNumber, navigate])
 
@@ -125,7 +122,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 
 	// A selection belongs to one page, while a half-finished copy deliberately outlives the change
 	useEffect(() => {
-		if (pageNumber !== null) gridStore.setViewPage(pageNumber, actions)
+		gridStore.setViewPage(pageNumber, actions)
 	}, [pageNumber, gridStore, actions])
 
 	// When screen becomes large, switch away from grid tab since it's now in its own column
@@ -186,9 +183,16 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		zoom: gridZoomController,
 	})
 
-	if (pageNumber === null) {
-		return <></>
-	}
+	// The tab exists only while there is something for it to show, and says which of the two that is
+	const editTabLabel = hasMultipleSelected ? (
+		<>
+			<FontAwesomeIcon icon={faObjectGroup} /> Selection ({selectionCount})
+		</>
+	) : selectedButton ? (
+		<>
+			<FontAwesomeIcon icon={faCalculator} /> Edit Button {formatLocation(selectedButton)}
+		</>
+	) : null
 
 	const gridPanel = (
 		<MyErrorBoundary>
@@ -227,20 +231,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 										<FontAwesomeIcon icon={faThLarge} /> Buttons
 									</TabArea.Tab>
 								)}
-								{(selectedButton || hasMultipleSelected) && (
-									<TabArea.Tab value="edit">
-										{hasMultipleSelected ? (
-											<>
-												<FontAwesomeIcon icon={faObjectGroup} /> Selection ({selectionCount})
-											</>
-										) : (
-											<>
-												<FontAwesomeIcon icon={faCalculator} /> Edit Button{' '}
-												{selectedButton ? `${formatLocation(selectedButton)}` : '?'}
-											</>
-										)}
-									</TabArea.Tab>
-								)}
+								{editTabLabel && <TabArea.Tab value="edit">{editTabLabel}</TabArea.Tab>}
 								<TabArea.Tab value="pages">
 									<FontAwesomeIcon icon={faLayerGroup} /> Pages
 								</TabArea.Tab>

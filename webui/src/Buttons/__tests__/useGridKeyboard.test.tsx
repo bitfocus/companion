@@ -8,7 +8,7 @@ import { at, makeGridActions } from './gridViewTestHelpers.js'
 
 const GRID_SIZE: UserConfigGridSize = { minRow: 0, maxRow: 3, minColumn: 0, maxColumn: 7 }
 
-function setup(options: { gridSize?: UserConfigGridSize | undefined; pageNumber?: number | null } = {}) {
+function setup(options: { gridSize?: UserConfigGridSize | undefined } = {}) {
 	const store = new ButtonGridStore()
 	const actions = makeGridActions()
 	const setPageNumber = vi.fn()
@@ -19,7 +19,7 @@ function setup(options: { gridSize?: UserConfigGridSize | undefined; pageNumber?
 			store,
 			actions,
 			gridSize: 'gridSize' in options ? options.gridSize : GRID_SIZE,
-			pageNumber: 'pageNumber' in options ? (options.pageNumber ?? null) : 1,
+			pageNumber: 1,
 			pageCount: 3,
 			setPageNumber,
 			zoom,
@@ -134,14 +134,6 @@ describe('walking around the grid', () => {
 		press('a', { ctrlKey: true })
 
 		expect(store.selectionCount).toBe(32)
-	})
-
-	it('has nothing to select before the page has been resolved', () => {
-		const { store, press } = setup({ pageNumber: null })
-
-		press('a', { ctrlKey: true })
-
-		expect(store.selectionCount).toBe(0)
 	})
 })
 

@@ -353,6 +353,16 @@ describe('ButtonGridStore', () => {
 
 			expect(store.selectionCount).toBe(0)
 		})
+
+		it('keeps it when told again about the page it is already showing', () => {
+			store.setViewPage(1, actions)
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+
+			// The page around the grid says this on every render, not only when it changes
+			store.setViewPage(1, actions)
+
+			expect(store.selectionCount).toBe(1)
+		})
 	})
 
 	describe('transfer tools', () => {

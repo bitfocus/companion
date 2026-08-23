@@ -33,6 +33,10 @@ export class ButtonGridStore {
 
 	/** Where the keyboard is, which is not always the whole of what is selected */
 	#focus: ControlLocation | null = null
+
+	/** Which page the grid is showing, so being told again about the same one changes nothing */
+	#viewPage: number | null = null
+
 	/** Where a shift-extended range measures from */
 	#rangeAnchor: ControlLocation | null = null
 
@@ -323,6 +327,11 @@ export class ButtonGridStore {
 
 	/** The grid is now showing a different page */
 	setViewPage(pageNumber: number, actions: GridToolActions): void {
+		// Told on every render of the page around it, so only an actual change is passed on - a select
+		// tool drops its selection on a page change, and re-rendering is not one
+		if (this.#viewPage === pageNumber) return
+		this.#viewPage = pageNumber
+
 		this.#activeTool.onPageChanged(this.#context(actions), pageNumber)
 	}
 

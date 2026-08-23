@@ -9,8 +9,7 @@ export interface UseGridKeyboardOptions {
 	actions: GridToolActions
 	/** Undefined until the user config has arrived, when there is no grid to navigate */
 	gridSize: UserConfigGridSize | undefined
-	/** Null before the page being viewed has been resolved */
-	pageNumber: number | null
+	pageNumber: number
 	pageCount: number
 	setPageNumber: (pageNumber: number) => void
 	zoom: GridZoomController
@@ -124,7 +123,7 @@ export function useGridKeyboard({
 				}
 			}
 
-			if (isControlOrCommandCombo && e.key.toLowerCase() === 'a' && pageNumber !== null) {
+			if (isControlOrCommandCombo && e.key.toLowerCase() === 'a') {
 				e.preventDefault()
 				store.selectAllOnPage(pageNumber, gridSize)
 				return
