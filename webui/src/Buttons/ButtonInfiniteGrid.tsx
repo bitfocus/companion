@@ -531,19 +531,20 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 	// Already subscribed by the cell the button actually lives on, and subscriptions are shared
 	const ghost = useButtonImageForLocation(ghostSource ?? location, !ghostSource)
 
-	// In select mode only an already-selected button drags, so dragging anywhere else can still
-	// rubber-band. Arrange lets any button drag. Press mode lets none - a drag must never swallow a
-	// press that is about to fire real actions.
+	const { image, isUsed } = useButtonImageForLocation(location)
+
+	// An empty cell has nothing to pick up, so dragging one is a gesture that can only end in nothing
+	// happening. In select mode only an already-selected button drags, so dragging anywhere else can
+	// still rubber-band. Arrange lets any button drag. Press mode lets none - a drag must never
+	// swallow a press that is about to fire real actions.
 	const dragData: GridButtonDragItem = useMemo(() => ({ location }), [location])
-	const dragDisabled = pressMode || !(dragAnyButton || selected)
+	const dragDisabled = pressMode || !isUsed || !(dragAnyButton || selected)
 	const { ref: dragRef, isDragSource } = useDraggable<GridButtonDragItem>({
 		id: `griddrag:${locationKey}`,
 		type: GRID_BUTTON_DRAG_TYPE,
 		data: dragData,
 		disabled: dragDisabled,
 	})
-
-	const { image, isUsed } = useButtonImageForLocation(location)
 
 	const onTap = useCallback(
 		(tapLocation: ControlLocation, modifiers: GridButtonModifiers) => store.handleTap(tapLocation, modifiers, actions),
