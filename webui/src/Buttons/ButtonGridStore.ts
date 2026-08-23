@@ -202,9 +202,12 @@ export class ButtonGridStore {
 	}
 
 	setSelection(locations: readonly ControlLocation[]): void {
-		this.#applySelection([...locations])
+		// Moved before the selection is applied, since that is what notifies: anything watching the
+		// focus - the grid scrolling to keep it in view - would otherwise be told while it is still
+		// wherever it used to be, and never hear about the new one
 		this.#focus = locations[locations.length - 1] ?? null
 		this.#rangeAnchor = this.#focus
+		this.#applySelection([...locations])
 	}
 
 	clearSelection(): void {

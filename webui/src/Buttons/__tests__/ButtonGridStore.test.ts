@@ -124,6 +124,19 @@ describe('ButtonGridStore', () => {
 			expect(listener).not.toHaveBeenCalled()
 		})
 
+		it('has already moved the focus by the time it says the selection changed', () => {
+			// Anything watching the focus reads it as it is told, so a focus moved afterwards is one it
+			// never hears about - which is how the grid used to stop scrolling to a new selection
+			let focusWhenTold: ControlLocation | null | undefined
+			store.subscribe(() => {
+				focusWhenTold = store.focus
+			})
+
+			store.setSelection([at(1, 1), at(1, 2)])
+
+			expect(focusWhenTold).toEqual(at(1, 2))
+		})
+
 		it('stops notifying an unsubscribed listener', () => {
 			const listener = vi.fn()
 			const unsubscribe = store.subscribe(listener)

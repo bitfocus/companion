@@ -88,10 +88,9 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	// Ctrl/cmd + wheel zooms, the way every canvas does. React attaches wheel passively at the root,
 	// where preventDefault is a no-op, so this has to be a native listener to stop the browser
 	// zooming the whole page instead.
-	const contentRef = useRef<HTMLDivElement>(null)
+	const [contentElement, setContentElement] = useState<HTMLDivElement | null>(null)
 	useEffect(() => {
-		const el = contentRef.current
-		if (!el) return
+		if (!contentElement) return
 
 		const handleWheel = (e: WheelEvent) => {
 			if (!e.ctrlKey && !e.metaKey) return // A plain wheel must still scroll the grid
@@ -101,9 +100,9 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 			else if (e.deltaY > 0) gridZoomController.zoomOut(true)
 		}
 
-		el.addEventListener('wheel', handleWheel, { passive: false })
-		return () => el.removeEventListener('wheel', handleWheel)
-	}, [gridZoomController])
+		contentElement.addEventListener('wheel', handleWheel, { passive: false })
+		return () => contentElement.removeEventListener('wheel', handleWheel)
+	}, [contentElement, gridZoomController])
 
 	const pressMode = useGridPressMode()
 	const pendingChangesJoin = useGridPendingChangesJoin()
@@ -178,7 +177,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 			{/* Rendered inside the grid's own styles, so the ghost is drawn the way the grid draws buttons */}
 			<GridButtonDragOverlay />
 
-			<div className="button-grid-panel-content" style={contentStyle} ref={contentRef}>
+			<div className="button-grid-panel-content" style={contentStyle} ref={setContentElement}>
 				{hasBeenInView && gridSize && (
 					<ButtonInfiniteGrid
 						ref={gridRef}
