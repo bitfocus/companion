@@ -3,7 +3,6 @@ import {
 	faDollarSign,
 	faGift,
 	faLayerGroup,
-	faObjectGroup,
 	faThLarge,
 	faVideoCamera,
 } from '@fortawesome/free-solid-svg-icons'
@@ -11,7 +10,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMatchRoute, useNavigate, type UseNavigateResult } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { nanoid } from 'nanoid'
-import { useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useMediaQuery } from 'usehooks-ts'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -23,7 +22,6 @@ import { MyErrorBoundary } from '~/Resources/Error.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ActionRecorder } from './ActionRecorder/index.js'
 import { ButtonsGridPanel } from './ButtonGridPanel.js'
-import { ButtonGridSelectionPanel } from './ButtonGridSelectionPanel.js'
 import { ButtonGridStore } from './ButtonGridStore.js'
 import { ButtonGridViewProvider, type ButtonGridView } from './ButtonGridViewContext.js'
 import { EditButton } from './EditButton/EditButton.js'
@@ -147,27 +145,6 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		setTabResetToken,
 	})
 
-	const selectionCount = useSyncExternalStore(
-		gridStore.subscribe,
-		useCallback(() => gridStore.selectionCount, [gridStore])
-	)
-	const hasMultipleSelected = selectionCount > 1
-
-	// On a wide screen the grid stays visible, so showing what was just selected costs nothing. On a
-	// narrow one the panel would replace the grid mid-gesture, which would be maddening.
-	useEffect(() => {
-		if (hasMultipleSelected && isLargeScreen) setActiveTab('edit')
-	}, [hasMultipleSelected, isLargeScreen])
-
-	// That tab only exists while there is something for it to show. Dropping the selection - or handing
-	// it to a tool that picks the buttons up - takes it away, and leaves the panel blank if it was the
-	// tab you were on.
-	useEffect(() => {
-		if (!selectedButton && !hasMultipleSelected) {
-			setActiveTab((oldTab) => (oldTab === 'edit' ? 'pages' : oldTab))
-		}
-	}, [selectedButton, hasMultipleSelected])
-
 	const gridView = useMemo<ButtonGridView>(
 		() => ({ store: gridStore, actions, onContextMenu: doButtonContextMenu }),
 		[gridStore, actions, doButtonContextMenu]
@@ -182,17 +159,6 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		setPageNumber,
 		zoom: gridZoomController,
 	})
-
-	// The tab exists only while there is something for it to show, and says which of the two that is
-	const editTabLabel = hasMultipleSelected ? (
-		<>
-			<FontAwesomeIcon icon={faObjectGroup} /> Selection ({selectionCount})
-		</>
-	) : selectedButton ? (
-		<>
-			<FontAwesomeIcon icon={faCalculator} /> Edit Button {formatLocation(selectedButton)}
-		</>
-	) : null
 
 	const gridPanel = (
 		<MyErrorBoundary>
@@ -231,7 +197,11 @@ export const ButtonsPage = observer(function ButtonsPage() {
 										<FontAwesomeIcon icon={faThLarge} /> Buttons
 									</TabArea.Tab>
 								)}
-								{editTabLabel && <TabArea.Tab value="edit">{editTabLabel}</TabArea.Tab>}
+								{selectedButton && (
+									<TabArea.Tab value="edit">
+										<FontAwesomeIcon icon={faCalculator} /> Edit Button {formatLocation(selectedButton)}
+									</TabArea.Tab>
+								)}
 								<TabArea.Tab value="pages">
 									<FontAwesomeIcon icon={faLayerGroup} /> Pages
 								</TabArea.Tab>
@@ -250,17 +220,13 @@ export const ButtonsPage = observer(function ButtonsPage() {
 							{!isLargeScreen && <TabArea.Panel value="grid">{gridPanel}</TabArea.Panel>}
 							<TabArea.Panel value="edit">
 								<MyErrorBoundary>
-									{hasMultipleSelected ? (
-										<ButtonGridSelectionPanel />
-									) : (
-										selectedButton && (
-											<EditButton
-												key={`${formatLocation(selectedButton)}-${tabResetToken}`}
-												location={selectedButton}
-												onKeyUp={handleKeyDownInButtons}
-												navigateToControl={navigateToControl}
-											/>
-										)
+									{selectedButton && (
+										<EditButton
+											key={`${formatLocation(selectedButton)}-${tabResetToken}`}
+											location={selectedButton}
+											onKeyUp={handleKeyDownInButtons}
+											navigateToControl={navigateToControl}
+										/>
 									)}
 								</MyErrorBoundary>
 							</TabArea.Panel>

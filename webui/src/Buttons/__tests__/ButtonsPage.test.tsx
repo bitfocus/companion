@@ -63,9 +63,6 @@ vi.mock('../EditButton/EditButton.js', async () => {
 	}
 })
 
-vi.mock('../ButtonGridSelectionPanel.js', () => ({
-	ButtonGridSelectionPanel: () => <div data-testid="selection-panel" />,
-}))
 vi.mock('../Pages.js', () => ({ PagesList: () => <div data-testid="pages-list" /> }))
 vi.mock('../PageVariablesPanel.js', () => ({ PageVariablesPanel: () => null }))
 vi.mock('../Presets/Presets.js', () => ({ ConnectionPresets: () => null }))
@@ -225,36 +222,25 @@ describe('the panel beside the grid', () => {
 		expect(editButtonProps.location).toEqual(at(1, 1, 2))
 	})
 
-	it('shows the selection instead once there is more than one button in it', () => {
+	it('keeps editing the button that was opened when several are selected', () => {
 		setup()
 		act(() => view.actions.openEditor(at(1, 1, 2)))
 
 		act(() => view.store.setSelection([at(1, 1, 2), at(1, 2, 2)]))
 
-		expect(tab(/Selection \(2\)/)).toBeInTheDocument()
-		expect(screen.getByTestId('selection-panel')).toBeInTheDocument()
-		expect(screen.queryByTestId('edit-button')).toBeNull()
+		// A selection is the grid's business, and belongs in the bar above it rather than in here
+		expect(tab(/Edit Button 2\/1\/1/)).toBeInTheDocument()
+		expect(screen.getByTestId('edit-button')).toBeInTheDocument()
 	})
 
-	it('stays out of the way on a narrow screen, where it would replace the grid mid-gesture', () => {
+	it('never moves you off the tab you are on when a selection is made', () => {
 		isLargeScreen = false
 		setup()
 
 		act(() => view.store.setSelection([at(1, 1, 2), at(1, 2, 2)]))
 
-		expect(tab(/Selection \(2\)/)).toHaveAttribute('aria-selected', 'false')
+		// Switching the panel mid-gesture is exactly what a narrow screen cannot afford
 		expect(tab(/Buttons/)).toHaveAttribute('aria-selected', 'true')
-	})
-
-	it('falls back to the pages list when what it was showing is deselected', () => {
-		setup()
-		act(() => view.store.setSelection([at(1, 1, 2), at(1, 2, 2)]))
-		expect(tab(/Selection/)).toHaveAttribute('aria-selected', 'true')
-
-		act(() => view.store.clearSelection())
-
-		expect(tab(/Selection/)).toBeNull()
-		expect(tab(/Pages/)).toHaveAttribute('aria-selected', 'true')
 	})
 
 	it('follows a button reference to wherever it points', () => {
