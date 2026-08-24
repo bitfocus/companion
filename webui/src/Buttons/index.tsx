@@ -10,7 +10,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMatchRoute, useNavigate, type UseNavigateResult } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { nanoid } from 'nanoid'
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { useMediaQuery } from 'usehooks-ts'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -145,6 +145,24 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		setTabResetToken,
 	})
 
+	const selectionCount = useSyncExternalStore(
+		gridStore.subscribe,
+		useCallback(() => gridStore.selectionCount, [gridStore])
+	)
+
+	// The editor edits one button. With several selected there is no one button it could mean - the
+	// last one opened is not necessarily even in the selection - and showing it beside a highlighted
+	// block invites the idea that what you type there lands on all of them.
+	const editingButton = selectedButton && selectionCount <= 1 ? selectedButton : null
+
+	// The tab exists only while there is a button for it to show, so it goes away for the length of a
+	// multiple selection, and would leave the panel blank if it was the tab you were on
+	useEffect(() => {
+		if (!editingButton) {
+			setActiveTab((oldTab) => (oldTab === 'edit' ? 'pages' : oldTab))
+		}
+	}, [editingButton])
+
 	const gridView = useMemo<ButtonGridView>(
 		() => ({ store: gridStore, actions, onContextMenu: doButtonContextMenu }),
 		[gridStore, actions, doButtonContextMenu]
@@ -197,9 +215,9 @@ export const ButtonsPage = observer(function ButtonsPage() {
 										<FontAwesomeIcon icon={faThLarge} /> Buttons
 									</TabArea.Tab>
 								)}
-								{selectedButton && (
+								{editingButton && (
 									<TabArea.Tab value="edit">
-										<FontAwesomeIcon icon={faCalculator} /> Edit Button {formatLocation(selectedButton)}
+										<FontAwesomeIcon icon={faCalculator} /> Edit Button {formatLocation(editingButton)}
 									</TabArea.Tab>
 								)}
 								<TabArea.Tab value="pages">
@@ -220,10 +238,10 @@ export const ButtonsPage = observer(function ButtonsPage() {
 							{!isLargeScreen && <TabArea.Panel value="grid">{gridPanel}</TabArea.Panel>}
 							<TabArea.Panel value="edit">
 								<MyErrorBoundary>
-									{selectedButton && (
+									{editingButton && (
 										<EditButton
-											key={`${formatLocation(selectedButton)}-${tabResetToken}`}
-											location={selectedButton}
+											key={`${formatLocation(editingButton)}-${tabResetToken}`}
+											location={editingButton}
 											onKeyUp={handleKeyDownInButtons}
 											navigateToControl={navigateToControl}
 										/>

@@ -222,18 +222,31 @@ describe('the panel beside the grid', () => {
 		expect(editButtonProps.location).toEqual(at(1, 1, 2))
 	})
 
-	it('keeps editing the button that was opened when several are selected', () => {
+	it('takes the editor away while several buttons are selected', () => {
 		setup()
 		act(() => view.actions.openEditor(at(1, 1, 2)))
 
 		act(() => view.store.setSelection([at(1, 1, 2), at(1, 2, 2)]))
 
-		// A selection is the grid's business, and belongs in the bar above it rather than in here
-		expect(tab(/Edit Button 2\/1\/1/)).toBeInTheDocument()
-		expect(screen.getByTestId('edit-button')).toBeInTheDocument()
+		// Editing one button beside a highlighted block reads as editing all of them
+		expect(tab(/Edit Button/)).toBeNull()
+		expect(screen.queryByTestId('edit-button')).toBeNull()
+		expect(tab(/Pages/)).toHaveAttribute('aria-selected', 'true')
 	})
 
-	it('never moves you off the tab you are on when a selection is made', () => {
+	it('gives the same button back once the selection is down to one again', () => {
+		setup()
+		act(() => view.actions.openEditor(at(1, 1, 2)))
+		act(() => view.store.setSelection([at(1, 1, 2), at(1, 2, 2)]))
+
+		act(() => view.store.clearSelection())
+
+		// Passing through a selection on the way should not cost you the button you were editing
+		expect(tab(/Edit Button 2\/1\/1/)).toBeInTheDocument()
+		expect(editButtonProps.location).toEqual(at(1, 1, 2))
+	})
+
+	it('leaves the grid tab alone on a narrow screen, where the panel would replace the grid', () => {
 		isLargeScreen = false
 		setup()
 
