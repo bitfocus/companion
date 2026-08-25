@@ -197,6 +197,18 @@ describe('dragging out a rubber-band', () => {
 		expect(onSelect).toHaveBeenCalledWith(at(0, 0), at(1, 2), false)
 	})
 
+	it('captures the pointer, so a box dragged off the edge still delivers its release', () => {
+		const { grid } = setup()
+		// jsdom does not implement pointer capture, which is why the grid calls it optionally; stand it in
+		const capture = vi.fn()
+		grid.setPointerCapture = capture
+
+		fireEvent.pointerDown(grid, { ...centreOf(0, 0), button: 0, pointerId: 1, pointerType: 'mouse' })
+
+		// Without this, a pointerup outside .button-infinite-grid never reaches the grid and the box sticks
+		expect(capture).toHaveBeenCalledWith(1)
+	})
+
 	it('draws the box while it is being dragged, so what it covers is visible', () => {
 		const { grid } = setup()
 
@@ -393,6 +405,19 @@ describe('panning with the middle button', () => {
 		expect(grid.scrollLeft).toBe(230)
 		expect(grid.scrollTop).toBe(110)
 		expect(canStart).not.toHaveBeenCalled()
+	})
+
+	it('shows the grabbing cursor while panning and drops it on release', () => {
+		const { grid } = setup()
+		expect(grid).not.toHaveClass('button-grid-panning')
+
+		// Driven by state, not the ref the pan math uses: a ref mutation would not re-render, so the
+		// class would only appear on some later unrelated render and linger after the pan ended
+		fireEvent.pointerDown(grid, { clientX: 100, clientY: 100, button: 1, pointerId: 1, pointerType: 'mouse' })
+		expect(grid).toHaveClass('button-grid-panning')
+
+		fireEvent.pointerUp(grid, { clientX: 100, clientY: 100, pointerId: 1, pointerType: 'mouse' })
+		expect(grid).not.toHaveClass('button-grid-panning')
 	})
 
 	it('stops panning once the button is released', () => {

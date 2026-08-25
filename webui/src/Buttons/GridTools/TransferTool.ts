@@ -245,7 +245,14 @@ export class TransferTool extends GridToolBase {
 	 * either, is exactly as much guesswork as the landing spot was.
 	 */
 	override onHover(ctx: GridToolContext, location: ControlLocation | null, modifiers: GridButtonModifiers): void {
-		if (!this.#sources) return
+		if (!this.#sources) {
+			// Nothing left in hand, so anything a previous hover drew is stale. This runs when a revision
+			// empties the set (#reviseSources nulls #sources then re-hovers) - without clearing here the
+			// dashed outlines would stay, and every later move hits this same early return.
+			ctx.store.setPendingChanges(null)
+			ctx.store.setDragPreview(null)
+			return
+		}
 
 		if (location && (modifiers.range || modifiers.toggle)) {
 			ctx.store.setDragPreview(null)

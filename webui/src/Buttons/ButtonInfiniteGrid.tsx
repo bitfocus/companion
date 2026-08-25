@@ -259,6 +259,9 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		// ---- panning with the middle button ----
 
 		const panRef = useRef<{ pointerId: number; clientX: number; clientY: number } | null>(null)
+		// Mirrors whether panRef is set, for the `grabbing` cursor: a ref mutation does not re-render, so
+		// the class would otherwise only follow the ref on some later unrelated render
+		const [isPanning, setIsPanning] = useState(false)
 
 		const handlePanDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
 			if (e.button !== 1) return false
@@ -266,6 +269,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			// Otherwise the browser starts its own autoscroll widget
 			e.preventDefault()
 			panRef.current = { pointerId: e.pointerId, clientX: e.clientX, clientY: e.clientY }
+			setIsPanning(true)
 			e.currentTarget.setPointerCapture?.(e.pointerId)
 			return true
 		}, [])
@@ -287,6 +291,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			if (panRef.current?.pointerId !== e.pointerId) return false
 
 			panRef.current = null
+			setIsPanning(false)
 			return true
 		}, [])
 
@@ -302,6 +307,9 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 				const point = canvasPoint(e.clientX, e.clientY)
 				if (!point) return
 
+				// Capture so a box dragged out past the edge of the grid still delivers its move and up here,
+				// rather than stranding the rectangle drawn with no release to finish the selection
+				e.currentTarget.setPointerCapture?.(e.pointerId)
 				setMarquee({
 					pointerId: e.pointerId,
 					startX: point.x,
@@ -436,7 +444,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 				ref={setRef}
 				className={classNames('button-infinite-grid', {
 					'button-armed': isHot,
-					'button-grid-panning': !!panRef.current,
+					'button-grid-panning': isPanning,
 				})}
 				style={gridWrapperStyle}
 				onPointerDown={(e) => {

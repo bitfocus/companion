@@ -44,9 +44,9 @@ export function ButtonGridPageMenu({ pageNumber, pageInfo }: ButtonGridPageMenuP
 				icon: faCompass,
 				do: () => {
 					confirmRef.current?.show(
-						'Reset page',
+						'Recreate navigation buttons',
 						`Are you sure you want to reset navigation buttons? This will completely erase button ${pageNumber}/0/0, ${pageNumber}/1/0 and ${pageNumber}/2/0`,
-						'Reset',
+						'Recreate',
 						() => {
 							recreateNavMutation.mutateAsync({ pageNumber }).catch((e) => {
 								console.error(`Reset nav failed: ${e}`)
@@ -56,13 +56,13 @@ export function ButtonGridPageMenu({ pageNumber, pageInfo }: ButtonGridPageMenuP
 				},
 			},
 			{
-				label: 'Wipe page',
+				label: 'Clear page',
 				icon: faEraser,
 				do: () => {
 					confirmRef.current?.show(
-						'Reset page',
-						`Are you sure you want to clear all buttons on page ${pageNumber}?\nThere's no going back from this.`,
-						'Reset',
+						'Clear page',
+						[`Are you sure you want to clear all buttons on page ${pageNumber}?`, `There's no going back from this.`],
+						'Clear',
 						() => {
 							clearPageMutation.mutateAsync({ pageNumber }).catch((e) => {
 								console.error(`Clear page failed: ${e}`)

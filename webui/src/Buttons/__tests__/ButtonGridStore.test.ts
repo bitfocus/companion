@@ -570,6 +570,20 @@ describe('ButtonGridStore', () => {
 			expect(store.dropGhostSource('1/3/3')).toBeNull()
 		})
 
+		it('drops the revision outline when the last held button is removed', () => {
+			// Emptying the set nulls the sources and re-hovers; the dashed "would remove" outline drawn
+			// for the old set must go with it, not linger until the tool changes
+			store.setTool('move', actions)
+			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
+			store.handleHover(at(1, 1), TOGGLE, actions)
+			expect(store.pendingChange('1/1/1')).toBe('remove')
+
+			store.handleTap(at(1, 1), TOGGLE, actions)
+
+			expect(held()).toEqual([])
+			expect(store.pendingChange('1/1/1')).toBeNull()
+		})
+
 		it('starts the set off when there is nothing yet to revise', () => {
 			store.setTool('move', actions)
 

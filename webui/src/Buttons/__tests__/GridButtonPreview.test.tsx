@@ -12,34 +12,35 @@ function setup(props: Partial<Props> = {}) {
 	const onTap = vi.fn()
 	const onContextMenu = vi.fn()
 
-	const utils = render(
-		<GridButtonPreview
-			location={location}
-			image={null}
-			style={{ left: 0, top: 0 }}
-			title="1/2/3"
-			placeholder="2/3"
-			pressMode={false}
-			onPress={onPress}
-			onTap={onTap}
-			onContextMenu={onContextMenu}
-			selected={false}
-			copySource={false}
-			pendingChange={null}
-			contextMenuOpen={false}
-			canDrop={false}
-			dropHover={false}
-			dropDestination={false}
-			dropInvalid={false}
-			ghostImage={null}
-			dropRef={() => {}}
-			dragRef={() => {}}
-			isDragSource={false}
-			{...props}
-		/>
-	)
+	const baseProps: Props = {
+		location,
+		image: null,
+		style: { left: 0, top: 0 },
+		title: '1/2/3',
+		placeholder: '2/3',
+		pressMode: false,
+		onPress,
+		onTap,
+		onContextMenu,
+		selected: false,
+		copySource: false,
+		pendingChange: null,
+		contextMenuOpen: false,
+		canDrop: false,
+		dropHover: false,
+		dropDestination: false,
+		dropInvalid: false,
+		ghostImage: null,
+		dropRef: () => {},
+		dragRef: () => {},
+		isDragSource: false,
+		...props,
+	}
+
+	const utils = render(<GridButtonPreview {...baseProps} />)
 	const root = utils.container.firstElementChild as HTMLElement
-	return { onPress, onTap, onContextMenu, root, ...utils }
+	const rerender = (next: Partial<Props>) => utils.rerender(<GridButtonPreview {...baseProps} {...next} />)
+	return { ...utils, onPress, onTap, onContextMenu, root, rerender }
 }
 
 describe('GridButtonPreview', () => {
@@ -164,6 +165,31 @@ describe('GridButtonPreview', () => {
 		it('stops the browser panning, so a scroll cannot steal the press', () => {
 			const { root } = setup({ pressMode: true })
 			expect(root).not.toHaveClass('grid-pannable')
+		})
+
+		it('releases a held button when press mode is turned off mid-press', () => {
+			// No pointerup arrives when the mode changes under a finger, so the release has to be
+			// guaranteed some other way or the control stays held
+			const { root, onPress, rerender } = setup({ pressMode: true })
+
+			fireEvent.pointerDown(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50 })
+			expect(onPress).toHaveBeenCalledWith(location, true)
+
+			rerender({ pressMode: false })
+
+			expect(onPress).toHaveBeenNthCalledWith(2, location, false)
+		})
+
+		it('releases a held button when the cell unmounts, so a virtualised cell cannot leave it stuck down', () => {
+			// The grid virtualises cells, so one can be unmounted while a finger is still pressing it
+			const { root, onPress, unmount } = setup({ pressMode: true })
+
+			fireEvent.pointerDown(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50 })
+			expect(onPress).toHaveBeenCalledWith(location, true)
+
+			unmount()
+
+			expect(onPress).toHaveBeenNthCalledWith(2, location, false)
 		})
 	})
 
