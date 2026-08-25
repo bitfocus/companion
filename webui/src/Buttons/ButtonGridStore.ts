@@ -19,9 +19,7 @@ import {
  * side each need their own selection and their own in-flight tool, and hanging this off the root
  * store would rule that out.
  *
- * Built on plain subscriptions rather than mobx so that consumers can use `useSyncExternalStore`.
- * Grid cells ask only whether they themselves are selected, which is a boolean, so React's identity
- * check drops the re-render for every cell except the ones that actually changed.
+ * Built on plain subscriptions rather than mobx for use with `useSyncExternalStore`.
  */
 export class ButtonGridStore {
 	readonly #listeners = new Set<() => void>()
@@ -206,9 +204,7 @@ export class ButtonGridStore {
 	}
 
 	setSelection(locations: readonly ControlLocation[]): void {
-		// Moved before the selection is applied, since that is what notifies: anything watching the
-		// focus - the grid scrolling to keep it in view - would otherwise be told while it is still
-		// wherever it used to be, and never hear about the new one
+		// Set the focus, then let #applySelection notify
 		this.#focus = locations[locations.length - 1] ?? null
 		this.#rangeAnchor = this.#focus
 		this.#applySelection([...locations])
@@ -223,14 +219,11 @@ export class ButtonGridStore {
 	}
 
 	/**
-	 * Apply a click to the selection, honouring the modifiers held at the time.
+	 * What the selection would become if this cell were clicked with these modifiers.
 	 *
 	 * Shift extends a rectangle from the anchor and ctrl/cmd toggles a single cell, matching how
 	 * every file manager and grid editor behaves. Shift is only free to mean this because hot
 	 * pressing moved to its own tool.
-	 */
-	/**
-	 * What the selection would become if this cell were clicked with these modifiers.
 	 *
 	 * Pure, and shared with the preview drawn while a modifier is held, so what is shown and what the
 	 * click then does cannot be worked out two different ways.
@@ -285,7 +278,7 @@ export class ButtonGridStore {
 		// Whatever the last tool was drawing under the cursor is its business, not the next one's
 		this.setPendingChanges(null)
 		this.#activeTool = createGridTool(id)
-		this.#activeTool.onEnter(this.#context(actions), carriedOver)
+		this.#activeTool.onEnter(ctx, carriedOver)
 		this.#notify()
 	}
 

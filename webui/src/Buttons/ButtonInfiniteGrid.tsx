@@ -4,7 +4,6 @@ import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, u
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
-import { ButtonPreview } from '~/Components/ButtonPreview.js'
 import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import useElementInnerSize from '~/Hooks/useElementClientSize.js'
 import useScrollPosition from '~/Hooks/useScrollPosition.js'
@@ -566,62 +565,6 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 			dragRef={dragDisabled ? null : dragRef}
 			dropRef={drop}
 			isDragSource={isDragSource}
-		/>
-	)
-})
-
-type ButtonGridIconProps = ButtonGridIconBaseProps
-
-export const ButtonGridIcon = memo(function ButtonGridIcon({ ...props }: ButtonGridIconProps) {
-	const { image, isUsed } = useButtonImageForLocation({
-		pageNumber: Number(props.pageNumber),
-		column: props.column,
-		row: props.row,
-	})
-
-	return <ButtonGridIconBase {...props} image={isUsed ? image : null} />
-})
-
-interface ButtonGridIconBaseProps {
-	pageNumber: number
-	column: number
-	row: number
-	image: string | null
-	left: number
-	top: number
-
-	fixedSize?: boolean
-	dropRef?: React.RefCallback<HTMLDivElement>
-	dropHover?: boolean
-	canDrop?: boolean
-	onClick?: (location: ControlLocation, pressed: boolean) => void
-	onContextMenu?: (location: ControlLocation, x: number, y: number) => void
-	selected?: boolean
-	copySource?: boolean
-	contextMenuOpen?: boolean
-}
-
-export const ButtonGridIconBase = memo(function ButtonGridIcon({
-	pageNumber,
-	column,
-	row,
-	image,
-	left,
-	top,
-	...props
-}: ButtonGridIconBaseProps) {
-	const location: ControlLocation = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
-	const style = useMemo(() => ({ left, top }), [left, top])
-
-	const title = formatLocation(location)
-	return (
-		<ButtonPreview
-			{...props}
-			style={style}
-			location={location}
-			title={title}
-			placeholder={`${location.row}/${location.column}`}
-			preview={image}
 		/>
 	)
 })

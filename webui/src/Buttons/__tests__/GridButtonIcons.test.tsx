@@ -24,7 +24,8 @@ vi.mock('@dnd-kit/react', () => ({
 	useDroppable: () => ({ ref: () => undefined, isDropTarget: false }),
 }))
 
-const { ButtonGridIcon, ButtonGridIconBase, PrimaryButtonGridIcon } = await import('../ButtonInfiniteGrid.js')
+const { PrimaryButtonGridIcon } = await import('../ButtonInfiniteGrid.js')
+const { ButtonGridIcon, ButtonGridIconBase } = await import('../GridButtonIcons.js')
 const { resetButtonImageCache } = await import('~/Hooks/useButtonImageForLocation.js')
 const { ButtonGridViewProvider } = await import('../ButtonGridViewContext.js')
 const { at, makeGridView } = await import('./gridViewTestHelpers.js')

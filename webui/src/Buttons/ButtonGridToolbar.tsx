@@ -11,7 +11,7 @@ import {
 	faXmark,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useCallback } from 'react'
+import { memo, useCallback } from 'react'
 import { Toolbar } from '~/Components/Toolbar.js'
 import type { GridClipboard } from './ButtonGridStore.js'
 import {
@@ -60,7 +60,7 @@ const TRANSFER_TOOLS: ToolDefinition[] = [
 
 const ALL_TOOLS = [...NAVIGATION_TOOLS, ...TRANSFER_TOOLS]
 
-export function ButtonGridToolbar(): React.JSX.Element {
+export const ButtonGridToolbar = memo(function ButtonGridToolbar(): React.JSX.Element {
 	const { store, actions } = useButtonGridView()
 	const activeToolId = useGridActiveToolId()
 	const pressMode = useGridPressMode()
@@ -72,9 +72,9 @@ export function ButtonGridToolbar(): React.JSX.Element {
 	const selectTool = useCallback(
 		(id: GridToolId) => {
 			// Choosing the tool you are already in is the quickest way back to normal
-			store.setTool(id === activeToolId ? 'select' : id, actions)
+			store.setTool(id === store.activeToolId ? 'select' : id, actions)
 		},
-		[store, actions, activeToolId]
+		[store, actions]
 	)
 
 	const cancel = useCallback(() => store.goBack(actions), [store, actions])
@@ -134,7 +134,7 @@ export function ButtonGridToolbar(): React.JSX.Element {
 			</Toolbar.Root>
 		</div>
 	)
-}
+})
 
 interface GridToolbarStatusProps {
 	pressMode: boolean

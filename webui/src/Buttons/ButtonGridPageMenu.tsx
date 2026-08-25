@@ -17,9 +17,6 @@ interface ButtonGridPageMenuProps {
 
 /**
  * Page-wide actions, kept one click away from the grid.
- *
- * Wiping a page and recreating its navigation buttons used to sit in the row under the grid at the
- * same weight as copy - permanently taking space, for something done rarely and impossible to undo.
  */
 export function ButtonGridPageMenu({ pageNumber, pageInfo }: ButtonGridPageMenuProps): React.JSX.Element {
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
