@@ -1,4 +1,4 @@
-import { safeSetSessionStorage } from '~/Helpers/SafeStorage.js'
+import { safeGetSessionStorage, safeSetSessionStorage } from '~/Helpers/SafeStorage.js'
 
 const SESSION_STORAGE_LAST_BUTTONS_PAGE = 'lastButtonsPage'
 
@@ -9,7 +9,7 @@ export function rememberViewedPage(pageNumber: number): void {
 
 /** Where /buttons goes when it is opened without a page, which is wherever it was left */
 export function getLastViewedPage(): number {
-	const lastPage = Number(window.sessionStorage.getItem(SESSION_STORAGE_LAST_BUTTONS_PAGE))
+	const lastPage = Number(safeGetSessionStorage(SESSION_STORAGE_LAST_BUTTONS_PAGE))
 	if (!isNaN(lastPage) && lastPage > 0) {
 		return lastPage
 	}

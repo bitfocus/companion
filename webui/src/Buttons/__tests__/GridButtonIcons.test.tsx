@@ -265,7 +265,7 @@ describe('which cells can be dragged', () => {
 
 describe('the cells on the grids that are only picked from', () => {
 	it('draws the button at the location it was given', () => {
-		const { container } = render(<ButtonGridIcon pageNumber={2} row={1} column={3} left={0} top={0} image={null} />)
+		const { container } = render(<ButtonGridIcon pageNumber={2} row={1} column={3} left={0} top={0} />)
 		emitAll(OCCUPIED)
 
 		expect(container.querySelector('.button-border')).toHaveStyle({ backgroundImage: `url(${OCCUPIED.image})` })

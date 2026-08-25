@@ -29,7 +29,7 @@ interface ButtonGridIconBaseProps {
 	contextMenuOpen?: boolean
 }
 
-export const ButtonGridIconBase = memo(function ButtonGridIcon({
+export const ButtonGridIconBase = memo(function ButtonGridIconBase({
 	pageNumber,
 	column,
 	row,
@@ -54,9 +54,10 @@ export const ButtonGridIconBase = memo(function ButtonGridIcon({
 	)
 })
 
-type ButtonGridIconProps = ButtonGridIconBaseProps
+// This resolves the image itself, so callers never supply one
+type ButtonGridIconProps = Omit<ButtonGridIconBaseProps, 'image'>
 
-export const ButtonGridIcon = memo(function ButtonGridIcon({ ...props }: ButtonGridIconProps) {
+export const ButtonGridIcon = memo(function ButtonGridIconWithImage({ ...props }: ButtonGridIconProps) {
 	const { image, isUsed } = useButtonImageForLocation({
 		pageNumber: Number(props.pageNumber),
 		column: props.column,

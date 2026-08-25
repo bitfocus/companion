@@ -173,7 +173,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		actions,
 		gridSize,
 		pageNumber,
-		pageCount: pages.data.length,
+		pageCount,
 		setPageNumber,
 		zoom: gridZoomController,
 	})

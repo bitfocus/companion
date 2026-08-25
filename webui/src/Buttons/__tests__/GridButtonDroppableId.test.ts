@@ -39,6 +39,14 @@ describe('grid button droppable ids', () => {
 		expect(parseGridButtonDroppableId('gridbtn::2:3')).toBeNull()
 	})
 
+	it('accepts cells left of and above the origin, since a grid need not start at 0/0', () => {
+		expect(parseGridButtonDroppableId(makeGridButtonDroppableId(1, -3, -2))).toEqual({
+			pageNumber: 1,
+			column: -3,
+			row: -2,
+		})
+	})
+
 	it('refuses anything that is not a string, since dnd-kit ids need not be one', () => {
 		expect(parseGridButtonDroppableId(undefined)).toBeNull()
 		expect(parseGridButtonDroppableId(null)).toBeNull()

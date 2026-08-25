@@ -108,6 +108,8 @@ export function useGridKeyboard({
 				case 'PageUp': {
 					const focus = store.focus
 					if (!focus) return
+					// The grid panel scrolls, so keep the browser from paging it while we change page
+					e.preventDefault()
 					const newPageNumber = focus.pageNumber >= pageCount ? 1 : focus.pageNumber + 1
 					setPageNumber(newPageNumber)
 					store.moveFocusToPage(newPageNumber)
@@ -116,6 +118,7 @@ export function useGridKeyboard({
 				case 'PageDown': {
 					const focus = store.focus
 					if (!focus) return
+					e.preventDefault()
 					const newPageNumber = focus.pageNumber <= 1 ? pageCount : focus.pageNumber - 1
 					setPageNumber(newPageNumber)
 					store.moveFocusToPage(newPageNumber)
