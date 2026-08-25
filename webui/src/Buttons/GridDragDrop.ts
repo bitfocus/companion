@@ -1,4 +1,4 @@
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { formatLocation, isLocationOnGrid } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { withoutEmptySources } from './GridGeometry.js'
@@ -52,13 +52,7 @@ export function planGridDrop(
 	if (pairs.length === 0) return null
 
 	// All or nothing: dropping only the buttons that happen to fit would quietly lose the rest
-	const fitsOnGrid = pairs.every(
-		({ toLocation }) =>
-			toLocation.row >= gridSize.minRow &&
-			toLocation.row <= gridSize.maxRow &&
-			toLocation.column >= gridSize.minColumn &&
-			toLocation.column <= gridSize.maxColumn
-	)
+	const fitsOnGrid = pairs.every(({ toLocation }) => isLocationOnGrid(gridSize, toLocation))
 
 	const sourceKeys = new Set(pairs.map(({ fromLocation }) => formatLocation(fromLocation)))
 	const overwrittenLocations = pairs

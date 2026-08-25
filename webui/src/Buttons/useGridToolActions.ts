@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { formatLocation, isLocationOnGrid } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -46,13 +46,7 @@ export function useGridToolActions({
 		(locations: ControlLocation[]) => {
 			if (!gridSize) return false
 
-			return locations.every(
-				(location) =>
-					location.row >= gridSize.minRow &&
-					location.row <= gridSize.maxRow &&
-					location.column >= gridSize.minColumn &&
-					location.column <= gridSize.maxColumn
-			)
+			return locations.every((location) => isLocationOnGrid(gridSize, location))
 		},
 		[gridSize]
 	)
