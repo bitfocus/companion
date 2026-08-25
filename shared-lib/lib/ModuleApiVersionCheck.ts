@@ -8,7 +8,7 @@ export const MODULE_BASE_VERSIONS = [
 	'2.2.0-nightly-main-20260812-184310-2c49abe', // DEV version
 ]
 // typos:disable-line this is a git hash
-export const SURFACE_BASE_VERSION = '1.4.0-nightly-main-20260802-210833-c2d781c'
+export const SURFACE_BASE_VERSION = '1.4.0'
 
 const moduleBaseRules = MODULE_BASE_VERSIONS.map((v) => {
 	const parsedVersion = semver.parse(v)

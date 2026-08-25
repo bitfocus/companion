@@ -96,8 +96,6 @@
     "serialize-javascript": "^7.0.3",
     "monaco-editor/dompurify": "npm:dompurify@^3.3.3",
     "webpack-bundle-analyzer": "^5.0.0",
-    "@companion-surface/base": "1.4.0-nightly-main-20260802-210833-c2d781c",
-    "@companion-surface/host": "1.4.0-nightly-main-20260803-170424-c2d781c",
     "@companion-module/host": "1.2.0-nightly-main-20260821-211656-d9a8af7",
     "@companion-module/base": "2.2.0-nightly-main-20260812-184310-2c49abe"
   },
