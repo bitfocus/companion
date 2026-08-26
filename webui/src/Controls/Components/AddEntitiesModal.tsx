@@ -122,9 +122,11 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 		}
 	}, [internalLeaves])
 
-	// Collections default expanded, connections default collapsed (no localStorage persistence for modals)
+	// Collections default expanded, connections default collapsed. Persisted per entity type so the
+	// user's expand/collapse choices survive switching between controls. `null` known-ids = never prune,
+	// since the visible collections/connections are only ever a subset of what may be stored.
 	const defaultCollapsedFn = useCallback((panelId: string) => !panelId.startsWith('collection:'), [])
-	const collapseHelper = usePanelCollapseHelper(null, [], defaultCollapsedFn)
+	const collapseHelper = usePanelCollapseHelper(`add_entities_${entityType}`, null, defaultCollapsedFn)
 
 	// When filtering, apply fuzzy search to leaf items in each node
 	const filteredNodes = useComputed(() => {
