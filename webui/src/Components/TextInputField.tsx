@@ -96,7 +96,7 @@ export function TextInputFieldSimple({
 				: options.filter(
 						(opt) =>
 							String(opt.id).toLowerCase().includes(searchValue.toLowerCase()) ||
-							opt.label.toLowerCase().includes(searchValue.toLowerCase())
+							String(opt.label).toLowerCase().includes(searchValue.toLowerCase())
 					),
 		[options, searchValue]
 	)
