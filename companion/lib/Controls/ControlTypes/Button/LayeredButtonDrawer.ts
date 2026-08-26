@@ -68,6 +68,12 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 
 	/** The variables referenced in the last draw. When one changes, a redraw is needed. */
 	#lastDrawVariables: ReadonlySet<string> | null = null
+	/**
+	 * Variable changes seen while a draw is in flight. `getDrawStyle` is async, so a change can land after
+	 * an element read the old value but before `#lastDrawVariables` is committed - checking it against the
+	 * stale set would drop it. Accumulated here and re-checked when the draw completes; `null` when idle.
+	 */
+	#variablesChangedDuringDraw: Set<string> | null = null
 	#lastDrawCompositeElements: ReadonlySet<CompositeElementIdString> | null = null
 	/** Location strings (e.g. '1/0/0') of buttons referenced via reference elements in the last draw. */
 	#lastDrawReferencedLocations: ReadonlySet<string> | null = null
@@ -193,54 +199,74 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 
 	/** Compute the draw style of the button. */
 	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel> {
-		const injectedVariableValues: VariableValues = {}
-		const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
+		// Arm mid-draw change tracking (see #variablesChangedDuringDraw). Draws are serialised per control,
+		// so a single accumulator is safe.
+		const changedDuringDraw = new Set<string>()
+		this.#variablesChangedDuringDraw = changedDuringDraw
+		try {
+			const injectedVariableValues: VariableValues = {}
+			const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
 
-		const parser = this.deps.variableValues.createVariablesAndExpressionParser(
-			location,
-			this.#host.entities?.getLocalVariableEntities() ?? null,
-			injectedVariableValues,
-			location ? this.deps.getPageVariableEntities(location.pageNumber) : null
-		)
-
-		const locationStr = location ? formatLocation(location) : null
-
-		const feedbackOverrides = this.#host.entities?.getFeedbackStyleOverrides() ?? emptyFeedbackOverrides
-
-		const { elements, usedVariables, usedCompositeElements, referencedLocations, cyclicLocations, clockSensitive } =
-			await ConvertSomeButtonGraphicsElementForDrawing(
-				this.deps.instance.definitions,
-				parser,
-				this.deps.graphics.renderPixelBuffers.bind(this.deps.graphics),
-				this.drawElementsList,
-				feedbackOverrides,
-				true,
-				this.elementConversionCache,
-				locationStr,
-				(location) => this.deps.graphics.getCachedRender(location) ?? null
+			const parser = this.deps.variableValues.createVariablesAndExpressionParser(
+				location,
+				this.#host.entities?.getLocalVariableEntities() ?? null,
+				injectedVariableValues,
+				location ? this.deps.getPageVariableEntities(location.pageNumber) : null
 			)
-		this.#lastDrawVariables = usedVariables.size > 0 ? usedVariables : null
-		this.#lastDrawCompositeElements = usedCompositeElements.size > 0 ? usedCompositeElements : null
-		this.#lastDrawReferencedLocations = referencedLocations.size > 0 ? referencedLocations : null
-		this.#lastCyclicReferences = cyclicLocations.size > 0 ? cyclicLocations : null
 
-		const result: Complete<DrawStyleLayeredButtonModel> = {
-			...this.#host.getButtonStateProps(),
+			const locationStr = location ? formatLocation(location) : null
 
-			elements,
-			referencedLocations,
-			clockSensitive: clockSensitive || undefined,
+			const feedbackOverrides = this.#host.entities?.getFeedbackStyleOverrides() ?? emptyFeedbackOverrides
 
-			style: 'button-layered',
-			drawType: this.#drawType,
+			const { elements, usedVariables, usedCompositeElements, referencedLocations, cyclicLocations, clockSensitive } =
+				await ConvertSomeButtonGraphicsElementForDrawing(
+					this.deps.instance.definitions,
+					parser,
+					this.deps.graphics.renderPixelBuffers.bind(this.deps.graphics),
+					this.drawElementsList,
+					feedbackOverrides,
+					true,
+					this.elementConversionCache,
+					locationStr,
+					(location) => this.deps.graphics.getCachedRender(location) ?? null
+				)
+			this.#lastDrawVariables = usedVariables.size > 0 ? usedVariables : null
+			this.#lastDrawCompositeElements = usedCompositeElements.size > 0 ? usedCompositeElements : null
+			this.#lastDrawReferencedLocations = referencedLocations.size > 0 ? referencedLocations : null
+			this.#lastCyclicReferences = cyclicLocations.size > 0 ? cyclicLocations : null
+
+			// If a variable we just drew changed mid-draw, redraw off the fresh value (it was accumulated
+			// rather than checked against the not-yet-committed #lastDrawVariables).
+			if (!usedVariables.isDisjointFrom(changedDuringDraw)) {
+				this.elementConversionCache.queueInvalidateVariables(changedDuringDraw)
+				this.invalidate()
+			}
+
+			const result: Complete<DrawStyleLayeredButtonModel> = {
+				...this.#host.getButtonStateProps(),
+
+				elements,
+				referencedLocations,
+				clockSensitive: clockSensitive || undefined,
+
+				style: 'button-layered',
+				drawType: this.#drawType,
+			}
+
+			this.#lastDrawStyle = result
+			return result
+		} finally {
+			this.#variablesChangedDuringDraw = null
 		}
-
-		this.#lastDrawStyle = result
-		return result
 	}
 
 	/** Propagate a variable change: invalidate affected cached elements and redraw if relevant. */
 	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
+		// Record changes during an in-flight draw so getDrawStyle re-checks them (see #variablesChangedDuringDraw).
+		if (this.#variablesChangedDuringDraw) {
+			for (const variable of allChangedVariables) this.#variablesChangedDuringDraw.add(variable)
+		}
+
 		if (!this.#lastDrawVariables) return
 		if (this.#lastDrawVariables.isDisjointFrom(allChangedVariables)) return
 
