@@ -118,6 +118,14 @@ const processModule = async (
 					return
 				}
 
+				if (
+					latestCompatibleVersion.licenseCategory === 'COPYLEFT' ||
+					latestCompatibleVersion.licenseCategory === 'UNKNOWN'
+				) {
+					console.log(`Skipping ${moduleInfo.id} (${latestCompatibleVersion.licenseCategory} license)`)
+					return
+				}
+
 				const tarUrl = latestCompatibleVersion.tarUrl! // Note: asserted in the find above
 
 				const abortControl = new AbortController()
