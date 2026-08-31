@@ -411,58 +411,6 @@
 	.property-pin-toggle:hover {
 		color: var(--color-text-strong);
 	}
-
-	/* An element's section in the pinned view. The link through to its full property panel sits alongside the
-	   collapse trigger rather than inside it (a button cannot nest in a button), so the header paints the
-	   strip's background and both halves sit on it. */
-	.pinned-section-header {
-		display: flex;
-		align-items: stretch;
-
-		background-color: var(--accordion2-trigger-bg);
-		box-shadow:
-			inset 0 1px 0 var(--accordion2-trigger-border),
-			inset 0 -1px 0 var(--accordion2-trigger-border);
-
-		/* Follow the trigger's own open state, so the two halves stay one strip */
-		&:has(.accordion2-trigger[data-panel-open]) {
-			background-color: var(--color-surface-hover);
-			box-shadow: none;
-		}
-
-		.pinned-section-name {
-			overflow: hidden;
-			white-space: nowrap;
-			text-overflow: ellipsis;
-		}
-
-		/* Warns that this element isn't being drawn, before someone edits a string they won't see */
-		.pinned-section-state {
-			font-weight: normal;
-			font-size: 0.8em;
-			color: var(--color-muted);
-		}
-
-		.accordion2-trigger {
-			min-width: 0;
-		}
-
-		.pinned-section-open {
-			flex: 0 0 auto;
-			padding: 0 0.6rem;
-			border: 0;
-			background: none;
-			color: var(--color-text-secondary);
-			cursor: pointer;
-
-			/* Highlights on its own, like the collapse trigger beside it does */
-			&:hover,
-			&:focus-visible {
-				background-color: var(--color-surface-hover);
-				color: var(--color-text);
-			}
-		}
-	}
 }
 
 /* Portaled to the body, so it can't live inside the .button-layer-preview block */

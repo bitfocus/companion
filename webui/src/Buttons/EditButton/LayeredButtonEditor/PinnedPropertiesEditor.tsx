@@ -1,7 +1,7 @@
-import { faArrowRight, faThumbtack } from '@fortawesome/free-solid-svg-icons'
+import { faThumbtack } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext } from 'react'
+import { useContext } from 'react'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { capitalize } from '@companion-app/shared/Util.js'
@@ -102,7 +102,7 @@ export const PinnedPropertiesEditor = observer(function PinnedPropertiesEditor({
 					<Accordion.Root value={sectionAccordion.value} onValueChange={sectionAccordion.onValueChange} multiple>
 						{sections.map((section) => (
 							<Accordion.Item key={section.element.id} value={section.element.id}>
-								<PinnedSectionHeader section={section} styleStore={styleStore} />
+								<PinnedSectionHeader section={section} />
 								<Accordion.Panel>
 									<Grid.Row className="gap-2 p-2">
 										{section.fields.map((field) => (
@@ -124,31 +124,19 @@ export const PinnedPropertiesEditor = observer(function PinnedPropertiesEditor({
 	)
 })
 
-// Names the element the properties below belong to, and carries the way through to its full property panel -
-// so reaching a property that isn't pinned is one click, not a hunt through the layer list. The link is a
-// sibling of the collapse trigger rather than inside it, since a button cannot nest inside a button.
-const PinnedSectionHeader = observer(function PinnedSectionHeader({
-	section,
-	styleStore,
-}: {
-	section: PinnedSection
-	styleStore: LayeredStyleStore
-}) {
+// Names the element the properties below belong to. The same section header as an element's own property
+// panel uses, so the two views read alike; the state labels warn when the element isn't being drawn.
+const PinnedSectionHeader = observer(function PinnedSectionHeader({ section }: { section: PinnedSection }) {
 	const { element, disabled, hiddenInPreview } = section
 
-	const openElement = useCallback(() => styleStore.setSelectedEntryId(element.id), [styleStore, element.id])
-
 	return (
-		<Accordion.Header className="pinned-section-header">
+		<Accordion.Header>
 			<Accordion.Trigger className="font-bold">
 				<FontAwesomeIcon icon={getElementTypeIcon(element.type)} fixedWidth />
-				<span className="pinned-section-name">{element.name || capitalize(element.type)}</span>
-				{disabled && <span className="pinned-section-state">Disabled</span>}
-				{hiddenInPreview && <span className="pinned-section-state">Hidden in preview</span>}
+				<span className="truncate">{element.name || capitalize(element.type)}</span>
+				{disabled && <span className="font-normal text-sm text-muted">Disabled</span>}
+				{hiddenInPreview && <span className="font-normal text-sm text-muted">Hidden in preview</span>}
 			</Accordion.Trigger>
-			<button type="button" className="pinned-section-open" onClick={openElement} title="Edit all properties">
-				<FontAwesomeIcon icon={faArrowRight} />
-			</button>
 		</Accordion.Header>
 	)
 })

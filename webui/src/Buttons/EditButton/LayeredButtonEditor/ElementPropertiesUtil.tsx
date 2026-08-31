@@ -6,9 +6,11 @@ import type {
 	ExpressionOrValue,
 	SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { PropertyFieldRow } from '~/Components/PropertyFieldRow.js'
 import type { InputFeatureIconsProps } from '~/Controls/InputFeatures.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { PinPropertyToggle } from './PinPropertyToggle.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 
 type SetValueFn = (value: JsonValue | undefined) => void
@@ -19,7 +21,7 @@ export interface InputFieldCommonProps {
 }
 
 interface FormPropertyFieldProps {
-	elementProps: Record<string, any>
+	elementProps: Readonly<SomeButtonGraphicsElement>
 	property: string
 	fieldDefinition: SomeCompanionInputField
 	label: string
@@ -28,8 +30,6 @@ interface FormPropertyFieldProps {
 	expressionDescription?: string
 	features: InputFeatureIconsProps | undefined
 	disableAutoExpression: boolean | undefined
-	/** Control for pinning/unpinning this property, shown alongside the label */
-	pinToggle?: React.ReactNode
 	children: (elementProp: { value: JsonValue | undefined }, setValue: SetValueFn, inputId: string) => React.ReactNode
 }
 export const FormPropertyField = observer(function FormPropertyField({
@@ -42,14 +42,15 @@ export const FormPropertyField = observer(function FormPropertyField({
 	expressionDescription,
 	features,
 	disableAutoExpression,
-	pinToggle,
 	children,
 }: FormPropertyFieldProps) {
 	const { controlId, localVariablesStore, isPropertyOverridden } = useElementPropertiesContext()
 	const updateOptionMutation = useMutationExt(trpc.controls.styles.updateOption.mutationOptions())
 	const elementId = elementProps.id
 
-	const elementProp = (elementProps[property] as ExpressionOrValue<JsonValue | undefined>) || {
+	// The element types have no index signature, so reach the property being edited through its key
+	const elementProp = ((elementProps as Record<string, unknown>)[property] as
+		ExpressionOrValue<JsonValue | undefined> | undefined) || {
 		isExpression: false,
 		value: undefined,
 	}
@@ -72,7 +73,7 @@ export const FormPropertyField = observer(function FormPropertyField({
 			description={description}
 			expressionDescription={expressionDescription}
 			features={features}
-			pinToggle={pinToggle}
+			pinToggle={<PinPropertyToggle elementProps={elementProps} property={property} />}
 			isOverridden={isOverridden}
 			value={elementProp}
 			setValue={setExpressionOrValue}
@@ -81,7 +82,7 @@ export const FormPropertyField = observer(function FormPropertyField({
 			entityType={null}
 			fieldDefinition={fieldDefinition}
 			controlId={controlId}
-			allRawOptions={elementProps as ExpressionableOptionsObject}
+			allRawOptions={elementProps as unknown as ExpressionableOptionsObject}
 			isLocatedInGrid={true}
 			disabled={false}
 		>
