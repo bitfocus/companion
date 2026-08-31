@@ -246,7 +246,8 @@ const ElementsListFooter = observer(function ElementsListFooter({
 						title="The topbar, status icons and empty-button look"
 					>
 						<FontAwesomeIcon icon={faCog} className="me-1" fixedWidth />
-						{canvasElement.name || 'Canvas'}
+						{/* Always "Canvas": it is the button's own settings rather than an element you name */}
+						Canvas
 					</Button>
 				)}
 			</ButtonGroup>

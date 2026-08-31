@@ -90,6 +90,7 @@ export const PinnedPropertiesEditor = observer(function PinnedPropertiesEditor({
 			controlId={controlId}
 			localVariablesStore={localVariablesStore}
 			isPropertyOverridden={isPropertyOverridden}
+			isPinnedView={true}
 		>
 			{sections.length === 0 ? (
 				<NonIdealState icon={faThumbtack}>
