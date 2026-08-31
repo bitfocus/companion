@@ -243,10 +243,6 @@ export class ControlButtonLayered
 		return this.drawing.setElementPropertyPinned(id, property, pinned)
 	}
 
-	layeredStyleResetPinnedProperties(): boolean {
-		return this.drawing.resetPinnedProperties()
-	}
-
 	layeredStyleGetElementById(id: string): SomeButtonGraphicsElement | undefined {
 		return this.drawing.getElementById(id)
 	}

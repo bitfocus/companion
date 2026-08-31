@@ -156,6 +156,12 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 	const elementProps = styleStore.getSelectedElement()
 	const isPinnedViewSelected = styleStore.isPinnedViewSelected
 	const [simpleMode, setSimpleMode] = useLocalStorage('layeredEditor.simpleMode', true)
+
+	// The detail level only has anything to hide for an element with simple-mode fields, or one which shows
+	// the external usage field. It says nothing about the canvas, a group, or the pinned view (a filter of
+	// its own), so it stays out of the way for those.
+	const showDetailLevelToggle =
+		!isPinnedViewSelected && !!elementProps && elementProps.type !== 'canvas' && elementProps.type !== 'group'
 	const savedPanelLayout = useMemo(() => {
 		try {
 			return JSON.parse(localStorage.getItem('layeredEditor.panelSizes') ?? '') ?? undefined
@@ -185,9 +191,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 				</div>
 			</Panel>
 			<Separator className="button-layer-resize-handle">
-				{/* The detail level applies to an element's property panel, so it has nothing to say about the
-				    pinned view - which is a filter of its own */}
-				<SeparatorInteractive hidden={isPinnedViewSelected}>
+				<SeparatorInteractive hidden={!showDetailLevelToggle}>
 					<ButtonGroup aria-label="Property detail level" className="button-layer-mode-toggle">
 						<Button
 							size="sm"

@@ -82,12 +82,6 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	layeredStyleSetElementPropertyPinned(id: string, property: string, pinned: boolean): boolean
 
 	/**
-	 * Restore every element in the layered style to its type's default pinned properties
-	 * @returns true if the control was updated
-	 */
-	layeredStyleResetPinnedProperties(): boolean
-
-	/**
 	 * Update an option on an element from the layered style
 	 * @param id Element id to update
 	 * @param key Option key to update

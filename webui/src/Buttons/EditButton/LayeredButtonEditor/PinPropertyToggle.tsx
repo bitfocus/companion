@@ -1,4 +1,4 @@
-import { faThumbtack } from '@fortawesome/free-solid-svg-icons'
+import { faThumbtack, faThumbtackSlash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
@@ -10,8 +10,9 @@ import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 /**
  * Pins or unpins one property of an element, so it does (or no longer does) show in the button's pinned view.
  *
- * Only shown once hovered or focused while the property is unpinned, so the full property panel stays as
- * quiet as it was; a pinned property keeps its pin visible so it can be found and removed from either view.
+ * Only shown once its property row is hovered or the toggle is focused, in both the full panel and the
+ * pinned view: a column of pins next to properties which are all pinned anyway is noise, and one that is
+ * always there invites a click that then takes effort to undo.
  */
 export const PinPropertyToggle = observer(function PinPropertyToggle({
 	elementProps,
@@ -52,7 +53,7 @@ export const PinPropertyToggle = observer(function PinPropertyToggle({
 			aria-pressed={isPinned}
 			aria-label={isPinned ? 'Unpin property' : 'Pin property'}
 		>
-			<FontAwesomeIcon icon={faThumbtack} />
+			<FontAwesomeIcon icon={isPinned ? faThumbtackSlash : faThumbtack} />
 		</button>
 	)
 })

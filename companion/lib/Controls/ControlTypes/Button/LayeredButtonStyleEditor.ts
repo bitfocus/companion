@@ -188,26 +188,6 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 		return true
 	}
 
-	/**
-	 * Restore every element on this button to its type's default pinned set.
-	 */
-	resetPinnedProperties(): boolean {
-		const applyDefaults = (elements: SomeButtonGraphicsElement[]): void => {
-			for (const element of elements) {
-				if (element.type === 'canvas') continue
-
-				element.pinnedProperties = getDefaultPinnedProperties(element.type)
-
-				if (element.type === 'group') applyDefaults(element.children)
-			}
-		}
-		applyDefaults(this.drawElementsList)
-
-		this.#host.commitChange(false)
-
-		return true
-	}
-
 	getElementById(id: string): SomeButtonGraphicsElement | undefined {
 		return this.#findElementIndexAndParent(this.drawElementsList, null, id)?.element
 	}
