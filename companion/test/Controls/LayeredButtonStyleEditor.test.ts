@@ -104,18 +104,6 @@ describe('LayeredButtonStyleEditor pinned properties', () => {
 		expect(editor.setElementPropertyPinned('nope', 'color', true)).toBe(false)
 	})
 
-	it('resets every element, including nested ones, to its type defaults', () => {
-		editor.setElementPropertyPinned('text0', 'color', false)
-		editor.setElementPropertyPinned('box0', 'cornerRadius', true)
-		editor.setElementPropertyPinned('inner', 'weight', true)
-
-		expect(editor.resetPinnedProperties()).toBe(true)
-
-		expect(elementById('text0').pinnedProperties).toContain('color')
-		expect(elementById('box0').pinnedProperties).toEqual(['color'])
-		expect(elementById('group0').children[0].pinnedProperties).not.toContain('weight')
-	})
-
 	it('will not let the generic option setters overwrite the pins', () => {
 		expect(editor.updateOption('text0', 'pinnedProperties', { isExpression: false, value: [] })).toBe(false)
 		expect(elementById('text0').pinnedProperties).toContain('text')

@@ -309,10 +309,26 @@
 			min-height: 0;
 		}
 
-		/* Sets the non-drawable entries (pinned properties, canvas) apart from the draw-order layers above */
-		.button-layer-elementlist-divider {
-			border-top: 2px solid var(--color-border-medium);
-			margin-top: 0.4rem;
+		/* The entries which aren't layers, along the bottom of the list rather than mixed into the stack */
+		.button-layer-elementlist-footer {
+			flex: 0 0 auto;
+			display: flex;
+			justify-content: flex-end;
+			padding: 0.3rem 0.25rem 0;
+			border-top: 1px solid var(--color-border);
+
+			.button {
+				--btn-color: var(--color-toolbar-fg);
+				--btn-bg: var(--color-surface);
+				--btn-border-color: var(--color-border);
+				--btn-hover-color: var(--color-text-strong);
+				--btn-hover-bg: var(--color-surface-muted);
+				--btn-hover-border-color: var(--color-border);
+				/* Selected reads like the selected tab/page elsewhere, since this is a selection, not an action */
+				--btn-active-color: var(--color-on-dark);
+				--btn-active-bg: var(--color-primary);
+				--btn-active-border-color: var(--color-primary);
+			}
 		}
 
 		.button-layer-elementlist-table-row {
@@ -405,9 +421,10 @@
 		padding: 0.5rem;
 	}
 
-	/* Pins a property into the pinned view. Kept out of sight until the property's label is hovered or the
-	   toggle is focused, so the panel reads as it did before; an already-pinned property keeps its pin
-	   showing, so it can be unpinned from either view. */
+	/* Pins a property into the pinned view. Out of sight until the property's label is hovered or the toggle
+	   is focused, whether or not the property is pinned: a column of pins beside properties which are all
+	   pinned anyway is noise, and a permanent one invites a click that is a chore to undo. Hidden with
+	   opacity so it still takes up its space and nothing shifts as it appears. */
 	.property-pin-toggle {
 		border: none;
 		background: none;
@@ -419,34 +436,30 @@
 
 	.form-label:hover .property-pin-toggle,
 	.property-pin-toggle:hover,
-	.property-pin-toggle:focus-visible,
-	.property-pin-toggle.pinned {
+	.property-pin-toggle:focus-visible {
 		opacity: 1;
 	}
 
-	.property-pin-toggle.pinned {
-		color: var(--color-toolbar-accent);
+	.property-pin-toggle:hover {
+		color: var(--color-icon);
 	}
 
-	/* Names the element a group of pinned properties belongs to, and links through to its full panel */
+	/* An element's section in the pinned view. The link through to its full property panel sits alongside the
+	   collapse trigger rather than inside it (a button cannot nest in a button), so the header paints the
+	   strip's background and both halves sit on it. */
 	.pinned-section-header {
 		display: flex;
-		align-items: center;
-		gap: 0.4rem;
-		width: 100%;
+		align-items: stretch;
 
-		margin-top: 0.4rem;
-		padding: 0.2rem 0.3rem;
-		border: none;
-		border-bottom: 1px solid var(--color-border);
-		background: none;
+		background-color: var(--accordion2-trigger-bg);
+		box-shadow:
+			inset 0 1px 0 var(--accordion2-trigger-border),
+			inset 0 -1px 0 var(--accordion2-trigger-border);
 
-		font-weight: bold;
-		color: var(--color-text);
-		cursor: pointer;
-
-		&:hover {
-			background-color: var(--color-row-hover);
+		/* Follow the trigger's own open state, so the two halves stay one strip */
+		&:has(.accordion2-trigger[data-panel-open]) {
+			background-color: var(--color-surface-hover);
+			box-shadow: none;
 		}
 
 		.pinned-section-name {
@@ -462,16 +475,25 @@
 			color: var(--color-muted);
 		}
 
-		.pinned-section-open {
-			margin-left: auto;
-			color: var(--color-text-faint);
+		.accordion2-trigger {
+			min-width: 0;
 		}
-	}
 
-	.pinned-view-footer {
-		display: flex;
-		justify-content: flex-end;
-		margin-top: 0.75rem;
+		.pinned-section-open {
+			flex: 0 0 auto;
+			padding: 0 0.6rem;
+			border: 0;
+			background: none;
+			color: var(--color-text-secondary);
+			cursor: pointer;
+
+			/* Highlights on its own, like the collapse trigger beside it does */
+			&:hover,
+			&:focus-visible {
+				background-color: var(--color-surface-hover);
+				color: var(--color-text);
+			}
+		}
 	}
 }
 

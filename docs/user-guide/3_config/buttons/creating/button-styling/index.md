@@ -34,7 +34,7 @@ When you edit a button you'll see two things:
 - The **elements list** — the stack of elements that make up the button. Elements at the top of the
   list are drawn on top of the ones below them, just like layers in an image editor.
 
-Below the elements, under a dividing line, sit two entries which are not layers at all:
+Along the bottom of the list are two buttons for the things which aren't layers:
 
 - **Pinned** — the properties you edit most often, gathered from across the button's elements. See
   [Pinned properties](#pinned-properties) below.
@@ -129,17 +129,17 @@ Every element starts with a sensible set pinned: for a Text element that's the t
 "shrink to fit", colour and alignment; for a Box, its colour. Elements with nothing pinned are left
 out of the view entirely.
 
-Each group is headed by the element it came from, which also links through to that element's full
-property panel — so a property that isn't pinned is one click away. The heading also tells you when
-an element is disabled or hidden, so you don't spend time editing something that isn't being drawn.
+Each group is headed by the element it came from, and collapses like the sections of the property
+panel do. The arrow at the end of the heading opens that element's full property panel — so a
+property that isn't pinned is one click away. The heading also tells you when an element is disabled
+or hidden, so you don't spend time editing something that isn't being drawn.
 
 ### Pinning and unpinning
 
-Hover a property in an element's panel and a **pin** appears next to its label. Click it to pin that
-property to this button, or click the pin of an already-pinned property (in either view) to remove
-it. Pins are stored per element per button, so pinning the font size of one button's text doesn't
-change any other button. **Reset to defaults** at the bottom of the pinned view puts every element on
-the button back to its default set.
+Hover a property in an element's panel and a **pin** appears next to its label; click it to pin that
+property to this button. Hovering a property in the pinned view shows the same control, now offering
+to unpin it. Pins are stored per element per button, so pinning the font size of one button's text
+doesn't change any other button.
 
 Companion remembers which entry of the elements list you had selected and reselects it on the next
 button you open. Because **Pinned** exists on every button, leaving it selected means every button you
