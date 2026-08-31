@@ -1,4 +1,7 @@
-import { FONTSIZE_SHRINK_DEFAULT } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
+import {
+	FONTSIZE_SHRINK_DEFAULT,
+	getDefaultPinnedProperties,
+} from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import {
 	EntityModelType,
 	type FeedbackEntityModel,
@@ -34,7 +37,6 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import type {
 	ButtonGraphicsCanvasElement as ButtonGraphicsCanvasElementModule,
 	ButtonGraphicsDrawBounds as ButtonGraphicsDrawBoundsModule,
-	ButtonGraphicsElementBase as ButtonGraphicsElementBaseModule,
 	CompanionGraphicsElementValue,
 	JsonValue,
 	ModuleLogger,
@@ -320,7 +322,7 @@ function convertElementSize(element: ButtonGraphicsDrawBoundsModule): ButtonGrap
 }
 
 function convertElementBasicProperties(
-	element: ButtonGraphicsElementBaseModule,
+	element: SomeButtonGraphicsElementModule,
 	defaultName: string,
 	forceNewIds: boolean,
 	generateId: IdGenerator
@@ -329,9 +331,26 @@ function convertElementBasicProperties(
 		id: forceNewIds ? generateId() : element.id || generateId(),
 		name: element.name ?? defaultName,
 		usage: ButtonGraphicsElementUsage.Automatic,
+		pinnedProperties: convertElementPinnedProperties(element),
 		enabled: convertModuleExpressionOrValue(element.enabled, { value: true, isExpression: false }),
 		opacity: convertModuleExpressionOrValue(element.opacity, { value: 100, isExpression: false }),
 	}
+}
+
+/**
+ * A preset that says nothing about pinning gets the element type's defaults, so a module author can ignore
+ * the feature entirely rather than having to ship (and keep up to date) a pin set of their own. One that
+ * does provide a set keeps exactly that set.
+ *
+ * The module API does not declare `pinnedProperties` yet, so it is read defensively rather than from the type.
+ */
+function convertElementPinnedProperties(
+	element: SomeButtonGraphicsElementModule & { pinnedProperties?: unknown }
+): string[] {
+	const pinned = element.pinnedProperties
+	if (Array.isArray(pinned)) return pinned.filter((property): property is string => typeof property === 'string')
+
+	return getDefaultPinnedProperties(element.type)
 }
 
 function convertModuleExpressionOrValue<T>(

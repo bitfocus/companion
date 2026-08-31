@@ -1,9 +1,9 @@
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { Fragment, useCallback, useContext } from 'react'
+import { Fragment, useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
-import { elementSchemas, elementSimpleModeFields } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
+import { elementSimpleModeFields } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	colorFieldExpressionHint,
@@ -24,11 +24,12 @@ import { OptionsInputControl } from '~/Controls/OptionsInputControl.js'
 import { usePanelCollapseAccordionProps, usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ElementCommonProperties } from './ElementCommonProperties.js'
 import { ElementPropertiesProvider, type IsPropertyOverridden } from './ElementPropertiesContext.js'
 import { FormPropertyField } from './ElementPropertiesUtil.js'
+import { PinPropertyToggle } from './PinPropertyToggle.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
+import { useElementSchemaSections } from './useElementSchema.js'
 
 interface ElementPropertiesEditorProps {
 	controlId: string
@@ -68,24 +69,10 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 	simpleMode: boolean
 }) {
 	const { localVariablesStore } = useElementPropertiesContext()
-	const { compositeElementDefinitions } = useContext(RootAppStoreContext)
 
 	const sectionCollapse = usePanelCollapseHelper(`layered-element-property-sections:${elementProps.type}`, null)
 
-	let schema = elementSchemas[elementProps.type]
-
-	// If this is a composite element, get the full schema
-	if (elementProps.type === 'composite' && elementProps.connectionId && elementProps.elementId) {
-		const compositeDefinition = compositeElementDefinitions.getDefinition(
-			elementProps.connectionId,
-			elementProps.elementId
-		)
-
-		if (compositeDefinition) {
-			// Combine common element fields with the custom schema from the composite definition
-			schema = [...schema, { id: 'properties', label: 'Properties', fields: compositeDefinition.options }]
-		}
-	}
+	const schema = useElementSchemaSections(elementProps)
 
 	const simpleModeFieldIds: readonly string[] | undefined =
 		simpleMode && elementProps.type in elementSimpleModeFields
@@ -157,7 +144,7 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 })
 
 // Wrapper component to make schema fields work with FormPropertyField-like rendering
-const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
+export const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 	field,
 	elementProps,
 	localVariablesStore,
@@ -180,6 +167,7 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 			elementProps={elementProps}
 			property={field.id}
 			fieldDefinition={field}
+			pinToggle={<PinPropertyToggle elementProps={elementProps} property={field.id} />}
 			label={field.label}
 			tooltip={field.tooltip}
 			description={field.description}
@@ -251,6 +239,7 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 				label={field.label}
 				tooltip={field.tooltip}
 				features={getInputFeatures(field)}
+				pinToggle={<PinPropertyToggle elementProps={elementProps} property={field.id} />}
 				value={LIST_HEADER_VALUE}
 				setValue={noop}
 				disableAutoExpression={true}

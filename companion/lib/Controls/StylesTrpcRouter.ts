@@ -109,6 +109,39 @@ export function createStylesTrpcRouter(controlsMap: Map<string, SomeControl<any>
 				return control.layeredStyleSetElementUsage(input.elementId, input.usage)
 			}),
 
+		setElementPropertyPinned: publicProcedure
+			.input(
+				z.object({
+					controlId: z.string(),
+					elementId: z.string(),
+					property: z.string(),
+					pinned: z.boolean(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const control = controlsMap.get(input.controlId)
+				if (!control) return false
+
+				if (!control.supportsLayeredStyle) throw new Error(`Control "${input.controlId}" does not support layer styles`)
+
+				return control.layeredStyleSetElementPropertyPinned(input.elementId, input.property, input.pinned)
+			}),
+
+		resetPinnedProperties: publicProcedure
+			.input(
+				z.object({
+					controlId: z.string(),
+				})
+			)
+			.mutation(async ({ input }) => {
+				const control = controlsMap.get(input.controlId)
+				if (!control) return false
+
+				if (!control.supportsLayeredStyle) throw new Error(`Control "${input.controlId}" does not support layer styles`)
+
+				return control.layeredStyleResetPinnedProperties()
+			}),
+
 		updateOption: publicProcedure
 			.input(
 				z.object({
