@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, test } from 'vitest'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { LayeredStyleStore } from '../StyleStore.js'
+import { LayeredStyleStore, PINNED_PROPERTIES_ENTRY_ID } from '../StyleStore.js'
 
 // jsdom runs on an opaque origin here, so window.localStorage is undefined. Install a minimal
 // in-memory Storage so the store's persistence can be exercised directly.
@@ -37,13 +37,19 @@ beforeEach(() => {
 	window.localStorage.clear()
 })
 
-// Minimal element stand-ins - the store only reads id/type/children.
+// Minimal element stand-ins - the store only reads id/type/enabled/children.
 function el(
 	id: string,
 	type: SomeButtonGraphicsElement['type'],
-	children?: SomeButtonGraphicsElement[]
+	children?: SomeButtonGraphicsElement[],
+	enabled = true
 ): SomeButtonGraphicsElement {
-	return { id, type, ...(children ? { children } : {}) } as unknown as SomeButtonGraphicsElement
+	return {
+		id,
+		type,
+		enabled: { isExpression: false, value: enabled },
+		...(children ? { children } : {}),
+	} as unknown as SomeButtonGraphicsElement
 }
 
 // Minimal feedback stand-in for updateOverridesData - it only reads type/styleOverrides.
@@ -89,32 +95,43 @@ describe('LayeredStyleStore updateData / findElementById', () => {
 })
 
 describe('LayeredStyleStore selection seeding', () => {
-	test('new button with no stored preference selects the topmost element (Text)', () => {
+	test('new button with no stored preference selects the pinned view', () => {
 		const store = new LayeredStyleStore()
 		store.updateData(defaultLayers)
-		expect(store.selectedElementId).toBe('text0')
+		expect(store.selectedEntryId).toBe(PINNED_PROPERTIES_ENTRY_ID)
+		expect(store.isPinnedViewSelected).toBe(true)
+		// The pinned view isn't an element, so nothing is selected for the preview/property panel
+		expect(store.selectedElementId).toBe(null)
 	})
 
-	test('a button with only the canvas selects nothing', () => {
+	test('a button with only the canvas still selects the pinned view', () => {
 		const store = new LayeredStyleStore()
 		store.updateData([canvas])
-		expect(store.selectedElementId).toBe(null)
+		expect(store.selectedEntryId).toBe(PINNED_PROPERTIES_ENTRY_ID)
 	})
 
 	test('keeps a still-valid selection when data updates', () => {
 		const store = new LayeredStyleStore()
 		store.updateData(defaultLayers)
-		store.setSelectedElementId('box0')
+		store.setSelectedEntryId('box0')
 		store.updateData(defaultLayers)
 		expect(store.selectedElementId).toBe('box0')
+	})
+
+	test('keeps the pinned view selected when data updates', () => {
+		const store = new LayeredStyleStore()
+		store.updateData(defaultLayers)
+		store.setSelectedEntryId(PINNED_PROPERTIES_ENTRY_ID)
+		store.updateData([canvas, el('other', 'box')])
+		expect(store.isPinnedViewSelected).toBe(true)
 	})
 
 	test('re-seeds when the selected element is deleted', () => {
 		const store = new LayeredStyleStore()
 		store.updateData(defaultLayers)
-		store.setSelectedElementId('box0')
+		store.setSelectedEntryId('box0')
 		store.updateData([canvas, el('text0', 'text')]) // box removed
-		expect(store.selectedElementId).toBe('text0')
+		expect(store.selectedEntryId).toBe(PINNED_PROPERTIES_ENTRY_ID)
 	})
 })
 
@@ -122,21 +139,22 @@ describe('LayeredStyleStore getSelectedElement', () => {
 	test('returns the selected element', () => {
 		const store = new LayeredStyleStore()
 		store.updateData(defaultLayers)
-		store.setSelectedElementId('box0')
+		store.setSelectedEntryId('box0')
 		expect(store.getSelectedElement()?.id).toBe('box0')
 	})
 
-	test('returns undefined when nothing is selected', () => {
+	test('returns undefined when the pinned view is selected', () => {
 		const store = new LayeredStyleStore()
-		store.updateData([canvas])
+		store.updateData(defaultLayers)
+		store.setSelectedEntryId(PINNED_PROPERTIES_ENTRY_ID)
 		expect(store.selectedElementId).toBe(null)
 		expect(store.getSelectedElement()).toBeUndefined()
 	})
 
-	test('setSelectedElementId(null) clears the selection', () => {
+	test('setSelectedEntryId(null) clears the selection', () => {
 		const store = new LayeredStyleStore()
 		store.updateData(defaultLayers)
-		store.setSelectedElementId(null)
+		store.setSelectedEntryId(null)
 		expect(store.selectedElementId).toBe(null)
 		expect(store.getSelectedElement()).toBeUndefined()
 	})
@@ -149,7 +167,7 @@ describe('LayeredStyleStore remembers by type + ordinal across buttons', () => {
 	test('restores the Nth element of the same type', () => {
 		const first = new LayeredStyleStore()
 		first.updateData(twoImages)
-		first.setSelectedElementId('img-a') // the 2nd image (ordinal 1)
+		first.setSelectedEntryId('img-a') // the 2nd image (ordinal 1)
 
 		const next = new LayeredStyleStore()
 		next.updateData([canvas, el('other-a', 'image'), el('other-b', 'image')])
@@ -160,27 +178,41 @@ describe('LayeredStyleStore remembers by type + ordinal across buttons', () => {
 	test('clamps down when the next button has fewer of that type', () => {
 		const first = new LayeredStyleStore()
 		first.updateData(twoImages)
-		first.setSelectedElementId('img-a') // 2nd image
+		first.setSelectedEntryId('img-a') // 2nd image
 
 		const next = new LayeredStyleStore()
 		next.updateData([canvas, el('solo', 'image')]) // only one image
 		expect(next.selectedElementId).toBe('solo')
 	})
 
-	test('falls back to the topmost element when the type is absent', () => {
+	test('falls back to the pinned view when the type is absent', () => {
 		const first = new LayeredStyleStore()
 		first.updateData(twoImages)
-		first.setSelectedElementId('img-a')
+		first.setSelectedEntryId('img-a')
 
 		const next = new LayeredStyleStore()
 		next.updateData(defaultLayers) // no image elements
-		expect(next.selectedElementId).toBe('text0')
+		expect(next.selectedEntryId).toBe(PINNED_PROPERTIES_ENTRY_ID)
+	})
+
+	test('remembers the pinned view, which every button has', () => {
+		const first = new LayeredStyleStore()
+		first.updateData(defaultLayers)
+		first.setSelectedEntryId(PINNED_PROPERTIES_ENTRY_ID)
+		expect(JSON.parse(window.localStorage.getItem(STORAGE_KEY)!)).toEqual({
+			type: PINNED_PROPERTIES_ENTRY_ID,
+			ordinal: 0,
+		})
+
+		const next = new LayeredStyleStore()
+		next.updateData(twoImages) // a button with entirely different elements
+		expect(next.isPinnedViewSelected).toBe(true)
 	})
 
 	test('remembers a canvas selection', () => {
 		const first = new LayeredStyleStore()
 		first.updateData(defaultLayers)
-		first.setSelectedElementId('canvas')
+		first.setSelectedEntryId('canvas')
 
 		const next = new LayeredStyleStore()
 		next.updateData(defaultLayers)
@@ -193,7 +225,7 @@ describe('LayeredStyleStore remembers by type + ordinal across buttons', () => {
 		const grouped = [canvas, el('box', 'box'), el('grp', 'group', [el('imgInner', 'image')]), el('imgTop', 'image')]
 		const first = new LayeredStyleStore()
 		first.updateData(grouped)
-		first.setSelectedElementId('imgInner') // 2nd image
+		first.setSelectedEntryId('imgInner') // 2nd image
 
 		const next = new LayeredStyleStore()
 		next.updateData(grouped)
@@ -203,15 +235,33 @@ describe('LayeredStyleStore remembers by type + ordinal across buttons', () => {
 	test('persists the reference to localStorage', () => {
 		const store = new LayeredStyleStore()
 		store.updateData(twoImages)
-		store.setSelectedElementId('img-a') // 2nd image (ordinal 1)
+		store.setSelectedEntryId('img-a') // 2nd image (ordinal 1)
 		expect(JSON.parse(window.localStorage.getItem(STORAGE_KEY)!)).toEqual({ type: 'image', ordinal: 1 })
 	})
 
-	test('a corrupt stored reference is ignored and falls back to the topmost element', () => {
+	test('a corrupt stored reference is ignored and falls back to the pinned view', () => {
 		window.localStorage.setItem(STORAGE_KEY, 'not json{')
 		const store = new LayeredStyleStore()
 		store.updateData(defaultLayers)
-		expect(store.selectedElementId).toBe('text0')
+		expect(store.selectedEntryId).toBe(PINNED_PROPERTIES_ENTRY_ID)
+	})
+})
+
+describe('LayeredStyleStore visualElements', () => {
+	test('lists elements top-first, each group above its own children, without the canvas', () => {
+		const store = new LayeredStyleStore()
+		store.updateData([canvas, el('box', 'box'), el('grp', 'group', [el('inner', 'text')]), el('top', 'image')])
+		expect(store.visualElements.map((entry) => entry.element.id)).toEqual(['top', 'grp', 'inner', 'box'])
+	})
+
+	test('marks children of a disabled group as disabled by an ancestor', () => {
+		const store = new LayeredStyleStore()
+		store.updateData([canvas, el('grp', 'group', [el('inner', 'text')], false), el('top', 'image')])
+		expect(store.visualElements.map((entry) => [entry.element.id, entry.ancestorDisabled])).toEqual([
+			['top', false],
+			['grp', false],
+			['inner', true],
+		])
 	})
 })
 

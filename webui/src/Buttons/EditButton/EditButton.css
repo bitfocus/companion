@@ -309,6 +309,12 @@
 			min-height: 0;
 		}
 
+		/* Sets the non-drawable entries (pinned properties, canvas) apart from the draw-order layers above */
+		.button-layer-elementlist-divider {
+			border-top: 2px solid var(--color-border-medium);
+			margin-top: 0.4rem;
+		}
+
 		.button-layer-elementlist-table-row {
 			display: grid;
 			grid-template-columns: auto 1fr auto auto;
@@ -397,6 +403,75 @@
 		overflow-y: scroll;
 
 		padding: 0.5rem;
+	}
+
+	/* Pins a property into the pinned view. Kept out of sight until the property's label is hovered or the
+	   toggle is focused, so the panel reads as it did before; an already-pinned property keeps its pin
+	   showing, so it can be unpinned from either view. */
+	.property-pin-toggle {
+		border: none;
+		background: none;
+		padding: 0 0.3rem;
+		color: var(--color-text-faint);
+		cursor: pointer;
+		opacity: 0;
+	}
+
+	.form-label:hover .property-pin-toggle,
+	.property-pin-toggle:hover,
+	.property-pin-toggle:focus-visible,
+	.property-pin-toggle.pinned {
+		opacity: 1;
+	}
+
+	.property-pin-toggle.pinned {
+		color: var(--color-toolbar-accent);
+	}
+
+	/* Names the element a group of pinned properties belongs to, and links through to its full panel */
+	.pinned-section-header {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		width: 100%;
+
+		margin-top: 0.4rem;
+		padding: 0.2rem 0.3rem;
+		border: none;
+		border-bottom: 1px solid var(--color-border);
+		background: none;
+
+		font-weight: bold;
+		color: var(--color-text);
+		cursor: pointer;
+
+		&:hover {
+			background-color: var(--color-row-hover);
+		}
+
+		.pinned-section-name {
+			overflow: hidden;
+			white-space: nowrap;
+			text-overflow: ellipsis;
+		}
+
+		/* Warns that this element isn't being drawn, before someone edits a string they won't see */
+		.pinned-section-state {
+			font-weight: normal;
+			font-size: 0.8em;
+			color: var(--color-muted);
+		}
+
+		.pinned-section-open {
+			margin-left: auto;
+			color: var(--color-text-faint);
+		}
+	}
+
+	.pinned-view-footer {
+		display: flex;
+		justify-content: flex-end;
+		margin-top: 0.75rem;
 	}
 }
 

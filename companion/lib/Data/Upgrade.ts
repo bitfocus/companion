@@ -18,6 +18,7 @@ import v12tov13 from './Upgrades/v12tov13.js'
 import v13tov14 from './Upgrades/v13tov14.js'
 import v14tov15 from './Upgrades/v14tov15.js'
 import v15tov16 from './Upgrades/v15tov16.js'
+import v16tov17 from './Upgrades/v16tov17.js'
 
 const logger = LogController.createLogger('Data/Upgrade')
 
@@ -37,6 +38,7 @@ const allUpgrades = [
 	v13tov14, // v5.0 - split fontsize into size + allowShrink
 	v14tov15, // v5.0 - move surface never_lock to the surface group
 	v15tov16, // v5.0 - replace remove_topbar boolean with buttons_decoration enum
+	v16tov17, // v5.0 - give style elements their default pinned properties
 ]
 export const targetVersion = allUpgrades.length + 1
 

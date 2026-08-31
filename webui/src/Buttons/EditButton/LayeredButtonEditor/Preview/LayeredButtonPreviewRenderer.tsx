@@ -412,7 +412,7 @@ const LayeredButtonCanvas = observer(function LayeredButtonCanvas({
 		[drawStyle, geometry, hiddenElements, selectableIds]
 	)
 
-	const selectElementById = useCallback((id: string) => styleStore.setSelectedElementId(id), [styleStore])
+	const selectElementById = useCallback((id: string) => styleStore.setSelectedEntryId(id), [styleStore])
 
 	const onCanvasPointerDown = useCallback(
 		(e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -422,7 +422,7 @@ const LayeredButtonCanvas = observer(function LayeredButtonCanvas({
 			const x = ((e.clientX - rect.left) * canvas.width) / rect.width
 			const y = ((e.clientY - rect.top) * canvas.height) / rect.height
 
-			styleStore.setSelectedElementId(hitTestElements(elementRects, x, y)?.id ?? null)
+			styleStore.setSelectedEntryId(hitTestElements(elementRects, x, y)?.id ?? null)
 		},
 		[canvas, elementRects, styleStore]
 	)

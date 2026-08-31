@@ -17,6 +17,7 @@ import { FeedbackOverridesTab } from '../FeedbackOverridesTab.js'
 import { ControlOptionsEditor } from './ControlOptionsEditor.js'
 import { ElementPropertiesEditor } from './ElementPropertiesEditor.js'
 import { ElementsList } from './ElementsList.js'
+import { PinnedPropertiesEditor } from './PinnedPropertiesEditor.js'
 import { LayeredButtonPreviewRenderer } from './Preview/LayeredButtonPreviewRenderer.js'
 import { LayeredStyleStore } from './StyleStore.js'
 
@@ -153,6 +154,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 	localVariablesStore,
 }: LayeredButtonEditorStyleProps) {
 	const elementProps = styleStore.getSelectedElement()
+	const isPinnedViewSelected = styleStore.isPinnedViewSelected
 	const [simpleMode, setSimpleMode] = useLocalStorage('layeredEditor.simpleMode', true)
 	const savedPanelLayout = useMemo(() => {
 		try {
@@ -183,7 +185,9 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 				</div>
 			</Panel>
 			<Separator className="button-layer-resize-handle">
-				<SeparatorInteractive>
+				{/* The detail level applies to an element's property panel, so it has nothing to say about the
+				    pinned view - which is a filter of its own */}
+				<SeparatorInteractive hidden={isPinnedViewSelected}>
 					<ButtonGroup aria-label="Property detail level" className="button-layer-mode-toggle">
 						<Button
 							size="sm"
@@ -209,7 +213,14 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 				</SeparatorInteractive>
 			</Separator>
 			<Panel id="bottom" className="button-layer-options" minSize="250px">
-				{elementProps ? (
+				{isPinnedViewSelected ? (
+					<PinnedPropertiesEditor
+						controlId={controlId}
+						styleStore={styleStore}
+						localVariablesStore={localVariablesStore}
+						isPropertyOverridden={styleStore.isPropertyOverridden}
+					/>
+				) : elementProps ? (
 					<ElementPropertiesEditor
 						controlId={controlId}
 						elementProps={elementProps}
@@ -227,7 +238,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 	)
 })
 
-function SeparatorInteractive({ children }: PropsWithChildren): React.JSX.Element {
+function SeparatorInteractive({ children, hidden }: PropsWithChildren<{ hidden: boolean }>): React.JSX.Element {
 	const ref = useRef<HTMLDivElement>(null)
 
 	useEffect(() => {
@@ -246,7 +257,7 @@ function SeparatorInteractive({ children }: PropsWithChildren): React.JSX.Elemen
 
 	return (
 		<div ref={ref} className="button-layer-separator-interactive" data-separator-button>
-			{children}
+			{hidden ? null : children}
 		</div>
 	)
 }

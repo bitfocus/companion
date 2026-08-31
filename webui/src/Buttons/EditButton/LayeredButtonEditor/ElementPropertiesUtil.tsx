@@ -28,6 +28,8 @@ interface FormPropertyFieldProps {
 	expressionDescription?: string
 	features: InputFeatureIconsProps | undefined
 	disableAutoExpression: boolean | undefined
+	/** Control for pinning/unpinning this property, shown alongside the label */
+	pinToggle?: React.ReactNode
 	children: (elementProp: { value: JsonValue | undefined }, setValue: SetValueFn, inputId: string) => React.ReactNode
 }
 export const FormPropertyField = observer(function FormPropertyField({
@@ -40,6 +42,7 @@ export const FormPropertyField = observer(function FormPropertyField({
 	expressionDescription,
 	features,
 	disableAutoExpression,
+	pinToggle,
 	children,
 }: FormPropertyFieldProps) {
 	const { controlId, localVariablesStore, isPropertyOverridden } = useElementPropertiesContext()
@@ -69,6 +72,7 @@ export const FormPropertyField = observer(function FormPropertyField({
 			description={description}
 			expressionDescription={expressionDescription}
 			features={features}
+			pinToggle={pinToggle}
 			isOverridden={isOverridden}
 			value={elementProp}
 			setValue={setExpressionOrValue}

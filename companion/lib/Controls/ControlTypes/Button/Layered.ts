@@ -1,5 +1,8 @@
 import type { JsonValue } from 'type-fest'
-import { FONTSIZE_SHRINK_DEFAULT } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
+import {
+	FONTSIZE_SHRINK_DEFAULT,
+	getDefaultPinnedProperties,
+} from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type {
 	LayeredButtonModel,
 	LayeredButtonOptions,
@@ -70,6 +73,7 @@ export class ControlButtonLayered
 			name: 'Background',
 			usage: ButtonGraphicsElementUsage.Automatic,
 			type: 'box',
+			pinnedProperties: getDefaultPinnedProperties('box'),
 			enabled: { value: true, isExpression: false },
 			opacity: { value: 100, isExpression: false },
 			x: { value: 0, isExpression: false },
@@ -88,6 +92,7 @@ export class ControlButtonLayered
 			name: 'Text',
 			usage: ButtonGraphicsElementUsage.Automatic,
 			type: 'text',
+			pinnedProperties: getDefaultPinnedProperties('text'),
 			enabled: { value: true, isExpression: false },
 			opacity: { value: 100, isExpression: false },
 			x: { value: 0, isExpression: false },
@@ -218,6 +223,14 @@ export class ControlButtonLayered
 
 	layeredStyleSetElementUsage(id: string, usage: ButtonGraphicsElementUsage): boolean {
 		return this.drawing.setElementUsage(id, usage)
+	}
+
+	layeredStyleSetElementPropertyPinned(id: string, property: string, pinned: boolean): boolean {
+		return this.drawing.setElementPropertyPinned(id, property, pinned)
+	}
+
+	layeredStyleResetPinnedProperties(): boolean {
+		return this.drawing.resetPinnedProperties()
 	}
 
 	layeredStyleGetElementById(id: string): SomeButtonGraphicsElement | undefined {
