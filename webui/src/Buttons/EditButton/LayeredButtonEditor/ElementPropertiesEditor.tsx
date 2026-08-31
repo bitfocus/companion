@@ -151,7 +151,6 @@ export const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 			elementProps={elementProps}
 			property={field.id}
 			fieldDefinition={field}
-			pinToggle={<PinPropertyToggle elementProps={elementProps} property={field.id} />}
 			label={field.label}
 			tooltip={field.tooltip}
 			description={field.description}

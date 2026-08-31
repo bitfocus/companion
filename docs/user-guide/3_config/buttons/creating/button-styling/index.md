@@ -122,9 +122,9 @@ Every element starts with a sensible set pinned: for a Text element that's the t
 out of the view entirely.
 
 Each group is headed by the element it came from, and collapses like the sections of the property
-panel do. The arrow at the end of the heading opens that element's full property panel — so a
-property that isn't pinned is one click away. The heading also tells you when an element is disabled
-or hidden, so you don't spend time editing something that isn't being drawn.
+panel do. The heading also tells you when an element is disabled or hidden, so you don't spend time
+editing something that isn't being drawn. To reach a property that isn't pinned, select that element
+in the list above.
 
 ### Pinning and unpinning
 
