@@ -80,21 +80,13 @@ Each row in the elements list has a few controls:
 
 ## Element properties
 
-Select an element to edit its properties.
-
-By default the panel is in **Simple** mode (the toggle sits in the bottom-left of the editor, and your
-choice is remembered between sessions). Simple mode shows just the handful of properties you change
-most often — for a Text element, for example, that's the text itself, its size, color and alignment —
-with a note at the bottom reminding you that _some fields are hidden in simple mode_. Turn **Simple**
-off to reveal the full set of properties.
-
-Simple mode trims the panel for the elements that have a lot of properties (Text, Image and Box); the
-other element types always show their full set.
+Select an element to edit its properties. If you only want the handful of properties you change most
+often, use [Pinned properties](#pinned-properties) below instead of selecting the element at all.
 
 ![Element property sections](./images/element-property-sections.png?raw=true)
 
-With **Simple** mode turned off, the properties are grouped into collapsible **sections** so the panel
-stays tidy. Every element (except the Canvas) shares two sections:
+The properties are grouped into collapsible **sections** so the panel stays tidy. Every element
+(except the Canvas) shares two sections:
 
 ### Layer
 
