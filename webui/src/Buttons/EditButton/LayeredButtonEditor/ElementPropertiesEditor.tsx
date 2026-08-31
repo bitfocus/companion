@@ -3,7 +3,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { Fragment, useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
-import { elementSimpleModeFields } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	colorFieldExpressionHint,
@@ -36,7 +35,6 @@ interface ElementPropertiesEditorProps {
 	elementProps: SomeButtonGraphicsElement
 	localVariablesStore: LocalVariablesStore
 	isPropertyOverridden: IsPropertyOverridden
-	simpleMode: boolean
 }
 
 export const ElementPropertiesEditor = observer(function ElementPropertiesEditor({
@@ -44,7 +42,6 @@ export const ElementPropertiesEditor = observer(function ElementPropertiesEditor
 	elementProps,
 	localVariablesStore,
 	isPropertyOverridden,
-	simpleMode,
 }: ElementPropertiesEditorProps) {
 	return (
 		<ElementPropertiesProvider
@@ -54,9 +51,9 @@ export const ElementPropertiesEditor = observer(function ElementPropertiesEditor
 			isPinnedView={false}
 		>
 			<Form row className="gap-2" onSubmit={PreventDefaultHandler}>
-				<ElementCommonProperties elementProps={elementProps} simpleMode={simpleMode} />
+				<ElementCommonProperties elementProps={elementProps} />
 
-				<ElementPropertiesEditorSchemaVersion elementProps={elementProps} simpleMode={simpleMode} />
+				<ElementPropertiesEditorSchemaVersion elementProps={elementProps} />
 			</Form>
 		</ElementPropertiesProvider>
 	)
@@ -64,21 +61,14 @@ export const ElementPropertiesEditor = observer(function ElementPropertiesEditor
 
 const ElementPropertiesEditorSchemaVersion = observer(function ElementPropertiesEditorSchemaVersion({
 	elementProps,
-	simpleMode,
 }: {
 	elementProps: SomeButtonGraphicsElement
-	simpleMode: boolean
 }) {
 	const { localVariablesStore } = useElementPropertiesContext()
 
 	const sectionCollapse = usePanelCollapseHelper(`layered-element-property-sections:${elementProps.type}`, null)
 
 	const schema = useElementSchemaSections(elementProps)
-
-	const simpleModeFieldIds: readonly string[] | undefined =
-		simpleMode && elementProps.type in elementSimpleModeFields
-			? elementSimpleModeFields[elementProps.type as keyof typeof elementSimpleModeFields]
-			: undefined
 
 	const sectionAccordion = usePanelCollapseAccordionProps(
 		sectionCollapse,
@@ -89,27 +79,20 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 		return <div>No schema found for element type: {elementProps.type}</div>
 	}
 
-	// Render flat for simple mode, or elements with only one section
-	if (simpleModeFieldIds || schema.length === 1) {
-		const flatFields = schema.flatMap((s) => s.fields)
-
+	// An element with a single section has nothing to gain from an accordion around it
+	if (schema.length === 1) {
 		return (
 			<>
-				{flatFields.map((field) => {
-					if (simpleModeFieldIds && !simpleModeFieldIds.includes(field.id)) return null
-					return (
+				{schema
+					.flatMap((s) => s.fields)
+					.map((field) => (
 						<SchemaFieldWrapper
 							key={field.id}
 							field={field}
 							elementProps={elementProps}
 							localVariablesStore={localVariablesStore}
 						/>
-					)
-				})}
-
-				{simpleModeFieldIds ? (
-					<div className="text-center text-muted mt-4 text-sm">Some fields are hidden in simple mode</div>
-				) : null}
+					))}
 			</>
 		)
 	}

@@ -1,15 +1,13 @@
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useEffect, useMemo, useRef, useState, type PropsWithChildren } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
 import type { LayeredButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { Button, ButtonGroup } from '~/Components/Button.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { LayeredStyleElementsProvider } from '~/Controls/Components/LayeredStyleElementsContext.js'
 import { useLocalVariablesStore, type LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
-import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { LocalVariablesEditor } from '../../../Controls/LocalVariablesEditor.js'
 import { ButtonEditorTabs, type ButtonEditorExtraTabs } from '../ButtonEditorTabs.js'
@@ -155,13 +153,6 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 }: LayeredButtonEditorStyleProps) {
 	const elementProps = styleStore.getSelectedElement()
 	const isPinnedViewSelected = styleStore.isPinnedViewSelected
-	const [simpleMode, setSimpleMode] = useLocalStorage('layeredEditor.simpleMode', true)
-
-	// The detail level only has anything to hide for an element with simple-mode fields, or one which shows
-	// the external usage field. It says nothing about the canvas, a group, or the pinned view (a filter of
-	// its own), so it stays out of the way for those.
-	const showDetailLevelToggle =
-		!isPinnedViewSelected && !!elementProps && elementProps.type !== 'canvas' && elementProps.type !== 'group'
 	const savedPanelLayout = useMemo(() => {
 		try {
 			return JSON.parse(localStorage.getItem('layeredEditor.panelSizes') ?? '') ?? undefined
@@ -191,30 +182,8 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 				</div>
 			</Panel>
 			<Separator className="button-layer-resize-handle">
-				<SeparatorInteractive hidden={!showDetailLevelToggle}>
-					<ButtonGroup aria-label="Property detail level" className="button-layer-mode-toggle">
-						<Button
-							size="sm"
-							className={simpleMode ? 'active' : undefined}
-							aria-pressed={simpleMode}
-							onClick={() => setSimpleMode(true)}
-							// pointerdown: claim the gesture before the separator starts a resize (click may be suppressed)
-							onPointerDown={() => setSimpleMode(true)}
-						>
-							Basic
-						</Button>
-						<Button
-							size="sm"
-							className={!simpleMode ? 'active' : undefined}
-							aria-pressed={!simpleMode}
-							onClick={() => setSimpleMode(false)}
-							onPointerDown={() => setSimpleMode(false)}
-							title="Show every property for the selected element, including the less commonly used ones"
-						>
-							All Properties
-						</Button>
-					</ButtonGroup>
-				</SeparatorInteractive>
+				{/* A grip, so the bar reads as something to drag rather than a gap between the panels */}
+				<span className="button-layer-resize-grip" />
 			</Separator>
 			<Panel id="bottom" className="button-layer-options" minSize="250px">
 				{isPinnedViewSelected ? (
@@ -230,7 +199,6 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 						elementProps={elementProps}
 						localVariablesStore={localVariablesStore}
 						isPropertyOverridden={styleStore.isPropertyOverridden}
-						simpleMode={simpleMode}
 					/>
 				) : (
 					<NonIdealState icon={faLayerGroup}>
@@ -241,27 +209,3 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 		</Group>
 	)
 })
-
-function SeparatorInteractive({ children, hidden }: PropsWithChildren<{ hidden: boolean }>): React.JSX.Element {
-	const ref = useRef<HTMLDivElement>(null)
-
-	useEffect(() => {
-		const root = ref.current
-		if (!root) return
-
-		const onPointerDown = (event: PointerEvent) => {
-			if (event.target instanceof Node && root.contains(event.target)) {
-				event.preventDefault()
-			}
-		}
-
-		window.addEventListener('pointerdown', onPointerDown, true)
-		return () => window.removeEventListener('pointerdown', onPointerDown, true)
-	}, [])
-
-	return (
-		<div ref={ref} className="button-layer-separator-interactive" data-separator-button>
-			{hidden ? null : children}
-		</div>
-	)
-}

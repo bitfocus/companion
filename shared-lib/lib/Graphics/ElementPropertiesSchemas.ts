@@ -828,35 +828,6 @@ export function getElementSchemaProperty(
 }
 
 /**
- * Fields to show for text elements when "simple mode" is enabled in the editor.
- */
-export const elementSimpleModeFields = {
-	text: [
-		//
-		'text',
-		'fontsize',
-		'fontsizeAllowShrink',
-		'color',
-		'halign',
-		'valign',
-	] satisfies ReadonlyArray<keyof ButtonGraphicsTextElement>,
-	image: [
-		//
-		'base64Image',
-		'halign',
-		'valign',
-	] satisfies ReadonlyArray<keyof ButtonGraphicsImageElement>,
-	box: [
-		//
-		'color',
-	] satisfies ReadonlyArray<keyof ButtonGraphicsBoxElement>,
-	gauge: [
-		//
-		'value',
-	] satisfies ReadonlyArray<keyof ButtonGraphicsGaugeElement>,
-} as const
-
-/**
  * The properties pinned by default on a newly created element of each type.
  *
  * These are what most users will ever see of the pinned view, so they matter far more than the ability to

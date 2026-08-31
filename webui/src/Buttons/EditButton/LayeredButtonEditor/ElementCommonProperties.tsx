@@ -16,10 +16,8 @@ import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 
 export const ElementCommonProperties = observer(function ElementCommonProperties({
 	elementProps,
-	simpleMode,
 }: {
 	elementProps: Readonly<SomeButtonGraphicsElement>
-	simpleMode: boolean
 }) {
 	const nameFieldId = useId()
 	const usageFieldId = useId()
@@ -41,7 +39,7 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 				</>
 			)}
 
-			{elementProps.type !== 'canvas' && elementProps.type !== 'group' && !simpleMode && (
+			{elementProps.type !== 'canvas' && elementProps.type !== 'group' && (
 				<>
 					<FormLabel htmlFor={usageFieldId} sm={4} column="sm">
 						External Usage

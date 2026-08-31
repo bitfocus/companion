@@ -83,7 +83,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	height: 28px;
+	height: 10px;
 	background-color: var(--color-surface-muted-hover);
 	cursor: row-resize;
 	flex-shrink: 0;
@@ -94,62 +94,24 @@
 		0 -1px 2px var(--color-shadow-4);
 	z-index: 1;
 
-	&:hover {
+	/* `active` is a drag in progress, `focus` a keyboard resize */
+	&:hover,
+	&[data-separator='active'],
+	&[data-separator='focus'] {
 		background-color: var(--color-resize-bar-bg-hover);
-	}
 
-	/* Keep pointer cursor on the toggle while the separator forces ns-resize on hover/drag */
-	&[data-separator='hover'],
-	&[data-separator='inactive'] {
-		[data-separator-button],
-		[data-separator-button] * {
-			cursor: pointer !important;
+		.button-layer-resize-grip {
+			background-color: var(--color-border-strong);
 		}
 	}
 
-	.button-layer-separator-interactive {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.button-layer-mode-toggle.button-group {
-		background: var(--color-mode-toggle-bg);
-		border: 1px solid var(--color-mode-toggle-border);
-		border-radius: 6px;
-		box-shadow: 0 1px 2px var(--color-shadow-6);
-		padding: 2px;
-		gap: 2px;
-
-		> .button {
-			min-width: 5.5rem;
-			padding-block: 0.15rem;
-			font-size: 0.8rem;
-			box-shadow: none;
-
-			border-radius: 4px;
-			border-start-start-radius: 4px;
-			border-end-start-radius: 4px;
-			border-start-end-radius: 4px;
-			border-end-end-radius: 4px;
-			border-inline-width: var(--btn-border-width);
-			border-inline-start-color: transparent;
-			border-inline-end-color: transparent;
-
-			--btn-color: var(--color-toolbar-fg);
-			--btn-bg: var(--color-surface);
-			--btn-border-color: transparent;
-			--btn-hover-color: var(--color-text-strong);
-			--btn-hover-bg: var(--color-toolbar-bg);
-			--btn-hover-border-color: transparent;
-			--btn-active-color: var(--color-on-dark);
-			--btn-active-bg: var(--color-primary);
-			--btn-active-border-color: var(--color-primary);
-
-			&.active {
-				box-shadow: 0 1px 2px color-mix(in srgb, var(--color-primary) 35%, transparent);
-			}
-		}
+	/* A short rounded bar in the middle: the least fussy way to say "drag me" */
+	.button-layer-resize-grip {
+		width: 2rem;
+		height: 3px;
+		border-radius: 2px;
+		background-color: var(--color-border-medium);
+		transition: background-color 0.15s ease-in-out;
 	}
 }
 
