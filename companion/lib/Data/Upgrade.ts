@@ -38,7 +38,7 @@ const allUpgrades = [
 	v13tov14, // v5.0 - split fontsize into size + allowShrink
 	v14tov15, // v5.0 - move surface never_lock to the surface group
 	v15tov16, // v5.0 - replace remove_topbar boolean with buttons_decoration enum
-	v16tov17, // v5.0 - give style elements their default pinned properties
+	v16tov17, // v5.1 - give style elements their default pinned properties
 ]
 export const targetVersion = allUpgrades.length + 1
 
