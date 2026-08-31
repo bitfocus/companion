@@ -51,6 +51,7 @@ export const ElementPropertiesEditor = observer(function ElementPropertiesEditor
 			controlId={controlId}
 			localVariablesStore={localVariablesStore}
 			isPropertyOverridden={isPropertyOverridden}
+			isPinnedView={false}
 		>
 			<Form row className="gap-2" onSubmit={PreventDefaultHandler}>
 				<ElementCommonProperties elementProps={elementProps} simpleMode={simpleMode} />

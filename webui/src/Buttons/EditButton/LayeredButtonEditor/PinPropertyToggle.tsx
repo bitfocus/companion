@@ -2,7 +2,7 @@ import { faThumbtack, faThumbtackSlash } from '@fortawesome/free-solid-svg-icons
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
@@ -10,9 +10,12 @@ import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 /**
  * Pins or unpins one property of an element, so it does (or no longer does) show in the button's pinned view.
  *
- * Only shown once its property row is hovered or the toggle is focused, in both the full panel and the
- * pinned view: a column of pins next to properties which are all pinned anyway is noise, and one that is
- * always there invites a click that then takes effort to undo.
+ * In an element's own panel a pinned property keeps its pin showing, so the panel says at a glance what is
+ * pinned; everything else only appears once its row is hovered or the toggle focused. The pinned view shows
+ * none of them at rest - everything there is pinned, so a column of pins is noise rather than information.
+ *
+ * The icon becomes a struck-through pin only while the toggle itself is hovered or focused, so a visible pin
+ * reads as "pinned" rather than as the unpin it is about to do.
  */
 export const PinPropertyToggle = observer(function PinPropertyToggle({
 	elementProps,
@@ -21,8 +24,10 @@ export const PinPropertyToggle = observer(function PinPropertyToggle({
 	elementProps: Readonly<SomeButtonGraphicsElement>
 	property: string
 }) {
-	const { controlId } = useElementPropertiesContext()
+	const { controlId, isPinnedView } = useElementPropertiesContext()
 	const setPinnedMutation = useMutationExt(trpc.controls.styles.setElementPropertyPinned.mutationOptions())
+
+	const [isTargeted, setIsTargeted] = useState(false)
 
 	// The canvas holds button-level properties, which are not pinnable
 	const isPinnable = elementProps.type !== 'canvas'
@@ -47,13 +52,18 @@ export const PinPropertyToggle = observer(function PinPropertyToggle({
 	return (
 		<button
 			type="button"
-			className={classNames('property-pin-toggle', { pinned: isPinned })}
+			// Only the element's own panel keeps a pinned property's pin on show
+			className={classNames('property-pin-toggle', { pinned: isPinned && !isPinnedView })}
 			onClick={togglePinned}
+			onPointerEnter={() => setIsTargeted(true)}
+			onPointerLeave={() => setIsTargeted(false)}
+			onFocus={() => setIsTargeted(true)}
+			onBlur={() => setIsTargeted(false)}
 			title={isPinned ? 'Unpin from the pinned view' : 'Pin to the pinned view'}
 			aria-pressed={isPinned}
 			aria-label={isPinned ? 'Unpin property' : 'Pin property'}
 		>
-			<FontAwesomeIcon icon={isPinned ? faThumbtackSlash : faThumbtack} />
+			<FontAwesomeIcon icon={isPinned && isTargeted ? faThumbtackSlash : faThumbtack} />
 		</button>
 	)
 })

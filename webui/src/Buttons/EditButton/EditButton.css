@@ -422,9 +422,9 @@
 	}
 
 	/* Pins a property into the pinned view. Out of sight until the property's label is hovered or the toggle
-	   is focused, whether or not the property is pinned: a column of pins beside properties which are all
-	   pinned anyway is noise, and a permanent one invites a click that is a chore to undo. Hidden with
-	   opacity so it still takes up its space and nothing shifts as it appears. */
+	   is focused, except for an already-pinned property in an element's own panel (`.pinned`), where it is
+	   worth seeing which properties are pinned. It is hidden with opacity rather than removed, so it keeps
+	   its space and nothing shifts as it appears. */
 	.property-pin-toggle {
 		border: none;
 		background: none;
@@ -436,12 +436,18 @@
 
 	.form-label:hover .property-pin-toggle,
 	.property-pin-toggle:hover,
-	.property-pin-toggle:focus-visible {
+	.property-pin-toggle:focus-visible,
+	.property-pin-toggle.pinned {
 		opacity: 1;
 	}
 
-	.property-pin-toggle:hover {
+	/* Solid enough to pick out from the faint pins of the properties which are not pinned */
+	.property-pin-toggle.pinned {
 		color: var(--color-icon);
+	}
+
+	.property-pin-toggle:hover {
+		color: var(--color-text-strong);
 	}
 
 	/* An element's section in the pinned view. The link through to its full property panel sits alongside the

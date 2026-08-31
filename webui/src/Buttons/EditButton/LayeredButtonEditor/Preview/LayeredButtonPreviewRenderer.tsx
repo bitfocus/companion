@@ -228,6 +228,9 @@ const ElementQuickActions = observer(function ElementQuickActions({
 	const bringToFront = useCallback(() => moveToZ(siblingCount - 1), [moveToZ, siblingCount])
 	const sendToBack = useCallback(() => moveToZ(1), [moveToZ])
 
+	// The canvas is pinned to the bottom of the stack and isn't a drawable layer, so it has no z-order to change
+	const canReorder = isTopLevel && selectedElement?.type !== 'canvas'
+
 	return (
 		<QuickActionsToolbar
 			onCenterHorizontal={centerHorizontal}
@@ -239,8 +242,8 @@ const ElementQuickActions = observer(function ElementQuickActions({
 			onToggleSnapEnabled={onToggleSnapEnabled}
 			onBringToFront={bringToFront}
 			onSendToBack={sendToBack}
-			canBringToFront={isTopLevel && indexInParent < siblingCount - 1}
-			canSendToBack={isTopLevel && indexInParent > 1}
+			canBringToFront={canReorder && indexInParent < siblingCount - 1}
+			canSendToBack={canReorder && indexInParent > 1}
 			boundsDisabled={boundsDisabled}
 			boundsDisabledReason={boundsDisabledReason}
 		/>
