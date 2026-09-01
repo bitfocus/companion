@@ -195,12 +195,22 @@ export class LayeredStyleStore {
 	public updateOverridesData = action((feedbacks: SomeEntityModel[]): void => {
 		const newOverrideIds = new Set<string>()
 
-		for (const feedback of feedbacks) {
-			if (feedback.type !== EntityModelType.Feedback) continue
-			for (const override of feedback.styleOverrides || []) {
-				newOverrideIds.add(`${override.elementId};${override.elementProperty}`)
+		// Nested too: a feedback inside a 'conditionalise' block overrides its properties just the same, so a
+		// property it targets is as overridden as one targeted from the top level.
+		const collect = (entities: readonly SomeEntityModel[]) => {
+			for (const entity of entities) {
+				if (entity.type !== EntityModelType.Feedback) continue
+
+				for (const override of entity.styleOverrides || []) {
+					newOverrideIds.add(`${override.elementId};${override.elementProperty}`)
+				}
+
+				for (const children of Object.values(entity.children || {})) {
+					if (children) collect(children)
+				}
 			}
 		}
+		collect(feedbacks)
 
 		this.#feedbackOverrideIds.replace(newOverrideIds)
 	})
