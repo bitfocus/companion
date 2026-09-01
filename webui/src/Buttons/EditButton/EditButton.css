@@ -259,6 +259,8 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 0;
+		/* Matches the preview, so both columns stop clear of the resize bar rather than against it */
+		margin-bottom: 0.75rem;
 
 		/* Only the rows scroll; the heading is a static sibling above them */
 		> .heading {
