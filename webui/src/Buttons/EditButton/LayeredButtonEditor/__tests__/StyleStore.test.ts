@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, test } from 'vitest'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { LayeredStyleStore, PINNED_PROPERTIES_ENTRY_ID } from '../StyleStore.js'
+import { isElementDisabled, LayeredStyleStore, PINNED_PROPERTIES_ENTRY_ID } from '../StyleStore.js'
 
 // jsdom runs on an opaque origin here, so window.localStorage is undefined. Install a minimal
 // in-memory Storage so the store's persistence can be exercised directly.
@@ -52,9 +52,21 @@ function el(
 	} as unknown as SomeButtonGraphicsElement
 }
 
-// Minimal feedback stand-in for updateOverridesData - it only reads type/styleOverrides.
-function feedback(styleOverrides: Array<{ elementId: string; elementProperty: string }>): SomeEntityModel {
-	return { type: EntityModelType.Feedback, styleOverrides } as unknown as SomeEntityModel
+// An element whose `enabled` is an expression, which cannot be resolved here
+function elExpressionEnabled(id: string, type: SomeButtonGraphicsElement['type']): SomeButtonGraphicsElement {
+	return {
+		id,
+		type,
+		enabled: { isExpression: true, value: '$(internal:time_s)' },
+	} as unknown as SomeButtonGraphicsElement
+}
+
+// Minimal feedback stand-in for updateOverridesData - it only reads type/styleOverrides/children.
+function feedback(
+	styleOverrides: Array<{ elementId: string; elementProperty: string }>,
+	children?: Record<string, SomeEntityModel[]>
+): SomeEntityModel {
+	return { type: EntityModelType.Feedback, styleOverrides, children } as unknown as SomeEntityModel
 }
 function action(): SomeEntityModel {
 	return { type: EntityModelType.Action } as unknown as SomeEntityModel
@@ -332,6 +344,226 @@ describe('LayeredStyleStore feedback style overrides', () => {
 	test('handles feedbacks without styleOverrides', () => {
 		const store = new LayeredStyleStore()
 		store.updateOverridesData([feedback([]), { type: EntityModelType.Feedback } as unknown as SomeEntityModel])
+		expect(store.isPropertyOverridden('text0', 'color')).toBe(false)
+	})
+})
+
+describe('LayeredStyleStore selectableElementIds', () => {
+	test('collects every element including the canvas and nested children', () => {
+		const store = new LayeredStyleStore()
+		store.updateData([canvas, el('box0', 'box'), el('grp', 'group', [el('inner', 'text'), el('deep', 'group', [])])])
+		expect(store.selectableElementIds).toEqual(new Set(['canvas', 'box0', 'grp', 'inner', 'deep']))
+	})
+
+	test('is empty for a button with no elements', () => {
+		const store = new LayeredStyleStore()
+		store.updateData([])
+		expect(store.selectableElementIds.size).toBe(0)
+	})
+
+	test('follows the data it is given', () => {
+		const store = new LayeredStyleStore()
+		store.updateData(defaultLayers)
+		store.updateData([canvas, el('only', 'image')])
+		expect(store.selectableElementIds).toEqual(new Set(['canvas', 'only']))
+	})
+})
+
+describe('isElementDisabled', () => {
+	test('an element switched off is disabled', () => {
+		expect(isElementDisabled(el('a', 'text', undefined, false))).toBe(true)
+	})
+
+	test('an element switched on is not', () => {
+		expect(isElementDisabled(el('a', 'text'))).toBe(false)
+	})
+
+	test('an expression cannot be resolved here, so it counts as on', () => {
+		expect(isElementDisabled(elExpressionEnabled('a', 'text'))).toBe(false)
+	})
+
+	test('the canvas has no enabled state and is never disabled', () => {
+		expect(isElementDisabled(canvas)).toBe(false)
+	})
+})
+
+describe('LayeredStyleStore visualElements nesting', () => {
+	test('carries a disabled ancestor down through several levels', () => {
+		const store = new LayeredStyleStore()
+		store.updateData([
+			canvas,
+			el('outer', 'group', [el('mid', 'group', [el('leaf', 'text')])], false), // outer is switched off
+		])
+		expect(store.visualElements.map((entry) => [entry.element.id, entry.ancestorDisabled])).toEqual([
+			['outer', false], // its own disabled state is not an *ancestor's*
+			['mid', true],
+			['leaf', true],
+		])
+	})
+
+	test('a disabled child does not mark its own siblings or itself', () => {
+		const store = new LayeredStyleStore()
+		store.updateData([canvas, el('grp', 'group', [el('off', 'text', undefined, false), el('on', 'text')])])
+		expect(store.visualElements.map((entry) => [entry.element.id, entry.ancestorDisabled])).toEqual([
+			['grp', false],
+			['on', false], // children render top-first, mirroring the layer list
+			['off', false],
+		])
+	})
+
+	test('is empty when the button has only the canvas', () => {
+		const store = new LayeredStyleStore()
+		store.updateData([canvas])
+		expect(store.visualElements).toEqual([])
+	})
+})
+
+describe('LayeredStyleStore selection persistence edge cases', () => {
+	test('selecting an unknown id leaves the remembered reference untouched', () => {
+		const store = new LayeredStyleStore()
+		store.updateData(defaultLayers)
+		store.setSelectedEntryId('box0')
+		store.setSelectedEntryId('nope')
+
+		expect(JSON.parse(window.localStorage.getItem(STORAGE_KEY)!)).toEqual({ type: 'box', ordinal: 0 })
+	})
+
+	test('clearing the selection does not write a reference', () => {
+		const store = new LayeredStyleStore()
+		store.updateData(defaultLayers)
+		store.setSelectedEntryId(null)
+		expect(window.localStorage.getItem(STORAGE_KEY)).toBe(null)
+	})
+
+	test('the canvas is remembered without an ordinal of its own', () => {
+		const store = new LayeredStyleStore()
+		store.updateData(defaultLayers)
+		store.setSelectedEntryId('canvas')
+		expect(JSON.parse(window.localStorage.getItem(STORAGE_KEY)!)).toEqual({ type: 'canvas', ordinal: 0 })
+	})
+
+	test('an element inside a group is remembered by its place in the visual order', () => {
+		// visual top-first: [imgTop (image #1), grp, imgInner (image #2)]
+		const grouped = [canvas, el('grp', 'group', [el('imgInner', 'image')]), el('imgTop', 'image')]
+		const store = new LayeredStyleStore()
+		store.updateData(grouped)
+		store.setSelectedEntryId('imgInner')
+		expect(JSON.parse(window.localStorage.getItem(STORAGE_KEY)!)).toEqual({ type: 'image', ordinal: 1 })
+	})
+
+	test('a remembered canvas falls back to the pinned view on a button without one', () => {
+		window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ type: 'canvas', ordinal: 0 }))
+		const store = new LayeredStyleStore()
+		store.updateData([el('text0', 'text')]) // no canvas
+		expect(store.selectedEntryId).toBe(PINNED_PROPERTIES_ENTRY_ID)
+	})
+
+	test('a stored ordinal of 0 selects the topmost of that type', () => {
+		window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ type: 'image', ordinal: 0 }))
+		const store = new LayeredStyleStore()
+		store.updateData([canvas, el('img-a', 'image'), el('img-b', 'image')])
+		expect(store.selectedElementId).toBe('img-b') // data order is bottom-first, so img-b is on top
+	})
+
+	test.each([
+		['a value of the wrong shape', JSON.stringify({ type: 5, ordinal: 0 })],
+		['a negative ordinal', JSON.stringify({ type: 'text', ordinal: -1 })],
+		['a fractional ordinal', JSON.stringify({ type: 'text', ordinal: 1.5 })],
+		['a missing ordinal', JSON.stringify({ type: 'text' })],
+		['an array', JSON.stringify(['text', 0])],
+		['a bare null', JSON.stringify(null)],
+	])('ignores %s and falls back to the pinned view', (_label, stored) => {
+		window.localStorage.setItem(STORAGE_KEY, stored)
+		const store = new LayeredStyleStore()
+		store.updateData(defaultLayers)
+		expect(store.selectedEntryId).toBe(PINNED_PROPERTIES_ENTRY_ID)
+	})
+
+	test('re-seeds from the remembered reference when the selected element goes away', () => {
+		const store = new LayeredStyleStore()
+		store.updateData([canvas, el('img-a', 'image'), el('box0', 'box')])
+		store.setSelectedEntryId('img-a') // remembers { image, 0 }
+
+		// That image is gone on the next update, so the reference picks the image which replaced it
+		store.updateData([canvas, el('img-b', 'image')])
+		expect(store.selectedElementId).toBe('img-b')
+	})
+
+	test('re-seeds to the pinned view when nothing matches the remembered reference', () => {
+		const store = new LayeredStyleStore()
+		store.updateData([canvas, el('img-a', 'image'), el('box0', 'box')])
+		store.setSelectedEntryId('box0') // the last selection is the one remembered
+
+		store.updateData([canvas, el('img-b', 'image')]) // no box on this button
+		expect(store.selectedEntryId).toBe(PINNED_PROPERTIES_ENTRY_ID)
+	})
+})
+
+describe('LayeredStyleStore selection of nested elements', () => {
+	const grouped = [canvas, el('grp', 'group', [el('inner', 'text')])]
+
+	test('a nested element can be selected and read back', () => {
+		const store = new LayeredStyleStore()
+		store.updateData(grouped)
+		store.setSelectedEntryId('inner')
+		expect(store.getSelectedElement()?.id).toBe('inner')
+	})
+
+	test('a nested selection survives a data update that keeps it', () => {
+		const store = new LayeredStyleStore()
+		store.updateData(grouped)
+		store.setSelectedEntryId('inner')
+		store.updateData([canvas, el('grp', 'group', [el('inner', 'text'), el('other', 'box')])])
+		expect(store.selectedElementId).toBe('inner')
+	})
+})
+
+describe('LayeredStyleStore hiddenElements', () => {
+	test('is a plain copy: mutating it does not change the store', () => {
+		const store = new LayeredStyleStore()
+		store.setElementVisibility('text0', false)
+
+		const hidden = store.hiddenElements
+		hidden.add('box0')
+
+		expect(store.isElementVisible('box0')).toBe(true)
+		expect(store.hiddenElements).toEqual(new Set(['text0']))
+	})
+
+	test('visibility is remembered across data updates', () => {
+		const store = new LayeredStyleStore()
+		store.updateData(defaultLayers)
+		store.setElementVisibility('text0', false)
+		store.updateData(defaultLayers)
+		expect(store.isElementVisible('text0')).toBe(false)
+	})
+})
+
+describe('LayeredStyleStore feedback overrides from nested feedbacks', () => {
+	test('marks properties overridden by a feedback nested in another', () => {
+		const store = new LayeredStyleStore()
+		store.updateOverridesData([
+			feedback([{ elementId: 'text0', elementProperty: 'color' }], {
+				feedbacks: [feedback([{ elementId: 'box0', elementProperty: 'color' }])],
+			}),
+		])
+		expect(store.isPropertyOverridden('text0', 'color')).toBe(true)
+		expect(store.isPropertyOverridden('box0', 'color')).toBe(true)
+	})
+
+	test('descends through several levels of nesting', () => {
+		const store = new LayeredStyleStore()
+		store.updateOverridesData([
+			feedback([], {
+				feedbacks: [feedback([], { feedbacks: [feedback([{ elementId: 'text0', elementProperty: 'text' }])] })],
+			}),
+		])
+		expect(store.isPropertyOverridden('text0', 'text')).toBe(true)
+	})
+
+	test('ignores non-feedback children', () => {
+		const store = new LayeredStyleStore()
+		store.updateOverridesData([feedback([], { children: [action()] })])
 		expect(store.isPropertyOverridden('text0', 'color')).toBe(false)
 	})
 })
