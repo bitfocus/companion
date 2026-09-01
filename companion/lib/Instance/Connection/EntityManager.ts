@@ -17,6 +17,12 @@ import LogController, { type Logger } from '../../Log/Controller.js'
 
 const MAX_UPDATE_PER_BATCH = 50 // Arbitrary limit to avoid sending too much data in one go
 
+// The maximum number of update/upgrade IPC batches to have in flight to the module at once.
+// Each IPC call has its own timeout that starts ticking when it is sent, so firing every batch at
+// once (as a large import does) makes the later batches time out while they wait their turn. Limiting
+// the concurrency spreads those timers out and keeps the module from being flooded.
+const MAX_INFLIGHT_BATCHES = 5
+
 enum EntityState {
 	UNLOADED = 'UNLOADED',
 	UPGRADING = 'UPGRADING',
@@ -77,6 +83,11 @@ export class ConnectionEntityManager {
 	// Before the connection is ready, we need to not send any updates
 	#ready = false
 	#currentUpgradeIndex = 0
+
+	// Queue of update/upgrade batches waiting to be sent, and the number currently in flight.
+	// This bounds how many IPC calls are outstanding at once, see MAX_INFLIGHT_BATCHES.
+	readonly #batchQueue: Array<() => Promise<void>> = []
+	#inflightBatches = 0
 
 	constructor(adapter: EntityManagerAdapter, controlsStore: IControlStore, connectionId: string) {
 		this.#logger = LogController.createLogger(`Instance/Connection/EntityManager/${connectionId}`)
@@ -262,17 +273,13 @@ export class ConnectionEntityManager {
 				// We do this to avoid sending too much data in one go, which can cause issues with IPC
 				// The exact limits here are somewhat arbitrary, but should be sufficient for most use cases
 				if (updateActionsPayload.size > MAX_UPDATE_PER_BATCH) {
-					this.#adapter.updateActions(updateActionsPayload).catch((e) => {
-						this.#logger.error('Error sending updateActions', e)
-					})
+					this.#queueUpdateActionsBatch(updateActionsPayload)
 
 					// Start a new batch
 					updateActionsPayload = new Map()
 				}
 				if (updateFeedbacksPayload.size > MAX_UPDATE_PER_BATCH) {
-					this.#adapter.updateFeedbacks(updateFeedbacksPayload).catch((e) => {
-						this.#logger.error('Error sending updateFeedbacks', e)
-					})
+					this.#queueUpdateFeedbacksBatch(updateFeedbacksPayload)
 
 					// Start a new batch
 					updateFeedbacksPayload = new Map()
@@ -281,14 +288,10 @@ export class ConnectionEntityManager {
 
 			// Start by sending the simple payloads
 			if (updateActionsPayload.size > 0) {
-				this.#adapter.updateActions(updateActionsPayload).catch((e) => {
-					this.#logger.error('Error sending updateActions', e)
-				})
+				this.#queueUpdateActionsBatch(updateActionsPayload)
 			}
 			if (updateFeedbacksPayload.size > 0) {
-				this.#adapter.updateFeedbacks(updateFeedbacksPayload).catch((e) => {
-					this.#logger.error('Error sending updateFeedbacks', e)
-				})
+				this.#queueUpdateFeedbacksBatch(updateFeedbacksPayload)
 			}
 
 			// Now we need to send the upgrades
@@ -307,35 +310,74 @@ export class ConnectionEntityManager {
 		}
 	)
 
+	/**
+	 * Add a batch to the send queue, and start it if there is capacity.
+	 * This bounds the number of IPC calls in flight at once, so that the per-call timeouts don't all
+	 * start ticking simultaneously when a large number of entities is processed in one go.
+	 */
+	#queueBatch(fn: () => Promise<void>): void {
+		this.#batchQueue.push(fn)
+		this.#pumpBatchQueue()
+	}
+	#pumpBatchQueue(): void {
+		while (this.#inflightBatches < MAX_INFLIGHT_BATCHES && this.#batchQueue.length > 0) {
+			const fn = this.#batchQueue.shift()!
+			this.#inflightBatches++
+			void fn().finally(() => {
+				this.#inflightBatches--
+				this.#pumpBatchQueue()
+			})
+		}
+	}
+
+	#queueUpdateActionsBatch(updateActionsPayload: Map<string, EntityManagerActionEntity | null>): void {
+		this.#queueBatch(async () =>
+			this.#adapter.updateActions(updateActionsPayload).catch((e) => {
+				this.#logger.error('Error sending updateActions', e)
+			})
+		)
+	}
+	#queueUpdateFeedbacksBatch(updateFeedbacksPayload: Map<string, EntityManagerFeedbackEntity | null>): void {
+		this.#queueBatch(async () =>
+			this.#adapter.updateFeedbacks(updateFeedbacksPayload).catch((e) => {
+				this.#logger.error('Error sending updateFeedbacks', e)
+			})
+		)
+	}
+
 	#sendUpgradeActionsBatch(
 		entityIdsInThisBatch: ReadonlyMap<string, string>,
 		upgradeActions: Omit<EntityManagerActionEntity, 'parsedOptions'>[]
 	): void {
-		this.#adapter
-			.upgradeActions(upgradeActions, this.#currentUpgradeIndex)
-			.then((upgradedEntities) => {
-				this.#upgradeBatchResolve(entityIdsInThisBatch, upgradedEntities)
-			})
-			.catch((e) => {
-				this.#logger.error('Error sending upgradeActions', e)
+		this.#queueBatch(async () =>
+			this.#adapter
+				.upgradeActions(upgradeActions, this.#currentUpgradeIndex)
+				.then((upgradedEntities) => {
+					this.#upgradeBatchResolve(entityIdsInThisBatch, upgradedEntities)
+				})
+				.catch((e) => {
+					this.#logger.error('Error sending upgradeActions', e)
 
-				this.#upgradeBatchRetry(entityIdsInThisBatch)
-			})
+					this.#upgradeBatchRetry(entityIdsInThisBatch)
+				})
+		)
 	}
 	#sendUpgradeFeedbacksBatch(
 		entityIdsInThisBatch: ReadonlyMap<string, string>,
 		upgradeFeedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[]
 	): void {
-		this.#adapter
-			.upgradeFeedbacks(upgradeFeedbacks, this.#currentUpgradeIndex)
-			.then((upgradedEntities) => {
-				this.#upgradeBatchResolve(entityIdsInThisBatch, upgradedEntities)
-			})
-			.catch((e) => {
-				this.#logger.error('Error sending upgradeFeedbacks', e)
+		this.#queueBatch(async () =>
+			this.#adapter
+				.upgradeFeedbacks(upgradeFeedbacks, this.#currentUpgradeIndex)
+				.then((upgradedEntities) => {
+					this.#upgradeBatchResolve(entityIdsInThisBatch, upgradedEntities)
+				})
+				.catch((e) => {
+					this.#logger.error('Error sending upgradeFeedbacks', e)
 
-				this.#upgradeBatchRetry(entityIdsInThisBatch)
-			})
+					this.#upgradeBatchRetry(entityIdsInThisBatch)
+				})
+		)
 	}
 
 	#upgradeBatchResolve(
@@ -446,6 +488,7 @@ export class ConnectionEntityManager {
 	 */
 	destroy(): void {
 		this.#debounceProcessPending.cancel()
+		this.#batchQueue.length = 0
 		this.#entities.clear()
 		this.#ready = false
 	}

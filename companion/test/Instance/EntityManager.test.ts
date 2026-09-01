@@ -1231,6 +1231,60 @@ describe('InstanceEntityManager', () => {
 				parsedOptions: { index: 'value-0' },
 			} satisfies EntityManagerFeedbackEntity)
 		})
+
+		it('should limit the number of update batches in flight at once', async () => {
+			// Make updateActions hang so that batches stay in flight until we release them
+			const releases: Array<() => void> = []
+			mockAdapter.updateActions.mockImplementation(
+				async () =>
+					new Promise<void>((resolve) => {
+						releases.push(resolve)
+					})
+			)
+
+			entityManager.start(5)
+
+			// Enough actions to require more than the in-flight limit of batches (batch size is 50)
+			const entityCount = 350
+			for (let i = 0; i < entityCount; i++) {
+				const mockEntity = {
+					id: `entity-${i}`,
+					type: EntityModelType.Action,
+					definitionId: `def-${i}`,
+					upgradeIndex: 5,
+					asEntityModel: vi.fn().mockReturnValue({
+						id: `entity-${i}`,
+						type: EntityModelType.Action,
+						definitionId: `def-${i}`,
+						connectionId: 'connection-1',
+						options: {},
+						upgradeIndex: 5,
+					}),
+					getEntityDefinition: vi.fn().mockReturnValue({
+						hasLifecycleFunctions: true,
+						options: [],
+						optionsToIgnoreForSubscribe: [],
+					}),
+				}
+				entityManager.trackEntity(mockEntity as any, `control-${i}`)
+			}
+
+			vi.runAllTimers()
+
+			// Only the in-flight limit worth of batches should have been sent so far
+			expect(mockAdapter.updateActions).toHaveBeenCalledTimes(5)
+
+			// Release the in-flight batches (and let subsequently-started ones resolve immediately),
+			// which should drain the rest of the queue
+			mockAdapter.updateActions.mockResolvedValue(undefined)
+			releases.forEach((release) => release())
+			await vi.runAllTimersAsync()
+
+			// All batches should have been sent, and it must have taken more than one round
+			const totalEntitiesSent = mockAdapter.updateActions.mock.calls.reduce((sum, [payload]) => sum + payload.size, 0)
+			expect(mockAdapter.updateActions.mock.calls.length).toBeGreaterThan(5)
+			expect(totalEntitiesSent).toBe(entityCount)
+		})
 	})
 
 	describe('Race Conditions', () => {
