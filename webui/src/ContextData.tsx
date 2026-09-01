@@ -1,5 +1,6 @@
 import { observable } from 'mobx'
 import { useMemo, useRef } from 'react'
+import type { ImportExportTask } from '@companion-app/shared/Model/ImportExport.js'
 import { NotificationsManager, type NotificationsManagerRef } from '~/Components/Notifications.js'
 import { CompositeElementDefinitionsStore } from '~/Stores/CompositeElementDefinitionsStore.js'
 import { ConnectionsStore } from '~/Stores/ConnectionsStore.js'
@@ -24,6 +25,7 @@ import { useEntityDefinitionsSubscription } from './Hooks/useEntityDefinitionsSu
 import { useEventDefinitions } from './Hooks/useEventDefinitions.js'
 import { useExpressionVariablesListSubscription } from './Hooks/useExpressionVariablesListSubscription.js'
 import { useImageLibrarySubscription } from './Hooks/useImageLibrarySubscription.js'
+import { useImportTaskStatusSubscription } from './Hooks/useImportTaskStatusSubscription.js'
 import { useInstanceStatusesSubscription } from './Hooks/useInstanceStatusesSubscription.js'
 import { useModuleInfoSubscription } from './Hooks/useModuleInfoSubscription.js'
 import { useModuleStoreListSubscription } from './Hooks/useModuleStoreListSubscription.js'
@@ -98,6 +100,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			moduleStoreRefreshProgress: observable.map(),
 
+			importTaskStatus: observable.box<ImportExportTask | null>(null, { deep: false }),
+
 			wizardOpen: observable.box(false),
 
 			viewControl: new ViewControlStore(),
@@ -167,6 +171,9 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		rootStore.compositeElementDefinitions
 	)
 	const activeLearnRequestsReady = useActiveLearnRequests(rootStore.activeLearns)
+
+	// Drives the shared import/reset task status; not part of initial loading, so not in `steps`
+	useImportTaskStatusSubscription(rootStore.importTaskStatus)
 
 	const steps: boolean[] = [
 		moduleInfoReady,

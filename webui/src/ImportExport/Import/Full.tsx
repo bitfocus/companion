@@ -10,6 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { createFormHook, createFormHookContexts, formOptions } from '@tanstack/react-form'
+import { when } from 'mobx'
 import { useCallback, useContext, useState } from 'react'
 import type {
 	ClientImportObject,
@@ -167,7 +168,7 @@ interface FullImportTabProps {
 }
 
 function FullImportTab({ snapshot }: FullImportTabProps) {
-	const { notifier } = useContext(RootAppStoreContext)
+	const { notifier, importTaskStatus } = useContext(RootAppStoreContext)
 
 	const importFullMutation = useMutationExt(trpc.importExport.importFull.mutationOptions())
 
@@ -178,10 +179,39 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 			const submitConfig = sanitiseSelection(value, snapshot, fullReset)
 
 			try {
-				await importFullMutation // TODO: 60s timeout?
-					.mutateAsync({
-						config: submitConfig,
-					})
+				const { runId } = await importFullMutation.mutateAsync({
+					config: submitConfig,
+				})
+
+				// The import runs as a background task on the server; track it via the shared task status
+				// rather than holding the RPC open. First wait (bounded) for the run to appear - the server
+				// sets it before returning the runId, so this only covers subscription propagation; if it
+				// never shows up, the task didn't start as expected.
+				try {
+					await when(() => importTaskStatus.get()?.runId === runId, { timeout: 10000 })
+				} catch {
+					notifier.show(`Import failed`, `The import did not start as expected. Please reload and try again.`, 10000)
+					return
+				}
+
+				// Then wait (unbounded - a large import legitimately takes a while) for it to complete. The
+				// run is alive as long as it is the current task; resolve when it completes, or bail if it
+				// is replaced/disappears (e.g. the server restarted), reloading to re-sync in that case.
+				await when(() => {
+					const task = importTaskStatus.get()
+					return task?.runId !== runId || task.status === 'completed'
+				})
+
+				const task = importTaskStatus.get()
+				if (!task || task.runId !== runId || task.status !== 'completed') {
+					console.log('lost track of import run, reloading to re-sync')
+					window.location.reload()
+					return
+				}
+				if (task.error) {
+					notifier.show(`Import failed`, `Full import failed with: "${task.error}"`, 10000)
+					return
+				}
 
 				// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
 				window.location.reload()

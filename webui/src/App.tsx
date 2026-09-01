@@ -2,7 +2,6 @@ import { DragDropProvider } from '@dnd-kit/react'
 import './loading.css'
 import './App.css'
 import { Outlet } from '@tanstack/react-router'
-import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { Suspense, useCallback, useContext, useEffect, useState } from 'react'
 import { useIdleTimer } from 'react-idle-timer'
@@ -24,7 +23,6 @@ import { PRIMARY_COLOR } from './Resources/Constants.js'
 import { MyErrorBoundary } from './Resources/Error.js'
 import { MonacoLoader } from './Resources/MonacoLoader.js'
 import { SortableHysteresis } from './Resources/SortableHysteresis.js'
-import { trpc } from './Resources/TRPC.js'
 import { shouldAutoOpenWizard } from './Wizard/Constants.js'
 import { WizardModal } from './Wizard/index.js'
 
@@ -42,22 +40,6 @@ export default function App(): React.JSX.Element {
 			window.location.reload()
 		}
 	}, [shouldReload])
-
-	const [currentImportTask, setCurrentImportTask] = useState<'reset' | 'import' | null>(null)
-	useSubscription(
-		trpc.importExport.importExportTaskStatus.subscriptionOptions(undefined, {
-			onStarted: () => {
-				setCurrentImportTask(null)
-			},
-			onData: (data) => {
-				setCurrentImportTask(data)
-			},
-			onError: (error) => {
-				console.error('Error in importExportTaskStatus subscription:', error)
-				setCurrentImportTask(null)
-			},
-		})
-	)
 
 	return (
 		<ContextData>
@@ -77,16 +59,7 @@ export default function App(): React.JSX.Element {
 							</Grid.Col>
 						</Grid.Row>
 					</div>
-					<div id="current-import-container" className={!wasConnected && currentImportTask ? 'show-error' : ''}>
-						<Grid.Row>
-							<Grid.Col md={{ span: 6, offset: 3 }}>
-								<div className="clearfix">
-									<h4 className="pt-4">Stand by, the config is being updated!</h4>
-									{/* <p className="text-muted">It seems that we have lost connection to the companion app.</p> */}
-								</div>
-							</Grid.Col>
-						</Grid.Row>
-					</div>
+					<ImportTaskOverlay wasConnected={wasConnected} />
 					<Suspense
 						fallback={
 							<Grid.Row className={'loading'}>
@@ -119,6 +92,26 @@ export default function App(): React.JSX.Element {
 		</ContextData>
 	)
 }
+
+// Reads the shared import/reset task status (driven by useImportTaskStatusSubscription) and shows the
+// blocking overlay on still-connected clients while a task runs. A dropped client sees the
+// disconnect screen instead, and reloads on reconnect.
+const ImportTaskOverlay = observer(function ImportTaskOverlay({ wasConnected }: { wasConnected: boolean }) {
+	const { importTaskStatus } = useContext(RootAppStoreContext)
+	const taskRunning = importTaskStatus.get()?.status === 'running'
+
+	return (
+		<div id="current-import-container" className={!wasConnected && taskRunning ? 'show-error' : ''}>
+			<Grid.Row>
+				<Grid.Col md={{ span: 6, offset: 3 }}>
+					<div className="clearfix">
+						<h4 className="pt-4">Stand by, the config is being updated!</h4>
+					</div>
+				</Grid.Col>
+			</Grid.Row>
+		</div>
+	)
+})
 
 interface AppMainProps {
 	connected: boolean

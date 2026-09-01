@@ -1,5 +1,6 @@
 import type { IObservableValue, ObservableMap, ObservableSet } from 'mobx'
 import { createContext } from 'react'
+import type { ImportExportTask } from '@companion-app/shared/Model/ImportExport.js'
 import type { NotificationsManagerRef } from '~/Components/Notifications.js'
 import type { HelpModalRef } from '~/Instances/HelpModal.js'
 import type { WhatsNewModalRef } from '~/WhatsNewModal/WhatsNew.js'
@@ -51,6 +52,9 @@ export interface RootAppStore {
 	readonly imageLibrary: ImageLibraryStore
 
 	readonly moduleStoreRefreshProgress: ObservableMap<string | null, number>
+
+	/** The current or most-recent import/reset task, driven by a single subscription (see useImportTaskStatusSubscription) */
+	readonly importTaskStatus: IObservableValue<ImportExportTask | null>
 
 	/**
 	 * The setup wizard modal's open state. Set to `true` to open it; the modal sets it back to `false` on close.
