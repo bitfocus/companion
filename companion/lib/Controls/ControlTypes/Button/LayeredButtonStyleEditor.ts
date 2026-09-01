@@ -173,13 +173,12 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 		// The canvas holds button-level properties, which are out of scope for pinning
 		if (element.type === 'canvas') return false
 
-		const currentIndex = element.pinnedProperties.indexOf(property)
+		if (element.pinnedProperties.includes(property) === pinned) return false // Already in the wanted state
+
 		if (pinned) {
-			if (currentIndex !== -1) return false
 			element.pinnedProperties.push(property)
 		} else {
-			if (currentIndex === -1) return false
-			element.pinnedProperties.splice(currentIndex, 1)
+			element.pinnedProperties = element.pinnedProperties.filter((pinnedProperty) => pinnedProperty !== property)
 		}
 
 		// Pins are editor-only metadata, so nothing needs redrawing
