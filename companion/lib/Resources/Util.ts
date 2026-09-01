@@ -90,6 +90,14 @@ export const delay = async (milliseconds: number): Promise<void> => {
 	return new Promise((resolve) => setTimeout(resolve, milliseconds || 0))
 }
 
+/**
+ * Yield control back to the event loop, allowing queued I/O (IPC responses, websocket keepalive, ...)
+ * to be processed. Use this to break up long synchronous bursts of work so they don't block the loop.
+ */
+export const yieldToEventLoop = async (): Promise<void> => {
+	return new Promise((resolve) => setImmediate(resolve))
+}
+
 export const getTimestamp = (): string => {
 	const d = new Date()
 	const year = d.getFullYear().toString()

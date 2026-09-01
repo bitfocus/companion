@@ -23,6 +23,7 @@ import type { InstanceController } from '../Instance/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
 import LogController from '../Log/Controller.js'
 import type { PageController } from '../Page/Controller.js'
+import { yieldToEventLoop } from '../Resources/Util.js'
 import { VisitorReferencesUpdater } from '../Resources/Visitors/ReferencesUpdater.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
@@ -66,12 +67,12 @@ export class ImportController {
 		this.#variablesController = variablesController
 	}
 
-	importSinglePage(
+	async importSinglePage(
 		instances: ExportInstancesv6 | undefined,
 		connectionIdRemapping: Record<string, string | undefined>,
 		pageInfo: ExportPageContentv6,
 		topage: number
-	): ConnectionRemappings {
+	): Promise<ConnectionRemappings> {
 		// Setup the new instances
 		const instanceIdMap = this.#importInstances(instances, connectionIdRemapping)
 
@@ -82,7 +83,7 @@ export class ImportController {
 		}
 		this.#graphicsController.clearAllForPage(topage)
 
-		this.#performPageImport(pageInfo, topage, instanceIdMap, undefined)
+		await this.#performPageImport(pageInfo, topage, instanceIdMap, undefined)
 
 		// Report the used remap to the ui, for future imports
 		const instanceRemap2: ConnectionRemappings = {}
@@ -134,7 +135,7 @@ export class ImportController {
 		return instanceRemap2
 	}
 
-	importFull(data: ExportFullv6, config: ClientImportOrResetSelection): void {
+	async importFull(data: ExportFullv6, config: ClientImportOrResetSelection): Promise<void> {
 		const isImporting = (value: ImportOrResetType): boolean => value === 'reset-and-import'
 
 		const mergeConnections = config.connections === 'unchanged'
@@ -205,7 +206,10 @@ export class ImportController {
 					)
 				}
 
-				this.#performPageImport(pageInfo, pageNumber, instanceIdMap, outboundSurfaceIdRemap)
+				await this.#performPageImport(pageInfo, pageNumber, instanceIdMap, outboundSurfaceIdRemap)
+
+				// Yield between pages so a large import doesn't block the event loop for its whole duration
+				await yieldToEventLoop()
 			}
 		}
 
@@ -333,12 +337,12 @@ export class ImportController {
 		}
 	}
 
-	#performPageImport = (
+	#performPageImport = async (
 		pageInfo: ExportPageContentv6,
 		topage: number,
 		instanceIdMap: InstanceAppliedRemappings,
 		outboundSurfaceIdRemap: Record<string, string> | undefined
-	): void => {
+	): Promise<void> => {
 		{
 			// Ensure the configured grid size is large enough for the import
 			const requiredSize = pageInfo.gridSize || find_smallest_grid_for_page(pageInfo)
@@ -402,6 +406,9 @@ export class ImportController {
 					this.#controlsController.importControl(location, fixedControlObj)
 				}
 			}
+
+			// Yield between rows so importing a densely-populated page doesn't block the event loop
+			await yieldToEventLoop()
 		}
 	}
 
