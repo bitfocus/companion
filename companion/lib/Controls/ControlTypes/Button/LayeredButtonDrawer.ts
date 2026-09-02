@@ -134,6 +134,19 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 		return this.drawElementsList
 	}
 
+	/** Every element id in the button, including those nested inside group elements. */
+	getAllElementIds(): string[] {
+		const ids: string[] = []
+		const collect = (elements: readonly SomeButtonGraphicsElement[]): void => {
+			for (const element of elements) {
+				ids.push(element.id)
+				if (element.type === 'group') collect(element.children)
+			}
+		}
+		collect(this.drawElementsList)
+		return ids
+	}
+
 	getLastDrawStyle(): DrawStyleLayeredButtonModel | null {
 		return this.#lastDrawStyle
 	}
