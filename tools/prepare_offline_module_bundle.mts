@@ -163,7 +163,7 @@ const processModule = async (
 
 				await fs.mkdirp(moduleDir)
 
-				await new Promise((resolve, reject) => {
+				await new Promise<void>((resolve, reject) => {
 					Readable.from(decompressedData)
 						.pipe(tarfs.extract(moduleDir, { strip: 1 }))
 						.on('finish', resolve)

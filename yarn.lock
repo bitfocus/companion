@@ -8020,7 +8020,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/tar-stream@npm:*, @types/tar-stream@npm:^3.1.4":
+"@types/tar-stream@npm:*":
   version: 3.1.4
   resolution: "@types/tar-stream@npm:3.1.4"
   dependencies:
@@ -9685,14 +9685,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bare-events@npm:^2.2.0":
-  version: 2.5.0
-  resolution: "bare-events@npm:2.5.0"
-  checksum: 10c0/afbeec4e8be4d93fb4a3be65c3b4a891a2205aae30b5a38fafd42976cc76cf30dad348963fe330a0d70186e15dc507c11af42c89af5dddab2a54e5aff02e2896
-  languageName: node
-  linkType: hard
-
-"bare-fs@npm:empty-npm-package@1.0.0, bare-path@npm:empty-npm-package@1.0.0, serialport@npm:empty-npm-package@1.0.0, unix-dgram@npm:empty-npm-package@1.0.0":
+"bare-events@npm:empty-npm-package@1.0.0, bare-fs@npm:empty-npm-package@1.0.0, bare-path@npm:empty-npm-package@1.0.0, serialport@npm:empty-npm-package@1.0.0, unix-dgram@npm:empty-npm-package@1.0.0":
   version: 1.0.0
   resolution: "empty-npm-package@npm:1.0.0"
   checksum: 10c0/86dc2266288d7e3456205b8fe69ef30a1561d2365783439df0870124e5f4cf64b845ef3fea9b3312107d5a08e8d0b56813392be80a98825b4ad75d22b7e68ce0
@@ -10676,7 +10669,6 @@ __metadata:
     "@types/socketcluster-client": "npm:^20.0.0"
     "@types/supertest": "npm:^7.2.1"
     "@types/tar-fs": "npm:^2.0.4"
-    "@types/tar-stream": "npm:^3.1.4"
     "@types/winston-syslog": "npm:^2.4.4"
     "@types/ws": "npm:^8.18.1"
     "@types/yazl": "npm:^3.3.1"
@@ -12957,6 +12949,15 @@ __metadata:
   version: 5.0.4
   resolution: "eventemitter3@npm:5.0.4"
   checksum: 10c0/575b8cac8d709e1473da46f8f15ef311b57ff7609445a7c71af5cd42598583eee6f098fa7a593e30f27e94b8865642baa0689e8fa97c016f742abdb3b1bf6d9a
+  languageName: node
+  linkType: hard
+
+"events-universal@npm:^1.0.0":
+  version: 1.0.1
+  resolution: "events-universal@npm:1.0.1"
+  dependencies:
+    bare-events: "npm:^2.7.0"
+  checksum: 10c0/a1d9a5e9f95843650f8ec240dd1221454c110189a9813f32cdf7185759b43f1f964367ac7dca4ebc69150b59043f2d77c7e122b0d03abf7c25477ea5494785a5
   languageName: node
   linkType: hard
 
@@ -19845,13 +19846,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"queue-tick@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "queue-tick@npm:1.0.1"
-  checksum: 10c0/0db998e2c9b15215317dbcf801e9b23e6bcde4044e115155dae34f8e7454b9a783f737c9a725528d677b7a66c775eb7a955cf144fe0b87f62b575ce5bfd515a9
-  languageName: node
-  linkType: hard
-
 "quick-lru@npm:^5.1.1":
   version: 5.1.1
   resolution: "quick-lru@npm:5.1.1"
@@ -21764,17 +21758,13 @@ __metadata:
   linkType: hard
 
 "streamx@npm:^2.15.0":
-  version: 2.20.1
-  resolution: "streamx@npm:2.20.1"
+  version: 2.28.1
+  resolution: "streamx@npm:2.28.1"
   dependencies:
-    bare-events: "npm:^2.2.0"
+    events-universal: "npm:^1.0.0"
     fast-fifo: "npm:^1.3.2"
-    queue-tick: "npm:^1.0.1"
     text-decoder: "npm:^1.1.0"
-  dependenciesMeta:
-    bare-events:
-      optional: true
-  checksum: 10c0/34ffa2ee9465d70e18c7e2ba70189720c166d150ab83eb7700304620fa23ff42a69cb37d712ea4b5fc6234d8e74346a88bb4baceb873c6b05e52ac420f8abb4d
+  checksum: 10c0/90871d76712ad9e00f555ffcb0d33bcbf6823cc2237e8868dcb30666ec76ae34157049042e3cd3251698278ebedf153291026eec7c87ad05c746178a35405f64
   languageName: node
   linkType: hard
 
