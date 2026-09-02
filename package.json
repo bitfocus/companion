@@ -97,8 +97,8 @@
     "serialize-javascript": "^7.0.3",
     "monaco-editor/dompurify": "npm:dompurify@^3.3.3",
     "webpack-bundle-analyzer": "^5.0.0",
-    "@companion-module/host": "1.2.0-nightly-main-20260821-211656-d9a8af7",
-    "@companion-module/base": "2.2.0-nightly-main-20260812-184310-2c49abe"
+    "@companion-module/host": "1.2.0-nightly-main-20260902-201543-eaa0afd",
+    "@companion-module/base": "2.2.0-nightly-main-20260902-210244-eaa0afd"
   },
   "dependenciesMeta": {
     "@sentry/cli": {
