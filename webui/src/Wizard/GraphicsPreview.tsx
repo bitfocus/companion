@@ -145,15 +145,18 @@ export function GraphicsPreviewButton({
 }: GraphicsPreviewButtonProps): React.JSX.Element {
 	const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null)
 	const imageRef = useRef<GraphicsImage | null>(null)
+	const textLayoutCacheRef = useRef<TextLayoutCache | null>(null)
 	const phaseRef = useRef(0)
 
 	// (Re)create the image whenever the canvas element changes.
 	useEffect(() => {
 		if (!canvas) return
 		const textLayoutCache: TextLayoutCache = new QuickLRU({ maxSize: 200 })
+		textLayoutCacheRef.current = textLayoutCache
 		imageRef.current = GraphicsImage.create(canvas, textLayoutCache)
 		return () => {
 			imageRef.current = null
+			textLayoutCacheRef.current = null
 		}
 	}, [canvas])
 
@@ -197,8 +200,12 @@ export function GraphicsPreviewButton({
 
 		draw()
 
-		// Redraw once fonts are ready (first paint may happen before the custom fonts load).
-		const unsub = FontLoader.listenForFontLoad(() => draw())
+		// Redraw once fonts are ready (first paint may happen before the custom fonts load). Drop the text
+		// measurements cached against the fallback font first, so text is re-measured at the correct size.
+		const unsub = FontLoader.listenForFontLoad(() => {
+			textLayoutCacheRef.current?.clear()
+			draw()
+		})
 
 		// Animate the progress bar.
 		const interval = setInterval(() => {

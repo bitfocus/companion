@@ -136,12 +136,11 @@ function LayeredButtonCanvas({
 		drawContext.current.draw(drawStyle)
 	}, [canvas, location, drawStyle, hiddenElements, selectedElementId])
 
-	// Ensure the fonts are loaded
-	// Future: maybe the first paint should be blocked until either the fonts are loaded, or a timeout is reached?
+	// The first paint can happen before the custom fonts finish loading, so text gets measured against the
+	// fallback font. Once the fonts are ready, drop the stale measurements and redraw at the correct size.
 	useEffect(() => {
 		const unsub = FontLoader.listenForFontLoad(() => {
-			console.log('font loaded!', Date.now())
-			if (drawContext.current) drawContext.current.redraw()
+			if (drawContext.current) drawContext.current.invalidateFontMetrics()
 		})
 
 		return () => {
@@ -166,6 +165,7 @@ function LayeredButtonCanvas({
 
 class RendererDrawContext {
 	readonly #image: GraphicsImage
+	readonly #textLayoutCache: TextLayoutCache
 	readonly #debounce: PromiseDebounce
 	readonly canvas: HTMLCanvasElement
 
@@ -178,6 +178,7 @@ class RendererDrawContext {
 		if (!image) throw new Error('Failed to create image')
 
 		this.#image = image
+		this.#textLayoutCache = textLayoutCache
 		this.#debounce = new PromiseDebounce(this.#debounceDraw, 1, 10)
 		this.canvas = canvas
 	}
@@ -233,7 +234,14 @@ class RendererDrawContext {
 		this.#debounce.trigger()
 	}
 
-	redraw() {
+	/**
+	 * Discard cached text measurements and redraw. The text-layout cache keys font line-box ratios and fitted
+	 * layouts by font spec only, so any measured before `companion-sans` finished loading (the first paint
+	 * happens before the fonts are ready) would otherwise stick until the context is recreated - leaving text
+	 * sized against the fallback font's metrics. Call this once the fonts load so they are re-measured.
+	 */
+	invalidateFontMetrics() {
+		this.#textLayoutCache.clear()
 		this.#debounce.trigger()
 	}
 }
