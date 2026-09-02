@@ -137,7 +137,7 @@ export class ControlButtonLayered
 			getButtonStateProps: () => this.getDrawStyleButtonStateProps(),
 			entities: this.entities,
 			commitChange: (redraw) => this.commitChange(redraw),
-			emitElementChanged: (id) => this.deps.events.emit('layeredStyleElementChanged', this.controlId, id),
+			emitElementChanged: (id) => this.#emitStyleElementsChanged([id]),
 		})
 
 		if (!storage) {
@@ -167,14 +167,28 @@ export class ControlButtonLayered
 		}
 		if (options.invalidateAllElements) {
 			this.drawing.clearCache()
+			// A changed feedback's style overrides can target any element, so re-resolve them all.
+			this.#emitStyleElementsChanged(this.drawing.getAllElementIds())
 		} else if (options.changedElementIds) {
 			for (const elementId of options.changedElementIds) {
 				this.drawing.invalidateElement(elementId)
 			}
+			this.#emitStyleElementsChanged(options.changedElementIds)
 		}
 
 		if (options.redraw || options.changedElementIds || options.invalidateAllElements) {
 			this.triggerInvalidation()
+		}
+	}
+
+	/**
+	 * Notify any open style editor that these elements must be re-resolved. Feedback value/override changes
+	 * redraw the button but emit no config patch (`noSave`), so without this the editor's per-element streams
+	 * would keep resolving the feedback state that was current when the editor was opened.
+	 */
+	#emitStyleElementsChanged(elementIds: Iterable<string>): void {
+		for (const elementId of elementIds) {
+			this.deps.events.emit('layeredStyleElementChanged', this.controlId, elementId)
 		}
 	}
 
