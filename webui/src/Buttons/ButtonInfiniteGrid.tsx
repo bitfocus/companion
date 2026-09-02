@@ -307,9 +307,6 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 				const point = canvasPoint(e.clientX, e.clientY)
 				if (!point) return
 
-				// Capture so a box dragged out past the edge of the grid still delivers its move and up here,
-				// rather than stranding the rectangle drawn with no release to finish the selection
-				e.currentTarget.setPointerCapture?.(e.pointerId)
 				setMarquee({
 					pointerId: e.pointerId,
 					startX: point.x,
@@ -333,6 +330,11 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 				const travelled = Math.hypot(point.x - marquee.startX, point.y - marquee.startY)
 				const active = marquee.active || travelled > MARQUEE_START_THRESHOLD
 				if (!active) return
+
+				// Capture only once a box is actually being dragged, so a box dragged out past the edge of the
+				// grid still delivers its move and up here - capturing on pointerdown instead would swallow the
+				// pointerup a plain click on a button needs
+				if (!marquee.active) e.currentTarget.setPointerCapture?.(e.pointerId)
 
 				setMarquee({ ...marquee, currentX: point.x, currentY: point.y, active })
 			},

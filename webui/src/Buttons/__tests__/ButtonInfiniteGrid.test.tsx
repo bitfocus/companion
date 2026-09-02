@@ -197,13 +197,18 @@ describe('dragging out a rubber-band', () => {
 		expect(onSelect).toHaveBeenCalledWith(at(0, 0), at(1, 2), false)
 	})
 
-	it('captures the pointer, so a box dragged off the edge still delivers its release', () => {
+	it('captures the pointer only once a box is dragged, so a box dragged off the edge still delivers its release', () => {
 		const { grid } = setup()
 		// jsdom does not implement pointer capture, which is why the grid calls it optionally; stand it in
 		const capture = vi.fn()
 		grid.setPointerCapture = capture
 
 		fireEvent.pointerDown(grid, { ...centreOf(0, 0), button: 0, pointerId: 1, pointerType: 'mouse' })
+
+		// Capturing on pointerdown would swallow the pointerup a plain click on a button needs
+		expect(capture).not.toHaveBeenCalled()
+
+		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
 
 		// Without this, a pointerup outside .button-infinite-grid never reaches the grid and the box sticks
 		expect(capture).toHaveBeenCalledWith(1)
