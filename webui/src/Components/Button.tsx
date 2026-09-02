@@ -21,8 +21,12 @@ export type ButtonColor =
 interface ButtonVisualProps {
 	className?: string
 	color?: ButtonColor
-	/** 'ghost' renders a text-only button with no background or border */
-	variant?: 'ghost' | 'outline'
+	/**
+	 * 'ghost' renders a text-only button with no background or border.
+	 * 'inline' goes further: no padding, border or line-height of its own either, for an icon or word sitting
+	 * inside a line of other content (a form label, a table cell) which it must not push around.
+	 */
+	variant?: 'ghost' | 'outline' | 'inline'
 	size?: 'sm' | 'lg'
 	hidden?: boolean
 

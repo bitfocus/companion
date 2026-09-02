@@ -280,19 +280,6 @@
 			justify-content: flex-end;
 			padding: 0.3rem 0.25rem 0;
 			border-top: 1px solid var(--color-border);
-
-			.button {
-				--btn-color: var(--color-toolbar-fg);
-				--btn-bg: var(--color-surface);
-				--btn-border-color: var(--color-border);
-				--btn-hover-color: var(--color-text-strong);
-				--btn-hover-bg: var(--color-surface-muted);
-				--btn-hover-border-color: var(--color-border);
-				/* Selected reads like the selected tab/page elsewhere, since this is a selection, not an action */
-				--btn-active-color: var(--color-on-dark);
-				--btn-active-bg: var(--color-primary);
-				--btn-active-border-color: var(--color-primary);
-			}
 		}
 
 		.button-layer-elementlist-table-row {
@@ -390,11 +377,7 @@
 	   worth seeing which properties are pinned. It is hidden with opacity rather than removed, so it keeps
 	   its space and nothing shifts as it appears. */
 	.property-pin-toggle {
-		border: none;
-		background: none;
-		padding: 0 0.3rem;
 		color: var(--color-text-faint);
-		cursor: pointer;
 		opacity: 0;
 	}
 

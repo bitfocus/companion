@@ -229,9 +229,12 @@ const ElementsListFooter = observer(function ElementsListFooter({
 	return (
 		<div ref={ref} className="button-layer-elementlist-footer">
 			<ButtonGroup>
+				{/* Selected is the stock primary colour rather than a bespoke one: these pick a view, so they
+				    read like the selected tab elsewhere in the app */}
 				<Button
 					size="sm"
-					active={styleStore.isPinnedViewSelected}
+					color={styleStore.isPinnedViewSelected ? 'primary' : 'secondary'}
+					aria-pressed={styleStore.isPinnedViewSelected}
 					onClick={() => styleStore.setSelectedEntryId(PINNED_PROPERTIES_ENTRY_ID)}
 					title="The properties pinned from across this button's elements"
 				>
@@ -241,7 +244,8 @@ const ElementsListFooter = observer(function ElementsListFooter({
 				{canvasElement && (
 					<Button
 						size="sm"
-						active={styleStore.selectedEntryId === canvasElement.id}
+						color={styleStore.selectedEntryId === canvasElement.id ? 'primary' : 'secondary'}
+						aria-pressed={styleStore.selectedEntryId === canvasElement.id}
 						onClick={() => styleStore.setSelectedEntryId(canvasElement.id)}
 						title="The topbar, status icons and empty-button look"
 					>

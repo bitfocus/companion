@@ -4,6 +4,7 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useState } from 'react'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { Button } from '~/Components/Button.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 
@@ -50,8 +51,9 @@ export const PinPropertyToggle = observer(function PinPropertyToggle({
 	if (!isPinnable) return null
 
 	return (
-		<button
+		<Button
 			type="button"
+			variant="inline"
 			// Only the element's own panel keeps a pinned property's pin on show
 			className={classNames('property-pin-toggle', { pinned: isPinned && !isPinnedView })}
 			onClick={togglePinned}
@@ -64,6 +66,6 @@ export const PinPropertyToggle = observer(function PinPropertyToggle({
 			aria-label={isPinned ? 'Unpin property' : 'Pin property'}
 		>
 			<FontAwesomeIcon icon={isPinned && isTargeted ? faThumbtackSlash : faThumbtack} />
-		</button>
+		</Button>
 	)
 })
