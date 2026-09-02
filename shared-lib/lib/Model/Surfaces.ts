@@ -23,6 +23,72 @@ export interface SurfaceFirmwareUpdateInfo {
 	updaterDownloadUrl: string
 }
 
+/**
+ * Pixel dimensions of the bitmap a surface control expects to be drawn at.
+ */
+export interface SurfaceLayoutBitmapSize {
+	w: number
+	h: number
+}
+
+export interface SurfaceLayoutLedsConfig {
+	segments: number
+	mode: 'full-ring' | 'simple'
+}
+
+/**
+ * The styling a surface requests for a control. Mirrors the style presets in the surface layout schemas used
+ * by the plugin (`@companion-surface/host`) and satellite APIs, so that a layout from either can be described
+ * with these types without depending on those packages.
+ */
+export interface SurfaceLayoutStylePreset {
+	bitmap?: SurfaceLayoutBitmapSize
+	text?: boolean
+	textStyle?: boolean
+	colors?: 'hex' | 'rgb'
+	leds?: SurfaceLayoutLedsConfig
+}
+
+export interface SurfaceLayoutControl {
+	row: number
+	column: number
+	stylePreset?: string
+}
+
+/**
+ * The layout manifest a surface reports when it connects: the styles it can draw, and the controls it has.
+ */
+export interface SurfaceLayoutDefinition {
+	stylePresets: Record<string, SurfaceLayoutStylePreset> & { default: SurfaceLayoutStylePreset }
+	controls: Record<string, SurfaceLayoutControl>
+}
+
+/**
+ * The full layout manifest of a surface, as pushed to the client.
+ */
+export interface ClientSurfaceLayoutItem {
+	id: string
+	/** The model name of the surface, matching `ClientSurfaceItem.type` */
+	type: string
+	displayName: string
+	isConnected: boolean
+	layout: SurfaceLayoutDefinition
+}
+
+/**
+ * The button sizes of a surface, as pushed to the client. A summary of `ClientSurfaceLayoutItem` for consumers
+ * which only care about how large the buttons are, and shouldn't have to receive every control to find out.
+ */
+export interface ClientSurfaceButtonSizesItem {
+	id: string
+	/** The model name of the surface, matching `ClientSurfaceItem.type` */
+	type: string
+	displayName: string
+	isConnected: boolean
+	/** The distinct sizes this surface's controls are drawn at */
+	bitmapSizes: SurfaceLayoutBitmapSize[]
+}
+
 export interface ClientSurfaceItem {
 	id: string
 	type: string
@@ -81,6 +147,7 @@ export interface SurfaceConfig {
 	type: string | undefined
 	integrationType: string | undefined
 	gridSize: GridSize | undefined
+	layout: SurfaceLayoutDefinition | undefined
 }
 
 export interface SurfaceGroupConfig {

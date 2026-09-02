@@ -3,7 +3,11 @@ import debounceFn from 'debounce-fn'
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import { sampleLedsToBuffer } from '@companion-app/shared/Graphics/GaugeLeds.js'
 import { parseColor } from '@companion-app/shared/Graphics/Util.js'
-import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import type {
+	CompanionSurfaceConfigField,
+	GridSize,
+	SurfaceLayoutDefinition,
+} from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
@@ -168,6 +172,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
+	readonly surfaceLayout: SurfaceLayoutDefinition
 
 	#config: Record<string, any>
 
@@ -262,6 +267,8 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 				return
 			}
 		})
+
+		this.surfaceLayout = surfaceInfo.surfaceLayout
 
 		// Find the max bounds of this surface
 		this.gridSize = Object.values(surfaceInfo.surfaceLayout.controls).reduce(

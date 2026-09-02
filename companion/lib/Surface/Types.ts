@@ -3,10 +3,13 @@ import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionRe
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
 import type {
+	ClientSurfaceButtonSizesItem,
+	ClientSurfaceLayoutItem,
 	CompanionSurfaceConfigField,
 	GridSize,
 	SurfaceFirmwareUpdateInfo,
 	SurfaceGroupConfig,
+	SurfaceLayoutDefinition,
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
@@ -35,6 +38,8 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
+	/** The layout manifest describing the controls this panel has, and how they are drawn */
+	readonly surfaceLayout: SurfaceLayoutDefinition
 	clearDeck(): void
 	draw(item: DrawButtonItem): void
 	setConfig(config: any, force?: boolean): void
@@ -102,6 +107,8 @@ export type UpdateEvents = EmulatorUpdateEvents & {
 	emulatorList: [list: EmulatorListItem[]]
 
 	surfaces: [changes: SurfacesUpdate[]]
+	surfaceLayouts: [layouts: Record<string, ClientSurfaceLayoutItem>]
+	surfaceButtonSizes: [sizes: Record<string, ClientSurfaceButtonSizesItem>]
 
 	[id: `groupConfig:${string}`]: [config: SurfaceGroupConfig | null]
 }

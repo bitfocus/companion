@@ -1,8 +1,8 @@
+import { useSubscription } from '@trpc/tanstack-react-query'
 import { PencilIcon } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
 import QuickLRU from 'quick-lru'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { useLocalStorage } from 'usehooks-ts'
 import type { ElementGeometry } from '@companion-app/shared/Graphics/Geometry.js'
 import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
@@ -10,11 +10,14 @@ import { DrawBounds, type ResolveButtonStylePropertiesConfig } from '@companion-
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
 import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
+import type { ClientSurfaceButtonSizesItem } from '@companion-app/shared/Model/Surfaces.js'
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
 import type { DropdownChoice } from '@companion-module/base'
+import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { InputGroup, InputGroupText } from '~/Components/Form.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { Popover } from '~/Components/Popover.js'
+import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
 import { useResizeObserver } from '~/Hooks/useResizeObserver.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useComputed } from '~/Resources/util.js'
@@ -35,6 +38,7 @@ import { GraphicsImage } from './Image.js'
 import { LineSelectionOverlay } from './LineSelectionOverlay.js'
 import { QuickActionsToolbar } from './QuickActionsToolbar.js'
 import { SelectionOverlay } from './SelectionOverlay.js'
+import { collectSurfaceAspectRatios } from './surfaceAspectRatios.js'
 
 interface LayeredButtonPreviewRendererProps {
 	controlId: string
@@ -254,11 +258,13 @@ const ASPECT_RATIO_OPTIONS: DropdownChoice[] = [
 ]
 
 const CUSTOM_RATIO_MIN = 1
-const CUSTOM_RATIO_MAX = 100
+// Large enough for the ratios real surfaces produce, such as the 124:29 of a Stream Deck Neo's info bar
+const CUSTOM_RATIO_MAX = 999
 
 /**
- * Lets a ratio be entered by hand, for surfaces that don't have a preset button. The value is the same
- * "w:h" string the presets use, so it needs no special handling anywhere else.
+ * Lets a ratio be entered by hand, or picked from the surfaces Companion knows about, for surfaces that don't
+ * have a preset button. The value is the same "w:h" string the presets use, so it needs no special handling
+ * anywhere else.
  */
 function CustomAspectRatioButton({
 	value,
@@ -287,6 +293,7 @@ function CustomAspectRatioButton({
 				<PencilIcon size={14} />
 			</Popover.Trigger>
 			<Popover.Popup className="button-layer-aspect-custom" align="end">
+				<SurfaceAspectRatioDropdown value={value} setValue={setValue} />
 				<InputGroup>
 					<InputGroupText>W</InputGroupText>
 					<NumberInputField
@@ -309,6 +316,42 @@ function CustomAspectRatioButton({
 				</InputGroup>
 			</Popover.Popup>
 		</Popover.Root>
+	)
+}
+
+/**
+ * The ratios of the buttons on the surfaces Companion knows about, so that connecting a surface is enough for
+ * its shape to be offered here - rather than every surface model having to be listed in the ui.
+ *
+ * This only mounts while the popover is open, so nothing subscribes until the picker is actually opened.
+ */
+function SurfaceAspectRatioDropdown({ value, setValue }: { value: string; setValue: (value: string) => void }) {
+	const [surfaces, setSurfaces] = useState<ClientSurfaceButtonSizesItem[]>([])
+
+	useSubscription(
+		trpc.surfaces.watchSurfaceButtonSizes.subscriptionOptions(undefined, {
+			onData: (data) => setSurfaces(Object.values(data)),
+			onError: (error) => {
+				console.error('Failed to subscribe to surface button sizes:', error)
+				setSurfaces([])
+			},
+		})
+	)
+
+	const choices = useMemo(() => collectSurfaceAspectRatios(surfaces), [surfaces])
+
+	return (
+		<SimpleDropdownInputField
+			id={undefined}
+			className="button-layer-aspect-surfaces"
+			choices={choices}
+			value={value}
+			setValue={(val) => setValue(String(val))}
+			tooltip="Match a surface you have"
+			disabled={choices.length === 0}
+			noOptionsMessage="No surfaces with buttons"
+			badOptionPrefix="Custom"
+		/>
 	)
 }
 

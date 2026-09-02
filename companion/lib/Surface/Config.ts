@@ -79,6 +79,7 @@ export function createOrSanitizeSurfaceHandlerConfig(
 		type: panel.info.description || 'Unknown',
 		integrationType,
 		gridSize: panel.gridSize,
+		layout: panel.surfaceLayout,
 	}
 
 	// Forget old values

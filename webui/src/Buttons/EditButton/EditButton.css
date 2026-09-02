@@ -402,13 +402,17 @@
 
 /* Portaled to the body, so it can't live inside the .button-layer-preview block */
 .button-layer-aspect-custom {
-	/* Sized for the two-digit values these ratios realistically use */
-	width: 135px;
+	/* Sized so a surface entry - a ratio plus the model name - fits on one line */
+	width: 230px;
 	min-width: 0;
 	padding: 6px;
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
+}
+
+.button-layer-aspect-surfaces {
+	min-width: 0;
 }
 
 .add-layered-element-popover {
