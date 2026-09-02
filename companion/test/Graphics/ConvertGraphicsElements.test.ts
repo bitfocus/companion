@@ -900,8 +900,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				null
 			)
 
-			expect(result.usedVariables.has('test:var1')).toBe(true)
-			expect(result.usedVariables.has('test:var2')).toBe(true)
+			expect(result.variables.drawn.has('test:var1')).toBe(true)
+			expect(result.variables.drawn.has('test:var2')).toBe(true)
 		})
 
 		test('tracks referenced variables in expression', async () => {
@@ -921,7 +921,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				null
 			)
 
-			expect(result.usedVariables.has('test:var3')).toBe(true)
+			expect(result.variables.drawn.has('test:var3')).toBe(true)
 		})
 	})
 
@@ -1133,6 +1133,159 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(childSetCalls).toHaveLength(0)
 		})
 
+		test('reports a disabled group\'s cached children variables as hiddenVariables', async () => {
+			const cache = new ElementConversionCache()
+
+			const elements: SomeButtonGraphicsElement[] = [
+				makeGroupEl([makeTextEl({ id: 'child1', text: val('$(test:myvar)') })]),
+			]
+
+			// First conversion with the group enabled - draws the child and tracks its variable as used.
+			const enabledResult = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser({ test: { myvar: 'A' } }),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				cache,
+				null,
+				null
+			)
+			expect(enabledResult.variables.drawn.has('test:myvar')).toBe(true)
+			expect(enabledResult.variables.hidden.has('test:myvar')).toBe(false)
+
+			// Disable the group - the child is no longer drawn but its cache entry is preserved.
+			const disabledElements: SomeButtonGraphicsElement[] = [
+				{ ...elements[0], enabled: val(false) } as SomeButtonGraphicsElement,
+			]
+			cache.queueInvalidate('group1')
+
+			const disabledResult = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser({ test: { myvar: 'A' } }),
+				mockDrawPixelBuffers,
+				disabledElements,
+				new Map(),
+				true,
+				cache,
+				null,
+				null
+			)
+
+			// The child's variable is now reported as hidden (not used), so a change to it can still evict
+			// the stale cache entry even though the child was not drawn.
+			expect(disabledResult.variables.drawn.has('test:myvar')).toBe(false)
+			expect(disabledResult.variables.hidden.has('test:myvar')).toBe(true)
+		})
+
+		test('reports a disabled group\'s cached composite child as a hiddenCompositeElement', async () => {
+			const cache = new ElementConversionCache()
+
+			const mockDefinitions = createMockInstanceDefinitions({
+				test: {
+					myComposite: {
+						id: 'myComposite',
+						name: 'My Composite',
+						description: undefined,
+						elements: [makeTextEl({ id: 'inner-text', text: val('inner') })],
+						options: [],
+					},
+				},
+			})
+
+			const compositeChild: SomeButtonGraphicsElement = {
+				id: 'composite1',
+				name: '',
+				type: 'composite',
+				usage: USAGE,
+				connectionId: 'test',
+				elementId: 'myComposite',
+				enabled: val(true),
+				opacity: val(100),
+				x: val(0),
+				y: val(0),
+				width: val(100),
+				height: val(100),
+			}
+			const elements: SomeButtonGraphicsElement[] = [makeGroupEl([compositeChild])]
+
+			const enabledResult = await ConvertSomeButtonGraphicsElementForDrawing(
+				mockDefinitions,
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				cache,
+				null,
+				null
+			)
+			expect(enabledResult.compositeElements.drawn.has('test:myComposite')).toBe(true)
+			expect(enabledResult.compositeElements.hidden.has('test:myComposite')).toBe(false)
+
+			// Disable the group - the composite child is preserved but no longer drawn.
+			const disabledElements: SomeButtonGraphicsElement[] = [
+				{ ...elements[0], enabled: val(false) } as SomeButtonGraphicsElement,
+			]
+			cache.queueInvalidate('group1')
+
+			const disabledResult = await ConvertSomeButtonGraphicsElementForDrawing(
+				mockDefinitions,
+				createMockParser(),
+				mockDrawPixelBuffers,
+				disabledElements,
+				new Map(),
+				true,
+				cache,
+				null,
+				null
+			)
+			expect(disabledResult.compositeElements.drawn.has('test:myComposite')).toBe(false)
+			expect(disabledResult.compositeElements.hidden.has('test:myComposite')).toBe(true)
+		})
+
+		test('reports a disabled group\'s cached reference child as a hiddenReferencedLocation', async () => {
+			const cache = new ElementConversionCache()
+			const getRenderAtLocation = vi.fn(() => createMockImageResult([makeTextDrawEl({ id: 'ref-text', text: 'Hi' })]))
+
+			const elements: SomeButtonGraphicsElement[] = [makeGroupEl([makeReferenceEl({ location: val('2/0/0') })])]
+
+			const enabledResult = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				cache,
+				'1/0/0',
+				getRenderAtLocation
+			)
+			expect(enabledResult.referencedLocations.drawn.has('2/0/0')).toBe(true)
+			expect(enabledResult.referencedLocations.hidden.has('2/0/0')).toBe(false)
+
+			// Disable the group - the reference child is preserved but no longer drawn.
+			const disabledElements: SomeButtonGraphicsElement[] = [
+				{ ...elements[0], enabled: val(false) } as SomeButtonGraphicsElement,
+			]
+			cache.queueInvalidate('group1')
+
+			const disabledResult = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				disabledElements,
+				new Map(),
+				true,
+				cache,
+				'1/0/0',
+				getRenderAtLocation
+			)
+			expect(disabledResult.referencedLocations.drawn.has('2/0/0')).toBe(false)
+			expect(disabledResult.referencedLocations.hidden.has('2/0/0')).toBe(true)
+		})
+
 		test('preserves nested child cache entries when parent composite is disabled', async () => {
 			const cache = new ElementConversionCache()
 
@@ -1262,7 +1415,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				'1/0/0',
 				getRenderAtLocation
 			)
-			expect(result1.referencedLocations.has('2/0/0')).toBe(true)
+			expect(result1.referencedLocations.drawn.has('2/0/0')).toBe(true)
 
 			// Second call — cache hit path
 			const result2 = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -1277,7 +1430,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				getRenderAtLocation
 			)
 			// Must still report '2/0/0' even though element was served from cache
-			expect(result2.referencedLocations.has('2/0/0')).toBe(true)
+			expect(result2.referencedLocations.drawn.has('2/0/0')).toBe(true)
 		})
 	})
 
@@ -1589,7 +1742,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 			// Missing variables should show $NA
 			expect((result.elements[0] as { text: string }).text).toBe('Value: $NA')
-			expect(result.usedVariables.has('nonexistent:var')).toBe(true)
+			expect(result.variables.drawn.has('nonexistent:var')).toBe(true)
 		})
 	})
 
@@ -1901,7 +2054,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				null
 			)
 
-			expect(result.usedCompositeElements.has('myconn:simpleComposite')).toBe(true)
+			expect(result.compositeElements.drawn.has('myconn:simpleComposite')).toBe(true)
 		})
 	})
 
@@ -2405,7 +2558,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				getRenderAtLocation
 			)
 
-			expect(result.referencedLocations.has('1/0/1')).toBe(true)
+			expect(result.referencedLocations.drawn.has('1/0/1')).toBe(true)
 		})
 
 		test('shows placeholder when reference target is the current location (self-loop)', async () => {
@@ -2480,9 +2633,9 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				getRenderAtLocation
 			)
 
-			expect(result.referencedLocations.has('1/0/1')).toBe(true)
-			expect(result.referencedLocations.has('1/0/2')).toBe(true)
-			expect(result.referencedLocations.has('1/0/3')).toBe(true)
+			expect(result.referencedLocations.drawn.has('1/0/1')).toBe(true)
+			expect(result.referencedLocations.drawn.has('1/0/2')).toBe(true)
+			expect(result.referencedLocations.drawn.has('1/0/3')).toBe(true)
 		})
 
 		test('reference element is omitted when disabled and onlyEnabled=true', async () => {
@@ -2523,7 +2676,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			)
 
 			expect(getRenderAtLocation).toHaveBeenCalledWith({ pageNumber: 1, row: 0, column: 1 })
-			expect(result.referencedLocations.has('1/0/1')).toBe(true)
+			expect(result.referencedLocations.drawn.has('1/0/1')).toBe(true)
 		})
 
 		test('tracks variables used in the location string', async () => {
@@ -2543,7 +2696,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				getRenderAtLocation
 			)
 
-			expect(result.usedVariables.has('test:loc')).toBe(true)
+			expect(result.variables.drawn.has('test:loc')).toBe(true)
 		})
 
 		test('cyclicLocations is empty when no cycle exists', async () => {
@@ -2586,7 +2739,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 			expect(result.cyclicLocations.has('1/0/0')).toBe(true)
 			// Also tracked in referencedLocations
-			expect(result.referencedLocations.has('1/0/0')).toBe(true)
+			expect(result.referencedLocations.drawn.has('1/0/0')).toBe(true)
 		})
 
 		test('cyclicLocations contains the location on an indirect loop', async () => {
@@ -2610,7 +2763,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 
 			expect(result.cyclicLocations.has('1/0/1')).toBe(true)
 			// The direct location is still in referencedLocations
-			expect(result.referencedLocations.has('1/0/1')).toBe(true)
+			expect(result.referencedLocations.drawn.has('1/0/1')).toBe(true)
 			// Only the cyclic entry, not an unrelated location
 			expect(result.cyclicLocations.size).toBe(1)
 		})

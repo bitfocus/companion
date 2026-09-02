@@ -99,9 +99,9 @@ function makeHelper(
 
 function makeGlobalRefs(): ExpressionReferences {
 	return {
-		variables: new Set(),
-		compositeElements: new Set(),
-		referencedLocations: new Set(),
+		variables: { drawn: new Set(), hidden: new Set() },
+		compositeElements: { drawn: new Set(), hidden: new Set() },
+		referencedLocations: { drawn: new Set(), hidden: new Set() },
 		cyclicLocations: new Set(),
 	}
 }

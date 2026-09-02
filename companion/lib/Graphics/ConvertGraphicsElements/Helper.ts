@@ -19,11 +19,22 @@ import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndE
 import type { ElementConversionCache } from '../ElementConversionCache.js'
 import type { ImageResult } from '../ImageResult.js'
 
+/**
+ * One kind of draw dependency, split into what was actually **drawn** and what belongs to elements only
+ * **preserved while hidden** - children of a disabled group/composite, whose cache entries survive but
+ * aren't rendered. A change to either must evict the affected cache entries, but only a change to something
+ * drawn warrants a redraw. The drawer consumes each pair into a `DrawDependency` tracker.
+ */
+export interface DrawnAndHidden<T> {
+	readonly drawn: Set<T>
+	readonly hidden: Set<T>
+}
+
 export interface ExpressionReferences {
-	readonly variables: Set<string>
-	readonly compositeElements: Set<CompositeElementIdString>
-	readonly referencedLocations: Set<string>
-	/** Locations where a cycle was detected during this conversion (subset of referencedLocations) */
+	readonly variables: DrawnAndHidden<string>
+	readonly compositeElements: DrawnAndHidden<CompositeElementIdString>
+	readonly referencedLocations: DrawnAndHidden<string>
+	/** Locations where a cycle was detected during this conversion (a subset of referencedLocations.drawn). */
 	readonly cyclicLocations: Set<string>
 }
 

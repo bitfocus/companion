@@ -33,13 +33,22 @@ function conversionResult(
 		usedCompositeElements?: Set<string>
 		referencedLocations?: Set<string>
 		cyclicLocations?: Set<string>
+		hiddenVariables?: Set<string>
+		hiddenCompositeElements?: Set<string>
+		hiddenReferencedLocations?: Set<string>
 	} = {}
 ) {
 	return {
 		elements: opts.elements ?? [],
-		usedVariables: opts.usedVariables ?? new Set<string>(),
-		usedCompositeElements: opts.usedCompositeElements ?? new Set<string>(),
-		referencedLocations: opts.referencedLocations ?? new Set<string>(),
+		variables: { drawn: opts.usedVariables ?? new Set<string>(), hidden: opts.hiddenVariables ?? new Set<string>() },
+		compositeElements: {
+			drawn: opts.usedCompositeElements ?? new Set<string>(),
+			hidden: opts.hiddenCompositeElements ?? new Set<string>(),
+		},
+		referencedLocations: {
+			drawn: opts.referencedLocations ?? new Set<string>(),
+			hidden: opts.hiddenReferencedLocations ?? new Set<string>(),
+		},
 		cyclicLocations: opts.cyclicLocations ?? new Set<string>(),
 	}
 }
@@ -274,6 +283,59 @@ describe('LayeredButtonDrawer', () => {
 			expect(invalidateSpy).not.toHaveBeenCalled()
 		})
 
+		it('evicts a hidden child cache entry without redrawing when its variable changes', async () => {
+			// The last draw did not draw this variable, but preserved a cached (hidden) child that uses it.
+			convertMock.mockResolvedValueOnce(
+				conversionResult({
+					usedVariables: new Set(['local:this_step']),
+					hiddenVariables: new Set(['connection:cam']),
+				})
+			)
+			await drawer.getDrawStyle()
+
+			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
+			drawer.onVariablesChanged(new Set(['connection:cam']))
+
+			// The stale cache entry must be evicted...
+			expect(queueSpy).toHaveBeenCalledWith(new Set(['connection:cam']))
+			// ...but nothing visible changed, so no redraw is triggered.
+			await sleep(30)
+			expect(invalidateSpy).not.toHaveBeenCalled()
+		})
+
+		it('redraws when a change affects both drawn and hidden variables', async () => {
+			convertMock.mockResolvedValueOnce(
+				conversionResult({
+					usedVariables: new Set(['local:this_step']),
+					hiddenVariables: new Set(['connection:cam']),
+				})
+			)
+			await drawer.getDrawStyle()
+
+			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
+			const changed = new Set(['local:this_step', 'connection:cam'])
+			drawer.onVariablesChanged(changed)
+
+			expect(queueSpy).toHaveBeenCalledWith(changed)
+			await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CONTROL_ID))
+		})
+
+		it('evicts a hidden child cache entry when its variable changes mid-draw', async () => {
+			const pending = deferred<ReturnType<typeof conversionResult>>()
+			convertMock.mockReturnValueOnce(pending.promise)
+
+			const drawPromise = drawer.getDrawStyle()
+			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
+			drawer.onVariablesChanged(new Set(['connection:cam']))
+			pending.resolve(conversionResult({ hiddenVariables: new Set(['connection:cam']) }))
+			await drawPromise
+
+			// Stale entry evicted, but a hidden-only change does not force a redraw.
+			expect(queueSpy).toHaveBeenCalledWith(new Set(['connection:cam']))
+			await sleep(30)
+			expect(invalidateSpy).not.toHaveBeenCalled()
+		})
+
 		it('does not leak a change accumulated during a finished draw into a later window', async () => {
 			convertMock.mockResolvedValueOnce(conversionResult({ usedVariables: new Set(['local:preset_name']) }))
 			await drawer.getDrawStyle()
@@ -316,6 +378,21 @@ describe('LayeredButtonDrawer', () => {
 
 			drawer.onCompositeElementsChanged(new Set<CompositeElementIdString>(['conn:other']))
 
+			await sleep(30)
+			expect(invalidateSpy).not.toHaveBeenCalled()
+		})
+
+		it('evicts a hidden composite cache entry without redrawing when its type changes', async () => {
+			convertMock.mockResolvedValueOnce(
+				conversionResult({ hiddenCompositeElements: new Set(['conn:elem']) })
+			)
+			await drawer.getDrawStyle()
+
+			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateCompositeType')
+			const changed = new Set<CompositeElementIdString>(['conn:elem'])
+			drawer.onCompositeElementsChanged(changed)
+
+			expect(queueSpy).toHaveBeenCalledWith(changed)
 			await sleep(30)
 			expect(invalidateSpy).not.toHaveBeenCalled()
 		})
@@ -372,6 +449,21 @@ describe('LayeredButtonDrawer', () => {
 			deps.graphics.emit('button_drawn', OTHER_LOCATION, { referencedLocations: new Set() })
 
 			await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CONTROL_ID))
+		})
+
+		it('evicts a hidden reference cache entry without redrawing when its target is drawn', async () => {
+			// The reference is inside a disabled group: its target is tracked as hidden, not drawn.
+			const otherStr = formatLocation(OTHER_LOCATION)
+			convertMock.mockResolvedValueOnce(conversionResult({ hiddenReferencedLocations: new Set([otherStr]) }))
+			await drawer.getDrawStyle()
+
+			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateReferencedLocation')
+			deps.graphics.emit('button_drawn', OTHER_LOCATION, { referencedLocations: new Set() })
+
+			// The stale embedded snapshot is evicted so re-showing re-fetches, but nothing visible changed.
+			expect(queueSpy).toHaveBeenCalledWith(otherStr)
+			await sleep(30)
+			expect(invalidateSpy).not.toHaveBeenCalled()
 		})
 	})
 
