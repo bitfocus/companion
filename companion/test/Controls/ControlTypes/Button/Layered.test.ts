@@ -117,9 +117,6 @@ describe('ControlButtonLayered', () => {
 		deps = {
 			surfaces: {} as any,
 			pageStore: { getLocationOfControlId: vi.fn(() => null) } as any,
-			getPageVariableEntities: () => null,
-			triggerEvents: null as any,
-			expressionVariableNamesMap: null as any,
 			internalModule: { entityUpgrade: vi.fn(() => undefined), visitReferences: vi.fn() } as any,
 			instance: {
 				definitions,
@@ -141,12 +138,6 @@ describe('ControlButtonLayered', () => {
 			dbTable: { set: dbSet, delete: vi.fn() } as any,
 			events: events as any,
 			changeEvents: new EventEmitter() as any,
-			renderClock: { subscribe: vi.fn(() => () => {}) } as any,
-			controlsAccessor: {
-				getControl: vi.fn(() => undefined),
-				pressControl: vi.fn(() => false),
-				rotateControl: vi.fn(() => false),
-			},
 		}
 	})
 

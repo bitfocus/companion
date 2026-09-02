@@ -1133,7 +1133,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(childSetCalls).toHaveLength(0)
 		})
 
-		test('reports a disabled group\'s cached children variables as hiddenVariables', async () => {
+		test("reports a disabled group's cached children variables as hiddenVariables", async () => {
 			const cache = new ElementConversionCache()
 
 			const elements: SomeButtonGraphicsElement[] = [
@@ -1179,7 +1179,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(disabledResult.variables.hidden.has('test:myvar')).toBe(true)
 		})
 
-		test('reports a disabled group\'s cached composite child as a hiddenCompositeElement', async () => {
+		test("reports a disabled group's cached composite child as a hiddenCompositeElement", async () => {
 			const cache = new ElementConversionCache()
 
 			const mockDefinitions = createMockInstanceDefinitions({
@@ -1245,7 +1245,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(disabledResult.compositeElements.hidden.has('test:myComposite')).toBe(true)
 		})
 
-		test('reports a disabled group\'s cached reference child as a hiddenReferencedLocation', async () => {
+		test("reports a disabled group's cached reference child as a hiddenReferencedLocation", async () => {
 			const cache = new ElementConversionCache()
 			const getRenderAtLocation = vi.fn(() => createMockImageResult([makeTextDrawEl({ id: 'ref-text', text: 'Hi' })]))
 

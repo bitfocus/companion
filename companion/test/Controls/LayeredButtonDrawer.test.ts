@@ -383,9 +383,7 @@ describe('LayeredButtonDrawer', () => {
 		})
 
 		it('evicts a hidden composite cache entry without redrawing when its type changes', async () => {
-			convertMock.mockResolvedValueOnce(
-				conversionResult({ hiddenCompositeElements: new Set(['conn:elem']) })
-			)
+			convertMock.mockResolvedValueOnce(conversionResult({ hiddenCompositeElements: new Set(['conn:elem']) }))
 			await drawer.getDrawStyle()
 
 			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateCompositeType')
