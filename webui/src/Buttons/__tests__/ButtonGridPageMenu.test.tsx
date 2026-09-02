@@ -69,7 +69,7 @@ describe('the page menu', () => {
 
 		await openMenu(user)
 
-		for (const label of ['Edit page', 'Export page', 'Recreate navigation buttons', 'Wipe page']) {
+		for (const label of ['Edit page', 'Export page', 'Recreate navigation buttons', 'Clear page']) {
 			expect(screen.getByText(label)).toBeInTheDocument()
 		}
 	})
@@ -78,7 +78,7 @@ describe('the page menu', () => {
 		const { user } = setup()
 		await openMenu(user)
 
-		await user.click(screen.getByText('Wipe page'))
+		await user.click(screen.getByText('Clear page'))
 
 		expect(screen.getByText(/clear all buttons on page 3/)).toBeInTheDocument()
 		expect(sent).toEqual([])
@@ -87,9 +87,9 @@ describe('the page menu', () => {
 	it('wipes the page once that is confirmed', async () => {
 		const { user } = setup()
 		await openMenu(user)
-		await user.click(screen.getByText('Wipe page'))
+		await user.click(screen.getByText('Clear page'))
 
-		await user.click(screen.getByRole('button', { name: 'Reset' }))
+		await user.click(screen.getByRole('button', { name: 'Clear' }))
 
 		expect(sent).toEqual([{ path: 'pages.clearPage', input: { pageNumber: 3 } }])
 	})
@@ -109,7 +109,7 @@ describe('the page menu', () => {
 		await openMenu(user)
 		await user.click(screen.getByText('Recreate navigation buttons'))
 
-		await user.click(screen.getByRole('button', { name: 'Reset' }))
+		await user.click(screen.getByRole('button', { name: 'Recreate' }))
 
 		expect(sent).toEqual([{ path: 'pages.recreateNav', input: { pageNumber: 3 } }])
 	})
@@ -125,16 +125,16 @@ describe('the page menu', () => {
 	})
 
 	it.each([
-		['Wipe page', 'Clear page failed'],
-		['Recreate navigation buttons', 'Reset nav failed'],
-	] as const)('reports a failed %s rather than letting the rejection escape', async (label, message) => {
+		['Clear page', 'Clear', 'Clear page failed'],
+		['Recreate navigation buttons', 'Recreate', 'Reset nav failed'],
+	] as const)('reports a failed %s rather than letting the rejection escape', async (label, confirm, message) => {
 		mutationsFail = true
 		const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
 		const { user } = setup()
 		await openMenu(user)
 		await user.click(screen.getByText(label))
 
-		await user.click(screen.getByRole('button', { name: 'Reset' }))
+		await user.click(screen.getByRole('button', { name: confirm }))
 
 		await vi.waitFor(() => expect(errors).toHaveBeenCalledWith(expect.stringContaining(message)))
 		errors.mockRestore()
