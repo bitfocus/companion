@@ -29,14 +29,21 @@ export function reduceToAspectRatio(w: number, h: number): string | null {
 /**
  * The distinct aspect ratios of the buttons across all of the known surfaces, labelled with the models which
  * have buttons of that shape. A surface with more than one button size contributes to more than one ratio.
+ *
+ * `excludeRatios` drops the ratios which are already offered elsewhere - the preset buttons in the footer -
+ * so that this only ever adds shapes the user could not otherwise reach.
  */
-export function collectSurfaceAspectRatios(surfaces: ClientSurfaceButtonSizesItem[]): SurfaceAspectRatioChoice[] {
+export function collectSurfaceAspectRatios(
+	surfaces: ClientSurfaceButtonSizesItem[],
+	excludeRatios: readonly string[]
+): SurfaceAspectRatioChoice[] {
+	const excluded = new Set(excludeRatios)
 	const namesByRatio = new Map<string, Set<string>>()
 
 	for (const surface of surfaces) {
 		for (const size of surface.bitmapSizes) {
 			const ratio = reduceToAspectRatio(size.w, size.h)
-			if (!ratio) continue
+			if (!ratio || excluded.has(ratio)) continue
 
 			let names = namesByRatio.get(ratio)
 			if (!names) {

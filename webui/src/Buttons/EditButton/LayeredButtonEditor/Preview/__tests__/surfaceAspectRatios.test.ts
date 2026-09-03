@@ -45,23 +45,26 @@ describe('reduceToAspectRatio', () => {
 
 describe('collectSurfaceAspectRatios', () => {
 	test('has nothing to offer for no surfaces', () => {
-		expect(collectSurfaceAspectRatios([])).toEqual([])
+		expect(collectSurfaceAspectRatios([], [])).toEqual([])
 	})
 
 	test('names the model a ratio comes from', () => {
-		expect(collectSurfaceAspectRatios([makeSurface('Stream Deck Neo', [[248, 58]])])).toEqual([
+		expect(collectSurfaceAspectRatios([makeSurface('Stream Deck Neo', [[248, 58]])], [])).toEqual([
 			{ id: '124:29', label: '124:29 (Stream Deck Neo)' },
 		])
 	})
 
 	test('a surface with several button sizes offers each of them', () => {
 		expect(
-			collectSurfaceAspectRatios([
-				makeSurface('Stream Deck Neo', [
-					[96, 96],
-					[248, 58],
-				]),
-			])
+			collectSurfaceAspectRatios(
+				[
+					makeSurface('Stream Deck Neo', [
+						[96, 96],
+						[248, 58],
+					]),
+				],
+				[]
+			)
 		).toEqual([
 			{ id: '1:1', label: '1:1 (Stream Deck Neo)' },
 			{ id: '124:29', label: '124:29 (Stream Deck Neo)' },
@@ -70,13 +73,16 @@ describe('collectSurfaceAspectRatios', () => {
 
 	test('merges the models which share a ratio into one entry', () => {
 		expect(
-			collectSurfaceAspectRatios([
-				makeSurface('Stream Deck XL', [[96, 96]]),
-				makeSurface('Stream Deck Neo', [
-					[96, 96],
-					[248, 58],
-				]),
-			])
+			collectSurfaceAspectRatios(
+				[
+					makeSurface('Stream Deck XL', [[96, 96]]),
+					makeSurface('Stream Deck Neo', [
+						[96, 96],
+						[248, 58],
+					]),
+				],
+				[]
+			)
 		).toEqual([
 			{ id: '1:1', label: '1:1 (Stream Deck Neo, Stream Deck XL)' },
 			{ id: '124:29', label: '124:29 (Stream Deck Neo)' },
@@ -85,22 +91,75 @@ describe('collectSurfaceAspectRatios', () => {
 
 	test('lists a model once for a ratio, however many of them are connected', () => {
 		expect(
-			collectSurfaceAspectRatios([makeSurface('Stream Deck XL', [[72, 72]]), makeSurface('Stream Deck XL', [[96, 96]])])
+			collectSurfaceAspectRatios(
+				[makeSurface('Stream Deck XL', [[72, 72]]), makeSurface('Stream Deck XL', [[96, 96]])],
+				[]
+			)
 		).toEqual([{ id: '1:1', label: '1:1 (Stream Deck XL)' }])
 	})
 
 	test('a surface with no drawn buttons offers nothing', () => {
-		expect(collectSurfaceAspectRatios([makeSurface('Contour Shuttle', [])])).toEqual([])
+		expect(collectSurfaceAspectRatios([makeSurface('Contour Shuttle', [])], [])).toEqual([])
 	})
 
 	test('skips sizes which describe no shape', () => {
 		expect(
-			collectSurfaceAspectRatios([
-				makeSurface('Broken', [
-					[0, 0],
-					[72, 72],
-				]),
-			])
+			collectSurfaceAspectRatios(
+				[
+					makeSurface('Broken', [
+						[0, 0],
+						[72, 72],
+					]),
+				],
+				[]
+			)
 		).toEqual([{ id: '1:1', label: '1:1 (Broken)' }])
+	})
+})
+
+describe('collectSurfaceAspectRatios exclusions', () => {
+	const presets = ['1:1', '9:7', '2:1']
+
+	test('leaves out the ratios already offered by the preset buttons', () => {
+		expect(
+			collectSurfaceAspectRatios(
+				[
+					makeSurface('Stream Deck Neo', [
+						[96, 96],
+						[248, 58],
+					]),
+				],
+				presets
+			)
+		).toEqual([{ id: '124:29', label: '124:29 (Stream Deck Neo)' }])
+	})
+
+	test('offers nothing when every surface is a shape the presets cover', () => {
+		expect(
+			collectSurfaceAspectRatios(
+				[makeSurface('Stream Deck XL', [[96, 96]]), makeSurface('Stream Deck Plus', [[200, 100]])],
+				presets
+			)
+		).toEqual([])
+	})
+
+	test('excludes by the reduced ratio, not the pixel size', () => {
+		// 120x60 reduces to 2:1, which is a preset, so it should not be offered
+		expect(collectSurfaceAspectRatios([makeSurface('Stream Deck Plus', [[120, 60]])], presets)).toEqual([])
+	})
+
+	test('a model is dropped from a label only for the excluded ratio', () => {
+		expect(
+			collectSurfaceAspectRatios(
+				[
+					makeSurface('Stream Deck Neo', [
+						[96, 96],
+						[248, 58],
+					]),
+					makeSurface('Stream Deck XL', [[96, 96]]),
+				],
+				presets
+			)
+		).toEqual([{ id: '124:29', label: '124:29 (Stream Deck Neo)' }])
 	})
 })

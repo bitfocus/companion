@@ -272,13 +272,6 @@
 				font-size: inherit;
 				min-width: 0;
 			}
-
-			/* Outlined rectangle drawn to the option's ratio; currentColor flips to white when active */
-			.button-layer-aspect-glyph {
-				display: block;
-				border: 1.5px solid currentColor;
-				border-radius: 1px;
-			}
 		}
 
 		/* Must shrink-wrap the canvas exactly: the selection overlay positions its handles and snap guides as
@@ -411,8 +404,47 @@
 	gap: 4px;
 }
 
-.button-layer-aspect-surfaces {
-	min-width: 0;
+/* Separates the surface shapes below from the W/H fields above */
+.button-layer-aspect-surfaces-label {
+	margin-top: 2px;
+	padding-top: 6px;
+	border-top: 1px solid var(--color-border);
+	font-size: 0.7rem;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	opacity: 0.6;
+}
+
+/* A popover item, but sized to the compact popup rather than the default menu metrics */
+.button-layer-aspect-surface.popover2-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 4px;
+	border-radius: 3px;
+	font-size: 0.8rem;
+
+	/* A long model name ellipsizes rather than wrapping the row onto a second line */
+	.button-layer-aspect-surface-label {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&.active {
+		background: var(--color-toolbar-accent);
+		color: var(--color-on-dark);
+	}
+}
+
+/* Outlined rectangle drawn to an option's ratio; currentColor flips to white when active. Used both by the
+   footer buttons and by the surface rows in the popover, so it is not scoped to either. */
+.button-layer-aspect-glyph {
+	display: block;
+	flex: 0 0 auto;
+	border: 1.5px solid currentColor;
+	border-radius: 1px;
 }
 
 .add-layered-element-popover {

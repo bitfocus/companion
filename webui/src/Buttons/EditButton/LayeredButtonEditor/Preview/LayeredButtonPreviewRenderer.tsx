@@ -1,5 +1,3 @@
-import { useSubscription } from '@trpc/tanstack-react-query'
-import { PencilIcon } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
 import QuickLRU from 'quick-lru'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
@@ -10,19 +8,14 @@ import { DrawBounds, type ResolveButtonStylePropertiesConfig } from '@companion-
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
 import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
-import type { ClientSurfaceButtonSizesItem } from '@companion-app/shared/Model/Surfaces.js'
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
-import type { DropdownChoice } from '@companion-module/base'
-import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
-import { InputGroup, InputGroupText } from '~/Components/Form.js'
-import { NumberInputField } from '~/Components/NumberInputField.js'
-import { Popover } from '~/Components/Popover.js'
 import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
 import { useResizeObserver } from '~/Hooks/useResizeObserver.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { LayeredStyleStore } from '../StyleStore.js'
+import { AspectRatioPicker } from './AspectRatioPicker.js'
 import {
 	buildOptionValues,
 	getDraggableBoundsFields,
@@ -30,7 +23,7 @@ import {
 	type BoundsFractions,
 	type BoundsKey,
 } from './boundsFields.js'
-import { fitCanvasSize, PAD_X, PAD_Y, parseAspectRatio } from './canvasSize.js'
+import { fitCanvasSize, PAD_X, PAD_Y } from './canvasSize.js'
 import { useLayeredButtonDrawStyleParser } from './DrawStyleParser.js'
 import { filterElementRects, findElementRect, hitTestElements } from './elementHitTest.js'
 import FontLoader from './FontLoader.js'
@@ -38,7 +31,6 @@ import { GraphicsImage } from './Image.js'
 import { LineSelectionOverlay } from './LineSelectionOverlay.js'
 import { QuickActionsToolbar } from './QuickActionsToolbar.js'
 import { SelectionOverlay } from './SelectionOverlay.js'
-import { collectSurfaceAspectRatios } from './surfaceAspectRatios.js'
 
 interface LayeredButtonPreviewRendererProps {
 	controlId: string
@@ -118,30 +110,7 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 						snapEnabledRef={snapEnabledRef}
 					/>
 				</div>
-				<div className="button-layer-canvas-footer">
-					<span className="button-layer-footer-label">Aspect Ratio</span>
-					<div className="button-layer-aspect-options">
-						{ASPECT_RATIO_OPTIONS.map((option) => {
-							const id = String(option.id)
-							return (
-								<button
-									key={id}
-									type="button"
-									title={option.label}
-									className={`button-layer-aspect-option${aspectRatio === id ? ' active' : ''}`}
-									onClick={() => setAspectRatio(id)}
-								>
-									<AspectRatioGlyph ratio={parseAspectRatio(id)} />
-								</button>
-							)
-						})}
-						<CustomAspectRatioButton
-							value={aspectRatio}
-							setValue={setAspectRatio}
-							active={!ASPECT_RATIO_OPTIONS.some((option) => String(option.id) === aspectRatio)}
-						/>
-					</div>
-				</div>
+				<AspectRatioPicker value={aspectRatio} setValue={setAspectRatio} />
 			</div>
 		</div>
 	)
@@ -250,118 +219,6 @@ const ElementQuickActions = observer(function ElementQuickActions({
 		/>
 	)
 })
-
-const ASPECT_RATIO_OPTIONS: DropdownChoice[] = [
-	{ id: '1:1', label: '1:1 (Square)' },
-	{ id: '9:7', label: '9:7 (Stream Deck Studio)' },
-	{ id: '2:1', label: '2:1 (Stream Deck Plus & Plus XL)' },
-]
-
-const CUSTOM_RATIO_MIN = 1
-// Large enough for the ratios real surfaces produce, such as the 124:29 of a Stream Deck Neo's info bar
-const CUSTOM_RATIO_MAX = 999
-
-/**
- * Lets a ratio be entered by hand, or picked from the surfaces Companion knows about, for surfaces that don't
- * have a preset button. The value is the same "w:h" string the presets use, so it needs no special handling
- * anywhere else.
- */
-function CustomAspectRatioButton({
-	value,
-	setValue,
-	active,
-}: {
-	value: string
-	setValue: (value: string) => void
-	active: boolean
-}) {
-	// Seeded from whatever is currently applied, preset or not, so opening this is a starting point rather
-	// than a jump to some unrelated ratio
-	const [w, h] = value.split(':').map(Number)
-	const width = isFinite(w) && w > 0 ? w : 4
-	const height = isFinite(h) && h > 0 ? h : 3
-
-	const clamp = (val: number) => Math.min(CUSTOM_RATIO_MAX, Math.max(CUSTOM_RATIO_MIN, Math.round(val)))
-
-	return (
-		<Popover.Root>
-			<Popover.Trigger
-				color={null}
-				className={`button-layer-aspect-option${active ? ' active' : ''}`}
-				title="Custom aspect ratio"
-			>
-				<PencilIcon size={14} />
-			</Popover.Trigger>
-			<Popover.Popup className="button-layer-aspect-custom" align="end">
-				<SurfaceAspectRatioDropdown value={value} setValue={setValue} />
-				<InputGroup>
-					<InputGroupText>W</InputGroupText>
-					<NumberInputField
-						id={undefined}
-						value={width}
-						setValue={(val) => setValue(`${clamp(val)}:${height}`)}
-						min={CUSTOM_RATIO_MIN}
-						max={CUSTOM_RATIO_MAX}
-					/>
-				</InputGroup>
-				<InputGroup>
-					<InputGroupText>H</InputGroupText>
-					<NumberInputField
-						id={undefined}
-						value={height}
-						setValue={(val) => setValue(`${width}:${clamp(val)}`)}
-						min={CUSTOM_RATIO_MIN}
-						max={CUSTOM_RATIO_MAX}
-					/>
-				</InputGroup>
-			</Popover.Popup>
-		</Popover.Root>
-	)
-}
-
-/**
- * The ratios of the buttons on the surfaces Companion knows about, so that connecting a surface is enough for
- * its shape to be offered here - rather than every surface model having to be listed in the ui.
- *
- * This only mounts while the popover is open, so nothing subscribes until the picker is actually opened.
- */
-function SurfaceAspectRatioDropdown({ value, setValue }: { value: string; setValue: (value: string) => void }) {
-	const [surfaces, setSurfaces] = useState<ClientSurfaceButtonSizesItem[]>([])
-
-	useSubscription(
-		trpc.surfaces.watchSurfaceButtonSizes.subscriptionOptions(undefined, {
-			onData: (data) => setSurfaces(Object.values(data)),
-			onError: (error) => {
-				console.error('Failed to subscribe to surface button sizes:', error)
-				setSurfaces([])
-			},
-		})
-	)
-
-	const choices = useMemo(() => collectSurfaceAspectRatios(surfaces), [surfaces])
-
-	return (
-		<SimpleDropdownInputField
-			id={undefined}
-			className="button-layer-aspect-surfaces"
-			choices={choices}
-			value={value}
-			setValue={(val) => setValue(String(val))}
-			tooltip="Match a surface you have"
-			disabled={choices.length === 0}
-			noOptionsMessage="No surfaces with buttons"
-			badOptionPrefix="Custom"
-		/>
-	)
-}
-
-// A little outlined rectangle drawn to the ratio, so the option reads at a glance
-function AspectRatioGlyph({ ratio }: { ratio: number }) {
-	const max = 15
-	const glyphWidth = ratio >= 1 ? max : max * ratio
-	const glyphHeight = ratio >= 1 ? max / ratio : max
-	return <span className="button-layer-aspect-glyph" style={{ width: glyphWidth, height: glyphHeight }} />
-}
 
 interface LayeredButtonCanvasProps {
 	width: number
