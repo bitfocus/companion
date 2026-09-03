@@ -1,0 +1,124 @@
+/* Styles for AspectRatioPicker.tsx: the control strip under the preview canvas, and the popover it opens.
+   The popover is portaled to the body, so none of this can be nested under the preview panel. */
+
+/* A compact control strip at the bottom of the canvas box */
+.button-layer-canvas-footer {
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 2px 6px;
+	border-top: 1px solid var(--color-border);
+	background-color: var(--color-toolbar-bg);
+
+	/* Truncates rather than pushing the buttons out of the strip when the panel is narrow */
+	.button-layer-footer-label {
+		white-space: nowrap;
+		font-size: 0.85em;
+		color: var(--color-toolbar-fg);
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.button-layer-aspect-options {
+		display: flex;
+		gap: 2px;
+		margin-left: auto;
+		flex: 0 0 auto;
+	}
+
+	.button-layer-aspect-option {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex: 0 0 auto;
+		width: 24px;
+		height: 24px;
+		padding: 0;
+		border: 1px solid transparent;
+		border-radius: 3px;
+		background: transparent;
+		color: var(--color-toolbar-fg);
+		cursor: pointer;
+
+		&:hover:not(.active) {
+			background: var(--color-surface-hover);
+			border-color: var(--color-border);
+		}
+
+		&.active {
+			background: var(--color-toolbar-accent);
+			border-color: var(--color-toolbar-accent);
+			color: var(--color-on-dark);
+		}
+	}
+
+	/* The custom option is a popover trigger, which always carries the `btn` class - undo its metrics
+	   so it keeps the same 24x24 box as the preset buttons */
+	.button-layer-aspect-option.btn {
+		line-height: 1;
+		font-size: inherit;
+		min-width: 0;
+	}
+}
+
+.button-layer-aspect-custom {
+	/* Sized so a surface entry - a ratio plus the model name - fits on one line */
+	width: 230px;
+	min-width: 0;
+	padding: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+
+	/* These size to their text by default, which leaves the single letter W and H prefixes different widths
+	   and the two fields misaligned. Wide enough for either, with the letter centred in it. */
+	.input-group2-text {
+		min-width: 2.75rem;
+		justify-content: center;
+	}
+}
+
+/* Separates the surface shapes below from the W/H fields above */
+.button-layer-aspect-surfaces-label {
+	margin-top: 2px;
+	padding-top: 6px;
+	border-top: 1px solid var(--color-border);
+	font-size: 0.7rem;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	opacity: 0.6;
+}
+
+/* A popover item, but sized to the compact popup rather than the default menu metrics */
+.button-layer-aspect-surface.popover2-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 4px;
+	border-radius: 3px;
+	font-size: 0.8rem;
+
+	/* A long model name ellipsizes rather than wrapping the row onto a second line */
+	.button-layer-aspect-surface-label {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&.active {
+		background: var(--color-toolbar-accent);
+		color: var(--color-on-dark);
+	}
+}
+
+/* Outlined rectangle drawn to an option's ratio; currentColor flips to white when active. Used both by the
+   footer buttons and by the surface rows in the popover, so it is not scoped to either. */
+.button-layer-aspect-glyph {
+	display: block;
+	flex: 0 0 auto;
+	border: 1.5px solid currentColor;
+	border-radius: 1px;
+}

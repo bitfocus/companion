@@ -212,75 +212,6 @@
 			overflow: hidden;
 		}
 
-		/* A compact control strip at the bottom of the canvas box */
-		.button-layer-canvas-footer {
-			flex: 0 0 auto;
-			display: flex;
-			align-items: center;
-			gap: 0.5rem;
-			padding: 2px 6px;
-			border-top: 1px solid var(--color-border);
-			background-color: var(--color-toolbar-bg);
-
-			/* Truncates rather than pushing the buttons out of the strip when the panel is narrow */
-			.button-layer-footer-label {
-				white-space: nowrap;
-				font-size: 0.85em;
-				color: var(--color-toolbar-fg);
-				min-width: 0;
-				overflow: hidden;
-				text-overflow: ellipsis;
-			}
-
-			.button-layer-aspect-options {
-				display: flex;
-				gap: 2px;
-				margin-left: auto;
-				flex: 0 0 auto;
-			}
-
-			.button-layer-aspect-option {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				flex: 0 0 auto;
-				width: 24px;
-				height: 24px;
-				padding: 0;
-				border: 1px solid transparent;
-				border-radius: 3px;
-				background: transparent;
-				color: var(--color-toolbar-fg);
-				cursor: pointer;
-
-				&:hover:not(.active) {
-					background: var(--color-surface-hover);
-					border-color: var(--color-border);
-				}
-
-				&.active {
-					background: var(--color-toolbar-accent);
-					border-color: var(--color-toolbar-accent);
-					color: var(--color-on-dark);
-				}
-			}
-
-			/* The custom option is a popover trigger, which always carries the `btn` class - undo its metrics
-			   so it keeps the same 24x24 box as the preset buttons */
-			.button-layer-aspect-option.btn {
-				line-height: 1;
-				font-size: inherit;
-				min-width: 0;
-			}
-
-			/* Outlined rectangle drawn to the option's ratio; currentColor flips to white when active */
-			.button-layer-aspect-glyph {
-				display: block;
-				border: 1.5px solid currentColor;
-				border-radius: 1px;
-			}
-		}
-
 		/* Must shrink-wrap the canvas exactly: the selection overlay positions its handles and snap guides as
 		   percentages of this box, so any difference between it and the canvas's displayed box offsets them. */
 		.button-layer-canvas-wrapper {
@@ -398,17 +329,6 @@
 
 		padding: 0.5rem;
 	}
-}
-
-/* Portaled to the body, so it can't live inside the .button-layer-preview block */
-.button-layer-aspect-custom {
-	/* Sized for the two-digit values these ratios realistically use */
-	width: 135px;
-	min-width: 0;
-	padding: 6px;
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
 }
 
 .add-layered-element-popover {
