@@ -554,7 +554,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		const missingReferencedFeedbackDefinitions = new Set<string>()
 		const missingReferencedActionDefinitions = new Set<string>()
 
-		const allowedSet = new Set<string>(['local'])
+		const allowedSet = new Set<string>(['local', 'this'])
 
 		const replaceVariablesInEntityOptions = (
 			definition: ClientEntityDefinition,
@@ -583,6 +583,42 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				}
 			)
 
+		// Fix up the variable references in a single entity and any children it may have.
+		// The definition is looked up using the entity's own connectionId, so that internal
+		// entities (eg building blocks, `user_value` local variables) resolve too.
+		const fixupEntity = (entity: SomeEntityModel): void => {
+			if (entity.type === EntityModelType.Feedback && entity.styleOverrides) {
+				for (const styleOverride of entity.styleOverrides) {
+					if (styleOverride.override && isExpressionOrValue(styleOverride.override)) {
+						if (styleOverride.override.isExpression) {
+							styleOverride.override.value = replaceAllVariables(styleOverride.override.value, label, allowedSet)
+						} else if (styleOverride.elementProperty === 'text' && typeof styleOverride.override.value === 'string') {
+							// TODO - this may be too strict/loose
+							styleOverride.override.value = replaceAllVariables(styleOverride.override.value, label, allowedSet)
+						}
+					}
+				}
+			}
+
+			const definition = this.getEntityDefinition(entity.type, entity.connectionId, entity.definitionId)
+			if (!definition) {
+				if (entity.type === EntityModelType.Action) {
+					missingReferencedActionDefinitions.add(entity.definitionId)
+				} else {
+					missingReferencedFeedbackDefinitions.add(entity.definitionId)
+				}
+			} else {
+				entity.options = replaceVariablesInEntityOptions(definition, entity.options)
+			}
+
+			if (entity.connectionId === 'internal' && entity.children) {
+				for (const childGroup of Object.values(entity.children)) {
+					if (!childGroup) continue
+					for (const child of childGroup) fixupEntity(child)
+				}
+			}
+		}
+
 		/*
 		 * Clean up variable references: $(label:variable)
 		 * since the name of the connection is dynamic. We don't want to
@@ -592,24 +628,16 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			// Update variable references in style layers
 			replaceAllVariablesInElements(preset.model.style.layers, label, allowedSet)
 
-			if (preset.model.feedbacks) {
-				for (const feedback of preset.model.feedbacks) {
-					if (feedback.type === EntityModelType.Feedback && feedback.styleOverrides) {
-						for (const styleOverride of feedback.styleOverrides) {
-							if (styleOverride.override && isExpressionOrValue(styleOverride.override)) {
-								if (styleOverride.override.isExpression) {
-									styleOverride.override.value = replaceAllVariables(styleOverride.override.value, label, allowedSet)
-								} else if (
-									styleOverride.elementProperty === 'text' &&
-									typeof styleOverride.override.value === 'string'
-								) {
-									// TODO - this may be too strict/loose
-									styleOverride.override.value = replaceAllVariables(styleOverride.override.value, label, allowedSet)
-								}
-							}
-						}
-					}
-				}
+			for (const feedback of preset.model.feedbacks ?? []) {
+				fixupEntity(feedback)
+			}
+
+			for (const localVariable of preset.model.localVariables ?? []) {
+				fixupEntity(localVariable)
+			}
+
+			for (const extraFeedback of preset.presetExtraFeedbacks ?? []) {
+				fixupEntity(extraFeedback)
 			}
 
 			for (const step of Object.values(preset.model.steps)) {
@@ -618,15 +646,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 					if (!set || !Array.isArray(set)) continue
 
 					for (const action of set) {
-						if (action.type !== EntityModelType.Action) continue
-
-						const definition = this.getEntityDefinition(EntityModelType.Action, connectionId, action.definitionId)
-						if (!definition) {
-							missingReferencedActionDefinitions.add(action.definitionId)
-							continue
-						}
-
-						action.options = replaceVariablesInEntityOptions(definition, action.options)
+						fixupEntity(action)
 					}
 				}
 			}
