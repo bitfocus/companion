@@ -35,7 +35,9 @@ class TestInstance extends InstanceBase {
 			{ variableId: 'last_value', name: 'Last value' },
 			{ variableId: 'run_count', name: 'Run count' },
 			{ variableId: 'prefix', name: 'Configured prefix' },
+			{ variableId: 'node_version', name: 'Node.js version of the child process' },
 		])
+		this.setVariableValues({ node_version: process.versions.node })
 
 		await this.configUpdated(config)
 	}

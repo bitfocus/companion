@@ -15,7 +15,7 @@
 	],
 	"legacyIds": [],
 	"runtime": {
-		"type": "node26",
+		"type": "node22",
 		"api": "nodejs-ipc",
 		"apiVersion": "2.0.4",
 		"entrypoint": "main.mjs"

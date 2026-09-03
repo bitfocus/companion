@@ -14,6 +14,7 @@ import * as esbuild from 'esbuild'
 interface FixtureVersion {
 	apiVersion: string
 	contract: 'v1' | 'v2'
+	runtime: 'node18' | 'node22' | 'node26'
 }
 
 const modulesDir = import.meta.dirname
@@ -43,8 +44,9 @@ function buildManifest(entry: FixtureVersion): Record<string, unknown> {
 		maintainers: [{ name: 'Companion integration tests' }],
 		legacyIds: [],
 		runtime: {
-			// v2 fixtures declare node26 so the host grants network access for the ipc data channel
-			type: entry.contract === 'v2' ? 'node26' : 'node22',
+			// The declared runtime mirrors the engines of that base library version, like real
+			// modules of that era ship
+			type: entry.runtime,
 			api: 'nodejs-ipc',
 			apiVersion: entry.apiVersion,
 			entrypoint: entry.contract === 'v2' ? 'main.mjs' : 'main.js',
@@ -92,7 +94,7 @@ async function buildFixture(entry: FixtureVersion): Promise<void> {
 		minify: true,
 		platform: 'node',
 		format: entry.contract === 'v2' ? 'esm' : 'cjs',
-		target: entry.contract === 'v2' ? 'node22' : 'node18',
+		target: entry.runtime,
 		outfile: path.join(fixtureDir, entry.contract === 'v2' ? 'main.mjs' : 'main.js'),
 		// Force resolution to the version installed above - plain resolution from src/ would find
 		// the repo's own copy of the base library instead
