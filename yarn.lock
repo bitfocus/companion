@@ -1950,9 +1950,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:1.2.0-nightly-main-20260902-201543-eaa0afd":
-  version: 1.2.0-nightly-main-20260902-201543-eaa0afd
-  resolution: "@companion-module/host@npm:1.2.0-nightly-main-20260902-201543-eaa0afd"
+"@companion-module/host@npm:1.2.0-nightly-main-20260903-192135-d3ed195":
+  version: 1.2.0-nightly-main-20260903-192135-d3ed195
+  resolution: "@companion-module/host@npm:1.2.0-nightly-main-20260903-192135-d3ed195"
   dependencies:
     "@companion-module/base": "npm:~2.1.3"
     colord: "npm:^2.9.3"
@@ -1961,7 +1961,7 @@ __metadata:
     p-queue: "npm:^9.3.3"
     semver: "npm:^7.8.5"
     zod: "npm:^4.4.3"
-  checksum: 10c0/ee44a30a2962b73e1a218e31fcd06a94bbcbe8da1cc1be4fb089456052fbfe88923c584eb4a0e83abc73d4377e55081df4f9ff627eb7193c38eb08454767a14e
+  checksum: 10c0/8c7a288fec570d00d8e8e853cdb600d2487b53a5b9567debc85171836676c557a5ed5bc314e0c7a01f595a620b03b5f719208deba4c603bf7f40507dc828f939
   languageName: node
   linkType: hard
 
