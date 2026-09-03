@@ -14,7 +14,6 @@ import { SurfacesStore } from '~/Stores/SurfacesStore.js'
 import { TriggersListStore } from '~/Stores/TriggersListStore.js'
 import { UserConfigStore } from '~/Stores/UserConfigStore.js'
 import { VariablesStore } from '~/Stores/VariablesStore.js'
-import { ViewControlStore } from '~/Stores/ViewControlStore.js'
 import { useActiveLearnRequests } from './Hooks/useActiveLearnRequests.js'
 import { useGenericCollectionsSubscription } from './Hooks/useCollectionsSubscription.js'
 import { useCompositeElementDefinitionsSubscription } from './Hooks/useCompositeElementDefinitionsSubscription.js'
@@ -103,8 +102,6 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 			importTaskStatus: observable.box<ImportExportTask | null>(null, { deep: false }),
 
 			wizardOpen: observable.box(false),
-
-			viewControl: new ViewControlStore(),
 		} satisfies RootAppStore
 	}, [notifierObj, helpModalRef, whatsNewModalRef])
 

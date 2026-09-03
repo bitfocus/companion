@@ -23,3 +23,12 @@ export function safeSetSessionStorage(key: string, value: string): void {
 		console.warn(`Failed to write "${key}" to sessionStorage:`, e)
 	}
 }
+
+export function safeGetSessionStorage(key: string): string | null {
+	try {
+		return window.sessionStorage.getItem(key)
+	} catch (e) {
+		console.warn(`Failed to read "${key}" from sessionStorage:`, e)
+		return null
+	}
+}

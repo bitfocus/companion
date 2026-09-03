@@ -1,0 +1,348 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { act, renderHook } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { MenuActionItemProps } from '~/Components/ActionMenu.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ButtonGridStore } from '../ButtonGridStore.js'
+import type { GridToolActions } from '../GridTools/index.js'
+import { useButtonContextMenu } from '../useButtonContextMenu.js'
+
+/** Every mutation the menu fires, by the trpc path it was built from */
+const sent: { path: string; input: unknown }[] = []
+
+/** Whether the server accepts what it is sent - only a test about failure says otherwise */
+let mutationsFail = false
+
+// The real `trpc` proxy is kept, so each mutation is still named by its real path - only the sending
+// is stood in for, which is also what lets a test decide whether it succeeds
+vi.mock('~/Resources/TRPC.js', async (importOriginal) => {
+	const original = await importOriginal<Record<string, unknown>>()
+	return {
+		...original,
+		useMutationExt: (options: { mutationKey?: unknown[][] }) => ({
+			...options,
+			mutateAsync: async (input: unknown) => {
+				sent.push({ path: (options.mutationKey?.[0] ?? []).join('.'), input })
+				if (mutationsFail) throw new Error('nope')
+			},
+		}),
+	}
+})
+
+beforeEach(() => {
+	sent.length = 0
+	mutationsFail = false
+})
+
+type ClickableMenuItem = Extract<MenuActionItemProps, { do: () => void }>
+
+function at(row: number, column: number, pageNumber = 1): ControlLocation {
+	return { pageNumber, row, column }
+}
+
+/** Every location holds a control, unless the test says otherwise */
+function makeWrapper(occupied?: (location: ControlLocation) => boolean) {
+	// Deep partial of the root store - typed loosely on purpose, the hook only reaches for `pages`
+	const rootStore: any = {
+		pages: {
+			getControlIdAtLocation: (location: ControlLocation) =>
+				!occupied || occupied(location) ? `control:${location.row}/${location.column}` : null,
+		},
+	}
+
+	// The menu's actions are mutations, so it needs a query client even though nothing is sent here
+	const queryClient = new QueryClient()
+
+	return function Wrapper({ children }: { children: React.ReactNode }) {
+		return (
+			<QueryClientProvider client={queryClient}>
+				<RootAppStoreContext.Provider value={rootStore}>{children}</RootAppStoreContext.Provider>
+			</QueryClientProvider>
+		)
+	}
+}
+
+function setup(occupied?: (location: ControlLocation) => boolean) {
+	const store = new ButtonGridStore()
+	const actions: GridToolActions = {
+		openEditor: vi.fn(),
+		press: vi.fn(),
+		transfer: vi.fn(),
+		clearButtons: vi.fn(),
+		// Tests act on a grid where every cell holds a button unless they say otherwise
+		isOccupied: vi.fn(() => true),
+		pasteAt: vi.fn(),
+		fitsOnGrid: vi.fn(() => true),
+	}
+
+	const { result } = renderHook(() => useButtonContextMenu({ store, actions, setTabResetToken: vi.fn() }), {
+		wrapper: makeWrapper(occupied),
+	})
+
+	const openAt = (location: ControlLocation) => act(() => result.current.doButtonContextMenu(location, 0, 0))
+	const labels = () => result.current.contextMenuItems.map((item) => ('isSeparator' in item ? '---' : item.label))
+	// Every item this menu builds runs a function, but the shared type also covers link items, and an
+	// optional `do?: never` on those defeats narrowing by `in`
+	const item = (label: string): ClickableMenuItem => {
+		const found = result.current.contextMenuItems.find((i) => !('isSeparator' in i) && i.label === label)
+		if (!found || 'isSeparator' in found) throw new Error(`no menu item ${label}, have: ${labels().join(', ')}`)
+		return found as ClickableMenuItem
+	}
+
+	return { store, actions, result, openAt, labels, item }
+}
+
+describe('useButtonContextMenu', () => {
+	it('acts on the one button when nothing is selected', () => {
+		const { store, actions, openAt, item } = setup()
+		openAt(at(1, 1))
+
+		expect(item('Copy').label).toBe('Copy')
+
+		act(() => item('Clear').do())
+		expect(actions.clearButtons).toHaveBeenCalledWith([at(1, 1)])
+
+		act(() => item('Copy').do())
+		expect(store.clipboard).toEqual({ locations: [at(1, 1)], mode: 'copy' })
+	})
+
+	describe('within a selection', () => {
+		it('names the count, so it is clear what is about to happen', () => {
+			const { store, openAt, labels } = setup()
+			act(() => store.selectRectangle(at(1, 1), at(1, 3), false))
+
+			openAt(at(1, 2))
+
+			expect(labels()).toContain('Copy 3 buttons')
+			expect(labels()).toContain('Cut 3 buttons')
+			expect(labels()).toContain('Clear 3 buttons')
+		})
+
+		it('copies the whole selection', () => {
+			const { store, openAt, item } = setup()
+			act(() => store.selectRectangle(at(1, 1), at(1, 3), false))
+			openAt(at(1, 2))
+
+			act(() => item('Copy 3 buttons').do())
+
+			expect(store.clipboard?.locations).toEqual([at(1, 1), at(1, 2), at(1, 3)])
+		})
+
+		it('clears the whole selection', () => {
+			const { store, actions, openAt, item } = setup()
+			act(() => store.selectRectangle(at(1, 1), at(1, 3), false))
+			openAt(at(1, 2))
+
+			act(() => item('Clear 3 buttons').do())
+
+			expect(actions.clearButtons).toHaveBeenCalledWith([at(1, 1), at(1, 2), at(1, 3)])
+		})
+
+		it('still offers the selection when the button under the cursor is empty', () => {
+			const { store, openAt, item } = setup((location) => location.column !== 2)
+			act(() => store.selectRectangle(at(1, 1), at(1, 3), false))
+			openAt(at(1, 2))
+
+			expect(item('Copy 3 buttons').disabled).toBeFalsy()
+		})
+	})
+
+	describe('outside a selection', () => {
+		it('acts on the button under the cursor, leaving the selection alone', () => {
+			const { store, actions, openAt, item, labels } = setup()
+			act(() => store.selectRectangle(at(1, 1), at(1, 3), false))
+
+			openAt(at(3, 7))
+
+			expect(labels()).toContain('Clear')
+			act(() => item('Clear').do())
+			expect(actions.clearButtons).toHaveBeenCalledWith([at(3, 7)])
+			expect(store.selectionCount).toBe(3)
+		})
+	})
+
+	it('treats a single selected button as just the one under the cursor', () => {
+		const { store, openAt, labels } = setup()
+		act(() => store.selectWithModifiers(at(1, 1), { range: false, toggle: false }))
+
+		openAt(at(1, 1))
+
+		expect(labels()).toContain('Copy')
+		expect(labels()).not.toContain('Copy 1 buttons')
+	})
+
+	it('pastes through the shared path, so it warns about the same things as the keyboard', () => {
+		const { store, actions, openAt, item } = setup()
+		act(() => store.setClipboard([at(2, 2)], 'copy'))
+
+		openAt(at(1, 1))
+		act(() => item('Paste here').do())
+
+		expect(actions.pasteAt).toHaveBeenCalledWith(at(1, 1))
+	})
+
+	it('disables the paste entries until something is on the clipboard', () => {
+		const { store, openAt, item } = setup()
+		openAt(at(1, 1))
+		expect(item('Paste here').disabled).toBe(true)
+
+		act(() => store.setClipboard([at(2, 2)], 'copy'))
+		openAt(at(1, 1))
+		expect(item('Paste here').disabled).toBeFalsy()
+	})
+
+	describe('what each item does', () => {
+		it('copies and cuts the targets onto the clipboard', () => {
+			const { store, openAt, item } = setup()
+			openAt(at(1, 1))
+
+			act(() => item('Copy').do())
+			expect(store.clipboard).toEqual({ locations: [at(1, 1)], mode: 'copy' })
+
+			act(() => item('Cut').do())
+			expect(store.clipboard).toEqual({ locations: [at(1, 1)], mode: 'cut' })
+		})
+
+		it('pastes through the same path as the keyboard, so it warns about the same things', () => {
+			const { actions, store, openAt, item } = setup()
+			act(() => store.setClipboard([at(1, 1)], 'copy'))
+			openAt(at(2, 2))
+
+			act(() => item('Paste here').do())
+
+			expect(actions.pasteAt).toHaveBeenCalledWith(at(2, 2))
+		})
+
+		it('calls a pending cut a move, since that is what pasting it does', () => {
+			const { store, openAt, labels } = setup()
+			act(() => store.setClipboard([at(1, 1)], 'cut'))
+			openAt(at(2, 2))
+
+			expect(labels()).toContain('Move here')
+			expect(labels()).not.toContain('Paste here')
+		})
+
+		it('swaps with the clipboard, and spends it once that has happened', () => {
+			const { actions, store, openAt, item } = setup()
+			act(() => store.setClipboard([at(1, 1)], 'copy'))
+			openAt(at(2, 2))
+
+			act(() => item('Swap here').do())
+
+			expect(actions.transfer).toHaveBeenCalledWith(
+				'swap',
+				[{ fromLocation: at(1, 1), toLocation: at(2, 2) }],
+				expect.any(Function)
+			)
+			// The clipboard is only spent when the transfer reports back
+			expect(store.clipboard).not.toBeNull()
+			act(() => vi.mocked(actions.transfer).mock.calls[0][2]())
+			expect(store.clipboard).toBeNull()
+		})
+
+		it('places a reference to the copied button, rather than a copy of it', async () => {
+			const { store, openAt, item } = setup()
+			act(() => store.setClipboard([at(1, 1)], 'copy'))
+			openAt(at(2, 2))
+
+			act(() => item('Paste as reference').do())
+
+			await vi.waitFor(() =>
+				expect(sent).toEqual([
+					{ path: 'controls.createReferenceControl', input: { fromLocation: at(1, 1), toLocation: at(2, 2) } },
+				])
+			)
+		})
+
+		it('reports a failed reference paste rather than letting the rejection escape', async () => {
+			mutationsFail = true
+			const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
+			const { store, openAt, item } = setup()
+			act(() => store.setClipboard([at(1, 1)], 'copy'))
+			openAt(at(2, 2))
+
+			act(() => item('Paste as reference').do())
+
+			await vi.waitFor(() => expect(errors).toHaveBeenCalledWith(expect.stringContaining('Paste reference failed')))
+			errors.mockRestore()
+		})
+
+		it('spends a cut when pasted as a reference, which never completes the move itself', () => {
+			const { store, openAt, item } = setup()
+			act(() => store.setClipboard([at(1, 1)], 'cut'))
+			openAt(at(2, 2))
+
+			act(() => item('Paste as reference').do())
+
+			expect(store.clipboard).toBeNull()
+		})
+
+		it('leaves a copy on the clipboard when pasted as a reference', () => {
+			const { store, openAt, item } = setup()
+			act(() => store.setClipboard([at(1, 1)], 'copy'))
+			openAt(at(2, 2))
+
+			act(() => item('Paste as reference').do())
+
+			expect(store.clipboard).toEqual({ locations: [at(1, 1)], mode: 'copy' })
+		})
+
+		it('presses the button under the cursor down and back up again', async () => {
+			const { openAt, item } = setup()
+			openAt(at(1, 1))
+
+			act(() => item('Press').do())
+
+			// A press that never released would leave the button held down on real hardware
+			await vi.waitFor(() =>
+				expect(sent).toEqual([
+					{
+						path: 'controls.hotPressControl',
+						input: { location: at(1, 1), direction: true, surfaceId: 'context-menu' },
+					},
+					{
+						path: 'controls.hotPressControl',
+						input: { location: at(1, 1), direction: false, surfaceId: 'context-menu' },
+					},
+				])
+			)
+		})
+
+		it('aborts the actions of the button under the cursor', async () => {
+			const { openAt, item } = setup()
+			openAt(at(1, 1))
+
+			act(() => item('Abort Actions').do())
+
+			await vi.waitFor(() =>
+				expect(sent).toEqual([{ path: 'controls.hotAbortControl', input: { location: at(1, 1) } }])
+			)
+		})
+
+		it.each([
+			['Press', 'Hot press failed'],
+			['Abort Actions', 'Hot abort failed'],
+		] as const)('reports a failed %s rather than letting the rejection escape', async (label, message) => {
+			mutationsFail = true
+			const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
+			const { openAt, item } = setup()
+			openAt(at(1, 1))
+
+			act(() => item(label).do())
+
+			await vi.waitFor(() => expect(errors).toHaveBeenCalledWith(expect.stringContaining(message)))
+			errors.mockRestore()
+		})
+
+		it('offers nothing to do with an empty clipboard', () => {
+			const { openAt, item } = setup()
+			openAt(at(1, 1))
+
+			for (const label of ['Paste here', 'Swap here', 'Paste as reference']) {
+				expect(item(label).disabled).toBe(true)
+				expect(() => act(() => item(label).do())).not.toThrow()
+			}
+		})
+	})
+})
