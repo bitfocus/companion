@@ -402,6 +402,13 @@
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
+
+	/* These size to their text by default, which leaves the single letter W and H prefixes different widths
+	   and the two fields misaligned. Wide enough for either, with the letter centred in it. */
+	.input-group2-text {
+		min-width: 2.75rem;
+		justify-content: center;
+	}
 }
 
 /* Separates the surface shapes below from the W/H fields above */
