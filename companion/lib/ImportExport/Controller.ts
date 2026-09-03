@@ -503,7 +503,7 @@ export class ImportExportController {
 						await this.#reset(config)
 
 						// Perform the import
-						this.#importController.importFull(data, config)
+						await this.#importController.importFull(data, config)
 
 						// trigger startup triggers to run
 						setImmediate(() => {
