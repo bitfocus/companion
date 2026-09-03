@@ -1,9 +1,9 @@
 import { createWriteStream } from 'node:fs'
 import { pipeline } from 'node:stream'
 import { promisify } from 'node:util'
-import { $, fetch, fs, path } from 'zx'
+import { $, fetch, fs, path, usePowerShell } from 'zx'
 import nodeVersionsJson from '../assets/nodejs-versions.json' with { type: 'json' }
-import { toPosix, type PlatformInfo } from './build/util.mts'
+import { determinePlatformInfo, toPosix, type PlatformInfo } from './build/util.mts'
 
 const streamPipeline = promisify(pipeline)
 
@@ -22,6 +22,13 @@ export async function fetchNodejs(platformInfo: PlatformInfo) {
 		})
 	)
 }
+
+/**
+ * The integration tests can stub a missing runtime with a link to the test host's own node binary
+ * (see companion/test/integration/TestApp.ts), marking the directory with this file. A stub must
+ * not satisfy this fetcher - replace it with the real runtime.
+ */
+export const STUB_RUNTIME_MARKER = '.companion-test-stub'
 
 async function fetchSingleVersion(platformInfo: PlatformInfo, nodeVersion: string) {
 	const isZip = platformInfo.runtimePlatform === 'win'
@@ -54,6 +61,10 @@ async function fetchSingleVersion(platformInfo: PlatformInfo, nodeVersion: strin
 
 	// Extract nodejs and discard 'junk'
 	const runtimeDir = path.join(cacheRuntimeDir, `${platformInfo.nodePlatform}-${runtimeArch}-${nodeVersion}`)
+	if (await fs.pathExists(path.join(runtimeDir, STUB_RUNTIME_MARKER))) {
+		console.log(`Replacing stubbed Node.js ${nodeVersion} runtime with the real one`)
+		await fs.remove(runtimeDir)
+	}
 	if (!(await fs.pathExists(runtimeDir))) {
 		if (isZip) {
 			const tmpDir = path.join(cacheRuntimeDir, `tmp-${nodeVersion}`)
@@ -89,4 +100,17 @@ async function fetchSingleVersion(platformInfo: PlatformInfo, nodeVersion: strin
 	}
 
 	return runtimeDir
+}
+
+// Also usable directly (yarn fetch-runtimes) to provision the module-child runtimes without a
+// full dev or packaging run - e.g. so the integration tests spawn modules on their real runtimes
+if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(import.meta.filename)) {
+	if (process.platform === 'win32') {
+		usePowerShell()
+	}
+	const platformInfo = determinePlatformInfo(process.argv[2])
+	const versions = await fetchNodejs(platformInfo)
+	for (const [name, runtimeDir] of versions) {
+		console.log(`${name}: ${runtimeDir}`)
+	}
 }

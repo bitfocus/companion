@@ -34,6 +34,7 @@
     "format": "prettier --write .",
     "test": "vitest",
     "test:e2e": "playwright test -c e2e",
+    "fetch-runtimes": "tsx ./tools/fetch_nodejs.mts",
     "build:writefile": "tsx ./tools/build_writefile.mts",
     "build:openapi": "zx ./tools/generate_openapi.mjs",
     "build:graphics-types": "tsx ./tools/generate_graphics_types.mts",
