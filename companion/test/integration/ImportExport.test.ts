@@ -35,7 +35,7 @@ describe('export and import', () => {
 
 		// Wreck the config
 		app.registry.variables.custom.deleteVariable('kept')
-		await app.trpc().controls.resetControl({ location })
+		await app.trpc().controls.resetControls({ locations: [location], newType: null })
 		await app.trpc().pages.setName({ pageNumber: 1, name: 'Wrecked' })
 		expect(app.registry.page.store.getControlIdAt(location)).toBeFalsy()
 
@@ -58,9 +58,13 @@ describe('export and import', () => {
 			},
 		})
 
-		// The config is restored
-		expect(app.registry.page.store.getPageInfo(1)?.name).toBe('MyPage')
-		expect(app.getCustomVariableValue('kept')).toBe('v1')
+		// The import runs as a deferred task (the mutation returns a runId immediately), so wait
+		// for the restored config to appear
+		await vi.waitFor(() => {
+			expect(app.registry.page.store.getPageInfo(1)?.name).toBe('MyPage')
+			expect(app.getCustomVariableValue('kept')).toBe('v1')
+			expect(app.registry.page.store.getControlIdAt(location)).toBeTruthy()
+		})
 
 		// And the restored button still works
 		app.pressButton(location, true)

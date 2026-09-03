@@ -18,7 +18,7 @@ describe('editing over trpc, as the ui does', () => {
 
 	test('create a button and edit its text element, rendered by the real graphics pipeline', async () => {
 		const location = { pageNumber: 1, row: 1, column: 1 }
-		await app.trpc().controls.resetControl({ location, newType: 'button-layered' })
+		await app.trpc().controls.resetControls({ locations: [location], newType: 'button-layered' })
 
 		const controlId = app.registry.page.store.getControlIdAt(location)
 		expect(controlId).toBeTruthy()

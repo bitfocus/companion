@@ -58,7 +58,7 @@ describe('real module children across module-api versions', () => {
 				expect(
 					app.registry.instance.definitions.getEntityDefinition(EntityModelType.Feedback, connectionId, 'last_value_is')
 				).toBeTruthy()
-			})
+			}, 15_000)
 
 			// Executing an action in the child updates the module's variables in the host
 			const location = { pageNumber: 1, row: 1 + Math.floor(index / 6), column: 1 + (index % 6) }
@@ -103,15 +103,17 @@ describe('real module children across module-api versions', () => {
 
 			app.pressButton(location, true)
 			app.pressButton(location, false)
+			// The round trip through the child process can be slow when the whole suite runs in
+			// parallel, so these waits need more than the default 1s
 			await vi.waitFor(() => {
 				expect(app.registry.variables.values.getVariableValue(label, 'last_value')).toBe('hello')
 				expect(app.registry.variables.values.getVariableValue(label, 'run_count')).toBe(1)
-			})
+			}, 15_000)
 
 			// The feedback re-evaluated in the child and its value reached the control
 			await vi.waitFor(() => {
 				expect(app.getFeedbackValue(controlId, feedbackId!)).toBe(true)
-			})
+			}, 15_000)
 
 			// A config update reaches the module, which reports the new prefix back as a variable
 			expect(
@@ -119,23 +121,23 @@ describe('real module children across module-api versions', () => {
 			).toBeNull()
 			await vi.waitFor(() => {
 				expect(app.registry.variables.values.getVariableValue(label, 'prefix')).toBe('P-')
-			})
+			}, 15_000)
 
 			// And the updated config is used by subsequent action runs
 			app.pressButton(location, true)
 			app.pressButton(location, false)
 			await vi.waitFor(() => {
 				expect(app.registry.variables.values.getVariableValue(label, 'last_value')).toBe('P-hello')
-			})
+			}, 15_000)
 			await vi.waitFor(() => {
 				expect(app.getFeedbackValue(controlId, feedbackId!)).toBe(false)
-			})
+			}, 15_000)
 
 			// Disable stops the child, re-enable brings it back
 			await app.trpc().instances.connections.setEnabled({ connectionId, enabled: false })
 			await vi.waitFor(() => {
 				expect(app.registry.instance.processManager.getConnectionChild(connectionId)).toBeUndefined()
-			})
+			}, 15_000)
 			await app.trpc().instances.connections.setEnabled({ connectionId, enabled: true })
 			await waitForStatusCategory(connectionId, 'good')
 		}
