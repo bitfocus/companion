@@ -1,6 +1,6 @@
 {
   "name": "@companion-app/config-tool",
-  "version": "5.0.4",
+  "version": "5.0.5",
   "description": "Interactive configuration tool for headless Companion installs",
   "type": "module",
   "private": true,
