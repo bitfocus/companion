@@ -1973,16 +1973,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:1.1.4":
-  version: 1.1.4
-  resolution: "@companion-module/host@npm:1.1.4"
+"@companion-module/host@npm:1.1.5":
+  version: 1.1.5
+  resolution: "@companion-module/host@npm:1.1.5"
   dependencies:
     "@companion-module/base": "npm:~2.1.3"
     debounce-fn: "npm:^6.0.0"
     p-queue: "npm:^9.3.0"
     semver: "npm:^7.8.5"
     zod: "npm:^4.4.3"
-  checksum: 10c0/cbf5f5832701ea758d47fde5bab1381c53ddbf172ed2c94c4848528810b6c53250593cfef9a87f0a23cfdb7d1c71f30efc5401158d8ae1324cd823d71f06a96e
+  checksum: 10c0/ca2dd7147c2f021e0782906f223490893778ee266cc5d891d18eedea2f990b665c14301f806364174a89f859196ada8eb7d391a68f9ebd6e077cdc9d47bae082
   languageName: node
   linkType: hard
 
@@ -10811,7 +10811,7 @@ __metadata:
   dependencies:
     "@companion-app/shared": "npm:*"
     "@companion-module/base-old": "npm:@companion-module/base@~1.14.1"
-    "@companion-module/host": "npm:1.1.4"
+    "@companion-module/host": "npm:1.1.5"
     "@companion-surface/host": "npm:1.3.3"
     "@julusian/bonjour-service": "npm:^1.4.4"
     "@julusian/image-rs": "npm:^2.2.0"
