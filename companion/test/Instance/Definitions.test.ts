@@ -566,6 +566,7 @@ describe('InstanceDefinitions', () => {
 				[ButtonGraphicsElementUsage.Text]: 'text-el',
 				[ButtonGraphicsElementUsage.Color]: 'color-el',
 				[ButtonGraphicsElementUsage.Image]: 'image-el',
+				[ButtonGraphicsElementUsage.Leds]: undefined,
 			})
 
 			expect(result).not.toBeNull()
@@ -591,6 +592,7 @@ describe('InstanceDefinitions', () => {
 				[ButtonGraphicsElementUsage.Text]: 'text-el',
 				[ButtonGraphicsElementUsage.Color]: 'color-el',
 				[ButtonGraphicsElementUsage.Image]: 'image-el',
+				[ButtonGraphicsElementUsage.Leds]: undefined,
 			})
 
 			expect(result).not.toBeNull()
@@ -1882,7 +1884,7 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {}, false)
 
 			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
@@ -1927,7 +1929,7 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {}, false)
 
 			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
@@ -1980,7 +1982,7 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {}, false)
 
 			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
@@ -2016,7 +2018,7 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {}, false)
 
 			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
@@ -2306,7 +2308,7 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {}, false)
 
 			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
@@ -2581,7 +2583,7 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {}, false)
 
 			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
@@ -2623,7 +2625,7 @@ describe('InstanceDefinitions', () => {
 				],
 			})
 
-			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {}, false)
 
 			// presetExtraFeedbacks are surfaced through the preview model
 			const preview = defs.convertPresetToPreviewControlModel('conn1', 'p1')
@@ -2696,7 +2698,7 @@ describe('InstanceDefinitions', () => {
 				},
 			})
 
-			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {})
+			defs.setPresetDefinitions('conn1', presetsToMap([preset]), {}, false)
 
 			const result = defs.convertPresetToControlModel('conn1', 'p1', null)
 			expect(result).not.toBeNull()
