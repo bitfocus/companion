@@ -324,6 +324,16 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			(e: React.PointerEvent<HTMLDivElement>) => {
 				if (!marquee || marquee.pointerId !== e.pointerId || dragSource) return
 
+				// The release can happen somewhere this element never sees it: outside the grid before the
+				// box was dragged far enough to capture the pointer, or outside the window entirely, where
+				// no pointerup is delivered at all. A move from the same pointer with nothing held is proof
+				// it has already happened - and a mouse keeps its pointer id between gestures, so without
+				// this the box would wake up on the next hover and rubber-band with no button pressed.
+				if (e.buttons === 0) {
+					setMarquee(null)
+					return
+				}
+
 				const point = canvasPoint(e.clientX, e.clientY)
 				if (!point) return
 

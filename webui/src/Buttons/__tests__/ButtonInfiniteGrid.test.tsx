@@ -191,7 +191,7 @@ describe('dragging out a rubber-band', () => {
 		const { grid, onSelect } = setup()
 
 		fireEvent.pointerDown(grid, { ...centreOf(0, 0), button: 0, pointerId: 1, pointerType: 'mouse' })
-		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
+		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse', buttons: 1 })
 		fireEvent.pointerUp(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
 
 		expect(onSelect).toHaveBeenCalledWith(at(0, 0), at(1, 2), false)
@@ -208,17 +208,22 @@ describe('dragging out a rubber-band', () => {
 		// Capturing on pointerdown would swallow the pointerup a plain click on a button needs
 		expect(capture).not.toHaveBeenCalled()
 
-		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
+		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse', buttons: 1 })
 
 		// Without this, a pointerup outside .button-infinite-grid never reaches the grid and the box sticks
 		expect(capture).toHaveBeenCalledWith(1)
+
+		// The rest of the drag is already captured, so it is not asked for again on every move
+		fireEvent.pointerMove(grid, { ...centreOf(2, 4), pointerId: 1, pointerType: 'mouse', buttons: 1 })
+
+		expect(capture).toHaveBeenCalledTimes(1)
 	})
 
 	it('draws the box while it is being dragged, so what it covers is visible', () => {
 		const { grid } = setup()
 
 		fireEvent.pointerDown(grid, { ...centreOf(1, 2), button: 0, pointerId: 1, pointerType: 'mouse' })
-		fireEvent.pointerMove(grid, { ...centreOf(0, 0), pointerId: 1, pointerType: 'mouse' })
+		fireEvent.pointerMove(grid, { ...centreOf(0, 0), pointerId: 1, pointerType: 'mouse', buttons: 1 })
 
 		// Dragged up and to the left, so the box is measured from where the pointer got to
 		const box = marqueeBox(grid)
@@ -236,6 +241,7 @@ describe('dragging out a rubber-band', () => {
 			clientY: centreOf(1, 1).clientY,
 			pointerId: 1,
 			pointerType: 'mouse',
+			buttons: 1,
 		})
 		fireEvent.pointerUp(grid, { ...centreOf(1, 1), pointerId: 1, pointerType: 'mouse' })
 
@@ -247,7 +253,7 @@ describe('dragging out a rubber-band', () => {
 		const { grid, canStart, onSelect } = setup({ canStart: () => false })
 
 		fireEvent.pointerDown(grid, { ...centreOf(0, 0), button: 0, pointerId: 1, pointerType: 'mouse' })
-		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
+		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse', buttons: 1 })
 		fireEvent.pointerUp(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
 
 		expect(canStart).toHaveBeenCalledWith(false)
@@ -263,7 +269,7 @@ describe('dragging out a rubber-band', () => {
 		const { grid, canStart, onSelect } = setup()
 
 		fireEvent.pointerDown(grid, { ...centreOf(0, 0), ...modifier, button: 0, pointerId: 1, pointerType: 'mouse' })
-		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
+		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse', buttons: 1 })
 		fireEvent.pointerUp(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
 
 		// Whether a box means anything depends on this, so the tool is asked with it rather than after
@@ -294,7 +300,7 @@ describe('dragging out a rubber-band', () => {
 		const { grid, onSelect } = setup({ marquee: false })
 
 		fireEvent.pointerDown(grid, { ...centreOf(0, 0), button: 0, pointerId: 1, pointerType: 'mouse' })
-		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
+		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse', buttons: 1 })
 		fireEvent.pointerUp(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
 
 		expect(marqueeBox(grid)).toBeNull()
@@ -318,7 +324,7 @@ describe('dragging out a rubber-band', () => {
 		)
 
 		const live = container.querySelector('.button-infinite-grid') as HTMLElement
-		fireEvent.pointerMove(live, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
+		fireEvent.pointerMove(live, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse', buttons: 1 })
 		fireEvent.pointerUp(live, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
 
 		expect(marqueeBox(live)).toBeNull()
@@ -328,7 +334,7 @@ describe('dragging out a rubber-band', () => {
 	it('drops the box when a different pointer is released, rather than selecting from it', () => {
 		const { grid, onSelect } = setup()
 		fireEvent.pointerDown(grid, { ...centreOf(0, 0), button: 0, pointerId: 1, pointerType: 'mouse' })
-		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
+		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse', buttons: 1 })
 
 		fireEvent.pointerUp(grid, { ...centreOf(1, 2), pointerId: 9, pointerType: 'mouse' })
 
@@ -345,10 +351,37 @@ describe('dragging out a rubber-band', () => {
 		expect(marqueeBox(grid)).toBeNull()
 	})
 
+	it('ends a pending box whose release happened where the grid could not see it', () => {
+		const { grid, onSelect } = setup()
+		// Pressed at the edge and taken off the grid before the first move landed on it, so no pointer
+		// capture was ever taken and the release went somewhere else entirely
+		fireEvent.pointerDown(grid, { ...centreOf(0, 0), button: 0, pointerId: 1, pointerType: 'mouse' })
+
+		// Back over the grid afterwards, hovering - a mouse keeps its pointer id between gestures
+		fireEvent.pointerMove(grid, { ...centreOf(2, 4), pointerId: 1, pointerType: 'mouse', buttons: 0 })
+
+		expect(marqueeBox(grid)).toBeNull()
+		fireEvent.pointerUp(grid, { ...centreOf(2, 4), pointerId: 1, pointerType: 'mouse' })
+		expect(onSelect).not.toHaveBeenCalled()
+	})
+
+	it('ends a box already being drawn when its release was missed the same way', () => {
+		const { grid, onSelect } = setup()
+		fireEvent.pointerDown(grid, { ...centreOf(0, 0), button: 0, pointerId: 1, pointerType: 'mouse' })
+		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse', buttons: 1 })
+		expect(marqueeBox(grid)).not.toBeNull()
+
+		fireEvent.pointerMove(grid, { ...centreOf(2, 4), pointerId: 1, pointerType: 'mouse', buttons: 0 })
+
+		// Selecting on a move that arrives after the release would be acting on a gesture already over
+		expect(marqueeBox(grid)).toBeNull()
+		expect(onSelect).not.toHaveBeenCalled()
+	})
+
 	it('abandons the box when the pointer is taken away mid-drag', () => {
 		const { grid, onSelect } = setup()
 		fireEvent.pointerDown(grid, { ...centreOf(0, 0), button: 0, pointerId: 1, pointerType: 'mouse' })
-		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
+		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse', buttons: 1 })
 
 		fireEvent.pointerCancel(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
 
@@ -368,7 +401,7 @@ describe('before the canvas has been measured', () => {
 		const { grid, onSelect } = setup()
 
 		fireEvent.pointerDown(grid, { ...centreOf(0, 0), button: 0, pointerId: 1, pointerType: 'mouse' })
-		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
+		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse', buttons: 1 })
 		fireEvent.pointerUp(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
 
 		expect(marqueeBox(grid)).toBeNull()
@@ -381,7 +414,7 @@ describe('before the canvas has been measured', () => {
 		fireEvent.pointerDown(grid, { ...centreOf(0, 0), button: 0, pointerId: 1, pointerType: 'mouse' })
 
 		Element.prototype.getBoundingClientRect = vi.fn(() => undefined as unknown as DOMRect)
-		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
+		fireEvent.pointerMove(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse', buttons: 1 })
 		fireEvent.pointerUp(grid, { ...centreOf(1, 2), pointerId: 1, pointerType: 'mouse' })
 
 		expect(marqueeBox(grid)).toBeNull()
