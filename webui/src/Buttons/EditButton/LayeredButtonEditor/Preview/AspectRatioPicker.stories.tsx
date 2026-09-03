@@ -2,9 +2,6 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { useArgs } from 'storybook/preview-api'
 import { Popover } from '~/Components/Popover.js'
 import { CustomAspectRatioBody } from './AspectRatioPicker'
-// These styles live in the feature stylesheet rather than being imported by the component, so the story has
-// to pull them in itself
-import '../../EditButton.css'
 
 const meta = {
 	component: CustomAspectRatioBody,

@@ -1,4 +1,5 @@
 import { useSubscription } from '@trpc/tanstack-react-query'
+import './AspectRatioPicker.css'
 import { PencilIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { ClientSurfaceButtonSizesItem } from '@companion-app/shared/Model/Surfaces.js'
