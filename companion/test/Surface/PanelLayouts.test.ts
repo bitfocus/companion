@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { describe, expect, test, vi } from 'vitest'
-import type { SurfaceLayoutDefinition } from '@companion-app/shared/Model/Surfaces.js'
+import type { SurfaceSchemaLayoutDefinition } from '@companion-app/shared/Model/Surfaces.js'
 import { PREVIEW_RENDER_SIZE } from '../../lib/Graphics/ImageResult.js'
 import type { SatelliteSurfaceLayout } from '../../lib/Service/Satellite/SatelliteSurfaceManifestSchema.js'
 import { SurfaceIPElgatoEmulator } from '../../lib/Surface/IP/ElgatoEmulator.js'
@@ -62,7 +62,7 @@ describe('SurfaceIPElgatoEmulator', () => {
 	}
 
 	test('reports a grid of square controls matching the default size', () => {
-		const layout: SurfaceLayoutDefinition = makeEmulator().surfaceLayout
+		const layout: SurfaceSchemaLayoutDefinition = makeEmulator().surfaceLayout
 
 		expect(layout.stylePresets).toEqual({
 			default: { bitmap: { w: PREVIEW_RENDER_SIZE, h: PREVIEW_RENDER_SIZE } },
@@ -83,7 +83,7 @@ describe('SurfaceIPElgatoEmulator', () => {
 
 describe('SurfacePluginPanel', () => {
 	test('exposes the layout reported by the surface module', () => {
-		const surfaceLayout: SurfaceLayoutDefinition = {
+		const surfaceLayout: SurfaceSchemaLayoutDefinition = {
 			stylePresets: {
 				default: { bitmap: { w: 120, h: 120 } },
 				encoder: { bitmap: { w: 200, h: 100 }, leds: { segments: 16, mode: 'full-ring' } },

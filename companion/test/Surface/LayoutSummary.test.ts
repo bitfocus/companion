@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import type { SurfaceConfig, SurfaceLayoutDefinition } from '@companion-app/shared/Model/Surfaces.js'
+import type { SurfaceConfig, SurfaceSchemaLayoutDefinition } from '@companion-app/shared/Model/Surfaces.js'
 import {
 	buildGridSurfaceLayout,
 	resolveControlStylePreset,
@@ -28,7 +28,7 @@ function makeConfig(partial: Partial<SurfaceConfig>): SurfaceConfig {
 }
 
 /** A surface shaped like a Stream Deck Neo: square keys plus a wide info bar */
-const neoLayout: SurfaceLayoutDefinition = {
+const neoLayout: SurfaceSchemaLayoutDefinition = {
 	stylePresets: {
 		default: { bitmap: { w: 96, h: 96 } },
 		infoBar: { bitmap: { w: 248, h: 58 } },
@@ -40,7 +40,7 @@ const neoLayout: SurfaceLayoutDefinition = {
 	},
 }
 
-const squareLayout: SurfaceLayoutDefinition = {
+const squareLayout: SurfaceSchemaLayoutDefinition = {
 	stylePresets: { default: { bitmap: { w: 72, h: 72 } } },
 	controls: { '0/0': { row: 0, column: 0 } },
 }
@@ -124,7 +124,7 @@ describe('surfaceLayoutsFromConfigs', () => {
 })
 
 describe('surfaceButtonSizesFromLayouts', () => {
-	function sizesFor(layout: SurfaceLayoutDefinition) {
+	function sizesFor(layout: SurfaceSchemaLayoutDefinition) {
 		const layouts = surfaceLayoutsFromConfigs([{ surfaceId: 'abc', config: makeConfig({ layout }), isConnected: true }])
 		return surfaceButtonSizesFromLayouts(layouts).abc.bitmapSizes
 	}

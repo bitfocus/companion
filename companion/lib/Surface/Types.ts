@@ -9,7 +9,7 @@ import type {
 	GridSize,
 	SurfaceFirmwareUpdateInfo,
 	SurfaceGroupConfig,
-	SurfaceLayoutDefinition,
+	SurfaceSchemaLayoutDefinition,
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
@@ -39,7 +39,7 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 	/** The layout manifest describing the controls this panel has, and how they are drawn */
-	readonly surfaceLayout: SurfaceLayoutDefinition
+	readonly surfaceLayout: SurfaceSchemaLayoutDefinition
 	clearDeck(): void
 	draw(item: DrawButtonItem): void
 	setConfig(config: any, force?: boolean): void

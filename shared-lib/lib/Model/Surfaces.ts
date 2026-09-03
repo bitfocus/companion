@@ -1,4 +1,10 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import type {
+	SurfaceSchemaBitmapConfig,
+	SurfaceSchemaControlDefinition,
+	SurfaceSchemaControlStylePreset,
+	SurfaceSchemaLayoutDefinition,
+} from '@companion-surface/base'
 import type { CollectionBase } from './Collections.js'
 import type { DropdownChoice } from './Common.js'
 import type {
@@ -10,6 +16,18 @@ import type {
 	CompanionInputFieldStaticTextExtended,
 	CompanionInputFieldTextInputExtended,
 } from './Options.js'
+
+/**
+ * The surface layout schema is owned by the surface api package, which both the plugin and satellite surfaces
+ * describe their layouts with. Re-exported here so that consumers of the models below get the same types from
+ * the same place, rather than a second description of the same thing.
+ */
+export type {
+	SurfaceSchemaBitmapConfig,
+	SurfaceSchemaControlDefinition,
+	SurfaceSchemaControlStylePreset,
+	SurfaceSchemaLayoutDefinition,
+}
 
 export type GridSize = { columns: number; rows: number }
 export type SurfaceRotation = 'surface90' | 'surface-90' | 'surface180' | 'surface0' | 0 | -90 | 90 | 180
@@ -24,44 +42,10 @@ export interface SurfaceFirmwareUpdateInfo {
 }
 
 /**
- * Pixel dimensions of the bitmap a surface control expects to be drawn at.
+ * Pixel dimensions of the bitmap a surface control is drawn at, without the pixel format which is only of
+ * interest to whatever is doing the drawing.
  */
-export interface SurfaceLayoutBitmapSize {
-	w: number
-	h: number
-}
-
-export interface SurfaceLayoutLedsConfig {
-	segments: number
-	mode: 'full-ring' | 'simple'
-}
-
-/**
- * The styling a surface requests for a control. Mirrors the style presets in the surface layout schemas used
- * by the plugin (`@companion-surface/host`) and satellite APIs, so that a layout from either can be described
- * with these types without depending on those packages.
- */
-export interface SurfaceLayoutStylePreset {
-	bitmap?: SurfaceLayoutBitmapSize
-	text?: boolean
-	textStyle?: boolean
-	colors?: 'hex' | 'rgb'
-	leds?: SurfaceLayoutLedsConfig
-}
-
-export interface SurfaceLayoutControl {
-	row: number
-	column: number
-	stylePreset?: string
-}
-
-/**
- * The layout manifest a surface reports when it connects: the styles it can draw, and the controls it has.
- */
-export interface SurfaceLayoutDefinition {
-	stylePresets: Record<string, SurfaceLayoutStylePreset> & { default: SurfaceLayoutStylePreset }
-	controls: Record<string, SurfaceLayoutControl>
-}
+export type SurfaceLayoutBitmapSize = Pick<SurfaceSchemaBitmapConfig, 'w' | 'h'>
 
 /**
  * The full layout manifest of a surface, as pushed to the client.
@@ -72,7 +56,7 @@ export interface ClientSurfaceLayoutItem {
 	type: string
 	displayName: string
 	isConnected: boolean
-	layout: SurfaceLayoutDefinition
+	layout: SurfaceSchemaLayoutDefinition
 }
 
 /**
@@ -147,7 +131,7 @@ export interface SurfaceConfig {
 	type: string | undefined
 	integrationType: string | undefined
 	gridSize: GridSize | undefined
-	layout: SurfaceLayoutDefinition | undefined
+	layout: SurfaceSchemaLayoutDefinition | undefined
 }
 
 export interface SurfaceGroupConfig {

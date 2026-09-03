@@ -5,7 +5,7 @@ import type {
 	ClientSurfaceButtonSizesItem,
 	ClientSurfaceLayoutItem,
 	SurfaceConfig,
-	SurfaceLayoutDefinition,
+	SurfaceSchemaLayoutDefinition,
 } from '@companion-app/shared/Model/Surfaces.js'
 import { createTables } from '../../lib/Data/Schema/v1.js'
 import { DataStoreBase } from '../../lib/Data/StoreBase.js'
@@ -31,7 +31,7 @@ class TestDatabase extends DataStoreBase<any> {
 	protected migrateFileToSqlite(): void {}
 }
 
-const neoLayout: SurfaceLayoutDefinition = {
+const neoLayout: SurfaceSchemaLayoutDefinition = {
 	stylePresets: {
 		default: { bitmap: { w: 96, h: 96 } },
 		infoBar: { bitmap: { w: 248, h: 58 } },

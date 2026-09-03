@@ -4,9 +4,9 @@ import type {
 	GridSize,
 	SurfaceConfig,
 	SurfaceLayoutBitmapSize,
-	SurfaceLayoutControl,
-	SurfaceLayoutDefinition,
-	SurfaceLayoutStylePreset,
+	SurfaceSchemaControlDefinition,
+	SurfaceSchemaControlStylePreset,
+	SurfaceSchemaLayoutDefinition,
 } from '@companion-app/shared/Model/Surfaces.js'
 import { getSurfaceName } from './Util.js'
 
@@ -21,9 +21,9 @@ export interface SurfaceLayoutSource {
  * An unknown preset name falls back to the default, matching how the panels resolve their own controls.
  */
 export function resolveControlStylePreset(
-	layout: SurfaceLayoutDefinition,
-	control: SurfaceLayoutControl
-): SurfaceLayoutStylePreset {
+	layout: SurfaceSchemaLayoutDefinition,
+	control: SurfaceSchemaControlDefinition
+): SurfaceSchemaControlStylePreset {
 	if (control.stylePreset) {
 		const preset = layout.stylePresets[control.stylePreset]
 		if (preset) return preset
@@ -95,8 +95,11 @@ export function surfaceButtonSizesFromLayouts(
 /**
  * A layout for a surface which is a plain grid of identical controls, such as the emulator.
  */
-export function buildGridSurfaceLayout(gridSize: GridSize, bitmap: SurfaceLayoutBitmapSize): SurfaceLayoutDefinition {
-	const controls: Record<string, SurfaceLayoutControl> = {}
+export function buildGridSurfaceLayout(
+	gridSize: GridSize,
+	bitmap: SurfaceLayoutBitmapSize
+): SurfaceSchemaLayoutDefinition {
+	const controls: Record<string, SurfaceSchemaControlDefinition> = {}
 
 	for (let row = 0; row < gridSize.rows; row++) {
 		for (let column = 0; column < gridSize.columns; column++) {

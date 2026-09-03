@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'vitest'
-import type { SurfaceConfig, SurfaceLayoutDefinition } from '@companion-app/shared/Model/Surfaces.js'
+import type { SurfaceConfig, SurfaceSchemaLayoutDefinition } from '@companion-app/shared/Model/Surfaces.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { createDefaultSurfacePanelConfig, createOrSanitizeSurfaceHandlerConfig } from '../../lib/Surface/Config.js'
 import type { SurfacePanel } from '../../lib/Surface/Types.js'
 
-const layout: SurfaceLayoutDefinition = {
+const layout: SurfaceSchemaLayoutDefinition = {
 	stylePresets: { default: { bitmap: { w: 96, h: 96 } } },
 	controls: { '0/0': { row: 0, column: 0 } },
 }
@@ -83,7 +83,7 @@ describe('createOrSanitizeSurfaceHandlerConfig', () => {
 	})
 
 	test('replaces a stale stored layout with the one the panel now reports', () => {
-		const newLayout: SurfaceLayoutDefinition = {
+		const newLayout: SurfaceSchemaLayoutDefinition = {
 			stylePresets: { default: { bitmap: { w: 120, h: 120 } } },
 			controls: { '0/0': { row: 0, column: 0 }, '0/1': { row: 0, column: 1 } },
 		}
