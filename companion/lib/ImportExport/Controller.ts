@@ -491,7 +491,7 @@ export class ImportExportController {
 							Object.values(config).some((val) => val === 'unchanged') ||
 							Object.values(config.surfaces).some((val) => val === 'unchanged')
 
-						console.log(
+						this.#logger.info(
 							`Performing full import: ${isPartialReset ? 'Partial Reset' : 'Full Reset'} Config: ${JSON.stringify(config)}`
 						)
 						const data = ctx.pendingImport?.object
