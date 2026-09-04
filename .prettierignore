@@ -23,3 +23,5 @@ webui/public/whatsnew
 docs/.docusaurus/
 launcher/assets/*.icon/
 launcher-ui/src/shadcn-tailwind.css
+companion/test/integration/modules/fixtures/
+companion/test/integration/modules/fixtures-invalid/
