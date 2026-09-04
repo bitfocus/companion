@@ -52,7 +52,7 @@
     "@julusian/bonjour-service": "^1.4.4",
     "@julusian/image-rs": "^2.2.0",
     "@julusian/segfault-raub": "^2.3.3",
-    "@napi-rs/canvas": "^1.0.1",
+    "@napi-rs/canvas": "^1.0.8",
     "@sentry/node": "^10.62.0",
     "@trpc/server": "^11.18.0",
     "bufferutil": "npm:@julusian/bufferutil@^4.1.0",
