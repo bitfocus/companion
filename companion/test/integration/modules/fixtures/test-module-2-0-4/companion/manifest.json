@@ -1,0 +1,30 @@
+{
+	"type": "connection",
+	"id": "test-module-2-0-4",
+	"name": "Test module (api 2.0.4)",
+	"shortname": "test-module-2-0-4",
+	"description": "Integration test fixture built against @companion-module/base@2.0.4",
+	"version": "1.0.0",
+	"license": "MIT",
+	"repository": "https://github.com/bitfocus/companion",
+	"bugs": "https://github.com/bitfocus/companion/issues",
+	"maintainers": [
+		{
+			"name": "Companion integration tests"
+		}
+	],
+	"legacyIds": [],
+	"runtime": {
+		"type": "node22",
+		"api": "nodejs-ipc",
+		"apiVersion": "2.0.4",
+		"entrypoint": "main.mjs"
+	},
+	"manufacturer": "Bitfocus",
+	"products": [
+		"Test"
+	],
+	"keywords": [
+		"test"
+	]
+}
