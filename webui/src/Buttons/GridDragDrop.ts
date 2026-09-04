@@ -9,7 +9,7 @@ export interface GridDropPlan {
 	pairs: GridTransferPair[]
 	/** Occupied cells that will be overwritten, so the user can be asked first */
 	overwrittenLocations: ControlLocation[]
-	/** False when part of the region would land off the grid, so the drop must be refused */
+	/** False when part of the region would land off the grid, or on a cell the view does not have */
 	fitsOnGrid: boolean
 }
 
@@ -28,7 +28,9 @@ export function planGridDrop(
 	destination: ControlLocation,
 	sources: readonly ControlLocation[],
 	gridSize: UserConfigGridSize,
-	isOccupied: (location: ControlLocation) => boolean
+	isOccupied: (location: ControlLocation) => boolean,
+	/** Whether the view has a cell here at all - viewing as a surface leaves holes which are not cells */
+	isCellPresent: (location: ControlLocation) => boolean
 ): GridDropPlan | null {
 	const rowOffset = destination.row - origin.row
 	const columnOffset = destination.column - origin.column
@@ -52,7 +54,9 @@ export function planGridDrop(
 	if (pairs.length === 0) return null
 
 	// All or nothing: dropping only the buttons that happen to fit would quietly lose the rest
-	const fitsOnGrid = pairs.every(({ toLocation }) => isLocationOnGrid(gridSize, toLocation))
+	const fitsOnGrid = pairs.every(
+		({ toLocation }) => isLocationOnGrid(gridSize, toLocation) && isCellPresent(toLocation)
+	)
 
 	const sourceKeys = new Set(pairs.map(({ fromLocation }) => formatLocation(fromLocation)))
 	const overwrittenLocations = pairs

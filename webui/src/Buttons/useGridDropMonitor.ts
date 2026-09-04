@@ -45,7 +45,7 @@ export function useGridDropMonitor({ store, gridSize, isOccupied, actions }: Use
 			const originKey = formatLocation(origin)
 			const sources = selection.some((l) => formatLocation(l) === originKey) ? [...selection] : [origin]
 
-			return planGridDrop(origin, destination, sources, gridSize, isOccupied)
+			return planGridDrop(origin, destination, sources, gridSize, isOccupied, store.isCellPresent)
 		},
 		[gridSize, store, isOccupied]
 	)

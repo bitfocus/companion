@@ -190,6 +190,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 						marquee={marquee}
 						onHoverLocation={handleHover}
 						drawScale={gridZoomValue / 100}
+						surfaceView={null}
 						setViewportMinHeight={setViewportMinHeight}
 					/>
 				)}

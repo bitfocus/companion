@@ -146,6 +146,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										marquee={null}
 										onHoverLocation={null}
 										drawScale={gridZoomValue / 100}
+										surfaceView={null}
 										maxHeightToMatchCanvas
 									/>
 								)}
@@ -181,6 +182,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										marquee={null}
 										onHoverLocation={null}
 										drawScale={gridZoomValue / 100}
+										surfaceView={null}
 										maxHeightToMatchCanvas
 									/>
 								)}

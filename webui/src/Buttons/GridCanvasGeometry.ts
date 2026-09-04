@@ -1,3 +1,4 @@
+import type { AspectRatio } from '@companion-app/shared/Graphics/AspectRatio.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 
@@ -10,26 +11,63 @@ export interface CanvasPoint {
 	y: number
 }
 
+/** A width and a height, of a cell or of the button drawn in it */
+export interface GridTileSize {
+	width: number
+	height: number
+}
+
 export interface GridTileGeometry {
 	/** The button itself */
-	inner: number
+	inner: GridTileSize
 	/** Drawn around the button, so neighbouring buttons do not touch */
 	padding: number
 	/** What one cell occupies on the canvas, which is what all the placement maths is in */
-	size: number
+	size: GridTileSize
 }
 
+/** The shape every cell is drawn at unless a surface says otherwise */
+export const SQUARE_TILE_ASPECT_RATIO: AspectRatio = { w: 1, h: 1 }
+
+/** How large a square cell is at 100%, and the box a cell of any other shape is fitted into */
+const BASE_TILE_SIZE = 72
+
 /**
- * How big one cell is at this zoom level.
+ * How big one cell is at this zoom level, and at this shape.
+ *
+ * A non-square cell is fitted into the box a square one would have occupied rather than keeping its
+ * width and growing downwards, so that viewing the grid as a surface with wide buttons shows the same
+ * number of them per screen rather than half as many.
  *
  * The padding stops growing once it would be more than a hairline gap, so zooming in makes the
  * buttons bigger rather than the space between them.
  */
-export function gridTileGeometry(drawScale: number): GridTileGeometry {
-	const inner = 72 * drawScale
-	const padding = Math.min(6, inner * 0.05)
+export function gridTileGeometry(drawScale: number, aspectRatio: AspectRatio): GridTileGeometry {
+	const box = BASE_TILE_SIZE * drawScale
+	const inner = fitInsideBox({ width: box, height: box }, aspectRatio)
 
-	return { inner, padding, size: inner + padding * 2 }
+	const padding = Math.min(6, Math.min(inner.width, inner.height) * 0.05)
+
+	return {
+		inner,
+		padding,
+		size: { width: inner.width + padding * 2, height: inner.height + padding * 2 },
+	}
+}
+
+/**
+ * The largest box of this shape which fits inside another, centred.
+ *
+ * This is what letterboxes the minority shape of a surface: the touch strip of a Stream Deck + is
+ * drawn the full width of its cell and half the height, in the cell every other control also gets,
+ * rather than the rows being sized one by one.
+ */
+export function fitInsideBox(box: GridTileSize, aspectRatio: AspectRatio): GridTileSize {
+	if (aspectRatio.w <= 0 || aspectRatio.h <= 0) return box
+
+	const scale = Math.min(box.width / aspectRatio.w, box.height / aspectRatio.h)
+
+	return { width: aspectRatio.w * scale, height: aspectRatio.h * scale }
 }
 
 /**
@@ -41,13 +79,13 @@ export function gridTileGeometry(drawScale: number): GridTileGeometry {
 export function locationAtCanvasPoint(
 	point: CanvasPoint,
 	gridSize: UserConfigGridSize,
-	tileSize: number,
+	tileSize: GridTileSize,
 	pageNumber: number
 ): ControlLocation {
 	return {
 		pageNumber,
-		column: clamp(gridSize.minColumn + Math.floor(point.x / tileSize), gridSize.minColumn, gridSize.maxColumn),
-		row: clamp(gridSize.minRow + Math.floor(point.y / tileSize), gridSize.minRow, gridSize.maxRow),
+		column: clamp(gridSize.minColumn + Math.floor(point.x / tileSize.width), gridSize.minColumn, gridSize.maxColumn),
+		row: clamp(gridSize.minRow + Math.floor(point.y / tileSize.height), gridSize.minRow, gridSize.maxRow),
 	}
 }
 

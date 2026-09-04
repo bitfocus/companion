@@ -177,16 +177,48 @@
 
 		.button-control {
 			position: absolute;
-			float: left;
+
+			/* The cell is the whole slot, with the button centred inside it. A control of a different shape to
+			   the rest of the surface is then letterboxed into the slot every other control gets - a Stream
+			   Deck + strip drawn full width and half height - rather than sitting at the top of a short cell
+			   and leaving the row looking ragged. */
+			box-sizing: border-box;
+			width: calc(var(--tile-slot-width) * 1px);
+			height: calc(var(--tile-slot-height) * 1px);
+			padding: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
 
 			.button-border {
-				width: calc(var(--tile-inner-size) * 1px);
-				height: calc(var(--tile-inner-size) * 1px);
+				flex: none;
+				width: calc(var(--tile-inner-width) * 1px);
+				height: calc(var(--tile-inner-height) * 1px);
 
 				.button-placeholder {
 					/* shrink text with scaling */
 					font-size: calc(var(--grid-scale) * 1.5rem);
 				}
+			}
+		}
+
+		/* A cell of the surface's bounding box which the surface has no control on: the gaps between the six
+		   encoders of a Stream Deck +XL, sitting under nine columns of buttons. Drawn as a hole in the surface
+		   rather than as an empty button, because a button could be put on an empty one and not on this. It
+		   takes no pointer events, so it is not a drop target and cannot be clicked. */
+		.button-grid-absent-cell {
+			position: absolute;
+			pointer-events: none;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			&::after {
+				content: '';
+				width: 4px;
+				height: 4px;
+				border-radius: 50%;
+				background-color: var(--color-button-border);
 			}
 		}
 	}
