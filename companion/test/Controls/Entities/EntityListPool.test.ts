@@ -240,6 +240,18 @@ describe('EntityListPool - read-only by construction', () => {
 		expect(pool.getStepIds()).toEqual(['0', '1'])
 	})
 
+	test('a local variable value can still be set on the read-only pool', () => {
+		// Setting a local variable's value is runtime state, not configuration - a preset reference must be
+		// able to drive its own local variables from the actions the preset carries.
+		const pool = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'ro02' }).deps, vi.fn(), true)
+
+		const variable = feedbackModel({ connectionId: 'internal', definitionId: 'user_value', variableName: 'tap' })
+		pool.loadStorage({ feedbacks: [], steps: {}, localVariables: [variable] }, true, false)
+
+		expect(pool.entitySetVariableValue('local-variables', variable.id, 500)).toBe(true)
+		expect(pool.findEntityById(variable.id)?.feedbackValue).toBe(500)
+	})
+
 	test('loading and runtime step navigation work on the read-only pool', () => {
 		const pool = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'ro01' }).deps, vi.fn(), true)
 

@@ -11,7 +11,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { ControlActionSetAndStepsEditor } from './ControlActionSetAndStepsManager.js'
-import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
+import type { ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityListPoolBase } from './EntityListPoolBase.js'
 import type { ButtonEntityListPoolBase } from './EntityListPoolButton.js'
 
@@ -115,13 +115,6 @@ export interface EditableEntityListPool extends ControlEntityListPoolBase {
 	 * @param name the new name for the variable
 	 */
 	entitySetVariableName(listId: SomeSocketEntityLocation, id: string, name: string): boolean
-
-	/**
-	 * Set the variable value for an entity, if this is a user local variable
-	 * @param id the id of the entity
-	 * @param value the new value for the variable
-	 */
-	entitySetVariableValue(listId: SomeSocketEntityLocation, id: string, value: JsonValue | undefined): boolean
 
 	/** Replace a feedback's style override */
 	entityReplaceStyleOverride(
@@ -444,27 +437,6 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 			this.tryTriggerLocalVariablesChanged(entity, oldLocalVariableName)
 
 			this.reportChange({ redraw: false })
-
-			return true
-		}
-
-		entitySetVariableValue(listId: SomeSocketEntityLocation, id: string, value: JsonValue | undefined): boolean {
-			const entityList = this.getEntityList(listId)
-			if (!entityList) return false
-
-			const entity = entityList.findById(id)
-			if (!entity) return false
-
-			if (!isInternalUserValueFeedback(entity)) return false
-
-			const needsPersistence = entity.setUserValue(value)
-
-			// Persist value if needed
-			if (needsPersistence) {
-				this.reportChange({ redraw: false })
-			}
-
-			this.tryTriggerLocalVariablesChanged(entity)
 
 			return true
 		}

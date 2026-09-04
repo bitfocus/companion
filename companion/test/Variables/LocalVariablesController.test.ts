@@ -26,11 +26,11 @@ function makeVariableEntity(name: string, props: MockEntityProps = {}) {
 	}
 }
 
-function makeControl(entities: any[]) {
+function makeControl(entities: any[], isEditable = true) {
 	return {
 		supportsEntities: true,
 		entities: {
-			isEditable: true,
+			isEditable,
 			getAllEntitiesInList: (listId: string) => (listId === 'local-variables' ? entities : []),
 			entitySetVariableValue: vi.fn(),
 			entitySetOption: vi.fn(),
@@ -235,6 +235,38 @@ describe('LocalVariablesController', () => {
 				isExpression: false,
 				value: 'current',
 			})
+		})
+	})
+
+	describe('a control with a read-only entity pool (e.g. a preset reference)', () => {
+		test('setLocalVariable still sets the value', () => {
+			const entity = makeVariableEntity('my_var')
+			const control = makeControl([entity], false)
+			const { controller } = createController({ 'control-a1': control })
+
+			controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var' }, 'new value')
+
+			expect(control.entities.entitySetVariableValue).toHaveBeenCalledWith('local-variables', entity.id, 'new value')
+		})
+
+		test('resetLocalVariable still restores the startup value', () => {
+			const entity = makeVariableEntity('my_var', { startupValue: 'startup' })
+			const control = makeControl([entity], false)
+			const { controller } = createController({ 'control-a1': control })
+
+			controller.resetLocalVariable({ controlId: 'control-a1', name: 'my_var' })
+
+			expect(control.entities.entitySetVariableValue).toHaveBeenCalledWith('local-variables', entity.id, 'startup')
+		})
+
+		test('writeLocalVariableStartupValue is rejected, as it edits the configuration', () => {
+			const entity = makeVariableEntity('my_var', { feedbackValue: 'current' })
+			const control = makeControl([entity], false)
+			const { controller } = createController({ 'control-a1': control })
+
+			controller.writeLocalVariableStartupValue({ controlId: 'control-a1', name: 'my_var' })
+
+			expect(control.entities.entitySetOption).not.toHaveBeenCalled()
 		})
 	})
 })

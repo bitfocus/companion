@@ -58,8 +58,11 @@ export class LocalVariablesController {
 
 	/**
 	 * As {@link #getControlAndVariable}, but only for controls whose entity pool is editable (narrowing on the
-	 * pool's `isEditable` discriminant). Returns `null` for read-only controls (e.g. a preset reference), so the
-	 * mutating callers below don't each repeat the editability check.
+	 * pool's `isEditable` discriminant). Returns `null` for read-only controls (e.g. a preset reference).
+	 *
+	 * Only for callers that change the variable's *configuration*. Changing its runtime value must work on
+	 * read-only controls too - a preset can carry actions which drive its own local variables - so those use
+	 * {@link #getControlAndVariable}.
 	 */
 	#getEditableControlAndVariable(
 		localVariable: LocalVariable
@@ -153,7 +156,7 @@ export class LocalVariablesController {
 	 * value.
 	 */
 	setLocalVariable(localVariable: LocalVariable, value: JsonValue | undefined): void {
-		const controlAndVariable = this.#getEditableControlAndVariable(localVariable)
+		const controlAndVariable = this.#getControlAndVariable(localVariable)
 		if (!controlAndVariable) return
 
 		const { entities, variableEntity } = controlAndVariable
@@ -165,7 +168,7 @@ export class LocalVariablesController {
 	 * value.
 	 */
 	resetLocalVariable(localVariable: LocalVariable): void {
-		const controlAndVariable = this.#getEditableControlAndVariable(localVariable)
+		const controlAndVariable = this.#getControlAndVariable(localVariable)
 		if (!controlAndVariable) return
 
 		const { entities, variableEntity } = controlAndVariable
