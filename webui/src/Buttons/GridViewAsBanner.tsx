@@ -42,6 +42,9 @@ function GridViewAsBannerMessage({ resolution }: { resolution: GridViewAsResolut
 		case 'off':
 			return null
 
+		case 'noSelection':
+			return <>No surface has been chosen to view the grid as yet.</>
+
 		case 'unknownSurface':
 			return <>The surface this grid was being viewed as is no longer known, so the whole grid is shown.</>
 

@@ -25,7 +25,8 @@ export interface GridViewAsState {
 	 * again comes back to the same surface rather than to nothing.
 	 */
 	enabled: boolean
-	selection: GridViewAsSelection
+	/** Null until something has been chosen, which is not the same as having chosen nothing */
+	selection: GridViewAsSelection | null
 }
 
 export const GRID_VIEW_AS_STORAGE_KEY = 'grid-view-as'
@@ -35,7 +36,7 @@ export const GRID_VIEW_AS_OFFSET_LIMIT = 999
 
 export const DEFAULT_GRID_VIEW_AS_STATE: GridViewAsState = {
 	enabled: false,
-	selection: { type: 'surfaceType', surfaceType: '', offset: { rows: 0, columns: 0 } },
+	selection: null,
 }
 
 /**
@@ -49,10 +50,10 @@ export function parseStoredGridViewAs(raw: unknown): GridViewAsState {
 	if (!raw || typeof raw !== 'object') return DEFAULT_GRID_VIEW_AS_STATE
 
 	const stored = raw as Partial<GridViewAsState>
-	const selection = parseStoredSelection(stored.selection)
-	if (!selection) return DEFAULT_GRID_VIEW_AS_STATE
 
-	return { enabled: stored.enabled === true, selection }
+	// A selection which cannot be understood comes back as nothing having been chosen, rather than as
+	// the whole view being thrown away - the toggle is still whatever it was
+	return { enabled: stored.enabled === true, selection: parseStoredSelection(stored.selection) }
 }
 
 function parseStoredSelection(raw: unknown): GridViewAsSelection | null {
@@ -67,7 +68,7 @@ function parseStoredSelection(raw: unknown): GridViewAsSelection | null {
 	}
 
 	if (selection.type === 'surfaceType') {
-		if (typeof selection.surfaceType !== 'string') return null
+		if (typeof selection.surfaceType !== 'string' || !selection.surfaceType) return null
 
 		const offset = selection.offset as { rows?: unknown; columns?: unknown } | undefined
 		return {
@@ -108,6 +109,8 @@ export interface KnownSurfacePlacement {
  */
 export type GridViewAsResolution =
 	| { status: 'off' }
+	/** The view is on, but nothing has been chosen for it to show */
+	| { status: 'noSelection' }
 	| { status: 'unknownSurface' }
 	| { status: 'noLayout'; displayName: string }
 	/** The surface would sit entirely outside the grid, so there is nothing of it to show */
@@ -135,6 +138,7 @@ export function resolveGridViewAs(
 	gridSize: UserConfigGridSize
 ): GridViewAsResolution {
 	if (!state.enabled) return { status: 'off' }
+	if (!state.selection) return { status: 'noSelection' }
 
 	if (state.selection.type === 'surface') {
 		const { surfaceId } = state.selection
@@ -162,7 +166,7 @@ export function resolveGridViewAs(
 	// Any surface of this type will do - what is being viewed as is the model, not the one that was
 	// plugged in to teach Companion what it looks like
 	const layout = findLayoutForSurfaceType(layouts, surfaceType)
-	if (!layout) return { status: 'noLayout', displayName: surfaceType || 'Custom' }
+	if (!layout) return { status: 'noLayout', displayName: surfaceType }
 
 	// A surface which is not here is not mounted any particular way up, so it is placed as it is drawn
 	return resolved(

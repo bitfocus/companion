@@ -68,10 +68,17 @@ describe('parseStoredGridViewAs', () => {
 		['nothing at all', null],
 		['a string', 'yes please'],
 		['an object which is not a view', { hello: 'world' }],
-		['a selection of an unknown kind', { enabled: true, selection: { type: 'holographic' } }],
-		['a surface selection with no surface', { enabled: true, selection: { type: 'surface' } }],
 	])('falls back to the view being off for %s', (_name, raw) => {
 		expect(parseStoredGridViewAs(raw)).toEqual(DEFAULT_GRID_VIEW_AS_STATE)
+	})
+
+	// The toggle is still whatever it was; only the part which cannot be understood is dropped
+	it.each([
+		['an unknown kind', { type: 'holographic' }],
+		['a surface with no id', { type: 'surface' }],
+		['a model with no name', { type: 'surfaceType', surfaceType: '' }],
+	])('forgets a selection which is %s, keeping the view otherwise intact', (_name, selection) => {
+		expect(parseStoredGridViewAs({ enabled: true, selection })).toEqual({ enabled: true, selection: null })
 	})
 
 	it('repairs offsets which are not numbers', () => {
@@ -170,10 +177,9 @@ describe('resolveGridViewAs', () => {
 			})
 		})
 
-		it('says so when no model has been chosen yet', () => {
-			expect(resolveGridViewAs(viewingType(''), layouts, placements, GRID_SIZE)).toEqual({
-				status: 'noLayout',
-				displayName: 'Custom',
+		it('says nothing has been chosen while nothing has been', () => {
+			expect(resolveGridViewAs({ enabled: true, selection: null }, layouts, placements, GRID_SIZE)).toEqual({
+				status: 'noSelection',
 			})
 		})
 	})

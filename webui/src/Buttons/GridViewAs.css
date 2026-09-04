@@ -13,6 +13,16 @@
 
 	font-size: 0.875rem;
 	line-height: 1.3;
+
+	/* The icon and the way out keep their size; only the message gives way when the bar is narrow */
+	> svg,
+	> button {
+		flex: none;
+	}
+
+	> button {
+		white-space: nowrap;
+	}
 }
 
 .grid-view-as-banner-text {
@@ -37,7 +47,10 @@
 	flex-direction: column;
 	gap: 0.5rem;
 
-	min-width: 17rem;
+	/* Wide enough for a surface name, and no wider - the note below the fields would otherwise stretch
+	   the popover out until it hangs off the side of the page */
+	width: 20rem;
+	max-width: 100%;
 }
 
 .grid-view-as-field {
