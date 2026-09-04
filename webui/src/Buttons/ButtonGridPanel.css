@@ -195,6 +195,11 @@
 				width: calc(var(--tile-inner-width) * 1px);
 				height: calc(var(--tile-inner-height) * 1px);
 
+				/* ButtonPreview keeps a button square by padding it to its own width, for the places which
+				   give it a width and let the height follow. The grid sets both, and a cell here is not
+				   always square, so that padding would win over the height it was given. */
+				padding-bottom: 0;
+
 				.button-placeholder {
 					/* shrink text with scaling */
 					font-size: calc(var(--grid-scale) * 1.5rem);

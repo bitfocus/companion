@@ -2,7 +2,9 @@ import { fireEvent, render } from '@testing-library/react'
 import { createRef, useLayoutEffect, useRef } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { SurfaceSchemaLayoutDefinition } from '@companion-app/shared/Model/Surfaces.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { resolveSurfaceGridView } from '@companion-app/shared/SurfaceLayout.js'
 import type { ButtonInfiniteGridButtonProps, ButtonInfiniteGridRef } from '../ButtonInfiniteGrid.js'
 
 /** Whatever dnd-kit says is being dragged right now */
@@ -42,13 +44,23 @@ function at(row: number, column: number, pageNumber = PAGE): ControlLocation {
 }
 
 /** Standing in for the real cell, which has an image subscription and a store behind it */
-function StubButton({ row, column, selected, copySource, contextMenuOpen }: ButtonInfiniteGridButtonProps) {
+function StubButton({
+	row,
+	column,
+	selected,
+	copySource,
+	contextMenuOpen,
+	renderSize,
+	innerSize,
+}: ButtonInfiniteGridButtonProps) {
 	return (
 		<div
 			data-testid={`cell-${row}-${column}`}
 			data-selected={String(selected)}
 			data-copy-source={String(copySource)}
 			data-context-menu={String(contextMenuOpen)}
+			data-render-size={`${renderSize.width}x${renderSize.height}`}
+			data-inner-size={innerSize ? `${Math.round(innerSize.width)}x${Math.round(innerSize.height)}` : 'cell'}
 		/>
 	)
 }
@@ -634,5 +646,76 @@ describe('moving the grid to a cell', () => {
 
 		expect(grid.scrollLeft).toBe(2 * TILE)
 		expect(grid.scrollTop).toBe(TILE)
+	})
+})
+
+describe('viewing the grid as a surface', () => {
+	// Shaped like a Stream Deck +XL: two rows of square buttons, a row of 2:1 touch strip segments, and
+	// a row with encoders at each end which have leds and no bitmap of their own
+	const plusLayout: SurfaceSchemaLayoutDefinition = {
+		stylePresets: {
+			default: { bitmap: { w: 120, h: 120 } },
+			strip: { bitmap: { w: 200, h: 100 } },
+			encoder: { leds: { segments: 24, mode: 'full-ring' } },
+		},
+		controls: {
+			...Object.fromEntries(
+				[0, 1].flatMap((row) => [0, 1, 2, 3].map((column) => [`${row}/${column}`, { row, column }]))
+			),
+			...Object.fromEntries([0, 1, 2, 3].map((column) => [`2/${column}`, { row: 2, column, stylePreset: 'strip' }])),
+			'3/0': { row: 3, column: 0, stylePreset: 'encoder' },
+			'3/3': { row: 3, column: 3, stylePreset: 'encoder' },
+		},
+	}
+
+	function surfaceSetup() {
+		const view = resolveSurfaceGridView(plusLayout, {
+			offset: { rows: 0, columns: 0 },
+			rotation: 0,
+			panelGridSize: { rows: 4, columns: 4 },
+		})!
+
+		return setup({
+			gridSize: view.bounds,
+			extra: { surfaceView: { controlsByCell: view.controlsByCell, aspectRatio: view.aspectRatio } },
+		})
+	}
+
+	it('draws a button for each control the surface has', () => {
+		const { queryByTestId } = surfaceSetup()
+
+		expect(queryByTestId('cell-0-0')).not.toBeNull()
+		expect(queryByTestId('cell-2-0')).not.toBeNull()
+		expect(queryByTestId('cell-3-0')).not.toBeNull()
+	})
+
+	it('draws the gaps between the encoders as holes rather than as buttons', () => {
+		const { queryByTestId, container } = surfaceSetup()
+
+		expect(queryByTestId('cell-3-1')).toBeNull()
+		expect(queryByTestId('cell-3-2')).toBeNull()
+		expect(container.querySelectorAll('.button-grid-absent-cell')).toHaveLength(2)
+	})
+
+	it('draws each control at the size the surface draws it', () => {
+		const { getByTestId } = surfaceSetup()
+
+		// The buttons are the least detailed control, so they set the scale at 288/120
+		expect(getByTestId('cell-0-0').dataset.renderSize).toBe('288x288')
+		expect(getByTestId('cell-2-0').dataset.renderSize).toBe('480x240')
+	})
+
+	it("letterboxes a control whose shape is not the view's into the cell every other control gets", () => {
+		const { getByTestId } = surfaceSetup()
+
+		// The buttons outnumber the strip, so a cell is square and the strip is drawn inside one
+		expect(getByTestId('cell-0-0').dataset.innerSize).toBe('cell')
+		expect(getByTestId('cell-2-0').dataset.innerSize).toBe('144x72')
+	})
+
+	it('gives a control with no bitmap the cell every other control gets', () => {
+		const { getByTestId } = surfaceSetup()
+
+		expect(getByTestId('cell-3-0').dataset.innerSize).toBe('cell')
 	})
 })
