@@ -2,6 +2,7 @@ import { DragOverlay } from '@dnd-kit/react'
 import { useMemo } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { DEFAULT_PREVIEW_RENDER_SIZE } from '@companion-app/shared/Model/Preview.js'
 import { ButtonPreviewBase } from '~/Components/ButtonPreview.js'
 import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import { useGridSelectedLocations } from './ButtonGridViewContext.js'
@@ -80,7 +81,7 @@ function GridDragGhost({ origin }: { origin: ControlLocation | undefined }): Rea
 function GhostCell({ location }: { location: ControlLocation }): React.JSX.Element {
 	// The grid is already watching this location, and image subscriptions are shared, so the ghost
 	// costs nothing beyond the element
-	const { image, isUsed } = useButtonImageForLocation(location)
+	const { image, isUsed } = useButtonImageForLocation(location, DEFAULT_PREVIEW_RENDER_SIZE)
 
 	return <ButtonPreviewBase preview={isUsed ? image : null} />
 }

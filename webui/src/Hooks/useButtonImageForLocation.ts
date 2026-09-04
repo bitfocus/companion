@@ -1,6 +1,7 @@
 import { useCallback, useSyncExternalStore } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
+import { formatPreviewRenderSize, type PreviewRenderSize } from '@companion-app/shared/Model/Preview.js'
 import { trpcClient } from '~/Resources/TRPC'
 
 /**
@@ -12,7 +13,8 @@ import { trpcClient } from '~/Resources/TRPC'
  * image landed.
  *
  * So locations are refcounted: one subscription each, however many components are watching, sharing
- * the one live image. When the last watcher leaves the subscription is torn down after a short grace
+ * the one live image. A location wanted at two different sizes is two subscriptions, since they carry
+ * different images. When the last watcher leaves the subscription is torn down after a short grace
  * period, so fast unmount/remount (scroll thrash, StrictMode) reuses the still-live subscription
  * instead of flashing - but nothing is retained beyond that, so the image can never go stale.
  */
@@ -32,7 +34,7 @@ interface ActiveEntry {
 const activeEntries = new Map<string, ActiveEntry>()
 
 /** The listener set doubles as the refcount - one listener per watching component */
-function acquire(key: string, location: ControlLocation, listener: () => void): void {
+function acquire(key: string, location: ControlLocation, size: PreviewRenderSize, listener: () => void): void {
 	const existing = activeEntries.get(key)
 	if (existing) {
 		if (existing.teardownTimer) {
@@ -52,7 +54,7 @@ function acquire(key: string, location: ControlLocation, listener: () => void): 
 	activeEntries.set(key, entry)
 
 	const subscription = trpcClient.preview.graphics.location.subscribe(
-		{ location },
+		{ location, size },
 		{
 			onData: (data: WrappedImage) => {
 				entry.image = data
@@ -84,24 +86,30 @@ function release(key: string, listener: () => void): void {
 /**
  * Load and retrieve a button image for a specific control location.
  * @param location Location of the control to load
+ * @param size The pixel size to draw it at, which is how a cell shows what a non-square surface will make of it
  * @param disable Disable loading of this preview
  */
-export function useButtonImageForLocation(location: ControlLocation, disable = false): WrappedImage {
-	const key = disable ? null : formatLocation(location)
+export function useButtonImageForLocation(
+	location: ControlLocation,
+	size: PreviewRenderSize,
+	disable = false
+): WrappedImage {
+	const key = disable ? null : `${formatLocation(location)}@${formatPreviewRenderSize(size)}`
 
-	// Captured so the subscription is set up from the location that produced `key`, without making the
-	// caller's (usually inline, so unstable) location object part of the subscribe identity
+	// Captured so the subscription is set up from the location and size that produced `key`, without making the
+	// caller's (usually inline, so unstable) objects part of the subscribe identity
 	const { pageNumber, row, column } = location
+	const { width, height } = size
 
 	const subscribe = useCallback(
 		(onStoreChange: () => void) => {
 			if (!key) return () => {}
 
-			acquire(key, { pageNumber, row, column }, onStoreChange)
+			acquire(key, { pageNumber, row, column }, { width, height }, onStoreChange)
 
 			return () => release(key, onStoreChange)
 		},
-		[key, pageNumber, row, column]
+		[key, pageNumber, row, column, width, height]
 	)
 
 	const getSnapshot = useCallback(() => {

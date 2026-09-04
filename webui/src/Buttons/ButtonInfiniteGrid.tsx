@@ -3,6 +3,7 @@ import classNames from 'classnames'
 import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { DEFAULT_PREVIEW_RENDER_SIZE } from '@companion-app/shared/Model/Preview.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import useElementInnerSize from '~/Hooks/useElementClientSize.js'
@@ -531,9 +532,9 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 	const dropWouldWork = useGridDragPreviewValid()
 
 	// Already subscribed by the cell the button actually lives on, and subscriptions are shared
-	const ghost = useButtonImageForLocation(ghostSource ?? location, !ghostSource)
+	const ghost = useButtonImageForLocation(ghostSource ?? location, DEFAULT_PREVIEW_RENDER_SIZE, !ghostSource)
 
-	const { image, isUsed } = useButtonImageForLocation(location)
+	const { image, isUsed } = useButtonImageForLocation(location, DEFAULT_PREVIEW_RENDER_SIZE)
 
 	// An empty cell has nothing to pick up, so dragging one is a gesture that can only end in nothing
 	// happening. In select mode only an already-selected button drags, so dragging anywhere else can
