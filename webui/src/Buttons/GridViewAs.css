@@ -1,0 +1,67 @@
+/* Drawn above the grid for as long as the grid is not showing all of itself. Deliberately hard to
+   miss: a cropped grid which does not say it is cropped reads as buttons having gone missing. */
+.grid-view-as-banner {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+
+	margin-bottom: 0.5rem;
+	padding: 0.4rem 0.6rem;
+
+	border-radius: var(--radius);
+	border: 1px solid transparent;
+
+	font-size: 0.875rem;
+	line-height: 1.3;
+}
+
+.grid-view-as-banner-text {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.grid-view-as-banner-viewing {
+	border-color: var(--color-primary);
+	background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+
+.grid-view-as-banner-warning {
+	border-color: var(--color-warning);
+	background-color: color-mix(in srgb, var(--color-warning) 15%, transparent);
+}
+
+/* The configuration behind the toolbar's eye: one dropdown, sometimes a second, and the two offsets
+   that make it possible to program for a surface which has not arrived yet. */
+.grid-view-as-popover {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+
+	min-width: 17rem;
+}
+
+.grid-view-as-field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+}
+
+.grid-view-as-field-label {
+	font-size: 0.8rem;
+	opacity: 0.8;
+}
+
+.grid-view-as-offsets {
+	display: flex;
+	gap: 0.5rem;
+
+	> * {
+		flex: 1 1 0;
+		min-width: 0;
+	}
+}
+
+.grid-view-as-note {
+	font-size: 0.8rem;
+	opacity: 0.8;
+}

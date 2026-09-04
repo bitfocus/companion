@@ -14,6 +14,7 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncE
 import { useMediaQuery } from 'usehooks-ts'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { surfaceCellKey } from '@companion-app/shared/SurfaceLayout.js'
 import { ContextMenu } from '~/Components/ContextMenu.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { TabArea } from '~/Components/TabArea.js'
@@ -26,6 +27,7 @@ import { ButtonGridStore } from './ButtonGridStore.js'
 import { ButtonGridViewProvider, type ButtonGridView } from './ButtonGridViewContext.js'
 import { EditButton } from './EditButton/EditButton.js'
 import { rememberViewedPage, resolveViewedPage } from './GridPageNavigation.js'
+import type { GridSurfaceView } from './GridSurfaceView.js'
 import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
 import { PageVariablesPanel } from './PageVariablesPanel.js'
@@ -34,6 +36,7 @@ import { useButtonContextMenu } from './useButtonContextMenu.js'
 import { useGridDropMonitor } from './useGridDropMonitor.js'
 import { useGridKeyboard } from './useGridKeyboard.js'
 import { useGridToolActions } from './useGridToolActions.js'
+import { useGridViewAs } from './useGridViewAs.js'
 
 /** What the URL asks for, or 0 when it names no usable page - "wherever I was" */
 function useUrlPageNumber(): number {
@@ -85,7 +88,30 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		if (rawPageNumber !== pageNumber) navigateToButtonsPage(navigate, pageNumber)
 	}, [rawPageNumber, pageNumber, navigate])
 
-	const gridSize = userConfig.properties?.gridSize
+	const fullGridSize = userConfig.properties?.gridSize
+
+	// Viewing as a surface narrows the grid to the region that surface covers, and leaves holes where it
+	// has no controls. Everything which places or walks over buttons is measured against that rather
+	// than against the whole grid, so nothing can be put where the view says there is nothing.
+	const viewAs = useGridViewAs()
+	const gridSize = viewAs.resolution.status === 'ready' ? viewAs.resolution.bounds : fullGridSize
+
+	const surfaceView = useMemo<GridSurfaceView | null>(
+		() =>
+			viewAs.resolution.status === 'ready'
+				? {
+						controlsByCell: viewAs.resolution.view.controlsByCell,
+						aspectRatio: viewAs.resolution.view.aspectRatio,
+					}
+				: null,
+		[viewAs.resolution]
+	)
+
+	useEffect(() => {
+		gridStore.setCellPresence(
+			surfaceView ? (location) => surfaceView.controlsByCell.has(surfaceCellKey(location.row, location.column)) : null
+		)
+	}, [gridStore, surfaceView])
 
 	const openEditor = useCallback((location: ControlLocation) => {
 		setActiveTab('edit')
@@ -188,6 +214,9 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				onButtonContextMenu={doButtonContextMenu}
 				gridZoomController={gridZoomController}
 				gridZoomValue={gridZoomValue}
+				viewAs={viewAs}
+				gridSize={gridSize}
+				surfaceView={surfaceView}
 			/>
 		</MyErrorBoundary>
 	)

@@ -135,6 +135,25 @@ export function unrotateXYForPanel(
 	}
 }
 
+/**
+ * How big the surface's own grid is, worked out from where its controls are.
+ *
+ * A layout knows nothing about the size of the panel it describes, so this is what stands in when the
+ * surface itself is not there to say - viewing as a type of surface rather than as one which is
+ * plugged in.
+ */
+export function panelGridSizeFromLayout(layout: SurfaceSchemaLayoutDefinition): GridSize {
+	let rows = 0
+	let columns = 0
+
+	for (const control of Object.values(layout.controls)) {
+		rows = Math.max(rows, control.row + 1)
+		columns = Math.max(columns, control.column + 1)
+	}
+
+	return { rows, columns }
+}
+
 /** The surface's size as the grid sees it: a quarter turn swaps the rows and columns over */
 export function rotatedPanelGridSize(panelGridSize: GridSize, rotation: SurfaceRotation): GridSize {
 	if (rotation === 'surface90' || rotation === 'surface-90' || rotation === 90 || rotation === -90) {

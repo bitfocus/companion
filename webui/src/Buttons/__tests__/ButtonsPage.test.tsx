@@ -79,6 +79,8 @@ function setup(overrides: { pageCount?: number } = {}) {
 	// Deep partial of the root store - the page only reaches for these
 	const rootStore: any = {
 		userConfig: { properties: { gridSize: GRID_SIZE } },
+		// No surfaces, so the page is showing the grid itself rather than viewing as one
+		surfaces: { store: new Map() },
 		pages: {
 			pageCount,
 			data: Array.from({ length: pageCount }, (_, index) => ({ name: `Page ${index + 1}` })),
