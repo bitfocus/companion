@@ -16,7 +16,8 @@ import { usePagePicker } from '~/Hooks/usePagePicker.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ButtonGridHeader } from '../ButtonGridHeader.js'
-import { ButtonGridIcon, ButtonInfiniteGrid, type ButtonInfiniteGridRef } from '../ButtonInfiniteGrid.js'
+import { ButtonInfiniteGrid, type ButtonInfiniteGridRef } from '../ButtonInfiniteGrid.js'
+import { ButtonGridIcon } from '../GridButtonIcons.js'
 
 interface ButtonPickerProps {
 	selectButton: (
@@ -166,6 +167,8 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 						selectedButton={selectedLocation}
 						gridSize={gridSize}
 						ButtonIconFactory={ButtonGridIcon}
+						marquee={null}
+						onHoverLocation={null}
 						drawScale={1} // TODO
 					/>
 				)}

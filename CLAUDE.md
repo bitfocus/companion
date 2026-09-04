@@ -73,6 +73,42 @@ commit will fail if types or lint don't pass — expect that and fix it rather t
   needed to avoid "excessively deep type instantiation" from deep mocks — prefer an `any`-typed
   local/helper in that case.
 
+### Styling (`webui`, Tailwind CSS v4)
+
+- **Order of preference for styling an element:**
+  1. **A custom/semantic class** in the component's own CSS, where it makes sense — anything reusable,
+     stateful, or more than a couple of one-off utilities reads better as a named class (e.g.
+     `.connections-list-container`) than a long utility soup.
+  2. **Simple Tailwind utilities** for genuinely one-off layout/spacing/visibility (`flex`, `gap-2`,
+     `mb-2`, `hidden`, `min-w-0`, …). Use logical utilities for left/right (`ms`/`me`, `ps`/`pe`),
+     matching the surrounding code.
+  3. **Inline `style` props only for values that are truly dynamic from React** — computed from state
+     or props at runtime (`style={{ minHeight: viewportMinHeight }}`, `style={{ width: glyphWidth }}`).
+     A static value in a `style` prop should be a class instead.
+- **No arbitrary values.** The codebase uses none — do not introduce `w-[30px]` / `bg-[#abc]`. If a
+  static value has no clean utility (off-scale px, `em`/`vh`, a one-off colour), give it a custom class
+  or a theme token rather than reaching for `[…]` or leaving it inline.
+- **Colours and fonts come from theme tokens** in `webui/src/tailwind.css` (`@theme` `--color-*`,
+  `--font-sans`/`--font-mono`). Reference those (or the generated `bg-*`/`text-*` utilities); don't
+  hardcode hex. Add a new `--color-*` token there when one is genuinely missing.
+- **Layout grid.** Use the `Grid` components (`webui/src/Components/Grid.tsx`), not grid classes in
+  markup: `Grid.Container`, `Grid.Row` (a 12-column CSS grid; `columns={n}` for a different count) and
+  `Grid.Col` (`xs`…`xxl`, each a span or `{ span, offset }`); `Form` and `Collapse.Panel` take a `row`
+  prop to act as the row themselves. A column with no span fills the row. The gutter is a real `gap` —
+  override it with `gap-2`/`sm:gap-2`/`gap-x-0`, not a gutter class. `.row`/`.page-container` live in
+  `webui/src/layout-grid.css`; the `col-span-*`/`col-start-*` utilities `Grid.Col` emits are built by
+  interpolation, so `tailwind.css` safelists them with `@source inline(...)`.
+- **Page layout.** A page that is a list plus what it opens uses `SplitPanels`
+  (`webui/src/Layout/SplitPanels.tsx`), not the 12-column grid: `SplitPanels.Root` takes
+  `showing="primary" | "secondary" | null` for which panel wins when there is only room for one, and
+  `.Primary`/`.Secondary` are the panels. The split is half-and-half above `xl` and one panel below.
+- **Cascade layers** (low → high): `base < layout-grid < app-base < components < features <
+utilities` (declared in `tailwind.css`). App CSS is assigned to a layer by path at build time
+  (`postcss-wrap-layer.mjs`): `src/Components/**` → `components`, a fixed set (`common.css`, `nav.css`,
+  `layout.css`, …) → `app-base`, everything else → `features`. Layer order beats specificity, so a
+  lower-layer rule can never override a class defined in a higher layer — put a component override in
+  that component's own CSS (the `components` layer), not in an `app-base` file like `common.css`.
+
 ## Testing notes
 
 - Framework is **Vitest** (not Jest). Prefer pure/unit tests where possible; heavy UI components

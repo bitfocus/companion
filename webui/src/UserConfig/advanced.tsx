@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import { memo } from 'react'
-import { Grid } from '~/Components/Grid'
 import { Table } from '~/Components/Table.js'
+import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { useUserConfigProps } from './Context.js'
 import { AdminPasswordConfig } from './Sections/AdminPasswordConfig.js'
 import { ExperimentsConfig } from './Sections/ExperimentsConfig.js'
@@ -9,11 +9,11 @@ import { HttpsConfig } from './Sections/HttpsConfig.js'
 
 export const SettingsAdvancedPage = memo(function UserConfig() {
 	return (
-		<Grid.Row className="split-panels">
-			<Grid.Col xl={6} className="primary-panel">
+		<SplitPanels.Root showing={null} resize={null}>
+			<SplitPanels.Primary>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
-						<div className="d-flex justify-content-between">
+						<div className="flex justify-between">
 							<div>
 								<h4>Settings - Advanced</h4>
 								<p>Settings apply instantaneously, don't worry about it!</p>
@@ -24,16 +24,16 @@ export const SettingsAdvancedPage = memo(function UserConfig() {
 						<UserConfigTable />
 					</div>
 				</div>
-			</Grid.Col>
-			{/* <Grid.Col xs={12} xl={6} className="secondary-panel">
+			</SplitPanels.Primary>
+			{/* <div className="secondary-panel">
 				<div className="secondary-panel-header">
 					<h4>Remote control</h4>
 					<p>Companion can be remote controlled in several ways. Below you'll find how to do it.</p>
 				</div>
 				<div className="secondary-panel-inner">
 				</div>
-			</Grid.Col> */}
-		</Grid.Row>
+			</div> */}
+		</SplitPanels.Root>
 	)
 })
 

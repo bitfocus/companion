@@ -126,14 +126,14 @@ export const ImageInputField = observer(function ImageInputField({
 	return (
 		<>
 			<ImagePickerModal ref={modalRef} setValue={setValue} min={min} max={max} />
-			<div id={id} className="image-input-field d-flex align-items-center gap-2">
+			<div id={id} className="image-input-field flex items-center gap-2">
 				<div
 					className="image-input-field__preview image-preview-checkerboard"
 					style={{ '--preview-bg-color': libraryImage?.backgroundColor ?? 'transparent' } as React.CSSProperties}
 				>
 					{thumbnail}
 				</div>
-				<div className="image-input-field__label flex-grow-1 text-truncate">{label}</div>
+				<div className="image-input-field__label grow truncate">{label}</div>
 				<ButtonGroup>
 					<Button
 						color="primary"

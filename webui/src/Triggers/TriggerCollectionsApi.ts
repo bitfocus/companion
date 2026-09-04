@@ -7,7 +7,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC'
 export type TriggerCollectionsApi = NestingCollectionsApi
 
 export function useTriggerCollectionsApi(
-	confirmModalRef: React.RefObject<GenericConfirmModalRef>
+	confirmModalRef: React.RefObject<GenericConfirmModalRef | null>
 ): TriggerCollectionsApi {
 	const renameMutation = useMutationExt(trpc.controls.triggers.collections.setName.mutationOptions())
 	const deleteMutation = useMutationExt(trpc.controls.triggers.collections.remove.mutationOptions())

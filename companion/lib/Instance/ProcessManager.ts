@@ -26,7 +26,7 @@ import { ConnectionChildHandlerLegacy } from './Connection/ChildHandlerLegacy.js
 import { ConnectionChildHandlerNew } from './Connection/ChildHandlerNew.js'
 import { PreserveEnvVars } from './Environment.js'
 import type { InstanceModules } from './Modules.js'
-import { getNodeJsPath, getNodeJsPermissionArguments } from './NodePath.js'
+import { getNodeJsPath, getNodeJsPermissionArguments, realPathOrSelf } from './NodePath.js'
 import { SurfaceChildHandler, type SurfaceChildHandlerDependencies } from './Surface/ChildHandler.js'
 import type { SomeModuleVersionInfo } from './Types.js'
 
@@ -115,6 +115,30 @@ export interface InstanceProcessManagerEvents {
 	 * (became ready, stopped or crashed). Used to drive UI subscriptions such as the config-fields editor.
 	 */
 	childStateChange: [instanceId: string]
+}
+
+/**
+ * Resolve a module's entrypoint to its real (symlink-free) on-disk path within the module dir. The real
+ * path is required so Node's permission model does not deny reading a symlinked config/module dir at
+ * import time.
+ */
+export async function resolveModuleEntrypoint(
+	basePath: string,
+	rawEntrypoint: string
+): Promise<{ entrypoint: string; error?: 'outside' | 'missing' }> {
+	const jsPath = path.join('companion', rawEntrypoint.replace(/\\/g, '/'))
+	const jsFullPath = path.resolve(path.join(basePath, jsPath))
+
+	const relativeToBase = path.relative(basePath, jsFullPath)
+	if (relativeToBase.startsWith('..') || path.isAbsolute(relativeToBase)) {
+		return { entrypoint: jsFullPath, error: 'outside' }
+	}
+
+	if (!(await fs.pathExists(jsFullPath))) {
+		return { entrypoint: jsFullPath, error: 'missing' }
+	}
+
+	return { entrypoint: realPathOrSelf(jsFullPath) }
 }
 
 export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerEvents> {
@@ -832,16 +856,16 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 		  }
 		| { error: string }
 	> {
-		const jsPath = path.join('companion', moduleInfo.manifest.runtime.entrypoint.replace(/\\/g, '/'))
-		const jsFullPath = path.resolve(path.join(moduleInfo.basePath, jsPath))
-		const relativeToBase = path.relative(moduleInfo.basePath, jsFullPath)
-		if (relativeToBase.startsWith('..') || path.isAbsolute(relativeToBase)) {
-			this.#logger.error(`Module entrypoint "${jsFullPath}" is outside module directory`)
+		const { entrypoint: realEntrypoint, error: entrypointError } = await resolveModuleEntrypoint(
+			moduleInfo.basePath,
+			moduleInfo.manifest.runtime.entrypoint
+		)
+		if (entrypointError === 'outside') {
+			this.#logger.error(`Module entrypoint "${realEntrypoint}" is outside module directory`)
 			return { error: 'Invalid module' }
 		}
-
-		if (!(await fs.pathExists(jsFullPath))) {
-			this.#logger.error(`Module entrypoint "${jsFullPath}" does not exist`)
+		if (entrypointError === 'missing') {
+			this.#logger.error(`Module entrypoint "${realEntrypoint}" does not exist`)
 			return { error: 'Module files missing' }
 		}
 
@@ -881,18 +905,18 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 						apiVersion: moduleApiVersion,
 						entrypoint: resolveThreadEntrypoint(import.meta.dirname, 'ConnectionThread.js'),
 						arguments: ['--enable-source-maps'],
-						moduleEntrypoint: jsFullPath,
+						moduleEntrypoint: realEntrypoint,
 						env: {
-							MODULE_ENTRYPOINT: jsFullPath,
+							MODULE_ENTRYPOINT: realEntrypoint,
 						},
 						usesDataChannel: true,
 					}
 				} else {
 					return {
 						apiVersion: moduleApiVersion,
-						entrypoint: jsFullPath,
+						entrypoint: realEntrypoint,
 						arguments: [],
-						moduleEntrypoint: jsFullPath,
+						moduleEntrypoint: realEntrypoint,
 						env: {
 							CONNECTION_ID: instanceId,
 						},
@@ -929,9 +953,9 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 					apiVersion: moduleApiVersion,
 					entrypoint: resolveThreadEntrypoint(import.meta.dirname, 'SurfaceThread.js'),
 					arguments: ['--enable-source-maps'],
-					moduleEntrypoint: jsFullPath,
+					moduleEntrypoint: realEntrypoint,
 					env: {
-						MODULE_ENTRYPOINT: jsFullPath,
+						MODULE_ENTRYPOINT: realEntrypoint,
 					},
 					usesDataChannel: true,
 				}

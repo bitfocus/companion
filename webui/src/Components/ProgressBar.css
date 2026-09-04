@@ -1,8 +1,8 @@
 .progress2 {
 	--progress-height: 1rem;
 	--progress-font-size: 0.75rem;
-	--progress-bg: var(--cui-secondary-bg, #e9ecef);
-	--progress-border-radius: var(--cui-border-radius, 0.375rem);
+	--progress-bg: var(--color-surface-muted, #e9ecef);
+	--progress-border-radius: var(--radius);
 	--progress-bar-color: var(--color-on-dark);
 	--progress-bar-bg: var(--color-primary);
 	--progress-bar-transition: width 0.6s ease;

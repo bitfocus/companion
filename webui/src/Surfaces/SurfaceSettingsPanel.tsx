@@ -20,9 +20,9 @@ export const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 			<p style={{ marginBottom: '0em', padding: '0.5em 2em' }}>
 				To configure a surface integration, select an item from the table below.
 				<br />
-				For a specific surface, <span className="d-inline d-xl-none"> click the X button, above and </span>select it in
-				the Configured Surfaces table
-				<span className="d-none d-xl-inline"> to the left</span>.
+				For a specific surface, <span className="inline xl:hidden"> click the X button, above and </span>
+				select it in the Configured Surfaces table
+				<span className="hidden xl:inline"> to the left</span>.
 			</p>
 			<div className="secondary-panel-simple-body" style={{ paddingTop: 0, paddingRight: '1.25em' }}>
 				{/* Putting this in the table changes the spacing between the buttons and the integrations table, so do it this way instead... */}
@@ -78,7 +78,7 @@ function SettingsPanelTitleBar() {
 					Manage surface integrations and global surface settings here.
 				</ContextHelpButton>
 
-				<CloseButton closeFn={doClose} visibilityClass="d-xl-none" />
+				<CloseButton closeFn={doClose} visibilityClass="xl:hidden" />
 			</div>
 		</div>
 	)

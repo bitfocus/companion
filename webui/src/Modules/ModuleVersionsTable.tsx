@@ -202,12 +202,12 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 				{versionId}
 				{storeInfo?.releaseChannel === 'beta' && (
 					<span title="Beta">
-						<FontAwesomeIcon className="pad-left" icon={faFlask} />
+						<FontAwesomeIcon className="ms-2" icon={faFlask} />
 					</span>
 				)}
 				{storeInfo?.deprecationReason && (
 					<span title="Deprecated">
-						<FontAwesomeIcon className="pad-left" icon={faWarning} />
+						<FontAwesomeIcon className="ms-2" icon={faWarning} />
 					</span>
 				)}
 			</td>

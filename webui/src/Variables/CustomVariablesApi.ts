@@ -11,7 +11,9 @@ export interface CustomVariablesApi {
 	setPersistenceValue: (name: string, persisted: boolean) => void
 }
 
-export function useCustomVariablesApi(confirmModalRef: React.RefObject<GenericConfirmModalRef>): CustomVariablesApi {
+export function useCustomVariablesApi(
+	confirmModalRef: React.RefObject<GenericConfirmModalRef | null>
+): CustomVariablesApi {
 	const setDefaultMutation = useMutationExt(trpc.customVariables.setDefault.mutationOptions())
 	const setCurrentMutation = useMutationExt(trpc.customVariables.setCurrent.mutationOptions())
 	const setPersistenceMutation = useMutationExt(trpc.customVariables.setPersistence.mutationOptions())

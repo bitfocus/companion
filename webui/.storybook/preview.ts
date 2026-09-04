@@ -1,5 +1,5 @@
 import type { Preview } from '@storybook/react'
-import '../src/App.scss'
+import '../src/tailwind.css'
 import './preview.css'
 import alignmentImg from '../src/scss/img/alignment.png'
 import checkImg from '../src/scss/img/check.svg?no-inline'

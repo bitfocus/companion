@@ -10,6 +10,14 @@ export interface PresetDefinition {
 	model: LayeredButtonModel
 	presetExtraFeedbacks: SomeEntityModel[]
 	keywords: string[] | undefined
+
+	/**
+	 * Lazily-computed, content-based checksum of this preset (memoised on first access). Reference and preview
+	 * controls read it - via the model produced by `convertPresetTo*ControlModel` - to detect whether a
+	 * `updatePresets` actually changed the preset. Reset naturally because the whole definition is replaced when
+	 * a connection re-reports its presets.
+	 */
+	checksum?: string
 }
 
 export interface UIPresetSection {

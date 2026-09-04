@@ -8,6 +8,7 @@ import { trpc } from '~/Resources/TRPC'
 import { EmulatorListCard } from './ListCard.js'
 import { EmulatorListFooter } from './ListFooter.js'
 import { EmulatorListHeader } from './ListHeader.js'
+import './Emulator.css'
 
 export const EmulatorList = observer(function EmulatorList() {
 	const emulatorList = useSubscription(trpc.surfaces.emulatorList.subscriptionOptions())

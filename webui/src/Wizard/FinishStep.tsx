@@ -13,7 +13,7 @@ export function FinishStep(_props: FinishStepProps): React.JSX.Element {
 			<NonIdealState icon={faCircleCheck}>
 				<h4 className="mb-2">You're all set!</h4>
 				<p>Companion is configured and ready to use. Here's where to go next:</p>
-				<ul className="text-start d-inline-block mb-0">
+				<ul className="text-start inline-block mb-0">
 					<li>
 						Check the <b>Surfaces</b> tab to confirm your USB devices are detected.
 					</li>

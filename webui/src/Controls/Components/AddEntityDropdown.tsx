@@ -118,7 +118,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 				disabled={disabled}
 				filteredItems={filterOptions}
 			>
-				<Combobox.InputGroup className="dropdown-field-input-group rounded-end-0">
+				<Combobox.InputGroup className="form-input dropdown-field-input-group rounded-e-none">
 					<Combobox.Input className="dropdown-field-input" placeholder={`+ Add ${entityTypeLabel}`} ref={inputRef} />
 					<Combobox.Trigger className="dropdown-field-trigger">
 						<ChevronDownIcon className="dropdown-field-icon" />

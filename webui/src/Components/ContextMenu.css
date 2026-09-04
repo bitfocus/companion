@@ -1,15 +1,18 @@
-/* Dropdown/context menu popovers: the help menu in the header (.help-menu-positioner) and the
-   right-click context menus used across the app (.context-menu, e.g. on buttons and the sidebar).
-   Both render a .popover2-popup, so they share the styling here. */
+/* Dropdown/context menu popovers: the help menu in the header (.help-menu-positioner), the
+   right-click context menus used across the app (.context-menu, e.g. on buttons and the sidebar),
+   and menus opened from a button rather than a right-click (.action-menu). They all render a
+   .popover2-popup, so they share the styling here - a menu that misses these classes gets none of
+   it, and looks it. */
 .help-menu-positioner,
-.context-menu {
+.context-menu,
+.action-menu {
 	z-index: 1070; /* above CoreUI sidebar (1035) and modals (1055); matches CoreUI's $zindex-popover */
 
 	/* gather the color scheme up front: */
 	--menu-color: var(--color-text-strong);
-	--menu-bg: var(--cui-tertiary-bg); /* or just use white? */
+	--menu-bg: var(--color-surface-subtle); /* or just use white? */
 	--menu-hover-color: var(--color-on-dark);
-	--menu-hover-bg: var(--cui-info);
+	--menu-hover-bg: var(--color-info);
 
 	.popover2-popup {
 		--popover2-bg: var(--menu-bg);
@@ -75,7 +78,9 @@
 
 /* override parts that differ from (dropdown) help-menus */
 .context-menu {
-	--menu-bg: var(--color-menu-bg); /* sidebar appears to override var(--cui-tertiary-bg);, so fix --menu-bg here. */
+	--menu-bg: var(
+		--color-menu-bg
+	); /* sidebar appears to override var(--color-surface-subtle);, so fix --menu-bg here. */
 	.popover2-popup {
 		min-width: 0;
 

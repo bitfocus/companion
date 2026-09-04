@@ -41,10 +41,8 @@ export const UdevRulesAlert = observer(function UdevRulesAlert(): React.JSX.Elem
 			{status.canAutoApply ? (
 				<>
 					<p className="mb-1">Apply them automatically below, or run this command manually:</p>
-					<pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', marginBottom: '0.5rem' }}>
-						{status.applyCommand}
-					</pre>
-					<div className="d-flex justify-content-end gap-2">
+					<pre className="whitespace-pre-wrap break-all mb-2">{status.applyCommand}</pre>
+					<div className="flex justify-end gap-2">
 						<CopyButton text={status.applyCommand} color="secondary" />
 						<Button color="primary" size="sm" onClick={applyRules} disabled={applyMutation.isPending}>
 							{applyMutation.isPending ? 'Applying…' : 'Apply USB permissions'}
@@ -54,10 +52,8 @@ export const UdevRulesAlert = observer(function UdevRulesAlert(): React.JSX.Elem
 			) : (
 				<>
 					<p className="mb-1">Run the following command, then reconnect your surfaces:</p>
-					<pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', marginBottom: '0.5rem' }}>
-						{status.applyCommand}
-					</pre>
-					<div className="d-flex justify-content-end gap-2">
+					<pre className="whitespace-pre-wrap break-all mb-2">{status.applyCommand}</pre>
+					<div className="flex justify-end gap-2">
 						<CopyButton text={status.applyCommand} color="secondary" />
 						<Button color="secondary" size="sm" onClick={() => recheckMutation.mutate()}>
 							Recheck status

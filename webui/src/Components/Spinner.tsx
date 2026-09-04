@@ -3,15 +3,15 @@ import './Spinner.css'
 import type { CSSProperties, ElementType, HTMLAttributes } from 'react'
 
 const spinnerSemanticColors: Record<string, string> = {
-	primary: 'var(--cui-primary)',
-	secondary: 'var(--cui-secondary)',
-	success: 'var(--cui-success)',
-	danger: 'var(--cui-danger)',
-	error: 'var(--cui-danger)',
-	warning: 'var(--cui-warning)',
-	info: 'var(--cui-info)',
-	light: 'var(--cui-light)',
-	dark: 'var(--cui-dark)',
+	primary: 'var(--color-primary)',
+	secondary: 'var(--color-secondary)',
+	success: 'var(--color-success)',
+	danger: 'var(--color-danger)',
+	error: 'var(--color-danger)',
+	warning: 'var(--color-warning)',
+	info: 'var(--color-info)',
+	light: 'var(--color-light)',
+	dark: 'var(--color-dark)',
 }
 
 function resolveSpinnerColor(color: string | undefined): string | undefined {
@@ -38,7 +38,7 @@ export function Spinner({
 	visuallyHiddenLabel = 'Loading...',
 	style,
 	...props
-}: SpinnerProps): JSX.Element {
+}: SpinnerProps): React.JSX.Element {
 	const Component = as ?? 'div'
 	const resolvedColor = resolveSpinnerColor(color)
 
@@ -54,7 +54,7 @@ export function Spinner({
 			role="status"
 			{...props}
 		>
-			<span className="visually-hidden">{visuallyHiddenLabel}</span>
+			<span className="sr-only">{visuallyHiddenLabel}</span>
 		</Component>
 	)
 }

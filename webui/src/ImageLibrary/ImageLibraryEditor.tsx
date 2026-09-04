@@ -157,8 +157,8 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		<div className="image-library-editor">
 			<GenericConfirmModal ref={confirmModalRef} />
 
-			<div className="mb-3">
-				<div className="d-flex flex-wrap gap-2">
+			<div className="mb-4">
+				<div className="flex flex-wrap gap-2">
 					<Button color="danger" onClick={handleDelete} title="Delete Image">
 						<FontAwesomeIcon icon={faTrashAlt} />
 					</Button>
@@ -173,22 +173,16 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					</Button>
 				</div>
 
-				<input
-					ref={fileInputRef}
-					type="file"
-					accept="image/*"
-					onChange={handleReplaceImage}
-					style={{ display: 'none' }}
-				/>
+				<input ref={fileInputRef} type="file" accept="image/*" onChange={handleReplaceImage} className="hidden" />
 			</div>
 
-			<Form className="row mb-3">
+			<Form row className="mb-4">
 				<FormLabel htmlFor={imageNameFieldId} sm={4} column="sm">
 					Name
 				</FormLabel>
-				<Grid.Col sm={8} className="d-flex align-items-center justify-content-between">
-					<div className="d-flex align-items-center">
-						<span id={imageNameFieldId} className="font-monospace">
+				<Grid.Col sm={8} className="flex items-center justify-between">
+					<div className="flex items-center">
+						<span id={imageNameFieldId} className="font-mono">
 							{imageInfo.name}
 						</span>
 						<CopyButton size="sm" title="Copy variable name" text={`$(image:${imageInfo.name})`} />
@@ -201,7 +195,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					/>
 				</Grid.Col>
 			</Form>
-			<Form className="row mb-3">
+			<Form row className="mb-4">
 				<FormLabel htmlFor={descriptionFieldId} sm={4} column="sm">
 					Description
 				</FormLabel>
@@ -213,11 +207,11 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					/>
 				</Grid.Col>
 			</Form>
-			<Form className="row mb-3">
+			<Form row className="mb-4">
 				<FormLabel htmlFor={backgroundColorFieldId} sm={4} column="sm">
 					Preview background
 				</FormLabel>
-				<Grid.Col sm={8} className="d-flex align-items-center">
+				<Grid.Col sm={8} className="flex items-center">
 					<ImageBackgroundColorEditor
 						id={backgroundColorFieldId}
 						imageName={selectedImageName}

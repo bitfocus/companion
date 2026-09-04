@@ -10,7 +10,7 @@ const LOG_LEVELS = [
 	{ value: 'debug', label: 'Debug' },
 ]
 
-export function GeneralSection(): JSX.Element {
+export function GeneralSection(): React.JSX.Element {
 	const { state, updateConfig } = useConfig()
 
 	// Assume data is available since loading/error states are handled elsewhere

@@ -1,4 +1,5 @@
 import { Combobox } from '@base-ui/react/combobox'
+import '../dropdown-field.css'
 import '../variable-dropdown.css'
 import { Popover } from '@base-ui/react/popover'
 import { useVirtualizer } from '@tanstack/react-virtual'

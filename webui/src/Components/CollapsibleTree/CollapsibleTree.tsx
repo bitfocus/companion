@@ -3,7 +3,7 @@ import './CollapsibleTree.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import type { PanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 
 /**
@@ -190,12 +190,16 @@ const CollapsibleTreeNodeList = observer(function CollapsibleTreeNodeList<
 	onLeafClick,
 	nestingLevel,
 }: CollapsibleTreeNodeListProps<TLeafData, TNodeMeta>): React.JSX.Element {
+	// Ids of every node at this level, so alt+clicking one header can expand/collapse the whole level
+	const siblingIds = useMemo(() => nodes.map((n) => n.id), [nodes])
+
 	return (
 		<>
 			{nodes.map((node) => (
 				<CollapsibleTreeNodeSingle
 					key={node.id}
 					node={node}
+					siblingIds={siblingIds}
 					collapseHelper={collapseHelper}
 					HeaderComponent={HeaderComponent}
 					LeafComponent={LeafComponent}
@@ -209,6 +213,8 @@ const CollapsibleTreeNodeList = observer(function CollapsibleTreeNodeList<
 
 interface CollapsibleTreeNodeSingleProps<TLeafData, TNodeMeta> {
 	node: CollapsibleTreeNode<TLeafData, TNodeMeta>
+	/** Ids of all nodes at this level (including this one), for the alt+click "toggle whole level" action */
+	siblingIds: string[]
 	collapseHelper: PanelCollapseHelper | null
 	HeaderComponent: React.ComponentType<CollapsibleTreeHeaderProps<TLeafData, TNodeMeta>>
 	LeafComponent: React.ComponentType<CollapsibleTreeLeafProps<TLeafData>>
@@ -226,10 +232,22 @@ const CollapsibleTreeNodeSingle = observer(function CollapsibleTreeNodeSingle<
 	LeafComponent,
 	onLeafClick,
 	nestingLevel,
+	siblingIds,
 }: CollapsibleTreeNodeSingleProps<TLeafData, TNodeMeta>): React.JSX.Element {
 	// If collapseHelper is null, all nodes are force-expanded (e.g. during search)
 	const isExpanded = collapseHelper ? !collapseHelper.isPanelCollapsed(null, node.id) : true
-	const doToggle = useCallback(() => collapseHelper?.togglePanelCollapsed(null, node.id), [collapseHelper, node.id])
+	const doToggle = useCallback(
+		(wholeLevel: boolean) => {
+			if (!collapseHelper) return
+			// alt+click toggles every sibling at this level to match this node's new state
+			if (wholeLevel && siblingIds.length > 1) {
+				collapseHelper.setMultipleCollapsed(siblingIds, isExpanded)
+			} else {
+				collapseHelper.togglePanelCollapsed(null, node.id)
+			}
+		},
+		[collapseHelper, node.id, siblingIds, isExpanded]
+	)
 
 	return (
 		<>
@@ -238,15 +256,16 @@ const CollapsibleTreeNodeSingle = observer(function CollapsibleTreeNodeSingle<
 				role="button"
 				tabIndex={0}
 				aria-expanded={isExpanded}
+				title={siblingIds.length > 1 ? 'Alt+click to expand/collapse all at this level' : undefined}
 				onKeyDown={(e) => {
 					if (e.key === 'Enter' || e.key === ' ') {
 						e.preventDefault()
-						doToggle()
+						doToggle(e.altKey)
 					}
 				}}
-				onClick={doToggle}
+				onClick={(e) => doToggle(e.altKey)}
 			>
-				<CollapsibleTreeNesting nestingLevel={nestingLevel}>
+				<CollapsibleTreeNesting nestingLevel={nestingLevel} className="collapsible-tree-group-content">
 					<FontAwesomeIcon icon={isExpanded ? faCaretDown : faCaretRight} className="collapsible-tree-caret" />
 					<HeaderComponent node={node} nestingLevel={nestingLevel} />
 				</CollapsibleTreeNesting>

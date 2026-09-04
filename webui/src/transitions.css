@@ -12,3 +12,23 @@
 		opacity: 0;
 	}
 }
+
+/* `fadeIn` fades an element in once on mount (used by the app-level loading/error transitions). */
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
+}
+
+.fadeIn {
+	animation-duration: 1s;
+	animation-name: fadeIn;
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+	}
+}

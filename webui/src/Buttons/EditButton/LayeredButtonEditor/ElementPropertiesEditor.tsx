@@ -15,6 +15,7 @@ import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/Styl
 import { Accordion } from '~/Components/Accordion.js'
 import { Button } from '~/Components/Button.js'
 import { Form } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { getRowId, ListRowControls, normaliseCell, useListField } from '~/Components/ListInputField.js'
 import { PropertyFieldRow } from '~/Components/PropertyFieldRow.js'
 import { getInputFeatures } from '~/Controls/InputFeatures.js'
@@ -50,7 +51,7 @@ export const ElementPropertiesEditor = observer(function ElementPropertiesEditor
 			localVariablesStore={localVariablesStore}
 			isPropertyOverridden={isPropertyOverridden}
 		>
-			<Form className="row g-2" onSubmit={PreventDefaultHandler}>
+			<Form row className="gap-2" onSubmit={PreventDefaultHandler}>
 				<ElementCommonProperties elementProps={elementProps} simpleMode={simpleMode} />
 
 				<ElementPropertiesEditorSchemaVersion elementProps={elementProps} simpleMode={simpleMode} />
@@ -119,9 +120,7 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 				})}
 
 				{simpleModeFieldIds ? (
-					<div className="text-center text-muted mt-3" style={{ fontSize: '0.875rem' }}>
-						Some fields are hidden in simple mode
-					</div>
+					<div className="text-center text-muted mt-4 text-sm">Some fields are hidden in simple mode</div>
 				) : null}
 			</>
 		)
@@ -135,10 +134,10 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 					return (
 						<Accordion.Item key={section.id} value={section.id}>
 							<Accordion.Header>
-								<Accordion.Trigger className="fw-bold">{section.label}</Accordion.Trigger>
+								<Accordion.Trigger className="font-bold">{section.label}</Accordion.Trigger>
 							</Accordion.Header>
 							<Accordion.Panel>
-								<div className="row g-2 p-2">
+								<Grid.Row className="gap-2 p-2">
 									{section.fields.map((field) => (
 										<SchemaFieldWrapper
 											key={field.id}
@@ -147,7 +146,7 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 											localVariablesStore={localVariablesStore}
 										/>
 									))}
-								</div>
+								</Grid.Row>
 							</Accordion.Panel>
 						</Accordion.Item>
 					)
@@ -180,6 +179,7 @@ const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 		<FormPropertyField
 			elementProps={elementProps}
 			property={field.id}
+			fieldDefinition={field}
 			label={field.label}
 			tooltip={field.tooltip}
 			description={field.description}
@@ -256,6 +256,9 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 				disableAutoExpression={true}
 				localVariablesStore={localVariablesStore}
 				entityType={null}
+				fieldDefinition={field}
+				controlId={controlId}
+				allRawOptions={undefined}
 				isLocatedInGrid={false}
 				disabled={false}
 			>
@@ -295,6 +298,9 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 								disableAutoExpression={!!cellField.disableAutoExpression}
 								localVariablesStore={localVariablesStore}
 								entityType={null}
+								fieldDefinition={cellField}
+								controlId={controlId}
+								allRawOptions={row}
 								isLocatedInGrid={false}
 								disabled={false}
 								labelClassName="ps-2"

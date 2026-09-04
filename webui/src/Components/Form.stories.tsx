@@ -17,7 +17,7 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 const SampleInput = ({ id }: { id: string }) => (
-	<input id={id} type="text" className="form-control" defaultValue="Some value" />
+	<input id={id} type="text" className="form-input text-input-field" defaultValue="Some value" />
 )
 
 // A plain label above its field (no column/grid props)

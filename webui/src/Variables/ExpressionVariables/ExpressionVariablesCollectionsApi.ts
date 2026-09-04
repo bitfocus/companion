@@ -7,7 +7,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC'
 export type ExpressionVariablesCollectionsApi = NestingCollectionsApi
 
 export function useExpressionVariablesCollectionsApi(
-	confirmModalRef: React.RefObject<GenericConfirmModalRef>
+	confirmModalRef: React.RefObject<GenericConfirmModalRef | null>
 ): ExpressionVariablesCollectionsApi {
 	const renameMutation = useMutationExt(trpc.controls.expressionVariables.collections.setName.mutationOptions())
 	const deleteMutation = useMutationExt(trpc.controls.expressionVariables.collections.remove.mutationOptions())

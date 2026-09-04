@@ -1,4 +1,5 @@
 import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import './VariableValueDisplay.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef, useState } from 'react'
 import type { PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
@@ -97,7 +98,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 			? compactValue
 			: valueStr
 
-	const elms: Array<string | JSX.Element> = []
+	const elms: Array<string | React.JSX.Element> = []
 	const lines = displayValue.split('\\n')
 	lines.forEach((l, i) => {
 		elms.push(l)
@@ -230,7 +231,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 
 	return (
 		<div className="variable-value-display" {...props}>
-			<div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
+			<div className="flex items-center min-w-0">
 				{valuePill}
 				{showCopy && (
 					<CopyButton size="sm" title="Copy variable value" text={valueStr} color="variable" variant="ghost" />
@@ -300,7 +301,7 @@ export const VariableValueDisplayPopover: React.FC<VariableValueDisplayPopoverPr
 					setExpanded(true)
 				}}
 				onMouseLeave={scheduleClose}
-				style={{ minWidth: 0 }}
+				className="min-w-0"
 			>
 				<VariableValueDisplay
 					value={value}

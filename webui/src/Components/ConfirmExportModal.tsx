@@ -3,6 +3,7 @@ import { forwardRef, useCallback, useContext, useId, useImperativeHandle, useRef
 import { ExportFormatDefault } from '@companion-app/shared/Model/ExportFormat.js'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { Modal } from '~/Components/Modal'
 import { windowLinkOpen } from '~/Helpers/Window.js'
 import { SelectExportFormat } from '~/ImportExport/ExportFormat.js'
@@ -83,18 +84,18 @@ export const ConfirmExportModal = observer(
 								<Modal.Title>{props.title}</Modal.Title>
 							</Modal.Header>
 							<Modal.Body>
-								<Form className="row g-3" onSubmit={doAction}>
+								<Form row className="gap-4" onSubmit={doAction}>
 									<FormLabel htmlFor={exportFormatId} sm={4} column="sm">
 										File format
 									</FormLabel>
-									<div className="col-sm-8">
+									<Grid.Col sm={8}>
 										<SelectExportFormat id={exportFormatId} value={format} setValue={setFormat} />
-									</div>
+									</Grid.Col>
 
 									<FormLabel htmlFor={exportNameId} sm={4} column="sm">
 										File name
 									</FormLabel>
-									<div className="col-sm-8">
+									<Grid.Col sm={8}>
 										<TextInputField
 											id={exportNameId}
 											value={filename}
@@ -102,7 +103,7 @@ export const ConfirmExportModal = observer(
 											useVariables
 											immediateValue
 										/>
-									</div>
+									</Grid.Col>
 
 									<FormLabel htmlFor={exportSecretsId} sm={4} column="sm">
 										Include secrets
@@ -111,9 +112,9 @@ export const ConfirmExportModal = observer(
 											compatible with this
 										</InlineHelpIcon>
 									</FormLabel>
-									<div className="col-sm-8 d-flex align-items-center">
+									<Grid.Col sm={8} className="flex items-center">
 										<SwitchInputField id={exportSecretsId} value={includeSecrets} setValue={setIncludeSecrets} />
-									</div>
+									</Grid.Col>
 								</Form>
 							</Modal.Body>
 							<Modal.Footer>

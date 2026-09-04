@@ -2,6 +2,7 @@ import React, { useId } from 'react'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { StaticAlert } from '~/Components/Alert'
 import { FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 
 interface ImageNameInputProps {
@@ -26,7 +27,7 @@ export function ImageNameInput({
 	warningText,
 	errorMessage,
 	className,
-}: ImageNameInputProps): JSX.Element {
+}: ImageNameInputProps): React.JSX.Element {
 	// Generate tooltip based on validation state
 	const tooltip = !isLabelValid(value) ? 'Invalid name: Use only letters, numbers, hyphens, and underscores' : undefined
 
@@ -43,22 +44,22 @@ export function ImageNameInput({
 	return (
 		<>
 			{errorMessage && (
-				<StaticAlert color="danger" className="mb-3">
+				<StaticAlert color="danger" className="mb-4">
 					{errorMessage}
 				</StaticAlert>
 			)}
 
 			{showWarning && warningText && (
-				<StaticAlert color="warning" className="mb-3">
+				<StaticAlert color="warning" className="mb-4">
 					{warningText}
 				</StaticAlert>
 			)}
 
-			<div className={`row ${className || ''}`}>
+			<Grid.Row className={className}>
 				<FormLabel htmlFor={labelInputId} sm={3} column>
 					Image name
 				</FormLabel>
-				<div className="col-sm-9">
+				<Grid.Col sm={9}>
 					<TextInputFieldSimple
 						id={labelInputId}
 						value={value}
@@ -69,9 +70,11 @@ export function ImageNameInput({
 						disabled={disabled}
 						immediateValue
 					/>
-				</div>
-				<div className="col-sm-12 mt-2 text-muted small">{helpText || defaultHelpText}</div>
-			</div>
+				</Grid.Col>
+				<Grid.Col sm={12} className="mt-2 text-muted small">
+					{helpText || defaultHelpText}
+				</Grid.Col>
+			</Grid.Row>
 		</>
 	)
 }

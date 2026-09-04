@@ -9,6 +9,7 @@ import type { ExportControlv6, ExportTriggerContentv6 } from '@companion-app/sha
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import {
+	fixupButtonReferenceControl,
 	fixupEntitiesRecursive,
 	fixupExpressionVariableControl,
 	fixupLayeredButtonControl,
@@ -680,5 +681,45 @@ describe('fixupPresetReferenceControl', () => {
 		expect(result.presetRef.connectionId).toBe('old-conn')
 		expect(result.presetRef.moduleId).toBe('mod1')
 		expect(result.presetRef.variableValues).toEqual({ channel: 3 })
+	})
+})
+
+describe('fixupButtonReferenceControl', () => {
+	function makeUpdater(labelRemap: Record<string, string> = {}): VisitorReferencesUpdater {
+		const internalModule = { visitReferences: vi.fn() } as any
+		return new VisitorReferencesUpdater(internalModule, labelRemap, {}, undefined)
+	}
+
+	function makeExport(options: any): ExportControlv6 {
+		return { type: 'button-reference', options }
+	}
+
+	test('preserves an existing plain location and clones the options', () => {
+		const control = makeExport({ location: { value: '3/0/0', isExpression: false }, notes: 'hi' })
+
+		const result = fixupButtonReferenceControl(control, makeUpdater())
+
+		expect(result.type).toBe('button-reference')
+		expect(result.options.location).toEqual({ value: '3/0/0', isExpression: false })
+		expect(result.options.notes).toBe('hi')
+		expect(result.options).not.toBe(control.options)
+	})
+
+	test('defaults a missing location to an empty reference', () => {
+		const result = fixupButtonReferenceControl(makeExport({}), makeUpdater())
+		expect(result.options.location).toEqual({ value: '', isExpression: false })
+	})
+
+	test('defaults a malformed location to an empty reference', () => {
+		const result = fixupButtonReferenceControl(makeExport({ location: 'nonsense' }), makeUpdater())
+		expect(result.options.location).toEqual({ value: '', isExpression: false })
+	})
+
+	test('renames a connection label used inside the location', () => {
+		const control = makeExport({ location: { value: '$(old:foo)/0/0', isExpression: false } })
+
+		const result = fixupButtonReferenceControl(control, makeUpdater({ old: 'new' }))
+
+		expect(result.options.location.value).toBe('$(new:foo)/0/0')
 	})
 })

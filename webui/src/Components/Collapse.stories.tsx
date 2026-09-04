@@ -6,7 +6,7 @@ const meta = {
 	component: Collapse.Root,
 	decorators: [
 		(Story) => (
-			<div style={{ padding: 40 }}>
+			<div className="p-10">
 				<Story />
 			</div>
 		),
@@ -15,8 +15,8 @@ const meta = {
 		<Collapse.Root {...args}>
 			<Collapse.Trigger>Toggle</Collapse.Trigger>
 			<Collapse.Panel>
-				<div style={{ padding: '16px', background: 'var(--cui-secondary-bg)', borderRadius: 4 }}>
-					<p style={{ margin: 0 }}>Collapsed content. This area can contain any content.</p>
+				<div style={{ padding: '16px', background: 'var(--color-surface-muted)', borderRadius: 4 }}>
+					<p className="m-0">Collapsed content. This area can contain any content.</p>
 				</div>
 			</Collapse.Panel>
 		</Collapse.Root>
@@ -38,13 +38,13 @@ function ControlledStory() {
 	const [open, setOpen] = useState(false)
 	return (
 		<div>
-			<button onClick={() => setOpen((v) => !v)} style={{ marginBottom: 12 }}>
+			<button onClick={() => setOpen((v) => !v)} className="mb-3">
 				{open ? 'Hide details' : 'Show details'}
 			</button>
 			<Collapse.Root open={open} onOpenChange={setOpen}>
 				<Collapse.Panel>
-					<div style={{ padding: 16, background: 'var(--cui-secondary-bg)', borderRadius: 4 }}>
-						<p style={{ margin: 0 }}>This panel is driven by external state, with no built-in trigger.</p>
+					<div style={{ padding: 16, background: 'var(--color-surface-muted)', borderRadius: 4 }}>
+						<p className="m-0">This panel is driven by external state, with no built-in trigger.</p>
 					</div>
 				</Collapse.Panel>
 			</Collapse.Root>
@@ -60,11 +60,11 @@ export const Controlled: Story = {
 /** Multiple independent panels. */
 export const MultiplePanels: Story = {
 	render: () => (
-		<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+		<div className="flex flex-col gap-2">
 			<Collapse.Root defaultOpen>
 				<Collapse.Trigger>Section A</Collapse.Trigger>
 				<Collapse.Panel>
-					<div style={{ padding: 12, background: 'var(--cui-secondary-bg)', borderRadius: 4 }}>
+					<div style={{ padding: 12, background: 'var(--color-surface-muted)', borderRadius: 4 }}>
 						Content for section A.
 					</div>
 				</Collapse.Panel>
@@ -72,7 +72,7 @@ export const MultiplePanels: Story = {
 			<Collapse.Root>
 				<Collapse.Trigger>Section B</Collapse.Trigger>
 				<Collapse.Panel>
-					<div style={{ padding: 12, background: 'var(--cui-secondary-bg)', borderRadius: 4 }}>
+					<div style={{ padding: 12, background: 'var(--color-surface-muted)', borderRadius: 4 }}>
 						Content for section B.
 					</div>
 				</Collapse.Panel>

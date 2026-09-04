@@ -11,7 +11,7 @@ export function useSectionVisibilityObserver({
 	sectionId,
 	rootMargin = '-20% 0px -60% 0px',
 	threshold = 0,
-}: UseSectionVisibilityObserverProps): React.RefObject<HTMLDivElement> {
+}: UseSectionVisibilityObserverProps): React.RefObject<HTMLDivElement | null> {
 	const elementRef = useRef<HTMLDivElement>(null)
 	const { addVisibleSection, removeVisibleSection } = useSectionVisibility()
 

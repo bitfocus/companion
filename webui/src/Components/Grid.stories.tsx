@@ -47,9 +47,52 @@ export const ColWithOffset: Story = {
 export const ColDefault: Story = {
 	render: () => (
 		<Grid.Row>
-			<Grid.Col style={{ background: '#dee2e6', padding: 8 }}>Auto-width col</Grid.Col>
-			<Grid.Col style={{ background: '#adb5bd', padding: 8 }}>Auto-width col</Grid.Col>
-			<Grid.Col style={{ background: '#dee2e6', padding: 8 }}>Auto-width col</Grid.Col>
+			<Grid.Col style={{ background: '#dee2e6', padding: 8 }}>A column with no span fills the row</Grid.Col>
+			<Grid.Col style={{ background: '#adb5bd', padding: 8 }}>…so these stack</Grid.Col>
+		</Grid.Row>
+	),
+}
+
+export const RowGutters: Story = {
+	render: () => (
+		<>
+			<Grid.Row>
+				<Grid.Col xs={6} style={{ background: '#dee2e6', padding: 8 }}>
+					Default gutter (1.5rem)
+				</Grid.Col>
+				<Grid.Col xs={6} style={{ background: '#adb5bd', padding: 8 }}>
+					Column 2
+				</Grid.Col>
+			</Grid.Row>
+			<Grid.Row className="gap-2">
+				<Grid.Col xs={6} style={{ background: '#dee2e6', padding: 8 }}>
+					gap-2
+				</Grid.Col>
+				<Grid.Col xs={6} style={{ background: '#adb5bd', padding: 8 }}>
+					Column 2
+				</Grid.Col>
+			</Grid.Row>
+			<Grid.Row className="gap-x-0">
+				<Grid.Col xs={6} style={{ background: '#dee2e6', padding: 8 }}>
+					gap-x-0
+				</Grid.Col>
+				<Grid.Col xs={6} style={{ background: '#adb5bd', padding: 8 }}>
+					Column 2
+				</Grid.Col>
+			</Grid.Row>
+		</>
+	),
+}
+
+export const RowWithFewerColumns: Story = {
+	render: () => (
+		<Grid.Row columns={5}>
+			<Grid.Col xs={2} style={{ background: '#dee2e6', padding: 8 }}>
+				2 of 5
+			</Grid.Col>
+			<Grid.Col xs={3} style={{ background: '#adb5bd', padding: 8 }}>
+				3 of 5
+			</Grid.Col>
 		</Grid.Row>
 	),
 }
@@ -66,27 +109,15 @@ export const ContainerDefault: StoryObj<typeof Grid.Container> = {
 	),
 }
 
-export const ContainerFluid: StoryObj<typeof Grid.Container> = {
+export const ContainerWithRow: Story = {
 	render: () => (
-		<Grid.Container fluid style={{ background: '#f8f9fa', padding: 16 }}>
+		<Grid.Container>
 			<Grid.Row>
-				<Grid.Col xs={12} style={{ background: '#dee2e6', padding: 8 }}>
-					Inside a fluid container (full width)
+				<Grid.Col xs={4} style={{ background: '#dee2e6', padding: 8 }}>
+					Inside a container
 				</Grid.Col>
-			</Grid.Row>
-		</Grid.Container>
-	),
-}
-
-export const FullGridLayout: Story = {
-	render: () => (
-		<Grid.Container fluid>
-			<Grid.Row className="split-panels">
-				<Grid.Col xs={6} className="primary-panel" style={{ background: '#dee2e6', padding: 8 }}>
-					Primary panel
-				</Grid.Col>
-				<Grid.Col xs={6} className="secondary-panel" style={{ background: '#adb5bd', padding: 8 }}>
-					Secondary panel
+				<Grid.Col xs={8} style={{ background: '#adb5bd', padding: 8 }}>
+					Second column
 				</Grid.Col>
 			</Grid.Row>
 		</Grid.Container>

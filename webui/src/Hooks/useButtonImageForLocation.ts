@@ -1,34 +1,122 @@
-import { useSubscription } from '@trpc/tanstack-react-query'
-import { useState } from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
-import { trpc } from '~/Resources/TRPC'
+import { trpcClient } from '~/Resources/TRPC'
+
+/**
+ * Button images are shared, not per-component.
+ *
+ * tRPC subscriptions are not deduplicated the way queries are, so without this every component
+ * watching a location opened its own subscription - the edit panel preview and a grid cell showing
+ * the same button each opened a subscription and flashed empty independently before their first
+ * image landed.
+ *
+ * So locations are refcounted: one subscription each, however many components are watching, sharing
+ * the one live image. When the last watcher leaves the subscription is torn down after a short grace
+ * period, so fast unmount/remount (scroll thrash, StrictMode) reuses the still-live subscription
+ * instead of flashing - but nothing is retained beyond that, so the image can never go stale.
+ */
+
+const NO_IMAGE: WrappedImage = { image: null, isUsed: false }
+
+/** How long a subscription is kept warm after its last watcher leaves, to absorb unmount/remount thrash */
+export const RELEASE_GRACE_MS = 100
+
+interface ActiveEntry {
+	image: WrappedImage
+	unsubscribe: () => void
+	listeners: Set<() => void>
+	teardownTimer: ReturnType<typeof setTimeout> | null
+}
+
+const activeEntries = new Map<string, ActiveEntry>()
+
+/** The listener set doubles as the refcount - one listener per watching component */
+function acquire(key: string, location: ControlLocation, listener: () => void): void {
+	const existing = activeEntries.get(key)
+	if (existing) {
+		if (existing.teardownTimer) {
+			clearTimeout(existing.teardownTimer)
+			existing.teardownTimer = null
+		}
+		existing.listeners.add(listener)
+		return
+	}
+
+	const entry: ActiveEntry = {
+		image: NO_IMAGE,
+		unsubscribe: () => {},
+		listeners: new Set([listener]),
+		teardownTimer: null,
+	}
+	activeEntries.set(key, entry)
+
+	const subscription = trpcClient.preview.graphics.location.subscribe(
+		{ location },
+		{
+			onData: (data: WrappedImage) => {
+				entry.image = data
+				for (const l of entry.listeners) l()
+			},
+			onError: (e: unknown) => {
+				console.error(`Button image subscription failed for ${key}: ${e}`)
+			},
+		}
+	)
+	entry.unsubscribe = () => subscription.unsubscribe()
+}
+
+function release(key: string, listener: () => void): void {
+	const entry = activeEntries.get(key)
+	if (!entry) return
+
+	entry.listeners.delete(listener)
+	if (entry.listeners.size > 0) return
+
+	// Defer teardown briefly - a remount within the grace period re-acquires this same entry (see
+	// acquire), reusing the live subscription rather than tearing down and flashing empty
+	entry.teardownTimer = setTimeout(() => {
+		entry.unsubscribe()
+		activeEntries.delete(key)
+	}, RELEASE_GRACE_MS)
+}
 
 /**
  * Load and retrieve a button image for a specific control location.
  * @param location Location of the control to load
  * @param disable Disable loading of this preview
- * @returns
  */
 export function useButtonImageForLocation(location: ControlLocation, disable = false): WrappedImage {
-	const [imageState, setImageState] = useState<WrappedImage>({ image: null, isUsed: false })
+	const key = disable ? null : formatLocation(location)
 
-	useSubscription(
-		trpc.preview.graphics.location.subscriptionOptions(
-			{
-				location,
-			},
-			{
-				enabled: !disable,
-				onStarted: () => {
-					// TODO?
-					// setImageState()
-				},
-				onData: (data) => {
-					setImageState(data)
-				},
-			}
-		)
+	// Captured so the subscription is set up from the location that produced `key`, without making the
+	// caller's (usually inline, so unstable) location object part of the subscribe identity
+	const { pageNumber, row, column } = location
+
+	const subscribe = useCallback(
+		(onStoreChange: () => void) => {
+			if (!key) return () => {}
+
+			acquire(key, { pageNumber, row, column }, onStoreChange)
+
+			return () => release(key, onStoreChange)
+		},
+		[key, pageNumber, row, column]
 	)
 
-	return imageState
+	const getSnapshot = useCallback(() => {
+		if (!key) return NO_IMAGE
+		return activeEntries.get(key)?.image ?? NO_IMAGE
+	}, [key])
+
+	return useSyncExternalStore(subscribe, getSnapshot)
+}
+
+/** Exposed for tests - tears down all subscriptions */
+export function resetButtonImageCache(): void {
+	for (const entry of activeEntries.values()) {
+		if (entry.teardownTimer) clearTimeout(entry.teardownTimer)
+		entry.unsubscribe()
+	}
+	activeEntries.clear()
 }

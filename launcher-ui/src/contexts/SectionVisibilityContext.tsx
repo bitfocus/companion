@@ -23,7 +23,7 @@ interface SectionVisibilityProviderProps {
 	children: ReactNode
 }
 
-export function SectionVisibilityProvider({ children }: SectionVisibilityProviderProps): JSX.Element {
+export function SectionVisibilityProvider({ children }: SectionVisibilityProviderProps): React.JSX.Element {
 	const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
 	const [sectionOrder, setSectionOrder] = useState<string[]>([])
 

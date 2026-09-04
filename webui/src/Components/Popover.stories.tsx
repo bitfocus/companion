@@ -10,7 +10,7 @@ const meta = {
 	component: Popover.Root,
 	decorators: [
 		(Story) => (
-			<div style={{ padding: 80, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+			<div className="p-20 flex justify-center items-center">
 				<Story />
 			</div>
 		),
@@ -78,8 +78,8 @@ export const WithArrow: Story = {
 export const WithArrowTop: Story = {
 	args: { defaultOpen: true },
 	decorators: [
-		(Story: () => JSX.Element): JSX.Element => (
-			<div style={{ padding: 80, paddingTop: 160, display: 'flex', justifyContent: 'center' }}>
+		(Story: () => React.JSX.Element): React.JSX.Element => (
+			<div className="p-20 pt-40 flex justify-center">
 				<Story />
 			</div>
 		),
@@ -99,8 +99,8 @@ export const WithArrowTop: Story = {
 export const SideRight: Story = {
 	args: { defaultOpen: true },
 	decorators: [
-		(Story: () => JSX.Element): JSX.Element => (
-			<div style={{ padding: 80, display: 'flex', justifyContent: 'flex-start' }}>
+		(Story: () => React.JSX.Element): React.JSX.Element => (
+			<div className="p-20 flex justify-start">
 				<Story />
 			</div>
 		),

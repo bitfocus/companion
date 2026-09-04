@@ -68,6 +68,8 @@ import { collectContentHashes, computeElementContentHash } from './ConvertGraphi
 import type { ElementConversionCache, ElementConversionCacheEntry } from './ElementConversionCache.js'
 import type { ImageResult } from './ImageResult.js'
 
+export type { DrawnAndHidden } from './ConvertGraphicsElements/Helper.js'
+
 /** Extract the valid choice IDs for a dropdown field directly from the element schema. */
 function dropdownChoices<T extends string>(
 	elementType: Parameters<typeof getElementSchemaProperty>[0],
@@ -92,6 +94,11 @@ const LINE_POSITION_CHOICES = dropdownChoices<ButtonGraphicsLineDrawElement['bor
 const GAUGE_ORIENTATION_CHOICES = dropdownChoices<ButtonGraphicsGaugeDrawElement['orientation']>('gauge', 'orientation')
 const GAUGE_TRACK_STYLE_CHOICES = dropdownChoices<ButtonGraphicsGaugeDrawElement['trackStyle']>('gauge', 'trackStyle')
 
+/** The converted draw elements plus the dependency references that drove them (see {@link ExpressionReferences}). */
+export interface ConvertedElementsResult extends ExpressionReferences {
+	elements: SomeButtonGraphicsDrawElement[]
+}
+
 export async function ConvertSomeButtonGraphicsElementForDrawing(
 	compositeElementStore: InstanceDefinitions,
 	parser: VariablesAndExpressionParser,
@@ -102,21 +109,14 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 	cache: ElementConversionCache | null,
 	currentLocationStr: string | null = null,
 	getRenderAtLocation: ((location: ControlLocation) => ImageResult | null) | null = null
-): Promise<{
-	elements: SomeButtonGraphicsDrawElement[]
-	usedVariables: Set<string>
-	usedCompositeElements: Set<CompositeElementIdString>
-	referencedLocations: Set<string>
-	cyclicLocations: Set<string>
-	clockSensitive: boolean
-}> {
+): Promise<ConvertedElementsResult> {
 	// Apply any queued invalidations before processing
 	cache?.applyQueuedInvalidations()
 
 	const globalReferences: ExpressionReferences = {
-		variables: new Set(),
-		compositeElements: new Set(),
-		referencedLocations: new Set(),
+		variables: { drawn: new Set(), hidden: new Set() },
+		compositeElements: { drawn: new Set(), hidden: new Set() },
+		referencedLocations: { drawn: new Set(), hidden: new Set() },
 		cyclicLocations: new Set(),
 		clockSensitive: false,
 	}
@@ -145,11 +145,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 
 	return {
 		elements: newElements,
-		usedVariables: globalReferences.variables,
-		usedCompositeElements: globalReferences.compositeElements,
-		referencedLocations: globalReferences.referencedLocations,
-		cyclicLocations: globalReferences.cyclicLocations,
-		clockSensitive: globalReferences.clockSensitive,
+		...globalReferences,
 	}
 }
 
@@ -224,8 +220,9 @@ async function convertElements(
 			// Merge the element's references into the global references (runs for cache hits too)
 			mergeElementReferences(context.globalReferences, cacheEntry.references)
 			if (cacheEntry.compositeElement?.elementId)
-				context.globalReferences.compositeElements.add(cacheEntry.compositeElement.elementId)
-			if (cacheEntry.referencedLocation) context.globalReferences.referencedLocations.add(cacheEntry.referencedLocation)
+				context.globalReferences.compositeElements.drawn.add(cacheEntry.compositeElement.elementId)
+			if (cacheEntry.referencedLocation)
+				context.globalReferences.referencedLocations.drawn.add(cacheEntry.referencedLocation)
 
 			// If this is a group, populate the children
 			if (element.type === 'group' || element.type === 'composite') {
@@ -375,7 +372,7 @@ async function convertReferenceElementForDrawing(
 				const targetRender = context.getRenderAtLocation(targetLocation)
 
 				// Always track the direct dependency so we re-render when the target eventually renders
-				context.globalReferences.referencedLocations.add(targetLocationStr)
+				context.globalReferences.referencedLocations.drawn.add(targetLocationStr)
 
 				// Loop detection: check if the target's render transitively references this button
 				const isLoop =
@@ -393,7 +390,7 @@ async function convertReferenceElementForDrawing(
 
 					// Track transitive referenced locations for loop detection in parent renders
 					for (const loc of targetRender.referencedLocations) {
-						context.globalReferences.referencedLocations.add(loc)
+						context.globalReferences.referencedLocations.drawn.add(loc)
 					}
 				}
 			}
@@ -411,7 +408,7 @@ async function convertReferenceElementForDrawing(
 	return { drawElement, references, compositeElement: null, referencedLocation: referencedLocationStr }
 }
 
-function makeReferencePlaceholder(
+export function makeReferencePlaceholder(
 	parentId: string,
 	text: string
 ): [ButtonGraphicsBoxDrawElement, ButtonGraphicsTextDrawElement] {
@@ -842,7 +839,7 @@ function convertGaugeElementForDrawing(
 				const rowHelper = helper.forRow(row)
 				return {
 					value: rowHelper.getNumber('value', 0),
-					color: rowHelper.getColor('color', 0, false), // gauge stop color field disables alpha
+					color: rowHelper.getColor('color', 0),
 					gradient: rowHelper.getBoolean('gradient', false),
 				}
 			})
@@ -871,6 +868,7 @@ function convertGaugeElementForDrawing(
 		roundedEnds: helper.getBoolean('roundedEnds', true),
 		fillEnabled: helper.getBoolean('fillEnabled', true),
 		multiColour: helper.getBoolean('multiColour', true),
+		fillWidth: Math.max(0, Math.min(100, helper.getNumber('fillWidth', 100))),
 		stops: stops,
 		markerEnabled: helper.getBoolean('markerEnabled', false),
 		markerColor: helper.getColor('markerColor', 0xffffff),
@@ -908,6 +906,22 @@ function collectChildElementIds(
 		const childId = idPrefix + child.id
 		context.processedElementIds.add(childId)
 
+		// Preserve the dependency tracking of this hidden-but-cached child. Its dependencies are recorded
+		// in the `hidden` half of each pair so that a change to one still evicts the now-stale cache entry -
+		// without which re-enabling the parent would reuse the value from when it was last drawn.
+		const cachedEntry = context.cache?.get(childId)
+		if (cachedEntry) {
+			for (const variable of cachedEntry.references.usedVariables) {
+				context.globalReferences.variables.hidden.add(variable)
+			}
+			if (cachedEntry.compositeElement?.elementId) {
+				context.globalReferences.compositeElements.hidden.add(cachedEntry.compositeElement.elementId)
+			}
+			if (cachedEntry.referencedLocation) {
+				context.globalReferences.referencedLocations.hidden.add(cachedEntry.referencedLocation)
+			}
+		}
+
 		// If this child is a group, recurse with same prefix
 		if (child.type === 'group') {
 			collectChildElementIds(context, child.children, idPrefix)
@@ -916,7 +930,6 @@ function collectChildElementIds(
 		// If this child is a composite, we need to check if we have a cached entry
 		// to determine the correct childIdPrefix for its children
 		if (child.type === 'composite') {
-			const cachedEntry = context.cache?.get(childId)
 			if (cachedEntry?.compositeElement) {
 				const compositeChildren = context.resolveCompositeElement(child.connectionId, child.elementId)?.elements
 				if (compositeChildren) {

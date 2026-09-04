@@ -7,10 +7,10 @@ import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 import { stringifyEntityOwnerId } from '../Util.js'
 
 interface EntityEditorHeadingProps {
-	heading: JSX.Element | string | null
+	heading: React.JSX.Element | string | null
 	ownerId: EntityOwner | null
 	childEntityIds: string[]
-	headingActions?: JSX.Element[]
+	headingActions?: React.JSX.Element[]
 }
 
 export const EntityEditorHeading = observer(function EntityEditorHeading({
@@ -26,7 +26,7 @@ export const EntityEditorHeading = observer(function EntityEditorHeading({
 	return (
 		<h5 className="my-1">
 			{heading}&nbsp;
-			<ButtonGroup className="right">
+			<ButtonGroup className="float-right">
 				{childEntityIds.length >= 1 && panelCollapseHelper.canExpandAll(ownerIdString, childEntityIds) && (
 					<Button
 						size="sm"

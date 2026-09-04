@@ -77,6 +77,14 @@ export class ControlButtonPresetReference
 	readonly #presetId: string
 	#variableValues: VariableValues | null
 
+	/**
+	 * The checksum of the source preset the cached data was last resolved from (carried on the model itself, so
+	 * it always matches the cached data). Used to ignore `updatePresets` events that don't actually change our
+	 * preset (e.g. a module re-reporting identical presets), so we don't needlessly discard cached feedback
+	 * values and re-subscribe. `null`/absent until resolved against a known preset.
+	 */
+	#lastPresetChecksum: string | null = null
+
 	get actionSets(): ControlStepsRuntimeManager {
 		return this.entities
 	}
@@ -139,6 +147,9 @@ export class ControlButtonPresetReference
 		this.entities.loadStorage(storage, true, isImport)
 		this.entities.stepExpressionUpdate(this.options)
 
+		// Baseline the checksum from the model we loaded, so a subsequent identical `updatePresets` is a no-op.
+		this.#lastPresetChecksum = storage.checksum ?? null
+
 		// Ensure control is stored before setup
 		if (isImport) setImmediate(() => this.postProcessImport())
 	}
@@ -156,6 +167,10 @@ export class ControlButtonPresetReference
 			this.#variableValues
 		)
 		if (!updatedModel) return // Preset is gone - keep the last-known cached data
+
+		// Ignore updates that don't actually change our preset (e.g. a module re-reporting identical presets),
+		// so we don't needlessly discard cached feedback values and re-subscribe.
+		if (updatedModel.checksum !== undefined && updatedModel.checksum === this.#lastPresetChecksum) return
 
 		this.#applyUpdatedModel(updatedModel)
 	}
@@ -179,6 +194,9 @@ export class ControlButtonPresetReference
 		this.entities.loadStorage(updatedModel, false, true)
 		this.entities.stepExpressionUpdate(this.options)
 		this.entities.resubscribeEntities()
+
+		// Record the checksum we just rebuilt from, so the next identical `updatePresets` is ignored.
+		this.#lastPresetChecksum = updatedModel.checksum ?? null
 
 		this.commitChange(true)
 		this.sendRuntimePropsChange()
@@ -342,6 +360,8 @@ export class ControlButtonPresetReference
 				presetId: this.#presetId,
 				variableValues: this.#variableValues,
 			},
+			// Persist the checksum so a reload keeps its baseline (and doesn't rebuild once on the first report).
+			checksum: this.#lastPresetChecksum ?? undefined,
 		}
 
 		return clone ? structuredClone(obj) : obj

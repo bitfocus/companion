@@ -59,7 +59,7 @@ export const PresetReferenceEditor = observer(function PresetReferenceEditor({
 	return (
 		<>
 			<Callout color="info" className="my-2">
-				<div className="d-flex gap-2">
+				<div className="flex gap-2">
 					<FontAwesomeIcon icon={faLink} className="mt-1" />
 					<div>
 						This button is <strong>linked</strong> to a preset. It updates automatically when the preset changes.
@@ -76,7 +76,7 @@ export const PresetReferenceEditor = observer(function PresetReferenceEditor({
 				</Callout>
 			)}
 
-			<Form className="row g-2" onSubmit={PreventDefaultHandler}>
+			<Form row className="gap-2" onSubmit={PreventDefaultHandler}>
 				<FormLabel htmlFor={connectionFieldId} sm={4} column="sm">
 					Connection
 				</FormLabel>
@@ -94,11 +94,11 @@ export const PresetReferenceEditor = observer(function PresetReferenceEditor({
 
 			{templateVariableNames.length > 0 && (
 				<>
-					<h5 className="mt-3">Preset variables</h5>
+					<h5 className="mt-4">Preset variables</h5>
 					<p className="text-muted small">
 						These values came from the preset template and can be customised. Other settings are managed by the preset.
 					</p>
-					<Form className="row g-2" onSubmit={PreventDefaultHandler}>
+					<Form row className="gap-2" onSubmit={PreventDefaultHandler}>
 						{templateVariableNames.map((variableName) => (
 							<PresetReferenceVariableRow
 								key={variableName}

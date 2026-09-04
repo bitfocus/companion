@@ -12,7 +12,7 @@ export function UserConfigHeadingRow({ label, helpMessage, helpAction }: UserCon
 			<tr className="settings-category-spacer"></tr>
 			<tr className="settings-category-row">
 				<th colSpan={3}>
-					<span className="d-flex justify-content-start">
+					<span className="flex justify-start">
 						{label}
 						{(helpMessage || helpAction) && (
 							<span className="ms-auto px-2">

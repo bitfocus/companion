@@ -10,12 +10,11 @@ import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { ButtonGridHeader, PageNumberPicker, type PageNumberOption } from '~/Buttons/ButtonGridHeader.js'
 import { ButtonGridZoomControl } from '~/Buttons/ButtonGridZoomControl.js'
 import {
-	ButtonGridIcon,
-	ButtonGridIconBase,
 	ButtonInfiniteGrid,
 	type ButtonInfiniteGridButtonProps,
 	type ButtonInfiniteGridRef,
 } from '~/Buttons/ButtonInfiniteGrid.js'
+import { ButtonGridIcon, ButtonGridIconBase } from '~/Buttons/GridButtonIcons.js'
 import { useGridZoom } from '~/Buttons/GridZoom.js'
 import { Button } from '~/Components/Button'
 import { Callout } from '~/Components/Callout'
@@ -144,6 +143,8 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										pageNumber={isSinglePage ? (snapshot.oldPageNumber ?? 1) : importPageNumber}
 										gridSize={sourceGridSize}
 										ButtonIconFactory={ButtonImportPreview}
+										marquee={null}
+										onHoverLocation={null}
 										drawScale={gridZoomValue / 100}
 										maxHeightToMatchCanvas
 									/>
@@ -177,6 +178,8 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										pageNumber={pageNumber}
 										gridSize={destinationGridSize}
 										ButtonIconFactory={ButtonGridIcon}
+										marquee={null}
+										onHoverLocation={null}
 										drawScale={gridZoomValue / 100}
 										maxHeightToMatchCanvas
 									/>

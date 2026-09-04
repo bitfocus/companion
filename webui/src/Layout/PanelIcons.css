@@ -6,9 +6,10 @@
 	align-items: center; /* center the "X" in the button's background */
 
 	.svg-inline--fa {
-		height: 1.25em;
-		width: 1.25em;
+		height: 1.25em !important;
+		width: 1.25em !important;
 		margin: 2px;
+		display: block !important;
 	}
 }
 
@@ -28,8 +29,9 @@
 	height: 2em;
 
 	.svg-inline--fa {
-		width: 2em;
-		height: 2em;
+		width: 2em !important;
+		height: 2em !important;
+		display: block !important;
 	}
 }
 

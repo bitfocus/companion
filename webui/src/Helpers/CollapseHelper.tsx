@@ -239,7 +239,7 @@ export function PanelCollapseHelperProvider({
 	knownPanelIds: readonly string[] | null
 	defaultCollapsed?: boolean
 	evictionOwner?: CollapseEvictionOwner
-}>): JSX.Element {
+}>): React.JSX.Element {
 	const helper = usePanelCollapseHelper(storageId, knownPanelIds, defaultCollapsed, evictionOwner)
 
 	return <PanelCollapseHelperContext.Provider value={helper}>{children}</PanelCollapseHelperContext.Provider>

@@ -85,7 +85,7 @@ export function TableInputField({
 					<thead>
 						<tr>
 							{columns.map((col) => (
-								<th key={col.id} className="fw-normal text-muted ps-0">
+								<th key={col.id} className="font-normal text-muted ps-0">
 									{col.label}
 								</th>
 							))}

@@ -7,10 +7,10 @@ import { useCallback, useRef, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert'
 import { Button, ButtonGroup } from '~/Components/Button'
 import { Callout } from '~/Components/Callout'
-import { Grid } from '~/Components/Grid'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { useShowSecondaryPanel } from '~/Hooks/useShowSecondaryPanel'
 import { ContextHelpButton } from '~/Layout/PanelIcons'
+import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { trpc } from '~/Resources/TRPC'
 import { AddEmulatorModal, type AddEmulatorModalRef } from './AddEmulatorModal'
@@ -84,16 +84,13 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 		[navigate, selectedSurfaceId]
 	)
 
-	// the following constants determine if the panel will actually be shown (previously these only established if it was "allowed" to be shown)
-	const showPrimaryPanel = twoPanelMode || (!selectedSurfaceId && !showSettings)
-	const showSecondaryPanel = twoPanelMode || !!selectedSurfaceId || showSettings
-
 	return (
-		<Grid.Row className="surfaces-page split-panels">
-			<Grid.Col
-				xs={twoPanelMode ? 6 : 12}
-				className={`primary-panel ${showPrimaryPanel ? 'd-flex' : 'd-none'} flex-column-layout`}
-			>
+		<SplitPanels.Root
+			showing={selectedSurfaceId || showSettings ? 'secondary' : 'primary'}
+			className="surfaces-page"
+			resize={{ storageKey: 'surfaces' }}
+		>
+			<SplitPanels.Primary className="flex-column-layout">
 				<div className="fixed-header">
 					<h4 className="button-inline">
 						Surfaces
@@ -109,7 +106,7 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 						</ContextHelpButton>
 					</h4>
 
-					<p style={{ marginBottom: '0.5rem' }}>
+					<p className="mb-2">
 						Click on any item below to edit the configuration of a currently-known surface or group.
 						<br />
 						If your streamdeck is missing from this list, you might need to close the Elgato Streamdeck application and
@@ -141,7 +138,7 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 					<AddEmulatorModal ref={addEmulatorModalRef} />
 
 					{!twoPanelMode && (
-						<Button color="info" className="float-end" size="sm" onClick={handleShowSettings}>
+						<Button color="info" className="float-right" size="sm" onClick={handleShowSettings}>
 							<FontAwesomeIcon icon={faCog} /> Show Settings
 						</Button>
 					)}
@@ -158,15 +155,15 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 						?
 					</Callout>
 				</div>
-			</Grid.Col>
+			</SplitPanels.Primary>
 
-			<Grid.Col xs={twoPanelMode ? 6 : 12} className={`secondary-panel ${showSecondaryPanel ? 'd-block' : 'd-none'}`}>
+			<SplitPanels.Secondary>
 				<div className="secondary-panel-simple">
 					<MyErrorBoundary>
 						<Outlet />
 					</MyErrorBoundary>
 				</div>
-			</Grid.Col>
-		</Grid.Row>
+			</SplitPanels.Secondary>
+		</SplitPanels.Root>
 	)
 })

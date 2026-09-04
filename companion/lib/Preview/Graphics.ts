@@ -236,7 +236,9 @@ export class PreviewGraphics {
 							allowExpression: true,
 							parseVariables: true,
 						})
-						const resolvedLocation = ParseLocationString(stringifyVariableValue(locationValue.value), location)
+						const resolvedLocation = locationValue.ok
+							? ParseLocationString(stringifyVariableValue(locationValue.value), location)
+							: null
 
 						// Track the subscription, to allow it to be invalidated
 						self.#buttonReferencePreviews.set(id, {
@@ -244,7 +246,7 @@ export class PreviewGraphics {
 							controlId,
 							options,
 							resolvedLocation: resolvedLocation,
-							referencedVariableIds: locationValue.referencedVariableIds,
+							referencedVariableIds: locationValue.variableIds,
 						})
 
 						// Emit the initial image
@@ -310,11 +312,13 @@ export class PreviewGraphics {
 				allowExpression: true,
 				parseVariables: true,
 			})
-			const resolvedLocation = ParseLocationString(stringifyVariableValue(locationValue.value), location)
+			const resolvedLocation = locationValue.ok
+				? ParseLocationString(stringifyVariableValue(locationValue.value), location)
+				: null
 
 			const lastResolvedLocation = previewSession.resolvedLocation
 
-			previewSession.referencedVariableIds = locationValue.referencedVariableIds
+			previewSession.referencedVariableIds = locationValue.variableIds
 			previewSession.resolvedLocation = resolvedLocation
 
 			if (!resolvedLocation) {

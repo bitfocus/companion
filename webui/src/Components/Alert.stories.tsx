@@ -28,7 +28,7 @@ export const Dismissable: Story = {
 					Dismiss me with the × button.
 				</DismissableAlert>
 				{!visible && (
-					<button onClick={() => setVisible(true)} style={{ marginTop: 8 }}>
+					<button onClick={() => setVisible(true)} className="mt-2">
 						Show again
 					</button>
 				)}

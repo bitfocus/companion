@@ -17,15 +17,16 @@
     "node": ">=22.20"
   },
   "dependencies": {
-    "@companion-app/expressions": "^0.7.0",
-    "colord": "^2.9.3",
+    "@companion-app/expressions": "^1.0.1",
+    "@companion-surface/base": "1.4.0",
+    "colord": "^2.10.0",
     "quick-lru": "^7.3.0",
     "semver": "^7.8.5",
     "type-fest": "^5.8.0",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@types/semver": "^7.7.1",
+    "@types/semver": "^7.8.0",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-7": "npm:typescript@^7.0.2"
   }

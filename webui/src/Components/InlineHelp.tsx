@@ -1,4 +1,5 @@
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import './InlineHelp.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classnames from 'classnames'
 import { Tooltip } from '~/Components/Tooltip.js'
@@ -11,7 +12,7 @@ export const InlineHelpCustom = ({
 	help: string | React.ReactNode
 	children: React.ReactNode
 	className?: string
-}): JSX.Element => {
+}): React.JSX.Element => {
 	return (
 		<Tooltip.Root>
 			<Tooltip.Trigger
@@ -36,7 +37,7 @@ export const InlineHelpIcon = ({
 }: {
 	children: React.ReactNode
 	className?: string
-}): JSX.Element => {
+}): React.JSX.Element => {
 	return (
 		<InlineHelpCustom help={children} className={className}>
 			<FontAwesomeIcon icon={faQuestionCircle} />

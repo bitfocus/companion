@@ -17,7 +17,7 @@
 	width: 22px;
 	height: 22px;
 	vertical-align: top;
-	border: var(--cui-border-width) solid var(--color-border-strong);
+	border: var(--border-width) solid var(--color-border-strong);
 	border-radius: 0.25em;
 
 	&:active {
@@ -33,7 +33,7 @@
 	/*
 	&[aria-checked='true'] {
 		background-color: #fff;
-		border-color: var(--cui-form-check-input-checked-border-color, var(--cui-primary));
+		border-color: var(--color-primary);
 	}
 	*/
 

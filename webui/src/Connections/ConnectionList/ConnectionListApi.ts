@@ -6,7 +6,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC'
 export type ConnectionCollectionsApi = NestingCollectionsApi
 
 export function useConnectionCollectionsApi(
-	confirmModalRef: React.RefObject<GenericConfirmModalRef>
+	confirmModalRef: React.RefObject<GenericConfirmModalRef | null>
 ): ConnectionCollectionsApi {
 	const renameMutation = useMutationExt(trpc.instances.connections.collections.setName.mutationOptions())
 	const deleteMutation = useMutationExt(trpc.instances.connections.collections.remove.mutationOptions())

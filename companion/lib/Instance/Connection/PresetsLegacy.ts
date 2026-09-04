@@ -156,7 +156,9 @@ function ConvertPresetDefinition(
 		const parsedStyle = ConvertLegacyStyleToElements(
 			ConvertPresetStyleToDrawStyle(rawPreset.style),
 			convertPresetFeedbacksToEntities(rawPreset.feedbacks, entryCtx),
-			rawPreset.previewStyle
+			rawPreset.previewStyle,
+			// Legacy (pre-2.0) modules do not declare per-feedback affectedProperties
+			null
 		)
 
 		const presetDefinition: PresetDefinition = {

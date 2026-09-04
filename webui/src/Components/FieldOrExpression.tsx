@@ -12,6 +12,7 @@ import { EntityListActionContext, type LocalVariablesStore } from '~/Controls/Lo
 import { useComputed } from '~/Resources/util'
 import { Button } from './Button'
 import { ExpressionInputField } from './ExpressionInputField'
+import './FieldOrExpression.css'
 
 interface FieldOrExpressionProps {
 	inputId: string | undefined

@@ -67,19 +67,15 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 	}
 
 	return (
-		<div className="flex flex-row align-items-center gap-2 hand">
-			<div
-				onClick={doEdit}
-				className={classNames('flex flex-column grow', { disabled: !isEnabled })}
-				style={{ minWidth: 0 }}
-			>
+		<div className="flex flex-row items-center gap-2 cursor-pointer">
+			<div onClick={doEdit} className={classNames('flex flex-col grow min-w-0', { disabled: !isEnabled })}>
 				<b>{remoteConnection.displayName}</b>
-				<span className="auto-ellipsis" title={surfaceInstanceDisplayName}>
+				<span className="truncate" title={surfaceInstanceDisplayName}>
 					{surfaceInstanceDisplayName}
 				</span>
 			</div>
 
-			<div className="flex align-items-center ps-2">
+			<div className="flex items-center ps-2">
 				<SwitchInputField
 					id={undefined}
 					// disabled={!moduleInfo || !moduleVersion}

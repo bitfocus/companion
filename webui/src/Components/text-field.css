@@ -1,7 +1,10 @@
-/* The base input styling comes from the CoreUI `form-control` class in the markup; only the
-   text-field-specific tweaks live here. (Unlike number/dropdown fields, this hasn't yet been moved
-   onto our own `form-input` base — future: replace form-control with css we control.) */
+/* Text-input-specific layer on top of the shared `form-input` base (Components/form.css). form-input
+   supplies the visual chrome (padding, border, focus ring, colours); this adds the block layout and
+   the text-field state tweaks. */
 .text-input-field {
+	display: block;
+	width: 100%;
+
 	&:focus {
 		/* Dont change background color on focus */
 		background-color: var(--color-input-bg);
@@ -24,4 +27,10 @@
 		outline: none;
 		box-shadow: none;
 	}
+}
+
+/* The multiline variant renders a <textarea> (single-line renders an <input>). Only the textarea is
+   resizable, and constrain it to vertical so it can't break the row layout. */
+textarea.text-input-field {
+	resize: vertical;
 }

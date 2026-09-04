@@ -75,20 +75,27 @@ label.disabled {
 	color: var(--color-text-disabled);
 }
 
-/* Shared base for our custom text-style inputs (number field, dropdown field, …) so they all match the
-   CoreUI .form-control look without each re-declaring it. Add `form-input` in the markup, then layer the
-   component's own rules on top. */
+/* Small helper/description text shown beneath a field. */
+.form-text {
+	margin-top: 0.25rem;
+	font-size: 0.875em;
+	color: var(--color-muted);
+}
+
+/* Shared base for our custom text-style inputs (the number field, and the text inputs via
+   `text-input-field`) so they share one input base rather than each re-declaring it. Add `form-input`
+   in the markup, then layer the component's own rules on top. */
 .form-input {
 	padding: 0.375rem 0.75rem;
 	font-size: 1rem;
 	font-weight: 400;
 	line-height: 1.5;
-	color: var(--cui-body-color);
+	color: var(--color-text);
 	appearance: none;
 	background-color: var(--color-input-bg);
 	background-clip: padding-box;
-	border: var(--cui-border-width) solid var(--cui-border-color);
-	border-radius: var(--cui-border-radius);
+	border: var(--border-width) solid var(--color-border);
+	border-radius: var(--radius);
 	transition:
 		border-color 0.15s ease-in-out,
 		box-shadow 0.15s ease-in-out;
@@ -102,7 +109,7 @@ label.disabled {
 	}
 
 	&:focus-visible {
-		color: var(--cui-body-color);
+		color: var(--color-text);
 		background-color: var(--color-input-bg);
 		border-color: var(--color-primary-soft);
 		outline: 0;
@@ -114,12 +121,12 @@ label.disabled {
 	}
 
 	&::placeholder {
-		color: var(--cui-input-placeholder-color, var(--cui-secondary-color));
+		color: var(--color-muted);
 		opacity: 1;
 	}
 
 	&:disabled {
-		background-color: var(--cui-secondary-bg);
+		background-color: var(--color-surface-muted);
 		opacity: 1;
 	}
 }
@@ -152,12 +159,12 @@ label.disabled {
 		font-size: 1rem;
 		font-weight: 400;
 		line-height: 1.5;
-		color: var(--cui-input-group-addon-color, var(--cui-body-color));
+		color: var(--color-text);
 		text-align: center;
 		white-space: nowrap;
-		background-color: var(--cui-input-group-addon-bg, var(--cui-tertiary-bg));
-		border: var(--cui-border-width) solid var(--cui-input-group-addon-border-color, var(--cui-border-color));
-		border-radius: var(--cui-border-radius);
+		background-color: var(--color-surface-subtle);
+		border: var(--border-width) solid var(--color-border);
+		border-radius: var(--radius);
 	}
 
 	> :focus {
@@ -189,19 +196,6 @@ label.disabled {
 		}
 	}
 }
-
-/*
-.input-group > .form-control,
-.react-date-picker .input-group > .react-date-picker__wrapper,
-.react-time-picker .input-group > .react-time-picker__wrapper,
-.input-group > .form-select,
-.input-group > .form-floating {
-	position: relative;
-	flex: 1 1 auto;
-	width: 1%;
-	min-width: 0;
-}
-*/
 
 /* Shared chrome for the connection/instance/surface edit and list panels (used across the
    Connections, Instances, Surfaces and Modules features). */

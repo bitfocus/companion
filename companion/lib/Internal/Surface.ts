@@ -43,7 +43,7 @@ const CHOICES_SURFACE_ID: SomeCompanionInputField = {
 	id: 'surfaceId',
 	default: 'self',
 	includeSelf: true,
-	useRawSurfaces: true,
+	listMode: 'surfaces',
 }
 
 const CHOICES_SURFACE_GROUP: SomeCompanionInputField = {
@@ -52,6 +52,18 @@ const CHOICES_SURFACE_GROUP: SomeCompanionInputField = {
 	id: 'surfaceId',
 	default: 'self',
 	includeSelf: true,
+	listMode: 'groups',
+}
+
+// Brightness is a per-surface setting, so offer both groups (applies to every member surface) and
+// individual surfaces (applies to just that surface).
+const CHOICES_SURFACE_GROUP_OR_SURFACE: SomeCompanionInputField = {
+	type: 'internal:surface_serial',
+	label: 'Surface / group',
+	id: 'surfaceId',
+	default: 'self',
+	includeSelf: true,
+	listMode: 'groups-and-surfaces',
 }
 
 const CHOICES_OUTBOUND_SURFACE_ID: SomeCompanionInputField = {
@@ -85,6 +97,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		this.#pageStore = pageStore
 
 		setImmediate(() => {
+			// Emit the old xkeys variables, so that they don't 'crash' expressions which reference them and expect numbers.
 			this.emit('setVariables', {
 				't-bar': 0,
 				jog: 0,
@@ -217,7 +230,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						name: `surface_${surfaceId}_location`,
 					},
 					{
-						description: `Surface page: ${surfaceGroup.displayName}`,
+						description: `Surface page: ${surface.displayName}`,
 						name: `surface_${surfaceId}_page`,
 					}
 				)
@@ -285,7 +298,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				label: 'Surface: Set to brightness',
 				description: undefined,
 				options: [
-					CHOICES_SURFACE_GROUP,
+					CHOICES_SURFACE_GROUP_OR_SURFACE,
 
 					{
 						type: 'number',
@@ -307,7 +320,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				label: 'Surface: Adjust brightness',
 				description: undefined,
 				options: [
-					CHOICES_SURFACE_GROUP,
+					CHOICES_SURFACE_GROUP_OR_SURFACE,
 
 					{
 						type: 'number',
@@ -675,7 +688,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 	#changeSurfacePage(
 		surfaceId: string,
 		toPage: string | 'back' | 'forward' | '+1' | '-1',
-		defer = !(surfaceId in ['back', 'forward'])
+		defer = toPage !== 'back' && toPage !== 'forward'
 	): void {
 		const groupId = this.#surfaceController.getGroupIdFromDeviceId(surfaceId)
 		if (!groupId) return
@@ -700,6 +713,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						id: 'surfaceId',
 						includeSelf: false,
 						default: '',
+						listMode: 'groups',
 					},
 					{
 						type: 'internal:page',

@@ -1,5 +1,37 @@
 # Bitfocus Companion
 
+## Companion v5.0.5 - Release Notes
+
+### 🐞 BUG FIXES
+
+- variables not being updated in feedbacks or localvariables in presets
+- hidden elements not being invalidated when variables/dependencies change #4380
+- catch variable changes that happen during async getDrawStyle #4380
+- ensure ui font metrics are cleared after fonts are loaded
+- feedbacks not updating while editing button in ui
+- limit number of in flight updates/upgrades to each connection
+- yield during import to ensure connections dont timeout
+- loosen variable name rule
+- preserve add entity modal expanded collections #4433
+- UI Crash in TextInputField when label is not a string #4435
+- exclude copyleft packages from offline bundle
+
+## Companion v5.0.4 - Release Notes
+
+### 🐞 BUG FIXES
+
+- load modules through a symlinked config dir #4418 #3971
+- enforce variable id format
+- parsing some expressions could throw an error and stall the resolver loop #4427
+- allow loading modules from symlink dirs #3971 #4418
+- allow feedback local variables in simple presets #4416
+- only show colour decorators inside expression strings
+- Set Brightness of Surface Group has no effect #4408
+- only validate option fields which are visible.
+- gauge stop colours not parsing css color strings (#4400)
+- ping permissions in docker #4365
+- disable macos LSBackgroundOnly #4419
+
 ## Companion v5.0.3 - Release Notes
 
 ### 🐞 BUG FIXES

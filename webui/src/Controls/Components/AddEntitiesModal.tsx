@@ -58,7 +58,7 @@ const AddEntityLeaf = observer(function AddEntityLeaf({ leaf }: { leaf: EntityLe
 	return (
 		<>
 			<div className="collapsible-tree-leaf-text">
-				<span className="collapsible-tree-leaf-label fw-semibold">{leaf.label}</span>
+				<span className="collapsible-tree-leaf-label font-semibold">{leaf.label}</span>
 				{leaf.description && (
 					<>
 						<span className="collapsible-tree-leaf-description">{leaf.description}</span>
@@ -122,9 +122,11 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 		}
 	}, [internalLeaves])
 
-	// Collections default expanded, connections default collapsed (no localStorage persistence for modals)
+	// Collections default expanded, connections default collapsed. Persisted per entity type so the
+	// user's expand/collapse choices survive switching between controls. `null` known-ids = never prune,
+	// since the visible collections/connections are only ever a subset of what may be stored.
 	const defaultCollapsedFn = useCallback((panelId: string) => !panelId.startsWith('collection:'), [])
-	const collapseHelper = usePanelCollapseHelper(null, [], defaultCollapsedFn)
+	const collapseHelper = usePanelCollapseHelper(`add_entities_${entityType}`, null, defaultCollapsedFn)
 
 	// When filtering, apply fuzzy search to leaf items in each node
 	const filteredNodes = useComputed(() => {
@@ -154,7 +156,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 		<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
 			<Modal.Trigger
 				color="primary"
-				className="rounded-start-0"
+				className="rounded-s-none"
 				disabled={disabled}
 				aria-label={`Browse ${capitalize(entityTypeLabel)}s`}
 				title={`Browse ${capitalize(entityTypeLabel)}s`}

@@ -29,11 +29,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 						<div>
 							<span className="text-muted">
 								Can't find your device?{' '}
-								<a
-									target="_blank"
-									href={makeAbsolutePath('/user-guide/config/modules')}
-									className="text-decoration-none"
-								>
+								<a target="_blank" href={makeAbsolutePath('/user-guide/config/modules')}>
 									Check our guidance for getting device support
 								</a>
 								.<br /> To import an offline module, go to the <Link to="/modules">Modules page</Link>.
@@ -44,7 +40,7 @@ export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 					<div>
 						<strong>Connect to hundreds of devices</strong> with Companion modules. Ensure you have an internet
 						connection to search and install modules, or{' '}
-						<a target="_blank" href="https://l.companion.free/q/lp68nsiV4" className="text-decoration-none">
+						<a target="_blank" href="https://l.companion.free/q/lp68nsiV4">
 							download a module bundle
 						</a>
 					</div>

@@ -10,7 +10,7 @@ export interface TabAreaRootProps extends Omit<Tabs.Root.Props, 'className'> {
 	className?: string
 }
 
-function TabAreaRoot({ className, ...props }: TabAreaRootProps): JSX.Element {
+function TabAreaRoot({ className, ...props }: TabAreaRootProps): React.JSX.Element {
 	return <Tabs.Root className={classNames('tab-area', className)} {...props} />
 }
 
@@ -20,7 +20,7 @@ export interface TabAreaListProps extends Omit<Tabs.List.Props, 'className'> {
 	className?: string
 }
 
-function TabAreaList({ className, ...props }: TabAreaListProps): JSX.Element {
+function TabAreaList({ className, ...props }: TabAreaListProps): React.JSX.Element {
 	const ref = useRef<HTMLDivElement>(null)
 
 	// Check and watch for overflowing, to manually show the scrollbar
@@ -62,7 +62,7 @@ export interface TabAreaTabProps extends Omit<Tabs.Tab.Props, 'className'> {
 	className?: string
 }
 
-function TabAreaTab({ className, ...props }: TabAreaTabProps): JSX.Element {
+function TabAreaTab({ className, ...props }: TabAreaTabProps): React.JSX.Element {
 	return <Tabs.Tab className={classNames('tab-bar__tab', className)} {...props} />
 }
 
@@ -72,7 +72,7 @@ export interface TabAreaIndicatorProps extends Omit<Tabs.Indicator.Props, 'class
 	className?: string
 }
 
-function TabAreaIndicator({ className, ...props }: TabAreaIndicatorProps): JSX.Element {
+function TabAreaIndicator({ className, ...props }: TabAreaIndicatorProps): React.JSX.Element {
 	return <Tabs.Indicator className={classNames('tab-bar__indicator', className)} {...props} />
 }
 
@@ -82,7 +82,7 @@ export interface TabAreaPanelProps extends Omit<Tabs.Panel.Props, 'className'> {
 	className?: string
 }
 
-function TabAreaPanel({ className, ...props }: TabAreaPanelProps): JSX.Element {
+function TabAreaPanel({ className, ...props }: TabAreaPanelProps): React.JSX.Element {
 	return <Tabs.Panel className={classNames('tab-panel', className)} {...props} />
 }
 

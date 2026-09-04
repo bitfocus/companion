@@ -24,6 +24,10 @@ const cacheDir = path.join(cacheRoot, 'builtin-surfaces')
 
 const cacheChecksumPath = path.join(cacheRoot, 'builtin-surfaces-checksum.txt')
 
+export async function ensureBuiltinSurfaceModulesDirExists() {
+	await fs.mkdirp(cacheDir)
+}
+
 export async function fetchBuiltinSurfaceModules() {
 	await fs.mkdirp(cacheDir)
 
@@ -93,7 +97,7 @@ async function fetchSinglePackage(moduleId: string, moduleInfo: Record<string, a
 	await fs.remove(moduleDir).catch(() => null)
 	await fs.mkdirp(moduleDir)
 
-	await new Promise((resolve, reject) => {
+	await new Promise<void>((resolve, reject) => {
 		Readable.from(decompressedData)
 			.pipe(tarfs.extract(moduleDir, { strip: 1 }))
 			.on('finish', resolve)

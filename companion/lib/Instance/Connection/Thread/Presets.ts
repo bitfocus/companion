@@ -41,12 +41,18 @@ export function ConvertPresetDefinitions(
 	connectionId: string,
 	connectionUpgradeIndex: number | undefined,
 	rawSections: CompanionPresetSection[],
-	rawPresets: CompanionPresetDefinitions
+	rawPresets: CompanionPresetDefinitions,
+	feedbackAffectedProperties: ReadonlyMap<string, string[] | undefined> | null
 ): {
 	presets: Record<string, PresetDefinition>
 	uiPresets: Record<string, UIPresetSection>
 } {
-	const converter = new PresetDefinitionConverter(logger, connectionId, connectionUpgradeIndex)
+	const converter = new PresetDefinitionConverter(
+		logger,
+		connectionId,
+		connectionUpgradeIndex,
+		feedbackAffectedProperties
+	)
 
 	const uiPresets: Record<string, UIPresetSection> = {}
 
@@ -111,15 +117,22 @@ class PresetDefinitionConverter {
 	readonly #logger: ModuleLogger
 	readonly #connectionId: string
 	readonly #connectionUpgradeIndex: number | undefined
+	readonly #feedbackAffectedProperties: ReadonlyMap<string, string[] | undefined> | null
 
 	readonly referencedPresetIds = new Set<string>()
 	readonly missingPresetIds = new Set<string>()
 	readonly presetDefinitions: Record<string, PresetDefinition> = {}
 
-	constructor(logger: ModuleLogger, connectionId: string, connectionUpgradeIndex: number | undefined) {
+	constructor(
+		logger: ModuleLogger,
+		connectionId: string,
+		connectionUpgradeIndex: number | undefined,
+		feedbackAffectedProperties: ReadonlyMap<string, string[] | undefined> | null
+	) {
 		this.#logger = logger
 		this.#connectionId = connectionId
 		this.#connectionUpgradeIndex = connectionUpgradeIndex
+		this.#feedbackAffectedProperties = feedbackAffectedProperties
 	}
 
 	convertSection(section: CompanionPresetSection, i: number): UIPresetSection | null {
@@ -265,7 +278,8 @@ class PresetDefinitionConverter {
 			this.#connectionId,
 			this.#connectionUpgradeIndex,
 			presetId,
-			preset
+			preset,
+			this.#feedbackAffectedProperties
 		)
 		if (!definition) return false
 
@@ -297,7 +311,8 @@ function ConvertPresetDefinition(
 	connectionId: string,
 	connectionUpgradeIndex: number | undefined,
 	presetId: string,
-	rawPreset: CompanionPresetDefinition
+	rawPreset: CompanionPresetDefinition,
+	feedbackAffectedProperties: ReadonlyMap<string, string[] | undefined> | null
 ): PresetDefinition | null {
 	try {
 		const presetType = rawPreset.type
@@ -316,7 +331,8 @@ function ConvertPresetDefinition(
 				const parsedStyle = ConvertLegacyStyleToElements(
 					ConvertPresetStyleToDrawStyle(rawPreset.style),
 					convertPresetFeedbacksToEntities(rawPreset.feedbacks, entryCtx),
-					rawPreset.previewStyle
+					rawPreset.previewStyle,
+					feedbackAffectedProperties
 				)
 
 				const { steps, hasRotaryActions } = ConvertStepsForPreset(entryCtx, rawPreset.steps)
@@ -331,6 +347,7 @@ function ConvertPresetDefinition(
 							rotaryActions: hasRotaryActions,
 							stepProgression: (rawPreset.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
 							canModifyStyleInApis: false,
+							notes: rawPreset.notes,
 						},
 
 						feedbacks: parsedStyle.feedbacks,
@@ -366,6 +383,7 @@ function ConvertPresetDefinition(
 							rotaryActions: hasRotaryActions,
 							stepProgression: (rawPreset.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
 							canModifyStyleInApis: false,
+							notes: rawPreset.notes,
 						},
 
 						style: {
@@ -461,7 +479,7 @@ function ConvertStepsForPreset(
 
 function ConvertLocalVariablesForPreset(
 	logger: ModuleLogger,
-	type: CompanionPresetDefinition['type'],
+	_type: CompanionPresetDefinition['type'],
 	rawLocalVariables: CompanionPresetLocalVariable[] | undefined,
 	connectionId: string,
 	connectionUpgradeIndex: number | undefined
@@ -474,13 +492,6 @@ function ConvertLocalVariablesForPreset(
 		const localVariableType = localVariable.variableType
 		switch (localVariable.variableType) {
 			case 'feedback':
-				if (type !== 'layered') {
-					logger.warn(
-						`Local variable "${localVariable.variableName}" is of type "feedback", which is only supported for layered presets. It will be ignored.`
-					)
-					continue
-				}
-
 				result.push({
 					type: EntityModelType.Feedback,
 					id: nanoid(),

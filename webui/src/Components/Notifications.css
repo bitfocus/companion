@@ -4,21 +4,20 @@
 
 .notification-viewport,
 .notification {
-	/* Mapped from CoreUI's --cui-toast-* CSS custom properties */
 	--notification-zindex: 1090;
 	--notification-max-width: 350px;
 	--notification-padding-x: 0.75rem;
 	--notification-padding-y: 0.5rem;
 	--notification-spacing: 0.75rem;
 	--notification-font-size: 0.875rem;
-	--notification-bg: rgba(var(--cui-body-bg-rgb), 0.85);
-	--notification-border-width: var(--cui-border-width, 1px);
-	--notification-border-color: var(--cui-border-color-translucent);
-	--notification-border-radius: var(--cui-border-radius, 0.375rem);
-	--notification-box-shadow: var(--cui-box-shadow);
+	--notification-bg: color-mix(in srgb, var(--color-surface-dark) 85%, transparent);
+	--notification-border-width: var(--border-width);
+	--notification-border-color: var(--color-border-translucent);
+	--notification-border-radius: var(--radius);
+	--notification-box-shadow: 0 0.5rem 1rem var(--color-shadow-15);
 	--notification-header-color: var(--color-on-dark-muted);
-	--notification-header-bg: rgba(var(--cui-body-bg-rgb), 0.85);
-	--notification-header-border-color: var(--cui-border-color-translucent);
+	--notification-header-bg: color-mix(in srgb, var(--color-surface-dark) 85%, transparent);
+	--notification-header-border-color: var(--color-border-translucent);
 }
 
 /* ─── Viewport (replaces .toast-container) ──────────────────────────────────── */

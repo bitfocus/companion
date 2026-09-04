@@ -1,8 +1,19 @@
-import { colord } from 'colord'
-import isEqual from 'fast-deep-equal'
 import type { JsonValue } from 'type-fest'
+import {
+	validateCheckboxValue,
+	validateColorValue,
+	validateDropdownValue,
+	validateMultiDropdownValue,
+	validateNumberValue,
+	validateTextValue,
+	type ColorValidationOptions,
+	type DropdownValidationOptions,
+	type MultiDropdownValidationOptions,
+	type NumberValidationOptions,
+	type TextValidationOptions,
+	type ValueValidationResult,
+} from '@companion-module/host/validate'
 import { ParseExpression } from './Expressions.js'
-import { colorToNumber, parseColor } from './Graphics/Util.js'
 import { isExpressionOrValue, type SomeCompanionInputField } from './Model/Options.js'
 import { stringifyVariableValue } from './Model/Variables.js'
 import { assertNever } from './Util.js'
@@ -10,6 +21,23 @@ import { assertNever } from './Util.js'
 export interface ValidateInputValueOptions {
 	/** If true, skip validating expression fields */
 	skipValidateExpression?: boolean
+}
+
+/**
+ * Require every property of `T` to be present. Optional properties become required (with `undefined`
+ * still an allowed value), so when an upstream options interface gains a new field, the call site
+ * that builds it fails to compile until the new option is threaded through.
+ */
+type Completed<T> = { [K in keyof Required<T>]: T[K] }
+
+/** Adapt a primitive validator result into a {@link ValidateInputValueResult}. */
+function adaptResult(result: ValueValidationResult): ValidateInputValueResult {
+	return {
+		sanitisedValue: result.sanitisedValue,
+		validationError: result.validationError,
+		validationWarnings: result.validationWarnings,
+		validity: result.validity,
+	}
 }
 
 /**
@@ -78,20 +106,12 @@ export function validateInputValue(
 			// textinput can opt out of all sanitisation, and therefore all validation
 			if (definition.type === 'textinput' && definition.disableSanitisation) return makeResult(value, undefined, false)
 
-			const sanitisedValue = stringifyVariableValue(value ?? '') ?? ''
-
-			const compiledRegex = compileRegex(definition.regex)
-			// hasValidation: whether a rule is actually configured (drives unknown vs valid when it passes)
-			const hasValidation = definition.minLength !== undefined || compiledRegex !== null
-
-			if (definition.minLength !== undefined && sanitisedValue.length < definition.minLength) {
-				return makeResult(sanitisedValue, `Value must be at least ${definition.minLength} characters long`)
-			}
-			if (compiledRegex && !compiledRegex.exec(sanitisedValue)) {
-				return makeResult(sanitisedValue, `Value does not match regex: ${definition.regex}`)
-			}
-
-			return makeResult(sanitisedValue, undefined, hasValidation)
+			return adaptResult(
+				validateTextValue(value, {
+					minLength: definition.minLength,
+					regex: definition.regex,
+				} satisfies Completed<TextValidationOptions>)
+			)
 		}
 
 		case 'expression': {
@@ -110,159 +130,58 @@ export function validateInputValue(
 			return makeResult(sanitisedValue, undefined)
 		}
 
-		case 'number': {
-			if (value === undefined || value === '' || value === null) {
-				return makeResult(value, 'A value must be provided')
-			}
-
-			// Coerce to number
-			let sanitisedValue = typeof value === 'number' ? value : Number(value)
-			if (isNaN(sanitisedValue)) {
-				return makeResult(value, 'Value must be a number')
-			}
-
-			// Round to integer if required
-			const isNotInteger = definition.asInteger && !Number.isInteger(sanitisedValue)
-			if (isNotInteger) {
-				validationWarnings.push('Value was rounded to nearest integer')
-				sanitisedValue = Math.round(sanitisedValue)
-			}
-
-			// Verify the value range - allowInvalidValues takes priority over clampValues
-			if (definition.min !== undefined && sanitisedValue < definition.min) {
-				if (definition.allowInvalidValues) {
-					validationWarnings.push(`Value is below ${definition.min}`)
-				} else if (definition.clampValues) {
-					sanitisedValue = definition.min
-					validationWarnings.push(`Value was clamped to ${definition.min}`)
-				} else {
-					return makeResult(sanitisedValue, `Value must be greater than or equal to ${definition.min}`)
-				}
-			}
-			if (definition.max !== undefined && sanitisedValue > definition.max) {
-				if (definition.allowInvalidValues) {
-					validationWarnings.push(`Value is above ${definition.max}`)
-				} else if (definition.clampValues) {
-					sanitisedValue = definition.max
-					validationWarnings.push(`Value was clamped to ${definition.max}`)
-				} else {
-					return makeResult(sanitisedValue, `Value must be less than or equal to ${definition.max}`)
-				}
-			}
-
-			return makeResult(sanitisedValue, undefined)
-		}
+		case 'number':
+			return adaptResult(
+				validateNumberValue(value, {
+					min: definition.min,
+					max: definition.max,
+					asInteger: definition.asInteger,
+					clampValues: definition.clampValues,
+					allowInvalidValues: definition.allowInvalidValues,
+				} satisfies Completed<NumberValidationOptions>)
+			)
 
 		case 'checkbox':
 			// Coerce to boolean - always acceptable, nothing to check
-			return makeResult(!!value, undefined, false)
+			return adaptResult(validateCheckboxValue(value))
 
-		case 'colorpicker': {
+		case 'colorpicker':
 			// A color field accepts any color representation - a number, a numeric string, or a css color string -
 			// and normalises it to the type the field declares (so the value handed onward always matches returnType
-			// and is consumable by a module's splitRgb()).
-			const isColor =
-				typeof value === 'number' ||
-				(typeof value === 'string' && ((value.trim() !== '' && !isNaN(Number(value))) || colord(value).isValid()))
-			if (!isColor) {
-				return makeResult(value, 'Value must be a color number or a css color string')
-			}
-
-			// isColor guarantees value is a number or string here
-			const colorValue = value as number | string
-			return definition.returnType === 'string'
-				? makeResult(parseColor(colorValue), undefined)
-				: makeResult(colorToNumber(colorValue), undefined)
-		}
+			// and is consumable by a module's splitRgb()). Companion stores colours as companion-ttrrggbb numbers, so
+			// the input encoding is always the default.
+			return adaptResult(
+				validateColorValue(value, {
+					returnType: definition.returnType,
+					encoding: undefined,
+					enableAlpha: definition.enableAlpha,
+				} satisfies Completed<ColorValidationOptions>)
+			)
 
 		case 'bonjour-device':
 		case 'custom-variable':
 			// Nothing to check
 			return makeResult(value, undefined, false)
 
-		case 'dropdown': {
-			// Check if value is in choices
-			const isInChoices = definition.choices.find((c) => isEqual(c.id, value) || c.id == value) // intentionally loose for backwards compatibility
-			if (isInChoices) return makeResult(isInChoices.id, undefined)
+		case 'dropdown':
+			return adaptResult(
+				validateDropdownValue(value, {
+					choices: definition.choices,
+					allowCustom: definition.allowCustom,
+					regex: definition.regex,
+				} satisfies Completed<DropdownValidationOptions>)
+			)
 
-			const stringValue = stringifyVariableValue(value) ?? ''
-
-			if (!definition.allowCustom) {
-				return makeResult(stringValue, 'Value is not in the list of choices')
-			}
-
-			// If allowCustom is true, and the value is not in the choices, check the regex
-			const strValue = stringifyVariableValue(value) ?? ''
-			const compiledRegex = compileRegex(definition.regex)
-			if (compiledRegex && !compiledRegex.exec(strValue)) {
-				return makeResult(stringValue, `Value does not match regex: ${definition.regex}`)
-			}
-
-			return makeResult(stringValue, undefined)
-		}
-
-		case 'multidropdown': {
-			if (value === undefined) return makeResult([], undefined)
-
-			if (!Array.isArray(value)) {
-				// Try to help modules which relied on old behaviour where non-array values were coerced into an array, by coercing strings/numbers/booleans into an array with a warning
-				if (
-					(typeof value === 'string' && value.trim() !== '') ||
-					typeof value === 'number' ||
-					typeof value === 'boolean'
-				) {
-					validationWarnings.push('Value was coerced into an array')
-					value = [value]
-				} else {
-					return makeResult(value, 'Value must be an array')
-				}
-			}
-
-			const sanitisedValue: JsonValue[] = []
-			const invalidValues: JsonValue[] = []
-
-			// Validate each value
-			for (const val of value) {
-				// Check if value is in choices
-				const isInChoices = definition.choices.find((c) => isEqual(c.id, val) || c.id == val) // intentionally loose for backwards compatibility
-				if (isInChoices) {
-					sanitisedValue.push(isInChoices.id)
-					continue
-				}
-
-				if (!definition.allowCustom) {
-					invalidValues.push(val)
-					continue
-				}
-
-				// If allowCustom is true, and the value is not in the choices, check the regex
-				const strVal = stringifyVariableValue(val) ?? ''
-				const compiledRegex = compileRegex(definition.regex)
-				if (compiledRegex && !compiledRegex.exec(strVal)) {
-					invalidValues.push(val)
-					continue
-				}
-
-				sanitisedValue.push(strVal)
-			}
-
-			if (invalidValues.length > 0) {
-				return makeResult(
-					value,
-					`The following selected values are not valid: ${invalidValues.map(stringifyVariableValue).join(', ')}`
-				)
-			}
-
-			// Check min/max selection
-			if (definition.minSelection !== undefined && value.length < definition.minSelection) {
-				return makeResult(sanitisedValue, `Must select at least ${definition.minSelection} items`)
-			}
-			if (definition.maxSelection !== undefined && value.length > definition.maxSelection) {
-				return makeResult(sanitisedValue, `Must select at most ${definition.maxSelection} items`)
-			}
-
-			return makeResult(sanitisedValue, undefined)
-		}
+		case 'multidropdown':
+			return adaptResult(
+				validateMultiDropdownValue(value, {
+					choices: definition.choices,
+					allowCustom: definition.allowCustom,
+					regex: definition.regex,
+					minSelection: definition.minSelection,
+					maxSelection: definition.maxSelection,
+				} satisfies Completed<MultiDropdownValidationOptions>)
+			)
 
 		case 'internal:table': {
 			if (!Array.isArray(value)) {
@@ -356,21 +275,5 @@ export function validateInputValue(
 		default:
 			assertNever(definition)
 			return makeResult(value, 'Unknown input field type')
-	}
-}
-
-export function compileRegex(regex: string | undefined): RegExp | null {
-	if (!regex) return null
-
-	try {
-		// Compile the regex string
-		const match = /^\/(.*)\/(.*)$/.exec(regex)
-		if (match) {
-			return new RegExp(match[1], match[2])
-		} else {
-			return null
-		}
-	} catch {
-		return null
 	}
 }

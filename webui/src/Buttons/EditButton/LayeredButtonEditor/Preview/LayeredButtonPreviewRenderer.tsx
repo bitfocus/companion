@@ -1,8 +1,6 @@
-import { PencilIcon } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
 import QuickLRU from 'quick-lru'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { useLocalStorage, useResizeObserver } from 'usehooks-ts'
 import type { ElementGeometry } from '@companion-app/shared/Graphics/Geometry.js'
 import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
@@ -11,14 +9,13 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
 import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
 import { PromiseDebounce } from '@companion-app/shared/PromiseDebounce.js'
-import type { DropdownChoice } from '@companion-module/base'
-import { InputGroup, InputGroupText } from '~/Components/Form.js'
-import { NumberInputField } from '~/Components/NumberInputField.js'
-import { Popover } from '~/Components/Popover.js'
+import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
+import { useResizeObserver } from '~/Hooks/useResizeObserver.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { LayeredStyleStore } from '../StyleStore.js'
+import { AspectRatioPicker } from './AspectRatioPicker.js'
 import {
 	buildOptionValues,
 	getDraggableBoundsFields,
@@ -26,7 +23,7 @@ import {
 	type BoundsFractions,
 	type BoundsKey,
 } from './boundsFields.js'
-import { fitCanvasSize, PAD_X, PAD_Y, parseAspectRatio } from './canvasSize.js'
+import { fitCanvasSize, PAD_X, PAD_Y } from './canvasSize.js'
 import { useLayeredButtonDrawStyleParser } from './DrawStyleParser.js'
 import { filterElementRects, findElementRect, hitTestElements } from './elementHitTest.js'
 import FontLoader from './FontLoader.js'
@@ -113,30 +110,7 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 						snapEnabledRef={snapEnabledRef}
 					/>
 				</div>
-				<div className="button-layer-canvas-footer">
-					<span className="button-layer-footer-label">Aspect Ratio</span>
-					<div className="button-layer-aspect-options">
-						{ASPECT_RATIO_OPTIONS.map((option) => {
-							const id = String(option.id)
-							return (
-								<button
-									key={id}
-									type="button"
-									title={option.label}
-									className={`button-layer-aspect-option${aspectRatio === id ? ' active' : ''}`}
-									onClick={() => setAspectRatio(id)}
-								>
-									<AspectRatioGlyph ratio={parseAspectRatio(id)} />
-								</button>
-							)
-						})}
-						<CustomAspectRatioButton
-							value={aspectRatio}
-							setValue={setAspectRatio}
-							active={!ASPECT_RATIO_OPTIONS.some((option) => String(option.id) === aspectRatio)}
-						/>
-					</div>
-				</div>
+				<AspectRatioPicker value={aspectRatio} setValue={setAspectRatio} />
 			</div>
 		</div>
 	)
@@ -246,79 +220,6 @@ const ElementQuickActions = observer(function ElementQuickActions({
 	)
 })
 
-const ASPECT_RATIO_OPTIONS: DropdownChoice[] = [
-	{ id: '1:1', label: '1:1 (Square)' },
-	{ id: '9:7', label: '9:7 (Stream Deck Studio)' },
-	{ id: '2:1', label: '2:1 (Stream Deck Plus & Plus XL)' },
-]
-
-const CUSTOM_RATIO_MIN = 1
-const CUSTOM_RATIO_MAX = 100
-
-/**
- * Lets a ratio be entered by hand, for surfaces that don't have a preset button. The value is the same
- * "w:h" string the presets use, so it needs no special handling anywhere else.
- */
-function CustomAspectRatioButton({
-	value,
-	setValue,
-	active,
-}: {
-	value: string
-	setValue: (value: string) => void
-	active: boolean
-}) {
-	// Seeded from whatever is currently applied, preset or not, so opening this is a starting point rather
-	// than a jump to some unrelated ratio
-	const [w, h] = value.split(':').map(Number)
-	const width = isFinite(w) && w > 0 ? w : 4
-	const height = isFinite(h) && h > 0 ? h : 3
-
-	const clamp = (val: number) => Math.min(CUSTOM_RATIO_MAX, Math.max(CUSTOM_RATIO_MIN, Math.round(val)))
-
-	return (
-		<Popover.Root>
-			<Popover.Trigger
-				color={null}
-				className={`button-layer-aspect-option${active ? ' active' : ''}`}
-				title="Custom aspect ratio"
-			>
-				<PencilIcon size={14} />
-			</Popover.Trigger>
-			<Popover.Popup className="button-layer-aspect-custom" align="end">
-				<InputGroup>
-					<InputGroupText>W</InputGroupText>
-					<NumberInputField
-						id={undefined}
-						value={width}
-						setValue={(val) => setValue(`${clamp(val)}:${height}`)}
-						min={CUSTOM_RATIO_MIN}
-						max={CUSTOM_RATIO_MAX}
-					/>
-				</InputGroup>
-				<InputGroup>
-					<InputGroupText>H</InputGroupText>
-					<NumberInputField
-						id={undefined}
-						value={height}
-						setValue={(val) => setValue(`${width}:${clamp(val)}`)}
-						min={CUSTOM_RATIO_MIN}
-						max={CUSTOM_RATIO_MAX}
-					/>
-				</InputGroup>
-			</Popover.Popup>
-		</Popover.Root>
-	)
-}
-
-// A little outlined rectangle drawn to the ratio, so the option reads at a glance
-function AspectRatioGlyph({ ratio }: { ratio: number }) {
-	const max = 15
-	const glyphWidth = ratio >= 1 ? max : max * ratio
-	const glyphHeight = ratio >= 1 ? max / ratio : max
-	return <span className="button-layer-aspect-glyph" style={{ width: glyphWidth, height: glyphHeight }} />
-}
-
 interface LayeredButtonCanvasProps {
 	width: number
 	height: number
@@ -369,12 +270,11 @@ const LayeredButtonCanvas = observer(function LayeredButtonCanvas({
 		drawContext.current.draw(drawStyle)
 	}, [canvas, location, drawStyle, hiddenElements, selectedElementId])
 
-	// Ensure the fonts are loaded
-	// Future: maybe the first paint should be blocked until either the fonts are loaded, or a timeout is reached?
+	// The first paint can happen before the custom fonts finish loading, so text gets measured against the
+	// fallback font. Once the fonts are ready, drop the stale measurements and redraw at the correct size.
 	useEffect(() => {
 		const unsub = FontLoader.listenForFontLoad(() => {
-			console.log('font loaded!', Date.now())
-			if (drawContext.current) drawContext.current.redraw()
+			if (drawContext.current) drawContext.current.invalidateFontMetrics()
 		})
 
 		return () => {
@@ -479,6 +379,7 @@ const LayeredButtonCanvas = observer(function LayeredButtonCanvas({
 
 class RendererDrawContext {
 	readonly #image: GraphicsImage
+	readonly #textLayoutCache: TextLayoutCache
 	readonly #debounce: PromiseDebounce
 	readonly #onGeometry: (geometry: readonly ElementGeometry[]) => void
 	readonly canvas: HTMLCanvasElement
@@ -492,6 +393,7 @@ class RendererDrawContext {
 		if (!image) throw new Error('Failed to create image')
 
 		this.#image = image
+		this.#textLayoutCache = textLayoutCache
 		this.#debounce = new PromiseDebounce(this.#debounceDraw, 1, 10)
 		this.#onGeometry = onGeometry
 		this.canvas = canvas
@@ -549,7 +451,14 @@ class RendererDrawContext {
 		this.#debounce.trigger()
 	}
 
-	redraw() {
+	/**
+	 * Discard cached text measurements and redraw. The text-layout cache keys font line-box ratios and fitted
+	 * layouts by font spec only, so any measured before `companion-sans` finished loading (the first paint
+	 * happens before the fonts are ready) would otherwise stick until the context is recreated - leaving text
+	 * sized against the fallback font's metrics. Call this once the fonts load so they are re-measured.
+	 */
+	invalidateFontMetrics() {
+		this.#textLayoutCache.clear()
 		this.#debounce.trigger()
 	}
 }

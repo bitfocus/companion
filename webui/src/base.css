@@ -1,0 +1,389 @@
+/*
+ * First-party element base styles — the app's deliberate defaults for bare elements, layered on top
+ * of Tailwind's Preflight (the `base` cascade layer, above `tw-base`; see tailwind.css). Element
+ * selectors only — no class rules.
+ *
+ * These rules originate from the CoreUI/Bootstrap `reboot` element reset (the `type` module's class
+ * helpers have been dropped, and the element rules kept), compiled once from the vendored SCSS
+ * (webui/src/scss/vendor/coreui/_reboot.scss) and now maintained here as first-party CSS. They read
+ * the theme's own tokens (`--color-*`, `--font-sans`/`--font-mono`, `--border-width`) from
+ * tailwind.css.
+ *
+ * The "Preflight neutralizers" section at the end masks the differences introduced by enabling
+ * Tailwind's Preflight in the lower `tw-base` layer, so turning Preflight on has no visual effect
+ * today; each neutralizer is removed as the corresponding element default is confirmed against
+ * Preflight, letting Preflight take over underneath.
+ */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	:root {
+		scroll-behavior: smooth;
+	}
+}
+
+body {
+	margin: 0;
+	font-family: var(--font-sans);
+	font-size: 1rem;
+	font-weight: 400;
+	line-height: 1.5;
+	color: var(--color-body-text);
+	background-color: var(--color-body-bg);
+	-webkit-text-size-adjust: 100%;
+	-webkit-tap-highlight-color: rgba(8, 10, 12, 0);
+}
+
+hr {
+	margin: 1rem 0;
+	color: inherit;
+	border: 0;
+	border-top: var(--border-width) solid;
+	opacity: 0.25;
+}
+
+h6,
+h5,
+h4,
+h3,
+h2,
+h1 {
+	margin-top: 0;
+	margin-bottom: 0.5rem;
+	font-weight: 500;
+	line-height: 1.2;
+	color: inherit;
+}
+
+h1 {
+	font-size: calc(1.375rem + 1.5vw);
+}
+@media (min-width: 1200px) {
+	h1 {
+		font-size: 2.5rem;
+	}
+}
+
+h2 {
+	font-size: calc(1.325rem + 0.9vw);
+}
+@media (min-width: 1200px) {
+	h2 {
+		font-size: 2rem;
+	}
+}
+
+h3 {
+	font-size: calc(1.3rem + 0.6vw);
+}
+@media (min-width: 1200px) {
+	h3 {
+		font-size: 1.75rem;
+	}
+}
+
+h4 {
+	font-size: calc(1.275rem + 0.3vw);
+}
+@media (min-width: 1200px) {
+	h4 {
+		font-size: 1.5rem;
+	}
+}
+
+h5 {
+	font-size: 1.25rem;
+}
+
+h6 {
+	font-size: 1rem;
+}
+
+p {
+	margin-top: 0;
+	margin-bottom: 1rem;
+}
+
+ol,
+ul {
+	padding-inline-start: 2rem;
+}
+
+ol,
+ul {
+	margin-top: 0;
+	margin-bottom: 1rem;
+}
+
+ol ol,
+ul ul,
+ol ul,
+ul ol {
+	margin-bottom: 0;
+}
+
+b,
+strong {
+	font-weight: bolder;
+}
+
+small {
+	font-size: 0.875em;
+}
+
+a {
+	color: var(--color-primary);
+	text-decoration: none;
+}
+a:hover {
+	color: var(--color-link-hover);
+}
+
+a:not([href]):not([class]),
+a:not([href]):not([class]):hover {
+	color: inherit;
+}
+
+pre,
+code {
+	font-family: var(--font-mono);
+	font-size: 1em;
+}
+
+pre {
+	display: block;
+	margin-top: 0;
+	margin-bottom: 1rem;
+	overflow: auto;
+	font-size: 0.875em;
+}
+pre code {
+	font-size: inherit;
+	color: inherit;
+	word-break: normal;
+}
+
+code {
+	font-size: 0.875em;
+	color: var(--color-code);
+	word-wrap: break-word;
+}
+a > code {
+	color: inherit;
+}
+
+img,
+svg {
+	vertical-align: middle;
+}
+
+table {
+	caption-side: bottom;
+	border-collapse: collapse;
+}
+
+th {
+	text-align: inherit;
+	text-align: -webkit-match-parent;
+}
+
+thead,
+tbody,
+tfoot,
+tr,
+td,
+th {
+	border-color: inherit;
+	border-style: solid;
+	border-width: 0;
+}
+
+label {
+	display: inline-block;
+}
+
+button {
+	border-radius: 0;
+}
+
+button:focus:not(:focus-visible) {
+	outline: 0;
+}
+
+input,
+button,
+select,
+optgroup,
+textarea {
+	margin: 0;
+	font-family: inherit;
+	font-size: inherit;
+	line-height: inherit;
+}
+
+button,
+select {
+	text-transform: none;
+}
+
+[role='button'] {
+	cursor: pointer;
+}
+
+[list]:not([type='date']):not([type='datetime-local']):not([type='month']):not([type='week']):not(
+		[type='time']
+	)::-webkit-calendar-picker-indicator {
+	display: none !important;
+}
+
+button,
+[type='button'],
+[type='reset'],
+[type='submit'] {
+	-webkit-appearance: button;
+}
+button:not(:disabled),
+[type='button']:not(:disabled),
+[type='reset']:not(:disabled),
+[type='submit']:not(:disabled) {
+	cursor: pointer;
+}
+
+::-moz-focus-inner {
+	padding: 0;
+	border-style: none;
+}
+
+::-webkit-datetime-edit-fields-wrapper,
+::-webkit-datetime-edit-text,
+::-webkit-datetime-edit-minute,
+::-webkit-datetime-edit-hour-field,
+::-webkit-datetime-edit-day-field,
+::-webkit-datetime-edit-month-field,
+::-webkit-datetime-edit-year-field {
+	padding: 0;
+}
+
+::-webkit-inner-spin-button {
+	height: auto;
+}
+
+[type='search'] {
+	-webkit-appearance: textfield;
+	outline-offset: -2px;
+}
+[type='search']::-webkit-search-cancel-button {
+	cursor: pointer;
+	filter: grayscale(1);
+}
+
+*[dir='rtl'] [type='tel'],
+*[dir='rtl'] [type='url'],
+*[dir='rtl'] [type='email'],
+*[dir='rtl'] [type='number'] {
+	direction: ltr;
+}
+
+::-webkit-search-decoration {
+	-webkit-appearance: none;
+}
+
+::-webkit-color-swatch-wrapper {
+	padding: 0;
+}
+
+::file-selector-button {
+	font: inherit;
+	-webkit-appearance: button;
+}
+
+iframe {
+	border: 0;
+}
+
+[hidden] {
+	display: none !important;
+}
+
+/*
+ * ===== Preflight neutralizers =====
+ * Enabling Tailwind Preflight (the `tw-base` layer, below this one) must have no visual effect today.
+ * These rules restore the previous browser/reboot rendering for the element+property pairs Preflight
+ * changes that the reboot above does not already own. `revert` rolls each back to the user-agent value
+ * (Preflight sits in a lower cascade layer, so it is reverted past); unlayered app/component CSS and
+ * Tailwind utilities stay above and still win. Remove each rule as the matching base style is rewritten
+ * first-party.
+ *
+ * Deliberately NOT neutralized: Preflight's `border-style: solid` at 0 width. It is invisible today and
+ * is what lets Tailwind `border-*` utilities work by setting only a width, so it must remain.
+ */
+
+/* Lists keep their native markers and menu keeps its indentation. */
+ol,
+ul,
+menu {
+	list-style: revert;
+}
+menu {
+	margin: revert;
+	padding: revert;
+}
+
+/* Replaced elements stay inline (Preflight forces display: block). */
+img,
+svg,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+	display: revert;
+}
+video,
+canvas,
+iframe {
+	vertical-align: revert;
+}
+/* Images/videos are not width-constrained (Preflight adds max-width: 100%). NOTE: Preflight's
+   `height: auto` overrides the `height`/`width` HTML presentation attributes and cannot be undone here
+   (`revert` rolls back past presentation hints to the UA `auto`), so elements that were sized via those
+   attributes are given explicit CSS sizing at the call site instead. */
+img,
+video {
+	max-width: revert;
+}
+
+/* Bare form controls keep their native chrome (Preflight strips padding/border/background/colour). */
+input,
+button,
+select,
+textarea,
+optgroup,
+::file-selector-button {
+	padding: revert;
+	border: revert;
+	background-color: revert;
+	color: revert;
+}
+::placeholder {
+	color: revert;
+	opacity: revert;
+}
+
+/* Table cells keep their default padding. (`revert` rolls back to the UA origin, which drops the 1px
+   that actually comes from the legacy `cellpadding` presentational default, so set it explicitly.) */
+th,
+td {
+	padding: 1px;
+}
+
+/* Keep the default tab size (Preflight sets 4). */
+html {
+	tab-size: revert;
+}

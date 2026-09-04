@@ -282,7 +282,12 @@ export const WizardModal = observer(function WizardModal(): React.JSX.Element {
 						<Modal.Popup initialFocus={buttonRef} size="lg" scrollable className="modal-wizard">
 							<Modal.Header closeButton>
 								<Modal.Title>
-									<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" className="me-2" />
+									<img
+										src={makeAbsolutePath('/img/icons/48x48.png')}
+										style={{ height: 30 }}
+										alt="logo"
+										className="me-2"
+									/>
 									Welcome to Companion
 								</Modal.Title>
 							</Modal.Header>

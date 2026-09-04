@@ -67,11 +67,11 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 		(p) => storeModulesOfTypeCount === 0 || !!p.installedInfo || typeFilter.visibility.available
 	)
 
-	let candidates: JSX.Element[] = []
+	let candidates: React.JSX.Element[] = []
 	try {
 		const searchResults = filterProducts(typeProducts, filter, false)
 
-		const candidatesObj: Record<string, JSX.Element> = {}
+		const candidatesObj: Record<string, React.JSX.Element> = {}
 		for (const moduleInfo of searchResults) {
 			candidatesObj[moduleInfo.name] = (
 				<AddInstanceEntry key={moduleInfo.name} moduleInfo={moduleInfo} addInstance={addInstance} />
@@ -118,14 +118,14 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 				<h4 className="panel-title">{title}</h4>
 				<div className="header-buttons">
 					<ContextHelpButton action={helpAction} />
-					<CloseButton closeFn={service.closeAddInstance} visibilityClass={isSubpanel ? '' : 'd-xl-none'} />
+					<CloseButton closeFn={service.closeAddInstance} visibilityClass={isSubpanel ? '' : 'xl:hidden'} />
 				</div>
 			</div>
 
 			<div className="secondary-panel-simple-body">
 				<AddInstanceModal ref={addRef} service={service} openConfigureInstance={service.openConfigureInstance} />
-				<div style={{ clear: 'both' }} className="sticky-heading">
-					<div className="add-connection-intro-section mb-3">
+				<div className="sticky-heading clear-both">
+					<div className="add-connection-intro-section mb-4">
 						{storeModulesOfTypeCount > 0 ? (
 							<div className="intro-grid">
 								{description(storeModulesOfTypeCount)}
@@ -154,7 +154,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 							</div>
 						) : (
 							<StaticAlert color="info" className="mb-0">
-								<div className="d-flex align-items-center gap-2">
+								<div className="flex items-center gap-2">
 									<FontAwesomeIcon icon={faPlug} className="text-info" />
 									{description(0)}
 								</div>
@@ -163,7 +163,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 					</div>
 
 					<div>
-						<div className="refresh-and-last-updated mb-3">
+						<div className="refresh-and-last-updated mb-4">
 							<RefreshModulesList btnSize="sm" />
 							<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
 						</div>
@@ -273,20 +273,13 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 					&nbsp;
 				</InlineHelpCustom>
 			)}
-			<div className="grow" style={{ alignContent: 'center' }}>
-				{moduleInfo.name}
-			</div>
-			<div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+			<div className="grow content-center">{moduleInfo.name}</div>
+			<div className="flex items-center gap-1">
 				<Link
 					to={`/modules/$moduleType/$moduleId`}
 					params={{ moduleType: moduleInfo.moduleType, moduleId: moduleInfo.moduleId }}
-					className="text-decoration-none"
 				>
-					<div
-						className="m-0"
-						style={{ display: 'inline-block', color: 'var(--cui-body-color)' }}
-						title={'Manage module'}
-					>
+					<div className="m-0" style={{ display: 'inline-block', color: 'var(--color-text)' }} title={'Manage module'}>
 						<FontAwesomeIcon icon={faCog} />
 					</div>
 				</Link>
@@ -301,7 +294,7 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 					</WindowLinkOpen>
 				)}
 				{showHelpForVersion?.helpPath && (
-					<div className="m-0" style={{ cursor: 'pointer' }} onClick={showHelpClick}>
+					<div className="m-0 cursor-pointer" onClick={showHelpClick}>
 						<FontAwesomeIcon icon={faQuestionCircle} />
 					</div>
 				)}

@@ -12,7 +12,7 @@
 	flex-shrink: 0;
 	cursor: pointer;
 	border-radius: 2em;
-	background-color: var(--cui-body-bg);
+	background-color: var(--color-surface-dark);
 	transition: background-color 0.15s ease-in-out;
 	margin: 0.25rem;
 	vertical-align: middle;
@@ -41,7 +41,7 @@
 
 		/*
 		&.switch-input-dimmed {
-			background-color: var(--cui-success);
+			background-color: var(--color-success);
 		}
 		*/
 

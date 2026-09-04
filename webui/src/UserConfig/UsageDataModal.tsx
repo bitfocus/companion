@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { Modal } from '~/Components/Modal'
 import { trpc } from '~/Resources/TRPC.js'
 
-export function UsageDataModal(): JSX.Element {
+export function UsageDataModal(): React.JSX.Element {
 	const [show, setShow] = useState(false)
 	const { data, isLoading, error } = useQuery({
 		...trpc.usageStatistics.getCurrentPayload.queryOptions(),
@@ -29,14 +29,14 @@ export function UsageDataModal(): JSX.Element {
 							<Modal.Title>Usage Statistics Data</Modal.Title>
 						</Modal.Header>
 						<Modal.Body>
-							<p className="mb-3">
+							<p className="mb-4">
 								This is a live preview of the data transmitted for the usage statistics.
 								<br />
 								The id field is a randomly generated identifier for your Companion instance when you first launched it.
 								It helps us distinguish between different users while ensuring your anonymity.
 							</p>
-							{isLoading && (
-								<div className="text-center py-5">
+							{!isLoading && (
+								<div className="text-center py-12">
 									<FontAwesomeIcon icon={faSpinner} spin size="2x" />
 								</div>
 							)}
@@ -51,8 +51,8 @@ export function UsageDataModal(): JSX.Element {
 										backgroundColor: '#f5f5f5',
 										padding: '1rem',
 										borderRadius: '4px',
-										fontSize: '0.875rem',
 									}}
+									className="text-sm"
 								>
 									<code>{jsonData}</code>
 								</pre>

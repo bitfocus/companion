@@ -85,13 +85,16 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 			: `Enable ${labelStr}`
 
 	return (
-		<div className="flex flex-row align-items-center gap-2 hand" title={`Click to configure the ${moduleDisplayName}.`}>
-			<div onClick={doEdit} className="flex flex-column grow" style={{ minWidth: 0 }}>
+		<div
+			className="flex flex-row items-center gap-2 cursor-pointer"
+			title={`Click to configure the ${moduleDisplayName}.`}
+		>
+			<div onClick={doEdit} className="flex flex-col grow min-w-0">
 				<b>{instance.label}</b>
-				<span className="auto-ellipsis">{moduleDisplayName}</span>
+				<span className="truncate">{moduleDisplayName}</span>
 			</div>
 
-			<div onClick={doEdit} className="no-break">
+			<div onClick={doEdit} className="whitespace-nowrap">
 				<MyErrorBoundary>
 					{moduleVersion?.isLegacy && (
 						<span title="This module has not been updated for Companion 3.0, and may not work fully">

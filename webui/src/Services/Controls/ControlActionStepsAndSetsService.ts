@@ -4,7 +4,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export interface IControlActionStepsAndSetsService {
 	// readonly listId: SomeSocketEntityLocation
-	readonly confirmModal: React.RefObject<GenericConfirmModalRef>
+	readonly confirmModal: React.RefObject<GenericConfirmModalRef | null>
 
 	appendStep: () => void
 	removeStep: (stepId: string) => void
@@ -17,7 +17,7 @@ export interface IControlActionStepsAndSetsService {
 
 export function useControlActionStepsAndSetsService(
 	controlId: string,
-	confirmModal: React.RefObject<GenericConfirmModalRef>,
+	confirmModal: React.RefObject<GenericConfirmModalRef | null>,
 	setSelectedStep: (stepId: string) => void
 ): IControlActionStepsAndSetsService {
 	const addStepMutation = useMutationExt(trpc.controls.steps.add.mutationOptions())

@@ -1,21 +1,22 @@
-import { faFileArrowDown, faFileArrowUp, faFileLines, faSquarePlus } from '@fortawesome/free-solid-svg-icons'
+import { faClone, faFileArrowDown, faFileArrowUp, faFileLines, faSquarePlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { Button } from '~/Components/Button'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
+import './CreateButtonTypeButtons.css'
 
 export function CreateButtonTypeButtons({ location }: { location: ControlLocation }): React.JSX.Element {
-	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())
+	const resetControlsMutation = useMutationExt(trpc.controls.resetControls.mutationOptions())
 
 	const setButtonType = useCallback(
 		(newType: string) => {
 			// On an empty slot there is no existing type to convert from, so no warning is needed
-			resetControlMutation.mutateAsync({ location, newType }).catch((e) => {
+			resetControlsMutation.mutateAsync({ locations: [location], newType }).catch((e) => {
 				console.error(`Set type failed: ${e}`)
 			})
 		},
-		[resetControlMutation, location]
+		[resetControlsMutation, location]
 	)
 
 	return (
@@ -29,6 +30,16 @@ export function CreateButtonTypeButtons({ location }: { location: ControlLocatio
 				>
 					<FontAwesomeIcon icon={faSquarePlus} />
 					<span>Regular button</span>
+				</Button>
+
+				<Button
+					variant="outline"
+					className="empty-button-type-tile empty-button-type-tile-primary"
+					onClick={() => setButtonType('button-reference')}
+					title="Create a button that mirrors another button."
+				>
+					<FontAwesomeIcon icon={faClone} />
+					<span>Button reference</span>
 				</Button>
 
 				<Button

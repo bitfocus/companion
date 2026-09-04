@@ -9,7 +9,7 @@ const meta = {
 	},
 	decorators: [
 		(Story) => (
-			<div style={{ padding: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+			<div className="p-6 inline-flex items-center justify-center">
 				<Story />
 			</div>
 		),
@@ -41,7 +41,7 @@ export const CustomHex: Story = {
 
 export const Multiple: Story = {
 	render: () => (
-		<div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+		<div className="flex gap-3 items-center">
 			<Spinner color="warning" style={{ width: '24px', height: '24px' }} />
 			<Spinner color="danger" style={{ width: '24px', height: '24px' }} />
 			<Spinner color="success" style={{ width: '24px', height: '24px' }} />

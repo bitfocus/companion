@@ -38,9 +38,9 @@ const allIcons: VariableTypeIconType[] = [
 
 export const AllTypes: Story = {
 	render: (args) => (
-		<div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+		<div className="flex flex-wrap gap-3 items-center">
 			{allIcons.map((icon) => (
-				<div key={icon} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+				<div key={icon} className="flex flex-col items-center gap-1">
 					<VariableTypeIcon {...args} icon={icon} />
 					<span style={{ fontSize: 11, color: '#555' }}>{icon}</span>
 				</div>

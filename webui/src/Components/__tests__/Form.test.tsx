@@ -46,9 +46,7 @@ describe('FormLabel', () => {
 				Name
 			</FormLabel>
 		)
-		expect(container.firstChild).toHaveClass('col-sm-4')
-		// unlike Grid.Col, FormLabel must NOT fall back to a bare `col`
-		expect(container.firstChild).not.toHaveClass('col')
+		expect(container.firstChild).toHaveClass('sm:col-span-4')
 	})
 
 	it('supports the offset object form', () => {
@@ -57,12 +55,12 @@ describe('FormLabel', () => {
 				Name
 			</FormLabel>
 		)
-		expect(container.firstChild).toHaveClass('col-sm-4', 'offset-sm-1', 'col-form-label', 'col-form-label-sm')
+		expect(container.firstChild).toHaveClass('sm:col-span-4', 'sm:col-start-2', 'col-form-label', 'col-form-label-sm')
 	})
 
-	it('does not emit a bare col when no breakpoint props are given', () => {
+	it('emits no span class when no breakpoint props are given', () => {
 		const { container } = render(<FormLabel htmlFor="x">Name</FormLabel>)
-		expect(container.firstChild).not.toHaveClass('col')
+		expect((container.firstChild as HTMLElement).className).not.toMatch(/col-span-/)
 	})
 
 	it('appends passthrough className', () => {
@@ -71,7 +69,13 @@ describe('FormLabel', () => {
 				Name
 			</FormLabel>
 		)
-		expect(container.firstChild).toHaveClass('form-label', 'col-sm-4', 'col-form-label', 'col-form-label-sm', 'mb-2')
+		expect(container.firstChild).toHaveClass(
+			'form-label',
+			'sm:col-span-4',
+			'col-form-label',
+			'col-form-label-sm',
+			'mb-2'
+		)
 	})
 
 	it('passes through htmlFor and other label attributes', () => {

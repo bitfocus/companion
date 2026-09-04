@@ -1,9 +1,9 @@
 import { observer } from 'mobx-react-lite'
 import './EntityList.css'
 import { useRef } from 'react'
-import { useResizeObserver } from 'usehooks-ts'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { EntityModelType, EntityOwner, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { useResizeObserver } from '~/Hooks/useResizeObserver.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { AddEntityPanel } from './AddEntityPanel.js'
 import { useEntityEditorContext } from './EntityEditorContext.js'
@@ -13,9 +13,9 @@ import { EntityDropPlaceholderZone } from './EntityListDropZone.js'
 import { EntityListHeightCacheProvider, useEntityListHeightCache } from './EntityListHeightCacheContext.js'
 
 interface EditableEntityListProps {
-	heading: JSX.Element | string | null
-	headingActions?: JSX.Element[]
-	subheading?: JSX.Element | string | null
+	heading: React.JSX.Element | string | null
+	headingActions?: React.JSX.Element[]
+	subheading?: React.JSX.Element | string | null
 	entities: SomeEntityModel[] | undefined
 	ownerId: EntityOwner | null
 	entityType: EntityModelType

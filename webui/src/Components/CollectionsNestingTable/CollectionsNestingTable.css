@@ -52,10 +52,10 @@
 
 		.disabled {
 			/* the following is applied to the text. The buttons need more specific selectors */
-			color: var(--cui-disabled);
+			color: var(--color-text-disabled);
 
 			.button {
-				--btn-color: var(--cui-disabled);
+				--btn-color: var(--color-text-disabled);
 			}
 		}
 	}
@@ -209,7 +209,7 @@
 		align-items: center;
 		justify-content: center;
 		padding: 0.5rem 1rem;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		font-style: italic;
 		text-align: center;
 
@@ -263,7 +263,7 @@
 			align-items: center;
 			justify-content: center;
 			font-size: 8px;
-			color: var(--color-text-muted);
+			color: var(--color-muted);
 
 			&:hover {
 				background: var(--color-tile-handle-bg-hover);

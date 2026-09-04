@@ -6,11 +6,10 @@
 	justify-content: space-between;
 	padding: 0.5rem;
 	background: var(--color-header-bg); /* the brand-red bar */
-	border-bottom: 1px solid var(--cui-border-color);
+	border-bottom: 1px solid var(--color-border);
 
 	/* The header lays out its single full-width container child as a flex row */
-	> .container,
-	> .container-fluid {
+	> .page-container {
 		display: flex;
 		flex-wrap: inherit;
 		align-items: center;
@@ -68,11 +67,10 @@
 	color: var(--color-header-text);
 	background-color: transparent;
 	border: 0;
-	border-radius: var(--cui-border-radius);
+	border-radius: var(--radius);
 
 	&:hover {
 		text-decoration: none;
-		/* make the colour similar to --cui-btn-hover-bg, which is not accessible here */
 		background-color: var(--color-header-hover);
 	}
 
@@ -90,7 +88,7 @@
 	margin-right: 5px;
 }
 
-.header > .container-fluid {
+.header > .page-container {
 	min-height: calc(4rem + 1px); /* stylelint-disable-line function-disallowed-list */
 }
 
@@ -121,6 +119,6 @@
 		padding: 0.2em 0em;
 		/* CDropdownToggle is not assigned class dropdown-toggle because we're not using the caret, so we manually override */
 		/* override "middle-of-group" rule (this appears to be a recent bug in CoreUI: https://github.com/coreui/coreui-react/issues/455) */
-		border-radius: var(--cui-border-radius) !important;
+		border-radius: var(--radius) !important;
 	}
 }

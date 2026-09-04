@@ -44,7 +44,14 @@ describe('ProgressBar rendering', () => {
 
 	it('forwards ref to root element', () => {
 		let ref: HTMLDivElement | null = null
-		render(<ProgressBar ref={(el) => (ref = el)} value={25} />)
+		render(
+			<ProgressBar
+				ref={(el) => {
+					ref = el
+				}}
+				value={25}
+			/>
+		)
 		expect(ref).toBeInstanceOf(HTMLElement)
 	})
 })

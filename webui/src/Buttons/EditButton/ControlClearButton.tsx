@@ -14,7 +14,7 @@ export function ControlClearButton({
 	location: ControlLocation
 	resetModalRef: React.MutableRefObject<GenericConfirmModalRef | null>
 }): React.JSX.Element {
-	const resetControlMutation = useMutationExt(trpc.controls.resetControl.mutationOptions())
+	const resetControlsMutation = useMutationExt(trpc.controls.resetControls.mutationOptions())
 
 	const clearButton = useCallback(() => {
 		resetModalRef.current?.show(
@@ -22,12 +22,12 @@ export function ControlClearButton({
 			`This will clear the style, feedbacks and all actions`,
 			'Clear',
 			() => {
-				resetControlMutation.mutateAsync({ location }).catch((e) => {
+				resetControlsMutation.mutateAsync({ locations: [location], newType: null }).catch((e) => {
 					console.error(`Reset failed: ${e}`)
 				})
 			}
 		)
-	}, [resetControlMutation, location, resetModalRef])
+	}, [resetControlsMutation, location, resetModalRef])
 
 	return (
 		<Button color="danger" onClick={clearButton} title="Clear Button" aria-label="Clear button">

@@ -1391,6 +1391,7 @@ describe('GraphicsLayeredButtonRenderer', () => {
 				roundedEnds: true,
 				fillEnabled: true,
 				multiColour: true,
+				fillWidth: 100,
 				stops: DEFAULT_STOPS,
 				markerEnabled: false,
 				markerColor: 0xffffff,
@@ -1613,6 +1614,26 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			await expect(await drawRing({ value: 75, trackWidth: 50 })).toMatchImageSnapshot()
 		})
 
+		test('fillWidth=40 - fill narrower than track', async () => {
+			await expect(await drawGauge(makeGaugeElement({ value: 60, fillWidth: 40 }))).toMatchImageSnapshot()
+		})
+
+		test('vertical fillWidth=50 - narrow fill, full-width track', async () => {
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 60, orientation: 'vertical', fillWidth: 50 }))
+			).toMatchImageSnapshot()
+		})
+
+		test('ring fillWidth=50 - fill narrower than track within ring width', async () => {
+			await expect(await drawRing({ value: 75, fillWidth: 50 })).toMatchImageSnapshot()
+		})
+
+		test('fillWidth=40 within trackWidth=70 - fill sits inside a narrowed track', async () => {
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 60, trackWidth: 70, fillWidth: 40 }))
+			).toMatchImageSnapshot()
+		})
+
 		// --- Fill toggle ---
 
 		test('fillEnabled=false - only the track renders', async () => {
@@ -1646,6 +1667,13 @@ describe('GraphicsLayeredButtonRenderer', () => {
 						],
 					})
 				)
+			).toMatchImageSnapshot()
+		})
+
+		test('stop color with alpha - semi-transparent fill', async () => {
+			// 0x8000ff00 is 50%-transparent green (alpha packed into the top byte, inverted).
+			await expect(
+				await drawGauge(makeGaugeElement({ value: 100, multiColour: false, stops: [{ value: 0, color: 0x8000ff00 }] }))
 			).toMatchImageSnapshot()
 		})
 

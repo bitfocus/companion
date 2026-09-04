@@ -22,13 +22,13 @@ import { Button, ButtonGroup, LinkButtonExternal } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { Grid } from '~/Components/Grid'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
+import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { sanitizeHtmlString } from '~/Resources/SanitizeHtml.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
@@ -115,25 +115,23 @@ export const TriggersPage = observer(function Triggers() {
 		void navigate({ to: '/triggers' })
 	}, [navigate])
 
-	const showPrimaryPanel = twoPanelMode || !selectedTriggerId
-	const showSecondaryPanel = twoPanelMode || !!selectedTriggerId
-
 	return (
-		<Grid.Row className="triggers-page split-panels">
+		<SplitPanels.Root
+			showing={selectedTriggerId ? 'secondary' : 'primary'}
+			className="triggers-page"
+			resize={{ storageKey: 'triggers' }}
+		>
 			<GenericConfirmModal ref={confirmModalRef} />
 			<ConfirmExportModal ref={exportModalRef} title="Export Triggers" />
 
-			<Grid.Col
-				xs={twoPanelMode ? 6 : 12}
-				className={classnames('primary-panel', showPrimaryPanel ? 'd-block' : 'd-none')}
-			>
+			<SplitPanels.Primary>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
 						<h4 className="button-inline">
 							Triggers
 							<ContextHelpButton action="/user-guide/config/triggers" />
 						</h4>
-						<p style={{ marginBottom: '0.5rem' }}>
+						<p className="mb-2">
 							Triggers allow you to automate Companion by running actions when certain events occur, such as feedback or
 							variable updates.
 						</p>
@@ -146,7 +144,7 @@ export const TriggersPage = observer(function Triggers() {
 								<CreateCollectionButton />
 							</ButtonGroup>
 
-							<Button color="secondary" className="right" size="sm" onClick={showExportModal}>
+							<Button color="secondary" className="float-right" size="sm" onClick={showExportModal}>
 								<FontAwesomeIcon icon={faFileExport} /> Export all
 							</Button>
 						</div>
@@ -177,17 +175,17 @@ export const TriggersPage = observer(function Triggers() {
 						</PanelCollapseHelperProvider>
 					</div>
 				</div>
-			</Grid.Col>
+			</SplitPanels.Primary>
 
-			<Grid.Col xs={twoPanelMode ? 6 : 12} className={`secondary-panel ${showSecondaryPanel ? 'd-block' : 'd-none'}`}>
+			<SplitPanels.Secondary>
 				<div className="secondary-panel-simple">
 					{!!selectedTriggerId && (
 						<TriggerEditPanelHeading doCloseTrigger={doCloseTrigger} twoPanelMode={twoPanelMode} />
 					)}
 					<Outlet />
 				</div>
-			</Grid.Col>
-		</Grid.Row>
+			</SplitPanels.Secondary>
+		</SplitPanels.Root>
 	)
 })
 
@@ -292,10 +290,9 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 	const triggerOrCollectionDisabled = !item.enabled || collectionDisabled
 
 	return (
-		<div className="flex flex-row align-items-center gap-2 hand">
+		<div className="flex flex-row items-center gap-2 cursor-pointer">
 			<div
-				className={classnames('flex flex-column grow', { disabled: triggerOrCollectionDisabled })}
-				style={{ minWidth: 0 }}
+				className={classnames('flex flex-col grow min-w-0', { disabled: triggerOrCollectionDisabled })}
 				onClick={doEdit}
 			>
 				<b>
@@ -309,7 +306,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 						</span>
 					) : null}
 				</b>
-				<span className="auto-ellipsis" dangerouslySetInnerHTML={descriptionHtml} />
+				<span className="truncate" dangerouslySetInnerHTML={descriptionHtml} />
 				{item.lastExecuted ? <small>Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}</small> : ''}
 			</div>
 			<div className="action-buttons w-auto">

@@ -87,3 +87,27 @@ export interface ClientImportObject {
 
 /** Remap old connection IDs to new IDs */
 export type ConnectionRemappings = Record<string, string | undefined>
+
+export type ImportExportTaskType = 'reset' | 'import'
+
+interface ImportExportTaskBase {
+	type: ImportExportTaskType
+	/** Identifies this specific run; returned by the mutation that started it so a client can track it */
+	runId: string
+}
+
+export interface ImportExportRunningTask extends ImportExportTaskBase {
+	status: 'running'
+}
+
+export interface ImportExportCompletedTask extends ImportExportTaskBase {
+	status: 'completed'
+	/** null on success, otherwise a description of the failure */
+	error: string | null
+}
+
+/**
+ * The current or most-recent import/reset task. A completed task is retained (so a client can observe
+ * the outcome of the run it started) until the next task begins, or null if none has ever run.
+ */
+export type ImportExportTask = ImportExportRunningTask | ImportExportCompletedTask

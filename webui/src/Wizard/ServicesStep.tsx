@@ -28,7 +28,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 				</p>
 			</Grid.Col>
 
-			<Grid.Col xs={12} className="ms-2 mb-1">
+			<Grid.Col xs={12} className="mt-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="TCP Raw Socket"
 					value={!!config.tcp_enabled}
@@ -52,7 +52,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 				</>
 			)}
 
-			<Grid.Col xs={12} className="ms-2 mb-1">
+			<Grid.Col xs={12} className="mt-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="UDP Raw Socket"
 					value={!!config.udp_enabled}
@@ -76,7 +76,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 				</>
 			)}
 
-			<Grid.Col xs={12} className="ms-2 mb-1">
+			<Grid.Col xs={12} className="mt-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="Open Sound Control (OSC)"
 					value={!!config.osc_enabled}
@@ -100,14 +100,14 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 				</>
 			)}
 
-			<Grid.Col xs={12} className="ms-2 mb-1">
+			<Grid.Col xs={12} className="mt-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="RossTalk"
 					value={!!config.rosstalk_enabled}
 					setValue={(val) => setValue('rosstalk_enabled', val)}
 				/>
 			</Grid.Col>
-			<Grid.Col xs={12} className="ms-2 mb-1">
+			<Grid.Col xs={12} className="mt-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="Ember+"
 					value={!!config.emberplus_enabled}
@@ -115,7 +115,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 				/>
 			</Grid.Col>
 
-			<Grid.Col xs={12} className="ms-2 mb-1">
+			<Grid.Col xs={12} className="mt-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="Artnet"
 					value={!!config.artnet_enabled}
@@ -157,7 +157,7 @@ export function ServicesStep({ config, setValue }: ServicesStepProps): React.JSX
 			)}
 
 			<Grid.Col sm={12}>
-				<p className="text-muted mt-3" style={{ fontSize: '0.875rem' }}>
+				<p className="text-muted mt-4 text-sm">
 					You can change these later and review how to use them on the 'Settings' tab in the GUI.
 				</p>
 			</Grid.Col>

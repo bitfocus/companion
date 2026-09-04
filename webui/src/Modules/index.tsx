@@ -1,6 +1,6 @@
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { memo, useCallback } from 'react'
-import { Grid } from '~/Components/Grid'
+import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { ModulesList, type ModuleTypeAndIdPair } from './ModulesList.js'
 
 export const ModulesPage = memo(function ConnectionsPage() {
@@ -21,28 +21,21 @@ export const ModulesPage = memo(function ConnectionsPage() {
 		[navigate]
 	)
 
-	const showPrimaryPanel = !selectedModuleInfo
-	const showSecondaryPanel = !!selectedModuleInfo
-
 	return (
-		<Grid.Row className="connections-page split-panels">
-			<Grid.Col
-				xs={12}
-				xl={6}
-				className={`connections-panel primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}
-			>
+		<SplitPanels.Root
+			showing={selectedModuleInfo ? 'secondary' : 'primary'}
+			className="connections-page"
+			resize={{ storageKey: 'modules' }}
+		>
+			<SplitPanels.Primary className="connections-panel">
 				<ModulesList doManageModule={doManageModule} selectedModuleInfo={selectedModuleInfo} />
-			</Grid.Col>
+			</SplitPanels.Primary>
 
-			<Grid.Col
-				xs={12}
-				xl={6}
-				className={`connections-panel secondary-panel add-connections-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}
-			>
+			<SplitPanels.Secondary className="connections-panel add-connections-panel">
 				<div className="secondary-panel-simple">
 					<Outlet />
 				</div>
-			</Grid.Col>
-		</Grid.Row>
+			</SplitPanels.Secondary>
+		</SplitPanels.Root>
 	)
 })

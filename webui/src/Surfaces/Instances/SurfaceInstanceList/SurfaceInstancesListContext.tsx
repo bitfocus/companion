@@ -6,7 +6,7 @@ import type { VisibleSurfaceInstancesState } from './SurfaceInstanceList.js'
 
 export interface SurfaceInstancesListContextType {
 	visibleInstances: TableVisibilityHelper<VisibleSurfaceInstancesState>
-	deleteModalRef: RefObject<GenericConfirmModalRef>
+	deleteModalRef: RefObject<GenericConfirmModalRef | null>
 	configureInstance: (instanceId: string | null) => void
 }
 

@@ -97,7 +97,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 							}}
 						>
 							<Modal.Body>
-								<Grid.Row className="g-sm-2">
+								<Grid.Row className="sm:gap-2">
 									{saveError && (
 										<Grid.Col className={`fieldtype-textinput`} sm={12}>
 											<StaticAlert color="danger">{saveError}</StaticAlert>
@@ -250,7 +250,7 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 										<>
 											<Modal.Close disabled={isSubmitting}>Cancel</Modal.Close>
 
-											<Button color="primary" className="me-md-1" disabled={!canSubmit || isSubmitting} type="submit">
+											<Button color="primary" className="md:me-1" disabled={!canSubmit || isSubmitting} type="submit">
 												Add {isSubmitting ? '...' : ''}
 											</Button>
 										</>

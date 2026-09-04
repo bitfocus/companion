@@ -30,9 +30,17 @@
 		font-weight: 600;
 		cursor: pointer;
 
+		/* Lay the caret and header out as a flex row so the header fills the remaining
+		   width without the caret ever wrapping onto its own line. */
+		.collapsible-tree-group-content {
+			display: flex;
+			align-items: center;
+		}
+
 		.collapsible-tree-caret {
 			width: 9px;
 			margin-right: 5px;
+			flex-shrink: 0;
 		}
 
 		&:hover {
@@ -41,18 +49,20 @@
 
 		/* Connection nodes get a slightly different style to stand out from collections */
 		.collapsible-tree-connection-header {
-			display: inline-flex;
+			display: flex;
 			justify-content: space-between;
 			align-items: center;
-			width: calc(100% - 15px); /* Account for caret width */
+			flex: 1;
+			min-width: 0;
 		}
 
 		/* Collection headers also show counts */
 		.collapsible-tree-collection-header {
-			display: inline-flex;
+			display: flex;
 			justify-content: space-between;
 			align-items: center;
-			width: calc(100% - 15px); /* Account for caret width */
+			flex: 1;
+			min-width: 0;
 		}
 
 		.collapsible-tree-connection-count {

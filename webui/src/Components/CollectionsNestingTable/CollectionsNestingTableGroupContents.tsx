@@ -122,7 +122,7 @@ export const CollectionsNestingTableCollectionContents = observer(function Colle
 
 			{hiddenCount > 0 && (
 				<div className="collections-nesting-table-row-item">
-					<CollectionsNestingTableNestingRow className="flex flex-row align-items-center" nestingLevel={nestingLevel}>
+					<CollectionsNestingTableNestingRow className="flex flex-row items-center" nestingLevel={nestingLevel}>
 						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
 						<strong>
 							{hiddenCount} {itemName}s are hidden
@@ -133,7 +133,7 @@ export const CollectionsNestingTableCollectionContents = observer(function Colle
 
 			{showNoItemsMessage && items.length === 0 && !isItemDragging && (
 				<div className="collections-nesting-table-row-item">
-					<CollectionsNestingTableNestingRow className="flex flex-row align-items-center" nestingLevel={nestingLevel}>
+					<CollectionsNestingTableNestingRow className="flex flex-row items-center" nestingLevel={nestingLevel}>
 						<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'gray' }} />
 						<strong>This collection is empty</strong>
 					</CollectionsNestingTableNestingRow>
@@ -156,7 +156,7 @@ function CollectionsNestingTableGridContainer({
 	nestingLevel: number
 	isItemDragging: boolean
 	itemCount: number
-}>): JSX.Element {
+}>): React.JSX.Element {
 	const containerRef = useRef<HTMLDivElement | null>(null)
 	const [columnCount, setColumnCount] = useState<number | null>(null)
 
@@ -208,7 +208,7 @@ function CollectionsNestingTableGridEndDropZone({
 	collectionId: string | null
 	accept: string
 	span: number
-}): JSX.Element {
+}): React.JSX.Element {
 	const { ref } = useDroppable({
 		id: emptyCollectionItemDropId(collectionId),
 		accept,

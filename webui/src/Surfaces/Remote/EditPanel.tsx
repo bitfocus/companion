@@ -98,7 +98,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 
 	return (
 		<Form
-			className="secondary-panel-simple-body d-flex flex-column pb-0"
+			className="secondary-panel-simple-body flex flex-col pb-0"
 			onSubmit={(e) => {
 				e.preventDefault()
 				e.stopPropagation()
@@ -107,8 +107,8 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 				})
 			}}
 		>
-			<div className="flex-fill">
-				<div className="row g-sm-2">
+			<div className="flex-auto">
+				<Grid.Row className="sm:gap-2">
 					{saveError && (
 						<Grid.Col className="fieldtype-textinput" sm={12}>
 							<StaticAlert color="danger">{saveError}</StaticAlert>
@@ -151,7 +151,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 						Surface Integration
 					</FormLabel>
 					<Grid.Col sm={8} className="flex px-2">
-						<span className="text-muted align-self-center">{instanceInfo?.label ?? remoteInfo.instanceId}</span>
+						<span className="text-muted self-center">{instanceInfo?.label ?? remoteInfo.instanceId}</span>
 					</Grid.Col>
 
 					<form.Subscribe
@@ -178,10 +178,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 																	isVisible={isVisible}
 																/>
 																{field.state.meta.errors.length > 0 && (
-																	<Grid.Col
-																		sm={{ offset: 4, span: 8 }}
-																		className={classNames({ displayNone: !isVisible })}
-																	>
+																	<Grid.Col sm={{ offset: 4, span: 8 }} className={classNames({ hidden: !isVisible })}>
 																		<StaticAlert color="warning" className="mt-2">
 																			{field.state.meta.errors}
 																		</StaticAlert>
@@ -198,19 +195,19 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							</OptionsVisibility>
 						)}
 					/>
-				</div>
+				</Grid.Row>
 			</div>
 
 			<form.Subscribe
 				selector={(state) => [state.isDirty, state.isValid, state.isSubmitting]}
 				children={([isDirty, isValid, isSubmitting]) => (
-					<div className="row connection-form-buttons border-top">
+					<Grid.Row className="connection-form-buttons border-t border-border-alt">
 						<Grid.Col sm={12}>
 							<div className="flex flex-row">
 								<div className="grow">
 									<Button
 										color="success"
-										className="me-md-1"
+										className="md:me-1"
 										disabled={!isDirty || !isValid || isSubmitting}
 										type="submit"
 									>
@@ -223,7 +220,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 								</div>
 							</div>
 						</Grid.Col>
-					</div>
+					</Grid.Row>
 				)}
 			/>
 		</Form>

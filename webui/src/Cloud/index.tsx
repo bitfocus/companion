@@ -124,12 +124,12 @@ function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps)
 			<FormLabel htmlFor={userId} className="mb-1">
 				Logged in as
 			</FormLabel>
-			<div id={userId} className="text-muted px-3">
+			<div id={userId} className="text-muted px-4">
 				{authenticatedAs}
 			</div>
 
 			{!cloudActive && (
-				<div className="my-3">
+				<div className="my-4">
 					<Button
 						color="success"
 						onClick={() => {
@@ -156,11 +156,11 @@ function RegionsList({ regionIds, cloudActive, canActivate }: RegionsListProps) 
 
 	return (
 		<Grid.Col sm={12}>
-			<div className="section cloud-regions-section">
+			<div className="cloud-regions-section">
 				<h5 className="cloud-regions-heading">Cloud regions</h5>
 
 				{!cloudActive && (
-					<div className="mb-3">
+					<div className="mb-4">
 						Please select the regions that is closest to you. You need to select at least <b>two regions</b> which will
 						give you redundancy.
 					</div>
@@ -206,7 +206,7 @@ const SecretKeyPanel = memo(function SecretKeyPanel({ uuid }: { uuid: string }) 
 
 			<StaticAlert color="success">{uuid}</StaticAlert>
 
-			<div className="my-3">
+			<div className="my-4">
 				<Button color="primary" onClick={() => regenerateUUIDMutation.mutate()}>
 					Regenerate secret key
 				</Button>

@@ -12,7 +12,11 @@ import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
-import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import type {
+	CompanionSurfaceConfigField,
+	GridSize,
+	SurfaceSchemaLayoutDefinition,
+} from '@companion-app/shared/Model/Surfaces.js'
 import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
@@ -201,6 +205,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
+	readonly surfaceLayout: SurfaceSchemaLayoutDefinition
 	readonly deviceId: string
 	readonly socket: SatelliteSocketWrapper
 
@@ -219,6 +224,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		this.socket = deviceInfo.socket
 
 		this.surfaceManifestFromClient = deviceInfo.surfaceManifestFromClient
+		this.surfaceLayout = deviceInfo.surfaceManifest
 		this.#surfaceManifest = deviceInfo.surfaceManifest
 		this.#controlDefinitions = resolveControlDefinitions(deviceInfo.surfaceManifest)
 		this.#supportsLockedState = deviceInfo.supportsLockedState

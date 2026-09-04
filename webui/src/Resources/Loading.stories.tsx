@@ -1,15 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { Grid } from '~/Components/Grid'
 import { LoadingRetryOrError } from './Loading'
 
 const meta = {
 	component: LoadingRetryOrError,
 	decorators: [
 		(Story) => (
-			<div className="container-fluid" style={{ maxWidth: 640, padding: 24 }}>
-				<div className="row">
+			<Grid.Container style={{ maxWidth: 640, padding: 24 }}>
+				<Grid.Row>
 					<Story />
-				</div>
-			</div>
+				</Grid.Row>
+			</Grid.Container>
 		),
 	],
 	args: {

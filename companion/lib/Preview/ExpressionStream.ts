@@ -212,8 +212,8 @@ export class PreviewExpressionStream {
 		try {
 			const parsed = parser.parseEntityOption(fieldValue, { allowExpression: true, parseVariables: true })
 			return {
-				value: stringifyVariableValue(parsed.value) ?? undefined,
-				variableIds: parsed.referencedVariableIds,
+				value: parsed.ok ? (stringifyVariableValue(parsed.value) ?? undefined) : undefined,
+				variableIds: parsed.variableIds,
 			}
 		} catch {
 			return { value: undefined, variableIds: new Set() }

@@ -3,6 +3,13 @@
 	<head>
 		<meta charset="utf-8" />
 
+		<!-- Cascade-layer order, declared before any stylesheet loads. Must live here: the prod build
+		     injects tailwind.css late and the CSS minifier drops an in-CSS @layer statement. Keep in
+		     sync with src/tailwind.css. -->
+		<style>
+			@layer theme, tw-base, base, layout-grid, app-base, components, features, utilities;
+		</style>
+
 		<link href="/img/icons/256x256.png" rel="shortcut icon" />
 
 		<link rel="manifest" href="/manifest.json" />

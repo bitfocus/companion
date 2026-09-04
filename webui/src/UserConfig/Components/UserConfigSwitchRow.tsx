@@ -22,7 +22,7 @@ export const UserConfigSwitchRow = observer(function UserConfigSwitchRow({
 	const invertIfNeeded = (value: boolean) => (inverted ? !value : value)
 	return (
 		<tr title={title}>
-			<td style={{ width: '100%' }}>
+			<td className="w-full">
 				{label}
 				{requiresRestart && (
 					<>
@@ -40,7 +40,7 @@ export const UserConfigSwitchRow = observer(function UserConfigSwitchRow({
 					/>
 				</div>
 			</td>
-			<td className="pe-3">
+			<td className="pe-4">
 				<ResetButton userConfig={userConfig} field={field} />
 			</td>
 		</tr>

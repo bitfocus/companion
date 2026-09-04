@@ -7,6 +7,7 @@ import { isLabelValid } from '@companion-app/shared/Label.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button.js'
 import { FormLabel } from '~/Components/Form.js'
+import { Grid } from '~/Components/Grid'
 import { Modal } from '~/Components/Modal.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
@@ -243,26 +244,26 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 	const canUpload = !!imageSource && isLabelValid(imageName) && !isUploading
 
 	return (
-		<div className="d-flex flex-column gap-3">
+		<div className="flex flex-col gap-4">
 			<DismissableAlert color="warning" visible={!!errorMessage} onClose={() => setErrorMessage(null)}>
 				{errorMessage}
 			</DismissableAlert>
 
 			<ImageNameInput value={imageName} onChange={setImageName} disabled={isUploading} />
 
-			<div className="mb-3 row">
+			<Grid.Row className="mb-4">
 				<FormLabel htmlFor="upload-description" sm={3} column>
 					Description
 				</FormLabel>
-				<div className="col-sm-9">
+				<Grid.Col sm={9}>
 					<TextInputFieldSimple
 						id="upload-description"
 						value={description}
 						setValue={setDescription}
 						disabled={isUploading}
 					/>
-				</div>
-			</div>
+				</Grid.Col>
+			</Grid.Row>
 
 			<div>
 				<Button color="primary" onClick={handleFileClick} disabled={isUploading}>
@@ -272,7 +273,7 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 					ref={fileInputRef}
 					type="file"
 					accept="image/*"
-					className="d-none"
+					className="hidden"
 					onChange={handleFileChange}
 					disabled={isUploading}
 				/>
@@ -398,7 +399,7 @@ function CustomImageTab({
 	}, [sharedDataUrl, onComplete])
 
 	return (
-		<div className="d-flex flex-column gap-3">
+		<div className="flex flex-col gap-4">
 			<p className="text-muted mb-0">
 				This image will be stored only for this field and will not appear in the image library.
 			</p>
@@ -415,7 +416,7 @@ function CustomImageTab({
 					ref={fileInputRef}
 					type="file"
 					accept="image/*"
-					className="d-none"
+					className="hidden"
 					onChange={handleFileChange}
 					disabled={!apiIsSupported}
 				/>

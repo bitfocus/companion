@@ -12,6 +12,9 @@ import { InputGroup } from '~/Components/Form'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { fuzzyFilterSort } from '~/util/fuzzy'
+// TODO: This CSS importing is a messy and needs refining
+import '../Components/dropdown-field.css'
+import './ButtonGridPanel.css'
 
 interface ButtonGridHeaderProps {
 	pageNumber: number
@@ -114,7 +117,7 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 						onInputValueChange={setInputValue}
 						itemToStringLabel={() => ''}
 					>
-						<Combobox.InputGroup className="dropdown-field-input-group rounded-start-0 rounded-end-0">
+						<Combobox.InputGroup className="form-input dropdown-field-input-group rounded-none">
 							<Combobox.Input
 								className="dropdown-field-input"
 								placeholder={choiceOptions.find((o) => o.id === pageNumber)?.label ?? String(pageNumber ?? '')}

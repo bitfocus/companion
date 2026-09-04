@@ -183,7 +183,7 @@ function TriggerConfig({ controlId, options }: TriggerConfigProps) {
 
 	return (
 		<Grid.Col sm={12} className="p-0">
-			<Form onSubmit={PreventDefaultHandler} className="row flex-form">
+			<Form row onSubmit={PreventDefaultHandler} className="flex-form">
 				<Grid.Col xs={12}>
 					<FormLabel htmlFor={nameFieldId}>Name</FormLabel>
 					<br />

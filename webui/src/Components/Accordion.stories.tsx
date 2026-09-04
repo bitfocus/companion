@@ -18,7 +18,7 @@ const meta = {
 					<Accordion.Trigger>Connection A</Accordion.Trigger>
 				</Accordion.Header>
 				<Accordion.Panel>
-					<div style={{ padding: '8px 0' }}>Element list for Connection A</div>
+					<div className="py-2 px-0">Element list for Connection A</div>
 				</Accordion.Panel>
 			</Accordion.Item>
 			<Accordion.Item value="connection-b">
@@ -26,7 +26,7 @@ const meta = {
 					<Accordion.Trigger>Connection B</Accordion.Trigger>
 				</Accordion.Header>
 				<Accordion.Panel>
-					<div style={{ padding: '8px 0' }}>Element list for Connection B</div>
+					<div className="py-2 px-0">Element list for Connection B</div>
 				</Accordion.Panel>
 			</Accordion.Item>
 		</Accordion.Root>
@@ -49,10 +49,7 @@ function ControlledStory() {
 
 	return (
 		<div>
-			<button
-				onClick={() => setValue((prev) => (prev.length > 0 ? [] : ['connection-a']))}
-				style={{ marginBottom: 12 }}
-			>
+			<button onClick={() => setValue((prev) => (prev.length > 0 ? [] : ['connection-a']))} className="mb-3">
 				{value.length > 0 ? 'Close from outside' : 'Open from outside'}
 			</button>
 			<Accordion.Root value={value} onValueChange={setValue}>
@@ -61,7 +58,7 @@ function ControlledStory() {
 						<Accordion.Trigger>Connection A</Accordion.Trigger>
 					</Accordion.Header>
 					<Accordion.Panel>
-						<div style={{ padding: '8px 0' }}>Controlled accordion content</div>
+						<div className="py-2 px-0">Controlled accordion content</div>
 					</Accordion.Panel>
 				</Accordion.Item>
 			</Accordion.Root>

@@ -226,7 +226,7 @@ const ElementListItem = observer(function ElementListItem({
 	group: string
 	styleStore: LayeredStyleStore
 	controlId: string
-	confirmModalRef: React.RefObject<GenericConfirmModalRef>
+	confirmModalRef: React.RefObject<GenericConfirmModalRef | null>
 }) {
 	// Reorders on hover (see the monitor): target what's under the cursor, and dim the source row since
 	// the preview is a DragOverlay clone rather than the moved source.

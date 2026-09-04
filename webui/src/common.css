@@ -1,0 +1,115 @@
+/* Global element defaults and cross-cutting rules shared across the app. (Generic utility classes live
+   in utilities.css.) */
+
+/* ── Element defaults ─────────────────────────────────────────────────────── */
+h4,
+h5 {
+	font-weight: bold;
+}
+
+code {
+	font-family: 'Fira Code', monospace;
+	font-size: 1.05em;
+}
+
+@supports (font-variation-settings: normal) {
+	code {
+		font-family: 'Fira Code VF', monospace;
+	}
+}
+
+/* ── Headings with inline buttons ─────────────────────────────────────────── */
+h4,
+h5,
+legend {
+	.button-group {
+		float: right;
+	}
+	.button {
+		float: right;
+	}
+}
+
+/* special case, mainly for context help buttons: add button-inline to the <h4> or <h5> element to prevent buttons from floating right */
+h4.button-inline,
+h5.button-inline {
+	display: flex;
+
+	.context-help-button,
+	.button-group {
+		display: inline-flex;
+		align-items: center;
+		padding-left: 0.75em;
+	}
+
+	.context-help-button-btn {
+		box-shadow: 1px 2px 1px 0px rgb(0 0 0 / 25%);
+
+		.svg-inline--fa {
+			width: 1.5em !important;
+			height: 1.5em !important;
+			display: block !important;
+		}
+	}
+}
+
+/* set the size of context-help-buttons for "settings category rows" and similar circumstances (doesn't actually affect the position) */
+.help-button-float,
+.settings-category-row {
+	.context-help-button-btn {
+		width: 1.5em;
+		height: 1.5em;
+		box-shadow: 1px 2px 1px 0px rgb(0 0 0 / 25%);
+
+		.svg-inline--fa {
+			width: 1.5em !important;
+			height: 1.5em !important;
+			display: block !important;
+		}
+	}
+}
+
+svg.button-size {
+	margin: 0.375rem 0.75rem;
+}
+
+/* ── Misc components ──────────────────────────────────────────────────────── */
+.c-app {
+	color: #222;
+}
+
+.markdown {
+	video {
+		width: 100%;
+		height: auto;
+		border-radius: 0.5rem;
+		margin: 1rem 0;
+	}
+
+	img {
+		max-width: 100%;
+		height: auto;
+	}
+
+	blockquote {
+		margin: 0 0 1rem;
+		padding: 0.5rem 1rem;
+		border-left: 4px solid var(--color-border);
+		border-radius: 0 4px 4px 0;
+		background-color: var(--color-surface-subtle);
+
+		> :last-child {
+			margin-bottom: 0;
+		}
+	}
+}
+
+.currentlyNone {
+	color: #777;
+	text-align: center;
+	padding: 30px !important;
+}
+
+.c-switch-input {
+	display: none;
+}

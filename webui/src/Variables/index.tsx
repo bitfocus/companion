@@ -26,13 +26,13 @@ const VariableLeaf = observer(function VariableLeaf({ leaf }: { leaf: Connection
 	return (
 		<>
 			<div className="collapsible-tree-leaf-text">
-				<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+				<div className="flex justify-between items-center w-full">
 					<div>
 						<span className="collapsible-tree-connection-label">{leaf.connectionLabel}</span>
 						{leaf.moduleDisplayName && (
 							<>
 								<br />
-								<small style={{ opacity: 0.7 }}>{leaf.moduleDisplayName}</small>
+								<small className="opacity-70">{leaf.moduleDisplayName}</small>
 							</>
 						)}
 					</div>
@@ -97,14 +97,14 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 				</div>
 
 				<div className="scrollable-content">
-					<div className="variables-category-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
-						<LinkButton color="info" to="/variables/custom" className="mb-3">
+					<div className="variables-category-grid">
+						<LinkButton color="info" to="/variables/custom" className="mb-4">
 							<h6 className="mb-0 py-1">
 								<FontAwesomeIcon icon={faDollarSign} className="me-1" />
 								Custom Variables
 							</h6>
 						</LinkButton>
-						<LinkButton color="info" to="/variables/expression" className="mb-3">
+						<LinkButton color="info" to="/variables/expression" className="mb-4">
 							<h6 className="mb-0 py-1">
 								<FontAwesomeIcon icon={faSquareRootVariable} className="me-1" /> Expression Variables
 							</h6>
@@ -149,7 +149,7 @@ export function VariablesListPage(): React.JSX.Element {
 			</div>
 
 			<VariablesTable label={label} />
-			<br style={{ clear: 'both' }} />
+			<br className="clear-both" />
 		</div>
 	)
 }

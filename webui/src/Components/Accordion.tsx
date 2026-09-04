@@ -9,7 +9,7 @@ export interface AccordionRootProps<Value = any> extends Omit<BaseAccordion.Root
 	className?: string
 }
 
-function AccordionRoot<Value = any>({ className, ...props }: AccordionRootProps<Value>): JSX.Element {
+function AccordionRoot<Value = any>({ className, ...props }: AccordionRootProps<Value>): React.JSX.Element {
 	return <BaseAccordion.Root className={classNames('accordion2', className)} {...props} />
 }
 
@@ -19,7 +19,7 @@ export interface AccordionItemProps extends Omit<BaseAccordion.Item.Props, 'clas
 	className?: string
 }
 
-function AccordionItem({ className, ...props }: AccordionItemProps): JSX.Element {
+function AccordionItem({ className, ...props }: AccordionItemProps): React.JSX.Element {
 	return <BaseAccordion.Item className={classNames('accordion2-item', className)} {...props} />
 }
 
@@ -29,7 +29,7 @@ export interface AccordionHeaderProps extends Omit<BaseAccordion.Header.Props, '
 	className?: string
 }
 
-function AccordionHeader({ className, ...props }: AccordionHeaderProps): JSX.Element {
+function AccordionHeader({ className, ...props }: AccordionHeaderProps): React.JSX.Element {
 	return <BaseAccordion.Header className={classNames('accordion2-header', className)} {...props} />
 }
 
@@ -39,7 +39,7 @@ export interface AccordionTriggerProps extends Omit<BaseAccordion.Trigger.Props,
 	className?: string
 }
 
-function AccordionTrigger({ className, ...props }: AccordionTriggerProps): JSX.Element {
+function AccordionTrigger({ className, ...props }: AccordionTriggerProps): React.JSX.Element {
 	return <BaseAccordion.Trigger className={classNames('accordion2-trigger', className)} {...props} />
 }
 
@@ -49,7 +49,7 @@ export interface AccordionPanelProps extends Omit<BaseAccordion.Panel.Props, 'cl
 	className?: string
 }
 
-function AccordionPanel({ className, ...props }: AccordionPanelProps): JSX.Element {
+function AccordionPanel({ className, ...props }: AccordionPanelProps): React.JSX.Element {
 	return <BaseAccordion.Panel className={classNames('accordion2-panel', className)} {...props} />
 }
 

@@ -1,4 +1,5 @@
 import { faAdd, faArrowLeft, faClone, faLayerGroup, faList, faTrash } from '@fortawesome/free-solid-svg-icons'
+import '../../Components/VariablesTable.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
@@ -12,11 +13,11 @@ import { Button, ButtonGroup, LinkButton } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { CopyButton } from '~/Components/CopyButton'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { Grid } from '~/Components/Grid'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
+import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useComputed } from '~/Resources/util'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -113,14 +114,15 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 		void navigate({ to: '/variables/expression' })
 	}, [navigate])
 
-	const showPrimaryPanel = !selectedVariableId
-	const showSecondaryPanel = !!selectedVariableId
-
 	return (
-		<Grid.Row className="triggers-page split-panels">
+		<SplitPanels.Root
+			showing={selectedVariableId ? 'secondary' : 'primary'}
+			className="triggers-page"
+			resize={{ storageKey: 'expression-variables' }}
+		>
 			<GenericConfirmModal ref={confirmModalRef} />
 
-			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
+			<SplitPanels.Primary>
 				<h4 className="button-inline">
 					Expression Variables
 					<ContextHelpButton action="/user-guide/config/variables#expression-variables" />
@@ -164,15 +166,15 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 						/>
 					</ExpressionVariablesTableContextProvider>
 				</PanelCollapseHelperProvider>
-			</Grid.Col>
+			</SplitPanels.Primary>
 
-			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
+			<SplitPanels.Secondary>
 				<div className="secondary-panel-simple">
 					{!!selectedVariableId && <ExpressionVariableEditPanelHeading doCloseVariable={doCloseVariable} />}
 					<Outlet />
 				</div>
-			</Grid.Col>
-		</Grid.Row>
+			</SplitPanels.Secondary>
+		</SplitPanels.Root>
 	)
 })
 
@@ -228,8 +230,8 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 	const fullname = item.variableName ? `$(expression:${item.variableName})` : null
 
 	return (
-		<div onClick={doEdit} className="flex flex-row align-items-center gap-2 hand">
-			<div className="flex flex-column grow">
+		<div onClick={doEdit} className="flex flex-row items-center gap-2 cursor-pointer">
+			<div className="flex flex-col grow">
 				{fullname ? (
 					<span className="variable-style">
 						{fullname}

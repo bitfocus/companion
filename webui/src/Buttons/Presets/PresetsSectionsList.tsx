@@ -135,7 +135,7 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 		>
 			<div>
 				<h5>Presets</h5>
-				<div style={{ marginBottom: 10 }}>
+				<div className="mb-2">
 					<ButtonGroup>
 						<Button color="primary" size="sm" onClick={clearSelectedConnectionId}>
 							<FontAwesomeIcon icon={faArrowLeft} />
@@ -154,7 +154,7 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 				) : (
 					<>
 						<Callout color="info" className="my-2">
-							<div className="d-flex align-items-center justify-content-between gap-3">
+							<div className="flex items-center justify-between gap-4">
 								<div>
 									<strong>Drag and drop</strong> the preset buttons below into your buttons-configuration.
 								</div>
@@ -178,11 +178,8 @@ function PresetPlacementModeToggle({ supportsReferences }: { supportsReferences:
 	const unsupportedTitle = 'Linked presets require a module built for the 2.0 (or newer) module api'
 
 	return (
-		<div
-			className="d-flex align-items-center gap-2 flex-shrink-0"
-			title={!supportsReferences ? unsupportedTitle : undefined}
-		>
-			<span className="text-muted small text-nowrap">When placed:</span>
+		<div className="flex items-center gap-2 shrink-0" title={!supportsReferences ? unsupportedTitle : undefined}>
+			<span className="text-muted small whitespace-nowrap">When placed:</span>
 			<ButtonGroup>
 				<Button
 					size="sm"

@@ -51,7 +51,7 @@ export function SectionOfButtons({
 		[buttonSize, buttonRows]
 	)
 
-	const buttonElements: JSX.Element[] = []
+	const buttonElements: React.JSX.Element[] = []
 	if (inView) {
 		let indexCount = 0
 		for (let y = gridSize.minRow; y <= gridSize.maxRow; y++) {

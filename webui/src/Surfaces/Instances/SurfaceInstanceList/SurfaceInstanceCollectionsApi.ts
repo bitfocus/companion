@@ -6,7 +6,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC'
 export type SurfaceInstanceCollectionsApi = NestingCollectionsApi
 
 export function useSurfaceInstanceCollectionsApi(
-	confirmModalRef: React.RefObject<GenericConfirmModalRef>
+	confirmModalRef: React.RefObject<GenericConfirmModalRef | null>
 ): SurfaceInstanceCollectionsApi {
 	const renameMutation = useMutationExt(trpc.instances.surfaces.collections.setName.mutationOptions())
 	const deleteMutation = useMutationExt(trpc.instances.surfaces.collections.remove.mutationOptions())

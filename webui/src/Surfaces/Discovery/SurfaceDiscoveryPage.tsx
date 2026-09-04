@@ -21,7 +21,7 @@ export function SurfaceDiscoveryPage(): React.JSX.Element {
 			</div>
 			<div className="secondary-panel-simple-body">
 				<div className="fixed-header">
-					<p style={{ marginBottom: '0.5rem' }}>
+					<p className="mb-2">
 						Discovered remote surfaces, such as Companion Satellite, Stream Deck Studio or Stream Deck Network Dock will
 						be listed here. You can easily configure them to connect to Companion from here.
 						<br />

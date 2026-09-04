@@ -5,10 +5,10 @@ import { assertNever } from './Util.js'
 export const MODULE_BASE_VERSIONS = [
 	'1.14.0',
 	'2.1.0',
-	'2.1.2-nightly-main-20260722-105828-99d8e81', // DEV version
+	'2.2.0-nightly-main-20260902-210244-eaa0afd', // DEV version
 ]
 // typos:disable-line this is a git hash
-export const SURFACE_BASE_VERSION = '1.4.0-nightly-main-20260802-210833-c2d781c'
+export const SURFACE_BASE_VERSION = '1.4.0'
 
 const moduleBaseRules = MODULE_BASE_VERSIONS.map((v) => {
 	const parsedVersion = semver.parse(v)

@@ -665,6 +665,17 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 				default: true,
 			},
 			{
+				type: 'number',
+				id: 'fillWidth',
+				label: 'Fill width (%)',
+				tooltip: 'Width of the fill relative to the available space, centred.',
+				default: 100,
+				min: 0,
+				max: 100,
+				step: 1,
+				range: true,
+			},
+			{
 				type: 'internal:list',
 				id: 'stops',
 				label: 'Color stops',
@@ -687,7 +698,7 @@ export const gaugeElementSchema: ElementSchemaSection[] = [
 						type: 'colorpicker',
 						label: 'Color',
 						default: 0x00ff00,
-						enableAlpha: false,
+						enableAlpha: true,
 						returnType: 'number',
 					},
 					{

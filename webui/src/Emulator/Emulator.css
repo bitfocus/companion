@@ -34,6 +34,9 @@
 		.emulator-list-logo {
 			flex-shrink: 0;
 			opacity: 0.95;
+			/* Size via CSS: Tailwind Preflight's `img { height: auto }` overrides the HTML height
+			   attribute, which would otherwise render this at its intrinsic 48px. */
+			height: 40px;
 		}
 
 		.emulator-list-heading {
@@ -255,7 +258,7 @@
 	padding: 4vh 2vw;
 
 	code {
-		color: var(--cui-warning);
+		color: var(--color-warning);
 	}
 
 	.emulator-back-button {

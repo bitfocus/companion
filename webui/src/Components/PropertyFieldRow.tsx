@@ -4,9 +4,15 @@ import classNames from 'classnames'
 import { useCallback, useId } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type {
+	ExpressionableOptionsObject,
+	ExpressionOrValue,
+	SomeCompanionInputField,
+} from '@companion-app/shared/Model/Options.js'
+import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { ExpressionModeFeatures, InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/InputFeatures.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
+import { buildContextResolutionForPreview, ExpressionValuePreview } from './ExpressionValuePreview.js'
 import { FieldOrExpression } from './FieldOrExpression.js'
 import { FormLabel } from './Form.js'
 import { Grid } from './Grid.js'
@@ -28,6 +34,12 @@ export interface PropertyFieldRowProps {
 	disableAutoExpression?: boolean
 	localVariablesStore: LocalVariablesStore | null
 	entityType: EntityModelType | null
+	/** The field definition, used to render the evaluated value preview when in expression mode */
+	fieldDefinition: SomeCompanionInputField
+	/** The control this field belongs to, for evaluating the expression preview */
+	controlId: string | null
+	/** Sibling field values, used to resolve context-variable overrides for the preview */
+	allRawOptions: ExpressionableOptionsObject | undefined
 	isLocatedInGrid: boolean
 	disabled: boolean
 	hidden?: boolean
@@ -51,6 +63,9 @@ export function PropertyFieldRow({
 	disableAutoExpression,
 	localVariablesStore,
 	entityType,
+	fieldDefinition,
+	controlId,
+	allRawOptions,
 	isLocatedInGrid,
 	disabled,
 	hidden = false,
@@ -70,7 +85,7 @@ export function PropertyFieldRow({
 
 	return (
 		<>
-			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames(labelClassName, { displayNone: hidden })}>
+			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames(labelClassName, { hidden: hidden })}>
 				{label}
 				{activeFeatures && <InputFeatureIcons {...activeFeatures} />}
 				{tooltip && <InlineHelpIcon className="ms-1">{tooltip}</InlineHelpIcon>}
@@ -79,8 +94,19 @@ export function PropertyFieldRow({
 						<FontAwesomeIcon icon={faLayerGroup} />
 					</span>
 				)}
+				{value.isExpression && (
+					<ExpressionValuePreview
+						expression={stringifyVariableValue(value.value) ?? ''}
+						controlId={controlId}
+						fieldDefinition={fieldDefinition}
+						contextResolution={buildContextResolutionForPreview(
+							fieldDefinition.contextVariableResolution,
+							allRawOptions
+						)}
+					/>
+				)}
 			</FormLabel>
-			<Grid.Col sm={8} className={classNames({ displayNone: hidden })}>
+			<Grid.Col sm={8} className={classNames({ hidden: hidden })}>
 				{disableAutoExpression ? (
 					children({ value: value.value }, setInnerValue, inputId)
 				) : (

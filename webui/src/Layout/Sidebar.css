@@ -1,0 +1,742 @@
+@import '../breakpoints.css';
+
+/* Sidebar styles. The sidebar's dimensions and colours are inlined as fixed values below; the
+   `--sidebar-*` custom properties are our own layout knobs:
+     --sidebar-occupy-start   read by layout.css to pad the main content
+     --sidebar-narrow-width   read by the narrow-mode rules
+     --sidebar-nav-link-bg / -active-bg / -border-radius / -icon-color / -padding-x
+   The sidebar is always dark (see Sidebar.tsx), so `.sidebar` overrides the theme's text/surface/
+   border tokens with dark values for its whole subtree. */
+
+.sidebar {
+	/* Always-dark: override the theme's text/surface/border tokens for the whole sidebar subtree. */
+	--color-text: rgba(255, 255, 255, 0.87);
+	--color-text-strong: #fff;
+	--color-muted: rgba(255, 255, 255, 0.6);
+	--color-text-faint: rgba(255, 255, 255, 0.38);
+	--color-surface-dark: #212631;
+	--color-surface-muted: #323a49;
+	--color-surface-subtle: rgb(41.5, 48, 61);
+	--color-border: #323a49;
+
+	position: relative;
+	display: flex;
+	flex: 0 0 16rem;
+	flex-direction: column;
+	/* put the nav on the left */
+	order: -1;
+	width: 16rem;
+	color: var(--color-text);
+	background: #111;
+	box-shadow: none;
+	margin-inline-start: 0;
+	transition:
+		margin-left 0.15s,
+		margin-right 0.15s,
+		box-shadow 0.075s,
+		transform 0.15s,
+		width 0.15s,
+		z-index 0s ease 0.15s;
+
+	@media (prefers-reduced-motion: reduce) {
+		transition: none;
+	}
+
+	@media (--bp-lg-up) {
+		/* push sibling content across by our width (consumed by layout.css) */
+		&:not(.sidebar-narrow):not(.sidebar-narrow-unfoldable) ~ * {
+			--sidebar-occupy-start: 16rem;
+		}
+	}
+
+	@media (--bp-lg-down) {
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		z-index: 1035;
+		inset-inline-start: 0;
+
+		&:not(.show) {
+			margin-inline-start: calc(-1 * 16rem);
+		}
+	}
+}
+
+/* Fixed positioning, shared by the standalone .sidebar-fixed and the unfoldable narrow sidebar. */
+.sidebar-fixed,
+.sidebar-narrow-unfoldable {
+	position: fixed;
+	top: 0;
+	bottom: 0;
+	z-index: 1035;
+	inset-inline-start: 0;
+}
+
+.sidebar-brand {
+	color: var(--color-text);
+	white-space: nowrap;
+
+	.sidebar-brand-narrow {
+		display: none;
+	}
+}
+
+.sidebar-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 1rem 1rem;
+
+	.btn-close {
+		padding: calc(1rem * 0.5) calc(1rem * 0.5);
+		margin-inline-end: calc(-0.5 * 1rem);
+		margin-top: calc(-0.5 * 1rem);
+		margin-bottom: calc(-0.5 * 1rem);
+	}
+}
+
+.sidebar-toggler {
+	position: relative;
+	box-sizing: content-box;
+	width: 0.5rem;
+	height: 0.5rem;
+	padding: 0.25rem 0.25rem;
+	background-color: transparent;
+	border: 0;
+	border-radius: 0.375rem;
+
+	&::before {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		content: '';
+		background-color: var(--color-text-faint);
+		mask: url("data:image/svg+xml,%0A%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cg xmlns='http://www.w3.org/2000/svg' transform='matrix%28-1 0 0 -1 512 512%29'%3E%3Cpath fill='%23000' d='M472,16H40A24.028,24.028,0,0,0,16,40V200H48V48H464V464H48V304H16V472a24.028,24.028,0,0,0,24,24H472a24.028,24.028,0,0,0,24-24V40A24.028,24.028,0,0,0,472,16Z'/%3E%3Cpolygon fill='%23000' points='209.377 363.306 232.004 385.933 366.627 251.31 232.004 116.687 209.377 139.313 305.374 235.311 16 235.311 16 267.311 305.372 267.311 209.377 363.306'/%3E%3C/g%3E%3C/svg%3E")
+			no-repeat center;
+		transition: transform 0.15s;
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+		}
+	}
+
+	/* Override <a>'s hover style */
+	&:hover {
+		text-decoration: none;
+		&::before {
+			background-color: var(--color-muted);
+		}
+	}
+
+	&:focus {
+		position: relative;
+		outline: 0;
+		box-shadow: 0 0 0 0.25rem rgba(213, 2, 21, 0.25);
+
+		&::before {
+			background-color: var(--color-muted);
+		}
+	}
+
+	@media (--bp-lg-down) {
+		display: none;
+	}
+}
+
+/* Backdrop background (mobile overlay) */
+.sidebar-backdrop {
+	--sidebar-backdrop-zindex: 1034;
+	--sidebar-backdrop-bg: #080a0c;
+	--sidebar-backdrop-opacity: 0.5;
+
+	@media (--bp-lg-down) {
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: var(--sidebar-backdrop-zindex);
+		width: 100vw;
+		height: 100vh;
+		background-color: var(--sidebar-backdrop-bg);
+
+		&.fade {
+			opacity: 0;
+		}
+		&.show {
+			opacity: var(--sidebar-backdrop-opacity);
+		}
+	}
+}
+
+.sidebar-nav {
+	/* Kept custom properties (set/overridden by our own rules below): */
+	--sidebar-nav-link-bg: transparent;
+	--sidebar-nav-link-active-bg: var(--color-surface-subtle);
+	--sidebar-nav-link-border-radius: var(--radius);
+	--sidebar-nav-link-icon-color: var(--color-text-faint);
+	--sidebar-nav-link-padding-x: 0.5rem;
+
+	position: relative;
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	padding: 0.5rem 0.5rem;
+	margin-bottom: 0;
+	overflow-x: hidden;
+	overflow-y: auto;
+	list-style: none;
+
+	.nav-item + .nav-item,
+	.nav-item + .nav-group,
+	.nav-group + .nav-item {
+		margin-top: 1px;
+	}
+
+	.nav-link {
+		display: flex;
+		flex: 1;
+		align-items: center;
+		padding: 0.75rem var(--sidebar-nav-link-padding-x);
+		color: var(--color-text);
+		text-decoration: none;
+		white-space: nowrap;
+		background: var(--sidebar-nav-link-bg);
+		border: 0 solid transparent;
+		border-radius: var(--sidebar-nav-link-border-radius);
+		transition:
+			background 0.15s ease,
+			color 0.15s ease,
+			gap 0.15s ease;
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+		}
+
+		&.active {
+			color: var(--color-text-strong);
+			background: var(--sidebar-nav-link-active-bg);
+
+			.nav-icon {
+				color: var(--color-text-strong);
+			}
+		}
+
+		&.disabled {
+			color: var(--color-text-faint);
+			pointer-events: none;
+			cursor: not-allowed;
+			background: transparent;
+
+			.nav-icon {
+				color: var(--color-text-faint);
+			}
+
+			&:hover {
+				color: var(--color-text-faint);
+
+				.nav-icon {
+					color: var(--color-text-faint);
+				}
+
+				&.nav-dropdown-toggle::after {
+					background-color: var(--color-text-strong);
+					mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708'/%3e%3c/svg%3e");
+				}
+			}
+		}
+
+		@media (hover: hover), (-ms-high-contrast: none) {
+			&:hover {
+				color: var(--color-text-strong);
+				text-decoration: none;
+				background: var(--color-surface-subtle);
+
+				.nav-icon {
+					color: var(--color-text);
+				}
+
+				&.nav-group-toggle::after {
+					background-color: var(--color-text-strong);
+					mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708'/%3e%3c/svg%3e");
+				}
+			}
+		}
+	}
+
+	.nav-icon {
+		display: flex;
+		flex: 0 0 1.25rem;
+		align-items: center;
+		justify-content: center;
+		height: 1.25rem;
+		margin-inline-end: 0.75rem;
+		font-size: 1.25rem;
+		color: var(--sidebar-nav-link-icon-color);
+		text-align: center;
+		pointer-events: none;
+		fill: currentcolor;
+		transition: inherit;
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+		}
+	}
+
+	.nav-icon-bullet {
+		display: inline-block;
+		width: 0.3125rem;
+		height: 0.3125rem;
+		background: transparent;
+		border: 1px solid var(--color-text-faint);
+		border-radius: 50rem; /* stylelint-disable-line property-disallowed-list */
+	}
+
+	/* stylelint-disable-next-line selector-no-qualifying-type */
+	svg.nav-icon {
+		overflow: hidden; /* fix chrome 105+ width issue */
+	}
+
+	.nav-group {
+		position: relative;
+		border: 0 solid transparent;
+		border-radius: var(--radius);
+		transition: background 0.15s ease-in-out;
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+		}
+
+		.nav-group-items {
+			padding: 0 0;
+			overflow: hidden;
+			transition: height 0.15s ease;
+
+			@media (prefers-reduced-motion: reduce) {
+				transition: none;
+			}
+		}
+
+		&:not(.show) .nav-group-items {
+			display: none;
+		}
+
+		&.show {
+			background: transparent;
+
+			.nav-group-toggle {
+				color: var(--color-text);
+			}
+
+			> .nav-group-toggle::after {
+				transform: rotate(180deg);
+			}
+
+			+ .show {
+				margin-top: 1px;
+			}
+		}
+	}
+
+	.nav-group-toggle {
+		cursor: pointer;
+
+		&::after {
+			display: block;
+			flex: 0 12px;
+			height: 12px;
+			margin-inline-start: auto;
+			content: '';
+			background-color: var(--color-text-faint);
+			mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708'/%3e%3c/svg%3e");
+			transition: transform 0.15s;
+
+			@media (prefers-reduced-motion: reduce) {
+				transition: none;
+			}
+		}
+	}
+
+	.nav-group-items {
+		padding: 0;
+		list-style: none;
+
+		.nav-link {
+			padding-inline-start: calc(
+				var(--sidebar-nav-link-padding-x) + 1.25rem + 0.75rem
+			); /* stylelint-disable-line function-disallowed-list */
+		}
+
+		.nav-icon {
+			margin-inline-start: calc(-1 * (1.25rem + 0.75rem)); /* stylelint-disable-line function-disallowed-list */
+		}
+	}
+}
+
+.sidebar-narrow,
+.sidebar-narrow-unfoldable:not(:hover) {
+	--sidebar-narrow-width: 4rem;
+
+	@media (--bp-lg-up) {
+		flex: 0 0 var(--sidebar-narrow-width);
+		width: var(--sidebar-narrow-width);
+		padding-bottom: 0.5rem;
+		overflow: visible;
+
+		.sidebar-brand-full {
+			display: none;
+		}
+
+		.sidebar-brand-narrow {
+			display: block;
+		}
+
+		.sidebar-header {
+			justify-content: center;
+			padding-right: 0;
+			padding-left: 0;
+		}
+
+		.nav-link {
+			overflow: hidden;
+		}
+
+		.nav-icon {
+			flex: 0 0 calc(var(--sidebar-narrow-width) - (0.5rem * 2) - (var(--sidebar-nav-link-padding-x) * 2)); /* stylelint-disable-line function-disallowed-list */
+		}
+
+		.nav-group-items,
+		.nav-group.show .nav-group-items {
+			height: 0 !important; /* stylelint-disable-line declaration-no-important */
+			padding: 0 !important; /* stylelint-disable-line declaration-no-important */
+			margin: 0 !important; /* stylelint-disable-line declaration-no-important */
+			visibility: hidden;
+			opacity: 0;
+		}
+
+		.sidebar-toggler::before {
+			transform: rotate(-180deg);
+		}
+	}
+}
+
+.sidebar-narrow-unfoldable {
+	&:hover {
+		box-shadow: 0 0.5rem 1rem var(--color-shadow-15);
+
+		.sidebar-toggler::before {
+			transform: rotate(-180deg);
+		}
+	}
+}
+
+.sidebar-narrow,
+.sidebar-narrow-unfoldable {
+	@media (--bp-lg-up) {
+		& ~ * {
+			--sidebar-occupy-start: 4rem;
+		}
+	}
+}
+
+/* ===================================================================== */
+/* Companion customisations */
+/* ===================================================================== */
+
+.sidebar {
+	will-change: contents;
+	user-select: none;
+
+	.sidebar-brand {
+		font-size: 1.3em;
+		text-decoration: none;
+
+		.sidebar-brand-full {
+			white-space: nowrap;
+
+			img {
+				margin-top: -5px;
+			}
+		}
+
+		.sidebar-brand-narrow {
+			margin-top: -6px;
+			margin-bottom: -6px;
+		}
+	}
+
+	.sidebar-header {
+		min-height: calc(4rem + 1px); /* stylelint-disable-line function-disallowed-list */
+
+		background-color: #a20210;
+		justify-content: left;
+		padding-left: 11px;
+	}
+
+	.nav-link {
+		--sidebar-nav-link-bg: #191919;
+
+		/* note: .nav-group-toggle, below, overrides these three lines. */
+		margin-bottom: 0.15rem;
+		padding-top: 0.7rem;
+		padding-bottom: 0.7rem;
+
+		small {
+			color: #aaa;
+			font-size: 0.75rem;
+		}
+
+		.nav-icon-wrapper {
+			width: 32px;
+			min-width: 32px;
+			min-height: calc(1.5 * 1em); /* so nav-link height doesn't change when we hide the text */
+			margin: 0; /* let .full-label handle the margin so the icon can be on its own in narrow sidebars */
+			text-align: center;
+			justify-content: center;
+
+			.nav-icon {
+				max-width: 20px;
+				margin: 0 auto;
+				align-self: center;
+			}
+		}
+
+		.full-label {
+			margin-left: 12px;
+		}
+	}
+
+	.nav-two-line .nav-link {
+		padding-top: 0.5rem;
+		padding-bottom: 0.5rem;
+
+		line-height: calc(1.5 * 0.85);
+	}
+
+	/* specific mobile-mode overrides for narrow mode. The .show is not necessary but makes the intent clearer. */
+	/* i.e., .sidebar.show indicates mobile-mode. In all other modes, CUI correctly handles these properties already. */
+	&.sidebar-narrow.show {
+		/* CoreUI CSS only allows narrow width for "non-mobile" mode (@media (min-width: 992px)), so make it universal here: */
+		width: var(--sidebar-narrow-width);
+
+		.sidebar-brand-narrow {
+			display: block;
+		}
+		.sidebar-brand-full {
+			display: none;
+		}
+	}
+
+	/* note: in .sidebar, .show is present in mobile mode, during which we ignore sidebar-narrow-unfoldable but not sidebar-narrow */
+	&.sidebar-narrow-unfoldable:not(.show, :hover),
+	&.sidebar-narrow {
+		/* when sidebar is narrow hide things including the label and toggler */
+		.nav-group-toggle::after,
+		.full-label {
+			display: none;
+		}
+
+		/* if there's a notification, cozy it up to the icon when the sidebar is narrow. */
+		.notification-count {
+			margin-left: -0.75rem;
+			margin-top: -0.25rem;
+		}
+
+		.sidebar-nav .nav-group-items .nav-link {
+			padding-right: 0;
+		}
+	}
+
+	/* In unfolding mode (but not narrow- or mobile-mode), hide the context menu when the sidebar folds */
+	&.sidebar-narrow-unfoldable:not(.show, :hover, .sidebar-narrow) {
+		.context-menu {
+			display: none;
+		}
+	}
+
+	.nav-link:hover {
+		background-color: #262626 !important;
+	}
+
+	.nav-secondary {
+		flex: none;
+		border-top: var(--border-width) solid var(--color-border);
+
+		.nav-group-toggle::after {
+			transform: rotate(180deg);
+		}
+		.show > .nav-group-toggle::after {
+			transform: rotate(0deg);
+		}
+	}
+
+	/* Sidebar groups, DOM: */
+	/*    .nav-group (".show" = when open) */
+	/*       .nav-link.nav-group-toggle */
+	/*           .nav-link */
+	/*       .nav-group-items */
+	.nav-group {
+		/* border to include the toggler. A subsequent rule thickens the border for the group items section. */
+		border-left: 1px solid var(--sidebar-nav-link-icon-color);
+		/* border-bottom: 1px solid var(--sidebar-nav-link-icon-color); optional bottom edge */
+
+		> .nav-link > .nav-link {
+			/* compensate for the border, so the icons stays centered relative to non-group items */
+			padding-left: calc(var(--sidebar-nav-link-padding-x) - 1px);
+		}
+
+		&.show > .nav-link {
+			/* make the toggler "active" when open (this only affects the caret in the "split-button", i.e. label is in a separate div) */
+			background: var(--sidebar-nav-link-active-bg);
+		}
+	}
+
+	.nav-group-toggle {
+		/* override the default padding so we don't double-pad: only the nested nav-link is padded (see Sidebar groups, DOM comment, above) */
+		padding: 0;
+
+		&::after {
+			/* affects the caret */
+			margin-left: 16px;
+			margin-right: 16px;
+			background-color: white;
+			mask-repeat: no-repeat;
+		}
+		.nav-link {
+			margin-bottom: 0;
+		}
+	}
+
+	/* highlighting for the group-items container (contains all the items excluding the group-toggler line) */
+	/* we need specificity here to override padding and margin on .nav-group-items when sidebar is narrow (CUI wants them 0) */
+	&.sidebar-narrow .nav-group.show .nav-group-items, /* override CUI in narrow mode */
+	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items, /* override CUI */
+	.nav-group-items {
+		/* the box underneath and containing the expanded group */
+		padding-left: 1px !important; /* to separate nested groups */
+		border-left: 2px solid var(--sidebar-nav-link-icon-color); /* to visually group the items in a group */
+		border-bottom-left-radius: var(--sidebar-nav-link-border-radius);
+	}
+
+	/* override CUI so nav-group-items show when sidebar is narrow (CoreUI tries to override these with !important, so we have to as well) */
+	&.sidebar-narrow .nav-group.show .nav-group-items, /* override CUI so nav-group-items show in narrow mode */
+	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items {
+		height: auto !important;
+		visibility: visible !important; /* !important is not currently necessary on this, but CUI could change it */
+		opacity: 1 !important; /* !important is not currently necessary on this, but CUI could change it */
+
+		.nav-link {
+			/* when narrow, remove the default padding set in the next rule. */
+			/* the borders defined above still provide a bit of offset in this case. */
+			padding-left: 0;
+		}
+	}
+
+	/* the individual buttons in a group (overrides something CUI? - spacing is odd when narrow otherwise) */
+	.sidebar-nav .nav-group-items .nav-link {
+		/* even though this is the default padding, CUI does something strange to it with `padding-inline-start` so we need to override it here */
+		padding-left: var(--sidebar-nav-link-padding-x);
+		/* smoother transition for icons when expanding the sidebar. The exact number isn't critical. */
+		transition: padding-left 0.1s;
+		justify-content: center;
+
+		&.nav-group-toggle {
+			padding-left: 0;
+		}
+	}
+
+	.sidebar-footer2 {
+		justify-content: left;
+		padding: 0.5rem 1rem;
+		border-top: var(--border-width) solid var(--color-border);
+
+		.sidebar-footer-toggler {
+			display: flex;
+			overflow: hidden;
+
+			background: none !important;
+			border: none !important;
+
+			&:hover {
+				background: none !important;
+				border: none !important;
+			}
+
+			.nav-icon-wrapper {
+				cursor: pointer;
+
+				display: flex;
+				align-items: center;
+
+				.sidebar-toggler {
+					display: block;
+					width: 100%;
+				}
+			}
+
+			.version,
+			.version-sub {
+				display: block;
+
+				overflow: hidden;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+			}
+
+			.version {
+				font-size: 0.95em;
+				color: #aaa;
+				display: block;
+			}
+			.version-sub {
+				font-size: 0.85em;
+				color: #888;
+			}
+		}
+	}
+
+	/* the scrolling container in the sidebar: */
+	.nav-main-scroller {
+		padding-bottom: 20px;
+	}
+
+	/* when the sidebar is narrow, make more space for the contents and let centering create what margins there will be. */
+	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-main-scroller,
+	&.sidebar-narrow .nav-main-scroller {
+		scrollbar-width: thin;
+		padding-left: 0;
+		padding-right: 0;
+		align-self: center;
+	}
+
+	.sidebar-bottom-shadow-container {
+		position: relative;
+
+		.sidebar-bottom-shadow {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			height: 20px;
+			background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 1));
+			pointer-events: none;
+			z-index: 1;
+		}
+	}
+}
+
+.notification-count {
+	background-color: var(--color-primary);
+	color: #fff;
+	font-weight: bold;
+
+	border-radius: 50%;
+	/* padding: 0.1rem; */
+	font-size: 0.7rem;
+	vertical-align: top;
+	text-align: center;
+
+	/* margin-right: -0.5rem; */
+	min-width: calc(1.5 * 1em);
+	display: inline-block;
+}

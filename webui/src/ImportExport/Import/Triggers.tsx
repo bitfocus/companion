@@ -83,10 +83,10 @@ export function ImportTriggersTab({
 		<>
 			<h4>Triggers</h4>
 			<p>Select the triggers you want to import.</p>
-			<Table className="mb-3">
+			<Table className="mb-4">
 				<colgroup>
-					<col style={{ width: '5rem' }}></col>
-					<col style={{ width: 'auto' }}></col>
+					<col className="w-20"></col>
+					<col className="w-auto"></col>
 				</colgroup>
 				<thead>
 					<tr>
@@ -109,7 +109,7 @@ export function ImportTriggersTab({
 					))}
 				</tbody>
 			</Table>
-			<ButtonGroup className="mb-3">
+			<ButtonGroup className="mb-4">
 				<Button
 					color="info"
 					onClick={selectAllTriggers}

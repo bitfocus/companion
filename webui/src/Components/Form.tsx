@@ -1,4 +1,5 @@
 import classNames from 'classnames'
+import './form.css'
 import { forwardRef, type FormHTMLAttributes, type HTMLAttributes, type LabelHTMLAttributes } from 'react'
 import { getGridColClasses, type GridBreakpointProps } from './Grid.js'
 
@@ -7,11 +8,14 @@ export interface FormProps extends FormHTMLAttributes<HTMLFormElement> {
 	 * A string of all className you want applied to the component.
 	 */
 	className?: string
+
+	/** Lay the form out as a grid row, so its own `Grid.Col` children don't need a `Grid.Row`. */
+	row?: boolean
 }
 
-export const Form = forwardRef<HTMLFormElement, FormProps>(({ children, ...rest }, ref) => {
+export const Form = forwardRef<HTMLFormElement, FormProps>(({ children, className, row, ...rest }, ref) => {
 	return (
-		<form {...rest} ref={ref}>
+		<form className={classNames(row && 'row', className)} {...rest} ref={ref}>
 			{children}
 		</form>
 	)

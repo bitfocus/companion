@@ -72,7 +72,7 @@ export const LogPanel = memo(function LogPanel() {
 			<GenericConfirmModal ref={exportRef} />
 			<div className="log-page">
 				<Grid.Row>
-					<Grid.Col lg={12} className="px-3">
+					<Grid.Col lg={12} className="px-4">
 						<ButtonGroup>
 							<Button color="warning" size="sm" onClick={doToggleWarn} variant={config.warn ? undefined : 'outline'}>
 								Warning
@@ -105,7 +105,7 @@ export const LogPanel = memo(function LogPanel() {
 				</Grid.Row>
 
 				<Grid.Row className="log-panel">
-					<Grid.Col lg={12} style={{ overflow: 'hidden', height: '100%', width: '100%' }}>
+					<Grid.Col lg={12} className="overflow-hidden h-full w-full">
 						<LogPanelContents config={config} />
 					</Grid.Col>
 				</Grid.Row>
@@ -199,7 +199,7 @@ function LogPanelContents({ config }: LogPanelContentsProps) {
 	const items = virtualizer.getVirtualItems()
 
 	return (
-		<div ref={parentRef} style={{ width: '100%', height: '100%', overflow: 'auto' }} onScroll={onScroll}>
+		<div ref={parentRef} className="w-full h-full overflow-auto" onScroll={onScroll}>
 			<div
 				style={{
 					height: virtualizer.getTotalSize(),

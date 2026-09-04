@@ -114,11 +114,71 @@ Calculate the square root of a number.
 
 eg `sqrt(9)` gives `3`
 
+**cbrt(v)**
+
+Calculate the cube root of a number.
+
+eg `cbrt(8)` gives `2`
+
 **pow(base, exponent)**
 
 Calculate the base raised to the power of the exponent. Equivalent to the `**` operator, but available as a function for clarity and for those used to other languages.
 
 eg `pow(2, 10)` gives `1024`
+
+**sin(v)**
+
+Takes an angle in radians and calculates the sine of the angle.
+
+eg `sin(0)` gives `0`
+
+**cos(v)**
+
+Takes an angle in radians and calculate the cosine of the angle.
+
+eg `cos(0)` gives `1`
+
+**tan(v)**
+
+Takes an angle in radians and calculate the tangent of the angle.
+
+eg `tan(0)` gives `0`
+
+**asin(v)**
+
+Takes a number and calculates the inverse sine angle of the number in radians.
+
+eg `asin(0)` gives `0`
+
+**acos(v)**
+
+Takes a number and calculates the inverse cosine angle of the number in radians.
+
+eg `acos(0)` gives `PI / 2`
+
+**atan(v)**
+
+Takes a number and calculates the inverse tangent angle of the number in radians.
+
+eg `atan(0)` gives `0`
+
+**asinh(v)**
+
+Calculate the inverse hyperbolic sine of a number.
+
+eg `asinh(0)` gives `0`
+
+**acosh(v)**
+
+Calculate the inverse hyperbolic cosine of a number.
+
+eg `acosh(1)` gives `0`
+
+**atanh(v)**
+
+Calculate the inverse hyperbolic tangent of a number.
+
+eg `atanh(0)` gives `0`
 
 The constant `PI` is also available as a value, eg `2 * PI`.
 

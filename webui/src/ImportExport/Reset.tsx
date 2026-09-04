@@ -191,7 +191,12 @@ export const ResetWizardModal = observer(function ResetWizardModal() {
 					<Modal.Popup initialFocus={buttonRef}>
 						<Modal.Header closeButton>
 							<Modal.Title>
-								<img src={makeAbsolutePath('/img/icons/48x48.png')} height="30" alt="logo" className="me-2" />
+								<img
+									src={makeAbsolutePath('/img/icons/48x48.png')}
+									style={{ height: 30 }}
+									alt="logo"
+									className="me-2"
+								/>
 								Reset Configuration
 							</Modal.Title>
 						</Modal.Header>
@@ -240,7 +245,7 @@ function ResetBeginStep() {
 					This lets you reset some or all major components of this Companion installation. Use the steps above to choose
 					what to reset and review before applying.
 				</p>
-				<p className="mb-3">It is strongly recommended to export your configuration first.</p>
+				<p className="mb-4">It is strongly recommended to export your configuration first.</p>
 				<LinkButtonExternal color="success" href={makeAbsolutePath('/int/export/full')}>
 					<FontAwesomeIcon icon={faDownload} /> Export
 				</LinkButtonExternal>

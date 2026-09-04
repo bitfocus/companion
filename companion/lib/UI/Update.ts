@@ -44,6 +44,8 @@ export class UIUpdate {
 	 */
 	#latestUpdateData: AppUpdateInfo | null = null
 
+	#cycleInterval: NodeJS.Timeout | undefined
+
 	constructor(appInfo: AppInfo) {
 		this.#logger.silly('loading update')
 		this.#appInfo = appInfo
@@ -59,13 +61,23 @@ export class UIUpdate {
 	startCycle(): void {
 		// Make a request now
 		this.#requestUpdate()
-		setInterval(
+		this.#cycleInterval = setInterval(
 			() => {
 				// Do a check every day, in case this installation is being left on constantly
 				this.#requestUpdate()
 			},
 			24 * 60 * 60 * 1000
 		)
+	}
+
+	/**
+	 * Stop the update check cycle. Used during application shutdown.
+	 */
+	destroy(): void {
+		if (this.#cycleInterval) {
+			clearInterval(this.#cycleInterval)
+			this.#cycleInterval = undefined
+		}
 	}
 
 	/**

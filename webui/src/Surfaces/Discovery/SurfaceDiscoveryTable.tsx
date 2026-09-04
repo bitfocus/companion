@@ -111,9 +111,9 @@ function SatelliteRow({ surfaceInfo, showSetupSatellite }: SatelliteRowProps) {
 	return (
 		<tr>
 			<td>
-				<div className="flex flex-column">
+				<div className="flex flex-col">
 					<b>{surfaceInfo.name}</b>
-					<span className="auto-ellipsis" title="Companion Satellite">
+					<span className="truncate" title="Companion Satellite">
 						Companion Satellite
 					</span>
 				</div>
@@ -125,7 +125,7 @@ function SatelliteRow({ surfaceInfo, showSetupSatellite }: SatelliteRowProps) {
 					const linkAddress = address.includes(':') ? `[${address}]` : address
 
 					return (
-						<p key={address} className="p-no-margin">
+						<p key={address} className="m-0">
 							{surfaceInfo.apiEnabled ? (
 								<a href={`http://${linkAddress}:${surfaceInfo.port}`} target="_blank">
 									{address}
@@ -210,15 +210,15 @@ const PluginSurfaceRow = observer(function PluginSurfaceRow({ surfaceInfo, addCo
 	return (
 		<tr>
 			<td>
-				<div className="flex flex-column">
+				<div className="flex flex-col">
 					<b>{surfaceInfo.name}</b>
-					<span className="auto-ellipsis" title={surfaceInfo.description}>
+					<span className="truncate" title={surfaceInfo.description}>
 						{surfaceInfo.description}
 					</span>
 				</div>
 			</td>
 			<td>
-				<p className="p-no-margin">{surfaceInfo.address ?? '-'}</p>
+				<p className="m-0">{surfaceInfo.address ?? '-'}</p>
 			</td>
 			<td>
 				<ButtonGroup>

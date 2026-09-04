@@ -13,6 +13,13 @@
 		cursor: pointer;
 	}
 
+	/* The editing grid must stay scrollable by touch - the browser pans and fires pointercancel, which
+	   the grid cell reads as "this gesture was not a tap". A physical-surface preview keeps the
+	   `touch-action: none` above instead, so a scroll can never steal a press. */
+	&.grid-pannable {
+		touch-action: pan-x pan-y;
+	}
+
 	&.selected .button-border {
 		border: 1px solid var(--color-primary) !important;
 		box-shadow: 0px 0px 0px 1px var(--color-primary) inset;
@@ -23,11 +30,25 @@
 		box-shadow: 0px 0px 0px 1px var(--color-copy-source) inset;
 	}
 
+	/* What the modifier-click being lined up would do. Dashed against the solid outline of what is
+	   already in the set, so it reads as "would be" rather than "is", in the colour of whichever set
+	   that is (the grid sets `--pending-change-color`) - and dimmed when the button is on its way out
+	   of the set rather than into it. */
+	&.pending-add .button-border,
+	&.pending-remove .button-border {
+		border: 1px dashed var(--pending-change-color, var(--color-copy-source)) !important;
+		box-shadow: none;
+	}
+
+	&.pending-remove .button-border {
+		filter: brightness(0.5);
+	}
+
 	&.context-menu-open .button-border {
 		filter: brightness(0.55);
 	}
 
-	&.fixed .button-border {
+	&.fixed-72 .button-border {
 		width: 72px;
 		height: 72px;
 	}
@@ -47,12 +68,33 @@
 		background-color: var(--color-drop-hover-bg);
 	}
 
-	/* dnd-kit: blur the in-pool preset that is currently being dragged (a clone is what follows the
-	   cursor). The `:not([popover])` guard excludes the floating clone, which dnd-kit renders as a
-	   top-layer popover, so only the original in the pool is blurred. */
+	/* Marked as a landing spot, but releasing here would be refused - usually because the rest of the
+	   region would hang off the grid */
+	&.dropinvalid {
+		border: 1px solid var(--color-danger);
+		background-color: color-mix(in srgb, var(--color-danger) 25%, transparent);
+	}
+
+	/* The button left behind while its ghost follows the cursor. `:not([popover])` excludes the
+	   floating ghost itself, which dnd-kit renders as a top-layer popover. */
+	&.grid-drag-source:not([popover]) {
+		opacity: 0.4;
+	}
+
+	/* The in-pool preset being dragged, dimmed and blurred while its clone follows the cursor. The
+	   `:not([popover])` guard excludes that floating clone, which dnd-kit renders as a top-layer
+	   popover, so only the original in the pool is affected. */
 	&.preset-drag-source:not([popover]) {
 		opacity: 0.8;
 		filter: blur(1px);
+	}
+
+	/* The grid draws its own ghost in a DragOverlay, which mounts a couple of frames after dnd-kit has
+	   already put this clone under the cursor - long enough to see the plain button flash before the
+	   ghost replaces it. The clone still carries the position collision detection reads, so it is
+	   hidden rather than turned off; a preset, whose clone *is* its feedback, keeps showing. */
+	&.grid-button[popover] {
+		opacity: 0;
 	}
 
 	.button-border {
@@ -69,6 +111,22 @@
 		background-size: contain;
 		background-position: center;
 		background-repeat: no-repeat;
+
+		/* What would be here if the drag were released. Drawn over this cell's own content rather than
+		   beside it, so a block can be checked against the grid it is landing on - and solid, so what
+		   is drawn is what you would get rather than the two blended into something that is neither.
+		   With no image it paints an empty button, which is how a swap shows the end that empties. */
+		.button-drop-ghost {
+			position: absolute;
+			inset: 0;
+
+			border-radius: inherit;
+
+			background-color: var(--color-button-bg);
+			background-size: contain;
+			background-position: center;
+			background-repeat: no-repeat;
+		}
 
 		.button-placeholder {
 			position: absolute;

@@ -440,7 +440,7 @@ export class InstanceInstalledModulesManager {
 		try {
 			await fs.mkdirp(moduleDir)
 
-			await new Promise((resolve, reject) => {
+			await new Promise<void>((resolve, reject) => {
 				Readable.from(uncompressedData)
 					.pipe(
 						tarfs.extract(
@@ -556,7 +556,7 @@ async function extractManifestFromTar(tarData: Buffer): Promise<SomeModuleManife
 				})
 
 				stream.on('data', (data) => {
-					dataBuffers.push(data)
+					dataBuffers.push(data as Buffer)
 				})
 			} else {
 				// Skip the irrelevant files
@@ -575,7 +575,7 @@ async function extractManifestFromTar(tarData: Buffer): Promise<SomeModuleManife
 		})
 
 		extract.on('error', (err) => {
-			reject(err as Error)
+			reject(err)
 
 			extract.destroy()
 		})
@@ -635,7 +635,7 @@ async function listModuleDirsInTar(tarData: Buffer): Promise<ListModuleDirsInfo[
 					})
 
 					stream.on('data', (data) => {
-						dataBuffers.push(data)
+						dataBuffers.push(data as Buffer)
 					})
 
 					return
@@ -658,7 +658,7 @@ async function listModuleDirsInTar(tarData: Buffer): Promise<ListModuleDirsInfo[
 		})
 
 		extract.on('error', (err) => {
-			reject(err as Error)
+			reject(err)
 
 			extract.destroy()
 		})

@@ -1,6 +1,13 @@
 import type { GridSize, SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 
 /**
+ * Get the display name of a surface
+ */
+export function getSurfaceName(config: Record<string, any>, surfaceId: string): string {
+	return `${config?.name || config?.type || 'Unknown'} (${surfaceId})`
+}
+
+/**
  * Convert a coordinate to surface index
  */
 export function convertXYToIndexForPanel(x: number, y: number, gridSize: GridSize): number | null {

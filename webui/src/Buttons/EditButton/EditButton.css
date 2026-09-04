@@ -20,59 +20,6 @@
 	}
 }
 
-.empty-button-type-picker {
-	container-type: inline-size; /* respond to panel width, not viewport */
-	max-width: 360px;
-	margin: 1.5rem auto 0;
-}
-
-.empty-button-type-grid {
-	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
-	gap: 0.5rem;
-
-	.empty-button-type-tile {
-		display: flex;
-		flex-direction: column; /* page tiles: icon above label */
-		align-items: center;
-		justify-content: center;
-		gap: 0.4rem;
-		padding: 0.85rem 0.5rem;
-		height: 100%; /* equal-height tiles in the row */
-		text-align: center;
-		line-height: 1.1;
-
-		/* override `.edit-button-panel svg:not(.non-ideal-svg){font-size:1rem}` hack */
-		svg {
-			font-size: 1.6rem;
-		}
-	}
-
-	.empty-button-type-tile-primary {
-		grid-column: 1 / -1; /* full-width row 1 */
-		flex-direction: row; /* regular: icon beside label */
-
-		svg {
-			font-size: 1.3rem;
-		}
-	}
-
-	@container (max-width: 280px) {
-		grid-template-columns: 1fr; /* stack all four vertically */
-
-		.empty-button-type-tile,
-		.empty-button-type-tile-primary {
-			flex-direction: row; /* consistent compact icon-beside-label */
-			justify-content: flex-start;
-			text-align: left;
-
-			svg {
-				font-size: 1.3rem;
-			}
-		}
-	}
-}
-
 .nav-steps-special {
 	margin-bottom: 0px !important;
 
@@ -265,75 +212,6 @@
 			overflow: hidden;
 		}
 
-		/* A compact control strip at the bottom of the canvas box */
-		.button-layer-canvas-footer {
-			flex: 0 0 auto;
-			display: flex;
-			align-items: center;
-			gap: 0.5rem;
-			padding: 2px 6px;
-			border-top: 1px solid var(--color-border);
-			background-color: var(--color-toolbar-bg);
-
-			/* Truncates rather than pushing the buttons out of the strip when the panel is narrow */
-			.button-layer-footer-label {
-				white-space: nowrap;
-				font-size: 0.85em;
-				color: var(--color-toolbar-fg);
-				min-width: 0;
-				overflow: hidden;
-				text-overflow: ellipsis;
-			}
-
-			.button-layer-aspect-options {
-				display: flex;
-				gap: 2px;
-				margin-left: auto;
-				flex: 0 0 auto;
-			}
-
-			.button-layer-aspect-option {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				flex: 0 0 auto;
-				width: 24px;
-				height: 24px;
-				padding: 0;
-				border: 1px solid transparent;
-				border-radius: 3px;
-				background: transparent;
-				color: var(--color-toolbar-fg);
-				cursor: pointer;
-
-				&:hover:not(.active) {
-					background: var(--color-surface-hover);
-					border-color: var(--color-border);
-				}
-
-				&.active {
-					background: var(--color-toolbar-accent);
-					border-color: var(--color-toolbar-accent);
-					color: var(--color-on-dark);
-				}
-			}
-
-			/* The custom option is a popover trigger, which always carries the `btn` class - undo its metrics
-			   so it keeps the same 24x24 box as the preset buttons */
-			.button-layer-aspect-option.btn {
-				line-height: 1;
-				font-size: inherit;
-				min-width: 0;
-			}
-
-			/* Outlined rectangle drawn to the option's ratio; currentColor flips to white when active */
-			.button-layer-aspect-glyph {
-				display: block;
-				border: 1.5px solid currentColor;
-				border-radius: 1px;
-			}
-		}
-
 		/* Must shrink-wrap the canvas exactly: the selection overlay positions its handles and snap guides as
 		   percentages of this box, so any difference between it and the canvas's displayed box offsets them. */
 		.button-layer-canvas-wrapper {
@@ -343,72 +221,6 @@
 
 		.button-layer-canvas {
 			display: block;
-		}
-
-		.button-layer-quick-actions {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			gap: 2px;
-			padding: 4px;
-
-			/* Hold its own width beside the canvas rather than being squeezed */
-			flex: 0 0 auto;
-
-			/* Set it off from the canvas as a distinct toolbar area */
-			margin-right: 0.5rem;
-			background-color: var(--color-toolbar-bg);
-			border: 1px solid var(--color-border);
-			border-radius: 4px;
-
-			.button-layer-quick-actions-separator {
-				align-self: stretch;
-				height: 1px;
-				background: var(--color-border);
-				margin: 3px 0;
-			}
-
-			/* Wraps a disabled button so its tooltip can still fire on hover */
-			.button-layer-quick-action-tooltip {
-				display: flex;
-			}
-
-			.button-layer-quick-action {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				width: 24px;
-				height: 24px;
-				padding: 0;
-				border: 1px solid transparent;
-				border-radius: 3px;
-				background: transparent;
-				color: var(--color-toolbar-fg);
-				cursor: pointer;
-
-				&:hover:not(:disabled):not(.active) {
-					background: var(--color-surface-hover);
-					border-color: var(--color-border);
-				}
-
-				&.active {
-					background: var(--color-toolbar-accent);
-					border-color: var(--color-toolbar-accent);
-					color: var(--color-on-dark);
-
-					&:hover:not(:disabled) {
-						background: var(--color-toolbar-accent-hover);
-						border-color: var(--color-toolbar-accent-hover);
-					}
-				}
-
-				&:disabled {
-					opacity: 0.3;
-					cursor: default;
-					/* Let the wrapping tooltip trigger receive the hover instead */
-					pointer-events: none;
-				}
-			}
 		}
 	}
 
@@ -517,17 +329,6 @@
 
 		padding: 0.5rem;
 	}
-}
-
-/* Portaled to the body, so it can't live inside the .button-layer-preview block */
-.button-layer-aspect-custom {
-	/* Sized for the two-digit values these ratios realistically use */
-	width: 135px;
-	min-width: 0;
-	padding: 6px;
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
 }
 
 .add-layered-element-popover {

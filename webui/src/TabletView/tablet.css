@@ -3,6 +3,8 @@
 .page-tablet {
 	background-color: var(--remote-bg);
 	color: var(--remote-accent);
+	/* Muted text (the `text-muted` utility reads this) uses the tablet's themed muted accent. */
+	--color-muted: var(--remote-accent-muted);
 
 	height: 100vh;
 
@@ -19,12 +21,12 @@
 		margin-top: 0.5rem;
 	}
 
+	/* Muted helper text is slightly smaller in the tablet view (colour comes from --color-muted above). */
 	.text-muted {
-		color: var(--remote-accent-muted) !important;
 		font-size: 0.93em;
 	}
 
-	.container-fluid {
+	.page-container {
 		/* max-width: 1200px; */
 		height: 100%;
 		margin: 0 auto;

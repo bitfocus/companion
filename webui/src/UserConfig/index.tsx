@@ -7,15 +7,16 @@ import { Grid } from '~/Components/Grid'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 
 export function SettingsSelectPage(): React.JSX.Element {
+	// Not a split: one readable-width column of cards, so this stays on the 12-column grid.
 	return (
-		<Grid.Row className="split-panels">
+		<Grid.Row>
 			<Grid.Col xxl={6} xl={8} lg={10} md={12} className="primary-panel">
-				<div className="d-flex justify-content-between">
+				<div className="flex justify-between">
 					<div>
 						<h4>Settings</h4>
 					</div>
 				</div>
-				<div className="h-fit-content">
+				<div className="h-fit">
 					<Grid.Row>
 						<SettingsLinkCard label="General" to="/settings/general" icon={faCog} />
 						<SettingsLinkCard label="Buttons" to="/settings/buttons" icon={faTh} />
@@ -51,9 +52,9 @@ function SettingsLinkCard<const TFrom extends string = string, const TTo extends
 	center,
 }: SettingsLinkCardProps<TFrom, TTo>) {
 	return (
-		<Grid.Col sm={center ? { span: 6, offset: 3 } : 6} className="mb-4">
-			<Link to={to} className="text-decoration-none grid h-100 settings-grid-card">
-				<Callout color="info" className="h-100 flex align-items-center justify-content-center">
+		<Grid.Col sm={center ? { span: 6, offset: 3 } : 6} className="mb-6">
+			<Link to={to} className="grid h-full settings-grid-card">
+				<Callout color="info" className="h-full flex items-center justify-center">
 					<NonIdealState icon={icon} style={{ padding: '5vh 1rem' }}>
 						<h3>{label}</h3>
 						{sublabel}

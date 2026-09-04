@@ -38,7 +38,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 	runtimeProps: Record<string, any> | false
 	location: ControlLocation
 }) {
-	const configRef = useRef<SomeButtonModel>()
+	const configRef = useRef<SomeButtonModel>(config || undefined)
 	configRef.current = config || undefined // update the ref every render
 
 	const [styleStore] = useState(() => {
@@ -57,7 +57,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables, location.pageNumber)
 
 	return (
-		<div className="grow flex flex-column min-h-0">
+		<div className="grow flex flex-col min-h-0">
 			{runtimeProps && (
 				<MyErrorBoundary>
 					<ButtonEditorTabs
@@ -73,7 +73,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 						{(currentTab) => {
 							if (currentTab === 'style') {
 								return (
-									<div className="mt-10 h-100">
+									<div className="mt-2 h-full">
 										{/* Wrap the entity-category, for :first-child to work */}
 										<MyErrorBoundary>
 											<LayeredButtonEditorStyle
@@ -89,7 +89,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 
 							if (currentTab === 'feedbacks') {
 								return (
-									<div className="mt-10">
+									<div className="mt-2">
 										<MyErrorBoundary>
 											<LayeredStyleElementsProvider styleStore={styleStore}>
 												<FeedbackOverridesTab
@@ -106,7 +106,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 
 							if (currentTab === 'variables') {
 								return (
-									<div className="mt-10">
+									<div className="mt-2">
 										<MyErrorBoundary>
 											<LocalVariablesEditor
 												controlId={controlId}
@@ -121,7 +121,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 
 							if (currentTab === 'options') {
 								return (
-									<div className="mt-10">
+									<div className="mt-2">
 										{/* Wrap the entity-category, for :first-child to work */}
 										<MyErrorBoundary>
 											<ControlOptionsEditor options={config.options} configRef={configRef} controlId={controlId} />
@@ -170,7 +170,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 	return (
 		<Group
 			orientation="vertical"
-			className="button-layer-style-editor h-100"
+			className="button-layer-style-editor h-full"
 			defaultLayout={savedPanelLayout}
 			onLayoutChanged={savePanelLayout}
 		>
@@ -227,7 +227,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 	)
 })
 
-function SeparatorInteractive({ children }: PropsWithChildren): JSX.Element {
+function SeparatorInteractive({ children }: PropsWithChildren): React.JSX.Element {
 	const ref = useRef<HTMLDivElement>(null)
 
 	useEffect(() => {

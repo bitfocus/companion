@@ -1,0 +1,31 @@
+/*
+ * The 12-column layout grid. Columns are plain Tailwind `col-span-*`/`col-start-*` utilities emitted
+ * by `Grid.Col` (Components/Grid.tsx); only the row and the container need classes of their own.
+ *
+ * Its own cascade layer (see tailwind.css): below `app-base` so a page can retune the grid, and below
+ * `utilities` so a plain `gap-2`/`px-4` wins over the defaults here.
+ */
+
+.row {
+	display: grid;
+	grid-template-columns: repeat(12, minmax(0, 1fr));
+
+	/* The default gutter: 1.5rem horizontal, none vertical. Override it with `gap-*`. */
+	column-gap: 1.5rem;
+	row-gap: 0;
+}
+
+/* A child with no span fills the row; any `col-span-*` utility overrides this. `min-width: 0` lets
+   wide content shrink to its grid area instead of forcing the row wider. */
+.row > * {
+	grid-column: 1 / -1;
+	min-width: 0;
+}
+
+/* The horizontal padding is the half-gutter the old grid bled into with negative row margins, kept so
+   content sits where it did. */
+.page-container {
+	width: 100%;
+	padding-inline: 0.75rem;
+	margin-inline: auto;
+}

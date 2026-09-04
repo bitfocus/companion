@@ -22,7 +22,7 @@ const meta = {
 	component: StepSelector,
 	decorators: [
 		(Story) => (
-			<div style={{ padding: 24, maxWidth: 760, background: 'var(--cui-modal-bg, #fff)' }}>
+			<div style={{ padding: 24, maxWidth: 760, background: 'var(--color-surface)' }}>
 				<Story />
 			</div>
 		),

@@ -165,13 +165,20 @@ const VariablesTableRow = observer(function VariablesTableRow({
 		<div className="variables-table-row">
 			<div className="variables-table-cell">
 				<div className="grid grid-col">
-					<div className="flex flex-row ">
-						<span className="variable-style autowrap" title={variableId}>
+					<div className="flex flex-row min-w-0">
+						<span className="variable-style truncate min-w-0" title={variableId}>
 							{variableId}
 						</span>
-						<CopyButton size="sm" title="Copy variable name" text={variableId} color="primary" variant="ghost" />
+						<CopyButton
+							size="sm"
+							title="Copy variable name"
+							text={variableId}
+							color="primary"
+							variant="ghost"
+							className="shrink-0"
+						/>
 					</div>
-					<div className="autowrap" title={variable.description}>
+					<div className="truncate min-w-0" title={variable.description}>
 						{variable.description}
 					</div>
 				</div>

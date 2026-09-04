@@ -17,7 +17,7 @@ function WithEventLog(props: TextInputFieldProps): React.JSX.Element {
 	}
 
 	return (
-		<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+		<div className="flex flex-col gap-2">
 			<TextInputField
 				{...props}
 				value={value}
@@ -132,7 +132,7 @@ export const WithValidationValid: Story = {
 }
 
 export const WithStyle: Story = {
-	args: { value: 'Custom styled', className: 'font-monospace bg-light' },
+	args: { value: 'Custom styled', className: 'font-mono bg-light' },
 }
 
 export const WithCallbacks: Story = {

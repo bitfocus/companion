@@ -14,7 +14,7 @@ const meta = {
 	render: function Render(args) {
 		const [, setArgs] = useArgs<{ value: string }>()
 		return (
-			<div style={{ height: 80 }}>
+			<div className="h-20">
 				<ExpressionInputField {...args} setValue={(v) => setArgs({ value: v })} />
 			</div>
 		)

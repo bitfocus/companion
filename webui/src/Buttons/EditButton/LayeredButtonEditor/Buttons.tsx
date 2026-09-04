@@ -52,7 +52,7 @@ export function RemoveElementButton({
 }: {
 	controlId: string
 	elementId: string
-	confirmModalRef: React.RefObject<GenericConfirmModalRef>
+	confirmModalRef: React.RefObject<GenericConfirmModalRef | null>
 }): React.JSX.Element {
 	const removeElementMutation = useMutationExt(trpc.controls.styles.removeElement.mutationOptions())
 

@@ -149,6 +149,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				roundedEnds: { value: true, isExpression: false },
 				fillEnabled: { value: true, isExpression: false },
 				multiColour: { value: true, isExpression: false },
+				fillWidth: { value: 100, isExpression: false },
 				stops: {
 					value: [
 						{

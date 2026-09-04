@@ -16,6 +16,7 @@ import { MyErrorBoundary } from '~/Resources/Error.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { KeyReceiver } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ButtonReferenceEditor } from './ButtonReferenceEditor.js'
 import { ControlClearButton } from './ControlClearButton.js'
 import { ControlHotPressButtons } from './ControlHotPressButtons.js'
 import { ConvertToNormalButton } from './ConvertToNormalButton.js'
@@ -26,9 +27,10 @@ import { PresetReferenceEditor } from './PresetReferenceEditor.js'
 interface EditButtonProps {
 	location: ControlLocation
 	onKeyUp: (e: React.KeyboardEvent<HTMLDivElement>) => void
+	navigateToControl: ((location: ControlLocation) => void) | undefined
 }
 
-export const EditButton = observer(function EditButton({ location, onKeyUp }: EditButtonProps) {
+export const EditButton = observer(function EditButton({ location, onKeyUp, navigateToControl }: EditButtonProps) {
 	const { pages } = useContext(RootAppStoreContext)
 
 	const resetModalRef = useRef<GenericConfirmModalRef>(null)
@@ -65,20 +67,21 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 								previewImage={previewImage}
 								config={controlConfig.config}
 								runtimeProps={controlConfig.runtime}
+								navigateToControl={navigateToControl}
 							/>
 						))}
 				</>
 			) : (
 				<>
 					<Grid.Col sm={12}>
-						<div className="d-flex mb-0">
-							<div className="flex-grow-1 min-w-0 d-flex flex-column gap-1"></div>
+						<div className="flex mb-0">
+							<div className="grow min-w-0 flex flex-col gap-1"></div>
 							<ButtonPreviewBase fixedSize={100} preview={previewImage} />
 						</div>
 
-						<NonIdealState icon={faSquarePlus} className="px-3">
-							<h4 className="mt-1">Empty button</h4>
-							<p className="mt-3">Choose a button type to get started.</p>
+						<NonIdealState icon={faSquarePlus} className="px-4">
+							<h4 className="my-1">Empty button</h4>
+							<p className="my-3">Choose a button type to get started.</p>
 							<MyErrorBoundary>
 								<CreateButtonTypeButtons location={location} />
 							</MyErrorBoundary>
@@ -91,12 +94,13 @@ export const EditButton = observer(function EditButton({ location, onKeyUp }: Ed
 })
 
 interface EditButtonContentProps {
-	resetModalRef: React.RefObject<GenericConfirmModalRef>
+	resetModalRef: React.RefObject<GenericConfirmModalRef | null>
 	controlId: string
 	location: ControlLocation
 	previewImage: string | null
 	config: SomeButtonModel
 	runtimeProps: Record<string, any> | false
+	navigateToControl: ((location: ControlLocation) => void) | undefined
 }
 const EditButtonContent = observer(function EditButton({
 	resetModalRef,
@@ -105,26 +109,35 @@ const EditButtonContent = observer(function EditButton({
 	previewImage,
 	config,
 	runtimeProps,
+	navigateToControl,
 }: EditButtonContentProps) {
 	return (
 		<>
-			<div className="d-flex mb-0">
-				<div className="flex-grow-1 min-w-0 d-flex flex-column gap-1">
-					<div className="d-flex flex-wrap align-items-center gap-1">
+			<div className="flex mb-0">
+				<div className="grow min-w-0 flex flex-col gap-1">
+					<div className="flex flex-wrap items-center gap-1">
 						<ControlClearButton location={location} resetModalRef={resetModalRef} />
 						<MyErrorBoundary>
 							{(config.type === 'pageup' ||
 								config.type === 'pagenum' ||
 								config.type === 'pagedown' ||
-								config.type === 'preset-reference') && <ConvertToNormalButton location={location} />}
-							{(config.type === 'button-layered' || config.type === 'preset-reference') && (
-								<ControlHotPressButtons location={location} showRotaries={config.options.rotaryActions} />
+								config.type === 'preset-reference' ||
+								config.type === 'button-reference') && <ConvertToNormalButton location={location} />}
+							{(config.type === 'button-layered' ||
+								config.type === 'preset-reference' ||
+								config.type === 'button-reference') && (
+								<ControlHotPressButtons
+									location={location}
+									showRotaries={config.type === 'button-reference' || config.options.rotaryActions}
+								/>
 							)}
 						</MyErrorBoundary>
 					</div>
-					{(config.type === 'button-layered' || config.type === 'preset-reference') && (
+					{(config.type === 'button-layered' ||
+						config.type === 'preset-reference' ||
+						config.type === 'button-reference') && (
 						<MyErrorBoundary>
-							<ControlNotesEditor controlId={controlId} notes={config.options.notes} className="w-100 mt-1" />
+							<ControlNotesEditor controlId={controlId} notes={config.options.notes} className="w-full mt-1" />
 						</MyErrorBoundary>
 					)}
 				</div>
@@ -133,28 +146,34 @@ const EditButtonContent = observer(function EditButton({
 
 			{config.type === 'pageup' && (
 				<NonIdealState icon={faFileArrowUp}>
-					<h4 className="mt-1">Page up button</h4>
-					<p className="mt-3">No configuration available for page up buttons</p>
+					<h4 className="my-1">Page up button</h4>
+					<p className="my-3">No configuration available for page up buttons</p>
 				</NonIdealState>
 			)}
 
 			{config.type === 'pagenum' && (
 				<NonIdealState icon={faFileLines}>
-					<h4 className="mt-1">Page number button</h4>
-					<p className="mt-3">No configuration available for page number buttons</p>
+					<h4 className="my-1">Page number button</h4>
+					<p className="my-3">No configuration available for page number buttons</p>
 				</NonIdealState>
 			)}
 
 			{config.type === 'pagedown' && (
 				<NonIdealState icon={faFileArrowDown}>
-					<h4 className="mt-1">Page down button</h4>
-					<p className="mt-3">No configuration available for page down buttons</p>
+					<h4 className="my-1">Page down button</h4>
+					<p className="my-3">No configuration available for page down buttons</p>
 				</NonIdealState>
 			)}
 
 			{config.type === 'preset-reference' && (
 				<MyErrorBoundary>
 					<PresetReferenceEditor config={config} location={location} />
+				</MyErrorBoundary>
+			)}
+
+			{config.type === 'button-reference' && (
+				<MyErrorBoundary>
+					<ButtonReferenceEditor config={config} controlId={controlId} navigateToControl={navigateToControl} />
 				</MyErrorBoundary>
 			)}
 

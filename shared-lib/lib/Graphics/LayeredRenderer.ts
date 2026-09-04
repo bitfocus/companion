@@ -546,6 +546,7 @@ export class GraphicsLayeredButtonRenderer {
 		const { valuePos, fillStart, fillEnd, hasFill, trackAmount, runs, singleColor, rgbaAt } = model
 
 		const trackWidth = Math.max(0, Math.min(100, finite(element.trackWidth, 100))) / 100
+		const fillWidth = Math.max(0, Math.min(100, finite(element.fillWidth, 100))) / 100
 
 		const cssOf = (c: GaugeRGBA): string => `rgba(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)}, ${c.a})`
 		// Track (unfilled) color. 'transparent' base colors are emitted at full alpha and composited
@@ -559,10 +560,10 @@ export class GraphicsLayeredButtonRenderer {
 		const isRing = orientation === 'ring'
 		const isHorizontal = orientation === 'horizontal'
 
-		// Cross-axis geometry. The fill (indicator) uses the FULL cross-axis; trackWidth only
-		// narrows the unfilled track, so the fill can be drawn wider than the track.
+		// Cross-axis geometry. The fill (indicator) and unfilled track are each narrowed by their own
+		// width setting (fillWidth / trackWidth), both centred, so either can be drawn wider than the other.
 		const crossFull = isHorizontal ? height : width
-		const fillHalf = crossFull / 2
+		const fillHalf = (crossFull * fillWidth) / 2
 		const trackHalf = (crossFull * trackWidth) / 2
 		const bandCenter = isHorizontal ? y + height / 2 : x + width / 2
 
@@ -597,8 +598,8 @@ export class GraphicsLayeredButtonRenderer {
 		const outerRadius = Math.min(width, height) / 2
 		const ringWidthPx = outerRadius * (element.ringWidth / 100)
 		const arcRadius = outerRadius - ringWidthPx / 2
-		// Ring stroke widths: fill uses the full ring width; the track is narrowed by trackWidth.
-		const fillStrokePx = ringWidthPx
+		// Ring stroke widths: fill and track are each narrowed by their own width setting.
+		const fillStrokePx = ringWidthPx * fillWidth
 		const trackStrokePx = ringWidthPx * trackWidth
 		// Arc span: clockwise from startAngle to endAngle (degrees, 0 = top). 0 span → full circle.
 		const startAngleDeg = finite(element.startAngle, 0)
@@ -620,21 +621,39 @@ export class GraphicsLayeredButtonRenderer {
 		}
 		const mapAngle = (p: number): number => (atEdge(p) ? posToAngleFull(p) : posToAngle(p))
 
-		// Paint a single position-space interval [a, b] with one solid color onto `target`.
-		// `wide` selects the fill width (full) vs the narrowed track width.
-		const paintSolid = (target: ImageBase<any>, a: number, b: number, color: string, wide: boolean): void => {
+		// A cross-axis band to paint an interval into, expressed as a single interval [lo, hi] on the cross
+		// axis: for a ring that axis is the radius (so the band is a stroke from radius `lo` out to `hi`),
+		// for a linear gauge it is the pixel coordinate across the bar. The fill and track each have their
+		// own band, and when the track is wider than the fill it also gets flanking strips.
+		type GaugeBand = { lo: number; hi: number }
+		const fillBand: GaugeBand = isRing
+			? { lo: arcRadius - fillStrokePx / 2, hi: arcRadius + fillStrokePx / 2 }
+			: { lo: bandCenter - fillHalf, hi: bandCenter + fillHalf }
+		const trackBand: GaugeBand = isRing
+			? { lo: arcRadius - trackStrokePx / 2, hi: arcRadius + trackStrokePx / 2 }
+			: { lo: bandCenter - trackHalf, hi: bandCenter + trackHalf }
+
+		// When the track is wider than the fill, the filled region shows the track as strips flanking
+		// the fill rather than a gap — but never directly behind the fill, so the fill's own alpha stays
+		// true (nothing composites underneath it). The strips are the parts of the track band left
+		// uncovered by the fill band, so they fall out as a plain interval subtraction.
+		const trackSideBands: GaugeBand[] = []
+		if (trackBand.lo < fillBand.lo - 1e-6) trackSideBands.push({ lo: trackBand.lo, hi: fillBand.lo })
+		if (trackBand.hi > fillBand.hi + 1e-6) trackSideBands.push({ lo: fillBand.hi, hi: trackBand.hi })
+
+		// Paint a single position-space interval [a, b] with one solid color onto `target`, into `band`.
+		const paintSolid = (target: ImageBase<any>, a: number, b: number, color: string, band: GaugeBand): void => {
 			if (b - a <= 1e-6) return
+			const { lo, hi } = band
+			if (hi - lo <= 0) return
 			if (isRing) {
 				const r1 = mapAngle(a)
 				const r2 = mapAngle(b)
-				target.arcStroke(cx, cy, arcRadius, Math.min(r1, r2), Math.max(r1, r2), false, {
+				target.arcStroke(cx, cy, (lo + hi) / 2, Math.min(r1, r2), Math.max(r1, r2), false, {
 					color,
-					width: wide ? fillStrokePx : trackStrokePx,
+					width: hi - lo,
 				})
 			} else {
-				const half = wide ? fillHalf : trackHalf
-				const lo = bandCenter - half
-				const hi = bandCenter + half
 				if (isHorizontal) {
 					const xa = mapX(a)
 					const xb = mapX(b)
@@ -660,14 +679,14 @@ export class GraphicsLayeredButtonRenderer {
 			b: number,
 			run: GaugeColorRun,
 			transform: (c: GaugeRGBA) => GaugeRGBA,
-			wide: boolean
+			band: GaugeBand
 		): void => {
 			if (b - a <= 1e-6) return
 			const steps = run.gradient ? Math.max(1, Math.min(64, Math.ceil(pixelLen(a, b) / 2))) : 1
 			for (let s = 0; s < steps; s++) {
 				const sa = a + ((b - a) * s) / steps
 				const sb = a + ((b - a) * (s + 1)) / steps
-				paintSolid(target, sa, sb, cssOf(transform(rgbaAt(run, (sa + sb) / 2))), wide)
+				paintSolid(target, sa, sb, cssOf(transform(rgbaAt(run, (sa + sb) / 2))), band)
 			}
 		}
 
@@ -677,14 +696,26 @@ export class GraphicsLayeredButtonRenderer {
 				const fullCircle = isRing && sweepDeg >= 360 && fillStart <= 1e-6 && fillEnd >= 100 - 1e-6
 				const partialRing = isRing && sweepDeg < 360
 
-				// --- Track pass: the parts of each run NOT covered by the fill. ---
+				// --- Track pass: the full-width track outside the fill, plus flanking strips beside a
+				//     narrower fill inside the filled region (never directly behind the fill). ---
 				const paintTrack = (target: ImageBase<any>) => {
 					for (const run of runs) {
 						const leftHi = Math.min(run.end, hasFill ? fillStart : run.end)
-						if (leftHi > run.start) paintRunInterval(target, run.start, leftHi, run, trackTransform, false)
+						if (leftHi > run.start) paintRunInterval(target, run.start, leftHi, run, trackTransform, trackBand)
 						if (hasFill) {
 							const rightLo = Math.max(run.start, fillEnd)
-							if (run.end > rightLo) paintRunInterval(target, rightLo, run.end, run, trackTransform, false)
+							if (run.end > rightLo) paintRunInterval(target, rightLo, run.end, run, trackTransform, trackBand)
+
+							// Flanking strips beside a fill that is narrower than the track.
+							if (trackSideBands.length > 0) {
+								const fLo = Math.max(run.start, fillStart)
+								const fHi = Math.min(run.end, fillEnd)
+								if (fHi > fLo) {
+									for (const strip of trackSideBands) {
+										paintRunInterval(target, fLo, fHi, run, trackTransform, strip)
+									}
+								}
+							}
 						}
 					}
 
@@ -719,16 +750,16 @@ export class GraphicsLayeredButtonRenderer {
 					paintTrack(layer)
 				}
 
-				// --- Fill pass: the active portion of each run (full width). ---
+				// --- Fill pass: the active portion of each run, at the fill width. ---
 				if (hasFill) {
 					for (const run of runs) {
 						const aLo = Math.max(run.start, fillStart)
 						const aHi = Math.min(run.end, fillEnd)
 						if (aHi <= aLo) continue
 						if (multiColour) {
-							paintRunInterval(layer, aLo, aHi, run, (c) => c, true)
+							paintRunInterval(layer, aLo, aHi, run, (c) => c, fillBand)
 						} else {
-							paintSolid(layer, aLo, aHi, parseColor(singleColor), true)
+							paintSolid(layer, aLo, aHi, parseColor(singleColor), fillBand)
 						}
 					}
 
@@ -769,13 +800,13 @@ export class GraphicsLayeredButtonRenderer {
 					for (const rawP of positions) {
 						const p = Math.max(0, Math.min(100, rawP))
 						if (isRing) {
-							// A short arc bead that follows the ring's curve, full ring width, ends matching
+							// A short arc bead that follows the ring's curve, matching the fill width, ends matching
 							// the rounded-ends flag — so it reads as a slice of the fill, not a straight line.
 							const centerAng = posToAngle(p)
 							const halfAng = Math.max(1, ringWidthPx * markerW) / 2 / arcRadius
 							layer.arcStroke(cx, cy, arcRadius, centerAng - halfAng, centerAng + halfAng, false, {
 								color: markerColor,
-								width: ringWidthPx,
+								width: fillStrokePx,
 								cap,
 							})
 						} else if (isHorizontal) {

@@ -6,7 +6,7 @@ import semver from 'semver'
 import { $, argv, usePowerShell } from 'zx'
 import { devThreadOutDir, startDevThreadBuild } from './build_dev_threads.mts'
 import { determinePlatformInfo } from './build/util.mts'
-import { fetchBuiltinSurfaceModules } from './fetch_builtin_modules.mts'
+import { ensureBuiltinSurfaceModulesDirExists, fetchBuiltinSurfaceModules } from './fetch_builtin_modules.mts'
 import { fetchNodejs } from './fetch_nodejs.mts'
 
 if (process.platform === 'win32') {
@@ -30,7 +30,7 @@ const repoRoot = path.join(import.meta.dirname, '..')
 let node: ChildProcess | null = null
 const nodeArgs: string[] = []
 
-const rawDevModulesPath = process.env.COMPANION_DEV_MODULES || argv['extra-module-path']
+const rawDevModulesPath = process.env.COMPANION_DEV_MODULES || argv['extra-module-path'] || './module-local-dev'
 const devModulesPath = rawDevModulesPath ? path.resolve(repoRoot, rawDevModulesPath) : undefined
 
 if (devModulesPath) {
@@ -77,7 +77,13 @@ await fetchNodejs(platformInfo)
 
 console.log('Ensuring builtin modules are installed')
 
-await fetchBuiltinSurfaceModules()
+if (process.env.COMPANION_SKIP_BUILTIN_SURFACE_MODULES) {
+	console.log('Skipping builtin surface modules (COMPANION_SKIP_BUILTIN_SURFACE_MODULES is set)')
+	await ensureBuiltinSurfaceModulesDirExists()
+} else {
+	console.log('Ensuring builtin modules are installed')
+	await fetchBuiltinSurfaceModules()
+}
 
 console.log('Ensuring bundled modules are synced')
 
@@ -128,7 +134,7 @@ function start() {
 			COMPANION_DEV_MODULES_PATH: devModulesPath ?? '',
 			COMPANION_DEV_THREAD_DIR: devThreadOutDir,
 		},
-	})`tsx watch --clear-screen=false --include ${threadBundleGlob} ${nodeArgs} lib/main-dev.ts ${process.argv.slice(3)}`
+	})`tsx watch --clear-screen=false --include ${threadBundleGlob} ${nodeArgs} lib/main-dev.ts ${process.argv.slice(2)}`
 
 	node = proc.child ?? null
 

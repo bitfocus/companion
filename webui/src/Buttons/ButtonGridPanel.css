@@ -49,28 +49,6 @@
 	}
 }
 
-.fadeinout {
-	transition: opacity 0.05s ease-in-out;
-	opacity: 1;
-
-	&.out {
-		opacity: 0;
-	}
-}
-
-.button-grid-controls {
-	display: flex;
-	flex-flow: row wrap;
-	justify-content: center;
-
-	margin-top: 1rem;
-
-	& > div {
-		white-space: nowrap;
-		margin-bottom: 1rem;
-	}
-}
-
 .c-sidebar-nav-link,
 .c-sidebar-nav-dropdown-toggle {
 	transition: none;
@@ -80,6 +58,58 @@
 	display: flex;
 	flex-direction: column;
 	height: 100%;
+}
+
+/* How the toolbar looks comes from the shared `.toolbar`. It spans the panel, so it reads as a
+   toolbar rather than as a huddle of buttons. */
+.button-grid-toolbar {
+	display: flex;
+	padding-bottom: 8px;
+}
+
+.button-grid-toolbar > .toolbar {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+/* What follows the cursor while buttons are dragged around the grid. Solid, so a block reads as the
+   buttons themselves rather than as something being faded in or out. */
+.grid-drag-ghost {
+	--grid-drag-ghost-cell: 44px;
+
+	display: grid;
+	gap: 2px;
+	width: max-content;
+
+	/* Centred on the cell the drag was started from, which is the box dnd-kit sizes this to. The
+	   ghost draws a cell smaller than the real thing - a large region at full size would be a
+	   screenful following the cursor - so without this it sits up and to the left of the pointer. */
+	position: relative;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+
+	pointer-events: none;
+}
+
+/* A gap in the region being dragged. It takes up its place in the shape, and lands on nothing. */
+.grid-drag-ghost-hole {
+	border: 1px dashed var(--color-button-border);
+	border-radius: Max(12%, 4px);
+
+	opacity: 0.4;
+}
+
+/* Past a certain size a faithful ghost is a screenful of buttons following the cursor, so it becomes
+   a count instead */
+.grid-drag-ghost-count {
+	padding: 8px 12px;
+	border-radius: var(--radius);
+
+	background-color: var(--color-surface-dark);
+	color: var(--color-text-strong);
+	font-weight: bold;
+	white-space: nowrap;
 }
 
 .button-grid-panel-content {
@@ -118,8 +148,25 @@
 		background-color: var(--color-scrollbar-thumb); /* Webkit thumb color for compatibility */
 	}
 
+	&.button-grid-panning {
+		cursor: grabbing;
+	}
+
 	&.button-armed {
 		background-color: var(--color-armed-surface);
+
+		/* Mark out exactly which area is live */
+		box-shadow: inset 0 0 0 3px var(--color-danger);
+	}
+
+	/* The rectangle being dragged out across the grid */
+	.button-grid-marquee {
+		position: absolute;
+		z-index: 1;
+		pointer-events: none;
+
+		border: 1px dashed var(--color-primary);
+		background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
 	}
 
 	.button-grid-canvas {
@@ -150,6 +197,6 @@
 	display: inline-block;
 
 	> .btn {
-		border-radius: var(--cui-btn-border-radius) !important; /* fix coreui bug for toggles w/o caret */
+		border-radius: var(--radius) !important; /* fix coreui bug for toggles w/o caret */
 	}
 }

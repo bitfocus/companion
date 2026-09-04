@@ -15,7 +15,7 @@
 		center / 1em auto no-repeat;
 	filter: var(--close-btn-filter, none);
 	border: 0;
-	border-radius: var(--cui-border-radius);
+	border-radius: var(--radius);
 	opacity: 0.5;
 
 	/* Override <a>'s hover style */

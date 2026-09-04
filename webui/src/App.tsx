@@ -1,7 +1,7 @@
 import { DragDropProvider } from '@dnd-kit/react'
 import './loading.css'
+import './App.css'
 import { Outlet } from '@tanstack/react-router'
-import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { Suspense, useCallback, useContext, useEffect, useState } from 'react'
 import { useIdleTimer } from 'react-idle-timer'
@@ -23,7 +23,6 @@ import { PRIMARY_COLOR } from './Resources/Constants.js'
 import { MyErrorBoundary } from './Resources/Error.js'
 import { MonacoLoader } from './Resources/MonacoLoader.js'
 import { SortableHysteresis } from './Resources/SortableHysteresis.js'
-import { trpc } from './Resources/TRPC.js'
 import { shouldAutoOpenWizard } from './Wizard/Constants.js'
 import { WizardModal } from './Wizard/index.js'
 
@@ -42,50 +41,25 @@ export default function App(): React.JSX.Element {
 		}
 	}, [shouldReload])
 
-	const [currentImportTask, setCurrentImportTask] = useState<'reset' | 'import' | null>(null)
-	useSubscription(
-		trpc.importExport.importExportTaskStatus.subscriptionOptions(undefined, {
-			onStarted: () => {
-				setCurrentImportTask(null)
-			},
-			onData: (data) => {
-				setCurrentImportTask(data)
-			},
-			onError: (error) => {
-				console.error('Error in importExportTaskStatus subscription:', error)
-				setCurrentImportTask(null)
-			},
-		})
-	)
-
 	return (
 		<ContextData>
 			{(loadingProgress, loadingComplete) => (
 				<>
 					<div id="error-container" className={wasConnected ? 'show-error' : ''}>
-						<div className="row justify-content-center">
-							<div className="col-md-6">
+						<Grid.Row>
+							<Grid.Col md={{ span: 6, offset: 3 }}>
 								<div className="clearfix">
-									<h4 className="pt-3">Houston, we have a problem!</h4>
+									<h4 className="pt-4">Houston, we have a problem!</h4>
 									<p className="text-muted">It seems that we have lost connection to the companion app.</p>
 									<ul className="text-muted">
 										<li>Check that the application is still running</li>
 										<li>If you're using the Admin GUI over a network - check your connection</li>
 									</ul>
 								</div>
-							</div>
-						</div>
+							</Grid.Col>
+						</Grid.Row>
 					</div>
-					<div id="current-import-container" className={!wasConnected && currentImportTask ? 'show-error' : ''}>
-						<div className="row justify-content-center">
-							<div className="col-md-6">
-								<div className="clearfix">
-									<h4 className="pt-3">Stand by, the config is being updated!</h4>
-									{/* <p className="text-muted">It seems that we have lost connection to the companion app.</p> */}
-								</div>
-							</div>
-						</div>
-					</div>
+					<ImportTaskOverlay wasConnected={wasConnected} />
 					<Suspense
 						fallback={
 							<Grid.Row className={'loading'}>
@@ -118,6 +92,26 @@ export default function App(): React.JSX.Element {
 		</ContextData>
 	)
 }
+
+// Reads the shared import/reset task status (driven by useImportTaskStatusSubscription) and shows the
+// blocking overlay on still-connected clients while a task runs. A dropped client sees the
+// disconnect screen instead, and reloads on reconnect.
+const ImportTaskOverlay = observer(function ImportTaskOverlay({ wasConnected }: { wasConnected: boolean }) {
+	const { importTaskStatus } = useContext(RootAppStoreContext)
+	const taskRunning = importTaskStatus.get()?.status === 'running'
+
+	return (
+		<div id="current-import-container" className={!wasConnected && taskRunning ? 'show-error' : ''}>
+			<Grid.Row>
+				<Grid.Col md={{ span: 6, offset: 3 }}>
+					<div className="clearfix">
+						<h4 className="pt-4">Stand by, the config is being updated!</h4>
+					</div>
+				</Grid.Col>
+			</Grid.Row>
+		</div>
+	)
+})
 
 interface AppMainProps {
 	connected: boolean
@@ -176,9 +170,9 @@ const AppMain = observer(function AppMain({ connected, loadingComplete, loadingP
 					''
 				)}
 				<MySidebar />
-				<div className="wrapper d-flex flex-column min-vh-100 bg-body-tertiary">
+				<div className="wrapper flex flex-col min-h-screen bg-app-frame-bg">
 					<MyHeader setLocked={setLocked} canLock={canLock && unlocked} />
-					<div className="body flex-grow-1">
+					<div className="body grow">
 						{connected && loadingComplete ? (
 							!canLock || unlocked ? (
 								<AppContent />
@@ -283,15 +277,15 @@ interface AppLoadingProps {
 function AppLoading({ progress, connected }: AppLoadingProps) {
 	const message = connected ? 'Syncing' : 'Connecting'
 	return (
-		<Grid.Container fluid className="fadeIn loading">
+		<Grid.Container className="fadeIn loading">
 			<Grid.Row>
 				<Grid.Col xxl={4} md={3} sm={2} xs={1}></Grid.Col>
 				<Grid.Col xxl={4} md={6} sm={8} xs={10}>
 					<h3>{message}</h3>
 					{connected ? (
-						<ProgressBar className="mt-4" value={progress} />
+						<ProgressBar className="mt-6" value={progress} />
 					) : (
-						<div className="mt-4" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+						<div className="flex items-center justify-center mt-6">
 							<PuffLoader loading={true} size={80} color={PRIMARY_COLOR} />
 						</div>
 					)}
@@ -338,7 +332,7 @@ const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuth
 	)
 
 	return (
-		<Grid.Container fluid className="fadeIn loading">
+		<Grid.Container className="fadeIn loading">
 			<Grid.Row>
 				<Grid.Col xxl={4} md={3} sm={2} xs={1}></Grid.Col>
 				<Grid.Col xxl={4} md={6} sm={8} xs={10}>
@@ -364,42 +358,7 @@ const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuth
 })
 
 const AppContent = observer(function AppContent() {
-	const { userConfig, viewControl } = useContext(RootAppStoreContext)
-
-	const handleWindowBlur = useCallback(() => {
-		viewControl.setButtonGridHotPress(false)
-	}, [viewControl])
-
-	const handleKeyDown = useCallback(
-		(e: KeyboardEvent) => {
-			if (e.key === 'Shift') {
-				viewControl.setButtonGridHotPress(true)
-			}
-		},
-		[viewControl]
-	)
-	const handleKeyUp = useCallback(
-		(e: KeyboardEvent) => {
-			if (e.key === 'Shift') {
-				viewControl.setButtonGridHotPress(false)
-			}
-		},
-		[viewControl]
-	)
-
-	useMountEffect(() => {
-		document.addEventListener('keydown', handleKeyDown)
-		document.addEventListener('keyup', handleKeyUp)
-
-		window.addEventListener('blur', handleWindowBlur)
-
-		return () => {
-			document.removeEventListener('keydown', handleKeyDown)
-			document.removeEventListener('keyup', handleKeyUp)
-
-			window.removeEventListener('blur', handleWindowBlur)
-		}
-	})
+	const { userConfig } = useContext(RootAppStoreContext)
 
 	useEffect(() => {
 		document.title =
@@ -409,7 +368,7 @@ const AppContent = observer(function AppContent() {
 	}, [userConfig.properties?.installName])
 
 	return (
-		<Grid.Container fluid className="fadeIn">
+		<Grid.Container className="fadeIn">
 			<WizardModal />
 
 			<MyErrorBoundary>

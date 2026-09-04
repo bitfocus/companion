@@ -1,5 +1,6 @@
 import type { IObservableValue, ObservableMap, ObservableSet } from 'mobx'
 import { createContext } from 'react'
+import type { ImportExportTask } from '@companion-app/shared/Model/ImportExport.js'
 import type { NotificationsManagerRef } from '~/Components/Notifications.js'
 import type { HelpModalRef } from '~/Instances/HelpModal.js'
 import type { WhatsNewModalRef } from '~/WhatsNewModal/WhatsNew.js'
@@ -17,14 +18,13 @@ import type { SurfacesStore } from './SurfacesStore.js'
 import type { TriggersListStore } from './TriggersListStore.js'
 import type { UserConfigStore } from './UserConfigStore.js'
 import type { VariablesStore } from './VariablesStore.js'
-import type { ViewControlStore } from './ViewControlStore.js'
 
 export const RootAppStoreContext = createContext<RootAppStore>(null as any) // TODO - fix this?
 
 export interface RootAppStore {
 	readonly notifier: NotificationsManagerRef
-	readonly helpViewer: React.RefObject<HelpModalRef> // TODO - this is not good
-	readonly whatsNewModal: React.RefObject<WhatsNewModalRef> // TODO - this is not good
+	readonly helpViewer: React.RefObject<HelpModalRef | null> // TODO - this is not good
+	readonly whatsNewModal: React.RefObject<WhatsNewModalRef | null> // TODO - this is not good
 
 	readonly modules: ModuleInfoStore
 
@@ -52,11 +52,12 @@ export interface RootAppStore {
 
 	readonly moduleStoreRefreshProgress: ObservableMap<string | null, number>
 
+	/** The current or most-recent import/reset task, driven by a single subscription (see useImportTaskStatusSubscription) */
+	readonly importTaskStatus: IObservableValue<ImportExportTask | null>
+
 	/**
 	 * The setup wizard modal's open state. Set to `true` to open it; the modal sets it back to `false` on close.
 	 * Doubles as the signal the What's New modal watches so it can wait its turn.
 	 */
 	readonly wizardOpen: IObservableValue<boolean>
-
-	readonly viewControl: ViewControlStore
 }

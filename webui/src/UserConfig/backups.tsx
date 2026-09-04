@@ -9,9 +9,9 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import type { BackupRulesConfig } from '@companion-app/shared/Model/UserConfigModel.js'
 import { Button, ButtonGroup } from '~/Components/Button'
-import { Grid } from '~/Components/Grid'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
+import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
 import { NonIdealState } from '../Components/NonIdealState.js'
@@ -47,15 +47,12 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 	const routeMatch = matchRoute({ to: '/settings/backups/$ruleId' })
 	const selectedRuleId = routeMatch ? routeMatch.ruleId : null
 
-	const showPrimaryPanel = !selectedRuleId
-	const showSecondaryPanel = !!selectedRuleId
-
 	return (
-		<Grid.Row className="split-panels">
-			<Grid.Col xs={12} xl={6} className={`primary-panel ${showPrimaryPanel ? '' : 'd-xl-block d-none'}`}>
+		<SplitPanels.Root showing={selectedRuleId ? 'secondary' : 'primary'} resize={{ storageKey: 'backups' }}>
+			<SplitPanels.Primary>
 				<div className="flex-column-layout">
 					<div className="fixed-header">
-						<div className="d-flex justify-content-between">
+						<div className="flex justify-between">
 							<div>
 								<h4 className="button-inline">
 									Settings - Backups
@@ -81,14 +78,14 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 						<BackupsTable editRule={doEditRule} />
 					</div>
 				</div>
-			</Grid.Col>
+			</SplitPanels.Primary>
 
-			<Grid.Col xs={12} xl={6} className={`secondary-panel ${showSecondaryPanel ? '' : 'd-xl-block d-none'}`}>
+			<SplitPanels.Secondary>
 				<div className="secondary-panel-simple">
 					<Outlet />
 				</div>
-			</Grid.Col>
-		</Grid.Row>
+			</SplitPanels.Secondary>
+		</SplitPanels.Root>
 	)
 })
 
@@ -202,12 +199,12 @@ function BackupsTableRow({ rule, index, editRule }: BackupsTableRowProps) {
 					<GenericConfirmModal ref={confirmRef} />
 				</div>
 				<div className="grow backup-rule-content">
-					<div onClick={doEdit} className="hand backup-rule-info">
+					<div onClick={doEdit} className="cursor-pointer backup-rule-info">
 						<b>{rule.name}</b>
 						<br />
 						<small>Format: {backupTypeLabel}</small>
 					</div>
-					<div onClick={doEdit} className="hand backup-rule-cron">
+					<div onClick={doEdit} className="cursor-pointer backup-rule-cron">
 						<small>Cron: {rule.cron}</small>
 						<br />
 						{rule.lastRan ? <small>Last run: {dayjs(rule.lastRan).format('MM/DD HH:mm:ss')}</small> : ''}

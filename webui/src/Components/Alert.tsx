@@ -45,13 +45,26 @@ export interface DismissableAlertProps extends StaticAlertProps {
 	visible?: boolean
 }
 
+// Static map so Tailwind's content scanner sees each literal `bg-*` class (a dynamic `bg-${color}`
+// would not be generated). Values mirror the themed colours in tailwind.css.
+const SOLID_ALERT_BG: Record<string, string> = {
+	primary: 'bg-primary',
+	secondary: 'bg-secondary',
+	success: 'bg-success',
+	danger: 'bg-danger',
+	warning: 'bg-warning',
+	info: 'bg-info',
+	dark: 'bg-dark',
+	light: 'bg-light',
+}
+
 export const StaticAlert = forwardRef<HTMLDivElement, StaticAlertProps>(
 	({ children, className, color = 'primary', variant, ...rest }, ref) => {
 		return (
 			<div
 				className={classNames(
 					'alert-element',
-					variant === 'solid' ? `bg-${color} text-white` : `alert-${color}`,
+					variant === 'solid' ? `${SOLID_ALERT_BG[color] ?? 'bg-primary'} text-white` : `alert-${color}`,
 					className
 				)}
 				role="alert"

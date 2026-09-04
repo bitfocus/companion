@@ -1,6 +1,6 @@
 .number-field {
-	--border-left-radius: var(--cui-border-radius);
-	--border-right-radius: var(--cui-border-radius);
+	--border-left-radius: var(--radius);
+	--border-right-radius: var(--radius);
 
 	.number-field-group {
 		display: grid;
@@ -15,9 +15,9 @@
 		align-items: center;
 		justify-content: center;
 		padding: 0 0.5rem;
-		color: var(--cui-body-color);
-		background-color: var(--cui-tertiary-bg);
-		border: var(--cui-border-width) solid var(--cui-border-color);
+		color: var(--color-text);
+		background-color: var(--color-surface-subtle);
+		border: var(--border-width) solid var(--color-border);
 		border-left: 0;
 		cursor: pointer;
 		transition: background-color 0.15s ease-in-out;
@@ -27,7 +27,7 @@
 		}
 
 		&:hover:not([data-disabled]) {
-			background-color: var(--cui-secondary-bg);
+			background-color: var(--color-surface-muted);
 		}
 
 		&[data-disabled] {
@@ -109,14 +109,14 @@
 		width: 100%;
 		height: 0.5rem;
 		cursor: pointer;
-		background-color: var(--cui-secondary-bg);
+		background-color: var(--color-surface-muted);
 		border-color: transparent;
 		border-radius: 1rem;
 	}
 
 	.number-range-indicator {
 		height: 100%;
-		/* background-color: var(--cui-primary); */
+		/* background-color: var(--color-primary); */
 		border-radius: 1rem;
 
 		/*
@@ -154,7 +154,7 @@
 		}
 
 		&[data-disabled] {
-			background-color: var(--cui-secondary-color);
+			background-color: var(--color-muted);
 		}
 	}
 }

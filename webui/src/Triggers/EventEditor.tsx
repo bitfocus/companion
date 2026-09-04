@@ -39,7 +39,7 @@ import { AddEventDropdown } from './AddEventDropdown.js'
 interface TriggerEventEditorProps {
 	controlId: string
 	events: EventInstance[]
-	heading: JSX.Element | string
+	heading: React.JSX.Element | string
 	subheading?: React.ReactNode
 	localVariablesStore: LocalVariablesStore
 }
@@ -80,7 +80,7 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 			<h5 className="mt-2">
 				{heading}
 				{events.length > 1 && (
-					<ButtonGroup className="right">
+					<ButtonGroup className="float-right">
 						{panelCollapseHelper.canExpandAll() && (
 							<Button size="sm" onClick={panelCollapseHelper.setAllExpanded} title="Expand all events">
 								<FontAwesomeIcon icon={faExpandArrowsAlt} />
@@ -136,7 +136,7 @@ const EventEditorRowContent = observer(function EventEditorRowContent({
 	localVariablesStore,
 	rowRef,
 	dragRef,
-}: EventEditorRowContentProps): JSX.Element {
+}: EventEditorRowContentProps): React.JSX.Element {
 	const service = useControlEventService(serviceFactory, event)
 
 	return (
@@ -177,7 +177,7 @@ function EventsTableRow({
 	serviceFactory,
 	panelCollapseHelper,
 	localVariablesStore,
-}: EventsTableRowProps): JSX.Element | null {
+}: EventsTableRowProps): React.JSX.Element | null {
 	// transition:null makes swaps instant (no 250ms slide). Direction-lock hysteresis that stops
 	// short-past-tall jitter is handled globally by <SortableHysteresis> in App.tsx.
 	const { ref, handleRef } = useSortable({
@@ -310,7 +310,7 @@ const EventEditor = observer(function EventEditor({
 						{eventSpec?.description || ''}
 					</Grid.Col>
 
-					<Form className="row g-sm-2" onSubmit={PreventDefaultHandler}>
+					<Form row className="sm:gap-2" onSubmit={PreventDefaultHandler}>
 						{eventSpec?.options.map((opt, i) => (
 							<MyErrorBoundary key={i}>
 								<OptionsInputField

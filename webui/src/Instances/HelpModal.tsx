@@ -101,7 +101,7 @@ export const HelpModal = observer(
 								</Modal.Title>
 							</Modal.Header>
 							<Modal.Body>
-								<div dangerouslySetInnerHTML={html} />
+								<div dangerouslySetInnerHTML={html} className="markdown" />
 							</Modal.Body>
 						</Modal.Popup>
 					</Modal.Viewport>

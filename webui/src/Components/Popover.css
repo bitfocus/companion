@@ -1,17 +1,17 @@
 /* ─── Popover ──────────────────────────────────────────────────────────────── */
 
 .popover2-popup {
-	--popover2-bg: var(--cui-dropdown-bg, #fff);
-	--popover2-border-color: var(--cui-border-color, rgba(0, 0, 21, 0.175));
-	--popover2-border-radius: var(--cui-border-radius, 0.375rem);
+	--popover2-bg: var(--color-surface);
+	--popover2-border-color: var(--color-border, rgba(0, 0, 21, 0.175));
+	--popover2-border-radius: var(--radius);
 	--popover2-padding-y: 0.5rem;
 	--popover2-item-padding-x: 1rem;
 	--popover2-item-padding-y: 0.25rem;
-	--popover2-link-color: var(--cui-dropdown-link-color, #212529);
-	--popover2-link-hover-color: var(--cui-dropdown-link-hover-color, #1e2125);
-	--popover2-link-hover-bg: var(--cui-dropdown-link-hover-bg, #e9ecef);
+	--popover2-link-color: var(--color-text);
+	--popover2-link-hover-color: var(--color-text);
+	--popover2-link-hover-bg: var(--color-surface-hover);
 	--popover2-transition-duration: 0.15s;
-	--popover2-arrow-color: var(--cui-body-color, #000);
+	--popover2-arrow-color: var(--popover2-bg);
 }
 
 /* ─── Positioner ─────────────────────────────────────────────────────────────── */
@@ -88,8 +88,8 @@
  * CoreUI's btn-group rules can strip the right border-radius. Restore it. */
 
 .btn-group .popover2-trigger-caret {
-	border-top-right-radius: var(--cui-btn-border-radius, 0.375rem) !important;
-	border-bottom-right-radius: var(--cui-btn-border-radius, 0.375rem) !important;
+	border-top-right-radius: var(--radius) !important;
+	border-bottom-right-radius: var(--radius) !important;
 }
 
 /* ─── Trigger caret ──────────────────────────────────────────────────────────── */
@@ -129,6 +129,7 @@
 /* ─── Trigger caret ──────────────────────────────────────────────────────────── */
 
 .popover2-trigger-caret::after {
+	margin-left: 0.5em;
 	display: inline-block;
 	vertical-align: 0.255em;
 	content: '';

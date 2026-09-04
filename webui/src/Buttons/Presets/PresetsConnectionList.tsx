@@ -49,13 +49,13 @@ const PresetLeaf = observer(function PresetLeaf({ leaf }: { leaf: ConnectionLeaf
 	return (
 		<>
 			<div className="collapsible-tree-leaf-text">
-				<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+				<div className="flex justify-between items-center w-full">
 					<div>
 						<span className="collapsible-tree-connection-label">{leaf.connectionLabel}</span>
 						{leaf.moduleDisplayName && (
 							<>
 								<br />
-								<small style={{ opacity: 0.7 }}>{leaf.moduleDisplayName}</small>
+								<small className="opacity-70">{leaf.moduleDisplayName}</small>
 							</>
 						)}
 					</div>

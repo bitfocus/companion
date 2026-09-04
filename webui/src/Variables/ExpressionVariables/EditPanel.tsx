@@ -1,6 +1,7 @@
 import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId, useMemo, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
@@ -67,7 +68,7 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={reloadConfig} design="pulse" />
 			{controlConfig ? (
-				<div style={{ display: dataReady ? '' : 'none' }}>
+				<div className={classNames({ hidden: !dataReady })}>
 					{controlConfig.config.type === 'expression-variable' ? (
 						<>
 							<MyErrorBoundary>
@@ -84,7 +85,7 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 
 							{!!controlConfig.config.entity && !isInternalUserValueFeedback(controlConfig.config.entity) && (
 								<MyErrorBoundary>
-									<div className="mt-3 pt-3 border-top">
+									<div className="mt-4 pt-2 border-t border-border-alt">
 										<ExpressionVariableLocalVariablesEditor
 											controlId={controlId}
 											localVariables={controlConfig.config.localVariables}
@@ -140,7 +141,7 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 
 	return (
 		<Grid.Col sm={12} className="p-0">
-			<Form onSubmit={PreventDefaultHandler} className="row flex-form">
+			<Form row onSubmit={PreventDefaultHandler} className="flex-form">
 				<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
 					Name
 					<InlineHelpIcon className="ms-1">
@@ -257,7 +258,7 @@ const ExpressionVariableSoleEntityEditor = observer(function ExpressionVariableS
 	return (
 		<>
 			<Grid.Col sm={12} className="p-0">
-				<Form onSubmit={PreventDefaultHandler} className="row flex-form">
+				<Form row onSubmit={PreventDefaultHandler} className="flex-form">
 					<FormLabel htmlFor={undefined} sm={4} column="sm">
 						Current Value
 					</FormLabel>

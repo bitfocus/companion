@@ -13,7 +13,7 @@ import { PreventDefaultHandler, useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface RecorderSessionHeadingProps {
-	confirmRef: RefObject<GenericConfirmModalRef>
+	confirmRef: RefObject<GenericConfirmModalRef | null>
 	sessionInfo: RecordSessionInfo
 	doFinish: () => void
 }
@@ -98,8 +98,8 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 	return (
 		<>
 			<Form onSubmit={PreventDefaultHandler}>
-				<Grid.Row className="flex-form m-0" style={{ clear: 'both' }}>
-					<div className="flex w-full gap-2rem">
+				<Grid.Row className="flex-form m-0 clear-both">
+					<div className="flex w-full gap-6">
 						<div className="w-full">
 							<FormLabel htmlFor={connectionsFieldId}>Connections</FormLabel>
 							<MultiDropdownInputField
@@ -118,9 +118,9 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 					</div>
 				</Grid.Row>
 
-				<Grid.Row className="m-0" style={{ clear: 'both' }}>
+				<Grid.Row className="m-0 clear-both">
 					<div>
-						<ButtonGroup className="margin-bottom">
+						<ButtonGroup className="mb-4">
 							<Button onClick={doClearActions} color="secondary" disabled={!sessionInfo.actions?.length}>
 								Clear Actions
 							</Button>

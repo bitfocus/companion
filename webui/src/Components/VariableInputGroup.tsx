@@ -120,7 +120,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ id, value, setV
 				style={{
 					boxShadow: isEditing && !disabled ? 'rgba(213, 2, 21, 0.25) 0px 0px 0px 0.25rem' : 'none',
 					transition: 'box-shadow 0.15s ease-in-out',
-					borderRadius: 'var(--cui-border-radius)',
+					borderRadius: 'var(--radius)',
 					outline: 'none',
 					marginBottom: '0.5rem',
 				}}
@@ -139,7 +139,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ id, value, setV
 				<Input
 					id={id}
 					type="text"
-					className={classNames('form-control text-input-field no-focus', { 'invalid-value': !isValueValid })}
+					className={classNames('form-input text-input-field no-focus', { 'invalid-value': !isValueValid })}
 					// render={multiline ? <textarea rows={2} /> : undefined}
 					disabled={disabled}
 					value={localValue}

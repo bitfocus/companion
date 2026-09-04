@@ -97,12 +97,6 @@
 		flex-direction: column;
 	}
 
-	.image-library-controls {
-		.d-flex {
-			gap: 0.5rem;
-		}
-	}
-
 	.image-library-dropzone {
 		margin: 1rem 0;
 		padding: 1.5rem 2rem;
@@ -127,7 +121,7 @@
 			align-items: center;
 			justify-content: center;
 			gap: 0.75rem;
-			color: var(--color-text-muted);
+			color: var(--color-muted);
 
 			svg {
 				color: var(--color-image-accent);
@@ -250,7 +244,7 @@
 		align-items: center;
 		justify-content: center;
 		background: var(--color-surface-subtle);
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		text-align: center;
 		padding: 1rem;
 		min-height: 100px;
@@ -298,7 +292,7 @@
 
 	.image-id {
 		font-size: 0.75rem;
-		color: var(--color-text-muted);
+		color: var(--color-muted);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;

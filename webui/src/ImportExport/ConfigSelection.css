@@ -7,7 +7,7 @@
 .config-selection {
 	.config-selection-intro {
 		margin-bottom: 0.75rem;
-		color: var(--cui-secondary-color, #768192);
+		color: var(--color-muted);
 	}
 
 	.config-selection-section {
@@ -24,11 +24,11 @@
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--cui-secondary-color, #768192);
+		color: var(--color-muted);
 	}
 
 	.config-selection-list {
-		border: 1px solid var(--cui-border-color, #c4c9d0);
+		border: 1px solid var(--color-border);
 		border-radius: 0.5rem;
 		overflow: hidden;
 	}
@@ -40,7 +40,7 @@
 		padding: 0.3rem 0.75rem;
 
 		& + .config-selection-row {
-			border-top: 1px solid var(--cui-border-color-translucent, rgb(0 0 21 / 10%));
+			border-top: 1px solid var(--color-border-translucent);
 		}
 
 		/* Nested items (Include secrets, the surface sub-options) sit indented under their parent, with a
@@ -49,8 +49,8 @@
 			padding-left: 2.25rem;
 
 			.config-selection-icon {
-				background-color: var(--cui-tertiary-bg, #ebedef);
-				color: var(--cui-secondary-color, #768192);
+				background-color: var(--color-surface-subtle);
+				color: var(--color-muted);
 			}
 		}
 

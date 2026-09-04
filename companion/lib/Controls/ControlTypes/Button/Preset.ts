@@ -88,6 +88,14 @@ export class ControlButtonPreset
 	readonly #connectionId: string
 	readonly #presetId: string
 
+	/**
+	 * The checksum of the source preset the cached data was last resolved from (carried on the model itself, so
+	 * it always matches the cached data). Used to ignore `updatePresets` events that don't actually change our
+	 * preset, so we don't needlessly re-subscribe the preview's feedbacks (and flicker) on every re-report of
+	 * identical presets.
+	 */
+	#lastPresetChecksum: string | null = null
+
 	#lastRender: ImageResult | null = null
 
 	get lastRender(): ImageResult | null {
@@ -188,11 +196,16 @@ export class ControlButtonPreset
 
 	#updatePresetDefinition = (connectionId: string): void => {
 		if (connectionId !== this.#connectionId) return
+
 		const updatedPreset = this.deps.instance.definitions.convertPresetToPreviewControlModel(
 			this.#connectionId,
 			this.#presetId
 		)
 		if (!updatedPreset) return // TODO - clear current preset?
+
+		// Ignore updates that don't actually change our preset (e.g. a module re-reporting identical presets),
+		// so we don't needlessly re-subscribe the preview's feedbacks.
+		if (updatedPreset.checksum !== undefined && updatedPreset.checksum === this.#lastPresetChecksum) return
 
 		this.#applyPresetModel(updatedPreset)
 	}
@@ -203,6 +216,9 @@ export class ControlButtonPreset
 		this.options = Object.assign(this.options, storage.options || {})
 		this.entities.loadStorage(storage, true, true)
 		this.entities.stepExpressionUpdate(this.options)
+
+		// Baseline the checksum from the model we loaded, so a subsequent identical `updatePresets` is a no-op.
+		this.#lastPresetChecksum = storage.checksum ?? null
 
 		// Ensure control is stored before setup
 		setImmediate(() => this.postProcessImport())
@@ -352,6 +368,7 @@ export class ControlButtonPreset
 			feedbacks: this.entities.getFeedbackEntities(),
 			steps: this.entities.asNormalButtonSteps(),
 			localVariables: this.entities.getLocalVariableEntities().map((ent) => ent.asEntityModel(true)),
+			checksum: this.#lastPresetChecksum ?? undefined,
 		}
 
 		return clone ? structuredClone(obj) : obj

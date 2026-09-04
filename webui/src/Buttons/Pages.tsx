@@ -18,7 +18,7 @@ interface PagesListProps {
 	setPageNumber: (page: number) => void
 }
 
-export const PagesList = observer(function PagesList({ setPageNumber }: PagesListProps): JSX.Element {
+export const PagesList = observer(function PagesList({ setPageNumber }: PagesListProps): React.JSX.Element {
 	const { pages } = useContext(RootAppStoreContext)
 
 	const deleteRef = useRef<GenericConfirmModalRef>(null)
@@ -117,11 +117,11 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 
 					<div className="collections-nesting-table pages-list-table">
 						<div className="collections-nesting-table-row-item">
-							<div className="collections-nesting-table-row-item-grid fw-bold">
+							<div className="collections-nesting-table-row-item-grid font-bold">
 								<div className="row-reorder-handle invisible">
 									<FontAwesomeIcon icon={faSort} />
 								</div>
-								<div className="grow d-flex align-items-center gap-2">
+								<div className="grow flex items-center gap-2">
 									<div className="pages-list-number">Number</div>
 									<div className="grow">Name</div>
 									<div className="ms-auto">
@@ -205,8 +205,8 @@ const PageListRow = observer(function PageListRow({
 				<div ref={handleRef} className="row-reorder-handle">
 					<FontAwesomeIcon icon={faSort} />
 				</div>
-				<div className="grow d-flex align-items-center gap-2">
-					<div className="pages-list-number fw-bold">{pageNumber}</div>
+				<div className="grow flex items-center gap-2">
+					<div className="pages-list-number font-bold">{pageNumber}</div>
 					<div className="grow">
 						<TextInputFieldSimple
 							id={undefined}

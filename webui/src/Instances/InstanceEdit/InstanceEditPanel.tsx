@@ -85,15 +85,15 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 	return (
 		<>
 			<Form
-				className="secondary-panel-simple-body d-flex flex-column pb-0"
+				className="secondary-panel-simple-body flex flex-col pb-0"
 				onSubmit={(e) => {
 					e.preventDefault()
 					e.stopPropagation()
 					performSave()
 				}}
 			>
-				<div className="flex-fill">
-					<div className="row edit-connection">
+				<div className="flex-auto">
+					<Grid.Row className="edit-connection">
 						{saveError && (
 							<Grid.Col className="fieldtype-textinput" sm={12}>
 								<StaticAlert color="danger">{saveError}</StaticAlert>
@@ -112,7 +112,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 						<InstanceVersionUpdatePolicyInputField panelStore={panelStore} />
 
 						<InstanceConfigArea panelStore={panelStore} />
-					</div>
+					</Grid.Row>
 				</div>
 
 				<InstanceFormButtons panelStore={panelStore} isSaving={isSaving.get()} />
@@ -176,8 +176,8 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 				Module Version
 			</FormLabel>
 			<Grid.Col className={`fieldtype-textinput`} sm={8}>
-				<div className="d-flex align-items-center gap-2">
-					<span className="fw-medium">{moduleVersion?.displayName ?? panelStore.instanceInfo.moduleVersionId}</span>
+				<div className="flex items-center gap-2">
+					<span className="font-medium">{moduleVersion?.displayName ?? panelStore.instanceInfo.moduleVersionId}</span>
 
 					<InstanceVersionChangeButton
 						id={moduleVersionId}
@@ -220,11 +220,7 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 					tooltip={cannotEnableReason || undefined}
 				/>
 
-				{cannotEnableReason && !isEnabled && (
-					<div className="text-danger mt-1" style={{ fontSize: '0.875em' }}>
-						{cannotEnableReason}
-					</div>
-				)}
+				{cannotEnableReason && !isEnabled && <div className="text-danger mt-1 small">{cannotEnableReason}</div>}
 			</Grid.Col>
 		</>
 	)
@@ -356,7 +352,7 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 
 	return (
 		<>
-			<hr className="my-3" />
+			<hr className="my-4" />
 			{configData.fields.map((fieldInfo) => {
 				const isVisible = panelStore.isVisible(fieldInfo)
 				if (!isVisible) return null
@@ -411,13 +407,13 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 	const doDelete = useCallback(() => panelStore.service.deleteInstance(panelStore.labelValue), [panelStore])
 
 	return (
-		<div className="row connection-form-buttons border-top">
+		<Grid.Row className="connection-form-buttons border-t border-border-alt">
 			<Grid.Col sm={12}>
 				<div className="flex flex-row">
 					<div className="grow">
 						<Button
 							color="success"
-							className="me-md-1"
+							className="md:me-1"
 							disabled={isLoading || isSaving || !isValid || !panelStore.isDirty()}
 							type="submit"
 							title={!isValid ? 'Please fix the errors before saving' : undefined}
@@ -437,7 +433,7 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 					</div>
 				</div>
 			</Grid.Col>
-		</div>
+		</Grid.Row>
 	)
 })
 
@@ -477,7 +473,7 @@ const InstanceFormRow = observer(function InstanceFormRow({
 				<FormLabel htmlFor={inputId} sm={4} column="sm" style={{ display: !isVisible ? 'none' : undefined }}>
 					<InstanceFieldLabel fieldInfo={fieldInfo} />
 				</FormLabel>
-				<Grid.Col sm={8} style={{ display: !isVisible ? 'none' : undefined }} className="align-self-center">
+				<Grid.Col sm={8} style={{ display: !isVisible ? 'none' : undefined }} className="self-center">
 					{children}
 				</Grid.Col>
 			</React.Fragment>
@@ -488,7 +484,7 @@ const InstanceFormRow = observer(function InstanceFormRow({
 
 		return (
 			<Grid.Col
-				className={classNames(`fieldtype-${fieldInfo.type}`, { 'd-none': hideInXs, 'd-sm-block': hideInXs })}
+				className={classNames(`fieldtype-${fieldInfo.type}`, { hidden: hideInXs, 'sm:block': hideInXs })}
 				sm={fieldInfo.width}
 				style={{ display: !isVisible ? 'none' : undefined }}
 			>

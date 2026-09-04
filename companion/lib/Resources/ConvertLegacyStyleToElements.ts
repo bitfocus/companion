@@ -210,6 +210,13 @@ export function ConvertLegacyStyleToElements(
 	style: ButtonStyleProperties,
 	feedbacks: SomeEntityModel[],
 	previewStyle: Partial<ButtonStyleProperties> | null | undefined,
+	/**
+	 * The `affectedProperties` declared by each feedback definition (keyed by feedback id), used to limit which
+	 * style properties an advanced feedback's overrides may set. `null` (legacy/upgrade conversions, where the
+	 * definitions are not available) or a feedback missing from the map means "no limit" - overrides are created
+	 * for every property, preserving the previous behaviour.
+	 */
+	feedbackAffectedProperties: ReadonlyMap<string, string[] | undefined> | null,
 	defaultNoTopBar = false
 ): {
 	layers: SomeButtonGraphicsElement[]
@@ -354,9 +361,13 @@ export function ConvertLegacyStyleToElements(
 		} else {
 			hasAnyAdvancedFeedbacks = true
 
-			// Should be advanced, translate all properties
+			// Should be advanced, translate the properties it declares it affects (all, if it declares none)
 
-			overrides = CreateAdvancedFeedbackStyleOverrides(selectedElementIds, bufferElement.id, undefined)
+			overrides = CreateAdvancedFeedbackStyleOverrides(
+				selectedElementIds,
+				bufferElement.id,
+				feedbackAffectedProperties?.get(fb.definitionId)
+			)
 		}
 
 		// Special case to preserve behaviour of 'conditionalise existing feedbacks'

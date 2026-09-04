@@ -23,6 +23,7 @@ import type { TriggerCollection, TriggerModel } from '@companion-app/shared/Mode
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
 import type { DataDatabase } from '../Data/Database.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { CompositeElementIdString } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
 import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
@@ -107,13 +108,7 @@ export class ControlsController {
 
 	/** Resolve a page's local-variable entities (its `page:<pageId>` control), for `$(page:x)` injection. */
 	readonly #getPageVariableEntities = (pageNumber: number): ControlEntityInstance[] | null => {
-		const pageId = this.#deps.pageStore.getPageId(pageNumber)
-		if (!pageId) return null
-
-		const control = this.#store.getControl(CreatePageControlId(pageId))
-		if (!control || !control.supportsEntities) return null
-
-		return control.entities.getLocalVariableEntities()
+		return this.#store.getPageVariableEntities(pageNumber)
 	}
 
 	constructor(
@@ -138,6 +133,7 @@ export class ControlsController {
 			getPageVariableEntities: this.#getPageVariableEntities,
 			triggerEvents: this.#store.triggerEvents,
 			expressionVariableNamesMap: this.#expressionVariableNamesMap,
+			controlsAccessor: this.#store,
 		})
 
 		this.#triggerCollections = new TriggerCollections(
@@ -260,7 +256,7 @@ export class ControlsController {
 				this.#deps.instance.definitions,
 				this.#controlEvents,
 				this,
-				this.#factory
+				this.#deps.userconfig
 			),
 
 			watchControl: publicProcedure
@@ -533,6 +529,17 @@ export class ControlsController {
 
 		for (const control of this.#store.controls.values()) {
 			control.drawing?.onCompositeElementsChanged(allChangedElementIds)
+		}
+	}
+
+	/**
+	 * A control finished rendering. Notify every drawer so any that mirror or reference that location can redraw.
+	 * @param location - the grid location that was drawn
+	 * @param render - the resulting render
+	 */
+	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
+		for (const control of this.#store.controls.values()) {
+			control.drawing?.onButtonDrawn(location, render)
 		}
 	}
 

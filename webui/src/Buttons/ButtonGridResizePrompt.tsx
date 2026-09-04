@@ -27,7 +27,7 @@ export const ButtonGridResizePrompt = observer(function ButtonGridResizePrompt()
 
 	return (
 		<>
-			<DismissableAlert color="info" onClose={doDismiss}>
+			<DismissableAlert color="info" onClose={doDismiss} className="m-0">
 				You have some surfaces which overflow the current grid bounds
 				<ul>
 					{overflowing.surfaces.map((s) => (

@@ -13,7 +13,7 @@ import type { DropdownChoiceGroup } from '~/Components/DropdownChoices.js'
  * @param ungroupedLabel - Label for the ungrouped items group (default: "Ungrouped")
  * @returns Array of DropdownChoiceGroups, or flat array if no groups exist
  */
-export function groupItemsByCollection<TItem extends { collectionId: string | null }>(
+export function groupItemsByCollection<TItem extends { collectionId: string | null; sortOrder?: number }>(
 	rootCollections: CollectionBase<any>[],
 	items: TItem[],
 	getItemChoice: (item: TItem) => DropdownChoice,
@@ -22,6 +22,19 @@ export function groupItemsByCollection<TItem extends { collectionId: string | nu
 ): DropdownChoiceGroup[] | DropdownChoice[] {
 	// Track which items have been assigned to collections
 	const assignedItemIds = new Set<TItem>()
+
+	const sortedItems = [...items].sort((a, b) => {
+		const sortA = a.sortOrder ?? 0
+		const sortB = b.sortOrder ?? 0
+
+		if (sortA < sortB) {
+			return -1
+		} else if (sortA > sortB) {
+			return 1
+		}
+
+		return 0
+	})
 
 	/**
 	 * Recursively builds a group for a collection and its direct children
@@ -34,7 +47,7 @@ export function groupItemsByCollection<TItem extends { collectionId: string | nu
 		const groupOptions: DropdownChoice[] = []
 
 		// Add direct children items of this collection
-		for (const item of items) {
+		for (const item of sortedItems) {
 			if (item.collectionId !== collection.id) continue
 			if (filterItem && !filterItem(item)) continue
 			groupOptions.push(getItemChoice(item))

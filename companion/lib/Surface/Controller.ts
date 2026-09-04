@@ -14,6 +14,7 @@ import { createHash } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import type express from 'express'
+import isEqual from 'fast-deep-equal'
 import jsonPatch from 'fast-json-patch'
 import HID from 'node-hid'
 import pDebounce from 'p-debounce'
@@ -25,7 +26,9 @@ import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 import type {
 	ClientDevicesListItem,
+	ClientSurfaceButtonSizesItem,
 	ClientSurfaceItem,
+	ClientSurfaceLayoutItem,
 	OutboundSurfaceInfo,
 	SurfaceConfig,
 	SurfaceGroupConfig,
@@ -50,13 +53,16 @@ import LogController, { type Logger } from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { createOrSanitizeSurfaceHandlerConfig, PanelDefaults } from './Config.js'
 import { SurfaceGroup, validateGroupConfigValue } from './Group.js'
-import { getSurfaceName, SurfaceHandler } from './Handler.js'
+import { SurfaceHandler } from './Handler.js'
 import { EmulatorRoom, SurfaceIPElgatoEmulator } from './IP/ElgatoEmulator.js'
 import { SurfaceIPSatellite, type SatelliteDeviceInfo } from './IP/Satellite.js'
+import { surfaceButtonSizesFromLayouts, surfaceLayoutsFromConfigs, type SurfaceLayoutSource } from './LayoutSummary.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import type { SurfacePluginPanel } from './PluginPanel.js'
 import { createSurfacesRestApiRouter } from './SurfacesRestApi.js'
+import { stripReferenceSurfaceId } from './ReferenceSurfaceId.js'
 import type { SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
+import { getSurfaceName } from './Util.js'
 
 /**
  * Interface for a handler that can process HID device scans.
@@ -104,6 +110,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * The last sent json object
 	 */
 	#lastSentJson: Record<string, ClientDevicesListItem> = {}
+	/** Only maintained while something is subscribed to the matching update event */
+	#lastSentLayoutsJson: Record<string, ClientSurfaceLayoutItem> | null = null
+	#lastSentButtonSizesJson: Record<string, ClientSurfaceButtonSizesItem> | null = null
 
 	/**
 	 * All the opened and active surfaces
@@ -436,6 +445,32 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				}
 			}),
 
+			watchSurfaceLayouts: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#updateEvents, 'surfaceLayouts', signal)
+
+				// Seed the cache, so that the first change is compared against what was sent here
+				const initial = self.getSurfaceLayouts()
+				self.#lastSentLayoutsJson = initial
+				yield initial
+
+				for await (const [layouts] of changes) {
+					yield layouts
+				}
+			}),
+
+			watchSurfaceButtonSizes: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#updateEvents, 'surfaceButtonSizes', signal)
+
+				// Seed the cache, so that the first change is compared against what was sent here
+				const initial = self.getSurfaceButtonSizes()
+				self.#lastSentButtonSizesJson = initial
+				yield initial
+
+				for await (const [sizes] of changes) {
+					yield sizes
+				}
+			}),
+
 			watchGroupConfig: publicProcedure
 				.input(
 					z.object({
@@ -495,7 +530,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 			rescanUsb: publicProcedure.mutation(async () => {
 				try {
-					return this.triggerRefreshDevices()
+					return await this.triggerRefreshDevices()
 				} catch (e) {
 					return stringifyError(e, true)
 				}
@@ -1137,6 +1172,44 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		return result
 	}
 
+	/**
+	 * Gather every surface which has a known layout, connected or not. Connected surfaces use the config held
+	 * by their handler, the rest fall back to what was persisted the last time they were connected.
+	 */
+	#collectLayoutSources(): SurfaceLayoutSource[] {
+		const sources: SurfaceLayoutSource[] = []
+		const connectedIds = new Set<string>()
+
+		for (const [surfaceId, handler] of this.#surfaceHandlers) {
+			if (!handler) continue
+
+			connectedIds.add(surfaceId)
+			sources.push({ surfaceId, config: handler.getFullConfig(), isConnected: true })
+		}
+
+		for (const [surfaceId, config] of Object.entries(this.#dbTableSurfaces.all())) {
+			if (connectedIds.has(surfaceId)) continue
+
+			sources.push({ surfaceId, config, isConnected: false })
+		}
+
+		return sources
+	}
+
+	/**
+	 * The full layout manifest of every surface with a known layout
+	 */
+	getSurfaceLayouts(): Record<string, ClientSurfaceLayoutItem> {
+		return surfaceLayoutsFromConfigs(this.#collectLayoutSources())
+	}
+
+	/**
+	 * The distinct button sizes of every surface with a known layout
+	 */
+	getSurfaceButtonSizes(): Record<string, ClientSurfaceButtonSizesItem> {
+		return surfaceButtonSizesFromLayouts(this.getSurfaceLayouts())
+	}
+
 	async reset(): Promise<void> {
 		// Each active handler will re-add itself when doing the save as part of its own reset
 		this.#dbTableGroups.clear()
@@ -1163,6 +1236,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		if (this.#updateEvents.listenerCount('emulatorList') > 0) {
 			this.#updateEvents.emit('emulatorList', this.#compileEmulatorList())
 		}
+
+		this.#updateSurfaceLayouts()
 
 		const hasSubscribers = this.#updateEvents.listenerCount('surfaces') > 0
 
@@ -1214,6 +1289,40 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			}
 		}
 		this.#lastSentJson = newJson
+	}
+
+	/**
+	 * Push out the surface layouts and the button sizes derived from them, if anything is listening.
+	 * These are only rebuilt when subscribed to, as they are much larger than they are volatile.
+	 */
+	#updateSurfaceLayouts(): void {
+		const hasLayoutSubscribers = this.#updateEvents.listenerCount('surfaceLayouts') > 0
+		const hasButtonSizeSubscribers = this.#updateEvents.listenerCount('surfaceButtonSizes') > 0
+		if (!hasLayoutSubscribers && !hasButtonSizeSubscribers) {
+			// Drop the caches, so that the next subscriber gets a fresh comparison
+			this.#lastSentLayoutsJson = null
+			this.#lastSentButtonSizesJson = null
+			return
+		}
+
+		const newLayouts = this.getSurfaceLayouts()
+
+		if (hasLayoutSubscribers) {
+			if (!this.#lastSentLayoutsJson || !isEqual(this.#lastSentLayoutsJson, newLayouts)) {
+				this.#updateEvents.emit('surfaceLayouts', newLayouts)
+			}
+		}
+		this.#lastSentLayoutsJson = newLayouts
+
+		if (hasButtonSizeSubscribers) {
+			const newButtonSizes = surfaceButtonSizesFromLayouts(newLayouts)
+			if (!this.#lastSentButtonSizesJson || !isEqual(this.#lastSentButtonSizesJson, newButtonSizes)) {
+				this.#updateEvents.emit('surfaceButtonSizes', newButtonSizes)
+			}
+			this.#lastSentButtonSizesJson = newButtonSizes
+		} else {
+			this.#lastSentButtonSizesJson = null
+		}
 	}
 
 	/**
@@ -1658,6 +1767,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			type: description || 'Unknown',
 			integrationType: undefined,
 			gridSize: undefined,
+			layout: undefined,
 		}
 
 		this.setDeviceConfig(surfaceId, minimalConfig)
@@ -1930,29 +2040,41 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	/**
-	 * Set the brightness of a surface
-	 * @param surfaceId
+	 * Set the brightness of a surface or every surface in a group
+	 * @param surfaceOrGroupId
 	 * @param brightness 0-100
 	 * @param looseIdMatching
 	 */
-	setDeviceBrightness(surfaceId: string, brightness: number, looseIdMatching = false): void {
-		const device = this.#getSurfaceHandlerForId(surfaceId, looseIdMatching)
-		if (device) {
+	setDeviceBrightness(surfaceOrGroupId: string, brightness: number, looseIdMatching = false): void {
+		for (const device of this.#getSurfaceHandlersForBrightness(surfaceOrGroupId, looseIdMatching)) {
 			device.setBrightness(brightness)
 		}
 	}
 
 	/**
-	 * Adjust the brightness of a surface by a relative amount
-	 * @param surfaceId
+	 * Adjust the brightness of a surface, or every surface in a group, by a relative amount
+	 * @param surfaceOrGroupId
 	 * @param adjustment -100 to 100
 	 * @param looseIdMatching
 	 */
-	adjustDeviceBrightness(surfaceId: string, adjustment: number, looseIdMatching = false): void {
-		const device = this.#getSurfaceHandlerForId(surfaceId, looseIdMatching)
-		if (device) {
+	adjustDeviceBrightness(surfaceOrGroupId: string, adjustment: number, looseIdMatching = false): void {
+		for (const device of this.#getSurfaceHandlersForBrightness(surfaceOrGroupId, looseIdMatching)) {
 			device.adjustBrightness(adjustment)
 		}
+	}
+
+	/**
+	 * Resolve the surfaces that a brightness action should target. A group id targets every surface
+	 * in that group, while a surface id targets only that surface.
+	 */
+	#getSurfaceHandlersForBrightness(surfaceOrGroupId: string, looseIdMatching: boolean): SurfaceHandler[] {
+		surfaceOrGroupId = stripReferenceSurfaceId(surfaceOrGroupId)
+
+		const surfaceGroup = this.#surfaceGroups.get(surfaceOrGroupId)
+		if (surfaceGroup) return surfaceGroup.surfaceHandlers
+
+		const device = this.#getSurfaceHandlerForId(surfaceOrGroupId, looseIdMatching)
+		return device ? [device] : []
 	}
 
 	/**
@@ -2000,6 +2122,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Get the `SurfaceGroup` for a surfaceId or groupId
 	 */
 	#getGroupForId(surfaceOrGroupId: string, looseIdMatching = false): SurfaceGroup | undefined {
+		// A button-reference forwards presses with the reference control id appended; recover the real id
+		surfaceOrGroupId = stripReferenceSurfaceId(surfaceOrGroupId)
+
 		const matchingGroup = this.#surfaceGroups.get(surfaceOrGroupId)
 		if (matchingGroup) return matchingGroup
 
@@ -2018,6 +2143,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @param looseIdMatching Loosely match the id, to handle old device naming
 	 */
 	#getSurfaceHandlerForId(surfaceId: string, looseIdMatching: boolean): SurfaceHandler | undefined {
+		// A button-reference forwards presses with the reference control id appended; recover the real id
+		surfaceId = stripReferenceSurfaceId(surfaceId)
+
 		if (surfaceId === 'emulator') surfaceId = 'emulator:emulator'
 
 		const surfaces = this.#surfaceHandlers.values().toArray()

@@ -6,7 +6,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC'
 export type ImageLibraryCollectionsApi = NestingCollectionsApi
 
 export function useImageLibraryCollectionsApi(
-	confirmModalRef: React.RefObject<GenericConfirmModalRef>
+	confirmModalRef: React.RefObject<GenericConfirmModalRef | null>
 ): ImageLibraryCollectionsApi {
 	const setNameCollectionMutation = useMutationExt(trpc.imageLibrary.collections.setName.mutationOptions())
 	const removeCollectionMutation = useMutationExt(trpc.imageLibrary.collections.remove.mutationOptions())

@@ -11,6 +11,7 @@
 
 import { EventEmitter } from 'node:events'
 import type express from 'express'
+import { nanoid } from 'nanoid'
 import workerPool from 'workerpool'
 import z from 'zod'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
@@ -20,12 +21,19 @@ import {
 	type ClientImportObject,
 	type ClientImportOrResetSelection,
 	type ClientPageInfo,
+	type ImportExportTask,
+	type ImportExportTaskType,
 	type ImportOrResetType,
 } from '@companion-app/shared/Model/ImportExport.js'
 import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
-import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type {
+	ButtonGraphicsReferenceElement,
+	SomeButtonGraphicsElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { ControlsController } from '../Controls/Controller.js'
+import { CreateElementOfType } from '../Controls/ControlTypes/Button/LayerDefaults.js'
 import { pageDownElements } from '../Controls/ControlTypes/PageDown.js'
 import { pageNumberElements } from '../Controls/ControlTypes/PageNumber.js'
 import { pageUpElements } from '../Controls/ControlTypes/PageUp.js'
@@ -224,11 +232,13 @@ export class ImportExportController {
 	}
 
 	/**
-	 * If there is a current import task that clients should be aware of, this will be set
+	 * The current or most-recently-completed import/reset task, published to clients on the subscription.
+	 * A completed task is retained (so a client can observe the outcome of the run it started) until the
+	 * next task begins.
 	 */
-	#currentImportTask: 'reset' | 'import' | null = null
+	#currentImportTask: ImportExportTask | null = null
 
-	readonly #taskEvents = new EventEmitter<{ taskChange: [status: 'reset' | 'import' | null] }>()
+	readonly #taskEvents = new EventEmitter<{ taskChange: [status: ImportExportTask | null] }>()
 
 	constructor(
 		appInfo: AppInfo,
@@ -289,18 +299,61 @@ export class ImportExportController {
 		this.#backupController.initializeWithConfig(backupRules || [])
 	}
 
-	async #checkOrRunImportTask<T>(newTaskType: 'reset' | 'import', executeFn: () => Promise<T>): Promise<T> {
-		if (this.#currentImportTask) throw new Error('Another operation is in progress')
+	/**
+	 * Mark a task as started, publishing it (with its runId) on the task status subscription.
+	 * Returns the runId, which the triggering mutation hands to the client so it can track this run.
+	 */
+	#beginTask(newTaskType: ImportExportTaskType): string {
+		if (this.#currentImportTask?.status === 'running') throw new Error('Another operation is in progress')
 
-		this.#currentImportTask = newTaskType
+		const runId = nanoid()
+		this.#currentImportTask = { type: newTaskType, runId, status: 'running' }
 		this.#taskEvents.emit('taskChange', this.#currentImportTask)
 
+		return runId
+	}
+
+	/** Mark a task as finished, recording its outcome so a client can observe completion via the subscription. */
+	#endTask(task: ImportExportTaskType, runId: string, error: string | null): void {
+		this.#currentImportTask = { type: task, runId, status: 'completed', error }
+		this.#taskEvents.emit('taskChange', this.#currentImportTask)
+	}
+
+	async #checkOrRunImportTask<T>(newTaskType: ImportExportTaskType, executeFn: () => Promise<T>): Promise<T> {
+		const runId = this.#beginTask(newTaskType)
+
 		try {
-			return await executeFn()
-		} finally {
-			this.#currentImportTask = null
-			this.#taskEvents.emit('taskChange', this.#currentImportTask)
+			const result = await executeFn()
+			this.#endTask(newTaskType, runId, null)
+			return result
+		} catch (e) {
+			this.#endTask(newTaskType, runId, stringifyError(e))
+			throw e
 		}
+	}
+
+	/**
+	 * Start a task that runs in the background, rather than for the duration of the triggering RPC call.
+	 * The task status subscription reports the running task (with its runId) and its eventual outcome, so
+	 * a client tracks the run there: bounded wait for it to appear as running, then an unbounded wait for
+	 * completion. This avoids a long-running import holding the RPC socket open - if that socket drops
+	 * mid-import (which a large import can trigger) the client would otherwise see a spurious failure even
+	 * though the import committed successfully.
+	 */
+	#startDeferredTask(newTaskType: ImportExportTaskType, executeFn: () => Promise<void>): string {
+		const runId = this.#beginTask(newTaskType)
+
+		Promise.resolve()
+			.then(executeFn)
+			.then(
+				() => this.#endTask(newTaskType, runId, null),
+				(e) => {
+					this.#logger.error(`${newTaskType} task failed: ${stringifyError(e)}`)
+					this.#endTask(newTaskType, runId, stringifyError(e))
+				}
+			)
+
+		return runId
 	}
 
 	createTrpcRouter() {
@@ -366,6 +419,15 @@ export class ImportExportController {
 							drawType = 'button'
 							rawElements = controlObjLayered.style.layers
 							break
+						case 'button-reference': {
+							// The mirror is drawn as a single reference element. Cross-page references can't be resolved
+							// in the import preview (no render cache), so this renders the "unresolved" placeholder.
+							drawType = 'button'
+							const referenceElement = CreateElementOfType('reference') as ButtonGraphicsReferenceElement
+							referenceElement.location = controlObjLayered.options.location
+							rawElements = [referenceElement]
+							break
+						}
 						case 'pagenum':
 							drawType = 'pagenum'
 							rawElements = structuredClone(pageNumberElements)
@@ -484,30 +546,35 @@ export class ImportExportController {
 			importFull: publicProcedure
 				.input(z.object({ config: zodClientImportOrResetSelection }))
 				.mutation(async ({ input: { config }, ctx }) => {
-					return this.#checkOrRunImportTask('import', async () => {
-						const isPartialReset =
-							Object.values(config).some((val) => val === 'unchanged') ||
-							Object.values(config.surfaces).some((val) => val === 'unchanged')
+					const isPartialReset =
+						Object.values(config).some((val) => val === 'unchanged') ||
+						Object.values(config.surfaces).some((val) => val === 'unchanged')
 
-						console.log(
-							`Performing full import: ${isPartialReset ? 'Partial Reset' : 'Full Reset'} Config: ${JSON.stringify(config)}`
-						)
-						const data = ctx.pendingImport?.object
-						if (!data) throw new Error('No in-progress import object')
+					this.#logger.info(
+						`Performing full import: ${isPartialReset ? 'Partial Reset' : 'Full Reset'} Config: ${JSON.stringify(config)}`
+					)
+					const data = ctx.pendingImport?.object
+					if (!data) throw new Error('No in-progress import object')
 
-						if (data.type !== 'full') throw new Error('Invalid import object')
+					if (data.type !== 'full') throw new Error('Invalid import object')
 
+					// A full import is potentially long-running, so run it as a deferred task rather than
+					// holding this RPC open for its whole duration. The client awaits completion via the
+					// task status subscription using the returned runId.
+					const runId = this.#startDeferredTask('import', async () => {
 						// Destroy old stuff
 						await this.#reset(config)
 
 						// Perform the import
-						this.#importController.importFull(data, config)
+						await this.#importController.importFull(data, config)
 
 						// trigger startup triggers to run
 						setImmediate(() => {
 							this.#controlsController.triggerEvents.emit('startup')
 						})
 					})
+
+					return { runId }
 				}),
 		})
 	}

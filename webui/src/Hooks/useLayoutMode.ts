@@ -26,7 +26,6 @@ export function useMobileMode(): boolean {
 
 	// (mobileMode is a bit wide. 880 would be better but isn't a standard breakpoint lg: 992; md: 768)
 	// ideally we would calculate this from desired min panel widths and sidebar width (folding or not)...
-	// (note: --cui-mobile-breakpoint also defaults to lg)
 	const mobileBreak = breakpoints.lg // when to switch to-from one-panel (mobile is smaller)
 
 	return !useMediaQuery(`(min-width: ${mobileBreak})`) // true when narrower!
@@ -40,6 +39,18 @@ export function useMobileMode(): boolean {
  */
 
 type BreakpointName = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl'
+
+// Maps our breakpoint names to the Tailwind `--breakpoint-*` custom properties emitted by @theme (see
+// tailwind.css). `xs` has no Tailwind variable — it is the implicit 0 floor — and `xxl` is Tailwind's
+// `2xl`. The values mirror the CoreUI grid breakpoints the app has always used.
+const breakpointVarSuffix: Record<BreakpointName, string | null> = {
+	xs: null,
+	sm: 'sm',
+	md: 'md',
+	lg: 'lg',
+	xl: 'xl',
+	xxl: '2xl',
+}
 
 let breakpointsInitialized = false
 // start with default bootstrap values (in the current code we never use the default values, but it's good documentation and helps keep the type simple)
@@ -57,22 +68,13 @@ export function getBreakpoints(): Record<BreakpointName, string> {
 	if (!breakpointsInitialized) {
 		breakpointsInitialized = true // note that this means the errors, below will only fire once.
 		const computedStyle = window.getComputedStyle(document.documentElement)
-		// prefix options in order of relevance: CoreUI, newer Bootstrap, older Bootstrap
-		const prefixOptions = ['--cui-breakpoint-', '--bs-breakpoint-', '--breakpoint-']
-		let prefix: string | null = null
-		for (const p of prefixOptions) {
-			if (computedStyle.getPropertyValue(p + 'sm')) {
-				prefix = p
-				break
-			}
-		}
-		// strict: complain if can't find prefix so CI testing will flag the problem
-		if (!prefix) throw new Error("Couldn't determine breakpoints prefix.")
 		for (const name of Object.keys(breakpointValues) as BreakpointName[]) {
-			const value = computedStyle.getPropertyValue(prefix + name)
+			const suffix = breakpointVarSuffix[name]
+			if (suffix === null) continue // xs has no variable; it stays at its 0px default
+			const value = computedStyle.getPropertyValue('--breakpoint-' + suffix).trim()
 			if (value) {
 				breakpointValues[name] = value
-			} else if (name !== 'xs') {
+			} else {
 				// strict: complain if definition is missing so CI testing will flag the problem
 				throw new Error('Missing breakpoint definition for: ' + name)
 			}

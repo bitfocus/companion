@@ -99,3 +99,15 @@
 	opacity: 0.75;
 	margin: 0 0 0.6rem 1rem;
 }
+
+/* Monospace variable-name token, shown in the variables table and other variable lists. */
+.variable-style {
+	font-family: monospace;
+	padding: 1px 3px 0px;
+	color: var(--color-primary);
+	font-weight: 600;
+	font-size: 16px;
+	letter-spacing: -0.15px;
+	border-radius: 6px;
+	display: inline-block;
+}

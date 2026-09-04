@@ -9,7 +9,7 @@ import { useSectionVisibilityObserver } from './hooks/useSectionVisibilityObserv
 import { cn } from './lib/utils'
 import { SectionDefinitions, type SectionDefinition } from './Sections'
 
-function SectionWithObserver({ section, isLast }: { section: SectionDefinition; isLast: boolean }): JSX.Element {
+function SectionWithObserver({ section, isLast }: { section: SectionDefinition; isLast: boolean }): React.JSX.Element {
 	const SectionComponent = section.component
 	const sectionRef = useSectionVisibilityObserver({ sectionId: section.id })
 
@@ -22,7 +22,7 @@ function SectionWithObserver({ section, isLast }: { section: SectionDefinition; 
 	)
 }
 
-function SettingsContent(): JSX.Element {
+function SettingsContent(): React.JSX.Element {
 	const { setSectionOrder } = useSectionVisibility()
 	const { state } = useConfig()
 
@@ -91,7 +91,7 @@ function SettingsContent(): JSX.Element {
 	)
 }
 
-export function Settings(): JSX.Element {
+export function Settings(): React.JSX.Element {
 	return (
 		<ConfigProvider>
 			<SectionVisibilityProvider>

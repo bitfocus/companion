@@ -21,7 +21,7 @@ export const UserConfigSwitchValueRow = observer(function UserConfigSwitchValueR
 }: UserConfigSwitchValueRowProps<TKey>) {
 	return (
 		<tr title={title}>
-			<td style={{ width: '100%' }}>{label}</td>
+			<td className="w-full">{label}</td>
 			<td>
 				<SwitchInputField
 					id={undefined} // Future: set this for better accessibility
@@ -29,7 +29,7 @@ export const UserConfigSwitchValueRow = observer(function UserConfigSwitchValueR
 					setValue={(value) => userConfig.setValue(field, value ? activeValue : inactiveValue)}
 				/>
 			</td>
-			<td className="pe-3">
+			<td className="pe-4">
 				<ResetButton userConfig={userConfig} field={field} />
 			</td>
 		</tr>

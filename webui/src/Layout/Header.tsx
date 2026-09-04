@@ -70,18 +70,18 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 		//  if position is sticky, the header is assigned z-index: 1020, which interferes with popups (monaco suggest-details, for example)
 		//  and would likely have to be overridden anyway (to be no more than 40, in the monaco case).
 		<div className="header p-0">
-			<Grid.Container fluid>
+			<Grid.Container>
 				{mobileMode && (
 					<button type="button" className="header-toggler ps-1" onClick={handleShowSidebar}>
 						<FontAwesomeIcon icon={faBars} />
 					</button>
 				)}
 
-				<a className="header-brand mx-auto d-md-none">
-					Bitfocus&nbsp;<span style={{ fontWeight: 'bold' }}>Companion</span>
+				<a className="header-brand mx-auto md:hidden">
+					Bitfocus&nbsp;<span className="font-bold">Companion</span>
 				</a>
 
-				<HeaderNav className="d-none d-md-flex me-auto">
+				<HeaderNav className="hidden md:flex me-auto">
 					{userConfig.properties?.installName && userConfig.properties?.installName.length > 0 && (
 						<li className="nav-item install-name">{userConfig.properties?.installName}</li>
 					)}
@@ -95,7 +95,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 								rel="noopener noreferrer"
 							>
 								<div className="flex">
-									<div className="align-self-center">
+									<div className="self-center">
 										<FontAwesomeIcon icon={faTriangleExclamation} className="header-update-icon" />
 									</div>
 									<div>

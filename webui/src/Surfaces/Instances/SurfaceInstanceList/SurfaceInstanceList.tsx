@@ -86,12 +86,12 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 
 	return (
 		<div className="connections-list-container flex-column-layout">
-			<div className="fixed-header d-flex flex-column">
+			<div className="fixed-header flex flex-col">
 				<MissingVersionsWarning moduleType={ModuleInstanceType.Surface} instances={surfaceInstances.instances} />
 
 				<GenericConfirmModal ref={confirmModalRef} />
 
-				<div className="d-flex align-items-center help-button-float">
+				<div className="flex items-center help-button-float">
 					<ButtonGroup className="connection-group-actions m-1 me-auto">
 						<Button color="primary" size="sm" onClick={() => void navigate({ to: '/surfaces/integrations/add' })}>
 							<FontAwesomeIcon icon={faPlug} className="me-1" />
@@ -150,7 +150,7 @@ function SurfaceInstancesListTableHeading() {
 	return (
 		<div className="flex flex-row">
 			<div className="grow">Surface Integrations </div>
-			<div className="no-break">
+			<div className="whitespace-nowrap">
 				<ButtonGroup className="table-header-buttons">
 					<VisibilityButton {...visibleInstances} keyId="disabled" color="secondary" label="Disabled" />
 					<VisibilityButton {...visibleInstances} keyId="ok" color="success" label="OK" />
@@ -166,8 +166,8 @@ function SurfaceInstancesListNoInstances() {
 	return (
 		<NonIdealState icon={faPlug}>
 			You haven't set up any surfaces yet. <br />
-			Try adding something from the list <span className="d-xl-none">below</span>
-			<span className="d-none d-xl-inline">to the right</span>.
+			Try adding something from the list <span className="xl:hidden">below</span>
+			<span className="hidden xl:inline">to the right</span>.
 		</NonIdealState>
 	)
 }

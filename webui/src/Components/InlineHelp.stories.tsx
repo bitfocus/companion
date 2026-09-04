@@ -18,7 +18,7 @@ export const Custom: Story = {
 	args: { children: '' },
 	render: () => (
 		<InlineHelpCustom help="This help text appears when you hover the custom trigger element.">
-			<span style={{ textDecoration: 'underline dotted', cursor: 'help' }}>hover me</span>
+			<span className="underline decoration-dotted cursor-help">hover me</span>
 		</InlineHelpCustom>
 	),
 }

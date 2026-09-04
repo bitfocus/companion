@@ -274,7 +274,7 @@ const SurfaceRow = observer(function SurfaceRow({
 					</span>
 				)}
 			</div>
-			<div className={classNames('grid-cell', { 'ps-4': isInGroup })}>
+			<div className={classNames('grid-cell', { 'ps-6': isInGroup })}>
 				<div>
 					<b>{surface.name ? `${surface.name} - (${surface.type})` : surface.type}</b>
 					{!!surface.hasFirmwareUpdates && (
@@ -296,7 +296,7 @@ const SurfaceRow = observer(function SurfaceRow({
 			</div>
 			<div className="grid-cell">
 				{surface.isConnected ? (
-					<ButtonGroup className="no-break">
+					<ButtonGroup className="whitespace-nowrap">
 						{surface.integrationType === 'emulator' && (
 							<>
 								<LinkButtonExternal

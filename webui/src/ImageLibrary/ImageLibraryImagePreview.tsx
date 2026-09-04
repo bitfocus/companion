@@ -29,7 +29,7 @@ export function ImageLibraryImagePreview({
 	className,
 	alt,
 	onLoad,
-}: ImageLibraryImagePreviewProps): JSX.Element {
+}: ImageLibraryImagePreviewProps): React.JSX.Element {
 	const {
 		data: queryData,
 		isLoading: queryLoading,

@@ -19,7 +19,7 @@ import debounceFn from 'debounce-fn'
 import type Express from 'express'
 import QuickLRU from 'quick-lru'
 import workerPool from 'workerpool'
-import { ParseControlId, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
+import { isLocationOnGrid, ParseControlId, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import {
 	resolveButtonStyleProperties,
 	type ResolveButtonStylePropertiesConfig,
@@ -109,18 +109,22 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 */
 	readonly imageLibrary: ImageLibrary
 
-	#pool = workerPool.pool(resolveThreadEntrypoint(import.meta.dirname, 'RenderThread.js'), {
-		minWorkers: 2,
-		maxWorkers: Math.max(4, Math.floor(os.cpus().length * 0.67)), // Use 2/3 of available CPUs, at least 4
-		workerType: 'thread',
-		onCreateWorker: () => {
-			this.#logger.info('Render worker created')
-			return undefined
-		},
-		onTerminateWorker: () => {
-			this.#logger.info('Render worker terminated')
-		},
-	})
+	// null when render threading is disabled: the pool spawns its minWorkers eagerly at construction,
+	// so it must not be created at all when rendering runs in-process
+	#pool: ReturnType<typeof workerPool.pool> | null = DEBUG_DISABLE_RENDER_THREADING
+		? null
+		: workerPool.pool(resolveThreadEntrypoint(import.meta.dirname, 'RenderThread.js'), {
+				minWorkers: 2,
+				maxWorkers: Math.max(4, Math.floor(os.cpus().length * 0.67)), // Use 2/3 of available CPUs, at least 4
+				workerType: 'thread',
+				onCreateWorker: () => {
+					this.#logger.info('Render worker created')
+					return undefined
+				},
+				onTerminateWorker: () => {
+					this.#logger.info('Render worker terminated')
+				},
+			})
 
 	// Track recent worker terminations (timestamps in ms), used for crash-loop detection
 	#workerTerminationTimestamps: number[] = []
@@ -140,11 +144,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		args: Parameters<(typeof GraphicsThreadMethods)[TKey]>,
 		attempts: number
 	): Promise<ReturnType<(typeof GraphicsThreadMethods)[TKey]>> => {
-		if (DEBUG_DISABLE_RENDER_THREADING) {
+		const pool = this.#pool
+		if (!pool) {
 			return (GraphicsThreadMethods[key] as any)(...args)
 		}
 
-		return this.#pool.exec(key, args).catch(async (e) => {
+		return pool.exec(key, args).catch(async (e) => {
 			const isTermination = e instanceof workerPool.TerminateError || e?.message?.includes('Worker is terminated')
 			if (!isTermination) throw e
 
@@ -334,13 +339,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					const { location } = args
 
 					const gridSize = this.#userConfigController.getKey('gridSize')
-					const locationIsInBounds =
-						location &&
-						gridSize &&
-						location.column <= gridSize.maxColumn &&
-						location.column >= gridSize.minColumn &&
-						location.row <= gridSize.maxRow &&
-						location.row >= gridSize.minRow
+					const locationIsInBounds = location && gridSize && isLocationOnGrid(gridSize, location)
 
 					const controlId = this.#pageStore.getControlIdAt(location)
 					const control = controlId ? this.controlsStore.getControl(controlId) : undefined
@@ -754,54 +753,59 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			{ labels: { state: 'in_progress' }, value: this.#renderQueue.inProgress },
 		])
 
-		// Worker pool's own queue: tasks handed to workerpool but not yet running on a thread (pending) and
-		// tasks currently executing on a thread (active). This is the true render-thread backlog.
-		metrics.labeledGauge('companion_render_pool_tasks', 'Render worker-pool tasks by state', ['state'], () => {
-			const stats = this.#pool.stats()
-			return [
-				{ labels: { state: 'pending' }, value: stats.pendingTasks },
-				{ labels: { state: 'active' }, value: stats.activeTasks },
-			]
-		})
-
-		// Peak pool tasks since the previous scrape - catches bursts that a scrape-time snapshot would miss.
-		// Read-and-reset per scrape, seeding the new window with the current reading so an in-flight burst
-		// isn't lost between reset and the next sampler tick.
-		metrics.labeledGauge(
-			'companion_render_pool_tasks_max',
-			'Peak render worker-pool tasks by state since the previous scrape',
-			['state'],
-			() => {
-				const stats = this.#pool.stats()
-				const pending = Math.max(this.#poolPendingMax, stats.pendingTasks)
-				const active = Math.max(this.#poolActiveMax, stats.activeTasks)
-				this.#poolPendingMax = stats.pendingTasks
-				this.#poolActiveMax = stats.activeTasks
+		// The pool gauges only exist when render threading is enabled - there is no backlog to report
+		// when rendering runs in-process
+		const pool = this.#pool
+		if (pool) {
+			// Worker pool's own queue: tasks handed to workerpool but not yet running on a thread (pending) and
+			// tasks currently executing on a thread (active). This is the true render-thread backlog.
+			metrics.labeledGauge('companion_render_pool_tasks', 'Render worker-pool tasks by state', ['state'], () => {
+				const stats = pool.stats()
 				return [
-					{ labels: { state: 'pending' }, value: pending },
-					{ labels: { state: 'active' }, value: active },
+					{ labels: { state: 'pending' }, value: stats.pendingTasks },
+					{ labels: { state: 'active' }, value: stats.activeTasks },
 				]
-			}
-		)
+			})
 
-		// Worker pool threads by state, for saturation context (busy vs idle against the max worker count).
-		metrics.labeledGauge('companion_render_pool_workers', 'Render worker-pool threads by state', ['state'], () => {
-			const stats = this.#pool.stats()
-			return [
-				{ labels: { state: 'busy' }, value: stats.busyWorkers },
-				{ labels: { state: 'idle' }, value: stats.idleWorkers },
-				{ labels: { state: 'total' }, value: stats.totalWorkers },
-			]
-		})
+			// Peak pool tasks since the previous scrape - catches bursts that a scrape-time snapshot would miss.
+			// Read-and-reset per scrape, seeding the new window with the current reading so an in-flight burst
+			// isn't lost between reset and the next sampler tick.
+			metrics.labeledGauge(
+				'companion_render_pool_tasks_max',
+				'Peak render worker-pool tasks by state since the previous scrape',
+				['state'],
+				() => {
+					const stats = pool.stats()
+					const pending = Math.max(this.#poolPendingMax, stats.pendingTasks)
+					const active = Math.max(this.#poolActiveMax, stats.activeTasks)
+					this.#poolPendingMax = stats.pendingTasks
+					this.#poolActiveMax = stats.activeTasks
+					return [
+						{ labels: { state: 'pending' }, value: pending },
+						{ labels: { state: 'active' }, value: active },
+					]
+				}
+			)
 
-		// Sample the pool backlog on a fast interval to maintain the high-water marks above. unref so it never
-		// keeps the process alive.
-		this.#poolStatsSampler = setInterval(() => {
-			const stats = this.#pool.stats()
-			if (stats.pendingTasks > this.#poolPendingMax) this.#poolPendingMax = stats.pendingTasks
-			if (stats.activeTasks > this.#poolActiveMax) this.#poolActiveMax = stats.activeTasks
-		}, 1000)
-		this.#poolStatsSampler.unref()
+			// Worker pool threads by state, for saturation context (busy vs idle against the max worker count).
+			metrics.labeledGauge('companion_render_pool_workers', 'Render worker-pool threads by state', ['state'], () => {
+				const stats = pool.stats()
+				return [
+					{ labels: { state: 'busy' }, value: stats.busyWorkers },
+					{ labels: { state: 'idle' }, value: stats.idleWorkers },
+					{ labels: { state: 'total' }, value: stats.totalWorkers },
+				]
+			})
+
+			// Sample the pool backlog on a fast interval to maintain the high-water marks above. unref so it never
+			// keeps the process alive.
+			this.#poolStatsSampler = setInterval(() => {
+				const stats = pool.stats()
+				if (stats.pendingTasks > this.#poolPendingMax) this.#poolPendingMax = stats.pendingTasks
+				if (stats.activeTasks > this.#poolActiveMax) this.#poolActiveMax = stats.activeTasks
+			}, 1000)
+			this.#poolStatsSampler.unref()
+		}
 
 		// Current ImageResults retained in memory
 		metrics.gauge('companion_image_results_live', 'ImageResult objects currently retained in memory', () => {

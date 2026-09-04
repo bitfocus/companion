@@ -3,7 +3,7 @@ import jsonPatch from 'fast-json-patch'
 import type { UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { ControlDependencies } from './ControlDependencies.js'
-import type { LayeredButtonDrawer } from './ControlTypes/Button/LayeredButtonDrawer.js'
+import type { IButtonDrawer } from './IButtonDrawer.js'
 
 export type ControlUpdateEvents = {
 	update: [change: UIControlUpdate]
@@ -117,7 +117,7 @@ export abstract class ControlBase<TJson> {
 	/**
 	 * The drawing surface for controls that render to a button, or `null` for controls that don't draw.
 	 */
-	abstract get drawing(): LayeredButtonDrawer | null
+	abstract get drawing(): IButtonDrawer | null
 
 	/**
 	 * Emit a change to the runtime properties of this control.
@@ -174,4 +174,14 @@ export abstract class ControlBase<TJson> {
 	 * @param force Trigger actions even if already in the state
 	 */
 	abstract pressControl(pressed: boolean, surfaceId: string | undefined, force?: boolean): void
+
+	/**
+	 * Execute a rotate of this control. Controls that don't support rotation (the default) do nothing and report
+	 * that they didn't handle it.
+	 * @param delta Signed rotation amount - sign is the direction, magnitude is the number of steps
+	 * @param surfaceId The surface that initiated this rotate
+	 */
+	rotateControl(_delta: number, _surfaceId: string | undefined): boolean {
+		return false
+	}
 }

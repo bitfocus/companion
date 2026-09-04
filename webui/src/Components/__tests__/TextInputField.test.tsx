@@ -266,6 +266,16 @@ describe('TextInputField', () => {
 			expect(items[0]).toHaveTextContent('Local Var')
 		})
 
+		it('does not crash filtering when an option has no label', async () => {
+			const store = makeStore([])
+			// modules can supply options with a missing label (#4435)
+			const localVariables = [{ value: 'local_val', label: undefined as unknown as string }]
+			const { user } = renderField({ useVariables: true, store, localVariables })
+			await user.type(screen.getByRole('textbox'), '$(local')
+			// should filter without throwing on the undefined label
+			expect(screen.getAllByRole('option')).toHaveLength(1)
+		})
+
 		it('does not navigate ArrowDown when the list is empty', async () => {
 			const store = makeStore([])
 			const { user } = renderField({ useVariables: true, store })

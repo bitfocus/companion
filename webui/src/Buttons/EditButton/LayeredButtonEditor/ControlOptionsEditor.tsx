@@ -20,7 +20,11 @@ interface ControlOptionsEditorProps {
 	configRef: MutableRefObject<any> // TODO
 }
 
-export function ControlOptionsEditor({ controlId, options, configRef }: ControlOptionsEditorProps): JSX.Element | null {
+export function ControlOptionsEditor({
+	controlId,
+	options,
+	configRef,
+}: ControlOptionsEditorProps): React.JSX.Element | null {
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
 	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
@@ -71,7 +75,7 @@ export function ControlOptionsEditor({ controlId, options, configRef }: ControlO
 	return (
 		<>
 			<GenericConfirmModal ref={confirmRef} />
-			<Form className="row g-2 grow" onSubmit={PreventDefaultHandler}>
+			<Form row className="gap-2 grow" onSubmit={PreventDefaultHandler}>
 				<FormLabel htmlFor={stepProgressionId} sm={4} column="sm">
 					Step Progression
 					<InlineHelpIcon className="ms-1">

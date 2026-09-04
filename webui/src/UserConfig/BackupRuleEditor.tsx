@@ -49,15 +49,7 @@ const PreviousBackupRow = observer(function PreviousBackupRow({ backup, ruleId }
 	return (
 		<tr>
 			<td>
-				<span
-					title={getFileName(backup.filePath)}
-					style={{
-						overflow: 'hidden',
-						textOverflow: 'ellipsis',
-						whiteSpace: 'nowrap',
-						fontWeight: 500,
-					}}
-				>
+				<span title={getFileName(backup.filePath)} className="truncate font-medium">
 					{getFileName(backup.filePath)}
 				</span>
 				<br />
@@ -65,7 +57,7 @@ const PreviousBackupRow = observer(function PreviousBackupRow({ backup, ruleId }
 					{new Date(backup.createdAt).toLocaleString()} • {formatFileSize(backup.fileSize)}
 				</small>
 			</td>
-			<td className="no-wrap" style={{ verticalAlign: 'middle' }}>
+			<td className="no-wrap align-middle">
 				<Button color="danger" size="sm" onClick={deleteBackup} title="Delete backup">
 					<FontAwesomeIcon icon={faTrash} />
 				</Button>
@@ -125,7 +117,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 	const previousBackups = [...(rule.previousBackups || [])].sort((a, b) => b.createdAt - a.createdAt)
 
 	return (
-		<Form className="p-3 row g-sm-2">
+		<Form row className="p-4 sm:gap-2">
 			<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
 				Rule Name
 			</FormLabel>

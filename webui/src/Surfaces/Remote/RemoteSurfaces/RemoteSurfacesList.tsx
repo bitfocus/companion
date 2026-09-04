@@ -60,7 +60,7 @@ export const RemoteSurfacesList = observer(function RemoteSurfacesList({
 			<div className="fixed-header">
 				<h4>Remote Surfaces</h4>
 
-				<p style={{ marginBottom: '0.5rem' }}>
+				<p className="mb-2">
 					The Stream Deck Studio and Network Dock support network connections. You can set up the connection from
 					Companion here, or use the Discovered Surfaces tab.
 					<br />
@@ -74,7 +74,7 @@ export const RemoteSurfacesList = observer(function RemoteSurfacesList({
 					<AddRemoteSurfaceButton />
 					<Button
 						color="warning"
-						className="d-xl-none"
+						className="xl:hidden"
 						onClick={() => void navigate({ to: '/surfaces/remote/discover' })}
 					>
 						<FontAwesomeIcon icon={faPlug} className="me-1" />

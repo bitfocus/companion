@@ -323,7 +323,7 @@ export const LineSelectionOverlay = observer(function LineSelectionOverlay({
 			{/* SVG rather than a div: only a stroke can be a hit target that follows a diagonal. The viewBox is
 			    the canvas backing-pixel space, which is what all the maths above is already in. */}
 			<svg
-				style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+				className="absolute left-0 top-0 w-full h-full pointer-events-none"
 				viewBox={`0 0 ${canvasSizePx.width} ${canvasSizePx.height}`}
 				preserveAspectRatio="none"
 			>

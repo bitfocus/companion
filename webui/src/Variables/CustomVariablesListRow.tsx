@@ -1,4 +1,5 @@
 import { faCompressArrowsAlt, faExpandArrowsAlt, faTrash } from '@fortawesome/free-solid-svg-icons'
+import '../Components/VariablesTable.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
@@ -58,7 +59,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 					</div>
 				)}
 				<div className="cell-header-item">
-					<ButtonGroup className="float-end">
+					<ButtonGroup className="float-right">
 						{isCollapsed ? (
 							<Button onClick={doExpand} size="sm" title="Expand variable view">
 								<FontAwesomeIcon icon={faExpandArrowsAlt} />

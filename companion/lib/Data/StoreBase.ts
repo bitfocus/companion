@@ -163,6 +163,11 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 * Close the file because we're existing
 	 */
 	public close(): void {
+		if (this.backupCycle) {
+			clearInterval(this.backupCycle)
+			this.backupCycle = undefined
+		}
+
 		this.store.close()
 	}
 

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
@@ -41,6 +42,7 @@ import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/Styl
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
 import type { Complete } from '@companion-module/base'
 import LogController from '../Log/Controller.js'
 import {
@@ -115,7 +117,6 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 * The preset definitions, as viewed by the ui
 	 */
 	#uiPresetDefinitions: Record<string, UIPresetSections> = {}
-
 	/**
 	 * The composite element definitions
 	 */
@@ -389,6 +390,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			type: 'preset:button',
 			steps: {},
 			feedbacks: [...definition.model.feedbacks, ...definition.presetExtraFeedbacks],
+			checksum: this.#getPresetChecksum(definition),
 		}
 
 		// Omit actions, as they can't be executed in the preview. By doing this we avoid bothering the module with lifecycle methods for them
@@ -468,7 +470,27 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				presetId,
 				variableValues: appliedVariableValues,
 			},
+			checksum: this.#getPresetChecksum(definition),
 		}
+	}
+
+	/**
+	 * Get a stable, content-based checksum of a preset definition, memoised on the definition itself so it is
+	 * computed at most once per stored definition (the memo resets naturally when the connection re-reports its
+	 * presets, since the whole definition object is replaced). Produced here, alongside the resolved model, so a
+	 * caller always gets a checksum that matches the model it was handed - the two cannot drift apart. Covers the
+	 * button `model` and the preview-only `presetExtraFeedbacks`; it is derived from content, so it is stable
+	 * across module restarts.
+	 */
+	#getPresetChecksum(definition: PresetDefinition): string {
+		return (definition.checksum ??= createHash('sha1')
+			.update(
+				createStableObjectHash({
+					model: definition.model,
+					presetExtraFeedbacks: definition.presetExtraFeedbacks,
+				})
+			)
+			.digest('hex'))
 	}
 
 	/**
@@ -628,7 +650,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		const missingReferencedFeedbackDefinitions = new Set<string>()
 		const missingReferencedActionDefinitions = new Set<string>()
 
-		const allowedSet = new Set<string>(['local'])
+		const allowedSet = new Set<string>(['local', 'this'])
 
 		const replaceVariablesInEntityOptions = (
 			definition: ClientEntityDefinition,
@@ -657,6 +679,42 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 				}
 			)
 
+		// Fix up the variable references in a single entity and any children it may have.
+		// The definition is looked up using the entity's own connectionId, so that internal
+		// entities (eg building blocks, `user_value` local variables) resolve too.
+		const fixupEntity = (entity: SomeEntityModel): void => {
+			if (entity.type === EntityModelType.Feedback && entity.styleOverrides) {
+				for (const styleOverride of entity.styleOverrides) {
+					if (styleOverride.override && isExpressionOrValue(styleOverride.override)) {
+						if (styleOverride.override.isExpression) {
+							styleOverride.override.value = replaceAllVariables(styleOverride.override.value, label, allowedSet)
+						} else if (styleOverride.elementProperty === 'text' && typeof styleOverride.override.value === 'string') {
+							// TODO - this may be too strict/loose
+							styleOverride.override.value = replaceAllVariables(styleOverride.override.value, label, allowedSet)
+						}
+					}
+				}
+			}
+
+			const definition = this.getEntityDefinition(entity.type, entity.connectionId, entity.definitionId)
+			if (!definition) {
+				if (entity.type === EntityModelType.Action) {
+					missingReferencedActionDefinitions.add(entity.definitionId)
+				} else {
+					missingReferencedFeedbackDefinitions.add(entity.definitionId)
+				}
+			} else {
+				entity.options = replaceVariablesInEntityOptions(definition, entity.options)
+			}
+
+			if (entity.connectionId === 'internal' && entity.children) {
+				for (const childGroup of Object.values(entity.children)) {
+					if (!childGroup) continue
+					for (const child of childGroup) fixupEntity(child)
+				}
+			}
+		}
+
 		/*
 		 * Clean up variable references: $(label:variable)
 		 * since the name of the connection is dynamic. We don't want to
@@ -666,24 +724,16 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			// Update variable references in style layers
 			replaceAllVariablesInElements(preset.model.style.layers, label, allowedSet)
 
-			if (preset.model.feedbacks) {
-				for (const feedback of preset.model.feedbacks) {
-					if (feedback.type === EntityModelType.Feedback && feedback.styleOverrides) {
-						for (const styleOverride of feedback.styleOverrides) {
-							if (styleOverride.override && isExpressionOrValue(styleOverride.override)) {
-								if (styleOverride.override.isExpression) {
-									styleOverride.override.value = replaceAllVariables(styleOverride.override.value, label, allowedSet)
-								} else if (
-									styleOverride.elementProperty === 'text' &&
-									typeof styleOverride.override.value === 'string'
-								) {
-									// TODO - this may be too strict/loose
-									styleOverride.override.value = replaceAllVariables(styleOverride.override.value, label, allowedSet)
-								}
-							}
-						}
-					}
-				}
+			for (const feedback of preset.model.feedbacks ?? []) {
+				fixupEntity(feedback)
+			}
+
+			for (const localVariable of preset.model.localVariables ?? []) {
+				fixupEntity(localVariable)
+			}
+
+			for (const extraFeedback of preset.presetExtraFeedbacks ?? []) {
+				fixupEntity(extraFeedback)
 			}
 
 			for (const step of Object.values(preset.model.steps)) {
@@ -692,15 +742,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 					if (!set || !Array.isArray(set)) continue
 
 					for (const action of set) {
-						if (action.type !== EntityModelType.Action) continue
-
-						const definition = this.getEntityDefinition(EntityModelType.Action, connectionId, action.definitionId)
-						if (!definition) {
-							missingReferencedActionDefinitions.add(action.definitionId)
-							continue
-						}
-
-						action.options = replaceVariablesInEntityOptions(definition, action.options)
+						fixupEntity(action)
 					}
 				}
 			}

@@ -203,13 +203,6 @@ export interface ControlWithActionSets extends ControlBase<any> {
 	 * for a button they are the same pool object.)
 	 */
 	readonly actionSets: SomeStepManager
-
-	/**
-	 * Execute a rotate of this control
-	 * @param delta Signed rotation amount - sign is the direction, magnitude is the number of steps
-	 * @param surfaceId The surface that initiated this rotate
-	 */
-	rotateControl(delta: number, surfaceId: string | undefined): void
 }
 
 export interface ControlWithoutActionSets extends ControlBase<any> {

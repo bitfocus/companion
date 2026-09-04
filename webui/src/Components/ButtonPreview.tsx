@@ -19,7 +19,7 @@ export interface ButtonPreviewProps extends Omit<ButtonPreviewBaseProps, 'onClic
 export const ButtonPreview = memo(function ButtonPreview(props: ButtonPreviewProps) {
 	const classes = {
 		'button-control': true,
-		fixed: !!props.fixedSize && props.fixedSize !== 100,
+		'fixed-72': !!props.fixedSize && props.fixedSize !== 100,
 		'fixed-100': props.fixedSize === 100,
 		drophere: props.canDrop,
 		drophover: props.dropHover,
@@ -173,7 +173,7 @@ export interface ButtonPreviewBaseProps {
 export const ButtonPreviewBase = memo(function ButtonPreview(props: ButtonPreviewBaseProps) {
 	const classes = {
 		'button-control': true,
-		fixed: !!props.fixedSize && props.fixedSize !== 100,
+		'fixed-72': !!props.fixedSize && props.fixedSize !== 100,
 		'fixed-100': props.fixedSize === 100,
 		drophere: props.canDrop,
 		drophover: props.dropHover,
@@ -188,8 +188,8 @@ export const ButtonPreviewBase = memo(function ButtonPreview(props: ButtonPrevie
 	return (
 		<div
 			// dnd-kit clones the element holding the drag ref into a top-layer popover as the drag
-			// feedback. It must be the outer .button-control (which carries the `.fixed` sizing for
-			// its child .button-border) - putting it on the inner element detaches it from `.fixed`
+			// feedback. It must be the outer .button-control (which carries the `.fixed-72` sizing for
+			// its child .button-border) - putting it on the inner element detaches it from `.fixed-72`
 			// and the `padding-bottom: 100%` aspect hack then resolves against the viewport.
 			ref={props.dragRef ?? props.dropRef}
 			className={classnames(classes, props.className)}
@@ -229,7 +229,10 @@ export const ButtonPreviewBase = memo(function ButtonPreview(props: ButtonPrevie
 	)
 })
 
-function useImagePreloader(imageUrl: string | null) {
+// Shared with the editing grid's own cell component, which needs the same preload-before-paint
+// behaviour but entirely different gesture handling
+// eslint-disable-next-line react-refresh/only-export-components
+export function useImagePreloader(imageUrl: string | null): string | null {
 	const [preloadedImage, setPreloadedImage] = useState<string | null>(imageUrl)
 	useEffect(() => {
 		let aborted = false

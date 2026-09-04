@@ -73,7 +73,7 @@ export function ControlActionStepTab({
 
 					<Button
 						color="success"
-						className="fw-medium"
+						className="font-medium"
 						variant={runtimeProps.current_step_id === selectedKey || disabledSetStep ? 'outline' : undefined}
 						disabled={runtimeProps.current_step_id === selectedKey || disabledSetStep}
 						onClick={() => service.setCurrentStep(selectedKey)}
@@ -98,9 +98,9 @@ export function ControlActionStepTab({
 				</ButtonGroup>
 			)}
 
-			<div className="mt-10">
+			<div className="mt-2">
+				{' '}
 				{/* Wrap the entity-category, for :first-child to work */}
-
 				{rotaryActions && selectedStepProps && (
 					<>
 						<MyErrorBoundary>
@@ -134,7 +134,6 @@ export function ControlActionStepTab({
 						</MyErrorBoundary>
 					</>
 				)}
-
 				{selectedStepProps && (
 					<>
 						<MyErrorBoundary>
@@ -165,7 +164,7 @@ export function ControlActionStepTab({
 				)}
 			</div>
 
-			<div className="my-3">
+			<div className="my-4">
 				<Button onClick={() => service.appendSet(selectedKey)} color="primary">
 					<FontAwesomeIcon icon={faPlus} /> Add duration group
 				</Button>

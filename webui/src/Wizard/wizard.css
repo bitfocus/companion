@@ -37,14 +37,14 @@
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.04em;
-		color: var(--cui-secondary-color, #768192);
+		color: var(--color-muted);
 	}
 
 	.wizard-review-list {
 		list-style: none;
 		padding-left: 0;
 		margin-bottom: 0;
-		border: 1px solid var(--cui-border-color, #c4c9d0);
+		border: 1px solid var(--color-border);
 		border-radius: 0.5rem;
 		overflow: hidden;
 	}
@@ -56,7 +56,7 @@
 		padding: 0.5rem 0.75rem;
 
 		& + .wizard-review-item {
-			border-top: 1px solid var(--cui-border-color-translucent, rgb(0 0 21 / 10%));
+			border-top: 1px solid var(--color-border-translucent);
 		}
 	}
 
@@ -71,18 +71,18 @@
 		font-size: 0.75rem;
 
 		&.wizard-review-badge-add {
-			background-color: var(--cui-success-bg-subtle, #d1e7dd);
-			color: var(--cui-success, #2eb85c);
+			background-color: var(--color-success-bg-subtle);
+			color: var(--color-success);
 		}
 
 		&.wizard-review-badge-remove {
-			background-color: var(--cui-danger-bg-subtle, #f8d7da);
-			color: var(--cui-danger, #e55353);
+			background-color: var(--color-danger-bg-subtle);
+			color: var(--color-danger);
 		}
 
 		&.wizard-review-badge-info {
-			background-color: var(--cui-tertiary-bg, #ebedef);
-			color: var(--cui-secondary-color, #768192);
+			background-color: var(--color-surface-subtle);
+			color: var(--color-muted);
 		}
 	}
 }

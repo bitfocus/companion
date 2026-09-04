@@ -57,7 +57,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 
 	const inputId = useId()
 
-	let control: JSX.Element | string | undefined = undefined
+	let control: React.JSX.Element | string | undefined = undefined
 	let features: InputFeatureIconsProps | undefined
 
 	const fieldType = definition.type
@@ -120,7 +120,7 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 			break
 		case 'checkbox':
 			control = (
-				<div style={{ marginRight: 40, marginTop: 2 }}>
+				<div className="me-10 mt-0.5">
 					<SwitchInputField id={inputId} value={!!value} setValue={setValue2} tooltip={definition.tooltip} />
 				</div>
 			)
@@ -149,12 +149,12 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 
 	return (
 		<>
-			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames({ displayNone: !isVisible })}>
+			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames({ hidden: !isVisible })}>
 				{definition.label}
 				<InputFeatureIcons {...features} />
 				{definition.tooltip && <InlineHelpIcon className="ms-1">{definition.tooltip}</InlineHelpIcon>}
 			</FormLabel>
-			<Grid.Col sm={8} className={classNames({ displayNone: !isVisible })}>
+			<Grid.Col sm={8} className={classNames({ hidden: !isVisible })}>
 				{control}
 				{definition.description && <div className="form-text">{definition.description}</div>}
 			</Grid.Col>

@@ -1,6 +1,7 @@
 import type { IRange, languages } from 'monaco-editor'
 import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api.d.ts' // In theory importable with import type { Monaco } from '@monaco-editor/react'
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
+import { companionExpressionColorProvider } from './Expression.colors.js'
 
 export const COMPANION_EXPRESSION_LANGUAGE_ID = 'companionExpression'
 
@@ -14,6 +15,8 @@ export function registerCompanionExpressionLanguage(monaco: typeof Monaco): void
 		COMPANION_EXPRESSION_LANGUAGE_ID,
 		companionExpressionCompletionItemProvider
 	)
+	// Replaces Monaco's built-in colour detection, which is unsafe here - see Expression.colors.ts
+	monaco.languages.registerColorProvider(COMPANION_EXPRESSION_LANGUAGE_ID, companionExpressionColorProvider)
 
 	// Define custom theme for Companion Expression language (based on JavaScript colors)
 	monaco.editor.defineTheme('companion-expression-light', {
@@ -84,7 +87,37 @@ export const builtinFunctionCompletions: Array<{
 	{ name: 'log10', detail: 'log10(number)', documentation: 'Returns the base-10 logarithm of a number' },
 	{ name: 'exp', detail: 'exp(number)', documentation: 'Returns e raised to the power of a number' },
 	{ name: 'sqrt', detail: 'sqrt(number)', documentation: 'Returns the square root of a number' },
+	{ name: 'cbrt', detail: 'cbrt(number)', documentation: 'Returns the cube root of a number' },
 	{ name: 'pow', detail: 'pow(base, exponent)', documentation: 'Returns the base raised to the power of the exponent' },
+	{ name: 'sin', detail: 'sin(number)', documentation: 'Takes an angle in radians and returns the sine of the angle' },
+	{
+		name: 'cos',
+		detail: 'cos(number)',
+		documentation: 'Takes an angle in radians and returns the cosine of the angle',
+	},
+	{
+		name: 'tan',
+		detail: 'tan(number)',
+		documentation: 'Takes an angle in radians and returns the tangent of the angle',
+	},
+	{
+		name: 'asin',
+		detail: 'asin(number)',
+		documentation: 'Takes a number and returns the inverse sine angle of the number in radians',
+	},
+	{
+		name: 'acos',
+		detail: 'acos(number)',
+		documentation: 'Takes a number and returns the inverse cosine angle of the number in radians',
+	},
+	{
+		name: 'atan',
+		detail: 'atan(number)',
+		documentation: 'Takes a number and returns the inverse tangent angle of the number in radians',
+	},
+	{ name: 'asinh', detail: 'asinh(number)', documentation: 'Returns the inverse hyperbolic sine of a number' },
+	{ name: 'acosh', detail: 'acosh(number)', documentation: 'Returns the inverse hyperbolic cosine of a number' },
+	{ name: 'atanh', detail: 'atanh(number)', documentation: 'Returns the inverse hyperbolic tangent of a number' },
 
 	// String operations
 	{ name: 'trim', detail: 'trim(string)', documentation: 'Removes whitespace from both ends of a string' },

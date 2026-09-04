@@ -67,7 +67,7 @@ interface ConfigurePanelProps {
 	config: EmulatorConfig
 }
 
-function ConfigurePanel({ config }: ConfigurePanelProps): JSX.Element | null {
+function ConfigurePanel({ config }: ConfigurePanelProps): React.JSX.Element | null {
 	const [show, setShow] = useState(true)
 	const [fullscreen, setFullscreen] = useState(document.fullscreenElement !== null)
 

@@ -10,7 +10,7 @@ interface ConvertToNormalButtonProps {
 	location: ControlLocation
 }
 
-export function ConvertToNormalButton({ location }: ConvertToNormalButtonProps): JSX.Element {
+export function ConvertToNormalButton({ location }: ConvertToNormalButtonProps): React.JSX.Element {
 	const convertModalRef = useRef<GenericConfirmModalRef>(null)
 	const convertControlMutation = useMutationExt(trpc.controls.convertControl.mutationOptions())
 
