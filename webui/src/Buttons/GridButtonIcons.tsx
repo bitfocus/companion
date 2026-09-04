@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { DEFAULT_PREVIEW_RENDER_SIZE } from '@companion-app/shared/Model/Preview.js'
 import { ButtonPreview } from '~/Components/ButtonPreview.js'
 import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 
@@ -58,11 +59,14 @@ export const ButtonGridIconBase = memo(function ButtonGridIconBase({
 type ButtonGridIconProps = Omit<ButtonGridIconBaseProps, 'image'>
 
 export const ButtonGridIcon = memo(function ButtonGridIconWithImage({ ...props }: ButtonGridIconProps) {
-	const { image, isUsed } = useButtonImageForLocation({
-		pageNumber: Number(props.pageNumber),
-		column: props.column,
-		row: props.row,
-	})
+	const { image, isUsed } = useButtonImageForLocation(
+		{
+			pageNumber: Number(props.pageNumber),
+			column: props.column,
+			row: props.row,
+		},
+		DEFAULT_PREVIEW_RENDER_SIZE
+	)
 
 	return <ButtonGridIconBase {...props} image={isUsed ? image : null} />
 })

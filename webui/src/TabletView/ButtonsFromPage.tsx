@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo } from 'react'
 import { useInView } from 'react-intersection-observer'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { DEFAULT_PREVIEW_RENDER_SIZE } from '@companion-app/shared/Model/Preview.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { ButtonPreview } from '~/Components/ButtonPreview.js'
 import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
@@ -138,7 +139,7 @@ export const ButtonWrapper = memo(function ButtonWrapper({
 }: ButtonWrapperProps) {
 	const location = useMemo(() => ({ pageNumber, column, row }), [pageNumber, column, row])
 
-	const { image } = useButtonImageForLocation(location)
+	const { image } = useButtonImageForLocation(location, DEFAULT_PREVIEW_RENDER_SIZE)
 
 	const buttonStyle = useMemo(
 		() => ({

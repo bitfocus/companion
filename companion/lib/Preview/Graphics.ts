@@ -7,6 +7,13 @@ import {
 	JsonValueSchema,
 	type ExpressionableOptionsObject,
 } from '@companion-app/shared/Model/Options.js'
+import {
+	DEFAULT_PREVIEW_RENDER_SIZE,
+	formatPreviewRenderSize,
+	PREVIEW_RENDER_SIZE_MAX,
+	PREVIEW_RENDER_SIZE_MIN,
+	type PreviewRenderSize,
+} from '@companion-app/shared/Model/Preview.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { ControlsController } from '../Controls/Controller.js'
@@ -24,6 +31,17 @@ export const zodLocation: z.ZodSchema<ControlLocation> = z.object({
 	column: z.number(),
 })
 
+/**
+ * The pixel size a preview is wanted at. Optional on the wire, defaulting to the square every caller wanted before
+ * there was anything else to ask for.
+ */
+export const zodPreviewRenderSize = z
+	.object({
+		width: z.number().int().min(PREVIEW_RENDER_SIZE_MIN).max(PREVIEW_RENDER_SIZE_MAX),
+		height: z.number().int().min(PREVIEW_RENDER_SIZE_MIN).max(PREVIEW_RENDER_SIZE_MAX),
+	})
+	.default(DEFAULT_PREVIEW_RENDER_SIZE)
+
 type PreviewRenderEvents = {
 	[id: `location:${string}`]: [image: WrappedImage]
 	[id: `controlId:${string}`]: [dataUrl: string | null]
@@ -32,6 +50,13 @@ type PreviewRenderEvents = {
 
 const getLocationSubId = (location: ControlLocation): string =>
 	`${location.pageNumber}_${location.row}_${location.column}`
+
+/**
+ * A location is watched once per size rather than once per watcher: two cells showing the same button at the same
+ * size share one encode, and the same button wanted as a square and as a strip is two.
+ */
+const getLocationSizeSubId = (locationId: string, size: PreviewRenderSize): string =>
+	`${locationId}:${formatPreviewRenderSize(size)}`
 
 /**
  * The class that manages button preview generation/relay for interfaces
@@ -60,6 +85,12 @@ export class PreviewGraphics {
 
 	readonly #renderEvents = new EventEmitter<PreviewRenderEvents>()
 
+	/**
+	 * Which sizes each location is currently being watched at. A redraw is encoded once per size rather than once
+	 * per watcher, and a size stops being encoded as soon as its last watcher goes.
+	 */
+	readonly #watchedLocationSizes = new Map<string, Map<string, WatchedSize>>()
+
 	readonly #updateButtonQueue: ImageWriteQueue<string, [ControlLocation, string | null, ImageResult]>
 	readonly #recheckQueue: ImageWriteQueue<string, [string, ControlLocation]>
 
@@ -84,9 +115,14 @@ export class PreviewGraphics {
 					)
 				}
 
-				if (this.#renderEvents.listenerCount(`location:${locationId}`) > 0) {
-					this.#renderEvents.emit(`location:${locationId}`, {
-						image: await render.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png'),
+				// Snapshotted, because a watcher can come or go while an encode is in flight
+				const watchedSizes = Array.from(this.#watchedLocationSizes.get(locationId)?.values() ?? [])
+				for (const { size } of watchedSizes) {
+					const subId = getLocationSizeSubId(locationId, size)
+					if (this.#renderEvents.listenerCount(`location:${subId}`) === 0) continue
+
+					this.#renderEvents.emit(`location:${subId}`, {
+						image: await render.drawNativeEncoded(size.width, size.height, null, 'png'),
 						isUsed: !!render.style,
 					})
 				}
@@ -128,20 +164,27 @@ export class PreviewGraphics {
 				.input(
 					z.object({
 						location: zodLocation,
+						size: zodPreviewRenderSize,
 					})
 				)
 				.subscription(async function* ({ signal, input }) {
-					const { location } = input
+					const { location, size } = input
 					const locationId = getLocationSubId(location)
+					const subId = getLocationSizeSubId(locationId, size)
 
-					const changes = toIterable(self.#renderEvents, `location:${locationId}`, signal)
+					const releaseSize = self.#watchLocationSize(locationId, size)
+					try {
+						const changes = toIterable(self.#renderEvents, `location:${subId}`, signal)
 
-					const render = self.#graphicsController.getCachedRenderOrGeneratePlaceholder(location)
-					const dataUrl = await render.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
-					yield { image: dataUrl, isUsed: !!render.style } satisfies WrappedImage
+						const render = self.#graphicsController.getCachedRenderOrGeneratePlaceholder(location)
+						const dataUrl = await render.drawNativeEncoded(size.width, size.height, null, 'png')
+						yield { image: dataUrl, isUsed: !!render.style } satisfies WrappedImage
 
-					for await (const [image] of changes) {
-						yield image
+						for await (const [image] of changes) {
+							yield image
+						}
+					} finally {
+						releaseSize()
 					}
 				}),
 
@@ -268,6 +311,41 @@ export class PreviewGraphics {
 	}
 
 	/**
+	 * Record that a location is being watched at a size, and return the release for when that watcher goes.
+	 *
+	 * Registered separately from the event listener because the redraw has to know which sizes to encode before it
+	 * has anything to emit, and an EventEmitter can only be asked whether a name it already knows has listeners.
+	 */
+	#watchLocationSize(locationId: string, size: PreviewRenderSize): () => void {
+		const key = formatPreviewRenderSize(size)
+
+		let sizes = this.#watchedLocationSizes.get(locationId)
+		if (!sizes) {
+			sizes = new Map()
+			this.#watchedLocationSizes.set(locationId, sizes)
+		}
+
+		const existing = sizes.get(key)
+		if (existing) existing.count++
+		else sizes.set(key, { size, count: 1 })
+
+		let released = false
+		return () => {
+			if (released) return
+			released = true
+
+			const sizes = this.#watchedLocationSizes.get(locationId)
+			const entry = sizes?.get(key)
+			if (!sizes || !entry) return
+
+			if (--entry.count > 0) return
+
+			sizes.delete(key)
+			if (sizes.size === 0) this.#watchedLocationSizes.delete(locationId)
+		}
+	}
+
+	/**
 	 * Send a button update to the UIs
 	 */
 	#updateButton(location: ControlLocation, render: ImageResult): void {
@@ -341,6 +419,11 @@ export class PreviewGraphics {
 			this.#logger.error(`Error while rechecking preview session for control ${previewSession.controlId}: ${e}`)
 		}
 	}
+}
+
+interface WatchedSize {
+	readonly size: PreviewRenderSize
+	count: number
 }
 
 interface PreviewSession {

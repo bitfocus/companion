@@ -5,10 +5,10 @@ import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 
 /**
- * Fixed resolution (px) used when rendering preview data urls for web/emulator/cloud/import consumers.
- * Matches the effective resolution the previously deprecated drawDataUrl path produced (72px logical at 4x oversampling).
+ * Re-exported so the many consumers which only want the default preview size keep finding it here, while the size
+ * model itself lives with the rest of the preview types the client shares.
  */
-export const PREVIEW_RENDER_SIZE = 288
+export { PREVIEW_RENDER_SIZE } from '@companion-app/shared/Model/Preview.js'
 
 export interface ImageResultProcessedStyle {
 	type: 'button' | 'pagenum' | 'pageup' | 'pagedown'
