@@ -2,7 +2,6 @@ import { describe, expect, test } from 'vitest'
 import type { SurfaceConfig, SurfaceSchemaLayoutDefinition } from '@companion-app/shared/Model/Surfaces.js'
 import {
 	buildGridSurfaceLayout,
-	resolveControlStylePreset,
 	surfaceButtonSizesFromLayouts,
 	surfaceLayoutsFromConfigs,
 	type SurfaceLayoutSource,
@@ -44,24 +43,6 @@ const squareLayout: SurfaceSchemaLayoutDefinition = {
 	stylePresets: { default: { bitmap: { w: 72, h: 72 } } },
 	controls: { '0/0': { row: 0, column: 0 } },
 }
-
-describe('resolveControlStylePreset', () => {
-	test('uses the default preset when the control names none', () => {
-		expect(resolveControlStylePreset(neoLayout, { row: 0, column: 0 })).toEqual({ bitmap: { w: 96, h: 96 } })
-	})
-
-	test('uses the named preset when the control names one', () => {
-		expect(resolveControlStylePreset(neoLayout, { row: 1, column: 0, stylePreset: 'infoBar' })).toEqual({
-			bitmap: { w: 248, h: 58 },
-		})
-	})
-
-	test('falls back to the default preset when the named one is unknown', () => {
-		expect(resolveControlStylePreset(neoLayout, { row: 1, column: 0, stylePreset: 'nope' })).toEqual({
-			bitmap: { w: 96, h: 96 },
-		})
-	})
-})
 
 describe('surfaceLayoutsFromConfigs', () => {
 	test('includes connected and offline surfaces alike', () => {

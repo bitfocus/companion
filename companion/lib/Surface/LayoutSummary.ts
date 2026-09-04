@@ -5,31 +5,15 @@ import type {
 	SurfaceConfig,
 	SurfaceLayoutBitmapSize,
 	SurfaceSchemaControlDefinition,
-	SurfaceSchemaControlStylePreset,
 	SurfaceSchemaLayoutDefinition,
 } from '@companion-app/shared/Model/Surfaces.js'
+import { resolveControlStylePreset } from '@companion-app/shared/SurfaceLayout.js'
 import { getSurfaceName } from './Util.js'
 
 export interface SurfaceLayoutSource {
 	surfaceId: string
 	config: SurfaceConfig
 	isConnected: boolean
-}
-
-/**
- * The style a control is drawn with: its named preset if it has one, otherwise the required default preset.
- * An unknown preset name falls back to the default, matching how the panels resolve their own controls.
- */
-export function resolveControlStylePreset(
-	layout: SurfaceSchemaLayoutDefinition,
-	control: SurfaceSchemaControlDefinition
-): SurfaceSchemaControlStylePreset {
-	if (control.stylePreset) {
-		const preset = layout.stylePresets[control.stylePreset]
-		if (preset) return preset
-	}
-
-	return layout.stylePresets.default
 }
 
 /**
