@@ -152,26 +152,15 @@ export async function getFreeUdpPort(): Promise<number> {
 	})
 }
 
-/** Marks a stubbed runtime directory - keep in sync with STUB_RUNTIME_MARKER in tools/fetch_nodejs.mts */
-const STUB_RUNTIME_MARKER = '.companion-test-stub'
-
-/**
- * Runtime names (e.g. 'node18') whose binaries are stubbed with the node running the tests instead
- * of the real pinned runtime. Populated by prepareForModuleChildren - tests must skip any assertion
- * about the child's true node version for these
- */
-export const stubbedNodeRuntimes = new Set<string>()
-
 /**
  * Provision what spawning real module child processes needs: node binaries at the paths the host
  * resolves runtimes from, and the bundled thread entrypoints that api-2.x modules run under (built
  * the same way `yarn dev` builds them).
  *
- * The real pinned runtimes are downloaded via `yarn fetch-runtimes` (the same script `yarn dev` and
- * packaging run), so a module declaring node18 really spawns on node18. Only when that download is
- * impossible (e.g. offline) is a runtime stubbed with a link to the node running the tests - which
- * can misbehave (the host tailors spawn arguments to the declared runtime), so on CI a missing
- * runtime is an error instead.
+ * The real pinned runtimes are required - the host tailors how it spawns a child (such as the
+ * permission model arguments) to the declared runtime, so substituting a different node binary
+ * changes behaviour. They are downloaded via `yarn fetch-runtimes` (the same script `yarn dev` and
+ * packaging run) when missing.
  */
 const prepareForModuleChildren = (() => {
 	let prepared: Promise<void> | null = null
@@ -191,51 +180,20 @@ const prepareForModuleChildren = (() => {
 				return {
 					runtimeName,
 					versionNumber,
-					runtimeDir,
 					nodePath:
 						process.platform === 'win32' ? path.join(runtimeDir, 'node.exe') : path.join(runtimeDir, 'bin/node'),
 				}
 			})
 
-			const isMissingOrStub = (runtime: (typeof runtimePaths)[0]): boolean =>
-				!fs.existsSync(runtime.nodePath) || fs.existsSync(path.join(runtime.runtimeDir, STUB_RUNTIME_MARKER))
-
-			if (runtimePaths.some(isMissingOrStub)) {
-				// Download the real runtimes (this also replaces stubs left by an earlier offline run)
-				try {
-					execSync('yarn fetch-runtimes', { cwd: repoRoot, stdio: 'inherit' })
-				} catch (e) {
-					console.warn(`Fetching the module node runtimes failed: ${e}`)
-				}
+			if (runtimePaths.some((runtime) => !fs.existsSync(runtime.nodePath))) {
+				execSync('yarn fetch-runtimes', { cwd: repoRoot, stdio: 'inherit' })
 			}
 
-			const stubbed: string[] = []
-			for (const runtime of runtimePaths) {
-				if (!isMissingOrStub(runtime)) continue
-
-				if (process.env.CI)
-					throw new Error(
-						`Node.js runtime ${runtime.runtimeName} (${runtime.versionNumber}) is missing from .cache/node-runtime ` +
-							`and could not be fetched. Stubbing it with the test host's node would hide node-version incompatibilities`
-					)
-
-				if (!fs.existsSync(runtime.nodePath)) {
-					fs.mkdirSync(path.dirname(runtime.nodePath), { recursive: true })
-					fs.writeFileSync(path.join(runtime.runtimeDir, STUB_RUNTIME_MARKER), '')
-					try {
-						fs.symlinkSync(process.execPath, runtime.nodePath)
-					} catch (_e) {
-						// Symlinks can need privileges on windows - fall back to a copy
-						fs.copyFileSync(process.execPath, runtime.nodePath)
-					}
-				}
-				stubbedNodeRuntimes.add(runtime.runtimeName)
-				stubbed.push(`${runtime.runtimeName} (${runtime.versionNumber})`)
-			}
-			if (stubbed.length > 0) {
-				console.warn(
-					`Module runtimes ${stubbed.join(', ')} are stubbed with the test host's node ${process.versions.node}. ` +
-						`Modules declaring them may not behave as they would on the real runtime.`
+			const missing = runtimePaths.filter((runtime) => !fs.existsSync(runtime.nodePath))
+			if (missing.length > 0) {
+				throw new Error(
+					`Node.js runtimes ${missing.map((r) => `${r.runtimeName} (${r.versionNumber})`).join(', ')} are missing ` +
+						`from .cache/node-runtime after running "yarn fetch-runtimes" - module child processes cannot be spawned`
 				)
 			}
 

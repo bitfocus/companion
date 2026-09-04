@@ -5,7 +5,7 @@ import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import nodeVersions from '../../../assets/nodejs-versions.json' with { type: 'json' }
 import fixtureVersions from './modules/fixture-versions.json' with { type: 'json' }
-import { createTestApp, stubbedNodeRuntimes, type TestApp } from './TestApp.js'
+import { createTestApp, type TestApp } from './TestApp.js'
 
 // Spawning real module child processes is slower than the other suites: the first boot also
 // provisions node runtimes and thread bundles
@@ -66,12 +66,8 @@ describe('real module children across module-api versions', () => {
 				).toBeTruthy()
 			}, 30_000)
 
-			// The child runs on exactly the node version its manifest requests. When the real runtime
-			// hasn't been fetched (yarn fetch-runtimes) the harness stubs it with the test host's node,
-			// so only the stub's version can be expected then
-			const expectedNodeVersion = stubbedNodeRuntimes.has(runtime)
-				? process.versions.node
-				: (nodeVersions as Record<string, string>)[runtime]
+			// The child runs on exactly the node version its manifest requests
+			const expectedNodeVersion = (nodeVersions as Record<string, string>)[runtime]
 			await vi.waitFor(() => {
 				expect(app.registry.variables.values.getVariableValue(label, 'node_version')).toBe(expectedNodeVersion)
 			}, 30_000)

@@ -23,13 +23,6 @@ export async function fetchNodejs(platformInfo: PlatformInfo) {
 	)
 }
 
-/**
- * The integration tests can stub a missing runtime with a link to the test host's own node binary
- * (see companion/test/integration/TestApp.ts), marking the directory with this file. A stub must
- * not satisfy this fetcher - replace it with the real runtime.
- */
-export const STUB_RUNTIME_MARKER = '.companion-test-stub'
-
 async function fetchSingleVersion(platformInfo: PlatformInfo, nodeVersion: string) {
 	const isZip = platformInfo.runtimePlatform === 'win'
 
@@ -61,10 +54,6 @@ async function fetchSingleVersion(platformInfo: PlatformInfo, nodeVersion: strin
 
 	// Extract nodejs and discard 'junk'
 	const runtimeDir = path.join(cacheRuntimeDir, `${platformInfo.nodePlatform}-${runtimeArch}-${nodeVersion}`)
-	if (await fs.pathExists(path.join(runtimeDir, STUB_RUNTIME_MARKER))) {
-		console.log(`Replacing stubbed Node.js ${nodeVersion} runtime with the real one`)
-		await fs.remove(runtimeDir)
-	}
 	if (!(await fs.pathExists(runtimeDir))) {
 		if (isZip) {
 			const tmpDir = path.join(cacheRuntimeDir, `tmp-${nodeVersion}`)
