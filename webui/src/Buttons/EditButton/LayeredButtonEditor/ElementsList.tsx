@@ -1,13 +1,14 @@
 import { pointerIntersection } from '@dnd-kit/collision'
 import { useDragDropMonitor, useDroppable } from '@dnd-kit/react'
 import { isSortable, useSortable } from '@dnd-kit/react/sortable'
-import { faCog, faSort } from '@fortawesome/free-solid-svg-icons'
+import { faCog, faSort, faThumbtack } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useRef } from 'react'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { capitalize } from '@companion-app/shared/Util.js'
+import { Button, ButtonGroup } from '~/Components/Button.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { DragCloneOverlay } from '~/Resources/DragCloneOverlay.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -18,7 +19,7 @@ import {
 	RemoveElementButton,
 	ToggleVisibilityButton,
 } from './Buttons.js'
-import type { LayeredStyleStore } from './StyleStore.js'
+import { PINNED_PROPERTIES_ENTRY_ID, type LayeredStyleStore } from './StyleStore.js'
 
 const DRAG_ID = 'button-element-item'
 const ROOT_GROUP = '__elements_root__'
@@ -202,12 +203,59 @@ export const ElementsList = observer(function ElementsList({
 							controlId={controlId}
 						/>
 					))}
-					{canvasElements.map((element) => (
-						<CanvasElementRow key={element.id} element={element} styleStore={styleStore} />
-					))}
 				</div>
 			</div>
+
+			{/* Neither of these is a drawable layer, so they sit apart from the draw order rather than
+			    pretending to be the bottom of it */}
+			<ElementsListFooter styleStore={styleStore} canvasElement={canvasElements[0]} />
 		</>
+	)
+})
+
+// The entries which are not layers: the pinned properties of this button, and the canvas settings. They live
+// in a strip along the bottom of the list, as a pair of buttons rather than rows that look reorderable.
+const ElementsListFooter = observer(function ElementsListFooter({
+	styleStore,
+	canvasElement,
+}: {
+	styleStore: LayeredStyleStore
+	canvasElement: SomeButtonGraphicsElement | undefined
+}) {
+	// Also the drop target for placing an element at the bottom of the root list (see ROOT_BOTTOM_DROPPABLE),
+	// which the canvas row used to provide.
+	const { ref } = useDroppable({ id: ROOT_BOTTOM_DROPPABLE, accept: DRAG_ID, collisionDetector: pointerIntersection })
+
+	return (
+		<div ref={ref} className="button-layer-elementlist-footer">
+			<ButtonGroup>
+				{/* Selected is the stock primary colour rather than a bespoke one: these pick a view, so they
+				    read like the selected tab elsewhere in the app */}
+				<Button
+					size="sm"
+					color={styleStore.isPinnedViewSelected ? 'primary' : 'secondary'}
+					aria-pressed={styleStore.isPinnedViewSelected}
+					onClick={() => styleStore.setSelectedEntryId(PINNED_PROPERTIES_ENTRY_ID)}
+					title="The properties pinned from across this button's elements"
+				>
+					<FontAwesomeIcon icon={faThumbtack} className="me-1" fixedWidth />
+					Pinned
+				</Button>
+				{canvasElement && (
+					<Button
+						size="sm"
+						color={styleStore.selectedEntryId === canvasElement.id ? 'primary' : 'secondary'}
+						aria-pressed={styleStore.selectedEntryId === canvasElement.id}
+						onClick={() => styleStore.setSelectedEntryId(canvasElement.id)}
+						title="The topbar, status icons and empty-button look"
+					>
+						<FontAwesomeIcon icon={faCog} className="me-1" fixedWidth />
+						{/* Always "Canvas": it is the button's own settings rather than an element you name */}
+						Canvas
+					</Button>
+				)}
+			</ButtonGroup>
+		</div>
 	)
 })
 
@@ -241,7 +289,7 @@ const ElementListItem = observer(function ElementListItem({
 		collisionDetector: pointerIntersection,
 	})
 
-	const commonClasses = styleStore.selectedElementId === element.id ? 'selected-row' : ''
+	const commonClasses = styleStore.selectedEntryId === element.id ? 'selected-row' : ''
 	const elementType = capitalize(element.type)
 
 	return (
@@ -258,7 +306,7 @@ const ElementListItem = observer(function ElementListItem({
 					<FontAwesomeIcon icon={faSort} />
 				</div>
 
-				<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedElementId(element.id)}>
+				<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedEntryId(element.id)}>
 					<span title={elementType}>
 						<FontAwesomeIcon icon={getElementTypeIcon(element.type)} className="me-1" fixedWidth />
 					</span>
@@ -291,34 +339,6 @@ const ElementListItem = observer(function ElementListItem({
 						/>
 					))}
 		</>
-	)
-})
-
-const CanvasElementRow = observer(function CanvasElementRow({
-	element,
-	styleStore,
-}: {
-	element: SomeButtonGraphicsElement
-	styleStore: LayeredStyleStore
-}) {
-	// Drop target for placing an element at the bottom of the root list (see ROOT_BOTTOM_DROPPABLE).
-	const { ref } = useDroppable({ id: ROOT_BOTTOM_DROPPABLE, accept: DRAG_ID, collisionDetector: pointerIntersection })
-
-	const commonClasses = styleStore.selectedElementId === element.id ? 'selected-row' : ''
-
-	return (
-		<div ref={ref} className={classNames(commonClasses, 'button-layer-elementlist-table-row last-row')}>
-			<div className="td-reorder-placeholder"></div>
-
-			<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedElementId(element.id)}>
-				<span title="Canvas Settings">
-					<FontAwesomeIcon icon={faCog} className="me-1" fixedWidth />
-				</span>
-				{element.name || 'Canvas'}
-			</div>
-
-			<div></div>
-		</div>
 	)
 })
 

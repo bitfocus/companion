@@ -1,6 +1,9 @@
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
-import { FONTSIZE_SHRINK_DEFAULT } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
+import {
+	FONTSIZE_SHRINK_DEFAULT,
+	getDefaultPinnedProperties,
+} from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
 import {
 	EntityModelType,
@@ -236,6 +239,7 @@ export function ConvertLegacyStyleToElements(
 		name: 'Background',
 		usage: ButtonGraphicsElementUsage.Automatic,
 		type: 'box',
+		pinnedProperties: getDefaultPinnedProperties('box'),
 		enabled: { value: true, isExpression: false },
 		opacity: { value: 100, isExpression: false },
 		x: { value: 0, isExpression: false },
@@ -254,6 +258,7 @@ export function ConvertLegacyStyleToElements(
 		name: 'Image',
 		usage: ButtonGraphicsElementUsage.Automatic,
 		type: 'image',
+		pinnedProperties: getDefaultPinnedProperties('image'),
 		enabled: { value: true, isExpression: false },
 		opacity: { value: 100, isExpression: false },
 		x: { value: 0, isExpression: false },
@@ -271,6 +276,7 @@ export function ConvertLegacyStyleToElements(
 		name: 'Text',
 		usage: ButtonGraphicsElementUsage.Automatic,
 		type: 'text',
+		pinnedProperties: getDefaultPinnedProperties('text'),
 		enabled: { value: true, isExpression: false },
 		opacity: { value: 100, isExpression: false },
 		x: { value: 0, isExpression: false },
@@ -294,6 +300,7 @@ export function ConvertLegacyStyleToElements(
 		name: 'Image Buffers',
 		usage: ButtonGraphicsElementUsage.Automatic,
 		type: 'image',
+		pinnedProperties: getDefaultPinnedProperties('image'),
 		enabled: { value: true, isExpression: false },
 		opacity: { value: 100, isExpression: false },
 		x: { value: 0, isExpression: false },

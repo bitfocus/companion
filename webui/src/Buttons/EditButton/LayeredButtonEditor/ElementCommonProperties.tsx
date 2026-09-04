@@ -16,24 +16,30 @@ import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 
 export const ElementCommonProperties = observer(function ElementCommonProperties({
 	elementProps,
-	simpleMode,
 }: {
 	elementProps: Readonly<SomeButtonGraphicsElement>
-	simpleMode: boolean
 }) {
 	const nameFieldId = useId()
 	const usageFieldId = useId()
 
+	// The canvas is the button's own settings rather than a layer to be told apart from others, and it is
+	// always presented as "Canvas", so naming it only invites confusion. The stored name is left alone.
+	const canBeNamed = elementProps.type !== 'canvas'
+
 	return (
 		<>
-			<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
-				Element Name
-			</FormLabel>
-			<Grid.Col sm={8}>
-				<FieldElementNameInput elementProps={elementProps} inputId={nameFieldId} />
-			</Grid.Col>
+			{canBeNamed && (
+				<>
+					<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
+						Element Name
+					</FormLabel>
+					<Grid.Col sm={8}>
+						<FieldElementNameInput elementProps={elementProps} inputId={nameFieldId} />
+					</Grid.Col>
+				</>
+			)}
 
-			{elementProps.type !== 'canvas' && elementProps.type !== 'group' && !simpleMode && (
+			{elementProps.type !== 'canvas' && elementProps.type !== 'group' && (
 				<>
 					<FormLabel htmlFor={usageFieldId} sm={4} column="sm">
 						External Usage

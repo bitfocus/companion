@@ -1,9 +1,8 @@
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { Fragment, useCallback, useContext } from 'react'
+import { Fragment, useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
-import { elementSchemas, elementSimpleModeFields } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	colorFieldExpressionHint,
@@ -24,18 +23,18 @@ import { OptionsInputControl } from '~/Controls/OptionsInputControl.js'
 import { usePanelCollapseAccordionProps, usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ElementCommonProperties } from './ElementCommonProperties.js'
 import { ElementPropertiesProvider, type IsPropertyOverridden } from './ElementPropertiesContext.js'
 import { FormPropertyField } from './ElementPropertiesUtil.js'
+import { PinPropertyToggle } from './PinPropertyToggle.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
+import { useElementSchemaSections } from './useElementSchema.js'
 
 interface ElementPropertiesEditorProps {
 	controlId: string
 	elementProps: SomeButtonGraphicsElement
 	localVariablesStore: LocalVariablesStore
 	isPropertyOverridden: IsPropertyOverridden
-	simpleMode: boolean
 }
 
 export const ElementPropertiesEditor = observer(function ElementPropertiesEditor({
@@ -43,18 +42,18 @@ export const ElementPropertiesEditor = observer(function ElementPropertiesEditor
 	elementProps,
 	localVariablesStore,
 	isPropertyOverridden,
-	simpleMode,
 }: ElementPropertiesEditorProps) {
 	return (
 		<ElementPropertiesProvider
 			controlId={controlId}
 			localVariablesStore={localVariablesStore}
 			isPropertyOverridden={isPropertyOverridden}
+			isPinnedView={false}
 		>
 			<Form row className="gap-2" onSubmit={PreventDefaultHandler}>
-				<ElementCommonProperties elementProps={elementProps} simpleMode={simpleMode} />
+				<ElementCommonProperties elementProps={elementProps} />
 
-				<ElementPropertiesEditorSchemaVersion elementProps={elementProps} simpleMode={simpleMode} />
+				<ElementPropertiesEditorSchemaVersion elementProps={elementProps} />
 			</Form>
 		</ElementPropertiesProvider>
 	)
@@ -62,35 +61,14 @@ export const ElementPropertiesEditor = observer(function ElementPropertiesEditor
 
 const ElementPropertiesEditorSchemaVersion = observer(function ElementPropertiesEditorSchemaVersion({
 	elementProps,
-	simpleMode,
 }: {
 	elementProps: SomeButtonGraphicsElement
-	simpleMode: boolean
 }) {
 	const { localVariablesStore } = useElementPropertiesContext()
-	const { compositeElementDefinitions } = useContext(RootAppStoreContext)
 
 	const sectionCollapse = usePanelCollapseHelper(`layered-element-property-sections:${elementProps.type}`, null)
 
-	let schema = elementSchemas[elementProps.type]
-
-	// If this is a composite element, get the full schema
-	if (elementProps.type === 'composite' && elementProps.connectionId && elementProps.elementId) {
-		const compositeDefinition = compositeElementDefinitions.getDefinition(
-			elementProps.connectionId,
-			elementProps.elementId
-		)
-
-		if (compositeDefinition) {
-			// Combine common element fields with the custom schema from the composite definition
-			schema = [...schema, { id: 'properties', label: 'Properties', fields: compositeDefinition.options }]
-		}
-	}
-
-	const simpleModeFieldIds: readonly string[] | undefined =
-		simpleMode && elementProps.type in elementSimpleModeFields
-			? elementSimpleModeFields[elementProps.type as keyof typeof elementSimpleModeFields]
-			: undefined
+	const schema = useElementSchemaSections(elementProps)
 
 	const sectionAccordion = usePanelCollapseAccordionProps(
 		sectionCollapse,
@@ -101,27 +79,20 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 		return <div>No schema found for element type: {elementProps.type}</div>
 	}
 
-	// Render flat for simple mode, or elements with only one section
-	if (simpleModeFieldIds || schema.length === 1) {
-		const flatFields = schema.flatMap((s) => s.fields)
-
+	// An element with a single section has nothing to gain from an accordion around it
+	if (schema.length === 1) {
 		return (
 			<>
-				{flatFields.map((field) => {
-					if (simpleModeFieldIds && !simpleModeFieldIds.includes(field.id)) return null
-					return (
+				{schema
+					.flatMap((s) => s.fields)
+					.map((field) => (
 						<SchemaFieldWrapper
 							key={field.id}
 							field={field}
 							elementProps={elementProps}
 							localVariablesStore={localVariablesStore}
 						/>
-					)
-				})}
-
-				{simpleModeFieldIds ? (
-					<div className="text-center text-muted mt-4 text-sm">Some fields are hidden in simple mode</div>
-				) : null}
+					))}
 			</>
 		)
 	}
@@ -157,7 +128,7 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 })
 
 // Wrapper component to make schema fields work with FormPropertyField-like rendering
-const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
+export const SchemaFieldWrapper = observer(function SchemaFieldWrapper({
 	field,
 	elementProps,
 	localVariablesStore,
@@ -251,6 +222,7 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 				label={field.label}
 				tooltip={field.tooltip}
 				features={getInputFeatures(field)}
+				pinToggle={<PinPropertyToggle elementProps={elementProps} property={field.id} />}
 				value={LIST_HEADER_VALUE}
 				setValue={noop}
 				disableAutoExpression={true}

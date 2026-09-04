@@ -1,8 +1,11 @@
 import { CompanionFieldVariablesSupport, type SomeCompanionInputField } from '../Model/Options.js'
 import type {
 	ButtonGraphicsBoxElement,
+	ButtonGraphicsCircleElement,
 	ButtonGraphicsGaugeElement,
 	ButtonGraphicsImageElement,
+	ButtonGraphicsLineElement,
+	ButtonGraphicsReferenceElement,
 	ButtonGraphicsTextElement,
 } from '../Model/StyleLayersModel.js'
 import { ButtonGraphicsDecorationType, ButtonGraphicsShowStatusIcons } from '../Model/StyleModel.js'
@@ -825,9 +828,17 @@ export function getElementSchemaProperty(
 }
 
 /**
- * Fields to show for text elements when "simple mode" is enabled in the editor.
+ * The properties pinned by default on a newly created element of each type.
+ *
+ * These are what most users will ever see of the pinned view, so they matter far more than the ability to
+ * customise them: the set for a text element is the v4 drawing panel, and the other types pin the property
+ * that gets edited over and over plus the couple of styling fields next to it. Keep each set short - a
+ * default set that needs scrolling defeats the point of pinning.
+ *
+ * The canvas element is deliberately absent: it holds button-level properties (decoration, status icons)
+ * which are out of scope for pinning.
  */
-export const elementSimpleModeFields = {
+export const elementDefaultPinnedProperties = {
 	text: [
 		//
 		'text',
@@ -847,8 +858,34 @@ export const elementSimpleModeFields = {
 		//
 		'color',
 	] satisfies ReadonlyArray<keyof ButtonGraphicsBoxElement>,
+	circle: [
+		//
+		'color',
+	] satisfies ReadonlyArray<keyof ButtonGraphicsCircleElement>,
+	line: [
+		//
+		'borderColor',
+		'borderWidth',
+	] satisfies ReadonlyArray<keyof ButtonGraphicsLineElement>,
 	gauge: [
 		//
 		'value',
 	] satisfies ReadonlyArray<keyof ButtonGraphicsGaugeElement>,
-} as const
+	reference: [
+		//
+		'location',
+	] satisfies ReadonlyArray<keyof ButtonGraphicsReferenceElement>,
+	// A group draws nothing of its own, so it has no content property worth pinning
+	group: [] as ReadonlyArray<string>,
+	// A composite's properties are defined by its module, so there is nothing sensible to pin up front
+	composite: [] as ReadonlyArray<string>,
+} as const satisfies Partial<Record<keyof typeof elementSchemas, ReadonlyArray<string>>>
+
+/**
+ * The default pinned properties for an element type, as a fresh array ready to store on an element.
+ * Types without defaults (the canvas) start with nothing pinned.
+ */
+export function getDefaultPinnedProperties(elementType: string): string[] {
+	const defaults = (elementDefaultPinnedProperties as Record<string, ReadonlyArray<string> | undefined>)[elementType]
+	return defaults ? [...defaults] : []
+}

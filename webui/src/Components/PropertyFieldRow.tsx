@@ -28,6 +28,8 @@ export interface PropertyFieldRowProps {
 	/** Hint shown below the field when in expression mode, in place of description. */
 	expressionDescription?: string
 	features?: InputFeatureIconsProps
+	/** Control for pinning/unpinning this property, shown at the end of the label */
+	pinToggle?: React.ReactNode
 	isOverridden?: boolean
 	value: ExpressionOrValue<JsonValue | undefined>
 	setValue: (value: ExpressionOrValue<JsonValue | undefined>) => void
@@ -57,6 +59,7 @@ export function PropertyFieldRow({
 	description,
 	expressionDescription,
 	features,
+	pinToggle,
 	isOverridden,
 	value,
 	setValue,
@@ -94,6 +97,7 @@ export function PropertyFieldRow({
 						<FontAwesomeIcon icon={faLayerGroup} />
 					</span>
 				)}
+				{pinToggle}
 				{value.isExpression && (
 					<ExpressionValuePreview
 						expression={stringifyVariableValue(value.value) ?? ''}

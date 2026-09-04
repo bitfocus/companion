@@ -34,9 +34,12 @@ When you edit a button you'll see two things:
 - The **elements list** — the stack of elements that make up the button. Elements at the top of the
   list are drawn on top of the ones below them, just like layers in an image editor.
 
-At the very bottom of every button's stack is the **Canvas** layer. This is always present and
-can't be deleted — it controls the topbar, status icons and the empty-button look. See
-[The canvas & button indicators](./canvas.md) for more on it.
+Along the bottom of the list are two buttons for the things which aren't layers:
+
+- **Pinned** — the properties you edit most often, gathered from across the button's elements. See
+  [Pinned properties](#pinned-properties) below.
+- **Canvas** — always present and can't be deleted; it controls the topbar, status icons and the
+  empty-button look. See [The canvas & button indicators](./canvas.md) for more on it.
 
 ![Layered button editor](images/layered-button-editor.png?raw=true 'Layered button editor')
 
@@ -77,21 +80,13 @@ Each row in the elements list has a few controls:
 
 ## Element properties
 
-Select an element to edit its properties.
-
-By default the panel is in **Simple** mode (the toggle sits in the bottom-left of the editor, and your
-choice is remembered between sessions). Simple mode shows just the handful of properties you change
-most often — for a Text element, for example, that's the text itself, its size, color and alignment —
-with a note at the bottom reminding you that _some fields are hidden in simple mode_. Turn **Simple**
-off to reveal the full set of properties.
-
-Simple mode trims the panel for the elements that have a lot of properties (Text, Image and Box); the
-other element types always show their full set.
+Select an element to edit its properties. If you only want the handful of properties you change most
+often, use [Pinned properties](#pinned-properties) below instead of selecting the element at all.
 
 ![Element property sections](./images/element-property-sections.png?raw=true)
 
-With **Simple** mode turned off, the properties are grouped into collapsible **sections** so the panel
-stays tidy. Every element (except the Canvas) shares two sections:
+The properties are grouped into collapsible **sections** so the panel stays tidy. Every element
+(except the Canvas) shares two sections:
 
 ### Layer
 
@@ -113,6 +108,34 @@ looks the same whether it's drawn on a small Stream Deck key or a large high-res
 
 For example, an element at `X 0`, `Y 0`, `Width 100`, `Height 100` fills the whole button, while
 `X 50`, `Y 0`, `Width 50`, `Height 100` fills the right-hand half.
+
+## Pinned properties
+
+Selecting an element and scrolling to the one property you actually wanted gets tedious when you are
+relabelling a lot of buttons. Selecting **Pinned** in the elements list instead shows the properties
+which have been pinned from across the whole button, grouped by the element they belong to — so a
+button's text string, its size and colour, and the background colour behind it are all in one place,
+with no element to select first.
+
+Every element starts with a sensible set pinned: for a Text element that's the text itself, its size,
+"shrink to fit", colour and alignment; for a Box, its colour. Elements with nothing pinned are left
+out of the view entirely.
+
+Each group is headed by the element it came from, and collapses like the sections of the property
+panel do. The heading also tells you when an element is disabled or hidden, so you don't spend time
+editing something that isn't being drawn. To reach a property that isn't pinned, select that element
+in the list above.
+
+### Pinning and unpinning
+
+Hover a property in an element's panel and a **pin** appears next to its label; click it to pin that
+property to this button. Hovering a property in the pinned view shows the same control, now offering
+to unpin it. Pins are stored per element per button, so pinning the font size of one button's text
+doesn't change any other button.
+
+Companion remembers which entry of the elements list you had selected and reselects it on the next
+button you open. Because **Pinned** exists on every button, leaving it selected means every button you
+click lands straight on its pinned properties.
 
 ## The simple shape elements
 
