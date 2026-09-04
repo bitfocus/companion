@@ -59,8 +59,8 @@ import { SurfaceIPSatellite, type SatelliteDeviceInfo } from './IP/Satellite.js'
 import { surfaceButtonSizesFromLayouts, surfaceLayoutsFromConfigs, type SurfaceLayoutSource } from './LayoutSummary.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import type { SurfacePluginPanel } from './PluginPanel.js'
-import { createSurfacesRestApiRouter } from './SurfacesRestApi.js'
 import { stripReferenceSurfaceId } from './ReferenceSurfaceId.js'
+import { createSurfacesRestApiRouter } from './SurfacesRestApi.js'
 import type { SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
 import { getSurfaceName } from './Util.js'
 
@@ -1069,7 +1069,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 				size: config.gridSize || null,
 				rotation: config?.config?.rotation,
-				brightness: config?.config?.brightness,
+				brightness: config?.config?.brightness ?? null,
 				offset: { columns: config?.config?.xOffset ?? 0, rows: config?.config?.yOffset ?? 0 },
 			}
 

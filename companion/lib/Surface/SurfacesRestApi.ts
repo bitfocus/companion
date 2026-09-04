@@ -47,6 +47,7 @@ const SurfaceResponseExample = {
 	size: { rows: 4, columns: 8 },
 	brightness: 80,
 	page: { id: 'ggmHXCUQ0RRXUwEr8HHtQ', number: 1, name: 'Main' },
+	groupId: 'streamdeck:1A2B3C4D',
 }
 
 /** Schema for a surface in API responses — used for both validation and stripping */
@@ -76,6 +77,11 @@ const SurfaceResponseSchema = z
 		page: SurfacePageSchema.nullable().describe(
 			'Page the surface is currently showing, or null if it is not showing one.'
 		),
+		groupId: z
+			.string()
+			.describe(
+				'Id of the surface group the surface belongs to. Note: if not part of a group, this will typically be the same as the id.'
+			),
 	})
 	.meta({ example: SurfaceResponseExample })
 
@@ -94,7 +100,7 @@ const SurfacePatchBodySchema = z
 
 type SurfaceResponse = z.infer<typeof SurfaceResponseSchema>
 
-const SURFACES_API_BASE_PATH = '/surfaces/v1'
+export const SURFACES_API_BASE_PATH = '/surfaces/v1'
 const SURFACES_API_TAGS = ['Surfaces']
 
 type SurfacesRestContext = {
@@ -168,6 +174,39 @@ const surfaceEndpointSpecs: RestEndpointSpec<SurfacesRestContext>[] = [
 
 	defineSurfaceEndpointSpec(
 		{
+			method: 'get',
+			path: '/:surfaceId',
+			scopes: ['read'],
+			tags: SURFACES_API_TAGS,
+			summary: 'Get a surface',
+			description: 'Returns a single surface by id, connected or not, with its current state.',
+			request: {
+				params: surfaceIdParam,
+			},
+			response: {
+				status: 200,
+				description: 'The requested surface',
+				schema: createSuccessSchema(SurfaceResponseSchema),
+			},
+			examples: {
+				response: successResponse(SurfaceResponseExample),
+			},
+			errorResponses,
+		},
+		({ surfaceController, pageStore }) => {
+			return ({ params }) => {
+				const { surfaceId } = params
+
+				const surface = listSurfaces(surfaceController, pageStore).find((surface) => surface.id === surfaceId)
+				if (!surface) throw RestApiError.notFound('Surface not found')
+
+				return { body: successResponse(surface) }
+			}
+		}
+	),
+
+	defineSurfaceEndpointSpec(
+		{
 			method: 'patch',
 			path: '/:surfaceId',
 			scopes: ['write'],
@@ -207,7 +246,12 @@ const surfaceEndpointSpecs: RestEndpointSpec<SurfacesRestContext>[] = [
 				surfaceController.setDeviceBrightness(surfaceId, brightness)
 
 				logger.info(`Set brightness of surface "${surface.displayName}" (${surfaceId}) to ${brightness}`)
-				return { body: successResponse({ ...surface, brightness }) }
+
+				// Re-read so the response reflects the surface's actual state after the change
+				const updatedSurface = listSurfaces(surfaceController, pageStore).find((surface) => surface.id === surfaceId)
+				if (!updatedSurface) throw RestApiError.notFound('Surface not found')
+
+				return { body: successResponse(updatedSurface) }
 			}
 		}
 	),
@@ -221,9 +265,7 @@ function listSurfaces(surfaceController: SurfaceController, pageStore: IPageStor
 		// All surfaces in a group share the same page
 		const page = buildSurfacePage(surfaceController, pageStore, group.id)
 
-		return group.surfaces.map((surface) =>
-			SurfaceResponseSchema.parse({ ...surface, brightness: surface.brightness ?? null, page })
-		)
+		return group.surfaces.map((surface) => SurfaceResponseSchema.parse({ ...surface, page, groupId: group.id }))
 	})
 }
 
