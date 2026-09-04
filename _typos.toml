@@ -24,4 +24,7 @@ extend-exclude = [
   "assets/linux/*.rules",
   "shared-lib/lib/OpenApi/",
   "launcher/assets/installer.nsh",
+  # Generated module fixtures (minified bundles of @companion-module/base at pinned versions)
+  "companion/test/integration/modules/fixtures/",
+  "companion/test/integration/modules/fixtures-invalid/",
 ]

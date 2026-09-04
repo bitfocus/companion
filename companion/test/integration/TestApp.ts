@@ -321,22 +321,48 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 
 	// The http port is bound for real, so randomise it to keep parallel test files from colliding.
 	// Most tests should drive `http` (supertest against the express app) rather than this socket
-	const requestedPort = 20000 + Math.floor(Math.random() * 40000)
-	await registry.ready(options.extraModulePath ?? '', '127.0.0.1', requestedPort)
+	const randomPort = () => 20000 + Math.floor(Math.random() * 40000)
+	await registry.ready(options.extraModulePath ?? '', '127.0.0.1', randomPort())
 
-	// ready() does not await the listen call, so wait for the server before reading the bound port
-	const httpPort = await new Promise<number>((resolve, reject) => {
-		const readPort = () => {
-			const address = registry.ui.server.address()
-			if (address && typeof address === 'object') resolve(address.port)
-			else reject(new Error('Failed to determine bound http port'))
-		}
-		if (registry.ui.server.listening) readPort()
-		else {
-			registry.ui.server.once('listening', readPort)
-			registry.ui.server.once('error', reject)
-		}
-	})
+	// ready() does not await the listen call, so wait for the server before reading the bound port.
+	// A random port is not guaranteed to be bindable (windows reserves blocks of this range and
+	// denies them with EACCES, and another process can hold one), so retry with a fresh port
+	const awaitListenOutcome = async (): Promise<number | null> =>
+		new Promise<number | null>((resolve, reject) => {
+			const server = registry.ui.server
+			const cleanup = () => {
+				server.off('listening', onListening)
+				server.off('error', onError)
+				clearTimeout(timeout)
+			}
+			const onListening = () => {
+				cleanup()
+				const address = server.address()
+				if (address && typeof address === 'object') resolve(address.port)
+				else reject(new Error('Failed to determine bound http port'))
+			}
+			const onError = (e: NodeJS.ErrnoException) => {
+				cleanup()
+				if (e.code === 'EACCES' || e.code === 'EADDRINUSE') resolve(null)
+				else reject(e)
+			}
+			// The error can fire before these listeners attach (rebindHttp swallows it into a log), so
+			// a quiet server that never reaches listening also counts as a failed attempt
+			const timeout = setTimeout(() => {
+				cleanup()
+				resolve(null)
+			}, 10_000)
+			server.on('listening', onListening)
+			server.on('error', onError)
+			if (server.listening) onListening()
+		})
+
+	let httpPort: number | null = await awaitListenOutcome()
+	for (let attempt = 0; httpPort === null && attempt < 10; attempt++) {
+		registry.rebindHttp('127.0.0.1', randomPort())
+		httpPort = await awaitListenOutcome()
+	}
+	if (httpPort === null) throw new Error('Failed to bind the http server to a free port')
 
 	// Building a second router for in-process calls is safe - ready() already bound its own copy to
 	// the websocket handler, and the router builders are side-effect free

@@ -48,8 +48,13 @@ describe('real module children across module-api versions', () => {
 				.instances.connections.add({ module: { type: fixtureModuleId(apiVersion) }, label, versionId: 'dev' })
 			expect(connectionId).toBeTruthy()
 
-			// The child process spawns, registers and initialises
+			// The child process spawns, registers and initialises. The status turns 'good' when the
+			// module reports ok during its init, slightly before the host marks the child ready - and
+			// an action executed in that window is silently dropped - so wait for readiness too
 			await waitForStatusCategory(connectionId, 'good')
+			await vi.waitFor(() => {
+				expect(app.registry.instance.processManager.getConnectionChild(connectionId)).toBeTruthy()
+			}, 30_000)
 
 			// Its definitions arrive at the host
 			await vi.waitFor(() => {
@@ -59,7 +64,7 @@ describe('real module children across module-api versions', () => {
 				expect(
 					app.registry.instance.definitions.getEntityDefinition(EntityModelType.Feedback, connectionId, 'last_value_is')
 				).toBeTruthy()
-			}, 15_000)
+			}, 30_000)
 
 			// The child runs on exactly the node version its manifest requests. When the real runtime
 			// hasn't been fetched (yarn fetch-runtimes) the harness stubs it with the test host's node,
@@ -69,7 +74,7 @@ describe('real module children across module-api versions', () => {
 				: (nodeVersions as Record<string, string>)[runtime]
 			await vi.waitFor(() => {
 				expect(app.registry.variables.values.getVariableValue(label, 'node_version')).toBe(expectedNodeVersion)
-			}, 15_000)
+			}, 30_000)
 
 			// Executing an action in the child updates the module's variables in the host
 			const location = { pageNumber: 1, row: 1 + Math.floor(index / 6), column: 1 + (index % 6) }
@@ -87,13 +92,15 @@ describe('real module children across module-api versions', () => {
 				entityDefinition: 'set_var',
 			})
 			expect(actionId).toBeTruthy()
-			await app.trpc().controls.entities.setOption({
-				controlId,
-				entityLocation: { stepId, setId: 'down' },
-				entityId: actionId!,
-				key: 'value',
-				value: exprVal('hello'),
-			})
+			expect(
+				await app.trpc().controls.entities.setOption({
+					controlId,
+					entityLocation: { stepId, setId: 'down' },
+					entityId: actionId!,
+					key: 'value',
+					value: exprVal('hello'),
+				})
+			).toBe(true)
 
 			const feedbackId = await app.trpc().controls.entities.add({
 				controlId,
@@ -104,13 +111,18 @@ describe('real module children across module-api versions', () => {
 				entityDefinition: 'last_value_is',
 			})
 			expect(feedbackId).toBeTruthy()
-			await app.trpc().controls.entities.setOption({
-				controlId,
-				entityLocation: 'feedbacks',
-				entityId: feedbackId!,
-				key: 'value',
-				value: exprVal('hello'),
-			})
+			expect(
+				await app.trpc().controls.entities.setOption({
+					controlId,
+					entityLocation: 'feedbacks',
+					entityId: feedbackId!,
+					key: 'value',
+					value: exprVal('hello'),
+				})
+			).toBe(true)
+
+			// The option value must be visible on the host-side entity before pressing
+			expect(control.entities.findEntityById(actionId!)?.asEntityModel(false).options.value).toEqual(exprVal('hello'))
 
 			app.pressButton(location, true)
 			app.pressButton(location, false)
@@ -119,12 +131,12 @@ describe('real module children across module-api versions', () => {
 			await vi.waitFor(() => {
 				expect(app.registry.variables.values.getVariableValue(label, 'last_value')).toBe('hello')
 				expect(app.registry.variables.values.getVariableValue(label, 'run_count')).toBe(1)
-			}, 15_000)
+			}, 30_000)
 
 			// The feedback re-evaluated in the child and its value reached the control
 			await vi.waitFor(() => {
 				expect(app.getFeedbackValue(controlId, feedbackId!)).toBe(true)
-			}, 15_000)
+			}, 30_000)
 
 			// A config update reaches the module, which reports the new prefix back as a variable
 			expect(
@@ -132,23 +144,23 @@ describe('real module children across module-api versions', () => {
 			).toBeNull()
 			await vi.waitFor(() => {
 				expect(app.registry.variables.values.getVariableValue(label, 'prefix')).toBe('P-')
-			}, 15_000)
+			}, 30_000)
 
 			// And the updated config is used by subsequent action runs
 			app.pressButton(location, true)
 			app.pressButton(location, false)
 			await vi.waitFor(() => {
 				expect(app.registry.variables.values.getVariableValue(label, 'last_value')).toBe('P-hello')
-			}, 15_000)
+			}, 30_000)
 			await vi.waitFor(() => {
 				expect(app.getFeedbackValue(controlId, feedbackId!)).toBe(false)
-			}, 15_000)
+			}, 30_000)
 
 			// Disable stops the child, re-enable brings it back
 			await app.trpc().instances.connections.setEnabled({ connectionId, enabled: false })
 			await vi.waitFor(() => {
 				expect(app.registry.instance.processManager.getConnectionChild(connectionId)).toBeUndefined()
-			}, 15_000)
+			}, 30_000)
 			await app.trpc().instances.connections.setEnabled({ connectionId, enabled: true })
 			await waitForStatusCategory(connectionId, 'good')
 		}
