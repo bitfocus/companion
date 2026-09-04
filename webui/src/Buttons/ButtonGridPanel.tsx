@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { Button } from '~/Components/Button.js'
 import { Grid } from '~/Components/Grid'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
@@ -24,7 +25,11 @@ import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { ButtonInfiniteGrid, PrimaryButtonGridIcon, type ButtonInfiniteGridRef } from './ButtonInfiniteGrid.js'
 import { GridButtonDragOverlay } from './GridButtonDragOverlay.js'
 import type { GridButtonModifiers } from './GridButtonPreview.js'
+import type { GridSurfaceView } from './GridSurfaceView.js'
+import { GridViewAsBanner } from './GridViewAsBanner.js'
+import { GridViewAsControl } from './GridViewAsControl.js'
 import type { GridZoomController } from './GridZoom.js'
+import type { GridViewAsController } from './useGridViewAs.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -34,6 +39,11 @@ interface ButtonsGridPanelProps {
 	gridZoomController: GridZoomController
 	contextMenuButton: ControlLocation | null
 	onButtonContextMenu: (location: ControlLocation, x: number, y: number) => void
+	viewAs: GridViewAsController
+	/** The bounds the grid is showing, which the surface being viewed as narrows */
+	gridSize: UserConfigGridSize | undefined
+	/** What the grid is being viewed as, or null when it is showing itself */
+	surfaceView: GridSurfaceView | null
 }
 
 export const ButtonsGridPanel = observer(function ButtonsPage({
@@ -44,8 +54,11 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	gridZoomController,
 	contextMenuButton,
 	onButtonContextMenu,
+	viewAs,
+	gridSize,
+	surfaceView,
 }: ButtonsGridPanelProps) {
-	const { pages, userConfig } = useContext(RootAppStoreContext)
+	const { pages } = useContext(RootAppStoreContext)
 	const { store, actions } = useButtonGridView()
 
 	const setPage = useCallback(
@@ -79,8 +92,6 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	const resetPosition = useCallback(() => {
 		gridRef.current?.resetPosition()
 	}, [gridRef])
-
-	const gridSize = userConfig.properties?.gridSize
 
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
 	const [viewportMinHeight, setViewportMinHeight] = useState(250) // arbitrary initial min-height
@@ -167,12 +178,15 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 							<Button color="light" onClick={resetPosition} title="Home Position" className="ms-1">
 								<FontAwesomeIcon icon={faHome} />
 							</Button>
+							<GridViewAsControl controller={viewAs} />
 							<ButtonGridPageMenu pageNumber={pageNumber} pageInfo={pageInfo} />
 						</ButtonGridHeader>
 					</Grid.Col>
 				</Grid.Row>
 
 				<ButtonGridToolbar />
+
+				<GridViewAsBanner resolution={viewAs.resolution} onExit={() => viewAs.setEnabled(false)} />
 			</div>
 			{/* Rendered inside the grid's own styles, so the ghost is drawn the way the grid draws buttons */}
 			<GridButtonDragOverlay />
@@ -190,7 +204,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 						marquee={marquee}
 						onHoverLocation={handleHover}
 						drawScale={gridZoomValue / 100}
-						surfaceView={null}
+						surfaceView={surfaceView}
 						setViewportMinHeight={setViewportMinHeight}
 					/>
 				)}
