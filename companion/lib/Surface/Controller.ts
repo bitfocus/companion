@@ -13,6 +13,7 @@
 import { createHash } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
+import type express from 'express'
 import isEqual from 'fast-deep-equal'
 import jsonPatch from 'fast-json-patch'
 import HID from 'node-hid'
@@ -48,7 +49,7 @@ import {
 	type SurfaceOpener,
 } from '../Instance/Surface/DiscoveredSurfaceRegistry.js'
 import type { CheckDeviceInfo } from '../Instance/Surface/IpcTypes.js'
-import LogController from '../Log/Controller.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { createOrSanitizeSurfaceHandlerConfig, PanelDefaults } from './Config.js'
 import { SurfaceGroup, validateGroupConfigValue } from './Group.js'
@@ -59,6 +60,7 @@ import { surfaceButtonSizesFromLayouts, surfaceLayoutsFromConfigs, type SurfaceL
 import { SurfaceOutboundController } from './Outbound.js'
 import type { SurfacePluginPanel } from './PluginPanel.js'
 import { stripReferenceSurfaceId } from './ReferenceSurfaceId.js'
+import { createSurfacesRestApiRouter } from './SurfacesRestApi.js'
 import type { SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
 import { getSurfaceName } from './Util.js'
 
@@ -420,6 +422,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#attachSurfaceToGroup(handler)
 
 		return handler
+	}
+
+	createRestApiRouter(logger: Logger): express.Router {
+		return createSurfacesRestApiRouter(logger, this, this.#handlerDependencies.pageStore)
 	}
 
 	createTrpcRouter() {
@@ -1063,7 +1069,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 				size: config.gridSize || null,
 				rotation: config?.config?.rotation,
-				brightness: config?.config?.brightness,
+				brightness: config?.config?.brightness ?? null,
 				offset: { columns: config?.config?.xOffset ?? 0, rows: config?.config?.yOffset ?? 0 },
 			}
 

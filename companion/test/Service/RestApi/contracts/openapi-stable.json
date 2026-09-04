@@ -3213,6 +3213,1168 @@
 				"summary": "Get the connection arrangement",
 				"tags": ["Connections"]
 			}
+		},
+		"/surfaces/v1": {
+			"get": {
+				"description": "Returns all known surfaces, connected or not, with their current state.",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"example": {
+									"data": [
+										{
+											"brightness": 80,
+											"displayName": "Front of house (streamdeck:1A2B3C4D)",
+											"groupId": "streamdeck:1A2B3C4D",
+											"id": "streamdeck:1A2B3C4D",
+											"integrationType": "elgato-stream-deck",
+											"isConnected": true,
+											"name": "Front of house",
+											"page": {
+												"id": "ggmHXCUQ0RRXUwEr8HHtQ",
+												"name": "Main",
+												"number": 1
+											},
+											"size": {
+												"columns": 8,
+												"rows": 4
+											},
+											"type": "Elgato Stream Deck XL"
+										}
+									],
+									"meta": {
+										"limit": 1,
+										"offset": 0,
+										"total": 1
+									}
+								},
+								"schema": {
+									"example": {
+										"data": [
+											{
+												"brightness": 80,
+												"displayName": "Front of house (streamdeck:1A2B3C4D)",
+												"groupId": "streamdeck:1A2B3C4D",
+												"id": "streamdeck:1A2B3C4D",
+												"integrationType": "elgato-stream-deck",
+												"isConnected": true,
+												"name": "Front of house",
+												"page": {
+													"id": "ggmHXCUQ0RRXUwEr8HHtQ",
+													"name": "Main",
+													"number": 1
+												},
+												"size": {
+													"columns": 8,
+													"rows": 4
+												},
+												"type": "Elgato Stream Deck XL"
+											}
+										],
+										"meta": {
+											"limit": 100,
+											"offset": 0,
+											"total": 1
+										}
+									},
+									"properties": {
+										"data": {
+											"items": {
+												"example": {
+													"brightness": 80,
+													"displayName": "Front of house (streamdeck:1A2B3C4D)",
+													"groupId": "streamdeck:1A2B3C4D",
+													"id": "streamdeck:1A2B3C4D",
+													"integrationType": "elgato-stream-deck",
+													"isConnected": true,
+													"name": "Front of house",
+													"page": {
+														"id": "ggmHXCUQ0RRXUwEr8HHtQ",
+														"name": "Main",
+														"number": 1
+													},
+													"size": {
+														"columns": 8,
+														"rows": 4
+													},
+													"type": "Elgato Stream Deck XL"
+												},
+												"properties": {
+													"brightness": {
+														"description": "Brightness of the surface in percent, or null if it is not set in the surface config.",
+														"example": 80,
+														"nullable": true,
+														"type": "number"
+													},
+													"displayName": {
+														"description": "Name shown for the surface in the Companion UI.",
+														"example": "Front of house (streamdeck:1A2B3C4D)",
+														"type": "string"
+													},
+													"groupId": {
+														"description": "Id of the surface group the surface belongs to. Note: if not part of a group, this will typically be the same as the id.",
+														"type": "string"
+													},
+													"id": {
+														"description": "Unique surface id.",
+														"example": "streamdeck:1A2B3C4D",
+														"type": "string"
+													},
+													"integrationType": {
+														"description": "Integration the surface is connected through.",
+														"example": "elgato-stream-deck",
+														"type": "string"
+													},
+													"isConnected": {
+														"description": "Whether the surface is currently connected.",
+														"example": true,
+														"type": "boolean"
+													},
+													"name": {
+														"description": "Name given to the surface in Companion.",
+														"example": "Front of house",
+														"type": "string"
+													},
+													"page": {
+														"description": "Page the surface is currently showing, or null if it is not showing one.",
+														"nullable": true,
+														"properties": {
+															"id": {
+																"description": "Unique page id.",
+																"example": "ggmHXCUQ0RRXUwEr8HHtQ",
+																"type": "string"
+															},
+															"name": {
+																"description": "Display name of the page.",
+																"example": "Main",
+																"nullable": true,
+																"type": "string"
+															},
+															"number": {
+																"description": "Position of the page in the page list, or null if the page is no longer in the list.",
+																"example": 1,
+																"nullable": true,
+																"type": "number"
+															}
+														},
+														"required": ["id", "number", "name"],
+														"type": "object"
+													},
+													"size": {
+														"description": "Button grid size of the surface, if known.",
+														"nullable": true,
+														"properties": {
+															"columns": {
+																"description": "Number of button columns on the surface.",
+																"example": 8,
+																"type": "number"
+															},
+															"rows": {
+																"description": "Number of button rows on the surface.",
+																"example": 4,
+																"type": "number"
+															}
+														},
+														"required": ["rows", "columns"],
+														"type": "object"
+													},
+													"type": {
+														"description": "Model of the surface, as reported by the integration.",
+														"example": "Elgato Stream Deck XL",
+														"type": "string"
+													}
+												},
+												"required": [
+													"id",
+													"type",
+													"integrationType",
+													"name",
+													"displayName",
+													"isConnected",
+													"size",
+													"brightness",
+													"page",
+													"groupId"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										},
+										"meta": {
+											"example": {
+												"limit": 100,
+												"offset": 0,
+												"total": 1
+											},
+											"properties": {
+												"limit": {
+													"description": "Maximum number of resources returned by this response.",
+													"example": 100,
+													"type": "number"
+												},
+												"offset": {
+													"description": "Number of resources skipped before this response.",
+													"example": 0,
+													"type": "number"
+												},
+												"total": {
+													"description": "Total number of resources available.",
+													"example": 1,
+													"type": "number"
+												}
+											},
+											"required": ["total", "limit", "offset"],
+											"type": "object"
+										}
+									},
+									"required": ["data", "meta"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "List of surfaces"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["read"]
+					}
+				],
+				"summary": "List all surfaces",
+				"tags": ["Surfaces"]
+			}
+		},
+		"/surfaces/v1/{surfaceId}": {
+			"get": {
+				"description": "Returns a single surface by id, connected or not, with its current state.",
+				"parameters": [
+					{
+						"description": "Surface id, as returned by the list surfaces endpoint.",
+						"in": "path",
+						"name": "surfaceId",
+						"required": true,
+						"schema": {
+							"description": "Surface id, as returned by the list surfaces endpoint.",
+							"example": "streamdeck:1A2B3C4D",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"example": {
+									"data": {
+										"brightness": 80,
+										"displayName": "Front of house (streamdeck:1A2B3C4D)",
+										"groupId": "streamdeck:1A2B3C4D",
+										"id": "streamdeck:1A2B3C4D",
+										"integrationType": "elgato-stream-deck",
+										"isConnected": true,
+										"name": "Front of house",
+										"page": {
+											"id": "ggmHXCUQ0RRXUwEr8HHtQ",
+											"name": "Main",
+											"number": 1
+										},
+										"size": {
+											"columns": 8,
+											"rows": 4
+										},
+										"type": "Elgato Stream Deck XL"
+									}
+								},
+								"schema": {
+									"example": {
+										"data": {
+											"brightness": 80,
+											"displayName": "Front of house (streamdeck:1A2B3C4D)",
+											"groupId": "streamdeck:1A2B3C4D",
+											"id": "streamdeck:1A2B3C4D",
+											"integrationType": "elgato-stream-deck",
+											"isConnected": true,
+											"name": "Front of house",
+											"page": {
+												"id": "ggmHXCUQ0RRXUwEr8HHtQ",
+												"name": "Main",
+												"number": 1
+											},
+											"size": {
+												"columns": 8,
+												"rows": 4
+											},
+											"type": "Elgato Stream Deck XL"
+										}
+									},
+									"properties": {
+										"data": {
+											"example": {
+												"brightness": 80,
+												"displayName": "Front of house (streamdeck:1A2B3C4D)",
+												"groupId": "streamdeck:1A2B3C4D",
+												"id": "streamdeck:1A2B3C4D",
+												"integrationType": "elgato-stream-deck",
+												"isConnected": true,
+												"name": "Front of house",
+												"page": {
+													"id": "ggmHXCUQ0RRXUwEr8HHtQ",
+													"name": "Main",
+													"number": 1
+												},
+												"size": {
+													"columns": 8,
+													"rows": 4
+												},
+												"type": "Elgato Stream Deck XL"
+											},
+											"properties": {
+												"brightness": {
+													"description": "Brightness of the surface in percent, or null if it is not set in the surface config.",
+													"example": 80,
+													"nullable": true,
+													"type": "number"
+												},
+												"displayName": {
+													"description": "Name shown for the surface in the Companion UI.",
+													"example": "Front of house (streamdeck:1A2B3C4D)",
+													"type": "string"
+												},
+												"groupId": {
+													"description": "Id of the surface group the surface belongs to. Note: if not part of a group, this will typically be the same as the id.",
+													"type": "string"
+												},
+												"id": {
+													"description": "Unique surface id.",
+													"example": "streamdeck:1A2B3C4D",
+													"type": "string"
+												},
+												"integrationType": {
+													"description": "Integration the surface is connected through.",
+													"example": "elgato-stream-deck",
+													"type": "string"
+												},
+												"isConnected": {
+													"description": "Whether the surface is currently connected.",
+													"example": true,
+													"type": "boolean"
+												},
+												"name": {
+													"description": "Name given to the surface in Companion.",
+													"example": "Front of house",
+													"type": "string"
+												},
+												"page": {
+													"description": "Page the surface is currently showing, or null if it is not showing one.",
+													"nullable": true,
+													"properties": {
+														"id": {
+															"description": "Unique page id.",
+															"example": "ggmHXCUQ0RRXUwEr8HHtQ",
+															"type": "string"
+														},
+														"name": {
+															"description": "Display name of the page.",
+															"example": "Main",
+															"nullable": true,
+															"type": "string"
+														},
+														"number": {
+															"description": "Position of the page in the page list, or null if the page is no longer in the list.",
+															"example": 1,
+															"nullable": true,
+															"type": "number"
+														}
+													},
+													"required": ["id", "number", "name"],
+													"type": "object"
+												},
+												"size": {
+													"description": "Button grid size of the surface, if known.",
+													"nullable": true,
+													"properties": {
+														"columns": {
+															"description": "Number of button columns on the surface.",
+															"example": 8,
+															"type": "number"
+														},
+														"rows": {
+															"description": "Number of button rows on the surface.",
+															"example": 4,
+															"type": "number"
+														}
+													},
+													"required": ["rows", "columns"],
+													"type": "object"
+												},
+												"type": {
+													"description": "Model of the surface, as reported by the integration.",
+													"example": "Elgato Stream Deck XL",
+													"type": "string"
+												}
+											},
+											"required": [
+												"id",
+												"type",
+												"integrationType",
+												"name",
+												"displayName",
+												"isConnected",
+												"size",
+												"brightness",
+												"page",
+												"groupId"
+											],
+											"type": "object"
+										}
+									},
+									"required": ["data"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "The requested surface"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["read"]
+					}
+				],
+				"summary": "Get a surface",
+				"tags": ["Surfaces"]
+			},
+			"patch": {
+				"description": "Update a connected surface. Currently only the brightness can be changed.",
+				"parameters": [
+					{
+						"description": "Surface id, as returned by the list surfaces endpoint.",
+						"in": "path",
+						"name": "surfaceId",
+						"required": true,
+						"schema": {
+							"description": "Surface id, as returned by the list surfaces endpoint.",
+							"example": "streamdeck:1A2B3C4D",
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"brightness": 50
+							},
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"brightness": {
+										"description": "Brightness to apply to the surface, in percent.",
+										"example": 50,
+										"maximum": 100,
+										"minimum": 0,
+										"type": "integer"
+									}
+								},
+								"required": ["brightness"],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"example": {
+									"data": {
+										"brightness": 50,
+										"displayName": "Front of house (streamdeck:1A2B3C4D)",
+										"groupId": "streamdeck:1A2B3C4D",
+										"id": "streamdeck:1A2B3C4D",
+										"integrationType": "elgato-stream-deck",
+										"isConnected": true,
+										"name": "Front of house",
+										"page": {
+											"id": "ggmHXCUQ0RRXUwEr8HHtQ",
+											"name": "Main",
+											"number": 1
+										},
+										"size": {
+											"columns": 8,
+											"rows": 4
+										},
+										"type": "Elgato Stream Deck XL"
+									}
+								},
+								"schema": {
+									"example": {
+										"data": {
+											"brightness": 80,
+											"displayName": "Front of house (streamdeck:1A2B3C4D)",
+											"groupId": "streamdeck:1A2B3C4D",
+											"id": "streamdeck:1A2B3C4D",
+											"integrationType": "elgato-stream-deck",
+											"isConnected": true,
+											"name": "Front of house",
+											"page": {
+												"id": "ggmHXCUQ0RRXUwEr8HHtQ",
+												"name": "Main",
+												"number": 1
+											},
+											"size": {
+												"columns": 8,
+												"rows": 4
+											},
+											"type": "Elgato Stream Deck XL"
+										}
+									},
+									"properties": {
+										"data": {
+											"example": {
+												"brightness": 80,
+												"displayName": "Front of house (streamdeck:1A2B3C4D)",
+												"groupId": "streamdeck:1A2B3C4D",
+												"id": "streamdeck:1A2B3C4D",
+												"integrationType": "elgato-stream-deck",
+												"isConnected": true,
+												"name": "Front of house",
+												"page": {
+													"id": "ggmHXCUQ0RRXUwEr8HHtQ",
+													"name": "Main",
+													"number": 1
+												},
+												"size": {
+													"columns": 8,
+													"rows": 4
+												},
+												"type": "Elgato Stream Deck XL"
+											},
+											"properties": {
+												"brightness": {
+													"description": "Brightness of the surface in percent, or null if it is not set in the surface config.",
+													"example": 80,
+													"nullable": true,
+													"type": "number"
+												},
+												"displayName": {
+													"description": "Name shown for the surface in the Companion UI.",
+													"example": "Front of house (streamdeck:1A2B3C4D)",
+													"type": "string"
+												},
+												"groupId": {
+													"description": "Id of the surface group the surface belongs to. Note: if not part of a group, this will typically be the same as the id.",
+													"type": "string"
+												},
+												"id": {
+													"description": "Unique surface id.",
+													"example": "streamdeck:1A2B3C4D",
+													"type": "string"
+												},
+												"integrationType": {
+													"description": "Integration the surface is connected through.",
+													"example": "elgato-stream-deck",
+													"type": "string"
+												},
+												"isConnected": {
+													"description": "Whether the surface is currently connected.",
+													"example": true,
+													"type": "boolean"
+												},
+												"name": {
+													"description": "Name given to the surface in Companion.",
+													"example": "Front of house",
+													"type": "string"
+												},
+												"page": {
+													"description": "Page the surface is currently showing, or null if it is not showing one.",
+													"nullable": true,
+													"properties": {
+														"id": {
+															"description": "Unique page id.",
+															"example": "ggmHXCUQ0RRXUwEr8HHtQ",
+															"type": "string"
+														},
+														"name": {
+															"description": "Display name of the page.",
+															"example": "Main",
+															"nullable": true,
+															"type": "string"
+														},
+														"number": {
+															"description": "Position of the page in the page list, or null if the page is no longer in the list.",
+															"example": 1,
+															"nullable": true,
+															"type": "number"
+														}
+													},
+													"required": ["id", "number", "name"],
+													"type": "object"
+												},
+												"size": {
+													"description": "Button grid size of the surface, if known.",
+													"nullable": true,
+													"properties": {
+														"columns": {
+															"description": "Number of button columns on the surface.",
+															"example": 8,
+															"type": "number"
+														},
+														"rows": {
+															"description": "Number of button rows on the surface.",
+															"example": 4,
+															"type": "number"
+														}
+													},
+													"required": ["rows", "columns"],
+													"type": "object"
+												},
+												"type": {
+													"description": "Model of the surface, as reported by the integration.",
+													"example": "Elgato Stream Deck XL",
+													"type": "string"
+												}
+											},
+											"required": [
+												"id",
+												"type",
+												"integrationType",
+												"name",
+												"displayName",
+												"isConnected",
+												"size",
+												"brightness",
+												"page",
+												"groupId"
+											],
+											"type": "object"
+										}
+									},
+									"required": ["data"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Updated surface"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					},
+					"409": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Surface is not connected"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["write"]
+					}
+				],
+				"summary": "Update a surface",
+				"tags": ["Surfaces"]
+			}
 		}
 	},
 	"security": [
