@@ -7,6 +7,7 @@ import type { IPageStore } from '../../lib/Page/Store.js'
 import { REST_API_BASE_PATH } from '../../lib/Service/RestApi/constants.js'
 import { createRestApiRouter } from '../../lib/Service/RestApi/RestApiRouter.js'
 import { RestApiTokenStoreMemory } from '../../lib/Service/RestApi/RestApiTokenStore.js'
+import { BrightnessConfigField } from '../../lib/Surface/CommonConfigFields.js'
 import type { SurfaceController } from '../../lib/Surface/Controller.js'
 import { createSurfacesRestApiRouter, SURFACES_API_BASE_PATH } from '../../lib/Surface/SurfacesRestApi.js'
 import { createTestRestApiResources } from '../Service/RestApi/RestApiTestHelpers.js'
@@ -86,7 +87,10 @@ function createDevicesList(): ClientDevicesListItem[] {
 			index: 0,
 			displayName: 'Group 1',
 			isAutoGroup: false,
-			surfaces: [createSurface('surface-1', {}), createSurface('surface-2', { brightness: null })],
+			surfaces: [
+				createSurface('surface-1', { configFields: [BrightnessConfigField] }),
+				createSurface('surface-2', { brightness: null }),
+			],
 		},
 		{
 			id: 'surface-3',
