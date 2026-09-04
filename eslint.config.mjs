@@ -126,6 +126,18 @@ export default [
 		},
 	},
 	{
+		files: ['e2e/**/*'],
+		rules: {
+			// @playwright/test is a root devDependency, which this rule doesn't recognise from here
+			'n/no-unpublished-import': 'off',
+			// playwright resolves fixture dependencies from the destructuring pattern, so an empty
+			// pattern is meaningful for fixtures with no dependencies
+			'no-empty-pattern': 'off',
+			// the app launcher is an entrypoint script, same as companion/lib/main.ts
+			'n/no-process-exit': 'off',
+		},
+	},
+	{
 		files: ['companion/**/*.ts', 'companion/**/*.js'],
 		rules: {
 			'n/no-missing-import': [
