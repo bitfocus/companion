@@ -45,9 +45,17 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 	 * The `affectedProperties` most recently declared by each feedback definition (keyed by feedback id).
 	 * Retained from `setFeedbackDefinitions` so that `setPresetDefinitions` can limit the style overrides it
 	 * generates for advanced feedbacks to the properties the feedback declares. Empty until the module reports
-	 * its feedbacks (which, in practice, happens before it reports presets).
+	 * its feedbacks, which it is free to do after reporting its presets - hence `#lastReportedPresets` below.
 	 */
 	#feedbackAffectedProperties: ReadonlyMap<string, string[] | undefined> = new Map()
+
+	/**
+	 * The raw presets from the module's last `setPresetDefinitions` call, retained so they can be re-converted
+	 * if the feedback definitions change afterwards. A module is free to report its presets before its
+	 * feedbacks; without this, those presets would keep the unrestricted style overrides that were generated
+	 * while the `affectedProperties` were still unknown.
+	 */
+	#lastReportedPresets: { sections: CompanionPresetSection[]; presets: CompanionPresetDefinitions } | null = null
 
 	/**
 	 * Coalesce variable value updates before sending them over IPC, to avoid a flood of tiny messages
@@ -137,9 +145,16 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 			} satisfies Complete<ClientEntityDefinition>
 		}
 
+		const affectedPropertiesChanged = !areAffectedPropertiesEqual(this.#feedbackAffectedProperties, affectedProperties)
 		this.#feedbackAffectedProperties = affectedProperties
 
 		this.#ipcWrapper.sendWithNoCb('setFeedbackDefinitions', { feedbacks })
+
+		// The style overrides generated for the presets were derived from the previous `affectedProperties`,
+		// so they must be rebuilt against the new ones.
+		if (affectedPropertiesChanged && this.#lastReportedPresets) {
+			this.#sendPresetDefinitions(this.#lastReportedPresets.sections, this.#lastReportedPresets.presets)
+		}
 	}
 	/** The variables available in the connection have changed */
 	setVariableDefinitions(definitions: HostVariableDefinition[], values: HostVariableValue[]): void {
@@ -150,6 +165,13 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 	}
 	/** The presets provided by the connection have changed */
 	setPresetDefinitions(rawSections: CompanionPresetSection[], rawPresets: CompanionPresetDefinitions): void {
+		this.#lastReportedPresets = { sections: rawSections, presets: rawPresets }
+
+		this.#sendPresetDefinitions(rawSections, rawPresets)
+	}
+
+	/** Convert the given raw presets against the current feedback definitions, and report them to the host */
+	#sendPresetDefinitions(rawSections: CompanionPresetSection[], rawPresets: CompanionPresetDefinitions): void {
 		const { presets, uiPresets } = ConvertPresetDefinitions(
 			this.#logger,
 			this.#connectionId,
@@ -316,5 +338,31 @@ function shouldShowInvertForFeedback(options: SomeCompanionFeedbackInputField[])
 	}
 
 	// Nothing looked to be a user defined invert field
+	return true
+}
+
+/**
+ * Whether two `affectedProperties` maps describe the same set of limits, so that an unchanged report of the
+ * feedback definitions doesn't needlessly rebuild (and re-report) the presets.
+ */
+function areAffectedPropertiesEqual(
+	a: ReadonlyMap<string, string[] | undefined>,
+	b: ReadonlyMap<string, string[] | undefined>
+): boolean {
+	if (a.size !== b.size) return false
+
+	for (const [id, aProperties] of a) {
+		if (!b.has(id)) return false
+
+		const bProperties = b.get(id)
+		if (aProperties === undefined || bProperties === undefined) {
+			if (aProperties !== bProperties) return false
+			continue
+		}
+
+		if (aProperties.length !== bProperties.length) return false
+		if (aProperties.some((property, i) => property !== bProperties[i])) return false
+	}
+
 	return true
 }
