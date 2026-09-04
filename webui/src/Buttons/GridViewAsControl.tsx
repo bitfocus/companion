@@ -8,7 +8,7 @@ import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { Popover } from '~/Components/Popover.js'
 import { GRID_VIEW_AS_OFFSET_LIMIT } from './GridViewAs.js'
-import { GRID_VIEW_AS_CUSTOM_ID, type GridViewAsController } from './useGridViewAs.js'
+import { GRID_VIEW_AS_CUSTOM_ID, GRID_VIEW_AS_NOTHING_ID, type GridViewAsController } from './useGridViewAs.js'
 
 interface GridViewAsControlProps {
 	controller: GridViewAsController
@@ -53,11 +53,24 @@ const GridViewAsPopoverContent = observer(function GridViewAsPopoverContent({
 }: GridViewAsControlProps): React.JSX.Element {
 	const { state, surfaceChoices, surfaceTypeChoices, setSelection, setOffset } = controller
 
-	const selectedSurfaceId = state.selection.type === 'surface' ? state.selection.surfaceId : GRID_VIEW_AS_CUSTOM_ID
+	const selection = state.selection
+	const selectedSurfaceId = !selection
+		? GRID_VIEW_AS_NOTHING_ID
+		: selection.type === 'surface'
+			? selection.surfaceId
+			: GRID_VIEW_AS_CUSTOM_ID
+
+	// Offered only while it is the answer, so that having chosen something there is no way back to
+	// having chosen nothing
+	const choices = selection
+		? surfaceChoices
+		: [{ id: GRID_VIEW_AS_NOTHING_ID, label: 'Choose a surface…' }, ...surfaceChoices]
 
 	const chooseSurface = useCallback(
 		(value: DropdownChoiceId) => {
-			if (value === GRID_VIEW_AS_CUSTOM_ID) {
+			if (value === GRID_VIEW_AS_NOTHING_ID) {
+				// Nothing to do - this is only ever offered while it is already the answer
+			} else if (value === GRID_VIEW_AS_CUSTOM_ID) {
 				// Starting from the first model we know about, so choosing this shows something rather than
 				// an empty view which has to be configured before it does anything
 				setSelection({
@@ -77,13 +90,13 @@ const GridViewAsPopoverContent = observer(function GridViewAsPopoverContent({
 			setSelection({
 				type: 'surfaceType',
 				surfaceType: String(value),
-				offset: state.selection.type === 'surfaceType' ? state.selection.offset : { rows: 0, columns: 0 },
+				offset: selection?.type === 'surfaceType' ? selection.offset : { rows: 0, columns: 0 },
 			})
 		},
-		[setSelection, state.selection]
+		[setSelection, selection]
 	)
 
-	const offset = state.selection.type === 'surfaceType' ? state.selection.offset : null
+	const model = selection?.type === 'surfaceType' ? selection : null
 
 	return (
 		<>
@@ -93,13 +106,13 @@ const GridViewAsPopoverContent = observer(function GridViewAsPopoverContent({
 				</label>
 				<SimpleDropdownInputField
 					id="grid-view-as-surface"
-					choices={surfaceChoices}
+					choices={choices}
 					value={selectedSurfaceId}
 					setValue={chooseSurface}
 				/>
 			</div>
 
-			{offset && (
+			{model && (
 				<>
 					<div className="grid-view-as-field">
 						<label className="grid-view-as-field-label" htmlFor="grid-view-as-type">
@@ -108,7 +121,7 @@ const GridViewAsPopoverContent = observer(function GridViewAsPopoverContent({
 						<SimpleDropdownInputField
 							id="grid-view-as-type"
 							choices={surfaceTypeChoices}
-							value={state.selection.type === 'surfaceType' ? state.selection.surfaceType : ''}
+							value={model.surfaceType}
 							setValue={chooseSurfaceType}
 							noOptionsMessage="No surface layouts are known yet"
 						/>
@@ -134,8 +147,8 @@ const GridViewAsPopoverContent = observer(function GridViewAsPopoverContent({
 										id="grid-view-as-offset-columns"
 										min={-GRID_VIEW_AS_OFFSET_LIMIT}
 										max={GRID_VIEW_AS_OFFSET_LIMIT}
-										value={offset.columns}
-										setValue={(columns) => setOffset({ rows: offset.rows, columns })}
+										value={model.offset.columns}
+										setValue={(columns) => setOffset({ rows: model.offset.rows, columns })}
 									/>
 								</div>
 
@@ -147,8 +160,8 @@ const GridViewAsPopoverContent = observer(function GridViewAsPopoverContent({
 										id="grid-view-as-offset-rows"
 										min={-GRID_VIEW_AS_OFFSET_LIMIT}
 										max={GRID_VIEW_AS_OFFSET_LIMIT}
-										value={offset.rows}
-										setValue={(rows) => setOffset({ rows, columns: offset.columns })}
+										value={model.offset.rows}
+										setValue={(rows) => setOffset({ rows, columns: model.offset.columns })}
 									/>
 								</div>
 							</div>

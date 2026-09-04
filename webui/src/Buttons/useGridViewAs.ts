@@ -35,6 +35,9 @@ export interface GridViewAsController {
 /** The id the surface dropdown uses for "not one of these, a model of surface" */
 export const GRID_VIEW_AS_CUSTOM_ID = '__custom__'
 
+/** The id it uses while nothing has been chosen at all */
+export const GRID_VIEW_AS_NOTHING_ID = ''
+
 /**
  * What the grid is being viewed as, and everything needed to change it.
  *
@@ -108,8 +111,10 @@ export function useGridViewAs(): GridViewAsController {
 
 	const setEnabled = useCallback((enabled: boolean) => setStored((oldState) => ({ ...oldState, enabled })), [setStored])
 
+	// Choosing something to view as is asking to see it - having to then find the toggle would be a
+	// second step which only ever has one sensible answer
 	const setSelection = useCallback(
-		(selection: GridViewAsSelection) => setStored((oldState) => ({ ...oldState, selection })),
+		(selection: GridViewAsSelection) => setStored((oldState) => ({ ...oldState, enabled: true, selection })),
 		[setStored]
 	)
 
@@ -117,12 +122,13 @@ export function useGridViewAs(): GridViewAsController {
 		(offset: { rows: number; columns: number }) =>
 			setStored((oldState) => {
 				// A surface which exists brings its own offset, so there is nothing here to move
-				if (oldState.selection.type !== 'surfaceType') return oldState
+				const selection = oldState.selection
+				if (selection?.type !== 'surfaceType') return oldState
 
 				return {
 					...oldState,
 					selection: {
-						...oldState.selection,
+						...selection,
 						offset: { rows: clampOffset(offset.rows), columns: clampOffset(offset.columns) },
 					},
 				}
