@@ -20,6 +20,7 @@ import type {
 	SurfacePanelConfig,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
+import { rotateXYForPanel, unrotateXYForPanel } from '@companion-app/shared/SurfaceLayout.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
@@ -31,7 +32,7 @@ import { createDefaultSurfacePanelConfig } from './Config.js'
 import type { SurfaceController } from './Controller.js'
 import { SurfaceGroup } from './Group.js'
 import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
-import { getSurfaceName, rotateXYForPanel, unrotateXYForPanel } from './Util.js'
+import { getSurfaceName } from './Util.js'
 
 interface SurfaceHandlerEvents {
 	interaction: []
