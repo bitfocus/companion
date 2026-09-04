@@ -24,6 +24,7 @@ import {
 	type OSCSomeArguments,
 	type SomeCompanionFeedbackInputField,
 } from '@companion-module/host'
+import { randomIdGenerator } from '../../../Resources/IdGenerator.js'
 import type { CompositeElementDefinition } from '../../Definitions.js'
 import type { EncodedOSCArgument, ModuleChildIpcWrapper, RecordActionMessage } from '../IpcTypesNew.js'
 import { VariableValueBatcher } from '../VariableValueBatcher.js'
@@ -202,6 +203,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 					this.#connectionId,
 					undefined,
 					rawElement.elements || [],
+					randomIdGenerator,
 					true // Force new unique IDs for elements within composite definitions
 				).slice(
 					1 // Crop off the canvas element

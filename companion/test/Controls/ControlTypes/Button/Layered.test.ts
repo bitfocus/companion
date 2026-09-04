@@ -161,6 +161,33 @@ describe('ControlButtonLayered', () => {
 			.map((call: any[]) => call[2] as string)
 	}
 
+	describe('preset definition ids', () => {
+		// A preset definition allocates deterministic ids so its content checksum is stable, and relies on
+		// being cloned into fresh ids before it becomes live control data. Preset placement goes through
+		// `importControl`, which constructs with isImport=true.
+		const presetFeedback = {
+			id: 'p1_0',
+			type: EntityModelType.Feedback,
+			connectionId: 'conn1',
+			definitionId: 'fb1',
+			options: {},
+		} as any
+
+		it('regenerates entity ids when a preset is placed', () => {
+			const control = new ControlButtonLayered(deps, CONTROL_ID, makeStorage([], [presetFeedback]), true)
+
+			const ids = control.toJSON().feedbacks.map((f) => f.id)
+			expect(ids).toHaveLength(1)
+			expect(ids[0]).not.toBe('p1_0')
+		})
+
+		it('keeps stored entity ids when loading from the database', () => {
+			const control = new ControlButtonLayered(deps, CONTROL_ID, makeStorage([], [presetFeedback]), false)
+
+			expect(control.toJSON().feedbacks.map((f) => f.id)).toEqual(['p1_0'])
+		})
+	})
+
 	describe('construction & metadata', () => {
 		it('reports its type and capability flags', () => {
 			const control = createControl(makeStorage([boxElement('box0')]))

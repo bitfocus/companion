@@ -17,6 +17,7 @@ import {
 	convertActionsDelay,
 	convertPresetFeedbacksToEntities,
 } from '../../../lib/Instance/Connection/Thread/PresetUtils.js'
+import { randomIdGenerator } from '../../../lib/Resources/IdGenerator.js'
 
 // Deterministic nanoid
 let nanoidCounter = 0
@@ -33,6 +34,7 @@ describe('PresetInternalEntities', () => {
 		connectionId: 'conn01',
 		connectionUpgradeIndex: 5,
 		allowInternalEntities: true,
+		generateId: randomIdGenerator,
 	}
 
 	beforeEach(() => {

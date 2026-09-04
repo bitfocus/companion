@@ -1,4 +1,3 @@
-import { nanoid } from 'nanoid'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
@@ -27,6 +26,7 @@ import type {
 	SomePresetActionEntry,
 } from '@companion-module/host'
 import { ConvertLegacyStyleToElements } from '../../../Resources/ConvertLegacyStyleToElements.js'
+import { createStableIdGenerator, type IdGenerator } from '../../../Resources/IdGenerator.js'
 import { convertPresetActionEntries, type PresetEntryConversionContext } from './PresetInternalEntities.js'
 import { ConvertLayeredPresetFeedbacksToEntities, ConvertLayerPresetElements } from './PresetsLayered.js'
 import { convertPresetFeedbacksToEntities, ConvertPresetStyleToDrawStyle } from './PresetUtils.js'
@@ -318,12 +318,17 @@ function ConvertPresetDefinition(
 		const presetType = rawPreset.type
 		const presetName = rawPreset.name
 
+		// Deterministic ids keep the content checksum stable across re-conversion. One generator per preset,
+		// so a change to one preset cannot renumber (and so appear to change) another.
+		const generateId = createStableIdGenerator(presetId)
+
 		// `internal:*` entries are allowed: the host has validated and version-gated them for new-api modules
 		const entryCtx: PresetEntryConversionContext = {
 			logger,
 			connectionId,
 			connectionUpgradeIndex,
 			allowInternalEntities: true,
+			generateId,
 		}
 
 		switch (rawPreset.type) {
@@ -332,7 +337,8 @@ function ConvertPresetDefinition(
 					ConvertPresetStyleToDrawStyle(rawPreset.style),
 					convertPresetFeedbacksToEntities(rawPreset.feedbacks, entryCtx),
 					rawPreset.previewStyle,
-					feedbackAffectedProperties
+					feedbackAffectedProperties,
+					generateId
 				)
 
 				const { steps, hasRotaryActions } = ConvertStepsForPreset(entryCtx, rawPreset.steps)
@@ -361,7 +367,8 @@ function ConvertPresetDefinition(
 							rawPreset.type,
 							rawPreset.localVariables,
 							connectionId,
-							connectionUpgradeIndex
+							connectionUpgradeIndex,
+							generateId
 						),
 					},
 					presetExtraFeedbacks: parsedStyle.previewStyleFeedbacks,
@@ -387,7 +394,13 @@ function ConvertPresetDefinition(
 						},
 
 						style: {
-							layers: ConvertLayerPresetElements(logger, connectionId, rawPreset.canvas, rawPreset.elements),
+							layers: ConvertLayerPresetElements(
+								logger,
+								connectionId,
+								rawPreset.canvas,
+								rawPreset.elements,
+								generateId
+							),
 						},
 						feedbacks: ConvertLayeredPresetFeedbacksToEntities(rawPreset.feedbacks, entryCtx),
 
@@ -397,7 +410,8 @@ function ConvertPresetDefinition(
 							rawPreset.type,
 							rawPreset.localVariables,
 							connectionId,
-							connectionUpgradeIndex
+							connectionUpgradeIndex,
+							generateId
 						),
 					},
 					presetExtraFeedbacks: [], // No preview style for layered presets
@@ -482,7 +496,8 @@ function ConvertLocalVariablesForPreset(
 	_type: CompanionPresetDefinition['type'],
 	rawLocalVariables: CompanionPresetLocalVariable[] | undefined,
 	connectionId: string,
-	connectionUpgradeIndex: number | undefined
+	connectionUpgradeIndex: number | undefined,
+	generateId: IdGenerator
 ): SomeEntityModel[] {
 	if (!rawLocalVariables) return []
 
@@ -494,7 +509,7 @@ function ConvertLocalVariablesForPreset(
 			case 'feedback':
 				result.push({
 					type: EntityModelType.Feedback,
-					id: nanoid(),
+					id: generateId(),
 					connectionId: connectionId,
 					definitionId: localVariable.feedbackId,
 					options: structuredClone(optionsObjectToExpressionOptions(localVariable.options ?? {}, true)),
@@ -507,7 +522,7 @@ function ConvertLocalVariablesForPreset(
 				break
 			case 'simple':
 				result.push({
-					id: nanoid(),
+					id: generateId(),
 					type: EntityModelType.Feedback,
 					definitionId: 'user_value',
 					connectionId: 'internal',

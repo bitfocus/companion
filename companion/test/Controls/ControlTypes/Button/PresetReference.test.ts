@@ -91,6 +91,50 @@ describe('ControlButtonPresetReference', () => {
 		return new ControlButtonPresetReference(deps, 'bank:test01', model, false)
 	}
 
+	describe('preset definition ids', () => {
+		// A preset definition allocates deterministic ids so its content checksum is stable across re-reports.
+		// Those ids must never reach a live control: entity ids are tracked per connection, so two buttons
+		// placed from one preset sharing an id would collide.
+		const presetFeedback = makeDefinitionFeedback('p1_0')
+
+		it('regenerates entity ids when the reference is placed', () => {
+			const control = new ControlButtonPresetReference(
+				deps,
+				'bank:test01',
+				makeModel({ feedbacks: [presetFeedback] }),
+				true
+			)
+
+			const ids = control.toJSON().feedbacks.map((f) => f.id)
+			expect(ids).toHaveLength(1)
+			expect(ids[0]).not.toBe('p1_0')
+		})
+
+		it('regenerates entity ids on a preset refresh', () => {
+			const control = createControl()
+			definitions.convertPresetToReferenceControlModel.mockReturnValue(
+				makeModel({ feedbacks: [presetFeedback], checksum: 'v2' })
+			)
+
+			definitions.emit('updatePresets', 'conn1')
+
+			const ids = control.toJSON().feedbacks.map((f) => f.id)
+			expect(ids).toHaveLength(1)
+			expect(ids[0]).not.toBe('p1_0')
+		})
+
+		it('keeps stored entity ids when loading from the database', () => {
+			const control = new ControlButtonPresetReference(
+				deps,
+				'bank:test01',
+				makeModel({ feedbacks: [presetFeedback] }),
+				false
+			)
+
+			expect(control.toJSON().feedbacks.map((f) => f.id)).toEqual(['p1_0'])
+		})
+	})
+
 	it('exposes the reference metadata from storage', () => {
 		const control = createControl()
 		expect(control.type).toBe('preset-reference')

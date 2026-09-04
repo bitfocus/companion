@@ -51,6 +51,7 @@ import {
 	ParseLegacyStyle,
 } from '../Resources/ConvertLegacyStyleToElements.js'
 import { EventDefinitions } from '../Resources/EventDefinitions.js'
+import { randomIdGenerator } from '../Resources/IdGenerator.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import {
 	injectOverriddenLocalVariableValues,
@@ -248,13 +249,15 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 						const parsedStyle = ParseLegacyStyle(definition.feedbackStyle)
 						feedback.styleOverrides = ConvertBooleanFeedbackStyleToOverrides(
 							parsedStyle,
-							layeredStyleSelectedElementIds
+							layeredStyleSelectedElementIds,
+							randomIdGenerator
 						)
 					} else if (definition.feedbackType === FeedbackEntitySubType.Advanced) {
 						feedback.styleOverrides = CreateAdvancedFeedbackStyleOverrides(
 							layeredStyleSelectedElementIds,
 							layeredStyleSelectedElementIds[ButtonGraphicsElementUsage.Image],
-							definition.feedbackAffectedProperties
+							definition.feedbackAffectedProperties,
+							randomIdGenerator
 						)
 					}
 				}
