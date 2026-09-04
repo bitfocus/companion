@@ -1,45 +1,105 @@
 import { describe, expect, it } from 'vitest'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
-import { drawnCellRange, gridTileGeometry, locationAtCanvasPoint, revealScrollOffset } from '../GridCanvasGeometry.js'
+import {
+	drawnCellRange,
+	fitInsideBox,
+	gridTileGeometry,
+	locationAtCanvasPoint,
+	revealScrollOffset,
+	SQUARE_TILE_ASPECT_RATIO,
+} from '../GridCanvasGeometry.js'
 
 const GRID: UserConfigGridSize = { minRow: 0, maxRow: 3, minColumn: 0, maxColumn: 7 }
 
+/** Cells are square unless a surface says otherwise, so most of these say nothing about the shape */
+const square = (drawScale: number) => gridTileGeometry(drawScale, SQUARE_TILE_ASPECT_RATIO)
+
+/** The 2:1 of a Stream Deck + touch strip segment */
+const STRIP = { w: 2, h: 1 }
+
 describe('gridTileGeometry', () => {
 	it('scales the button with the zoom level', () => {
-		expect(gridTileGeometry(1).inner).toBe(72)
-		expect(gridTileGeometry(2).inner).toBe(144)
+		expect(square(1).inner).toEqual({ width: 72, height: 72 })
+		expect(square(2).inner).toEqual({ width: 144, height: 144 })
 	})
 
 	it('stops the gap growing once it is wide enough, so zooming in grows the buttons', () => {
-		expect(gridTileGeometry(1).padding).toBeCloseTo(3.6)
-		expect(gridTileGeometry(2).padding).toBe(6)
-		expect(gridTileGeometry(4).padding).toBe(6)
+		expect(square(1).padding).toBeCloseTo(3.6)
+		expect(square(2).padding).toBe(6)
+		expect(square(4).padding).toBe(6)
 	})
 
 	it('measures a cell as the button plus the gap on both sides', () => {
-		const { inner, padding, size } = gridTileGeometry(2)
+		const { inner, padding, size } = square(2)
 
-		expect(size).toBe(inner + padding * 2)
+		expect(size).toEqual({ width: inner.width + padding * 2, height: inner.height + padding * 2 })
+	})
+
+	it('fits a wide cell into the box a square one would have had, rather than growing it', () => {
+		// Otherwise viewing as a surface with wide buttons would show half as many per screen
+		expect(gridTileGeometry(1, STRIP).inner).toEqual({ width: 72, height: 36 })
+	})
+
+	it('fits a tall cell the same way', () => {
+		expect(gridTileGeometry(1, { w: 1, h: 2 }).inner).toEqual({ width: 36, height: 72 })
+	})
+})
+
+describe('fitInsideBox', () => {
+	it('fills the width of a box with a wider shape, and centres nothing it cannot fill', () => {
+		expect(fitInsideBox({ width: 72, height: 72 }, STRIP)).toEqual({ width: 72, height: 36 })
+	})
+
+	it('fills the height of a box with a taller shape', () => {
+		expect(fitInsideBox({ width: 72, height: 72 }, { w: 1, h: 3 })).toEqual({ width: 24, height: 72 })
+	})
+
+	it('leaves a shape which already matches the box alone', () => {
+		expect(fitInsideBox({ width: 72, height: 36 }, STRIP)).toEqual({ width: 72, height: 36 })
 	})
 })
 
 describe('locationAtCanvasPoint', () => {
 	it('answers with the cell the point is inside', () => {
-		expect(locationAtCanvasPoint({ x: 0, y: 0 }, GRID, 80, 4)).toEqual({ pageNumber: 4, row: 0, column: 0 })
-		expect(locationAtCanvasPoint({ x: 199, y: 81 }, GRID, 80, 4)).toEqual({ pageNumber: 4, row: 1, column: 2 })
+		expect(locationAtCanvasPoint({ x: 0, y: 0 }, GRID, { width: 80, height: 80 }, 4)).toEqual({
+			pageNumber: 4,
+			row: 0,
+			column: 0,
+		})
+		expect(locationAtCanvasPoint({ x: 199, y: 81 }, GRID, { width: 80, height: 80 }, 4)).toEqual({
+			pageNumber: 4,
+			row: 1,
+			column: 2,
+		})
 	})
 
 	it('measures from the first cell, which is not always 0/0', () => {
 		const offset: UserConfigGridSize = { minRow: -2, maxRow: 2, minColumn: -3, maxColumn: 3 }
 
-		expect(locationAtCanvasPoint({ x: 0, y: 0 }, offset, 80, 1)).toEqual({ pageNumber: 1, row: -2, column: -3 })
-		expect(locationAtCanvasPoint({ x: 240, y: 160 }, offset, 80, 1)).toEqual({ pageNumber: 1, row: 0, column: 0 })
+		expect(locationAtCanvasPoint({ x: 0, y: 0 }, offset, { width: 80, height: 80 }, 1)).toEqual({
+			pageNumber: 1,
+			row: -2,
+			column: -3,
+		})
+		expect(locationAtCanvasPoint({ x: 240, y: 160 }, offset, { width: 80, height: 80 }, 1)).toEqual({
+			pageNumber: 1,
+			row: 0,
+			column: 0,
+		})
 	})
 
 	it('holds at the edge rather than naming a cell that does not exist', () => {
 		// Dragging a box past the corner of the grid keeps picking the corner
-		expect(locationAtCanvasPoint({ x: 9999, y: 9999 }, GRID, 80, 1)).toEqual({ pageNumber: 1, row: 3, column: 7 })
-		expect(locationAtCanvasPoint({ x: -50, y: -50 }, GRID, 80, 1)).toEqual({ pageNumber: 1, row: 0, column: 0 })
+		expect(locationAtCanvasPoint({ x: 9999, y: 9999 }, GRID, { width: 80, height: 80 }, 1)).toEqual({
+			pageNumber: 1,
+			row: 3,
+			column: 7,
+		})
+		expect(locationAtCanvasPoint({ x: -50, y: -50 }, GRID, { width: 80, height: 80 }, 1)).toEqual({
+			pageNumber: 1,
+			row: 0,
+			column: 0,
+		})
 	})
 })
 

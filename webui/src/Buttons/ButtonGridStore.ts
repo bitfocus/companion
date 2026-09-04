@@ -35,6 +35,13 @@ export class ButtonGridStore {
 	/** Which page the grid is showing, so being told again about the same one changes nothing */
 	#viewPage: number | null = null
 
+	/**
+	 * Which cells of the view exist at all. Null on the grid itself, where every cell does; viewing as a
+	 * surface leaves holes where the surface has no control, and a hole is not somewhere a button can be
+	 * put, selected, or walked onto.
+	 */
+	#cellPresence: ((location: ControlLocation) => boolean) | null = null
+
 	/** Where a shift-extended range measures from */
 	#rangeAnchor: ControlLocation | null = null
 
@@ -355,7 +362,7 @@ export class ButtonGridStore {
 	 * already selected, for building up a selection in several sweeps.
 	 */
 	selectRectangle(from: ControlLocation, to: ControlLocation, additive: boolean): void {
-		const rectangle = locationsInRectangle(from, to)
+		const rectangle = this.#presentOnly(locationsInRectangle(from, to))
 
 		const keepExisting = additive && (this.selectionPageNumber === null || this.selectionPageNumber === to.pageNumber)
 		const existing = keepExisting ? this.#selectionLocations : []
@@ -370,22 +377,79 @@ export class ButtonGridStore {
 			merged.push(location)
 		}
 
-		this.#focus = to
+		this.#focus = this.#focusWithin(to, merged)
 		this.#rangeAnchor = from
 		this.#applySelection(merged)
 	}
 
+	/**
+	 * Say which cells the view has. Passing null goes back to every cell of the grid having one, which is
+	 * what leaving the surface view does.
+	 */
+	setCellPresence(isPresent: ((location: ControlLocation) => boolean) | null): void {
+		this.#cellPresence = isPresent
+
+		// A selection made before the view narrowed can be holding cells the view no longer has
+		if (isPresent) {
+			const kept = this.#selectionLocations.filter(isPresent)
+			if (kept.length !== this.#selectionLocations.length) this.#applySelection(kept)
+
+			if (this.#focus && !isPresent(this.#focus)) {
+				this.#focus = null
+				this.#rangeAnchor = null
+				this.#notify()
+			}
+		}
+	}
+
+	/** Whether this cell is one the view has. Every cell of the grid itself is. */
+	isCellPresent = (location: ControlLocation): boolean => {
+		return !this.#cellPresence || this.#cellPresence(location)
+	}
+
+	#presentOnly(locations: readonly ControlLocation[]): ControlLocation[] {
+		return locations.filter(this.isCellPresent)
+	}
+
+	/**
+	 * Where the keyboard should sit after a selection which was dragged or asked for as a rectangle.
+	 *
+	 * Normally the corner the gesture ended on, but that corner can be a cell the view does not have, and
+	 * leaving the focus on one would put the next keypress somewhere nothing is.
+	 */
+	#focusWithin(preferred: ControlLocation, selected: readonly ControlLocation[]): ControlLocation | null {
+		if (this.isCellPresent(preferred)) return preferred
+
+		return selected.length > 0 ? selected[selected.length - 1] : null
+	}
+
 	// ---- keyboard navigation ----
 
+	/**
+	 * Where one step in this direction lands, wrapping at the edges.
+	 *
+	 * Keeps stepping over cells the view does not have, so walking along the encoder row of a Stream Deck
+	 * +XL goes from one encoder to the next rather than stopping on the gaps between them. A lap of the
+	 * whole view without finding one means there is nowhere to go.
+	 */
 	#nextFocus(rowDelta: number, columnDelta: number, gridSize: UserConfigGridSize): ControlLocation | null {
 		const from = this.#focus
 		if (!from) return null
 
-		return {
-			pageNumber: from.pageNumber,
-			row: wrap(from.row + rowDelta, gridSize.minRow, gridSize.maxRow),
-			column: wrap(from.column + columnDelta, gridSize.minColumn, gridSize.maxColumn),
+		const cellCount = (gridSize.maxRow - gridSize.minRow + 1) * (gridSize.maxColumn - gridSize.minColumn + 1)
+
+		let next = from
+		for (let step = 0; step < cellCount; step++) {
+			next = {
+				pageNumber: from.pageNumber,
+				row: wrap(next.row + rowDelta, gridSize.minRow, gridSize.maxRow),
+				column: wrap(next.column + columnDelta, gridSize.minColumn, gridSize.maxColumn),
+			}
+
+			if (this.isCellPresent(next)) return next
 		}
+
+		return null
 	}
 
 	/**
@@ -409,7 +473,7 @@ export class ButtonGridStore {
 		if (!next || !this.#rangeAnchor) return null
 
 		this.#focus = next
-		this.#applySelection(locationsInRectangle(this.#rangeAnchor, next))
+		this.#applySelection(this.#presentOnly(locationsInRectangle(this.#rangeAnchor, next)))
 
 		return next
 	}
@@ -439,9 +503,11 @@ export class ButtonGridStore {
 		const from: ControlLocation = { pageNumber, row: gridSize.minRow, column: gridSize.minColumn }
 		const to: ControlLocation = { pageNumber, row: gridSize.maxRow, column: gridSize.maxColumn }
 
-		this.#focus = to
+		const selected = this.#presentOnly(locationsInRectangle(from, to))
+
+		this.#focus = this.#focusWithin(to, selected)
 		this.#rangeAnchor = from
-		this.#applySelection(locationsInRectangle(from, to))
+		this.#applySelection(selected)
 	}
 
 	/** Move the focus onto another page, keeping the same cell */

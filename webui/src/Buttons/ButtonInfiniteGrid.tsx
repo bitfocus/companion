@@ -2,9 +2,11 @@ import { useDraggable, useDragOperation, useDroppable } from '@dnd-kit/react'
 import classNames from 'classnames'
 import React, { forwardRef, memo, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { aspectRatiosEqual } from '@companion-app/shared/Graphics/AspectRatio.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { DEFAULT_PREVIEW_RENDER_SIZE } from '@companion-app/shared/Model/Preview.js'
+import { DEFAULT_PREVIEW_RENDER_SIZE, type PreviewRenderSize } from '@companion-app/shared/Model/Preview.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { surfaceCellKey } from '@companion-app/shared/SurfaceLayout.js'
 import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import useElementInnerSize from '~/Hooks/useElementClientSize.js'
 import useScrollPosition from '~/Hooks/useScrollPosition.js'
@@ -24,10 +26,14 @@ import { GridButtonPreview, type GridButtonModifiers } from './GridButtonPreview
 import {
 	locationAtCanvasPoint as cellAtCanvasPoint,
 	drawnCellRange,
+	fitInsideBox,
 	gridTileGeometry,
 	MARQUEE_START_THRESHOLD,
 	revealScrollOffset,
+	SQUARE_TILE_ASPECT_RATIO,
+	type GridTileSize,
 } from './GridCanvasGeometry.js'
+import type { GridSurfaceView } from './GridSurfaceView.js'
 
 export interface ButtonInfiniteGridRef {
 	resetPosition(): void
@@ -68,6 +74,17 @@ export interface ButtonInfiniteGridButtonProps {
 
 	left: number
 	top: number
+	/**
+	 * The size to draw this button's image at. Uniform on the ordinary grid; on a surface it is the
+	 * size that surface draws this control at, so the cell shows what the surface will show.
+	 */
+	renderSize: PreviewRenderSize
+	/**
+	 * The size of the button inside its cell, when that is not the cell's own - a control of a different
+	 * shape to the rest of the surface, letterboxed into the cell every other control gets. Null to fill
+	 * the cell, which is what the grid's own styling already does.
+	 */
+	innerSize: GridTileSize | null
 	fixedSize: boolean
 	onClick: ((location: ControlLocation, pressed: boolean) => void) | undefined
 	onContextMenu: ((location: ControlLocation, x: number, y: number) => void) | undefined
@@ -94,6 +111,11 @@ interface ButtonInfiniteGridProps {
 	 */
 	onHoverLocation: ((location: ControlLocation | null, modifiers: GridButtonModifiers) => void) | null
 	drawScale: number
+	/**
+	 * The surface being viewed as, or null for the grid itself. It decides the shape of every cell, which
+	 * cells are controls at all, and the size each is drawn at.
+	 */
+	surfaceView: GridSurfaceView | null
 	maxHeightToMatchCanvas?: boolean
 	setViewportMinHeight?: React.Dispatch<React.SetStateAction<number>>
 }
@@ -113,6 +135,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			marquee: marqueeHandling,
 			onHoverLocation,
 			drawScale,
+			surfaceView,
 			maxHeightToMatchCanvas,
 			setViewportMinHeight,
 		},
@@ -122,7 +145,13 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		const countColumns = maxColumn - minColumn + 1
 		const countRows = maxRow - minRow + 1
 
-		const { inner: tileInnerSize, size: tileSize } = gridTileGeometry(drawScale ?? 1)
+		// Memoised on the numbers rather than the objects, so that the geometry keeps its identity across
+		// renders and the callbacks measured against it are not rebuilt on every one
+		const aspectRatio = surfaceView?.aspectRatio ?? SQUARE_TILE_ASPECT_RATIO
+		const { inner: tileInnerSize, size: tileSize } = useMemo(
+			() => gridTileGeometry(drawScale ?? 1, { w: aspectRatio.w, h: aspectRatio.h }),
+			[drawScale, aspectRatio.w, aspectRatio.h]
+		)
 		const SCROLLBAR_PADDING = 15
 
 		const [setSizeElement, windowSizeRaw] = useElementInnerSize()
@@ -135,9 +164,9 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 
 		useEffect(() => {
 			if (setViewportMinHeight) {
-				setViewportMinHeight(2 * tileSize + SCROLLBAR_PADDING)
+				setViewportMinHeight(2 * tileSize.height + SCROLLBAR_PADDING)
 			}
-		}, [setViewportMinHeight, tileSize])
+		}, [setViewportMinHeight, tileSize.height])
 
 		// Update last valid values only when we have non-trivial sizes (grid is actually visible)
 		useEffect(() => {
@@ -166,10 +195,10 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		const [scrollerRef, setScrollerRef] = useState<HTMLDivElement | null>(null)
 		const resetScrollPosition = useCallback(() => {
 			if (scrollerRef) {
-				scrollerRef.scrollTop = -minRow * tileSize
-				scrollerRef.scrollLeft = -minColumn * tileSize
+				scrollerRef.scrollTop = -minRow * tileSize.height
+				scrollerRef.scrollLeft = -minColumn * tileSize.width
 			}
-		}, [scrollerRef, minColumn, minRow, tileSize])
+		}, [scrollerRef, minColumn, minRow, tileSize.width, tileSize.height])
 
 		// Make the scroll position sticky when zooming
 		const tmpScrollerPosition = useRef<{ left: number; top: number }>({ left: 0, top: 0 })
@@ -220,18 +249,18 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 					scrollerRef.scrollLeft = revealScrollOffset(
 						scrollerRef.scrollLeft,
 						scrollerRef.clientWidth,
-						(location.column - minColumn) * tileSize,
-						tileSize
+						(location.column - minColumn) * tileSize.width,
+						tileSize.width
 					)
 					scrollerRef.scrollTop = revealScrollOffset(
 						scrollerRef.scrollTop,
 						scrollerRef.clientHeight,
-						(location.row - minRow) * tileSize,
-						tileSize
+						(location.row - minRow) * tileSize.height,
+						tileSize.height
 					)
 				},
 			}),
-			[resetScrollPosition, scrollerRef, minColumn, minRow, tileSize]
+			[resetScrollPosition, scrollerRef, minColumn, minRow, tileSize.width, tileSize.height]
 		)
 
 		// ---- dragging out a selection ----
@@ -373,14 +402,33 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		)
 
 		// Only what is on screen, plus enough spill to make scrolling smooth
-		const drawColumns = drawnCellRange(minColumn, maxColumn, scrollX, windowSize.width, tileSize)
-		const drawRows = drawnCellRange(minRow, maxRow, scrollY, windowSize.height, tileSize)
+		const drawColumns = drawnCellRange(minColumn, maxColumn, scrollX, windowSize.width, tileSize.width)
+		const drawRows = drawnCellRange(minRow, maxRow, scrollY, windowSize.height, tileSize.height)
 		const { first: drawMinColumn, last: drawMaxColumn } = drawColumns
 		const { first: drawMinRow, last: drawMaxRow } = drawRows
 
 		const visibleButtons: React.JSX.Element[] = []
 		for (let row = drawMinRow; row <= drawMaxRow; row++) {
 			for (let column = drawMinColumn; column <= drawMaxColumn; column++) {
+				const left = (column - minColumn) * tileSize.width
+				const top = (row - minRow) * tileSize.height
+
+				// A cell of the bounding box which the surface has no control on. Drawn as a gap in the
+				// surface rather than as a button, because that is what it is - and it is how the six
+				// encoders of a Stream Deck +XL are shown sitting under nine columns of buttons.
+				const control = surfaceView?.controlsByCell.get(surfaceCellKey(row, column))
+				if (surfaceView && !control) {
+					visibleButtons.push(
+						<div
+							key={`${column}_${row}`}
+							className="button-grid-absent-cell"
+							style={{ left, top, width: tileSize.width, height: tileSize.height }}
+							aria-hidden="true"
+						/>
+					)
+					continue
+				}
+
 				visibleButtons.push(
 					<ButtonIconFactory
 						key={`${column}_${row}`}
@@ -405,15 +453,21 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 							contextMenuButton?.column === column &&
 							contextMenuButton?.row === row
 						}
-						left={(column - minColumn) * tileSize}
-						top={(row - minRow) * tileSize}
+						left={left}
+						top={top}
+						renderSize={control?.renderSize ?? DEFAULT_PREVIEW_RENDER_SIZE}
+						innerSize={
+							control?.aspectRatio && !aspectRatiosEqual(control.aspectRatio, aspectRatio)
+								? fitInsideBox(tileInnerSize, control.aspectRatio)
+								: null
+						}
 					/>
 				)
 			}
 		}
 
-		const canvasWidth = countColumns * tileSize
-		const canvasHeight = countRows * tileSize
+		const canvasWidth = countColumns * tileSize.width
+		const canvasHeight = countRows * tileSize.height
 
 		// A tool that is about to place something ghosts it under the cursor, so hovering has to be
 		// reported. Touch has no hover, and the padding around the canvas is not a cell, so both report
@@ -439,17 +493,20 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			() => ({
 				width: canvasWidth,
 				height: canvasHeight,
-				'--tile-inner-size': tileInnerSize,
+				'--tile-inner-width': tileInnerSize.width,
+				'--tile-inner-height': tileInnerSize.height,
+				'--tile-slot-width': tileSize.width,
+				'--tile-slot-height': tileSize.height,
 				'--grid-scale': drawScale,
 			}),
-			[canvasWidth, canvasHeight, tileInnerSize, drawScale]
+			[canvasWidth, canvasHeight, tileInnerSize.width, tileInnerSize.height, tileSize.width, tileSize.height, drawScale]
 		)
 		const gridWrapperStyle = useMemo(
 			() => ({
-				maxHeight: maxHeightToMatchCanvas ? countRows * tileSize + 2 * SCROLLBAR_PADDING : 'none', // Pad for possible scrollbar
+				maxHeight: maxHeightToMatchCanvas ? countRows * tileSize.height + 2 * SCROLLBAR_PADDING : 'none', // Pad for possible scrollbar
 				maxWidth: canvasWidth + SCROLLBAR_PADDING,
 			}),
-			[maxHeightToMatchCanvas, countRows, tileSize, canvasWidth]
+			[maxHeightToMatchCanvas, countRows, tileSize.height, canvasWidth]
 		)
 
 		return (
@@ -500,6 +557,8 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 	row,
 	left,
 	top,
+	renderSize,
+	innerSize,
 	contextMenuOpen,
 }: ButtonInfiniteGridButtonProps) {
 	const { store, actions, onContextMenu } = useButtonGridView()
@@ -532,9 +591,9 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 	const dropWouldWork = useGridDragPreviewValid()
 
 	// Already subscribed by the cell the button actually lives on, and subscriptions are shared
-	const ghost = useButtonImageForLocation(ghostSource ?? location, DEFAULT_PREVIEW_RENDER_SIZE, !ghostSource)
+	const ghost = useButtonImageForLocation(ghostSource ?? location, renderSize, !ghostSource)
 
-	const { image, isUsed } = useButtonImageForLocation(location, DEFAULT_PREVIEW_RENDER_SIZE)
+	const { image, isUsed } = useButtonImageForLocation(location, renderSize)
 
 	// An empty cell has nothing to pick up, so dragging one is a gesture that can only end in nothing
 	// happening. In select mode only an already-selected button drags, so dragging anywhere else can
@@ -558,7 +617,16 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 		[store, actions]
 	)
 
-	const style = useMemo(() => ({ left, top }), [left, top])
+	// A control of a different shape to the rest of the surface is letterboxed into the cell every other
+	// control gets, so a Stream Deck + strip is drawn full width and half height without the row it is in
+	// having to be sized differently to the others
+	const style = useMemo(
+		() =>
+			innerSize
+				? { left, top, '--tile-inner-width': innerSize.width, '--tile-inner-height': innerSize.height }
+				: { left, top },
+		[left, top, innerSize]
+	)
 
 	return (
 		<GridButtonPreview

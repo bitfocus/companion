@@ -2,6 +2,7 @@ import { act, fireEvent, render } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
+import { DEFAULT_PREVIEW_RENDER_SIZE } from '@companion-app/shared/Model/Preview.js'
 
 const subscribeMock = vi.fn((_input: unknown, _handlers: { onData: (data: WrappedImage) => void }) => ({
 	unsubscribe: vi.fn(),
@@ -66,6 +67,8 @@ function setup(location: ControlLocation = at(1, 2), view = makeGridView()) {
 				column={location.column}
 				left={10}
 				top={20}
+				renderSize={DEFAULT_PREVIEW_RENDER_SIZE}
+				innerSize={null}
 				fixedSize
 				onClick={undefined}
 				onContextMenu={undefined}

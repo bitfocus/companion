@@ -175,6 +175,75 @@ describe('ButtonGridStore', () => {
 		})
 	})
 
+	describe('a view with holes in it', () => {
+		/** Viewing as a surface which has controls only on these cells */
+		function onlyCells(...locations: ControlLocation[]) {
+			const keys = new Set(locations.map(formatLocationKey))
+			return (location: ControlLocation) => keys.has(formatLocationKey(location))
+		}
+
+		it('counts every cell as present on the grid itself', () => {
+			expect(store.isCellPresent(at(0, 0))).toBe(true)
+		})
+
+		it('steps over the cells the view does not have', () => {
+			// The encoder row of a Stream Deck +XL: two controls with a gap between them
+			store.setCellPresence(onlyCells(at(1, 0), at(1, 3)))
+			store.selectWithModifiers(at(1, 0), NO_MODIFIERS)
+
+			expect(store.moveFocus(0, 1, GRID_SIZE)).toEqual(at(1, 3))
+		})
+
+		it('wraps round to the only other control rather than stopping in a gap', () => {
+			store.setCellPresence(onlyCells(at(1, 0), at(1, 3)))
+			store.selectWithModifiers(at(1, 3), NO_MODIFIERS)
+
+			expect(store.moveFocus(0, 1, GRID_SIZE)).toEqual(at(1, 0))
+		})
+
+		it('comes back round to where it started when the view has nothing else on that axis', () => {
+			store.setCellPresence(onlyCells(at(1, 0)))
+			store.selectWithModifiers(at(1, 0), NO_MODIFIERS)
+
+			expect(store.moveFocus(0, 1, GRID_SIZE)).toEqual(at(1, 0))
+		})
+
+		it('leaves the holes out of a rectangle dragged across them', () => {
+			store.setCellPresence(onlyCells(at(1, 1), at(1, 2), at(2, 2)))
+			store.selectRectangle(at(1, 1), at(2, 2), false)
+
+			expect(store.selectedLocations).toEqual([at(1, 1), at(1, 2), at(2, 2)])
+		})
+
+		it('leaves the holes out of selecting everything', () => {
+			store.setCellPresence(onlyCells(at(0, 0), at(3, 7)))
+			store.selectAllOnPage(1, GRID_SIZE)
+
+			expect(store.selectedLocations).toEqual([at(0, 0), at(3, 7)])
+		})
+
+		it('drops a selection the view no longer has when it narrows', () => {
+			store.selectRectangle(at(1, 1), at(1, 2), false)
+			store.setCellPresence(onlyCells(at(1, 1)))
+
+			expect(store.selectedLocations).toEqual([at(1, 1)])
+		})
+
+		it('lets go of a focus the view no longer has', () => {
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+			store.setCellPresence(onlyCells(at(2, 2)))
+
+			expect(store.focus).toBeNull()
+		})
+
+		it('goes back to every cell when the view is left', () => {
+			store.setCellPresence(onlyCells(at(1, 1)))
+			store.setCellPresence(null)
+
+			expect(store.isCellPresent(at(0, 0))).toBe(true)
+		})
+	})
+
 	describe('dragging out a rectangle', () => {
 		it('selects everything inside it', () => {
 			store.selectRectangle(at(1, 1), at(2, 2), false)

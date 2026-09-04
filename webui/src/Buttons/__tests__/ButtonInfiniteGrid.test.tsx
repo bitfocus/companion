@@ -21,12 +21,13 @@ vi.mock('~/Resources/TRPC', () => ({
 }))
 
 const { ButtonInfiniteGrid } = await import('../ButtonInfiniteGrid.js')
-const { gridTileGeometry } = await import('../GridCanvasGeometry.js')
+const { gridTileGeometry, SQUARE_TILE_ASPECT_RATIO } = await import('../GridCanvasGeometry.js')
 
 const GRID_SIZE: UserConfigGridSize = { minRow: 0, maxRow: 3, minColumn: 0, maxColumn: 7 }
 const PAGE = 2
 const DRAW_SCALE = 2
-const TILE = gridTileGeometry(DRAW_SCALE).size
+// Square, so one number describes a cell for the tests which are not about the shape of one
+const TILE = gridTileGeometry(DRAW_SCALE, SQUARE_TILE_ASPECT_RATIO).size.width
 
 /** jsdom lays nothing out, so the viewport it reports is whatever the test says it is */
 const VIEWPORT = { width: 600, height: 400 }
@@ -75,6 +76,7 @@ function setup(
 			marquee={overrides.marquee === false ? null : { canStart, onSelect }}
 			onHoverLocation={overrides.hover === false ? null : onHoverLocation}
 			drawScale={DRAW_SCALE}
+			surfaceView={null}
 			{...overrides.extra}
 		/>
 	)
@@ -317,6 +319,7 @@ describe('dragging out a rubber-band', () => {
 				pageNumber={PAGE}
 				gridSize={GRID_SIZE}
 				ButtonIconFactory={StubButton}
+				surfaceView={null}
 				marquee={{ canStart: () => true, onSelect }}
 				onHoverLocation={null}
 				drawScale={DRAW_SCALE}
@@ -588,6 +591,7 @@ describe('moving the grid to a cell', () => {
 					pageNumber={PAGE}
 					gridSize={GRID_SIZE}
 					ButtonIconFactory={StubButton}
+					surfaceView={null}
 					marquee={null}
 					onHoverLocation={null}
 					drawScale={DRAW_SCALE}
