@@ -1,5 +1,7 @@
 import { execSync } from 'node:child_process'
+import dgram from 'node:dgram'
 import fs from 'node:fs'
+import net from 'node:net'
 import os from 'node:os'
 import path from 'node:path'
 import { initTRPC, type TRPCRouterCaller } from '@trpc/server'
@@ -114,6 +116,40 @@ export interface TestApp {
 
 	/** Shut the application down gracefully. The config directory is left in place for reuse */
 	close(): Promise<void>
+}
+
+/**
+ * Find a tcp port that is free and bindable right now, for pointing one of the api services at.
+ * A blind random port can collide with another parallel test file's server, or land in a range
+ * the os refuses to bind (windows reserves blocks of the ephemeral range), leaving the service
+ * down and the test stuck waiting for it
+ */
+export async function getFreeTcpPort(): Promise<number> {
+	return new Promise<number>((resolve, reject) => {
+		const probe = net.createServer()
+		probe.on('error', reject)
+		probe.listen(0, '127.0.0.1', () => {
+			const address = probe.address()
+			if (!address || typeof address !== 'object') {
+				probe.close()
+				reject(new Error('Failed to probe for a free port'))
+				return
+			}
+			probe.close(() => resolve(address.port))
+		})
+	})
+}
+
+/** The udp equivalent of getFreeTcpPort */
+export async function getFreeUdpPort(): Promise<number> {
+	return new Promise<number>((resolve, reject) => {
+		const probe = dgram.createSocket('udp4')
+		probe.on('error', reject)
+		probe.bind(0, '127.0.0.1', () => {
+			const port = probe.address().port
+			probe.close(() => resolve(port))
+		})
+	})
 }
 
 /** Marks a stubbed runtime directory - keep in sync with STUB_RUNTIME_MARKER in tools/fetch_nodejs.mts */

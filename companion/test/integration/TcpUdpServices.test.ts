@@ -2,7 +2,7 @@ import dgram from 'node:dgram'
 import net from 'node:net'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
-import { createTestApp, type TestApp } from './TestApp.js'
+import { createTestApp, getFreeTcpPort, getFreeUdpPort, type TestApp } from './TestApp.js'
 
 // Booting the application takes a few seconds, so the default timeouts are too tight
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 30_000 })
@@ -16,7 +16,7 @@ async function tryConnectTcp(port: number): Promise<net.Socket> {
 
 /** Connect to a freshly-enabled service, retrying until it is listening */
 async function connectTcp(port: number): Promise<net.Socket> {
-	return await vi.waitFor(async () => tryConnectTcp(port), { timeout: 5000 })
+	return await vi.waitFor(async () => tryConnectTcp(port), { timeout: 15_000 })
 }
 
 /** Collect reply lines from a socket */
@@ -38,7 +38,7 @@ describe('tcp/udp api services over real sockets', () => {
 	})
 
 	test('the tcp service accepts commands and replies', async () => {
-		const port = 21000 + Math.floor(Math.random() * 20000)
+		const port = await getFreeTcpPort()
 		app.registry.userconfig.setKey('tcp_listen_port', port)
 		app.registry.userconfig.setKey('tcp_enabled', true)
 
@@ -54,18 +54,21 @@ describe('tcp/udp api services over real sockets', () => {
 		const socket = await connectTcp(port)
 		try {
 			const lines = collectLines(socket)
+			// The service also pushes unsolicited events (json blobs such as bank_bg_change) to
+			// clients, interleaved with the command replies - only the +OK/-ERR replies are asserted
+			const replies = () => lines().filter((line) => line.startsWith('+') || line.startsWith('-'))
 
 			// Set and read back a custom variable
 			socket.write('custom-variable tcp_var set-value hello-tcp\n')
 			await vi.waitFor(() => {
-				expect(lines()).toEqual(['+OK'])
+				expect(replies()).toEqual(['+OK'])
 			})
 			expect(app.getCustomVariableValue('tcp_var')).toBe('hello-tcp')
 
 			// get-value replies with the json-encoded value
 			socket.write('custom-variable tcp_var get-value\n')
 			await vi.waitFor(() => {
-				expect(lines()).toEqual(['+OK', '+OK "hello-tcp"'])
+				expect(replies()).toEqual(['+OK', '+OK "hello-tcp"'])
 			})
 
 			// Press a button by location
@@ -77,7 +80,7 @@ describe('tcp/udp api services over real sockets', () => {
 			// An unknown command is rejected
 			socket.write('nonsense command\n')
 			await vi.waitFor(() => {
-				expect(lines().at(-1)).toMatch(/^-ERR/)
+				expect(replies().at(-1)).toMatch(/^-ERR/)
 			})
 		} finally {
 			socket.destroy()
@@ -85,7 +88,7 @@ describe('tcp/udp api services over real sockets', () => {
 	})
 
 	test('disabling the tcp service closes the socket', async () => {
-		const port = 21000 + Math.floor(Math.random() * 20000)
+		const port = await getFreeTcpPort()
 		app.registry.userconfig.setKey('tcp_listen_port', port)
 		app.registry.userconfig.setKey('tcp_enabled', true)
 
@@ -101,7 +104,7 @@ describe('tcp/udp api services over real sockets', () => {
 	})
 
 	test('the udp service processes datagrams', async () => {
-		const port = 21000 + Math.floor(Math.random() * 20000)
+		const port = await getFreeUdpPort()
 		app.registry.userconfig.setKey('udp_listen_port', port)
 		app.registry.userconfig.setKey('udp_enabled', true)
 

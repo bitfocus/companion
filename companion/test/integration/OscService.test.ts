@@ -3,7 +3,7 @@ import osc from 'osc'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type { ControlButtonLayered } from '../../lib/Controls/ControlTypes/Button/Layered.js'
-import { createTestApp, type TestApp } from './TestApp.js'
+import { createTestApp, getFreeUdpPort, type TestApp } from './TestApp.js'
 
 // Booting the application takes a few seconds, so the default timeouts are too tight
 vi.setConfig({ testTimeout: 30_000, hookTimeout: 30_000 })
@@ -26,7 +26,7 @@ describe('osc api service over a real udp socket', () => {
 	beforeEach(async () => {
 		app = await createTestApp({ configDir: null, extraModulePath: null })
 
-		port = 21000 + Math.floor(Math.random() * 20000)
+		port = await getFreeUdpPort()
 		app.registry.userconfig.setKey('osc_listen_port', port)
 		app.registry.userconfig.setKey('osc_enabled', true)
 
