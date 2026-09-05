@@ -95,6 +95,8 @@ async function buildFixture(entry: FixtureVersion): Promise<void> {
 		platform: 'node',
 		format: entry.contract === 'v2' ? 'esm' : 'cjs',
 		target: entry.runtime,
+		// The api version this bundle is built against, for the hasApiFeature() gates in the sources
+		define: { 'process.env.FIXTURE_API_VERSION': JSON.stringify(entry.apiVersion) },
 		outfile: path.join(fixtureDir, entry.contract === 'v2' ? 'main.mjs' : 'main.js'),
 		// Force resolution to the version installed above - plain resolution from src/ would find
 		// the repo's own copy of the base library instead

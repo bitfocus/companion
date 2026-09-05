@@ -1,3 +1,4 @@
+import dgram from 'node:dgram'
 import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
@@ -5,7 +6,8 @@ import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import nodeVersions from '../../../assets/nodejs-versions.json' with { type: 'json' }
 import fixtureVersions from './modules/fixture-versions.json' with { type: 'json' }
-import { createTestApp, type TestApp } from './TestApp.js'
+import { hasApiFeature } from './modules/src/api-gates.js'
+import { createTestApp, getFreeUdpPort, type TestApp } from './TestApp.js'
 
 // Spawning real module child processes is slower than the other suites: the first boot also
 // provisions node runtimes and thread bundles
@@ -151,6 +153,84 @@ describe('real module children across module-api versions', () => {
 			await vi.waitFor(() => {
 				expect(app.getFeedbackValue(controlId, feedbackId!)).toBe(false)
 			}, 30_000)
+
+			// Behaviours that appeared in a specific api version are registered by the fixture only
+			// when its base library supports them - the same feature map drives what to expect here
+			if (hasApiFeature(apiVersion, 'shared-udp')) {
+				// The module joins a shared udp socket through the host when its config names a port
+				const udpPort = await getFreeUdpPort()
+				expect(
+					await app
+						.trpc()
+						.instances.connections.setConfig({ connectionId, label, config: { prefix: 'P-', udp_port: udpPort } })
+				).toBeNull()
+				await vi.waitFor(() => {
+					expect(app.registry.variables.values.getVariableValue(label, 'udp_listening')).toBe(String(udpPort))
+				}, 30_000)
+
+				const udpSender = dgram.createSocket('udp4')
+				try {
+					// Datagrams are lossy, so keep sending until one is seen
+					await vi.waitFor(
+						() => {
+							udpSender.send(Buffer.from(`ping-${label}`), udpPort, '127.0.0.1')
+							expect(app.registry.variables.values.getVariableValue(label, 'last_udp')).toBe(`ping-${label}`)
+						},
+						{ timeout: 30_000, interval: 200 }
+					)
+				} finally {
+					udpSender.close()
+				}
+			} else {
+				expect(app.registry.variables.values.getVariableValue(label, 'udp_listening')).toBeUndefined()
+			}
+
+			if (hasApiFeature(apiVersion, 'action-result-value')) {
+				// The action's returned value is stored where the entity's storeResult points
+				const resultActionId = await app.trpc().controls.entities.add({
+					controlId,
+					entityLocation: { stepId, setId: 'down' },
+					ownerId: null,
+					connectionId,
+					entityType: EntityModelType.Action,
+					entityDefinition: 'get_prefixed_value',
+				})
+				expect(resultActionId).toBeTruthy()
+				await app.trpc().controls.entities.setOption({
+					controlId,
+					entityLocation: { stepId, setId: 'down' },
+					entityId: resultActionId!,
+					key: 'value',
+					value: exprVal('result'),
+				})
+				expect(
+					await app.trpc().controls.entities.setRawStoreResult({
+						controlId,
+						entityLocation: { stepId, setId: 'down' },
+						entityId: resultActionId!,
+						target: { type: 'custom-variable', variableName: exprVal(`result_${label}`), createIfNotExists: true },
+					})
+				).toBe(true)
+
+				// The storeResult target is computed asynchronously after the mutation, so keep
+				// pressing until the stored result appears
+				await vi.waitFor(
+					() => {
+						app.pressButton(location, true)
+						app.pressButton(location, false)
+						expect(app.getCustomVariableValue(`result_${label}`)).toBe('P-result')
+					},
+					{ timeout: 30_000, interval: 500 }
+				)
+			} else {
+				expect(
+					app.registry.instance.definitions.getEntityDefinition(
+						EntityModelType.Action,
+						connectionId,
+						'get_prefixed_value'
+					)
+				).toBeUndefined()
+			}
 
 			// Disable stops the child, re-enable brings it back
 			await app.trpc().instances.connections.setEnabled({ connectionId, enabled: false })
