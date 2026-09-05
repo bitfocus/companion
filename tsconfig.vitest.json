@@ -2,6 +2,7 @@
 	"exclude": ["node_modules/**", "webui/**", "module-local-dev/**"],
 	"include": [
 		"vitest.config.mts",
+		"companion/lib/@types/*.d.ts",
 		"companion/test/**/*",
 		"config-tool/test/**/*",
 		"shared-lib/lib/**/*spec.ts",
