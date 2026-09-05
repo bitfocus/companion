@@ -1,9 +1,9 @@
 import { createWriteStream } from 'node:fs'
 import { pipeline } from 'node:stream'
 import { promisify } from 'node:util'
-import { $, fetch, fs, path } from 'zx'
+import { $, fetch, fs, path, usePowerShell } from 'zx'
 import nodeVersionsJson from '../assets/nodejs-versions.json' with { type: 'json' }
-import { toPosix, type PlatformInfo } from './build/util.mts'
+import { determinePlatformInfo, toPosix, type PlatformInfo } from './build/util.mts'
 
 const streamPipeline = promisify(pipeline)
 
@@ -89,4 +89,17 @@ async function fetchSingleVersion(platformInfo: PlatformInfo, nodeVersion: strin
 	}
 
 	return runtimeDir
+}
+
+// Also usable directly (yarn fetch-runtimes) to provision the module-child runtimes without a
+// full dev or packaging run - e.g. so the integration tests spawn modules on their real runtimes
+if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(import.meta.filename)) {
+	if (process.platform === 'win32') {
+		usePowerShell()
+	}
+	const platformInfo = determinePlatformInfo(process.argv[2])
+	const versions = await fetchNodejs(platformInfo)
+	for (const [name, runtimeDir] of versions) {
+		console.log(`${name}: ${runtimeDir}`)
+	}
 }

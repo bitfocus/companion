@@ -29,6 +29,16 @@ jobs:
           yarn config set httpTimeout 100000
 
           yarn install --immutable
+      - name: cache node.js runtime downloads
+        uses: actions/cache@v4
+        with:
+          path: .cache/node
+          key: nodejs-runtimes-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('assets/nodejs-versions.json') }}
+      - name: fetch node.js runtimes for module children
+        # The integration tests spawn real module child processes, which must run on the node
+        # versions their manifests request rather than a stub of the test host's node
+        run: |
+          yarn fetch-runtimes
       - name: run tests
         run: |
           yarn test
