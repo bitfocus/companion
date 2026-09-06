@@ -10744,6 +10744,7 @@ __metadata:
     express-serve-zip: "npm:^2.0.1"
     fast-deep-equal: "npm:^3.1.3"
     fast-json-patch: "patch:fast-json-patch@npm%3A3.1.1#~/.yarn/patches/fast-json-patch-npm-3.1.1-7e8bb70a45.patch"
+    fflate: "npm:^0.8.2"
     fs-extra: "npm:^11.4.0"
     get-port: "npm:^7.2.0"
     nanoid: "npm:^6.0.1"

@@ -518,6 +518,9 @@ describe('ExportController', () => {
 			await fs.rm(tmpRoot, { recursive: true, force: true })
 		})
 
+		// Zip entry names always use forward slashes (ZIP spec; fflate also normalises them on read),
+		// regardless of the host path separator - so entry-name assertions below use '/', not path.join.
+
 		/** Fetch the support bundle and unzip it into a { filename: string } map. */
 		async function fetchBundle(app: Express.Express): Promise<Record<string, string>> {
 			const res = await supertest(app).get('/int/api/export/support').buffer(true).parse(binaryParser)
@@ -560,7 +563,7 @@ describe('ExportController', () => {
 			const files = await fetchBundle(app)
 
 			expect(files['db.sqlite']).toBe('FAKE-DB')
-			expect(files[path.join('nested', 'inner.txt')]).toBe('INNER')
+			expect(files['nested/inner.txt']).toBe('INNER')
 			expect(files['log.csv']).toContain('"Date","Module","Type","Log"')
 			expect(files['log.csv']).toContain('boot')
 
@@ -581,7 +584,7 @@ describe('ExportController', () => {
 
 			const files = await fetchBundle(app)
 			expect(files['db.sqlite']).toBe('DB')
-			expect(Object.keys(files)).not.toContain(path.join('cloud', 'secret.txt'))
+			expect(Object.keys(files)).not.toContain('cloud/secret.txt')
 		})
 
 		test('includes the logs directory when present', async () => {
@@ -595,7 +598,7 @@ describe('ExportController', () => {
 			vi.spyOn(LogController, 'getAllLines').mockReturnValue([])
 
 			const files = await fetchBundle(app)
-			expect(files[path.join('logs', 'companion.log')]).toBe('LOGDATA')
+			expect(files['logs/companion.log']).toBe('LOGDATA')
 		})
 
 		test('omits the logs directory when it does not exist', async () => {
@@ -604,7 +607,7 @@ describe('ExportController', () => {
 			vi.spyOn(LogController, 'getAllLines').mockReturnValue([])
 
 			const files = await fetchBundle(app)
-			const hasLogsEntry = Object.keys(files).some((f) => f.startsWith('logs' + path.sep) || f.startsWith('logs/'))
+			const hasLogsEntry = Object.keys(files).some((f) => f.startsWith('logs/'))
 			expect(hasLogsEntry).toBe(false)
 		})
 
