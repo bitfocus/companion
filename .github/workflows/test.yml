@@ -39,6 +39,16 @@ jobs:
         # versions their manifests request rather than a stub of the test host's node
         run: |
           yarn fetch-runtimes
+      - name: cache prebuilt test modules
+        uses: actions/cache@v6
+        with:
+          path: .cache/test-portal-modules
+          key: test-portal-modules-${{ hashFiles('companion/test/integration/modules/fetch-portal-module.mts') }}
+      - name: fetch prebuilt modules for module children
+        # The generic-http integration test spawns the real published module, downloaded from the
+        # Bitfocus module portal (pinned + checksum-verified in fetch-portal-module.mts)
+        run: |
+          yarn fetch-test-modules
       - name: run tests
         run: |
           yarn test
