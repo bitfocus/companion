@@ -1,5 +1,6 @@
 import cors from 'cors'
 import Express from 'express'
+import type { DataUserConfig } from '../../Data/UserConfig.js'
 import LogController from '../../Log/Controller.js'
 import type { AppInfo, Registry } from '../../Registry.js'
 import { RestApiError } from './errors.js'
@@ -13,15 +14,26 @@ import { createSwaggerUiRouter } from './SwaggerUi.js'
  * Mounted at /api/v2/ on the admin Express app.
  * Each resource type is versioned independently: /api/v2/connections/v1/, /api/v2/pages/v1/, etc.
  *
- * Created and mounted while the REST API is enabled; unmounted when it is disabled (see RestApiService).
+ * The router is always mounted; it gates every request (including the docs and spec) on the
+ * `rest_api_enabled` user config, so toggling the setting takes effect without a restart.
  */
 export function createRestApiRouter(
 	registry: Registry,
+	userconfig: DataUserConfig,
 	tokenStore: ApiTokenStore,
 	appInfo: Pick<AppInfo, 'appVersion'>
 ): Express.Router {
 	const logger = LogController.createLogger('Service/Rest')
 	const router = Express.Router()
+
+	// Gate everything on the enable flag, before the docs/spec below. When disabled the whole API,
+	// including its documentation, responds with a structured error.
+	router.use((_req, _res, next) => {
+		if (!userconfig.getKey('rest_api_enabled')) {
+			return next(new RestApiError(403, 'API_DISABLED', 'REST API is disabled'))
+		}
+		next()
+	})
 
 	// OpenAPI spec and Swagger UI — served without auth
 	const openApiDocument = generateOpenApiDocument(appInfo)

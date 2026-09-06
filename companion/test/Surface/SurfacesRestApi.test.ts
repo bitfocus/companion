@@ -9,7 +9,11 @@ import { createRestApiRouter } from '../../lib/Service/RestApi/RestApiRouter.js'
 import { BrightnessConfigField } from '../../lib/Surface/CommonConfigFields.js'
 import type { SurfaceController } from '../../lib/Surface/Controller.js'
 import { createSurfacesRestApiRouter, SURFACES_API_BASE_PATH } from '../../lib/Surface/SurfacesRestApi.js'
-import { createTestRestApiResources, createTestTokenStore } from '../Service/RestApi/RestApiTestHelpers.js'
+import {
+	createTestEnabledUserConfig,
+	createTestRestApiResources,
+	createTestTokenStore,
+} from '../Service/RestApi/RestApiTestHelpers.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -47,6 +51,7 @@ function createService(): TestService {
 		createTestRestApiResources({
 			surfaces: { createRestApiRouter: (logger) => createSurfacesRestApiRouter(logger, surfaceController, pageStore) },
 		}),
+		createTestEnabledUserConfig(),
 		tokenStore,
 		mockAppInfo
 	)

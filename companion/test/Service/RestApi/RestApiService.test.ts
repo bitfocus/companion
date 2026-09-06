@@ -34,7 +34,8 @@ function createService(initialEnabled: boolean) {
 		getKey: (key: string) => (key === 'rest_api_enabled' ? enabled : undefined),
 	} as unknown as DataUserConfig
 
-	// Capture the router assigned via the setter and expose it through a stable app.
+	// Capture the router assigned via the setter and expose it through a stable app. The router is
+	// mounted once and gates each request on `rest_api_enabled` internally.
 	let currentRouter: express.Router = express.Router()
 	const uiExpress = {
 		set restApiRouter(router: express.Router) {
@@ -42,17 +43,15 @@ function createService(initialEnabled: boolean) {
 		},
 	} as unknown as UIExpress
 
-	const service = new RestApiService(registry, userconfig, uiExpress, mockAppInfo)
+	new RestApiService(registry, userconfig, uiExpress, mockAppInfo)
 
 	const app = express()
 	app.use('/api/v2', (req, res, next) => currentRouter(req, res, next))
 
 	return {
-		service,
 		app,
 		setEnabled: (value: boolean) => {
 			enabled = value
-			service.updateUserConfig('rest_api_enabled', value)
 		},
 	}
 }
@@ -61,28 +60,21 @@ describe('RestApiService live toggle', () => {
 	test('serves the API only while enabled', async () => {
 		const { app, setEnabled } = createService(false)
 
-		// Disabled at startup: nothing mounted, so the docs endpoint does not exist
+		// Disabled at startup: the gate rejects every request, including the docs/spec
 		const whenDisabled = await supertest(app).get('/api/v2/openapi.json').send()
-		expect(whenDisabled.status).toBe(404)
+		expect(whenDisabled.status).toBe(403)
+		expect(whenDisabled.body.error.code).toBe('API_DISABLED')
 
-		// Enabling mounts the router live
+		// Enabling is read live, no restart or remount
 		setEnabled(true)
 		const whenEnabled = await supertest(app).get('/api/v2/openapi.json').send()
 		expect(whenEnabled.status).toBe(200)
 		expect(whenEnabled.body.openapi).toBeTruthy()
 
-		// Disabling unmounts it again
+		// Disabling takes effect immediately for the next request
 		setEnabled(false)
 		const whenDisabledAgain = await supertest(app).get('/api/v2/openapi.json').send()
-		expect(whenDisabledAgain.status).toBe(404)
-	})
-
-	test('ignores unrelated config keys', async () => {
-		const { app, service } = createService(true)
-
-		service.updateUserConfig('some_other_key', true)
-
-		const res = await supertest(app).get('/api/v2/openapi.json').send()
-		expect(res.status).toBe(200)
+		expect(whenDisabledAgain.status).toBe(403)
+		expect(whenDisabledAgain.body.error.code).toBe('API_DISABLED')
 	})
 })

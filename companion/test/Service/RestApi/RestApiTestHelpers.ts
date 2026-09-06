@@ -2,9 +2,17 @@ import { DatabaseSync } from 'node:sqlite'
 import express from 'express'
 import type { ApiTokenScope } from '../../../../shared-lib/lib/Model/ApiKeys.js'
 import { DataStoreTableView } from '../../../lib/Data/StoreBase.js'
+import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
 import LogController, { type Logger } from '../../../lib/Log/Controller.js'
 import type { Registry } from '../../../lib/Registry.js'
 import { RestApiTokenStore } from '../../../lib/Service/RestApi/RestApiTokenStore.js'
+
+/** A user config where the REST API is enabled, for driving the router in tests. */
+export function createTestEnabledUserConfig(): DataUserConfig {
+	return {
+		getKey: (key: string) => key === 'rest_api_enabled',
+	} as unknown as DataUserConfig
+}
 
 /** The only member the REST API router uses from each Registry resource. */
 type FakeRestApiResource = { createRestApiRouter: (logger: Logger) => express.Router }

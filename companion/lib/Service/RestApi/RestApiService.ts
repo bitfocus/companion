@@ -1,4 +1,3 @@
-import Express from 'express'
 import { z } from 'zod'
 import { API_KEY_SCOPES } from '@companion-app/shared/Model/ApiKeys.js'
 import type { DataUserConfig } from '../../Data/UserConfig.js'
@@ -15,18 +14,13 @@ import { RestApiTokenStore } from './RestApiTokenStore.js'
  * Creates the token store, router, and mounts on the Express app at /api/v2/.
  * Each resource type is versioned independently (e.g. /api/v2/connections/v1/).
  *
- * The REST API is mounted when `rest_api_enabled` is true. Toggling the setting mounts or unmounts
- * the router live, with no restart required.
+ * The router is always mounted; it gates each request on `rest_api_enabled` internally, so toggling
+ * the setting takes effect live without a restart (see createRestApiRouter).
  */
 export class RestApiService {
 	readonly #logger = LogController.createLogger('Service/RestApi')
-	readonly #registry: Registry
-	readonly #express: UIExpress
-	readonly #appInfo: Pick<AppInfo, 'appVersion'>
 
 	readonly tokenStore: RestApiTokenStore
-
-	#mounted = false
 
 	constructor(
 		registry: Registry,
@@ -34,39 +28,13 @@ export class RestApiService {
 		express: UIExpress,
 		appInfo: Pick<AppInfo, 'appVersion'>
 	) {
-		this.#registry = registry
-		this.#express = express
-		this.#appInfo = appInfo
-
 		this.tokenStore = new RestApiTokenStore(
 			LogController.createLogger('Service/RestApi/Tokens'),
 			registry.db.getTableView('api_keys')
 		)
 
-		this.#setMounted(!!userconfig.getKey('rest_api_enabled'))
-	}
-
-	/**
-	 * React to a user config change. Mounts or unmounts the REST API router when `rest_api_enabled`
-	 * toggles, so the setting takes effect without a restart.
-	 */
-	updateUserConfig(key: string, value: boolean | number | string): void {
-		if (key !== 'rest_api_enabled') return
-		this.#setMounted(!!value)
-	}
-
-	#setMounted(enabled: boolean): void {
-		if (enabled === this.#mounted) return
-		this.#mounted = enabled
-
-		if (enabled) {
-			this.#express.restApiRouter = createRestApiRouter(this.#registry, this.tokenStore, this.#appInfo)
-			this.#logger.info(`REST API mounted at ${REST_API_BASE_PATH}/ (resources versioned independently)`)
-		} else {
-			// Replace with an empty router, matching UIExpress's default, so /api/v2 stops matching.
-			this.#express.restApiRouter = Express.Router()
-			this.#logger.info('REST API unmounted')
-		}
+		express.restApiRouter = createRestApiRouter(registry, userconfig, this.tokenStore, appInfo)
+		this.#logger.info(`REST API mounted at ${REST_API_BASE_PATH}/ (resources versioned independently)`)
 	}
 
 	createTrpcRouter() {

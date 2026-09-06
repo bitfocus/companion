@@ -15,7 +15,11 @@ import { createInstanceRestApiRouter } from '../../../lib/Instance/RestApi.js'
 import { REST_API_BASE_PATH } from '../../../lib/Service/RestApi/constants.js'
 import { createRestApiRouter } from '../../../lib/Service/RestApi/RestApiRouter.js'
 import type { RestApiTokenStore } from '../../../lib/Service/RestApi/RestApiTokenStore.js'
-import { createTestRestApiResources, createTestTokenStore } from '../../Service/RestApi/RestApiTestHelpers.js'
+import {
+	createTestEnabledUserConfig,
+	createTestRestApiResources,
+	createTestTokenStore,
+} from '../../Service/RestApi/RestApiTestHelpers.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -57,6 +61,7 @@ function createService(): TestService {
 				createRestApiRouter: (logger) => createInstanceRestApiRouter(logger, instanceController, configStore),
 			},
 		}),
+		createTestEnabledUserConfig(),
 		tokenStore,
 		mockAppInfo
 	)
