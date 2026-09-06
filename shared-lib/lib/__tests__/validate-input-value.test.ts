@@ -1399,12 +1399,22 @@ describe('validateInputValue', () => {
 			label: 'Test',
 		}
 
-		it('should always return undefined', () => {
+		it('should coerce a nullish value (no variable selected) to an empty string', () => {
+			// A never-touched option arrives as undefined; it must be sanitised to '' so a module never
+			// sees a distinct "unset" value and coerces it to a bogus variable name (generic-http #110)
 			expect(validateInputValue(definition, undefined)).toEqual({
-				sanitisedValue: undefined,
+				sanitisedValue: '',
 				validationError: undefined,
 				validationWarnings: [],
 			})
+			expect(validateInputValue(definition, null)).toEqual({
+				sanitisedValue: '',
+				validationError: undefined,
+				validationWarnings: [],
+			})
+		})
+
+		it('should pass a selected variable name through unchanged', () => {
 			expect(validateInputValue(definition, 'var-name')).toEqual({
 				sanitisedValue: 'var-name',
 				validationError: undefined,
