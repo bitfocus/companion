@@ -4,6 +4,7 @@ import electronBuilder from 'electron-builder'
 import { $, argv, fs, glob, usePowerShell } from 'zx'
 import { fetchBuiltinSurfaceModules } from '../fetch_builtin_modules.mts'
 import { fetchNodejs } from '../fetch_nodejs.mts'
+import { generateLegalArtifacts } from '../licenses/generate.mts'
 import { generateVersionString } from '../lib.mts'
 import { determinePlatformInfo } from './util.mts'
 
@@ -90,6 +91,10 @@ await fs.remove('dist/node_modules/.bin')
 await fs.remove('dist/node_modules/usb/libusb')
 await fs.remove('dist/node_modules/usb/node_modules/node-addon-api')
 await fs.remove('dist/node_modules/node-addon-api')
+
+// Now that dist/node_modules is installed and pruned, the shipped set is known. This writes dist/LICENSE and
+// dist/NOTICE, and fails the build on anything Companion cannot distribute, before electron-builder copies dist in.
+await generateLegalArtifacts('dist')
 
 if (!process.env.SKIP_LAUNCH_CHECK) {
 	const nodeExePath =

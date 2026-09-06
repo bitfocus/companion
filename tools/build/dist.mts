@@ -6,6 +6,7 @@ import yaml from 'yaml'
 import yazl from 'yazl'
 import { $, argv, fs, usePowerShell } from 'zx'
 import { companionNativeExternals } from '../companion-externals.mts'
+import { clearRecordedBundleInputs } from '../licenses/inputs.mts'
 import { generateMiniVersionString, generateVersionString } from '../lib.mts'
 import { determinePlatformInfo } from './util.mts'
 
@@ -63,6 +64,9 @@ async function zipDirectory(sourceDir: string, outPath: string): Promise<void> {
 // Trash old
 await fs.remove('dist')
 fs.mkdirSync('dist') // so next line puts files in dist:
+
+// Discard what a previous build recorded, so a bundle it produced cannot leak into this build's license inventory
+await clearRecordedBundleInputs()
 
 await $`tsx tools/build_writefile.mts`
 

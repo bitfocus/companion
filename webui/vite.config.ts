@@ -7,6 +7,7 @@ import legacyPlugin from '@vitejs/plugin-legacy'
 import reactPlugin from '@vitejs/plugin-react'
 import postcssCustomMedia from 'postcss-custom-media'
 import { defaultClientConditions, defineConfig, loadEnv } from 'vite'
+import { recordLicenseInputs } from '../tools/licenses/vite-plugin.mts'
 import { normalizeBasePath } from '../tools/webui-dev-utils.js'
 import postcssWrapLayer from './postcss-wrap-layer.mjs'
 
@@ -146,6 +147,13 @@ export default defineConfig(({ mode }) => {
 						release: { name: buildFile },
 					})
 				: undefined,
+			// Rollup has no metafile, so record what this bundle shipped for the license inventory to attribute
+			recordLicenseInputs({
+				name: 'webui',
+				// Not build tooling: vite's module preload polyfill and rolldown's syntax helpers are copied verbatim
+				// into the shipped chunks, so their licenses ship with them
+				bundlerRuntimePackages: ['vite', 'rolldown'],
+			}),
 		],
 		css: {
 			// Resolve @custom-media (shared responsive breakpoints in breakpoints.css) at build time, so
