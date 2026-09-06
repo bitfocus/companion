@@ -122,6 +122,7 @@ export class ServiceController {
 		this.mdnsAdvertise.updateUserConfig(key, value)
 		this.oscListener.updateUserConfig(key, value)
 		this.oscSender.updateUserConfig(key, value)
+		this.restApi.updateUserConfig(key, value)
 		this.rosstalk.updateUserConfig(key, value)
 		this.satelliteApi.updateUserConfig(key, value)
 		this.satelliteTcp.updateUserConfig(key, value)

@@ -1,13 +1,17 @@
 import type Express from 'express'
+import type { ApiTokenScope } from '@companion-app/shared/Model/ApiKeys.js'
 import type { Logger } from '../../Log/Controller.js'
 import { RestApiError } from './errors.js'
 
-export type ApiTokenScope = 'read' | 'write' | 'execute' | 'connections' | 'admin'
+export type { ApiTokenScope }
 
+/**
+ * The authenticated identity attached to a request once its bearer token is validated. Carries only
+ * what authorization needs - never the token itself.
+ */
 export interface ApiToken {
 	id: string
 	name: string
-	token: string
 	scopes: ApiTokenScope[]
 }
 
