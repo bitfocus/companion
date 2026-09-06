@@ -89,13 +89,12 @@ export function useGridViewAs(): GridViewAsController {
 		return placements
 	}, [surfaces])
 
+	// Just the surfaces themselves; the popover adds the choices which are not one of them
 	const surfaceChoices = useComputed(
-		() => [
-			{ id: GRID_VIEW_AS_CUSTOM_ID, label: 'A model of surface…' },
-			...Array.from(surfaces.store.values()).flatMap((group) =>
+		() =>
+			Array.from(surfaces.store.values()).flatMap((group) =>
 				group.surfaces.map((surface) => ({ id: surface.id, label: surface.displayName }))
 			),
-		],
 		[surfaces]
 	)
 

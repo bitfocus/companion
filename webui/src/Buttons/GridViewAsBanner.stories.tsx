@@ -38,7 +38,7 @@ function readyResolution(overrides: Partial<Extract<GridViewAsResolution, { stat
 
 const meta = {
 	component: GridViewAsBanner,
-	args: { onExit: () => {} },
+	args: { onConfigure: () => {}, onExit: () => {} },
 } satisfies Meta<typeof GridViewAsBanner>
 
 export default meta

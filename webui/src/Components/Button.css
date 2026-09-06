@@ -990,3 +990,34 @@
 	align-items: center;
 	padding-left: 0.75em;
 }
+
+/* ---- Button group ----
+ *
+ * A row of buttons drawn as one control: the split button of an action and the caret which
+ * configures it. Only the ends of the row are rounded, and the seam between two buttons is a single
+ * border rather than each of them drawing their own.
+ *
+ * `.btn-group` is the name the Popover component and its stories already use for this. */
+.btn-group {
+	display: inline-flex;
+	vertical-align: middle;
+
+	> .btn:not(:first-child) {
+		margin-left: calc(var(--btn-border-width, 1px) * -1);
+		border-top-left-radius: 0;
+		border-bottom-left-radius: 0;
+	}
+
+	> .btn:not(:last-child) {
+		border-top-right-radius: 0;
+		border-bottom-right-radius: 0;
+	}
+
+	/* Whichever button is being used draws its border over its neighbour's, rather than under it */
+	> .btn:hover,
+	> .btn:focus-visible,
+	> .btn:active,
+	> .btn.active {
+		z-index: 1;
+	}
+}

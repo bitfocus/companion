@@ -31,6 +31,9 @@ export interface GridViewAsState {
 
 export const GRID_VIEW_AS_STORAGE_KEY = 'grid-view-as'
 
+/** `ClientSurfaceItem.integrationType` of the built-in emulators */
+const EMULATOR_INTEGRATION_TYPE = 'emulator'
+
 /** How far a surface may be pushed around the grid by hand. Well past any grid anyone has. */
 export const GRID_VIEW_AS_OFFSET_LIMIT = 999
 
@@ -227,12 +230,21 @@ function findLayoutForSurfaceType(
  * some point: a surface module describes its layout when a device opens, so a model nobody here has
  * ever owned is not something we can draw. Surface modules cannot yet list the layouts they know
  * about without a device, so this list is as long as the user's own history and no longer.
+ *
+ * Emulators are left out. An emulator is not a model anyone is programming ahead for - it is a
+ * window on this machine, whose layout is whatever its own grid size was last set to - so offering
+ * one here would be offering a shape rather than a device. Viewing as a particular emulator, which
+ * does have a place on the grid, is still offered alongside the real surfaces.
  */
 export function surfaceTypeChoicesFromLayouts(
 	layouts: ReadonlyMap<string, ClientSurfaceLayoutItem>
 ): { id: string; label: string }[] {
 	const types = new Set<string>()
-	for (const layout of layouts.values()) types.add(layout.type)
+	for (const layout of layouts.values()) {
+		if (layout.integrationType === EMULATOR_INTEGRATION_TYPE) continue
+
+		types.add(layout.type)
+	}
 
 	return Array.from(types)
 		.sort((a, b) => a.localeCompare(b))

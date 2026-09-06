@@ -94,6 +94,11 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	}, [gridRef])
 
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
+
+	// Held here rather than inside the control, so that the banner can open the same popover: the
+	// states the banner reports need something choosing, and the chooser is otherwise out of reach
+	const [configureOpen, setConfigureOpen] = useState(false)
+	const openConfigure = useCallback(() => setConfigureOpen(true), [])
 	const [viewportMinHeight, setViewportMinHeight] = useState(250) // arbitrary initial min-height
 
 	// Ctrl/cmd + wheel zooms, the way every canvas does. React attaches wheel passively at the root,
@@ -178,7 +183,11 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 							<Button color="light" onClick={resetPosition} title="Home Position" className="ms-1">
 								<FontAwesomeIcon icon={faHome} />
 							</Button>
-							<GridViewAsControl controller={viewAs} />
+							<GridViewAsControl
+								controller={viewAs}
+								configureOpen={configureOpen}
+								setConfigureOpen={setConfigureOpen}
+							/>
 							<ButtonGridPageMenu pageNumber={pageNumber} pageInfo={pageInfo} />
 						</ButtonGridHeader>
 					</Grid.Col>
@@ -186,7 +195,11 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 
 				<ButtonGridToolbar />
 
-				<GridViewAsBanner resolution={viewAs.resolution} onExit={() => viewAs.setEnabled(false)} />
+				<GridViewAsBanner
+					resolution={viewAs.resolution}
+					onConfigure={openConfigure}
+					onExit={() => viewAs.setEnabled(false)}
+				/>
 			</div>
 			{/* Rendered inside the grid's own styles, so the ghost is drawn the way the grid draws buttons */}
 			<GridButtonDragOverlay />

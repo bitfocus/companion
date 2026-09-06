@@ -24,8 +24,8 @@ const squareLayout: SurfaceSchemaLayoutDefinition = {
 	},
 }
 
-function layoutItem(id: string, type: string): ClientSurfaceLayoutItem {
-	return { id, type, displayName: `${type} (${id})`, isConnected: true, layout: squareLayout }
+function layoutItem(id: string, type: string, integrationType = 'satellite'): ClientSurfaceLayoutItem {
+	return { id, type, integrationType, displayName: `${type} (${id})`, isConnected: true, layout: squareLayout }
 }
 
 function placement(overrides: Partial<KnownSurfacePlacement> = {}): KnownSurfacePlacement {
@@ -232,5 +232,16 @@ describe('surfaceTypeChoicesFromLayouts', () => {
 
 	it('is empty when nothing has ever reported a layout', () => {
 		expect(surfaceTypeChoicesFromLayouts(new Map())).toEqual([])
+	})
+
+	// An emulator is a window on this machine rather than a device anyone is programming ahead for, and
+	// its layout is only whatever its own grid size was last set to
+	it('leaves emulators out, so they are not offered as a model', () => {
+		const withEmulator = new Map([
+			['a', layoutItem('a', 'Stream Deck XL')],
+			['emulator:emulator', layoutItem('emulator:emulator', 'Emulator', 'emulator')],
+		])
+
+		expect(surfaceTypeChoicesFromLayouts(withEmulator)).toEqual([{ id: 'Stream Deck XL', label: 'Stream Deck XL' }])
 	})
 })
