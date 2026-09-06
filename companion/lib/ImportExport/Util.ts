@@ -42,7 +42,7 @@ export function prepareExport(data: SomeExportv6, format: ExportFormat | undefin
 		}
 	} else if (format === 'yaml') {
 		try {
-			return { kind: 'buffer', data: yaml.stringify(data, splitLongPng64Values) }
+			return { kind: 'buffer', data: stringifyExportAsYaml(data) }
 		} catch (e) {
 			if (e instanceof RangeError) {
 				throw new ExportTooLargeError('Export is too large for the YAML format. Please export as JSON.')
@@ -150,35 +150,33 @@ async function publishFileNoClobber(tempPath: string, filePath: string): Promise
 }
 
 /**
- * Replacer that splits "png64" values into multiple lines.
+ * Serialise an export as YAML, wrapping long base64 image payloads (png64 values and `data:image`
+ * data-URLs) across lines so the file stays readable/diff-able.
  *
- * These are base64 encoded PNGs and can get very long. A length of 60 characters is used to allow
- * for indentation in the YAML.
- *
- * @param key - The key of the value being processed.
- * @param value - The value to be processed.
- * @returns The modified value or the original value if the conditions are not met.
+ * The wrapping is done by emitting those values as double-quoted scalars: YAML wraps a double-quoted
+ * scalar using `\`-line-continuations, which are stripped again on parse. This is the key difference
+ * from inserting literal newlines into the value (the previous approach) - those survived a re-import
+ * and corrupted the base64, so a YAML export did not round-trip. This does.
  */
-function splitLongPng64Values(key: string, value: string): string {
-	if (typeof value === 'string' && value.length > 60 && (key === 'png64' || value.startsWith('data:image'))) {
-		try {
-			// Support "data:...;base64,..." by extracting the base64 payload.
-			const m = value.match(/^(data:[^;]+;base64,)([\s\S]*)$/)
-			let prefix = ''
-			let b64 = value
-			if (m) {
-				prefix = m[1]
-				b64 = m[2]
-			}
+function stringifyExportAsYaml(data: SomeExportv6): string {
+	const doc = new yaml.Document(data)
 
-			const normalized = btoa(atob(b64))
-			return (prefix ? prefix + normalized : normalized).replace(/(.{60})/g, '$1\n') + '\n'
-		} catch {
-			// If it's not valid base64, return the original value unchanged.
-			return value
-		}
-	}
-	return value
+	yaml.visit(doc, {
+		Pair(_, pair) {
+			const key = yaml.isScalar(pair.key) ? pair.key.value : undefined
+			const value = pair.value
+			if (
+				yaml.isScalar(value) &&
+				typeof value.value === 'string' &&
+				value.value.length > 60 &&
+				(key === 'png64' || value.value.startsWith('data:image'))
+			) {
+				value.type = 'QUOTE_DOUBLE'
+			}
+		},
+	})
+
+	return doc.toString()
 }
 
 /**
