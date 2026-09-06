@@ -1,3 +1,4 @@
+import cors from 'cors'
 import Express from 'express'
 import LogController from '../../Log/Controller.js'
 import type { AppInfo, Registry } from '../../Registry.js'
@@ -12,7 +13,7 @@ import { createSwaggerUiRouter } from './SwaggerUi.js'
  * Mounted at /api/v2/ on the admin Express app.
  * Each resource type is versioned independently: /api/v2/connections/v1/, /api/v2/pages/v1/, etc.
  *
- * Only created when the REST API is enabled at startup (checked in RestApiService).
+ * Created and mounted while the REST API is enabled; unmounted when it is disabled (see RestApiService).
  */
 export function createRestApiRouter(
 	registry: Registry,
@@ -30,6 +31,18 @@ export function createRestApiRouter(
 	})
 
 	router.use('/docs', createSwaggerUiRouter())
+
+	// CORS applies only to the data endpoints below, not the docs/spec above: the API is authenticated
+	// by a bearer token (not cookies), so there is no CSRF risk and it is meant to be callable from
+	// browsers on other origins. The docs UI and spec are viewed/fetched same-origin, so they are left
+	// out. This also answers resource preflight (OPTIONS) requests before they reach auth.
+	router.use(
+		cors({
+			origin: '*',
+			methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+			allowedHeaders: ['Authorization', 'Content-Type'],
+		})
+	)
 
 	// Mount resource routers — each versioned independently
 	router.use(createAuthMiddleware(logger, tokenStore))

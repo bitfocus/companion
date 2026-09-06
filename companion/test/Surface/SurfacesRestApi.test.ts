@@ -6,11 +6,10 @@ import type { ClientDevicesListItem, ClientSurfaceItem } from '../../../shared-l
 import type { IPageStore } from '../../lib/Page/Store.js'
 import { REST_API_BASE_PATH } from '../../lib/Service/RestApi/constants.js'
 import { createRestApiRouter } from '../../lib/Service/RestApi/RestApiRouter.js'
-import { RestApiTokenStoreMemory } from '../../lib/Service/RestApi/RestApiTokenStore.js'
 import { BrightnessConfigField } from '../../lib/Surface/CommonConfigFields.js'
 import type { SurfaceController } from '../../lib/Surface/Controller.js'
 import { createSurfacesRestApiRouter, SURFACES_API_BASE_PATH } from '../../lib/Surface/SurfacesRestApi.js'
-import { createTestRestApiResources } from '../Service/RestApi/RestApiTestHelpers.js'
+import { createTestRestApiResources, createTestTokenStore } from '../Service/RestApi/RestApiTestHelpers.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -22,9 +21,10 @@ const mockAppInfo = {
 	appVersion: '5.0.0-test',
 }
 
+const { store: tokenStore, mint } = createTestTokenStore()
 const tokens = {
-	read: 'cpn_read',
-	write: 'cpn_write',
+	read: mint(['read']),
+	write: mint(['read', 'write']),
 }
 
 const SURFACES_PATH = `${REST_API_BASE_PATH}${SURFACES_API_BASE_PATH}`
@@ -47,7 +47,7 @@ function createService(): TestService {
 		createTestRestApiResources({
 			surfaces: { createRestApiRouter: (logger) => createSurfacesRestApiRouter(logger, surfaceController, pageStore) },
 		}),
-		new RestApiTokenStoreMemory(),
+		tokenStore,
 		mockAppInfo
 	)
 
@@ -253,6 +253,47 @@ describe('Surfaces REST API', () => {
 
 			expect(res.status).toBe(403)
 			expect(res.body.error.code).toBe('FORBIDDEN')
+		})
+	})
+
+	describe('CORS', () => {
+		test('data endpoints are cross-origin accessible', async () => {
+			const service = createService()
+			service.surfaceController.getDevicesList.mockReturnValue([])
+
+			const res = await supertest(service.app)
+				.get(SURFACES_PATH)
+				.set('Origin', 'https://example.com')
+				.set('Authorization', `Bearer ${tokens.read}`)
+				.send()
+
+			expect(res.status).toBe(200)
+			expect(res.headers['access-control-allow-origin']).toBe('*')
+		})
+
+		test('answers preflight requests without auth', async () => {
+			const service = createService()
+
+			const res = await supertest(service.app)
+				.options(SURFACES_PATH)
+				.set('Origin', 'https://example.com')
+				.set('Access-Control-Request-Method', 'GET')
+				.send()
+
+			expect(res.status).toBeLessThan(300)
+			expect(res.headers['access-control-allow-origin']).toBe('*')
+		})
+
+		test('the OpenAPI spec is not exposed cross-origin', async () => {
+			const service = createService()
+
+			const res = await supertest(service.app)
+				.get(`${REST_API_BASE_PATH}/openapi.json`)
+				.set('Origin', 'https://example.com')
+				.send()
+
+			expect(res.status).toBe(200)
+			expect(res.headers['access-control-allow-origin']).toBeUndefined()
 		})
 	})
 })

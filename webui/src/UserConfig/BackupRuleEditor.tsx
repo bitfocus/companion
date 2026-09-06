@@ -57,7 +57,7 @@ const PreviousBackupRow = observer(function PreviousBackupRow({ backup, ruleId }
 					{new Date(backup.createdAt).toLocaleString()} • {formatFileSize(backup.fileSize)}
 				</small>
 			</td>
-			<td className="no-wrap align-middle">
+			<td className="whitespace-nowrap align-middle">
 				<Button color="danger" size="sm" onClick={deleteBackup} title="Delete backup">
 					<FontAwesomeIcon icon={faTrash} />
 				</Button>

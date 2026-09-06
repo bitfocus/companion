@@ -189,6 +189,7 @@ export function createTrpcRouter(registry: Registry) {
 		appInfo: registry.ui.update.createTrpcRouter(),
 
 		bonjour: registry.services.bonjourDiscovery.createTrpcRouter(),
+		restApiKeys: registry.services.restApi.createTrpcRouter(),
 
 		actionRecorder: registry.instance.actionRecorder.createTrpcRouter(),
 		surfaces: registry.surfaces.createTrpcRouter(),
