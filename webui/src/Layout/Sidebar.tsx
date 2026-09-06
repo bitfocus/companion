@@ -648,9 +648,9 @@ function SidebarRoot({
 		if (mobileMode) setVisibleMobile(false)
 	}, [mobileMode])
 
-	// handle clicks in the sidebar for mobile mode and "unfolding" mode
-	const handleOnClick = useCallback(
-		(event: MouseEvent) => {
+	// handle completed pointer interactions in the sidebar for mobile mode and "unfolding" mode
+	const handlePointerUp = useCallback(
+		(event: PointerEvent) => {
 			const target = event.target
 			// note: middle-click currently opens the nav-link target in a new tab, so it makes sense to close the sidebar in that case.
 			// Only context-menu should leave the sidebar alone, since it is acting on the current sidebar, hence "event.button === 2".
@@ -679,6 +679,15 @@ function SidebarRoot({
 		[setNarrow, mobileMode, unfoldable]
 	)
 
+	// Touch pointers do not hover, so entering a temporarily narrowed folding sidebar must explicitly expand it.
+	// The subsequent pointerup will schedule the fold again if a navigation item is selected.
+	const handlePointerEnter = useCallback(
+		(event: React.PointerEvent<HTMLDivElement>) => {
+			if (narrow && event.pointerType === 'touch') setNarrow(false)
+		},
+		[narrow, setNarrow]
+	)
+
 	// if in "temporary narrow-mode" return to folding mode after the mouse leaves the sidebar
 	// note that in "permanent" narrow-mode, setNarrow is passed as a no-op, so this callback is active only when not in narrow-mode
 	const handleMouseLeave = useCallback(() => {
@@ -695,20 +704,20 @@ function SidebarRoot({
 	)
 
 	useEffect(() => {
-		window.addEventListener('mouseup', handleKeyOrClickOutside)
+		window.addEventListener('pointerup', handleKeyOrClickOutside)
 		window.addEventListener('keyup', handleKeyOrClickOutside)
 
 		const sideBarElement = sidebarRef.current
 
-		sideBarElement?.addEventListener('mouseup', handleOnClick)
+		sideBarElement?.addEventListener('pointerup', handlePointerUp)
 
 		return () => {
-			window.removeEventListener('mouseup', handleKeyOrClickOutside)
+			window.removeEventListener('pointerup', handleKeyOrClickOutside)
 			window.removeEventListener('keyup', handleKeyOrClickOutside)
 
-			sideBarElement?.removeEventListener('mouseup', handleOnClick)
+			sideBarElement?.removeEventListener('pointerup', handlePointerUp)
 		}
-	}, [sidebarRef, handleOnClick, handleKeyOrClickOutside])
+	}, [sidebarRef, handlePointerUp, handleKeyOrClickOutside])
 
 	return (
 		<>
@@ -726,6 +735,7 @@ function SidebarRoot({
 				})}
 				ref={sidebarRef}
 				onMouseLeave={handleMouseLeave}
+				onPointerEnter={handlePointerEnter}
 				onContextMenu={onContextMenu}
 			>
 				{children}
