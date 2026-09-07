@@ -1,6 +1,5 @@
 import type express from 'express'
 import semver from 'semver'
-import { ButtonDecorationRenderer } from '@companion-app/shared/Graphics/ButtonDecorationRenderer.js'
 import {
 	EntityModelType,
 	type ActionEntityModel,
@@ -38,6 +37,7 @@ import {
 	type EntityManagerAdapter,
 	type EntityManagerFeedbackEntity,
 } from './EntityManager.js'
+import { getFeedbackImageSizeForControl } from './FeedbackImageSize.js'
 import type {
 	LogMessageMessage,
 	ModuleIpcWrapper,
@@ -58,8 +58,6 @@ import type {
 	UpdateFeedbackInstancesMessage,
 	UpdateFeedbackValuesMessage,
 } from './IpcTypesNew.js'
-
-const moduleFeedbackSize = { width: 72, height: 72 - ButtonDecorationRenderer.DEFAULT_HEIGHT } // Backwards compatibility for modules that expect feedback size
 
 export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
 	logger: Logger
@@ -330,7 +328,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 								feedbackId: entity.definitionId,
 								options: parseRes.parsedOptions,
 
-								image: control?.supportsLayeredStyle ? moduleFeedbackSize : undefined,
+								image: getFeedbackImageSizeForControl(control),
 							},
 						},
 						undefined,
@@ -793,7 +791,7 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 					feedbackId: value.entity.definitionId,
 					options: value.parsedOptions,
 
-					image: control?.supportsLayeredStyle ? moduleFeedbackSize : undefined,
+					image: getFeedbackImageSizeForControl(control),
 				}
 			} else {
 				updateMessage.feedbacks[id] = null

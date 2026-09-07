@@ -118,6 +118,14 @@ const processModule = async (
 					return
 				}
 
+				if (
+					latestCompatibleVersion.licenseCategory === 'COPYLEFT' ||
+					latestCompatibleVersion.licenseCategory === 'UNKNOWN'
+				) {
+					console.log(`Skipping ${moduleInfo.id} (${latestCompatibleVersion.licenseCategory} license)`)
+					return
+				}
+
 				const tarUrl = latestCompatibleVersion.tarUrl! // Note: asserted in the find above
 
 				const abortControl = new AbortController()
@@ -155,7 +163,7 @@ const processModule = async (
 
 				await fs.mkdirp(moduleDir)
 
-				await new Promise((resolve, reject) => {
+				await new Promise<void>((resolve, reject) => {
 					Readable.from(decompressedData)
 						.pipe(tarfs.extract(moduleDir, { strip: 1 }))
 						.on('finish', resolve)

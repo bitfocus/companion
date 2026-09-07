@@ -204,6 +204,26 @@ export interface paths {
 		patch?: never
 		trace?: never
 	}
+	'/v1/public/stats': {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		/**
+		 * Get portal-wide statistics
+		 * @description Get aggregate counts across the portal (modules, published versions, developers) for display on the homepage
+		 */
+		get: operations['getPublicStats']
+		put?: never
+		post?: never
+		delete?: never
+		options?: never
+		head?: never
+		patch?: never
+		trace?: never
+	}
 	'/v1/modules-pending-review': {
 		parameters: {
 			query?: never
@@ -216,6 +236,46 @@ export interface paths {
 		 * @description Get a list of all module versions that are currently pending review, across all module types
 		 */
 		get: operations['getModulesPendingReview']
+		put?: never
+		post?: never
+		delete?: never
+		options?: never
+		head?: never
+		patch?: never
+		trace?: never
+	}
+	'/v1/team/modules-pending-review': {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		/**
+		 * Get module versions pending review with reviewer info
+		 * @description Returns a list of all module versions currently pending review, including the assigned reviewer's GitHub username and assignment time. Requires module team permissions.
+		 */
+		get: operations['getTeamModulesPendingReview']
+		put?: never
+		post?: never
+		delete?: never
+		options?: never
+		head?: never
+		patch?: never
+		trace?: never
+	}
+	'/v1/user/modules': {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		/**
+		 * Get the authenticated user's modules
+		 * @description Returns a list of modules the authenticated user is a maintainer of, including pending versions and latest published version info.
+		 */
+		get: operations['getUserModules']
 		put?: never
 		post?: never
 		delete?: never
@@ -250,6 +310,11 @@ export interface components {
 			/** @description JSON string of the module manifest */
 			manifestJson: string
 		}
+		/**
+		 * @description Coarse classification of the SPDX licence declared in the module manifest, for consumers that can only redistribute modules under certain licences. `MIT` is the only category without redistribution constraints; `PERMISSIVE` covers other permissive licences (Apache-2.0, BSD, ISC and similar), `COPYLEFT` covers the GPL/AGPL/LGPL/MPL/EPL/CDDL families, and `UNKNOWN` means the licence string could not be matched to a known identifier.
+		 * @enum {string}
+		 */
+		ModuleLicenseCategory: 'MIT' | 'PERMISSIVE' | 'COPYLEFT' | 'UNKNOWN'
 		CompanionModuleInfo: {
 			/** @description Id of the module */
 			id: string
@@ -281,6 +346,9 @@ export interface components {
 			legacyIds?: string[]
 			/** @description Reason for deprecation (if deprecated) */
 			deprecationReason?: string
+			/** @description SPDX licence identifier declared by the latest package of this module */
+			license: string | null
+			licenseCategory: components['schemas']['ModuleLicenseCategory']
 		}
 		CompanionModuleVersionInfo: {
 			/** @description Version number */
@@ -301,6 +369,9 @@ export interface components {
 			deprecationReason?: string
 			/** @description Url to the module help markdown. This may reference other assets in the same folder */
 			helpUrl?: string
+			/** @description SPDX licence identifier declared by this version's package */
+			license: string | null
+			licenseCategory: components['schemas']['ModuleLicenseCategory']
 		}
 		ButtonsModuleInfo: {
 			/** @description Id of the module */
@@ -353,6 +424,11 @@ export interface components {
 			id: string
 			/** @description Version number */
 			latestVersion: string
+			/**
+			 * Format: date-time
+			 * @description When the latest module package was published
+			 */
+			packageUpdatedAt: string
 			/** @description Name of the module */
 			name: string
 			/** @description Manufacturer of the device controller by the module */
@@ -369,9 +445,16 @@ export interface components {
 			/** @description Url to the module help markdown. This may reference other assets in the same folder */
 			helpUrl?: string
 			/** @description Blurb for the connection */
+			blurb?: string | null
+			/**
+			 * @deprecated
+			 * @description Deprecated: Use blurb instead
+			 */
 			blulb?: string | null
 			/** @description Url to the company logo */
 			companyLogo?: string | null
+			/** @description Url to the company website */
+			companyWebsite?: string | null
 			/**
 			 * @description The type of connection
 			 * @enum {string}
@@ -381,8 +464,12 @@ export interface components {
 			isFeatured: boolean
 			images: {
 				url: string
-				/** @enum {string} */
-				type: 'PRODUCT' | 'ACTION'
+				/**
+				 * @deprecated
+				 * @description Deprecated: All images are now of type PRODUCT
+				 * @enum {string}
+				 */
+				type?: 'PRODUCT'
 			}[]
 			trainingVideos: {
 				url: string
@@ -392,6 +479,11 @@ export interface components {
 				id: string
 				name: string
 			}[]
+			/**
+			 * Format: date-time
+			 * @description When the connection was last updated (latest of module info changes and latest version publish date)
+			 */
+			updatedAt: string
 		}
 		WebsiteFeaturedConnectionInfo: components['schemas']['WebsiteConnectionInfo'] & {
 			/** @description The order in which the connection is featured */
@@ -437,6 +529,17 @@ export interface components {
 			 * @description Date when the module was last published
 			 */
 			lastPublish?: string | null
+			/** @description SPDX licence identifier declared by the latest package of this module */
+			license: string | null
+			licenseCategory: components['schemas']['ModuleLicenseCategory']
+		}
+		PublicPortalStats: {
+			/** @description Number of active (non-deprecated) connection modules with a published version */
+			connections: number
+			/** @description Number of active (non-deprecated) surface modules with a published version */
+			surfaces: number
+			/** @description Number of approved (published) module versions */
+			publishedVersions: number
 		}
 		PublicModuleDetailsInfo: {
 			/** @description Reason for deprecation (if deprecated) */
@@ -455,6 +558,9 @@ export interface components {
 				/** @description Reason for deprecation of the predecessor */
 				deprecationReason: string | null
 			}[]
+			/** @description SPDX licence identifier declared by the latest package of this module */
+			license: string | null
+			licenseCategory: components['schemas']['ModuleLicenseCategory']
 		}
 		PublicModuleVersionInfo: {
 			/** @description Internal version id */
@@ -469,6 +575,8 @@ export interface components {
 			published: boolean
 			/** @description URL to the published package tarball */
 			packageUrl?: string | null
+			/** @description URL to the HELP.md file for this version */
+			helpUrl?: string | null
 			/** @description URL to the build log */
 			buildLogUrl?: string | null
 			/** @description Reason for deprecation (if deprecated) */
@@ -480,6 +588,44 @@ export interface components {
 			createdAt: string
 			/** @description Tags assigned to this version */
 			assignedTags: components['schemas']['TagInfo'][]
+			/** @description SPDX licence identifier declared by this version's package, if it has one */
+			license: string | null
+			licenseCategory: components['schemas']['ModuleLicenseCategory']
+		}
+		TeamPendingModuleVersionInfo: components['schemas']['PendingModuleVersionInfo'] & {
+			/** @description The assigned reviewer, if any */
+			assignedReviewer?: {
+				/** @description GitHub username of the assigned reviewer */
+				githubUsername: string | null
+				/** @description Unix timestamp (milliseconds) when the reviewer was assigned */
+				assignedAt: number
+			} | null
+		}
+		UserModuleInfo: {
+			/** @description Name of the module */
+			name: string
+			/** @description Type of the module (e.g. companion-connection, companion-surface) */
+			type: string
+			latestPublished?: {
+				/** @description Version string of the latest published package */
+				version: string
+				/**
+				 * Format: date-time
+				 * @description When the latest package was published
+				 */
+				createdAt: string
+			} | null
+			pendingVersions: {
+				/** @description Internal version id */
+				id?: number
+				/** @description Git tag of the pending version */
+				gitTag: string
+				/**
+				 * Format: date-time
+				 * @description When the version was submitted
+				 */
+				createdAt: string
+			}[]
 		}
 	}
 	responses: never
@@ -538,6 +684,11 @@ export interface operations {
 				content: {
 					'application/json': {
 						connections: components['schemas']['WebsiteConnectionInfo'][]
+						/**
+						 * Format: date-time
+						 * @description When the connections list was last updated
+						 */
+						updatedAt: string
 					}
 				}
 			}
@@ -560,6 +711,11 @@ export interface operations {
 				content: {
 					'application/json': {
 						connections: components['schemas']['WebsiteFeaturedConnectionInfo'][]
+						/**
+						 * Format: date-time
+						 * @description When the featured connections list was last updated
+						 */
+						updatedAt: string
 					}
 				}
 			}
@@ -631,7 +787,7 @@ export interface operations {
 		parameters: {
 			query?: {
 				/** @description Limit versions included in results to those compatible with the given API version */
-				'module-api-version'?: string
+				'module-api-version'?: string[]
 			}
 			header?: never
 			path: {
@@ -784,6 +940,26 @@ export interface operations {
 			}
 		}
 	}
+	getPublicStats: {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		requestBody?: never
+		responses: {
+			/** @description successful operation */
+			200: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': components['schemas']['PublicPortalStats']
+				}
+			}
+		}
+	}
 	getModulesPendingReview: {
 		parameters: {
 			query?: never
@@ -802,6 +978,77 @@ export interface operations {
 					'application/json': {
 						versions: components['schemas']['PendingModuleVersionInfo'][]
 					}
+				}
+			}
+		}
+	}
+	getTeamModulesPendingReview: {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		requestBody?: never
+		responses: {
+			/** @description successful operation */
+			200: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': {
+						versions: components['schemas']['TeamPendingModuleVersionInfo'][]
+					}
+				}
+			}
+			/** @description unauthorized */
+			401: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': components['schemas']['ErrorResponse']
+				}
+			}
+			/** @description forbidden - requires module team permissions */
+			403: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': components['schemas']['ErrorResponse']
+				}
+			}
+		}
+	}
+	getUserModules: {
+		parameters: {
+			query?: never
+			header?: never
+			path?: never
+			cookie?: never
+		}
+		requestBody?: never
+		responses: {
+			/** @description successful operation */
+			200: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': {
+						modules: components['schemas']['UserModuleInfo'][]
+					}
+				}
+			}
+			/** @description unauthorized */
+			401: {
+				headers: {
+					[name: string]: unknown
+				}
+				content: {
+					'application/json': components['schemas']['ErrorResponse']
 				}
 			}
 		}

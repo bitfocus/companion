@@ -160,6 +160,31 @@ describe('prepareExport', () => {
 		expect(prepareExport(sampleData, 'json-gz')).toEqual({ kind: 'stream', format: 'json-gz' })
 	})
 
+	test('long png64/data-image values are wrapped but round-trip unchanged', () => {
+		// A long base64 payload and a long data-URL - both are wrapped across lines in the YAML for
+		// readability, but must parse back to exactly the original strings (they used to gain newlines).
+		const png64 = Buffer.from('x'.repeat(300)).toString('base64')
+		const dataUrl = `data:image/png;base64,${png64}`
+		const data = { type: 'full', version: 6, style: { png64 }, image: dataUrl } as any
+
+		const result = prepareExport(data, 'yaml')
+		expect(result.kind).toBe('buffer')
+		const text = (result as { data: string }).data
+
+		// The long values are wrapped (not left on one giant line)
+		expect(text.split('\n').length).toBeGreaterThan(5)
+
+		// ...yet a parse restores the originals byte-for-byte
+		const parsed = yaml.parse(text)
+		expect(parsed.style.png64).toBe(png64)
+		expect(parsed.image).toBe(dataUrl)
+	})
+
+	test('short strings are left as plain scalars (not force-quoted)', () => {
+		const result = prepareExport({ type: 'full', version: 6, name: 'My Config' } as any, 'yaml')
+		expect((result as { data: string }).data).toContain('name: My Config')
+	})
+
 	test('undefined format defaults to streaming json-gz', () => {
 		expect(prepareExport(sampleData, undefined)).toEqual({ kind: 'stream', format: 'json-gz' })
 	})
@@ -176,7 +201,8 @@ describe('prepareExport', () => {
 	})
 
 	test('yaml rejects with ExportTooLargeError when it exceeds the string limit', () => {
-		const spy = vi.spyOn(yaml, 'stringify').mockImplementationOnce(() => {
+		// The oversized-YAML failure surfaces when serialising the Document to a string.
+		const spy = vi.spyOn(yaml.Document.prototype, 'toString').mockImplementationOnce(() => {
 			throw new RangeError('Invalid string length')
 		})
 		try {

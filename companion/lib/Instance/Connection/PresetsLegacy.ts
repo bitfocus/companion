@@ -16,6 +16,7 @@ import type {
 import type { Complete } from '@companion-module/host'
 import type { Logger } from '../../Log/Controller.js'
 import { ConvertLegacyStyleToElements } from '../../Resources/ConvertLegacyStyleToElements.js'
+import { createStableIdGenerator } from '../../Resources/IdGenerator.js'
 import type { PresetEntryConversionContext } from './Thread/PresetInternalEntities.js'
 import {
 	convertActionsDelay,
@@ -144,6 +145,9 @@ function ConvertPresetDefinition(
 	try {
 		if (rawPreset.type !== 'button') return null
 
+		// These cannot be linked, but their checksum still drives the preset preview's rebuild guard.
+		const generateId = createStableIdGenerator(presetId)
+
 		// Legacy modules predate `internal:*` preset entries and have no host-side validation of them,
 		// so they must never be translated to internal entities
 		const entryCtx: PresetEntryConversionContext = {
@@ -151,6 +155,7 @@ function ConvertPresetDefinition(
 			connectionId,
 			connectionUpgradeIndex,
 			allowInternalEntities: false,
+			generateId,
 		}
 
 		const parsedStyle = ConvertLegacyStyleToElements(
@@ -158,7 +163,8 @@ function ConvertPresetDefinition(
 			convertPresetFeedbacksToEntities(rawPreset.feedbacks, entryCtx),
 			rawPreset.previewStyle,
 			// Legacy (pre-2.0) modules do not declare per-feedback affectedProperties
-			null
+			null,
+			generateId
 		)
 
 		const presetDefinition: PresetDefinition = {

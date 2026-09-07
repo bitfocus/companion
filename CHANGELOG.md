@@ -1,5 +1,21 @@
 # Bitfocus Companion
 
+## Companion v5.0.5 - Release Notes
+
+### 🐞 BUG FIXES
+
+- variables not being updated in feedbacks or localvariables in presets
+- hidden elements not being invalidated when variables/dependencies change #4380
+- catch variable changes that happen during async getDrawStyle #4380
+- ensure ui font metrics are cleared after fonts are loaded
+- feedbacks not updating while editing button in ui
+- limit number of in flight updates/upgrades to each connection
+- yield during import to ensure connections dont timeout
+- loosen variable name rule
+- preserve add entity modal expanded collections #4433
+- UI Crash in TextInputField when label is not a string #4435
+- exclude copyleft packages from offline bundle
+
 ## Companion v5.0.4 - Release Notes
 
 ### 🐞 BUG FIXES

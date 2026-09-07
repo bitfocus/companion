@@ -55,6 +55,14 @@ export default defineConfig({
 			},
 
 			{
+				test: {
+					name: 'tools',
+					root: 'tools',
+					exclude: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**'],
+				},
+			},
+
+			{
 				ssr: ssrSourceResolve,
 				test: {
 					name: 'config-tool',

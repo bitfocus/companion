@@ -568,6 +568,7 @@ export class Registry {
 	async close(): Promise<void> {
 		this.internalModule.destroy()
 		this.#renderClock.destroy()
+		this.controls.triggerEvents.destroy()
 
 		this.services.close()
 		this.cloud.stop()

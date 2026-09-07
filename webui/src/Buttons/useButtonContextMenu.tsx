@@ -1,16 +1,17 @@
 import { nanoid } from 'nanoid'
-import { useCallback, useContext, useMemo, useState } from 'react'
+import { useCallback, useContext, useMemo, useState, useSyncExternalStore } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { MenuItemProps } from '~/Components/ActionMenu.js'
-import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import type { ButtonGridStore } from './ButtonGridStore.js'
+import { buildTransferPairs } from './GridGeometry.js'
+import type { GridToolActions } from './GridTools/index.js'
 
 interface UseButtonContextMenuOptions {
-	copyFromButton: [ControlLocation, string] | null
-	setCopyFromButton: (value: [ControlLocation, string] | null) => void
-	clearModalRef: React.RefObject<GenericConfirmModalRef | null>
+	store: ButtonGridStore
+	actions: GridToolActions
 	setTabResetToken: (token: string) => void
 }
 
@@ -24,9 +25,8 @@ export interface UseButtonContextMenuResult {
 }
 
 export function useButtonContextMenu({
-	copyFromButton,
-	setCopyFromButton,
-	clearModalRef,
+	store,
+	actions,
 	setTabResetToken,
 }: UseButtonContextMenuOptions): UseButtonContextMenuResult {
 	const { pages } = useContext(RootAppStoreContext)
@@ -34,6 +34,17 @@ export function useButtonContextMenu({
 	const [contextMenuLocation, setContextMenuLocation] = useState<ControlLocation | null>(null)
 	const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 })
 	const [contextMenuOpen, setContextMenuOpen] = useState(false)
+
+	// The clipboard lives in the grid store, so a pending cut/copy highlights its source on the grid
+	// and is shared with the keyboard shortcuts
+	const clipboard = useSyncExternalStore(
+		store.subscribe,
+		useCallback(() => store.clipboard, [store])
+	)
+	const selection = useSyncExternalStore(
+		store.subscribe,
+		useCallback(() => store.selectedLocations, [store])
+	)
 
 	const doButtonContextMenu = useCallback((location: ControlLocation, x: number, y: number) => {
 		setContextMenuLocation(location)
@@ -45,8 +56,6 @@ export function useButtonContextMenu({
 
 	const hotPressMutation = useMutationExt(trpc.controls.hotPressControl.mutationOptions())
 	const hotAbortMutation = useMutationExt(trpc.controls.hotAbortControl.mutationOptions())
-	const gridTransferMutation = useMutationExt(trpc.controls.gridBatchTransfer.mutationOptions())
-	const resetControlsMutation = useMutationExt(trpc.controls.resetControls.mutationOptions())
 	const createReferenceControlMutation = useMutationExt(trpc.controls.createReferenceControl.mutationOptions())
 
 	const contextMenuItems = useMemo((): MenuItemProps[] => {
@@ -55,7 +64,15 @@ export function useButtonContextMenu({
 		const location = contextMenuLocation
 		const isEmpty = !contextControlId
 
-		const pasteLabel = copyFromButton?.[1] === 'cut' ? 'Move here' : 'Paste here'
+		// Right-clicking within a selection acts on the whole of it - that is what selecting it was for.
+		// Right-clicking outside one is about the button under the cursor, and leaves the selection be.
+		const locationKey = formatLocation(location)
+		const targets =
+			selection.length > 1 && selection.some((l) => formatLocation(l) === locationKey) ? [...selection] : [location]
+		const isMultiple = targets.length > 1
+		const forCount = (verb: string) => (isMultiple ? `${verb} ${targets.length} buttons` : verb)
+
+		const pasteLabel = clipboard?.mode === 'cut' ? 'Move here' : 'Paste here'
 
 		const items: MenuItemProps[] = [
 			{
@@ -77,22 +94,23 @@ export function useButtonContextMenu({
 			},
 			{ isSeparator: true, label: 'Edit' },
 			{
-				label: 'Copy',
-				disabled: isEmpty,
+				label: forCount('Copy'),
+				// A selection is worth copying even if the button under the cursor happens to be empty
+				disabled: isEmpty && !isMultiple,
 				do: () => {
-					setCopyFromButton([location, 'copy'])
+					store.setClipboard(targets, 'copy')
 				},
 			},
 			{
-				label: 'Cut',
-				disabled: isEmpty,
+				label: forCount('Cut'),
+				disabled: isEmpty && !isMultiple,
 				do: () => {
-					setCopyFromButton([location, 'cut'])
+					store.setClipboard(targets, 'cut')
 				},
 			},
 		]
 
-		if (!copyFromButton) {
+		if (!clipboard) {
 			items.push(
 				{ label: 'Paste here', disabled: true, do: () => {} },
 				{ label: 'Swap here', disabled: true, do: () => {} },
@@ -102,49 +120,28 @@ export function useButtonContextMenu({
 			items.push(
 				{
 					label: pasteLabel,
-					do: () => {
-						if (copyFromButton[1] === 'copy') {
-							gridTransferMutation
-								.mutateAsync({
-									operation: 'copy',
-									pairs: [{ fromLocation: copyFromButton[0], toLocation: location }],
-								})
-								.catch((e) => console.error(`Copy failed: ${e}`))
-							setTabResetToken(nanoid())
-						} else if (copyFromButton[1] === 'cut') {
-							gridTransferMutation
-								.mutateAsync({
-									operation: 'move',
-									pairs: [{ fromLocation: copyFromButton[0], toLocation: location }],
-								})
-								.catch((e) => console.error(`Move failed: ${e}`))
-							setCopyFromButton(null)
-							setTabResetToken(nanoid())
-						}
-					},
+					// Same path as the keyboard, so a paste warns about the same things either way
+					do: () => actions.pasteAt(location),
 				},
 				{
 					label: 'Swap here',
 					do: () => {
-						gridTransferMutation
-							.mutateAsync({
-								operation: 'swap',
-								pairs: [{ fromLocation: copyFromButton[0], toLocation: location }],
-							})
-							.catch((e) => console.error(`Swap failed: ${e}`))
-						setCopyFromButton(null)
-						setTabResetToken(nanoid())
+						actions.transfer('swap', buildTransferPairs(clipboard.locations, location, 'top-left'), () => {
+							store.clearClipboard()
+							setTabResetToken(nanoid())
+						})
 					},
 				},
 				{
 					label: 'Paste as reference',
+					disabled: clipboard.locations.length !== 1,
 					do: () => {
 						// Place a button that mirrors the copied button, rather than a full copy
 						createReferenceControlMutation
-							.mutateAsync({ fromLocation: copyFromButton[0], toLocation: location })
+							.mutateAsync({ fromLocation: clipboard.locations[0], toLocation: location })
 							.catch((e) => console.error(`Paste reference failed: ${e}`))
 						// A reference leaves the source in place, so clear a pending cut - it never completes otherwise
-						if (copyFromButton[1] === 'cut') setCopyFromButton(null)
+						if (clipboard.mode === 'cut') store.clearClipboard()
 						setTabResetToken(nanoid())
 					},
 				}
@@ -154,20 +151,9 @@ export function useButtonContextMenu({
 		items.push(
 			{ isSeparator: true },
 			{
-				label: 'Clear',
-				disabled: isEmpty,
-				do: () => {
-					clearModalRef.current?.show(
-						`Clear button ${formatLocation(location)}`,
-						`This will clear the style, feedbacks and all actions`,
-						'Clear',
-						() => {
-							resetControlsMutation.mutateAsync({ locations: [location], newType: null }).catch((e) => {
-								console.error(`Reset failed: ${e}`)
-							})
-						}
-					)
-				},
+				label: forCount('Clear'),
+				disabled: isEmpty && !isMultiple,
+				do: () => actions.clearButtons(targets),
 			}
 		)
 
@@ -175,15 +161,14 @@ export function useButtonContextMenu({
 	}, [
 		contextMenuLocation,
 		contextControlId,
-		copyFromButton,
+		clipboard,
+		selection,
+		store,
+		actions,
 		hotPressMutation,
 		hotAbortMutation,
-		gridTransferMutation,
-		resetControlsMutation,
 		createReferenceControlMutation,
-		setCopyFromButton,
 		setTabResetToken,
-		clearModalRef,
 	])
 
 	return {

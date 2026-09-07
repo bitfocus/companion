@@ -20,6 +20,7 @@ import type {
 	SurfacePanelConfig,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
+import { rotateXYForPanel, unrotateXYForPanel } from '@companion-app/shared/SurfaceLayout.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
@@ -31,14 +32,7 @@ import { createDefaultSurfacePanelConfig } from './Config.js'
 import type { SurfaceController } from './Controller.js'
 import { SurfaceGroup } from './Group.js'
 import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
-import { rotateXYForPanel, unrotateXYForPanel } from './Util.js'
-
-/**
- * Get the display name of a surface
- */
-export function getSurfaceName(config: Record<string, any>, surfaceId: string): string {
-	return `${config?.name || config?.type || 'Unknown'} (${surfaceId})`
-}
+import { getSurfaceName } from './Util.js'
 
 interface SurfaceHandlerEvents {
 	interaction: []
@@ -411,7 +405,11 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (!this.panel) return
 
 		this.#surfaceConfig.gridSize = this.panel.gridSize
+		this.#surfaceConfig.layout = this.panel.surfaceLayout
 		this.#saveConfig()
+
+		// Saving the config doesn't push the new size/layout to the ui, so do that here
+		this.#surfaces.triggerUpdateDevicesList()
 
 		this.#drawPage()
 	}

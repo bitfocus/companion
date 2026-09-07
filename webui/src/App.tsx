@@ -3,7 +3,6 @@ import './App.css'
 import { faBars } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet } from '@tanstack/react-router'
-import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { Suspense, useCallback, useContext, useEffect, useState } from 'react'
 import { useIdleTimer } from 'react-idle-timer'
@@ -25,7 +24,6 @@ import { MySidebar, SidebarStateProvider, useSidebarState } from './Layout/Sideb
 import { MyErrorBoundary } from './Resources/Error.js'
 import { MonacoLoader } from './Resources/MonacoLoader.js'
 import { SortableHysteresis } from './Resources/SortableHysteresis.js'
-import { trpc } from './Resources/TRPC.js'
 import { shouldAutoOpenWizard } from './Wizard/Constants.js'
 import { WizardModal } from './Wizard/index.js'
 
@@ -44,28 +42,12 @@ export default function App(): React.JSX.Element {
 		}
 	}, [shouldReload])
 
-	const [currentImportTask, setCurrentImportTask] = useState<'reset' | 'import' | null>(null)
-	useSubscription(
-		trpc.importExport.importExportTaskStatus.subscriptionOptions(undefined, {
-			onStarted: () => {
-				setCurrentImportTask(null)
-			},
-			onData: (data) => {
-				setCurrentImportTask(data)
-			},
-			onError: (error) => {
-				console.error('Error in importExportTaskStatus subscription:', error)
-				setCurrentImportTask(null)
-			},
-		})
-	)
-
 	return (
 		<ContextData>
 			{(loadingProgress, loadingComplete) => (
 				<>
 					{wasConnected && <ConnectionLostOverlay />}
-					{!wasConnected && !!currentImportTask && <ConfigImportingOverlay />}
+					<ImportTaskOverlay wasConnected={wasConnected} />
 					<Suspense fallback={<AppLoading progress={loadingProgress} connected={connected} />}>
 						<MonacoLoader />
 						{/*
@@ -90,6 +72,18 @@ export default function App(): React.JSX.Element {
 		</ContextData>
 	)
 }
+
+// Reads the shared import/reset task status (driven by useImportTaskStatusSubscription) and shows the
+// blocking overlay on still-connected clients while a task runs. A dropped client sees the
+// disconnect screen instead, and reloads on reconnect.
+const ImportTaskOverlay = observer(function ImportTaskOverlay({ wasConnected }: { wasConnected: boolean }) {
+	const { importTaskStatus } = useContext(RootAppStoreContext)
+	const taskRunning = importTaskStatus.get()?.status === 'running'
+
+	if (wasConnected || !taskRunning) return null
+
+	return <ConfigImportingOverlay />
+})
 
 interface AppMainProps {
 	connected: boolean
@@ -397,42 +391,7 @@ const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuth
 })
 
 const AppContent = observer(function AppContent() {
-	const { userConfig, viewControl } = useContext(RootAppStoreContext)
-
-	const handleWindowBlur = useCallback(() => {
-		viewControl.setButtonGridHotPress(false)
-	}, [viewControl])
-
-	const handleKeyDown = useCallback(
-		(e: KeyboardEvent) => {
-			if (e.key === 'Shift') {
-				viewControl.setButtonGridHotPress(true)
-			}
-		},
-		[viewControl]
-	)
-	const handleKeyUp = useCallback(
-		(e: KeyboardEvent) => {
-			if (e.key === 'Shift') {
-				viewControl.setButtonGridHotPress(false)
-			}
-		},
-		[viewControl]
-	)
-
-	useMountEffect(() => {
-		document.addEventListener('keydown', handleKeyDown)
-		document.addEventListener('keyup', handleKeyUp)
-
-		window.addEventListener('blur', handleWindowBlur)
-
-		return () => {
-			document.removeEventListener('keydown', handleKeyDown)
-			document.removeEventListener('keyup', handleKeyUp)
-
-			window.removeEventListener('blur', handleWindowBlur)
-		}
-	})
+	const { userConfig } = useContext(RootAppStoreContext)
 
 	useEffect(() => {
 		document.title =

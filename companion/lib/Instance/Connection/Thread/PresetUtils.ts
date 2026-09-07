@@ -1,4 +1,3 @@
-import { nanoid } from 'nanoid'
 import {
 	EntityModelType,
 	type ActionEntityModel,
@@ -33,7 +32,7 @@ export function convertActionsDelay(
 		let currentDelay = 0
 		let currentDelayGroupChildren: ActionEntityModel[] = []
 
-		const delayGroups: ActionEntityModel[] = [wrapActionsInGroup(currentDelayGroupChildren)]
+		const delayGroups: ActionEntityModel[] = [wrapActionsInGroup(currentDelayGroupChildren, ctx)]
 
 		for (const action of actions) {
 			const delay = Number(action.delay)
@@ -42,18 +41,18 @@ export function convertActionsDelay(
 				// action has different delay to the last one
 				if (delay > currentDelay) {
 					// delay is greater than the last one, translate it to a relative delay
-					currentDelayGroupChildren.push(createWaitAction(delay - currentDelay))
+					currentDelayGroupChildren.push(createWaitAction(delay - currentDelay, ctx))
 				} else {
 					// delay is less than the last one, preserve the weird order
 					currentDelayGroupChildren = []
-					if (delay > 0) currentDelayGroupChildren.push(createWaitAction(delay))
-					delayGroups.push(wrapActionsInGroup(currentDelayGroupChildren))
+					if (delay > 0) currentDelayGroupChildren.push(createWaitAction(delay, ctx))
+					delayGroups.push(wrapActionsInGroup(currentDelayGroupChildren, ctx))
 				}
 
 				currentDelay = delay
 			}
 
-			currentDelayGroupChildren.push(convertModulePresetAction(action, ctx.connectionId, ctx.connectionUpgradeIndex))
+			currentDelayGroupChildren.push(convertModulePresetAction(action, ctx))
 		}
 
 		if (delayGroups.length > 1) {
@@ -66,10 +65,10 @@ export function convertActionsDelay(
 	}
 }
 
-function wrapActionsInGroup(actions: ActionEntityModel[]): ActionEntityModel {
+function wrapActionsInGroup(actions: ActionEntityModel[], ctx: PresetEntryConversionContext): ActionEntityModel {
 	return {
 		type: EntityModelType.Action,
-		id: nanoid(),
+		id: ctx.generateId(),
 		connectionId: 'internal',
 		definitionId: 'action_group',
 		options: {
@@ -99,7 +98,7 @@ export function convertPresetFeedbacksToEntities(
 			// overrides by ConvertLegacyStyleToElements
 			feedbacks.push({
 				type: EntityModelType.Feedback,
-				id: nanoid(),
+				id: ctx.generateId(),
 				connectionId: ctx.connectionId,
 				definitionId: feedback.feedbackId,
 				options: structuredClone(optionsObjectToExpressionOptions(feedback.options ?? {}, true)),

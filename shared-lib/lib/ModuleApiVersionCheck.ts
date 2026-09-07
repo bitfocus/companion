@@ -5,7 +5,7 @@ import { assertNever } from './Util.js'
 export const MODULE_BASE_VERSIONS = [
 	'1.14.0',
 	'2.1.0',
-	'2.2.0-nightly-main-20260812-184310-2c49abe', // DEV version
+	'2.2.0-nightly-main-20260902-210244-eaa0afd', // DEV version
 ]
 // typos:disable-line this is a git hash
 export const SURFACE_BASE_VERSION = '1.4.0'

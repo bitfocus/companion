@@ -14,11 +14,16 @@ import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import isEqual from 'fast-deep-equal'
 import type { EmulatorConfig, EmulatorImage, EmulatorLockedState } from '@companion-app/shared/Model/Common.js'
-import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import type {
+	CompanionSurfaceConfigField,
+	GridSize,
+	SurfaceSchemaLayoutDefinition,
+} from '@companion-app/shared/Model/Surfaces.js'
 import { PREVIEW_RENDER_SIZE, type ImageResult } from '../../Graphics/ImageResult.js'
 import LogController from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import { OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
+import { buildGridSurfaceLayout } from '../LayoutSummary.js'
 import type { DrawButtonItem, SurfacePanel, SurfacePanelEvents, SurfacePanelInfo } from '../Types.js'
 
 export function EmulatorRoom(id: string): string {
@@ -155,6 +160,11 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 			columns: this.#lastSentConfigJson?.emulator_columns || 8,
 			rows: this.#lastSentConfigJson?.emulator_rows || 4,
 		}
+	}
+
+	get surfaceLayout(): SurfaceSchemaLayoutDefinition {
+		// The emulator draws every button itself, at the same size the button preview images are rendered at
+		return buildGridSurfaceLayout(this.gridSize, { w: PREVIEW_RENDER_SIZE, h: PREVIEW_RENDER_SIZE })
 	}
 
 	latestConfig(): EmulatorConfig {

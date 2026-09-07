@@ -1,0 +1,298 @@
+import { formatLocation } from '@companion-app/shared/ControlId.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { GridButtonModifiers } from '../GridButtonPreview.js'
+import {
+	buildTransferPairs,
+	locationsInRectangle,
+	pendingChanges,
+	previewPlacements,
+	withoutEmptySources,
+} from '../GridGeometry.js'
+import { GridToolBase, type GridToolContext, type GridToolId, type GridTransferOperation } from './types.js'
+
+const VERBS: Record<GridTransferOperation, string> = {
+	copy: 'copy',
+	move: 'move',
+	swap: 'swap',
+}
+
+/**
+ * Copy, move and swap: pick what to act on, then pick where it goes.
+ *
+ * Activated with nothing selected - or with just the one button you happen to have been looking at -
+ * this is the long-standing two-tap flow, hint text and all: no modifiers, no drag precision, large
+ * targets, which is still the best way to do this on a touchscreen. Only a deliberate multiple
+ * selection skips the first step, so the same tool also serves "select a region, then place it".
+ *
+ * It stays active after each transfer rather than dropping back to select, so repeated
+ * source-then-destination work does not mean re-arming the tool every time.
+ */
+export class TransferTool extends GridToolBase {
+	readonly id: GridToolId
+
+	readonly #operation: GridTransferOperation
+
+	/** Revising what a transfer holds, not what is selected - the tool took those out of it */
+	override readonly pendingChangesJoin = 'held-buttons' as const
+
+	/**
+	 * What is being transferred, once chosen.
+	 *
+	 * Held here rather than read from the selection as we go, so that changing page mid-transfer
+	 * cannot lose it - that is what makes copying between pages work. While a tool holds buttons they
+	 * are not selected: one or the other owns them, never both.
+	 */
+	#sources: ControlLocation[] | null = null
+
+	/**
+	 * The cell a shift-click measures its rectangle from - wherever picking these buttons up started.
+	 * Kept alongside the sources rather than using the store's, which belongs to the selection the
+	 * tool has just taken these out of.
+	 */
+	#rangeAnchor: ControlLocation | null = null
+
+	constructor(operation: GridTransferOperation) {
+		super()
+		this.id = operation
+		this.#operation = operation
+	}
+
+	override hint(_ctx: GridToolContext): string {
+		if (!this.#sources) return `Press the button you want to ${VERBS[this.#operation]}`
+		return `Where do you want it?`
+	}
+
+	override getSourceLocations(): readonly ControlLocation[] {
+		return this.#sources ?? []
+	}
+
+	/**
+	 * A plain box while it is asking what to take. Once it is holding buttons only an additive one,
+	 * which adds to them - a stray drag then means nothing, rather than silently replacing the
+	 * selection that was built up to be placed.
+	 */
+	override allowsMarquee(additive: boolean): boolean {
+		return this.#sources === null || additive
+	}
+
+	override onMarquee(ctx: GridToolContext, from: ControlLocation, to: ControlLocation, additive: boolean): void {
+		const region = locationsInRectangle(from, to)
+
+		// The gaps in a region are part of its shape - they set where the buttons around them land, and
+		// place nothing of their own - but a box containing nothing at all is a stray drag, not a choice
+		if (!region.some((location) => ctx.actions.isOccupied(location))) return
+
+		if (additive && this.#sources) {
+			const held = new Set(this.#sources.map(formatLocation))
+			this.#sources = [...this.#sources, ...region.filter((location) => !held.has(formatLocation(location)))]
+			ctx.store.notifyToolChanged()
+		} else {
+			this.#pickUp(ctx, region)
+			this.#rangeAnchor = from
+		}
+
+		// Whatever was drawn for the old set is now wrong
+		ctx.store.setDragPreview(null)
+	}
+
+	override onEnter(ctx: GridToolContext, carriedOver: readonly ControlLocation[]): void {
+		// Already picked up, by whichever transfer tool was active a moment ago. Taken on as-is,
+		// however few, since choosing them was a deliberate act that the switch is not undoing.
+		if (carriedOver.length > 0) {
+			this.#pickUp(ctx, [...carriedOver])
+			return
+		}
+
+		// Only a deliberate multiple selection is taken as "these are what I want to move". A single
+		// selected button is just the one you last looked at - clicking a button to see it selects it -
+		// so treating that as the source would silently make your first tap the destination.
+		const selection = ctx.store.selectedLocations
+		if (selection.length > 1) this.#pickUp(ctx, [...selection])
+
+		// Either way nothing is left selected. A highlighted button the tool is not holding is the
+		// confusing half of two copies of the same state: it looks picked up and behaves as though it
+		// is not, so the next modifier-click appears to ignore it.
+		ctx.store.clearSelection()
+	}
+
+	/** Held by the tool, and so no longer selected - one or the other owns them, never both */
+	#pickUp(ctx: GridToolContext, locations: ControlLocation[]): void {
+		this.#sources = locations
+		this.#rangeAnchor = locations[0]
+		ctx.store.clearSelection()
+		ctx.store.notifyToolChanged()
+	}
+
+	override onTap(ctx: GridToolContext, location: ControlLocation, modifiers: GridButtonModifiers): void {
+		if (!this.#sources) {
+			// A modifier means "and this one too", so it has to have something to add to. Anything
+			// selected is what that is - a selection handed back by Escape, or one made while the tool
+			// was already armed - rather than being quietly dropped in favour of the cell just clicked.
+			const selection = ctx.store.selectedLocations
+			if ((modifiers.range || modifiers.toggle) && selection.length > 0) {
+				this.#pickUp(ctx, [...selection])
+				this.#reviseSources(ctx, selection, location, modifiers)
+				return
+			}
+
+			// Copying or moving an empty cell has nothing to carry, and would quietly wipe whatever it
+			// was dropped on. A swap is symmetric - trading with an empty cell is how you move a button
+			// into one - so it accepts either end.
+			if (this.#operation !== 'swap' && !ctx.actions.isOccupied(location)) return
+
+			this.#pickUp(ctx, [location])
+			return
+		}
+
+		// Getting the selection wrong should not mean starting the tool again. The same modifiers that
+		// built it still work on it, so a stray button can be dropped from what is in hand, or a
+		// forgotten row added, without putting anything down first.
+		if (modifiers.range || modifiers.toggle) {
+			this.#reviseSources(ctx, this.#sources, location, modifiers)
+			return
+		}
+
+		const pairs = this.#pairsFor(ctx, this.#sources, location)
+
+		// A region that would hang off the grid is refused outright rather than placing the part of it
+		// that happens to fit and losing the rest somewhere unreachable. The tool keeps hold of the
+		// buttons, so the only cost is another tap somewhere with more room - and with a pointer the
+		// ghost has already been showing this as refused.
+		if (!ctx.actions.fitsOnGrid(pairs.map((pair) => pair.toLocation))) return
+
+		// Only once it has actually happened. Overwriting asks first, and backing out of that question
+		// should leave the buttons still in hand rather than dropped somewhere unasked for.
+		//
+		// The selection is left to follow the buttons to their destination, which `transfer` handles
+		ctx.actions.transfer(this.#operation, pairs, () => {
+			// Ready for the next one
+			this.#sources = null
+			this.#rangeAnchor = null
+			ctx.store.setDragPreview(null)
+			ctx.store.setPendingChanges(null)
+			ctx.store.notifyToolChanged()
+		})
+	}
+
+	/**
+	 * What the held set would become if this cell were clicked with these modifiers.
+	 *
+	 * Shift extends from where the pick started, ctrl/cmd takes one button in or out. Worked out in
+	 * one place so that what is drawn under the cursor and what the click then does cannot disagree.
+	 */
+	#revisedSources(
+		held: readonly ControlLocation[],
+		location: ControlLocation,
+		modifiers: GridButtonModifiers
+	): ControlLocation[] {
+		if (modifiers.range && this.#rangeAnchor) return locationsInRectangle(this.#rangeAnchor, location)
+
+		const key = formatLocation(location)
+		return held.some((one) => formatLocation(one) === key)
+			? held.filter((one) => formatLocation(one) !== key)
+			: [...held, location]
+	}
+
+	#reviseSources(
+		ctx: GridToolContext,
+		held: readonly ControlLocation[],
+		location: ControlLocation,
+		modifiers: GridButtonModifiers
+	): void {
+		const revised = this.#revisedSources(held, location, modifiers)
+
+		// Emptied out entirely - back to asking what to take, rather than holding nothing and still
+		// claiming to be waiting for a destination
+		this.#sources = revised.length > 0 ? revised : null
+		if (!this.#sources) this.#rangeAnchor = null
+
+		// What was in hand has changed, so anything drawn for the old set is now wrong. Redrawn for the
+		// new one rather than just cleared: the pointer has not moved, and going blank until it does
+		// looks like the click failed - where "a second one would undo this" is the useful answer.
+		ctx.store.setDragPreview(null)
+		ctx.store.notifyToolChanged()
+		this.onHover(ctx, location, modifiers)
+	}
+
+	/**
+	 * Where each button would go, minus the gaps in the region.
+	 *
+	 * The gaps still decide where everything lands - they are part of the shape that was picked up -
+	 * but they have nothing of their own to place, so they are not shown as destinations and cannot
+	 * be counted as overwriting anything.
+	 */
+	#pairsFor(ctx: GridToolContext, held: readonly ControlLocation[], location: ControlLocation) {
+		return withoutEmptySources(
+			this.#operation,
+			// Centred, because the ghost draws the answer under the cursor as it moves - "put it here"
+			// needs no rule, where "its top-left corner goes here" does
+			buildTransferPairs([...held], location, 'center'),
+			ctx.actions.isOccupied
+		)
+	}
+
+	/**
+	 * Show where the region would land if it were placed here.
+	 *
+	 * Drawn rather than left to be worked out: which cell a region is anchored by is not something
+	 * anyone can guess from a box they dragged bottom-up. It also means the click that commits the
+	 * move is never the first sign of what it does.
+	 *
+	 * With a modifier held the next click revises what is in hand instead of placing it, so there is
+	 * no landing spot to show and drawing one would say the click does something it does not. The
+	 * revision is drawn instead - which cells would join what is held and which would leave it -
+	 * since a rectangle measured from an anchor you cannot see, or a ctrl-click that could mean
+	 * either, is exactly as much guesswork as the landing spot was.
+	 */
+	override onHover(ctx: GridToolContext, location: ControlLocation | null, modifiers: GridButtonModifiers): void {
+		if (!this.#sources) {
+			// Nothing left in hand, so anything a previous hover drew is stale. This runs when a revision
+			// empties the set (#reviseSources nulls #sources then re-hovers) - without clearing here the
+			// dashed outlines would stay, and every later move hits this same early return.
+			ctx.store.setPendingChanges(null)
+			ctx.store.setDragPreview(null)
+			return
+		}
+
+		if (location && (modifiers.range || modifiers.toggle)) {
+			ctx.store.setDragPreview(null)
+			ctx.store.setPendingChanges(
+				pendingChanges(this.#sources, this.#revisedSources(this.#sources, location, modifiers))
+			)
+			return
+		}
+		ctx.store.setPendingChanges(null)
+
+		if (!location) {
+			ctx.store.setDragPreview(null)
+			return
+		}
+
+		const pairs = this.#pairsFor(ctx, this.#sources, location)
+		ctx.store.setDragPreview({
+			placements: previewPlacements(this.#operation, pairs),
+			valid: ctx.actions.fitsOnGrid(pairs.map((pair) => pair.toLocation)),
+		})
+	}
+
+	override onExit(ctx: GridToolContext): void {
+		this.#sources = null
+		this.#rangeAnchor = null
+		ctx.store.setDragPreview(null)
+		ctx.store.setPendingChanges(null)
+	}
+
+	override onBack(ctx: GridToolContext): boolean {
+		if (!this.#sources) return false
+
+		// Put them back where they came from rather than dropping them entirely. Backing out of a
+		// misclicked tool should not cost you the selection you built up to use it.
+		const released = this.#sources
+		this.#sources = null
+		this.#rangeAnchor = null
+		ctx.store.setDragPreview(null)
+		ctx.store.setPendingChanges(null)
+		ctx.store.setSelection(released)
+		return true
+	}
+}

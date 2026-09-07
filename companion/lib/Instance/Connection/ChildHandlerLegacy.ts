@@ -1,7 +1,6 @@
 import type express from 'express'
 import semver from 'semver'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
-import { ButtonDecorationRenderer } from '@companion-app/shared/Graphics/ButtonDecorationRenderer.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
@@ -85,10 +84,9 @@ import {
 	type EntityManagerAdapter,
 	type EntityManagerFeedbackEntity,
 } from './EntityManager.js'
+import { getFeedbackImageSizeForControl } from './FeedbackImageSize.js'
 import { ConvertPresetDefinitions } from './PresetsLegacy.js'
 import { VariableValueBatcher } from './VariableValueBatcher.js'
-
-const moduleFeedbackSize = { width: 72, height: 72 - ButtonDecorationRenderer.DEFAULT_HEIGHT } // Backwards compatibility for modules that expect feedback size
 
 export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, ConnectionChildHandlerApi {
 	logger: Logger
@@ -327,7 +325,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					upgradeIndex: entityModel.upgradeIndex ?? null,
 					disabled: !!entityModel.disabled,
 
-					image: control.supportsLayeredStyle ? moduleFeedbackSize : undefined,
+					image: getFeedbackImageSizeForControl(control),
 				}
 			}
 		}
@@ -440,7 +438,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 					isInverted: typeof feedback.isInverted?.value === 'boolean' ? feedback.isInverted.value : false, // This is fine, there should be no expressions here
 
-					image: control?.supportsLayeredStyle ? moduleFeedbackSize : undefined,
+					image: getFeedbackImageSizeForControl(control),
 
 					upgradeIndex: feedback.upgradeIndex ?? null,
 					disabled: !!feedback.disabled,
@@ -502,7 +500,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 								isInverted: !!entity.isInverted?.value, // This is fine, there should be no expressions here
 
-								image: control?.supportsLayeredStyle ? moduleFeedbackSize : undefined,
+								image: getFeedbackImageSizeForControl(control),
 
 								upgradeIndex: null,
 								disabled: !!entity.disabled,
@@ -1172,7 +1170,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 					feedbackId: value.entity.definitionId,
 					options: value.parsedOptions as OptionsObject,
 
-					image: control?.supportsLayeredStyle ? moduleFeedbackSize : undefined,
+					image: getFeedbackImageSizeForControl(control),
 
 					isInverted: typeof value.entity.isInverted?.value === 'boolean' ? value.entity.isInverted.value : false, // This is fine, there should be no expressions here
 

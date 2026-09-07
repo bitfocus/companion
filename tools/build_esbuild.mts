@@ -4,6 +4,7 @@ import { sentryEsbuildPlugin } from '@sentry/esbuild-plugin'
 import type { BuildOptions } from 'esbuild'
 import * as esbuild from 'esbuild'
 import { companionEsbuildBaseOptions, companionThreadEntryPoints } from './companion-esbuild.mts'
+import { bundleInputsFromMetafile, recordBundleInputs } from './licenses/inputs.mts'
 
 const devMode = process.env.ESBUILD_IN_DEV_MODE === '1'
 console.log(`Running esbuild in ${devMode ? 'development' : 'production'} mode.`)
@@ -18,6 +19,18 @@ const sharedOptions: BuildOptions = {
 	...companionEsbuildBaseOptions({ packaged: true, minify: !devMode }),
 	absWorkingDir: companionDir,
 	outdir: distPath,
+	// Needed by the license inventory, which has to know which dependencies ended up in the shipped bundles
+	metafile: true,
+}
+
+/**
+ * esbuild only reports what a build pulled in once it has run, so each build records its own inputs for
+ * tools/build_licenses.mts to assemble at the end of the distribution build.
+ */
+async function buildAndRecord(name: string, options: BuildOptions): Promise<void> {
+	const result = await esbuild.build(options)
+	if (!result.metafile) throw new Error(`esbuild produced no metafile for ${name}`)
+	await recordBundleInputs(name, bundleInputsFromMetafile(result.metafile, options.absWorkingDir ?? process.cwd()))
 }
 
 const threadEntryPointsFor = (target: 'node22' | 'node26') =>
@@ -42,7 +55,7 @@ const sentryPlugins: BuildOptions['plugins'] = sentryAuthToken
 	: []
 
 // Node.js 26: main application and internal worker threads
-await esbuild.build({
+await buildAndRecord('companion-node26', {
 	...sharedOptions,
 	plugins: sentryPlugins,
 	target: 'node26',
@@ -53,7 +66,7 @@ await esbuild.build({
 // This is a linux-only headless tool, so only bundle it for linux builds
 const targetBuildPlatform = process.env.COMPANION_BUILD_PLATFORM
 if (!targetBuildPlatform || targetBuildPlatform === 'linux') {
-	await esbuild.build({
+	await buildAndRecord('config-tool', {
 		...sharedOptions,
 		plugins: [],
 		absWorkingDir: configToolDir,
@@ -63,7 +76,7 @@ if (!targetBuildPlatform || targetBuildPlatform === 'linux') {
 }
 
 // Node.js 22: module host threads (must match user-module targets)
-await esbuild.build({
+await buildAndRecord('companion-node22', {
 	...sharedOptions,
 	plugins: sentryPlugins,
 	target: 'node22',

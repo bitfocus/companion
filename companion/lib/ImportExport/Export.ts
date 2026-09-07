@@ -115,7 +115,7 @@ export class ExportController {
 				includeSecrets: false,
 			})
 
-			const triggerName = control.options.name.toLowerCase().replace(/\W/, '')
+			const triggerName = control.options.name.toLowerCase().replace(/\W/g, '')
 			const filename = this.#generateFilename(
 				String(req.query.filename as any),
 				`trigger_${triggerName}`,

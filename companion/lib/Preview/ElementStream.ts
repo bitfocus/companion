@@ -289,23 +289,18 @@ export class PreviewElementStream {
 
 			// Convert the single element to its draw representation
 			// We wrap it in an array since ConvertSomeButtonGraphicsElementForDrawing expects an array
-			const {
-				elements,
-				usedVariables,
-				usedCompositeElements: connectionCompositeElements,
-				referencedLocations,
-				clockSensitive,
-			} = await ConvertSomeButtonGraphicsElementForDrawing(
-				this.#instanceDefinitions,
-				parser,
-				this.#graphicsController.renderPixelBuffers.bind(this.#graphicsController),
-				[elementDefToProcess],
-				feedbackOverrides,
-				false, // onlyEnabled
-				null,
-				currentLocationStr,
-				(location) => this.#graphicsController.getCachedRender(location) ?? null
-			)
+			const { elements, variables, compositeElements, referencedLocations, clockSensitive } =
+				await ConvertSomeButtonGraphicsElementForDrawing(
+					this.#instanceDefinitions,
+					parser,
+					this.#graphicsController.renderPixelBuffers.bind(this.#graphicsController),
+					[elementDefToProcess],
+					feedbackOverrides,
+					false, // onlyEnabled
+					null,
+					currentLocationStr,
+					(location) => this.#graphicsController.getCachedRender(location) ?? null
+				)
 
 			if (elements.length === 0) {
 				throw new Error(
@@ -313,11 +308,13 @@ export class PreviewElementStream {
 				)
 			}
 
+			// This path passes cache:null + onlyEnabled:false, so every element is drawn and the hidden sets
+			// are always empty; only the drawn half is meaningful here.
 			return {
 				element: elements[0],
-				referencedVariableIds: usedVariables,
-				referencedCompositeElements: connectionCompositeElements,
-				referencedLocations,
+				referencedVariableIds: variables.drawn,
+				referencedCompositeElements: compositeElements.drawn,
+				referencedLocations: referencedLocations.drawn,
 				clockSensitive,
 			}
 		} catch (error) {

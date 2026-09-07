@@ -97,6 +97,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		this.#pageStore = pageStore
 
 		setImmediate(() => {
+			// Emit the old xkeys variables, so that they don't 'crash' expressions which reference them and expect numbers.
 			this.emit('setVariables', {
 				't-bar': 0,
 				jog: 0,
@@ -229,7 +230,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 						name: `surface_${surfaceId}_location`,
 					},
 					{
-						description: `Surface page: ${surfaceGroup.displayName}`,
+						description: `Surface page: ${surface.displayName}`,
 						name: `surface_${surfaceId}_page`,
 					}
 				)
@@ -687,7 +688,7 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 	#changeSurfacePage(
 		surfaceId: string,
 		toPage: string | 'back' | 'forward' | '+1' | '-1',
-		defer = !(surfaceId in ['back', 'forward'])
+		defer = toPage !== 'back' && toPage !== 'forward'
 	): void {
 		const groupId = this.#surfaceController.getGroupIdFromDeviceId(surfaceId)
 		if (!groupId) return

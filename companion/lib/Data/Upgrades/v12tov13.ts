@@ -15,6 +15,7 @@ import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigMode
 import type { Complete } from '@companion-module/base'
 import type { Logger } from '../../Log/Controller.js'
 import { ConvertLegacyStyleToElements } from '../../Resources/ConvertLegacyStyleToElements.js'
+import { randomIdGenerator } from '../../Resources/IdGenerator.js'
 import type { DataStoreBase } from '../StoreBase.js'
 
 interface NormalButtonModel {
@@ -58,7 +59,14 @@ function convertDatabaseToV13(db: DataStoreBase<any>, _logger: Logger): void {
 }
 
 function convertControlToLayered(control: NormalButtonModel, defaultNoTopBar: boolean): LayeredButtonModel {
-	const parsed = ConvertLegacyStyleToElements(control.style, control.feedbacks, null, null, defaultNoTopBar)
+	const parsed = ConvertLegacyStyleToElements(
+		control.style,
+		control.feedbacks,
+		null,
+		null,
+		randomIdGenerator,
+		defaultNoTopBar
+	)
 	return {
 		type: 'button-layered',
 		options: {

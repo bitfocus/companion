@@ -1,4 +1,10 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import type {
+	SurfaceSchemaBitmapConfig,
+	SurfaceSchemaControlDefinition,
+	SurfaceSchemaControlStylePreset,
+	SurfaceSchemaLayoutDefinition,
+} from '@companion-surface/base'
 import type { CollectionBase } from './Collections.js'
 import type { DropdownChoice } from './Common.js'
 import type {
@@ -11,6 +17,18 @@ import type {
 	CompanionInputFieldTextInputExtended,
 } from './Options.js'
 
+/**
+ * The surface layout schema is owned by the surface api package, which both the plugin and satellite surfaces
+ * describe their layouts with. Re-exported here so that consumers of the models below get the same types from
+ * the same place, rather than a second description of the same thing.
+ */
+export type {
+	SurfaceSchemaBitmapConfig,
+	SurfaceSchemaControlDefinition,
+	SurfaceSchemaControlStylePreset,
+	SurfaceSchemaLayoutDefinition,
+}
+
 export type GridSize = { columns: number; rows: number }
 export type SurfaceRotation = 'surface90' | 'surface-90' | 'surface180' | 'surface0' | 0 | -90 | 90 | 180
 
@@ -21,6 +39,38 @@ export interface RowsAndColumns {
 
 export interface SurfaceFirmwareUpdateInfo {
 	updaterDownloadUrl: string
+}
+
+/**
+ * Pixel dimensions of the bitmap a surface control is drawn at, without the pixel format which is only of
+ * interest to whatever is doing the drawing.
+ */
+export type SurfaceLayoutBitmapSize = Pick<SurfaceSchemaBitmapConfig, 'w' | 'h'>
+
+/**
+ * The full layout manifest of a surface, as pushed to the client.
+ */
+export interface ClientSurfaceLayoutItem {
+	id: string
+	/** The model name of the surface, matching `ClientSurfaceItem.type` */
+	type: string
+	displayName: string
+	isConnected: boolean
+	layout: SurfaceSchemaLayoutDefinition
+}
+
+/**
+ * The button sizes of a surface, as pushed to the client. A summary of `ClientSurfaceLayoutItem` for consumers
+ * which only care about how large the buttons are, and shouldn't have to receive every control to find out.
+ */
+export interface ClientSurfaceButtonSizesItem {
+	id: string
+	/** The model name of the surface, matching `ClientSurfaceItem.type` */
+	type: string
+	displayName: string
+	isConnected: boolean
+	/** The distinct sizes this surface's controls are drawn at */
+	bitmapSizes: SurfaceLayoutBitmapSize[]
 }
 
 export interface ClientSurfaceItem {
@@ -81,6 +131,7 @@ export interface SurfaceConfig {
 	type: string | undefined
 	integrationType: string | undefined
 	gridSize: GridSize | undefined
+	layout: SurfaceSchemaLayoutDefinition | undefined
 }
 
 export interface SurfaceGroupConfig {

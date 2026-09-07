@@ -87,10 +87,7 @@
 					"items": { "$ref": "#/$defs/DropdownChoice" },
 					"description": "List of selectable choices."
 				},
-				"default": {
-					"description": "Default selected choice id.",
-					"anyOf": [{ "type": "string" }, { "type": "number" }]
-				},
+				"default": { "description": "Default selected choice id.", "type": ["string", "number"] },
 				"allowCustom": {
 					"description": "Whether the user can type a custom value not in the choices list.",
 					"type": "boolean"
@@ -102,10 +99,7 @@
 		"DropdownChoice": {
 			"type": "object",
 			"properties": {
-				"id": {
-					"anyOf": [{ "type": "string" }, { "type": "number" }],
-					"description": "The value stored when this choice is selected."
-				},
+				"id": { "description": "The value stored when this choice is selected.", "type": ["string", "number"] },
 				"label": { "type": "string", "description": "Human-readable label for the choice." }
 			},
 			"required": ["id", "label"],

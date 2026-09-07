@@ -13,6 +13,8 @@
 import { createHash } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
+import type express from 'express'
+import isEqual from 'fast-deep-equal'
 import jsonPatch from 'fast-json-patch'
 import HID from 'node-hid'
 import pDebounce from 'p-debounce'
@@ -24,7 +26,9 @@ import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 import type {
 	ClientDevicesListItem,
+	ClientSurfaceButtonSizesItem,
 	ClientSurfaceItem,
+	ClientSurfaceLayoutItem,
 	OutboundSurfaceInfo,
 	SurfaceConfig,
 	SurfaceGroupConfig,
@@ -45,17 +49,20 @@ import {
 	type SurfaceOpener,
 } from '../Instance/Surface/DiscoveredSurfaceRegistry.js'
 import type { CheckDeviceInfo } from '../Instance/Surface/IpcTypes.js'
-import LogController from '../Log/Controller.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { createOrSanitizeSurfaceHandlerConfig, PanelDefaults } from './Config.js'
 import { SurfaceGroup, validateGroupConfigValue } from './Group.js'
-import { getSurfaceName, SurfaceHandler } from './Handler.js'
+import { SurfaceHandler } from './Handler.js'
 import { EmulatorRoom, SurfaceIPElgatoEmulator } from './IP/ElgatoEmulator.js'
 import { SurfaceIPSatellite, type SatelliteDeviceInfo } from './IP/Satellite.js'
+import { surfaceButtonSizesFromLayouts, surfaceLayoutsFromConfigs, type SurfaceLayoutSource } from './LayoutSummary.js'
 import { SurfaceOutboundController } from './Outbound.js'
 import type { SurfacePluginPanel } from './PluginPanel.js'
 import { stripReferenceSurfaceId } from './ReferenceSurfaceId.js'
+import { createSurfacesRestApiRouter } from './SurfacesRestApi.js'
 import type { SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
+import { getSurfaceName } from './Util.js'
 
 /**
  * Interface for a handler that can process HID device scans.
@@ -103,6 +110,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * The last sent json object
 	 */
 	#lastSentJson: Record<string, ClientDevicesListItem> = {}
+	/** Only maintained while something is subscribed to the matching update event */
+	#lastSentLayoutsJson: Record<string, ClientSurfaceLayoutItem> | null = null
+	#lastSentButtonSizesJson: Record<string, ClientSurfaceButtonSizesItem> | null = null
 
 	/**
 	 * All the opened and active surfaces
@@ -414,6 +424,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		return handler
 	}
 
+	createRestApiRouter(logger: Logger): express.Router {
+		return createSurfacesRestApiRouter(logger, this, this.#handlerDependencies.pageStore)
+	}
+
 	createTrpcRouter() {
 		const self = this
 		const selfEvents = this as EventEmitter<SurfaceControllerEvents>
@@ -428,6 +442,32 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 				for await (const [info] of changes) {
 					yield info
+				}
+			}),
+
+			watchSurfaceLayouts: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#updateEvents, 'surfaceLayouts', signal)
+
+				// Seed the cache, so that the first change is compared against what was sent here
+				const initial = self.getSurfaceLayouts()
+				self.#lastSentLayoutsJson = initial
+				yield initial
+
+				for await (const [layouts] of changes) {
+					yield layouts
+				}
+			}),
+
+			watchSurfaceButtonSizes: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#updateEvents, 'surfaceButtonSizes', signal)
+
+				// Seed the cache, so that the first change is compared against what was sent here
+				const initial = self.getSurfaceButtonSizes()
+				self.#lastSentButtonSizesJson = initial
+				yield initial
+
+				for await (const [sizes] of changes) {
+					yield sizes
 				}
 			}),
 
@@ -490,7 +530,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 			rescanUsb: publicProcedure.mutation(async () => {
 				try {
-					return this.triggerRefreshDevices()
+					return await this.triggerRefreshDevices()
 				} catch (e) {
 					return stringifyError(e, true)
 				}
@@ -1029,7 +1069,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 				size: config.gridSize || null,
 				rotation: config?.config?.rotation,
-				brightness: config?.config?.brightness,
+				brightness: config?.config?.brightness ?? null,
 				offset: { columns: config?.config?.xOffset ?? 0, rows: config?.config?.yOffset ?? 0 },
 			}
 
@@ -1132,6 +1172,44 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		return result
 	}
 
+	/**
+	 * Gather every surface which has a known layout, connected or not. Connected surfaces use the config held
+	 * by their handler, the rest fall back to what was persisted the last time they were connected.
+	 */
+	#collectLayoutSources(): SurfaceLayoutSource[] {
+		const sources: SurfaceLayoutSource[] = []
+		const connectedIds = new Set<string>()
+
+		for (const [surfaceId, handler] of this.#surfaceHandlers) {
+			if (!handler) continue
+
+			connectedIds.add(surfaceId)
+			sources.push({ surfaceId, config: handler.getFullConfig(), isConnected: true })
+		}
+
+		for (const [surfaceId, config] of Object.entries(this.#dbTableSurfaces.all())) {
+			if (connectedIds.has(surfaceId)) continue
+
+			sources.push({ surfaceId, config, isConnected: false })
+		}
+
+		return sources
+	}
+
+	/**
+	 * The full layout manifest of every surface with a known layout
+	 */
+	getSurfaceLayouts(): Record<string, ClientSurfaceLayoutItem> {
+		return surfaceLayoutsFromConfigs(this.#collectLayoutSources())
+	}
+
+	/**
+	 * The distinct button sizes of every surface with a known layout
+	 */
+	getSurfaceButtonSizes(): Record<string, ClientSurfaceButtonSizesItem> {
+		return surfaceButtonSizesFromLayouts(this.getSurfaceLayouts())
+	}
+
 	async reset(): Promise<void> {
 		// Each active handler will re-add itself when doing the save as part of its own reset
 		this.#dbTableGroups.clear()
@@ -1158,6 +1236,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		if (this.#updateEvents.listenerCount('emulatorList') > 0) {
 			this.#updateEvents.emit('emulatorList', this.#compileEmulatorList())
 		}
+
+		this.#updateSurfaceLayouts()
 
 		const hasSubscribers = this.#updateEvents.listenerCount('surfaces') > 0
 
@@ -1209,6 +1289,40 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			}
 		}
 		this.#lastSentJson = newJson
+	}
+
+	/**
+	 * Push out the surface layouts and the button sizes derived from them, if anything is listening.
+	 * These are only rebuilt when subscribed to, as they are much larger than they are volatile.
+	 */
+	#updateSurfaceLayouts(): void {
+		const hasLayoutSubscribers = this.#updateEvents.listenerCount('surfaceLayouts') > 0
+		const hasButtonSizeSubscribers = this.#updateEvents.listenerCount('surfaceButtonSizes') > 0
+		if (!hasLayoutSubscribers && !hasButtonSizeSubscribers) {
+			// Drop the caches, so that the next subscriber gets a fresh comparison
+			this.#lastSentLayoutsJson = null
+			this.#lastSentButtonSizesJson = null
+			return
+		}
+
+		const newLayouts = this.getSurfaceLayouts()
+
+		if (hasLayoutSubscribers) {
+			if (!this.#lastSentLayoutsJson || !isEqual(this.#lastSentLayoutsJson, newLayouts)) {
+				this.#updateEvents.emit('surfaceLayouts', newLayouts)
+			}
+		}
+		this.#lastSentLayoutsJson = newLayouts
+
+		if (hasButtonSizeSubscribers) {
+			const newButtonSizes = surfaceButtonSizesFromLayouts(newLayouts)
+			if (!this.#lastSentButtonSizesJson || !isEqual(this.#lastSentButtonSizesJson, newButtonSizes)) {
+				this.#updateEvents.emit('surfaceButtonSizes', newButtonSizes)
+			}
+			this.#lastSentButtonSizesJson = newButtonSizes
+		} else {
+			this.#lastSentButtonSizesJson = null
+		}
 	}
 
 	/**
@@ -1653,6 +1767,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			type: description || 'Unknown',
 			integrationType: undefined,
 			gridSize: undefined,
+			layout: undefined,
 		}
 
 		this.setDeviceConfig(surfaceId, minimalConfig)

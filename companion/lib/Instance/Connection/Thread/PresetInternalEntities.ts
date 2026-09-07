@@ -1,4 +1,3 @@
-import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
 import { ControlLocationOption } from '@companion-app/shared/ControlLocation.js'
 import {
@@ -28,6 +27,7 @@ import type {
 	SomePresetLayeredFeedbackEntry,
 	SomePresetSimpleFeedbackEntry,
 } from '@companion-module/host'
+import type { IdGenerator } from '../../../Resources/IdGenerator.js'
 
 /**
  * Translation of the reserved `internal:*` preset action/feedback ids (defined by `@companion-module/base`)
@@ -55,6 +55,7 @@ export interface PresetEntryConversionContext {
 	 * false: their entries are converted as plain module entities, as they were before this existed.
 	 */
 	allowInternalEntities: boolean
+	generateId: IdGenerator
 }
 
 /** Matches MAX_PRESET_NESTING_DEPTH enforced by @companion-module/host (not exported there) */
@@ -285,7 +286,7 @@ function tryConvertInternalActionEntry(
 
 	const entity: ActionEntityModel = {
 		type: EntityModelType.Action,
-		id: nanoid(),
+		id: ctx.generateId(),
 		connectionId: 'internal',
 		definitionId: translation.definitionId,
 		options: buildInternalEntityOptions(translation, entry.options, entryDescription, ctx),
@@ -323,7 +324,7 @@ function tryConvertInternalFeedbackEntry(
 
 	const entity: FeedbackEntityModel = {
 		type: EntityModelType.Feedback,
-		id: nanoid(),
+		id: ctx.generateId(),
 		connectionId: 'internal',
 		definitionId: translation.definitionId,
 		options: buildInternalEntityOptions(translation, entry.options, entryDescription, ctx),
@@ -344,24 +345,23 @@ function tryConvertInternalFeedbackEntry(
 /** Moved from PresetUtils (was toActionInstance): convert a module-defined preset action to an entity */
 export function convertModulePresetAction(
 	action: CompanionPresetAction,
-	connectionId: string,
-	connectionUpgradeIndex: number | undefined
+	ctx: PresetEntryConversionContext
 ): ActionEntityModel {
 	return {
 		type: EntityModelType.Action,
-		id: nanoid(),
-		connectionId: connectionId,
+		id: ctx.generateId(),
+		connectionId: ctx.connectionId,
 		definitionId: action.actionId,
 		options: structuredClone(optionsObjectToExpressionOptions(action.options ?? {}, true)),
 		headline: action.headline,
-		upgradeIndex: connectionUpgradeIndex,
+		upgradeIndex: ctx.connectionUpgradeIndex,
 	}
 }
 
-export function createWaitAction(delay: number): ActionEntityModel {
+export function createWaitAction(delay: number, ctx: PresetEntryConversionContext): ActionEntityModel {
 	return {
 		type: EntityModelType.Action,
-		id: nanoid(),
+		id: ctx.generateId(),
 		connectionId: 'internal',
 		definitionId: 'wait',
 		options: {
@@ -388,14 +388,14 @@ export function convertPresetActionEntries(
 
 		const delay = Number(entry.delay)
 		if (!isNaN(delay) && delay > 0) {
-			newActions.push(createWaitAction(delay))
+			newActions.push(createWaitAction(delay, ctx))
 		}
 
 		if (ctx.allowInternalEntities && isInternalPresetEntryId(entry.actionId)) {
 			const entity = tryConvertInternalActionEntry(entry.actionId, entry, ctx, depth)
 			if (entity) newActions.push(entity)
 		} else {
-			newActions.push(convertModulePresetAction(entry, ctx.connectionId, ctx.connectionUpgradeIndex))
+			newActions.push(convertModulePresetAction(entry, ctx))
 		}
 	}
 
@@ -422,7 +422,7 @@ export function convertPresetConditionEntries(
 		} else {
 			feedbacks.push({
 				type: EntityModelType.Feedback,
-				id: nanoid(),
+				id: ctx.generateId(),
 				connectionId: ctx.connectionId,
 				definitionId: entry.feedbackId,
 				options: structuredClone(optionsObjectToExpressionOptions(entry.options ?? {}, true)),

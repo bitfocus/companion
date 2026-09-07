@@ -15,6 +15,7 @@ import {
 	collectionResponse,
 	createCollectionSchema,
 	createSuccessSchema,
+	errorResponses,
 	ErrorResponseSchema,
 	successResponse,
 } from '../../Service/RestApi/schemas/common.js'
@@ -370,13 +371,6 @@ const connectionIdParam = z.object({
 		.describe('Connection instance id, as returned by the list or create connection endpoints.')
 		.meta({ example: 'KJA1isEECHRDBTFjx-7tf' }),
 })
-
-const errorResponses = {
-	400: { description: 'Bad request', content: { 'application/json': { schema: ErrorResponseSchema } } },
-	401: { description: 'Unauthorized', content: { 'application/json': { schema: ErrorResponseSchema } } },
-	403: { description: 'Forbidden', content: { 'application/json': { schema: ErrorResponseSchema } } },
-	404: { description: 'Not found', content: { 'application/json': { schema: ErrorResponseSchema } } },
-}
 
 const connectionListQuery = z.object({
 	include_config: z.enum(['true', 'false']).optional().describe('Include connection config in response').meta({

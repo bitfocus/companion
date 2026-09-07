@@ -1,4 +1,3 @@
-import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
 import { FONTSIZE_SHRINK_DEFAULT } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
@@ -25,6 +24,7 @@ import {
 	type HorizontalAlignment,
 	type VerticalAlignment,
 } from '@companion-app/shared/Model/StyleModel.js'
+import type { IdGenerator } from './IdGenerator.js'
 
 interface ParsedLegacyStyle {
 	text: {
@@ -217,6 +217,7 @@ export function ConvertLegacyStyleToElements(
 	 * for every property, preserving the previous behaviour.
 	 */
 	feedbackAffectedProperties: ReadonlyMap<string, string[] | undefined> | null,
+	generateId: IdGenerator,
 	defaultNoTopBar = false
 ): {
 	layers: SomeButtonGraphicsElement[]
@@ -348,11 +349,11 @@ export function ConvertLegacyStyleToElements(
 
 			const parsedStyle = ParseLegacyStyle(fb.style, defaultNoTopBar)
 
-			overrides = ConvertBooleanFeedbackStyleToOverrides(parsedStyle, selectedElementIds)
+			overrides = ConvertBooleanFeedbackStyleToOverrides(parsedStyle, selectedElementIds, generateId)
 
 			if (parsedStyle.canvas.decoration !== undefined) {
 				overrides.push({
-					overrideId: nanoid(),
+					overrideId: generateId(),
 					elementId: canvasElement.id,
 					elementProperty: 'decoration',
 					override: { isExpression: false, value: parsedStyle.canvas.decoration },
@@ -366,7 +367,8 @@ export function ConvertLegacyStyleToElements(
 			overrides = CreateAdvancedFeedbackStyleOverrides(
 				selectedElementIds,
 				bufferElement.id,
-				feedbackAffectedProperties?.get(fb.definitionId)
+				feedbackAffectedProperties?.get(fb.definitionId),
+				generateId
 			)
 		}
 
@@ -393,12 +395,12 @@ export function ConvertLegacyStyleToElements(
 	const previewStyleFeedbacks: SomeEntityModel[] = []
 	if (previewStyle) {
 		const parsedStyle = ParseLegacyStyle(previewStyle, defaultNoTopBar)
-		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsedStyle, selectedElementIds)
+		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsedStyle, selectedElementIds, generateId)
 
 		if (overrides.length > 0) {
 			previewStyleFeedbacks.push({
 				type: EntityModelType.Feedback,
-				id: nanoid(),
+				id: generateId(),
 				definitionId: 'check_expression',
 				connectionId: 'internal',
 				options: {
@@ -419,7 +421,8 @@ export function ConvertLegacyStyleToElements(
 
 export function ConvertBooleanFeedbackStyleToOverrides(
 	parsedStyle: ParsedLegacyStyle,
-	selectedElementIds: { [usage in ButtonGraphicsElementUsage]: string | undefined }
+	selectedElementIds: { [usage in ButtonGraphicsElementUsage]: string | undefined },
+	generateId: IdGenerator
 ): FeedbackEntityStyleOverride[] {
 	const overrides: FeedbackEntityStyleOverride[] = []
 
@@ -430,7 +433,7 @@ export function ConvertBooleanFeedbackStyleToOverrides(
 	if (textElementId) {
 		if (parsedStyle.text.text !== undefined) {
 			overrides.push({
-				overrideId: nanoid(),
+				overrideId: generateId(),
 				elementId: textElementId,
 				elementProperty: 'text',
 				override: parsedStyle.text.text,
@@ -439,13 +442,13 @@ export function ConvertBooleanFeedbackStyleToOverrides(
 		if (parsedStyle.text.size !== undefined) {
 			overrides.push(
 				{
-					overrideId: nanoid(),
+					overrideId: generateId(),
 					elementId: textElementId,
 					elementProperty: 'fontsize',
 					override: { isExpression: false, value: parsedStyle.text.size },
 				},
 				{
-					overrideId: nanoid(),
+					overrideId: generateId(),
 					elementId: textElementId,
 					elementProperty: 'fontsizeAllowShrink',
 					override: { isExpression: false, value: parsedStyle.text.sizeAllowShrink ?? false },
@@ -455,7 +458,7 @@ export function ConvertBooleanFeedbackStyleToOverrides(
 
 		if (parsedStyle.text.halign !== undefined) {
 			overrides.push({
-				overrideId: nanoid(),
+				overrideId: generateId(),
 				elementId: textElementId,
 				elementProperty: 'halign',
 				override: { isExpression: false, value: parsedStyle.text.halign },
@@ -463,7 +466,7 @@ export function ConvertBooleanFeedbackStyleToOverrides(
 		}
 		if (parsedStyle.text.valign !== undefined) {
 			overrides.push({
-				overrideId: nanoid(),
+				overrideId: generateId(),
 				elementId: textElementId,
 				elementProperty: 'valign',
 				override: { isExpression: false, value: parsedStyle.text.valign },
@@ -472,7 +475,7 @@ export function ConvertBooleanFeedbackStyleToOverrides(
 
 		if (parsedStyle.text.color !== undefined) {
 			overrides.push({
-				overrideId: nanoid(),
+				overrideId: generateId(),
 				elementId: textElementId,
 				elementProperty: 'color',
 				override: { isExpression: false, value: parsedStyle.text.color },
@@ -483,7 +486,7 @@ export function ConvertBooleanFeedbackStyleToOverrides(
 	if (imageElementId) {
 		if (parsedStyle.image.halign !== undefined) {
 			overrides.push({
-				overrideId: nanoid(),
+				overrideId: generateId(),
 				elementId: imageElementId,
 				elementProperty: 'halign',
 				override: { isExpression: false, value: parsedStyle.image.halign },
@@ -491,7 +494,7 @@ export function ConvertBooleanFeedbackStyleToOverrides(
 		}
 		if (parsedStyle.image.valign !== undefined) {
 			overrides.push({
-				overrideId: nanoid(),
+				overrideId: generateId(),
 				elementId: imageElementId,
 				elementProperty: 'valign',
 				override: { isExpression: false, value: parsedStyle.image.valign },
@@ -500,7 +503,7 @@ export function ConvertBooleanFeedbackStyleToOverrides(
 
 		if (parsedStyle.image.image !== undefined) {
 			overrides.push({
-				overrideId: nanoid(),
+				overrideId: generateId(),
 				elementId: imageElementId,
 				elementProperty: 'base64Image',
 				override: {
@@ -514,7 +517,7 @@ export function ConvertBooleanFeedbackStyleToOverrides(
 	if (backgroundElementId) {
 		if (parsedStyle.background.color !== undefined) {
 			overrides.push({
-				overrideId: nanoid(),
+				overrideId: generateId(),
 				elementId: backgroundElementId,
 				elementProperty: 'color',
 				override: { isExpression: false, value: parsedStyle.background.color },
@@ -530,7 +533,8 @@ export function CreateAdvancedFeedbackStyleOverrides(
 		[usage in ButtonGraphicsElementUsage]: string | undefined
 	},
 	bufferElementId: string | undefined,
-	affectedProperties: string[] | undefined
+	affectedProperties: string[] | undefined,
+	generateId: IdGenerator
 ): FeedbackEntityStyleOverride[] {
 	const overrides: FeedbackEntityStyleOverride[] = []
 
@@ -541,7 +545,7 @@ export function CreateAdvancedFeedbackStyleOverrides(
 	if (textElementId) {
 		if (!affectedProperties || affectedProperties.includes('text')) {
 			overrides.push({
-				overrideId: nanoid(),
+				overrideId: generateId(),
 				elementId: textElementId,
 				elementProperty: 'text',
 				override: { isExpression: false, value: 'text' },
@@ -550,13 +554,13 @@ export function CreateAdvancedFeedbackStyleOverrides(
 		if (!affectedProperties || affectedProperties.includes('size')) {
 			overrides.push(
 				{
-					overrideId: nanoid(),
+					overrideId: generateId(),
 					elementId: textElementId,
 					elementProperty: 'fontsize',
 					override: { isExpression: false, value: 'size' },
 				},
 				{
-					overrideId: nanoid(),
+					overrideId: generateId(),
 					elementId: textElementId,
 					elementProperty: 'fontsizeAllowShrink',
 					override: { isExpression: false, value: 'size' },
@@ -566,13 +570,13 @@ export function CreateAdvancedFeedbackStyleOverrides(
 		if (!affectedProperties || affectedProperties.includes('alignment')) {
 			overrides.push(
 				{
-					overrideId: nanoid(),
+					overrideId: generateId(),
 					elementId: textElementId,
 					elementProperty: 'halign',
 					override: { isExpression: false, value: 'alignment' },
 				},
 				{
-					overrideId: nanoid(),
+					overrideId: generateId(),
 					elementId: textElementId,
 					elementProperty: 'valign',
 					override: { isExpression: false, value: 'alignment' },
@@ -581,7 +585,7 @@ export function CreateAdvancedFeedbackStyleOverrides(
 		}
 		if (!affectedProperties || affectedProperties.includes('color')) {
 			overrides.push({
-				overrideId: nanoid(),
+				overrideId: generateId(),
 				elementId: textElementId,
 				elementProperty: 'color',
 				override: { isExpression: false, value: 'color' },
@@ -593,13 +597,13 @@ export function CreateAdvancedFeedbackStyleOverrides(
 		if (!affectedProperties || affectedProperties.includes('pngalignment')) {
 			overrides.push(
 				{
-					overrideId: nanoid(),
+					overrideId: generateId(),
 					elementId: imageElementId,
 					elementProperty: 'halign',
 					override: { isExpression: false, value: 'pngalignment' },
 				},
 				{
-					overrideId: nanoid(),
+					overrideId: generateId(),
 					elementId: imageElementId,
 					elementProperty: 'valign',
 					override: { isExpression: false, value: 'pngalignment' },
@@ -609,7 +613,7 @@ export function CreateAdvancedFeedbackStyleOverrides(
 
 		if (!affectedProperties || affectedProperties.includes('png64')) {
 			overrides.push({
-				overrideId: nanoid(),
+				overrideId: generateId(),
 				elementId: imageElementId,
 				elementProperty: 'base64Image',
 				override: { isExpression: false, value: 'png64' },
@@ -619,7 +623,7 @@ export function CreateAdvancedFeedbackStyleOverrides(
 
 	if (backgroundElementId && (!affectedProperties || affectedProperties.includes('bgcolor'))) {
 		overrides.push({
-			overrideId: nanoid(),
+			overrideId: generateId(),
 			elementId: backgroundElementId,
 			elementProperty: 'color',
 			override: { isExpression: false, value: 'bgcolor' },
@@ -628,7 +632,7 @@ export function CreateAdvancedFeedbackStyleOverrides(
 
 	if (bufferElementId && (!affectedProperties || affectedProperties.includes('imageBuffer'))) {
 		overrides.push({
-			overrideId: nanoid(),
+			overrideId: generateId(),
 			elementId: bufferElementId,
 			elementProperty: 'base64Image',
 			override: { isExpression: false, value: 'imageBuffers' },

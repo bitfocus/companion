@@ -158,8 +158,11 @@ export function validateInputValue(
 				} satisfies Completed<ColorValidationOptions>)
 			)
 
-		case 'bonjour-device':
 		case 'custom-variable':
+			// "No variable selected" should be an empty string
+			return makeResult(value ?? '', undefined, false)
+
+		case 'bonjour-device':
 			// Nothing to check
 			return makeResult(value, undefined, false)
 

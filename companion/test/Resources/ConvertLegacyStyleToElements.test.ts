@@ -13,6 +13,7 @@ import {
 	GetLegacyStyleProperty,
 	ParseLegacyStyle,
 } from '../../lib/Resources/ConvertLegacyStyleToElements.js'
+import { randomIdGenerator } from '../../lib/Resources/IdGenerator.js'
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -264,19 +265,31 @@ describe('GetLegacyStyleProperty', () => {
 
 describe('ConvertLegacyStyleToElements', () => {
 	test('always produces 4 base layers', () => {
-		const { layers } = ConvertLegacyStyleToElements(minimalStyle, [], null, null)
+		const { layers } = ConvertLegacyStyleToElements(minimalStyle, [], null, null, randomIdGenerator)
 		expect(layers).toHaveLength(4)
 		expect(layers.map((l) => l.id)).toEqual(['canvas', 'box0', 'image0', 'text0'])
 	})
 
 	test('advanced feedback adds a 5th bufferElement layer', () => {
-		const { layers } = ConvertLegacyStyleToElements(minimalStyle, [makeAdvancedFeedback()], null, null)
+		const { layers } = ConvertLegacyStyleToElements(
+			minimalStyle,
+			[makeAdvancedFeedback()],
+			null,
+			null,
+			randomIdGenerator
+		)
 		expect(layers).toHaveLength(5)
 		expect(layers[4].id).toBe('imageBuffers')
 	})
 
 	test('advanced feedback with no affectedProperties info produces overrides for all properties', () => {
-		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [makeAdvancedFeedback()], null, null)
+		const { feedbacks } = ConvertLegacyStyleToElements(
+			minimalStyle,
+			[makeAdvancedFeedback()],
+			null,
+			null,
+			randomIdGenerator
+		)
 		const props = (feedbacks[0] as FeedbackEntityModel).styleOverrides!.map((o) => o.elementProperty)
 		// The dedicated buffer element receives the imageBuffer, plus every text/image/background property
 		expect(props).toContain('text')
@@ -288,7 +301,13 @@ describe('ConvertLegacyStyleToElements', () => {
 	test('advanced feedback overrides are limited to the definition affectedProperties', () => {
 		// The module declares this advanced feedback only affects the imageBuffer (as it returns an imageBuffer)
 		const affectedProperties = new Map<string, string[] | undefined>([['advanced-feedback', ['imageBuffer']]])
-		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [makeAdvancedFeedback()], null, affectedProperties)
+		const { feedbacks } = ConvertLegacyStyleToElements(
+			minimalStyle,
+			[makeAdvancedFeedback()],
+			null,
+			affectedProperties,
+			randomIdGenerator
+		)
 		const overrides = (feedbacks[0] as FeedbackEntityModel).styleOverrides!
 		// Only the imageBuffer override (base64Image on the dedicated buffer element) should be present
 		expect(overrides).toHaveLength(1)
@@ -297,7 +316,13 @@ describe('ConvertLegacyStyleToElements', () => {
 	})
 
 	test('boolean feedback with style sets styleOverrides and removes style', () => {
-		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [makeBooleanFeedback()], null, null)
+		const { feedbacks } = ConvertLegacyStyleToElements(
+			minimalStyle,
+			[makeBooleanFeedback()],
+			null,
+			null,
+			randomIdGenerator
+		)
 		expect(feedbacks[0]).toHaveProperty('styleOverrides')
 		expect((feedbacks[0] as any).style).toBeUndefined()
 	})
@@ -307,7 +332,8 @@ describe('ConvertLegacyStyleToElements', () => {
 			minimalStyle,
 			[makeBooleanFeedback({ bgcolor: 0xff0000 })],
 			null,
-			null
+			null,
+			randomIdGenerator
 		)
 		const overrides = (feedbacks[0] as FeedbackEntityModel).styleOverrides!
 		const colorOverride = overrides.find((o) => o.elementProperty === 'color' && o.elementId === 'box0')
@@ -326,24 +352,30 @@ describe('ConvertLegacyStyleToElements', () => {
 				{ overrideId: 'existing', elementId: 'x', elementProperty: 'y', override: { isExpression: false, value: 'z' } },
 			],
 		}
-		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [feedback], null, null)
+		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [feedback], null, null, randomIdGenerator)
 		expect((feedbacks[0] as FeedbackEntityModel).styleOverrides).toHaveLength(1)
 		expect((feedbacks[0] as FeedbackEntityModel).styleOverrides![0].overrideId).toBe('existing')
 	})
 
 	test('non-feedback entity is passed through unchanged', () => {
 		const action = makeAction()
-		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [action], null, null)
+		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [action], null, null, randomIdGenerator)
 		expect(feedbacks[0]).toEqual(action)
 	})
 
 	test('previewStyle null results in empty previewStyleFeedbacks', () => {
-		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], null, null)
+		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], null, null, randomIdGenerator)
 		expect(previewStyleFeedbacks).toEqual([])
 	})
 
 	test('previewStyle with a property creates a previewStyleFeedback entry', () => {
-		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], { bgcolor: 0x0000ff }, null)
+		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(
+			minimalStyle,
+			[],
+			{ bgcolor: 0x0000ff },
+			null,
+			randomIdGenerator
+		)
 		expect(previewStyleFeedbacks).toHaveLength(1)
 		expect(previewStyleFeedbacks[0].type).toBe(EntityModelType.Feedback)
 		expect((previewStyleFeedbacks[0] as FeedbackEntityModel).styleOverrides).toBeDefined()
@@ -351,12 +383,18 @@ describe('ConvertLegacyStyleToElements', () => {
 
 	test('previewStyle with no overridable properties gives empty previewStyleFeedbacks', () => {
 		// Empty partial style → parsedStyle has nothing set → overrides.length === 0
-		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], {}, null)
+		const { previewStyleFeedbacks } = ConvertLegacyStyleToElements(minimalStyle, [], {}, null, randomIdGenerator)
 		expect(previewStyleFeedbacks).toHaveLength(0)
 	})
 
 	test('style properties are applied to the canvas decoration layer', () => {
-		const { layers } = ConvertLegacyStyleToElements({ ...minimalStyle, show_topbar: true }, [], null, null)
+		const { layers } = ConvertLegacyStyleToElements(
+			{ ...minimalStyle, show_topbar: true },
+			[],
+			null,
+			null,
+			randomIdGenerator
+		)
 		const canvas = layers[0] as any
 		expect(canvas.decoration.value).toBe(ButtonGraphicsDecorationType.TopBar)
 	})
@@ -366,14 +404,21 @@ describe('ConvertLegacyStyleToElements', () => {
 			{ ...minimalStyle, text: 'hi', textExpression: false },
 			[],
 			null,
-			null
+			null,
+			randomIdGenerator
 		)
 		const textEl = layers.find((l) => l.id === 'text0') as any
 		expect(textEl.text).toEqual({ isExpression: false, value: 'hi' })
 	})
 
 	test('style bgcolor is applied to the background element', () => {
-		const { layers } = ConvertLegacyStyleToElements({ ...minimalStyle, bgcolor: 0xaabbcc }, [], null, null)
+		const { layers } = ConvertLegacyStyleToElements(
+			{ ...minimalStyle, bgcolor: 0xaabbcc },
+			[],
+			null,
+			null,
+			randomIdGenerator
+		)
 		const boxEl = layers.find((l) => l.id === 'box0') as any
 		expect(boxEl.color.value).toBe(0xaabbcc)
 	})
@@ -390,7 +435,13 @@ describe('ConvertLegacyStyleToElements', () => {
 			children: { feedbacks: [childFeedback] },
 		}
 
-		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [conditionalFeedback], null, null)
+		const { feedbacks } = ConvertLegacyStyleToElements(
+			minimalStyle,
+			[conditionalFeedback],
+			null,
+			null,
+			randomIdGenerator
+		)
 		const updatedCond = feedbacks[0] as FeedbackEntityModel
 		const children = updatedCond.children!['feedbacks']!
 		expect((children[0] as FeedbackEntityModel).styleOverrides).toBeDefined()
@@ -402,12 +453,12 @@ describe('ConvertLegacyStyleToElements', () => {
 describe('ConvertBooleanFeedbackStyleToOverrides', () => {
 	test('returns empty array when no properties are set', () => {
 		const parsed = ParseLegacyStyle({})
-		expect(ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)).toHaveLength(0)
+		expect(ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds, randomIdGenerator)).toHaveLength(0)
 	})
 
 	test('text property creates a text override on the text element', () => {
 		const parsed = ParseLegacyStyle({ text: 'hello', textExpression: false })
-		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)
+		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds, randomIdGenerator)
 		const textOverride = overrides.find((o) => o.elementProperty === 'text')
 		expect(textOverride?.elementId).toBe('text0')
 		expect(textOverride?.override).toEqual({ isExpression: false, value: 'hello' })
@@ -415,7 +466,7 @@ describe('ConvertBooleanFeedbackStyleToOverrides', () => {
 
 	test('text color creates a color override', () => {
 		const parsed = ParseLegacyStyle({ color: 0xaabbcc })
-		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)
+		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds, randomIdGenerator)
 		const colorOverride = overrides.find((o) => o.elementProperty === 'color')
 		expect(colorOverride?.elementId).toBe('text0')
 		expect(colorOverride?.override.value).toBe(0xaabbcc)
@@ -423,7 +474,7 @@ describe('ConvertBooleanFeedbackStyleToOverrides', () => {
 
 	test('text alignment creates halign and valign overrides', () => {
 		const parsed = ParseLegacyStyle({ alignment: 'left:top' })
-		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)
+		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds, randomIdGenerator)
 		const halign = overrides.find((o) => o.elementProperty === 'halign' && o.elementId === 'text0')
 		const valign = overrides.find((o) => o.elementProperty === 'valign' && o.elementId === 'text0')
 		expect(halign?.override.value).toBe('left')
@@ -432,28 +483,28 @@ describe('ConvertBooleanFeedbackStyleToOverrides', () => {
 
 	test('bgcolor creates a background color override', () => {
 		const parsed = ParseLegacyStyle({ bgcolor: 0x112233 })
-		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)
+		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds, randomIdGenerator)
 		const colorOverride = overrides.find((o) => o.elementId === 'box0')
 		expect(colorOverride?.override.value).toBe(0x112233)
 	})
 
 	test('png64 creates a base64Image override on the image element', () => {
 		const parsed = ParseLegacyStyle({ png64: 'data:image/png;base64,abc' })
-		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)
+		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds, randomIdGenerator)
 		const imgOverride = overrides.find((o) => o.elementProperty === 'base64Image')
 		expect(imgOverride?.elementId).toBe('image0')
 	})
 
 	test('each override has a unique overrideId', () => {
 		const parsed = ParseLegacyStyle({ text: 'x', color: 0xffffff, bgcolor: 0, alignment: 'left:top' })
-		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)
+		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds, randomIdGenerator)
 		const ids = overrides.map((o) => o.overrideId)
 		expect(new Set(ids).size).toBe(ids.length)
 	})
 
 	test('numeric size creates fontsize and fontsizeAllowShrink overrides', () => {
 		const parsed = ParseLegacyStyle({ size: 10, show_topbar: true }, false)
-		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)
+		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds, randomIdGenerator)
 		const fontsizeOverride = overrides.find((o) => o.elementProperty === 'fontsize')
 		const allowShrinkOverride = overrides.find((o) => o.elementProperty === 'fontsizeAllowShrink')
 		expect(fontsizeOverride?.override).toEqual({ isExpression: false, value: 21 })
@@ -462,7 +513,7 @@ describe('ConvertBooleanFeedbackStyleToOverrides', () => {
 
 	test('auto size creates fontsize=FONTSIZE_SHRINK_DEFAULT and fontsizeAllowShrink=true overrides', () => {
 		const parsed = ParseLegacyStyle({ size: 'auto' })
-		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds)
+		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, defaultSelectedIds, randomIdGenerator)
 		const fontsizeOverride = overrides.find((o) => o.elementProperty === 'fontsize')
 		const allowShrinkOverride = overrides.find((o) => o.elementProperty === 'fontsizeAllowShrink')
 		expect(fontsizeOverride?.override).toEqual({ isExpression: false, value: 100 })
@@ -475,7 +526,7 @@ describe('ConvertBooleanFeedbackStyleToOverrides', () => {
 			[ButtonGraphicsElementUsage.Text]: undefined,
 		}
 		const parsed = ParseLegacyStyle({ text: 'hi', color: 0xffffff })
-		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, ids)
+		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsed, ids, randomIdGenerator)
 		expect(overrides.find((o) => o.elementProperty === 'text')).toBeUndefined()
 	})
 })
@@ -484,7 +535,12 @@ describe('ConvertBooleanFeedbackStyleToOverrides', () => {
 
 describe('CreateAdvancedFeedbackStyleOverrides', () => {
 	test('with no affectedProperties filter produces overrides for all properties', () => {
-		const overrides = CreateAdvancedFeedbackStyleOverrides(defaultSelectedIds, 'imageBuffers', undefined)
+		const overrides = CreateAdvancedFeedbackStyleOverrides(
+			defaultSelectedIds,
+			'imageBuffers',
+			undefined,
+			randomIdGenerator
+		)
 		const props = overrides.map((o) => o.elementProperty)
 		expect(props).toContain('text')
 		expect(props).toContain('fontsize')
@@ -496,14 +552,19 @@ describe('CreateAdvancedFeedbackStyleOverrides', () => {
 	})
 
 	test('filtering to ["text"] produces only the text override', () => {
-		const overrides = CreateAdvancedFeedbackStyleOverrides(defaultSelectedIds, undefined, ['text'])
+		const overrides = CreateAdvancedFeedbackStyleOverrides(defaultSelectedIds, undefined, ['text'], randomIdGenerator)
 		expect(overrides).toHaveLength(1)
 		expect(overrides[0].elementProperty).toBe('text')
 		expect(overrides[0].elementId).toBe('text0')
 	})
 
 	test('filtering to ["alignment"] produces halign and valign overrides', () => {
-		const overrides = CreateAdvancedFeedbackStyleOverrides(defaultSelectedIds, undefined, ['alignment'])
+		const overrides = CreateAdvancedFeedbackStyleOverrides(
+			defaultSelectedIds,
+			undefined,
+			['alignment'],
+			randomIdGenerator
+		)
 		expect(overrides).toHaveLength(2)
 		expect(overrides.every((o) => o.elementId === 'text0')).toBe(true)
 		const props = overrides.map((o) => o.elementProperty)
@@ -512,21 +573,26 @@ describe('CreateAdvancedFeedbackStyleOverrides', () => {
 	})
 
 	test('bufferElementId present and not filtered → buffer override included', () => {
-		const overrides = CreateAdvancedFeedbackStyleOverrides(defaultSelectedIds, 'bufId', undefined)
+		const overrides = CreateAdvancedFeedbackStyleOverrides(defaultSelectedIds, 'bufId', undefined, randomIdGenerator)
 		const buf = overrides.find((o) => o.elementId === 'bufId')
 		expect(buf).toBeDefined()
 		expect(buf?.override.value).toBe('imageBuffers')
 	})
 
 	test('bufferElementId undefined → no buffer override', () => {
-		const overrides = CreateAdvancedFeedbackStyleOverrides(defaultSelectedIds, undefined, undefined)
+		const overrides = CreateAdvancedFeedbackStyleOverrides(defaultSelectedIds, undefined, undefined, randomIdGenerator)
 		expect(overrides.find((o) => o.elementProperty === 'base64Image' && o.elementId === undefined)).toBeUndefined()
 		// More precisely: no override for a buffer element that doesn't exist
 		expect(overrides.filter((o) => o.override.value === 'imageBuffers')).toHaveLength(0)
 	})
 
 	test('bgcolor filter produces only the background color override', () => {
-		const overrides = CreateAdvancedFeedbackStyleOverrides(defaultSelectedIds, undefined, ['bgcolor'])
+		const overrides = CreateAdvancedFeedbackStyleOverrides(
+			defaultSelectedIds,
+			undefined,
+			['bgcolor'],
+			randomIdGenerator
+		)
 		expect(overrides).toHaveLength(1)
 		expect(overrides[0].elementId).toBe('box0')
 		expect(overrides[0].override.value).toBe('bgcolor')

@@ -247,8 +247,8 @@ export class GraphicsRenderer {
 				height: originalHeight,
 				previewDataUrl,
 			}
-		} catch (_e) {
-			throw new Error('Failed to process image')
+		} catch (e) {
+			throw new Error(`Failed to process image: ${e instanceof Error ? e.message : e}`, { cause: e })
 		}
 	}
 

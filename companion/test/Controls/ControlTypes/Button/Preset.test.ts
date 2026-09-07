@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PresetButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlDependencies } from '../../../../lib/Controls/ControlDependencies.js'
 import { ControlButtonPreset } from '../../../../lib/Controls/ControlTypes/Button/Preset.js'
 
@@ -75,6 +76,24 @@ describe('ControlButtonPreset', () => {
 	function createControl(checksum?: string) {
 		return new ControlButtonPreset(deps, 'conn1', 'p1', 'novars', makeStorage({ checksum }))
 	}
+
+	it('regenerates the deterministic preset definition ids for the preview control', () => {
+		// The preview loads the definition model directly, so it must clone it into fresh ids
+		const feedback = {
+			id: 'p1_0',
+			type: EntityModelType.Feedback,
+			connectionId: 'conn1',
+			definitionId: 'fb1',
+			options: {},
+		} as any
+		definitions.convertPresetToPreviewControlModel = vi.fn(() => makeStorage({ feedbacks: [feedback] }))
+
+		const control = new ControlButtonPreset(deps, 'conn1', 'p1', 'novars', makeStorage({ feedbacks: [feedback] }))
+
+		const ids = control.toJSON().feedbacks.map((f) => f.id)
+		expect(ids).toHaveLength(1)
+		expect(ids[0]).not.toBe('p1_0')
+	})
 
 	it('ignores an unchanged preset re-report (no rebuild)', () => {
 		// The re-resolved preview model carries the same checksum the preview was built from

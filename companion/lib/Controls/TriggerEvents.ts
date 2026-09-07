@@ -37,12 +37,14 @@ export class TriggerEvents extends EventEmitter<TriggerEventsEvents> {
 	 */
 	#lastTick: number = Math.round(performance.now() / 1000)
 
+	readonly #tickInterval: NodeJS.Timeout
+
 	constructor() {
 		super()
 
 		this.setMaxListeners(0)
 
-		setInterval(() => {
+		this.#tickInterval = setInterval(() => {
 			try {
 				// Future: Would this benefit from ticking more than once a second?
 				const nowSeconds = Math.round(performance.now() / 1000)
@@ -52,6 +54,13 @@ export class TriggerEvents extends EventEmitter<TriggerEventsEvents> {
 				this.#logger.error(`Unhandled error: ${e}`)
 			}
 		}, 1000)
+	}
+
+	/**
+	 * Stop the tick timer. Used during application shutdown
+	 */
+	destroy(): void {
+		clearInterval(this.#tickInterval)
 	}
 
 	/**

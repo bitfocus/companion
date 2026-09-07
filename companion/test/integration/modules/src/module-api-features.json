@@ -1,0 +1,7 @@
+{
+	"comment": "Behaviours of the module-api that appeared in a specific base library version. The fixture sources register the matching definitions only when the version they are bundled against supports them (via api-gates.cjs and the version injected by build-module-fixtures.mts), and ModuleVersions.test.ts reads the same map to decide what each fixture must - and must not - provide. To cover a new api feature: add it here, register it behind hasApiFeature() in main-v1.cjs/main-v2.mjs, exercise it behind the same gate in the test, and regenerate the fixtures.",
+	"features": {
+		"shared-udp": { "minApiVersion": "1.8.0" },
+		"action-result-value": { "minApiVersion": "2.1.0" }
+	}
+}

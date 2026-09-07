@@ -229,7 +229,10 @@ export const ButtonPreviewBase = memo(function ButtonPreview(props: ButtonPrevie
 	)
 })
 
-function useImagePreloader(imageUrl: string | null) {
+// Shared with the editing grid's own cell component, which needs the same preload-before-paint
+// behaviour but entirely different gesture handling
+// eslint-disable-next-line react-refresh/only-export-components
+export function useImagePreloader(imageUrl: string | null): string | null {
 	const [preloadedImage, setPreloadedImage] = useState<string | null>(imageUrl)
 	useEffect(() => {
 		let aborted = false

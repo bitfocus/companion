@@ -1,4 +1,5 @@
 import debounceFn from 'debounce-fn'
+import type { JsonValue } from 'type-fest'
 import {
 	EntityModelType,
 	type FeedbackEntityStyleOverride,
@@ -18,7 +19,7 @@ import type {
 	VariablesAndExpressionParser,
 } from '../../Variables/VariablesAndExpressionParser.js'
 import type { RenderClock } from '../RenderClock.js'
-import type { ControlEntityInstance } from './EntityInstance.js'
+import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
 import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
 import { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
@@ -361,6 +362,38 @@ export abstract class ControlEntityListPoolBase {
 		}
 
 		return undefined
+	}
+
+	/**
+	 * Set the value of a user local-variable entity.
+	 *
+	 * This is runtime state, not configuration - a `local_variable_set_value` action, or an action storing its
+	 * result into a local variable, must work on every control that can run actions. It therefore lives on the
+	 * read-only base rather than the entity-editing mixin, so a read-only control (e.g. a preset reference) can
+	 * still drive its own local variables.
+	 * @param listId the list holding the entity
+	 * @param id the id of the entity
+	 * @param value the new value for the variable
+	 */
+	entitySetVariableValue(listId: SomeSocketEntityLocation, id: string, value: JsonValue | undefined): boolean {
+		const entityList = this.getEntityList(listId)
+		if (!entityList) return false
+
+		const entity = entityList.findById(id)
+		if (!entity) return false
+
+		if (!isInternalUserValueFeedback(entity)) return false
+
+		const needsPersistence = entity.setUserValue(value)
+
+		// Persist value if needed
+		if (needsPersistence) {
+			this.reportChange({ redraw: false })
+		}
+
+		this.tryTriggerLocalVariablesChanged(entity)
+
+		return true
 	}
 
 	/**

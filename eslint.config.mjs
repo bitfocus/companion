@@ -115,6 +115,29 @@ export default [
 		},
 	},
 	{
+		files: ['companion/test/integration/modules/src/**/*'],
+		rules: {
+			// These sources are bundler inputs: the base library is resolved from a per-version
+			// scratch install by build-module-fixtures.mts, not from the repo's dependencies
+			'n/no-extraneous-import': 'off',
+			'n/no-extraneous-require': 'off',
+			// The v1 module contract is commonjs
+			'@typescript-eslint/no-require-imports': 'off',
+		},
+	},
+	{
+		files: ['e2e/**/*'],
+		rules: {
+			// @playwright/test is a root devDependency, which this rule doesn't recognise from here
+			'n/no-unpublished-import': 'off',
+			// playwright resolves fixture dependencies from the destructuring pattern, so an empty
+			// pattern is meaningful for fixtures with no dependencies
+			'no-empty-pattern': 'off',
+			// the app launcher is an entrypoint script, same as companion/lib/main.ts
+			'n/no-process-exit': 'off',
+		},
+	},
+	{
 		files: ['companion/**/*.ts', 'companion/**/*.js'],
 		rules: {
 			'n/no-missing-import': [
@@ -180,6 +203,9 @@ export default [
 			'vitest.workspace.ts',
 			'html/**/*',
 			'bundled-modules/**/*',
+			// Generated module fixtures (bundles of @companion-module/base at pinned versions)
+			'companion/test/integration/modules/fixtures/**/*',
+			'companion/test/integration/modules/fixtures-invalid/**/*',
 			'tools/**/*',
 			'module-local-dev/**/*',
 			'launcher/dev.cjs',
