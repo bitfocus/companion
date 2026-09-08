@@ -34,7 +34,7 @@ export interface PanelCollapseHelper {
 	canExpandAll(parentId: string | null, panelIds: string[]): boolean
 	canCollapseAll(parentId: string | null, panelIds: string[]): boolean
 	setPanelCollapsed: (panelId: string, collapsed: boolean) => void
-	setMultipleCollapsed: (panelIds: string[], collapsed: boolean) => void
+	setMultipleCollapsed: (panelIds: readonly string[], collapsed: boolean) => void
 	togglePanelCollapsed: (parentId: string | null, panelId: string) => void
 	isPanelCollapsed: (parentId: string | null, panelId: string) => boolean
 }
@@ -147,7 +147,7 @@ class PanelCollapseHelperStore implements PanelCollapseHelper {
 		})
 	}
 
-	setMultipleCollapsed = (panelIds: string[], collapsed: boolean): void => {
+	setMultipleCollapsed = (panelIds: readonly string[], collapsed: boolean): void => {
 		runInAction(() => {
 			for (const panelId of panelIds) {
 				this.#ids.set(panelId, collapsed)
@@ -272,15 +272,28 @@ export function usePanelCollapseHelper(
 	return store
 }
 
+export interface PanelCollapseAccordionProps {
+	value: string[]
+	onValueChange: (openIds: readonly string[]) => void
+	/**
+	 * Spread onto each `Accordion.Trigger`. Alt+clicking a header expands or collapses every section at once
+	 * (matching the alt+click behaviour on CollapsibleTree nodes) with a tooltip advertising it; a plain click
+	 * falls through to base-ui's own single-section toggle. Returns nothing for the lone section of a one-section
+	 * accordion, where there is nothing to toggle together.
+	 */
+	getTriggerProps: (panelId: string) => { title?: string; onClickCapture?: React.MouseEventHandler }
+}
+
 /**
- * Bridge a collapse helper to a controlled multi-open accordion's `value`/`onValueChange`. The callback is
- * stable across renders (panel ids are read through a ref) so it does not churn the accordion each render.
+ * Bridge a collapse helper to a controlled multi-open accordion's `value`/`onValueChange`, plus the per-header
+ * alt+click "toggle every section" behaviour. The callbacks are stable across renders (panel ids are read
+ * through a ref) so they do not churn the accordion each render.
  */
 export function usePanelCollapseAccordionProps(
 	helper: PanelCollapseHelper,
 	panelIds: readonly string[],
 	parentId: string | null = null
-): { value: string[]; onValueChange: (openIds: readonly string[]) => void } {
+): PanelCollapseAccordionProps {
 	const panelIdsRef = useRef(panelIds)
 	panelIdsRef.current = panelIds
 
@@ -291,9 +304,29 @@ export function usePanelCollapseAccordionProps(
 		[helper]
 	)
 
+	const canToggleAll = panelIds.length > 1
+	const getTriggerProps = useCallback(
+		(panelId: string) => {
+			if (!canToggleAll) return {}
+			return {
+				title: 'Alt+click to expand/collapse all sections',
+				onClickCapture: (e: React.MouseEvent) => {
+					if (!e.altKey) return
+					// Take over from base-ui's single-section toggle before it runs
+					e.stopPropagation()
+					// Match every section to this one's about-to-be state, like CollapsibleTree does for a level
+					const isExpanded = !helper.isPanelCollapsed(parentId, panelId)
+					helper.setMultipleCollapsed(panelIdsRef.current, isExpanded)
+				},
+			}
+		},
+		[helper, parentId, canToggleAll]
+	)
+
 	return {
 		value: panelIds.filter((id) => !helper.isPanelCollapsed(parentId, id)),
 		onValueChange,
+		getTriggerProps,
 	}
 }
 

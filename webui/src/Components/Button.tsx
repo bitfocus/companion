@@ -14,6 +14,7 @@ export type ButtonColor =
 	| 'info'
 	| 'light'
 	| 'dark'
+	| 'gray'
 	| 'disabled'
 	| 'link'
 	| 'variable'

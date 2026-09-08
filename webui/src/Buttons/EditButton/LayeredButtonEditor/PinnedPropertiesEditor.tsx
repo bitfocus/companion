@@ -102,7 +102,10 @@ export const PinnedPropertiesEditor = observer(function PinnedPropertiesEditor({
 					<Accordion.Root value={sectionAccordion.value} onValueChange={sectionAccordion.onValueChange} multiple>
 						{sections.map((section) => (
 							<Accordion.Item key={section.element.id} value={section.element.id}>
-								<PinnedSectionHeader section={section} />
+								<PinnedSectionHeader
+									section={section}
+									triggerProps={sectionAccordion.getTriggerProps(section.element.id)}
+								/>
 								<Accordion.Panel>
 									<Grid.Row className="gap-2 p-2">
 										{section.fields.map((field) => (
@@ -126,12 +129,18 @@ export const PinnedPropertiesEditor = observer(function PinnedPropertiesEditor({
 
 // Names the element the properties below belong to. The same section header as an element's own property
 // panel uses, so the two views read alike; the state labels warn when the element isn't being drawn.
-const PinnedSectionHeader = observer(function PinnedSectionHeader({ section }: { section: PinnedSection }) {
+const PinnedSectionHeader = observer(function PinnedSectionHeader({
+	section,
+	triggerProps,
+}: {
+	section: PinnedSection
+	triggerProps: { title?: string; onClickCapture?: React.MouseEventHandler }
+}) {
 	const { element, disabled, hiddenInPreview } = section
 
 	return (
 		<Accordion.Header>
-			<Accordion.Trigger className="font-bold">
+			<Accordion.Trigger className="font-bold" {...triggerProps}>
 				<FontAwesomeIcon icon={getElementTypeIcon(element.type)} fixedWidth />
 				<span className="truncate">{element.name || capitalize(element.type)}</span>
 				{disabled && <span className="font-normal text-sm text-muted">Disabled</span>}

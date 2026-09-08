@@ -70,10 +70,8 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 
 	const schema = useElementSchemaSections(elementProps)
 
-	const sectionAccordion = usePanelCollapseAccordionProps(
-		sectionCollapse,
-		(schema ?? []).filter((s) => s.fields.length > 0).map((s) => s.id)
-	)
+	const sectionIds = (schema ?? []).filter((s) => s.fields.length > 0).map((s) => s.id)
+	const sectionAccordion = usePanelCollapseAccordionProps(sectionCollapse, sectionIds)
 
 	if (!schema) {
 		return <div>No schema found for element type: {elementProps.type}</div>
@@ -105,7 +103,9 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 					return (
 						<Accordion.Item key={section.id} value={section.id}>
 							<Accordion.Header>
-								<Accordion.Trigger className="font-bold">{section.label}</Accordion.Trigger>
+								<Accordion.Trigger className="font-bold" {...sectionAccordion.getTriggerProps(section.id)}>
+									{section.label}
+								</Accordion.Trigger>
 							</Accordion.Header>
 							<Accordion.Panel>
 								<Grid.Row className="gap-2 p-2">

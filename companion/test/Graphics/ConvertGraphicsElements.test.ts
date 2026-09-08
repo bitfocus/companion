@@ -1277,6 +1277,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				y: val(0),
 				width: val(100),
 				height: val(100),
+				pinnedProperties: [],
 			}
 			const elements: SomeButtonGraphicsElement[] = [makeGroupEl([compositeChild])]
 
