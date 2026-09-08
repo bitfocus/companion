@@ -327,6 +327,15 @@
 	.property-pin-toggle:hover {
 		color: var(--color-text-strong);
 	}
+
+	.pinned-section-open {
+		color: var(--color-text-faint);
+		cursor: pointer;
+
+		&:hover {
+			color: var(--color-text-strong);
+		}
+	}
 }
 
 .add-layered-element-popover {

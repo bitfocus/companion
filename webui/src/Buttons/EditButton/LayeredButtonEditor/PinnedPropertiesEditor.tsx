@@ -1,7 +1,7 @@
-import { faThumbtack } from '@fortawesome/free-solid-svg-icons'
+import { faArrowRight, faBan, faEyeSlash, faThumbtack } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useContext } from 'react'
+import { useCallback, useContext } from 'react'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { capitalize } from '@companion-app/shared/Util.js'
@@ -104,6 +104,7 @@ export const PinnedPropertiesEditor = observer(function PinnedPropertiesEditor({
 							<Accordion.Item key={section.element.id} value={section.element.id}>
 								<PinnedSectionHeader
 									section={section}
+									styleStore={styleStore}
 									triggerProps={sectionAccordion.getTriggerProps(section.element.id)}
 								/>
 								<Accordion.Panel>
@@ -127,24 +128,49 @@ export const PinnedPropertiesEditor = observer(function PinnedPropertiesEditor({
 	)
 })
 
-// Names the element the properties below belong to. The same section header as an element's own property
-// panel uses, so the two views read alike; the state labels warn when the element isn't being drawn.
 const PinnedSectionHeader = observer(function PinnedSectionHeader({
 	section,
+	styleStore,
 	triggerProps,
 }: {
 	section: PinnedSection
+	styleStore: LayeredStyleStore
 	triggerProps: { title?: string; onClickCapture?: React.MouseEventHandler }
 }) {
 	const { element, disabled, hiddenInPreview } = section
+
+	const openElement = useCallback(
+		(e: React.MouseEvent) => {
+			e.stopPropagation()
+			styleStore.setSelectedEntryId(element.id)
+		},
+		[styleStore, element.id]
+	)
 
 	return (
 		<Accordion.Header>
 			<Accordion.Trigger className="font-bold" {...triggerProps}>
 				<FontAwesomeIcon icon={getElementTypeIcon(element.type)} fixedWidth />
-				<span className="truncate">{element.name || capitalize(element.type)}</span>
-				{disabled && <span className="font-normal text-sm text-muted">Disabled</span>}
-				{hiddenInPreview && <span className="font-normal text-sm text-muted">Hidden in preview</span>}
+				<span className="truncate min-w-0">{element.name || capitalize(element.type)}</span>
+				{disabled && (
+					<span className="shrink-0 text-muted" title="Disabled">
+						<FontAwesomeIcon icon={faBan} />
+					</span>
+				)}
+				{hiddenInPreview && (
+					<span className="shrink-0 text-muted" title="Hidden in preview">
+						<FontAwesomeIcon icon={faEyeSlash} />
+					</span>
+				)}
+				<span
+					className="pinned-section-open shrink-0"
+					role="button"
+					aria-label="Edit all properties"
+					title="Edit all properties"
+					onClick={openElement}
+				>
+					<FontAwesomeIcon icon={faArrowRight} />
+				</span>
 			</Accordion.Trigger>
 		</Accordion.Header>
 	)

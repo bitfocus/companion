@@ -229,9 +229,7 @@ const ElementsListFooter = observer(function ElementsListFooter({
 	return (
 		<div ref={ref} className="button-layer-elementlist-footer">
 			<ButtonGroup>
-				{/* Selected fills with a mid grey rather than the primary red: these pick a view, so they read like
-				    a selected tab (and sit naturally under the greys of the element list) without competing with
-				    the actual primary actions on the panel */}
+				{/* Grey rather than primary red when selected: these pick a view, like a selected tab */}
 				<Button
 					size="sm"
 					color={styleStore.isPinnedViewSelected ? 'gray' : 'secondary'}
