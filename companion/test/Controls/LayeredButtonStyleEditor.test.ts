@@ -30,14 +30,17 @@ describe('LayeredButtonStyleEditor pinned properties', () => {
 		return editor.drawElements.find((element) => element.id === id)
 	}
 
+	let getCompositeElementDefinition: ReturnType<typeof vi.fn>
+
 	beforeEach(() => {
 		const events = new EventEmitter()
+		getCompositeElementDefinition = vi.fn(() => undefined)
 		const deps: any = {
 			events,
 			pageStore: { getLocationOfControlId: vi.fn(() => undefined) },
 			variableValues: { createVariablesAndExpressionParser: vi.fn(() => ({})) },
 			getPageVariableEntities: vi.fn(() => ({})),
-			instance: { definitions: {} },
+			instance: { definitions: { getCompositeElementDefinition } },
 			graphics: { renderPixelBuffers: vi.fn(), getCachedRender: vi.fn(() => undefined) },
 		}
 
@@ -71,6 +74,34 @@ describe('LayeredButtonStyleEditor pinned properties', () => {
 			'valign',
 		])
 		expect(elementById('box0').pinnedProperties).toEqual(['color'])
+	})
+
+	it('adds a plain element with the defaults for its type', () => {
+		const id = editor.addElement('circle', null)
+		expect(elementById(id).type).toBe('circle')
+		expect(elementById(id).pinnedProperties).toEqual(['color'])
+	})
+
+	it('adds a composite element with the composite defaults and its option fields', () => {
+		getCompositeElementDefinition.mockReturnValue({
+			name: 'My Composite',
+			options: [{ id: 'speed', default: 5 }, { id: 'label' }],
+		})
+
+		const id = editor.addElement('conn1;widget', null)
+
+		expect(getCompositeElementDefinition).toHaveBeenCalledWith('conn1', 'widget')
+		const element = elementById(id)
+		expect(element.type).toBe('composite')
+		expect(element.connectionId).toBe('conn1')
+		expect(element.elementId).toBe('widget')
+		expect(element.pinnedProperties).toEqual([]) // composites have no sensible default to pin
+		expect(element['opt:speed']).toEqual({ value: 5, isExpression: false })
+		expect(element['opt:label']).toEqual({ value: undefined, isExpression: false })
+	})
+
+	it('throws when a composite definition is missing', () => {
+		expect(() => editor.addElement('conn1;gone', null)).toThrow('Composite element not found')
 	})
 
 	it('pins a property that was not pinned', () => {

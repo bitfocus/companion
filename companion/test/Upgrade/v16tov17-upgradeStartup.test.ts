@@ -112,4 +112,30 @@ describe('v16tov17 upgradeImport', () => {
 		expect(result.version).toBe(17)
 		expect(result.page.controls['0']['0'].style.layers[1].pinnedProperties).toContain('text')
 	})
+
+	it('migrates the controls of a full export across its pages', () => {
+		const result: any = v16tov17.upgradeImport(
+			{
+				type: 'full',
+				version: 16,
+				companionBuild: undefined,
+				pages: {
+					'1': {
+						controls: {
+							'0': {
+								'0': {
+									type: 'button-layered',
+									style: { layers: [element('canvas', 'canvas'), element('text0', 'text')] },
+								},
+							},
+						},
+					},
+				},
+			} as any,
+			logger
+		)
+
+		expect(result.version).toBe(17)
+		expect(result.pages['1'].controls['0']['0'].style.layers[1].pinnedProperties).toContain('text')
+	})
 })

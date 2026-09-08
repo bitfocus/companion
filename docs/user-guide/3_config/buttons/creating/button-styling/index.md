@@ -117,7 +117,7 @@ which have been pinned from across the whole button, grouped by the element they
 button's text string, its size and colour, and the background colour behind it are all in one place,
 with no element to select first.
 
-Every element starts with a sensible set pinned: for a Text element that's the text itself, its size,
+Each pinnable element type starts with a sensible set pinned: for a Text element that's the text itself, its size,
 "shrink to fit", colour and alignment; for a Box, its colour. Elements with nothing pinned are left
 out of the view entirely.
 
