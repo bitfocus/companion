@@ -2,7 +2,7 @@
   "name": "@companion-app/workspace",
   "version": "5.1.0",
   "license": "MIT",
-  "packageManager": "yarn@4.17.1",
+  "packageManager": "yarn@4.18.0",
   "workspaces": [
     "companion",
     "config-tool",
@@ -94,7 +94,7 @@
   "resolutions": {
     "osc/serialport": "npm:empty-npm-package@1.0.0",
     "osc/ws": "^8.21.0",
-    "app-builder-lib@npm:26.16.0": "patch:app-builder-lib@npm%3A26.16.0#~/.yarn/patches/app-builder-lib-npm-26.1.0-3323342f9a.patch",
+    "app-builder-lib@npm:26.16.1": "patch:app-builder-lib@npm%3A26.16.1#~/.yarn/patches/app-builder-lib-npm-26.1.0-3323342f9a.patch",
     "unix-dgram": "npm:empty-npm-package@1.0.0",
     "bare-events": "npm:empty-npm-package@1.0.0",
     "bare-fs": "npm:empty-npm-package@1.0.0",
