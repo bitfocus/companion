@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@companion-app/shared": "*",
-    "@inquirer/prompts": "^8.7.0",
+    "@inquirer/prompts": "^8.7.1",
     "yaml": "^2.9.0"
   }
 }
