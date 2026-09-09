@@ -1732,15 +1732,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@companion-app/expressions@npm:^1.0.1":
-  version: 1.0.1
-  resolution: "@companion-app/expressions@npm:1.0.1"
+"@companion-app/expressions@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "@companion-app/expressions@npm:1.1.1"
   dependencies:
     acorn: "npm:^8.17.0"
+    colord-for-expressions: "npm:colord@^2.10.0"
     jsonpath-plus: "npm:^10.4.0"
     type-fest: "npm:^5.8.0"
     unicode-segmenter: "npm:^0.17.2"
-  checksum: 10c0/6ee891ada50c7db32b164b63a2d05aec9de7e698dbfc72bca3b8bdd94c8ecf588ee03f9b5af877a1e8182c5025bec3af6c61baef757b17ad4aa1be7040724dc5
+  checksum: 10c0/2571e50fde31233416f2e8327e9691c6ef891a94e3c88aa599af21ff4f0f8d1379673e58ca39bf027acfa17807827a04571f2f433fc533559f3a5fa41a19430b
   languageName: node
   linkType: hard
 
@@ -1800,7 +1801,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@companion-app/shared@workspace:shared-lib"
   dependencies:
-    "@companion-app/expressions": "npm:^1.0.1"
+    "@companion-app/expressions": "npm:^1.1.1"
     "@companion-surface/base": "npm:1.4.0"
     "@types/semver": "npm:^7.8.0"
     colord: "npm:^2.10.0"
@@ -10487,7 +10488,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"colord@npm:^2.10.0, colord@npm:^2.9.3":
+"colord-for-expressions@npm:colord@^2.10.0, colord@npm:^2.10.0, colord@npm:^2.9.3":
   version: 2.10.0
   resolution: "colord@npm:2.10.0"
   checksum: 10c0/2f5d1d1759124f593deca17bbbab8a88bdc3ab68bbcc88db76c1192d9a5d575db202badde044bf61789561fa0ed7a9eb895382becad1af27ec65934c216e9e04

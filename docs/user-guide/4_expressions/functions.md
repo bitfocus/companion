@@ -313,6 +313,74 @@ Gets the unencoded version of an encoded component of a Uniform Resource Identif
 
 eg `decodeURIComponent('hello%20world%261')` gives `"hello world&1"`
 
+### Color operations
+
+These functions produce, inspect and manipulate colors. Anywhere a color is accepted it can be given as a CSS color string (`"#f00"`, `"rgb(255 0 0)"`, `"hsl(0, 100%, 50%)"`, or a CSS color keyword such as `"red"`), a 24-bit `0xRRGGBB` number (as produced by the color pickers), or a channel object returned from one of the `colorTo*` functions. Values that aren't a color give `null`.
+
+**rgb(r, g, b, ?a)** / **rgba(r, g, b, ?a)**
+
+Build a color from red, green and blue channels (each 0–255), with an optional alpha (0–1). Returns an `rgb()`/`rgba()` string.
+
+Called with a single color argument instead of channels, it re-formats that color as `rgb()`, eg `rgb("#336699")` gives `"rgb(51, 102, 153)"`.
+
+eg `rgb(255, 0, 0)` gives `"rgb(255, 0, 0)"`, `rgb(255, 0, 0, 0.5)` gives `"rgba(255, 0, 0, 0.5)"`
+
+**hsl(h, s, l, ?a)** / **hsla(h, s, l, ?a)**
+
+Build a color from hue (0–360), saturation and lightness (each 0–100), with an optional alpha (0–1). Returns an `hsl()`/`hsla()` string. Called with a single color argument, it re-formats that color as `hsl()`.
+
+eg `hsl(0, 100, 50)` gives `"hsl(0, 100%, 50%)"`
+
+**hsv(h, s, v, ?a)**
+
+Build a color from hue (0–360), saturation and value (each 0–100), with an optional alpha (0–1). Returns an `rgb()`/`rgba()` string. Called with a single color argument, it converts that color.
+
+eg `hsv(0, 100, 100)` gives `"rgb(255, 0, 0)"`
+
+**colorToRgb(color)** / **colorToHsl(color)** / **colorToHsv(color)**
+
+Split a color into an object of its channels, eg `colorToRgb("#ff0000")` gives `{ r: 255, g: 0, b: 0, a: 1 }`, `colorToHsl("#ff0000")` gives `{ h: 0, s: 100, l: 50, a: 1 }`.
+
+**colorToHex(color)**
+
+Convert a color into a `"#rrggbb"` hex string, eg `colorToHex("rgb(255, 0, 0)")` gives `"#ff0000"`.
+
+**isColor(value)**
+
+Check whether a value is a color that these functions can parse. eg `isColor("#ff0000")` gives `true`, `isColor("notacolor")` gives `false`.
+
+**colorAlpha(color, alpha)**
+
+Set the alpha (0–1) of a color. Returns an `rgb()`/`rgba()` string.
+
+eg `colorAlpha("#ff0000", 0.5)` gives `"rgba(255, 0, 0, 0.5)"`
+
+**colorLighten(color, ?amount)** / **colorDarken(color, ?amount)**
+
+Lighten or darken a color by the given amount (0–1, default `0.1`). Returns an `rgb()`/`rgba()` string.
+
+eg `colorLighten("#808080", 0.2)` returns a lighter grey.
+
+**colorSaturate(color, ?amount)**
+
+Saturate a color by the given amount (0–1, default `0.1`). A negative amount desaturates. Returns an `rgb()`/`rgba()` string.
+
+**colorInvert(color)**
+
+Invert a color. Returns an `rgb()`/`rgba()` string, eg `colorInvert("#000000")` gives `"rgb(255, 255, 255)"`.
+
+**colorMix(colorA, colorB, ?ratio)**
+
+Mix two colors together in CIE Lab space. The ratio (0–1, default `0.5`) is how much of the second color to take. Returns an `rgb()`/`rgba()` string.
+
+eg `colorMix("#ff0000", "#0000ff")` gives the color halfway between red and blue.
+
+**colorIsDark(color)**
+
+Check whether a color is dark enough to want light text on top of it. Returns a boolean.
+
+eg `colorIsDark("#000000")` gives `true`, `colorIsDark("#ffffff")` gives `false`.
+
 ### Variable operations
 
 **parseVariables(string, ?undefinedValue)**
@@ -572,7 +640,7 @@ Returns the day of the week as a number: 0 = Sunday, 1 = Monday, ..., 6 = Saturd
 
 eg `dateWeekday(unixNow())` returns today's weekday number.
 
-**dateFormat(value, formatString, timezone?)**
+**dateFormat(value, formatString, timezone?, locale?)**
 
 Format a date value into a custom string representation. The format string uses [dayjs-compatible tokens](https://day.js.org/docs/en/display/format):
 
@@ -593,6 +661,8 @@ Pass `'iso'` as the format to get an ISO 8601 string (always UTC): `dateFormat(v
 eg `dateFormat(unixNow(), 'YYYY-MM-DD HH:mm:ss')` returns something like `"2024-06-15 14:30:00"`
 
 eg `dateFormat(unixNow(), 'dddd, MMMM D, YYYY')` returns something like `"Saturday, June 15, 2024"`
+
+Month (`MMMM` / `MMM`) and weekday (`dddd` / `ddd`) names are localized. By default they follow the system locale (matching the `internal:date_weekday` variable), so on a French system the example above returns `"samedi, juin 15, 2024"`. Pass an explicit [BCP 47 locale](https://en.wikipedia.org/wiki/IETF_language_tag) as the fourth argument to override, eg `dateFormat(unixNow(), 'dddd', 'UTC', 'fr')` returns `"samedi"` and `dateFormat(unixNow(), 'dddd', 'UTC', 'en')` forces English regardless of the system locale.
 
 **dateAdd(value, amount, unit)**
 

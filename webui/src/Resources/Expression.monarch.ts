@@ -405,6 +405,98 @@ export const builtinFunctionCompletions: Array<{
 		documentation:
 			'Adds a duration to a date and returns Unix ms. Units: seconds, minutes, hours, days, weeks, months, years. Use negative amount to subtract.',
 	},
+
+	// Color operations
+	{
+		name: 'rgb',
+		detail: 'rgb(r, g, b, a?)',
+		documentation:
+			'Builds an rgb()/rgba() color string from channels (r/g/b 0-255, optional alpha 0-1). Called with a single color, re-formats it as rgb().',
+	},
+	{
+		name: 'rgba',
+		detail: 'rgba(r, g, b, a?)',
+		documentation: 'Alias for rgb().',
+	},
+	{
+		name: 'hsl',
+		detail: 'hsl(h, s, l, a?)',
+		documentation:
+			'Builds an hsl()/hsla() color string from channels (h 0-360, s/l 0-100, optional alpha 0-1). Called with a single color, re-formats it as hsl().',
+	},
+	{
+		name: 'hsla',
+		detail: 'hsla(h, s, l, a?)',
+		documentation: 'Alias for hsl().',
+	},
+	{
+		name: 'hsv',
+		detail: 'hsv(h, s, v, a?)',
+		documentation:
+			'Builds a color from HSV channels (h 0-360, s/v 0-100, optional alpha 0-1) and returns an rgb()/rgba() string. Called with a single color, converts it.',
+	},
+	{
+		name: 'colorToRgb',
+		detail: 'colorToRgb(color)',
+		documentation: 'Splits a color into an object of its red, green, blue and alpha channels.',
+	},
+	{
+		name: 'colorToHsl',
+		detail: 'colorToHsl(color)',
+		documentation: 'Splits a color into an object of its hue, saturation, lightness and alpha channels.',
+	},
+	{
+		name: 'colorToHsv',
+		detail: 'colorToHsv(color)',
+		documentation: 'Splits a color into an object of its hue, saturation, value and alpha channels.',
+	},
+	{
+		name: 'colorToHex',
+		detail: 'colorToHex(color)',
+		documentation: 'Converts a color into a "#rrggbb" hex string.',
+	},
+	{
+		name: 'isColor',
+		detail: 'isColor(value)',
+		documentation: 'Returns true if the value is a color that these functions can parse.',
+	},
+	{
+		name: 'colorAlpha',
+		detail: 'colorAlpha(color, alpha)',
+		documentation: 'Sets the alpha (0-1) of a color, returning an rgb()/rgba() string.',
+	},
+	{
+		name: 'colorLighten',
+		detail: 'colorLighten(color, amount?)',
+		documentation: 'Lightens a color by the given amount (0-1, default 0.1), returning an rgb()/rgba() string.',
+	},
+	{
+		name: 'colorDarken',
+		detail: 'colorDarken(color, amount?)',
+		documentation: 'Darkens a color by the given amount (0-1, default 0.1), returning an rgb()/rgba() string.',
+	},
+	{
+		name: 'colorSaturate',
+		detail: 'colorSaturate(color, amount?)',
+		documentation:
+			'Saturates a color by the given amount (0-1, default 0.1); a negative amount desaturates. Returns an rgb()/rgba() string.',
+	},
+	{
+		name: 'colorInvert',
+		detail: 'colorInvert(color)',
+		documentation: 'Inverts a color, returning an rgb()/rgba() string.',
+	},
+	{
+		name: 'colorMix',
+		detail: 'colorMix(a, b, ratio?)',
+		documentation:
+			'Mixes two colors in CIE Lab space. The ratio (0-1, default 0.5) is how much of the second color to take. Returns an rgb()/rgba() string.',
+	},
+	{
+		name: 'colorIsDark',
+		detail: 'colorIsDark(color)',
+		documentation: 'Returns true if a color is dark enough to want light text on top of it.',
+	},
 ]
 
 const keywords = ['return', 'undefined', 'if', 'else', 'for', 'while', 'of', 'let', 'const', 'break', 'continue']
