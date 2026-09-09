@@ -6,6 +6,7 @@ import type { SomeCompanionInputField } from '@companion-app/shared/Model/Option
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { capitalize } from '@companion-app/shared/Util.js'
 import { Accordion } from '~/Components/Accordion.js'
+import { Button } from '~/Components/Button.js'
 import { Form } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -139,16 +140,10 @@ const PinnedSectionHeader = observer(function PinnedSectionHeader({
 }) {
 	const { element, disabled, hiddenInPreview } = section
 
-	const openElement = useCallback(
-		(e: React.MouseEvent) => {
-			e.stopPropagation()
-			styleStore.setSelectedEntryId(element.id)
-		},
-		[styleStore, element.id]
-	)
+	const openElement = useCallback(() => styleStore.setSelectedEntryId(element.id), [styleStore, element.id])
 
 	return (
-		<Accordion.Header>
+		<Accordion.Header className="pinned-section-header">
 			<Accordion.Trigger className="font-bold" {...triggerProps}>
 				<FontAwesomeIcon icon={getElementTypeIcon(element.type)} fixedWidth />
 				<span className="truncate min-w-0">{element.name || capitalize(element.type)}</span>
@@ -162,16 +157,18 @@ const PinnedSectionHeader = observer(function PinnedSectionHeader({
 						<FontAwesomeIcon icon={faEyeSlash} />
 					</span>
 				)}
-				<span
-					className="pinned-section-open shrink-0"
-					role="button"
-					aria-label="Edit all properties"
-					title="Edit all properties"
-					onClick={openElement}
-				>
-					<FontAwesomeIcon icon={faArrowRight} />
-				</span>
 			</Accordion.Trigger>
+			{/* A real button, a sibling of the trigger rather than nested in it, so it is keyboard-operable */}
+			<Button
+				type="button"
+				variant="inline"
+				className="pinned-section-open"
+				title="Edit all properties"
+				aria-label="Edit all properties"
+				onClick={openElement}
+			>
+				<FontAwesomeIcon icon={faArrowRight} />
+			</Button>
 		</Accordion.Header>
 	)
 })

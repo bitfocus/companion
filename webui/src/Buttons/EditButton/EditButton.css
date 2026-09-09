@@ -328,11 +328,22 @@
 		color: var(--color-text-strong);
 	}
 
-	.pinned-section-open {
-		color: var(--color-text-faint);
-		cursor: pointer;
+	.pinned-section-header {
+		position: relative;
+	}
 
-		&:hover {
+	/* Overlays the trigger's right side, clear of the collapse chevron, so it rides the trigger's strip
+	   without needing one of its own */
+	.pinned-section-open {
+		position: absolute;
+		inset-block: 0;
+		inset-inline-end: 1.75rem;
+		display: flex;
+		align-items: center;
+		color: var(--color-text-faint);
+
+		&:hover,
+		&:focus-visible {
 			color: var(--color-text-strong);
 		}
 	}
