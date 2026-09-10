@@ -224,6 +224,17 @@ describe('Rosstalk', () => {
 			expect(serviceApi.pressControl).toHaveBeenCalledTimes(2)
 		})
 
+		test('noop keepalive is ignored', async () => {
+			const { serviceApi, service } = createService()
+
+			// Ross XPression polls the connection with a `noop` keepalive
+			service.processIncoming(null as any, 'noop')
+			service.processIncoming(null as any, 'NOOP\r\n')
+
+			expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(0)
+			expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
+		})
+
 		test('bad format coordinates', async () => {
 			const { serviceApi, service } = createService()
 
