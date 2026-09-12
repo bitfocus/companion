@@ -14,8 +14,8 @@ import type { InstanceController } from '../../../lib/Instance/Controller.js'
 import { createInstanceRestApiRouter } from '../../../lib/Instance/RestApi.js'
 import { REST_API_BASE_PATH } from '../../../lib/Service/RestApi/constants.js'
 import { createRestApiRouter } from '../../../lib/Service/RestApi/RestApiRouter.js'
-import { RestApiTokenStoreMemory } from '../../../lib/Service/RestApi/RestApiTokenStore.js'
-import { createTestRestApiResources } from '../../Service/RestApi/RestApiTestHelpers.js'
+import type { RestApiTokenStore } from '../../../lib/Service/RestApi/RestApiTokenStore.js'
+import { createTestRestApiResources, createTestTokenStore } from '../../Service/RestApi/RestApiTestHelpers.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -27,19 +27,20 @@ const mockAppInfo = {
 	appVersion: '5.0.0-test',
 }
 
+const { store: tokenStore, mint } = createTestTokenStore()
 const tokens = {
-	admin: 'cpn_admin',
-	readOnly: 'cpn_connections_read',
-	write: 'cpn_connections_write',
-	genericRead: 'cpn_read',
-	genericWrite: 'cpn_write',
+	admin: mint(['admin']),
+	readOnly: mint(['connections', 'read']),
+	write: mint(['connections', 'read', 'write']),
+	genericRead: mint(['read']),
+	genericWrite: mint(['read', 'write']),
 }
 
 type TestService = {
 	app: express.Express
 	instanceController: DeepMockProxy<InstanceController>
 	configStore: DeepMockProxy<InstanceConfigStore>
-	tokenStore: RestApiTokenStoreMemory
+	tokenStore: RestApiTokenStore
 	validToken: string
 	readOnlyToken: string
 	writeToken: string
@@ -50,7 +51,6 @@ type TestService = {
 function createService(): TestService {
 	const instanceController = mockDeep<InstanceController>(mockOptions)
 	const configStore = mockDeep<InstanceConfigStore>(mockOptions)
-	const tokenStore = new RestApiTokenStoreMemory()
 	const restApiRouter = createRestApiRouter(
 		createTestRestApiResources({
 			instance: {
