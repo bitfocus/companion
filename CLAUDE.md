@@ -85,6 +85,17 @@ commit will fail if types or lint don't pass — expect that and fix it rather t
   3. **Inline `style` props only for values that are truly dynamic from React** — computed from state
      or props at runtime (`style={{ minHeight: viewportMinHeight }}`, `style={{ width: glyphWidth }}`).
      A static value in a `style` prop should be a class instead.
+- **Shared components before CSS.** A button is `Button`/`ButtonGroup` (`webui/src/Components/Button.tsx`)
+  with its `color`, `variant` and `size` props — not a bare `<button>` with a hand-written class, and not
+  a `Button` whose `--btn-*` variables a feature stylesheet overrides to reach a look a stock `color`
+  already gives. The same goes for the other shared components: use `Accordion` for a collapsible section
+  (including its header) rather than re-painting one, `Toolbar` for a toolbar, `NonIdealState` for an
+  empty state. Repainting a shared component from a feature stylesheet means duplicating its internals,
+  and then tracking them when they change.
+- **A genuinely new kind of a shared component belongs in that component**, as another `variant`/`color`
+  in `Components/Button.css` (etc.), so the next feature that needs it does not reinvent it. Only what is
+  specific to one feature — which of its rows reveal a control on hover, say — stays in the feature's own
+  CSS.
 - **No arbitrary values.** The codebase uses none — do not introduce `w-[30px]` / `bg-[#abc]`. If a
   static value has no clean utility (off-scale px, `em`/`vh`, a one-off colour), give it a custom class
   or a theme token rather than reaching for `[…]` or leaving it inline.

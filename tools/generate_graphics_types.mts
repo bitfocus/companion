@@ -90,6 +90,8 @@ generatedFile += `\tname: string\n`
 generatedFile += `\tusage: ButtonGraphicsElementUsage\n`
 generatedFile += `\tenabled: ExpressionOrValue<boolean>\n`
 generatedFile += `\topacity: ExpressionOrValue<number>\n`
+generatedFile += `\t/** Ids of the properties pinned to this button's pinned view */\n`
+generatedFile += `\tpinnedProperties: string[]\n`
 generatedFile += '}\n\n'
 
 const baseInterfaceTypes = {
@@ -148,7 +150,7 @@ for (const field of canvasElementSchema.flatMap((s) => s.fields)) {
 generatedFile += '}\n\n'
 
 // Generate ButtonGraphicsCanvasElement interface
-generatedFile += `export interface ButtonGraphicsCanvasElement extends Omit<ButtonGraphicsElementBase, 'enabled' | 'opacity'> {\n`
+generatedFile += `export interface ButtonGraphicsCanvasElement extends Omit<ButtonGraphicsElementBase, 'enabled' | 'opacity' | 'pinnedProperties'> {\n`
 generatedFile += `\t// Note: this is the background element and can only be at the bottom of the stack\n`
 generatedFile += `\ttype: 'canvas'\n`
 for (const field of canvasElementSchema.flatMap((s) => s.fields)) {
