@@ -1002,6 +1002,29 @@ describe('computeTextLayout', () => {
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
+
+		test('keeps multi-codepoint glyphs intact when a width break falls inside them', () => {
+			// #143db: a break must land between glyphs, never inside a multi-codepoint one. Flags (🇺🇸) are
+			// two code points each; the old code split lines via text.split('') and could cut a glyph in half.
+			// Feed several as atomic array elements (as segmentTextToUnicodeChars would) and force a width wrap.
+			const context = createMockContext(10, 14)
+			const flag = '🇺🇸'
+			const chars = new Array(6).fill(flag) as string[]
+			const result = computeTextLayout(context, 100, 72, chars, '14px TestFont')
+
+			// it must actually wrap to more than one line
+			expect(result.lines.length).toBeGreaterThan(1)
+			// every line is whole flags only: length is a multiple of one flag's length (no partial glyph),
+			// and each grapheme is the complete flag
+			for (const line of result.lines) {
+				expect(line.text.length % flag.length).toBe(0)
+				for (const { segment } of new Intl.Segmenter().segment(line.text)) {
+					expect(segment).toBe(flag)
+				}
+			}
+			// and nothing is lost across the breaks
+			expect(result.lines.map((l) => l.text).join('')).toBe(chars.join(''))
+		})
 	})
 
 	describe('long text handling', () => {

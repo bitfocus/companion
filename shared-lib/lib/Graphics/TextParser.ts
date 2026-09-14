@@ -256,10 +256,7 @@ export function computeTextLayout(
 
 	// console.log('processing layout for', displayTextChars.join(''), fontDefinition.substring(0, 20))
 	// first split the text into lines by existing line breaks
-	const lines: { text: string; ascent: number; descent: number; fitsH?: boolean }[] = displayTextChars
-		.join('')
-		.split('\n')
-		.map((text) => ({ text, ascent: 0, descent: 0 }))
+	const lines = splitToLines(displayTextChars)
 	// console.log('lines are', JSON.stringify(lines, null, 2))
 
 	const makeLayout = (): TextLayoutResult => {
@@ -282,7 +279,7 @@ export function computeTextLayout(
 	while (currentLine < lines.length) {
 		// console.log('length check for line', currentLine, lines[currentLine].text)
 		let lastDrawnCharIndex = 0
-		const lineChars: string[] = lines[currentLine].text.split('')
+		const lineChars: string[] = lines[currentLine].chars
 
 		// get rid of one space at line start, but keep more spaces
 		if (lineChars[0] === ' ') lineChars.shift()
@@ -290,6 +287,7 @@ export function computeTextLayout(
 		// if line is (now) empty there is no need for expensive measurement
 		if (lineChars.length === 0) {
 			lines[currentLine] = {
+				chars: [],
 				text: '',
 				ascent: lineHeightSample.fontBoundingBoxAscent,
 				descent: lineHeightSample.fontBoundingBoxDescent,
@@ -313,6 +311,7 @@ export function computeTextLayout(
 		if (maxCodepoints >= lineChars.length) {
 			// console.log(`line ${currentLine} width fits`)
 			lines[currentLine] = {
+				chars: lineChars,
 				text: lineChars.join(''),
 				ascent,
 				descent,
@@ -351,6 +350,7 @@ export function computeTextLayout(
 				// we found a good breaking position in the line, update the current line with the part before the break
 				const partialLine = possibleLine.slice(0, breakPos + (possibleLine[breakPos] === ' ' ? 0 : 1))
 				lines[currentLine] = {
+					chars: partialLine,
 					text: partialLine.join(''),
 					ascent,
 					descent,
@@ -361,6 +361,7 @@ export function computeTextLayout(
 				// insert a new line with the remaining part
 				const remainingLine = lineChars.slice(breakPos + 1)
 				lines.splice(currentLine + 1, 0, {
+					chars: remainingLine,
 					text: remainingLine.join(''),
 					ascent,
 					descent,
@@ -379,6 +380,7 @@ export function computeTextLayout(
 				}
 				if (possibleLine.length >= 1) {
 					lines[currentLine] = {
+						chars: possibleLine,
 						text: possibleLine.join(''),
 						ascent,
 						descent,
@@ -388,6 +390,7 @@ export function computeTextLayout(
 					// insert a new line with the remaining part
 					const remainingLine = lineChars.slice(possibleLine.length)
 					lines.splice(currentLine + 1, 0, {
+						chars: remainingLine,
 						text: remainingLine.join(''),
 						ascent,
 						descent,
@@ -399,6 +402,7 @@ export function computeTextLayout(
 				} else {
 					// the text is so big that not even a single char fits, but we have to place at least one char in a line anyhow to get finished eventually
 					lines[currentLine] = {
+						chars: [lineChars[0]],
 						text: lineChars[0],
 						ascent,
 						descent,
@@ -407,6 +411,7 @@ export function computeTextLayout(
 					totalHeight += ascent + descent
 					// insert a new line with the remaining part
 					lines.splice(currentLine + 1, 0, {
+						chars: lineChars.slice(1),
 						text: lineChars.slice(1).join(''),
 						ascent,
 						descent,
@@ -428,4 +433,26 @@ export function computeTextLayout(
 	// )
 
 	return makeLayout()
+}
+
+interface SplitLineResult extends TextLayoutLine {
+	chars: string[]
+	fitsH?: boolean
+}
+
+const splitToLines = (chars: string[]): SplitLineResult[] => {
+	const result: SplitLineResult[] = []
+	let chunk: string[] = []
+
+	for (const char of chars) {
+		if (char === '\n') {
+			result.push({ chars: chunk, text: '', ascent: 0, descent: 0 })
+			chunk = []
+		} else {
+			chunk.push(char)
+		}
+	}
+
+	result.push({ chars: chunk, text: '', ascent: 0, descent: 0 })
+	return result
 }
