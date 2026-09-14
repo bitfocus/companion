@@ -17,8 +17,13 @@ export class SelectTool extends GridToolBase {
 		return true
 	}
 
-	override onMarquee(ctx: GridToolContext, from: ControlLocation, to: ControlLocation, additive: boolean): void {
-		ctx.store.selectRectangle(from, to, additive)
+	override onMarquee(
+		ctx: GridToolContext,
+		locations: readonly ControlLocation[],
+		anchor: ControlLocation,
+		additive: boolean
+	): void {
+		ctx.store.selectLocations(locations, anchor, additive)
 	}
 
 	override onTap(ctx: GridToolContext, location: ControlLocation, modifiers: GridButtonModifiers): void {

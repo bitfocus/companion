@@ -35,6 +35,13 @@ export class ButtonGridStore {
 	/** Which page the grid is showing, so being told again about the same one changes nothing */
 	#viewPage: number | null = null
 
+	/**
+	 * How the view being shown is laid out, or null for the infinite grid, which is a lattice and needs no
+	 * telling. A surface is not: which buttons it shows, and which one is next to which, are things only it
+	 * can answer, because its controls are wherever the device puts them.
+	 */
+	#viewShape: GridViewShape | null = null
+
 	/** Where a shift-extended range measures from */
 	#rangeAnchor: ControlLocation | null = null
 
@@ -291,9 +298,19 @@ export class ButtonGridStore {
 		this.#activeTool.onHover(this.#context(actions), location, modifiers)
 	}
 
-	/** A box was dragged out across the grid. What it picks depends on the tool. */
-	handleMarquee(from: ControlLocation, to: ControlLocation, additive: boolean, actions: GridToolActions): void {
-		this.#activeTool.onMarquee(this.#context(actions), from, to, additive)
+	/**
+	 * A box was dragged out, covering these buttons. What is done with them depends on the tool.
+	 *
+	 * Which buttons a box covers is the view's answer, not this one's: the infinite grid says the rectangle of
+	 * cells, and a surface says the controls the box touched, which need not be a rectangle of anything.
+	 */
+	handleMarquee(
+		locations: readonly ControlLocation[],
+		anchor: ControlLocation,
+		additive: boolean,
+		actions: GridToolActions
+	): void {
+		this.#activeTool.onMarquee(this.#context(actions), locations, anchor, additive)
 	}
 
 	handlePress(location: ControlLocation, isDown: boolean, actions: GridToolActions): void {
@@ -354,15 +371,16 @@ export class ButtonGridStore {
 	 * Select every cell in a rectangle, as dragged out on the grid. Additive keeps whatever was
 	 * already selected, for building up a selection in several sweeps.
 	 */
-	selectRectangle(from: ControlLocation, to: ControlLocation, additive: boolean): void {
-		const rectangle = locationsInRectangle(from, to)
+	selectLocations(locations: readonly ControlLocation[], anchor: ControlLocation, additive: boolean): void {
+		const covered = this.#inViewOnly(locations)
 
-		const keepExisting = additive && (this.selectionPageNumber === null || this.selectionPageNumber === to.pageNumber)
+		const page = covered[covered.length - 1]?.pageNumber ?? anchor.pageNumber
+		const keepExisting = additive && (this.selectionPageNumber === null || this.selectionPageNumber === page)
 		const existing = keepExisting ? this.#selectionLocations : []
 
 		const merged = [...existing]
 		const seen = new Set(existing.map(formatLocation))
-		for (const location of rectangle) {
+		for (const location of covered) {
 			const key = formatLocation(location)
 			if (seen.has(key)) continue
 
@@ -370,16 +388,56 @@ export class ButtonGridStore {
 			merged.push(location)
 		}
 
-		this.#focus = to
-		this.#rangeAnchor = from
+		this.#focus = merged[merged.length - 1] ?? null
+		this.#rangeAnchor = anchor
 		this.#applySelection(merged)
+	}
+
+	/**
+	 * Say how the view is laid out. Passing null goes back to the infinite grid, which is what leaving the
+	 * surface view does.
+	 */
+	setViewShape(shape: GridViewShape | null): void {
+		this.#viewShape = shape
+		if (!shape) return
+
+		// A selection made before the view changed can be holding buttons the view does not show
+		const kept = this.#selectionLocations.filter(this.isLocationInView)
+		if (kept.length !== this.#selectionLocations.length) this.#applySelection(kept)
+
+		if (this.#focus && !this.isLocationInView(this.#focus)) {
+			this.#focus = null
+			this.#rangeAnchor = null
+			this.#notify()
+		}
+	}
+
+	/** Whether the view shows this button. The infinite grid shows every one of them. */
+	isLocationInView = (location: ControlLocation): boolean => {
+		if (!this.#viewShape) return true
+
+		const key = formatLocation(location)
+		return this.#viewShape.locations.some((shown) => formatLocation(shown) === key)
+	}
+
+	#inViewOnly(locations: readonly ControlLocation[]): ControlLocation[] {
+		return locations.filter(this.isLocationInView)
 	}
 
 	// ---- keyboard navigation ----
 
+	/**
+	 * Where one step in this direction lands.
+	 *
+	 * On the infinite grid that is the next cell along, wrapping at the edges. On a surface it is whichever
+	 * control lies that way, which the view works out from where its controls are - there being no next
+	 * column to step to on a device whose controls are not in columns.
+	 */
 	#nextFocus(rowDelta: number, columnDelta: number, gridSize: UserConfigGridSize): ControlLocation | null {
 		const from = this.#focus
 		if (!from) return null
+
+		if (this.#viewShape) return this.#viewShape.stepFocus(from, rowDelta, columnDelta)
 
 		return {
 			pageNumber: from.pageNumber,
@@ -409,7 +467,7 @@ export class ButtonGridStore {
 		if (!next || !this.#rangeAnchor) return null
 
 		this.#focus = next
-		this.#applySelection(locationsInRectangle(this.#rangeAnchor, next))
+		this.#applySelection(this.#inViewOnly(locationsInRectangle(this.#rangeAnchor, next)))
 
 		return next
 	}
@@ -436,12 +494,18 @@ export class ButtonGridStore {
 	}
 
 	selectAllOnPage(pageNumber: number, gridSize: UserConfigGridSize): void {
-		const from: ControlLocation = { pageNumber, row: gridSize.minRow, column: gridSize.minColumn }
-		const to: ControlLocation = { pageNumber, row: gridSize.maxRow, column: gridSize.maxColumn }
+		// Everything the view shows, which on the infinite grid is every cell of it and on a surface is
+		// whatever controls that surface has
+		const selected = this.#viewShape
+			? this.#viewShape.locations.filter((location) => location.pageNumber === pageNumber)
+			: locationsInRectangle(
+					{ pageNumber, row: gridSize.minRow, column: gridSize.minColumn },
+					{ pageNumber, row: gridSize.maxRow, column: gridSize.maxColumn }
+				)
 
-		this.#focus = to
-		this.#rangeAnchor = from
-		this.#applySelection(locationsInRectangle(from, to))
+		this.#focus = selected[selected.length - 1] ?? null
+		this.#rangeAnchor = selected[0] ?? null
+		this.#applySelection([...selected])
 	}
 
 	/** Move the focus onto another page, keeping the same cell */
@@ -472,6 +536,19 @@ const NOWHERE: ControlLocation = { pageNumber: -1, row: -1, column: -1 }
 const EMPTY_PENDING_CHANGES: ReadonlyMap<string, GridPendingChange> = new Map()
 
 export type GridClipboardMode = 'copy' | 'cut'
+
+/**
+ * How the view the grid is showing is laid out.
+ *
+ * The store works in buttons, which are grid coordinates whatever is drawing them; this is how it asks the view
+ * the two questions that depend on the shape of what is on screen.
+ */
+export interface GridViewShape {
+	/** Every button the view shows */
+	locations: readonly ControlLocation[]
+	/** Where the focus goes when stepped this way, or null when there is nothing that way */
+	stepFocus(from: ControlLocation, rowDelta: number, columnDelta: number): ControlLocation | null
+}
 
 export interface GridClipboard {
 	locations: ControlLocation[]

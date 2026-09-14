@@ -24,6 +24,7 @@ import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { ButtonInfiniteGrid, PrimaryButtonGridIcon, type ButtonInfiniteGridRef } from './ButtonInfiniteGrid.js'
 import { GridButtonDragOverlay } from './GridButtonDragOverlay.js'
 import type { GridButtonModifiers } from './GridButtonPreview.js'
+import { locationsInRectangle } from './GridGeometry.js'
 import type { GridZoomController } from './GridZoom.js'
 
 interface ButtonsGridPanelProps {
@@ -124,8 +125,10 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	const marquee = useMemo(
 		() => ({
 			canStart: store.allowsMarquee,
+			// The infinite grid is a lattice, so the buttons a box covers are the rectangle of cells it spans.
+			// Anything laid out differently answers this for itself.
 			onSelect: (from: ControlLocation, to: ControlLocation, additive: boolean) =>
-				store.handleMarquee(from, to, additive, actions),
+				store.handleMarquee(locationsInRectangle(from, to), from, additive, actions),
 		}),
 		[store, actions]
 	)

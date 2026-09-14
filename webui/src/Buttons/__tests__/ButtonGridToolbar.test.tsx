@@ -4,6 +4,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { ButtonGridStore } from '../ButtonGridStore.js'
 import { ButtonGridToolbar } from '../ButtonGridToolbar.js'
 import { ButtonGridViewProvider, type ButtonGridView } from '../ButtonGridViewContext.js'
+import { locationsInRectangle } from '../GridGeometry.js'
 import type { GridToolActions } from '../GridTools/index.js'
 
 function at(row: number, column: number, pageNumber = 1): ControlLocation {
@@ -107,7 +108,7 @@ describe('the grid toolbar', () => {
 	it('shows what is selected once there is more than one', () => {
 		const { store } = setup()
 
-		act(() => store.selectRectangle(at(1, 1), at(1, 2), false))
+		act(() => store.selectLocations(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false))
 
 		expect(screen.getByText(/2 buttons selected/)).toBeInTheDocument()
 		expect(screen.getByText(/on page 1/)).toBeInTheDocument()
@@ -123,7 +124,7 @@ describe('the grid toolbar', () => {
 
 	it('picking a transfer tool with a selection skips straight to the destination', () => {
 		const { store } = setup()
-		act(() => store.selectRectangle(at(1, 1), at(1, 2), false))
+		act(() => store.selectLocations(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false))
 
 		fireEvent.click(screen.getByRole('button', { name: 'Move' }))
 
@@ -133,7 +134,7 @@ describe('the grid toolbar', () => {
 
 	it('does not repeat the transfer tools in the selection bar', () => {
 		const { store } = setup()
-		act(() => store.selectRectangle(at(1, 1), at(1, 2), false))
+		act(() => store.selectLocations(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false))
 
 		// The palette above already acts on the selection; a second copy of it is just more chrome
 		expect(screen.getAllByRole('button', { name: /Copy/ })).toHaveLength(1)
@@ -142,7 +143,7 @@ describe('the grid toolbar', () => {
 
 	it('deleting offers to clear the selection, so touch has a way to do it', () => {
 		const { store, actions } = setup()
-		act(() => store.selectRectangle(at(1, 1), at(1, 2), false))
+		act(() => store.selectLocations(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false))
 
 		fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
 
@@ -151,7 +152,7 @@ describe('the grid toolbar', () => {
 
 	it('cancel drops the selection', () => {
 		const { store } = setup()
-		act(() => store.selectRectangle(at(1, 1), at(1, 2), false))
+		act(() => store.selectLocations(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false))
 
 		fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
 
@@ -195,7 +196,7 @@ describe('the grid toolbar', () => {
 
 	it('reports the cut ahead of the selection it was made from', () => {
 		const { store } = setup()
-		act(() => store.selectRectangle(at(1, 1), at(1, 2), false))
+		act(() => store.selectLocations(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false))
 		act(() => store.setClipboard([at(1, 1), at(1, 2)], 'copy'))
 
 		// Otherwise the copy - the half you cannot see - stays hidden behind the selection count
