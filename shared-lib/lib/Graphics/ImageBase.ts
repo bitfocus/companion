@@ -896,16 +896,23 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		// Find the best fitting size at the normalized scale
 		let normLayout: TextLayoutResult | undefined
 		let usedNormSize = normCheckSizes[0]
-		for (const normSize of normCheckSizes) {
-			usedNormSize = normSize
-			const normFontSpec = `${fontStylePrefix}${normSize}px/${normSize * 1.1}px ${fontNameStr}`
+		for (let i = 0; i < normCheckSizes.length; i += 1) {
+			usedNormSize = normCheckSizes[i]
+			const normFontSpec = `${fontStylePrefix}${usedNormSize}px/${usedNormSize * 1.1}px ${fontNameStr}`
 
 			// Cache keyed on normalized dimensions — hits are shared across canvas sizes with same aspect ratio
 			const cacheKey = `${normFontSpec}:${normW}:${NORM_H}:${displayTextCharsStr}`
 			const cachedLayout = this.#textLayoutCache?.get(cacheKey)
 			let layout = typeof cachedLayout === 'object' ? cachedLayout : undefined
 			if (!layout) {
-				layout = computeTextLayout(this.context2d, normW, NORM_H, displayTextChars, normFontSpec)
+				layout = computeTextLayout(
+					this.context2d,
+					normW,
+					NORM_H,
+					displayTextChars,
+					normFontSpec,
+					!allowShrink || i == normCheckSizes.length - 1 ? false : true // don't exit early if not trying to shrink or this is the smallest size we try
+				)
 				this.#textLayoutCache?.set(cacheKey, layout)
 			}
 
@@ -913,7 +920,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			if (layout.fits) break
 		}
 
-		// If no layout was resolved, something went wrong
+		// If no layout was returned at all, something went wrong
 		if (!normLayout) return
 
 		// Scale the normalized layout up to the actual canvas dimensions for rendering
@@ -923,6 +930,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			lines: normLayout.lines,
 			measuredLineHeight: normLayout.measuredLineHeight * upScale,
 			measuredAscent: normLayout.measuredAscent * upScale,
+			totalHeight: normLayout.totalHeight * upScale,
 			fits: normLayout.fits,
 		}
 
@@ -931,7 +939,8 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	}
 
 	/**
-	 * Draw text using a computed layout
+	 * Draw text using a computed layout  
+	 * when the text fits into the area, alignemnt will be trivial. When text overflows the line break has precedence. That means text should be broken into hopefully fitting lines (even inside of words) and then those lines are aligned.
 	 */
 	#drawTextLayout(
 		x: number,
@@ -967,17 +976,20 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 				break
 		}
 
-		const linesTotalHeight = layout.lines.length * layout.measuredLineHeight
+		// how many lines can we fit?
+		const numLines = Math.min(Math.max(Math.floor((h + h * 1e-4) / layout.measuredLineHeight), 1), layout.lines.length) // no Linespacing, make h a little taller to compensate for rounding errors around the breakpoints, draw at least one line even if it is too big and maximum the lines that really are there
+
+		const drawingLinesTotalHeight = layout.measuredLineHeight * numLines
 		let yAnchor = 0
 		switch (valign) {
 			case 'top':
 				yAnchor = layout.measuredAscent
 				break
 			case 'center':
-				yAnchor = (h - linesTotalHeight) / 2 + layout.measuredAscent
+				yAnchor = (h - drawingLinesTotalHeight) / 2 + layout.measuredAscent
 				break
 			case 'bottom':
-				yAnchor = h - linesTotalHeight + layout.measuredAscent
+				yAnchor = h - drawingLinesTotalHeight + layout.measuredAscent
 				break
 		}
 		yAnchor += y
@@ -988,7 +1000,8 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			this.context2d.lineWidth = outlineStyle.width
 		}
 
-		for (const line of layout.lines) {
+		// only draw the lines that actually fit in the box (numLines); the rest overflow and are clipped
+		for (const line of layout.lines.slice(0, numLines)) {
 			if (outlineStyle && outlineStyle.width > 0) {
 				this.context2d.strokeText(line.text, xAnchor, yAnchor)
 			}
