@@ -944,7 +944,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 
 	/**
 	 * Draw text using a computed layout  
-	 * when the text fits into the area, alignemnt will be trivial. When text overflows the line break has precedence. That means text should be broken into hopefully fitting lines (even inside of words) and then those lines are aligned.
+	 * when the text fits into the area, alignment will be trivial. When text overflows the line break has precedence. That means text should be broken into hopefully fitting lines (even inside of words) and then those lines are aligned.
 	 */
 	#drawTextLayout(
 		x: number,
