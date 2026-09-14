@@ -5,6 +5,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { MenuActionItemProps } from '~/Components/ActionMenu.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ButtonGridStore } from '../ButtonGridStore.js'
+import { locationsInRectangle } from '../GridGeometry.js'
 import type { GridToolActions } from '../GridTools/index.js'
 import { useButtonContextMenu } from '../useButtonContextMenu.js'
 
@@ -110,7 +111,7 @@ describe('useButtonContextMenu', () => {
 	describe('within a selection', () => {
 		it('names the count, so it is clear what is about to happen', () => {
 			const { store, openAt, labels } = setup()
-			act(() => store.selectRectangle(at(1, 1), at(1, 3), false))
+			act(() => store.selectLocations(locationsInRectangle(at(1, 1), at(1, 3)), at(1, 1), false))
 
 			openAt(at(1, 2))
 
@@ -121,7 +122,7 @@ describe('useButtonContextMenu', () => {
 
 		it('copies the whole selection', () => {
 			const { store, openAt, item } = setup()
-			act(() => store.selectRectangle(at(1, 1), at(1, 3), false))
+			act(() => store.selectLocations(locationsInRectangle(at(1, 1), at(1, 3)), at(1, 1), false))
 			openAt(at(1, 2))
 
 			act(() => item('Copy 3 buttons').do())
@@ -131,7 +132,7 @@ describe('useButtonContextMenu', () => {
 
 		it('clears the whole selection', () => {
 			const { store, actions, openAt, item } = setup()
-			act(() => store.selectRectangle(at(1, 1), at(1, 3), false))
+			act(() => store.selectLocations(locationsInRectangle(at(1, 1), at(1, 3)), at(1, 1), false))
 			openAt(at(1, 2))
 
 			act(() => item('Clear 3 buttons').do())
@@ -141,7 +142,7 @@ describe('useButtonContextMenu', () => {
 
 		it('still offers the selection when the button under the cursor is empty', () => {
 			const { store, openAt, item } = setup((location) => location.column !== 2)
-			act(() => store.selectRectangle(at(1, 1), at(1, 3), false))
+			act(() => store.selectLocations(locationsInRectangle(at(1, 1), at(1, 3)), at(1, 1), false))
 			openAt(at(1, 2))
 
 			expect(item('Copy 3 buttons').disabled).toBeFalsy()
@@ -151,7 +152,7 @@ describe('useButtonContextMenu', () => {
 	describe('outside a selection', () => {
 		it('acts on the button under the cursor, leaving the selection alone', () => {
 			const { store, actions, openAt, item, labels } = setup()
-			act(() => store.selectRectangle(at(1, 1), at(1, 3), false))
+			act(() => store.selectLocations(locationsInRectangle(at(1, 1), at(1, 3)), at(1, 1), false))
 
 			openAt(at(3, 7))
 

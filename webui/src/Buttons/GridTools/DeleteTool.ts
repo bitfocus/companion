@@ -1,5 +1,4 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { locationsInRectangle } from '../GridGeometry.js'
 import { GridToolBase, type GridToolContext, type GridToolId } from './types.js'
 
 /**
@@ -33,10 +32,10 @@ export class DeleteTool extends GridToolBase {
 		return true
 	}
 
-	override onMarquee(ctx: GridToolContext, from: ControlLocation, to: ControlLocation): void {
-		// Only the cells that hold something, so the count in the confirmation is the number of buttons
-		// actually about to go rather than the size of the box
-		const occupied = locationsInRectangle(from, to).filter((location) => ctx.actions.isOccupied(location))
+	override onMarquee(ctx: GridToolContext, locations: readonly ControlLocation[]): void {
+		// Only the buttons that hold something, so the count in the confirmation is the number actually
+		// about to go rather than the size of the box
+		const occupied = locations.filter((location) => ctx.actions.isOccupied(location))
 		if (occupied.length === 0) return
 
 		ctx.actions.clearButtons(occupied)

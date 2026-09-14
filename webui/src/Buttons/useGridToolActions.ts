@@ -41,14 +41,15 @@ export function useGridToolActions({
 	const hotPressMutation = useMutationExt(trpc.controls.hotPressControl.mutationOptions())
 
 	// A button placed outside the grid is somewhere nothing can reach it, so the tools refuse a
-	// placement that would do that rather than clamping it to the edge
+	// placement that would do that rather than clamping it to the edge. Viewing as a surface narrows
+	// what counts: a button the surface has no control for is one it cannot be placed on either.
 	const fitsOnGrid = useCallback(
 		(locations: ControlLocation[]) => {
 			if (!gridSize) return false
 
-			return locations.every((location) => isLocationOnGrid(gridSize, location))
+			return locations.every((location) => isLocationOnGrid(gridSize, location) && store.isLocationInView(location))
 		},
-		[gridSize]
+		[gridSize, store]
 	)
 
 	const transfer = useCallback<GridToolActions['transfer']>(
