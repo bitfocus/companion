@@ -2,6 +2,7 @@ import { faCopy, faEllipsisVertical, faPlus, faTrash } from '@fortawesome/free-s
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { Meta, StoryObj } from '@storybook/react'
 import type { ComponentProps } from 'react'
+import { Button, ButtonGroup } from './Button'
 import { Popover } from './Popover'
 
 type RootArgs = ComponentProps<typeof Popover.Root>
@@ -169,10 +170,10 @@ export const DangerTrigger: Story = {
 export const SplitButton: Story = {
 	args: { defaultOpen: true },
 	render: (args: RootArgs) => (
-		<div className="btn-group">
-			<button className="btn button button-primary" onClick={() => console.log('primary action')}>
+		<ButtonGroup>
+			<Button color="primary" onClick={() => console.log('primary action')}>
 				Save
-			</button>
+			</Button>
 			<Popover.Root {...args}>
 				<Popover.Trigger color="primary" caret aria-label="More save options" />
 				<Popover.Popup>
@@ -180,7 +181,7 @@ export const SplitButton: Story = {
 					<Popover.Item onClick={() => console.log('save as')}>Save as…</Popover.Item>
 				</Popover.Popup>
 			</Popover.Root>
-		</div>
+		</ButtonGroup>
 	),
 }
 

@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import { Button, ButtonGroup } from '../Button'
 import { Popover } from '../Popover'
 
 // ---------------------------------------------------------------------------
@@ -239,6 +240,43 @@ describe('Arrow', () => {
 		)
 		await user.click(screen.getByRole('button', { name: 'Trigger' }))
 		expect(document.querySelector('.popover2-arrow')).not.toBeInTheDocument()
+	})
+})
+
+// ---------------------------------------------------------------------------
+// Split-button caret in a ButtonGroup
+// ---------------------------------------------------------------------------
+
+describe('Split-button caret', () => {
+	function renderSplitButton() {
+		return render(
+			<ButtonGroup>
+				<Button color="primary">Save</Button>
+				<Popover.Root open={true}>
+					<Popover.Trigger color="primary" caret aria-label="More" />
+					<Popover.Popup>
+						<Popover.Item onClick={() => {}}>Save as…</Popover.Item>
+					</Popover.Popup>
+				</Popover.Root>
+			</ButtonGroup>
+		)
+	}
+
+	// An open trigger injects focus guards and an anchor span after the caret, so it is no longer the
+	// group's last child - which is why the caret needs its own rule to keep its trailing corners.
+	it('the caret is not the last child of the group when open', () => {
+		const { container } = renderSplitButton()
+		const group = container.querySelector('.button-group')!
+		const caret = group.querySelector('.popover2-trigger-caret')!
+		expect(group.lastElementChild).not.toBe(caret)
+		expect(caret.matches(':nth-last-child(1 of :not([data-base-ui-focus-guard]))')).toBe(false)
+	})
+
+	// The override that holds its trailing edge regardless of those injected siblings
+	it('the caret matches the split-button override selector', () => {
+		const { container } = renderSplitButton()
+		const caret = container.querySelector('.popover2-trigger-caret')!
+		expect(caret.matches('.button-group > .popover2-trigger-caret')).toBe(true)
 	})
 })
 
