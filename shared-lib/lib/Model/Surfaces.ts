@@ -54,6 +54,8 @@ export interface ClientSurfaceLayoutItem {
 	id: string
 	/** The model name of the surface, matching `ClientSurfaceItem.type` */
 	type: string
+	/** Which kind of surface integration this came from, matching `ClientSurfaceItem.integrationType` */
+	integrationType: string
 	displayName: string
 	isConnected: boolean
 	layout: SurfaceSchemaLayoutDefinition

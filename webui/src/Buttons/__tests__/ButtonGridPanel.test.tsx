@@ -40,11 +40,24 @@ const { at, makeGridView } = await import('./gridViewTestHelpers.js')
 
 const GRID_SIZE = { minRow: 0, maxRow: 3, minColumn: 0, maxColumn: 7 }
 
-function setup(overrides: { pageCount?: number; pageNumber?: number } = {}) {
+function setup(overrides: { pageCount?: number; pageNumber?: number; viewAs?: any } = {}) {
 	const view = makeGridView()
 	const changePage = vi.fn()
 	const zoom: GridZoomController = { zoomIn: vi.fn(), zoomOut: vi.fn(), zoomReset: vi.fn(), setZoom: vi.fn() }
 	const onKeyDown = vi.fn()
+
+	// The panel only reads the resolution and the toggle; the rest belongs to the popover
+	const viewAs: any = {
+		available: true,
+		state: { enabled: false, selection: { type: 'surfaceType', surfaceType: '', offset: { rows: 0, columns: 0 } } },
+		resolution: { status: 'off' },
+		surfaceChoices: [],
+		surfaceTypeChoices: [],
+		setEnabled: vi.fn(),
+		setSelection: vi.fn(),
+		setOffset: vi.fn(),
+		...overrides.viewAs,
+	}
 
 	// Deep partial of the root store - the panel and its header only reach for these
 	const rootStore: any = {
@@ -70,6 +83,9 @@ function setup(overrides: { pageCount?: number; pageNumber?: number } = {}) {
 						gridZoomController={zoom}
 						contextMenuButton={null}
 						onButtonContextMenu={vi.fn()}
+						viewAs={viewAs}
+						gridSize={GRID_SIZE}
+						surfaceView={null}
 					/>
 				</ButtonGridViewProvider>
 			</RootAppStoreContext.Provider>
@@ -120,6 +136,37 @@ describe('the grid panel', () => {
 		fireEvent.click(screen.getByTitle('Home Position'))
 
 		expect(gridHandle.resetPosition).toHaveBeenCalled()
+	})
+})
+
+describe('the view-as-surface setting', () => {
+	it('offers the control while the setting is on', () => {
+		setup()
+
+		expect(screen.getByTitle('View the grid as one of your surfaces')).toBeInTheDocument()
+		expect(screen.getByTitle('Choose which surface to view as')).toBeInTheDocument()
+	})
+
+	it('shows nothing of it at all while the setting is off', () => {
+		setup({ viewAs: { available: false } })
+
+		expect(screen.queryByTitle('View the grid as one of your surfaces')).not.toBeInTheDocument()
+		expect(screen.queryByTitle('Choose which surface to view as')).not.toBeInTheDocument()
+		// The rest of the toolbar is untouched
+		expect(screen.getByTitle('Home Position')).toBeInTheDocument()
+	})
+
+	// The banner says the grid is not showing all of itself, which is only ever true while the feature is on
+	it('shows no banner while the setting is off, whatever was stored', () => {
+		const { container } = setup({ viewAs: { available: false, resolution: { status: 'noSelection' } } })
+
+		expect(container.querySelector('.grid-view-as-banner')).toBeNull()
+	})
+
+	it('shows the banner while the setting is on and the grid is not showing all of itself', () => {
+		const { container } = setup({ viewAs: { available: true, resolution: { status: 'noSelection' } } })
+
+		expect(container.querySelector('.grid-view-as-banner')).not.toBeNull()
 	})
 })
 
