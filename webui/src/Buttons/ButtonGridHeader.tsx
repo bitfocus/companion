@@ -110,6 +110,7 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 						items={choiceOptions}
 						filteredItems={filteredItems}
 						disabled={!setPage}
+						isItemEqualToValue={isItemEqualToValue}
 						onValueChange={inputChange}
 						onInputValueChange={setInputValue}
 						itemToStringLabel={() => ''}
@@ -134,3 +135,6 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 		</div>
 	)
 })
+
+const isItemEqualToValue = (itemValue: DropdownChoice | number | null, value: number | null) =>
+	(itemValue !== null && typeof itemValue === 'object' ? itemValue.id : itemValue) === value
