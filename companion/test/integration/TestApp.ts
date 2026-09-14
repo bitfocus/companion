@@ -119,37 +119,63 @@ export interface TestApp {
 }
 
 /**
- * Find a tcp port that is free and bindable right now, for pointing one of the api services at.
- * A blind random port can collide with another parallel test file's server, or land in a range
- * the os refuses to bind (windows reserves blocks of the ephemeral range), leaving the service
- * down and the test stuck waiting for it
+ * The band to draw test service ports from. The os hands out ephemeral ports from 32768 upwards on
+ * linux (and reserves blocks inside its own range on windows), and the application's own service
+ * defaults all sit below this, so nothing else has a claim on a port from here
  */
+const TEST_PORT_RANGE_START = 20_000
+const TEST_PORT_RANGE_END = 32_000
+
+/** The wildcard address the services bind - GLOBAL_BIND_ADDRESS with DISABLE_IPV6 set, as the
+ * fixture always does. A port must be free on every interface, not just loopback, for the service
+ * to be able to bind it */
+const PROBE_BIND_ADDRESS = '0.0.0.0'
+
+/**
+ * Find a port that is free and bindable right now, for pointing one of the api services at.
+ *
+ * Asking the os for a port (binding to port 0) is not enough: the port it picks comes from the
+ * ephemeral range, which it is free to hand straight back out once the probe closes - to another
+ * parallel test file, or as the local port of any outgoing connection. A service pointed at such a
+ * port can fail to bind it, or worse, a test asserting the service has shut down can find the port
+ * still answering because something else now holds it. Ports below the ephemeral range are never
+ * handed out by the os, so only another probe here can take one, and each candidate is verified
+ * bindable before it is handed out.
+ */
+async function findFreePort(isPortFree: (port: number) => Promise<boolean>): Promise<number> {
+	for (let attempt = 0; attempt < 100; attempt++) {
+		const port = TEST_PORT_RANGE_START + Math.floor(Math.random() * (TEST_PORT_RANGE_END - TEST_PORT_RANGE_START))
+		if (await isPortFree(port)) return port
+	}
+	throw new Error('Failed to find a free port')
+}
+
+/** Find a tcp port that is free and bindable right now */
 export async function getFreeTcpPort(): Promise<number> {
-	return new Promise<number>((resolve, reject) => {
-		const probe = net.createServer()
-		probe.on('error', reject)
-		probe.listen(0, '127.0.0.1', () => {
-			const address = probe.address()
-			if (!address || typeof address !== 'object') {
-				probe.close()
-				reject(new Error('Failed to probe for a free port'))
-				return
-			}
-			probe.close(() => resolve(address.port))
-		})
-	})
+	return findFreePort(
+		async (port) =>
+			new Promise<boolean>((resolve) => {
+				const probe = net.createServer()
+				probe.on('error', () => resolve(false))
+				probe.listen(port, PROBE_BIND_ADDRESS, () => {
+					probe.close(() => resolve(true))
+				})
+			})
+	)
 }
 
 /** The udp equivalent of getFreeTcpPort */
 export async function getFreeUdpPort(): Promise<number> {
-	return new Promise<number>((resolve, reject) => {
-		const probe = dgram.createSocket('udp4')
-		probe.on('error', reject)
-		probe.bind(0, '127.0.0.1', () => {
-			const port = probe.address().port
-			probe.close(() => resolve(port))
-		})
-	})
+	return findFreePort(
+		async (port) =>
+			new Promise<boolean>((resolve) => {
+				const probe = dgram.createSocket('udp4')
+				probe.on('error', () => resolve(false))
+				probe.bind(port, PROBE_BIND_ADDRESS, () => {
+					probe.close(() => resolve(true))
+				})
+			})
+	)
 }
 
 /**
