@@ -23,8 +23,9 @@ import type { ButtonGraphicsTextDrawElement } from '../Model/StyleLayersModel.js
 import { resolveFontName } from './Fonts.js'
 import {
 	computeTextLayout,
+	findBestFontSize,
 	MIN_FONT_SIZE_FRACTION,
-	resolveFontSizes,
+	resolveFontSizeBounds,
 	segmentTextToUnicodeChars,
 	type TextLayoutResult,
 } from './TextParser.js'
@@ -876,9 +877,11 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		// Normalize layout decisions to a fixed reference height (72 px) so that font-size selection
 		// and line-breaking use identical absolute pixel measurements regardless of actual canvas size.
 		const NORM_H = 72
+		// Sub-pixel precision of the shrink-to-fit search, at the normalized scale
+		const SIZE_SEARCH_GRID = 0.25
 		const normScale = NORM_H / h
 		const normW = Math.round(w * normScale)
-		// When fontsize === h (signals "heuristics only"), normFontsize === NORM_H — same signal preserved.
+		// When fontsize === h (signals "shrink up to the full height"), normFontsize === NORM_H — preserved.
 		const normFontsize = fontsize * normScale
 		const upScale = h / NORM_H
 		const fontNameStr = resolveFontName(font)
@@ -887,41 +890,42 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		// Must be part of the measured spec too, as it affects glyph widths (and the layout cache key).
 		const fontStylePrefix = `${italic ? 'italic ' : ''}${weight === 'bold' ? 'bold ' : ''}`
 
-		// If we hit the character limit, only the smallest font size could possibly fit
-		const normCheckSizes =
-			allowShrink && wasTruncated
-				? [Math.max(MIN_FONT_SIZE_FRACTION * NORM_H, 1)]
-				: resolveFontSizes(normW, NORM_H, normFontsize, allowShrink, displayTextChars.length)
-
-		// Find the best fitting size at the normalized scale
-		let normLayout: TextLayoutResult | undefined
-		let usedNormSize = normCheckSizes[0]
-		for (let i = 0; i < normCheckSizes.length; i += 1) {
-			usedNormSize = normCheckSizes[i]
-			const normFontSpec = `${fontStylePrefix}${usedNormSize}px/${usedNormSize * 1.1}px ${fontNameStr}`
-
-			// Cache keyed on normalized dimensions — hits are shared across canvas sizes with same aspect ratio
+		// Layout at a normalized size, cached by normalized dims (shared across same-aspect canvases).
+		// `needComplete` forces a full layout for rendering; otherwise a fast early-exit probe is used,
+		// whose only reliable output is `fits`. Only cache render-safe layouts: an early-exit probe is
+		// complete only when it fits, so non-fitting probes are skipped.
+		const getNormLayout = (size: number, needComplete: boolean): TextLayoutResult => {
+			const normFontSpec = `${fontStylePrefix}${size}px/${size * 1.1}px ${fontNameStr}`
 			const cacheKey = `${normFontSpec}:${normW}:${NORM_H}:${displayTextCharsStr}`
 			const cachedLayout = this.#textLayoutCache?.get(cacheKey)
-			let layout = typeof cachedLayout === 'object' ? cachedLayout : undefined
-			if (!layout) {
-				layout = computeTextLayout(
-					this.context2d,
-					normW,
-					NORM_H,
-					displayTextChars,
-					normFontSpec,
-					!allowShrink || i == normCheckSizes.length - 1 ? false : true // don't exit early if not trying to shrink or this is the smallest size we try
-				)
-				this.#textLayoutCache?.set(cacheKey, layout)
-			}
+			if (typeof cachedLayout === 'object') return cachedLayout
 
-			normLayout = layout
-			if (layout.fits) break
+			const layout = computeTextLayout(this.context2d, normW, NORM_H, displayTextChars, normFontSpec, !needComplete)
+			if (needComplete || layout.fits) this.#textLayoutCache?.set(cacheKey, layout)
+			return layout
 		}
 
-		// If no layout was returned at all, something went wrong
-		if (!normLayout) return
+		const bounds = resolveFontSizeBounds(NORM_H, normFontsize, allowShrink)
+
+		// Pick the normalized font size, keeping the layout the search found so it needn't be recomputed
+		let usedNormSize: number
+		let fittingLayout: TextLayoutResult | undefined
+		if (!allowShrink) {
+			usedNormSize = bounds.max // fixed size, render regardless of fit
+		} else if (wasTruncated) {
+			usedNormSize = bounds.min // hit the char cap, only the smallest size could fit
+		} else {
+			// Smooth shrink-to-fit. The search accepts fitting sizes in increasing order, so the last one
+			// is the winner — capture its (complete, since it fits) layout to reuse below.
+			usedNormSize = findBestFontSize(bounds, SIZE_SEARCH_GRID, (size) => {
+				const layout = getNormLayout(size, false)
+				if (layout.fits) fittingLayout = layout
+				return layout.fits
+			})
+		}
+
+		// The fallbacks (fixed/truncated/nothing-fit) weren't probed, so this computes once, not extra
+		const normLayout = fittingLayout ?? getNormLayout(usedNormSize, true)
 
 		// Scale the normalized layout up to the actual canvas dimensions for rendering
 		const actualSize = usedNormSize * upScale

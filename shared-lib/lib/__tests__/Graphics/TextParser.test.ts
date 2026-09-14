@@ -2,14 +2,11 @@ import { describe, expect, test, vi } from 'vitest'
 import type { CompanionImageContext2D } from '../../Graphics/ImageBase.js'
 import {
 	computeTextLayout,
-	resolveFontSizes,
+	findBestFontSize,
+	resolveFontSizeBounds,
 	segmentTextToUnicodeChars,
 	type TextLayoutResult,
 } from '../../Graphics/TextParser.js'
-
-// Round each element of a number array to 3 decimal places.
-// Keeps test expectations stable across V8 float-rounding changes.
-const r3 = (nums: number[]): number[] => nums.map((n) => Math.round(n * 1000) / 1000)
 
 // Mock context that simulates measuring text with roughly 10px per character for simplicity
 function createMockContext(charWidth: number = 10, lineHeight: number = 14): CompanionImageContext2D {
@@ -143,166 +140,114 @@ describe('segmentTextToUnicodeChars', () => {
 	})
 })
 
-describe('resolveFontSizes', () => {
+describe('resolveFontSizeBounds', () => {
 	describe('allowShrink=false (fixed size)', () => {
-		test('returns single element array with requested size', () => {
-			expect(resolveFontSizes(72, 72, 14, false, 10)).toEqual([14])
-			expect(resolveFontSizes(72, 72, 24, false, 10)).toEqual([24])
-			expect(resolveFontSizes(72, 72, 7, false, 10)).toEqual([7])
+		test('collapses to the requested size', () => {
+			expect(resolveFontSizeBounds(72, 14, false)).toEqual({ min: 14, max: 14 })
+			expect(resolveFontSizeBounds(72, 24, false)).toEqual({ min: 24, max: 24 })
+			expect(resolveFontSizeBounds(72, 7, false)).toEqual({ min: 7, max: 7 })
 		})
 
-		test('clamps minimum font size to 3', () => {
-			expect(resolveFontSizes(72, 72, 1, false, 10)).toEqual([3])
-			expect(resolveFontSizes(72, 72, 2, false, 10)).toEqual([3])
-			expect(resolveFontSizes(72, 72, 0, false, 10)).toEqual([3])
-			expect(resolveFontSizes(72, 72, -5, false, 10)).toEqual([3])
+		test('clamps minimum font size to round(h/24)', () => {
+			expect(resolveFontSizeBounds(72, 1, false)).toEqual({ min: 3, max: 3 })
+			expect(resolveFontSizeBounds(72, 0, false)).toEqual({ min: 3, max: 3 })
+			expect(resolveFontSizeBounds(72, -5, false)).toEqual({ min: 3, max: 3 })
 		})
 
 		test('clamps maximum font size to height', () => {
-			expect(resolveFontSizes(72, 72, 150, false, 10)).toEqual([72])
-			expect(resolveFontSizes(72, 123, 200, false, 10)).toEqual([123])
-			expect(resolveFontSizes(72, 72, 120, false, 10)).toEqual([72])
+			expect(resolveFontSizeBounds(72, 150, false)).toEqual({ min: 72, max: 72 })
+			expect(resolveFontSizeBounds(123, 200, false)).toEqual({ min: 123, max: 123 })
 		})
 
 		test('passes through edge values', () => {
-			expect(resolveFontSizes(72, 72, 3, false, 10)).toEqual([3])
-			expect(resolveFontSizes(72, 72, 71, false, 10)).toEqual([71])
+			expect(resolveFontSizeBounds(72, 3, false)).toEqual({ min: 3, max: 3 })
+			expect(resolveFontSizeBounds(72, 71, false)).toEqual({ min: 71, max: 71 })
 		})
 	})
 
 	describe('allowShrink=true (shrink to fit)', () => {
-		describe('w:72 h:72 (standard button)', () => {
-			const w = 72
-			const h = 72
-
-			test('configured size appears first, then heuristic sizes below it', () => {
-				// fontsize=60 is above the 0.83*72=59.76 threshold
-				const result = resolveFontSizes(w, h, 60, true, 3)
-				expect(r3(result)).toEqual([
-					60, 59.76, 51.12, 43.92, 30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2,
-				])
-			})
-
-			test('configured size caps the heuristic candidates for short text', () => {
-				// fontsize=30.96 (≈ 0.43*72) — only heuristic sizes below it are included
-				const result = resolveFontSizes(w, h, 30.96, true, 3)
-				expect(r3(result)).toEqual([30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
-			})
-
-			test('very short text: FONTSIZE_SHRINK_DEFAULT equivalent gives full heuristic list', () => {
-				// FONTSIZE_SHRINK_DEFAULT=100 → pixel size = 100*72/100/1.2 = 60
-				// Equivalent to old 'auto' for very short text (charCount < 7*area)
-				const result = resolveFontSizes(w, h, 60, true, 3)
-				expect(r3(result)).toEqual([
-					60, 59.76, 51.12, 43.92, 30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2,
-				])
-			})
-
-			test('short text (charCount < 30*area)', () => {
-				const result = resolveFontSizes(w, h, 60, true, 15)
-				expect(r3(result)).toEqual([60, 30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
-			})
-
-			test('medium text (charCount < 40*area)', () => {
-				const result = resolveFontSizes(w, h, 60, true, 35)
-				expect(r3(result)).toEqual([60, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
-			})
-
-			test('longer text (charCount < 50*area)', () => {
-				const result = resolveFontSizes(w, h, 60, true, 45)
-				expect(r3(result)).toEqual([60, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
-			})
-
-			test('very long text (charCount >= 50*area)', () => {
-				const result = resolveFontSizes(w, h, 60, true, 60)
-				expect(r3(result)).toEqual([60, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
-			})
-
-			test('configured size below all heuristic candidates returns only that size', () => {
-				// fontsize=5 < MIN_FONT_SIZE_FRACTION*72=7.2, so nothing from heuristic qualifies
-				const result = resolveFontSizes(w, h, 5, true, 3)
-				expect(r3(result)).toEqual([5])
-			})
-
-			test('clamps min/max like fixed mode', () => {
-				expect(resolveFontSizes(w, h, 0, true, 3)).toEqual([3])
-				expect(resolveFontSizes(w, h, 200, true, 3)[0]).toEqual(72)
-			})
+		test('spans from the min auto size (10% of h) up to the configured size', () => {
+			// floor = MIN_FONT_SIZE_FRACTION * 72 = 7.2
+			expect(resolveFontSizeBounds(72, 60, true)).toEqual({ min: 7.2, max: 60 })
+			expect(resolveFontSizeBounds(72, 30, true)).toEqual({ min: 7.2, max: 30 })
 		})
 
-		describe('w:144 h:144 (double-size button)', () => {
-			const w = 144
-			const h = 144
+		test('max clamps to the height (the "auto" / no-cap signal is fontsize === h)', () => {
+			expect(resolveFontSizeBounds(72, 72, true)).toEqual({ min: 7.2, max: 72 })
+			expect(resolveFontSizeBounds(72, 200, true)).toEqual({ min: 7.2, max: 72 })
+		})
 
-			test('thresholds are resolution-independent, sizes scale with h', () => {
-				// relativeWidth = 1.0 for square — same thresholds as 72x72; charCount < 30 * 1 = 30
-				expect(r3(resolveFontSizes(w, h, h, true, 20))).toEqual([
-					61.92, 47.52, 40.32, 34.56, 30.24, 24.48, 20.16, 18.72, 15.84, 14.4,
-				])
+		test('the floor never exceeds the configured cap', () => {
+			// fontsize=5 is below the 7.2 floor, so both bounds collapse to it
+			expect(resolveFontSizeBounds(72, 5, true)).toEqual({ min: 5, max: 5 })
+			// fontsize=0 clamps up to round(72/24)=3, still below the floor
+			expect(resolveFontSizeBounds(72, 0, true)).toEqual({ min: 3, max: 3 })
+		})
 
-				// charCount >= 50 * 1 = 50
-				expect(r3(resolveFontSizes(w, h, h, true, 50))).toEqual([30.24, 24.48, 20.16, 18.72, 15.84, 14.4])
-			})
+		test('bounds scale with the reference height', () => {
+			// floor = 0.1 * 144 = 14.4
+			expect(resolveFontSizeBounds(144, 144, true)).toEqual({ min: 14.4, max: 144 })
 		})
 	})
+})
 
-	// The candidate size range must depend only on the element's aspect ratio (w/h), not its
-	// absolute pixel size. The bug this tests: old formula `(w*h)/5000` was calibrated for a
-	// ~72px button, so a *small* subregion (e.g. 36×36) produces area ≈ 0.26 and falls into a
-	// smaller size range than a proportionally-equivalent large subregion (e.g. 100×100, area=2).
-	// The fix normalises to w/h so the same range is always selected for the same aspect ratio.
-	describe('resolution independence — same candidate fractions for any subregion size', () => {
-		// Normalise returned sizes to fractions-of-h so different absolute sizes are comparable
-		const fractions = (w: number, h: number, chars: number) =>
-			resolveFontSizes(w, h, h, true, chars).map((s) => r3([s / h])[0])
+describe('findBestFontSize', () => {
+	const GRID = 0.25
+	// A monotonic fit oracle: every size up to (and including) `boundary` fits, larger ones don't
+	const fitsUpTo = (boundary: number) => (size: number) => size <= boundary
 
-		// Square subregion (1:1): critical case is short text in a small element.
-		// Old formula: 36×36 → area=0.26, 2 chars → Range 2 [0.43…]
-		//              100×100 → area=2.0,  2 chars → Range 1 [0.83…]  ← different!
-		// New formula: both → relativeWidth=1, 2 < 7 → Range 1 [0.83…] ← same
-		test.each([
-			{ chars: 2, desc: '2 chars' },
-			{ chars: 4, desc: '4 chars' },
-			{ chars: 6, desc: '6 chars' },
-		])('square subregion: $desc — same fractions at 36px, 72px, and 100px', ({ chars }) => {
-			const atSmall = fractions(36, 36, chars) // small subregion: old formula diverges here
-			expect(fractions(72, 72, chars)).toEqual(atSmall)
-			expect(fractions(100, 100, chars)).toEqual(atSmall)
+	test('returns max when the text already fits at the largest size', () => {
+		expect(findBestFontSize({ min: 7.2, max: 72 }, GRID, fitsUpTo(100))).toBe(72)
+	})
+
+	test('returns min when nothing above the floor fits (rendered as overflow by the caller)', () => {
+		expect(findBestFontSize({ min: 7.2, max: 72 }, GRID, fitsUpTo(3))).toBe(7.2)
+	})
+
+	test('collapses to the single size when the range is empty (min === max)', () => {
+		const fits = vi.fn(() => false)
+		expect(findBestFontSize({ min: 20, max: 20 }, GRID, fits)).toBe(20)
+		// No searching needed for a fixed size
+		expect(fits).not.toHaveBeenCalled()
+	})
+
+	test.each([{ boundary: 42.37 }, { boundary: 12.9 }, { boundary: 55.05 }, { boundary: 30.0 }, { boundary: 68.8 }])(
+		'converges on an arbitrary boundary ($boundary) to within one grid step',
+		({ boundary }) => {
+			const result = findBestFontSize({ min: 7.2, max: 72 }, GRID, fitsUpTo(boundary))
+			// The chosen size must fit and be no more than one grid step below the true boundary —
+			// i.e. any size is reachable, not just a handful of fixed steps.
+			expect(result).toBeLessThanOrEqual(boundary)
+			expect(boundary - result).toBeLessThanOrEqual(GRID)
+		}
+	)
+
+	test('produces finely-spaced sizes across neighbouring boundaries (smooth, not stepped)', () => {
+		// Sweeping the fit boundary in small increments must yield correspondingly small changes in the
+		// chosen size — the property the old fixed-step list could not provide.
+		const sizes = []
+		for (let boundary = 20; boundary <= 40; boundary += 1) {
+			sizes.push(findBestFontSize({ min: 7.2, max: 72 }, GRID, fitsUpTo(boundary)))
+		}
+		const distinct = new Set(sizes)
+		// 21 distinct boundaries should map to many distinct sizes (not a few discrete steps)
+		expect(distinct.size).toBeGreaterThan(15)
+		// And every step between neighbours stays small
+		for (let i = 1; i < sizes.length; i++) {
+			expect(sizes[i] - sizes[i - 1]).toBeLessThanOrEqual(1 + GRID)
+		}
+	})
+
+	test('never probes outside the bounds', () => {
+		const probed: number[] = []
+		findBestFontSize({ min: 7.2, max: 72 }, GRID, (size) => {
+			probed.push(size)
+			return size <= 33
 		})
-
-		// Wide subregion (2:1): same principle across different absolute widths
-		test.each([{ chars: 2 }, { chars: 5 }])(
-			'2:1 subregion: $chars chars — same fractions at 36×18, 72×36, and 100×50',
-			({ chars }) => {
-				const atSmall = fractions(36, 18, chars)
-				expect(fractions(72, 36, chars)).toEqual(atSmall)
-				expect(fractions(100, 50, chars)).toEqual(atSmall)
-			}
-		)
-
-		// Narrow-height element (~35% of canvas height, full width): the specific case
-		// the user observed — a single line of text in a short text region.
-		// Old formula: w=72, h=25 → area=0.36, 3 chars ≥ 7×0.36=2.52 → Range 2 [0.43…]
-		//              w=200, h=70 → area=2.8,  3 chars < 7×2.8=19.6  → Range 1 [0.83…]  ← different!
-		// New formula: relativeWidth=72/25=2.88 or 200/70=2.857, both → 3 < 7×2.857=20 → Range 1
-		test.each([
-			{ chars: 3, desc: '3 chars (single short word)' },
-			{ chars: 5, desc: '5 chars (single medium word)' },
-		])('full-width 35% height element: $desc — same fractions at 72×25, 144×50, and 200×70', ({ chars }) => {
-			const atSmall = fractions(72, 25, chars)
-			expect(fractions(144, 50, chars)).toEqual(atSmall)
-			expect(fractions(200, 70, chars)).toEqual(atSmall)
-		})
-
-		// Same for ~40% height
-		test.each([{ chars: 3 }, { chars: 5 }])(
-			'full-width 40% height element: $chars chars — same fractions at 72×29, 144×58, and 200×80',
-			({ chars }) => {
-				const atSmall = fractions(72, 29, chars)
-				expect(fractions(144, 58, chars)).toEqual(atSmall)
-				expect(fractions(200, 80, chars)).toEqual(atSmall)
-			}
-		)
+		for (const size of probed) {
+			expect(size).toBeGreaterThanOrEqual(7.2)
+			expect(size).toBeLessThanOrEqual(72)
+		}
 	})
 })
 

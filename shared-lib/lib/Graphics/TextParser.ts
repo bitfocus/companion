@@ -54,66 +54,56 @@ export function segmentTextToUnicodeChars(
 /** Minimum auto font size as a fraction of canvas height (10%) */
 export const MIN_FONT_SIZE_FRACTION = 0.1
 
+export interface FontSizeBounds {
+	/** Smallest font size (px) to consider */
+	min: number
+	/** Largest font size (px) to consider */
+	max: number
+}
+
 /**
- * returns a list of font sizes to try when shrinking the text to fit or the configured size without shrink to fit
+ * Font-size search range (px) for a text box: a single clamped size when not shrinking, otherwise
+ * from the minimum auto size ({@link MIN_FONT_SIZE_FRACTION} of the height) up to the configured size.
  */
-export function resolveFontSizes(
-	w: number,
-	h: number,
-	fontsize: number,
-	allowShrink: boolean,
-	charCount: number
-): number[] {
-	// Clamp the configured size to a sane pixel range (minimum is calibrated to 72px reference height)
-	const clamped = Math.min(Math.max(fontsize, Math.round(h / 24)), h)
+export function resolveFontSizeBounds(h: number, fontsize: number, allowShrink: boolean): FontSizeBounds {
+	// Clamp the configured size to a sane pixel range (minimum calibrated to 72px reference height)
+	const max = Math.min(Math.max(fontsize, Math.round(h / 24)), h)
 
 	if (!allowShrink) {
-		return [clamped]
+		return { min: max, max }
 	}
 
-	// Estimate how many characters fit per font-height-squared of available area.
-	// Capacity at fraction s ≈ (w/h) / (s² × char_aspect), so threshold comparisons
-	// should use w/h — purely relative, resolution-independent.
-	const relativeWidth = w / h
+	// Floor is the minimum auto size, but never above the configured cap
+	const min = Math.min(Math.max(MIN_FONT_SIZE_FRACTION * h, 1), max)
+	return { min, max }
+}
 
-	// Sizes expressed as fractions of canvas height
-	let baseSizes: number[]
-	if (charCount < 7 * relativeWidth) {
-		baseSizes = [0.83, 0.71, 0.61, 0.43, 0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
-	} else if (charCount < 30 * relativeWidth) {
-		baseSizes = [0.43, 0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
-	} else if (charCount < 40 * relativeWidth) {
-		baseSizes = [0.33, 0.28, 0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
-	} else if (charCount < 50 * relativeWidth) {
-		baseSizes = [0.24, 0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
-	} else {
-		baseSizes = [0.21, 0.17, 0.14, 0.13, 0.11, MIN_FONT_SIZE_FRACTION]
-	}
+/**
+ * Binary-search the largest font size (px) that fits. `fits` must be monotonic (true up to some
+ * boundary, false above). Converges to `grid` px precision; returns `bounds.max` if it already fits
+ * or `bounds.min` if nothing above the floor does (caller renders that as overflow).
+ */
+export function findBestFontSize(bounds: FontSizeBounds, grid: number, fits: (size: number) => boolean): number {
+	const { min, max } = bounds
+	if (max <= min) return max
+	if (fits(max)) return max
 
-	// When fontsize equals h the caller is signalling "use heuristics only" (no user-chosen cap),
-	// so we skip prepending the configured size and just return the heuristic list.
-	const prependConfigured = fontsize !== h
-
-	// Start with the configured size (if appropriate), then add heuristic candidates smaller than it
-	const seen = new Set<number>()
-	const candidates: number[] = []
-
-	if (prependConfigured) {
-		seen.add(clamped)
-		candidates.push(clamped)
-	}
-
-	// Multiply fraction by h to get pixel size; only include sizes strictly below the cap,
-	// and deduplicate while preserving order
-	for (const s of baseSizes) {
-		const v = Math.max(s * h, 1)
-		if (!seen.has(v) && v < clamped) {
-			seen.add(v)
-			candidates.push(v)
+	let lo = min // largest size not yet proven too big (search lower bound)
+	let hi = max // smallest size known not to fit
+	let best: number | undefined
+	while (hi - lo > grid) {
+		const mid = Math.round((lo + hi) / 2 / grid) * grid
+		if (mid <= lo || mid >= hi) break
+		if (fits(mid)) {
+			lo = mid
+			best = mid
+		} else {
+			hi = mid
 		}
 	}
 
-	return candidates
+	// Nothing above the floor fit → fall back to the floor (rendered as overflow by the caller)
+	return best ?? min
 }
 
 /**
