@@ -54,13 +54,13 @@
     "@julusian/bonjour-service": "^1.4.5",
     "@julusian/image-rs": "^2.2.0",
     "@julusian/segfault-raub": "^2.3.3",
-    "@napi-rs/canvas": "^1.0.8",
-    "@sentry/node": "^10.73.0",
+    "@napi-rs/canvas": "^1.0.9",
+    "@sentry/node": "^10.74.0",
     "@trpc/server": "^11.18.0",
     "bufferutil": "npm:@julusian/bufferutil@^4.1.0",
     "colord": "^2.10.0",
     "commander": "^15.0.0",
-    "compression": "^1.8.1",
+    "compression": "^1.8.2",
     "cors": "^2.8.6",
     "csv-stringify": "^6.8.3",
     "dayjs": "^1.11.23",
@@ -92,7 +92,7 @@
     "stream-json": "^3.6.0",
     "supports-color": "^11.0.0",
     "swagger-ui-dist": "^5.32.15",
-    "systeminformation": "^5.33.8",
+    "systeminformation": "^5.33.10",
     "tar-fs": "^3.1.3",
     "tar-stream": "^3.2.1",
     "type-fest": "^5.9.0",
@@ -105,6 +105,6 @@
     "ws": "^8.21.3",
     "yaml": "^2.9.0",
     "yazl": "^3.3.1",
-    "zod": "^4.5.4"
+    "zod": "^4.6.2"
   }
 }

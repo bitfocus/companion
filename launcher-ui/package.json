@@ -8,14 +8,14 @@
     "@companion-app/shared": "*",
     "@fontsource/roboto": "^5.3.0",
     "@tailwindcss/vite": "^4.3.3",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^1.41.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8",
+    "lucide-react": "^1.45.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "react-error-boundary": "^6.1.5",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.3",
@@ -23,7 +23,7 @@
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-7": "npm:typescript@^7.0.2",
     "usehooks-ts": "^3.1.1",
-    "vite": "^8.2.2"
+    "vite": "^8.3.0"
   },
   "scripts": {
     "start": "vite --port 5177",
