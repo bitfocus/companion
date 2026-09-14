@@ -131,6 +131,11 @@ describe('ParseLegacyStyle', () => {
 		expect(r2.text.sizeAllowShrink).toBe(false)
 	})
 
+	test('show_topbar is respected when no defaultNoTopBar is given', () => {
+		expect(ParseLegacyStyle({ size: 10, show_topbar: false }).text.size).toBe(16.7)
+		expect(ParseLegacyStyle({ size: 10, show_topbar: true }).text.size).toBe(21)
+	})
+
 	test('alignment string is parsed into halign and valign', () => {
 		const result = ParseLegacyStyle({ alignment: 'left:top' })
 		expect(result.text.halign).toBe('left')

@@ -63,8 +63,7 @@ export function ParseLegacyStyle(style: Partial<ButtonStyleProperties>, defaultN
 			const n = Number(style.size)
 			if (!isNaN(n)) {
 				// We can't be 100% accurate on whether to account for the top-bar or not, but during imports we want to try to match how it was just drawing
-				const showTopBar =
-					defaultNoTopBar !== undefined && typeof style.show_topbar === 'boolean' ? style.show_topbar : !defaultNoTopBar
+				const showTopBar = typeof style.show_topbar === 'boolean' ? style.show_topbar : !defaultNoTopBar
 				const scale = showTopBar ? TEXT_SIZE_SCALE : TEXT_SIZE_SCALE_NO_TOPBAR
 
 				// Ensure is a number, and round to 1dp
