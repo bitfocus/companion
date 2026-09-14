@@ -4,6 +4,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { ResolvedSurfaceView } from '@companion-app/shared/SurfaceLayout.js'
 import { Button } from '~/Components/Button.js'
 import { Grid } from '~/Components/Grid'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
@@ -25,7 +27,11 @@ import { ButtonInfiniteGrid, PrimaryButtonGridIcon, type ButtonInfiniteGridRef }
 import { GridButtonDragOverlay } from './GridButtonDragOverlay.js'
 import type { GridButtonModifiers } from './GridButtonPreview.js'
 import { locationsInRectangle } from './GridGeometry.js'
+import { GridViewAsBanner } from './GridViewAsBanner.js'
+import { GridViewAsControl } from './GridViewAsControl.js'
 import type { GridZoomController } from './GridZoom.js'
+import { SurfaceCanvas, type SurfaceCanvasRef } from './SurfaceView/SurfaceCanvas.js'
+import type { GridViewAsController } from './useGridViewAs.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -35,6 +41,12 @@ interface ButtonsGridPanelProps {
 	gridZoomController: GridZoomController
 	contextMenuButton: ControlLocation | null
 	onButtonContextMenu: (location: ControlLocation, x: number, y: number) => void
+	viewAs: GridViewAsController
+	/** The bounds the grid is showing, which the surface being viewed as narrows */
+	gridSize: UserConfigGridSize | undefined
+	/** What the grid is being viewed as, or null when it is showing itself */
+	/** The surface being viewed as, drawn in place of the grid itself */
+	surfaceView: ResolvedSurfaceView | null
 }
 
 export const ButtonsGridPanel = observer(function ButtonsPage({
@@ -45,8 +57,11 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	gridZoomController,
 	contextMenuButton,
 	onButtonContextMenu,
+	viewAs,
+	gridSize,
+	surfaceView,
 }: ButtonsGridPanelProps) {
-	const { pages, userConfig } = useContext(RootAppStoreContext)
+	const { pages } = useContext(RootAppStoreContext)
 	const { store, actions } = useButtonGridView()
 
 	const setPage = useCallback(
@@ -76,14 +91,18 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	const pageInfo = pages.get(pageNumber)
 
 	const gridRef = useRef<ButtonInfiniteGridRef>(null)
+	const surfaceRef = useRef<SurfaceCanvasRef>(null)
 
 	const resetPosition = useCallback(() => {
 		gridRef.current?.resetPosition()
 	}, [gridRef])
 
-	const gridSize = userConfig.properties?.gridSize
-
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
+
+	// Held here rather than inside the control, so that the banner can open the same popover: the
+	// states the banner reports need something choosing, and the chooser is otherwise out of reach
+	const [configureOpen, setConfigureOpen] = useState(false)
+	const openConfigure = useCallback(() => setConfigureOpen(true), [])
 	const [viewportMinHeight, setViewportMinHeight] = useState(250) // arbitrary initial min-height
 
 	// Ctrl/cmd + wheel zooms, the way every canvas does. React attaches wheel passively at the root,
@@ -126,7 +145,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 		() => ({
 			canStart: store.allowsMarquee,
 			// The infinite grid is a lattice, so the buttons a box covers are the rectangle of cells it spans.
-			// Anything laid out differently answers this for itself.
+			// A surface answers this for itself, from where its controls actually are.
 			onSelect: (from: ControlLocation, to: ControlLocation, additive: boolean) =>
 				store.handleMarquee(locationsInRectangle(from, to), from, additive, actions),
 		}),
@@ -142,7 +161,10 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 
 	// Keyboard navigation is useless if it walks the focus off the edge of what you can see
 	useEffect(() => {
-		if (focus && focus.pageNumber === pageNumber) gridRef.current?.revealLocation(focus)
+		if (focus && focus.pageNumber === pageNumber) {
+			gridRef.current?.revealLocation(focus)
+			surfaceRef.current?.revealLocation(focus)
+		}
 	}, [focus, pageNumber])
 
 	return (
@@ -170,32 +192,55 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 							<Button color="light" onClick={resetPosition} title="Home Position" className="ms-1">
 								<FontAwesomeIcon icon={faHome} />
 							</Button>
+							<GridViewAsControl
+								controller={viewAs}
+								configureOpen={configureOpen}
+								setConfigureOpen={setConfigureOpen}
+							/>
 							<ButtonGridPageMenu pageNumber={pageNumber} pageInfo={pageInfo} />
 						</ButtonGridHeader>
 					</Grid.Col>
 				</Grid.Row>
 
 				<ButtonGridToolbar />
+
+				<GridViewAsBanner
+					resolution={viewAs.resolution}
+					onConfigure={openConfigure}
+					onExit={() => viewAs.setEnabled(false)}
+				/>
 			</div>
 			{/* Rendered inside the grid's own styles, so the ghost is drawn the way the grid draws buttons */}
 			<GridButtonDragOverlay />
 
 			<div className="button-grid-panel-content" style={contentStyle} ref={setContentElement}>
-				{hasBeenInView && gridSize && (
-					<ButtonInfiniteGrid
-						ref={gridRef}
-						isHot={pressMode}
-						pageNumber={pageNumber}
-						contextMenuButton={contextMenuButton}
-						onButtonContextMenu={onButtonContextMenu}
-						gridSize={gridSize}
-						ButtonIconFactory={PrimaryButtonGridIcon}
-						marquee={marquee}
-						onHoverLocation={handleHover}
-						drawScale={gridZoomValue / 100}
-						setViewportMinHeight={setViewportMinHeight}
-					/>
-				)}
+				{hasBeenInView &&
+					(surfaceView ? (
+						<SurfaceCanvas
+							ref={surfaceRef}
+							isHot={pressMode}
+							pageNumber={pageNumber}
+							contextMenuButton={contextMenuButton}
+							view={surfaceView}
+							drawScale={gridZoomValue / 100}
+						/>
+					) : (
+						gridSize && (
+							<ButtonInfiniteGrid
+								ref={gridRef}
+								isHot={pressMode}
+								pageNumber={pageNumber}
+								contextMenuButton={contextMenuButton}
+								onButtonContextMenu={onButtonContextMenu}
+								gridSize={gridSize}
+								ButtonIconFactory={PrimaryButtonGridIcon}
+								marquee={marquee}
+								onHoverLocation={handleHover}
+								drawScale={gridZoomValue / 100}
+								setViewportMinHeight={setViewportMinHeight}
+							/>
+						)
+					))}
 			</div>
 		</KeyReceiver>
 	)

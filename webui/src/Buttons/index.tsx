@@ -30,10 +30,12 @@ import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
 import { PageVariablesPanel } from './PageVariablesPanel.js'
 import { ConnectionPresets } from './Presets/Presets.js'
+import { controlLocation, stepToNearestControl } from './SurfaceView/surfaceGeometry.js'
 import { useButtonContextMenu } from './useButtonContextMenu.js'
 import { useGridDropMonitor } from './useGridDropMonitor.js'
 import { useGridKeyboard } from './useGridKeyboard.js'
 import { useGridToolActions } from './useGridToolActions.js'
+import { useGridViewAs } from './useGridViewAs.js'
 
 /** What the URL asks for, or 0 when it names no usable page - "wherever I was" */
 function useUrlPageNumber(): number {
@@ -85,7 +87,36 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		if (rawPageNumber !== pageNumber) navigateToButtonsPage(navigate, pageNumber)
 	}, [rawPageNumber, pageNumber, navigate])
 
-	const gridSize = userConfig.properties?.gridSize
+	const fullGridSize = userConfig.properties?.gridSize
+
+	// Viewing as a surface narrows the grid to the region that surface covers, and leaves holes where it
+	// has no controls. Everything which places or walks over buttons is measured against that rather
+	// than against the whole grid, so nothing can be put where the view says there is nothing.
+	const viewAs = useGridViewAs()
+	const gridSize = viewAs.resolution.status === 'ready' ? viewAs.resolution.bounds : fullGridSize
+
+	const surfaceView = viewAs.resolution.status === 'ready' ? viewAs.resolution.view : null
+
+	// The surface answers for itself which buttons it shows and which one is next to which, because its
+	// controls are wherever the device puts them rather than on a lattice the store could walk
+	useEffect(() => {
+		gridStore.setViewShape(
+			surfaceView
+				? {
+						locations: surfaceView.controls.map((control) => controlLocation(control, pageNumber)),
+						stepFocus: (from, rowDelta, columnDelta) => {
+							const current = surfaceView.controls.find(
+								(control) => control.cell.row === from.row && control.cell.column === from.column
+							)
+							if (!current) return null
+
+							const next = stepToNearestControl(surfaceView, current, rowDelta, columnDelta)
+							return next ? controlLocation(next, pageNumber) : null
+						},
+					}
+				: null
+		)
+	}, [gridStore, surfaceView, pageNumber])
 
 	const openEditor = useCallback((location: ControlLocation) => {
 		setActiveTab('edit')
@@ -188,6 +219,9 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				onButtonContextMenu={doButtonContextMenu}
 				gridZoomController={gridZoomController}
 				gridZoomValue={gridZoomValue}
+				viewAs={viewAs}
+				gridSize={gridSize}
+				surfaceView={surfaceView}
 			/>
 		</MyErrorBoundary>
 	)

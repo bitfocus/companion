@@ -31,6 +31,7 @@ export function surfaceLayoutsFromConfigs(
 		result[surfaceId] = {
 			id: surfaceId,
 			type: config.type || 'Unknown',
+			integrationType: config.integrationType || '',
 			displayName: getSurfaceName(config, surfaceId),
 			isConnected,
 			layout: config.layout,

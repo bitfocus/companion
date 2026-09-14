@@ -1,0 +1,55 @@
+/* The grid drawn as the face of a surface: controls wherever the surface has them, at the size it draws
+   them. Nothing here is a lattice, so there are no cells to leave empty - the bare face shows between
+   the controls, which is what a device looks like. */
+.surface-canvas-viewport {
+	overflow: auto;
+	max-width: 100%;
+
+	&.button-armed {
+		background-color: var(--color-armed-surface);
+		box-shadow: inset 0 0 0 3px var(--color-danger);
+	}
+}
+
+.surface-canvas {
+	position: relative;
+
+	/* default draw scale, used for button text */
+	--grid-scale: 1;
+
+	.button-control {
+		position: absolute;
+
+		/* The control is exactly the size the surface draws it, so the button fills what it is given
+		   rather than being fitted into a cell of some other shape */
+		box-sizing: border-box;
+		padding: 0;
+
+		.button-border {
+			width: 100%;
+			height: 100%;
+
+			/* ButtonPreview keeps a button square by padding it to its own width, for the places which give
+			   it a width and let the height follow. Here both are known, and a control is very often not
+			   square, so that padding would win over the height it was given. */
+			padding-bottom: 0;
+
+			border-radius: var(--control-radius, 12%);
+
+			.button-placeholder {
+				/* shrink text with scaling */
+				font-size: calc(var(--grid-scale) * 1.5rem);
+			}
+		}
+	}
+
+	/* The rectangle being dragged out across the face */
+	.surface-canvas-marquee {
+		position: absolute;
+		z-index: 1;
+		pointer-events: none;
+
+		border: 1px dashed var(--color-primary);
+		background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+	}
+}
