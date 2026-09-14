@@ -153,7 +153,7 @@ function AddElementDropdownPopoverButton({
 			.mutateAsync({ controlId, type: elementType, afterElementId: styleStore.selectedElementId })
 			.then((resId) => {
 				console.log('Added element', resId)
-				if (resId) styleStore.setSelectedElementId(resId)
+				if (resId) styleStore.setSelectedEntryId(resId)
 			})
 			.catch((e) => {
 				console.error('Failed to add element', e)

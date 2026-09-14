@@ -29,6 +29,8 @@ export interface ButtonGraphicsElementBase {
 	usage: ButtonGraphicsElementUsage
 	enabled: ExpressionOrValue<boolean>
 	opacity: ExpressionOrValue<number>
+	/** Ids of the properties pinned to this button's pinned view */
+	pinnedProperties: string[]
 }
 
 export interface ButtonGraphicsDrawBounds {
@@ -72,7 +74,10 @@ export interface ButtonGraphicsCanvasDrawElement extends Omit<ButtonGraphicsDraw
 	showStatusIcons: ButtonGraphicsShowStatusIcons
 }
 
-export interface ButtonGraphicsCanvasElement extends Omit<ButtonGraphicsElementBase, 'enabled' | 'opacity'> {
+export interface ButtonGraphicsCanvasElement extends Omit<
+	ButtonGraphicsElementBase,
+	'enabled' | 'opacity' | 'pinnedProperties'
+> {
 	// Note: this is the background element and can only be at the bottom of the stack
 	type: 'canvas'
 	decoration: ExpressionOrValue<ButtonGraphicsDecorationType> // replaces show_topbar

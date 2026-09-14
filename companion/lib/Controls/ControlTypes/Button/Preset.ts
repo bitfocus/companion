@@ -315,6 +315,13 @@ export class ControlButtonPreset
 	}
 
 	/**
+	 * Pin or unpin a property of an element in the layered style
+	 */
+	layeredStyleSetElementPropertyPinned(_id: string, _property: string, _pinned: boolean): boolean {
+		throw new Error('ControlButtonPreset does not support mutations')
+	}
+
+	/**
 	 * Update an option on an element from the layered style
 	 */
 	layeredStyleUpdateOption(_id: string, _key: string, _value: ExpressionOrValue<JsonValue | undefined>): boolean {

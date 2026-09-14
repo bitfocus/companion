@@ -1,5 +1,8 @@
 import { nanoid } from 'nanoid'
-import { FONTSIZE_SHRINK_DEFAULT } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
+import {
+	FONTSIZE_SHRINK_DEFAULT,
+	getDefaultPinnedProperties,
+} from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import { assertNever } from '@companion-app/shared/Util.js'
@@ -14,6 +17,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				name: 'Text',
 				usage: ButtonGraphicsElementUsage.Automatic,
 				type: 'text',
+				pinnedProperties: getDefaultPinnedProperties('text'),
 				enabled: { value: true, isExpression: false },
 				opacity: { value: 100, isExpression: false },
 				x: { value: 0, isExpression: false },
@@ -38,6 +42,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				name: 'Image',
 				usage: ButtonGraphicsElementUsage.Automatic,
 				type: 'image',
+				pinnedProperties: getDefaultPinnedProperties('image'),
 				enabled: { value: true, isExpression: false },
 				opacity: { value: 100, isExpression: false },
 				x: { value: 0, isExpression: false },
@@ -56,6 +61,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				name: 'Box',
 				usage: ButtonGraphicsElementUsage.Automatic,
 				type: 'box',
+				pinnedProperties: getDefaultPinnedProperties('box'),
 				enabled: { value: true, isExpression: false },
 				opacity: { value: 100, isExpression: false },
 				x: { value: 0, isExpression: false },
@@ -75,6 +81,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				name: 'Group',
 				usage: ButtonGraphicsElementUsage.Automatic,
 				type: 'group',
+				pinnedProperties: getDefaultPinnedProperties('group'),
 				enabled: { value: true, isExpression: false },
 				opacity: { value: 100, isExpression: false },
 				x: { value: 0, isExpression: false },
@@ -91,6 +98,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				name: 'Line',
 				usage: ButtonGraphicsElementUsage.Automatic,
 				type: 'line',
+				pinnedProperties: getDefaultPinnedProperties('line'),
 				enabled: { value: true, isExpression: false },
 				opacity: { value: 100, isExpression: false },
 				fromX: { value: 0, isExpression: false },
@@ -107,6 +115,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				name: 'Circle',
 				usage: ButtonGraphicsElementUsage.Automatic,
 				type: 'circle',
+				pinnedProperties: getDefaultPinnedProperties('circle'),
 				enabled: { value: true, isExpression: false },
 				opacity: { value: 100, isExpression: false },
 				x: { value: 0, isExpression: false },
@@ -128,6 +137,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				name: 'Gauge',
 				usage: ButtonGraphicsElementUsage.Automatic,
 				type: 'gauge',
+				pinnedProperties: getDefaultPinnedProperties('gauge'),
 				enabled: { value: true, isExpression: false },
 				opacity: { value: 100, isExpression: false },
 				x: { value: 0, isExpression: false },
@@ -189,6 +199,7 @@ export function CreateElementOfType(type: SomeButtonGraphicsElement['type']): So
 				name: 'Reference',
 				usage: ButtonGraphicsElementUsage.Automatic,
 				type: 'reference',
+				pinnedProperties: getDefaultPinnedProperties('reference'),
 				enabled: { value: true, isExpression: false },
 				opacity: { value: 100, isExpression: false },
 				x: { value: 0, isExpression: false },

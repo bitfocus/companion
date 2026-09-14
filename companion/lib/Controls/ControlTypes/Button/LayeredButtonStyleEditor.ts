@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
+import { getDefaultPinnedProperties } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
 	ButtonGraphicsBoxElement,
@@ -58,6 +59,7 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 					type: 'composite',
 					connectionId,
 					elementId,
+					pinnedProperties: getDefaultPinnedProperties('composite'),
 					enabled: { value: true, isExpression: false },
 					opacity: { value: 100, isExpression: false },
 					x: { value: 0, isExpression: false },
@@ -158,6 +160,33 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 		return true
 	}
 
+	/**
+	 * Pin or unpin one property of an element, so it does (or no longer does) appear in the button's pinned
+	 * view. The stored order is insertion order and carries no meaning: the pinned view lays properties out in
+	 * the element type's canonical schema order.
+	 */
+	setElementPropertyPinned(id: string, property: string, pinned: boolean): boolean {
+		const currentElementLocation = this.#findElementIndexAndParent(this.drawElementsList, null, id)
+		if (!currentElementLocation) return false
+
+		const { element } = currentElementLocation
+		// The canvas holds button-level properties, which are out of scope for pinning
+		if (element.type === 'canvas') return false
+
+		if (element.pinnedProperties.includes(property) === pinned) return false // Already in the wanted state
+
+		if (pinned) {
+			element.pinnedProperties.push(property)
+		} else {
+			element.pinnedProperties = element.pinnedProperties.filter((pinnedProperty) => pinnedProperty !== property)
+		}
+
+		// Pins are editor-only metadata, so nothing needs redrawing
+		this.#host.commitChange(false)
+
+		return true
+	}
+
 	getElementById(id: string): SomeButtonGraphicsElement | undefined {
 		return this.#findElementIndexAndParent(this.drawElementsList, null, id)?.element
 	}
@@ -212,6 +241,7 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 			key === 'type' ||
 			key === 'name' ||
 			key === 'usage' ||
+			key === 'pinnedProperties' ||
 			key === 'children' ||
 			key === 'connectionId' ||
 			key === 'elementId'

@@ -487,6 +487,33 @@
 
 /* ---- Ghost variant ---- */
 
+/* An icon or word acting as a button from within a line of other content: it keeps the button behaviours
+   (focus ring, disabled handling) but takes no space or paint of its own beyond a small gap either side, so
+   it doesn't disturb the line it sits in. The caller supplies the colours it wants. */
+.button-inline {
+	--btn-padding-x: 0.3rem;
+	--btn-padding-y: 0;
+	--btn-border-width: 0;
+	--btn-border-radius: 0;
+	--btn-font-size: inherit;
+
+	--btn-color: inherit;
+	--btn-bg: transparent;
+	--btn-border-color: transparent;
+	--btn-hover-color: inherit;
+	--btn-hover-bg: transparent;
+	--btn-hover-border-color: transparent;
+	--btn-active-color: inherit;
+	--btn-active-bg: transparent;
+	--btn-active-border-color: transparent;
+	--btn-disabled-color: inherit;
+	--btn-disabled-bg: transparent;
+	--btn-disabled-border-color: transparent;
+
+	--btn-line-height: inherit;
+	vertical-align: baseline;
+}
+
 .button-ghost {
 	--btn-color: #6d7d9c;
 	--btn-bg: transparent;
