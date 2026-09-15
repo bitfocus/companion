@@ -16,7 +16,6 @@ import { Modal } from '~/Components/Modal'
 import { useAllModuleProducts } from '~/Hooks/useFilteredProducts.js'
 import { ModuleVersionsRefresh } from '~/Instances/ModuleVersionsRefresh.js'
 import { useModuleVersionSelectOptions } from '~/Instances/useModuleVersionSelectOptions.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { InstanceEditPanelService } from './InstanceEditPanelService'
@@ -45,8 +44,6 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 
 	const buttonRef = useRef<HTMLButtonElement>(null)
 
-	const setModuleAndVersionMutation = useMutationExt(trpc.instances.connections.setModuleAndVersion.mutationOptions())
-
 	const [saveError, setSaveError] = useState<string | null>(null)
 	const form = useForm({
 		defaultValues: {
@@ -54,11 +51,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 			versionId: currentVersionId,
 		},
 		onSubmit: async ({ value }) => {
-			const error = await setModuleAndVersionMutation.mutateAsync({
-				connectionId: service.instanceId,
-				moduleId: value.moduleId,
-				versionId: value.versionId,
-			})
+			const error = await service.setModuleAndVersion(value.moduleId, value.versionId)
 			if (error) {
 				setSaveError(error)
 			} else {

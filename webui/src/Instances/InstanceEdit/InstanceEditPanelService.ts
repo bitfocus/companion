@@ -22,6 +22,12 @@ export interface InstanceEditPanelService<TConfig extends ClientInstanceConfigBa
 
 	saveConfig: (panelStore: InstanceEditPanelStore<TConfig>) => Promise<string | null>
 
+	/**
+	 * Change the module and/or version for this instance. Returns an error message to display, or null
+	 * on success. Routed to the connection or surface endpoint by the concrete service implementation.
+	 */
+	setModuleAndVersion: (moduleId: string, versionId: string | null) => Promise<string | null>
+
 	deleteInstance: (currentLabel: string) => void
 
 	closePanel: () => void
