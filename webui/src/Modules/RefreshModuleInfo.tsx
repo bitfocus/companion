@@ -16,9 +16,9 @@ export const RefreshModuleInfo = observer(function RefreshModuleInfo({
 	moduleType,
 	moduleId,
 }: RefreshModulesListProps) {
-	const { moduleStoreRefreshProgress } = useContext(RootAppStoreContext)
+	const { modules } = useContext(RootAppStoreContext)
 
-	const refreshProgress = moduleStoreRefreshProgress.get(moduleId) ?? 1
+	const { percent: refreshProgress } = modules.getStoreRefreshProgress(moduleType, moduleId)
 
 	const refreshInfoMutation = useMutationExt(trpc.instances.modulesStore.refreshModuleInfo.mutationOptions())
 

@@ -1,4 +1,4 @@
-import type { IObservableValue, ObservableMap, ObservableSet } from 'mobx'
+import type { IObservableValue, ObservableSet } from 'mobx'
 import { createContext } from 'react'
 import type { ImportExportTask } from '@companion-app/shared/Model/ImportExport.js'
 import type { NotificationsManagerRef } from '~/Components/Notifications.js'
@@ -49,8 +49,6 @@ export interface RootAppStore {
 	readonly userConfig: UserConfigStore
 
 	readonly imageLibrary: ImageLibraryStore
-
-	readonly moduleStoreRefreshProgress: ObservableMap<string | null, number>
 
 	/** The current or most-recent import/reset task, driven by a single subscription (see useImportTaskStatusSubscription) */
 	readonly importTaskStatus: IObservableValue<ImportExportTask | null>

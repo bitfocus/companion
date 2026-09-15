@@ -1,7 +1,7 @@
-import { faSync } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faSync, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -14,9 +14,12 @@ export const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({
 	moduleType,
 	moduleId,
 }: ModuleVersionsRefreshProps) {
-	const { moduleStoreRefreshProgress } = useContext(RootAppStoreContext)
+	const { modules } = useContext(RootAppStoreContext)
 
-	const refreshProgress = (moduleId ? moduleStoreRefreshProgress.get(moduleId) : null) ?? 1
+	const { percent: refreshProgress, failed } = moduleId
+		? modules.getStoreRefreshProgress(moduleType, moduleId)
+		: { percent: 1, failed: false }
+	const isRefreshing = refreshProgress !== 1
 
 	const refreshInfoMutation = useMutationExt(trpc.instances.modulesStore.refreshModuleInfo.mutationOptions())
 	const doRefreshModules = useCallback(() => {
@@ -26,25 +29,26 @@ export const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({
 		})
 	}, [refreshInfoMutation, moduleType, moduleId])
 
-	if (refreshProgress === 1) {
-		return (
-			<div
-				className="float_right"
-				onClick={doRefreshModules}
-				onKeyDown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') {
-						e.preventDefault()
-						doRefreshModules()
-					}
-				}}
-				role="button"
-				tabIndex={0}
-				title="Refresh module versions"
-			>
-				<FontAwesomeIcon icon={faSync} aria-label="Refresh module versions" />
-			</div>
-		)
-	} else {
+	// Briefly show the outcome (tick or cross) once a refresh finishes, so a fast refresh still gives
+	// visible feedback and a failure is not silent
+	const [completed, setCompleted] = useState<'success' | 'failed' | null>(null)
+	const wasRefreshing = useRef(false)
+	useEffect(() => {
+		if (isRefreshing) {
+			wasRefreshing.current = true
+			setCompleted(null)
+			return undefined
+		} else if (wasRefreshing.current) {
+			wasRefreshing.current = false
+			setCompleted(failed ? 'failed' : 'success')
+			const timeout = setTimeout(() => setCompleted(null), 2000)
+			return () => clearTimeout(timeout)
+		} else {
+			return undefined
+		}
+	}, [isRefreshing, failed])
+
+	if (isRefreshing) {
 		return (
 			<div className="float_right" title={`Refreshing module info ${Math.round(refreshProgress * 100)}%`}>
 				<FontAwesomeIcon
@@ -55,4 +59,38 @@ export const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({
 			</div>
 		)
 	}
+
+	if (completed === 'success') {
+		return (
+			<div className="float_right text-success" title="Module versions refreshed">
+				<FontAwesomeIcon icon={faCheck} aria-label="Module versions refreshed" />
+			</div>
+		)
+	}
+
+	if (completed === 'failed') {
+		return (
+			<div className="float_right text-danger" title="Failed to refresh module versions">
+				<FontAwesomeIcon icon={faXmark} aria-label="Failed to refresh module versions" />
+			</div>
+		)
+	}
+
+	return (
+		<div
+			className="float_right"
+			onClick={doRefreshModules}
+			onKeyDown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault()
+					doRefreshModules()
+				}
+			}}
+			role="button"
+			tabIndex={0}
+			title="Refresh module versions"
+		>
+			<FontAwesomeIcon icon={faSync} aria-label="Refresh module versions" />
+		</div>
+	)
 })

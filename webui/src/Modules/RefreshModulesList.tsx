@@ -8,9 +8,9 @@ import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 export const RefreshModulesList = observer(function RefreshModulesList({ btnSize }: { btnSize?: 'sm' | 'lg' }) {
-	const { moduleStoreRefreshProgress } = useContext(RootAppStoreContext)
+	const { modules } = useContext(RootAppStoreContext)
 
-	const refreshProgress = moduleStoreRefreshProgress.get(null) ?? 1
+	const { percent: refreshProgress } = modules.getStoreListRefreshProgress()
 
 	const [refreshError, setLoadError] = useState<string | null>(null)
 
