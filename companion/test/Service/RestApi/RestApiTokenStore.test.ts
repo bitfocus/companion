@@ -95,17 +95,39 @@ describe('RestApiTokenStore', () => {
 		const { store, table } = createStore()
 
 		// Seed a record belonging to some other, future API surface
-		table.set('foreign', {
-			id: 'foreign',
-			name: 'foreign',
-			api: 'other-api',
-			scopes: ['read'],
-			tokenHash: createHash('sha256').update('foreigntoken').digest('hex'),
-			tokenPrefix: 'cpn_xxxxxx',
-			createdAt: 1,
-			lastUsedAt: null,
-		})
+		seedForeignKey(table)
 
 		expect(store.findByToken('foreigntoken')).toBeUndefined()
 	})
+
+	test('key management is scoped to this API - foreign keys are invisible and untouchable', () => {
+		const { store, table } = createStore()
+
+		const own = store.create('own', ['read'])
+		seedForeignKey(table)
+
+		// list only exposes keys minted for this API
+		expect(store.list().map((k) => k.id)).toEqual([own.info.id])
+
+		// a foreign key cannot be edited or revoked through this store
+		expect(store.update('foreign', { name: 'hijack', scopes: ['admin'] })).toBeUndefined()
+		expect(store.delete('foreign')).toBe(false)
+
+		// and it remains untouched in the shared table
+		expect(table.get('foreign')).toMatchObject({ name: 'foreign', scopes: ['read'] })
+	})
 })
+
+/** Seed a record belonging to some other, future API surface into the shared `api_keys` table. */
+function seedForeignKey(table: DataStoreTableView<any>): void {
+	table.set('foreign', {
+		id: 'foreign',
+		name: 'foreign',
+		api: 'other-api',
+		scopes: ['read'],
+		tokenHash: createHash('sha256').update('foreigntoken').digest('hex'),
+		tokenPrefix: 'cpn_xxxxxx',
+		createdAt: 1,
+		lastUsedAt: null,
+	})
+}

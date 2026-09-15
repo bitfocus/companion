@@ -37,6 +37,7 @@ export const RestApiKeyModal = forwardRef<RestApiKeyModalRef, RestApiKeyModalPro
 	const [name, setName] = useState('')
 	const [scopes, setScopes] = useState<ApiTokenScope[]>(['read'])
 	const [createdToken, setCreatedToken] = useState<string | null>(null)
+	const [saving, setSaving] = useState(false)
 
 	useImperativeHandle(
 		ref,
@@ -46,6 +47,7 @@ export const RestApiKeyModal = forwardRef<RestApiKeyModalRef, RestApiKeyModalPro
 				setName('')
 				setScopes(['read'])
 				setCreatedToken(null)
+				setSaving(false)
 				setShow(true)
 			},
 			edit(key) {
@@ -53,6 +55,7 @@ export const RestApiKeyModal = forwardRef<RestApiKeyModalRef, RestApiKeyModalPro
 				setName(key.name)
 				setScopes(key.scopes)
 				setCreatedToken(null)
+				setSaving(false)
 				setShow(true)
 			},
 		}),
@@ -64,17 +67,23 @@ export const RestApiKeyModal = forwardRef<RestApiKeyModalRef, RestApiKeyModalPro
 	const doSave = useCallback(
 		(e?: React.FormEvent) => {
 			e?.preventDefault()
-			if (!isValid) return
+			if (!isValid || saving) return
 
+			setSaving(true)
 			if (editingId === null) {
 				createMutation
 					.mutateAsync({ name: name.trim(), scopes })
 					.then((result) => {
+						// Reveal the one-time token, keeping the modal open even if a stray close fired mid-request
 						setCreatedToken(result.token)
+						setShow(true)
 						onSaved()
 					})
 					.catch((err) => {
 						notifier.show('Error', `Failed to create API key: ${err.message || err}`, 5000)
+					})
+					.finally(() => {
+						setSaving(false)
 					})
 			} else {
 				updateMutation
@@ -86,21 +95,24 @@ export const RestApiKeyModal = forwardRef<RestApiKeyModalRef, RestApiKeyModalPro
 					.catch((err) => {
 						notifier.show('Error', `Failed to update API key: ${err.message || err}`, 5000)
 					})
+					.finally(() => {
+						setSaving(false)
+					})
 			}
 		},
-		[createMutation, updateMutation, editingId, name, scopes, isValid, notifier, onSaved]
+		[createMutation, updateMutation, editingId, name, scopes, isValid, saving, notifier, onSaved]
 	)
 
 	const nameFieldId = useId()
 	const title = editingId === null ? 'Create API key' : 'Edit API key'
 
 	return (
-		<Modal.Root open={show} onOpenChange={setShow} disableDismiss={!!createdToken}>
+		<Modal.Root open={show} onOpenChange={setShow} disableDismiss={!!createdToken || saving}>
 			<Modal.Portal>
 				<Modal.Backdrop />
 				<Modal.Viewport>
 					<Modal.Popup>
-						<Modal.Header closeButton={!createdToken}>
+						<Modal.Header closeButton={!createdToken && !saving}>
 							<Modal.Title>{title}</Modal.Title>
 						</Modal.Header>
 
@@ -158,8 +170,8 @@ export const RestApiKeyModal = forwardRef<RestApiKeyModalRef, RestApiKeyModalPro
 									</Form>
 								</Modal.Body>
 								<Modal.Footer>
-									<Modal.Close>Cancel</Modal.Close>
-									<Button color="primary" onClick={doSave} disabled={!isValid}>
+									<Modal.Close disabled={saving}>Cancel</Modal.Close>
+									<Button color="primary" onClick={doSave} disabled={!isValid || saving}>
 										{editingId === null ? 'Create' : 'Save'}
 									</Button>
 								</Modal.Footer>

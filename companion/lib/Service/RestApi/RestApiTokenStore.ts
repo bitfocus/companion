@@ -77,9 +77,13 @@ export class RestApiTokenStore implements ApiTokenStore {
 		return undefined
 	}
 
-	/** All keys as public metadata, ordered oldest-first. Never exposes the token or its hash. */
+	/**
+	 * All keys for this API as public metadata, ordered oldest-first. Never exposes the token or its
+	 * hash. Keys minted for another API audience are excluded - the shared table may hold them.
+	 */
 	list(): ApiKeyInfo[] {
 		return Object.values(this.#table.all())
+			.filter((record) => record.api === REST_API_AUDIENCE)
 			.map(toApiKeyInfo)
 			.sort((a, b) => a.createdAt - b.createdAt)
 	}
@@ -115,7 +119,7 @@ export class RestApiTokenStore implements ApiTokenStore {
 	 */
 	update(id: string, changes: { name: string; scopes: ApiTokenScope[] }): ApiKeyInfo | undefined {
 		const existing = this.#table.get(id)
-		if (!existing) return undefined
+		if (!existing || existing.api !== REST_API_AUDIENCE) return undefined
 
 		const updated: StoredApiKey = { ...existing, name: changes.name, scopes: changes.scopes }
 		this.#table.set(id, updated)
@@ -127,7 +131,7 @@ export class RestApiTokenStore implements ApiTokenStore {
 	/** Revoke a key by id. Returns whether a key was removed. */
 	delete(id: string): boolean {
 		const existing = this.#table.get(id)
-		if (!existing) return false
+		if (!existing || existing.api !== REST_API_AUDIENCE) return false
 
 		this.#table.delete(id)
 		this.#logger.info(`Revoked API key "${existing.name}" (${id})`)
