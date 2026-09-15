@@ -217,6 +217,15 @@ const PageMatrixCard = memo(function PageMatrixCard({
 	return (
 		<div
 			onClick={() => onSelect(pageNumber)}
+			onKeyDown={(e) => {
+				if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+					e.preventDefault()
+					onSelect(pageNumber)
+				}
+			}}
+			role="button"
+			tabIndex={0}
+			aria-label={`Open page ${pageNumber}${name ? `, ${name}` : ''}`}
 			className={`group relative flex flex-col p-3 rounded-xl border bg-surface transition-all cursor-pointer select-none hover:shadow-md ${
 				isCurrent ? 'border-primary ring-2 ring-primary/20 shadow-sm' : 'border-border hover:border-primary/50'
 			}`}
@@ -274,13 +283,14 @@ const PageMatrixCard = memo(function PageMatrixCard({
 			<div className="flex items-center justify-between mt-auto pt-1 text-3xs text-muted">
 				<span>Click to open</span>
 				<div
-					className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+					className="flex items-center gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity"
 					onClick={(e) => e.stopPropagation()}
 				>
 					<button
 						type="button"
 						onClick={() => onConfigure(pageNumber)}
 						title="Rename page"
+						aria-label={`Rename page ${pageNumber}`}
 						className="p-1 rounded hover:bg-surface-muted hover:text-body text-muted"
 					>
 						<FontAwesomeIcon icon={faPencil} />

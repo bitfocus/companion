@@ -25,8 +25,15 @@ export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.El
 		if (!selectedConnectionId) return
 
 		const handleKeyDown = (e: KeyboardEvent) => {
-			// Don't close if a modal is open or typing in a form input that might want Esc to clear
-			if (addConnectionsMatch) return
+			// Let focused controls and dialogs consume Escape without also discarding the editor.
+			const target = e.target instanceof Element ? e.target : null
+			if (
+				e.defaultPrevented ||
+				addConnectionsMatch ||
+				document.querySelector('[role="dialog"]') ||
+				target?.closest('input, textarea, select, [contenteditable="true"], [role="listbox"], [role="combobox"]')
+			)
+				return
 			if (e.key === 'Escape') {
 				void navigate({ to: '/connections' })
 			}

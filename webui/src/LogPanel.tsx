@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import copy from 'copy-to-clipboard'
 import dayjs from 'dayjs'
 import {
 	AlertCircle,
@@ -155,11 +156,14 @@ export const LogPanel = memo(function LogPanel() {
 			)
 			.join('\n')
 
-		void navigator.clipboard.writeText(dump).then(() => {
-			setCopiedAll(true)
-			notifier.show('Logs Copied', `Copied ${processedMessages.length} log lines to clipboard`, 2500)
-			setTimeout(() => setCopiedAll(false), 2000)
-		})
+		void copy(dump)
+			.then((copied) => {
+				if (!copied) throw new Error('Clipboard copy was rejected')
+				setCopiedAll(true)
+				notifier.show('Logs Copied', `Copied ${processedMessages.length} log lines to clipboard`, 2500)
+				setTimeout(() => setCopiedAll(false), 2000)
+			})
+			.catch(() => notifier.show('Copy Failed', 'Could not copy logs to the clipboard', 2500))
 	}, [processedMessages, notifier])
 
 	return (
@@ -357,10 +361,13 @@ const SystemLogLine = memo(function SystemLogLine({ line }: { line: GroupedLogLi
 	const handleCopy = (e: React.MouseEvent) => {
 		e.stopPropagation()
 		const str = `[${dayjs(line.time).format('YYYY-MM-DD HH:mm:ss.SSS')}] [${line.level?.toUpperCase()}] [${line.source}] ${line.message}`
-		void navigator.clipboard.writeText(str).then(() => {
-			setCopied(true)
-			setTimeout(() => setCopied(false), 1500)
-		})
+		void copy(str)
+			.then((copied) => {
+				if (!copied) return
+				setCopied(true)
+				setTimeout(() => setCopied(false), 1500)
+			})
+			.catch(() => undefined)
 	}
 
 	return (
