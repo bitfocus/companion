@@ -1,9 +1,10 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { exprExpr, exprVal, type ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
 import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandlerApi.js'
 import type { ActionForInternalExecution } from '../../lib/Internal/Types.js'
 import { InternalVariables } from '../../lib/Internal/Variables.js'
+import LogController, { type Logger } from '../../lib/Log/Controller.js'
 import type { LocalVariable, LocalVariablesController } from '../../lib/Variables/LocalVariablesController.js'
 import type { VariableValueData } from '../../lib/Variables/Util.js'
 import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
@@ -34,6 +35,20 @@ function makeAction(
 	}
 }
 
+/**
+ * Capture the warnings the module logs. Must be called before constructing InternalVariables,
+ * as the logger is created in the field initialiser.
+ */
+function mockLogger(): Logger {
+	const logger = { warn: vi.fn(), info: vi.fn(), debug: vi.fn(), error: vi.fn(), silly: vi.fn() } as unknown as Logger
+	vi.spyOn(LogController, 'createLogger').mockReturnValue(logger)
+	return logger
+}
+
+afterEach(() => {
+	vi.restoreAllMocks()
+})
+
 const fakeExtras: RunActionExtras = {
 	controlId: 'ctrl1',
 	surfaceId: undefined,
@@ -52,7 +67,7 @@ describe('local_variable_set_value deferred parse', () => {
 		return {
 			localVariableFor: vi.fn().mockReturnValue(localVariable),
 			getLocalVariableContextFor: vi.fn().mockReturnValue(context),
-			setLocalVariable: vi.fn(),
+			setLocalVariable: vi.fn().mockReturnValue(true),
 		} as unknown as LocalVariablesController
 	}
 
@@ -105,6 +120,7 @@ describe('local_variable_set_value deferred parse', () => {
 	it('does nothing if local variable is not found', () => {
 		const localVariables = makeLocalVariablesController(null, null)
 
+		const logger = mockLogger()
 		const module = new InternalVariables(localVariables)
 		const parser = createParser()
 
@@ -121,6 +137,30 @@ describe('local_variable_set_value deferred parse', () => {
 		module.executeAction(action, fakeExtras, parser)
 
 		expect(localVariables.setLocalVariable).not.toHaveBeenCalled()
+		expect(logger.warn).toHaveBeenCalledWith('Local variable "missing" at location "this" not found')
+	})
+
+	it('logs when the variable cannot be written to', () => {
+		const localVar: LocalVariable = { controlId: 'ctrl1', name: 'counter' }
+		const localVariables = makeLocalVariablesController(localVar, {})
+		vi.mocked(localVariables.setLocalVariable).mockReturnValue(false)
+
+		const logger = mockLogger()
+		const module = new InternalVariables(localVariables)
+
+		const action = makeAction(
+			'local_variable_set_value',
+			{ location: 'this', name: 'counter', value: 'x' },
+			{
+				location: exprVal('this'),
+				name: exprVal('counter'),
+				value: exprVal('x'),
+			}
+		)
+
+		module.executeAction(action, fakeExtras, createParser())
+
+		expect(logger.warn).toHaveBeenCalledWith('Unable to set value of local variable "counter" at location "this"')
 	})
 
 	it('falls back to empty context when the variable is found but context is null', () => {
@@ -180,9 +220,9 @@ function makeFullLocalVariablesController(localVariable: LocalVariable | null): 
 	return {
 		localVariableFor: vi.fn().mockReturnValue(localVariable),
 		getLocalVariableContextFor: vi.fn().mockReturnValue({}),
-		setLocalVariable: vi.fn(),
-		resetLocalVariable: vi.fn(),
-		writeLocalVariableStartupValue: vi.fn(),
+		setLocalVariable: vi.fn().mockReturnValue(true),
+		resetLocalVariable: vi.fn().mockReturnValue(true),
+		writeLocalVariableStartupValue: vi.fn().mockReturnValue(true),
 	} as unknown as LocalVariablesController
 }
 
@@ -205,6 +245,7 @@ describe('local_variable_reset_to_default', () => {
 
 	it('does nothing when the local variable is not found', () => {
 		const localVariables = makeFullLocalVariablesController(null)
+		const logger = mockLogger()
 		const module = new InternalVariables(localVariables)
 
 		const action = makeAction(
@@ -216,6 +257,25 @@ describe('local_variable_reset_to_default', () => {
 		module.executeAction(action, fakeExtras, createParser())
 
 		expect(localVariables.resetLocalVariable).not.toHaveBeenCalled()
+		expect(logger.warn).toHaveBeenCalledWith('Local variable "missing" at location "this" not found')
+	})
+
+	it('logs when the variable cannot be written to', () => {
+		const localVariables = makeFullLocalVariablesController({ controlId: 'ctrl1', name: 'counter' })
+		vi.mocked(localVariables.resetLocalVariable).mockReturnValue(false)
+
+		const logger = mockLogger()
+		const module = new InternalVariables(localVariables)
+
+		const action = makeAction(
+			'local_variable_reset_to_default',
+			{ location: 'this', name: 'counter' },
+			{ location: exprVal('this'), name: exprVal('counter') }
+		)
+
+		module.executeAction(action, fakeExtras, createParser())
+
+		expect(logger.warn).toHaveBeenCalledWith('Unable to reset local variable "counter" at location "this"')
 	})
 })
 
@@ -238,6 +298,7 @@ describe('local_variable_sync_to_default', () => {
 
 	it('does nothing when the local variable is not found', () => {
 		const localVariables = makeFullLocalVariablesController(null)
+		const logger = mockLogger()
 		const module = new InternalVariables(localVariables)
 
 		const action = makeAction(
@@ -249,6 +310,27 @@ describe('local_variable_sync_to_default', () => {
 		module.executeAction(action, fakeExtras, createParser())
 
 		expect(localVariables.writeLocalVariableStartupValue).not.toHaveBeenCalled()
+		expect(logger.warn).toHaveBeenCalledWith('Local variable "missing" at location "this" not found')
+	})
+
+	it('logs when the variable cannot be written to', () => {
+		const localVariables = makeFullLocalVariablesController({ controlId: 'ctrl1', name: 'counter' })
+		vi.mocked(localVariables.writeLocalVariableStartupValue).mockReturnValue(false)
+
+		const logger = mockLogger()
+		const module = new InternalVariables(localVariables)
+
+		const action = makeAction(
+			'local_variable_sync_to_default',
+			{ location: 'this', name: 'counter' },
+			{ location: exprVal('this'), name: exprVal('counter') }
+		)
+
+		module.executeAction(action, fakeExtras, createParser())
+
+		expect(logger.warn).toHaveBeenCalledWith(
+			'Unable to write startup value of local variable "counter" at location "this"'
+		)
 	})
 })
 

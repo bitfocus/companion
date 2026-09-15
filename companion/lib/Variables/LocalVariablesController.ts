@@ -126,37 +126,44 @@ export class LocalVariablesController {
 	/**
 	 * Set the named local variable on the identified control to the supplied
 	 * value.
+	 * Returns false if the variable could not be written to.
 	 */
-	setLocalVariable(localVariable: LocalVariable, value: JsonValue | undefined): void {
+	setLocalVariable(localVariable: LocalVariable, value: JsonValue | undefined): boolean {
 		const controlAndVariable = this.#getEditableControlAndVariable(localVariable)
-		if (!controlAndVariable) return
+		if (!controlAndVariable) return false
 
 		const { entities, variableEntity } = controlAndVariable
 		entities.entitySetVariableValue(LocalVariablesList, variableEntity.id, value)
+
+		return true
 	}
 
 	/**
 	 * Reset the named local variable on the identified control to its startup
 	 * value.
+	 * Returns false if the variable could not be written to.
 	 */
-	resetLocalVariable(localVariable: LocalVariable): void {
+	resetLocalVariable(localVariable: LocalVariable): boolean {
 		const controlAndVariable = this.#getEditableControlAndVariable(localVariable)
-		if (!controlAndVariable) return
+		if (!controlAndVariable) return false
 
 		const { entities, variableEntity } = controlAndVariable
 
 		// This isn't allowed to be an expression
 		const startupValue = variableEntity.rawOptions.startup_value?.value
 		entities.entitySetVariableValue(LocalVariablesList, variableEntity.id, startupValue)
+
+		return true
 	}
 
 	/**
 	 * Set the startup value of the named local variable on the identified control
 	 * from its current value.
+	 * Returns false if the variable could not be written to.
 	 */
-	writeLocalVariableStartupValue(localVariable: LocalVariable): void {
+	writeLocalVariableStartupValue(localVariable: LocalVariable): boolean {
 		const controlAndVariable = this.#getEditableControlAndVariable(localVariable)
-		if (!controlAndVariable) return
+		if (!controlAndVariable) return false
 
 		const { entities, variableEntity } = controlAndVariable
 
@@ -164,5 +171,7 @@ export class LocalVariablesController {
 			isExpression: false,
 			value: variableEntity.feedbackValue,
 		})
+
+		return true
 	}
 }

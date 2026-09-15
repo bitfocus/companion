@@ -14,9 +14,10 @@ import { ControlLocationOption } from '@companion-app/shared/ControlLocation.js'
 import { LocalVariableNameOption } from '@companion-app/shared/LocalVariable.js'
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { CompanionInputFieldDropdownExtended } from '@companion-app/shared/Model/Options.js'
-import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { CompanionFeedbackButtonStyleResult } from '@companion-module/base'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
+import LogController from '../Log/Controller.js'
 import { isPackaged } from '../Resources/Util.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
@@ -48,6 +49,10 @@ const COMPARISON_OPERATION: CompanionInputFieldDropdownExtended = {
 	disableAutoExpression: true,
 }
 
+function describeLocalVariable(location: VariableValue, name: VariableValue): string {
+	return `"${stringifyVariableValue(name)}" at location "${stringifyVariableValue(location)}"`
+}
+
 function compareValues(op: any, value: any, value2: any): boolean {
 	switch (op) {
 		case 'gt':
@@ -62,6 +67,8 @@ function compareValues(op: any, value: any, value2: any): boolean {
 }
 
 export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents> implements InternalModuleFragment {
+	readonly #logger = LogController.createLogger('Internal/Variables')
+
 	readonly #localVariables: LocalVariablesController
 
 	constructor(localVariables: LocalVariablesController) {
@@ -321,7 +328,10 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 			case 'local_variable_set_value': {
 				const { location, name } = action.options
 				const localVariable = this.#localVariables.localVariableFor(location, name, extras)
-				if (!localVariable) break
+				if (!localVariable) {
+					this.#logger.warn(`Local variable ${describeLocalVariable(location, name)} not found`)
+					break
+				}
 
 				const context = this.#localVariables.getLocalVariableContextFor(localVariable) ?? {}
 				const childParser = parser.createChildParser(context)
@@ -332,25 +342,34 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						`Failed to evaluate value for local variable "${stringifyVariableValue(name)}": ${parsed.error}`
 					)
 
-				this.#localVariables.setLocalVariable(localVariable, parsed.value)
+				if (!this.#localVariables.setLocalVariable(localVariable, parsed.value))
+					this.#logger.warn(`Unable to set value of local variable ${describeLocalVariable(location, name)}`)
 
 				break
 			}
 			case 'local_variable_reset_to_default': {
 				const { location, name } = action.options
 				const localVariable = this.#localVariables.localVariableFor(location, name, extras)
-				if (!localVariable) break
+				if (!localVariable) {
+					this.#logger.warn(`Local variable ${describeLocalVariable(location, name)} not found`)
+					break
+				}
 
-				this.#localVariables.resetLocalVariable(localVariable)
+				if (!this.#localVariables.resetLocalVariable(localVariable))
+					this.#logger.warn(`Unable to reset local variable ${describeLocalVariable(location, name)}`)
 
 				break
 			}
 			case 'local_variable_sync_to_default': {
 				const { location, name } = action.options
 				const localVariable = this.#localVariables.localVariableFor(location, name, extras)
-				if (!localVariable) break
+				if (!localVariable) {
+					this.#logger.warn(`Local variable ${describeLocalVariable(location, name)} not found`)
+					break
+				}
 
-				this.#localVariables.writeLocalVariableStartupValue(localVariable)
+				if (!this.#localVariables.writeLocalVariableStartupValue(localVariable))
+					this.#logger.warn(`Unable to write startup value of local variable ${describeLocalVariable(location, name)}`)
 
 				break
 			}
