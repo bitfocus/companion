@@ -838,7 +838,7 @@
 	position: fixed;
 	top: 0.75rem;
 	left: 0.75rem;
-	z-index: 1036; /* just above .sidebar (1035) so it stays reachable */
+	z-index: 1034; /* below the open sidebar, so it does not overlap the brand */
 	width: 2.5rem;
 	height: 2.5rem;
 	display: flex;

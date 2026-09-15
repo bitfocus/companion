@@ -1,4 +1,4 @@
-import { faChevronLeft, faChevronRight, faLock } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faChevronRight, faLock, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import classNames from 'classnames'
@@ -61,18 +61,38 @@ export interface SidebarFooterProps {
 	onContextMenu: MouseEventHandler<HTMLElement>
 	onToggleNarrow: () => void
 	isNarrow: boolean
+	mobileMode: boolean
+	onCloseMobile: () => void
 }
 
 export const SidebarFooter = observer(function SidebarFooter({
 	onContextMenu,
 	onToggleNarrow,
 	isNarrow,
+	mobileMode,
+	onCloseMobile,
 }: SidebarFooterProps): React.JSX.Element {
 	const { versionName } = useCompanionVersion()
 	const { canLock, setLocked } = useContext(AdminLockContext)
 	const updateData = useSubscription(trpc.appInfo.updateInfo.subscriptionOptions())
 
 	const channelBadge = CHANNEL_BADGE[channelFromUpdateMessage(updateData.data?.message)]
+
+	if (mobileMode) {
+		return (
+			<div className="sidebar-footer2 flex flex-col gap-2 p-3 border-t border-zinc-800/80 shrink-0">
+				<button
+					type="button"
+					className="w-full h-9 flex items-center justify-center gap-2 bg-zinc-800/60 hover:bg-zinc-700/80 border border-zinc-700/50 rounded-md text-xs font-medium text-zinc-200 hover:text-white transition cursor-pointer shadow-xs"
+					onClick={onCloseMobile}
+					title="Close navigation"
+				>
+					<FontAwesomeIcon icon={faXmark} className="w-3.5 h-3.5 text-zinc-400" />
+					<span>Close navigation</span>
+				</button>
+			</div>
+		)
+	}
 
 	if (isNarrow) {
 		return (

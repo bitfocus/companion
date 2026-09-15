@@ -61,6 +61,7 @@ function foldableIcon(foldable: boolean): ReactElement {
 export interface SidebarStateProps {
 	mobileMode: boolean
 	handleShowSidebar: () => void
+	handleHideSidebar: () => void
 	showSidebarEvent: EventTarget
 }
 const SidebarStateContext = createContext<SidebarStateProps | null>(null)
@@ -69,6 +70,7 @@ const NarrowModeContext = createContext(false) // used locally for labelling: tr
 const defaultSidebarState: SidebarStateProps = {
 	mobileMode: false,
 	handleShowSidebar: () => {},
+	handleHideSidebar: () => {},
 	showSidebarEvent: new EventTarget(),
 }
 
@@ -89,6 +91,9 @@ export function SidebarStateProvider({ children }: React.PropsWithChildren): Rea
 			// the next two are for the hamburger toggle
 			handleShowSidebar: () => {
 				event.dispatchEvent(new Event('show'))
+			},
+			handleHideSidebar: () => {
+				event.dispatchEvent(new Event('hide'))
 			},
 			showSidebarEvent: event,
 		} satisfies SidebarStateProps
@@ -427,7 +432,7 @@ export const MySidebar = memo(function MySidebar() {
 	// unfold-able, not un-foldable! Unfortunately "unfoldable" is CoreUI terminology, so probably shouldn't be changed.
 	const [unfoldable, setUnfoldable] = useLocalStorage('sidebar_foldable', false)
 	const [narrowMode, setNarrowMode] = useLocalStorage('sidebar_narrow_mode', false)
-	const { mobileMode } = useSidebarState()
+	const { mobileMode, handleHideSidebar } = useSidebarState()
 
 	// tempNarrow is used in unfoldable mode to make it temporarily narrow on click, so it is independent of narrowMode
 	const [tempNarrow, setTempNarrow] = useState(false)
@@ -529,6 +534,8 @@ export const MySidebar = memo(function MySidebar() {
 					onContextMenu={contextState.onContextMenu}
 					onToggleNarrow={toggleNarrowMode}
 					isNarrow={narrowMode}
+					mobileMode={mobileMode}
+					onCloseMobile={handleHideSidebar}
 				/>
 			</SidebarRoot>
 		</NarrowModeContext.Provider>
@@ -566,13 +573,18 @@ function SidebarRoot({
 	// handle the "hamburger" to show the sidebar in mobile mode
 	useEffect(() => {
 		const event = toggleEvent
-		const handler = () => {
+		const showHandler = () => {
 			setVisibleMobile(true)
 		}
-		event.addEventListener('show', handler)
+		const hideHandler = () => {
+			setVisibleMobile(false)
+		}
+		event.addEventListener('show', showHandler)
+		event.addEventListener('hide', hideHandler)
 
 		return () => {
-			event.removeEventListener('show', handler)
+			event.removeEventListener('show', showHandler)
+			event.removeEventListener('hide', hideHandler)
 		}
 	}, [toggleEvent, setVisibleMobile])
 
