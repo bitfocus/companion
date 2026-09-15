@@ -211,7 +211,14 @@ function useInstanceEditPanelService(
 	}, [navigate])
 
 	const setConfigMutation = useMutationExt(trpc.instances.connections.setConfig.mutationOptions())
+	const setModuleAndVersionMutation = useMutationExt(trpc.instances.connections.setModuleAndVersion.mutationOptions())
 	const deleteMutation = useMutationExt(trpc.instances.connections.delete.mutationOptions())
+
+	const setModuleAndVersion = useCallback(
+		async (moduleId: string, versionId: string | null): Promise<string | null> =>
+			setModuleAndVersionMutation.mutateAsync({ connectionId: instanceId, moduleId, versionId }),
+		[setModuleAndVersionMutation, instanceId]
+	)
 
 	const deleteInstance = useCallback(
 		(currentLabel: string) => {
@@ -285,8 +292,10 @@ function useInstanceEditPanelService(
 
 			saveConfig,
 
+			setModuleAndVersion,
+
 			closePanel,
 		}),
-		[instanceId, deleteInstance, saveConfig, closePanel]
+		[instanceId, deleteInstance, saveConfig, setModuleAndVersion, closePanel]
 	)
 }

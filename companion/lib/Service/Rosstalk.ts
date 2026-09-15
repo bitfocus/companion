@@ -62,6 +62,12 @@ export class ServiceRosstalk extends ServiceTcpBase {
 		// Ignore empty lines, e.g. the trailing part left by a command terminator
 		if (!line) return
 
+		// Ross XPression polls the connection with a `noop` keepalive; ignore it rather than warning.
+		if (/^noop$/i.test(line)) {
+			this.logger.debug(`Got noop command`)
+			return
+		}
+
 		// Use anchored matches, so that a command surrounded by garbage is not executed.
 		// The optional leading `CC ` tolerates senders (e.g. ProPresenter) that prepend their own `CC `
 		// on top of a user-entered `CC ...` command, producing `CC CC 1:1`.

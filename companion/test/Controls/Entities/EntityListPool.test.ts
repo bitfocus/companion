@@ -368,7 +368,7 @@ describe('EntityListPool - getFeedbackStyleOverrides (layered button)', () => {
 		pool.entityAdd('feedbacks', null, feedback)
 		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: true }))
 
-		const overrides = pool.getFeedbackStyleOverrides()
+		const overrides = pool.getFeedbackStyleOverrides(undefined)
 
 		// Boolean/advanced overrides carry no `this:value` binding
 		expect(overrides.get('el1')?.get('color')).toEqual({
@@ -383,7 +383,40 @@ describe('EntityListPool - getFeedbackStyleOverrides (layered button)', () => {
 		pool.entityAdd('feedbacks', null, feedback)
 		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: false }))
 
-		expect(pool.getFeedbackStyleOverrides().size).toBe(0)
+		expect(pool.getFeedbackStyleOverrides(undefined).size).toBe(0)
+	})
+
+	test('legacy advanced-feedback font size scales by the resolved top-bar state', () => {
+		const { pool } = createPool({
+			isLayered: true,
+			getEntityDefinition: (entityType) =>
+				entityType === EntityModelType.Feedback
+					? ({ entityType, feedbackType: FeedbackEntitySubType.Advanced } as any)
+					: ({ entityType } as any),
+		})
+		const feedback = feedbackModel({
+			styleOverrides: [
+				{
+					overrideId: 'ov1',
+					elementId: 'text0',
+					elementProperty: 'fontsize',
+					override: { isExpression: false, value: 'size' },
+				},
+			],
+		})
+		pool.entityAdd('feedbacks', null, feedback)
+		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: { size: 14 } }))
+
+		// No top bar → full draw height → smaller percentage (the bug: this used to always be 29.4)
+		expect(pool.getFeedbackStyleOverrides(true).get('text0')?.get('fontsize')).toEqual({
+			value: { isExpression: false, value: 23.3 },
+			thisContext: null,
+		})
+		// Top bar → reduced draw height → larger percentage
+		expect(pool.getFeedbackStyleOverrides(false).get('text0')?.get('fontsize')).toEqual({
+			value: { isExpression: false, value: 29.4 },
+			thisContext: null,
+		})
 	})
 
 	test('a value feedback binds its value to thisContext for the override expression', () => {
@@ -401,7 +434,7 @@ describe('EntityListPool - getFeedbackStyleOverrides (layered button)', () => {
 
 		// The pool does not evaluate the expression here - it carries the raw expression plus the feedback
 		// value as `thisContext` for the drawer to evaluate.
-		expect(pool.getFeedbackStyleOverrides().get('el1')?.get('color')).toEqual({
+		expect(pool.getFeedbackStyleOverrides(undefined).get('el1')?.get('color')).toEqual({
 			value: { isExpression: true, value: '$(this:value) + 1' },
 			thisContext: { value: 41 },
 		})
@@ -421,7 +454,7 @@ describe('EntityListPool - getFeedbackStyleOverrides (layered button)', () => {
 		pool.entityAdd('feedbacks', null, feedback)
 		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: 21 }))
 
-		expect(pool.getFeedbackStyleOverrides().get('el1')?.get('color')).toEqual({
+		expect(pool.getFeedbackStyleOverrides(undefined).get('el1')?.get('color')).toEqual({
 			value: { isExpression: true, value: '$(this:value) * 2' },
 			thisContext: { value: 21 },
 		})
@@ -440,7 +473,7 @@ describe('EntityListPool - getFeedbackStyleOverrides (layered button)', () => {
 		pool.entityAdd('feedbacks', null, feedback)
 		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: 41 }))
 
-		expect(pool.getFeedbackStyleOverrides().get('el1')?.get('color')).toEqual({
+		expect(pool.getFeedbackStyleOverrides(undefined).get('el1')?.get('color')).toEqual({
 			value: { isExpression: true, value: '5' },
 			thisContext: { value: 41 },
 		})

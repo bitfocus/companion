@@ -27,7 +27,7 @@ describe('bundleInputsFromMetafile', () => {
 			'/repo/companion'
 		)
 
-		expect(recorded.inputs).toEqual(['/repo/companion/lib/main.ts'])
+		expect(recorded.inputs).toEqual([path.resolve('/repo/companion', 'lib/main.ts')])
 		expect(recorded.diagnostics).toEqual([])
 	})
 
@@ -50,7 +50,7 @@ describe('bundleInputsFromMetafile', () => {
 			'/repo/companion'
 		)
 
-		expect(recorded.inputs).toEqual(['/repo/companion/lib/shared.ts'])
+		expect(recorded.inputs).toEqual([path.resolve('/repo/companion', 'lib/shared.ts')])
 	})
 })
 

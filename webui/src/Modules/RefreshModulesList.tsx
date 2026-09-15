@@ -20,9 +20,9 @@ export const RefreshModulesList = observer(function RefreshModulesList({
 	color?: ButtonColor
 	variant?: 'ghost' | 'outline'
 }) {
-	const { moduleStoreRefreshProgress } = useContext(RootAppStoreContext)
+	const { modules } = useContext(RootAppStoreContext)
 
-	const refreshProgress = moduleStoreRefreshProgress.get(null) ?? 1
+	const { percent: refreshProgress } = modules.getStoreListRefreshProgress()
 
 	const [refreshError, setLoadError] = useState<string | null>(null)
 

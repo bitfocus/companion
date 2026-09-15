@@ -17,6 +17,15 @@ import { applyJsonPatchInPlace } from './ApplyDiffToMap'
 
 export type ModuleInfoId = `${ModuleInstanceType}:${string}`
 
+export interface ModuleStoreRefreshState {
+	/** Progress of the in-flight refresh, 0..1. `1` means no refresh is in progress. */
+	readonly percent: number
+	/** Whether the most-recently-completed refresh failed (only meaningful once `percent === 1`). */
+	readonly failed: boolean
+}
+
+const REFRESH_IDLE: ModuleStoreRefreshState = { percent: 1, failed: false }
+
 export interface ModuleStoreListCacheEntryExt extends ModuleStoreListCacheEntry {
 	moduleType: ModuleInstanceType
 }
@@ -26,7 +35,7 @@ export class ModuleInfoStore {
 
 	readonly storeVersions = new ModuleStoreVersionsStore()
 
-	readonly storeRefreshProgress = observable.map<ModuleInfoId | null, number>()
+	readonly storeRefreshProgress = observable.map<ModuleInfoId | null, ModuleStoreRefreshState>()
 
 	readonly storeUpdateInfo: Omit<
 		ModuleStoreListCacheStore,
@@ -61,13 +70,13 @@ export class ModuleInfoStore {
 		return this.storeList.get(`${moduleType}:${moduleId}`)
 	}
 
-	public getStoreListRefreshProgress(): number {
-		return this.storeRefreshProgress.get(null) ?? 1
+	public getStoreListRefreshProgress(): ModuleStoreRefreshState {
+		return this.storeRefreshProgress.get(null) ?? REFRESH_IDLE
 	}
 
-	public getStoreRefreshProgress(moduleType: ModuleInstanceType, moduleId: string): number {
+	public getStoreRefreshProgress(moduleType: ModuleInstanceType, moduleId: string): ModuleStoreRefreshState {
 		const id = `${moduleType}:${moduleId}` as const
-		return this.storeRefreshProgress.get(id) ?? 1
+		return this.storeRefreshProgress.get(id) ?? REFRESH_IDLE
 	}
 
 	public updateStore = action((change: ModuleInfoUpdate | null) => {

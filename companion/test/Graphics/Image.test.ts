@@ -909,6 +909,13 @@ describe('Image drawing', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
+		test('fixed size, wider than box, wraps inside word without a trailing empty line', async () => {
+			const img = Image.create(72, 72, 1, null)
+			img.fillColor('#000000')
+			img.drawAlignedText(0, 0, 72, 72, 'somelong', '#ffffff', 35, { allowShrink: false })
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
 		test('bold weight', async () => {
 			const img = Image.create(72, 58, 1, null)
 			img.fillColor('#000000')

@@ -100,7 +100,9 @@ export class EntityListPoolPage extends WithEntityEditing(ControlEntityListPoolB
 		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
 	}
 
-	public getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>> {
+	public getFeedbackStyleOverrides(
+		_defaultNoTopBar: boolean | undefined
+	): ReadonlyMap<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>> {
 		return new Map()
 	}
 

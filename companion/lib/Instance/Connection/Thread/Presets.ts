@@ -338,7 +338,8 @@ function ConvertPresetDefinition(
 					convertPresetFeedbacksToEntities(rawPreset.feedbacks, entryCtx),
 					rawPreset.previewStyle,
 					feedbackAffectedProperties,
-					generateId
+					generateId,
+					undefined
 				)
 
 				const { steps, hasRotaryActions } = ConvertStepsForPreset(entryCtx, rawPreset.steps)

@@ -97,8 +97,6 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			imageLibrary: new ImageLibraryStore(),
 
-			moduleStoreRefreshProgress: observable.map(),
-
 			importTaskStatus: observable.box<ImportExportTask | null>(null, { deep: false }),
 
 			wizardOpen: observable.box(false),

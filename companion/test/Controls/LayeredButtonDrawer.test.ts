@@ -83,6 +83,7 @@ describe('LayeredButtonDrawer', () => {
 				renderPixelBuffers: vi.fn(),
 				getCachedRender: vi.fn(() => undefined),
 			},
+			userconfig: { getKey: vi.fn() },
 		}
 		host = {
 			getButtonStateProps: () => ({

@@ -2,14 +2,11 @@ import { describe, expect, test, vi } from 'vitest'
 import type { CompanionImageContext2D } from '../../Graphics/ImageBase.js'
 import {
 	computeTextLayout,
-	resolveFontSizes,
+	findBestFontSize,
+	resolveFontSizeBounds,
 	segmentTextToUnicodeChars,
 	type TextLayoutResult,
 } from '../../Graphics/TextParser.js'
-
-// Round each element of a number array to 3 decimal places.
-// Keeps test expectations stable across V8 float-rounding changes.
-const r3 = (nums: number[]): number[] => nums.map((n) => Math.round(n * 1000) / 1000)
 
 // Mock context that simulates measuring text with roughly 10px per character for simplicity
 function createMockContext(charWidth: number = 10, lineHeight: number = 14): CompanionImageContext2D {
@@ -143,168 +140,120 @@ describe('segmentTextToUnicodeChars', () => {
 	})
 })
 
-describe('resolveFontSizes', () => {
+describe('resolveFontSizeBounds', () => {
 	describe('allowShrink=false (fixed size)', () => {
-		test('returns single element array with requested size', () => {
-			expect(resolveFontSizes(72, 72, 14, false, 10)).toEqual([14])
-			expect(resolveFontSizes(72, 72, 24, false, 10)).toEqual([24])
-			expect(resolveFontSizes(72, 72, 7, false, 10)).toEqual([7])
+		test('collapses to the requested size', () => {
+			expect(resolveFontSizeBounds(72, 14, false)).toEqual({ min: 14, max: 14 })
+			expect(resolveFontSizeBounds(72, 24, false)).toEqual({ min: 24, max: 24 })
+			expect(resolveFontSizeBounds(72, 7, false)).toEqual({ min: 7, max: 7 })
 		})
 
-		test('clamps minimum font size to 3', () => {
-			expect(resolveFontSizes(72, 72, 1, false, 10)).toEqual([3])
-			expect(resolveFontSizes(72, 72, 2, false, 10)).toEqual([3])
-			expect(resolveFontSizes(72, 72, 0, false, 10)).toEqual([3])
-			expect(resolveFontSizes(72, 72, -5, false, 10)).toEqual([3])
+		test('clamps minimum font size to round(h/24)', () => {
+			expect(resolveFontSizeBounds(72, 1, false)).toEqual({ min: 3, max: 3 })
+			expect(resolveFontSizeBounds(72, 0, false)).toEqual({ min: 3, max: 3 })
+			expect(resolveFontSizeBounds(72, -5, false)).toEqual({ min: 3, max: 3 })
 		})
 
 		test('clamps maximum font size to height', () => {
-			expect(resolveFontSizes(72, 72, 150, false, 10)).toEqual([72])
-			expect(resolveFontSizes(72, 123, 200, false, 10)).toEqual([123])
-			expect(resolveFontSizes(72, 72, 120, false, 10)).toEqual([72])
+			expect(resolveFontSizeBounds(72, 150, false)).toEqual({ min: 72, max: 72 })
+			expect(resolveFontSizeBounds(123, 200, false)).toEqual({ min: 123, max: 123 })
 		})
 
 		test('passes through edge values', () => {
-			expect(resolveFontSizes(72, 72, 3, false, 10)).toEqual([3])
-			expect(resolveFontSizes(72, 72, 71, false, 10)).toEqual([71])
+			expect(resolveFontSizeBounds(72, 3, false)).toEqual({ min: 3, max: 3 })
+			expect(resolveFontSizeBounds(72, 71, false)).toEqual({ min: 71, max: 71 })
 		})
 	})
 
 	describe('allowShrink=true (shrink to fit)', () => {
-		describe('w:72 h:72 (standard button)', () => {
-			const w = 72
-			const h = 72
-
-			test('configured size appears first, then heuristic sizes below it', () => {
-				// fontsize=60 is above the 0.83*72=59.76 threshold
-				const result = resolveFontSizes(w, h, 60, true, 3)
-				expect(r3(result)).toEqual([
-					60, 59.76, 51.12, 43.92, 30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2,
-				])
-			})
-
-			test('configured size caps the heuristic candidates for short text', () => {
-				// fontsize=30.96 (≈ 0.43*72) — only heuristic sizes below it are included
-				const result = resolveFontSizes(w, h, 30.96, true, 3)
-				expect(r3(result)).toEqual([30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
-			})
-
-			test('very short text: FONTSIZE_SHRINK_DEFAULT equivalent gives full heuristic list', () => {
-				// FONTSIZE_SHRINK_DEFAULT=100 → pixel size = 100*72/100/1.2 = 60
-				// Equivalent to old 'auto' for very short text (charCount < 7*area)
-				const result = resolveFontSizes(w, h, 60, true, 3)
-				expect(r3(result)).toEqual([
-					60, 59.76, 51.12, 43.92, 30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2,
-				])
-			})
-
-			test('short text (charCount < 30*area)', () => {
-				const result = resolveFontSizes(w, h, 60, true, 15)
-				expect(r3(result)).toEqual([60, 30.96, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
-			})
-
-			test('medium text (charCount < 40*area)', () => {
-				const result = resolveFontSizes(w, h, 60, true, 35)
-				expect(r3(result)).toEqual([60, 23.76, 20.16, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
-			})
-
-			test('longer text (charCount < 50*area)', () => {
-				const result = resolveFontSizes(w, h, 60, true, 45)
-				expect(r3(result)).toEqual([60, 17.28, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
-			})
-
-			test('very long text (charCount >= 50*area)', () => {
-				const result = resolveFontSizes(w, h, 60, true, 60)
-				expect(r3(result)).toEqual([60, 15.12, 12.24, 10.08, 9.36, 7.92, 7.2])
-			})
-
-			test('configured size below all heuristic candidates returns only that size', () => {
-				// fontsize=5 < MIN_FONT_SIZE_FRACTION*72=7.2, so nothing from heuristic qualifies
-				const result = resolveFontSizes(w, h, 5, true, 3)
-				expect(r3(result)).toEqual([5])
-			})
-
-			test('clamps min/max like fixed mode', () => {
-				expect(resolveFontSizes(w, h, 0, true, 3)).toEqual([3])
-				expect(resolveFontSizes(w, h, 200, true, 3)[0]).toEqual(72)
-			})
+		test('spans from the min auto size (10% of h) up to the configured size', () => {
+			// floor = MIN_FONT_SIZE_FRACTION * 72 = 7.2
+			expect(resolveFontSizeBounds(72, 60, true)).toEqual({ min: 7.2, max: 60 })
+			expect(resolveFontSizeBounds(72, 30, true)).toEqual({ min: 7.2, max: 30 })
 		})
 
-		describe('w:144 h:144 (double-size button)', () => {
-			const w = 144
-			const h = 144
-
-			test('thresholds are resolution-independent, sizes scale with h', () => {
-				// relativeWidth = 1.0 for square — same thresholds as 72x72; charCount < 30 * 1 = 30
-				expect(r3(resolveFontSizes(w, h, h, true, 20))).toEqual([
-					61.92, 47.52, 40.32, 34.56, 30.24, 24.48, 20.16, 18.72, 15.84, 14.4,
-				])
-
-				// charCount >= 50 * 1 = 50
-				expect(r3(resolveFontSizes(w, h, h, true, 50))).toEqual([30.24, 24.48, 20.16, 18.72, 15.84, 14.4])
-			})
-		})
-	})
-
-	// The candidate size range must depend only on the element's aspect ratio (w/h), not its
-	// absolute pixel size. The bug this tests: old formula `(w*h)/5000` was calibrated for a
-	// ~72px button, so a *small* subregion (e.g. 36×36) produces area ≈ 0.26 and falls into a
-	// smaller size range than a proportionally-equivalent large subregion (e.g. 100×100, area=2).
-	// The fix normalises to w/h so the same range is always selected for the same aspect ratio.
-	describe('resolution independence — same candidate fractions for any subregion size', () => {
-		// Normalise returned sizes to fractions-of-h so different absolute sizes are comparable
-		const fractions = (w: number, h: number, chars: number) =>
-			resolveFontSizes(w, h, h, true, chars).map((s) => r3([s / h])[0])
-
-		// Square subregion (1:1): critical case is short text in a small element.
-		// Old formula: 36×36 → area=0.26, 2 chars → Range 2 [0.43…]
-		//              100×100 → area=2.0,  2 chars → Range 1 [0.83…]  ← different!
-		// New formula: both → relativeWidth=1, 2 < 7 → Range 1 [0.83…] ← same
-		test.each([
-			{ chars: 2, desc: '2 chars' },
-			{ chars: 4, desc: '4 chars' },
-			{ chars: 6, desc: '6 chars' },
-		])('square subregion: $desc — same fractions at 36px, 72px, and 100px', ({ chars }) => {
-			const atSmall = fractions(36, 36, chars) // small subregion: old formula diverges here
-			expect(fractions(72, 72, chars)).toEqual(atSmall)
-			expect(fractions(100, 100, chars)).toEqual(atSmall)
+		test('max clamps to the height (the "auto" / no-cap signal is fontsize === h)', () => {
+			expect(resolveFontSizeBounds(72, 72, true)).toEqual({ min: 7.2, max: 72 })
+			expect(resolveFontSizeBounds(72, 200, true)).toEqual({ min: 7.2, max: 72 })
 		})
 
-		// Wide subregion (2:1): same principle across different absolute widths
-		test.each([{ chars: 2 }, { chars: 5 }])(
-			'2:1 subregion: $chars chars — same fractions at 36×18, 72×36, and 100×50',
-			({ chars }) => {
-				const atSmall = fractions(36, 18, chars)
-				expect(fractions(72, 36, chars)).toEqual(atSmall)
-				expect(fractions(100, 50, chars)).toEqual(atSmall)
-			}
-		)
-
-		// Narrow-height element (~35% of canvas height, full width): the specific case
-		// the user observed — a single line of text in a short text region.
-		// Old formula: w=72, h=25 → area=0.36, 3 chars ≥ 7×0.36=2.52 → Range 2 [0.43…]
-		//              w=200, h=70 → area=2.8,  3 chars < 7×2.8=19.6  → Range 1 [0.83…]  ← different!
-		// New formula: relativeWidth=72/25=2.88 or 200/70=2.857, both → 3 < 7×2.857=20 → Range 1
-		test.each([
-			{ chars: 3, desc: '3 chars (single short word)' },
-			{ chars: 5, desc: '5 chars (single medium word)' },
-		])('full-width 35% height element: $desc — same fractions at 72×25, 144×50, and 200×70', ({ chars }) => {
-			const atSmall = fractions(72, 25, chars)
-			expect(fractions(144, 50, chars)).toEqual(atSmall)
-			expect(fractions(200, 70, chars)).toEqual(atSmall)
+		test('the floor never exceeds the configured cap', () => {
+			// fontsize=5 is below the 7.2 floor, so both bounds collapse to it
+			expect(resolveFontSizeBounds(72, 5, true)).toEqual({ min: 5, max: 5 })
+			// fontsize=0 clamps up to round(72/24)=3, still below the floor
+			expect(resolveFontSizeBounds(72, 0, true)).toEqual({ min: 3, max: 3 })
 		})
 
-		// Same for ~40% height
-		test.each([{ chars: 3 }, { chars: 5 }])(
-			'full-width 40% height element: $chars chars — same fractions at 72×29, 144×58, and 200×80',
-			({ chars }) => {
-				const atSmall = fractions(72, 29, chars)
-				expect(fractions(144, 58, chars)).toEqual(atSmall)
-				expect(fractions(200, 80, chars)).toEqual(atSmall)
-			}
-		)
+		test('bounds scale with the reference height', () => {
+			// floor = 0.1 * 144 = 14.4
+			expect(resolveFontSizeBounds(144, 144, true)).toEqual({ min: 14.4, max: 144 })
+		})
 	})
 })
+
+describe('findBestFontSize', () => {
+	const GRID = 0.25
+	// A monotonic fit oracle: every size up to (and including) `boundary` fits, larger ones don't
+	const fitsUpTo = (boundary: number) => (size: number) => size <= boundary
+
+	test('returns max when the text already fits at the largest size', () => {
+		expect(findBestFontSize({ min: 7.2, max: 72 }, GRID, fitsUpTo(100))).toBe(72)
+	})
+
+	test('returns min when nothing above the floor fits (rendered as overflow by the caller)', () => {
+		expect(findBestFontSize({ min: 7.2, max: 72 }, GRID, fitsUpTo(3))).toBe(7.2)
+	})
+
+	test('collapses to the single size when the range is empty (min === max)', () => {
+		const fits = vi.fn(() => false)
+		expect(findBestFontSize({ min: 20, max: 20 }, GRID, fits)).toBe(20)
+		// No searching needed for a fixed size
+		expect(fits).not.toHaveBeenCalled()
+	})
+
+	test.each([{ boundary: 42.37 }, { boundary: 12.9 }, { boundary: 55.05 }, { boundary: 30.0 }, { boundary: 68.8 }])(
+		'converges on an arbitrary boundary ($boundary) to within one grid step',
+		({ boundary }) => {
+			const result = findBestFontSize({ min: 7.2, max: 72 }, GRID, fitsUpTo(boundary))
+			// The chosen size must fit and be no more than one grid step below the true boundary —
+			// i.e. any size is reachable, not just a handful of fixed steps.
+			expect(result).toBeLessThanOrEqual(boundary)
+			expect(boundary - result).toBeLessThanOrEqual(GRID)
+		}
+	)
+
+	test('produces finely-spaced sizes across neighbouring boundaries (smooth, not stepped)', () => {
+		// Sweeping the fit boundary in small increments must yield correspondingly small changes in the
+		// chosen size — the property the old fixed-step list could not provide.
+		const sizes = []
+		for (let boundary = 20; boundary <= 40; boundary += 1) {
+			sizes.push(findBestFontSize({ min: 7.2, max: 72 }, GRID, fitsUpTo(boundary)))
+		}
+		const distinct = new Set(sizes)
+		// 21 distinct boundaries should map to many distinct sizes (not a few discrete steps)
+		expect(distinct.size).toBeGreaterThan(15)
+		// And every step between neighbours stays small
+		for (let i = 1; i < sizes.length; i++) {
+			expect(sizes[i] - sizes[i - 1]).toBeLessThanOrEqual(1 + GRID)
+		}
+	})
+
+	test('never probes outside the bounds', () => {
+		const probed: number[] = []
+		findBestFontSize({ min: 7.2, max: 72 }, GRID, (size) => {
+			probed.push(size)
+			return size <= 33
+		})
+		for (const size of probed) {
+			expect(size).toBeGreaterThanOrEqual(7.2)
+			expect(size).toBeLessThanOrEqual(72)
+		}
+	})
+})
+
+const expAscent = (em: number) => em * 0.8
+const expDescent = (em: number) => em * 0.2
+const expLineHeight = (em: number) => em
 
 describe('computeTextLayout', () => {
 	describe('with w:72 h:72 (standard button)', () => {
@@ -319,9 +268,10 @@ describe('computeTextLayout', () => {
 			expect(result).toEqual({
 				fontDefinition: fontDef,
 				lines: [],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
 				fits: false,
+				totalHeight: 0,
 			} satisfies TextLayoutResult)
 		})
 
@@ -332,9 +282,16 @@ describe('computeTextLayout', () => {
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [{ text: 'Hello', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				lines: [
+					{
+						text: 'Hello',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+				],
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 1, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -347,11 +304,20 @@ describe('computeTextLayout', () => {
 			expect(result).toEqual({
 				fontDefinition: fontDef,
 				lines: [
-					{ text: 'Hello', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'World', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
+					{
+						text: 'Hello',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'World',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
 				],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 2, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -363,11 +329,20 @@ describe('computeTextLayout', () => {
 			expect(result).toEqual({
 				fontDefinition: fontDef,
 				lines: [
-					{ text: 'Line1', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'Line2', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
+					{
+						text: 'Line1',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'Line2',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
 				],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 2, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -379,12 +354,25 @@ describe('computeTextLayout', () => {
 			expect(result).toEqual({
 				fontDefinition: fontDef,
 				lines: [
-					{ text: 'A', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'B', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'C', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
+					{
+						text: 'A',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'B',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'C',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
 				],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 3, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -398,11 +386,20 @@ describe('computeTextLayout', () => {
 			expect(result).toEqual({
 				fontDefinition: fontDef,
 				lines: [
-					{ text: 'AB CD', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'EF', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
+					{
+						text: 'AB CD',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'EF',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
 				],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 2, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -415,12 +412,25 @@ describe('computeTextLayout', () => {
 			expect(hyphenResult).toEqual({
 				fontDefinition: fontDef,
 				lines: [
-					{ text: 'ABCD-', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'EFGH-', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'IJKL', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
+					{
+						text: 'ABCD-',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'EFGH-',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'IJKL',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
 				],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 3, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 
@@ -429,12 +439,25 @@ describe('computeTextLayout', () => {
 			expect(underscoreResult).toEqual({
 				fontDefinition: fontDef,
 				lines: [
-					{ text: 'ABCD_', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'EFGH_', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'IJKL', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
+					{
+						text: 'ABCD_',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'EFGH_',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'IJKL',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
 				],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 3, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 
@@ -443,12 +466,25 @@ describe('computeTextLayout', () => {
 			expect(colonResult).toEqual({
 				fontDefinition: fontDef,
 				lines: [
-					{ text: 'ABCD:', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'EFGH:', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'IJKL', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
+					{
+						text: 'ABCD:',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'EFGH:',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'IJKL',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
 				],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 3, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 
@@ -457,12 +493,25 @@ describe('computeTextLayout', () => {
 			expect(tildeResult).toEqual({
 				fontDefinition: fontDef,
 				lines: [
-					{ text: 'ABCD~', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'EFGH~', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'IJKL', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
+					{
+						text: 'ABCD~',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'EFGH~',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'IJKL',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
 				],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 3, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -472,18 +521,8 @@ describe('computeTextLayout', () => {
 			// With h=72, fits 4 lines (4 * 20 = 80px > 72px). 5 lines requested (A-E), stops at 4, fits=false
 			const result = computeTextLayout(context, w, h, [...'A\nB\nC\nD\nE'], fontDef)
 
-			expect(result).toEqual({
-				fontDefinition: fontDef,
-				lines: [
-					{ text: 'A', ascent: expect.closeTo(20 * 0.8, 5), descent: expect.closeTo(20 * 0.2, 5) },
-					{ text: 'B', ascent: expect.closeTo(20 * 0.8, 5), descent: expect.closeTo(20 * 0.2, 5) },
-					{ text: 'C', ascent: expect.closeTo(20 * 0.8, 5), descent: expect.closeTo(20 * 0.2, 5) },
-					{ text: 'D', ascent: expect.closeTo(20 * 0.8, 5), descent: expect.closeTo(20 * 0.2, 5) },
-				],
-				measuredLineHeight: expect.closeTo(20, 5),
-				measuredAscent: expect.closeTo(20 * 0.8, 5),
-				fits: false,
-			} satisfies TextLayoutResult)
+			expect(result.fits).toBe(false)
+			expect(result.totalHeight).toBeGreaterThan(h)
 		})
 
 		test('single line taller than the box is still drawn (draw & clip, not vanish)', () => {
@@ -494,9 +533,16 @@ describe('computeTextLayout', () => {
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [{ text: '⏵', ascent: expect.closeTo(80 * 0.8, 5), descent: expect.closeTo(80 * 0.2, 5) }],
-				measuredLineHeight: expect.closeTo(80, 5),
-				measuredAscent: expect.closeTo(80 * 0.8, 5),
+				lines: [
+					{
+						text: '⏵',
+						ascent: expect.closeTo(expAscent(80), 5),
+						descent: expect.closeTo(expDescent(80), 5),
+					},
+				],
+				measuredLineHeight: expect.closeTo(expLineHeight(80), 5),
+				measuredAscent: expect.closeTo(expAscent(80), 5),
+				totalHeight: expect.closeTo(expLineHeight(80) * 1, 5),
 				fits: false,
 			} satisfies TextLayoutResult)
 		})
@@ -507,9 +553,16 @@ describe('computeTextLayout', () => {
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [{ text: 'Hello', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				lines: [
+					{
+						text: 'Hello',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+				],
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 1, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -521,23 +574,16 @@ describe('computeTextLayout', () => {
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [{ text: ' Hi', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
-				fits: true,
-			} satisfies TextLayoutResult)
-		})
-
-		test('returns correct measuredLineHeight and measuredAscent', () => {
-			const lineHeight = 18
-			const context = createMockContext(10, lineHeight)
-			const result = computeTextLayout(context, w, h, [...'Test'], fontDef)
-
-			expect(result).toEqual({
-				fontDefinition: fontDef,
-				lines: [{ text: 'Test', ascent: lineHeight * 0.8, descent: lineHeight * 0.2 }],
-				measuredLineHeight: lineHeight,
-				measuredAscent: lineHeight * 0.8,
+				lines: [
+					{
+						text: ' Hi',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+				],
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 1, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -549,9 +595,16 @@ describe('computeTextLayout', () => {
 			expect(context.font).toBe(fontDef)
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [{ text: 'Test', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				lines: [
+					{
+						text: 'Test',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+				],
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 1, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -569,9 +622,16 @@ describe('computeTextLayout', () => {
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [{ text: 'Hello World!', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				lines: [
+					{
+						text: 'Hello World!',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+				],
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 1, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -584,19 +644,60 @@ describe('computeTextLayout', () => {
 			expect(result).toEqual({
 				fontDefinition: fontDef,
 				lines: [
-					{ text: 'A', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'B', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'C', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'D', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'E', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'F', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'G', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'H', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'I', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'J', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
+					{
+						text: 'A',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'B',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'C',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'D',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'E',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'F',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'G',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'H',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'I',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'J',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
 				],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 10, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -618,18 +719,23 @@ describe('computeTextLayout', () => {
 				lines: [
 					{
 						text: 'This is a longer text that should',
-						ascent: expect.closeTo(14 * 0.8, 5),
-						descent: expect.closeTo(14 * 0.2, 5),
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
 					},
 					{
 						text: 'wrap across multiple lines on a',
-						ascent: expect.closeTo(14 * 0.8, 5),
-						descent: expect.closeTo(14 * 0.2, 5),
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
 					},
-					{ text: 'larger display', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
+					{
+						text: 'larger display',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
 				],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 3, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -643,9 +749,16 @@ describe('computeTextLayout', () => {
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [{ text: 'A', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				lines: [
+					{
+						text: 'A',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+				],
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 1, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -657,9 +770,16 @@ describe('computeTextLayout', () => {
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [{ text: 'W', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				lines: [
+					{
+						text: 'W',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+				],
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 1, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -672,9 +792,16 @@ describe('computeTextLayout', () => {
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [{ text: '    ', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				lines: [
+					{
+						text: '    ',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+				],
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 1, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -688,14 +815,31 @@ describe('computeTextLayout', () => {
 			expect(result).toEqual({
 				fontDefinition: fontDef,
 				lines: [
-					{ text: 'ABCDEFG', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'HIJKLMN', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'OPQRSTU', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'VWXYZ', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
+					{
+						text: 'ABCDEFG',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'HIJKLMN',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'OPQRSTU',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{
+						text: 'VWXYZ',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
 				],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
-				fits: true,
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 4, 5),
+				fits: false,
 			} satisfies TextLayoutResult)
 		})
 
@@ -707,11 +851,12 @@ describe('computeTextLayout', () => {
 			expect(result).toEqual({
 				fontDefinition: fontDef,
 				lines: [
-					{ text: '', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: '', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
+					{ text: '', ascent: expect.closeTo(expAscent(14), 5), descent: expect.closeTo(expDescent(14), 5) },
+					{ text: '', ascent: expect.closeTo(expAscent(14), 5), descent: expect.closeTo(expDescent(14), 5) },
 				],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 2, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -724,13 +869,22 @@ describe('computeTextLayout', () => {
 			expect(result).toEqual({
 				fontDefinition: fontDef,
 				lines: [
-					{ text: 'A', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: '', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: '', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'B', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
+					{
+						text: 'A',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+					{ text: '', ascent: expect.closeTo(expAscent(14), 5), descent: expect.closeTo(expDescent(14), 5) },
+					{ text: '', ascent: expect.closeTo(expAscent(14), 5), descent: expect.closeTo(expDescent(14), 5) },
+					{
+						text: 'B',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
 				],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 4, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -742,9 +896,16 @@ describe('computeTextLayout', () => {
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [{ text: 'Héllo', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				lines: [
+					{
+						text: 'Héllo',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+				],
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 1, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -758,9 +919,10 @@ describe('computeTextLayout', () => {
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [{ text: emoji, ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				lines: [{ text: emoji, ascent: expect.closeTo(expAscent(14), 5), descent: expect.closeTo(expDescent(14), 5) }],
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 1, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -772,40 +934,69 @@ describe('computeTextLayout', () => {
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [{ text: 'Hi 😀!', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				lines: [
+					{
+						text: 'Hi 😀!',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+				],
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 1, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
+		})
+
+		test('keeps multi-codepoint glyphs intact when a width break falls inside them', () => {
+			// #143db: a break must land between glyphs, never inside a multi-codepoint one. Flags (🇺🇸) are
+			// two code points each; the old code split lines via text.split('') and could cut a glyph in half.
+			// Feed several as atomic array elements (as segmentTextToUnicodeChars would) and force a width wrap.
+			const context = createMockContext(10, 14)
+			const flag = '🇺🇸'
+			const chars = new Array(6).fill(flag) as string[]
+			const result = computeTextLayout(context, 100, 72, chars, '14px TestFont')
+
+			// it must actually wrap to more than one line
+			expect(result.lines.length).toBeGreaterThan(1)
+			// every line is whole flags only: length is a multiple of one flag's length (no partial glyph),
+			// and each grapheme is the complete flag
+			for (const line of result.lines) {
+				expect(line.text.length % flag.length).toBe(0)
+				for (const { segment } of new Intl.Segmenter().segment(line.text)) {
+					expect(segment).toBe(flag)
+				}
+			}
+			// and nothing is lost across the breaks
+			expect(result.lines.map((l) => l.text).join('')).toBe(chars.join(''))
 		})
 	})
 
 	describe('long text handling', () => {
-		test('very long text stops adding lines when height exceeded', () => {
+		test('very long text aborts adding lines when height exceeded and it should exit early', () => {
 			const context = createMockContext(10, 14)
-			// With h=72, fits 5 lines (5 * 14 = 70px). Each line fits 'A A A' (5 chars * 10px = 50px < 72px)
-			const veryLongText = 'A '.repeat(100) // 200 chars total
+			// With h=72 and 14px line height, fits 7 lines. Each line fits 'A A A' (5 chars * 10px = 50px < 72px)
+			const veryLongText = 'A '.repeat(90)
 			const fontDef = '14px TestFont'
-			const result = computeTextLayout(context, 72, 72, [...veryLongText], fontDef)
+			const result = computeTextLayout(context, 72, 72, [...veryLongText], fontDef, true)
 
-			expect(result).toEqual({
-				fontDefinition: fontDef,
-				lines: [
-					{ text: 'A A A', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'A A A', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'A A A', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'A A A', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'A A A', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-				],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
-				fits: false,
-			} satisfies TextLayoutResult)
+			expect(result.lines.length).toEqual(7) // number when check is aborted
+			expect(result.fits).toBe(false)
+			expect(result.totalHeight).greaterThan(72)
+		})
+
+		test('unbreakable overflowing word reports not-fitting during a shrink probe (no blank layout)', () => {
+			const context = createMockContext(10, 14)
+			// No break points, so every size must break mid-word. With exitEarly set (the shrink loop probing
+			// a size), the result must be fits:false so a smaller size is tried - not an empty fits:true layout
+			// that would render a blank button.
+			const result = computeTextLayout(context, 72, 72, [...'ABCDEFGHIJKLMNOP'], '14px TestFont', true)
+			expect(result.fits).toBe(false)
 		})
 
 		test('extremely long text does not hang', () => {
 			const context = createMockContext(10, 14)
-			const extremelyLongText = 'X'.repeat(10000)
+			const extremelyLongText = 'X'.repeat(10_000)
 			const fontDef = '14px TestFont'
 
 			const startTime = Date.now()
@@ -814,40 +1005,60 @@ describe('computeTextLayout', () => {
 
 			// Should complete in reasonable time (less than 1 second)
 			expect(elapsed).toBeLessThan(1000)
-			expect(result).toEqual({
-				fontDefinition: fontDef,
-				lines: [
-					{ text: 'XXXXXXX', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'XXXXXXX', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'XXXXXXX', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'XXXXXXX', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-					{ text: 'XXXXXXX', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) },
-				],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
-				fits: false,
-			} satisfies TextLayoutResult)
+			expect(result.lines.length).toEqual(1429)
+			expect(result.totalHeight).toBeGreaterThanOrEqual(expLineHeight(14) * 1239 - 5)
 		})
 
 		test('paragraph text wraps correctly', () => {
 			const context = createMockContext(8, 12) // 8px per char, 12px line height
 			// With w=72, fits 9 chars (72/8=9). Words wrap individually: 'The' (3 chars), 'quick' (5 chars), etc.
-			const paragraph = 'The quick brown fox jumps over the lazy dog. ' + 'Pack my box with five dozen liquor jugs.'
+			const paragraph = 'The quick brown fox jumps over the lazy dog.'
 			const fontDef = '12px TestFont'
 			const result = computeTextLayout(context, 72, 72, [...paragraph], fontDef)
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
 				lines: [
-					{ text: 'The', ascent: expect.closeTo(12 * 0.8, 5), descent: expect.closeTo(12 * 0.2, 5) },
-					{ text: 'quick', ascent: expect.closeTo(12 * 0.8, 5), descent: expect.closeTo(12 * 0.2, 5) },
-					{ text: 'brown', ascent: expect.closeTo(12 * 0.8, 5), descent: expect.closeTo(12 * 0.2, 5) },
-					{ text: 'fox', ascent: expect.closeTo(12 * 0.8, 5), descent: expect.closeTo(12 * 0.2, 5) },
-					{ text: 'jumps', ascent: expect.closeTo(12 * 0.8, 5), descent: expect.closeTo(12 * 0.2, 5) },
+					{
+						text: 'The',
+						ascent: expect.closeTo(expAscent(12), 5),
+						descent: expect.closeTo(expDescent(12), 5),
+					},
+					{
+						text: 'quick',
+						ascent: expect.closeTo(expAscent(12), 5),
+						descent: expect.closeTo(expDescent(12), 5),
+					},
+					{
+						text: 'brown',
+						ascent: expect.closeTo(expAscent(12), 5),
+						descent: expect.closeTo(expDescent(12), 5),
+					},
+					{
+						text: 'fox',
+						ascent: expect.closeTo(expAscent(12), 5),
+						descent: expect.closeTo(expDescent(12), 5),
+					},
+					{
+						text: 'jumps',
+						ascent: expect.closeTo(expAscent(12), 5),
+						descent: expect.closeTo(expDescent(12), 5),
+					},
+					{
+						text: 'over the',
+						ascent: expect.closeTo(expAscent(12), 5),
+						descent: expect.closeTo(expDescent(12), 5),
+					},
+					{
+						text: 'lazy dog.',
+						ascent: expect.closeTo(expAscent(12), 5),
+						descent: expect.closeTo(expDescent(12), 5),
+					},
 				],
-				measuredLineHeight: expect.closeTo(12, 5),
-				measuredAscent: expect.closeTo(12 * 0.8, 5),
-				fits: false,
+				measuredLineHeight: expect.closeTo(expLineHeight(12), 5),
+				measuredAscent: expect.closeTo(expAscent(12), 5),
+				totalHeight: expect.closeTo(expLineHeight(12) * 7, 5),
+				fits: false, // 7 lines * 12px = 84px exceeds the 72px height
 			} satisfies TextLayoutResult)
 		})
 	})
@@ -860,9 +1071,16 @@ describe('computeTextLayout', () => {
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [{ text: 'AB', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				lines: [
+					{
+						text: 'AB',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+				],
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 1, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -875,9 +1093,16 @@ describe('computeTextLayout', () => {
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [{ text: 'Hello', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				lines: [
+					{
+						text: 'Hello',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+				],
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 1, 5),
 				fits: false,
 			} satisfies TextLayoutResult)
 		})
@@ -891,9 +1116,16 @@ describe('computeTextLayout', () => {
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [{ text: 'Hi', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				lines: [
+					{
+						text: 'Hi',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+				],
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 1, 5),
 				fits: true,
 			} satisfies TextLayoutResult)
 		})
@@ -902,13 +1134,20 @@ describe('computeTextLayout', () => {
 			// #4305: even when a single line does not fit vertically, draw it rather than nothing.
 			const context = createMockContext(10, 14)
 			const fontDef = '14px TestFont'
-			const result = computeTextLayout(context, 72, 13, [...'Hi'], fontDef)
+			const result = computeTextLayout(context, 72, 10, [...'Hi'], fontDef)
 
 			expect(result).toEqual({
 				fontDefinition: fontDef,
-				lines: [{ text: 'Hi', ascent: expect.closeTo(14 * 0.8, 5), descent: expect.closeTo(14 * 0.2, 5) }],
-				measuredLineHeight: expect.closeTo(14, 5),
-				measuredAscent: expect.closeTo(14 * 0.8, 5),
+				lines: [
+					{
+						text: 'Hi',
+						ascent: expect.closeTo(expAscent(14), 5),
+						descent: expect.closeTo(expDescent(14), 5),
+					},
+				],
+				measuredLineHeight: expect.closeTo(expLineHeight(14), 5),
+				measuredAscent: expect.closeTo(expAscent(14), 5),
+				totalHeight: expect.closeTo(expLineHeight(14) * 1, 5),
 				fits: false,
 			} satisfies TextLayoutResult)
 		})

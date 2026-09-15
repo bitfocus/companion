@@ -39,7 +39,11 @@ const LATEST_MODULE_INFO_CACHE_DURATION = 1000 * 60 * 60 * 6 // Cache the latest
 
 export type ModuleStoreServiceEvents = {
 	storeListUpdated: [data: ModuleStoreListCacheStore]
-	refreshProgress: [moduleInfo: { moduleType: ModuleInstanceType; moduleId: string } | null, percent: number]
+	refreshProgress: [
+		moduleInfo: { moduleType: ModuleInstanceType; moduleId: string } | null,
+		percent: number,
+		failed: boolean,
+	]
 	[id: `update:${ModuleInstanceType}:${string}`]: [data: ModuleStoreModuleInfoStore | null]
 }
 
@@ -128,7 +132,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 				const changes = toIterable(selfEmitter, 'refreshProgress', signal)
 
 				for await (const change of changes) {
-					yield { moduleInfo: change[0], percent: change[1] }
+					yield { moduleInfo: change[0], percent: change[1], failed: change[2] }
 				}
 			}),
 
@@ -230,10 +234,11 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 
 		this.#logger.debug(`Refreshing store module list`)
 
+		let listRefreshFailed = false
 		Promise.resolve()
 			.then(async () => {
 				let progress = 0
-				this.emit('refreshProgress', null, progress)
+				this.emit('refreshProgress', null, progress, false)
 
 				const increment = 0.25
 
@@ -270,7 +275,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 						}),
 				])
 
-				this.emit('refreshProgress', null, 0.5)
+				this.emit('refreshProgress', null, 0.5, false)
 
 				const error = connectionResult.error || surfaceResult.error
 				if (error) throw new Error(`Failed to fetch module list: ${JSON.stringify(error)}`)
@@ -298,6 +303,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 
 				this.#listStore.lastUpdateAttempt = Date.now()
 				this.#listStore.updateWarning = 'Failed to update the module list from the store'
+				listRefreshFailed = true
 			})
 			.finally(() => {
 				this.#cacheStore.set(CacheStoreListKey, this.#listStore)
@@ -306,7 +312,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 
 				// Update clients
 				this.emit('storeListUpdated', this.#listStore)
-				this.emit('refreshProgress', null, 1)
+				this.emit('refreshProgress', null, 1, listRefreshFailed)
 
 				this.#logger.debug(`Done refreshing store module list`)
 			})
@@ -330,8 +336,9 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 		this.#logger.debug(`Refreshing store info for module "${moduleId}"`)
 
 		let moduleData: ModuleStoreModuleInfoStore
+		let refreshFailed = false
 		try {
-			this.emit('refreshProgress', { moduleType, moduleId }, 0)
+			this.emit('refreshProgress', { moduleType, moduleId }, 0, false)
 
 			const { data, error, response } = await this.#openApiClient.GET(
 				'/v1/companion/modules/{moduleType}/{moduleName}',
@@ -344,7 +351,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 					},
 				}
 			)
-			this.emit('refreshProgress', { moduleType, moduleId }, 0.5)
+			this.emit('refreshProgress', { moduleType, moduleId }, 0.5, false)
 
 			if (response.status === 404) {
 				// If the store returns 404, then don't throw an error, this is normal
@@ -403,6 +410,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 
 			moduleData.lastUpdateAttempt = Date.now()
 			moduleData.updateWarning = 'Failed to update the module version list from the store'
+			refreshFailed = true
 		}
 
 		// Store value and update the cache on disk
@@ -413,7 +421,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 
 		// Update clients
 		this.emit(`update:${moduleType}:${moduleId}`, moduleData)
-		this.emit('refreshProgress', { moduleType, moduleId }, 1)
+		this.emit('refreshProgress', { moduleType, moduleId }, 1, refreshFailed)
 
 		this.#logger.debug(`Done refreshing store info for module "${moduleId}"`)
 

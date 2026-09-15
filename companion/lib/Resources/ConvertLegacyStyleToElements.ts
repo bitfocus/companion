@@ -1,5 +1,8 @@
 import type { JsonValue } from 'type-fest'
-import { FONTSIZE_SHRINK_DEFAULT } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
+import {
+	FONTSIZE_SHRINK_DEFAULT,
+	getDefaultPinnedProperties,
+} from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
 import {
 	EntityModelType,
@@ -52,7 +55,10 @@ interface ParsedLegacyStyle {
 const TEXT_SIZE_SCALE_NO_TOPBAR = 1 / 0.6 // When no topbar
 const TEXT_SIZE_SCALE = 2.1 // When with topbar
 
-export function ParseLegacyStyle(style: Partial<ButtonStyleProperties>, defaultNoTopBar?: boolean): ParsedLegacyStyle {
+export function ParseLegacyStyle(
+	style: Partial<ButtonStyleProperties>,
+	defaultNoTopBar: boolean | undefined
+): ParsedLegacyStyle {
 	let textSize: number | undefined = undefined
 	let textSizeAllowShrink: boolean | undefined = undefined
 	if (style.size !== undefined) {
@@ -63,8 +69,7 @@ export function ParseLegacyStyle(style: Partial<ButtonStyleProperties>, defaultN
 			const n = Number(style.size)
 			if (!isNaN(n)) {
 				// We can't be 100% accurate on whether to account for the top-bar or not, but during imports we want to try to match how it was just drawing
-				const showTopBar =
-					defaultNoTopBar !== undefined && typeof style.show_topbar === 'boolean' ? style.show_topbar : !defaultNoTopBar
+				const showTopBar = typeof style.show_topbar === 'boolean' ? style.show_topbar : !defaultNoTopBar
 				const scale = showTopBar ? TEXT_SIZE_SCALE : TEXT_SIZE_SCALE_NO_TOPBAR
 
 				// Ensure is a number, and round to 1dp
@@ -218,7 +223,7 @@ export function ConvertLegacyStyleToElements(
 	 */
 	feedbackAffectedProperties: ReadonlyMap<string, string[] | undefined> | null,
 	generateId: IdGenerator,
-	defaultNoTopBar = false
+	defaultNoTopBar: boolean | undefined
 ): {
 	layers: SomeButtonGraphicsElement[]
 	feedbacks: SomeEntityModel[]
@@ -237,6 +242,7 @@ export function ConvertLegacyStyleToElements(
 		name: 'Background',
 		usage: ButtonGraphicsElementUsage.Automatic,
 		type: 'box',
+		pinnedProperties: getDefaultPinnedProperties('box'),
 		enabled: { value: true, isExpression: false },
 		opacity: { value: 100, isExpression: false },
 		x: { value: 0, isExpression: false },
@@ -255,6 +261,7 @@ export function ConvertLegacyStyleToElements(
 		name: 'Image',
 		usage: ButtonGraphicsElementUsage.Automatic,
 		type: 'image',
+		pinnedProperties: getDefaultPinnedProperties('image'),
 		enabled: { value: true, isExpression: false },
 		opacity: { value: 100, isExpression: false },
 		x: { value: 0, isExpression: false },
@@ -272,6 +279,7 @@ export function ConvertLegacyStyleToElements(
 		name: 'Text',
 		usage: ButtonGraphicsElementUsage.Automatic,
 		type: 'text',
+		pinnedProperties: getDefaultPinnedProperties('text'),
 		enabled: { value: true, isExpression: false },
 		opacity: { value: 100, isExpression: false },
 		x: { value: 0, isExpression: false },
@@ -295,6 +303,7 @@ export function ConvertLegacyStyleToElements(
 		name: 'Image Buffers',
 		usage: ButtonGraphicsElementUsage.Automatic,
 		type: 'image',
+		pinnedProperties: getDefaultPinnedProperties('image'),
 		enabled: { value: true, isExpression: false },
 		opacity: { value: 100, isExpression: false },
 		x: { value: 0, isExpression: false },
@@ -310,6 +319,10 @@ export function ConvertLegacyStyleToElements(
 
 	// Apply the old style properties to the new elements
 	const parsedStyle = ParseLegacyStyle(style, defaultNoTopBar)
+
+	// Feedback/preview styles rarely carry their own show_topbar, so scale their legacy font sizes relative to
+	// THIS button's resolved top-bar state (its own show_topbar, else the passed default) rather than the raw default.
+	const resolvedNoTopBar = typeof style.show_topbar === 'boolean' ? !style.show_topbar : defaultNoTopBar
 
 	if (parsedStyle.text.text !== undefined) textElement.text = parsedStyle.text.text
 	if (parsedStyle.text.size !== undefined) {
@@ -347,7 +360,7 @@ export function ConvertLegacyStyleToElements(
 		if ('style' in fb && fb.style && (Object.keys(fb.style).length > 0 || fb.connectionId !== 'internal')) {
 			// Must be boolean, translate the props as such
 
-			const parsedStyle = ParseLegacyStyle(fb.style, defaultNoTopBar)
+			const parsedStyle = ParseLegacyStyle(fb.style, resolvedNoTopBar)
 
 			overrides = ConvertBooleanFeedbackStyleToOverrides(parsedStyle, selectedElementIds, generateId)
 
@@ -394,7 +407,7 @@ export function ConvertLegacyStyleToElements(
 
 	const previewStyleFeedbacks: SomeEntityModel[] = []
 	if (previewStyle) {
-		const parsedStyle = ParseLegacyStyle(previewStyle, defaultNoTopBar)
+		const parsedStyle = ParseLegacyStyle(previewStyle, resolvedNoTopBar)
 		const overrides = ConvertBooleanFeedbackStyleToOverrides(parsedStyle, selectedElementIds, generateId)
 
 		if (overrides.length > 0) {

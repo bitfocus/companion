@@ -4,6 +4,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import {
+	ButtonGraphicsDecorationType,
 	ButtonGraphicsShowStatusIcons,
 	type DrawStyleButtonStateProps,
 	type DrawStyleLayeredButtonModel,
@@ -34,7 +35,12 @@ export interface DrawElementsVisitor {
  */
 export interface LayeredButtonDrawerEntitySource {
 	getLocalVariableEntities(): ControlEntityInstance[]
-	getFeedbackStyleOverrides(): ReadonlyMap<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>
+	/**
+	 * @param defaultNoTopBar the button's resolved top-bar state, so legacy feedback sizes scale correctly
+	 */
+	getFeedbackStyleOverrides(
+		defaultNoTopBar: boolean | undefined
+	): ReadonlyMap<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>
 }
 
 /**
@@ -269,6 +275,25 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 		}
 	}
 
+	/**
+	 * Resolve whether this button draws without a top bar, combining the global `buttons_decoration` default
+	 * with the button's own canvas decoration. Used to scale legacy (pre-5.0) feedback font sizes, which are
+	 * converted relative to the available draw height. Resolves from the button's base decoration - a feedback
+	 * that itself overrides the decoration is deliberately not accounted for (that would be a resolution cycle).
+	 */
+	resolveDefaultNoTopBar(): boolean {
+		const canvasElement = this.drawElementsList.find((el) => el.type === 'canvas')
+		const rawDecoration =
+			canvasElement?.type === 'canvas' && !canvasElement.decoration.isExpression
+				? canvasElement.decoration.value
+				: ButtonGraphicsDecorationType.FollowDefault
+		const resolvedDecoration =
+			rawDecoration === ButtonGraphicsDecorationType.FollowDefault
+				? this.deps.userconfig.getKey('buttons_decoration')
+				: rawDecoration
+		return resolvedDecoration !== ButtonGraphicsDecorationType.TopBar
+	}
+
 	/** Compute the draw style of the button. */
 	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel> {
 		// Arm mid-draw change tracking (see #variablesChangedDuringDraw). Draws are serialised per control,
@@ -288,7 +313,8 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 
 			const locationStr = location ? formatLocation(location) : null
 
-			const feedbackOverrides = this.#host.entities?.getFeedbackStyleOverrides() ?? emptyFeedbackOverrides
+			const feedbackOverrides =
+				this.#host.entities?.getFeedbackStyleOverrides(this.resolveDefaultNoTopBar()) ?? emptyFeedbackOverrides
 
 			const { elements, variables, compositeElements, referencedLocations, cyclicLocations, clockSensitive } =
 				await ConvertSomeButtonGraphicsElementForDrawing(
