@@ -1,6 +1,11 @@
 import type { JsonValue } from 'type-fest'
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
-import type { DiscoveredRemoteSurfaceInfo, RemoteSurfaceConnectionInfo } from '@companion-surface/base'
+import type {
+	DiscoveredRemoteSurfaceInfo,
+	RemoteSurfaceConnectionInfo,
+	SurfaceAppearanceDefinition,
+	SurfaceSchemaLayoutDefinition,
+} from '@companion-surface/base'
 import type {
 	HIDDevice,
 	LogLevel,
@@ -24,6 +29,8 @@ export interface SurfaceModuleToHostEvents {
 
 	notifyConnectionsFound: (msg: NotifyConnectionsFoundMessage) => never
 	notifyConnectionsForgotten: (msg: NotifyConnectionsForgottenMessage) => never
+
+	setSurfaceModels: (msg: SetSurfaceModelsMessage) => never
 
 	/** The connection has a message for the Companion log */
 	'log-message': (msg: LogMessageMessage) => never
@@ -79,6 +86,23 @@ export interface RegisterMessage {
 	} | null
 }
 export type RegisterResponseMessage = Record<string, never>
+
+/**
+ * The models this plugin drives, sent once the plugin has been initialised.
+ */
+export interface SetSurfaceModelsMessage {
+	models: IpcSurfaceModel[]
+}
+
+export interface IpcSurfaceModel {
+	/** Unique within the plugin which declared it */
+	id: string
+	name: string
+	/** Validated on receipt by the host; a model whose layout does not hold up is dropped */
+	layout: SurfaceSchemaLayoutDefinition
+	/** How to draw the model's face. Optional, and dropped by the host if it does not hold up */
+	appearance: SurfaceAppearanceDefinition | undefined
+}
 
 export interface CheckHidDevicesMessage {
 	devices: HIDDevice[]

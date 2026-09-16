@@ -29,9 +29,11 @@ import type {
 	ClientSurfaceButtonSizesItem,
 	ClientSurfaceItem,
 	ClientSurfaceLayoutItem,
+	ClientSurfaceModelItem,
 	OutboundSurfaceInfo,
 	SurfaceConfig,
 	SurfaceGroupConfig,
+	SurfaceModelsUpdate,
 	SurfacePanelConfig,
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
@@ -48,7 +50,7 @@ import {
 	type DiscoveredSurfaceInfo,
 	type SurfaceOpener,
 } from '../Instance/Surface/DiscoveredSurfaceRegistry.js'
-import type { CheckDeviceInfo } from '../Instance/Surface/IpcTypes.js'
+import type { CheckDeviceInfo, IpcSurfaceModel } from '../Instance/Surface/IpcTypes.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { createOrSanitizeSurfaceHandlerConfig, PanelDefaults } from './Config.js'
@@ -113,6 +115,16 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	/** Only maintained while something is subscribed to the matching update event */
 	#lastSentLayoutsJson: Record<string, ClientSurfaceLayoutItem> | null = null
 	#lastSentButtonSizesJson: Record<string, ClientSurfaceButtonSizesItem> | null = null
+	#lastSentModelsJson: Record<string, ClientSurfaceModelItem> | null = null
+
+	/**
+	 * The models each surface instance says it can drive, keyed by instance id.
+	 *
+	 * Declared by the plugin rather than learned from a device, so these describe surfaces which may
+	 * never have been plugged in here. Kept by instance so that a plugin which stops takes its models
+	 * with it - a model Companion can no longer draw is not one worth offering.
+	 */
+	readonly #surfaceModels = new Map<string, ClientSurfaceModelItem[]>()
 
 	/**
 	 * All the opened and active surfaces
@@ -455,6 +467,19 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 				for await (const [layouts] of changes) {
 					yield layouts
+				}
+			}),
+
+			watchSurfaceModels: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#updateEvents, 'surfaceModels', signal)
+
+				// Seed the cache, so that the first change is compared against what was sent here
+				const initial = self.#buildSurfaceModelsJson()
+				self.#lastSentModelsJson = initial
+				yield [{ type: 'init', models: initial }] satisfies SurfaceModelsUpdate[]
+
+				for await (const [modelChanges] of changes) {
+					yield modelChanges
 				}
 			}),
 
@@ -1210,6 +1235,94 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		return surfaceButtonSizesFromLayouts(this.getSurfaceLayouts())
 	}
 
+	/**
+	 * Every model of surface the loaded plugins say they can drive, sorted by name.
+	 *
+	 * Two plugins may each declare a model of the same name - a surface reachable over more than one
+	 * transport, say - so these are qualified by the module which declared them rather than deduplicated:
+	 * they are different models which happen to share a name, and only the plugin knows the difference.
+	 * A name shared across modules would read identically to a user, so those - and only those - carry
+	 * the declaring module as a suffix to tell them apart.
+	 */
+	getSurfaceModels(): ClientSurfaceModelItem[] {
+		const models: ClientSurfaceModelItem[] = []
+		for (const instanceModels of this.#surfaceModels.values()) {
+			models.push(...instanceModels)
+		}
+
+		const countByName = new Map<string, number>()
+		for (const model of models) {
+			countByName.set(model.name, (countByName.get(model.name) ?? 0) + 1)
+		}
+
+		return models
+			.map((model) =>
+				(countByName.get(model.name) ?? 0) > 1 ? { ...model, name: `${model.name} (${model.moduleId})` } : model
+			)
+			.sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id))
+	}
+
+	/** The declared models keyed by their qualified id, as pushed to a subscriber. */
+	#buildSurfaceModelsJson(): Record<string, ClientSurfaceModelItem> {
+		const models: Record<string, ClientSurfaceModelItem> = {}
+		for (const model of this.getSurfaceModels()) {
+			models[model.id] = model
+		}
+		return models
+	}
+
+	/**
+	 * Record the models a surface instance drives, replacing whatever it declared before.
+	 */
+	setSurfaceModelsForInstance(instanceId: string, moduleId: string, models: IpcSurfaceModel[]): void {
+		this.#surfaceModels.set(
+			instanceId,
+			models.map((model) => ({
+				// The plugin only promises an id unique within itself
+				id: `${moduleId}:${model.id}`,
+				moduleId,
+				name: model.name,
+				layout: model.layout,
+				appearance: model.appearance,
+			}))
+		)
+
+		this.#updateSurfaceModels()
+	}
+
+	/**
+	 * Push out the declared models as add/remove ops, if anything is listening. Only the models which
+	 * actually changed are sent, so one plugin declaring or dropping its own does not churn the rest.
+	 */
+	#updateSurfaceModels(): void {
+		if (this.#updateEvents.listenerCount('surfaceModels') === 0) {
+			// Drop the cache, so that the next subscriber gets a fresh comparison
+			this.#lastSentModelsJson = null
+			return
+		}
+
+		const newModels = this.#buildSurfaceModelsJson()
+		const lastModels = this.#lastSentModelsJson
+		this.#lastSentModelsJson = newModels
+
+		const changes: SurfaceModelsUpdate[] = []
+
+		for (const [id, model] of Object.entries(newModels)) {
+			const lastModel = lastModels?.[id]
+			if (!lastModel || !isEqual(lastModel, model)) {
+				changes.push({ type: 'replace', itemId: id, info: model })
+			}
+		}
+
+		if (lastModels) {
+			for (const oldId of Object.keys(lastModels)) {
+				if (!newModels[oldId]) changes.push({ type: 'remove', itemId: oldId })
+			}
+		}
+
+		if (changes.length > 0) this.#updateEvents.emit('surfaceModels', changes)
+	}
+
 	async reset(): Promise<void> {
 		// Each active handler will re-add itself when doing the save as part of its own reset
 		this.#dbTableGroups.clear()
@@ -1343,6 +1456,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	cleanupForInstance(instanceId: string): void {
 		// Unregister HID scan handler
 		this.#surfaceScanHandlers.delete(instanceId)
+
+		// Forget the models it declared
+		if (this.#surfaceModels.delete(instanceId)) this.#updateSurfaceModels()
 
 		// Unload all surfaces for this instance
 		for (const [id, surface] of this.#surfaceHandlers.entries()) {
