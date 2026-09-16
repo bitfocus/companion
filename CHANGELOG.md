@@ -1,5 +1,77 @@
 # Bitfocus Companion
 
+## Companion v5.1.0 - Release Notes
+
+<!-- DRAFT -->
+
+### 📣 CORE FEATURES AND IMPROVEMENTS
+
+- Graphics improvements
+  - pinned properties for quicker access to commonly used properties in the style editor #4324 (#4442)
+  - wysiwyg toolbar for basic edits to a button's style (#4341)
+  - better custom preview aspect ratios (#4450)
+  - surface gauge leds (#4314)
+  - show expresion value previews for elements and style overrides
+  - add fill width setting and alpha support for fill colors #4359
+  - allow value feedbacks as layered-button style overrides (#4379)
+  - make button preview aspect entry more robust and more flexible
+  - text style properties (#4337)
+  - smooth text autosizing
+  - support corner radius for box elements #4359
+
+- Misc UX
+  - rework button grid interactions (#4434)
+  - support alt+click on CollapsibleTree nodes to expand all at that level
+  - make split panel layouts resizable #2781
+  - Show local variable value when collapsed (#4386)
+  - configurable default export format #4349
+
+- APIs
+  - Prototype of new full system REST API (#4259)
+  - REST API to list surfaces and set brightness (#4405)
+  - REST API token management (#4453)
+
+- Expressions
+  - new maths functions (#4388)
+  - expression oscillator function (#4328)
+
+- Variables
+  - Local Variables on pages (#4332)
+  - expose $(this:delta) for rotary actions and carry rotation amount (#4387)
+
+- Controls
+  - reference/mirror control type (#4339)
+  - linked presets (#4284)
+
+- Misc
+  - lazily evaluate internal feedbacks that are children of an action (#4378)
+  - Add milliseconds to log entries #2891
+  - add COMPANION_INSTALL_NAME env var to set the installation name
+  - prometheus metrics for monitoring (#4304)
+  - streaming json parsing/generation (#4390)
+
+### 🐞 BUG FIXES
+
+- better logging in internal actions when not finding local variable to update #4466
+- module versions refresh button not indicating progress
+- keep unicode glyphs together when breaking a line #3671
+- rework line breaking to work as is was long ago (#4372)
+- font size scaling not always consider whether topbar is visible
+- keep preset definition ids stable across re-conversion
+- surface page-change defer condition and rescanUsb error reporting
+- propagate image import errors #4438
+- better report import progress to the ui
+- sort to the connection selection dropdown (#4402)
+- limit preset advanced-feedback style overrides to affectedProperties #4410
+- backup file renaming failing #4394
+- try to ensure module are shutdown cleanly when companion exits
+- adjust line draw bounds to not hide the line #4359
+- measure font ascent/descent for better positioning #4359
+- avoid excessive button-drawn events upon a cache hit
+- make element type clearer in list #4331
+- emulator long press suppress buzz #4322
+- standalone pipe for child ipc (#4312)
+
 ## Companion v5.0.5 - Release Notes
 
 ### 🐞 BUG FIXES
