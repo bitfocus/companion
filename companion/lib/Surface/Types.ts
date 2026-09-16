@@ -9,6 +9,7 @@ import type {
 	GridSize,
 	SurfaceFirmwareUpdateInfo,
 	SurfaceGroupConfig,
+	SurfaceModelsUpdate,
 	SurfaceSchemaLayoutDefinition,
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
@@ -108,6 +109,7 @@ export type UpdateEvents = EmulatorUpdateEvents & {
 
 	surfaces: [changes: SurfacesUpdate[]]
 	surfaceLayouts: [layouts: Record<string, ClientSurfaceLayoutItem>]
+	surfaceModels: [changes: SurfaceModelsUpdate[]]
 	surfaceButtonSizes: [sizes: Record<string, ClientSurfaceButtonSizesItem>]
 
 	[id: `groupConfig:${string}`]: [config: SurfaceGroupConfig | null]
