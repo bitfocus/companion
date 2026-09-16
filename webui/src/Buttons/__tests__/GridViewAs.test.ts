@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import type { ClientSurfaceLayoutItem, SurfaceSchemaLayoutDefinition } from '@companion-app/shared/Model/Surfaces.js'
+import type {
+	ClientSurfaceLayoutItem,
+	ClientSurfaceModelItem,
+	SurfaceSchemaLayoutDefinition,
+} from '@companion-app/shared/Model/Surfaces.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import {
+	applySurfaceModelChanges,
 	DEFAULT_GRID_VIEW_AS_STATE,
+	findSurfaceModelChoice,
 	parseStoredGridViewAs,
 	resolveGridViewAs,
-	surfaceTypeChoicesFromLayouts,
+	surfaceModelChoices,
 	type GridViewAsState,
 	type KnownSurfacePlacement,
 } from '../GridViewAs.js'
@@ -37,8 +43,15 @@ function placement(overrides: Partial<KnownSurfacePlacement> = {}): KnownSurface
 	}
 }
 
+function modelItem(id: string, name: string, moduleId = 'elgato-streamdeck'): ClientSurfaceModelItem {
+	return { id: `${moduleId}:${id}`, moduleId, name, layout: squareLayout, appearance: undefined }
+}
+
 const layouts = new Map([['abc', layoutItem('abc', 'Stream Deck XL')]])
 const placements = new Map([['abc', placement()]])
+
+/** No plugin has declared anything, so only what has been plugged in is known */
+const noModels = new Map<string, ClientSurfaceModelItem>()
 
 function viewingSurface(surfaceId: string): GridViewAsState {
 	return { enabled: true, selection: { type: 'surface', surfaceId } }
@@ -48,9 +61,19 @@ function viewingType(surfaceType: string, offset = { rows: 0, columns: 0 }): Gri
 	return { enabled: true, selection: { type: 'surfaceType', surfaceType, offset } }
 }
 
+function viewingModel(modelId: string, offset = { rows: 0, columns: 0 }): GridViewAsState {
+	return { enabled: true, selection: { type: 'surfaceModel', modelId, offset } }
+}
+
 describe('parseStoredGridViewAs', () => {
 	it('reads back what was stored', () => {
 		const state = viewingSurface('abc')
+
+		expect(parseStoredGridViewAs(JSON.parse(JSON.stringify(state)))).toEqual(state)
+	})
+
+	it('reads back a declared model selection with its offsets', () => {
+		const state = viewingModel('elgato-streamdeck:xl', { rows: -1, columns: 4 })
 
 		expect(parseStoredGridViewAs(JSON.parse(JSON.stringify(state)))).toEqual(state)
 	})
@@ -101,13 +124,15 @@ describe('parseStoredGridViewAs', () => {
 
 describe('resolveGridViewAs', () => {
 	it('is off while the view is turned off', () => {
-		expect(resolveGridViewAs({ ...viewingSurface('abc'), enabled: false }, layouts, placements, GRID_SIZE)).toEqual({
+		expect(
+			resolveGridViewAs({ ...viewingSurface('abc'), enabled: false }, layouts, noModels, placements, GRID_SIZE)
+		).toEqual({
 			status: 'off',
 		})
 	})
 
 	it('resolves a surface onto the grid', () => {
-		const resolution = resolveGridViewAs(viewingSurface('abc'), layouts, placements, GRID_SIZE)
+		const resolution = resolveGridViewAs(viewingSurface('abc'), layouts, noModels, placements, GRID_SIZE)
 
 		expect(resolution.status).toBe('ready')
 		if (resolution.status !== 'ready') return
@@ -120,7 +145,7 @@ describe('resolveGridViewAs', () => {
 	it('places the surface where the surface itself says it is', () => {
 		const moved = new Map([['abc', placement({ offset: { rows: 2, columns: 5 } })]])
 
-		const resolution = resolveGridViewAs(viewingSurface('abc'), layouts, moved, GRID_SIZE)
+		const resolution = resolveGridViewAs(viewingSurface('abc'), layouts, noModels, moved, GRID_SIZE)
 
 		expect(resolution.status === 'ready' && resolution.bounds).toEqual({
 			minRow: 2,
@@ -131,7 +156,7 @@ describe('resolveGridViewAs', () => {
 	})
 
 	it('says so when the surface it was viewing as has been forgotten', () => {
-		expect(resolveGridViewAs(viewingSurface('gone'), layouts, placements, GRID_SIZE)).toEqual({
+		expect(resolveGridViewAs(viewingSurface('gone'), layouts, noModels, placements, GRID_SIZE)).toEqual({
 			status: 'unknownSurface',
 		})
 	})
@@ -139,7 +164,7 @@ describe('resolveGridViewAs', () => {
 	it('says so when the surface exists but nothing knows how it is laid out', () => {
 		const known = new Map([['xyz', placement({ displayName: 'Old Deck (xyz)' })]])
 
-		expect(resolveGridViewAs(viewingSurface('xyz'), layouts, known, GRID_SIZE)).toEqual({
+		expect(resolveGridViewAs(viewingSurface('xyz'), layouts, noModels, known, GRID_SIZE)).toEqual({
 			status: 'noLayout',
 			displayName: 'Old Deck (xyz)',
 		})
@@ -147,7 +172,7 @@ describe('resolveGridViewAs', () => {
 
 	describe('viewing as a model rather than a surface', () => {
 		it('uses the layout of any surface of that model', () => {
-			const resolution = resolveGridViewAs(viewingType('Stream Deck XL'), layouts, placements, GRID_SIZE)
+			const resolution = resolveGridViewAs(viewingType('Stream Deck XL'), layouts, noModels, placements, GRID_SIZE)
 
 			expect(resolution.status).toBe('ready')
 			expect(resolution.status === 'ready' && resolution.displayName).toBe('Stream Deck XL')
@@ -157,6 +182,7 @@ describe('resolveGridViewAs', () => {
 			const resolution = resolveGridViewAs(
 				viewingType('Stream Deck XL', { rows: 1, columns: 4 }),
 				layouts,
+				noModels,
 				new Map(),
 				GRID_SIZE
 			)
@@ -170,14 +196,54 @@ describe('resolveGridViewAs', () => {
 		})
 
 		it('says so when no layout is known for that model', () => {
-			expect(resolveGridViewAs(viewingType('Stream Deck Studio'), layouts, placements, GRID_SIZE)).toEqual({
+			expect(resolveGridViewAs(viewingType('Stream Deck Studio'), layouts, noModels, placements, GRID_SIZE)).toEqual({
 				status: 'noLayout',
 				displayName: 'Stream Deck Studio',
 			})
 		})
 
+		it('uses a model a plugin declared, with nothing of it plugged in', () => {
+			const declared = new Map([['elgato-streamdeck:studio', modelItem('studio', 'Stream Deck Studio')]])
+
+			const resolution = resolveGridViewAs(
+				viewingModel('elgato-streamdeck:studio'),
+				new Map(),
+				declared,
+				new Map(),
+				GRID_SIZE
+			)
+
+			expect(resolution.status).toBe('ready')
+			expect(resolution.status === 'ready' && resolution.displayName).toBe('Stream Deck Studio')
+		})
+
+		it('puts a declared model where the offsets say', () => {
+			const declared = new Map([['elgato-streamdeck:studio', modelItem('studio', 'Stream Deck Studio')]])
+
+			const resolution = resolveGridViewAs(
+				viewingModel('elgato-streamdeck:studio', { rows: 2, columns: 3 }),
+				new Map(),
+				declared,
+				new Map(),
+				GRID_SIZE
+			)
+
+			expect(resolution.status === 'ready' && resolution.bounds).toEqual({
+				minRow: 2,
+				maxRow: 3,
+				minColumn: 3,
+				maxColumn: 4,
+			})
+		})
+
+		it('says so when the plugin which declared the model has gone away', () => {
+			expect(
+				resolveGridViewAs(viewingModel('elgato-streamdeck:studio'), layouts, noModels, placements, GRID_SIZE)
+			).toEqual({ status: 'noLayout', displayName: 'elgato-streamdeck:studio' })
+		})
+
 		it('says nothing has been chosen while nothing has been', () => {
-			expect(resolveGridViewAs({ enabled: true, selection: null }, layouts, placements, GRID_SIZE)).toEqual({
+			expect(resolveGridViewAs({ enabled: true, selection: null }, layouts, noModels, placements, GRID_SIZE)).toEqual({
 				status: 'noSelection',
 			})
 		})
@@ -188,6 +254,7 @@ describe('resolveGridViewAs', () => {
 			const resolution = resolveGridViewAs(
 				viewingType('Stream Deck XL', { rows: 0, columns: 7 }),
 				layouts,
+				noModels,
 				new Map(),
 				GRID_SIZE
 			)
@@ -201,13 +268,19 @@ describe('resolveGridViewAs', () => {
 
 		it('says there is nothing to show when none of it is on the grid', () => {
 			expect(
-				resolveGridViewAs(viewingType('Stream Deck XL', { rows: 0, columns: 20 }), layouts, new Map(), GRID_SIZE)
+				resolveGridViewAs(
+					viewingType('Stream Deck XL', { rows: 0, columns: 20 }),
+					layouts,
+					noModels,
+					new Map(),
+					GRID_SIZE
+				)
 			).toEqual({ status: 'offGrid', displayName: 'Stream Deck XL' })
 		})
 	})
 
 	it('hands over the surface itself, for the view to draw as the surface rather than as a grid', () => {
-		const resolution = resolveGridViewAs(viewingSurface('abc'), layouts, placements, GRID_SIZE)
+		const resolution = resolveGridViewAs(viewingSurface('abc'), layouts, noModels, placements, GRID_SIZE)
 		if (resolution.status !== 'ready') throw new Error('expected the view to resolve')
 
 		// Controls with somewhere to be and a size to be drawn at, not a map of which cells are filled
@@ -217,22 +290,66 @@ describe('resolveGridViewAs', () => {
 	})
 })
 
-describe('surfaceTypeChoicesFromLayouts', () => {
-	it('lists each model once, sorted', () => {
-		const many = new Map([
-			['a', layoutItem('a', 'Stream Deck XL')],
-			['b', layoutItem('b', 'Stream Deck XL')],
-			['c', layoutItem('c', 'Stream Deck +')],
-		])
+describe('surfaceModelChoices', () => {
+	it('offers a model a plugin declares, with nothing plugged in at all', () => {
+		const declared = new Map([['elgato-streamdeck:studio', modelItem('studio', 'Stream Deck Studio')]])
 
-		expect(surfaceTypeChoicesFromLayouts(many)).toEqual([
-			{ id: 'Stream Deck +', label: 'Stream Deck +' },
-			{ id: 'Stream Deck XL', label: 'Stream Deck XL' },
+		expect(surfaceModelChoices(declared, new Map())).toEqual([
+			{
+				id: 'model:elgato-streamdeck:studio',
+				label: 'Stream Deck Studio',
+				selector: { type: 'surfaceModel', modelId: 'elgato-streamdeck:studio' },
+			},
 		])
 	})
 
-	it('is empty when nothing has ever reported a layout', () => {
-		expect(surfaceTypeChoicesFromLayouts(new Map())).toEqual([])
+	it('still offers a model only ever seen plugged in, for plugins which cannot declare their own', () => {
+		const seen = new Map([['a', layoutItem('a', 'Stream Deck XL')]])
+
+		expect(surfaceModelChoices(new Map(), seen)).toEqual([
+			{
+				id: 'type:Stream Deck XL',
+				label: 'Stream Deck XL',
+				selector: { type: 'surfaceType', surfaceType: 'Stream Deck XL' },
+			},
+		])
+	})
+
+	it('lists a seen model once however many of it are plugged in', () => {
+		const many = new Map([
+			['a', layoutItem('a', 'Stream Deck XL')],
+			['b', layoutItem('b', 'Stream Deck XL')],
+		])
+
+		expect(surfaceModelChoices(new Map(), many).map((choice) => choice.label)).toEqual(['Stream Deck XL'])
+	})
+
+	it('prefers the declared model over a plugged-in one of the same name', () => {
+		const declared = new Map([['elgato-streamdeck:xl', modelItem('xl', 'Stream Deck XL')]])
+		const seen = new Map([['a', layoutItem('a', 'Stream Deck XL')]])
+
+		const choices = surfaceModelChoices(declared, seen)
+
+		expect(choices).toHaveLength(1)
+		expect(choices[0].selector).toEqual({ type: 'surfaceModel', modelId: 'elgato-streamdeck:xl' })
+	})
+
+	it('sorts the two sources together, rather than one after the other', () => {
+		const declared = new Map([['elgato-streamdeck:studio', modelItem('studio', 'Stream Deck Studio')]])
+		const seen = new Map([
+			['a', layoutItem('a', 'Loupedeck Live')],
+			['b', layoutItem('b', 'X-keys XK-80')],
+		])
+
+		expect(surfaceModelChoices(declared, seen).map((choice) => choice.label)).toEqual([
+			'Loupedeck Live',
+			'Stream Deck Studio',
+			'X-keys XK-80',
+		])
+	})
+
+	it('is empty when no plugin declares anything and nothing has been plugged in', () => {
+		expect(surfaceModelChoices(new Map(), new Map())).toEqual([])
 	})
 
 	// An emulator is a window on this machine rather than a device anyone is programming ahead for, and
@@ -243,6 +360,75 @@ describe('surfaceTypeChoicesFromLayouts', () => {
 			['emulator:emulator', layoutItem('emulator:emulator', 'Emulator', 'emulator')],
 		])
 
-		expect(surfaceTypeChoicesFromLayouts(withEmulator)).toEqual([{ id: 'Stream Deck XL', label: 'Stream Deck XL' }])
+		expect(surfaceModelChoices(new Map(), withEmulator).map((choice) => choice.label)).toEqual(['Stream Deck XL'])
+	})
+})
+
+describe('findSurfaceModelChoice', () => {
+	const declared = new Map([['elgato-streamdeck:xl', modelItem('xl', 'Stream Deck XL')]])
+	const seen = new Map([['a', layoutItem('a', 'Loupedeck Live')]])
+	const choices = surfaceModelChoices(declared, seen)
+
+	it('finds a declared model', () => {
+		expect(findSurfaceModelChoice(choices, viewingModel('elgato-streamdeck:xl').selection)?.label).toBe(
+			'Stream Deck XL'
+		)
+	})
+
+	it('finds a model which was only ever seen', () => {
+		expect(findSurfaceModelChoice(choices, viewingType('Loupedeck Live').selection)?.label).toBe('Loupedeck Live')
+	})
+
+	// The two are named in different ways against different lists, so a name which happens to match must
+	// not be taken for the other kind
+	it('does not mistake one kind of choice for the other', () => {
+		expect(findSurfaceModelChoice(choices, viewingModel('Loupedeck Live').selection)).toBeNull()
+		expect(findSurfaceModelChoice(choices, viewingType('Stream Deck XL').selection)).toBeNull()
+	})
+
+	it('finds nothing for a surface, or for nothing at all', () => {
+		expect(findSurfaceModelChoice(choices, viewingSurface('abc').selection)).toBeNull()
+		expect(findSurfaceModelChoice(choices, null)).toBeNull()
+	})
+})
+
+describe('applySurfaceModelChanges', () => {
+	const xl = modelItem('xl', 'Stream Deck XL')
+	const neo = modelItem('neo', 'Stream Deck Neo')
+
+	it('replaces the lot on init', () => {
+		const before = { [neo.id]: neo }
+		const after = applySurfaceModelChanges(before, [{ type: 'init', models: { [xl.id]: xl } }])
+
+		expect(after).toEqual({ [xl.id]: xl })
+	})
+
+	it('adds and overwrites on replace, and drops on remove', () => {
+		let models = applySurfaceModelChanges({}, [{ type: 'replace', itemId: xl.id, info: xl }])
+		expect(models).toEqual({ [xl.id]: xl })
+
+		const renamed = { ...xl, name: 'Stream Deck XL v2' }
+		models = applySurfaceModelChanges(models, [{ type: 'replace', itemId: xl.id, info: renamed }])
+		expect(models[xl.id].name).toBe('Stream Deck XL v2')
+
+		models = applySurfaceModelChanges(models, [{ type: 'remove', itemId: xl.id }])
+		expect(models).toEqual({})
+	})
+
+	it('returns the same reference when a remove changes nothing, so it does not force a re-render', () => {
+		const before = { [xl.id]: xl }
+		const after = applySurfaceModelChanges(before, [{ type: 'remove', itemId: 'nope' }])
+
+		expect(after).toBe(before)
+	})
+
+	it('applies a batch of ops in order', () => {
+		const after = applySurfaceModelChanges({}, [
+			{ type: 'init', models: { [xl.id]: xl } },
+			{ type: 'replace', itemId: neo.id, info: neo },
+			{ type: 'remove', itemId: xl.id },
+		])
+
+		expect(after).toEqual({ [neo.id]: neo })
 	})
 })

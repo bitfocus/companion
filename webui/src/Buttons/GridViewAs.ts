@@ -1,4 +1,11 @@
-import type { ClientSurfaceLayoutItem, GridSize, SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import type {
+	ClientSurfaceLayoutItem,
+	ClientSurfaceModelItem,
+	GridSize,
+	SurfaceModelsUpdate,
+	SurfaceRotation,
+	SurfaceSchemaLayoutDefinition,
+} from '@companion-app/shared/Model/Surfaces.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import {
 	panelGridSizeFromLayout,
@@ -17,15 +24,14 @@ import {
  */
 export type GridViewAsSelection =
 	| { type: 'surface'; surfaceId: string }
+	// A model a plugin can drive, plugged in or not; its offset is the user's to set
+	| { type: 'surfaceModel'; modelId: string; offset: { rows: number; columns: number } }
+	/** A model Companion only knows because one was plugged in, named by what that surface called itself */
 	| { type: 'surfaceType'; surfaceType: string; offset: { rows: number; columns: number } }
 
 export interface GridViewAsState {
-	/**
-	 * Whether the view is being applied. Kept apart from the selection so that turning it off and on
-	 * again comes back to the same surface rather than to nothing.
-	 */
+	/** Kept apart from the selection so toggling off and on returns to the same surface */
 	enabled: boolean
-	/** Null until something has been chosen, which is not the same as having chosen nothing */
 	selection: GridViewAsSelection | null
 }
 
@@ -34,7 +40,7 @@ export const GRID_VIEW_AS_STORAGE_KEY = 'grid-view-as'
 /** `ClientSurfaceItem.integrationType` of the built-in emulators */
 const EMULATOR_INTEGRATION_TYPE = 'emulator'
 
-/** How far a surface may be pushed around the grid by hand. Well past any grid anyone has. */
+/** How far a surface may be pushed around the grid by hand */
 export const GRID_VIEW_AS_OFFSET_LIMIT = 999
 
 export const DEFAULT_GRID_VIEW_AS_STATE: GridViewAsState = {
@@ -42,20 +48,13 @@ export const DEFAULT_GRID_VIEW_AS_STATE: GridViewAsState = {
 	selection: null,
 }
 
-/**
- * Read back what was stored, treating anything unrecognisable as nothing at all.
- *
- * What is in local storage was written by some earlier version of this, or by hand, so nothing here
- * may assume it is the shape it was written in: a view which cannot be understood must come back as
- * the view being off, never as a crash on a page which is otherwise fine.
- */
+/** Read back what was stored, treating anything unrecognisable as the view being off. */
 export function parseStoredGridViewAs(raw: unknown): GridViewAsState {
 	if (!raw || typeof raw !== 'object') return DEFAULT_GRID_VIEW_AS_STATE
 
 	const stored = raw as Partial<GridViewAsState>
 
-	// A selection which cannot be understood comes back as nothing having been chosen, rather than as
-	// the whole view being thrown away - the toggle is still whatever it was
+	// An unreadable selection drops to null, keeping whatever the toggle was
 	return { enabled: stored.enabled === true, selection: parseStoredSelection(stored.selection) }
 }
 
@@ -70,21 +69,25 @@ function parseStoredSelection(raw: unknown): GridViewAsSelection | null {
 			: null
 	}
 
+	if (selection.type === 'surfaceModel') {
+		if (typeof selection.modelId !== 'string' || !selection.modelId) return null
+
+		return { type: 'surfaceModel', modelId: selection.modelId, offset: parseStoredOffset(selection.offset) }
+	}
+
 	if (selection.type === 'surfaceType') {
 		if (typeof selection.surfaceType !== 'string' || !selection.surfaceType) return null
 
-		const offset = selection.offset as { rows?: unknown; columns?: unknown } | undefined
-		return {
-			type: 'surfaceType',
-			surfaceType: selection.surfaceType,
-			offset: {
-				rows: clampOffset(offset?.rows),
-				columns: clampOffset(offset?.columns),
-			},
-		}
+		return { type: 'surfaceType', surfaceType: selection.surfaceType, offset: parseStoredOffset(selection.offset) }
 	}
 
 	return null
+}
+
+function parseStoredOffset(raw: unknown): { rows: number; columns: number } {
+	const offset = raw as { rows?: unknown; columns?: unknown } | undefined
+
+	return { rows: clampOffset(offset?.rows), columns: clampOffset(offset?.columns) }
 }
 
 function clampOffset(value: unknown): number {
@@ -103,13 +106,7 @@ export interface KnownSurfacePlacement {
 	panelGridSize: GridSize | null
 }
 
-/**
- * What the view amounts to right now.
- *
- * A selection can outlive what it names - a surface can be forgotten while it is being viewed as, and
- * a layout is only known for a surface which has been plugged in at least once - so this says which
- * of those happened rather than quietly showing the whole grid and leaving the user to wonder.
- */
+/** What the view amounts to now - a selection can outlive the surface or model it names. */
 export type GridViewAsResolution =
 	| { status: 'off' }
 	/** The view is on, but nothing has been chosen for it to show */
@@ -129,14 +126,13 @@ export type GridViewAsResolution =
 	  }
 
 /**
- * Work out what the grid should show.
- *
- * `layouts` and `placements` are what Companion currently knows, both keyed by surface id; a
- * selection naming something which is in neither is what the unknown states are for.
+ * Work out what the grid should show. `layouts`/`placements` are keyed by surface id; `models` is
+ * what the plugins declare, plugged in or not.
  */
 export function resolveGridViewAs(
 	state: GridViewAsState,
 	layouts: ReadonlyMap<string, ClientSurfaceLayoutItem>,
+	models: ReadonlyMap<string, ClientSurfaceModelItem>,
 	placements: ReadonlyMap<string, KnownSurfacePlacement>,
 	gridSize: UserConfigGridSize
 ): GridViewAsResolution {
@@ -152,9 +148,9 @@ export function resolveGridViewAs(
 		const layout = layouts.get(surfaceId)
 		if (!layout) return { status: 'noLayout', displayName: placement.displayName }
 
-		return resolved(
+		return resolvedFromLayout(
 			placement.displayName,
-			layout,
+			layout.layout,
 			{
 				offset: placement.offset,
 				rotation: placement.rotation,
@@ -164,6 +160,16 @@ export function resolveGridViewAs(
 		)
 	}
 
+	if (state.selection.type === 'surfaceModel') {
+		const { modelId, offset } = state.selection
+
+		const model = models.get(modelId)
+		// The plugin which declared it may have been stopped or uninstalled since it was chosen
+		if (!model) return { status: 'noLayout', displayName: modelId }
+
+		return resolvedForModel(model.name, model.layout, offset, gridSize)
+	}
+
 	const { surfaceType, offset } = state.selection
 
 	// Any surface of this type will do - what is being viewed as is the model, not the one that was
@@ -171,26 +177,34 @@ export function resolveGridViewAs(
 	const layout = findLayoutForSurfaceType(layouts, surfaceType)
 	if (!layout) return { status: 'noLayout', displayName: surfaceType }
 
-	// A surface which is not here is not mounted any particular way up, so it is placed as it is drawn
-	return resolved(
-		layout.type,
+	return resolvedForModel(layout.type, layout.layout, offset, gridSize)
+}
+
+/** A model which is not here: placed as drawn (no rotation), the user choosing only its offset. */
+function resolvedForModel(
+	displayName: string,
+	layout: SurfaceSchemaLayoutDefinition,
+	offset: { rows: number; columns: number },
+	gridSize: UserConfigGridSize
+): GridViewAsResolution {
+	return resolvedFromLayout(
+		displayName,
 		layout,
-		{ offset, rotation: 0, panelGridSize: panelGridSizeFromLayout(layout.layout) },
+		{ offset, rotation: 0, panelGridSize: panelGridSizeFromLayout(layout) },
 		gridSize
 	)
 }
 
-function resolved(
+function resolvedFromLayout(
 	displayName: string,
-	layout: ClientSurfaceLayoutItem,
+	layout: SurfaceSchemaLayoutDefinition,
 	placement: SurfaceGridPlacement,
 	gridSize: UserConfigGridSize
 ): GridViewAsResolution {
-	const view = resolveSurfaceView(layout.layout, placement)
+	const view = resolveSurfaceView(layout, placement)
 	if (!view) return { status: 'noLayout', displayName }
 
-	// A surface can be positioned - or offset by hand - so that some or all of it is beyond the grid.
-	// The part which is there is still worth showing; the cells beyond it are not cells at all.
+	// Clip to the grid; the part beyond it is not cells at all, but what remains is still worth showing
 	const bounds: UserConfigGridSize = {
 		minRow: Math.max(view.gridBounds.minRow, gridSize.minRow),
 		maxRow: Math.min(view.gridBounds.maxRow, gridSize.maxRow),
@@ -224,29 +238,108 @@ function findLayoutForSurfaceType(
 }
 
 /**
- * The types of surface which can be viewed as, sorted by name.
+ * A model of surface which can be viewed as, whether or not one is here.
  *
- * Only the ones Companion has a layout for, which today means the ones which have been plugged in at
- * some point: a surface module describes its layout when a device opens, so a model nobody here has
- * ever owned is not something we can draw. Surface modules cannot yet list the layouts they know
- * about without a device, so this list is as long as the user's own history and no longer.
+ * The dropdown only needs an id and a label; `selector` is how the choice is written down once it is
+ * picked, and keeps the two kinds apart - a model a plugin declared and a name a surface once called
+ * itself are different things, resolved against different places.
+ */
+export interface GridViewAsModelChoice {
+	id: string
+	label: string
+	selector: { type: 'surfaceModel'; modelId: string } | { type: 'surfaceType'; surfaceType: string }
+}
+
+/**
+ * The models of surface which can be viewed as, sorted by name.
+ *
+ * Two sources, because plugins are not all able to say the same things. A plugin which knows the
+ * models it drives declares them, so they can be programmed for before one is bought. A plugin which
+ * cannot - Satellite, where the surface on the other end describes itself when it arrives - leaves
+ * only the models Companion has actually seen, and those are offered too, so this is never shorter
+ * than it used to be.
+ *
+ * A declared model wins over a seen one of the same name: they are the same device, and the plugin's
+ * own description of it is the one that does not depend on what happened to be plugged in.
  *
  * Emulators are left out. An emulator is not a model anyone is programming ahead for - it is a
  * window on this machine, whose layout is whatever its own grid size was last set to - so offering
  * one here would be offering a shape rather than a device. Viewing as a particular emulator, which
  * does have a place on the grid, is still offered alongside the real surfaces.
  */
-export function surfaceTypeChoicesFromLayouts(
+export function surfaceModelChoices(
+	models: ReadonlyMap<string, ClientSurfaceModelItem>,
 	layouts: ReadonlyMap<string, ClientSurfaceLayoutItem>
-): { id: string; label: string }[] {
-	const types = new Set<string>()
-	for (const layout of layouts.values()) {
-		if (layout.integrationType === EMULATOR_INTEGRATION_TYPE) continue
+): GridViewAsModelChoice[] {
+	const choices: GridViewAsModelChoice[] = []
+	const declaredNames = new Set<string>()
 
-		types.add(layout.type)
+	for (const model of models.values()) {
+		declaredNames.add(model.name)
+		choices.push({
+			id: `model:${model.id}`,
+			label: model.name,
+			selector: { type: 'surfaceModel', modelId: model.id },
+		})
 	}
 
-	return Array.from(types)
-		.sort((a, b) => a.localeCompare(b))
-		.map((type) => ({ id: type, label: type }))
+	const seenTypes = new Set<string>()
+	for (const layout of layouts.values()) {
+		if (layout.integrationType === EMULATOR_INTEGRATION_TYPE) continue
+		if (declaredNames.has(layout.type)) continue
+
+		seenTypes.add(layout.type)
+	}
+
+	for (const type of seenTypes) {
+		choices.push({ id: `type:${type}`, label: type, selector: { type: 'surfaceType', surfaceType: type } })
+	}
+
+	return choices.sort((a, b) => a.label.localeCompare(b.label) || a.id.localeCompare(b.id))
+}
+
+/** Apply surface-model diff ops to the map. Returns the same map on a no-op, to avoid a re-render. */
+export function applySurfaceModelChanges(
+	current: Record<string, ClientSurfaceModelItem>,
+	changes: SurfaceModelsUpdate[]
+): Record<string, ClientSurfaceModelItem> {
+	let next = current
+
+	for (const change of changes) {
+		switch (change.type) {
+			case 'init':
+				next = { ...change.models }
+				break
+			case 'replace':
+				next = { ...next, [change.itemId]: change.info }
+				break
+			case 'remove':
+				if (!(change.itemId in next)) break
+				next = { ...next }
+				delete next[change.itemId]
+				break
+		}
+	}
+
+	return next
+}
+
+/** Which of the choices a selection names, or null when it names none of them */
+export function findSurfaceModelChoice(
+	choices: readonly GridViewAsModelChoice[],
+	selection: GridViewAsSelection | null
+): GridViewAsModelChoice | null {
+	if (!selection) return null
+
+	for (const choice of choices) {
+		if (choice.selector.type !== selection.type) continue
+
+		if (choice.selector.type === 'surfaceModel' && selection.type === 'surfaceModel') {
+			if (choice.selector.modelId === selection.modelId) return choice
+		} else if (choice.selector.type === 'surfaceType' && selection.type === 'surfaceType') {
+			if (choice.selector.surfaceType === selection.surfaceType) return choice
+		}
+	}
+
+	return null
 }

@@ -66,7 +66,8 @@ const GridViewAsPopoverContent = observer(function GridViewAsPopoverContent({
 }: {
 	controller: GridViewAsController
 }): React.JSX.Element {
-	const { state, surfaceChoices, surfaceTypeChoices, setSelection, setOffset } = controller
+	const { state, surfaceChoices, modelChoices, selectedModelChoice, setSelection, setModelChoice, setOffset } =
+		controller
 
 	const selection = state.selection
 	const selectedSurfaceId = !selection
@@ -83,36 +84,29 @@ const GridViewAsPopoverContent = observer(function GridViewAsPopoverContent({
 				// Starting from the first model we know about, so choosing this shows something rather than
 				// an empty view which has to be configured before it does anything. Only offered when there
 				// is a model to start from.
-				setSelection({
-					type: 'surfaceType',
-					surfaceType: String(surfaceTypeChoices[0].id),
-					offset: { rows: 0, columns: 0 },
-				})
+				setModelChoice(modelChoices[0])
 			} else {
 				setSelection({ type: 'surface', surfaceId: String(value) })
 			}
 		},
-		[setSelection, surfaceTypeChoices]
+		[setSelection, setModelChoice, modelChoices]
 	)
 
-	const chooseSurfaceType = useCallback(
+	const chooseModel = useCallback(
 		(value: DropdownChoiceId) => {
-			setSelection({
-				type: 'surfaceType',
-				surfaceType: String(value),
-				offset: selection?.type === 'surfaceType' ? selection.offset : { rows: 0, columns: 0 },
-			})
+			const choice = modelChoices.find((choice) => choice.id === value)
+			if (choice) setModelChoice(choice)
 		},
-		[setSelection, selection]
+		[setModelChoice, modelChoices]
 	)
 
-	// Nothing to view as at all: no surface has ever been seen, so there is neither one to pick nor a
-	// model to pick. Said plainly rather than shown as an empty dropdown which does nothing.
-	if (surfaceChoices.length === 0 && surfaceTypeChoices.length === 0) {
+	// Nothing to view as at all: no plugin declares a model and no surface has ever been seen, so there
+	// is nothing to pick. Said plainly rather than shown as an empty dropdown which does nothing.
+	if (surfaceChoices.length === 0 && modelChoices.length === 0) {
 		return (
 			<p className="text-muted small m-0">
-				Companion has not seen a surface yet, so there is nothing to view the grid as. Connect one - or install support
-				for one from the module store - and it will be offered here.
+				Companion does not know of any surfaces yet, so there is nothing to view the grid as. Connect one - or install
+				support for one from the module store - and it will be offered here.
 			</p>
 		)
 	}
@@ -123,10 +117,10 @@ const GridViewAsPopoverContent = observer(function GridViewAsPopoverContent({
 		...(selection ? [] : [{ id: GRID_VIEW_AS_NOTHING_ID, label: 'Choose a surface…' }]),
 		...surfaceChoices,
 		// A model is only worth offering when one is known; the note below says why when none is
-		...(surfaceTypeChoices.length > 0 ? [{ id: GRID_VIEW_AS_CUSTOM_ID, label: 'A model of surface…' }] : []),
+		...(modelChoices.length > 0 ? [{ id: GRID_VIEW_AS_CUSTOM_ID, label: 'A model of surface…' }] : []),
 	]
 
-	const model = selection?.type === 'surfaceType' ? selection : null
+	const model = selection?.type === 'surfaceType' || selection?.type === 'surfaceModel' ? selection : null
 
 	return (
 		<>
@@ -142,10 +136,10 @@ const GridViewAsPopoverContent = observer(function GridViewAsPopoverContent({
 				/>
 			</div>
 
-			{surfaceTypeChoices.length === 0 && (
+			{modelChoices.length === 0 && (
 				<p className="text-muted small m-0">
-					Companion learns how a surface is laid out when one connects, so a surface which has never been plugged in
-					cannot be chosen by model yet.
+					None of the installed surface modules lists the models it supports, and no surface has been plugged in, so
+					there is no model to choose yet.
 				</p>
 			)}
 
@@ -157,9 +151,9 @@ const GridViewAsPopoverContent = observer(function GridViewAsPopoverContent({
 						</label>
 						<SimpleDropdownInputField
 							id="grid-view-as-type"
-							choices={surfaceTypeChoices}
-							value={model.surfaceType}
-							setValue={chooseSurfaceType}
+							choices={modelChoices}
+							value={selectedModelChoice?.id ?? ''}
+							setValue={chooseModel}
 						/>
 					</div>
 

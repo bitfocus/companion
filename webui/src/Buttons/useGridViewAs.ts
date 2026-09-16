@@ -1,17 +1,24 @@
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { useCallback, useContext, useMemo, useState } from 'react'
-import type { ClientSurfaceLayoutItem } from '@companion-app/shared/Model/Surfaces.js'
+import type {
+	ClientSurfaceLayoutItem,
+	ClientSurfaceModelItem,
+	SurfaceModelsUpdate,
+} from '@companion-app/shared/Model/Surfaces.js'
 import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
 import { trpc } from '~/Resources/TRPC.js'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import {
+	applySurfaceModelChanges,
 	DEFAULT_GRID_VIEW_AS_STATE,
+	findSurfaceModelChoice,
 	GRID_VIEW_AS_OFFSET_LIMIT,
 	GRID_VIEW_AS_STORAGE_KEY,
 	parseStoredGridViewAs,
 	resolveGridViewAs,
-	surfaceTypeChoicesFromLayouts,
+	surfaceModelChoices,
+	type GridViewAsModelChoice,
 	type GridViewAsResolution,
 	type GridViewAsSelection,
 	type GridViewAsState,
@@ -32,11 +39,15 @@ export interface GridViewAsController {
 	 * choosable, so choosing it cannot land on a view which shows nothing.
 	 */
 	readonly surfaceChoices: { id: string; label: string; disabled: boolean }[]
-	/** Every model of surface Companion has a layout for */
-	readonly surfaceTypeChoices: { id: string; label: string }[]
+	/** Every model of surface which could be viewed as, whether or not one has ever been here */
+	readonly modelChoices: GridViewAsModelChoice[]
+	/** Which of `modelChoices` the current selection names, if it names one */
+	readonly selectedModelChoice: GridViewAsModelChoice | null
 
 	setEnabled: (enabled: boolean) => void
 	setSelection: (selection: GridViewAsSelection) => void
+	/** Choose a model of surface, keeping wherever the last one was put */
+	setModelChoice: (choice: GridViewAsModelChoice) => void
 	setOffset: (offset: { rows: number; columns: number }) => void
 }
 
@@ -82,6 +93,21 @@ export function useGridViewAs(): GridViewAsController {
 
 	const layouts = useMemo(() => new Map(Object.entries(layoutItems)), [layoutItems])
 
+	// The models the plugins declare, plugged in or not. Streamed as diff ops and folded into a map here.
+	const [modelItems, setModelItems] = useState<Record<string, ClientSurfaceModelItem>>({})
+	useSubscription(
+		trpc.surfaces.watchSurfaceModels.subscriptionOptions(undefined, {
+			enabled: available,
+			onData: (changes) => setModelItems((old) => applySurfaceModelChanges(old, changes as SurfaceModelsUpdate[])),
+			onError: (error) => {
+				console.error('Failed to subscribe to surface models:', error)
+				setModelItems({})
+			},
+		})
+	)
+
+	const models = useMemo(() => new Map(Object.entries(modelItems)), [modelItems])
+
 	// Where each surface sits on the grid. Disconnected surfaces are in here too, so a view survives
 	// the surface being unplugged - which is most of the point of being able to program for one.
 	const placements = useComputed(() => {
@@ -119,7 +145,11 @@ export function useGridViewAs(): GridViewAsController {
 		[surfaces, layouts]
 	)
 
-	const surfaceTypeChoices = useMemo(() => surfaceTypeChoicesFromLayouts(layouts), [layouts])
+	const modelChoices = useMemo(() => surfaceModelChoices(models, layouts), [models, layouts])
+	const selectedModelChoice = useMemo(
+		() => findSurfaceModelChoice(modelChoices, stored.selection),
+		[modelChoices, stored.selection]
+	)
 
 	const gridSize = useComputed(() => userConfig.properties?.gridSize ?? null, [userConfig])
 
@@ -128,8 +158,10 @@ export function useGridViewAs(): GridViewAsController {
 		// view which is not available resolves to off, so the grid draws itself whole without every
 		// caller having to ask whether the feature is on.
 		() =>
-			available && gridSize ? resolveGridViewAs(stored, layouts, placements, gridSize) : { status: 'off' as const },
-		[available, stored, layouts, placements, gridSize]
+			available && gridSize
+				? resolveGridViewAs(stored, layouts, models, placements, gridSize)
+				: { status: 'off' as const },
+		[available, stored, layouts, models, placements, gridSize]
 	)
 
 	const setEnabled = useCallback((enabled: boolean) => setStored((oldState) => ({ ...oldState, enabled })), [setStored])
@@ -141,12 +173,24 @@ export function useGridViewAs(): GridViewAsController {
 		[setStored]
 	)
 
+	// Changing which model is being looked at should not move it back to the corner of the grid - where
+	// it sits is the user's answer to a different question
+	const setModelChoice = useCallback(
+		(choice: GridViewAsModelChoice) =>
+			setStored((oldState) => ({
+				...oldState,
+				enabled: true,
+				selection: { ...choice.selector, offset: offsetOfSelection(oldState.selection) },
+			})),
+		[setStored]
+	)
+
 	const setOffset = useCallback(
 		(offset: { rows: number; columns: number }) =>
 			setStored((oldState) => {
 				// A surface which exists brings its own offset, so there is nothing here to move
 				const selection = oldState.selection
-				if (selection?.type !== 'surfaceType') return oldState
+				if (selection?.type !== 'surfaceType' && selection?.type !== 'surfaceModel') return oldState
 
 				return {
 					...oldState,
@@ -164,11 +208,20 @@ export function useGridViewAs(): GridViewAsController {
 		state: stored,
 		resolution,
 		surfaceChoices,
-		surfaceTypeChoices,
+		modelChoices,
+		selectedModelChoice,
 		setEnabled,
 		setSelection,
+		setModelChoice,
 		setOffset,
 	}
+}
+
+/** Where the current selection sits on the grid, for a selection which has a say in that */
+function offsetOfSelection(selection: GridViewAsSelection | null): { rows: number; columns: number } {
+	if (selection?.type === 'surfaceModel' || selection?.type === 'surfaceType') return selection.offset
+
+	return { rows: 0, columns: 0 }
 }
 
 function clampOffset(value: number): number {
