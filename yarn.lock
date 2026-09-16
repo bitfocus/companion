@@ -2037,22 +2037,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-surface/base@npm:1.4.0, @companion-surface/base@npm:~1.4.0":
-  version: 1.4.0
-  resolution: "@companion-surface/base@npm:1.4.0"
+"@companion-surface/base@npm:1.5.0-nightly-claude-keen-tesla-ekqmu3-20260916-142851-baa91b4":
+  version: 1.5.0-nightly-claude-keen-tesla-ekqmu3-20260916-142851-baa91b4
+  resolution: "@companion-surface/base@npm:1.5.0-nightly-claude-keen-tesla-ekqmu3-20260916-142851-baa91b4"
   dependencies:
     zod: "npm:^4.4.3"
-  checksum: 10c0/8b50af17ee832a8f5e13cfde5958e846be36fd5a3709174faec80e01aab27c84e2302160ce94ac727a6dd23e0dda8249604858e066a06f7ceb10ced8272614d0
+  checksum: 10c0/9715355f83026a3072b002b42f2f8a4de5aa2d1c991c19e83b6e8625131ee9371e1686238620e72ff32397c94c89d37449910863e58b2b9e0ccb74d6428fea9e
   languageName: node
   linkType: hard
 
-"@companion-surface/host@npm:1.4.0":
-  version: 1.4.0
-  resolution: "@companion-surface/host@npm:1.4.0"
+"@companion-surface/host@npm:1.5.0-nightly-claude-keen-tesla-ekqmu3-20260916-144138-baa91b4":
+  version: 1.5.0-nightly-claude-keen-tesla-ekqmu3-20260916-144138-baa91b4
+  resolution: "@companion-surface/host@npm:1.5.0-nightly-claude-keen-tesla-ekqmu3-20260916-144138-baa91b4"
   dependencies:
     "@companion-surface/base": "npm:~1.4.0"
     fast-deep-equal: "npm:^3.1.3"
-  checksum: 10c0/ea01491a94b6eaaf8a752082bba48d06b7253fd55b1f1c27b9f96ed7dded7f791f4aabf1b36e51f961e25241841dea7f97400c4c0fa0d3e7d1e9a7a73e63efb7
+  checksum: 10c0/0f9bde2c3f15e9a6fb332a89941c05a0f1d3eeaf38a9f25687cc14f1abef8628ac39c93ef7788bea4661115d08caa1e8018d2ebdc9ad61c7f55ba6036c2f486f
   languageName: node
   linkType: hard
 
