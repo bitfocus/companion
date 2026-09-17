@@ -120,7 +120,7 @@ const GridViewAsPopoverContent = observer(function GridViewAsPopoverContent({
 		...(modelChoices.length > 0 ? [{ id: GRID_VIEW_AS_CUSTOM_ID, label: 'A model of surface…' }] : []),
 	]
 
-	const model = selection?.type === 'surfaceType' || selection?.type === 'surfaceModel' ? selection : null
+	const model = selection?.type === 'surfaceModel' ? selection : null
 
 	return (
 		<>

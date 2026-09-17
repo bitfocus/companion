@@ -145,7 +145,7 @@ export function useGridViewAs(): GridViewAsController {
 		[surfaces, layouts]
 	)
 
-	const modelChoices = useMemo(() => surfaceModelChoices(models, layouts), [models, layouts])
+	const modelChoices = useMemo(() => surfaceModelChoices(models), [models])
 	const selectedModelChoice = useMemo(
 		() => findSurfaceModelChoice(modelChoices, stored.selection),
 		[modelChoices, stored.selection]
@@ -190,7 +190,7 @@ export function useGridViewAs(): GridViewAsController {
 			setStored((oldState) => {
 				// A surface which exists brings its own offset, so there is nothing here to move
 				const selection = oldState.selection
-				if (selection?.type !== 'surfaceType' && selection?.type !== 'surfaceModel') return oldState
+				if (selection?.type !== 'surfaceModel') return oldState
 
 				return {
 					...oldState,
@@ -219,7 +219,7 @@ export function useGridViewAs(): GridViewAsController {
 
 /** Where the current selection sits on the grid, for a selection which has a say in that */
 function offsetOfSelection(selection: GridViewAsSelection | null): { rows: number; columns: number } {
-	if (selection?.type === 'surfaceModel' || selection?.type === 'surfaceType') return selection.offset
+	if (selection?.type === 'surfaceModel') return selection.offset
 
 	return { rows: 0, columns: 0 }
 }
