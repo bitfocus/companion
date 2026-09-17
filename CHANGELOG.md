@@ -11,7 +11,7 @@
   - wysiwyg toolbar for basic edits to a button's style (#4341)
   - better custom preview aspect ratios (#4450)
   - surface gauge leds (#4314)
-  - show expresion value previews for elements and style overrides
+  - show expression value previews for elements and style overrides
   - add fill width setting and alpha support for fill colors #4359
   - allow value feedbacks as layered-button style overrides (#4379)
   - make button preview aspect entry more robust and more flexible
