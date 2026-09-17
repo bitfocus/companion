@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite'
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import type { JsonValue } from 'type-fest'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { CompanionFieldVariablesSupport, type SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
@@ -13,6 +13,7 @@ import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputField } from '~/Components/TextInputField.js'
+import { unwrapPastedVariableReference } from '~/Components/variablePaste.js'
 import { useOptionalEntityEditorContext } from './Components/EntityEditorContext.js'
 import type { InputFeatureIconsProps } from './InputFeatures.js'
 import { InternalCustomVariableDropdown, InternalModuleField } from './InternalModuleField.js'
@@ -53,6 +54,16 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 	// Tri-state validity (valid/invalid/unknown) used by every field's validation indicator/styling
 	const checkValid = useCallback((value: JsonValue | undefined) => validateInputValue(option, value).validity, [option])
 
+	// For variable-name text fields, unwrap a pasted `$(namespace:name)` reference down to just the name
+	const pasteNamespace = option?.type === 'textinput' ? option.unwrapPastedVariableNamespace : undefined
+	const onPasteIntercept = useMemo(
+		() =>
+			pasteNamespace !== undefined
+				? (pasted: string) => unwrapPastedVariableReference(pasted, pasteNamespace)
+				: undefined,
+		[pasteNamespace]
+	)
+
 	if (!option) return <p>Bad option</p>
 
 	switch (option.type) {
@@ -83,6 +94,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 					setValue={setValue}
 					checkValid={checkValid}
 					multiline={option.multiline}
+					onPasteIntercept={onPasteIntercept}
 				/>
 			)
 		}

@@ -13,6 +13,7 @@ import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js
 import { TextStylesInputField } from '~/Components/TextStylesInputField.js'
 import { TimeInputField } from '~/Components/TimeInputField.js'
 import VariableInputGroup from '~/Components/VariableInputGroup.js'
+import { unwrapPastedVariableReference } from '~/Components/variablePaste.js'
 import { VariablePickerField } from '~/Components/VariablePickerField.js'
 import { groupItemsByCollection } from '~/Helpers/CollectionGrouping.js'
 import { useComputed } from '~/Resources/util.js'
@@ -409,15 +410,7 @@ const InternalVariableDropdown = observer(function InternalVariableDropdown({
 		return choices
 	}, [baseVariableDefinitions, localVariableDefinitions])
 
-	const onPasteIntercept = useCallback((pastedValue: string) => {
-		let value = pastedValue.trim()
-		if (value.length === 0) return pastedValue
-		if (value.startsWith('$(') && value.endsWith(')')) {
-			value = value.slice(2, -1)
-		}
-
-		return value
-	}, [])
+	const onPasteIntercept = useCallback((pastedValue: string) => unwrapPastedVariableReference(pastedValue), [])
 
 	return (
 		<VariablePickerField

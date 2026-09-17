@@ -77,6 +77,7 @@ function translateTextInputField(field: CompanionInputFieldTextInput): Complete<
 		multiline: false,
 		placeholder: undefined, // Not supported from modules
 		disableSanitisation: false, // Not supported from modules
+		unwrapPastedVariableNamespace: undefined, // Not supported from modules
 	}
 }
 function translateCheckboxField(field: CompanionInputFieldCheckbox): Complete<CompanionInputFieldCheckboxExtended> {
