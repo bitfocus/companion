@@ -2,6 +2,7 @@ import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
+import { LocalVariableNameRegex } from '@companion-app/shared/LocalVariable.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
@@ -153,8 +154,7 @@ export class ControlEntityInstance {
 		if (!entity.variableName) return null
 
 		// Check if the variable name is valid
-		const idCheckRegex = /^([a-zA-Z0-9-_.]+)$/
-		if (!entity.variableName.match(idCheckRegex)) return null
+		if (!entity.variableName.match(LocalVariableNameRegex)) return null
 
 		return `local:${entity.variableName}`
 	}
@@ -166,8 +166,7 @@ export class ControlEntityInstance {
 		if (!entity.variableName) return null
 
 		// Check if the variable name is valid
-		const idCheckRegex = /^([a-zA-Z0-9-_.]+)$/
-		if (!entity.variableName.match(idCheckRegex)) return null
+		if (!entity.variableName.match(LocalVariableNameRegex)) return null
 
 		return entity.variableName
 	}

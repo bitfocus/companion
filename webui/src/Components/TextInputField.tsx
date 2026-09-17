@@ -29,6 +29,11 @@ interface TextInputFieldSimpleProps {
 	 * If the value is written to local storage, set this to opt out of the internal temporary focus value
 	 */
 	immediateValue?: boolean
+	/**
+	 * When provided, transform the pasted text before it is applied. Returning a value different from the
+	 * pasted text replaces the whole field with it (e.g. unwrapping a pasted `$(...)` variable reference).
+	 */
+	onPasteIntercept?: (value: string) => string
 }
 
 interface TextInputFieldProps extends Omit<TextInputFieldSimpleProps, 'variableOptions'> {
@@ -53,6 +58,7 @@ export function TextInputFieldSimple({
 	onBlur,
 	onKeyDown: onKeyDownProp,
 	immediateValue,
+	onPasteIntercept,
 }: TextInputFieldSimpleProps): React.JSX.Element {
 	const useVariables = !!variableOptions
 
@@ -132,6 +138,22 @@ export function TextInputFieldSimple({
 		[storeValue]
 	)
 
+	const handlePaste = useCallback(
+		(e: React.ClipboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+			if (!onPasteIntercept || !e.clipboardData) return
+
+			const rawValue = e.clipboardData.getData('text')
+			const newValue = onPasteIntercept(rawValue)
+
+			// Nothing changed, let the default paste happen
+			if (newValue === rawValue) return
+
+			e.preventDefault()
+			storeValue(newValue)
+		},
+		[onPasteIntercept, storeValue]
+	)
+
 	const handleKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLInputElement> | React.KeyboardEvent<HTMLTextAreaElement>) => {
 			if (e.code === 'Escape' && isPickerOpen) {
@@ -178,6 +200,7 @@ export function TextInputFieldSimple({
 				onBlur?.()
 			}}
 			onKeyDown={handleKeyDown}
+			onPaste={handlePaste}
 			onSelect={(e) => {
 				setCursorPosition(e.currentTarget.selectionStart)
 			}}
