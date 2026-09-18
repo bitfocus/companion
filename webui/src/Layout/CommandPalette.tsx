@@ -307,8 +307,14 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 			<GenericConfirmModal ref={clearLogConfirmRef} />
 			<Modal.Root open onOpenChange={(open) => !open && closePalette()}>
 				<Modal.Portal>
-					<Modal.Backdrop className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs transition-opacity" />
-					<Modal.Viewport className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 p-4 overflow-y-auto">
+					<Modal.Backdrop
+						className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+						style={{ zIndex: 1300 }}
+					/>
+					<Modal.Viewport
+						className="fixed inset-0 flex items-start justify-center pt-16 sm:pt-24 p-4 overflow-y-auto"
+						style={{ zIndex: 1300 }}
+					>
 						<Modal.Popup className="w-full max-w-2xl bg-surface border border-border/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col dialog-max-h animate-in fade-in zoom-in-95 duration-150">
 							{/* Search Input Header */}
 							<div className="flex items-center px-4 py-3.5 border-b border-border/70 gap-3 bg-surface">
