@@ -1,5 +1,19 @@
 # Bitfocus Companion
 
+## Companion v5.0.6 - Release Notes
+
+### 🐞 BUG FIXES
+
+- surface module compatibility check using wrong versions #4472
+- improve UX of `internal: Local Variable: Set value` name field, clarifying what is valid input #4467
+- unable to change version of surface module
+- better logging in internal actions when not finding local variable to update #4466
+- Page dropdown not scrolling to the current page #4456
+- respect explicit show_topbar when scaling legacy font sizes
+- suppress logging for rosstalk noop commands #4463
+- sanitise custom-variable option values
+- update canvas library to fix png containing svg issue #4438
+
 ## Companion v5.0.5 - Release Notes
 
 ### 🐞 BUG FIXES
