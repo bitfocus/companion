@@ -58,15 +58,16 @@ test('a config export can be imported back through the ui', async ({ page }) => 
 		'Remote Surfaces',
 		'Image Library',
 	]) {
+		// Sections the export doesn't contain are shown disabled and are never imported
 		const checkbox = page.getByRole('checkbox', { name: label, exact: true })
-		if ((await checkbox.count()) > 0) await checkbox.uncheck()
+		if ((await checkbox.count()) > 0 && (await checkbox.isEnabled())) await checkbox.uncheck()
 	}
 	// A successful import reloads the whole page. The sidebar stays visible throughout the wizard,
 	// so it cannot signal the reload - wait for the load event itself, armed before the click, or a
 	// later navigation races the app-initiated reload (net::ERR_ABORTED)
 	await Promise.all([
 		page.waitForEvent('load', { timeout: 30_000 }),
-		page.getByRole('button', { name: 'Import Preserving Unselected' }).click(),
+		page.getByRole('button', { name: 'Import (Preserve Unselected)' }).click(),
 	])
 	await expect(page.locator('.sidebar-nav').first()).toBeVisible({ timeout: 30_000 })
 

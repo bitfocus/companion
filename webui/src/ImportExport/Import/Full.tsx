@@ -286,7 +286,14 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 																? !snapshot.surfacesInstances
 																: !snapshot.surfacesRemote
 													}
-													value={field.state.value !== 'unchanged'}
+													value={
+														field.state.value !== 'unchanged' &&
+														(opt.key === 'known'
+															? !!snapshot.surfacesKnown
+															: opt.key === 'instances'
+																? !!snapshot.surfacesInstances
+																: !!snapshot.surfacesRemote)
+													}
 													setValue={(val) => field.handleChange(val ? 'reset-and-import' : 'unchanged')}
 													onBlur={field.handleBlur}
 												/>

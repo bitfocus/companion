@@ -19,27 +19,24 @@ test('configure and fire a variable-change trigger through the ui', async ({ pag
 	await page.getByRole('button', { name: 'Add Trigger' }).click()
 
 	// Rename it, so the list row can be identified
-	await page.getByLabel('Name').fill('E2E trigger')
+	await page.getByPlaceholder('Trigger Name...').fill('E2E trigger')
 	const listRow = page.locator('.collections-nesting-table-row-item', { hasText: 'E2E trigger' })
 	await expect(listRow).toBeVisible()
 
 	// Watch the source variable
-	await page.getByRole('tab', { name: 'Events' }).click()
 	await page.getByPlaceholder('+ Add event').click()
 	await page.getByRole('option', { name: 'On variable change' }).click()
-	// Commit the variable by picking the filtered option - the popup would otherwise stay open
-	// over the tab bar
+	// Commit the variable by picking the filtered option, so the popup closes
 	const eventRow = page.locator('.entity-row', { hasText: 'On variable change' })
 	await eventRow.getByRole('combobox').fill('custom:watch_src')
 	await page.getByRole('option', { name: /custom:watch_src/ }).click()
 
 	// Set the destination variable when it fires
-	await page.getByRole('tab', { name: 'Actions' }).click()
 	const addAction = page.getByPlaceholder('+ Add action')
 	await addAction.click()
 	await addAction.fill('custom variable set value')
 	await page.getByRole('option', { name: 'internal: Custom Variable: Set value' }).click()
-	const actionRow = page.locator('.entity-row', { hasText: 'internal: Custom Variable: Set value' })
+	const actionRow = page.locator('.entity-row', { hasText: 'Custom Variable: Set value' })
 	await actionRow.locator('.dropdown-field-trigger').click()
 	await page.getByRole('option', { name: /watch_dst/ }).click()
 	await actionRow.getByLabel('Value', { exact: true }).fill('triggered!')
@@ -59,9 +56,8 @@ test('configure and fire a variable-change trigger through the ui', async ({ pag
 test('interval event options persist', async ({ page }) => {
 	await gotoApp(page, '/triggers')
 	await page.getByRole('button', { name: 'Add Trigger' }).click()
-	await page.getByLabel('Name').fill('Interval trigger')
+	await page.getByPlaceholder('Trigger Name...').fill('Interval trigger')
 
-	await page.getByRole('tab', { name: 'Events' }).click()
 	await page.getByPlaceholder('+ Add event').click()
 	await page.getByRole('option', { name: 'Time Interval: Fixed' }).click()
 
@@ -71,6 +67,11 @@ test('interval event options persist', async ({ page }) => {
 	await interval.press('ControlOrMeta+a')
 	await interval.pressSequentially('42')
 	await interval.blur()
+
+	// The option is saved by a fire-and-forget mutation. Make a change that is echoed back through
+	// the list subscription and wait for it; the socket is ordered, so the interval has landed too
+	await page.getByPlaceholder('Trigger Name...').fill('Interval trigger saved')
+	await expect(page.locator('.collections-nesting-table-row-item', { hasText: 'Interval trigger saved' })).toBeVisible()
 
 	await page.reload()
 	await expect(page.locator('.sidebar-nav').first()).toBeVisible({ timeout: 30_000 })
