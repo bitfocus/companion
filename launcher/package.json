@@ -1,7 +1,7 @@
 {
 	"name": "@companion-app/launcher",
 	"description": "Companion",
-	"version": "5.0.5",
+	"version": "5.0.6",
 	"main": "main.js",
 	"license": "MIT",
 	"private": true,
