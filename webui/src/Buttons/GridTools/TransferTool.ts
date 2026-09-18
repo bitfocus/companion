@@ -75,9 +75,12 @@ export class TransferTool extends GridToolBase {
 		return this.#sources === null || additive
 	}
 
-	override onMarquee(ctx: GridToolContext, from: ControlLocation, to: ControlLocation, additive: boolean): void {
-		const region = locationsInRectangle(from, to)
-
+	override onMarquee(
+		ctx: GridToolContext,
+		region: readonly ControlLocation[],
+		anchor: ControlLocation,
+		additive: boolean
+	): void {
 		// The gaps in a region are part of its shape - they set where the buttons around them land, and
 		// place nothing of their own - but a box containing nothing at all is a stray drag, not a choice
 		if (!region.some((location) => ctx.actions.isOccupied(location))) return
@@ -87,8 +90,8 @@ export class TransferTool extends GridToolBase {
 			this.#sources = [...this.#sources, ...region.filter((location) => !held.has(formatLocation(location)))]
 			ctx.store.notifyToolChanged()
 		} else {
-			this.#pickUp(ctx, region)
-			this.#rangeAnchor = from
+			this.#pickUp(ctx, [...region])
+			this.#rangeAnchor = anchor
 		}
 
 		// Whatever was drawn for the old set is now wrong

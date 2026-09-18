@@ -19,6 +19,22 @@ async function connectTcp(port: number): Promise<net.Socket> {
 	return await vi.waitFor(async () => tryConnectTcp(port), { timeout: 15_000 })
 }
 
+/** Wait until the service has stopped listening and refuses new connections */
+async function waitForConnectionRefused(port: number): Promise<void> {
+	await vi.waitFor(
+		async () => {
+			// A connection that does succeed must not be left open - it would keep the service's
+			// clients alive past the end of the test
+			const socket = await tryConnectTcp(port).catch(() => null)
+			if (socket) {
+				socket.destroy()
+				throw new Error(`Port ${port} is still accepting connections`)
+			}
+		},
+		{ timeout: 15_000 }
+	)
+}
+
 /** Collect reply lines from a socket */
 function collectLines(socket: net.Socket): () => string[] {
 	let buffer = ''
@@ -93,14 +109,22 @@ describe('tcp/udp api services over real sockets', () => {
 		app.registry.userconfig.setKey('tcp_enabled', true)
 
 		const socket = await connectTcp(port)
-		socket.destroy()
+		try {
+			app.registry.userconfig.setKey('tcp_enabled', false)
 
-		app.registry.userconfig.setKey('tcp_enabled', false)
+			// The service destroys the sockets of connected clients as it shuts down
+			await vi.waitFor(
+				() => {
+					expect(socket.closed).toBe(true)
+				},
+				{ timeout: 15_000 }
+			)
 
-		// New connections are refused once the service has shut down
-		await vi.waitFor(async () => {
-			await expect(tryConnectTcp(port)).rejects.toThrow()
-		})
+			// And new connections are refused once it has
+			await waitForConnectionRefused(port)
+		} finally {
+			socket.destroy()
+		}
 	})
 
 	test('the udp service processes datagrams', async () => {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { LocalVariableNameOption, PageVariableNameOption } from '../LocalVariable.js'
 import type {
 	CompanionInputFieldBonjourDeviceExtended,
 	CompanionInputFieldCheckboxExtended,
@@ -672,6 +673,23 @@ describe('validateInputValue', () => {
 				expect(result.validationError).toBeUndefined()
 				expect(result.validity).toBeUndefined()
 			})
+		})
+
+		describe('local/page variable name fields', () => {
+			it.each([LocalVariableNameOption, PageVariableNameOption])('accepts a valid name ($label)', (definition) => {
+				expect(validateInputValue(definition, 'my_var-1.2')).toMatchObject({ validity: true })
+			})
+
+			it.each([LocalVariableNameOption, PageVariableNameOption])(
+				'rejects invalid characters ($label)',
+				(definition) => {
+					// An empty name, a still-wrapped reference, or a name with a space/colon are all invalid
+					expect(validateInputValue(definition, '')).toMatchObject({ validity: false })
+					expect(validateInputValue(definition, '$(local:foo)')).toMatchObject({ validity: false })
+					expect(validateInputValue(definition, 'has space')).toMatchObject({ validity: false })
+					expect(validateInputValue(definition, 'local:foo')).toMatchObject({ validity: false })
+				}
+			)
 		})
 
 		describe('number', () => {

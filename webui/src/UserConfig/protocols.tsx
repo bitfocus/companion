@@ -18,6 +18,7 @@ import { HttpProtocol } from './Sections/HttpProtocol.js'
 import { MetricsConfig } from './Sections/MetricsConfig.js'
 import { OscConfig } from './Sections/OscConfig.js'
 import { OscProtocol } from './Sections/OscProtocol.js'
+import { RestApiConfig } from './Sections/RestApiConfig.js'
 import { RosstalkConfig } from './Sections/RosstalkConfig.js'
 import { RosstalkProtocol } from './Sections/RosstalkProtocol.js'
 import { SatelliteConfig } from './Sections/SatelliteConfig.js'
@@ -83,6 +84,7 @@ const UserConfigTable = observer(function UserConfigTable() {
 				<TcpConfig {...userConfigProps} />
 				<UdpConfig {...userConfigProps} />
 				<HttpConfig {...userConfigProps} />
+				<RestApiConfig {...userConfigProps} />
 				<MetricsConfig {...userConfigProps} />
 				<OscConfig {...userConfigProps} />
 				<RosstalkConfig {...userConfigProps} />

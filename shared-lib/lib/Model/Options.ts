@@ -289,6 +289,13 @@ export interface CompanionInputFieldTextInputExtended extends CompanionInputFiel
 	 * This is so that expression results don't get mangled
 	 */
 	disableSanitisation?: boolean
+
+	/**
+	 * Internal use only: when a `$(...)` variable reference is pasted into this field (in value mode), unwrap it to
+	 * just the inner name. Set to a namespace (e.g. `local`) to also strip a matching `namespace:` prefix, so pasting
+	 * `$(local:foo)` yields `foo`. Used by the local/page variable name fields.
+	 */
+	unwrapPastedVariableNamespace?: string
 }
 export interface CompanionInputFieldExpressionExtended extends CompanionInputFieldBaseExtended {
 	type: 'expression'

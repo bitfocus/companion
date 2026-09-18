@@ -87,14 +87,16 @@
 	}
 }
 
-/* ─── Split-button border-radius fix ─────────────────────────────────────────
+/* ─── Split-button ───────────────────────────────────────────────────────────
  *
- * When a Popover.Trigger with a caret is the last button in a .btn-group,
- * CoreUI's btn-group rules can strip the right border-radius. Restore it. */
+ * An open trigger adds an `aria-owns` anchor span after the caret, which the group's end-of-row
+ * `:nth-last-child` rule doesn't skip, so the caret gets squared as if mid-row. It is always the row's
+ * end, so hold that edge - `!important` to beat the group's more specific rule. */
 
-.btn-group .popover2-trigger-caret {
-	border-top-right-radius: var(--radius) !important;
-	border-bottom-right-radius: var(--radius) !important;
+.button-group > .popover2-trigger-caret {
+	border-start-end-radius: var(--btn-border-radius) !important;
+	border-end-end-radius: var(--btn-border-radius) !important;
+	border-inline-end-width: var(--btn-border-width) !important;
 }
 
 /* ─── Trigger caret ──────────────────────────────────────────────────────────── */
@@ -132,6 +134,16 @@
 }
 
 /* ─── Trigger caret ──────────────────────────────────────────────────────────── */
+
+/* A trigger which is nothing but a caret - the menu half of a split button - needs neither the padding
+   a label would have wanted nor the space that would have separated the caret from it. */
+.popover2-trigger-caret:empty {
+	--btn-padding-x: 0.4rem;
+
+	&::after {
+		margin-left: 0;
+	}
+}
 
 .popover2-trigger-caret::after {
 	margin-left: 0.5em;

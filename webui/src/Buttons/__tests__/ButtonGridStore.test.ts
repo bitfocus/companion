@@ -175,9 +175,90 @@ describe('ButtonGridStore', () => {
 		})
 	})
 
+	describe('a view which is not the whole grid', () => {
+		/**
+		 * Viewing as a surface: it shows the buttons its controls drive, and answers for itself which one is
+		 * next to which, because its controls are wherever the device puts them.
+		 */
+		function surfaceShowing(...locations: ControlLocation[]) {
+			return {
+				locations,
+				stepFocus: (from: ControlLocation, rowDelta: number, columnDelta: number) => {
+					// Standing in for the real geometry: the next one listed, in the direction asked for
+					const index = locations.findIndex((location) => formatLocationKey(location) === formatLocationKey(from))
+					if (index < 0) return null
+
+					const next = index + (rowDelta || columnDelta > 0 ? 1 : -1)
+					return locations[next] ?? null
+				},
+			}
+		}
+
+		it('shows every button of the grid itself', () => {
+			expect(store.isLocationInView(at(0, 0))).toBe(true)
+		})
+
+		it('shows only what the view says it shows', () => {
+			store.setViewShape(surfaceShowing(at(1, 0), at(1, 3)))
+
+			expect(store.isLocationInView(at(1, 0))).toBe(true)
+			expect(store.isLocationInView(at(1, 1))).toBe(false)
+		})
+
+		it('lets the view say where the focus goes, rather than stepping a column', () => {
+			// The two encoders of a Stream Deck +XL, with three columns of nothing between them
+			store.setViewShape(surfaceShowing(at(1, 0), at(1, 3)))
+			store.selectWithModifiers(at(1, 0), NO_MODIFIERS)
+
+			expect(store.moveFocus(0, 1, GRID_SIZE)).toEqual(at(1, 3))
+		})
+
+		it('goes nowhere when the view says there is nothing that way', () => {
+			store.setViewShape(surfaceShowing(at(1, 0)))
+			store.selectWithModifiers(at(1, 0), NO_MODIFIERS)
+
+			expect(store.moveFocus(0, 1, GRID_SIZE)).toBeNull()
+		})
+
+		it('leaves out the buttons the view does not show when a box is dragged over them', () => {
+			store.setViewShape(surfaceShowing(at(1, 1), at(1, 2), at(2, 2)))
+			store.selectLocations(locationsInRectangle(at(1, 1), at(2, 2)), at(1, 1), false)
+
+			expect(store.selectedLocations).toEqual([at(1, 1), at(1, 2), at(2, 2)])
+		})
+
+		it('selects everything the view shows, and nothing else', () => {
+			store.setViewShape(surfaceShowing(at(0, 0), at(3, 7)))
+			store.selectAllOnPage(1, GRID_SIZE)
+
+			expect(store.selectedLocations).toEqual([at(0, 0), at(3, 7)])
+		})
+
+		it('drops a selection the view no longer shows when it changes', () => {
+			store.selectLocations(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false)
+			store.setViewShape(surfaceShowing(at(1, 1)))
+
+			expect(store.selectedLocations).toEqual([at(1, 1)])
+		})
+
+		it('lets go of a focus the view no longer shows', () => {
+			store.selectWithModifiers(at(1, 1), NO_MODIFIERS)
+			store.setViewShape(surfaceShowing(at(2, 2)))
+
+			expect(store.focus).toBeNull()
+		})
+
+		it('goes back to the whole grid when the view is left', () => {
+			store.setViewShape(surfaceShowing(at(1, 1)))
+			store.setViewShape(null)
+
+			expect(store.isLocationInView(at(0, 0))).toBe(true)
+		})
+	})
+
 	describe('dragging out a rectangle', () => {
 		it('selects everything inside it', () => {
-			store.selectRectangle(at(1, 1), at(2, 2), false)
+			store.selectLocations(locationsInRectangle(at(1, 1), at(2, 2)), at(1, 1), false)
 
 			expect(store.selectionCount).toBe(4)
 			expect(store.isSelected('1/1/1')).toBe(true)
@@ -186,15 +267,15 @@ describe('ButtonGridStore', () => {
 
 		it('replaces the previous selection by default', () => {
 			store.selectWithModifiers(at(0, 0), NO_MODIFIERS)
-			store.selectRectangle(at(1, 1), at(1, 2), false)
+			store.selectLocations(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false)
 
 			expect(store.isSelected('1/0/0')).toBe(false)
 			expect(store.selectionCount).toBe(2)
 		})
 
 		it('adds to the previous selection when additive, without duplicating overlap', () => {
-			store.selectRectangle(at(1, 1), at(1, 2), false)
-			store.selectRectangle(at(1, 2), at(1, 3), true)
+			store.selectLocations(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false)
+			store.selectLocations(locationsInRectangle(at(1, 2), at(1, 3)), at(1, 2), true)
 
 			expect(store.selectionCount).toBe(3)
 			expect(store.isSelected('1/1/1')).toBe(true)
@@ -202,14 +283,14 @@ describe('ButtonGridStore', () => {
 		})
 
 		it('starts over when an additive sweep lands on another page', () => {
-			store.selectRectangle(at(1, 1, 1), at(1, 2, 1), false)
-			store.selectRectangle(at(1, 1, 2), at(1, 1, 2), true)
+			store.selectLocations(locationsInRectangle(at(1, 1, 1), at(1, 2, 1)), at(1, 1, 1), false)
+			store.selectLocations(locationsInRectangle(at(1, 1, 2), at(1, 1, 2)), at(1, 1, 2), true)
 
 			expect(store.selectedLocations).toEqual([at(1, 1, 2)])
 		})
 
 		it('leaves the anchor where the sweep began, so shift-click can extend it', () => {
-			store.selectRectangle(at(1, 1), at(2, 2), false)
+			store.selectLocations(locationsInRectangle(at(1, 1), at(2, 2)), at(1, 1), false)
 			store.selectWithModifiers(at(3, 3), RANGE)
 
 			expect(store.selectionCount).toBe(9)
@@ -392,7 +473,7 @@ describe('ButtonGridStore', () => {
 		it('picks the buttons up rather than leaving them selected as well', () => {
 			// Two copies of the same thing is what let deselecting clear one and leave the tool holding
 			// the other, still asking where to put them
-			store.selectRectangle(at(1, 1), at(1, 2), false)
+			store.selectLocations(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false)
 			store.setTool('copy', actions)
 
 			expect(store.selectionCount).toBe(0)
@@ -401,7 +482,7 @@ describe('ButtonGridStore', () => {
 		})
 
 		it('hands them back when you change your mind', () => {
-			store.selectRectangle(at(1, 1), at(1, 2), false)
+			store.selectLocations(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false)
 			store.setTool('copy', actions)
 
 			store.goBack(actions)
@@ -436,7 +517,7 @@ describe('ButtonGridStore', () => {
 		})
 
 		it('skips straight to the destination when several buttons are selected', () => {
-			store.selectRectangle(at(1, 1), at(1, 2), false)
+			store.selectLocations(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false)
 			store.setTool('move', actions)
 
 			expect(store.hint(actions)).toBe('Where do you want it?')
@@ -524,7 +605,7 @@ describe('ButtonGridStore', () => {
 
 		it('drops a button that should not have been picked up', () => {
 			store.setTool('copy', actions)
-			store.handleMarquee(at(1, 1), at(1, 3), false, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 1), at(1, 3)), at(1, 1), false, actions)
 
 			store.handleTap(at(1, 2), TOGGLE, actions)
 
@@ -543,7 +624,7 @@ describe('ButtonGridStore', () => {
 		it('measures a shift-click from the corner a box was drawn from', () => {
 			store.setTool('move', actions)
 			// Bottom-right to top-left, so the anchor is not the first cell of the region
-			store.handleMarquee(at(2, 2), at(1, 1), false, actions)
+			store.handleMarquee(locationsInRectangle(at(2, 2), at(1, 1)), at(2, 2), false, actions)
 
 			store.handleTap(at(3, 2), RANGE, actions)
 
@@ -598,7 +679,7 @@ describe('ButtonGridStore', () => {
 		it('adds to the selection when a modifier click arrives with nothing yet in hand', () => {
 			// Escape hands the buttons back to the selection, so this is the state after backing out
 			store.setTool('move', actions)
-			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false, actions)
 			store.goBack(actions)
 			expect(store.selectionCount).toBe(2)
 
@@ -638,7 +719,7 @@ describe('ButtonGridStore', () => {
 
 		it('keeps the buttons when switching between copy, move and swap', () => {
 			store.setTool('copy', actions)
-			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false, actions)
 			expect(held()).toEqual(['1/1/1', '1/1/2'])
 
 			store.setTool('move', actions)
@@ -659,7 +740,7 @@ describe('ButtonGridStore', () => {
 
 		it('hands them back as a selection when leaving for a tool with no use for them', () => {
 			store.setTool('move', actions)
-			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false, actions)
 
 			store.setTool('select', actions)
 
@@ -669,7 +750,7 @@ describe('ButtonGridStore', () => {
 
 		it('asks about the buttons in hand when switching to delete', () => {
 			store.setTool('move', actions)
-			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false, actions)
 
 			store.setTool('delete', actions)
 
@@ -678,7 +759,7 @@ describe('ButtonGridStore', () => {
 
 		it('puts them down when switching to press mode, where a highlight only misleads', () => {
 			store.setTool('move', actions)
-			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false, actions)
 
 			store.setTool('press', actions)
 
@@ -939,7 +1020,7 @@ describe('ButtonGridStore', () => {
 		it('puts the region under the cursor, wherever the box was drawn from', () => {
 			store.setTool('copy', actions)
 			// Dragged out bottom-right to top-left, which is the case that is impossible to guess at
-			store.handleMarquee(at(2, 2), at(1, 1), false, actions)
+			store.handleMarquee(locationsInRectangle(at(2, 2), at(1, 1)), at(2, 2), false, actions)
 
 			store.handleHover(at(3, 5), NO_MODIFIERS, actions)
 
@@ -950,7 +1031,7 @@ describe('ButtonGridStore', () => {
 
 		it('centres an odd-sided region on the cursor, rather than hanging it below and right', () => {
 			store.setTool('copy', actions)
-			store.handleMarquee(at(0, 0), at(2, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(0, 0), at(2, 2)), at(0, 0), false, actions)
 
 			store.handleHover(at(2, 4), NO_MODIFIERS, actions)
 
@@ -962,7 +1043,7 @@ describe('ButtonGridStore', () => {
 
 		it('places where the ghost said it would', () => {
 			store.setTool('copy', actions)
-			store.handleMarquee(at(0, 0), at(2, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(0, 0), at(2, 2)), at(0, 0), false, actions)
 			store.handleHover(at(2, 4), NO_MODIFIERS, actions)
 
 			store.handleTap(at(2, 4), NO_MODIFIERS, actions)
@@ -1179,7 +1260,7 @@ describe('ButtonGridStore', () => {
 			}
 
 			store.setTool('select', actions)
-			store.handleMarquee(at(1, 1), at(2, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 1), at(2, 2)), at(1, 1), false, actions)
 			expect(store.selectionCount).toBe(4)
 		})
 
@@ -1187,7 +1268,7 @@ describe('ButtonGridStore', () => {
 			store.setTool('copy', actions)
 			expect(store.allowsMarquee(false)).toBe(true)
 
-			store.handleMarquee(at(1, 1), at(2, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 1), at(2, 2)), at(1, 1), false, actions)
 
 			expect(store.selectionCount).toBe(0)
 			expect(store.isTransferSource('1/1/1')).toBe(true)
@@ -1196,7 +1277,7 @@ describe('ButtonGridStore', () => {
 
 		it('carries the region to the destination in one go', () => {
 			store.setTool('move', actions)
-			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false, actions)
 
 			store.handleTap(at(3, 4), NO_MODIFIERS, actions)
 
@@ -1212,7 +1293,7 @@ describe('ButtonGridStore', () => {
 
 		it('stops offering a box once the transfer is asking where to put them', () => {
 			store.setTool('copy', actions)
-			store.handleMarquee(at(1, 1), at(2, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 1), at(2, 2)), at(1, 1), false, actions)
 
 			// A plain box would mean nothing here, and drawing one would just leave a stray rectangle
 			expect(store.allowsMarquee(false)).toBe(false)
@@ -1222,28 +1303,28 @@ describe('ButtonGridStore', () => {
 
 		it('adds to what a transfer is already holding', () => {
 			store.setTool('move', actions)
-			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false, actions)
 
-			store.handleMarquee(at(3, 3), at(3, 4), true, actions)
+			store.handleMarquee(locationsInRectangle(at(3, 3), at(3, 4)), at(3, 3), true, actions)
 
 			expect([...store.transferSourceKeys].sort()).toEqual(['1/1/1', '1/1/2', '1/3/3', '1/3/4'])
 		})
 
 		it('does not add the same button twice', () => {
 			store.setTool('move', actions)
-			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false, actions)
 
-			store.handleMarquee(at(1, 2), at(1, 3), true, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 2), at(1, 3)), at(1, 2), true, actions)
 
 			expect([...store.transferSourceKeys].sort()).toEqual(['1/1/1', '1/1/2', '1/1/3'])
 		})
 
 		it('drops a landing spot drawn before the region grew', () => {
 			store.setTool('move', actions)
-			store.handleMarquee(at(1, 1), at(1, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 1), at(1, 2)), at(1, 1), false, actions)
 			store.handleHover(at(3, 3), NO_MODIFIERS, actions)
 
-			store.handleMarquee(at(2, 5), at(2, 6), true, actions)
+			store.handleMarquee(locationsInRectangle(at(2, 5), at(2, 6)), at(2, 5), true, actions)
 
 			expect(store.dropGhostSource('1/3/3')).toBeNull()
 		})
@@ -1252,7 +1333,7 @@ describe('ButtonGridStore', () => {
 			actions.isOccupied = vi.fn(() => false)
 			store.setTool('copy', actions)
 
-			store.handleMarquee(at(1, 1), at(2, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 1), at(2, 2)), at(1, 1), false, actions)
 
 			expect(store.hint(actions)).toBe('Press the button you want to copy')
 		})
@@ -1261,7 +1342,7 @@ describe('ButtonGridStore', () => {
 			actions.isOccupied = vi.fn((location) => location.column === 1)
 			store.setTool('delete', actions)
 
-			store.handleMarquee(at(1, 1), at(2, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 1), at(2, 2)), at(1, 1), false, actions)
 
 			expect(actions.clearButtons).toHaveBeenCalledWith([at(1, 1), at(2, 1)])
 		})
@@ -1433,7 +1514,7 @@ describe('ButtonGridStore, in the states nothing else reaches', () => {
 		it('ignores a box, a hover and a tap in press mode', () => {
 			store.setTool('press', actions)
 
-			store.handleMarquee(at(1, 1), at(2, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 1), at(2, 2)), at(1, 1), false, actions)
 			store.handleHover(at(1, 1), NO_MODIFIERS, actions)
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
 
@@ -1460,7 +1541,7 @@ describe('ButtonGridStore, in the states nothing else reaches', () => {
 			actions.isOccupied = vi.fn(() => false)
 			store.setTool('delete', actions)
 
-			store.handleMarquee(at(1, 1), at(2, 2), false, actions)
+			store.handleMarquee(locationsInRectangle(at(1, 1), at(2, 2)), at(1, 1), false, actions)
 
 			expect(actions.clearButtons).not.toHaveBeenCalled()
 		})

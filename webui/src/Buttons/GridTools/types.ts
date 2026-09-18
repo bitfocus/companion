@@ -80,8 +80,19 @@ export interface GridTool {
 	 */
 	allowsMarquee(additive: boolean): boolean
 
-	/** A box was dragged out across the grid. What that picks is up to the tool. */
-	onMarquee(ctx: GridToolContext, from: ControlLocation, to: ControlLocation, additive: boolean): void
+	/**
+	 * A box was dragged out, and these are the buttons it covered.
+	 *
+	 * The view works out which those are, because only it knows how it is laid out: the infinite grid answers with
+	 * the rectangle of cells, and a surface with the controls the box actually touched. `anchor` is where the drag
+	 * started, for the tools which measure a later range from it.
+	 */
+	onMarquee(
+		ctx: GridToolContext,
+		locations: readonly ControlLocation[],
+		anchor: ControlLocation,
+		additive: boolean
+	): void
 
 	/**
 	 * The pointer moved over this cell, or left the grid entirely.
@@ -134,7 +145,12 @@ export abstract class GridToolBase implements GridTool {
 		return false
 	}
 
-	onMarquee(_ctx: GridToolContext, _from: ControlLocation, _to: ControlLocation, _additive: boolean): void {
+	onMarquee(
+		_ctx: GridToolContext,
+		_locations: readonly ControlLocation[],
+		_anchor: ControlLocation,
+		_additive: boolean
+	): void {
 		// nothing by default
 	}
 

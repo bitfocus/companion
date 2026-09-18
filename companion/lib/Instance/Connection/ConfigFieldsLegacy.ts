@@ -171,6 +171,7 @@ function translateTextInputField(
 		multiline: field.multiline,
 		placeholder: undefined, // Not supported from modules
 		disableSanitisation: false, // Not supported from modules
+		unwrapPastedVariableNamespace: undefined, // Not supported from modules
 	}
 }
 function translateCheckboxField(

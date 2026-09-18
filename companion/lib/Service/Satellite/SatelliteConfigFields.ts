@@ -73,6 +73,7 @@ function translateTextInputField(field: TextInputField): Complete<CompanionSurfa
 		multiline: field.multiline ?? false,
 		placeholder: undefined,
 		disableSanitisation: false,
+		unwrapPastedVariableNamespace: undefined,
 	}
 }
 

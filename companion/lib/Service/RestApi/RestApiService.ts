@@ -1,44 +1,69 @@
+import { z } from 'zod'
+import { API_KEY_SCOPES } from '@companion-app/shared/Model/ApiKeys.js'
 import type { DataUserConfig } from '../../Data/UserConfig.js'
 import LogController from '../../Log/Controller.js'
 import type { AppInfo, Registry } from '../../Registry.js'
 import type { UIExpress } from '../../UI/Express.js'
+import { publicProcedure, router } from '../../UI/TRPC.js'
 import { REST_API_BASE_PATH } from './constants.js'
 import { createRestApiRouter } from './RestApiRouter.js'
-import { RestApiTokenStoreMemory } from './RestApiTokenStore.js'
+import { RestApiTokenStore } from './RestApiTokenStore.js'
 
 /**
  * Service class that sets up and mounts the REST API.
  * Creates the token store, router, and mounts on the Express app at /api/v2/.
  * Each resource type is versioned independently (e.g. /api/v2/connections/v1/).
  *
- * The REST API is only mounted when `rest_api_enabled` is true at startup.
- * Changing the setting requires a restart of Companion.
+ * The router is always mounted; it gates each request on `rest_api_enabled` internally, so toggling
+ * the setting takes effect live without a restart (see createRestApiRouter).
  */
 export class RestApiService {
 	readonly #logger = LogController.createLogger('Service/RestApi')
-	readonly tokenStore: RestApiTokenStoreMemory
+
+	readonly tokenStore: RestApiTokenStore
 
 	constructor(
 		registry: Registry,
-		_userconfigController: DataUserConfig,
+		userconfig: DataUserConfig,
 		express: UIExpress,
 		appInfo: Pick<AppInfo, 'appVersion'>
 	) {
-		this.tokenStore = new RestApiTokenStoreMemory()
+		this.tokenStore = new RestApiTokenStore(
+			LogController.createLogger('Service/RestApi/Tokens'),
+			registry.db.getTableView('api_keys')
+		)
 
-		// Temporarily use an env var instead of the userconfig
+		express.restApiRouter = createRestApiRouter(registry, userconfig, this.tokenStore, appInfo)
+		this.#logger.info(`REST API mounted at ${REST_API_BASE_PATH}/ (resources versioned independently)`)
+	}
 
-		if (!process.env.EXPERIMENTAL_ENABLE_REST_API) {
-			this.#logger.info('Experimental REST API is disabled')
-			return
-		}
+	createTrpcRouter() {
+		const tokenStore = this.tokenStore
+		return router({
+			list: publicProcedure.query(() => tokenStore.list()),
 
-		const restApiRouter = createRestApiRouter(registry, this.tokenStore, appInfo)
+			create: publicProcedure
+				.input(
+					z.object({
+						name: z.string().min(1).max(100),
+						scopes: z.array(z.enum(API_KEY_SCOPES)).min(1),
+					})
+				)
+				.mutation(({ input }) => tokenStore.create(input.name, input.scopes)),
 
-		// Mount the REST API router via the setter on UIExpress
-		// This is registered at /api/v2 before the existing /api legacy routes
-		express.restApiRouter = restApiRouter
+			update: publicProcedure
+				.input(
+					z.object({
+						id: z.string(),
+						name: z.string().min(1).max(100),
+						scopes: z.array(z.enum(API_KEY_SCOPES)).min(1),
+					})
+				)
+				.mutation(({ input }) => tokenStore.update(input.id, { name: input.name, scopes: input.scopes })),
 
-		this.#logger.info(`Experimental REST API mounted at ${REST_API_BASE_PATH}/ (resources versioned independently)`)
+			delete: publicProcedure.input(z.object({ id: z.string() })).mutation(({ input }) => {
+				return tokenStore.delete(input.id)
+			}),
+		})
 	}
 }

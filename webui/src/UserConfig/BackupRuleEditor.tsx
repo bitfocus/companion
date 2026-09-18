@@ -57,7 +57,7 @@ const PreviousBackupRow = observer(function PreviousBackupRow({ backup, ruleId }
 					<span className="font-mono">{formatFileSize(backup.fileSize)}</span>
 				</div>
 			</td>
-			<td className="no-wrap align-middle py-2.5 px-3 text-right">
+			<td className="whitespace-nowrap align-middle py-2.5 px-3 text-right">
 				<Button
 					color="secondary"
 					size="sm"

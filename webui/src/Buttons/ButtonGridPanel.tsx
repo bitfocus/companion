@@ -24,6 +24,7 @@ import { ButtonGridZoomControl } from './ButtonGridZoomControl.js'
 import { ButtonInfiniteGrid, PrimaryButtonGridIcon, type ButtonInfiniteGridRef } from './ButtonInfiniteGrid.js'
 import { GridButtonDragOverlay } from './GridButtonDragOverlay.js'
 import type { GridButtonModifiers } from './GridButtonPreview.js'
+import { locationsInRectangle } from './GridGeometry.js'
 import type { GridZoomController } from './GridZoom.js'
 
 interface ButtonsGridPanelProps {
@@ -125,7 +126,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 		() => ({
 			canStart: store.allowsMarquee,
 			onSelect: (from: ControlLocation, to: ControlLocation, additive: boolean) =>
-				store.handleMarquee(from, to, additive, actions),
+				store.handleMarquee(locationsInRectangle(from, to), from, additive, actions),
 		}),
 		[store, actions]
 	)
