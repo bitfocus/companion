@@ -1,13 +1,12 @@
+import { Check, Pause, Play, Trash2, X } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId, type RefObject } from 'react'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
-import { Button, ButtonGroup } from '~/Components/Button'
+import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { Grid } from '~/Components/Grid'
 import { MultiDropdownInputField } from '~/Components/MultiDropdownInputField.js'
-import { SwitchInputField } from '~/Components/SwitchInputField'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler, useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -66,6 +65,10 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 
 		doFinish()
 	}, [changeRecording, doFinish])
+	const toggleRecording = useCallback(
+		() => changeRecording(!sessionInfo.isRunning),
+		[changeRecording, sessionInfo.isRunning]
+	)
 
 	const changeConnectionIds = useCallback(
 		(ids: DropdownChoiceId[]) => {
@@ -93,47 +96,60 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 	}, [connections])
 
 	const connectionsFieldId = useId()
-	const recordingFieldId = useId()
 
 	return (
-		<>
-			<Form onSubmit={PreventDefaultHandler}>
-				<Grid.Row className="flex-form m-0 clear-both">
-					<div className="flex w-full gap-6">
-						<div className="w-full">
-							<FormLabel htmlFor={connectionsFieldId}>Connections</FormLabel>
-							<MultiDropdownInputField
-								htmlName={connectionsFieldId}
-								value={sessionInfo.connectionIds}
-								setValue={changeConnectionIds}
-								choices={connectionsWhichCanRecord}
-							/>
-						</div>
-
-						<div>
-							<FormLabel htmlFor={recordingFieldId}>Recording</FormLabel>
-							<br />
-							<SwitchInputField id={recordingFieldId} value={!!sessionInfo.isRunning} setValue={changeRecording} />
-						</div>
-					</div>
-				</Grid.Row>
-
-				<Grid.Row className="m-0 clear-both">
-					<div>
-						<ButtonGroup className="mb-4">
-							<Button onClick={doClearActions} color="secondary" disabled={!sessionInfo.actions?.length}>
-								Clear Actions
-							</Button>
-							<Button onClick={doAbort} color="danger">
-								Discard
-							</Button>
-							<Button onClick={doFinish2} color="secondary" disabled={!sessionInfo.actions?.length}>
-								Finish
-							</Button>
-						</ButtonGroup>
-					</div>
-				</Grid.Row>
-			</Form>
-		</>
+		<Form
+			onSubmit={PreventDefaultHandler}
+			className={`recorder-session-card${sessionInfo.isRunning ? ' recorder-session-card-active' : ''}`}
+		>
+			<div className="recorder-state-summary" aria-live="polite">
+				<span
+					aria-hidden="true"
+					className={sessionInfo.isRunning ? 'recorder-state-dot recorder-state-dot-active' : 'recorder-state-dot'}
+				/>
+				<div>
+					<strong>{sessionInfo.isRunning ? 'Recording in progress' : 'Recording paused'}</strong>
+					<p>
+						{sessionInfo.isRunning
+							? 'New actions will appear below as they happen.'
+							: 'Choose connections, then start recording.'}
+					</p>
+				</div>
+			</div>
+			<div className="recorder-session-fields">
+				<div className="recorder-connections-field">
+					<FormLabel htmlFor={connectionsFieldId}>Connections</FormLabel>
+					<MultiDropdownInputField
+						htmlName={connectionsFieldId}
+						value={sessionInfo.connectionIds}
+						setValue={changeConnectionIds}
+						choices={connectionsWhichCanRecord}
+					/>
+				</div>
+			</div>
+			<div className="recorder-session-actions">
+				<Button type="button" color={sessionInfo.isRunning ? 'danger' : 'primary'} size="sm" onClick={toggleRecording}>
+					{sessionInfo.isRunning ? <Pause size={14} /> : <Play size={14} />}
+					{sessionInfo.isRunning ? 'Pause recording' : 'Start recording'}
+				</Button>
+				<div className="recorder-session-secondary-actions">
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						onClick={doClearActions}
+						disabled={!sessionInfo.actions?.length}
+					>
+						<Trash2 size={14} /> Clear
+					</Button>
+					<Button type="button" variant="ghost" size="sm" onClick={doAbort} className="recorder-discard-button">
+						<X size={14} /> Discard
+					</Button>
+					<Button type="button" color="secondary" size="sm" onClick={doFinish2} disabled={!sessionInfo.actions?.length}>
+						<Check size={14} /> Finish
+					</Button>
+				</div>
+			</div>
+		</Form>
 	)
 })

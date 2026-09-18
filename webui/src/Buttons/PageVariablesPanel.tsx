@@ -33,12 +33,12 @@ export const PageVariablesPanel = observer(function PageVariablesPanel({ pageNum
 	const dataReady = !error && !!config && config.type === 'page'
 
 	return (
-		<div className="page-variables-panel">
+		<div className="page-variables-panel buttons-sidebar-section">
 			<LoadingRetryOrError dataReady={dataReady} error={error} doRetry={reloadConfig} design="pulse" />
 			{dataReady && controlId && (
 				<MyErrorBoundary>
 					<LocalVariablesEditor
-						heading="Page Variables"
+						heading={<h5 className="buttons-sidebar-heading">Page Variables</h5>}
 						controlId={controlId}
 						location={undefined}
 						variables={localVariables ?? []}

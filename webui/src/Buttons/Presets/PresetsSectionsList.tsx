@@ -1,16 +1,15 @@
 import { faArrowLeft, faClone, faLink, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Search, X } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
 import { useMemo, useState } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { UIPresetSection, UIPresetSections } from '@companion-app/shared/Model/Presets.js'
 import { StaticAlert } from '~/Components/Alert.js'
-import { Button, ButtonGroup } from '~/Components/Button'
-import { Callout } from '~/Components/Callout.js'
+import { Button } from '~/Components/Button'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { useComputed } from '~/Resources/util.js'
 import { NonIdealState } from '../../Components/NonIdealState.js'
-import { SearchBox } from '../../Components/SearchBox.js'
 import { fuzzyMatch } from './fuzzyMatch.js'
 import { PresetSectionCollapse } from './PresetSectionCollapse.js'
 import { usePresetPlacementMode } from './usePresetPlacementMode.js'
@@ -133,35 +132,43 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 			defaultCollapsed={true}
 			evictionOwner={{ kind: 'connection', id: selectedConnectionId }}
 		>
-			<div>
-				<h5>Presets</h5>
-				<div className="mb-2">
-					<ButtonGroup>
-						<Button color="primary" size="sm" onClick={clearSelectedConnectionId}>
-							<FontAwesomeIcon icon={faArrowLeft} />
-							&nbsp; Go back
-						</Button>
-						<Button color="secondary" size="sm" disabled>
-							{connectionInfo?.label || selectedConnectionId}
-						</Button>
-					</ButtonGroup>
+			<div className="buttons-sidebar-section presets-panel">
+				<h5 className="buttons-sidebar-heading">Presets</h5>
+				<div className="presets-detail-navigation">
+					<Button variant="ghost" size="sm" onClick={clearSelectedConnectionId}>
+						<FontAwesomeIcon icon={faArrowLeft} /> Back
+					</Button>
+					<span title={connectionInfo?.label || selectedConnectionId}>
+						{connectionInfo?.label || selectedConnectionId}
+					</span>
 				</div>
-				<SearchBox filter={searchQuery} setFilter={setSearchQuery} className="mb-2" />
+				<div className="presets-search">
+					<Search size={16} aria-hidden="true" />
+					<input
+						type="search"
+						aria-label="Search presets"
+						placeholder="Search presets..."
+						value={searchQuery}
+						onChange={(event) => setSearchQuery(event.target.value)}
+					/>
+					{searchQuery && (
+						<button type="button" onClick={() => setSearchQuery('')} aria-label="Clear preset search">
+							<X size={14} />
+						</button>
+					)}
+				</div>
 				{allSections.length === 0 ? (
 					<StaticAlert color="primary">Connection has no presets.</StaticAlert>
 				) : visibleSections.length === 0 && searchQuery ? (
 					<NonIdealState icon={faSearch} text="No matching presets" />
 				) : (
 					<>
-						<Callout color="info" className="my-2">
-							<div className="flex items-center justify-between gap-4">
-								<div>
-									<strong>Drag and drop</strong> the preset buttons below into your buttons-configuration.
-								</div>
-								<PresetPlacementModeToggle supportsReferences={supportsReferences} />
-							</div>
-						</Callout>
-						<div className="collapsible-tree">{sections}</div>
+						<div className="presets-placement-card">
+							<strong>Drag to add</strong>
+							<p>Drop a preset onto a button in the grid.</p>
+							<PresetPlacementModeToggle supportsReferences={supportsReferences} />
+						</div>
+						<div className="collapsible-tree presets-sections-tree">{sections}</div>
 					</>
 				)}
 			</div>
@@ -178,12 +185,13 @@ function PresetPlacementModeToggle({ supportsReferences }: { supportsReferences:
 	const unsupportedTitle = 'Linked presets require a module built for the 2.0 (or newer) module api'
 
 	return (
-		<div className="flex items-center gap-2 shrink-0" title={!supportsReferences ? unsupportedTitle : undefined}>
-			<span className="text-muted small whitespace-nowrap">When placed:</span>
-			<ButtonGroup>
-				<Button
-					size="sm"
-					color={effectiveMode === 'reference' ? 'primary' : 'secondary'}
+		<div className="presets-placement-mode" title={!supportsReferences ? unsupportedTitle : undefined}>
+			<span>Placement mode</span>
+			<div className="presets-placement-options" role="group" aria-label="Preset placement mode">
+				<button
+					type="button"
+					className={effectiveMode === 'reference' ? 'selected' : undefined}
+					aria-pressed={effectiveMode === 'reference'}
 					disabled={!supportsReferences}
 					onClick={() => setMode('reference')}
 					title={
@@ -192,20 +200,21 @@ function PresetPlacementModeToggle({ supportsReferences }: { supportsReferences:
 							: unsupportedTitle
 					}
 				>
-					<FontAwesomeIcon icon={faLink} className="me-1" />
+					<FontAwesomeIcon icon={faLink} />
 					Linked
-				</Button>
-				<Button
-					size="sm"
-					color={effectiveMode === 'copy' ? 'primary' : 'secondary'}
+				</button>
+				<button
+					type="button"
+					className={effectiveMode === 'copy' ? 'selected' : undefined}
+					aria-pressed={effectiveMode === 'copy'}
 					disabled={!supportsReferences}
 					onClick={() => setMode('copy')}
 					title={supportsReferences ? 'Newly placed presets are a one-off copy you can freely edit' : unsupportedTitle}
 				>
-					<FontAwesomeIcon icon={faClone} className="me-1" />
+					<FontAwesomeIcon icon={faClone} />
 					Copy
-				</Button>
-			</ButtonGroup>
+				</button>
+			</div>
 		</div>
 	)
 }

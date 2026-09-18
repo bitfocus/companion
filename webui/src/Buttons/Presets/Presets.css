@@ -1,0 +1,211 @@
+.presets-panel {
+	min-width: 0;
+}
+
+.presets-panel .presets-intro {
+	margin: 0 0 1rem;
+	color: var(--color-muted);
+	font-size: 0.75rem;
+	line-height: 1.5;
+}
+
+.presets-list-heading {
+	margin-bottom: 0.5rem;
+	color: var(--color-text-strong);
+	font-size: 0.75rem;
+	font-weight: 700;
+}
+
+.presets-connection-tree,
+.presets-sections-tree {
+	border-radius: 0.75rem;
+	box-shadow: none;
+	overflow: hidden;
+	font-size: 0.75rem;
+}
+
+.presets-connection-tree .collapsible-tree-group-row,
+.presets-connection-tree .collapsible-tree-ungrouped-header,
+.presets-sections-tree .collapsible-tree-group-row {
+	padding: 0.625rem 0.75rem;
+	font-size: 0.75rem;
+}
+
+.presets-connection-tree .collapsible-tree-leaf-row {
+	padding: 0.625rem 0.75rem;
+}
+
+.presets-connection-leaf {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
+
+.presets-connection-name {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.presets-connection-name > span,
+.presets-connection-name > small {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.presets-connection-name > small {
+	margin-top: 0.125rem;
+	color: var(--color-muted);
+}
+
+.presets-connection-count {
+	flex: 0 0 auto;
+	padding: 0.125rem 0.4rem;
+	border-radius: 999px;
+	background: var(--color-surface-muted);
+	color: var(--color-muted);
+	font-size: 0.6875rem;
+}
+
+.presets-footnote {
+	margin: 0.75rem 0 0;
+	color: var(--color-muted);
+	font-size: 0.6875rem;
+	line-height: 1.4;
+}
+
+.presets-empty-state {
+	border: 1px dashed var(--color-border);
+	border-radius: 0.75rem;
+	background: var(--color-surface-muted);
+}
+
+.presets-detail-navigation {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+	margin-bottom: 0.75rem;
+}
+
+.presets-detail-navigation > .button {
+	flex: 0 0 auto;
+}
+
+.presets-detail-navigation > span {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--color-text-strong);
+	font-size: 0.75rem;
+	font-weight: 600;
+}
+
+.presets-search {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+	margin-bottom: 0.75rem;
+	padding: 0.375rem 0.625rem;
+	border: 1px solid var(--color-border);
+	border-radius: 0.5rem;
+	background: var(--color-surface);
+	color: var(--color-muted);
+}
+
+.presets-search:focus-within {
+	border-color: var(--color-primary);
+}
+
+.presets-search input {
+	flex: 1;
+	min-width: 0;
+	border: 0;
+	outline: 0;
+	background: transparent;
+	color: var(--color-text-strong);
+	font-size: 0.75rem;
+}
+
+.presets-search button {
+	flex: 0 0 auto;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--color-muted);
+}
+
+.presets-placement-card {
+	margin-bottom: 0.75rem;
+	padding: 0.875rem;
+	border: 1px solid var(--color-border);
+	border-radius: 0.75rem;
+	background: var(--color-surface-muted);
+}
+
+.presets-placement-card > strong {
+	color: var(--color-text-strong);
+	font-size: 0.75rem;
+}
+
+.presets-placement-card > p {
+	margin: 0.25rem 0 0.75rem;
+	color: var(--color-muted);
+	font-size: 0.75rem;
+}
+
+.presets-placement-mode {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+}
+
+.presets-placement-mode > span {
+	color: var(--color-muted);
+	font-size: 0.6875rem;
+	font-weight: 600;
+}
+
+.presets-placement-options {
+	display: inline-flex;
+	padding: 0.125rem;
+	border: 1px solid var(--color-border);
+	border-radius: 0.5rem;
+	background: var(--color-surface);
+}
+
+.presets-placement-options button {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	padding: 0.3rem 0.5rem;
+	border: 0;
+	border-radius: 0.375rem;
+	background: transparent;
+	color: var(--color-muted);
+	font-size: 0.6875rem;
+}
+
+.presets-placement-options button.selected {
+	background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
+	color: var(--color-primary);
+	font-weight: 700;
+}
+
+.presets-placement-options button:disabled {
+	cursor: not-allowed;
+}
+
+.presets-placement-options button:disabled:not(.selected) {
+	opacity: 0.45;
+}
+
+.presets-sections-tree .presets-section-row {
+	font-size: 0.75rem;
+}
