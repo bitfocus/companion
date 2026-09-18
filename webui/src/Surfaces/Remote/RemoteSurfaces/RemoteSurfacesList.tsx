@@ -5,7 +5,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import type { OutboundSurfaceCollection, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { Button, ButtonGroup } from '~/Components/Button'
+import { Button } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -58,30 +58,29 @@ export const RemoteSurfacesList = observer(function RemoteSurfacesList({
 	return (
 		<div className="connections-list-container flex-column-layout">
 			<div className="fixed-header">
-				<h4>Remote Surfaces</h4>
-
-				<p className="mb-2">
-					The Stream Deck Studio and Network Dock support network connections. You can set up the connection from
-					Companion here, or use the Discovered Surfaces tab.
-					<br />
-					This is not suitable for all remote surfaces such as Satellite, as that opens the connection to Companion
-					itself.
-				</p>
+				<div className="bg-surface-muted/50 border border-border/70 p-3 rounded-lg flex flex-col gap-2.5 mb-2">
+					<div>
+						<h2 className="text-sm font-semibold mb-1">Remote Surfaces</h2>
+						<p className="text-xs text-muted mb-0">
+							Connect supported devices such as Stream Deck Studio and Network Dock, or find them in Discovered
+							Surfaces. Satellite connects to Companion instead and is not configured here.
+						</p>
+					</div>
+					<div className="flex flex-wrap items-center gap-2">
+						<AddRemoteSurfaceButton />
+						<Button
+							color="secondary"
+							size="sm"
+							className="xl:hidden"
+							onClick={() => void navigate({ to: '/surfaces/remote/discover' })}
+						>
+							<FontAwesomeIcon icon={faPlug} className="me-1.5" /> Discover Remote Surfaces
+						</Button>
+						<CreateCollectionButton />
+					</div>
+				</div>
 
 				<GenericConfirmModal ref={confirmModalRef} />
-
-				<ButtonGroup className="connection-group-actions mb-2">
-					<AddRemoteSurfaceButton />
-					<Button
-						color="warning"
-						className="xl:hidden"
-						onClick={() => void navigate({ to: '/surfaces/remote/discover' })}
-					>
-						<FontAwesomeIcon icon={faPlug} className="me-1" />
-						Discover Remote Surfaces
-					</Button>
-					<CreateCollectionButton />
-				</ButtonGroup>
 			</div>
 
 			<div className="connections-list-table-container scrollable-content">

@@ -1,11 +1,8 @@
 import { Input } from '@base-ui/react'
 import './text-field.css'
-import { faTimes } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
+import { Search, X } from 'lucide-react'
 import { useCallback } from 'react'
-import { Button } from '~/Components/Button'
-import { InputGroup } from '~/Components/Form'
 
 export interface SearchBoxProps {
 	className?: string
@@ -22,24 +19,21 @@ export function SearchBox({ className, placeholder, filter, setFilter }: SearchB
 	const clearFilter = useCallback(() => setFilter(''), [setFilter])
 
 	return (
-		<InputGroup className={classNames('h-9', className)}>
+		<div className={classNames('search-box h-9', className)}>
+			<Search size={16} className="search-box-icon" aria-hidden="true" />
 			<Input
-				type="text"
-				className="form-input text-input-field h-full text-sm py-0"
+				type="search"
+				className="form-input text-input-field search-box-input h-full text-sm py-0"
 				placeholder={placeholder || 'Search ...'}
 				onChange={updateFilter}
 				value={filter}
 				aria-label="Search"
 			/>
-			<Button
-				color="primary"
-				onClick={clearFilter}
-				aria-label="Clear search filter"
-				title="Clear search filter"
-				className="h-full flex items-center justify-center px-3"
-			>
-				<FontAwesomeIcon icon={faTimes} />
-			</Button>
-		</InputGroup>
+			{filter && (
+				<button type="button" className="search-box-clear" onClick={clearFilter} aria-label="Clear search filter">
+					<X size={14} aria-hidden="true" />
+				</button>
+			)}
+		</div>
 	)
 }

@@ -13,7 +13,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { StaticAlert } from '~/Components/Alert.js'
-import { Button, ButtonGroup } from '~/Components/Button'
+import { Button } from '~/Components/Button'
 import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
@@ -168,32 +168,35 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 						</p>
 					</div>
 
-					<ButtonGroup className="shrink-0">
+					<div className="module-visibility-filters" role="group" aria-label="Filter modules by availability">
 						<Button
-							color={visibleModules.visibility.installed ? 'primary' : 'secondary'}
+							variant="ghost"
+							className="module-visibility-filter"
 							size="sm"
-							active={visibleModules.visibility.installed}
+							aria-pressed={visibleModules.visibility.installed}
 							onClick={() => visibleModules.toggleVisibility('installed')}
 						>
 							Installed
 						</Button>
 						<Button
-							color={visibleModules.visibility.available ? 'primary' : 'secondary'}
+							variant="ghost"
+							className="module-visibility-filter"
 							size="sm"
-							active={visibleModules.visibility.available}
+							aria-pressed={visibleModules.visibility.available}
 							onClick={() => visibleModules.toggleVisibility('available')}
 						>
 							Available
 						</Button>
 						<Button
-							color={visibleModules.visibility.availableDeprecated ? 'primary' : 'secondary'}
+							variant="ghost"
+							className="module-visibility-filter"
 							size="sm"
-							active={visibleModules.visibility.availableDeprecated}
+							aria-pressed={visibleModules.visibility.availableDeprecated}
 							onClick={() => visibleModules.toggleVisibility('availableDeprecated')}
 						>
 							Deprecated
 						</Button>
-					</ButtonGroup>
+					</div>
 				</div>
 
 				{/* Search Toolbar & Custom Module Import Row */}

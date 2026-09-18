@@ -10,12 +10,12 @@ import type {
 	SurfaceInstanceCollection,
 } from '@companion-app/shared/Model/SurfaceInstance.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { Button, ButtonGroup } from '~/Components/Button'
+import { Button } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
-import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
+import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { MissingVersionsWarning } from '~/Instances/MissingVersionsWarning.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
@@ -91,15 +91,15 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 
 				<GenericConfirmModal ref={confirmModalRef} />
 
-				<div className="flex items-center help-button-float">
-					<ButtonGroup className="connection-group-actions m-1 me-auto">
+				<div className="bg-surface-muted/50 border border-border/70 p-3 rounded-lg flex items-center justify-between gap-2 flex-wrap">
+					<div className="flex flex-wrap items-center gap-2">
 						<Button color="primary" size="sm" onClick={() => void navigate({ to: '/surfaces/integrations/add' })}>
 							<FontAwesomeIcon icon={faPlug} className="me-1" />
 							Add Surface Integration
 						</Button>
 						<CreateCollectionButton />
-					</ButtonGroup>
-					<ContextHelpButton action="/user-guide/surfaces" className="pe-2">
+					</div>
+					<ContextHelpButton action="/user-guide/surfaces">
 						<p>
 							Surface integrations are like connections but for input surfaces: they provide the ability to use
 							different hardware or virtual surfaces to trigger buttons in Companion.
@@ -109,7 +109,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 				</div>
 			</div>
 
-			<div className="connections-list-table-container scrollable-content mt-2">
+			<div className="connections-list-table-container scrollable-content mt-2 rounded-md border border-border/70 bg-surface">
 				<PanelCollapseHelperProvider
 					storageId="connection-collections"
 					knownPanelIds={surfaceInstances.allCollectionIds}
@@ -148,15 +148,21 @@ function SurfaceInstancesListTableHeading() {
 	const { visibleInstances } = useSurfaceInstancesListContext()
 
 	return (
-		<div className="flex flex-row">
-			<div className="grow">Surface Integrations </div>
-			<div className="whitespace-nowrap">
-				<ButtonGroup className="table-header-buttons">
-					<VisibilityButton {...visibleInstances} keyId="disabled" color="secondary" label="Disabled" />
-					<VisibilityButton {...visibleInstances} keyId="ok" color="success" label="OK" />
-					<VisibilityButton {...visibleInstances} keyId="warning" color="warning" label="Warning" />
-					<VisibilityButton {...visibleInstances} keyId="error" color="danger" label="Error" />
-				</ButtonGroup>
+		<div className="flex flex-wrap items-center justify-between gap-2">
+			<div className="font-semibold">Surface Integrations</div>
+			<div className="surface-visibility-filters" role="group" aria-label="Filter surface integrations by status">
+				{(['disabled', 'ok', 'warning', 'error'] as const).map((key) => (
+					<Button
+						key={key}
+						size="sm"
+						variant="ghost"
+						className="surface-visibility-filter"
+						aria-pressed={visibleInstances.visibility[key]}
+						onClick={() => visibleInstances.toggleVisibility(key)}
+					>
+						{key === 'ok' ? 'OK' : key.charAt(0).toUpperCase() + key.slice(1)}
+					</Button>
+				))}
 			</div>
 		</div>
 	)
@@ -231,8 +237,8 @@ function CreateCollectionButton() {
 	}, [createMutation])
 
 	return (
-		<Button color="info" size="sm" onClick={doCreateCollection}>
-			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
+		<Button color="secondary" size="sm" onClick={doCreateCollection}>
+			<FontAwesomeIcon icon={faLayerGroup} className="me-1.5" /> Create Collection
 		</Button>
 	)
 }

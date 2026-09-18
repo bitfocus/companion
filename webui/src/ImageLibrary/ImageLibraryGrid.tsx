@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { humanId } from 'human-id'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
-import { Button, ButtonGroup } from '~/Components/Button.js'
+import { Button } from '~/Components/Button.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -96,7 +96,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 					</p>
 				</div>
 
-				<ButtonGroup>
+				<div className="flex flex-wrap items-center gap-2">
 					<Button color="primary" size="sm" onClick={handleImportFiles}>
 						<FontAwesomeIcon icon={faPlus} className="me-1.5" /> Import Images
 					</Button>
@@ -104,7 +104,7 @@ export const ImageLibraryGrid = observer(function ImageLibraryGridInner({
 						<FontAwesomeIcon icon={faPlus} className="me-1.5" /> Add Placeholder
 					</Button>
 					<CreateCollectionButton />
-				</ButtonGroup>
+				</div>
 			</div>
 
 			<ImageLibraryDropzone />

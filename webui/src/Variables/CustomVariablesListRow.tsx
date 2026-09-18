@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useId } from 'react'
-import { Button, ButtonGroup } from '~/Components/Button.js'
+import { Button } from '~/Components/Button.js'
 import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
 import { CopyButton } from '~/Components/CopyButton'
 import { Form, FormLabel } from '~/Components/Form.js'
@@ -47,7 +47,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 	const startupValueFieldId = useId()
 
 	return (
-		<div className="editor-grid">
+		<div className="editor-grid custom-variable-editor">
 			<div className="cell-header">
 				<div className={classNames('cell-header-item', !isCollapsed && 'span-2')}>
 					<span className="variable-style">$({fullname})</span>
@@ -59,14 +59,14 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 					</div>
 				)}
 				<div className="cell-header-item">
-					<ButtonGroup className="float-right">
+					<div className="flex flex-wrap items-center justify-end gap-1.5">
 						{isCollapsed ? (
-							<Button onClick={doExpand} size="sm" title="Expand variable view">
+							<Button onClick={doExpand} size="sm" variant="outline" title="Expand variable view">
 								<FontAwesomeIcon icon={faExpandArrowsAlt} className="me-1.5" />
 								<span>Edit</span>
 							</Button>
 						) : (
-							<Button onClick={doCollapse} size="sm" title="Collapse variable view">
+							<Button onClick={doCollapse} size="sm" variant="outline" title="Collapse variable view">
 								<FontAwesomeIcon icon={faCompressArrowsAlt} className="me-1.5" />
 								<span>Collapse</span>
 							</Button>
@@ -75,13 +75,14 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 						<Button
 							onClick={() => customVariablesApi.doDelete(info.id)}
 							size="sm"
+							color="danger"
+							variant="outline"
 							title="Delete custom variable"
-							className="text-rose-500 hover:bg-rose-500/10"
 						>
-							<FontAwesomeIcon icon={faTrash} className="me-1.5 text-rose-500" />
+							<FontAwesomeIcon icon={faTrash} className="me-1.5" />
 							<span>Delete</span>
 						</Button>
-					</ButtonGroup>
+					</div>
 				</div>
 			</div>
 			{isCollapsed ? (
@@ -91,23 +92,14 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 			) : (
 				<>
 					<Form onSubmit={PreventDefaultHandler} className="cell-fields">
-						<div>
+						<div className="flex flex-wrap items-center gap-2">
 							<FormLabel htmlFor={persistFieldId}>
 								Persist value
 								<InlineHelpIcon className="ms-1">
 									If enabled, variable value will be saved and restored when Companion restarts.
 								</InlineHelpIcon>
 							</FormLabel>
-							<div
-								style={{
-									display: 'inline-flex',
-									alignItems: 'center',
-									verticalAlign: 'middle',
-									marginLeft: '1em',
-									paddingBottom: '.5em',
-									paddingTop: '.3em',
-								}}
-							>
+							<div className="inline-flex items-center mb-2">
 								<CheckboxInputField
 									id={persistFieldId}
 									value={info.persistCurrentValue}

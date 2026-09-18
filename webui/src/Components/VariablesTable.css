@@ -111,3 +111,23 @@
 	border-radius: 6px;
 	display: inline-block;
 }
+
+.custom-variable-editor .cell-header {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.5rem 1rem;
+	padding-bottom: 0.625rem;
+	margin-bottom: 0.75rem;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.custom-variable-editor .cell-header-item:first-child,
+.custom-variable-editor .cell-header-item.grow {
+	min-width: 0;
+	flex: 1 1 auto;
+}
+
+.custom-variable-editor .cell-header-item:last-child {
+	margin-left: auto;
+}

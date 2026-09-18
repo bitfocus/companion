@@ -5,7 +5,7 @@ import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useRef, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert'
-import { Button, ButtonGroup } from '~/Components/Button'
+import { Button } from '~/Components/Button'
 import { PageHeader } from '~/Layout/PageHeader'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { MyErrorBoundary } from '~/Resources/Error'
@@ -86,7 +86,7 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 
 						{/* Top Header Card: Actions & Rescan */}
 						<div className="bg-surface-muted/50 border border-border/70 p-3 rounded-lg flex items-center justify-between gap-2 flex-wrap shrink-0">
-							<ButtonGroup>
+							<div className="flex flex-wrap items-center gap-2">
 								<Button color="primary" size="sm" onClick={refreshUSB}>
 									<FontAwesomeIcon icon={faSync} spin={rescanUsbMutation.isPending} className="me-1.5" />
 									{rescanUsbMutation.isPending ? 'Rescanning USB...' : 'Rescan USB'}
@@ -97,7 +97,7 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 								<Button color="secondary" size="sm" onClick={addGroup}>
 									<FontAwesomeIcon icon={faAdd} className="me-1.5" /> Add Group
 								</Button>
-							</ButtonGroup>
+							</div>
 						</div>
 
 						<AddSurfaceGroupModal ref={addGroupModalRef} />

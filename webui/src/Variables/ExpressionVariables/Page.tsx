@@ -138,12 +138,12 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 						{/* Top Header Card: Toolbar & Search */}
 						<div className="bg-surface-muted/50 border border-border/70 p-3 rounded-lg flex flex-col gap-2.5 shrink-0">
 							<div className="flex items-center justify-between gap-2 flex-wrap">
-								<ButtonGroup>
+								<div className="flex flex-wrap items-center gap-2">
 									<Button color="primary" onClick={doAddNew} size="sm">
 										<FontAwesomeIcon icon={faAdd} className="me-1.5" /> Add Expression Variable
 									</Button>
 									<CreateCollectionButton />
-								</ButtonGroup>
+								</div>
 							</div>
 
 							<SearchBox

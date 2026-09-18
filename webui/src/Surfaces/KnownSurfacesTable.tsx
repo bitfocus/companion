@@ -5,7 +5,7 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import type { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
-import { Button, ButtonGroup, LinkButtonExternal } from '~/Components/Button'
+import { Button, LinkButtonExternal } from '~/Components/Button'
 import { CopyButton } from '~/Components/CopyButton'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -180,21 +180,24 @@ const ManualGroupRow = observer(function ManualGroupRow({
 			>
 				<div className="grid-cell">#{group.index}</div>
 				<div className="grid-cell">
-					<b>{groupName}</b>
+					<div className="surface-name-row">
+						<b>{groupName}</b>
+						<span className="surface-status surface-status-group">Group</span>
+					</div>
 					<div className="surface-id-row">
 						<span className="surface-id" title={group.id}>
 							{group.id}
 						</span>
-						<CopyButton size="sm" title="Copy group id" text={group.id} />
+						<CopyButton size="sm" variant="ghost" title="Copy group id" text={group.id} />
 					</div>
 				</div>
-				<div className="grid-cell">
-					<ButtonGroup>
-						<Button onClick={deleteGroup2} size="sm" color="danger" title="Delete group">
+				<div className="grid-cell surface-row-actions">
+					<div className="surface-action-list">
+						<Button onClick={deleteGroup2} size="sm" color="danger" variant="outline" title="Delete group">
 							<FontAwesomeIcon icon={faTrash} className="me-1.5" />
 							<span>Delete Group</span>
 						</Button>
-					</ButtonGroup>
+					</div>
 				</div>
 			</div>
 			{(group.surfaces || []).map((surface, i, arr) => (
@@ -276,10 +279,19 @@ const SurfaceRow = observer(function SurfaceRow({
 				)}
 			</div>
 			<div className={classNames('grid-cell', { 'ps-6': isInGroup })}>
-				<div>
+				<div className="surface-name-row">
 					<b className="text-sm font-semibold text-body-strong">
 						{surface.name ? `${surface.name} - (${surface.type})` : surface.type}
 					</b>
+					<span
+						className={classNames('surface-status', {
+							'surface-status-disabled': surfaceDisabled,
+							'surface-status-online': !surfaceDisabled && surface.isConnected,
+							'surface-status-offline': !surfaceDisabled && !surface.isConnected,
+						})}
+					>
+						{surfaceDisabled ? 'Disabled' : surface.isConnected ? surface.location || 'Local' : 'Offline'}
+					</span>
 					{!!surface.hasFirmwareUpdates && (
 						<>
 							{' '}
@@ -291,35 +303,33 @@ const SurfaceRow = observer(function SurfaceRow({
 				</div>
 				<div className="surface-id-row">
 					<span className="surface-id font-mono tabular-nums text-2xs text-muted">{surface.id}</span>
-					<CopyButton size="sm" title="Copy surface id" text={surface.id} />
-					<span className={classNames('surface-status tabular-nums', { 'surface-disabled': surfaceDisabled })}>
-						{surfaceDisabled ? 'Disabled' : surface.isConnected ? surface.location || 'Local' : 'Offline'}
-					</span>
+					<CopyButton size="sm" variant="ghost" title="Copy surface id" text={surface.id} />
 				</div>
 			</div>
-			<div className="grid-cell">
+			<div className="grid-cell surface-row-actions">
 				{surface.isConnected ? (
-					<ButtonGroup className="whitespace-nowrap">
+					<div className="surface-action-list">
 						{surface.integrationType === 'emulator' && (
 							<>
 								<LinkButtonExternal
 									href={makeAbsolutePath(`/emulator/${surface.id.substring(9)}`)}
 									title="Open Emulator"
 									size="sm"
+									variant="outline"
 								>
 									<FontAwesomeIcon icon={faFolderOpen} className="me-1.5" />
 									<span>Open</span>
 								</LinkButtonExternal>
-								<Button onClick={deleteEmulator2} size="sm" color="danger" title="Delete Emulator">
+								<Button onClick={deleteEmulator2} size="sm" color="danger" variant="outline" title="Delete Emulator">
 									<FontAwesomeIcon icon={faTrash} className="me-1.5" />
 									<span>Delete</span>
 								</Button>
 							</>
 						)}
-					</ButtonGroup>
+					</div>
 				) : (
-					<Button onClick={forgetSurface2} size="sm" color="secondary" title="Forget">
-						<FontAwesomeIcon icon={faTrash} className="me-1.5 text-rose-500" />
+					<Button onClick={forgetSurface2} size="sm" color="danger" variant="outline" title="Forget surface">
+						<FontAwesomeIcon icon={faTrash} className="me-1.5" />
 						<span>Forget</span>
 					</Button>
 				)}

@@ -20,7 +20,7 @@ import { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientTriggerData, TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { Button, ButtonGroup, LinkButtonExternal } from '~/Components/Button'
+import { Button, LinkButtonExternal } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -131,12 +131,12 @@ export const TriggersPage = observer(function Triggers() {
 						{/* Top Header Card: Toolbar & Search */}
 						<div className="bg-surface-muted/50 border border-border/70 p-3 rounded-lg flex flex-col gap-2.5 shrink-0">
 							<div className="flex items-center justify-between gap-2 flex-wrap">
-								<ButtonGroup>
+								<div className="flex flex-wrap items-center gap-2">
 									<Button color="primary" onClick={doAddNew} size="sm">
 										<FontAwesomeIcon icon={faAdd} className="me-1.5" /> Add Trigger
 									</Button>
 									<CreateCollectionButton />
-								</ButtonGroup>
+								</div>
 
 								<Button color="secondary" size="sm" onClick={showExportModal}>
 									<FontAwesomeIcon icon={faFileExport} className="me-1.5" /> Export All

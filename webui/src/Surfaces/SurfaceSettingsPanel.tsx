@@ -17,23 +17,18 @@ export const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 	return (
 		<>
 			<SettingsPanelTitleBar />
-			<p style={{ marginBottom: '0em', padding: '0.5em 2em' }}>
-				To configure a surface integration, select an item from the table below.
-				<br />
-				For a specific surface, <span className="inline xl:hidden"> click the X button, above and </span>
-				select it in the Configured Surfaces table
-				<span className="hidden xl:inline"> to the left</span>.
-			</p>
-			<div className="secondary-panel-simple-body" style={{ paddingTop: 0, paddingRight: '1.25em' }}>
-				{/* Putting this in the table changes the spacing between the buttons and the integrations table, so do it this way instead... */}
-				<div>
+			<div className="secondary-panel-simple-body space-y-4 p-4">
+				<p className="text-sm text-muted mb-0">
+					Select an integration below to configure it. For a specific surface,{' '}
+					<span className="inline xl:hidden">close this panel and </span>
+					select it in Configured Surfaces<span className="hidden xl:inline"> to the left</span>.
+				</p>
+				<div className="rounded-md border border-border/70 bg-surface overflow-hidden">
 					<SurfaceInstancesList selectedInstanceId={null} />
 				</div>
 
-				<br />
-
 				{userConfigProps && (
-					<Table className="table-settings">
+					<Table className="table-settings rounded-md border border-border/70 bg-surface">
 						<thead>
 							<UserConfigHeadingRow
 								label="General Surface Settings"
