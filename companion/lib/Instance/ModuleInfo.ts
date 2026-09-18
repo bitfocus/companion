@@ -1,7 +1,7 @@
 import semver from 'semver'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
-import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import { isSomeModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { getHelpPathForInstalledModule } from './ModuleScanner.js'
 import type { SomeModuleVersionInfo } from './Types.js'
 
@@ -36,7 +36,7 @@ export class InstanceModuleInfo {
 		let latest: SomeModuleVersionInfo | null = null
 		for (const version of Object.values(this.installedVersions)) {
 			if (!version || version.isBeta !== isBeta) continue
-			if (!isModuleApiVersionCompatible(version.manifest.runtime.apiVersion)) continue
+			if (!isSomeModuleApiVersionCompatible(this.moduleType, version.manifest.runtime.apiVersion)) continue
 			if (!latest || semver.compare(version.versionId, latest.versionId) > 0) {
 				latest = version
 			}

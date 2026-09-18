@@ -35,8 +35,8 @@ const UpdateInstanceToLatestBadgeInner = observer(function UpdateInstanceToLates
 		if (upgradeToVersions.length > 0 && instance.updatePolicy !== InstanceVersionUpdatePolicy.Manual) {
 			message = 'A replacement for this module is available'
 		} else {
-			const latestStableVersion = getLatestVersion(moduleStoreInfo?.versions, false)
-			const latestBetaVersion = getLatestVersion(moduleStoreInfo?.versions, true)
+			const latestStableVersion = getLatestVersion(instance.moduleType, moduleStoreInfo?.versions, false)
+			const latestBetaVersion = getLatestVersion(instance.moduleType, moduleStoreInfo?.versions, true)
 
 			let latestVersion: string | null = instance.moduleVersionId
 

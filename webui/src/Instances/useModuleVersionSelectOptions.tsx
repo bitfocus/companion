@@ -20,9 +20,9 @@ export function useModuleVersionSelectOptions(
 	const moduleStoreInfo = useModuleStoreInfo(moduleType, moduleId)
 	const upgradeToVersions = useModuleUpgradeToVersions(moduleType, moduleId)
 
-	const latestStableVersion = getLatestVersion(moduleStoreInfo?.versions, false)
-	const latestIncompatibleStableVersion = getLatestVersion(moduleStoreInfo?.versions, false, true)
-	const latestBetaVersion = getLatestVersion(moduleStoreInfo?.versions, true)
+	const latestStableVersion = getLatestVersion(moduleType, moduleStoreInfo?.versions, false)
+	const latestIncompatibleStableVersion = getLatestVersion(moduleType, moduleStoreInfo?.versions, false, true)
+	const latestBetaVersion = getLatestVersion(moduleType, moduleStoreInfo?.versions, true)
 
 	const loaded = !!moduleStoreInfo
 	const hasIncompatibleNewerVersion =
