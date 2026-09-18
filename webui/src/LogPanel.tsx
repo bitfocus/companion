@@ -1,22 +1,9 @@
+import { faClipboardList } from '@fortawesome/free-solid-svg-icons'
 import { useQuery } from '@tanstack/react-query'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import copy from 'copy-to-clipboard'
 import dayjs from 'dayjs'
-import {
-	AlertCircle,
-	AlertTriangle,
-	Bug,
-	Check,
-	Copy,
-	Download,
-	FileText,
-	Info,
-	Pause,
-	Play,
-	Search,
-	Trash2,
-	X,
-} from 'lucide-react'
+import { AlertCircle, AlertTriangle, Bug, Check, Copy, Download, FileText, Info, Search, Trash2, X } from 'lucide-react'
 import { nanoid } from 'nanoid'
 import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ClientLogLine } from '@companion-app/shared/Model/LogLine.js'
@@ -61,7 +48,6 @@ export const LogPanel = memo(function LogPanel() {
 	const [config, setConfig] = useState<LogConfig>(() => loadConfig())
 	const [searchQuery, setSearchQuery] = useState('')
 	const [deduplicate, setDeduplicate] = useState(true)
-	const [autoScroll, setAutoScroll] = useState(true)
 	const [copiedAll, setCopiedAll] = useState(false)
 
 	const exportRef = useRef<GenericConfirmModalRef>(null)
@@ -170,7 +156,7 @@ export const LogPanel = memo(function LogPanel() {
 		<>
 			<GenericConfirmModal ref={exportRef} />
 			<div className="page-shell">
-				<PageHeader title="System Log" helpAction="/user-guide/log" />
+				<PageHeader icon={faClipboardList} title="System Log" helpAction="/user-guide/log" />
 
 				{/* Top Controls Bar */}
 				<div className="bg-surface-muted/60 border border-border/80 p-3 rounded-xl flex flex-col gap-3 shrink-0 shadow-xs">
@@ -204,17 +190,6 @@ export const LogPanel = memo(function LogPanel() {
 								title="Collapse repetitive consecutive log lines"
 							>
 								<span>Group Repeats</span>
-							</PillButton>
-
-							<PillButton
-								tone="primary"
-								active={autoScroll}
-								onClick={() => setAutoScroll(!autoScroll)}
-								className={autoScroll ? undefined : 'text-amber-500'}
-								title={autoScroll ? 'Pause auto-scroll' : 'Resume auto-scroll'}
-							>
-								{autoScroll ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
-								<span>{autoScroll ? 'Live Stream' : 'Paused'}</span>
 							</PillButton>
 
 							<PillButton tone="primary" active={false} onClick={handleCopyAll} title="Copy filtered logs to clipboard">
@@ -281,7 +256,7 @@ export const LogPanel = memo(function LogPanel() {
 
 				{/* Log Content Terminal Window */}
 				<div className="flex-1 min-h-0 bg-surface rounded-xl border border-border/80 shadow-xs overflow-hidden flex flex-col p-2">
-					<LogPanelContents messages={processedMessages} autoScroll={autoScroll} />
+					<LogPanelContents messages={processedMessages} />
 				</div>
 			</div>
 		</>
@@ -333,10 +308,9 @@ function useLogHistory() {
 
 interface LogPanelContentsProps {
 	messages: GroupedLogLine[]
-	autoScroll: boolean
 }
 
-function LogPanelContents({ messages, autoScroll }: LogPanelContentsProps) {
+function LogPanelContents({ messages }: LogPanelContentsProps) {
 	const { data: appInfo } = useQuery(trpc.appInfo.version.queryOptions())
 
 	const noticeMessage = appInfo?.logsDir
@@ -349,7 +323,7 @@ function LogPanelContents({ messages, autoScroll }: LogPanelContentsProps) {
 			header={<LogNoticeLine message={noticeMessage} />}
 			renderLine={(line) => <SystemLogLine line={line} />}
 			estimateSize={28}
-			autoScroll={autoScroll}
+			autoScroll={true}
 			className="w-full h-full overflow-auto font-mono text-xs select-text scrollbar-thin"
 		/>
 	)

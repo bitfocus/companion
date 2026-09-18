@@ -1,13 +1,25 @@
-import { faBug, faCheck, faFileExport, faTrash } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faBug } from '@fortawesome/free-solid-svg-icons'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { stringify as csvStringify } from 'csv-stringify/browser/esm/sync'
+import {
+	AlertCircle,
+	AlertTriangle,
+	Bug,
+	FileDown,
+	Info,
+	Play,
+	Search,
+	Square,
+	Terminal,
+	Trash2,
+	X,
+} from 'lucide-react'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
-import { Button, ButtonGroup, type ButtonProps } from '~/Components/Button'
 import { LogLine, LogNoticeLine, VirtualLogList } from '~/Components/LogViewer.js'
+import { PillButton, type PillTone } from '~/Components/PillButton.js'
 import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
 import { InstanceTableStatusCell } from '~/Instances/List/InstanceTableStatusCell.js'
 import { PageHeader } from '~/Layout/PageHeader.js'
@@ -30,12 +42,12 @@ interface DebugConfig {
 }
 
 const DEBUG_LEVELS = [
-	{ key: 'error', label: 'Error', color: 'danger' },
-	{ key: 'warn', label: 'Warning', color: 'warning' },
-	{ key: 'info', label: 'Info', color: 'info' },
-	{ key: 'debug', label: 'Debug', color: 'secondary' },
-	{ key: 'console', label: 'Console', color: 'secondary' },
-] as const satisfies readonly { key: keyof DebugConfig; label: string; color: ButtonProps['color'] }[]
+	{ key: 'error', label: 'Error', icon: AlertCircle, tone: 'error' },
+	{ key: 'warn', label: 'Warn', icon: AlertTriangle, tone: 'warning' },
+	{ key: 'info', label: 'Info', icon: Info, tone: 'info' },
+	{ key: 'debug', label: 'Debug', icon: Bug, tone: 'neutral' },
+	{ key: 'console', label: 'Console', icon: Terminal, tone: 'media' },
+] as const satisfies readonly { key: keyof DebugConfig; label: string; icon: typeof Info; tone: PillTone }[]
 
 const LogsOnDiskInfoLine: DebugLogLine = {
 	time: null,
@@ -58,6 +70,7 @@ export const InstanceDebugLog = observer(function InstanceDebugLog({
 	const rootAppStore = useContext(RootAppStoreContext)
 	const [connectionInfo, setConnectionInfo] = useState<ClientConnectionConfig | null>(null)
 	const [connectionStatus, setConnectionStatus] = useState<InstanceStatusEntry | null>(null)
+	const [searchQuery, setSearchQuery] = useState('')
 
 	useSubscription(
 		trpc.instances.connections.watch.subscriptionOptions(undefined, {
@@ -185,8 +198,7 @@ export const InstanceDebugLog = observer(function InstanceDebugLog({
 		link.remove()
 	}, [linesBuffer])
 
-	const doStopInstance = useCallback(() => setEnabled(false), [setEnabled])
-	const doStartInstance = useCallback(() => setEnabled(true), [setEnabled])
+	const doToggleInstance = useCallback(() => setEnabled(!isEnabled), [isEnabled, setEnabled])
 
 	const [config, setConfig] = useState<DebugConfig>(() => loadConfig(instanceId ?? ''))
 	// Save the config when it changes
@@ -200,55 +212,83 @@ export const InstanceDebugLog = observer(function InstanceDebugLog({
 			[key]: !oldConfig[key],
 		}))
 	}, [])
+	const counts = useMemo(() => {
+		const result = { error: 0, warn: 0, info: 0, debug: 0, console: 0 }
+		for (const line of linesBuffer) {
+			if (line.level in result) result[line.level as keyof DebugConfig]++
+		}
+		return result
+	}, [linesBuffer])
 
 	return (
 		<div className="page-shell bg-app-frame-bg h-screen max-h-screen text-body pt-3">
 			<PageHeader icon={faBug} title={`Debug Log: ${label}`} helpAction="/user-guide/config/connections" />
 
-			{/* Top Header Card: Filters & Actions */}
-			<div className="bg-surface-muted/50 border border-border/70 p-3 rounded-lg flex items-center justify-between gap-3 flex-wrap shrink-0">
-				<div className="flex items-center gap-2">
-					<span className="text-xs font-semibold text-body me-1">Levels:</span>
-					<ButtonGroup>
-						{DEBUG_LEVELS.map(({ key, label: levelLabel, color }) => (
-							<Button
-								key={key}
-								color={color}
-								size="sm"
-								onClick={() => doToggleConfig(key)}
-								variant={config[key] ? undefined : 'outline'}
-							>
-								{config[key] && <FontAwesomeIcon icon={faCheck} className="me-1 text-xs" />}
-								{levelLabel}
-							</Button>
+			{/* Top Controls Bar */}
+			<div className="bg-surface-muted/60 border border-border/80 p-3 rounded-xl flex flex-col gap-3 shrink-0 shadow-xs">
+				<div className="flex items-center justify-between gap-3 flex-wrap">
+					<div className="flex items-center gap-1.5 flex-wrap">
+						<span className="text-xs font-semibold text-body me-1">Filters:</span>
+						{DEBUG_LEVELS.map(({ key, label: levelLabel, icon: Icon, tone }) => (
+							<PillButton key={key} small tone={tone} active={!!config[key]} onClick={() => doToggleConfig(key)}>
+								<Icon className="w-3.5 h-3.5" />
+								<span>
+									{levelLabel} ({counts[key]})
+								</span>
+							</PillButton>
 						))}
-					</ButtonGroup>
+					</div>
+
+					<div className="flex items-center gap-2 flex-wrap">
+						<InstanceTableStatusCell isEnabled={isEnabled} status={connectionStatus ?? undefined} />
+						<PillButton
+							tone="primary"
+							active={false}
+							onClick={doClearLog}
+							title="Clear log history"
+							className="hover:text-rose-500"
+						>
+							<Trash2 className="w-3.5 h-3.5" />
+							<span>Clear</span>
+						</PillButton>
+						<PillButton tone="primary" active={false} onClick={doExportLog} title="Download log file">
+							<FileDown className="w-3.5 h-3.5" />
+							<span>Export Log</span>
+						</PillButton>
+						<PillButton tone={isEnabled ? 'error' : 'good'} active onClick={doToggleInstance}>
+							{isEnabled ? <Square className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+							<span>
+								{isEnabled ? 'Stop' : 'Start'} {instanceTypeStr}
+							</span>
+						</PillButton>
+					</div>
 				</div>
 
-				<div className="flex items-center gap-2">
-					<InstanceTableStatusCell isEnabled={isEnabled} status={connectionStatus ?? undefined} />
-					<Button color="secondary" size="sm" onClick={doClearLog} title="Clear log history">
-						<FontAwesomeIcon icon={faTrash} className="me-1.5" />
-						Clear Log
-					</Button>
-					<Button color="secondary" size="sm" onClick={doExportLog} title="Download log file">
-						<FontAwesomeIcon icon={faFileExport} className="me-1.5" />
-						Export Log
-					</Button>
-					<ButtonGroup>
-						<Button color="danger" size="sm" onClick={doStopInstance} disabled={!isEnabled}>
-							Stop {instanceTypeStr}
-						</Button>
-						<Button color="success" size="sm" onClick={doStartInstance} disabled={isEnabled}>
-							Start {instanceTypeStr}
-						</Button>
-					</ButtonGroup>
+				<div className="relative flex items-center">
+					<Search className="w-4 h-4 absolute left-3 text-muted pointer-events-none" />
+					<input
+						type="text"
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+						placeholder="Search logs by keyword, source, or message..."
+						className="w-full bg-surface border border-border rounded-lg pl-9 pr-8 py-1.5 text-xs text-body placeholder:text-muted focus:outline-none focus:border-primary transition-colors"
+					/>
+					{searchQuery && (
+						<button
+							type="button"
+							onClick={() => setSearchQuery('')}
+							className="absolute right-2.5 text-muted hover:text-body p-0.5"
+							title="Clear search"
+						>
+							<X className="w-3.5 h-3.5" />
+						</button>
+					)}
 				</div>
 			</div>
 
 			{/* Log Content Terminal Window */}
-			<div className="flex-1 min-h-0 bg-surface rounded-lg border border-border/70 shadow-xs overflow-hidden flex flex-col p-2">
-				<LogPanelContents linesBuffer={linesBuffer} config={config} />
+			<div className="flex-1 min-h-0 bg-surface rounded-xl border border-border/80 shadow-xs overflow-hidden flex flex-col p-2">
+				<LogPanelContents linesBuffer={linesBuffer} config={config} searchQuery={searchQuery} />
 			</div>
 		</div>
 	)
@@ -257,12 +297,17 @@ export const InstanceDebugLog = observer(function InstanceDebugLog({
 interface LogPanelContentsProps {
 	linesBuffer: DebugLogLine[]
 	config: DebugConfig
+	searchQuery: string
 }
 
-function LogPanelContents({ linesBuffer, config }: LogPanelContentsProps) {
+function LogPanelContents({ linesBuffer, config, searchQuery }: LogPanelContentsProps) {
 	const messages = useMemo(() => {
-		return linesBuffer.filter((msg) => msg.level === 'system' || !!config[msg.level as keyof DebugConfig])
-	}, [linesBuffer, config])
+		const query = searchQuery.toLowerCase()
+		return linesBuffer.filter((msg) => {
+			if (msg.level !== 'system' && !config[msg.level as keyof DebugConfig]) return false
+			return !query || [msg.message, msg.source, msg.level].some((value) => value?.toLowerCase().includes(query))
+		})
+	}, [linesBuffer, config, searchQuery])
 
 	return (
 		<VirtualLogList
@@ -271,15 +316,15 @@ function LogPanelContents({ linesBuffer, config }: LogPanelContentsProps) {
 			renderLine={(line) => (
 				<LogLine
 					line={line}
-					timeFormat="YYYY-MM-DD HH:mm:ss.SSS"
-					timeClassName="log-timestamp-cell"
-					sourceClassName="w-48"
-					alwaysReserveSource
+					timeFormat="HH:mm:ss.SSS"
+					timeClassName=""
+					sourceClassName="log-source-cell text-2xs pt-0.5"
+					alwaysReserveSource={false}
 				/>
 			)}
-			estimateSize={24}
+			estimateSize={28}
 			autoScroll
-			className="w-full h-full overflow-auto"
+			className="w-full h-full overflow-auto font-mono text-xs select-text scrollbar-thin"
 		/>
 	)
 }

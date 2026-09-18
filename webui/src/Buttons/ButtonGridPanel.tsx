@@ -1,4 +1,4 @@
-import { faHome } from '@fortawesome/free-solid-svg-icons'
+import { faHome, faTableCells } from '@fortawesome/free-solid-svg-icons'
 import './ButtonGridPanel.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -7,7 +7,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { Button } from '~/Components/Button.js'
 import { Grid } from '~/Components/Grid'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
-import { ContextHelpButton } from '~/Layout/PanelIcons.js'
+import { PageHeader } from '~/Layout/PageHeader.js'
 import { KeyReceiver } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ButtonGridHeader } from './ButtonGridHeader.js'
@@ -145,14 +145,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
 			<div className="button-grid-panel-header" ref={isInViewRef}>
-				<h4 className="button-inline">
-					Buttons
-					<ContextHelpButton action="/user-guide/config/buttons/" />
-				</h4>
-				<p className="mb-2">
-					The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,
-					and what they should do when you press or click on them.
-				</p>
+				<PageHeader icon={faTableCells} title="Buttons" helpAction="/user-guide/config/buttons/" />
 
 				<ButtonGridResizePrompt />
 
