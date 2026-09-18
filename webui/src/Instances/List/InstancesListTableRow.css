@@ -1,0 +1,23 @@
+/* The module's status message under an instance name, coloured to match its status badge's tone. */
+.instance-status-message {
+	margin-top: 0.125rem;
+	font-size: var(--text-2xs);
+	font-weight: 500;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--color-muted);
+}
+
+.instance-status-message[data-tone='good'] {
+	color: var(--color-tone-good-text);
+}
+.instance-status-message[data-tone='warning'] {
+	color: var(--color-tone-warning-text);
+}
+.instance-status-message[data-tone='error'] {
+	color: var(--color-tone-error-text);
+}
+.instance-status-message[data-tone='info'] {
+	color: var(--color-tone-info-text);
+}

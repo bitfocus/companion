@@ -1,7 +1,8 @@
 import { observer } from 'mobx-react-lite'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
-import { Badge, type BadgeTone } from '~/Components/Badge.js'
+import { Badge } from '~/Components/Badge.js'
 import { Spinner } from '~/Components/Spinner.js'
+import { instanceStatusTone } from './InstanceStatusHelpers.js'
 
 interface InstanceTableStatusCellProps {
 	isEnabled: boolean
@@ -24,24 +25,17 @@ export const InstanceTableStatusCell = observer(function InstanceTableStatusCell
 				? JSON.stringify(status.message)
 				: ''
 
-	const isConnecting = !status?.category || (status.category === 'error' && status.level === 'Connecting')
-
-	let tone: BadgeTone
+	const tone = instanceStatusTone(status)
 	let label: string
 	let indicator: React.ReactNode = undefined
-	if (isConnecting) {
-		tone = status?.category === 'error' ? 'info' : 'neutral'
+	if (tone === 'neutral' || tone === 'info') {
 		label = 'Connecting'
-		indicator = <Spinner size="sm" color={tone === 'info' ? 'primary' : 'secondary'} className="status-badge-spinner" />
-	} else if (status.category === 'good') {
-		tone = 'good'
+		// No explicit colour: the spinner draws in currentColor, so it matches the badge's tone text.
+		indicator = <Spinner size="sm" className="status-badge-spinner" />
+	} else if (tone === 'good') {
 		label = 'OK'
-	} else if (status.category === 'warning') {
-		tone = 'warning'
-		label = status.level || 'Warning'
 	} else {
-		tone = 'error'
-		label = status.level || 'Error'
+		label = status?.level || (tone === 'warning' ? 'Warning' : 'Error')
 	}
 
 	return (

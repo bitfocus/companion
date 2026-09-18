@@ -102,10 +102,13 @@ export const SidebarFooter = observer(function SidebarFooter({
 }: SidebarFooterProps): React.JSX.Element {
 	const { versionName, versionBuild } = useCompanionVersion()
 	const { canLock, setLocked } = useContext(AdminLockContext)
-	const updateData = useSubscription(trpc.appInfo.updateInfo.subscriptionOptions())
-	const updateInfo = updateData.data?.message ? updateData.data : null
+	const channel = channelFromVersionBuild(versionBuild)
+	const channelBadge = CHANNEL_BADGE[channel]
 
-	const channelBadge = CHANNEL_BADGE[channelFromVersionBuild(versionBuild)]
+	// The update server only knows about released versions, so its "new version available" notice is
+	// noise on an experimental (main/feature branch) build.
+	const updateData = useSubscription(trpc.appInfo.updateInfo.subscriptionOptions())
+	const updateInfo = updateData.data?.message && channel !== 'experimental' ? updateData.data : null
 
 	if (mobileMode) {
 		return (

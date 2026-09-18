@@ -22,6 +22,8 @@ import type { GenericCollectionsStore } from '~/Stores/GenericCollectionsStore'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 import { UpdateInstanceToLatestBadge } from '../UpdateInstanceToLatestBadge'
 import { getModuleVersionInfo } from '../Util'
+import { instanceStatusTone } from './InstanceStatusHelpers.js'
+import './InstancesListTableRow.css'
 import { InstanceTableStatusCell } from './InstanceTableStatusCell'
 
 export interface InstancesListTableRowProps<TMetaData extends { enabled?: boolean }> {
@@ -87,6 +89,17 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 			? `Disable ${labelStr}`
 			: `Enable ${labelStr}`
 
+	// Only failures (and the in-progress "connecting" state, which modules report as an error) carry a
+	// message worth showing under the name.
+	const statusMessage =
+		instanceStatus &&
+		(instanceStatus.category === 'error' || instanceStatus.category === 'warning') &&
+		instanceStatus.message
+			? typeof instanceStatus.message === 'string'
+				? instanceStatus.message
+				: JSON.stringify(instanceStatus.message)
+			: null
+
 	return (
 		<div
 			className={classNames(
@@ -102,22 +115,15 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 				<div className="flex items-center gap-1.5 text-xs text-muted/80 font-normal truncate">
 					<span className="truncate">{moduleDisplayName}</span>
 				</div>
-				{instanceStatus &&
-					(instanceStatus.category === 'error' || instanceStatus.category === 'warning') &&
-					instanceStatus.message && (
-						<span
-							className={classNames(
-								'text-2xs font-medium truncate mt-0.5',
-								instanceStatus.category === 'warning'
-									? 'text-amber-600 dark:text-amber-400'
-									: 'text-rose-600 dark:text-rose-400'
-							)}
-						>
-							{typeof instanceStatus.message === 'string'
-								? instanceStatus.message
-								: JSON.stringify(instanceStatus.message)}
-						</span>
-					)}
+				{statusMessage && (
+					<span
+						className="instance-status-message"
+						data-tone={instanceStatusTone(instanceStatus)}
+						title={statusMessage}
+					>
+						{statusMessage}
+					</span>
+				)}
 			</div>
 
 			<div
