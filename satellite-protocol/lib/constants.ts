@@ -32,6 +32,10 @@
  *          `0` still means a single counter-clockwise step for backwards compatibility. Support is
  *          advertised via ROTARY_AMOUNT in CAPS.
  * 1.15.0 - Add DEVICE-APPEARANCE message, describing how to draw the face of the surface
+ *        - Add CONTROL-EVENT message, sent to a surface that sets CONTROL_EVENTS on ADD-DEVICE. It carries KEY or
+ *          CONTROLID and EVENT when a press of that control ran actions (EVENT=press) or a group set to run while
+ *          held fired (EVENT=hold). How to show it is up to the surface. Clients must ignore unknown EVENT values,
+ *          as more may be added. Support is advertised via CONTROL_EVENTS in CAPS.
  */
 export const API_VERSION = '1.15.0'
 

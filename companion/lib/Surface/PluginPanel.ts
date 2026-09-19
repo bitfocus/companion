@@ -7,6 +7,7 @@ import type { CompanionSurfaceConfigField, GridSize } from '@companion-app/share
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import type { SurfaceControlEvent } from '@companion-surface/base'
 import type {
 	SurfaceAppearanceDefinition,
 	SurfaceRotation,
@@ -174,6 +175,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 	readonly surfaceModelId: string | null
 
 	#config: Record<string, any>
+	#closed = false
 
 	/** The module has already closed this surface, so it must not be told to close it again */
 	#closedByModule = false
@@ -293,12 +295,37 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 			canChangePage: !!surfaceInfo.canChangePage,
 			location: surfaceInfo.location ?? null,
 			isRemote: surfaceInfo.isRemote,
+			supportsControlEvents: !!surfaceInfo.controlEvents,
 			// hasFirmwareUpdates?: SurfaceFirmwareUpdateInfo
 		}
 
 		// Send all variables immediately
 		for (const [name, outputVariable] of Object.entries(this.#outputVariables)) {
 			this.#triggerOutputVariable(name, outputVariable)
+		}
+	}
+
+	controlEvent(x: number, y: number, event: SurfaceControlEvent): void {
+		// The connection id is captured from this open, so the module drops it if the surface has since reopened
+		const connectionId = this.#surfaceInfo.controlEvents?.connectionId
+		if (this.#closed || !connectionId) return
+
+		const definitions = this.#controlDefinitions.get(formatSurfaceXy(x, y))
+		if (!definitions) return
+
+		for (const definition of definitions) {
+			try {
+				this.#ipcWrapper
+					.sendWithCb('controlEvent', {
+						surfaceId: this.#surfaceInfo.surfaceId,
+						connectionId,
+						controlId: definition.id,
+						event,
+					})
+					.catch((e) => this.#logger.debug(`Control event failed: ${stringifyError(e)}`))
+			} catch (e) {
+				this.#logger.debug(`Control event failed: ${stringifyError(e)}`)
+			}
 		}
 	}
 
@@ -412,6 +439,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 	}
 
 	quit(): void {
+		this.#closed = true
 		if (this.#closedByModule) return
 
 		this.#ipcWrapper.sendWithCb('closeSurface', { surfaceId: this.#surfaceInfo.surfaceId }).catch((e) => {

@@ -178,7 +178,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	}
 
 	pressControl(controlId: string, pressed: boolean, surfaceId: string): boolean {
-		return this.#controlStore.pressControl(controlId, pressed, surfaceId)
+		return this.#controlStore.pressControl(controlId, pressed, surfaceId, null)
 	}
 
 	rotateControl(controlId: string, delta: number, surfaceId: string): boolean {

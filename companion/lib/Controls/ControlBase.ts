@@ -2,6 +2,7 @@ import { EventEmitter } from 'node:events'
 import jsonPatch from 'fast-json-patch'
 import type { UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 import LogController, { type Logger } from '../Log/Controller.js'
+import type { ButtonPressEvents } from './ButtonPressEvents.js'
 import type { ControlDependencies } from './ControlDependencies.js'
 import type { IButtonDrawer } from './IButtonDrawer.js'
 
@@ -171,9 +172,15 @@ export abstract class ControlBase<TJson> {
 	 * Execute a press of a control
 	 * @param pressed Whether the control is pressed
 	 * @param surfaceId The surface that initiated this press
+	 * @param pressEvents Control events for a physical press, or null for any other press
 	 * @param force Trigger actions even if already in the state
 	 */
-	abstract pressControl(pressed: boolean, surfaceId: string | undefined, force?: boolean): void
+	abstract pressControl(
+		pressed: boolean,
+		surfaceId: string | undefined,
+		pressEvents: ButtonPressEvents | null,
+		force?: boolean
+	): void
 
 	/**
 	 * Execute a rotate of this control. Controls that don't support rotation (the default) do nothing and report

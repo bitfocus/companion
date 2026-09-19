@@ -9,8 +9,16 @@ import type {
 } from '@companion-app/shared/Model/Surfaces.js'
 import { createTables } from '../../lib/Data/Schema/v1.js'
 import { DataStoreBase } from '../../lib/Data/StoreBase.js'
+import type { IpcWrapper } from '../../lib/Instance/Common/IpcWrapper.js'
+import type {
+	HostOpenDeviceResult,
+	HostToSurfaceModuleEvents,
+	SurfaceModuleToHostEvents,
+} from '../../lib/Instance/Surface/IpcTypes.js'
 import { SurfaceController } from '../../lib/Surface/Controller.js'
 import type { SatelliteDeviceInfo } from '../../lib/Surface/IP/Satellite.js'
+import { SurfacePluginPanel } from '../../lib/Surface/PluginPanel.js'
+import { mangleReferenceSurfaceId } from '../../lib/Surface/ReferenceSurfaceId.js'
 import type { SurfaceHandlerDependencies } from '../../lib/Surface/Types.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
 import { createMockTrpcContext } from '../Util.js'
@@ -78,7 +86,7 @@ function createController() {
 
 	const controller = new SurfaceController(db as any, deps, true)
 
-	return { controller, db }
+	return { controller, db, deps }
 }
 
 function satelliteDeviceInfo(overrides: Partial<SatelliteDeviceInfo> = {}): SatelliteDeviceInfo {
@@ -407,5 +415,128 @@ describe('SurfaceController layout subscriptions', () => {
 		expect(Object.keys(await sub.next())).toEqual(['offline1', 'offline2'])
 
 		await sub.cleanup()
+	})
+})
+
+function addPluginPanel(controller: SurfaceController, surfaceId: string, connectionId: string) {
+	const ipc = mockDeep<IpcWrapper<HostToSurfaceModuleEvents, SurfaceModuleToHostEvents>>()
+	ipc.sendWithCb.mockResolvedValue(undefined)
+	const info: HostOpenDeviceResult = {
+		surfaceId,
+		description: 'Test control event surface',
+		supportsBrightness: false,
+		controlEvents: { connectionId },
+		surfaceLayout: neoLayout,
+		surfaceAppearance: null,
+		modelId: null,
+		transferVariables: null,
+		location: null,
+		isRemote: false,
+		configFields: null,
+	}
+	const panel = new SurfacePluginPanel(ipc, 'test-instance', info, vi.fn())
+	vi.spyOn(panel, 'draw').mockImplementation(() => {})
+	controller.addPluginPanel('test-module', panel)
+	return { ipc, panel }
+}
+
+function controlEventCalls(ipc: ReturnType<typeof addPluginPanel>['ipc']) {
+	return ipc.sendWithCb.mock.calls.filter(([event]) => event === 'controlEvent').map(([, msg]) => msg)
+}
+
+describe('SurfaceController control event routing', () => {
+	let controller: SurfaceController
+
+	beforeEach(() => {
+		const created = createController()
+		controller = created.controller
+		created.deps.pageStore.getPageNumber.mockReturnValue(1)
+	})
+
+	test('routes an explicit cue to the connected panel and strips a reference surface id', () => {
+		const { ipc } = addPluginPanel(controller, 'test:deck', 'open-1')
+		const location = { pageNumber: 1, row: 1, column: 0 }
+
+		controller.sendDeviceControlEvent('test:deck', location, 'press')
+		controller.sendDeviceControlEvent(mangleReferenceSurfaceId('test:deck', 'bank:1-0-0'), location, 'hold')
+		expect(controlEventCalls(ipc)).toEqual([
+			{ surfaceId: 'test:deck', connectionId: 'open-1', controlId: '1/0', event: 'press' },
+			{ surfaceId: 'test:deck', connectionId: 'open-1', controlId: '1/0', event: 'hold' },
+		])
+	})
+
+	test('does not throw or broadcast for an unknown or group id', async () => {
+		const first = addPluginPanel(controller, 'test:first', 'open-1')
+		const second = addPluginPanel(controller, 'test:second', 'open-2')
+		const caller = t.createCallerFactory(controller.createTrpcRouter())(testCtx)
+		const groupId = await caller.groupAdd({ baseId: 'cues', name: 'Cues' })
+		await caller.surfaceSetGroup({ surfaceId: 'test:first', groupId })
+		await caller.surfaceSetGroup({ surfaceId: 'test:second', groupId })
+
+		const location = { pageNumber: 1, row: 0, column: 0 }
+		expect(() => controller.sendDeviceControlEvent('missing', location, 'press')).not.toThrow()
+		expect(() => controller.sendDeviceControlEvent(groupId, location, 'press')).not.toThrow()
+		expect(controlEventCalls(first.ipc)).toHaveLength(0)
+		expect(controlEventCalls(second.ipc)).toHaveLength(0)
+	})
+
+	test('does not expose the connection id in the client device list', () => {
+		addPluginPanel(controller, 'test:deck', 'open-1')
+
+		const surface = controller
+			.getDevicesList()
+			.flatMap((group) => group.surfaces)
+			.find((item) => item.id === 'test:deck')
+		expect(surface).toBeTruthy()
+		expect(JSON.stringify(surface)).not.toContain('open-1')
+	})
+})
+
+describe('Satellite control events', () => {
+	function satellitePanel(overrides: Partial<SatelliteDeviceInfo>) {
+		const { controller } = createController()
+		const info = satelliteDeviceInfo(overrides)
+		const panel = controller.addSatelliteDevice(info)
+		const sendMessage = info.socket.sendMessage as ReturnType<typeof vi.fn>
+		const events = () => sendMessage.mock.calls.filter(([name]) => name === 'CONTROL-EVENT')
+		return { panel, events }
+	}
+
+	test('sends CONTROL-EVENT with the control id to a client that asked for it', () => {
+		const { panel, events } = satellitePanel({ supportsControlEvents: true })
+		expect(panel.info.supportsControlEvents).toBe(true)
+
+		panel.controlEvent(0, 1, 'hold')
+		expect(events()).toEqual([['CONTROL-EVENT', null, 'dev1', { CONTROLID: '1/0', EVENT: 'hold' }]])
+
+		panel.controlEvent(4, 4, 'press')
+		expect(events()).toHaveLength(1)
+	})
+
+	test('uses the key index for a client in grid mode', () => {
+		const { panel, events } = satellitePanel({
+			supportsControlEvents: true,
+			surfaceManifestFromClient: false,
+			gridSize: { columns: 2, rows: 2 },
+			surfaceManifest: {
+				stylePresets: { default: { bitmap: { w: 72, h: 72 } } },
+				controls: { '0/0': { row: 0, column: 0 }, '1/1': { row: 1, column: 1 } },
+			},
+		})
+
+		panel.controlEvent(1, 1, 'press')
+		expect(events()).toEqual([['CONTROL-EVENT', null, 'dev1', { KEY: 3, EVENT: 'press' }]])
+	})
+
+	test('sends nothing to a client that did not ask, or after the device is closed', () => {
+		const legacy = satellitePanel({})
+		expect(legacy.panel.info.supportsControlEvents).toBe(false)
+		legacy.panel.controlEvent(0, 0, 'press')
+		expect(legacy.events()).toHaveLength(0)
+
+		const closed = satellitePanel({ supportsControlEvents: true })
+		closed.panel.quit()
+		closed.panel.controlEvent(0, 0, 'press')
+		expect(closed.events()).toHaveLength(0)
 	})
 })

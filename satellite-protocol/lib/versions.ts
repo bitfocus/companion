@@ -87,6 +87,12 @@ export const SATELLITE_FEATURES = {
 		capsFlag: null,
 		description: 'DEVICE-APPEARANCE describes how to draw the face of the surface',
 	},
+	controlEvents: {
+		since: '1.15.0',
+		capsFlag: 'CONTROL_EVENTS',
+		description:
+			'A surface that sets CONTROL_EVENTS on ADD-DEVICE receives CONTROL-EVENT when a press or held group of one of its controls runs actions',
+	},
 } as const satisfies Record<string, SatelliteFeatureDefinition>
 
 export type SatelliteFeatureId = keyof typeof SATELLITE_FEATURES

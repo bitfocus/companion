@@ -130,6 +130,15 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.writtenData[1]).toContain('BITMAP_FORMATS="rgb,png,webp"')
 		})
 
+		test('CAPS advertises control events', () => {
+			const { api, logger } = createService()
+			const socket = new TestSocketWrapper()
+
+			api.initSocket(logger, socket)
+
+			expect(socket.writtenData[1]).toContain('CONTROL_EVENTS=1')
+		})
+
 		test('returns processMessage and cleanupDevices', () => {
 			const { api, logger } = createService()
 			const socket = new TestSocketWrapper()
@@ -368,6 +377,23 @@ describe('ServiceSatelliteApi', () => {
 
 			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
 			expect(callArgs.bitmapFormat).toBe(format)
+		})
+
+		test.each([
+			['', false],
+			[' CONTROL_EVENTS=1', true],
+			[' CONTROL_EVENTS=0', false],
+		])('reads control event support from ADD-DEVICE%s', (flag, expected) => {
+			const { api, logger, surfaceController } = createService()
+			const { processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage(`ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test"${flag}\n`)
+
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(!!callArgs.supportsControlEvents).toBe(expected)
 		})
 
 		test('falls back to rgb for an unadvertised BITMAP_FORMAT', () => {

@@ -296,6 +296,25 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 	getActionDefinitions(): Record<string, InternalActionDefinition> {
 		return {
+			surface_cue: {
+				label: 'Surface: Show cue on this button',
+				description:
+					'Ask a supported surface to show a cue on the control for this button, for example a haptic click. Nothing happens if the button is not shown on that surface. Turn off the automatic surface cue for this group to avoid a second cue.',
+				options: [
+					{ ...CHOICES_SURFACE_ID, label: 'Surface' },
+					{
+						type: 'dropdown',
+						label: 'Cue',
+						id: 'event',
+						default: 'press',
+						choices: [
+							{ id: 'press', label: 'Press' },
+							{ id: 'hold', label: 'Hold' },
+						],
+					},
+				],
+				optionsSupportExpressions: true,
+			},
 			set_brightness: {
 				label: 'Surface: Set to brightness',
 				description: undefined,
@@ -516,6 +535,14 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 
 	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): InternalActionResult {
 		switch (action.definitionId) {
+			case 'surface_cue': {
+				const surfaceId = this.#fetchSurfaceId(action.options, extras)
+				const event = action.options.event === 'hold' ? 'hold' : 'press'
+				if (surfaceId && extras.location) {
+					this.#surfaceController.sendDeviceControlEvent(surfaceId, extras.location, event)
+				}
+				break
+			}
 			case 'set_brightness': {
 				const surfaceId = this.#fetchSurfaceId(action.options, extras)
 				if (surfaceId) {

@@ -16,6 +16,7 @@ import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { ActionRunner } from './ActionRunner.js'
+import type { ButtonPressEvents } from './ButtonPressEvents.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import type { SomeControl } from './IControlFragments.js'
@@ -27,7 +28,13 @@ import type { TriggerEvents } from './TriggerEvents.js'
  */
 export interface ControlsAccessor {
 	getControl(controlId: string): SomeControl<any> | undefined
-	pressControl(controlId: string, pressed: boolean, surfaceId: string | undefined, force?: boolean): boolean
+	pressControl(
+		controlId: string,
+		pressed: boolean,
+		surfaceId: string | undefined,
+		pressEvents: ButtonPressEvents | null,
+		force?: boolean
+	): boolean
 	rotateControl(controlId: string, delta: number, surfaceId: string | undefined): boolean
 }
 
