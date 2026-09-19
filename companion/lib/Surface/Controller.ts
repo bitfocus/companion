@@ -54,6 +54,7 @@ import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { createOrSanitizeSurfaceHandlerConfig, PanelDefaults } from './Config.js'
 import { SurfaceGroup, validateGroupConfigValue } from './Group.js'
 import { SurfaceHandler } from './Handler.js'
+import { HotplugRescan } from './HotplugRescan.js'
 import { EmulatorRoom, SurfaceIPElgatoEmulator } from './IP/ElgatoEmulator.js'
 import { SurfaceIPSatellite, type SatelliteDeviceInfo } from './IP/Satellite.js'
 import { surfaceButtonSizesFromLayouts, surfaceLayoutsFromConfigs, type SurfaceLayoutSource } from './LayoutSummary.js'
@@ -144,6 +145,12 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Whether usb hotplug is currently configured and running
 	 */
 	#runningUsbHotplug: boolean = false
+
+	readonly #hotplugRescan = new HotplugRescan(() => {
+		this.triggerRefreshDevices().catch((e) => {
+			this.#logger.warn(`Hotplug device refresh failed: ${e}`)
+		})
+	})
 
 	/**
 	 * Promise for the currently running scan operation.
@@ -259,6 +266,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				if (!value && this.#runningUsbHotplug) {
 					// Stop watching
 					usb.removeEventListener('connect', this.triggerRefreshDevicesEvent)
+					this.#hotplugRescan.cancel()
 					this.#runningUsbHotplug = false
 				} else if (value && !this.#runningUsbHotplug) {
 					// Start watching
@@ -354,9 +362,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	triggerRefreshDevicesEvent = (): void => {
-		this.triggerRefreshDevices().catch((e) => {
-			this.#logger.warn(`Hotplug device refresh failed: ${e}`)
-		})
+		this.#hotplugRescan.trigger()
 	}
 
 	/**
@@ -1827,6 +1833,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	quit(): void {
+		this.#hotplugRescan.cancel()
+
 		for (const surface of this.#surfaceHandlers.values()) {
 			if (!surface) continue
 			try {
