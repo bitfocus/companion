@@ -1833,6 +1833,15 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	}
 
 	quit(): void {
+		if (this.#runningUsbHotplug) {
+			// Stop watching, so that a device connected during shutdown does not start a scan
+			try {
+				usb.removeEventListener('connect', this.triggerRefreshDevicesEvent)
+			} catch (e) {
+				this.#logger.warn(`Failed to disable usb hotplug: ${e}`)
+			}
+			this.#runningUsbHotplug = false
+		}
 		this.#hotplugRescan.cancel()
 
 		for (const surface of this.#surfaceHandlers.values()) {
