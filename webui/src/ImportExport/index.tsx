@@ -174,7 +174,7 @@ export const ImportExportPage = observer(function ImportExport() {
 
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 					{/* Export Card */}
-					<div className="flex flex-col justify-between p-5 rounded-xl border border-emerald-500/25 bg-surface dark:bg-surface hover:border-emerald-500/50 hover:shadow-sm transition-all">
+					<div className="flex flex-col justify-between p-5 rounded-xl border border-emerald-500/25 bg-surface hover:border-emerald-500/50 hover:shadow-sm transition-all">
 						<div>
 							<div className="flex items-center gap-3 mb-3">
 								<span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-500 font-bold">
@@ -182,7 +182,7 @@ export const ImportExportPage = observer(function ImportExport() {
 								</span>
 								<div>
 									<h3 className="text-sm font-bold text-body mb-0">Export Configuration</h3>
-									<span className="text-2xs text-emerald-600 dark:text-emerald-400 font-medium">Backup & Share</span>
+									<span className="text-2xs text-emerald-600 font-medium">Backup & Share</span>
 								</div>
 							</div>
 							<p className="text-xs text-muted leading-relaxed mb-4">
@@ -196,7 +196,7 @@ export const ImportExportPage = observer(function ImportExport() {
 					</div>
 
 					{/* Import Card */}
-					<div className="flex flex-col justify-between p-5 rounded-xl border border-amber-500/25 bg-surface dark:bg-surface hover:border-amber-500/50 hover:shadow-sm transition-all">
+					<div className="flex flex-col justify-between p-5 rounded-xl border border-amber-500/25 bg-surface hover:border-amber-500/50 hover:shadow-sm transition-all">
 						<div>
 							<div className="flex items-center gap-3 mb-3">
 								<span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-amber-500/10 text-amber-500 font-bold">
@@ -204,7 +204,7 @@ export const ImportExportPage = observer(function ImportExport() {
 								</span>
 								<div>
 									<h3 className="text-sm font-bold text-body mb-0">Import Configuration</h3>
-									<span className="text-2xs text-amber-600 dark:text-amber-400 font-medium">Restore Snapshot</span>
+									<span className="text-2xs text-amber-600 font-medium">Restore Snapshot</span>
 								</div>
 							</div>
 							<p className="text-xs text-muted leading-relaxed mb-4">
@@ -235,7 +235,7 @@ export const ImportExportPage = observer(function ImportExport() {
 					</div>
 
 					{/* Reset Card */}
-					<div className="flex flex-col justify-between p-5 rounded-xl border border-rose-500/25 bg-surface dark:bg-surface hover:border-rose-500/50 hover:shadow-sm transition-all">
+					<div className="flex flex-col justify-between p-5 rounded-xl border border-rose-500/25 bg-surface hover:border-rose-500/50 hover:shadow-sm transition-all">
 						<div>
 							<div className="flex items-center gap-3 mb-3">
 								<span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-rose-500/10 text-rose-500 font-bold">
@@ -243,7 +243,7 @@ export const ImportExportPage = observer(function ImportExport() {
 								</span>
 								<div>
 									<h3 className="text-sm font-bold text-body mb-0">Reset Companion</h3>
-									<span className="text-2xs text-rose-600 dark:text-rose-400 font-medium">Clear Configuration</span>
+									<span className="text-2xs text-rose-600 font-medium">Clear Configuration</span>
 								</div>
 							</div>
 							<p className="text-xs text-muted leading-relaxed mb-4">

@@ -296,6 +296,15 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 	const doEdit = useCallback(() => {
 		tableContext.selectTrigger(item.id)
 	}, [tableContext, item.id])
+	const doEditKey = useCallback(
+		(e: React.KeyboardEvent) => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault()
+				tableContext.selectTrigger(item.id)
+			}
+		},
+		[tableContext, item.id]
+	)
 	const doClone = useCallback(() => {
 		cloneMutation
 			.mutateAsync({ controlId: CreateTriggerControlId(item.id) })
@@ -327,13 +336,16 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 			)}
 		>
 			<div
+				role="button"
+				tabIndex={0}
 				className={classnames('flex flex-col grow min-w-0', { 'opacity-60': triggerOrCollectionDisabled })}
 				onClick={doEdit}
+				onKeyDown={doEditKey}
 			>
 				<div className="truncate text-sm font-semibold text-body flex items-center gap-2">
 					<span>{item.name}</span>
 					{item.enabled && !collectionDisabled && (
-						<span className="text-3xs font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+						<span className="text-3xs font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
 							Active
 						</span>
 					)}

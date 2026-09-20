@@ -15,6 +15,13 @@ button {
 	text-decoration: none;
 	box-shadow: none;
 	outline: none;
+
+	/* The reset above drops the UA outline, so raw buttons need their own keyboard focus ring. Styled
+	   components (Button, PillButton, …) define a matching ring of their own. */
+	&:focus-visible {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 2px;
+	}
 }
 
 h4,

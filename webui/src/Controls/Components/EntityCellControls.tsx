@@ -172,7 +172,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 
 						{entity.headline && (
 							<span
-								className="text-3xs font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 truncate entity-value-pill"
+								className="text-3xs font-mono text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 truncate entity-value-pill"
 								title={`Note: ${entity.headline}`}
 							>
 								// {entity.headline}

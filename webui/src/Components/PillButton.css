@@ -32,6 +32,11 @@
 		border-color: var(--color-border-hover);
 	}
 
+	&:focus-visible {
+		outline: 0;
+		box-shadow: 0 0 0 0.25rem var(--color-focus-ring);
+	}
+
 	/* Tighter variant, for a dense row of filters. */
 	&.pill-button-sm {
 		padding: 0.3125rem 0.625rem;

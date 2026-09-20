@@ -234,18 +234,12 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 				<div className="flex items-center gap-1.5">
 					<span>{versionId}</span>
 					{storeInfo?.releaseChannel === 'beta' && (
-						<span
-							title="Beta"
-							className="px-1.5 py-0.5 rounded text-3xs bg-amber-500/10 text-amber-600 dark:text-amber-400 font-sans"
-						>
+						<span title="Beta" className="px-1.5 py-0.5 rounded text-3xs bg-amber-500/10 text-amber-600 font-sans">
 							Beta
 						</span>
 					)}
 					{storeInfo?.deprecationReason && (
-						<span
-							title="Deprecated"
-							className="px-1.5 py-0.5 rounded text-3xs bg-rose-500/10 text-rose-600 dark:text-rose-400 font-sans"
-						>
+						<span title="Deprecated" className="px-1.5 py-0.5 rounded text-3xs bg-rose-500/10 text-rose-600 font-sans">
 							Deprecated
 						</span>
 					)}

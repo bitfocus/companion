@@ -119,7 +119,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 					size="sm"
 					onClick={doTestRun}
 					title="Test fire trigger actions immediately"
-					className="text-xs px-3 py-1.5 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 flex items-center gap-1.5 font-medium shrink-0 rounded-lg transition-all"
+					className="text-xs px-3 py-1.5 text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 flex items-center gap-1.5 font-medium shrink-0 rounded-lg transition-all"
 				>
 					<FontAwesomeIcon icon={faPlay} className="text-2xs" />
 					<span>Test Run</span>
@@ -132,7 +132,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 				<div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
 					<div className="px-3.5 py-2.5 bg-surface-subtle border-b border-border flex items-center justify-between">
 						<div className="flex items-center gap-2">
-							<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1">
+							<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-amber-500/15 text-amber-600 border border-amber-500/20 flex items-center gap-1">
 								<FontAwesomeIcon icon={faBolt} className="text-3xs" />
 								WHEN
 							</span>
@@ -166,7 +166,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 				<div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
 					<div className="px-3.5 py-2.5 bg-surface-subtle border-b border-border flex items-center justify-between">
 						<div className="flex items-center gap-2">
-							<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/20 flex items-center gap-1">
+							<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-sky-500/15 text-sky-600 border border-sky-500/20 flex items-center gap-1">
 								<FontAwesomeIcon icon={faFilter} className="text-3xs" />
 								IF
 							</span>
@@ -206,7 +206,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 				<div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
 					<div className="px-3.5 py-2.5 bg-surface-subtle border-b border-border flex items-center justify-between">
 						<div className="flex items-center gap-2">
-							<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+							<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-emerald-500/15 text-emerald-600 border border-emerald-500/20 flex items-center gap-1">
 								<FontAwesomeIcon icon={faPlay} className="text-3xs" />
 								THEN
 							</span>

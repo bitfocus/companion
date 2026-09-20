@@ -228,9 +228,24 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 		)
 	}, [deleteMutation, tableContext.deleteModalRef, item.id])
 
-	const doEdit = useCallback(() => {
-		tableContext.selectExpressionVariable(item.id)
-	}, [tableContext, item.id])
+	const doEdit = useCallback(
+		(e: React.MouseEvent) => {
+			// The row's own buttons (copy, clone, delete) shouldn't also open the editor
+			if ((e.target as HTMLElement).closest('button, a')) return
+			tableContext.selectExpressionVariable(item.id)
+		},
+		[tableContext, item.id]
+	)
+	const doEditKey = useCallback(
+		(e: React.KeyboardEvent) => {
+			if (e.target !== e.currentTarget) return
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault()
+				tableContext.selectExpressionVariable(item.id)
+			}
+		},
+		[tableContext, item.id]
+	)
 
 	const doClone = useCallback(() => {
 		cloneMutation
@@ -247,7 +262,10 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 
 	return (
 		<div
+			role="button"
+			tabIndex={0}
 			onClick={doEdit}
+			onKeyDown={doEditKey}
 			className={classnames(
 				'flex flex-row items-center gap-3 cursor-pointer py-2 px-3 rounded-lg transition-colors hover:bg-surface-muted/50',
 				isSelected

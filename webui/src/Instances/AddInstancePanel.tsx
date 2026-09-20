@@ -498,18 +498,18 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 							{categoryMeta.badgeLabel}
 						</span>
 						{isInstalled ? (
-							<span className="px-1.5 py-0.5 rounded text-3xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25">
+							<span className="px-1.5 py-0.5 rounded text-3xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/25">
 								Installed
 							</span>
 						) : (
-							<span className="px-1.5 py-0.5 rounded text-3xs font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/25">
+							<span className="px-1.5 py-0.5 rounded text-3xs font-semibold bg-sky-500/10 text-sky-600 border border-sky-500/25">
 								Store
 							</span>
 						)}
 						{isLegacy && (
 							<span
 								title="This module has not been updated for Companion 3.0"
-								className="px-1.5 py-0.5 rounded text-3xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25"
+								className="px-1.5 py-0.5 rounded text-3xs font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/25"
 							>
 								Legacy
 							</span>
