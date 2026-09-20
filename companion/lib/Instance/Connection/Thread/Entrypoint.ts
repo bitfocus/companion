@@ -126,10 +126,10 @@ const ipcWrapper = new IpcWrapper<ModuleToHostEventsNew, HostToModuleEventsNew>(
 				latestUpgradeIndex: res.latestUpgradeIndex,
 			}
 		},
-		executeAction: async (msg): Promise<ExecuteActionResponseMessage> => {
+		executeAction: async (msg, signal): Promise<ExecuteActionResponseMessage> => {
 			if (!instance || !instanceInitialized) throw new Error('Not initialized')
 
-			const res = await instance.executeAction(msg.action, msg.surfaceId)
+			const res = await instance.executeActionWithSignal(msg.action, msg.surfaceId, signal)
 			return res.success
 				? {
 						success: true,
