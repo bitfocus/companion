@@ -24,6 +24,8 @@ import type { InstanceEditPanelService } from '~/Instances/InstanceEdit/Instance
 import { InstanceEditPanelStore, isConfigFieldSecret } from '~/Instances/InstanceEdit/InstanceEditPanelStore.js'
 import { InstanceSecretField } from '~/Instances/InstanceEdit/InstanceSecretField.js'
 import { getModuleVersionInfo } from '~/Instances/Util.js'
+import { ModuleDeprecationAlert } from '~/Modules/ModuleDeprecationAlert.js'
+import { useModuleDeprecationInfo } from '~/Modules/useModuleDeprecationInfo.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { InstanceVersionChangeButton } from '../../Instances/InstanceEdit/InstanceVersionChangeButton.js'
@@ -56,6 +58,8 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 	)
 
 	const moduleInfo = modules.getModuleInfo(panelStore.instanceInfo.moduleType, panelStore.instanceInfo.moduleId)
+
+	const deprecationInfo = useModuleDeprecationInfo(panelStore.instanceInfo.moduleType, panelStore.instanceInfo.moduleId)
 
 	const isSaving = observable.box(false)
 	const [saveError, setSaveError] = useState<string | null>(null)
@@ -97,6 +101,12 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 						{saveError && (
 							<Grid.Col className="fieldtype-textinput" sm={12}>
 								<StaticAlert color="danger">{saveError}</StaticAlert>
+							</Grid.Col>
+						)}
+
+						{!!deprecationInfo && (
+							<Grid.Col sm={12}>
+								<ModuleDeprecationAlert info={deprecationInfo} />
 							</Grid.Col>
 						)}
 

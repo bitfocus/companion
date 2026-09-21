@@ -5,6 +5,8 @@ import { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useS
 import semver from 'semver'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { Modal } from '~/Components/Modal'
+import { ModuleDeprecationAlert } from '~/Modules/ModuleDeprecationAlert.js'
+import { useModuleDeprecationInfo } from '~/Modules/useModuleDeprecationInfo.js'
 import { sanitizeHtmlString } from '~/Resources/SanitizeHtml.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -89,6 +91,8 @@ export const HelpModal = observer(
 
 		const moduleInfo = content && modules.getModuleInfo(content.moduleType, content.moduleId)
 
+		const deprecationInfo = useModuleDeprecationInfo(content?.moduleType, content?.moduleId)
+
 		return (
 			<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
 				<Modal.Portal>
@@ -101,6 +105,7 @@ export const HelpModal = observer(
 								</Modal.Title>
 							</Modal.Header>
 							<Modal.Body>
+								{!!deprecationInfo && <ModuleDeprecationAlert info={deprecationInfo} />}
 								<div dangerouslySetInnerHTML={html} className="markdown" />
 							</Modal.Body>
 						</Modal.Popup>

@@ -5,19 +5,19 @@ import { useComputed } from '~/Resources/util'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 
 export function useModuleUpgradeToVersions(
-	moduleType: ModuleInstanceType,
+	moduleType: ModuleInstanceType | undefined,
 	moduleId: string | undefined
 ): ModuleUpgradeToOtherVersion[] {
 	const { modules } = useContext(RootAppStoreContext)
 
 	useEffect(() => {
-		if (!moduleId) return
+		if (!moduleType || !moduleId) return
 
 		return modules.storeVersions.subscribeToModuleUpgradeToVersions(moduleType, moduleId)
 	}, [modules, moduleType, moduleId])
 
 	return useComputed(
-		() => (moduleId ? modules.storeVersions.getModuleUpgradeToVersions(moduleType, moduleId) : []),
-		[moduleId]
+		() => (moduleType && moduleId ? modules.storeVersions.getModuleUpgradeToVersions(moduleType, moduleId) : []),
+		[modules, moduleType, moduleId]
 	)
 }
