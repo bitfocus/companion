@@ -1,0 +1,195 @@
+import { EyeIcon, EyeOffIcon } from 'lucide-react'
+import './GridViewAs.css'
+import { observer } from 'mobx-react-lite'
+import { useCallback } from 'react'
+import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
+import { Button, ButtonGroup } from '~/Components/Button.js'
+import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
+import { NumberInputField } from '~/Components/NumberInputField.js'
+import { Popover } from '~/Components/Popover.js'
+import { GRID_VIEW_AS_OFFSET_LIMIT } from './GridViewAs.js'
+import { GRID_VIEW_AS_CUSTOM_ID, GRID_VIEW_AS_NOTHING_ID, type GridViewAsController } from './useGridViewAs.js'
+
+interface GridViewAsControlProps {
+	controller: GridViewAsController
+	/** Held by the panel, so that the banner can open it too */
+	configureOpen: boolean
+	setConfigureOpen: (open: boolean) => void
+}
+
+/**
+ * Turning the view on and off, beside the zoom which is the other thing that changes how the grid is
+ * drawn without changing what is on it.
+ *
+ * A split button: the eye applies the view, and the caret beside it chooses what to apply. They are
+ * one control because they are one thing - the caret is only ever used to feed the eye.
+ *
+ * The configuration is a popover rather than a panel of its own: it is one dropdown, sometimes a
+ * second, and two numbers, and putting that somewhere permanent would cost more of the page than it
+ * is worth.
+ */
+export const GridViewAsControl = observer(function GridViewAsControl({
+	controller,
+	configureOpen,
+	setConfigureOpen,
+}: GridViewAsControlProps): React.JSX.Element {
+	const { state, setEnabled } = controller
+
+	return (
+		<ButtonGroup className="ms-1">
+			<Button
+				color={state.enabled ? 'primary' : 'light'}
+				onClick={() => setEnabled(!state.enabled)}
+				title={state.enabled ? 'Show the whole grid again' : 'View the grid as one of your surfaces'}
+				className="inline-flex items-center justify-center"
+			>
+				{state.enabled ? <EyeIcon size={16} /> : <EyeOffIcon size={16} />}
+			</Button>
+
+			<Popover.Root open={configureOpen} onOpenChange={setConfigureOpen}>
+				<Popover.Trigger
+					color={state.enabled ? 'primary' : 'light'}
+					caret
+					title="Choose which surface to view as"
+					aria-label="Choose which surface to view as"
+				/>
+				<Popover.Popup className="grid-view-as-popover" align="end">
+					<GridViewAsPopoverContent controller={controller} />
+				</Popover.Popup>
+			</Popover.Root>
+		</ButtonGroup>
+	)
+})
+
+const GridViewAsPopoverContent = observer(function GridViewAsPopoverContent({
+	controller,
+}: {
+	controller: GridViewAsController
+}): React.JSX.Element {
+	const { state, surfaceChoices, modelChoices, selectedModelChoice, setSelection, setModelChoice, setOffset } =
+		controller
+
+	const selection = state.selection
+	const selectedSurfaceId = !selection
+		? GRID_VIEW_AS_NOTHING_ID
+		: selection.type === 'surface'
+			? selection.surfaceId
+			: GRID_VIEW_AS_CUSTOM_ID
+
+	const chooseSurface = useCallback(
+		(value: DropdownChoiceId) => {
+			if (value === GRID_VIEW_AS_NOTHING_ID) {
+				// Nothing to do - this is only ever offered while it is already the answer
+			} else if (value === GRID_VIEW_AS_CUSTOM_ID) {
+				// Starting from the first model we know about, so choosing this shows something rather than
+				// an empty view which has to be configured before it does anything. Only offered when there
+				// is a model to start from.
+				setModelChoice(modelChoices[0])
+			} else {
+				setSelection({ type: 'surface', surfaceId: String(value) })
+			}
+		},
+		[setSelection, setModelChoice, modelChoices]
+	)
+
+	const chooseModel = useCallback(
+		(value: DropdownChoiceId) => {
+			const choice = modelChoices.find((choice) => choice.id === value)
+			if (choice) setModelChoice(choice)
+		},
+		[setModelChoice, modelChoices]
+	)
+
+	// Nothing to view as at all: no plugin declares a model and no surface has ever been seen, so there
+	// is nothing to pick. Said plainly rather than shown as an empty dropdown which does nothing.
+	if (surfaceChoices.length === 0 && modelChoices.length === 0) {
+		return (
+			<p className="text-muted small m-0">
+				Companion does not know of any surfaces yet, so there is nothing to view the grid as. Connect one - or install
+				support for one from the module store - and it will be offered here.
+			</p>
+		)
+	}
+
+	const choices = [
+		// Offered only while it is the answer, so that having chosen something there is no way back to
+		// having chosen nothing
+		...(selection ? [] : [{ id: GRID_VIEW_AS_NOTHING_ID, label: 'Choose a surface…' }]),
+		...surfaceChoices,
+		// A model is only worth offering when one is known; the note below says why when none is
+		...(modelChoices.length > 0 ? [{ id: GRID_VIEW_AS_CUSTOM_ID, label: 'A model of surface…' }] : []),
+	]
+
+	const model = selection?.type === 'surfaceModel' ? selection : null
+
+	return (
+		<>
+			<div className="grid-view-as-field">
+				<label className="text-muted small" htmlFor="grid-view-as-surface">
+					View as
+				</label>
+				<SimpleDropdownInputField
+					id="grid-view-as-surface"
+					choices={choices}
+					value={selectedSurfaceId}
+					setValue={chooseSurface}
+				/>
+			</div>
+
+			{modelChoices.length === 0 && (
+				<p className="text-muted small m-0">
+					None of the installed surface modules lists the models it supports, and no surface has been plugged in, so
+					there is no model to choose yet.
+				</p>
+			)}
+
+			{model && (
+				<>
+					<div className="grid-view-as-field">
+						<label className="text-muted small" htmlFor="grid-view-as-type">
+							Model
+						</label>
+						<SimpleDropdownInputField
+							id="grid-view-as-type"
+							choices={modelChoices}
+							value={selectedModelChoice?.id ?? ''}
+							setValue={chooseModel}
+						/>
+					</div>
+
+					<p className="text-muted small m-0">
+						Where on the grid this surface would sit, so its buttons can be programmed before it arrives.
+					</p>
+
+					<div className="grid-view-as-offsets">
+						<div className="grid-view-as-field">
+							<label className="text-muted small" htmlFor="grid-view-as-offset-columns">
+								Column offset
+							</label>
+							<NumberInputField
+								id="grid-view-as-offset-columns"
+								min={-GRID_VIEW_AS_OFFSET_LIMIT}
+								max={GRID_VIEW_AS_OFFSET_LIMIT}
+								value={model.offset.columns}
+								setValue={(columns) => setOffset({ rows: model.offset.rows, columns })}
+							/>
+						</div>
+
+						<div className="grid-view-as-field">
+							<label className="text-muted small" htmlFor="grid-view-as-offset-rows">
+								Row offset
+							</label>
+							<NumberInputField
+								id="grid-view-as-offset-rows"
+								min={-GRID_VIEW_AS_OFFSET_LIMIT}
+								max={GRID_VIEW_AS_OFFSET_LIMIT}
+								value={model.offset.rows}
+								setValue={(rows) => setOffset({ rows, columns: model.offset.columns })}
+							/>
+						</div>
+					</div>
+				</>
+			)}
+		</>
+	)
+})

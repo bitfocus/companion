@@ -105,7 +105,9 @@
     "monaco-editor/dompurify": "npm:dompurify@^3.3.3",
     "webpack-bundle-analyzer": "^5.0.0",
     "@companion-module/host": "1.2.0-nightly-main-20260903-192135-d3ed195",
-    "@companion-module/base": "2.2.0-nightly-main-20260902-210244-eaa0afd"
+    "@companion-module/base": "2.2.0-nightly-main-20260902-210244-eaa0afd",
+    "@companion-surface/host": "1.5.0-nightly-claude-keen-tesla-ekqmu3-20260916-144138-baa91b4",
+    "@companion-surface/base": "1.5.0-nightly-claude-keen-tesla-ekqmu3-20260916-142851-baa91b4"
   },
   "dependenciesMeta": {
     "@sentry/cli": {

@@ -124,4 +124,6 @@ export interface DropdownChoice {
 	id: DropdownChoiceId
 	/** Label to show to users */
 	label: string
+	/** Show the option but do not let it be picked */
+	disabled?: boolean
 }
