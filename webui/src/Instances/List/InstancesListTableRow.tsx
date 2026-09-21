@@ -21,6 +21,7 @@ import type { GenericCollectionsStore } from '~/Stores/GenericCollectionsStore'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 import { UpdateInstanceToLatestBadge } from '../UpdateInstanceToLatestBadge'
 import { getModuleVersionInfo } from '../Util'
+import { InstanceDeprecatedBadge } from './InstanceDeprecatedBadge'
 import { InstanceTableStatusCell } from './InstanceTableStatusCell'
 
 export interface InstancesListTableRowProps<TMetaData extends { enabled?: boolean }> {
@@ -91,7 +92,10 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 		>
 			<div onClick={doEdit} className="flex flex-col grow min-w-0">
 				<b>{instance.label}</b>
-				<span className="truncate">{moduleDisplayName}</span>
+				<span className="flex items-center gap-1 min-w-0">
+					<span className="truncate">{moduleDisplayName}</span>
+					<InstanceDeprecatedBadge moduleType={instance.moduleType} moduleId={instance.moduleId} className="shrink-0" />
+				</span>
 			</div>
 
 			<div onClick={doEdit} className="whitespace-nowrap">

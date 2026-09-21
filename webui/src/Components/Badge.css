@@ -1,0 +1,70 @@
+/* Inline status pill: a short word labelling the thing it sits beside ("Deprecated", "Beta"), for
+   when a glyph alone is too easily missed or mistaken for one of the row's other warning icons.
+   Tonal fills mirror Alert's subtle/emphasis pairs so the two read as one family. */
+
+.badge-pill {
+	--badge-color: inherit;
+	--badge-bg: transparent;
+	--badge-border-color: transparent;
+
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3em;
+	padding: 0.05rem 0.4rem;
+	font-size: 0.7rem;
+	font-weight: 600;
+	line-height: 1.5;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	vertical-align: middle;
+	color: var(--badge-color);
+	background-color: var(--badge-bg);
+	border: var(--border-width) solid var(--badge-border-color);
+	border-radius: var(--radius-sm);
+
+	&.badge-pill-primary {
+		--badge-color: var(--color-primary-text-emphasis);
+		--badge-bg: var(--color-primary-bg-subtle);
+		--badge-border-color: var(--color-primary-border-subtle);
+	}
+	&.badge-pill-secondary {
+		--badge-color: var(--color-secondary-text-emphasis);
+		--badge-bg: var(--color-secondary-bg-subtle);
+		--badge-border-color: var(--color-secondary-border-subtle);
+	}
+	&.badge-pill-success {
+		--badge-color: var(--color-success-text-emphasis);
+		--badge-bg: var(--color-success-bg-subtle);
+		--badge-border-color: var(--color-success-border-subtle);
+	}
+	&.badge-pill-info {
+		--badge-color: var(--color-info-text-emphasis);
+		--badge-bg: var(--color-info-bg-subtle);
+		--badge-border-color: var(--color-info-border-subtle);
+	}
+	&.badge-pill-warning {
+		--badge-color: var(--color-warning-text-emphasis);
+		--badge-bg: var(--color-warning-bg-subtle);
+		--badge-border-color: var(--color-warning-border-subtle);
+	}
+	&.badge-pill-danger {
+		--badge-color: var(--color-danger-text-emphasis);
+		--badge-bg: var(--color-danger-bg-subtle);
+		--badge-border-color: var(--color-danger-border-subtle);
+	}
+	&.badge-pill-light {
+		--badge-color: var(--color-light-text-emphasis);
+		--badge-bg: var(--color-light-bg-subtle);
+		--badge-border-color: var(--color-light-border-subtle);
+	}
+	&.badge-pill-dark {
+		--badge-color: var(--color-dark-text-emphasis);
+		--badge-bg: var(--color-dark-bg-subtle);
+		--badge-border-color: var(--color-dark-border-subtle);
+	}
+}
+
+.badge-pill-icon {
+	font-size: 0.9em;
+}
