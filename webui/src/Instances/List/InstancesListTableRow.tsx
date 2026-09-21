@@ -23,6 +23,7 @@ import { UpdateInstanceToLatestBadge } from '../UpdateInstanceToLatestBadge'
 import { getModuleVersionInfo } from '../Util'
 import { InstanceDeprecatedBadge } from './InstanceDeprecatedBadge'
 import { InstanceTableStatusCell } from './InstanceTableStatusCell'
+import { InstanceVersionDeprecatedBadge } from './InstanceVersionDeprecatedBadge'
 
 export interface InstancesListTableRowProps<TMetaData extends { enabled?: boolean }> {
 	collectionsStore: GenericCollectionsStore<TMetaData>
@@ -111,6 +112,14 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 						</span>
 					)}
 					{moduleVersion?.displayName ?? instance.moduleVersionId}
+
+					<InstanceVersionDeprecatedBadge
+						moduleType={instance.moduleType}
+						moduleId={instance.moduleId}
+						moduleVersionId={instance.moduleVersionId}
+						labelStr={labelStr}
+						className="ms-1"
+					/>
 
 					<UpdateInstanceToLatestBadge instance={instance} />
 				</MyErrorBoundary>

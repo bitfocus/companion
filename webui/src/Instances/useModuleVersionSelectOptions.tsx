@@ -40,6 +40,11 @@ export function useModuleVersionSelectOptions(
 				if (latestStableVersion && latestStableVersion.id === version.versionId) {
 					label += ' (Latest stable)'
 				}
+				// A deprecated version is never offered as the latest, but can already be installed, so say
+				// so here too - this is where a user acts on the badge shown in the list
+				if (moduleStoreInfo?.versions.find((v) => v.id === version.versionId)?.deprecationReason) {
+					label += ' (Deprecated)'
+				}
 
 				choices.push({ id: version.versionId, label })
 				listedVersions.add(version.versionId)
@@ -96,6 +101,7 @@ export function useModuleVersionSelectOptions(
 		}
 	}, [
 		installedInfo,
+		moduleStoreInfo,
 		upgradeToVersions,
 		latestStableVersion,
 		latestBetaVersion,
