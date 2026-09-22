@@ -213,7 +213,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 			<FilterTypeTabs filterType={filterType} setFilterType={setFilterType} />
 
-			<div className="scrollable-content rounded-md border border-border/70 bg-surface">
+			<div className="scrollable-content list-card">
 				<Table className="table-tight mb-0">
 					<tbody>
 						{components}

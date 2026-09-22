@@ -49,6 +49,8 @@ interface CollapsibleTreeProps<TLeafData, TNodeMeta> {
 	LeafComponent: React.ComponentType<CollapsibleTreeLeafProps<TLeafData>>
 	/** Callback for when a leaf item row is clicked */
 	onLeafClick?: (leaf: TLeafData) => void
+	/** Key of the leaf currently open elsewhere on the page, highlighted as selected. `null` when none is. */
+	selectedLeafKey: string | null
 	/** Content to show when the tree has no nodes or leaves at all */
 	noContent?: React.ReactNode
 	/** Optional extra class name for the root element */
@@ -71,6 +73,7 @@ export const CollapsibleTree = observer(function CollapsibleTree<TLeafData exten
 	HeaderComponent,
 	LeafComponent,
 	onLeafClick,
+	selectedLeafKey,
 	noContent,
 	className,
 }: CollapsibleTreeProps<TLeafData, TNodeMeta>): React.JSX.Element {
@@ -91,6 +94,7 @@ export const CollapsibleTree = observer(function CollapsibleTree<TLeafData exten
 						nestingLevel={0}
 						LeafComponent={LeafComponent}
 						onLeafClick={onLeafClick}
+						selectedLeafKey={selectedLeafKey}
 					/>
 				))}
 
@@ -100,6 +104,7 @@ export const CollapsibleTree = observer(function CollapsibleTree<TLeafData exten
 				HeaderComponent={HeaderComponent}
 				LeafComponent={LeafComponent}
 				onLeafClick={onLeafClick}
+				selectedLeafKey={selectedLeafKey}
 				nestingLevel={0}
 			/>
 
@@ -116,6 +121,7 @@ export const CollapsibleTree = observer(function CollapsibleTree<TLeafData exten
 					HeaderComponent={HeaderComponent}
 					LeafComponent={LeafComponent}
 					onLeafClick={onLeafClick}
+					selectedLeafKey={selectedLeafKey}
 					nestingLevel={0}
 				/>
 			)}
@@ -127,6 +133,7 @@ export const CollapsibleTree = observer(function CollapsibleTree<TLeafData exten
 					nestingLevel={0}
 					LeafComponent={LeafComponent}
 					onLeafClick={onLeafClick}
+					selectedLeafKey={selectedLeafKey}
 				/>
 			))}
 		</div>
@@ -138,17 +145,22 @@ interface CollapsibleTreeLeafWrapperProps<TLeafData> {
 	nestingLevel: number
 	LeafComponent: React.ComponentType<CollapsibleTreeLeafProps<TLeafData>>
 	onLeafClick?: (leaf: TLeafData) => void
+	selectedLeafKey: string | null
 }
 
-function CollapsibleTreeLeafWrapper<TLeafData>({
+function CollapsibleTreeLeafWrapper<TLeafData extends { key: string }>({
 	leaf,
 	nestingLevel,
 	LeafComponent,
 	onLeafClick,
+	selectedLeafKey,
 }: CollapsibleTreeLeafWrapperProps<TLeafData>) {
+	const isSelected = selectedLeafKey !== null && selectedLeafKey === leaf.key
+
 	return (
 		<div
-			className="collapsible-tree-leaf-row"
+			className={classNames('collapsible-tree-leaf-row', { selected: isSelected })}
+			aria-current={isSelected ? 'true' : undefined}
 			role={onLeafClick ? 'button' : undefined}
 			tabIndex={onLeafClick ? 0 : undefined}
 			onKeyDown={
@@ -176,6 +188,7 @@ interface CollapsibleTreeNodeListProps<TLeafData, TNodeMeta> {
 	HeaderComponent: React.ComponentType<CollapsibleTreeHeaderProps<TLeafData, TNodeMeta>>
 	LeafComponent: React.ComponentType<CollapsibleTreeLeafProps<TLeafData>>
 	onLeafClick?: (leaf: TLeafData) => void
+	selectedLeafKey: string | null
 	nestingLevel: number
 }
 
@@ -188,6 +201,7 @@ const CollapsibleTreeNodeList = observer(function CollapsibleTreeNodeList<
 	HeaderComponent,
 	LeafComponent,
 	onLeafClick,
+	selectedLeafKey,
 	nestingLevel,
 }: CollapsibleTreeNodeListProps<TLeafData, TNodeMeta>): React.JSX.Element {
 	// Ids of every node at this level, so alt+clicking one header can expand/collapse the whole level
@@ -204,6 +218,7 @@ const CollapsibleTreeNodeList = observer(function CollapsibleTreeNodeList<
 					HeaderComponent={HeaderComponent}
 					LeafComponent={LeafComponent}
 					onLeafClick={onLeafClick}
+					selectedLeafKey={selectedLeafKey}
 					nestingLevel={nestingLevel}
 				/>
 			))}
@@ -219,6 +234,7 @@ interface CollapsibleTreeNodeSingleProps<TLeafData, TNodeMeta> {
 	HeaderComponent: React.ComponentType<CollapsibleTreeHeaderProps<TLeafData, TNodeMeta>>
 	LeafComponent: React.ComponentType<CollapsibleTreeLeafProps<TLeafData>>
 	onLeafClick?: (leaf: TLeafData) => void
+	selectedLeafKey: string | null
 	nestingLevel: number
 }
 
@@ -231,6 +247,7 @@ const CollapsibleTreeNodeSingle = observer(function CollapsibleTreeNodeSingle<
 	HeaderComponent,
 	LeafComponent,
 	onLeafClick,
+	selectedLeafKey,
 	nestingLevel,
 	siblingIds,
 }: CollapsibleTreeNodeSingleProps<TLeafData, TNodeMeta>): React.JSX.Element {
@@ -279,6 +296,7 @@ const CollapsibleTreeNodeSingle = observer(function CollapsibleTreeNodeSingle<
 						HeaderComponent={HeaderComponent}
 						LeafComponent={LeafComponent}
 						onLeafClick={onLeafClick}
+						selectedLeafKey={selectedLeafKey}
 						nestingLevel={nestingLevel + 1}
 					/>
 
@@ -289,6 +307,7 @@ const CollapsibleTreeNodeSingle = observer(function CollapsibleTreeNodeSingle<
 							nestingLevel={nestingLevel + 1}
 							LeafComponent={LeafComponent}
 							onLeafClick={onLeafClick}
+							selectedLeafKey={selectedLeafKey}
 						/>
 					))}
 				</>

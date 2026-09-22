@@ -6,6 +6,7 @@ import classnames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
 import { CreateExpressionVariableControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
+import { isLabelValid } from '@companion-app/shared/Label.js'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableCollection,
@@ -23,6 +24,7 @@ import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useComputed } from '~/Resources/util'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { AddVariableModal, type AddVariableModalRef } from '../AddVariableModal'
 import { VariablesNav } from '../VariablesNav.js'
 import { useExpressionVariablesCollectionsApi } from './ExpressionVariablesCollectionsApi'
 import {
@@ -35,28 +37,33 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 
 	const navigate = useNavigate({ from: '/variables/expression' })
 
+	const addModalRef = useRef<AddVariableModalRef>(null)
+	const doAddNew = useCallback(() => addModalRef.current?.show(), [])
+
 	const createMutation = useMutationExt(trpc.controls.expressionVariables.create.mutationOptions())
+	const validateNewName = useCallback(
+		(name: string) => {
+			if (!isLabelValid(name)) return 'Name must be alphanumeric and can contain underscores and dashes'
+			for (const variable of expressionVariablesList.expressionVariables.values()) {
+				if (variable.variableName === name) return 'A variable with this name already exists'
+			}
+			return undefined
+		},
+		[expressionVariablesList]
+	)
+	const createVariable = useCallback(
+		async (variableName: string) => {
+			const controlId = await createMutation.mutateAsync({ variableName })
 
-	const doAddNew = useCallback(
-		(_e: React.MouseEvent<HTMLButtonElement>) => {
-			createMutation
-				.mutateAsync()
-				.then(async (controlId) => {
-					console.log('created expression variable', controlId)
+			const parsedId = ParseControlId(controlId)
+			if (parsedId?.type !== 'expression-variable') return
 
-					const parsedId = ParseControlId(controlId)
-					if (parsedId?.type !== 'expression-variable') return
-
-					await navigate({
-						to: `/variables/expression/$controlId`,
-						params: {
-							controlId: parsedId.variableId,
-						},
-					})
-				})
-				.catch((e) => {
-					console.error('failed to create expression-variable', e)
-				})
+			await navigate({
+				to: `/variables/expression/$controlId`,
+				params: {
+					controlId: parsedId.variableId,
+				},
+			})
 		},
 		[createMutation, navigate]
 	)
@@ -120,6 +127,13 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 	return (
 		<div className="page-shell">
 			<GenericConfirmModal ref={confirmModalRef} />
+			<AddVariableModal
+				ref={addModalRef}
+				title="Add Expression Variable"
+				nameHelp="The variable will be available as $(expression:name). This can be changed later."
+				validateName={validateNewName}
+				create={createVariable}
+			/>
 
 			<PageHeader
 				icon={faSquareRootVariable}
@@ -155,7 +169,7 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 						</div>
 
 						{/* Expression Variables Table Container */}
-						<div className="flex-1 min-h-0 scrollable-content rounded-md border border-border/70 bg-surface">
+						<div className="flex-1 min-h-0 scrollable-content list-card">
 							<PanelCollapseHelperProvider
 								storageId="expression-variable-groups"
 								knownPanelIds={expressionVariablesList.allCollectionIds}

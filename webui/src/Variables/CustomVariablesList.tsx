@@ -1,28 +1,27 @@
-import { faAnglesDown, faAnglesUp, faDollarSign, faLayerGroup, faList } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faDollarSign, faLayerGroup, faList } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef, useState } from 'react'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 import type { CustomVariableDefinition } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { Button } from '~/Components/Button'
-import {
-	CollectionsNestingTable,
-	UNGROUPED_PANEL_ID,
-} from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
+import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import type {
 	CollectionsNestingTableCollection,
 	CollectionsNestingTableItem,
 } from '~/Components/CollectionsNestingTable/Types'
-import { Form, InputGroup } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
-import { TextInputFieldSimple } from '~/Components/TextInputField'
-import { PanelCollapseHelperProvider, usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
+import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { PageHeader } from '~/Layout/PageHeader'
+import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
+import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { AddVariableModal, type AddVariableModalRef } from './AddVariableModal'
 import { useCustomVariablesApi } from './CustomVariablesApi'
 import { useCustomVariablesCollectionsApi } from './CustomVariablesCollectionsApi'
 import { CustomVariableRow } from './CustomVariablesListRow'
@@ -36,16 +35,9 @@ type CustomVariableCollectionExt = CollectionsNestingTableCollection
 export const CustomVariablesListPage = observer(function CustomVariablesList() {
 	const { variablesStore: customVariables } = useContext(RootAppStoreContext)
 
-	const customVariableValues = useVariablesValuesForLabel('custom')
+	const navigate = useNavigate({ from: '/variables/custom' })
 
-	const allVariableNames = useComputed(
-		() => [
-			...Array.from(customVariables.customVariables.keys()),
-			...customVariables.allCustomVariableCollectionIds,
-			UNGROUPED_PANEL_ID,
-		],
-		[customVariables]
-	)
+	const customVariableValues = useVariablesValuesForLabel('custom')
 
 	const [filter, setFilter] = useState('')
 
@@ -82,32 +74,80 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 
 	const customVariablesApi = useCustomVariablesApi(confirmModalRef)
 
+	const matchRoute = useMatchRoute()
+	const routeMatch = matchRoute({ to: '/variables/custom/$name' })
+	const selectedVariableId = routeMatch ? routeMatch.name : null
+
+	const selectCustomVariable = useCallback(
+		(name: string | null) => {
+			if (name === null) {
+				void navigate({ to: '/variables/custom' })
+			} else {
+				void navigate({ to: '/variables/custom/$name', params: { name } })
+			}
+		},
+		[navigate]
+	)
+
+	const doCloseVariable = useCallback(() => {
+		void navigate({ to: '/variables/custom' })
+	}, [navigate])
+
+	const addModalRef = useRef<AddVariableModalRef>(null)
+	const doAddNew = useCallback(() => addModalRef.current?.show(), [])
+
+	const createMutation = useMutationExt(trpc.customVariables.create.mutationOptions())
+	const validateNewName = useCallback(
+		(name: string) => {
+			if (!isCustomVariableValid(name)) return 'Name must be alphanumeric and can contain underscores and dashes'
+			if (customVariables.customVariables.has(name)) return 'A variable with this name already exists'
+			return undefined
+		},
+		[customVariables]
+	)
+	const createVariable = useCallback(
+		async (name: string) => {
+			const res = await createMutation.mutateAsync({ name, defaultVal: '' })
+			if (res) return res
+			selectCustomVariable(name)
+			return null
+		},
+		[createMutation, selectCustomVariable]
+	)
+
 	return (
 		<div className="page-shell">
 			<GenericConfirmModal ref={confirmModalRef} />
+			<AddVariableModal
+				ref={addModalRef}
+				title="Add Custom Variable"
+				nameHelp="The variable will be available as $(custom:name). This cannot be changed once set."
+				validateName={validateNewName}
+				create={createVariable}
+			/>
 
-			<PanelCollapseHelperProvider storageId="custom_variables" knownPanelIds={allVariableNames}>
-				<PageHeader
-					icon={faDollarSign}
-					title="Custom Variables"
-					helpAction="/user-guide/config/variables#custom-variables"
-				/>
+			<PageHeader
+				icon={faDollarSign}
+				title="Custom Variables"
+				helpAction="/user-guide/config/variables#custom-variables"
+			/>
 
-				<div className="page-shell-body">
-					<VariablesNav activeTab="custom" />
+			<VariablesNav activeTab="custom" />
 
-					<div className="flex flex-col flex-1 min-h-0 overflow-hidden gap-2">
+			<SplitPanels.Root
+				showing={selectedVariableId ? 'secondary' : 'primary'}
+				resize={{ storageKey: 'custom-variables' }}
+			>
+				<SplitPanels.Primary>
+					<div className="flex flex-col h-full min-h-0 gap-2">
 						{/* Top Header Card: Toolbar & Search */}
 						<div className="bg-surface-muted/50 border border-border/70 p-3 rounded-lg flex flex-col gap-2.5 shrink-0">
 							<div className="flex items-center justify-between gap-2 flex-wrap">
-								<div className="flex items-center gap-2">
+								<div className="flex flex-wrap items-center gap-2">
+									<Button color="primary" onClick={doAddNew} size="sm">
+										<FontAwesomeIcon icon={faAdd} className="me-1.5" /> Add Custom Variable
+									</Button>
 									<CreateCollectionButton />
-									{(customVariables.customVariables.size > 0 || customVariables.customVariableCollections.size > 0) && (
-										<ExpandCollapseButtons />
-									)}
-								</div>
-								<div className="list-toolbar-panel">
-									<AddVariablePanel />
 								</div>
 							</div>
 
@@ -120,128 +160,47 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 						</div>
 
 						{/* Custom Variables Table Container */}
-						<div className="flex-1 min-h-0 scrollable-content rounded-md border border-border/70 bg-surface">
-							<CustomVariablesTableContextProvider
-								customVariablesApi={customVariablesApi}
-								customVariableValues={customVariableValues}
+						<div className="flex-1 min-h-0 scrollable-content list-card">
+							<PanelCollapseHelperProvider
+								storageId="custom-variable-groups"
+								knownPanelIds={customVariables.allCustomVariableCollectionIds}
+								defaultCollapsed
 							>
-								<div className="variables-table">
+								<CustomVariablesTableContextProvider
+									customVariablesApi={customVariablesApi}
+									customVariableValues={customVariableValues}
+									selectCustomVariable={selectCustomVariable}
+									selectedVariableId={selectedVariableId}
+								>
 									<CollectionsNestingTable<CustomVariableCollectionExt, CustomVariableDefinitionExt>
 										NoContent={CustomVariableListNoContent}
 										ItemRow={CustomVariableItemRow}
-										showCollapseButtons
 										itemName="custom variable"
 										dragId="custom-variable"
 										collectionsApi={collectionsApi}
 										collections={customVariables.rootCustomVariableCollections()}
 										items={allCustomVariables}
-										selectedItemId={null}
+										selectedItemId={selectedVariableId}
 									/>
-								</div>
-							</CustomVariablesTableContextProvider>
+								</CustomVariablesTableContextProvider>
+							</PanelCollapseHelperProvider>
 						</div>
 					</div>
-				</div>
-			</PanelCollapseHelperProvider>
+				</SplitPanels.Primary>
+
+				<SplitPanels.Secondary>
+					<div className="secondary-panel-simple">
+						{!!selectedVariableId && <CustomVariableEditPanelHeading doCloseVariable={doCloseVariable} />}
+						<Outlet />
+					</div>
+				</SplitPanels.Secondary>
+			</SplitPanels.Root>
 		</div>
 	)
 })
 
 function CustomVariableListNoContent() {
-	return <NonIdealState icon={faList} text="No custom variables are defined" />
-}
-
-const ExpandCollapseButtons = observer(function ExpandCollapseButtons() {
-	const { variablesStore: customVariables } = useContext(RootAppStoreContext)
-
-	const rootCustomVariables = Array.from(customVariables.customVariables.keys()) // TODO - filter
-	const rootPanels = [
-		...customVariables.rootCustomVariableCollections().map((c) => c.id),
-		...rootCustomVariables,
-		UNGROUPED_PANEL_ID,
-	]
-
-	const panelCollapseHelper = usePanelCollapseHelperContext()
-
-	return (
-		<>
-			{panelCollapseHelper.canExpandAll(null, rootPanels) && (
-				<Button
-					color="secondary"
-					size="sm"
-					onClick={() => panelCollapseHelper.setAllExpanded(null, rootPanels)}
-					title="Expand all"
-					className="flex items-center gap-1.5"
-				>
-					<FontAwesomeIcon icon={faAnglesDown} className="text-2xs" /> Expand All
-				</Button>
-			)}
-			{panelCollapseHelper.canCollapseAll(null, rootPanels) && (
-				<Button
-					color="secondary"
-					size="sm"
-					onClick={() => panelCollapseHelper.setAllCollapsed(null, rootPanels)}
-					title="Collapse all"
-					className="flex items-center gap-1.5"
-				>
-					<FontAwesomeIcon icon={faAnglesUp} className="text-2xs" /> Collapse All
-				</Button>
-			)}
-		</>
-	)
-})
-
-function AddVariablePanel() {
-	const { notifier } = useContext(RootAppStoreContext)
-	const panelCollapseHelper = usePanelCollapseHelperContext()
-
-	const [newName, setNewName] = useState('')
-
-	const createMutation = useMutationExt(trpc.customVariables.create.mutationOptions())
-
-	const doCreateNew = useCallback(
-		(e: React.FormEvent) => {
-			e?.preventDefault()
-
-			if (!isCustomVariableValid(newName)) return
-			createMutation
-				.mutateAsync({ name: newName, defaultVal: '' })
-				.then((res) => {
-					console.log('done with', res)
-					if (res) {
-						notifier.show(`Failed to create variable`, res, 5000)
-					}
-
-					// clear value
-					setNewName('')
-
-					// Make sure the panel is open and wont be forgotten on first render
-					setTimeout(() => panelCollapseHelper.setPanelCollapsed(newName, false), 10)
-				})
-				.catch((e) => {
-					console.error('Failed to create variable')
-					notifier.show(`Failed to create variable`, e?.toString?.() ?? e ?? 'Failed', 5000)
-				})
-		},
-		[createMutation, notifier, panelCollapseHelper, newName]
-	)
-
-	return (
-		<Form onSubmit={doCreateNew}>
-			<InputGroup>
-				<TextInputFieldSimple
-					id={undefined}
-					setValue={setNewName}
-					value={newName}
-					placeholder="variableName"
-					immediateValue
-				/>
-				<Button color="primary" onClick={doCreateNew} disabled={!isCustomVariableValid(newName)}>
-					Add
-				</Button>
-			</InputGroup>
-		</Form>
-	)
+	return <NonIdealState icon={faList} text="There are currently no custom variables." />
 }
 
 function CreateCollectionButton() {
@@ -257,5 +216,26 @@ function CreateCollectionButton() {
 		<Button color="secondary" size="sm" onClick={doCreateCollection}>
 			<FontAwesomeIcon icon={faLayerGroup} className="me-1.5" /> Create Collection
 		</Button>
+	)
+}
+
+interface CustomVariableEditPanelHeadingProps {
+	doCloseVariable: () => void
+}
+
+function CustomVariableEditPanelHeading({ doCloseVariable }: CustomVariableEditPanelHeadingProps) {
+	return (
+		<div className="flex items-center justify-between gap-3 p-3 bg-surface-muted/40 border-b border-border/70 shrink-0">
+			<div className="flex items-center gap-2">
+				<span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-surface-muted text-muted text-xs">
+					<FontAwesomeIcon icon={faDollarSign} />
+				</span>
+				<h3 className="text-sm font-bold text-body mb-0">Edit Custom Variable</h3>
+			</div>
+			<div className="flex items-center gap-1.5">
+				<ContextHelpButton action="/user-guide/config/variables#custom-variables" />
+				<CloseButton closeFn={doCloseVariable} />
+			</div>
+		</div>
 	)
 }

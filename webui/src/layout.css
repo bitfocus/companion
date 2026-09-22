@@ -141,7 +141,6 @@ form.row > * {
 .secondary-panel {
 	display: grid;
 	grid-template-rows: auto 1fr;
-	row-gap: 5px;
 
 	&.fill-height {
 		height: 100%;
@@ -380,6 +379,13 @@ hr.slim {
 	flex: 1;
 	min-height: 0;
 	overflow-y: auto;
+}
+
+/* The bordered card a page's main list sits in, under its toolbar. */
+.list-card {
+	border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+	border-radius: 0.375rem;
+	background: var(--color-surface);
 }
 
 .page-header {

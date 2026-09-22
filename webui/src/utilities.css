@@ -24,17 +24,6 @@
 	min-width: 200px;
 }
 
-.list-toolbar-panel {
-	width: 100%;
-}
-
-@media (width >= 40rem) {
-	.list-toolbar-panel {
-		width: auto;
-		min-width: 280px;
-	}
-}
-
 .table-cell-version {
 	max-width: 100px;
 }

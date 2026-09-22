@@ -104,7 +104,7 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 						<AddEmulatorModal ref={addEmulatorModalRef} />
 
 						{/* Surfaces Table Container */}
-						<div className="flex-1 min-h-0 scrollable-content rounded-md border border-border/70 bg-surface">
+						<div className="flex-1 min-h-0 scrollable-content list-card">
 							<KnownSurfacesTable selectedItemId={selectedSurfaceId} selectItem={selectKnownSurface} />
 						</div>
 					</div>

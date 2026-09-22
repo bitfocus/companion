@@ -152,7 +152,7 @@ export const TriggersPage = observer(function Triggers() {
 						</div>
 
 						{/* Triggers Table Container */}
-						<div className="flex-1 min-h-0 scrollable-content rounded-md border border-border/70 bg-surface">
+						<div className="flex-1 min-h-0 scrollable-content list-card">
 							<PanelCollapseHelperProvider
 								storageId="trigger-groups"
 								knownPanelIds={triggersList.allCollectionIds}

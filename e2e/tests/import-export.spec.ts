@@ -4,7 +4,7 @@ import path from 'node:path'
 import { expect, gotoApp, test, type Page } from '../support/fixtures.js'
 
 function variableRow(page: Page, name: string) {
-	return page.locator('.editor-grid').filter({ hasText: `$(custom:${name})` })
+	return page.getByRole('button', { name: `$(custom:${name})` })
 }
 
 // An import reloads the page and touches global state, so keep this file serial
@@ -13,8 +13,9 @@ test.describe.configure({ mode: 'serial' })
 test('a config export can be imported back through the ui', async ({ page }) => {
 	// Create a custom variable worth exporting
 	await gotoApp(page, '/variables/custom')
-	await page.getByPlaceholder('variableName').fill('exported_var')
-	await page.getByRole('button', { name: 'Add' }).click()
+	await page.getByRole('button', { name: 'Add Custom Variable' }).click()
+	await page.getByRole('dialog').getByPlaceholder('variableName').fill('exported_var')
+	await page.getByRole('dialog').getByRole('button', { name: 'Add', exact: true }).click()
 	await expect(variableRow(page, 'exported_var')).toBeVisible()
 
 	// Export the config as json through the export wizard
@@ -39,7 +40,7 @@ test('a config export can be imported back through the ui', async ({ page }) => 
 
 	// Delete the variable, then restore it by importing the export
 	await gotoApp(page, '/variables/custom')
-	await variableRow(page, 'exported_var').getByTitle('Delete custom variable').click()
+	await variableRow(page, 'exported_var').getByTitle('Delete').click()
 	await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click()
 	await expect(variableRow(page, 'exported_var')).toHaveCount(0)
 

@@ -1,20 +1,12 @@
-import { faCompressArrowsAlt, faExpandArrowsAlt, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faTrash } from '@fortawesome/free-solid-svg-icons'
 import '../Components/VariablesTable.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useId } from 'react'
-import { Button } from '~/Components/Button.js'
-import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
+import { useCallback } from 'react'
+import { Button, ButtonGroup } from '~/Components/Button.js'
 import { CopyButton } from '~/Components/CopyButton'
-import { Form, FormLabel } from '~/Components/Form.js'
-import { Grid } from '~/Components/Grid'
-import { InlineHelpIcon } from '~/Components/InlineHelp'
-import { TextInputFieldSimple } from '~/Components/TextInputField.js'
-import VariableInputGroup from '~/Components/VariableInputGroup.js'
 import { VariableValueDisplay } from '~/Components/VariableValueDisplay.js'
-import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
-import { PreventDefaultHandler } from '~/Resources/util.js'
 import type { CustomVariableDefinitionExt } from './CustomVariablesList'
 import { useCustomVariablesTableContext } from './CustomVariablesTableContext'
 
@@ -23,129 +15,76 @@ interface CustomVariableRowProps {
 }
 
 export const CustomVariableRow = observer(function CustomVariableRow({ info }: CustomVariableRowProps) {
-	const fullname = `custom:${info.id}`
+	const fullname = `$(custom:${info.id})`
 
-	const { customVariablesApi, customVariableValues } = useCustomVariablesTableContext()
-	const panelCollapseHelper = usePanelCollapseHelperContext()
+	const tableContext = useCustomVariablesTableContext()
+	const isSelected = tableContext.selectedVariableId === info.id
 
-	const doCollapse = useCallback(
-		() => panelCollapseHelper.setPanelCollapsed(info.id, true),
-		[panelCollapseHelper, info.id]
+	const value = tableContext.customVariableValues.get(info.id)
+
+	const doEdit = useCallback(
+		(e: React.MouseEvent) => {
+			// The row's own buttons (copy, delete) shouldn't also open the editor
+			if ((e.target as HTMLElement).closest('button, a')) return
+			tableContext.selectCustomVariable(info.id)
+		},
+		[tableContext, info.id]
 	)
-	const doExpand = useCallback(
-		() => panelCollapseHelper.setPanelCollapsed(info.id, false),
-		[panelCollapseHelper, info.id]
+	const doEditKey = useCallback(
+		(e: React.KeyboardEvent) => {
+			if (e.target !== e.currentTarget) return
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault()
+				tableContext.selectCustomVariable(info.id)
+			}
+		},
+		[tableContext, info.id]
 	)
-	// Don't consider the collection as the parent, as the contents doesn't want to follow the collapse state of the collection
-	const isCollapsed = panelCollapseHelper.isPanelCollapsed(null, info.id)
 
-	const value = customVariableValues.get(info.id)
-
-	const persistFieldId = useId()
-	const descriptionFieldId = useId()
-	const currentValueFieldId = useId()
-	const startupValueFieldId = useId()
+	const doDelete = useCallback(
+		() => tableContext.customVariablesApi.doDelete(info.id),
+		[tableContext.customVariablesApi, info.id]
+	)
 
 	return (
-		<div className="editor-grid custom-variable-editor">
-			<div className="cell-header">
-				<div className={classNames('cell-header-item', !isCollapsed && 'span-2')}>
-					<span className="variable-style">$({fullname})</span>
-					<CopyButton size="sm" title="Copy variable name" color="primary" variant="ghost" text={`$(${fullname})`} />
-				</div>
-				{isCollapsed && (
-					<div className="cell-header-item grow">
-						<VariableValueDisplay value={value} />
-					</div>
-				)}
-				<div className="cell-header-item">
-					<div className="flex flex-wrap items-center justify-end gap-1.5">
-						{isCollapsed ? (
-							<Button onClick={doExpand} size="sm" variant="outline" title="Expand variable view">
-								<FontAwesomeIcon icon={faExpandArrowsAlt} className="me-1.5" />
-								<span>Edit</span>
-							</Button>
-						) : (
-							<Button onClick={doCollapse} size="sm" variant="outline" title="Collapse variable view">
-								<FontAwesomeIcon icon={faCompressArrowsAlt} className="me-1.5" />
-								<span>Collapse</span>
-							</Button>
-						)}
-
-						<Button
-							onClick={() => customVariablesApi.doDelete(info.id)}
-							size="sm"
-							color="danger"
-							variant="outline"
-							title="Delete custom variable"
-						>
-							<FontAwesomeIcon icon={faTrash} className="me-1.5" />
-							<span>Delete</span>
-						</Button>
-					</div>
-				</div>
-			</div>
-			{isCollapsed ? (
-				<>
-					<div className="variable-description">{info.description}</div>
-				</>
-			) : (
-				<>
-					<Form onSubmit={PreventDefaultHandler} className="cell-fields">
-						<div className="flex flex-wrap items-center gap-2">
-							<FormLabel htmlFor={persistFieldId}>
-								Persist value
-								<InlineHelpIcon className="ms-1">
-									If enabled, variable value will be saved and restored when Companion restarts.
-								</InlineHelpIcon>
-							</FormLabel>
-							<div className="inline-flex items-center mb-2">
-								<CheckboxInputField
-									id={persistFieldId}
-									value={info.persistCurrentValue}
-									setValue={(val) => customVariablesApi.setPersistenceValue(info.id, val)}
-								/>
-							</div>
-						</div>
-						<Grid.Row>
-							<FormLabel htmlFor={descriptionFieldId} sm={3} className="align-right">
-								Description:
-							</FormLabel>
-							<Grid.Col sm={9}>
-								<TextInputFieldSimple
-									id={descriptionFieldId}
-									value={info.description}
-									setValue={(description) => customVariablesApi.setDescription(info.id, description)}
-									className="mb-2"
-								/>
-							</Grid.Col>
-
-							<FormLabel htmlFor={currentValueFieldId} sm={3} className="align-right">
-								Current value:
-							</FormLabel>
-							<Grid.Col sm={9}>
-								<VariableInputGroup
-									id={currentValueFieldId}
-									value={value}
-									setValue={(val) => customVariablesApi.setCurrentValue(info.id, val)}
-								/>
-							</Grid.Col>
-
-							<FormLabel htmlFor={startupValueFieldId} sm={3} className="align-right">
-								Startup value:
-							</FormLabel>
-							<Grid.Col sm={9}>
-								<VariableInputGroup
-									id={startupValueFieldId}
-									disabled={!!info.persistCurrentValue}
-									value={info.defaultValue}
-									setValue={(val) => customVariablesApi.setStartupValue(info.id, val)}
-								/>
-							</Grid.Col>
-						</Grid.Row>
-					</Form>
-				</>
+		<div
+			role="button"
+			tabIndex={0}
+			onClick={doEdit}
+			onKeyDown={doEditKey}
+			className={classNames(
+				'flex flex-row items-center gap-3 cursor-pointer py-2 px-3 rounded-lg transition-colors hover:bg-surface-muted/50',
+				isSelected
+					? 'bg-primary/10 font-semibold text-primary border-l-4 border-l-primary rounded-l-none'
+					: 'bg-transparent'
 			)}
+		>
+			<div className="flex flex-col grow min-w-0">
+				<span className="variable-style flex items-center gap-1.5 truncate">
+					<span>{fullname}</span>
+					<CopyButton size="sm" title="Copy variable name" color="primary" variant="ghost" text={fullname} />
+				</span>
+
+				{info.description ? <span className="text-xs text-muted truncate">{info.description}</span> : null}
+			</div>
+
+			<div className="shrink min-w-0 basis-1/3 text-xs">
+				<VariableValueDisplay value={value} compact />
+			</div>
+
+			<div className="shrink-0 flex items-center gap-1">
+				<ButtonGroup>
+					<Button
+						color="secondary"
+						size="sm"
+						onClick={doDelete}
+						title="Delete"
+						className="text-rose-500 hover:bg-rose-500/10"
+					>
+						<FontAwesomeIcon icon={faTrash} />
+					</Button>
+				</ButtonGroup>
+			</div>
 		</div>
 	)
 })

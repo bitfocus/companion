@@ -181,6 +181,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 									ungroupedNodes={filteredNodes.ungroupedNodes}
 									ungroupedLabel="Ungrouped Connections"
 									collapseHelper={filter ? null : collapseHelper}
+									selectedLeafKey={null}
 									HeaderComponent={AddEntityGroupHeader}
 									LeafComponent={AddEntityLeaf}
 									onLeafClick={(leaf) => addAndTrackRecentUsage(leaf.fullId)}

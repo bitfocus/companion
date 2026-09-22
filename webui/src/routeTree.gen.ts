@@ -54,8 +54,8 @@ import { Route as AppSurfacesOutboundRouteImport } from './routes/_app/surfaces/
 import { Route as AppSurfacesRemoteRouteImport } from './routes/_app/surfaces_/remote.tsx'
 import { Route as AppTriggersIndexRouteImport } from './routes/_app/triggers/index.tsx'
 import { Route as AppTriggersControlIdRouteImport } from './routes/_app/triggers/$controlId.tsx'
-import { Route as AppVariablesIndexRouteImport } from './routes/_app/variables/index.tsx'
 import { Route as AppVariablesOldLabelRouteImport } from './routes/_app/variables/$oldLabel.tsx'
+import { Route as AppVariablesConnectionsRouteImport } from './routes/_app/variables/_connections.tsx'
 import { Route as AppVariablesCustomRouteImport } from './routes/_app/variables/custom.tsx'
 import { Route as AppVariablesExpressionRouteImport } from './routes/_app/variables/expression.tsx'
 import { Route as StandaloneConnectionDebugDotconnectionIdRouteImport } from './routes/_standalone/connection-debug.$connectionId.tsx'
@@ -70,10 +70,13 @@ import { Route as AppSurfacesIntegrationsAddRouteImport } from './routes/_app/su
 import { Route as AppSurfacesRemoteIndexRouteImport } from './routes/_app/surfaces_/remote/index.tsx'
 import { Route as AppSurfacesRemoteConnectionIdRouteImport } from './routes/_app/surfaces_/remote/$connectionId.tsx'
 import { Route as AppSurfacesRemoteDiscoverRouteImport } from './routes/_app/surfaces_/remote/discover.tsx'
-import { Route as AppVariablesConnectionDotlabelRouteImport } from './routes/_app/variables/connection.$label.tsx'
+import { Route as AppVariablesConnectionsIndexRouteImport } from './routes/_app/variables/_connections/index.tsx'
+import { Route as AppVariablesCustomIndexRouteImport } from './routes/_app/variables/custom/index.tsx'
+import { Route as AppVariablesCustomNameRouteImport } from './routes/_app/variables/custom/$name.tsx'
 import { Route as AppVariablesExpressionIndexRouteImport } from './routes/_app/variables/expression/index.tsx'
 import { Route as AppVariablesExpressionControlIdRouteImport } from './routes/_app/variables/expression/$controlId.tsx'
 import { Route as StandaloneSurfacesDotdebugDotinstanceIdRouteImport } from './routes/_standalone/surfaces.debug.$instanceId.tsx'
+import { Route as AppVariablesConnectionsConnectionDotlabelRouteImport } from './routes/_app/variables/_connections/connection.$label.tsx'
 
 const StandaloneTabletDotlazyRouteImport = createFileRoute(
   '/_standalone/tablet',
@@ -305,14 +308,14 @@ const AppTriggersControlIdRoute = AppTriggersControlIdRouteImport.update({
   path: '/$controlId',
   getParentRoute: () => AppTriggersRoute,
 } as any)
-const AppVariablesIndexRoute = AppVariablesIndexRouteImport.update({
-  id: '/variables/',
-  path: '/variables/',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppVariablesOldLabelRoute = AppVariablesOldLabelRouteImport.update({
   id: '/variables/$oldLabel',
   path: '/variables/$oldLabel',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppVariablesConnectionsRoute = AppVariablesConnectionsRouteImport.update({
+  id: '/variables/_connections',
+  path: '/variables',
   getParentRoute: () => AppRoute,
 } as any)
 const AppVariablesCustomRoute = AppVariablesCustomRouteImport.update({
@@ -404,12 +407,22 @@ const AppSurfacesRemoteDiscoverRoute =
     path: '/discover',
     getParentRoute: () => AppSurfacesRemoteRoute,
   } as any)
-const AppVariablesConnectionDotlabelRoute =
-  AppVariablesConnectionDotlabelRouteImport.update({
-    id: '/variables/connection/$label',
-    path: '/variables/connection/$label',
-    getParentRoute: () => AppRoute,
+const AppVariablesConnectionsIndexRoute =
+  AppVariablesConnectionsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AppVariablesConnectionsRoute,
   } as any)
+const AppVariablesCustomIndexRoute = AppVariablesCustomIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppVariablesCustomRoute,
+} as any)
+const AppVariablesCustomNameRoute = AppVariablesCustomNameRouteImport.update({
+  id: '/$name',
+  path: '/$name',
+  getParentRoute: () => AppVariablesCustomRoute,
+} as any)
 const AppVariablesExpressionIndexRoute =
   AppVariablesExpressionIndexRouteImport.update({
     id: '/',
@@ -427,6 +440,12 @@ const StandaloneSurfacesDotdebugDotinstanceIdRoute =
     id: '/_standalone/surfaces/debug/$instanceId',
     path: '/surfaces/debug/$instanceId',
     getParentRoute: () => rootRouteImport,
+  } as any)
+const AppVariablesConnectionsConnectionDotlabelRoute =
+  AppVariablesConnectionsConnectionDotlabelRouteImport.update({
+    id: '/connection/$label',
+    path: '/connection/$label',
+    getParentRoute: () => AppVariablesConnectionsRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -468,7 +487,8 @@ export interface FileRoutesByFullPath {
   '/surfaces/remote': typeof AppSurfacesRemoteRouteWithChildren
   '/triggers/$controlId': typeof AppTriggersControlIdRoute
   '/variables/$oldLabel': typeof AppVariablesOldLabelRoute
-  '/variables/custom': typeof AppVariablesCustomRoute
+  '/variables': typeof AppVariablesConnectionsRouteWithChildren
+  '/variables/custom': typeof AppVariablesCustomRouteWithChildren
   '/variables/expression': typeof AppVariablesExpressionRouteWithChildren
   '/connection-debug/$connectionId': typeof StandaloneConnectionDebugDotconnectionIdRoute
   '/emulator/$emulatorId': typeof StandaloneEmulatorEmulatorIdDotlazyRoute
@@ -478,7 +498,6 @@ export interface FileRoutesByFullPath {
   '/settings/': typeof AppSettingsIndexRoute
   '/surfaces/': typeof AppSurfacesIndexRoute
   '/triggers/': typeof AppTriggersIndexRoute
-  '/variables/': typeof AppVariablesIndexRoute
   '/emulator/': typeof StandaloneEmulatorIndexRoute
   '/modules/$moduleType/$moduleId': typeof AppModulesModuleTypeDotmoduleIdRoute
   '/settings/backups/$ruleId': typeof AppSettingsBackupsRuleIdRoute
@@ -487,13 +506,16 @@ export interface FileRoutesByFullPath {
   '/surfaces/integrations/add': typeof AppSurfacesIntegrationsAddRoute
   '/surfaces/remote/$connectionId': typeof AppSurfacesRemoteConnectionIdRoute
   '/surfaces/remote/discover': typeof AppSurfacesRemoteDiscoverRoute
-  '/variables/connection/$label': typeof AppVariablesConnectionDotlabelRoute
+  '/variables/custom/$name': typeof AppVariablesCustomNameRoute
   '/variables/expression/$controlId': typeof AppVariablesExpressionControlIdRoute
   '/surfaces/debug/$instanceId': typeof StandaloneSurfacesDotdebugDotinstanceIdRoute
   '/settings/backups/': typeof AppSettingsBackupsIndexRoute
   '/surfaces/integrations/': typeof AppSurfacesIntegrationsIndexRoute
   '/surfaces/remote/': typeof AppSurfacesRemoteIndexRoute
+  '/variables/': typeof AppVariablesConnectionsIndexRoute
+  '/variables/custom/': typeof AppVariablesCustomIndexRoute
   '/variables/expression/': typeof AppVariablesExpressionIndexRoute
+  '/variables/connection/$label': typeof AppVariablesConnectionsConnectionDotlabelRoute
 }
 export interface FileRoutesByTo {
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
@@ -526,7 +548,6 @@ export interface FileRoutesByTo {
   '/surfaces/outbound': typeof AppSurfacesOutboundRoute
   '/triggers/$controlId': typeof AppTriggersControlIdRoute
   '/variables/$oldLabel': typeof AppVariablesOldLabelRoute
-  '/variables/custom': typeof AppVariablesCustomRoute
   '/connection-debug/$connectionId': typeof StandaloneConnectionDebugDotconnectionIdRoute
   '/emulator/$emulatorId': typeof StandaloneEmulatorEmulatorIdDotlazyRoute
   '/connections': typeof AppConnectionsIndexRoute
@@ -535,7 +556,6 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsIndexRoute
   '/surfaces': typeof AppSurfacesIndexRoute
   '/triggers': typeof AppTriggersIndexRoute
-  '/variables': typeof AppVariablesIndexRoute
   '/emulator': typeof StandaloneEmulatorIndexRoute
   '/modules/$moduleType/$moduleId': typeof AppModulesModuleTypeDotmoduleIdRoute
   '/settings/backups/$ruleId': typeof AppSettingsBackupsRuleIdRoute
@@ -544,13 +564,16 @@ export interface FileRoutesByTo {
   '/surfaces/integrations/add': typeof AppSurfacesIntegrationsAddRoute
   '/surfaces/remote/$connectionId': typeof AppSurfacesRemoteConnectionIdRoute
   '/surfaces/remote/discover': typeof AppSurfacesRemoteDiscoverRoute
-  '/variables/connection/$label': typeof AppVariablesConnectionDotlabelRoute
+  '/variables/custom/$name': typeof AppVariablesCustomNameRoute
   '/variables/expression/$controlId': typeof AppVariablesExpressionControlIdRoute
   '/surfaces/debug/$instanceId': typeof StandaloneSurfacesDotdebugDotinstanceIdRoute
   '/settings/backups': typeof AppSettingsBackupsIndexRoute
   '/surfaces/integrations': typeof AppSurfacesIntegrationsIndexRoute
   '/surfaces/remote': typeof AppSurfacesRemoteIndexRoute
+  '/variables': typeof AppVariablesConnectionsIndexRoute
+  '/variables/custom': typeof AppVariablesCustomIndexRoute
   '/variables/expression': typeof AppVariablesExpressionIndexRoute
+  '/variables/connection/$label': typeof AppVariablesConnectionsConnectionDotlabelRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -593,7 +616,8 @@ export interface FileRoutesById {
   '/_app/surfaces_/remote': typeof AppSurfacesRemoteRouteWithChildren
   '/_app/triggers/$controlId': typeof AppTriggersControlIdRoute
   '/_app/variables/$oldLabel': typeof AppVariablesOldLabelRoute
-  '/_app/variables/custom': typeof AppVariablesCustomRoute
+  '/_app/variables/_connections': typeof AppVariablesConnectionsRouteWithChildren
+  '/_app/variables/custom': typeof AppVariablesCustomRouteWithChildren
   '/_app/variables/expression': typeof AppVariablesExpressionRouteWithChildren
   '/_standalone/connection-debug/$connectionId': typeof StandaloneConnectionDebugDotconnectionIdRoute
   '/_standalone/emulator/$emulatorId': typeof StandaloneEmulatorEmulatorIdDotlazyRoute
@@ -603,7 +627,6 @@ export interface FileRoutesById {
   '/_app/settings/': typeof AppSettingsIndexRoute
   '/_app/surfaces/': typeof AppSurfacesIndexRoute
   '/_app/triggers/': typeof AppTriggersIndexRoute
-  '/_app/variables/': typeof AppVariablesIndexRoute
   '/_standalone/emulator/': typeof StandaloneEmulatorIndexRoute
   '/_app/modules/$moduleType/$moduleId': typeof AppModulesModuleTypeDotmoduleIdRoute
   '/_app/settings/backups/$ruleId': typeof AppSettingsBackupsRuleIdRoute
@@ -612,13 +635,16 @@ export interface FileRoutesById {
   '/_app/surfaces/integrations/add': typeof AppSurfacesIntegrationsAddRoute
   '/_app/surfaces_/remote/$connectionId': typeof AppSurfacesRemoteConnectionIdRoute
   '/_app/surfaces_/remote/discover': typeof AppSurfacesRemoteDiscoverRoute
-  '/_app/variables/connection/$label': typeof AppVariablesConnectionDotlabelRoute
+  '/_app/variables/custom/$name': typeof AppVariablesCustomNameRoute
   '/_app/variables/expression/$controlId': typeof AppVariablesExpressionControlIdRoute
   '/_standalone/surfaces/debug/$instanceId': typeof StandaloneSurfacesDotdebugDotinstanceIdRoute
   '/_app/settings/backups/': typeof AppSettingsBackupsIndexRoute
   '/_app/surfaces/integrations/': typeof AppSurfacesIntegrationsIndexRoute
   '/_app/surfaces_/remote/': typeof AppSurfacesRemoteIndexRoute
+  '/_app/variables/_connections/': typeof AppVariablesConnectionsIndexRoute
+  '/_app/variables/custom/': typeof AppVariablesCustomIndexRoute
   '/_app/variables/expression/': typeof AppVariablesExpressionIndexRoute
+  '/_app/variables/_connections/connection/$label': typeof AppVariablesConnectionsConnectionDotlabelRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -661,6 +687,7 @@ export interface FileRouteTypes {
     | '/surfaces/remote'
     | '/triggers/$controlId'
     | '/variables/$oldLabel'
+    | '/variables'
     | '/variables/custom'
     | '/variables/expression'
     | '/connection-debug/$connectionId'
@@ -671,7 +698,6 @@ export interface FileRouteTypes {
     | '/settings/'
     | '/surfaces/'
     | '/triggers/'
-    | '/variables/'
     | '/emulator/'
     | '/modules/$moduleType/$moduleId'
     | '/settings/backups/$ruleId'
@@ -680,13 +706,16 @@ export interface FileRouteTypes {
     | '/surfaces/integrations/add'
     | '/surfaces/remote/$connectionId'
     | '/surfaces/remote/discover'
-    | '/variables/connection/$label'
+    | '/variables/custom/$name'
     | '/variables/expression/$controlId'
     | '/surfaces/debug/$instanceId'
     | '/settings/backups/'
     | '/surfaces/integrations/'
     | '/surfaces/remote/'
+    | '/variables/'
+    | '/variables/custom/'
     | '/variables/expression/'
+    | '/variables/connection/$label'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/emulator.html'
@@ -719,7 +748,6 @@ export interface FileRouteTypes {
     | '/surfaces/outbound'
     | '/triggers/$controlId'
     | '/variables/$oldLabel'
-    | '/variables/custom'
     | '/connection-debug/$connectionId'
     | '/emulator/$emulatorId'
     | '/connections'
@@ -728,7 +756,6 @@ export interface FileRouteTypes {
     | '/settings'
     | '/surfaces'
     | '/triggers'
-    | '/variables'
     | '/emulator'
     | '/modules/$moduleType/$moduleId'
     | '/settings/backups/$ruleId'
@@ -737,13 +764,16 @@ export interface FileRouteTypes {
     | '/surfaces/integrations/add'
     | '/surfaces/remote/$connectionId'
     | '/surfaces/remote/discover'
-    | '/variables/connection/$label'
+    | '/variables/custom/$name'
     | '/variables/expression/$controlId'
     | '/surfaces/debug/$instanceId'
     | '/settings/backups'
     | '/surfaces/integrations'
     | '/surfaces/remote'
+    | '/variables'
+    | '/variables/custom'
     | '/variables/expression'
+    | '/variables/connection/$label'
   id:
     | '__root__'
     | '/_app'
@@ -785,6 +815,7 @@ export interface FileRouteTypes {
     | '/_app/surfaces_/remote'
     | '/_app/triggers/$controlId'
     | '/_app/variables/$oldLabel'
+    | '/_app/variables/_connections'
     | '/_app/variables/custom'
     | '/_app/variables/expression'
     | '/_standalone/connection-debug/$connectionId'
@@ -795,7 +826,6 @@ export interface FileRouteTypes {
     | '/_app/settings/'
     | '/_app/surfaces/'
     | '/_app/triggers/'
-    | '/_app/variables/'
     | '/_standalone/emulator/'
     | '/_app/modules/$moduleType/$moduleId'
     | '/_app/settings/backups/$ruleId'
@@ -804,13 +834,16 @@ export interface FileRouteTypes {
     | '/_app/surfaces/integrations/add'
     | '/_app/surfaces_/remote/$connectionId'
     | '/_app/surfaces_/remote/discover'
-    | '/_app/variables/connection/$label'
+    | '/_app/variables/custom/$name'
     | '/_app/variables/expression/$controlId'
     | '/_standalone/surfaces/debug/$instanceId'
     | '/_app/settings/backups/'
     | '/_app/surfaces/integrations/'
     | '/_app/surfaces_/remote/'
+    | '/_app/variables/_connections/'
+    | '/_app/variables/custom/'
     | '/_app/variables/expression/'
+    | '/_app/variables/_connections/connection/$label'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1140,18 +1173,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTriggersControlIdRouteImport
       parentRoute: typeof AppTriggersRoute
     }
-    '/_app/variables/': {
-      id: '/_app/variables/'
-      path: '/variables'
-      fullPath: '/variables/'
-      preLoaderRoute: typeof AppVariablesIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/variables/$oldLabel': {
       id: '/_app/variables/$oldLabel'
       path: '/variables/$oldLabel'
       fullPath: '/variables/$oldLabel'
       preLoaderRoute: typeof AppVariablesOldLabelRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/variables/_connections': {
+      id: '/_app/variables/_connections'
+      path: '/variables'
+      fullPath: '/variables'
+      preLoaderRoute: typeof AppVariablesConnectionsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/variables/custom': {
@@ -1259,12 +1292,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSurfacesRemoteDiscoverRouteImport
       parentRoute: typeof AppSurfacesRemoteRoute
     }
-    '/_app/variables/connection/$label': {
-      id: '/_app/variables/connection/$label'
-      path: '/variables/connection/$label'
-      fullPath: '/variables/connection/$label'
-      preLoaderRoute: typeof AppVariablesConnectionDotlabelRouteImport
-      parentRoute: typeof AppRoute
+    '/_app/variables/_connections/': {
+      id: '/_app/variables/_connections/'
+      path: '/'
+      fullPath: '/variables/'
+      preLoaderRoute: typeof AppVariablesConnectionsIndexRouteImport
+      parentRoute: typeof AppVariablesConnectionsRoute
+    }
+    '/_app/variables/custom/': {
+      id: '/_app/variables/custom/'
+      path: '/'
+      fullPath: '/variables/custom/'
+      preLoaderRoute: typeof AppVariablesCustomIndexRouteImport
+      parentRoute: typeof AppVariablesCustomRoute
+    }
+    '/_app/variables/custom/$name': {
+      id: '/_app/variables/custom/$name'
+      path: '/$name'
+      fullPath: '/variables/custom/$name'
+      preLoaderRoute: typeof AppVariablesCustomNameRouteImport
+      parentRoute: typeof AppVariablesCustomRoute
     }
     '/_app/variables/expression/': {
       id: '/_app/variables/expression/'
@@ -1286,6 +1333,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/surfaces/debug/$instanceId'
       preLoaderRoute: typeof StandaloneSurfacesDotdebugDotinstanceIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/variables/_connections/connection/$label': {
+      id: '/_app/variables/_connections/connection/$label'
+      path: '/connection/$label'
+      fullPath: '/variables/connection/$label'
+      preLoaderRoute: typeof AppVariablesConnectionsConnectionDotlabelRouteImport
+      parentRoute: typeof AppVariablesConnectionsRoute
     }
   }
 }
@@ -1428,6 +1482,36 @@ const AppSurfacesRemoteRouteChildren: AppSurfacesRemoteRouteChildren = {
 const AppSurfacesRemoteRouteWithChildren =
   AppSurfacesRemoteRoute._addFileChildren(AppSurfacesRemoteRouteChildren)
 
+interface AppVariablesConnectionsRouteChildren {
+  AppVariablesConnectionsIndexRoute: typeof AppVariablesConnectionsIndexRoute
+  AppVariablesConnectionsConnectionDotlabelRoute: typeof AppVariablesConnectionsConnectionDotlabelRoute
+}
+
+const AppVariablesConnectionsRouteChildren: AppVariablesConnectionsRouteChildren =
+  {
+    AppVariablesConnectionsIndexRoute: AppVariablesConnectionsIndexRoute,
+    AppVariablesConnectionsConnectionDotlabelRoute:
+      AppVariablesConnectionsConnectionDotlabelRoute,
+  }
+
+const AppVariablesConnectionsRouteWithChildren =
+  AppVariablesConnectionsRoute._addFileChildren(
+    AppVariablesConnectionsRouteChildren,
+  )
+
+interface AppVariablesCustomRouteChildren {
+  AppVariablesCustomNameRoute: typeof AppVariablesCustomNameRoute
+  AppVariablesCustomIndexRoute: typeof AppVariablesCustomIndexRoute
+}
+
+const AppVariablesCustomRouteChildren: AppVariablesCustomRouteChildren = {
+  AppVariablesCustomNameRoute: AppVariablesCustomNameRoute,
+  AppVariablesCustomIndexRoute: AppVariablesCustomIndexRoute,
+}
+
+const AppVariablesCustomRouteWithChildren =
+  AppVariablesCustomRoute._addFileChildren(AppVariablesCustomRouteChildren)
+
 interface AppVariablesExpressionRouteChildren {
   AppVariablesExpressionControlIdRoute: typeof AppVariablesExpressionControlIdRoute
   AppVariablesExpressionIndexRoute: typeof AppVariablesExpressionIndexRoute
@@ -1463,11 +1547,10 @@ interface AppRouteChildren {
   AppSettingsProtocolsRoute: typeof AppSettingsProtocolsRoute
   AppSurfacesRemoteRoute: typeof AppSurfacesRemoteRouteWithChildren
   AppVariablesOldLabelRoute: typeof AppVariablesOldLabelRoute
-  AppVariablesCustomRoute: typeof AppVariablesCustomRoute
+  AppVariablesConnectionsRoute: typeof AppVariablesConnectionsRouteWithChildren
+  AppVariablesCustomRoute: typeof AppVariablesCustomRouteWithChildren
   AppVariablesExpressionRoute: typeof AppVariablesExpressionRouteWithChildren
   AppSettingsIndexRoute: typeof AppSettingsIndexRoute
-  AppVariablesIndexRoute: typeof AppVariablesIndexRoute
-  AppVariablesConnectionDotlabelRoute: typeof AppVariablesConnectionDotlabelRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -1489,11 +1572,10 @@ const AppRouteChildren: AppRouteChildren = {
   AppSettingsProtocolsRoute: AppSettingsProtocolsRoute,
   AppSurfacesRemoteRoute: AppSurfacesRemoteRouteWithChildren,
   AppVariablesOldLabelRoute: AppVariablesOldLabelRoute,
-  AppVariablesCustomRoute: AppVariablesCustomRoute,
+  AppVariablesConnectionsRoute: AppVariablesConnectionsRouteWithChildren,
+  AppVariablesCustomRoute: AppVariablesCustomRouteWithChildren,
   AppVariablesExpressionRoute: AppVariablesExpressionRouteWithChildren,
   AppSettingsIndexRoute: AppSettingsIndexRoute,
-  AppVariablesIndexRoute: AppVariablesIndexRoute,
-  AppVariablesConnectionDotlabelRoute: AppVariablesConnectionDotlabelRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

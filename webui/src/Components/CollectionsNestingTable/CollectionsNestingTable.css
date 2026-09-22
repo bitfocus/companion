@@ -2,6 +2,12 @@
 	border: 1px solid var(--color-border);
 	border-radius: 0.75rem;
 	overflow: hidden;
+
+	/* A list card already draws the frame; a second one here shows as a double border with mismatched corners. */
+	.list-card > & {
+		border: 0;
+		border-radius: 0;
+	}
 	border-collapse: separate;
 	border-spacing: 0;
 

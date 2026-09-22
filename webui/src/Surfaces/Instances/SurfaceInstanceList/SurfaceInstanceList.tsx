@@ -109,7 +109,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 				</div>
 			</div>
 
-			<div className="connections-list-table-container scrollable-content mt-2 rounded-md border border-border/70 bg-surface">
+			<div className="connections-list-table-container scrollable-content mt-2 list-card">
 				<PanelCollapseHelperProvider
 					storageId="connection-collections"
 					knownPanelIds={surfaceInstances.allCollectionIds}

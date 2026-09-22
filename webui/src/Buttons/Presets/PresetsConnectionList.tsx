@@ -104,6 +104,7 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 						ungroupedLeaves={ungroupedLeaves}
 						ungroupedLabel="Ungrouped Connections"
 						collapseHelper={collapseHelper}
+						selectedLeafKey={null}
 						HeaderComponent={PresetGroupHeader}
 						LeafComponent={PresetLeaf}
 						onLeafClick={(leaf) => setConnectionId(leaf.connectionId)}
