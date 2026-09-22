@@ -11,7 +11,6 @@ import type { BackupRulesConfig } from '@companion-app/shared/Model/UserConfigMo
 import { Button } from '~/Components/Button'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { PageHeader } from '~/Layout/PageHeader.js'
-import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -51,42 +50,35 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 		<div className="page-shell">
 			<PageHeader icon={faCog} title="Settings" helpAction="/user-guide/config/settings#backups" />
 
-			<div className="page-shell-body">
-				<SettingsNav activeTab="backups" />
+			<SettingsNav activeTab="backups" />
 
-				<div className="page-scroll">
-					<SplitPanels.Root showing={selectedRuleId ? 'secondary' : 'primary'} resize={{ storageKey: 'backups' }}>
-						<SplitPanels.Primary>
-							<div className="flex flex-col h-full gap-3">
-								<div className="bg-surface-muted/30 border border-border/70 rounded-lg p-3 flex items-center justify-between flex-wrap gap-2 shrink-0">
-									<div>
-										<h4 className="text-base font-bold text-body mb-0.5 flex items-center gap-2">
-											<span>Scheduled Backups</span>
-											<ContextHelpButton action="/user-guide/config/settings#backups" />
-										</h4>
-										<p className="text-xs text-muted mb-0">
-											Automatically back up Companion configuration files on a schedule.
-										</p>
-									</div>
-									<Button color="primary" size="sm" onClick={doAddNew}>
-										<FontAwesomeIcon icon={faAdd} className="me-1.5" /> Add Backup Rule
-									</Button>
-								</div>
-
-								<div className="flex-1 min-h-0 scrollable-content rounded-lg border border-border/70 bg-surface p-2">
-									<BackupsTable editRule={doEditRule} />
-								</div>
+			<SplitPanels.Root showing={selectedRuleId ? 'secondary' : 'primary'} resize={{ storageKey: 'backups' }}>
+				<SplitPanels.Primary>
+					<div className="flex flex-col h-full min-h-0 gap-2">
+						{/* Top Header Card: Toolbar */}
+						<div className="bg-surface-muted/50 border border-border/70 p-3 rounded-lg flex flex-col gap-2.5 shrink-0">
+							<div className="flex flex-wrap items-center gap-2">
+								<Button color="primary" size="sm" onClick={doAddNew}>
+									<FontAwesomeIcon icon={faAdd} className="me-1.5" /> Add Backup Rule
+								</Button>
 							</div>
-						</SplitPanels.Primary>
+							<p className="text-xs text-muted mb-0">
+								Automatically back up Companion configuration files on a schedule.
+							</p>
+						</div>
 
-						<SplitPanels.Secondary>
-							<div className="secondary-panel-simple">
-								<Outlet />
-							</div>
-						</SplitPanels.Secondary>
-					</SplitPanels.Root>
-				</div>
-			</div>
+						<div className="flex-1 min-h-0 scrollable-content list-card p-2">
+							<BackupsTable editRule={doEditRule} />
+						</div>
+					</div>
+				</SplitPanels.Primary>
+
+				<SplitPanels.Secondary>
+					<div className="secondary-panel-simple">
+						<Outlet />
+					</div>
+				</SplitPanels.Secondary>
+			</SplitPanels.Root>
 		</div>
 	)
 })
@@ -197,11 +189,16 @@ function BackupsTableRow({ rule, index, editRule }: BackupsTableRowProps) {
 				<FontAwesomeIcon icon={faSort} />
 				<GenericConfirmModal ref={confirmRef} />
 			</div>
-			<div className="grow min-w-0" onClick={doEdit}>
+			<div className={classNames('grow min-w-0', { 'opacity-60': !rule.enabled })} onClick={doEdit}>
 				<b className="text-sm font-semibold text-body-strong truncate block">{rule.name}</b>
 				<span className="text-xs text-muted/80 font-normal">Format: {backupTypeLabel}</span>
 			</div>
-			<div className="min-w-0 text-xs text-muted/80 hidden sm:block font-mono tabular-nums" onClick={doEdit}>
+			<div
+				className={classNames('min-w-0 text-xs text-muted/80 hidden sm:block font-mono tabular-nums', {
+					'opacity-60': !rule.enabled,
+				})}
+				onClick={doEdit}
+			>
 				<span>Cron: {rule.cron}</span>
 				{rule.lastRan && (
 					<span className="block text-2xs tabular-nums text-muted/70 font-sans">

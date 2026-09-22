@@ -29,11 +29,7 @@ export const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 				{userConfigProps && (
 					<Table className="table-settings rounded-md border border-border/70 bg-surface">
 						<thead>
-							<UserConfigHeadingRow
-								label="General Surface Settings"
-								helpMessage="The following settings affect all surfaces."
-								helpAction="/user-guide/config/settings#surfaces"
-							/>
+							<UserConfigHeadingRow label="General Surface Settings" />
 						</thead>
 						<tbody>
 							<UserConfigSwitchRow

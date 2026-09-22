@@ -1,4 +1,4 @@
-import { faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
+import { faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
@@ -7,7 +7,7 @@ import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import type { UserConfigProps } from '../Components/Common.js'
+import { ResetButton, type UserConfigProps } from '../Components/Common.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigNumberInputRow } from '../Components/UserConfigNumberInputRow.js'
 import { UserConfigPortNumberRow } from '../Components/UserConfigPortNumberRow.js'
@@ -42,7 +42,7 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 
 	return (
 		<>
-			<UserConfigHeadingRow label="HTTPS Web Server" helpAction="/user-guide/config/settings#https-web-server" />
+			<UserConfigHeadingRow label="HTTPS Web Server" />
 
 			<tr>
 				<td colSpan={3} className="bg-surface-muted/20 p-4">
@@ -74,9 +74,7 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 							/>
 						</td>
 						<td>
-							<Button onClick={() => props.resetValue('https_cert_type')} title="Reset to default">
-								<FontAwesomeIcon icon={faUndo} />
-							</Button>
+							<ResetButton userConfig={props} field="https_cert_type" />
 						</td>
 					</tr>
 
@@ -111,8 +109,8 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 										<div className="text-xs text-muted italic">No certificate generated yet</div>
 									)}
 								</td>
-								<td>
-									<div className="flex items-center gap-2">
+								<td className="settings-value-end">
+									<div className="flex items-center justify-end gap-2">
 										{props.config.https_self_cert && props.config.https_self_cert.length > 0 ? (
 											<>
 												<Button onClick={renewSslCertificate} color="success" size="sm">
@@ -132,7 +130,7 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 										)}
 									</div>
 								</td>
-								<td>&nbsp;</td>
+								<td />
 							</tr>
 						</>
 					)}

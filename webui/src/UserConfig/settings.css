@@ -39,6 +39,12 @@
 	text-align: left;
 }
 
+/* Value cells that hold a control rather than an input (switch, static text, a button) sit at the
+   end of the column, so they line up with each other and with the reset buttons. */
+.table-settings td.settings-value-end {
+	text-align: end;
+}
+
 .settings-category-row th {
 	font-weight: 700;
 	font-size: 0.75rem;

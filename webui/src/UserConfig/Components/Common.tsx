@@ -20,7 +20,7 @@ interface ResetButtonProps {
 
 export function ResetButton({ userConfig, field }: ResetButtonProps): React.JSX.Element {
 	return (
-		<Button onClick={() => userConfig.resetValue(field)} title="Reset to default">
+		<Button variant="ghost" size="sm" onClick={() => userConfig.resetValue(field)} title="Reset to default">
 			<FontAwesomeIcon icon={faUndo} />
 		</Button>
 	)

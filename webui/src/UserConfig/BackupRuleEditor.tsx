@@ -123,7 +123,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 	const previousBackups = [...(rule.previousBackups || [])].sort((a, b) => b.createdAt - a.createdAt)
 
 	return (
-		<div className="p-4 space-y-4">
+		<div className="space-y-4">
 			<div className="surface-card p-4 space-y-4">
 				<div className="flex items-center justify-between gap-2 border-b border-border/70 pb-3">
 					<div>

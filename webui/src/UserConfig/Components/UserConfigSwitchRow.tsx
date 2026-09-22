@@ -30,7 +30,7 @@ export const UserConfigSwitchRow = observer(function UserConfigSwitchRow({
 					)}
 				</div>
 			</td>
-			<td>
+			<td className="settings-value-end">
 				<div className="flex justify-end items-center">
 					<SwitchInputField
 						id={undefined}

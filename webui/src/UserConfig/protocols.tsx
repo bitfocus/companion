@@ -6,7 +6,6 @@ import { TabArea } from '~/Components/TabArea.js'
 import { Table } from '~/Components/Table.js'
 import { PageHeader } from '~/Layout/PageHeader.js'
 import { PageIntro } from '~/Layout/PageIntro'
-import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { useUserConfigProps } from './Context.js'
 import { ArtnetConfig } from './Sections/ArtnetConfig.js'
@@ -38,10 +37,7 @@ export const SettingsProtocolsPage = memo(function UserConfig() {
 				<div className="page-scroll">
 					<div className="primary-panel space-y-6 pb-8">
 						<div>
-							<PageIntro
-								title="Protocols Settings"
-								titleSuffix={<ContextHelpButton action="/user-guide/config/settings#protocols" />}
-							>
+							<PageIntro title="Protocols Settings">
 								Enable or disable network remote control endpoints for TCP, UDP, HTTP, OSC, Artnet, and Satellite.
 							</PageIntro>
 							<div className="surface-card">
