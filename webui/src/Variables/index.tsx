@@ -92,7 +92,7 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 
 				<div className="page-scroll">
 					<PageIntro title="Connection Variables">
-						Select a active module connection below to inspect its live dynamic variables.
+						Select an active connection below to browse its availabe variables and their current values.
 					</PageIntro>
 
 					<div className="rounded-lg border border-border/70 bg-surface p-3">

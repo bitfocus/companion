@@ -67,7 +67,7 @@ export const VARIABLES_SECTION: NavSection = {
 		{
 			id: 'connections',
 			label: 'Connection Variables',
-			shortLabel: 'Browse',
+			shortLabel: 'Connection',
 			path: '/variables',
 			icon: faNetworkWired,
 		},
