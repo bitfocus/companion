@@ -500,6 +500,7 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Buttons" icon={faTableCells} path="/buttons" />
 					<SidebarMenuItem name="Triggers" icon={faClock} path="/triggers" />
 					<SidebarSectionNavGroup section={VARIABLES_SECTION} />
+					<SidebarMenuItem name="Image Library" icon={faImages} path="/image-library" />
 
 					{/* Category: Connect */}
 					<li className="nav-title">Connect</li>
@@ -511,7 +512,6 @@ export const MySidebar = memo(function MySidebar() {
 					/>
 					<SidebarMenuItem name="Surfaces" icon={faGamepad} notifications={SurfacesTabNotifyIcon} path="/surfaces" />
 					<SidebarMenuItem name="Modules" icon={faPuzzlePiece} path="/modules" />
-					<SidebarMenuItem name="Image Library" icon={faImages} path="/image-library" />
 					<SidebarNavGroup name="Interactive Buttons" icon={faTabletScreenButton} basePath="/interactive-buttons">
 						<SidebarSubMenuItem name="Emulator" path="/emulator" target="_blank" />
 						<SidebarSubMenuItem name="Web Buttons" path="/tablet" target="_blank" />
