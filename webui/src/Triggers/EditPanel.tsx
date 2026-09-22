@@ -101,9 +101,9 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables)
 
 	return (
-		<div className="flex-1 min-h-0 flex flex-col overflow-hidden bg-surface-muted/20">
-			{/* Top Header: Trigger Title & Live Test Run */}
-			<div className="p-3 bg-surface border-b border-border shrink-0 flex items-center justify-between gap-3 shadow-2xs">
+		<div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+			{/* Top Header: Trigger Title */}
+			<div className="p-3 bg-surface border-b border-border shrink-0 flex items-center justify-between gap-3">
 				<div className="grow min-w-0">
 					<TextInputFieldSimple
 						id={undefined}
@@ -113,21 +113,10 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 						className="h-8 font-semibold text-sm bg-surface-subtle"
 					/>
 				</div>
-
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={doTestRun}
-					title="Test fire trigger actions immediately"
-					className="text-xs px-3 py-1.5 text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 flex items-center gap-1.5 font-medium shrink-0 rounded-lg transition-all"
-				>
-					<FontAwesomeIcon icon={faPlay} className="text-2xs" />
-					<span>Test Run</span>
-				</Button>
 			</div>
 
 			{/* Unified Automation Pipeline Canvas (No Tabs, No Truncation) */}
-			<div className="page-scroll p-4 space-y-3">
+			<div className="page-scroll p-4">
 				{/* ─── STAGE 1: WHEN (Events) ─────────────────────────────────── */}
 				<div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
 					<div className="px-3.5 py-2.5 bg-surface-subtle border-b border-border flex items-center justify-between">
@@ -156,8 +145,8 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 				</div>
 
 				{/* Connector Arrow */}
-				<div className="flex justify-center items-center -my-1 text-muted/50">
-					<div className="w-6 h-6 rounded-full bg-surface border border-border flex items-center justify-center text-3xs shadow-xs">
+				<div className="relative z-10 flex justify-center items-center -my-2 text-muted/50">
+					<div className="w-9 h-9 rounded-full bg-surface border border-border flex items-center justify-center text-xs shadow-xs">
 						<FontAwesomeIcon icon={faArrowDown} />
 					</div>
 				</div>
@@ -196,8 +185,8 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 				</div>
 
 				{/* Connector Arrow */}
-				<div className="flex justify-center items-center -my-1 text-muted/50">
-					<div className="w-6 h-6 rounded-full bg-surface border border-border flex items-center justify-center text-3xs shadow-xs">
+				<div className="relative z-10 flex justify-center items-center -my-2 text-muted/50">
+					<div className="w-9 h-9 rounded-full bg-surface border border-border flex items-center justify-center text-xs shadow-xs">
 						<FontAwesomeIcon icon={faArrowDown} />
 					</div>
 				</div>
@@ -212,9 +201,21 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 							</span>
 							<span className="text-xs font-semibold text-body">Execute Actions</span>
 						</div>
-						<span className="text-3xs font-medium text-muted">
-							{config.actions.length} {config.actions.length === 1 ? 'action' : 'actions'}
-						</span>
+						<div className="flex items-center gap-3">
+							<span className="text-3xs font-medium text-muted">
+								{config.actions.length} {config.actions.length === 1 ? 'action' : 'actions'}
+							</span>
+							<Button
+								variant="ghost"
+								size="sm"
+								onClick={doTestRun}
+								title="Test fire trigger actions immediately"
+								className="text-xs px-2.5 py-1 text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 flex items-center gap-1.5 font-medium shrink-0 rounded-lg transition-all"
+							>
+								<FontAwesomeIcon icon={faPlay} className="text-2xs" />
+								<span>Test Run</span>
+							</Button>
+						</div>
 					</div>
 
 					<div className="p-3">
@@ -236,7 +237,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 				</div>
 
 				{/* ─── STAGE 4: Variables & Documentation Notes (Collapsible) ──── */}
-				<div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
+				<div className="mt-3 rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
 					<button
 						type="button"
 						onClick={() => setShowVariablesAndNotes((v) => !v)}

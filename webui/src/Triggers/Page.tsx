@@ -183,11 +183,7 @@ export const TriggersPage = observer(function Triggers() {
 				<SplitPanels.Secondary>
 					<div className="secondary-panel-simple">
 						{!!selectedTriggerId && (
-							<TriggerEditPanelHeading
-								doCloseTrigger={doCloseTrigger}
-								twoPanelMode={twoPanelMode}
-								controlId={CreateTriggerControlId(selectedTriggerId)}
-							/>
+							<TriggerEditPanelHeading doCloseTrigger={doCloseTrigger} twoPanelMode={twoPanelMode} />
 						)}
 						<Outlet />
 					</div>
@@ -439,10 +435,9 @@ function CreateCollectionButton() {
 interface TriggerEditPanelHeadingProps {
 	doCloseTrigger: () => void
 	twoPanelMode: boolean
-	controlId: string
 }
 
-function TriggerEditPanelHeading({ doCloseTrigger, twoPanelMode, controlId }: TriggerEditPanelHeadingProps) {
+function TriggerEditPanelHeading({ doCloseTrigger, twoPanelMode }: TriggerEditPanelHeadingProps) {
 	return (
 		<div className="flex items-center justify-between gap-3 p-3 bg-surface-muted/40 border-b border-border/70 shrink-0">
 			<div className="flex items-center gap-2 min-w-0">
@@ -452,27 +447,11 @@ function TriggerEditPanelHeading({ doCloseTrigger, twoPanelMode, controlId }: Tr
 				<h3 className="text-sm font-bold text-body mb-0 truncate">Edit Trigger</h3>
 			</div>
 			<div className="flex items-center gap-2 shrink-0">
-				<TestActionsHeaderButton controlId={controlId} />
 				<ContextHelpButton action="/user-guide/config/triggers#configuring">
 					Define your trigger here.
 				</ContextHelpButton>
 				{!twoPanelMode && <CloseButton closeFn={doCloseTrigger} />}
 			</div>
 		</div>
-	)
-}
-
-function TestActionsHeaderButton({ controlId }: { controlId: string }): React.JSX.Element {
-	const testActionsMutation = useMutationExt(trpc.controls.triggers.testActions.mutationOptions())
-
-	const hotPressDown = useCallback(() => {
-		testActionsMutation.mutateAsync({ controlId }).catch((e) => console.error(`Hot press failed: ${e}`))
-	}, [testActionsMutation, controlId])
-
-	return (
-		<Button color="warning" size="sm" onClick={hotPressDown} title="Test actions for this trigger">
-			<FontAwesomeIcon icon={faPlay} className="me-1.5 text-xs" />
-			Test Actions
-		</Button>
 	)
 }

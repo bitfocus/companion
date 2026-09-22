@@ -42,6 +42,7 @@
 	display: grid;
 	grid-auto-flow: column;
 	grid-template-columns: 1fr auto;
+	margin-top: 0.5rem;
 }
 
 .presets-section-content {
