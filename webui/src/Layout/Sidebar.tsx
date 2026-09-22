@@ -132,6 +132,9 @@ function NarrowModePopover({ title, children }: { title: React.ReactNode; childr
 	)
 }
 
+/** Apple keyboards use ⌘ for the command palette shortcut; everything else uses Ctrl. */
+const IS_APPLE_PLATFORM = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent)
+
 function SidebarSearchButton() {
 	const isNarrow = useContext(NarrowModeContext)
 
@@ -139,12 +142,14 @@ function SidebarSearchButton() {
 		commandPaletteOpen.set(true)
 	}
 
+	const shortcutLabel = IS_APPLE_PLATFORM ? '⌘K' : 'Ctrl+K'
+
 	return (
 		<div className="px-3 py-1.5 list-none">
 			<button
 				type="button"
 				onClick={openSearch}
-				title="Search or Jump to... (⌘K / Ctrl+K)"
+				title={`Search or Jump to... (${shortcutLabel})`}
 				className="w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-surface-muted/70 hover:bg-surface-muted text-muted hover:text-body border border-border/70 text-xs transition-colors cursor-pointer text-left"
 			>
 				<div className="flex items-center gap-2 min-w-0">
@@ -153,7 +158,7 @@ function SidebarSearchButton() {
 				</div>
 				{!isNarrow && (
 					<span className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-3xs font-mono font-medium text-zinc-400 bg-black/25 border border-white/10 rounded leading-none">
-						⌘K
+						{shortcutLabel}
 					</span>
 				)}
 			</button>
@@ -307,8 +312,8 @@ function HelpSidebarMenuItem() {
 
 	return (
 		<li onContextMenu={blockPropagation}>
-			<NarrowModePopover title="Help and Version Information">
-				<Popover.Root>
+			<Popover.Root>
+				<NarrowModePopover title="Help and Version Information">
 					<BasePopover.Trigger
 						render={
 							<a className="nav-link cursor-pointer">
@@ -316,11 +321,11 @@ function HelpSidebarMenuItem() {
 							</a>
 						}
 					/>
-					<Popover.Popup side="right" align="center" sideOffset={12}>
-						<PopoverActionMenu menuItems={helpMenuItems} />
-					</Popover.Popup>
-				</Popover.Root>
-			</NarrowModePopover>
+				</NarrowModePopover>
+				<Popover.Popup side="right" align="center" sideOffset={12}>
+					<PopoverActionMenu menuItems={helpMenuItems} />
+				</Popover.Popup>
+			</Popover.Root>
 		</li>
 	)
 }
@@ -346,7 +351,11 @@ function SidebarSubMenuItem({ name, path, target }: SidebarSubMenuItemProps) {
 /** A nav group whose sub-items are a section of the shared nav registry. */
 function SidebarSectionNavGroup({ section }: { section: NavSection }) {
 	return (
-		<SidebarNavGroup name={section.label} icon={section.icon} basePath={section.pages[0].path}>
+		<SidebarNavGroup
+			name={section.label}
+			icon={section.icon}
+			basePaths={section.pages.flatMap((page) => [page.path, ...(page.alsoMatches ?? [])])}
+		>
 			{section.pages.map((page) => (
 				<SidebarSubMenuItem key={page.id} name={page.shortLabel ?? page.label} path={page.path} />
 			))}
@@ -357,14 +366,14 @@ function SidebarSectionNavGroup({ section }: { section: NavSection }) {
 interface SidebarNavGroupProps {
 	name: string
 	icon: IconDefinition
-	basePath: string
+	basePaths: readonly string[]
 	children: React.ReactNode
 }
 
-function SidebarNavGroup({ name, icon, basePath, children }: SidebarNavGroupProps) {
+function SidebarNavGroup({ name, icon, basePaths, children }: SidebarNavGroupProps) {
 	const isNarrow = useContext(NarrowModeContext)
 	const { pathname } = useLocation()
-	const isGroupActive = pathname.startsWith(basePath)
+	const isGroupActive = basePaths.some((path) => pathname === path || pathname.startsWith(`${path}/`))
 	const [isOpen, setIsOpen] = useState(isGroupActive)
 
 	useEffect(() => {
@@ -407,7 +416,9 @@ function SidebarNavGroup({ name, icon, basePath, children }: SidebarNavGroupProp
 	return (
 		<li className="nav-group-wrapper" onContextMenu={blockPropagation}>
 			<NarrowModePopover title={name}>
-				<a
+				<button
+					type="button"
+					aria-expanded={isOpen}
 					className={classNames('nav-link cursor-pointer nav-group-toggle', {
 						active: isGroupActive,
 						open: isOpen,
@@ -421,7 +432,7 @@ function SidebarNavGroup({ name, icon, basePath, children }: SidebarNavGroupProp
 							'rotate-90': isOpen,
 						})}
 					/>
-				</a>
+				</button>
 			</NarrowModePopover>
 			{isOpen && <ul className="nav-sub-list">{children}</ul>}
 		</li>
@@ -512,7 +523,7 @@ export const MySidebar = memo(function MySidebar() {
 					/>
 					<SidebarMenuItem name="Surfaces" icon={faGamepad} notifications={SurfacesTabNotifyIcon} path="/surfaces" />
 					<SidebarMenuItem name="Modules" icon={faPuzzlePiece} path="/modules" />
-					<SidebarNavGroup name="Interactive Buttons" icon={faTabletScreenButton} basePath="/interactive-buttons">
+					<SidebarNavGroup name="Interactive Buttons" icon={faTabletScreenButton} basePaths={['/interactive-buttons']}>
 						<SidebarSubMenuItem name="Emulator" path="/emulator" target="_blank" />
 						<SidebarSubMenuItem name="Web Buttons" path="/tablet" target="_blank" />
 					</SidebarNavGroup>

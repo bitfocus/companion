@@ -1,17 +1,5 @@
 import { expect, gotoApp, test, type Page } from '../support/fixtures.js'
-
-/** Create a custom variable through the variables page */
-async function createCustomVariable(page: Page, name: string): Promise<void> {
-	await gotoApp(page, '/variables/custom')
-	await page.getByPlaceholder('variableName').fill(name)
-	await page.getByRole('button', { name: 'Add' }).click()
-	await expect(page.getByText(`$(custom:${name})`)).toBeVisible()
-}
-
-/** The variables page row for one custom variable */
-function variableRow(page: Page, name: string) {
-	return page.locator('.editor-grid').filter({ hasText: `$(custom:${name})` })
-}
+import { createCustomVariable, navigateToCustomVariables, openCustomVariableValue } from '../support/variables.js'
 
 /** Create a button and give it an internal custom_variable_set_value action, all through the ui */
 async function createButtonSettingVariable(
@@ -48,8 +36,10 @@ test('configure an action through the editor and run it with test press', async 
 
 	await page.getByTitle('Test press button').click()
 
-	await gotoApp(page, '/variables/custom')
-	await expect(variableRow(page, 'edit_var').getByLabel('Current value:')).toHaveValue('pressed by test')
+	// Navigate inside the app: the press is a fire-and-forget mutation, and a full page load would
+	// tear down the websocket before it reaches the backend
+	await navigateToCustomVariables(page)
+	await expect(await openCustomVariableValue(page, 'edit_var')).toHaveValue('pressed by test')
 })
 
 test('the full user loop: configure a button, press it in the emulator, see the variable change', async ({ page }) => {
@@ -84,7 +74,7 @@ test('the full user loop: configure a button, press it in the emulator, see the 
 	}).toPass()
 
 	await gotoApp(page, '/variables/custom')
-	await expect(variableRow(page, 'loop_var').getByLabel('Current value:')).toHaveValue('pressed via emulator')
+	await expect(await openCustomVariableValue(page, 'loop_var')).toHaveValue('pressed via emulator')
 })
 
 test('add and configure a feedback through the editor, surviving a reload', async ({ page }) => {

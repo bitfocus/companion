@@ -79,26 +79,13 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 	}, [surfaceInstances.instances, instanceStatuses])
 
 	const counts = useMemo(() => {
-		let disabled = 0
-		let ok = 0
-		let warning = 0
-		let error = 0
+		const counts = { disabled: 0, ok: 0, warning: 0, error: 0 }
 
 		for (const item of allSurfaceInstances) {
-			if (item.enabled === false) {
-				disabled++
-			} else if (item.status?.category === 'good') {
-				ok++
-			} else if (item.status?.category === 'warning') {
-				warning++
-			} else if (item.status?.category === 'error') {
-				error++
-			} else {
-				ok++
-			}
+			counts[getSurfaceInstanceCategory(item)]++
 		}
 
-		return { disabled, ok, warning, error }
+		return counts
 	}, [allSurfaceInstances])
 
 	const SurfaceInstanceItemRow = useCallback(
@@ -155,6 +142,23 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 		</div>
 	)
 })
+
+/**
+ * The single status category an instance belongs to, used both for the header counts and for the
+ * visibility filtering, so that the two can never disagree.
+ */
+function getSurfaceInstanceCategory(item: ClientSurfaceInstanceConfigWithId): keyof VisibleSurfaceInstancesState {
+	if (item.enabled === false) return 'disabled'
+
+	switch (item.status?.category) {
+		case 'warning':
+			return 'warning'
+		case 'error':
+			return 'error'
+		default:
+			return 'ok'
+	}
+}
 
 export interface ClientSurfaceInstanceConfigWithId extends ClientSurfaceInstanceConfig {
 	id: string
@@ -261,17 +265,9 @@ function SurfaceInstancesListItemWrapper(
 	item: ClientSurfaceInstanceConfigWithId,
 	selectedItemId: string | null
 ) {
-	// Apply visibility filters
-	if (!visibility.disabled && item.enabled === false) {
+	// Apply visibility filters, using the same category the counts are derived from
+	if (!visibility[getSurfaceInstanceCategory(item)]) {
 		return null
-	} else if (item.status) {
-		if (!visibility.ok && item.status.category === 'good') {
-			return null
-		} else if (!visibility.warning && item.status.category === 'warning') {
-			return null
-		} else if (!visibility.error && item.status.category === 'error') {
-			return null
-		}
 	}
 
 	return (

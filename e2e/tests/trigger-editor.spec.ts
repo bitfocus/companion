@@ -1,15 +1,5 @@
-import { expect, gotoApp, test, type Page } from '../support/fixtures.js'
-
-async function createCustomVariable(page: Page, name: string): Promise<void> {
-	await gotoApp(page, '/variables/custom')
-	await page.getByPlaceholder('variableName').fill(name)
-	await page.getByRole('button', { name: 'Add' }).click()
-	await expect(page.getByText(`$(custom:${name})`)).toBeVisible()
-}
-
-function variableRow(page: Page, name: string) {
-	return page.locator('.editor-grid').filter({ hasText: `$(custom:${name})` })
-}
+import { expect, gotoApp, test } from '../support/fixtures.js'
+import { createCustomVariable, openCustomVariableValue } from '../support/variables.js'
 
 test('configure and fire a variable-change trigger through the ui', async ({ page }) => {
 	await createCustomVariable(page, 'watch_src')
@@ -45,12 +35,12 @@ test('configure and fire a variable-change trigger through the ui', async ({ pag
 	await listRow.getByRole('switch').click()
 	await expect(listRow.getByRole('switch')).toHaveAttribute('aria-checked', 'true')
 
-	// Change the watched variable through the variables page (rows are expanded by default)
+	// Change the watched variable through the variables page
 	await gotoApp(page, '/variables/custom')
-	await variableRow(page, 'watch_src').getByLabel('Current value:').fill('go')
+	await (await openCustomVariableValue(page, 'watch_src')).fill('go')
 
 	// The trigger fires and sets the destination variable
-	await expect(variableRow(page, 'watch_dst').getByLabel('Current value:')).toHaveValue('triggered!')
+	await expect(await openCustomVariableValue(page, 'watch_dst')).toHaveValue('triggered!')
 })
 
 test('interval event options persist', async ({ page }) => {

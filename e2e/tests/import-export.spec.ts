@@ -1,22 +1,15 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { expect, gotoApp, test, type Page } from '../support/fixtures.js'
-
-function variableRow(page: Page, name: string) {
-	return page.getByRole('button', { name: `$(custom:${name})` })
-}
+import { expect, gotoApp, test } from '../support/fixtures.js'
+import { createCustomVariable, customVariableRow as variableRow } from '../support/variables.js'
 
 // An import reloads the page and touches global state, so keep this file serial
 test.describe.configure({ mode: 'serial' })
 
 test('a config export can be imported back through the ui', async ({ page }) => {
 	// Create a custom variable worth exporting
-	await gotoApp(page, '/variables/custom')
-	await page.getByRole('button', { name: 'Add Custom Variable' }).click()
-	await page.getByRole('dialog').getByPlaceholder('variableName').fill('exported_var')
-	await page.getByRole('dialog').getByRole('button', { name: 'Add', exact: true }).click()
-	await expect(variableRow(page, 'exported_var')).toBeVisible()
+	await createCustomVariable(page, 'exported_var')
 
 	// Export the config as json through the export wizard
 	await gotoApp(page, '/import-export')

@@ -202,7 +202,9 @@
 		flex: 1;
 		align-items: center;
 		padding: 0.75rem var(--sidebar-nav-link-padding-x);
+		font: inherit;
 		color: var(--color-text);
+		text-align: start;
 		text-decoration: none;
 		white-space: nowrap;
 		background: var(--sidebar-nav-link-bg);
