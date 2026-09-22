@@ -6,18 +6,13 @@ import { AddInstancePanel } from '~/Instances/AddInstancePanel.js'
 import type { AddInstanceService } from '~/Instances/AddInstanceService'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
-interface AddSurfaceInstancePanelProps {
-	isSubpanel?: boolean
-}
-export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel({
-	isSubpanel,
-}: AddSurfaceInstancePanelProps) {
+export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel() {
 	const service = useAddSurfaceInstanceService()
 
 	return (
 		<AddInstancePanel
 			service={service}
-			isSubpanel={!!isSubpanel}
+			isModal={true}
 			title="Add Surface Integration"
 			helpAction="/user-guide/surfaces/"
 		/>

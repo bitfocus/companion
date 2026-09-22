@@ -2,7 +2,7 @@ import { faLayerGroup, faPlug } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useRef } from 'react'
+import { useCallback, useContext, useMemo, useRef } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import type {
@@ -14,11 +14,11 @@ import { Button } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { StatusFilterPill } from '~/Components/StatusFilterPill.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { MissingVersionsWarning } from '~/Instances/MissingVersionsWarning.js'
-import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useComputed } from '~/Resources/util.js'
@@ -78,6 +78,29 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 		return allSurfaceInstances
 	}, [surfaceInstances.instances, instanceStatuses])
 
+	const counts = useMemo(() => {
+		let disabled = 0
+		let ok = 0
+		let warning = 0
+		let error = 0
+
+		for (const item of allSurfaceInstances) {
+			if (item.enabled === false) {
+				disabled++
+			} else if (item.status?.category === 'good') {
+				ok++
+			} else if (item.status?.category === 'warning') {
+				warning++
+			} else if (item.status?.category === 'error') {
+				error++
+			} else {
+				ok++
+			}
+		}
+
+		return { disabled, ok, warning, error }
+	}, [allSurfaceInstances])
+
 	const SurfaceInstanceItemRow = useCallback(
 		(item: ClientSurfaceInstanceConfigWithId) =>
 			SurfaceInstancesListItemWrapper(visibleInstances.visibility, item, selectedInstanceId),
@@ -85,7 +108,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 	)
 
 	return (
-		<div className="connections-list-container flex-column-layout">
+		<div className="connections-list-container flex-column-layout h-full">
 			<div className="fixed-header flex flex-col">
 				<MissingVersionsWarning moduleType={ModuleInstanceType.Surface} instances={surfaceInstances.instances} />
 
@@ -99,13 +122,6 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 						</Button>
 						<CreateCollectionButton />
 					</div>
-					<ContextHelpButton action="/user-guide/surfaces">
-						<p>
-							Surface integrations are like connections but for input surfaces: they provide the ability to use
-							different hardware or virtual surfaces to trigger buttons in Companion.
-						</p>
-						<p>Click on any row to configure the integration. Click this icon for further help.</p>
-					</ContextHelpButton>
 				</div>
 			</div>
 
@@ -117,6 +133,7 @@ export const SurfaceInstancesList = observer(function SurfaceInstancesList({
 				>
 					<SurfaceInstancesListContextProvider
 						visibleInstances={visibleInstances}
+						counts={counts}
 						deleteModalRef={confirmModalRef}
 						configureInstance={doConfigureInstance}
 					>
@@ -145,24 +162,62 @@ export interface ClientSurfaceInstanceConfigWithId extends ClientSurfaceInstance
 }
 
 function SurfaceInstancesListTableHeading() {
-	const { visibleInstances } = useSurfaceInstancesListContext()
+	const { visibleInstances, counts } = useSurfaceInstancesListContext()
+
+	const totalCount = counts.disabled + counts.ok + counts.warning + counts.error
+	const isAllActive =
+		visibleInstances.visibility.disabled &&
+		visibleInstances.visibility.ok &&
+		visibleInstances.visibility.warning &&
+		visibleInstances.visibility.error
+
+	const toggleAll = useCallback(() => {
+		const targetState = !isAllActive
+		visibleInstances.toggleVisibility('disabled', targetState)
+		visibleInstances.toggleVisibility('ok', targetState)
+		visibleInstances.toggleVisibility('warning', targetState)
+		visibleInstances.toggleVisibility('error', targetState)
+	}, [isAllActive, visibleInstances])
 
 	return (
 		<div className="flex flex-wrap items-center justify-between gap-2">
 			<div className="font-semibold">Surface Integrations</div>
-			<div className="surface-visibility-filters" role="group" aria-label="Filter surface integrations by status">
-				{(['disabled', 'ok', 'warning', 'error'] as const).map((key) => (
-					<Button
-						key={key}
-						size="sm"
-						variant="ghost"
-						className="surface-visibility-filter"
-						aria-pressed={visibleInstances.visibility[key]}
-						onClick={() => visibleInstances.toggleVisibility(key)}
-					>
-						{key === 'ok' ? 'OK' : key.charAt(0).toUpperCase() + key.slice(1)}
-					</Button>
-				))}
+			<div className="flex flex-wrap items-center gap-1.5">
+				<StatusFilterPill
+					label="All"
+					count={totalCount}
+					isActive={isAllActive}
+					onClick={toggleAll}
+					title="Show all status types"
+				/>
+				<StatusFilterPill
+					label="OK"
+					count={counts.ok}
+					dotClass="bg-emerald-500"
+					isActive={visibleInstances.visibility.ok}
+					onClick={() => visibleInstances.toggleVisibility('ok')}
+				/>
+				<StatusFilterPill
+					label="Warning"
+					count={counts.warning}
+					dotClass="bg-amber-500"
+					isActive={visibleInstances.visibility.warning}
+					onClick={() => visibleInstances.toggleVisibility('warning')}
+				/>
+				<StatusFilterPill
+					label="Error"
+					count={counts.error}
+					dotClass="bg-rose-500"
+					isActive={visibleInstances.visibility.error}
+					onClick={() => visibleInstances.toggleVisibility('error')}
+				/>
+				<StatusFilterPill
+					label="Disabled"
+					count={counts.disabled}
+					dotClass="bg-zinc-400"
+					isActive={visibleInstances.visibility.disabled}
+					onClick={() => visibleInstances.toggleVisibility('disabled')}
+				/>
 			</div>
 		</div>
 	)
@@ -171,9 +226,8 @@ function SurfaceInstancesListTableHeading() {
 function SurfaceInstancesListNoInstances() {
 	return (
 		<NonIdealState icon={faPlug}>
-			You haven't set up any surfaces yet. <br />
-			Try adding something from the list <span className="xl:hidden">below</span>
-			<span className="hidden xl:inline">to the right</span>.
+			You haven't set up any surface integrations yet. <br />
+			Use &quot;Add Surface Integration&quot; above to get started.
 		</NonIdealState>
 	)
 }

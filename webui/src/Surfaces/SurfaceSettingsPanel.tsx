@@ -1,32 +1,31 @@
-import { useNavigate } from '@tanstack/react-router'
+import { faCogs } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useCallback } from 'react'
 import { Table } from '~/Components/Table.js'
-import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
-import { SurfaceInstancesList } from '~/Surfaces/Instances/SurfaceInstanceList/SurfaceInstanceList'
+import { ContextHelpButton } from '~/Layout/PanelIcons'
 import { UserConfigHeadingRow } from '~/UserConfig/Components/UserConfigHeadingRow'
 import { UserConfigSwitchRow } from '~/UserConfig/Components/UserConfigSwitchRow'
 import { useUserConfigProps } from '~/UserConfig/Context'
 import { PinLockoutConfig } from '~/UserConfig/Sections/PinLockoutConfig'
 
-// settings panel (shown when no configured surface is selected)
-//  Shows surface user-settings and the integrations table (SurfaceInstancesList)
+/** The integrations page's secondary panel while no integration is selected: the global surface settings. */
 export const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 	const userConfigProps = useUserConfigProps()
 
 	return (
 		<>
-			<SettingsPanelTitleBar />
-			<div className="secondary-panel-simple-body space-y-4 p-4">
-				<p className="text-sm text-muted mb-0">
-					Select an integration below to configure it. For a specific surface,{' '}
-					<span className="inline xl:hidden">close this panel and </span>
-					select it in Configured Surfaces<span className="hidden xl:inline"> to the left</span>.
-				</p>
-				<div className="rounded-md border border-border/70 bg-surface overflow-hidden">
-					<SurfaceInstancesList selectedInstanceId={null} />
+			<div className="flex items-center justify-between gap-3 p-3 bg-surface-muted/40 border-b border-border/70 shrink-0">
+				<div className="flex items-center gap-2">
+					<span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-surface-muted text-muted text-xs">
+						<FontAwesomeIcon icon={faCogs} />
+					</span>
+					<h3 className="text-sm font-bold text-body mb-0">General Surface Settings</h3>
 				</div>
-
+				<ContextHelpButton action="/user-guide/config/settings#surfaces">
+					The following settings affect all surfaces. Select an integration to configure it instead.
+				</ContextHelpButton>
+			</div>
+			<div className="secondary-panel-simple-body space-y-4 p-4">
 				{userConfigProps && (
 					<Table className="table-settings rounded-md border border-border/70 bg-surface">
 						<thead>
@@ -57,24 +56,3 @@ export const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 		</>
 	)
 })
-
-function SettingsPanelTitleBar() {
-	const navigate = useNavigate({ from: '/surfaces' })
-	// note that the close button is hidden when the window is wide enough.
-	const doClose = useCallback(() => {
-		void navigate({ to: '/surfaces' })
-	}, [navigate])
-
-	return (
-		<div className="secondary-panel-simple-header">
-			<h4 className="panel-title">Surface Settings</h4>
-			<div className="header-buttons">
-				<ContextHelpButton action="/user-guide/surfaces">
-					Manage surface integrations and global surface settings here.
-				</ContextHelpButton>
-
-				<CloseButton closeFn={doClose} visibilityClass="xl:hidden" />
-			</div>
-		</div>
-	)
-}
