@@ -154,7 +154,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 	return (
 		<>
 			<ButtonGridHeader pageNumber={pageNumber} changePage={changePage} setPage={setPageNumber}>
-				<Button color="light" onClick={resetPosition}>
+				<Button color="secondary" variant="ghost" onClick={resetPosition}>
 					<FontAwesomeIcon icon={faHome} /> Home Position
 				</Button>
 			</ButtonGridHeader>

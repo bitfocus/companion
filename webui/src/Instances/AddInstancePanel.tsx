@@ -12,7 +12,6 @@ import {
 	faNetworkWired,
 	faPlug,
 	faPlus,
-	faStar,
 	faTv,
 	faVideo,
 	faVolumeHigh,
@@ -46,10 +45,10 @@ import type { AddInstanceService } from './AddInstanceService.js'
 import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
 import { useModuleVersionSelectOptions } from './useModuleVersionSelectOptions.js'
 
-type BroadcastCategory = 'popular' | 'video' | 'camera' | 'audio' | 'media' | 'lighting' | 'routing' | 'all'
+type BroadcastCategory = 'video' | 'camera' | 'audio' | 'media' | 'lighting' | 'routing' | 'all'
 
 interface ModuleCategoryDefinition {
-	id: Exclude<BroadcastCategory, 'popular' | 'all'>
+	id: Exclude<BroadcastCategory, 'all'>
 	/** Label for the category tab */
 	label: string
 	/** Shorter label for the badge shown on each module entry */
@@ -123,41 +122,21 @@ const MODULE_CATEGORIES: readonly ModuleCategoryDefinition[] = [
 	},
 ]
 
-const POPULAR_KEYWORDS = [
-	'atem',
-	'obs',
-	'vmix',
-	'propresenter',
-	'ptzoptics',
-	'yamaha',
-	'x32',
-	'behringer',
-	'internal',
-	'hyperdeck',
-	'videohub',
-	'tricaster',
-	'companion',
-]
-
 const CATEGORY_TABS: readonly { id: BroadcastCategory; label: string; icon: IconDefinition; tone: PillTone }[] = [
-	{ id: 'popular', label: 'Popular', icon: faStar, tone: 'warning' },
-	...MODULE_CATEGORIES.map((cat) => ({ id: cat.id, label: cat.label, icon: cat.icon, tone: cat.tone })),
 	{ id: 'all', label: 'All', icon: faList, tone: 'primary' },
+	...MODULE_CATEGORIES.map((cat) => ({ id: cat.id, label: cat.label, icon: cat.icon, tone: cat.tone })),
 ]
 
 function getModuleCategory(item: FuzzyProduct): {
 	category: BroadcastCategory
-	isPopular: boolean
 	badgeLabel: string
 } {
 	const str = `${item.name} ${item.product || ''} ${item.moduleId}`.toLowerCase()
 
-	const isPopular = POPULAR_KEYWORDS.some((keyword) => str.includes(keyword))
 	const category = MODULE_CATEGORIES.find((cat) => cat.keywords.some((keyword) => str.includes(keyword)))
 
 	return {
 		category: category?.id ?? 'all',
-		isPopular,
 		badgeLabel: category?.badgeLabel ?? 'Integration',
 	}
 }
@@ -181,7 +160,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 	const { modules } = useContext(RootAppStoreContext)
 
 	const [filter, setFilter] = useState('')
-	const [selectedCategory, setSelectedCategory] = useState<BroadcastCategory>('popular')
+	const [selectedCategory, setSelectedCategory] = useState<BroadcastCategory>('all')
 
 	const [selectedModule, setSelectedModule] = useState<FuzzyProduct | null>(null)
 	const addInstance = useCallback((moduleInfo: FuzzyProduct) => {
@@ -221,7 +200,6 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 	// Calculate counts for categories
 	const categoryCounts = useMemo(() => {
 		const counts: Record<BroadcastCategory, number> = {
-			popular: 0,
 			video: 0,
 			camera: 0,
 			audio: 0,
@@ -232,7 +210,6 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 		}
 
 		for (const cat of productCategories.values()) {
-			if (cat.isPopular) counts.popular++
 			if (cat.category !== 'all') counts[cat.category]++
 		}
 
@@ -244,9 +221,6 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 		if (filter) return typeProducts // If user is actively typing a search query, search everything!
 
 		if (selectedCategory === 'all') return typeProducts
-		if (selectedCategory === 'popular') {
-			return typeProducts.filter((p) => productCategories.get(p)?.isPopular)
-		}
 
 		return typeProducts.filter((p) => productCategories.get(p)?.category === selectedCategory)
 	}, [typeProducts, productCategories, selectedCategory, filter])

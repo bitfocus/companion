@@ -133,7 +133,9 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 			evictionOwner={{ kind: 'connection', id: selectedConnectionId }}
 		>
 			<div className="buttons-sidebar-section presets-panel">
-				<h5 className="buttons-sidebar-heading">Presets</h5>
+				<div className="buttons-sidebar-heading-row">
+					<h5 className="buttons-sidebar-heading">Presets</h5>
+				</div>
 				<div className="presets-detail-navigation">
 					<Button variant="ghost" size="sm" onClick={clearSelectedConnectionId}>
 						<FontAwesomeIcon icon={faArrowLeft} /> Back

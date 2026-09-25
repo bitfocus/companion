@@ -105,7 +105,7 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 
 	return (
 		<div className="buttons-sidebar-section pages-list-section">
-			<div className="pages-list-heading-row">
+			<div className="buttons-sidebar-heading-row">
 				<h5 className="buttons-sidebar-heading">Pages</h5>
 				<Button color="primary" size="sm" onClick={doInsertPage} data-page={pages.data.length + 1}>
 					<FontAwesomeIcon icon={faPlus} />

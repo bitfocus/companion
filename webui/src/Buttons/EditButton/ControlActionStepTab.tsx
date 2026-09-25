@@ -129,8 +129,8 @@ export function ControlActionStepTab({
 				)}
 			</div>
 
-			<div className="my-4">
-				<Button onClick={() => service.appendSet(selectedKey)} color="primary">
+			<div className="edit-button-add-duration">
+				<Button onClick={() => service.appendSet(selectedKey)} color="primary" variant="outline" size="sm">
 					<FontAwesomeIcon icon={faPlus} /> Add duration group
 				</Button>
 			</div>

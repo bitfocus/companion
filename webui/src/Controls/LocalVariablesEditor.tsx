@@ -15,7 +15,7 @@ interface LocalVariablesEditorProps {
 	location: ControlLocation | undefined
 	variables: SomeEntityModel[]
 	localVariablesStore: LocalVariablesStore
-	heading?: React.JSX.Element | string
+	heading?: React.JSX.Element | string | null
 	localVariablePrefix?: string
 }
 export function LocalVariablesEditor({

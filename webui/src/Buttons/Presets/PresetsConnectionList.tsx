@@ -89,7 +89,9 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 	return (
 		<PresetsStoreContext.Provider value={presetsDefinitionsStore}>
 			<div className="buttons-sidebar-section presets-panel">
-				<h5 className="buttons-sidebar-heading">Presets</h5>
+				<div className="buttons-sidebar-heading-row">
+					<h5 className="buttons-sidebar-heading">Presets</h5>
+				</div>
 				<p className="presets-intro">Choose a connection, then drag a ready-made button onto the grid.</p>
 				<div className="presets-list-heading">Available connections</div>
 

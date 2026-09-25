@@ -85,6 +85,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
 	const [viewportMinHeight, setViewportMinHeight] = useState(250) // arbitrary initial min-height
+	const [viewportPreferredHeight, setViewportPreferredHeight] = useState(250)
 
 	// Ctrl/cmd + wheel zooms, the way every canvas does. React attaches wheel passively at the root,
 	// where preventDefault is a no-op, so this has to be a native listener to stop the browser
@@ -113,10 +114,11 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	const contentStyle = useMemo(
 		() => ({
 			minHeight: viewportMinHeight,
+			height: viewportPreferredHeight,
 			'--pending-change-color':
 				pendingChangesJoin === 'held-buttons' ? 'var(--color-copy-source)' : 'var(--color-primary)',
 		}),
-		[viewportMinHeight, pendingChangesJoin]
+		[viewportMinHeight, viewportPreferredHeight, pendingChangesJoin]
 	)
 	const focus = useGridFocus()
 
@@ -158,7 +160,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 								gridZoomValue={gridZoomValue}
 								gridZoomController={gridZoomController}
 							/>
-							<Button color="light" onClick={resetPosition} title="Home Position" className="ms-1">
+							<Button color="secondary" variant="ghost" onClick={resetPosition} title="Home Position" className="ms-1">
 								<FontAwesomeIcon icon={faHome} />
 							</Button>
 							<ButtonGridPageMenu pageNumber={pageNumber} pageInfo={pageInfo} />
@@ -185,6 +187,8 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 						onHoverLocation={handleHover}
 						drawScale={gridZoomValue / 100}
 						setViewportMinHeight={setViewportMinHeight}
+						setViewportPreferredHeight={setViewportPreferredHeight}
+						fillViewportWidth={true}
 					/>
 				)}
 			</div>

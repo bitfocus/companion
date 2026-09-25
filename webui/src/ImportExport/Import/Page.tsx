@@ -130,7 +130,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 									setPage={isSinglePage ? undefined : setImportPageNumber}
 									pageOptions={snapshotPageOptions}
 								>
-									<Button color="light" title="Home Position" onClick={resetSourcePosition}>
+									<Button color="secondary" variant="ghost" title="Home Position" onClick={resetSourcePosition}>
 										<FontAwesomeIcon icon={faHome} />
 									</Button>
 								</PageNumberPicker>
@@ -165,7 +165,13 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										gridZoomController={gridZoomController}
 									/>
 
-									<Button color="light" className="ms-1" title="Home Position" onClick={resetDestinationPosition}>
+									<Button
+										color="secondary"
+										variant="ghost"
+										className="ms-1"
+										title="Home Position"
+										onClick={resetDestinationPosition}
+									>
 										<FontAwesomeIcon icon={faHome} />
 									</Button>
 								</ButtonGridHeader>

@@ -2,19 +2,7 @@
 	container-type: inline-size;
 }
 
-.pages-list-heading-row {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 0.75rem;
-	margin-bottom: 0.75rem;
-}
-
-.pages-list-heading-row > .buttons-sidebar-heading {
-	margin: 0;
-}
-
-.pages-list-heading-row > .button {
+.buttons-sidebar-heading-row > .button {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.375rem;

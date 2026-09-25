@@ -30,7 +30,6 @@ import { RefreshModulesList } from './RefreshModulesList.js'
 interface VisibleModulesState {
 	installed: boolean
 	available: boolean
-	availableDeprecated: boolean
 }
 
 interface ModulesListProps {
@@ -49,8 +48,8 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 	const visibleModules = useTableVisibilityHelper<VisibleModulesState>('modules_visible', {
 		installed: true,
 		available: false,
-		availableDeprecated: false,
 	})
+	const [showDeprecated, setShowDeprecated] = useState(false)
 
 	const [filterType, setFilterType] = useState<ModuleInstanceType | null>(null)
 	const [filter, setFilter] = useState('')
@@ -71,7 +70,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 		if (
 			p.storeInfo &&
 			visibleModules.visibility.available &&
-			(visibleModules.visibility.availableDeprecated || !p.storeInfo.deprecationReason) // only show deprecated ones when the flag is enabled
+			(showDeprecated || !p.storeInfo.deprecationReason) // only show deprecated ones when explicitly enabled for this view
 		)
 			isVisible = true
 
@@ -191,8 +190,8 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 							variant="ghost"
 							className="module-visibility-filter"
 							size="sm"
-							aria-pressed={visibleModules.visibility.availableDeprecated}
-							onClick={() => visibleModules.toggleVisibility('availableDeprecated')}
+							aria-pressed={showDeprecated}
+							onClick={() => setShowDeprecated((visible) => !visible)}
 						>
 							Deprecated
 						</Button>

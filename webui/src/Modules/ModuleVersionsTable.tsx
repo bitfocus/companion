@@ -61,10 +61,10 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 
 	const visibleVersions = useTableVisibilityHelper<VisibleVersionsState>(`modules_visible_versions:${moduleId}`, {
 		availableStable: true,
-		availableDeprecated: false,
 		availableBeta: false,
 	})
-	const allHidden = Object.values(visibleVersions.visibility).every((v) => !v)
+	const [showDeprecated, setShowDeprecated] = useState(false)
+	const allHidden = Object.values(visibleVersions.visibility).every((v) => !v) && !showDeprecated
 
 	const versionRows = allVersionNumbers
 		.map((versionId) => {
@@ -72,7 +72,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 			const installedInfo = installedModuleVersions.get(versionId)
 			if (storeInfo) {
 				// Hide based on visibility settings
-				if (storeInfo.deprecationReason && !visibleVersions.visibility.availableDeprecated) return null
+				if (storeInfo.deprecationReason && !showDeprecated) return null
 				if (storeInfo.releaseChannel === 'beta' && !visibleVersions.visibility.availableBeta) return null
 
 				if (
@@ -119,10 +119,10 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 						Beta
 					</Button>
 					<Button
-						color={visibleVersions.visibility.availableDeprecated ? 'primary' : 'secondary'}
+						color={showDeprecated ? 'primary' : 'secondary'}
 						size="sm"
-						active={visibleVersions.visibility.availableDeprecated}
-						onClick={() => visibleVersions.toggleVisibility('availableDeprecated')}
+						active={showDeprecated}
+						onClick={() => setShowDeprecated((visible) => !visible)}
 					>
 						Deprecated
 					</Button>
@@ -170,7 +170,6 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 
 interface VisibleVersionsState {
 	availableStable: boolean
-	availableDeprecated: boolean
 	availableBeta: boolean
 }
 

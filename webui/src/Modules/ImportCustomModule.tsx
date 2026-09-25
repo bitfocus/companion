@@ -213,24 +213,24 @@ export function ImportModules(): React.JSX.Element {
 		<div className="flex items-center gap-2 flex-wrap">
 			<label
 				className={classNames(
-					'button button-secondary button-sm inline-flex items-center justify-center gap-1.5 cursor-pointer font-semibold text-xs h-9 px-3 rounded-md transition-colors shadow-xs border-0 mb-0',
+					'button button-outline-primary button-sm inline-flex items-center justify-center gap-1.5 cursor-pointer font-semibold text-xs h-9 px-3 rounded-md transition-colors shadow-xs mb-0',
 					!importAllowed && 'opacity-65 cursor-not-allowed'
 				)}
-				title={importDisabledTooltip}
+				title={importDisabledTooltip ?? 'Install a single module package (.tgz)'}
 			>
-				<FontAwesomeIcon icon={faFileImport} className="text-muted" />
+				<FontAwesomeIcon icon={faFileImport} />
 				<span>Import Package</span>
 				<input type="file" onChange={loadModuleFile} className="hidden" accept=".tgz" disabled={!importAllowed} />
 			</label>
 
 			<label
 				className={classNames(
-					'button button-secondary button-sm inline-flex items-center justify-center gap-1.5 cursor-pointer font-semibold text-xs h-9 px-3 rounded-md transition-colors shadow-xs border-0 mb-0',
+					'button button-outline-primary button-sm inline-flex items-center justify-center gap-1.5 cursor-pointer font-semibold text-xs h-9 px-3 rounded-md transition-colors shadow-xs mb-0',
 					!importAllowed && 'opacity-65 cursor-not-allowed'
 				)}
-				title={importDisabledTooltip}
+				title={importDisabledTooltip ?? 'Import a module bundle containing multiple packages (.tgz or .gz)'}
 			>
-				<FontAwesomeIcon icon={faFileImport} className="text-muted" />
+				<FontAwesomeIcon icon={faFileImport} />
 				<span>Import Bundle</span>
 				<input type="file" onChange={loadModuleBundle} className="hidden" accept=".tgz,.gz" disabled={!importAllowed} />
 			</label>

@@ -43,21 +43,21 @@
 		width: 100%;
 	}
 
+	.buttons-sidebar-heading-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		min-height: 2rem;
+		margin-bottom: 0.75rem;
+	}
+
 	.buttons-sidebar-heading {
-		margin: 0 0 0.75rem;
+		margin: 0;
 		color: var(--color-text-strong);
 		font-size: 0.875rem;
 		font-weight: 700;
 		line-height: 1.25;
-	}
-
-	.page-variables-panel .entity-category > div:first-child {
-		margin-top: 0;
-		margin-bottom: 0.75rem;
-	}
-
-	.page-variables-panel .buttons-sidebar-heading {
-		margin-bottom: 0;
 	}
 
 	.action-recorder-panel,

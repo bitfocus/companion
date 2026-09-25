@@ -8,6 +8,7 @@ interface ControlNotesEditorProps {
 	className?: string
 	id?: string
 	multiline?: boolean
+	autoFocus?: boolean
 }
 
 export function ControlNotesEditor({
@@ -16,6 +17,7 @@ export function ControlNotesEditor({
 	className,
 	id,
 	multiline = true,
+	autoFocus,
 }: ControlNotesEditorProps): React.JSX.Element {
 	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
 
@@ -35,6 +37,7 @@ export function ControlNotesEditor({
 			setValue={setNotes}
 			placeholder="Notes..."
 			multiline={multiline}
+			autoFocus={autoFocus}
 			tooltip="Internal notes for this control"
 			className={className}
 		/>

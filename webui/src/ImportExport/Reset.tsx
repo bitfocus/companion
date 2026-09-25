@@ -181,9 +181,9 @@ export const ResetWizardModal = observer(function ResetWizardModal() {
 
 	return (
 		<Modal.Root open={show} onOpenChange={onOpenChange} onOpenChangeComplete={onOpenChangeComplete} disableDismiss>
-			<Modal.Trigger color="danger">
-				<FontAwesomeIcon icon={faTrashAlt} className="me-2" />
-				Reset configuration
+			<Modal.Trigger color="danger" className="w-full flex items-center justify-center gap-2 font-semibold">
+				<FontAwesomeIcon icon={faTrashAlt} />
+				Reset Configuration
 			</Modal.Trigger>
 
 			<Modal.Portal>

@@ -119,10 +119,10 @@
 		border-radius: 0.375rem;
 		padding: 0.25rem 0.625rem;
 
-		&:hover {
+		&:not(.pill-button-active):hover {
 			border-color: transparent;
-			background: transparent;
-			color: var(--color-body-text);
+			background: color-mix(in srgb, var(--pill-fill) 8%, transparent);
+			color: var(--pill-text);
 		}
 
 		&.pill-button-active {

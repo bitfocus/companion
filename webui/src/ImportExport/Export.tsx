@@ -89,9 +89,9 @@ export const ExportWizardModal = observer(function ExportWizardModal() {
 
 	return (
 		<Modal.Root open={show} onOpenChange={onOpenChange} onOpenChangeComplete={onOpenChangeComplete}>
-			<Modal.Trigger color="success">
-				<FontAwesomeIcon icon={faDownload} className="me-2" />
-				Export configuration
+			<Modal.Trigger color="success" className="w-full flex items-center justify-center gap-2 font-semibold">
+				<FontAwesomeIcon icon={faDownload} />
+				Export Configuration
 			</Modal.Trigger>
 
 			<Modal.Portal>

@@ -68,7 +68,9 @@ export const ActionRecorder = observer(function ActionRecorder(): React.JSX.Elem
 				''
 			)}
 
-			<h5 className="buttons-sidebar-heading">Recorder</h5>
+			<div className="buttons-sidebar-heading-row">
+				<h5 className="buttons-sidebar-heading">Recorder</h5>
+			</div>
 			<div className="action-recorder-session-heading">
 				{sessionsStore.selectedSessionInfo && (
 					<RecorderSessionHeading

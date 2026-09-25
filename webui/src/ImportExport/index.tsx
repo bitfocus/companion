@@ -219,9 +219,9 @@ export const ImportExportPage = observer(function ImportExport() {
 							) : (
 								<>
 									{loadError && <StaticAlert color="warning">{loadError}</StaticAlert>}
-									<label className="button button-warning button-file w-full flex items-center justify-center">
-										<FontAwesomeIcon icon={faFileImport} className="me-2" />
-										Import configuration
+									<label className="button button-warning button-file w-full flex items-center justify-center gap-2 font-semibold">
+										<FontAwesomeIcon icon={faFileImport} />
+										Import Configuration
 										<input
 											type="file"
 											onChange={loadSnapshot}
