@@ -104,6 +104,41 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 										</Grid.Col>
 									)}
 
+									<Grid.Col sm={12} className="mb-2">
+										<FormLabel
+											htmlFor={undefined}
+											className="text-xs font-semibold text-muted uppercase tracking-wider mb-1.5 block"
+										>
+											Device Presets
+										</FormLabel>
+										<div className="flex flex-wrap gap-1.5">
+											{[
+												{ label: 'Mini (3×2)', rows: 2, columns: 3 },
+												{ label: 'Standard (5×3)', rows: 3, columns: 5 },
+												{ label: 'XL (8×4)', rows: 4, columns: 8 },
+												{ label: 'Plus (4×2)', rows: 2, columns: 4 },
+												{ label: 'Loupedeck (4×3)', rows: 3, columns: 4 },
+											].map((preset) => (
+												<Button
+													key={preset.label}
+													color="secondary"
+													size="sm"
+													type="button"
+													className="text-xs"
+													onClick={() => {
+														form.setFieldValue('rows', preset.rows)
+														form.setFieldValue('columns', preset.columns)
+														if (!form.getFieldValue('name')) {
+															form.setFieldValue('name', `Emulator ${preset.label}`)
+														}
+													}}
+												>
+													{preset.label}
+												</Button>
+											))}
+										</div>
+									</Grid.Col>
+
 									<form.Field
 										name="name"
 										children={(field) => (

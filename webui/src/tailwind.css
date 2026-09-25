@@ -53,14 +53,50 @@
 	--font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 	--font-mono: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-	--color-primary: #d50215;
+	/* Steps below Tailwind's `text-xs` (0.75rem), for badges, table meta lines and toolbar chips. */
+	--text-2xs: 0.6875rem;
+	--text-3xs: 0.625rem;
+
+	/* Three jobs that used to share one red. Keep them apart:
+	   `brand`   — identity only: the logo, the page-title icon, the active sidebar item, inline links.
+	   `primary` — anything safe and interactive: primary buttons, checked controls, selection, focus.
+	   `danger`  — destructive actions and error status, and nothing else.
+	   A red button in the content area now always means "this destroys something". */
+	--color-brand: #d50215;
+	--color-brand-hover: rgb(170, 2, 17); /* darkened brand, for hover on brand-coloured text/links */
+	--color-primary: #1f242e;
+	--color-primary-hover: #2b3341;
+	--color-primary-active: #12161d;
+	--color-accent-active: #941d1b; /* the active sidebar indicator — brand, not selection */
 	--color-secondary: #ccc;
 	--color-success: #1b9e3e;
-	--color-danger: #e55353;
+	--color-danger: #c8102e;
 	--color-warning: #f9b115;
 	--color-info: #3399ff;
 	--color-light: #e9e9e9;
 	--color-dark: #212631;
+
+	/* Status tones — the one palette behind every badge, filter pill and category chip. `-fill` is the
+	   solid hue (used at low alpha for backgrounds/borders) and `-text` the readable foreground on a
+	   light ground. These
+	   are deliberately separate from `success`/`danger`/`warning`/`info` above, which are the CoreUI
+	   button/alert colours; a status badge is not a button. */
+	--color-tone-good-fill: #10b981;
+	--color-tone-good-text: #059669;
+	--color-tone-warning-fill: #f59e0b;
+	--color-tone-warning-text: #d97706;
+	--color-tone-error-fill: #f43f5e;
+	--color-tone-error-text: #e11d48;
+	--color-tone-info-fill: #0ea5e9;
+	--color-tone-info-text: #0284c7;
+	--color-tone-neutral-fill: #71717a;
+	--color-tone-neutral-text: #71717a;
+	--color-tone-accent-fill: #6366f1;
+	--color-tone-accent-text: #4f46e5;
+	--color-tone-media-fill: #a855f7;
+	--color-tone-media-text: #9333ea;
+	--color-tone-routing-fill: #06b6d4;
+	--color-tone-routing-text: #0891b2;
 
 	/* Subtle/emphasis tints per severity (used by Alert, and a few wizard/expression badges).
 	   Adopted from CoreUI's *-bg-subtle / *-border-subtle / *-text-emphasis values. */
@@ -109,8 +145,7 @@
 	--color-surface-dark: #222; /* dark panel/inset surface (tablet, emulator, button editor) */
 	--color-app-bg: #f9f9f9; /* main content area background */
 	--color-app-frame-bg: #f3f4f7; /* outer app frame behind the sidebar/header/body */
-	--color-body-bg: #333; /* <body> element backing, behind the app chrome */
-	--color-loading-track: #3c4b64;
+	--color-body-bg: #f3f4f7; /* <body> element backing, behind the app chrome */
 
 	/* Borders */
 	--color-border: #ddd;
@@ -188,10 +223,10 @@
 	--color-on-dark: #fff;
 	--color-on-dark-muted: rgba(255, 255, 255, 0.75);
 
-	/* Primary tints */
-	--color-primary-soft: #ea818a;
-	--color-link-hover: rgb(170.4, 1.6, 16.8); /* darkened brand red for a:hover */
-	--color-primary-softer: #f2b3b9;
+	/* Primary tints — the borders a field takes on focus/hover, so they follow `primary`, not the brand. */
+	--color-primary-soft: #8a94a6;
+	--color-primary-softer: #c3cad6;
+	--color-link-hover: var(--color-brand-hover); /* inline links stay brand-coloured */
 	--color-focus-ring: color-mix(in srgb, var(--color-primary) 25%, transparent);
 
 	/* Drop-shadow / dark-tint scale. The alpha for each weight lives here (one place to retune when
@@ -208,20 +243,17 @@
 	--color-shadow-40: color-mix(in srgb, var(--color-shadow) 40%, transparent);
 	--color-shadow-50: color-mix(in srgb, var(--color-shadow) 50%, transparent);
 
+	/* Switch track. `off` is a light, visibly empty well and `on` is the filled `--color-primary`, so
+	   the two states differ in fill as well as thumb position — the old dark-on-dark pair read as the
+	   same state at a glance. */
+	--color-switch-off: #b4bcc7;
+	--color-switch-off-hover: #a3acb9;
+
 	/* Tabs (tab-area, and the secondary-panel tabs in layout) */
 	--color-tab-bg: #f3f3f3; /* inactive tab background */
 	--color-tab-fg: #555; /* inactive tab text */
 
-	/* Header bar (defaults to the brand primary; can be themed separately) */
-	--color-header-bg: var(--color-primary);
-	--color-header-text: var(--color-on-dark);
-	--color-header-hover: #b70212; /* darkened header bg for the mobile toggler hover */
-	--color-header-text-muted: #ddd; /* dimmed header nav-link on hover/focus */
-	--color-header-notification-bg: #333;
-
 	/* Panel headers & dropdown menus (layout) */
-	--color-panel-header-bg: #dee2e5;
-	--color-panel-header-fg: #343a40; /* panel title text */
 	--color-panel-header-btn: #4b545c; /* the round context-help / close button chrome */
 	--color-menu-bg: #f3f4f7; /* context-menu popover background */
 
@@ -267,6 +299,7 @@
 	--radius-lg: 0.5rem;
 	--border-width: 1px;
 }
+
 
 @source '../index.html';
 @source './**/*.{ts,tsx}';

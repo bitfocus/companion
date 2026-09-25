@@ -18,7 +18,7 @@ describe('expression variables', () => {
 
 	/** Create an expression variable and configure it the way the ui does */
 	async function createExpressionVariable(name: string, expression: string): Promise<string> {
-		const controlId = await app.trpc().controls.expressionVariables.create()
+		const controlId = await app.trpc().controls.expressionVariables.create({ variableName: name })
 
 		const control = app.registry.controls.getControl(controlId) as ControlExpressionVariable
 		const entityId = control.entities.getRootEntity()!.id
@@ -31,7 +31,6 @@ describe('expression variables', () => {
 			key: 'expression',
 			value: exprVal(expression),
 		})
-		await app.trpc().controls.setOptionsField({ controlId, key: 'variableName', value: name })
 
 		return controlId
 	}

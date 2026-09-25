@@ -1,11 +1,11 @@
 import { DragDropProvider } from '@dnd-kit/react'
-import './loading.css'
 import './App.css'
+import { faBars } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { Suspense, useCallback, useContext, useEffect, useState } from 'react'
 import { useIdleTimer } from 'react-idle-timer'
-import { PuffLoader } from 'react-spinners'
 import { Grid } from '~/Components/Grid'
 import { useEvictDeadCollapseState } from '~/Helpers/useEvictDeadCollapseState.js'
 import { useMountEffect } from '~/Resources/util.js'
@@ -17,9 +17,10 @@ import { SecretTextInputField } from './Components/SecretTextInputField.js'
 import { ContextData } from './ContextData.js'
 import { EntityDragLayer } from './Controls/Components/EntityDragLayer.js'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCConnectionStatus.js'
-import { MyHeader } from './Layout/Header.js'
-import { MySidebar, SidebarStateProvider } from './Layout/Sidebar.js'
-import { PRIMARY_COLOR } from './Resources/Constants.js'
+import { AdminLockContext } from './Layout/AdminLockContext.js'
+import { CommandPalette } from './Layout/CommandPalette.js'
+import { ConfigImportingOverlay, ConnectionLostOverlay } from './Layout/ConnectionLostOverlay.js'
+import { MySidebar, SidebarStateProvider, useSidebarState } from './Layout/Sidebar.js'
 import { MyErrorBoundary } from './Resources/Error.js'
 import { MonacoLoader } from './Resources/MonacoLoader.js'
 import { SortableHysteresis } from './Resources/SortableHysteresis.js'
@@ -45,30 +46,9 @@ export default function App(): React.JSX.Element {
 		<ContextData>
 			{(loadingProgress, loadingComplete) => (
 				<>
-					<div id="error-container" className={wasConnected ? 'show-error' : ''}>
-						<Grid.Row>
-							<Grid.Col md={{ span: 6, offset: 3 }}>
-								<div className="clearfix">
-									<h4 className="pt-4">Houston, we have a problem!</h4>
-									<p className="text-muted">It seems that we have lost connection to the companion app.</p>
-									<ul className="text-muted">
-										<li>Check that the application is still running</li>
-										<li>If you're using the Admin GUI over a network - check your connection</li>
-									</ul>
-								</div>
-							</Grid.Col>
-						</Grid.Row>
-					</div>
+					{wasConnected && <ConnectionLostOverlay />}
 					<ImportTaskOverlay wasConnected={wasConnected} />
-					<Suspense
-						fallback={
-							<Grid.Row className={'loading'}>
-								<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
-									<PuffLoader loading={true} size={80} color={PRIMARY_COLOR} />
-								</div>
-							</Grid.Row>
-						}
-					>
+					<Suspense fallback={<AppLoading progress={loadingProgress} connected={connected} />}>
 						<MonacoLoader />
 						{/*
 						 * Single global dnd-kit provider for all drag and drop. Each feature subscribes to its
@@ -100,17 +80,9 @@ const ImportTaskOverlay = observer(function ImportTaskOverlay({ wasConnected }: 
 	const { importTaskStatus } = useContext(RootAppStoreContext)
 	const taskRunning = importTaskStatus.get()?.status === 'running'
 
-	return (
-		<div id="current-import-container" className={!wasConnected && taskRunning ? 'show-error' : ''}>
-			<Grid.Row>
-				<Grid.Col md={{ span: 6, offset: 3 }}>
-					<div className="clearfix">
-						<h4 className="pt-4">Stand by, the config is being updated!</h4>
-					</div>
-				</Grid.Col>
-			</Grid.Row>
-		</div>
-	)
+	if (wasConnected || !taskRunning) return null
+
+	return <ConfigImportingOverlay />
 })
 
 interface AppMainProps {
@@ -163,31 +135,74 @@ const AppMain = observer(function AppMain({ connected, loadingComplete, loadingP
 
 	return (
 		<div className="c-app">
-			<SidebarStateProvider>
-				{canLock && unlocked && (userConfig.properties?.admin_timeout ?? 0) > 0 ? (
-					<IdleTimerWrapper setLocked={setLocked} timeoutMinutes={userConfig.properties?.admin_timeout} />
-				) : (
-					''
-				)}
-				<MySidebar />
-				<div className="wrapper flex flex-col min-h-screen bg-app-frame-bg">
-					<MyHeader setLocked={setLocked} canLock={canLock && unlocked} />
-					<div className="body grow">
-						{connected && loadingComplete ? (
-							!canLock || unlocked ? (
-								<AppContent />
-							) : (
-								<AppAuthWrapper setUnlocked={setUnlockedInner} />
-							)
-						) : (
-							<AppLoading progress={loadingProgress} connected={connected} />
-						)}
-					</div>
-				</div>
-			</SidebarStateProvider>
+			<AdminLockContext.Provider value={{ canLock: canLock && unlocked, setLocked }}>
+				<SidebarStateProvider>
+					{canLock && unlocked && (userConfig.properties?.admin_timeout ?? 0) > 0 ? (
+						<IdleTimerWrapper setLocked={setLocked} timeoutMinutes={userConfig.properties?.admin_timeout} />
+					) : (
+						''
+					)}
+					<MySidebar />
+					<CommandPalette />
+					<AppWrapper
+						connected={connected}
+						loadingComplete={loadingComplete}
+						loadingProgress={loadingProgress}
+						canLock={canLock}
+						unlocked={unlocked}
+						setUnlockedInner={setUnlockedInner}
+					/>
+				</SidebarStateProvider>
+			</AdminLockContext.Provider>
 		</div>
 	)
 })
+
+interface AppWrapperProps {
+	connected: boolean
+	loadingComplete: boolean
+	loadingProgress: number
+	canLock: boolean
+	unlocked: boolean
+	setUnlockedInner: () => void
+}
+
+function AppWrapper({
+	connected,
+	loadingComplete,
+	loadingProgress,
+	canLock,
+	unlocked,
+	setUnlockedInner,
+}: AppWrapperProps) {
+	const { mobileMode, handleShowSidebar } = useSidebarState()
+
+	return (
+		<div className="wrapper flex flex-col min-h-screen bg-app-frame-bg relative">
+			{mobileMode && (
+				<button
+					type="button"
+					className="sidebar-mobile-toggle block-collapse"
+					onClick={handleShowSidebar}
+					title="Show Sidebar"
+				>
+					<FontAwesomeIcon icon={faBars} className="w-5 h-5" />
+				</button>
+			)}
+			<div className="body grow">
+				{connected && loadingComplete ? (
+					!canLock || unlocked ? (
+						<AppContent />
+					) : (
+						<AppAuthWrapper setUnlocked={setUnlockedInner} />
+					)
+				) : (
+					<AppLoading progress={loadingProgress} connected={connected} />
+				)}
+			</div>
+		</div>
+	)
+}
 
 interface IdleTimerWrapperProps {
 	setLocked: () => void
@@ -275,23 +290,41 @@ interface AppLoadingProps {
 }
 
 function AppLoading({ progress, connected }: AppLoadingProps) {
-	const message = connected ? 'Syncing' : 'Connecting'
 	return (
-		<Grid.Container className="fadeIn loading">
-			<Grid.Row>
-				<Grid.Col xxl={4} md={3} sm={2} xs={1}></Grid.Col>
-				<Grid.Col xxl={4} md={6} sm={8} xs={10}>
-					<h3>{message}</h3>
-					{connected ? (
-						<ProgressBar className="mt-6" value={progress} />
-					) : (
-						<div className="flex items-center justify-center mt-6">
-							<PuffLoader loading={true} size={80} color={PRIMARY_COLOR} />
+		<div className="flex flex-col items-center justify-center page-empty-state p-6 select-none">
+			<div className="bg-surface text-body border border-border/80 rounded-2xl shadow-xl p-8 sm:p-10 max-w-sm w-full flex flex-col items-center text-center">
+				<div className="w-16 h-16 rounded-2xl bg-surface-muted/80 border border-border/70 p-2.5 flex items-center justify-center mb-5 shadow-xs">
+					<img
+						src="/img/icons/128x128.png"
+						alt="Bitfocus Companion"
+						className="w-full h-full object-contain rounded-xl"
+					/>
+				</div>
+
+				<h3 className="text-lg font-bold text-body mb-1">
+					{connected ? 'Syncing Configuration' : 'Connecting to Companion'}
+				</h3>
+
+				<p className="text-xs text-muted mb-6 leading-relaxed">
+					{connected ? 'Loading surfaces, modules, and controls…' : 'Establishing real-time connection…'}
+				</p>
+
+				{connected ? (
+					<div className="w-full space-y-2">
+						<ProgressBar className="h-2 rounded-full overflow-hidden" value={progress} />
+						<div className="flex justify-between text-2xs text-muted font-mono font-medium px-0.5">
+							<span>Loading workspace</span>
+							<span>{Math.round(progress)}%</span>
 						</div>
-					)}
-				</Grid.Col>
-			</Grid.Row>
-		</Grid.Container>
+					</div>
+				) : (
+					<div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-muted/60 border border-border/70 text-xs text-muted font-medium shadow-xs">
+						<span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+						<span>Locating server…</span>
+					</div>
+				)}
+			</div>
+		</div>
 	)
 }
 

@@ -1,44 +1,29 @@
-.panel-close-button {
-	box-shadow: 2px 2px 4px var(--color-shadow-25);
-	border: none;
-	background-color: var(--color-panel-header-btn); /* the "X" is foreground; the rest is background */
-	display: flex;
-	align-items: center; /* center the "X" in the button's background */
-
-	.svg-inline--fa {
-		height: 1.25em !important;
-		width: 1.25em !important;
-		margin: 2px;
-		display: block !important;
-	}
-}
-
-/* format context-help-buttons. Everything but size can be globally applied. */
-.context-help-button-btn {
-	border: 0;
-	border-radius: 100%;
-	--btn-color: var(--color-panel-header-btn); /* the circle is the foreground; the "?" is transparent */
-	background-color: var(--color-surface);
-}
-
-/* context-help-buttons in panel headers.  (For h4, h5 headings see common.scss) */
-.header-buttons .context-help-button-btn {
-	box-shadow: 1px 1px 4px 1px var(--color-shadow-25);
-	margin-top: 1px; /* centers it a bit better relative to the close button */
-	width: 2em;
-	height: 2em;
-
-	.svg-inline--fa {
-		width: 2em !important;
-		height: 2em !important;
-		display: block !important;
-	}
-}
-
-/* is this used anywhere? (it's not explicitly in the code) */
-.subhead-help-button {
-	border: 0;
-	background: none;
+/* The bare icon button used in panel/modal headers and table rows: a transparent square that
+   highlights on hover. Sized by `panel-icon-button-sm` or the default. */
+.panel-icon-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 1.75rem;
+	height: 1.75rem;
 	padding: 0;
+	border: 0;
+	border-radius: 0.5rem;
+	background: transparent;
+	color: var(--color-muted);
 	cursor: pointer;
+	transition:
+		color 0.15s ease,
+		background-color 0.15s ease;
+
+	&:hover {
+		color: var(--color-body-text);
+		background: var(--color-surface-muted);
+	}
+
+	&.panel-icon-button-sm {
+		width: 1.5rem;
+		height: 1.5rem;
+	}
 }

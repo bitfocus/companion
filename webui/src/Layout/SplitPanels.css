@@ -19,6 +19,14 @@
 	grid-template-columns: 1fr;
 	height: 100%;
 
+	/* The containing block for the absolutely-positioned resize handle, whose `left` is measured from
+	   this element. Needed here rather than on an ancestor, as a split can be nested in a page shell. */
+	position: relative;
+
+	/* A single track the height of the split, rather than of its content, so that panels filling it
+	   (and scrolling inside) measure against the space they are given. */
+	grid-template-rows: minmax(0, 1fr);
+
 	> * {
 		min-width: 0;
 	}
@@ -58,6 +66,14 @@
 	}
 }
 
+/* Nothing open in the secondary panel: it is hidden (see SplitPanels.tsx) and the primary takes the
+   whole split at every width. Two classes, so this beats the single-class column rules above and the
+   wide-screen one below whatever their order. */
+.split-panels.split-panels-single {
+	grid-template-columns: 1fr;
+	column-gap: 0;
+}
+
 /* For bigger screens, like 1440p and 4K, give the secondary panel more of the extra width. */
 @media only screen and (min-width: 2000px) {
 	.split-panels {
@@ -78,21 +94,35 @@
 	cursor: col-resize;
 	touch-action: none;
 
-	/* A slim visible line down the middle of the hit area. */
+	/* Just a short grip at the middle of the divide, rather than a full-height rule: enough to say
+	   "this can be dragged" without drawing a line between the panels. It firms up on hover. */
 	&::before {
 		content: '';
 		position: absolute;
-		top: 0;
-		bottom: 0;
+		top: 50%;
 		left: 50%;
-		transform: translateX(-50%);
-		width: 2px;
-		border-radius: 1px;
+		transform: translate(-50%, -50%);
+		width: 3px;
+		height: 2rem;
+		border-radius: 9999px;
 		background-color: var(--color-border);
+		opacity: 0.6;
+		transition:
+			height 0.15s ease,
+			opacity 0.15s ease,
+			background-color 0.15s ease;
 	}
 
 	&:hover::before,
 	&:active::before {
+		height: 3.5rem;
+		opacity: 1;
 		background-color: var(--color-border-hover);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.split-panels-resize-handle::before {
+		transition: none;
 	}
 }

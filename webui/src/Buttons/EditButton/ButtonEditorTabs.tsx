@@ -1,6 +1,6 @@
-import { faClone, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faChevronRight, faClone, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import classNames from 'classnames'
+import { observer } from 'mobx-react-lite'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
@@ -34,7 +34,8 @@ interface ButtonEditorTabsProps {
 	extraTabs?: ButtonEditorExtraTabs[]
 	children?: (currentTab: string) => React.ReactNode
 }
-export function ButtonEditorTabs({
+
+export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 	controlId,
 	location,
 	steps,
@@ -50,139 +51,214 @@ export function ButtonEditorTabs({
 
 	const stepKeys = useMemo(() => GetStepIds(steps), [steps])
 
-	const tabKeys = useMemo(() => {
-		const tabKeys: string[] = [...stepKeys.map((s) => `step:${s}`)]
+	// Top level tabs list: Actions + extra tabs
+	const mainTabs = useMemo(() => {
+		const tabs: { id: string; name: string; count?: number }[] = []
 
 		if (extraTabs) {
-			tabKeys.unshift(...extraTabs.filter((t) => t.position === 'start').map((t) => t.id))
-			tabKeys.push(...extraTabs.filter((t) => t.position === 'end').map((t) => t.id))
+			for (const t of extraTabs.filter((tab) => tab.position === 'start')) {
+				tabs.push({ id: t.id, name: t.name })
+			}
 		}
 
-		return tabKeys
-	}, [stepKeys, extraTabs])
+		tabs.push({
+			id: 'actions',
+			name: 'Actions',
+			count: stepKeys.length > 1 ? stepKeys.length : undefined,
+		})
 
-	const defaultStep = stepKeys[0] ? `step:${stepKeys[0]}` : (tabKeys[0] ?? '')
-	const [selectedStep, setSelectedStep] = useLocalStorage('buttonEditor.activeTab', defaultStep)
+		if (extraTabs) {
+			for (const t of extraTabs.filter((tab) => tab.position === 'end')) {
+				tabs.push({ id: t.id, name: t.name })
+			}
+		}
+
+		return tabs
+	}, [stepKeys.length, extraTabs])
+
+	const [activeMainTab, setActiveMainTab] = useLocalStorage('buttonEditor.activeMainTab', 'actions')
+	const [selectedStepId, setSelectedStepId] = useLocalStorage('buttonEditor.selectedStepId', stepKeys[0] || '0')
+
+	// Ensure selected step exists
 	useEffect(() => {
-		if (!tabKeys.includes(selectedStep)) {
-			setSelectedStep(stepKeys[0] ? `step:${stepKeys[0]}` : (tabKeys[0] ?? ''))
+		if (stepKeys.length > 0 && !stepKeys.includes(selectedStepId)) {
+			setSelectedStepId(stepKeys[0] || '0')
 		}
-	}, [tabKeys, selectedStep, stepKeys, setSelectedStep])
+	}, [stepKeys, selectedStepId, setSelectedStepId])
 
-	const service = useControlActionStepsAndSetsService(controlId, confirmRef, setSelectedStep)
+	// Fallback to 'actions' if selected tab is invalid
+	useEffect(() => {
+		if (!mainTabs.some((t) => t.id === activeMainTab)) {
+			setActiveMainTab('actions')
+		}
+	}, [mainTabs, activeMainTab, setActiveMainTab])
 
-	const selectedIndex = stepKeys.findIndex((k) => `step:${k}` === selectedStep)
-	const selectedKey = selectedIndex >= 0 && stepKeys[selectedIndex]
-	const selectedStepProps = selectedKey ? steps[selectedKey] : undefined
+	const service = useControlActionStepsAndSetsService(controlId, confirmRef, (newStepKey) => {
+		if (newStepKey.startsWith('step:')) {
+			setSelectedStepId(newStepKey.slice(5))
+		}
+	})
+
+	const selectedIndex = stepKeys.indexOf(selectedStepId)
+	const currentStepKey = selectedIndex >= 0 ? stepKeys[selectedIndex] : stepKeys[0] || '0'
+	const selectedStepProps = steps[currentStepKey]
 
 	return (
 		<>
 			<GenericConfirmModal ref={confirmRef} />
 
-			<div ref={tabBarRef} className="sticky-tabs">
-				<TabArea.Root value={selectedStep} onValueChange={setSelectedStep}>
-					<TabArea.List>
-						{extraTabs?.map(
-							(tab) =>
-								tab.position === 'start' && (
-									<TabArea.Tab key={tab.id} className="nav-steps-special" value={tab.id} title={tab.name}>
-										{tab.name}
-									</TabArea.Tab>
-								)
-						)}
-
-						{stepKeys.map((stepId, i) => (
-							<ActionSetTab
-								key={stepId}
-								controlId={controlId}
-								stepId={stepId}
-								stepIndex={i}
-								stepOptions={steps[stepId]?.options}
-								moreThanOneStep={stepKeys.length > 1}
-								isCurrent={runtimeProps.current_step_id === stepId}
-							/>
+			{/* Primary Clean Navigation Tabs */}
+			<div ref={tabBarRef} className="sticky-tabs button-editor-tabs-shell">
+				<TabArea.Root className="button-editor-main-tabs" value={activeMainTab} onValueChange={setActiveMainTab}>
+					<TabArea.List className="button-editor-main-tabs-list">
+						{mainTabs.map((tab) => (
+							<TabArea.Tab key={tab.id} className="button-editor-main-tab" value={tab.id} title={tab.name}>
+								<div className="flex items-center gap-1.5">
+									<span>{tab.name}</span>
+									{tab.count !== undefined && (
+										<span className="px-1.5 py-0.5 rounded-full text-3xs font-semibold bg-primary/20 text-primary">
+											{tab.count}
+										</span>
+									)}
+								</div>
+							</TabArea.Tab>
 						))}
-
-						{extraTabs?.map(
-							(tab) =>
-								tab.position === 'end' && (
-									<TabArea.Tab key={tab.id} className="nav-steps-special" value={tab.id} title={tab.name}>
-										{tab.name}
-									</TabArea.Tab>
-								)
-						)}
-
-						{stepKeys.length === 1 && (
-							<div className="tab-end-area self-center">
-								<Button title="Add step" size="sm" onClick={service.appendStep}>
-									<FontAwesomeIcon icon={faPlus} />
-								</Button>
-								<Button title="Duplicate step" size="sm" onClick={() => service.duplicateStep(stepKeys[0])}>
-									<FontAwesomeIcon icon={faClone} />
-								</Button>
-							</div>
-						)}
 					</TabArea.List>
 				</TabArea.Root>
 			</div>
 
 			<div className="edit-sticky-body" style={{ '--tab-bar-height': `${tabBarSize.height}px` } as React.CSSProperties}>
-				{children && children(selectedStep)}
+				{activeMainTab === 'actions' ? (
+					<>
+						{/* Inside Actions: Modern Step Navigator Bar */}
+						<div className="flex items-center justify-between gap-3 p-1.5 bg-surface-muted/50 rounded-xl border border-border/70 mb-3 mt-1 flex-wrap">
+							<div className="flex items-center gap-1.5 flex-wrap">
+								<span className="text-3xs font-semibold uppercase tracking-wider text-muted px-1.5">Steps:</span>
+								{stepKeys.map((stepId, i) => (
+									<StepPill
+										key={stepId}
+										controlId={controlId}
+										stepId={stepId}
+										stepIndex={i}
+										stepOptions={steps[stepId]?.options}
+										isSelected={stepId === currentStepKey}
+										isCurrent={runtimeProps.current_step_id === stepId}
+										onSelect={() => setSelectedStepId(stepId)}
+									/>
+								))}
 
-				{selectedKey && selectedStepProps && (
-					<ControlActionStepTab
-						service={service}
-						controlId={controlId}
-						location={location}
-						runtimeProps={runtimeProps}
-						rotaryActions={rotaryActions}
-						stepKeys={stepKeys}
-						selectedIndex={selectedIndex}
-						selectedKey={selectedKey}
-						selectedStepProps={selectedStepProps}
-						localVariablesStore={localVariablesStore}
-						disabledSetStep={disabledSetStep}
-					/>
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={service.appendStep}
+									title="Add another step (for latching / toggle buttons)"
+									className="text-muted hover:text-primary text-xs px-2 py-1 flex items-center gap-1"
+								>
+									<FontAwesomeIcon icon={faPlus} className="text-2xs" />
+									<span className="text-3xs font-medium">Add Step</span>
+								</Button>
+							</div>
+
+							{stepKeys.length > 1 && (
+								<div className="flex items-center gap-1 shrink-0">
+									<Button
+										variant="ghost"
+										size="sm"
+										disabled={runtimeProps.current_step_id === currentStepKey || disabledSetStep}
+										onClick={() => service.setCurrentStep(currentStepKey)}
+										title="Make this step the current active live step"
+										className={`text-3xs px-2 py-0.5 font-medium rounded-md ${
+											runtimeProps.current_step_id === currentStepKey
+												? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+												: 'text-muted hover:text-body'
+										}`}
+									>
+										{runtimeProps.current_step_id === currentStepKey ? '● Live' : 'Set Live'}
+									</Button>
+
+									<Button
+										variant="ghost"
+										size="sm"
+										title="Move step left"
+										disabled={selectedIndex === 0}
+										onClick={() => service.swapSteps(currentStepKey, stepKeys[selectedIndex - 1])}
+										className="text-muted hover:text-body p-1"
+									>
+										<FontAwesomeIcon icon={faChevronLeft} className="text-xs" />
+									</Button>
+									<Button
+										variant="ghost"
+										size="sm"
+										title="Move step right"
+										disabled={selectedIndex === stepKeys.length - 1}
+										onClick={() => service.swapSteps(currentStepKey, stepKeys[selectedIndex + 1])}
+										className="text-muted hover:text-body p-1"
+									>
+										<FontAwesomeIcon icon={faChevronRight} className="text-xs" />
+									</Button>
+									<Button
+										variant="ghost"
+										size="sm"
+										title="Duplicate step"
+										onClick={() => service.duplicateStep(currentStepKey)}
+										className="text-muted hover:text-body p-1"
+									>
+										<FontAwesomeIcon icon={faClone} className="text-xs" />
+									</Button>
+									<Button
+										variant="ghost"
+										size="sm"
+										title="Delete step"
+										onClick={() => service.removeStep(currentStepKey)}
+										className="text-muted hover:text-danger p-1"
+									>
+										<FontAwesomeIcon icon={faTrash} className="text-xs" />
+									</Button>
+								</div>
+							)}
+						</div>
+
+						{selectedStepProps && (
+							<ControlActionStepTab
+								service={service}
+								controlId={controlId}
+								location={location}
+								runtimeProps={runtimeProps}
+								rotaryActions={rotaryActions}
+								stepKeys={stepKeys}
+								selectedIndex={selectedIndex}
+								selectedKey={currentStepKey}
+								selectedStepProps={selectedStepProps}
+								localVariablesStore={localVariablesStore}
+								disabledSetStep={disabledSetStep}
+							/>
+						)}
+					</>
+				) : (
+					children && children(activeMainTab)
 				)}
 			</div>
 		</>
 	)
-}
+})
 
-interface ActionSetTabProps {
+interface StepPillProps {
 	controlId: string
 	stepId: string
 	stepIndex: number
 	stepOptions: ActionStepOptions | undefined
-	// if there's more than one step, we need to show the current step
-	moreThanOneStep: boolean
-	// the current step is the one that is currently being executed
+	isSelected: boolean
 	isCurrent: boolean
+	onSelect: () => void
 }
-function ActionSetTab({
-	controlId,
-	stepId,
-	stepIndex,
-	stepOptions,
-	moreThanOneStep,
-	isCurrent,
-}: Readonly<ActionSetTabProps>) {
-	let linkClassname: string | undefined = undefined
 
-	const name = stepOptions?.name
-	const displayText = name
-		? name + ` (${stepIndex + 1})`
-		: stepIndex === 0
-			? 'Step ' + (stepIndex + 1)
-			: String(stepIndex + 1)
-
-	if (moreThanOneStep) {
-		if (isCurrent) linkClassname = 'highlight-current'
-	}
-
+function StepPill({ controlId, stepId, stepIndex, stepOptions, isSelected, isCurrent, onSelect }: StepPillProps) {
+	const name = stepOptions?.name || `Step ${stepIndex + 1}`
 	const renameStepMutation = useMutationExt(trpc.controls.steps.rename.mutationOptions())
 
-	const renameStep = useCallback(
+	const [isEditing, setIsEditing] = useState(false)
+
+	const doRename = useCallback(
 		(newName: string) => {
 			renameStepMutation.mutateAsync({ controlId, stepId, newName }).catch((e) => {
 				console.error('Failed to rename step:', e)
@@ -191,37 +267,39 @@ function ActionSetTab({
 		[renameStepMutation, controlId, stepId]
 	)
 
-	const [showInputField, setShowInputField] = useState(false)
-
-	const showField = useCallback(() => setShowInputField(true), [setShowInputField])
-	const hideField = useCallback(() => setShowInputField(false), [setShowInputField])
-	const onKeyDown = useCallback(
-		(e: React.KeyboardEvent<HTMLElement>) => {
-			if (e.key === 'Enter' || e.key === 'Escape') {
-				setShowInputField(false)
-			}
-		},
-		[setShowInputField]
-	)
-
 	return (
-		<TabArea.Tab
-			className={classNames('nav-steps-special', linkClassname)}
-			value={`step:${stepId}`}
-			title={displayText}
-			onDoubleClick={showField}
+		<div
+			onClick={onSelect}
+			onDoubleClick={() => setIsEditing(true)}
+			className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-all select-none ${
+				isSelected
+					? 'bg-primary text-white shadow-xs'
+					: 'bg-surface hover:bg-surface-hover text-muted hover:text-body border border-border/70'
+			}`}
 		>
-			{showInputField ? (
-				<TextInputFieldSimple
-					id={undefined}
-					value={name ?? ''}
-					setValue={renameStep}
-					onBlur={hideField}
-					onKeyDown={onKeyDown}
+			{isCurrent && (
+				<span
+					className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500 animate-pulse'}`}
+					title="Active live step"
 				/>
-			) : (
-				displayText
 			)}
-		</TabArea.Tab>
+
+			{isEditing ? (
+				<div onClick={(e) => e.stopPropagation()}>
+					<TextInputFieldSimple
+						id={undefined}
+						value={stepOptions?.name ?? ''}
+						setValue={doRename}
+						onBlur={() => setIsEditing(false)}
+						onKeyDown={(e) => {
+							if (e.key === 'Enter' || e.key === 'Escape') setIsEditing(false)
+						}}
+						autoFocus
+					/>
+				</div>
+			) : (
+				<span>{name}</span>
+			)}
+		</div>
 	)
 }

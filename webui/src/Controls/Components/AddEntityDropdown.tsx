@@ -92,18 +92,34 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 	const filterOptions = useComputed<Array<AddEntityGroup> | undefined>(() => {
 		const res: Array<AddEntityGroup> = []
 
-		for (const group of options) {
-			if (inputValue) {
+		if (inputValue) {
+			for (const group of options) {
 				if (group.showWhenUnfiltered) continue
 				const items = fuzzyFilterSort(group.items, inputValue)
 				if (items.length > 0) res.push({ ...group, items })
-			} else {
-				if (group.showWhenUnfiltered && group.items.length > 0) res.push(group)
+			}
+		} else {
+			for (const group of options) {
+				if (group.showWhenUnfiltered && group.items.length > 0) {
+					res.push(group)
+				}
+			}
+
+			// If no recently used / common items, show all actions so dropdown isn't empty
+			if (res.length === 0) {
+				const allGroup = options.find((g) => g.id === '__all__')
+				if (allGroup && allGroup.items.length > 0) {
+					res.push({
+						...allGroup,
+						label: `All ${entityTypeLabel}s`,
+						items: allGroup.items.slice(0, 50),
+					})
+				}
 			}
 		}
 
 		return toJS(res)
-	}, [options, inputValue])
+	}, [options, inputValue, entityTypeLabel])
 
 	return (
 		<div className="dropdown-field">
@@ -119,13 +135,19 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 				filteredItems={filterOptions}
 			>
 				<Combobox.InputGroup className="form-input dropdown-field-input-group rounded-e-none">
-					<Combobox.Input className="dropdown-field-input" placeholder={`+ Add ${entityTypeLabel}`} ref={inputRef} />
+					<Combobox.Input
+						className="dropdown-field-input"
+						placeholder={`+ Add ${entityTypeLabel} (type to search...)`}
+						ref={inputRef}
+					/>
 					<Combobox.Trigger className="dropdown-field-trigger">
 						<ChevronDownIcon className="dropdown-field-icon" />
 					</Combobox.Trigger>
 				</Combobox.InputGroup>
 				<DropdownInputPopup
-					noOptionsMessage={inputValue ? `No ${entityTypeLabel}s found` : `No recently used ${entityTypeLabel}s`}
+					noOptionsMessage={
+						inputValue ? `No ${entityTypeLabel}s matching "${inputValue}"` : `No ${entityTypeLabel}s available`
+					}
 				/>
 			</Combobox.Root>
 		</div>

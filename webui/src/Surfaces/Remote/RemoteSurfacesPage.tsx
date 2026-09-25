@@ -1,8 +1,11 @@
+import { faGamepad } from '@fortawesome/free-solid-svg-icons'
 import { Outlet, useMatchRoute } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
+import { PageHeader } from '~/Layout/PageHeader'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { SurfaceDiscoveryContextProvider } from '../Discovery/SurfaceDiscoveryContext.js'
+import { SurfacesNav } from '../SurfacesNav.js'
 import { RemoteSurfacesList } from './RemoteSurfaces/RemoteSurfacesList.js'
 
 export const RemoteSurfacesPage = observer(function RemoteSurfacesPage(): React.JSX.Element {
@@ -11,20 +14,26 @@ export const RemoteSurfacesPage = observer(function RemoteSurfacesPage(): React.
 	const selectedRemoteConnectionId = routeMatch ? routeMatch.connectionId : null
 
 	return (
-		<SplitPanels.Root showing={routeMatch ? 'secondary' : 'primary'} resize={{ storageKey: 'surfaces-remote' }}>
-			<SplitPanels.Primary>
-				<MyErrorBoundary>
-					<RemoteSurfacesList selectedRemoteConnectionId={selectedRemoteConnectionId} />
-				</MyErrorBoundary>
-			</SplitPanels.Primary>
+		<div className="page-shell">
+			<PageHeader icon={faGamepad} title="Surfaces" helpAction="/user-guide/config/surfaces#remote" />
 
-			<SplitPanels.Secondary>
-				<div className="secondary-panel-simple">
-					<SurfaceDiscoveryContextProvider>
-						<Outlet />
-					</SurfaceDiscoveryContextProvider>
-				</div>
-			</SplitPanels.Secondary>
-		</SplitPanels.Root>
+			<SurfacesNav />
+
+			<SplitPanels.Root showing={routeMatch ? 'secondary' : 'primary'} resize={{ storageKey: 'surfaces-remote' }}>
+				<SplitPanels.Primary>
+					<MyErrorBoundary>
+						<RemoteSurfacesList selectedRemoteConnectionId={selectedRemoteConnectionId} />
+					</MyErrorBoundary>
+				</SplitPanels.Primary>
+
+				<SplitPanels.Secondary>
+					<div className="secondary-panel-simple">
+						<SurfaceDiscoveryContextProvider>
+							<Outlet />
+						</SurfaceDiscoveryContextProvider>
+					</div>
+				</SplitPanels.Secondary>
+			</SplitPanels.Root>
+		</div>
 	)
 })

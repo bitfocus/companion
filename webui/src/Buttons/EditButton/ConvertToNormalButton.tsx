@@ -30,8 +30,14 @@ export function ConvertToNormalButton({ location }: ConvertToNormalButtonProps):
 	return (
 		<>
 			<GenericConfirmModal ref={convertModalRef} />
-			<Button color="secondary" onClick={doConvertControl} title="Convert to Normal Button">
-				<FontAwesomeIcon icon={faPencil} className="me-1" />
+			<Button
+				className="edit-button-toolbar-action"
+				color="secondary"
+				size="sm"
+				onClick={doConvertControl}
+				title="Convert to Normal Button"
+			>
+				<FontAwesomeIcon icon={faPencil} />
 				Edit
 			</Button>
 		</>

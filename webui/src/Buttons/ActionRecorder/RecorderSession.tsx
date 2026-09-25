@@ -1,8 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { Callout } from '~/Components/Callout'
-import { Grid } from '~/Components/Grid'
 import { EntityEditorContextProvider } from '~/Controls/Components/EntityEditorContext'
 import { MinimalEntityList } from '~/Controls/Components/EntityList.js'
 import { useEntityListReorderMonitor } from '~/Controls/Components/useEntityListReorderMonitor.js'
@@ -23,7 +21,7 @@ export const RecorderSession = observer(function RecorderSession({ sessionId, se
 	if (!sessionInfo || !sessionInfo.actions) return <LoadingRetryOrError dataReady={false} design="pulse" />
 
 	return (
-		<Grid.Col xs={12} className="flex-form">
+		<div className="recorder-actions-list">
 			<EntityEditorContextProvider
 				controlId={recorderControlId}
 				location={undefined}
@@ -41,7 +39,11 @@ export const RecorderSession = observer(function RecorderSession({ sessionId, se
 					feedbackListType={null}
 				/>
 			</EntityEditorContextProvider>
-			{sessionInfo.actions.length === 0 ? <Callout color="info">No actions have been recorded</Callout> : ''}
-		</Grid.Col>
+			{sessionInfo.actions.length === 0 ? (
+				<div className="recorder-empty-state">
+					No actions recorded yet. Use a supported connection to capture actions.
+				</div>
+			) : null}
+		</div>
 	)
 })

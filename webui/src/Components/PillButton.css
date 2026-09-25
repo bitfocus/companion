@@ -1,0 +1,132 @@
+/* The small toggle/filter pill used by log filters, module category tabs and toolbar toggles.
+   One shape; the active colour comes from `--pill-fill`/`--pill-text`, set by the tone classes
+   below. Lives in the `components` layer, which outranks `features`, so a page's own CSS can still
+   override it and nothing here needs !important. */
+.pill-button {
+	appearance: none;
+	-webkit-appearance: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	flex-shrink: 0;
+	padding: 0.375rem 0.75rem;
+	border: 1px solid var(--color-border);
+	border-radius: 0.5rem;
+	background: var(--color-surface);
+	box-shadow: none;
+	outline: none;
+	color: var(--color-muted);
+	font-size: 0.75rem;
+	font-weight: 500;
+	white-space: nowrap;
+	text-decoration: none;
+	cursor: pointer;
+	transition:
+		color 0.15s ease,
+		background-color 0.15s ease,
+		border-color 0.15s ease;
+
+	&:hover {
+		color: var(--color-body-text);
+		background: var(--color-surface-hover);
+		border-color: var(--color-border-hover);
+	}
+
+	&:focus-visible {
+		outline: 0;
+		box-shadow: 0 0 0 0.25rem var(--color-focus-ring);
+	}
+
+	/* Tighter variant, for a dense row of filters. */
+	&.pill-button-sm {
+		padding: 0.3125rem 0.625rem;
+	}
+
+	&.pill-button-active {
+		background: color-mix(in srgb, var(--pill-fill) 15%, transparent);
+		border-color: color-mix(in srgb, var(--pill-fill) 35%, transparent);
+		color: var(--pill-text);
+		font-weight: 600;
+	}
+
+	/* `primary` is a solid fill rather than a tint - it reads as "this is the whole set", not a tone. */
+	&.pill-button-active.pill-tone-primary {
+		background: var(--color-primary);
+		border-color: var(--color-primary);
+		color: var(--color-on-dark);
+	}
+}
+
+.pill-tone-good {
+	--pill-fill: var(--color-tone-good-fill);
+	--pill-text: var(--color-tone-good-text);
+}
+
+.pill-tone-warning {
+	--pill-fill: var(--color-tone-warning-fill);
+	--pill-text: var(--color-tone-warning-text);
+}
+
+.pill-tone-error {
+	--pill-fill: var(--color-tone-error-fill);
+	--pill-text: var(--color-tone-error-text);
+}
+
+.pill-tone-info {
+	--pill-fill: var(--color-tone-info-fill);
+	--pill-text: var(--color-tone-info-text);
+}
+
+.pill-tone-neutral {
+	--pill-fill: var(--color-tone-neutral-fill);
+	--pill-text: var(--color-tone-neutral-text);
+}
+
+.pill-tone-accent {
+	--pill-fill: var(--color-tone-accent-fill);
+	--pill-text: var(--color-tone-accent-text);
+}
+
+.pill-tone-media {
+	--pill-fill: var(--color-tone-media-fill);
+	--pill-text: var(--color-tone-media-text);
+}
+
+.pill-tone-routing {
+	--pill-fill: var(--color-tone-routing-fill);
+	--pill-text: var(--color-tone-routing-text);
+}
+
+.pill-tone-primary {
+	--pill-fill: var(--color-primary);
+	--pill-text: var(--color-primary);
+}
+
+/* A strip of pills that share one well, as a segmented control. The pills inside lose their own
+   border and ground so the well provides both. */
+.pill-button-group {
+	display: inline-flex;
+	align-items: center;
+	flex-shrink: 0;
+	padding: 0.125rem;
+	border: 1px solid var(--color-border);
+	border-radius: 0.5rem;
+	background: var(--color-surface);
+
+	.pill-button {
+		border-color: transparent;
+		background: transparent;
+		border-radius: 0.375rem;
+		padding: 0.25rem 0.625rem;
+
+		&:not(.pill-button-active):hover {
+			border-color: transparent;
+			background: color-mix(in srgb, var(--pill-fill) 8%, transparent);
+			color: var(--pill-text);
+		}
+
+		&.pill-button-active {
+			border-color: transparent;
+		}
+	}
+}

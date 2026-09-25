@@ -10,7 +10,7 @@ import { UserConfigTextInputRow } from '../Components/UserConfigTextInputRow.js'
 export const CompanionConfig = observer(function CompanionConfig(props: UserConfigProps) {
 	return (
 		<>
-			<UserConfigHeadingRow label="Installation Settings" helpAction="/user-guide/config/settings#general" />
+			<UserConfigHeadingRow label="Installation Settings" />
 			<UserConfigTextInputRow userConfig={props} label="Installation Name" field="installName" />
 			<UserConfigSwitchRow
 				userConfig={props}

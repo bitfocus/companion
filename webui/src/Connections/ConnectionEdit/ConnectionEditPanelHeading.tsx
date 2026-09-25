@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext } from 'react'
+import { useContext } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons.js'
+import { InstanceTableStatusCell } from '~/Instances/List/InstanceTableStatusCell.js'
+import { CloseButton } from '~/Layout/PanelIcons.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { getModuleVersionInfo } from '../../Instances/Util.js'
 
@@ -15,34 +15,26 @@ export const ConnectionEditPanelHeading = observer(function ConnectionEditPanelH
 	connectionInfo,
 	closeConfigurePanel,
 }: ConnectionEditPanelHeadingProps) {
-	const { helpViewer, modules } = useContext(RootAppStoreContext)
+	const { modules, instanceStatuses } = useContext(RootAppStoreContext)
 
 	const moduleInfo = modules.getModuleInfo(connectionInfo.moduleType, connectionInfo.moduleId)
 	const moduleVersion = getModuleVersionInfo(moduleInfo, connectionInfo.moduleVersionId)
-
-	const doShowHelp = useCallback(
-		() =>
-			moduleVersion?.helpPath &&
-			helpViewer.current?.showFromUrl(
-				ModuleInstanceType.Connection,
-				connectionInfo.moduleId,
-				moduleVersion.versionId,
-				moduleVersion.helpPath
-			),
-		[helpViewer, connectionInfo.moduleId, moduleVersion]
-	)
+	const status = instanceStatuses.getStatus(connectionInfo.id)
 
 	return (
-		<div className="secondary-panel-simple-header">
-			<h4 className="panel-title">Edit Connection: {moduleInfo?.display?.name ?? connectionInfo.moduleId}</h4>
-			<div className="header-buttons">
-				{moduleVersion?.helpPath && (
-					<ContextHelpButton action={doShowHelp}>
-						Change properties of the connection here. Click the icon to show instructions for this module.
-					</ContextHelpButton>
-				)}
-				<CloseButton closeFn={closeConfigurePanel} />
+		<div className="secondary-panel-simple-header panel-header-compact panel-header-stacked">
+			<div className="flex items-center gap-2.5 min-w-0 pr-8">
+				<h3 className="text-base font-bold truncate text-body mb-0">{connectionInfo.label}</h3>
+				<InstanceTableStatusCell isEnabled={connectionInfo.enabled !== false} status={status} />
 			</div>
+
+			<div className="flex items-center gap-1.5 text-xs text-muted truncate pr-8">
+				<span className="font-medium text-body">{moduleInfo?.display?.name ?? connectionInfo.moduleId}</span>
+				<span>•</span>
+				<span>{moduleVersion?.displayName ?? connectionInfo.moduleVersionId}</span>
+			</div>
+
+			<CloseButton closeFn={closeConfigurePanel} className="absolute top-2.5 right-3" />
 		</div>
 	)
 })

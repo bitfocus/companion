@@ -1,4 +1,4 @@
-import { faSync, faTrash, faUndo } from '@fortawesome/free-solid-svg-icons'
+import { faSync, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
@@ -6,9 +6,8 @@ import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
-import { Table } from '~/Components/Table.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import type { UserConfigProps } from '../Components/Common.js'
+import { ResetButton, type UserConfigProps } from '../Components/Common.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 import { UserConfigNumberInputRow } from '../Components/UserConfigNumberInputRow.js'
 import { UserConfigPortNumberRow } from '../Components/UserConfigPortNumberRow.js'
@@ -43,14 +42,17 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 
 	return (
 		<>
-			<UserConfigHeadingRow label="HTTPS Web Server" helpAction="/user-guide/config/settings#https-web-server" />
+			<UserConfigHeadingRow label="HTTPS Web Server" />
 
 			<tr>
-				<td colSpan={3}>
-					<p>An HTTPS server can be enabled for the Companion web interfaces should your deployment require it.</p>
-					<StaticAlert color="danger">
-						Never expose the Companion web interface directly to the Internet. Note that HTTPS alone does not provide
-						additional security for this configuration.
+				<td colSpan={3} className="bg-surface-muted/20 p-4">
+					<p className="text-xs text-muted mb-2">
+						An HTTPS server can be enabled for the Companion web interfaces should your deployment require encrypted
+						transport.
+					</p>
+					<StaticAlert color="danger" className="mb-0 text-xs">
+						Never expose the Companion web interface directly to the Internet. HTTPS alone does not protect an
+						unauthenticated or publicly accessible installation.
 					</StaticAlert>
 				</td>
 			</tr>
@@ -72,121 +74,96 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 							/>
 						</td>
 						<td>
-							<Button onClick={() => props.resetValue('https_cert_type')} title="Reset to default">
-								<FontAwesomeIcon icon={faUndo} />
-							</Button>
+							<ResetButton userConfig={props} field="https_cert_type" />
 						</td>
 					</tr>
 
 					{props.config.https_cert_type === 'self' && (
-						<tr>
-							<td colSpan={3}>
-								<Table>
-									<tbody>
-										<tr>
-											<td colSpan={3}>This tool will help create a self-signed certificate for the server to use.</td>
-										</tr>
+						<>
+							<UserConfigTextInputRow userConfig={props} label="Common Name (Domain Name)" field="https_self_cn" />
+							<UserConfigNumberInputRow
+								userConfig={props}
+								label="Certificate Expiry Days"
+								field="https_self_expiry"
+								min={1}
+								max={65535}
+							/>
 
-										<UserConfigTextInputRow
-											userConfig={props}
-											label="Common Name (Domain Name)"
-											field="https_self_cn"
-										/>
-										<UserConfigNumberInputRow
-											userConfig={props}
-											label="Certificate Expiry Days"
-											field="https_self_expiry"
-											min={1}
-											max={65535}
-										/>
-
-										<tr>
-											<td>
-												Certificate Details
-												<br />
-												{props.config.https_self_cert && props.config.https_self_cert.length > 0 ? (
-													<ul>
-														<li>Common Name: {props.config.https_self_cert_cn}</li>
-														<li>Created: {props.config.https_self_cert_created}</li>
-														<li>Expiry Period: {props.config.https_self_cert_expiry}</li>
-													</ul>
-												) : (
-													<ul>
-														<li>No certificate available</li>
-													</ul>
-												)}
-											</td>
-											<td>
-												{props.config.https_self_cert && props.config.https_self_cert.length > 0 ? (
-													<div className="my-4">
-														<Button onClick={renewSslCertificate} color="success" className="mb-2">
-															<FontAwesomeIcon icon={faSync} />
-															&nbsp;Renew
-														</Button>
-														<br />
-														<Button onClick={deleteSslCertificate} color="danger">
-															<FontAwesomeIcon icon={faTrash} />
-															&nbsp;Delete
-														</Button>
-													</div>
-												) : (
-													<Button onClick={createSslCertificate} color="success">
-														<FontAwesomeIcon icon={faSync} />
-														&nbsp;Generate
-													</Button>
-												)}
-											</td>
-											<td>&nbsp;</td>
-										</tr>
-									</tbody>
-								</Table>
-							</td>
-						</tr>
+							<tr>
+								<td>
+									<div className="font-semibold text-body mb-1">Certificate Details</div>
+									{props.config.https_self_cert && props.config.https_self_cert.length > 0 ? (
+										<div className="text-xs text-muted space-y-1">
+											<div>
+												<span className="font-medium text-body">Common Name:</span> {props.config.https_self_cert_cn}
+											</div>
+											<div>
+												<span className="font-medium text-body">Created:</span> {props.config.https_self_cert_created}
+											</div>
+											<div>
+												<span className="font-medium text-body">Validity:</span> {props.config.https_self_cert_expiry}{' '}
+												days
+											</div>
+										</div>
+									) : (
+										<div className="text-xs text-muted italic">No certificate generated yet</div>
+									)}
+								</td>
+								<td className="settings-value-end">
+									<div className="flex items-center justify-end gap-2">
+										{props.config.https_self_cert && props.config.https_self_cert.length > 0 ? (
+											<>
+												<Button onClick={renewSslCertificate} color="success" size="sm">
+													<FontAwesomeIcon icon={faSync} className="me-1.5" />
+													Renew Certificate
+												</Button>
+												<Button onClick={deleteSslCertificate} color="danger" size="sm">
+													<FontAwesomeIcon icon={faTrash} className="me-1.5" />
+													Delete
+												</Button>
+											</>
+										) : (
+											<Button onClick={createSslCertificate} color="success" size="sm">
+												<FontAwesomeIcon icon={faSync} className="me-1.5" />
+												Generate Self-Signed Certificate
+											</Button>
+										)}
+									</div>
+								</td>
+								<td />
+							</tr>
+						</>
 					)}
 
 					{props.config.https_cert_type === 'external' && (
-						<tr>
-							<td colSpan={3}>
-								<Table>
-									<tbody>
-										<tr>
-											<td colSpan={3}>
-												<p>
-													This requires you to generate your own self-signed certificate or go through a certificate
-													authority. A properly signed certificate will work.
-												</p>
-												<StaticAlert color="danger">
-													This option is provided as-is. Support will not be provided for this feature. <br />
-													DO NOT POST GITHUB ISSUES IF THIS DOES NOT WORK.
-												</StaticAlert>
-											</td>
-										</tr>
+						<>
+							<tr>
+								<td colSpan={3} className="bg-surface-muted/20 p-4">
+									<p className="text-xs text-muted mb-2">
+										Provide absolute filesystem paths to your custom certificate and private key files.
+									</p>
+									<StaticAlert color="warning" className="mb-0 text-xs">
+										Ensure the files are accessible and readable by the Companion service process.
+									</StaticAlert>
+								</td>
+							</tr>
 
-										<UserConfigTextInputRow
-											userConfig={props}
-											label="Private Key File (full path)"
-											field="https_ext_private_key"
-										/>
-										<UserConfigTextInputRow
-											userConfig={props}
-											label="Certificate File (full path)"
-											field="https_ext_certificate"
-										/>
-										<UserConfigTextInputRow
-											userConfig={props}
-											label={
-												<>
-													Chain File (full path)
-													<br />
-													*Optional
-												</>
-											}
-											field="https_ext_chain"
-										/>
-									</tbody>
-								</Table>
-							</td>
-						</tr>
+							<UserConfigTextInputRow
+								userConfig={props}
+								label="Private Key File (full path)"
+								field="https_ext_private_key"
+							/>
+							<UserConfigTextInputRow
+								userConfig={props}
+								label="Certificate File (full path)"
+								field="https_ext_certificate"
+							/>
+							<UserConfigTextInputRow
+								userConfig={props}
+								label="Certificate Chain File (optional full path)"
+								field="https_ext_chain"
+							/>
+						</>
 					)}
 				</>
 			)}

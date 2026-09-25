@@ -1,8 +1,11 @@
+import { faImages } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import './image-library.css'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
+import { PageHeader } from '~/Layout/PageHeader'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { MyErrorBoundary } from '~/Resources/Error'
@@ -37,28 +40,31 @@ export const ImageLibraryPage = observer(function ImageLibraryPage() {
 	}, [navigate])
 
 	const twoPanelMode = useTwoPanelMode()
-
 	return (
-		<SplitPanels.Root
-			showing={selectedImageName ? 'secondary' : 'primary'}
-			className="image-library-page"
-			resize={{ storageKey: 'image-library' }}
-		>
-			<SplitPanels.Primary>
-				<MyErrorBoundary>
-					<ImageLibraryGrid selectedImageName={selectedImageName} onSelectImage={handleSelectImage} />
-				</MyErrorBoundary>
-			</SplitPanels.Primary>
+		<div className="page-shell">
+			<PageHeader icon={faImages} title="Image Library" helpAction="/user-guide/config/image-library" />
 
-			<SplitPanels.Secondary>
-				<div className="secondary-panel-simple">
-					{!!selectedImageName && <ImageEditPanelHeading doClose={doCloseImage} twoPanelMode={twoPanelMode} />}
+			<SplitPanels.Root
+				showing={selectedImageName ? 'secondary' : 'primary'}
+				className="image-library-page"
+				resize={{ storageKey: 'image-library' }}
+			>
+				<SplitPanels.Primary>
 					<MyErrorBoundary>
-						<Outlet />
+						<ImageLibraryGrid selectedImageName={selectedImageName} onSelectImage={handleSelectImage} />
 					</MyErrorBoundary>
-				</div>
-			</SplitPanels.Secondary>
-		</SplitPanels.Root>
+				</SplitPanels.Primary>
+
+				<SplitPanels.Secondary>
+					<div className="secondary-panel-simple">
+						{!!selectedImageName && <ImageEditPanelHeading doClose={doCloseImage} twoPanelMode={twoPanelMode} />}
+						<MyErrorBoundary>
+							<Outlet />
+						</MyErrorBoundary>
+					</div>
+				</SplitPanels.Secondary>
+			</SplitPanels.Root>
+		</div>
 	)
 })
 
@@ -69,8 +75,13 @@ interface ImageEditPanelHeadingProps {
 
 function ImageEditPanelHeading({ doClose, twoPanelMode }: ImageEditPanelHeadingProps) {
 	return (
-		<div className="secondary-panel-simple-header">
-			<h4 className="panel-title">Edit Image</h4>
+		<div className="secondary-panel-simple-header panel-header-compact">
+			<div className="flex items-center gap-2">
+				<span className="panel-icon-button">
+					<FontAwesomeIcon icon={faImages} />
+				</span>
+				<h3 className="text-sm font-bold text-body mb-0">Edit Image</h3>
+			</div>
 			<div className="header-buttons">
 				<ContextHelpButton action="/user-guide/config/image-library#editing">Define your image here.</ContextHelpButton>
 				{!twoPanelMode && <CloseButton closeFn={doClose} />}

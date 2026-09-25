@@ -1,0 +1,73 @@
+/* The Buttons secondary panel is a narrow workspace, even on a wide screen. Keep its navigation
+   and every tab's content inside that panel rather than inheriting full-page tab spacing. */
+.buttons-sidebar-tabs {
+	min-width: 0;
+
+	> .tab-bar {
+		gap: 0.25rem;
+		padding: 0.25rem 0.5rem;
+		overflow-x: auto;
+		overflow-y: hidden;
+		background: var(--color-surface-muted);
+	}
+
+	> .tab-bar.tab-bar--overflowing {
+		overflow-x: auto;
+	}
+
+	> .tab-bar .tab-bar__tab {
+		flex: 0 0 auto;
+		margin: 0;
+		padding: 0.375rem 0.5rem;
+		border: 1px solid transparent;
+		border-radius: 0.5rem;
+		font-size: 0.75rem;
+		line-height: 1.25;
+		text-align: center;
+		white-space: nowrap;
+	}
+
+	> .tab-bar .tab-bar__tab[data-active] {
+		border: 1px solid var(--color-border);
+		background: var(--color-surface);
+	}
+
+	> .tab-panel {
+		min-width: 0;
+		padding: 1rem;
+		overflow-x: hidden;
+	}
+
+	.buttons-sidebar-section {
+		min-width: 0;
+		width: 100%;
+	}
+
+	.buttons-sidebar-heading-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		min-height: 2rem;
+		margin-bottom: 0.75rem;
+	}
+
+	.buttons-sidebar-heading {
+		margin: 0;
+		color: var(--color-text-strong);
+		font-size: 0.875rem;
+		font-weight: 700;
+		line-height: 1.25;
+	}
+
+	.action-recorder-panel,
+	.action-recorder-session-heading {
+		min-width: 0;
+	}
+
+	.buttons-sidebar-section > p {
+		margin: 0 0 0.75rem;
+		color: var(--color-muted);
+		font-size: 0.75rem;
+	}
+}

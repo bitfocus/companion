@@ -30,16 +30,16 @@ export const RefreshModuleInfo = observer(function RefreshModuleInfo({
 
 	if (refreshProgress === 1) {
 		return (
-			<Button color="primary" onClick={doRefreshModules}>
-				<FontAwesomeIcon icon={faSync} />
-				&nbsp;Refresh module info
+			<Button color="secondary" size="sm" onClick={doRefreshModules}>
+				<FontAwesomeIcon icon={faSync} className="me-1.5" />
+				Refresh module info
 			</Button>
 		)
 	} else {
 		return (
-			<Button color="primary" disabled>
-				<FontAwesomeIcon icon={faSync} spin={true} />
-				&nbsp;Refreshing module info {Math.round(refreshProgress * 100)}%
+			<Button color="secondary" size="sm" disabled>
+				<FontAwesomeIcon icon={faSync} spin={true} className="me-1.5" />
+				Refreshing module info {Math.round(refreshProgress * 100)}%
 			</Button>
 		)
 	}

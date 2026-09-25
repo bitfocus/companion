@@ -137,7 +137,7 @@ small {
 }
 
 a {
-	color: var(--color-primary);
+	color: var(--color-brand);
 	text-decoration: none;
 }
 a:hover {

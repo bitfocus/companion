@@ -13,6 +13,10 @@ import { useResizeObserver } from '~/Hooks/useResizeObserver.js'
 /**
  * Which panel to show while there is only room for one. `null` when the panels are not alternatives
  * to each other, and both should stay on show at every width.
+ *
+ * `'primary'` additionally means "nothing is open in the secondary panel", so the secondary is
+ * collapsed at *every* width and the primary is given the whole split — a list page shows its list
+ * full width until you open something from it.
  */
 export type SplitPanelsShowing = 'primary' | 'secondary' | null
 
@@ -86,7 +90,11 @@ function SplitPanelsRoot({
 	}
 
 	return (
-		<div className={classNames('split-panels', className)} style={style} {...rest}>
+		<div
+			className={classNames('split-panels', showing === 'primary' && 'split-panels-single', className)}
+			style={style}
+			{...rest}
+		>
 			<ShowingContext.Provider value={showing}>{children}</ShowingContext.Provider>
 		</div>
 	)
@@ -106,7 +114,10 @@ function ResizableSplitPanelsRoot({
 	...rest
 }: ResizableSplitPanelsRootProps): React.JSX.Element {
 	const twoPanelMode = useTwoPanelMode()
-	const resizable = twoPanelMode
+	// Nothing to drag while the secondary panel is collapsed: the primary has the whole split, and the
+	// stored percent is left untouched so it comes back as it was when something is opened again.
+	const collapsed = showing === 'primary'
+	const resizable = twoPanelMode && !collapsed
 
 	const minPrimaryPx = resize.minPrimaryPx ?? SPLIT_PANELS_DEFAULT_MIN_PX
 	const minSecondaryPx = resize.minSecondaryPx ?? SPLIT_PANELS_DEFAULT_MIN_PX
@@ -188,6 +199,37 @@ function ResizableSplitPanelsRoot({
 	}, [defaultPrimaryPercent, setPrimaryPercent])
 
 	const primaryPercentSafe = Number.isFinite(primaryPercent) ? primaryPercent : defaultPrimaryPercent
+
+	const handleKeyDown = useCallback(
+		(e: React.KeyboardEvent<HTMLDivElement>) => {
+			let delta = 0
+			if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+				delta = e.shiftKey ? -10 : -2
+			} else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+				delta = e.shiftKey ? 10 : 2
+			} else if (e.key === 'Home') {
+				e.preventDefault()
+				setPrimaryPercent(20)
+				return
+			} else if (e.key === 'End') {
+				e.preventDefault()
+				setPrimaryPercent(80)
+				return
+			} else if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault()
+				setPrimaryPercent(defaultPrimaryPercent)
+				return
+			} else {
+				return
+			}
+
+			e.preventDefault()
+			const newPercent = Math.min(80, Math.max(20, primaryPercentSafe + delta))
+			setPrimaryPercent(newPercent)
+		},
+		[primaryPercentSafe, defaultPrimaryPercent, setPrimaryPercent]
+	)
+
 	const mergedStyle = resizable
 		? { ...style, gridTemplateColumns: gridTemplateColumnsFor(minPrimaryPx, minSecondaryPx, primaryPercentSafe) }
 		: style
@@ -195,7 +237,12 @@ function ResizableSplitPanelsRoot({
 	return (
 		<div
 			ref={rootRef}
-			className={classNames('split-panels', resizable && 'split-panels-resizable', className)}
+			className={classNames(
+				'split-panels',
+				collapsed && 'split-panels-single',
+				resizable && 'split-panels-resizable',
+				className
+			)}
 			style={mergedStyle}
 			{...rest}
 		>
@@ -206,8 +253,14 @@ function ResizableSplitPanelsRoot({
 					className="split-panels-resize-handle"
 					onPointerDown={handlePointerDown}
 					onDoubleClick={handleDoubleClick}
+					onKeyDown={handleKeyDown}
 					role="separator"
+					tabIndex={0}
 					aria-orientation="vertical"
+					aria-label="Resize panel split"
+					aria-valuenow={Math.round(primaryPercentSafe)}
+					aria-valuemin={20}
+					aria-valuemax={80}
 				/>
 			)}
 		</div>
@@ -216,8 +269,9 @@ function ResizableSplitPanelsRoot({
 
 export type SplitPanelProps = HTMLAttributes<HTMLDivElement>
 
-// The panels only ever *hide*, below the width at which both fit. Nothing sets a display for the
-// visible state, so a panel keeps whatever its own classes give it (`.flex-column-layout`, say).
+// The panels only ever *hide* — the secondary whenever nothing is open in it, the primary below the
+// width at which both fit. Nothing sets a display for the visible state, so a panel keeps whatever
+// its own classes give it (`.flex-column-layout`, say).
 function SplitPanelsPrimary({ className, ...rest }: SplitPanelProps): React.JSX.Element {
 	const showing = useContext(ShowingContext)
 
@@ -229,9 +283,7 @@ function SplitPanelsPrimary({ className, ...rest }: SplitPanelProps): React.JSX.
 function SplitPanelsSecondary({ className, ...rest }: SplitPanelProps): React.JSX.Element {
 	const showing = useContext(ShowingContext)
 
-	return (
-		<div className={classNames('secondary-panel', showing === 'primary' && 'max-xl:hidden', className)} {...rest} />
-	)
+	return <div className={classNames('secondary-panel', showing === 'primary' && 'hidden', className)} {...rest} />
 }
 
 export const SplitPanels = {

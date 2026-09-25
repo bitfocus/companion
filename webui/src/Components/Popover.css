@@ -3,10 +3,10 @@
 .popover2-popup {
 	--popover2-bg: var(--color-surface);
 	--popover2-border-color: var(--color-border, rgba(0, 0, 21, 0.175));
-	--popover2-border-radius: var(--radius);
-	--popover2-padding-y: 0.5rem;
-	--popover2-item-padding-x: 1rem;
-	--popover2-item-padding-y: 0.25rem;
+	--popover2-border-radius: 0.75rem;
+	--popover2-padding-y: 0.35rem;
+	--popover2-item-padding-x: 0.75rem;
+	--popover2-item-padding-y: 0.35rem;
 	--popover2-link-color: var(--color-text);
 	--popover2-link-hover-color: var(--color-text);
 	--popover2-link-hover-bg: var(--color-surface-hover);
@@ -56,16 +56,21 @@
 /* ─── Item ────────────────────────────────────────────────────────────────────── */
 
 .popover2-item {
-	display: block;
-	width: 100%;
+	display: flex;
+	align-items: center;
+	width: calc(100% - 0.5rem);
+	margin: 0.125rem 0.25rem;
 	padding: var(--popover2-item-padding-y) var(--popover2-item-padding-x);
-	font-size: 0.95rem;
+	font-size: 0.875rem;
+	border-radius: 0.5rem;
 	color: var(--popover2-link-color);
 	text-align: left;
 	background-color: transparent;
 	border: 0;
 	cursor: pointer;
-	transition: background-color 0.15s ease-in-out;
+	transition:
+		background-color 0.15s ease-in-out,
+		color 0.15s ease-in-out;
 
 	&:hover,
 	&:focus-visible {

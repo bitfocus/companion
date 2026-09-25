@@ -1,4 +1,5 @@
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
+import classNames from 'classnames'
 import './modules-manage.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
@@ -208,27 +209,36 @@ export function ImportModules(): React.JSX.Element {
 				? 'enable remote custom module imports in the Companion launcher settings, under "Dangerous Features".'
 				: 'start Companion with --enable-restricted-modules (or set COMPANION_ENABLE_RESTRICTED_MODULES=1) to allow remote clients.')
 
-	const disabledButtonStyle = importAllowed ? undefined : { opacity: 0.65, cursor: 'not-allowed' as const }
-
 	return (
-		<div className="import-module">
-			<label className="button button-warning button-file" title={importDisabledTooltip} style={disabledButtonStyle}>
-				<FontAwesomeIcon icon={faFileImport} style={{ marginRight: 8, marginLeft: -3 }} />
-				Import module package
+		<div className="flex items-center gap-2 flex-wrap">
+			<label
+				className={classNames(
+					'button button-outline-primary button-sm inline-flex items-center justify-center gap-1.5 cursor-pointer font-semibold text-xs h-9 px-3 rounded-md transition-colors shadow-xs mb-0',
+					!importAllowed && 'opacity-65 cursor-not-allowed'
+				)}
+				title={importDisabledTooltip ?? 'Install a single module package (.tgz)'}
+			>
+				<FontAwesomeIcon icon={faFileImport} />
+				<span>Import Package</span>
 				<input type="file" onChange={loadModuleFile} className="hidden" accept=".tgz" disabled={!importAllowed} />
 			</label>
-			&nbsp;
-			<label className="button button-info button-file" title={importDisabledTooltip} style={disabledButtonStyle}>
-				<FontAwesomeIcon icon={faFileImport} style={{ marginRight: 8, marginLeft: -3 }} />
-				Import offline module bundle
+
+			<label
+				className={classNames(
+					'button button-outline-primary button-sm inline-flex items-center justify-center gap-1.5 cursor-pointer font-semibold text-xs h-9 px-3 rounded-md transition-colors shadow-xs mb-0',
+					!importAllowed && 'opacity-65 cursor-not-allowed'
+				)}
+				title={importDisabledTooltip ?? 'Import a module bundle containing multiple packages (.tgz or .gz)'}
+			>
+				<FontAwesomeIcon icon={faFileImport} />
+				<span>Import Bundle</span>
 				<input type="file" onChange={loadModuleBundle} className="hidden" accept=".tgz,.gz" disabled={!importAllowed} />
 			</label>
-			{importError ? (
-				<DismissableAlert color="warning" onClose={() => setImportError(null)}>
+
+			{importError && (
+				<DismissableAlert color="warning" onClose={() => setImportError(null)} className="w-full mt-2 mb-0 text-xs">
 					{importError}
 				</DismissableAlert>
-			) : (
-				''
 			)}
 		</div>
 	)

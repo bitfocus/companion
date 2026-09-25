@@ -1,4 +1,4 @@
-import { faPencil, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faClock, faHand, faPencil, faStopwatch, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef } from 'react'
 import type { ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
@@ -74,11 +74,19 @@ export function EditActionsRelease({
 	const components = candidate_sets.map(([id, actions]) => {
 		const runWhileHeld = stepOptions.runWhileHeld.includes(Number(id))
 		const ident = runWhileHeld ? `Held for ${id}ms` : `Release after ${id}ms`
+		const icon = runWhileHeld ? faStopwatch : faClock
+		const iconColor = runWhileHeld ? 'text-amber-500' : 'text-muted'
+
 		return (
 			<MyErrorBoundary key={id}>
 				<ControlEntitiesEditor
 					key={id}
-					heading={`${ident} actions`}
+					heading={
+						<div className="flex items-center gap-2">
+							<FontAwesomeIcon icon={icon} className={`${iconColor} text-xs`} />
+							<span>{ident} actions</span>
+						</div>
+					}
 					headingActions={[
 						<Button key="rename" title="Configure" size="sm" onClick={() => configureSet(id)}>
 							<FontAwesomeIcon icon={faPencil} />
@@ -107,7 +115,12 @@ export function EditActionsRelease({
 
 			<MyErrorBoundary>
 				<ControlEntitiesEditor
-					heading={candidate_sets.length ? 'Short release actions' : 'Release actions'}
+					heading={
+						<div className="flex items-center gap-2">
+							<FontAwesomeIcon icon={faHand} className="text-secondary text-xs" />
+							<span>{candidate_sets.length ? 'Short release actions' : 'Release actions (On Up)'}</span>
+						</div>
+					}
 					controlId={controlId}
 					location={location}
 					listId={{ stepId, setId: 'up' }}

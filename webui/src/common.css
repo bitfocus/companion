@@ -2,6 +2,28 @@
    in utilities.css.) */
 
 /* ── Element defaults ─────────────────────────────────────────────────────── */
+button {
+	appearance: none;
+	-webkit-appearance: none;
+	background: transparent;
+	border: 0;
+	padding: 0;
+	margin: 0;
+	font: inherit;
+	color: inherit;
+	text-align: inherit;
+	text-decoration: none;
+	box-shadow: none;
+	outline: none;
+
+	/* The reset above drops the UA outline, so raw buttons need their own keyboard focus ring. Styled
+	   components (Button, PillButton, …) define a matching ring of their own. */
+	&:focus-visible {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 2px;
+	}
+}
+
 h4,
 h5 {
 	font-weight: bold;
@@ -112,4 +134,15 @@ svg.button-size {
 
 .c-switch-input {
 	display: none;
+}
+
+/* The standard content card: a bordered, rounded surface panel. Repeated on every settings, import
+   and cloud page, so it is named here rather than pasted as five utilities each time. Lives in
+   app-base, below `components` and `features`, so any component or page can still override it. */
+.surface-card {
+	border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+	border-radius: 0.75rem;
+	background: var(--color-surface);
+	box-shadow: 0 1px 2px 0 var(--color-shadow-6);
+	overflow: hidden;
 }

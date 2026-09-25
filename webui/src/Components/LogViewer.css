@@ -1,0 +1,97 @@
+/* The shared log row, used by the system log and the per-instance debug log. The level tint comes
+   from the same --color-tone-* tokens as Badge and PillButton, so all three agree. */
+.log-line {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.625rem;
+	margin: 0.125rem 0;
+	padding: 0.25rem 0.625rem;
+	border: 1px solid transparent;
+	border-radius: 0.375rem;
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+	line-height: 1.625;
+	transition: background-color 0.15s ease;
+
+	&:hover {
+		background: color-mix(in srgb, var(--color-surface-hover) 60%, transparent);
+	}
+}
+
+/* Rows that carry a severity are tinted; info/debug/console stay on the plain ground. */
+.log-line-error,
+.log-line-warn {
+	background: color-mix(in srgb, var(--log-line-fill) 8%, transparent);
+	border-color: color-mix(in srgb, var(--log-line-fill) 20%, transparent);
+
+	&:hover {
+		background: color-mix(in srgb, var(--log-line-fill) 14%, transparent);
+	}
+}
+
+.log-line-error {
+	--log-line-fill: var(--color-tone-error-fill);
+}
+
+.log-line-warn {
+	--log-line-fill: var(--color-tone-warning-fill);
+}
+
+.log-level-badge {
+	flex-shrink: 0;
+	padding: 0.125rem 0.375rem;
+	border: 1px solid color-mix(in srgb, var(--log-level-fill) 30%, transparent);
+	border-radius: 0.25rem;
+	background: color-mix(in srgb, var(--log-level-fill) 18%, transparent);
+	color: var(--log-level-text);
+	font-size: 0.625rem;
+	font-weight: 700;
+	text-align: center;
+	text-transform: uppercase;
+	user-select: none;
+}
+
+.log-level-badge-error {
+	--log-level-fill: var(--color-tone-error-fill);
+	--log-level-text: var(--color-tone-error-text);
+}
+
+.log-level-badge-warn {
+	--log-level-fill: var(--color-tone-warning-fill);
+	--log-level-text: var(--color-tone-warning-text);
+}
+
+.log-level-badge-info {
+	--log-level-fill: var(--color-tone-info-fill);
+	--log-level-text: var(--color-tone-info-text);
+}
+
+.log-level-badge-debug {
+	--log-level-fill: var(--color-tone-neutral-fill);
+	--log-level-text: var(--color-tone-neutral-text);
+}
+
+.log-level-badge-console {
+	--log-level-fill: var(--color-tone-media-fill);
+	--log-level-text: var(--color-tone-media-text);
+}
+
+/* A fixed-width badge column, so the message text of every row lines up. */
+.log-level-badge-fixed {
+	width: 3rem;
+}
+
+/* The "older logs are on disk" style notice that heads both viewers. */
+.log-notice-line {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 0.25rem;
+	padding: 0.375rem 0.75rem;
+	border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+	border-radius: 0.5rem;
+	background: color-mix(in srgb, var(--color-surface-muted) 60%, transparent);
+	color: var(--color-muted);
+	font-family: var(--font-sans);
+	font-size: 0.75rem;
+}

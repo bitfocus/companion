@@ -1,10 +1,9 @@
 import { useSubscription } from '@trpc/tanstack-react-query'
+import './Recorder.css'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useMemo, useRef } from 'react'
 import type { RecordSessionUpdate } from '@companion-app/shared/Model/ActionRecorderModel.js'
-import { Callout } from '~/Components/Callout.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { Grid } from '~/Components/Grid'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { trpc } from '~/Resources/TRPC.js'
 import { useComputed } from '~/Resources/util.js'
@@ -60,7 +59,7 @@ export const ActionRecorder = observer(function ActionRecorder(): React.JSX.Elem
 	)
 
 	return (
-		<Grid.Row className="action-recorder-panel">
+		<div className="action-recorder-panel buttons-sidebar-section">
 			<GenericConfirmModal ref={confirmRef} />
 
 			{sessionsStore.isFinishing && selectedSessionId ? (
@@ -69,30 +68,32 @@ export const ActionRecorder = observer(function ActionRecorder(): React.JSX.Elem
 				''
 			)}
 
-			<Grid.Col xs={12} className="sticky-heading pt-4">
-				<h5>Action Recorder</h5>
-				<p>
-					You can use this panel to record actions as you make changes directly on a configured device. <br />
-					Not many modules support this, and they don't support it for every action.
-				</p>
-				<div style={{ margin: -12, marginTop: 10 }}>
-					{sessionsStore.selectedSessionInfo && (
-						<RecorderSessionHeading
-							confirmRef={confirmRef}
-							sessionInfo={sessionsStore.selectedSessionInfo}
-							doFinish={openFinishingModal}
-						/>
-					)}
-				</div>
-			</Grid.Col>
+			<div className="buttons-sidebar-heading-row">
+				<h5 className="buttons-sidebar-heading">Recorder</h5>
+			</div>
+			<div className="action-recorder-session-heading">
+				{sessionsStore.selectedSessionInfo && (
+					<RecorderSessionHeading
+						confirmRef={confirmRef}
+						sessionInfo={sessionsStore.selectedSessionInfo}
+						doFinish={openFinishingModal}
+					/>
+				)}
+			</div>
 
 			{selectedSessionId ? (
-				<PanelCollapseHelperProvider storageId="action_recorder" knownPanelIds={actionIds}>
-					<RecorderSession sessionId={selectedSessionId} sessionInfo={sessionsStore.selectedSessionInfo} />
-				</PanelCollapseHelperProvider>
+				<section className="recorder-actions-section">
+					<div className="recorder-actions-header">
+						<h6>Recorded actions</h6>
+						<span>{actionIds.length}</span>
+					</div>
+					<PanelCollapseHelperProvider storageId="action_recorder" knownPanelIds={actionIds}>
+						<RecorderSession sessionId={selectedSessionId} sessionInfo={sessionsStore.selectedSessionInfo} />
+					</PanelCollapseHelperProvider>
+				</section>
 			) : (
-				<Callout color="danger">There is no session, this looks like a bug!</Callout>
+				<div className="recorder-empty-state">No recording session is available yet.</div>
 			)}
-		</Grid.Row>
+		</div>
 	)
 })

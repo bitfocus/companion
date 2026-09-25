@@ -2,7 +2,7 @@ import { faPlay, faRedo, faStop, faUndo } from '@fortawesome/free-solid-svg-icon
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { Button, ButtonGroup } from '~/Components/Button'
+import { Button } from '~/Components/Button'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
@@ -42,36 +42,53 @@ export function ControlHotPressButtons({
 	}, [hotAbortMutation, location])
 
 	return (
-		<>
-			<ButtonGroup>
-				<Button
-					className="ms-1"
-					color="warning"
-					onMouseDown={hotPressDown}
-					onMouseUp={hotPressUp}
-					title="Test press button"
-				>
-					<FontAwesomeIcon icon={faPlay} />
-					&nbsp;Test
-				</Button>
+		<div className="control-hotpress-actions" role="group" aria-label="Test button actions">
+			<Button
+				className="edit-button-toolbar-action"
+				color="primary"
+				size="sm"
+				onMouseDown={hotPressDown}
+				onMouseUp={hotPressUp}
+				title="Test press button"
+			>
+				<FontAwesomeIcon icon={faPlay} />
+				Test
+			</Button>
 
-				{showRotaries && (
-					<MyErrorBoundary>
-						<Button color="warning" onMouseDown={hotRotateLeft} title="Test rotate left">
-							<FontAwesomeIcon icon={faUndo} />
-						</Button>
+			{showRotaries && (
+				<MyErrorBoundary>
+					<Button
+						className="edit-button-toolbar-action"
+						color="secondary"
+						size="sm"
+						onMouseDown={hotRotateLeft}
+						title="Test rotate left"
+					>
+						<FontAwesomeIcon icon={faUndo} />
+					</Button>
 
-						<Button color="warning" onMouseDown={hotRotateRight} title="Test rotate right">
-							<FontAwesomeIcon icon={faRedo} />
-						</Button>
-					</MyErrorBoundary>
-				)}
+					<Button
+						className="edit-button-toolbar-action"
+						color="secondary"
+						size="sm"
+						onMouseDown={hotRotateRight}
+						title="Test rotate right"
+					>
+						<FontAwesomeIcon icon={faRedo} />
+					</Button>
+				</MyErrorBoundary>
+			)}
 
-				<Button color="secondary" onMouseDown={hotAbortActions} title="Abort running actions">
-					<FontAwesomeIcon icon={faStop} />
-					&nbsp;Stop
-				</Button>
-			</ButtonGroup>
-		</>
+			<Button
+				className="edit-button-toolbar-action"
+				color="danger"
+				size="sm"
+				onMouseDown={hotAbortActions}
+				title="Abort running actions"
+			>
+				<FontAwesomeIcon icon={faStop} />
+				Stop
+			</Button>
+		</div>
 	)
 }

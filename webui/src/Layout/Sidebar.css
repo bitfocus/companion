@@ -14,10 +14,10 @@
 	--color-text-strong: #fff;
 	--color-muted: rgba(255, 255, 255, 0.6);
 	--color-text-faint: rgba(255, 255, 255, 0.38);
-	--color-surface-dark: #212631;
-	--color-surface-muted: #323a49;
-	--color-surface-subtle: rgb(41.5, 48, 61);
-	--color-border: #323a49;
+	--color-surface-dark: #18181b;
+	--color-surface-muted: #27272a;
+	--color-surface-subtle: #27272a;
+	--color-border: #27272a;
 
 	position: relative;
 	display: flex;
@@ -27,7 +27,7 @@
 	order: -1;
 	width: 16rem;
 	color: var(--color-text);
-	background: #111;
+	background: linear-gradient(180deg, #2c0e0f 0%, #09090b 45%);
 	box-shadow: none;
 	margin-inline-start: 0;
 	transition:
@@ -125,6 +125,7 @@
 	/* Override <a>'s hover style */
 	&:hover {
 		text-decoration: none;
+
 		&::before {
 			background-color: var(--color-muted);
 		}
@@ -163,6 +164,7 @@
 		&.fade {
 			opacity: 0;
 		}
+
 		&.show {
 			opacity: var(--sidebar-backdrop-opacity);
 		}
@@ -172,7 +174,7 @@
 .sidebar-nav {
 	/* Kept custom properties (set/overridden by our own rules below): */
 	--sidebar-nav-link-bg: transparent;
-	--sidebar-nav-link-active-bg: var(--color-surface-subtle);
+	--sidebar-nav-link-active-bg: rgba(255, 255, 255, 0.08);
 	--sidebar-nav-link-border-radius: var(--radius);
 	--sidebar-nav-link-icon-color: var(--color-text-faint);
 	--sidebar-nav-link-padding-x: 0.5rem;
@@ -181,6 +183,7 @@
 	display: flex;
 	flex: 1;
 	flex-direction: column;
+	min-height: 0;
 	padding: 0.5rem 0.5rem;
 	margin-bottom: 0;
 	overflow-x: hidden;
@@ -194,11 +197,15 @@
 	}
 
 	.nav-link {
+		position: relative;
 		display: flex;
 		flex: 1;
+		width: 100%; /* buttons (nav-group-toggle) don't stretch to fill like a block element otherwise */
 		align-items: center;
 		padding: 0.75rem var(--sidebar-nav-link-padding-x);
+		font: inherit;
 		color: var(--color-text);
+		text-align: start;
 		text-decoration: none;
 		white-space: nowrap;
 		background: var(--sidebar-nav-link-bg);
@@ -219,6 +226,17 @@
 
 			.nav-icon {
 				color: var(--color-text-strong);
+			}
+
+			&::before {
+				content: '';
+				position: absolute;
+				left: 4px;
+				top: 20%;
+				height: 60%;
+				width: 3px;
+				background-color: var(--color-accent-active);
+				border-radius: 9999px;
 			}
 		}
 
@@ -270,7 +288,7 @@
 		align-items: center;
 		justify-content: center;
 		height: 1.25rem;
-		margin-inline-end: 0.75rem;
+		margin-inline-end: 0.875rem;
 		font-size: 1.25rem;
 		color: var(--sidebar-nav-link-icon-color);
 		text-align: center;
@@ -294,7 +312,8 @@
 
 	/* stylelint-disable-next-line selector-no-qualifying-type */
 	svg.nav-icon {
-		overflow: hidden; /* fix chrome 105+ width issue */
+		overflow: hidden;
+		/* fix chrome 105+ width issue */
 	}
 
 	.nav-group {
@@ -453,10 +472,6 @@
 
 		.sidebar-brand-full {
 			white-space: nowrap;
-
-			img {
-				margin-top: -5px;
-			}
 		}
 
 		.sidebar-brand-narrow {
@@ -466,15 +481,26 @@
 	}
 
 	.sidebar-header {
-		min-height: calc(4rem + 1px); /* stylelint-disable-line function-disallowed-list */
+		min-height: calc(3.25rem + 1px); /* stylelint-disable-line function-disallowed-list */
 
-		background-color: #a20210;
+		background: transparent;
 		justify-content: left;
-		padding-left: 11px;
+		padding: 0 11px;
+		/* Align vertical height with main header */
+		flex-shrink: 0;
+	}
+
+	.nav-title {
+		padding: 1rem 1rem 0.4rem 1.25rem;
+		font-size: 0.65rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--color-muted);
 	}
 
 	.nav-link {
-		--sidebar-nav-link-bg: #191919;
+		--sidebar-nav-link-bg: transparent;
 
 		/* note: .nav-group-toggle, below, overrides these three lines. */
 		margin-bottom: 0.15rem;
@@ -489,8 +515,10 @@
 		.nav-icon-wrapper {
 			width: 32px;
 			min-width: 32px;
-			min-height: calc(1.5 * 1em); /* so nav-link height doesn't change when we hide the text */
-			margin: 0; /* let .full-label handle the margin so the icon can be on its own in narrow sidebars */
+			min-height: calc(1.5 * 1em);
+			/* so nav-link height doesn't change when we hide the text */
+			margin: 0;
+			/* let .full-label handle the margin so the icon can be on its own in narrow sidebars */
 			text-align: center;
 			justify-content: center;
 
@@ -519,9 +547,18 @@
 		/* CoreUI CSS only allows narrow width for "non-mobile" mode (@media (min-width: 992px)), so make it universal here: */
 		width: var(--sidebar-narrow-width);
 
-		.sidebar-brand-narrow {
-			display: block;
+		.sidebar-header {
+			justify-content: center;
+			padding-left: 0;
+			padding-right: 0;
 		}
+
+		.sidebar-brand-narrow {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
 		.sidebar-brand-full {
 			display: none;
 		}
@@ -530,9 +567,29 @@
 	/* note: in .sidebar, .show is present in mobile mode, during which we ignore sidebar-narrow-unfoldable but not sidebar-narrow */
 	&.sidebar-narrow-unfoldable:not(.show, :hover),
 	&.sidebar-narrow {
+		.sidebar-header {
+			justify-content: center;
+			padding-left: 0;
+			padding-right: 0;
+		}
+
+		.sidebar-brand-full {
+			display: none;
+		}
+
+		.sidebar-brand-narrow {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			width: 100%;
+			margin-left: 0;
+			margin-right: 0;
+		}
+
 		/* when sidebar is narrow hide things including the label and toggler */
 		.nav-group-toggle::after,
-		.full-label {
+		.full-label,
+		.nav-title {
 			display: none;
 		}
 
@@ -555,7 +612,7 @@
 	}
 
 	.nav-link:hover {
-		background-color: #262626 !important;
+		background-color: rgba(255, 255, 255, 0.04);
 	}
 
 	.nav-secondary {
@@ -565,6 +622,7 @@
 		.nav-group-toggle::after {
 			transform: rotate(180deg);
 		}
+
 		.show > .nav-group-toggle::after {
 			transform: rotate(0deg);
 		}
@@ -576,15 +634,6 @@
 	/*           .nav-link */
 	/*       .nav-group-items */
 	.nav-group {
-		/* border to include the toggler. A subsequent rule thickens the border for the group items section. */
-		border-left: 1px solid var(--sidebar-nav-link-icon-color);
-		/* border-bottom: 1px solid var(--sidebar-nav-link-icon-color); optional bottom edge */
-
-		> .nav-link > .nav-link {
-			/* compensate for the border, so the icons stays centered relative to non-group items */
-			padding-left: calc(var(--sidebar-nav-link-padding-x) - 1px);
-		}
-
 		&.show > .nav-link {
 			/* make the toggler "active" when open (this only affects the caret in the "split-button", i.e. label is in a separate div) */
 			background: var(--sidebar-nav-link-active-bg);
@@ -592,51 +641,40 @@
 	}
 
 	.nav-group-toggle {
-		/* override the default padding so we don't double-pad: only the nested nav-link is padded (see Sidebar groups, DOM comment, above) */
-		padding: 0;
+		padding: 0.75rem var(--sidebar-nav-link-padding-x);
 
 		&::after {
-			/* affects the caret */
-			margin-left: 16px;
-			margin-right: 16px;
-			background-color: white;
-			mask-repeat: no-repeat;
+			display: none;
 		}
+
 		.nav-link {
 			margin-bottom: 0;
 		}
 	}
 
-	/* highlighting for the group-items container (contains all the items excluding the group-toggler line) */
-	/* we need specificity here to override padding and margin on .nav-group-items when sidebar is narrow (CUI wants them 0) */
-	&.sidebar-narrow .nav-group.show .nav-group-items, /* override CUI in narrow mode */
-	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items, /* override CUI */
+	/* highlighting for the group-items container */
 	.nav-group-items {
-		/* the box underneath and containing the expanded group */
-		padding-left: 1px !important; /* to separate nested groups */
-		border-left: 2px solid var(--sidebar-nav-link-icon-color); /* to visually group the items in a group */
-		border-bottom-left-radius: var(--sidebar-nav-link-border-radius);
+		padding-left: 0.75rem;
+		/* Indent sub-items to make hierarchy clear */
 	}
 
-	/* override CUI so nav-group-items show when sidebar is narrow (CoreUI tries to override these with !important, so we have to as well) */
-	&.sidebar-narrow .nav-group.show .nav-group-items, /* override CUI so nav-group-items show in narrow mode */
+	/* override CUI so nav-group-items show when sidebar is narrow */
+	&.sidebar-narrow .nav-group.show .nav-group-items,
 	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items {
-		height: auto !important;
-		visibility: visible !important; /* !important is not currently necessary on this, but CUI could change it */
-		opacity: 1 !important; /* !important is not currently necessary on this, but CUI could change it */
+		height: auto;
+		visibility: visible;
+		opacity: 1;
+		padding-left: 0;
+		/* No indentation in narrow/folded mode to keep icons centered */
 
 		.nav-link {
-			/* when narrow, remove the default padding set in the next rule. */
-			/* the borders defined above still provide a bit of offset in this case. */
 			padding-left: 0;
 		}
 	}
 
-	/* the individual buttons in a group (overrides something CUI? - spacing is odd when narrow otherwise) */
+	/* the individual buttons in a group */
 	.sidebar-nav .nav-group-items .nav-link {
-		/* even though this is the default padding, CUI does something strange to it with `padding-inline-start` so we need to override it here */
 		padding-left: var(--sidebar-nav-link-padding-x);
-		/* smoother transition for icons when expanding the sidebar. The exact number isn't critical. */
 		transition: padding-left 0.1s;
 		justify-content: center;
 
@@ -645,21 +683,60 @@
 		}
 	}
 
+	.sidebar-update-notice {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		width: 100%;
+		padding: 0.5rem 0.625rem;
+		border: 1px solid --alpha(var(--color-amber-500) / 40%);
+		border-radius: 0.375rem;
+		background: --alpha(var(--color-amber-500) / 12%);
+		color: var(--color-amber-400);
+		font-size: 0.75rem;
+		font-weight: 500;
+		line-height: 1.3;
+		text-decoration: none;
+		transition: background 0.15s;
+
+		&:hover {
+			background: --alpha(var(--color-amber-500) / 22%);
+			color: var(--color-amber-300);
+		}
+	}
+
+	.sidebar-update-notice-compact {
+		position: relative;
+		width: 2.25rem;
+		height: 2.25rem;
+		padding: 0;
+		justify-content: center;
+
+		.sidebar-update-notice-dot {
+			position: absolute;
+			top: -3px;
+			right: -3px;
+			width: 8px;
+			height: 8px;
+			border-radius: 9999px;
+			background: var(--color-amber-500);
+		}
+	}
+
 	.sidebar-footer2 {
 		justify-content: left;
-		padding: 0.5rem 1rem;
 		border-top: var(--border-width) solid var(--color-border);
 
 		.sidebar-footer-toggler {
 			display: flex;
 			overflow: hidden;
 
-			background: none !important;
-			border: none !important;
+			background: none;
+			border: none;
 
 			&:hover {
-				background: none !important;
-				border: none !important;
+				background: none;
+				border: none;
 			}
 
 			.nav-icon-wrapper {
@@ -688,6 +765,7 @@
 				color: #aaa;
 				display: block;
 			}
+
 			.version-sub {
 				font-size: 0.85em;
 				color: #888;
@@ -726,7 +804,7 @@
 }
 
 .notification-count {
-	background-color: var(--color-primary);
+	background-color: var(--color-brand);
 	color: #fff;
 	font-weight: bold;
 
@@ -739,4 +817,148 @@
 	/* margin-right: -0.5rem; */
 	min-width: calc(1.5 * 1em);
 	display: inline-block;
+}
+
+/* Sidebar Submenus / Accordion Nested Lists */
+.nav-sub-list {
+	list-style: none;
+	padding: 0.25rem 0 0.5rem 0;
+	margin: 0;
+	position: relative;
+}
+
+/* Vertical indented line connecting sub-items */
+.nav-sub-list::before {
+	content: '';
+	position: absolute;
+	left: 1.5rem;
+	top: 0;
+	bottom: 0.75rem;
+	width: 1px;
+	background-color: var(--color-border);
+}
+
+/* Nested under `.sidebar-nav` so these match the specificity of the `.nav-link` rules above and
+   win on order, rather than needing `!important` on every declaration. */
+.sidebar-nav {
+	.nav-sub-link {
+		padding: 0.5rem 1rem 0.5rem 2.5rem;
+		font-size: 13px;
+		color: var(--color-muted);
+		display: flex;
+		align-items: center;
+		background: transparent;
+		border-radius: var(--sidebar-nav-link-border-radius);
+		transition:
+			color 0.15s ease,
+			background-color 0.15s ease;
+
+		&:hover {
+			color: var(--color-text-strong);
+			background-color: rgba(255, 255, 255, 0.04);
+		}
+
+		&.active {
+			color: var(--color-text-strong);
+			background-color: rgba(255, 255, 255, 0.08);
+
+			&::before {
+				content: '';
+				position: absolute;
+				left: 1.4rem; /* Aligns exactly with the vertical tree line */
+				top: 35%;
+				height: 30%;
+				width: 3px;
+				background-color: var(--color-accent-active);
+				border-radius: 9999px;
+			}
+		}
+	}
+}
+/* Floating "show sidebar" button, rendered by App.tsx in mobile mode. Lives outside `.sidebar`, so
+   it carries its own dark chrome rather than inheriting the sidebar's token overrides. */
+.sidebar-mobile-toggle {
+	position: fixed;
+	top: 0.75rem;
+	left: 0.75rem;
+	z-index: 1034; /* below the open sidebar, so it does not overlap the brand */
+	width: 2.5rem;
+	height: 2.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #fff;
+	background-color: rgba(24, 24, 27, 0.85);
+	border: 1px solid rgba(63, 63, 70, 0.5);
+	border-radius: 9999px;
+	box-shadow: 0 4px 6px -1px var(--color-shadow-30);
+
+	&:hover {
+		background-color: #27272a;
+	}
+}
+
+/* Popover menu shown for a nav group when the sidebar is narrow. */
+.sidebar-popover-menu {
+	display: flex;
+	flex-direction: column;
+	padding: 0.375rem;
+	min-width: 140px;
+
+	.sidebar-popover-list,
+	ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	li {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.nav-sub-link {
+		padding: 0.375rem 0.625rem;
+		font-size: 13px;
+		color: var(--color-muted);
+		border-radius: var(--radius);
+		display: flex;
+		align-items: center;
+		text-decoration: none;
+		transition:
+			color 0.15s ease,
+			background-color 0.15s ease;
+
+		&:hover {
+			color: var(--color-text-strong);
+			background-color: rgba(255, 255, 255, 0.08);
+		}
+
+		&.active {
+			color: var(--color-text-strong);
+			background-color: rgba(255, 255, 255, 0.12);
+			font-weight: 600;
+		}
+	}
+}
+
+/* The install-name chip under the brand. */
+.sidebar-install-name {
+	height: 26px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: auto;
+	min-width: 0;
+	padding: 0 0.625rem;
+	font-size: var(--text-2xs);
+	font-weight: 700;
+	letter-spacing: 0.025em;
+	text-transform: uppercase;
+	color: #d4d4d8;
+	background-color: rgba(39, 39, 42, 0.4);
+	border: 1px solid rgba(63, 63, 70, 0.3);
+	border-radius: 0.375rem;
+	box-shadow: 0 1px 2px 0 var(--color-shadow-30);
 }

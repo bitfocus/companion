@@ -17,7 +17,6 @@ import {
 import { ButtonGridIcon, ButtonGridIconBase } from '~/Buttons/GridButtonIcons.js'
 import { useGridZoom } from '~/Buttons/GridZoom.js'
 import { Button } from '~/Components/Button'
-import { Callout } from '~/Components/Callout'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
 import { Grid } from '~/Components/Grid'
 import { Table } from '~/Components/Table.js'
@@ -131,7 +130,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 									setPage={isSinglePage ? undefined : setImportPageNumber}
 									pageOptions={snapshotPageOptions}
 								>
-									<Button color="light" title="Home Position" onClick={resetSourcePosition}>
+									<Button color="secondary" variant="ghost" title="Home Position" onClick={resetSourcePosition}>
 										<FontAwesomeIcon icon={faHome} />
 									</Button>
 								</PageNumberPicker>
@@ -166,7 +165,13 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										gridZoomController={gridZoomController}
 									/>
 
-									<Button color="light" className="ms-1" title="Home Position" onClick={resetDestinationPosition}>
+									<Button
+										color="secondary"
+										variant="ghost"
+										className="ms-1"
+										title="Home Position"
+										onClick={resetDestinationPosition}
+									>
 										<FontAwesomeIcon icon={faHome} />
 									</Button>
 								</ButtonGridHeader>
@@ -204,20 +209,25 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 			<MyErrorBoundary>
 				<ImportRemap snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap2} />
 			</MyErrorBoundary>
-			<Callout color={pageNumber == -1 ? 'success' : 'warning'}>
-				<h5>Import Buttons to Page</h5>
-				<p>
-					Clicking the button below will
-					{pageNumber == -1
-						? ' import the source page to a new page'
-						: ' completely override the button on the existing destination page with the buttons on the selected source page'}
-					.
-				</p>
-				<Button color={pageNumber == -1 ? 'success' : 'warning'} onClick={doImport2} disabled={isRunning}>
-					<FontAwesomeIcon icon={pageNumber == -1 ? faFileCirclePlus : faFileCircleExclamation} />
-					{pageNumber == -1 ? ' Import to new page' : ` Replace page ${pageNumber} with imported page`}
-				</Button>
-			</Callout>
+
+			<div
+				className={`rounded-xl border ${pageNumber === -1 ? 'border-emerald-500/30' : 'border-amber-500/30'} bg-surface p-4 flex flex-col justify-between gap-3 shadow-xs my-4`}
+			>
+				<div>
+					<h5 className="text-sm font-bold text-body mb-1">Import Buttons to Page</h5>
+					<p className="text-xs text-muted leading-relaxed mb-0">
+						{pageNumber === -1
+							? 'Imports the selected source buttons onto a brand new page at the end of your page list.'
+							: `Completely replaces the buttons on destination page ${pageNumber} with the buttons from the selected source page.`}
+					</p>
+				</div>
+				<div>
+					<Button color={pageNumber === -1 ? 'success' : 'warning'} onClick={doImport2} disabled={isRunning}>
+						<FontAwesomeIcon icon={pageNumber === -1 ? faFileCirclePlus : faFileCircleExclamation} className="me-1.5" />
+						{pageNumber === -1 ? 'Import to New Page' : `Replace Page ${pageNumber} with Imported Page`}
+					</Button>
+				</div>
+			</div>
 		</>
 	)
 })
@@ -238,38 +248,42 @@ export function ImportRemap({ snapshot, connectionRemap, setConnectionRemap }: I
 	}, [snapshot.connections])
 
 	return (
-		<div id="import_resolve">
-			<h5>Import Connections Behavior</h5>
-			<p>
-				If you have existing connections that match the type of connections in the import, you can link them here.
-				Otherwise, new connections will be created for any connections left unlinked. You can also choose to ignore
-				certain connections if they are not needed.
-			</p>
-			<Table>
-				<thead>
-					<tr>
-						<th>Behavior</th>
-						<th>Import Connection Type</th>
-						<th>Import Connection Name</th>
-					</tr>
-				</thead>
-				<tbody>
-					{sortedConnections.length === 0 && (
-						<tr>
-							<td colSpan={3}>No connections</td>
+		<div id="import_resolve" className="surface-card my-4">
+			<div className="p-4 border-b border-border/70 bg-surface-muted/30">
+				<h5 className="text-sm font-bold text-body mb-1">Connection Mapping</h5>
+				<p className="text-xs text-muted leading-relaxed mb-0">
+					Link imported connections to your existing connections, create new ones, or ignore unneeded connections.
+				</p>
+			</div>
+			<div className="overflow-x-auto">
+				<Table className="mb-0">
+					<thead>
+						<tr className="bg-surface-muted/50 text-xs text-muted uppercase">
+							<th className="py-2.5 px-3">Behavior</th>
+							<th className="py-2.5 px-3">Import Connection Type</th>
+							<th className="py-2.5 px-3">Import Connection Name</th>
 						</tr>
-					)}
-					{sortedConnections.map(([key, connection]) => (
-						<ImportRemapRow
-							key={key}
-							id={key}
-							connection={connection}
-							connectionRemap={connectionRemap}
-							setConnectionRemap={setConnectionRemap}
-						/>
-					))}
-				</tbody>
-			</Table>
+					</thead>
+					<tbody className="divide-y divide-border/60">
+						{sortedConnections.length === 0 && (
+							<tr>
+								<td colSpan={3} className="text-center text-muted py-4 text-xs italic">
+									No connections found in snapshot
+								</td>
+							</tr>
+						)}
+						{sortedConnections.map(([key, connection]) => (
+							<ImportRemapRow
+								key={key}
+								id={key}
+								connection={connection}
+								connectionRemap={connectionRemap}
+								setConnectionRemap={setConnectionRemap}
+							/>
+						))}
+					</tbody>
+				</Table>
+			</div>
 		</div>
 	)
 }

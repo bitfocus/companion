@@ -5,6 +5,7 @@ import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js
 export interface ExpressionVariablesTableContextType {
 	deleteModalRef: RefObject<GenericConfirmModalRef | null>
 	selectExpressionVariable: (expressionVariableId: string | null) => void
+	selectedVariableId: string | null
 }
 
 const ExpressionVariablesTableContext = createContext<ExpressionVariablesTableContextType | null>(null)
@@ -21,14 +22,16 @@ type ExpressionVariablesTableContextProviderProps = ExpressionVariablesTableCont
 export function ExpressionVariablesTableContextProvider({
 	deleteModalRef,
 	selectExpressionVariable,
+	selectedVariableId,
 	children,
 }: React.PropsWithChildren<ExpressionVariablesTableContextProviderProps>): React.JSX.Element {
 	const value = useMemo<ExpressionVariablesTableContextType>(() => {
 		return {
 			deleteModalRef,
 			selectExpressionVariable,
+			selectedVariableId,
 		}
-	}, [deleteModalRef, selectExpressionVariable])
+	}, [deleteModalRef, selectExpressionVariable, selectedVariableId])
 
 	return <ExpressionVariablesTableContext.Provider value={value}>{children}</ExpressionVariablesTableContext.Provider>
 }

@@ -1,4 +1,4 @@
-import { faHome } from '@fortawesome/free-solid-svg-icons'
+import { faHome, faTableCells } from '@fortawesome/free-solid-svg-icons'
 import './ButtonGridPanel.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
@@ -7,7 +7,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { Button } from '~/Components/Button.js'
 import { Grid } from '~/Components/Grid'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
-import { ContextHelpButton } from '~/Layout/PanelIcons.js'
+import { PageHeader } from '~/Layout/PageHeader.js'
 import { KeyReceiver } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ButtonGridHeader } from './ButtonGridHeader.js'
@@ -85,6 +85,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
 	const [viewportMinHeight, setViewportMinHeight] = useState(250) // arbitrary initial min-height
+	const [viewportPreferredHeight, setViewportPreferredHeight] = useState(250)
 
 	// Ctrl/cmd + wheel zooms, the way every canvas does. React attaches wheel passively at the root,
 	// where preventDefault is a no-op, so this has to be a native listener to stop the browser
@@ -113,10 +114,11 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	const contentStyle = useMemo(
 		() => ({
 			minHeight: viewportMinHeight,
+			height: viewportPreferredHeight,
 			'--pending-change-color':
 				pendingChangesJoin === 'held-buttons' ? 'var(--color-copy-source)' : 'var(--color-primary)',
 		}),
-		[viewportMinHeight, pendingChangesJoin]
+		[viewportMinHeight, viewportPreferredHeight, pendingChangesJoin]
 	)
 	const focus = useGridFocus()
 
@@ -146,14 +148,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	return (
 		<KeyReceiver onKeyDown={onKeyDown} tabIndex={0} className="button-grid-panel">
 			<div className="button-grid-panel-header" ref={isInViewRef}>
-				<h4 className="button-inline">
-					Buttons
-					<ContextHelpButton action="/user-guide/config/buttons/" />
-				</h4>
-				<p className="mb-2">
-					The squares below represent each button on your Streamdeck. Click on them to set up how you want them to look,
-					and what they should do when you press or click on them.
-				</p>
+				<PageHeader icon={faTableCells} title="Buttons" helpAction="/user-guide/config/buttons/" />
 
 				<ButtonGridResizePrompt />
 
@@ -165,7 +160,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 								gridZoomValue={gridZoomValue}
 								gridZoomController={gridZoomController}
 							/>
-							<Button color="light" onClick={resetPosition} title="Home Position" className="ms-1">
+							<Button color="secondary" variant="ghost" onClick={resetPosition} title="Home Position" className="ms-1">
 								<FontAwesomeIcon icon={faHome} />
 							</Button>
 							<ButtonGridPageMenu pageNumber={pageNumber} pageInfo={pageInfo} />
@@ -192,6 +187,8 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 						onHoverLocation={handleHover}
 						drawScale={gridZoomValue / 100}
 						setViewportMinHeight={setViewportMinHeight}
+						setViewportPreferredHeight={setViewportPreferredHeight}
+						fillViewportWidth={true}
 					/>
 				)}
 			</div>

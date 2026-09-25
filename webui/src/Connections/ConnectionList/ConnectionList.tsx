@@ -1,20 +1,22 @@
-import { faLayerGroup, faPlug } from '@fortawesome/free-solid-svg-icons'
+import { faFolderPlus, faPlug } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useRef } from 'react'
+import { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import type { ClientConnectionConfig, ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { Button, ButtonGroup } from '~/Components/Button.js'
+import { Button } from '~/Components/Button.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { SearchBox } from '~/Components/SearchBox.js'
+import { StatusFilterPill } from '~/Components/StatusFilterPill.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
-import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
+import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
-import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useComputed } from '~/Resources/util.js'
@@ -22,7 +24,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { MissingVersionsWarning } from '../../Instances/MissingVersionsWarning.js'
 import { ConnectionVariablesModal, type ConnectionVariablesModalRef } from '../ConnectionVariablesModal.js'
 import { useConnectionCollectionsApi } from './ConnectionListApi.js'
-import { ConnectionListContextProvider, useConnectionListContext } from './ConnectionListContext.js'
+import { ConnectionListContextProvider, useConnectionListFilterContext } from './ConnectionListContext.js'
 import { ConnectionsTableRow } from './ConnectionsTableRow.js'
 
 export interface VisibleConnectionsState {
@@ -37,7 +39,7 @@ interface ConnectionsListProps {
 }
 
 export const ConnectionsList = observer(function ConnectionsList({ selectedConnectionId }: ConnectionsListProps) {
-	const { connections, instanceStatuses } = useContext(RootAppStoreContext)
+	const { connections, instanceStatuses, modules } = useContext(RootAppStoreContext)
 
 	const navigate = useNavigate({ from: '/connections' })
 	const doConfigureConnection = useCallback(
@@ -79,6 +81,45 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 		return allConnections
 	}, [connections.connections, instanceStatuses])
 
+	const [searchText, setSearchText] = useState('')
+
+	const filteredConnections = useMemo(() => {
+		const query = searchText.trim().toLowerCase()
+		if (!query) return allConnections
+
+		return allConnections.filter((item) => {
+			const labelMatch = item.label?.toLowerCase().includes(query)
+			const idMatch = item.id.toLowerCase().includes(query)
+			const moduleInfo = modules.getModuleInfo(item.moduleType, item.moduleId)
+			const brandMatch =
+				moduleInfo?.display?.name?.toLowerCase().includes(query) || item.moduleId.toLowerCase().includes(query)
+			return labelMatch || idMatch || brandMatch
+		})
+	}, [allConnections, searchText, modules])
+
+	const counts = useMemo(() => {
+		let disabled = 0
+		let ok = 0
+		let warning = 0
+		let error = 0
+
+		for (const item of allConnections) {
+			if (item.enabled === false) {
+				disabled++
+			} else if (item.status?.category === 'good') {
+				ok++
+			} else if (item.status?.category === 'warning') {
+				warning++
+			} else if (item.status?.category === 'error') {
+				error++
+			} else {
+				ok++
+			}
+		}
+
+		return { disabled, ok, warning, error }
+	}, [allConnections])
+
 	const ConnectionsItemRow = useCallback(
 		(item: ClientConnectionConfigWithId) =>
 			ConnectionListItemWrapper(visibleConnections.visibility, item, selectedConnectionId),
@@ -87,33 +128,10 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 
 	return (
 		<div className="connections-list-container flex-column-layout">
-			<div className="fixed-header">
-				<h4 className="button-inline">
-					Connections <ContextHelpButton action="/user-guide/config/connections" className="pe-2" />
-				</h4>
-
-				<p>
-					When you want to control devices or software with Companion, you need to add a connection to let Companion
-					know how to communicate with whatever you want to control.
-				</p>
-
+			<div className="px-3">
 				<MissingVersionsWarning moduleType={ModuleInstanceType.Connection} instances={connections.connections} />
-
 				<GenericConfirmModal ref={confirmModalRef} />
 				<ConnectionVariablesModal ref={variablesModalRef} />
-
-				<ButtonGroup className="connection-group-actions mb-2">
-					<Button
-						color="primary"
-						size="sm"
-						className="xl:hidden"
-						onClick={() => void navigate({ to: '/connections/add' })}
-					>
-						<FontAwesomeIcon icon={faPlug} className="me-1" />
-						Add Connection
-					</Button>
-					<CreateCollectionButton />
-				</ButtonGroup>
 			</div>
 
 			<div className="connections-list-table-container scrollable-content">
@@ -127,6 +145,9 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 						showVariables={showConnectionVariables}
 						deleteModalRef={confirmModalRef}
 						configureConnection={doConfigureConnection}
+						searchText={searchText}
+						setSearchText={setSearchText}
+						counts={counts}
 					>
 						<CollectionsNestingTable<ConnectionCollection, ClientConnectionConfigWithId>
 							Heading={ConnectionListTableHeading}
@@ -137,7 +158,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 							dragId="connection"
 							collectionsApi={connectionListApi}
 							collections={connections.rootCollections()}
-							items={allConnections}
+							items={filteredConnections}
 							selectedItemId={selectedConnectionId}
 						/>
 					</ConnectionListContextProvider>
@@ -153,29 +174,103 @@ export interface ClientConnectionConfigWithId extends ClientConnectionConfig {
 }
 
 function ConnectionListTableHeading() {
-	const { visibleConnections } = useConnectionListContext()
+	const navigate = useNavigate()
+	const { visibleConnections, searchText, setSearchText, counts } = useConnectionListFilterContext()
+
+	const totalCount = counts.disabled + counts.ok + counts.warning + counts.error
+	const isAllActive =
+		visibleConnections.visibility.disabled &&
+		visibleConnections.visibility.ok &&
+		visibleConnections.visibility.warning &&
+		visibleConnections.visibility.error
+
+	const toggleAll = useCallback(() => {
+		const targetState = !isAllActive
+		visibleConnections.toggleVisibility('disabled', targetState)
+		visibleConnections.toggleVisibility('ok', targetState)
+		visibleConnections.toggleVisibility('warning', targetState)
+		visibleConnections.toggleVisibility('error', targetState)
+	}, [isAllActive, visibleConnections])
 
 	return (
-		<div className="flex flex-row">
-			<div className="grow">Connection</div>
-			<div className="whitespace-nowrap">
-				<ButtonGroup className="table-header-buttons">
-					<VisibilityButton {...visibleConnections} keyId="disabled" color="secondary" label="Disabled" />
-					<VisibilityButton {...visibleConnections} keyId="ok" color="success" label="OK" />
-					<VisibilityButton {...visibleConnections} keyId="warning" color="warning" label="Warning" />
-					<VisibilityButton {...visibleConnections} keyId="error" color="danger" label="Error" />
-				</ButtonGroup>
+		<div className="flex flex-col gap-2.5 w-full py-1">
+			<div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full">
+				<SearchBox
+					filter={searchText}
+					setFilter={setSearchText}
+					placeholder="Filter connections..."
+					className="mb-0 flex-1 min-w-0 h-9"
+				/>
+
+				<div className="flex items-center gap-2 shrink-0">
+					<CreateCollectionButton />
+					<Button
+						color="primary"
+						className="h-9 inline-flex items-center justify-center"
+						onClick={() => void navigate({ to: '/connections/add' })}
+					>
+						<FontAwesomeIcon icon={faPlug} className="me-1" />
+						Add Connection
+					</Button>
+				</div>
+			</div>
+
+			<div className="flex flex-wrap items-center gap-1.5">
+				<StatusFilterPill
+					label="All"
+					count={totalCount}
+					isActive={isAllActive}
+					onClick={toggleAll}
+					title="Show all status types"
+				/>
+
+				<StatusFilterPill
+					label="OK"
+					count={counts.ok}
+					dotClass="bg-emerald-500"
+					isActive={visibleConnections.visibility.ok}
+					onClick={() => visibleConnections.toggleVisibility('ok')}
+				/>
+
+				<StatusFilterPill
+					label="Warning"
+					count={counts.warning}
+					dotClass="bg-amber-500"
+					isActive={visibleConnections.visibility.warning}
+					onClick={() => visibleConnections.toggleVisibility('warning')}
+				/>
+
+				<StatusFilterPill
+					label="Error"
+					count={counts.error}
+					dotClass="bg-rose-500"
+					isActive={visibleConnections.visibility.error}
+					onClick={() => visibleConnections.toggleVisibility('error')}
+				/>
+
+				<StatusFilterPill
+					label="Disabled"
+					count={counts.disabled}
+					dotClass="bg-zinc-400"
+					isActive={visibleConnections.visibility.disabled}
+					onClick={() => visibleConnections.toggleVisibility('disabled')}
+				/>
 			</div>
 		</div>
 	)
 }
 
 function ConnectionListNoConnections() {
+	const { searchText } = useConnectionListFilterContext()
+
+	if (searchText) {
+		return <NonIdealState icon={faPlug}>No connections match your search query.</NonIdealState>
+	}
+
 	return (
 		<NonIdealState icon={faPlug}>
 			You haven't set up any connections yet. <br />
-			Try adding something <span className="xl:hidden">with the button above</span>
-			<span className="hidden xl:inline">from the list to the right</span>.
+			Try adding something with the button above.
 		</NonIdealState>
 	)
 }
@@ -229,18 +324,23 @@ function ConnectionListItemWrapper(
 	)
 }
 
-function CreateCollectionButton() {
+export function CreateCollectionButton({ className }: { className?: string } = {}): React.JSX.Element {
 	const createMutation = useMutationExt(trpc.instances.connections.collections.add.mutationOptions())
 
 	const doCreateCollection = useCallback(() => {
-		createMutation.mutateAsync({ collectionName: 'New Collection' }).catch((e) => {
+		createMutation.mutateAsync({ collectionName: 'New Folder' }).catch((e) => {
 			console.error('Failed to add collection', e)
 		})
 	}, [createMutation])
 
 	return (
-		<Button color="info" size="sm" onClick={doCreateCollection}>
-			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
+		<Button
+			color="secondary"
+			className={classNames('h-9 inline-flex items-center justify-center', className)}
+			onClick={doCreateCollection}
+			title="Create new folder to organize connections"
+		>
+			<FontAwesomeIcon icon={faFolderPlus} className="me-1" /> New Folder
 		</Button>
 	)
 }

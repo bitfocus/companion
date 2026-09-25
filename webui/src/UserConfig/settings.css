@@ -1,16 +1,60 @@
-.settings-category-spacer:not(:first-child) {
-	height: 20px;
+.table-settings {
+	width: 100%;
+	border-collapse: collapse;
 }
 
-.settings-category-row {
-	th {
-		font-weight: bold;
-		font-size: 18px;
-		padding-top: 10px !important;
-		padding-bottom: 10px !important;
-		/* background-color: #fff !important; */
-		border-bottom: 1px solid var(--color-border-muted) !important;
-	}
+.table-settings tr {
+	border-bottom: 1px solid var(--color-border-subtle);
+	transition: background-color 0.15s ease;
+}
+
+.table-settings tr:last-child {
+	border-bottom: none;
+}
+
+.table-settings tr:hover:not(.settings-category-row) {
+	background-color: var(--color-surface-hover);
+}
+
+.table-settings td {
+	padding: 0.75rem 1rem;
+	vertical-align: middle;
+	font-size: 0.875rem;
+	text-align: left;
+}
+
+.table-settings td:first-child {
+	font-weight: 500;
+	color: var(--color-text-body);
+	text-align: left;
+}
+
+.table-settings td:nth-child(2) {
+	width: 320px;
+	text-align: left;
+}
+
+.table-settings td:last-child {
+	width: 48px;
+	text-align: left;
+}
+
+/* Value cells that hold a control rather than an input (switch, static text, a button) sit at the
+   end of the column, so they line up with each other and with the reset buttons. */
+.table-settings td.settings-value-end {
+	text-align: end;
+}
+
+.settings-category-row th {
+	font-weight: 700;
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--color-text-muted);
+	background-color: var(--color-surface-muted);
+	padding: 0.625rem 1rem;
+	border-bottom: 1px solid var(--color-border-muted);
+	border-top: none;
 }
 
 .remote-control-tabs .nav-link {
@@ -43,10 +87,5 @@
 	.backup-rule-actions {
 		flex: 0 0 auto;
 		margin-left: auto;
-
-		.button {
-			padding-left: 0.25rem;
-			padding-right: 0.25rem;
-		}
 	}
 }

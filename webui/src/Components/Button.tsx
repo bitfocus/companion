@@ -58,6 +58,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
 	{ className, color, variant, size, hidden, active, disabled, children, ...rest },
 	ref
 ) {
+	const ariaLabel = rest['aria-label'] ?? rest.title
+
 	return (
 		<ButtonBase
 			className={getColorClasses({
@@ -69,6 +71,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
 				active,
 				disabled,
 			} satisfies Complete<ButtonVisualProps>)}
+			aria-label={ariaLabel}
 			{...(active && { 'aria-current': 'page' })}
 			{...rest}
 			disabled={disabled}

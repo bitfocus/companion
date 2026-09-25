@@ -1,4 +1,4 @@
-import { faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faClock, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId } from 'react'
@@ -6,7 +6,7 @@ import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/share
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
-import { Form, FormLabel, InputGroup } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { Table } from '~/Components/Table.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -47,18 +47,24 @@ const PreviousBackupRow = observer(function PreviousBackupRow({ backup, ruleId }
 	}
 
 	return (
-		<tr>
-			<td>
-				<span title={getFileName(backup.filePath)} className="truncate font-medium">
+		<tr className="hover:bg-surface-hover/60 transition-colors">
+			<td className="py-2.5 px-3">
+				<div title={getFileName(backup.filePath)} className="font-medium text-body text-xs truncate max-w-xs">
 					{getFileName(backup.filePath)}
-				</span>
-				<br />
-				<small>
-					{new Date(backup.createdAt).toLocaleString()} • {formatFileSize(backup.fileSize)}
-				</small>
+				</div>
+				<div className="text-2xs text-muted mt-0.5">
+					{new Date(backup.createdAt).toLocaleString()} •{' '}
+					<span className="font-mono">{formatFileSize(backup.fileSize)}</span>
+				</div>
 			</td>
-			<td className="whitespace-nowrap align-middle">
-				<Button color="danger" size="sm" onClick={deleteBackup} title="Delete backup">
+			<td className="whitespace-nowrap align-middle py-2.5 px-3 text-right">
+				<Button
+					color="secondary"
+					size="sm"
+					onClick={deleteBackup}
+					title="Delete backup"
+					className="text-rose-500 hover:bg-rose-500/10"
+				>
 					<FontAwesomeIcon icon={faTrash} />
 				</Button>
 			</td>
@@ -117,114 +123,131 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 	const previousBackups = [...(rule.previousBackups || [])].sort((a, b) => b.createdAt - a.createdAt)
 
 	return (
-		<Form row className="p-4 sm:gap-2">
-			<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
-				Rule Name
-			</FormLabel>
-			<Grid.Col className={`fieldtype-textinput`} sm={8}>
-				<InputGroup>
-					<TextInputFieldSimple id={nameFieldId} value={rule.name} setValue={(value) => updateField('name', value)} />
-					<Button color="warning" onClick={runNow}>
+		<div className="space-y-4">
+			<div className="surface-card p-4 space-y-4">
+				<div className="flex items-center justify-between gap-2 border-b border-border/70 pb-3">
+					<div>
+						<h4 className="text-sm font-bold text-body mb-0.5">Rule Configuration</h4>
+						<p className="text-xs text-muted mb-0">Set rule name, schedule, and output destination.</p>
+					</div>
+					<Button color="warning" size="sm" onClick={runNow}>
+						<FontAwesomeIcon icon={faPlay} className="me-1.5" />
 						Run Now
 					</Button>
-				</InputGroup>
-			</Grid.Col>
+				</div>
 
-			<FormLabel htmlFor={cronFieldId} sm={4} column="sm">
-				Cron Schedule
-			</FormLabel>
-			<Grid.Col className={`fieldtype-textinput`} sm={8}>
-				<TextInputFieldSimple id={cronFieldId} value={rule.cron} setValue={(value) => updateField('cron', value)} />
-			</Grid.Col>
-			<Grid.Col className={`fieldtype-textinput mt-0`} sm={{ offset: 4, span: 8 }}>
-				<small className="form-text text-muted">
-					Use cron syntax (e.g., "0 0 * * *" for daily at midnight). You can use{' '}
-					<a href="https://crontab.guru" target="_blank" rel="noopener noreferrer">
-						crontab guru
-					</a>{' '}
-					to help you generate the correct syntax.
-				</small>
-			</Grid.Col>
+				<Form row className="gap-y-3">
+					<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
+						Rule Name
+					</FormLabel>
+					<Grid.Col sm={8}>
+						<TextInputFieldSimple id={nameFieldId} value={rule.name} setValue={(value) => updateField('name', value)} />
+					</Grid.Col>
 
-			<FormLabel htmlFor={backupTypeFieldId} sm={4} column="sm">
-				Backup Type
-			</FormLabel>
-			<Grid.Col className={`fieldtype-textinput`} sm={8}>
-				<SimpleDropdownInputField
-					id={backupTypeFieldId}
-					value={rule.backupType}
-					setValue={(value) => updateField('backupType', value as BackupRulesConfig['backupType'])}
-					choices={backupTypes}
-				/>
-			</Grid.Col>
-			{rule.backupType === 'db' && (
-				<Grid.Col sm={12}>
-					<StaticAlert color="warning" className="mt-2">
-						Raw backups are a direct copy of the database file. They cannot be restored through the web interface, but
-						contain more data than the default exports.
-					</StaticAlert>
-				</Grid.Col>
-			)}
+					<FormLabel htmlFor={cronFieldId} sm={4} column="sm">
+						Cron Schedule
+					</FormLabel>
+					<Grid.Col sm={8}>
+						<TextInputFieldSimple id={cronFieldId} value={rule.cron} setValue={(value) => updateField('cron', value)} />
+						<small className="form-text text-muted block mt-1">
+							Use cron syntax (e.g., <code className="text-2xs bg-surface-muted px-1 py-0.5 rounded">0 0 * * *</code>{' '}
+							for daily at midnight). Use{' '}
+							<a
+								href="https://crontab.guru"
+								target="_blank"
+								rel="noopener noreferrer"
+								className="text-primary hover:underline"
+							>
+								crontab guru
+							</a>{' '}
+							for help generating expressions.
+						</small>
+					</Grid.Col>
 
-			<FormLabel htmlFor={backupPathFieldId} sm={4} column="sm">
-				Backup Path
-			</FormLabel>
-			<Grid.Col className={`fieldtype-textinput`} sm={8}>
-				<TextInputFieldSimple
-					id={backupPathFieldId}
-					value={rule.backupPath}
-					setValue={(value) => updateField('backupPath', value)}
-				/>
-			</Grid.Col>
-			<Grid.Col className={`fieldtype-textinput mt-0`} sm={{ offset: 4, span: 8 }}>
-				<small className="form-text text-muted">
-					Directory path where backups will be saved. Leave empty for default location.
-				</small>
-			</Grid.Col>
+					<FormLabel htmlFor={backupTypeFieldId} sm={4} column="sm">
+						Backup Type
+					</FormLabel>
+					<Grid.Col sm={8}>
+						<SimpleDropdownInputField
+							id={backupTypeFieldId}
+							value={rule.backupType}
+							setValue={(value) => updateField('backupType', value as BackupRulesConfig['backupType'])}
+							choices={backupTypes}
+						/>
+						{rule.backupType === 'db' && (
+							<StaticAlert color="warning" className="mt-2 text-xs">
+								Raw backups are a direct copy of the database file. They cannot be restored through the web interface,
+								but contain more internal database data than standard exports.
+							</StaticAlert>
+						)}
+					</Grid.Col>
 
-			<FormLabel htmlFor={backupNamePatternFieldId} sm={4} column="sm">
-				Backup Name Pattern
-			</FormLabel>
-			<Grid.Col className={`fieldtype-textinput`} sm={8}>
-				<TextInputField
-					id={backupNamePatternFieldId}
-					value={rule.backupNamePattern}
-					setValue={(value) => updateField('backupNamePattern', value)}
-					useVariables
-				/>
-			</Grid.Col>
+					<FormLabel htmlFor={backupPathFieldId} sm={4} column="sm">
+						Backup Path
+					</FormLabel>
+					<Grid.Col sm={8}>
+						<TextInputFieldSimple
+							id={backupPathFieldId}
+							value={rule.backupPath}
+							setValue={(value) => updateField('backupPath', value)}
+						/>
+						<small className="form-text text-muted block mt-1">
+							Directory path where backups will be saved. Leave empty for default location.
+						</small>
+					</Grid.Col>
 
-			<FormLabel htmlFor={keepFieldId} sm={4} column="sm">
-				Number of Backups to Keep
-			</FormLabel>
-			<Grid.Col className={`fieldtype-textinput`} sm={8}>
-				<NumberInputField id={keepFieldId} value={rule.keep} min={1} setValue={(value) => updateField('keep', value)} />
-			</Grid.Col>
-			<Grid.Col className={`fieldtype-textinput mt-0`} sm={{ offset: 4, span: 8 }}>
-				<small className="form-text text-muted">How many backup files to retain before deleting the oldest ones</small>
-			</Grid.Col>
+					<FormLabel htmlFor={backupNamePatternFieldId} sm={4} column="sm">
+						Backup Name Pattern
+					</FormLabel>
+					<Grid.Col sm={8}>
+						<TextInputField
+							id={backupNamePatternFieldId}
+							value={rule.backupNamePattern}
+							setValue={(value) => updateField('backupNamePattern', value)}
+							useVariables
+						/>
+					</Grid.Col>
 
-			<Grid.Col sm={12}>
-				<hr />
-				<FormLabel htmlFor={undefined}>Previous Backups</FormLabel>
-				{rule.previousBackups && rule.previousBackups.length > 0 && (
-					<div className="table-responsive">
-						<Table size="sm" striped responsive={false}>
-							<tbody>
+					<FormLabel htmlFor={keepFieldId} sm={4} column="sm">
+						Retention Count
+					</FormLabel>
+					<Grid.Col sm={8}>
+						<NumberInputField
+							id={keepFieldId}
+							value={rule.keep}
+							min={1}
+							setValue={(value) => updateField('keep', value)}
+						/>
+						<small className="form-text text-muted block mt-1">
+							Number of backup files to retain before automatically purging older backups.
+						</small>
+					</Grid.Col>
+				</Form>
+			</div>
+
+			<div className="surface-card p-4">
+				<div className="flex items-center gap-2 border-b border-border/70 pb-3 mb-3">
+					<FontAwesomeIcon icon={faClock} className="text-muted text-xs" />
+					<h4 className="text-sm font-bold text-body mb-0">Previous Backups</h4>
+					<span className="text-2xs text-muted ms-auto">{rule.previousBackups?.length ?? 0} saved</span>
+				</div>
+
+				{rule.previousBackups && rule.previousBackups.length > 0 ? (
+					<div className="overflow-hidden rounded-lg border border-border/70">
+						<Table size="sm" className="mb-0">
+							<tbody className="divide-y divide-border/60">
 								{previousBackups.map((backup) => (
 									<PreviousBackupRow key={`${backup.filePath}-${backup.createdAt}`} backup={backup} ruleId={ruleId} />
 								))}
 							</tbody>
 						</Table>
 					</div>
-				)}
-
-				{(!rule.previousBackups || rule.previousBackups.length === 0) && (
-					<div className="text-muted">
-						<small>No backup files found. Backups may have been manually deleted or moved.</small>
+				) : (
+					<div className="text-xs text-muted text-center py-4 italic">
+						No backup files found yet. Backups will appear here as the rule runs.
 					</div>
 				)}
-			</Grid.Col>
-		</Form>
+			</div>
+		</div>
 	)
 })

@@ -9,7 +9,7 @@
 	--btn-border-width: 1px;
 	--btn-border-radius: 0.375rem;
 	--btn-disabled-opacity: 0.65;
-	--btn-focus-shadow-rgb: 213, 2, 21;
+	--btn-focus-shadow-rgb: 31, 36, 46;
 
 	/* defaults — overridden by color variants below */
 	--btn-color: inherit;
@@ -113,20 +113,22 @@
 
 /* ---- Solid color variants ---- */
 
+/* The safe, affirmative action. Deliberately not red: in the content area red now means destructive,
+   and the brand red is reserved for identity (see the token block in tailwind.css). */
 .button-primary {
 	--btn-color: #fff;
-	--btn-bg: #d50215;
-	--btn-border-color: #d50215;
+	--btn-bg: var(--color-primary);
+	--btn-border-color: var(--color-primary);
 	--btn-hover-color: #fff;
-	--btn-hover-bg: rgb(181, 2, 18);
-	--btn-hover-border-color: rgb(170, 2, 17);
-	--btn-focus-shadow-rgb: 219, 40, 56;
+	--btn-hover-bg: var(--color-primary-hover);
+	--btn-hover-border-color: var(--color-primary-hover);
+	--btn-focus-shadow-rgb: 31, 36, 46;
 	--btn-active-color: #fff;
-	--btn-active-bg: rgb(170, 2, 17);
-	--btn-active-border-color: rgb(160, 2, 16);
+	--btn-active-bg: var(--color-primary-active);
+	--btn-active-border-color: var(--color-primary-active);
 	--btn-disabled-color: #fff;
-	--btn-disabled-bg: #d50215;
-	--btn-disabled-border-color: #d50215;
+	--btn-disabled-bg: var(--color-primary);
+	--btn-disabled-border-color: var(--color-primary);
 }
 
 .button-secondary {
@@ -193,20 +195,21 @@
 	--btn-disabled-border-color: #f9b115;
 }
 
+/* Destructive, and now the only red button in the app. */
 .button-danger {
 	--btn-color: #fff;
-	--btn-bg: rgb(180, 0, 0);
-	--btn-border-color: rgb(180, 0, 0);
-	--btn-hover-color: #eee;
-	--btn-hover-bg: rgb(155, 0, 0);
-	--btn-hover-border-color: rgb(145, 0, 0);
-	--btn-focus-shadow-rgb: 196, 72, 72;
+	--btn-bg: var(--color-danger);
+	--btn-border-color: var(--color-danger);
+	--btn-hover-color: #fff;
+	--btn-hover-bg: rgb(163, 13, 37);
+	--btn-hover-border-color: rgb(163, 13, 37);
+	--btn-focus-shadow-rgb: 200, 16, 46;
 	--btn-active-color: #fff;
-	--btn-active-bg: rgb(140, 0, 0);
-	--btn-active-border-color: rgb(130, 0, 0);
+	--btn-active-bg: rgb(140, 11, 32);
+	--btn-active-border-color: rgb(140, 11, 32);
 	--btn-disabled-color: rgba(255, 255, 255, 0.8);
-	--btn-disabled-bg: rgb(180, 0, 0);
-	--btn-disabled-border-color: rgb(180, 0, 0);
+	--btn-disabled-bg: var(--color-danger);
+	--btn-disabled-border-color: var(--color-danger);
 
 	&:hover {
 		animation: blinker 0.4s linear infinite;
@@ -310,7 +313,7 @@
 }
 
 .button-link {
-	--btn-color: #d50215;
+	--btn-color: var(--color-brand);
 	--btn-bg: transparent;
 	--btn-border-color: transparent;
 	--btn-hover-color: #aa0111;
@@ -342,19 +345,19 @@
 }
 
 .button-outline-primary {
-	--btn-color: #d50215;
+	--btn-color: var(--color-primary);
 	--btn-bg: transparent;
-	--btn-border-color: #d50215;
+	--btn-border-color: var(--color-primary);
 	--btn-hover-color: #fff;
-	--btn-hover-bg: #d50215;
-	--btn-hover-border-color: #d50215;
-	--btn-focus-shadow-rgb: 213, 2, 21;
+	--btn-hover-bg: var(--color-primary);
+	--btn-hover-border-color: var(--color-primary);
+	--btn-focus-shadow-rgb: 31, 36, 46;
 	--btn-active-color: #fff;
-	--btn-active-bg: #d50215;
-	--btn-active-border-color: #d50215;
-	--btn-disabled-color: #d50215;
+	--btn-active-bg: var(--color-primary);
+	--btn-active-border-color: var(--color-primary);
+	--btn-disabled-color: var(--color-primary);
 	--btn-disabled-bg: transparent;
-	--btn-disabled-border-color: #d50215;
+	--btn-disabled-border-color: var(--color-primary);
 }
 
 .button-outline-secondary {
@@ -530,16 +533,16 @@
 }
 
 .button-ghost-primary {
-	--btn-color: #d50215;
+	--btn-color: var(--color-primary);
 	--btn-bg: transparent;
 	--btn-border-color: transparent;
 	--btn-hover-color: #fff;
-	--btn-hover-bg: #d50215;
-	--btn-hover-border-color: #d50215;
+	--btn-hover-bg: var(--color-primary);
+	--btn-hover-border-color: var(--color-primary);
 	--btn-active-color: #fff;
-	--btn-active-bg: #d50215;
-	--btn-active-border-color: #d50215;
-	--btn-disabled-color: #d50215;
+	--btn-active-bg: var(--color-primary);
+	--btn-active-border-color: var(--color-primary);
+	--btn-disabled-color: var(--color-primary);
 	--btn-disabled-bg: transparent;
 	--btn-disabled-border-color: transparent;
 }

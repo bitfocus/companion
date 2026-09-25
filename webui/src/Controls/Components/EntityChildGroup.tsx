@@ -1,5 +1,7 @@
 import { pointerIntersection } from '@dnd-kit/collision'
 import { useDroppable } from '@dnd-kit/react'
+import { faCodeBranch } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useContext, useMemo } from 'react'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
@@ -78,17 +80,31 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 	// Entities inside this child group are one level deeper, so bump the dnd collision priority for them.
 	const parentNestingLevel = useContext(EntityNestingLevelContext)
 
-	// don't wrap in a form here as it will cause nested forms (illegal HTML)...and it's not necessary here!
+	const labelLower = (groupInfo.label || '').toLowerCase()
+	const isIf = groupInfo.groupId === 'if' || labelLower.startsWith('if')
+	const isElse = groupInfo.groupId === 'else' || labelLower.startsWith('else')
+
 	return (
-		<div>
+		<div className="mt-2">
 			<EntityNestingLevelContext.Provider value={parentNestingLevel + 1}>
 				<EditableEntityList
 					heading={
 						groupInfo.label ? (
-							<>
-								{groupInfo.label}
+							<div className="flex items-center gap-1.5">
+								<span
+									className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-semibold uppercase tracking-wider ${
+										isIf
+											? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+											: isElse
+												? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+												: 'bg-primary/10 text-primary border border-primary/20'
+									}`}
+								>
+									<FontAwesomeIcon icon={faCodeBranch} className="text-3xs" />
+									{groupInfo.label}
+								</span>
 								{groupInfo.hint ? <InlineHelpIcon className="ms-1">{groupInfo.hint}</InlineHelpIcon> : null}
-							</>
+							</div>
 						) : null
 					}
 					entities={entities}

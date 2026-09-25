@@ -1,22 +1,26 @@
-import { faArrowLeft, faArrowRight, faDollarSign, faSquareRootVariable } from '@fortawesome/free-solid-svg-icons'
+import { faArrowRight, faDollarSign, faList } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useNavigate, useParams } from '@tanstack/react-router'
+import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import './variables-category-grid.css'
 import { observer } from 'mobx-react-lite'
-import { memo, useCallback, useContext } from 'react'
+import { memo, useCallback, useContext, useState } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import { Button, ButtonGroup, LinkButton } from '~/Components/Button'
 import { CollapsibleTree, type CollapsibleTreeHeaderProps } from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import {
 	useConnectionLeafTree,
 	type CollectionGroupMeta,
 	type ConnectionLeafItem,
 } from '~/Components/CollapsibleTree/useConnectionLeafTree.js'
-import { Grid } from '~/Components/Grid'
+import { NonIdealState } from '~/Components/NonIdealState.js'
+import { SearchBox } from '~/Components/SearchBox'
 import { VariablesTable } from '~/Components/VariablesTable.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
-import { ContextHelpButton } from '~/Layout/PanelIcons'
+import { PageHeader } from '~/Layout/PageHeader'
+import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
+import { SplitPanels } from '~/Layout/SplitPanels.js'
+import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { VariablesNav } from './VariablesNav.js'
 
 const VariableLeaf = observer(function VariableLeaf({ leaf }: { leaf: ConnectionLeafItem }) {
 	const { variablesStore } = useContext(RootAppStoreContext)
@@ -53,15 +57,27 @@ const VariableGroupHeader = memo(function VariableGroupHeader({
 })
 
 export const ConnectionVariablesPage = observer(function VariablesConnectionList() {
-	const { variablesStore } = useContext(RootAppStoreContext)
+	const { variablesStore, connections } = useContext(RootAppStoreContext)
 	const navigate = useNavigate()
+
+	const [filter, setFilter] = useState('')
+
+	let filterRegexp: RegExp | null = null
+	if (filter) {
+		try {
+			filterRegexp = new RegExp(filter, 'i')
+		} catch (e) {
+			console.error('Failed to compile filter regexp:', e)
+		}
+	}
 
 	const filterConnection = useCallback(
 		(_connectionId: string, connectionInfo: ClientConnectionConfig) => {
 			const connectionVariables = variablesStore.variables.get(connectionInfo.label)
-			return !!connectionVariables && connectionVariables.size > 0
+			if (!connectionVariables || connectionVariables.size === 0) return false
+			return !filterRegexp || filterRegexp.test(connectionInfo.label)
 		},
-		[variablesStore.variables]
+		[variablesStore.variables, filterRegexp]
 	)
 
 	const { nodes, ungroupedLeaves, allNodeIds } = useConnectionLeafTree(filterConnection)
@@ -71,85 +87,118 @@ export const ConnectionVariablesPage = observer(function VariablesConnectionList
 	const internalVariables = variablesStore.variables.get('internal')
 	const hasInternalVariables = !!internalVariables && internalVariables.size > 0
 
-	const staticLeaves: ConnectionLeafItem[] = hasInternalVariables
-		? [
-				{
-					key: 'internal',
-					connectionId: 'internal',
-					connectionLabel: 'internal',
-					moduleDisplayName: 'Internal',
-				},
-			]
-		: []
+	const staticLeaves: ConnectionLeafItem[] =
+		hasInternalVariables && (!filterRegexp || filterRegexp.test('internal'))
+			? [
+					{
+						key: 'internal',
+						connectionId: 'internal',
+						connectionLabel: 'internal',
+						moduleDisplayName: 'Internal',
+					},
+				]
+			: []
+
+	const matchRoute = useMatchRoute()
+	const routeMatch = matchRoute({ to: '/variables/connection/$label' })
+	const selectedLabel = routeMatch ? routeMatch.label : null
+
+	// Leaves are keyed by connection id, but the route (and the variables) use the label
+	const selectedLeafKey = useComputed(() => {
+		if (!selectedLabel) return null
+		if (selectedLabel === 'internal') return 'internal'
+		for (const [connectionId, connectionInfo] of connections.connections) {
+			if (connectionInfo.label === selectedLabel) return connectionId
+		}
+		return null
+	}, [connections.connections, selectedLabel])
+
+	const doClose = useCallback(() => {
+		void navigate({ to: '/variables' })
+	}, [navigate])
 
 	return (
-		<Grid.Row>
-			<Grid.Col xs={12} className="flex-column-layout">
-				<div className="fixed-header">
-					<h4 className="button-inline">
-						Variables
-						<ContextHelpButton action="/user-guide/config/variables" />
-					</h4>
-					<p>
-						Variables are dynamic placeholders that can be used in text, actions, and feedbacks. They automatically
-						update with live content, making it easy to create customized and responsive displays.
-					</p>
-				</div>
+		<div className="page-shell">
+			<PageHeader icon={faDollarSign} title="Connection Variables" helpAction="/user-guide/config/variables" />
 
-				<div className="scrollable-content">
-					<div className="variables-category-grid">
-						<LinkButton color="info" to="/variables/custom" className="mb-4">
-							<h6 className="mb-0 py-1">
-								<FontAwesomeIcon icon={faDollarSign} className="me-1" />
-								Custom Variables
-							</h6>
-						</LinkButton>
-						<LinkButton color="info" to="/variables/expression" className="mb-4">
-							<h6 className="mb-0 py-1">
-								<FontAwesomeIcon icon={faSquareRootVariable} className="me-1" /> Expression Variables
-							</h6>
-						</LinkButton>
+			<VariablesNav activeTab="connections" />
+
+			<SplitPanels.Root
+				showing={selectedLabel ? 'secondary' : 'primary'}
+				resize={{ storageKey: 'connection-variables' }}
+			>
+				<SplitPanels.Primary>
+					<div className="flex flex-col h-full min-h-0 gap-2">
+						{/* Top Header Card: Search */}
+						<div className="bg-surface-muted/50 border border-border/70 p-3 rounded-lg flex flex-col gap-2.5 shrink-0">
+							<p className="text-xs text-muted mb-0">
+								Select an active connection below to browse its available variables and their current values.
+							</p>
+
+							<SearchBox
+								placeholder="Search connections..."
+								filter={filter}
+								setFilter={setFilter}
+								className="w-full h-9"
+							/>
+						</div>
+
+						<div className="flex-1 min-h-0 scrollable-content list-card">
+							<CollapsibleTree
+								nodes={nodes}
+								staticLeaves={staticLeaves}
+								ungroupedLeaves={ungroupedLeaves}
+								ungroupedLabel="Ungrouped Connections"
+								collapseHelper={filter ? null : collapseHelper}
+								selectedLeafKey={selectedLeafKey}
+								HeaderComponent={VariableGroupHeader}
+								LeafComponent={VariableLeaf}
+								noContent={<NonIdealState icon={faList} text="No connections with variables" />}
+								onLeafClick={(leaf) =>
+									void navigate({ to: '/variables/connection/$label', params: { label: leaf.connectionLabel } })
+								}
+							/>
+						</div>
 					</div>
+				</SplitPanels.Primary>
 
-					<CollapsibleTree
-						nodes={nodes}
-						staticLeaves={staticLeaves}
-						ungroupedLeaves={ungroupedLeaves}
-						ungroupedLabel="Ungrouped Connections"
-						collapseHelper={collapseHelper}
-						HeaderComponent={VariableGroupHeader}
-						LeafComponent={VariableLeaf}
-						onLeafClick={(leaf) => void navigate({ to: `/variables/connection/${leaf.connectionLabel}` })}
-					/>
-				</div>
-			</Grid.Col>
-		</Grid.Row>
+				<SplitPanels.Secondary>
+					<div className="secondary-panel-simple">
+						{!!selectedLabel && <ConnectionVariablesPanelHeading label={selectedLabel} doClose={doClose} />}
+						<Outlet />
+					</div>
+				</SplitPanels.Secondary>
+			</SplitPanels.Root>
+		</div>
 	)
 })
 
-export function VariablesListPage(): React.JSX.Element {
-	const { label } = useParams({ from: '/_app/variables/connection/$label' })
+interface ConnectionVariablesPanelHeadingProps {
+	label: string
+	doClose: () => void
+}
 
-	// Future: if label is not found, redirect to /variables
-	// 	throw redirect({ to: '/variables' })
-
+function ConnectionVariablesPanelHeading({ label, doClose }: ConnectionVariablesPanelHeadingProps) {
 	return (
-		<div className="variables-panel">
-			<div>
-				<h4 style={{ marginBottom: '0.8rem' }}>Variables</h4>
-				<ButtonGroup>
-					<LinkButton color="primary" size="sm" to="/variables">
-						<FontAwesomeIcon icon={faArrowLeft} />
-						&nbsp; Go back
-					</LinkButton>
-					<Button color="secondary" size="sm" disabled>
-						{label}
-					</Button>
-				</ButtonGroup>
+		<div className="flex items-center justify-between gap-3 p-3 bg-surface-muted/40 border-b border-border/70 shrink-0">
+			<div className="flex items-center gap-2 min-w-0">
+				<span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-surface-muted text-muted text-xs shrink-0">
+					<FontAwesomeIcon icon={faDollarSign} />
+				</span>
+				<h3 className="text-sm font-bold text-body mb-0 truncate">{label}</h3>
 			</div>
+			<div className="flex items-center gap-1.5">
+				<ContextHelpButton action="/user-guide/config/variables" />
+				<CloseButton closeFn={doClose} />
+			</div>
+		</div>
+	)
+}
 
+export function ConnectionVariablesPanel({ label }: { label: string }): React.JSX.Element {
+	return (
+		<div className="secondary-panel-simple-body variables-panel">
 			<VariablesTable label={label} />
-			<br className="clear-both" />
 		</div>
 	)
 }

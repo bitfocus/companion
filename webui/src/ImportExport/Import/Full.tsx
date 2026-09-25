@@ -1,12 +1,11 @@
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import {
-	faCircleInfo,
 	faClock,
 	faDownload,
 	faFileImport,
 	faGlobe,
-	faPlug,
 	faTh,
-	faWarning,
+	faTriangleExclamation,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { createFormHook, createFormHookContexts, formOptions } from '@tanstack/react-form'
@@ -18,17 +17,14 @@ import type {
 	ImportOrResetType,
 } from '@companion-app/shared/Model/ImportExport.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { StaticAlert } from '~/Components/Alert.js'
 import { Button, LinkButtonExternal } from '~/Components/Button.js'
-import { Callout } from '~/Components/Callout.js'
-import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField.js'
 import { Form } from '~/Components/Form.js'
-import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { CONFIG_OPTION_META, ConfigOptionRow, CONTENT_OPTION_KEYS, SURFACE_CHILD_OPTIONS } from '../ConfigSelection.js'
 import { ImportPageWizard } from './Page.js'
 import { ImportTriggersTab } from './Triggers.js'
 
@@ -59,7 +55,6 @@ export function ImportFullWizard({
 				})
 				.then((res) => {
 					notifier.show(`Import successful`, `Page was imported successfully`, 10000)
-					console.log('remap response', res)
 					if (res) {
 						setConnectionRemap(res)
 					}
@@ -76,15 +71,15 @@ export function ImportFullWizard({
 
 	return (
 		<TabArea.Root value={activeTab} onValueChange={setActiveTab}>
-			<TabArea.List>
+			<TabArea.List className="mb-4">
 				<TabArea.Tab value="full">
-					<FontAwesomeIcon icon={faGlobe} /> Full Import
+					<FontAwesomeIcon icon={faGlobe} className="me-1.5" /> Full Import
 				</TabArea.Tab>
 				<TabArea.Tab value="buttons" disabled={!snapshot.buttons}>
-					<FontAwesomeIcon icon={faTh} /> Buttons
+					<FontAwesomeIcon icon={faTh} className="me-1.5" /> Buttons
 				</TabArea.Tab>
 				<TabArea.Tab value="triggers" disabled={!snapshot.triggers}>
-					<FontAwesomeIcon icon={faClock} /> Triggers
+					<FontAwesomeIcon icon={faClock} className="me-1.5" /> Triggers
 				</TabArea.Tab>
 			</TabArea.List>
 
@@ -94,8 +89,7 @@ export function ImportFullWizard({
 				</MyErrorBoundary>
 			</TabArea.Panel>
 			<TabArea.Panel value="buttons" style={{ height: '100%' }}>
-				<div className="flex flex-col h-full">
-					<h4>Buttons</h4>
+				<div className="flex flex-col h-full space-y-4">
 					<MyErrorBoundary>
 						{snapshot.buttons ? (
 							<ImportPageWizard
@@ -105,7 +99,7 @@ export function ImportFullWizard({
 								doImport={doSinglePageImport}
 							/>
 						) : (
-							''
+							<div className="text-muted p-4">No button configuration found in this snapshot file.</div>
 						)}
 					</MyErrorBoundary>
 				</div>
@@ -119,7 +113,7 @@ export function ImportFullWizard({
 							setConnectionRemap={setConnectionRemap}
 						/>
 					) : (
-						''
+						<div className="text-muted p-4">No trigger configuration found in this snapshot file.</div>
 					)}
 				</MyErrorBoundary>
 			</TabArea.Panel>
@@ -156,9 +150,7 @@ const { useAppForm } = createFormHook({
 		ImportToggleField,
 		ImportToggleGroup,
 	},
-	formComponents: {
-		// 	FormSubmitButton,
-	},
+	formComponents: {},
 	fieldContext,
 	formContext,
 })
@@ -213,7 +205,6 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 					return
 				}
 
-				// notifier.current.show(`Import successful`, `Page was imported successfully`, 10000)
 				window.location.reload()
 			} catch (e) {
 				console.log('import failed', stringifyError(e))
@@ -223,275 +214,251 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 	})
 
 	return (
-		<>
-			<h4>Full Import</h4>
-			<p>
-				A full import will replace the current system configuration of the selected components with the imported
-				configuration of the components.
-			</p>
-			<StaticAlert color="info" className="mb-0">
-				<FontAwesomeIcon icon={faCircleInfo} /> Want to import specific buttons or triggers instead? Use the{' '}
-				<strong>Buttons</strong> or <strong>Triggers</strong> tabs at the top.
-			</StaticAlert>
-			<Callout color="warning">
-				<h5>
-					<FontAwesomeIcon icon={faWarning} /> Before You Proceed
-				</h5>
-				<p>
-					It is <strong>highly recommended</strong> to export the current system configuration before performing a full
-					import.
-				</p>
-				<LinkButtonExternal color="warning" href={makeAbsolutePath('/int/export/full')}>
-					<FontAwesomeIcon icon={faDownload} /> Export Current Configuration
+		<div className="space-y-4">
+			{/* Pre-Import Safety / Prerequisite Banner */}
+			<div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 flex items-center justify-between flex-wrap gap-3">
+				<div className="flex items-start gap-3 max-w-2xl">
+					<FontAwesomeIcon icon={faTriangleExclamation} className="text-amber-500 text-lg mt-0.5 shrink-0" />
+					<div>
+						<h5 className="text-sm font-bold text-body mb-0.5">Pre-Import Recommendation</h5>
+						<p className="text-xs text-muted leading-relaxed mb-0">
+							Importing will overwrite components selected below. We strongly advise taking a backup of your current
+							setup first. Note that all connections are automatically imported to ensure actions and feedbacks resolve
+							correctly.
+						</p>
+					</div>
+				</div>
+				<LinkButtonExternal color="warning" size="sm" href={makeAbsolutePath('/int/export/full')} className="shrink-0">
+					<FontAwesomeIcon icon={faDownload} className="me-1.5" /> Quick Backup Current Config
 				</LinkButtonExternal>
-			</Callout>
-			<h5>Components</h5>
-			<p>
-				Select the components you want to import. This will{' '}
-				<strong>completely reset their existing configuration</strong>, and replace it with the imported state.
-			</p>
+			</div>
 
-			<form.AppForm>
-				<Form
-					className={'flex-form'}
-					onSubmit={(e) => {
-						e.preventDefault()
-						e.stopPropagation()
-					}}
-				>
-					{/* <div className="ms-2">
-						<CFormCheck
-							checked={true}
-							disabled
-							label={
-								<>
-									Connections
-									<InlineHelp help="Connections are always imported, as they are referenced by the buttons and triggers.">
-										<FontAwesomeIcon style={{ marginLeft: '5px' }} icon={faQuestionCircle} />
-									</InlineHelp>
-								</>
-							}
-						/>
-					</div> */}
+			{/* Components Selection Cards */}
+			<div>
+				<div className="mb-2">
+					<h5 className="text-sm font-bold text-body mb-0.5">Select Components to Import</h5>
+					<p className="text-xs text-muted mb-0">Choose which elements to restore from this snapshot.</p>
+				</div>
 
-					<div className="mt-2">
-						<form.AppField name="buttons">
-							{(field) => <field.ImportToggleField label="Buttons" disabled={!snapshot.buttons} />}
-						</form.AppField>
-					</div>
-					<div className="mt-2">
-						<form.AppField name="triggers">
-							{(field) => <field.ImportToggleField label="Triggers" disabled={!snapshot.triggers} />}
-						</form.AppField>
-					</div>
-					<div className="mt-2">
-						<form.AppField name="customVariables">
-							{(field) => <field.ImportToggleField label="Custom Variables" disabled={!snapshot.customVariables} />}
-						</form.AppField>
-					</div>
-					<div className="mt-2">
-						<form.AppField name="expressionVariables">
-							{(field) => (
-								<field.ImportToggleField label="Expression Variables" disabled={!snapshot.expressionVariables} />
-							)}
-						</form.AppField>
-					</div>
-					<div className="mt-2">
-						<form.AppField name="surfaces">
-							{(field) => (
-								<field.ImportToggleGroup
-									label="Surfaces"
-									disabled={!snapshot.surfacesInstances && !snapshot.surfacesKnown && !snapshot.surfacesRemote}
-									defaultChecked={
-										{
-											known: 'reset-and-import',
-											instances: 'reset-and-import',
-											remote: 'reset-and-import',
-										} satisfies ClientImportSelection['surfaces']
-									}
-									defaultUnchecked={
-										{
-											known: 'unchanged',
-											instances: 'unchanged',
-											remote: 'unchanged',
-										} satisfies ClientImportSelection['surfaces']
-									}
-								/>
-							)}
-						</form.AppField>
-					</div>
+				<form.AppForm>
+					<Form
+						onSubmit={(e) => {
+							e.preventDefault()
+							e.stopPropagation()
+						}}
+					>
+						<div className="config-selection space-y-4 my-3">
+							{/* Surfaces Card */}
+							<div className="config-selection-section">
+								<div className="config-selection-title">Surfaces</div>
+								<div className="config-selection-list">
+									<form.AppField name="surfaces">
+										{(field) => (
+											<field.ImportToggleGroup
+												icon={CONFIG_OPTION_META.surfaces.icon}
+												label="Surfaces"
+												disabled={!snapshot.surfacesInstances && !snapshot.surfacesKnown && !snapshot.surfacesRemote}
+												defaultChecked={{
+													known: 'reset-and-import',
+													instances: 'reset-and-import',
+													remote: 'reset-and-import',
+												}}
+												defaultUnchecked={{
+													known: 'unchanged',
+													instances: 'unchanged',
+													remote: 'unchanged',
+												}}
+											/>
+										)}
+									</form.AppField>
 
-					<div className="mt-2">
-						<form.AppField name="surfaces.known">
-							{(field) => (
-								<field.ImportToggleField
-									className="ms-8"
-									disabled={!snapshot.surfacesKnown}
-									label={
-										<>
-											Known Surfaces
-											<InlineHelpIcon className="ms-1">The list of known surfaces, and their settings</InlineHelpIcon>
-										</>
-									}
-								/>
-							)}
-						</form.AppField>
-					</div>
-					<div className="ms-2">
-						<form.AppField name="surfaces.instances">
-							{(field) => (
-								<field.ImportToggleField
-									className="ms-8"
-									disabled={!snapshot.surfacesInstances}
-									label={
-										<>
-											Surface Integrations
-											<InlineHelpIcon className="ms-1">The configured surface integrations</InlineHelpIcon>
-										</>
-									}
-								/>
-							)}
-						</form.AppField>
-					</div>
-					<div className="ms-2">
-						<form.AppField name="surfaces.remote">
-							{(field) => (
-								<field.ImportToggleField
-									className="ms-8"
-									disabled={!snapshot.surfacesRemote}
-									label={
-										<>
-											Remote Surfaces
-											<InlineHelpIcon className="ms-1">
-												Connections for surfaces that are connected remotely
-											</InlineHelpIcon>
-										</>
-									}
-								/>
-							)}
-						</form.AppField>
-					</div>
+									{SURFACE_CHILD_OPTIONS.map((opt) => (
+										<form.AppField key={opt.key} name={`surfaces.${opt.key}`}>
+											{(field) => (
+												<ConfigOptionRow
+													icon={opt.icon}
+													label={opt.label}
+													sub
+													disabled={
+														opt.key === 'known'
+															? !snapshot.surfacesKnown
+															: opt.key === 'instances'
+																? !snapshot.surfacesInstances
+																: !snapshot.surfacesRemote
+													}
+													value={
+														field.state.value !== 'unchanged' &&
+														(opt.key === 'known'
+															? !!snapshot.surfacesKnown
+															: opt.key === 'instances'
+																? !!snapshot.surfacesInstances
+																: !!snapshot.surfacesRemote)
+													}
+													setValue={(val) => field.handleChange(val ? 'reset-and-import' : 'unchanged')}
+													onBlur={field.handleBlur}
+												/>
+											)}
+										</form.AppField>
+									))}
+								</div>
+							</div>
 
-					<div className="ms-2">
-						<form.AppField name="imageLibrary">
-							{(field) => <field.ImportToggleField label="Image Library" disabled={!snapshot.imageLibrary} />}
-						</form.AppField>
-					</div>
+							{/* Content & Variables Card */}
+							<div className="config-selection-section">
+								<div className="config-selection-title">Content & Variables</div>
+								<div className="config-selection-list">
+									{CONTENT_OPTION_KEYS.map((key) => {
+										const isSnapshotAvailable =
+											key === 'buttons'
+												? !!snapshot.buttons
+												: key === 'triggers'
+													? !!snapshot.triggers
+													: key === 'customVariables'
+														? !!snapshot.customVariables
+														: key === 'expressionVariables'
+															? !!snapshot.expressionVariables
+															: !!snapshot.imageLibrary
 
-					{/* <div className="ms-2">
-								<form.AppField name="userconfig">
-									{(field) => <field.ImportToggleField label="Settings" disabled={!snapshot.userconfig} />}
-								</form.AppField>
-							</div> */}
+										return (
+											<form.AppField key={key} name={key}>
+												{(field) => <field.ImportToggleField name={key} disabled={!isSnapshotAvailable} />}
+											</form.AppField>
+										)
+									})}
+								</div>
+							</div>
+						</div>
 
-					<StaticAlert color="info" className="mt-4">
-						<FontAwesomeIcon icon={faPlug} /> All connections will be imported, as they are required to be able to
-						import any actions and feedbacks.
-					</StaticAlert>
+						{/* Action Choice Cards */}
+						<div className="space-y-3 pt-2">
+							<div className="rounded-xl border border-emerald-500/30 bg-surface p-4 flex flex-col justify-between gap-3 shadow-xs">
+								<div>
+									<h5 className="text-sm font-bold text-body mb-1">Import, Preserving Unselected Components</h5>
+									<p className="text-xs text-muted leading-relaxed mb-0">
+										Resets <strong>only</strong> the selected components before importing. Preserves existing{' '}
+										<a href="settings" className="text-primary hover:underline">
+											Settings
+										</a>{' '}
+										and components not included in this import.
+									</p>
+								</div>
+								<form.Subscribe selector={(form) => [form.values]}>
+									{([values]) => {
+										const anythingEnabled = isAnythingEnabled(sanitiseSelection(values, snapshot, false))
+										return (
+											<div>
+												<Button
+													color="success"
+													type="submit"
+													disabled={!anythingEnabled}
+													onClick={() => {
+														form.handleSubmit({ fullReset: false }).catch((err) => {
+															console.error('Form submission error', err)
+														})
+													}}
+												>
+													<FontAwesomeIcon icon={faFileImport} className="me-1.5" /> Import (Preserve Unselected)
+												</Button>
+											</div>
+										)
+									}}
+								</form.Subscribe>
+							</div>
 
-					<Callout color="success">
-						<h5>Import, Resetting only Selected Components</h5>
-						<p>
-							This option resets <strong>only</strong> the selected components before importing them.
-							<br /> Choosing this option will preserve your <a href="settings">Settings</a> page configurations.
-						</p>
-						<form.Subscribe selector={(form) => [form.values]}>
-							{([values]) => {
-								const anythingEnabled = isAnythingEnabled(sanitiseSelection(values, snapshot, false))
-								return (
-									<>
-										<Button
-											color="success"
-											type="submit"
-											disabled={!anythingEnabled}
-											onClick={() => {
-												form.handleSubmit({ fullReset: false }).catch((err) => {
-													console.error('Form submission error', err)
-												})
-											}}
-										>
-											<FontAwesomeIcon icon={faFileImport} /> Import Preserving Unselected
-										</Button>
-									</>
-								)
-							}}
-						</form.Subscribe>
-					</Callout>
-					<Callout color="danger">
-						<h5>Full Reset & Import</h5>
-						<p>
-							This option will reset <strong>all</strong> components, including <a href="settings">Settings</a>, before
-							importing the selected ones.
-							<br />
-							Full reset is generally the safer option when some items are deselected, as it reduces the chance of
-							producing an inconsistent setup.
-						</p>
-						<form.Subscribe selector={(form) => [form.values]}>
-							{([values]) => {
-								const anythingEnabled = isAnythingEnabled(sanitiseSelection(values, snapshot, false))
-								return (
-									<Button
-										color="primary"
-										type="submit"
-										disabled={!anythingEnabled}
-										onClick={() => {
-											// override default specified in onSubmitMeta
-											form.handleSubmit({ fullReset: true }).catch((err) => {
-												console.error('Form submission error', err)
-											})
-										}}
-									>
-										<FontAwesomeIcon icon={faFileImport} /> Full Reset & Import
-									</Button>
-								)
-							}}
-						</form.Subscribe>
-					</Callout>
-				</Form>
-			</form.AppForm>
-		</>
+							<div className="rounded-xl border border-rose-500/30 bg-surface p-4 flex flex-col justify-between gap-3 shadow-xs">
+								<div>
+									<h5 className="text-sm font-bold text-body mb-1">Full Reset & Import</h5>
+									<p className="text-xs text-muted leading-relaxed mb-0">
+										Resets <strong>all</strong> components including{' '}
+										<a href="settings" className="text-primary hover:underline">
+											Settings
+										</a>{' '}
+										before importing. This ensures a clean slate and avoids potential conflicts with obsolete
+										configurations.
+									</p>
+								</div>
+								<form.Subscribe selector={(form) => [form.values]}>
+									{([values]) => {
+										const anythingEnabled = isAnythingEnabled(sanitiseSelection(values, snapshot, false))
+										return (
+											<div>
+												<Button
+													color="danger"
+													type="submit"
+													disabled={!anythingEnabled}
+													onClick={() => {
+														form.handleSubmit({ fullReset: true }).catch((err) => {
+															console.error('Form submission error', err)
+														})
+													}}
+												>
+													<FontAwesomeIcon icon={faFileImport} className="me-1.5" /> Full Reset & Import
+												</Button>
+											</div>
+										)
+									}}
+								</form.Subscribe>
+							</div>
+						</div>
+					</Form>
+				</form.AppForm>
+			</div>
+		</div>
 	)
 }
 
-interface ImportToggleFieldProps {
-	label: string | React.ReactNode
-	disabled: boolean
-	className?: string
-}
-function ImportToggleField({ label, disabled, className }: ImportToggleFieldProps) {
+function ImportToggleField({
+	name,
+	disabled,
+	sub,
+}: {
+	name: (typeof CONTENT_OPTION_KEYS)[number]
+	disabled?: boolean
+	sub?: boolean
+}) {
 	const field = useFieldContext<ImportOrResetType>()
+	const meta = CONFIG_OPTION_META[name]
 
 	return (
-		<CheckboxInputFieldWithLabel
-			className={className}
+		<ConfigOptionRow
+			icon={meta.icon}
+			label={meta.label}
 			disabled={disabled}
+			sub={sub}
 			value={field.state.value !== 'unchanged' && !disabled}
 			setValue={(val) => field.handleChange(val ? 'reset-and-import' : 'unchanged')}
 			onBlur={field.handleBlur}
-			label={label}
 		/>
 	)
 }
-interface ImportToggleGroupProps {
-	label: string
-	disabled: boolean
+
+function ImportToggleGroup({
+	icon,
+	label,
+	disabled,
+	defaultChecked,
+	defaultUnchecked,
+}: {
+	icon: IconDefinition
+	label: React.ReactNode
+	disabled?: boolean
 	defaultChecked: Record<string, ImportOrResetType>
 	defaultUnchecked: Record<string, ImportOrResetType>
-}
-function ImportToggleGroup({ label, disabled, defaultChecked, defaultUnchecked }: ImportToggleGroupProps) {
+}) {
 	const field = useFieldContext<Record<string, ImportOrResetType>>()
 
 	const isAChildChecked = !!field.state.value && Object.values(field.state.value).some((v) => v !== 'unchanged')
 	const isAChildUnchecked = !!field.state.value && Object.values(field.state.value).some((v) => v === 'unchanged')
 
 	return (
-		<CheckboxInputFieldWithLabel
+		<ConfigOptionRow
+			icon={icon}
+			label={label}
 			disabled={disabled}
 			indeterminate={isAChildChecked && isAChildUnchecked}
 			value={isAChildChecked && !disabled}
 			setValue={(val) => field.handleChange(val ? defaultChecked : defaultUnchecked)}
 			onBlur={field.handleBlur}
-			label={label}
 		/>
 	)
 }

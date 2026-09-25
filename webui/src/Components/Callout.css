@@ -1,10 +1,24 @@
 .callout2-element {
-	padding: 1rem 1rem;
-	margin: 1rem 0;
-	border: var(--border-width) solid var(--color-border);
+	padding: 0.875rem 1rem;
+	margin: 0.75rem 0;
+	border: 1px solid var(--color-border);
 	border-inline-start-color: var(--callout2-border-left-color);
-	border-inline-start-width: calc(var(--border-width) * 4);
-	border-radius: var(--radius);
+	border-inline-start-width: 4px;
+	border-radius: 0.75rem;
+	background-color: var(--color-surface);
+	font-size: 0.875rem;
+	line-height: 1.5;
+	box-shadow: none;
+
+	h5 {
+		font-size: 0.875rem;
+		font-weight: 600;
+		margin-bottom: 0.35rem;
+	}
+
+	p:last-child {
+		margin-bottom: 0;
+	}
 }
 
 .callout2-primary {

@@ -1,3 +1,5 @@
+@import '../breakpoints.css'; /* makes @custom-media (--bp-*) resolvable in this file */
+
 .surfaces-tab-content {
 	display: grid;
 	grid-auto-flow: row;
@@ -8,15 +10,14 @@
 .surfaces-grid-container {
 	display: grid;
 	grid-template-columns: min-content 1fr min-content;
-	margin-top: 1rem;
-	border: 1px solid var(--color-border);
-	box-shadow: 0px 2px 21px -10px var(--color-shadow-20);
+	border-radius: 0.375rem;
 	color: var(--color-text);
 	width: 100%;
 
 	.grid-header-cell {
-		padding: 6px 10px;
+		padding: 0.625rem 0.75rem;
 		font-weight: 600;
+		font-size: 0.75rem;
 		background-color: var(--color-surface-muted);
 		border-bottom: 1px solid var(--color-border);
 		white-space: nowrap;
@@ -54,7 +55,7 @@
 	}
 
 	.grid-cell {
-		padding: 5px 10px;
+		padding: 0.625rem 0.75rem;
 		display: flex;
 		align-items: center;
 		min-width: 0;
@@ -76,8 +77,17 @@
 			overflow-wrap: break-word;
 			min-width: 200px;
 
-			b {
-				margin-bottom: 2px;
+			.surface-name-row {
+				display: flex;
+				align-items: center;
+				flex-wrap: wrap;
+				gap: 0.375rem 0.5rem;
+				min-width: 0;
+				margin-bottom: 0.125rem;
+			}
+
+			.surface-name-row b {
+				margin: 0;
 			}
 
 			.surface-id-row {
@@ -99,38 +109,45 @@
 			}
 
 			.surface-status {
+				display: inline-flex;
+				align-items: center;
+				min-height: 1.25rem;
+				padding: 0.125rem 0.45rem;
+				border: 1px solid var(--color-border);
+				border-radius: 999px;
+				background: var(--color-surface-muted);
 				white-space: nowrap;
-				font-size: 0.9em;
+				font-size: 0.6875rem;
+				font-weight: 600;
+				line-height: 1;
 				color: var(--color-text-secondary);
-				margin-left: auto;
 			}
 
-			/* note: this is needed to override the .surface-status rule, immediately above,
-			         to make it consistent with the disabled row. */
-			.surface-disabled {
+			.surface-status-online {
+				color: var(--color-text);
+			}
+
+			.surface-status-disabled,
+			.surface-status-offline {
 				color: var(--color-text-disabled);
 			}
 		}
 
 		/* Third column - Actions column */
 		&:nth-child(3n) {
-			text-align: right;
 			justify-content: flex-end;
-			white-space: nowrap;
-
-			.button {
-				text-transform: uppercase;
-				padding: 4px;
-
-				&:disabled {
-					opacity: 0.2;
-				}
-			}
-
-			.button-primary.disabled {
-				opacity: 0.5;
-			}
 		}
+	}
+
+	.surface-action-list {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: 0.375rem;
+	}
+
+	.surface-row-actions .button {
+		white-space: nowrap;
 	}
 
 	.grid-no-results {
@@ -140,7 +157,7 @@
 	}
 
 	/* Responsive design for smaller screens */
-	@media (max-width: 768px) {
+	@media (--bp-md-down) {
 		.grid-cell {
 			padding: 4px 6px;
 			font-size: 0.875rem;

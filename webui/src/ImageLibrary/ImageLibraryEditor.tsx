@@ -1,4 +1,4 @@
-import { faDownload, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faImages, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useEffect, useId, useRef, useState } from 'react'
@@ -8,6 +8,7 @@ import { CopyButton } from '~/Components/CopyButton.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
+import { NonIdealState } from '~/Components/NonIdealState.js'
 import { trpc, trpcClient, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImageBackgroundColorEditor } from './imageBackgroundColorEditor.js'
@@ -139,15 +140,15 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 
 	if (!selectedImageName) {
 		return (
-			<div className="image-library-editor">
-				<StaticAlert color="info">Select an image from the library to view and edit its properties.</StaticAlert>
+			<div className="flex items-center justify-center h-full p-8 text-center">
+				<NonIdealState icon={faImages} text="Select an image from the library to view and edit its properties." />
 			</div>
 		)
 	}
 
 	if (!imageInfo) {
 		return (
-			<div className="image-library-editor">
+			<div className="p-4">
 				<StaticAlert color="danger">Failed to load image data.</StaticAlert>
 			</div>
 		)

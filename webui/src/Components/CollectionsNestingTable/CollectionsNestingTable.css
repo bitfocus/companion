@@ -1,13 +1,29 @@
 .collections-nesting-table {
 	border: 1px solid var(--color-border);
-	border-collapse: collapse;
-	box-shadow: 0px 2px 21px -10px var(--color-shadow-20);
+	border-radius: 0.75rem;
+	overflow: hidden;
+
+	/* A list card already draws the frame; a second one here shows as a double border with mismatched corners. */
+	.list-card > & {
+		border: 0;
+		border-radius: 0;
+	}
+	border-collapse: separate;
+	border-spacing: 0;
 
 	--collection-nesting-level: 0;
 
-	.collections-nesting-table-header,
+	.collections-nesting-table-header {
+		position: sticky;
+		top: 0;
+		z-index: 10;
+		background-color: var(--color-surface-subtle);
+		padding: 10px 14px;
+		border-bottom: 1px solid var(--color-border);
+	}
+
 	.collections-nesting-table-ungrouped-header {
-		background-color: var(--color-surface-muted);
+		background-color: var(--color-surface-subtle);
 		padding: 6px 10px;
 		padding-left: 20px;
 
@@ -17,7 +33,7 @@
 	}
 
 	.collections-nesting-table-row-item {
-		padding: 5px 10px;
+		padding: 4px 8px;
 		border-bottom: 1px solid var(--color-border);
 
 		.row-reorder-handle {
@@ -28,26 +44,19 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			margin: -5px 0 -5px -10px;
-			padding: 0 10px;
-			background-color: var(--color-surface-alt);
-		}
-
-		&.row-selected {
-			background-color: var(--color-row-selected);
+			margin: -4px 0 -4px -8px;
+			padding: 0 8px;
+			background-color: transparent;
+			opacity: 0.5;
 
 			&:hover {
-				background-color: var(--color-row-overlay-30) !important;
+				opacity: 1;
 			}
 		}
 
 		/* Items drag via a DragOverlay (dnd-kit doesn't move/clone the source), so dim the source row. */
 		&.row-dragging {
 			opacity: 0.4;
-		}
-
-		&:hover:not(.row-selected):not(.row-dragging) {
-			background-color: var(--color-row-overlay-10);
 		}
 
 		.disabled {

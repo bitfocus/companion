@@ -1,0 +1,86 @@
+/* Pill-shaped status badge, shared by the instance/connection lists, the module tables and the
+   connection edit panel. The per-tone colours are applied as utilities by Badge.tsx; this holds the
+   shape/typography that every tone has in common. */
+.status-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.375rem;
+	min-width: 70px;
+	padding: 0.125rem 0.625rem;
+	border-radius: 9999px;
+	border: 1px solid transparent;
+	font-size: 0.75rem;
+	font-weight: 500;
+	white-space: nowrap;
+	user-select: none;
+}
+
+/* Tone colours, from the shared --color-tone-* tokens in tailwind.css (which carry their own
+   dark-scheme values), so a badge and a filter pill of the same tone always agree. */
+.status-badge[data-tone='good'],
+.status-badge[data-tone='warning'],
+.status-badge[data-tone='error'],
+.status-badge[data-tone='info'] {
+	background: color-mix(in srgb, var(--badge-fill) 10%, transparent);
+	border-color: color-mix(in srgb, var(--badge-fill) 25%, transparent);
+	color: var(--badge-text);
+	box-shadow: var(--badge-shadow, 0 1px 2px 0 var(--color-shadow-6));
+}
+
+.status-badge[data-tone='good'] {
+	--badge-fill: var(--color-tone-good-fill);
+	--badge-text: var(--color-tone-good-text);
+}
+
+.status-badge[data-tone='warning'] {
+	--badge-fill: var(--color-tone-warning-fill);
+	--badge-text: var(--color-tone-warning-text);
+}
+
+.status-badge[data-tone='error'] {
+	--badge-fill: var(--color-tone-error-fill);
+	--badge-text: var(--color-tone-error-text);
+}
+
+.status-badge[data-tone='info'] {
+	--badge-fill: var(--color-tone-info-fill);
+	--badge-text: var(--color-tone-info-text);
+}
+
+/* `neutral` and `disabled` are absence of status, not a tone, so they stay on the surface palette. */
+.status-badge[data-tone='neutral'] {
+	background: color-mix(in srgb, var(--color-surface-muted) 60%, transparent);
+	border-color: color-mix(in srgb, var(--color-border) 60%, transparent);
+	color: var(--color-muted);
+}
+
+.status-badge[data-tone='disabled'] {
+	background: color-mix(in srgb, var(--color-surface-muted) 50%, transparent);
+	border-color: color-mix(in srgb, var(--color-border) 40%, transparent);
+	color: var(--color-muted);
+	opacity: 0.75;
+}
+
+/* The spinner some badges use in place of the tone icon. */
+.status-badge-spinner {
+	--spinner2-size: 0.75rem;
+	--spinner2-stroke: 0.125rem;
+	width: var(--spinner2-size);
+	height: var(--spinner2-size);
+	flex-shrink: 0;
+}
+
+/* The small square chip naming a module's type ("Connection" / "Surface"), shown beside a module or
+   instance name. Squarer and tighter than .status-badge, which is sized for status text. */
+.module-type-chip {
+	display: inline-block;
+	flex-shrink: 0;
+	padding: 0.125rem 0.5rem;
+	border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+	border-radius: 0.25rem;
+	background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+	color: var(--color-primary);
+	font-size: 0.625rem;
+	font-weight: 600;
+}

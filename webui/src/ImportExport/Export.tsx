@@ -89,9 +89,9 @@ export const ExportWizardModal = observer(function ExportWizardModal() {
 
 	return (
 		<Modal.Root open={show} onOpenChange={onOpenChange} onOpenChangeComplete={onOpenChangeComplete}>
-			<Modal.Trigger color="success">
-				<FontAwesomeIcon icon={faDownload} className="me-2" />
-				Export configuration
+			<Modal.Trigger color="success" className="w-full flex items-center justify-center gap-2 font-semibold">
+				<FontAwesomeIcon icon={faDownload} />
+				Export Configuration
 			</Modal.Trigger>
 
 			<Modal.Portal>
@@ -99,15 +99,7 @@ export const ExportWizardModal = observer(function ExportWizardModal() {
 				<Modal.Viewport>
 					<Modal.Popup initialFocus={buttonRef}>
 						<Modal.Header closeButton>
-							<Modal.Title>
-								<img
-									src={makeAbsolutePath('/img/icons/48x48.png')}
-									style={{ height: 30 }}
-									alt="logo"
-									className="me-2"
-								/>
-								Export Configuration
-							</Modal.Title>
+							<Modal.Title>Export Configuration</Modal.Title>
 						</Modal.Header>
 						<Form
 							className={'flex-form'}

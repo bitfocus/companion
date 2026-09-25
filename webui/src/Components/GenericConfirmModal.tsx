@@ -68,7 +68,9 @@ export const GenericConfirmModal = forwardRef<GenericConfirmModalRef, GenericCon
 							<Modal.Body>{content}</Modal.Body>
 							<Modal.Footer>
 								<Modal.Close>Cancel</Modal.Close>
-								<Button ref={buttonRef} color="primary" onClick={doAction} autoFocus>
+								{/* Every caller of this modal is confirming something destructive (delete / remove / clear),
+								    so the confirm button is the destructive colour, not the primary one. */}
+								<Button ref={buttonRef} color="danger" onClick={doAction} autoFocus>
 									{data?.buttonLabel}
 								</Button>
 							</Modal.Footer>

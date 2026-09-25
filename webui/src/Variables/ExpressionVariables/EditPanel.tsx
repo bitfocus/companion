@@ -334,10 +334,10 @@ const ExpressionVariableLocalVariablesEditor = observer(function ExpressionVaria
 							</>
 						}
 						subheading={
-							<StaticAlert color="info" className="mb-2">
-								Local variables are not supported by all modules or fields. Fields which support local variables can be
-								identified by the <FontAwesomeIcon icon={faGlobe} /> icon.
-							</StaticAlert>
+							<span className="text-xs text-muted">
+								Local variables are supported on fields featuring the{' '}
+								<FontAwesomeIcon icon={faGlobe} className="mx-0.5" /> icon.
+							</span>
 						}
 						entities={localVariables}
 						ownerId={null}

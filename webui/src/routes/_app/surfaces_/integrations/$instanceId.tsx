@@ -17,6 +17,6 @@ const ModuleConfigComponent = observer(function ModuleConfigComponent() {
 	}
 })
 
-export const Route = createFileRoute('/_app/surfaces/integrations/$instanceId')({
+export const Route = createFileRoute('/_app/surfaces_/integrations/$instanceId')({
 	component: ModuleConfigComponent,
 })

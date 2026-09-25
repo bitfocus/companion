@@ -5,10 +5,10 @@ import { faPlus, faShareFromSquare, faSort, faTrash } from '@fortawesome/free-so
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
-import { Button, ButtonGroup } from '~/Components/Button'
+import { Button } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { Grid } from '~/Components/Grid'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
+import { DragCloneOverlay } from '~/Resources/DragCloneOverlay.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import type { PagesStoreModel } from '~/Stores/PagesStore.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -104,58 +104,39 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 	})
 
 	return (
-		<div>
-			<h5>Pages</h5>
-			<p>
-				You can insert, delete, and re-arrange the order of pages here. You can also give each page a unique name to
-				help you identify its purpose.
-			</p>
-			<Grid.Row>
-				<Grid.Col xs={12}>
-					<GenericConfirmModal ref={deleteRef} />
-					<EditPagePropertiesModal ref={editRef} includeName={false} />
+		<div className="buttons-sidebar-section pages-list-section">
+			<div className="buttons-sidebar-heading-row">
+				<h5 className="buttons-sidebar-heading">Pages</h5>
+				<Button color="primary" size="sm" onClick={doInsertPage} data-page={pages.data.length + 1}>
+					<FontAwesomeIcon icon={faPlus} />
+					Add Page
+				</Button>
+			</div>
+			<GenericConfirmModal ref={deleteRef} />
+			<EditPagePropertiesModal ref={editRef} includeName={false} />
 
-					<div className="collections-nesting-table pages-list-table">
-						<div className="collections-nesting-table-row-item">
-							<div className="collections-nesting-table-row-item-grid font-bold">
-								<div className="row-reorder-handle invisible">
-									<FontAwesomeIcon icon={faSort} />
-								</div>
-								<div className="grow flex items-center gap-2">
-									<div className="pages-list-number">Number</div>
-									<div className="grow">Name</div>
-									<div className="ms-auto">
-										<ButtonGroup className="pages-list-actions">
-											<Button
-												color="warning"
-												size="sm"
-												onClick={doInsertPage}
-												title="Insert page at start"
-												data-page={1}
-											>
-												<FontAwesomeIcon icon={faPlus} />
-											</Button>
-										</ButtonGroup>
-									</div>
-								</div>
-							</div>
-						</div>
-						{pages.data.map((info, id) => (
-							<PageListRow
-								key={info.id}
-								index={id}
-								pageNumber={id + 1}
-								info={info}
-								pageCount={pages.data.length}
-								goToPage={goToPage}
-								configurePage={configurePage}
-								doInsertPage={doInsertPage}
-								doDeletePage={doDeletePage}
-							/>
-						))}
-					</div>
-				</Grid.Col>
-			</Grid.Row>
+			<div className="pages-list-table">
+				<div className="pages-list-row pages-list-header">
+					<span aria-hidden="true" />
+					<span>Number</span>
+					<span>Name</span>
+					<span aria-hidden="true" />
+				</div>
+				{pages.data.map((info, id) => (
+					<PageListRow
+						key={info.id}
+						index={id}
+						pageNumber={id + 1}
+						info={info}
+						pageCount={pages.data.length}
+						goToPage={goToPage}
+						configurePage={configurePage}
+						doInsertPage={doInsertPage}
+						doDeletePage={doDeletePage}
+					/>
+				))}
+				<DragCloneOverlay disabled={(source) => source?.type !== 'page-list'} />
+			</div>
 		</div>
 	)
 })
@@ -197,51 +178,53 @@ const PageListRow = observer(function PageListRow({
 		[setNameMutation, pageNumber]
 	)
 
-	const { ref, handleRef } = useSortable({ id: info.id, index, type: 'page-list', accept: 'page-list' })
+	const { ref, handleRef, isDragging } = useSortable({ id: info.id, index, type: 'page-list', accept: 'page-list' })
 
 	return (
-		<div ref={ref} className="collections-nesting-table-row-item">
-			<div className="collections-nesting-table-row-item-grid">
-				<div ref={handleRef} className="row-reorder-handle">
-					<FontAwesomeIcon icon={faSort} />
-				</div>
-				<div className="grow flex items-center gap-2">
-					<div className="pages-list-number font-bold">{pageNumber}</div>
-					<div className="grow">
-						<TextInputFieldSimple
-							id={undefined}
-							value={info.name ?? ''}
-							setValue={changeName}
-							placeholder="Unnamed page"
-						/>
-					</div>
-					<ButtonGroup className="pages-list-actions ms-auto">
-						<Button color="secondary" size="sm" onClick={goToPage} title="Jump to page" data-page={pageNumber}>
-							<FontAwesomeIcon icon={faShareFromSquare} />
-						</Button>
-						<Button
-							color="warning"
-							size="sm"
-							onClick={doInsertPage}
-							title="Insert page after"
-							data-page={pageNumber + 1}
-						>
-							<FontAwesomeIcon icon={faPlus} />
-						</Button>
-
-						<Button
-							color="primary"
-							size="sm"
-							onClick={doDeletePage}
-							title="Delete page"
-							data-page={pageNumber}
-							data-name={info.name}
-							disabled={pageCount <= 1}
-						>
-							<FontAwesomeIcon icon={faTrash} />
-						</Button>
-					</ButtonGroup>
-				</div>
+		<div
+			ref={ref}
+			className={`pages-list-row${isDragging ? ' row-dragging' : ''}${index === pageCount - 1 ? ' pages-list-last-row' : ''}`}
+		>
+			<div ref={handleRef} className="pages-list-drag-handle" title="Drag to reorder page">
+				<FontAwesomeIcon icon={faSort} />
+			</div>
+			<span className="pages-list-number">{pageNumber}</span>
+			<div className="pages-list-name">
+				<TextInputFieldSimple id={undefined} value={info.name ?? ''} setValue={changeName} placeholder="Unnamed page" />
+			</div>
+			<div className="pages-list-actions">
+				<Button
+					variant="ghost"
+					size="sm"
+					className="pages-list-action"
+					onClick={goToPage}
+					title="Jump to page"
+					data-page={pageNumber}
+				>
+					<FontAwesomeIcon icon={faShareFromSquare} />
+				</Button>
+				<Button
+					variant="ghost"
+					size="sm"
+					className="pages-list-action"
+					onClick={doInsertPage}
+					title="Insert page after"
+					data-page={pageNumber + 1}
+				>
+					<FontAwesomeIcon icon={faPlus} />
+				</Button>
+				<Button
+					variant="ghost"
+					size="sm"
+					className="pages-list-action pages-list-delete"
+					onClick={doDeletePage}
+					title="Delete page"
+					data-page={pageNumber}
+					data-name={info.name}
+					disabled={pageCount <= 1}
+				>
+					<FontAwesomeIcon icon={faTrash} />
+				</Button>
 			</div>
 		</div>
 	)

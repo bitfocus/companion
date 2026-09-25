@@ -1,7 +1,6 @@
 import {
 	faCircleMinus,
 	faEyeSlash,
-	faFlask,
 	faPlus,
 	faQuestionCircle,
 	faSync,
@@ -23,7 +22,7 @@ import type {
 import { isSomeModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { Button, ButtonGroup } from '~/Components/Button'
 import { Table } from '~/Components/Table.js'
-import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
+import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ModuleVersionUsageIcon } from './ModuleVersionUsageIcon.js'
@@ -62,10 +61,10 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 
 	const visibleVersions = useTableVisibilityHelper<VisibleVersionsState>(`modules_visible_versions:${moduleId}`, {
 		availableStable: true,
-		availableDeprecated: false,
 		availableBeta: false,
 	})
-	const allHidden = Object.values(visibleVersions.visibility).every((v) => !v)
+	const [showDeprecated, setShowDeprecated] = useState(false)
+	const allHidden = Object.values(visibleVersions.visibility).every((v) => !v) && !showDeprecated
 
 	const versionRows = allVersionNumbers
 		.map((versionId) => {
@@ -73,7 +72,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 			const installedInfo = installedModuleVersions.get(versionId)
 			if (storeInfo) {
 				// Hide based on visibility settings
-				if (storeInfo.deprecationReason && !visibleVersions.visibility.availableDeprecated) return null
+				if (storeInfo.deprecationReason && !showDeprecated) return null
 				if (storeInfo.releaseChannel === 'beta' && !visibleVersions.visibility.availableBeta) return null
 
 				if (
@@ -99,46 +98,78 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 		.filter((r) => !!r)
 
 	return (
-		<Table className="table-tight">
-			<thead>
-				<tr>
-					<th>Version</th>
-					<th>&nbsp;</th>
-					<th colSpan={3} className="fit">
-						<ButtonGroup className="table-header-buttons">
-							<VisibilityButton {...visibleVersions} keyId="availableStable" color="success" label="Stable" />
-							<VisibilityButton {...visibleVersions} keyId="availableBeta" color="warning" label="Beta" />
-							<VisibilityButton {...visibleVersions} keyId="availableDeprecated" color="primary" label="Deprecated" />
-						</ButtonGroup>
-					</th>
-				</tr>
-			</thead>
-			<tbody>
-				{versionRows}
-				{!allHidden && versionRows.length === 0 && (
-					<tr>
-						<td colSpan={4} style={{ padding: '10px 5px' }}>
-							<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
-							<strong>There are no matching versions for the current filters</strong>
-						</td>
-					</tr>
-				)}
-				{allHidden && (
-					<tr>
-						<td colSpan={4} style={{ padding: '10px 5px' }}>
-							<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
-							<strong>All versions are hidden by the filters</strong>
-						</td>
-					</tr>
-				)}
-			</tbody>
-		</Table>
+		<div className="space-y-3">
+			<div className="flex items-center justify-between gap-3">
+				<h4 className="text-xs font-bold uppercase tracking-wider text-muted mb-0">Module Versions</h4>
+				<ButtonGroup className="shrink-0">
+					<Button
+						color={visibleVersions.visibility.availableStable ? 'primary' : 'secondary'}
+						size="sm"
+						active={visibleVersions.visibility.availableStable}
+						onClick={() => visibleVersions.toggleVisibility('availableStable')}
+					>
+						Stable
+					</Button>
+					<Button
+						color={visibleVersions.visibility.availableBeta ? 'primary' : 'secondary'}
+						size="sm"
+						active={visibleVersions.visibility.availableBeta}
+						onClick={() => visibleVersions.toggleVisibility('availableBeta')}
+					>
+						Beta
+					</Button>
+					<Button
+						color={showDeprecated ? 'primary' : 'secondary'}
+						size="sm"
+						active={showDeprecated}
+						onClick={() => setShowDeprecated((visible) => !visible)}
+					>
+						Deprecated
+					</Button>
+				</ButtonGroup>
+			</div>
+
+			<div className="rounded-md border border-border/70 bg-surface overflow-hidden">
+				<Table className="table-tight mb-0">
+					<thead>
+						<tr className="bg-surface-muted/40 border-b border-border/70 text-xs text-muted">
+							<th className="w-12 py-2 px-3">Action</th>
+							<th className="py-2 px-3">Version</th>
+							<th className="py-2 px-3">Released</th>
+							<th className="py-2 px-3 text-end w-20">Status</th>
+						</tr>
+					</thead>
+					<tbody>
+						{versionRows}
+						{!allHidden && versionRows.length === 0 && (
+							<tr>
+								<td colSpan={4} className="p-3 text-xs text-muted">
+									<div className="flex items-center gap-2">
+										<FontAwesomeIcon icon={faEyeSlash} className="text-amber-500" />
+										<span>There are no matching versions for the current filters.</span>
+									</div>
+								</td>
+							</tr>
+						)}
+						{allHidden && (
+							<tr>
+								<td colSpan={4} className="p-3 text-xs text-muted">
+									<div className="flex items-center gap-2">
+										<FontAwesomeIcon icon={faEyeSlash} className="text-amber-500" />
+										<span>All versions are hidden by active filter toggles.</span>
+									</div>
+								</td>
+							</tr>
+						)}
+					</tbody>
+				</Table>
+			</div>
+		</div>
 	)
 })
 
 interface VisibleVersionsState {
 	availableStable: boolean
-	availableDeprecated: boolean
 	availableBeta: boolean
 }
 
@@ -179,8 +210,8 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 	}
 
 	return (
-		<tr>
-			<td className="compact">
+		<tr className="hover:bg-surface-muted/50 transition-colors">
+			<td className="compact py-2 px-3 w-12">
 				{installedInfo ? (
 					<ModuleUninstallButton
 						moduleType={moduleType}
@@ -198,33 +229,38 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 					/>
 				)}
 			</td>
-			<td>
-				{versionId}
-				{storeInfo?.releaseChannel === 'beta' && (
-					<span title="Beta">
-						<FontAwesomeIcon className="ms-2" icon={faFlask} />
-					</span>
-				)}
-				{storeInfo?.deprecationReason && (
-					<span title="Deprecated">
-						<FontAwesomeIcon className="ms-2" icon={faWarning} />
-					</span>
-				)}
+			<td className="py-2 px-3 font-mono text-xs font-semibold text-body">
+				<div className="flex items-center gap-1.5">
+					<span>{versionId}</span>
+					{storeInfo?.releaseChannel === 'beta' && (
+						<span title="Beta" className="px-1.5 py-0.5 rounded text-3xs bg-amber-500/10 text-amber-600 font-sans">
+							Beta
+						</span>
+					)}
+					{storeInfo?.deprecationReason && (
+						<span title="Deprecated" className="px-1.5 py-0.5 rounded text-3xs bg-rose-500/10 text-rose-600 font-sans">
+							Deprecated
+						</span>
+					)}
+				</div>
 			</td>
-			<td>
-				{!!storeInfo && (
-					<>
-						Released <LastUpdatedTimestamp releasedAt={storeInfo.releasedAt} />
-					</>
-				)}
+			<td className="py-2 px-3 text-xs text-muted">
+				{!!storeInfo && <LastUpdatedTimestamp releasedAt={storeInfo.releasedAt} />}
 			</td>
-			<td className="compact">
-				<ModuleVersionUsageIcon matchingConnections={matchingConnections} isInstalled={!!installedInfo} />
-				{helpPath && (
-					<div className="float_right" onClick={doShowHelp}>
-						<FontAwesomeIcon icon={faQuestionCircle} />
-					</div>
-				)}
+			<td className="compact py-2 px-3 text-end w-20">
+				<div className="flex items-center justify-end gap-1.5">
+					<ModuleVersionUsageIcon matchingConnections={matchingConnections} isInstalled={!!installedInfo} />
+					{helpPath && (
+						<button
+							type="button"
+							onClick={doShowHelp}
+							className="panel-icon-button panel-icon-button-sm"
+							title="Show documentation"
+						>
+							<FontAwesomeIcon icon={faQuestionCircle} className="text-xs" />
+						</button>
+					)}
+				</div>
 			</td>
 		</tr>
 	)
@@ -277,15 +313,21 @@ function ModuleUninstallButton({ moduleType, moduleId, versionId, disabled }: Mo
 	}, [uninstallModuleMutation, notifier, moduleType, moduleId, versionId])
 
 	return (
-		<Button disabled={isRunningInstallOrUninstall || disabled} onClick={doRemove}>
+		<Button
+			color="secondary"
+			size="sm"
+			className="w-7 h-7 p-0 inline-flex items-center justify-center"
+			disabled={isRunningInstallOrUninstall || disabled}
+			onClick={doRemove}
+		>
 			{isRunningInstallOrUninstall ? (
-				<span title="Removing">
-					<FontAwesomeIcon icon={faSync} spin />
-				</span>
+				<FontAwesomeIcon icon={faSync} spin className="text-xs" />
 			) : (
-				<span title={disabled ? 'Cannot remove version, it is in use by connections' : 'Remove version'}>
-					<FontAwesomeIcon icon={faTrash} />
-				</span>
+				<FontAwesomeIcon
+					icon={faTrash}
+					className="text-xs text-rose-500"
+					title={disabled ? 'Cannot remove version, it is in use by connections' : 'Remove version'}
+				/>
 			)}
 		</Button>
 	)
@@ -326,30 +368,38 @@ function ModuleInstallButton({ moduleType, moduleId, versionId, apiVersion, hasT
 
 	if (!hasTarUrl) {
 		return (
-			<span title="Module is no longer available">
-				<FontAwesomeIcon icon={faCircleMinus} className="disabled button-size" />
+			<span
+				title="Module is no longer available"
+				className="inline-flex items-center justify-center w-7 h-7 text-muted"
+			>
+				<FontAwesomeIcon icon={faCircleMinus} className="text-xs" />
 			</span>
 		)
 	}
 
 	if (!isSomeModuleApiVersionCompatible(moduleType, apiVersion)) {
 		return (
-			<span title="Module is not compatible with this version of Companion">
-				<FontAwesomeIcon icon={faWarning} className="disabled button-size" />
+			<span
+				title="Module is not compatible with this version of Companion"
+				className="inline-flex items-center justify-center w-7 h-7 text-amber-500"
+			>
+				<FontAwesomeIcon icon={faWarning} className="text-xs" />
 			</span>
 		)
 	}
 
 	return (
-		<Button disabled={isRunningInstallOrUninstall} onClick={doInstall}>
+		<Button
+			color="secondary"
+			size="sm"
+			className="w-7 h-7 p-0 inline-flex items-center justify-center"
+			disabled={isRunningInstallOrUninstall}
+			onClick={doInstall}
+		>
 			{isRunningInstallOrUninstall ? (
-				<span title="Installing">
-					<FontAwesomeIcon icon={faSync} />
-				</span>
+				<FontAwesomeIcon icon={faSync} spin className="text-xs" />
 			) : (
-				<span title="Install version">
-					<FontAwesomeIcon icon={faPlus} />
-				</span>
+				<FontAwesomeIcon icon={faPlus} className="text-xs" title="Install version" />
 			)}
 		</Button>
 	)

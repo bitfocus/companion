@@ -32,14 +32,34 @@
 }
 
 .entity-list {
-	/* Entity list - plain stacked divs (no layout on draggable element to avoid DnD preview issues) */
+	background-color: transparent;
+	padding: 0;
+
+	/* Entity list - modern cards with crisp border */
 	.entity-row {
 		background-color: var(--color-surface);
-		margin-bottom: 0.25rem;
+		border: 1px solid var(--color-border);
+		border-radius: 0.75rem;
+		box-shadow: none;
+		margin-bottom: 0.5rem;
 		display: flex;
 		flex-direction: row;
 		align-items: stretch;
 		width: 100%;
+		overflow: hidden;
+		transition: border-color 0.15s ease;
+
+		&:hover {
+			border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+
+			.cell-controls {
+				opacity: 1;
+			}
+
+			.entity-row-reorder {
+				opacity: 0.8;
+			}
+		}
 
 		&:last-child {
 			margin-bottom: 0;
@@ -50,19 +70,47 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 10px;
-		cursor: ns-resize;
+		padding: 0 0.4rem 0 0.65rem;
+		cursor: grab;
 		flex-shrink: 0;
-		background-color: var(--color-surface-alt);
+		background-color: transparent;
+		color: var(--color-text-muted);
+		opacity: 0.35;
+		transition:
+			opacity 0.15s ease,
+			color 0.15s ease;
+
+		&:hover {
+			opacity: 1;
+			color: var(--color-primary);
+		}
+
+		&:active {
+			cursor: grabbing;
+		}
+	}
+
+	.cell-controls {
+		opacity: 0.65;
+		transition: opacity 0.15s ease;
 	}
 
 	.entity-row-content {
 		flex: 1;
-		padding: 0.5rem;
+		padding: 0.625rem 0.875rem;
 		min-width: 0;
+
+		&:has(.editor-grid) .editor-grid-header {
+			padding-bottom: 0.5rem;
+			margin-bottom: 0.5rem;
+			border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+		}
 	}
 
 	.entity-row.entity-disabled {
+		opacity: 0.6;
+		background-color: var(--color-surface-muted);
+
 		.cell-name,
 		.form-label {
 			color: var(--color-text-disabled);
@@ -70,38 +118,41 @@
 	}
 
 	.entitylist-dropzone {
-		background-color: var(--color-surface);
+		background-color: var(--color-surface-muted);
+		border-radius: 0.75rem;
+		margin-top: 0.35rem;
 
 		p {
-			border: 2px dashed var(--color-dropzone-border);
-			border-radius: 5px;
+			border: 2px dashed var(--color-border);
+			border-radius: 0.75rem;
 			text-align: center;
 			margin: 0;
 			padding: 0.75rem;
+			color: var(--color-text-muted);
+			font-size: 0.75rem;
+			font-weight: 500;
 		}
 	}
 
 	.editor-grid-header {
 		display: flex;
 		flex-direction: row;
-		margin-right: -0.75rem;
+		align-items: center;
 		min-width: 0;
+		gap: 0.5rem;
 
 		.cell-name {
 			flex-grow: 1;
 			min-width: 0;
-
-			font-weight: bold;
+			font-weight: 600;
+			font-size: 0.8125rem;
 			align-self: center;
-
-			/* Long headlines/names (including unbreakable strings) wrap instead of overflowing the row,
-			   and anything that still can't fit is clipped here rather than spilling under the controls */
 			overflow-wrap: anywhere;
 			overflow: hidden;
 
 			input {
-				font-weight: bold;
-				margin-bottom: 5px;
+				font-weight: 600;
+				margin-bottom: 0;
 			}
 
 			/* A collapsed local variable shows its name alongside a compact preview of its current value */
@@ -194,10 +245,21 @@
 		}
 
 		.cell-children {
-			margin-top: 0.5rem;
+			margin-top: 0.625rem;
+			padding-left: 0.875rem;
+			border-left: 2px solid color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+			margin-left: 0.25rem;
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
 
 			h4 {
 				margin-top: 0 !important;
+				font-size: 0.8125rem;
+				font-weight: 600;
+				color: var(--color-text-secondary);
+				text-transform: uppercase;
+				letter-spacing: 0.05em;
 			}
 
 			> form:not(:first-child) {
@@ -205,11 +267,6 @@
 			}
 		}
 	}
-}
-
-.entity-list {
-	background-color: var(--color-surface-muted);
-	padding: 0.25rem 0;
 }
 
 /* The entity DragOverlay reuses `.entity-list` so the cloned drag preview row inherits its styling, but

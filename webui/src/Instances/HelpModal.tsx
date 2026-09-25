@@ -1,13 +1,11 @@
-import { Marked } from 'marked'
-import { baseUrl } from 'marked-base-url'
 import { observer } from 'mobx-react-lite'
-import { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react'
+import { forwardRef, useCallback, useContext, useImperativeHandle, useState } from 'react'
 import semver from 'semver'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { Modal } from '~/Components/Modal'
-import { sanitizeHtmlString } from '~/Resources/SanitizeHtml.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ModuleHelpContent } from './ModuleHelpContent.js'
 
 export interface HelpModalRef {
 	showFromUrl(moduleType: ModuleInstanceType, moduleId: string, versionDisplayName: string, url: string): void
@@ -74,19 +72,6 @@ export const HelpModal = observer(
 			}
 		}, [])
 
-		const contentBaseUrl = content?.baseUrl
-		const marked = useMemo(() => {
-			const marked = new Marked()
-			if (contentBaseUrl) marked.use(baseUrl(contentBaseUrl))
-			return marked
-		}, [contentBaseUrl])
-
-		const html = content
-			? {
-					__html: sanitizeHtmlString(marked.parse(content.markdown) as string, { allowImages: true }),
-				}
-			: undefined
-
 		const moduleInfo = content && modules.getModuleInfo(content.moduleType, content.moduleId)
 
 		return (
@@ -101,7 +86,7 @@ export const HelpModal = observer(
 								</Modal.Title>
 							</Modal.Header>
 							<Modal.Body>
-								<div dangerouslySetInnerHTML={html} className="markdown" />
+								{content && <ModuleHelpContent markdown={content.markdown} helpUrl={content.baseUrl} />}
 							</Modal.Body>
 						</Modal.Popup>
 					</Modal.Viewport>

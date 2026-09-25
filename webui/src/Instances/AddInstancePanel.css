@@ -1,10 +1,4 @@
-#connection_add_search_results {
-	margin-top: 10px;
-}
-
-#connection_add_search_results div {
-	margin-bottom: 5px;
-}
+@import '../breakpoints.css'; /* makes @custom-media (--bp-*) resolvable in this file */
 
 .add-connection-intro-section {
 	.intro-grid {
@@ -12,7 +6,7 @@
 		grid-template-columns: 1fr auto;
 		gap: 0 0.5rem;
 
-		@media (max-width: 768px) {
+		@media (--bp-md-down) {
 			grid-template-columns: 1fr;
 			gap: 0.75rem;
 

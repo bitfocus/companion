@@ -1,15 +1,30 @@
-import { useVirtualizer } from '@tanstack/react-virtual'
-import '../log.css'
+import { faBug } from '@fortawesome/free-solid-svg-icons'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { stringify as csvStringify } from 'csv-stringify/browser/esm/sync'
-import dayjs from 'dayjs'
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Button, ButtonGroup } from '~/Components/Button'
-import { Grid } from '~/Components/Grid'
+import {
+	AlertCircle,
+	AlertTriangle,
+	Bug,
+	FileDown,
+	Info,
+	Play,
+	Search,
+	Square,
+	Terminal,
+	Trash2,
+	X,
+} from 'lucide-react'
+import { observer } from 'mobx-react-lite'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
+import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
+import { LogLine, LogNoticeLine, VirtualLogList } from '~/Components/LogViewer.js'
+import { PillButton, type PillTone } from '~/Components/PillButton.js'
 import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
-import { useStickyScroll } from '~/Hooks/useStickyScroll.js'
-import { TRPCConnectionStatus, useTRPCConnectionStatus } from '~/Hooks/useTRPCConnectionStatus'
+import { InstanceTableStatusCell } from '~/Instances/List/InstanceTableStatusCell.js'
+import { PageHeader } from '~/Layout/PageHeader.js'
 import { trpc } from '~/Resources/TRPC'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface DebugLogLine {
 	time: number | null
@@ -26,6 +41,14 @@ interface DebugConfig {
 	console: boolean | undefined
 }
 
+const DEBUG_LEVELS = [
+	{ key: 'error', label: 'Error', icon: AlertCircle, tone: 'error' },
+	{ key: 'warn', label: 'Warn', icon: AlertTriangle, tone: 'warning' },
+	{ key: 'info', label: 'Info', icon: Info, tone: 'info' },
+	{ key: 'debug', label: 'Debug', icon: Bug, tone: 'neutral' },
+	{ key: 'console', label: 'Console', icon: Terminal, tone: 'media' },
+] as const satisfies readonly { key: keyof DebugConfig; label: string; icon: typeof Info; tone: PillTone }[]
+
 const LogsOnDiskInfoLine: DebugLogLine = {
 	time: null,
 	source: 'System',
@@ -39,25 +62,88 @@ export interface InstanceDebugLogProps {
 	setEnabled: (enabled: boolean) => void
 }
 
-export function InstanceDebugLog({
+export const InstanceDebugLog = observer(function InstanceDebugLog({
 	instanceId,
 	instanceTypeStr,
 	setEnabled,
 }: InstanceDebugLogProps): React.JSX.Element {
-	const trpcStatus = useTRPCConnectionStatus()
+	const rootAppStore = useContext(RootAppStoreContext)
+	const [connectionInfo, setConnectionInfo] = useState<ClientConnectionConfig | null>(null)
+	const [connectionStatus, setConnectionStatus] = useState<InstanceStatusEntry | null>(null)
+	const [searchQuery, setSearchQuery] = useState('')
+
+	useSubscription(
+		trpc.instances.connections.watch.subscriptionOptions(undefined, {
+			enabled: instanceTypeStr === 'connection',
+			onData: (changes) => {
+				for (const change of changes) {
+					if (change.type === 'init') {
+						if (change.info[instanceId]) {
+							setConnectionInfo(change.info[instanceId])
+						}
+					} else if (change.type === 'update') {
+						if (change.id === instanceId) {
+							setConnectionInfo(change.info)
+						}
+					} else if (change.type === 'remove') {
+						if (change.id === instanceId) {
+							setConnectionInfo(null)
+						}
+					}
+				}
+			},
+		})
+	)
+
+	useSubscription(
+		trpc.instances.surfaces.watch.subscriptionOptions(undefined, {
+			enabled: instanceTypeStr !== 'connection',
+			onData: (changes) => {
+				for (const change of changes) {
+					if (change.type === 'init') {
+						if (change.info[instanceId]) {
+							setConnectionInfo(change.info[instanceId] as unknown as ClientConnectionConfig)
+						}
+					} else if (change.type === 'update') {
+						if (change.id === instanceId) {
+							setConnectionInfo(change.info as unknown as ClientConnectionConfig)
+						}
+					} else if (change.type === 'remove') {
+						if (change.id === instanceId) {
+							setConnectionInfo(null)
+						}
+					}
+				}
+			},
+		})
+	)
+
+	useSubscription(
+		trpc.instances.statuses.watch.subscriptionOptions(undefined, {
+			onData: (data) => {
+				if (!data) return
+				if (data.type === 'init') {
+					if (data.statuses[instanceId]) {
+						setConnectionStatus(data.statuses[instanceId])
+					}
+				} else if (data.type === 'update') {
+					if (data.instanceId === instanceId) {
+						setConnectionStatus(data.status)
+					}
+				} else if (data.type === 'remove') {
+					if (data.instanceId === instanceId) {
+						setConnectionStatus(null)
+					}
+				}
+			},
+		})
+	)
+
+	const isEnabled = connectionInfo ? connectionInfo.enabled !== false : true
+	const label = connectionInfo?.label ?? rootAppStore?.connections?.getInfo(instanceId)?.label ?? instanceId
 
 	// const [loadError, setLoadError]=useState(null)
 	const [linesBuffer, setLinesBuffer] = useState<DebugLogLine[]>([])
-
-	const [isConnected, setIsConnected] = useState(false)
-	useEffect(() => {
-		if (trpcStatus.status === TRPCConnectionStatus.Connected) {
-			setIsConnected(true)
-			setLinesBuffer([])
-		} else {
-			setIsConnected(false)
-		}
-	}, [trpcStatus.status])
 
 	useSubscription(
 		trpc.instances.debugLog.subscriptionOptions(
@@ -112,8 +198,7 @@ export function InstanceDebugLog({
 		link.remove()
 	}, [linesBuffer])
 
-	const doStopInstance = useCallback(() => setEnabled(false), [setEnabled])
-	const doStartInstance = useCallback(() => setEnabled(true), [setEnabled])
+	const doToggleInstance = useCallback(() => setEnabled(!isEnabled), [isEnabled, setEnabled])
 
 	const [config, setConfig] = useState<DebugConfig>(() => loadConfig(instanceId ?? ''))
 	// Save the config when it changes
@@ -127,155 +212,122 @@ export function InstanceDebugLog({
 			[key]: !oldConfig[key],
 		}))
 	}, [])
-
-	const doToggleError = useCallback(() => doToggleConfig('error'), [doToggleConfig])
-	const doToggleWarn = useCallback(() => doToggleConfig('warn'), [doToggleConfig])
-	const doToggleInfo = useCallback(() => doToggleConfig('info'), [doToggleConfig])
-	const doToggleDebug = useCallback(() => doToggleConfig('debug'), [doToggleConfig])
-	const doToggleConsole = useCallback(() => doToggleConfig('console'), [doToggleConfig])
+	const counts = useMemo(() => {
+		const result = { error: 0, warn: 0, info: 0, debug: 0, console: 0 }
+		for (const line of linesBuffer) {
+			if (line.level in result) result[line.level as keyof DebugConfig]++
+		}
+		return result
+	}, [linesBuffer])
 
 	return (
-		<Grid.Container style={{ height: 'calc(100vh - 10px)', padding: '10px', background: '#eee' }}>
-			<div className="log-page">
-				<Grid.Row className="px-4">
-					<Grid.Col>
-						<ButtonGroup className="me-2">
-							<Button color={isConnected ? 'success' : 'warning'} size="sm" disabled>
-								{isConnected ? 'Connected' : 'Reconnecting'}
-							</Button>
-						</ButtonGroup>
+		<div className="page-shell bg-app-frame-bg h-screen max-h-screen text-body pt-3">
+			<PageHeader icon={faBug} title={`Debug Log: ${label}`} helpAction="/user-guide/config/connections" />
 
-						<ButtonGroup className="me-2">
-							<Button color="danger" size="sm" onClick={doClearLog}>
-								Clear log
-							</Button>
-							<Button color="info" size="sm" onClick={doExportLog}>
-								Export log
-							</Button>
-						</ButtonGroup>
+			{/* Top Controls Bar */}
+			<div className="bg-surface-muted/60 border border-border/80 p-3 rounded-xl flex flex-col gap-3 shrink-0 shadow-xs">
+				<div className="flex items-center justify-between gap-3 flex-wrap">
+					<div className="flex items-center gap-1.5 flex-wrap">
+						<span className="text-xs font-semibold text-body me-1">Filters:</span>
+						{DEBUG_LEVELS.map(({ key, label: levelLabel, icon: Icon, tone }) => (
+							<PillButton key={key} small tone={tone} active={!!config[key]} onClick={() => doToggleConfig(key)}>
+								<Icon className="w-3.5 h-3.5" />
+								<span>
+									{levelLabel} ({counts[key]})
+								</span>
+							</PillButton>
+						))}
+					</div>
 
-						<ButtonGroup className="me-2">
-							<Button color="danger" size="sm" onClick={doStopInstance}>
-								Stop {instanceTypeStr}
-							</Button>
-							<Button color="success" size="sm" onClick={doStartInstance}>
-								Start {instanceTypeStr}
-							</Button>
-						</ButtonGroup>
+					<div className="flex items-center gap-2 flex-wrap">
+						<InstanceTableStatusCell isEnabled={isEnabled} status={connectionStatus ?? undefined} />
+						<PillButton
+							tone="primary"
+							active={false}
+							onClick={doClearLog}
+							title="Clear log history"
+							className="hover:text-rose-500"
+						>
+							<Trash2 className="w-3.5 h-3.5" />
+							<span>Clear</span>
+						</PillButton>
+						<PillButton tone="primary" active={false} onClick={doExportLog} title="Download log file">
+							<FileDown className="w-3.5 h-3.5" />
+							<span>Export Log</span>
+						</PillButton>
+						<PillButton tone={isEnabled ? 'error' : 'good'} active onClick={doToggleInstance}>
+							{isEnabled ? <Square className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+							<span>
+								{isEnabled ? 'Stop' : 'Start'} {instanceTypeStr}
+							</span>
+						</PillButton>
+					</div>
+				</div>
 
-						<div className="float-right">
-							<ButtonGroup>
-								<Button color="danger" size="sm" onClick={doToggleError} variant={config.error ? undefined : 'outline'}>
-									Error
-								</Button>
-								<Button color="warning" size="sm" onClick={doToggleWarn} variant={config.warn ? undefined : 'outline'}>
-									Warning
-								</Button>
-								<Button color="info" size="sm" onClick={doToggleInfo} variant={config.info ? undefined : 'outline'}>
-									Info
-								</Button>
-								<Button
-									color="secondary"
-									size="sm"
-									onClick={doToggleDebug}
-									variant={config.debug ? undefined : 'outline'}
-								>
-									Debug
-								</Button>
-								<Button
-									color="secondary"
-									size="sm"
-									onClick={doToggleConsole}
-									variant={config.console ? undefined : 'outline'}
-								>
-									Console
-								</Button>
-							</ButtonGroup>
-						</div>
-					</Grid.Col>
-				</Grid.Row>
-				<Grid.Row className="log-panel">
-					<Grid.Col lg={12} className="overflow-hidden h-full w-full">
-						<LogPanelContents linesBuffer={linesBuffer} config={config} />
-					</Grid.Col>
-				</Grid.Row>
+				<div className="relative flex items-center">
+					<Search className="w-4 h-4 absolute left-3 text-muted pointer-events-none" />
+					<input
+						type="text"
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+						placeholder="Search logs by keyword, source, or message..."
+						className="w-full bg-surface border border-border rounded-lg pl-9 pr-8 py-1.5 text-xs text-body placeholder:text-muted focus:outline-none focus:border-primary transition-colors"
+					/>
+					{searchQuery && (
+						<button
+							type="button"
+							onClick={() => setSearchQuery('')}
+							className="absolute right-2.5 text-muted hover:text-body p-0.5"
+							title="Clear search"
+						>
+							<X className="w-3.5 h-3.5" />
+						</button>
+					)}
+				</div>
 			</div>
-		</Grid.Container>
+
+			{/* Log Content Terminal Window */}
+			<div className="flex-1 min-h-0 bg-surface rounded-xl border border-border/80 shadow-xs overflow-hidden flex flex-col p-2">
+				<LogPanelContents linesBuffer={linesBuffer} config={config} searchQuery={searchQuery} />
+			</div>
+		</div>
 	)
-}
+})
 
 interface LogPanelContentsProps {
 	linesBuffer: DebugLogLine[]
 	config: DebugConfig
+	searchQuery: string
 }
 
-function LogPanelContents({ linesBuffer, config }: LogPanelContentsProps) {
-	const parentRef = useRef<HTMLDivElement>(null)
-
+function LogPanelContents({ linesBuffer, config, searchQuery }: LogPanelContentsProps) {
 	const messages = useMemo(() => {
-		return linesBuffer.filter((msg) => msg.level === 'system' || !!config[msg.level as keyof DebugConfig])
-	}, [linesBuffer, config])
-
-	const count = messages.length + 1
-
-	// eslint-disable-next-line react-hooks/incompatible-library
-	const virtualizer = useVirtualizer({
-		count: count,
-		getScrollElement: () => parentRef.current,
-		estimateSize: () => 18,
-		overscan: 5,
-	})
-
-	const onScroll = useStickyScroll(parentRef, virtualizer, count)
-
-	const items = virtualizer.getVirtualItems()
+		const query = searchQuery.toLowerCase()
+		return linesBuffer.filter((msg) => {
+			if (msg.level !== 'system' && !config[msg.level as keyof DebugConfig]) return false
+			return !query || [msg.message, msg.source, msg.level].some((value) => value?.toLowerCase().includes(query))
+		})
+	}, [linesBuffer, config, searchQuery])
 
 	return (
-		<div ref={parentRef} className="w-full h-full overflow-auto" onScroll={onScroll}>
-			<div
-				style={{
-					height: virtualizer.getTotalSize(),
-					width: '100%',
-					position: 'relative',
-				}}
-			>
-				<div
-					style={{
-						position: 'absolute',
-						top: 0,
-						left: 0,
-						width: '100%',
-						transform: `translateY(${items[0]?.start ?? 0}px)`,
-					}}
-				>
-					{items.map((virtualRow) => (
-						<div
-							key={virtualRow.key}
-							data-index={virtualRow.index}
-							ref={virtualizer.measureElement}
-							className={virtualRow.index % 2 ? 'ListItemOdd' : 'ListItemEven'}
-						>
-							<LogLineInner line={virtualRow.index === 0 ? LogsOnDiskInfoLine : messages[virtualRow.index - 1]} />
-						</div>
-					))}
-				</div>
-			</div>
-		</div>
+		<VirtualLogList
+			lines={messages}
+			header={<LogNoticeLine message={LogsOnDiskInfoLine.message} />}
+			renderLine={(line) => (
+				<LogLine
+					line={line}
+					timeFormat="HH:mm:ss.SSS"
+					timeClassName=""
+					sourceClassName="log-source-cell text-2xs pt-0.5"
+					alwaysReserveSource={false}
+				/>
+			)}
+			estimateSize={28}
+			autoScroll
+			className="w-full h-full overflow-auto font-mono text-xs select-text scrollbar-thin"
+		/>
 	)
 }
-
-interface LogLineInnerProps {
-	line: DebugLogLine
-}
-const LogLineInner = memo(({ line }: LogLineInnerProps) => {
-	const time_format = !line.time ? '                 ' : dayjs(line.time).format('YY.MM.DD HH:mm:ss')
-
-	return (
-		<div className={`log-line log-type-${line.level}`}>
-			{time_format} <strong>{line.source}</strong>: <span className="log-message">{line.message}</span>
-		</div>
-	)
-})
 
 function loadConfig(instanceId: string): DebugConfig {
 	const saveId = `module_debug:${instanceId}`

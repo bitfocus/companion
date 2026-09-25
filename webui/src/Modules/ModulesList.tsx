@@ -13,15 +13,14 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { StaticAlert } from '~/Components/Alert.js'
-import { Button, ButtonGroup } from '~/Components/Button'
+import { Button } from '~/Components/Button'
 import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { Table } from '~/Components/Table.js'
-import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
+import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
 import { filterProducts, useAllModuleProducts, type FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
-import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImportModules } from './ImportCustomModule.js'
@@ -31,7 +30,6 @@ import { RefreshModulesList } from './RefreshModulesList.js'
 interface VisibleModulesState {
 	installed: boolean
 	available: boolean
-	availableDeprecated: boolean
 }
 
 interface ModulesListProps {
@@ -50,23 +48,11 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 	const visibleModules = useTableVisibilityHelper<VisibleModulesState>('modules_visible', {
 		installed: true,
 		available: false,
-		availableDeprecated: false,
 	})
+	const [showDeprecated, setShowDeprecated] = useState(false)
 
 	const [filterType, setFilterType] = useState<ModuleInstanceType | null>(null)
 	const [filter, setFilter] = useState('')
-	const filterName = (() => {
-		if (filterType === null) return ' '
-		switch (filterType) {
-			case ModuleInstanceType.Connection:
-				return ' Connection '
-			case ModuleInstanceType.Surface:
-				return ' Surface '
-			default:
-				assertNever(filterType)
-				return ' '
-		}
-	})()
 
 	//  A module can support several devices: useAllModuleProducts returns the list of devices, so some modules are represented by several entries here.
 	const allProducts = useAllModuleProducts(null, true, true).filter((p) => !filterType || filterType === p.moduleType)
@@ -84,7 +70,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 		if (
 			p.storeInfo &&
 			visibleModules.visibility.available &&
-			(visibleModules.visibility.availableDeprecated || !p.storeInfo.deprecationReason) // only show deprecated ones when the flag is enabled
+			(showDeprecated || !p.storeInfo.deprecationReason) // only show deprecated ones when explicitly enabled for this view
 		)
 			isVisible = true
 
@@ -154,74 +140,91 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 	const hiddenCount = modulesCount - new Set(typeProducts.map(moduleKey)).size
 
 	return (
-		<div className="flex-column-layout">
-			<div className="fixed-header">
-				<h4 className="button-inline">
-					Manage Modules
-					<ContextHelpButton action="/user-guide/config/modules" />
-				</h4>
-				<p className="mb-2">
-					<strong>
-						Companion can work with over {modulesCount} different{filterName}modules
-					</strong>{' '}
-					and the list grows every day.
-				</p>
-				<p>
-					View and manage your installed modules, or search for new ones to support additional devices. Can't find your
-					device?{' '}
-					<a target="_blank" href={makeAbsolutePath('/user-guide/config/modules')}>
-						Check our guidance for getting device support
-					</a>
-					.<br />
-					For offline systems, download module bundles from the{' '}
-					<a href="https://l.companion.free/q/lp68nsiV4" target="_blank">
-						Bitfocus website
-					</a>
-					.
-				</p>
+		<div className="flex-column-layout space-y-3">
+			<div className="fixed-header space-y-3">
+				{/* Top Header Card: Title Info & Filter Controls */}
+				<div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-surface-muted/50 border border-border/70 shadow-xs">
+					<div className="min-w-0 flex-1">
+						<div className="flex items-center gap-2 mb-1">
+							<h3 className="text-sm font-bold text-body mb-0">Module Catalog</h3>
+						</div>
+						<p className="text-xs text-muted mb-0 flex items-center gap-1.5 flex-wrap">
+							<span>Browse over {modulesCount} integrations.</span>
+							<span>•</span>
+							<span className="inline-flex items-center gap-1">
+								<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
+								<RefreshModulesList btnSize="sm" color="secondary" iconOnly className="inline-flex" />
+							</span>
+							<span>•</span>
+							<a
+								target="_blank"
+								rel="noreferrer"
+								href={makeAbsolutePath('/user-guide/config/modules')}
+								className="underline hover:text-body"
+							>
+								Need help?
+							</a>
+						</p>
+					</div>
 
-				<ImportModules />
-
-				<div className="refresh-and-last-updated">
-					<RefreshModulesList />
-					<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
+					<div className="module-visibility-filters" role="group" aria-label="Filter modules by availability">
+						<Button
+							variant="ghost"
+							className="module-visibility-filter"
+							size="sm"
+							aria-pressed={visibleModules.visibility.installed}
+							onClick={() => visibleModules.toggleVisibility('installed')}
+						>
+							Installed
+						</Button>
+						<Button
+							variant="ghost"
+							className="module-visibility-filter"
+							size="sm"
+							aria-pressed={visibleModules.visibility.available}
+							onClick={() => visibleModules.toggleVisibility('available')}
+						>
+							Available
+						</Button>
+						<Button
+							variant="ghost"
+							className="module-visibility-filter"
+							size="sm"
+							aria-pressed={showDeprecated}
+							onClick={() => setShowDeprecated((visible) => !visible)}
+						>
+							Deprecated
+						</Button>
+					</div>
 				</div>
 
-				<SearchBox filter={filter} setFilter={setFilter} className="mb-2" />
+				{/* Search Toolbar & Custom Module Import Row */}
+				<div className="flex items-center gap-2 flex-wrap">
+					<SearchBox
+						filter={filter}
+						setFilter={setFilter}
+						placeholder="Search modules (e.g. ATEM, OBS, vMix, PTZOptics, Yamaha)..."
+						className="flex-1 list-toolbar-search h-9"
+					/>
+					<ImportModules />
+				</div>
 			</div>
 
 			<FilterTypeTabs filterType={filterType} setFilterType={setFilterType} />
 
-			<div className="scrollable-content">
-				<Table className="table-tight">
-					<thead>
-						<tr>
-							<th colSpan={3}>
-								Module
-								<ButtonGroup className="table-header-buttons">
-									<VisibilityButton {...visibleModules} keyId="installed" color="success" label="Installed" />
-									<VisibilityButton {...visibleModules} keyId="available" color="warning" label="Available" />
-									<VisibilityButton
-										{...visibleModules}
-										keyId="availableDeprecated"
-										color="primary"
-										label="Deprecated"
-									/>
-								</ButtonGroup>
-							</th>
-						</tr>
-					</thead>
+			<div className="scrollable-content list-card">
+				<Table className="table-tight mb-0">
 					<tbody>
 						{components}
 						{hiddenCount > 0 && (
 							<tr>
-								<td colSpan={4} style={{ padding: '10px 5px' }}>
-									<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
-									<strong>{hiddenCount} Modules are ignored</strong>. <br /> Enable{' '}
-									{(visibleModules.visibility.installed ? '' : '"Installed" ') +
-										(visibleModules.visibility.available ? '' : '"Available" ') +
-										(visibleModules.visibility.availableDeprecated ? '' : '"Deprecated"') +
-										' to include them in the search'}
+								<td colSpan={4} className="p-3 text-xs text-muted">
+									<div className="flex items-center gap-2">
+										<FontAwesomeIcon icon={faEyeSlash} className="text-amber-500" />
+										<span>
+											<strong>{hiddenCount} Modules hidden</strong> by active filter toggles.
+										</span>
+									</div>
 								</td>
 							</tr>
 						)}
@@ -231,8 +234,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 								<td colSpan={4}>
 									<NonIdealState icon={faPlug}>
 										You don't have any modules installed yet. <br />
-										Try adding something from the list <span className="xl:hidden">below</span>
-										<span className="hidden xl:inline">to the right</span>.
+										Try enabling "Available" to view the full module catalog.
 									</NonIdealState>
 								</td>
 							</tr>
@@ -242,11 +244,11 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 							<tr>
 								<td colSpan={4}>
 									<NonIdealState icon={faPlug}>
-										No modules match your search.
+										No installed modules match your search.
 										<br />
 										{!visibleModules.visibility.available && (
-											<a href="#" onClick={includeStoreModules}>
-												Click here to include modules from the store
+											<a href="#" onClick={includeStoreModules} className="underline text-primary">
+												Click here to include available modules from the store
 											</a>
 										)}
 									</NonIdealState>
@@ -273,27 +275,21 @@ const ModulesListRow = observer(function ModulesListRow({
 }: ModulesListRowProps) {
 	const { helpViewer } = useContext(RootAppStoreContext)
 
-	const doShowHelp = useCallback(() => {
-		if (!moduleInfo.helpUrl) return
-		const latestVersionName =
-			moduleInfo.installedInfo?.stableVersion?.versionId ?? moduleInfo.installedInfo?.betaVersion?.versionId ?? ''
-		helpViewer.current?.showFromUrl(moduleInfo.moduleType, moduleInfo.moduleId, latestVersionName, moduleInfo.helpUrl)
-	}, [helpViewer, moduleInfo])
+	const doShowHelp = useCallback(
+		(e: React.MouseEvent) => {
+			e.stopPropagation()
+			if (!moduleInfo.helpUrl) return
+			const latestVersionName =
+				moduleInfo.installedInfo?.stableVersion?.versionId ?? moduleInfo.installedInfo?.betaVersion?.versionId ?? ''
+			helpViewer.current?.showFromUrl(moduleInfo.moduleType, moduleInfo.moduleId, latestVersionName, moduleInfo.helpUrl)
+		},
+		[helpViewer, moduleInfo]
+	)
 
 	const doEdit = () => {
-		if (!moduleInfo) {
-			return
-		}
-
+		if (!moduleInfo) return
 		doManageModule({ moduleId: moduleInfo.moduleId, moduleType: moduleInfo.moduleType })
 	}
-
-	// const openBugUrl = useCallback(() => {
-	// 	const url = moduleInfo?.bugUrl
-	// 	if (url) windowLinkOpen({ href: url })
-	// }, [moduleInfo])
-
-	// const moduleVersion = getModuleVersionInfoForConnection(moduleInfo, connection)
 
 	let icon: IconDefinition | null = null
 	let iconTitle: string | null = null
@@ -313,29 +309,37 @@ const ModulesListRow = observer(function ModulesListRow({
 
 	return (
 		<tr
-			className={classNames({
-				'connectionlist-selected': isSelected,
+			onClick={doEdit}
+			className={classNames('cursor-pointer transition-colors hover:bg-surface-muted/50', {
+				'bg-primary/10 font-semibold text-primary border-l-4 border-l-primary': isSelected,
 			})}
 		>
-			<td onClick={doEdit} className="cursor-pointer compact">
+			<td className="compact py-2 px-3 w-10">
 				{icon && (
-					<span title={iconTitle ?? ''}>
+					<span
+						title={iconTitle ?? ''}
+						className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-surface-muted text-muted text-xs"
+					>
 						<FontAwesomeIcon icon={icon} />
 					</span>
 				)}
 			</td>
-			<td onClick={doEdit} className="cursor-pointer">
-				{!!moduleInfo.storeInfo?.deprecationReason && (
-					<InlineHelpCustom help="Deprecated" className="me-1">
-						<FontAwesomeIcon icon={faWarning} aria-label="Deprecated" />
-					</InlineHelpCustom>
-				)}
-				{moduleInfo.name}
+			<td className="py-2 px-3 font-medium text-body">
+				<div className="flex items-center gap-2">
+					{!!moduleInfo.storeInfo?.deprecationReason && (
+						<InlineHelpCustom help="Deprecated" className="text-amber-500">
+							<FontAwesomeIcon icon={faWarning} aria-label="Deprecated" />
+						</InlineHelpCustom>
+					)}
+					<span>{moduleInfo.name}</span>
+				</div>
 			</td>
-			<td className="compact">
-				<Button onMouseDown={doShowHelp} title="Show Help" disabled={!moduleInfo.helpUrl}>
-					<FontAwesomeIcon icon={faQuestionCircle} />
-				</Button>
+			<td className="compact py-2 px-3 text-end w-12">
+				{moduleInfo.helpUrl && (
+					<button type="button" onClick={doShowHelp} className="panel-icon-button" title="Show documentation">
+						<FontAwesomeIcon icon={faQuestionCircle} className="text-xs" />
+					</button>
+				)}
 			</td>
 		</tr>
 	)

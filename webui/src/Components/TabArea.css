@@ -16,8 +16,10 @@
 		scrollbar-width: thin;
 		scrollbar-color: var(--color-line) transparent;
 		flex-shrink: 0;
-		border-bottom: 1px solid var(--color-border-medium);
+		border-bottom: 1px solid var(--color-border);
 		background: transparent;
+		gap: 1.5rem;
+		padding: 0 1.5rem;
 
 		/* JS sets this class when scrollWidth > clientWidth.
 		   overflow:scroll keeps the scrollbar in the render tree so Safari shows it immediately. */
@@ -49,24 +51,21 @@
 	.tab-bar__tab {
 		flex-shrink: 0;
 		display: block;
-		padding: 8px 1rem 7px;
+		padding: 0.75rem 0.25rem 0.5rem 0.25rem;
 		margin-bottom: 0;
-		margin-right: 4px;
-		color: var(--color-tab-fg);
-		background-color: var(--color-tab-bg);
+		margin-right: 0;
+		color: var(--color-muted);
+		background-color: transparent;
 		font-weight: 500;
 		text-decoration: none;
-		border: 1px solid var(--color-border);
-		border-bottom-width: 0;
-		border-top-left-radius: 6px;
-		border-top-right-radius: 6px;
+		border: none;
+		border-bottom: 2px solid transparent;
 		cursor: pointer;
 		appearance: none;
 		-webkit-appearance: none;
 		font: inherit;
 		transition:
 			color 0.15s ease-in-out,
-			background-color 0.15s ease-in-out,
 			border-color 0.15s ease-in-out;
 
 		@media (prefers-reduced-motion: reduce) {
@@ -74,19 +73,14 @@
 		}
 
 		&:hover:not([data-active]):not([data-disabled]) {
-			background-color: var(--color-surface-muted-hover);
 			color: var(--color-text-strong);
 		}
 
 		&[data-active] {
-			background-color: var(--color-surface);
-			border: 1px solid var(--color-border-medium);
-			border-top: 3px solid var(--color-primary);
-			border-top-left-radius: 6px;
-			border-top-right-radius: 6px;
-			border-bottom-color: var(--color-surface);
-			margin-bottom: -1px;
-			padding-top: 6px;
+			background-color: transparent;
+			/* A selected tab is selection, not identity, so it follows `primary` (the sidebar's own
+			   active indicator keeps --color-accent-active, which is brand-derived). */
+			border-bottom: 2px solid var(--color-primary);
 			color: var(--color-text-strong);
 		}
 
@@ -99,13 +93,6 @@
 		@media (--bp-lg-down) {
 			padding: 5px 10px;
 			font-size: 16px;
-			background-color: var(--color-border);
-			border-top: 3px solid var(--color-surface-muted);
-			border-bottom: 1px solid var(--color-line);
-
-			&[data-active] {
-				border-top: 3px solid var(--color-primary);
-			}
 		}
 	}
 
@@ -114,14 +101,10 @@
 	}
 
 	.tab-panel {
-		background-color: var(--color-surface);
-		border-bottom-right-radius: 8px;
-		border-bottom-left-radius: 8px;
-		border-left: 1px solid var(--color-line);
-		border-bottom: 1px solid var(--color-line);
-		border-right: 1px solid var(--color-line);
+		background-color: transparent;
+		border: none;
 		min-height: 300px;
-		padding: 1rem;
+		padding: 1.25rem 0 1rem 0;
 		position: relative;
 		flex: 1;
 		min-height: 0; /* allow flex shrink so overflow scroll works */
@@ -162,10 +145,16 @@
 .split-panels > .secondary-panel .secondary-panel-inner {
 	.tab-area {
 		grid-row: 1 / -1;
+		height: 100%;
 		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
 	}
 
 	.tab-panel {
-		overflow-y: scroll;
+		flex: 1;
+		min-height: 0;
+		overflow-y: auto;
 	}
 }
