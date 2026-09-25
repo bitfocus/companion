@@ -9,9 +9,22 @@ export interface SearchBoxProps {
 	placeholder?: string
 	filter: string
 	setFilter: (filter: string) => void
+	autoFocus?: boolean
+	onKeyDown?: React.KeyboardEventHandler<HTMLInputElement>
+	ariaControls?: string
+	ariaActiveDescendant?: string
 }
 
-export function SearchBox({ className, placeholder, filter, setFilter }: SearchBoxProps): React.JSX.Element {
+export function SearchBox({
+	className,
+	placeholder,
+	filter,
+	setFilter,
+	autoFocus,
+	onKeyDown,
+	ariaControls,
+	ariaActiveDescendant,
+}: SearchBoxProps): React.JSX.Element {
 	const updateFilter = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => setFilter(e.currentTarget.value),
 		[setFilter]
@@ -26,8 +39,15 @@ export function SearchBox({ className, placeholder, filter, setFilter }: SearchB
 				className="form-input text-input-field search-box-input h-full text-sm py-0"
 				placeholder={placeholder || 'Search ...'}
 				onChange={updateFilter}
+				onKeyDown={onKeyDown}
 				value={filter}
 				aria-label="Search"
+				autoFocus={autoFocus}
+				role={ariaControls ? 'combobox' : undefined}
+				aria-autocomplete={ariaControls ? 'list' : undefined}
+				aria-expanded={ariaControls ? true : undefined}
+				aria-controls={ariaControls}
+				aria-activedescendant={ariaActiveDescendant}
 			/>
 			{filter && (
 				<button type="button" className="search-box-clear" onClick={clearFilter} aria-label="Clear search filter">

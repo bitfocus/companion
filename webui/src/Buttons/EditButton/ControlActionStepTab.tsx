@@ -48,9 +48,7 @@ export function ControlActionStepTab({
 
 	return (
 		<>
-			<div className="mt-2">
-				{' '}
-				{/* Wrap the entity-category, for :first-child to work */}
+			<div className="edit-button-action-sections">
 				{rotaryActions && selectedStepProps && (
 					<>
 						<MyErrorBoundary>
@@ -101,7 +99,7 @@ export function ControlActionStepTab({
 								heading={
 									<div className="flex items-center gap-2">
 										<FontAwesomeIcon icon={faHandPointer} className="text-primary text-xs" />
-										<span>Press actions (On Down)</span>
+										<span>Press actions</span>
 									</div>
 								}
 								controlId={controlId}

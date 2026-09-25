@@ -1,10 +1,11 @@
-import { faFolderOpen, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faClockRotateLeft, faFolderOpen, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { go as fuzzySearch } from 'fuzzysort'
 import { observer } from 'mobx-react-lite'
-import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { capitalize } from '@companion-app/shared/Util.js'
+import { Button } from '~/Components/Button.js'
 import {
 	CollapsibleTree,
 	type CollapsibleTreeHeaderProps,
@@ -18,6 +19,7 @@ import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import { useComputed } from '~/Resources/util'
 import { type EntityLeafItem } from '~/Stores/EntityDefinitionsStore.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import './AddEntitiesModal.css'
 
 const AddEntityGroupHeader = observer(function AddEntityGroupHeader({
 	node,
@@ -54,6 +56,58 @@ interface AddEntitiesModalProps {
 }
 const EntityTypeLabelContext = createContext<string>('')
 
+interface EntitySearchResult {
+	leaf: EntityLeafItem
+	connectionLabel: string
+	moduleDisplayName: string | undefined
+	searchText: string
+}
+
+function EntityResultRow({
+	result,
+	active,
+	id,
+	onActivate,
+	onSelect,
+}: {
+	result: EntitySearchResult
+	active?: boolean
+	id?: string
+	onActivate?: () => void
+	onSelect: () => void
+}): React.JSX.Element {
+	return (
+		<div
+			id={id}
+			className={`add-entity-search-result${active ? ' active' : ''}`}
+			role="option"
+			aria-selected={active}
+			tabIndex={active === undefined ? 0 : undefined}
+			onMouseEnter={onActivate}
+			onMouseDown={(event) => event.preventDefault()}
+			onKeyDown={(event) => {
+				if (event.key === 'Enter' || event.key === ' ') {
+					event.preventDefault()
+					onSelect()
+				}
+			}}
+			onClick={onSelect}
+		>
+			<div className="add-entity-search-result-text">
+				<span className="font-semibold">{result.leaf.label}</span>
+				{result.leaf.description && <small>{result.leaf.description}</small>}
+			</div>
+			<div className="add-entity-search-result-meta">
+				<span className="add-entity-search-result-badge">{result.connectionLabel}</span>
+				{result.moduleDisplayName && (
+					<span className="add-entity-search-result-module">{result.moduleDisplayName}</span>
+				)}
+			</div>
+			<FontAwesomeIcon icon={faPlus} className="add-entity-search-result-add" />
+		</div>
+	)
+}
+
 const AddEntityLeaf = observer(function AddEntityLeaf({ leaf }: { leaf: EntityLeafItem }) {
 	return (
 		<>
@@ -84,6 +138,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 
 	const [show, setShow] = useState(false)
 	const [filter, setFilter] = useState('')
+	const [activeResultIndex, setActiveResultIndex] = useState(0)
 
 	const onOpenChangeComplete = useCallback(() => {
 		setFilter('')
@@ -128,27 +183,95 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 	const defaultCollapsedFn = useCallback((panelId: string) => !panelId.startsWith('collection:'), [])
 	const collapseHelper = usePanelCollapseHelper(`add_entities_${entityType}`, null, defaultCollapsedFn)
 
-	// When filtering, apply fuzzy search to leaf items in each node
-	const filteredNodes = useComputed(() => {
+	const browseNodes = useComputed(() => {
 		const rawNodes = internalNode ? [internalNode, ...nodes] : nodes
-
-		const res = !filter ? { nodes: rawNodes, ungroupedNodes } : filterTreeNodes(filter, rawNodes, ungroupedNodes)
 
 		// If there are no collections visible, merge ungrouped nodes into the main list
 		// This hides the "Ungrouped Connections" header
-		const hasCollections = res.nodes.some((n) => n.metadata.type === 'collection')
-		if (!hasCollections && res.ungroupedNodes.length > 0) {
+		const hasCollections = rawNodes.some((n) => n.metadata.type === 'collection')
+		if (!hasCollections && ungroupedNodes.length > 0) {
 			return {
-				nodes: [...res.nodes, ...res.ungroupedNodes],
+				nodes: [...rawNodes, ...ungroupedNodes],
 				ungroupedNodes: [],
 			}
 		}
 
-		return res
-	}, [filter, nodes, ungroupedNodes, internalNode])
+		return { nodes: rawNodes, ungroupedNodes }
+	}, [nodes, ungroupedNodes, internalNode])
+
+	const allEntityResults = useComputed(() => {
+		const results: EntitySearchResult[] = []
+		const collectResults = (node: CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta>) => {
+			if (node.metadata.type === 'connection') {
+				for (const leaf of node.leaves) {
+					results.push({
+						leaf,
+						connectionLabel: node.metadata.connectionLabel,
+						moduleDisplayName: node.metadata.moduleDisplayName,
+						searchText: `${node.metadata.connectionLabel} ${node.metadata.moduleDisplayName ?? ''} ${leaf.searchLabel} ${leaf.description ?? ''}`,
+					})
+				}
+			}
+			for (const child of node.children) collectResults(child)
+		}
+
+		for (const node of [...browseNodes.nodes, ...browseNodes.ungroupedNodes]) collectResults(node)
+		return results
+	}, [browseNodes])
+
+	const recentResults = useComputed(() => {
+		const resultsById = new Map(allEntityResults.map((result) => [result.leaf.fullId, result]))
+		return recentlyUsed.recentIds
+			.map((id) => resultsById.get(id))
+			.filter((result): result is EntitySearchResult => result !== undefined)
+			.slice(0, 6)
+	}, [allEntityResults, recentlyUsed.recentIds])
+
+	const searchResults = useComputed(() => {
+		if (!filter) return []
+
+		return fuzzySearch(filter, allEntityResults, {
+			key: 'searchText',
+			threshold: 0.5,
+		}).map((match) => match.obj)
+	}, [filter, allEntityResults])
+
+	useEffect(() => {
+		setActiveResultIndex(0)
+	}, [filter])
+
+	useEffect(() => {
+		if (!filter) return
+		document.getElementById(`add-entity-search-result-${activeResultIndex}`)?.scrollIntoView({ block: 'nearest' })
+	}, [filter, activeResultIndex])
+
+	const handleSearchKeyDown = useCallback(
+		(event: React.KeyboardEvent<HTMLInputElement>) => {
+			if (!filter || searchResults.length === 0) return
+
+			if (event.key === 'ArrowDown') {
+				event.preventDefault()
+				setActiveResultIndex((index) => Math.min(index + 1, searchResults.length - 1))
+			} else if (event.key === 'ArrowUp') {
+				event.preventDefault()
+				setActiveResultIndex((index) => Math.max(index - 1, 0))
+			} else if (event.key === 'Enter') {
+				event.preventDefault()
+				const result = searchResults[activeResultIndex]
+				if (result) addAndTrackRecentUsage(result.leaf.fullId)
+			}
+		},
+		[filter, searchResults, activeResultIndex, addAndTrackRecentUsage]
+	)
 
 	const noResultsContent = useMemo(
-		() => <NonIdealState icon={faSearch} text={`No ${entityTypeLabel}s match your search.`} />,
+		() => (
+			<NonIdealState icon={faSearch} text={`No ${entityTypeLabel}s match your search.`}>
+				<Button color="primary" variant="outline" size="sm" onClick={() => setFilter('')}>
+					Clear search
+				</Button>
+			</NonIdealState>
+		),
 		[entityTypeLabel]
 	)
 
@@ -167,26 +290,78 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 			<Modal.Portal>
 				<Modal.Backdrop />
 				<Modal.Viewport>
-					<Modal.Popup size="lg" scrollable>
-						<Modal.Header closeButton>
-							<Modal.Title>Browse {capitalize(entityTypeLabel)}s</Modal.Title>
-						</Modal.Header>
-						<Modal.Header>
-							<SearchBox filter={filter} setFilter={setFilter} className="mb-2" />
+					<Modal.Popup size="lg" scrollable className="add-entities-modal">
+						<Modal.Header closeButton className="add-entities-modal-header">
+							<div className="add-entities-modal-header-content">
+								<div className="add-entities-modal-title-row">
+									<Modal.Title>Browse {capitalize(entityTypeLabel)}s</Modal.Title>
+									{filter && (
+										<span className="add-entities-modal-result-count" aria-live="polite">
+											{searchResults.length} {searchResults.length === 1 ? 'result' : 'results'}
+										</span>
+									)}
+								</div>
+								<SearchBox
+									filter={filter}
+									setFilter={setFilter}
+									className="w-full"
+									placeholder={`Search ${entityTypeLabel}s...`}
+									autoFocus
+									onKeyDown={handleSearchKeyDown}
+									ariaControls={filter ? 'add-entity-search-results' : undefined}
+									ariaActiveDescendant={filter ? `add-entity-search-result-${activeResultIndex}` : undefined}
+								/>
+							</div>
 						</Modal.Header>
 						<Modal.Body>
 							<EntityTypeLabelContext.Provider value={entityTypeLabel}>
-								<CollapsibleTree
-									nodes={filteredNodes.nodes}
-									ungroupedNodes={filteredNodes.ungroupedNodes}
-									ungroupedLabel="Ungrouped Connections"
-									collapseHelper={filter ? null : collapseHelper}
-									selectedLeafKey={null}
-									HeaderComponent={AddEntityGroupHeader}
-									LeafComponent={AddEntityLeaf}
-									onLeafClick={(leaf) => addAndTrackRecentUsage(leaf.fullId)}
-									noContent={filter ? noResultsContent : undefined}
-								/>
+								{filter ? (
+									searchResults.length > 0 ? (
+										<div id="add-entity-search-results" className="add-entity-search-results" role="listbox">
+											{searchResults.map((result, index) => (
+												<EntityResultRow
+													key={result.leaf.fullId}
+													id={`add-entity-search-result-${index}`}
+													result={result}
+													active={index === activeResultIndex}
+													onActivate={() => setActiveResultIndex(index)}
+													onSelect={() => addAndTrackRecentUsage(result.leaf.fullId)}
+												/>
+											))}
+										</div>
+									) : (
+										noResultsContent
+									)
+								) : (
+									<>
+										{recentResults.length > 0 && (
+											<section className="add-entity-recent-section" aria-labelledby="add-entity-recent-title">
+												<h3 id="add-entity-recent-title">
+													<FontAwesomeIcon icon={faClockRotateLeft} /> Recently used
+												</h3>
+												<div className="add-entity-search-results" role="listbox">
+													{recentResults.map((result) => (
+														<EntityResultRow
+															key={result.leaf.fullId}
+															result={result}
+															onSelect={() => addAndTrackRecentUsage(result.leaf.fullId)}
+														/>
+													))}
+												</div>
+											</section>
+										)}
+										<CollapsibleTree
+											nodes={browseNodes.nodes}
+											ungroupedNodes={browseNodes.ungroupedNodes}
+											ungroupedLabel="Ungrouped Connections"
+											collapseHelper={collapseHelper}
+											selectedLeafKey={null}
+											HeaderComponent={AddEntityGroupHeader}
+											LeafComponent={AddEntityLeaf}
+											onLeafClick={(leaf) => addAndTrackRecentUsage(leaf.fullId)}
+										/>
+									</>
+								)}
 							</EntityTypeLabelContext.Provider>
 						</Modal.Body>
 					</Modal.Popup>
@@ -195,44 +370,3 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 		</Modal.Root>
 	)
 })
-
-/**
- * Filter tree nodes by applying fuzzy search to leaf items.
- * Removes nodes with no matching leaves (unless they have children with matches).
- * Preserves the tree structure.
- */
-function filterTreeNodes(
-	filter: string,
-	nodes: CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta>[],
-	ungroupedNodes: CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta>[]
-): {
-	nodes: CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta>[]
-	ungroupedNodes: CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta>[]
-} {
-	function filterNode(
-		node: CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta>
-	): CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta> | null {
-		const filteredChildren = node.children.map(filterNode).filter((n) => n !== null)
-
-		const filteredLeaves =
-			node.leaves.length > 0
-				? fuzzySearch(filter, node.leaves, {
-						keys: ['searchLabel'],
-						threshold: 0.5, // relatively strict.
-					}).map((x) => x.obj)
-				: []
-
-		if (filteredChildren.length === 0 && filteredLeaves.length === 0) return null
-
-		return {
-			...node,
-			children: filteredChildren,
-			leaves: filteredLeaves,
-		}
-	}
-
-	return {
-		nodes: nodes.map(filterNode).filter((n) => n !== null),
-		ungroupedNodes: ungroupedNodes.map(filterNode).filter((n) => n !== null),
-	}
-}

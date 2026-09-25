@@ -108,11 +108,11 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 			<GenericConfirmModal ref={confirmRef} />
 
 			{/* Primary Clean Navigation Tabs */}
-			<div ref={tabBarRef} className="sticky-tabs">
-				<TabArea.Root value={activeMainTab} onValueChange={setActiveMainTab}>
-					<TabArea.List>
+			<div ref={tabBarRef} className="sticky-tabs button-editor-tabs-shell">
+				<TabArea.Root className="button-editor-main-tabs" value={activeMainTab} onValueChange={setActiveMainTab}>
+					<TabArea.List className="button-editor-main-tabs-list">
 						{mainTabs.map((tab) => (
-							<TabArea.Tab key={tab.id} className="nav-steps-special" value={tab.id} title={tab.name}>
+							<TabArea.Tab key={tab.id} className="button-editor-main-tab" value={tab.id} title={tab.name}>
 								<div className="flex items-center gap-1.5">
 									<span>{tab.name}</span>
 									{tab.count !== undefined && (
