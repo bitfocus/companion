@@ -60,7 +60,7 @@ export function ConvertLayeredPresetFeedbacksToEntities(
 
 	for (const feedback of rawFeedbacks) {
 		const styleOverrides: FeedbackEntityStyleOverride[] = (feedback.styleOverrides ?? [])
-			.filter((override) => isExpressionOrValue(override.override))
+			.filter((override) => override.override !== undefined)
 			.map((override) => ({
 				overrideId: ctx.generateId(),
 				elementId: override.elementId,
