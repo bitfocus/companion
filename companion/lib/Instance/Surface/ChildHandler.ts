@@ -467,6 +467,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 		const surface = this.#panels.get(msg.surfaceId)
 		if (surface) {
 			this.logger.info(`Surface panel disconnected: ${msg.surfaceId} (${msg.reason ?? 'no reason given'})`)
+			surface.markClosedByModule()
 			surface.emit('remove')
 			this.#panels.delete(msg.surfaceId)
 
