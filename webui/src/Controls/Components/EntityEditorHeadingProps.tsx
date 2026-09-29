@@ -27,12 +27,7 @@ export const EntityEditorHeading = observer(function EntityEditorHeading({
 
 	return (
 		<div className="entity-editor-heading flex items-center justify-between gap-2 my-2">
-			<div className="entity-editor-heading-title text-sm font-semibold text-body">
-				{heading}
-				<span className="entity-editor-heading-count" aria-label={`${childEntityIds.length} items`}>
-					{childEntityIds.length}
-				</span>
-			</div>
+			<div className="entity-editor-heading-title text-sm font-semibold text-body">{heading}</div>
 
 			<div className="entity-editor-heading-actions flex items-center gap-1 shrink-0">
 				{childEntityIds.length >= 1 && panelCollapseHelper.canExpandAll(ownerIdString, childEntityIds) && (
