@@ -181,15 +181,19 @@ function ResizableSplitPanelsRoot({
 				positionHandle()
 			}
 			const onUp = () => {
-				handleEl.releasePointerCapture(e.pointerId)
+				delete handleEl.dataset.dragging
+				if (handleEl.hasPointerCapture(e.pointerId)) handleEl.releasePointerCapture(e.pointerId)
 				handleEl.removeEventListener('pointermove', onMove)
 				handleEl.removeEventListener('pointerup', onUp)
+				handleEl.removeEventListener('pointercancel', onUp)
 				setPrimaryPercent(latestPercent)
 			}
 
+			handleEl.dataset.dragging = 'true'
 			handleEl.setPointerCapture(e.pointerId)
 			handleEl.addEventListener('pointermove', onMove)
 			handleEl.addEventListener('pointerup', onUp)
+			handleEl.addEventListener('pointercancel', onUp)
 		},
 		[minPrimaryPx, minSecondaryPx, primaryPercent, positionHandle, setPrimaryPercent]
 	)
@@ -258,6 +262,7 @@ function ResizableSplitPanelsRoot({
 					tabIndex={0}
 					aria-orientation="vertical"
 					aria-label="Resize panel split"
+					title="Drag to resize · Double-click to reset"
 					aria-valuenow={Math.round(primaryPercentSafe)}
 					aria-valuemin={20}
 					aria-valuemax={80}

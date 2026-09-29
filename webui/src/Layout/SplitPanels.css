@@ -93,31 +93,69 @@
 	z-index: 2;
 	cursor: col-resize;
 	touch-action: none;
+	--divider-color: var(--color-action-border);
+	background-image: linear-gradient(var(--divider-color), var(--divider-color));
+	background-position: center;
+	background-size: 1px 100%;
+	background-repeat: no-repeat;
 
-	/* Just a short grip at the middle of the divide, rather than a full-height rule: enough to say
-	   "this can be dragged" without drawing a line between the panels. It firms up on hover. */
-	&::before {
+	/* A full-height rule separates the panels; the opaque grip sits over its centre. */
+	&::before,
+	&::after {
 		content: '';
 		position: absolute;
 		top: 50%;
 		left: 50%;
+		pointer-events: none;
+	}
+
+	&::before {
 		transform: translate(-50%, -50%);
+		width: 16px;
+		height: 36px;
+		border-radius: 6px;
+		background-color: var(--color-action-bg);
+		border: 1px solid var(--divider-color);
+		transition: background-color 0.15s ease;
+	}
+
+	&::after {
+		/* Two columns of three dots, centred inside the grip. */
+		transform: translate(-4.5px, -8.5px);
 		width: 3px;
-		height: 2rem;
-		border-radius: 9999px;
-		background-color: var(--color-border);
-		opacity: 0.6;
-		transition:
-			height 0.15s ease,
-			opacity 0.15s ease,
-			background-color 0.15s ease;
+		height: 3px;
+		border-radius: 50%;
+		background-color: var(--color-action-text);
+		box-shadow:
+			6px 0 0 var(--color-action-text),
+			0 7px 0 var(--color-action-text),
+			6px 7px 0 var(--color-action-text),
+			0 14px 0 var(--color-action-text),
+			6px 14px 0 var(--color-action-text);
+	}
+
+	&:hover,
+	&:focus-visible,
+	&[data-dragging] {
+		--divider-color: var(--color-action-border-hover);
 	}
 
 	&:hover::before,
-	&:active::before {
-		height: 3.5rem;
-		opacity: 1;
-		background-color: var(--color-border-hover);
+	&:focus-visible::before {
+		background-color: var(--color-action-hover);
+	}
+
+	&[data-dragging]::before {
+		background-color: var(--color-action-pressed);
+	}
+
+	&:focus-visible {
+		outline: none;
+	}
+
+	&:focus-visible::before {
+		outline: 2px solid var(--color-action-focus);
+		outline-offset: 2px;
 	}
 }
 
