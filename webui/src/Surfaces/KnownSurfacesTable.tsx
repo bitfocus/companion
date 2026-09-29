@@ -283,15 +283,16 @@ const SurfaceRow = observer(function SurfaceRow({
 					<b className="text-sm font-semibold text-body-strong">
 						{surface.name ? `${surface.name} - (${surface.type})` : surface.type}
 					</b>
-					<span
-						className={classNames('surface-status', {
-							'surface-status-disabled': surfaceDisabled,
-							'surface-status-online': !surfaceDisabled && surface.isConnected,
-							'surface-status-offline': !surfaceDisabled && !surface.isConnected,
-						})}
-					>
-						{surfaceDisabled ? 'Disabled' : surface.isConnected ? surface.location || 'Local' : 'Offline'}
-					</span>
+					{(surfaceDisabled || !surface.isConnected) && (
+						<span
+							className={classNames('surface-status', {
+								'surface-status-disabled': surfaceDisabled,
+								'surface-status-offline': !surfaceDisabled,
+							})}
+						>
+							{surfaceDisabled ? 'Disabled' : 'Offline'}
+						</span>
+					)}
 					{!!surface.hasFirmwareUpdates && (
 						<>
 							{' '}
@@ -302,6 +303,16 @@ const SurfaceRow = observer(function SurfaceRow({
 					)}
 				</div>
 				<div className="surface-id-row">
+					{surface.isConnected && !surfaceDisabled && (
+						<>
+							<span className="surface-location" title="Surface location">
+								{surface.location || 'Local'}
+							</span>
+							<span className="text-2xs text-muted/50" aria-hidden="true">
+								·
+							</span>
+						</>
+					)}
 					<span className="surface-id font-mono tabular-nums text-2xs text-muted">{surface.id}</span>
 					<CopyButton size="sm" variant="ghost" title="Copy surface id" text={surface.id} />
 				</div>

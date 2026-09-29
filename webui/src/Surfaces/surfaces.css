@@ -123,8 +123,11 @@
 				color: var(--color-text-secondary);
 			}
 
-			.surface-status-online {
-				color: var(--color-text);
+			.surface-location {
+				white-space: nowrap;
+				font-size: 0.6875rem;
+				font-weight: 400;
+				color: var(--color-muted);
 			}
 
 			.surface-status-disabled,
