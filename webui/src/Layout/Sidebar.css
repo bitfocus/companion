@@ -31,11 +31,11 @@
 	box-shadow: none;
 	margin-inline-start: 0;
 	transition:
-		margin-left 0.15s,
-		margin-right 0.15s,
+		margin-left 0.22s ease,
+		margin-right 0.22s ease,
 		box-shadow 0.075s,
-		transform 0.15s,
-		width 0.15s,
+		transform 0.22s ease,
+		width 0.22s ease,
 		z-index 0s ease 0.15s;
 
 	@media (prefers-reduced-motion: reduce) {
@@ -394,7 +394,7 @@
 }
 
 .sidebar-narrow,
-.sidebar-narrow-unfoldable:not(:hover) {
+.sidebar-narrow-unfoldable:not(.sidebar-unfolded) {
 	--sidebar-narrow-width: 4rem;
 
 	@media (--bp-lg-up) {
@@ -441,7 +441,7 @@
 }
 
 .sidebar-narrow-unfoldable {
-	&:hover {
+	&.sidebar-unfolded {
 		box-shadow: 0 0.5rem 1rem var(--color-shadow-15);
 
 		.sidebar-toggler::before {
@@ -566,7 +566,7 @@
 	}
 
 	/* note: in .sidebar, .show is present in mobile mode, during which we ignore sidebar-narrow-unfoldable but not sidebar-narrow */
-	&.sidebar-narrow-unfoldable:not(.show, :hover),
+	&.sidebar-narrow-unfoldable:not(.show, .sidebar-unfolded),
 	&.sidebar-narrow {
 		.sidebar-header {
 			justify-content: center;
@@ -605,8 +605,18 @@
 		}
 	}
 
+	/* Folding is visual state only, so an accordion can still be open in React while the sidebar is
+	   narrow. Keep its contents and disclosure chevron out of the folded layout; they return with the
+	   same open state when the sidebar expands on hover. */
+	&.sidebar-narrow-unfoldable:not(.show, .sidebar-unfolded) {
+		.nav-sub-list,
+		.sidebar-group-chevron {
+			display: none;
+		}
+	}
+
 	/* In unfolding mode (but not narrow- or mobile-mode), hide the context menu when the sidebar folds */
-	&.sidebar-narrow-unfoldable:not(.show, :hover, .sidebar-narrow) {
+	&.sidebar-narrow-unfoldable:not(.show, .sidebar-unfolded, .sidebar-narrow) {
 		.context-menu {
 			display: none;
 		}
@@ -661,7 +671,7 @@
 
 	/* override CUI so nav-group-items show when sidebar is narrow */
 	&.sidebar-narrow .nav-group.show .nav-group-items,
-	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items {
+	&.sidebar-narrow-unfoldable:not(.show, .sidebar-unfolded) .nav-group-items {
 		height: auto;
 		visibility: visible;
 		opacity: 1;
@@ -780,7 +790,7 @@
 	}
 
 	/* when the sidebar is narrow, make more space for the contents and let centering create what margins there will be. */
-	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-main-scroller,
+	&.sidebar-narrow-unfoldable:not(.show, .sidebar-unfolded) .nav-main-scroller,
 	&.sidebar-narrow .nav-main-scroller {
 		scrollbar-width: thin;
 		padding-left: 0;

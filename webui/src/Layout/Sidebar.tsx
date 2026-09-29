@@ -428,7 +428,7 @@ function SidebarNavGroup({ name, icon, basePaths, children }: SidebarNavGroupPro
 					<SidebarMenuItemLabel name={name} icon={icon} />
 					<FontAwesomeIcon
 						icon={faChevronRight}
-						className={classNames('ms-auto w-3 h-3 transition-transform duration-200', {
+						className={classNames('sidebar-group-chevron ms-auto w-3 h-3 transition-transform duration-200', {
 							'rotate-90': isOpen,
 						})}
 					/>
@@ -447,21 +447,28 @@ export const MySidebar = memo(function MySidebar() {
 
 	// tempNarrow is used in unfoldable mode to make it temporarily narrow on click, so it is independent of narrowMode
 	const [tempNarrow, setTempNarrow] = useState(false)
+	const [sidebarHovered, setSidebarHovered] = useState(false)
+	const sidebarIsNarrow = tempNarrow || narrowMode || (!mobileMode && unfoldable && !sidebarHovered)
 
 	const toggleUnfoldable = useCallback(() => {
 		setUnfoldable((val) => {
 			// enabling folding → fold now; disabling folding → unfold now
 			setTempNarrow(!val)
+			if (!val) setNarrowMode(false)
 			return !val
 		})
-	}, [setUnfoldable])
+	}, [setNarrowMode, setUnfoldable])
 
 	const toggleNarrowMode = useCallback(() => {
 		setNarrowMode((val) => {
-			if (!val) setTempNarrow(false) // so sidebar unfolds when we later turn narrowMode off
+			if (!val) {
+				// Permanent narrow mode and hover-folding are mutually exclusive.
+				setTempNarrow(false)
+				setUnfoldable(false)
+			}
 			return !val
 		})
-	}, [setNarrowMode])
+	}, [setNarrowMode, setUnfoldable])
 
 	const contextMenuItems: MenuItemProps[] = useMemo(
 		() => [
@@ -493,11 +500,13 @@ export const MySidebar = memo(function MySidebar() {
 	const DontSetOrUnset: React.Dispatch<React.SetStateAction<boolean>> = () => {}
 
 	return (
-		<NarrowModeContext.Provider value={tempNarrow || narrowMode}>
+		<NarrowModeContext.Provider value={sidebarIsNarrow}>
 			<SidebarRoot
 				unfoldable={unfoldable}
 				narrow={tempNarrow || narrowMode}
+				hovered={sidebarHovered}
 				setNarrow={narrowMode ? DontSetOrUnset : setTempNarrow}
+				onHoverChange={setSidebarHovered}
 				onContextMenu={contextState.onContextMenu}
 			>
 				<ContextMenu {...contextState} />
@@ -543,8 +552,11 @@ export const MySidebar = memo(function MySidebar() {
 				</div>
 				<SidebarFooter
 					onContextMenu={contextState.onContextMenu}
+					onToggleFolding={toggleUnfoldable}
+					folding={unfoldable}
 					onToggleNarrow={toggleNarrowMode}
 					isNarrow={narrowMode}
+					compact={sidebarIsNarrow}
 					mobileMode={mobileMode}
 					onCloseMobile={handleHideSidebar}
 				/>
@@ -565,17 +577,22 @@ interface SidebarRootProps {
 	 */
 	unfoldable?: boolean
 	narrow: boolean
+	hovered: boolean
 	setNarrow: React.Dispatch<React.SetStateAction<boolean>>
+	onHoverChange: (hovered: boolean) => void
 	onContextMenu: MouseEventHandler<HTMLDivElement>
 }
 function SidebarRoot({
 	children,
 	unfoldable,
 	narrow,
+	hovered,
 	setNarrow,
+	onHoverChange,
 	onContextMenu,
 }: React.PropsWithChildren<SidebarRootProps>) {
 	const sidebarRef = useRef<HTMLDivElement>(null)
+	const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
 	const [visibleMobile, setVisibleMobile] = useState<boolean>(false)
 
@@ -638,8 +655,36 @@ function SidebarRoot({
 	// if in "temporary narrow-mode" return to folding mode after the mouse leaves the sidebar
 	// note that in "permanent" narrow-mode, setNarrow is passed as a no-op, so this callback is active only when not in narrow-mode
 	const handleMouseLeave = useCallback(() => {
-		if (narrow) setNarrow(false)
-	}, [narrow, setNarrow])
+		if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+
+		// A forced narrow state is used when folding is first enabled or after navigation. Clear it
+		// immediately so the next hover works normally; otherwise leave a short grace period so small
+		// pointer movements across the sidebar edge do not make the layout flicker.
+		if (narrow) {
+			onHoverChange(false)
+			setNarrow(false)
+		} else {
+			closeTimerRef.current = setTimeout(() => {
+				onHoverChange(false)
+				closeTimerRef.current = null
+			}, 350)
+		}
+	}, [narrow, onHoverChange, setNarrow])
+
+	const handleMouseEnter = useCallback(() => {
+		if (closeTimerRef.current) {
+			clearTimeout(closeTimerRef.current)
+			closeTimerRef.current = null
+		}
+		onHoverChange(true)
+	}, [onHoverChange])
+
+	useEffect(
+		() => () => {
+			if (closeTimerRef.current) clearTimeout(closeTimerRef.current)
+		},
+		[]
+	)
 
 	const handleKeyOrClickOutside = useCallback(
 		(event: Event) => {
@@ -671,6 +716,7 @@ function SidebarRoot({
 			<div
 				className={classNames('sidebar sidebar-fixed', {
 					'sidebar-narrow': narrow,
+					'sidebar-unfolded': unfoldable && hovered,
 					//'no-transition-all': narrow, // optional, but this works only after very long transitions (modules page)
 					// 'sidebar-overlaid': overlaid,
 					// [`sidebar-${placement}`]: placement,
@@ -681,6 +727,7 @@ function SidebarRoot({
 					// hide: visibleDesktop === false && !showToggle && !overlaid,
 				})}
 				ref={sidebarRef}
+				onMouseEnter={handleMouseEnter}
 				onMouseLeave={handleMouseLeave}
 				onContextMenu={onContextMenu}
 			>

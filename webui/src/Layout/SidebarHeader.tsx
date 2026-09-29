@@ -63,7 +63,7 @@ export function SidebarHeader(): React.JSX.Element {
 		<div className="sidebar-header brand py-2">
 			<div className="sidebar-brand w-full">
 				<div className="sidebar-brand-full w-full">
-					<div className="flex items-center gap-1.5">
+					<div className="flex items-center justify-center gap-1.5">
 						<img src={makeAbsolutePath('/img/logo-glass.png')} style={{ height: 30 }} alt="logo" />
 						<span>
 							Bitfocus <span className="font-bold">Companion</span>
@@ -87,16 +87,22 @@ export function SidebarHeader(): React.JSX.Element {
 
 export interface SidebarFooterProps {
 	onContextMenu: MouseEventHandler<HTMLElement>
+	onToggleFolding: () => void
+	folding: boolean
 	onToggleNarrow: () => void
 	isNarrow: boolean
+	compact: boolean
 	mobileMode: boolean
 	onCloseMobile: () => void
 }
 
 export const SidebarFooter = observer(function SidebarFooter({
 	onContextMenu,
+	onToggleFolding,
+	folding,
 	onToggleNarrow,
 	isNarrow,
+	compact,
 	mobileMode,
 	onCloseMobile,
 }: SidebarFooterProps): React.JSX.Element {
@@ -127,7 +133,9 @@ export const SidebarFooter = observer(function SidebarFooter({
 		)
 	}
 
-	if (isNarrow) {
+	if (compact) {
+		const handleExpand = isNarrow ? onToggleNarrow : onToggleFolding
+
 		return (
 			<div className="sidebar-footer2 flex flex-col items-center gap-2 p-2 border-t border-zinc-800/80 shrink-0">
 				{updateInfo && <UpdateNotice updateInfo={updateInfo} compact={true} />}
@@ -144,7 +152,7 @@ export const SidebarFooter = observer(function SidebarFooter({
 				<button
 					type="button"
 					className="w-9 h-9 flex items-center justify-center bg-zinc-800/60 hover:bg-zinc-700/80 border border-zinc-700/50 rounded-md text-zinc-300 hover:text-white transition cursor-pointer shadow-sm"
-					onClick={onToggleNarrow}
+					onClick={handleExpand}
 					onContextMenu={onContextMenu}
 					title="Expand Sidebar"
 				>
@@ -186,16 +194,16 @@ export const SidebarFooter = observer(function SidebarFooter({
 				</button>
 			)}
 
-			{/* Row 3: Sidebar Collapse Button */}
+			{/* Row 3: Sidebar Folding Button */}
 			<button
 				type="button"
 				className="w-full h-7 flex items-center justify-center gap-1.5 bg-zinc-800/60 hover:bg-zinc-700/80 border border-zinc-700/50 rounded-md text-xs font-medium text-zinc-300 hover:text-white transition cursor-pointer shadow-xs"
-				onClick={onToggleNarrow}
+				onClick={onToggleFolding}
 				onContextMenu={onContextMenu}
-				title="Collapse Sidebar"
+				title={folding ? 'Keep Sidebar Open' : 'Collapse Sidebar'}
 			>
-				<FontAwesomeIcon icon={faChevronLeft} className="w-3 h-3 text-zinc-400" />
-				<span>Collapse Sidebar</span>
+				<FontAwesomeIcon icon={folding ? faChevronRight : faChevronLeft} className="w-3 h-3 text-zinc-400" />
+				<span>{folding ? 'Keep Sidebar Open' : 'Collapse Sidebar'}</span>
 			</button>
 		</div>
 	)
