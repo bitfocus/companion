@@ -157,7 +157,7 @@ function SidebarSearchButton() {
 					{!isNarrow && <span className="truncate">Search or jump...</span>}
 				</div>
 				{!isNarrow && (
-					<span className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-3xs font-mono font-medium text-zinc-400 bg-black/25 border border-white/10 rounded leading-none">
+					<span className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-3xs font-mono font-medium text-muted bg-surface border border-border rounded leading-none">
 						{shortcutLabel}
 					</span>
 				)}

@@ -64,7 +64,9 @@ export function SidebarHeader(): React.JSX.Element {
 			<div className="sidebar-brand w-full">
 				<div className="sidebar-brand-full w-full">
 					<div className="flex items-center justify-center gap-1.5">
-						<img src={makeAbsolutePath('/img/logo-glass.png')} style={{ height: 30 }} alt="logo" />
+						<span className="sidebar-logo-mark">
+							<img src={makeAbsolutePath('/img/logo-glass.png')} alt="Bitfocus Companion" />
+						</span>
 						<span>
 							Bitfocus <span className="font-bold">Companion</span>
 						</span>
@@ -78,7 +80,9 @@ export function SidebarHeader(): React.JSX.Element {
 					)}
 				</div>
 				<div className="sidebar-brand-narrow">
-					<img src={makeAbsolutePath('/img/logo-glass.png')} style={{ height: 42 }} alt="logo" />
+					<span className="sidebar-logo-mark sidebar-logo-mark-narrow">
+						<img src={makeAbsolutePath('/img/logo-glass.png')} alt="Bitfocus Companion" />
+					</span>
 				</div>
 			</div>
 		</div>
@@ -118,15 +122,15 @@ export const SidebarFooter = observer(function SidebarFooter({
 
 	if (mobileMode) {
 		return (
-			<div className="sidebar-footer2 flex flex-col gap-2 p-3 border-t border-zinc-800/80 shrink-0">
+			<div className="sidebar-footer2 flex flex-col gap-2 p-3 border-t border-border/80 shrink-0">
 				{updateInfo && <UpdateNotice updateInfo={updateInfo} compact={false} />}
 				<button
 					type="button"
-					className="w-full h-9 flex items-center justify-center gap-2 bg-zinc-800/60 hover:bg-zinc-700/80 border border-zinc-700/50 rounded-md text-xs font-medium text-zinc-200 hover:text-white transition cursor-pointer shadow-xs"
+					className="w-full h-9 flex items-center justify-center gap-2 bg-surface hover:bg-surface-hover border border-border rounded-md text-xs font-medium text-muted hover:text-body transition cursor-pointer shadow-xs"
 					onClick={onCloseMobile}
 					title="Close navigation"
 				>
-					<FontAwesomeIcon icon={faXmark} className="w-3.5 h-3.5 text-zinc-400" />
+					<FontAwesomeIcon icon={faXmark} className="w-3.5 h-3.5 text-muted" />
 					<span>Close navigation</span>
 				</button>
 			</div>
@@ -137,38 +141,38 @@ export const SidebarFooter = observer(function SidebarFooter({
 		const handleExpand = isNarrow ? onToggleNarrow : onToggleFolding
 
 		return (
-			<div className="sidebar-footer2 flex flex-col items-center gap-2 p-2 border-t border-zinc-800/80 shrink-0">
+			<div className="sidebar-footer2 flex flex-col items-center gap-2 p-2 border-t border-border/80 shrink-0">
 				{updateInfo && <UpdateNotice updateInfo={updateInfo} compact={true} />}
 				{canLock && (
 					<button
 						type="button"
-						className="w-9 h-9 flex items-center justify-center bg-zinc-800/60 hover:bg-zinc-700/80 border border-zinc-700/50 rounded-md text-zinc-300 hover:text-white transition cursor-pointer shadow-sm"
+						className="w-9 h-9 flex items-center justify-center bg-surface hover:bg-surface-hover border border-border rounded-md text-muted hover:text-body transition cursor-pointer shadow-sm"
 						onClick={setLocked}
 						title="Lock Admin UI"
 					>
-						<FontAwesomeIcon icon={faLock} className="w-3.5 h-3.5 text-zinc-400" />
+						<FontAwesomeIcon icon={faLock} className="w-3.5 h-3.5 text-muted" />
 					</button>
 				)}
 				<button
 					type="button"
-					className="w-9 h-9 flex items-center justify-center bg-zinc-800/60 hover:bg-zinc-700/80 border border-zinc-700/50 rounded-md text-zinc-300 hover:text-white transition cursor-pointer shadow-sm"
+					className="w-9 h-9 flex items-center justify-center bg-surface hover:bg-surface-hover border border-border rounded-md text-muted hover:text-body transition cursor-pointer shadow-sm"
 					onClick={handleExpand}
 					onContextMenu={onContextMenu}
 					title="Expand Sidebar"
 				>
-					<FontAwesomeIcon icon={faChevronRight} className="w-3.5 h-3.5 text-zinc-400" />
+					<FontAwesomeIcon icon={faChevronRight} className="w-3.5 h-3.5 text-muted" />
 				</button>
 			</div>
 		)
 	}
 
 	return (
-		<div className="sidebar-footer2 flex flex-col gap-2 p-3 border-t border-zinc-800/80 shrink-0">
+		<div className="sidebar-footer2 flex flex-col gap-2 p-3 border-t border-border/80 shrink-0">
 			{updateInfo && <UpdateNotice updateInfo={updateInfo} compact={false} />}
 
 			{/* Row 1: Full-width Version (Bigger) & Update Channel Tag */}
 			<div className="flex items-center justify-between gap-2 w-full min-w-0">
-				<span className="version font-bold text-sm text-zinc-100 truncate" title={versionBuild || undefined}>
+				<span className="version font-bold text-sm text-body truncate" title={versionBuild || undefined}>
 					{versionName || 'Unknown'}
 				</span>
 				<span
@@ -185,11 +189,11 @@ export const SidebarFooter = observer(function SidebarFooter({
 			{canLock && (
 				<button
 					type="button"
-					className="w-full h-7 flex items-center justify-center gap-1.5 bg-zinc-800/60 hover:bg-zinc-700/80 border border-zinc-700/50 rounded-md text-xs font-medium text-zinc-300 hover:text-white transition cursor-pointer shadow-xs"
+					className="w-full h-7 flex items-center justify-center gap-1.5 bg-surface hover:bg-surface-hover border border-border rounded-md text-xs font-medium text-muted hover:text-body transition cursor-pointer shadow-xs"
 					onClick={setLocked}
 					title="Lock Admin UI"
 				>
-					<FontAwesomeIcon icon={faLock} className="w-3 h-3 text-zinc-400" />
+					<FontAwesomeIcon icon={faLock} className="w-3 h-3 text-muted" />
 					<span>Lock Admin UI</span>
 				</button>
 			)}
@@ -197,12 +201,12 @@ export const SidebarFooter = observer(function SidebarFooter({
 			{/* Row 3: Sidebar Folding Button */}
 			<button
 				type="button"
-				className="w-full h-7 flex items-center justify-center gap-1.5 bg-zinc-800/60 hover:bg-zinc-700/80 border border-zinc-700/50 rounded-md text-xs font-medium text-zinc-300 hover:text-white transition cursor-pointer shadow-xs"
+				className="w-full h-7 flex items-center justify-center gap-1.5 bg-surface hover:bg-surface-hover border border-border rounded-md text-xs font-medium text-muted hover:text-body transition cursor-pointer shadow-xs"
 				onClick={onToggleFolding}
 				onContextMenu={onContextMenu}
 				title={folding ? 'Keep Sidebar Open' : 'Collapse Sidebar'}
 			>
-				<FontAwesomeIcon icon={folding ? faChevronRight : faChevronLeft} className="w-3 h-3 text-zinc-400" />
+				<FontAwesomeIcon icon={folding ? faChevronRight : faChevronLeft} className="w-3 h-3 text-muted" />
 				<span>{folding ? 'Keep Sidebar Open' : 'Collapse Sidebar'}</span>
 			</button>
 		</div>
