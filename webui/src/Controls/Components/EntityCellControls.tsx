@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { EntityOwner, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, type EntityOwner, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { Button } from '~/Components/Button.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
@@ -23,8 +23,8 @@ interface EntityCellControlProps {
 	setPanelCollapsed: (collapsed: boolean) => void
 	definitionName: string
 	canSetHeadline: boolean
-	headlineExpanded: boolean
-	setHeadlineExpanded: () => void
+	noteEditing: boolean
+	setNoteEditing: (editing: boolean) => void
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
 	localVariablePrefix: string | null
@@ -113,13 +113,16 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	setPanelCollapsed,
 	definitionName,
 	canSetHeadline,
-	headlineExpanded,
-	setHeadlineExpanded,
+	noteEditing,
+	setNoteEditing,
 	readonly,
 	localVariablesStore,
 	localVariablePrefix,
 }: EntityCellControlProps) {
-	const toggleCollapse = useCallback(() => setPanelCollapsed(!isPanelCollapsed), [isPanelCollapsed, setPanelCollapsed])
+	const toggleCollapse = useCallback(() => {
+		if (!isPanelCollapsed) setNoteEditing(false)
+		setPanelCollapsed(!isPanelCollapsed)
+	}, [isPanelCollapsed, setNoteEditing, setPanelCollapsed])
 
 	// When a local variable is collapsed, show its name and current value instead of the definition name
 	const { headline, localVariableValueName } = getEntityRowHeaderDisplay(
@@ -130,8 +133,20 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 		localVariablePrefix
 	)
 
-	let cleanHeadline = headline
-	if (connectionLabel && cleanHeadline.toLowerCase().startsWith(`${connectionLabel.toLowerCase()}:`)) {
+	const isCollapsedLocalVariable =
+		isPanelCollapsed && !!localVariablePrefix && entity.type === EntityModelType.Feedback && !ownerId
+
+	let cleanDefinitionName = definitionName
+	if (connectionLabel && cleanDefinitionName.toLowerCase().startsWith(`${connectionLabel.toLowerCase()}:`)) {
+		cleanDefinitionName = cleanDefinitionName.slice(connectionLabel.length + 1).trim()
+	}
+
+	let cleanHeadline = isCollapsedLocalVariable ? headline : cleanDefinitionName
+	if (
+		isCollapsedLocalVariable &&
+		connectionLabel &&
+		cleanHeadline.toLowerCase().startsWith(`${connectionLabel.toLowerCase()}:`)
+	) {
 		cleanHeadline = cleanHeadline.slice(connectionLabel.length + 1).trim()
 	}
 
@@ -152,55 +167,70 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 					</span>
 				)}
 
-				{!service.setHeadline || !headlineExpanded || isPanelCollapsed ? (
-					<>
-						{localVariableValueName !== null && localVariablesStore ? (
-							<div className="cell-name-local-variable">
-								<span className="cell-name-local-variable-label font-semibold text-xs text-body" title={cleanHeadline}>
-									{cleanHeadline}
-								</span>
-								<div className="cell-name-local-variable-value">
-									<VariableValueDisplayPopover
-										value={localVariablesStore.getValue(localVariableValueName)}
-										showCopy={false}
-									/>
-								</div>
-							</div>
-						) : (
-							<span className="font-semibold text-xs text-body truncate">{cleanHeadline}</span>
-						)}
-
-						{entity.headline && !isPanelCollapsed && (
-							<span
-								className="text-3xs font-mono text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 truncate entity-value-pill"
-								title={`Note: ${entity.headline}`}
-							>
-								// {entity.headline}
+				<div className="flex flex-col grow min-w-0 gap-0.5">
+					{localVariableValueName !== null && localVariablesStore ? (
+						<div className="cell-name-local-variable">
+							<span className="cell-name-local-variable-label font-semibold text-xs text-body" title={cleanHeadline}>
+								{cleanHeadline}
 							</span>
-						)}
-					</>
-				) : (
-					<div className="grow list-toolbar-search" onClick={(e) => e.stopPropagation()}>
-						<TextInputFieldSimple
-							id={undefined}
-							value={entity.headline ?? ''}
-							placeholder={`Describe the intent of the ${entityTypeLabel}`}
-							setValue={service.setHeadline}
-						/>
-					</div>
-				)}
+							<div className="cell-name-local-variable-value">
+								<VariableValueDisplayPopover
+									value={localVariablesStore.getValue(localVariableValueName)}
+									showCopy={false}
+								/>
+							</div>
+						</div>
+					) : (
+						<span className="font-semibold text-xs text-body whitespace-normal break-words leading-tight">
+							{cleanHeadline}
+						</span>
+					)}
+
+					{!isCollapsedLocalVariable && noteEditing && !isPanelCollapsed && service.setHeadline ? (
+						<div className="px-0.5 py-0.5" onClick={(e) => e.stopPropagation()}>
+							<TextInputFieldSimple
+								id={undefined}
+								value={entity.headline ?? ''}
+								placeholder={`Describe the intent of the ${entityTypeLabel}`}
+								setValue={service.setHeadline}
+								autoFocus
+								onBlur={() => setNoteEditing(false)}
+								onKeyDown={(event) => {
+									if (event.key === 'Enter' || event.key === 'Escape') event.currentTarget.blur()
+								}}
+							/>
+						</div>
+					) : (
+						!isCollapsedLocalVariable &&
+						entity.headline && (
+							<button
+								type="button"
+								disabled={readonly || isPanelCollapsed || !service.setHeadline}
+								onClick={(event) => {
+									event.stopPropagation()
+									setNoteEditing(true)
+								}}
+								className="w-fit max-w-full whitespace-normal break-words leading-snug border-0 bg-transparent p-0 text-left text-3xs font-normal text-muted hover:text-body disabled:hover:text-muted disabled:cursor-default"
+								title={isPanelCollapsed ? entity.headline : `Edit note: ${entity.headline}`}
+							>
+								{entity.headline}
+							</button>
+						)
+					)}
+				</div>
 
 				{isPanelCollapsed && <EntityOptionPills entity={entity} entityDefinition={entityDefinition} />}
 			</div>
 
 			{/* Right section: Clean ghost buttons + switch toggle + smooth accordion caret */}
 			<div className="cell-controls flex items-center gap-0.5 shrink-0">
-				{canSetHeadline && !headlineExpanded && !isPanelCollapsed && (
+				{canSetHeadline && !noteEditing && !isPanelCollapsed && (
 					<Button
 						variant="ghost"
 						size="sm"
-						onClick={setHeadlineExpanded}
-						title="Set headline / note"
+						disabled={readonly}
+						onClick={() => setNoteEditing(true)}
+						title={entity.headline ? 'Edit note' : `Add note to ${entityTypeLabel}`}
 						className="text-muted hover:text-body p-1.5"
 					>
 						<FontAwesomeIcon icon={faPencil} className="text-xs" />

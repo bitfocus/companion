@@ -4,7 +4,7 @@ import { faSort } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useState } from 'react'
+import { useContext, useState } from 'react'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	type EntityModelType,
@@ -184,8 +184,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 		: `${connectionLabel}: ${entity.definitionId} (undefined)`
 
 	const canSetHeadline = !!entityService.setHeadline
-	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!entity.headline)
-	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
+	const [noteEditing, setNoteEditing] = useState(false)
 
 	const { isCollapsed, setCollapsed } = usePanelCollapseHelperContextForPanel(
 		stringifyEntityOwnerId(ownerId),
@@ -205,8 +204,8 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 				setPanelCollapsed={setCollapsed}
 				definitionName={definitionName}
 				canSetHeadline={canSetHeadline}
-				headlineExpanded={headlineExpanded}
-				setHeadlineExpanded={doEditHeadline}
+				noteEditing={noteEditing}
+				setNoteEditing={setNoteEditing}
 				readonly={readonly}
 				localVariablesStore={localVariablesStore}
 				localVariablePrefix={localVariablePrefix}
@@ -216,7 +215,6 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 				<LazyEditorGrid entity={entity} disableLazyMount={disableLazyMount}>
 					<div className="cell-description">
 						<div className="grow">
-							{headlineExpanded && <div className="name">{definitionName}</div>}
 							{entityDefinition?.description && <div className="description">{entityDefinition.description || ''}</div>}
 						</div>
 						{entityDefinition?.hasLearn && !!entityService.performLearn && (
