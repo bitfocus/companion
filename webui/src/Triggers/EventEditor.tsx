@@ -1,6 +1,14 @@
 import { useDragDropMonitor } from '@dnd-kit/react'
 import { isSortable, useSortable } from '@dnd-kit/react/sortable'
-import { faAnglesDown, faAnglesUp, faClone, faPencil, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
+import {
+	faAnglesDown,
+	faAnglesUp,
+	faChevronDown,
+	faClone,
+	faPencil,
+	faSort,
+	faTrash,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
@@ -8,7 +16,7 @@ import { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { optionsObjectToExpressionOptions, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import { Button, ButtonGroup } from '~/Components/Button'
+import { Button } from '~/Components/Button'
 import { Form } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
@@ -235,13 +243,13 @@ const EventEditor = observer(function EventEditor({
 
 	const canSetHeadline = !!service.setHeadline
 	const headline = event.headline
-	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!headline)
-	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
+	const [noteEditing, setNoteEditing] = useState(false)
+	const doEditHeadline = useCallback(() => setNoteEditing(true), [])
 
-	const doCollapse = useCallback(
-		() => panelCollapseHelper.setPanelCollapsed(event.id, true),
-		[panelCollapseHelper, event.id]
-	)
+	const doCollapse = useCallback(() => {
+		setNoteEditing(false)
+		panelCollapseHelper.setPanelCollapsed(event.id, true)
+	}, [panelCollapseHelper, event.id])
 	const doExpand = useCallback(
 		() => panelCollapseHelper.setPanelCollapsed(event.id, false),
 		[panelCollapseHelper, event.id]
@@ -259,63 +267,97 @@ const EventEditor = observer(function EventEditor({
 
 	return (
 		<>
-			<div className="editor-grid-header">
-				<div className="cell-name">
-					{!service.setHeadline || !headlineExpanded || isCollapsed ? (
-						headline || name
-					) : (
-						<TextInputFieldSimple
-							id={undefined}
-							value={headline ?? ''}
-							placeholder={'Describe the intent of the event'}
-							setValue={service.setHeadline}
-							aria-label="Event headline"
-						/>
-					)}
+			<div className="editor-grid-header flex items-center justify-between gap-3">
+				<div className="flex flex-col grow min-w-0 gap-0.5">
+					<span className="font-semibold text-xs text-body whitespace-normal break-words leading-tight">{name}</span>
+					{noteEditing && !isCollapsed && service.setHeadline ? (
+						<div className="px-0.5 py-0.5">
+							<TextInputFieldSimple
+								id={undefined}
+								value={headline ?? ''}
+								placeholder="Describe the intent of the event"
+								setValue={service.setHeadline}
+								aria-label="Event headline"
+								autoFocus
+								onBlur={() => setNoteEditing(false)}
+								onKeyDown={(event) => {
+									if (event.key === 'Enter' || event.key === 'Escape') event.currentTarget.blur()
+								}}
+							/>
+						</div>
+					) : headline ? (
+						<button
+							type="button"
+							disabled={isCollapsed || !service.setHeadline}
+							onClick={doEditHeadline}
+							className="w-fit max-w-full whitespace-normal break-words leading-snug border-0 bg-transparent p-0 text-left text-3xs font-normal text-action-text hover:text-body disabled:hover:text-action-text disabled:cursor-default"
+							title={isCollapsed ? headline : `Edit note: ${headline}`}
+						>
+							{headline}
+						</button>
+					) : null}
 				</div>
 
-				<div className="cell-controls">
-					<ButtonGroup className="me-1">
-						{canSetHeadline && !headlineExpanded && (
-							<Button size="sm" onClick={doEditHeadline} title="Set headline">
-								<FontAwesomeIcon icon={faPencil} />
-							</Button>
-						)}
-						{isCollapsed ? (
-							<Button size="sm" onClick={doExpand} title="Expand event view">
-								<FontAwesomeIcon icon={faAnglesDown} />
-							</Button>
-						) : (
-							<Button size="sm" onClick={doCollapse} title="Collapse event view">
-								<FontAwesomeIcon icon={faAnglesUp} />
-							</Button>
-						)}
-						<Button size="sm" onClick={service.performDuplicate} title="Duplicate event">
-							<FontAwesomeIcon icon={faClone} />
+				<div className="cell-controls flex items-center gap-0.5 shrink-0">
+					{canSetHeadline && !noteEditing && !isCollapsed && (
+						<Button
+							variant="ghost"
+							size="sm"
+							className="p-1.5"
+							onClick={doEditHeadline}
+							title={headline ? 'Edit note' : 'Add note to event'}
+						>
+							<FontAwesomeIcon icon={faPencil} className="text-xs" />
 						</Button>
-						<Button size="sm" onClick={service.performDelete} title="Remove event" variant="ghost" color="danger">
-							<FontAwesomeIcon icon={faTrash} />
-						</Button>
-						{!!service.setEnabled && (
-							<>
-								&nbsp;
-								<SwitchInputField
-									id={undefined}
-									value={event.enabled}
-									tooltip={event.enabled ? 'Disable event' : 'Enable event'}
-									setValue={service.setEnabled}
-									small
-								/>
-							</>
-						)}
-					</ButtonGroup>
+					)}
+					<Button
+						variant="ghost"
+						size="sm"
+						className="p-1.5"
+						onClick={service.performDuplicate}
+						title="Duplicate event"
+					>
+						<FontAwesomeIcon icon={faClone} className="text-xs" />
+					</Button>
+					<Button
+						size="sm"
+						className="p-1.5"
+						onClick={service.performDelete}
+						title="Remove event"
+						variant="ghost"
+						color="danger"
+					>
+						<FontAwesomeIcon icon={faTrash} className="text-xs" />
+					</Button>
+					{!!service.setEnabled && (
+						<div className="ms-1.5 me-1 flex items-center">
+							<SwitchInputField
+								id={undefined}
+								value={event.enabled}
+								tooltip={event.enabled ? 'Disable event' : 'Enable event'}
+								setValue={service.setEnabled}
+								small
+							/>
+						</div>
+					)}
+					<Button
+						variant="ghost"
+						size="sm"
+						className="p-1.5"
+						onClick={isCollapsed ? doExpand : doCollapse}
+						title={isCollapsed ? 'Expand event view' : 'Collapse event view'}
+					>
+						<FontAwesomeIcon
+							icon={faChevronDown}
+							className={`text-xs transition-transform duration-200 ${isCollapsed ? '-rotate-90' : 'rotate-0'}`}
+						/>
+					</Button>
 				</div>
 			</div>
 
 			{!isCollapsed && (
 				<div className="editor-grid">
 					<Grid.Col sm={12} className="cell-description">
-						{headlineExpanded && <p className="name">{name}</p>}
 						{eventSpec?.description || ''}
 					</Grid.Col>
 
