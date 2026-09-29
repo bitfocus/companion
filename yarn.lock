@@ -1982,18 +1982,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:1.2.0-nightly-main-20260903-192135-d3ed195":
-  version: 1.2.0-nightly-main-20260903-192135-d3ed195
-  resolution: "@companion-module/host@npm:1.2.0-nightly-main-20260903-192135-d3ed195"
+"@companion-module/host@npm:1.2.0-nightly-main-20260929-202637-4da1450":
+  version: 1.2.0-nightly-main-20260929-202637-4da1450
+  resolution: "@companion-module/host@npm:1.2.0-nightly-main-20260929-202637-4da1450"
   dependencies:
     "@companion-module/base": "npm:~2.1.3"
-    colord: "npm:^2.9.3"
+    colord: "npm:^2.9.4"
     debounce-fn: "npm:^6.0.0"
     fast-deep-equal: "npm:^3.1.3"
     p-queue: "npm:^9.3.3"
     semver: "npm:^7.8.5"
     zod: "npm:^4.4.3"
-  checksum: 10c0/8c7a288fec570d00d8e8e853cdb600d2487b53a5b9567debc85171836676c557a5ed5bc314e0c7a01f595a620b03b5f719208deba4c603bf7f40507dc828f939
+  checksum: 10c0/4a39c3fc2336628531b52cd66767950d19949f223565eafa4cb8c4adfa225c7daf11f763f5b99782eb7699647ddec35f1350ca5c1252db53b6c63d131ef0c2be
   languageName: node
   linkType: hard
 
@@ -10600,7 +10600,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"colord-for-expressions@npm:colord@^2.10.0, colord@npm:^2.10.0, colord@npm:^2.9.3":
+"colord-for-expressions@npm:colord@^2.10.0, colord@npm:^2.10.0, colord@npm:^2.9.3, colord@npm:^2.9.4":
   version: 2.10.0
   resolution: "colord@npm:2.10.0"
   checksum: 10c0/2f5d1d1759124f593deca17bbbab8a88bdc3ab68bbcc88db76c1192d9a5d575db202badde044bf61789561fa0ed7a9eb895382becad1af27ec65934c216e9e04
