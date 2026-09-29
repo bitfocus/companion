@@ -206,10 +206,11 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							<div className="flex flex-row">
 								<div className="grow">
 									<Button
-										color="success"
+										color="primary"
 										className="md:me-1"
 										disabled={!isDirty || !isValid || isSubmitting}
 										type="submit"
+										aria-busy={isSubmitting}
 									>
 										Save {isSubmitting ? '...' : ''}
 									</Button>

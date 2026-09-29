@@ -142,7 +142,7 @@ export function ImportTriggersTab({
 						</p>
 					</div>
 					<div>
-						<Button color="success" data-replace={false} onClick={doImport} disabled={selectedTriggers.length === 0}>
+						<Button color="primary" data-replace={false} onClick={doImport} disabled={selectedTriggers.length === 0}>
 							<FontAwesomeIcon icon={faFileCirclePlus} className="me-1.5" /> Add to Existing Triggers
 						</Button>
 					</div>

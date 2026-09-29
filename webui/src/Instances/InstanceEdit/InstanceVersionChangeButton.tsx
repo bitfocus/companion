@@ -103,7 +103,13 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 
 	return (
 		<Modal.Root open={show} onOpenChange={doShow} onOpenChangeComplete={onOpenChangeComplete}>
-			<Modal.Trigger id={id} color="light" size="sm" title="Change module version" aria-label="Change module version">
+			<Modal.Trigger
+				id={id}
+				color="secondary"
+				size="sm"
+				title="Change module version"
+				aria-label="Change module version"
+			>
 				<FontAwesomeIcon icon={faPencil} />
 			</Modal.Trigger>
 

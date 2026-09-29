@@ -228,7 +228,12 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 						</p>
 					</div>
 				</div>
-				<LinkButtonExternal color="warning" size="sm" href={makeAbsolutePath('/int/export/full')} className="shrink-0">
+				<LinkButtonExternal
+					color="secondary"
+					size="sm"
+					href={makeAbsolutePath('/int/export/full')}
+					className="shrink-0"
+				>
 					<FontAwesomeIcon icon={faDownload} className="me-1.5" /> Quick Backup Current Config
 				</LinkButtonExternal>
 			</div>
@@ -348,7 +353,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 										return (
 											<div>
 												<Button
-													color="success"
+													color="primary"
 													type="submit"
 													disabled={!anythingEnabled}
 													onClick={() => {

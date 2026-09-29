@@ -113,17 +113,17 @@ export const HttpsConfig = observer(function HttpsConfig(props: UserConfigProps)
 									<div className="flex items-center justify-end gap-2">
 										{props.config.https_self_cert && props.config.https_self_cert.length > 0 ? (
 											<>
-												<Button onClick={renewSslCertificate} color="success" size="sm">
+												<Button onClick={renewSslCertificate} color="secondary" size="sm">
 													<FontAwesomeIcon icon={faSync} className="me-1.5" />
 													Renew Certificate
 												</Button>
-												<Button onClick={deleteSslCertificate} color="danger" size="sm">
+												<Button onClick={deleteSslCertificate} color="danger" variant="ghost" size="sm">
 													<FontAwesomeIcon icon={faTrash} className="me-1.5" />
 													Delete
 												</Button>
 											</>
 										) : (
-											<Button onClick={createSslCertificate} color="success" size="sm">
+											<Button onClick={createSslCertificate} color="secondary" size="sm">
 												<FontAwesomeIcon icon={faSync} className="me-1.5" />
 												Generate Self-Signed Certificate
 											</Button>

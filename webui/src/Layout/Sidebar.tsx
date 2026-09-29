@@ -150,7 +150,7 @@ function SidebarSearchButton() {
 				type="button"
 				onClick={openSearch}
 				title={`Search or Jump to... (${shortcutLabel})`}
-				className="w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-surface-muted/70 hover:bg-surface-muted text-muted hover:text-body border border-border/70 text-xs transition-colors cursor-pointer text-left"
+				className="w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-surface-muted/70 hover:bg-surface-muted text-action-text hover:text-body border border-border/70 text-xs transition-colors cursor-pointer text-left"
 			>
 				<div className="flex items-center gap-2 min-w-0">
 					<FontAwesomeIcon icon={faMagnifyingGlass} className="text-2xs" />

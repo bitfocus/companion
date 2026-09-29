@@ -81,7 +81,7 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 									size="sm"
 									onClick={panelCollapseHelper.setAllExpanded}
 									title="Expand all events"
-									className="text-muted hover:text-body text-xs px-2 py-0.5 flex items-center gap-1.5"
+									className="text-xs px-2 py-0.5 flex items-center gap-1.5"
 								>
 									<FontAwesomeIcon icon={faAnglesDown} className="text-2xs" />
 									<span className="text-3xs font-medium">Expand all</span>
@@ -93,7 +93,7 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 									size="sm"
 									onClick={panelCollapseHelper.setAllCollapsed}
 									title="Collapse all events"
-									className="text-muted hover:text-body text-xs px-2 py-0.5 flex items-center gap-1.5"
+									className="text-xs px-2 py-0.5 flex items-center gap-1.5"
 								>
 									<FontAwesomeIcon icon={faAnglesUp} className="text-2xs" />
 									<span className="text-3xs font-medium">Collapse all</span>
@@ -293,7 +293,7 @@ const EventEditor = observer(function EventEditor({
 						<Button size="sm" onClick={service.performDuplicate} title="Duplicate event">
 							<FontAwesomeIcon icon={faClone} />
 						</Button>
-						<Button size="sm" onClick={service.performDelete} title="Remove event">
+						<Button size="sm" onClick={service.performDelete} title="Remove event" variant="ghost" color="danger">
 							<FontAwesomeIcon icon={faTrash} />
 						</Button>
 						{!!service.setEnabled && (

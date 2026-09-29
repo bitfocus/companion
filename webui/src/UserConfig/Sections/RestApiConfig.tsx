@@ -121,7 +121,13 @@ const RestApiKeyManager = observer(function RestApiKeyManager() {
 									<Button color="secondary" size="sm" onClick={() => modalRef.current?.edit(key)} title="Edit key">
 										<FontAwesomeIcon icon={faPen} />
 									</Button>
-									<Button color="danger" size="sm" onClick={() => deleteKey(key.id, key.name)} title="Revoke key">
+									<Button
+										color="danger"
+										size="sm"
+										onClick={() => deleteKey(key.id, key.name)}
+										title="Revoke key"
+										variant="ghost"
+									>
 										<FontAwesomeIcon icon={faTrash} />
 									</Button>
 								</ButtonGroup>

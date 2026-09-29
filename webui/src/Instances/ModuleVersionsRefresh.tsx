@@ -53,7 +53,8 @@ export const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({
 			<button
 				type="button"
 				disabled
-				className="w-6 h-6 inline-flex items-center justify-center rounded-lg text-muted transition-colors border-0 bg-transparent"
+				aria-busy
+				className="w-6 h-6 inline-flex items-center justify-center rounded-lg text-action-text transition-colors border-0 bg-transparent"
 				title={`Refreshing module info ${Math.round(refreshProgress * 100)}%`}
 				aria-label={`Refreshing module info ${Math.round(refreshProgress * 100)}%`}
 			>

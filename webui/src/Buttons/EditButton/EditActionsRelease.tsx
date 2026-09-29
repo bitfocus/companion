@@ -91,7 +91,14 @@ export function EditActionsRelease({
 						<Button key="rename" title="Configure" size="sm" onClick={() => configureSet(id)}>
 							<FontAwesomeIcon icon={faPencil} />
 						</Button>,
-						<Button key="delete" title="Delete step" size="sm" onClick={() => removeSet(stepId, id)}>
+						<Button
+							key="delete"
+							title="Delete step"
+							size="sm"
+							onClick={() => removeSet(stepId, id)}
+							variant="ghost"
+							color="danger"
+						>
 							<FontAwesomeIcon icon={faTrash} />
 						</Button>,
 					]}

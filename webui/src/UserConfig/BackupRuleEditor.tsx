@@ -58,13 +58,7 @@ const PreviousBackupRow = observer(function PreviousBackupRow({ backup, ruleId }
 				</div>
 			</td>
 			<td className="whitespace-nowrap align-middle py-2.5 px-3 text-right">
-				<Button
-					color="secondary"
-					size="sm"
-					onClick={deleteBackup}
-					title="Delete backup"
-					className="text-rose-500 hover:bg-rose-500/10"
-				>
+				<Button color="danger" size="sm" onClick={deleteBackup} title="Delete backup" variant="ghost">
 					<FontAwesomeIcon icon={faTrash} />
 				</Button>
 			</td>
@@ -130,7 +124,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 						<h4 className="text-sm font-bold text-body mb-0.5">Rule Configuration</h4>
 						<p className="text-xs text-muted mb-0">Set rule name, schedule, and output destination.</p>
 					</div>
-					<Button color="warning" size="sm" onClick={runNow}>
+					<Button color="secondary" size="sm" onClick={runNow}>
 						<FontAwesomeIcon icon={faPlay} className="me-1.5" />
 						Run Now
 					</Button>

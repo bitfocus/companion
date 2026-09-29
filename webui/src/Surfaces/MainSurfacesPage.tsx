@@ -87,7 +87,7 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 						{/* Top Header Card: Actions & Rescan */}
 						<div className="bg-surface-muted/50 border border-border/70 p-3 rounded-lg flex items-center justify-between gap-2 flex-wrap shrink-0">
 							<div className="flex flex-wrap items-center gap-2">
-								<Button color="primary" size="sm" onClick={refreshUSB}>
+								<Button color="secondary" size="sm" onClick={refreshUSB}>
 									<FontAwesomeIcon icon={faSync} spin={rescanUsbMutation.isPending} className="me-1.5" />
 									{rescanUsbMutation.isPending ? 'Rescanning USB...' : 'Rescan USB'}
 								</Button>

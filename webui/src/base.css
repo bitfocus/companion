@@ -215,6 +215,12 @@ button:focus:not(:focus-visible) {
 	outline: 0;
 }
 
+button:focus-visible,
+[role='button']:focus-visible {
+	outline: 2px solid var(--color-action-focus);
+	outline-offset: 2px;
+}
+
 input,
 button,
 select,

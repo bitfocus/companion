@@ -551,7 +551,7 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 					</Tooltip.Root>
 				) : (
 					<Button
-						color="primary"
+						color="secondary"
 						size="sm"
 						onClick={(e) => {
 							e.stopPropagation()
@@ -695,7 +695,7 @@ const AddInstanceConfigureStep = observer(function AddInstanceConfigureStep({
 								{selectedVersionInfo && (
 									<button
 										type="button"
-										className="text-muted hover:text-primary text-xs cursor-pointer bg-transparent border-0 flex items-center gap-1 transition-colors"
+										className="text-action-text hover:text-primary text-xs cursor-pointer bg-transparent border-0 flex items-center gap-1 transition-colors"
 										onClick={showHelpClick}
 										title="View module documentation"
 									>

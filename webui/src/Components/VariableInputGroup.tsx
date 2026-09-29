@@ -126,7 +126,7 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ id, value, setV
 				}}
 			>
 				<Button
-					color="info"
+					color="secondary"
 					variant="outline"
 					title={buttonProps.title}
 					onClick={handleToggle}

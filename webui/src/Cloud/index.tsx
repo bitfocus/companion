@@ -149,7 +149,7 @@ function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps)
 
 			{!cloudActive && (
 				<Button
-					color="danger"
+					color="secondary"
 					size="sm"
 					onClick={() => {
 						clearError()

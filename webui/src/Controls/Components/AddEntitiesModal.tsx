@@ -278,7 +278,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 	return (
 		<Modal.Root open={show} onOpenChange={setShow} onOpenChangeComplete={onOpenChangeComplete}>
 			<Modal.Trigger
-				color="primary"
+				color="secondary"
 				className="rounded-s-none"
 				disabled={disabled}
 				aria-label={`Browse ${capitalize(entityTypeLabel)}s`}

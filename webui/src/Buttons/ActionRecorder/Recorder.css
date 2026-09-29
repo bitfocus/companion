@@ -85,7 +85,7 @@
 }
 
 .recorder-discard-button:hover:not(:disabled) {
-	color: var(--color-tone-error-text);
+	color: var(--color-action-danger-text);
 }
 
 .recorder-actions-section {

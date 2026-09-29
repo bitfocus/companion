@@ -36,7 +36,7 @@ export const EntityEditorHeading = observer(function EntityEditorHeading({
 						size="sm"
 						onClick={() => panelCollapseHelper.setAllExpanded(ownerIdString, childEntityIds)}
 						title="Expand all"
-						className="text-muted hover:text-body text-xs px-2 py-0.5 flex items-center gap-1.5"
+						className="text-xs px-2 py-0.5 flex items-center gap-1.5"
 					>
 						<FontAwesomeIcon icon={faAnglesDown} className="text-2xs" />
 						<span className="text-3xs font-medium">Expand all</span>
@@ -48,7 +48,7 @@ export const EntityEditorHeading = observer(function EntityEditorHeading({
 						size="sm"
 						onClick={() => panelCollapseHelper.setAllCollapsed(ownerIdString, childEntityIds)}
 						title="Collapse all"
-						className="text-muted hover:text-body text-xs px-2 py-0.5 flex items-center gap-1.5"
+						className="text-xs px-2 py-0.5 flex items-center gap-1.5"
 					>
 						<FontAwesomeIcon icon={faAnglesUp} className="text-2xs" />
 						<span className="text-3xs font-medium">Collapse all</span>

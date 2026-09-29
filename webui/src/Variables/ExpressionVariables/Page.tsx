@@ -305,13 +305,7 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 					<Button color="secondary" size="sm" onClick={doClone} title="Clone">
 						<FontAwesomeIcon icon={faClone} />
 					</Button>
-					<Button
-						color="secondary"
-						size="sm"
-						onClick={doDelete}
-						title="Delete"
-						className="text-rose-500 hover:bg-rose-500/10"
-					>
+					<Button color="danger" size="sm" onClick={doDelete} title="Delete" variant="ghost">
 						<FontAwesomeIcon icon={faTrash} />
 					</Button>
 				</ButtonGroup>

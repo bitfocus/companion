@@ -126,7 +126,7 @@ export const SidebarFooter = observer(function SidebarFooter({
 				{updateInfo && <UpdateNotice updateInfo={updateInfo} compact={false} />}
 				<button
 					type="button"
-					className="w-full h-9 flex items-center justify-center gap-2 bg-surface hover:bg-surface-hover border border-border rounded-md text-xs font-medium text-muted hover:text-body transition cursor-pointer shadow-xs"
+					className="w-full h-9 flex items-center justify-center gap-2 bg-surface hover:bg-surface-hover border border-border rounded-md text-xs font-medium text-action-text hover:text-body transition cursor-pointer shadow-xs"
 					onClick={onCloseMobile}
 					title="Close navigation"
 				>
@@ -146,7 +146,7 @@ export const SidebarFooter = observer(function SidebarFooter({
 				{canLock && (
 					<button
 						type="button"
-						className="w-9 h-9 flex items-center justify-center bg-surface hover:bg-surface-hover border border-border rounded-md text-muted hover:text-body transition cursor-pointer shadow-sm"
+						className="w-9 h-9 flex items-center justify-center bg-surface hover:bg-surface-hover border border-border rounded-md text-action-text hover:text-body transition cursor-pointer shadow-sm"
 						onClick={setLocked}
 						title="Lock Admin UI"
 					>
@@ -155,7 +155,7 @@ export const SidebarFooter = observer(function SidebarFooter({
 				)}
 				<button
 					type="button"
-					className="w-9 h-9 flex items-center justify-center bg-surface hover:bg-surface-hover border border-border rounded-md text-muted hover:text-body transition cursor-pointer shadow-sm"
+					className="w-9 h-9 flex items-center justify-center bg-surface hover:bg-surface-hover border border-border rounded-md text-action-text hover:text-body transition cursor-pointer shadow-sm"
 					onClick={handleExpand}
 					onContextMenu={onContextMenu}
 					title="Expand Sidebar"
@@ -189,7 +189,7 @@ export const SidebarFooter = observer(function SidebarFooter({
 			{canLock && (
 				<button
 					type="button"
-					className="w-full h-7 flex items-center justify-center gap-1.5 bg-surface hover:bg-surface-hover border border-border rounded-md text-xs font-medium text-muted hover:text-body transition cursor-pointer shadow-xs"
+					className="w-full h-7 flex items-center justify-center gap-1.5 bg-surface hover:bg-surface-hover border border-border rounded-md text-xs font-medium text-action-text hover:text-body transition cursor-pointer shadow-xs"
 					onClick={setLocked}
 					title="Lock Admin UI"
 				>
@@ -201,7 +201,7 @@ export const SidebarFooter = observer(function SidebarFooter({
 			{/* Row 3: Sidebar Folding Button */}
 			<button
 				type="button"
-				className="w-full h-7 flex items-center justify-center gap-1.5 bg-surface hover:bg-surface-hover border border-border rounded-md text-xs font-medium text-muted hover:text-body transition cursor-pointer shadow-xs"
+				className="w-full h-7 flex items-center justify-center gap-1.5 bg-surface hover:bg-surface-hover border border-border rounded-md text-xs font-medium text-action-text hover:text-body transition cursor-pointer shadow-xs"
 				onClick={onToggleFolding}
 				onContextMenu={onContextMenu}
 				title={folding ? 'Keep Sidebar Open' : 'Collapse Sidebar'}

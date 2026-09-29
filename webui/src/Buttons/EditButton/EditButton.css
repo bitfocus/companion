@@ -707,7 +707,7 @@
 		}
 
 		.element-icon {
-			color: var(--color-selected-accent);
+			color: var(--color-selection-text);
 		}
 	}
 }

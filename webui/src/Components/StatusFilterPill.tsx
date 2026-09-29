@@ -25,12 +25,14 @@ export function StatusFilterPill({
 			onClick={onClick}
 			title={title || `Filter by ${label}`}
 			disabled={isZero}
+			aria-pressed={isActive}
 			className={classNames(
 				'inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full transition-all border cursor-pointer select-none',
 				{
-					'bg-secondary/40 border-secondary text-body shadow-xs font-semibold': isActive && !isZero,
-					'bg-transparent border-transparent text-muted hover:text-body hover:bg-secondary/20': !isActive && !isZero,
-					'opacity-40 border-transparent text-muted cursor-default hover:text-muted hover:bg-transparent': isZero,
+					'bg-selection-bg border-selection-border text-selection-text shadow-xs font-semibold': isActive && !isZero,
+					'bg-transparent border-transparent text-action-text hover:text-body hover:bg-secondary/20':
+						!isActive && !isZero,
+					'border-transparent text-action-disabled-text cursor-default hover:bg-transparent': isZero,
 				}
 			)}
 		>

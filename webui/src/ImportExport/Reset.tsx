@@ -143,7 +143,13 @@ export const ResetWizardModal = observer(function ResetWizardModal() {
 				<form.Subscribe
 					selector={(state) => [state.canSubmit, state.isSubmitting]}
 					children={([canSubmit, isSubmitting]) => (
-						<Button ref={buttonRef} color="danger" type="submit" disabled={!canSubmit || isSubmitting}>
+						<Button
+							ref={buttonRef}
+							color="danger"
+							type="submit"
+							disabled={!canSubmit || isSubmitting}
+							aria-busy={isSubmitting}
+						>
 							Apply {isSubmitting ? '...' : ''}
 						</Button>
 					)}
@@ -239,7 +245,7 @@ function ResetBeginStep() {
 					what to reset and review before applying.
 				</p>
 				<p className="mb-4">It is strongly recommended to export your configuration first.</p>
-				<LinkButtonExternal color="success" href={makeAbsolutePath('/int/export/full')}>
+				<LinkButtonExternal color="secondary" href={makeAbsolutePath('/int/export/full')}>
 					<FontAwesomeIcon icon={faDownload} /> Export
 				</LinkButtonExternal>
 			</NonIdealState>

@@ -193,8 +193,9 @@
 }
 
 .presets-placement-options button.selected {
-	background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
-	color: var(--color-primary);
+	background: var(--color-selection-bg);
+	color: var(--color-selection-text);
+	box-shadow: inset 0 0 0 1px var(--color-selection-border);
 	font-weight: 700;
 }
 
@@ -203,7 +204,7 @@
 }
 
 .presets-placement-options button:disabled:not(.selected) {
-	opacity: 0.45;
+	color: var(--color-action-disabled-text);
 }
 
 .presets-sections-tree .presets-section-row {

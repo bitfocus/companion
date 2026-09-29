@@ -222,7 +222,12 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 					</p>
 				</div>
 				<div>
-					<Button color={pageNumber === -1 ? 'success' : 'warning'} onClick={doImport2} disabled={isRunning}>
+					<Button
+						color={pageNumber === -1 ? 'primary' : 'danger'}
+						onClick={doImport2}
+						disabled={isRunning}
+						aria-busy={isRunning}
+					>
 						<FontAwesomeIcon icon={pageNumber === -1 ? faFileCirclePlus : faFileCircleExclamation} className="me-1.5" />
 						{pageNumber === -1 ? 'Import to New Page' : `Replace Page ${pageNumber} with Imported Page`}
 					</Button>

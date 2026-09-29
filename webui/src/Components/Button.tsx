@@ -72,7 +72,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
 				disabled,
 			} satisfies Complete<ButtonVisualProps>)}
 			aria-label={ariaLabel}
-			{...(active && { 'aria-current': 'page' })}
+			{...(active && { 'aria-pressed': true })}
 			{...rest}
 			disabled={disabled}
 			hidden={hidden}

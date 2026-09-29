@@ -152,7 +152,7 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 									size="sm"
 									onClick={service.appendStep}
 									title="Add another step (for latching / toggle buttons)"
-									className="text-muted hover:text-primary text-xs px-2 py-1 flex items-center gap-1"
+									className="text-xs px-2 py-1 flex items-center gap-1"
 								>
 									<FontAwesomeIcon icon={faPlus} className="text-2xs" />
 									<span className="text-3xs font-medium">Add Step</span>
@@ -170,7 +170,7 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 										className={`text-3xs px-2 py-0.5 font-medium rounded-md ${
 											runtimeProps.current_step_id === currentStepKey
 												? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-												: 'text-muted hover:text-body'
+												: 'text-action-text hover:text-body'
 										}`}
 									>
 										{runtimeProps.current_step_id === currentStepKey ? '● Live' : 'Set Live'}
@@ -182,7 +182,7 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 										title="Move step left"
 										disabled={selectedIndex === 0}
 										onClick={() => service.swapSteps(currentStepKey, stepKeys[selectedIndex - 1])}
-										className="text-muted hover:text-body p-1"
+										className="p-1"
 									>
 										<FontAwesomeIcon icon={faChevronLeft} className="text-xs" />
 									</Button>
@@ -192,7 +192,7 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 										title="Move step right"
 										disabled={selectedIndex === stepKeys.length - 1}
 										onClick={() => service.swapSteps(currentStepKey, stepKeys[selectedIndex + 1])}
-										className="text-muted hover:text-body p-1"
+										className="p-1"
 									>
 										<FontAwesomeIcon icon={faChevronRight} className="text-xs" />
 									</Button>
@@ -201,7 +201,7 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 										size="sm"
 										title="Duplicate step"
 										onClick={() => service.duplicateStep(currentStepKey)}
-										className="text-muted hover:text-body p-1"
+										className="p-1"
 									>
 										<FontAwesomeIcon icon={faClone} className="text-xs" />
 									</Button>
@@ -210,7 +210,8 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 										size="sm"
 										title="Delete step"
 										onClick={() => service.removeStep(currentStepKey)}
-										className="text-muted hover:text-danger p-1"
+										className="p-1"
+										color="danger"
 									>
 										<FontAwesomeIcon icon={faTrash} className="text-xs" />
 									</Button>

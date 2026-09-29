@@ -331,7 +331,7 @@ const DangerZoneSection = observer(function DangerZoneSection<TConfig extends Cl
 						Delete this {panelStore.service.moduleTypeDisplayName} and all associated triggers, actions, and feedbacks.
 					</p>
 				</div>
-				<Button color="danger" size="sm" onClick={doDelete} disabled={isSaving || panelStore.isLoading}>
+				<Button color="danger" size="sm" onClick={doDelete} disabled={isSaving || panelStore.isLoading} variant="ghost">
 					Delete
 				</Button>
 			</div>
@@ -506,6 +506,7 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 					disabled={isLoading || isSaving || !isValid || !isDirty}
 					type="submit"
 					title={!isValid ? 'Please fix the errors before saving' : 'Save changes (Cmd+S / Ctrl+S)'}
+					aria-busy={isSaving}
 				>
 					{isSaving ? 'Saving...' : 'Save Changes'}
 				</Button>

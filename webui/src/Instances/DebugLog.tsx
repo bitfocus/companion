@@ -246,7 +246,7 @@ export const InstanceDebugLog = observer(function InstanceDebugLog({
 							active={false}
 							onClick={doClearLog}
 							title="Clear log history"
-							className="hover:text-rose-500"
+							className="hover:text-action-danger-text"
 						>
 							<Trash2 className="w-3.5 h-3.5" />
 							<span>Clear</span>
@@ -255,7 +255,7 @@ export const InstanceDebugLog = observer(function InstanceDebugLog({
 							<FileDown className="w-3.5 h-3.5" />
 							<span>Export Log</span>
 						</PillButton>
-						<PillButton tone={isEnabled ? 'error' : 'good'} active onClick={doToggleInstance}>
+						<PillButton tone="primary" active={false} onClick={doToggleInstance}>
 							{isEnabled ? <Square className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
 							<span>
 								{isEnabled ? 'Stop' : 'Start'} {instanceTypeStr}
@@ -277,7 +277,7 @@ export const InstanceDebugLog = observer(function InstanceDebugLog({
 						<button
 							type="button"
 							onClick={() => setSearchQuery('')}
-							className="absolute right-2.5 text-muted hover:text-body p-0.5"
+							className="absolute right-2.5 text-action-text hover:text-body p-0.5"
 							title="Clear search"
 						>
 							<X className="w-3.5 h-3.5" />

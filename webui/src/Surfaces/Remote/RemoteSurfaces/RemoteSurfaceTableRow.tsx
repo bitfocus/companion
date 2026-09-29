@@ -84,7 +84,7 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 					tooltip={isEnabled ? `Disable surface connection` : `Enable surface connection`}
 				/>
 
-				<Button onClick={doDelete} title="Delete" className="p-1">
+				<Button onClick={doDelete} title="Delete" className="p-1" color="danger" variant="ghost">
 					<FontAwesomeIcon icon={faTrash} />
 				</Button>
 			</div>

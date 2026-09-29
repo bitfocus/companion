@@ -128,7 +128,7 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 				</div>
 			</div>
 			<div className="recorder-session-actions">
-				<Button type="button" color={sessionInfo.isRunning ? 'danger' : 'primary'} size="sm" onClick={toggleRecording}>
+				<Button type="button" color="secondary" size="sm" onClick={toggleRecording}>
 					{sessionInfo.isRunning ? <Pause size={14} /> : <Play size={14} />}
 					{sessionInfo.isRunning ? 'Pause recording' : 'Start recording'}
 				</Button>
@@ -139,13 +139,21 @@ export const RecorderSessionHeading = observer(function RecorderSessionHeading({
 						size="sm"
 						onClick={doClearActions}
 						disabled={!sessionInfo.actions?.length}
+						color="danger"
 					>
 						<Trash2 size={14} /> Clear
 					</Button>
-					<Button type="button" variant="ghost" size="sm" onClick={doAbort} className="recorder-discard-button">
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						onClick={doAbort}
+						className="recorder-discard-button"
+						color="danger"
+					>
 						<X size={14} /> Discard
 					</Button>
-					<Button type="button" color="secondary" size="sm" onClick={doFinish2} disabled={!sessionInfo.actions?.length}>
+					<Button type="button" color="primary" size="sm" onClick={doFinish2} disabled={!sessionInfo.actions?.length}>
 						<Check size={14} /> Finish
 					</Button>
 				</div>

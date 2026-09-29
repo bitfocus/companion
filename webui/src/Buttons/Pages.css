@@ -92,7 +92,7 @@
 }
 
 .pages-list-delete:hover:not(:disabled) {
-	color: var(--color-tone-error-text);
+	color: var(--color-action-danger-text);
 }
 
 @container (max-width: 26rem) {

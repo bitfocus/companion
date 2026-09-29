@@ -45,7 +45,7 @@ export function ControlHotPressButtons({
 		<div className="control-hotpress-actions" role="group" aria-label="Test button actions">
 			<Button
 				className="edit-button-toolbar-action"
-				color="primary"
+				color="secondary"
 				size="sm"
 				onMouseDown={hotPressDown}
 				onMouseUp={hotPressUp}

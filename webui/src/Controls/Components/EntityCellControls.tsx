@@ -210,7 +210,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 									event.stopPropagation()
 									setNoteEditing(true)
 								}}
-								className="w-fit max-w-full whitespace-normal break-words leading-snug border-0 bg-transparent p-0 text-left text-3xs font-normal text-muted hover:text-body disabled:hover:text-muted disabled:cursor-default"
+								className="w-fit max-w-full whitespace-normal break-words leading-snug border-0 bg-transparent p-0 text-left text-3xs font-normal text-action-text hover:text-body disabled:hover:text-action-text disabled:cursor-default"
 								title={isPanelCollapsed ? entity.headline : `Edit note: ${entity.headline}`}
 							>
 								{entity.headline}
@@ -231,7 +231,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 						disabled={readonly}
 						onClick={() => setNoteEditing(true)}
 						title={entity.headline ? 'Edit note' : `Add note to ${entityTypeLabel}`}
-						className="text-muted hover:text-body p-1.5"
+						className="p-1.5"
 					>
 						<FontAwesomeIcon icon={faPencil} className="text-xs" />
 					</Button>
@@ -243,7 +243,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 					disabled={readonly}
 					onClick={service.performDuplicate}
 					title={`Duplicate ${entityTypeLabel}`}
-					className="text-muted hover:text-body p-1.5"
+					className="p-1.5"
 				>
 					<FontAwesomeIcon icon={faClone} className="text-xs" />
 				</Button>
@@ -254,7 +254,8 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 					disabled={readonly}
 					onClick={service.performDelete}
 					title={`Remove ${entityTypeLabel}`}
-					className="text-muted hover:text-danger p-1.5"
+					className="p-1.5"
+					color="danger"
 				>
 					<FontAwesomeIcon icon={faTrash} className="text-xs" />
 				</Button>
@@ -276,7 +277,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 					size="sm"
 					onClick={toggleCollapse}
 					title={isPanelCollapsed ? `Expand ${entityTypeLabel}` : `Collapse ${entityTypeLabel}`}
-					className="text-muted hover:text-body p-1.5"
+					className="p-1.5"
 				>
 					<FontAwesomeIcon
 						icon={faChevronDown}

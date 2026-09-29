@@ -15,7 +15,7 @@
 	background: var(--color-surface);
 	box-shadow: none;
 	outline: none;
-	color: var(--color-muted);
+	color: var(--color-action-text);
 	font-size: 0.75rem;
 	font-weight: 500;
 	white-space: nowrap;
@@ -33,8 +33,8 @@
 	}
 
 	&:focus-visible {
-		outline: 0;
-		box-shadow: 0 0 0 0.25rem var(--color-focus-ring);
+		outline: 2px solid var(--color-action-focus);
+		outline-offset: 2px;
 	}
 
 	/* Tighter variant, for a dense row of filters. */
@@ -49,11 +49,12 @@
 		font-weight: 600;
 	}
 
-	/* `primary` is a solid fill rather than a tint - it reads as "this is the whole set", not a tone. */
+	/* Neutral selection is distinct from both primary actions and semantic status tones. */
 	&.pill-button-active.pill-tone-primary {
-		background: var(--color-primary);
-		border-color: var(--color-primary);
-		color: var(--color-on-dark);
+		background: var(--color-selection-bg);
+		border-color: var(--color-selection-border);
+		color: var(--color-selection-text);
+		box-shadow: inset 0 0 0 1px var(--color-selection-border);
 	}
 }
 
@@ -98,8 +99,8 @@
 }
 
 .pill-tone-primary {
-	--pill-fill: var(--color-primary);
-	--pill-text: var(--color-primary);
+	--pill-fill: var(--color-selection-border);
+	--pill-text: var(--color-action-text);
 }
 
 /* A strip of pills that share one well, as a segmented control. The pills inside lose their own

@@ -201,7 +201,7 @@ export const LogPanel = memo(function LogPanel() {
 								tone="primary"
 								active={false}
 								onClick={doClearLog}
-								className="hover:text-rose-500"
+								className="hover:text-action-danger-text"
 								title="Clear active log history"
 							>
 								<Trash2 className="w-3.5 h-3.5" />
@@ -245,7 +245,7 @@ export const LogPanel = memo(function LogPanel() {
 							<button
 								type="button"
 								onClick={() => setSearchQuery('')}
-								className="absolute right-2.5 text-muted hover:text-body p-0.5"
+								className="absolute right-2.5 text-action-text hover:text-body p-0.5"
 								title="Clear search"
 							>
 								<X className="w-3.5 h-3.5" />
@@ -355,7 +355,7 @@ const SystemLogLine = memo(function SystemLogLine({ line }: { line: GroupedLogLi
 				<button
 					type="button"
 					onClick={handleCopy}
-					className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-muted hover:text-body shrink-0 cursor-pointer bg-transparent border-0 shadow-none outline-none inline-flex items-center justify-center rounded hover:bg-surface-muted"
+					className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity p-1 text-action-text hover:text-body shrink-0 cursor-pointer bg-transparent border-0 shadow-none outline-none inline-flex items-center justify-center rounded hover:bg-surface-muted"
 					title="Copy log line"
 				>
 					{copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}

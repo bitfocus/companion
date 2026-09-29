@@ -234,7 +234,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 								size="sm"
 								onClick={doTestRun}
 								title="Test fire trigger actions immediately"
-								className="text-xs px-2.5 py-1 text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 flex items-center gap-1.5 font-medium shrink-0 rounded-lg transition-all"
+								className="text-xs px-2.5 py-1 bg-action-bg hover:bg-action-hover border border-action-border flex items-center gap-1.5 font-medium shrink-0 rounded-lg transition-all"
 							>
 								<FontAwesomeIcon icon={faPlay} className="text-2xs" />
 								<span>Test Run</span>

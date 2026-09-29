@@ -44,6 +44,7 @@ export const RefreshModulesList = observer(function RefreshModulesList({
 					color={color}
 					variant={variant}
 					disabled
+					aria-busy
 					size={btnSize}
 					title={`Refreshing modules list ${Math.round(refreshProgress * 100)}%`}
 					className="h-full inline-flex items-center justify-center"

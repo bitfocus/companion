@@ -157,7 +157,7 @@ function CreateCollectionButton() {
 	}, [createMutation])
 
 	return (
-		<Button color="info" size="sm" onClick={doCreateCollection}>
+		<Button color="secondary" size="sm" onClick={doCreateCollection}>
 			<FontAwesomeIcon icon={faLayerGroup} /> Create Collection
 		</Button>
 	)

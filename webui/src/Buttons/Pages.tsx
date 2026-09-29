@@ -222,6 +222,7 @@ const PageListRow = observer(function PageListRow({
 					data-page={pageNumber}
 					data-name={info.name}
 					disabled={pageCount <= 1}
+					color="danger"
 				>
 					<FontAwesomeIcon icon={faTrash} />
 				</Button>

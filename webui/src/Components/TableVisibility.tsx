@@ -72,6 +72,7 @@ export function VisibilityButton<T extends Record<string, any>>({
 			size="sm"
 			color={color}
 			className={classNames({ active: visibility[keyId] })}
+			aria-pressed={visibility[keyId]}
 			onClick={doToggle}
 			title={title}
 		>

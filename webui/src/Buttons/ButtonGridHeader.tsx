@@ -103,7 +103,7 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 	return (
 		<div className="button-grid-header">
 			<InputGroup>
-				<Button color="secondary" variant="ghost" hidden={!changePage} onClick={prevPage}>
+				<Button color="secondary" hidden={!changePage} onClick={prevPage} title="Previous page">
 					<FontAwesomeIcon icon={faChevronLeft} />
 				</Button>
 				<div className="dropdown-field button-page-input">
@@ -130,7 +130,7 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 						<DropdownInputPopup />
 					</Combobox.Root>
 				</div>
-				<Button color="secondary" variant="ghost" hidden={!changePage} onClick={nextPage}>
+				<Button color="secondary" hidden={!changePage} onClick={nextPage} title="Next page">
 					<FontAwesomeIcon icon={faChevronRight} />
 				</Button>
 			</InputGroup>

@@ -37,7 +37,7 @@ export const RefreshModuleInfo = observer(function RefreshModuleInfo({
 		)
 	} else {
 		return (
-			<Button color="secondary" size="sm" disabled>
+			<Button color="secondary" size="sm" disabled aria-busy>
 				<FontAwesomeIcon icon={faSync} spin={true} className="me-1.5" />
 				Refreshing module info {Math.round(refreshProgress * 100)}%
 			</Button>

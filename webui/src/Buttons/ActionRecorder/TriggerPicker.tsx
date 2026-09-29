@@ -26,7 +26,7 @@ function TriggerPickerRow({ id, trigger, selectTrigger }: TriggerPickerRowProps)
 					<Button color="primary" title="Replace all the actions on the trigger" onClick={replaceActions}>
 						Replace
 					</Button>
-					<Button color="info" title="Append to the existing actions" onClick={appendActions}>
+					<Button color="secondary" title="Append to the existing actions" onClick={appendActions}>
 						Append
 					</Button>
 				</ButtonGroup>

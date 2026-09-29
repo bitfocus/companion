@@ -149,10 +149,11 @@ export const PageMatrixModal = observer(function PageMatrixModal({
 											key={mode}
 											type="button"
 											onClick={() => setFilterMode(mode)}
+											aria-pressed={filterMode === mode}
 											className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
 												filterMode === mode
-													? 'bg-primary text-white shadow-xs'
-													: 'bg-surface hover:bg-surface-hover text-muted hover:text-body border border-border'
+													? 'bg-selection-bg text-selection-text border border-selection-border shadow-xs'
+													: 'bg-surface hover:bg-surface-hover text-action-text hover:text-body border border-border'
 											}`}
 										>
 											{label} ({count})
@@ -235,7 +236,9 @@ const PageMatrixCard = memo(function PageMatrixCard({
 				<div className="flex items-center gap-1.5 min-w-0">
 					<span
 						className={`px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase ${
-							isCurrent ? 'bg-primary text-white' : 'bg-surface-muted text-muted border border-border'
+							isCurrent
+								? 'bg-selection-bg text-selection-text border border-selection-border'
+								: 'bg-surface-muted text-muted border border-border'
 						}`}
 					>
 						P{pageNumber}
@@ -291,7 +294,7 @@ const PageMatrixCard = memo(function PageMatrixCard({
 						onClick={() => onConfigure(pageNumber)}
 						title="Rename page"
 						aria-label={`Rename page ${pageNumber}`}
-						className="p-1 rounded hover:bg-surface-muted hover:text-body text-muted"
+						className="p-1 rounded hover:bg-surface-muted hover:text-body text-action-text"
 					>
 						<FontAwesomeIcon icon={faPencil} />
 					</button>

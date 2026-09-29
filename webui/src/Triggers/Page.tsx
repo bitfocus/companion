@@ -379,17 +379,11 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 						size="sm"
 						onClick={doTestRun}
 						title="Test Run Trigger (Fire actions now)"
-						className="text-muted hover:text-emerald-600 p-1.5"
+						className="hover:text-action-text p-1.5"
 					>
 						<FontAwesomeIcon icon={faPlay} className="text-xs" />
 					</Button>
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={doClone}
-						title="Clone Trigger"
-						className="text-muted hover:text-body p-1.5"
-					>
+					<Button variant="ghost" size="sm" onClick={doClone} title="Clone Trigger" className="p-1.5">
 						<FontAwesomeIcon icon={faClone} className="text-xs" />
 					</Button>
 					<LinkButtonExternal
@@ -397,17 +391,11 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 						size="sm"
 						href={makeAbsolutePath(`/int/export/triggers/single/${item.id}`)}
 						title="Export Trigger"
-						className="text-muted hover:text-body p-1.5"
+						className="p-1.5"
 					>
 						<FontAwesomeIcon icon={faDownload} className="text-xs" />
 					</LinkButtonExternal>
-					<Button
-						variant="ghost"
-						size="sm"
-						onClick={doDelete}
-						title="Delete Trigger"
-						className="text-muted hover:text-rose-500 p-1.5"
-					>
+					<Button variant="ghost" size="sm" onClick={doDelete} title="Delete Trigger" className="p-1.5" color="danger">
 						<FontAwesomeIcon icon={faTrash} className="text-xs" />
 					</Button>
 				</div>

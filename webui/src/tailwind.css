@@ -67,6 +67,30 @@
 	--color-primary: #1f242e;
 	--color-primary-hover: #2b3341;
 	--color-primary-active: #12161d;
+
+	/* Action chrome is independent of switches, focus and content/status colours. */
+	--color-action-primary: #525b66;
+	--color-action-primary-hover: #46505b;
+	--color-action-primary-pressed: #39434e;
+	--color-action-on-primary: #fff;
+	--color-action-text: #46505b;
+	--color-action-bg: #f3f4f5;
+	--color-action-hover: #e8ebee;
+	--color-action-pressed: #dce1e6;
+	--color-action-border: #c5cbd2;
+	--color-action-border-hover: #aeb7c2;
+	--color-action-disabled-text: #9aa2ac;
+	--color-action-disabled-bg: #f3f4f5;
+	--color-action-disabled-border: #e1e5ea;
+	--color-action-focus: #66788a;
+	--color-action-danger-text: #b4233a;
+	--color-action-danger-hover: #fff1f3;
+	--color-action-danger-pressed: #ffe4e9;
+	--color-action-danger-hover-solid: #a30d25;
+	--color-action-danger-pressed-solid: #8c0b20;
+	--color-selection-bg: #e5e8eb;
+	--color-selection-text: #303842;
+	--color-selection-border: #73808c;
 	--color-accent-active: #941d1b; /* the active sidebar indicator — brand, not selection */
 	--color-secondary: #ccc;
 	--color-success: #1b9e3e;
@@ -190,20 +214,18 @@
 	--color-canvas-workspace: rgb(228, 228, 228); /* darker fill behind the layer canvas */
 	--color-toolbar-bg: rgb(245, 245, 245); /* quick-actions / canvas footer strips */
 	--color-toolbar-fg: #4a4a4a; /* toolbar icon & label text */
-	--color-toolbar-accent: #2276d2; /* active aspect / quick-action */
-	--color-toolbar-accent-hover: #1a5ea3;
 	--color-resize-bar-bg-hover: #dedede; /* panel resize bar hover (base is --color-surface-muted-hover) */
 	--color-mode-toggle-bg: #ececec;
 	--color-mode-toggle-border: #c8c8c8;
 
 	/* Selected list item (button editor element pickers) */
-	--color-selected-item-bg: #e3f2fd;
-	--color-selected-accent: #1976d2;
+	--color-selected-item-bg: var(--color-selection-bg);
+	--color-selected-accent: var(--color-selection-border);
 	--color-step-highlight: #2eb85c; /* green glow pulsing on the current step selector */
 
 	/* Dropdown / select field popups */
-	--color-dropdown-item-hover-bg: #deebff; /* highlighted (hovered/keyboard-active) option */
-	--color-dropdown-item-selected-bg: #c7deff; /* selected option */
+	--color-dropdown-item-hover-bg: var(--color-action-hover); /* highlighted (hovered/keyboard-active) option */
+	--color-dropdown-item-selected-bg: var(--color-selection-bg); /* selected option */
 	--color-pill-bg: #e6e6e6; /* multi-select value pill */
 	--color-pill-remove-bg: #d7d7d7; /* pill remove button */
 

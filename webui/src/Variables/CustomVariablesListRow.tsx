@@ -74,13 +74,7 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 
 			<div className="shrink-0 flex items-center gap-1">
 				<ButtonGroup>
-					<Button
-						color="secondary"
-						size="sm"
-						onClick={doDelete}
-						title="Delete"
-						className="text-rose-500 hover:bg-rose-500/10"
-					>
+					<Button color="danger" size="sm" onClick={doDelete} title="Delete" variant="ghost">
 						<FontAwesomeIcon icon={faTrash} />
 					</Button>
 				</ButtonGroup>

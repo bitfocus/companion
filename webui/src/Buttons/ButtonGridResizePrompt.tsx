@@ -34,7 +34,7 @@ export const ButtonGridResizePrompt = observer(function ButtonGridResizePrompt()
 						<li key={s.id}>{s.displayName}</li>
 					))}
 				</ul>
-				<Button color="info" onClick={doAutoResize}>
+				<Button color="secondary" onClick={doAutoResize}>
 					<FontAwesomeIcon icon={faExpand} />
 					&nbsp;Resize grid to fit
 				</Button>

@@ -146,6 +146,7 @@ export const AddVariableModal = forwardRef<AddVariableModalRef, AddVariableModal
 												className="md:me-1"
 												disabled={!canSubmit || isSubmitting || isPristine}
 												type="submit"
+												aria-busy={isSubmitting}
 											>
 												Add {isSubmitting ? '...' : ''}
 											</Button>

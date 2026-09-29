@@ -103,7 +103,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 				<h4 className="text-xs font-bold uppercase tracking-wider text-muted mb-0">Module Versions</h4>
 				<ButtonGroup className="shrink-0">
 					<Button
-						color={visibleVersions.visibility.availableStable ? 'primary' : 'secondary'}
+						color="secondary"
 						size="sm"
 						active={visibleVersions.visibility.availableStable}
 						onClick={() => visibleVersions.toggleVisibility('availableStable')}
@@ -111,7 +111,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 						Stable
 					</Button>
 					<Button
-						color={visibleVersions.visibility.availableBeta ? 'primary' : 'secondary'}
+						color="secondary"
 						size="sm"
 						active={visibleVersions.visibility.availableBeta}
 						onClick={() => visibleVersions.toggleVisibility('availableBeta')}
@@ -119,7 +119,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 						Beta
 					</Button>
 					<Button
-						color={showDeprecated ? 'primary' : 'secondary'}
+						color="secondary"
 						size="sm"
 						active={showDeprecated}
 						onClick={() => setShowDeprecated((visible) => !visible)}
@@ -314,18 +314,20 @@ function ModuleUninstallButton({ moduleType, moduleId, versionId, disabled }: Mo
 
 	return (
 		<Button
-			color="secondary"
+			color="danger"
 			size="sm"
 			className="w-7 h-7 p-0 inline-flex items-center justify-center"
 			disabled={isRunningInstallOrUninstall || disabled}
 			onClick={doRemove}
+			aria-busy={isRunningInstallOrUninstall}
+			variant="ghost"
 		>
 			{isRunningInstallOrUninstall ? (
 				<FontAwesomeIcon icon={faSync} spin className="text-xs" />
 			) : (
 				<FontAwesomeIcon
 					icon={faTrash}
-					className="text-xs text-rose-500"
+					className="text-xs"
 					title={disabled ? 'Cannot remove version, it is in use by connections' : 'Remove version'}
 				/>
 			)}
@@ -395,6 +397,7 @@ function ModuleInstallButton({ moduleType, moduleId, versionId, apiVersion, hasT
 			className="w-7 h-7 p-0 inline-flex items-center justify-center"
 			disabled={isRunningInstallOrUninstall}
 			onClick={doInstall}
+			aria-busy={isRunningInstallOrUninstall}
 		>
 			{isRunningInstallOrUninstall ? (
 				<FontAwesomeIcon icon={faSync} spin className="text-xs" />

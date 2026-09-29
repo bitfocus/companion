@@ -44,7 +44,7 @@ function EditTabButton({ tab, activeTab, setActiveTab, icon, label, showAttentio
 				'inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-lg transition-all border cursor-pointer whitespace-nowrap',
 				activeTab === tab
 					? 'bg-surface border-border text-body shadow-xs font-semibold'
-					: 'bg-transparent border-transparent text-muted hover:text-body hover:bg-surface/50'
+					: 'bg-transparent border-transparent text-action-text hover:text-body hover:bg-surface/50'
 			)}
 		>
 			<FontAwesomeIcon icon={icon} className="text-muted" />

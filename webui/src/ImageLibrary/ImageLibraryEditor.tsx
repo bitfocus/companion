@@ -160,7 +160,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 
 			<div className="mb-4">
 				<div className="flex flex-wrap gap-2">
-					<Button color="danger" onClick={handleDelete} title="Delete Image">
+					<Button color="danger" onClick={handleDelete} title="Delete Image" variant="ghost">
 						<FontAwesomeIcon icon={faTrashAlt} />
 					</Button>
 
@@ -168,7 +168,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 						<FontAwesomeIcon icon={faDownload} /> Download
 					</Button>
 
-					<Button color="warning" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+					<Button color="secondary" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
 						<FontAwesomeIcon icon={faUpload} />
 						{uploading ? ' Replacing...' : ' Replace'}
 					</Button>

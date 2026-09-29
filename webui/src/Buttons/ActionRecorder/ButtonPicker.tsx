@@ -209,7 +209,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 									Replace
 								</Button>
 								<Button
-									color="info"
+									color="secondary"
 									title="Append to the existing actions"
 									disabled={!selectedControl || !selectedSet}
 									onClick={appendActions}

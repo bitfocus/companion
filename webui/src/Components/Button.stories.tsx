@@ -22,6 +22,75 @@ export const Disabled: Story = { args: { disabled: true, children: 'Disabled' } 
 
 export const Hidden: Story = { args: { hidden: true, children: 'Hidden (not rendered)' } }
 
+/** Static previews alongside the real hover/focus interactions, on both common page surfaces. */
+export const StateMatrix: Story = {
+	render: function Render() {
+		const treatments = [
+			{ label: 'Primary', color: 'primary' },
+			{ label: 'Secondary', color: 'secondary' },
+			{ label: 'Ghost', variant: 'ghost' },
+			{ label: 'Danger', color: 'danger', variant: 'ghost' },
+			{ label: 'Confirmation', color: 'danger' },
+		] as const
+		return (
+			<div className="button-state-matrix space-y-6">
+				<style>{`
+					.button-state-matrix [data-preview-state="hover"] {
+						color: var(--btn-hover-color);
+						background: var(--btn-hover-bg);
+						border-color: var(--btn-hover-border-color);
+					}
+					.button-state-matrix [data-preview-state="pressed"] {
+						color: var(--btn-active-color);
+						background: var(--btn-active-bg);
+						border-color: var(--btn-active-border-color);
+					}
+					.button-state-matrix [data-preview-state="focus"] {
+						outline: 2px solid var(--color-action-focus);
+						outline-offset: 2px;
+					}
+				`}</style>
+				{['bg-surface', 'bg-surface-muted'].map((surface) => (
+					<div key={surface} className={`${surface} p-4 overflow-x-auto`}>
+						<table>
+							<thead>
+								<tr>
+									{['Treatment', 'Rest', 'Hover', 'Focus', 'Pressed', 'Selected', 'Disabled', 'Busy'].map((label) => (
+										<th key={label} className="p-2">
+											{label}
+										</th>
+									))}
+								</tr>
+							</thead>
+							<tbody>
+								{treatments.map(({ label, ...props }) => (
+									<tr key={label}>
+										<th className="p-2">{label}</th>
+										{['rest', 'hover', 'focus', 'pressed', 'selected', 'disabled', 'busy'].map((state) => (
+											<td key={state} className="p-2">
+												<Button
+													{...props}
+													size="sm"
+													data-preview-state={state}
+													active={state === 'selected'}
+													disabled={state === 'disabled' || state === 'busy'}
+													aria-busy={state === 'busy'}
+												>
+													{state === 'busy' ? 'Saving…' : 'Action'}
+												</Button>
+											</td>
+										))}
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				))}
+			</div>
+		)
+	},
+}
+
 export const AllColors: Story = {
 	argTypes: {
 		color: { table: { disable: true } },

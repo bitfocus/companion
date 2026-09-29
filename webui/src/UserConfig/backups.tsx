@@ -213,13 +213,7 @@ function BackupsTableRow({ rule, index, editRule }: BackupsTableRowProps) {
 					setValue={doEnableDisable}
 					tooltip={rule.enabled ? 'Disable rule' : 'Enable rule'}
 				/>
-				<Button
-					color="secondary"
-					size="sm"
-					onClick={doDelete}
-					title="Delete"
-					className="text-rose-500 hover:bg-rose-500/10"
-				>
+				<Button color="danger" size="sm" onClick={doDelete} title="Delete" variant="ghost">
 					<FontAwesomeIcon icon={faTrash} />
 				</Button>
 			</div>
