@@ -13,11 +13,10 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { StaticAlert } from '~/Components/Alert.js'
-import { Button } from '~/Components/Button'
 import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
-import { TabArea } from '~/Components/TabArea.js'
+import { StatusFilterPill } from '~/Components/StatusFilterPill.js'
 import { Table } from '~/Components/Table.js'
 import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
 import { filterProducts, useAllModuleProducts, type FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
@@ -55,8 +54,9 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 	const [filter, setFilter] = useState('')
 
 	//  A module can support several devices: useAllModuleProducts returns the list of devices, so some modules are represented by several entries here.
-	const allProducts = useAllModuleProducts(null, true, true).filter((p) => !filterType || filterType === p.moduleType)
-	const typeProducts = allProducts.filter((p) => {
+	const allProducts = useAllModuleProducts(null, true, true)
+	const filteredTypeProducts = allProducts.filter((p) => !filterType || filterType === p.moduleType)
+	const typeProducts = filteredTypeProducts.filter((p) => {
 		let isVisible = false
 		if (p.installedInfo) {
 			if (
@@ -137,82 +137,98 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 	const moduleKey = (p: FuzzyProduct) => `${p.moduleType}:${p.moduleId}`
 	const modulesCount = new Set(allProducts.map(moduleKey)).size
-	const hiddenCount = modulesCount - new Set(typeProducts.map(moduleKey)).size
+	const hiddenCount = new Set(filteredTypeProducts.map(moduleKey)).size - new Set(typeProducts.map(moduleKey)).size
+	const countModules = (products: FuzzyProduct[]) => new Set(products.map(moduleKey)).size
+	const connectionCount = countModules(
+		allProducts.filter((product) => product.moduleType === ModuleInstanceType.Connection)
+	)
+	const surfaceCount = countModules(allProducts.filter((product) => product.moduleType === ModuleInstanceType.Surface))
+	const installedCount = countModules(
+		allProducts.filter(
+			(product) =>
+				product.installedInfo &&
+				(product.installedInfo.installedVersions.length > 0 ||
+					!!product.installedInfo.devVersion ||
+					!!product.installedInfo.builtinVersion)
+		)
+	)
+	const availableCount = countModules(allProducts.filter((product) => !!product.storeInfo))
+	const deprecatedCount = countModules(allProducts.filter((product) => !!product.storeInfo?.deprecationReason))
 
 	return (
-		<div className="flex-column-layout space-y-3">
-			<div className="fixed-header space-y-3">
-				{/* Top Header Card: Title Info & Filter Controls */}
-				<div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-surface-muted/50 border border-border/70 shadow-xs">
-					<div className="min-w-0 flex-1">
-						<div className="flex items-center gap-2 mb-1">
-							<h3 className="text-sm font-bold text-body mb-0">Module Catalog</h3>
-						</div>
-						<p className="text-xs text-muted mb-0 flex items-center gap-1.5 flex-wrap">
-							<span>Browse over {modulesCount} integrations.</span>
-							<span>•</span>
-							<span className="inline-flex items-center gap-1">
-								<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
-								<RefreshModulesList btnSize="sm" color="secondary" iconOnly className="inline-flex" />
-							</span>
-							<span>•</span>
-							<a
-								target="_blank"
-								rel="noreferrer"
-								href={makeAbsolutePath('/user-guide/config/modules')}
-								className="underline hover:text-body"
-							>
-								Need help?
-							</a>
-						</p>
-					</div>
-
-					<div className="module-visibility-filters" role="group" aria-label="Filter modules by availability">
-						<Button
-							variant="ghost"
-							className="module-visibility-filter"
-							size="sm"
-							aria-pressed={visibleModules.visibility.installed}
-							onClick={() => visibleModules.toggleVisibility('installed')}
-						>
-							Installed
-						</Button>
-						<Button
-							variant="ghost"
-							className="module-visibility-filter"
-							size="sm"
-							aria-pressed={visibleModules.visibility.available}
-							onClick={() => visibleModules.toggleVisibility('available')}
-						>
-							Available
-						</Button>
-						<Button
-							variant="ghost"
-							className="module-visibility-filter"
-							size="sm"
-							aria-pressed={showDeprecated}
-							onClick={() => setShowDeprecated((visible) => !visible)}
-						>
-							Deprecated
-						</Button>
-					</div>
-				</div>
-
-				{/* Search Toolbar & Custom Module Import Row */}
-				<div className="flex items-center gap-2 flex-wrap">
+		<div className="flex-column-layout modules-list-layout space-y-3">
+			<div className="fixed-header flex flex-col gap-2.5 w-full px-1 py-1">
+				<div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full">
 					<SearchBox
 						filter={filter}
 						setFilter={setFilter}
-						placeholder="Search modules (e.g. ATEM, OBS, vMix, PTZOptics, Yamaha)..."
-						className="flex-1 list-toolbar-search h-9"
+						placeholder="Filter modules..."
+						className="mb-0 flex-1 min-w-0 h-9"
 					/>
-					<ImportModules />
+					<div className="shrink-0">
+						<ImportModules />
+					</div>
+				</div>
+
+				<div className="flex flex-wrap items-center justify-between gap-2">
+					<div className="flex flex-wrap items-center gap-1.5">
+						<StatusFilterPill
+							label="All"
+							count={modulesCount}
+							isActive={filterType === null}
+							onClick={() => setFilterType(null)}
+							title="Show all module types"
+						/>
+						<StatusFilterPill
+							label="Connections"
+							count={connectionCount}
+							isActive={filterType === ModuleInstanceType.Connection}
+							onClick={() => setFilterType(ModuleInstanceType.Connection)}
+						/>
+						<StatusFilterPill
+							label="Surfaces"
+							count={surfaceCount}
+							isActive={filterType === ModuleInstanceType.Surface}
+							onClick={() => setFilterType(ModuleInstanceType.Surface)}
+						/>
+						<span className="h-5 w-px bg-border mx-0.5" aria-hidden="true" />
+						<StatusFilterPill
+							label="Installed"
+							count={installedCount}
+							isActive={visibleModules.visibility.installed}
+							onClick={() => visibleModules.toggleVisibility('installed')}
+						/>
+						<StatusFilterPill
+							label="Available"
+							count={availableCount}
+							isActive={visibleModules.visibility.available}
+							onClick={() => visibleModules.toggleVisibility('available')}
+						/>
+						<StatusFilterPill
+							label="Deprecated"
+							count={deprecatedCount}
+							isActive={showDeprecated}
+							onClick={() => setShowDeprecated((visible) => !visible)}
+						/>
+					</div>
+
+					<div className="text-xs text-muted flex items-center gap-1.5 shrink-0">
+						<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
+						<RefreshModulesList btnSize="sm" color="secondary" iconOnly className="inline-flex" />
+						<span>•</span>
+						<a
+							target="_blank"
+							rel="noreferrer"
+							href={makeAbsolutePath('/user-guide/config/modules')}
+							className="underline hover:text-body"
+						>
+							Help
+						</a>
+					</div>
 				</div>
 			</div>
 
-			<FilterTypeTabs filterType={filterType} setFilterType={setFilterType} />
-
-			<div className="scrollable-content list-card">
+			<div className="scrollable-content modules-list-results list-card">
 				<Table className="table-tight mb-0">
 					<tbody>
 						{components}
@@ -344,30 +360,3 @@ const ModulesListRow = observer(function ModulesListRow({
 		</tr>
 	)
 })
-
-interface FilterTypeTabsProps {
-	filterType: ModuleInstanceType | null
-	setFilterType: (type: ModuleInstanceType | null) => void
-}
-
-function FilterTypeTabs({ filterType, setFilterType }: FilterTypeTabsProps) {
-	return (
-		<TabArea.Root
-			value={filterType}
-			onValueChange={(v) => setFilterType(v as ModuleInstanceType | null)}
-			className="remote-control-tabs"
-		>
-			<TabArea.List>
-				<TabArea.Tab value={null} title="Show all module types">
-					All Modules
-				</TabArea.Tab>
-				<TabArea.Tab value={ModuleInstanceType.Connection} title="Show only connection modules">
-					Connection Modules
-				</TabArea.Tab>
-				<TabArea.Tab value={ModuleInstanceType.Surface} title="Show only surface modules">
-					Surface Modules
-				</TabArea.Tab>
-			</TabArea.List>
-		</TabArea.Root>
-	)
-}

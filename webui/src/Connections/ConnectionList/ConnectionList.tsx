@@ -127,30 +127,31 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 	)
 
 	return (
-		<div className="connections-list-container flex-column-layout">
+		<div className="connections-list-container flex-column-layout h-full min-h-0 gap-3">
 			<div className="px-3">
 				<MissingVersionsWarning moduleType={ModuleInstanceType.Connection} instances={connections.connections} />
 				<GenericConfirmModal ref={confirmModalRef} />
 				<ConnectionVariablesModal ref={variablesModalRef} />
 			</div>
 
-			<div className="connections-list-table-container scrollable-content">
-				<PanelCollapseHelperProvider
-					storageId="connection-collections"
-					knownPanelIds={connections.allCollectionIds}
-					defaultCollapsed
+			<PanelCollapseHelperProvider
+				storageId="connection-collections"
+				knownPanelIds={connections.allCollectionIds}
+				defaultCollapsed
+			>
+				<ConnectionListContextProvider
+					visibleConnections={visibleConnections}
+					showVariables={showConnectionVariables}
+					deleteModalRef={confirmModalRef}
+					configureConnection={doConfigureConnection}
+					searchText={searchText}
+					setSearchText={setSearchText}
+					counts={counts}
 				>
-					<ConnectionListContextProvider
-						visibleConnections={visibleConnections}
-						showVariables={showConnectionVariables}
-						deleteModalRef={confirmModalRef}
-						configureConnection={doConfigureConnection}
-						searchText={searchText}
-						setSearchText={setSearchText}
-						counts={counts}
-					>
+					<ConnectionListTableHeading />
+
+					<div className="connections-list-table-container scrollable-content flex-1 min-h-0 list-card">
 						<CollectionsNestingTable<ConnectionCollection, ClientConnectionConfigWithId>
-							Heading={ConnectionListTableHeading}
 							NoContent={ConnectionListNoConnections}
 							ItemRow={ConnectionsItemRow}
 							GroupHeaderContent={ConnectionGroupHeaderContent}
@@ -161,9 +162,9 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 							items={filteredConnections}
 							selectedItemId={selectedConnectionId}
 						/>
-					</ConnectionListContextProvider>
-				</PanelCollapseHelperProvider>
-			</div>
+					</div>
+				</ConnectionListContextProvider>
+			</PanelCollapseHelperProvider>
 		</div>
 	)
 })
@@ -193,7 +194,7 @@ function ConnectionListTableHeading() {
 	}, [isAllActive, visibleConnections])
 
 	return (
-		<div className="flex flex-col gap-2.5 w-full py-1">
+		<div className="fixed-header flex flex-col gap-2.5 w-full px-1 py-1">
 			<div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full">
 				<SearchBox
 					filter={searchText}

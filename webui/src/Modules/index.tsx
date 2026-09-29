@@ -29,7 +29,7 @@ export const ModulesPage = memo(function ModulesPage() {
 			<PageHeader icon={faBoxes} title="Modules Manager" helpAction="/user-guide/config/modules" />
 
 			<SplitPanels.Root showing={selectedModuleInfo ? 'secondary' : 'primary'} resize={{ storageKey: 'modules' }}>
-				<SplitPanels.Primary>
+				<SplitPanels.Primary className="modules-list-panel">
 					<ModulesList doManageModule={doManageModule} selectedModuleInfo={selectedModuleInfo} />
 				</SplitPanels.Primary>
 
