@@ -67,6 +67,8 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 	const { notifier } = useContext(RootAppStoreContext)
 	const testActionsMutation = useMutationExt(trpc.controls.triggers.testActions.mutationOptions())
 	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
+	const triggerNameInputId = `trigger-name-${controlId}`
+	const [isEditingName, setIsEditingName] = useState(false)
 
 	const [showVariablesAndNotes, setShowVariablesAndNotes] = useState(
 		Boolean(config.localVariables.length > 0 || config.options.notes)
@@ -103,15 +105,37 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 	return (
 		<div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 			{/* Top Header: Trigger Title */}
-			<div className="p-3 bg-surface border-b border-border shrink-0 flex items-center justify-between gap-3">
-				<div className="grow min-w-0">
-					<TextInputFieldSimple
-						id={undefined}
-						setValue={setName}
-						value={config.options.name}
-						placeholder="Trigger Name..."
-						className="h-8 font-semibold text-sm bg-surface-subtle"
-					/>
+			<div className="px-2 py-1 bg-surface border-b border-border shrink-0 flex items-center">
+				<div className="grow min-w-0 px-1 py-0.5">
+					{isEditingName ? (
+						<TextInputFieldSimple
+							id={triggerNameInputId}
+							setValue={setName}
+							value={config.options.name}
+							placeholder="Trigger Name..."
+							className="h-8 font-semibold text-base bg-surface"
+							autoFocus
+							onBlur={() => setIsEditingName(false)}
+							onKeyDown={(event) => {
+								if (event.key === 'Enter' || event.key === 'Escape') event.currentTarget.blur()
+							}}
+						/>
+					) : (
+						<button
+							type="button"
+							onClick={() => setIsEditingName(true)}
+							className="group w-full h-8 px-1.5 flex items-center gap-2 rounded-md border border-transparent bg-transparent text-left hover:bg-surface-subtle hover:border-border transition-colors"
+							aria-label="Edit trigger name"
+						>
+							<span className="grow min-w-0 truncate font-semibold text-base text-body">
+								{config.options.name || 'Untitled trigger'}
+							</span>
+							<FontAwesomeIcon
+								icon={faPencil}
+								className="shrink-0 text-2xs text-muted opacity-50 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity"
+							/>
+						</button>
+					)}
 				</div>
 			</div>
 
