@@ -9,6 +9,7 @@ test('configure and fire a variable-change trigger through the ui', async ({ pag
 	await page.getByRole('button', { name: 'Add Trigger' }).click()
 
 	// Rename it, so the list row can be identified
+	await page.getByRole('button', { name: 'Edit trigger name' }).click()
 	await page.getByPlaceholder('Trigger Name...').fill('E2E trigger')
 	const listRow = page.locator('.collections-nesting-table-row-item', { hasText: 'E2E trigger' })
 	await expect(listRow).toBeVisible()
@@ -46,6 +47,7 @@ test('configure and fire a variable-change trigger through the ui', async ({ pag
 test('interval event options persist', async ({ page }) => {
 	await gotoApp(page, '/triggers')
 	await page.getByRole('button', { name: 'Add Trigger' }).click()
+	await page.getByRole('button', { name: 'Edit trigger name' }).click()
 	await page.getByPlaceholder('Trigger Name...').fill('Interval trigger')
 
 	await page.getByPlaceholder('+ Add event').click()
@@ -60,6 +62,7 @@ test('interval event options persist', async ({ page }) => {
 
 	// The option is saved by a fire-and-forget mutation. Make a change that is echoed back through
 	// the list subscription and wait for it; the socket is ordered, so the interval has landed too
+	await page.getByRole('button', { name: 'Edit trigger name' }).click()
 	await page.getByPlaceholder('Trigger Name...').fill('Interval trigger saved')
 	await expect(page.locator('.collections-nesting-table-row-item', { hasText: 'Interval trigger saved' })).toBeVisible()
 
