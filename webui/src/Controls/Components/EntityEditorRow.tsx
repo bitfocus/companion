@@ -7,7 +7,8 @@ import { observer } from 'mobx-react-lite'
 import { useContext, useState } from 'react'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
-	type EntityModelType,
+	EntityModelType,
+	FeedbackEntitySubType,
 	type EntityOwner,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -191,6 +192,31 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 		entity.id
 	)
 
+	// Options are only one source of expandable content: retain all shared editor controls too.
+	const hasDetails =
+		!entityDefinition ||
+		(!!connectionInfo &&
+			Array.from(connections.connections.values()).filter(
+				(connection) => connection.moduleId === connectionInfo.moduleId
+			).length > 1) ||
+		!!entityDefinition.description?.trim() ||
+		!!entityDefinition.options.length ||
+		!!(entityDefinition.hasLearn && entityService.performLearn) ||
+		!!entityDefinition.showButtonPreview ||
+		!!entityDefinition.supportsChildGroups?.length ||
+		(entityDefinition.entityType === EntityModelType.Action &&
+			!!entityDefinition.actionHasResult &&
+			!!entityService.setRawStoreResult) ||
+		(entity.type === EntityModelType.Feedback &&
+			(!!localVariablePrefix ||
+				(entityDefinition.entityType === EntityModelType.Feedback &&
+					entityDefinition.feedbackType === FeedbackEntitySubType.Boolean &&
+					entityDefinition.showInvert !== false) ||
+				(feedbackListType === FeedbackEntitySubType.StyleOverride &&
+					!entityDefinition.feedbackDisableStyleOverrides &&
+					!entityDefinition.feedbackStyleOverridesUnsupported)))
+	const isPanelCollapsed = hasDetails && isCollapsed
+
 	return (
 		<>
 			<EntityRowHeader
@@ -200,7 +226,8 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 				entityDefinition={entityDefinition}
 				connectionLabel={connectionLabel}
 				ownerId={ownerId}
-				isPanelCollapsed={isCollapsed}
+				isPanelCollapsed={isPanelCollapsed}
+				hasDetails={hasDetails}
 				setPanelCollapsed={setCollapsed}
 				definitionName={definitionName}
 				canSetHeadline={canSetHeadline}
@@ -211,7 +238,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 				localVariablePrefix={localVariablePrefix}
 			/>
 
-			{!isCollapsed && (
+			{hasDetails && !isPanelCollapsed && (
 				<LazyEditorGrid entity={entity} disableLazyMount={disableLazyMount}>
 					<div className="cell-description">
 						<div className="grow">

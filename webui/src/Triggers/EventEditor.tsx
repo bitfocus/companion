@@ -240,6 +240,7 @@ const EventEditor = observer(function EventEditor({
 	const eventSpec = eventDefinitions.definitions.get(event.type)
 
 	const name = eventSpec ? eventSpec.name : `${event.type} (undefined)`
+	const hasDetails = !!eventSpec?.description?.trim() || !!eventSpec?.options.length
 
 	const canSetHeadline = !!service.setHeadline
 	const headline = event.headline
@@ -254,7 +255,7 @@ const EventEditor = observer(function EventEditor({
 		() => panelCollapseHelper.setPanelCollapsed(event.id, false),
 		[panelCollapseHelper, event.id]
 	)
-	const isCollapsed = panelCollapseHelper.isPanelCollapsed(event.id)
+	const isCollapsed = hasDetails && panelCollapseHelper.isPanelCollapsed(event.id)
 
 	// Events don't support expressions, so we have to pretend for the UI
 	const wrappedOptions = optionsObjectToExpressionOptions(event.options || {}, false)
@@ -340,22 +341,24 @@ const EventEditor = observer(function EventEditor({
 							/>
 						</div>
 					)}
-					<Button
-						variant="ghost"
-						size="sm"
-						className="p-1.5"
-						onClick={isCollapsed ? doExpand : doCollapse}
-						title={isCollapsed ? 'Expand event view' : 'Collapse event view'}
-					>
-						<FontAwesomeIcon
-							icon={faChevronDown}
-							className={`text-xs transition-transform duration-200 ${isCollapsed ? '-rotate-90' : 'rotate-0'}`}
-						/>
-					</Button>
+					{hasDetails && (
+						<Button
+							variant="ghost"
+							size="sm"
+							className="p-1.5"
+							onClick={isCollapsed ? doExpand : doCollapse}
+							title={isCollapsed ? 'Expand event view' : 'Collapse event view'}
+						>
+							<FontAwesomeIcon
+								icon={faChevronDown}
+								className={`text-xs transition-transform duration-200 ${isCollapsed ? '-rotate-90' : 'rotate-0'}`}
+							/>
+						</Button>
+					)}
 				</div>
 			</div>
 
-			{!isCollapsed && (
+			{hasDetails && !isCollapsed && (
 				<div className="editor-grid">
 					<Grid.Col sm={12} className="cell-description">
 						{eventSpec?.description || ''}

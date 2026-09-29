@@ -20,6 +20,7 @@ interface EntityCellControlProps {
 	connectionLabel: string
 	ownerId: EntityOwner | null
 	isPanelCollapsed: boolean
+	hasDetails: boolean
 	setPanelCollapsed: (collapsed: boolean) => void
 	definitionName: string
 	canSetHeadline: boolean
@@ -110,6 +111,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	connectionLabel,
 	ownerId,
 	isPanelCollapsed,
+	hasDetails,
 	setPanelCollapsed,
 	definitionName,
 	canSetHeadline,
@@ -120,9 +122,10 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	localVariablePrefix,
 }: EntityCellControlProps) {
 	const toggleCollapse = useCallback(() => {
+		if (!hasDetails) return
 		if (!isPanelCollapsed) setNoteEditing(false)
 		setPanelCollapsed(!isPanelCollapsed)
-	}, [isPanelCollapsed, setNoteEditing, setPanelCollapsed])
+	}, [hasDetails, isPanelCollapsed, setNoteEditing, setPanelCollapsed])
 
 	// When a local variable is collapsed, show its name and current value instead of the definition name
 	const { headline, localVariableValueName } = getEntityRowHeaderDisplay(
@@ -154,7 +157,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 		<div className="editor-grid-header flex items-center justify-between gap-3">
 			{/* Left section: Connection badge + Title + Parameter Pills */}
 			<div
-				className="flex items-center gap-2.5 grow min-w-0 cursor-pointer select-none py-0.5"
+				className={`flex items-center gap-2.5 grow min-w-0 select-none py-0.5 ${hasDetails ? 'cursor-pointer' : ''}`}
 				onClick={(e) => {
 					// Don't toggle if user clicked inside an input
 					if ((e.target as HTMLElement).closest('input, textarea, button')) return
@@ -272,18 +275,20 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 					</div>
 				)}
 
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={toggleCollapse}
-					title={isPanelCollapsed ? `Expand ${entityTypeLabel}` : `Collapse ${entityTypeLabel}`}
-					className="p-1.5"
-				>
-					<FontAwesomeIcon
-						icon={faChevronDown}
-						className={`text-xs transition-transform duration-200 ${isPanelCollapsed ? '-rotate-90' : 'rotate-0'}`}
-					/>
-				</Button>
+				{hasDetails && (
+					<Button
+						variant="ghost"
+						size="sm"
+						onClick={toggleCollapse}
+						title={isPanelCollapsed ? `Expand ${entityTypeLabel}` : `Collapse ${entityTypeLabel}`}
+						className="p-1.5"
+					>
+						<FontAwesomeIcon
+							icon={faChevronDown}
+							className={`text-xs transition-transform duration-200 ${isPanelCollapsed ? '-rotate-90' : 'rotate-0'}`}
+						/>
+					</Button>
+				)}
 			</div>
 		</div>
 	)
