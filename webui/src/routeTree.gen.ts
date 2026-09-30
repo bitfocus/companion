@@ -23,6 +23,7 @@ import { Route as RedirectsTablet2HtmlRouteImport } from './routes/-redirects/ta
 import { Route as RedirectsTablet3RouteImport } from './routes/-redirects/tablet3.tsx'
 import { Route as AppIndexRouteImport } from './routes/_app/index.tsx'
 import { Route as AppSplatRouteImport } from './routes/_app/$.tsx'
+import { Route as AppActionRecorderRouteImport } from './routes/_app/action-recorder.tsx'
 import { Route as AppButtonsRouteImport } from './routes/_app/buttons.tsx'
 import { Route as AppCloudRouteImport } from './routes/_app/cloud.tsx'
 import { Route as AppConnectionsRouteImport } from './routes/_app/connections.tsx'
@@ -143,6 +144,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppSplatRoute = AppSplatRouteImport.update({
   id: '/$',
   path: '/$',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppActionRecorderRoute = AppActionRecorderRouteImport.update({
+  id: '/action-recorder',
+  path: '/action-recorder',
   getParentRoute: () => AppRoute,
 } as any)
 const AppButtonsRoute = AppButtonsRouteImport.update({
@@ -466,6 +472,7 @@ export interface FileRoutesByFullPath {
   '/tablet2.html': typeof RedirectsTablet2HtmlRoute
   '/tablet3': typeof RedirectsTablet3Route
   '/$': typeof AppSplatRoute
+  '/action-recorder': typeof AppActionRecorderRoute
   '/buttons': typeof AppButtonsRouteWithChildren
   '/cloud': typeof AppCloudRoute
   '/connections': typeof AppConnectionsRouteWithChildren
@@ -535,6 +542,7 @@ export interface FileRoutesByTo {
   '/tablet2.html': typeof RedirectsTablet2HtmlRoute
   '/tablet3': typeof RedirectsTablet3Route
   '/$': typeof AppSplatRoute
+  '/action-recorder': typeof AppActionRecorderRoute
   '/buttons': typeof AppButtonsRouteWithChildren
   '/cloud': typeof AppCloudRoute
   '/import-export': typeof AppImportExportRoute
@@ -595,6 +603,7 @@ export interface FileRoutesById {
   '/tablet2.html': typeof RedirectsTablet2HtmlRoute
   '/tablet3': typeof RedirectsTablet3Route
   '/_app/$': typeof AppSplatRoute
+  '/_app/action-recorder': typeof AppActionRecorderRoute
   '/_app/buttons': typeof AppButtonsRouteWithChildren
   '/_app/cloud': typeof AppCloudRoute
   '/_app/connections': typeof AppConnectionsRouteWithChildren
@@ -668,6 +677,7 @@ export interface FileRouteTypes {
     | '/tablet2.html'
     | '/tablet3'
     | '/$'
+    | '/action-recorder'
     | '/buttons'
     | '/cloud'
     | '/connections'
@@ -737,6 +747,7 @@ export interface FileRouteTypes {
     | '/tablet2.html'
     | '/tablet3'
     | '/$'
+    | '/action-recorder'
     | '/buttons'
     | '/cloud'
     | '/import-export'
@@ -796,6 +807,7 @@ export interface FileRouteTypes {
     | '/tablet2.html'
     | '/tablet3'
     | '/_app/$'
+    | '/_app/action-recorder'
     | '/_app/buttons'
     | '/_app/cloud'
     | '/_app/connections'
@@ -957,6 +969,13 @@ declare module '@tanstack/react-router' {
       path: '/$'
       fullPath: '/$'
       preLoaderRoute: typeof AppSplatRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/action-recorder': {
+      id: '/_app/action-recorder'
+      path: '/action-recorder'
+      fullPath: '/action-recorder'
+      preLoaderRoute: typeof AppActionRecorderRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/buttons': {
@@ -1559,6 +1578,7 @@ const AppVariablesExpressionRouteWithChildren =
 
 interface AppRouteChildren {
   AppSplatRoute: typeof AppSplatRoute
+  AppActionRecorderRoute: typeof AppActionRecorderRoute
   AppButtonsRoute: typeof AppButtonsRouteWithChildren
   AppCloudRoute: typeof AppCloudRoute
   AppConnectionsRoute: typeof AppConnectionsRouteWithChildren
@@ -1585,6 +1605,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppSplatRoute: AppSplatRoute,
+  AppActionRecorderRoute: AppActionRecorderRoute,
   AppButtonsRoute: AppButtonsRouteWithChildren,
   AppCloudRoute: AppCloudRoute,
   AppConnectionsRoute: AppConnectionsRouteWithChildren,

@@ -1,11 +1,4 @@
-import {
-	faCalculator,
-	faDollarSign,
-	faGift,
-	faLayerGroup,
-	faThLarge,
-	faVideoCamera,
-} from '@fortawesome/free-solid-svg-icons'
+import { faCalculator, faDollarSign, faGift, faLayerGroup, faThLarge } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMatchRoute, useNavigate, type UseNavigateResult } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
@@ -20,7 +13,6 @@ import { TabArea } from '~/Components/TabArea.js'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { ActionRecorder } from './ActionRecorder/index.js'
 import { ButtonsGridPanel } from './ButtonGridPanel.js'
 import { ButtonGridStore } from './ButtonGridStore.js'
 import { ButtonGridViewProvider, type ButtonGridView } from './ButtonGridViewContext.js'
@@ -230,9 +222,6 @@ export const ButtonsPage = observer(function ButtonsPage() {
 								<TabArea.Tab value="presets">
 									<FontAwesomeIcon icon={faGift} /> Presets
 								</TabArea.Tab>
-								<TabArea.Tab value="action-recorder">
-									<FontAwesomeIcon icon={faVideoCamera} /> Recorder
-								</TabArea.Tab>
 							</TabArea.List>
 
 							{/* On small screens, show the grid in its own tab */}
@@ -262,11 +251,6 @@ export const ButtonsPage = observer(function ButtonsPage() {
 							<TabArea.Panel value="presets">
 								<MyErrorBoundary>
 									<ConnectionPresets resetToken={tabResetToken} />
-								</MyErrorBoundary>
-							</TabArea.Panel>
-							<TabArea.Panel value="action-recorder">
-								<MyErrorBoundary>
-									<ActionRecorder />
 								</MyErrorBoundary>
 							</TabArea.Panel>
 						</TabArea.Root>

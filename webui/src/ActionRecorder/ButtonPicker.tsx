@@ -2,24 +2,25 @@ import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation, DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
-import { Button, ButtonGroup } from '~/Components/Button'
+import { ButtonGridHeader } from '~/Buttons/ButtonGridHeader.js'
+import { ButtonInfiniteGrid, type ButtonInfiniteGridRef } from '~/Buttons/ButtonInfiniteGrid.js'
+import { ButtonGridIcon } from '~/Buttons/GridButtonIcons.js'
+import { Button } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { FormLabel } from '~/Components/Form'
 import { Form } from '~/Components/Form.js'
-import { Grid } from '~/Components/Grid'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
 import { usePagePicker } from '~/Hooks/usePagePicker.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { ButtonGridHeader } from '../ButtonGridHeader.js'
-import { ButtonInfiniteGrid, type ButtonInfiniteGridRef } from '../ButtonInfiniteGrid.js'
-import { ButtonGridIcon } from '../GridButtonIcons.js'
 
 interface ButtonPickerProps {
+	saving?: boolean
 	selectButton: (
 		selectedControl: string,
 		selectedStep: string,
@@ -27,7 +28,7 @@ interface ButtonPickerProps {
 		mode: 'replace' | 'append'
 	) => void
 }
-export const ButtonPicker = observer(function ButtonPicker({ selectButton }: ButtonPickerProps) {
+export const ButtonPicker = observer(function ButtonPicker({ selectButton, saving = false }: ButtonPickerProps) {
 	const { pages, userConfig } = useContext(RootAppStoreContext)
 
 	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages.data.length, 1)
@@ -48,11 +49,11 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 	useEffect(() => setSelectedSet(null), [selectedControl])
 
 	const replaceActions = useCallback(() => {
-		if (selectedControl && selectedStep && selectedSet)
+		if (selectedControl && selectedStep !== null && selectedSet !== null)
 			selectButton(selectedControl, selectedStep, selectedSet, 'replace')
 	}, [selectedControl, selectedStep, selectedSet, selectButton])
 	const appendActions = useCallback(() => {
-		if (selectedControl && selectedStep && selectedSet)
+		if (selectedControl && selectedStep !== null && selectedSet !== null)
 			selectButton(selectedControl, selectedStep, selectedSet, 'append')
 	}, [selectedControl, selectedStep, selectedSet, selectButton])
 
@@ -166,6 +167,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 						pageNumber={pageNumber}
 						selectedButton={selectedLocation}
 						gridSize={gridSize}
+						fillViewportWidth
 						ButtonIconFactory={ButtonGridIcon}
 						marquee={null}
 						onHoverLocation={null}
@@ -173,54 +175,56 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton }: But
 					/>
 				)}
 			</div>
-			<div>
-				<Form className="flex-form" onSubmit={PreventDefaultHandler}>
-					<Grid.Row>
-						<Grid.Col sm={10} xs={9} hidden={actionStepOptions.length <= 1}>
+			<Form className="recorder-button-destination" onSubmit={PreventDefaultHandler}>
+				<div className="recorder-destination-selection">
+					<strong>{selectedLocation ? `Button ${formatLocation(selectedLocation)}` : 'Select a button above'}</strong>
+					{selectedLocation && !controlInfo && <span>Select a configured button to save actions.</span>}
+				</div>
+				<div className="recorder-destination-fields">
+					{
+						<div>
 							<FormLabel htmlFor={stepInputId}>Step</FormLabel>
-
 							<SimpleDropdownInputField
 								id={stepInputId}
 								choices={actionStepOptions}
 								value={selectedStep ?? ''}
 								setValue={setSelectedStep as (val: DropdownChoiceId) => void}
-								disabled={!controlInfo}
+								disabled={!controlInfo || saving}
 							/>
-						</Grid.Col>
-						<Grid.Col sm={10} xs={9} hidden={actionSetOptions.length === 0}>
-							<FormLabel htmlFor={setInputId}>Action Group</FormLabel>
-
+						</div>
+					}
+					{
+						<div>
+							<FormLabel htmlFor={setInputId}>Action group</FormLabel>
 							<SimpleDropdownInputField
 								id={setInputId}
 								choices={actionSetOptions}
 								value={selectedSet ?? ''}
 								setValue={setSelectedSet as (val: DropdownChoiceId) => void}
-								disabled={!controlInfo}
+								disabled={!controlInfo || saving}
 							/>
-						</Grid.Col>
-						<Grid.Col className="py-1" sm={10} xs={9}>
-							<ButtonGroup>
-								<Button
-									color="primary"
-									title="Replace all the actions on the trigger"
-									disabled={!selectedControl || !selectedSet}
-									onClick={replaceActions}
-								>
-									Replace
-								</Button>
-								<Button
-									color="secondary"
-									title="Append to the existing actions"
-									disabled={!selectedControl || !selectedSet}
-									onClick={appendActions}
-								>
-									Append
-								</Button>
-							</ButtonGroup>
-						</Grid.Col>
-					</Grid.Row>
-				</Form>
-			</div>
+						</div>
+					}
+				</div>
+				<div className="recorder-destination-buttons">
+					<Button
+						color="secondary"
+						title="Replace actions in the selected button action group"
+						disabled={saving || !selectedControl || selectedStep === null || selectedSet === null}
+						onClick={replaceActions}
+					>
+						Replace
+					</Button>
+					<Button
+						color="primary"
+						title="Append to the selected button action group"
+						disabled={saving || !selectedControl || selectedStep === null || selectedSet === null}
+						onClick={appendActions}
+					>
+						Append
+					</Button>
+				</div>
+			</Form>
 		</>
 	)
 })

@@ -19,6 +19,7 @@ import {
 	faStar,
 	faTableCells,
 	faTabletScreenButton,
+	faVideoCamera,
 	faWandMagicSparkles,
 	type IconDefinition,
 } from '@fortawesome/free-solid-svg-icons'
@@ -520,6 +521,7 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Buttons" icon={faTableCells} path="/buttons" />
 					<SidebarMenuItem name="Triggers" icon={faClock} path="/triggers" />
 					<SidebarSectionNavGroup section={VARIABLES_SECTION} />
+					<SidebarMenuItem name="Action Recorder" icon={faVideoCamera} path="/action-recorder" />
 					<SidebarMenuItem name="Image Library" icon={faImages} path="/image-library" />
 
 					{/* Category: Connect */}

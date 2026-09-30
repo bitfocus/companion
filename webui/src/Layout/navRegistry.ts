@@ -16,6 +16,7 @@ import {
 	faPuzzlePiece,
 	faSquareRootVariable,
 	faTh,
+	faVideoCamera,
 	faWarning,
 } from '@fortawesome/free-solid-svg-icons'
 import type { FileRouteTypes } from '~/routeTree.gen'
@@ -103,6 +104,7 @@ export const SURFACES_SECTION: NavSection = {
 export const TOP_LEVEL_PAGES: readonly NavPage[] = [
 	{ id: 'buttons', label: 'Buttons', path: '/buttons', icon: faBorderAll },
 	{ id: 'triggers', label: 'Triggers', path: '/triggers', icon: faClock },
+	{ id: 'action-recorder', label: 'Action Recorder', path: '/action-recorder', icon: faVideoCamera },
 	{ id: 'connections', label: 'Connections', path: '/connections', icon: faPlug },
 	{ id: 'modules', label: 'Modules', path: '/modules', icon: faPuzzlePiece },
 	{ id: 'image-library', label: 'Image Library', path: '/image-library', icon: faImages },
