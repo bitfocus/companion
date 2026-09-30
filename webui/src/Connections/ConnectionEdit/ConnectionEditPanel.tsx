@@ -7,7 +7,7 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { ModuleInstanceType, type InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
 import { Badge, badgeToneForStatusCategory } from '~/Components/Badge'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
@@ -173,7 +173,7 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 						<div className="flex items-center justify-between">
 							<h4 className="text-sm font-semibold text-body mb-0">Connection Health</h4>
 							<Badge tone={badgeToneForStatusCategory(status?.category)} className="capitalize">
-								{status?.level || status?.category || 'Unknown'}
+								{status?.category === 'good' ? 'OK' : status?.level || status?.category || 'Unknown'}
 							</Badge>
 						</div>
 
@@ -215,8 +215,12 @@ function useInstanceEditPanelService(
 	const deleteMutation = useMutationExt(trpc.instances.connections.delete.mutationOptions())
 
 	const setModuleAndVersion = useCallback(
-		async (moduleId: string, versionId: string | null): Promise<string | null> =>
-			setModuleAndVersionMutation.mutateAsync({ connectionId: instanceId, moduleId, versionId }),
+		async (
+			moduleId: string,
+			versionId: string | null,
+			updatePolicy: InstanceVersionUpdatePolicy
+		): Promise<string | null> =>
+			setModuleAndVersionMutation.mutateAsync({ connectionId: instanceId, moduleId, versionId, updatePolicy }),
 		[setModuleAndVersionMutation, instanceId]
 	)
 

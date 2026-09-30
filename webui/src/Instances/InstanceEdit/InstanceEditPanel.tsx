@@ -1,18 +1,17 @@
+import './InstanceEditPanel.css'
 import { faCheck, faCircleExclamation, faGear } from '@fortawesome/free-solid-svg-icons'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import classNames from 'classnames'
 import { observable } from 'mobx'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useEffect, useId, useMemo, useState } from 'react'
-import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
-import type { ClientInstanceConfigBase, InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
+import { InstanceVersionUpdatePolicy, type ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { capitalize } from '@companion-app/shared/Util.js'
 import { DismissableAlert, StaticAlert } from '~/Components/Alert.js'
 import { Badge } from '~/Components/Badge'
 import { Button } from '~/Components/Button.js'
-import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
@@ -38,28 +37,35 @@ interface InstanceGenericEditPanelProps<TConfig extends ClientInstanceConfigBase
 
 function EditSectionCard({
 	title,
-	description,
 	children,
 	danger,
+	collapsible,
+	summary,
 }: {
 	title: string
-	description?: string
 	children: React.ReactNode
 	danger?: boolean
+	collapsible?: boolean
+	summary?: string
 }) {
-	return (
-		<div
-			className={classNames(
-				'rounded-lg border p-4 mb-4 transition-all',
-				danger ? 'bg-red-500/5 border-red-500/20' : 'bg-surface-muted/20 border-border'
-			)}
-		>
-			<div className="mb-3">
-				<h4 className={classNames('text-sm font-semibold mb-0.5', danger ? 'text-red-500' : 'text-body')}>{title}</h4>
-				{description && <p className="text-xs text-muted mb-0">{description}</p>}
-			</div>
-			<div className="flex flex-col gap-3.5">{children}</div>
-		</div>
+	const heading = (
+		<>
+			<h4>{title}</h4>
+			{summary && <span className="instance-edit-section-summary">{summary}</span>}
+		</>
+	)
+	const content = <div className="instance-edit-section-body">{children}</div>
+	const sectionClass = classNames('instance-edit-section', danger && 'instance-edit-section-danger')
+	return collapsible ? (
+		<details className={sectionClass}>
+			<summary>{heading}</summary>
+			{content}
+		</details>
+	) : (
+		<section className={sectionClass}>
+			<div className="instance-edit-section-heading">{heading}</div>
+			{content}
+		</section>
 	)
 }
 
@@ -125,14 +131,14 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 	return (
 		<>
 			<Form
-				className="flex flex-col flex-1 min-h-0 overflow-hidden relative"
+				className="instance-edit-panel flex flex-col flex-1 min-h-0 overflow-hidden relative"
 				onSubmit={(e) => {
 					e.preventDefault()
 					e.stopPropagation()
 					performSave()
 				}}
 			>
-				<div className="page-scroll p-4">
+				<div className="page-scroll instance-edit-scroll">
 					{saveError && (
 						<StaticAlert color="danger" className="mb-4">
 							{saveError}
@@ -140,29 +146,18 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 					)}
 
 					{/* General Settings */}
-					<EditSectionCard
-						title="General Settings"
-						description={`Basic identity and enabled state of this ${service.moduleTypeDisplayName}.`}
-					>
+					<EditSectionCard title="General Settings">
 						<InstanceLabelInputField panelStore={panelStore} />
-						<InstanceEnabledInputField panelStore={panelStore} cannotEnableReason={cannotEnableReason} />
-					</EditSectionCard>
-
-					{/* Dynamic Device Config */}
-					<InstanceConfigArea panelStore={panelStore} />
-
-					{/* Module Version & Updates */}
-					<EditSectionCard
-						title="Module & Updates"
-						description="Manage the installed module version and update policy."
-					>
 						<InstanceModuleVersionInputField
 							panelStore={panelStore}
 							moduleInfo={moduleInfo}
 							changeModuleDangerMessage={changeModuleDangerMessage}
 						/>
-						<InstanceVersionUpdatePolicyInputField panelStore={panelStore} />
+						<InstanceEnabledInputField panelStore={panelStore} cannotEnableReason={cannotEnableReason} />
 					</EditSectionCard>
+
+					{/* Dynamic Device Config */}
+					<InstanceConfigArea panelStore={panelStore} />
 
 					{/* Danger Zone */}
 					<DangerZoneSection panelStore={panelStore} isSaving={isSaving.get()} />
@@ -191,7 +186,7 @@ const InstanceLabelInputField = observer(function InstanceLabelInputField<TConfi
 	const labelId = useId()
 
 	return (
-		<div className="flex flex-col gap-1.5">
+		<div className="instance-edit-field-row">
 			<label htmlFor={labelId} className="text-xs font-semibold text-body">
 				Label
 			</label>
@@ -222,13 +217,20 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 	const moduleVersion = getModuleVersionInfo(moduleInfo, panelStore.instanceInfo.moduleVersionId)
 
 	return (
-		<div className="flex flex-col gap-1.5">
+		<div className="instance-edit-field-row">
 			<label htmlFor={moduleVersionId} className="text-xs font-semibold text-body">
 				Module Version
 			</label>
-			<div className="flex items-center justify-between gap-2 p-2.5 rounded-md border border-border bg-surface-muted/30">
-				<span className="text-xs font-mono font-medium text-body truncate">
+			<div className="instance-module-version-row">
+				<span className="instance-module-version-value text-xs font-mono font-medium text-body">
 					{moduleVersion?.displayName ?? panelStore.instanceInfo.moduleVersionId}
+				</span>
+				<span className="instance-update-policy-badge">
+					{panelStore.updatePolicy === InstanceVersionUpdatePolicy.Manual
+						? 'Manual updates'
+						: panelStore.updatePolicy === InstanceVersionUpdatePolicy.Stable
+							? 'Stable updates'
+							: 'Stable + Beta'}
 				</span>
 
 				<InstanceVersionChangeButton
@@ -236,6 +238,7 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 					service={panelStore.service}
 					currentModuleId={panelStore.instanceInfo.moduleId}
 					currentVersionId={panelStore.instanceInfo.moduleVersionId}
+					currentUpdatePolicy={panelStore.updatePolicy}
 					changeModuleDangerMessage={changeModuleDangerMessage}
 				/>
 			</div>
@@ -258,15 +261,10 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 	const canToggle = !cannotEnableReason || isEnabled
 
 	return (
-		<div className="flex items-center justify-between gap-3 pt-2 border-t border-border/50">
-			<div className="flex flex-col">
-				<label htmlFor={enabledId} className="text-xs font-semibold text-body mb-0">
-					Enabled
-				</label>
-				<span className="text-xs text-muted">
-					Enable or disable communication for this {panelStore.service.moduleTypeDisplayName}
-				</span>
-			</div>
+		<div className="instance-edit-field-row">
+			<label htmlFor={enabledId} className="text-xs font-semibold text-body mb-0">
+				Enabled
+			</label>
 			<div className="shrink-0">
 				<SwitchInputField
 					id={enabledId}
@@ -276,36 +274,9 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 					tooltip={cannotEnableReason || undefined}
 				/>
 			</div>
-			{cannotEnableReason && !isEnabled && <div className="text-danger mt-1 text-xs">{cannotEnableReason}</div>}
-		</div>
-	)
-})
-
-const UpdatePolicyOptions: DropdownChoice[] = [
-	{ id: 'manual', label: 'Disabled' },
-	{ id: 'stable', label: 'Stable' },
-	{ id: 'beta', label: 'Stable and Beta' },
-]
-
-const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionUpdatePolicyInputField<
-	TConfig extends ClientInstanceConfigBase,
->({ panelStore }: { panelStore: InstanceEditPanelStore<TConfig> }): React.JSX.Element {
-	const updatePolicyId = useId()
-
-	return (
-		<div className="flex flex-col gap-1.5">
-			<label htmlFor={updatePolicyId} className="text-xs font-semibold text-body flex items-center gap-1">
-				<span>Update Policy</span>
-				<InlineHelpIcon>
-					How to check whether there are updates available for this {panelStore.service.moduleTypeDisplayName}
-				</InlineHelpIcon>
-			</label>
-			<SimpleDropdownInputField
-				id={updatePolicyId}
-				value={panelStore.updatePolicy}
-				setValue={(value) => panelStore.setUpdatePolicy(value as InstanceVersionUpdatePolicy)}
-				choices={UpdatePolicyOptions}
-			/>
+			{cannotEnableReason && !isEnabled && (
+				<div className="instance-edit-field-help text-danger text-xs">{cannotEnableReason}</div>
+			)}
 		</div>
 	)
 })
@@ -320,18 +291,14 @@ const DangerZoneSection = observer(function DangerZoneSection<TConfig extends Cl
 	const doDelete = useCallback(() => panelStore.service.deleteInstance(panelStore.labelValue), [panelStore])
 
 	return (
-		<EditSectionCard
-			title="Danger Zone"
-			danger
-			description={`Permanent destructive actions for this ${panelStore.service.moduleTypeDisplayName}.`}
-		>
+		<EditSectionCard title={`Delete ${panelStore.service.moduleTypeDisplayName}`} collapsible danger>
 			<div className="flex items-center justify-between gap-3">
 				<div>
 					<p className="text-xs text-muted mb-0">
-						Delete this {panelStore.service.moduleTypeDisplayName} and all associated triggers, actions, and feedbacks.
+						Delete this {panelStore.service.moduleTypeDisplayName} and remove its associated actions and feedbacks.
 					</p>
 				</div>
-				<Button color="danger" size="sm" onClick={doDelete} disabled={isSaving || panelStore.isLoading} variant="ghost">
+				<Button color="danger" size="sm" onClick={doDelete} disabled={isSaving || panelStore.isLoading}>
 					Delete
 				</Button>
 			</div>
@@ -353,7 +320,7 @@ const InstanceConfigArea = observer(function InstanceConfigArea<TConfig extends 
 	// A terminal failure (e.g. incompatible module version) - show the reported reason
 	if (panelStore.loadError) {
 		return (
-			<EditSectionCard title="Configuration" description={`Connection parameters for ${displayName}.`}>
+			<EditSectionCard title="Configuration">
 				<NonIdealState icon={faCircleExclamation}>
 					{panelStore.loadError}
 					<br />
@@ -366,7 +333,7 @@ const InstanceConfigArea = observer(function InstanceConfigArea<TConfig extends 
 	// Crashed and not running
 	if (panelStore.notRunningReason === 'crashed') {
 		return (
-			<EditSectionCard title="Configuration" description={`Connection parameters for ${displayName}.`}>
+			<EditSectionCard title="Configuration">
 				<NonIdealState icon={faCircleExclamation}>
 					{displayName} is not running.
 					<br />
@@ -379,7 +346,7 @@ const InstanceConfigArea = observer(function InstanceConfigArea<TConfig extends 
 	// Disabled (directly or via its collection), so there is nothing running to configure
 	if (panelStore.notRunningReason === 'disabled' || panelStore.notRunningReason === 'missing') {
 		return (
-			<EditSectionCard title="Configuration" description={`Connection parameters for ${displayName}.`}>
+			<EditSectionCard title="Configuration">
 				<NonIdealState icon={faGear}>
 					<p>{displayName} configuration cannot be edited while it is disabled.</p>
 				</NonIdealState>
@@ -390,14 +357,14 @@ const InstanceConfigArea = observer(function InstanceConfigArea<TConfig extends 
 	// Still starting up / waiting for the config fields
 	if (panelStore.isLoading || panelStore.configAndSecrets === null) {
 		return (
-			<EditSectionCard title="Configuration" description={`Loading parameters for ${displayName}...`}>
+			<EditSectionCard title="Configuration">
 				<LoadingRetryOrError error={null} dataReady={false} design="pulse" />
 			</EditSectionCard>
 		)
 	}
 
 	return (
-		<EditSectionCard title="Configuration" description={`Connection parameters and options for ${displayName}.`}>
+		<EditSectionCard title="Configuration">
 			{panelStore.externalChangeWarning && (
 				<DismissableAlert color="warning" onClose={panelStore.dismissExternalChangeWarning} className="mb-3">
 					This {panelStore.service.moduleTypeDisplayName}'s configuration was changed elsewhere. Your unsaved changes
@@ -431,7 +398,7 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 	}
 
 	return (
-		<div className="row edit-connection">
+		<div className={classNames('row edit-connection', configData.useNewLayout && 'instance-edit-horizontal-fields')}>
 			{configData.fields.map((fieldInfo) => {
 				const isVisible = panelStore.isVisible(fieldInfo)
 				if (!isVisible) return null
@@ -464,7 +431,9 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 								instanceId={panelStore.service.instanceId}
 							/>
 						)}
-						{fieldInfo.description && <div className="form-text">{fieldInfo.description}</div>}
+						{fieldInfo.description?.trim() && (
+							<div className="form-text instance-config-description">{fieldInfo.description}</div>
+						)}
 					</InstanceFormRow>
 				)
 			})}
@@ -484,7 +453,7 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 	const isDirty = panelStore.isDirty()
 
 	return (
-		<div className="shrink-0 bg-surface border-t border-border px-4 py-3 z-10 flex items-center justify-between gap-3 shadow-lg">
+		<div className="shrink-0 bg-surface border-t border-border px-3 py-2 z-10 flex items-center justify-between gap-3">
 			<div className="flex items-center gap-2">
 				{isDirty ? (
 					<Badge tone="warning" className="select-none">
@@ -538,22 +507,22 @@ const InstanceFormRow = observer(function InstanceFormRow({
 
 			if (isLong && (!fieldInfo.width || fieldInfo.width > 6)) {
 				return (
-					<Grid.Col sm={12}>
+					<div className="instance-edit-static-text">
 						{fieldInfo.label ? <FormLabel htmlFor={inputId}>{fieldInfo.label}</FormLabel> : ''}
 						<StaticTextFieldText {...fieldInfo} id={inputId} allowImages />
-					</Grid.Col>
+					</div>
 				)
 			}
 		}
 
 		return (
 			<React.Fragment>
-				<FormLabel htmlFor={inputId} sm={4} column="sm" style={{ display: !isVisible ? 'none' : undefined }}>
+				<FormLabel htmlFor={inputId} style={{ display: !isVisible ? 'none' : undefined }}>
 					<InstanceFieldLabel fieldInfo={fieldInfo} />
 				</FormLabel>
-				<Grid.Col sm={8} style={{ display: !isVisible ? 'none' : undefined }} className="self-center">
+				<div style={{ display: !isVisible ? 'none' : undefined }} className="self-center">
 					{children}
-				</Grid.Col>
+				</div>
 			</React.Fragment>
 		)
 	} else {

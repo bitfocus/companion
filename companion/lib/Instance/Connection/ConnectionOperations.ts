@@ -48,6 +48,7 @@ export interface SetConnectionConfigInput {
 }
 
 export interface SetConnectionModuleVersionInput {
+	updatePolicy?: InstanceVersionUpdatePolicy
 	connectionId: string
 	moduleId?: string
 	versionId: string | null
@@ -209,13 +210,22 @@ export class ConnectionOperations {
 	async setConnectionModuleVersion(input: SetConnectionModuleVersionInput): Promise<void> {
 		const connection = this.#getConnectionOrThrow(input.connectionId)
 		const moduleId = input.moduleId ?? connection.moduleId
+		if (moduleId === connection.moduleId && input.versionId === connection.moduleVersionId) {
+			if (input.updatePolicy !== undefined)
+				this.#applyConnectionConfig({ connectionId: input.connectionId, updatePolicy: input.updatePolicy })
+			return
+		}
 
 		if (input.versionId !== null) {
 			await this.#validateExistingConnectionVersion(moduleId, input.versionId)
 		}
 
 		const version = input.moduleId ? `${input.moduleId}@${input.versionId ?? ''}` : input.versionId
-		const result = this.#instanceController.setModuleVersionAndActivate(input.connectionId, version, null)
+		const result = this.#instanceController.setModuleVersionAndActivate(
+			input.connectionId,
+			version,
+			input.updatePolicy ?? null
+		)
 		if (!result) throw new ConnectionOperationError('invalid_input', 'Failed to update connection version')
 	}
 

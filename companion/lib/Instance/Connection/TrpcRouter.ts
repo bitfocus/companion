@@ -173,6 +173,7 @@ export function createConnectionsTrpcRouter(
 					connectionId: z.string(),
 					moduleId: z.string(),
 					versionId: z.string().nullable(),
+					updatePolicy: z.enum(InstanceVersionUpdatePolicy).optional(),
 				})
 			)
 			.mutation(async ({ input }) => {
@@ -181,6 +182,7 @@ export function createConnectionsTrpcRouter(
 						connectionId: input.connectionId,
 						moduleId: input.moduleId,
 						versionId: input.versionId,
+						updatePolicy: input.updatePolicy,
 					})
 				} catch (e) {
 					if (e instanceof ConnectionOperationError) return e.message

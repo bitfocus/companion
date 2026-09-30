@@ -1,7 +1,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useMemo, useRef } from 'react'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { ModuleInstanceType, type InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
 import type { ClientSurfaceInstanceConfig } from '@companion-app/shared/Model/SurfaceInstance.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
@@ -76,8 +76,12 @@ function useInstanceEditPanelService(
 	const deleteMutation = useMutationExt(trpc.instances.surfaces.delete.mutationOptions())
 
 	const setModuleAndVersion = useCallback(
-		async (moduleId: string, versionId: string | null): Promise<string | null> =>
-			setModuleAndVersionMutation.mutateAsync({ instanceId, moduleId, versionId }),
+		async (
+			moduleId: string,
+			versionId: string | null,
+			updatePolicy: InstanceVersionUpdatePolicy
+		): Promise<string | null> =>
+			setModuleAndVersionMutation.mutateAsync({ instanceId, moduleId, versionId, updatePolicy }),
 		[setModuleAndVersionMutation, instanceId]
 	)
 
