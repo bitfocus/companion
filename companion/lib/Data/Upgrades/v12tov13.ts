@@ -58,7 +58,7 @@ function convertDatabaseToV13(db: DataStoreBase<any>, _logger: Logger): void {
 }
 
 function convertControlToLayered(control: NormalButtonModel, defaultNoTopBar: boolean): LayeredButtonModel {
-	const parsed = ConvertLegacyStyleToElements(control.style, control.feedbacks, null, defaultNoTopBar)
+	const parsed = ConvertLegacyStyleToElements(control.style, control.feedbacks, null, null, defaultNoTopBar)
 	return {
 		type: 'button-layered',
 		options: {
