@@ -3,13 +3,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMutation } from '@tanstack/react-query'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useContext, useRef, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
 import { PageHeader } from '~/Layout/PageHeader'
+import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { trpc } from '~/Resources/TRPC'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { AddEmulatorModal, type AddEmulatorModalRef } from './AddEmulatorModal'
 import { AddSurfaceGroupModal, type AddSurfaceGroupModalRef } from './AddGroupModal'
 import { KnownSurfacesTable } from './KnownSurfacesTable'
@@ -67,6 +69,17 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 		[navigate, selectedSurfaceId]
 	)
 
+	const { surfaces } = useContext(RootAppStoreContext)
+	const emptyList: PanelEmptyListState | null =
+		surfaces.store.size === 0
+			? {
+					title: 'No surfaces yet',
+					description: 'Plug in a USB surface, or add an emulator to press buttons from a browser.',
+					actionLabel: 'Add emulator',
+					onAction: addEmulator,
+				}
+			: null
+
 	return (
 		<div className="page-shell">
 			<PageHeader icon={faGamepad} title="Surfaces" helpAction="/user-guide/config/surfaces" />
@@ -113,7 +126,9 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 				<SplitPanels.Secondary>
 					<div className="secondary-panel-simple">
 						<MyErrorBoundary>
-							<Outlet />
+							<PanelEmptyListProvider value={emptyList}>
+								<Outlet />
+							</PanelEmptyListProvider>
 						</MyErrorBoundary>
 					</div>
 				</SplitPanels.Secondary>

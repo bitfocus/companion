@@ -66,14 +66,6 @@
 	}
 }
 
-/* Nothing open in the secondary panel: it is hidden (see SplitPanels.tsx) and the primary takes the
-   whole split at every width. Two classes, so this beats the single-class column rules above and the
-   wide-screen one below whatever their order. */
-.split-panels.split-panels-single {
-	grid-template-columns: 1fr;
-	column-gap: 0;
-}
-
 /* For bigger screens, like 1440p and 4K, give the secondary panel more of the extra width. */
 @media only screen and (min-width: 2000px) {
 	.split-panels {

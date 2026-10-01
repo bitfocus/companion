@@ -30,6 +30,7 @@ import { SwitchInputField } from '~/Components/SwitchInputField'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { PageHeader } from '~/Layout/PageHeader'
+import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { sanitizeHtmlString } from '~/Resources/SanitizeHtml.js'
@@ -118,6 +119,16 @@ export const TriggersPage = observer(function Triggers() {
 		void navigate({ to: '/triggers' })
 	}, [navigate])
 
+	const emptyList: PanelEmptyListState | null =
+		triggersList.triggers.size === 0
+			? {
+					title: 'No triggers yet',
+					description: 'Triggers run actions on a schedule, or when an event or variable changes.',
+					actionLabel: 'Add trigger',
+					onAction: doAddNew,
+				}
+			: null
+
 	return (
 		<div className="page-shell">
 			<PageHeader icon={faClock} title="Triggers" helpAction="/user-guide/config/triggers" />
@@ -185,7 +196,9 @@ export const TriggersPage = observer(function Triggers() {
 						{!!selectedTriggerId && (
 							<TriggerEditPanelHeading doCloseTrigger={doCloseTrigger} twoPanelMode={twoPanelMode} />
 						)}
-						<Outlet />
+						<PanelEmptyListProvider value={emptyList}>
+							<Outlet />
+						</PanelEmptyListProvider>
 					</div>
 				</SplitPanels.Secondary>
 			</SplitPanels.Root>
@@ -201,7 +214,7 @@ export interface TriggerDataWithId extends Omit<ClientTriggerData, 'collectionId
 const tableDateFormat = 'MM/DD HH:mm:ss'
 
 function TriggerListNoContent() {
-	return <NonIdealState icon={faList} text="There are currently no triggers or scheduled tasks." />
+	return <NonIdealState icon={faList} text="No triggers yet" />
 }
 
 // Item row rendering is provided inline in the component to allow filtering

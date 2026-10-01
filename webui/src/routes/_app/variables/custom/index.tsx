@@ -1,6 +1,6 @@
 import { faDollarSign } from '@fortawesome/free-solid-svg-icons'
 import { createFileRoute } from '@tanstack/react-router'
-import { NonIdealState } from '~/Components/NonIdealState.js'
+import { PanelEmptyState } from '~/Layout/PanelEmptyState.js'
 
 export const Route = createFileRoute('/_app/variables/custom/')({
 	component: RouteComponent,
@@ -8,10 +8,10 @@ export const Route = createFileRoute('/_app/variables/custom/')({
 
 function RouteComponent() {
 	return (
-		<div className="secondary-panel-simple">
-			<div className="secondary-panel-simple-body no-scroll">
-				<NonIdealState text="Select a custom variable to edit" icon={faDollarSign} />
-			</div>
-		</div>
+		<PanelEmptyState
+			icon={faDollarSign}
+			title="Select a custom variable"
+			description="Choose a custom variable from the list to edit it."
+		/>
 	)
 }

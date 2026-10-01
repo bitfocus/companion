@@ -16,6 +16,7 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { PageHeader } from '~/Layout/PageHeader'
+import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -115,6 +116,16 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 		[createMutation, selectCustomVariable]
 	)
 
+	const emptyList: PanelEmptyListState | null =
+		customVariables.customVariables.size === 0
+			? {
+					title: 'No custom variables yet',
+					description: 'Custom variables hold values you can set from actions and use anywhere in Companion.',
+					actionLabel: 'Add custom variable',
+					onAction: doAddNew,
+				}
+			: null
+
 	return (
 		<div className="page-shell">
 			<GenericConfirmModal ref={confirmModalRef} />
@@ -191,7 +202,9 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 				<SplitPanels.Secondary>
 					<div className="secondary-panel-simple">
 						{!!selectedVariableId && <CustomVariableEditPanelHeading doCloseVariable={doCloseVariable} />}
-						<Outlet />
+						<PanelEmptyListProvider value={emptyList}>
+							<Outlet />
+						</PanelEmptyListProvider>
 					</div>
 				</SplitPanels.Secondary>
 			</SplitPanels.Root>
@@ -200,7 +213,7 @@ export const CustomVariablesListPage = observer(function CustomVariablesList() {
 })
 
 function CustomVariableListNoContent() {
-	return <NonIdealState icon={faList} text="There are currently no custom variables." />
+	return <NonIdealState icon={faList} text="No custom variables yet" />
 }
 
 function CreateCollectionButton() {

@@ -268,12 +268,7 @@ function ConnectionListNoConnections() {
 		return <NonIdealState icon={faPlug}>No connections match your search query.</NonIdealState>
 	}
 
-	return (
-		<NonIdealState icon={faPlug}>
-			You haven't set up any connections yet. <br />
-			Try adding something with the button above.
-		</NonIdealState>
-	)
+	return <NonIdealState icon={faPlug} text="No connections yet" />
 }
 
 function ConnectionGroupHeaderContent({ collection }: { collection: ConnectionCollection }) {

@@ -1,12 +1,14 @@
 import { faPlug } from '@fortawesome/free-solid-svg-icons'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useContext, useEffect } from 'react'
 import { Modal } from '~/Components/Modal.js'
 import { AddConnectionsPanel } from '~/Connections/AddConnectionPanel.js'
 import { PageHeader } from '~/Layout/PageHeader.js'
+import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ConnectionsList } from './ConnectionList/ConnectionList.js'
 
 export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.Element {
@@ -43,6 +45,17 @@ export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.El
 		return () => window.removeEventListener('keydown', handleKeyDown)
 	}, [selectedConnectionId, addConnectionsMatch, navigate])
 
+	const { connections } = useContext(RootAppStoreContext)
+	const emptyList: PanelEmptyListState | null =
+		connections.count === 0
+			? {
+					title: 'No connections yet',
+					description: 'Connections link Companion to the devices and software you want to control.',
+					actionLabel: 'Add connection',
+					onAction: () => void navigate({ to: '/connections/add' }),
+				}
+			: null
+
 	return (
 		<div className="page-shell">
 			<PageHeader icon={faPlug} title="Connections" helpAction="/user-guide/config/connections" />
@@ -55,7 +68,9 @@ export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.El
 				<SplitPanels.Secondary>
 					<div className="secondary-panel-simple">
 						<MyErrorBoundary>
-							<Outlet />
+							<PanelEmptyListProvider value={emptyList}>
+								<Outlet />
+							</PanelEmptyListProvider>
 						</MyErrorBoundary>
 					</div>
 				</SplitPanels.Secondary>

@@ -11,6 +11,7 @@ import type { BackupRulesConfig } from '@companion-app/shared/Model/UserConfigMo
 import { Button } from '~/Components/Button'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { PageHeader } from '~/Layout/PageHeader.js'
+import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '../Components/GenericConfirmModal.js'
@@ -46,6 +47,17 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 	const routeMatch = matchRoute({ to: '/settings/backups/$ruleId' })
 	const selectedRuleId = routeMatch ? routeMatch.ruleId : null
 
+	const { userConfig } = useContext(RootAppStoreContext)
+	const emptyList: PanelEmptyListState | null =
+		(userConfig.properties?.backups ?? []).length === 0
+			? {
+					title: 'No backup rules yet',
+					description: 'Backup rules save a copy of your configuration automatically, on a schedule.',
+					actionLabel: 'Add backup rule',
+					onAction: doAddNew,
+				}
+			: null
+
 	return (
 		<div className="page-shell">
 			<PageHeader icon={faCog} title="Settings" helpAction="/user-guide/config/settings#backups" />
@@ -75,7 +87,9 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 
 				<SplitPanels.Secondary>
 					<div className="secondary-panel-simple">
-						<Outlet />
+						<PanelEmptyListProvider value={emptyList}>
+							<Outlet />
+						</PanelEmptyListProvider>
 					</div>
 				</SplitPanels.Secondary>
 			</SplitPanels.Root>
@@ -124,7 +138,7 @@ const BackupsTable = observer(function BackupsTable({ editRule }: BackupsTablePr
 				))
 			) : (
 				<div className="py-8">
-					<NonIdealState icon={faAdd} text="No backup rules configured. Add one to get started!" />
+					<NonIdealState icon={faAdd} text="No backup rules yet" />
 				</div>
 			)}
 		</div>

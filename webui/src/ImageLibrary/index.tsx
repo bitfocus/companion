@@ -3,13 +3,16 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import './image-library.css'
 import { observer } from 'mobx-react-lite'
-import { useCallback } from 'react'
+import { useCallback, useContext } from 'react'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { PageHeader } from '~/Layout/PageHeader'
+import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { MyErrorBoundary } from '~/Resources/Error'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImageLibraryGrid } from './ImageLibraryGrid'
+import { useImportImageFiles } from './useImportImageFiles'
 
 export const ImageLibraryPage = observer(function ImageLibraryPage() {
 	const matchRoute = useMatchRoute()
@@ -40,6 +43,18 @@ export const ImageLibraryPage = observer(function ImageLibraryPage() {
 	}, [navigate])
 
 	const twoPanelMode = useTwoPanelMode()
+	const { imageLibrary } = useContext(RootAppStoreContext)
+	const importImages = useImportImageFiles()
+	const emptyList: PanelEmptyListState | null =
+		imageLibrary.count === 0
+			? {
+					title: 'No images yet',
+					description: 'Import images to reuse on your buttons, or to expose through variables.',
+					actionLabel: 'Import images',
+					onAction: importImages,
+				}
+			: null
+
 	return (
 		<div className="page-shell">
 			<PageHeader icon={faImages} title="Image Library" helpAction="/user-guide/config/image-library" />
@@ -59,7 +74,9 @@ export const ImageLibraryPage = observer(function ImageLibraryPage() {
 					<div className="secondary-panel-simple">
 						{!!selectedImageName && <ImageEditPanelHeading doClose={doCloseImage} twoPanelMode={twoPanelMode} />}
 						<MyErrorBoundary>
-							<Outlet />
+							<PanelEmptyListProvider value={emptyList}>
+								<Outlet />
+							</PanelEmptyListProvider>
 						</MyErrorBoundary>
 					</div>
 				</SplitPanels.Secondary>

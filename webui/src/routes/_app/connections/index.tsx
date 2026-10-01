@@ -1,6 +1,6 @@
 import { faPlug } from '@fortawesome/free-solid-svg-icons'
 import { createFileRoute } from '@tanstack/react-router'
-import { NonIdealState } from '~/Components/NonIdealState.js'
+import { PanelEmptyState } from '~/Layout/PanelEmptyState.js'
 
 export const Route = createFileRoute('/_app/connections/')({
 	component: RouteComponent,
@@ -8,8 +8,10 @@ export const Route = createFileRoute('/_app/connections/')({
 
 function RouteComponent() {
 	return (
-		<div className="secondary-panel-simple-body no-scroll">
-			<NonIdealState text="Select a connection to edit" icon={faPlug} />
-		</div>
+		<PanelEmptyState
+			icon={faPlug}
+			title="Select a connection"
+			description="Choose a connection from the list to edit its configuration."
+		/>
 	)
 }

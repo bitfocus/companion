@@ -19,6 +19,7 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { PageHeader } from '~/Layout/PageHeader.js'
+import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -124,6 +125,16 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 		void navigate({ to: '/variables/expression' })
 	}, [navigate])
 
+	const emptyList: PanelEmptyListState | null =
+		expressionVariablesList.expressionVariables.size === 0
+			? {
+					title: 'No expression variables yet',
+					description: 'Expression variables compute their value from an expression, updating as its inputs change.',
+					actionLabel: 'Add expression variable',
+					onAction: doAddNew,
+				}
+			: null
+
 	return (
 		<div className="page-shell">
 			<GenericConfirmModal ref={confirmModalRef} />
@@ -199,7 +210,9 @@ export const ExpressionVariablesPage = observer(function ExpressionVariablesPage
 				<SplitPanels.Secondary>
 					<div className="secondary-panel-simple">
 						{!!selectedVariableId && <ExpressionVariableEditPanelHeading doCloseVariable={doCloseVariable} />}
-						<Outlet />
+						<PanelEmptyListProvider value={emptyList}>
+							<Outlet />
+						</PanelEmptyListProvider>
 					</div>
 				</SplitPanels.Secondary>
 			</SplitPanels.Root>
@@ -213,7 +226,7 @@ export interface ExpressionVariableDataWithId extends Omit<ClientExpressionVaria
 }
 
 function ExpressionVariablesListNoContent() {
-	return <NonIdealState icon={faList} text="There are currently no expression variables." />
+	return <NonIdealState icon={faList} text="No expression variables yet" />
 }
 
 interface ExpressionVariableTableRowProps {

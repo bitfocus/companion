@@ -1,6 +1,6 @@
 import { faDollarSign } from '@fortawesome/free-solid-svg-icons'
 import { createFileRoute } from '@tanstack/react-router'
-import { NonIdealState } from '~/Components/NonIdealState.js'
+import { PanelEmptyState } from '~/Layout/PanelEmptyState.js'
 
 export const Route = createFileRoute('/_app/variables/_connections/')({
 	component: RouteComponent,
@@ -8,10 +8,10 @@ export const Route = createFileRoute('/_app/variables/_connections/')({
 
 function RouteComponent() {
 	return (
-		<div className="secondary-panel-simple">
-			<div className="secondary-panel-simple-body no-scroll">
-				<NonIdealState text="Select a connection to browse its variables" icon={faDollarSign} />
-			</div>
-		</div>
+		<PanelEmptyState
+			icon={faDollarSign}
+			title="Select a connection"
+			description="Choose a connection from the list to browse its variables."
+		/>
 	)
 }

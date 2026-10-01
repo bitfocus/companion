@@ -51,10 +51,8 @@ const RESIZE: SplitPanelsResizeConfig = {
 }
 
 // Hiding is the whole visibility mechanism — a panel never has a display forced on it, so it keeps
-// whatever its own classes give it. The primary hides only below the width at which both fit; the
-// secondary hides outright, as `showing='primary'` means there is nothing open in it.
-const HIDE_PRIMARY = 'max-xl:hidden'
-const HIDE_SECONDARY = 'hidden'
+// whatever its own classes give it. Either panel hides only below the width at which both fit.
+const HIDE_BELOW_XL = 'max-xl:hidden'
 
 function renderPanels(showing: 'primary' | 'secondary' | null, resize: SplitPanelsResizeConfig | null = null) {
 	const { container } = render(
@@ -75,25 +73,23 @@ describe('SplitPanels', () => {
 		expect(secondary).toHaveClass('secondary-panel')
 	})
 
-	it("showing='primary' collapses the secondary at every width and gives the primary the split", () => {
-		const { root, primary, secondary } = renderPanels('primary')
-		expect(primary).not.toHaveClass(HIDE_PRIMARY)
-		expect(secondary).toHaveClass(HIDE_SECONDARY)
-		expect(root).toHaveClass('split-panels-single')
+	it("showing='primary' hides only the secondary, and only where there is room for one", () => {
+		const { primary, secondary } = renderPanels('primary')
+		expect(primary).not.toHaveClass(HIDE_BELOW_XL)
+		expect(secondary).toHaveClass(HIDE_BELOW_XL)
+		expect(secondary).not.toHaveClass('hidden')
 	})
 
 	it("showing='secondary' hides only the primary, and only where there is room for one", () => {
-		const { root, primary, secondary } = renderPanels('secondary')
-		expect(primary).toHaveClass(HIDE_PRIMARY)
-		expect(secondary).not.toHaveClass(HIDE_SECONDARY)
-		expect(root).not.toHaveClass('split-panels-single')
+		const { primary, secondary } = renderPanels('secondary')
+		expect(primary).toHaveClass(HIDE_BELOW_XL)
+		expect(secondary).not.toHaveClass(HIDE_BELOW_XL)
 	})
 
 	it('showing={null} keeps both panels on show at every width', () => {
-		const { root, primary, secondary } = renderPanels(null)
-		expect(primary).not.toHaveClass(HIDE_PRIMARY)
-		expect(secondary).not.toHaveClass(HIDE_SECONDARY)
-		expect(root).not.toHaveClass('split-panels-single')
+		const { primary, secondary } = renderPanels(null)
+		expect(primary).not.toHaveClass(HIDE_BELOW_XL)
+		expect(secondary).not.toHaveClass(HIDE_BELOW_XL)
 	})
 
 	it('never forces a display on a visible panel, so its own classes decide', () => {
@@ -115,7 +111,7 @@ describe('SplitPanels', () => {
 
 	it('a panel outside a root is not hidden', () => {
 		const { container } = render(<SplitPanels.Primary />)
-		expect(container.firstChild).not.toHaveClass(HIDE_PRIMARY)
+		expect(container.firstChild).not.toHaveClass(HIDE_BELOW_XL)
 	})
 })
 
@@ -145,14 +141,12 @@ describe('SplitPanels resize', () => {
 		expect(root.style.gridTemplateColumns).toBe('minmax(300px, 70fr) minmax(350px, 30fr)')
 	})
 
-	it('does not resize while the secondary panel is collapsed, and keeps the stored percent', () => {
+	it("keeps the stored split while nothing is open in the secondary, so opening something doesn't reflow", () => {
 		window.localStorage.setItem('split-panels-width:test-view', '70')
 		const { root } = renderPanels('primary', RESIZE)
-		expect(root).toHaveClass('split-panels-single')
-		expect(root).not.toHaveClass('split-panels-resizable')
-		expect(root.style.gridTemplateColumns).toBe('')
-		expect(root.querySelector('.split-panels-resize-handle')).toBeNull()
-		expect(window.localStorage.getItem('split-panels-width:test-view')).toBe('70')
+		expect(root).toHaveClass('split-panels-resizable')
+		expect(root.style.gridTemplateColumns).toBe('minmax(300px, 70fr) minmax(350px, 30fr)')
+		expect(root.querySelector('.split-panels-resize-handle')).not.toBeNull()
 	})
 
 	it('does not resize (no handle, no inline columns) below the two-panel breakpoint', () => {

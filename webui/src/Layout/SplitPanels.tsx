@@ -14,9 +14,8 @@ import { useResizeObserver } from '~/Hooks/useResizeObserver.js'
  * Which panel to show while there is only room for one. `null` when the panels are not alternatives
  * to each other, and both should stay on show at every width.
  *
- * `'primary'` additionally means "nothing is open in the secondary panel", so the secondary is
- * collapsed at *every* width and the primary is given the whole split — a list page shows its list
- * full width until you open something from it.
+ * Once both fit, both are always shown, whichever this is: the secondary shows its empty state while
+ * nothing is open in it, rather than collapsing, so opening something never reflows the primary.
  */
 export type SplitPanelsShowing = 'primary' | 'secondary' | null
 
@@ -90,11 +89,7 @@ function SplitPanelsRoot({
 	}
 
 	return (
-		<div
-			className={classNames('split-panels', showing === 'primary' && 'split-panels-single', className)}
-			style={style}
-			{...rest}
-		>
+		<div className={classNames('split-panels', className)} style={style} {...rest}>
 			<ShowingContext.Provider value={showing}>{children}</ShowingContext.Provider>
 		</div>
 	)
@@ -113,11 +108,7 @@ function ResizableSplitPanelsRoot({
 	style,
 	...rest
 }: ResizableSplitPanelsRootProps): React.JSX.Element {
-	const twoPanelMode = useTwoPanelMode()
-	// Nothing to drag while the secondary panel is collapsed: the primary has the whole split, and the
-	// stored percent is left untouched so it comes back as it was when something is opened again.
-	const collapsed = showing === 'primary'
-	const resizable = twoPanelMode && !collapsed
+	const resizable = useTwoPanelMode()
 
 	const minPrimaryPx = resize.minPrimaryPx ?? SPLIT_PANELS_DEFAULT_MIN_PX
 	const minSecondaryPx = resize.minSecondaryPx ?? SPLIT_PANELS_DEFAULT_MIN_PX
@@ -241,12 +232,7 @@ function ResizableSplitPanelsRoot({
 	return (
 		<div
 			ref={rootRef}
-			className={classNames(
-				'split-panels',
-				collapsed && 'split-panels-single',
-				resizable && 'split-panels-resizable',
-				className
-			)}
+			className={classNames('split-panels', resizable && 'split-panels-resizable', className)}
 			style={mergedStyle}
 			{...rest}
 		>
@@ -274,9 +260,8 @@ function ResizableSplitPanelsRoot({
 
 export type SplitPanelProps = HTMLAttributes<HTMLDivElement>
 
-// The panels only ever *hide* — the secondary whenever nothing is open in it, the primary below the
-// width at which both fit. Nothing sets a display for the visible state, so a panel keeps whatever
-// its own classes give it (`.flex-column-layout`, say).
+// The panels only ever *hide*, and only below the width at which both fit. Nothing sets a display for
+// the visible state, so a panel keeps whatever its own classes give it (`.flex-column-layout`, say).
 function SplitPanelsPrimary({ className, ...rest }: SplitPanelProps): React.JSX.Element {
 	const showing = useContext(ShowingContext)
 
@@ -288,7 +273,9 @@ function SplitPanelsPrimary({ className, ...rest }: SplitPanelProps): React.JSX.
 function SplitPanelsSecondary({ className, ...rest }: SplitPanelProps): React.JSX.Element {
 	const showing = useContext(ShowingContext)
 
-	return <div className={classNames('secondary-panel', showing === 'primary' && 'hidden', className)} {...rest} />
+	return (
+		<div className={classNames('secondary-panel', showing === 'primary' && 'max-xl:hidden', className)} {...rest} />
+	)
 }
 
 export const SplitPanels = {
