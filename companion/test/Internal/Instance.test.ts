@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { EntityModelType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
@@ -30,8 +31,9 @@ interface HarnessOptions {
 	connectionIds?: string[]
 	labels?: Record<string, string | undefined>
 	statuses?: Record<string, InstanceStatusEntry | undefined>
-	configs?: Record<string, { enabled: boolean; label: string } | undefined>
-	collectionEnabled?: boolean
+	configs?: Record<string, { enabled: boolean; label: string; collectionId?: string } | undefined>
+	collections?: ConnectionCollection[]
+	disabledCollectionIds?: string[]
 }
 
 /**
@@ -40,6 +42,9 @@ interface HarnessOptions {
  */
 function createHarness(opts: HarnessOptions = {}) {
 	let statusChangeHandler: ((statuses: Record<string, InstanceStatusEntry | undefined>) => void) | undefined
+
+	const isCollectionEnabled = (collectionId: string | null | undefined) =>
+		!collectionId || !opts.disabledCollectionIds?.includes(collectionId)
 
 	const controller = {
 		status: {
@@ -52,10 +57,15 @@ function createHarness(opts: HarnessOptions = {}) {
 		getLabelForConnection: vi.fn((id: string) => opts.labels?.[id]),
 		getInstanceStatus: vi.fn((id: string) => opts.statuses?.[id]),
 		getInstanceConfigOfType: vi.fn((id: string) => opts.configs?.[id]),
+		isInstanceEnabled: vi.fn(
+			(config: { enabled: boolean; collectionId?: string }) =>
+				config.enabled && isCollectionEnabled(config.collectionId)
+		),
 		enableDisableConnection: vi.fn(),
 		connectionCollections: {
+			collectionData: opts.collections ?? [],
 			setCollectionEnabled: vi.fn(),
-			isCollectionEnabled: vi.fn(() => opts.collectionEnabled ?? false),
+			isCollectionEnabled: vi.fn(isCollectionEnabled),
 		},
 	}
 
@@ -119,6 +129,10 @@ function makeFeedback(definitionId: string, options: Record<string, unknown>): F
 		options,
 		upgradeIndex: undefined,
 	} as FeedbackEntityModel
+}
+
+function makeCollection(id: string, label: string, children: ConnectionCollection[]): ConnectionCollection {
+	return { id, label, sortOrder: 0, children, metaData: { enabled: true } }
 }
 
 // ---- tests ------------------------------------------------------------------
@@ -365,7 +379,7 @@ describe('InternalInstance', () => {
 
 	describe('executeFeedback - connection_collection_enabled', () => {
 		it('returns true when the collection state matches the target', () => {
-			const { internal } = createHarness({ collectionEnabled: true })
+			const { internal } = createHarness()
 
 			expect(
 				internal.executeFeedback(
@@ -377,6 +391,16 @@ describe('InternalInstance', () => {
 					makeExecFeedback('connection_collection_enabled', { collection_id: 'col1', enable: 'false' })
 				)
 			).toBe(false)
+		})
+
+		it('returns true for the disabled target when the collection is disabled', () => {
+			const { internal } = createHarness({ disabledCollectionIds: ['col1'] })
+
+			expect(
+				internal.executeFeedback(
+					makeExecFeedback('connection_collection_enabled', { collection_id: 'col1', enable: 'false' })
+				)
+			).toBe(true)
 		})
 
 		it('returns false when no collection is selected', () => {
@@ -407,6 +431,21 @@ describe('InternalInstance', () => {
 					'instance_warns',
 					'instance_oks',
 					'connection_My Device_status',
+				])
+			)
+		})
+
+		it('includes an enabled variable for every connection collection, including nested ones', () => {
+			const { internal } = createHarness({
+				collections: [makeCollection('col1', 'Room A', [makeCollection('col2', 'Room A Sub', [])])],
+			})
+
+			const definitions = internal.getVariableDefinitions()
+
+			expect(definitions).toEqual(
+				expect.arrayContaining([
+					{ name: 'connection_collection_col1_status', description: 'Connection Collection Enabled: Room A' },
+					{ name: 'connection_collection_col2_status', description: 'Connection Collection Enabled: Room A Sub' },
 				])
 			)
 		})
@@ -443,6 +482,53 @@ describe('InternalInstance', () => {
 			})
 			expect(values['connection_C3_status']).toBe('disabled')
 			expect(values['connection_C2_status']).toBe('error')
+		})
+
+		it('reports a connection in a disabled collection as disabled', () => {
+			const { internal, fireStatusChange } = createHarness({
+				connectionIds: ['c1', 'c2'],
+				configs: {
+					c1: { enabled: true, label: 'C1', collectionId: 'col1' },
+					c2: { enabled: false, label: 'C2', collectionId: 'col1' },
+				},
+				disabledCollectionIds: ['col1'],
+			})
+
+			const setVariables = vi.fn()
+			internal.on('setVariables', setVariables)
+
+			fireStatusChange({ c1: { category: 'good' } as InstanceStatusEntry })
+
+			const values = setVariables.mock.calls.at(-1)![0]
+			expect(values).toMatchObject({
+				instance_total: 2,
+				instance_oks: 0,
+				instance_disabled: 2,
+			})
+			expect(values['connection_C1_status']).toBe('disabled')
+			expect(values['connection_C2_status']).toBe('disabled')
+		})
+
+		it('emits the effective enabled state of each connection collection', () => {
+			const { internal } = createHarness({
+				collections: [
+					makeCollection('col1', 'Room A', [makeCollection('col2', 'Room A Sub', [])]),
+					makeCollection('col3', 'Room B', []),
+				],
+				disabledCollectionIds: ['col1', 'col2'],
+			})
+
+			const setVariables = vi.fn()
+			internal.on('setVariables', setVariables)
+
+			internal.updateVariables()
+
+			const values = setVariables.mock.calls.at(-1)![0]
+			expect(values).toMatchObject({
+				connection_collection_col1_status: false,
+				connection_collection_col2_status: false,
+				connection_collection_col3_status: true,
+			})
 		})
 	})
 
