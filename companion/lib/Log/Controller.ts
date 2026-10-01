@@ -343,11 +343,17 @@ class LogController {
 					integrations: [
 						rewriteFramesIntegration(),
 						httpIntegration({
-							trackIncomingRequestsAsSessions: false,
+							sessions: false,
 						}),
 					],
 					// Disable periodic client reports - we only care about actual errors
 					sendClientReports: false,
+					// Keep the v10 privacy defaults: no auto user info, cookies or http bodies
+					dataCollection: {
+						userInfo: false,
+						cookies: false,
+						httpBodies: [],
+					},
 				})
 
 				const scope = getCurrentScope()
