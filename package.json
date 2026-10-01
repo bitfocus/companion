@@ -2,7 +2,7 @@
   "name": "@companion-app/workspace",
   "version": "5.1.0",
   "license": "MIT",
-  "packageManager": "yarn@4.18.0",
+  "packageManager": "yarn@4.18.1",
   "workspaces": [
     "companion",
     "config-tool",
@@ -57,7 +57,7 @@
     "node": ">=26.10.0 <27"
   },
   "devDependencies": {
-    "@companion-module/tools": "3.1.0-nightly-main-20260906-185604-0809085",
+    "@companion-module/tools": "^3.1.1",
     "@eslint/js": "^10.0.1",
     "@ianvs/prettier-plugin-sort-imports": "patch:@ianvs/prettier-plugin-sort-imports@npm%3A4.7.1#~/.yarn/patches/@ianvs-prettier-plugin-sort-imports-npm-4.7.1-0d71bdf6a7.patch",
     "@playwright/test": "^1.63.0",
@@ -80,11 +80,11 @@
     "openapi-typescript": "^7.13.0",
     "p-retry": "^8.0.1",
     "prettier": "^3.9.9",
-    "socket": "^1.1.180",
+    "socket": "^1.2.1",
     "tsx": "^4.23.15",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-7": "npm:typescript@^7.0.2",
-    "typescript-eslint": "^8.70.1",
+    "typescript-eslint": "^8.71.0",
     "vitest": "^4.1.11",
     "vitest-mock-extended": "^5.1.1",
     "yaml": "^2.9.1",
