@@ -10,7 +10,7 @@ test('create a custom variable through the ui', async ({ page }) => {
 test('create a trigger through the ui', async ({ page }) => {
 	await gotoApp(page, '/triggers')
 
-	await page.getByRole('button', { name: 'Add Trigger' }).click()
+	await page.locator('.primary-panel').getByRole('button', { name: 'Add Trigger' }).click()
 
 	await expect(page.getByText('New Trigger').first()).toBeVisible()
 })

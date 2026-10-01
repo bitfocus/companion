@@ -49,7 +49,7 @@ test('the full user loop: configure a button, press it in the emulator, see the 
 
 	// Add an emulator and press the button through it
 	await gotoApp(page, '/surfaces')
-	await page.getByRole('button', { name: 'Add Emulator' }).click()
+	await page.locator('.primary-panel').getByRole('button', { name: 'Add Emulator' }).click()
 	const dialog = page.getByRole('dialog')
 	await dialog.getByLabel(/^Id/).fill('e2eloop')
 	await dialog.getByRole('button', { name: 'Add' }).click()

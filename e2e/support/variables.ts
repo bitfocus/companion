@@ -19,7 +19,7 @@ export async function navigateToCustomVariables(page: Page): Promise<void> {
 export async function createCustomVariable(page: Page, name: string): Promise<void> {
 	await gotoApp(page, '/variables/custom')
 
-	await page.getByRole('button', { name: 'Add Custom Variable' }).click()
+	await page.locator('.primary-panel').getByRole('button', { name: 'Add Custom Variable' }).click()
 	const dialog = page.getByRole('dialog')
 	await dialog.getByPlaceholder('variableName').fill(name)
 	await dialog.getByRole('button', { name: 'Add', exact: true }).click()

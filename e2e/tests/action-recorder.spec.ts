@@ -17,7 +17,7 @@ test('action recorder has its own page and resumes its session after navigation'
 	await page.setViewportSize({ width: 390, height: 844 })
 	await expect(page.getByRole('heading', { name: 'Recorded actions', exact: true })).toBeVisible()
 	const overflows = await page
-		.locator('.recorder-workspace')
+		.locator('.action-recorder-split')
 		.evaluate((element) => element.scrollWidth > element.clientWidth)
 	expect(overflows).toBe(false)
 })
