@@ -102,6 +102,6 @@
     "storybook": "^10.6.0",
     "tailwindcss": "^4.3.3",
     "type-testing": "^0.2.0",
-    "vitest": "^4.1.11"
+    "vitest": "^5.0.2"
   }
 }
