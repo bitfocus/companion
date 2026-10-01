@@ -559,6 +559,62 @@ describe('PresetInternalEntities', () => {
 		})
 	})
 
+	describe('module action storeResult', () => {
+		it('translates a local-variable storeResult, injecting the self location', () => {
+			const entities = convertPresetActionEntries(
+				[{ actionId: 'my-action', options: {}, storeResult: { type: 'local-variable', variableName: 'out' } }],
+				ctx
+			)
+
+			expect(entities).toHaveLength(1)
+			expect(entities[0]).toMatchObject({
+				connectionId: 'conn01',
+				definitionId: 'my-action',
+				storeResult: {
+					type: 'local-variable',
+					location: SELF_LOCATION,
+					variableName: exprVal('out'),
+				},
+			})
+		})
+
+		it('translates storeResult on actions nested in building blocks', () => {
+			const entities = convertPresetActionEntries(
+				[
+					{
+						actionId: 'internal:actionGroup',
+						options: {},
+						children: {
+							default: [
+								{ actionId: 'my-action', options: {}, storeResult: { type: 'local-variable', variableName: 'out' } },
+							],
+						},
+					},
+				] as any[],
+				ctx
+			)
+
+			expect(entities[0].children?.['default']?.[0]).toMatchObject({
+				definitionId: 'my-action',
+				storeResult: { type: 'local-variable', location: SELF_LOCATION, variableName: exprVal('out') },
+			})
+		})
+
+		it('omits storeResult when absent or malformed', () => {
+			const entities = convertPresetActionEntries(
+				[
+					{ actionId: 'my-action', options: {} },
+					{ actionId: 'my-action', options: {}, storeResult: { type: 'custom-variable', variableName: 'out' } },
+					{ actionId: 'my-action', options: {}, storeResult: 'out' },
+				] as any[],
+				ctx
+			)
+
+			expect(entities).toHaveLength(3)
+			for (const entity of entities) expect(entity.storeResult).toBeUndefined()
+		})
+	})
+
 	describe('legacy modules (allowInternalEntities: false)', () => {
 		const legacyCtx: PresetEntryConversionContext = { ...ctx, allowInternalEntities: false }
 

@@ -4,6 +4,7 @@ import {
 	EntityModelType,
 	type ActionEntityModel,
 	type FeedbackEntityModel,
+	type RawStoreResult,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import {
@@ -355,6 +356,18 @@ export function convertModulePresetAction(
 		options: structuredClone(optionsObjectToExpressionOptions(action.options ?? {}, true)),
 		headline: action.headline,
 		upgradeIndex: ctx.connectionUpgradeIndex,
+		storeResult: convertPresetStoreResult(action.storeResult),
+	}
+}
+
+/** Convert the result target of a preset action. The host has already validated it against the preset */
+function convertPresetStoreResult(storeResult: CompanionPresetAction['storeResult']): RawStoreResult | undefined {
+	if (storeResult?.type !== 'local-variable' || typeof storeResult.variableName !== 'string') return undefined
+
+	return {
+		type: 'local-variable',
+		location: selfLocation(),
+		variableName: exprVal(storeResult.variableName),
 	}
 }
 

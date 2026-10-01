@@ -1972,28 +1972,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:2.2.0-nightly-main-20260902-210244-eaa0afd":
-  version: 2.2.0-nightly-main-20260902-210244-eaa0afd
-  resolution: "@companion-module/base@npm:2.2.0-nightly-main-20260902-210244-eaa0afd"
+"@companion-module/base@npm:~2.2.0":
+  version: 2.2.0
+  resolution: "@companion-module/base@npm:2.2.0"
   dependencies:
-    colord: "npm:^2.9.3"
+    colord: "npm:^2.9.4"
     zod: "npm:^4.4.3"
-  checksum: 10c0/919b352413b382238b2b55aa64e35680f58b9de5c94c2f80f02d92be96ef78c943d06aca18bbb61f93621010fa4a445781613da98a2a07dc72008feb0e484974
+  checksum: 10c0/a51591c6d0a7e4aa16eedadd8d8727b769c0c4f4b60381600859a1aba20ad703f95ea4b8e3d8803e538b3e12ed088fe1e2e1d36c639d78237304f322113835cc
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:1.2.0-nightly-main-20260929-202637-4da1450":
-  version: 1.2.0-nightly-main-20260929-202637-4da1450
-  resolution: "@companion-module/host@npm:1.2.0-nightly-main-20260929-202637-4da1450"
+"@companion-module/host@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@companion-module/host@npm:1.2.0"
   dependencies:
-    "@companion-module/base": "npm:~2.1.3"
+    "@companion-module/base": "npm:~2.2.0"
     colord: "npm:^2.9.4"
     debounce-fn: "npm:^6.0.0"
     fast-deep-equal: "npm:^3.1.3"
     p-queue: "npm:^9.3.3"
     semver: "npm:^7.8.5"
     zod: "npm:^4.4.3"
-  checksum: 10c0/4a39c3fc2336628531b52cd66767950d19949f223565eafa4cb8c4adfa225c7daf11f763f5b99782eb7699647ddec35f1350ca5c1252db53b6c63d131ef0c2be
+  checksum: 10c0/2e87887dc56ee4659d6f341b2ea5c8183900f3d365a38c5a86ff3766e33ace6a7a275fbd6bc5b097d484387079c73e9cf82e166ef5b9d3a11bafc2872acc775f
   languageName: node
   linkType: hard
 
@@ -11069,7 +11069,7 @@ __metadata:
     "@asteasolutions/zod-to-openapi": "npm:^9.1.0"
     "@companion-app/shared": "npm:*"
     "@companion-module/base-old": "npm:@companion-module/base@~1.14.1"
-    "@companion-module/host": "npm:1.1.5"
+    "@companion-module/host": "npm:1.2.0"
     "@companion-surface/host": "npm:1.4.1"
     "@julusian/bonjour-service": "npm:^1.4.5"
     "@julusian/image-rs": "npm:^2.2.0"
