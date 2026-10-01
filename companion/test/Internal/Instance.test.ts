@@ -444,8 +444,8 @@ describe('InternalInstance', () => {
 
 			expect(definitions).toEqual(
 				expect.arrayContaining([
-					{ name: 'connection_collection_col1_status', description: 'Connection Collection Enabled: Room A' },
-					{ name: 'connection_collection_col2_status', description: 'Connection Collection Enabled: Room A Sub' },
+					{ name: 'connection_collection_col1_status', description: 'Connection Collection Status: Room A' },
+					{ name: 'connection_collection_col2_status', description: 'Connection Collection Status: Room A Sub' },
 				])
 			)
 		})
