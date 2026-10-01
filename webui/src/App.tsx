@@ -1,17 +1,17 @@
 import { DragDropProvider } from '@dnd-kit/react'
 import './App.css'
-import { faBars } from '@fortawesome/free-solid-svg-icons'
+import { faBars, faLock } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
-import { Suspense, useCallback, useContext, useEffect, useState } from 'react'
+import { Suspense, useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { useIdleTimer } from 'react-idle-timer'
 import { Grid } from '~/Components/Grid'
 import { useEvictDeadCollapseState } from '~/Helpers/useEvictDeadCollapseState.js'
 import { useMountEffect } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { Button } from './Components/Button.js'
-import { Form, InputGroup } from './Components/Form.js'
+import { Form } from './Components/Form.js'
 import { ProgressBar } from './Components/ProgressBar.js'
 import { SecretTextInputField } from './Components/SecretTextInputField.js'
 import { ContextData } from './ContextData.js'
@@ -100,6 +100,7 @@ const AppMain = observer(function AppMain({ connected, loadingComplete, loadingP
 	const [unlocked, setUnlocked] = useState(false)
 
 	const canLock = !!userConfig.properties?.admin_lockout
+	const locked = canLock && !unlocked
 	const setLocked = useCallback(() => {
 		if (canLock) {
 			setUnlocked(false)
@@ -142,14 +143,17 @@ const AppMain = observer(function AppMain({ connected, loadingComplete, loadingP
 					) : (
 						''
 					)}
-					<MySidebar />
-					<CommandPalette />
+					{!locked && (
+						<>
+							<MySidebar />
+							<CommandPalette />
+						</>
+					)}
 					<AppWrapper
 						connected={connected}
 						loadingComplete={loadingComplete}
 						loadingProgress={loadingProgress}
-						canLock={canLock}
-						unlocked={unlocked}
+						locked={locked}
 						setUnlockedInner={setUnlockedInner}
 					/>
 				</SidebarStateProvider>
@@ -162,24 +166,16 @@ interface AppWrapperProps {
 	connected: boolean
 	loadingComplete: boolean
 	loadingProgress: number
-	canLock: boolean
-	unlocked: boolean
+	locked: boolean
 	setUnlockedInner: () => void
 }
 
-function AppWrapper({
-	connected,
-	loadingComplete,
-	loadingProgress,
-	canLock,
-	unlocked,
-	setUnlockedInner,
-}: AppWrapperProps) {
+function AppWrapper({ connected, loadingComplete, loadingProgress, locked, setUnlockedInner }: AppWrapperProps) {
 	const { mobileMode, handleShowSidebar } = useSidebarState()
 
 	return (
 		<div className="wrapper flex flex-col min-h-screen bg-app-frame-bg relative">
-			{mobileMode && (
+			{mobileMode && !locked && (
 				<button
 					type="button"
 					className="sidebar-mobile-toggle block-collapse"
@@ -191,10 +187,10 @@ function AppWrapper({
 			)}
 			<div className="body grow">
 				{connected && loadingComplete ? (
-					!canLock || unlocked ? (
-						<AppContent />
-					) : (
+					locked ? (
 						<AppAuthWrapper setUnlocked={setUnlockedInner} />
+					) : (
+						<AppContent />
 					)
 				) : (
 					<AppLoading progress={loadingProgress} connected={connected} />
@@ -291,14 +287,10 @@ interface AppLoadingProps {
 
 function AppLoading({ progress, connected }: AppLoadingProps) {
 	return (
-		<div className="flex flex-col items-center justify-center page-empty-state p-6 select-none">
-			<div className="bg-surface text-body border border-border/80 rounded-2xl shadow-xl p-8 sm:p-10 max-w-sm w-full flex flex-col items-center text-center">
-				<div className="w-16 h-16 rounded-2xl bg-surface-muted/80 border border-border/70 p-2.5 flex items-center justify-center mb-5 shadow-xs">
-					<img
-						src="/img/icons/128x128.png"
-						alt="Bitfocus Companion"
-						className="w-full h-full object-contain rounded-xl"
-					/>
+		<div className="app-splash select-none">
+			<div className="app-splash-card">
+				<div className="app-splash-logo">
+					<img src="/img/icons/128x128.png" alt="Bitfocus Companion" />
 				</div>
 
 				<h3 className="text-lg font-bold text-body mb-1">
@@ -364,29 +356,52 @@ const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuth
 		[userConfig, setUnlocked]
 	)
 
+	const installName = userConfig.properties?.installName
+
+	const formRef = useRef<HTMLFormElement>(null)
+	useEffect(() => {
+		formRef.current?.querySelector('input')?.focus()
+	}, [])
+
 	return (
-		<Grid.Container className="fadeIn loading">
-			<Grid.Row>
-				<Grid.Col xxl={4} md={3} sm={2} xs={1}></Grid.Col>
-				<Grid.Col xxl={4} md={6} sm={8} xs={10}>
-					<h3>Companion is locked</h3>
-					<Form onSubmit={tryLogin}>
-						<InputGroup>
-							<SecretTextInputField
-								id={undefined}
-								value={password}
-								setValue={passwordChanged}
-								checkValid={showError ? false : undefined}
-								immediateValue
-							/>
-							<Button type="submit" color="primary">
-								Unlock
-							</Button>
-						</InputGroup>
-					</Form>
-				</Grid.Col>
-			</Grid.Row>
-		</Grid.Container>
+		<div className="app-splash fadeIn">
+			<div className="app-splash-card">
+				<div className="app-splash-logo">
+					<img src="/img/icons/128x128.png" alt="Bitfocus Companion" />
+					<span className="app-splash-logo-badge">
+						<FontAwesomeIcon icon={faLock} />
+					</span>
+				</div>
+
+				<h3 className="text-lg font-bold text-body mb-1">Companion is locked</h3>
+				<p className="text-xs text-muted mb-6 leading-relaxed">
+					{installName ? (
+						<>
+							Enter the admin password to unlock <strong>{installName}</strong>.
+						</>
+					) : (
+						'Enter the admin password to continue.'
+					)}
+				</p>
+
+				<Form ref={formRef} className="app-lock-form" onSubmit={tryLogin}>
+					<div>
+						<SecretTextInputField
+							id={undefined}
+							placeholder="Password"
+							value={password}
+							setValue={passwordChanged}
+							checkValid={showError ? false : undefined}
+							immediateValue
+						/>
+						{showError && <div className="app-lock-error mt-1">Incorrect password, please try again.</div>}
+					</div>
+					<Button type="submit" color="primary" className="w-full">
+						Unlock
+					</Button>
+				</Form>
+			</div>
+		</div>
 	)
 })
 
