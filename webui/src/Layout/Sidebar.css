@@ -97,6 +97,52 @@
 	padding: 0.125rem;
 }
 
+/* Looks like an input so it stands out from the muted sidebar background */
+.sidebar-search-button {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	width: 100%;
+	padding: 0.375rem 0.625rem;
+	font-size: 0.75rem;
+	text-align: start;
+	color: var(--color-muted);
+	background: var(--color-input-bg);
+	border: 1px solid var(--color-border-medium);
+	border-radius: 0.5rem;
+	box-shadow: inset 0 1px 2px var(--color-shadow-6);
+	cursor: pointer;
+	transition:
+		border-color 0.15s,
+		color 0.15s,
+		box-shadow 0.15s;
+
+	&:hover {
+		color: var(--color-text);
+		border-color: var(--color-border-strong);
+	}
+
+	&:focus-visible {
+		outline: none;
+		border-color: var(--color-primary);
+		box-shadow: 0 0 0 2px var(--color-primary-bg-subtle);
+	}
+}
+
+.sidebar-search-shortcut {
+	align-items: center;
+	padding: 0.125rem 0.375rem;
+	font-family: var(--font-mono);
+	font-size: 0.625rem;
+	font-weight: 500;
+	line-height: 1;
+	color: var(--color-muted);
+	background: var(--color-surface-muted);
+	border: 1px solid var(--color-border);
+	border-radius: 0.25rem;
+}
+
 .sidebar-header {
 	display: flex;
 	align-items: center;

@@ -151,17 +151,13 @@ function SidebarSearchButton() {
 				type="button"
 				onClick={openSearch}
 				title={`Search or Jump to... (${shortcutLabel})`}
-				className="w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-surface-muted/70 hover:bg-surface-muted text-action-text hover:text-body border border-border/70 text-xs transition-colors cursor-pointer text-left"
+				className="sidebar-search-button"
 			>
 				<div className="flex items-center gap-2 min-w-0">
 					<FontAwesomeIcon icon={faMagnifyingGlass} className="text-2xs" />
 					{!isNarrow && <span className="truncate">Search or jump...</span>}
 				</div>
-				{!isNarrow && (
-					<span className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-3xs font-mono font-medium text-muted bg-surface border border-border rounded leading-none">
-						{shortcutLabel}
-					</span>
-				)}
+				{!isNarrow && <span className="sidebar-search-shortcut hidden sm:inline-flex">{shortcutLabel}</span>}
 			</button>
 		</div>
 	)
