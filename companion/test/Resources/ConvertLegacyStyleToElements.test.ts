@@ -300,6 +300,22 @@ describe('ConvertLegacyStyleToElements', () => {
 		expect(overrides[0].elementId).toBe('imageBuffers')
 	})
 
+	test('advanced feedback without imageBuffer in affectedProperties does not add the bufferElement layer', () => {
+		const affectedProperties = new Map<string, string[] | undefined>([['advanced-feedback', ['png64']]])
+		const { layers, feedbacks } = ConvertLegacyStyleToElements(
+			minimalStyle,
+			[makeAdvancedFeedback()],
+			null,
+			affectedProperties
+		)
+		expect(layers.map((l) => l.id)).toEqual(['canvas', 'box0', 'image0', 'text0'])
+
+		const overrides = (feedbacks[0] as FeedbackEntityModel).styleOverrides!
+		expect(overrides).toHaveLength(1)
+		expect(overrides[0].elementId).toBe('image0')
+		expect(overrides[0].elementProperty).toBe('base64Image')
+	})
+
 	test('boolean feedback with style sets styleOverrides and removes style', () => {
 		const { feedbacks } = ConvertLegacyStyleToElements(minimalStyle, [makeBooleanFeedback()], null, null)
 		expect(feedbacks[0]).toHaveProperty('styleOverrides')
