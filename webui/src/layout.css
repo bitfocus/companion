@@ -170,9 +170,9 @@ form.row > * {
 
 .secondary-panel-simple {
 	background: var(--color-surface);
-	border: 1px solid var(--color-border);
+	/* Same softened border as .list-card, so the two panels of a split read as a pair */
+	border: 1px solid var(--color-border-soft);
 	border-radius: 0.375rem;
-	box-shadow: 0 4px 12px var(--color-shadow-10);
 	overflow: hidden;
 	height: 100%;
 	display: flex;
@@ -182,7 +182,7 @@ form.row > * {
 
 	.secondary-panel-simple-header {
 		background: var(--color-surface);
-		border-bottom: 1px solid var(--color-border);
+		border-bottom: 1px solid var(--color-border-soft);
 		padding: 1rem 1.5rem; /* only 1rem y-padding now, to preserve the original header-height now that CloseButton & ContextHelpButton are in almost all panel headers. */
 		display: flex;
 		align-items: center;
@@ -383,7 +383,7 @@ hr.slim {
 
 /* The bordered card a page's main list sits in, under its toolbar. */
 .list-card {
-	border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+	border: 1px solid var(--color-border-soft);
 	border-radius: 0.375rem;
 	background: var(--color-surface);
 }

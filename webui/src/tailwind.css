@@ -173,6 +173,7 @@
 
 	/* Borders */
 	--color-border: #ddd;
+	--color-border-soft: color-mix(in srgb, var(--color-border) 70%, transparent); /* the frame of a list card or panel card, and the dividers inside it (same as `border-border/70`) */
 	--color-border-alt: #dbdfe6; /* CoreUI gray-300; the legacy .cui-border/.cui-border-top colour, kept exactly pending reconciliation with --color-border */
 	--color-border-subtle: #e9ecef; /* faint divider (lighter than --color-border) */
 	--color-border-translucent: color-mix(in srgb, var(--color-shadow) 17.5%, transparent); /* translucent hairline that darkens against its backdrop (modals, toasts, separators) */
