@@ -1,14 +1,24 @@
-import { faCircleUp, faFolderOpen, faPowerOff, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
+import {
+	faArrowUpRightFromSquare,
+	faBars,
+	faCircleUp,
+	faCopy,
+	faLayerGroup,
+	faSearch,
+	faTrash,
+} from '@fortawesome/free-solid-svg-icons'
 import './surfaces.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
+import copy from 'copy-to-clipboard'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import type { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
-import { Button, LinkButtonExternal } from '~/Components/Button'
-import { CopyButton } from '~/Components/CopyButton'
+import { Badge } from '~/Components/Badge.js'
+import { LinkButtonExternal } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { Popover } from '~/Components/Popover'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { makeAbsolutePath } from '~/Resources/util'
@@ -94,10 +104,7 @@ export const KnownSurfacesTable = observer(function KnownSurfacesTable({
 		<>
 			<GenericConfirmModal ref={confirmRef} />
 
-			<div className="scrollable-content surfaces-grid-container">
-				<div className="grid-header-cell">Nr.</div>
-				<div className="grid-header-cell">Configured Surfaces and Groups</div>
-				<div className="grid-header-cell"></div>
+			<div className="surfaces-list">
 				{surfacesList.map((group) => {
 					if (group.isAutoGroup && (group.surfaces || []).length === 1) {
 						return (
@@ -108,7 +115,6 @@ export const KnownSurfacesTable = observer(function KnownSurfacesTable({
 								isInGroup={false}
 								deleteEmulator={deleteEmulator}
 								forgetSurface={forgetSurface}
-								noBorder={false}
 								isSelected={selectedItemId === group.surfaces[0].id}
 								selectItem={selectItem}
 							/>
@@ -129,11 +135,7 @@ export const KnownSurfacesTable = observer(function KnownSurfacesTable({
 					}
 				})}
 
-				{surfacesList.length === 0 && (
-					<div className="grid-no-results">
-						<NonIdealState icon={faSearch} text="No surfaces found" />
-					</div>
-				)}
+				{surfacesList.length === 0 && <NonIdealState icon={faSearch} text="No surfaces found" />}
 			</div>
 		</>
 	)
@@ -171,36 +173,32 @@ const ManualGroupRow = observer(function ManualGroupRow({
 	)
 
 	const groupName = group.displayName || 'Surface Group'
+	const surfaceCount = (group.surfaces || []).length
 	return (
-		<>
+		<div className="surface-group">
 			<div
-				className={classNames('grid-row', { 'grid-row-selected': isGroupSelected })}
+				className={classNames('surface-row surface-group-row', { 'surface-row-selected': isGroupSelected })}
 				onClick={handleGroupClick}
 				title={`${groupName}${/group/i.test(groupName) ? '' : ' group'}: click to edit settings.`}
 			>
-				<div className="grid-cell">#{group.index}</div>
-				<div className="grid-cell">
-					<div className="surface-name-row">
-						<b>{groupName}</b>
-						<span className="surface-status surface-status-group">Group</span>
-					</div>
-					<div className="surface-id-row">
-						<span className="surface-id" title={group.id}>
-							{group.id}
-						</span>
-						<CopyButton size="sm" variant="ghost" title="Copy group id" text={group.id} />
-					</div>
+				<span className="surface-row-index">{group.index !== null ? `#${group.index}` : ''}</span>
+				<div className="surface-row-text">
+					<span className="surface-row-name">
+						<FontAwesomeIcon icon={faLayerGroup} className="surface-group-icon" />
+						{groupName}
+					</span>
+					<span className="surface-row-subtitle">
+						{surfaceCount} {surfaceCount === 1 ? 'surface' : 'surfaces'} · {group.id}
+					</span>
 				</div>
-				<div className="grid-cell surface-row-actions">
-					<div className="surface-action-list">
-						<Button onClick={deleteGroup2} size="sm" color="danger" variant="outline" title="Delete group">
-							<FontAwesomeIcon icon={faTrash} className="me-1.5" />
-							<span>Delete Group</span>
-						</Button>
-					</div>
-				</div>
+				<SurfaceRowMenu copyId={group.id} copyLabel="Copy group ID">
+					<Popover.Item onClick={deleteGroup2} title="Delete group" className="surface-row-menu-danger">
+						<FontAwesomeIcon icon={faTrash} className="me-2" />
+						Delete group
+					</Popover.Item>
+				</SurfaceRowMenu>
 			</div>
-			{(group.surfaces || []).map((surface, i, arr) => (
+			{(group.surfaces || []).map((surface) => (
 				<SurfaceRow
 					key={surface.id}
 					surface={surface}
@@ -208,12 +206,11 @@ const ManualGroupRow = observer(function ManualGroupRow({
 					isInGroup={true}
 					deleteEmulator={deleteEmulator}
 					forgetSurface={forgetSurface}
-					noBorder={i !== arr.length - 1} // No border on the last item
 					isSelected={selectedItemId === surface.id}
 					selectItem={selectItem}
 				/>
 			))}
-		</>
+		</div>
 	)
 })
 
@@ -223,7 +220,6 @@ interface SurfaceRowProps {
 	isInGroup: boolean
 	deleteEmulator: (id: string) => void
 	forgetSurface: (id: string) => void
-	noBorder?: boolean
 	isSelected: boolean
 	selectItem: (id: string) => void
 }
@@ -234,7 +230,6 @@ const SurfaceRow = observer(function SurfaceRow({
 	isInGroup,
 	deleteEmulator,
 	forgetSurface,
-	noBorder,
 	isSelected,
 	selectItem,
 }: SurfaceRowProps) {
@@ -244,7 +239,7 @@ const SurfaceRow = observer(function SurfaceRow({
 	const handleSurfaceClick = useCallback(
 		(e: React.MouseEvent) => {
 			// Don't trigger row click if clicking on input field or buttons
-			if ((e.target as HTMLElement).closest('input, button')) {
+			if ((e.target as HTMLElement).closest('input, button, a, [role="button"]')) {
 				return
 			}
 			selectItem(surface.id)
@@ -259,92 +254,116 @@ const SurfaceRow = observer(function SurfaceRow({
 		surface.integrationType !== 'elgato-plugin' &&
 		surface.integrationType !== 'satellite'
 
+	const subtitle = [
+		surface.name ? surface.type : null,
+		surface.isConnected && !surfaceDisabled ? surface.location || 'Local' : null,
+		surface.id,
+	]
+		.filter((part) => !!part)
+		.join(' · ')
+
 	return (
 		<div
-			className={classNames('grid-row', {
-				'grid-row-no-border': noBorder,
-				'grid-row-selected': isSelected,
-				'surface-disabled': surfaceDisabled,
+			className={classNames('surface-row', {
+				'surface-row-nested': isInGroup,
+				'surface-row-selected': isSelected,
+				'surface-row-disabled': surfaceDisabled,
 			})}
 			onClick={handleSurfaceClick}
 			title={`${surface.id}: click to edit surface settings.`}
 		>
-			<div className="grid-cell font-mono tabular-nums text-xs text-muted/70">
-				{index !== null ? `#${index}` : ''}
-				{/* Show disabled icon for surfaces that respect the enabled setting and are disabled */}
-				{surfaceDisabled && (
-					<span title="Disabled">
-						<FontAwesomeIcon icon={faPowerOff} color="gray" aria-label="Disabled" />
-					</span>
-				)}
+			<span className="surface-row-index">{index !== null ? `#${index}` : ''}</span>
+			<div className="surface-row-text">
+				<span className="surface-row-name">{surface.name || surface.type}</span>
+				<span className="surface-row-subtitle" title={subtitle}>
+					{subtitle}
+				</span>
 			</div>
-			<div className={classNames('grid-cell', { 'ps-6': isInGroup })}>
-				<div className="surface-name-row">
-					<b className="text-sm font-semibold text-body-strong">
-						{surface.name ? `${surface.name} - (${surface.type})` : surface.type}
-					</b>
-					{(surfaceDisabled || !surface.isConnected) && (
-						<span
-							className={classNames('surface-status', {
-								'surface-status-disabled': surfaceDisabled,
-								'surface-status-offline': !surfaceDisabled,
-							})}
-						>
-							{surfaceDisabled ? 'Disabled' : 'Offline'}
-						</span>
-					)}
-					{!!surface.hasFirmwareUpdates && (
-						<>
-							{' '}
-							<WindowLinkOpen href={surface.hasFirmwareUpdates.updaterDownloadUrl} title="Firmware update is available">
-								<FontAwesomeIcon icon={faCircleUp} />
-							</WindowLinkOpen>
-						</>
-					)}
-				</div>
-				<div className="surface-id-row">
-					{surface.isConnected && !surfaceDisabled && (
-						<>
-							<span className="surface-location" title="Surface location">
-								{surface.location || 'Local'}
-							</span>
-							<span className="text-2xs text-muted/50" aria-hidden="true">
-								·
-							</span>
-						</>
-					)}
-					<span className="surface-id font-mono tabular-nums text-2xs text-muted">{surface.id}</span>
-					<CopyButton size="sm" variant="ghost" title="Copy surface id" text={surface.id} />
-				</div>
-			</div>
-			<div className="grid-cell surface-row-actions">
+
+			{!!surface.hasFirmwareUpdates && (
+				<WindowLinkOpen
+					href={surface.hasFirmwareUpdates.updaterDownloadUrl}
+					title="Firmware update is available"
+					className="surface-row-firmware"
+				>
+					<FontAwesomeIcon icon={faCircleUp} />
+				</WindowLinkOpen>
+			)}
+
+			{surface.isConnected && surface.integrationType === 'emulator' && (
+				<LinkButtonExternal
+					href={makeAbsolutePath(`/emulator/${surface.id.substring(9)}`)}
+					title="Open Emulator"
+					size="sm"
+					variant="ghost"
+				>
+					<FontAwesomeIcon icon={faArrowUpRightFromSquare} />
+				</LinkButtonExternal>
+			)}
+
+			<SurfaceStatusBadge isConnected={surface.isConnected} isDisabled={surfaceDisabled} />
+
+			<SurfaceRowMenu copyId={surface.id} copyLabel="Copy surface ID">
 				{surface.isConnected ? (
-					<div className="surface-action-list">
-						{surface.integrationType === 'emulator' && (
-							<>
-								<LinkButtonExternal
-									href={makeAbsolutePath(`/emulator/${surface.id.substring(9)}`)}
-									title="Open Emulator"
-									size="sm"
-									variant="outline"
-								>
-									<FontAwesomeIcon icon={faFolderOpen} className="me-1.5" />
-									<span>Open</span>
-								</LinkButtonExternal>
-								<Button onClick={deleteEmulator2} size="sm" color="danger" variant="outline" title="Delete Emulator">
-									<FontAwesomeIcon icon={faTrash} className="me-1.5" />
-									<span>Delete</span>
-								</Button>
-							</>
-						)}
-					</div>
+					surface.integrationType === 'emulator' && (
+						<Popover.Item onClick={deleteEmulator2} title="Delete emulator" className="surface-row-menu-danger">
+							<FontAwesomeIcon icon={faTrash} className="me-2" />
+							Delete emulator
+						</Popover.Item>
+					)
 				) : (
-					<Button onClick={forgetSurface2} size="sm" color="danger" variant="outline" title="Forget surface">
-						<FontAwesomeIcon icon={faTrash} className="me-1.5" />
-						<span>Forget</span>
-					</Button>
+					<Popover.Item onClick={forgetSurface2} title="Forget surface" className="surface-row-menu-danger">
+						<FontAwesomeIcon icon={faTrash} className="me-2" />
+						Forget surface
+					</Popover.Item>
 				)}
-			</div>
+			</SurfaceRowMenu>
 		</div>
 	)
 })
+
+interface SurfaceStatusBadgeProps {
+	isConnected: boolean
+	isDisabled: boolean
+}
+
+function SurfaceStatusBadge({ isConnected, isDisabled }: SurfaceStatusBadgeProps) {
+	if (isDisabled) return <Badge tone="disabled">Disabled</Badge>
+	if (!isConnected) return <Badge tone="neutral">Offline</Badge>
+	return <Badge tone="good">Connected</Badge>
+}
+
+interface SurfaceRowMenuProps {
+	copyId: string
+	copyLabel: string
+	children: React.ReactNode
+}
+
+/** The row's `⋯` menu, matching the connection/integration rows: copy the id, then any destructive actions. */
+function SurfaceRowMenu({ copyId, copyLabel, children }: SurfaceRowMenuProps) {
+	const doCopy = useCallback(() => {
+		copy(copyId).catch(() => {
+			console.error('Failed to copy text:', copyId)
+		})
+	}, [copyId])
+
+	return (
+		<Popover.Root>
+			<Popover.Trigger
+				color={null}
+				className="surface-row-menu-trigger"
+				title="Click for additional options."
+				aria-label="Click for additional options."
+			>
+				<FontAwesomeIcon icon={faBars} />
+			</Popover.Trigger>
+			<Popover.Popup arrow side="right" align="center">
+				<Popover.Item onClick={doCopy} title={copyLabel}>
+					<FontAwesomeIcon icon={faCopy} className="me-2 opacity-70" />
+					{copyLabel}
+				</Popover.Item>
+				{children}
+			</Popover.Popup>
+		</Popover.Root>
+	)
+}

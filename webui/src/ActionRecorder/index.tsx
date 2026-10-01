@@ -7,6 +7,8 @@ import type { RecordSessionUpdate } from '@companion-app/shared/Model/ActionReco
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { PageHeader } from '~/Layout/PageHeader.js'
+import { PanelEmptyState } from '~/Layout/PanelEmptyState.js'
+import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { trpc } from '~/Resources/TRPC.js'
 import { useComputed } from '~/Resources/util.js'
 import { RecorderSession } from './RecorderSession.js'
@@ -61,7 +63,7 @@ export const ActionRecorder = observer(function ActionRecorder(): React.JSX.Elem
 	)
 
 	return (
-		<div className="page-shell action-recorder-page">
+		<div className="page-shell">
 			<GenericConfirmModal ref={confirmRef} />
 
 			{sessionsStore.isFinishing && selectedSessionId ? (
@@ -75,53 +77,67 @@ export const ActionRecorder = observer(function ActionRecorder(): React.JSX.Elem
 			)}
 
 			<PageHeader icon={faVideoCamera} title="Action Recorder" />
-			<div className="page-shell-body">
-				<p className="recorder-page-intro">
-					Capture actions from supported connections, review them, then save them to a button or trigger.
-				</p>
-				<div className="recorder-workspace">
-					<aside className="recorder-setup">
-						<div className="action-recorder-session-heading">
-							{sessionsStore.selectedSessionInfo && (
-								<RecorderSessionHeading confirmRef={confirmRef} sessionInfo={sessionsStore.selectedSessionInfo} />
-							)}
-						</div>
 
-						<section className="recorder-guide">
-							<h2>Recording a sequence</h2>
-							<ol>
-								<li>Choose the connections you want to record.</li>
-								<li>Start recording and operate the connected devices or software.</li>
-								<li>Pause to review, edit, or reorder the captured actions.</li>
-								<li>Finish to save the sequence to a button or trigger.</li>
-							</ol>
-							<p>Only connections that support action recording appear in the list.</p>
-						</section>
-					</aside>
+			<SplitPanels.Root
+				showing={null}
+				className="action-recorder-split"
+				resize={{ storageKey: 'action-recorder', minPrimaryPx: 320, defaultPrimaryPercent: 35 }}
+			>
+				<SplitPanels.Primary className="recorder-setup">
+					<p className="recorder-page-intro">
+						Capture actions from supported connections, review them, then save them to a button or trigger.
+					</p>
 
-					{selectedSessionId ? (
-						<section className="recorder-actions-section">
-							<div className="recorder-actions-header">
-								<div className="recorder-actions-title">
-									<h6>Recorded actions</h6>
-									<span>{actionIds.length}</span>
+					<div className="action-recorder-session-heading">
+						{sessionsStore.selectedSessionInfo && (
+							<RecorderSessionHeading confirmRef={confirmRef} sessionInfo={sessionsStore.selectedSessionInfo} />
+						)}
+					</div>
+
+					<section className="recorder-guide">
+						<h2>Recording a sequence</h2>
+						<ol>
+							<li>Choose the connections you want to record.</li>
+							<li>Start recording and operate the connected devices or software.</li>
+							<li>Pause to review, edit, or reorder the captured actions.</li>
+							<li>Finish to save the sequence to a button or trigger.</li>
+						</ol>
+						<p>Only connections that support action recording appear in the list.</p>
+					</section>
+				</SplitPanels.Primary>
+
+				<SplitPanels.Secondary>
+					<div className="secondary-panel-simple">
+						{selectedSessionId ? (
+							<>
+								<div className="secondary-panel-simple-header panel-header-compact">
+									<div className="recorder-actions-title">
+										<h4 className="panel-title">Recorded actions</h4>
+										<span>{actionIds.length}</span>
+									</div>
+									{sessionsStore.selectedSessionInfo && (
+										<RecorderSessionActions
+											sessionInfo={sessionsStore.selectedSessionInfo}
+											doFinish={openFinishingModal}
+										/>
+									)}
 								</div>
-								{sessionsStore.selectedSessionInfo && (
-									<RecorderSessionActions
-										sessionInfo={sessionsStore.selectedSessionInfo}
-										doFinish={openFinishingModal}
-									/>
-								)}
-							</div>
-							<PanelCollapseHelperProvider storageId="action_recorder" knownPanelIds={actionIds}>
-								<RecorderSession sessionId={selectedSessionId} sessionInfo={sessionsStore.selectedSessionInfo} />
-							</PanelCollapseHelperProvider>
-						</section>
-					) : (
-						<div className="recorder-empty-state">No recording session is available yet.</div>
-					)}
-				</div>
-			</div>
+								<div className="secondary-panel-simple-body">
+									<PanelCollapseHelperProvider storageId="action_recorder" knownPanelIds={actionIds}>
+										<RecorderSession sessionId={selectedSessionId} sessionInfo={sessionsStore.selectedSessionInfo} />
+									</PanelCollapseHelperProvider>
+								</div>
+							</>
+						) : (
+							<PanelEmptyState
+								icon={faVideoCamera}
+								title="No recording session"
+								description="A recording session will appear here once Companion has started one."
+							/>
+						)}
+					</div>
+				</SplitPanels.Secondary>
+			</SplitPanels.Root>
 		</div>
 	)
 })

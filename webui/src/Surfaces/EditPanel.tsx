@@ -1,4 +1,4 @@
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faGamepad, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import './surfaces.css'
 import { useNavigate } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
@@ -20,6 +20,7 @@ import { NonIdealState } from '~/Components/NonIdealState'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { InternalPageIdDropdown } from '~/Controls/InternalModuleField.js'
+import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton } from '~/Layout/PanelIcons.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -75,14 +76,12 @@ export const SurfaceEditPanel = observer<SurfaceEditPanelProps>(function Surface
 
 	return (
 		<>
-			<div className="secondary-panel-simple-header">
-				<h4 className="panel-title">
-					Settings for {surfaceInfo?.displayName ?? surfaceInfo?.type ?? groupInfo?.displayName}
-				</h4>
-				<div className="header-buttons">
-					<CloseButton closeFn={doCloseSurface} />
-				</div>
-			</div>
+			<PanelHeader
+				icon={faGamepad}
+				title={`Settings for ${surfaceInfo?.displayName ?? surfaceInfo?.type ?? groupInfo?.displayName ?? 'surface'}`}
+			>
+				<CloseButton closeFn={doCloseSurface} />
+			</PanelHeader>
 
 			<div className="secondary-panel-simple-body">
 				<SurfaceEditPanelContent surfaceInfo={surfaceInfo} groupInfo={groupInfo} />

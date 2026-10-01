@@ -17,6 +17,7 @@ import { SearchBox } from '~/Components/SearchBox'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { PageHeader } from '~/Layout/PageHeader'
 import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
+import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -238,17 +239,9 @@ interface CustomVariableEditPanelHeadingProps {
 
 function CustomVariableEditPanelHeading({ doCloseVariable }: CustomVariableEditPanelHeadingProps) {
 	return (
-		<div className="flex items-center justify-between gap-3 p-3 bg-surface-muted/40 border-b border-border/70 shrink-0">
-			<div className="flex items-center gap-2">
-				<span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-surface-muted text-muted text-xs">
-					<FontAwesomeIcon icon={faDollarSign} />
-				</span>
-				<h3 className="text-sm font-bold text-body mb-0">Edit Custom Variable</h3>
-			</div>
-			<div className="flex items-center gap-1.5">
-				<ContextHelpButton action="/user-guide/config/variables#custom-variables" />
-				<CloseButton closeFn={doCloseVariable} />
-			</div>
-		</div>
+		<PanelHeader icon={faDollarSign} title="Edit Custom Variable">
+			<ContextHelpButton action="/user-guide/config/variables#custom-variables" />
+			<CloseButton closeFn={doCloseVariable} />
+		</PanelHeader>
 	)
 }

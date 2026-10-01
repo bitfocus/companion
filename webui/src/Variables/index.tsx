@@ -16,6 +16,7 @@ import { SearchBox } from '~/Components/SearchBox'
 import { VariablesTable } from '~/Components/VariablesTable.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import { PageHeader } from '~/Layout/PageHeader'
+import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { useComputed } from '~/Resources/util.js'
@@ -180,18 +181,10 @@ interface ConnectionVariablesPanelHeadingProps {
 
 function ConnectionVariablesPanelHeading({ label, doClose }: ConnectionVariablesPanelHeadingProps) {
 	return (
-		<div className="flex items-center justify-between gap-3 p-3 bg-surface-muted/40 border-b border-border/70 shrink-0">
-			<div className="flex items-center gap-2 min-w-0">
-				<span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-surface-muted text-muted text-xs shrink-0">
-					<FontAwesomeIcon icon={faDollarSign} />
-				</span>
-				<h3 className="text-sm font-bold text-body mb-0 truncate">{label}</h3>
-			</div>
-			<div className="flex items-center gap-1.5">
-				<ContextHelpButton action="/user-guide/config/variables" />
-				<CloseButton closeFn={doClose} />
-			</div>
-		</div>
+		<PanelHeader icon={faDollarSign} title={label}>
+			<ContextHelpButton action="/user-guide/config/variables" />
+			<CloseButton closeFn={doClose} />
+		</PanelHeader>
 	)
 }
 
