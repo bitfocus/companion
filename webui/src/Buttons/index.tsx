@@ -200,60 +200,62 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				{isLargeScreen && <SplitPanels.Primary>{gridPanel}</SplitPanels.Primary>}
 
 				<SplitPanels.Secondary>
-					<div className="secondary-panel-inner">
-						<TabArea.Root value={activeTab} onValueChange={setActiveTab} className="buttons-sidebar-tabs">
-							<TabArea.List>
-								{!isLargeScreen && (
-									<TabArea.Tab value="grid">
-										<FontAwesomeIcon icon={faThLarge} /> Buttons
-									</TabArea.Tab>
-								)}
-								{editingButton && (
-									<TabArea.Tab value="edit">
-										<FontAwesomeIcon icon={faCalculator} /> Edit Button {formatLocation(editingButton)}
-									</TabArea.Tab>
-								)}
-								<TabArea.Tab value="pages">
-									<FontAwesomeIcon icon={faLayerGroup} /> Pages
-								</TabArea.Tab>
-								<TabArea.Tab value="page-variables">
-									<FontAwesomeIcon icon={faDollarSign} /> Page Variables
-								</TabArea.Tab>
-								<TabArea.Tab value="presets">
-									<FontAwesomeIcon icon={faGift} /> Presets
-								</TabArea.Tab>
-							</TabArea.List>
-
-							{/* On small screens, show the grid in its own tab */}
-							{!isLargeScreen && <TabArea.Panel value="grid">{gridPanel}</TabArea.Panel>}
-							<TabArea.Panel value="edit">
-								<MyErrorBoundary>
-									{editingButton && (
-										<EditButton
-											key={`${formatLocation(editingButton)}-${tabResetToken}`}
-											location={editingButton}
-											onKeyUp={handleKeyDownInButtons}
-											navigateToControl={navigateToControl}
-										/>
+					<div className="secondary-panel-simple">
+						<div className="secondary-panel-inner">
+							<TabArea.Root value={activeTab} onValueChange={setActiveTab} className="buttons-sidebar-tabs">
+								<TabArea.List>
+									{!isLargeScreen && (
+										<TabArea.Tab value="grid">
+											<FontAwesomeIcon icon={faThLarge} /> Buttons
+										</TabArea.Tab>
 									)}
-								</MyErrorBoundary>
-							</TabArea.Panel>
-							<TabArea.Panel value="pages">
-								<MyErrorBoundary>
-									<PagesList setPageNumber={setPageNumber} />
-								</MyErrorBoundary>
-							</TabArea.Panel>
-							<TabArea.Panel value="page-variables">
-								<MyErrorBoundary>
-									<PageVariablesPanel pageNumber={pageNumber} />
-								</MyErrorBoundary>
-							</TabArea.Panel>
-							<TabArea.Panel value="presets">
-								<MyErrorBoundary>
-									<ConnectionPresets resetToken={tabResetToken} />
-								</MyErrorBoundary>
-							</TabArea.Panel>
-						</TabArea.Root>
+									{editingButton && (
+										<TabArea.Tab value="edit">
+											<FontAwesomeIcon icon={faCalculator} /> Edit Button {formatLocation(editingButton)}
+										</TabArea.Tab>
+									)}
+									<TabArea.Tab value="pages">
+										<FontAwesomeIcon icon={faLayerGroup} /> Pages
+									</TabArea.Tab>
+									<TabArea.Tab value="page-variables">
+										<FontAwesomeIcon icon={faDollarSign} /> Page Variables
+									</TabArea.Tab>
+									<TabArea.Tab value="presets">
+										<FontAwesomeIcon icon={faGift} /> Presets
+									</TabArea.Tab>
+								</TabArea.List>
+
+								{/* On small screens, show the grid in its own tab */}
+								{!isLargeScreen && <TabArea.Panel value="grid">{gridPanel}</TabArea.Panel>}
+								<TabArea.Panel value="edit">
+									<MyErrorBoundary>
+										{editingButton && (
+											<EditButton
+												key={`${formatLocation(editingButton)}-${tabResetToken}`}
+												location={editingButton}
+												onKeyUp={handleKeyDownInButtons}
+												navigateToControl={navigateToControl}
+											/>
+										)}
+									</MyErrorBoundary>
+								</TabArea.Panel>
+								<TabArea.Panel value="pages">
+									<MyErrorBoundary>
+										<PagesList setPageNumber={setPageNumber} />
+									</MyErrorBoundary>
+								</TabArea.Panel>
+								<TabArea.Panel value="page-variables">
+									<MyErrorBoundary>
+										<PageVariablesPanel pageNumber={pageNumber} />
+									</MyErrorBoundary>
+								</TabArea.Panel>
+								<TabArea.Panel value="presets">
+									<MyErrorBoundary>
+										<ConnectionPresets resetToken={tabResetToken} />
+									</MyErrorBoundary>
+								</TabArea.Panel>
+							</TabArea.Root>
+						</div>
 					</div>
 				</SplitPanels.Secondary>
 			</SplitPanels.Root>
