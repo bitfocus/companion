@@ -22,12 +22,13 @@
 	cursor: pointer;
 	transition: background-color 0.15s ease-in-out;
 
-	&:hover {
+	/* These rules sit in a higher cascade layer than .list-row-selected, so step aside for it */
+	&:not(.list-row-selected):hover {
 		background-color: var(--color-row-hover);
 	}
 
-	&.surface-row-selected {
-		background-color: var(--color-row-selected);
+	&.list-row-selected {
+		border-radius: 0 0.5rem 0.5rem 0;
 	}
 
 	&.surface-row-nested {
@@ -41,9 +42,11 @@
 }
 
 /* Same muted band as a collection header, so a group reads as the heading of the rows under it */
-.surface-group-row {
+.surface-group-row:not(.list-row-selected) {
 	background-color: var(--color-surface-muted);
+}
 
+.surface-group-row {
 	.surface-group-icon {
 		margin-inline-end: 0.375rem;
 		font-size: 0.75rem;

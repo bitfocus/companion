@@ -326,9 +326,10 @@ const ModulesListRow = observer(function ModulesListRow({
 	return (
 		<tr
 			onClick={doEdit}
-			className={classNames('cursor-pointer transition-colors hover:bg-surface-muted/50', {
-				'bg-primary/10 font-semibold text-primary border-l-4 border-l-primary': isSelected,
-			})}
+			className={classNames(
+				'cursor-pointer transition-colors',
+				isSelected ? 'list-row-selected' : 'hover:bg-surface-muted/50'
+			)}
 		>
 			<td className="compact py-2 px-3 w-10">
 				{icon && (

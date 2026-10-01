@@ -381,6 +381,28 @@ hr.slim {
 	overflow-y: auto;
 }
 
+/* The selected row of a page's list (the item open in the secondary panel): a primary tint with a bar
+   down its leading edge. An inset shadow rather than a border, so selecting a row doesn't shift its
+   content. Rows apply their own rounding and hover background only while unselected, as those
+   utilities would otherwise override this. */
+.list-row-selected {
+	background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+	box-shadow: inset 4px 0 0 var(--color-primary);
+	border-start-start-radius: 0;
+	border-end-start-radius: 0;
+	border-start-end-radius: 0.5rem;
+	border-end-end-radius: 0.5rem;
+}
+
+/* A table row can't reliably paint an inset shadow, so its first cell carries the bar. */
+tr.list-row-selected {
+	box-shadow: none;
+
+	> td:first-child {
+		box-shadow: inset 4px 0 0 var(--color-primary);
+	}
+}
+
 /* The bordered card a page's main list sits in, under its toolbar. */
 .list-card {
 	border: 1px solid var(--color-border-soft);

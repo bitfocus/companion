@@ -90,10 +90,8 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 	return (
 		<div
 			className={classNames(
-				'flex flex-row items-center gap-3 cursor-pointer py-2 px-3 rounded-lg transition-all',
-				isSelected
-					? 'bg-primary/10 font-semibold text-primary ring-1 ring-primary/30 shadow-xs'
-					: 'hover:bg-surface-muted/60'
+				'flex flex-row items-center gap-3 cursor-pointer py-2 px-3 transition-all',
+				isSelected ? 'list-row-selected' : 'rounded-lg hover:bg-surface-muted/60'
 			)}
 			title={`Click to configure the ${moduleDisplayName}.`}
 		>

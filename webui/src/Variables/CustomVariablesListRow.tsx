@@ -53,10 +53,8 @@ export const CustomVariableRow = observer(function CustomVariableRow({ info }: C
 			onClick={doEdit}
 			onKeyDown={doEditKey}
 			className={classNames(
-				'flex flex-row items-center gap-3 cursor-pointer py-2 px-3 rounded-lg transition-colors hover:bg-surface-muted/50',
-				isSelected
-					? 'bg-primary/10 font-semibold text-primary border-l-4 border-l-primary rounded-l-none'
-					: 'bg-transparent'
+				'flex flex-row items-center gap-3 cursor-pointer py-2 px-3 transition-colors',
+				isSelected ? 'list-row-selected' : 'rounded-lg hover:bg-surface-muted/50'
 			)}
 		>
 			<div className="flex flex-col grow min-w-0">

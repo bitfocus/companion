@@ -193,10 +193,8 @@ function BackupsTableRow({ rule, index, editRule }: BackupsTableRowProps) {
 		<div
 			ref={ref}
 			className={classNames(
-				'flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-colors',
-				isSelected
-					? 'bg-primary/10 font-semibold text-primary border-l-4 border-l-primary rounded-l-none'
-					: 'hover:bg-surface-muted/50 bg-transparent'
+				'flex items-center gap-3 p-2.5 cursor-pointer transition-colors',
+				isSelected ? 'list-row-selected' : 'rounded-lg hover:bg-surface-muted/50'
 			)}
 		>
 			<div ref={handleRef} className="cursor-grab text-muted/60 hover:text-muted px-1">

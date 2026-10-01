@@ -200,7 +200,6 @@
 	--color-row-overlay-10: color-mix(in srgb, var(--color-row-overlay) 10%, transparent); /* row hover */
 	--color-row-overlay-15: color-mix(in srgb, var(--color-row-overlay) 15%, transparent); /* tree leaf hover */
 	--color-row-overlay-30: color-mix(in srgb, var(--color-row-overlay) 30%, transparent); /* selected row hover */
-	--color-row-selected: color-mix(in srgb, var(--color-row-overlay) 35%, transparent);
 
 	/* Button preview / rendering (the always-black button canvas and its drag/drop states) */
 	--color-button-bg: #000; /* hardware buttons are black; this does not flip with app theme */

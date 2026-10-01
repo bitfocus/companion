@@ -177,7 +177,7 @@ const ManualGroupRow = observer(function ManualGroupRow({
 	return (
 		<div className="surface-group">
 			<div
-				className={classNames('surface-row surface-group-row', { 'surface-row-selected': isGroupSelected })}
+				className={classNames('surface-row surface-group-row', { 'list-row-selected': isGroupSelected })}
 				onClick={handleGroupClick}
 				title={`${groupName}${/group/i.test(groupName) ? '' : ' group'}: click to edit settings.`}
 			>
@@ -266,7 +266,7 @@ const SurfaceRow = observer(function SurfaceRow({
 		<div
 			className={classNames('surface-row', {
 				'surface-row-nested': isInGroup,
-				'surface-row-selected': isSelected,
+				'list-row-selected': isSelected,
 				'surface-row-disabled': surfaceDisabled,
 			})}
 			onClick={handleSurfaceClick}
