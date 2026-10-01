@@ -340,7 +340,7 @@ export function ConvertLegacyStyleToElements(
 	if (parsedStyle.background.color !== undefined) backgroundElement.color.value = parsedStyle.background.color
 	if (parsedStyle.canvas.decoration !== undefined) canvasElement.decoration.value = parsedStyle.canvas.decoration
 
-	let hasAnyAdvancedFeedbacks = false
+	let usesBufferElement = false
 
 	const selectedElementIds: { [usage in ButtonGraphicsElementUsage]: string | undefined } = {
 		[ButtonGraphicsElementUsage.Automatic]: undefined, // Not valid here
@@ -373,8 +373,6 @@ export function ConvertLegacyStyleToElements(
 				})
 			}
 		} else {
-			hasAnyAdvancedFeedbacks = true
-
 			// Should be advanced, translate the properties it declares it affects (all, if it declares none)
 
 			overrides = CreateAdvancedFeedbackStyleOverrides(
@@ -383,6 +381,7 @@ export function ConvertLegacyStyleToElements(
 				feedbackAffectedProperties?.get(fb.definitionId),
 				generateId
 			)
+			if (overrides.some((o) => o.elementId === bufferElement.id)) usesBufferElement = true
 		}
 
 		// Special case to preserve behaviour of 'conditionalise existing feedbacks'
@@ -403,7 +402,8 @@ export function ConvertLegacyStyleToElements(
 	const updatedFeedbacks = feedbacks.map(updateFeedback)
 
 	const layers: SomeButtonGraphicsElement[] = [canvasElement, backgroundElement, imageElement, textElement]
-	if (hasAnyAdvancedFeedbacks) layers.push(bufferElement)
+	// Only add the buffer element if a feedback can draw an imageBuffer into it
+	if (usesBufferElement) layers.push(bufferElement)
 
 	const previewStyleFeedbacks: SomeEntityModel[] = []
 	if (previewStyle) {
