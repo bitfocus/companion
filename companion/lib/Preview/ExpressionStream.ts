@@ -146,7 +146,7 @@ export class PreviewExpressionStream {
 	}
 
 	#reevaluateSession(expressionId: string, session: ExpressionStreamSession): void {
-		this.#logger.debug(
+		this.#logger.silly(
 			`Re-evaluating expression: ${expressionId} for ${session.changes.listenerCount('change')} clients`
 		)
 
