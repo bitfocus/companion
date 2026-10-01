@@ -1,0 +1,54 @@
+name: Create GitHub release
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: ${{ github.repository_owner == 'bitfocus' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Build release notes
+        env:
+          TAG: ${{ github.ref_name }}
+        run: ./tools/build_release_notes.sh "$TAG" > release-notes.md
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "Release $TAG already exists, skipping"
+            exit 0
+          fi
+
+          FLAGS=()
+          if [[ "$TAG" == *-* ]]; then
+            FLAGS+=(--prerelease)
+          fi
+
+          # Only mark as latest when this is the highest stable version (eg not a patch to an older release line)
+          HIGHEST=$(git tag --list 'v*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+          if [[ "$TAG" == "$HIGHEST" ]]; then
+            FLAGS+=(--latest)
+          else
+            FLAGS+=(--latest=false)
+          fi
+
+          gh release create "$TAG" \
+            --verify-tag \
+            --title "Bitfocus Companion $TAG" \
+            --notes-file release-notes.md \
+            "${FLAGS[@]}"
