@@ -24,6 +24,7 @@ import { capitalize } from '@companion-app/shared/Util.js'
 import { DismissableAlert, StaticAlert } from '~/Components/Alert.js'
 import { Badge } from '~/Components/Badge'
 import { Button } from '~/Components/Button.js'
+import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
@@ -39,7 +40,6 @@ import { getModuleVersionInfo } from '~/Instances/Util.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { InstanceVersionChangeButton } from '../../Instances/InstanceEdit/InstanceVersionChangeButton.js'
-import { EditSectionCard } from './EditSectionCard.js'
 
 interface InstanceGenericEditPanelProps<TConfig extends ClientInstanceConfigBase> {
 	instanceInfo: TConfig
@@ -110,14 +110,14 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 	return (
 		<>
 			<Form
-				className="instance-edit-panel flex flex-col flex-1 min-h-0 overflow-hidden relative"
+				className="edit-panel instance-edit-panel flex flex-col flex-1 min-h-0 overflow-hidden relative"
 				onSubmit={(e) => {
 					e.preventDefault()
 					e.stopPropagation()
 					performSave()
 				}}
 			>
-				<div className="page-scroll instance-edit-scroll">
+				<div className="page-scroll edit-panel-scroll">
 					{saveError && (
 						<StaticAlert color="danger" className="mb-4">
 							{saveError}
@@ -165,7 +165,7 @@ const InstanceLabelInputField = observer(function InstanceLabelInputField<TConfi
 	const labelId = useId()
 
 	return (
-		<div className="instance-edit-field-row">
+		<div className="edit-field-row">
 			<label htmlFor={labelId} className="text-xs font-semibold text-body">
 				Label
 			</label>
@@ -196,7 +196,7 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 	const moduleVersion = getModuleVersionInfo(moduleInfo, panelStore.instanceInfo.moduleVersionId)
 
 	return (
-		<div className="instance-edit-field-row">
+		<div className="edit-field-row">
 			<label htmlFor={moduleVersionId} className="text-xs font-semibold text-body">
 				Module Version
 			</label>
@@ -253,7 +253,7 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 	const canToggle = !cannotEnableReason || isEnabled
 
 	return (
-		<div className="instance-edit-field-row">
+		<div className="edit-field-row">
 			<label htmlFor={enabledId} className="text-xs font-semibold text-body mb-0">
 				Enabled
 			</label>
@@ -267,7 +267,7 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 				/>
 			</div>
 			{cannotEnableReason && !isEnabled && (
-				<div className="instance-edit-field-help text-danger text-xs">{cannotEnableReason}</div>
+				<div className="edit-field-help text-danger text-xs">{cannotEnableReason}</div>
 			)}
 		</div>
 	)
@@ -341,8 +341,8 @@ const InstanceConfigArea = observer(function InstanceConfigArea<TConfig extends 
 	if (panelStore.notRunningReason === 'disabled' || panelStore.notRunningReason === 'missing') {
 		return (
 			<EditSectionCard title="Configuration">
-				<div className="instance-edit-note">
-					<FontAwesomeIcon icon={faPowerOff} className="instance-edit-note-icon" />
+				<div className="edit-note">
+					<FontAwesomeIcon icon={faPowerOff} className="edit-note-icon" />
 					Enable this {panelStore.service.moduleTypeDisplayName} to edit its configuration
 				</div>
 			</EditSectionCard>
@@ -386,8 +386,8 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 
 	if (configData.fields.length === 0) {
 		return (
-			<div className="instance-edit-note">
-				<FontAwesomeIcon icon={faCircleCheck} className="instance-edit-note-icon instance-edit-note-icon-good" />
+			<div className="edit-note">
+				<FontAwesomeIcon icon={faCircleCheck} className="edit-note-icon edit-note-icon-good" />
 				This {panelStore.service.moduleTypeDisplayName} requires no configuration
 			</div>
 		)

@@ -9,9 +9,9 @@ import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceSt
 import type { ClientModuleInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { Badge } from '~/Components/Badge.js'
 import { Button, LinkButtonExternal } from '~/Components/Button.js'
+import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { LogLine, LogNoticeLine, VirtualLogList, type LogViewerLine } from '~/Components/LogViewer.js'
 import { windowLinkOpen } from '~/Helpers/Window.js'
-import { EditSectionCard } from '~/Instances/InstanceEdit/EditSectionCard.js'
 import { InstanceTableStatusCell } from '~/Instances/List/InstanceTableStatusCell.js'
 import { UpdateInstanceToLatestBadge } from '~/Instances/UpdateInstanceToLatestBadge.js'
 import { trpc } from '~/Resources/TRPC.js'
@@ -43,15 +43,15 @@ export const ConnectionDiagnosticsTab = observer(function ConnectionDiagnosticsT
 	const bugUrl = moduleInfo?.display?.bugUrl
 
 	return (
-		<div className="page-scroll instance-edit-panel instance-edit-scroll">
+		<div className="page-scroll edit-panel edit-panel-scroll">
 			<EditSectionCard title="Health">
-				<div className="instance-edit-field-row">
+				<div className="edit-field-row">
 					<span className="text-xs font-semibold text-body">Status</span>
 					<div>
 						<InstanceTableStatusCell isEnabled={connectionInfo.enabled !== false} status={status} />
 					</div>
 				</div>
-				<div className="instance-edit-field-row">
+				<div className="edit-field-row">
 					<span className="text-xs font-semibold text-body">Message</span>
 					<div className={classNames('connection-diagnostics-message', !statusMessage && 'text-muted')}>
 						{statusMessage || 'No message'}
@@ -99,7 +99,7 @@ export const ConnectionDiagnosticsTab = observer(function ConnectionDiagnosticsT
 
 function DiagnosticsRow({ label, children }: { label: string; children: React.ReactNode }) {
 	return (
-		<div className="instance-edit-field-row">
+		<div className="edit-field-row">
 			<span className="text-xs font-semibold text-body">{label}</span>
 			<div className="text-xs text-body min-w-0">{children}</div>
 		</div>

@@ -1,16 +1,28 @@
-import { faImage } from '@fortawesome/free-solid-svg-icons'
+import { faImage, faSquare, faTableCells, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import classNames from 'classnames'
 import fuzzysort from 'fuzzysort'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
 import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
+import { Button, ButtonGroup } from '~/Components/Button.js'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable.js'
 import type { CollectionsNestingTableItem, NestingCollectionsApi } from '~/Components/CollectionsNestingTable/Types.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
+import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
 import { useComputed } from '~/Resources/util'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImageThumbnail } from './ImageThumbnail'
+
+type ImageTileSize = 'small' | 'medium' | 'large'
+
+const TILE_SIZES: readonly { size: ImageTileSize; label: string; icon: typeof faImage }[] = [
+	{ size: 'small', label: 'Small thumbnails', icon: faTableCells },
+	{ size: 'medium', label: 'Medium thumbnails', icon: faTableCellsLarge },
+	{ size: 'large', label: 'Large thumbnails', icon: faSquare },
+]
 
 interface ImageItem extends CollectionsNestingTableItem {
 	imageInfo: ImageLibraryInfo
@@ -39,6 +51,7 @@ export const ImageLibrarySelector = observer(function ImageLibrarySelector({
 }: ImageLibrarySelectorProps) {
 	const { imageLibrary } = useContext(RootAppStoreContext)
 	const [searchQuery, setSearchQuery] = useState('')
+	const [tileSize, setTileSize] = useLocalStorage<ImageTileSize>('image_library_tile_size', 'medium')
 
 	const images = imageLibrary.getAllImages()
 
@@ -71,13 +84,33 @@ export const ImageLibrarySelector = observer(function ImageLibrarySelector({
 
 	return (
 		<div className="image-library-selector">
-			<div className="pb-2">
-				<SearchBox placeholder="Search images..." filter={searchQuery} setFilter={setSearchQuery} />
+			<div className="flex items-center gap-2 pb-2">
+				<div className="flex-1 min-w-0">
+					<SearchBox placeholder="Search images..." filter={searchQuery} setFilter={setSearchQuery} />
+				</div>
+				<ButtonGroup>
+					{TILE_SIZES.map(({ size, label, icon }) => (
+						<Button
+							key={size}
+							size="sm"
+							color="secondary"
+							aria-pressed={tileSize === size}
+							onClick={() => setTileSize(size)}
+							title={label}
+							aria-label={label}
+							className="h-9"
+						>
+							<FontAwesomeIcon icon={icon} fixedWidth />
+						</Button>
+					))}
+				</ButtonGroup>
 			</div>
 
-			<div className="image-library-selector-grid">
+			<div className={classNames('image-library-selector-grid', `image-library-tiles-${tileSize}`)}>
 				<PanelCollapseHelperProvider storageId="image_library_selector" knownPanelIds={imageLibrary.allCollectionIds}>
+					{/* Keyed on the size: the table measures its column count on mount and resize only */}
 					<CollectionsNestingTable
+						key={tileSize}
 						ItemRow={ItemRow}
 						itemName="image"
 						dragId={dragId}

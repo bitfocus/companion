@@ -1,5 +1,5 @@
 import classNames from 'classnames'
-import './InstanceEditPanel.css'
+import './EditSectionCard.css'
 
 /** A titled section of an instance's edit panel (General Settings, Configuration, Diagnostics, …). */
 export function EditSectionCard({
@@ -18,11 +18,11 @@ export function EditSectionCard({
 	const heading = (
 		<>
 			<h4>{title}</h4>
-			{summary && <span className="instance-edit-section-summary">{summary}</span>}
+			{summary && <span className="edit-section-summary">{summary}</span>}
 		</>
 	)
-	const content = <div className="instance-edit-section-body">{children}</div>
-	const sectionClass = classNames('instance-edit-section', danger && 'instance-edit-section-danger')
+	const content = <div className="edit-section-body">{children}</div>
+	const sectionClass = classNames('edit-section', danger && 'edit-section-danger')
 	return collapsible ? (
 		<details className={sectionClass}>
 			<summary>{heading}</summary>
@@ -30,7 +30,7 @@ export function EditSectionCard({
 		</details>
 	) : (
 		<section className={sectionClass}>
-			<div className="instance-edit-section-heading">{heading}</div>
+			<div className="edit-section-heading">{heading}</div>
 			{content}
 		</section>
 	)
