@@ -31,6 +31,7 @@ import { ControlClearButton } from './ControlClearButton.js'
 import { ControlHotPressButtons } from './ControlHotPressButtons.js'
 import { ConvertToNormalButton } from './ConvertToNormalButton.js'
 import { CreateButtonTypeButtons } from './CreateButtonTypeButtons.js'
+import { EditButtonTabsSlotContext } from './EditButtonTabsSlot.js'
 import { LayeredButtonEditor } from './LayeredButtonEditor/LayeredButtonEditor.js'
 import { PresetReferenceEditor } from './PresetReferenceEditor.js'
 
@@ -157,8 +158,10 @@ const EditButtonContent = observer(function EditButton({
 		})
 	}, [resetControlsMutation, location])
 
+	const [tabsSlot, setTabsSlot] = useState<HTMLDivElement | null>(null)
+
 	return (
-		<>
+		<EditButtonTabsSlotContext.Provider value={tabsSlot}>
 			<div className="edit-button-sticky-header">
 				<div className="edit-button-summary">
 					<div className="edit-button-summary-preview">
@@ -167,6 +170,18 @@ const EditButtonContent = observer(function EditButton({
 					<div className="edit-button-summary-identity">
 						<strong>Button {formatLocation(location)}</strong>
 						<span>{typeLabel}</span>
+						{(config.type === 'button-layered' ||
+							config.type === 'preset-reference' ||
+							config.type === 'button-reference') && (
+							<div className="edit-button-summary-test">
+								<MyErrorBoundary>
+									<ControlHotPressButtons
+										location={location}
+										showRotaries={config.type === 'button-reference' || config.options.rotaryActions}
+									/>
+								</MyErrorBoundary>
+							</div>
+						)}
 					</div>
 					<div className="edit-button-summary-actions">
 						<MyErrorBoundary>
@@ -194,21 +209,9 @@ const EditButtonContent = observer(function EditButton({
 							<ControlClearButton location={location} resetModalRef={resetModalRef} />
 						</MyErrorBoundary>
 					</div>
+					{/* The editor tabs (regular buttons only) portal in here, see EditButtonTabsSlotContext */}
+					<div className="edit-button-summary-tabs" ref={setTabsSlot} />
 				</div>
-
-				{(config.type === 'button-layered' ||
-					config.type === 'preset-reference' ||
-					config.type === 'button-reference') && (
-					<section className="edit-button-test-strip" aria-label="Test button">
-						<div className="edit-button-section-label">Test button</div>
-						<MyErrorBoundary>
-							<ControlHotPressButtons
-								location={location}
-								showRotaries={config.type === 'button-reference' || config.options.rotaryActions}
-							/>
-						</MyErrorBoundary>
-					</section>
-				)}
 
 				{(config.type === 'button-layered' ||
 					config.type === 'preset-reference' ||
@@ -310,6 +313,6 @@ const EditButtonContent = observer(function EditButton({
 			{config.type === 'button-layered' && (
 				<LayeredButtonEditor config={config} controlId={controlId} runtimeProps={runtimeProps} location={location} />
 			)}
-		</>
+		</EditButtonTabsSlotContext.Provider>
 	)
 })

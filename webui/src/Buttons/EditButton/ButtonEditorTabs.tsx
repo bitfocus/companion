@@ -1,7 +1,8 @@
 import { faChevronLeft, faChevronRight, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
@@ -17,6 +18,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
 import type { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 import { ControlActionStepTab } from './ControlActionStepTab.js'
+import { EditButtonTabsSlotContext } from './EditButtonTabsSlot.js'
 
 export interface ButtonEditorExtraTabs {
 	id: string
@@ -49,6 +51,7 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 }: ButtonEditorTabsProps): React.JSX.Element {
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 	const [tabBarRef, tabBarSize] = useElementClientSize<HTMLDivElement>()
+	const tabsSlot = useContext(EditButtonTabsSlotContext)
 
 	const stepKeys = useMemo(() => GetStepIds(steps), [steps])
 
@@ -108,31 +111,35 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 		<>
 			<GenericConfirmModal ref={confirmRef} />
 
-			{/* Primary Clean Navigation Tabs */}
-			<div ref={tabBarRef} className="sticky-tabs button-editor-tabs-shell">
-				<TabArea.Root className="button-editor-main-tabs" value={activeMainTab} onValueChange={setActiveMainTab}>
-					<TabArea.List className="button-editor-main-tabs-list">
-						{mainTabs.map((tab) => (
-							<TabArea.Tab key={tab.id} className="button-editor-main-tab" value={tab.id} title={tab.name}>
-								<div className="flex items-center gap-1.5">
-									<span>{tab.name}</span>
-									{tab.count !== undefined && (
-										<span className="px-1.5 py-0.5 rounded-full text-3xs font-semibold bg-primary/20 text-primary">
-											{tab.count}
-										</span>
-									)}
-								</div>
-							</TabArea.Tab>
-						))}
-					</TabArea.List>
-				</TabArea.Root>
-			</div>
+			{/* Rendered into the summary card, so the tabs stick with it */}
+			{tabsSlot &&
+				createPortal(
+					<div ref={tabBarRef} className="button-editor-tabs-shell">
+						<TabArea.Root className="button-editor-main-tabs" value={activeMainTab} onValueChange={setActiveMainTab}>
+							<TabArea.List className="button-editor-main-tabs-list">
+								{mainTabs.map((tab) => (
+									<TabArea.Tab key={tab.id} className="button-editor-main-tab" value={tab.id} title={tab.name}>
+										<div className="flex items-center gap-1.5">
+											<span>{tab.name}</span>
+											{tab.count !== undefined && (
+												<span className="px-1.5 py-0.5 rounded-full text-3xs font-semibold bg-primary/20 text-primary">
+													{tab.count}
+												</span>
+											)}
+										</div>
+									</TabArea.Tab>
+								))}
+							</TabArea.List>
+						</TabArea.Root>
+					</div>,
+					tabsSlot
+				)}
 
 			<div className="edit-sticky-body" style={{ '--tab-bar-height': `${tabBarSize.height}px` } as React.CSSProperties}>
 				{activeMainTab === 'actions' ? (
 					<>
 						{/* Inside Actions: Modern Step Navigator Bar */}
-						<div className="flex items-center justify-between gap-3 p-1.5 bg-surface-muted/50 rounded-xl border border-border/70 mb-3 mt-1 flex-wrap">
+						<div className="flex items-center justify-between gap-3 p-1.5 bg-surface-muted/50 rounded-xl border border-border/70 mb-2 flex-wrap">
 							<div className="flex items-center gap-1.5 flex-wrap">
 								<span className="text-3xs font-semibold uppercase tracking-wider text-muted px-1.5">Steps:</span>
 								{stepKeys.map((stepId, i) => (

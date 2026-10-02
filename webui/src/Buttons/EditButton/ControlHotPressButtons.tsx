@@ -2,8 +2,7 @@ import { faPlay, faRedo, faStop, faUndo } from '@fortawesome/free-solid-svg-icon
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { Button } from '~/Components/Button'
-import { MyErrorBoundary } from '~/Resources/Error'
+import { Button, ButtonGroup } from '~/Components/Button'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export function ControlHotPressButtons({
@@ -42,53 +41,33 @@ export function ControlHotPressButtons({
 	}, [hotAbortMutation, location])
 
 	return (
-		<div className="control-hotpress-actions" role="group" aria-label="Test button actions">
-			<Button
-				className="edit-button-toolbar-action"
-				color="secondary"
-				size="sm"
-				onMouseDown={hotPressDown}
-				onMouseUp={hotPressUp}
-				title="Test press button"
-			>
-				<FontAwesomeIcon icon={faPlay} />
+		<ButtonGroup className="control-hotpress-actions">
+			<Button color="secondary" size="sm" onMouseDown={hotPressDown} onMouseUp={hotPressUp} title="Test press button">
+				<FontAwesomeIcon icon={faPlay} className="me-1.5" />
 				Test
 			</Button>
 
 			{showRotaries && (
-				<MyErrorBoundary>
-					<Button
-						className="edit-button-toolbar-action"
-						color="secondary"
-						size="sm"
-						onMouseDown={hotRotateLeft}
-						title="Test rotate left"
-					>
+				<>
+					<Button color="secondary" size="sm" onMouseDown={hotRotateLeft} title="Test rotate left">
 						<FontAwesomeIcon icon={faUndo} />
 					</Button>
-
-					<Button
-						className="edit-button-toolbar-action"
-						color="secondary"
-						size="sm"
-						onMouseDown={hotRotateRight}
-						title="Test rotate right"
-					>
+					<Button color="secondary" size="sm" onMouseDown={hotRotateRight} title="Test rotate right">
 						<FontAwesomeIcon icon={faRedo} />
 					</Button>
-				</MyErrorBoundary>
+				</>
 			)}
 
 			<Button
-				className="edit-button-toolbar-action"
-				color="danger"
+				color="secondary"
 				size="sm"
+				className="control-hotpress-stop"
 				onMouseDown={hotAbortActions}
 				title="Abort running actions"
+				aria-label="Abort running actions"
 			>
 				<FontAwesomeIcon icon={faStop} />
-				Stop
 			</Button>
-		</div>
+		</ButtonGroup>
 	)
 }
