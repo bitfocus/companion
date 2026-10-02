@@ -1,7 +1,6 @@
 import {
 	faAdd,
 	faClock,
-	faClone,
 	faDownload,
 	faFileExport,
 	faLayerGroup,
@@ -24,6 +23,7 @@ import { Badge } from '~/Components/Badge.js'
 import { Button, LinkButtonExternal } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
+import { DuplicateIcon } from '~/Components/DuplicateIcon.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
@@ -402,7 +402,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 						<FontAwesomeIcon icon={faPlay} className="text-xs" />
 					</Button>
 					<Button variant="ghost" size="sm" onClick={doClone} title="Clone Trigger" className="p-1.5">
-						<FontAwesomeIcon icon={faClone} className="text-xs" />
+						<DuplicateIcon />
 					</Button>
 					<LinkButtonExternal
 						variant="ghost"

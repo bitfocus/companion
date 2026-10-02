@@ -1,14 +1,6 @@
 import { useDragDropMonitor } from '@dnd-kit/react'
 import { isSortable, useSortable } from '@dnd-kit/react/sortable'
-import {
-	faAnglesDown,
-	faAnglesUp,
-	faChevronDown,
-	faClone,
-	faPencil,
-	faSort,
-	faTrash,
-} from '@fortawesome/free-solid-svg-icons'
+import { faAnglesDown, faAnglesUp, faChevronDown, faPencil, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
@@ -17,6 +9,7 @@ import type { JsonValue } from 'type-fest'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { optionsObjectToExpressionOptions, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { Button } from '~/Components/Button'
+import { DuplicateIcon } from '~/Components/DuplicateIcon.js'
 import { Form } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
@@ -318,7 +311,7 @@ const EventEditor = observer(function EventEditor({
 						onClick={service.performDuplicate}
 						title="Duplicate event"
 					>
-						<FontAwesomeIcon icon={faClone} className="text-xs" />
+						<DuplicateIcon />
 					</Button>
 					<Button
 						size="sm"

@@ -1,4 +1,4 @@
-import { faChevronLeft, faChevronRight, faClone, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faChevronLeft, faChevronRight, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -7,6 +7,7 @@ import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { Button } from '~/Components/Button'
+import { DuplicateIcon } from '~/Components/DuplicateIcon.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
@@ -203,7 +204,7 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 										onClick={() => service.duplicateStep(currentStepKey)}
 										className="p-1"
 									>
-										<FontAwesomeIcon icon={faClone} className="text-xs" />
+										<DuplicateIcon />
 									</Button>
 									<Button
 										variant="ghost"

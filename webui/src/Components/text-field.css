@@ -29,6 +29,36 @@
 	}
 }
 
+/* VariableInputGroup: the type toggle and input focus as one control, so the group (not the input)
+   draws the shared focus ring while either part is being edited. */
+.variable-input-group {
+	margin-bottom: 0.5rem;
+	border-radius: var(--radius);
+	outline: none;
+	transition: box-shadow 0.15s ease-in-out;
+
+	&.editing {
+		box-shadow: 0 0 0 0.25rem var(--color-focus-ring);
+	}
+
+	/* The value-type toggle: a small icon + label chip, fixed width so switching type doesn't shift the input */
+	.variable-input-type-toggle {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.25rem;
+		min-width: 4rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+		color: var(--color-muted);
+	}
+
+	/* A label/value row already spaces its rows, and the margin would pull the label off-centre */
+	.edit-field-row & {
+		margin-bottom: 0;
+	}
+}
+
 /* The multiline variant renders a <textarea> (single-line renders an <input>). Only the textarea is
    resizable, and constrain it to vertical so it can't break the row layout. */
 textarea.text-input-field {

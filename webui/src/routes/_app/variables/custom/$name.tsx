@@ -22,7 +22,7 @@ const RouteComponent = observer(function RouteComponent() {
 	}, [navigate, variableExists])
 
 	return (
-		<div className="secondary-panel-simple-body">
+		<div className="page-scroll edit-panel-scroll">
 			<MyErrorBoundary>
 				<CustomVariableEditPanel key={name} name={name} />
 			</MyErrorBoundary>

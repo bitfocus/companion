@@ -1,4 +1,4 @@
-import { faAdd, faClone, faLayerGroup, faList, faSquareRootVariable, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faAdd, faLayerGroup, faList, faSquareRootVariable, faTrash } from '@fortawesome/free-solid-svg-icons'
 import '../../Components/VariablesTable.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
@@ -11,9 +11,10 @@ import type {
 	ClientExpressionVariableData,
 	ExpressionVariableCollection,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
-import { Button, ButtonGroup } from '~/Components/Button'
+import { Button } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { CopyButton } from '~/Components/CopyButton'
+import { DuplicateIcon } from '~/Components/DuplicateIcon.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
@@ -313,14 +314,12 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 			</div>
 
 			<div className="shrink-0 flex items-center gap-1">
-				<ButtonGroup>
-					<Button color="secondary" size="sm" onClick={doClone} title="Clone">
-						<FontAwesomeIcon icon={faClone} />
-					</Button>
-					<Button color="danger" size="sm" onClick={doDelete} title="Delete" variant="ghost">
-						<FontAwesomeIcon icon={faTrash} />
-					</Button>
-				</ButtonGroup>
+				<Button variant="ghost" size="sm" onClick={doClone} title="Clone" className="p-1.5">
+					<DuplicateIcon />
+				</Button>
+				<Button variant="ghost" size="sm" onClick={doDelete} title="Delete" className="p-1.5" color="danger">
+					<FontAwesomeIcon icon={faTrash} className="text-xs" />
+				</Button>
 			</div>
 		</div>
 	)

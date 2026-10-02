@@ -34,7 +34,7 @@ export async function createCustomVariable(page: Page, name: string): Promise<vo
 export async function openCustomVariableValue(page: Page, name: string): Promise<Locator> {
 	await customVariableRow(page, name).click()
 
-	const value = page.getByLabel('Current value:')
+	const value = page.getByLabel('Current value', { exact: true })
 	await expect(value).toBeVisible()
 	return value
 }

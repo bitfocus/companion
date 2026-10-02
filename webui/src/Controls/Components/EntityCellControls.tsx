@@ -1,10 +1,11 @@
-import { faChevronDown, faClone, faPencil, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faChevronDown, faPencil, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, type EntityOwner, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { Button } from '~/Components/Button.js'
+import { DuplicateIcon } from '~/Components/DuplicateIcon.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { VariableValueDisplayPopover } from '~/Components/VariableValueDisplay.js'
@@ -248,7 +249,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 					title={`Duplicate ${entityTypeLabel}`}
 					className="p-1.5"
 				>
-					<FontAwesomeIcon icon={faClone} className="text-xs" />
+					<DuplicateIcon />
 				</Button>
 
 				<Button

@@ -1,14 +1,12 @@
 import { observer } from 'mobx-react-lite'
 import { useContext, useId, useRef } from 'react'
-import { CheckboxInputField } from '~/Components/CheckboxInputField.js'
 import { CopyButton } from '~/Components/CopyButton'
-import { Form, FormLabel } from '~/Components/Form.js'
+import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
+import { SwitchInputField } from '~/Components/SwitchInputField'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import VariableInputGroup from '~/Components/VariableInputGroup.js'
-import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useCustomVariablesApi } from './CustomVariablesApi'
 import { useVariablesValuesForLabel } from './useVariablesValuesForLabel'
@@ -39,66 +37,67 @@ export const CustomVariableEditPanel = observer(function CustomVariableEditPanel
 	const fullname = `$(custom:${name})`
 
 	return (
-		<div className="p-3">
+		<div className="edit-panel">
 			<GenericConfirmModal ref={confirmModalRef} />
 
-			<div className="flex items-center gap-1.5 mb-3">
-				<span className="variable-style">{fullname}</span>
-				<CopyButton size="sm" title="Copy variable name" color="primary" variant="ghost" text={fullname} />
-			</div>
+			<EditSectionCard title="General Settings">
+				<div className="edit-field-row">
+					<span className="text-xs font-semibold text-body">Variable</span>
+					<div className="flex items-center gap-1.5 min-w-0">
+						<span className="variable-style truncate">{fullname}</span>
+						<CopyButton size="sm" title="Copy variable name" color="primary" variant="ghost" text={fullname} />
+					</div>
+				</div>
+				<div className="edit-field-row">
+					<label htmlFor={descriptionFieldId} className="text-xs font-semibold text-body">
+						Description
+					</label>
+					<TextInputFieldSimple
+						id={descriptionFieldId}
+						value={info.description}
+						setValue={(description) => customVariablesApi.setDescription(name, description)}
+					/>
+				</div>
+			</EditSectionCard>
 
-			<Form onSubmit={PreventDefaultHandler}>
-				<Grid.Row>
-					<FormLabel htmlFor={descriptionFieldId} sm={3} className="align-right">
-						Description:
-					</FormLabel>
-					<Grid.Col sm={9}>
-						<TextInputFieldSimple
-							id={descriptionFieldId}
-							value={info.description}
-							setValue={(description) => customVariablesApi.setDescription(name, description)}
-							className="mb-2"
-						/>
-					</Grid.Col>
-
-					<FormLabel htmlFor={currentValueFieldId} sm={3} className="align-right">
-						Current value:
-					</FormLabel>
-					<Grid.Col sm={9}>
-						<VariableInputGroup
-							id={currentValueFieldId}
-							value={value}
-							setValue={(val) => customVariablesApi.setCurrentValue(name, val)}
-						/>
-					</Grid.Col>
-
-					<FormLabel htmlFor={persistFieldId} sm={3} className="align-right">
+			<EditSectionCard title="Value">
+				<div className="edit-field-row">
+					<label htmlFor={currentValueFieldId} className="text-xs font-semibold text-body">
+						Current value
+					</label>
+					<VariableInputGroup
+						id={currentValueFieldId}
+						value={value}
+						setValue={(val) => customVariablesApi.setCurrentValue(name, val)}
+					/>
+				</div>
+				<div className="edit-field-row">
+					<label htmlFor={persistFieldId} className="text-xs font-semibold text-body">
 						Persist value
 						<InlineHelpIcon className="ms-1">
 							If enabled, variable value will be saved and restored when Companion restarts.
 						</InlineHelpIcon>
-					</FormLabel>
-					<Grid.Col sm={9} className="inline-flex items-center mb-2">
-						<CheckboxInputField
+					</label>
+					<div>
+						<SwitchInputField
 							id={persistFieldId}
 							value={info.persistCurrentValue}
 							setValue={(val) => customVariablesApi.setPersistenceValue(name, val)}
 						/>
-					</Grid.Col>
-
-					<FormLabel htmlFor={startupValueFieldId} sm={3} className="align-right">
-						Startup value:
-					</FormLabel>
-					<Grid.Col sm={9}>
-						<VariableInputGroup
-							id={startupValueFieldId}
-							disabled={!!info.persistCurrentValue}
-							value={info.defaultValue}
-							setValue={(val) => customVariablesApi.setStartupValue(name, val)}
-						/>
-					</Grid.Col>
-				</Grid.Row>
-			</Form>
+					</div>
+				</div>
+				<div className="edit-field-row">
+					<label htmlFor={startupValueFieldId} className="text-xs font-semibold text-body">
+						Startup value
+					</label>
+					<VariableInputGroup
+						id={startupValueFieldId}
+						disabled={!!info.persistCurrentValue}
+						value={info.defaultValue}
+						setValue={(val) => customVariablesApi.setStartupValue(name, val)}
+					/>
+				</div>
+			</EditSectionCard>
 		</div>
 	)
 })
