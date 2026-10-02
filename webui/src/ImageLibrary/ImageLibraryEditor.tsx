@@ -133,7 +133,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		return new Date(timestamp).toLocaleString()
 	}
 
-	const imageNameFieldId = useId()
 	const descriptionFieldId = useId()
 	const backgroundColorFieldId = useId()
 
@@ -195,13 +194,9 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 
 			<EditSectionCard title="General Settings">
 				<div className="edit-field-row">
-					<label htmlFor={imageNameFieldId} className="text-xs font-semibold text-body">
-						Name
-					</label>
+					<span className="text-xs font-semibold text-body">Name</span>
 					<div className="flex items-center gap-1 min-w-0">
-						<span id={imageNameFieldId} className="font-mono text-xs text-body truncate">
-							{imageInfo.name}
-						</span>
+						<span className="font-mono text-xs text-body truncate">{imageInfo.name}</span>
 						<CopyButton size="sm" title="Copy variable name" text={`$(image:${imageInfo.name})`} />
 						<span className="ms-auto">
 							<ImageNameEditModal
