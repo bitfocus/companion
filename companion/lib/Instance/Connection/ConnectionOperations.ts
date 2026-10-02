@@ -210,9 +210,12 @@ export class ConnectionOperations {
 	async setConnectionModuleVersion(input: SetConnectionModuleVersionInput): Promise<void> {
 		const connection = this.#getConnectionOrThrow(input.connectionId)
 		const moduleId = input.moduleId ?? connection.moduleId
-		if (moduleId === connection.moduleId && input.versionId === connection.moduleVersionId) {
-			if (input.updatePolicy !== undefined)
-				this.#applyConnectionConfig({ connectionId: input.connectionId, updatePolicy: input.updatePolicy })
+		if (
+			input.updatePolicy !== undefined &&
+			moduleId === connection.moduleId &&
+			input.versionId === connection.moduleVersionId
+		) {
+			this.#applyConnectionConfig({ connectionId: input.connectionId, updatePolicy: input.updatePolicy })
 			return
 		}
 

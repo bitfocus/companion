@@ -166,12 +166,16 @@ export function createSurfacesTrpcRouter(
 			)
 			.mutation(({ input }) => {
 				const current = configStore.getConfigOfTypeForId(input.instanceId, ModuleInstanceType.Surface)
-				if (current?.moduleId === input.moduleId && current.moduleVersionId === input.versionId) {
+				if (
+					input.updatePolicy !== undefined &&
+					current?.moduleId === input.moduleId &&
+					current.moduleVersionId === input.versionId
+				) {
 					const result = instanceController.setSurfaceInstanceLabelAndConfig(input.instanceId, {
 						label: null,
 						enabled: null,
 						config: null,
-						updatePolicy: input.updatePolicy ?? null,
+						updatePolicy: input.updatePolicy,
 					})
 					return result.ok ? null : result.message
 				}

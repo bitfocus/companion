@@ -42,6 +42,17 @@ test('policy-only save preserves version and other connection settings', async (
 	expect(controller.setModuleVersionAndActivate).not.toHaveBeenCalled()
 })
 
+test('same version without a policy still activates', async () => {
+	const { operations, controller } = setup()
+	await operations.setConnectionModuleVersion({
+		connectionId: 'test',
+		moduleId: 'test-module',
+		versionId: '1.0.0',
+	})
+	expect(controller.setModuleVersionAndActivate).toHaveBeenCalledWith('test', 'test-module@1.0.0', null)
+	expect(controller.setConnectionLabelAndConfig).not.toHaveBeenCalled()
+})
+
 test('version change applies the chosen policy in the same operation', async () => {
 	const { operations, controller } = setup()
 	await operations.setConnectionModuleVersion({
