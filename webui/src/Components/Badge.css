@@ -62,6 +62,13 @@
 	opacity: 0.75;
 }
 
+/* On a selected row's primary tint, or a panel header's grey band, the grey fill muddies into the
+   background, so these go outline-only there. */
+:is(.list-row-selected, .panel-header-compact) .status-badge:is([data-tone='neutral'], [data-tone='disabled']) {
+	background: transparent;
+	border-color: color-mix(in srgb, var(--color-muted) 35%, transparent);
+}
+
 /* The spinner some badges use in place of the tone icon. */
 .status-badge-spinner {
 	--spinner2-size: 0.75rem;

@@ -1,5 +1,11 @@
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
-import { faCogs, faQuestionCircle, faStethoscope } from '@fortawesome/free-solid-svg-icons'
+import {
+	faArrowUpRightFromSquare,
+	faBug,
+	faCogs,
+	faQuestionCircle,
+	faStethoscope,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
@@ -8,7 +14,6 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { ModuleInstanceType, type InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
-import { Badge, badgeToneForStatusCategory } from '~/Components/Badge'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
 import { InstanceGenericEditPanel } from '~/Instances/InstanceEdit/InstanceEditPanel.js'
@@ -18,6 +23,7 @@ import { ModuleHelpContent, resolveModuleHelpUrl } from '~/Instances/ModuleHelpC
 import { getModuleVersionInfo } from '~/Instances/Util.js'
 import { trpc, useMutationExt, type RouterInput } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ConnectionDiagnosticsTab } from './ConnectionDiagnosticsTab.js'
 import { ConnectionEditPanelHeading } from './ConnectionEditPanelHeading.js'
 
 interface ConnectionEditPanelProps {
@@ -35,22 +41,40 @@ interface EditTabButtonProps {
 	showAttentionDot?: boolean
 }
 
+const EDIT_TAB_CLASS =
+	'inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-lg transition-all border cursor-pointer whitespace-nowrap'
+const EDIT_TAB_INACTIVE_CLASS = 'bg-transparent border-transparent text-action-text hover:text-body hover:bg-surface/50'
+
 function EditTabButton({ tab, activeTab, setActiveTab, icon, label, showAttentionDot }: EditTabButtonProps) {
 	return (
 		<button
 			type="button"
 			onClick={() => setActiveTab(tab)}
 			className={classNames(
-				'inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-lg transition-all border cursor-pointer whitespace-nowrap',
-				activeTab === tab
-					? 'bg-surface border-border text-body shadow-xs font-semibold'
-					: 'bg-transparent border-transparent text-action-text hover:text-body hover:bg-surface/50'
+				EDIT_TAB_CLASS,
+				activeTab === tab ? 'bg-surface border-border text-body shadow-xs font-semibold' : EDIT_TAB_INACTIVE_CLASS
 			)}
 		>
 			<FontAwesomeIcon icon={icon} className="text-muted" />
 			<span>{label}</span>
 			{showAttentionDot && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
 		</button>
+	)
+}
+
+/** A tab-bar entry that opens an external page (rather than switching tab), marked as such */
+function EditTabLink({ href, icon, label }: { href: string; icon: IconDefinition; label: string }) {
+	return (
+		<a
+			href={href}
+			target="_blank"
+			rel="noopener noreferrer"
+			className={classNames(EDIT_TAB_CLASS, EDIT_TAB_INACTIVE_CLASS, 'no-underline')}
+		>
+			<FontAwesomeIcon icon={icon} className="text-muted" />
+			<span>{label}</span>
+			<FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-3xs text-muted" />
+		</a>
 	)
 }
 
@@ -147,6 +171,8 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 					label="Diagnostics"
 					showAttentionDot={!!status?.category && status.category !== 'good'}
 				/>
+
+				{!!moduleInfo?.display?.bugUrl && <EditTabLink href={moduleInfo.display.bugUrl} icon={faBug} label="Issues" />}
 			</div>
 
 			{/* Tab 1: Settings Form */}
@@ -168,34 +194,12 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 
 			{/* Tab 3: Diagnostics */}
 			{activeTab === 'diagnostics' && (
-				<div className="page-scroll p-4 space-y-4 flex flex-col">
-					<div className="rounded-md border border-border bg-surface-muted/20 p-4 space-y-3 shrink-0">
-						<div className="flex items-center justify-between">
-							<h4 className="text-sm font-semibold text-body mb-0">Connection Health</h4>
-							<Badge tone={badgeToneForStatusCategory(status?.category)} className="capitalize">
-								{status?.category === 'good' ? 'OK' : status?.level || status?.category || 'Unknown'}
-							</Badge>
-						</div>
-
-						{status?.message && (
-							<div className="p-3 rounded-lg bg-surface border border-border/60 text-xs font-mono text-body">
-								{typeof status.message === 'string' ? status.message : JSON.stringify(status.message, null, 2)}
-							</div>
-						)}
-					</div>
-
-					<div className="rounded-md border border-border bg-surface-muted/20 p-4 space-y-3">
-						<h4 className="text-sm font-semibold text-body mb-0">Module Metadata</h4>
-						<div className="grid grid-cols-2 gap-2 text-xs">
-							<div className="text-muted">Module Type:</div>
-							<div className="font-medium text-body">{moduleInfo?.display?.name ?? connectionInfo.moduleId}</div>
-							<div className="text-muted">Module Version:</div>
-							<div className="font-mono text-body">{moduleVersion?.displayName ?? connectionInfo.moduleVersionId}</div>
-							<div className="text-muted">Connection ID:</div>
-							<div className="font-mono text-body select-all">{connectionInfo.id}</div>
-						</div>
-					</div>
-				</div>
+				<ConnectionDiagnosticsTab
+					connectionInfo={connectionInfo}
+					status={status}
+					moduleInfo={moduleInfo}
+					moduleVersion={moduleVersion}
+				/>
 			)}
 		</div>
 	)

@@ -90,12 +90,15 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 	return (
 		<div
 			className={classNames(
-				'flex flex-row items-center gap-3 cursor-pointer py-2 px-3 transition-all',
-				isSelected ? 'list-row-selected' : 'rounded-lg hover:bg-surface-muted/60'
+				'list-row flex flex-row items-center gap-3 py-2 pe-3',
+				isSelected ? 'list-row-selected' : 'hover:bg-surface-muted/60'
 			)}
 			title={`Click to configure the ${moduleDisplayName}.`}
 		>
-			<div onClick={doEdit} className="flex flex-col grow min-w-0 flex-1">
+			<div
+				onClick={doEdit}
+				className={classNames('flex flex-col grow min-w-0 flex-1', { 'opacity-60': !showAsEnabled })}
+			>
 				<b className="truncate text-sm font-semibold text-body-strong">{instance.label}</b>
 				<div className="flex items-center gap-1.5 text-xs text-muted/80 font-normal truncate">
 					<span className="truncate">{moduleDisplayName}</span>
@@ -104,7 +107,10 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 
 			<div
 				onClick={doEdit}
-				className="hidden lg:flex shrink-0 items-center justify-end gap-1 text-2xs text-muted/70 font-mono tabular-nums whitespace-nowrap table-cell-version"
+				className={classNames(
+					'hidden lg:flex shrink-0 items-center justify-end gap-1 text-2xs text-muted/70 font-mono tabular-nums whitespace-nowrap table-cell-version',
+					{ 'opacity-60': !showAsEnabled }
+				)}
 			>
 				<MyErrorBoundary>
 					{moduleVersion?.isLegacy && (

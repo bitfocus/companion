@@ -295,8 +295,8 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 			onClick={doEdit}
 			onKeyDown={doEditKey}
 			className={classnames(
-				'flex flex-row items-center gap-3 cursor-pointer py-2 px-3 transition-colors',
-				isSelected ? 'list-row-selected' : 'rounded-lg hover:bg-surface-muted/50'
+				'list-row flex flex-row items-center gap-3 py-2 pe-3',
+				isSelected ? 'list-row-selected' : 'hover:bg-surface-muted/50'
 			)}
 		>
 			<div className="flex flex-col grow min-w-0">

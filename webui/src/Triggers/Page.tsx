@@ -20,6 +20,7 @@ import { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientTriggerData, TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { Badge } from '~/Components/Badge.js'
 import { Button, LinkButtonExternal } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
@@ -339,8 +340,8 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 	return (
 		<div
 			className={classnames(
-				'group flex flex-row items-center gap-3 cursor-pointer py-2 px-3 transition-all',
-				isSelected ? 'list-row-selected' : 'rounded-lg hover:bg-surface-muted/60'
+				'list-row group flex flex-row items-center gap-3 py-2 pe-3',
+				isSelected ? 'list-row-selected' : 'hover:bg-surface-muted/60'
 			)}
 		>
 			<div
@@ -352,11 +353,6 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 			>
 				<div className="truncate text-sm font-semibold text-body flex items-center gap-2">
 					<span>{item.name}</span>
-					{item.enabled && !collectionDisabled && (
-						<span className="text-3xs font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-							Active
-						</span>
-					)}
 					{item.isRateLimited && (
 						<span
 							className="text-amber-500 font-normal text-xs flex items-center gap-1"
@@ -371,6 +367,16 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 					<small className="text-3xs tabular-nums text-muted/70 mt-0.5">
 						Last run: {dayjs(item.lastExecuted).format(tableDateFormat)}
 					</small>
+				)}
+			</div>
+
+			<div onClick={doEdit} className="shrink-0 flex items-center justify-center">
+				{triggerOrCollectionDisabled ? (
+					<Badge tone="disabled" title={collectionDisabled ? 'Disabled by its collection' : undefined}>
+						Disabled
+					</Badge>
+				) : (
+					<Badge tone="good">Active</Badge>
 				)}
 			</div>
 

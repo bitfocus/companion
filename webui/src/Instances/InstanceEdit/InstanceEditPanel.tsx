@@ -1,11 +1,23 @@
 import './InstanceEditPanel.css'
-import { faCheck, faCircleExclamation, faGear } from '@fortawesome/free-solid-svg-icons'
+import {
+	faArrowsRotate,
+	faCircleCheck,
+	faCircleExclamation,
+	faFlask,
+	faLock,
+	faPowerOff,
+} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import classNames from 'classnames'
 import { observable } from 'mobx'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useEffect, useId, useMemo, useState } from 'react'
-import { InstanceVersionUpdatePolicy, type ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
+import {
+	InstanceVersionUpdatePolicy,
+	ModuleInstanceType,
+	type ClientInstanceConfigBase,
+} from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { capitalize } from '@companion-app/shared/Util.js'
@@ -27,46 +39,13 @@ import { getModuleVersionInfo } from '~/Instances/Util.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { InstanceVersionChangeButton } from '../../Instances/InstanceEdit/InstanceVersionChangeButton.js'
+import { EditSectionCard } from './EditSectionCard.js'
 
 interface InstanceGenericEditPanelProps<TConfig extends ClientInstanceConfigBase> {
 	instanceInfo: TConfig
 	service: InstanceEditPanelService<TConfig>
 	changeModuleDangerMessage: React.ReactNode
 	cannotEnableReason?: string | null
-}
-
-function EditSectionCard({
-	title,
-	children,
-	danger,
-	collapsible,
-	summary,
-}: {
-	title: string
-	children: React.ReactNode
-	danger?: boolean
-	collapsible?: boolean
-	summary?: string
-}) {
-	const heading = (
-		<>
-			<h4>{title}</h4>
-			{summary && <span className="instance-edit-section-summary">{summary}</span>}
-		</>
-	)
-	const content = <div className="instance-edit-section-body">{children}</div>
-	const sectionClass = classNames('instance-edit-section', danger && 'instance-edit-section-danger')
-	return collapsible ? (
-		<details className={sectionClass}>
-			<summary>{heading}</summary>
-			{content}
-		</details>
-	) : (
-		<section className={sectionClass}>
-			<div className="instance-edit-section-heading">{heading}</div>
-			{content}
-		</section>
-	)
 }
 
 export const InstanceGenericEditPanel = observer(function InstanceGenericEditPanel<
@@ -225,13 +204,7 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 				<span className="instance-module-version-value text-xs font-mono font-medium text-body">
 					{moduleVersion?.displayName ?? panelStore.instanceInfo.moduleVersionId}
 				</span>
-				<span className="instance-update-policy-badge">
-					{panelStore.updatePolicy === InstanceVersionUpdatePolicy.Manual
-						? 'Manual updates'
-						: panelStore.updatePolicy === InstanceVersionUpdatePolicy.Stable
-							? 'Stable updates'
-							: 'Stable + Beta'}
-				</span>
+				<UpdatePolicyLabel policy={panelStore.updatePolicy} />
 
 				<InstanceVersionChangeButton
 					id={moduleVersionId}
@@ -245,6 +218,25 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 		</div>
 	)
 })
+
+function UpdatePolicyLabel({ policy }: { policy: InstanceVersionUpdatePolicy }): React.JSX.Element {
+	const [icon, label] =
+		policy === InstanceVersionUpdatePolicy.Manual
+			? [faLock, 'Manual updates']
+			: policy === InstanceVersionUpdatePolicy.Stable
+				? [faArrowsRotate, 'Stable updates']
+				: [faFlask, 'Stable + Beta']
+
+	return (
+		<Badge
+			tone="neutral"
+			className="instance-update-policy"
+			indicator={<FontAwesomeIcon icon={icon} className="text-3xs shrink-0" aria-hidden="true" />}
+		>
+			{label}
+		</Badge>
+	)
+}
 
 const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 	TConfig extends ClientInstanceConfigBase,
@@ -295,7 +287,9 @@ const DangerZoneSection = observer(function DangerZoneSection<TConfig extends Cl
 			<div className="flex items-center justify-between gap-3">
 				<div>
 					<p className="text-xs text-muted mb-0">
-						Delete this {panelStore.service.moduleTypeDisplayName} and remove its associated actions and feedbacks.
+						{panelStore.service.moduleType === ModuleInstanceType.Surface
+							? 'Delete this surface integration. Its surfaces will disconnect, and any remote surfaces added through it will be removed.'
+							: `Delete this ${panelStore.service.moduleTypeDisplayName} and remove its associated actions and feedbacks.`}
 					</p>
 				</div>
 				<Button color="danger" size="sm" onClick={doDelete} disabled={isSaving || panelStore.isLoading}>
@@ -347,9 +341,10 @@ const InstanceConfigArea = observer(function InstanceConfigArea<TConfig extends 
 	if (panelStore.notRunningReason === 'disabled' || panelStore.notRunningReason === 'missing') {
 		return (
 			<EditSectionCard title="Configuration">
-				<NonIdealState icon={faGear}>
-					<p>{displayName} configuration cannot be edited while it is disabled.</p>
-				</NonIdealState>
+				<div className="instance-edit-note">
+					<FontAwesomeIcon icon={faPowerOff} className="instance-edit-note-icon" />
+					Enable this {panelStore.service.moduleTypeDisplayName} to edit its configuration
+				</div>
 			</EditSectionCard>
 		)
 	}
@@ -391,9 +386,10 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 
 	if (configData.fields.length === 0) {
 		return (
-			<NonIdealState icon={faCheck}>
-				{capitalize(panelStore.service.moduleTypeDisplayName)} has no additional configuration
-			</NonIdealState>
+			<div className="instance-edit-note">
+				<FontAwesomeIcon icon={faCircleCheck} className="instance-edit-note-icon instance-edit-note-icon-good" />
+				This {panelStore.service.moduleTypeDisplayName} requires no configuration
+			</div>
 		)
 	}
 
@@ -430,9 +426,6 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 								moduleType={panelStore.instanceInfo.moduleType}
 								instanceId={panelStore.service.instanceId}
 							/>
-						)}
-						{fieldInfo.description?.trim() && (
-							<div className="form-text instance-config-description">{fieldInfo.description}</div>
 						)}
 					</InstanceFormRow>
 				)
@@ -498,6 +491,15 @@ const InstanceFormRow = observer(function InstanceFormRow({
 	useNewLayout,
 	children,
 }: React.PropsWithChildren<InstanceFormRowProps>): React.JSX.Element | null {
+	const description = fieldInfo.description?.trim() ? (
+		<div
+			className="form-text instance-config-description"
+			style={{ display: !isVisible && useNewLayout ? 'none' : undefined }}
+		>
+			{fieldInfo.description}
+		</div>
+	) : null
+
 	if (useNewLayout) {
 		if (fieldInfo.type === 'static-text') {
 			if (!fieldInfo.label && !fieldInfo.value) return null // Skip rendering the fields used to force alignment
@@ -523,6 +525,8 @@ const InstanceFormRow = observer(function InstanceFormRow({
 				<div style={{ display: !isVisible ? 'none' : undefined }} className="self-center">
 					{children}
 				</div>
+				{/* Its own grid row under the control, so the label centres on the control alone */}
+				{description}
 			</React.Fragment>
 		)
 	} else {
@@ -540,6 +544,7 @@ const InstanceFormRow = observer(function InstanceFormRow({
 				</FormLabel>
 
 				{children}
+				{description}
 			</Grid.Col>
 		)
 	}

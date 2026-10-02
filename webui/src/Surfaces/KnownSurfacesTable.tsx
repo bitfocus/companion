@@ -112,7 +112,6 @@ export const KnownSurfacesTable = observer(function KnownSurfacesTable({
 								key={group.id}
 								surface={group.surfaces[0]}
 								index={group.index}
-								isInGroup={false}
 								deleteEmulator={deleteEmulator}
 								forgetSurface={forgetSurface}
 								isSelected={selectedItemId === group.surfaces[0].id}
@@ -181,7 +180,7 @@ const ManualGroupRow = observer(function ManualGroupRow({
 				onClick={handleGroupClick}
 				title={`${groupName}${/group/i.test(groupName) ? '' : ' group'}: click to edit settings.`}
 			>
-				<span className="surface-row-index">{group.index !== null ? `#${group.index}` : ''}</span>
+				<SurfaceIndex index={group.index} />
 				<div className="surface-row-text">
 					<span className="surface-row-name">
 						<FontAwesomeIcon icon={faLayerGroup} className="surface-group-icon" />
@@ -198,26 +197,43 @@ const ManualGroupRow = observer(function ManualGroupRow({
 					</Popover.Item>
 				</SurfaceRowMenu>
 			</div>
-			{(group.surfaces || []).map((surface) => (
-				<SurfaceRow
-					key={surface.id}
-					surface={surface}
-					index={null}
-					isInGroup={true}
-					deleteEmulator={deleteEmulator}
-					forgetSurface={forgetSurface}
-					isSelected={selectedItemId === surface.id}
-					selectItem={selectItem}
-				/>
-			))}
+			{surfaceCount > 0 && (
+				<div className="surface-group-members">
+					{(group.surfaces || []).map((surface) => (
+						<SurfaceRow
+							key={surface.id}
+							surface={surface}
+							index={null}
+							deleteEmulator={deleteEmulator}
+							forgetSurface={forgetSurface}
+							isSelected={selectedItemId === surface.id}
+							selectItem={selectItem}
+						/>
+					))}
+				</div>
+			)}
 		</div>
 	)
 })
 
+function SurfaceIndex({ index }: { index: number | null }): React.JSX.Element {
+	return (
+		<span
+			className="surface-row-index"
+			title={
+				index !== null
+					? `Surface index ${index}: used to refer to this by number in the "Surface: Set by index to page" action. It can change when surfaces are added or removed.`
+					: undefined
+			}
+		>
+			{index !== null ? `#${index}` : ''}
+		</span>
+	)
+}
+
 interface SurfaceRowProps {
 	surface: ClientSurfaceItem
 	index: number | null
-	isInGroup: boolean
 	deleteEmulator: (id: string) => void
 	forgetSurface: (id: string) => void
 	isSelected: boolean
@@ -227,7 +243,6 @@ interface SurfaceRowProps {
 const SurfaceRow = observer(function SurfaceRow({
 	surface,
 	index,
-	isInGroup,
 	deleteEmulator,
 	forgetSurface,
 	isSelected,
@@ -265,14 +280,13 @@ const SurfaceRow = observer(function SurfaceRow({
 	return (
 		<div
 			className={classNames('surface-row', {
-				'surface-row-nested': isInGroup,
 				'list-row-selected': isSelected,
 				'surface-row-disabled': surfaceDisabled,
 			})}
 			onClick={handleSurfaceClick}
 			title={`${surface.id}: click to edit surface settings.`}
 		>
-			<span className="surface-row-index">{index !== null ? `#${index}` : ''}</span>
+			<SurfaceIndex index={index} />
 			<div className="surface-row-text">
 				<span className="surface-row-name">{surface.name || surface.type}</span>
 				<span className="surface-row-subtitle" title={subtitle}>

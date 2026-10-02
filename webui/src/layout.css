@@ -381,25 +381,91 @@ hr.slim {
 	overflow-y: auto;
 }
 
-/* The selected row of a page's list (the item open in the secondary panel): a primary tint with a bar
-   down its leading edge. An inset shadow rather than a border, so selecting a row doesn't shift its
-   content. Rows apply their own rounding and hover background only while unselected, as those
-   utilities would otherwise override this. */
-.list-row-selected {
-	background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
-	box-shadow: inset 4px 0 0 var(--color-primary);
-	border-start-start-radius: 0;
-	border-end-start-radius: 0;
-	border-start-end-radius: 0.5rem;
-	border-end-end-radius: 0.5rem;
+/* A selectable row in a page's list: rounded, with its background easing between states, and a focus
+   ring for keyboard users. Rows add their own hover background only while unselected, as that
+   utility would otherwise override .list-row-selected. */
+.list-row {
+	border-radius: 0.5rem;
+	/* Leaves room for the selected row's pill clear of the text, so rows set only their trailing padding */
+	padding-inline-start: 1rem;
+	cursor: pointer;
+	transition: background-color 150ms ease-out;
+
+	&:focus-visible {
+		outline: 2px solid var(--color-primary);
+		outline-offset: -2px;
+	}
 }
 
-/* A table row can't reliably paint an inset shadow, so its first cell carries the bar. */
+/* The selected row (the item open in the secondary panel): a primary tint with a short pill inside its
+   leading edge. The pill is absolutely positioned so selecting a row doesn't shift its content. */
+.list-row-selected {
+	--list-row-selected-bg: color-mix(in srgb, var(--color-primary) 10%, transparent);
+
+	position: relative;
+	background-color: var(--list-row-selected-bg);
+	border-radius: 0.5rem;
+
+	&:hover {
+		--list-row-selected-bg: color-mix(in srgb, var(--color-primary) 14%, transparent);
+	}
+
+	&::before {
+		content: '';
+		position: absolute;
+		inset-block: 20%;
+		inset-inline-start: 0.375rem;
+		width: 3px;
+		border-radius: 9999px;
+		background-color: var(--color-primary);
+		animation: list-row-indicator-in 150ms ease-out;
+	}
+}
+
+/* A table row can't reliably paint a background or position a pseudo-element, so its cells carry the
+   tint and the first cell carries the pill. */
 tr.list-row-selected {
-	box-shadow: none;
+	position: static;
+	background-color: transparent;
+	border-radius: 0;
+
+	&::before {
+		content: none;
+	}
+
+	/* A table's rows run edge to edge between dividers, so its selection stays square to match */
+	> td {
+		background-color: var(--list-row-selected-bg);
+		transition: background-color 150ms ease-out;
+	}
 
 	> td:first-child {
-		box-shadow: inset 4px 0 0 var(--color-primary);
+		position: relative;
+
+		&::before {
+			content: '';
+			position: absolute;
+			inset-block: 20%;
+			inset-inline-start: 0.375rem;
+			width: 3px;
+			border-radius: 9999px;
+			background-color: var(--color-primary);
+			animation: list-row-indicator-in 150ms ease-out;
+		}
+	}
+}
+
+@keyframes list-row-indicator-in {
+	from {
+		transform: scaleY(0.4);
+		opacity: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.list-row-selected::before,
+	tr.list-row-selected > td:first-child::before {
+		animation: none;
 	}
 }
 

@@ -45,7 +45,8 @@
 			align-items: center;
 			justify-content: center;
 			margin: -4px 0 -4px -8px;
-			padding: 0 8px;
+			/* Tighter on the trailing side: the row's own leading padding already spaces the label off it */
+			padding: 0 4px 0 8px;
 			background-color: transparent;
 			opacity: 0.5;
 
@@ -73,7 +74,7 @@
 		display: grid;
 		grid-template-columns: auto 1fr;
 		align-items: center;
-		gap: 0.5rem;
+		gap: 0.25rem;
 		min-width: 0;
 
 		> .grow {
