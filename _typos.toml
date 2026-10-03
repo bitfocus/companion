@@ -1,6 +1,7 @@
 [default]
 extend-ignore-re = [
   ".*// typos:disable-line[^\\n]*\\n[^\\n]*\\n",
+  ";ba\\b", # sed branch to label `a`
 ]
 
 [default.extend-words]
