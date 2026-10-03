@@ -1,9 +1,9 @@
 import './modules-manage.css'
 import {
+	faBook,
 	faEyeSlash,
 	faGamepad,
 	faPlug,
-	faQuestionCircle,
 	faWarning,
 	type IconDefinition,
 } from '@fortawesome/free-solid-svg-icons'
@@ -13,7 +13,6 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { StaticAlert } from '~/Components/Alert.js'
-import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
 import { StatusFilterPill } from '~/Components/StatusFilterPill.js'
@@ -91,9 +90,9 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 		const candidatesObj: Record<string, React.JSX.Element> = {}
 		for (const moduleInfo of searchResults) {
-			candidatesObj[moduleInfo.moduleId] = (
+			candidatesObj[`${moduleInfo.moduleType}:${moduleInfo.moduleId}`] = (
 				<ModulesListRow
-					key={moduleInfo.moduleId}
+					key={`${moduleInfo.moduleType}:${moduleInfo.moduleId}`}
 					moduleInfo={moduleInfo}
 					doManageModule={doManageModule}
 					isSelected={
@@ -108,8 +107,8 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 		if (!filter) {
 			components = Object.entries(candidatesObj)
 				.sort((a, b) => {
-					const aName = a[0].toLocaleLowerCase()
-					const bName = b[0].toLocaleLowerCase()
+					const aName = a[0].slice(a[0].indexOf(':') + 1).toLocaleLowerCase()
+					const bName = b[0].slice(b[0].indexOf(':') + 1).toLocaleLowerCase()
 					if (aName < bName) return -1
 					if (aName > bName) return 1
 					return 0
@@ -289,7 +288,28 @@ const ModulesListRow = observer(function ModulesListRow({
 	doManageModule,
 	isSelected,
 }: ModulesListRowProps) {
-	const { helpViewer } = useContext(RootAppStoreContext)
+	const { helpViewer, modules } = useContext(RootAppStoreContext)
+	const installedInfo = modules.getModuleInfo(moduleInfo.moduleType, moduleInfo.moduleId)
+	const storeInfo = modules.storeList.get(`${moduleInfo.moduleType}:${moduleInfo.moduleId}`) ?? moduleInfo.storeInfo
+	const products = [...new Set([...(installedInfo?.display.products ?? []), ...(storeInfo?.products ?? [])])]
+	const installedVersions = installedInfo?.installedVersions ?? []
+	const version =
+		installedInfo?.devVersion ??
+		installedInfo?.stableVersion ??
+		installedInfo?.betaVersion ??
+		installedInfo?.builtinVersion
+	const installationLabel = installedInfo?.devVersion
+		? 'Development'
+		: installedVersions.length > 0
+			? 'Installed'
+			: installedInfo?.builtinVersion
+				? 'Built-in'
+				: 'Available'
+	const versionLabel =
+		installedVersions.length > 1 && !installedInfo?.devVersion
+			? `${installedVersions.length} versions`
+			: version?.displayName
+	const deprecationReason = storeInfo?.deprecationReason
 
 	const doShowHelp = useCallback(
 		(e: React.MouseEvent) => {
@@ -338,20 +358,50 @@ const ModulesListRow = observer(function ModulesListRow({
 					</span>
 				)}
 			</td>
-			<td className="py-2 px-3 font-medium text-body">
-				<div className="flex items-center gap-2">
-					{!!moduleInfo.storeInfo?.deprecationReason && (
-						<InlineHelpCustom help="Deprecated" className="text-amber-500">
-							<FontAwesomeIcon icon={faWarning} aria-label="Deprecated" />
-						</InlineHelpCustom>
+			<td className="py-2.5 px-3">
+				<div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+					<span className="text-sm font-semibold text-body-strong">{moduleInfo.name}</span>
+					{deprecationReason && (
+						<span
+							title={deprecationReason}
+							className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-1.5 py-0.5 text-2xs font-medium text-amber-500"
+						>
+							<FontAwesomeIcon icon={faWarning} />
+							Deprecated
+						</span>
 					)}
-					<span>{moduleInfo.name}</span>
+				</div>
+				<div className="mt-0.5 line-clamp-1 text-xs text-muted/80" title={products.join(', ')}>
+					{products.join(', ') || moduleInfo.moduleId}
+				</div>
+			</td>
+			<td className="compact py-2.5 px-3 text-end">
+				<div className="flex flex-col items-end gap-1 whitespace-nowrap">
+					<span
+						className={classNames(
+							'rounded-md px-1.5 py-0.5 text-2xs font-medium',
+							installationLabel === 'Development'
+								? 'bg-amber-500/10 text-amber-500'
+								: installationLabel === 'Available'
+									? 'bg-surface-muted text-muted'
+									: 'bg-primary/10 text-primary'
+						)}
+					>
+						{installationLabel}
+					</span>
+					{versionLabel && <span className="text-2xs font-mono tabular-nums text-muted/70">{versionLabel}</span>}
 				</div>
 			</td>
 			<td className="compact py-2 px-3 text-end w-12">
 				{moduleInfo.helpUrl && (
-					<button type="button" onClick={doShowHelp} className="panel-icon-button" title="Show documentation">
-						<FontAwesomeIcon icon={faQuestionCircle} className="text-xs" />
+					<button
+						type="button"
+						onClick={doShowHelp}
+						className="panel-icon-button"
+						title="Show documentation"
+						aria-label="Show documentation"
+					>
+						<FontAwesomeIcon icon={faBook} className="text-xs" />
 					</button>
 				)}
 			</td>
