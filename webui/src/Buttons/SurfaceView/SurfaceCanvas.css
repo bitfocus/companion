@@ -1,0 +1,79 @@
+/* The grid drawn as the face of a surface: controls wherever the surface has them, at the size it draws
+   them. Nothing here is a lattice, so there are no cells to leave empty - the bare face shows between
+   the controls, which is what a device looks like. */
+/* The scrolling surface itself is `.button-grid-scroller` (the dark ground and scrollbars shared with
+   the infinite grid); only its own max-width lives here. */
+.surface-canvas-viewport {
+	max-width: 100%;
+
+	/* Breathing room so the face is not flush to the scroller edge, matching the infinite grid */
+	padding: 12px;
+}
+
+.surface-canvas {
+	position: relative;
+
+	/* default draw scale, used for button text */
+	--grid-scale: 1;
+
+	.button-control {
+		position: absolute;
+
+		/* The control is exactly the size the surface draws it, so the button fills what it is given
+		   rather than being fitted into a cell of some other shape. A small inset keeps neighbours from
+		   touching, the way each cell of the infinite grid carries its own padding. */
+		box-sizing: border-box;
+		padding: 2px;
+
+		.button-border {
+			width: 100%;
+			height: 100%;
+
+			/* ButtonPreview keeps a button square by padding it to its own width, for the places which give
+			   it a width and let the height follow. Here both are known, and a control is very often not
+			   square, so that padding would win over the height it was given. */
+			padding-bottom: 0;
+
+			border-radius: var(--control-radius, 12%);
+
+			.button-placeholder {
+				/* shrink text with scaling */
+				font-size: calc(var(--grid-scale) * 1.5rem);
+			}
+		}
+	}
+
+	/* A control the surface has beyond the configured grid: drawn so the face stays accurate, but marked
+	   as not a real button - dashed and dimmed, with a lock, and clicking it offers to grow the grid. */
+	.surface-control-offgrid {
+		position: absolute;
+		box-sizing: border-box;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		padding: 2px;
+		border: 1px dashed color-mix(in srgb, var(--color-text-muted, #888888) 60%, transparent);
+		border-radius: var(--control-radius, 12%);
+
+		color: var(--color-text-muted, #888888);
+		background-color: color-mix(in srgb, var(--color-text-muted, #888888) 8%, transparent);
+
+		cursor: pointer;
+		opacity: 0.6;
+
+		&:hover {
+			opacity: 0.9;
+		}
+	}
+
+	/* The rectangle being dragged out across the face */
+	.surface-canvas-marquee {
+		position: absolute;
+		z-index: 1;
+		pointer-events: none;
+
+		border: 1px dashed var(--color-primary);
+		background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+	}
+}
