@@ -160,15 +160,18 @@ function modelZoomKey(modelId: string): string {
 }
 
 /**
- * A surface's zoom is its model's, when it can be told which model it is: the module that declared the model is
- * the one driving the surface, and the model's name is the surface's type (suffixed with the module when two
- * modules declared models of the same name). Otherwise it is remembered for the surface alone.
+ * A surface's zoom is its model's, when it can be told which model it is. Best from the surface saying so; failing
+ * that, the module that declared the model is the one driving the surface, and the model's name is the surface's
+ * type (suffixed with the module when two modules declared models of the same name). Otherwise it is remembered for
+ * the surface alone.
  */
 function zoomKeyForSurface(
 	surfaceId: string,
 	layout: ClientSurfaceLayoutItem,
 	models: ReadonlyMap<string, ClientSurfaceModelItem>
 ): string {
+	if (layout.modelId && models.has(layout.modelId)) return modelZoomKey(layout.modelId)
+
 	for (const model of models.values()) {
 		if (model.moduleId !== layout.integrationType) continue
 		if (model.name === layout.type || model.name === `${layout.type} (${model.moduleId})`) {
