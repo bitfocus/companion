@@ -4,9 +4,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { ResolvedSurfaceView } from '@companion-app/shared/SurfaceLayout.js'
 import { Button } from '~/Components/Button.js'
 import { Grid } from '~/Components/Grid'
 import { useHasBeenRendered } from '~/Hooks/useHasBeenRendered.js'
+import { useResizeObserver } from '~/Hooks/useResizeObserver.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { KeyReceiver } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -25,7 +28,11 @@ import { ButtonInfiniteGrid, PrimaryButtonGridIcon, type ButtonInfiniteGridRef }
 import { GridButtonDragOverlay } from './GridButtonDragOverlay.js'
 import type { GridButtonModifiers } from './GridButtonPreview.js'
 import { locationsInRectangle } from './GridGeometry.js'
-import type { GridZoomController } from './GridZoom.js'
+import { GridViewAsBanner } from './GridViewAsBanner.js'
+import { GridViewAsControl } from './GridViewAsControl.js'
+import type { GridZoomController, ZoomFit } from './GridZoom.js'
+import { SurfaceCanvas, type SurfaceCanvasRef } from './SurfaceView/SurfaceCanvas.js'
+import type { GridViewAsController } from './useGridViewAs.js'
 
 interface ButtonsGridPanelProps {
 	pageNumber: number
@@ -33,8 +40,18 @@ interface ButtonsGridPanelProps {
 	changePage: (pageNumber: number) => void
 	gridZoomValue: number
 	gridZoomController: GridZoomController
+	/** The zoom's fit mode, while viewing as a surface; null for the grid */
+	zoomFit: ZoomFit | null
+	/** Told how wide the panel is, so the zoom can fit a surface to it */
+	setAvailableWidth: (width: number) => void
 	contextMenuButton: ControlLocation | null
 	onButtonContextMenu: (location: ControlLocation, x: number, y: number) => void
+	viewAs: GridViewAsController
+	/** The bounds the grid is showing, which the surface being viewed as narrows */
+	gridSize: UserConfigGridSize | undefined
+	/** What the grid is being viewed as, or null when it is showing itself */
+	/** The surface being viewed as, drawn in place of the grid itself */
+	surfaceView: ResolvedSurfaceView | null
 }
 
 export const ButtonsGridPanel = observer(function ButtonsPage({
@@ -43,10 +60,15 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	changePage,
 	gridZoomValue,
 	gridZoomController,
+	zoomFit,
+	setAvailableWidth,
 	contextMenuButton,
 	onButtonContextMenu,
+	viewAs,
+	gridSize,
+	surfaceView,
 }: ButtonsGridPanelProps) {
-	const { pages, userConfig } = useContext(RootAppStoreContext)
+	const { pages } = useContext(RootAppStoreContext)
 	const { store, actions } = useButtonGridView()
 
 	const setPage = useCallback(
@@ -76,14 +98,18 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	const pageInfo = pages.get(pageNumber)
 
 	const gridRef = useRef<ButtonInfiniteGridRef>(null)
+	const surfaceRef = useRef<SurfaceCanvasRef>(null)
 
 	const resetPosition = useCallback(() => {
 		gridRef.current?.resetPosition()
 	}, [gridRef])
 
-	const gridSize = userConfig.properties?.gridSize
-
 	const [hasBeenInView, isInViewRef] = useHasBeenRendered()
+
+	// Held here rather than inside the control, so that the banner can open the same popover: the
+	// states the banner reports need something choosing, and the chooser is otherwise out of reach
+	const [configureOpen, setConfigureOpen] = useState(false)
+	const openConfigure = useCallback(() => setConfigureOpen(true), [])
 	const [viewportMinHeight, setViewportMinHeight] = useState(250) // arbitrary initial min-height
 
 	// Ctrl/cmd + wheel zooms, the way every canvas does. React attaches wheel passively at the root,
@@ -104,6 +130,12 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 		contentElement.addEventListener('wheel', handleWheel, { passive: false })
 		return () => contentElement.removeEventListener('wheel', handleWheel)
 	}, [contentElement, gridZoomController])
+
+	// The panel is the space a surface has to fit in. Observed rather than read on window resize, as dragging the
+	// split between the panels changes it too.
+	const panelRef = useMemo(() => ({ current: contentElement?.parentElement ?? null }), [contentElement])
+	const { width: panelWidth = 0 } = useResizeObserver({ ref: panelRef })
+	useEffect(() => setAvailableWidth(panelWidth), [setAvailableWidth, panelWidth])
 
 	const pressMode = useGridPressMode()
 	const pendingChangesJoin = useGridPendingChangesJoin()
@@ -140,7 +172,10 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 
 	// Keyboard navigation is useless if it walks the focus off the edge of what you can see
 	useEffect(() => {
-		if (focus && focus.pageNumber === pageNumber) gridRef.current?.revealLocation(focus)
+		if (focus && focus.pageNumber === pageNumber) {
+			gridRef.current?.revealLocation(focus)
+			surfaceRef.current?.revealLocation(focus)
+		}
 	}, [focus, pageNumber])
 
 	return (
@@ -164,36 +199,61 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 								useCompactButtons={true}
 								gridZoomValue={gridZoomValue}
 								gridZoomController={gridZoomController}
+								fit={zoomFit}
 							/>
 							<Button color="light" onClick={resetPosition} title="Home Position" className="ms-1">
 								<FontAwesomeIcon icon={faHome} />
 							</Button>
+							<GridViewAsControl
+								controller={viewAs}
+								configureOpen={configureOpen}
+								setConfigureOpen={setConfigureOpen}
+							/>
 							<ButtonGridPageMenu pageNumber={pageNumber} pageInfo={pageInfo} />
 						</ButtonGridHeader>
 					</Grid.Col>
 				</Grid.Row>
 
 				<ButtonGridToolbar />
+
+				<GridViewAsBanner
+					resolution={viewAs.resolution}
+					onConfigure={openConfigure}
+					onExit={() => viewAs.setEnabled(false)}
+				/>
 			</div>
 			{/* Rendered inside the grid's own styles, so the ghost is drawn the way the grid draws buttons */}
 			<GridButtonDragOverlay />
 
 			<div className="button-grid-panel-content" style={contentStyle} ref={setContentElement}>
-				{hasBeenInView && gridSize && (
-					<ButtonInfiniteGrid
-						ref={gridRef}
-						isHot={pressMode}
-						pageNumber={pageNumber}
-						contextMenuButton={contextMenuButton}
-						onButtonContextMenu={onButtonContextMenu}
-						gridSize={gridSize}
-						ButtonIconFactory={PrimaryButtonGridIcon}
-						marquee={marquee}
-						onHoverLocation={handleHover}
-						drawScale={gridZoomValue / 100}
-						setViewportMinHeight={setViewportMinHeight}
-					/>
-				)}
+				{hasBeenInView &&
+					gridSize &&
+					(surfaceView ? (
+						<SurfaceCanvas
+							ref={surfaceRef}
+							isHot={pressMode}
+							pageNumber={pageNumber}
+							contextMenuButton={contextMenuButton}
+							view={surfaceView}
+							gridSize={gridSize}
+							drawScale={gridZoomValue / 100}
+							setViewportMinHeight={setViewportMinHeight}
+						/>
+					) : (
+						<ButtonInfiniteGrid
+							ref={gridRef}
+							isHot={pressMode}
+							pageNumber={pageNumber}
+							contextMenuButton={contextMenuButton}
+							onButtonContextMenu={onButtonContextMenu}
+							gridSize={gridSize}
+							ButtonIconFactory={PrimaryButtonGridIcon}
+							marquee={marquee}
+							onHoverLocation={handleHover}
+							drawScale={gridZoomValue / 100}
+							setViewportMinHeight={setViewportMinHeight}
+						/>
+					))}
 			</div>
 		</KeyReceiver>
 	)

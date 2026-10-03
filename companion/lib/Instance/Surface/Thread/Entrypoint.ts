@@ -65,6 +65,20 @@ const ipcWrapper = new IpcWrapper<SurfaceModuleToHostEvents, HostToSurfaceModule
 
 			pluginInitialized = true
 
+			// The plugin is only asked for its models during init, so this is the first moment there are
+			// any to report. A plugin which drives surfaces it cannot know ahead of time reports none.
+			const models = plugin.getSurfaceModels()
+			if (models.length > 0) {
+				ipcWrapper.sendWithNoCb('setSurfaceModels', {
+					models: models.map((model) => ({
+						id: model.id,
+						name: model.name,
+						layout: model.layout,
+						appearance: model.appearance,
+					})),
+				})
+			}
+
 			logger.info('Module initialized successfully')
 		},
 		destroy: async () => {

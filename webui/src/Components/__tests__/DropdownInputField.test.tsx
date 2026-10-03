@@ -240,6 +240,20 @@ describe('Selection', () => {
 		expect(setValue).toHaveBeenCalledTimes(1)
 	})
 
+	it('shows a disabled choice but does not let it be picked', async () => {
+		const choices = [...CHOICES, { id: 'fig', label: 'Fig', disabled: true }]
+		const setValue = vi.fn()
+		const { user } = renderField({ choices, setValue })
+		await user.click(screen.getByRole('button'))
+
+		const fig = within(getListbox()).getByRole('option', { name: 'Fig' })
+		expect(fig).toHaveAttribute('data-disabled')
+
+		// It takes no pointer events, so the click is forced through to prove the choice itself refuses it
+		await userEvent.setup({ pointerEventsCheck: 0 }).click(fig)
+		expect(setValue).not.toHaveBeenCalled()
+	})
+
 	it('selects promptly from a very large list', async () => {
 		// Regression: labelling each item used to be a linear scan, making selection O(n^2) and freezing the UI
 		const choices = Array.from({ length: 20000 }, (_, i) => ({ id: `item${i}`, label: `Item ${i}` }))

@@ -7,8 +7,10 @@ import type {
 	ClientSurfaceLayoutItem,
 	CompanionSurfaceConfigField,
 	GridSize,
+	SurfaceAppearanceDefinition,
 	SurfaceFirmwareUpdateInfo,
 	SurfaceGroupConfig,
+	SurfaceModelsUpdate,
 	SurfaceSchemaLayoutDefinition,
 	SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
@@ -40,6 +42,10 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	readonly gridSize: GridSize
 	/** The layout manifest describing the controls this panel has, and how they are drawn */
 	readonly surfaceLayout: SurfaceSchemaLayoutDefinition
+	/** How to draw the panel's face; null when it supplied none and the face is derived from the layout */
+	readonly surfaceAppearance: SurfaceAppearanceDefinition | null
+	/** Which of its module's declared models the panel is, by the id the module declared it with; null for none */
+	readonly surfaceModelId: string | null
 	clearDeck(): void
 	draw(item: DrawButtonItem): void
 	setConfig(config: any, force?: boolean): void
@@ -108,6 +114,7 @@ export type UpdateEvents = EmulatorUpdateEvents & {
 
 	surfaces: [changes: SurfacesUpdate[]]
 	surfaceLayouts: [layouts: Record<string, ClientSurfaceLayoutItem>]
+	surfaceModels: [changes: SurfaceModelsUpdate[]]
 	surfaceButtonSizes: [sizes: Record<string, ClientSurfaceButtonSizesItem>]
 
 	[id: `groupConfig:${string}`]: [config: SurfaceGroupConfig | null]

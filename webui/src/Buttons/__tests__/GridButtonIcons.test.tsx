@@ -83,8 +83,13 @@ function setup(location: ControlLocation = at(1, 2), view = makeGridView()) {
 }
 
 /** Whichever cell is asking, say it holds a button */
-const OCCUPIED: WrappedImage = { image: 'data:image/png;base64,AAAA', isUsed: true }
-const EMPTY: WrappedImage = { image: null, isUsed: false }
+const OCCUPIED: WrappedImage = {
+	image: 'data:image/png;base64,AAAA',
+	isUsed: true,
+	color: 'rgba(0, 0, 0, 1)',
+	leds: null,
+}
+const EMPTY: WrappedImage = { image: null, isUsed: false, color: 'rgba(0, 0, 0, 1)', leds: null }
 
 describe('a cell on the main grid', () => {
 	it('draws the button that lives there', () => {
