@@ -223,6 +223,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 							view={surfaceView}
 							gridSize={gridSize}
 							drawScale={gridZoomValue / 100}
+							setViewportMinHeight={setViewportMinHeight}
 						/>
 					) : (
 						<ButtonInfiniteGrid
