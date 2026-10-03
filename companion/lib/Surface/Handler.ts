@@ -407,6 +407,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		this.#surfaceConfig.gridSize = this.panel.gridSize
 		this.#surfaceConfig.layout = this.panel.surfaceLayout
 		this.#surfaceConfig.appearance = this.panel.surfaceAppearance
+		this.#surfaceConfig.modelId = this.panel.surfaceModelId
 		this.#saveConfig()
 
 		// Saving the config doesn't push the new size/layout to the ui, so do that here

@@ -65,6 +65,8 @@ export interface ClientSurfaceLayoutItem {
 	layout: SurfaceSchemaLayoutDefinition
 	/** How to draw the surface's face; null when it supplied none and the face is derived from the layout */
 	appearance: SurfaceAppearanceDefinition | null
+	/** Which declared model the surface is, qualified as `ClientSurfaceModelItem.id` is; null when it named none */
+	modelId: string | null
 }
 
 /**
@@ -166,6 +168,11 @@ export interface SurfaceConfig {
 	layout: SurfaceSchemaLayoutDefinition | undefined
 	/** null when the surface supplied none; undefined for configs saved before this was persisted */
 	appearance: SurfaceAppearanceDefinition | null | undefined
+	/**
+	 * Which of its module's declared models the surface is, by the id the module declared it with. null when it
+	 * named none; undefined for configs saved before this was persisted
+	 */
+	modelId: string | null | undefined
 }
 
 export interface SurfaceGroupConfig {

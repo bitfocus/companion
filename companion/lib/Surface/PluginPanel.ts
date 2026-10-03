@@ -171,6 +171,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 	readonly gridSize: GridSize
 	readonly surfaceLayout: SurfaceSchemaLayoutDefinition
 	readonly surfaceAppearance: SurfaceAppearanceDefinition | null
+	readonly surfaceModelId: string | null
 
 	#config: Record<string, any>
 
@@ -272,6 +273,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 
 		this.surfaceLayout = surfaceInfo.surfaceLayout
 		this.surfaceAppearance = surfaceInfo.surfaceAppearance
+		this.surfaceModelId = surfaceInfo.modelId
 
 		// Find the max bounds of this surface
 		this.gridSize = Object.values(surfaceInfo.surfaceLayout.controls).reduce(

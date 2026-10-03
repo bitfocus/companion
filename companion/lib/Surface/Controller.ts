@@ -1909,6 +1909,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			gridSize: undefined,
 			layout: undefined,
 			appearance: undefined,
+			modelId: undefined,
 		}
 
 		this.setDeviceConfig(surfaceId, minimalConfig)

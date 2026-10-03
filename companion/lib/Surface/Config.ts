@@ -81,6 +81,7 @@ export function createOrSanitizeSurfaceHandlerConfig(
 		gridSize: panel.gridSize,
 		layout: panel.surfaceLayout,
 		appearance: panel.surfaceAppearance,
+		modelId: panel.surfaceModelId,
 	}
 
 	// Forget old values

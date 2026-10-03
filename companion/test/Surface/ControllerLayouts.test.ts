@@ -58,6 +58,7 @@ function makeStoredConfig(partial: Partial<SurfaceConfig>): SurfaceConfig {
 		gridSize: { columns: 1, rows: 2 },
 		layout: undefined,
 		appearance: undefined,
+		modelId: undefined,
 		...partial,
 	}
 }
@@ -126,6 +127,7 @@ describe('SurfaceController layouts', () => {
 			isConnected: false,
 			layout: neoLayout,
 			appearance: null,
+			modelId: null,
 		})
 	})
 

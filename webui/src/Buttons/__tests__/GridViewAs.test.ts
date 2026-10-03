@@ -40,6 +40,7 @@ function layoutItem(id: string, type: string, integrationType = 'satellite'): Cl
 		isConnected: true,
 		layout: squareLayout,
 		appearance: null,
+		modelId: null,
 	}
 }
 

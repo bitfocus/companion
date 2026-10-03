@@ -23,6 +23,7 @@ function makeConfig(partial: Partial<SurfaceConfig>): SurfaceConfig {
 		gridSize: { columns: 2, rows: 1 },
 		layout: undefined,
 		appearance: undefined,
+		modelId: undefined,
 		...partial,
 	}
 }
@@ -113,6 +114,23 @@ describe('surfaceLayoutsFromConfigs', () => {
 
 		expect(result.face.appearance).toEqual(appearance)
 		expect(result.noFace.appearance).toBeNull()
+	})
+
+	test('qualifies the model a surface says it is with its module, as the declared models are', () => {
+		const result = surfaceLayoutsFromConfigs([
+			{
+				surfaceId: 'named',
+				config: makeConfig({ layout: squareLayout, integrationType: 'elgato-stream-deck', modelId: 'xl' }),
+				isConnected: true,
+			},
+			{ surfaceId: 'unnamed', config: makeConfig({ layout: squareLayout, modelId: null }), isConnected: true },
+			{ surfaceId: 'old', config: makeConfig({ layout: squareLayout }), isConnected: false },
+		])
+
+		expect(result.named.modelId).toBe('elgato-stream-deck:xl')
+		expect(result.unnamed.modelId).toBeNull()
+		// Saved before the model was remembered
+		expect(result.old.modelId).toBeNull()
 	})
 
 	test('produces nothing for no sources', () => {
