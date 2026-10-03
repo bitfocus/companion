@@ -239,6 +239,19 @@ describe('Selection', () => {
 		await user.keyboard('{Enter}')
 		expect(setValue).toHaveBeenCalledTimes(1)
 	})
+
+	it('selects promptly from a very large list', async () => {
+		// Regression: labelling each item used to be a linear scan, making selection O(n^2) and freezing the UI
+		const choices = Array.from({ length: 20000 }, (_, i) => ({ id: `item${i}`, label: `Item ${i}` }))
+		const setValue = vi.fn()
+		const { user, input } = renderField({ choices, initialValue: 'item0', setValue })
+		await user.click(input)
+		await user.keyboard('{ArrowDown}')
+		await user.keyboard('{Enter}')
+		expect(setValue).toHaveBeenCalledTimes(1)
+		const selected = choices.find((c) => c.id === setValue.mock.calls[0][0])
+		expect(input).toHaveValue(selected?.label)
+	}, 5000)
 })
 
 // ---------------------------------------------------------------------------

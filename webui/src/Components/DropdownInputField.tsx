@@ -9,7 +9,7 @@ import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { type DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { DropdownInputPopup } from './DropdownInputField/Popup.js'
 import { useDropdownComboboxItems } from './DropdownInputField/useDropdownComboboxItems.js'
-import { useFuzzyChoices } from './DropdownInputField/useFuzzyChoices.js'
+import { useFuzzyChoices, type FuzzyChoice } from './DropdownInputField/useFuzzyChoices.js'
 import { useRegex } from './useRegex.js'
 
 interface DropdownInputFieldProps {
@@ -166,6 +166,20 @@ export const DropdownInputField = observer(function DropdownInputField({
 		return flatItems.find((o) => o.id == localDisplayValue)?.label ?? String(localDisplayValue)
 	}, [disableEditingCustom, allowCustom, localDisplayValue, flatItems])
 
+	const itemToStringLabel = useCallback(
+		(id: DropdownChoiceId | FuzzyChoice) => {
+			if (disableEditingCustom && allowCustom) return ''
+			// base-ui also calls this with each item object (once per item), so avoid a lookup there
+			if (typeof id === 'object' && id !== null) return id.label
+			const item = flatItems.find((o) => o.id == id)
+			if (item) return item.label
+			const strId = String(id)
+			if (!allowCustom && strId) return `?? (${strId})`
+			return strId
+		},
+		[disableEditingCustom, allowCustom, flatItems]
+	)
+
 	return (
 		<div
 			className={classNames(
@@ -193,14 +207,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 							? inputValue
 							: undefined
 				}
-				itemToStringLabel={(id: DropdownChoiceId) => {
-					if (disableEditingCustom && allowCustom) return ''
-					const item = flatItems.find((o) => o.id == id)
-					if (item) return item.label
-					const strId = String(id)
-					if (!allowCustom && strId) return `?? (${strId})`
-					return strId
-				}}
+				itemToStringLabel={itemToStringLabel}
 			>
 				<Combobox.InputGroup className="form-input dropdown-field-input-group">
 					<Combobox.Input
