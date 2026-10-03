@@ -13,9 +13,9 @@ import { MARQUEE_START_THRESHOLD } from '../GridCanvasGeometry.js'
 import {
 	controlAtPoint,
 	controlBorderRadius,
-	controlCanvasBox,
 	controlLocation,
 	controlsInBox,
+	placeSurfaceControls,
 	surfaceUnitScale,
 } from './surfaceGeometry.js'
 
@@ -61,6 +61,7 @@ export const SurfaceCanvas = forwardRef<SurfaceCanvasRef, SurfaceCanvasProps>(fu
 	const { store, actions } = useButtonGridView()
 
 	const unitScale = useMemo(() => surfaceUnitScale(view, drawScale), [view, drawScale])
+	const placed = useMemo(() => placeSurfaceControls(view, unitScale), [view, unitScale])
 
 	const canvasRef = useRef<HTMLDivElement | null>(null)
 	const [scrollerRef, setScrollerRef] = useState<HTMLDivElement | null>(null)
@@ -71,12 +72,12 @@ export const SurfaceCanvas = forwardRef<SurfaceCanvasRef, SurfaceCanvasProps>(fu
 			revealLocation(location) {
 				if (!scrollerRef) return
 
-				const control = view.controls.find(
-					(control) => control.cell.row === location.row && control.cell.column === location.column
+				const entry = placed.find(
+					({ control }) => control.cell.row === location.row && control.cell.column === location.column
 				)
-				if (!control) return
+				if (!entry) return
 
-				const box = controlCanvasBox(control, unitScale)
+				const box = entry.hit
 				if (box.left < scrollerRef.scrollLeft) scrollerRef.scrollLeft = box.left
 				else if (box.left + box.width > scrollerRef.scrollLeft + scrollerRef.clientWidth) {
 					scrollerRef.scrollLeft = box.left + box.width - scrollerRef.clientWidth
@@ -88,7 +89,7 @@ export const SurfaceCanvas = forwardRef<SurfaceCanvasRef, SurfaceCanvasProps>(fu
 				}
 			},
 		}),
-		[scrollerRef, view, unitScale]
+		[scrollerRef, placed]
 	)
 
 	const canvasPoint = useCallback((clientX: number, clientY: number) => {
@@ -131,7 +132,7 @@ export const SurfaceCanvas = forwardRef<SurfaceCanvasRef, SurfaceCanvasProps>(fu
 			// A tool that is about to place something ghosts it under the cursor, so hovering is reported
 			if (e.pointerType !== 'touch') {
 				const point = canvasPoint(e.clientX, e.clientY)
-				const control = point ? controlAtPoint(view, unitScale, point.x, point.y) : null
+				const control = point ? controlAtPoint(placed, point.x, point.y) : null
 				const modifiers: GridButtonModifiers = { range: e.shiftKey, toggle: e.ctrlKey || e.metaKey }
 				store.handleHover(control ? controlLocation(control, pageNumber) : null, modifiers, actions)
 			}
@@ -155,7 +156,7 @@ export const SurfaceCanvas = forwardRef<SurfaceCanvasRef, SurfaceCanvasProps>(fu
 
 			setMarquee({ ...marquee, currentX: point.x, currentY: point.y, active })
 		},
-		[marquee, canvasPoint, view, unitScale, store, actions, pageNumber]
+		[marquee, canvasPoint, placed, store, actions, pageNumber]
 	)
 
 	const handlePointerUp = useCallback(
@@ -170,7 +171,7 @@ export const SurfaceCanvas = forwardRef<SurfaceCanvasRef, SurfaceCanvasProps>(fu
 			if (!marquee.active) return
 
 			const box = marqueeBox(marquee)
-			const covered = controlsInBox(view, unitScale, box)
+			const covered = controlsInBox(placed, box)
 			if (covered.length === 0) return
 
 			store.handleMarquee(
@@ -180,7 +181,7 @@ export const SurfaceCanvas = forwardRef<SurfaceCanvasRef, SurfaceCanvasProps>(fu
 				actions
 			)
 		},
-		[marquee, view, unitScale, store, actions, pageNumber]
+		[marquee, placed, store, actions, pageNumber]
 	)
 
 	const canvasStyle = useMemo(
@@ -209,15 +210,22 @@ export const SurfaceCanvas = forwardRef<SurfaceCanvasRef, SurfaceCanvasProps>(fu
 			onPointerCancel={handlePointerUp}
 		>
 			<div className="surface-canvas" style={canvasStyle} ref={canvasRef}>
-				{view.controls.map((control) => {
-					const box = controlCanvasBox(control, unitScale)
+				{placed.map(({ control, box, hit }) => {
 					const location = controlLocation(control, pageNumber)
-					const boxStyle = {
-						left: box.left,
-						top: box.top,
-						width: box.width,
-						height: box.height,
-						'--control-radius': controlBorderRadius(control.shape, box),
+					const radius = controlBorderRadius(control.shape, box)
+
+					// Placed by its hit area, with the drawn control inset within it, so a thin control can be
+					// picked from just beside it while still being drawn exactly where it is
+					const cellStyle = {
+						left: hit.left,
+						top: hit.top,
+						width: hit.width,
+						height: hit.height,
+						paddingLeft: box.left - hit.left,
+						paddingTop: box.top - hit.top,
+						paddingRight: hit.left + hit.width - (box.left + box.width),
+						paddingBottom: hit.top + hit.height - (box.top + box.height),
+						'--control-radius': radius,
 					} as React.CSSProperties
 
 					// The surface reaches beyond the grid here: draw the control so the face is accurate, but
@@ -228,7 +236,7 @@ export const SurfaceCanvas = forwardRef<SurfaceCanvasRef, SurfaceCanvasProps>(fu
 								key={control.id}
 								type="button"
 								className="surface-control-offgrid"
-								style={boxStyle}
+								style={{ ...box, '--control-radius': radius } as React.CSSProperties}
 								title="Outside your grid — click to grow it to fit"
 								onClick={() => actions.openEditor(location)}
 							>
@@ -242,7 +250,7 @@ export const SurfaceCanvas = forwardRef<SurfaceCanvasRef, SurfaceCanvasProps>(fu
 							key={control.id}
 							location={location}
 							renderSize={control.renderSize}
-							style={boxStyle}
+							style={cellStyle}
 							contextMenuOpen={
 								contextMenuButton?.row === control.cell.row &&
 								contextMenuButton?.column === control.cell.column &&
