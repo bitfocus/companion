@@ -100,7 +100,16 @@ export type GridViewAsResolution =
 	 * The full surface is shown, controls and all, even where they fall outside the grid - those are
 	 * drawn but not configurable, with the way to grow the grid offered when one is opened.
 	 */
-	| { status: 'ready'; displayName: string; view: ResolvedSurfaceView }
+	| {
+			status: 'ready'
+			displayName: string
+			view: ResolvedSurfaceView
+			/**
+			 * What the view's zoom is remembered against: the model, so a surface plugged in shares the zoom of
+			 * its model rather than each one of the same kind needing it set again
+			 */
+			zoomKey: string
+	  }
 
 /**
  * Work out what the grid should show. `layouts`/`placements` are keyed by surface id; `models` is
@@ -124,11 +133,17 @@ export function resolveGridViewAs(
 		const layout = layouts.get(surfaceId)
 		if (!layout) return { status: 'noLayout', displayName: placement.displayName }
 
-		return resolvedFromLayout(placement.displayName, layout.layout, layout.appearance, {
-			offset: placement.offset,
-			rotation: placement.rotation,
-			panelGridSize: placement.panelGridSize ?? panelGridSizeFromLayout(layout.layout),
-		})
+		return resolvedFromLayout(
+			placement.displayName,
+			layout.layout,
+			layout.appearance,
+			{
+				offset: placement.offset,
+				rotation: placement.rotation,
+				panelGridSize: placement.panelGridSize ?? panelGridSizeFromLayout(layout.layout),
+			},
+			zoomKeyForSurface(surfaceId, layout, models)
+		)
 	}
 
 	const { modelId, offset } = state.selection
@@ -137,7 +152,31 @@ export function resolveGridViewAs(
 	// The plugin which declared it may have been stopped or uninstalled since it was chosen
 	if (!model) return { status: 'noLayout', displayName: modelId }
 
-	return resolvedForModel(model.name, model.layout, model.appearance ?? null, offset)
+	return resolvedForModel(model.name, model.layout, model.appearance ?? null, offset, modelZoomKey(model.id))
+}
+
+function modelZoomKey(modelId: string): string {
+	return `model:${modelId}`
+}
+
+/**
+ * A surface's zoom is its model's, when it can be told which model it is: the module that declared the model is
+ * the one driving the surface, and the model's name is the surface's type (suffixed with the module when two
+ * modules declared models of the same name). Otherwise it is remembered for the surface alone.
+ */
+function zoomKeyForSurface(
+	surfaceId: string,
+	layout: ClientSurfaceLayoutItem,
+	models: ReadonlyMap<string, ClientSurfaceModelItem>
+): string {
+	for (const model of models.values()) {
+		if (model.moduleId !== layout.integrationType) continue
+		if (model.name === layout.type || model.name === `${layout.type} (${model.moduleId})`) {
+			return modelZoomKey(model.id)
+		}
+	}
+
+	return `surface:${surfaceId}`
 }
 
 /** A model which is not here: placed as drawn (no rotation), the user choosing only its offset. */
@@ -145,27 +184,31 @@ function resolvedForModel(
 	displayName: string,
 	layout: SurfaceSchemaLayoutDefinition,
 	appearance: SurfaceAppearanceDefinition | null,
-	offset: { rows: number; columns: number }
+	offset: { rows: number; columns: number },
+	zoomKey: string
 ): GridViewAsResolution {
-	return resolvedFromLayout(displayName, layout, appearance, {
-		offset,
-		rotation: 0,
-		panelGridSize: panelGridSizeFromLayout(layout),
-	})
+	return resolvedFromLayout(
+		displayName,
+		layout,
+		appearance,
+		{ offset, rotation: 0, panelGridSize: panelGridSizeFromLayout(layout) },
+		zoomKey
+	)
 }
 
 function resolvedFromLayout(
 	displayName: string,
 	layout: SurfaceSchemaLayoutDefinition,
 	appearance: SurfaceAppearanceDefinition | null,
-	placement: SurfaceGridPlacement
+	placement: SurfaceGridPlacement,
+	zoomKey: string
 ): GridViewAsResolution {
 	const view = resolveSurfaceView(layout, appearance, placement)
 	if (!view) return { status: 'noLayout', displayName }
 
 	// The whole surface is shown; the grid is not clipped to it. Controls beyond the grid are the caller's
 	// to mark as unconfigurable and to offer growing the grid for.
-	return { status: 'ready', displayName, view }
+	return { status: 'ready', displayName, view, zoomKey }
 }
 
 /**

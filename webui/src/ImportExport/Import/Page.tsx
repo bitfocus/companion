@@ -163,6 +163,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										useCompactButtons={true}
 										gridZoomValue={gridZoomValue}
 										gridZoomController={gridZoomController}
+										fit={null}
 									/>
 
 									<Button

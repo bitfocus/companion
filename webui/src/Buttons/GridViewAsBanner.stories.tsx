@@ -30,6 +30,7 @@ function readyResolution(overrides: Partial<Extract<GridViewAsResolution, { stat
 		status: 'ready' as const,
 		displayName: 'Stream Deck + (desk)',
 		view,
+		zoomKey: 'model:elgato-stream-deck:plus',
 		...overrides,
 	}
 }
