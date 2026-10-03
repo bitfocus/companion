@@ -227,6 +227,23 @@ describe('resolveGridViewAs', () => {
 			expect(zoomKeyOf(resolveGridViewAs(viewingSurface('abc'), pluggedIn, declared, placements))).toBe('surface:abc')
 		})
 
+		it('shares the zoom of the model the surface says it is, whatever either is called', () => {
+			const declared = new Map([['elgato-streamdeck:original', modelItem('original', 'Stream Deck (15 key)')]])
+			const pluggedIn = new Map([
+				[
+					'abc',
+					{
+						...layoutItem('abc', 'Elgato Stream Deck MK.2', 'elgato-streamdeck'),
+						modelId: 'elgato-streamdeck:original',
+					},
+				],
+			])
+
+			expect(zoomKeyOf(resolveGridViewAs(viewingSurface('abc'), pluggedIn, declared, placements))).toBe(
+				'model:elgato-streamdeck:original'
+			)
+		})
+
 		it('keys a surface of no known model by the surface', () => {
 			expect(zoomKeyOf(resolveGridViewAs(viewingSurface('abc'), layouts, noModels, placements))).toBe('surface:abc')
 		})
