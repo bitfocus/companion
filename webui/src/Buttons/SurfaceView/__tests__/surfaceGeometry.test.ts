@@ -2,11 +2,13 @@ import { describe, expect, it } from 'vitest'
 import type { ResolvedSurfaceControl, ResolvedSurfaceView } from '@companion-app/shared/SurfaceLayout.js'
 import {
 	controlAtPoint,
+	controlBorderRadius,
 	controlCanvasBox,
 	controlsInBox,
 	placeSurfaceControls,
 	stepToNearestControl,
 	surfaceUnitScale,
+	surfaceViewportMinHeight,
 } from '../surfaceGeometry.js'
 
 function control(id: string, x: number, y: number, width: number, height: number): ResolvedSurfaceControl {
@@ -220,5 +222,37 @@ describe('controlCanvasBox', () => {
 			width: 200,
 			height: 100,
 		})
+	})
+})
+
+describe('controlBorderRadius', () => {
+	const box = { left: 0, top: 0, width: 200, height: 100 }
+
+	it('rounds the corners by the shorter side', () => {
+		expect(controlBorderRadius({ type: 'rect', cornerRadiusRatio: 0.1 }, box)).toBe('10px')
+	})
+
+	it('draws a circle as a circle', () => {
+		expect(controlBorderRadius({ type: 'circle' }, box)).toBe('50%')
+	})
+})
+
+describe('surfaceViewportMinHeight', () => {
+	it('fits the whole of a short face, with its padding', () => {
+		const surface = { ...view(control('a', 0, 0, 100, 100)), extent: { width: 400, height: 100 } }
+
+		expect(surfaceViewportMinHeight(surface, 0.5, 1)).toBe(50 + 24)
+	})
+
+	it('asks for no more than two rows of keys for a tall face, which scrolls instead', () => {
+		const surface = { ...view(control('a', 0, 0, 100, 100)), extent: { width: 400, height: 1000 } }
+
+		expect(surfaceViewportMinHeight(surface, 0.72, 1)).toBe(144 + 24)
+	})
+
+	it('follows the zoom, so zooming out lets the panel shrink with the face', () => {
+		const surface = { ...view(control('a', 0, 0, 100, 100)), extent: { width: 400, height: 100 } }
+
+		expect(surfaceViewportMinHeight(surface, 0.72 * 0.4, 0.4)).toBeCloseTo(100 * 0.72 * 0.4 + 24)
 	})
 })

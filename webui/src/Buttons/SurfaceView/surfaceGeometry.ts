@@ -58,6 +58,19 @@ export function controlCanvasBox(control: ResolvedSurfaceControl, unitScale: num
 	}
 }
 
+/** The padding `.surface-canvas-viewport` keeps around the face, on each side */
+const VIEWPORT_PADDING = 12
+
+/**
+ * The least height the panel showing a face should have: the whole face when it is short, and otherwise two rows of
+ * keys' worth, so a tall face scrolls within the panel rather than stretching the page - as the grid keeps two rows.
+ */
+export function surfaceViewportMinHeight(view: ResolvedSurfaceView, unitScale: number, drawScale: number): number {
+	const faceHeight = view.extent.height * unitScale
+
+	return Math.min(faceHeight, 2 * BASE_CONTROL_SIZE * drawScale) + 2 * VIEWPORT_PADDING
+}
+
 /**
  * How small a control may be, in canvas pixels, before it is given more room to be clicked than it is drawn with.
  * About a fingertip, and comfortably more than a mouse needs.
