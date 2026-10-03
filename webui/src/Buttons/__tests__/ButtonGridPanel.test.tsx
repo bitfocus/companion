@@ -81,6 +81,8 @@ function setup(overrides: { pageCount?: number; pageNumber?: number; viewAs?: an
 						changePage={changePage}
 						gridZoomValue={150}
 						gridZoomController={zoom}
+						zoomFit={null}
+						setAvailableWidth={vi.fn()}
 						contextMenuButton={null}
 						onButtonContextMenu={vi.fn()}
 						viewAs={viewAs}

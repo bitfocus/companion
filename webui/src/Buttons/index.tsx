@@ -28,11 +28,11 @@ import { EditButton } from './EditButton/EditButton.js'
 import { rememberViewedPage, resolveViewedPage } from './GridPageNavigation.js'
 import { unionGridBounds } from './GridViewAs.js'
 import { GridViewGrowPanel } from './GridViewGrowPanel.js'
-import { useGridZoom } from './GridZoom.js'
+import { useGridZoom, useSurfaceZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
 import { PageVariablesPanel } from './PageVariablesPanel.js'
 import { ConnectionPresets } from './Presets/Presets.js'
-import { controlLocation, stepToNearestControl } from './SurfaceView/surfaceGeometry.js'
+import { controlLocation, stepToNearestControl, surfaceFitZoom } from './SurfaceView/surfaceGeometry.js'
 import { useButtonContextMenu } from './useButtonContextMenu.js'
 import { useGridDropMonitor } from './useGridDropMonitor.js'
 import { useGridKeyboard } from './useGridKeyboard.js'
@@ -96,6 +96,15 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	const viewAs = useGridViewAs()
 
 	const surfaceView = viewAs.resolution.status === 'ready' ? viewAs.resolution.view : null
+
+	// A surface has a zoom of its own, remembered for its kind, which until set by hand fits it to the panel
+	const [panelWidth, setPanelWidth] = useState(0)
+	const surfaceZoom = useSurfaceZoom(
+		viewAs.resolution.status === 'ready' ? viewAs.resolution.zoomKey : null,
+		surfaceView ? surfaceFitZoom(surfaceView, panelWidth) : 100
+	)
+	const zoomController = surfaceZoom?.controller ?? gridZoomController
+	const zoomValue = surfaceZoom?.value ?? gridZoomValue
 
 	// Growing to fit keeps the whole current grid, so nothing already placed is lost
 	const growGridBounds =
@@ -216,7 +225,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		pageNumber,
 		pageCount,
 		setPageNumber,
-		zoom: gridZoomController,
+		zoom: zoomController,
 	})
 
 	const gridPanel = (
@@ -227,8 +236,10 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				onKeyDown={handleKeyDownInButtons}
 				contextMenuButton={contextMenuOpen ? contextMenuLocation : null}
 				onButtonContextMenu={doButtonContextMenu}
-				gridZoomController={gridZoomController}
-				gridZoomValue={gridZoomValue}
+				gridZoomController={zoomController}
+				gridZoomValue={zoomValue}
+				zoomFit={surfaceZoom?.fit ?? null}
+				setAvailableWidth={setPanelWidth}
 				viewAs={viewAs}
 				gridSize={gridSize}
 				surfaceView={surfaceView}
