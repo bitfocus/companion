@@ -35,6 +35,7 @@ export function surfaceLayoutsFromConfigs(
 			displayName: getSurfaceName(config, surfaceId),
 			isConnected,
 			layout: config.layout,
+			appearance: config.appearance ?? null,
 		}
 	}
 

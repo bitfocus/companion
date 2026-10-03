@@ -32,7 +32,15 @@ const squareLayout: SurfaceSchemaLayoutDefinition = {
 }
 
 function layoutItem(id: string, type: string, integrationType = 'satellite'): ClientSurfaceLayoutItem {
-	return { id, type, integrationType, displayName: `${type} (${id})`, isConnected: true, layout: squareLayout }
+	return {
+		id,
+		type,
+		integrationType,
+		displayName: `${type} (${id})`,
+		isConnected: true,
+		layout: squareLayout,
+		appearance: null,
+	}
 }
 
 function placement(overrides: Partial<KnownSurfacePlacement> = {}): KnownSurfacePlacement {

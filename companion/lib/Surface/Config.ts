@@ -80,6 +80,7 @@ export function createOrSanitizeSurfaceHandlerConfig(
 		integrationType,
 		gridSize: panel.gridSize,
 		layout: panel.surfaceLayout,
+		appearance: panel.surfaceAppearance,
 	}
 
 	// Forget old values

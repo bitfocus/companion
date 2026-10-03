@@ -130,12 +130,12 @@ describe('surfaceRenderScale', () => {
 describe('resolveSurfaceView', () => {
 	test('returns null for a layout which describes no controls', () => {
 		expect(
-			resolveSurfaceView({ stylePresets: { default: { bitmap: { w: 72, h: 72 } } }, controls: {} }, UNROTATED)
+			resolveSurfaceView({ stylePresets: { default: { bitmap: { w: 72, h: 72 } } }, controls: {} }, null, UNROTATED)
 		).toBeNull()
 	})
 
 	test('places every control, and says which button each drives', () => {
-		const view = resolveSurfaceView(squareLayout, UNROTATED)!
+		const view = resolveSurfaceView(squareLayout, null, UNROTATED)!
 
 		expect(view.controls).toHaveLength(4)
 		expect(controlAt(view, 0, 0).bounds).toEqual({ x: 0, y: 0, width: 72, height: 72 })
@@ -143,7 +143,7 @@ describe('resolveSurfaceView', () => {
 	})
 
 	test('lays the controls out at the size the surface draws them', () => {
-		const view = resolveSurfaceView(squareLayout, UNROTATED)!
+		const view = resolveSurfaceView(squareLayout, null, UNROTATED)!
 
 		// A gap between them, and the face is exactly as big as what is on it
 		const gap = controlAt(view, 0, 1).bounds.x - 72
@@ -152,7 +152,7 @@ describe('resolveSurfaceView', () => {
 	})
 
 	test('offsets the buttons it drives onto the grid, without moving the face', () => {
-		const view = resolveSurfaceView(squareLayout, { ...UNROTATED, offset: { rows: 3, columns: 5 } })!
+		const view = resolveSurfaceView(squareLayout, null, { ...UNROTATED, offset: { rows: 3, columns: 5 } })!
 
 		expect(view.gridBounds).toEqual({ minRow: 3, maxRow: 4, minColumn: 5, maxColumn: 6 })
 		// Where the surface sits on the grid says nothing about where its controls are on its own face
@@ -167,21 +167,21 @@ describe('resolveSurfaceView', () => {
 		}
 
 		test('draws the touch strip at its own shape rather than squeezing it into a key', () => {
-			const view = resolveSurfaceView(plusLayout, placement)!
+			const view = resolveSurfaceView(plusLayout, null, placement)!
 
 			expect(controlAt(view, 2, 0).bounds.width).toBe(200)
 			expect(controlAt(view, 2, 0).bounds.height).toBe(100)
 		})
 
 		test('gives the strip row its own height, so the keys above it keep theirs', () => {
-			const view = resolveSurfaceView(plusLayout, placement)!
+			const view = resolveSurfaceView(plusLayout, null, placement)!
 
 			expect(controlAt(view, 0, 0).bounds.height).toBe(120)
 			expect(controlAt(view, 2, 0).bounds.height).toBe(100)
 		})
 
 		test('makes the columns wide enough for the widest thing in them', () => {
-			const view = resolveSurfaceView(plusLayout, placement)!
+			const view = resolveSurfaceView(plusLayout, null, placement)!
 
 			// The strip is wider than a key, so the keys sit in the middle of the room it needs
 			const key = controlAt(view, 0, 0)
@@ -199,7 +199,7 @@ describe('resolveSurfaceView', () => {
 		 * a layout can state a size per control this is the test that should change.
 		 */
 		test('takes a control to be as big as its bitmap, density differences and all', () => {
-			const view = resolveSurfaceView(plusLayout, placement)!
+			const view = resolveSurfaceView(plusLayout, null, placement)!
 
 			const key = controlAt(view, 0, 0).bounds
 			const strip = controlAt(view, 2, 0).bounds
@@ -210,7 +210,7 @@ describe('resolveSurfaceView', () => {
 		})
 
 		test('draws the strip with more pixels than a key, in the proportion the surface uses', () => {
-			const view = resolveSurfaceView(plusLayout, placement)!
+			const view = resolveSurfaceView(plusLayout, null, placement)!
 
 			expect(controlAt(view, 0, 0).renderSize).toEqual({ width: 288, height: 288 })
 			expect(controlAt(view, 2, 0).renderSize).toEqual({ width: 480, height: 240 })
@@ -225,14 +225,14 @@ describe('resolveSurfaceView', () => {
 		}
 
 		test('draws the non-square keys at their own shape', () => {
-			const view = resolveSurfaceView(studioLayout, placement)!
+			const view = resolveSurfaceView(studioLayout, null, placement)!
 
 			expect(controlAt(view, 0, 0).bounds.width).toBe(200)
 			expect(controlAt(view, 0, 0).bounds.height).toBe(156)
 		})
 
 		test('gives a control with no bitmap a size to be drawn at anyway', () => {
-			const view = resolveSurfaceView(studioLayout, placement)!
+			const view = resolveSurfaceView(studioLayout, null, placement)!
 			const encoder = controlAt(view, 1, 0)
 
 			expect(encoder.aspectRatio).toBeNull()
@@ -241,7 +241,7 @@ describe('resolveSurfaceView', () => {
 		})
 
 		test('has nothing at all where the surface has no control', () => {
-			const view = resolveSurfaceView(studioLayout, placement)!
+			const view = resolveSurfaceView(studioLayout, null, placement)!
 
 			// The gaps between the encoders are not controls, and are not anything else either
 			expect(view.controls).toHaveLength(6)
@@ -249,7 +249,7 @@ describe('resolveSurfaceView', () => {
 		})
 
 		test('keeps the room the surface leaves between spaced-out controls', () => {
-			const view = resolveSurfaceView(studioLayout, placement)!
+			const view = resolveSurfaceView(studioLayout, null, placement)!
 
 			// The two encoders are at either end of the row, so they are as far apart as the keys above them
 			const left = controlAt(view, 1, 0)
@@ -273,14 +273,18 @@ describe('resolveSurfaceView', () => {
 		const panelGridSize = { rows: 1, columns: 3 }
 
 		test('lays an unrotated surface out as the layout describes it', () => {
-			const view = resolveSurfaceView(stripLayout, { offset: { rows: 0, columns: 0 }, rotation: 0, panelGridSize })!
+			const view = resolveSurfaceView(stripLayout, null, {
+				offset: { rows: 0, columns: 0 },
+				rotation: 0,
+				panelGridSize,
+			})!
 
 			expect(view.gridBounds).toEqual({ minRow: 0, maxRow: 0, minColumn: 0, maxColumn: 2 })
 			expect(view.extent.width).toBeGreaterThan(view.extent.height)
 		})
 
 		test('turns a quarter-turned surface onto its side, controls and all', () => {
-			const view = resolveSurfaceView(stripLayout, {
+			const view = resolveSurfaceView(stripLayout, null, {
 				offset: { rows: 0, columns: 0 },
 				rotation: 'surface90',
 				panelGridSize,
@@ -293,7 +297,7 @@ describe('resolveSurfaceView', () => {
 		})
 
 		test('drives the buttons the surface handler would', () => {
-			const view = resolveSurfaceView(stripLayout, {
+			const view = resolveSurfaceView(stripLayout, null, {
 				offset: { rows: 0, columns: 0 },
 				rotation: 'surface90',
 				panelGridSize,
@@ -304,7 +308,7 @@ describe('resolveSurfaceView', () => {
 		})
 
 		test('reverses a surface turned upside down', () => {
-			const view = resolveSurfaceView(stripLayout, {
+			const view = resolveSurfaceView(stripLayout, null, {
 				offset: { rows: 0, columns: 0 },
 				rotation: 'surface180',
 				panelGridSize,
@@ -313,5 +317,91 @@ describe('resolveSurfaceView', () => {
 			expect(controlAt(view, 0, 0).id).toBe('c')
 			expect(controlAt(view, 0, 2).id).toBe('a')
 		})
+	})
+})
+
+describe('resolveSurfaceView with a described appearance', () => {
+	/** The 2x2 square layout, but with a real face: circular keys at chosen positions on a coloured body */
+	const squareAppearance = {
+		size: { width: 400, height: 400 },
+		bodyColor: '#101010',
+		controls: {
+			'0/0': { x: 10, y: 10, width: 80, height: 80, shape: { type: 'circle' as const } },
+			'0/1': { x: 110, y: 10, width: 80, height: 80 },
+			'1/0': { x: 10, y: 110, width: 80, height: 80 },
+			'1/1': { x: 110, y: 110, width: 80, height: 80, shape: { type: 'rect' as const, cornerRadius: 20 } },
+		},
+	}
+
+	test('draws each control exactly where the face puts it, not where the layout estimate would', () => {
+		const view = resolveSurfaceView(squareLayout, squareAppearance, UNROTATED)!
+
+		expect(controlAt(view, 0, 0).bounds).toEqual({ x: 10, y: 10, width: 80, height: 80 })
+		expect(controlAt(view, 1, 1).bounds).toEqual({ x: 110, y: 110, width: 80, height: 80 })
+		expect(view.extent).toEqual({ width: 400, height: 400 })
+	})
+
+	test('carries the body through so the face can be drawn behind the controls', () => {
+		const withImage = { ...squareAppearance, bodyImage: 'data:image/png;base64,abc' }
+		const view = resolveSurfaceView(squareLayout, withImage, UNROTATED)!
+
+		expect(view.body).toEqual({ color: '#101010', image: 'data:image/png;base64,abc' })
+	})
+
+	test('reports null for the body image when the face declared none', () => {
+		const view = resolveSurfaceView(squareLayout, squareAppearance, UNROTATED)!
+
+		expect(view.body).toEqual({ color: '#101010', image: null })
+	})
+
+	test('takes the shape from the face: a circle, or the rounding of a rounded rect', () => {
+		const view = resolveSurfaceView(squareLayout, squareAppearance, UNROTATED)!
+
+		expect(controlAt(view, 0, 0).shape).toEqual({ type: 'circle' })
+		// cornerRadius 20 over an 80px side is a quarter of it
+		expect(controlAt(view, 1, 1).shape).toEqual({ type: 'rect', cornerRadiusRatio: 0.25 })
+	})
+
+	test('draws a rect square unless the face gives it a radius', () => {
+		const withPlainRect = {
+			...squareAppearance,
+			controls: {
+				...squareAppearance.controls,
+				'1/0': { ...squareAppearance.controls['1/0'], shape: { type: 'rect' as const } },
+			},
+		}
+		const view = resolveSurfaceView(squareLayout, withPlainRect, UNROTATED)!
+
+		// One with no shape at all, and one which is a rect with no radius
+		expect(controlAt(view, 0, 1).shape).toEqual({ type: 'rect', cornerRadiusRatio: 0 })
+		expect(controlAt(view, 1, 0).shape).toEqual({ type: 'rect', cornerRadiusRatio: 0 })
+	})
+
+	test('still maps each control to the button it drives', () => {
+		const view = resolveSurfaceView(squareLayout, squareAppearance, {
+			...UNROTATED,
+			offset: { rows: 1, columns: 2 },
+		})!
+
+		expect(controlAt(view, 1, 2).id).toBe('0/0')
+		expect(view.gridBounds).toEqual({ minRow: 1, maxRow: 2, minColumn: 2, maxColumn: 3 })
+	})
+
+	test('falls back to the layout estimate when the surface is rotated, which the estimate handles', () => {
+		const view = resolveSurfaceView(squareLayout, squareAppearance, { ...UNROTATED, rotation: 'surface90' })!
+
+		// The estimate draws no body and sizes to the layout, not the described 400x400 face
+		expect(view.body).toBeNull()
+		expect(view.extent).not.toEqual({ width: 400, height: 400 })
+	})
+
+	test('falls back to the estimate when the face does not cover every control', () => {
+		const partial = {
+			...squareAppearance,
+			controls: { '0/0': squareAppearance.controls['0/0'] },
+		}
+		const view = resolveSurfaceView(squareLayout, partial, UNROTATED)!
+
+		expect(view.body).toBeNull()
 	})
 })

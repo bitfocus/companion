@@ -8,6 +8,7 @@ import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type {
+	SurfaceAppearanceDefinition,
 	SurfaceRotation,
 	SurfaceSchemaControlStylePreset,
 	SurfaceSchemaLayoutDefinition,
@@ -169,6 +170,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 	readonly surfaceLayout: SurfaceSchemaLayoutDefinition
+	readonly surfaceAppearance: SurfaceAppearanceDefinition | null
 
 	#config: Record<string, any>
 
@@ -269,6 +271,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 		})
 
 		this.surfaceLayout = surfaceInfo.surfaceLayout
+		this.surfaceAppearance = surfaceInfo.surfaceAppearance
 
 		// Find the max bounds of this surface
 		this.gridSize = Object.values(surfaceInfo.surfaceLayout.controls).reduce(

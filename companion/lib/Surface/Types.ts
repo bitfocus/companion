@@ -7,6 +7,7 @@ import type {
 	ClientSurfaceLayoutItem,
 	CompanionSurfaceConfigField,
 	GridSize,
+	SurfaceAppearanceDefinition,
 	SurfaceFirmwareUpdateInfo,
 	SurfaceGroupConfig,
 	SurfaceModelsUpdate,
@@ -41,6 +42,8 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	readonly gridSize: GridSize
 	/** The layout manifest describing the controls this panel has, and how they are drawn */
 	readonly surfaceLayout: SurfaceSchemaLayoutDefinition
+	/** How to draw the panel's face; null when it supplied none and the face is derived from the layout */
+	readonly surfaceAppearance: SurfaceAppearanceDefinition | null
 	clearDeck(): void
 	draw(item: DrawButtonItem): void
 	setConfig(config: any, force?: boolean): void

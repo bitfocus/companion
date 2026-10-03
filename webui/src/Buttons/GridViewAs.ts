@@ -2,6 +2,7 @@ import type {
 	ClientSurfaceLayoutItem,
 	ClientSurfaceModelItem,
 	GridSize,
+	SurfaceAppearanceDefinition,
 	SurfaceModelsUpdate,
 	SurfaceRotation,
 	SurfaceSchemaLayoutDefinition,
@@ -123,7 +124,7 @@ export function resolveGridViewAs(
 		const layout = layouts.get(surfaceId)
 		if (!layout) return { status: 'noLayout', displayName: placement.displayName }
 
-		return resolvedFromLayout(placement.displayName, layout.layout, {
+		return resolvedFromLayout(placement.displayName, layout.layout, layout.appearance, {
 			offset: placement.offset,
 			rotation: placement.rotation,
 			panelGridSize: placement.panelGridSize ?? panelGridSizeFromLayout(layout.layout),
@@ -136,16 +137,17 @@ export function resolveGridViewAs(
 	// The plugin which declared it may have been stopped or uninstalled since it was chosen
 	if (!model) return { status: 'noLayout', displayName: modelId }
 
-	return resolvedForModel(model.name, model.layout, offset)
+	return resolvedForModel(model.name, model.layout, model.appearance ?? null, offset)
 }
 
 /** A model which is not here: placed as drawn (no rotation), the user choosing only its offset. */
 function resolvedForModel(
 	displayName: string,
 	layout: SurfaceSchemaLayoutDefinition,
+	appearance: SurfaceAppearanceDefinition | null,
 	offset: { rows: number; columns: number }
 ): GridViewAsResolution {
-	return resolvedFromLayout(displayName, layout, {
+	return resolvedFromLayout(displayName, layout, appearance, {
 		offset,
 		rotation: 0,
 		panelGridSize: panelGridSizeFromLayout(layout),
@@ -155,9 +157,10 @@ function resolvedForModel(
 function resolvedFromLayout(
 	displayName: string,
 	layout: SurfaceSchemaLayoutDefinition,
+	appearance: SurfaceAppearanceDefinition | null,
 	placement: SurfaceGridPlacement
 ): GridViewAsResolution {
-	const view = resolveSurfaceView(layout, placement)
+	const view = resolveSurfaceView(layout, appearance, placement)
 	if (!view) return { status: 'noLayout', displayName }
 
 	// The whole surface is shown; the grid is not clipped to it. Controls beyond the grid are the caller's

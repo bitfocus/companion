@@ -15,6 +15,7 @@ import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type {
 	CompanionSurfaceConfigField,
 	GridSize,
+	SurfaceAppearanceDefinition,
 	SurfaceSchemaLayoutDefinition,
 } from '@companion-app/shared/Model/Surfaces.js'
 import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
@@ -206,6 +207,8 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 	readonly surfaceLayout: SurfaceSchemaLayoutDefinition
+	// Satellite surfaces describe only their layout; the face is derived from it
+	readonly surfaceAppearance: SurfaceAppearanceDefinition | null = null
 	readonly deviceId: string
 	readonly socket: SatelliteSocketWrapper
 

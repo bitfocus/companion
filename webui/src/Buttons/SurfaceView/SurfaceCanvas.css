@@ -4,7 +4,11 @@
 /* The scrolling surface itself is `.button-grid-scroller` (the dark ground and scrollbars shared with
    the infinite grid); only its own max-width lives here. */
 .surface-canvas-viewport {
+	/* Fill the space so a face taller or wider than it scrolls, rather than growing the panel. Matches
+	   `.button-infinite-grid`, which fills the same way to get its scrollbars. */
+	height: 100%;
 	max-width: 100%;
+	box-sizing: border-box;
 
 	/* Breathing room so the face is not flush to the scroller edge, matching the infinite grid */
 	padding: 12px;
