@@ -58,6 +58,12 @@ export type SurfaceControlShape =
 	  }
 	| { type: 'circle' }
 
+/**
+ * What a control shows of its button: a drawn image, only a colour (an rgb-lit key, a touch strip which lights up),
+ * or nothing at all (a plain key, a pedal).
+ */
+export type SurfaceControlFeedback = 'bitmap' | 'color' | 'none'
+
 /** Which button on the grid a control drives. A surface control is an input to a button, not a cell of a layout. */
 export interface SurfaceControlCell {
 	row: number
@@ -73,6 +79,7 @@ export interface ResolvedSurfaceControl {
 	/** Where the control is on the face of the surface, and how big it is there */
 	bounds: SurfaceRect
 	shape: SurfaceControlShape
+	feedback: SurfaceControlFeedback
 	/** The shape of the bitmap this control is drawn with, or null when its style declares no bitmap (leds-only, text-only). */
 	aspectRatio: AspectRatio | null
 	/** How many pixels to draw a preview with - its resolution, a separate question to how large it is on the face. */
@@ -98,6 +105,14 @@ export interface ResolvedSurfaceView {
 	gridBounds: UserConfigGridSize
 	/** The face's background, when the surface described one, to draw behind the controls; null for the plain ground */
 	body: { color: string; image: string | null } | null
+}
+
+/** What a control shows, from its style. A bitmap wins over colours, as that is what the panel draws. */
+export function controlFeedback(preset: SurfaceSchemaControlStylePreset): SurfaceControlFeedback {
+	if (preset.bitmap) return 'bitmap'
+	if (preset.colors) return 'color'
+
+	return 'none'
 }
 
 /**
@@ -265,6 +280,7 @@ export function resolveSurfaceView(
 		gridX: number
 		gridY: number
 		size: { width: number; height: number }
+		feedback: SurfaceControlFeedback
 		aspectRatio: AspectRatio | null
 		renderSize: PreviewRenderSize
 	}
@@ -274,7 +290,8 @@ export function resolveSurfaceView(
 		// The layout is in the panel's own coordinates, which a rotated surface does not share with the grid
 		const [gridX, gridY] = unrotateXYForPanel(control.column, control.row, gridSizeOfSurface, placement.rotation)
 
-		const bitmap = resolveControlStylePreset(layout, control).bitmap
+		const preset = resolveControlStylePreset(layout, control)
+		const bitmap = preset.bitmap
 		const natural = estimateControlSize(bitmap, fallbackSide)
 
 		placed.push({
@@ -284,6 +301,7 @@ export function resolveSurfaceView(
 			gridY,
 			// A surface on its side presents its controls on their side too
 			size: quarterTurn ? { width: natural.height, height: natural.width } : natural,
+			feedback: controlFeedback(preset),
 			aspectRatio: bitmap ? reduceAspectRatio(bitmap.w, bitmap.h) : null,
 			renderSize: bitmap
 				? clampPreviewRenderSize({ width: bitmap.w * scale, height: bitmap.h * scale })
@@ -302,6 +320,7 @@ export function resolveSurfaceView(
 				cell: control.cell,
 				bounds: { x: face.x, y: face.y, width: face.width, height: face.height },
 				shape: shapeFromAppearance(face),
+				feedback: control.feedback,
 				aspectRatio: control.aspectRatio,
 				renderSize: control.renderSize,
 			}
@@ -346,6 +365,7 @@ export function resolveSurfaceView(
 				height: control.size.height,
 			},
 			shape: { type: 'rect', cornerRadiusRatio: CONTROL_CORNER_RATIO },
+			feedback: control.feedback,
 			aspectRatio: control.aspectRatio,
 			renderSize: control.renderSize,
 		}

@@ -15,6 +15,7 @@ function control(id: string, x: number, y: number, width: number, height: number
 		cell: { row: 0, column: 0 },
 		bounds: { x, y, width, height },
 		shape: { type: 'rect', cornerRadiusRatio: 0.12 },
+		feedback: 'bitmap',
 		aspectRatio: null,
 		renderSize: { width: 288, height: 288 },
 	}

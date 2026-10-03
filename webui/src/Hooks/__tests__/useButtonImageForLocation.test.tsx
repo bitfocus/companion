@@ -40,8 +40,8 @@ function elapseGracePeriod() {
 	})
 }
 
-const IMAGE_A: WrappedImage = { image: 'data:image/png;base64,AAAA', isUsed: true }
-const IMAGE_B: WrappedImage = { image: 'data:image/png;base64,BBBB', isUsed: true }
+const IMAGE_A: WrappedImage = { image: 'data:image/png;base64,AAAA', isUsed: true, color: 'rgba(0, 0, 0, 1)' }
+const IMAGE_B: WrappedImage = { image: 'data:image/png;base64,BBBB', isUsed: true, color: 'rgba(0, 0, 0, 1)' }
 
 beforeEach(() => {
 	vi.useFakeTimers()
@@ -59,7 +59,7 @@ describe('useButtonImageForLocation', () => {
 	it('starts with no image and subscribes to the location', () => {
 		const { result } = renderHook(() => useButtonImageForLocation(locationA, DEFAULT_PREVIEW_RENDER_SIZE))
 
-		expect(result.current).toEqual({ image: null, isUsed: false })
+		expect(result.current).toEqual({ image: null, isUsed: false, color: 'rgba(0, 0, 0, 0)' })
 		expect(subscribeMock).toHaveBeenCalledTimes(1)
 		expect(subscribeMock.mock.calls[0][0]).toEqual({ location: locationA, size: DEFAULT_PREVIEW_RENDER_SIZE })
 	})
@@ -148,7 +148,7 @@ describe('useButtonImageForLocation', () => {
 		const second = renderHook(() => useButtonImageForLocation(locationA, DEFAULT_PREVIEW_RENDER_SIZE))
 
 		// Nothing is retained past the grace period, so no risk of painting a stale image
-		expect(second.result.current).toEqual({ image: null, isUsed: false })
+		expect(second.result.current).toEqual({ image: null, isUsed: false, color: 'rgba(0, 0, 0, 0)' })
 		expect(subscribeMock).toHaveBeenCalledTimes(2)
 	})
 
@@ -190,7 +190,7 @@ describe('useButtonImageForLocation', () => {
 		const { result } = renderHook(() => useButtonImageForLocation(locationA, DEFAULT_PREVIEW_RENDER_SIZE, true))
 
 		expect(subscribeMock).not.toHaveBeenCalled()
-		expect(result.current).toEqual({ image: null, isUsed: false })
+		expect(result.current).toEqual({ image: null, isUsed: false, color: 'rgba(0, 0, 0, 0)' })
 	})
 
 	it('resubscribes when the watched location changes', () => {

@@ -15,6 +15,7 @@ function setup(props: Partial<Props> = {}) {
 	const baseProps: Props = {
 		location,
 		image: null,
+		color: null,
 		style: { left: 0, top: 0 },
 		title: '1/2/3',
 		placeholder: '2/3',
@@ -44,6 +45,23 @@ function setup(props: Partial<Props> = {}) {
 }
 
 describe('GridButtonPreview', () => {
+	describe('a control which shows only a colour', () => {
+		it('is filled with the colour, with no placeholder over it', () => {
+			const { root } = setup({ color: 'rgba(255, 0, 0, 1)' })
+			const border = root.querySelector('.button-border') as HTMLElement
+
+			expect(border.style.backgroundColor).toBe('rgb(255, 0, 0)')
+			expect(border.style.backgroundImage).toBe('')
+			expect(root.querySelector('.button-placeholder')).toBeNull()
+		})
+
+		it('shows the placeholder when there is no colour, as an empty button does', () => {
+			const { root } = setup({ color: null })
+
+			expect(root.querySelector('.button-placeholder')).toHaveTextContent('2/3')
+		})
+	})
+
 	describe('select mode', () => {
 		it('commits a tap on release, not on press', () => {
 			const { root, onTap } = setup()

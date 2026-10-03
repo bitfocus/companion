@@ -98,6 +98,43 @@ describe('resolveControlStylePreset', () => {
 	})
 })
 
+describe('control feedback', () => {
+	/** Shaped like a Neo's bottom row: a touch button which only lights up, the info bar, and a plain key */
+	const layout: SurfaceSchemaLayoutDefinition = {
+		stylePresets: {
+			default: { bitmap: { w: 248, h: 58 } },
+			rgb: { colors: 'hex' },
+			lit: { bitmap: { w: 96, h: 96 }, colors: 'hex' },
+			empty: {},
+		},
+		controls: {
+			'0/0': { row: 0, column: 0, stylePreset: 'rgb' },
+			'0/1': { row: 0, column: 1 },
+			'0/2': { row: 0, column: 2, stylePreset: 'lit' },
+			'0/3': { row: 0, column: 3, stylePreset: 'empty' },
+		},
+	}
+	const placement: SurfaceGridPlacement = {
+		offset: { rows: 0, columns: 0 },
+		rotation: 0,
+		panelGridSize: { rows: 1, columns: 4 },
+	}
+
+	test('says what each control shows of its button', () => {
+		const view = resolveSurfaceView(layout, null, placement)!
+
+		expect(controlAt(view, 0, 0).feedback).toBe('color')
+		expect(controlAt(view, 0, 1).feedback).toBe('bitmap')
+		expect(controlAt(view, 0, 3).feedback).toBe('none')
+	})
+
+	test('draws a control which has both a bitmap and colours as its bitmap, as the panel does', () => {
+		const view = resolveSurfaceView(layout, null, placement)!
+
+		expect(controlAt(view, 0, 2).feedback).toBe('bitmap')
+	})
+})
+
 describe('surfaceRenderScale', () => {
 	test('scales the least detailed control up to a normal preview, keeping the others in proportion', () => {
 		// A Stream Deck +XL: the strip is drawn wider than a key, and stays wider

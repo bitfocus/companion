@@ -93,6 +93,8 @@ export interface ClientEventDefinition extends EventDefinition {}
 export interface WrappedImage {
 	image: string | null
 	isUsed: boolean
+	/** The button's background, as a css colour: all a control which shows only a colour gets of it */
+	color: string
 }
 
 /**
