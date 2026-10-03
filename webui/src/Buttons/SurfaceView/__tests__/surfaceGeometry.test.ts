@@ -24,6 +24,7 @@ function view(...controls: ResolvedSurfaceControl[]): ResolvedSurfaceView {
 		controls,
 		extent: { width: 1000, height: 1000 },
 		gridBounds: { minRow: 0, maxRow: 0, minColumn: 0, maxColumn: 0 },
+		body: null,
 	}
 }
 

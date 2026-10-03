@@ -20,7 +20,7 @@ const plusLayout: SurfaceSchemaLayoutDefinition = {
 }
 
 function readyResolution(overrides: Partial<Extract<GridViewAsResolution, { status: 'ready' }>> = {}) {
-	const view = resolveSurfaceView(plusLayout, {
+	const view = resolveSurfaceView(plusLayout, null, {
 		offset: { rows: 0, columns: 0 },
 		rotation: 0,
 		panelGridSize: { rows: 3, columns: 4 },

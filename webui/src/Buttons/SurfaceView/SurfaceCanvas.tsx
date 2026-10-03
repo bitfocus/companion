@@ -12,6 +12,7 @@ import type { GridButtonModifiers } from '../GridButtonPreview.js'
 import { MARQUEE_START_THRESHOLD } from '../GridCanvasGeometry.js'
 import {
 	controlAtPoint,
+	controlBorderRadius,
 	controlCanvasBox,
 	controlLocation,
 	controlsInBox,
@@ -187,8 +188,14 @@ export const SurfaceCanvas = forwardRef<SurfaceCanvasRef, SurfaceCanvasProps>(fu
 			width: view.extent.width * unitScale,
 			height: view.extent.height * unitScale,
 			'--grid-scale': drawScale,
+			// The described face is drawn behind the controls, so the body shows between them as on the device. Artwork
+			// is the whole face, outline included, so its colour is not painted under it - that would fill out the
+			// corners and anything else the artwork leaves clear, and lose the shape of the device against the ground.
+			...(view.body?.image
+				? { backgroundImage: `url(${view.body.image})`, backgroundSize: '100% 100%' }
+				: view.body && { backgroundColor: view.body.color }),
 		}),
-		[view.extent.width, view.extent.height, unitScale, drawScale]
+		[view.extent.width, view.extent.height, unitScale, drawScale, view.body]
 	)
 
 	return (
@@ -210,7 +217,7 @@ export const SurfaceCanvas = forwardRef<SurfaceCanvasRef, SurfaceCanvasProps>(fu
 						top: box.top,
 						width: box.width,
 						height: box.height,
-						'--control-radius': `${Math.min(box.width, box.height) * control.shape.cornerRadiusRatio}px`,
+						'--control-radius': controlBorderRadius(control.shape, box),
 					} as React.CSSProperties
 
 					// The surface reaches beyond the grid here: draw the control so the face is accurate, but

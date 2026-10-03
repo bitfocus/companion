@@ -57,6 +57,7 @@ function makeStoredConfig(partial: Partial<SurfaceConfig>): SurfaceConfig {
 		integrationType: 'satellite',
 		gridSize: { columns: 1, rows: 2 },
 		layout: undefined,
+		appearance: undefined,
 		...partial,
 	}
 }
@@ -124,6 +125,7 @@ describe('SurfaceController layouts', () => {
 			displayName: 'Stream Deck Neo (offline1)',
 			isConnected: false,
 			layout: neoLayout,
+			appearance: null,
 		})
 	})
 

@@ -17,6 +17,7 @@ import type { EmulatorConfig, EmulatorImage, EmulatorLockedState } from '@compan
 import type {
 	CompanionSurfaceConfigField,
 	GridSize,
+	SurfaceAppearanceDefinition,
 	SurfaceSchemaLayoutDefinition,
 } from '@companion-app/shared/Model/Surfaces.js'
 import { PREVIEW_RENDER_SIZE, type ImageResult } from '../../Graphics/ImageResult.js'
@@ -165,6 +166,11 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 	get surfaceLayout(): SurfaceSchemaLayoutDefinition {
 		// The emulator draws every button itself, at the same size the button preview images are rendered at
 		return buildGridSurfaceLayout(this.gridSize, { w: PREVIEW_RENDER_SIZE, h: PREVIEW_RENDER_SIZE })
+	}
+
+	// The emulator's face is its plain grid, derived from the layout
+	get surfaceAppearance(): SurfaceAppearanceDefinition | null {
+		return null
 	}
 
 	latestConfig(): EmulatorConfig {

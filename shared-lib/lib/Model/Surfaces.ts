@@ -61,6 +61,8 @@ export interface ClientSurfaceLayoutItem {
 	displayName: string
 	isConnected: boolean
 	layout: SurfaceSchemaLayoutDefinition
+	/** How to draw the surface's face; null when it supplied none and the face is derived from the layout */
+	appearance: SurfaceAppearanceDefinition | null
 }
 
 /**
@@ -160,6 +162,8 @@ export interface SurfaceConfig {
 	integrationType: string | undefined
 	gridSize: GridSize | undefined
 	layout: SurfaceSchemaLayoutDefinition | undefined
+	/** null when the surface supplied none; undefined for configs saved before this was persisted */
+	appearance: SurfaceAppearanceDefinition | null | undefined
 }
 
 export interface SurfaceGroupConfig {
