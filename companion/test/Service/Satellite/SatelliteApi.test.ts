@@ -568,6 +568,93 @@ describe('ServiceSatelliteApi', () => {
 			expect(callArgs.gridSize).toEqual({ columns: 2, rows: 2 })
 		})
 
+		describe('APPEARANCE', () => {
+			const manifest = {
+				controls: {
+					btn1: { row: 0, column: 0 },
+					strip: { row: 1, column: 0 },
+				},
+				stylePresets: { default: {} },
+			}
+			const appearance = {
+				size: { width: 120, height: 200 },
+				bodyColor: '#1c1c1c',
+				controls: {
+					btn1: { x: 10, y: 10, width: 96, height: 96, shape: { type: 'rect', cornerRadius: 12 } },
+					strip: { x: 0, y: 120, width: 120, height: 16, type: 'lcd-segment' },
+				},
+			}
+			const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64')
+
+			function addWith(args: string) {
+				const service = createService()
+				const { socket, processMessage } = createSocketAndInit(service.api, service.logger)
+				service.surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDeep<SurfaceIPSatellite>(mockOptions))
+
+				processMessage(`ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" ${args}\n`)
+
+				return { ...service, socket }
+			}
+
+			test('passes on the appearance the surface describes', () => {
+				const { socket, surfaceController, logger } = addWith(
+					`LAYOUT_MANIFEST="${encode(manifest)}" APPEARANCE="${encode(appearance)}"`
+				)
+
+				expect(socket.lastMessage).toContain('OK')
+				expect(surfaceController.addSatelliteDevice.mock.calls[0][0].surfaceAppearance).toEqual(appearance)
+				expect(logger.warn).not.toHaveBeenCalled()
+			})
+
+			test('passes on no appearance when the surface describes none', () => {
+				const { surfaceController } = addWith(`LAYOUT_MANIFEST="${encode(manifest)}"`)
+
+				expect(surfaceController.addSatelliteDevice.mock.calls[0][0].surfaceAppearance).toBeNull()
+			})
+
+			test('accepts an appearance for a simple mode surface, by the ids its controls are given', () => {
+				const simple = {
+					size: { width: 200, height: 100 },
+					bodyColor: '#000000',
+					controls: {
+						'0/0': { x: 0, y: 0, width: 100, height: 100 },
+						'0/1': { x: 100, y: 0, width: 100, height: 100 },
+					},
+				}
+				const { surfaceController } = addWith(`KEYS_TOTAL=2 KEYS_PER_ROW=2 APPEARANCE="${encode(simple)}"`)
+
+				expect(surfaceController.addSatelliteDevice.mock.calls[0][0].surfaceAppearance).toEqual(simple)
+			})
+
+			test.each([
+				['is not base64 json', 'not-valid-base64!!!'],
+				['does not match the schema', encode({ ...appearance, bodyColor: 'red' })],
+				[
+					'has body art which is not an inline image',
+					encode({ ...appearance, bodyImage: 'https://example.com/face.svg' }),
+				],
+				['is missing a control of the layout', encode({ ...appearance, controls: { btn1: appearance.controls.btn1 } })],
+			])('adds the surface without an appearance, and says why, when it %s', (_, value) => {
+				const { socket, surfaceController, logger } = addWith(
+					`LAYOUT_MANIFEST="${encode(manifest)}" APPEARANCE="${value}"`
+				)
+
+				expect(socket.lastMessage).toContain('OK')
+				expect(surfaceController.addSatelliteDevice.mock.calls[0][0].surfaceAppearance).toBeNull()
+				expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('APPEARANCE'))
+			})
+
+			test('ignores ids the layout does not have', () => {
+				const extra = {
+					...appearance,
+					controls: { ...appearance.controls, ghost: { x: 0, y: 0, width: 1, height: 1 } },
+				}
+				const { surfaceController } = addWith(`LAYOUT_MANIFEST="${encode(manifest)}" APPEARANCE="${encode(extra)}"`)
+
+				expect(surfaceController.addSatelliteDevice.mock.calls[0][0].surfaceAppearance).toEqual(extra)
+			})
+		})
+
 		test('error for invalid LAYOUT_MANIFEST base64', () => {
 			const { api, logger } = createService()
 			const { socket, processMessage } = createSocketAndInit(api, logger)
