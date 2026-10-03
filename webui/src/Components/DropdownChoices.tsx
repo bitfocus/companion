@@ -21,6 +21,7 @@ export type DropdownChoicesOrGroups =
 export interface DropdownChoiceInt {
 	value: DropdownChoiceId
 	label: string
+	disabled?: boolean
 }
 
 export type OptionsOrGroupsInt = readonly (DropdownChoiceInt | GroupBase<DropdownChoiceInt>)[]
@@ -41,14 +42,16 @@ export function useDropdownChoicesForSelect(choices: DropdownChoicesOrGroups): {
 						options: item.options.map((choice): DropdownChoiceInt => ({
 							value: choice.id,
 							label: String(choice.label),
+							disabled: choice.disabled,
 						})),
 					}
 					options.push(group)
 					flatOptions.push(...group.options)
 				} else {
 					// Flat choice
-					options.push({ value: item.id, label: String(item.label) })
-					flatOptions.push({ value: item.id, label: String(item.label) })
+					const option: DropdownChoiceInt = { value: item.id, label: String(item.label), disabled: item.disabled }
+					options.push(option)
+					flatOptions.push(option)
 				}
 			}
 
@@ -60,6 +63,7 @@ export function useDropdownChoicesForSelect(choices: DropdownChoicesOrGroups): {
 			const options = Object.values(choices).map((choice): DropdownChoiceInt => ({
 				value: choice.id,
 				label: String(choice.label),
+				disabled: choice.disabled,
 			}))
 			return {
 				options,
