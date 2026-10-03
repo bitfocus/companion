@@ -15,6 +15,7 @@ import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { CloseButton } from '~/Layout/PanelIcons.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
+import { ModuleDeprecationAlert, useModuleDeprecation } from './ModuleDeprecation.js'
 import { ModuleVersionsTable } from './ModuleVersionsTable.js'
 import { RefreshModuleInfo } from './RefreshModuleInfo.js'
 import { useModuleStoreInfo } from './useModuleStoreInfo.js'
@@ -66,6 +67,9 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 	const moduleStoreInfo = useModuleStoreInfo(moduleType, moduleId)
 	const navigate = useNavigate()
 
+	// This panel covers the module as a whole, so no single version is in context here
+	const deprecation = useModuleDeprecation(moduleType, moduleId, null)
+
 	const baseInfo = moduleInfo || moduleStoreBaseInfo
 
 	const doCloseModule = useCallback(() => {
@@ -93,6 +97,8 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 				</div>
 			</div>
 			<div className="secondary-panel-simple-body">
+				{deprecation && <ModuleDeprecationAlert deprecation={deprecation} />}
+
 				<div className="refresh-and-last-updated">
 					<RefreshModuleInfo moduleType={moduleType} moduleId={moduleId} />
 					<LastUpdatedTimestamp timestamp={moduleStoreInfo?.lastUpdated} />
