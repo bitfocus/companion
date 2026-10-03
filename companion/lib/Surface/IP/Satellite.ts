@@ -209,6 +209,8 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly surfaceLayout: SurfaceSchemaLayoutDefinition
 	// Satellite surfaces describe only their layout; the face is derived from it
 	readonly surfaceAppearance: SurfaceAppearanceDefinition | null = null
+	// Satellite has no declared models for a surface to be one of
+	readonly surfaceModelId: string | null = null
 	readonly deviceId: string
 	readonly socket: SatelliteSocketWrapper
 
