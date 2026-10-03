@@ -44,6 +44,8 @@ export interface SurfacePanel extends EventEmitter<SurfacePanelEvents> {
 	readonly surfaceLayout: SurfaceSchemaLayoutDefinition
 	/** How to draw the panel's face; null when it supplied none and the face is derived from the layout */
 	readonly surfaceAppearance: SurfaceAppearanceDefinition | null
+	/** Which of its module's declared models the panel is, by the id the module declared it with; null for none */
+	readonly surfaceModelId: string | null
 	clearDeck(): void
 	draw(item: DrawButtonItem): void
 	setConfig(config: any, force?: boolean): void

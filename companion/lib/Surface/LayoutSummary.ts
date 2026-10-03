@@ -36,6 +36,8 @@ export function surfaceLayoutsFromConfigs(
 			isConnected,
 			layout: config.layout,
 			appearance: config.appearance ?? null,
+			// Qualified by the module that declared it, as the declared models are
+			modelId: config.modelId && config.integrationType ? `${config.integrationType}:${config.modelId}` : null,
 		}
 	}
 

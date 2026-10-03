@@ -173,6 +173,11 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		return null
 	}
 
+	// Not a model any module declares
+	get surfaceModelId(): string | null {
+		return null
+	}
+
 	latestConfig(): EmulatorConfig {
 		return this.#lastSentConfigJson
 	}
