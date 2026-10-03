@@ -3,6 +3,7 @@ import { memo, useCallback, useMemo } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { PreviewRenderSize } from '@companion-app/shared/Model/Preview.js'
+import type { SurfaceControlFeedback } from '@companion-app/shared/SurfaceLayout.js'
 import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import {
 	useButtonGridView,
@@ -22,6 +23,11 @@ export interface GridButtonCellProps {
 	location: ControlLocation
 	/** The size to draw this button's image at */
 	renderSize: PreviewRenderSize
+	/**
+	 * What the control shows of the button. One which shows only a colour is drawn as that colour, as the image
+	 * would be squeezed into something too small to read and is not what the device shows anyway.
+	 */
+	feedback: SurfaceControlFeedback
 	/** Where the button goes and how big it is. Whatever is drawing it decides; this only wears it. */
 	style: React.CSSProperties
 	contextMenuOpen: boolean
@@ -37,6 +43,7 @@ export interface GridButtonCellProps {
 export const GridButtonCell = memo(function GridButtonCell({
 	location,
 	renderSize,
+	feedback,
 	style,
 	contextMenuOpen,
 }: GridButtonCellProps) {
@@ -72,7 +79,8 @@ export const GridButtonCell = memo(function GridButtonCell({
 	// Already subscribed by the cell the button actually lives on, and subscriptions are shared
 	const ghost = useButtonImageForLocation(ghostSource ?? location, renderSize, !ghostSource)
 
-	const { image, isUsed } = useButtonImageForLocation(location, renderSize)
+	const { image, isUsed, color } = useButtonImageForLocation(location, renderSize)
+	const colorOnly = feedback === 'color'
 
 	// An empty cell has nothing to pick up, so dragging one is a gesture that can only end in nothing
 	// happening. In select mode only an already-selected button drags, so dragging anywhere else can
@@ -99,7 +107,8 @@ export const GridButtonCell = memo(function GridButtonCell({
 	return (
 		<GridButtonPreview
 			location={location}
-			image={isUsed ? image : null}
+			image={isUsed && !colorOnly ? image : null}
+			color={isUsed && colorOnly ? color : null}
 			style={style}
 			title={locationKey}
 			placeholder={`${row}/${column}`}
