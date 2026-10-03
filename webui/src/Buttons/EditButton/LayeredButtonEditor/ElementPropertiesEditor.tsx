@@ -236,7 +236,7 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 			>
 				{() => (
 					<>
-						<Button color="primary" size="sm" onClick={addRow}>
+						<Button color="secondary" size="sm" onClick={addRow}>
 							<FontAwesomeIcon icon={faPlus} className="me-1" />
 							{field.addLabel ?? 'Add item'}
 						</Button>

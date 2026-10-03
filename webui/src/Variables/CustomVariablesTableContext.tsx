@@ -7,6 +7,8 @@ import type { CustomVariablesApi } from './CustomVariablesApi'
 export interface CustomVariablesTableContextType {
 	customVariablesApi: CustomVariablesApi
 	customVariableValues: ObservableMap<string, VariableValue | undefined>
+	selectCustomVariable: (name: string | null) => void
+	selectedVariableId: string | null
 }
 
 const CustomVariablesTableContext = createContext<CustomVariablesTableContextType | null>(null)
@@ -22,14 +24,18 @@ type CustomVariablesTableContextProviderProps = CustomVariablesTableContextType
 export function CustomVariablesTableContextProvider({
 	customVariablesApi,
 	customVariableValues,
+	selectCustomVariable,
+	selectedVariableId,
 	children,
 }: React.PropsWithChildren<CustomVariablesTableContextProviderProps>): React.JSX.Element {
 	const value = useMemo<CustomVariablesTableContextType>(() => {
 		return {
 			customVariablesApi,
 			customVariableValues,
+			selectCustomVariable,
+			selectedVariableId,
 		}
-	}, [customVariablesApi, customVariableValues])
+	}, [customVariablesApi, customVariableValues, selectCustomVariable, selectedVariableId])
 
 	return <CustomVariablesTableContext.Provider value={value}>{children}</CustomVariablesTableContext.Provider>
 }

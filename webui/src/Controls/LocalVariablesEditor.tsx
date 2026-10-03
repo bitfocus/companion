@@ -6,7 +6,6 @@ import {
 	FeedbackEntitySubType,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { StaticAlert } from '~/Components/Alert.js'
 import { ControlEntitiesEditor } from './EntitiesEditor.js'
 import type { LocalVariablesStore } from './LocalVariablesStore.js'
 
@@ -16,7 +15,7 @@ interface LocalVariablesEditorProps {
 	location: ControlLocation | undefined
 	variables: SomeEntityModel[]
 	localVariablesStore: LocalVariablesStore
-	heading?: string
+	heading?: React.JSX.Element | string | null
 	localVariablePrefix?: string
 }
 export function LocalVariablesEditor({
@@ -34,10 +33,10 @@ export function LocalVariablesEditor({
 				className={className}
 				heading={heading}
 				subheading={
-					<StaticAlert color="info" className="mb-2 py-2">
-						Local variables are not supported by all modules or fields. Fields which support local variables can be
-						identified by the <FontAwesomeIcon icon={faGlobe} /> icon.
-					</StaticAlert>
+					<span className="text-xs text-muted">
+						Local variables are supported on fields featuring the <FontAwesomeIcon icon={faGlobe} className="mx-0.5" />{' '}
+						icon.
+					</span>
 				}
 				controlId={controlId}
 				entities={variables}

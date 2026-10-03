@@ -114,13 +114,14 @@
 
 .button-grid-panel-content {
 	overflow: hidden;
-	align-self: center;
-	width: fit-content; /* ← sizes to child naturally */
-	max-width: 100%; /* ← but shrinks when container is smaller */
+	width: 100%;
+	max-width: 100%;
+	/* Prefer the height of the configured rows, but yield when the panel has less room. */
+	flex-grow: 0;
 	flex-shrink: 1;
-	min-width: 0;
+	min-height: 0;
 	border-radius: 8px;
-	/* min-height: 250px;  instead, set min-height in tsx to match button-sizes. */
+	background-color: var(--color-surface-dark);
 }
 
 .button-infinite-grid {
@@ -133,11 +134,13 @@
 	/* border-radius: 5px; */ /* A radius here breaks safari, causing the div to draw over the scrollbars */
 	overflow: auto;
 
-	scrollbar-color: var(--color-scrollbar-thumb) var(--color-surface-dark); /* match the scrollbar bg to the background-color so corner-rounding is apparent even with scrollbars present */
+	/* The grid is a canvas, so make its scrollbars more assertive than ordinary document scrollbars. */
+	scrollbar-width: auto;
+	scrollbar-color: var(--color-scrollbar-thumb) var(--color-surface-dark);
 
 	&::-webkit-scrollbar {
-		width: 12px;
-		height: 12px;
+		width: 14px;
+		height: 14px;
 	}
 
 	&::-webkit-scrollbar-track {
@@ -145,7 +148,13 @@
 	}
 
 	&::-webkit-scrollbar-thumb {
-		background-color: var(--color-scrollbar-thumb); /* Webkit thumb color for compatibility */
+		border: 3px solid var(--color-surface-dark);
+		border-radius: 9999px;
+		background-color: var(--color-scrollbar-thumb);
+
+		&:hover {
+			background-color: var(--color-border-hover);
+		}
 	}
 
 	&.button-grid-panning {

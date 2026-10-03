@@ -127,12 +127,16 @@ export function TextInputFieldSimple({
 
 			if (cursorPositionRef.current == null) return
 
-			const openIndex = FindVariableStartIndexFromCursor(oldValue, cursorPositionRef.current)
-			if (openIndex === -1) return
+			const match = FindVariableStartIndexFromCursor(oldValue, cursorPositionRef.current)
+			if (!match) return
 
-			storeValue(oldValue.slice(0, openIndex) + `$(${variable.id})` + oldValue.slice(cursorPositionRef.current))
+			const before = oldValue.slice(0, match.startIndex)
+			const after = oldValue.slice(cursorPositionRef.current)
+			const variableStr = `$(${variable.id})`
 
-			const newSelection = openIndex + String(variable.id).length + 3
+			storeValue(before + variableStr + after)
+
+			const newSelection = match.startIndex + variableStr.length
 			setTimeout(() => {
 				if (inputRef.current) inputRef.current.setSelectionRange(newSelection, newSelection)
 			}, 0)
@@ -263,10 +267,10 @@ function useIsPickerOpen(showValue: string, cursorPosition: number | null) {
 	let searchValue = ' '
 
 	if (cursorPosition != null) {
-		const lastOpenSequence = FindVariableStartIndexFromCursor(showValue, cursorPosition)
-		isPickerOpen = lastOpenSequence !== -1
+		const match = FindVariableStartIndexFromCursor(showValue, cursorPosition)
+		isPickerOpen = match !== null
 
-		searchValue = showValue.slice(isPickerOpen ? lastOpenSequence + 2 : 0, cursorPosition)
+		searchValue = match ? showValue.slice(match.startIndex + match.prefixLength, cursorPosition) : ' '
 
 		// If it has no length, then the input field swallows the 'space' character as 'select the focussed option'
 		if (searchValue.length === 0) searchValue = ' '
@@ -285,16 +289,28 @@ function useIsPickerOpen(showValue: string, cursorPosition: number | null) {
 	}
 }
 
-function FindVariableStartIndexFromCursor(text: string, cursor: number): number {
-	const previousOpen = cursor >= 2 ? text.lastIndexOf('$(', cursor - 2) : -1
+interface VariableCursorMatch {
+	startIndex: number
+	prefixLength: number
+}
+
+function FindVariableStartIndexFromCursor(text: string, cursor: number): VariableCursorMatch | null {
+	const previousOpenParen = cursor >= 2 ? text.lastIndexOf('$(', cursor - 2) : -1
+	const previousOpenDollar = cursor >= 1 ? text.lastIndexOf('$', cursor - 1) : -1
 	const previousClose = cursor >= 1 ? text.lastIndexOf(')', cursor - 1) : -1
 
-	// Already closed
-	if (previousOpen < previousClose) return -1
-	// Not open
-	if (previousOpen === -1) return -1
+	// If there is a '$(' after any closing ')'
+	if (previousOpenParen !== -1 && previousOpenParen >= previousClose) {
+		return { startIndex: previousOpenParen, prefixLength: 2 }
+	}
 
-	// TODO - ensure contents is valid
+	// If there is a single '$' after any closing ')'
+	if (previousOpenDollar !== -1 && previousOpenDollar >= previousClose) {
+		const between = text.slice(previousOpenDollar + 1, cursor)
+		if (!between.includes(' ') && !between.includes('\n') && !between.includes('\t')) {
+			return { startIndex: previousOpenDollar, prefixLength: 1 }
+		}
+	}
 
-	return previousOpen
+	return null
 }

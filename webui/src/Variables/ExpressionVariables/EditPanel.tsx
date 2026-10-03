@@ -14,9 +14,8 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionVariableOptions } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { StaticAlert } from '~/Components/Alert'
-import { Form, FormLabel } from '~/Components/Form.js'
+import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField'
@@ -39,7 +38,6 @@ import { useControlConfig } from '~/Hooks/useControlConfig'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { LoadingBar, LoadingRetryOrError } from '~/Resources/Loading'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
-import { PreventDefaultHandler } from '~/Resources/util'
 import { useControlEntitiesEditorService, useControlEntityService } from '~/Services/Controls/ControlEntitiesService.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 
@@ -63,7 +61,7 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 	)
 
 	return (
-		<div className="edit-button-panel flex-form">
+		<div className="edit-panel">
 			<GenericConfirmModal ref={resetModalRef} />
 
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={reloadConfig} design="pulse" />
@@ -75,24 +73,32 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 								<ExpressionVariableConfig options={controlConfig.config.options} controlId={controlId} />
 							</MyErrorBoundary>
 
-							<MyErrorBoundary>
-								<ExpressionVariableEntityEditor
-									controlId={controlId}
-									entity={controlConfig.config.entity}
-									localVariablesStore={localVariablesStore}
-								/>
-							</MyErrorBoundary>
-
-							{!!controlConfig.config.entity && !isInternalUserValueFeedback(controlConfig.config.entity) && (
-								<MyErrorBoundary>
-									<div className="mt-4 pt-2 border-t border-border-alt">
-										<ExpressionVariableLocalVariablesEditor
+							<EditSectionCard title="Value">
+								{/* The entity editor's styles are scoped to these classes, so they wrap just the editor */}
+								<div className="edit-button-panel flex-form">
+									<MyErrorBoundary>
+										<ExpressionVariableEntityEditor
 											controlId={controlId}
-											localVariables={controlConfig.config.localVariables}
+											entity={controlConfig.config.entity}
 											localVariablesStore={localVariablesStore}
 										/>
+									</MyErrorBoundary>
+								</div>
+							</EditSectionCard>
+
+							{!!controlConfig.config.entity && !isInternalUserValueFeedback(controlConfig.config.entity) && (
+								// The entity list draws its own heading (with help), so this is a bare section rather than a card
+								<section className="edit-section">
+									<div className="edit-button-panel flex-form">
+										<MyErrorBoundary>
+											<ExpressionVariableLocalVariablesEditor
+												controlId={controlId}
+												localVariables={controlConfig.config.localVariables}
+												localVariablesStore={localVariablesStore}
+											/>
+										</MyErrorBoundary>
 									</div>
-								</MyErrorBoundary>
+								</section>
 							)}
 						</>
 					) : (
@@ -140,38 +146,34 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 	const notesFieldId = useId()
 
 	return (
-		<Grid.Col sm={12} className="p-0">
-			<Form row onSubmit={PreventDefaultHandler} className="flex-form">
-				<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
+		<EditSectionCard title="General Settings">
+			<div className="edit-field-row">
+				<label htmlFor={nameFieldId} className="text-xs font-semibold text-body">
 					Name
 					<InlineHelpIcon className="ms-1">
 						The name for the variable. It will get wrapped with <code>$(expression:X)</code> for you
 					</InlineHelpIcon>
-				</FormLabel>
-				<Grid.Col xs={8}>
-					<TextInputFieldSimple
-						id={nameFieldId}
-						setValue={setName}
-						value={options.variableName}
-						checkValid={isLabelValid}
-					/>
-				</Grid.Col>
-
-				<FormLabel htmlFor={descriptionFieldId} sm={4} column="sm">
+				</label>
+				<TextInputFieldSimple
+					id={nameFieldId}
+					setValue={setName}
+					value={options.variableName}
+					checkValid={isLabelValid}
+				/>
+			</div>
+			<div className="edit-field-row">
+				<label htmlFor={descriptionFieldId} className="text-xs font-semibold text-body">
 					Description
-				</FormLabel>
-				<Grid.Col xs={8}>
-					<TextInputFieldSimple id={descriptionFieldId} setValue={setDescription} value={options.description} />
-				</Grid.Col>
-
-				<FormLabel htmlFor={notesFieldId} sm={4} column="sm">
+				</label>
+				<TextInputFieldSimple id={descriptionFieldId} setValue={setDescription} value={options.description} />
+			</div>
+			<div className="edit-field-row">
+				<label htmlFor={notesFieldId} className="text-xs font-semibold text-body">
 					Notes
-				</FormLabel>
-				<Grid.Col xs={8}>
-					<ControlNotesEditor id={notesFieldId} controlId={controlId} notes={options.notes} className="mb-2" />
-				</Grid.Col>
-			</Form>
-		</Grid.Col>
+				</label>
+				<ControlNotesEditor id={notesFieldId} controlId={controlId} notes={options.notes} />
+			</div>
+		</EditSectionCard>
 	)
 }
 
@@ -257,20 +259,16 @@ const ExpressionVariableSoleEntityEditor = observer(function ExpressionVariableS
 
 	return (
 		<>
-			<Grid.Col sm={12} className="p-0">
-				<Form row onSubmit={PreventDefaultHandler} className="flex-form">
-					<FormLabel htmlFor={undefined} sm={4} column="sm">
-						Current Value
-					</FormLabel>
-					<Grid.Col xs={8}>
-						{expressionVariableDefinition?.isActive ? (
-							<ExpressionVariableCurrentValue name={expressionVariableDefinition.variableName} />
-						) : (
-							<small>Variable is not active (the name is either empty or in use elsewhere)</small>
-						)}
-					</Grid.Col>
-				</Form>
-			</Grid.Col>
+			<div className="edit-field-row">
+				<span className="text-xs font-semibold text-body">Current value</span>
+				<div className="text-xs text-body min-w-0">
+					{expressionVariableDefinition?.isActive ? (
+						<ExpressionVariableCurrentValue name={expressionVariableDefinition.variableName} />
+					) : (
+						<span className="text-muted">Variable is not active (the name is either empty or in use elsewhere)</span>
+					)}
+				</div>
+			</div>
 
 			<div className="editor-grid">
 				<EntityCommonCells
@@ -334,10 +332,10 @@ const ExpressionVariableLocalVariablesEditor = observer(function ExpressionVaria
 							</>
 						}
 						subheading={
-							<StaticAlert color="info" className="mb-2">
-								Local variables are not supported by all modules or fields. Fields which support local variables can be
-								identified by the <FontAwesomeIcon icon={faGlobe} /> icon.
-							</StaticAlert>
+							<span className="text-xs text-muted">
+								Local variables are supported on fields featuring the{' '}
+								<FontAwesomeIcon icon={faGlobe} className="mx-0.5" /> icon.
+							</span>
 						}
 						entities={localVariables}
 						ownerId={null}

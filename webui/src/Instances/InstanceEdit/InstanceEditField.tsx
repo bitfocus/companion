@@ -68,7 +68,7 @@ export function InstanceEditField({
 			)
 		case 'checkbox':
 			return (
-				<div className="me-10 mt-0.5">
+				<div className="instance-config-switch">
 					<SwitchInputField id={inputId} value={!!value} setValue={setValue} tooltip={definition.tooltip} />
 				</div>
 			)

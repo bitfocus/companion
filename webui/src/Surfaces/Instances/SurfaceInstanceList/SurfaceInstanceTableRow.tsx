@@ -63,6 +63,7 @@ export const SurfaceInstanceTableRow = observer(function SurfaceInstanceTableRow
 			doToggleEnabled={doToggleEnabled}
 			debugLogUrl={`/surfaces/debug/${id}`}
 			cannotEnableReason={cannotEnableReason}
+			isSelected={isSelected}
 		/>
 	)
 })

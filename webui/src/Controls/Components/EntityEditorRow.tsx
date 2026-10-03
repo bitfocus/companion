@@ -4,10 +4,11 @@ import { faSort } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useState } from 'react'
+import { useContext, useState } from 'react'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
-	type EntityModelType,
+	EntityModelType,
+	FeedbackEntitySubType,
 	type EntityOwner,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
@@ -184,13 +185,37 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 		: `${connectionLabel}: ${entity.definitionId} (undefined)`
 
 	const canSetHeadline = !!entityService.setHeadline
-	const [headlineExpanded, setHeadlineExpanded] = useState(canSetHeadline && !!entity.headline)
-	const doEditHeadline = useCallback(() => setHeadlineExpanded(true), [])
+	const [noteEditing, setNoteEditing] = useState(false)
 
 	const { isCollapsed, setCollapsed } = usePanelCollapseHelperContextForPanel(
 		stringifyEntityOwnerId(ownerId),
 		entity.id
 	)
+
+	// Options are only one source of expandable content: retain all shared editor controls too.
+	const hasDetails =
+		!entityDefinition ||
+		(!!connectionInfo &&
+			Array.from(connections.connections.values()).filter(
+				(connection) => connection.moduleId === connectionInfo.moduleId
+			).length > 1) ||
+		!!entityDefinition.description?.trim() ||
+		!!entityDefinition.options.length ||
+		!!(entityDefinition.hasLearn && entityService.performLearn) ||
+		!!entityDefinition.showButtonPreview ||
+		!!entityDefinition.supportsChildGroups?.length ||
+		(entityDefinition.entityType === EntityModelType.Action &&
+			!!entityDefinition.actionHasResult &&
+			!!entityService.setRawStoreResult) ||
+		(entity.type === EntityModelType.Feedback &&
+			(!!localVariablePrefix ||
+				(entityDefinition.entityType === EntityModelType.Feedback &&
+					entityDefinition.feedbackType === FeedbackEntitySubType.Boolean &&
+					entityDefinition.showInvert !== false) ||
+				(feedbackListType === FeedbackEntitySubType.StyleOverride &&
+					!entityDefinition.feedbackDisableStyleOverrides &&
+					!entityDefinition.feedbackStyleOverridesUnsupported)))
+	const isPanelCollapsed = hasDetails && isCollapsed
 
 	return (
 		<>
@@ -198,23 +223,25 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 				service={entityService}
 				entityTypeLabel={entityTypeLabel}
 				entity={entity}
+				entityDefinition={entityDefinition}
+				connectionLabel={connectionLabel}
 				ownerId={ownerId}
-				isPanelCollapsed={isCollapsed}
+				isPanelCollapsed={isPanelCollapsed}
+				hasDetails={hasDetails}
 				setPanelCollapsed={setCollapsed}
 				definitionName={definitionName}
 				canSetHeadline={canSetHeadline}
-				headlineExpanded={headlineExpanded}
-				setHeadlineExpanded={doEditHeadline}
+				noteEditing={noteEditing}
+				setNoteEditing={setNoteEditing}
 				readonly={readonly}
 				localVariablesStore={localVariablesStore}
 				localVariablePrefix={localVariablePrefix}
 			/>
 
-			{!isCollapsed && (
+			{hasDetails && !isPanelCollapsed && (
 				<LazyEditorGrid entity={entity} disableLazyMount={disableLazyMount}>
 					<div className="cell-description">
 						<div className="grow">
-							{headlineExpanded && <div className="name">{definitionName}</div>}
 							{entityDefinition?.description && <div className="description">{entityDefinition.description || ''}</div>}
 						</div>
 						{entityDefinition?.hasLearn && !!entityService.performLearn && (

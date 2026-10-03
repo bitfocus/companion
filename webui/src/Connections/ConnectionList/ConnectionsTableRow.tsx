@@ -61,6 +61,7 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			collectionsStore={connections}
 			instance={connection}
 			instanceStatus={connection.status}
+			isSelected={isSelected}
 			extraMenuItems={
 				<Popover.Item
 					onClick={doShowVariables}

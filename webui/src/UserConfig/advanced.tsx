@@ -1,39 +1,33 @@
+import { faCog } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
 import { memo } from 'react'
-import { Table } from '~/Components/Table.js'
-import { SplitPanels } from '~/Layout/SplitPanels.js'
+import { PageHeader } from '~/Layout/PageHeader.js'
+import { PageIntro } from '~/Layout/PageIntro'
+import { SettingsCard } from './Components/SettingsCard.js'
 import { useUserConfigProps } from './Context.js'
 import { AdminPasswordConfig } from './Sections/AdminPasswordConfig.js'
 import { ExperimentsConfig } from './Sections/ExperimentsConfig.js'
 import { HttpsConfig } from './Sections/HttpsConfig.js'
+import { SettingsNav } from './SettingsNav.js'
 
 export const SettingsAdvancedPage = memo(function UserConfig() {
 	return (
-		<SplitPanels.Root showing={null} resize={null}>
-			<SplitPanels.Primary>
-				<div className="flex-column-layout">
-					<div className="fixed-header">
-						<div className="flex justify-between">
-							<div>
-								<h4>Settings - Advanced</h4>
-								<p>Settings apply instantaneously, don't worry about it!</p>
-							</div>
-						</div>
-					</div>
-					<div className="scrollable-content">
+		<div className="page-shell">
+			<PageHeader icon={faCog} title="Settings" helpAction="/user-guide/config/settings#advanced" />
+
+			<div className="page-shell-body">
+				<SettingsNav activeTab="advanced" />
+
+				<div className="page-scroll">
+					<div className="primary-panel">
+						<PageIntro title="Advanced Settings">
+							Admin authentication, HTTPS certificates, and experimental features.
+						</PageIntro>
 						<UserConfigTable />
 					</div>
 				</div>
-			</SplitPanels.Primary>
-			{/* <div className="secondary-panel">
-				<div className="secondary-panel-header">
-					<h4>Remote control</h4>
-					<p>Companion can be remote controlled in several ways. Below you'll find how to do it.</p>
-				</div>
-				<div className="secondary-panel-inner">
-				</div>
-			</div> */}
-		</SplitPanels.Root>
+			</div>
+		</div>
 	)
 })
 
@@ -42,14 +36,16 @@ const UserConfigTable = observer(function UserConfigTable() {
 	if (!userConfigProps) return null
 
 	return (
-		<Table className="table-settings">
-			<tbody>
+		<div className="w-full space-y-4">
+			<SettingsCard>
 				<AdminPasswordConfig {...userConfigProps} />
-
+			</SettingsCard>
+			<SettingsCard>
 				<HttpsConfig {...userConfigProps} />
-
+			</SettingsCard>
+			<SettingsCard>
 				<ExperimentsConfig {...userConfigProps} />
-			</tbody>
-		</Table>
+			</SettingsCard>
+		</div>
 	)
 })

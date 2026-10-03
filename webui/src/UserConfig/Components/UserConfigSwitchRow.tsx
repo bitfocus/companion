@@ -22,25 +22,24 @@ export const UserConfigSwitchRow = observer(function UserConfigSwitchRow({
 	const invertIfNeeded = (value: boolean) => (inverted ? !value : value)
 	return (
 		<tr title={title}>
-			<td className="w-full">
-				{label}
-				{requiresRestart && (
-					<>
-						<br />
-						<em>(Requires Companion restart)</em>
-					</>
-				)}
-			</td>
 			<td>
-				<div className="float-right">
+				<div>
+					<span>{label}</span>
+					{requiresRestart && (
+						<span className="ms-2 text-xs text-amber-500 italic font-normal">(Requires Companion restart)</span>
+					)}
+				</div>
+			</td>
+			<td className="settings-value-end">
+				<div className="flex justify-end items-center">
 					<SwitchInputField
-						id={undefined} // Future: set this for better accessibility
+						id={undefined}
 						value={invertIfNeeded(!!userConfig.config[field])}
 						setValue={(val) => userConfig.setValue(field, invertIfNeeded(val))}
 					/>
 				</div>
 			</td>
-			<td className="pe-4">
+			<td>
 				<ResetButton userConfig={userConfig} field={field} />
 			</td>
 		</tr>

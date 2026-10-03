@@ -49,6 +49,7 @@ type RenderProps = {
 	ungroupedLeaves?: Leaf[]
 	ungroupedLabel?: string
 	onLeafClick?: (leaf: Leaf) => void
+	selectedLeafKey?: string | null
 	noContent?: React.ReactNode
 	className?: string
 	// harness-only knobs
@@ -68,6 +69,7 @@ function renderTree(props: RenderProps = {}) {
 				ungroupedLeaves={props.ungroupedLeaves}
 				ungroupedLabel={props.ungroupedLabel}
 				collapseHelper={props.forceNullHelper ? null : helper}
+				selectedLeafKey={props.selectedLeafKey ?? null}
 				HeaderComponent={Header}
 				LeafComponent={LeafComp}
 				onLeafClick={props.onLeafClick}
@@ -434,5 +436,20 @@ describe('CollapsibleTree', () => {
 			const second = renderTree({ nodes: THREE_GROUPS })
 			expect(within(second.container).getByText('b-leaf')).toBeInTheDocument()
 		})
+	})
+
+	it('marks the selected leaf', () => {
+		renderTree({
+			staticLeaves: [
+				{ key: 'a', label: 'Leaf A' },
+				{ key: 'b', label: 'Leaf B' },
+			],
+			selectedLeafKey: 'b',
+			onLeafClick: () => {},
+		})
+
+		expect(screen.getByRole('button', { name: 'Leaf A' })).not.toHaveAttribute('aria-current')
+		expect(screen.getByRole('button', { name: 'Leaf B' })).toHaveAttribute('aria-current', 'true')
+		expect(screen.getByRole('button', { name: 'Leaf B' })).toHaveClass('selected')
 	})
 })

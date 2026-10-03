@@ -1,4 +1,4 @@
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useContext, useMemo } from 'react'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
@@ -7,45 +7,17 @@ import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { AddInstancePanel } from '~/Instances/AddInstancePanel.js'
 import type { AddInstanceService } from '~/Instances/AddInstanceService'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
-import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 
-export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
+export const AddConnectionsPanel = observer(function AddConnectionsPanel({ isModal }: { isModal?: boolean }) {
 	const service = useAddConnectionService()
 
 	return (
 		<AddInstancePanel
 			service={service}
+			isModal={isModal}
 			title="Add New Connection"
 			helpAction="/user-guide/config/connections#adding-a-connection"
-			description={(moduleCount) =>
-				moduleCount > 0 ? (
-					<>
-						<div className="intro-text">
-							<p className="mb-2">
-								<strong>Companion supports over {moduleCount} different devices</strong>, and the list grows every day.
-							</p>
-						</div>
-						<div>
-							<span className="text-muted">
-								Can't find your device?{' '}
-								<a target="_blank" href={makeAbsolutePath('/user-guide/config/modules')}>
-									Check our guidance for getting device support
-								</a>
-								.<br /> To import an offline module, go to the <Link to="/modules">Modules page</Link>.
-							</span>
-						</div>
-					</>
-				) : (
-					<div>
-						<strong>Connect to hundreds of devices</strong> with Companion modules. Ensure you have an internet
-						connection to search and install modules, or{' '}
-						<a target="_blank" href="https://l.companion.free/q/lp68nsiV4">
-							download a module bundle
-						</a>
-					</div>
-				)
-			}
 		/>
 	)
 })

@@ -118,6 +118,7 @@ export function TableInputField({
 										onClick={() => removeRow(rowIndex)}
 										disabled={disabled}
 										title="Remove row"
+										variant="ghost"
 									>
 										<FontAwesomeIcon icon={faTrash} />
 									</Button>
@@ -127,7 +128,7 @@ export function TableInputField({
 					</tbody>
 				</Table>
 			)}
-			<Button color="primary" size="sm" onClick={addRow} disabled={disabled}>
+			<Button color="secondary" size="sm" onClick={addRow} disabled={disabled}>
 				<FontAwesomeIcon icon={faPlus} className="me-1" />
 				Add row
 			</Button>

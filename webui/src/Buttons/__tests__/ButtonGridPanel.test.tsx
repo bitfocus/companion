@@ -105,6 +105,16 @@ describe('the grid panel', () => {
 		expect(gridProps.drawScale).toBe(1.5)
 	})
 
+	it('uses a full-width grid inside an adaptive-height frame', () => {
+		const { content } = setup()
+
+		expect(gridProps.fillViewportWidth).toBe(true)
+		act(() => {
+			gridProps.setViewportPreferredHeight(480)
+		})
+		expect(content.style.height).toBe('480px')
+	})
+
 	it('marks the grid as live while the press tool is armed', () => {
 		const { view } = setup()
 		expect(gridProps.isHot).toBe(false)

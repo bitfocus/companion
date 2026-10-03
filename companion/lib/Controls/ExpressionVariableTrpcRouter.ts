@@ -2,6 +2,7 @@ import type EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 import z from 'zod'
 import { CreateExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
+import { isLabelValid } from '@companion-app/shared/Label.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type {
 	ClientExpressionVariableData,
@@ -48,7 +49,9 @@ export function createExpressionVariableTrpcRouter(
 			}
 		}),
 
-		create: publicProcedure.mutation(() => {
+		create: publicProcedure.input(z.object({ variableName: z.string() })).mutation(({ input }) => {
+			if (!isLabelValid(input.variableName)) throw new Error(`Invalid variable name "${input.variableName}"`)
+
 			// Create the initial entity for the expression variable
 			const rootEntity = instanceDefinitions.createEntityItem(
 				'internal',
@@ -77,8 +80,8 @@ export function createExpressionVariableTrpcRouter(
 			const maxRank = Math.max(0, ...allExpressionVariables.map((control) => control.options.sortOrder))
 			newControl.optionsSetField('sortOrder', maxRank, true)
 
-			// Add to names map (initially empty variableName, will be added when name is set)
 			expressionVariableNamesMap.addExpressionVariable(controlId, newControl.options.variableName)
+			newControl.optionsSetField('variableName', input.variableName)
 
 			// Ensure it is stored to the db
 			newControl.commitChange()

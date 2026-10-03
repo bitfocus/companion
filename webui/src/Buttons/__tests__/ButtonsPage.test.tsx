@@ -66,7 +66,6 @@ vi.mock('../EditButton/EditButton.js', async () => {
 vi.mock('../Pages.js', () => ({ PagesList: () => <div data-testid="pages-list" /> }))
 vi.mock('../PageVariablesPanel.js', () => ({ PageVariablesPanel: () => null }))
 vi.mock('../Presets/Presets.js', () => ({ ConnectionPresets: () => null }))
-vi.mock('../ActionRecorder/index.js', () => ({ ActionRecorder: () => null }))
 
 const { ButtonsPage } = await import('../index.js')
 const { RootAppStoreContext } = await import('~/Stores/RootAppStore.js')

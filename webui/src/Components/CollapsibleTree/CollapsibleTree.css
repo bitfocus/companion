@@ -5,6 +5,17 @@
 	font-size: 1.05em;
 	--collapsible-tree-nesting-level: 0;
 
+	/* Filling a page's list card: the card is the frame, and the tree reads like the other list pages. */
+	.list-card > & {
+		border: 0;
+		box-shadow: none;
+		font-size: inherit;
+
+		.collapsible-tree-leaf-row {
+			padding: 0.5rem 0.75rem;
+		}
+	}
+
 	.modal2-content & {
 		/* fix color in the Browse Actions/Feedbacks window (AddEntitiesModal) or any modal
 		   override default --cui-modal-color = rgb(37 43 54 /0.95)
@@ -91,6 +102,17 @@
 			.collapsible-tree-leaf-add-icon {
 				opacity: 0.6;
 			}
+
+			.collapsible-tree-leaf-arrow-icon {
+				opacity: 0.8;
+			}
+		}
+
+		/* Matches the selected row of the CollectionsNestingTable-based list pages. */
+		&.selected {
+			background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+			color: var(--color-primary);
+			box-shadow: inset 4px 0 0 var(--color-primary);
 
 			.collapsible-tree-leaf-arrow-icon {
 				opacity: 0.8;

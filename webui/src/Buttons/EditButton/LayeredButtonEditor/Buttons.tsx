@@ -70,7 +70,7 @@ export function RemoveElementButton({
 	}, [removeElementMutation, confirmModalRef, controlId, elementId])
 
 	return (
-		<Button size="sm" onClick={removeElement} title="Remove">
+		<Button size="sm" onClick={removeElement} title="Remove" variant="ghost" color="danger">
 			<FontAwesomeIcon icon={faTrash} />
 		</Button>
 	)

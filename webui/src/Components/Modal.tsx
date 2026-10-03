@@ -2,6 +2,8 @@
 import { Dialog } from '@base-ui/react/dialog'
 import './Modal.css'
 import './close-button.css'
+import { faTimes } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type HTMLAttributes } from 'react'
 import type { ButtonColor } from './Button'
@@ -212,7 +214,11 @@ function ModalHeader({ className, children, closeButton, ...props }: ModalHeader
 	return (
 		<div className={classNames('modal2-header', className)} {...props}>
 			{children}
-			{closeButton && <Dialog.Close className="btn btn-close" aria-label="Close modal" tabIndex={-1} />}
+			{closeButton && (
+				<Dialog.Close className="panel-icon-button ms-auto" aria-label="Close modal" tabIndex={-1}>
+					<FontAwesomeIcon icon={faTimes} className="text-sm" />
+				</Dialog.Close>
+			)}
 		</div>
 	)
 }

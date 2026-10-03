@@ -1,7 +1,6 @@
 import { faPuzzlePiece } from '@fortawesome/free-solid-svg-icons'
 import { createFileRoute } from '@tanstack/react-router'
-import { NonIdealState } from '~/Components/NonIdealState.js'
-import { MyErrorBoundary } from '~/Resources/Error'
+import { PanelEmptyState } from '~/Layout/PanelEmptyState.js'
 
 export const Route = createFileRoute('/_app/modules/')({
 	component: RouteComponent,
@@ -9,8 +8,10 @@ export const Route = createFileRoute('/_app/modules/')({
 
 function RouteComponent() {
 	return (
-		<MyErrorBoundary>
-			<NonIdealState text="Select a module to manage" icon={faPuzzlePiece} />
-		</MyErrorBoundary>
+		<PanelEmptyState
+			icon={faPuzzlePiece}
+			title="Select a module"
+			description="Choose a module from the list to manage its installed versions."
+		/>
 	)
 }

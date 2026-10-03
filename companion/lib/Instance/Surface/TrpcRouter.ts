@@ -161,13 +161,28 @@ export function createSurfacesTrpcRouter(
 					instanceId: z.string(),
 					moduleId: z.string(),
 					versionId: z.string().nullable(),
+					updatePolicy: z.enum(InstanceVersionUpdatePolicy).optional(),
 				})
 			)
 			.mutation(({ input }) => {
+				const current = configStore.getConfigOfTypeForId(input.instanceId, ModuleInstanceType.Surface)
+				if (
+					input.updatePolicy !== undefined &&
+					current?.moduleId === input.moduleId &&
+					current.moduleVersionId === input.versionId
+				) {
+					const result = instanceController.setSurfaceInstanceLabelAndConfig(input.instanceId, {
+						label: null,
+						enabled: null,
+						config: null,
+						updatePolicy: input.updatePolicy,
+					})
+					return result.ok ? null : result.message
+				}
 				const res = instanceController.setModuleVersionAndActivate(
 					input.instanceId,
 					`${input.moduleId}@${input.versionId ?? ''}`,
-					null
+					input.updatePolicy ?? null
 				)
 
 				if (!res) return 'no surface integration' // Update the config

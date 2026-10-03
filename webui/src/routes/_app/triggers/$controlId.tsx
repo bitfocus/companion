@@ -23,7 +23,7 @@ const RouteComponent = observer(function RouteComponent() {
 	}, [navigate, triggersList, fullControlId])
 
 	return (
-		<div className="secondary-panel-simple-body">
+		<div className="secondary-panel-simple-body p-0 flex flex-col min-h-0">
 			<MyErrorBoundary>
 				<EditTriggerPanel key={controlId} controlId={fullControlId} />
 			</MyErrorBoundary>

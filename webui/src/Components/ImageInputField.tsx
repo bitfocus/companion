@@ -136,7 +136,7 @@ export const ImageInputField = observer(function ImageInputField({
 				<div className="image-input-field__label grow truncate">{label}</div>
 				<ButtonGroup>
 					<Button
-						color="primary"
+						color="secondary"
 						onClick={openModal}
 						disabled={disabled}
 						aria-label="Select image"
@@ -161,6 +161,7 @@ export const ImageInputField = observer(function ImageInputField({
 						disabled={disabled || parsed.type === 'none'}
 						aria-label="Clear image"
 						title="Clear image"
+						variant="ghost"
 					>
 						<FontAwesomeIcon icon={faTrash} />
 					</Button>

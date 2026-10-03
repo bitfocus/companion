@@ -1,6 +1,5 @@
-import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { CircleHelp } from 'lucide-react'
 import './InlineHelp.css'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classnames from 'classnames'
 import { Tooltip } from '~/Components/Tooltip.js'
 
@@ -40,7 +39,7 @@ export const InlineHelpIcon = ({
 }): React.JSX.Element => {
 	return (
 		<InlineHelpCustom help={children} className={className}>
-			<FontAwesomeIcon icon={faQuestionCircle} />
+			<CircleHelp className="w-3.5 h-3.5 inline-block opacity-70 hover:opacity-100 transition-opacity" />
 		</InlineHelpCustom>
 	)
 }

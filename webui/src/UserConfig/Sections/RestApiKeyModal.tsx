@@ -171,7 +171,7 @@ export const RestApiKeyModal = forwardRef<RestApiKeyModalRef, RestApiKeyModalPro
 								</Modal.Body>
 								<Modal.Footer>
 									<Modal.Close disabled={saving}>Cancel</Modal.Close>
-									<Button color="primary" onClick={doSave} disabled={!isValid || saving}>
+									<Button color="primary" onClick={doSave} disabled={!isValid || saving} aria-busy={saving}>
 										{editingId === null ? 'Create' : 'Save'}
 									</Button>
 								</Modal.Footer>

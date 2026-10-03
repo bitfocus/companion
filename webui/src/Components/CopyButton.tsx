@@ -43,6 +43,7 @@ export function CopyButton({
 		<Button
 			onMouseDown={handleClick}
 			title={copied ? 'Copied!' : title}
+			aria-label={copied ? 'Copied!' : title}
 			size={size}
 			className={className}
 			color={color}

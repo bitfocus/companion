@@ -1,3 +1,5 @@
+import { faCalendarAlt } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
@@ -49,9 +51,14 @@ interface BackupRuleEditPanelHeadingProps {
 
 function BackupRuleEditPanelHeading({ doCloseRule }: BackupRuleEditPanelHeadingProps) {
 	return (
-		<div className="secondary-panel-simple-header">
-			<h4 className="panel-title">Edit Backup Rule</h4>
-			<div className="header-buttons">
+		<div className="flex items-center justify-between gap-3 p-3 bg-surface-muted/40 border-b border-border/70 shrink-0">
+			<div className="flex items-center gap-2">
+				<span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-surface-muted text-muted text-xs">
+					<FontAwesomeIcon icon={faCalendarAlt} />
+				</span>
+				<h3 className="text-sm font-bold text-body mb-0">Edit Backup Rule</h3>
+			</div>
+			<div className="flex items-center gap-1.5">
 				<ContextHelpButton action="/user-guide/config/settings#backups" />
 				<CloseButton closeFn={doCloseRule} />
 			</div>

@@ -27,29 +27,22 @@
 }
 */
 
-.refresh-and-last-updated {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 0.5rem;
-
-	.last-updated {
-		margin-left: 0.5em;
-
-		.bold {
-			font-weight: bold;
-		}
-	}
-}
-
-.connectionlist-selected {
-	background-color: var(--color-row-selected);
-
-	&:hover {
-		background-color: var(--color-row-overlay-30) !important;
-	}
-}
-
 .import-module {
 	margin-bottom: 0.5rem;
+}
+
+/* Keep the module controls in place and give scrolling to the results card instead of the whole
+   primary panel. This also works when the secondary module details panel is open. */
+.modules-list-panel {
+	overflow: hidden;
+}
+
+.modules-list-layout {
+	height: 100%;
+	min-height: 0;
+}
+
+.modules-list-results {
+	flex: 1;
+	min-height: 0;
 }

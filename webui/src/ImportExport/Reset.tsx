@@ -137,12 +137,19 @@ export const ResetWizardModal = observer(function ResetWizardModal() {
 
 	let nextButton
 	switch (currentStep) {
+		// The apply step is the destructive one, so its button is the destructive colour.
 		case applyStep:
 			nextButton = (
 				<form.Subscribe
 					selector={(state) => [state.canSubmit, state.isSubmitting]}
 					children={([canSubmit, isSubmitting]) => (
-						<Button ref={buttonRef} color="primary" type="submit" disabled={!canSubmit || isSubmitting}>
+						<Button
+							ref={buttonRef}
+							color="danger"
+							type="submit"
+							disabled={!canSubmit || isSubmitting}
+							aria-busy={isSubmitting}
+						>
 							Apply {isSubmitting ? '...' : ''}
 						</Button>
 					)}
@@ -180,9 +187,9 @@ export const ResetWizardModal = observer(function ResetWizardModal() {
 
 	return (
 		<Modal.Root open={show} onOpenChange={onOpenChange} onOpenChangeComplete={onOpenChangeComplete} disableDismiss>
-			<Modal.Trigger color="danger">
-				<FontAwesomeIcon icon={faTrashAlt} className="me-2" />
-				Reset configuration
+			<Modal.Trigger color="danger" className="w-full flex items-center justify-center gap-2 font-semibold">
+				<FontAwesomeIcon icon={faTrashAlt} />
+				Reset Configuration
 			</Modal.Trigger>
 
 			<Modal.Portal>
@@ -190,15 +197,7 @@ export const ResetWizardModal = observer(function ResetWizardModal() {
 				<Modal.Viewport>
 					<Modal.Popup initialFocus={buttonRef}>
 						<Modal.Header closeButton>
-							<Modal.Title>
-								<img
-									src={makeAbsolutePath('/img/icons/48x48.png')}
-									style={{ height: 30 }}
-									alt="logo"
-									className="me-2"
-								/>
-								Reset Configuration
-							</Modal.Title>
+							<Modal.Title>Reset Configuration</Modal.Title>
 						</Modal.Header>
 						{currentStep <= applyStep && (
 							<StepSelector items={stepperItems} currentIndex={currentStep} onJump={doJumpToStep} />
@@ -246,7 +245,7 @@ function ResetBeginStep() {
 					what to reset and review before applying.
 				</p>
 				<p className="mb-4">It is strongly recommended to export your configuration first.</p>
-				<LinkButtonExternal color="success" href={makeAbsolutePath('/int/export/full')}>
+				<LinkButtonExternal color="secondary" href={makeAbsolutePath('/int/export/full')}>
 					<FontAwesomeIcon icon={faDownload} /> Export
 				</LinkButtonExternal>
 			</NonIdealState>

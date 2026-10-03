@@ -4,8 +4,8 @@
 .nav {
 	--nav-link-padding-x: 1rem;
 	--nav-link-padding-y: 0.5rem;
-	--nav-link-color: var(--color-primary);
-	--nav-link-hover-color: color-mix(in srgb, var(--color-primary) 80%, black);
+	--nav-link-color: var(--color-brand);
+	--nav-link-hover-color: color-mix(in srgb, var(--color-brand) 80%, black);
 	--nav-link-disabled-color: var(--color-muted);
 
 	display: flex;

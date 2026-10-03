@@ -1,0 +1,55 @@
+/* The pill nav strip under a PageHeader (Layout/PageTabs.tsx). */
+
+.page-tabs {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	margin-bottom: 0.5rem;
+	padding: 0.25rem;
+	border: 1px solid var(--color-border);
+	border-radius: 0.5rem;
+	background: var(--color-surface-muted);
+	flex-shrink: 0;
+	overflow-x: auto;
+
+	/* As a direct child of the page shell the shell's gap already spaces it from what follows. */
+	.page-shell > & {
+		margin-bottom: 0;
+	}
+}
+
+.page-tab {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.375rem 0.75rem;
+	border: 1px solid transparent;
+	border-radius: 0.375rem;
+	font-size: 0.75rem;
+	font-weight: 500;
+	white-space: nowrap;
+	text-decoration: none;
+	color: var(--color-muted);
+	transition: all 0.15s ease;
+
+	.svg-inline--fa {
+		color: var(--color-muted);
+	}
+
+	&:hover {
+		color: var(--color-body-text);
+		background: var(--color-surface);
+	}
+
+	&.active {
+		font-weight: 700;
+		color: var(--color-primary);
+		border-color: var(--color-border);
+		background: var(--color-surface);
+		box-shadow: 0 1px 2px var(--color-shadow-10);
+
+		.svg-inline--fa {
+			color: var(--color-primary);
+		}
+	}
+}

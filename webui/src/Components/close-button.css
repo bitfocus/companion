@@ -37,4 +37,10 @@
 		user-select: none;
 		opacity: 0.25;
 	}
+
+	&:focus-visible {
+		outline: 2px solid var(--color-action-focus);
+		outline-offset: 2px;
+		box-shadow: none;
+	}
 }

@@ -9,11 +9,7 @@ import { UserConfigSwitchValueRow } from '../Components/UserConfigSwitchValueRow
 export const ButtonsConfig = observer(function ButtonsConfig(props: UserConfigProps) {
 	return (
 		<>
-			<UserConfigHeadingRow
-				label="Buttons"
-				helpMessage="Setup button appearances."
-				helpAction="/user-guide/config/settings#buttons"
-			/>
+			<UserConfigHeadingRow label="Buttons" />
 
 			<UserConfigSwitchRow
 				userConfig={props}

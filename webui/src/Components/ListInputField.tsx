@@ -158,6 +158,7 @@ export function ListRowControls({
 					onClick={() => removeRow(rowIndex)}
 					disabled={disabled || atMinimum}
 					title="Remove item"
+					variant="ghost"
 				>
 					<FontAwesomeIcon icon={faTrash} />
 				</Button>
@@ -201,7 +202,7 @@ export const ListInputField = observer(function ListInputField({
 				{definition.tooltip && <InlineHelpIcon className="ms-1">{definition.tooltip}</InlineHelpIcon>}
 			</FormLabel>
 			<Grid.Col sm={8} className={classNames({ hidden: hidden })}>
-				<Button color="primary" size="sm" onClick={addRow} disabled={disabled}>
+				<Button color="secondary" size="sm" onClick={addRow} disabled={disabled}>
 					<FontAwesomeIcon icon={faPlus} className="me-1" />
 					{definition.addLabel ?? 'Add item'}
 				</Button>

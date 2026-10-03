@@ -3,7 +3,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { Button, ButtonGroup } from '~/Components/Button'
-import { MyErrorBoundary } from '~/Resources/Error'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
 export function ControlHotPressButtons({
@@ -42,36 +41,33 @@ export function ControlHotPressButtons({
 	}, [hotAbortMutation, location])
 
 	return (
-		<>
-			<ButtonGroup>
-				<Button
-					className="ms-1"
-					color="warning"
-					onMouseDown={hotPressDown}
-					onMouseUp={hotPressUp}
-					title="Test press button"
-				>
-					<FontAwesomeIcon icon={faPlay} />
-					&nbsp;Test
-				</Button>
+		<ButtonGroup className="control-hotpress-actions">
+			<Button color="secondary" size="sm" onMouseDown={hotPressDown} onMouseUp={hotPressUp} title="Test press button">
+				<FontAwesomeIcon icon={faPlay} className="me-1.5" />
+				Test
+			</Button>
 
-				{showRotaries && (
-					<MyErrorBoundary>
-						<Button color="warning" onMouseDown={hotRotateLeft} title="Test rotate left">
-							<FontAwesomeIcon icon={faUndo} />
-						</Button>
+			{showRotaries && (
+				<>
+					<Button color="secondary" size="sm" onMouseDown={hotRotateLeft} title="Test rotate left">
+						<FontAwesomeIcon icon={faUndo} />
+					</Button>
+					<Button color="secondary" size="sm" onMouseDown={hotRotateRight} title="Test rotate right">
+						<FontAwesomeIcon icon={faRedo} />
+					</Button>
+				</>
+			)}
 
-						<Button color="warning" onMouseDown={hotRotateRight} title="Test rotate right">
-							<FontAwesomeIcon icon={faRedo} />
-						</Button>
-					</MyErrorBoundary>
-				)}
-
-				<Button color="secondary" onMouseDown={hotAbortActions} title="Abort running actions">
-					<FontAwesomeIcon icon={faStop} />
-					&nbsp;Stop
-				</Button>
-			</ButtonGroup>
-		</>
+			<Button
+				color="secondary"
+				size="sm"
+				className="control-hotpress-stop"
+				onMouseDown={hotAbortActions}
+				title="Abort running actions"
+				aria-label="Abort running actions"
+			>
+				<FontAwesomeIcon icon={faStop} />
+			</Button>
+		</ButtonGroup>
 	)
 }

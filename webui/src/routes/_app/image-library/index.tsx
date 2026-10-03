@@ -1,6 +1,6 @@
 import { faImage } from '@fortawesome/free-solid-svg-icons'
 import { createFileRoute } from '@tanstack/react-router'
-import { NonIdealState } from '~/Components/NonIdealState.js'
+import { PanelEmptyState } from '~/Layout/PanelEmptyState.js'
 
 export const Route = createFileRoute('/_app/image-library/')({
 	component: RouteComponent,
@@ -8,8 +8,10 @@ export const Route = createFileRoute('/_app/image-library/')({
 
 function RouteComponent() {
 	return (
-		<div className="secondary-panel-simple-body no-scroll">
-			<NonIdealState text="Select an image to edit" icon={faImage} />
-		</div>
+		<PanelEmptyState
+			icon={faImage}
+			title="Select an image"
+			description="Choose an image from the library to view and edit it."
+		/>
 	)
 }

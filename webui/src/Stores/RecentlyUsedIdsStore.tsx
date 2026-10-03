@@ -14,7 +14,7 @@ export class RecentlyUsedIdsStore {
 		let initialValue: string[] = []
 		try {
 			// Try to load from storage, ignoring any errors
-			const loadedValue = JSON.parse(window.localStorage.getItem('recent_actions') || '[]')
+			const loadedValue = JSON.parse(window.localStorage.getItem(this.#localStorageKey) || '[]')
 			if (Array.isArray(loadedValue)) initialValue = loadedValue
 		} catch (_e) {
 			// Ignore

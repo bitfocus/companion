@@ -1,9 +1,11 @@
+import { faCog, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { memo, useState } from 'react'
 import { TabArea } from '~/Components/TabArea.js'
 import { Table } from '~/Components/Table.js'
-import { ContextHelpButton } from '~/Layout/PanelIcons.js'
-import { SplitPanels } from '~/Layout/SplitPanels.js'
+import { PageHeader } from '~/Layout/PageHeader.js'
+import { PageIntro } from '~/Layout/PageIntro'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { useUserConfigProps } from './Context.js'
 import { ArtnetConfig } from './Sections/ArtnetConfig.js'
@@ -22,38 +24,48 @@ import { SatelliteConfig } from './Sections/SatelliteConfig.js'
 import { TcpConfig } from './Sections/TcpConfig.js'
 import { TcpUdpProtocol } from './Sections/TcpUdpProtocol.js'
 import { UdpConfig } from './Sections/UdpConfig.js'
+import { SettingsNav } from './SettingsNav.js'
 
 export const SettingsProtocolsPage = memo(function UserConfig() {
 	return (
-		<SplitPanels.Root showing={null} resize={{ storageKey: 'settings' }}>
-			<SplitPanels.Primary>
-				<div className="flex-column-layout">
-					<div className="fixed-header">
-						<div className="flex justify-between">
-							<div>
-								<h4 className="button-inline">
-									Settings - Protocols
-									<ContextHelpButton action="/user-guide/config/settings#protocols" />
-								</h4>
-								<p>Settings apply instantaneously, don't worry about it!</p>
+		<div className="page-shell">
+			<PageHeader icon={faCog} title="Settings" helpAction="/user-guide/config/settings#protocols" />
+
+			<div className="page-shell-body">
+				<SettingsNav activeTab="protocols" />
+
+				<div className="page-scroll">
+					<div className="primary-panel space-y-6 pb-8">
+						<div>
+							<PageIntro title="Protocols Settings">
+								Enable or disable network remote control endpoints for TCP, UDP, HTTP, OSC, Artnet, and Satellite.
+							</PageIntro>
+							<div className="surface-card">
+								<UserConfigTable />
+							</div>
+						</div>
+
+						<div className="surface-card">
+							<div className="flex items-center gap-3 p-4 bg-surface-muted/40 border-b border-border/70">
+								<span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-surface-muted text-muted text-sm">
+									<FontAwesomeIcon icon={faNetworkWired} />
+								</span>
+								<div>
+									<h4 className="text-base font-bold text-body mb-0.5">Remote Control API Reference</h4>
+									<p className="text-xs text-muted mb-0">
+										Companion can be controlled remotely over several protocols. Select a protocol tab below to view
+										command syntax and endpoint documentation.
+									</p>
+								</div>
+							</div>
+							<div className="p-4">
+								<RemoteControlInfo />
 							</div>
 						</div>
 					</div>
-					<div className="scrollable-content">
-						<UserConfigTable />
-					</div>
 				</div>
-			</SplitPanels.Primary>
-			<SplitPanels.Secondary>
-				<div className="secondary-panel-header">
-					<h4>Remote control</h4>
-					<p>Companion can be remote controlled in several ways. Below you'll find how to do it.</p>
-				</div>
-				<div className="secondary-panel-inner">
-					<RemoteControlInfo />
-				</div>
-			</SplitPanels.Secondary>
-		</SplitPanels.Root>
+			</div>
+		</div>
 	)
 })
 

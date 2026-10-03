@@ -266,7 +266,7 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 			</Grid.Row>
 
 			<div>
-				<Button color="primary" onClick={handleFileClick} disabled={isUploading}>
+				<Button color="secondary" onClick={handleFileClick} disabled={isUploading} aria-busy={isUploading}>
 					<FontAwesomeIcon icon={faFolderOpen} /> Choose File
 				</Button>
 				<input
@@ -409,7 +409,7 @@ function CustomImageTab({
 			</DismissableAlert>
 
 			<div>
-				<Button color="primary" onClick={handleFileClick} disabled={!apiIsSupported}>
+				<Button color="secondary" onClick={handleFileClick} disabled={!apiIsSupported}>
 					<FontAwesomeIcon icon={faFolderOpen} /> Choose File
 				</Button>
 				<input

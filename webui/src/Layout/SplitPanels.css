@@ -19,6 +19,14 @@
 	grid-template-columns: 1fr;
 	height: 100%;
 
+	/* The containing block for the absolutely-positioned resize handle, whose `left` is measured from
+	   this element. Needed here rather than on an ancestor, as a split can be nested in a page shell. */
+	position: relative;
+
+	/* A single track the height of the split, rather than of its content, so that panels filling it
+	   (and scrolling inside) measure against the space they are given. */
+	grid-template-rows: minmax(0, 1fr);
+
 	> * {
 		min-width: 0;
 	}
@@ -77,22 +85,74 @@
 	z-index: 2;
 	cursor: col-resize;
 	touch-action: none;
+	--divider-color: var(--color-action-border);
+	background-image: linear-gradient(var(--divider-color), var(--divider-color));
+	background-position: center;
+	background-size: 1px 100%;
+	background-repeat: no-repeat;
 
-	/* A slim visible line down the middle of the hit area. */
-	&::before {
+	/* A full-height rule separates the panels; the opaque grip sits over its centre. */
+	&::before,
+	&::after {
 		content: '';
 		position: absolute;
-		top: 0;
-		bottom: 0;
+		top: 50%;
 		left: 50%;
-		transform: translateX(-50%);
-		width: 2px;
-		border-radius: 1px;
-		background-color: var(--color-border);
+		pointer-events: none;
+	}
+
+	&::before {
+		transform: translate(-50%, -50%);
+		width: 16px;
+		height: 36px;
+		border-radius: 6px;
+		background-color: var(--color-action-bg);
+		border: 1px solid var(--divider-color);
+		transition: background-color 0.15s ease;
+	}
+
+	&::after {
+		/* Two columns of three dots, centred inside the grip. */
+		transform: translate(-4.5px, -8.5px);
+		width: 3px;
+		height: 3px;
+		border-radius: 50%;
+		background-color: var(--color-action-text);
+		box-shadow:
+			6px 0 0 var(--color-action-text),
+			0 7px 0 var(--color-action-text),
+			6px 7px 0 var(--color-action-text),
+			0 14px 0 var(--color-action-text),
+			6px 14px 0 var(--color-action-text);
+	}
+
+	&:hover,
+	&:focus-visible,
+	&[data-dragging] {
+		--divider-color: var(--color-action-border-hover);
 	}
 
 	&:hover::before,
-	&:active::before {
-		background-color: var(--color-border-hover);
+	&:focus-visible::before {
+		background-color: var(--color-action-hover);
+	}
+
+	&[data-dragging]::before {
+		background-color: var(--color-action-pressed);
+	}
+
+	&:focus-visible {
+		outline: none;
+	}
+
+	&:focus-visible::before {
+		outline: 2px solid var(--color-action-focus);
+		outline-offset: 2px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.split-panels-resize-handle::before {
+		transition: none;
 	}
 }

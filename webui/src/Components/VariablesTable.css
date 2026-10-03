@@ -1,8 +1,6 @@
 @import '../breakpoints.css';
 
 .variables-panel {
-	margin-right: -0.5rem;
-
 	overflow: hidden;
 	height: 100%;
 	position: relative;

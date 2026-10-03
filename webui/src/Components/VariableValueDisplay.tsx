@@ -234,7 +234,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 			<div className="flex items-center min-w-0">
 				{valuePill}
 				{showCopy && (
-					<CopyButton size="sm" title="Copy variable value" text={valueStr} color="variable" variant="ghost" />
+					<CopyButton size="sm" title="Copy variable value" text={valueStr} color="secondary" variant="ghost" />
 				)}
 			</div>
 		</div>

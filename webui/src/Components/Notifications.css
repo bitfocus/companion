@@ -5,19 +5,16 @@
 .notification-viewport,
 .notification {
 	--notification-zindex: 1090;
-	--notification-max-width: 350px;
-	--notification-padding-x: 0.75rem;
-	--notification-padding-y: 0.5rem;
+	--notification-max-width: 380px;
+	--notification-padding-x: 0.875rem;
+	--notification-padding-y: 0.625rem;
 	--notification-spacing: 0.75rem;
 	--notification-font-size: 0.875rem;
-	--notification-bg: color-mix(in srgb, var(--color-surface-dark) 85%, transparent);
-	--notification-border-width: var(--border-width);
-	--notification-border-color: var(--color-border-translucent);
-	--notification-border-radius: var(--radius);
-	--notification-box-shadow: 0 0.5rem 1rem var(--color-shadow-15);
-	--notification-header-color: var(--color-on-dark-muted);
-	--notification-header-bg: color-mix(in srgb, var(--color-surface-dark) 85%, transparent);
-	--notification-header-border-color: var(--color-border-translucent);
+	--notification-bg: var(--color-surface);
+	--notification-border-width: 1px;
+	--notification-border-color: var(--color-border-muted);
+	--notification-border-radius: 0.75rem;
+	--notification-box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.15);
 }
 
 /* ─── Viewport (replaces .toast-container) ──────────────────────────────────── */
@@ -41,7 +38,7 @@
 	width: var(--notification-max-width);
 	max-width: 100%;
 	font-size: var(--notification-font-size);
-	color: var(--color-on-dark);
+	color: var(--color-text-body);
 	pointer-events: auto;
 	background-color: var(--notification-bg);
 	background-clip: padding-box;
