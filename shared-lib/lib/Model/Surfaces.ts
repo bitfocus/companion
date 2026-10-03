@@ -5,6 +5,7 @@ import type {
 	SurfaceSchemaControlDefinition,
 	SurfaceSchemaControlStylePreset,
 	SurfaceSchemaLayoutDefinition,
+	SurfaceSchemaLedsConfig,
 } from '@companion-surface/base'
 import type { CollectionBase } from './Collections.js'
 import type { DropdownChoice } from './Common.js'
@@ -29,6 +30,7 @@ export type {
 	SurfaceSchemaControlDefinition,
 	SurfaceSchemaControlStylePreset,
 	SurfaceSchemaLayoutDefinition,
+	SurfaceSchemaLedsConfig,
 }
 
 export type GridSize = { columns: number; rows: number }

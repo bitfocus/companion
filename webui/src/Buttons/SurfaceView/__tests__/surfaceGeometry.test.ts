@@ -16,6 +16,7 @@ function control(id: string, x: number, y: number, width: number, height: number
 		bounds: { x, y, width, height },
 		shape: { type: 'rect', cornerRadiusRatio: 0.12 },
 		feedback: 'bitmap',
+		leds: null,
 		aspectRatio: null,
 		renderSize: { width: 288, height: 288 },
 	}
@@ -48,6 +49,22 @@ describe('surfaceUnitScale', () => {
 
 		// The strip is drawn wider than a key, as the device draws it
 		expect(200 * scale).toBeCloseTo(120)
+	})
+
+	it('sizes by the keys, not a small control which shows no bitmap', () => {
+		// A key, and a thin touch strip which only lights up
+		const strip = { ...control('strip', 0, 0, 96, 16), feedback: 'color' as const }
+		const scale = surfaceUnitScale(view(control('key', 0, 0, 96, 96), strip), 1)
+
+		expect(96 * scale).toBeCloseTo(72)
+	})
+
+	it('draws the narrowest control a cell across when nothing shows a bitmap', () => {
+		// A pedal: tall treads, the side ones narrower than the middle
+		const tread = (id: string, width: number) => ({ ...control(id, 0, 0, width, 272), feedback: 'none' as const })
+		const scale = surfaceUnitScale(view(tread('left', 83), tread('middle', 280), tread('right', 83)), 1)
+
+		expect(83 * scale).toBeCloseTo(72)
 	})
 })
 
