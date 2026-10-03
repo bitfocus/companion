@@ -22,6 +22,7 @@ describe('SurfaceIPSatellite', () => {
 			supportsLockedState: false,
 			surfaceManifestFromClient: true,
 			surfaceManifest,
+			surfaceAppearance: null,
 			configFields: undefined,
 			canChangePage: undefined,
 			bitmapFormat: 'rgb',

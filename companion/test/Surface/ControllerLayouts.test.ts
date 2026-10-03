@@ -94,6 +94,7 @@ function satelliteDeviceInfo(overrides: Partial<SatelliteDeviceInfo> = {}): Sate
 		supportsLockedState: false,
 		surfaceManifestFromClient: true,
 		surfaceManifest: neoLayout,
+		surfaceAppearance: null,
 		configFields: undefined,
 		canChangePage: undefined,
 		bitmapFormat: 'rgb',
@@ -156,6 +157,30 @@ describe('SurfaceController layouts', () => {
 		expect(layouts[ids[0]].isConnected).toBe(true)
 		expect(layouts[ids[0]].type).toBe('Stream Deck Neo')
 		expect(layouts[ids[0]].layout).toEqual(neoLayout)
+	})
+
+	test('reports the appearance a satellite surface described, and keeps it once the surface disconnects', () => {
+		const appearance = {
+			size: { width: 120, height: 200 },
+			bodyColor: '#1c1c1c',
+			controls: {
+				'0/0': { x: 10, y: 10, width: 96, height: 96 },
+				'1/0': { x: 0, y: 120, width: 120, height: 58 },
+			},
+		}
+		const device = controller.addSatelliteDevice(satelliteDeviceInfo({ surfaceAppearance: appearance }))
+		const surfaceId = device.info.surfaceId
+
+		expect(controller.getSurfaceLayouts()[surfaceId].appearance).toEqual(appearance)
+
+		controller.removeDevice(surfaceId)
+		expect(controller.getSurfaceLayouts()[surfaceId].appearance).toEqual(appearance)
+	})
+
+	test('reports no appearance for a satellite surface which described none', () => {
+		const device = controller.addSatelliteDevice(satelliteDeviceInfo())
+
+		expect(controller.getSurfaceLayouts()[device.info.surfaceId].appearance).toBeNull()
 	})
 
 	test('reports a connected surface once, not also as a stored one', () => {

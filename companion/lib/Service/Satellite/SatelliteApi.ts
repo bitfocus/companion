@@ -263,6 +263,8 @@ export class ServiceSatelliteApi {
 			supportsLockedState,
 			surfaceManifestFromClient,
 			surfaceManifest,
+			// Not yet something a satellite surface can describe
+			surfaceAppearance: null,
 			configFields: processedConfigFields,
 			canChangePage,
 			bitmapFormat,
