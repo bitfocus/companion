@@ -34,6 +34,7 @@ export function useFuzzyChoices(
 		const toFuzzy = (c: DropdownChoice): FuzzyChoice => ({
 			id: c.id,
 			label: String(c.label),
+			disabled: c.disabled,
 			fuzzy: fuzzyPrepare(searchLabelsOnly ? String(c.label) : `${String(c.label)} ${String(c.id)}`),
 		})
 
