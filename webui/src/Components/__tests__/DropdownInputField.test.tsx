@@ -239,6 +239,18 @@ describe('Selection', () => {
 		await user.keyboard('{Enter}')
 		expect(setValue).toHaveBeenCalledTimes(1)
 	})
+
+	it('selects quickly with a very large number of choices (#4494)', async () => {
+		const choices = Array.from({ length: 30000 }, (_, i) => ({ id: `path.${i}`, label: `Path ${i}` }))
+		const setValue = vi.fn()
+		const { user, input } = renderField({ choices, initialValue: 'path.0', setValue })
+		await user.click(input)
+		await user.keyboard('{ArrowDown}')
+		const start = performance.now()
+		await user.keyboard('{Enter}')
+		expect(setValue).toHaveBeenCalledTimes(1)
+		expect(performance.now() - start).toBeLessThan(2000)
+	})
 })
 
 // ---------------------------------------------------------------------------

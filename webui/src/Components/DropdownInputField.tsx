@@ -8,7 +8,7 @@ import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { type DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { DropdownInputPopup } from './DropdownInputField/Popup.js'
 import { useDropdownComboboxItems } from './DropdownInputField/useDropdownComboboxItems.js'
-import { useFuzzyChoices } from './DropdownInputField/useFuzzyChoices.js'
+import { useFuzzyChoices, type FuzzyChoice } from './DropdownInputField/useFuzzyChoices.js'
 import { useRegex } from './useRegex.js'
 
 interface DropdownInputFieldProps {
@@ -78,7 +78,18 @@ export const DropdownInputField = observer(function DropdownInputField({
 	const localDisplayValue = localDisplay.get()
 	const controlledInputValue = controlledInput.get()
 
-	const isKnownValue = !!allowCustom || flatItems.length === 0 || flatItems.some((o) => o.id == localDisplayValue)
+	// Keyed by String(id) to mirror the loose `==` id comparisons. Avoids O(n) lookups inside
+	// itemToStringLabel, which base-ui calls for every item (O(n^2) for large choice lists)
+	const labelById = useMemo(() => {
+		const map = new Map<string, string>()
+		for (const item of flatItems) {
+			const key = String(item.id)
+			if (!map.has(key)) map.set(key, item.label)
+		}
+		return map
+	}, [flatItems])
+
+	const isKnownValue = !!allowCustom || flatItems.length === 0 || labelById.has(String(localDisplayValue))
 
 	const { effectiveItems, filteredItems } = useDropdownComboboxItems({
 		allItems,
@@ -162,8 +173,22 @@ export const DropdownInputField = observer(function DropdownInputField({
 	// current value is shown as a placeholder so the user knows what's selected.
 	const inputPlaceholder = useMemo(() => {
 		if (!disableEditingCustom || !allowCustom) return undefined
-		return flatItems.find((o) => o.id == localDisplayValue)?.label ?? String(localDisplayValue)
-	}, [disableEditingCustom, allowCustom, localDisplayValue, flatItems])
+		return labelById.get(String(localDisplayValue)) ?? String(localDisplayValue)
+	}, [disableEditingCustom, allowCustom, localDisplayValue, labelById])
+
+	const itemToStringLabel = useCallback(
+		(item: DropdownChoiceId | FuzzyChoice) => {
+			if (disableEditingCustom && allowCustom) return ''
+			// base-ui passes both raw values and entries from `items`
+			if (item && typeof item === 'object') return item.label
+			const strId = String(item)
+			const label = labelById.get(strId)
+			if (label !== undefined) return label
+			if (!allowCustom && strId) return `?? (${strId})`
+			return strId
+		},
+		[disableEditingCustom, allowCustom, labelById]
+	)
 
 	return (
 		<div
@@ -185,21 +210,12 @@ export const DropdownInputField = observer(function DropdownInputField({
 				onInputValueChange={onInputValueChange}
 				inputValue={
 					isEditingMode
-						? (controlledInputValue ??
-							flatItems.find((o) => o.id == localDisplayValue)?.label ??
-							String(localDisplayValue))
+						? (controlledInputValue ?? labelById.get(String(localDisplayValue)) ?? String(localDisplayValue))
 						: disableEditingCustom && allowCustom
 							? inputValue
 							: undefined
 				}
-				itemToStringLabel={(id: DropdownChoiceId) => {
-					if (disableEditingCustom && allowCustom) return ''
-					const item = flatItems.find((o) => o.id == id)
-					if (item) return item.label
-					const strId = String(id)
-					if (!allowCustom && strId) return `?? (${strId})`
-					return strId
-				}}
+				itemToStringLabel={itemToStringLabel}
 			>
 				<Combobox.InputGroup className="dropdown-field-input-group">
 					<Combobox.Input
