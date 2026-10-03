@@ -51,34 +51,85 @@ export function useModuleDeprecation(
 	return { module: moduleReason, version: versionReason }
 }
 
+/** What a notice is about. The heading already names it, so the reason itself need not repeat it. */
+export type ModuleDeprecationSubject = 'module' | 'version'
+
+export interface ModuleDeprecationNotice {
+	subject: ModuleDeprecationSubject
+	/** The store's reason, or advice to act on where the store gave nothing worth showing */
+	text: string
+}
+
+/** Heading when a notice stands alone, and label when it shares the block with the other subject */
+export const MODULE_DEPRECATION_TITLES: Record<ModuleDeprecationSubject, string> = {
+	module: 'Deprecated module',
+	version: 'Deprecated version',
+}
+export const MODULE_DEPRECATION_LABELS: Record<ModuleDeprecationSubject, string> = {
+	module: 'This module',
+	version: 'The version in use',
+}
+
+/** What the store sends when it has nothing to say beyond the fact of the deprecation */
+const BOILERPLATE_REASON: Record<ModuleDeprecationSubject, RegExp> = {
+	module: /^module is deprecated[.!]?$/i,
+	version: /^version is deprecated[.!]?$/i,
+}
+
+const FALLBACK_ADVICE: Record<ModuleDeprecationSubject, string> = {
+	module: 'It will receive no further updates. You should look for an alternative.',
+	version: 'You should change to a version that is still supported.',
+}
+
 /**
- * One sentence per deprecated level, quoting the store's reason where it gave one.
+ * The store's reason, less any leading line that only restates the deprecation - most entries open
+ * with its boilerplate, which the heading already says. Falls back to advice when nothing is left.
  */
-export function describeModuleDeprecation(deprecation: ModuleDeprecationInfo): string[] {
-	const lines: string[] = []
+function reasonText(subject: ModuleDeprecationSubject, reason: string): string {
+	const lines = reason.trim().split('\n')
+	if (lines.length > 0 && BOILERPLATE_REASON[subject].test(lines[0].trim())) lines.shift()
 
-	if (deprecation.module !== null) {
-		lines.push(
-			deprecation.module.trim()
-				? `This module is deprecated: ${deprecation.module}`
-				: 'This module is deprecated, and will receive no further updates. You should look for an alternative.'
-		)
-	}
+	return lines.join('\n').trim() || FALLBACK_ADVICE[subject]
+}
 
-	if (deprecation.version !== null) {
-		lines.push(
-			deprecation.version.trim()
-				? `The version in use is deprecated: ${deprecation.version}`
-				: 'The version in use is deprecated, and should be changed to a supported one.'
-		)
-	}
+/**
+ * One notice per deprecated level, in the order the user should read them.
+ */
+export function describeModuleDeprecation(deprecation: ModuleDeprecationInfo): ModuleDeprecationNotice[] {
+	const notices: ModuleDeprecationNotice[] = []
 
-	return lines
+	if (deprecation.module !== null) notices.push({ subject: 'module', text: reasonText('module', deprecation.module) })
+	if (deprecation.version !== null)
+		notices.push({ subject: 'version', text: reasonText('version', deprecation.version) })
+
+	return notices
 }
 
 /** A module-level deprecation shadows the whole module; a version-level one only the version in use */
 export function moduleDeprecationLabel(deprecation: ModuleDeprecationInfo): string {
 	return deprecation.module !== null ? 'Deprecated' : 'Deprecated version'
+}
+
+/**
+ * The notices as text. A lone notice needs no label - whatever heads the block already names its
+ * subject - but two of them have to say which is which. Reasons keep their own line breaks.
+ */
+function ModuleDeprecationNotices({ notices }: { notices: ModuleDeprecationNotice[] }): React.JSX.Element {
+	return (
+		<>
+			{notices.map((notice) => (
+				<p key={notice.subject} className="mb-0 whitespace-pre-line">
+					{notices.length > 1 && <strong>{MODULE_DEPRECATION_LABELS[notice.subject]}: </strong>}
+					{notice.text}
+				</p>
+			))}
+		</>
+	)
+}
+
+/** Names the subject when there is only one, and stays generic when both are deprecated */
+function noticesHeading(notices: ModuleDeprecationNotice[]): string {
+	return notices.length === 1 ? MODULE_DEPRECATION_TITLES[notices[0].subject] : 'Deprecated'
 }
 
 /**
@@ -93,16 +144,10 @@ export function ModuleDeprecationBadge({
 	className?: string
 }): React.JSX.Element {
 	const label = moduleDeprecationLabel(deprecation)
+	const notices = describeModuleDeprecation(deprecation)
 
 	return (
-		<InlineHelpCustom
-			help={describeModuleDeprecation(deprecation).map((line) => (
-				<p key={line} className="mb-0">
-					{line}
-				</p>
-			))}
-			className={className}
-		>
+		<InlineHelpCustom help={<ModuleDeprecationNotices notices={notices} />} className={className}>
 			<Badge color="warning" aria-label={label}>
 				{label}
 			</Badge>
@@ -121,17 +166,15 @@ export function ModuleDeprecationAlert({
 	deprecation: ModuleDeprecationInfo
 	className?: string
 }): React.JSX.Element {
+	const notices = describeModuleDeprecation(deprecation)
+
 	return (
 		<StaticAlert color="warning" className={className}>
 			<div className="flex gap-2">
 				<FontAwesomeIcon icon={faTriangleExclamation} className="mt-1" />
 				<div className="min-w-0">
-					<strong>{moduleDeprecationLabel(deprecation)}</strong>
-					{describeModuleDeprecation(deprecation).map((line) => (
-						<p key={line} className="mb-0">
-							{line}
-						</p>
-					))}
+					<strong>{noticesHeading(notices)}</strong>
+					<ModuleDeprecationNotices notices={notices} />
 				</div>
 			</div>
 		</StaticAlert>

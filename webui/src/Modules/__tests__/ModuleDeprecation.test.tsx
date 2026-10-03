@@ -139,7 +139,8 @@ describe('useModuleDeprecation', () => {
 		renderProbe({ moduleReason: 'Superseded by generic-tcp' }, '1.0.0')
 
 		expect(badgeLabel()).toBe('Deprecated')
-		expect(screen.getByText('This module is deprecated: Superseded by generic-tcp')).toBeInTheDocument()
+		expect(screen.getByText('Deprecated module')).toBeInTheDocument()
+		expect(screen.getByText('Superseded by generic-tcp')).toBeInTheDocument()
 	})
 
 	it('reports a deprecated version of a module that is otherwise current', () => {
@@ -147,7 +148,8 @@ describe('useModuleDeprecation', () => {
 
 		// Only the version is at fault, so the label must not condemn the whole module
 		expect(badgeLabel()).toBe('Deprecated version')
-		expect(screen.getByText('The version in use is deprecated: Broken protocol handling')).toBeInTheDocument()
+		expect(screen.getAllByText('Deprecated version').length).toBeGreaterThan(0)
+		expect(screen.getByText('Broken protocol handling')).toBeInTheDocument()
 	})
 
 	it('ignores a deprecated version that is not the one in use', () => {
@@ -165,47 +167,79 @@ describe('useModuleDeprecation', () => {
 	it('still reports a deprecated module when a dev build of it is in use', () => {
 		renderProbe({ moduleReason: 'No longer maintained' }, 'dev')
 
-		expect(screen.getByText('This module is deprecated: No longer maintained')).toBeInTheDocument()
+		expect(screen.getByText('No longer maintained')).toBeInTheDocument()
 	})
 
 	it('reports only the module level when no particular version is in context', () => {
 		renderProbe({ moduleReason: 'No longer maintained', versionReasons: { '1.0.0': 'Broken' } }, null)
 
-		expect(screen.getByText('This module is deprecated: No longer maintained')).toBeInTheDocument()
-		expect(screen.queryByText(/The version in use is deprecated/)).not.toBeInTheDocument()
+		expect(screen.getByText('No longer maintained')).toBeInTheDocument()
+		expect(screen.queryByText('Broken')).not.toBeInTheDocument()
 	})
 
-	it('reports both levels when the module and the version in use are each deprecated', () => {
+	it('labels each level when the module and the version in use are each deprecated', () => {
 		renderProbe({ moduleReason: 'No longer maintained', versionReasons: { '1.0.0': 'Broken' } }, '1.0.0')
 
-		expect(screen.getByText('This module is deprecated: No longer maintained')).toBeInTheDocument()
-		expect(screen.getByText('The version in use is deprecated: Broken')).toBeInTheDocument()
+		// With two reasons in one block, each has to say which it is about
+		const alert = within(screen.getByTestId('alert'))
+		expect(alert.getByText('This module:').parentElement).toHaveTextContent('This module: No longer maintained')
+		expect(alert.getByText('The version in use:').parentElement).toHaveTextContent('The version in use: Broken')
 	})
 })
 
 describe('describeModuleDeprecation', () => {
 	it('quotes the reason the store gave', () => {
 		expect(describeModuleDeprecation({ module: 'Superseded', version: null })).toEqual([
-			'This module is deprecated: Superseded',
+			{ subject: 'module', text: 'Superseded' },
 		])
 	})
 
-	it('falls back to advice when the store deprecated the module without a reason', () => {
+	// The store's default reason is this exact string, so it is by far the most common one sent
+	it('replaces the bare boilerplate reason with advice, rather than restating the heading', () => {
+		expect(describeModuleDeprecation({ module: null, version: 'Version is deprecated' })).toEqual([
+			{ subject: 'version', text: 'You should change to a version that is still supported.' },
+		])
+		expect(describeModuleDeprecation({ module: 'Module is deprecated', version: null })).toEqual([
+			{ subject: 'module', text: 'It will receive no further updates. You should look for an alternative.' },
+		])
+	})
+
+	it('drops a leading boilerplate line but keeps the detail under it', () => {
+		// As sent for qsys-remote-control v3.1.2
+		expect(
+			describeModuleDeprecation({
+				module: null,
+				version: 'Version is deprecated\nMemory leak in p-queue can crash Companion',
+			})
+		).toEqual([{ subject: 'version', text: 'Memory leak in p-queue can crash Companion' }])
+	})
+
+	it('keeps the line breaks within a reason', () => {
+		expect(describeModuleDeprecation({ module: null, version: 'Broken\nand also broken' })[0].text).toBe(
+			'Broken\nand also broken'
+		)
+	})
+
+	it('leaves a reason that merely opens with the boilerplate wording intact', () => {
+		// As sent for greenhippo-hippotizer - only a line that is *nothing but* boilerplate is dropped
+		expect(
+			describeModuleDeprecation({ module: 'Module is deprecated new module based on REST', version: null })
+		).toEqual([{ subject: 'module', text: 'Module is deprecated new module based on REST' }])
+	})
+
+	it('falls back to advice when the store deprecated something without any reason', () => {
 		expect(describeModuleDeprecation({ module: '', version: null })).toEqual([
-			'This module is deprecated, and will receive no further updates. You should look for an alternative.',
+			{ subject: 'module', text: 'It will receive no further updates. You should look for an alternative.' },
 		])
-	})
-
-	it('falls back to advice when the store deprecated the version without a reason', () => {
 		expect(describeModuleDeprecation({ module: null, version: '  ' })).toEqual([
-			'The version in use is deprecated, and should be changed to a supported one.',
+			{ subject: 'version', text: 'You should change to a version that is still supported.' },
 		])
 	})
 
 	it('describes the module before the version when both are deprecated', () => {
 		expect(describeModuleDeprecation({ module: 'Gone', version: 'Buggy' })).toEqual([
-			'This module is deprecated: Gone',
-			'The version in use is deprecated: Buggy',
+			{ subject: 'module', text: 'Gone' },
+			{ subject: 'version', text: 'Buggy' },
 		])
 	})
 })
