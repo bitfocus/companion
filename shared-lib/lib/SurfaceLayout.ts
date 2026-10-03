@@ -8,6 +8,7 @@ import {
 } from './Model/Preview.js'
 import type {
 	GridSize,
+	SurfaceAppearanceDefinition,
 	SurfaceLayoutBitmapSize,
 	SurfaceRotation,
 	SurfaceSchemaControlDefinition,
@@ -47,14 +48,15 @@ export interface SurfaceRect {
 }
 
 /**
- * How a control is drawn. A union so a round encoder or curved strip can arrive as another member; today the
- * schema only describes rectangles.
+ * How a control is drawn: a rounded rectangle, or a circle for a round encoder or jog.
  */
-export type SurfaceControlShape = {
-	type: 'rect'
-	/** As a fraction of the shorter side, so it survives being scaled */
-	cornerRadiusRatio: number
-}
+export type SurfaceControlShape =
+	| {
+			type: 'rect'
+			/** As a fraction of the shorter side, so it survives being scaled */
+			cornerRadiusRatio: number
+	  }
+	| { type: 'circle' }
 
 /** Which button on the grid a control drives. A surface control is an input to a button, not a cell of a layout. */
 export interface SurfaceControlCell {
@@ -94,6 +96,8 @@ export interface ResolvedSurfaceView {
 	 * part of the grid it reaches, which the editor's grid-coordinate code needs.
 	 */
 	gridBounds: UserConfigGridSize
+	/** The face's background, when the surface described one, to draw behind the controls; null for the plain ground */
+	body: { color: string; image: string | null } | null
 }
 
 /**
@@ -233,6 +237,7 @@ function estimateControlSize(
  */
 export function resolveSurfaceView(
 	layout: SurfaceSchemaLayoutDefinition,
+	appearance: SurfaceAppearanceDefinition | null,
 	placement: SurfaceGridPlacement
 ): ResolvedSurfaceView | null {
 	const entries = Object.entries(layout.controls)
@@ -286,6 +291,30 @@ export function resolveSurfaceView(
 		})
 	}
 
+	// A surface which described its own face is drawn from that, exactly, rather than the estimate below. Only
+	// while mounted the normal way up: rotating a described face is not done yet, so a rotated surface falls
+	// back to the derived layout, which does handle rotation.
+	if (appearance && isUnrotated(placement.rotation) && placed.every((control) => appearance.controls[control.id])) {
+		const controls: ResolvedSurfaceControl[] = placed.map((control) => {
+			const face = appearance.controls[control.id]
+			return {
+				id: control.id,
+				cell: control.cell,
+				bounds: { x: face.x, y: face.y, width: face.width, height: face.height },
+				shape: shapeFromAppearance(face),
+				aspectRatio: control.aspectRatio,
+				renderSize: control.renderSize,
+			}
+		})
+
+		return {
+			controls,
+			extent: { width: appearance.size.width, height: appearance.size.height },
+			gridBounds: gridBoundsFromCells(controls),
+			body: { color: appearance.bodyColor, image: appearance.bodyImage ?? null },
+		}
+	}
+
 	// Empty tracks between occupied ones keep their room: controls numbered 0, 3, 5 left space for what's between,
 	// and closing it up would draw the device narrower than it is
 	const columnWidths = trackSizes(
@@ -328,12 +357,33 @@ export function resolveSurfaceView(
 			width: trackExtent(columnWidths, gap),
 			height: trackExtent(rowHeights, gap),
 		},
-		gridBounds: {
-			minRow: Math.min(...controls.map((control) => control.cell.row)),
-			maxRow: Math.max(...controls.map((control) => control.cell.row)),
-			minColumn: Math.min(...controls.map((control) => control.cell.column)),
-			maxColumn: Math.max(...controls.map((control) => control.cell.column)),
-		},
+		gridBounds: gridBoundsFromCells(controls),
+		// No described face; the plain ground shows between the controls
+		body: null,
+	}
+}
+
+/** The plain-up orientations, where a described face can be drawn as-is without turning it */
+function isUnrotated(rotation: SurfaceRotation): boolean {
+	return rotation === 0 || rotation === 'surface0'
+}
+
+/** A described face is drawn as described: a rect is only rounded when the surface gives it a radius */
+function shapeFromAppearance(face: SurfaceAppearanceDefinition['controls'][string]): SurfaceControlShape {
+	if (face.shape?.type === 'circle') return { type: 'circle' }
+
+	const cornerRadius = face.shape?.type === 'rect' ? (face.shape.cornerRadius ?? 0) : 0
+	const minSide = Math.min(face.width, face.height)
+
+	return { type: 'rect', cornerRadiusRatio: minSide > 0 ? cornerRadius / minSide : 0 }
+}
+
+function gridBoundsFromCells(controls: readonly ResolvedSurfaceControl[]): UserConfigGridSize {
+	return {
+		minRow: Math.min(...controls.map((control) => control.cell.row)),
+		maxRow: Math.max(...controls.map((control) => control.cell.row)),
+		minColumn: Math.min(...controls.map((control) => control.cell.column)),
+		maxColumn: Math.max(...controls.map((control) => control.cell.column)),
 	}
 }
 

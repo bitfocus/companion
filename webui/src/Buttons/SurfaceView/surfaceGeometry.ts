@@ -1,5 +1,10 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { ResolvedSurfaceControl, ResolvedSurfaceView, SurfaceRect } from '@companion-app/shared/SurfaceLayout.js'
+import type {
+	ResolvedSurfaceControl,
+	ResolvedSurfaceView,
+	SurfaceControlShape,
+	SurfaceRect,
+} from '@companion-app/shared/SurfaceLayout.js'
 
 /** How large an ordinary control is drawn at 100%, matching a cell of the infinite grid */
 const BASE_CONTROL_SIZE = 72
@@ -17,7 +22,7 @@ export interface CanvasBox {
  *
  * Tied to the smallest control on the surface rather than to the surface as a whole, so that zoom means the same
  * thing here as it does on the grid - a key comes out about the size a grid cell would be - however large or small
- * the whole device happens to be.
+ * the whole device happens to be. The face's units are arbitrary, not pixels, so this is what gives them a size.
  */
 export function surfaceUnitScale(view: ResolvedSurfaceView, drawScale: number): number {
 	const sides = view.controls.map((control) => Math.max(control.bounds.width, control.bounds.height))
@@ -25,6 +30,13 @@ export function surfaceUnitScale(view: ResolvedSurfaceView, drawScale: number): 
 	if (!(reference > 0)) return drawScale
 
 	return (BASE_CONTROL_SIZE * drawScale) / reference
+}
+
+/** The CSS border-radius which draws a control's shape: a circle, or the layout's rounded corners */
+export function controlBorderRadius(shape: SurfaceControlShape, box: CanvasBox): string {
+	if (shape.type === 'circle') return '50%'
+
+	return `${Math.min(box.width, box.height) * shape.cornerRadiusRatio}px`
 }
 
 /** Where a control is drawn on the canvas */
