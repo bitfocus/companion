@@ -268,17 +268,22 @@ export function rotateResolution(width: number, height: number, rotation: Surfac
 /**
  * Transform a button image render to the format needed for a surface integration
  * Note: input is assumed to be straight alpha RGBA
+ * @param oversampling The factor the buffer was rendered larger than its real size by, which is resolved by averaging
+ *   each block of pixels in linear light. Use 1 for a buffer at its real size.
  */
 export async function transformButtonImage(
 	buffer: Buffer,
 	bufferWidth: number,
 	bufferHeight: number,
+	oversampling: number,
 	rotation: SurfaceRotation | null,
 	targetWidth: number,
 	targetHeight: number,
 	targetFormat: imageRs.PixelFormat
 ): Promise<Buffer> {
 	let image = imageRs.ImageTransformer.fromBuffer(buffer, bufferWidth, bufferHeight, 'rgba')
+
+	if (oversampling > 0) image = image.downsample(oversampling)
 
 	const imageRsRotation = translateRotation(rotation)
 	if (imageRsRotation !== null) image = image.rotate(imageRsRotation)

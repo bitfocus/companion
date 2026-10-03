@@ -4596,10 +4596,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@julusian/image-rs@npm:^2.2.0":
-  version: 2.2.0
-  resolution: "@julusian/image-rs@npm:2.2.0"
-  checksum: 10c0/9d622e41f7cb167868e0290e2de8b7f9e8d734e77a9e4dc2d76f3a524674791aedf2ba0d6e213ff0b0ec901574db73818b12084b75cda4286f4db65f5c9bd88d
+"@julusian/image-rs@npm:^2.3.0":
+  version: 2.3.0
+  resolution: "@julusian/image-rs@npm:2.3.0"
+  checksum: 10c0/1da76d3d51fd2dea2f03ef07ef169d40ba1d4d9ef729612b30bda32f63826ff631e5a4a7e3bad945564bacfa03b30a19cb7e22301d885426b7a48bf538f2959e
   languageName: node
   linkType: hard
 
@@ -11027,7 +11027,7 @@ __metadata:
     "@companion-module/host": "npm:1.2.0"
     "@companion-surface/host": "npm:1.4.2"
     "@julusian/bonjour-service": "npm:^1.4.5"
-    "@julusian/image-rs": "npm:^2.2.0"
+    "@julusian/image-rs": "npm:^2.3.0"
     "@julusian/segfault-raub": "npm:^2.3.3"
     "@napi-rs/canvas": "npm:^1.0.9"
     "@sentry/esbuild-plugin": "npm:^5.4.0"
