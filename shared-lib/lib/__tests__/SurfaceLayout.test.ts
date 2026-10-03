@@ -128,6 +128,24 @@ describe('control feedback', () => {
 		expect(controlAt(view, 0, 3).feedback).toBe('none')
 	})
 
+	test('carries the leds a control has, alongside whatever else it shows', () => {
+		const withRing: SurfaceSchemaLayoutDefinition = {
+			stylePresets: {
+				default: { bitmap: { w: 96, h: 96 } },
+				encoder: { colors: 'hex', leds: { segments: 24, mode: 'full-ring' } },
+			},
+			controls: {
+				'0/0': { row: 0, column: 0 },
+				'0/1': { row: 0, column: 1, stylePreset: 'encoder' },
+			},
+		}
+		const view = resolveSurfaceView(withRing, null, placement)!
+
+		expect(controlAt(view, 0, 0).leds).toBeNull()
+		expect(controlAt(view, 0, 1).leds).toEqual({ segments: 24, mode: 'full-ring' })
+		expect(controlAt(view, 0, 1).feedback).toBe('color')
+	})
+
 	test('draws a control which has both a bitmap and colours as its bitmap, as the panel does', () => {
 		const view = resolveSurfaceView(layout, null, placement)!
 

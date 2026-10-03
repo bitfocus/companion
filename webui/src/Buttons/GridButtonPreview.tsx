@@ -23,6 +23,8 @@ export interface GridButtonPreviewProps {
 	image: string | null
 	/** Fill the button with this colour instead of an image, for a control which shows only a colour */
 	color: string | null
+	/** Drawn over the button, for what a surface control shows besides it (its leds) */
+	overlay: React.ReactNode
 	style: React.CSSProperties
 	title: string
 	placeholder: string
@@ -71,6 +73,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 	location,
 	image,
 	color,
+	overlay,
 	style,
 	title,
 	placeholder,
@@ -223,6 +226,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 				title={title}
 			>
 				{!preloadedImage && !color && <div className="button-placeholder">{placeholder}</div>}
+				{overlay}
 				{/* Drawn for any cell something is heading to, image or not: with no image it paints an
 				    empty button, which is how the end of a swap that empties is shown. Without it that
 				    cell would still be showing the button that is about to leave it. */}

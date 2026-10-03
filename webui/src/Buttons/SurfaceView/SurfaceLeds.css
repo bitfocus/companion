@@ -1,0 +1,35 @@
+/* A control's leds, drawn over it: a strip across it, or a ring around the outside of it. Positioned within the
+   control's own box, so the leds sit with whatever the control is drawn as. */
+.surface-control-leds {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+	pointer-events: none;
+
+	/* An unlit led is still there - dim, so the ring reads as a ring before anything lights it */
+	rect.led-off {
+		fill: color-mix(in srgb, var(--color-border-strong) 35%, transparent);
+	}
+}
+
+/* Reaches past the control by the ring's overhang (LED_RING_OVERHANG of 100) on every side */
+.surface-control-led-ring {
+	inset: -12%;
+	width: 124%;
+	height: 124%;
+
+	.led-track {
+		fill: none;
+		stroke: color-mix(in srgb, var(--color-shadow) 70%, transparent);
+	}
+
+	.led {
+		fill: none;
+	}
+
+	.led-off {
+		stroke: color-mix(in srgb, var(--color-border-strong) 35%, transparent);
+	}
+}

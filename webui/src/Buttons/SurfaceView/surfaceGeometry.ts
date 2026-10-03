@@ -23,9 +23,18 @@ export interface CanvasBox {
  * Tied to the smallest control on the surface rather than to the surface as a whole, so that zoom means the same
  * thing here as it does on the grid - a key comes out about the size a grid cell would be - however large or small
  * the whole device happens to be. The face's units are arbitrary, not pixels, so this is what gives them a size.
+ *
+ * Only the controls which show a bitmap count, as those are what a grid cell stands in for; anything else on the
+ * surface - a touch strip which only lights up, a knob - takes its size from them. A surface with no bitmaps at
+ * all, such as a pedal, has nothing like a key to match, so its narrowest control is drawn a grid cell across
+ * instead. Matching a long side there would shrink a tall pedal until the whole device was one cell high.
  */
 export function surfaceUnitScale(view: ResolvedSurfaceView, drawScale: number): number {
-	const sides = view.controls.map((control) => Math.max(control.bounds.width, control.bounds.height))
+	const displays = view.controls.filter((control) => control.feedback === 'bitmap')
+	const sides =
+		displays.length > 0
+			? displays.map((control) => Math.max(control.bounds.width, control.bounds.height))
+			: view.controls.map((control) => Math.min(control.bounds.width, control.bounds.height))
 	const reference = sides.length > 0 ? Math.min(...sides) : BASE_CONTROL_SIZE
 	if (!(reference > 0)) return drawScale
 

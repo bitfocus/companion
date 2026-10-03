@@ -14,6 +14,7 @@ import type {
 	SurfaceSchemaControlDefinition,
 	SurfaceSchemaControlStylePreset,
 	SurfaceSchemaLayoutDefinition,
+	SurfaceSchemaLedsConfig,
 } from './Model/Surfaces.js'
 import type { UserConfigGridSize } from './Model/UserConfigModel.js'
 
@@ -80,6 +81,8 @@ export interface ResolvedSurfaceControl {
 	bounds: SurfaceRect
 	shape: SurfaceControlShape
 	feedback: SurfaceControlFeedback
+	/** The leds the control has around or along it, as well as whatever it shows, or null when it has none */
+	leds: SurfaceSchemaLedsConfig | null
 	/** The shape of the bitmap this control is drawn with, or null when its style declares no bitmap (leds-only, text-only). */
 	aspectRatio: AspectRatio | null
 	/** How many pixels to draw a preview with - its resolution, a separate question to how large it is on the face. */
@@ -281,6 +284,7 @@ export function resolveSurfaceView(
 		gridY: number
 		size: { width: number; height: number }
 		feedback: SurfaceControlFeedback
+		leds: SurfaceSchemaLedsConfig | null
 		aspectRatio: AspectRatio | null
 		renderSize: PreviewRenderSize
 	}
@@ -302,6 +306,7 @@ export function resolveSurfaceView(
 			// A surface on its side presents its controls on their side too
 			size: quarterTurn ? { width: natural.height, height: natural.width } : natural,
 			feedback: controlFeedback(preset),
+			leds: preset.leds ?? null,
 			aspectRatio: bitmap ? reduceAspectRatio(bitmap.w, bitmap.h) : null,
 			renderSize: bitmap
 				? clampPreviewRenderSize({ width: bitmap.w * scale, height: bitmap.h * scale })
@@ -321,6 +326,7 @@ export function resolveSurfaceView(
 				bounds: { x: face.x, y: face.y, width: face.width, height: face.height },
 				shape: shapeFromAppearance(face),
 				feedback: control.feedback,
+				leds: control.leds,
 				aspectRatio: control.aspectRatio,
 				renderSize: control.renderSize,
 			}
@@ -366,6 +372,7 @@ export function resolveSurfaceView(
 			},
 			shape: { type: 'rect', cornerRadiusRatio: CONTROL_CORNER_RATIO },
 			feedback: control.feedback,
+			leds: control.leds,
 			aspectRatio: control.aspectRatio,
 			renderSize: control.renderSize,
 		}

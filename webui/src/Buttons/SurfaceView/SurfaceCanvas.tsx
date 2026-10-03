@@ -252,6 +252,7 @@ export const SurfaceCanvas = forwardRef<SurfaceCanvasRef, SurfaceCanvasProps>(fu
 							location={location}
 							renderSize={control.renderSize}
 							feedback={control.feedback}
+							leds={control.leds}
 							style={cellStyle}
 							contextMenuOpen={
 								contextMenuButton?.row === control.cell.row &&

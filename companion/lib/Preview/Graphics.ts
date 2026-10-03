@@ -126,6 +126,7 @@ export class PreviewGraphics {
 						image: await render.drawNativeEncoded(size.width, size.height, null, 'png'),
 						isUsed: !!render.style,
 						color: parseColor(render.bgcolor),
+						leds: render.style?.leds ?? null,
 					} satisfies WrappedImage)
 				}
 
@@ -180,7 +181,12 @@ export class PreviewGraphics {
 
 						const render = self.#graphicsController.getCachedRenderOrGeneratePlaceholder(location)
 						const dataUrl = await render.drawNativeEncoded(size.width, size.height, null, 'png')
-						yield { image: dataUrl, isUsed: !!render.style, color: parseColor(render.bgcolor) } satisfies WrappedImage
+						yield {
+							image: dataUrl,
+							isUsed: !!render.style,
+							color: parseColor(render.bgcolor),
+							leds: render.style?.leds ?? null,
+						} satisfies WrappedImage
 
 						for await (const [image] of changes) {
 							yield image
