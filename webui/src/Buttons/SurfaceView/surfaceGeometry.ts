@@ -5,6 +5,7 @@ import type {
 	SurfaceControlShape,
 	SurfaceRect,
 } from '@companion-app/shared/SurfaceLayout.js'
+import { fitZoom } from '../GridZoom.js'
 
 /** How large an ordinary control is drawn at 100%, matching a cell of the infinite grid */
 const BASE_CONTROL_SIZE = 72
@@ -60,6 +61,11 @@ export function controlCanvasBox(control: ResolvedSurfaceControl, unitScale: num
 
 /** The padding `.surface-canvas-viewport` keeps around the face, on each side */
 const VIEWPORT_PADDING = 12
+
+/** The zoom which fits the whole face across the space there is, within the range fitting keeps to */
+export function surfaceFitZoom(view: ResolvedSurfaceView, availableWidth: number): number {
+	return fitZoom(view.extent.width * surfaceUnitScale(view, 1), availableWidth - 2 * VIEWPORT_PADDING)
+}
 
 /**
  * The least height the panel showing a face should have: the whole face when it is short, and otherwise two rows of

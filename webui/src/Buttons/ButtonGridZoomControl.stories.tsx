@@ -17,6 +17,7 @@ const meta = {
 	args: {
 		useCompactButtons: false,
 		gridZoomValue: 100,
+		fit: null,
 	},
 	render: function Render(args) {
 		const [, setArgs] = useArgs<{ gridZoomValue: number }>()
@@ -52,4 +53,13 @@ export const ZoomedIn: Story = {
 /** Zoomed out to 50% */
 export const ZoomedOut: Story = {
 	args: { gridZoomValue: 50, gridZoomController: makeController(() => {}, 50) },
+}
+
+/** Viewing as a surface, where the zoom can fit the surface to the panel - and is doing so */
+export const Fitting: Story = {
+	args: {
+		gridZoomValue: 74,
+		gridZoomController: makeController(() => {}, 74),
+		fit: { active: true, enable: () => {} },
+	},
 }

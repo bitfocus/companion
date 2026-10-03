@@ -188,6 +188,49 @@ describe('resolveGridViewAs', () => {
 		})
 	})
 
+	describe('which zoom the view remembers', () => {
+		function zoomKeyOf(resolution: ReturnType<typeof resolveGridViewAs>): string | null {
+			return resolution.status === 'ready' ? resolution.zoomKey : null
+		}
+
+		it('keys a model by the model', () => {
+			const declared = new Map([['elgato-streamdeck:studio', modelItem('studio', 'Stream Deck Studio')]])
+
+			expect(
+				zoomKeyOf(resolveGridViewAs(viewingModel('elgato-streamdeck:studio'), new Map(), declared, new Map()))
+			).toBe('model:elgato-streamdeck:studio')
+		})
+
+		it('shares a plugged in surface’s zoom with its model', () => {
+			const declared = new Map([['elgato-streamdeck:xl', modelItem('xl', 'Stream Deck XL')]])
+			const pluggedIn = new Map([['abc', layoutItem('abc', 'Stream Deck XL', 'elgato-streamdeck')]])
+
+			expect(zoomKeyOf(resolveGridViewAs(viewingSurface('abc'), pluggedIn, declared, placements))).toBe(
+				'model:elgato-streamdeck:xl'
+			)
+		})
+
+		it('finds the model under the name it was given to tell it apart from another module’s', () => {
+			const declared = new Map([['elgato-streamdeck:xl', modelItem('xl', 'Stream Deck XL (elgato-streamdeck)')]])
+			const pluggedIn = new Map([['abc', layoutItem('abc', 'Stream Deck XL', 'elgato-streamdeck')]])
+
+			expect(zoomKeyOf(resolveGridViewAs(viewingSurface('abc'), pluggedIn, declared, placements))).toBe(
+				'model:elgato-streamdeck:xl'
+			)
+		})
+
+		it('does not take a model of the same name from a module which is not driving the surface', () => {
+			const declared = new Map([['other:xl', modelItem('xl', 'Stream Deck XL', 'other')]])
+			const pluggedIn = new Map([['abc', layoutItem('abc', 'Stream Deck XL', 'elgato-streamdeck')]])
+
+			expect(zoomKeyOf(resolveGridViewAs(viewingSurface('abc'), pluggedIn, declared, placements))).toBe('surface:abc')
+		})
+
+		it('keys a surface of no known model by the surface', () => {
+			expect(zoomKeyOf(resolveGridViewAs(viewingSurface('abc'), layouts, noModels, placements))).toBe('surface:abc')
+		})
+	})
+
 	describe('viewing as a model rather than a surface', () => {
 		it('uses a model a plugin declared, with nothing of it plugged in', () => {
 			const declared = new Map([['elgato-streamdeck:studio', modelItem('studio', 'Stream Deck Studio')]])
