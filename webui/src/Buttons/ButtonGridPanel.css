@@ -119,15 +119,13 @@
 	background-color: var(--color-surface-dark);
 }
 
-.button-infinite-grid {
-	height: 100%; /* needed to get the scrollbar. */
-	padding-bottom: 6px; /* without this the vertical scrollbar won't go away: it needs 6px for 8 rows; 5px for fewer rows */
-	/* (alt: adding 6px to the button-grid-canvas height in tsx works, even though it's counter-intuitive) */
-	padding-right: 6px;
+/* The dark scrolling face shared by the button grid and by a surface drawn in its place: the same
+   ground colour, the same scrollbars, and the same armed outline when the view is live, so the two
+   read as one surface however the grid is being shown. */
+.button-grid-scroller {
+	overflow: auto;
 
 	background-color: var(--color-surface-dark);
-	/* border-radius: 5px; */ /* A radius here breaks safari, causing the div to draw over the scrollbars */
-	overflow: auto;
 
 	/* The grid is a canvas, so make its scrollbars more assertive than ordinary document scrollbars. */
 	scrollbar-width: auto;
@@ -152,15 +150,24 @@
 		}
 	}
 
-	&.button-grid-panning {
-		cursor: grabbing;
-	}
-
 	&.button-armed {
 		background-color: var(--color-armed-surface);
 
 		/* Mark out exactly which area is live */
 		box-shadow: inset 0 0 0 3px var(--color-danger);
+	}
+}
+
+.button-infinite-grid {
+	height: 100%; /* needed to get the scrollbar. */
+	padding-bottom: 6px; /* without this the vertical scrollbar won't go away: it needs 6px for 8 rows; 5px for fewer rows */
+	/* (alt: adding 6px to the button-grid-canvas height in tsx works, even though it's counter-intuitive) */
+	padding-right: 6px;
+
+	/* border-radius: 5px; */ /* A radius here breaks safari, causing the div to draw over the scrollbars */
+
+	&.button-grid-panning {
+		cursor: grabbing;
 	}
 
 	/* The rectangle being dragged out across the grid */
