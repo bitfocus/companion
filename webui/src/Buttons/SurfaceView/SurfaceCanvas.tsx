@@ -1,7 +1,7 @@
 import './SurfaceCanvas.css'
 import classNames from 'classnames'
 import { LockIcon } from 'lucide-react'
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { isLocationOnGrid } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
@@ -17,6 +17,7 @@ import {
 	controlsInBox,
 	placeSurfaceControls,
 	surfaceUnitScale,
+	surfaceViewportMinHeight,
 } from './surfaceGeometry.js'
 
 export interface SurfaceCanvasRef {
@@ -32,6 +33,8 @@ interface SurfaceCanvasProps {
 	drawScale: number
 	contextMenuButton: ControlLocation | null
 	isHot: boolean
+	/** Tell the panel how short it may get, which otherwise keeps whatever the grid last asked for */
+	setViewportMinHeight: React.Dispatch<React.SetStateAction<number>>
 }
 
 /** A rectangle being dragged out, in canvas pixels */
@@ -55,13 +58,17 @@ interface MarqueeState {
  * is inside rather than dividing by a cell size.
  */
 export const SurfaceCanvas = forwardRef<SurfaceCanvasRef, SurfaceCanvasProps>(function SurfaceCanvas(
-	{ view, gridSize, pageNumber, drawScale, contextMenuButton, isHot },
+	{ view, gridSize, pageNumber, drawScale, contextMenuButton, isHot, setViewportMinHeight },
 	ref
 ) {
 	const { store, actions } = useButtonGridView()
 
 	const unitScale = useMemo(() => surfaceUnitScale(view, drawScale), [view, drawScale])
 	const placed = useMemo(() => placeSurfaceControls(view, unitScale), [view, unitScale])
+
+	useEffect(() => {
+		setViewportMinHeight(surfaceViewportMinHeight(view, unitScale, drawScale))
+	}, [setViewportMinHeight, view, unitScale, drawScale])
 
 	const canvasRef = useRef<HTMLDivElement | null>(null)
 	const [scrollerRef, setScrollerRef] = useState<HTMLDivElement | null>(null)
