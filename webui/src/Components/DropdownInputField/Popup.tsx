@@ -42,6 +42,7 @@ export function DropdownInputPopup({
 		<Combobox.Item
 			key={item.id}
 			value={item.id}
+			disabled={item.disabled}
 			className={fancyFormat ? 'dropdown-field-item variable-dropdown-option' : 'dropdown-field-item'}
 		>
 			{showIndicator && (
@@ -124,6 +125,7 @@ const VirtualComboboxItem = React.memo(function VirtualComboboxItem({
 	return (
 		<Combobox.Item
 			value={item.id}
+			disabled={item.disabled}
 			index={index}
 			data-index={index}
 			ref={measureElement}
