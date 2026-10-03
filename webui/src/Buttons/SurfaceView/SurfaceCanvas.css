@@ -23,13 +23,16 @@
 	.button-control {
 		position: absolute;
 
-		/* The control is exactly the size the surface draws it, so the button fills what it is given
-		   rather than being fitted into a cell of some other shape. A small inset keeps neighbours from
-		   touching, the way each cell of the infinite grid carries its own padding. */
+		/* The cell is the control's hit area, and its padding (set inline) insets the drawn control to exactly
+		   where the surface has it. No border or padding of its own: a fixed few pixels taken off every side
+		   is nothing on a key but a large part of a thin strip, and squashes it out of the shape its image is
+		   drawn at. The face already has gaps between its controls, so nothing is needed to keep them apart.
+		   The drop states show by their background instead. */
 		box-sizing: border-box;
-		padding: 2px;
+		border-width: 0;
 
 		.button-border {
+			box-sizing: border-box;
 			width: 100%;
 			height: 100%;
 
@@ -38,7 +41,14 @@
 			   square, so that padding would win over the height it was given. */
 			padding-bottom: 0;
 
+			/* The image fills the control edge to edge, under its border, so the border takes nothing from
+			   the shape the image is drawn at */
+			background-origin: border-box;
+
 			border-radius: var(--control-radius, 12%);
+
+			/* Lets the placeholder find out it has no room */
+			container-type: size;
 
 			.button-placeholder {
 				/* shrink text with scaling */
@@ -79,5 +89,13 @@
 
 		border: 1px dashed var(--color-primary);
 		background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+	}
+}
+
+/* A control too small to hold its location (a touch strip, a led) leaves it out rather than spilling it over
+   the face; it is still in the tooltip, and the editor names it once selected */
+@container (height < 32px) or (width < 32px) {
+	.surface-canvas .button-control .button-placeholder {
+		display: none;
 	}
 }

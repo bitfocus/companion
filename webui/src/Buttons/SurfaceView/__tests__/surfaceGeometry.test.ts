@@ -4,6 +4,7 @@ import {
 	controlAtPoint,
 	controlCanvasBox,
 	controlsInBox,
+	placeSurfaceControls,
 	stepToNearestControl,
 	surfaceUnitScale,
 } from '../surfaceGeometry.js'
@@ -54,19 +55,90 @@ describe('controlAtPoint', () => {
 	const surface = view(control('key', 0, 0, 100, 100), control('strip', 120, 20, 200, 60))
 
 	it('finds the control a point is inside', () => {
-		expect(controlAtPoint(surface, 1, 50, 50)?.id).toBe('key')
-		expect(controlAtPoint(surface, 1, 200, 40)?.id).toBe('strip')
+		expect(controlAtPoint(placeSurfaceControls(surface, 1), 50, 50)?.id).toBe('key')
+		expect(controlAtPoint(placeSurfaceControls(surface, 1), 200, 40)?.id).toBe('strip')
 	})
 
 	it('finds nothing on the bare face between the controls', () => {
 		// Between them horizontally, and above the strip
-		expect(controlAtPoint(surface, 1, 110, 50)).toBeNull()
-		expect(controlAtPoint(surface, 1, 200, 5)).toBeNull()
+		expect(controlAtPoint(placeSurfaceControls(surface, 1), 110, 50)).toBeNull()
+		expect(controlAtPoint(placeSurfaceControls(surface, 1), 200, 5)).toBeNull()
 	})
 
 	it('measures in canvas pixels, so it follows the zoom', () => {
-		expect(controlAtPoint(surface, 2, 100, 100)?.id).toBe('key')
-		expect(controlAtPoint(surface, 2, 100, 300)).toBeNull()
+		expect(controlAtPoint(placeSurfaceControls(surface, 2), 100, 100)?.id).toBe('key')
+		expect(controlAtPoint(placeSurfaceControls(surface, 2), 100, 300)).toBeNull()
+	})
+})
+
+describe('placeSurfaceControls', () => {
+	function placedById(surface: ResolvedSurfaceView, unitScale: number) {
+		return new Map(placeSurfaceControls(surface, unitScale).map((entry) => [entry.control.id, entry]))
+	}
+
+	it('picks a control large enough to hit by exactly what it draws', () => {
+		const placed = placedById(view(control('key', 100, 100, 72, 72)), 1)
+
+		expect(placed.get('key')?.hit).toEqual(placed.get('key')?.box)
+	})
+
+	it('grows a thin control to something which can be hit, around its middle', () => {
+		// A Neo touch strip: as wide as a key, but only a few pixels tall
+		const placed = placedById(view(control('strip', 100, 100, 96, 10)), 1)
+
+		expect(placed.get('strip')?.box).toEqual({ left: 100, top: 100, width: 96, height: 10 })
+		expect(placed.get('strip')?.hit).toEqual({ left: 100, top: 89, width: 96, height: 32 })
+	})
+
+	it('grows in canvas pixels, so it needs less help zoomed in', () => {
+		const placed = placedById(view(control('strip', 100, 100, 96, 10)), 4)
+
+		expect(placed.get('strip')?.hit).toEqual(placed.get('strip')?.box)
+	})
+
+	it('shares the gap with a neighbour rather than reaching into it', () => {
+		// A strip just under a key, closer than the strip would like to grow
+		const placed = placedById(view(control('key', 0, 0, 96, 96), control('strip', 0, 100, 96, 10)), 1)
+
+		expect(placed.get('key')?.hit).toEqual(placed.get('key')?.box)
+		expect(placed.get('strip')?.hit).toEqual({ left: 0, top: 98, width: 96, height: 23 })
+	})
+
+	it('never lets two thin controls overlap, however close they are', () => {
+		const surface = view(control('a', 0, 100, 96, 10), control('b', 0, 114, 96, 10))
+		const placed = placedById(surface, 1)
+		const a = placed.get('a')!.hit
+		const b = placed.get('b')!.hit
+
+		expect(a.top + a.height).toBe(112)
+		expect(b.top).toBe(112)
+	})
+
+	it('divides along the axis the controls are furthest apart on, when they sit diagonally', () => {
+		const surface = view(control('a', 0, 0, 10, 10), control('b', 30, 14, 10, 10))
+		const placed = placedById(surface, 1)
+
+		expect(placed.get('a')!.hit.left + placed.get('a')!.hit.width).toBe(20)
+		expect(placed.get('b')!.hit.left).toBe(20)
+	})
+
+	it('keeps a hit area on the canvas', () => {
+		const surface = { ...view(control('strip', 0, 0, 96, 10)), extent: { width: 96, height: 10 } }
+
+		expect(placedById(surface, 1).get('strip')?.hit).toEqual({ left: 0, top: 0, width: 96, height: 10 })
+	})
+
+	it('picks a thin control from just beside it', () => {
+		const placed = placeSurfaceControls(view(control('strip', 100, 100, 96, 10)), 1)
+
+		expect(controlAtPoint(placed, 140, 92)?.id).toBe('strip')
+		expect(controlAtPoint(placed, 140, 80)).toBeNull()
+	})
+
+	it('selects by what is drawn when dragging out a box, not by the hit area', () => {
+		const placed = placeSurfaceControls(view(control('strip', 100, 100, 96, 10)), 1)
+
+		expect(controlsInBox(placed, { left: 90, top: 90, width: 50, height: 5 })).toEqual([])
 	})
 })
 
@@ -75,17 +147,17 @@ describe('controlsInBox', () => {
 
 	it('takes everything the box touches, not only what it encloses', () => {
 		// Clips the right-hand edge of a and the left of b
-		const touched = controlsInBox(surface, 1, { left: 90, top: 10, width: 40, height: 20 })
+		const touched = controlsInBox(placeSurfaceControls(surface, 1), { left: 90, top: 10, width: 40, height: 20 })
 
 		expect(touched.map((control) => control.id)).toEqual(['a', 'b'])
 	})
 
 	it('takes nothing when the box is on the bare face', () => {
-		expect(controlsInBox(surface, 1, { left: 105, top: 105, width: 10, height: 10 })).toEqual([])
+		expect(controlsInBox(placeSurfaceControls(surface, 1), { left: 105, top: 105, width: 10, height: 10 })).toEqual([])
 	})
 
 	it('is not a rectangle of cells - a box down one side takes only that side', () => {
-		const touched = controlsInBox(surface, 1, { left: 0, top: 0, width: 100, height: 300 })
+		const touched = controlsInBox(placeSurfaceControls(surface, 1), { left: 0, top: 0, width: 100, height: 300 })
 
 		expect(touched.map((control) => control.id)).toEqual(['a', 'c'])
 	})
