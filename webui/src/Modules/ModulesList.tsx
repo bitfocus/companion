@@ -1,12 +1,5 @@
 import './modules-manage.css'
-import {
-	faEyeSlash,
-	faGamepad,
-	faPlug,
-	faQuestionCircle,
-	faWarning,
-	type IconDefinition,
-} from '@fortawesome/free-solid-svg-icons'
+import { faEyeSlash, faGamepad, faPlug, faQuestionCircle, type IconDefinition } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
@@ -14,7 +7,6 @@ import { useCallback, useContext, useState } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button, ButtonGroup } from '~/Components/Button'
-import { InlineHelpCustom } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
 import { TabArea } from '~/Components/TabArea.js'
@@ -26,6 +18,7 @@ import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImportModules } from './ImportCustomModule.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
+import { ModuleDeprecationBadge, useModuleDeprecation } from './ModuleDeprecation.js'
 import { RefreshModulesList } from './RefreshModulesList.js'
 
 interface VisibleModulesState {
@@ -273,6 +266,9 @@ const ModulesListRow = observer(function ModulesListRow({
 }: ModulesListRowProps) {
 	const { helpViewer } = useContext(RootAppStoreContext)
 
+	// No single version is in context in this list, so only the module as a whole can be deprecated here
+	const deprecation = useModuleDeprecation(moduleInfo.moduleType, moduleInfo.moduleId, null)
+
 	const doShowHelp = useCallback(() => {
 		if (!moduleInfo.helpUrl) return
 		const latestVersionName =
@@ -325,11 +321,7 @@ const ModulesListRow = observer(function ModulesListRow({
 				)}
 			</td>
 			<td onClick={doEdit} className="cursor-pointer">
-				{!!moduleInfo.storeInfo?.deprecationReason && (
-					<InlineHelpCustom help="Deprecated" className="me-1">
-						<FontAwesomeIcon icon={faWarning} aria-label="Deprecated" />
-					</InlineHelpCustom>
-				)}
+				{deprecation && <ModuleDeprecationBadge deprecation={deprecation} className="me-1" />}
 				{moduleInfo.name}
 			</td>
 			<td className="compact">

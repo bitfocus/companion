@@ -24,6 +24,7 @@ import type { InstanceEditPanelService } from '~/Instances/InstanceEdit/Instance
 import { InstanceEditPanelStore, isConfigFieldSecret } from '~/Instances/InstanceEdit/InstanceEditPanelStore.js'
 import { InstanceSecretField } from '~/Instances/InstanceEdit/InstanceSecretField.js'
 import { getModuleVersionInfo } from '~/Instances/Util.js'
+import { ModuleDeprecationAlert, useModuleDeprecation } from '~/Modules/ModuleDeprecation.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { InstanceVersionChangeButton } from '../../Instances/InstanceEdit/InstanceVersionChangeButton.js'
@@ -100,6 +101,8 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 							</Grid.Col>
 						)}
 
+						<InstanceDeprecationAlert panelStore={panelStore} />
+
 						<InstanceLabelInputField panelStore={panelStore} />
 						<InstanceEnabledInputField panelStore={panelStore} cannotEnableReason={cannotEnableReason} />
 
@@ -118,6 +121,27 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 				<InstanceFormButtons panelStore={panelStore} isSaving={isSaving.get()} />
 			</Form>
 		</>
+	)
+})
+
+/**
+ * Why the module behind this instance should no longer be used, spelled out at the top of the panel.
+ * Renders nothing - not even its column - when the module and the version in use are both current.
+ */
+const InstanceDeprecationAlert = observer(function InstanceDeprecationAlert<TConfig extends ClientInstanceConfigBase>({
+	panelStore,
+}: {
+	panelStore: InstanceEditPanelStore<TConfig>
+}): React.JSX.Element | null {
+	const { moduleType, moduleId, moduleVersionId } = panelStore.instanceInfo
+
+	const deprecation = useModuleDeprecation(moduleType, moduleId, moduleVersionId)
+	if (!deprecation) return null
+
+	return (
+		<Grid.Col sm={12}>
+			<ModuleDeprecationAlert deprecation={deprecation} />
+		</Grid.Col>
 	)
 })
 

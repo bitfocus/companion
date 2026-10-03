@@ -15,6 +15,7 @@ import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceSt
 import { Popover } from '~/Components/Popover'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { windowLinkOpen } from '~/Helpers/Window'
+import { ModuleDeprecationBadge, useModuleDeprecation } from '~/Modules/ModuleDeprecation.js'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { isCollectionEnabled, makeAbsolutePath } from '~/Resources/util'
 import type { GenericCollectionsStore } from '~/Stores/GenericCollectionsStore'
@@ -63,6 +64,8 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 
 	const moduleVersion = getModuleVersionInfo(moduleInfo, instance.moduleVersionId)
 
+	const deprecation = useModuleDeprecation(instance.moduleType, instance.moduleId, instance.moduleVersionId)
+
 	const doShowHelp = useCallback(
 		() =>
 			moduleVersion?.helpPath &&
@@ -91,7 +94,10 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 		>
 			<div onClick={doEdit} className="flex flex-col grow min-w-0">
 				<b>{instance.label}</b>
-				<span className="truncate">{moduleDisplayName}</span>
+				<span className="flex items-center gap-1 min-w-0">
+					<span className="truncate">{moduleDisplayName}</span>
+					{deprecation && <ModuleDeprecationBadge deprecation={deprecation} />}
+				</span>
 			</div>
 
 			<div onClick={doEdit} className="whitespace-nowrap">
