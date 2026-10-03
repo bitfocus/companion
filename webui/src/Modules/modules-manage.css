@@ -40,9 +40,26 @@
 .modules-list-layout {
 	height: 100%;
 	min-height: 0;
+	min-width: 0;
 }
 
 .modules-list-results {
 	flex: 1;
 	min-height: 0;
+	min-width: 0;
+
+	.table > tbody > tr > .module-type-cell {
+		padding-inline-start: 1rem;
+		padding-inline-end: 0.25rem;
+	}
+
+	.table > tbody > tr > .module-name-cell {
+		padding-inline-start: 0.25rem;
+	}
+
+	.module-manufacturer-heading th {
+		position: static;
+		box-shadow: none;
+		background: transparent;
+	}
 }

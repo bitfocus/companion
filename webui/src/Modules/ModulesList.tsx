@@ -1,17 +1,12 @@
 import './modules-manage.css'
-import {
-	faBook,
-	faEyeSlash,
-	faGamepad,
-	faPlug,
-	faWarning,
-	type IconDefinition,
-} from '@fortawesome/free-solid-svg-icons'
+import { faEyeSlash, faGamepad, faPlug, faWarning, type IconDefinition } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
+import semver from 'semver'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { isSomeModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
@@ -19,11 +14,13 @@ import { StatusFilterPill } from '~/Components/StatusFilterPill.js'
 import { Table } from '~/Components/Table.js'
 import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
 import { filterProducts, useAllModuleProducts, type FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
-import { assertNever, makeAbsolutePath } from '~/Resources/util.js'
+import { assertNever } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImportModules } from './ImportCustomModule.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
+import { getModuleProductName, groupModuleCatalog } from './ModuleCatalog.js'
 import { RefreshModulesList } from './RefreshModulesList.js'
+import { useModuleStoreInfo } from './useModuleStoreInfo.js'
 
 interface VisibleModulesState {
 	installed: boolean
@@ -88,34 +85,32 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 	try {
 		const searchResults = filterProducts(typeProducts, filter, true)
 
-		const candidatesObj: Record<string, React.JSX.Element> = {}
-		for (const moduleInfo of searchResults) {
-			candidatesObj[`${moduleInfo.moduleType}:${moduleInfo.moduleId}`] = (
-				<ModulesListRow
-					key={`${moduleInfo.moduleType}:${moduleInfo.moduleId}`}
-					moduleInfo={moduleInfo}
-					doManageModule={doManageModule}
-					isSelected={
-						!!selectedModuleInfo &&
-						moduleInfo.moduleId === selectedModuleInfo.moduleId &&
-						moduleInfo.moduleType === selectedModuleInfo.moduleType
-					}
-				/>
+		const sortedGroups = groupModuleCatalog(searchResults, !!filter.trim())
+		for (const [key, group] of sortedGroups) {
+			components.push(
+				<tr key={`manufacturer:${key}`} className="module-manufacturer-heading bg-surface-muted/60">
+					<th colSpan={3} scope="rowgroup" className="text-start">
+						<div className="flex items-center gap-2 text-xs">
+							<span className="font-semibold text-body">{group.name}</span>
+							<span className="font-normal text-muted">{group.modules.length}</span>
+						</div>
+					</th>
+				</tr>
 			)
-		}
-
-		if (!filter) {
-			components = Object.entries(candidatesObj)
-				.sort((a, b) => {
-					const aName = a[0].slice(a[0].indexOf(':') + 1).toLocaleLowerCase()
-					const bName = b[0].slice(b[0].indexOf(':') + 1).toLocaleLowerCase()
-					if (aName < bName) return -1
-					if (aName > bName) return 1
-					return 0
-				})
-				.map((c) => c[1])
-		} else {
-			components = Object.entries(candidatesObj).map((c) => c[1])
+			for (const moduleInfo of group.modules) {
+				components.push(
+					<ModulesListRow
+						key={`${moduleInfo.moduleType}:${moduleInfo.moduleId}`}
+						moduleInfo={moduleInfo}
+						doManageModule={doManageModule}
+						isSelected={
+							!!selectedModuleInfo &&
+							moduleInfo.moduleId === selectedModuleInfo.moduleId &&
+							moduleInfo.moduleType === selectedModuleInfo.moduleType
+						}
+					/>
+				)
+			}
 		}
 	} catch (e) {
 		console.error('Failed to compile candidates list:', e)
@@ -123,7 +118,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 		components = []
 		components.push(
 			<tr key="module-list-build-error">
-				<td colSpan={4}>
+				<td colSpan={3}>
 					<StaticAlert color="warning" role="alert">
 						Failed to build list of modules:
 						<br />
@@ -214,26 +209,22 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 					<div className="text-xs text-muted flex items-center gap-1.5 shrink-0">
 						<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
 						<RefreshModulesList btnSize="sm" color="secondary" iconOnly className="inline-flex" />
-						<span>•</span>
-						<a
-							target="_blank"
-							rel="noreferrer"
-							href={makeAbsolutePath('/user-guide/config/modules')}
-							className="underline hover:text-body"
-						>
-							Help
-						</a>
 					</div>
 				</div>
 			</div>
 
 			<div className="scrollable-content modules-list-results list-card">
-				<Table className="table-tight mb-0">
+				<Table className="table-tight table-fixed mb-0" responsive={false}>
+					<colgroup>
+						<col className="w-12" />
+						<col />
+						<col className="w-40" />
+					</colgroup>
 					<tbody>
 						{components}
 						{hiddenCount > 0 && (
 							<tr>
-								<td colSpan={4} className="p-3 text-xs text-muted">
+								<td colSpan={3} className="p-3 text-xs text-muted">
 									<div className="flex items-center gap-2">
 										<FontAwesomeIcon icon={faEyeSlash} className="text-amber-500" />
 										<span>
@@ -246,7 +237,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 						{modules.count === 0 && !visibleModules.visibility.available && (
 							<tr>
-								<td colSpan={4}>
+								<td colSpan={3}>
 									<NonIdealState icon={faPlug}>
 										You don't have any modules installed yet. <br />
 										Try enabling "Available" to view the full module catalog.
@@ -257,7 +248,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 						{components.length === 0 && allProducts.length > 0 && !!filter && !visibleModules.visibility.available && (
 							<tr>
-								<td colSpan={4}>
+								<td colSpan={3}>
 									<NonIdealState icon={faPlug}>
 										No installed modules match your search.
 										<br />
@@ -288,10 +279,10 @@ const ModulesListRow = observer(function ModulesListRow({
 	doManageModule,
 	isSelected,
 }: ModulesListRowProps) {
-	const { helpViewer, modules } = useContext(RootAppStoreContext)
+	const { modules } = useContext(RootAppStoreContext)
 	const installedInfo = modules.getModuleInfo(moduleInfo.moduleType, moduleInfo.moduleId)
 	const storeInfo = modules.storeList.get(`${moduleInfo.moduleType}:${moduleInfo.moduleId}`) ?? moduleInfo.storeInfo
-	const products = [...new Set([...(installedInfo?.display.products ?? []), ...(storeInfo?.products ?? [])])]
+	const displayName = getModuleProductName(moduleInfo)
 	const installedVersions = installedInfo?.installedVersions ?? []
 	const version =
 		installedInfo?.devVersion ??
@@ -308,19 +299,32 @@ const ModulesListRow = observer(function ModulesListRow({
 	const versionLabel =
 		installedVersions.length > 1 && !installedInfo?.devVersion
 			? `${installedVersions.length} versions`
-			: version?.displayName
+			: version && (version.versionId === 'dev' || version.versionId === 'builtin')
+				? version.displayName
+				: version
+					? `v${version.versionId}`
+					: undefined
 	const deprecationReason = storeInfo?.deprecationReason
-
-	const doShowHelp = useCallback(
-		(e: React.MouseEvent) => {
-			e.stopPropagation()
-			if (!moduleInfo.helpUrl) return
-			const latestVersionName =
-				moduleInfo.installedInfo?.stableVersion?.versionId ?? moduleInfo.installedInfo?.betaVersion?.versionId ?? ''
-			helpViewer.current?.showFromUrl(moduleInfo.moduleType, moduleInfo.moduleId, latestVersionName, moduleInfo.helpUrl)
-		},
-		[helpViewer, moduleInfo]
+	const moduleStoreInfo = useModuleStoreInfo(
+		moduleInfo.moduleType,
+		installedVersions.length > 0 && !installedInfo?.devVersion ? moduleInfo.moduleId : undefined
 	)
+	const newestInstalled = installedVersions
+		.map((version) => version.versionId)
+		.filter((version) => semver.valid(version, { loose: true }))
+		.sort((a, b) => semver.rcompare(a, b, { loose: true }))[0]
+	const updateVersion = moduleStoreInfo?.versions
+		.filter(
+			(version) =>
+				version.releaseChannel === 'stable' &&
+				!!version.tarUrl &&
+				!version.deprecationReason &&
+				isSomeModuleApiVersionCompatible(moduleInfo.moduleType, version.apiVersion) &&
+				semver.valid(version.id, { loose: true }) &&
+				!!newestInstalled &&
+				semver.gt(version.id, newestInstalled, { loose: true })
+		)
+		.sort((a, b) => semver.rcompare(a.id, b.id, { loose: true }))[0]
 
 	const doEdit = () => {
 		if (!moduleInfo) return
@@ -348,7 +352,7 @@ const ModulesListRow = observer(function ModulesListRow({
 			onClick={doEdit}
 			className={classNames('list-row', isSelected ? 'list-row-selected' : 'hover:bg-surface-muted/50')}
 		>
-			<td className="compact py-2 ps-4 pe-3 w-10">
+			<td className="module-type-cell compact py-2 ps-4 pe-1">
 				{icon && (
 					<span
 						title={iconTitle ?? ''}
@@ -358,9 +362,19 @@ const ModulesListRow = observer(function ModulesListRow({
 					</span>
 				)}
 			</td>
-			<td className="py-2.5 px-3">
+			<td className="module-name-cell py-2.5 ps-1 pe-3">
 				<div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-					<span className="text-sm font-semibold text-body-strong">{moduleInfo.name}</span>
+					<span className="min-w-0 break-words text-sm font-semibold text-body-strong" title={displayName}>
+						{displayName}
+					</span>
+					{updateVersion && (
+						<span
+							title={`Stable v${updateVersion.id} is available. Open module details to install it.`}
+							className="rounded-md bg-blue-500/10 px-1.5 py-0.5 text-2xs font-medium text-blue-600"
+						>
+							Update available
+						</span>
+					)}
 					{deprecationReason && (
 						<span
 							title={deprecationReason}
@@ -371,39 +385,29 @@ const ModulesListRow = observer(function ModulesListRow({
 						</span>
 					)}
 				</div>
-				<div className="mt-0.5 line-clamp-1 text-xs text-muted/80" title={products.join(', ')}>
-					{products.join(', ') || moduleInfo.moduleId}
-				</div>
 			</td>
 			<td className="compact py-2.5 px-3 text-end">
-				<div className="flex flex-col items-end gap-1 whitespace-nowrap">
+				<div className="flex min-w-0 items-center justify-end gap-2 whitespace-nowrap">
+					{versionLabel && (
+						<span className="min-w-0 truncate text-2xs font-mono tabular-nums text-muted/70" title={versionLabel}>
+							{versionLabel}
+						</span>
+					)}
 					<span
 						className={classNames(
-							'rounded-md px-1.5 py-0.5 text-2xs font-medium',
+							'shrink-0 rounded-md px-1.5 py-0.5 text-2xs font-medium',
 							installationLabel === 'Development'
 								? 'bg-amber-500/10 text-amber-500'
 								: installationLabel === 'Available'
 									? 'bg-surface-muted text-muted'
-									: 'bg-primary/10 text-primary'
+									: installationLabel === 'Installed'
+										? 'bg-emerald-500/10 text-emerald-600'
+										: 'bg-primary/10 text-primary'
 						)}
 					>
 						{installationLabel}
 					</span>
-					{versionLabel && <span className="text-2xs font-mono tabular-nums text-muted/70">{versionLabel}</span>}
 				</div>
-			</td>
-			<td className="compact py-2 px-3 text-end w-12">
-				{moduleInfo.helpUrl && (
-					<button
-						type="button"
-						onClick={doShowHelp}
-						className="panel-icon-button"
-						title="Show documentation"
-						aria-label="Show documentation"
-					>
-						<FontAwesomeIcon icon={faBook} className="text-xs" />
-					</button>
-				)}
 			</td>
 		</tr>
 	)

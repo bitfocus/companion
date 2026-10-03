@@ -1,11 +1,5 @@
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
-import {
-	faArrowUpRightFromSquare,
-	faBug,
-	faCogs,
-	faQuestionCircle,
-	faStethoscope,
-} from '@fortawesome/free-solid-svg-icons'
+import { faArrowUpRightFromSquare, faBug, faCogs, faFileLines, faStethoscope } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
@@ -154,13 +148,7 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 				/>
 
 				{moduleVersion?.helpPath && (
-					<EditTabButton
-						tab="help"
-						activeTab={activeTab}
-						setActiveTab={setActiveTab}
-						icon={faQuestionCircle}
-						label="Help"
-					/>
+					<EditTabButton tab="help" activeTab={activeTab} setActiveTab={setActiveTab} icon={faFileLines} label="Docs" />
 				)}
 
 				<EditTabButton
@@ -189,7 +177,7 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 				/>
 			)}
 
-			{/* Tab 2: Help */}
+			{/* Tab 2: Docs */}
 			{activeTab === 'help' && moduleVersion?.helpPath && <SidebarHelpTab helpPath={moduleVersion.helpPath} />}
 
 			{/* Tab 3: Diagnostics */}

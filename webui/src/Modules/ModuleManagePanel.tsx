@@ -1,6 +1,6 @@
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import './modules-manage.css'
-import { faBook, faBug, faStore } from '@fortawesome/free-solid-svg-icons'
+import { faBug, faFileLines, faStore } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
@@ -138,12 +138,12 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 						{helpPath && (
 							<button
 								type="button"
-								className="inline-flex items-center gap-1.5 text-primary hover:underline cursor-pointer"
+								className="inline-flex items-center gap-1.5 text-action-text hover:text-body hover:underline cursor-pointer"
 								onClick={() =>
 									helpViewer.current?.showFromUrl(moduleType, moduleId, version?.versionId ?? '', helpPath)
 								}
 							>
-								<FontAwesomeIcon icon={faBook} />
+								<FontAwesomeIcon icon={faFileLines} />
 								Docs
 							</button>
 						)}

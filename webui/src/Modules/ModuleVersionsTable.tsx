@@ -1,7 +1,7 @@
 import {
-	faBook,
 	faCircleMinus,
 	faEyeSlash,
+	faFileLines,
 	faPlus,
 	faSync,
 	faTrash,
@@ -318,7 +318,7 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 							title="Show documentation"
 							aria-label="Show documentation"
 						>
-							<FontAwesomeIcon icon={faBook} className="text-xs" />
+							<FontAwesomeIcon icon={faFileLines} className="text-xs" />
 						</button>
 					)}
 				</div>

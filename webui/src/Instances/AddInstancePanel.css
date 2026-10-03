@@ -24,3 +24,12 @@
 		justify-self: end;
 	}
 }
+
+.add-module-row {
+	padding-inline: 1rem 0.75rem;
+}
+
+.add-module-status {
+	max-width: 45%;
+	white-space: nowrap;
+}

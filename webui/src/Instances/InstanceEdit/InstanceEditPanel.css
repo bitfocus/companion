@@ -73,11 +73,26 @@
 }
 
 .instance-module-version-row {
+	container: module-version / inline-size;
 	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.instance-module-version-details {
+	display: flex;
+	flex: 1;
 	flex-wrap: wrap;
 	align-items: center;
 	gap: 0.5rem;
 	min-width: 0;
+}
+
+@container module-version (max-width: 24rem) {
+	.instance-module-version-change-label {
+		display: none;
+	}
 }
 
 .instance-module-version-value {

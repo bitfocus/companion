@@ -36,6 +36,7 @@ import { InstanceEditField } from '~/Instances/InstanceEdit/InstanceEditField.js
 import type { InstanceEditPanelService } from '~/Instances/InstanceEdit/InstanceEditPanelService.js'
 import { InstanceEditPanelStore, isConfigFieldSecret } from '~/Instances/InstanceEdit/InstanceEditPanelStore.js'
 import { InstanceSecretField } from '~/Instances/InstanceEdit/InstanceSecretField.js'
+import { UpdateInstanceToLatestBadge } from '~/Instances/UpdateInstanceToLatestBadge.js'
 import { getModuleVersionInfo } from '~/Instances/Util.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -201,10 +202,15 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 				Module Version
 			</label>
 			<div className="instance-module-version-row">
-				<span className="instance-module-version-value text-xs font-mono font-medium text-body">
-					{moduleVersion?.displayName ?? panelStore.instanceInfo.moduleVersionId}
-				</span>
-				<UpdatePolicyLabel policy={panelStore.updatePolicy} />
+				<div className="instance-module-version-details">
+					<span className="instance-module-version-value text-xs font-mono font-medium text-body">
+						{moduleVersion?.displayName ?? panelStore.instanceInfo.moduleVersionId}
+					</span>
+					{panelStore.instanceInfo.moduleType === ModuleInstanceType.Connection && (
+						<UpdateInstanceToLatestBadge instance={panelStore.instanceInfo} variant="label" />
+					)}
+					<UpdatePolicyLabel policy={panelStore.updatePolicy} />
+				</div>
 
 				<InstanceVersionChangeButton
 					id={moduleVersionId}

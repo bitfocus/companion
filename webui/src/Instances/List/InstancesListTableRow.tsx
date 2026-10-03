@@ -2,8 +2,8 @@ import {
 	faBars,
 	faBug,
 	faExclamationTriangle,
+	faFileLines,
 	faFlask,
-	faQuestionCircle,
 	faTerminal,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
@@ -152,9 +152,9 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 						<FontAwesomeIcon icon={faBars} className="text-xs" />
 					</Popover.Trigger>
 					<Popover.Popup arrow side="right" align="center">
-						<Popover.Item onClick={doShowHelp} title="Help" disabled={!moduleVersion?.helpPath}>
-							<FontAwesomeIcon icon={faQuestionCircle} className="me-2 opacity-70" />
-							Help
+						<Popover.Item onClick={doShowHelp} title="Docs" disabled={!moduleVersion?.helpPath}>
+							<FontAwesomeIcon icon={faFileLines} className="me-2 opacity-70" />
+							Docs
 						</Popover.Item>
 
 						<Popover.Item onClick={openBugUrl} title="Issue Tracker" disabled={!moduleInfo?.display?.bugUrl}>

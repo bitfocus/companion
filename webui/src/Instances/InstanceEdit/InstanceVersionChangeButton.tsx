@@ -120,7 +120,8 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 				title="Change module version"
 				aria-label="Change module version"
 			>
-				<FontAwesomeIcon icon={faPencil} /> Change
+				<FontAwesomeIcon icon={faPencil} />
+				<span className="instance-module-version-change-label">Change</span>
 			</Modal.Trigger>
 
 			<Modal.Portal>

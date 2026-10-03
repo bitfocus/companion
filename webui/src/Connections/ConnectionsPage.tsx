@@ -85,7 +85,7 @@ export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.El
 				<Modal.Portal>
 					<Modal.Backdrop />
 					<Modal.Viewport>
-						<Modal.Popup size="xl" scrollable>
+						<Modal.Popup size="lg" scrollable>
 							<Modal.Header closeButton>
 								<Modal.Title>Add Connection</Modal.Title>
 							</Modal.Header>
