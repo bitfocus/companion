@@ -8,9 +8,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { type DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { DropdownInputPopup } from './DropdownInputField/Popup.js'
-import { toComboboxItems, useComboboxCollection } from './DropdownInputField/useComboboxCollection.js'
+import { useComboboxCollection } from './DropdownInputField/useComboboxCollection.js'
 import { useDropdownComboboxItems } from './DropdownInputField/useDropdownComboboxItems.js'
-import { useFuzzyChoices, type FuzzyChoice } from './DropdownInputField/useFuzzyChoices.js'
+import { isGroupedFuzzyItems, useFuzzyChoices, type FuzzyChoice } from './DropdownInputField/useFuzzyChoices.js'
 import { useRegex } from './useRegex.js'
 
 interface DropdownInputFieldProps {
@@ -47,7 +47,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 	const { allItems, flatItems } = useFuzzyChoices(choices, searchLabelsOnly)
 
 	// The popup doesn't handle groups when virtualised, so detect if there are any groups
-	const hasGroups = allItems.some((item) => 'items' in item)
+	const hasGroups = isGroupedFuzzyItems(allItems)
 
 	// Compile the regex for custom value validation
 	const compiledRegex = useRegex(regex)
@@ -200,7 +200,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 				autoHighlight
 				value={localDisplayValue}
 				items={collection}
-				filteredItems={toComboboxItems(filteredItems)}
+				filteredItems={filteredItems}
 				disabled={disabled}
 				onValueChange={onValueChange}
 				onInputValueChange={onInputValueChange}

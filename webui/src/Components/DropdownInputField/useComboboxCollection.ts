@@ -8,25 +8,21 @@ import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Mod
  * The ids must be unique across all the items.
  */
 export function useComboboxCollection<TItem extends DropdownChoice>(
-	items: ReadonlyArray<TItem | { items: TItem[] }> | undefined,
-	getLabel: (item: TItem) => string
+	items: readonly TItem[] | ReadonlyArray<{ items: TItem[] }> | undefined,
+	getLabel: (item: NoInfer<TItem>) => string
 ): ComboboxItemCollection<TItem, DropdownChoiceId> {
 	return useMemo(
 		() =>
-			Combobox.createItems<TItem, DropdownChoiceId>(items && toComboboxItems(items), {
-				getValue: (item) => item.id,
-				getLabel,
-			}),
+			// The cast is needed as createItems can't check a generic TItem isn't group shaped
+			Combobox.createItems<TItem, DropdownChoiceId>(
+				items as Parameters<typeof Combobox.createItems<TItem, DropdownChoiceId>>[0],
+				{
+					getValue: (item) => item.id,
+					getLabel,
+				}
+			),
 		[items, getLabel]
 	)
-}
-
-/**
- * base-ui types the items as either all items or all groups, but we can have a mix of both.
- * At runtime it decides by the first entry, which is the behaviour we already rely on.
- */
-export function toComboboxItems<TItem>(items: ReadonlyArray<TItem | { items: TItem[] }>): never {
-	return items as never
 }
 
 export const getComboboxItemLabel = (item: DropdownChoice): string => String(item.label)

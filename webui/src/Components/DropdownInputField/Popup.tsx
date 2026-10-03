@@ -8,7 +8,8 @@ import React, { useCallback, useContext, useRef, type Ref } from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import { MenuPortalContext } from '../MenuPortalContext'
 
-export interface DropdownGroupBase {
+// A type rather than an interface, so that it satisfies base-ui's Group index signature
+export type DropdownGroupBase = {
 	id: string
 	label: string
 	items: DropdownChoice[]

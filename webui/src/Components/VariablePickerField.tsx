@@ -8,9 +8,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { type DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { DropdownInputPopup } from './DropdownInputField/Popup.js'
-import { toComboboxItems, useComboboxCollection } from './DropdownInputField/useComboboxCollection.js'
+import { useComboboxCollection } from './DropdownInputField/useComboboxCollection.js'
 import { useDropdownComboboxItems } from './DropdownInputField/useDropdownComboboxItems.js'
-import { useFuzzyChoices, type FuzzyChoice } from './DropdownInputField/useFuzzyChoices.js'
+import { isGroupedFuzzyItems, useFuzzyChoices, type FuzzyChoice } from './DropdownInputField/useFuzzyChoices.js'
 import { useRegex } from './useRegex.js'
 
 interface VariablePickerFieldProps {
@@ -46,7 +46,7 @@ export const VariablePickerField = observer(function VariablePickerField({
 	// Always search both label and id for variable pickers
 	const { allItems, flatItems } = useFuzzyChoices(choices, false)
 
-	const hasGroups = allItems.some((item) => 'items' in item)
+	const hasGroups = isGroupedFuzzyItems(allItems)
 
 	// Compile the regex for custom value validation
 	const compiledRegex = useRegex(regex)
@@ -153,7 +153,7 @@ export const VariablePickerField = observer(function VariablePickerField({
 				autoHighlight
 				value={localDisplayValue}
 				items={collection}
-				filteredItems={toComboboxItems(filteredItems)}
+				filteredItems={filteredItems}
 				disabled={disabled}
 				onValueChange={onValueChange}
 				onInputValueChange={onInputValueChange}

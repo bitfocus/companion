@@ -1,11 +1,10 @@
 import { prepare as fuzzyPrepare } from 'fuzzysort'
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { useComputed } from '~/Resources/util.js'
-import { fuzzyFilterSort } from '~/util/fuzzy.js'
-import type { FuzzyChoice, FuzzyGroup } from './useFuzzyChoices.js'
+import { filterFuzzyItems, prependFuzzyChoices, type FuzzyChoice, type FuzzyItems } from './useFuzzyChoices.js'
 
 interface UseDropdownComboboxItemsParams {
-	allItems: Array<FuzzyChoice | FuzzyGroup>
+	allItems: FuzzyItems
 	flatItems: FuzzyChoice[]
 	localDisplayValue: DropdownChoiceId
 	inputValue: string
@@ -18,8 +17,8 @@ interface UseDropdownComboboxItemsParams {
 interface UseDropdownComboboxItemsResult {
 	currentItem: FuzzyChoice
 	syntheticItem: FuzzyChoice | null
-	effectiveItems: Array<FuzzyChoice | FuzzyGroup>
-	filteredItems: Array<FuzzyChoice | FuzzyGroup>
+	effectiveItems: FuzzyItems
+	filteredItems: FuzzyItems
 }
 
 export function useDropdownComboboxItems({
@@ -59,7 +58,7 @@ export function useDropdownComboboxItems({
 
 	// Items for base-ui value resolution. Includes the synthetic item and, when the current
 	// value is a custom/unknown entry, the current item itself so itemToStringLabel can find it.
-	const effectiveItems = useComputed((): Array<FuzzyChoice | FuzzyGroup> => {
+	const effectiveItems = useComputed((): FuzzyItems => {
 		const isCurrentKnown = flatItems.some((o) => o.id == localDisplayValue)
 		const isSyntheticMatchesCurrent = syntheticItem != null && syntheticItem.id == localDisplayValue
 
@@ -70,11 +69,11 @@ export function useDropdownComboboxItems({
 			prefixed.push(currentItem)
 		}
 
-		return [...prefixed, ...allItems]
+		return prependFuzzyChoices(allItems, prefixed)
 	}, [syntheticItem, allItems, flatItems, localDisplayValue, currentItem])
 
 	// Items displayed in the popup (excluding the hidden resolution entry for the current custom value)
-	const filteredItems = useComputed((): Array<FuzzyChoice | FuzzyGroup> => {
+	const filteredItems = useComputed((): FuzzyItems => {
 		// In editing mode, when the input still shows the pre-filled raw value (user hasn't typed
 		// anything different), show all options rather than filtering.
 		const fuzzyInput =
@@ -82,26 +81,8 @@ export function useDropdownComboboxItems({
 
 		if (!fuzzyInput) return allItems
 
-		const result: Array<FuzzyChoice | FuzzyGroup> = []
-
-		// Batch root-level choices between groups so they get sorted together by score
-		const pendingRoot: FuzzyChoice[] = []
-		for (const item of allItems) {
-			if ('items' in item) {
-				if (pendingRoot.length > 0) {
-					result.push(...fuzzyFilterSort(pendingRoot, fuzzyInput))
-					pendingRoot.length = 0
-				}
-				const filtered = fuzzyFilterSort(item.items, fuzzyInput)
-				if (filtered.length > 0) result.push({ ...item, items: filtered })
-			} else {
-				pendingRoot.push(item)
-			}
-		}
-		if (pendingRoot.length > 0) result.push(...fuzzyFilterSort(pendingRoot, fuzzyInput))
-
-		if (syntheticItem) result.unshift(syntheticItem)
-		return result
+		const result = filterFuzzyItems(allItems, fuzzyInput)
+		return syntheticItem ? prependFuzzyChoices(result, [syntheticItem]) : result
 	}, [allItems, syntheticItem, inputValue, isEditingMode, controlledInputValue, localDisplayValue])
 
 	return { currentItem, syntheticItem, effectiveItems, filteredItems }
