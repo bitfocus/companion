@@ -1,0 +1,97 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"properties": {
+		"size": { "$ref": "#/$defs/SatelliteAppearanceSize" },
+		"bodyColor": {
+			"type": "string",
+			"pattern": "^#[0-9a-fA-F]{6}$",
+			"description": "The colour of the device itself, as `#rrggbb` - the colour of the plastic, not a colour chosen to suit a theme. With no `bodyImage` it fills the face; with one it says what the device looks like, so the face can be told apart from whatever is behind it."
+		},
+		"bodyImage": {
+			"description": "Artwork for the face, drawn under the controls, as a base64 `data:` URI. SVG is preferred. An SVG must use a `viewBox` of `0 0 <size.width> <size.height>` so that the art and the control positions share one coordinate system; a raster is scaled to fill `size` exactly.",
+			"type": "string",
+			"maxLength": 524288,
+			"pattern": "^data:image\\/(svg\\+xml|png|webp);base64,(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)$"
+		},
+		"controls": {
+			"type": "object",
+			"propertyNames": { "type": "string", "pattern": "^[a-zA-Z0-9\\-/]+$" },
+			"additionalProperties": { "$ref": "#/$defs/SatelliteControlAppearance" },
+			"description": "Where each control sits, keyed by the same control ids as the layout manifest. Must cover every control of the layout, or the whole appearance is ignored. Ids the layout does not have are ignored."
+		}
+	},
+	"required": ["size", "bodyColor", "controls"],
+	"title": "Satellite Surface Appearance",
+	"description": "Schema describing how to draw the face of a satellite surface: its extent, its background, and where each of its controls is. Layered over the layout manifest and keyed by the same control ids.",
+	"$defs": {
+		"SatelliteAppearanceSize": {
+			"type": "object",
+			"properties": {
+				"width": { "type": "number", "exclusiveMinimum": 0, "description": "Width of the whole face, in face units." },
+				"height": { "type": "number", "exclusiveMinimum": 0, "description": "Height of the whole face, in face units." }
+			},
+			"required": ["width", "height"],
+			"title": "SatelliteAppearanceSize",
+			"description": "The extent of the whole face. Every other measurement in the appearance is in these units."
+		},
+		"SatelliteControlAppearance": {
+			"type": "object",
+			"properties": {
+				"x": {
+					"type": "number",
+					"description": "Distance from the left edge of the face to the left edge of the control, in face units."
+				},
+				"y": {
+					"type": "number",
+					"description": "Distance from the top edge of the face to the top edge of the control, in face units."
+				},
+				"width": { "type": "number", "exclusiveMinimum": 0, "description": "Width of the control, in face units." },
+				"height": { "type": "number", "exclusiveMinimum": 0, "description": "Height of the control, in face units." },
+				"shape": {
+					"description": "How the control is drawn. Defaults to a square-cornered rectangle filling the bounds.",
+					"$ref": "#/$defs/SatelliteControlShape"
+				},
+				"type": {
+					"description": "What kind of control this is, so it can be drawn as one - a knob rather than a round button, a fader rather than a tall key. Defaults to a button.",
+					"type": "string",
+					"enum": ["button", "encoder", "jog", "fader", "lcd-segment"]
+				},
+				"label": {
+					"description": "The legend printed on the hardware, if it has one, eg `CUT`. Drawn on the face where there is no artwork.",
+					"type": "string",
+					"maxLength": 64
+				}
+			},
+			"required": ["x", "y", "width", "height"],
+			"title": "SatelliteControlAppearance",
+			"description": "Where one control sits on the face and how it is drawn. A control may overhang `size`, and controls may overlap - a later entry is drawn, and hit tested, on top of an earlier one."
+		},
+		"SatelliteControlShape": {
+			"oneOf": [
+				{
+					"type": "object",
+					"properties": {
+						"type": { "type": "string", "const": "rect" },
+						"cornerRadius": {
+							"default": 0,
+							"description": "Corner radius in face units. Omit or use `0` for square corners; a capsule (a touch strip segment, a fader track) is half the shorter side.",
+							"type": "number",
+							"minimum": 0
+						}
+					},
+					"required": ["type"],
+					"description": "A rectangle filling the control bounds, optionally with rounded corners."
+				},
+				{
+					"type": "object",
+					"properties": { "type": { "type": "string", "const": "circle" } },
+					"required": ["type"],
+					"description": "An ellipse inscribed in the control bounds, which in square bounds is a circle."
+				}
+			],
+			"title": "SatelliteControlShape",
+			"description": "How a control is drawn."
+		}
+	}
+}
