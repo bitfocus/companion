@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
@@ -621,5 +621,31 @@ describe('null value edge cases (runtime null passed as value)', () => {
 		await user.type(input, 'custom')
 		await user.tab()
 		expect(setValue).toHaveBeenCalledWith('custom')
+	})
+})
+
+// ---------------------------------------------------------------------------
+// Selected value in the popup
+// ---------------------------------------------------------------------------
+
+describe('Selected value in the popup', () => {
+	it('marks and highlights the current value when the popup opens', async () => {
+		const { user } = renderField({ initialValue: 'cherry' })
+		await user.click(screen.getByRole('button'))
+		const current = within(getListbox()).getByRole('option', { name: 'Cherry' })
+		await waitFor(() => expect(current).toHaveAttribute('data-highlighted'))
+		expect(current).toHaveAttribute('data-selected')
+		expect(within(getListbox()).getByRole('option', { name: 'Apple' })).not.toHaveAttribute('data-selected')
+	})
+
+	it('marks the current value inside a group', async () => {
+		const choices = [
+			{ label: 'Fruits', options: [{ id: 'apple', label: 'Apple' }] },
+			{ label: 'Veggies', options: [{ id: 'carrot', label: 'Carrot' }] },
+		]
+		const { user } = renderField({ choices, initialValue: 'carrot' })
+		await user.click(screen.getByRole('button'))
+		expect(within(getListbox()).getByRole('option', { name: 'Carrot' })).toHaveAttribute('data-selected')
+		expect(within(getListbox()).getByRole('option', { name: 'Apple' })).not.toHaveAttribute('data-selected')
 	})
 })

@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { type DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { DropdownInputPopup } from './DropdownInputField/Popup.js'
+import { toComboboxItems, useComboboxCollection } from './DropdownInputField/useComboboxCollection.js'
 import { useDropdownComboboxItems } from './DropdownInputField/useDropdownComboboxItems.js'
 import { useFuzzyChoices, type FuzzyChoice } from './DropdownInputField/useFuzzyChoices.js'
 import { useRegex } from './useRegex.js'
@@ -166,11 +167,16 @@ export const DropdownInputField = observer(function DropdownInputField({
 		return flatItems.find((o) => o.id == localDisplayValue)?.label ?? String(localDisplayValue)
 	}, [disableEditingCustom, allowCustom, localDisplayValue, flatItems])
 
+	const getItemLabel = useCallback(
+		(item: FuzzyChoice) => (disableEditingCustom && allowCustom ? '' : item.label),
+		[disableEditingCustom, allowCustom]
+	)
+	const collection = useComboboxCollection(effectiveItems, getItemLabel)
+
+	// Fallback for values not in the collection
 	const itemToStringLabel = useCallback(
-		(id: DropdownChoiceId | FuzzyChoice) => {
+		(id: DropdownChoiceId) => {
 			if (disableEditingCustom && allowCustom) return ''
-			// base-ui also calls this with each item object (once per item), so avoid a lookup there
-			if (typeof id === 'object' && id !== null) return id.label
 			const item = flatItems.find((o) => o.id == id)
 			if (item) return item.label
 			const strId = String(id)
@@ -189,12 +195,12 @@ export const DropdownInputField = observer(function DropdownInputField({
 			)}
 			title={tooltip}
 		>
-			<Combobox.Root<DropdownChoiceId>
+			<Combobox.Root<DropdownChoiceId, false, FuzzyChoice>
 				virtualized={!hasGroups}
 				autoHighlight
 				value={localDisplayValue}
-				items={effectiveItems}
-				filteredItems={filteredItems}
+				items={collection}
+				filteredItems={toComboboxItems(filteredItems)}
 				disabled={disabled}
 				onValueChange={onValueChange}
 				onInputValueChange={onInputValueChange}

@@ -9,6 +9,7 @@ import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup'
+import { getComboboxItemLabel, useComboboxCollection } from '~/Components/DropdownInputField/useComboboxCollection.js'
 import { useComputed } from '~/Resources/util.js'
 import type { AddEntityGroup, AddEntityOption } from '~/Stores/EntityDefinitionsStore'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -64,13 +65,14 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 				showWhenUnfiltered: true,
 				items: recents,
 			},
-		]
+		].map(scopeGroupItemIds)
 	}, [baseGroups, definitions, connections, recentlyUsedStore.recentIds, feedbackListType])
+	const collection = useComboboxCollection(options, getComboboxItemLabel)
 
 	const onChange = useCallback(
 		(id: DropdownChoice['id'] | null) => {
 			if (!id) return
-			const id2 = String(id)
+			const id2 = unscopeItemId(String(id))
 			recentlyUsedStore.trackId(id2)
 
 			const [connectionId, definitionId] = id2.split(':', 2)
@@ -107,9 +109,9 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 
 	return (
 		<div className="dropdown-field">
-			<Combobox.Root<DropdownChoice['id'] | null>
+			<Combobox.Root<DropdownChoice['id'] | null, false, AddEntityOption>
 				value={null}
-				items={options}
+				items={collection}
 				multiple={false}
 				autoHighlight
 				onValueChange={onChange}
@@ -131,3 +133,14 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 		</div>
 	)
 })
+
+/**
+ * The same entity can appear in multiple groups, but the combobox needs every item to have a unique id.
+ * So prefix each item id with its group id
+ */
+function scopeGroupItemIds(group: AddEntityGroup): AddEntityGroup {
+	return { ...group, items: group.items.map((item) => ({ ...item, id: `${group.id}/${item.id}` })) }
+}
+function unscopeItemId(id: string): string {
+	return id.slice(id.indexOf('/') + 1)
+}

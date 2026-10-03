@@ -7,6 +7,11 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useState } from 'react'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup.js'
+import {
+	getComboboxItemLabel,
+	toComboboxItems,
+	useComboboxCollection,
+} from '~/Components/DropdownInputField/useComboboxCollection.js'
 import { useFuzzyChoices, type FuzzyChoice, type FuzzyGroup } from '~/Components/DropdownInputField/useFuzzyChoices.js'
 import { useComputed } from '~/Resources/util.js'
 import { fuzzyFilterSort } from '~/util/fuzzy.js'
@@ -104,6 +109,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 		(): Array<FuzzyChoice | FuzzyGroup> => (syntheticItem ? [syntheticItem, ...allItems] : allItems),
 		[syntheticItem, allItems]
 	)
+	const collection = useComboboxCollection(effectiveItems, getComboboxItemLabel)
 
 	const filteredItems = useComputed((): Array<FuzzyChoice | FuzzyGroup> => {
 		if (!inputValue) return allItems
@@ -165,13 +171,13 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 			)}
 			title={tooltip}
 		>
-			<Combobox.Root<DropdownChoiceId, true>
+			<Combobox.Root<DropdownChoiceId, true, FuzzyChoice>
 				multiple={true}
 				virtualized={!hasGroups}
 				autoHighlight
 				value={value}
-				items={effectiveItems}
-				filteredItems={filteredItems}
+				items={collection}
+				filteredItems={toComboboxItems(filteredItems)}
 				disabled={disabled}
 				onValueChange={onValueChange}
 				onInputValueChange={setInputValue}

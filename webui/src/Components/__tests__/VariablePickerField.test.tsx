@@ -446,3 +446,17 @@ describe('VariablePickerField — fancy format', () => {
 		expect(within(list).queryByText('Current time (HH:MM:SS)')).toBeNull()
 	})
 })
+
+// ---------------------------------------------------------------------------
+// Selected value in the popup
+// ---------------------------------------------------------------------------
+
+describe('Selected value in the popup', () => {
+	it('marks the current value when the popup opens', async () => {
+		const { user } = renderPicker({ initialValue: 'connection:var_b' })
+		await user.click(screen.getByRole('button'))
+		const list = getListbox()
+		expect(within(list).getByText('Variable B').closest('[role="option"]')).toHaveAttribute('data-selected')
+		expect(within(list).getByText('Variable A').closest('[role="option"]')).not.toHaveAttribute('data-selected')
+	})
+})

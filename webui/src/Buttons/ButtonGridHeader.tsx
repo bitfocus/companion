@@ -5,9 +5,10 @@ import { prepare as fuzzyPrepare } from 'fuzzysort'
 import { ChevronDownIcon } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
-import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
+import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { Button } from '~/Components/Button'
 import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup.js'
+import { useComboboxCollection } from '~/Components/DropdownInputField/useComboboxCollection.js'
 import { InputGroup } from '~/Components/Form'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -73,8 +74,8 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 	children,
 }: React.PropsWithChildren<PageNumberPickerProps>) {
 	const inputChange = useCallback(
-		(val: number | null) => {
-			if (val !== null && setPage && !isNaN(val)) {
+		(val: DropdownChoiceId | null) => {
+			if (typeof val === 'number' && setPage && !isNaN(val)) {
 				setPage(val)
 			}
 		},
@@ -84,7 +85,7 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 	const nextPage = useCallback(() => changePage?.(1), [changePage])
 	const prevPage = useCallback(() => changePage?.(-1), [changePage])
 
-	const choiceOptions = useComputed<Array<DropdownChoice & { fuzzy: ReturnType<typeof fuzzyPrepare> }>>(() => {
+	const choiceOptions = useComputed<PageChoice[]>(() => {
 		const options = pageOptions.map((o) => ({ id: o.value, label: o.label, fuzzy: fuzzyPrepare(o.label) }))
 		if (!options.some((o) => o.id === pageNumber)) {
 			const label = String(pageNumber)
@@ -93,9 +94,11 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 		return options
 	}, [pageOptions, pageNumber])
 
+	const collection = useComboboxCollection(choiceOptions, getEmptyLabel)
+
 	const [inputValue, setInputValue] = useState('')
 
-	const filteredItems = useComputed<DropdownChoice[]>(() => {
+	const filteredItems = useComputed<PageChoice[]>(() => {
 		if (!inputValue) return choiceOptions
 		return fuzzyFilterSort(choiceOptions, inputValue)
 	}, [choiceOptions, inputValue])
@@ -107,16 +110,15 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 					<FontAwesomeIcon icon={faChevronLeft} />
 				</Button>
 				<div className="dropdown-field button-page-input">
-					<Combobox.Root<number | null>
+					<Combobox.Root<DropdownChoiceId | null, false, PageChoice>
 						autoHighlight
 						value={pageNumber}
-						items={choiceOptions}
+						items={collection}
 						filteredItems={filteredItems}
 						disabled={!setPage}
-						isItemEqualToValue={isItemEqualToValue}
 						onValueChange={inputChange}
 						onInputValueChange={setInputValue}
-						itemToStringLabel={() => ''}
+						itemToStringLabel={getEmptyLabel}
 					>
 						<Combobox.InputGroup className="form-input dropdown-field-input-group rounded-none">
 							<Combobox.Input
@@ -139,5 +141,7 @@ export const PageNumberPicker = observer(function ButtonGridHeader({
 	)
 })
 
-const isItemEqualToValue = (itemValue: DropdownChoice | number | null, value: number | null) =>
-	(itemValue !== null && typeof itemValue === 'object' ? itemValue.id : itemValue) === value
+type PageChoice = DropdownChoice & { fuzzy: ReturnType<typeof fuzzyPrepare> }
+
+// The input stays empty, with the current page shown as the placeholder
+const getEmptyLabel = () => ''
