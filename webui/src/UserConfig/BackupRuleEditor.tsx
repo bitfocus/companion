@@ -1,4 +1,4 @@
-import { faClock, faPlay, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faPlay, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId } from 'react'
@@ -6,8 +6,7 @@ import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/share
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
-import { Form, FormLabel } from '~/Components/Form.js'
-import { Grid } from '~/Components/Grid'
+import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { Table } from '~/Components/Table.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
@@ -117,115 +116,116 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 	const previousBackups = [...(rule.previousBackups || [])].sort((a, b) => b.createdAt - a.createdAt)
 
 	return (
-		<div className="space-y-4">
-			<div className="surface-card p-4 space-y-4">
-				<div className="flex items-center justify-between gap-2 border-b border-border/70 pb-3">
-					<div>
-						<h4 className="text-sm font-bold text-body mb-0.5">Rule Configuration</h4>
-						<p className="text-xs text-muted mb-0">Set rule name, schedule, and output destination.</p>
-					</div>
+		<div className="edit-panel">
+			<EditSectionCard title="Rule Configuration">
+				<div className="flex items-center justify-between gap-2">
+					<p className="text-xs text-muted mb-0">Set rule name, schedule, and output destination.</p>
 					<Button color="secondary" size="sm" onClick={runNow}>
 						<FontAwesomeIcon icon={faPlay} className="me-1.5" />
 						Run Now
 					</Button>
 				</div>
 
-				<Form row className="gap-y-3">
-					<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
+				<div className="edit-field-row">
+					<label htmlFor={nameFieldId} className="text-xs font-semibold text-body">
 						Rule Name
-					</FormLabel>
-					<Grid.Col sm={8}>
+					</label>
+					<div className="min-w-0">
 						<TextInputFieldSimple id={nameFieldId} value={rule.name} setValue={(value) => updateField('name', value)} />
-					</Grid.Col>
+					</div>
+				</div>
 
-					<FormLabel htmlFor={cronFieldId} sm={4} column="sm">
+				<div className="edit-field-row">
+					<label htmlFor={cronFieldId} className="text-xs font-semibold text-body">
 						Cron Schedule
-					</FormLabel>
-					<Grid.Col sm={8}>
+					</label>
+					<div className="min-w-0">
 						<TextInputFieldSimple id={cronFieldId} value={rule.cron} setValue={(value) => updateField('cron', value)} />
-						<small className="form-text text-muted block mt-1">
-							Use cron syntax (e.g., <code className="text-2xs bg-surface-muted px-1 py-0.5 rounded">0 0 * * *</code>{' '}
-							for daily at midnight). Use{' '}
-							<a
-								href="https://crontab.guru"
-								target="_blank"
-								rel="noopener noreferrer"
-								className="text-primary hover:underline"
-							>
-								crontab guru
-							</a>{' '}
-							for help generating expressions.
-						</small>
-					</Grid.Col>
+					</div>
+					<small className="edit-field-help form-text text-muted block">
+						Use cron syntax (e.g., <code className="text-2xs bg-surface-muted px-1 py-0.5 rounded">0 0 * * *</code> for
+						daily at midnight). Use{' '}
+						<a
+							href="https://crontab.guru"
+							target="_blank"
+							rel="noopener noreferrer"
+							className="text-primary hover:underline"
+						>
+							crontab guru
+						</a>{' '}
+						for help generating expressions.
+					</small>
+				</div>
 
-					<FormLabel htmlFor={backupTypeFieldId} sm={4} column="sm">
+				<div className="edit-field-row">
+					<label htmlFor={backupTypeFieldId} className="text-xs font-semibold text-body">
 						Backup Type
-					</FormLabel>
-					<Grid.Col sm={8}>
+					</label>
+					<div className="min-w-0">
 						<SimpleDropdownInputField
 							id={backupTypeFieldId}
 							value={rule.backupType}
 							setValue={(value) => updateField('backupType', value as BackupRulesConfig['backupType'])}
 							choices={backupTypes}
 						/>
-						{rule.backupType === 'db' && (
-							<StaticAlert color="warning" className="mt-2 text-xs">
-								Raw backups are a direct copy of the database file. They cannot be restored through the web interface,
-								but contain more internal database data than standard exports.
-							</StaticAlert>
-						)}
-					</Grid.Col>
+					</div>
+					{rule.backupType === 'db' && (
+						<StaticAlert color="warning" className="edit-field-help text-xs">
+							Raw backups are a direct copy of the database file. They cannot be restored through the web interface, but
+							contain more internal database data than standard exports.
+						</StaticAlert>
+					)}
+				</div>
 
-					<FormLabel htmlFor={backupPathFieldId} sm={4} column="sm">
+				<div className="edit-field-row">
+					<label htmlFor={backupPathFieldId} className="text-xs font-semibold text-body">
 						Backup Path
-					</FormLabel>
-					<Grid.Col sm={8}>
+					</label>
+					<div className="min-w-0">
 						<TextInputFieldSimple
 							id={backupPathFieldId}
 							value={rule.backupPath}
 							setValue={(value) => updateField('backupPath', value)}
 						/>
-						<small className="form-text text-muted block mt-1">
-							Directory path where backups will be saved. Leave empty for default location.
-						</small>
-					</Grid.Col>
+					</div>
+					<small className="edit-field-help form-text text-muted block">
+						Directory path where backups will be saved. Leave empty for default location.
+					</small>
+				</div>
 
-					<FormLabel htmlFor={backupNamePatternFieldId} sm={4} column="sm">
+				<div className="edit-field-row">
+					<label htmlFor={backupNamePatternFieldId} className="text-xs font-semibold text-body">
 						Backup Name Pattern
-					</FormLabel>
-					<Grid.Col sm={8}>
+					</label>
+					<div className="min-w-0">
 						<TextInputField
 							id={backupNamePatternFieldId}
 							value={rule.backupNamePattern}
 							setValue={(value) => updateField('backupNamePattern', value)}
 							useVariables
 						/>
-					</Grid.Col>
+					</div>
+				</div>
 
-					<FormLabel htmlFor={keepFieldId} sm={4} column="sm">
+				<div className="edit-field-row">
+					<label htmlFor={keepFieldId} className="text-xs font-semibold text-body">
 						Retention Count
-					</FormLabel>
-					<Grid.Col sm={8}>
+					</label>
+					<div className="min-w-0">
 						<NumberInputField
 							id={keepFieldId}
 							value={rule.keep}
 							min={1}
 							setValue={(value) => updateField('keep', value)}
 						/>
-						<small className="form-text text-muted block mt-1">
-							Number of backup files to retain before automatically purging older backups.
-						</small>
-					</Grid.Col>
-				</Form>
-			</div>
-
-			<div className="surface-card p-4">
-				<div className="flex items-center gap-2 border-b border-border/70 pb-3 mb-3">
-					<FontAwesomeIcon icon={faClock} className="text-muted text-xs" />
-					<h4 className="text-sm font-bold text-body mb-0">Previous Backups</h4>
-					<span className="text-2xs text-muted ms-auto">{rule.previousBackups?.length ?? 0} saved</span>
+					</div>
+					<small className="edit-field-help form-text text-muted block">
+						Number of backup files to retain before automatically purging older backups.
+					</small>
 				</div>
+			</EditSectionCard>
 
+			<EditSectionCard title="Previous Backups" summary={`${previousBackups.length} saved`}>
 				{rule.previousBackups && rule.previousBackups.length > 0 ? (
 					<div className="overflow-hidden rounded-lg border border-border/70">
 						<Table size="sm" className="mb-0">
@@ -241,7 +241,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 						No backup files found yet. Backups will appear here as the rule runs.
 					</div>
 				)}
-			</div>
+			</EditSectionCard>
 		</div>
 	)
 })
