@@ -14,6 +14,38 @@
 	padding: 12px;
 }
 
+/* The panel rounds its corners to frame the grid's dark ground. With the face on the page there is no
+   ground to frame, and the rounding only clips the ends off the scrollbars. */
+.button-grid-panel-content:has(> .surface-canvas-viewport.has-face:not(.button-armed)) {
+	border-radius: 0;
+}
+
+/* A surface which describes its own face is the device itself, so it sits on the page rather than on the
+   dark ground the grid uses - that ground fights with a face of any colour but its own. Press mode keeps
+   the armed ground, as marking out what is live matters more there. */
+.surface-canvas-viewport.has-face:not(.button-armed) {
+	background-color: transparent;
+
+	/* Scrollbars to match: the grid's are dark to sit on its dark ground, which is gone here */
+	scrollbar-color: var(--color-line) transparent;
+
+	&::-webkit-scrollbar-track {
+		background-color: transparent;
+	}
+
+	&::-webkit-scrollbar-thumb {
+		background-color: var(--color-line);
+	}
+
+	.surface-canvas {
+		/* A hairline and a soft shadow, so the device stands out from the page whatever its colour. A
+		   drop-shadow follows the alpha of the artwork, so it traces the outline of the device rather
+		   than the box around it. */
+		filter: drop-shadow(0 0 1px var(--color-border-strong))
+			drop-shadow(0 2px 6px color-mix(in srgb, var(--color-shadow) 25%, transparent));
+	}
+}
+
 .surface-canvas {
 	position: relative;
 

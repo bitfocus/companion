@@ -202,7 +202,10 @@ export const SurfaceCanvas = forwardRef<SurfaceCanvasRef, SurfaceCanvasProps>(fu
 	return (
 		<div
 			ref={setScrollerRef}
-			className={classNames('button-grid-scroller', 'surface-canvas-viewport', { 'button-armed': isHot })}
+			className={classNames('button-grid-scroller', 'surface-canvas-viewport', {
+				'button-armed': isHot,
+				'has-face': !!view.body,
+			})}
 			onPointerDown={handlePointerDown}
 			onPointerMove={handlePointerMove}
 			onPointerLeave={() => store.handleHover(null, { range: false, toggle: false }, actions)}
