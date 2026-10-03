@@ -16,6 +16,7 @@ function setup(props: Partial<Props> = {}) {
 		location,
 		image: null,
 		color: null,
+		overlay: null,
 		style: { left: 0, top: 0 },
 		title: '1/2/3',
 		placeholder: '2/3',

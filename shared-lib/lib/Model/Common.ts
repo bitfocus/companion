@@ -1,4 +1,5 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import type { LedGaugeDescription } from '../Graphics/GaugeLeds.js'
 import type { SomeCompanionInputField } from './Options.js'
 
 export interface ObjectsDiff<T> {
@@ -95,6 +96,8 @@ export interface WrappedImage {
 	isUsed: boolean
 	/** The button's background, as a css colour: all a control which shows only a colour gets of it */
 	color: string
+	/** The gauge the button drives a surface's leds with, or null when it drives none */
+	leds: LedGaugeDescription | null
 }
 
 /**

@@ -19,7 +19,7 @@ import { trpcClient } from '~/Resources/TRPC'
  * instead of flashing - but nothing is retained beyond that, so the image can never go stale.
  */
 
-const NO_IMAGE: WrappedImage = { image: null, isUsed: false, color: 'rgba(0, 0, 0, 0)' }
+const NO_IMAGE: WrappedImage = { image: null, isUsed: false, color: 'rgba(0, 0, 0, 0)', leds: null }
 
 /** How long a subscription is kept warm after its last watcher leaves, to absorb unmount/remount thrash */
 export const RELEASE_GRACE_MS = 100
