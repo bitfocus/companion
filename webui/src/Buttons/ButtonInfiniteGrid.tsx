@@ -442,7 +442,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		return (
 			<div
 				ref={setRef}
-				className={classNames('button-infinite-grid', {
+				className={classNames('button-grid-scroller', 'button-infinite-grid', {
 					'button-armed': isHot,
 					'button-grid-panning': isPanning,
 				})}
