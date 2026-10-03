@@ -203,6 +203,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 				const drawProps: IpcDrawProps = {
 					controlId: controlDefinition.id,
 					pageNumber: drawItem.location?.pageNumber,
+					pressed: drawItem.defaultRender.style?.state?.pushed ?? false,
 				}
 
 				const style = drawItem.defaultRender.style

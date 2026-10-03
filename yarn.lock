@@ -1802,7 +1802,7 @@ __metadata:
   resolution: "@companion-app/shared@workspace:shared-lib"
   dependencies:
     "@companion-app/expressions": "npm:^1.1.1"
-    "@companion-surface/base": "npm:1.4.0"
+    "@companion-surface/base": "npm:1.4.1"
     "@types/semver": "npm:^7.8.0"
     colord: "npm:^2.10.0"
     quick-lru: "npm:^7.3.0"
@@ -2037,22 +2037,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-surface/base@npm:1.4.0, @companion-surface/base@npm:~1.4.0":
-  version: 1.4.0
-  resolution: "@companion-surface/base@npm:1.4.0"
+"@companion-surface/base@npm:1.4.1, @companion-surface/base@npm:~1.4.1":
+  version: 1.4.1
+  resolution: "@companion-surface/base@npm:1.4.1"
   dependencies:
     zod: "npm:^4.4.3"
-  checksum: 10c0/8b50af17ee832a8f5e13cfde5958e846be36fd5a3709174faec80e01aab27c84e2302160ce94ac727a6dd23e0dda8249604858e066a06f7ceb10ced8272614d0
+  checksum: 10c0/263e078ffeaf7c274d5e225a9a119be2c244afdefb3cbcd898101f7f269b29c0fc60b7a130ad4e5632fb52b5c69b4410ef60ec18ed6c479212dc221b3cf1e6a5
   languageName: node
   linkType: hard
 
-"@companion-surface/host@npm:1.4.1":
-  version: 1.4.1
-  resolution: "@companion-surface/host@npm:1.4.1"
+"@companion-surface/host@npm:1.4.2":
+  version: 1.4.2
+  resolution: "@companion-surface/host@npm:1.4.2"
   dependencies:
-    "@companion-surface/base": "npm:~1.4.0"
+    "@companion-surface/base": "npm:~1.4.1"
     fast-deep-equal: "npm:^3.1.3"
-  checksum: 10c0/8381fb63a8971f3a82cda09df62a7f3de739885bc8b956d722b96f63a3f4b43e18011a55085acfbd4a67f5e79f2bb4c6aad9ac5c69d1118e27f1bbaa1225d11e
+  checksum: 10c0/1b917a63e72e269727cecf2b6fea11e3930b80a67b833f61eaca493ae3dd44cf9c053888284d3ddfe515ca621e7a97e1e1cb94e8dca543d1275b071f71dd61d6
   languageName: node
   linkType: hard
 
@@ -11070,7 +11070,7 @@ __metadata:
     "@companion-app/shared": "npm:*"
     "@companion-module/base-old": "npm:@companion-module/base@~1.14.1"
     "@companion-module/host": "npm:1.2.0"
-    "@companion-surface/host": "npm:1.4.1"
+    "@companion-surface/host": "npm:1.4.2"
     "@julusian/bonjour-service": "npm:^1.4.5"
     "@julusian/image-rs": "npm:^2.2.0"
     "@julusian/segfault-raub": "npm:^2.3.3"
