@@ -1,7 +1,8 @@
 import semver from 'semver'
+import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ModuleStoreModuleInfoVersion } from '@companion-app/shared/Model/ModulesStore.js'
-import { isModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
+import { isSomeModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 
 export function doesInstanceVersionExist(moduleInfo: ClientModuleInfo | undefined, versionId: string | null): boolean {
 	if (versionId === null) return false
@@ -12,6 +13,7 @@ export function doesInstanceVersionExist(moduleInfo: ClientModuleInfo | undefine
 }
 
 export function getLatestVersion(
+	moduleType: ModuleInstanceType,
 	versions: ModuleStoreModuleInfoVersion[] | undefined,
 	isBeta: boolean,
 	skipCompatibleCheck = false
@@ -19,7 +21,10 @@ export function getLatestVersion(
 	let latest: ModuleStoreModuleInfoVersion | null = null
 	for (const version of versions || []) {
 		if (!version || (version.releaseChannel === 'beta') !== isBeta) continue
-		if ((!skipCompatibleCheck && !isModuleApiVersionCompatible(version.apiVersion)) || version.deprecationReason)
+		if (
+			(!skipCompatibleCheck && !isSomeModuleApiVersionCompatible(moduleType, version.apiVersion)) ||
+			version.deprecationReason
+		)
 			continue
 		if (!latest || semver.compare(version.id, latest.id, { loose: true }) > 0) {
 			latest = version

@@ -1,3 +1,4 @@
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ModuleStoreModuleInfoStore } from '@companion-app/shared/Model/ModulesStore.js'
 import { getLatestVersion, getStoreInstallChoices } from './VersionUtil.js'
@@ -26,8 +27,8 @@ export function isSurfaceInstanceLimitReached(
 	// selected version's manifest when adding, and creates the instance disabled if it doesn't
 	const storeChoices = getStoreInstallChoices(
 		installedInfo,
-		getLatestVersion(storeInfo?.versions, false),
-		getLatestVersion(storeInfo?.versions, true),
+		getLatestVersion(ModuleInstanceType.Surface, storeInfo?.versions, false),
+		getLatestVersion(ModuleInstanceType.Surface, storeInfo?.versions, true),
 		true
 	)
 	return storeChoices.length === 0
