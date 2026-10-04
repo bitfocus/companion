@@ -1,0 +1,18 @@
+/* The entity editor draws its option labels as standalone form labels. In an expression variable's Value section
+   they sit beside the panel's own field rows, so they take the same size and weight as those rows' labels. */
+.expression-variable-value .form-label.col-form-label {
+	font-size: 0.75rem;
+	font-weight: 600;
+}
+
+/* Line the option rows up with the panel's field rows. They are 12-column grids with the label spanning 4 columns
+   and the field 8, both set by span utilities, so rather than fight those, size the first 4 tracks to make the
+   label column the panel's label width. The rows' own gap (their `sm:gap-2`) is narrower than the panel's 0.75rem
+   between label and field, so the label tracks also take up the difference, to start the fields level too. */
+.expression-variable-value .editor-grid .row {
+	--option-row-gap: 0.5rem;
+
+	grid-template-columns:
+		repeat(4, calc((var(--edit-panel-label-width) + 0.75rem - 4 * var(--option-row-gap)) / 4))
+		repeat(8, minmax(0, 1fr));
+}

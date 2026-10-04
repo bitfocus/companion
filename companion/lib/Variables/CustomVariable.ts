@@ -156,6 +156,17 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 					return this.setVariableDescription(input.name, input.description)
 				}),
 
+			setNotes: publicProcedure
+				.input(
+					z.object({
+						name: z.string(),
+						notes: z.string(),
+					})
+				)
+				.mutation(({ input }) => {
+					return this.setVariableNotes(input.name, input.notes)
+				}),
+
 			setPersistence: publicProcedure
 				.input(
 					z.object({
@@ -482,6 +493,26 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 
 		this.#emitUpdateOneVariable(name)
 		this.#emitVariableDefinitionChange(name, this.#custom_variables[name])
+
+		return null
+	}
+
+	/**
+	 * Set the notes of a custom variable. Unlike the description, notes are not part of the variable definition
+	 * @param name
+	 * @param notes
+	 * @returns Failure reason, if any
+	 */
+	setVariableNotes(name: string, notes: string): string | null {
+		if (!this.#custom_variables[name]) {
+			return 'Unknown name'
+		}
+
+		this.#custom_variables[name].notes = notes
+
+		this.#dbTable.set(name, this.#custom_variables[name])
+
+		this.#emitUpdateOneVariable(name)
 
 		return null
 	}

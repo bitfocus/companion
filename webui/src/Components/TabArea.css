@@ -158,3 +158,52 @@
 		overflow-y: auto;
 	}
 }
+
+/* The `pills` variant: compact text pills with no bar around them, for switching views inside an edit panel.
+   Scoped one class deeper than the defaults above so it wins over them, the small-screen sizing included. */
+.tab-area.tab-area-pills {
+	height: auto;
+	overflow: visible;
+
+	.tab-bar {
+		gap: 0.375rem;
+		/* The horizontal scrollport clips shadows, so leave room for the focus ring on every edge. */
+		padding: 0.25rem;
+		border: 0;
+		background: transparent;
+	}
+
+	.tab-bar__tab {
+		display: inline-flex;
+		flex: 0 0 auto;
+		align-items: center;
+		gap: 0.375rem;
+		margin: 0;
+		padding: 0.25rem 0.75rem;
+		border: 1px solid transparent;
+		border-radius: 0.5rem;
+		color: var(--color-action-text);
+		font-size: 0.75rem;
+		font-weight: 500;
+		line-height: 1.5;
+		white-space: nowrap;
+		transition:
+			background-color 0.15s ease,
+			border-color 0.15s ease,
+			box-shadow 0.15s ease,
+			color 0.15s ease;
+
+		&:hover:not([data-active]):not([data-disabled]) {
+			background: color-mix(in srgb, var(--color-surface) 50%, transparent);
+			color: var(--color-text);
+		}
+
+		&[data-active] {
+			border-color: var(--color-border);
+			background: var(--color-surface);
+			color: var(--color-text);
+			font-weight: 600;
+			box-shadow: 0 1px 2px var(--color-shadow-10);
+		}
+	}
+}

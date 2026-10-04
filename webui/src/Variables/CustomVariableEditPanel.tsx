@@ -1,15 +1,17 @@
 import { observer } from 'mobx-react-lite'
-import { useContext, useId, useRef } from 'react'
-import { CopyButton } from '~/Components/CopyButton'
+import { useCallback, useContext, useId, useRef } from 'react'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import VariableInputGroup from '~/Components/VariableInputGroup.js'
+import { NotesAfterSection } from '~/Controls/Notes.js'
+import { useNotesEditor } from '~/Controls/useNotesEditor.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useCustomVariablesApi } from './CustomVariablesApi'
 import { useVariablesValuesForLabel } from './useVariablesValuesForLabel'
+import { VariableReferenceRow } from './VariableReferenceRow.js'
 
 interface CustomVariableEditPanelProps {
 	name: string
@@ -32,6 +34,9 @@ export const CustomVariableEditPanel = observer(function CustomVariableEditPanel
 	const currentValueFieldId = useId()
 	const startupValueFieldId = useId()
 
+	const setNotes = useCallback((notes: string) => customVariablesApi.setNotes(name, notes), [customVariablesApi, name])
+	const notesState = useNotesEditor(`custom:${name}`, info?.notes, setNotes)
+
 	if (!info) return null
 
 	const fullname = `$(custom:${name})`
@@ -41,13 +46,7 @@ export const CustomVariableEditPanel = observer(function CustomVariableEditPanel
 			<GenericConfirmModal ref={confirmModalRef} />
 
 			<EditSectionCard title="General Settings">
-				<div className="edit-field-row">
-					<span className="text-xs font-semibold text-body">Variable</span>
-					<div className="flex items-center gap-1.5 min-w-0">
-						<span className="variable-style truncate">{fullname}</span>
-						<CopyButton size="sm" title="Copy variable name" color="primary" variant="ghost" text={fullname} />
-					</div>
-				</div>
+				<VariableReferenceRow reference={fullname} notesState={notesState} />
 				<div className="edit-field-row">
 					<label htmlFor={descriptionFieldId} className="text-xs font-semibold text-body">
 						Description
@@ -59,6 +58,8 @@ export const CustomVariableEditPanel = observer(function CustomVariableEditPanel
 					/>
 				</div>
 			</EditSectionCard>
+
+			<NotesAfterSection state={notesState} />
 
 			<EditSectionCard title="Value">
 				<div className="edit-field-row">

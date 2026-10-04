@@ -89,7 +89,7 @@ export function RecorderSessionFinishModal({
 										{saveError}
 									</div>
 								)}
-								<TabArea.Root value={activeTab} onValueChange={setActiveTab}>
+								<TabArea.Root variant="underline" value={activeTab} onValueChange={setActiveTab}>
 									<TabArea.List>
 										<TabArea.Tab value="buttons">
 											<FontAwesomeIcon icon={faCalendarAlt} /> Buttons

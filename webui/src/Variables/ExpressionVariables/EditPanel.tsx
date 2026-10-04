@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
+import './EditPanel.css'
 import { useCallback, useContext, useId, useMemo, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
 import { isLabelValid } from '@companion-app/shared/Label.js'
@@ -26,12 +27,13 @@ import { EntityCommonCells } from '~/Controls/Components/EntityCommonCells'
 import { EntityEditorContextProvider, useEntityEditorContext } from '~/Controls/Components/EntityEditorContext.js'
 import { EditableEntityList } from '~/Controls/Components/EntityList'
 import { useEntityListReorderMonitor } from '~/Controls/Components/useEntityListReorderMonitor.js'
-import { ControlNotesEditor } from '~/Controls/ControlNotesEditor.js'
 import {
 	EntityListActionContext,
 	useLocalVariablesStore,
 	type LocalVariablesStore,
 } from '~/Controls/LocalVariablesStore'
+import { NotesAfterSection } from '~/Controls/Notes.js'
+import { useControlNotesSetter, useNotesEditor } from '~/Controls/useNotesEditor.js'
 import { findAllEntityIdsDeep } from '~/Controls/Util.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { useControlConfig } from '~/Hooks/useControlConfig'
@@ -40,6 +42,7 @@ import { LoadingBar, LoadingRetryOrError } from '~/Resources/Loading'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useControlEntitiesEditorService, useControlEntityService } from '~/Services/Controls/ControlEntitiesService.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
+import { VariableReferenceRow } from '../VariableReferenceRow.js'
 
 interface EditExpressionVariablePanelProps {
 	controlId: string
@@ -75,7 +78,7 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 
 							<EditSectionCard title="Value">
 								{/* The entity editor's styles are scoped to these classes, so they wrap just the editor */}
-								<div className="edit-button-panel flex-form">
+								<div className="edit-button-panel flex-form expression-variable-value">
 									<MyErrorBoundary>
 										<ExpressionVariableEntityEditor
 											controlId={controlId}
@@ -143,37 +146,37 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 
 	const nameFieldId = useId()
 	const descriptionFieldId = useId()
-	const notesFieldId = useId()
+	const setNotes = useControlNotesSetter(controlId)
+	const notesState = useNotesEditor(controlId, options.notes, setNotes)
 
 	return (
-		<EditSectionCard title="General Settings">
-			<div className="edit-field-row">
-				<label htmlFor={nameFieldId} className="text-xs font-semibold text-body">
-					Name
-					<InlineHelpIcon className="ms-1">
-						The name for the variable. It will get wrapped with <code>$(expression:X)</code> for you
-					</InlineHelpIcon>
-				</label>
-				<TextInputFieldSimple
-					id={nameFieldId}
-					setValue={setName}
-					value={options.variableName}
-					checkValid={isLabelValid}
-				/>
-			</div>
-			<div className="edit-field-row">
-				<label htmlFor={descriptionFieldId} className="text-xs font-semibold text-body">
-					Description
-				</label>
-				<TextInputFieldSimple id={descriptionFieldId} setValue={setDescription} value={options.description} />
-			</div>
-			<div className="edit-field-row">
-				<label htmlFor={notesFieldId} className="text-xs font-semibold text-body">
-					Notes
-				</label>
-				<ControlNotesEditor id={notesFieldId} controlId={controlId} notes={options.notes} />
-			</div>
-		</EditSectionCard>
+		<>
+			<EditSectionCard title="General Settings">
+				<VariableReferenceRow reference={`$(expression:${options.variableName})`} notesState={notesState} />
+				<div className="edit-field-row">
+					<label htmlFor={nameFieldId} className="text-xs font-semibold text-body">
+						Name
+						<InlineHelpIcon className="ms-1">
+							The name for the variable. It will get wrapped with <code>$(expression:X)</code> for you
+						</InlineHelpIcon>
+					</label>
+					<TextInputFieldSimple
+						id={nameFieldId}
+						setValue={setName}
+						value={options.variableName}
+						checkValid={isLabelValid}
+					/>
+				</div>
+				<div className="edit-field-row">
+					<label htmlFor={descriptionFieldId} className="text-xs font-semibold text-body">
+						Description
+					</label>
+					<TextInputFieldSimple id={descriptionFieldId} setValue={setDescription} value={options.description} />
+				</div>
+			</EditSectionCard>
+
+			<NotesAfterSection state={notesState} />
+		</>
 	)
 }
 

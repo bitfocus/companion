@@ -8,10 +8,17 @@ import { useEffect, useRef } from 'react'
 
 export interface TabAreaRootProps extends Omit<Tabs.Root.Props, 'className'> {
 	className?: string
+	/**
+	 * `underline` is a full-width tab bar with the active tab underlined, for switching a whole page or modal.
+	 * `pills` is a compact row of text pills with no bar, for switching between views inside an edit panel.
+	 */
+	variant: 'underline' | 'pills'
 }
 
-function TabAreaRoot({ className, ...props }: TabAreaRootProps): React.JSX.Element {
-	return <Tabs.Root className={classNames('tab-area', className)} {...props} />
+function TabAreaRoot({ className, variant, ...props }: TabAreaRootProps): React.JSX.Element {
+	return (
+		<Tabs.Root className={classNames('tab-area', { 'tab-area-pills': variant === 'pills' }, className)} {...props} />
+	)
 }
 
 // ─── List ─────────────────────────────────────────────────────────────────────

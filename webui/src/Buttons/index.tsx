@@ -202,7 +202,12 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				<SplitPanels.Secondary>
 					<div className="secondary-panel-simple">
 						<div className="secondary-panel-inner">
-							<TabArea.Root value={activeTab} onValueChange={setActiveTab} className="buttons-sidebar-tabs">
+							<TabArea.Root
+								variant="underline"
+								value={activeTab}
+								onValueChange={setActiveTab}
+								className="buttons-sidebar-tabs"
+							>
 								<TabArea.List>
 									{!isLargeScreen && (
 										<TabArea.Tab value="grid">

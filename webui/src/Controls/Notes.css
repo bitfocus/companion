@@ -1,0 +1,91 @@
+/* The internal notes at the top of an editor (Notes.tsx), shared by buttons, triggers and variables */
+
+.notes-add.button {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	color: var(--color-muted);
+}
+
+.notes-card {
+	margin-top: 0.375rem;
+	padding: 0.625rem;
+	border: 1px solid var(--color-border);
+	border-radius: 0.625rem;
+	background: var(--color-surface-muted);
+}
+
+.notes-heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.375rem;
+	margin-bottom: 0.375rem;
+	color: var(--color-muted);
+	font-size: 0.75rem;
+	font-weight: 700;
+
+	span {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+	}
+
+	.button {
+		padding-block: 0.125rem;
+	}
+}
+
+.notes-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.notes-input.form-input {
+	font-size: 0.75rem;
+}
+
+.notes-preview {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	align-items: start;
+	gap: 0.5rem;
+	margin-top: 0.375rem;
+	padding: 0.375rem 0.5rem 0.375rem 0.625rem;
+	border: 1px solid var(--color-border);
+	border-radius: 0.625rem;
+	background: var(--color-surface-muted);
+	color: var(--color-muted);
+	font-size: 0.75rem;
+
+	.button {
+		padding-block: 0.125rem;
+	}
+}
+
+/* Lines up with the first line of the note rather than the middle of a long one */
+.notes-preview-icon {
+	margin-top: 0.3rem;
+}
+
+.notes-preview-text {
+	min-width: 0;
+	padding-block: 0.125rem;
+	color: var(--color-text-secondary);
+	text-align: start;
+	white-space: pre-line;
+	overflow-wrap: anywhere;
+	cursor: pointer;
+}
+
+/* NotesAfterSection: between two .edit-section blocks, so it takes their gap rather than hugging a header.
+   Empty when there is no note, so it adds no space then. */
+.notes-after-section:has(> *) {
+	padding-top: 0.75rem;
+
+	.notes-card,
+	.notes-preview {
+		margin-top: 0;
+	}
+}

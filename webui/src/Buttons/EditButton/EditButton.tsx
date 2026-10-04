@@ -1,10 +1,4 @@
-import {
-	faFileArrowDown,
-	faFileArrowUp,
-	faFileLines,
-	faNoteSticky,
-	faSquarePlus,
-} from '@fortawesome/free-solid-svg-icons'
+import { faFileArrowDown, faFileArrowUp, faFileLines, faSquarePlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import './EditButton.css'
 import { observer } from 'mobx-react-lite'
@@ -18,7 +12,8 @@ import { ButtonPreviewBase } from '~/Components/ButtonPreview.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import '~/Layout/PanelEmptyState.css'
 import { NonIdealState } from '~/Components/NonIdealState.js'
-import { ControlNotesEditor } from '~/Controls/ControlNotesEditor.js'
+import { AddNoteButton, NotesStrip } from '~/Controls/Notes.js'
+import { useControlNotesSetter, useNotesEditor } from '~/Controls/useNotesEditor.js'
 import { useButtonImageForControlId } from '~/Hooks/useButtonImageForControlId.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
@@ -116,13 +111,12 @@ const EditButtonContent = observer(function EditButton({
 	runtimeProps,
 	navigateToControl,
 }: EditButtonContentProps) {
-	const [editingNoteForControlId, setEditingNoteForControlId] = useState<string | null>(null)
-	const editingNote = editingNoteForControlId === controlId
 	const controlNotes =
 		config.type === 'button-layered' || config.type === 'preset-reference' || config.type === 'button-reference'
 			? config.options.notes
 			: undefined
-	const hasNote = !!controlNotes?.trim()
+	const setControlNotes = useControlNotesSetter(controlId)
+	const notesState = useNotesEditor(controlId, controlNotes, setControlNotes)
 	const typeLabel =
 		config.type === 'button-layered'
 			? 'Regular button'
@@ -137,15 +131,6 @@ const EditButtonContent = observer(function EditButton({
 							: 'Page number'
 
 	const resetControlsMutation = useMutationExt(trpc.controls.resetControls.mutationOptions())
-	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
-	const clearNote = useCallback(() => {
-		setOptionsFieldMutation
-			.mutateAsync({ controlId, key: 'notes', value: '' })
-			.then(() => setEditingNoteForControlId(null))
-			.catch((e) => {
-				console.error('Failed to clear notes:', e)
-			})
-	}, [setOptionsFieldMutation, controlId])
 	const changeToRegularButton = useCallback(() => {
 		resetControlsMutation.mutateAsync({ locations: [location], newType: 'button-layered' }).catch((e) => {
 			console.error('Failed to change button type', e)
@@ -181,20 +166,7 @@ const EditButtonContent = observer(function EditButton({
 						<MyErrorBoundary>
 							{(config.type === 'button-layered' ||
 								config.type === 'preset-reference' ||
-								config.type === 'button-reference') &&
-								!hasNote &&
-								!editingNote && (
-									<Button
-										color="secondary"
-										variant="ghost"
-										size="sm"
-										className="edit-button-add-note"
-										onClick={() => setEditingNoteForControlId(controlId)}
-									>
-										<FontAwesomeIcon icon={faNoteSticky} />
-										Add note
-									</Button>
-								)}
+								config.type === 'button-reference') && <AddNoteButton state={notesState} />}
 							{(config.type === 'pageup' ||
 								config.type === 'pagenum' ||
 								config.type === 'pagedown' ||
@@ -211,47 +183,7 @@ const EditButtonContent = observer(function EditButton({
 					config.type === 'preset-reference' ||
 					config.type === 'button-reference') && (
 					<MyErrorBoundary>
-						{editingNote ? (
-							<div className="edit-button-note-card">
-								<div className="edit-button-note-heading">
-									<span>
-										<FontAwesomeIcon icon={faNoteSticky} /> Notes
-									</span>
-									<div className="edit-button-note-actions">
-										<Button color="danger" variant="ghost" size="sm" onClick={clearNote}>
-											Clear
-										</Button>
-										<Button
-											color="secondary"
-											variant="ghost"
-											size="sm"
-											onClick={() => setEditingNoteForControlId(null)}
-										>
-											Done
-										</Button>
-									</div>
-								</div>
-								<ControlNotesEditor
-									controlId={controlId}
-									notes={controlNotes}
-									className="edit-button-notes"
-									autoFocus
-								/>
-							</div>
-						) : hasNote ? (
-							<div className="edit-button-note-metadata">
-								<FontAwesomeIcon icon={faNoteSticky} />
-								<span title={controlNotes}>{controlNotes}</span>
-								<Button
-									color="secondary"
-									variant="ghost"
-									size="sm"
-									onClick={() => setEditingNoteForControlId(controlId)}
-								>
-									Edit
-								</Button>
-							</div>
-						) : null}
+						<NotesStrip key={controlId} state={notesState} />
 					</MyErrorBoundary>
 				)}
 			</div>

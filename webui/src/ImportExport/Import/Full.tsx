@@ -70,7 +70,7 @@ export function ImportFullWizard({
 	const [activeTab, setActiveTab] = useState<'full' | 'buttons' | 'triggers'>('full')
 
 	return (
-		<TabArea.Root value={activeTab} onValueChange={setActiveTab}>
+		<TabArea.Root variant="underline" value={activeTab} onValueChange={setActiveTab}>
 			<TabArea.List className="mb-4">
 				<TabArea.Tab value="full">
 					<FontAwesomeIcon icon={faGlobe} className="me-1.5" /> Full Import

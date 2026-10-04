@@ -115,10 +115,10 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 			{tabsSlot &&
 				createPortal(
 					<div ref={tabBarRef} className="button-editor-tabs-shell">
-						<TabArea.Root className="button-editor-main-tabs" value={activeMainTab} onValueChange={setActiveMainTab}>
-							<TabArea.List className="button-editor-main-tabs-list">
+						<TabArea.Root variant="pills" value={activeMainTab} onValueChange={setActiveMainTab}>
+							<TabArea.List>
 								{mainTabs.map((tab) => (
-									<TabArea.Tab key={tab.id} className="button-editor-main-tab" value={tab.id} title={tab.name}>
+									<TabArea.Tab key={tab.id} value={tab.id} title={tab.name}>
 										<div className="flex items-center gap-1.5">
 											<span>{tab.name}</span>
 											{tab.count !== undefined && (

@@ -140,78 +140,6 @@
 	font-weight: 600;
 }
 
-.edit-button-add-note.button {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.375rem;
-	color: var(--color-muted);
-}
-
-.edit-button-note-card {
-	margin-top: 0.375rem;
-	padding: 0.625rem;
-	border: 1px solid var(--color-border);
-	border-radius: 0.625rem;
-	background: var(--color-surface-muted);
-}
-
-.edit-button-note-heading {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 0.375rem;
-	margin-bottom: 0.375rem;
-	color: var(--color-muted);
-	font-size: 0.75rem;
-	font-weight: 700;
-
-	span {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.375rem;
-	}
-
-	.button {
-		padding-block: 0.125rem;
-	}
-}
-
-.edit-button-note-actions {
-	display: flex;
-	align-items: center;
-	gap: 0.25rem;
-}
-
-.edit-button-note-metadata {
-	display: grid;
-	grid-template-columns: auto minmax(0, 1fr) auto;
-	align-items: center;
-	gap: 0.5rem;
-	margin-top: 0.375rem;
-	padding: 0.375rem 0.5rem 0.375rem 0.625rem;
-	border: 1px solid var(--color-border);
-	border-radius: 0.625rem;
-	background: var(--color-surface-muted);
-	color: var(--color-muted);
-	font-size: 0.75rem;
-
-	> span {
-		min-width: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-		color: var(--color-text-secondary);
-	}
-
-	.button {
-		padding-block: 0.125rem;
-	}
-}
-
-.edit-button-notes.form-input {
-	font-size: 0.75rem;
-}
-
 /* The entity editor powers Press, Release, Rotary, Feedbacks, and Local Variables. Giving that
    shared primitive one shell makes every editor section read the same when switching tabs. */
 .edit-button-panel .entity-category {
@@ -282,54 +210,6 @@
 
 	&:empty {
 		display: none;
-	}
-}
-
-.button-editor-main-tabs.tab-area {
-	height: auto;
-	overflow: visible;
-}
-
-.button-editor-main-tabs .button-editor-main-tabs-list {
-	/* Compact text pills with no frame around the strip, matching the connection edit panel's tabs */
-	gap: 0.375rem;
-	/* The horizontal scrollport clips shadows, so leave room for the focus ring on every edge. */
-	padding: 0.25rem;
-	border: 0;
-	background: transparent;
-}
-
-.button-editor-main-tabs .button-editor-main-tab {
-	display: inline-flex;
-	flex: 0 0 auto;
-	align-items: center;
-	gap: 0.375rem;
-	margin: 0;
-	padding: 0.25rem 0.75rem;
-	border: 1px solid transparent;
-	border-radius: 0.5rem;
-	color: var(--color-action-text);
-	font-size: 0.75rem;
-	font-weight: 500;
-	line-height: 1.5;
-	white-space: nowrap;
-	transition:
-		background-color 0.15s ease,
-		border-color 0.15s ease,
-		box-shadow 0.15s ease,
-		color 0.15s ease;
-
-	&:hover:not([data-active]):not([data-disabled]) {
-		background: color-mix(in srgb, var(--color-surface) 50%, transparent);
-		color: var(--color-text);
-	}
-
-	&[data-active] {
-		border-color: var(--color-border);
-		background: var(--color-surface);
-		color: var(--color-text);
-		font-weight: 600;
-		box-shadow: 0 1px 2px var(--color-shadow-10);
 	}
 }
 
