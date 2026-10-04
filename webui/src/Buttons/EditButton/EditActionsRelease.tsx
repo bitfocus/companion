@@ -125,7 +125,7 @@ export function EditActionsRelease({
 					heading={
 						<div className="flex items-center gap-2">
 							<FontAwesomeIcon icon={faHand} className="text-secondary text-xs" />
-							<span>{candidate_sets.length ? 'Short release actions' : 'Release actions (On Up)'}</span>
+							<span>{candidate_sets.length ? 'Short release actions' : 'Release actions'}</span>
 						</div>
 					}
 					controlId={controlId}

@@ -50,7 +50,7 @@ export const ElementPropertiesEditor = observer(function ElementPropertiesEditor
 			isPropertyOverridden={isPropertyOverridden}
 			isPinnedView={false}
 		>
-			<Form row className="gap-2" onSubmit={PreventDefaultHandler}>
+			<Form row className="gap-2 property-inspector" onSubmit={PreventDefaultHandler}>
 				<ElementCommonProperties elementProps={elementProps} />
 
 				<ElementPropertiesEditorSchemaVersion elementProps={elementProps} />
@@ -108,7 +108,7 @@ const ElementPropertiesEditorSchemaVersion = observer(function ElementProperties
 								</Accordion.Trigger>
 							</Accordion.Header>
 							<Accordion.Panel>
-								<Grid.Row className="gap-2 p-2">
+								<Grid.Row className="property-inspector-fields">
 									{section.fields.map((field) => (
 										<SchemaFieldWrapper
 											key={field.id}
@@ -219,6 +219,7 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 	return (
 		<>
 			<PropertyFieldRow
+				layout="inspector"
 				label={field.label}
 				tooltip={field.tooltip}
 				features={getInputFeatures(field)}
@@ -259,6 +260,7 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 							updateCell(rowIndex, cellField.id, newCell)
 						return (
 							<PropertyFieldRow
+								layout="inspector"
 								key={cellField.id}
 								label={cellField.label}
 								tooltip={cellField.tooltip}

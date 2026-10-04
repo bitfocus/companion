@@ -15,10 +15,11 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { EditPagePropertiesModal, type EditPagePropertiesModalRef } from './EditPageProperties.js'
 
 interface PagesListProps {
+	pageNumber: number
 	setPageNumber: (page: number) => void
 }
 
-export const PagesList = observer(function PagesList({ setPageNumber }: PagesListProps): React.JSX.Element {
+export const PagesList = observer(function PagesList({ pageNumber, setPageNumber }: PagesListProps): React.JSX.Element {
 	const { pages } = useContext(RootAppStoreContext)
 
 	const deleteRef = useRef<GenericConfirmModalRef>(null)
@@ -127,6 +128,7 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 						key={info.id}
 						index={id}
 						pageNumber={id + 1}
+						current={pageNumber === id + 1}
 						info={info}
 						pageCount={pages.data.length}
 						goToPage={goToPage}
@@ -142,6 +144,7 @@ export const PagesList = observer(function PagesList({ setPageNumber }: PagesLis
 })
 
 interface PageListRowProps {
+	current: boolean
 	index: number
 	pageNumber: number
 	info: PagesStoreModel
@@ -153,6 +156,7 @@ interface PageListRowProps {
 }
 
 const PageListRow = observer(function PageListRow({
+	current,
 	index,
 	pageNumber,
 	info,
@@ -183,7 +187,8 @@ const PageListRow = observer(function PageListRow({
 	return (
 		<div
 			ref={ref}
-			className={`pages-list-row${isDragging ? ' row-dragging' : ''}${index === pageCount - 1 ? ' pages-list-last-row' : ''}`}
+			aria-current={current ? 'page' : undefined}
+			className={`pages-list-row${current ? ' list-row-selected' : ''}${isDragging ? ' row-dragging' : ''}${index === pageCount - 1 ? ' pages-list-last-row' : ''}`}
 		>
 			<div ref={handleRef} className="pages-list-drag-handle" title="Drag to reorder page">
 				<FontAwesomeIcon icon={faSort} />

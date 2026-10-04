@@ -16,7 +16,7 @@ import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
 import { ButtonPreviewBase } from '~/Components/ButtonPreview.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { Grid } from '~/Components/Grid'
+import '~/Layout/PanelEmptyState.css'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { ControlNotesEditor } from '~/Controls/ControlNotesEditor.js'
 import { useButtonImageForControlId } from '~/Hooks/useButtonImageForControlId.js'
@@ -83,22 +83,16 @@ export const EditButton = observer(function EditButton({ location, onKeyUp, navi
 						))}
 				</>
 			) : (
-				<>
-					<Grid.Col sm={12}>
-						<div className="flex mb-0">
-							<div className="grow min-w-0 flex flex-col gap-1"></div>
-							<ButtonPreviewBase fixedSize={100} preview={previewImage} />
-						</div>
-
-						<NonIdealState icon={faSquarePlus} className="px-4">
-							<h4 className="my-1">Empty button</h4>
-							<p className="my-3">Choose a button type to get started.</p>
-							<MyErrorBoundary>
-								<CreateButtonTypeButtons location={location} />
-							</MyErrorBoundary>
-						</NonIdealState>
-					</Grid.Col>
-				</>
+				<div className="panel-empty-state empty-button-state">
+					<div className="panel-empty-state-icon">
+						<FontAwesomeIcon icon={faSquarePlus} className="non-ideal-svg" />
+					</div>
+					<h4 className="panel-empty-state-title">Empty button</h4>
+					<p className="panel-empty-state-description">Choose a button type to get started.</p>
+					<MyErrorBoundary>
+						<CreateButtonTypeButtons location={location} />
+					</MyErrorBoundary>
+				</div>
 			)}
 		</KeyReceiver>
 	)

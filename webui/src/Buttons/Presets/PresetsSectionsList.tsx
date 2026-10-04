@@ -165,9 +165,8 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 					<NonIdealState icon={faSearch} text="No matching presets" />
 				) : (
 					<>
-						<div className="presets-placement-card">
-							<strong>Drag to add</strong>
-							<p>Drop a preset onto a button in the grid.</p>
+						<div className="presets-placement-toolbar">
+							<p>Drag a preset onto the grid.</p>
 							<PresetPlacementModeToggle supportsReferences={supportsReferences} />
 						</div>
 						<div className="collapsible-tree presets-sections-tree">{sections}</div>
@@ -188,7 +187,6 @@ function PresetPlacementModeToggle({ supportsReferences }: { supportsReferences:
 
 	return (
 		<div className="presets-placement-mode" title={!supportsReferences ? unsupportedTitle : undefined}>
-			<span>Placement mode</span>
 			<div className="presets-placement-options" role="group" aria-label="Preset placement mode">
 				<button
 					type="button"

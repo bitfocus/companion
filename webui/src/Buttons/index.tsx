@@ -241,7 +241,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 								</TabArea.Panel>
 								<TabArea.Panel value="pages">
 									<MyErrorBoundary>
-										<PagesList setPageNumber={setPageNumber} />
+										<PagesList pageNumber={pageNumber} setPageNumber={setPageNumber} />
 									</MyErrorBoundary>
 								</TabArea.Panel>
 								<TabArea.Panel value="page-variables">
