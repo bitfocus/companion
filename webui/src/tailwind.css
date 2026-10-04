@@ -496,8 +496,8 @@
 		--color-tab-active-bg: #343943;
 		--color-tab-active-border: #4a505c;
 
-		/* `primary` is a fill colour here, too dim as text on a dark ground */
-		--color-variable-text: #a9c1ff;
+		/* Neutral text keeps variable references legible on dark and selected surfaces. */
+		--color-variable-text: #e6e8eb;
 
 		--color-panel-header-btn: #aeb5bf;
 		--color-menu-bg: #1d2026;
