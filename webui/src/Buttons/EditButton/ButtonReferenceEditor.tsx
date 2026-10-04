@@ -12,7 +12,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { Button } from '~/Components/Button'
-import { Callout } from '~/Components/Callout.js'
+import '~/Components/EditSectionCard.css'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
@@ -61,17 +61,14 @@ export const ButtonReferenceEditor = observer(function ButtonReferenceEditor({
 
 	return (
 		<>
-			<Callout color="info" className="my-2">
-				<div className="flex gap-2">
-					<FontAwesomeIcon icon={faClone} className="mt-1" />
-					<div>
-						This button <strong>mirrors</strong> another button. It shows that button's appearance and forwards presses
-						to it.
-						<br />
-						Use <strong>Edit</strong> above to turn it into a normal, fully editable copy.
-					</div>
+			<div className="edit-note my-2">
+				<FontAwesomeIcon icon={faClone} className="edit-note-icon" aria-hidden="true" />
+				<div>
+					<strong className="block text-text-strong font-medium">Mirrored button</strong>
+					<div>Appearance and presses follow the source button.</div>
+					<div className="mt-1">Choose Edit above to make an independent, editable copy.</div>
 				</div>
-			</Callout>
+			</div>
 
 			<Form row className="gap-2" onSubmit={PreventDefaultHandler}>
 				<FormLabel htmlFor={fieldId} sm={4} column="sm">
