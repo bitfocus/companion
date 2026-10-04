@@ -1,6 +1,8 @@
-import { faInfo, faStar, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons'
+import { faFacebook, faGithub, faSlack } from '@fortawesome/free-brands-svg-icons'
+import { faDollarSign, faInfo, faStar, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons'
 import { useCallback, useContext, useMemo } from 'react'
 import type { MenuActionItemProps, MenuItemProps } from '~/Components/ActionMenu.js'
+import { MenuSeparator } from '~/Components/useContextMenuProps.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useCompanionVersion } from './useCompanionVersion'
@@ -61,6 +63,40 @@ export function useHelpMenuItems(): MenuItemProps[] {
 				tooltip: 'Show the current release notes.',
 				inNewTab: false,
 			},
+			MenuSeparator,
+			{
+				id: 'github',
+				label: 'Report an Issue',
+				icon: faGithub,
+				href: 'https://l.companion.free/q/QZbI6mdNd',
+				tooltip: 'Report bugs or request features on GitHub.',
+				inNewTab: true,
+			},
+			{
+				id: 'sponsor',
+				label: 'Sponsor Companion',
+				icon: faDollarSign,
+				href: 'https://l.companion.free/q/6PtdAvZab',
+				tooltip: 'Contribute funds to Bitfocus Companion.',
+				inNewTab: true,
+			},
+			{
+				id: 'slack',
+				label: 'Slack Community',
+				icon: faSlack,
+				href: 'https://l.companion.free/q/OWxbBnDKG',
+				tooltip: 'Discuss technical issues on Slack.',
+				inNewTab: true,
+			},
+			{
+				id: 'fb',
+				label: 'Facebook Community Support',
+				icon: faFacebook,
+				href: 'https://l.companion.free/q/6pc9ciJR5',
+				tooltip: 'Share your experience or ask questions to your Companions.',
+				inNewTab: true,
+			},
+			MenuSeparator,
 			{
 				id: 'version',
 				label: sysinfo.version,
