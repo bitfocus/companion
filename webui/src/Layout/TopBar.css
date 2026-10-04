@@ -1,0 +1,273 @@
+@import '../breakpoints.css';
+
+/* The app header (TopBar.tsx): where you are on the left, app-wide actions on the right. */
+
+.top-bar {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	height: 2.75rem;
+	flex-shrink: 0;
+	padding-inline: 1rem 0.75rem;
+	background-color: var(--color-app-frame-bg);
+	border-bottom: 1px solid var(--color-border);
+}
+
+/* ─── Breadcrumb ─────────────────────────────────────────────────────────────── */
+
+.top-bar-breadcrumb {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex: 1;
+	min-width: 0;
+	font-size: 0.875rem;
+
+	ol {
+		display: flex;
+		align-items: center;
+		min-width: 0;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	li {
+		display: flex;
+		align-items: center;
+		min-width: 0;
+	}
+}
+
+.top-bar-breadcrumb-icon {
+	flex-shrink: 0;
+	color: var(--color-muted);
+}
+
+.top-bar-breadcrumb-section {
+	flex-shrink: 0;
+	color: var(--color-muted);
+}
+
+.top-bar-breadcrumb-separator {
+	margin-inline: 0.5rem;
+	font-size: 0.625rem;
+	color: var(--color-muted);
+	opacity: 0.6;
+}
+
+.top-bar-breadcrumb-page {
+	color: var(--color-text-strong);
+
+	h1 {
+		min-width: 0;
+		margin: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: inherit;
+		font-weight: 600;
+		line-height: inherit;
+	}
+
+	a {
+		color: inherit;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+}
+
+/* ─── Actions ────────────────────────────────────────────────────────────────── */
+
+.top-bar-actions {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	flex-shrink: 0;
+}
+
+.top-bar-install-name {
+	max-width: 12rem;
+	margin-inline-end: 0.5rem;
+	padding: 0.125rem 0.5rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: var(--text-2xs);
+	font-weight: 700;
+	letter-spacing: 0.025em;
+	text-transform: uppercase;
+	color: var(--color-muted);
+	background-color: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 0.375rem;
+}
+
+/* Looks like an input, so it reads as somewhere to type rather than another button */
+.top-bar-search {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	width: 15rem;
+	height: 1.875rem;
+	margin-inline-end: 0.25rem;
+	padding: 0 0.375rem 0 0.625rem;
+	font-size: 0.75rem;
+	color: var(--color-muted);
+	background: var(--color-input-bg);
+	border: 1px solid var(--color-border-medium);
+	border-radius: 0.5rem;
+	cursor: pointer;
+	transition:
+		border-color 0.15s,
+		color 0.15s;
+
+	&:hover {
+		color: var(--color-text);
+		border-color: var(--color-border-strong);
+	}
+
+	&:focus-visible {
+		outline: none;
+		border-color: var(--color-primary);
+		box-shadow: 0 0 0 2px var(--color-primary-bg-subtle);
+	}
+}
+
+.top-bar-search-label {
+	flex: 1;
+	text-align: start;
+}
+
+.top-bar-search-shortcut {
+	padding: 0.125rem 0.375rem;
+	font-family: var(--font-mono);
+	font-size: 0.625rem;
+	line-height: 1;
+	color: var(--color-muted);
+	background: var(--color-surface-muted);
+	border: 1px solid var(--color-border);
+	border-radius: 0.25rem;
+}
+
+/* Also styles the popover triggers, which come with the shared .button classes; this layer sets everything they do */
+.top-bar-icon-button {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2rem;
+	height: 2rem;
+	padding: 0;
+	font-size: 0.9375rem;
+	color: var(--color-muted);
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 0.5rem;
+	box-shadow: none;
+	cursor: pointer;
+	transition:
+		background-color 0.15s,
+		color 0.15s;
+
+	&:hover,
+	&[data-popup-open] {
+		color: var(--color-text);
+		background: var(--color-surface-hover);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--color-primary);
+		outline-offset: -2px;
+	}
+}
+
+/* The app-wide Help menu: an icon with its label, unlike the bare icon buttons around it */
+.top-bar-help-button {
+	gap: 0.375rem;
+	width: auto;
+	padding-inline: 0.5rem;
+	font-size: 0.8125rem;
+	font-weight: 500;
+}
+
+/* A new release: amber and labelled, so it can't be missed the way an icon in a row of icons could */
+.top-bar-update {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	max-width: 22rem;
+	height: 1.875rem;
+	margin-inline-end: 0.5rem;
+	padding-inline: 0.625rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--color-warning-text-emphasis);
+	text-decoration: none;
+	background: var(--color-warning-bg-subtle);
+	border: 1px solid color-mix(in srgb, var(--color-warning) 45%, transparent);
+	border-radius: 9999px;
+	transition: background-color 0.15s;
+
+	&:hover {
+		color: var(--color-warning-text-emphasis);
+		background: color-mix(in srgb, var(--color-warning) 28%, transparent);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 2px;
+	}
+}
+
+.top-bar-update-label {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.top-bar-update-external {
+	flex-shrink: 0;
+	font-size: 0.625rem;
+	opacity: 0.7;
+}
+
+/* ─── Narrow screens ─────────────────────────────────────────────────────────── */
+
+@media (--bp-md-down) {
+	.top-bar {
+		padding-inline: 0.5rem;
+	}
+
+	.top-bar-breadcrumb-section,
+	.top-bar-install-name {
+		display: none;
+	}
+
+	/* The search shrinks to its icon */
+	.top-bar-search {
+		width: 2rem;
+		height: 2rem;
+		margin: 0;
+		padding: 0;
+		justify-content: center;
+		border-color: transparent;
+		background: transparent;
+	}
+
+	.top-bar-search-label,
+	.top-bar-search-shortcut,
+	.top-bar-help-label,
+	.top-bar-update-label,
+	.top-bar-update-external {
+		display: none;
+	}
+
+	.top-bar-help-button {
+		width: 2rem;
+		padding: 0;
+	}
+}

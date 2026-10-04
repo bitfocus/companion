@@ -97,52 +97,6 @@
 	padding: 0.125rem;
 }
 
-/* Looks like an input so it stands out from the muted sidebar background */
-.sidebar-search-button {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 0.5rem;
-	width: 100%;
-	padding: 0.375rem 0.625rem;
-	font-size: 0.75rem;
-	text-align: start;
-	color: var(--color-muted);
-	background: var(--color-input-bg);
-	border: 1px solid var(--color-border-medium);
-	border-radius: 0.5rem;
-	box-shadow: inset 0 1px 2px var(--color-shadow-6);
-	cursor: pointer;
-	transition:
-		border-color 0.15s,
-		color 0.15s,
-		box-shadow 0.15s;
-
-	&:hover {
-		color: var(--color-text);
-		border-color: var(--color-border-strong);
-	}
-
-	&:focus-visible {
-		outline: none;
-		border-color: var(--color-primary);
-		box-shadow: 0 0 0 2px var(--color-primary-bg-subtle);
-	}
-}
-
-.sidebar-search-shortcut {
-	align-items: center;
-	padding: 0.125rem 0.375rem;
-	font-family: var(--font-mono);
-	font-size: 0.625rem;
-	font-weight: 500;
-	line-height: 1;
-	color: var(--color-muted);
-	background: var(--color-surface-muted);
-	border: 1px solid var(--color-border);
-	border-radius: 0.25rem;
-}
-
 .sidebar-header {
 	display: flex;
 	align-items: center;
@@ -756,46 +710,6 @@
 		}
 	}
 
-	.sidebar-update-notice {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		width: 100%;
-		padding: 0.5rem 0.625rem;
-		border: 1px solid --alpha(var(--color-amber-500) / 40%);
-		border-radius: 0.375rem;
-		background: --alpha(var(--color-amber-500) / 12%);
-		color: var(--color-amber-400);
-		font-size: 0.75rem;
-		font-weight: 500;
-		line-height: 1.3;
-		text-decoration: none;
-		transition: background 0.15s;
-
-		&:hover {
-			background: --alpha(var(--color-amber-500) / 22%);
-			color: var(--color-amber-300);
-		}
-	}
-
-	.sidebar-update-notice-compact {
-		position: relative;
-		width: 2.25rem;
-		height: 2.25rem;
-		padding: 0;
-		justify-content: center;
-
-		.sidebar-update-notice-dot {
-			position: absolute;
-			top: -3px;
-			right: -3px;
-			width: 8px;
-			height: 8px;
-			border-radius: 9999px;
-			background: var(--color-amber-500);
-		}
-	}
-
 	.sidebar-footer2 {
 		justify-content: left;
 		border-top: var(--border-width) solid var(--color-border);
@@ -949,26 +863,6 @@
 	}
 }
 /* Floating "show sidebar" button, rendered by App.tsx in mobile mode. */
-.sidebar-mobile-toggle {
-	position: fixed;
-	top: 0.75rem;
-	left: 0.75rem;
-	z-index: 1034; /* below the open sidebar, so it does not overlap the brand */
-	width: 2.5rem;
-	height: 2.5rem;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: var(--color-text);
-	background-color: color-mix(in srgb, var(--color-surface) 92%, transparent);
-	border: 1px solid var(--color-border);
-	border-radius: 9999px;
-	box-shadow: 0 4px 6px -1px var(--color-shadow-30);
-
-	&:hover {
-		background-color: var(--color-surface-muted-hover);
-	}
-}
 
 /* Popover menu shown for a nav group when the sidebar is narrow. */
 .sidebar-popover-menu {
@@ -1013,24 +907,4 @@
 			font-weight: 600;
 		}
 	}
-}
-
-/* The install-name chip under the brand. */
-.sidebar-install-name {
-	height: 26px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	flex: auto;
-	min-width: 0;
-	padding: 0 0.625rem;
-	font-size: var(--text-2xs);
-	font-weight: 700;
-	letter-spacing: 0.025em;
-	text-transform: uppercase;
-	color: var(--color-muted);
-	background-color: var(--color-surface);
-	border: 1px solid var(--color-border);
-	border-radius: 0.375rem;
-	box-shadow: 0 1px 2px 0 var(--color-shadow-6);
 }

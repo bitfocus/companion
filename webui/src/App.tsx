@@ -1,6 +1,6 @@
 import { DragDropProvider } from '@dnd-kit/react'
 import './App.css'
-import { faBars, faLock } from '@fortawesome/free-solid-svg-icons'
+import { faLock } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Outlet } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
@@ -20,7 +20,9 @@ import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCCo
 import { AdminLockContext } from './Layout/AdminLockContext.js'
 import { CommandPalette } from './Layout/CommandPalette.js'
 import { ConfigImportingOverlay, ConnectionLostOverlay } from './Layout/ConnectionLostOverlay.js'
-import { MySidebar, SidebarStateProvider, useSidebarState } from './Layout/Sidebar.js'
+import { MySidebar, SidebarStateProvider } from './Layout/Sidebar.js'
+import { TopBar } from './Layout/TopBar.js'
+import { TopBarPageContext, type TopBarPage } from './Layout/TopBarContext.js'
 import { MyErrorBoundary } from './Resources/Error.js'
 import { MonacoLoader } from './Resources/MonacoLoader.js'
 import { SortableHysteresis } from './Resources/SortableHysteresis.js'
@@ -171,26 +173,19 @@ interface AppWrapperProps {
 }
 
 function AppWrapper({ connected, loadingComplete, loadingProgress, locked, setUnlockedInner }: AppWrapperProps) {
-	const { mobileMode, handleShowSidebar } = useSidebarState()
+	const [topBarPage, setTopBarPage] = useState<TopBarPage | null>(null)
 
 	return (
 		<div className="wrapper flex flex-col min-h-screen bg-app-frame-bg relative">
-			{mobileMode && !locked && (
-				<button
-					type="button"
-					className="sidebar-mobile-toggle block-collapse"
-					onClick={handleShowSidebar}
-					title="Show Sidebar"
-				>
-					<FontAwesomeIcon icon={faBars} className="w-5 h-5" />
-				</button>
-			)}
+			{connected && loadingComplete && !locked && <TopBar page={topBarPage} />}
 			<div className="body grow">
 				{connected && loadingComplete ? (
 					locked ? (
 						<AppAuthWrapper setUnlocked={setUnlockedInner} />
 					) : (
-						<AppContent />
+						<TopBarPageContext.Provider value={setTopBarPage}>
+							<AppContent />
+						</TopBarPageContext.Provider>
 					)
 				) : (
 					<AppLoading progress={loadingProgress} connected={connected} />

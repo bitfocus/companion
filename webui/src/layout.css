@@ -46,11 +46,9 @@ body {
 	display: flex;
 	flex-flow: column;
 
-	max-height: 100%;
+	/* Fill what the top bar leaves of the frame (the frame is a column: the bar, then this) */
+	min-height: 0;
 	overflow-y: hidden;
-
-	/* Fit minus the header */
-	/* height: calc(100% - #{$header-height}); // nocommit */
 
 	/* Force to fill the screen and scroll internally */
 	> .page-container {

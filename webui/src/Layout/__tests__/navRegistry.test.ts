@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import {
 	activePageIdForPath,
 	matchedPageIdForPath,
+	navLocationForPath,
 	SETTINGS_SECTION,
 	SURFACES_SECTION,
 	VARIABLES_SECTION,
@@ -40,5 +41,25 @@ describe('activePageIdForPath', () => {
 	test("falls back to the section's first page", () => {
 		expect(activePageIdForPath(VARIABLES_SECTION, '/buttons')).toBe('connections')
 		expect(activePageIdForPath(VARIABLES_SECTION, '/variables/custom/x')).toBe('custom')
+	})
+})
+
+describe('navLocationForPath', () => {
+	test('a page in a section, including its child routes', () => {
+		const location = navLocationForPath('/settings/protocols/tcp')
+		expect(location?.section?.id).toBe('settings')
+		expect(location?.page.id).toBe('protocols')
+	})
+
+	test('a top-level page, including its child routes', () => {
+		const location = navLocationForPath('/connections/abc123')
+		expect(location?.section).toBe(null)
+		expect(location?.page.id).toBe('connections')
+	})
+
+	test('a location outside the nav', () => {
+		expect(navLocationForPath('/getting-started')).toBe(null)
+		// A shared prefix is not a match
+		expect(navLocationForPath('/buttonsx')).toBe(null)
 	})
 })

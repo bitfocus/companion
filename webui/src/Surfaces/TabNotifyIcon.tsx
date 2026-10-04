@@ -1,44 +1,20 @@
 import { observer } from 'mobx-react-lite'
-import { useContext } from 'react'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { useUdevRulesStatus } from '~/Hooks/useUdevRulesStatus'
-import { useMissingVersionsCount } from '~/Instances/MissingVersionsWarning'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { useConnectionsNotifications, useSurfacesNotifications, type TabNotifications } from './useTabNotifications.js'
 
-export const SurfacesTabNotifyIcon = observer(function SurfacesTabNotifyIcon(): React.JSX.Element | null {
-	const { surfaces, surfaceInstances } = useContext(RootAppStoreContext)
-
-	const updateCount = surfaces.countFirmwareUpdates()
-	const missingCount = useMissingVersionsCount(ModuleInstanceType.Surface, surfaceInstances.instances)
-
-	const udevStatus = useUdevRulesStatus()
-	const udevNeedsApply = !!udevStatus?.supported && udevStatus.needsApply
-
-	const count = updateCount + missingCount + (udevNeedsApply ? 1 : 0)
-	if (count === 0) return null
-
-	const lines = [
-		updateCount > 0 ? `${updateCount} surfaces have firmware updates available` : null,
-		missingCount > 0 ? `Missing ${missingCount} needed modules` : null,
-		udevNeedsApply ? `USB permissions need updating` : null,
-	].filter(Boolean)
+function NotifyCount({ notifications }: { notifications: TabNotifications }): React.JSX.Element | null {
+	if (notifications.count === 0) return null
 
 	return (
-		<span className="notification-count" title={lines.join(', ')}>
-			{count}
+		<span className="notification-count" title={notifications.lines.join(', ')}>
+			{notifications.count}
 		</span>
 	)
+}
+
+export const SurfacesTabNotifyIcon = observer(function SurfacesTabNotifyIcon(): React.JSX.Element | null {
+	return <NotifyCount notifications={useSurfacesNotifications()} />
 })
 
 export const ConnectionsTabNotifyIcon = observer(function ConnectionsTabNotifyIcon(): React.JSX.Element | null {
-	const { connections } = useContext(RootAppStoreContext)
-
-	const missingCount = useMissingVersionsCount(ModuleInstanceType.Connection, connections.connections)
-	if (missingCount === 0) return null
-
-	return (
-		<span className="notification-count" title={`Missing ${missingCount} needed modules`}>
-			{missingCount}
-		</span>
-	)
+	return <NotifyCount notifications={useConnectionsNotifications()} />
 })

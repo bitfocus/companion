@@ -1,6 +1,5 @@
 import './Sidebar.css'
 import { Popover as BasePopover } from '@base-ui/react/popover'
-import { faCircleQuestion } from '@fortawesome/free-regular-svg-icons'
 import {
 	faArrowsDownToLine,
 	faCheck,
@@ -12,15 +11,11 @@ import {
 	faFileImport,
 	faGamepad,
 	faImages,
-	faInfo,
-	faMagnifyingGlass,
 	faPlug,
 	faPuzzlePiece,
-	faStar,
 	faTableCells,
 	faTabletScreenButton,
 	faVideoCamera,
-	faWandMagicSparkles,
 	type IconDefinition,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -41,20 +36,16 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import { Transition } from 'react-transition-group'
-import { PopoverActionMenu, type MenuActionItemProps, type MenuItemProps } from '~/Components/ActionMenu.js'
+import type { MenuItemProps } from '~/Components/ActionMenu.js'
 import { ContextMenu } from '~/Components/ContextMenu'
 import { Popover } from '~/Components/Popover.js'
 import { Tooltip } from '~/Components/Tooltip.js'
 import { useContextMenuState } from '~/Components/useContextMenuProps'
 import { useMobileMode } from '~/Hooks/useLayoutMode'
 import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
-import { makeAbsolutePath } from '~/Resources/util.js'
-import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ConnectionsTabNotifyIcon, SurfacesTabNotifyIcon } from '~/Surfaces/TabNotifyIcon.js'
-import { commandPaletteOpen } from './CommandPaletteState.js'
 import { matchedPageIdForPath, SETTINGS_SECTION, VARIABLES_SECTION, type NavSection } from './navRegistry.js'
 import { SidebarFooter, SidebarHeader } from './SidebarHeader'
-import { useCompanionVersion } from './useCompanionVersion'
 
 function foldableIcon(foldable: boolean): ReactElement {
 	return <FontAwesomeIcon icon={faArrowsDownToLine} style={{ rotate: foldable ? '-90deg' : '90deg' }} />
@@ -130,36 +121,6 @@ function NarrowModePopover({ title, children }: { title: React.ReactNode; childr
 				{title}
 			</Tooltip.Popup>
 		</Tooltip.Root>
-	)
-}
-
-/** Apple keyboards use ⌘ for the command palette shortcut; everything else uses Ctrl. */
-const IS_APPLE_PLATFORM = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent)
-
-function SidebarSearchButton() {
-	const isNarrow = useContext(NarrowModeContext)
-
-	const openSearch = () => {
-		commandPaletteOpen.set(true)
-	}
-
-	const shortcutLabel = IS_APPLE_PLATFORM ? '⌘K' : 'Ctrl+K'
-
-	return (
-		<div className="px-3 py-1.5 list-none">
-			<button
-				type="button"
-				onClick={openSearch}
-				title={`Search or Jump to... (${shortcutLabel})`}
-				className="sidebar-search-button"
-			>
-				<div className="flex items-center gap-2 min-w-0">
-					<FontAwesomeIcon icon={faMagnifyingGlass} className="text-2xs" />
-					{!isNarrow && <span className="truncate">Search or jump...</span>}
-				</div>
-				{!isNarrow && <span className="sidebar-search-shortcut hidden sm:inline-flex">{shortcutLabel}</span>}
-			</button>
-		</div>
 	)
 }
 
@@ -239,93 +200,6 @@ function SidebarMenuItem(item: SidebarMenuItemProps) {
 // }>({
 // 	setGroupVisible: () => {},
 // })
-
-function HelpSidebarMenuItem() {
-	const { whatsNewModal, notifier, wizardOpen } = useContext(RootAppStoreContext)
-	const whatsNewOpen = useCallback(() => whatsNewModal.current?.show(), [whatsNewModal])
-	const openWizard = useCallback(() => wizardOpen.set(true), [wizardOpen])
-
-	const { versionName, versionBuild, os, browser } = useCompanionVersion(true)
-	const sysinfo = useMemo(() => {
-		let version = versionName || 'version unknown'
-		let versionPlus = 'Companion: ' + version
-		if (versionBuild) {
-			version += '\n' + versionBuild
-			versionPlus += ' ' + versionBuild
-		}
-		versionPlus += `\nOS: ${os}\nBrowser: ${browser}\n`
-		return { version, versionPlus }
-	}, [versionName, versionBuild, os, browser])
-
-	const copyVersionToClipboard = useMemo(
-		(): MenuActionItemProps['copyToClipboard'] => ({
-			text: sysinfo.versionPlus,
-			onCopy: (_text, result) => {
-				const success = 'Version info copied!'
-				const failure = 'Failed to copy version-string to the clipboard'
-				notifier.show('', result ? success : failure, 1000)
-			},
-		}),
-		[sysinfo, notifier]
-	)
-
-	const helpMenuItems: MenuItemProps[] = useMemo(
-		() => [
-			{
-				id: 'user-guide',
-				label: 'User Guide / Help',
-				icon: faInfo,
-				href: makeAbsolutePath('/user-guide/'),
-				tooltip: 'Open the User Guide in a new tab.',
-				inNewTab: true,
-			},
-			{
-				id: 'setup-wizard',
-				label: 'Getting Started Wizard',
-				icon: faWandMagicSparkles,
-				do: openWizard,
-				tooltip: 'Open the initial setup and configuration wizard.',
-				inNewTab: false,
-			},
-			{
-				id: 'whats-new',
-				label: "What's New",
-				icon: faStar,
-				do: whatsNewOpen,
-				tooltip: 'Show the current release notes.',
-				inNewTab: false,
-			},
-			{
-				id: 'version',
-				label: sysinfo.version,
-				fullWidth: true,
-				do: () => {},
-				tooltip: 'Click to copy version info including OS and browser to the clipboard.',
-				copyToClipboard: copyVersionToClipboard,
-			},
-		],
-		[copyVersionToClipboard, openWizard, sysinfo, whatsNewOpen]
-	)
-
-	return (
-		<li onContextMenu={blockPropagation}>
-			<Popover.Root>
-				<NarrowModePopover title="Help and Version Information">
-					<BasePopover.Trigger
-						render={
-							<a className="nav-link cursor-pointer">
-								<SidebarMenuItemLabel name="Help" icon={faCircleQuestion} />
-							</a>
-						}
-					/>
-				</NarrowModePopover>
-				<Popover.Popup side="right" align="center" sideOffset={12}>
-					<PopoverActionMenu menuItems={helpMenuItems} />
-				</Popover.Popup>
-			</Popover.Root>
-		</li>
-	)
-}
 
 interface SidebarSubMenuItemProps {
 	name: string
@@ -527,8 +401,6 @@ export const MySidebar = memo(function MySidebar() {
 				<ContextMenu {...contextState} />
 				<SidebarHeader />
 
-				<SidebarSearchButton />
-
 				<ul className="sidebar-nav nav-main-scroller">
 					{/* Category: Program */}
 					<li className="nav-title">Program</li>
@@ -558,7 +430,6 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Log" icon={faClipboardList} path="/log" />
 					<SidebarSectionNavGroup section={SETTINGS_SECTION} />
 					<SidebarMenuItem name="Import / Export" icon={faFileImport} path="/import-export" />
-					<HelpSidebarMenuItem />
 					{window.localStorage.getItem('show_companion_cloud') === '1' && (
 						<SidebarMenuItem name="Cloud" icon={faCloud} path="/cloud" />
 					)}

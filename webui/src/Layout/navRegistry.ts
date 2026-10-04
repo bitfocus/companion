@@ -149,3 +149,26 @@ export function matchedPageIdForPath(section: NavSection, pathname: string): str
 export function activePageIdForPath(section: NavSection, pathname: string): string {
 	return matchedPageIdForPath(section, pathname) ?? section.pages[0].id
 }
+
+/** Where a location sits in the nav: its section (for a page inside one) and page */
+export interface NavLocation {
+	section: NavSection | null
+	page: NavPage
+}
+
+/** Find the nav page a location is on, including that page's child routes, or `null` for one outside the nav */
+export function navLocationForPath(pathname: string): NavLocation | null {
+	for (const section of NAV_SECTIONS) {
+		const pageId = matchedPageIdForPath(section, pathname)
+		const page = pageId === null ? undefined : section.pages.find((p) => p.id === pageId)
+		if (page) return { section, page }
+	}
+
+	let best: NavPage | null = null
+	for (const page of TOP_LEVEL_PAGES) {
+		if (pathname === page.path || pathname.startsWith(`${page.path}/`)) {
+			if (!best || page.path.length > best.path.length) best = page
+		}
+	}
+	return best ? { section: null, page: best } : null
+}
