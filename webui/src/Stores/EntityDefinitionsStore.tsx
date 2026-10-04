@@ -18,7 +18,8 @@ export interface AddEntityOption extends DropdownChoice {
 	fuzzy: ReturnType<typeof fuzzyPrepare>
 }
 
-export interface AddEntityGroup {
+// A type rather than an interface, so that it satisfies base-ui's Group index signature
+export type AddEntityGroup = {
 	id: string
 	showWhenUnfiltered: boolean
 	label: string

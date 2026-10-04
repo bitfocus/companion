@@ -3,6 +3,7 @@ import { forwardRef, useCallback, useContext, useImperativeHandle, useState } fr
 import semver from 'semver'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { Modal } from '~/Components/Modal'
+import { ModuleDeprecationAlert, useModuleDeprecation } from '~/Modules/ModuleDeprecation.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ModuleHelpContent } from './ModuleHelpContent.js'
@@ -14,10 +15,19 @@ export interface HelpModalRef {
 interface HelpDisplayInfo {
 	moduleType: ModuleInstanceType
 	moduleId: string
+	versionId: string
 	versionDisplayName: string
 	markdown: string
 	baseUrl: string
 }
+
+/** The deprecation notice for the module the help is being shown for, if it has one */
+const HelpDeprecationAlert = observer(function HelpDeprecationAlert({ content }: { content: HelpDisplayInfo }) {
+	const deprecation = useModuleDeprecation(content.moduleType, content.moduleId, content.versionId)
+	if (!deprecation) return null
+
+	return <ModuleDeprecationAlert deprecation={deprecation} />
+})
 
 export const HelpModal = observer(
 	forwardRef<HelpModalRef>(function HelpModal(_props, ref) {
@@ -45,6 +55,7 @@ export const HelpModal = observer(
 							setContent({
 								moduleType,
 								moduleId,
+								versionId,
 								versionDisplayName: versionDisplayName,
 								markdown: text,
 								baseUrl: fixedUrl,
@@ -55,6 +66,7 @@ export const HelpModal = observer(
 							setContent({
 								moduleType,
 								moduleId,
+								versionId,
 								versionDisplayName: versionDisplayName,
 								markdown: `Failed to load help text: ${e}`,
 								baseUrl: '/null',
@@ -86,6 +98,7 @@ export const HelpModal = observer(
 								</Modal.Title>
 							</Modal.Header>
 							<Modal.Body>
+								{content && <HelpDeprecationAlert content={content} />}
 								{content && <ModuleHelpContent markdown={content.markdown} helpUrl={content.baseUrl} />}
 							</Modal.Body>
 						</Modal.Popup>

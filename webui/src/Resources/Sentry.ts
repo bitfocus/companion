@@ -4,6 +4,12 @@ import * as Sentry from '@sentry/react'
 if (import.meta.env.VITE_SENTRY_DSN) {
 	Sentry.init({
 		dsn: import.meta.env.VITE_SENTRY_DSN,
+		// Keep the v10 privacy defaults: no auto user info, cookies or http bodies
+		dataCollection: {
+			userInfo: false,
+			cookies: false,
+			httpBodies: [],
+		},
 		// Conservative, stack-aware filtering to drop Monaco/editor errors
 		// while avoiding any message-only ignores.
 		beforeSend(event, _hint) {

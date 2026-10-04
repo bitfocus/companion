@@ -1,5 +1,5 @@
 import type { IRange, languages } from 'monaco-editor'
-import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api.d.ts' // In theory importable with import type { Monaco } from '@monaco-editor/react'
+import type * as Monaco from 'monaco-editor'
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import { companionExpressionColorProvider } from './Expression.colors.js'
 

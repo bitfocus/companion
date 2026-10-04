@@ -11,6 +11,7 @@
 
 import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
+import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { FeedbackEntitySubType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
@@ -91,10 +92,10 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		this.#instanceController.on('connection_added', this.#debounceRegenerateVariables.bind(this))
 		this.#instanceController.on('connection_updated', this.#debounceRegenerateVariables.bind(this))
 		this.#instanceController.on('connection_deleted', this.#debounceRegenerateVariables.bind(this))
-		this.#instanceController.on(
-			'connection_collections_enabled',
-			this.#debounceCheckConnectionCollectionFeedbacks.bind(this)
-		)
+		this.#instanceController.on('connection_collections_enabled', () => {
+			this.#debounceCheckConnectionCollectionFeedbacks()
+			this.#debounceRegenerateVariables()
+		})
 	}
 
 	getVariableDefinitions(): VariableDefinition[] {
@@ -132,7 +133,26 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 			}
 		}
 
+		for (const collection of this.#getAllConnectionCollections()) {
+			variables.push({
+				description: `Connection Collection Status: ${collection.label}`,
+				name: `connection_collection_${collection.id}_status`,
+			})
+		}
+
 		return variables
+	}
+
+	#getAllConnectionCollections(): ConnectionCollection[] {
+		const result: ConnectionCollection[] = []
+		const collect = (collections: ConnectionCollection[]) => {
+			for (const collection of collections) {
+				result.push(collection)
+				collect(collection.children)
+			}
+		}
+		collect(this.#instanceController.connectionCollections.collectionData)
+		return result
 	}
 
 	getActionDefinitions(): Record<string, InternalActionDefinition> {
@@ -469,10 +489,15 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 				const status = this.#instanceStatuses[connectionId]
 
 				let statusMessage = status?.category
-				if (!config.enabled) statusMessage = 'disabled'
+				if (!this.#instanceController.isInstanceEnabled(config)) statusMessage = 'disabled'
 
 				values[`connection_${config.label}_status`] = statusMessage ?? ''
 			}
+		}
+
+		const connectionCollections = this.#instanceController.connectionCollections
+		for (const collection of this.#getAllConnectionCollections()) {
+			values[`connection_collection_${collection.id}_status`] = connectionCollections.isCollectionEnabled(collection.id)
 		}
 
 		this.emit('setVariables', values)
@@ -495,7 +520,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 
 				numTotal++
 
-				if (!config.enabled || !status || status.category === null) {
+				if (!this.#instanceController.isInstanceEnabled(config) || !status || status.category === null) {
 					numDisabled++
 				} else if (status.category === 'good') {
 					numOk++

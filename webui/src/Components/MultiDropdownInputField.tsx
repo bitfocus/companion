@@ -7,9 +7,16 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useState } from 'react'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { DropdownInputPopup } from '~/Components/DropdownInputField/Popup.js'
-import { useFuzzyChoices, type FuzzyChoice, type FuzzyGroup } from '~/Components/DropdownInputField/useFuzzyChoices.js'
+import { getComboboxItemLabel, useComboboxCollection } from '~/Components/DropdownInputField/useComboboxCollection.js'
+import {
+	filterFuzzyItems,
+	isGroupedFuzzyItems,
+	prependFuzzyChoices,
+	useFuzzyChoices,
+	type FuzzyChoice,
+	type FuzzyItems,
+} from '~/Components/DropdownInputField/useFuzzyChoices.js'
 import { useComputed } from '~/Resources/util.js'
-import { fuzzyFilterSort } from '~/util/fuzzy.js'
 import type { DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { useRegex } from './useRegex.js'
 
@@ -53,7 +60,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 	const { allItems, flatItems } = useFuzzyChoices(choices, true)
 
 	// The popup doesn't handle groups when virtualised, so detect if there are any groups
-	const hasGroups = allItems.some((item) => 'items' in item)
+	const hasGroups = isGroupedFuzzyItems(allItems)
 
 	// Compile the regex (and cache)
 	const compiledRegex = useRegex(regex)
@@ -101,34 +108,16 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 
 	// Items master list — must include the synthetic item so base-ui can resolve it on selection
 	const effectiveItems = useComputed(
-		(): Array<FuzzyChoice | FuzzyGroup> => (syntheticItem ? [syntheticItem, ...allItems] : allItems),
+		(): FuzzyItems => (syntheticItem ? prependFuzzyChoices(allItems, [syntheticItem]) : allItems),
 		[syntheticItem, allItems]
 	)
+	const collection = useComboboxCollection(effectiveItems, getComboboxItemLabel)
 
-	const filteredItems = useComputed((): Array<FuzzyChoice | FuzzyGroup> => {
+	const filteredItems = useComputed((): FuzzyItems => {
 		if (!inputValue) return allItems
 
-		const result: Array<FuzzyChoice | FuzzyGroup> = []
-
-		// Batch root-level choices between groups so they get sorted together by score
-		const pendingRoot: FuzzyChoice[] = []
-		for (const item of allItems) {
-			if ('items' in item) {
-				if (pendingRoot.length > 0) {
-					result.push(...fuzzyFilterSort(pendingRoot, inputValue))
-					pendingRoot.length = 0
-				}
-				const filtered = fuzzyFilterSort(item.items, inputValue)
-				if (filtered.length > 0) result.push({ ...item, items: filtered })
-			} else {
-				pendingRoot.push(item)
-			}
-		}
-		if (pendingRoot.length > 0) result.push(...fuzzyFilterSort(pendingRoot, inputValue))
-
-		if (syntheticItem) result.unshift(syntheticItem)
-
-		return result
+		const result = filterFuzzyItems(allItems, inputValue)
+		return syntheticItem ? prependFuzzyChoices(result, [syntheticItem]) : result
 	}, [allItems, syntheticItem, inputValue])
 
 	const onValueChange = useCallback(
@@ -165,12 +154,12 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 			)}
 			title={tooltip}
 		>
-			<Combobox.Root<DropdownChoiceId, true>
+			<Combobox.Root<DropdownChoiceId, true, FuzzyChoice>
 				multiple={true}
 				virtualized={!hasGroups}
 				autoHighlight
 				value={value}
-				items={effectiveItems}
+				items={collection}
 				filteredItems={filteredItems}
 				disabled={disabled}
 				onValueChange={onValueChange}

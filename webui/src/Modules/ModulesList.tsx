@@ -1,5 +1,5 @@
 import './modules-manage.css'
-import { faEyeSlash, faGamepad, faPlug, faWarning, type IconDefinition } from '@fortawesome/free-solid-svg-icons'
+import { faEyeSlash, faGamepad, faPlug, type IconDefinition } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
@@ -19,6 +19,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImportModules } from './ImportCustomModule.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { getModuleProductName, groupModuleCatalog } from './ModuleCatalog.js'
+import { ModuleDeprecationBadge, useModuleDeprecation } from './ModuleDeprecation.js'
 import { RefreshModulesList } from './RefreshModulesList.js'
 import { useModuleStoreInfo } from './useModuleStoreInfo.js'
 
@@ -281,7 +282,6 @@ const ModulesListRow = observer(function ModulesListRow({
 }: ModulesListRowProps) {
 	const { modules } = useContext(RootAppStoreContext)
 	const installedInfo = modules.getModuleInfo(moduleInfo.moduleType, moduleInfo.moduleId)
-	const storeInfo = modules.storeList.get(`${moduleInfo.moduleType}:${moduleInfo.moduleId}`) ?? moduleInfo.storeInfo
 	const displayName = getModuleProductName(moduleInfo)
 	const installedVersions = installedInfo?.installedVersions ?? []
 	const version =
@@ -304,7 +304,10 @@ const ModulesListRow = observer(function ModulesListRow({
 				: version
 					? `v${version.versionId}`
 					: undefined
-	const deprecationReason = storeInfo?.deprecationReason
+
+	// No single version is in context in this list, so only the module as a whole can be deprecated here
+	const deprecation = useModuleDeprecation(moduleInfo.moduleType, moduleInfo.moduleId, null)
+
 	const moduleStoreInfo = useModuleStoreInfo(
 		moduleInfo.moduleType,
 		installedVersions.length > 0 && !installedInfo?.devVersion ? moduleInfo.moduleId : undefined
@@ -375,15 +378,7 @@ const ModulesListRow = observer(function ModulesListRow({
 							Update available
 						</span>
 					)}
-					{deprecationReason && (
-						<span
-							title={deprecationReason}
-							className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-1.5 py-0.5 text-2xs font-medium text-amber-500"
-						>
-							<FontAwesomeIcon icon={faWarning} />
-							Deprecated
-						</span>
-					)}
+					{deprecation && <ModuleDeprecationBadge deprecation={deprecation} />}
 				</div>
 			</td>
 			<td className="compact py-2.5 px-3 text-end">

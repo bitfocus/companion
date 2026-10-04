@@ -192,7 +192,16 @@ export class GraphicsRenderer {
 			}
 		)
 
-		return transformButtonImage(buffer, width, height, rotation, resolution.width, resolution.height, format)
+		return transformButtonImage(
+			buffer,
+			width,
+			height,
+			resolution.oversampling,
+			rotation,
+			resolution.width,
+			resolution.height,
+			format
+		)
 	}
 
 	/**
@@ -261,7 +270,16 @@ export class GraphicsRenderer {
 	): Promise<Buffer> {
 		// Future: once we support rotation within Image, we can avoid this final transform
 
-		return transformButtonImage(img.buffer(), img.realwidth, img.realheight, rotation, width, height, format)
+		return transformButtonImage(
+			img.buffer(),
+			img.realwidth,
+			img.realheight,
+			img.oversampling,
+			rotation,
+			width,
+			height,
+			format
+		)
 	}
 
 	/**

@@ -816,6 +816,7 @@ describe('REST API v1 — Connections', () => {
 
 			instanceController.modules.hasModule.mockReturnValue(true)
 			instanceController.modules.getModuleManifest.mockReturnValue(undefined)
+			instanceController.modulesStore.fetchModuleVersionInfo.mockResolvedValue(null)
 
 			const res = await supertest(app)
 				.post('/api/v2/connections/v1')
@@ -830,6 +831,76 @@ describe('REST API v1 — Connections', () => {
 			expect(res.body.error.code).toBe('BAD_REQUEST')
 			expect(res.body.error.message).toContain('v99.0.0')
 			expect(instanceController.addConnectionWithLabel).not.toHaveBeenCalled()
+		})
+
+		test('creates a connection for a store version when a different version is installed', async () => {
+			const { app, instanceController, validToken } = createService()
+
+			const newConfig: InstanceConfig = {
+				moduleInstanceType: ModuleInstanceType.Connection,
+				moduleId: 'bmd-atem',
+				moduleVersionId: '4.3.1',
+				label: 'New ATEM',
+				config: {},
+				secrets: undefined,
+				isFirstInit: true,
+				lastUpgradeIndex: 0,
+				enabled: true,
+				sortOrder: 2,
+				updatePolicy: InstanceVersionUpdatePolicy.Stable,
+			}
+
+			instanceController.modules.hasModule.mockReturnValue(true)
+			instanceController.modules.getModuleManifest.mockReturnValue(undefined)
+			instanceController.modulesStore.fetchModuleVersionInfo.mockResolvedValue({
+				id: '4.3.1',
+				releaseChannel: 'stable',
+				releasedAt: 0,
+				tarUrl: 'https://example.com/bmd-atem.tgz',
+				tarSha: 'sha',
+				deprecationReason: null,
+				apiVersion: '1.12.0',
+				helpUrl: null,
+			})
+			instanceController.addConnectionWithLabel.mockReturnValue(['new-id', newConfig])
+			instanceController.getInstanceConfigOfType.mockReturnValue(newConfig)
+			instanceController.getConnectionClientJson.mockReturnValue({
+				'new-id': {
+					id: 'new-id',
+					label: 'New ATEM',
+					moduleId: 'bmd-atem',
+					moduleVersionId: '4.3.1',
+					updatePolicy: InstanceVersionUpdatePolicy.Stable,
+					enabled: true,
+					sortOrder: 2,
+					moduleType: ModuleInstanceType.Connection,
+					hasRecordActionsHandler: false,
+					collectionId: null,
+				},
+			})
+			instanceController.getInstanceStatus.mockReturnValue(undefined)
+
+			const res = await supertest(app)
+				.post('/api/v2/connections/v1')
+				.set('Authorization', `Bearer ${validToken}`)
+				.send({
+					moduleId: 'bmd-atem',
+					label: 'New ATEM',
+					versionId: '4.3.1',
+				})
+
+			expect(res.status).toBe(201)
+			expect(instanceController.modulesStore.fetchModuleVersionInfo).toHaveBeenCalledWith(
+				ModuleInstanceType.Connection,
+				'bmd-atem',
+				'4.3.1',
+				true
+			)
+			expect(instanceController.addConnectionWithLabel).toHaveBeenCalledWith({ type: 'bmd-atem' }, 'New ATEM', {
+				versionId: '4.3.1',
+				updatePolicy: InstanceVersionUpdatePolicy.Stable,
+				disabled: false,
+			})
 		})
 
 		test('returns 400 for empty version id', async () => {

@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
@@ -239,6 +239,19 @@ describe('Selection', () => {
 		await user.keyboard('{Enter}')
 		expect(setValue).toHaveBeenCalledTimes(1)
 	})
+
+	it('selects promptly from a very large list', async () => {
+		// Regression: labelling each item used to be a linear scan, making selection O(n^2) and freezing the UI
+		const choices = Array.from({ length: 20000 }, (_, i) => ({ id: `item${i}`, label: `Item ${i}` }))
+		const setValue = vi.fn()
+		const { user, input } = renderField({ choices, initialValue: 'item0', setValue })
+		await user.click(input)
+		await user.keyboard('{ArrowDown}')
+		await user.keyboard('{Enter}')
+		expect(setValue).toHaveBeenCalledTimes(1)
+		const selected = choices.find((c) => c.id === setValue.mock.calls[0][0])
+		expect(input).toHaveValue(selected?.label)
+	}, 5000)
 })
 
 // ---------------------------------------------------------------------------
@@ -608,5 +621,117 @@ describe('null value edge cases (runtime null passed as value)', () => {
 		await user.type(input, 'custom')
 		await user.tab()
 		expect(setValue).toHaveBeenCalledWith('custom')
+	})
+})
+
+// ---------------------------------------------------------------------------
+// Selected value in the popup
+// ---------------------------------------------------------------------------
+
+describe('Selected value in the popup', () => {
+	it('marks and highlights the current value when the popup opens', async () => {
+		const { user } = renderField({ initialValue: 'cherry' })
+		await user.click(screen.getByRole('button'))
+		const current = within(getListbox()).getByRole('option', { name: 'Cherry' })
+		await waitFor(() => expect(current).toHaveAttribute('data-highlighted'))
+		expect(current).toHaveAttribute('data-selected')
+		expect(within(getListbox()).getByRole('option', { name: 'Apple' })).not.toHaveAttribute('data-selected')
+	})
+
+	it('marks the current value inside a group', async () => {
+		const choices = [
+			{ label: 'Fruits', options: [{ id: 'apple', label: 'Apple' }] },
+			{ label: 'Veggies', options: [{ id: 'carrot', label: 'Carrot' }] },
+		]
+		const { user } = renderField({ choices, initialValue: 'carrot' })
+		await user.click(screen.getByRole('button'))
+		expect(within(getListbox()).getByRole('option', { name: 'Carrot' })).toHaveAttribute('data-selected')
+		expect(within(getListbox()).getByRole('option', { name: 'Apple' })).not.toHaveAttribute('data-selected')
+	})
+})
+
+// ---------------------------------------------------------------------------
+// Ungrouped choices mixed with groups
+// ---------------------------------------------------------------------------
+
+describe('Ungrouped choices mixed with groups', () => {
+	const VEG = {
+		label: 'Veg',
+		options: [
+			{ id: 'carrot', label: 'Carrot' },
+			{ id: 'celery', label: 'Celery' },
+		],
+	}
+	const LOOSE = { id: 'loose', label: 'Loose' }
+
+	describe.each([
+		['an ungrouped choice first', [LOOSE, VEG]],
+		['a group first', [VEG, LOOSE]],
+	])('with %s', (_name, choices) => {
+		it('shows the label of a grouped value', () => {
+			const { input } = renderField({ choices, initialValue: 'carrot' })
+			expect(input).toHaveValue('Carrot')
+		})
+
+		it('marks and highlights a grouped value when the popup opens', async () => {
+			const { user } = renderField({ choices, initialValue: 'carrot' })
+			await user.click(screen.getByRole('button'))
+			const current = within(getListbox()).getByRole('option', { name: 'Carrot' })
+			await waitFor(() => expect(current).toHaveAttribute('data-highlighted'))
+			expect(current).toHaveAttribute('data-selected')
+		})
+
+		it('selects a grouped choice', async () => {
+			const setValue = vi.fn()
+			const { user, input } = renderField({ choices, initialValue: 'loose', setValue })
+			await user.click(screen.getByRole('button'))
+			await user.click(within(getListbox()).getByRole('option', { name: 'Celery' }))
+			expect(setValue).toHaveBeenCalledWith('celery')
+			expect(input).toHaveValue('Celery')
+		})
+
+		it('selects an ungrouped choice', async () => {
+			const setValue = vi.fn()
+			const { user, input } = renderField({ choices, initialValue: 'carrot', setValue })
+			await user.click(screen.getByRole('button'))
+			await user.click(within(getListbox()).getByRole('option', { name: 'Loose' }))
+			expect(setValue).toHaveBeenCalledWith('loose')
+			expect(input).toHaveValue('Loose')
+		})
+
+		it('filters both grouped and ungrouped choices', async () => {
+			const { user, input } = renderField({ choices, initialValue: 'carrot' })
+			await user.click(input)
+			await user.clear(input)
+			await user.type(input, 'l')
+			const names = within(getListbox())
+				.getAllByRole('option')
+				.map((o) => o.textContent)
+			expect(names).toEqual(expect.arrayContaining(['Loose', 'Celery']))
+		})
+	})
+
+	it('highlights a grouped value when the current custom value is shown ahead of the groups', async () => {
+		const { user } = renderField({
+			choices: [{ label: 'Fruit', options: [{ id: 'apple', label: 'Apple' }] }, VEG],
+			allowCustom: true,
+			initialValue: 'carrot',
+		})
+		await user.click(screen.getByRole('button'))
+		const current = within(getListbox()).getByRole('option', { name: 'Carrot' })
+		await waitFor(() => expect(current).toHaveAttribute('data-highlighted'))
+		expect(current).toHaveAttribute('data-selected')
+	})
+
+	it('shows the "Use" option ahead of the groups when typing a custom value', async () => {
+		const { user, input } = renderField({ choices: [VEG], allowCustom: true, initialValue: 'carrot' })
+		await user.click(input)
+		await user.clear(input)
+		await user.type(input, 'cel')
+		const names = within(getListbox())
+			.getAllByRole('option')
+			.map((o) => o.textContent)
+		expect(names[0]).toContain('Use "cel"')
+		expect(names).toContain('Celery')
 	})
 })

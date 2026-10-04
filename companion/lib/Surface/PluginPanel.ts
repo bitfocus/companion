@@ -172,6 +172,9 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 
 	#config: Record<string, any>
 
+	/** The module has already closed this surface, so it must not be told to close it again */
+	#closedByModule = false
+
 	constructor(
 		ipcWrapper: IpcWrapper<HostToSurfaceModuleEvents, SurfaceModuleToHostEvents>,
 		instanceId: string,
@@ -200,6 +203,7 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 				const drawProps: IpcDrawProps = {
 					controlId: controlDefinition.id,
 					pageNumber: drawItem.location?.pageNumber,
+					pressed: drawItem.defaultRender.style?.state?.pushed ?? false,
 				}
 
 				const style = drawItem.defaultRender.style
@@ -394,7 +398,17 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 		outputVariable.triggerUpdate()
 	}
 
+	/**
+	 * Mark the surface as closed by the module.
+	 * A closeSurface sent after this could arrive after the module has reopened the same surfaceId, and close that instead
+	 */
+	markClosedByModule(): void {
+		this.#closedByModule = true
+	}
+
 	quit(): void {
+		if (this.#closedByModule) return
+
 		this.#ipcWrapper.sendWithCb('closeSurface', { surfaceId: this.#surfaceInfo.surfaceId }).catch((e) => {
 			this.#logger.debug(`Close surface failed: ${e}`)
 		})

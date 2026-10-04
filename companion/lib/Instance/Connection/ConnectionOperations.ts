@@ -343,27 +343,27 @@ export class ConnectionOperations {
 
 	async #validateModuleVersion(moduleId: string, versionId: string | null): Promise<void> {
 		const isInstalledModule = this.#instanceController.modules.hasModule(ModuleInstanceType.Connection, moduleId)
-		const storeVersionInfo = !isInstalledModule
-			? await this.#instanceController.modulesStore.fetchModuleVersionInfo(
-					ModuleInstanceType.Connection,
-					moduleId,
-					versionId,
-					true
-				)
-			: null
 
-		if (!isInstalledModule && !storeVersionInfo) {
+		// A specific version may be in the store but not installed, even when other versions of the module are
+		if (isInstalledModule && !versionId) return
+		if (
+			versionId &&
+			this.#instanceController.modules.getModuleManifest(ModuleInstanceType.Connection, moduleId, versionId)
+		)
+			return
+
+		const storeVersionInfo = await this.#instanceController.modulesStore.fetchModuleVersionInfo(
+			ModuleInstanceType.Connection,
+			moduleId,
+			versionId,
+			true
+		)
+		if (storeVersionInfo) return
+
+		if (!isInstalledModule) {
 			throw new ConnectionOperationError('invalid_input', `Unknown module id: "${moduleId}"`)
 		}
-
-		if (versionId) {
-			const versionInfo =
-				this.#instanceController.modules.getModuleManifest(ModuleInstanceType.Connection, moduleId, versionId) ??
-				storeVersionInfo
-			if (!versionInfo) {
-				throw new ConnectionOperationError('invalid_input', `Unknown version "${versionId}" for module "${moduleId}"`)
-			}
-		}
+		throw new ConnectionOperationError('invalid_input', `Unknown version "${versionId}" for module "${moduleId}"`)
 	}
 
 	async #validateExistingConnectionVersion(moduleId: string, versionId: string): Promise<void> {

@@ -19,7 +19,6 @@ import { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientTriggerData, TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { Badge } from '~/Components/Badge.js'
 import { Button, LinkButtonExternal } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
@@ -27,6 +26,7 @@ import { DuplicateIcon } from '~/Components/DuplicateIcon.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
+import { StatusBadge } from '~/Components/StatusBadge.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
@@ -372,11 +372,11 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 
 			<div onClick={doEdit} className="shrink-0 flex items-center justify-center">
 				{triggerOrCollectionDisabled ? (
-					<Badge tone="disabled" title={collectionDisabled ? 'Disabled by its collection' : undefined}>
+					<StatusBadge tone="disabled" title={collectionDisabled ? 'Disabled by its collection' : undefined}>
 						Disabled
-					</Badge>
+					</StatusBadge>
 				) : (
-					<Badge tone="good">Active</Badge>
+					<StatusBadge tone="good">Active</StatusBadge>
 				)}
 			</div>
 

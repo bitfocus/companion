@@ -67,6 +67,11 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 
 	readonly #oversampling: number
 
+	/** The factor the image is rendered larger than its `width`x`height` by */
+	get oversampling(): number {
+		return this.#oversampling
+	}
+
 	get canvasImage(): Canvas {
 		return this.#canvas
 	}

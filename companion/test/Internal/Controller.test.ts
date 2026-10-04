@@ -26,6 +26,7 @@ function createController() {
 
 	// getVariableDefinitions on a couple of fragments iterate over these during init
 	instanceController.getAllConnectionIds.mockReturnValue([])
+	instanceController.connectionCollections.collectionData = []
 	pageStore.getPageCount.mockReturnValue(0)
 	surfaceController.getDevicesList.mockReturnValue([])
 

@@ -5,11 +5,12 @@ import classNames from 'classnames'
 import { ChevronDownIcon } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
+import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { type DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { DropdownInputPopup } from './DropdownInputField/Popup.js'
+import { useComboboxCollection } from './DropdownInputField/useComboboxCollection.js'
 import { useDropdownComboboxItems } from './DropdownInputField/useDropdownComboboxItems.js'
-import { useFuzzyChoices } from './DropdownInputField/useFuzzyChoices.js'
+import { isGroupedFuzzyItems, useFuzzyChoices, type FuzzyChoice } from './DropdownInputField/useFuzzyChoices.js'
 import { useRegex } from './useRegex.js'
 
 interface VariablePickerFieldProps {
@@ -23,6 +24,9 @@ interface VariablePickerFieldProps {
 	disabled?: boolean
 	onPasteIntercept?: (value: string) => string
 }
+
+// The input shows the variable id rather than its label
+const getItemIdAsLabel = (item: DropdownChoice) => String(item.id)
 
 /**
  * A specialised dropdown field component, intended for picking variables
@@ -42,7 +46,7 @@ export const VariablePickerField = observer(function VariablePickerField({
 	// Always search both label and id for variable pickers
 	const { allItems, flatItems } = useFuzzyChoices(choices, false)
 
-	const hasGroups = allItems.some((item) => 'items' in item)
+	const hasGroups = isGroupedFuzzyItems(allItems)
 
 	// Compile the regex for custom value validation
 	const compiledRegex = useRegex(regex)
@@ -79,6 +83,7 @@ export const VariablePickerField = observer(function VariablePickerField({
 		isValidCustom,
 		isEditingMode,
 	})
+	const collection = useComboboxCollection(effectiveItems, getItemIdAsLabel)
 
 	const onValueChange = useCallback(
 		(newId: DropdownChoiceId | null) => {
@@ -143,11 +148,11 @@ export const VariablePickerField = observer(function VariablePickerField({
 		<div
 			className={classNames('dropdown-field', { 'dropdown-field-warning': !!allowCustom && !isKnownValue }, className)}
 		>
-			<Combobox.Root<DropdownChoiceId>
+			<Combobox.Root<DropdownChoiceId, false, FuzzyChoice>
 				virtualized={!hasGroups}
 				autoHighlight
 				value={localDisplayValue}
-				items={effectiveItems}
+				items={collection}
 				filteredItems={filteredItems}
 				disabled={disabled}
 				onValueChange={onValueChange}

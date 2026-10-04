@@ -22,13 +22,13 @@ import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { capitalize } from '@companion-app/shared/Util.js'
 import { DismissableAlert, StaticAlert } from '~/Components/Alert.js'
-import { Badge } from '~/Components/Badge'
 import { Button } from '~/Components/Button.js'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { StatusBadge } from '~/Components/StatusBadge.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
@@ -38,6 +38,7 @@ import { InstanceEditPanelStore, isConfigFieldSecret } from '~/Instances/Instanc
 import { InstanceSecretField } from '~/Instances/InstanceEdit/InstanceSecretField.js'
 import { UpdateInstanceToLatestBadge } from '~/Instances/UpdateInstanceToLatestBadge.js'
 import { getModuleVersionInfo } from '~/Instances/Util.js'
+import { ModuleDeprecationAlert, useModuleDeprecation } from '~/Modules/ModuleDeprecation.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { InstanceVersionChangeButton } from '../../Instances/InstanceEdit/InstanceVersionChangeButton.js'
@@ -125,6 +126,8 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 						</StaticAlert>
 					)}
 
+					<InstanceDeprecationAlert panelStore={panelStore} />
+
 					{/* General Settings */}
 					<EditSectionCard title="General Settings">
 						<InstanceLabelInputField panelStore={panelStore} />
@@ -147,6 +150,23 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 			</Form>
 		</>
 	)
+})
+
+/**
+ * Why the module behind this instance should no longer be used, spelled out at the top of the panel.
+ * Renders nothing when the module and the version in use are both current.
+ */
+const InstanceDeprecationAlert = observer(function InstanceDeprecationAlert<TConfig extends ClientInstanceConfigBase>({
+	panelStore,
+}: {
+	panelStore: InstanceEditPanelStore<TConfig>
+}): React.JSX.Element | null {
+	const { moduleType, moduleId, moduleVersionId } = panelStore.instanceInfo
+
+	const deprecation = useModuleDeprecation(moduleType, moduleId, moduleVersionId)
+	if (!deprecation) return null
+
+	return <ModuleDeprecationAlert deprecation={deprecation} className="mb-4" />
 })
 
 function InstanceFieldLabel({ fieldInfo }: { fieldInfo: SomeCompanionInputField }) {
@@ -234,13 +254,13 @@ function UpdatePolicyLabel({ policy }: { policy: InstanceVersionUpdatePolicy }):
 				: [faFlask, 'Stable + Beta']
 
 	return (
-		<Badge
+		<StatusBadge
 			tone="neutral"
 			className="instance-update-policy"
 			indicator={<FontAwesomeIcon icon={icon} className="text-3xs shrink-0" aria-hidden="true" />}
 		>
 			{label}
-		</Badge>
+		</StatusBadge>
 	)
 }
 
@@ -456,9 +476,9 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 			<div className="max-w-readable flex items-center justify-between gap-3">
 				<div className="flex items-center gap-2">
 					{isDirty ? (
-						<Badge tone="warning" className="select-none">
+						<StatusBadge tone="warning" className="select-none">
 							Unsaved Changes
-						</Badge>
+						</StatusBadge>
 					) : (
 						<span className="text-xs text-muted select-none">No unsaved changes</span>
 					)}

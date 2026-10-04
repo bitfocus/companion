@@ -14,11 +14,11 @@ import copy from 'copy-to-clipboard'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import type { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
-import { Badge } from '~/Components/Badge.js'
 import { LinkButtonExternal } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { Popover } from '~/Components/Popover'
+import { StatusBadge } from '~/Components/StatusBadge.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { makeAbsolutePath } from '~/Resources/util'
@@ -342,9 +342,9 @@ interface SurfaceStatusBadgeProps {
 }
 
 function SurfaceStatusBadge({ isConnected, isDisabled }: SurfaceStatusBadgeProps) {
-	if (isDisabled) return <Badge tone="disabled">Disabled</Badge>
-	if (!isConnected) return <Badge tone="neutral">Offline</Badge>
-	return <Badge tone="good">Connected</Badge>
+	if (isDisabled) return <StatusBadge tone="disabled">Disabled</StatusBadge>
+	if (!isConnected) return <StatusBadge tone="neutral">Offline</StatusBadge>
+	return <StatusBadge tone="good">Connected</StatusBadge>
 }
 
 interface SurfaceRowMenuProps {

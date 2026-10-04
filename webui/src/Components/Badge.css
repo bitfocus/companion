@@ -1,93 +1,79 @@
-/* Pill-shaped status badge, shared by the instance/connection lists, the module tables and the
-   connection edit panel. The per-tone colours are applied as utilities by Badge.tsx; this holds the
-   shape/typography that every tone has in common. */
-.status-badge {
+/* A small pill: uppercase label, tight padding, sized to sit inline with body text.
+   Each colour declares both fills; `.badge-tonal` picks the tinted pair instead of the solid one. */
+.badge-element {
 	display: inline-flex;
 	align-items: center;
-	justify-content: center;
-	gap: 0.375rem;
-	min-width: 70px;
-	padding: 0.125rem 0.625rem;
-	border-radius: 9999px;
-	border: 1px solid transparent;
-	font-size: 0.75rem;
-	font-weight: 500;
+	gap: 0.25rem;
+	padding: 0.1rem 0.4rem;
+	border-radius: 0.5rem;
+	background-color: var(--badge-solid-bg);
+	color: var(--badge-solid-fg);
+	font-size: 0.7rem;
+	font-weight: bold;
+	line-height: 1.3;
+	text-transform: uppercase;
 	white-space: nowrap;
-	user-select: none;
-}
+	vertical-align: middle;
 
-/* Tone colours, from the shared --color-tone-* tokens in tailwind.css (which carry their own
-   dark-scheme values), so a badge and a filter pill of the same tone always agree. */
-.status-badge[data-tone='good'],
-.status-badge[data-tone='warning'],
-.status-badge[data-tone='error'],
-.status-badge[data-tone='info'] {
-	background: color-mix(in srgb, var(--badge-fill) 10%, transparent);
-	border-color: color-mix(in srgb, var(--badge-fill) 25%, transparent);
-	color: var(--badge-text);
-	box-shadow: var(--badge-shadow, 0 1px 2px 0 var(--color-shadow-6));
-}
+	&.badge-tonal {
+		background-color: var(--badge-tonal-bg);
+		color: var(--badge-tonal-fg);
+	}
 
-.status-badge[data-tone='good'] {
-	--badge-fill: var(--color-tone-good-fill);
-	--badge-text: var(--color-tone-good-text);
-}
+	&.badge-primary {
+		--badge-solid-bg: var(--color-primary);
+		--badge-solid-fg: var(--color-on-dark);
+		--badge-tonal-bg: var(--color-primary-bg-subtle);
+		--badge-tonal-fg: var(--color-primary-text-emphasis);
+	}
 
-.status-badge[data-tone='warning'] {
-	--badge-fill: var(--color-tone-warning-fill);
-	--badge-text: var(--color-tone-warning-text);
-}
+	&.badge-secondary {
+		--badge-solid-bg: var(--color-secondary);
+		--badge-solid-fg: var(--color-text);
+		--badge-tonal-bg: var(--color-secondary-bg-subtle);
+		--badge-tonal-fg: var(--color-secondary-text-emphasis);
+	}
 
-.status-badge[data-tone='error'] {
-	--badge-fill: var(--color-tone-error-fill);
-	--badge-text: var(--color-tone-error-text);
-}
+	&.badge-success {
+		--badge-solid-bg: var(--color-success);
+		--badge-solid-fg: var(--color-on-dark);
+		--badge-tonal-bg: var(--color-success-bg-subtle);
+		--badge-tonal-fg: var(--color-success-text-emphasis);
+	}
 
-.status-badge[data-tone='info'] {
-	--badge-fill: var(--color-tone-info-fill);
-	--badge-text: var(--color-tone-info-text);
-}
+	&.badge-danger {
+		--badge-solid-bg: var(--color-danger);
+		--badge-solid-fg: var(--color-on-dark);
+		--badge-tonal-bg: var(--color-danger-bg-subtle);
+		--badge-tonal-fg: var(--color-danger-text-emphasis);
+	}
 
-/* `neutral` and `disabled` are absence of status, not a tone, so they stay on the surface palette. */
-.status-badge[data-tone='neutral'] {
-	background: color-mix(in srgb, var(--color-surface-muted) 60%, transparent);
-	border-color: color-mix(in srgb, var(--color-border) 60%, transparent);
-	color: var(--color-muted);
-}
+	/* Amber is too light to carry white text, so the solid variant keeps the body colour */
+	&.badge-warning {
+		--badge-solid-bg: var(--color-warning);
+		--badge-solid-fg: var(--color-text);
+		--badge-tonal-bg: var(--color-warning-bg-subtle);
+		--badge-tonal-fg: var(--color-warning-text-emphasis);
+	}
 
-.status-badge[data-tone='disabled'] {
-	background: color-mix(in srgb, var(--color-surface-muted) 50%, transparent);
-	border-color: color-mix(in srgb, var(--color-border) 40%, transparent);
-	color: var(--color-muted);
-	opacity: 0.75;
-}
+	&.badge-info {
+		--badge-solid-bg: var(--color-info);
+		--badge-solid-fg: var(--color-on-dark);
+		--badge-tonal-bg: var(--color-info-bg-subtle);
+		--badge-tonal-fg: var(--color-info-text-emphasis);
+	}
 
-/* On a selected row's primary tint, or a panel header's grey band, the grey fill muddies into the
-   background, so these go outline-only there. */
-:is(.list-row-selected, .panel-header-compact) .status-badge:is([data-tone='neutral'], [data-tone='disabled']) {
-	background: transparent;
-	border-color: color-mix(in srgb, var(--color-muted) 35%, transparent);
-}
+	&.badge-dark {
+		--badge-solid-bg: var(--color-dark);
+		--badge-solid-fg: var(--color-on-dark);
+		--badge-tonal-bg: var(--color-dark-bg-subtle);
+		--badge-tonal-fg: var(--color-dark-text-emphasis);
+	}
 
-/* The spinner some badges use in place of the tone icon. */
-.status-badge-spinner {
-	--spinner2-size: 0.75rem;
-	--spinner2-stroke: 0.125rem;
-	width: var(--spinner2-size);
-	height: var(--spinner2-size);
-	flex-shrink: 0;
-}
-
-/* The small square chip naming a module's type ("Connection" / "Surface"), shown beside a module or
-   instance name. Squarer and tighter than .status-badge, which is sized for status text. */
-.module-type-chip {
-	display: inline-block;
-	flex-shrink: 0;
-	padding: 0.125rem 0.5rem;
-	border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
-	border-radius: 0.25rem;
-	background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-	color: var(--color-primary);
-	font-size: 0.625rem;
-	font-weight: 600;
+	&.badge-light {
+		--badge-solid-bg: var(--color-light);
+		--badge-solid-fg: var(--color-text);
+		--badge-tonal-bg: var(--color-light-bg-subtle);
+		--badge-tonal-fg: var(--color-light-text-emphasis);
+	}
 }

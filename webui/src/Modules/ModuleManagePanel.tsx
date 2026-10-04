@@ -13,6 +13,7 @@ import { StaticAlert } from '~/Components/Alert.js'
 import { Grid } from '~/Components/Grid'
 import { CloseButton } from '~/Layout/PanelIcons.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ModuleDeprecationAlert, useModuleDeprecation } from './ModuleDeprecation.js'
 import { ModuleVersionsTable } from './ModuleVersionsTable.js'
 import { useModuleStoreInfo } from './useModuleStoreInfo.js'
 
@@ -82,6 +83,10 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 		...(installedInfo?.builtinVersion ? ['Built-in'] : []),
 		...(installedInfo?.devVersion ? ['Development'] : []),
 	]
+
+	// This panel covers the module as a whole, so no single version is in context here
+	const deprecation = useModuleDeprecation(moduleType, moduleId, null)
+
 	const baseInfo = moduleInfo || moduleStoreBaseInfo
 	const moduleName = baseInfo?.name ?? moduleId
 	const normalizeName = (value: string) => value.trim().toLocaleLowerCase()
@@ -182,12 +187,7 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 						)}
 					</div>
 				</div>
-				{moduleStoreBaseInfo?.deprecationReason && (
-					<StaticAlert color="warning">
-						<strong>Deprecated module</strong>
-						<p className="mb-0 mt-1">{moduleStoreBaseInfo.deprecationReason}</p>
-					</StaticAlert>
-				)}
+				{deprecation && <ModuleDeprecationAlert deprecation={deprecation} />}
 				{moduleStoreInfo?.updateWarning && <StaticAlert color="danger">{moduleStoreInfo.updateWarning}</StaticAlert>}
 				{usages.length > 0 && (
 					<section className="space-y-2" aria-label="Module usage">

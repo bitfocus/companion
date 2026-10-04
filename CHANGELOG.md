@@ -72,6 +72,19 @@
 - emulator long press suppress buzz #4322
 - standalone pipe for child ipc (#4312)
 
+## Companion v5.0.7 - Release Notes
+
+### 🐞 BUG FIXES
+
+- only add imageBuffers layer to simple presets when a feedback declares imageBuffer #4490
+- limit preset advanced-feedback style overrides to affectedProperties #4410 #4490
+- some surface open race conditions
+- update elgato-stream-deck surface module
+- layered presets lose all feedbacks when style overrides use plain values (#4477)
+- late closeSurface closing a reopened plugin surface
+- abort signal not being propagated into module action callback
+- move expression stream re-evaluation log to silly level #4489
+
 ## Companion v5.0.6 - Release Notes
 
 ### 🐞 BUG FIXES

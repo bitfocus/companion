@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
-import { Badge } from '~/Components/Badge.js'
 import { Spinner } from '~/Components/Spinner.js'
+import { StatusBadge } from '~/Components/StatusBadge.js'
 import { instanceStatusTone } from './InstanceStatusHelpers.js'
 
 interface InstanceTableStatusCellProps {
@@ -13,7 +13,7 @@ export const InstanceTableStatusCell = observer(function InstanceTableStatusCell
 	status,
 }: InstanceTableStatusCellProps) {
 	if (!isEnabled) {
-		return <Badge tone="disabled">Disabled</Badge>
+		return <StatusBadge tone="disabled">Disabled</StatusBadge>
 	}
 
 	// The module's own status message is the only explanation of *why* a connection is failing, and it
@@ -39,8 +39,8 @@ export const InstanceTableStatusCell = observer(function InstanceTableStatusCell
 	}
 
 	return (
-		<Badge tone={tone} indicator={indicator} title={messageStr ? `${label}: ${messageStr}` : label}>
+		<StatusBadge tone={tone} indicator={indicator} title={messageStr ? `${label}: ${messageStr}` : label}>
 			<span>{label}</span>
-		</Badge>
+		</StatusBadge>
 	)
 })

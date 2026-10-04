@@ -405,3 +405,18 @@ describe('Grouped choices — interactions', () => {
 		expect(screen.getByText(/Create "custom-grouped"/)).toBeInTheDocument()
 	})
 })
+
+// ---------------------------------------------------------------------------
+// Selected values in the popup
+// ---------------------------------------------------------------------------
+
+describe('Selected values in the popup', () => {
+	it('marks each selected value when the popup opens', async () => {
+		const { user, container } = renderField({ initialValue: ['apple', 'cherry'] })
+		await user.click(container.querySelector('.dropdown-field-trigger')!)
+		const list = getListbox()
+		expect(within(list).getByRole('option', { name: 'Apple' })).toHaveAttribute('data-selected')
+		expect(within(list).getByRole('option', { name: 'Cherry' })).toHaveAttribute('data-selected')
+		expect(within(list).getByRole('option', { name: 'Banana' })).not.toHaveAttribute('data-selected')
+	})
+})

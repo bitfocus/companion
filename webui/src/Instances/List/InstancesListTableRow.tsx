@@ -16,6 +16,7 @@ import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceSt
 import { Popover } from '~/Components/Popover'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { windowLinkOpen } from '~/Helpers/Window'
+import { ModuleDeprecationBadge, useModuleDeprecation } from '~/Modules/ModuleDeprecation.js'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { isCollectionEnabled, makeAbsolutePath } from '~/Resources/util'
 import type { GenericCollectionsStore } from '~/Stores/GenericCollectionsStore'
@@ -66,6 +67,8 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 
 	const moduleVersion = getModuleVersionInfo(moduleInfo, instance.moduleVersionId)
 
+	const deprecation = useModuleDeprecation(instance.moduleType, instance.moduleId, instance.moduleVersionId)
+
 	const doShowHelp = useCallback(
 		() =>
 			moduleVersion?.helpPath &&
@@ -102,6 +105,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 				<b className="truncate text-sm font-semibold text-body-strong">{instance.label}</b>
 				<div className="flex items-center gap-1.5 text-xs text-muted/80 font-normal truncate">
 					<span className="truncate">{moduleDisplayName}</span>
+					{deprecation && <ModuleDeprecationBadge deprecation={deprecation} className="shrink-0" />}
 				</div>
 			</div>
 

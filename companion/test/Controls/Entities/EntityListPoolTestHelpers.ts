@@ -15,6 +15,8 @@ import { EditableControlEntityListPoolButton } from '../../../lib/Controls/Entit
 import { EntityListPoolExpressionVariable } from '../../../lib/Controls/Entities/EntityListPoolExpressionVariable.js'
 import { ControlEntityListPoolTrigger } from '../../../lib/Controls/Entities/EntityListPoolTrigger.js'
 import type { NewFeedbackValue } from '../../../lib/Controls/Entities/Types.js'
+import type { InternalController } from '../../../lib/Internal/Controller.js'
+import type { VariablesValuesEvents } from '../../../lib/Variables/Values.js'
 
 /**
  * Shared harness for exercising `ControlEntityListPoolButton` (and the `ControlEntityListPoolBase`
@@ -60,12 +62,12 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 	const getEntityDefinition = vi.fn(options.getEntityDefinition ?? defaultGetEntityDefinition)
 
 	const internalModule = {
-		entityUpdate: vi.fn(),
-		entityDelete: vi.fn(),
-		entityUpgrade: vi.fn(),
-		executeLogicFeedback: vi.fn(),
-		evaluateFeedbackValue: vi.fn(),
-		onVariablesChanged: vi.fn(),
+		entityUpdate: vi.fn<InternalController['entityUpdate']>(),
+		entityDelete: vi.fn<InternalController['entityDelete']>(),
+		entityUpgrade: vi.fn<InternalController['entityUpgrade']>(),
+		executeLogicFeedback: vi.fn<InternalController['executeLogicFeedback']>(),
+		evaluateFeedbackValue: vi.fn<InternalController['evaluateFeedbackValue']>(),
+		onVariablesChanged: vi.fn<InternalController['onVariablesChanged']>(),
 	}
 	const processManager = {
 		connectionEntityUpdate: vi.fn(async () => false),
@@ -76,7 +78,7 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 	}
 	const executeExpression = vi.fn(() => ({ ok: true, value: 1, variableIds: new Set<string>() }) as any)
 	const variableValues = {
-		emit: vi.fn(),
+		emit: vi.fn<(event: 'variablesChanged', ...args: VariablesValuesEvents['variablesChanged']) => boolean>(),
 		createVariablesAndExpressionParser: vi.fn(() => ({ executeExpression }) as any),
 	}
 	const pageStore = {
@@ -111,7 +113,7 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 export function createPool(options: CreatePoolOptions = {}) {
 	const isLayered = options.isLayered ?? false
 
-	const sendRuntimeProps = vi.fn()
+	const sendRuntimeProps = vi.fn<() => void>()
 
 	const base = createPoolDeps(options)
 

@@ -7,10 +7,10 @@ import { useCallback, useState } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import type { ClientModuleInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
-import { Badge } from '~/Components/Badge.js'
 import { Button, LinkButtonExternal } from '~/Components/Button.js'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { LogLine, LogNoticeLine, VirtualLogList, type LogViewerLine } from '~/Components/LogViewer.js'
+import { StatusBadge } from '~/Components/StatusBadge.js'
 import { windowLinkOpen } from '~/Helpers/Window.js'
 import { InstanceTableStatusCell } from '~/Instances/List/InstanceTableStatusCell.js'
 import { UpdateInstanceToLatestBadge } from '~/Instances/UpdateInstanceToLatestBadge.js'
@@ -71,12 +71,15 @@ export const ConnectionDiagnosticsTab = observer(function ConnectionDiagnosticsT
 				<DiagnosticsRow label="Version">
 					<span className="inline-flex items-center gap-2">
 						<span className="font-mono">{moduleVersion?.displayName ?? connectionInfo.moduleVersionId}</span>
-						{connectionInfo.moduleVersionId === 'dev' && <Badge tone="info">Dev build</Badge>}
-						{moduleVersion?.isBeta && <Badge tone="warning">Beta</Badge>}
+						{connectionInfo.moduleVersionId === 'dev' && <StatusBadge tone="info">Dev build</StatusBadge>}
+						{moduleVersion?.isBeta && <StatusBadge tone="warning">Beta</StatusBadge>}
 						{moduleVersion?.isLegacy && (
-							<Badge tone="warning" title="This module has not been updated for Companion 3.0, and may not work fully">
+							<StatusBadge
+								tone="warning"
+								title="This module has not been updated for Companion 3.0, and may not work fully"
+							>
 								Legacy
-							</Badge>
+							</StatusBadge>
 						)}
 						<UpdateInstanceToLatestBadge instance={connectionInfo} />
 					</span>

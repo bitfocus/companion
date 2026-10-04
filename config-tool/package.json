@@ -24,6 +24,6 @@
   "dependencies": {
     "@companion-app/shared": "*",
     "@inquirer/prompts": "^8.7.2",
-    "yaml": "^2.9.0"
+    "yaml": "^2.9.1"
   }
 }

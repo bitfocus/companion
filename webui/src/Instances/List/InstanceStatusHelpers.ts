@@ -1,5 +1,5 @@
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
-import type { BadgeTone } from '~/Components/Badge.js'
+import type { StatusBadgeTone } from '~/Components/StatusBadge.js'
 
 /**
  * Whether a status should be presented as "still connecting" rather than as a failure. Modules report
@@ -10,7 +10,7 @@ export function isInstanceStatusConnecting(status: InstanceStatusEntry | undefin
 }
 
 /** The badge tone for an enabled instance's status, shared by the status pill and the message under the name. */
-export function instanceStatusTone(status: InstanceStatusEntry | undefined): BadgeTone {
+export function instanceStatusTone(status: InstanceStatusEntry | undefined): StatusBadgeTone {
 	if (isInstanceStatusConnecting(status)) return status?.category === 'error' ? 'info' : 'neutral'
 	if (status?.category === 'good') return 'good'
 	if (status?.category === 'warning') return 'warning'

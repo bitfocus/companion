@@ -8,8 +8,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { type DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { DropdownInputPopup } from './DropdownInputField/Popup.js'
+import { useComboboxCollection } from './DropdownInputField/useComboboxCollection.js'
 import { useDropdownComboboxItems } from './DropdownInputField/useDropdownComboboxItems.js'
-import { useFuzzyChoices } from './DropdownInputField/useFuzzyChoices.js'
+import { isGroupedFuzzyItems, useFuzzyChoices, type FuzzyChoice } from './DropdownInputField/useFuzzyChoices.js'
 import { useRegex } from './useRegex.js'
 
 interface DropdownInputFieldProps {
@@ -46,7 +47,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 	const { allItems, flatItems } = useFuzzyChoices(choices, searchLabelsOnly)
 
 	// The popup doesn't handle groups when virtualised, so detect if there are any groups
-	const hasGroups = allItems.some((item) => 'items' in item)
+	const hasGroups = isGroupedFuzzyItems(allItems)
 
 	// Compile the regex for custom value validation
 	const compiledRegex = useRegex(regex)
@@ -166,6 +167,25 @@ export const DropdownInputField = observer(function DropdownInputField({
 		return flatItems.find((o) => o.id == localDisplayValue)?.label ?? String(localDisplayValue)
 	}, [disableEditingCustom, allowCustom, localDisplayValue, flatItems])
 
+	const getItemLabel = useCallback(
+		(item: FuzzyChoice) => (disableEditingCustom && allowCustom ? '' : item.label),
+		[disableEditingCustom, allowCustom]
+	)
+	const collection = useComboboxCollection(effectiveItems, getItemLabel)
+
+	// Fallback for values not in the collection
+	const itemToStringLabel = useCallback(
+		(id: DropdownChoiceId) => {
+			if (disableEditingCustom && allowCustom) return ''
+			const item = flatItems.find((o) => o.id == id)
+			if (item) return item.label
+			const strId = String(id)
+			if (!allowCustom && strId) return `?? (${strId})`
+			return strId
+		},
+		[disableEditingCustom, allowCustom, flatItems]
+	)
+
 	return (
 		<div
 			className={classNames(
@@ -175,11 +195,11 @@ export const DropdownInputField = observer(function DropdownInputField({
 			)}
 			title={tooltip}
 		>
-			<Combobox.Root<DropdownChoiceId>
+			<Combobox.Root<DropdownChoiceId, false, FuzzyChoice>
 				virtualized={!hasGroups}
 				autoHighlight
 				value={localDisplayValue}
-				items={effectiveItems}
+				items={collection}
 				filteredItems={filteredItems}
 				disabled={disabled}
 				onValueChange={onValueChange}
@@ -193,14 +213,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 							? inputValue
 							: undefined
 				}
-				itemToStringLabel={(id: DropdownChoiceId) => {
-					if (disableEditingCustom && allowCustom) return ''
-					const item = flatItems.find((o) => o.id == id)
-					if (item) return item.label
-					const strId = String(id)
-					if (!allowCustom && strId) return `?? (${strId})`
-					return strId
-				}}
+				itemToStringLabel={itemToStringLabel}
 			>
 				<Combobox.InputGroup className="form-input dropdown-field-input-group">
 					<Combobox.Input
