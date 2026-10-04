@@ -116,7 +116,7 @@ export const WhatsNewModal = observer(
 									</StaticAlert>
 								)}
 								{pages && pages.length > 0 && (
-									<TabArea.Root variant="underline" value={selectedVersion} onValueChange={setSelectedVersion}>
+									<TabArea.Root variant="pills" value={selectedVersion} onValueChange={setSelectedVersion}>
 										<TabArea.List>
 											{pages.map((page) => (
 												<TabArea.Tab key={page.version} value={page.file}>
