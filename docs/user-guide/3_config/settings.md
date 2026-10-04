@@ -25,8 +25,7 @@ The **Installation Name** is used to define the name this installation of Compan
 
 ## Surfaces
 
-Surfaces are now controlled via [Surface Integrations](../7_surfaces/index.md).
-All surface settings and integration options have been moved to the Configured Surfaces page.
+These settings affect all surfaces. Individual surface integrations are configured via [Surface Integrations](../7_surfaces/index.md).
 More details on supported surfaces are available in the chapter on [Surfaces](../7_surfaces/index.md).
 
 - **Watch for new USB Devices**

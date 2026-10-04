@@ -34,8 +34,8 @@ export function SettingsSelectPage(): React.JSX.Element {
 						/>
 						<SettingsLinkCard
 							label="Surfaces"
-							description="Surface controller integrations and input mapping (managed in Surfaces page)."
-							to="/surfaces/integrations"
+							description="USB hotplug, auto-enabling discovered surfaces, and PIN lockout."
+							to="/settings/surfaces"
 							icon={faGamepad}
 						/>
 						<SettingsLinkCard

@@ -29,6 +29,4 @@ A full list of available surface modules and supported device models is also ava
 
 ## General Surface Settings
 
-Global surface settings are also accessible from the right-hand panel of the [Surface Page](../3_config/surfaces.md). (If your browser window only shows a single panel, click the blue <span style={{color: "white", background: "#4a9aff", borderRadius: "5px", fontSize: "0.8em", padding: "0.5em"}}>Show Settings</span> button to get to the settings panel.)
-
-For additional help, see the [surface settings](../3_config/settings.md#surfaces) help page or the [surface configuration](../3_config/surfaces.md) help page.
+Global surface settings, such as watching for new USB devices and PIN lockout, are on the **Surfaces** tab of the Settings page. See the [surface settings](../3_config/settings.md#surfaces) help page for details, or the [surface configuration](../3_config/surfaces.md) help page.

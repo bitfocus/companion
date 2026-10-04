@@ -54,6 +54,7 @@ export const SETTINGS_SECTION: NavSection = {
 	pages: [
 		{ id: 'general', label: 'General', path: '/settings/general', icon: faCog },
 		{ id: 'buttons', label: 'Buttons', path: '/settings/buttons', icon: faTh },
+		{ id: 'surfaces', label: 'Surfaces', path: '/settings/surfaces', icon: faGamepad },
 		{ id: 'protocols', label: 'Protocols', path: '/settings/protocols', icon: faNetworkWired },
 		{ id: 'backups', label: 'Backups', path: '/settings/backups', icon: faFloppyDisk },
 		{ id: 'advanced', label: 'Advanced', path: '/settings/advanced', icon: faWarning },
@@ -89,7 +90,7 @@ export const SURFACES_SECTION: NavSection = {
 	icon: faGamepad,
 	pages: [
 		{ id: 'configured', label: 'Surfaces & Groups', path: '/surfaces', icon: faGamepad },
-		{ id: 'integrations', label: 'Integrations & Settings', path: '/surfaces/integrations', icon: faCogs },
+		{ id: 'integrations', label: 'Integrations', path: '/surfaces/integrations', icon: faCogs },
 		{
 			id: 'remote',
 			label: 'Remote & Discover',

@@ -2,7 +2,7 @@ import { SETTINGS_SECTION } from '~/Layout/navRegistry.js'
 import { PageTabs } from '~/Layout/PageTabs'
 
 interface SettingsNavProps {
-	activeTab: 'general' | 'buttons' | 'protocols' | 'backups' | 'advanced'
+	activeTab: 'general' | 'buttons' | 'surfaces' | 'protocols' | 'backups' | 'advanced'
 }
 
 export function SettingsNav({ activeTab }: SettingsNavProps): React.JSX.Element {
