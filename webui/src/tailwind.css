@@ -192,6 +192,10 @@
 	--color-body-text: rgba(37, 42.92, 54.02, 0.95); /* inherited <body> default text colour */
 	--color-code: #d63384; /* inline <code> text */
 	--color-text-strong: #000;
+	/* For the `text-body` / `text-body-strong` utilities: body text that stays body-coloured inside a link or a muted
+	   container, rather than inheriting from it */
+	--color-body: var(--color-body-text);
+	--color-body-strong: var(--color-text-strong);
 	--color-icon: #333;
 	--color-text-secondary: #666;
 	--color-muted: #6c757d; /* deliberately un-prefixed (not --color-text-muted) so the utility reads `text-muted` */

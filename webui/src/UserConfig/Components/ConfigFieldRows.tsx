@@ -21,7 +21,7 @@ interface ConfigFieldRowProps {
 export function ConfigFieldRow({ label, htmlFor, help, children }: ConfigFieldRowProps): React.JSX.Element {
 	return (
 		<div className="edit-field-row">
-			<label htmlFor={htmlFor ?? undefined} className="text-xs font-semibold text-body-text">
+			<label htmlFor={htmlFor ?? undefined} className="text-xs font-semibold text-body">
 				{label}
 			</label>
 			<div className="flex items-center gap-2 min-w-0">{children}</div>

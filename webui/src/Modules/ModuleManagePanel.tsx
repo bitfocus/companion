@@ -203,7 +203,7 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 										params={isConnection ? { connectionId: instance.id } : { instanceId: instance.id }}
 										className="list-row flex items-center justify-between gap-3 px-3 py-2 hover:bg-surface-muted/60"
 									>
-										<span className="text-sm font-medium text-body-text truncate">{instance.label}</span>
+										<span className="text-sm font-medium text-body truncate">{instance.label}</span>
 										<span className="text-2xs font-mono text-muted shrink-0">
 											{instance.moduleVersionId ?? 'Default'}
 											{!instance.enabled && <span className="ml-2 font-sans">Disabled</span>}
