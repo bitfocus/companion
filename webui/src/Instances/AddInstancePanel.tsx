@@ -24,6 +24,7 @@ import { getModuleProductName, groupModuleCatalog } from '~/Modules/ModuleCatalo
 import { RefreshModulesList } from '~/Modules/RefreshModulesList.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { isSurfaceInstanceLimitReached } from './AddInstanceLimit.js'
 import type { AddInstanceService } from './AddInstanceService.js'
 import { ModuleVersionsRefresh } from './ModuleVersionsRefresh.js'
 import { useModuleVersionSelectOptions } from './useModuleVersionSelectOptions.js'
@@ -209,8 +210,7 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 		installedInfo?.installedVersions[0]
 	const isLimitReached =
 		moduleInfo.moduleType === ModuleInstanceType.Surface &&
-		surfaceInstances.getAllOfModuleId(moduleInfo.moduleId).length > 0 &&
-		!(version?.allowMultipleInstances ?? true)
+		isSurfaceInstanceLimitReached(installedInfo, surfaceInstances.getAllOfModuleId(moduleInfo.moduleId).length)
 	const installationLabel = installedInfo?.devVersion
 		? 'Development'
 		: installedInfo?.installedVersions.length

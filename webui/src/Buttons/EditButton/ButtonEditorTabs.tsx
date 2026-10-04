@@ -276,39 +276,47 @@ function StepPill({ controlId, stepId, stepIndex, stepOptions, isSelected, isCur
 		[renameStepMutation, controlId, stepId]
 	)
 
+	const pillClassName = `flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all select-none ${
+		isSelected
+			? 'bg-primary text-white shadow-xs'
+			: 'bg-surface hover:bg-surface-hover text-muted hover:text-body border border-border/70'
+	}`
+
+	const liveDot = isCurrent && (
+		<span
+			className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500 animate-pulse'}`}
+			title="Active live step"
+		/>
+	)
+
+	if (isEditing) {
+		return (
+			<div className={pillClassName}>
+				{liveDot}
+				<TextInputFieldSimple
+					id={undefined}
+					value={stepOptions?.name ?? ''}
+					setValue={doRename}
+					onBlur={() => setIsEditing(false)}
+					onKeyDown={(e) => {
+						if (e.key === 'Enter' || e.key === 'Escape') setIsEditing(false)
+					}}
+					autoFocus
+				/>
+			</div>
+		)
+	}
+
 	return (
-		<div
+		<button
+			type="button"
 			onClick={onSelect}
 			onDoubleClick={() => setIsEditing(true)}
-			className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-all select-none ${
-				isSelected
-					? 'bg-primary text-white shadow-xs'
-					: 'bg-surface hover:bg-surface-hover text-muted hover:text-body border border-border/70'
-			}`}
+			aria-pressed={isSelected}
+			className={`${pillClassName} cursor-pointer`}
 		>
-			{isCurrent && (
-				<span
-					className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500 animate-pulse'}`}
-					title="Active live step"
-				/>
-			)}
-
-			{isEditing ? (
-				<div onClick={(e) => e.stopPropagation()}>
-					<TextInputFieldSimple
-						id={undefined}
-						value={stepOptions?.name ?? ''}
-						setValue={doRename}
-						onBlur={() => setIsEditing(false)}
-						onKeyDown={(e) => {
-							if (e.key === 'Enter' || e.key === 'Escape') setIsEditing(false)
-						}}
-						autoFocus
-					/>
-				</div>
-			) : (
-				<span>{name}</span>
-			)}
-		</div>
+			{liveDot}
+			<span>{name}</span>
+		</button>
 	)
 }
