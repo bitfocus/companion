@@ -123,17 +123,29 @@ export const ALL_NAV_PAGES: readonly NavPage[] = [
 	),
 ]
 
-/** Which page of a section the current location is on. */
-export function activePageIdForPath(section: NavSection, pathname: string): string {
+/**
+ * Which page of a section the current location is on, including on that page's child routes, or `null` when the
+ * location is outside the section.
+ */
+export function matchedPageIdForPath(section: NavSection, pathname: string): string | null {
 	let best: NavPage | undefined
+	let bestLength = -1
 	for (const page of section.pages) {
 		const paths = [page.path, ...(page.alsoMatches ?? [])]
 		for (const path of paths) {
 			if (pathname === path || pathname.startsWith(`${path}/`)) {
 				// Longest match wins, so `/surfaces/remote` beats the section root `/surfaces`
-				if (!best || path.length > best.path.length) best = page
+				if (path.length > bestLength) {
+					best = page
+					bestLength = path.length
+				}
 			}
 		}
 	}
-	return (best ?? section.pages[0]).id
+	return best?.id ?? null
+}
+
+/** Which page of a section's tab strip to show as selected: the matched page, or the section's first page */
+export function activePageIdForPath(section: NavSection, pathname: string): string {
+	return matchedPageIdForPath(section, pathname) ?? section.pages[0].id
 }

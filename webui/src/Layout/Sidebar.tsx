@@ -52,7 +52,7 @@ import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ConnectionsTabNotifyIcon, SurfacesTabNotifyIcon } from '~/Surfaces/TabNotifyIcon.js'
 import { commandPaletteOpen } from './CommandPaletteState.js'
-import { SETTINGS_SECTION, VARIABLES_SECTION, type NavSection } from './navRegistry.js'
+import { matchedPageIdForPath, SETTINGS_SECTION, VARIABLES_SECTION, type NavSection } from './navRegistry.js'
 import { SidebarFooter, SidebarHeader } from './SidebarHeader'
 import { useCompanionVersion } from './useCompanionVersion'
 
@@ -331,12 +331,22 @@ interface SidebarSubMenuItemProps {
 	name: string
 	path: string
 	target?: string
+	/**
+	 * Whether this is the page of its section that is open, including on that page's own child routes (an item
+	 * selected from its list). The link's own matching is exact, since a section's pages nest inside each other.
+	 */
+	isActive: boolean
 }
 
-function SidebarSubMenuItem({ name, path, target }: SidebarSubMenuItemProps) {
+function SidebarSubMenuItem({ name, path, target, isActive }: SidebarSubMenuItemProps) {
 	return (
 		<li>
-			<Link className="nav-link nav-sub-link" to={path} target={target} activeOptions={{ exact: true }}>
+			<Link
+				className={classNames('nav-link nav-sub-link', { active: isActive })}
+				to={path}
+				target={target}
+				activeOptions={{ exact: true }}
+			>
 				<span className="nav-sub-dot" />
 				{name}
 				{target === '_blank' && <FontAwesomeIcon icon={faExternalLinkSquare} className="ms-1 full-label" />}
@@ -347,6 +357,9 @@ function SidebarSubMenuItem({ name, path, target }: SidebarSubMenuItemProps) {
 
 /** A nav group whose sub-items are a section of the shared nav registry. */
 function SidebarSectionNavGroup({ section }: { section: NavSection }) {
+	const { pathname } = useLocation()
+	const activePageId = matchedPageIdForPath(section, pathname)
+
 	return (
 		<SidebarNavGroup
 			name={section.label}
@@ -354,7 +367,12 @@ function SidebarSectionNavGroup({ section }: { section: NavSection }) {
 			basePaths={section.pages.flatMap((page) => [page.path, ...(page.alsoMatches ?? [])])}
 		>
 			{section.pages.map((page) => (
-				<SidebarSubMenuItem key={page.id} name={page.shortLabel ?? page.label} path={page.path} />
+				<SidebarSubMenuItem
+					key={page.id}
+					name={page.shortLabel ?? page.label}
+					path={page.path}
+					isActive={page.id === activePageId}
+				/>
 			))}
 		</SidebarNavGroup>
 	)
@@ -531,8 +549,8 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Surfaces" icon={faGamepad} notifications={SurfacesTabNotifyIcon} path="/surfaces" />
 					<SidebarMenuItem name="Modules" icon={faPuzzlePiece} path="/modules" />
 					<SidebarNavGroup name="Interactive Buttons" icon={faTabletScreenButton} basePaths={['/emulator', '/tablet']}>
-						<SidebarSubMenuItem name="Emulator" path="/emulator" target="_blank" />
-						<SidebarSubMenuItem name="Web Buttons" path="/tablet" target="_blank" />
+						<SidebarSubMenuItem name="Emulator" path="/emulator" target="_blank" isActive={false} />
+						<SidebarSubMenuItem name="Web Buttons" path="/tablet" target="_blank" isActive={false} />
 					</SidebarNavGroup>
 
 					{/* Category: System */}
