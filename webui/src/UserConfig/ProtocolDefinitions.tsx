@@ -1,8 +1,5 @@
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { windowLinkOpen } from '~/Helpers/Window.js'
-import type { ContextHelpButtonProps } from '~/Layout/PanelIcons.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
-import type { UserConfigProps } from './Components/Common.js'
 import { ArtnetConfig } from './Sections/ArtnetConfig.js'
 import { EmberPlusConfig } from './Sections/EmberPlusConfig.js'
 import { HttpConfig } from './Sections/HttpConfig.js'
@@ -13,25 +10,7 @@ import { RosstalkConfig } from './Sections/RosstalkConfig.js'
 import { SatelliteConfig } from './Sections/SatelliteConfig.js'
 import { TcpConfig } from './Sections/TcpConfig.js'
 import { UdpConfig } from './Sections/UdpConfig.js'
-
-export interface ProtocolDefinition {
-	id: string
-	name: string
-	/** The user config key that switches it on and off, or `null` for a protocol that is always running */
-	enabledField: keyof UserConfigModel | null
-	/** What it is for, as the summary at the top of its panel */
-	description: string
-	/** A one-line description of how it is reached, for the list row */
-	summary: (config: UserConfigModel) => string
-	/** Where its API reference lives */
-	docs: NonNullable<ContextHelpButtonProps['action']>
-	/** The label of the button that opens `docs`, short enough to sit beside the summary */
-	docsLabel: string
-	/** The protocol's settings, as rows of a settings table, or `null` when it has none */
-	Settings: React.ComponentType<UserConfigProps> | null
-	/** Anything more it needs that doesn't fit a settings row, shown below them, or `null` */
-	Section: React.ComponentType | null
-}
+import type { SettingsItemDefinition } from './SettingsItems.js'
 
 /**
  * The port this web interface was opened on, which also serves the HTTP based APIs. The server doesn't report its
@@ -41,13 +20,13 @@ function webInterfacePort(): string {
 	return window.location.port || (window.location.protocol === 'https:' ? '443' : '80')
 }
 
-export const PROTOCOLS: ProtocolDefinition[] = [
+export const PROTOCOLS: SettingsItemDefinition[] = [
 	{
 		id: 'satellite',
 		name: 'Satellite',
 		description:
 			'Lets remote surfaces such as Stream Decks connect to Companion over the network, most often through the Companion Satellite app. Its ports are fixed.',
-		enabledField: null,
+		enabledField: 'always-on',
 		summary: () => 'TCP port 16622 · WebSocket port 16623',
 		docs: '/user-guide/remote-control/satellite',
 		docsLabel: 'Setup guide',

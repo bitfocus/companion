@@ -64,6 +64,8 @@ import { Route as AppVariablesExpressionRouteImport } from './routes/_app/variab
 import { Route as StandaloneConnectionDebugDotconnectionIdRouteImport } from './routes/_standalone/connection-debug.$connectionId.tsx'
 import { Route as StandaloneEmulatorIndexRouteImport } from './routes/_standalone/emulator/index.tsx'
 import { Route as AppModulesModuleTypeDotmoduleIdRouteImport } from './routes/_app/modules/$moduleType.$moduleId.tsx'
+import { Route as AppSettingsAdvancedIndexRouteImport } from './routes/_app/settings/advanced/index.tsx'
+import { Route as AppSettingsAdvancedItemIdRouteImport } from './routes/_app/settings/advanced/$itemId.tsx'
 import { Route as AppSettingsBackupsIndexRouteImport } from './routes/_app/settings/backups/index.tsx'
 import { Route as AppSettingsBackupsRuleIdRouteImport } from './routes/_app/settings/backups/$ruleId.tsx'
 import { Route as AppSettingsProtocolsIndexRouteImport } from './routes/_app/settings/protocols/index.tsx'
@@ -375,6 +377,18 @@ const AppModulesModuleTypeDotmoduleIdRoute =
     path: '/$moduleType/$moduleId',
     getParentRoute: () => AppModulesRoute,
   } as any)
+const AppSettingsAdvancedIndexRoute =
+  AppSettingsAdvancedIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AppSettingsAdvancedRoute,
+  } as any)
+const AppSettingsAdvancedItemIdRoute =
+  AppSettingsAdvancedItemIdRouteImport.update({
+    id: '/$itemId',
+    path: '/$itemId',
+    getParentRoute: () => AppSettingsAdvancedRoute,
+  } as any)
 const AppSettingsBackupsIndexRoute = AppSettingsBackupsIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -508,7 +522,7 @@ export interface FileRoutesByFullPath {
   '/connections/$connectionId': typeof AppConnectionsConnectionIdRoute
   '/connections/add': typeof AppConnectionsAddRoute
   '/image-library/$imageName': typeof AppImageLibraryImageNameRoute
-  '/settings/advanced': typeof AppSettingsAdvancedRoute
+  '/settings/advanced': typeof AppSettingsAdvancedRouteWithChildren
   '/settings/backups': typeof AppSettingsBackupsRouteWithChildren
   '/settings/buttons': typeof AppSettingsButtonsRoute
   '/settings/general': typeof AppSettingsGeneralRoute
@@ -535,6 +549,7 @@ export interface FileRoutesByFullPath {
   '/triggers/': typeof AppTriggersIndexRoute
   '/emulator/': typeof StandaloneEmulatorIndexRoute
   '/modules/$moduleType/$moduleId': typeof AppModulesModuleTypeDotmoduleIdRoute
+  '/settings/advanced/$itemId': typeof AppSettingsAdvancedItemIdRoute
   '/settings/backups/$ruleId': typeof AppSettingsBackupsRuleIdRoute
   '/settings/protocols/$protocolId': typeof AppSettingsProtocolsProtocolIdRoute
   '/surfaces/configured/$': typeof AppSurfacesConfiguredDotsplatRoute
@@ -545,6 +560,7 @@ export interface FileRoutesByFullPath {
   '/variables/custom/$name': typeof AppVariablesCustomNameRoute
   '/variables/expression/$controlId': typeof AppVariablesExpressionControlIdRoute
   '/surfaces/debug/$instanceId': typeof StandaloneSurfacesDotdebugDotinstanceIdRoute
+  '/settings/advanced/': typeof AppSettingsAdvancedIndexRoute
   '/settings/backups/': typeof AppSettingsBackupsIndexRoute
   '/settings/protocols/': typeof AppSettingsProtocolsIndexRoute
   '/surfaces/integrations/': typeof AppSurfacesIntegrationsIndexRoute
@@ -576,7 +592,6 @@ export interface FileRoutesByTo {
   '/connections/$connectionId': typeof AppConnectionsConnectionIdRoute
   '/connections/add': typeof AppConnectionsAddRoute
   '/image-library/$imageName': typeof AppImageLibraryImageNameRoute
-  '/settings/advanced': typeof AppSettingsAdvancedRoute
   '/settings/buttons': typeof AppSettingsButtonsRoute
   '/settings/general': typeof AppSettingsGeneralRoute
   '/settings/surfaces': typeof AppSettingsSurfacesRoute
@@ -596,6 +611,7 @@ export interface FileRoutesByTo {
   '/triggers': typeof AppTriggersIndexRoute
   '/emulator': typeof StandaloneEmulatorIndexRoute
   '/modules/$moduleType/$moduleId': typeof AppModulesModuleTypeDotmoduleIdRoute
+  '/settings/advanced/$itemId': typeof AppSettingsAdvancedItemIdRoute
   '/settings/backups/$ruleId': typeof AppSettingsBackupsRuleIdRoute
   '/settings/protocols/$protocolId': typeof AppSettingsProtocolsProtocolIdRoute
   '/surfaces/configured/$': typeof AppSurfacesConfiguredDotsplatRoute
@@ -606,6 +622,7 @@ export interface FileRoutesByTo {
   '/variables/custom/$name': typeof AppVariablesCustomNameRoute
   '/variables/expression/$controlId': typeof AppVariablesExpressionControlIdRoute
   '/surfaces/debug/$instanceId': typeof StandaloneSurfacesDotdebugDotinstanceIdRoute
+  '/settings/advanced': typeof AppSettingsAdvancedIndexRoute
   '/settings/backups': typeof AppSettingsBackupsIndexRoute
   '/settings/protocols': typeof AppSettingsProtocolsIndexRoute
   '/surfaces/integrations': typeof AppSurfacesIntegrationsIndexRoute
@@ -645,7 +662,7 @@ export interface FileRoutesById {
   '/_app/connections/$connectionId': typeof AppConnectionsConnectionIdRoute
   '/_app/connections/add': typeof AppConnectionsAddRoute
   '/_app/image-library/$imageName': typeof AppImageLibraryImageNameRoute
-  '/_app/settings/advanced': typeof AppSettingsAdvancedRoute
+  '/_app/settings/advanced': typeof AppSettingsAdvancedRouteWithChildren
   '/_app/settings/backups': typeof AppSettingsBackupsRouteWithChildren
   '/_app/settings/buttons': typeof AppSettingsButtonsRoute
   '/_app/settings/general': typeof AppSettingsGeneralRoute
@@ -672,6 +689,7 @@ export interface FileRoutesById {
   '/_app/triggers/': typeof AppTriggersIndexRoute
   '/_standalone/emulator/': typeof StandaloneEmulatorIndexRoute
   '/_app/modules/$moduleType/$moduleId': typeof AppModulesModuleTypeDotmoduleIdRoute
+  '/_app/settings/advanced/$itemId': typeof AppSettingsAdvancedItemIdRoute
   '/_app/settings/backups/$ruleId': typeof AppSettingsBackupsRuleIdRoute
   '/_app/settings/protocols/$protocolId': typeof AppSettingsProtocolsProtocolIdRoute
   '/_app/surfaces/configured/$': typeof AppSurfacesConfiguredDotsplatRoute
@@ -682,6 +700,7 @@ export interface FileRoutesById {
   '/_app/variables/custom/$name': typeof AppVariablesCustomNameRoute
   '/_app/variables/expression/$controlId': typeof AppVariablesExpressionControlIdRoute
   '/_standalone/surfaces/debug/$instanceId': typeof StandaloneSurfacesDotdebugDotinstanceIdRoute
+  '/_app/settings/advanced/': typeof AppSettingsAdvancedIndexRoute
   '/_app/settings/backups/': typeof AppSettingsBackupsIndexRoute
   '/_app/settings/protocols/': typeof AppSettingsProtocolsIndexRoute
   '/_app/surfaces_/integrations/': typeof AppSurfacesIntegrationsIndexRoute
@@ -748,6 +767,7 @@ export interface FileRouteTypes {
     | '/triggers/'
     | '/emulator/'
     | '/modules/$moduleType/$moduleId'
+    | '/settings/advanced/$itemId'
     | '/settings/backups/$ruleId'
     | '/settings/protocols/$protocolId'
     | '/surfaces/configured/$'
@@ -758,6 +778,7 @@ export interface FileRouteTypes {
     | '/variables/custom/$name'
     | '/variables/expression/$controlId'
     | '/surfaces/debug/$instanceId'
+    | '/settings/advanced/'
     | '/settings/backups/'
     | '/settings/protocols/'
     | '/surfaces/integrations/'
@@ -789,7 +810,6 @@ export interface FileRouteTypes {
     | '/connections/$connectionId'
     | '/connections/add'
     | '/image-library/$imageName'
-    | '/settings/advanced'
     | '/settings/buttons'
     | '/settings/general'
     | '/settings/surfaces'
@@ -809,6 +829,7 @@ export interface FileRouteTypes {
     | '/triggers'
     | '/emulator'
     | '/modules/$moduleType/$moduleId'
+    | '/settings/advanced/$itemId'
     | '/settings/backups/$ruleId'
     | '/settings/protocols/$protocolId'
     | '/surfaces/configured/$'
@@ -819,6 +840,7 @@ export interface FileRouteTypes {
     | '/variables/custom/$name'
     | '/variables/expression/$controlId'
     | '/surfaces/debug/$instanceId'
+    | '/settings/advanced'
     | '/settings/backups'
     | '/settings/protocols'
     | '/surfaces/integrations'
@@ -884,6 +906,7 @@ export interface FileRouteTypes {
     | '/_app/triggers/'
     | '/_standalone/emulator/'
     | '/_app/modules/$moduleType/$moduleId'
+    | '/_app/settings/advanced/$itemId'
     | '/_app/settings/backups/$ruleId'
     | '/_app/settings/protocols/$protocolId'
     | '/_app/surfaces/configured/$'
@@ -894,6 +917,7 @@ export interface FileRouteTypes {
     | '/_app/variables/custom/$name'
     | '/_app/variables/expression/$controlId'
     | '/_standalone/surfaces/debug/$instanceId'
+    | '/_app/settings/advanced/'
     | '/_app/settings/backups/'
     | '/_app/settings/protocols/'
     | '/_app/surfaces_/integrations/'
@@ -1308,6 +1332,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppModulesModuleTypeDotmoduleIdRouteImport
       parentRoute: typeof AppModulesRoute
     }
+    '/_app/settings/advanced/': {
+      id: '/_app/settings/advanced/'
+      path: '/'
+      fullPath: '/settings/advanced/'
+      preLoaderRoute: typeof AppSettingsAdvancedIndexRouteImport
+      parentRoute: typeof AppSettingsAdvancedRoute
+    }
+    '/_app/settings/advanced/$itemId': {
+      id: '/_app/settings/advanced/$itemId'
+      path: '/$itemId'
+      fullPath: '/settings/advanced/$itemId'
+      preLoaderRoute: typeof AppSettingsAdvancedItemIdRouteImport
+      parentRoute: typeof AppSettingsAdvancedRoute
+    }
     '/_app/settings/backups/': {
       id: '/_app/settings/backups/'
       path: '/'
@@ -1540,6 +1578,19 @@ const AppTriggersRouteWithChildren = AppTriggersRoute._addFileChildren(
   AppTriggersRouteChildren,
 )
 
+interface AppSettingsAdvancedRouteChildren {
+  AppSettingsAdvancedItemIdRoute: typeof AppSettingsAdvancedItemIdRoute
+  AppSettingsAdvancedIndexRoute: typeof AppSettingsAdvancedIndexRoute
+}
+
+const AppSettingsAdvancedRouteChildren: AppSettingsAdvancedRouteChildren = {
+  AppSettingsAdvancedItemIdRoute: AppSettingsAdvancedItemIdRoute,
+  AppSettingsAdvancedIndexRoute: AppSettingsAdvancedIndexRoute,
+}
+
+const AppSettingsAdvancedRouteWithChildren =
+  AppSettingsAdvancedRoute._addFileChildren(AppSettingsAdvancedRouteChildren)
+
 interface AppSettingsBackupsRouteChildren {
   AppSettingsBackupsRuleIdRoute: typeof AppSettingsBackupsRuleIdRoute
   AppSettingsBackupsIndexRoute: typeof AppSettingsBackupsIndexRoute
@@ -1659,7 +1710,7 @@ interface AppRouteChildren {
   AppSurfacesRoute: typeof AppSurfacesRouteWithChildren
   AppTriggersRoute: typeof AppTriggersRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
-  AppSettingsAdvancedRoute: typeof AppSettingsAdvancedRoute
+  AppSettingsAdvancedRoute: typeof AppSettingsAdvancedRouteWithChildren
   AppSettingsBackupsRoute: typeof AppSettingsBackupsRouteWithChildren
   AppSettingsButtonsRoute: typeof AppSettingsButtonsRoute
   AppSettingsGeneralRoute: typeof AppSettingsGeneralRoute
@@ -1687,7 +1738,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSurfacesRoute: AppSurfacesRouteWithChildren,
   AppTriggersRoute: AppTriggersRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
-  AppSettingsAdvancedRoute: AppSettingsAdvancedRoute,
+  AppSettingsAdvancedRoute: AppSettingsAdvancedRouteWithChildren,
   AppSettingsBackupsRoute: AppSettingsBackupsRouteWithChildren,
   AppSettingsButtonsRoute: AppSettingsButtonsRoute,
   AppSettingsGeneralRoute: AppSettingsGeneralRoute,

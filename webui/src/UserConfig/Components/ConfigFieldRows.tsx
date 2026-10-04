@@ -1,8 +1,11 @@
 import { observer } from 'mobx-react-lite'
 import { useId } from 'react'
+import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
+import { TextInputField } from '~/Components/TextInputField.js'
 import { ResetButton, type UserConfigProps } from './Common.js'
 
 interface ConfigFieldRowProps {
@@ -92,6 +95,72 @@ export const ConfigNumberField = observer(function ConfigNumberField({
 
 						userConfig.setValue(field, Math.min(Math.max(value, min), max))
 					}}
+				/>
+			</div>
+			{!isLocked && <ResetButton userConfig={userConfig} field={field} />}
+		</ConfigFieldRow>
+	)
+})
+
+interface ConfigTextFieldProps {
+	userConfig: UserConfigProps
+	label: string
+	field: keyof UserConfigModel
+	help: React.ReactNode
+}
+
+export const ConfigTextField = observer(function ConfigTextField({
+	userConfig,
+	label,
+	field,
+	help,
+}: ConfigTextFieldProps) {
+	const id = useId()
+	const isLocked = userConfig.readonlyKeys.has(field)
+
+	return (
+		<ConfigFieldRow label={label} htmlFor={id} help={help}>
+			<div className="grow min-w-0">
+				<TextInputField
+					id={id}
+					value={String((userConfig.config[field] as any) ?? '')}
+					setValue={(value) => userConfig.setValue(field, value)}
+					disabled={isLocked}
+					tooltip={isLocked ? 'This value is locked by an environment variable' : undefined}
+				/>
+			</div>
+			{!isLocked && <ResetButton userConfig={userConfig} field={field} />}
+		</ConfigFieldRow>
+	)
+})
+
+interface ConfigDropdownFieldProps {
+	userConfig: UserConfigProps
+	label: string
+	field: keyof UserConfigModel
+	choices: DropdownChoice[]
+	help: React.ReactNode
+}
+
+export const ConfigDropdownField = observer(function ConfigDropdownField({
+	userConfig,
+	label,
+	field,
+	choices,
+	help,
+}: ConfigDropdownFieldProps) {
+	const id = useId()
+	const isLocked = userConfig.readonlyKeys.has(field)
+
+	return (
+		<ConfigFieldRow label={label} htmlFor={id} help={help}>
+			<div className="grow min-w-0">
+				<SimpleDropdownInputField
+					id={id}
+					value={String((userConfig.config[field] as any) ?? '')}
+					setValue={(value) => userConfig.setValue(field, value)}
+					choices={choices}
+					disabled={isLocked}
 				/>
 			</div>
 			{!isLocked && <ResetButton userConfig={userConfig} field={field} />}

@@ -154,6 +154,8 @@ A list of previous backups can be found at the bottom of the **Edit Backup Rule*
 
 ## Advanced
 
+The Advanced page lists the admin password, the HTTPS web server and experimental features. Admin password and HTTPS each have a switch to turn them on or off; select one to open its settings.
+
 ### Admin UI Password
 
 _If enabled, Companion will require a password to view any of the configuration pages. This does not make an installation secure, it is only designed to stop casual browsers_
