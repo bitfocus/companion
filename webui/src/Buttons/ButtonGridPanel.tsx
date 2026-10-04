@@ -116,7 +116,7 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 			minHeight: viewportMinHeight,
 			height: viewportPreferredHeight,
 			'--pending-change-color':
-				pendingChangesJoin === 'held-buttons' ? 'var(--color-copy-source)' : 'var(--color-primary)',
+				pendingChangesJoin === 'held-buttons' ? 'var(--color-copy-source)' : 'var(--color-grid-selection)',
 		}),
 		[viewportMinHeight, viewportPreferredHeight, pendingChangesJoin]
 	)

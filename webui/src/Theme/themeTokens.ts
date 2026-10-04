@@ -7,6 +7,7 @@ export const FIXED_TOKENS: readonly string[] = [
 	'--color-button-bg',
 	'--color-button-border',
 	'--color-button-placeholder',
+	'--color-grid-selection',
 	'--color-copy-source',
 	'--color-drop-border',
 	'--color-drop-neutral-bg',

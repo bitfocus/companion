@@ -216,6 +216,7 @@
 	/* Button preview / rendering (the always-black button canvas and its drag/drop states). Fixed: these don't
 	   follow the theme (see FIXED_TOKENS in Theme/themeTokens.ts) */
 	--color-button-bg: #000; /* hardware buttons are black; this does not flip with app theme */
+	--color-grid-selection: #cbd5e1; /* selections sit on the always-dark button grid in both themes */
 	--color-button-border: rgba(100, 100, 100, 0.4);
 	--color-button-placeholder: #262626;
 	--color-copy-source: #1b7fc2; /* highlight for a button marked as a copy/paste source */

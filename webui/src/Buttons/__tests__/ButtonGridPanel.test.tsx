@@ -281,7 +281,7 @@ describe('the colour an about-to-change cell is outlined in', () => {
 	it('matches the selection while a selecting tool is active', () => {
 		const { content } = setup()
 
-		expect(content.style.getPropertyValue('--pending-change-color')).toBe('var(--color-primary)')
+		expect(content.style.getPropertyValue('--pending-change-color')).toBe('var(--color-grid-selection)')
 	})
 
 	it('matches the held buttons while a transfer tool is', () => {

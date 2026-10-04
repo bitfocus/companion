@@ -174,8 +174,8 @@
 		z-index: 1;
 		pointer-events: none;
 
-		border: 1px dashed var(--color-primary);
-		background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+		border: 2px dashed var(--color-grid-selection);
+		background-color: color-mix(in srgb, var(--color-grid-selection) 20%, transparent);
 	}
 
 	.button-grid-canvas {
