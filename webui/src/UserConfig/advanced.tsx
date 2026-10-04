@@ -19,7 +19,7 @@ export const SettingsAdvancedPage = memo(function UserConfig() {
 				<SettingsNav activeTab="advanced" />
 
 				<div className="page-scroll">
-					<div className="primary-panel">
+					<div className="primary-panel max-w-readable">
 						<PageIntro title="Advanced Settings">
 							Admin authentication, HTTPS certificates, and experimental features.
 						</PageIntro>

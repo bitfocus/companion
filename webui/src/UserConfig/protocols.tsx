@@ -35,7 +35,7 @@ export const SettingsProtocolsPage = memo(function UserConfig() {
 				<SettingsNav activeTab="protocols" />
 
 				<div className="page-scroll">
-					<div className="primary-panel space-y-6 pb-8">
+					<div className="primary-panel max-w-readable space-y-6 pb-8">
 						<div>
 							<PageIntro title="Protocols Settings">
 								Enable or disable network remote control endpoints for TCP, UDP, HTTP, OSC, Artnet, and Satellite.

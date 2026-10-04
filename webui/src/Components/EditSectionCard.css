@@ -11,6 +11,7 @@
 }
 
 .edit-section {
+	max-width: var(--container-readable);
 	padding-block: 0.75rem;
 	border-bottom: 1px solid var(--color-border);
 

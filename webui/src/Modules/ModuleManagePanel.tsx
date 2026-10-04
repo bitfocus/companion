@@ -121,7 +121,7 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 			</div>
 
 			<div className="secondary-panel-simple-body p-4 space-y-4 overflow-y-auto flex-1">
-				<div className="space-y-4">
+				<div className="max-w-readable space-y-4">
 					{extraProducts.length > 0 && (
 						<div className="flex flex-col gap-3 border-b border-border/70 pb-4">
 							<h4 className="text-2xs font-medium uppercase tracking-wider text-muted mb-0">Supported products</h4>
@@ -215,7 +215,9 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 					</section>
 				)}
 
-				<ModuleVersionsTable moduleType={moduleType} moduleId={moduleId} moduleStoreInfo={moduleStoreInfo} />
+				<div className="max-w-readable">
+					<ModuleVersionsTable moduleType={moduleType} moduleId={moduleId} moduleStoreInfo={moduleStoreInfo} />
+				</div>
 			</div>
 		</>
 	)

@@ -18,7 +18,7 @@ export const SettingsButtonsPage = memo(function UserConfig() {
 				<SettingsNav activeTab="buttons" />
 
 				<div className="page-scroll">
-					<div className="primary-panel">
+					<div className="primary-panel max-w-readable">
 						<PageIntro title="Button Settings">
 							Configure button behavior, default press actions, grid dimensions, and surface controls.
 						</PageIntro>

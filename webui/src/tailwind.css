@@ -48,6 +48,10 @@
 	--breakpoint-xl: 1200px;
 	--breakpoint-2xl: 1400px;
 
+	/* The widest a form or settings page grows (`max-w-readable`), so labels and their values stay
+	   within an easy glance of each other on wide screens. */
+	--container-readable: 56rem;
+
 	/* Fonts — the app's canonical UI and monospace stacks. Declared here so base.css and the
 	   font-sans/font-mono utilities all read one source. */
 	--font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";

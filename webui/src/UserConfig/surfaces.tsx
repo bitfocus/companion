@@ -18,7 +18,7 @@ export const SettingsSurfacesPage = memo(function UserConfig() {
 				<SettingsNav activeTab="surfaces" />
 
 				<div className="page-scroll">
-					<div className="primary-panel">
+					<div className="primary-panel max-w-readable">
 						<PageIntro title="Surface Settings">
 							These settings affect all surfaces. Surface integrations are configured on the Surfaces page.
 						</PageIntro>

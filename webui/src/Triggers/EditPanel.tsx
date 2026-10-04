@@ -141,173 +141,175 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 
 			{/* Unified Automation Pipeline Canvas (No Tabs, No Truncation) */}
 			<div className="page-scroll p-4">
-				{/* ─── STAGE 1: WHEN (Events) ─────────────────────────────────── */}
-				<div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
-					<div className="px-3.5 py-2.5 bg-surface-subtle border-b border-border flex items-center justify-between">
-						<div className="flex items-center gap-2">
-							<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-amber-500/15 text-amber-600 border border-amber-500/20 flex items-center gap-1">
-								<FontAwesomeIcon icon={faBolt} className="text-3xs" />
-								WHEN
-							</span>
-							<span className="text-xs font-semibold text-body">Trigger Events</span>
-						</div>
-						<span className="text-3xs font-medium text-muted">
-							{config.events.length} {config.events.length === 1 ? 'event' : 'events'}
-						</span>
-					</div>
-
-					<div className="p-3">
-						<MyErrorBoundary>
-							<TriggerEventEditor
-								heading=""
-								controlId={controlId}
-								events={config.events}
-								localVariablesStore={localVariablesStore}
-							/>
-						</MyErrorBoundary>
-					</div>
-				</div>
-
-				{/* Connector Arrow */}
-				<div className="relative z-10 flex justify-center items-center -my-2 text-muted/50">
-					<div className="w-9 h-9 rounded-full bg-surface border border-border flex items-center justify-center text-xs shadow-xs">
-						<FontAwesomeIcon icon={faArrowDown} />
-					</div>
-				</div>
-
-				{/* ─── STAGE 2: IF (Conditions) ───────────────────────────────── */}
-				<div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
-					<div className="px-3.5 py-2.5 bg-surface-subtle border-b border-border flex items-center justify-between">
-						<div className="flex items-center gap-2">
-							<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-sky-500/15 text-sky-600 border border-sky-500/20 flex items-center gap-1">
-								<FontAwesomeIcon icon={faFilter} className="text-3xs" />
-								IF
-							</span>
-							<span className="text-xs font-semibold text-body">Conditions & Guardrails</span>
-						</div>
-						<span className="text-3xs font-medium text-muted">
-							{config.condition.length === 0 ? 'Always run' : `${config.condition.length} conditions`}
-						</span>
-					</div>
-
-					<div className="p-3">
-						<MyErrorBoundary>
-							<ControlEntitiesEditor
-								heading=""
-								controlId={controlId}
-								entities={config.condition}
-								listId="feedbacks"
-								entityType={EntityModelType.Feedback}
-								entityTypeLabel="condition"
-								feedbackListType={FeedbackEntitySubType.Boolean}
-								location={undefined}
-								localVariablesStore={localVariablesStore}
-								localVariablePrefix={null}
-							/>
-						</MyErrorBoundary>
-					</div>
-				</div>
-
-				{/* Connector Arrow */}
-				<div className="relative z-10 flex justify-center items-center -my-2 text-muted/50">
-					<div className="w-9 h-9 rounded-full bg-surface border border-border flex items-center justify-center text-xs shadow-xs">
-						<FontAwesomeIcon icon={faArrowDown} />
-					</div>
-				</div>
-
-				{/* ─── STAGE 3: THEN (Actions) ────────────────────────────────── */}
-				<div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
-					<div className="px-3.5 py-2.5 bg-surface-subtle border-b border-border flex items-center justify-between">
-						<div className="flex items-center gap-2">
-							<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-emerald-500/15 text-emerald-600 border border-emerald-500/20 flex items-center gap-1">
-								<FontAwesomeIcon icon={faPlay} className="text-3xs" />
-								THEN
-							</span>
-							<span className="text-xs font-semibold text-body">Execute Actions</span>
-						</div>
-						<div className="flex items-center gap-3">
+				<div className="max-w-readable">
+					{/* ─── STAGE 1: WHEN (Events) ─────────────────────────────────── */}
+					<div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
+						<div className="px-3.5 py-2.5 bg-surface-subtle border-b border-border flex items-center justify-between">
+							<div className="flex items-center gap-2">
+								<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-amber-500/15 text-amber-600 border border-amber-500/20 flex items-center gap-1">
+									<FontAwesomeIcon icon={faBolt} className="text-3xs" />
+									WHEN
+								</span>
+								<span className="text-xs font-semibold text-body">Trigger Events</span>
+							</div>
 							<span className="text-3xs font-medium text-muted">
-								{config.actions.length} {config.actions.length === 1 ? 'action' : 'actions'}
+								{config.events.length} {config.events.length === 1 ? 'event' : 'events'}
 							</span>
-							<Button
-								variant="ghost"
-								size="sm"
-								onClick={doTestRun}
-								title="Test fire trigger actions immediately"
-								className="text-xs px-2.5 py-1 bg-action-bg hover:bg-action-hover border border-action-border flex items-center gap-1.5 font-medium shrink-0 rounded-lg transition-all"
-							>
-								<FontAwesomeIcon icon={faPlay} className="text-2xs" />
-								<span>Test Run</span>
-							</Button>
+						</div>
+
+						<div className="p-3">
+							<MyErrorBoundary>
+								<TriggerEventEditor
+									heading=""
+									controlId={controlId}
+									events={config.events}
+									localVariablesStore={localVariablesStore}
+								/>
+							</MyErrorBoundary>
 						</div>
 					</div>
 
-					<div className="p-3">
-						<MyErrorBoundary>
-							<ControlEntitiesEditor
-								heading=""
-								controlId={controlId}
-								location={undefined}
-								listId="trigger_actions"
-								entities={config.actions}
-								entityType={EntityModelType.Action}
-								entityTypeLabel="action"
-								feedbackListType={null}
-								localVariablesStore={localVariablesStore}
-								localVariablePrefix={null}
-							/>
-						</MyErrorBoundary>
+					{/* Connector Arrow */}
+					<div className="relative z-10 flex justify-center items-center -my-2 text-muted/50">
+						<div className="w-9 h-9 rounded-full bg-surface border border-border flex items-center justify-center text-xs shadow-xs">
+							<FontAwesomeIcon icon={faArrowDown} />
+						</div>
 					</div>
-				</div>
 
-				{/* ─── STAGE 4: Variables & Documentation Notes (Collapsible) ──── */}
-				<div className="mt-3 rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
-					<button
-						type="button"
-						onClick={() => setShowVariablesAndNotes((v) => !v)}
-						className="w-full px-3.5 py-2.5 bg-surface-subtle border-b border-border flex items-center justify-between text-left hover:bg-surface-hover transition-colors"
-					>
-						<div className="flex items-center gap-2">
-							<FontAwesomeIcon
-								icon={showVariablesAndNotes ? faChevronDown : faChevronRight}
-								className="text-2xs text-muted"
-							/>
-							<span className="text-xs font-semibold text-body">Variables & Documentation Notes</span>
-						</div>
-						<div className="flex items-center gap-2 text-3xs text-muted font-medium">
-							<span>{config.localVariables.length} variables</span>
-						</div>
-					</button>
-
-					{showVariablesAndNotes && (
-						<div className="p-3.5 space-y-4 bg-surface">
-							<div>
-								<div className="flex items-center gap-1.5 text-xs font-semibold text-body mb-1.5">
-									<FontAwesomeIcon icon={faDollarSign} className="text-2xs text-muted" />
-									<span>Local Variables</span>
-								</div>
-								<MyErrorBoundary>
-									<LocalVariablesEditor
-										className="mt-1"
-										controlId={controlId}
-										location={undefined}
-										variables={config.localVariables}
-										localVariablesStore={localVariablesStore}
-									/>
-								</MyErrorBoundary>
+					{/* ─── STAGE 2: IF (Conditions) ───────────────────────────────── */}
+					<div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
+						<div className="px-3.5 py-2.5 bg-surface-subtle border-b border-border flex items-center justify-between">
+							<div className="flex items-center gap-2">
+								<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-sky-500/15 text-sky-600 border border-sky-500/20 flex items-center gap-1">
+									<FontAwesomeIcon icon={faFilter} className="text-3xs" />
+									IF
+								</span>
+								<span className="text-xs font-semibold text-body">Conditions & Guardrails</span>
 							</div>
+							<span className="text-3xs font-medium text-muted">
+								{config.condition.length === 0 ? 'Always run' : `${config.condition.length} conditions`}
+							</span>
+						</div>
 
-							<div className="pt-2 border-t border-border/70">
-								<div className="flex items-center gap-1.5 text-xs font-semibold text-body mb-1.5">
-									<FontAwesomeIcon icon={faPencil} className="text-2xs text-muted" />
-									<span>Notes & Documentation</span>
-								</div>
-								<MyErrorBoundary>
-									<ControlNotesEditor controlId={controlId} notes={config.options.notes} multiline={true} />
-								</MyErrorBoundary>
+						<div className="p-3">
+							<MyErrorBoundary>
+								<ControlEntitiesEditor
+									heading=""
+									controlId={controlId}
+									entities={config.condition}
+									listId="feedbacks"
+									entityType={EntityModelType.Feedback}
+									entityTypeLabel="condition"
+									feedbackListType={FeedbackEntitySubType.Boolean}
+									location={undefined}
+									localVariablesStore={localVariablesStore}
+									localVariablePrefix={null}
+								/>
+							</MyErrorBoundary>
+						</div>
+					</div>
+
+					{/* Connector Arrow */}
+					<div className="relative z-10 flex justify-center items-center -my-2 text-muted/50">
+						<div className="w-9 h-9 rounded-full bg-surface border border-border flex items-center justify-center text-xs shadow-xs">
+							<FontAwesomeIcon icon={faArrowDown} />
+						</div>
+					</div>
+
+					{/* ─── STAGE 3: THEN (Actions) ────────────────────────────────── */}
+					<div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
+						<div className="px-3.5 py-2.5 bg-surface-subtle border-b border-border flex items-center justify-between">
+							<div className="flex items-center gap-2">
+								<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-emerald-500/15 text-emerald-600 border border-emerald-500/20 flex items-center gap-1">
+									<FontAwesomeIcon icon={faPlay} className="text-3xs" />
+									THEN
+								</span>
+								<span className="text-xs font-semibold text-body">Execute Actions</span>
+							</div>
+							<div className="flex items-center gap-3">
+								<span className="text-3xs font-medium text-muted">
+									{config.actions.length} {config.actions.length === 1 ? 'action' : 'actions'}
+								</span>
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={doTestRun}
+									title="Test fire trigger actions immediately"
+									className="text-xs px-2.5 py-1 bg-action-bg hover:bg-action-hover border border-action-border flex items-center gap-1.5 font-medium shrink-0 rounded-lg transition-all"
+								>
+									<FontAwesomeIcon icon={faPlay} className="text-2xs" />
+									<span>Test Run</span>
+								</Button>
 							</div>
 						</div>
-					)}
+
+						<div className="p-3">
+							<MyErrorBoundary>
+								<ControlEntitiesEditor
+									heading=""
+									controlId={controlId}
+									location={undefined}
+									listId="trigger_actions"
+									entities={config.actions}
+									entityType={EntityModelType.Action}
+									entityTypeLabel="action"
+									feedbackListType={null}
+									localVariablesStore={localVariablesStore}
+									localVariablePrefix={null}
+								/>
+							</MyErrorBoundary>
+						</div>
+					</div>
+
+					{/* ─── STAGE 4: Variables & Documentation Notes (Collapsible) ──── */}
+					<div className="mt-3 rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
+						<button
+							type="button"
+							onClick={() => setShowVariablesAndNotes((v) => !v)}
+							className="w-full px-3.5 py-2.5 bg-surface-subtle border-b border-border flex items-center justify-between text-left hover:bg-surface-hover transition-colors"
+						>
+							<div className="flex items-center gap-2">
+								<FontAwesomeIcon
+									icon={showVariablesAndNotes ? faChevronDown : faChevronRight}
+									className="text-2xs text-muted"
+								/>
+								<span className="text-xs font-semibold text-body">Variables & Documentation Notes</span>
+							</div>
+							<div className="flex items-center gap-2 text-3xs text-muted font-medium">
+								<span>{config.localVariables.length} variables</span>
+							</div>
+						</button>
+
+						{showVariablesAndNotes && (
+							<div className="p-3.5 space-y-4 bg-surface">
+								<div>
+									<div className="flex items-center gap-1.5 text-xs font-semibold text-body mb-1.5">
+										<FontAwesomeIcon icon={faDollarSign} className="text-2xs text-muted" />
+										<span>Local Variables</span>
+									</div>
+									<MyErrorBoundary>
+										<LocalVariablesEditor
+											className="mt-1"
+											controlId={controlId}
+											location={undefined}
+											variables={config.localVariables}
+											localVariablesStore={localVariablesStore}
+										/>
+									</MyErrorBoundary>
+								</div>
+
+								<div className="pt-2 border-t border-border/70">
+									<div className="flex items-center gap-1.5 text-xs font-semibold text-body mb-1.5">
+										<FontAwesomeIcon icon={faPencil} className="text-2xs text-muted" />
+										<span>Notes & Documentation</span>
+									</div>
+									<MyErrorBoundary>
+										<ControlNotesEditor controlId={controlId} notes={config.options.notes} multiline={true} />
+									</MyErrorBoundary>
+								</div>
+							</div>
+						)}
+					</div>
 				</div>
 			</div>
 		</div>

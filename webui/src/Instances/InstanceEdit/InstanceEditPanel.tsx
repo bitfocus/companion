@@ -452,32 +452,34 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 	const isDirty = panelStore.isDirty()
 
 	return (
-		<div className="shrink-0 bg-surface border-t border-border px-3 py-2 z-10 flex items-center justify-between gap-3">
-			<div className="flex items-center gap-2">
-				{isDirty ? (
-					<Badge tone="warning" className="select-none">
-						Unsaved Changes
-					</Badge>
-				) : (
-					<span className="text-xs text-muted select-none">No unsaved changes</span>
-				)}
-			</div>
+		<div className="shrink-0 bg-surface border-t border-border px-3 py-2 z-10">
+			<div className="max-w-readable flex items-center justify-between gap-3">
+				<div className="flex items-center gap-2">
+					{isDirty ? (
+						<Badge tone="warning" className="select-none">
+							Unsaved Changes
+						</Badge>
+					) : (
+						<span className="text-xs text-muted select-none">No unsaved changes</span>
+					)}
+				</div>
 
-			<div className="flex items-center gap-2">
-				<Button color="secondary" size="sm" onClick={panelStore.service.closePanel} disabled={isSaving || isLoading}>
-					{isDirty ? 'Cancel' : 'Done'}
-				</Button>
+				<div className="flex items-center gap-2">
+					<Button color="secondary" size="sm" onClick={panelStore.service.closePanel} disabled={isSaving || isLoading}>
+						{isDirty ? 'Cancel' : 'Done'}
+					</Button>
 
-				<Button
-					color="primary"
-					size="sm"
-					disabled={isLoading || isSaving || !isValid || !isDirty}
-					type="submit"
-					title={!isValid ? 'Please fix the errors before saving' : 'Save changes (Cmd+S / Ctrl+S)'}
-					aria-busy={isSaving}
-				>
-					{isSaving ? 'Saving...' : 'Save Changes'}
-				</Button>
+					<Button
+						color="primary"
+						size="sm"
+						disabled={isLoading || isSaving || !isValid || !isDirty}
+						type="submit"
+						title={!isValid ? 'Please fix the errors before saving' : 'Save changes (Cmd+S / Ctrl+S)'}
+						aria-busy={isSaving}
+					>
+						{isSaving ? 'Saving...' : 'Save Changes'}
+					</Button>
+				</div>
 			</div>
 		</div>
 	)

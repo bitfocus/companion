@@ -41,6 +41,7 @@
 	.buttons-sidebar-section {
 		min-width: 0;
 		width: 100%;
+		max-width: var(--container-readable);
 	}
 
 	.buttons-sidebar-heading-row {

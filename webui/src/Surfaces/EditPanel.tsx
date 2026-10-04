@@ -84,7 +84,9 @@ export const SurfaceEditPanel = observer<SurfaceEditPanelProps>(function Surface
 			</PanelHeader>
 
 			<div className="secondary-panel-simple-body">
-				<SurfaceEditPanelContent surfaceInfo={surfaceInfo} groupInfo={groupInfo} />
+				<div className="max-w-readable">
+					<SurfaceEditPanelContent surfaceInfo={surfaceInfo} groupInfo={groupInfo} />
+				</div>
 			</div>
 		</>
 	)

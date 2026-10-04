@@ -14,7 +14,7 @@ export function SettingsSelectPage(): React.JSX.Element {
 			<PageHeader icon={faCog} title="Settings" helpAction="/user-guide/config/settings" />
 
 			<div className="page-scroll">
-				<div className="max-w-5xl">
+				<div className="max-w-readable">
 					<PageIntro title="Companion System Settings">
 						Select a configuration category below to adjust installation parameters, protocols, and backups.
 					</PageIntro>

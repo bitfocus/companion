@@ -18,7 +18,7 @@ export const SettingsGeneralPage = memo(function UserConfig() {
 				<SettingsNav activeTab="general" />
 
 				<div className="page-scroll">
-					<div className="primary-panel">
+					<div className="primary-panel max-w-readable">
 						<PageIntro title="General Settings">Settings take effect automatically as you change them.</PageIntro>
 						<UserConfigTable />
 					</div>

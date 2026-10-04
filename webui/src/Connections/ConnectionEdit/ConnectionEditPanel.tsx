@@ -101,8 +101,10 @@ function SidebarHelpTab({ helpPath }: { helpPath: string }) {
 	}
 
 	return (
-		<div className="page-scroll p-4 text-sm text-body leading-relaxed space-y-3">
-			<ModuleHelpContent markdown={markdown} helpUrl={helpUrl} />
+		<div className="page-scroll p-4 text-sm text-body leading-relaxed">
+			<div className="max-w-readable space-y-3">
+				<ModuleHelpContent markdown={markdown} helpUrl={helpUrl} />
+			</div>
 		</div>
 	)
 }
