@@ -56,6 +56,7 @@ export function registerCompanionExpressionLanguage(monaco: typeof Monaco): void
 			{ token: 'predefined', foreground: 'DCDCAA' },
 			{ token: 'keyword', foreground: '569CD6' },
 			{ token: 'string', foreground: 'CE9178' },
+			// typos:disable-line D7BA7D is a hex color, not a word
 			{ token: 'string.escape', foreground: 'D7BA7D' },
 			{ token: 'number', foreground: 'B5CEA8' },
 			{ token: 'number.hex', foreground: 'B5CEA8' },
