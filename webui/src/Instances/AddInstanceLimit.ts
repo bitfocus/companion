@@ -1,11 +1,15 @@
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ModuleStoreModuleInfoStore } from '@companion-app/shared/Model/ModulesStore.js'
+import { getLatestVersion, getStoreInstallChoices } from './VersionUtil.js'
 
 /**
  * Whether a new instance of a surface module cannot be added because of allowMultipleInstances.
- * The configure step offers every installed version, so this only blocks when none of them allows multiples.
+ * The configure step offers every installed version plus the latest store versions, so this only blocks when none of
+ * those could allow multiples.
  */
 export function isSurfaceInstanceLimitReached(
 	installedInfo: ClientModuleInfo | null | undefined,
+	storeInfo: ModuleStoreModuleInfoStore | null,
 	existingInstanceCount: number
 ): boolean {
 	if (existingInstanceCount === 0) return false
@@ -16,6 +20,15 @@ export function isSurfaceInstanceLimitReached(
 		...(installedInfo?.installedVersions ?? []),
 	].filter((v) => !!v)
 	if (selectableVersions.length === 0) return false
+	if (selectableVersions.some((v) => v.allowMultipleInstances)) return false
 
-	return !selectableVersions.some((v) => v.allowMultipleInstances)
+	// Store versions don't expose their manifest, so an offered one might allow multiples. The server checks the
+	// selected version's manifest when adding, and creates the instance disabled if it doesn't
+	const storeChoices = getStoreInstallChoices(
+		installedInfo,
+		getLatestVersion(storeInfo?.versions, false),
+		getLatestVersion(storeInfo?.versions, true),
+		true
+	)
+	return storeChoices.length === 0
 }

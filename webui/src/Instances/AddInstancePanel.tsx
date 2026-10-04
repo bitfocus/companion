@@ -22,6 +22,7 @@ import { CloseButton, ContextHelpButton, type ContextHelpButtonProps } from '~/L
 import { LastUpdatedTimestamp } from '~/Modules/LastUpdatedTimestamp.js'
 import { getModuleProductName, groupModuleCatalog } from '~/Modules/ModuleCatalog.js'
 import { RefreshModulesList } from '~/Modules/RefreshModulesList.js'
+import { useModuleStoreInfo } from '~/Modules/useModuleStoreInfo.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { isSurfaceInstanceLimitReached } from './AddInstanceLimit.js'
@@ -208,9 +209,16 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 		installedInfo?.betaVersion ??
 		installedInfo?.builtinVersion ??
 		installedInfo?.installedVersions[0]
-	const isLimitReached =
-		moduleInfo.moduleType === ModuleInstanceType.Surface &&
-		isSurfaceInstanceLimitReached(installedInfo, surfaceInstances.getAllOfModuleId(moduleInfo.moduleId).length)
+	const existingSurfaceCount =
+		moduleInfo.moduleType === ModuleInstanceType.Surface
+			? surfaceInstances.getAllOfModuleId(moduleInfo.moduleId).length
+			: 0
+	// Only subscribe to store versions when they can affect the limit
+	const storeInfo = useModuleStoreInfo(
+		moduleInfo.moduleType,
+		existingSurfaceCount > 0 ? moduleInfo.moduleId : undefined
+	)
+	const isLimitReached = isSurfaceInstanceLimitReached(installedInfo, storeInfo, existingSurfaceCount)
 	const installationLabel = installedInfo?.devVersion
 		? 'Development'
 		: installedInfo?.installedVersions.length
