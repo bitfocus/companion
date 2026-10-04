@@ -9,6 +9,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import type { BackupRulesConfig } from '@companion-app/shared/Model/UserConfigModel.js'
 import { Button } from '~/Components/Button'
+import { StatusBadge } from '~/Components/StatusBadge.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { PageHeader } from '~/Layout/PageHeader.js'
 import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
@@ -216,6 +217,13 @@ function BackupsTableRow({ rule, index, editRule }: BackupsTableRowProps) {
 					<span className="block text-2xs tabular-nums text-muted/70 font-sans">
 						Last run: {dayjs(rule.lastRan).format('MM/DD HH:mm:ss')}
 					</span>
+				)}
+			</div>
+			<div onClick={doEdit} className="shrink-0 flex items-center justify-center">
+				{rule.enabled ? (
+					<StatusBadge tone="good">Enabled</StatusBadge>
+				) : (
+					<StatusBadge tone="disabled">Disabled</StatusBadge>
 				)}
 			</div>
 			<div className="shrink-0 flex items-center gap-2">

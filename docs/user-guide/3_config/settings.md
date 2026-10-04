@@ -54,6 +54,8 @@ More details on supported surfaces are available in the chapter on [Surfaces](..
 
 ## Protocols
 
+The Protocols page lists each network endpoint for controlling Companion remotely, with a switch to turn it on or off. Select a protocol to open its settings, such as the port it listens on, and use the help button there to find its API reference.
+
 ### Satellite
 
 - **Satellite Listen Port**  
@@ -111,7 +113,7 @@ _If enabled, Companion will listen for Ember+ messages, allowing for external de
 
 ### Artnet Listener
 
-_If enabled, Companion will listen for Artnet messages, allowing for external devices to control Companion. An example GrandMA2 fixture file for controlling Companion can be found on the bottom of that tab._
+_If enabled, Companion will listen for Artnet messages, allowing for external devices to control Companion. Fixture files for Avolites, GrandMA2 and Vista consoles can be downloaded from the Artnet settings._
 
 - **Artnet Listener**  
   Check to allow Companion to be controlled over Artnet.
