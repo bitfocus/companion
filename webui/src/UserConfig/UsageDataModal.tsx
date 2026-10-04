@@ -48,7 +48,7 @@ export function UsageDataModal(): React.JSX.Element {
 							{!isLoading && !error && data && (
 								<pre
 									style={{
-										backgroundColor: '#f5f5f5',
+										backgroundColor: 'var(--color-surface-muted)',
 										padding: '1rem',
 										borderRadius: '4px',
 									}}

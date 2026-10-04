@@ -75,7 +75,7 @@ export function EditActionsRelease({
 		const runWhileHeld = stepOptions.runWhileHeld.includes(Number(id))
 		const ident = runWhileHeld ? `Held for ${id}ms` : `Release after ${id}ms`
 		const icon = runWhileHeld ? faStopwatch : faClock
-		const iconColor = runWhileHeld ? 'text-amber-500' : 'text-muted'
+		const iconColor = runWhileHeld ? 'text-tone-warning-text' : 'text-muted'
 
 		return (
 			<MyErrorBoundary key={id}>

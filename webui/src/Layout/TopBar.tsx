@@ -1,20 +1,24 @@
 import './TopBar.css'
 import {
 	faBars,
+	faCheck,
 	faChevronRight,
 	faCircleArrowUp,
 	faExternalLinkSquare,
 	faLifeRing,
 	faLock,
 	faMagnifyingGlass,
+	faPalette,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Link, useLocation } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
-import { PopoverActionMenu } from '~/Components/ActionMenu.js'
+import { PopoverActionMenu, type MenuItemProps } from '~/Components/ActionMenu.js'
 import { Popover } from '~/Components/Popover.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { THEME_CHOICES } from '~/Theme/themeChoices.js'
+import { themeStore } from '~/Theme/ThemeState.js'
 import { AdminLockContext } from './AdminLockContext.js'
 import { commandPaletteOpen } from './CommandPaletteState.js'
 import { navLocationForPath } from './navRegistry.js'
@@ -62,6 +66,7 @@ export const TopBar = observer(function TopBar({ page }: TopBarProps) {
 
 				<TopBarUpdateNotice />
 				<TopBarSearchButton />
+				<TopBarThemeMenu />
 				<TopBarHelpMenu />
 
 				{canLock && (
@@ -154,6 +159,32 @@ function TopBarUpdateNotice() {
 		</a>
 	)
 }
+
+/** Light, dark, or follow the system. The trigger shows the current choice */
+const TopBarThemeMenu = observer(function TopBarThemeMenu() {
+	const preference = themeStore.preference
+	const current = THEME_CHOICES.find((choice) => choice.id === preference) ?? THEME_CHOICES[0]
+
+	const menuItems: MenuItemProps[] = THEME_CHOICES.map((choice) => ({
+		id: choice.id,
+		label: choice.label,
+		icon: choice.id === preference ? faCheck : choice.icon,
+		tooltip: choice.description,
+		do: () => themeStore.setPreference(choice.id),
+	}))
+
+	return (
+		<Popover.Root>
+			{/* A fixed palette icon, so the control is recognisable whichever theme is chosen; the menu shows the choice */}
+			<Popover.Trigger color={null} className="top-bar-icon-button" title={`Theme: ${current.label}`}>
+				<FontAwesomeIcon icon={faPalette} />
+			</Popover.Trigger>
+			<Popover.Popup side="bottom" align="end">
+				<PopoverActionMenu menuItems={menuItems} />
+			</Popover.Popup>
+		</Popover.Root>
+	)
+})
 
 function TopBarHelpMenu() {
 	const helpMenuItems = useHelpMenuItems()

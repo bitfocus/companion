@@ -102,7 +102,7 @@
 .variable-style {
 	font-family: monospace;
 	padding: 1px 3px 0px;
-	color: var(--color-primary);
+	color: var(--color-variable-text);
 	font-weight: 600;
 	font-size: 16px;
 	letter-spacing: -0.15px;

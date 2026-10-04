@@ -39,6 +39,9 @@
 @source inline("{,sm:,md:,lg:,xl:,2xl:}col-start-auto");
 @source inline("grid-cols-{1..12}");
 
+/* `dark:` for the rare one-off that a token can't express. Prefer a token: it carries a value for every theme. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
 @theme static {
 	/* Align Tailwind's responsive breakpoints with the CoreUI grid breakpoints we use everywhere else
 	   (mirrored by the @custom-media in breakpoints.css), so `sm:`/`lg:`/… match `@media (--bp-*)`. */
@@ -71,6 +74,7 @@
 	--color-primary: #1f242e;
 	--color-primary-hover: #2b3341;
 	--color-primary-active: #12161d;
+	--color-primary-text: var(--color-primary); /* `primary` used as text: active tabs, hovered controls */
 
 	/* Action chrome is independent of switches, focus and content/status colours. */
 	--color-action-primary: #525b66;
@@ -170,7 +174,7 @@
 	--color-surface-hover: #eee; /* light hover highlight on cards/rows */
 	--color-surface-alt: #f7f7f7;
 	--color-surface-subtle: #f8f9fa; /* very light neutral stage (preview stages, list backgrounds) */
-	--color-surface-dark: #222; /* dark panel/inset surface (tablet, emulator, button editor) */
+	--color-surface-dark: #222; /* dark panel/inset surface behind the button grid. Fixed: always dark */
 	--color-app-bg: #f9f9f9; /* main content area background */
 	--color-app-frame-bg: #f3f4f7; /* outer app frame behind the sidebar/header/body */
 	--color-body-bg: #f3f4f7; /* <body> element backing, behind the app chrome */
@@ -202,14 +206,15 @@
 	--color-text-faint: #999; /* fainter than -muted: dropdown group headings, empty/placeholder labels */
 	--color-text-disabled: #ccc;
 
-	/* Row interaction states (dark mode overrides these to light overlays) */
+	/* Row interaction states (the dark theme turns these into light overlays) */
 	--color-row-hover: rgba(0, 0, 0, 0.05);
 	--color-row-overlay: rgb(200, 200, 200); /* neutral overlay base; the per-state alphas live below */
 	--color-row-overlay-10: color-mix(in srgb, var(--color-row-overlay) 10%, transparent); /* row hover */
 	--color-row-overlay-15: color-mix(in srgb, var(--color-row-overlay) 15%, transparent); /* tree leaf hover */
 	--color-row-overlay-30: color-mix(in srgb, var(--color-row-overlay) 30%, transparent); /* selected row hover */
 
-	/* Button preview / rendering (the always-black button canvas and its drag/drop states) */
+	/* Button preview / rendering (the always-black button canvas and its drag/drop states). Fixed: these don't
+	   follow the theme (see FIXED_TOKENS in Theme/themeTokens.ts) */
 	--color-button-bg: #000; /* hardware buttons are black; this does not flip with app theme */
 	--color-button-border: rgba(100, 100, 100, 0.4);
 	--color-button-placeholder: #262626;
@@ -249,7 +254,7 @@
 	--color-tile-handle-bg-hover: #d0d0d0;
 	--color-tile-handle-bg-active: #adb5bd;
 
-	/* Text on dark/coloured backgrounds */
+	/* Text on dark/coloured backgrounds. Fixed: always on a dark or coloured fill, in every theme */
 	--color-on-dark: #fff;
 	--color-on-dark-muted: rgba(255, 255, 255, 0.75);
 
@@ -282,15 +287,21 @@
 	/* Tabs (tab-area, and the secondary-panel tabs in layout) */
 	--color-tab-bg: #f3f3f3; /* inactive tab background */
 	--color-tab-fg: #555; /* inactive tab text */
+	--color-tab-active-bg: var(--color-surface); /* the selected pill of a `pills` tab strip */
+	--color-tab-active-border: var(--color-border);
+
+	/* A variable reference shown as text, e.g. `$(custom:name)` */
+	--color-variable-text: var(--color-primary);
 
 	/* Panel headers & dropdown menus (layout) */
 	--color-panel-header-btn: #4b545c; /* the round context-help / close button chrome */
 	--color-menu-bg: #f3f4f7; /* context-menu popover background */
 
-	/* Modal / sidebar backdrop (dimmed behind an overlay; paired with an opacity) */
+	/* Modal / sidebar backdrop (dimmed behind an overlay; paired with an opacity). Fixed */
 	--color-backdrop: #080a0c;
 
-	/* Button grid "armed"/live state (the app's own button grid; the tablet/emulator have their own set) */
+	/* Button grid "armed"/live state (the app's own button grid; the tablet/emulator have their own set). Fixed:
+	   the grid is always dark */
 	--color-button-armed: rgba(255, 0, 0, 0.5); /* overlay tint for an armed button */
 	--color-armed-surface: #7f1111; /* opaque dark-red background of an armed button grid */
 	--color-scrollbar-thumb: #666; /* scrollbar thumb on the dark button grid */
@@ -319,6 +330,191 @@
 
 	/* Spacing (non-colour theme values, e.g. for a future compactness/density setting) */
 	--variable-pill-padding: 1px 3px 0px;
+}
+
+/* The dark theme: every themed token's dark value. Applied by `data-theme` on <html> (set by Theme/ThemeState.ts,
+   and before first paint by index.html). Tokens built from others with var()/color-mix recompute from these, and
+   the fixed ones (Theme/themeTokens.ts) are deliberately absent. themeTokens.test.ts keeps this list complete. */
+@layer theme {
+	:root[data-theme='dark'] {
+		--color-brand: #f0444f;
+		--color-brand-hover: #ff6b74;
+		--color-primary: #6b7689;
+		--color-primary-hover: #7b8699;
+		--color-primary-active: #5d6779;
+		/* `primary` is a mid-tone fill in this theme, too dim as text */
+		--color-primary-text: #e6e8eb;
+
+		--color-action-primary: #6b7689;
+		--color-action-primary-hover: #7b8699;
+		--color-action-primary-pressed: #5d6779;
+		--color-action-on-primary: #fff;
+		--color-action-text: #c9ced6;
+		--color-action-bg: #22252c;
+		--color-action-hover: #2b2f37;
+		--color-action-pressed: #343943;
+		--color-action-border: #3a3f49;
+		--color-action-border-hover: #4a505c;
+		--color-action-disabled-text: #5d646f;
+		--color-action-disabled-bg: #1c1f25;
+		--color-action-disabled-border: #2a2e36;
+		--color-action-focus: #8a9bb0;
+		--color-action-danger-text: #ff7a8a;
+		--color-action-danger-hover: #3a1a20;
+		--color-action-danger-pressed: #4a1f27;
+		--color-action-danger-hover-solid: #f04a62;
+		--color-action-danger-pressed-solid: #c8203a;
+		--color-selection-bg: #2a313b;
+		--color-selection-text: #dfe4ea;
+		--color-selection-border: #8795a3;
+		--color-accent-active: #e0434a;
+		--color-secondary: #4a505a;
+		--color-success: #2fbf5a;
+		--color-danger: #e5354f;
+		--color-warning: #f9b115;
+		--color-info: #4da6ff;
+		/* Keep their roles: `light` a quiet neutral fill, `dark` a deep one that still carries white text */
+		--color-light: #3a3f48;
+		--color-dark: #4a505c;
+
+		--color-tone-good-fill: #10b981;
+		--color-tone-good-text: #34d399;
+		--color-tone-warning-fill: #f59e0b;
+		--color-tone-warning-text: #fbbf24;
+		--color-tone-error-fill: #f43f5e;
+		--color-tone-error-text: #fb7185;
+		--color-tone-info-fill: #0ea5e9;
+		--color-tone-info-text: #38bdf8;
+		--color-tone-neutral-fill: #71717a;
+		--color-tone-neutral-text: #a1a1aa;
+		--color-tone-accent-fill: #6366f1;
+		--color-tone-accent-text: #818cf8;
+		--color-tone-media-fill: #a855f7;
+		--color-tone-media-text: #c084fc;
+		--color-tone-routing-fill: #06b6d4;
+		--color-tone-routing-text: #22d3ee;
+
+		--color-primary-bg-subtle: #2a2650;
+		--color-primary-border-subtle: #4a43a0;
+		--color-primary-text-emphasis: #c7c2f7;
+		--color-secondary-bg-subtle: #2a2e36;
+		--color-secondary-border-subtle: #454b56;
+		--color-secondary-text-emphasis: #d4d8de;
+		--color-success-bg-subtle: #13311f;
+		--color-success-border-subtle: #1f6b3a;
+		--color-success-text-emphasis: #8fe0a9;
+		--color-info-bg-subtle: #10304a;
+		--color-info-border-subtle: #1d5a8a;
+		--color-info-text-emphasis: #9dd3ff;
+		--color-warning-bg-subtle: #3a2c0a;
+		--color-warning-border-subtle: #7a5a12;
+		--color-warning-text-emphasis: #fcd88a;
+		--color-danger-bg-subtle: #3d1416;
+		--color-danger-border-subtle: #7d2a2e;
+		--color-danger-text-emphasis: #f5a9a9;
+		--color-light-bg-subtle: #1c1f25;
+		--color-light-border-subtle: #2f343d;
+		--color-light-text-emphasis: #c3cad6;
+		--color-dark-bg-subtle: #2a2e36;
+		--color-dark-border-subtle: #454b56;
+		--color-dark-text-emphasis: #e6e8eb;
+
+		--color-status-ok-bg: #1f3d24;
+		--color-status-warn-bg: #3d3418;
+		--color-status-error-bg: #4a1f22;
+
+		--color-input-bg: #121418;
+		--color-input-readonly-bg: #1c1f25;
+		--color-input-invalid: #ff5a5a;
+		--color-syntax-error: #ff4fa8;
+
+		/* Elevation comes from lightness: the frame is darkest, cards and popovers lightest */
+		--color-surface: #16181d;
+		--color-surface-muted: #1d2026;
+		--color-surface-muted-hover: #242830;
+		--color-surface-hover: #23272e;
+		--color-surface-alt: #1a1d22;
+		--color-surface-subtle: #14161a;
+		--color-app-bg: #111317;
+		--color-app-frame-bg: #0c0e11;
+		--color-body-bg: #0c0e11;
+
+		--color-border: #2c3038;
+		--color-border-alt: #2c3038;
+		--color-border-subtle: #23272e;
+		--color-border-muted: #2c3038;
+		--color-border-medium: #454b56;
+		--color-border-strong: #5c6370;
+		--color-border-hover: #5c6370;
+		--color-line: #3a3f49;
+
+		--color-text: #e6e8eb;
+		--color-body-text: #dcdfe3;
+		--color-code: #f07fb8;
+		--color-text-strong: #fff;
+		--color-icon: #c9ced6;
+		--color-text-secondary: #a3a9b3;
+		--color-muted: #9aa1ab;
+		--color-text-faint: #6f7682;
+		--color-text-disabled: #4f5560;
+
+		--color-row-hover: rgba(255, 255, 255, 0.05);
+		--color-row-overlay: #fff;
+
+		--color-canvas-workspace: #0f1114;
+		--color-toolbar-bg: #1a1d22;
+		--color-toolbar-fg: #c9ced6;
+		--color-resize-bar-bg-hover: #2f343d;
+		--color-mode-toggle-bg: #23272e;
+		--color-mode-toggle-border: #3a3f49;
+
+		--color-step-highlight: #2eb85c;
+
+		--color-pill-bg: #2b2f37;
+		--color-pill-remove-bg: #363b45;
+
+		--color-drop-target: #3d8bff;
+		--color-drag-row-bg: #262333;
+		--color-dropzone-border: #4a505c;
+		--color-tile-border: #2c3038;
+		--color-tile-handle-bg: #23272e;
+		--color-tile-handle-bg-hover: #2f343d;
+		--color-tile-handle-bg-active: #4a505c;
+
+		--color-primary-soft: #6f7a8d;
+		--color-primary-softer: #3a4250;
+
+		--color-shadow: #000;
+
+		--color-switch-off: #3f4652;
+		--color-switch-off-hover: #4b5361;
+
+		--color-tab-bg: #1a1d22;
+		--color-tab-fg: #a3a9b3;
+		/* Lifted above the strip: a dark theme's surfaces get darker the lower they sit, so `surface` would sink */
+		--color-tab-active-bg: #343943;
+		--color-tab-active-border: #4a505c;
+
+		/* `primary` is a fill colour here, too dim as text on a dark ground */
+		--color-variable-text: #a9c1ff;
+
+		--color-panel-header-btn: #aeb5bf;
+		--color-menu-bg: #1d2026;
+
+		--color-image-accent: #4d94ff;
+		--color-upload-success: #2fbf71;
+		--color-text-emphasis: #c3c9d1;
+		--color-image-empty-text: #5c6570;
+		--color-preview-error-bg: #3d1a1e;
+		--color-preview-error-text: #f5a3ab;
+
+		--color-log-error: #ff5c5c;
+		--color-log-error-text: #ff7a7a;
+		--color-log-warn: #ffa04d;
+		--color-log-info: #6aa8ff;
+		--color-log-info-text: rgba(140, 180, 255, 0.85);
+		--color-log-debug-text: rgba(200, 205, 212, 0.7);
+	}
 }
 
 /* Non-colour sizing tokens. Deliberately in a plain :root rather than @theme, so they don't

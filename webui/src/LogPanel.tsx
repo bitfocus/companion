@@ -193,7 +193,7 @@ export const LogPanel = memo(function LogPanel() {
 							</PillButton>
 
 							<PillButton tone="primary" active={false} onClick={handleCopyAll} title="Copy filtered logs to clipboard">
-								{copiedAll ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+								{copiedAll ? <Check className="w-3.5 h-3.5 text-tone-good-text" /> : <Copy className="w-3.5 h-3.5" />}
 								<span>Copy</span>
 							</PillButton>
 
@@ -358,7 +358,7 @@ const SystemLogLine = memo(function SystemLogLine({ line }: { line: GroupedLogLi
 					className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity p-1 text-action-text hover:text-body shrink-0 cursor-pointer bg-transparent border-0 shadow-none outline-none inline-flex items-center justify-center rounded hover:bg-surface-muted"
 					title="Copy log line"
 				>
-					{copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+					{copied ? <Check className="w-3.5 h-3.5 text-tone-good-text" /> : <Copy className="w-3.5 h-3.5" />}
 				</button>
 			}
 		/>

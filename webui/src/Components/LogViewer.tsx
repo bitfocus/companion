@@ -46,7 +46,7 @@ export function LogLevelBadge({
 export function LogNoticeLine({ message }: { message: string }): React.JSX.Element {
 	return (
 		<div className="log-notice-line">
-			<Info className="w-4 h-4 text-sky-500 shrink-0" />
+			<Info className="w-4 h-4 text-tone-info-text shrink-0" />
 			<span className="break-words min-w-0 flex-1">{message}</span>
 		</div>
 	)

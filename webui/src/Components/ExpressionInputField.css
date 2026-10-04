@@ -212,7 +212,7 @@
 			position: absolute !important; /* it already is absolute, but just for clarity... */
 			top: -1px !important;
 			right: -1px !important; /* note: 12px would avoid the scrollbar, but it's unlikely to be used, so this looks better */
-			background-color: lightgray;
+			background-color: var(--color-action-hover);
 			display: flex;
 			align-items: center;
 			justify-content: center;

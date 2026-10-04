@@ -171,7 +171,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 							<tr>
 								<td colSpan={5} className="p-3 text-xs text-muted">
 									<div className="flex items-center gap-2">
-										<FontAwesomeIcon icon={faEyeSlash} className="text-amber-500" />
+										<FontAwesomeIcon icon={faEyeSlash} className="text-tone-warning-text" />
 										<span>There are no matching versions for the current filters.</span>
 									</div>
 								</td>
@@ -181,7 +181,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 							<tr>
 								<td colSpan={5} className="p-3 text-xs text-muted">
 									<div className="flex items-center gap-2">
-										<FontAwesomeIcon icon={faEyeSlash} className="text-amber-500" />
+										<FontAwesomeIcon icon={faEyeSlash} className="text-tone-warning-text" />
 										<span>All versions are hidden by active filter toggles.</span>
 									</div>
 								</td>
@@ -271,14 +271,17 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 						</span>
 					)}
 					{storeInfo?.releaseChannel === 'beta' && (
-						<span title="Beta" className="px-1.5 py-0.5 rounded text-3xs bg-amber-500/10 text-amber-600 font-sans">
+						<span
+							title="Beta"
+							className="px-1.5 py-0.5 rounded text-3xs bg-tone-warning-fill/10 text-tone-warning-text font-sans"
+						>
 							Beta
 						</span>
 					)}
 					{storeInfo?.deprecationReason && (
 						<span
 							title={storeInfo.deprecationReason}
-							className="px-1.5 py-0.5 rounded text-3xs bg-rose-500/10 text-rose-600 font-sans"
+							className="px-1.5 py-0.5 rounded text-3xs bg-tone-error-fill/10 text-tone-error-text font-sans"
 						>
 							Deprecated
 						</span>
@@ -286,7 +289,7 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 				</div>
 				{isCompatible === false && (
 					<div
-						className="mt-1 text-2xs font-sans font-normal text-amber-500"
+						className="mt-1 text-2xs font-sans font-normal text-tone-warning-text"
 						title={`Module API ${storeInfo?.apiVersion}`}
 					>
 						Requires a different Companion version
@@ -444,7 +447,7 @@ function ModuleInstallButton({ moduleType, moduleId, versionId, apiVersion, hasT
 		return (
 			<span
 				title="Module is not compatible with this version of Companion"
-				className="inline-flex items-center justify-center w-7 h-7 text-amber-500"
+				className="inline-flex items-center justify-center w-7 h-7 text-tone-warning-text"
 			>
 				<FontAwesomeIcon icon={faWarning} className="text-xs" />
 			</span>

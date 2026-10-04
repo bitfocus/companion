@@ -65,7 +65,7 @@ h5.button-inline {
 	}
 
 	.context-help-button-btn {
-		box-shadow: 1px 2px 1px 0px rgb(0 0 0 / 25%);
+		box-shadow: 1px 2px 1px 0px var(--color-shadow-25);
 
 		.svg-inline--fa {
 			width: 1.5em !important;
@@ -81,7 +81,7 @@ h5.button-inline {
 	.context-help-button-btn {
 		width: 1.5em;
 		height: 1.5em;
-		box-shadow: 1px 2px 1px 0px rgb(0 0 0 / 25%);
+		box-shadow: 1px 2px 1px 0px var(--color-shadow-25);
 
 		.svg-inline--fa {
 			width: 1.5em !important;
@@ -97,7 +97,7 @@ svg.button-size {
 
 /* ── Misc components ──────────────────────────────────────────────────────── */
 .c-app {
-	color: #222;
+	color: var(--color-text);
 }
 
 .markdown {
@@ -127,7 +127,7 @@ svg.button-size {
 }
 
 .currentlyNone {
-	color: #777;
+	color: var(--color-muted);
 	text-align: center;
 	padding: 30px !important;
 }

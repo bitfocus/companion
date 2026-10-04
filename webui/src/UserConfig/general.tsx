@@ -5,6 +5,7 @@ import { PageHeader } from '~/Layout/PageHeader.js'
 import { PageIntro } from '~/Layout/PageIntro'
 import { SettingsCard } from './Components/SettingsCard.js'
 import { useUserConfigProps } from './Context.js'
+import { AppearanceConfig } from './Sections/AppearanceConfig.js'
 import { CompanionConfig } from './Sections/CompanionConfig.js'
 import { DataCollectionConfig } from './Sections/DataCollection.js'
 import { SettingsNav } from './SettingsNav.js'
@@ -34,6 +35,9 @@ const UserConfigTable = observer(function UserConfigTable() {
 
 	return (
 		<div className="w-full space-y-4">
+			<SettingsCard>
+				<AppearanceConfig />
+			</SettingsCard>
 			<SettingsCard>
 				<CompanionConfig {...userConfigProps} />
 			</SettingsCard>

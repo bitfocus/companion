@@ -92,7 +92,7 @@ function EntityOptionPills({
 					key={pill.key}
 					className={`inline-flex items-center px-2 py-0.5 rounded-md text-3xs font-medium ${
 						pill.isDelay
-							? 'bg-amber-500/10 text-amber-500 border border-amber-500/20 font-semibold'
+							? 'bg-tone-warning-fill/10 text-tone-warning-text border border-tone-warning-fill/20 font-semibold'
 							: 'bg-surface-muted text-muted border border-border/70'
 					}`}
 				>

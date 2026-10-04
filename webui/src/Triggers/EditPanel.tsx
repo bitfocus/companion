@@ -176,7 +176,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 						<div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
 							<div className="px-3.5 py-2.5 bg-surface-subtle border-b border-border flex items-center justify-between">
 								<div className="flex items-center gap-2">
-									<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-amber-500/15 text-amber-600 border border-amber-500/20 flex items-center gap-1">
+									<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-tone-warning-fill/15 text-tone-warning-text border border-tone-warning-fill/20 flex items-center gap-1">
 										<FontAwesomeIcon icon={faBolt} className="text-3xs" />
 										WHEN
 									</span>
@@ -210,7 +210,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 						<div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
 							<div className="px-3.5 py-2.5 bg-surface-subtle border-b border-border flex items-center justify-between">
 								<div className="flex items-center gap-2">
-									<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-sky-500/15 text-sky-600 border border-sky-500/20 flex items-center gap-1">
+									<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-tone-info-fill/15 text-tone-info-text border border-tone-info-fill/20 flex items-center gap-1">
 										<FontAwesomeIcon icon={faFilter} className="text-3xs" />
 										IF
 									</span>
@@ -250,7 +250,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 						<div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
 							<div className="px-3.5 py-2.5 bg-surface-subtle border-b border-border flex items-center justify-between">
 								<div className="flex items-center gap-2">
-									<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-emerald-500/15 text-emerald-600 border border-emerald-500/20 flex items-center gap-1">
+									<span className="px-1.5 py-0.5 rounded text-3xs font-bold font-mono uppercase bg-tone-good-fill/15 text-tone-good-text border border-tone-good-fill/20 flex items-center gap-1">
 										<FontAwesomeIcon icon={faPlay} className="text-3xs" />
 										THEN
 									</span>

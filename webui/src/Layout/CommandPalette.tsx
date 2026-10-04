@@ -23,6 +23,8 @@ import { Modal } from '~/Components/Modal'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { THEME_CHOICES } from '~/Theme/themeChoices.js'
+import { themeStore } from '~/Theme/ThemeState.js'
 import { commandPaletteOpen } from './CommandPaletteState.js'
 import { ALL_NAV_PAGES } from './navRegistry.js'
 import { pageMatrixOpen } from './PageMatrixState.js'
@@ -157,6 +159,20 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 				)
 			},
 		})
+
+		for (const choice of THEME_CHOICES) {
+			items.push({
+				id: `action:theme-${choice.id}`,
+				category: 'Quick Actions',
+				title: `Use ${choice.label} Theme`,
+				subtitle: choice.description,
+				icon: choice.icon,
+				onSelect: () => {
+					themeStore.setPreference(choice.id)
+					closePalette()
+				},
+			})
+		}
 
 		items.push({
 			id: 'action:quick-backup',
@@ -308,7 +324,7 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 			<Modal.Root open onOpenChange={(open) => !open && closePalette()}>
 				<Modal.Portal>
 					<Modal.Backdrop
-						className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+						className="fixed inset-0 bg-backdrop/60 backdrop-blur-xs transition-opacity"
 						style={{ zIndex: 1300 }}
 					/>
 					<Modal.Viewport
@@ -358,7 +374,7 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 												<div className="flex items-center gap-3 min-w-0 flex-1">
 													<div
 														className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-xs ${
-															isSelected ? 'bg-primary text-white' : 'bg-surface-muted text-muted'
+															isSelected ? 'bg-primary text-on-dark' : 'bg-surface-muted text-muted'
 														}`}
 													>
 														<FontAwesomeIcon icon={item.icon} />

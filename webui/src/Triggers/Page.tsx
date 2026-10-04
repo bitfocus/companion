@@ -355,7 +355,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 					<span>{item.name}</span>
 					{item.isRateLimited && (
 						<span
-							className="text-amber-500 font-normal text-xs flex items-center gap-1"
+							className="text-tone-warning-text font-normal text-xs flex items-center gap-1"
 							title="This trigger is firing very rapidly and is being rate-limited."
 						>
 							<FontAwesomeIcon icon={faTriangleExclamation} /> Rate limited

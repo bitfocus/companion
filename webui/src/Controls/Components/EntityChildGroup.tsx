@@ -94,9 +94,9 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 								<span
 									className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-semibold uppercase tracking-wider ${
 										isIf
-											? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+											? 'bg-tone-good-fill/10 text-tone-good-text border border-tone-good-fill/20'
 											: isElse
-												? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+												? 'bg-tone-warning-fill/10 text-tone-warning-text border border-tone-warning-fill/20'
 												: 'bg-primary/10 text-primary border border-primary/20'
 									}`}
 								>

@@ -8,6 +8,14 @@ In the Settings tab, you can configure Companion settings.
 
 ## General
 
+### Appearance
+
+Choose a **Light** or **Dark** theme for the web interface, or **System** to follow your device's light or dark setting (the default). The choice is saved in each browser, so different stations can use different themes. You can also switch it from the theme button in the top bar, or by searching "theme" in the command palette.
+
+The button grid, button previews, the emulator and the web buttons page stay dark in both themes, to match the hardware.
+
+### Installation Name
+
 The **Installation Name** is used to define the name this installation of Companion will display in the browser titles. This can be useful in networks containing multiple Companion control devices to differentiate between them in different browser tabs.
 
 ![Installation Name](images/install-name.png?raw=true 'Installation Name')

@@ -150,7 +150,7 @@
 	&:focus {
 		position: relative;
 		outline: 0;
-		box-shadow: 0 0 0 0.25rem rgba(213, 2, 21, 0.25);
+		box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--color-brand) 25%, transparent);
 
 		&::before {
 			background-color: var(--color-muted);
@@ -165,7 +165,7 @@
 /* Backdrop background (mobile overlay) */
 .sidebar-backdrop {
 	--sidebar-backdrop-zindex: 1034;
-	--sidebar-backdrop-bg: #080a0c;
+	--sidebar-backdrop-bg: var(--color-backdrop);
 	--sidebar-backdrop-opacity: 0.5;
 
 	@media (--bp-lg-down) {
@@ -792,7 +792,7 @@
 
 .notification-count {
 	background-color: var(--color-brand);
-	color: #fff;
+	color: var(--color-on-dark);
 	font-weight: bold;
 
 	border-radius: 50%;

@@ -25,8 +25,8 @@ export function CloudPage(): React.JSX.Element {
 
 			<div className="page-scroll space-y-4 max-w-4xl pb-8">
 				{/* Deprecation notice banner */}
-				<div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 flex items-start gap-3">
-					<FontAwesomeIcon icon={faTriangleExclamation} className="text-amber-500 text-lg mt-0.5 shrink-0" />
+				<div className="rounded-xl border border-tone-warning-fill/30 bg-tone-warning-fill/10 p-4 flex items-start gap-3">
+					<FontAwesomeIcon icon={faTriangleExclamation} className="text-tone-warning-text text-lg mt-0.5 shrink-0" />
 					<div className="text-xs text-body leading-relaxed space-y-1">
 						<div className="font-bold text-sm text-body">Service Deprecation Notice</div>
 						<p className="mb-0 text-muted">
@@ -131,7 +131,7 @@ function AuthState({ authenticatedAs, cloudActive, clearError }: AuthStateProps)
 	return (
 		<div className="surface-card p-4 flex items-center justify-between flex-wrap gap-3">
 			<div className="flex items-center gap-3">
-				<div className="w-10 h-10 rounded-lg bg-sky-500/10 text-sky-500 flex items-center justify-center shrink-0">
+				<div className="w-10 h-10 rounded-lg bg-tone-info-fill/10 text-tone-info-text flex items-center justify-center shrink-0">
 					<FontAwesomeIcon icon={faLock} />
 				</div>
 				<div>

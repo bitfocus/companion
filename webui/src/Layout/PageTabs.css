@@ -43,13 +43,13 @@
 
 	&.active {
 		font-weight: 700;
-		color: var(--color-primary);
-		border-color: var(--color-border);
-		background: var(--color-surface);
+		color: var(--color-primary-text);
+		border-color: var(--color-tab-active-border);
+		background: var(--color-tab-active-bg);
 		box-shadow: 0 1px 2px var(--color-shadow-10);
 
 		.svg-inline--fa {
-			color: var(--color-primary);
+			color: var(--color-primary-text);
 		}
 	}
 }

@@ -177,7 +177,7 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 										title="Make this step the current active live step"
 										className={`text-3xs px-2 py-0.5 font-medium rounded-md ${
 											runtimeProps.current_step_id === currentStepKey
-												? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
+												? 'bg-tone-good-fill/10 text-tone-good-text border border-tone-good-fill/20'
 												: 'text-action-text hover:text-body'
 										}`}
 									>
@@ -278,13 +278,13 @@ function StepPill({ controlId, stepId, stepIndex, stepOptions, isSelected, isCur
 
 	const pillClassName = `flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all select-none ${
 		isSelected
-			? 'bg-primary text-white shadow-xs'
+			? 'bg-primary text-on-dark shadow-xs'
 			: 'bg-surface hover:bg-surface-hover text-muted hover:text-body border border-border/70'
 	}`
 
 	const liveDot = isCurrent && (
 		<span
-			className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500 animate-pulse'}`}
+			className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-on-dark' : 'bg-tone-good-fill animate-pulse'}`}
 			title="Active live step"
 		/>
 	)

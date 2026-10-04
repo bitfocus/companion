@@ -134,7 +134,7 @@ export function ImportTriggersTab({
 			<ImportRemap snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap2} />
 
 			<div className="space-y-3 pt-2">
-				<div className="rounded-xl border border-emerald-500/30 bg-surface p-4 flex flex-col justify-between gap-3 shadow-xs">
+				<div className="rounded-xl border border-tone-good-fill/30 bg-surface p-4 flex flex-col justify-between gap-3 shadow-xs">
 					<div>
 						<h5 className="text-sm font-bold text-body mb-1">Add to Existing Triggers</h5>
 						<p className="text-xs text-muted leading-relaxed mb-0">
@@ -148,7 +148,7 @@ export function ImportTriggersTab({
 					</div>
 				</div>
 
-				<div className="rounded-xl border border-rose-500/30 bg-surface p-4 flex flex-col justify-between gap-3 shadow-xs">
+				<div className="rounded-xl border border-tone-error-fill/30 bg-surface p-4 flex flex-col justify-between gap-3 shadow-xs">
 					<div>
 						<h5 className="text-sm font-bold text-body mb-1">Reset & Import Triggers</h5>
 						<p className="text-xs text-muted leading-relaxed mb-0">

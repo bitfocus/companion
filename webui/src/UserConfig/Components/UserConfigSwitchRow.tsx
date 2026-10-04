@@ -26,7 +26,7 @@ export const UserConfigSwitchRow = observer(function UserConfigSwitchRow({
 				<div>
 					<span>{label}</span>
 					{requiresRestart && (
-						<span className="ms-2 text-xs text-amber-500 italic font-normal">(Requires Companion restart)</span>
+						<span className="ms-2 text-xs text-tone-warning-text italic font-normal">(Requires Companion restart)</span>
 					)}
 				</div>
 			</td>

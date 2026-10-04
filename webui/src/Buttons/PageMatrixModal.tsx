@@ -274,7 +274,7 @@ const PageMatrixCard = memo(function PageMatrixCard({
 								isOccupied
 									? isCurrent
 										? 'bg-primary/80 group-hover:bg-primary'
-										: 'bg-zinc-400 group-hover:bg-primary/70'
+										: 'bg-tone-neutral-fill group-hover:bg-primary/70'
 									: 'bg-border/30'
 							}`}
 						/>

@@ -107,8 +107,10 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 		}
 	})
 
-	const color = invalidReason ? '#c83232' : '#0000c8'
-	const backgroundColor = invalidReason ? '#f9e5e5' : '#e5e5f9'
+	const color = invalidReason ? 'var(--color-tone-error-text)' : 'var(--color-tone-accent-text)'
+	const backgroundColor = invalidReason
+		? 'color-mix(in srgb, var(--color-tone-error-fill) 12%, transparent)'
+		: 'color-mix(in srgb, var(--color-tone-accent-fill) 12%, transparent)'
 
 	let typeDescription = 'unknown'
 	let iconPath: VariableTypeIconType = 'unknown'

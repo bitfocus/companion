@@ -1,5 +1,5 @@
 .variable-value-expanded {
-	background-color: #fff;
+	background-color: var(--color-surface);
 	min-width: 250px;
 	padding: 0.75rem;
 

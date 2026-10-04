@@ -181,9 +181,9 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 						<Popover.Item
 							onClick={doDelete}
 							title="Delete"
-							className="text-rose-500 hover:bg-rose-500/10 hover:text-rose-600 font-medium"
+							className="text-tone-error-text hover:bg-tone-error-fill/10 hover:text-tone-error-text font-medium"
 						>
-							<FontAwesomeIcon icon={faTrash} className="me-2 text-rose-500" />
+							<FontAwesomeIcon icon={faTrash} className="me-2 text-tone-error-text" />
 							Delete
 						</Popover.Item>
 					</Popover.Popup>

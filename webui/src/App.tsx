@@ -306,7 +306,7 @@ function AppLoading({ progress, connected }: AppLoadingProps) {
 					</div>
 				) : (
 					<div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-muted/60 border border-border/70 text-xs text-muted font-medium shadow-xs">
-						<span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+						<span className="w-2 h-2 rounded-full bg-tone-warning-fill animate-pulse" />
 						<span>Locating server…</span>
 					</div>
 				)}

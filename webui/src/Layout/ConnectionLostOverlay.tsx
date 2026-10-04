@@ -24,7 +24,7 @@ function FullscreenOverlay({
 }: FullscreenOverlayProps): React.JSX.Element {
 	return (
 		<div
-			className="fullscreen-overlay fixed inset-0 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity duration-200"
+			className="fullscreen-overlay fixed inset-0 flex items-center justify-center p-4 bg-backdrop/60 backdrop-blur-sm transition-opacity duration-200"
 			role="alertdialog"
 			aria-modal="true"
 			aria-labelledby={titleId}
@@ -88,7 +88,7 @@ export function ConnectionLostOverlay(): React.JSX.Element {
 			</div>
 
 			<div className="mb-5">
-				<OverlayStatusPill dotClassName="bg-amber-500" label="Reconnecting automatically…" />
+				<OverlayStatusPill dotClassName="bg-tone-warning-fill" label="Reconnecting automatically…" />
 			</div>
 
 			<div className="flex items-center justify-center gap-3 w-full">

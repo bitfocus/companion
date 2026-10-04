@@ -199,8 +199,8 @@
 		}
 
 		&[data-active] {
-			border-color: var(--color-border);
-			background: var(--color-surface);
+			border-color: var(--color-tab-active-border);
+			background: var(--color-tab-active-bg);
 			color: var(--color-text);
 			font-weight: 600;
 			box-shadow: 0 1px 2px var(--color-shadow-10);

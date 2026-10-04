@@ -73,7 +73,7 @@
 		height: 1.6rem;
 		border-radius: 50%;
 		background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
-		color: var(--color-primary);
+		color: var(--color-primary-text);
 		font-size: 0.72rem;
 	}
 

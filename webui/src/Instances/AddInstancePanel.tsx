@@ -259,9 +259,9 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 					className={classNames(
 						'shrink-0 rounded-md px-1.5 py-0.5 text-2xs font-medium',
 						installationLabel === 'Installed'
-							? 'bg-emerald-500/10 text-emerald-600'
+							? 'bg-tone-good-fill/10 text-tone-good-text'
 							: installationLabel === 'Development'
-								? 'bg-amber-500/10 text-amber-500'
+								? 'bg-tone-warning-fill/10 text-tone-warning-text'
 								: 'bg-surface-muted text-muted'
 					)}
 				>

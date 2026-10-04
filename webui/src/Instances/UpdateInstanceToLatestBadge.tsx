@@ -70,7 +70,10 @@ const UpdateInstanceToLatestBadgeInner = observer(function UpdateInstanceToLates
 
 	if (variant === 'label') {
 		return (
-			<span title={message} className="rounded-md bg-blue-500/10 px-1.5 py-0.5 text-2xs font-medium text-blue-600">
+			<span
+				title={message}
+				className="rounded-md bg-tone-info-fill/10 px-1.5 py-0.5 text-2xs font-medium text-tone-info-text"
+			>
 				Update available
 			</span>
 		)
@@ -78,7 +81,7 @@ const UpdateInstanceToLatestBadgeInner = observer(function UpdateInstanceToLates
 
 	return (
 		<InlineHelpCustom help={message} className="ms-1">
-			<FontAwesomeIcon icon={faCircleUp} className="text-blue-600" aria-label={message} />
+			<FontAwesomeIcon icon={faCircleUp} className="text-tone-info-text" aria-label={message} />
 		</InlineHelpCustom>
 	)
 })

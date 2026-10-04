@@ -51,7 +51,7 @@ function EditTabButton({ tab, activeTab, setActiveTab, icon, label, showAttentio
 		>
 			<FontAwesomeIcon icon={icon} className="text-muted" />
 			<span>{label}</span>
-			{showAttentionDot && <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
+			{showAttentionDot && <span className="w-1.5 h-1.5 rounded-full bg-tone-warning-fill animate-pulse" />}
 		</button>
 	)
 }
@@ -94,7 +94,7 @@ function SidebarHelpTab({ helpPath }: { helpPath: string }) {
 
 	if (error || !markdown) {
 		return (
-			<div className="p-4 text-xs text-rose-500">
+			<div className="p-4 text-xs text-tone-error-text">
 				{error ? `Failed to load help documentation: ${error}` : 'No help documentation available.'}
 			</div>
 		)

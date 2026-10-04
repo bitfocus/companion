@@ -197,28 +197,28 @@ function SurfaceInstancesListTableHeading() {
 				<StatusFilterPill
 					label="OK"
 					count={counts.ok}
-					dotClass="bg-emerald-500"
+					dotClass="bg-tone-good-fill"
 					isActive={visibleInstances.visibility.ok}
 					onClick={() => visibleInstances.toggleVisibility('ok')}
 				/>
 				<StatusFilterPill
 					label="Warning"
 					count={counts.warning}
-					dotClass="bg-amber-500"
+					dotClass="bg-tone-warning-fill"
 					isActive={visibleInstances.visibility.warning}
 					onClick={() => visibleInstances.toggleVisibility('warning')}
 				/>
 				<StatusFilterPill
 					label="Error"
 					count={counts.error}
-					dotClass="bg-rose-500"
+					dotClass="bg-tone-error-fill"
 					isActive={visibleInstances.visibility.error}
 					onClick={() => visibleInstances.toggleVisibility('error')}
 				/>
 				<StatusFilterPill
 					label="Disabled"
 					count={counts.disabled}
-					dotClass="bg-zinc-400"
+					dotClass="bg-tone-neutral-fill"
 					isActive={visibleInstances.visibility.disabled}
 					onClick={() => visibleInstances.toggleVisibility('disabled')}
 				/>

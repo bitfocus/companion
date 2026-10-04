@@ -227,7 +227,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 							<tr>
 								<td colSpan={3} className="p-3 text-xs text-muted">
 									<div className="flex items-center gap-2">
-										<FontAwesomeIcon icon={faEyeSlash} className="text-amber-500" />
+										<FontAwesomeIcon icon={faEyeSlash} className="text-tone-warning-text" />
 										<span>
 											<strong>{hiddenCount} Modules hidden</strong> by active filter toggles.
 										</span>
@@ -373,7 +373,7 @@ const ModulesListRow = observer(function ModulesListRow({
 					{updateVersion && (
 						<span
 							title={`Stable v${updateVersion.id} is available. Open module details to install it.`}
-							className="rounded-md bg-blue-500/10 px-1.5 py-0.5 text-2xs font-medium text-blue-600"
+							className="rounded-md bg-tone-info-fill/10 px-1.5 py-0.5 text-2xs font-medium text-tone-info-text"
 						>
 							Update available
 						</span>
@@ -392,11 +392,11 @@ const ModulesListRow = observer(function ModulesListRow({
 						className={classNames(
 							'shrink-0 rounded-md px-1.5 py-0.5 text-2xs font-medium',
 							installationLabel === 'Development'
-								? 'bg-amber-500/10 text-amber-500'
+								? 'bg-tone-warning-fill/10 text-tone-warning-text'
 								: installationLabel === 'Available'
 									? 'bg-surface-muted text-muted'
 									: installationLabel === 'Installed'
-										? 'bg-emerald-500/10 text-emerald-600'
+										? 'bg-tone-good-fill/10 text-tone-good-text'
 										: 'bg-primary/10 text-primary'
 						)}
 					>

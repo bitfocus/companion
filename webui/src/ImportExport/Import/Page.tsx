@@ -211,7 +211,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 			</MyErrorBoundary>
 
 			<div
-				className={`rounded-xl border ${pageNumber === -1 ? 'border-emerald-500/30' : 'border-amber-500/30'} bg-surface p-4 flex flex-col justify-between gap-3 shadow-xs my-4`}
+				className={`rounded-xl border ${pageNumber === -1 ? 'border-tone-good-fill/30' : 'border-tone-warning-fill/30'} bg-surface p-4 flex flex-col justify-between gap-3 shadow-xs my-4`}
 			>
 				<div>
 					<h5 className="text-sm font-bold text-body mb-1">Import Buttons to Page</h5>

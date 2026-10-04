@@ -228,7 +228,7 @@ function ConnectionListTableHeading() {
 				<StatusFilterPill
 					label="OK"
 					count={counts.ok}
-					dotClass="bg-emerald-500"
+					dotClass="bg-tone-good-fill"
 					isActive={visibleConnections.visibility.ok}
 					onClick={() => visibleConnections.toggleVisibility('ok')}
 				/>
@@ -236,7 +236,7 @@ function ConnectionListTableHeading() {
 				<StatusFilterPill
 					label="Warning"
 					count={counts.warning}
-					dotClass="bg-amber-500"
+					dotClass="bg-tone-warning-fill"
 					isActive={visibleConnections.visibility.warning}
 					onClick={() => visibleConnections.toggleVisibility('warning')}
 				/>
@@ -244,7 +244,7 @@ function ConnectionListTableHeading() {
 				<StatusFilterPill
 					label="Error"
 					count={counts.error}
-					dotClass="bg-rose-500"
+					dotClass="bg-tone-error-fill"
 					isActive={visibleConnections.visibility.error}
 					onClick={() => visibleConnections.toggleVisibility('error')}
 				/>
@@ -252,7 +252,7 @@ function ConnectionListTableHeading() {
 				<StatusFilterPill
 					label="Disabled"
 					count={counts.disabled}
-					dotClass="bg-zinc-400"
+					dotClass="bg-tone-neutral-fill"
 					isActive={visibleConnections.visibility.disabled}
 					onClick={() => visibleConnections.toggleVisibility('disabled')}
 				/>

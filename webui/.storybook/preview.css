@@ -1,3 +1,4 @@
+/* The canvas behind a story is the theme's surface, so a story previews against the right ground in either theme */
 body {
-	background-color: #fff !important;
+	background-color: var(--color-surface) !important;
 }

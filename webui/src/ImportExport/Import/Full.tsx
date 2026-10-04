@@ -216,9 +216,9 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 	return (
 		<div className="space-y-4">
 			{/* Pre-Import Safety / Prerequisite Banner */}
-			<div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 flex items-center justify-between flex-wrap gap-3">
+			<div className="rounded-xl border border-tone-warning-fill/30 bg-tone-warning-fill/10 p-4 flex items-center justify-between flex-wrap gap-3">
 				<div className="flex items-start gap-3 max-w-2xl">
-					<FontAwesomeIcon icon={faTriangleExclamation} className="text-amber-500 text-lg mt-0.5 shrink-0" />
+					<FontAwesomeIcon icon={faTriangleExclamation} className="text-tone-warning-text text-lg mt-0.5 shrink-0" />
 					<div>
 						<h5 className="text-sm font-bold text-body mb-0.5">Pre-Import Recommendation</h5>
 						<p className="text-xs text-muted leading-relaxed mb-0">
@@ -336,7 +336,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 
 						{/* Action Choice Cards */}
 						<div className="space-y-3 pt-2">
-							<div className="rounded-xl border border-emerald-500/30 bg-surface p-4 flex flex-col justify-between gap-3 shadow-xs">
+							<div className="rounded-xl border border-tone-good-fill/30 bg-surface p-4 flex flex-col justify-between gap-3 shadow-xs">
 								<div>
 									<h5 className="text-sm font-bold text-body mb-1">Import, Preserving Unselected Components</h5>
 									<p className="text-xs text-muted leading-relaxed mb-0">
@@ -370,7 +370,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 								</form.Subscribe>
 							</div>
 
-							<div className="rounded-xl border border-rose-500/30 bg-surface p-4 flex flex-col justify-between gap-3 shadow-xs">
+							<div className="rounded-xl border border-tone-error-fill/30 bg-surface p-4 flex flex-col justify-between gap-3 shadow-xs">
 								<div>
 									<h5 className="text-sm font-bold text-body mb-1">Full Reset & Import</h5>
 									<p className="text-xs text-muted leading-relaxed mb-0">
