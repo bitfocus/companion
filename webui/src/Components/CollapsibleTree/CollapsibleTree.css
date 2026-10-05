@@ -111,7 +111,7 @@
 		/* Matches the selected row of the CollectionsNestingTable-based list pages. */
 		&.selected {
 			background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
-			color: var(--color-primary);
+			color: var(--color-primary-text);
 			box-shadow: inset 4px 0 0 var(--color-primary);
 
 			.collapsible-tree-leaf-arrow-icon {

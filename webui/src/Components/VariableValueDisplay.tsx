@@ -1,10 +1,11 @@
-import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import { faChevronDown, faChevronUp, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import './VariableValueDisplay.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef, useState } from 'react'
 import type { PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import { VARIABLE_UNKNOWN_VALUE } from '~/Resources/Constants.js'
 import { StaticAlert } from './Alert.js'
+import { Button } from './Button.js'
 import { CopyButton } from './CopyButton.js'
 import { Popover } from './Popover.js'
 import { VariableTypeIcon, type VariableTypeIconType } from './VariableTypeIcon.js'
@@ -137,8 +138,6 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 		typeDescription = 'JSON Object or Array'
 	}
 
-	const btnstyle = { marginLeft: '4px', borderRadius: '4px' }
-
 	const valuePill = (
 		<div
 			style={{
@@ -214,19 +213,6 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 				title={compact && showHoverTitle ? compactValue : undefined}
 			>
 				{elms /*displayValue */}
-				{!compact &&
-					!forceExpanded &&
-					(valueStr.length <= TRUNCATE_LENGTH ? (
-						''
-					) : collapser.isPanelCollapsed() ? (
-						<button style={btnstyle} onClick={() => collapser.setPanelCollapsed(false)}>
-							More
-						</button>
-					) : (
-						<button style={btnstyle} onClick={() => collapser.setPanelCollapsed(true)}>
-							Less
-						</button>
-					))}
 			</code>
 		</div>
 	)
@@ -239,6 +225,18 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 					<CopyButton size="sm" title="Copy variable value" text={valueStr} color="secondary" variant="ghost" />
 				)}
 			</div>
+			{!compact &&
+				!forceExpanded &&
+				valueStr.length > TRUNCATE_LENGTH &&
+				(collapser.isPanelCollapsed() ? (
+					<Button size="sm" color="secondary" className="mt-2" onClick={() => collapser.setPanelCollapsed(false)}>
+						<FontAwesomeIcon icon={faChevronDown} /> Show more
+					</Button>
+				) : (
+					<Button size="sm" color="secondary" className="mt-2" onClick={() => collapser.setPanelCollapsed(true)}>
+						<FontAwesomeIcon icon={faChevronUp} /> Show less
+					</Button>
+				))}
 		</div>
 	)
 }

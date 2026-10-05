@@ -4,6 +4,8 @@
 	overflow: hidden;
 	height: 100%;
 	position: relative;
+	/* The list runs edge to edge; the toolbar and rows carry their own padding */
+	padding: 0;
 
 	display: flex;
 	flex-direction: column;
@@ -14,36 +16,80 @@
 	}
 }
 
-.variables-table-header {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	position: sticky;
-	top: 0;
-	z-index: 1;
-	background-color: var(--color-surface-muted);
-	font-weight: bold;
+.variables-table-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-shrink: 0;
+	padding: 0.75rem 1rem;
+	border-bottom: 1px solid var(--color-border-soft);
+}
 
-	> div {
-		padding: 0.5rem;
+.variables-table-count {
+	flex-shrink: 0;
+	white-space: nowrap;
+	font-size: 0.85em;
+	color: var(--color-muted);
+}
+
+/* Name and description sit beside the value; a narrow list stacks them above a full-width value instead */
+.variables-table-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	grid-template-areas:
+		'name value'
+		'description value';
+	grid-template-rows: auto 1fr;
+	column-gap: 1.5rem;
+	row-gap: 0.25rem;
+	padding: 0.75rem 1rem;
+	border-bottom: 1px solid var(--color-border-soft);
+	word-break: break-all;
+
+	&:hover {
+		background-color: var(--color-row-hover);
 	}
 }
 
-.variables-table-row {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	word-break: break-all;
-	border-bottom: 10px solid var(--color-surface-muted);
+.variables-table-name {
+	grid-area: name;
+	display: flex;
+	align-items: flex-start;
+	min-width: 0;
 }
 
-.variables-table-cell {
-	padding: 0.5rem;
+.variables-table-description {
+	grid-area: description;
 	min-width: 0;
-	overflow: hidden;
+	word-break: normal;
+	font-size: 0.875rem;
+	color: var(--color-text-secondary);
+}
+
+.variables-table-value {
+	grid-area: value;
+	min-width: 0;
 }
 
 .variables-table-scroller {
 	overflow-y: auto;
 	overflow-x: hidden;
+	container-type: inline-size;
+
+	@container (max-width: 30rem) {
+		.variables-table-row {
+			grid-template-columns: minmax(0, 1fr);
+			grid-template-areas:
+				'name'
+				'description'
+				'value';
+			grid-template-rows: none;
+		}
+
+		.variables-table-value {
+			margin-top: 0.25rem;
+		}
+	}
 
 	.variable-description {
 		word-break: normal;
@@ -90,12 +136,6 @@
 	.variables-table-scroller {
 		max-height: calc(90vh - 10rem);
 	}
-}
-
-.variables-table-count {
-	font-size: 0.85em;
-	opacity: 0.75;
-	margin: 0 0 0.6rem 1rem;
 }
 
 /* Monospace variable-name token, shown in the variables table and other variable lists. */
