@@ -297,6 +297,7 @@
 	/* Panel headers & dropdown menus (layout) */
 	--color-panel-header-btn: #4b545c; /* the round context-help / close button chrome */
 	--color-menu-bg: #f3f4f7; /* context-menu popover background */
+	--color-tooltip-bg: #111; /* tooltip fill, under --color-on-dark text */
 
 	/* Modal / sidebar backdrop (dimmed behind an overlay; paired with an opacity). Fixed */
 	--color-backdrop: #080a0c;
@@ -501,6 +502,7 @@
 
 		--color-panel-header-btn: #aeb5bf;
 		--color-menu-bg: #1d2026;
+		--color-tooltip-bg: #3a3f49;
 
 		--color-image-accent: #4d94ff;
 		--color-upload-success: #2fbf71;
