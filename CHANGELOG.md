@@ -25,6 +25,7 @@
   - make split panel layouts resizable #2781
   - Show local variable value when collapsed (#4386)
   - configurable default export format #4349
+  - make module deprecation more visible to users (#4495)
 
 - APIs
   - Prototype of new full system REST API (#4259)
@@ -49,6 +50,7 @@
   - add COMPANION_INSTALL_NAME env var to set the installation name
   - prometheus metrics for monitoring (#4304)
   - streaming json parsing/generation (#4390)
+  - report collection-disabled connections as disabled, add connection collection status variables #4479
 
 ### 🐞 BUG FIXES
 
@@ -71,6 +73,10 @@
 - make element type clearer in list #4331
 - emulator long press suppress buzz #4322
 - standalone pipe for child ipc (#4312)
+- colors when downscaling oversampled images
+- dropdown freezing when selecting from a large list #4494
+- expose pressed state to surfaces
+- don't recreate desktop shortcut when updating
 
 ## Companion v5.0.7 - Release Notes
 
