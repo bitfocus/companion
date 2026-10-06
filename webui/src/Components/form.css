@@ -104,20 +104,12 @@ label.disabled {
 		transition: none;
 	}
 
-	&.invalid-value {
-		color: var(--color-input-invalid);
-	}
-
 	&:focus-visible {
 		color: var(--color-text);
 		background-color: var(--color-input-bg);
 		border-color: var(--color-primary-soft);
 		outline: 0;
 		box-shadow: 0 0 0 0.25rem var(--color-focus-ring);
-
-		&.invalid-value {
-			color: var(--color-input-invalid);
-		}
 	}
 
 	&::placeholder {

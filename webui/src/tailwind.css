@@ -164,7 +164,6 @@
 
 	--color-input-bg: #ffffff;
 	--color-input-readonly-bg: #eeeeee;
-	--color-input-invalid: red;
 	--color-syntax-error: rgb(255, 12, 138);
 
 	/* Surfaces */
@@ -427,7 +426,6 @@
 
 		--color-input-bg: #121418;
 		--color-input-readonly-bg: #1c1f25;
-		--color-input-invalid: #ff5a5a;
 		--color-syntax-error: #ff4fa8;
 
 		/* Elevation comes from lightness: the frame is darkest, cards and popovers lightest */
