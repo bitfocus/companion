@@ -5,7 +5,7 @@
 
 		<!-- Cascade-layer order, declared before any stylesheet loads. Must live here: the prod build
 		     injects tailwind.css late and the CSS minifier drops an in-CSS @layer statement. Keep in
-		     sync with src/tailwind.css. -->
+		     sync with src/tailwind.css and .storybook/preview-head.html. -->
 		<style>
 			@layer theme, tw-base, base, layout-grid, app-base, components, features, utilities;
 		</style>
