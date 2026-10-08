@@ -19,6 +19,8 @@ export interface GridTransferPair {
 export interface GridToolActions {
 	openEditor: (location: ControlLocation) => void
 	press: (location: ControlLocation, isDown: boolean) => void
+	/** Turn a knob, jog or shuttle one step, rightward (clockwise) or leftward */
+	rotate: (location: ControlLocation, isRightward: boolean) => void
 	/**
 	 * Move buttons about. Refuses a placement that would fall off the grid and asks before replacing
 	 * anything, so `onApplied` runs only once the transfer has actually been sent.
@@ -115,6 +117,7 @@ export interface GridTool {
 
 	onTap(ctx: GridToolContext, location: ControlLocation, modifiers: GridButtonModifiers): void
 	onPress(ctx: GridToolContext, location: ControlLocation, isDown: boolean): void
+	onRotate(ctx: GridToolContext, location: ControlLocation, isRightward: boolean): void
 
 	/**
 	 * Unwind one step. Returning false means there was nothing left to unwind, and the grid should
@@ -173,6 +176,10 @@ export abstract class GridToolBase implements GridTool {
 	}
 
 	onPress(_ctx: GridToolContext, _location: ControlLocation, _isDown: boolean): void {
+		// nothing by default
+	}
+
+	onRotate(_ctx: GridToolContext, _location: ControlLocation, _isRightward: boolean): void {
 		// nothing by default
 	}
 

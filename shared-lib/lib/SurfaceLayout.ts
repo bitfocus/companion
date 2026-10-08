@@ -389,8 +389,8 @@ export function controlKind(type: string | undefined): SurfaceControlKind {
 	}
 }
 
-/** The kinds which are round, so are drawn as a circle unless the face says otherwise */
-function isRoundKind(kind: SurfaceControlKind): boolean {
+/** The kinds which turn, so are round unless the face says otherwise, and can be turned from the editor */
+export function isRotaryKind(kind: SurfaceControlKind): boolean {
 	return kind === 'encoder' || kind === 'jog' || kind === 'shuttle'
 }
 
@@ -400,7 +400,7 @@ function shapeFromAppearance(
 	kind: SurfaceControlKind
 ): SurfaceControlShape {
 	// A knob is round whatever the face says; a jog or shuttle unless the face says otherwise
-	if (kind === 'encoder' || face.shape?.type === 'circle' || (!face.shape && isRoundKind(kind))) {
+	if (kind === 'encoder' || face.shape?.type === 'circle' || (!face.shape && isRotaryKind(kind))) {
 		return { type: 'circle' }
 	}
 

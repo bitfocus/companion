@@ -6,6 +6,9 @@
 	border-radius: inherit;
 	pointer-events: none;
 
+	/* Turned a step at a time as it is dragged round, eased so each step reads as movement rather than a jump */
+	transition: rotate 80ms ease-out;
+
 	/* A rim, so it reads as something raised off the face rather than printed on it */
 	box-shadow: inset 0 0 0 max(1px, 3cqmin) color-mix(in srgb, var(--color-border-strong) 45%, transparent);
 

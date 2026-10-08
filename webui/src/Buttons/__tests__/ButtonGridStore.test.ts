@@ -20,6 +20,7 @@ function makeActions(): GridToolActions {
 	return {
 		openEditor: vi.fn(),
 		press: vi.fn(),
+		rotate: vi.fn(),
 		// The real one asks before replacing anything, and only reports back once it has happened
 		transfer: vi.fn((_operation, _pairs, onApplied: () => void) => onApplied()),
 		clearButtons: vi.fn(),
@@ -402,6 +403,13 @@ describe('ButtonGridStore', () => {
 			store.handlePress(at(1, 1), true, actions)
 
 			expect(actions.press).toHaveBeenCalledWith(at(1, 1), true)
+		})
+
+		it('routes a turn straight through in press mode', () => {
+			store.setTool('press', actions)
+			store.handleRotate(at(1, 1), false, actions)
+
+			expect(actions.rotate).toHaveBeenCalledWith(at(1, 1), false)
 		})
 
 		it('drops the selection on entering press mode', () => {
@@ -1527,6 +1535,12 @@ describe('ButtonGridStore, in the states nothing else reaches', () => {
 			store.handlePress(at(1, 1), true, actions)
 
 			expect(actions.press).not.toHaveBeenCalled()
+		})
+
+		it('ignores a turn under a tool that does not fire buttons', () => {
+			store.handleRotate(at(1, 1), true, actions)
+
+			expect(actions.rotate).not.toHaveBeenCalled()
 		})
 	})
 

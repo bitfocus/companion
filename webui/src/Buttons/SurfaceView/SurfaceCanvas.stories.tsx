@@ -142,6 +142,7 @@ function storyActions(): GridToolActions {
 	return {
 		openEditor: action('openEditor'),
 		press: action('press'),
+		rotate: action('rotate'),
 		transfer: (operation, pairs, onApplied) => {
 			action('transfer')(operation, pairs)
 			onApplied()
@@ -243,10 +244,11 @@ export const StreamDeckPlus: Story = {}
  * corners of the jog's box still reach the ring around it.
  */
 export const ContourShuttlePro: Story = {
-	args: { layout: shuttleProLayout, appearance: shuttleProAppearance },
+	// With no bitmaps, its smallest button is drawn a grid cell across, which puts the whole device off the page at 100%
+	args: { layout: shuttleProLayout, appearance: shuttleProAppearance, zoom: 50 },
 }
 
 /** A surface whose last column is beyond the configured grid, drawn but locked */
 export const BeyondTheGrid: Story = {
-	args: { layout: shuttleProLayout, appearance: shuttleProAppearance, trimGrid: true },
+	args: { layout: shuttleProLayout, appearance: shuttleProAppearance, zoom: 50, trimGrid: true },
 }

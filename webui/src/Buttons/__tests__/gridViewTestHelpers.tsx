@@ -20,6 +20,7 @@ export function makeGridActions(overrides: Partial<GridToolActions> = {}): GridT
 	return {
 		openEditor: vi.fn(),
 		press: vi.fn(),
+		rotate: vi.fn(),
 		// The real one asks before replacing anything, and only reports back once it has happened
 		transfer: vi.fn((_operation, _pairs, onApplied: () => void) => onApplied()),
 		clearButtons: vi.fn(),
