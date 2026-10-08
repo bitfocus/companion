@@ -4585,14 +4585,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@julusian/bonjour-service@npm:^1.4.5":
-  version: 1.4.5
-  resolution: "@julusian/bonjour-service@npm:1.4.5"
+"@julusian/bonjour-service@npm:^1.4.6":
+  version: 1.4.6
+  resolution: "@julusian/bonjour-service@npm:1.4.6"
   dependencies:
     dns-packet: "npm:^5.6.1"
     fast-deep-equal: "npm:^3.1.3"
     thunky: "npm:^1.0.2"
-  checksum: 10c0/bcd95af1e518d4464b95dc711346c5542a2ddd9bb3788615bc03b2a2adf49647dbc35bc0a086147283afa0dcc93b464dd40b22ad606b12142f84b9da8c53287f
+  checksum: 10c0/5ccb1a6ac9cf55ac078e6676b96b296ceca3d1ad66226df06da6cc8ba73cde26967cf3b843882aa69f561145396623929b380828ce6688e6bf05dc61dcadbe69
   languageName: node
   linkType: hard
 
@@ -11026,7 +11026,7 @@ __metadata:
     "@companion-module/base-old": "npm:@companion-module/base@~1.14.1"
     "@companion-module/host": "npm:1.2.0"
     "@companion-surface/host": "npm:1.4.2"
-    "@julusian/bonjour-service": "npm:^1.4.5"
+    "@julusian/bonjour-service": "npm:^1.4.6"
     "@julusian/image-rs": "npm:^2.3.0"
     "@julusian/segfault-raub": "npm:^2.3.3"
     "@napi-rs/canvas": "npm:^1.0.9"
