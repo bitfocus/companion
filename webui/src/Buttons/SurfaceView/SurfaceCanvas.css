@@ -89,6 +89,19 @@
 		}
 	}
 
+	/* The slices of one screen are drawn as one screen, rather than as keys sat edge to edge */
+	.control-kind-lcd-segment .button-border {
+		border-color: transparent;
+	}
+
+	/* A shuttle ring has a jog wheel in it, as a rule, which covers its middle - so it is labelled at the top, on
+	   the ring itself */
+	.control-kind-shuttle .button-border .button-placeholder,
+	.surface-control-offgrid.control-kind-shuttle {
+		align-items: flex-start;
+		padding-top: 4%;
+	}
+
 	/* A control the surface has beyond the configured grid: drawn so the face stays accurate, but marked
 	   as not a real button - dashed and dimmed, with a lock, and clicking it offers to grow the grid. */
 	.surface-control-offgrid {

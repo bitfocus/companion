@@ -497,6 +497,7 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 		<GridButtonCell
 			location={location}
 			renderSize={DEFAULT_PREVIEW_RENDER_SIZE}
+			kind="button"
 			feedback="bitmap"
 			leds={null}
 			style={style}

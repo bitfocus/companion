@@ -14,6 +14,7 @@ function setup(props: Partial<Props> = {}) {
 
 	const baseProps: Props = {
 		location,
+		kind: 'button',
 		image: null,
 		color: null,
 		overlay: null,
@@ -289,6 +290,15 @@ describe('GridButtonPreview', () => {
 	})
 
 	describe('what it draws', () => {
+		it('marks what kind of control it is, so it can be drawn as one', () => {
+			const { root, rerender } = setup({ kind: 'jog' })
+			expect(root).toHaveClass('control-kind-jog')
+
+			rerender({ kind: 'button' })
+			expect(root).toHaveClass('control-kind-button')
+			expect(root).not.toHaveClass('control-kind-jog')
+		})
+
 		it('draws the placeholder while there is no image', () => {
 			const { root } = setup({ image: null })
 

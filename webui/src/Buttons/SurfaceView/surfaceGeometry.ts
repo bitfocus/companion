@@ -196,7 +196,8 @@ function clampEdges(edges: Edges, drawn: Edges, limit: Edges): Edges {
  * Which control is under a point, or null for the bare face between them.
  *
  * Asks the hit areas rather than what is drawn, so a thin control can be picked from just beside it. Later controls
- * win, so that anything a layout deliberately draws on top of something else is what gets hit.
+ * win, so that anything a layout deliberately draws on top of something else is what gets hit. A round control is
+ * only hit inside its circle, so the corners of its box go to whatever it sits on - a jog wheel inside a shuttle ring.
  */
 export function controlAtPoint(
 	placed: readonly PlacedSurfaceControl[],
@@ -206,10 +207,26 @@ export function controlAtPoint(
 	for (let index = placed.length - 1; index >= 0; index--) {
 		const { control, hit } = placed[index]
 
-		if (x >= hit.left && x < hit.left + hit.width && y >= hit.top && y < hit.top + hit.height) return control
+		if (control.shape.type === 'circle' ? isInEllipse(hit, x, y) : isInBox(hit, x, y)) return control
 	}
 
 	return null
+}
+
+function isInBox(box: CanvasBox, x: number, y: number): boolean {
+	return x >= box.left && x < box.left + box.width && y >= box.top && y < box.top + box.height
+}
+
+/** Whether a point is inside the ellipse inscribed in a box, as a circle is drawn in its bounds */
+function isInEllipse(box: CanvasBox, x: number, y: number): boolean {
+	const radiusX = box.width / 2
+	const radiusY = box.height / 2
+	if (!(radiusX > 0 && radiusY > 0)) return false
+
+	const dx = (x - (box.left + radiusX)) / radiusX
+	const dy = (y - (box.top + radiusY)) / radiusY
+
+	return dx * dx + dy * dy < 1
 }
 
 /**

@@ -1,6 +1,7 @@
 import classnames from 'classnames'
 import { memo, useCallback, useEffect, useRef } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { SurfaceControlKind } from '@companion-app/shared/SurfaceLayout.js'
 import { useImagePreloader } from '~/Components/ButtonPreview.js'
 import type { GridPendingChange } from './GridGeometry.js'
 
@@ -20,6 +21,8 @@ export interface GridButtonModifiers {
 
 export interface GridButtonPreviewProps {
 	location: ControlLocation
+	/** What sort of control this is drawn as - a key, a knob, a slice of a screen */
+	kind: SurfaceControlKind
 	image: string | null
 	/** Fill the button with this colour instead of an image, for a control which shows only a colour */
 	color: string | null
@@ -71,6 +74,7 @@ export interface GridButtonPreviewProps {
  */
 export const GridButtonPreview = memo(function GridButtonPreview({
 	location,
+	kind,
 	image,
 	color,
 	overlay,
@@ -197,7 +201,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 			ref={setRefs}
 			// `grid-button` marks this as the grid's own cell rather than any other ButtonPreview, so a
 			// rule can apply to it and not to the preset pool or the emulator
-			className={classnames('button-control', 'clickable', 'fixed-72', 'grid-button', {
+			className={classnames('button-control', 'clickable', 'fixed-72', 'grid-button', `control-kind-${kind}`, {
 				// Let the browser scroll the grid, except in press mode where a scroll must not steal the press
 				'grid-pannable': !pressMode,
 				selected,

@@ -4,7 +4,7 @@ import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { PreviewRenderSize } from '@companion-app/shared/Model/Preview.js'
 import type { SurfaceSchemaLedsConfig } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfaceControlFeedback } from '@companion-app/shared/SurfaceLayout.js'
+import type { SurfaceControlFeedback, SurfaceControlKind } from '@companion-app/shared/SurfaceLayout.js'
 import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import {
 	useButtonGridView,
@@ -19,12 +19,15 @@ import {
 import { GRID_BUTTON_DRAG_TYPE, type GridButtonDragItem } from './GridButtonDragItem.js'
 import { makeGridButtonDroppableId } from './GridButtonDroppableId.js'
 import { GridButtonPreview, type GridButtonModifiers } from './GridButtonPreview.js'
+import { SurfaceControlDetail } from './SurfaceView/SurfaceControlDetail.js'
 import { SurfaceLeds } from './SurfaceView/SurfaceLeds.js'
 
 export interface GridButtonCellProps {
 	location: ControlLocation
 	/** The size to draw this button's image at */
 	renderSize: PreviewRenderSize
+	/** What sort of control it is, so it is drawn as one: a knob rather than a round key */
+	kind: SurfaceControlKind
 	/**
 	 * What the control shows of the button. One which shows only a colour is drawn as that colour, as the image
 	 * would be squeezed into something too small to read and is not what the device shows anyway.
@@ -47,6 +50,7 @@ export interface GridButtonCellProps {
 export const GridButtonCell = memo(function GridButtonCell({
 	location,
 	renderSize,
+	kind,
 	feedback,
 	leds,
 	style,
@@ -112,9 +116,15 @@ export const GridButtonCell = memo(function GridButtonCell({
 	return (
 		<GridButtonPreview
 			location={location}
+			kind={kind}
 			image={isUsed && !colorOnly ? image : null}
 			color={isUsed && colorOnly ? color : null}
-			overlay={leds && <SurfaceLeds config={leds} leds={isUsed ? ledGauge : null} />}
+			overlay={
+				<>
+					<SurfaceControlDetail kind={kind} />
+					{leds && <SurfaceLeds config={leds} leds={isUsed ? ledGauge : null} />}
+				</>
+			}
 			style={style}
 			title={locationKey}
 			placeholder={`${row}/${column}`}
