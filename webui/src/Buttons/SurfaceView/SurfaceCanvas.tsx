@@ -200,7 +200,8 @@ export const SurfaceCanvas = forwardRef<SurfaceCanvasRef, SurfaceCanvasProps>(fu
 			// is the whole face, outline included, so its colour is not painted under it - that would fill out the
 			// corners and anything else the artwork leaves clear, and lose the shape of the device against the ground.
 			...(view.body?.image
-				? { backgroundImage: `url(${view.body.image})`, backgroundSize: '100% 100%' }
+				? // Quoted, as a data URI of an svg can hold the brackets and quotes which end a bare url()
+					{ backgroundImage: `url(${JSON.stringify(view.body.image)})`, backgroundSize: '100% 100%' }
 				: view.body && { backgroundColor: view.body.color }),
 		}),
 		[view.extent.width, view.extent.height, unitScale, drawScale, view.body]
