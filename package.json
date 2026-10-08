@@ -104,7 +104,7 @@
     "serialize-javascript": "^7.0.3",
     "webpack-bundle-analyzer": "^5.0.0",
     "@companion-surface/host": "1.5.0-nightly-claude-keen-tesla-ekqmu3-20261003-162119-932edce",
-    "@companion-surface/base": "1.5.0-nightly-claude-keen-tesla-ekqmu3-20261003-161950-932edce"
+    "@companion-surface/base": "1.5.0-nightly-claude-keen-tesla-ekqmu3-20261008-204416-ad13936"
   },
   "dependenciesMeta": {
     "@sentry/cli": {

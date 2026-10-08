@@ -1992,12 +1992,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-surface/base@npm:1.5.0-nightly-claude-keen-tesla-ekqmu3-20261003-161950-932edce":
-  version: 1.5.0-nightly-claude-keen-tesla-ekqmu3-20261003-161950-932edce
-  resolution: "@companion-surface/base@npm:1.5.0-nightly-claude-keen-tesla-ekqmu3-20261003-161950-932edce"
+"@companion-surface/base@npm:1.5.0-nightly-claude-keen-tesla-ekqmu3-20261008-204416-ad13936":
+  version: 1.5.0-nightly-claude-keen-tesla-ekqmu3-20261008-204416-ad13936
+  resolution: "@companion-surface/base@npm:1.5.0-nightly-claude-keen-tesla-ekqmu3-20261008-204416-ad13936"
   dependencies:
     zod: "npm:^4.4.3"
-  checksum: 10c0/70c2d78b1568e9daba6b602bdbc35ea24142473eccc9109d3d93505c89784a306521d6c9783a8b282a2df05b23acfbfaf233d5ed660f244c7c0297cd75c087d4
+  checksum: 10c0/37380d22ae321c9f3f300b017268629a428eff8c82b4d69eaba7222bb95d85ddf071fe2f28f462c783e31109d40a04978053e65d21e9a12fab7539db01284c73
   languageName: node
   linkType: hard
 
