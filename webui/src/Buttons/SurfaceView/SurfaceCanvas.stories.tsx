@@ -45,21 +45,21 @@ const streamDeckPlusAppearance: SurfaceAppearanceDefinition = {
 		...[0, 1, 2, 3].flatMap((column) => [
 			[
 				`0/${column}`,
-				{ x: 60 + column * 124, y: 40, width: 108, height: 108, shape: { type: 'rect', cornerRadius: 14 } },
+				{ x: 60 + column * 124, y: 40, width: 108, height: 108, shape: { shape: 'rect', cornerRadius: 14 } },
 			],
 			[
 				`1/${column}`,
-				{ x: 60 + column * 124, y: 164, width: 108, height: 108, shape: { type: 'rect', cornerRadius: 14 } },
+				{ x: 60 + column * 124, y: 164, width: 108, height: 108, shape: { shape: 'rect', cornerRadius: 14 } },
 			],
 		]),
 		// One screen, cut into a slice per encoder
 		...[0, 1, 2, 3].map((column) => [
 			`2/${column}`,
-			{ x: 54 + column * 123, y: 300, width: 123, height: 62, type: 'lcd-segment' },
+			{ x: 54 + column * 123, y: 300, width: 123, height: 62, kind: 'lcd-segment' },
 		]),
 		...[0, 1, 2, 3].map((column) => [
 			`3/${column}`,
-			{ x: 72 + column * 123, y: 420, width: 84, height: 84, type: 'encoder' },
+			{ x: 72 + column * 123, y: 420, width: 84, height: 84, kind: 'encoder' },
 		]),
 	]),
 }
@@ -114,25 +114,25 @@ const shuttleProAppearance: SurfaceAppearanceDefinition = {
 	bodyImage: shuttleProBodyImage,
 	controls: {
 		// The top two rows follow the arc of the case
-		'0/0': { x: 82, y: 46, width: 50, height: 32, shape: { type: 'rect', cornerRadius: 6 } },
-		'0/1': { x: 144, y: 36, width: 50, height: 32, shape: { type: 'rect', cornerRadius: 6 } },
-		'0/2': { x: 206, y: 36, width: 50, height: 32, shape: { type: 'rect', cornerRadius: 6 } },
-		'0/3': { x: 268, y: 46, width: 50, height: 32, shape: { type: 'rect', cornerRadius: 6 } },
-		'1/0': { x: 40, y: 102, width: 50, height: 32, shape: { type: 'rect', cornerRadius: 6 } },
-		'1/1': { x: 102, y: 92, width: 50, height: 32, shape: { type: 'rect', cornerRadius: 6 } },
-		'1/2': { x: 175, y: 88, width: 50, height: 32, shape: { type: 'rect', cornerRadius: 6 } },
-		'1/3': { x: 248, y: 92, width: 50, height: 32, shape: { type: 'rect', cornerRadius: 6 } },
-		'1/4': { x: 310, y: 102, width: 50, height: 32, shape: { type: 'rect', cornerRadius: 6 } },
-		'2/0': { x: 24, y: 236, width: 40, height: 64, shape: { type: 'rect', cornerRadius: 8 } },
-		'2/4': { x: 336, y: 236, width: 40, height: 64, shape: { type: 'rect', cornerRadius: 8 } },
-		'3/0': { x: 44, y: 400, width: 80, height: 40, shape: { type: 'rect', cornerRadius: 8 } },
-		'3/3': { x: 276, y: 400, width: 80, height: 40, shape: { type: 'rect', cornerRadius: 8 } },
-		'3/1': { x: 136, y: 412, width: 60, height: 36, shape: { type: 'rect', cornerRadius: 8 } },
-		'3/2': { x: 204, y: 412, width: 60, height: 36, shape: { type: 'rect', cornerRadius: 8 } },
+		'0/0': { x: 82, y: 46, width: 50, height: 32, shape: { shape: 'rect', cornerRadius: 6 } },
+		'0/1': { x: 144, y: 36, width: 50, height: 32, shape: { shape: 'rect', cornerRadius: 6 } },
+		'0/2': { x: 206, y: 36, width: 50, height: 32, shape: { shape: 'rect', cornerRadius: 6 } },
+		'0/3': { x: 268, y: 46, width: 50, height: 32, shape: { shape: 'rect', cornerRadius: 6 } },
+		'1/0': { x: 40, y: 102, width: 50, height: 32, shape: { shape: 'rect', cornerRadius: 6 } },
+		'1/1': { x: 102, y: 92, width: 50, height: 32, shape: { shape: 'rect', cornerRadius: 6 } },
+		'1/2': { x: 175, y: 88, width: 50, height: 32, shape: { shape: 'rect', cornerRadius: 6 } },
+		'1/3': { x: 248, y: 92, width: 50, height: 32, shape: { shape: 'rect', cornerRadius: 6 } },
+		'1/4': { x: 310, y: 102, width: 50, height: 32, shape: { shape: 'rect', cornerRadius: 6 } },
+		'2/0': { x: 24, y: 236, width: 40, height: 64, shape: { shape: 'rect', cornerRadius: 8 } },
+		'2/4': { x: 336, y: 236, width: 40, height: 64, shape: { shape: 'rect', cornerRadius: 8 } },
+		'3/0': { x: 44, y: 400, width: 80, height: 40, shape: { shape: 'rect', cornerRadius: 8 } },
+		'3/3': { x: 276, y: 400, width: 80, height: 40, shape: { shape: 'rect', cornerRadius: 8 } },
+		'3/1': { x: 136, y: 412, width: 60, height: 36, shape: { shape: 'rect', cornerRadius: 8 } },
+		'3/2': { x: 204, y: 412, width: 60, height: 36, shape: { shape: 'rect', cornerRadius: 8 } },
 		// The one ring, as both of its controls, then the jog drawn over its middle
-		'2/3': { x: 86, y: 154, width: 228, height: 228, type: 'shuttle' },
-		'2/2': { x: 86, y: 154, width: 228, height: 228, type: 'shuttle' },
-		'2/1': { x: 136, y: 204, width: 128, height: 128, type: 'jog' },
+		'2/3': { x: 86, y: 154, width: 228, height: 228, kind: 'shuttle' },
+		'2/2': { x: 86, y: 154, width: 228, height: 228, kind: 'shuttle' },
+		'2/1': { x: 136, y: 204, width: 128, height: 128, kind: 'jog' },
 	},
 }
 
@@ -142,6 +142,7 @@ function storyActions(): GridToolActions {
 	return {
 		openEditor: action('openEditor'),
 		press: action('press'),
+		rotate: action('rotate'),
 		transfer: (operation, pairs, onApplied) => {
 			action('transfer')(operation, pairs)
 			onApplied()
@@ -243,10 +244,11 @@ export const StreamDeckPlus: Story = {}
  * corners of the jog's box still reach the ring around it.
  */
 export const ContourShuttlePro: Story = {
-	args: { layout: shuttleProLayout, appearance: shuttleProAppearance },
+	// With no bitmaps, its smallest button is drawn a grid cell across, which puts the whole device off the page at 100%
+	args: { layout: shuttleProLayout, appearance: shuttleProAppearance, zoom: 50 },
 }
 
 /** A surface whose last column is beyond the configured grid, drawn but locked */
 export const BeyondTheGrid: Story = {
-	args: { layout: shuttleProLayout, appearance: shuttleProAppearance, trimGrid: true },
+	args: { layout: shuttleProLayout, appearance: shuttleProAppearance, zoom: 50, trimGrid: true },
 }

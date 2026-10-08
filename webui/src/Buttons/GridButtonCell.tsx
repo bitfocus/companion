@@ -1,10 +1,14 @@
 import { useDraggable, useDragOperation, useDroppable } from '@dnd-kit/react'
-import { memo, useCallback, useMemo } from 'react'
+import { memo, useCallback, useMemo, useState } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { PreviewRenderSize } from '@companion-app/shared/Model/Preview.js'
 import type { SurfaceSchemaLedsConfig } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfaceControlFeedback, SurfaceControlKind } from '@companion-app/shared/SurfaceLayout.js'
+import {
+	isRotaryKind,
+	type SurfaceControlFeedback,
+	type SurfaceControlKind,
+} from '@companion-app/shared/SurfaceLayout.js'
 import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import {
 	useButtonGridView,
@@ -19,6 +23,7 @@ import {
 import { GRID_BUTTON_DRAG_TYPE, type GridButtonDragItem } from './GridButtonDragItem.js'
 import { makeGridButtonDroppableId } from './GridButtonDroppableId.js'
 import { GridButtonPreview, type GridButtonModifiers } from './GridButtonPreview.js'
+import { ROTARY_STEP_DEGREES } from './SurfaceView/rotaryDrag.js'
 import { SurfaceControlDetail } from './SurfaceView/SurfaceControlDetail.js'
 import { SurfaceLeds } from './SurfaceView/SurfaceLeds.js'
 
@@ -112,6 +117,16 @@ export const GridButtonCell = memo(function GridButtonCell({
 		(pressLocation: ControlLocation, isDown: boolean) => store.handlePress(pressLocation, isDown, actions),
 		[store, actions]
 	)
+	// How far this control has been turned from here, so each step sent turns what is drawn with it. A knob has no
+	// position to read back, so this counts turns made, not where the knob is.
+	const [turn, setTurn] = useState(0)
+	const onRotate = useCallback(
+		(rotateLocation: ControlLocation, isRightward: boolean) => {
+			setTurn((degrees) => degrees + (isRightward ? ROTARY_STEP_DEGREES : -ROTARY_STEP_DEGREES))
+			store.handleRotate(rotateLocation, isRightward, actions)
+		},
+		[store, actions]
+	)
 
 	return (
 		<GridButtonPreview
@@ -121,7 +136,7 @@ export const GridButtonCell = memo(function GridButtonCell({
 			color={isUsed && colorOnly ? color : null}
 			overlay={
 				<>
-					<SurfaceControlDetail kind={kind} />
+					<SurfaceControlDetail kind={kind} turn={turn} />
 					{leds && <SurfaceLeds config={leds} leds={isUsed ? ledGauge : null} />}
 				</>
 			}
@@ -130,6 +145,7 @@ export const GridButtonCell = memo(function GridButtonCell({
 			placeholder={`${row}/${column}`}
 			pressMode={pressMode}
 			onPress={onPress}
+			onRotate={isRotaryKind(kind) ? onRotate : null}
 			onTap={onTap}
 			onContextMenu={onContextMenu}
 			selected={selected}

@@ -69,6 +69,7 @@ function setup(occupied?: (location: ControlLocation) => boolean) {
 	const actions: GridToolActions = {
 		openEditor: vi.fn(),
 		press: vi.fn(),
+		rotate: vi.fn(),
 		transfer: vi.fn(),
 		clearButtons: vi.fn(),
 		// Tests act on a grid where every cell holds a button unless they say otherwise
