@@ -49,13 +49,13 @@
 				"width": { "type": "number", "exclusiveMinimum": 0, "description": "Width of the control, in face units." },
 				"height": { "type": "number", "exclusiveMinimum": 0, "description": "Height of the control, in face units." },
 				"shape": {
-					"description": "How the control is drawn. Defaults to a square-cornered rectangle filling the bounds.",
+					"description": "How the control is drawn. An `encoder` is always a circle, so this is ignored for one. Defaults to a circle for a `jog` or `shuttle`, and otherwise a square-cornered rectangle filling the bounds.",
 					"$ref": "#/$defs/SatelliteControlShape"
 				},
 				"type": {
-					"description": "What kind of control this is, so it can be drawn as one - a knob rather than a round button, a fader rather than a tall key. Defaults to a button.",
+					"description": "What kind of control this is, so it can be drawn as one - a knob rather than a round button. Defaults to a button.",
 					"type": "string",
-					"enum": ["button", "encoder", "jog", "fader", "lcd-segment"]
+					"enum": ["button", "encoder", "jog", "shuttle", "lcd-segment"]
 				},
 				"label": {
 					"description": "The legend printed on the hardware, if it has one, eg `CUT`. Drawn on the face where there is no artwork.",
@@ -75,7 +75,7 @@
 						"type": { "type": "string", "const": "rect" },
 						"cornerRadius": {
 							"default": 0,
-							"description": "Corner radius in face units. Omit or use `0` for square corners; a capsule (a touch strip segment, a fader track) is half the shorter side.",
+							"description": "Corner radius in face units. Omit or use `0` for square corners; a capsule (a touch strip segment) is half the shorter side.",
 							"type": "number",
 							"minimum": 0
 						}
