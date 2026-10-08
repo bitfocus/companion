@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import type { SurfaceSchemaLayoutDefinition } from '../Model/Surfaces.js'
 import {
+	controlKind,
 	resolveControlStylePreset,
 	resolveSurfaceView,
 	surfaceRenderScale,
@@ -375,6 +376,21 @@ describe('resolveSurfaceView', () => {
 	})
 })
 
+describe('controlKind', () => {
+	test('takes the kinds it knows to draw', () => {
+		expect(controlKind('encoder')).toBe('encoder')
+		expect(controlKind('jog')).toBe('jog')
+		expect(controlKind('shuttle')).toBe('shuttle')
+		expect(controlKind('lcd-segment')).toBe('lcd-segment')
+	})
+
+	test('draws anything else as a button, a kind newer than this included', () => {
+		expect(controlKind(undefined)).toBe('button')
+		expect(controlKind('button')).toBe('button')
+		expect(controlKind('trackball')).toBe('button')
+	})
+})
+
 describe('resolveSurfaceView with a described appearance', () => {
 	/** The 2x2 square layout, but with a real face: circular keys at chosen positions on a coloured body */
 	const squareAppearance = {
@@ -430,6 +446,73 @@ describe('resolveSurfaceView with a described appearance', () => {
 		// One with no shape at all, and one which is a rect with no radius
 		expect(controlAt(view, 0, 1).shape).toEqual({ type: 'rect', cornerRadiusRatio: 0 })
 		expect(controlAt(view, 1, 0).shape).toEqual({ type: 'rect', cornerRadiusRatio: 0 })
+	})
+
+	test('draws every control as a button unless the face says what kind it is', () => {
+		const withKinds = {
+			...squareAppearance,
+			controls: {
+				...squareAppearance.controls,
+				'0/1': { ...squareAppearance.controls['0/1'], type: 'encoder' as const },
+				'1/0': { ...squareAppearance.controls['1/0'], type: 'lcd-segment' as const },
+			},
+		}
+		const view = resolveSurfaceView(squareLayout, withKinds, UNROTATED)!
+
+		expect(controlAt(view, 0, 0).kind).toBe('button')
+		expect(controlAt(view, 0, 1).kind).toBe('encoder')
+		expect(controlAt(view, 1, 0).kind).toBe('lcd-segment')
+	})
+
+	test('draws a knob, jog or shuttle round unless the face gives it a shape', () => {
+		const withKinds = {
+			...squareAppearance,
+			controls: {
+				'0/0': { x: 10, y: 10, width: 80, height: 80, type: 'encoder' as const },
+				'0/1': { x: 110, y: 10, width: 80, height: 80, type: 'jog' as const },
+				'1/0': { x: 10, y: 110, width: 80, height: 80, type: 'shuttle' as const },
+				'1/1': { x: 110, y: 110, width: 80, height: 80, type: 'jog' as const, shape: { type: 'rect' as const } },
+			},
+		}
+		const view = resolveSurfaceView(squareLayout, withKinds, UNROTATED)!
+
+		expect(controlAt(view, 0, 0).shape).toEqual({ type: 'circle' })
+		expect(controlAt(view, 0, 1).shape).toEqual({ type: 'circle' })
+		expect(controlAt(view, 1, 0).shape).toEqual({ type: 'circle' })
+		// A jog the face says is square is drawn square
+		expect(controlAt(view, 1, 1).shape).toEqual({ type: 'rect', cornerRadiusRatio: 0 })
+	})
+
+	test('draws a knob as a full circle, whatever shape the face gives it', () => {
+		const withSquareKnob = {
+			...squareAppearance,
+			controls: {
+				...squareAppearance.controls,
+				'1/1': {
+					...squareAppearance.controls['1/1'],
+					type: 'encoder' as const,
+					shape: { type: 'rect' as const, cornerRadius: 20 },
+				},
+			},
+		}
+		const view = resolveSurfaceView(squareLayout, withSquareKnob, UNROTATED)!
+
+		expect(controlAt(view, 1, 1).shape).toEqual({ type: 'circle' })
+	})
+
+	test('draws an estimated face as all buttons, as the layout does not say what anything is', () => {
+		const view = resolveSurfaceView(squareLayout, null, UNROTATED)!
+
+		expect(view.controls.every((control) => control.kind === 'button')).toBe(true)
+	})
+
+	test('stacks the controls as the face lists them, so a later one is drawn on top', () => {
+		// The layout lists 0/0 first, but the face puts it last, as a jog sits on top of the ring around it
+		const { '0/0': first, ...rest } = squareAppearance.controls
+		const reordered = { ...squareAppearance, controls: { ...rest, '0/0': first } }
+		const view = resolveSurfaceView(squareLayout, reordered, UNROTATED)!
+
+		expect(view.controls.map((control) => control.id)).toEqual(['0/1', '1/0', '1/1', '0/0'])
 	})
 
 	test('still maps each control to the button it drives', () => {
