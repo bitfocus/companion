@@ -17,6 +17,7 @@ function control(id: string, x: number, y: number, width: number, height: number
 		cell: { row: 0, column: 0 },
 		bounds: { x, y, width, height },
 		shape: { type: 'rect', cornerRadiusRatio: 0.12 },
+		kind: 'button',
 		feedback: 'bitmap',
 		leds: null,
 		aspectRatio: null,
@@ -88,6 +89,29 @@ describe('controlAtPoint', () => {
 	it('measures in canvas pixels, so it follows the zoom', () => {
 		expect(controlAtPoint(placeSurfaceControls(surface, 2), 100, 100)?.id).toBe('key')
 		expect(controlAtPoint(placeSurfaceControls(surface, 2), 100, 300)).toBeNull()
+	})
+
+	describe('a jog wheel inside a shuttle ring', () => {
+		function round(id: string, x: number, y: number, size: number): ResolvedSurfaceControl {
+			return { ...control(id, x, y, size, size), shape: { type: 'circle' } }
+		}
+
+		// The ring first, so the jog is drawn on top of its middle
+		const placed = placeSurfaceControls(view(round('shuttle', 0, 0, 200), round('jog', 50, 50, 100)), 1)
+
+		it('gives the middle to the jog, which is drawn over it', () => {
+			expect(controlAtPoint(placed, 100, 100)?.id).toBe('jog')
+		})
+
+		it('gives the ring to the shuttle, even inside the square around the jog', () => {
+			// The corner of the jog's box, outside its circle but on the ring
+			expect(controlAtPoint(placed, 55, 55)?.id).toBe('shuttle')
+			expect(controlAtPoint(placed, 100, 10)?.id).toBe('shuttle')
+		})
+
+		it('finds nothing in the corners of the ring, outside its circle', () => {
+			expect(controlAtPoint(placed, 5, 5)).toBeNull()
+		})
 	})
 })
 
