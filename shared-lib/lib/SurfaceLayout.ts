@@ -61,6 +61,12 @@ export type SurfaceControlShape =
 	| { type: 'circle' }
 
 /**
+ * What sort of control it is, so it can be drawn as one: a knob rather than a round key, a slice of a shared screen
+ * rather than a key of its own. Anything not described as otherwise is a button.
+ */
+export type SurfaceControlKind = 'button' | 'encoder' | 'jog' | 'shuttle' | 'lcd-segment'
+
+/**
  * What a control shows of its button: a drawn image, only a colour (an rgb-lit key, a touch strip which lights up),
  * or nothing at all (a plain key, a pedal).
  */
@@ -81,6 +87,7 @@ export interface ResolvedSurfaceControl {
 	/** Where the control is on the face of the surface, and how big it is there */
 	bounds: SurfaceRect
 	shape: SurfaceControlShape
+	kind: SurfaceControlKind
 	feedback: SurfaceControlFeedback
 	/** The leds the control has around or along it, as well as whatever it shows, or null when it has none */
 	leds: SurfaceSchemaLedsConfig | null
@@ -98,7 +105,10 @@ export interface ResolvedSurfaceControl {
  * lattice. When the schema can carry real positions, only `resolveSurfaceView` changes.
  */
 export interface ResolvedSurfaceView {
-	/** Every control of the surface, in the order the layout listed them */
+	/**
+	 * Every control of the surface, in the order they are drawn, so a later one is on top: as the face lists them when
+	 * the surface described one, otherwise as the layout does
+	 */
 	controls: readonly ResolvedSurfaceControl[]
 	/** The whole face, in the same layout units as the control bounds */
 	extent: { width: number; height: number }
@@ -298,13 +308,20 @@ export function resolveSurfaceView(
 	// while mounted the normal way up: rotating a described face is not done yet, so a rotated surface falls
 	// back to the derived layout, which does handle rotation.
 	if (appearance && isUnrotated(placement.rotation) && placed.every((control) => appearance.controls[control.id])) {
-		const controls: ResolvedSurfaceControl[] = placed.map((control) => {
+		// Stacked as the face lists them, not as the layout does: a later one is drawn, and hit, on top - a jog wheel
+		// inside its shuttle ring
+		const faceOrder = Object.keys(appearance.controls)
+		const stacked = placed.toSorted((a, b) => faceOrder.indexOf(a.id) - faceOrder.indexOf(b.id))
+
+		const controls: ResolvedSurfaceControl[] = stacked.map((control) => {
 			const face = appearance.controls[control.id]
+			const kind = controlKind(face.type)
 			return {
 				id: control.id,
 				cell: control.cell,
 				bounds: { x: face.x, y: face.y, width: face.width, height: face.height },
-				shape: shapeFromAppearance(face),
+				shape: shapeFromAppearance(face, kind),
+				kind,
 				feedback: control.feedback,
 				leds: control.leds,
 				aspectRatio: control.aspectRatio,
@@ -334,6 +351,8 @@ export function resolveSurfaceView(
 		cell: control.cell,
 		bounds: face.bounds[index],
 		shape: { type: 'rect', cornerRadiusRatio: CONTROL_CORNER_RATIO },
+		// The layout alone does not say what a control is, so an estimated face is all keys
+		kind: 'button',
 		feedback: control.feedback,
 		leds: control.leds,
 		aspectRatio: control.aspectRatio,
@@ -354,9 +373,36 @@ function isUnrotated(rotation: SurfaceRotation): boolean {
 	return rotation === 0 || rotation === 'surface0'
 }
 
+/**
+ * What kind of control the face says this is. Taken as a plain string, so a kind newer than this knows of is drawn as
+ * a button rather than refused.
+ */
+export function controlKind(type: string | undefined): SurfaceControlKind {
+	switch (type) {
+		case 'encoder':
+		case 'jog':
+		case 'shuttle':
+		case 'lcd-segment':
+			return type
+		default:
+			return 'button'
+	}
+}
+
+/** The kinds which are round, so are drawn as a circle unless the face says otherwise */
+function isRoundKind(kind: SurfaceControlKind): boolean {
+	return kind === 'encoder' || kind === 'jog' || kind === 'shuttle'
+}
+
 /** A described face is drawn as described: a rect is only rounded when the surface gives it a radius */
-function shapeFromAppearance(face: SurfaceAppearanceDefinition['controls'][string]): SurfaceControlShape {
-	if (face.shape?.type === 'circle') return { type: 'circle' }
+function shapeFromAppearance(
+	face: SurfaceAppearanceDefinition['controls'][string],
+	kind: SurfaceControlKind
+): SurfaceControlShape {
+	// A knob is round whatever the face says; a jog or shuttle unless the face says otherwise
+	if (kind === 'encoder' || face.shape?.type === 'circle' || (!face.shape && isRoundKind(kind))) {
+		return { type: 'circle' }
+	}
 
 	const cornerRadius = face.shape?.type === 'rect' ? (face.shape.cornerRadius ?? 0) : 0
 	const minSide = Math.min(face.width, face.height)
