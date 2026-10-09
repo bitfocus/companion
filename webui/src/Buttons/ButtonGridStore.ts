@@ -317,8 +317,8 @@ export class ButtonGridStore {
 		this.#activeTool.onPress(this.#context(actions), location, isDown)
 	}
 
-	handleRotate(location: ControlLocation, isRightward: boolean, actions: GridToolActions): void {
-		this.#activeTool.onRotate(this.#context(actions), location, isRightward)
+	handleRotate(location: ControlLocation, delta: number, actions: GridToolActions): void {
+		this.#activeTool.onRotate(this.#context(actions), location, delta)
 	}
 
 	/**

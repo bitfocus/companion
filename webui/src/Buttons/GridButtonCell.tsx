@@ -121,9 +121,9 @@ export const GridButtonCell = memo(function GridButtonCell({
 	// position to read back, so this counts turns made, not where the knob is.
 	const [turn, setTurn] = useState(0)
 	const onRotate = useCallback(
-		(rotateLocation: ControlLocation, isRightward: boolean) => {
-			setTurn((degrees) => degrees + (isRightward ? ROTARY_STEP_DEGREES : -ROTARY_STEP_DEGREES))
-			store.handleRotate(rotateLocation, isRightward, actions)
+		(rotateLocation: ControlLocation, delta: number) => {
+			setTurn((degrees) => degrees + delta * ROTARY_STEP_DEGREES)
+			store.handleRotate(rotateLocation, delta, actions)
 		},
 		[store, actions]
 	)

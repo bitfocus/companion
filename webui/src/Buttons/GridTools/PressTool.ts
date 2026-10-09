@@ -17,8 +17,8 @@ export class PressTool extends GridToolBase {
 		ctx.actions.press(location, isDown)
 	}
 
-	override onRotate(ctx: GridToolContext, location: ControlLocation, isRightward: boolean): void {
-		ctx.actions.rotate(location, isRightward)
+	override onRotate(ctx: GridToolContext, location: ControlLocation, delta: number): void {
+		ctx.actions.rotate(location, delta)
 	}
 
 	override onEnter(ctx: GridToolContext, _carriedOver: readonly ControlLocation[]): void {

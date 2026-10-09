@@ -139,9 +139,9 @@ export function useGridToolActions({
 					.mutateAsync({ location, direction: isDown, surfaceId: 'grid' })
 					.catch((e) => console.error(`Hot press failed: ${e}`))
 			},
-			rotate: (location, isRightward) => {
+			rotate: (location, delta) => {
 				hotRotateMutation
-					.mutateAsync({ location, direction: isRightward, surfaceId: 'grid' })
+					.mutateAsync({ location, delta, surfaceId: 'grid' })
 					.catch((e) => console.error(`Hot rotate failed: ${e}`))
 			},
 			clearButtons: (locations) => {
