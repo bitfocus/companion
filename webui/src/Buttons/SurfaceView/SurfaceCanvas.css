@@ -137,6 +137,15 @@
 	}
 }
 
+/* In press mode a jog or shuttle is turned by dragging it round, not clicked, so it is grabbed rather than pointed at */
+.surface-canvas-viewport.button-armed .button-control:is(.control-kind-jog, .control-kind-shuttle) {
+	cursor: grab;
+
+	&:active {
+		cursor: grabbing;
+	}
+}
+
 /* A control too small to hold its location (a touch strip, a led) leaves it out rather than spilling it over
    the face; it is still in the tooltip, and the editor names it once selected */
 @container (height < 32px) or (width < 32px) {
