@@ -27,14 +27,19 @@ export const devThreadOutDir = path.join(companionDir, 'dist', 'threads')
  * it. Production bundles native modules and copies their `.node` bindings alongside the output, but
  * in dev there is no copy step - a bundled native module (e.g. @julusian/image-rs) would look for
  * its binding relative to the bundle and fail. Externalizing matches how the old per-file tsc dev
- * build behaved (everything resolved from node_modules). @companion-app/shared is the exception: it
- * must be bundled from its TypeScript source, since there is no compiled output to resolve at runtime.
+ * build behaved (everything resolved from node_modules). The workspace packages (@companion-app/shared and
+ * @companion-app/satellite-protocol) are the exception: they must be bundled from their TypeScript source,
+ * since there is no compiled output to resolve at runtime.
  */
 const externalizeNodeModules: esbuild.Plugin = {
 	name: 'dev-externalize-node-modules',
 	setup(build) {
 		build.onResolve({ filter: /^[^./]/ }, (args) => {
-			if (args.path === '@companion-app/shared' || args.path.startsWith('@companion-app/shared/')) {
+			if (
+				args.path === '@companion-app/shared' ||
+				args.path.startsWith('@companion-app/shared/') ||
+				args.path === '@companion-app/satellite-protocol'
+			) {
 				return null // let esbuild resolve + bundle it from source
 			}
 			return { path: args.path, external: true }

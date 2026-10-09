@@ -1,35 +1,31 @@
 {
-	"include": ["lib/**/*.js", "lib/**/*.ts"],
-	"exclude": ["node_modules/**"],
+	"include": ["lib/**/*.ts"],
+	"exclude": ["node_modules/**", "lib/**/__tests__/**"],
 	"compilerOptions": {
 		"outDir": "./dist",
 		"rootDir": "./lib",
-		"paths": {
-			"*": ["./node_modules/*"]
-		},
 		"module": "Node16",
 		"moduleResolution": "Node16",
 		"composite": true,
 
-		"target": "es2024",
+		"target": "es2022",
 		"noImplicitAny": true,
+		"sourceMap": false,
 		"declaration": true,
-		"emitDeclarationOnly": true,
+		"declarationMap": false,
 		"importHelpers": false,
 		"listFiles": false,
 		"traceResolution": false,
 		"pretty": true,
-		"lib": ["es2024", "ESNext.Collection", "ESNext.Iterator", "ESNext.TypedArrays"],
-		"types": ["node"],
+		"lib": ["es2022"],
+		// No @types/node: the package must stay isomorphic (browser, node, bundlers)
+		"types": [],
 		"strict": true,
 		"forceConsistentCasingInFileNames": true,
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitReturns": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
-		"skipLibCheck": true,
-		"allowSyntheticDefaultImports": true,
-		"esModuleInterop": true
-	},
-	"references": [{ "path": "../shared-lib" }, { "path": "../satellite-protocol" }]
+		"skipLibCheck": true
+	}
 }

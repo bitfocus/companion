@@ -1752,6 +1752,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@companion-app/satellite-protocol@npm:*, @companion-app/satellite-protocol@workspace:satellite-protocol":
+  version: 0.0.0-use.local
+  resolution: "@companion-app/satellite-protocol@workspace:satellite-protocol"
+  dependencies:
+    typescript: "npm:@typescript/typescript6@^6.0.2"
+    zod: "npm:^4.6.5"
+  languageName: unknown
+  linkType: soft
+
 "@companion-app/shared@npm:*, @companion-app/shared@workspace:shared-lib":
   version: 0.0.0-use.local
   resolution: "@companion-app/shared@workspace:shared-lib"
@@ -11022,6 +11031,7 @@ __metadata:
   resolution: "companion@workspace:companion"
   dependencies:
     "@asteasolutions/zod-to-openapi": "npm:^9.1.0"
+    "@companion-app/satellite-protocol": "npm:*"
     "@companion-app/shared": "npm:*"
     "@companion-module/base-old": "npm:@companion-module/base@~1.14.1"
     "@companion-module/host": "npm:1.2.1"

@@ -1,13 +1,10 @@
 import { describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
+import { API_VERSION, parseLineParameters } from '@companion-app/satellite-protocol'
 import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
 import type { ImageResult } from '../../../lib/Graphics/ImageResult.js'
 import type { Logger } from '../../../lib/Log/Controller.js'
-import {
-	API_VERSION,
-	SatelliteSocketWrapper,
-	ServiceSatelliteApi,
-} from '../../../lib/Service/Satellite/SatelliteApi.js'
+import { SatelliteSocketWrapper, ServiceSatelliteApi } from '../../../lib/Service/Satellite/SatelliteApi.js'
 import type { ServiceApi } from '../../../lib/Service/ServiceApi.js'
 import type { SurfaceController } from '../../../lib/Surface/Controller.js'
 import type { SurfaceIPSatellite } from '../../../lib/Surface/IP/Satellite.js'
@@ -270,6 +267,19 @@ describe('ServiceSatelliteApi', () => {
 
 			expect(socket.lastMessage).toContain('ERROR')
 			expect(socket.lastMessage).toContain('Device already added')
+		})
+
+		test('escapes a DEVICEID containing quotes and backslashes in the reply', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage('ADD-DEVICE DEVICEID="a\\"b\\\\c" PRODUCT_NAME="Test"\n')
+
+			expect(socket.lastMessage).toBe('ADD-DEVICE OK DEVICEID="a\\"b\\\\c" \n')
+			expect(parseLineParameters(socket.lastMessage!.slice('ADD-DEVICE '.length, -1)).DEVICEID).toBe('a"b\\c')
 		})
 
 		test('error when device exists on different socket', () => {

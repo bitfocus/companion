@@ -56,6 +56,14 @@ export default defineConfig({
 
 			{
 				test: {
+					name: 'satellite-protocol',
+					root: 'satellite-protocol',
+					exclude: ['**/node_modules/**', '**/dist/**'],
+				},
+			},
+
+			{
+				test: {
 					name: 'tools',
 					root: 'tools',
 					exclude: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**'],

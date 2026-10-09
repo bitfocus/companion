@@ -5,6 +5,7 @@
 		{ "path": "./tools" },
 		{ "path": "./companion" },
 		{ "path": "./shared-lib" },
+		{ "path": "./satellite-protocol" },
 		{ "path": "./config-tool" },
 		{ "path": "./webui" },
 		{ "path": "./launcher-ui" },

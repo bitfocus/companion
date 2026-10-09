@@ -6,8 +6,9 @@ on:
   schedule:
     - cron: "43 5 * * 0"
   push:
+    # Only app releases, not the satellite-protocol library (satellite-protocol-v*)
     tags:
-      - "**"
+      - "v*"
 
 permissions:
   contents: read

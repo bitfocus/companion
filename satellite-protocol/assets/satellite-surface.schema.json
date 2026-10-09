@@ -1,0 +1,92 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"properties": {
+		"stylePresets": {
+			"type": "object",
+			"properties": { "default": { "$ref": "#/$defs/SatelliteControlStylePreset" } },
+			"required": ["default"],
+			"additionalProperties": { "$ref": "#/$defs/SatelliteControlStylePreset" },
+			"description": "Named collection of style presets. The preset named `default` is required and is used as the fallback style for controls when no `stylePreset` is specified."
+		},
+		"controls": {
+			"type": "object",
+			"propertyNames": { "type": "string", "pattern": "^[a-zA-Z0-9\\-/]+$" },
+			"additionalProperties": { "$ref": "#/$defs/SatelliteControlDefinition" }
+		}
+	},
+	"required": ["stylePresets", "controls"],
+	"title": "Satellite Surface Layout",
+	"description": "Schema describing a satellite surface layout: default styling and a map of controls with positions and optional style overrides.",
+	"$defs": {
+		"SatelliteControlStylePreset": {
+			"type": "object",
+			"properties": {
+				"bitmap": {
+					"description": "If set, bitmaps of the specified size will be reported.",
+					"$ref": "#/$defs/SatelliteConfigSize"
+				},
+				"text": { "description": "If true, the control requests text to be reported.", "type": "boolean" },
+				"textStyle": {
+					"description": "If true, the control requests text style properties to be reported",
+					"type": "boolean"
+				},
+				"colors": {
+					"description": "If set, the control requests colors to be reported.",
+					"type": "string",
+					"enum": ["hex", "rgb"]
+				},
+				"leds": {
+					"description": "If set, the control has an addressable strip/ring of LEDs and requests LED colors to be reported.",
+					"$ref": "#/$defs/SatelliteLedsConfig"
+				}
+			},
+			"title": "SatelliteControlStylePreset",
+			"description": "Styling options that can be applied to controls. Can be used as the default style or as per-control overrides."
+		},
+		"SatelliteConfigSize": {
+			"type": "object",
+			"properties": {
+				"w": { "type": "number", "minimum": 0, "description": "Width in pixels (non-negative)." },
+				"h": { "type": "number", "minimum": 0, "description": "Height in pixels (non-negative)." }
+			},
+			"required": ["w", "h"],
+			"title": "SatelliteConfigSize",
+			"description": "Pixel size for bitmap content."
+		},
+		"SatelliteLedsConfig": {
+			"type": "object",
+			"properties": {
+				"segments": {
+					"type": "integer",
+					"minimum": 1,
+					"maximum": 200,
+					"description": "The number of individually addressable LED segments."
+				},
+				"mode": {
+					"type": "string",
+					"enum": ["full-ring", "simple"],
+					"description": "How Companion maps a gauge onto these LEDs. `full-ring`: the LEDs form a complete circle and the gauge is rendered faithfully (angles, deadzone and colors respected 1:1); segment 0 is at 6 o'clock and indices increase clockwise. `simple`: any other shape where the value is swept across all segments, with segment 0 as the 0% end. In both cases the surface re-maps to its physical wiring locally if it differs from these conventions."
+				}
+			},
+			"required": ["segments", "mode"],
+			"title": "SatelliteLedsConfig",
+			"description": "If set, the control has an addressable strip/ring of LEDs (e.g. the ring around a Stream Deck Studio encoder) and requests LED colors to be reported. Colors are reported per-frame via the `LEDS` parameter as base64 of a packed RGB buffer, one `R,G,B` triple per segment."
+		},
+		"SatelliteControlDefinition": {
+			"type": "object",
+			"properties": {
+				"row": { "type": "number", "minimum": 0, "description": "Zero-based row index for layout placement." },
+				"column": { "type": "number", "minimum": 0, "description": "Zero-based column index for layout placement." },
+				"stylePreset": {
+					"description": "Optional name of a style preset defined in `stylePresets`. If present, the control will use the named preset instead of the default style.",
+					"type": "string",
+					"minLength": 1
+				}
+			},
+			"required": ["row", "column"],
+			"title": "SatelliteControlDefinition",
+			"description": "Single control definition. The id must be unique and may be user facing in logs. Typically the id would be in the form of 1/0, matching the row/column of the control."
+		}
+	}
+}

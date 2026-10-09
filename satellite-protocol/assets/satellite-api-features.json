@@ -1,0 +1,67 @@
+{
+	"apiVersion": "1.14.1",
+	"features": {
+		"lockState": {
+			"since": "1.8.0",
+			"capsFlag": null,
+			"description": "The surface can draw the locked state itself (LOCKED-STATE)"
+		},
+		"surfaceManifest": {
+			"since": "1.9.0",
+			"capsFlag": null,
+			"description": "ADD-DEVICE accepts a LAYOUT_MANIFEST describing a complex surface"
+		},
+		"deviceSerial": {
+			"since": "1.10.0",
+			"capsFlag": null,
+			"description": "ADD-DEVICE accepts a SERIAL separate from the DEVICEID"
+		},
+		"caps": {
+			"since": "1.10.0",
+			"capsFlag": null,
+			"description": "CAPS is sent after BEGIN, and the connection is not ready until it has been received"
+		},
+		"subscriptions": {
+			"since": "1.10.0",
+			"capsFlag": "SUBSCRIPTIONS",
+			"description": "Button subscriptions (ADD-SUB, REMOVE-SUB, SUB-PRESS, SUB-ROTATE, SUB-STATE). Can be disabled by the user"
+		},
+		"keyStateLocation": {
+			"since": "1.10.0",
+			"capsFlag": null,
+			"description": "KEY-STATE carries LOCATION=page/row/column when known"
+		},
+		"configFields": {
+			"since": "1.10.0",
+			"capsFlag": null,
+			"description": "ADD-DEVICE accepts CONFIG_FIELDS, with values relayed back via DEVICE-CONFIG"
+		},
+		"changePage": { "since": "1.10.0", "capsFlag": null, "description": "The surface can send CHANGE-PAGE" },
+		"firmwareUpdateInfo": {
+			"since": "1.10.0",
+			"capsFlag": null,
+			"description": "The surface can send FIRMWARE-UPDATE-INFO"
+		},
+		"nonSquareBitmaps": { "since": "1.11.0", "capsFlag": "NONSQUARE", "description": "Bitmaps may be non-square" },
+		"bitmapFormats": {
+			"since": "1.12.0",
+			"capsFlag": "BITMAP_FORMATS",
+			"description": "BITMAP_FORMAT can be negotiated from the comma separated list in CAPS BITMAP_FORMATS"
+		},
+		"leds": {
+			"since": "1.13.0",
+			"capsFlag": null,
+			"description": "Style presets may request `leds` (addressable LED strips/rings), streamed as LEDS"
+		},
+		"rotaryAmount": {
+			"since": "1.14.0",
+			"capsFlag": "ROTARY_AMOUNT",
+			"description": "DIRECTION on KEY-ROTATE and SUB-ROTATE may be a signed step count"
+		},
+		"escapedValues": {
+			"since": "1.14.1",
+			"capsFlag": null,
+			"description": "`\\` and `\"` inside quoted string values are escaped with a `\\`"
+		}
+	}
+}

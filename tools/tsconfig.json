@@ -18,5 +18,10 @@
 		"allowImportingTsExtensions": true,
 		"strict": true
 	},
-	"references": [{ "path": "../companion" }, { "path": "../shared-lib" }, { "path": "../config-tool" }]
+	"references": [
+		{ "path": "../companion" },
+		{ "path": "../shared-lib" },
+		{ "path": "../satellite-protocol" },
+		{ "path": "../config-tool" }
+	]
 }

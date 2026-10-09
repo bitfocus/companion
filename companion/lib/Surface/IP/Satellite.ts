@@ -11,6 +11,12 @@
 import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
+import type {
+	SatelliteBitmapFormat,
+	SatelliteControlStylePreset,
+	SatelliteMessageArgs,
+	SatelliteSurfaceLayout,
+} from '@companion-app/satellite-protocol'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type {
 	CompanionSurfaceConfigField,
@@ -24,12 +30,8 @@ import type { ImageResult } from '../../Graphics/ImageResult.js'
 import { GraphicsRenderer } from '../../Graphics/Renderer.js'
 import LogController from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
-import type { SatelliteMessageArgs, SatelliteSocketWrapper } from '../../Service/Satellite/SatelliteApi.js'
-import { buildSatelliteStyleArgs, type SatelliteBitmapFormat } from '../../Service/Satellite/SatelliteRenderUtil.js'
-import type {
-	SatelliteControlStylePreset,
-	SatelliteSurfaceLayout,
-} from '../../Service/Satellite/SatelliteSurfaceManifestSchema.js'
+import type { SatelliteSocketWrapper } from '../../Service/Satellite/SatelliteApi.js'
+import { buildSatelliteStyleArgs } from '../../Service/Satellite/SatelliteRenderUtil.js'
 import { BrightnessConfigField, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import { createSurfaceConfigPayload } from '../PluginConfigFields.js'
 import type {
