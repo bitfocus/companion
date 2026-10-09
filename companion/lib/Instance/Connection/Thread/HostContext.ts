@@ -205,7 +205,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 					undefined,
 					rawElement.elements || [],
 					randomIdGenerator,
-					true // Force new unique IDs for elements within composite definitions
+					true // Force new unique IDs, so the conversion cache drops children of a changed definition
 				).slice(
 					1 // Crop off the canvas element
 				),

@@ -1810,6 +1810,30 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				expect(placeholderText(b.children[0])).toBe('\u221e')
 			}
 		})
+
+		test('draws the new children after the definition is replaced', async () => {
+			const definitions: Record<string, Record<string, CompositeElementDefinition>> = {
+				'test-connection': {
+					composite1: makeDefinition('composite1', [makeTextEl({ id: 'gen-1', text: val('Old') })]),
+				},
+			}
+			const instanceDefs = createMockInstanceDefinitions(definitions)
+			const cache = new ElementConversionCache()
+
+			const before = await convert(instanceDefs, [makeCompositeEl('composite1')], cache)
+			expect((before.elements[0] as ButtonGraphicsGroupDrawElement).children[0]).toMatchObject({ text: 'Old' })
+
+			// A module update gives every child a fresh id
+			definitions['test-connection'].composite1 = makeDefinition('composite1', [
+				makeTextEl({ id: 'gen-2', text: val('New') }),
+			])
+			cache.queueInvalidateCompositeType(['test-connection:composite1'])
+
+			const after = await convert(instanceDefs, [makeCompositeEl('composite1')], cache)
+			const children = (after.elements[0] as ButtonGraphicsGroupDrawElement).children
+			expect(children).toHaveLength(1)
+			expect(children[0]).toMatchObject({ text: 'New' })
+		})
 	})
 
 	describe('id prefixing', () => {
