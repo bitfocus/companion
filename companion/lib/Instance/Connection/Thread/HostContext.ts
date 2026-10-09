@@ -196,6 +196,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 			convertedElements.push({
 				id,
 				name: rawElement.name,
+				sortKey: rawElement.sortName ? String(rawElement.sortName) : null,
 				description: rawElement.description,
 				options: translateEntityInputFields(rawElement.options || [], EntityModelType.Feedback),
 				elements: ConvertLayerPresetElements(

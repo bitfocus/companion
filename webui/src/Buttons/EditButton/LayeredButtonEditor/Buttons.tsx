@@ -140,11 +140,13 @@ function AddElementDropdownPopoverButton({
 	controlId,
 	elementType,
 	label,
+	description,
 }: {
 	styleStore: LayeredStyleStore
 	controlId: string
 	elementType: SomeButtonGraphicsElement['type'] | string
 	label: string
+	description: string | null
 }) {
 	const addElementMutation = useMutationExt(trpc.controls.styles.addElement.mutationOptions())
 
@@ -161,7 +163,7 @@ function AddElementDropdownPopoverButton({
 	}, [addElementMutation, controlId, elementType, styleStore])
 
 	return (
-		<Popover.Item onClick={addCallback} title={`Add ${label}`}>
+		<Popover.Item onClick={addCallback} title={description ?? `Add ${label}`}>
 			<FontAwesomeIcon icon={getElementTypeIcon(elementType)} className="me-2" />
 			{label}
 		</Popover.Item>
@@ -207,6 +209,7 @@ const CompositeElementConnectionGroup = observer(function CompositeElementConnec
 							controlId={controlId}
 							elementType={`${group.connectionId};${elementId}`}
 							label={definition.name}
+							description={definition.description ?? null}
 						/>
 					))}
 				</Accordion.Panel>
@@ -231,10 +234,18 @@ const AddElementDropdownPopoverContent = observer(function AddElementDropdownPop
 			if (connectionDefinitions.size === 0) continue
 
 			const connectionLabel = connections.getLabel(connectionId) ?? connectionId
-			const elements = Array.from(connectionDefinitions.entries()).map(([elementId, definition]) => ({
-				elementId,
-				definition,
-			}))
+			const elements = Array.from(connectionDefinitions.entries())
+				.map(([elementId, definition]) => ({
+					elementId,
+					definition,
+				}))
+				.sort((a, b) =>
+					(a.definition.sortKey ?? a.definition.name).localeCompare(
+						b.definition.sortKey ?? b.definition.name,
+						undefined,
+						{ sensitivity: 'base' }
+					)
+				)
 
 			groups.push({
 				connectionId,
@@ -253,33 +264,56 @@ const AddElementDropdownPopoverContent = observer(function AddElementDropdownPop
 				controlId={controlId}
 				elementType="group"
 				label="Group"
+				description={null}
 			/>
-			<AddElementDropdownPopoverButton styleStore={styleStore} controlId={controlId} elementType="text" label="Text" />
+			<AddElementDropdownPopoverButton
+				styleStore={styleStore}
+				controlId={controlId}
+				elementType="text"
+				label="Text"
+				description={null}
+			/>
 			<AddElementDropdownPopoverButton
 				styleStore={styleStore}
 				controlId={controlId}
 				elementType="image"
 				label="Image"
+				description={null}
 			/>
-			<AddElementDropdownPopoverButton styleStore={styleStore} controlId={controlId} elementType="box" label="Box" />
-			<AddElementDropdownPopoverButton styleStore={styleStore} controlId={controlId} elementType="line" label="Line" />
+			<AddElementDropdownPopoverButton
+				styleStore={styleStore}
+				controlId={controlId}
+				elementType="box"
+				label="Box"
+				description={null}
+			/>
+			<AddElementDropdownPopoverButton
+				styleStore={styleStore}
+				controlId={controlId}
+				elementType="line"
+				label="Line"
+				description={null}
+			/>
 			<AddElementDropdownPopoverButton
 				styleStore={styleStore}
 				controlId={controlId}
 				elementType="circle"
 				label="Circle"
+				description={null}
 			/>
 			<AddElementDropdownPopoverButton
 				styleStore={styleStore}
 				controlId={controlId}
 				elementType="gauge"
 				label="Gauge"
+				description={null}
 			/>
 			<AddElementDropdownPopoverButton
 				styleStore={styleStore}
 				controlId={controlId}
 				elementType="reference"
 				label="Reference"
+				description={null}
 			/>
 
 			{/* Composite Elements grouped by connection */}

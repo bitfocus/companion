@@ -266,7 +266,20 @@ describe('HostContext setCompositeElementDefinitions', () => {
 		} as any)
 
 		const { definitions } = lastPayloadFor(sendWithNoCb, 'setCompositeElementDefinitions')
-		expect(definitions).toEqual([{ id: 'widget', name: 'Widget', description: 'A widget', options: [], elements: [] }])
+		expect(definitions).toEqual([
+			{ id: 'widget', name: 'Widget', sortKey: null, description: 'A widget', options: [], elements: [] },
+		])
+	})
+
+	test('maps sortName to sortKey', () => {
+		const { hostContext, sendWithNoCb } = createHostContext()
+
+		hostContext.setCompositeElementDefinitions({
+			widget: { name: 'Widget', sortName: 'aaa', options: [], elements: [] },
+		} as any)
+
+		const { definitions } = lastPayloadFor(sendWithNoCb, 'setCompositeElementDefinitions')
+		expect(definitions[0].sortKey).toBe('aaa')
 	})
 
 	test('skips null entries', () => {

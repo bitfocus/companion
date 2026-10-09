@@ -63,6 +63,7 @@ import type { InstanceConfigStore } from './ConfigStore.js'
 export interface CompositeElementDefinition {
 	id: string
 	name: string
+	sortKey: string | null
 	description: string | undefined
 	options: SomeCompanionInputField[]
 	elements: SomeButtonGraphicsElement[]
@@ -606,6 +607,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 		for (const [elementId, definition] of Object.entries(definitions)) {
 			result[elementId] = {
 				name: definition.name,
+				sortKey: definition.sortKey,
 				description: definition.description,
 				options: definition.options.map((opt) => ({ ...opt, id: `opt:${opt.id}` })),
 			} satisfies Complete<UICompositeElementDefinition>

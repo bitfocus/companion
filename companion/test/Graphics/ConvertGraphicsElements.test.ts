@@ -1257,6 +1257,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					myComposite: {
 						id: 'myComposite',
 						name: 'My Composite',
+						sortKey: null,
 						description: undefined,
 						elements: [makeTextEl({ id: 'inner-text', text: val('inner') })],
 						options: [],
@@ -1369,6 +1370,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					myComposite: {
 						id: 'myComposite',
 						name: 'My Composite',
+						sortKey: null,
 						description: undefined,
 						elements: compositeElements,
 						options: [],
@@ -1629,6 +1631,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'composite1',
 				name: 'Test Composite',
+				sortKey: null,
 				description: '',
 				options: [],
 				elements: [makeTextEl({ id: 'child1', text: val('Inside Composite') })],
@@ -1684,6 +1687,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'composite1',
 				name: 'Test Composite',
+				sortKey: null,
 				description: '',
 				options: [],
 				elements: [],
@@ -1757,6 +1761,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'composite1',
 				name: 'Test Composite',
+				sortKey: null,
 				description: '',
 				options: [],
 				elements: [makeTextEl({ id: 'inner1', text: val('Inside Composite') })],
@@ -1946,6 +1951,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'labelComposite',
 				name: 'Label Composite',
+				sortKey: null,
 				description: '',
 				options: [
 					{
@@ -2004,6 +2010,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'labelComposite',
 				name: 'Label Composite',
+				sortKey: null,
 				description: '',
 				options: [
 					{
@@ -2061,6 +2068,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'labelComposite',
 				name: 'Label Composite',
+				sortKey: null,
 				description: '',
 				options: [],
 				// Authored by the module - must NOT be able to reach global variables
@@ -2112,6 +2120,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const innerComposite: CompositeElementDefinition = {
 				id: 'innerComposite',
 				name: 'Inner Composite',
+				sortKey: null,
 				description: '',
 				options: [
 					{
@@ -2131,6 +2140,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const outerComposite: CompositeElementDefinition = {
 				id: 'outerComposite',
 				name: 'Outer Composite',
+				sortKey: null,
 				description: '',
 				options: [
 					{
@@ -2214,6 +2224,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'simpleComposite',
 				name: 'Simple',
+				sortKey: null,
 				description: '',
 				options: [],
 				elements: [makeBoxEl({ id: 'child', color: val(0xff0000) })],
@@ -2389,6 +2400,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'checkboxComposite',
 				name: 'Checkbox Composite',
+				sortKey: null,
 				description: '',
 				options: [
 					{
@@ -2446,6 +2458,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'numberComposite',
 				name: 'Number Composite',
+				sortKey: null,
 				description: '',
 				options: [
 					{
@@ -2504,6 +2517,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'dropdownComposite',
 				name: 'Dropdown Composite',
+				sortKey: null,
 				description: '',
 				options: [
 					{

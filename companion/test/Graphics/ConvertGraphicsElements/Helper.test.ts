@@ -1228,6 +1228,7 @@ describe('createParseElementsContext', () => {
 			const definition: CompositeElementDefinition = {
 				id: 'elem1',
 				name: 'My Element',
+				sortKey: null,
 				description: undefined,
 				options: [],
 				elements: [],
@@ -1245,6 +1246,7 @@ describe('createParseElementsContext', () => {
 			const definition: CompositeElementDefinition = {
 				id: 'elem1',
 				name: 'My Element',
+				sortKey: null,
 				description: undefined,
 				options: [],
 				elements: [],
