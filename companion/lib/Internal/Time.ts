@@ -56,6 +56,10 @@ export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> imp
 				name: 'date_m',
 			},
 			{
+				description: 'Date (Month name)',
+				name: 'date_monthname',
+			},
+			{
 				description: 'Date (Day)',
 				name: 'date_d',
 			},
@@ -147,6 +151,7 @@ export class InternalTime extends EventEmitter<InternalModuleFragmentEvents> imp
 			date_iso: `${year}-${month}-${day}`,
 			date_y: year,
 			date_m: month,
+			date_monthname: now.toLocaleString(undefined, { month: 'long', timeZone: effectiveTz }),
 			date_d: day,
 			date_dow: parts.weekday,
 			date_weekday: now.toLocaleString(undefined, { weekday: 'long', timeZone: effectiveTz }),

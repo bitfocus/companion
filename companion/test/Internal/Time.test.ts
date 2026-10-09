@@ -41,11 +41,12 @@ describe('InternalTime', () => {
 			const defs = time.getVariableDefinitions()
 			const names = defs.map((d) => d.name)
 
-			expect(defs).toHaveLength(17)
+			expect(defs).toHaveLength(18)
 			expect(names).toEqual([
 				'date_iso',
 				'date_y',
 				'date_m',
+				'date_monthname',
 				'date_d',
 				'date_dow',
 				'date_weekday',
@@ -180,6 +181,28 @@ describe('InternalTime', () => {
 				time_h_12: '10',
 				timezone: 'Asia/Tokyo',
 			})
+		})
+
+		test('emits the month name in the configured timezone', () => {
+			// Just after midnight UTC on 1 July: still June in New York, already July in Tokyo
+			const now = new Date('2024-07-01T01:30:00Z')
+			const config = { timezone: 'America/New_York' }
+
+			vi.setSystemTime(now)
+			const time = new InternalTime(mockUserConfig(config))
+			const setVariables = vi.fn<(values: VariableValues) => void>()
+			time.on('setVariables', setVariables)
+
+			// Compare against the host locale's names, so the assertion is locale-independent
+			const monthName = (m: number) =>
+				new Date(Date.UTC(2024, m, 15)).toLocaleString(undefined, { month: 'long', timeZone: 'UTC' })
+
+			time.updateVariables()
+			expect(lastValues(setVariables).date_monthname).toBe(monthName(5))
+
+			config.timezone = 'Asia/Tokyo'
+			time.updateVariables()
+			expect(lastValues(setVariables).date_monthname).toBe(monthName(6))
 		})
 
 		test('exposes the resolved system timezone when none is configured', () => {
