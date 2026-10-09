@@ -6,6 +6,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { FeedbackExecutionContext } from '../../Internal/Types.js'
 import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
@@ -51,9 +52,14 @@ export class ControlEntityListPoolTrigger extends WithEntityEditing(ControlEntit
 
 	/**
 	 * Get the value from all feedbacks as a single boolean
+	 * @param evaluateLive Re-evaluate internal feedbacks now rather than using their cached values, so that
+	 * expressions which don't depend on variables (eg randomInt()) are sampled fresh
 	 */
-	checkConditionValue(): boolean {
-		return this.#feedbacks.getBooleanFeedbackValue(null)
+	checkConditionValue(evaluateLive: boolean): boolean {
+		const context: FeedbackExecutionContext | null = evaluateLive
+			? { parser: this.createVariablesAndExpressionParser(null, { allowClockSensitive: true }) }
+			: null
+		return this.#feedbacks.getBooleanFeedbackValue(context)
 	}
 
 	/**

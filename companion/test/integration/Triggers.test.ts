@@ -126,7 +126,7 @@ describe('trigger controls', () => {
 		// Condition true: the next event runs the actions. count === 1 proves the first change never ran
 		app.registry.variables.custom.setValue('flag', 'yes')
 		await vi.waitFor(() => {
-			expect(trigger.entities.checkConditionValue()).toBe(true)
+			expect(trigger.entities.checkConditionValue(false)).toBe(true)
 		})
 		app.registry.variables.custom.setValue('input', 'second')
 		await vi.waitFor(() => {

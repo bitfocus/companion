@@ -255,7 +255,7 @@ export class ControlTrigger
 
 			// Ensure the condition passes when it is not part of the event
 			if (source !== TriggerExecutionSource.ConditionChange) {
-				const conditionPasses = this.entities.checkConditionValue()
+				const conditionPasses = this.entities.checkConditionValue(true)
 				if (!conditionPasses) return
 			}
 
@@ -473,12 +473,12 @@ export class ControlTrigger
 					this.#miscEvents.setControlPress(event.id, false)
 					break
 				case 'condition_true':
-					this.#conditionCheckLastValue = this.entities.checkConditionValue()
+					this.#conditionCheckLastValue = this.entities.checkConditionValue(false)
 					this.#conditionCheckEvents.add(event.id)
 					this.triggerInvalidation() // Recheck the condition
 					break
 				case 'condition_false':
-					this.#conditionCheckLastValue = this.entities.checkConditionValue()
+					this.#conditionCheckLastValue = this.entities.checkConditionValue(false)
 					this.#conditionCheckEvents.add(event.id)
 					this.triggerInvalidation() // Recheck the condition
 					break
@@ -613,7 +613,7 @@ export class ControlTrigger
 			if (newEnabled && this.#conditionCheckEvents.size > 0) {
 				// Refresh the last-known condition value so the first triggerInvalidation
 				// after re-enabling does not mistake a stale transition for a new edge.
-				this.#conditionCheckLastValue = this.entities.checkConditionValue()
+				this.#conditionCheckLastValue = this.entities.checkConditionValue(false)
 			}
 			this.#setupEvents(false)
 		} else {
@@ -661,7 +661,7 @@ export class ControlTrigger
 				return
 			}
 			try {
-				const newStatus = this.entities.checkConditionValue()
+				const newStatus = this.entities.checkConditionValue(false)
 
 				const runOnTrue = this.events.some((event) => event.enabled && event.type === 'condition_true')
 				const runOnFalse = this.events.some((event) => event.enabled && event.type === 'condition_false')
