@@ -483,6 +483,41 @@ describe('InternalSurface', () => {
 			expect(surface.executeFeedback(makeFeedback('surface_on_page', { surfaceId: '', page: 2 }))).toBe(false)
 		})
 
+		test('surface_connected reflects the surface connection state', () => {
+			const { surface, surfaceController } = createSurface()
+			surfaceController.isSurfaceConnected.mockReturnValue(true)
+
+			expect(surface.executeFeedback(makeFeedback('surface_connected', { surfaceId: 'surface0' }))).toBe(true)
+			expect(surfaceController.isSurfaceConnected).toHaveBeenCalledWith('surface0', true)
+		})
+
+		test('surface_connected is false when the surface is not connected', () => {
+			const { surface, surfaceController } = createSurface()
+			surfaceController.isSurfaceConnected.mockReturnValue(false)
+
+			expect(surface.executeFeedback(makeFeedback('surface_connected', { surfaceId: 'surface0' }))).toBe(false)
+		})
+
+		test('surface_connected is false when no surface is selected', () => {
+			const { surface, surfaceController } = createSurface()
+			surfaceController.isSurfaceConnected.mockReturnValue(true)
+
+			expect(surface.executeFeedback(makeFeedback('surface_connected', { surfaceId: '' }))).toBe(false)
+		})
+
+		test('surface_connected is rechecked when a surface connects or disconnects', () => {
+			const { surface, surfaceController } = createSurface()
+			const checkFeedbacks = vi.fn()
+			surface.on('checkFeedbacks', checkFeedbacks)
+
+			const handlers = new Map(surfaceController.on.mock.calls.map(([event, fn]) => [event, fn as () => void]))
+			handlers.get('surface-add')!()
+			handlers.get('surface-delete')!()
+
+			expect(checkFeedbacks).toHaveBeenCalledTimes(2)
+			expect(checkFeedbacks).toHaveBeenCalledWith('surface_connected')
+		})
+
 		test('outbound_surface_enabled reflects the surface enabled state', () => {
 			const { surface, surfaceController } = createSurface()
 			surfaceController.outbound.getById.mockReturnValue({ enabled: true } as any)
@@ -607,7 +642,7 @@ describe('InternalSurface', () => {
 			const { surface } = createSurface()
 
 			expect(Object.keys(surface.getFeedbackDefinitions()).sort()).toEqual(
-				['surface_on_page', 'outbound_surface_enabled'].sort()
+				['surface_on_page', 'surface_connected', 'outbound_surface_enabled'].sort()
 			)
 		})
 	})

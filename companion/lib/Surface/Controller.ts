@@ -1905,6 +1905,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	/**
 	 * Get the page id of a surface
 	 */
+	isSurfaceConnected(surfaceId: string, looseIdMatching: boolean): boolean {
+		return !!this.#getSurfaceHandlerForId(surfaceId, looseIdMatching)
+	}
+
 	devicePageGet(surfaceOrGroupId: string, looseIdMatching = false): string | undefined {
 		const surfaceGroup = this.#getGroupForId(surfaceOrGroupId, looseIdMatching)
 		if (surfaceGroup) {
