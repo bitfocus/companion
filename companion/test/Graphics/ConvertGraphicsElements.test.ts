@@ -6,6 +6,7 @@ import type {
 	ButtonGraphicsBoxDrawElement,
 	ButtonGraphicsBoxElement,
 	ButtonGraphicsCanvasDrawElement,
+	ButtonGraphicsCompositeElement,
 	ButtonGraphicsGaugeDrawElement,
 	ButtonGraphicsGaugeElement,
 	ButtonGraphicsGroupDrawElement,
@@ -1269,6 +1270,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				id: 'composite1',
 				name: '',
 				type: 'composite',
+				rotation: val(0),
 				usage: USAGE,
 				connectionId: 'test',
 				elementId: 'myComposite',
@@ -1383,6 +1385,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'composite1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					connectionId: 'test',
@@ -1648,6 +1651,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -1704,6 +1708,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -1730,6 +1735,69 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			)
 
 			expect(result.elements).toHaveLength(0)
+		})
+
+		function makeCompositeEl(elementId: string, overrides: Partial<ButtonGraphicsCompositeElement> = {}) {
+			return {
+				id: 'comp1',
+				name: '',
+				type: 'composite',
+				rotation: val(0),
+				pinnedProperties: [],
+				usage: USAGE,
+				enabled: val(true),
+				opacity: val(100),
+				x: val(0),
+				y: val(0),
+				width: val(100),
+				height: val(100),
+				connectionId: 'test-connection',
+				elementId,
+				...overrides,
+			} satisfies ButtonGraphicsCompositeElement
+		}
+
+		function makeDefinition(id: string, elements: SomeButtonGraphicsElement[]): CompositeElementDefinition {
+			return { id, name: id, sortKey: null, description: '', options: [], elements }
+		}
+
+		async function convert(
+			instanceDefs: InstanceDefinitions,
+			elements: SomeButtonGraphicsElement[],
+			cache: ElementConversionCache | null
+		) {
+			return ConvertSomeButtonGraphicsElementForDrawing(
+				instanceDefs,
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				cache,
+				null,
+				null
+			)
+		}
+
+		test('applies rotation to the group', async () => {
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': { composite1: makeDefinition('composite1', [makeTextEl({ id: 'child1' })]) },
+			})
+
+			const result = await convert(instanceDefs, [makeCompositeEl('composite1', { rotation: val(45) })], null)
+
+			expect(result.elements[0]).toMatchObject({ type: 'group', rotation: 45 })
+		})
+
+		test('defaults rotation to 0 when absent', async () => {
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': { composite1: makeDefinition('composite1', [makeTextEl({ id: 'child1' })]) },
+			})
+			const { rotation: _rotation, ...element } = makeCompositeEl('composite1')
+
+			const result = await convert(instanceDefs, [element as SomeButtonGraphicsElement], null)
+
+			expect(result.elements[0]).toMatchObject({ type: 'group', rotation: 0 })
 		})
 	})
 
@@ -1778,6 +1846,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -1976,6 +2045,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -2034,6 +2104,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -2086,6 +2157,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -2157,6 +2229,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 						id: 'inner-instance',
 						name: '',
 						type: 'composite',
+						rotation: val(0),
 						pinnedProperties: [],
 						usage: USAGE,
 						enabled: val(true),
@@ -2184,6 +2257,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -2241,6 +2315,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -2424,6 +2499,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -2484,6 +2560,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -2546,6 +2623,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),

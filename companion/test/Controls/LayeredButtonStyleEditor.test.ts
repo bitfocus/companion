@@ -96,6 +96,7 @@ describe('LayeredButtonStyleEditor pinned properties', () => {
 		expect(element.connectionId).toBe('conn1')
 		expect(element.elementId).toBe('widget')
 		expect(element.pinnedProperties).toEqual([]) // composites have no sensible default to pin
+		expect(element.rotation).toEqual({ value: 0, isExpression: false })
 		expect(element['opt:speed']).toEqual({ value: 5, isExpression: false })
 		expect(element['opt:label']).toEqual({ value: undefined, isExpression: false })
 	})

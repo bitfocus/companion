@@ -66,6 +66,7 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 					y: { value: 0, isExpression: false },
 					width: { value: 100, isExpression: false },
 					height: { value: 100, isExpression: false },
+					rotation: { value: 0, isExpression: false },
 				}
 
 				for (const field of compositeDefinition.options) {

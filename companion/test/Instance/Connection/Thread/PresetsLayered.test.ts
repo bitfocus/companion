@@ -977,9 +977,18 @@ describe('ConvertLayerPresetElements', () => {
 				y: exprVal(0),
 				width: exprVal(100),
 				height: exprVal(100),
+				rotation: exprVal(0),
 				connectionId: 'conn01',
 				elementId: 'my-element',
 			})
+		})
+
+		it('converts composite rotation', () => {
+			const elements = convertWithoutCanvas([
+				{ type: 'composite', elementId: 'my-element', rotation: exprExpr('$(foo)') } as any,
+			])
+
+			expect(elements[0]).toMatchObject({ rotation: exprExpr('$(foo)') })
 		})
 
 		it('prefixes composite options and converts their values', () => {

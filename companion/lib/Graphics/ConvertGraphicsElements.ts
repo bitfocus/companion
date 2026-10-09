@@ -619,7 +619,7 @@ async function convertCompositeElementForDrawing(
 		enabled,
 		opacity,
 		...bounds,
-		rotation: 0, // Not supported on composite elements
+		rotation: helper.getNumber('rotation', 0),
 		squareCoords: false,
 		children: [], // Will be filled in by caller
 		contentHash: '', // Will be computed below

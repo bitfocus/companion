@@ -1927,28 +1927,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-module/base@npm:~2.2.0":
-  version: 2.2.0
-  resolution: "@companion-module/base@npm:2.2.0"
+"@companion-module/base@npm:~2.2.1":
+  version: 2.2.1
+  resolution: "@companion-module/base@npm:2.2.1"
   dependencies:
-    colord: "npm:^2.9.4"
-    zod: "npm:^4.4.3"
-  checksum: 10c0/a51591c6d0a7e4aa16eedadd8d8727b769c0c4f4b60381600859a1aba20ad703f95ea4b8e3d8803e538b3e12ed088fe1e2e1d36c639d78237304f322113835cc
+    colord: "npm:^2.10.0"
+    zod: "npm:^4.6.5"
+  checksum: 10c0/1b2d275091daa5865658c56c695ff44c39e465cde4b7bfa19a389c1113c435ba38fe1001cae0b3c1330a37a7b6671792c36b43fb14eb657c532ac9e498b569c2
   languageName: node
   linkType: hard
 
-"@companion-module/host@npm:1.2.0":
-  version: 1.2.0
-  resolution: "@companion-module/host@npm:1.2.0"
+"@companion-module/host@npm:1.2.1":
+  version: 1.2.1
+  resolution: "@companion-module/host@npm:1.2.1"
   dependencies:
-    "@companion-module/base": "npm:~2.2.0"
-    colord: "npm:^2.9.4"
+    "@companion-module/base": "npm:~2.2.1"
+    colord: "npm:^2.10.0"
     debounce-fn: "npm:^6.0.0"
     fast-deep-equal: "npm:^3.1.3"
     p-queue: "npm:^9.3.3"
     semver: "npm:^7.8.5"
-    zod: "npm:^4.4.3"
-  checksum: 10c0/2e87887dc56ee4659d6f341b2ea5c8183900f3d365a38c5a86ff3766e33ace6a7a275fbd6bc5b097d484387079c73e9cf82e166ef5b9d3a11bafc2872acc775f
+    zod: "npm:^4.6.5"
+  checksum: 10c0/dd555289898917c6e584790b392d3acdeda54770f536058fc80e938298433732a907509073d84c312e356df31850cdbb11ff9d6562df800c558e123d403eca66
   languageName: node
   linkType: hard
 
@@ -10910,7 +10910,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"colord-for-expressions@npm:colord@^2.10.0, colord@npm:^2.10.0, colord@npm:^2.9.3, colord@npm:^2.9.4":
+"colord-for-expressions@npm:colord@^2.10.0, colord@npm:^2.10.0, colord@npm:^2.9.3":
   version: 2.10.0
   resolution: "colord@npm:2.10.0"
   checksum: 10c0/2f5d1d1759124f593deca17bbbab8a88bdc3ab68bbcc88db76c1192d9a5d575db202badde044bf61789561fa0ed7a9eb895382becad1af27ec65934c216e9e04
@@ -11024,7 +11024,7 @@ __metadata:
     "@asteasolutions/zod-to-openapi": "npm:^9.1.0"
     "@companion-app/shared": "npm:*"
     "@companion-module/base-old": "npm:@companion-module/base@~1.14.1"
-    "@companion-module/host": "npm:1.2.0"
+    "@companion-module/host": "npm:1.2.1"
     "@companion-surface/host": "npm:1.4.2"
     "@julusian/bonjour-service": "npm:^1.4.6"
     "@julusian/image-rs": "npm:^2.3.0"

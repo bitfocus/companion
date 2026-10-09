@@ -497,7 +497,7 @@ export const groupElementSchema: ElementSchemaSection[] = [
 
 export const compositeElementSchema: ElementSchemaSection[] = [
 	{ id: 'drawing', label: 'Drawing', fields: [...commonElementFields] },
-	{ id: 'position', label: 'Position & Size', fields: [...boundsFields] },
+	{ id: 'position', label: 'Position & Size', fields: [...boundsFields, ...rotationFields] },
 ]
 
 export const referenceElementSchema: ElementSchemaSection[] = [
