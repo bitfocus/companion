@@ -1,4 +1,5 @@
 import { OpenApiGeneratorV3 } from '@asteasolutions/zod-to-openapi'
+import { registerImageLibraryPaths } from '../../Graphics/ImageLibraryRestApi.js'
 import { registerInstanceRestApiPaths } from '../../Instance/RestApi.js'
 import type { AppInfo } from '../../Registry.js'
 import { registerSurfacePaths } from '../../Surface/SurfacesRestApi.js'
@@ -17,6 +18,7 @@ export function generateOpenApiDocument(
 	// Register all route paths into the registry
 	registerInstanceRestApiPaths(registry)
 	registerSurfacePaths(registry)
+	registerImageLibraryPaths(registry)
 
 	const generator = new OpenApiGeneratorV3(registry.definitions)
 

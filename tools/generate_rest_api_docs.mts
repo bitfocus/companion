@@ -23,6 +23,7 @@ interface Parameter {
 
 interface SchemaObject {
 	type?: string
+	format?: string
 	properties?: Record<string, SchemaObject>
 	items?: SchemaObject
 	required?: string[]
@@ -44,6 +45,7 @@ interface ResponseObject {
 }
 
 interface RequestBody {
+	description?: string
 	required?: boolean
 	content?: Record<string, MediaContent>
 }
@@ -128,6 +130,12 @@ function renderResponse(code: string, resp: ResponseObject): string {
 	const responseLabel = code === '200' ? '**Successful response** (`200`)' : '**Successful response**'
 	lines.push(`${responseLabel} — ${resp.description ?? ''}`)
 
+	const binaryContentTypes = getBinaryContentTypes(resp.content)
+	if (binaryContentTypes.length > 0) {
+		lines.push('')
+		lines.push(`Response body: the raw file, as ${formatContentTypes(binaryContentTypes)}`)
+	}
+
 	const jsonContent = resp.content?.['application/json']
 	if (jsonContent?.schema) {
 		const schema = jsonContent.schema
@@ -166,7 +174,25 @@ function renderRequestBody(body: RequestBody): string {
 		lines.push('')
 		lines.push(schemaToTable(jsonContent.schema, { showRequired: true }))
 	}
+
+	const binaryContentTypes = getBinaryContentTypes(body.content)
+	if (binaryContentTypes.length > 0) {
+		lines.push(`**Request body** (${formatContentTypes(binaryContentTypes)}):`)
+		lines.push('')
+		lines.push(body.description ?? 'The raw file.')
+	}
 	return lines.join('\n')
+}
+
+/** Content types whose body is a raw file rather than JSON */
+function getBinaryContentTypes(content: Record<string, MediaContent> | undefined): string[] {
+	return Object.entries(content ?? {})
+		.filter(([, media]) => media.schema?.format === 'binary')
+		.map(([contentType]) => contentType)
+}
+
+function formatContentTypes(contentTypes: string[]): string {
+	return contentTypes.map((contentType) => `\`${contentType}\``).join(', ')
 }
 
 function exampleValue(schema: SchemaObject | undefined, fieldName = 'value'): unknown {
@@ -216,7 +242,7 @@ function renderEndpointExample(method: HttpMethod, apiPath: string, op: Operatio
 
 	lines.push('**Example:**')
 	lines.push('')
-	lines.push(`\`${method.toUpperCase()} /api${examplePath}\``)
+	lines.push(`\`${method.toUpperCase()} /api/v2${examplePath}\``)
 
 	if (requestSchema) {
 		lines.push('')

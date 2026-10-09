@@ -3214,6 +3214,2458 @@
 				"tags": ["Connections"]
 			}
 		},
+		"/image-library/v1": {
+			"get": {
+				"description": "Returns every image in the image library, sorted by name.",
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"example": {
+									"data": [
+										{
+											"backgroundColor": "rgba(0, 0, 0, 0)",
+											"checksum": "3f786850e387550fdab836ed7e6dc881de23001b",
+											"collectionId": null,
+											"createdAt": 1767225600000,
+											"description": "Company logo",
+											"mimeType": "image/png",
+											"modifiedAt": 1767225600000,
+											"name": "logo",
+											"originalSize": 24512,
+											"previewSize": 3120,
+											"urls": {
+												"original": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+												"preview": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b"
+											},
+											"variable": "$(image:logo)"
+										}
+									],
+									"meta": {
+										"limit": 1,
+										"offset": 0,
+										"total": 1
+									}
+								},
+								"schema": {
+									"example": {
+										"data": [
+											{
+												"backgroundColor": "rgba(0, 0, 0, 0)",
+												"checksum": "3f786850e387550fdab836ed7e6dc881de23001b",
+												"collectionId": null,
+												"createdAt": 1767225600000,
+												"description": "Company logo",
+												"mimeType": "image/png",
+												"modifiedAt": 1767225600000,
+												"name": "logo",
+												"originalSize": 24512,
+												"previewSize": 3120,
+												"urls": {
+													"original": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+													"preview": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b"
+												},
+												"variable": "$(image:logo)"
+											}
+										],
+										"meta": {
+											"limit": 100,
+											"offset": 0,
+											"total": 1
+										}
+									},
+									"properties": {
+										"data": {
+											"items": {
+												"example": {
+													"backgroundColor": "rgba(0, 0, 0, 0)",
+													"checksum": "3f786850e387550fdab836ed7e6dc881de23001b",
+													"collectionId": null,
+													"createdAt": 1767225600000,
+													"description": "Company logo",
+													"mimeType": "image/png",
+													"modifiedAt": 1767225600000,
+													"name": "logo",
+													"originalSize": 24512,
+													"previewSize": 3120,
+													"urls": {
+														"original": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+														"preview": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b"
+													},
+													"variable": "$(image:logo)"
+												},
+												"properties": {
+													"backgroundColor": {
+														"description": "CSS color shown behind the image when previewing it in the UI.",
+														"example": "rgba(0, 0, 0, 0)",
+														"type": "string"
+													},
+													"checksum": {
+														"description": "Checksum of the image data, or null if no image data has been uploaded yet.",
+														"example": "3f786850e387550fdab836ed7e6dc881de23001b",
+														"nullable": true,
+														"type": "string"
+													},
+													"collectionId": {
+														"description": "Id of the collection the image is in, or null if in none.",
+														"nullable": true,
+														"type": "string"
+													},
+													"createdAt": {
+														"description": "Time the image was created, in milliseconds since the epoch.",
+														"example": 1767225600000,
+														"type": "number"
+													},
+													"description": {
+														"description": "Description of the image.",
+														"example": "Company logo",
+														"type": "string"
+													},
+													"mimeType": {
+														"description": "Content type of the uploaded image, or null if no image data has been uploaded yet.",
+														"example": "image/png",
+														"nullable": true,
+														"type": "string"
+													},
+													"modifiedAt": {
+														"description": "Time the image was last modified, in milliseconds since the epoch.",
+														"example": 1767225600000,
+														"type": "number"
+													},
+													"name": {
+														"description": "Unique name of the image. Only letters, numbers, underscores and dashes.",
+														"example": "logo",
+														"type": "string"
+													},
+													"originalSize": {
+														"description": "Size of the uploaded image in bytes.",
+														"example": 24512,
+														"type": "number"
+													},
+													"previewSize": {
+														"description": "Size of the preview image in bytes.",
+														"example": 3120,
+														"type": "number"
+													},
+													"urls": {
+														"description": "URLs to fetch the image data from, or null if no image data has been uploaded yet. These include the checksum, so can be cached indefinitely.",
+														"nullable": true,
+														"properties": {
+															"original": {
+																"description": "URL of the image as uploaded. Changes whenever the image data changes.",
+																"example": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+																"type": "string"
+															},
+															"preview": {
+																"description": "URL of a small WebP preview of the image. Changes whenever the image data changes.",
+																"example": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b",
+																"type": "string"
+															}
+														},
+														"required": ["original", "preview"],
+														"type": "object"
+													},
+													"variable": {
+														"description": "Variable to use in a button to reference this image.",
+														"example": "$(image:logo)",
+														"type": "string"
+													}
+												},
+												"required": [
+													"name",
+													"description",
+													"variable",
+													"mimeType",
+													"originalSize",
+													"previewSize",
+													"checksum",
+													"urls",
+													"backgroundColor",
+													"collectionId",
+													"createdAt",
+													"modifiedAt"
+												],
+												"type": "object"
+											},
+											"type": "array"
+										},
+										"meta": {
+											"example": {
+												"limit": 100,
+												"offset": 0,
+												"total": 1
+											},
+											"properties": {
+												"limit": {
+													"description": "Maximum number of resources returned by this response.",
+													"example": 100,
+													"type": "number"
+												},
+												"offset": {
+													"description": "Number of resources skipped before this response.",
+													"example": 0,
+													"type": "number"
+												},
+												"total": {
+													"description": "Total number of resources available.",
+													"example": 1,
+													"type": "number"
+												}
+											},
+											"required": ["total", "limit", "offset"],
+											"type": "object"
+										}
+									},
+									"required": ["data", "meta"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "List of images"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["read"]
+					}
+				],
+				"summary": "List all images",
+				"tags": ["Image Library"]
+			},
+			"post": {
+				"description": "Create a new, empty image. Upload its data with the set image data endpoint. The name is sanitised, so check the name in the response.",
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"description": "Company logo",
+								"name": "logo"
+							},
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"description": {
+										"description": "Description of the image.",
+										"example": "Company logo",
+										"type": "string"
+									},
+									"name": {
+										"description": "Name for the image. Characters other than letters, numbers, underscores and dashes are replaced with underscores.",
+										"example": "logo",
+										"minLength": 1,
+										"type": "string"
+									}
+								},
+								"required": ["name"],
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"201": {
+						"content": {
+							"application/json": {
+								"example": {
+									"data": {
+										"backgroundColor": "rgba(0, 0, 0, 0)",
+										"checksum": null,
+										"collectionId": null,
+										"createdAt": 1767225600000,
+										"description": "Company logo",
+										"mimeType": null,
+										"modifiedAt": 1767225600000,
+										"name": "logo",
+										"originalSize": 0,
+										"previewSize": 0,
+										"urls": null,
+										"variable": "$(image:logo)"
+									}
+								},
+								"schema": {
+									"example": {
+										"data": {
+											"backgroundColor": "rgba(0, 0, 0, 0)",
+											"checksum": "3f786850e387550fdab836ed7e6dc881de23001b",
+											"collectionId": null,
+											"createdAt": 1767225600000,
+											"description": "Company logo",
+											"mimeType": "image/png",
+											"modifiedAt": 1767225600000,
+											"name": "logo",
+											"originalSize": 24512,
+											"previewSize": 3120,
+											"urls": {
+												"original": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+												"preview": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b"
+											},
+											"variable": "$(image:logo)"
+										}
+									},
+									"properties": {
+										"data": {
+											"example": {
+												"backgroundColor": "rgba(0, 0, 0, 0)",
+												"checksum": "3f786850e387550fdab836ed7e6dc881de23001b",
+												"collectionId": null,
+												"createdAt": 1767225600000,
+												"description": "Company logo",
+												"mimeType": "image/png",
+												"modifiedAt": 1767225600000,
+												"name": "logo",
+												"originalSize": 24512,
+												"previewSize": 3120,
+												"urls": {
+													"original": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+													"preview": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b"
+												},
+												"variable": "$(image:logo)"
+											},
+											"properties": {
+												"backgroundColor": {
+													"description": "CSS color shown behind the image when previewing it in the UI.",
+													"example": "rgba(0, 0, 0, 0)",
+													"type": "string"
+												},
+												"checksum": {
+													"description": "Checksum of the image data, or null if no image data has been uploaded yet.",
+													"example": "3f786850e387550fdab836ed7e6dc881de23001b",
+													"nullable": true,
+													"type": "string"
+												},
+												"collectionId": {
+													"description": "Id of the collection the image is in, or null if in none.",
+													"nullable": true,
+													"type": "string"
+												},
+												"createdAt": {
+													"description": "Time the image was created, in milliseconds since the epoch.",
+													"example": 1767225600000,
+													"type": "number"
+												},
+												"description": {
+													"description": "Description of the image.",
+													"example": "Company logo",
+													"type": "string"
+												},
+												"mimeType": {
+													"description": "Content type of the uploaded image, or null if no image data has been uploaded yet.",
+													"example": "image/png",
+													"nullable": true,
+													"type": "string"
+												},
+												"modifiedAt": {
+													"description": "Time the image was last modified, in milliseconds since the epoch.",
+													"example": 1767225600000,
+													"type": "number"
+												},
+												"name": {
+													"description": "Unique name of the image. Only letters, numbers, underscores and dashes.",
+													"example": "logo",
+													"type": "string"
+												},
+												"originalSize": {
+													"description": "Size of the uploaded image in bytes.",
+													"example": 24512,
+													"type": "number"
+												},
+												"previewSize": {
+													"description": "Size of the preview image in bytes.",
+													"example": 3120,
+													"type": "number"
+												},
+												"urls": {
+													"description": "URLs to fetch the image data from, or null if no image data has been uploaded yet. These include the checksum, so can be cached indefinitely.",
+													"nullable": true,
+													"properties": {
+														"original": {
+															"description": "URL of the image as uploaded. Changes whenever the image data changes.",
+															"example": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+															"type": "string"
+														},
+														"preview": {
+															"description": "URL of a small WebP preview of the image. Changes whenever the image data changes.",
+															"example": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b",
+															"type": "string"
+														}
+													},
+													"required": ["original", "preview"],
+													"type": "object"
+												},
+												"variable": {
+													"description": "Variable to use in a button to reference this image.",
+													"example": "$(image:logo)",
+													"type": "string"
+												}
+											},
+											"required": [
+												"name",
+												"description",
+												"variable",
+												"mimeType",
+												"originalSize",
+												"previewSize",
+												"checksum",
+												"urls",
+												"backgroundColor",
+												"collectionId",
+												"createdAt",
+												"modifiedAt"
+											],
+											"type": "object"
+										}
+									},
+									"required": ["data"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Image created"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					},
+					"409": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "An image with that name already exists"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["write"]
+					}
+				],
+				"summary": "Create an image",
+				"tags": ["Image Library"]
+			}
+		},
+		"/image-library/v1/{imageName}": {
+			"delete": {
+				"description": "Delete an image. Buttons using it will no longer show it.",
+				"parameters": [
+					{
+						"description": "Image name, as returned by the list images endpoint.",
+						"in": "path",
+						"name": "imageName",
+						"required": true,
+						"schema": {
+							"description": "Image name, as returned by the list images endpoint.",
+							"example": "logo",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"204": {
+						"description": "Image deleted"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["write"]
+					}
+				],
+				"summary": "Delete an image",
+				"tags": ["Image Library"]
+			},
+			"get": {
+				"description": "Returns the details of a single image. Fetch the image itself from one of its urls.",
+				"parameters": [
+					{
+						"description": "Image name, as returned by the list images endpoint.",
+						"in": "path",
+						"name": "imageName",
+						"required": true,
+						"schema": {
+							"description": "Image name, as returned by the list images endpoint.",
+							"example": "logo",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"example": {
+									"data": {
+										"backgroundColor": "rgba(0, 0, 0, 0)",
+										"checksum": "3f786850e387550fdab836ed7e6dc881de23001b",
+										"collectionId": null,
+										"createdAt": 1767225600000,
+										"description": "Company logo",
+										"mimeType": "image/png",
+										"modifiedAt": 1767225600000,
+										"name": "logo",
+										"originalSize": 24512,
+										"previewSize": 3120,
+										"urls": {
+											"original": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+											"preview": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b"
+										},
+										"variable": "$(image:logo)"
+									}
+								},
+								"schema": {
+									"example": {
+										"data": {
+											"backgroundColor": "rgba(0, 0, 0, 0)",
+											"checksum": "3f786850e387550fdab836ed7e6dc881de23001b",
+											"collectionId": null,
+											"createdAt": 1767225600000,
+											"description": "Company logo",
+											"mimeType": "image/png",
+											"modifiedAt": 1767225600000,
+											"name": "logo",
+											"originalSize": 24512,
+											"previewSize": 3120,
+											"urls": {
+												"original": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+												"preview": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b"
+											},
+											"variable": "$(image:logo)"
+										}
+									},
+									"properties": {
+										"data": {
+											"example": {
+												"backgroundColor": "rgba(0, 0, 0, 0)",
+												"checksum": "3f786850e387550fdab836ed7e6dc881de23001b",
+												"collectionId": null,
+												"createdAt": 1767225600000,
+												"description": "Company logo",
+												"mimeType": "image/png",
+												"modifiedAt": 1767225600000,
+												"name": "logo",
+												"originalSize": 24512,
+												"previewSize": 3120,
+												"urls": {
+													"original": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+													"preview": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b"
+												},
+												"variable": "$(image:logo)"
+											},
+											"properties": {
+												"backgroundColor": {
+													"description": "CSS color shown behind the image when previewing it in the UI.",
+													"example": "rgba(0, 0, 0, 0)",
+													"type": "string"
+												},
+												"checksum": {
+													"description": "Checksum of the image data, or null if no image data has been uploaded yet.",
+													"example": "3f786850e387550fdab836ed7e6dc881de23001b",
+													"nullable": true,
+													"type": "string"
+												},
+												"collectionId": {
+													"description": "Id of the collection the image is in, or null if in none.",
+													"nullable": true,
+													"type": "string"
+												},
+												"createdAt": {
+													"description": "Time the image was created, in milliseconds since the epoch.",
+													"example": 1767225600000,
+													"type": "number"
+												},
+												"description": {
+													"description": "Description of the image.",
+													"example": "Company logo",
+													"type": "string"
+												},
+												"mimeType": {
+													"description": "Content type of the uploaded image, or null if no image data has been uploaded yet.",
+													"example": "image/png",
+													"nullable": true,
+													"type": "string"
+												},
+												"modifiedAt": {
+													"description": "Time the image was last modified, in milliseconds since the epoch.",
+													"example": 1767225600000,
+													"type": "number"
+												},
+												"name": {
+													"description": "Unique name of the image. Only letters, numbers, underscores and dashes.",
+													"example": "logo",
+													"type": "string"
+												},
+												"originalSize": {
+													"description": "Size of the uploaded image in bytes.",
+													"example": 24512,
+													"type": "number"
+												},
+												"previewSize": {
+													"description": "Size of the preview image in bytes.",
+													"example": 3120,
+													"type": "number"
+												},
+												"urls": {
+													"description": "URLs to fetch the image data from, or null if no image data has been uploaded yet. These include the checksum, so can be cached indefinitely.",
+													"nullable": true,
+													"properties": {
+														"original": {
+															"description": "URL of the image as uploaded. Changes whenever the image data changes.",
+															"example": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+															"type": "string"
+														},
+														"preview": {
+															"description": "URL of a small WebP preview of the image. Changes whenever the image data changes.",
+															"example": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b",
+															"type": "string"
+														}
+													},
+													"required": ["original", "preview"],
+													"type": "object"
+												},
+												"variable": {
+													"description": "Variable to use in a button to reference this image.",
+													"example": "$(image:logo)",
+													"type": "string"
+												}
+											},
+											"required": [
+												"name",
+												"description",
+												"variable",
+												"mimeType",
+												"originalSize",
+												"previewSize",
+												"checksum",
+												"urls",
+												"backgroundColor",
+												"collectionId",
+												"createdAt",
+												"modifiedAt"
+											],
+											"type": "object"
+										}
+									},
+									"required": ["data"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "The requested image"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["read"]
+					}
+				],
+				"summary": "Get an image",
+				"tags": ["Image Library"]
+			},
+			"patch": {
+				"description": "Update the details of an image. Renaming an image changes its variable, so buttons using the old name will no longer show it.",
+				"parameters": [
+					{
+						"description": "Image name, as returned by the list images endpoint.",
+						"in": "path",
+						"name": "imageName",
+						"required": true,
+						"schema": {
+							"description": "Image name, as returned by the list images endpoint.",
+							"example": "logo",
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"application/json": {
+							"example": {
+								"description": "Company logo"
+							},
+							"schema": {
+								"additionalProperties": false,
+								"properties": {
+									"backgroundColor": {
+										"description": "CSS color shown behind the image when previewing it in the UI.",
+										"example": "#000000",
+										"type": "string"
+									},
+									"description": {
+										"description": "Description of the image.",
+										"example": "Company logo",
+										"type": "string"
+									},
+									"name": {
+										"description": "Name for the image. Characters other than letters, numbers, underscores and dashes are replaced with underscores.",
+										"example": "new_logo",
+										"minLength": 1,
+										"type": "string"
+									}
+								},
+								"type": "object"
+							}
+						}
+					},
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"example": {
+									"data": {
+										"backgroundColor": "rgba(0, 0, 0, 0)",
+										"checksum": "3f786850e387550fdab836ed7e6dc881de23001b",
+										"collectionId": null,
+										"createdAt": 1767225600000,
+										"description": "Company logo",
+										"mimeType": "image/png",
+										"modifiedAt": 1767225600000,
+										"name": "logo",
+										"originalSize": 24512,
+										"previewSize": 3120,
+										"urls": {
+											"original": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+											"preview": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b"
+										},
+										"variable": "$(image:logo)"
+									}
+								},
+								"schema": {
+									"example": {
+										"data": {
+											"backgroundColor": "rgba(0, 0, 0, 0)",
+											"checksum": "3f786850e387550fdab836ed7e6dc881de23001b",
+											"collectionId": null,
+											"createdAt": 1767225600000,
+											"description": "Company logo",
+											"mimeType": "image/png",
+											"modifiedAt": 1767225600000,
+											"name": "logo",
+											"originalSize": 24512,
+											"previewSize": 3120,
+											"urls": {
+												"original": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+												"preview": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b"
+											},
+											"variable": "$(image:logo)"
+										}
+									},
+									"properties": {
+										"data": {
+											"example": {
+												"backgroundColor": "rgba(0, 0, 0, 0)",
+												"checksum": "3f786850e387550fdab836ed7e6dc881de23001b",
+												"collectionId": null,
+												"createdAt": 1767225600000,
+												"description": "Company logo",
+												"mimeType": "image/png",
+												"modifiedAt": 1767225600000,
+												"name": "logo",
+												"originalSize": 24512,
+												"previewSize": 3120,
+												"urls": {
+													"original": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+													"preview": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b"
+												},
+												"variable": "$(image:logo)"
+											},
+											"properties": {
+												"backgroundColor": {
+													"description": "CSS color shown behind the image when previewing it in the UI.",
+													"example": "rgba(0, 0, 0, 0)",
+													"type": "string"
+												},
+												"checksum": {
+													"description": "Checksum of the image data, or null if no image data has been uploaded yet.",
+													"example": "3f786850e387550fdab836ed7e6dc881de23001b",
+													"nullable": true,
+													"type": "string"
+												},
+												"collectionId": {
+													"description": "Id of the collection the image is in, or null if in none.",
+													"nullable": true,
+													"type": "string"
+												},
+												"createdAt": {
+													"description": "Time the image was created, in milliseconds since the epoch.",
+													"example": 1767225600000,
+													"type": "number"
+												},
+												"description": {
+													"description": "Description of the image.",
+													"example": "Company logo",
+													"type": "string"
+												},
+												"mimeType": {
+													"description": "Content type of the uploaded image, or null if no image data has been uploaded yet.",
+													"example": "image/png",
+													"nullable": true,
+													"type": "string"
+												},
+												"modifiedAt": {
+													"description": "Time the image was last modified, in milliseconds since the epoch.",
+													"example": 1767225600000,
+													"type": "number"
+												},
+												"name": {
+													"description": "Unique name of the image. Only letters, numbers, underscores and dashes.",
+													"example": "logo",
+													"type": "string"
+												},
+												"originalSize": {
+													"description": "Size of the uploaded image in bytes.",
+													"example": 24512,
+													"type": "number"
+												},
+												"previewSize": {
+													"description": "Size of the preview image in bytes.",
+													"example": 3120,
+													"type": "number"
+												},
+												"urls": {
+													"description": "URLs to fetch the image data from, or null if no image data has been uploaded yet. These include the checksum, so can be cached indefinitely.",
+													"nullable": true,
+													"properties": {
+														"original": {
+															"description": "URL of the image as uploaded. Changes whenever the image data changes.",
+															"example": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+															"type": "string"
+														},
+														"preview": {
+															"description": "URL of a small WebP preview of the image. Changes whenever the image data changes.",
+															"example": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b",
+															"type": "string"
+														}
+													},
+													"required": ["original", "preview"],
+													"type": "object"
+												},
+												"variable": {
+													"description": "Variable to use in a button to reference this image.",
+													"example": "$(image:logo)",
+													"type": "string"
+												}
+											},
+											"required": [
+												"name",
+												"description",
+												"variable",
+												"mimeType",
+												"originalSize",
+												"previewSize",
+												"checksum",
+												"urls",
+												"backgroundColor",
+												"collectionId",
+												"createdAt",
+												"modifiedAt"
+											],
+											"type": "object"
+										}
+									},
+									"required": ["data"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Updated image"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					},
+					"409": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "An image with that name already exists"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["write"]
+					}
+				],
+				"summary": "Update an image",
+				"tags": ["Image Library"]
+			}
+		},
+		"/image-library/v1/{imageName}/data": {
+			"put": {
+				"description": "Replace the image data with the raw image file in the request body. Buttons using the image update to show the new image.",
+				"parameters": [
+					{
+						"description": "Image name, as returned by the list images endpoint.",
+						"in": "path",
+						"name": "imageName",
+						"required": true,
+						"schema": {
+							"description": "Image name, as returned by the list images endpoint.",
+							"example": "logo",
+							"type": "string"
+						}
+					}
+				],
+				"requestBody": {
+					"content": {
+						"image/gif": {
+							"schema": {
+								"format": "binary",
+								"type": "string"
+							}
+						},
+						"image/jpeg": {
+							"schema": {
+								"format": "binary",
+								"type": "string"
+							}
+						},
+						"image/png": {
+							"schema": {
+								"format": "binary",
+								"type": "string"
+							}
+						},
+						"image/svg+xml": {
+							"schema": {
+								"format": "binary",
+								"type": "string"
+							}
+						},
+						"image/webp": {
+							"schema": {
+								"format": "binary",
+								"type": "string"
+							}
+						}
+					},
+					"description": "The raw image file, with a Content-Type matching its format. At most 7863296 bytes.",
+					"required": true
+				},
+				"responses": {
+					"200": {
+						"content": {
+							"application/json": {
+								"example": {
+									"data": {
+										"backgroundColor": "rgba(0, 0, 0, 0)",
+										"checksum": "3f786850e387550fdab836ed7e6dc881de23001b",
+										"collectionId": null,
+										"createdAt": 1767225600000,
+										"description": "Company logo",
+										"mimeType": "image/png",
+										"modifiedAt": 1767225600000,
+										"name": "logo",
+										"originalSize": 24512,
+										"previewSize": 3120,
+										"urls": {
+											"original": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+											"preview": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b"
+										},
+										"variable": "$(image:logo)"
+									}
+								},
+								"schema": {
+									"example": {
+										"data": {
+											"backgroundColor": "rgba(0, 0, 0, 0)",
+											"checksum": "3f786850e387550fdab836ed7e6dc881de23001b",
+											"collectionId": null,
+											"createdAt": 1767225600000,
+											"description": "Company logo",
+											"mimeType": "image/png",
+											"modifiedAt": 1767225600000,
+											"name": "logo",
+											"originalSize": 24512,
+											"previewSize": 3120,
+											"urls": {
+												"original": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+												"preview": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b"
+											},
+											"variable": "$(image:logo)"
+										}
+									},
+									"properties": {
+										"data": {
+											"example": {
+												"backgroundColor": "rgba(0, 0, 0, 0)",
+												"checksum": "3f786850e387550fdab836ed7e6dc881de23001b",
+												"collectionId": null,
+												"createdAt": 1767225600000,
+												"description": "Company logo",
+												"mimeType": "image/png",
+												"modifiedAt": 1767225600000,
+												"name": "logo",
+												"originalSize": 24512,
+												"previewSize": 3120,
+												"urls": {
+													"original": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+													"preview": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b"
+												},
+												"variable": "$(image:logo)"
+											},
+											"properties": {
+												"backgroundColor": {
+													"description": "CSS color shown behind the image when previewing it in the UI.",
+													"example": "rgba(0, 0, 0, 0)",
+													"type": "string"
+												},
+												"checksum": {
+													"description": "Checksum of the image data, or null if no image data has been uploaded yet.",
+													"example": "3f786850e387550fdab836ed7e6dc881de23001b",
+													"nullable": true,
+													"type": "string"
+												},
+												"collectionId": {
+													"description": "Id of the collection the image is in, or null if in none.",
+													"nullable": true,
+													"type": "string"
+												},
+												"createdAt": {
+													"description": "Time the image was created, in milliseconds since the epoch.",
+													"example": 1767225600000,
+													"type": "number"
+												},
+												"description": {
+													"description": "Description of the image.",
+													"example": "Company logo",
+													"type": "string"
+												},
+												"mimeType": {
+													"description": "Content type of the uploaded image, or null if no image data has been uploaded yet.",
+													"example": "image/png",
+													"nullable": true,
+													"type": "string"
+												},
+												"modifiedAt": {
+													"description": "Time the image was last modified, in milliseconds since the epoch.",
+													"example": 1767225600000,
+													"type": "number"
+												},
+												"name": {
+													"description": "Unique name of the image. Only letters, numbers, underscores and dashes.",
+													"example": "logo",
+													"type": "string"
+												},
+												"originalSize": {
+													"description": "Size of the uploaded image in bytes.",
+													"example": 24512,
+													"type": "number"
+												},
+												"previewSize": {
+													"description": "Size of the preview image in bytes.",
+													"example": 3120,
+													"type": "number"
+												},
+												"urls": {
+													"description": "URLs to fetch the image data from, or null if no image data has been uploaded yet. These include the checksum, so can be cached indefinitely.",
+													"nullable": true,
+													"properties": {
+														"original": {
+															"description": "URL of the image as uploaded. Changes whenever the image data changes.",
+															"example": "/api/v2/image-library/v1/logo/data/original/3f786850e387550fdab836ed7e6dc881de23001b",
+															"type": "string"
+														},
+														"preview": {
+															"description": "URL of a small WebP preview of the image. Changes whenever the image data changes.",
+															"example": "/api/v2/image-library/v1/logo/data/preview/3f786850e387550fdab836ed7e6dc881de23001b",
+															"type": "string"
+														}
+													},
+													"required": ["original", "preview"],
+													"type": "object"
+												},
+												"variable": {
+													"description": "Variable to use in a button to reference this image.",
+													"example": "$(image:logo)",
+													"type": "string"
+												}
+											},
+											"required": [
+												"name",
+												"description",
+												"variable",
+												"mimeType",
+												"originalSize",
+												"previewSize",
+												"checksum",
+												"urls",
+												"backgroundColor",
+												"collectionId",
+												"createdAt",
+												"modifiedAt"
+											],
+											"type": "object"
+										}
+									},
+									"required": ["data"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Updated image"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					},
+					"413": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Image is too large"
+					},
+					"415": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unsupported image type"
+					},
+					"422": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Image could not be decoded"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["write"]
+					}
+				],
+				"summary": "Set image data",
+				"tags": ["Image Library"]
+			}
+		},
+		"/image-library/v1/{imageName}/data/{variant}/{checksum}": {
+			"get": {
+				"description": "Returns the raw image. Use the urls from the image rather than building this path: they contain the checksum of the current data, so can be cached indefinitely. Once the image data changes, the old urls return 404.",
+				"parameters": [
+					{
+						"description": "Image name, as returned by the list images endpoint.",
+						"in": "path",
+						"name": "imageName",
+						"required": true,
+						"schema": {
+							"description": "Image name, as returned by the list images endpoint.",
+							"example": "logo",
+							"type": "string"
+						}
+					},
+					{
+						"description": "Which version of the image to fetch. The preview is a small WebP thumbnail.",
+						"in": "path",
+						"name": "variant",
+						"required": true,
+						"schema": {
+							"description": "Which version of the image to fetch. The preview is a small WebP thumbnail.",
+							"enum": ["original", "preview"],
+							"example": "original",
+							"type": "string"
+						}
+					},
+					{
+						"description": "Checksum of the image data, as included in the image urls.",
+						"in": "path",
+						"name": "checksum",
+						"required": true,
+						"schema": {
+							"description": "Checksum of the image data, as included in the image urls.",
+							"example": "3f786850e387550fdab836ed7e6dc881de23001b",
+							"type": "string"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"content": {
+							"image/gif": {
+								"schema": {
+									"format": "binary",
+									"type": "string"
+								}
+							},
+							"image/jpeg": {
+								"schema": {
+									"format": "binary",
+									"type": "string"
+								}
+							},
+							"image/png": {
+								"schema": {
+									"format": "binary",
+									"type": "string"
+								}
+							},
+							"image/svg+xml": {
+								"schema": {
+									"format": "binary",
+									"type": "string"
+								}
+							},
+							"image/webp": {
+								"schema": {
+									"format": "binary",
+									"type": "string"
+								}
+							}
+						},
+						"description": "The image"
+					},
+					"400": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Bad request"
+					},
+					"401": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Unauthorized"
+					},
+					"403": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Forbidden"
+					},
+					"404": {
+						"content": {
+							"application/json": {
+								"schema": {
+									"example": {
+										"error": {
+											"code": "unauthorized",
+											"message": "Missing bearer token"
+										}
+									},
+									"properties": {
+										"error": {
+											"properties": {
+												"code": {
+													"description": "Machine-readable error code.",
+													"example": "unauthorized",
+													"type": "string"
+												},
+												"details": {
+													"description": "Additional structured details about the error.",
+													"nullable": true
+												},
+												"message": {
+													"description": "Human-readable error message.",
+													"example": "Missing bearer token",
+													"type": "string"
+												}
+											},
+											"required": ["code", "message"],
+											"type": "object"
+										}
+									},
+									"required": ["error"],
+									"type": "object"
+								}
+							}
+						},
+						"description": "Not found"
+					}
+				},
+				"security": [
+					{
+						"bearerAuth": ["read"]
+					}
+				],
+				"summary": "Get image data",
+				"tags": ["Image Library"]
+			}
+		},
 		"/surfaces/v1": {
 			"get": {
 				"description": "Returns all known surfaces, connected or not, with their current state.",

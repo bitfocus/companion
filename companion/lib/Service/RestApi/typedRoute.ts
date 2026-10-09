@@ -1,13 +1,73 @@
 import type { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi'
-import type Express from 'express'
-import type z from 'zod'
+import Express from 'express'
+import z from 'zod'
 import { RestApiError } from './errors.js'
 import { requireScopes, type ApiToken, type RequiredScope, type RestApiResponse } from './RestApiAuth.js'
 
 type RegisterPathConfig = Parameters<OpenAPIRegistry['registerPath']>[0]
-type HttpMethod = 'get' | 'post' | 'patch' | 'delete'
+type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete'
 type ResponseConfig = NonNullable<RegisterPathConfig['responses']>[number]
 type RouteParameter = NonNullable<NonNullable<RegisterPathConfig['request']>['params']>
+
+/** A request body sent as raw bytes rather than JSON, eg an image upload */
+export interface BinaryRequestBody {
+	/** The content type of the body, as matched against the accepted content types */
+	contentType: string
+	data: Buffer
+}
+
+/** A response sent as raw bytes rather than JSON, eg an image download */
+export interface BinaryResponseBody {
+	contentType: string
+	data: Buffer
+	/** Value for the Cache-Control header, or null to not send one */
+	cacheControl: string | null
+}
+
+interface BinaryRequestBodyConfig {
+	contentTypes: readonly string[]
+	maxBytes: number
+	description: string
+}
+
+interface BinaryResponseBodyConfig {
+	contentTypes: readonly string[]
+}
+
+const binaryRequestBodyConfigs = new WeakMap<z.ZodType, BinaryRequestBodyConfig>()
+const binaryResponseBodyConfigs = new WeakMap<z.ZodType, BinaryResponseBodyConfig>()
+
+/**
+ * Create a schema for a request body that is sent as raw bytes with one of the given content types.
+ * Use it as `request.body`; the handler then receives a {@link BinaryRequestBody}.
+ */
+export function binaryRequestBodySchema(config: BinaryRequestBodyConfig): z.ZodType<BinaryRequestBody> {
+	const schema = z.custom<BinaryRequestBody>(
+		(value) =>
+			typeof value === 'object' &&
+			value !== null &&
+			typeof (value as BinaryRequestBody).contentType === 'string' &&
+			Buffer.isBuffer((value as BinaryRequestBody).data)
+	)
+	binaryRequestBodyConfigs.set(schema, config)
+	return schema
+}
+
+/**
+ * Create a schema for a response that is sent as raw bytes with one of the given content types.
+ * Use it as `response.schema`; the handler then returns a {@link BinaryResponseBody}.
+ */
+export function binaryResponseBodySchema(config: BinaryResponseBodyConfig): z.ZodType<BinaryResponseBody> {
+	const schema = z.custom<BinaryResponseBody>(
+		(value) =>
+			typeof value === 'object' &&
+			value !== null &&
+			typeof (value as BinaryResponseBody).contentType === 'string' &&
+			Buffer.isBuffer((value as BinaryResponseBody).data)
+	)
+	binaryResponseBodyConfigs.set(schema, config)
+	return schema
+}
 
 type InferSchema<T> = T extends z.ZodType ? z.infer<T> : undefined
 type RequestBodyExample<T> = T extends z.ZodType ? z.input<T> : never
@@ -154,31 +214,90 @@ export function mountRestEndpoint(
 		z.ZodType | undefined
 	>
 ): void {
-	router[endpoint.method](endpoint.path, requireScopes(endpoint.scopes), async (req, res: RestApiResponse, next) => {
-		try {
-			const token = res.locals.apiToken
-			if (!token) throw RestApiError.unauthorized()
+	const binaryRequestConfig = endpoint.request?.body ? binaryRequestBodyConfigs.get(endpoint.request.body) : undefined
+	const binaryResponseConfig = endpoint.response.schema
+		? binaryResponseBodyConfigs.get(endpoint.response.schema)
+		: undefined
 
-			const params = parseRequestPart(endpoint.request?.params, req.params, 'Invalid path parameters')
-			const query = parseRequestPart(endpoint.request?.query, req.query, 'Invalid query parameters')
-			const body = parseRequestPart(endpoint.request?.body, req.body, 'Invalid request body')
+	// Binary bodies are only read once the scopes have been checked, so an unauthorised client can't make us buffer them
+	const bodyParsers: Express.RequestHandler[] = binaryRequestConfig
+		? [
+				Express.raw({ type: [...binaryRequestConfig.contentTypes], limit: binaryRequestConfig.maxBytes }),
+				createBinaryBodyMiddleware(binaryRequestConfig),
+			]
+		: []
 
-			const result = await endpoint.handler({ params, query, body, token })
+	router[endpoint.method](
+		endpoint.path,
+		requireScopes(endpoint.scopes),
+		...bodyParsers,
+		async (req, res: RestApiResponse, next) => {
+			try {
+				const token = res.locals.apiToken
+				if (!token) throw RestApiError.unauthorized()
 
-			if (result.status === 204) {
-				res.status(204).send()
-				return
+				const params = parseRequestPart(endpoint.request?.params, req.params, 'Invalid path parameters')
+				const query = parseRequestPart(endpoint.request?.query, req.query, 'Invalid query parameters')
+				const body = parseRequestPart(
+					endpoint.request?.body,
+					binaryRequestConfig ? res.locals.binaryBody : req.body,
+					'Invalid request body'
+				)
+
+				const result = await endpoint.handler({ params, query, body, token })
+
+				if (result.status === 204) {
+					res.status(204).send()
+					return
+				}
+				if (endpoint.response.status === 204) throw new Error('Route returned a body for a 204 response')
+				if (!endpoint.response.schema) throw new Error('Route response schema is missing')
+
+				if (result.location) res.location(result.location)
+				const parsedBody = endpoint.response.schema.parse(result.body)
+
+				if (binaryResponseConfig) {
+					const binaryBody = parsedBody as BinaryResponseBody
+					res.type(binaryBody.contentType)
+					if (binaryBody.cacheControl !== null) res.set('Cache-Control', binaryBody.cacheControl)
+					res.status(result.status ?? 200).send(binaryBody.data)
+				} else {
+					res.status(result.status ?? 200).json(parsedBody)
+				}
+			} catch (e) {
+				next(e)
 			}
-			if (endpoint.response.status === 204) throw new Error('Route returned a body for a 204 response')
-			if (!endpoint.response.schema) throw new Error('Route response schema is missing')
-
-			if (result.location) res.location(result.location)
-			const parsedBody = endpoint.response.schema.parse(result.body)
-			res.status(result.status ?? 200).json(parsedBody)
-		} catch (e) {
-			next(e)
 		}
-	})
+	)
+}
+
+/**
+ * Validate the raw body read by `Express.raw` and stash it for the handler. `Express.raw` silently skips
+ * bodies of other content types, so those are rejected here.
+ */
+function createBinaryBodyMiddleware(config: BinaryRequestBodyConfig): Express.RequestHandler {
+	return (req, res: RestApiResponse, next) => {
+		const contentType = req.is([...config.contentTypes])
+		const isEmpty =
+			contentType === null ||
+			req.headers['content-length'] === '0' ||
+			(Buffer.isBuffer(req.body) && req.body.length === 0)
+		if (isEmpty) {
+			next(RestApiError.badRequest('Request body is required'))
+			return
+		}
+		if (contentType === false || !Buffer.isBuffer(req.body)) {
+			next(
+				RestApiError.unsupportedMediaType(
+					`Unsupported content type, expected one of: ${config.contentTypes.join(', ')}`
+				)
+			)
+			return
+		}
+
+		res.locals.binaryBody = { contentType, data: req.body } satisfies BinaryRequestBody
+		next()
+	}
 }
 
 export function registerRestEndpoint(
@@ -194,7 +313,19 @@ export function registerRestEndpoint(
 	const request: RegisterPathConfig['request'] = {}
 	if (endpoint.request?.params) request.params = endpoint.request.params as RouteParameter
 	if (endpoint.request?.query) request.query = endpoint.request.query as RouteParameter
-	if (endpoint.request?.body) {
+	const binaryRequestConfig = endpoint.request?.body ? binaryRequestBodyConfigs.get(endpoint.request.body) : undefined
+	if (binaryRequestConfig) {
+		request.body = {
+			description: binaryRequestConfig.description,
+			content: Object.fromEntries(
+				binaryRequestConfig.contentTypes.map((contentType) => [
+					contentType,
+					{ schema: { type: 'string', format: 'binary' } },
+				])
+			),
+			required: true,
+		}
+	} else if (endpoint.request?.body) {
 		request.body = {
 			content: {
 				'application/json': {
@@ -242,6 +373,19 @@ function createOpenApiResponse(
 	example?: unknown
 ): ResponseConfig {
 	if (!response.schema) return { description: response.description }
+
+	const binaryResponseConfig = binaryResponseBodyConfigs.get(response.schema)
+	if (binaryResponseConfig) {
+		return {
+			description: response.description,
+			content: Object.fromEntries(
+				binaryResponseConfig.contentTypes.map((contentType) => [
+					contentType,
+					{ schema: { type: 'string', format: 'binary' } },
+				])
+			),
+		}
+	}
 
 	return {
 		description: response.description,

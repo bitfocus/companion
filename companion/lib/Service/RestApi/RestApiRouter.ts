@@ -51,7 +51,7 @@ export function createRestApiRouter(
 	router.use(
 		cors({
 			origin: '*',
-			methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+			methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 			allowedHeaders: ['Authorization', 'Content-Type'],
 		})
 	)
@@ -60,6 +60,7 @@ export function createRestApiRouter(
 	router.use(createAuthMiddleware(logger, tokenStore))
 	router.use(registry.instance.createRestApiRouter(logger))
 	router.use(registry.surfaces.createRestApiRouter(logger))
+	router.use(registry.graphics.imageLibrary.createRestApiRouter(logger))
 
 	// Do not allow unknown v2 routes to fall through into the legacy /api router.
 	router.use((_req, _res, next) => next(RestApiError.notFound()))
