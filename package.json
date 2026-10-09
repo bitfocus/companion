@@ -10,7 +10,8 @@
     "webui",
     "launcher",
     "launcher-ui",
-    "docs"
+    "docs",
+    "satellite-protocol"
   ],
   "type": "module",
   "scripts": {

@@ -1,0 +1,91 @@
+{
+	"$comment": "Conformance cases for the Satellite API line format. `parse` cases give the parameters part of a line (after the command name) and the expected result of parsing it, where `true` is a parameter given without a value. `format` cases give a message and the exact line (including the terminating newline) it is sent as. `roundTrip` values must parse back to themselves after being formatted as a string argument.",
+	"version": 1,
+	"parse": [
+		{ "name": "single key=value", "line": "KEY=value", "expected": { "KEY": "value" } },
+		{ "name": "multiple pairs", "line": "A=1 B=2 C=3", "expected": { "A": "1", "B": "2", "C": "3" } },
+		{ "name": "empty value", "line": "KEY=", "expected": { "KEY": "" } },
+		{ "name": "values are not coerced", "line": "N=42 F=0", "expected": { "N": "42", "F": "0" } },
+		{ "name": "valueless flag", "line": "FLAG", "expected": { "FLAG": true } },
+		{ "name": "flags mixed with pairs", "line": "A=1 FLAG B=2", "expected": { "A": "1", "FLAG": true, "B": "2" } },
+		{ "name": "split on the first = only", "line": "X=a=b=c", "expected": { "X": "a=b=c" } },
+		{ "name": "base64 padding", "line": "BITMAP=aGVsbG8=", "expected": { "BITMAP": "aGVsbG8=" } },
+		{ "name": "quoted value keeps spaces", "line": "TEXT=\"hello world\"", "expected": { "TEXT": "hello world" } },
+		{ "name": "quotes may appear mid-token", "line": "KEY=va\"lue\"", "expected": { "KEY": "value" } },
+		{ "name": "quoted key", "line": "\"quoted key\"=v", "expected": { "quoted key": "v" } },
+		{ "name": "escaped quote", "line": "KEY=\"a\\\"b\"", "expected": { "KEY": "a\"b" } },
+		{ "name": "escaped backslash", "line": "KEY=\"a\\\\b\"", "expected": { "KEY": "a\\b" } },
+		{ "name": "escaped space outside quotes", "line": "KEY=a\\ b", "expected": { "KEY": "a b" } },
+		{ "name": "dangling backslash is dropped", "line": "KEY=a\\", "expected": { "KEY": "a" } },
+		{ "name": "tabs are not separators", "line": "A=1\tB=2", "expected": { "A": "1\tB=2" } },
+		{ "name": "consecutive spaces", "line": "A=1  B=2", "expected": { "A": "1", "B": "2" } },
+		{ "name": "leading and trailing spaces", "line": "  A=1 B=2  ", "expected": { "A": "1", "B": "2" } },
+		{ "name": "empty line", "line": "", "expected": {} },
+		{ "name": "empty key is dropped", "line": "=x A=1", "expected": { "A": "1" } },
+		{
+			"name": "prototype-polluting keys are dropped",
+			"line": "__proto__=a constructor=b prototype=c __defineGetter__=d __defineSetter__=e __lookupGetter__=f __lookupSetter__=g normal=ok",
+			"expected": { "normal": "ok" }
+		},
+		{
+			"name": "realistic KEY-STATE",
+			"line": "DEVICEID=\"surface-1\" KEY=5 COLOR=\"#ff0000\" TEXT=\"UGxheQ==\" BITMAP=\"data:image/png;base64,iVBORw0KGgo=\" PRESSED=0",
+			"expected": {
+				"DEVICEID": "surface-1",
+				"KEY": "5",
+				"COLOR": "#ff0000",
+				"TEXT": "UGxheQ==",
+				"BITMAP": "data:image/png;base64,iVBORw0KGgo=",
+				"PRESSED": "0"
+			}
+		}
+	],
+	"format": [
+		{
+			"name": "no arguments",
+			"message": "PING",
+			"status": null,
+			"deviceId": null,
+			"args": {},
+			"expected": "PING \n"
+		},
+		{
+			"name": "status and device",
+			"message": "ADD-DEVICE",
+			"status": "OK",
+			"deviceId": "abc",
+			"args": {},
+			"expected": "ADD-DEVICE OK DEVICEID=\"abc\" \n"
+		},
+		{
+			"name": "value kinds",
+			"message": "KEY-STATE",
+			"status": null,
+			"deviceId": "abc",
+			"args": { "KEY": 5, "PRESSED": true, "LOCKED": false, "COLOR": "#ff0000" },
+			"expected": "KEY-STATE DEVICEID=\"abc\" KEY=5 PRESSED=1 LOCKED=0 COLOR=\"#ff0000\" \n"
+		},
+		{
+			"name": "escaping",
+			"message": "ERROR",
+			"status": null,
+			"deviceId": "a\"b",
+			"args": { "MESSAGE": "path C:\\x \"quoted\"" },
+			"expected": "ERROR DEVICEID=\"a\\\"b\" MESSAGE=\"path C:\\\\x \\\"quoted\\\"\" \n"
+		}
+	],
+	"roundTrip": [
+		"",
+		"plain",
+		"with spaces",
+		"a=b=c",
+		"aGVsbG8=",
+		"data:image/png;base64,iVBORw0KGgo=",
+		"\"",
+		"\\",
+		"\\\"",
+		"ends with backslash\\",
+		"\"quoted\" and \\escaped\\",
+		"unicode ✓ — ü"
+	]
+}

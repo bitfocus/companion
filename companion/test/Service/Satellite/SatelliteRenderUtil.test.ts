@@ -1,8 +1,8 @@
 import { describe, expect, test, vi } from 'vitest'
+import type { SatelliteControlStylePreset } from '@companion-app/satellite-protocol'
 import type { LedGaugeDescription } from '@companion-app/shared/Graphics/GaugeLeds.js'
 import { ImageResult, type ImageResultProcessedStyle } from '../../../lib/Graphics/ImageResult.js'
 import { buildSatelliteStyleArgs } from '../../../lib/Service/Satellite/SatelliteRenderUtil.js'
-import type { SatelliteControlStylePreset } from '../../../lib/Service/Satellite/SatelliteSurfaceManifestSchema.js'
 
 /** A description whose whole track is solid green, so every sampled segment is (0, 255, 0). */
 const GREEN_RING: LedGaugeDescription = {

@@ -47,6 +47,7 @@
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "^9.1.0",
+    "@companion-app/satellite-protocol": "*",
     "@companion-app/shared": "*",
     "@companion-module/base-old": "npm:@companion-module/base@~1.14.1",
     "@companion-module/host": "1.2.1",

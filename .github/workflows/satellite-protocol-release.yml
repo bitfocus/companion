@@ -1,0 +1,64 @@
+name: Publish satellite-protocol
+on:
+  push:
+    tags:
+      - "satellite-protocol-v*"
+
+permissions:
+  contents: read
+  # Required for npm trusted publishing and provenance
+  id-token: write
+
+jobs:
+  publish:
+    if: ${{ github.repository_owner == 'bitfocus' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Use Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: ".node-version"
+          registry-url: "https://registry.npmjs.org"
+      - name: yarn install
+        run: |
+          npm install -g corepack --force
+
+          # try and avoid timeout errors
+          yarn config set httpTimeout 100000
+
+          yarn install --immutable
+
+      - name: Check tag matches package version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          VERSION=$(node -p "require('./satellite-protocol/package.json').version")
+          if [[ "$TAG" != "satellite-protocol-v$VERSION" ]]; then
+            echo "Tag $TAG does not match satellite-protocol/package.json version $VERSION"
+            exit 1
+          fi
+
+      - name: Test
+        run: yarn vitest run --project satellite-protocol
+
+      - name: Check generated assets are up to date
+        run: yarn build:satellite-schema --check
+
+      - name: Build
+        run: yarn workspace @companion-app/satellite-protocol build
+
+      - name: Publish
+        working-directory: satellite-protocol
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          FLAGS=(--provenance --access public)
+          if [[ "$VERSION" == *-* ]]; then
+            # A prerelease version, eg 1.0.0-beta.1
+            FLAGS+=(--tag next)
+          fi
+          npm publish "${FLAGS[@]}"

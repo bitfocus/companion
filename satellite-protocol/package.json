@@ -1,0 +1,35 @@
+{
+  "name": "@companion-app/satellite-protocol",
+  "version": "0.1.0",
+  "description": "Wire protocol definitions for the Bitfocus Companion Satellite API",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitfocus/companion.git",
+    "directory": "satellite-protocol"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "companion:source": "./lib/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./assets/*": "./assets/*"
+  },
+  "files": [
+    "dist",
+    "!dist/**/__tests__",
+    "!dist/tsconfig.tsbuildinfo",
+    "assets"
+  ],
+  "scripts": {
+    "build": "tsc --build"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
+  }
+}

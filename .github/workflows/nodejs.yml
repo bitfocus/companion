@@ -1,5 +1,11 @@
 name: Build binaries
-on: [push]
+on:
+  push:
+    branches:
+      - "**"
+    # Only app releases, not the satellite-protocol library (satellite-protocol-v*)
+    tags:
+      - "v*"
 
 permissions:
   contents: read
