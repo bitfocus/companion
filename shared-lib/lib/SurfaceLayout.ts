@@ -315,7 +315,7 @@ export function resolveSurfaceView(
 
 		const controls: ResolvedSurfaceControl[] = stacked.map((control) => {
 			const face = appearance.controls[control.id]
-			const kind = controlKind(face.type)
+			const kind = controlKind(face.kind)
 			return {
 				id: control.id,
 				cell: control.cell,
@@ -377,32 +377,32 @@ function isUnrotated(rotation: SurfaceRotation): boolean {
  * What kind of control the face says this is. Taken as a plain string, so a kind newer than this knows of is drawn as
  * a button rather than refused.
  */
-export function controlKind(type: string | undefined): SurfaceControlKind {
-	switch (type) {
+export function controlKind(kind: string | undefined): SurfaceControlKind {
+	switch (kind) {
 		case 'encoder':
 		case 'jog':
 		case 'shuttle':
 		case 'lcd-segment':
-			return type
+			return kind
 		default:
 			return 'button'
 	}
 }
 
-/** The kinds which turn, so are round unless the face says otherwise, and can be turned from the editor */
+/** The kinds which turn, so are always round, and can be turned from the editor */
 export function isRotaryKind(kind: SurfaceControlKind): boolean {
 	return kind === 'encoder' || kind === 'jog' || kind === 'shuttle'
 }
 
-/** A described face is drawn as described: a rect is only rounded when the surface gives it a radius */
+/**
+ * A described face is drawn as described: a rect is only rounded when the surface gives it a radius. Anything which
+ * turns is round whatever shape the face gives it.
+ */
 function shapeFromAppearance(
 	face: SurfaceAppearanceDefinition['controls'][string],
 	kind: SurfaceControlKind
 ): SurfaceControlShape {
-	// A knob is round whatever the face says; a jog or shuttle unless the face says otherwise
-	if (kind === 'encoder' || face.shape?.shape === 'ellipse' || (!face.shape && isRotaryKind(kind))) {
-		return { type: 'circle' }
-	}
+	if (isRotaryKind(kind) || face.shape?.shape === 'ellipse') return { type: 'circle' }
 
 	const cornerRadius = face.shape?.shape === 'rect' ? (face.shape.cornerRadius ?? 0) : 0
 	const minSide = Math.min(face.width, face.height)
