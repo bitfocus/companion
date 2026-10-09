@@ -520,11 +520,14 @@ export interface ParseElementsContext {
 	/** Callback to fetch the last-rendered ImageResult for a given location */
 	readonly getRenderAtLocation: ((location: ControlLocation) => ImageResult | null) | null
 
+	/** Composite element types currently being expanded above this point, used for cycle detection */
+	readonly compositeAncestors: ReadonlySet<CompositeElementIdString>
+
 	/**
-	 * Create a child factory for recursive conversion (e.g., inside composite elements)
-	 * with prop overrides injected into the parser
+	 * Create a child factory for converting the children of a composite element,
+	 * with prop overrides injected into the parser and the composite added to the ancestors
 	 */
-	withPropOverrides(propOverrides: VariableValues): ParseElementsContext
+	withCompositeChild(compositeElementId: CompositeElementIdString, propOverrides: VariableValues): ParseElementsContext
 
 	/**
 	 * Resolve a composite element definition by connection and element ID
@@ -548,7 +551,8 @@ export function createParseElementsContext(
 	globalReferences: ExpressionReferences,
 	processedElementIds: Set<string>,
 	currentLocationStr: string | null,
-	getRenderAtLocation: ((location: ControlLocation) => ImageResult | null) | null
+	getRenderAtLocation: ((location: ControlLocation) => ImageResult | null) | null,
+	compositeAncestors: ReadonlySet<CompositeElementIdString>
 ): ParseElementsContext {
 	return {
 		cache,
@@ -558,6 +562,7 @@ export function createParseElementsContext(
 		drawPixelBuffers,
 		currentLocationStr,
 		getRenderAtLocation,
+		compositeAncestors,
 
 		createHelper<T extends { readonly id: string }>(
 			element: T
@@ -568,7 +573,10 @@ export function createParseElementsContext(
 			return { helper, references }
 		},
 
-		withPropOverrides(propOverrides: VariableValues): ParseElementsContext {
+		withCompositeChild(
+			compositeElementId: CompositeElementIdString,
+			propOverrides: VariableValues
+		): ParseElementsContext {
 			return createParseElementsContext(
 				compositeElementStore,
 				parser.createIsolatedChildParser(propOverrides),
@@ -579,7 +587,8 @@ export function createParseElementsContext(
 				globalReferences,
 				processedElementIds,
 				currentLocationStr,
-				getRenderAtLocation
+				getRenderAtLocation,
+				new Set([...compositeAncestors, compositeElementId])
 			)
 		},
 

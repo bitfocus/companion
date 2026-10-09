@@ -151,7 +151,8 @@ function makeCtx(
 		makeGlobalRefs(),
 		new Set(),
 		null,
-		null
+		null,
+		new Set()
 	)
 }
 
@@ -1195,25 +1196,34 @@ describe('createParseElementsContext', () => {
 		})
 	})
 
-	describe('withPropOverrides', () => {
+	describe('withCompositeChild', () => {
 		test('variables injected via propOverrides are resolved in the child context', () => {
 			const ctx = makeCtx()
-			const child = ctx.withPropOverrides({ 'ns:x': 'injected' })
+			const child = ctx.withCompositeChild('conn:elem', { 'ns:x': 'injected' })
 			const { helper } = child.createHelper({ id: 'el1', strProp: expr<string>('$(ns:x)') })
 			expect(helper.getString('strProp', '')).toBe('injected')
 		})
 
 		test('injected propOverrides do not affect the parent context', () => {
 			const ctx = makeCtx()
-			ctx.withPropOverrides({ 'ns:x': 'injected' })
+			ctx.withCompositeChild('conn:elem', { 'ns:x': 'injected' })
 			// Parent parser has no ns:x; missing variable resolves to undefined → defaultValue
 			const { helper } = ctx.createHelper({ id: 'el1', strProp: expr<string>('$(ns:x)') })
 			expect(helper.getString('strProp', 'default')).toBe('default')
 		})
 
+		test('adds the composite to the ancestors of the child context only', () => {
+			const ctx = makeCtx()
+			const child = ctx.withCompositeChild('conn:elem', {})
+			const grandchild = child.withCompositeChild('conn:other', {})
+			expect(ctx.compositeAncestors).toEqual(new Set())
+			expect(child.compositeAncestors).toEqual(new Set(['conn:elem']))
+			expect(grandchild.compositeAncestors).toEqual(new Set(['conn:elem', 'conn:other']))
+		})
+
 		test('child context is isolated from parent global variable values', () => {
 			const ctx = makeCtx({ variableValues: { ns: { existing: 'base' } } })
-			const child = ctx.withPropOverrides({ 'ns:injected': 'extra' })
+			const child = ctx.withCompositeChild('conn:elem', { 'ns:injected': 'extra' })
 			// The child can only see its own propOverrides, not the parent's global variables
 			const { helper } = child.createHelper({ id: 'el1', strProp: expr<string>('$(ns:existing)') })
 			expect(helper.getString('strProp', 'default')).toBe('default')

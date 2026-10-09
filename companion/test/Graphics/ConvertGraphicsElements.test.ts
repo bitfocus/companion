@@ -1687,56 +1687,6 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			})
 		})
 
-		test('returns nothing for missing composite definition', async () => {
-			const compositeDefinition: CompositeElementDefinition = {
-				id: 'composite1',
-				name: 'Test Composite',
-				sortKey: null,
-				description: '',
-				options: [],
-				elements: [],
-			}
-
-			const instanceDefs = createMockInstanceDefinitions({
-				'test-connection': {
-					composite1: compositeDefinition,
-				},
-			})
-
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'comp1',
-					name: '',
-					type: 'composite',
-					rotation: val(0),
-					pinnedProperties: [],
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					connectionId: 'test-connection',
-					elementId: 'nonexistent',
-				},
-			]
-
-			const result = await ConvertSomeButtonGraphicsElementForDrawing(
-				instanceDefs,
-				createMockParser(),
-				mockDrawPixelBuffers,
-				elements,
-				new Map(),
-				true,
-				null,
-				null,
-				null
-			)
-
-			expect(result.elements).toHaveLength(0)
-		})
-
 		function makeCompositeEl(elementId: string, overrides: Partial<ButtonGraphicsCompositeElement> = {}) {
 			return {
 				id: 'comp1',
@@ -1779,6 +1729,12 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			)
 		}
 
+		function placeholderText(element: SomeButtonGraphicsDrawElement | undefined): string | undefined {
+			const group = element as ButtonGraphicsGroupDrawElement
+			const text = group.children.find((c) => c.type === 'text')
+			return text?.text
+		}
+
 		test('applies rotation to the group', async () => {
 			const instanceDefs = createMockInstanceDefinitions({
 				'test-connection': { composite1: makeDefinition('composite1', [makeTextEl({ id: 'child1' })]) },
@@ -1798,6 +1754,61 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const result = await convert(instanceDefs, [element as SomeButtonGraphicsElement], null)
 
 			expect(result.elements[0]).toMatchObject({ type: 'group', rotation: 0 })
+		})
+
+		test('draws a placeholder for a missing composite definition', async () => {
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': { composite1: makeDefinition('composite1', []) },
+			})
+
+			const result = await convert(instanceDefs, [makeCompositeEl('nonexistent')], null)
+
+			expect(result.elements).toHaveLength(1)
+			expect(result.elements[0].type).toBe('group')
+			expect(placeholderText(result.elements[0])).toBe('Missing\nElement')
+			expect([...result.compositeElements.drawn]).toEqual(['test-connection:nonexistent'])
+		})
+
+		test('draws nothing for a disabled composite with a missing definition', async () => {
+			const instanceDefs = createMockInstanceDefinitions({})
+
+			const result = await convert(instanceDefs, [makeCompositeEl('nonexistent', { enabled: val(false) })], null)
+
+			expect(result.elements).toHaveLength(0)
+		})
+
+		test('draws a placeholder for a composite that contains itself', async () => {
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': {
+					loop: makeDefinition('loop', [makeTextEl({ id: 'text' }), makeCompositeEl('loop', { id: 'self' })]),
+				},
+			})
+
+			const result = await convert(instanceDefs, [makeCompositeEl('loop')], null)
+
+			const outer = result.elements[0] as ButtonGraphicsGroupDrawElement
+			expect(outer.children).toHaveLength(2)
+			expect(outer.children[0].type).toBe('text')
+			expect(placeholderText(outer.children[1])).toBe('\u221e')
+		})
+
+		test('draws a placeholder for an indirect composite cycle', async () => {
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': {
+					a: makeDefinition('a', [makeCompositeEl('b', { id: 'to-b' })]),
+					b: makeDefinition('b', [makeCompositeEl('a', { id: 'to-a' })]),
+				},
+			})
+
+			const cache = new ElementConversionCache()
+			for (let i = 0; i < 2; i++) {
+				// Second pass is served from the cache
+				const result = await convert(instanceDefs, [makeCompositeEl('a')], cache)
+
+				const a = result.elements[0] as ButtonGraphicsGroupDrawElement
+				const b = a.children[0] as ButtonGraphicsGroupDrawElement
+				expect(placeholderText(b.children[0])).toBe('\u221e')
+			}
 		})
 	})
 

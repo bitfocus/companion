@@ -134,7 +134,8 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 		globalReferences,
 		processedElementIds,
 		currentLocationStr,
-		getRenderAtLocation
+		getRenderAtLocation,
+		new Set()
 	)
 
 	const newElements = await convertElements(context, elements, '')
@@ -224,8 +225,11 @@ async function convertElements(
 			if (cacheEntry.referencedLocation)
 				context.globalReferences.referencedLocations.drawn.add(cacheEntry.referencedLocation)
 
-			// If this is a group, populate the children
-			if (element.type === 'group' || element.type === 'composite') {
+			if (cacheEntry.compositeElement?.isPlaceholder) {
+				// Placeholder already carries its children
+				return cacheEntry.drawElement
+			} else if (element.type === 'group' || element.type === 'composite') {
+				// If this is a group, populate the children
 				const childIdPrefix = cacheEntry.compositeElement ? cacheEntry.compositeElement.childIdPrefix : idPrefix
 
 				const children =
@@ -234,8 +238,11 @@ async function convertElements(
 						: (context.resolveCompositeElement(element.connectionId, element.elementId)?.elements ?? [])
 
 				if (cacheEntry.drawElement?.type === 'group') {
-					const childContext = cacheEntry.compositeElement?.childPropOverrides
-						? context.withPropOverrides(cacheEntry.compositeElement.childPropOverrides)
+					const childContext = cacheEntry.compositeElement
+						? context.withCompositeChild(
+								cacheEntry.compositeElement.elementId,
+								cacheEntry.compositeElement.childPropOverrides
+							)
 						: context
 
 					// Recurse to process children
@@ -577,39 +584,32 @@ async function convertCompositeElementForDrawing(
 	// The full ID of this composite element (with any parent prefixes)
 	const compositeFullId = idPrefix + element.id
 
-	const childElement = context.resolveCompositeElement(element.connectionId, element.elementId)
-	if (!childElement) {
-		return {
-			drawElement: null,
-			references,
-			compositeElement: {
-				elementId: compositeElementId,
-				childIdPrefix: compositeFullId + '/',
-				childPropOverrides: {},
-			},
-		}
-	}
-
-	const propOverrides = parseCompositeElementChildOptions(helper, childElement, element)
-	const propOverridesHash = createHash('sha256').update(JSON.stringify(propOverrides)).digest('hex')
-
-	const childIdPrefix = compositeFullId + '-' + propOverridesHash + '/'
-
 	// Perform enabled check first, to avoid executing expressions when not needed
 	const enabled = helper.getBoolean('enabled', true)
-	if (!enabled && context.onlyEnabled)
-		return {
-			drawElement: null,
-			references,
-			compositeElement: {
-				elementId: compositeElementId,
-				childIdPrefix,
-				childPropOverrides: propOverrides,
-			},
-		}
 
-	const opacity = helper.getNumber('opacity', 1, 0.01)
-	const bounds = convertDrawBounds(helper)
+	const childElement = context.resolveCompositeElement(element.connectionId, element.elementId)
+	const placeholderText = !childElement
+		? 'Missing\nElement'
+		: context.compositeAncestors.has(compositeElementId)
+			? '\u221e'
+			: null
+
+	let propOverrides: VariableValues = {}
+	let childIdPrefix = compositeFullId + '/'
+	if (childElement && placeholderText === null) {
+		propOverrides = parseCompositeElementChildOptions(helper, childElement, element)
+		const propOverridesHash = createHash('sha256').update(JSON.stringify(propOverrides)).digest('hex')
+		childIdPrefix = compositeFullId + '-' + propOverridesHash + '/'
+	}
+
+	const compositeElement: ElementConversionCacheEntry['compositeElement'] = {
+		elementId: compositeElementId,
+		childIdPrefix,
+		childPropOverrides: propOverrides,
+		isPlaceholder: placeholderText !== null,
+	}
+
+	if (!enabled && context.onlyEnabled) return { drawElement: null, references, compositeElement }
 
 	// Note: Composite elements render as groups - hash is shallow (children have their own hashes)
 	const drawElement: ButtonGraphicsGroupDrawElement = {
@@ -617,24 +617,21 @@ async function convertCompositeElementForDrawing(
 		type: 'group',
 		usage: element.usage,
 		enabled,
-		opacity,
-		...bounds,
+		opacity: helper.getNumber('opacity', 1, 0.01),
+		...convertDrawBounds(helper),
 		rotation: helper.getNumber('rotation', 0),
 		squareCoords: false,
-		children: [], // Will be filled in by caller
+		children: [], // Will be filled in by caller, unless a placeholder
 		contentHash: '', // Will be computed below
 	}
 
 	drawElement.contentHash = computeElementContentHash(drawElement)
-	return {
-		drawElement,
-		references,
-		compositeElement: {
-			elementId: compositeElementId,
-			childIdPrefix,
-			childPropOverrides: propOverrides,
-		},
+
+	if (placeholderText !== null) {
+		drawElement.children = makeReferencePlaceholder(compositeFullId, placeholderText)
 	}
+
+	return { drawElement, references, compositeElement }
 }
 
 async function convertImageElementForDrawing(
@@ -930,7 +927,7 @@ function collectChildElementIds(
 		// If this child is a composite, we need to check if we have a cached entry
 		// to determine the correct childIdPrefix for its children
 		if (child.type === 'composite') {
-			if (cachedEntry?.compositeElement) {
+			if (cachedEntry?.compositeElement && !cachedEntry.compositeElement.isPlaceholder) {
 				const compositeChildren = context.resolveCompositeElement(child.connectionId, child.elementId)?.elements
 				if (compositeChildren) {
 					collectChildElementIds(context, compositeChildren, cachedEntry.compositeElement.childIdPrefix)
