@@ -10,11 +10,13 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 interface RefreshModulesListProps {
 	moduleType: ModuleInstanceType
 	moduleId: string
+	iconOnly?: boolean
 }
 
 export const RefreshModuleInfo = observer(function RefreshModuleInfo({
 	moduleType,
 	moduleId,
+	iconOnly,
 }: RefreshModulesListProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
@@ -30,16 +32,25 @@ export const RefreshModuleInfo = observer(function RefreshModuleInfo({
 
 	if (refreshProgress === 1) {
 		return (
-			<Button color="primary" onClick={doRefreshModules}>
-				<FontAwesomeIcon icon={faSync} />
-				&nbsp;Refresh module info
+			<Button
+				color="secondary"
+				size="sm"
+				onClick={doRefreshModules}
+				title="Refresh module info"
+				aria-label="Refresh module info"
+				variant={iconOnly ? 'ghost' : undefined}
+			>
+				<FontAwesomeIcon icon={faSync} className={iconOnly ? '' : 'me-1.5'} />
+				{!iconOnly && 'Refresh module info'}
 			</Button>
 		)
 	} else {
 		return (
-			<Button color="primary" disabled>
-				<FontAwesomeIcon icon={faSync} spin={true} />
-				&nbsp;Refreshing module info {Math.round(refreshProgress * 100)}%
+			<Button color="secondary" size="sm" disabled aria-busy>
+				<FontAwesomeIcon icon={faSync} spin={true} className={iconOnly ? '' : 'me-1.5'} />
+				{iconOnly
+					? `${Math.round(refreshProgress * 100)}%`
+					: `Refreshing module info ${Math.round(refreshProgress * 100)}%`}
 			</Button>
 		)
 	}

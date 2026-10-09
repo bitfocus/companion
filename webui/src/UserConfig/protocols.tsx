@@ -1,130 +1,45 @@
+import { faCog } from '@fortawesome/free-solid-svg-icons'
+import { Outlet, useMatchRoute } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
-import { memo, useState } from 'react'
-import { TabArea } from '~/Components/TabArea.js'
-import { Table } from '~/Components/Table.js'
-import { ContextHelpButton } from '~/Layout/PanelIcons.js'
+import { PageHeader } from '~/Layout/PageHeader.js'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
-import { MyErrorBoundary } from '~/Resources/Error.js'
-import { useUserConfigProps } from './Context.js'
-import { ArtnetConfig } from './Sections/ArtnetConfig.js'
-import { ArtnetProtocol } from './Sections/ArtnetProtocol.js'
-import { EmberPlusConfig } from './Sections/EmberPlusConfig.js'
-import { EmberPlusProtocol } from './Sections/EmberPlusProtocol.js'
-import { HttpConfig } from './Sections/HttpConfig.js'
-import { HttpProtocol } from './Sections/HttpProtocol.js'
-import { MetricsConfig } from './Sections/MetricsConfig.js'
-import { OscConfig } from './Sections/OscConfig.js'
-import { OscProtocol } from './Sections/OscProtocol.js'
-import { RestApiConfig } from './Sections/RestApiConfig.js'
-import { RosstalkConfig } from './Sections/RosstalkConfig.js'
-import { RosstalkProtocol } from './Sections/RosstalkProtocol.js'
-import { SatelliteConfig } from './Sections/SatelliteConfig.js'
-import { TcpConfig } from './Sections/TcpConfig.js'
-import { TcpUdpProtocol } from './Sections/TcpUdpProtocol.js'
-import { UdpConfig } from './Sections/UdpConfig.js'
+import { PROTOCOLS } from './ProtocolDefinitions.js'
+import { SettingsItemsList } from './SettingsItems.js'
+import { SettingsNav } from './SettingsNav.js'
 
-export const SettingsProtocolsPage = memo(function UserConfig() {
+export const SettingsProtocolsPage = observer(function UserConfig() {
+	const matchRoute = useMatchRoute()
+	const routeMatch = matchRoute({ to: '/settings/protocols/$protocolId' })
+	const selectedProtocolId = routeMatch ? routeMatch.protocolId : null
+
 	return (
-		<SplitPanels.Root showing={null} resize={{ storageKey: 'settings' }}>
-			<SplitPanels.Primary>
-				<div className="flex-column-layout">
-					<div className="fixed-header">
-						<div className="flex justify-between">
-							<div>
-								<h4 className="button-inline">
-									Settings - Protocols
-									<ContextHelpButton action="/user-guide/config/settings#protocols" />
-								</h4>
-								<p>Settings apply instantaneously, don't worry about it!</p>
-							</div>
+		<div className="page-shell">
+			<PageHeader icon={faCog} title="Settings" helpAction="/user-guide/config/settings#protocols" />
+
+			<SettingsNav activeTab="protocols" />
+
+			<SplitPanels.Root showing={selectedProtocolId ? 'secondary' : 'primary'} resize={{ storageKey: 'protocols' }}>
+				<SplitPanels.Primary>
+					<div className="flex flex-col h-full min-h-0 gap-2">
+						<div className="bg-surface-muted/50 border border-border/70 p-3 rounded-lg shrink-0">
+							<p className="text-xs text-muted mb-0">
+								Network endpoints for controlling Companion remotely. Select one to change its settings or find its API
+								reference.
+							</p>
+						</div>
+
+						<div className="flex-1 min-h-0 scrollable-content list-card p-2">
+							<SettingsItemsList items={PROTOCOLS} selectedId={selectedProtocolId} basePath="/settings/protocols" />
 						</div>
 					</div>
-					<div className="scrollable-content">
-						<UserConfigTable />
+				</SplitPanels.Primary>
+
+				<SplitPanels.Secondary>
+					<div className="secondary-panel-simple">
+						<Outlet />
 					</div>
-				</div>
-			</SplitPanels.Primary>
-			<SplitPanels.Secondary>
-				<div className="secondary-panel-header">
-					<h4>Remote control</h4>
-					<p>Companion can be remote controlled in several ways. Below you'll find how to do it.</p>
-				</div>
-				<div className="secondary-panel-inner">
-					<RemoteControlInfo />
-				</div>
-			</SplitPanels.Secondary>
-		</SplitPanels.Root>
-	)
-})
-
-const UserConfigTable = observer(function UserConfigTable() {
-	const userConfigProps = useUserConfigProps()
-	if (!userConfigProps) return null
-
-	return (
-		<Table className="table-settings">
-			<tbody>
-				<SatelliteConfig {...userConfigProps} />
-				<TcpConfig {...userConfigProps} />
-				<UdpConfig {...userConfigProps} />
-				<HttpConfig {...userConfigProps} />
-				<RestApiConfig {...userConfigProps} />
-				<MetricsConfig {...userConfigProps} />
-				<OscConfig {...userConfigProps} />
-				<RosstalkConfig {...userConfigProps} />
-				<EmberPlusConfig {...userConfigProps} />
-				<ArtnetConfig {...userConfigProps} />
-			</tbody>
-		</Table>
-	)
-})
-
-const RemoteControlInfo = memo(function RemoteControlInfo() {
-	const [activeTab, setActiveTab] = useState<'tcp-udp' | 'http' | 'osc' | 'artnet' | 'rosstalk' | 'emberplus'>(
-		'tcp-udp'
-	)
-
-	return (
-		<TabArea.Root value={activeTab} onValueChange={setActiveTab}>
-			<TabArea.List>
-				<TabArea.Tab value="tcp-udp">TCP/UDP</TabArea.Tab>
-				<TabArea.Tab value="http">HTTP</TabArea.Tab>
-				<TabArea.Tab value="osc">OSC</TabArea.Tab>
-				<TabArea.Tab value="artnet">Artnet / DMX</TabArea.Tab>
-				<TabArea.Tab value="rosstalk">Rosstalk</TabArea.Tab>
-				<TabArea.Tab value="emberplus">Ember+</TabArea.Tab>
-				<TabArea.Indicator />
-			</TabArea.List>
-			<TabArea.Panel value="tcp-udp">
-				<MyErrorBoundary>
-					<TcpUdpProtocol />
-				</MyErrorBoundary>
-			</TabArea.Panel>
-			<TabArea.Panel value="http">
-				<MyErrorBoundary>
-					<HttpProtocol />
-				</MyErrorBoundary>
-			</TabArea.Panel>
-			<TabArea.Panel value="osc">
-				<MyErrorBoundary>
-					<OscProtocol />
-				</MyErrorBoundary>
-			</TabArea.Panel>
-			<TabArea.Panel value="artnet">
-				<MyErrorBoundary>
-					<ArtnetProtocol />
-				</MyErrorBoundary>
-			</TabArea.Panel>
-			<TabArea.Panel value="rosstalk">
-				<MyErrorBoundary>
-					<RosstalkProtocol />
-				</MyErrorBoundary>
-			</TabArea.Panel>
-			<TabArea.Panel value="emberplus">
-				<MyErrorBoundary>
-					<EmberPlusProtocol />
-				</MyErrorBoundary>
-			</TabArea.Panel>
-		</TabArea.Root>
+				</SplitPanels.Secondary>
+			</SplitPanels.Root>
+		</div>
 	)
 })

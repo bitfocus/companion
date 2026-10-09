@@ -6,6 +6,7 @@ import type { VisibleSurfaceInstancesState } from './SurfaceInstanceList.js'
 
 export interface SurfaceInstancesListContextType {
 	visibleInstances: TableVisibilityHelper<VisibleSurfaceInstancesState>
+	counts: { disabled: number; ok: number; warning: number; error: number }
 	deleteModalRef: RefObject<GenericConfirmModalRef | null>
 	configureInstance: (instanceId: string | null) => void
 }
@@ -22,6 +23,7 @@ type SurfaceInstancesListContextProviderProps = SurfaceInstancesListContextType
 
 export function SurfaceInstancesListContextProvider({
 	visibleInstances,
+	counts,
 	deleteModalRef,
 	configureInstance,
 	children,
@@ -29,11 +31,13 @@ export function SurfaceInstancesListContextProvider({
 	const value = useMemo<SurfaceInstancesListContextType>(() => {
 		return {
 			visibleInstances,
+			counts,
 			deleteModalRef,
 			configureInstance,
 		}
 	}, [
 		visibleInstances, // TODO - is this too reactive?
+		counts,
 		deleteModalRef,
 		configureInstance,
 	])

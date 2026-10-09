@@ -9,7 +9,12 @@ export function EmulatorListHeader({ installName }: EmulatorListHeaderProps): Re
 
 	return (
 		<header className="emulator-list-header">
-			<img src={makeAbsolutePath('/img/icons/48x48.png')} alt="Bitfocus Companion" className="emulator-list-logo" />
+			<img
+				src={makeAbsolutePath('/img/logo-glass.png')}
+				alt="Bitfocus Companion"
+				className="emulator-list-logo"
+				style={{ height: 36 }}
+			/>
 			<div className="emulator-list-heading">
 				<h1>{title}</h1>
 				<span className="emulator-list-subheading">Choose an emulator to control</span>

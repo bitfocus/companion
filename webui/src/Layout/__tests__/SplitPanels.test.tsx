@@ -50,9 +50,9 @@ const RESIZE: SplitPanelsResizeConfig = {
 	defaultPrimaryPercent: 50,
 }
 
-// `max-xl:hidden` is the whole visibility mechanism: a panel is hidden only below the width at which
-// both fit, and never has a display forced on it, so it keeps whatever its own classes give it.
-const HIDE = 'max-xl:hidden'
+// Hiding is the whole visibility mechanism — a panel never has a display forced on it, so it keeps
+// whatever its own classes give it. Either panel hides only below the width at which both fit.
+const HIDE_BELOW_XL = 'max-xl:hidden'
 
 function renderPanels(showing: 'primary' | 'secondary' | null, resize: SplitPanelsResizeConfig | null = null) {
 	const { container } = render(
@@ -73,22 +73,23 @@ describe('SplitPanels', () => {
 		expect(secondary).toHaveClass('secondary-panel')
 	})
 
-	it("showing='primary' hides only the secondary while there is room for one", () => {
+	it("showing='primary' hides only the secondary, and only where there is room for one", () => {
 		const { primary, secondary } = renderPanels('primary')
-		expect(primary).not.toHaveClass(HIDE)
-		expect(secondary).toHaveClass(HIDE)
+		expect(primary).not.toHaveClass(HIDE_BELOW_XL)
+		expect(secondary).toHaveClass(HIDE_BELOW_XL)
+		expect(secondary).not.toHaveClass('hidden')
 	})
 
-	it("showing='secondary' hides only the primary", () => {
+	it("showing='secondary' hides only the primary, and only where there is room for one", () => {
 		const { primary, secondary } = renderPanels('secondary')
-		expect(primary).toHaveClass(HIDE)
-		expect(secondary).not.toHaveClass(HIDE)
+		expect(primary).toHaveClass(HIDE_BELOW_XL)
+		expect(secondary).not.toHaveClass(HIDE_BELOW_XL)
 	})
 
 	it('showing={null} keeps both panels on show at every width', () => {
 		const { primary, secondary } = renderPanels(null)
-		expect(primary).not.toHaveClass(HIDE)
-		expect(secondary).not.toHaveClass(HIDE)
+		expect(primary).not.toHaveClass(HIDE_BELOW_XL)
+		expect(secondary).not.toHaveClass(HIDE_BELOW_XL)
 	})
 
 	it('never forces a display on a visible panel, so its own classes decide', () => {
@@ -98,19 +99,19 @@ describe('SplitPanels', () => {
 
 	it('merges className and passes through HTML attributes', () => {
 		const { container } = render(
-			<SplitPanels.Root showing={null} className="connections-page" data-testid="root" resize={null}>
-				<SplitPanels.Primary className="connections-panel">primary</SplitPanels.Primary>
+			<SplitPanels.Root showing={null} className="custom-page" data-testid="root" resize={null}>
+				<SplitPanels.Primary className="custom-panel">primary</SplitPanels.Primary>
 			</SplitPanels.Root>
 		)
 		const root = container.firstChild as HTMLElement
-		expect(root).toHaveClass('split-panels', 'connections-page')
+		expect(root).toHaveClass('split-panels', 'custom-page')
 		expect(root.getAttribute('data-testid')).toBe('root')
-		expect(root.children[0]).toHaveClass('primary-panel', 'connections-panel')
+		expect(root.children[0]).toHaveClass('primary-panel', 'custom-panel')
 	})
 
 	it('a panel outside a root is not hidden', () => {
 		const { container } = render(<SplitPanels.Primary />)
-		expect(container.firstChild).not.toHaveClass(HIDE)
+		expect(container.firstChild).not.toHaveClass(HIDE_BELOW_XL)
 	})
 })
 
@@ -138,6 +139,14 @@ describe('SplitPanels resize', () => {
 		window.localStorage.setItem('split-panels-width:test-view', '70')
 		const { root } = renderPanels(null, RESIZE)
 		expect(root.style.gridTemplateColumns).toBe('minmax(300px, 70fr) minmax(350px, 30fr)')
+	})
+
+	it("keeps the stored split while nothing is open in the secondary, so opening something doesn't reflow", () => {
+		window.localStorage.setItem('split-panels-width:test-view', '70')
+		const { root } = renderPanels('primary', RESIZE)
+		expect(root).toHaveClass('split-panels-resizable')
+		expect(root.style.gridTemplateColumns).toBe('minmax(300px, 70fr) minmax(350px, 30fr)')
+		expect(root.querySelector('.split-panels-resize-handle')).not.toBeNull()
 	})
 
 	it('does not resize (no handle, no inline columns) below the two-panel breakpoint', () => {

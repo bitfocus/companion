@@ -56,11 +56,12 @@
 
 	.button {
 		margin: 0 5px;
-		color: var(--remote-accent);
-		border: 1px solid var(--remote-accent);
+		color: var(--btn-color);
+		border: 1px solid var(--btn-border-color);
 
 		&:disabled {
-			opacity: 0.5;
+			opacity: 1;
+			color: var(--color-action-disabled-text);
 		}
 	}
 

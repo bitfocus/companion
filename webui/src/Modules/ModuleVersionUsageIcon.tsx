@@ -14,12 +14,11 @@ export const ModuleVersionUsageIcon = observer(function ModuleVersionUsageIcon({
 }: ModuleVersionUsageIconProps) {
 	if (matchingConnections === 0) return null // TODO - needs a placeholder for positioning
 
+	const usageLabel = `${matchingConnections} connection${matchingConnections === 1 ? ' is' : 's are'} using this version`
+
 	return (
-		<InlineHelpCustom help={`${matchingConnections} connections are using this version`}>
-			<FontAwesomeIcon
-				icon={isInstalled ? faPlug : faWarning}
-				aria-label={`${matchingConnections} connections are using this version`}
-			/>
+		<InlineHelpCustom help={usageLabel}>
+			<FontAwesomeIcon icon={isInstalled ? faPlug : faWarning} aria-label={usageLabel} />
 		</InlineHelpCustom>
 	)
 })

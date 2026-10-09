@@ -71,6 +71,16 @@
 		}
 	}
 
+	/* Invalid: the input and its stepper buttons share one red outline */
+	.number-field-group:has(.number-field-input.invalid-value) {
+		.number-field-input,
+		.number-field-input:focus-visible,
+		.number-field-decrement,
+		.number-field-increment {
+			border-color: var(--color-danger);
+		}
+	}
+
 	.number-field-inf-overlay {
 		grid-column: 1;
 		grid-row: 1 / 3;
@@ -78,10 +88,6 @@
 		align-items: center;
 		padding-left: 0.75rem;
 		pointer-events: none;
-
-		&.invalid-value {
-			color: var(--color-input-invalid);
-		}
 	}
 
 	&:has(.number-field-inf-overlay) .number-field-input:not(:focus-visible) {

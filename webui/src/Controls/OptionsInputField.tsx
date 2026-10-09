@@ -157,22 +157,27 @@ export const OptionsInputField = observer(function OptionsInputField({
 		? (option.expressionDescription ?? option.description ?? colorFieldExpressionHint(option))
 		: option.description
 
+	const expressionPreview = (
+		<ExpressionValuePreview
+			expression={stringifyVariableValue(rawValue?.value) ?? ''}
+			controlId={controlId ?? null}
+			fieldDefinition={option}
+			contextResolution={buildContextResolutionForPreview(option.contextVariableResolution, allRawOptions)}
+			statusOnly={previewStatusOnly}
+		/>
+	)
+
 	return (
 		<>
 			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames({ hidden: !visibility })}>
 				<OptionLabel option={option} features={isInExpressionMode ? ExpressionModeFeatures : features} />
-				{isInExpressionMode && (
-					<ExpressionValuePreview
-						expression={stringifyVariableValue(rawValue?.value) ?? ''}
-						controlId={controlId ?? null}
-						fieldDefinition={option}
-						contextResolution={buildContextResolutionForPreview(option.contextVariableResolution, allRawOptions)}
-						statusOnly={previewStatusOnly}
-					/>
-				)}
+				{/* The value preview needs the room under the label; a bare status sits under the field instead, so
+				    the label stays level with the field beside it */}
+				{isInExpressionMode && !previewStatusOnly && expressionPreview}
 			</FormLabel>
 			<Grid.Col sm={8} className={classNames({ hidden: !visibility })}>
 				{control}
+				{isInExpressionMode && previewStatusOnly && expressionPreview}
 				{description && <div className="form-text">{description}</div>}
 			</Grid.Col>
 		</>

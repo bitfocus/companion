@@ -1,4 +1,4 @@
-import { faFileImport } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faFileImport, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import CryptoJS from 'crypto-js'
 import { observer } from 'mobx-react-lite'
@@ -6,8 +6,8 @@ import { useCallback, useContext, useState } from 'react'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { StaticAlert } from '~/Components/Alert.js'
-import { Callout } from '~/Components/Callout.js'
-import { ContextHelpButton } from '~/Layout/PanelIcons.js'
+import { PageHeader } from '~/Layout/PageHeader.js'
+import { PageIntro } from '~/Layout/PageIntro'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { base64EncodeUint8Array } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -124,8 +124,6 @@ export const ImportExportPage = observer(function ImportExport() {
 
 											setLoadError(null)
 											notifier.close(NOTIFICATION_ID_IMPORT)
-											// const mode = config.type === 'page' ? 'import_page' : 'import_full'
-											// modalRef.current.show(mode, config, initialRemap)
 											setImportInfo([config, initialRemap])
 										}
 									},
@@ -166,57 +164,99 @@ export const ImportExportPage = observer(function ImportExport() {
 	const isMobileSafari = 'ongesturechange' in window
 
 	return (
-		<div>
-			<h4 className="button-inline">
-				Import / Export Configuration
-				<ContextHelpButton action="/user-guide/config/import-export" />
-			</h4>
-			<p>On this page, you can import, export, and reset all settings stored in your Companion installation.</p>
+		<div className="page-shell">
+			<PageHeader icon={faFileImport} title="Import / Export" helpAction="/user-guide/config/import-export" />
 
-			<Callout color="success">
-				<h5>Export</h5>
-				<p>Download a file containing all connections and button pages.</p>
-				<ExportWizardModal />
-			</Callout>
+			<div className="page-scroll">
+				<PageIntro title="Configuration Management">
+					Export custom configuration backups, restore from a snapshot, or reset Companion configuration.
+				</PageIntro>
 
-			<Callout color="warning">
-				<h5>Import</h5>
-				{!fileApiIsSupported ? (
-					<>
-						<StaticAlert color="warning">File uploading is not supported in your browser</StaticAlert>
-					</>
-				) : (
-					<>
-						<p>
-							Use the button below to browse your computer for a <b>.companionconfig</b> file containing a configuration
-							set.
-						</p>
+				<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+					{/* Export Card */}
+					<div className="flex flex-col justify-between p-5 rounded-xl border border-tone-good-fill/25 bg-surface hover:border-tone-good-fill/50 hover:shadow-sm transition-all">
+						<div>
+							<div className="flex items-center gap-3 mb-3">
+								<span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-tone-good-fill/10 text-tone-good-text font-bold">
+									<FontAwesomeIcon icon={faDownload} className="text-base" />
+								</span>
+								<div>
+									<h3 className="text-sm font-bold text-body mb-0">Export Configuration</h3>
+									<span className="text-2xs text-tone-good-text font-medium">Backup & Share</span>
+								</div>
+							</div>
+							<p className="text-xs text-muted leading-relaxed mb-4">
+								Download a custom <b>.companionconfig</b> backup file containing your connections, button pages,
+								surfaces, triggers, and variables.
+							</p>
+						</div>
+						<div>
+							<ExportWizardModal />
+						</div>
+					</div>
+
+					{/* Import Card */}
+					<div className="flex flex-col justify-between p-5 rounded-xl border border-tone-warning-fill/25 bg-surface hover:border-tone-warning-fill/50 hover:shadow-sm transition-all">
+						<div>
+							<div className="flex items-center gap-3 mb-3">
+								<span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-tone-warning-fill/10 text-tone-warning-text font-bold">
+									<FontAwesomeIcon icon={faFileImport} className="text-base" />
+								</span>
+								<div>
+									<h3 className="text-sm font-bold text-body mb-0">Import Configuration</h3>
+									<span className="text-2xs text-tone-warning-text font-medium">Restore Snapshot</span>
+								</div>
+							</div>
+							<p className="text-xs text-muted leading-relaxed mb-4">
+								Browse your computer for a <b>.companionconfig</b> or <b>.yaml</b> backup file to restore or merge into
+								Companion.
+							</p>
+						</div>
 
 						<div>
-							{loadError ? <StaticAlert color="warning">{loadError}</StaticAlert> : ''}
-
-							<label className="button button-warning button-file">
-								<FontAwesomeIcon icon={faFileImport} className="me-2" />
-								Import configuration
-								<input
-									type="file"
-									onChange={loadSnapshot}
-									className="hidden"
-									accept={isMobileSafari ? undefined : '.companionconfig,.yaml'} // Mobile safari doesn't support custom file extensions https://github.com/bitfocus/companion/issues/3676
-								/>
-							</label>
+							{!fileApiIsSupported ? (
+								<StaticAlert color="warning">File uploading is not supported in your browser</StaticAlert>
+							) : (
+								<>
+									{loadError && <StaticAlert color="warning">{loadError}</StaticAlert>}
+									<label className="button button-secondary button-file w-full flex items-center justify-center gap-2 font-semibold">
+										<FontAwesomeIcon icon={faFileImport} />
+										Import Configuration
+										<input
+											type="file"
+											onChange={loadSnapshot}
+											className="hidden"
+											accept={isMobileSafari ? undefined : '.companionconfig,.yaml'}
+										/>
+									</label>
+								</>
+							)}
 						</div>
-					</>
-				)}
-			</Callout>
+					</div>
 
-			<Callout color="danger">
-				<h5>Reset</h5>
-				<p>This will clear all connections, triggers and/or buttons.</p>
-				<div>
-					<ResetWizardModal />
+					{/* Reset Card */}
+					<div className="flex flex-col justify-between p-5 rounded-xl border border-tone-error-fill/25 bg-surface hover:border-tone-error-fill/50 hover:shadow-sm transition-all">
+						<div>
+							<div className="flex items-center gap-3 mb-3">
+								<span className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-tone-error-fill/10 text-tone-error-text font-bold">
+									<FontAwesomeIcon icon={faTrashAlt} className="text-base" />
+								</span>
+								<div>
+									<h3 className="text-sm font-bold text-body mb-0">Reset Companion</h3>
+									<span className="text-2xs text-tone-error-text font-medium">Clear Configuration</span>
+								</div>
+							</div>
+							<p className="text-xs text-muted leading-relaxed mb-4">
+								Selectively clear connections, triggers, buttons, or custom variables to reset Companion back to a fresh
+								state.
+							</p>
+						</div>
+						<div>
+							<ResetWizardModal />
+						</div>
+					</div>
 				</div>
-			</Callout>
+			</div>
 		</div>
 	)
 })

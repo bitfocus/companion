@@ -127,7 +127,7 @@ function EmulatorNotFound({ emulatorId }: { emulatorId: string }) {
 				</div>
 				<div>
 					<Button
-						color="warning"
+						color="secondary"
 						className="emulator-back-button"
 						onClick={() => void navigate({ to: '/emulators' })}
 						title="Back to emulator list"

@@ -28,10 +28,13 @@ export function getEntityRowHeaderDisplay(
 
 	if (entity.variableName) {
 		return {
-			headline: `$(${localVariablePrefix}:${entity.variableName}) ${entity.headline || ''}`,
+			headline: `$(${localVariablePrefix}:${entity.variableName})${entity.headline?.trim() ? ` ${entity.headline}` : ''}`,
 			localVariableValueName: entity.variableName,
 		}
 	}
 
-	return { headline: `Unnamed: ${entity.headline || ''}`, localVariableValueName: null }
+	return {
+		headline: entity.headline?.trim() ? `Unnamed: ${entity.headline}` : 'Unnamed',
+		localVariableValueName: null,
+	}
 }

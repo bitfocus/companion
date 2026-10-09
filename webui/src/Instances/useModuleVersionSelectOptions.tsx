@@ -5,7 +5,7 @@ import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js
 import { useModuleStoreInfo } from '~/Modules/useModuleStoreInfo.js'
 import { useModuleUpgradeToVersions } from '~/Modules/useModuleUpgradeToVersions.js'
 import { useComputed } from '~/Resources/util.js'
-import { getLatestVersion } from './VersionUtil.js'
+import { getLatestVersion, getStoreInstallChoices } from './VersionUtil.js'
 
 export function useModuleVersionSelectOptions(
 	moduleType: ModuleInstanceType,
@@ -31,7 +31,6 @@ export function useModuleVersionSelectOptions(
 	return useComputed(() => {
 		const choices: DropdownChoice[] = []
 
-		const listedVersions = new Set<string>()
 		if (installedInfo) {
 			for (const version of installedInfo.installedVersions) {
 				if (!includeBeta && version.isBeta) continue
@@ -42,30 +41,12 @@ export function useModuleVersionSelectOptions(
 				}
 
 				choices.push({ id: version.versionId, label })
-				listedVersions.add(version.versionId)
 			}
 		}
 
-		if (
-			latestStableVersion &&
-			!listedVersions.has(latestStableVersion.id) &&
-			(!installedInfo?.stableVersion ||
-				semver.compare(latestStableVersion.id, installedInfo.stableVersion.versionId, { loose: true }) > 0)
-		) {
-			choices.push({ id: latestStableVersion.id, label: `v${latestStableVersion.id} (Install latest stable)` })
-		}
-
-		if (
-			includeBeta &&
-			latestBetaVersion &&
-			!listedVersions.has(latestBetaVersion.id) &&
-			(!installedInfo?.betaVersion ||
-				semver.compare(latestBetaVersion.id, installedInfo.betaVersion.versionId, { loose: true }) > 0)
-		) {
-			choices.push({
-				id: latestBetaVersion.id,
-				label: `v${latestBetaVersion.id} (Install latest beta)`,
-			})
+		for (const version of getStoreInstallChoices(installedInfo, latestStableVersion, latestBetaVersion, includeBeta)) {
+			const channel = version.releaseChannel === 'beta' ? 'beta' : 'stable'
+			choices.push({ id: version.id, label: `v${version.id} (Install latest ${channel})` })
 		}
 
 		choices.sort((a, b) => semver.compare(String(b.id), String(a.id), { loose: true }))

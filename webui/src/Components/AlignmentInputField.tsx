@@ -119,7 +119,8 @@ function AlignmentButton({
 }: React.PropsWithChildren<AlignmentButtonProps>) {
 	return (
 		<Button
-			color={value === buttonValue ? 'primary' : 'secondary'}
+			color="secondary"
+			aria-pressed={value === buttonValue}
 			onClick={() => setValue(buttonValue)}
 			title={title}
 			aria-label={title}

@@ -1,13 +1,13 @@
-import { faDownload, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faImages, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useEffect, useId, useRef, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
 import { CopyButton } from '~/Components/CopyButton.js'
-import { Form, FormLabel } from '~/Components/Form.js'
+import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { Grid } from '~/Components/Grid'
+import { NonIdealState } from '~/Components/NonIdealState.js'
 import { trpc, trpcClient, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImageBackgroundColorEditor } from './imageBackgroundColorEditor.js'
@@ -133,127 +133,130 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		return new Date(timestamp).toLocaleString()
 	}
 
-	const imageNameFieldId = useId()
 	const descriptionFieldId = useId()
 	const backgroundColorFieldId = useId()
 
 	if (!selectedImageName) {
 		return (
-			<div className="image-library-editor">
-				<StaticAlert color="info">Select an image from the library to view and edit its properties.</StaticAlert>
+			<div className="flex items-center justify-center h-full p-8 text-center">
+				<NonIdealState icon={faImages} text="Select an image from the library to view and edit its properties." />
 			</div>
 		)
 	}
 
 	if (!imageInfo) {
 		return (
-			<div className="image-library-editor">
+			<div className="p-4">
 				<StaticAlert color="danger">Failed to load image data.</StaticAlert>
 			</div>
 		)
 	}
 
 	return (
-		<div className="image-library-editor">
+		<div className="edit-panel image-library-editor">
 			<GenericConfirmModal ref={confirmModalRef} />
+			<input ref={fileInputRef} type="file" accept="image/*" onChange={handleReplaceImage} className="hidden" />
 
-			<div className="mb-4">
-				<div className="flex flex-wrap gap-2">
-					<Button color="danger" onClick={handleDelete} title="Delete Image">
-						<FontAwesomeIcon icon={faTrashAlt} />
-					</Button>
-
-					<Button color="secondary" onClick={handleDownload}>
-						<FontAwesomeIcon icon={faDownload} /> Download
-					</Button>
-
-					<Button color="warning" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-						<FontAwesomeIcon icon={faUpload} />
-						{uploading ? ' Replacing...' : ' Replace'}
-					</Button>
-				</div>
-
-				<input ref={fileInputRef} type="file" accept="image/*" onChange={handleReplaceImage} className="hidden" />
-			</div>
-
-			<Form row className="mb-4">
-				<FormLabel htmlFor={imageNameFieldId} sm={4} column="sm">
-					Name
-				</FormLabel>
-				<Grid.Col sm={8} className="flex items-center justify-between">
-					<div className="flex items-center">
-						<span id={imageNameFieldId} className="font-mono">
-							{imageInfo.name}
-						</span>
-						<CopyButton size="sm" title="Copy variable name" text={`$(image:${imageInfo.name})`} />
-					</div>
-
-					<ImageNameEditModal
+			<EditSectionCard title="Image">
+				<ImagePreviewBox
+					onFileDrop={uploadFile}
+					dragOverMessage="Drop image to replace"
+					backgroundColor={imageInfo.backgroundColor}
+				>
+					<ImageLibraryImagePreview
 						imageName={selectedImageName}
-						currentName={imageInfo.name}
-						onNameChanged={handleImageNameChanged}
+						type="original"
+						checksum={imageInfo.checksum}
+						alt={imageInfo.name}
+						onLoad={(width, height) => setDimensions({ width, height })}
 					/>
-				</Grid.Col>
-			</Form>
-			<Form row className="mb-4">
-				<FormLabel htmlFor={descriptionFieldId} sm={4} column="sm">
-					Description
-				</FormLabel>
-				<Grid.Col sm={8}>
+				</ImagePreviewBox>
+				<div className="flex items-center justify-between gap-2">
+					<span className="text-xs text-muted">Drop an image on the preview to replace it</span>
+					<div className="flex items-center gap-1">
+						<Button
+							variant="ghost"
+							size="sm"
+							color="primary"
+							onClick={() => fileInputRef.current?.click()}
+							disabled={uploading}
+						>
+							<FontAwesomeIcon icon={faUpload} className="me-1.5" />
+							{uploading ? 'Replacing…' : 'Replace'}
+						</Button>
+						<Button variant="ghost" size="sm" color="primary" onClick={handleDownload}>
+							<FontAwesomeIcon icon={faDownload} className="me-1.5" />
+							Download
+						</Button>
+					</div>
+				</div>
+			</EditSectionCard>
+
+			<EditSectionCard title="General Settings">
+				<div className="edit-field-row">
+					<span className="text-xs font-semibold text-body">Name</span>
+					<div className="flex items-center gap-1 min-w-0">
+						<span className="font-mono text-xs text-body truncate">{imageInfo.name}</span>
+						<CopyButton size="sm" title="Copy variable name" text={`$(image:${imageInfo.name})`} />
+						<span className="ms-auto">
+							<ImageNameEditModal
+								imageName={selectedImageName}
+								currentName={imageInfo.name}
+								onNameChanged={handleImageNameChanged}
+							/>
+						</span>
+					</div>
+				</div>
+				<div className="edit-field-row">
+					<label htmlFor={descriptionFieldId} className="text-xs font-semibold text-body">
+						Description
+					</label>
 					<ImageDescriptionEditor
 						id={descriptionFieldId}
 						imageName={selectedImageName}
 						currentName={imageInfo.description}
 					/>
-				</Grid.Col>
-			</Form>
-			<Form row className="mb-4">
-				<FormLabel htmlFor={backgroundColorFieldId} sm={4} column="sm">
-					Preview background
-				</FormLabel>
-				<Grid.Col sm={8} className="flex items-center">
-					<ImageBackgroundColorEditor
-						id={backgroundColorFieldId}
-						imageName={selectedImageName}
-						currentColor={imageInfo.backgroundColor}
-					/>
-				</Grid.Col>
-			</Form>
-
-			<ImagePreviewBox
-				onFileDrop={uploadFile}
-				dragOverMessage="Drop image to replace"
-				backgroundColor={imageInfo.backgroundColor}
-			>
-				<ImageLibraryImagePreview
-					imageName={selectedImageName}
-					type="original"
-					checksum={imageInfo.checksum}
-					alt={imageInfo.name}
-					onLoad={(width, height) => setDimensions({ width, height })}
-				/>
-			</ImagePreviewBox>
-
-			<div className="image-properties">
-				<div className="image-metadata">
-					<div className="metadata-row">
-						<span className="metadata-label">Type:</span>
-						<span>{imageInfo.mimeType}</span>
-					</div>
-					{dimensions && (
-						<div className="metadata-row">
-							<span className="metadata-label">Dimensions:</span>
-							<span>
-								{dimensions.width} × {dimensions.height} px
-							</span>
-						</div>
-					)}
-					<div className="metadata-row">
-						<span className="metadata-label">Modified:</span>
-						<span>{formatDate(imageInfo.modifiedAt)}</span>
+				</div>
+				<div className="edit-field-row">
+					<label htmlFor={backgroundColorFieldId} className="text-xs font-semibold text-body">
+						Preview background
+					</label>
+					<div className="flex items-center">
+						<ImageBackgroundColorEditor
+							id={backgroundColorFieldId}
+							imageName={selectedImageName}
+							currentColor={imageInfo.backgroundColor}
+						/>
 					</div>
 				</div>
-			</div>
+			</EditSectionCard>
+
+			<EditSectionCard title="Image Info">
+				<ImageInfoRow label="Type">{imageInfo.mimeType}</ImageInfoRow>
+				<ImageInfoRow label="Dimensions">
+					{dimensions ? `${dimensions.width} × ${dimensions.height} px` : '…'}
+				</ImageInfoRow>
+				<ImageInfoRow label="Modified">{formatDate(imageInfo.modifiedAt)}</ImageInfoRow>
+			</EditSectionCard>
+
+			<EditSectionCard title="Delete Image" collapsible danger>
+				<div className="flex items-center justify-between gap-3">
+					<p className="text-xs text-muted mb-0">Permanently delete this image from the library.</p>
+					<Button color="danger" size="sm" onClick={handleDelete}>
+						<FontAwesomeIcon icon={faTrashAlt} className="me-1.5" />
+						Delete
+					</Button>
+				</div>
+			</EditSectionCard>
 		</div>
 	)
 })
+
+function ImageInfoRow({ label, children }: { label: string; children: React.ReactNode }) {
+	return (
+		<div className="edit-field-row">
+			<span className="text-xs font-semibold text-body">{label}</span>
+			<div className="text-xs text-body min-w-0">{children}</div>
+		</div>
+	)
+}

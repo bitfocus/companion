@@ -23,12 +23,21 @@ type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
 	args: {
+		variant: 'underline',
+		defaultValue: 'tab1',
+	},
+}
+
+export const Pills: Story = {
+	args: {
+		variant: 'pills',
 		defaultValue: 'tab1',
 	},
 }
 
 export const SecondTabActive: Story = {
 	args: {
+		variant: 'underline',
 		defaultValue: 'tab2',
 	},
 }

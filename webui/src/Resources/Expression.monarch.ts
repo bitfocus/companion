@@ -5,6 +5,10 @@ import { companionExpressionColorProvider } from './Expression.colors.js'
 
 export const COMPANION_EXPRESSION_LANGUAGE_ID = 'companionExpression'
 
+/** The editor themes, one per app theme. Monaco themes are global: the editor picks one from the resolved theme */
+export const COMPANION_EXPRESSION_THEME_LIGHT = 'companion-expression-light'
+export const COMPANION_EXPRESSION_THEME_DARK = 'companion-expression-dark'
+
 export function registerCompanionExpressionLanguage(monaco: typeof Monaco): void {
 	if (!monaco.languages.getLanguages().some((l) => l.id === COMPANION_EXPRESSION_LANGUAGE_ID)) {
 		monaco.languages.register({ id: COMPANION_EXPRESSION_LANGUAGE_ID })
@@ -19,7 +23,7 @@ export function registerCompanionExpressionLanguage(monaco: typeof Monaco): void
 	monaco.languages.registerColorProvider(COMPANION_EXPRESSION_LANGUAGE_ID, companionExpressionColorProvider)
 
 	// Define custom theme for Companion Expression language (based on JavaScript colors)
-	monaco.editor.defineTheme('companion-expression-light', {
+	monaco.editor.defineTheme(COMPANION_EXPRESSION_THEME_LIGHT, {
 		base: 'vs',
 		inherit: true,
 		rules: [
@@ -40,6 +44,34 @@ export function registerCompanionExpressionLanguage(monaco: typeof Monaco): void
 			{ token: 'identifier', foreground: '001080' }, // Identifiers - dark blue (JS identifiers)
 		],
 		colors: {},
+	})
+
+	// The same roles in VS Code's Dark+ colours. Monaco can't read CSS variables, so the background repeats the
+	// dark theme's --color-input-bg
+	monaco.editor.defineTheme(COMPANION_EXPRESSION_THEME_DARK, {
+		base: 'vs-dark',
+		inherit: true,
+		rules: [
+			{ token: 'variable.companion', foreground: '9CDCFE', fontStyle: 'bold' },
+			{ token: 'predefined', foreground: 'DCDCAA' },
+			{ token: 'keyword', foreground: '569CD6' },
+			{ token: 'string', foreground: 'CE9178' },
+			// typos:disable-line D7BA7D is a hex color, not a word
+			{ token: 'string.escape', foreground: 'D7BA7D' },
+			{ token: 'number', foreground: 'B5CEA8' },
+			{ token: 'number.hex', foreground: 'B5CEA8' },
+			{ token: 'number.octal', foreground: 'B5CEA8' },
+			{ token: 'number.binary', foreground: 'B5CEA8' },
+			{ token: 'number.float', foreground: 'B5CEA8' },
+			{ token: 'operator', foreground: 'D4D4D4' },
+			{ token: 'delimiter', foreground: 'D4D4D4' },
+			{ token: 'delimiter.bracket', foreground: 'D4D4D4' },
+			{ token: 'comment', foreground: '6A9955', fontStyle: 'italic' },
+			{ token: 'identifier', foreground: '9CDCFE' },
+		],
+		colors: {
+			'editor.background': '#121418',
+		},
 	})
 }
 

@@ -50,13 +50,16 @@ export const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({
 
 	if (isRefreshing) {
 		return (
-			<div className="float_right" title={`Refreshing module info ${Math.round(refreshProgress * 100)}%`}>
-				<FontAwesomeIcon
-					icon={faSync}
-					spin={true}
-					aria-label={`Refreshing module info ${Math.round(refreshProgress * 100)}%`}
-				/>
-			</div>
+			<button
+				type="button"
+				disabled
+				aria-busy
+				className="w-6 h-6 inline-flex items-center justify-center rounded-lg text-action-text transition-colors border-0 bg-transparent"
+				title={`Refreshing module info ${Math.round(refreshProgress * 100)}%`}
+				aria-label={`Refreshing module info ${Math.round(refreshProgress * 100)}%`}
+			>
+				<FontAwesomeIcon icon={faSync} spin={true} className="text-xs" />
+			</button>
 		)
 	}
 
@@ -77,8 +80,9 @@ export const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({
 	}
 
 	return (
-		<div
-			className="float_right"
+		<button
+			type="button"
+			className="panel-icon-button panel-icon-button-sm"
 			onClick={doRefreshModules}
 			onKeyDown={(e) => {
 				if (e.key === 'Enter' || e.key === ' ') {
@@ -86,11 +90,10 @@ export const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({
 					doRefreshModules()
 				}
 			}}
-			role="button"
-			tabIndex={0}
 			title="Refresh module versions"
+			aria-label="Refresh module versions"
 		>
-			<FontAwesomeIcon icon={faSync} aria-label="Refresh module versions" />
-		</div>
+			<FontAwesomeIcon icon={faSync} className="text-xs" />
+		</button>
 	)
 })

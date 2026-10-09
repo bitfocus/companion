@@ -1,6 +1,8 @@
+import { faCalendarAlt } from '@fortawesome/free-solid-svg-icons'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
+import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { useComputed } from '../../../../Resources/util.js'
@@ -49,12 +51,9 @@ interface BackupRuleEditPanelHeadingProps {
 
 function BackupRuleEditPanelHeading({ doCloseRule }: BackupRuleEditPanelHeadingProps) {
 	return (
-		<div className="secondary-panel-simple-header">
-			<h4 className="panel-title">Edit Backup Rule</h4>
-			<div className="header-buttons">
-				<ContextHelpButton action="/user-guide/config/settings#backups" />
-				<CloseButton closeFn={doCloseRule} />
-			</div>
-		</div>
+		<PanelHeader icon={faCalendarAlt} title="Edit Backup Rule">
+			<ContextHelpButton action="/user-guide/config/settings#backups" />
+			<CloseButton closeFn={doCloseRule} />
+		</PanelHeader>
 	)
 }

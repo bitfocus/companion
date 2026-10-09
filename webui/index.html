@@ -3,6 +3,23 @@
 	<head>
 		<meta charset="utf-8" />
 
+		<!-- Apply the light/dark theme before anything paints, so it never flashes the wrong one. Mirrors
+		     resolveTheme() in src/Theme/resolveTheme.ts, which takes over once the app loads. -->
+		<script>
+			;(function () {
+				var preference = null
+				try {
+					preference = window.localStorage.getItem('companion_theme')
+				} catch (e) {}
+				var dark =
+					preference === 'dark' || (preference !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+				var theme = dark ? 'dark' : 'light'
+				document.documentElement.dataset.theme = theme
+				document.documentElement.style.colorScheme = theme
+			})()
+		</script>
+		<meta name="color-scheme" content="light dark" />
+
 		<!-- Cascade-layer order, declared before any stylesheet loads. Must live here: the prod build
 		     injects tailwind.css late and the CSS minifier drops an in-CSS @layer statement. Keep in
 		     sync with src/tailwind.css. -->
@@ -13,8 +30,7 @@
 		<link href="/img/icons/256x256.png" rel="shortcut icon" />
 
 		<link rel="manifest" href="/manifest.json" />
-		<!-- PWA support -->
-		<meta name="theme-color" content="#000000" />
+		<!-- PWA support. theme-color is set below, and kept in step with the theme by ThemeState.ts -->
 		<!-- ios support -->
 		<link rel="apple-touch-icon" sizes="16x16" href="/img/icons/16x16.png" />
 		<link rel="apple-touch-icon" sizes="32x32" href="/img/icons/32x32.png" />

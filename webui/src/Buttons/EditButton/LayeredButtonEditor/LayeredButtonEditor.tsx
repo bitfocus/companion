@@ -72,7 +72,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 						{(currentTab) => {
 							if (currentTab === 'style') {
 								return (
-									<div className="mt-2 h-full">
+									<div className="button-editor-tab-content h-full">
 										{/* Wrap the entity-category, for :first-child to work */}
 										<MyErrorBoundary>
 											<LayeredButtonEditorStyle
@@ -88,7 +88,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 
 							if (currentTab === 'feedbacks') {
 								return (
-									<div className="mt-2">
+									<div className="button-editor-tab-content">
 										<MyErrorBoundary>
 											<LayeredStyleElementsProvider styleStore={styleStore}>
 												<FeedbackOverridesTab
@@ -105,7 +105,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 
 							if (currentTab === 'variables') {
 								return (
-									<div className="mt-2">
+									<div className="button-editor-tab-content">
 										<MyErrorBoundary>
 											<LocalVariablesEditor
 												controlId={controlId}
@@ -120,7 +120,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 
 							if (currentTab === 'options') {
 								return (
-									<div className="mt-2">
+									<div className="button-editor-tab-content">
 										{/* Wrap the entity-category, for :first-child to work */}
 										<MyErrorBoundary>
 											<ControlOptionsEditor options={config.options} configRef={configRef} controlId={controlId} />

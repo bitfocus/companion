@@ -1,0 +1,113 @@
+@import '../breakpoints.css';
+
+/* The shared building blocks of a secondary panel's edit form: .edit-panel sets the label column width,
+   EditSectionCard renders the .edit-section blocks, and .edit-field-row lays out a label beside its value. */
+.edit-panel {
+	--edit-panel-label-width: 150px;
+}
+
+.edit-panel-scroll {
+	padding: 0.75rem;
+}
+
+.edit-section {
+	max-width: var(--container-readable);
+	padding-block: 0.75rem;
+	border-bottom: 1px solid var(--color-border);
+
+	&:first-child {
+		padding-top: 0;
+	}
+
+	&:last-child {
+		border-bottom: 0;
+	}
+
+	h4 {
+		margin: 0;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		color: var(--color-text-strong);
+	}
+
+	> summary {
+		cursor: pointer;
+		font-size: 0.8125rem;
+
+		h4 {
+			display: inline;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--color-action-focus);
+			outline-offset: 3px;
+			border-radius: 2px;
+		}
+	}
+
+	&[open] > summary,
+	.edit-section-heading {
+		margin-bottom: 0.5rem;
+	}
+}
+
+.edit-section-summary {
+	margin-left: 0.75rem;
+	font-size: 0.75rem;
+	color: var(--color-muted);
+}
+
+.edit-section-body {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.edit-field-row {
+	display: grid;
+	grid-template-columns: var(--edit-panel-label-width) minmax(0, 1fr);
+	align-items: center;
+	gap: 0.5rem 0.75rem;
+
+	> label {
+		margin: 0;
+	}
+}
+
+.edit-field-help {
+	grid-column: 2;
+}
+
+@media (--bp-sm-down) {
+	.edit-field-row {
+		grid-template-columns: minmax(0, 1fr);
+		gap: 0.375rem;
+	}
+
+	.edit-field-help {
+		grid-column: 1;
+	}
+}
+
+/* Compact one-line note shown in place of the config fields (none defined, or not editable right now) */
+.edit-note {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 0.75rem;
+	border: 1px solid var(--color-border-soft);
+	border-radius: 0.5rem;
+	background-color: var(--color-surface-subtle);
+	font-size: 0.8125rem;
+	color: var(--color-muted);
+}
+
+.edit-note-icon {
+	flex-shrink: 0;
+	opacity: 0.8;
+}
+
+.edit-note-icon-good {
+	color: var(--color-tone-good-text);
+	opacity: 1;
+}

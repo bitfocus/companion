@@ -15,6 +15,7 @@ import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { trpc } from '~/Resources/TRPC.js'
 import { useDebounced } from '~/Resources/util.js'
 import { StaticAlert } from './Alert.js'
+import { StatusBadge } from './StatusBadge.js'
 import { VariableValueDisplayPopover } from './VariableValueDisplay.js'
 
 type ContextResolutionForPreview =
@@ -90,15 +91,10 @@ export function ExpressionValuePreview({
 
 	if (!isParseable) {
 		const invalidWarning = (
-			<StaticAlert
-				color="warning"
-				className="mt-2 mb-0"
-				style={{ display: 'inline-block', border: 'none', fontWeight: '500', padding: '0.375rem 1rem' }}
-			>
-				Invalid expression
-			</StaticAlert>
+			<div className="mt-1">
+				<StatusBadge tone="warning">Invalid expression</StatusBadge>
+			</div>
 		)
-		// In status-only mode, keep the indicator on its own line below the label, consistent with the valid/error states
 		return statusOnly ? <div>{invalidWarning}</div> : invalidWarning
 	}
 
@@ -134,17 +130,13 @@ export function ExpressionPreviewResult({
 	}
 
 	// The value itself is shown elsewhere (e.g. the panel's "Current Value" row). Rather than duplicate it,
-	// confirm the expression evaluates cleanly. Styled identically to the "Invalid expression" pill so the
-	// spot keeps the same footprint as you move between valid and invalid states.
+	// confirm the expression evaluates cleanly, in the same pill as "Invalid expression" so the spot keeps its
+	// footprint as you move between valid and invalid states.
 	if (statusOnly) {
 		return (
-			<StaticAlert
-				color="success"
-				className="mt-2 mb-0"
-				style={{ display: 'inline-block', border: 'none', fontWeight: '500', padding: '0.375rem 1rem' }}
-			>
-				Valid expression
-			</StaticAlert>
+			<div className="mt-1">
+				<StatusBadge tone="good">Valid expression</StatusBadge>
+			</div>
 		)
 	}
 

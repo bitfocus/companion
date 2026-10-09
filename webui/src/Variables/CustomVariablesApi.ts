@@ -6,6 +6,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC'
 export interface CustomVariablesApi {
 	doDelete: (name: string) => void
 	setDescription: (name: string, value: string) => void
+	setNotes: (name: string, notes: string) => void
 	setStartupValue: (name: string, value: JsonValue | undefined) => void
 	setCurrentValue: (name: string, value: JsonValue | undefined) => void
 	setPersistenceValue: (name: string, persisted: boolean) => void
@@ -18,6 +19,7 @@ export function useCustomVariablesApi(
 	const setCurrentMutation = useMutationExt(trpc.customVariables.setCurrent.mutationOptions())
 	const setPersistenceMutation = useMutationExt(trpc.customVariables.setPersistence.mutationOptions())
 	const setDescriptionMutation = useMutationExt(trpc.customVariables.setDescription.mutationOptions())
+	const setNotesMutation = useMutationExt(trpc.customVariables.setNotes.mutationOptions())
 	const deleteMutation = useMutationExt(trpc.customVariables.delete.mutationOptions())
 
 	return useMemo(
@@ -45,6 +47,11 @@ export function useCustomVariablesApi(
 						console.error('Failed to update variable description')
 					})
 				},
+				setNotes: (name: string, notes: string) => {
+					setNotesMutation.mutateAsync({ name, notes }).catch(() => {
+						console.error('Failed to update variable notes')
+					})
+				},
 
 				doDelete: (name: string) => {
 					confirmModalRef.current?.show(
@@ -64,6 +71,7 @@ export function useCustomVariablesApi(
 			setCurrentMutation,
 			setPersistenceMutation,
 			setDescriptionMutation,
+			setNotesMutation,
 			deleteMutation,
 			confirmModalRef,
 		]

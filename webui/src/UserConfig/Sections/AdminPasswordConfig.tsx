@@ -1,41 +1,25 @@
 import { observer } from 'mobx-react-lite'
 import { StaticAlert } from '~/Components/Alert.js'
 import type { UserConfigProps } from '../Components/Common.js'
-import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
-import { UserConfigNumberInputRow } from '../Components/UserConfigNumberInputRow.js'
-import { UserConfigSwitchRow } from '../Components/UserConfigSwitchRow.js'
-import { UserConfigTextInputRow } from '../Components/UserConfigTextInputRow.js'
+import { ConfigNumberField, ConfigTextField } from '../Components/ConfigFieldRows.js'
 
 export const AdminPasswordConfig = observer(function AdminPasswordConfig(props: UserConfigProps) {
 	return (
 		<>
-			<UserConfigHeadingRow label="Admin UI Password" helpAction="/user-guide/config/settings#admin-ui-password" />
+			<StaticAlert color="danger" className="mb-0 text-xs">
+				This does not make an installation secure! It is intended to keep normal users from stumbling upon the settings
+				and changing things. It will not keep out someone determined to bypass it.
+			</StaticAlert>
 
-			<tr>
-				<td colSpan={3}>
-					<StaticAlert color="danger">
-						This does not make an installation secure!
-						<br /> This is intended to keep normal users from stumbling upon the settings and changing things. It will
-						not keep out someone determined to bypass it.
-					</StaticAlert>
-				</td>
-			</tr>
-
-			<UserConfigSwitchRow userConfig={props} label="Enable Locking" field="admin_lockout" />
-
-			{props.config.admin_lockout && (
-				<>
-					<UserConfigNumberInputRow
-						userConfig={props}
-						label="Session Timeout (minutes, 0 for no timeout)"
-						field="admin_timeout"
-						min={0}
-						max={24 * 60}
-					/>
-
-					<UserConfigTextInputRow userConfig={props} label="Password" field="admin_password" />
-				</>
-			)}
+			<ConfigTextField userConfig={props} label="Password" field="admin_password" help={null} />
+			<ConfigNumberField
+				userConfig={props}
+				label="Session Timeout"
+				field="admin_timeout"
+				min={0}
+				max={24 * 60}
+				help="Minutes of inactivity before the interface locks again, or 0 for no timeout."
+			/>
 		</>
 	)
 })

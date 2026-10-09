@@ -57,8 +57,8 @@ function ToolbarButton({
 		<button
 			type="button"
 			title={disabledReason ? undefined : title}
-			aria-label={ariaLabel}
-			aria-pressed={pressed}
+			aria-label={ariaLabel ?? title}
+			aria-pressed={pressed ?? active}
 			className={classNames('toolbar-button', { active, [`toolbar-button-${tone}`]: tone })}
 			onClick={onClick}
 			disabled={disabled}

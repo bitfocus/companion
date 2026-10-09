@@ -1,13 +1,14 @@
 import {
+	faBars,
 	faBug,
-	faEllipsisV,
 	faExclamationTriangle,
+	faFileLines,
 	faFlask,
-	faQuestionCircle,
 	faTerminal,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import type { ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
@@ -35,6 +36,7 @@ export interface InstancesListTableRowProps<TMetaData extends { enabled?: boolea
 	doToggleEnabled: () => void
 	debugLogUrl: string | null
 	cannotEnableReason?: string | null
+	isSelected?: boolean
 }
 
 export const InstancesListTableRow = observer(function InstancesListTableRow<TMetaData extends { enabled?: boolean }>({
@@ -48,6 +50,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 	doToggleEnabled,
 	debugLogUrl,
 	cannotEnableReason,
+	isSelected,
 }: InstancesListTableRowProps<TMetaData>) {
 	const { helpViewer, modules } = useContext(RootAppStoreContext)
 
@@ -89,18 +92,30 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 
 	return (
 		<div
-			className="flex flex-row items-center gap-2 cursor-pointer"
+			className={classNames(
+				'list-row flex flex-row items-center gap-3 py-2 pe-3',
+				isSelected ? 'list-row-selected' : 'hover:bg-surface-muted/60'
+			)}
 			title={`Click to configure the ${moduleDisplayName}.`}
 		>
-			<div onClick={doEdit} className="flex flex-col grow min-w-0">
-				<b>{instance.label}</b>
-				<span className="flex items-center gap-1 min-w-0">
+			<div
+				onClick={doEdit}
+				className={classNames('flex flex-col grow min-w-0 flex-1', { 'opacity-60': !showAsEnabled })}
+			>
+				<b className="truncate text-sm font-semibold text-body-strong">{instance.label}</b>
+				<div className="flex items-center gap-1.5 text-xs text-muted/80 font-normal truncate">
 					<span className="truncate">{moduleDisplayName}</span>
-					{deprecation && <ModuleDeprecationBadge deprecation={deprecation} />}
-				</span>
+					{deprecation && <ModuleDeprecationBadge deprecation={deprecation} className="shrink-0" />}
+				</div>
 			</div>
 
-			<div onClick={doEdit} className="whitespace-nowrap">
+			<div
+				onClick={doEdit}
+				className={classNames(
+					'hidden lg:flex shrink-0 items-center justify-end gap-1 text-2xs text-muted/70 font-mono tabular-nums whitespace-nowrap table-cell-version',
+					{ 'opacity-60': !showAsEnabled }
+				)}
+			>
 				<MyErrorBoundary>
 					{moduleVersion?.isLegacy && (
 						<span title="This module has not been updated for Companion 3.0, and may not work fully">
@@ -112,16 +127,18 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 							<FontAwesomeIcon icon={faFlask} />{' '}
 						</span>
 					)}
-					{moduleVersion?.displayName ?? instance.moduleVersionId}
+					<span className="truncate tabular-nums">{moduleVersion?.displayName ?? instance.moduleVersionId}</span>
 
 					<UpdateInstanceToLatestBadge instance={instance} />
 				</MyErrorBoundary>
 			</div>
-			<div onClick={doEdit} className="ms-2">
+
+			<div onClick={doEdit} className="shrink-0 flex items-center justify-center">
 				<InstanceTableStatusCell isEnabled={showAsEnabled} status={instanceStatus} />
 			</div>
-			<div className="flex">
-				<div className="ms-2" title={toggleEnabledTitle}>
+
+			<div className="shrink-0 flex items-center gap-1">
+				<div title={toggleEnabledTitle}>
 					<SwitchInputField
 						id={undefined}
 						value={isEnabled}
@@ -131,21 +148,21 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 				</div>
 				<Popover.Root>
 					<Popover.Trigger
-						color="secondary"
-						className="py-1 px-2"
+						color={null}
+						className="p-1.5 w-7 h-7 inline-flex items-center justify-center rounded-lg text-muted hover:text-body hover:bg-surface-muted transition-colors border-0 cursor-pointer"
 						title="Click for additional options."
 						aria-label="Click for additional options."
 					>
-						<FontAwesomeIcon icon={faEllipsisV} />
+						<FontAwesomeIcon icon={faBars} className="text-xs" />
 					</Popover.Trigger>
 					<Popover.Popup arrow side="right" align="center">
-						<Popover.Item onClick={doShowHelp} title="Help" disabled={!moduleVersion?.helpPath}>
-							<FontAwesomeIcon icon={faQuestionCircle} className="me-2" />
-							Help
+						<Popover.Item onClick={doShowHelp} title="Docs" disabled={!moduleVersion?.helpPath}>
+							<FontAwesomeIcon icon={faFileLines} className="me-2 opacity-70" />
+							Docs
 						</Popover.Item>
 
 						<Popover.Item onClick={openBugUrl} title="Issue Tracker" disabled={!moduleInfo?.display?.bugUrl}>
-							<FontAwesomeIcon icon={faBug} className="me-2" />
+							<FontAwesomeIcon icon={faBug} className="me-2 opacity-70" />
 							Known issues
 						</Popover.Item>
 
@@ -156,13 +173,17 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 								onClick={() => windowLinkOpen({ href: makeAbsolutePath(debugLogUrl), title: 'View debug log' })}
 								title="Logs"
 							>
-								<FontAwesomeIcon icon={faTerminal} className="me-2" />
+								<FontAwesomeIcon icon={faTerminal} className="me-2 opacity-70" />
 								View logs
 							</Popover.Item>
 						)}
 
-						<Popover.Item onClick={doDelete} title="Delete">
-							<FontAwesomeIcon icon={faTrash} className="me-2" />
+						<Popover.Item
+							onClick={doDelete}
+							title="Delete"
+							className="text-tone-error-text hover:bg-tone-error-fill/10 hover:text-tone-error-text font-medium"
+						>
+							<FontAwesomeIcon icon={faTrash} className="me-2 text-tone-error-text" />
 							Delete
 						</Popover.Item>
 					</Popover.Popup>

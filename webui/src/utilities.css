@@ -17,3 +17,44 @@
 [data-dnd-overlay]:not([data-dnd-dragging]) {
 	display: none !important;
 }
+
+/* Off-scale widths used by list toolbars and table cells. Tailwind has no utility at these sizes
+   and the codebase does not use arbitrary values, so they live here as named utilities. */
+.list-toolbar-search {
+	min-width: 200px;
+}
+
+.table-cell-version {
+	max-width: 100px;
+}
+
+/* Off-scale sizes for dialogs and log/entity cells. As above, Tailwind has no utility at these sizes
+   and the codebase does not use arbitrary values. */
+.dialog-tall {
+	min-height: 60vh;
+	max-height: 75vh;
+}
+
+.dialog-max-h {
+	max-height: 75vh;
+}
+
+.page-empty-state {
+	min-height: 75vh;
+}
+
+.log-source-cell {
+	max-width: 140px;
+}
+
+.entity-pill-value {
+	max-width: 140px;
+}
+
+.log-timestamp-cell {
+	width: 160px;
+}
+
+.entity-value-pill {
+	max-width: 220px;
+}

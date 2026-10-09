@@ -1,19 +1,24 @@
 import { faFileArrowDown, faFileArrowUp, faFileLines, faSquarePlus } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import './EditButton.css'
 import { observer } from 'mobx-react-lite'
-import { useContext, useRef } from 'react'
+import { useCallback, useContext, useRef, useState } from 'react'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button } from '~/Components/Button.js'
 import { ButtonPreviewBase } from '~/Components/ButtonPreview.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
-import { Grid } from '~/Components/Grid'
+import '~/Layout/PanelEmptyState.css'
 import { NonIdealState } from '~/Components/NonIdealState.js'
-import { ControlNotesEditor } from '~/Controls/ControlNotesEditor.js'
+import { AddNoteButton, NotesStrip } from '~/Controls/Notes.js'
+import { useControlNotesSetter, useNotesEditor } from '~/Controls/useNotesEditor.js'
 import { useButtonImageForControlId } from '~/Hooks/useButtonImageForControlId.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
+import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { KeyReceiver } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ButtonReferenceEditor } from './ButtonReferenceEditor.js'
@@ -21,6 +26,7 @@ import { ControlClearButton } from './ControlClearButton.js'
 import { ControlHotPressButtons } from './ControlHotPressButtons.js'
 import { ConvertToNormalButton } from './ConvertToNormalButton.js'
 import { CreateButtonTypeButtons } from './CreateButtonTypeButtons.js'
+import { EditButtonTabsSlotContext } from './EditButtonTabsSlot.js'
 import { LayeredButtonEditor } from './LayeredButtonEditor/LayeredButtonEditor.js'
 import { PresetReferenceEditor } from './PresetReferenceEditor.js'
 
@@ -72,22 +78,16 @@ export const EditButton = observer(function EditButton({ location, onKeyUp, navi
 						))}
 				</>
 			) : (
-				<>
-					<Grid.Col sm={12}>
-						<div className="flex mb-0">
-							<div className="grow min-w-0 flex flex-col gap-1"></div>
-							<ButtonPreviewBase fixedSize={100} preview={previewImage} />
-						</div>
-
-						<NonIdealState icon={faSquarePlus} className="px-4">
-							<h4 className="my-1">Empty button</h4>
-							<p className="my-3">Choose a button type to get started.</p>
-							<MyErrorBoundary>
-								<CreateButtonTypeButtons location={location} />
-							</MyErrorBoundary>
-						</NonIdealState>
-					</Grid.Col>
-				</>
+				<div className="panel-empty-state empty-button-state">
+					<div className="panel-empty-state-icon">
+						<FontAwesomeIcon icon={faSquarePlus} className="non-ideal-svg" />
+					</div>
+					<h4 className="panel-empty-state-title">Empty button</h4>
+					<p className="panel-empty-state-description">Choose a button type to get started.</p>
+					<MyErrorBoundary>
+						<CreateButtonTypeButtons location={location} />
+					</MyErrorBoundary>
+				</div>
 			)}
 		</KeyReceiver>
 	)
@@ -111,57 +111,116 @@ const EditButtonContent = observer(function EditButton({
 	runtimeProps,
 	navigateToControl,
 }: EditButtonContentProps) {
+	const controlNotes =
+		config.type === 'button-layered' || config.type === 'preset-reference' || config.type === 'button-reference'
+			? config.options.notes
+			: undefined
+	const setControlNotes = useControlNotesSetter(controlId)
+	const notesState = useNotesEditor(controlId, controlNotes, setControlNotes)
+	const typeLabel =
+		config.type === 'button-layered'
+			? 'Regular button'
+			: config.type === 'preset-reference'
+				? 'Preset reference'
+				: config.type === 'button-reference'
+					? 'Button reference'
+					: config.type === 'pageup'
+						? 'Page up'
+						: config.type === 'pagedown'
+							? 'Page down'
+							: 'Page number'
+
+	const resetControlsMutation = useMutationExt(trpc.controls.resetControls.mutationOptions())
+	const changeToRegularButton = useCallback(() => {
+		resetControlsMutation.mutateAsync({ locations: [location], newType: 'button-layered' }).catch((e) => {
+			console.error('Failed to change button type', e)
+		})
+	}, [resetControlsMutation, location])
+
+	const [tabsSlot, setTabsSlot] = useState<HTMLDivElement | null>(null)
+
 	return (
-		<>
-			<div className="flex mb-0">
-				<div className="grow min-w-0 flex flex-col gap-1">
-					<div className="flex flex-wrap items-center gap-1">
-						<ControlClearButton location={location} resetModalRef={resetModalRef} />
+		<EditButtonTabsSlotContext.Provider value={tabsSlot}>
+			<div className="edit-button-sticky-header">
+				<div className="edit-button-summary">
+					<div className="edit-button-summary-preview">
+						<ButtonPreviewBase fixedSize={100} preview={previewImage} />
+					</div>
+					<div className="edit-button-summary-identity">
+						<strong>Button {formatLocation(location)}</strong>
+						<span>{typeLabel}</span>
+						{(config.type === 'button-layered' ||
+							config.type === 'preset-reference' ||
+							config.type === 'button-reference') && (
+							<div className="edit-button-summary-test">
+								<MyErrorBoundary>
+									<ControlHotPressButtons
+										location={location}
+										showRotaries={config.type === 'button-reference' || config.options.rotaryActions}
+									/>
+								</MyErrorBoundary>
+							</div>
+						)}
+					</div>
+					<div className="edit-button-summary-actions">
 						<MyErrorBoundary>
+							{(config.type === 'button-layered' ||
+								config.type === 'preset-reference' ||
+								config.type === 'button-reference') && <AddNoteButton state={notesState} />}
 							{(config.type === 'pageup' ||
 								config.type === 'pagenum' ||
 								config.type === 'pagedown' ||
 								config.type === 'preset-reference' ||
 								config.type === 'button-reference') && <ConvertToNormalButton location={location} />}
-							{(config.type === 'button-layered' ||
-								config.type === 'preset-reference' ||
-								config.type === 'button-reference') && (
-								<ControlHotPressButtons
-									location={location}
-									showRotaries={config.type === 'button-reference' || config.options.rotaryActions}
-								/>
-							)}
+							<ControlClearButton location={location} resetModalRef={resetModalRef} />
 						</MyErrorBoundary>
 					</div>
-					{(config.type === 'button-layered' ||
-						config.type === 'preset-reference' ||
-						config.type === 'button-reference') && (
-						<MyErrorBoundary>
-							<ControlNotesEditor controlId={controlId} notes={config.options.notes} className="w-full mt-1" />
-						</MyErrorBoundary>
-					)}
+					{/* The editor tabs (regular buttons only) portal in here, see EditButtonTabsSlotContext */}
+					<div className="edit-button-summary-tabs" ref={setTabsSlot} />
 				</div>
-				<ButtonPreviewBase fixedSize={100} preview={previewImage} />
+
+				{(config.type === 'button-layered' ||
+					config.type === 'preset-reference' ||
+					config.type === 'button-reference') && (
+					<MyErrorBoundary>
+						<NotesStrip key={controlId} state={notesState} />
+					</MyErrorBoundary>
+				)}
 			</div>
 
 			{config.type === 'pageup' && (
 				<NonIdealState icon={faFileArrowUp}>
-					<h4 className="my-1">Page up button</h4>
-					<p className="my-3">No configuration available for page up buttons</p>
+					<h4 className="my-1 font-semibold text-body">Page up button</h4>
+					<p className="my-2 text-sm text-muted">
+						Page up buttons automatically navigate to the previous page when pressed.
+					</p>
+					<Button color="secondary" size="sm" onClick={changeToRegularButton} className="mt-2">
+						Change to regular button
+					</Button>
 				</NonIdealState>
 			)}
 
 			{config.type === 'pagenum' && (
 				<NonIdealState icon={faFileLines}>
-					<h4 className="my-1">Page number button</h4>
-					<p className="my-3">No configuration available for page number buttons</p>
+					<h4 className="my-1 font-semibold text-body">Page number button</h4>
+					<p className="my-2 text-sm text-muted">
+						Page number buttons display the current active page number on your control surface.
+					</p>
+					<Button color="secondary" size="sm" onClick={changeToRegularButton} className="mt-2">
+						Change to regular button
+					</Button>
 				</NonIdealState>
 			)}
 
 			{config.type === 'pagedown' && (
 				<NonIdealState icon={faFileArrowDown}>
-					<h4 className="my-1">Page down button</h4>
-					<p className="my-3">No configuration available for page down buttons</p>
+					<h4 className="my-1 font-semibold text-body">Page down button</h4>
+					<p className="my-2 text-sm text-muted">
+						Page down buttons automatically navigate to the next page when pressed.
+					</p>
+					<Button color="secondary" size="sm" onClick={changeToRegularButton} className="mt-2">
+						Change to regular button
+					</Button>
 				</NonIdealState>
 			)}
 
@@ -180,6 +239,6 @@ const EditButtonContent = observer(function EditButton({
 			{config.type === 'button-layered' && (
 				<LayeredButtonEditor config={config} controlId={controlId} runtimeProps={runtimeProps} location={location} />
 			)}
-		</>
+		</EditButtonTabsSlotContext.Provider>
 	)
 })

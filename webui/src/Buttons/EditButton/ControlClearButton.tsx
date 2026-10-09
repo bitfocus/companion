@@ -30,7 +30,15 @@ export function ControlClearButton({
 	}, [resetControlsMutation, location, resetModalRef])
 
 	return (
-		<Button color="danger" onClick={clearButton} title="Clear Button" aria-label="Clear button">
+		<Button
+			className="edit-button-toolbar-action"
+			color="danger"
+			variant="ghost"
+			size="sm"
+			onClick={clearButton}
+			title="Clear Button"
+			aria-label="Clear button"
+		>
 			<FontAwesomeIcon icon={faTrashAlt} />
 		</Button>
 	)

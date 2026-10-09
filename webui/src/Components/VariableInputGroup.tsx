@@ -2,11 +2,11 @@ import { Input } from '@base-ui/react'
 import './text-field.css'
 import classNames from 'classnames'
 import JSON5 from 'json5'
+import { Braces, Type } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import type { JsonValue } from 'type-fest'
 import { Button } from '~/Components/Button.js'
 import { InputGroup } from './Form.js'
-import { VariableTypeIcon } from './VariableTypeIcon.js'
 
 interface VariableInputGroupProps {
 	id: string | undefined
@@ -96,12 +96,22 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ id, value, setV
 	// Button appearance
 	const buttonProps = isString
 		? {
-				title: 'String entry',
-				label: <VariableTypeIcon width={14} height={14} fill="#0000cc" icon="string" />,
+				title: 'Text value. Click to enter JSON instead',
+				label: (
+					<>
+						<Type className="w-3.5 h-3.5" aria-hidden="true" />
+						Text
+					</>
+				),
 			}
 		: {
-				title: 'JSON entry',
-				label: <VariableTypeIcon width={14} height={14} fill="#cc0000" icon="object" />,
+				title: 'JSON value. Click to enter text instead',
+				label: (
+					<>
+						<Braces className="w-3.5 h-3.5" aria-hidden="true" />
+						JSON
+					</>
+				),
 			}
 
 	return (
@@ -117,17 +127,12 @@ const VariableInputGroup: React.FC<VariableInputGroupProps> = ({ id, value, setV
 				tabIndex={0}
 				onFocus={handleFocus}
 				onBlur={handleBlur}
-				style={{
-					boxShadow: isEditing && !disabled ? 'rgba(213, 2, 21, 0.25) 0px 0px 0px 0.25rem' : 'none',
-					transition: 'box-shadow 0.15s ease-in-out',
-					borderRadius: 'var(--radius)',
-					outline: 'none',
-					marginBottom: '0.5rem',
-				}}
+				className={classNames('variable-input-group', { editing: isEditing && !disabled })}
 			>
 				<Button
-					color="info"
+					color="secondary"
 					variant="outline"
+					className="variable-input-type-toggle"
 					title={buttonProps.title}
 					onClick={handleToggle}
 					tabIndex={-1} // So the group receives focus, not the button

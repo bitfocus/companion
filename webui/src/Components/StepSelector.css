@@ -67,7 +67,7 @@
 		height: 1.75rem;
 		border-radius: 50%;
 		border: 2px solid var(--color-border, #c4c9d0);
-		background-color: var(--modal2-bg, #fff);
+		background-color: var(--modal2-bg, var(--color-surface));
 		font-size: 0.8rem;
 		font-weight: bold;
 		line-height: 1;

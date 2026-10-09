@@ -61,7 +61,6 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 
 	const showValue = ((immediateValue ? null : tmpValue) ?? value ?? '').toString()
 	const validity = computeInputValidity(checkValid, showValue)
-	const valueIsInvalid = validity === 'invalid'
 
 	return (
 		<InputGroup className={className}>
@@ -71,10 +70,7 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 					type={showSecretValue ? 'text' : 'password'}
 					className={classNames(
 						'form-input text-input-field',
-						{
-							'invalid-value': valueIsInvalid,
-							'has-validity-icon': validity !== 'unknown',
-						},
+						{ 'has-validity-icon': validity !== 'unknown' },
 						inputClassName
 					)}
 					value={showValue}

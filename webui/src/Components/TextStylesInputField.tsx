@@ -35,7 +35,7 @@ export function TextStylesInputField({
 			{STYLE_OPTIONS.map(({ id: styleId, title, icon: Icon }) => (
 				<Button
 					key={styleId}
-					color={selected.includes(styleId) ? 'primary' : 'secondary'}
+					color="secondary"
 					onClick={() => toggle(styleId)}
 					title={title}
 					aria-label={title}

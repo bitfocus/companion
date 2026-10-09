@@ -1,3 +1,4 @@
+import './InstanceVersionChangeButton.css'
 import { faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm } from '@tanstack/react-form'
@@ -5,7 +6,11 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId, useRef, useState } from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
-import type { ClientInstanceConfigBase, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type {
+	ClientInstanceConfigBase,
+	InstanceVersionUpdatePolicy,
+	ModuleInstanceType,
+} from '@companion-app/shared/Model/Instance.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
 import { Collapse } from '~/Components/Collapse'
@@ -26,6 +31,7 @@ interface InstanceVersionChangeButtonProps<TConfig extends ClientInstanceConfigB
 	service: InstanceEditPanelService<TConfig>
 	currentModuleId: string
 	currentVersionId: string | null
+	currentUpdatePolicy: InstanceVersionUpdatePolicy
 
 	changeModuleDangerMessage: React.ReactNode
 }
@@ -35,6 +41,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 	service,
 	currentModuleId,
 	currentVersionId,
+	currentUpdatePolicy,
 	changeModuleDangerMessage,
 }: InstanceVersionChangeButtonProps<TConfig>): React.JSX.Element {
 	const { modules } = useContext(RootAppStoreContext)
@@ -50,9 +57,10 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 		defaultValues: {
 			moduleId: currentModuleId,
 			versionId: currentVersionId,
+			updatePolicy: currentUpdatePolicy,
 		},
 		onSubmit: async ({ value }) => {
-			const error = await service.setModuleAndVersion(value.moduleId, value.versionId)
+			const error = await service.setModuleAndVersion(value.moduleId, value.versionId, value.updatePolicy)
 			if (error) {
 				setSaveError(error)
 			} else {
@@ -67,14 +75,14 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 			if (!open) {
 				setShow(false)
 			} else {
-				form.reset()
+				form.reset({ moduleId: currentModuleId, versionId: currentVersionId, updatePolicy: currentUpdatePolicy })
 				originalModuleIdRef.current = currentModuleId
 				setSaveError(null)
 				setAdvancedMode(false)
 				setShow(true)
 			}
 		},
-		[form, currentModuleId]
+		[form, currentModuleId, currentVersionId, currentUpdatePolicy]
 	)
 	const onOpenChangeComplete = useCallback(
 		(open: boolean) => {
@@ -100,17 +108,26 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 
 	const versionFieldId = useId()
 	const moduleFieldId = useId()
+	const policyFieldId = useId()
 
 	return (
 		<Modal.Root open={show} onOpenChange={doShow} onOpenChangeComplete={onOpenChangeComplete}>
-			<Modal.Trigger id={id} color="light" size="sm" title="Change module version" aria-label="Change module version">
+			<Modal.Trigger
+				id={id}
+				className="instance-module-version-change"
+				color="secondary"
+				size="sm"
+				title="Change module version"
+				aria-label="Change module version"
+			>
 				<FontAwesomeIcon icon={faPencil} />
+				<span className="instance-module-version-change-label">Change</span>
 			</Modal.Trigger>
 
 			<Modal.Portal>
 				<Modal.Backdrop />
 				<Modal.Viewport>
-					<Modal.Popup initialFocus={buttonRef}>
+					<Modal.Popup initialFocus={buttonRef} className="instance-version-modal">
 						<Modal.Header closeButton>
 							<Modal.Title>Change Module Version</Modal.Title>
 						</Modal.Header>
@@ -124,14 +141,14 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 							}}
 						>
 							<Modal.Body>
-								<Grid.Row className="sm:gap-2">
+								<Grid.Row className="instance-version-fields gap-3">
 									<Grid.Col sm={12}>
-										<StaticAlert color="warning" className="mb-4">
+										<StaticAlert color="warning" className="mb-0">
 											Be careful when downgrading the module version. Some features may not be available in older
 											versions.
 										</StaticAlert>
 										{!!saveError && (
-											<StaticAlert color="danger" className="mb-4">
+											<StaticAlert color="danger" className="mb-0">
 												Save failed: {saveError}
 											</StaticAlert>
 										)}
@@ -173,20 +190,44 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 										}}
 									/>
 
+									<FormLabel htmlFor={policyFieldId} sm={3} column="sm">
+										Update policy
+									</FormLabel>
+									<Grid.Col sm={9}>
+										<form.Field
+											name="updatePolicy"
+											children={(field) => (
+												<SimpleDropdownInputField
+													id={policyFieldId}
+													value={field.state.value}
+													setValue={(value) => field.handleChange(value as InstanceVersionUpdatePolicy)}
+													choices={[
+														{ id: 'manual', label: 'Manual updates' },
+														{ id: 'stable', label: 'Stable updates' },
+														{ id: 'beta', label: 'Stable + Beta updates' },
+													]}
+												/>
+											)}
+										/>
+										<p className="form-text mt-1 mb-0">
+											Choose the update channel for this {service.moduleTypeDisplayName}. You can save this policy
+											without changing the version.
+										</p>
+									</Grid.Col>
+
 									<Collapse.Root
 										open={advancedMode}
 										onOpenChange={handleAdvancedModeChange}
-										className={classNames(getGridColClasses({ sm: 12 }), 'mt-4 mb-2 p-0')}
+										className={classNames(getGridColClasses({ sm: 12 }), 'instance-version-advanced p-0')}
 									>
-										<hr className="my-2" />
 										<Collapse.Trigger className="button button-link button-sm p-0">
 											<span className="me-1">{advancedMode ? '▼' : '▶'}</span>
 											Advanced Options
 										</Collapse.Trigger>
 
-										<Collapse.Panel keepMounted row className="sm:gap-2 p-0">
+										<Collapse.Panel keepMounted row className="gap-3 p-0">
 											<Grid.Col sm={12}>
-												<StaticAlert color="danger" className="mt-2 mb-4">
+												<StaticAlert color="danger" className="mt-3 mb-0">
 													{changeModuleDangerMessage}
 												</StaticAlert>
 											</Grid.Col>
@@ -221,7 +262,13 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 									children={([canSubmit, isSubmitting]) => (
 										<>
 											<Modal.Close disabled={isSubmitting}>Cancel</Modal.Close>
-											<Button ref={buttonRef} color="primary" type="submit" disabled={!canSubmit}>
+											<Button
+												ref={buttonRef}
+												color="primary"
+												type="submit"
+												disabled={!canSubmit || isSubmitting}
+												aria-busy={isSubmitting}
+											>
 												Save {isSubmitting ? '...' : ''}
 											</Button>
 										</>

@@ -67,7 +67,12 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 	}
 
 	return (
-		<div className="flex flex-row items-center gap-2 cursor-pointer">
+		<div
+			className={classNames(
+				'list-row flex flex-row items-center gap-2 py-2 pe-3',
+				isSelected ? 'list-row-selected' : 'hover:bg-surface-muted/60'
+			)}
+		>
 			<div onClick={doEdit} className={classNames('flex flex-col grow min-w-0', { disabled: !isEnabled })}>
 				<b>{remoteConnection.displayName}</b>
 				<span className="truncate" title={surfaceInstanceDisplayName}>
@@ -84,7 +89,7 @@ export const RemoteSurfaceTableRow = observer(function RemoteSurfaceTableRow({
 					tooltip={isEnabled ? `Disable surface connection` : `Enable surface connection`}
 				/>
 
-				<Button onClick={doDelete} title="Delete" className="p-1">
+				<Button onClick={doDelete} title="Delete" className="p-1" color="danger" variant="ghost">
 					<FontAwesomeIcon icon={faTrash} />
 				</Button>
 			</div>

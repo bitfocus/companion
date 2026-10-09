@@ -133,7 +133,7 @@ export const ImageNameEditModal = observer(function ImageNameEditModal({
 							</Modal.Body>
 							<Modal.Footer>
 								<Modal.Close disabled={isSaving}>Cancel</Modal.Close>
-								<Button color="primary" type="submit" disabled={!canSave || isSaving}>
+								<Button color="primary" type="submit" disabled={!canSave || isSaving} aria-busy={isSaving}>
 									{isSaving ? 'Saving...' : 'Save'}
 								</Button>
 							</Modal.Footer>

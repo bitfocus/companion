@@ -10,7 +10,6 @@ import { Form } from '~/Components/Form.js'
 import { Modal } from '~/Components/Modal.js'
 import { StepSelector, type StepSelectorItem } from '~/Components/StepSelector.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ApplyStep, getWizardChanges } from './ApplyStep.js'
 import { BeginStep } from './BeginStep.js'
@@ -281,15 +280,7 @@ export const WizardModal = observer(function WizardModal(): React.JSX.Element {
 					<Modal.Viewport>
 						<Modal.Popup initialFocus={buttonRef} size="lg" scrollable className="modal-wizard">
 							<Modal.Header closeButton>
-								<Modal.Title>
-									<img
-										src={makeAbsolutePath('/img/icons/48x48.png')}
-										style={{ height: 30 }}
-										alt="logo"
-										className="me-2"
-									/>
-									Welcome to Companion
-								</Modal.Title>
+								<Modal.Title>Welcome to Companion</Modal.Title>
 							</Modal.Header>
 							{showStepper && stepperItems.length > 0 && (
 								<StepSelector items={stepperItems} currentIndex={currentStep} onJump={doJumpToStep} />

@@ -104,7 +104,7 @@ export const FieldOrExpression = observer(function FieldOrExpression({
 			</div>
 			<div className="expression-toggle-button">
 				<Button
-					color="info"
+					color="secondary"
 					variant="outline"
 					onClick={toggleExpression}
 					title={value.isExpression ? 'Expression mode' : 'Value mode'}

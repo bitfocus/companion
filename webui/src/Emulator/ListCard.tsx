@@ -13,7 +13,7 @@ export function EmulatorListCard({ surface }: EmulatorListCardProps): React.JSX.
 
 	return (
 		<Button
-			color="dark"
+			color="secondary"
 			className="emulator-button"
 			onClick={() =>
 				void navigate({

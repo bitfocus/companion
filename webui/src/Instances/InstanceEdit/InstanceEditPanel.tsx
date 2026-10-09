@@ -1,21 +1,34 @@
-import { faCheck, faCircleExclamation, faGear } from '@fortawesome/free-solid-svg-icons'
+import './InstanceEditPanel.css'
+import {
+	faArrowsRotate,
+	faCircleCheck,
+	faCircleExclamation,
+	faFlask,
+	faLock,
+	faPowerOff,
+} from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import classNames from 'classnames'
 import { observable } from 'mobx'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext, useId, useMemo, useState } from 'react'
-import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
-import type { ClientInstanceConfigBase, InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
+import React, { useCallback, useContext, useEffect, useId, useMemo, useState } from 'react'
+import {
+	InstanceVersionUpdatePolicy,
+	ModuleInstanceType,
+	type ClientInstanceConfigBase,
+} from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { capitalize } from '@companion-app/shared/Util.js'
 import { DismissableAlert, StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
-import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
+import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { StatusBadge } from '~/Components/StatusBadge.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
@@ -23,6 +36,7 @@ import { InstanceEditField } from '~/Instances/InstanceEdit/InstanceEditField.js
 import type { InstanceEditPanelService } from '~/Instances/InstanceEdit/InstanceEditPanelService.js'
 import { InstanceEditPanelStore, isConfigFieldSecret } from '~/Instances/InstanceEdit/InstanceEditPanelStore.js'
 import { InstanceSecretField } from '~/Instances/InstanceEdit/InstanceSecretField.js'
+import { UpdateInstanceToLatestBadge } from '~/Instances/UpdateInstanceToLatestBadge.js'
 import { getModuleVersionInfo } from '~/Instances/Util.js'
 import { ModuleDeprecationAlert, useModuleDeprecation } from '~/Modules/ModuleDeprecation.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
@@ -83,39 +97,53 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 			})
 	}, [service, panelStore, isSaving])
 
+	// Cmd+S / Ctrl+S keyboard shortcut to save
+	useEffect(() => {
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+				e.preventDefault()
+				performSave()
+			}
+		}
+		window.addEventListener('keydown', handleKeyDown)
+		return () => window.removeEventListener('keydown', handleKeyDown)
+	}, [performSave])
+
 	return (
 		<>
 			<Form
-				className="secondary-panel-simple-body flex flex-col pb-0"
+				className="edit-panel instance-edit-panel flex flex-col flex-1 min-h-0 overflow-hidden relative"
 				onSubmit={(e) => {
 					e.preventDefault()
 					e.stopPropagation()
 					performSave()
 				}}
 			>
-				<div className="flex-auto">
-					<Grid.Row className="edit-connection">
-						{saveError && (
-							<Grid.Col className="fieldtype-textinput" sm={12}>
-								<StaticAlert color="danger">{saveError}</StaticAlert>
-							</Grid.Col>
-						)}
+				<div className="page-scroll edit-panel-scroll">
+					{saveError && (
+						<StaticAlert color="danger" className="mb-4">
+							{saveError}
+						</StaticAlert>
+					)}
 
-						<InstanceDeprecationAlert panelStore={panelStore} />
+					<InstanceDeprecationAlert panelStore={panelStore} />
 
+					{/* General Settings */}
+					<EditSectionCard title="General Settings">
 						<InstanceLabelInputField panelStore={panelStore} />
-						<InstanceEnabledInputField panelStore={panelStore} cannotEnableReason={cannotEnableReason} />
-
 						<InstanceModuleVersionInputField
 							panelStore={panelStore}
 							moduleInfo={moduleInfo}
 							changeModuleDangerMessage={changeModuleDangerMessage}
 						/>
+						<InstanceEnabledInputField panelStore={panelStore} cannotEnableReason={cannotEnableReason} />
+					</EditSectionCard>
 
-						<InstanceVersionUpdatePolicyInputField panelStore={panelStore} />
+					{/* Dynamic Device Config */}
+					<InstanceConfigArea panelStore={panelStore} />
 
-						<InstanceConfigArea panelStore={panelStore} />
-					</Grid.Row>
+					{/* Danger Zone */}
+					<DangerZoneSection panelStore={panelStore} isSaving={isSaving.get()} />
 				</div>
 
 				<InstanceFormButtons panelStore={panelStore} isSaving={isSaving.get()} />
@@ -126,7 +154,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 
 /**
  * Why the module behind this instance should no longer be used, spelled out at the top of the panel.
- * Renders nothing - not even its column - when the module and the version in use are both current.
+ * Renders nothing when the module and the version in use are both current.
  */
 const InstanceDeprecationAlert = observer(function InstanceDeprecationAlert<TConfig extends ClientInstanceConfigBase>({
 	panelStore,
@@ -138,11 +166,7 @@ const InstanceDeprecationAlert = observer(function InstanceDeprecationAlert<TCon
 	const deprecation = useModuleDeprecation(moduleType, moduleId, moduleVersionId)
 	if (!deprecation) return null
 
-	return (
-		<Grid.Col sm={12}>
-			<ModuleDeprecationAlert deprecation={deprecation} />
-		</Grid.Col>
-	)
+	return <ModuleDeprecationAlert deprecation={deprecation} className="mb-4" />
 })
 
 function InstanceFieldLabel({ fieldInfo }: { fieldInfo: SomeCompanionInputField }) {
@@ -162,20 +186,18 @@ const InstanceLabelInputField = observer(function InstanceLabelInputField<TConfi
 	const labelId = useId()
 
 	return (
-		<>
-			<FormLabel htmlFor={labelId} sm={4} column="sm">
+		<div className="edit-field-row">
+			<label htmlFor={labelId} className="text-xs font-semibold text-body">
 				Label
-			</FormLabel>
-			<Grid.Col className={`fieldtype-textinput`} sm={8}>
-				<TextInputFieldSimple
-					id={labelId}
-					setValue={panelStore.setLabelValue}
-					checkValid={panelStore.checkLabelIsValid}
-					value={panelStore.labelValue}
-					immediateValue
-				/>
-			</Grid.Col>
-		</>
+			</label>
+			<TextInputFieldSimple
+				id={labelId}
+				setValue={panelStore.setLabelValue}
+				checkValid={panelStore.checkLabelIsValid}
+				value={panelStore.labelValue}
+				immediateValue
+			/>
+		</div>
 	)
 })
 
@@ -195,26 +217,52 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 	const moduleVersion = getModuleVersionInfo(moduleInfo, panelStore.instanceInfo.moduleVersionId)
 
 	return (
-		<>
-			<FormLabel htmlFor={moduleVersionId} sm={4} column="sm">
+		<div className="edit-field-row">
+			<label htmlFor={moduleVersionId} className="text-xs font-semibold text-body">
 				Module Version
-			</FormLabel>
-			<Grid.Col className={`fieldtype-textinput`} sm={8}>
-				<div className="flex items-center gap-2">
-					<span className="font-medium">{moduleVersion?.displayName ?? panelStore.instanceInfo.moduleVersionId}</span>
-
-					<InstanceVersionChangeButton
-						id={moduleVersionId}
-						service={panelStore.service}
-						currentModuleId={panelStore.instanceInfo.moduleId}
-						currentVersionId={panelStore.instanceInfo.moduleVersionId}
-						changeModuleDangerMessage={changeModuleDangerMessage}
-					/>
+			</label>
+			<div className="instance-module-version-row">
+				<div className="instance-module-version-details">
+					<span className="instance-module-version-value text-xs font-mono font-medium text-body">
+						{moduleVersion?.displayName ?? panelStore.instanceInfo.moduleVersionId}
+					</span>
+					{panelStore.instanceInfo.moduleType === ModuleInstanceType.Connection && (
+						<UpdateInstanceToLatestBadge instance={panelStore.instanceInfo} variant="label" />
+					)}
+					<UpdatePolicyLabel policy={panelStore.updatePolicy} />
 				</div>
-			</Grid.Col>
-		</>
+
+				<InstanceVersionChangeButton
+					id={moduleVersionId}
+					service={panelStore.service}
+					currentModuleId={panelStore.instanceInfo.moduleId}
+					currentVersionId={panelStore.instanceInfo.moduleVersionId}
+					currentUpdatePolicy={panelStore.updatePolicy}
+					changeModuleDangerMessage={changeModuleDangerMessage}
+				/>
+			</div>
+		</div>
 	)
 })
+
+function UpdatePolicyLabel({ policy }: { policy: InstanceVersionUpdatePolicy }): React.JSX.Element {
+	const [icon, label] =
+		policy === InstanceVersionUpdatePolicy.Manual
+			? [faLock, 'Manual updates']
+			: policy === InstanceVersionUpdatePolicy.Stable
+				? [faArrowsRotate, 'Stable updates']
+				: [faFlask, 'Stable + Beta']
+
+	return (
+		<StatusBadge
+			tone="neutral"
+			className="instance-update-policy"
+			indicator={<FontAwesomeIcon icon={icon} className="text-3xs shrink-0" aria-hidden="true" />}
+		>
+			{label}
+		</StatusBadge>
+	)
+}
 
 const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 	TConfig extends ClientInstanceConfigBase,
@@ -231,11 +279,11 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 	const canToggle = !cannotEnableReason || isEnabled
 
 	return (
-		<>
-			<FormLabel htmlFor={enabledId} sm={4} column="sm">
+		<div className="edit-field-row">
+			<label htmlFor={enabledId} className="text-xs font-semibold text-body mb-0">
 				Enabled
-			</FormLabel>
-			<Grid.Col className={`fieldtype-textinput`} sm={8}>
+			</label>
+			<div className="shrink-0">
 				<SwitchInputField
 					id={enabledId}
 					value={isEnabled}
@@ -243,41 +291,38 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 					disabled={!canToggle}
 					tooltip={cannotEnableReason || undefined}
 				/>
-
-				{cannotEnableReason && !isEnabled && <div className="text-danger mt-1 small">{cannotEnableReason}</div>}
-			</Grid.Col>
-		</>
+			</div>
+			{cannotEnableReason && !isEnabled && (
+				<div className="edit-field-help text-danger text-xs">{cannotEnableReason}</div>
+			)}
+		</div>
 	)
 })
 
-const UpdatePolicyOptions: DropdownChoice[] = [
-	{ id: 'manual', label: 'Disabled' },
-	{ id: 'stable', label: 'Stable' },
-	{ id: 'beta', label: 'Stable and Beta' },
-]
-
-const InstanceVersionUpdatePolicyInputField = observer(function InstanceVersionUpdatePolicyInputField<
-	TConfig extends ClientInstanceConfigBase,
->({ panelStore }: { panelStore: InstanceEditPanelStore<TConfig> }): React.JSX.Element {
-	const updatePolicyId = useId()
+const DangerZoneSection = observer(function DangerZoneSection<TConfig extends ClientInstanceConfigBase>({
+	panelStore,
+	isSaving,
+}: {
+	panelStore: InstanceEditPanelStore<TConfig>
+	isSaving: boolean
+}): React.JSX.Element {
+	const doDelete = useCallback(() => panelStore.service.deleteInstance(panelStore.labelValue), [panelStore])
 
 	return (
-		<>
-			<FormLabel htmlFor={updatePolicyId} sm={4} column="sm">
-				Update Policy
-				<InlineHelpIcon className="ms-1">
-					How to check whether there are updates available for this {panelStore.service.moduleTypeDisplayName}
-				</InlineHelpIcon>
-			</FormLabel>
-			<Grid.Col className={`fieldtype-textinput`} sm={8}>
-				<SimpleDropdownInputField
-					id={updatePolicyId}
-					value={panelStore.updatePolicy}
-					setValue={(value) => panelStore.setUpdatePolicy(value as InstanceVersionUpdatePolicy)}
-					choices={UpdatePolicyOptions}
-				/>
-			</Grid.Col>
-		</>
+		<EditSectionCard title={`Delete ${panelStore.service.moduleTypeDisplayName}`} collapsible danger>
+			<div className="flex items-center justify-between gap-3">
+				<div>
+					<p className="text-xs text-muted mb-0">
+						{panelStore.service.moduleType === ModuleInstanceType.Surface
+							? 'Delete this surface integration. Its surfaces will disconnect, and any remote surfaces added through it will be removed.'
+							: `Delete this ${panelStore.service.moduleTypeDisplayName} and remove its associated actions and feedbacks.`}
+					</p>
+				</div>
+				<Button color="danger" size="sm" onClick={doDelete} disabled={isSaving || panelStore.isLoading}>
+					Delete
+				</Button>
+			</div>
+		</EditSectionCard>
 	)
 })
 
@@ -295,61 +340,60 @@ const InstanceConfigArea = observer(function InstanceConfigArea<TConfig extends 
 	// A terminal failure (e.g. incompatible module version) - show the reported reason
 	if (panelStore.loadError) {
 		return (
-			<Grid.Col xs={12}>
+			<EditSectionCard title="Configuration">
 				<NonIdealState icon={faCircleExclamation}>
 					{panelStore.loadError}
 					<br />
 					Please check the logs for more information.
 				</NonIdealState>
-			</Grid.Col>
+			</EditSectionCard>
 		)
 	}
 
 	// Crashed and not running
 	if (panelStore.notRunningReason === 'crashed') {
 		return (
-			<Grid.Col xs={12}>
+			<EditSectionCard title="Configuration">
 				<NonIdealState icon={faCircleExclamation}>
 					{displayName} is not running.
 					<br />
 					Please check the logs for more information.
 				</NonIdealState>
-			</Grid.Col>
+			</EditSectionCard>
 		)
 	}
 
 	// Disabled (directly or via its collection), so there is nothing running to configure
 	if (panelStore.notRunningReason === 'disabled' || panelStore.notRunningReason === 'missing') {
 		return (
-			<Grid.Col xs={12}>
-				<NonIdealState icon={faGear}>
-					<p>{displayName} configuration cannot be edited while it is not running. The fields above can be edited.</p>
-				</NonIdealState>
-			</Grid.Col>
+			<EditSectionCard title="Configuration">
+				<div className="edit-note">
+					<FontAwesomeIcon icon={faPowerOff} className="edit-note-icon" />
+					Enable this {panelStore.service.moduleTypeDisplayName} to edit its configuration
+				</div>
+			</EditSectionCard>
 		)
 	}
 
 	// Still starting up / waiting for the config fields
 	if (panelStore.isLoading || panelStore.configAndSecrets === null) {
 		return (
-			<Grid.Col xs={12}>
+			<EditSectionCard title="Configuration">
 				<LoadingRetryOrError error={null} dataReady={false} design="pulse" />
-			</Grid.Col>
+			</EditSectionCard>
 		)
 	}
 
 	return (
-		<>
+		<EditSectionCard title="Configuration">
 			{panelStore.externalChangeWarning && (
-				<Grid.Col xs={12}>
-					<DismissableAlert color="warning" onClose={panelStore.dismissExternalChangeWarning}>
-						This {panelStore.service.moduleTypeDisplayName}'s configuration was changed elsewhere. Your unsaved changes
-						have been kept.
-					</DismissableAlert>
-				</Grid.Col>
+				<DismissableAlert color="warning" onClose={panelStore.dismissExternalChangeWarning} className="mb-3">
+					This {panelStore.service.moduleTypeDisplayName}'s configuration was changed elsewhere. Your unsaved changes
+					have been kept.
+				</DismissableAlert>
 			)}
 			<InstanceConfigFields panelStore={panelStore} />
-		</>
+		</EditSectionCard>
 	)
 })
 
@@ -368,15 +412,15 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 
 	if (configData.fields.length === 0) {
 		return (
-			<NonIdealState icon={faCheck}>
-				{capitalize(panelStore.service.moduleTypeDisplayName)} has no configuration
-			</NonIdealState>
+			<div className="edit-note">
+				<FontAwesomeIcon icon={faCircleCheck} className="edit-note-icon edit-note-icon-good" />
+				This {panelStore.service.moduleTypeDisplayName} requires no configuration
+			</div>
 		)
 	}
 
 	return (
-		<>
-			<hr className="my-4" />
+		<div className={classNames('row edit-connection', configData.useNewLayout && 'instance-edit-horizontal-fields')}>
 			{configData.fields.map((fieldInfo) => {
 				const isVisible = panelStore.isVisible(fieldInfo)
 				if (!isVisible) return null
@@ -409,11 +453,10 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 								instanceId={panelStore.service.instanceId}
 							/>
 						)}
-						{fieldInfo.description && <div className="form-text">{fieldInfo.description}</div>}
 					</InstanceFormRow>
 				)
 			})}
-		</>
+		</div>
 	)
 })
 
@@ -425,39 +468,40 @@ const InstanceFormButtons = observer(function InstanceFormButtons<TConfig extend
 	isSaving: boolean
 }): React.JSX.Element {
 	const isValid = panelStore.isValid()
-
 	const isLoading = panelStore.isLoading
-
-	const doDelete = useCallback(() => panelStore.service.deleteInstance(panelStore.labelValue), [panelStore])
+	const isDirty = panelStore.isDirty()
 
 	return (
-		<Grid.Row className="connection-form-buttons border-t border-border-alt">
-			<Grid.Col sm={12}>
-				<div className="flex flex-row">
-					<div className="grow">
-						<Button
-							color="success"
-							className="md:me-1"
-							disabled={isLoading || isSaving || !isValid || !panelStore.isDirty()}
-							type="submit"
-							title={!isValid ? 'Please fix the errors before saving' : undefined}
-						>
-							Save {isSaving ? '...' : ''}
-						</Button>
-
-						<Button color="secondary" onClick={panelStore.service.closePanel} disabled={isSaving || isLoading}>
-							{panelStore.isDirty() ? 'Cancel' : 'Done'}
-						</Button>
-					</div>
-
-					<div>
-						<Button color="danger" onClick={doDelete} disabled={isSaving || isLoading}>
-							Delete
-						</Button>
-					</div>
+		<div className="shrink-0 bg-surface border-t border-border px-3 py-2 z-10">
+			<div className="max-w-readable flex items-center justify-between gap-3">
+				<div className="flex items-center gap-2">
+					{isDirty ? (
+						<StatusBadge tone="warning" className="select-none">
+							Unsaved Changes
+						</StatusBadge>
+					) : (
+						<span className="text-xs text-muted select-none">No unsaved changes</span>
+					)}
 				</div>
-			</Grid.Col>
-		</Grid.Row>
+
+				<div className="flex items-center gap-2">
+					<Button color="secondary" size="sm" onClick={panelStore.service.closePanel} disabled={isSaving || isLoading}>
+						{isDirty ? 'Cancel' : 'Done'}
+					</Button>
+
+					<Button
+						color="primary"
+						size="sm"
+						disabled={isLoading || isSaving || !isValid || !isDirty}
+						type="submit"
+						title={!isValid ? 'Please fix the errors before saving' : 'Save changes (Cmd+S / Ctrl+S)'}
+						aria-busy={isSaving}
+					>
+						{isSaving ? 'Saving...' : 'Save Changes'}
+					</Button>
+				</div>
+			</div>
+		</div>
 	)
 })
 
@@ -475,6 +519,15 @@ const InstanceFormRow = observer(function InstanceFormRow({
 	useNewLayout,
 	children,
 }: React.PropsWithChildren<InstanceFormRowProps>): React.JSX.Element | null {
+	const description = fieldInfo.description?.trim() ? (
+		<div
+			className="form-text instance-config-description"
+			style={{ display: !isVisible && useNewLayout ? 'none' : undefined }}
+		>
+			{fieldInfo.description}
+		</div>
+	) : null
+
 	if (useNewLayout) {
 		if (fieldInfo.type === 'static-text') {
 			if (!fieldInfo.label && !fieldInfo.value) return null // Skip rendering the fields used to force alignment
@@ -484,22 +537,24 @@ const InstanceFormRow = observer(function InstanceFormRow({
 
 			if (isLong && (!fieldInfo.width || fieldInfo.width > 6)) {
 				return (
-					<Grid.Col sm={12}>
+					<div className="instance-edit-static-text">
 						{fieldInfo.label ? <FormLabel htmlFor={inputId}>{fieldInfo.label}</FormLabel> : ''}
 						<StaticTextFieldText {...fieldInfo} id={inputId} allowImages />
-					</Grid.Col>
+					</div>
 				)
 			}
 		}
 
 		return (
 			<React.Fragment>
-				<FormLabel htmlFor={inputId} sm={4} column="sm" style={{ display: !isVisible ? 'none' : undefined }}>
+				<FormLabel htmlFor={inputId} style={{ display: !isVisible ? 'none' : undefined }}>
 					<InstanceFieldLabel fieldInfo={fieldInfo} />
 				</FormLabel>
-				<Grid.Col sm={8} style={{ display: !isVisible ? 'none' : undefined }} className="self-center">
+				<div style={{ display: !isVisible ? 'none' : undefined }} className="self-center">
 					{children}
-				</Grid.Col>
+				</div>
+				{/* Its own grid row under the control, so the label centres on the control alone */}
+				{description}
 			</React.Fragment>
 		)
 	} else {
@@ -517,6 +572,7 @@ const InstanceFormRow = observer(function InstanceFormRow({
 				</FormLabel>
 
 				{children}
+				{description}
 			</Grid.Col>
 		)
 	}

@@ -12,12 +12,7 @@ export const PinLockoutConfig = observer(function PinLockoutConfig(props: UserCo
 	// note: hold on to the heading row in case we want to make a "security" page.
 	return (
 		<>
-			{/* <UserConfigHeadingRow
-				label="PIN Lockout"
-				helpMessage="Enable this feature to lock input surfaces when idle for a specified time."
-				helpAction="/user-guide/config/settings#pin-lockout"
-			/>
- */}
+			{/* <UserConfigHeadingRow label="PIN Lockout" /> */}
 			<UserConfigSwitchRow
 				userConfig={props}
 				label={

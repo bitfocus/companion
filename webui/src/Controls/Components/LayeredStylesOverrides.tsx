@@ -288,7 +288,13 @@ const LayeredStylesOverridesRow = observer(function LayeredStylesOverridesRow({
 					/>
 				</td>
 				<td>
-					<Button size="sm" title="Delete override" onClick={() => deleteRow(row.overrideId)}>
+					<Button
+						size="sm"
+						title="Delete override"
+						onClick={() => deleteRow(row.overrideId)}
+						variant="ghost"
+						color="danger"
+					>
 						<FontAwesomeIcon icon={faTrash} />
 					</Button>
 				</td>

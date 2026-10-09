@@ -21,6 +21,7 @@ import { InlineHelpIcon } from './InlineHelp.js'
 type SetInnerValueFn = (value: JsonValue | undefined) => void
 
 export interface PropertyFieldRowProps {
+	layout?: 'form' | 'inspector'
 	label: string
 	tooltip?: string
 	/** Hint shown below the field. Replaced by expressionDescription when in expression mode. */
@@ -54,6 +55,7 @@ export interface PropertyFieldRowProps {
 }
 
 export function PropertyFieldRow({
+	layout = 'form',
 	label,
 	tooltip,
 	description,
@@ -86,6 +88,57 @@ export function PropertyFieldRow({
 	const activeDescription =
 		value.isExpression && expressionDescription !== undefined ? expressionDescription : description
 
+	const inputControl = disableAutoExpression ? (
+		children({ value: value.value }, setInnerValue, inputId)
+	) : (
+		<FieldOrExpression
+			inputId={inputId}
+			value={value}
+			setValue={setValue}
+			localVariablesStore={localVariablesStore}
+			entityType={entityType}
+			isLocatedInGrid={isLocatedInGrid}
+			disabled={disabled}
+		>
+			{children({ value: value.value }, setInnerValue, inputId)}
+		</FieldOrExpression>
+	)
+
+	if (layout === 'inspector') {
+		return (
+			<div className={classNames('property-inspector-row', { hidden })}>
+				<label htmlFor={inputId} className={classNames('property-inspector-label', labelClassName)}>
+					{label}
+					{tooltip && <InlineHelpIcon className="ms-1">{tooltip}</InlineHelpIcon>}
+				</label>
+				<div className="property-inspector-input">{inputControl}</div>
+				<div className="property-inspector-pin">{pinToggle}</div>
+				{(activeFeatures?.variables || activeFeatures?.local || isOverridden || value.isExpression) && (
+					<div className="property-inspector-status">
+						{activeFeatures && <InputFeatureIcons {...activeFeatures} />}
+						{isOverridden && (
+							<span title="Value has a linked feedback override">
+								<FontAwesomeIcon icon={faLayerGroup} /> Linked feedback
+							</span>
+						)}
+						{value.isExpression && (
+							<ExpressionValuePreview
+								expression={stringifyVariableValue(value.value) ?? ''}
+								controlId={controlId}
+								fieldDefinition={fieldDefinition}
+								contextResolution={buildContextResolutionForPreview(
+									fieldDefinition.contextVariableResolution,
+									allRawOptions
+								)}
+							/>
+						)}
+					</div>
+				)}
+				{activeDescription && <div className="property-inspector-description">{activeDescription}</div>}
+			</div>
+		)
+	}
+
 	return (
 		<>
 			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames(labelClassName, { hidden: hidden })}>
@@ -111,21 +164,7 @@ export function PropertyFieldRow({
 				)}
 			</FormLabel>
 			<Grid.Col sm={8} className={classNames({ hidden: hidden })}>
-				{disableAutoExpression ? (
-					children({ value: value.value }, setInnerValue, inputId)
-				) : (
-					<FieldOrExpression
-						inputId={inputId}
-						value={value}
-						setValue={setValue}
-						localVariablesStore={localVariablesStore}
-						entityType={entityType}
-						isLocatedInGrid={isLocatedInGrid}
-						disabled={disabled}
-					>
-						{children({ value: value.value }, setInnerValue, inputId)}
-					</FieldOrExpression>
-				)}
+				{inputControl}
 				{activeDescription && <div className="form-text">{activeDescription}</div>}
 			</Grid.Col>
 		</>

@@ -18,12 +18,12 @@ export function ButtonGridZoomControl({
 }: ButtonGridZoomControlProps): React.JSX.Element {
 	return (
 		<Popover.Root>
-			<Popover.Trigger color="light" caret={!useCompactButtons} title="View Scale">
+			<Popover.Trigger color="secondary" caret={!useCompactButtons} title="View Scale">
 				<FontAwesomeIcon icon={faMagnifyingGlass} /> {useCompactButtons ? '' : `${Math.round(gridZoomValue)}%`}
 			</Popover.Trigger>
 			<Popover.Popup>
 				<InputGroup>
-					<Button onClick={() => gridZoomController.zoomOut()}>
+					<Button onClick={() => gridZoomController.zoomOut()} title="Zoom out">
 						<FontAwesomeIcon icon={faMinus} />
 					</Button>
 					<SliderInputField
@@ -35,7 +35,7 @@ export function ButtonGridZoomControl({
 						value={gridZoomValue}
 						setValue={(val) => gridZoomController.setZoom(val)}
 					/>
-					<Button onClick={() => gridZoomController.zoomIn()}>
+					<Button onClick={() => gridZoomController.zoomIn()} title="Zoom in">
 						<FontAwesomeIcon icon={faPlus} />
 					</Button>
 				</InputGroup>

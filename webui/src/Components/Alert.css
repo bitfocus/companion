@@ -1,12 +1,12 @@
 .alert-element {
 	--alert-elm-bg: transparent;
-	--alert-elm-padding-x: 1rem;
-	--alert-elm-padding-y: 1rem;
-	--alert-elm-margin-bottom: 1rem;
+	--alert-elm-padding-x: 0.875rem;
+	--alert-elm-padding-y: 0.75rem;
+	--alert-elm-margin-bottom: 0.75rem;
 	--alert-elm-color: inherit;
 	--alert-elm-border-color: transparent;
-	--alert-elm-border: var(--border-width) solid var(--alert-elm-border-color);
-	--alert-elm-border-radius: var(--radius);
+	--alert-elm-border: 1px solid var(--alert-elm-border-color);
+	--alert-elm-border-radius: 0.75rem;
 	--alert-elm-link-color: inherit;
 	position: relative;
 	padding: var(--alert-elm-padding-y) var(--alert-elm-padding-x);
@@ -15,6 +15,8 @@
 	background-color: var(--alert-elm-bg);
 	border: var(--alert-elm-border);
 	border-radius: var(--alert-elm-border-radius);
+	font-size: 0.8125rem;
+	line-height: 1.5;
 
 	/*
 	.alert-link {

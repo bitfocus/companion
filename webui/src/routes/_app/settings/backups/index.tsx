@@ -1,6 +1,6 @@
 import { faCalendarAlt } from '@fortawesome/free-solid-svg-icons'
 import { createFileRoute } from '@tanstack/react-router'
-import { NonIdealState } from '../../../../Components/NonIdealState.js'
+import { PanelEmptyState } from '~/Layout/PanelEmptyState.js'
 
 export const Route = createFileRoute('/_app/settings/backups/')({
 	component: RouteComponent,
@@ -8,8 +8,10 @@ export const Route = createFileRoute('/_app/settings/backups/')({
 
 function RouteComponent() {
 	return (
-		<div className="secondary-panel-simple-body no-scroll">
-			<NonIdealState text="Select a backup rule to edit" icon={faCalendarAlt} />
-		</div>
+		<PanelEmptyState
+			icon={faCalendarAlt}
+			title="Select a backup rule"
+			description="Choose a backup rule from the list to edit it."
+		/>
 	)
 }

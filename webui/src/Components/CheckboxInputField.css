@@ -52,15 +52,15 @@
 		width: 100%;
 		height: 100%;
 
-		color: var(--color-text-strong);
-
-		background: 0 0 var(--companion-img-check);
-		background-repeat: no-repeat;
-		background-position: center;
-		background-size: contain;
+		/* Use the image as a mask so the mark follows the active theme. */
+		background-color: var(--color-text-strong);
+		mask-image: var(--companion-img-check);
+		mask-repeat: no-repeat;
+		mask-position: center;
+		mask-size: contain;
 
 		&[data-indeterminate] {
-			background-image: var(--companion-img-indeterminate);
+			mask-image: var(--companion-img-indeterminate);
 		}
 	}
 }
