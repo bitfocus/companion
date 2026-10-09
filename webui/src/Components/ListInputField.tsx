@@ -224,7 +224,8 @@ export const ListInputField = observer(function ListInputField({
 						const cellRaw = row[field.id]
 						const cell = normaliseCell(cellRaw)
 						const inputId = `${baseId}-${rowIndex}-${field.id}`
-						const canExpression = fieldSupportsExpression && !field.disableAutoExpression
+						const canExpression =
+							fieldSupportsExpression && !field.disableAutoExpression && field.type !== 'static-text'
 
 						const setCell = (newCell: ExpressionOrValue<JsonValue | undefined>) =>
 							updateCell(rowIndex, field.id, newCell)
