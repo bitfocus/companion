@@ -407,9 +407,9 @@ describe('ButtonGridStore', () => {
 
 		it('routes a turn straight through in press mode', () => {
 			store.setTool('press', actions)
-			store.handleRotate(at(1, 1), false, actions)
+			store.handleRotate(at(1, 1), -3, actions)
 
-			expect(actions.rotate).toHaveBeenCalledWith(at(1, 1), false)
+			expect(actions.rotate).toHaveBeenCalledWith(at(1, 1), -3)
 		})
 
 		it('drops the selection on entering press mode', () => {
@@ -1538,7 +1538,7 @@ describe('ButtonGridStore, in the states nothing else reaches', () => {
 		})
 
 		it('ignores a turn under a tool that does not fire buttons', () => {
-			store.handleRotate(at(1, 1), true, actions)
+			store.handleRotate(at(1, 1), 1, actions)
 
 			expect(actions.rotate).not.toHaveBeenCalled()
 		})

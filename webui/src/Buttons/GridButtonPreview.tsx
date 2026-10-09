@@ -46,10 +46,12 @@ export interface GridButtonPreviewProps {
 	pressMode: boolean
 	onPress: (location: ControlLocation, isDown: boolean) => void
 	/**
-	 * For a control which turns (a knob, a jog, a shuttle): in press mode a drag round it turns it, a step at a time.
-	 * Null for one which does not, where a drag is only ever a press sliding off.
+	 * For a control which turns (a knob, a jog, a shuttle): in press mode a drag round it turns it, by a signed number
+	 * of steps - positive is rightward. Each move sends however far it went as one turn, so a fast spin is a bigger
+	 * turn rather than more of them, as an encoder reports it. Null for one which does not turn, where a drag is only
+	 * ever a press sliding off.
 	 */
-	onRotate: ((location: ControlLocation, isRightward: boolean) => void) | null
+	onRotate: ((location: ControlLocation, delta: number) => void) | null
 	onTap: (location: ControlLocation, modifiers: GridButtonModifiers) => void
 	onContextMenu: (location: ControlLocation, x: number, y: number) => void
 
@@ -216,7 +218,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 
 			const { drag, steps } = continueRotaryDrag(gesture.rotation, point)
 			gesture.rotation = drag
-			for (let step = 0; step < Math.abs(steps); step++) onRotate(location, steps > 0)
+			if (steps !== 0) onRotate(location, steps)
 		},
 		[cancelHold, onRotate, location]
 	)

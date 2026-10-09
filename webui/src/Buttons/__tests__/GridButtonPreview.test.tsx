@@ -222,7 +222,7 @@ describe('GridButtonPreview', () => {
 		const right = { clientX: 50, clientY: 0 }
 		const down = { clientX: 0, clientY: 50 }
 
-		it('turns it rightward, a step at a time, for a drag clockwise round it', () => {
+		it('turns it rightward for a drag clockwise round it, as one turn of however far it went', () => {
 			const onRotate = vi.fn()
 			const { root, onPress } = setup({ pressMode: true, onRotate })
 
@@ -230,8 +230,8 @@ describe('GridButtonPreview', () => {
 			fireEvent.pointerMove(root, { pointerId: 1, ...down })
 			fireEvent.pointerUp(root, { pointerId: 1, ...down })
 
-			// A quarter turn is 6 steps of 15 degrees
-			expect(onRotate.mock.calls).toEqual(Array.from({ length: 6 }, () => [location, true]))
+			// A quarter turn in one move is 6 steps of 15 degrees, sent together as an encoder spun fast would
+			expect(onRotate.mock.calls).toEqual([[location, 6]])
 			// Turned, not pushed
 			expect(onPress).not.toHaveBeenCalled()
 		})
@@ -243,9 +243,25 @@ describe('GridButtonPreview', () => {
 			fireEvent.pointerDown(root, { button: 0, pointerId: 1, ...down })
 			fireEvent.pointerMove(root, { pointerId: 1, ...right })
 
-			expect(onRotate).toHaveBeenCalledTimes(6)
-			expect(onRotate).toHaveBeenCalledWith(location, false)
-			expect(onRotate).not.toHaveBeenCalledWith(location, true)
+			expect(onRotate.mock.calls).toEqual([[location, -6]])
+		})
+
+		it('sends a slow turn a step at a time, as each move only goes one step', () => {
+			const onRotate = vi.fn()
+			const { root } = setup({ pressMode: true, onRotate })
+
+			// A quarter turn, a little over a step per move
+			fireEvent.pointerDown(root, { button: 0, pointerId: 1, ...right })
+			for (const degrees of [16, 32, 48]) {
+				const radians = (degrees * Math.PI) / 180
+				fireEvent.pointerMove(root, { pointerId: 1, clientX: Math.cos(radians) * 50, clientY: Math.sin(radians) * 50 })
+			}
+
+			expect(onRotate.mock.calls).toEqual([
+				[location, 1],
+				[location, 1],
+				[location, 1],
+			])
 		})
 
 		it('pushes it for a quick tap', () => {
