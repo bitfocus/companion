@@ -389,20 +389,20 @@ export function controlKind(type: string | undefined): SurfaceControlKind {
 	}
 }
 
-/** The kinds which turn, so are round unless the face says otherwise, and can be turned from the editor */
+/** The kinds which turn, so are always round, and can be turned from the editor */
 export function isRotaryKind(kind: SurfaceControlKind): boolean {
 	return kind === 'encoder' || kind === 'jog' || kind === 'shuttle'
 }
 
-/** A described face is drawn as described: a rect is only rounded when the surface gives it a radius */
+/**
+ * A described face is drawn as described: a rect is only rounded when the surface gives it a radius. Anything which
+ * turns is round whatever shape the face gives it.
+ */
 function shapeFromAppearance(
 	face: SurfaceAppearanceDefinition['controls'][string],
 	kind: SurfaceControlKind
 ): SurfaceControlShape {
-	// A knob is round whatever the face says; a jog or shuttle unless the face says otherwise
-	if (kind === 'encoder' || face.shape?.type === 'circle' || (!face.shape && isRotaryKind(kind))) {
-		return { type: 'circle' }
-	}
+	if (isRotaryKind(kind) || face.shape?.type === 'circle') return { type: 'circle' }
 
 	const cornerRadius = face.shape?.type === 'rect' ? (face.shape.cornerRadius ?? 0) : 0
 	const minSide = Math.min(face.width, face.height)

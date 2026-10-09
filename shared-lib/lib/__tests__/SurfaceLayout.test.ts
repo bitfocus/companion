@@ -464,14 +464,15 @@ describe('resolveSurfaceView with a described appearance', () => {
 		expect(controlAt(view, 1, 0).kind).toBe('lcd-segment')
 	})
 
-	test('draws a knob, jog or shuttle round unless the face gives it a shape', () => {
+	test('draws a knob, jog or shuttle as a full circle, whatever shape the face gives it', () => {
+		const squareRect = { type: 'rect' as const, cornerRadius: 20 }
 		const withKinds = {
 			...squareAppearance,
 			controls: {
 				'0/0': { x: 10, y: 10, width: 80, height: 80, type: 'encoder' as const },
-				'0/1': { x: 110, y: 10, width: 80, height: 80, type: 'jog' as const },
-				'1/0': { x: 10, y: 110, width: 80, height: 80, type: 'shuttle' as const },
-				'1/1': { x: 110, y: 110, width: 80, height: 80, type: 'jog' as const, shape: { type: 'rect' as const } },
+				'0/1': { x: 110, y: 10, width: 80, height: 80, type: 'jog' as const, shape: squareRect },
+				'1/0': { x: 10, y: 110, width: 80, height: 80, type: 'shuttle' as const, shape: squareRect },
+				'1/1': { x: 110, y: 110, width: 80, height: 80, type: 'encoder' as const, shape: squareRect },
 			},
 		}
 		const view = resolveSurfaceView(squareLayout, withKinds, UNROTATED)!
@@ -479,24 +480,6 @@ describe('resolveSurfaceView with a described appearance', () => {
 		expect(controlAt(view, 0, 0).shape).toEqual({ type: 'circle' })
 		expect(controlAt(view, 0, 1).shape).toEqual({ type: 'circle' })
 		expect(controlAt(view, 1, 0).shape).toEqual({ type: 'circle' })
-		// A jog the face says is square is drawn square
-		expect(controlAt(view, 1, 1).shape).toEqual({ type: 'rect', cornerRadiusRatio: 0 })
-	})
-
-	test('draws a knob as a full circle, whatever shape the face gives it', () => {
-		const withSquareKnob = {
-			...squareAppearance,
-			controls: {
-				...squareAppearance.controls,
-				'1/1': {
-					...squareAppearance.controls['1/1'],
-					type: 'encoder' as const,
-					shape: { type: 'rect' as const, cornerRadius: 20 },
-				},
-			},
-		}
-		const view = resolveSurfaceView(squareLayout, withSquareKnob, UNROTATED)!
-
 		expect(controlAt(view, 1, 1).shape).toEqual({ type: 'circle' })
 	})
 
