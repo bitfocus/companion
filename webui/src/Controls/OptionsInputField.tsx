@@ -130,7 +130,8 @@ export const OptionsInputField = observer(function OptionsInputField({
 		/>
 	)
 
-	if (fieldSupportsExpression && option.type !== 'expression') {
+	// Static text has no value to drive with an expression
+	if (fieldSupportsExpression && option.type !== 'expression' && option.type !== 'static-text') {
 		const rawExpressionValue = rawValue || { isExpression: false, value: undefined }
 
 		control = (
