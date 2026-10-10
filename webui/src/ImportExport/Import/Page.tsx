@@ -164,6 +164,7 @@ export const ImportPageWizard = observer(function ImportPageWizard({
 										useCompactButtons={true}
 										gridZoomValue={gridZoomValue}
 										gridZoomController={gridZoomController}
+										fit={null}
 									/>
 
 									<Button color="light" className="ms-1" title="Home Position" onClick={resetDestinationPosition}>

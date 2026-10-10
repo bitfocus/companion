@@ -5,6 +5,7 @@ import LogController, { type Logger } from '../../Log/Controller.js'
 import type { SurfaceController, SurfaceScanHandler } from '../../Surface/Controller.js'
 import { createSurfaceConfigPayload, sanitizePluginConfigFields } from '../../Surface/PluginConfigFields.js'
 import { SurfacePluginPanel } from '../../Surface/PluginPanel.js'
+import { sanitizeSurfaceModels } from '../../Surface/PluginSurfaceModels.js'
 import type { DataChannelServer } from '../Common/DataChannelServer.js'
 import { HostFramedTransport } from '../Common/FramedMessageChannel.js'
 import { IpcWrapper, type IpcEventHandlers, type IpcMessagePacket } from '../Common/IpcWrapper.js'
@@ -26,6 +27,7 @@ import type {
 	NotifyOpenedDeviceMessage,
 	PincodeEntryMessage,
 	RegisterMessage,
+	SetSurfaceModelsMessage,
 	SetVariableValueMessage,
 	ShouldOpenDeviceMessage,
 	ShouldOpenDeviceResponseMessage,
@@ -129,6 +131,8 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 
 			notifyConnectionsFound: this.#handleNotifyConnectionsFound.bind(this),
 			notifyConnectionsForgotten: this.#handleNotifyConnectionsForgotten.bind(this),
+
+			setSurfaceModels: this.#handleSetSurfaceModels.bind(this),
 
 			'log-message': this.#handleLogMessage.bind(this),
 
@@ -465,6 +469,14 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 			// TODO - tell the child, as something has gone wrong
 			this.logger.warn(`Error opening surface panel: ${e}`)
 		}
+	}
+
+	/**
+	 * Record the models this plugin drives, so that they can be offered whether or not one is plugged in.
+	 */
+	async #handleSetSurfaceModels(msg: SetSurfaceModelsMessage): Promise<void> {
+		const models = sanitizeSurfaceModels(this.logger, msg.models)
+		this.#deps.surfaceController.setSurfaceModelsForInstance(this.instanceId, this.moduleId, models)
 	}
 
 	async #handleDisconnectMessage(msg: DisconnectMessage): Promise<void> {

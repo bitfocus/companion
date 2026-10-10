@@ -3,6 +3,8 @@ import { memo, useCallback, useMemo } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { PreviewRenderSize } from '@companion-app/shared/Model/Preview.js'
+import type { SurfaceSchemaLedsConfig } from '@companion-app/shared/Model/Surfaces.js'
+import type { SurfaceControlFeedback } from '@companion-app/shared/SurfaceLayout.js'
 import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import {
 	useButtonGridView,
@@ -17,11 +19,19 @@ import {
 import { GRID_BUTTON_DRAG_TYPE, type GridButtonDragItem } from './GridButtonDragItem.js'
 import { makeGridButtonDroppableId } from './GridButtonDroppableId.js'
 import { GridButtonPreview, type GridButtonModifiers } from './GridButtonPreview.js'
+import { SurfaceLeds } from './SurfaceView/SurfaceLeds.js'
 
 export interface GridButtonCellProps {
 	location: ControlLocation
 	/** The size to draw this button's image at */
 	renderSize: PreviewRenderSize
+	/**
+	 * What the control shows of the button. One which shows only a colour is drawn as that colour, as the image
+	 * would be squeezed into something too small to read and is not what the device shows anyway.
+	 */
+	feedback: SurfaceControlFeedback
+	/** The leds the control has, drawn around it lit as the button would light them; null for none */
+	leds: SurfaceSchemaLedsConfig | null
 	/** Where the button goes and how big it is. Whatever is drawing it decides; this only wears it. */
 	style: React.CSSProperties
 	contextMenuOpen: boolean
@@ -37,6 +47,8 @@ export interface GridButtonCellProps {
 export const GridButtonCell = memo(function GridButtonCell({
 	location,
 	renderSize,
+	feedback,
+	leds,
 	style,
 	contextMenuOpen,
 }: GridButtonCellProps) {
@@ -72,7 +84,8 @@ export const GridButtonCell = memo(function GridButtonCell({
 	// Already subscribed by the cell the button actually lives on, and subscriptions are shared
 	const ghost = useButtonImageForLocation(ghostSource ?? location, renderSize, !ghostSource)
 
-	const { image, isUsed } = useButtonImageForLocation(location, renderSize)
+	const { image, isUsed, color, leds: ledGauge } = useButtonImageForLocation(location, renderSize)
+	const colorOnly = feedback === 'color'
 
 	// An empty cell has nothing to pick up, so dragging one is a gesture that can only end in nothing
 	// happening. In select mode only an already-selected button drags, so dragging anywhere else can
@@ -99,7 +112,9 @@ export const GridButtonCell = memo(function GridButtonCell({
 	return (
 		<GridButtonPreview
 			location={location}
-			image={isUsed ? image : null}
+			image={isUsed && !colorOnly ? image : null}
+			color={isUsed && colorOnly ? color : null}
+			overlay={leds && <SurfaceLeds config={leds} leds={isUsed ? ledGauge : null} />}
 			style={style}
 			title={locationKey}
 			placeholder={`${row}/${column}`}

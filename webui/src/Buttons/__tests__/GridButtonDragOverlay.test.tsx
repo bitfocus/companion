@@ -118,7 +118,7 @@ describe('the drag ghost', () => {
 	it('draws each button being carried', () => {
 		const { container } = setup(at(1, 1), [at(1, 1), at(1, 2)])
 
-		emitAll({ image: 'data:image/png;base64,AAAA', isUsed: true })
+		emitAll({ image: 'data:image/png;base64,AAAA', isUsed: true, color: 'rgba(0, 0, 0, 1)', leds: null })
 
 		const drawn = [...container.querySelectorAll('.button-border')].map(
 			(el) => (el as HTMLElement).style.backgroundImage

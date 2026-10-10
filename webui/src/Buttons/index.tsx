@@ -12,7 +12,7 @@ import { observer } from 'mobx-react-lite'
 import { nanoid } from 'nanoid'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { useMediaQuery } from 'usehooks-ts'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { formatLocation, isLocationOnGrid } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { ContextMenu } from '~/Components/ContextMenu.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -26,14 +26,18 @@ import { ButtonGridStore } from './ButtonGridStore.js'
 import { ButtonGridViewProvider, type ButtonGridView } from './ButtonGridViewContext.js'
 import { EditButton } from './EditButton/EditButton.js'
 import { rememberViewedPage, resolveViewedPage } from './GridPageNavigation.js'
-import { useGridZoom } from './GridZoom.js'
+import { unionGridBounds } from './GridViewAs.js'
+import { GridViewGrowPanel } from './GridViewGrowPanel.js'
+import { useGridZoom, useSurfaceZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
 import { PageVariablesPanel } from './PageVariablesPanel.js'
 import { ConnectionPresets } from './Presets/Presets.js'
+import { controlLocation, stepToNearestControl, surfaceFitZoom } from './SurfaceView/surfaceGeometry.js'
 import { useButtonContextMenu } from './useButtonContextMenu.js'
 import { useGridDropMonitor } from './useGridDropMonitor.js'
 import { useGridKeyboard } from './useGridKeyboard.js'
 import { useGridToolActions } from './useGridToolActions.js'
+import { useGridViewAs } from './useGridViewAs.js'
 
 /** What the URL asks for, or 0 when it names no usable page - "wherever I was" */
 function useUrlPageNumber(): number {
@@ -86,6 +90,49 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	}, [rawPageNumber, pageNumber, navigate])
 
 	const gridSize = userConfig.properties?.gridSize
+
+	// A viewed surface draws its own face over the grid, but the configured grid stays the coordinate
+	// space: controls it has beyond the grid are shown unconfigurable rather than placed off-grid.
+	const viewAs = useGridViewAs()
+
+	const surfaceView = viewAs.resolution.status === 'ready' ? viewAs.resolution.view : null
+
+	// A surface has a zoom of its own, remembered for its kind, which until set by hand fits it to the panel
+	const [panelWidth, setPanelWidth] = useState(0)
+	const surfaceZoom = useSurfaceZoom(
+		viewAs.resolution.status === 'ready' ? viewAs.resolution.zoomKey : null,
+		surfaceView ? surfaceFitZoom(surfaceView, panelWidth) : 100
+	)
+	const zoomController = surfaceZoom?.controller ?? gridZoomController
+	const zoomValue = surfaceZoom?.value ?? gridZoomValue
+
+	// Growing to fit keeps the whole current grid, so nothing already placed is lost
+	const growGridBounds =
+		gridSize && viewAs.resolution.status === 'ready'
+			? unionGridBounds(gridSize, viewAs.resolution.view.gridBounds)
+			: null
+	const viewingName = viewAs.resolution.status === 'ready' ? viewAs.resolution.displayName : null
+
+	// The surface answers for itself which buttons it shows and which one is next to which, because its
+	// controls are wherever the device puts them rather than on a lattice the store could walk
+	useEffect(() => {
+		gridStore.setViewShape(
+			surfaceView
+				? {
+						locations: surfaceView.controls.map((control) => controlLocation(control, pageNumber)),
+						stepFocus: (from, rowDelta, columnDelta) => {
+							const current = surfaceView.controls.find(
+								(control) => control.cell.row === from.row && control.cell.column === from.column
+							)
+							if (!current) return null
+
+							const next = stepToNearestControl(surfaceView, current, rowDelta, columnDelta)
+							return next ? controlLocation(next, pageNumber) : null
+						},
+					}
+				: null
+		)
+	}, [gridStore, surfaceView, pageNumber])
 
 	const openEditor = useCallback((location: ControlLocation) => {
 		setActiveTab('edit')
@@ -155,6 +202,9 @@ export const ButtonsPage = observer(function ButtonsPage() {
 	// block invites the idea that what you type there lands on all of them.
 	const editingButton = selectedButton && selectionCount <= 1 ? selectedButton : null
 
+	// A viewed surface can have a control the grid does not reach; that location is not configurable
+	const editingOffGrid = !!editingButton && !!gridSize && !isLocationOnGrid(gridSize, editingButton)
+
 	// The tab exists only while there is a button for it to show, so it goes away for the length of a
 	// multiple selection, and would leave the panel blank if it was the tab you were on
 	useEffect(() => {
@@ -175,7 +225,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 		pageNumber,
 		pageCount,
 		setPageNumber,
-		zoom: gridZoomController,
+		zoom: zoomController,
 	})
 
 	const gridPanel = (
@@ -186,8 +236,13 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				onKeyDown={handleKeyDownInButtons}
 				contextMenuButton={contextMenuOpen ? contextMenuLocation : null}
 				onButtonContextMenu={doButtonContextMenu}
-				gridZoomController={gridZoomController}
-				gridZoomValue={gridZoomValue}
+				gridZoomController={zoomController}
+				gridZoomValue={zoomValue}
+				zoomFit={surfaceZoom?.fit ?? null}
+				setAvailableWidth={setPanelWidth}
+				viewAs={viewAs}
+				gridSize={gridSize}
+				surfaceView={surfaceView}
 			/>
 		</MyErrorBoundary>
 	)
@@ -238,14 +293,17 @@ export const ButtonsPage = observer(function ButtonsPage() {
 							{!isLargeScreen && <TabArea.Panel value="grid">{gridPanel}</TabArea.Panel>}
 							<TabArea.Panel value="edit">
 								<MyErrorBoundary>
-									{editingButton && (
-										<EditButton
-											key={`${formatLocation(editingButton)}-${tabResetToken}`}
-											location={editingButton}
-											onKeyUp={handleKeyDownInButtons}
-											navigateToControl={navigateToControl}
-										/>
-									)}
+									{editingButton &&
+										(editingOffGrid && growGridBounds ? (
+											<GridViewGrowPanel displayName={viewingName ?? 'This surface'} neededBounds={growGridBounds} />
+										) : (
+											<EditButton
+												key={`${formatLocation(editingButton)}-${tabResetToken}`}
+												location={editingButton}
+												onKeyUp={handleKeyDownInButtons}
+												navigateToControl={navigateToControl}
+											/>
+										))}
 								</MyErrorBoundary>
 							</TabArea.Panel>
 							<TabArea.Panel value="pages">

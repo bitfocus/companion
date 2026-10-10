@@ -40,11 +40,24 @@ const { at, makeGridView } = await import('./gridViewTestHelpers.js')
 
 const GRID_SIZE = { minRow: 0, maxRow: 3, minColumn: 0, maxColumn: 7 }
 
-function setup(overrides: { pageCount?: number; pageNumber?: number } = {}) {
+function setup(overrides: { pageCount?: number; pageNumber?: number; viewAs?: any } = {}) {
 	const view = makeGridView()
 	const changePage = vi.fn()
 	const zoom: GridZoomController = { zoomIn: vi.fn(), zoomOut: vi.fn(), zoomReset: vi.fn(), setZoom: vi.fn() }
 	const onKeyDown = vi.fn()
+
+	// The panel only reads the resolution and the toggle; the rest belongs to the popover
+	const viewAs: any = {
+		state: { enabled: false, selection: { type: 'surfaceType', surfaceType: '', offset: { rows: 0, columns: 0 } } },
+		resolution: { status: 'off' },
+		surfaceChoices: [],
+		modelChoices: [],
+		selectedModelChoice: null,
+		setEnabled: vi.fn(),
+		setSelection: vi.fn(),
+		setOffset: vi.fn(),
+		...overrides.viewAs,
+	}
 
 	// Deep partial of the root store - the panel and its header only reach for these
 	const rootStore: any = {
@@ -68,8 +81,13 @@ function setup(overrides: { pageCount?: number; pageNumber?: number } = {}) {
 						changePage={changePage}
 						gridZoomValue={150}
 						gridZoomController={zoom}
+						zoomFit={null}
+						setAvailableWidth={vi.fn()}
 						contextMenuButton={null}
 						onButtonContextMenu={vi.fn()}
+						viewAs={viewAs}
+						gridSize={GRID_SIZE}
+						surfaceView={null}
 					/>
 				</ButtonGridViewProvider>
 			</RootAppStoreContext.Provider>
@@ -120,6 +138,28 @@ describe('the grid panel', () => {
 		fireEvent.click(screen.getByTitle('Home Position'))
 
 		expect(gridHandle.resetPosition).toHaveBeenCalled()
+	})
+})
+
+describe('viewing as a surface', () => {
+	it('offers the control', () => {
+		setup()
+
+		expect(screen.getByTitle('View the grid as one of your surfaces')).toBeInTheDocument()
+		expect(screen.getByTitle('Choose which surface to view as')).toBeInTheDocument()
+	})
+
+	// The banner says the grid is not showing all of itself
+	it('shows no banner while the view is off', () => {
+		const { container } = setup({ viewAs: { resolution: { status: 'off' } } })
+
+		expect(container.querySelector('.grid-view-as-banner')).toBeNull()
+	})
+
+	it('shows the banner while the grid is not showing all of itself', () => {
+		const { container } = setup({ viewAs: { resolution: { status: 'noSelection' } } })
+
+		expect(container.querySelector('.grid-view-as-banner')).not.toBeNull()
 	})
 })
 

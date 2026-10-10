@@ -8,13 +8,16 @@ import {
 } from './Model/Preview.js'
 import type {
 	GridSize,
+	SurfaceAppearanceDefinition,
 	SurfaceLayoutBitmapSize,
 	SurfaceRotation,
 	SurfaceSchemaControlDefinition,
 	SurfaceSchemaControlStylePreset,
 	SurfaceSchemaLayoutDefinition,
+	SurfaceSchemaLedsConfig,
 } from './Model/Surfaces.js'
 import type { UserConfigGridSize } from './Model/UserConfigModel.js'
+import { estimateFace } from './SurfaceLayoutEstimate.js'
 
 /**
  * The style a control is drawn with: its named preset if it has one, otherwise the required default preset.
@@ -32,65 +35,88 @@ export function resolveControlStylePreset(
 	return layout.stylePresets.default
 }
 
-/** Where a surface sits on the grid, and which way up */
-export interface SurfaceGridPlacement {
-	/** How far right and down the surface's own origin is on the grid */
-	offset: { rows: number; columns: number }
-	rotation: SurfaceRotation
-	/**
-	 * The surface's own grid size, as it reports it - before rotation. Needed because a rotated surface's controls
-	 * are mirrored about the axis they turned around, which can only be done knowing how big that axis is.
-	 */
-	panelGridSize: GridSize
+/**
+ * A rectangle on the face of a surface, in layout units.
+ *
+ * Layout units measure the face, not the bitmaps drawn on it: two controls of the same size can be drawn at
+ * different resolutions, so a pixel count says how much detail a control has, not how big it is. Pixels to draw
+ * with is `renderSize`. Only the ratios between controls matter; see `estimateControlSize` for where they come from.
+ */
+export interface SurfaceRect {
+	x: number
+	y: number
+	width: number
+	height: number
 }
 
-/** One control of a surface, placed on the grid */
+/**
+ * How a control is drawn: a rounded rectangle, or a circle for a round encoder or jog.
+ */
+export type SurfaceControlShape =
+	| {
+			type: 'rect'
+			/** As a fraction of the shorter side, so it survives being scaled */
+			cornerRadiusRatio: number
+	  }
+	| { type: 'circle' }
+
+/**
+ * What a control shows of its button: a drawn image, only a colour (an rgb-lit key, a touch strip which lights up),
+ * or nothing at all (a plain key, a pedal).
+ */
+export type SurfaceControlFeedback = 'bitmap' | 'color' | 'none'
+
+/** Which button on the grid a control drives. A surface control is an input to a button, not a cell of a layout. */
+export interface SurfaceControlCell {
+	row: number
+	column: number
+}
+
+/** One control of a surface: where it is, how it is drawn, and which button it drives */
 export interface ResolvedSurfaceControl {
 	/** The control's id in the layout, which is stable and unique within the surface */
 	id: string
-	/** Absolute grid coordinates, not relative to the view */
-	row: number
-	column: number
-	/**
-	 * The shape this control is drawn at, or null when its style declares no bitmap at all - an encoder which only
-	 * has leds, or a text-only display. Those still occupy a cell, but have no shape of their own to be drawn at.
-	 */
+	/** The button this control drives, in absolute grid coordinates */
+	cell: SurfaceControlCell
+	/** Where the control is on the face of the surface, and how big it is there */
+	bounds: SurfaceRect
+	shape: SurfaceControlShape
+	feedback: SurfaceControlFeedback
+	/** The leds the control has around or along it, as well as whatever it shows, or null when it has none */
+	leds: SurfaceSchemaLedsConfig | null
+	/** The shape of the bitmap this control is drawn with, or null when its style declares no bitmap (leds-only, text-only). */
 	aspectRatio: AspectRatio | null
-	/** The pixel size to draw a preview of this control at */
+	/** How many pixels to draw a preview with - its resolution, a separate question to how large it is on the face. */
 	renderSize: PreviewRenderSize
 }
 
 /**
- * A surface's layout, resolved onto the grid.
+ * A surface's layout, resolved into something that can be drawn.
  *
- * A discriminated union with one member for now: the schema describes controls by row and column only, so a grid
- * is all it can express. Per-control pixel geometry needs a schema change first, and would arrive here as another
- * variant rather than by widening this one.
+ * A flat list of placed controls, not a grid: the schema only says rows and columns today, but this describes a
+ * face with controls on it, so drawing, hit-testing and navigation above never learn the positions came from a
+ * lattice. When the schema can carry real positions, only `resolveSurfaceView` changes.
  */
-export type ResolvedSurfaceView = ResolvedSurfaceGridView
-
-export interface ResolvedSurfaceGridView {
-	type: 'grid'
-	/** The smallest rectangle of the grid containing every control */
-	bounds: UserConfigGridSize
-	/** Every control, in no particular order */
-	controls: ResolvedSurfaceControl[]
-	/** The controls by `row/column`, for asking whether a cell of the bounding box is a control at all */
-	controlsByCell: ReadonlyMap<string, ResolvedSurfaceControl>
+export interface ResolvedSurfaceView {
+	/** Every control of the surface, in the order the layout listed them */
+	controls: readonly ResolvedSurfaceControl[]
+	/** The whole face, in the same layout units as the control bounds */
+	extent: { width: number; height: number }
 	/**
-	 * The shape every cell of the view is drawn at: whichever shape the most controls have. Controls of another
-	 * shape are letterboxed into it rather than the rows being sized individually.
+	 * The smallest grid rectangle containing every button these controls drive - not the shape of the view, but the
+	 * part of the grid it reaches, which the editor's grid-coordinate code needs.
 	 */
-	aspectRatio: AspectRatio
-	/** The size a cell of the view's own shape is drawn at */
-	renderSize: PreviewRenderSize
-	/** Whether any control is drawn at a shape other than the view's, and so is letterboxed into its cell */
-	hasMixedAspectRatios: boolean
+	gridBounds: UserConfigGridSize
+	/** The face's background, when the surface described one, to draw behind the controls; null for the plain ground */
+	body: { color: string; image: string | null } | null
 }
 
-/** The key `controlsByCell` is indexed by */
-export function surfaceCellKey(row: number, column: number): string {
-	return `${row}/${column}`
+/** What a control shows, from its style. A bitmap wins over colours, as that is what the panel draws. */
+export function controlFeedback(preset: SurfaceSchemaControlStylePreset): SurfaceControlFeedback {
+	if (preset.bitmap) return 'bitmap'
+	if (preset.colors) return 'color'
+
+	return 'none'
 }
 
 /**
@@ -135,22 +161,41 @@ export function unrotateXYForPanel(
 	}
 }
 
+/** Whether a surface is mounted on its side, which swaps over everything measured across it */
+export function isQuarterTurn(rotation: SurfaceRotation): boolean {
+	return rotation === 'surface90' || rotation === 'surface-90' || rotation === 90 || rotation === -90
+}
+
 /** The surface's size as the grid sees it: a quarter turn swaps the rows and columns over */
 export function rotatedPanelGridSize(panelGridSize: GridSize, rotation: SurfaceRotation): GridSize {
-	if (rotation === 'surface90' || rotation === 'surface-90' || rotation === 90 || rotation === -90) {
-		return { rows: panelGridSize.columns, columns: panelGridSize.rows }
-	}
+	if (isQuarterTurn(rotation)) return { rows: panelGridSize.columns, columns: panelGridSize.rows }
 
 	return panelGridSize
 }
 
 /**
- * One scale for the whole surface, so that the sizes its controls are drawn at keep the proportions the device
- * has: the touch strip of a Stream Deck +XL is twice as wide as a button, and stays twice as wide here.
+ * How big the surface's own grid is, worked out from where its controls are.
  *
- * Chosen so that the least detailed control is drawn at least as large as an ordinary button preview, which is
- * what the grid needs to stay sharp when zoomed in - and then capped, so that a surface which also has a large
- * display on it does not turn that into an enormous render.
+ * A layout knows nothing about the size of the panel it describes, so this stands in when the surface itself is
+ * not there to say - viewing as a type of surface rather than one that is plugged in.
+ */
+export function panelGridSizeFromLayout(layout: SurfaceSchemaLayoutDefinition): GridSize {
+	let rows = 0
+	let columns = 0
+
+	for (const control of Object.values(layout.controls)) {
+		rows = Math.max(rows, control.row + 1)
+		columns = Math.max(columns, control.column + 1)
+	}
+
+	return { rows, columns }
+}
+
+/**
+ * One scale for the whole surface, so controls keep the proportions the device gives them.
+ *
+ * Chosen so the least detailed control is drawn at least button-preview size (so the grid stays sharp zoomed in),
+ * then capped so a large display on the surface doesn't turn into an enormous render.
  */
 export function surfaceRenderScale(bitmaps: readonly SurfaceLayoutBitmapSize[]): number {
 	const longSides = bitmaps.map((bitmap) => Math.max(bitmap.w, bitmap.h)).filter((side) => side > 0)
@@ -161,123 +206,169 @@ export function surfaceRenderScale(bitmaps: readonly SurfaceLayoutBitmapSize[]):
 	return Math.min(scale, PREVIEW_RENDER_SIZE_MAX / Math.max(...longSides))
 }
 
-/**
- * Which shape the view as a whole is drawn at: the one the most controls have.
- *
- * Grouped by shape rather than by pixel size, so a surface whose buttons are 72x72 and whose secondary display is
- * 120x120 is all one shape. Controls with no bitmap have no shape to vote with, but still occupy a cell and are
- * drawn at whatever wins.
- *
- * Ties go to the default preset's shape, and failing that to the first when sorted - never to whichever the
- * object happened to be iterated in, or the same surface would be drawn differently between restarts.
- */
-export function chooseViewAspectRatio(
-	controlRatios: readonly (AspectRatio | null)[],
-	defaultRatio: AspectRatio | null
-): AspectRatio {
-	const counts = new Map<string, { ratio: AspectRatio; count: number }>()
-
-	for (const ratio of controlRatios) {
-		if (!ratio) continue
-
-		const key = `${ratio.w}:${ratio.h}`
-		const existing = counts.get(key)
-		if (existing) existing.count++
-		else counts.set(key, { ratio, count: 1 })
-	}
-
-	if (counts.size === 0) return defaultRatio ?? { w: 1, h: 1 }
-
-	const candidates = Array.from(counts.entries()).sort(([keyA, a], [keyB, b]) => {
-		if (a.count !== b.count) return b.count - a.count
-
-		// A tie the default preset is part of is settled by it, so the surface's own idea of normal wins
-		if (defaultRatio) {
-			const defaultKey = `${defaultRatio.w}:${defaultRatio.h}`
-			if (keyA === defaultKey) return -1
-			if (keyB === defaultKey) return 1
-		}
-
-		return keyA.localeCompare(keyB)
-	})
-
-	return candidates[0][1].ratio
+/** Where a surface sits on the grid, and which way up */
+export interface SurfaceGridPlacement {
+	/** How far right and down the surface's own origin is on the grid */
+	offset: { rows: number; columns: number }
+	rotation: SurfaceRotation
+	/**
+	 * The surface's own grid size before rotation. Needed because a rotated surface's controls are mirrored about
+	 * the axis they turned around, which needs the size of that axis.
+	 */
+	panelGridSize: GridSize
 }
 
+/** How round a control's corners are, as a fraction of its shorter side. A Stream Deck key, near enough. */
+const CONTROL_CORNER_RATIO = 0.12
+
+/** The size of a control which declares no bitmap, when the surface has nothing else to go on */
+const NOMINAL_CONTROL_SIZE = 72
+
 /**
- * Place a surface's layout onto the grid.
+ * Work out where a surface's controls are, and which buttons they drive.
  *
- * Returns null when the layout describes no controls at all, which is not a surface anything can be viewed as.
+ * Returns null when the layout describes no controls at all.
+ *
+ * Drawn exactly from the surface's appearance when it described one; otherwise estimated from the layout, see
+ * `estimateFace`.
  */
-export function resolveSurfaceGridView(
+export function resolveSurfaceView(
 	layout: SurfaceSchemaLayoutDefinition,
+	appearance: SurfaceAppearanceDefinition | null,
 	placement: SurfaceGridPlacement
-): ResolvedSurfaceGridView | null {
+): ResolvedSurfaceView | null {
+	const entries = Object.entries(layout.controls)
+	if (entries.length === 0) return null
+
 	const gridSizeOfSurface = rotatedPanelGridSize(placement.panelGridSize, placement.rotation)
+	const quarterTurn = isQuarterTurn(placement.rotation)
 
 	const bitmaps: SurfaceLayoutBitmapSize[] = []
-	for (const control of Object.values(layout.controls)) {
+	for (const [, control] of entries) {
 		const bitmap = resolveControlStylePreset(layout, control).bitmap
 		if (bitmap) bitmaps.push(bitmap)
 	}
+
+	// A control with no bitmap still takes up room; the smallest thing the surface draws is the closest to a size
+	// for it, failing that a nominal key.
+	const fallbackSide =
+		bitmaps.length > 0 ? Math.min(...bitmaps.map((bitmap) => Math.min(bitmap.w, bitmap.h))) : NOMINAL_CONTROL_SIZE
 	const scale = surfaceRenderScale(bitmaps)
 
-	const controls: ResolvedSurfaceControl[] = []
-	const controlsByCell = new Map<string, ResolvedSurfaceControl>()
+	interface PlacedControl {
+		id: string
+		cell: SurfaceControlCell
+		/** Relative to the surface's own origin, before the offset onto the grid */
+		gridX: number
+		gridY: number
+		/** How big its display is on the face, or null when it has none */
+		display: { width: number; height: number } | null
+		feedback: SurfaceControlFeedback
+		leds: SurfaceSchemaLedsConfig | null
+		aspectRatio: AspectRatio | null
+		renderSize: PreviewRenderSize
+	}
 
-	for (const [id, control] of Object.entries(layout.controls)) {
+	const placed: PlacedControl[] = []
+	for (const [id, control] of entries) {
 		// The layout is in the panel's own coordinates, which a rotated surface does not share with the grid
 		const [gridX, gridY] = unrotateXYForPanel(control.column, control.row, gridSizeOfSurface, placement.rotation)
 
-		const bitmap = resolveControlStylePreset(layout, control).bitmap
-		const resolved: ResolvedSurfaceControl = {
+		const preset = resolveControlStylePreset(layout, control)
+		const bitmap = preset.bitmap
+		const display = bitmap ? { width: bitmap.w, height: bitmap.h } : null
+
+		placed.push({
 			id,
-			row: gridY + placement.offset.rows,
-			column: gridX + placement.offset.columns,
+			cell: { row: gridY + placement.offset.rows, column: gridX + placement.offset.columns },
+			gridX,
+			gridY,
+			// A surface on its side presents its controls on their side too
+			display: display && quarterTurn ? { width: display.height, height: display.width } : display,
+			feedback: controlFeedback(preset),
+			leds: preset.leds ?? null,
 			aspectRatio: bitmap ? reduceAspectRatio(bitmap.w, bitmap.h) : null,
 			renderSize: bitmap
 				? clampPreviewRenderSize({ width: bitmap.w * scale, height: bitmap.h * scale })
 				: DEFAULT_PREVIEW_RENDER_SIZE,
-		}
-
-		controls.push(resolved)
-
-		// Two controls on one cell is a surface describing something the grid cannot show; the first wins, so which
-		// one that is does not change between renders
-		const cellKey = surfaceCellKey(resolved.row, resolved.column)
-		if (!controlsByCell.has(cellKey)) controlsByCell.set(cellKey, resolved)
+		})
 	}
 
-	if (controls.length === 0) return null
+	// A surface which described its own face is drawn from that, exactly, rather than the estimate below. Only
+	// while mounted the normal way up: rotating a described face is not done yet, so a rotated surface falls
+	// back to the derived layout, which does handle rotation.
+	if (appearance && isUnrotated(placement.rotation) && placed.every((control) => appearance.controls[control.id])) {
+		const controls: ResolvedSurfaceControl[] = placed.map((control) => {
+			const face = appearance.controls[control.id]
+			return {
+				id: control.id,
+				cell: control.cell,
+				bounds: { x: face.x, y: face.y, width: face.width, height: face.height },
+				shape: shapeFromAppearance(face),
+				feedback: control.feedback,
+				leds: control.leds,
+				aspectRatio: control.aspectRatio,
+				renderSize: control.renderSize,
+			}
+		})
 
-	const defaultBitmap = layout.stylePresets.default.bitmap
-	const aspectRatio = chooseViewAspectRatio(
-		controls.map((control) => control.aspectRatio),
-		defaultBitmap ? reduceAspectRatio(defaultBitmap.w, defaultBitmap.h) : null
+		return {
+			controls,
+			extent: { width: appearance.size.width, height: appearance.size.height },
+			gridBounds: gridBoundsFromCells(controls),
+			body: { color: appearance.bodyColor, image: appearance.bodyImage ?? null },
+		}
+	}
+
+	const face = estimateFace(
+		placed.map((control) => ({
+			track: { x: control.gridX, y: control.gridY },
+			display: control.display,
+			ring: control.leds?.mode === 'full-ring',
+		})),
+		fallbackSide
 	)
 
-	// The cell's own size comes from a control of the chosen shape, so the view is drawn at a size the surface
-	// actually uses rather than one derived from the shape alone
-	const matching = controls.find(
-		(control) =>
-			control.aspectRatio && control.aspectRatio.w === aspectRatio.w && control.aspectRatio.h === aspectRatio.h
-	)
+	const controls: ResolvedSurfaceControl[] = placed.map((control, index) => ({
+		id: control.id,
+		cell: control.cell,
+		bounds: face.bounds[index],
+		shape: { type: 'rect', cornerRadiusRatio: CONTROL_CORNER_RATIO },
+		feedback: control.feedback,
+		leds: control.leds,
+		aspectRatio: control.aspectRatio,
+		renderSize: control.renderSize,
+	}))
 
 	return {
-		type: 'grid',
-		bounds: {
-			minRow: Math.min(...controls.map((control) => control.row)),
-			maxRow: Math.max(...controls.map((control) => control.row)),
-			minColumn: Math.min(...controls.map((control) => control.column)),
-			maxColumn: Math.max(...controls.map((control) => control.column)),
-		},
 		controls,
-		controlsByCell,
-		aspectRatio,
-		renderSize: matching?.renderSize ?? DEFAULT_PREVIEW_RENDER_SIZE,
-		hasMixedAspectRatios: controls.some(
-			(control) =>
-				control.aspectRatio && (control.aspectRatio.w !== aspectRatio.w || control.aspectRatio.h !== aspectRatio.h)
-		),
+		extent: face.extent,
+		gridBounds: gridBoundsFromCells(controls),
+		// No described face; the plain ground shows between the controls
+		body: null,
+	}
+}
+
+/** The plain-up orientations, where a described face can be drawn as-is without turning it */
+function isUnrotated(rotation: SurfaceRotation): boolean {
+	return rotation === 0 || rotation === 'surface0'
+}
+
+/** A described face is drawn as described: a rect is only rounded when the surface gives it a radius */
+function shapeFromAppearance(face: SurfaceAppearanceDefinition['controls'][string]): SurfaceControlShape {
+	if (face.shape?.type === 'circle') return { type: 'circle' }
+
+	const cornerRadius = face.shape?.type === 'rect' ? (face.shape.cornerRadius ?? 0) : 0
+	const minSide = Math.min(face.width, face.height)
+
+	return { type: 'rect', cornerRadiusRatio: minSide > 0 ? cornerRadius / minSide : 0 }
+}
+
+function gridBoundsFromCells(controls: readonly ResolvedSurfaceControl[]): UserConfigGridSize {
+	return {
+		minRow: Math.min(...controls.map((control) => control.cell.row)),
+		maxRow: Math.max(...controls.map((control) => control.cell.row)),
+		minColumn: Math.min(...controls.map((control) => control.cell.column)),
+		maxColumn: Math.max(...controls.map((control) => control.cell.column)),
 	}
 }

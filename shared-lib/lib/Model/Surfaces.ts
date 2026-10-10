@@ -1,9 +1,11 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import type {
+	SurfaceAppearanceDefinition,
 	SurfaceSchemaBitmapConfig,
 	SurfaceSchemaControlDefinition,
 	SurfaceSchemaControlStylePreset,
 	SurfaceSchemaLayoutDefinition,
+	SurfaceSchemaLedsConfig,
 } from '@companion-surface/base'
 import type { CollectionBase } from './Collections.js'
 import type { DropdownChoice } from './Common.js'
@@ -23,10 +25,12 @@ import type {
  * the same place, rather than a second description of the same thing.
  */
 export type {
+	SurfaceAppearanceDefinition,
 	SurfaceSchemaBitmapConfig,
 	SurfaceSchemaControlDefinition,
 	SurfaceSchemaControlStylePreset,
 	SurfaceSchemaLayoutDefinition,
+	SurfaceSchemaLedsConfig,
 }
 
 export type GridSize = { columns: number; rows: number }
@@ -54,9 +58,39 @@ export interface ClientSurfaceLayoutItem {
 	id: string
 	/** The model name of the surface, matching `ClientSurfaceItem.type` */
 	type: string
+	/** Which kind of surface integration this came from, matching `ClientSurfaceItem.integrationType` */
+	integrationType: string
 	displayName: string
 	isConnected: boolean
 	layout: SurfaceSchemaLayoutDefinition
+	/** How to draw the surface's face; null when it supplied none and the face is derived from the layout */
+	appearance: SurfaceAppearanceDefinition | null
+	/** Which declared model the surface is, qualified as `ClientSurfaceModelItem.id` is; null when it named none */
+	modelId: string | null
+}
+
+/**
+ * A model of surface a plugin knows how to drive, as pushed to the client.
+ *
+ * Declared by the plugin rather than learned from a device, so these exist for surfaces nobody here
+ * has ever owned - which is the point of them. A model is only a description of a shape: it has no
+ * place on the grid and no config, because there is nothing of it here to place or configure.
+ */
+export interface ClientSurfaceModelItem {
+	/** Unique across Companion: the plugin's own model id, qualified by the module which declared it */
+	id: string
+	/** The surface module which declared this model */
+	moduleId: string
+	/**
+	 * User facing name of the model, eg `Stream Deck XL`. Matches `ClientSurfaceItem.type` for a surface of it,
+	 * unless another module declared a model of the same name, in which case it is suffixed with the declaring
+	 * module to keep the two apart.
+	 */
+	name: string
+	/** The controls this model has, in the form a connected surface of it would report */
+	layout: SurfaceSchemaLayoutDefinition
+	/** How to draw the model's face, if it declared a valid one; drawn from the layout's geometry otherwise */
+	appearance: SurfaceAppearanceDefinition | undefined
 }
 
 /**
@@ -132,6 +166,13 @@ export interface SurfaceConfig {
 	integrationType: string | undefined
 	gridSize: GridSize | undefined
 	layout: SurfaceSchemaLayoutDefinition | undefined
+	/** null when the surface supplied none; undefined for configs saved before this was persisted */
+	appearance: SurfaceAppearanceDefinition | null | undefined
+	/**
+	 * Which of its module's declared models the surface is, by the id the module declared it with. null when it
+	 * named none; undefined for configs saved before this was persisted
+	 */
+	modelId: string | null | undefined
 }
 
 export interface SurfaceGroupConfig {
@@ -187,6 +228,26 @@ export interface SurfacesUpdateUpdateOp {
 	itemId: string
 
 	patch: JsonPatchOperation<ClientDevicesListItem>[]
+}
+
+/**
+ * An incremental update to the set of surface models declared to the client, keyed by qualified id.
+ */
+export type SurfaceModelsUpdate = SurfaceModelsUpdateInitOp | SurfaceModelsUpdateRemoveOp | SurfaceModelsUpdateReplaceOp
+
+export interface SurfaceModelsUpdateInitOp {
+	type: 'init'
+	models: Record<string, ClientSurfaceModelItem>
+}
+export interface SurfaceModelsUpdateRemoveOp {
+	type: 'remove'
+	itemId: string
+}
+export interface SurfaceModelsUpdateReplaceOp {
+	type: 'replace'
+	itemId: string
+
+	info: ClientSurfaceModelItem
 }
 
 export interface OutboundSurfaceInfo {
