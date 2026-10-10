@@ -1,8 +1,16 @@
 import classnames from 'classnames'
 import { memo, useCallback, useEffect, useRef } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { SurfaceControlKind } from '@companion-app/shared/SurfaceLayout.js'
 import { useImagePreloader } from '~/Components/ButtonPreview.js'
 import type { GridPendingChange } from './GridGeometry.js'
+import {
+	continueRotaryDrag,
+	ROTARY_HOLD_MS,
+	startRotaryDrag,
+	type Point,
+	type RotaryDrag,
+} from './SurfaceView/rotaryDrag.js'
 
 /**
  * How far (px) a pointer may travel before the gesture stops counting as a tap. Touch scrolling is
@@ -20,6 +28,8 @@ export interface GridButtonModifiers {
 
 export interface GridButtonPreviewProps {
 	location: ControlLocation
+	/** What sort of control this is drawn as - a key, a knob, a slice of a screen */
+	kind: SurfaceControlKind
 	image: string | null
 	/** Fill the button with this colour instead of an image, for a control which shows only a colour */
 	color: string | null
@@ -35,6 +45,13 @@ export interface GridButtonPreviewProps {
 	 */
 	pressMode: boolean
 	onPress: (location: ControlLocation, isDown: boolean) => void
+	/**
+	 * For a control which turns (a knob, a jog, a shuttle): in press mode a drag round it turns it, by a signed number
+	 * of steps - positive is rightward. Each move sends however far it went as one turn, so a fast spin is a bigger
+	 * turn rather than more of them, as an encoder reports it. Null for one which does not turn, where a drag is only
+	 * ever a press sliding off.
+	 */
+	onRotate: ((location: ControlLocation, delta: number) => void) | null
 	onTap: (location: ControlLocation, modifiers: GridButtonModifiers) => void
 	onContextMenu: (location: ControlLocation, x: number, y: number) => void
 
@@ -71,6 +88,7 @@ export interface GridButtonPreviewProps {
  */
 export const GridButtonPreview = memo(function GridButtonPreview({
 	location,
+	kind,
 	image,
 	color,
 	overlay,
@@ -79,6 +97,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 	placeholder,
 	pressMode,
 	onPress,
+	onRotate,
 	onTap,
 	onContextMenu,
 	selected,
@@ -97,15 +116,38 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 	const preloadedImage = useImagePreloader(image)
 
 	// Tracks the in-flight gesture. Null between gestures.
-	const gestureRef = useRef<{ pointerId: number; startX: number; startY: number; moved: boolean } | null>(null)
+	const gestureRef = useRef<{
+		pointerId: number
+		startX: number
+		startY: number
+		moved: boolean
+		/** The middle of a control which turns, which a drag goes round; null for one which does not */
+		centre: Point | null
+		/** The drag turning it, once the pointer has moved off where it went down */
+		rotation: RotaryDrag | null
+	} | null>(null)
 	// Whether a real press is outstanding, so we can guarantee a matching release
 	const isPressedRef = useRef(false)
+	// The push of a control which turns, waiting to see whether it is held or dragged
+	const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+	const cancelHold = useCallback(() => {
+		if (!holdTimerRef.current) return
+		clearTimeout(holdTimerRef.current)
+		holdTimerRef.current = null
+	}, [])
+
+	const pressDown = useCallback(() => {
+		isPressedRef.current = true
+		onPress(location, true)
+	}, [onPress, location])
 
 	const releaseIfPressed = useCallback(() => {
+		cancelHold()
 		if (!isPressedRef.current) return
 		isPressedRef.current = false
 		onPress(location, false)
-	}, [onPress, location])
+	}, [cancelHold, onPress, location])
 
 	// The pointer events match every press with a release in the normal cases, but two escape them:
 	// press mode being turned off mid-press, and this cell unmounting while the finger is still down
@@ -121,25 +163,65 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 			// Right-click is for the context menu only
 			if (e.button === 2) return
 
-			gestureRef.current = { pointerId: e.pointerId, startX: e.clientX, startY: e.clientY, moved: false }
+			const turns = pressMode && !!onRotate
+			const box = turns ? e.currentTarget.getBoundingClientRect() : null
+
+			gestureRef.current = {
+				pointerId: e.pointerId,
+				startX: e.clientX,
+				startY: e.clientY,
+				moved: false,
+				centre: box && { x: box.left + box.width / 2, y: box.top + box.height / 2 },
+				rotation: null,
+			}
 
 			if (pressMode) {
 				// Capture so the release still reaches us if the finger slides off the button
 				e.currentTarget.setPointerCapture?.(e.pointerId)
-				isPressedRef.current = true
-				onPress(location, true)
+
+				if (turns) {
+					// Pushed only once held still, as moving first means it is being turned instead
+					cancelHold()
+					holdTimerRef.current = setTimeout(() => {
+						holdTimerRef.current = null
+						pressDown()
+					}, ROTARY_HOLD_MS)
+				} else {
+					pressDown()
+				}
 			}
 		},
-		[pressMode, onPress, location]
+		[pressMode, onRotate, cancelHold, pressDown]
 	)
 
-	const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-		const gesture = gestureRef.current
-		if (!gesture || gesture.pointerId !== e.pointerId || gesture.moved) return
+	const handlePointerMove = useCallback(
+		(e: React.PointerEvent<HTMLDivElement>) => {
+			const gesture = gestureRef.current
+			if (!gesture || gesture.pointerId !== e.pointerId) return
 
-		const distance = Math.hypot(e.clientX - gesture.startX, e.clientY - gesture.startY)
-		if (distance > TAP_MOVE_THRESHOLD) gesture.moved = true
-	}, [])
+			const point = { x: e.clientX, y: e.clientY }
+
+			if (!gesture.moved) {
+				const distance = Math.hypot(point.x - gesture.startX, point.y - gesture.startY)
+				if (distance <= TAP_MOVE_THRESHOLD) return
+				gesture.moved = true
+
+				// Moved before it was held long enough to push, so it is being turned. Counted from where it went
+				// down, so the threshold is not lost from the turn.
+				if (gesture.centre && holdTimerRef.current) {
+					cancelHold()
+					gesture.rotation = startRotaryDrag(gesture.centre, { x: gesture.startX, y: gesture.startY })
+				}
+			}
+
+			if (!gesture.rotation || !onRotate) return
+
+			const { drag, steps } = continueRotaryDrag(gesture.rotation, point)
+			gesture.rotation = drag
+			if (steps !== 0) onRotate(location, steps)
+		},
+		[cancelHold, onRotate, location]
+	)
 
 	const handlePointerUp = useCallback(
 		(e: React.PointerEvent<HTMLDivElement>) => {
@@ -147,6 +229,14 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 			gestureRef.current = null
 
 			if (pressMode) {
+				// Let go of a control which turns before it was held or turned: a quick push
+				if (holdTimerRef.current && gesture && !gesture.moved) {
+					cancelHold()
+					onPress(location, true)
+					onPress(location, false)
+					return
+				}
+
 				releaseIfPressed()
 				return
 			}
@@ -156,7 +246,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 
 			onTap(location, { range: e.shiftKey, toggle: e.ctrlKey || e.metaKey })
 		},
-		[pressMode, releaseIfPressed, onTap, location]
+		[pressMode, cancelHold, releaseIfPressed, onPress, onTap, location]
 	)
 
 	const handlePointerCancel = useCallback(() => {
@@ -197,7 +287,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 			ref={setRefs}
 			// `grid-button` marks this as the grid's own cell rather than any other ButtonPreview, so a
 			// rule can apply to it and not to the preset pool or the emulator
-			className={classnames('button-control', 'clickable', 'fixed-72', 'grid-button', {
+			className={classnames('button-control', 'clickable', 'fixed-72', 'grid-button', `control-kind-${kind}`, {
 				// Let the browser scroll the grid, except in press mode where a scroll must not steal the press
 				'grid-pannable': !pressMode,
 				selected,

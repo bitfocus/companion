@@ -317,6 +317,10 @@ export class ButtonGridStore {
 		this.#activeTool.onPress(this.#context(actions), location, isDown)
 	}
 
+	handleRotate(location: ControlLocation, delta: number, actions: GridToolActions): void {
+		this.#activeTool.onRotate(this.#context(actions), location, delta)
+	}
+
 	/**
 	 * Unwind one step of whatever is in progress. Once the active tool has nothing left to undo, fall
 	 * back to select - so escape is always "one step back, then out", never a jump to somewhere

@@ -1,0 +1,57 @@
+/* The detail drawn over a control to say what it is. Sized in `cqmin` of the button, which is a size container,
+   so it scales with the control rather than staying a fixed few pixels on a large jog wheel. */
+.surface-control-detail {
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	pointer-events: none;
+
+	/* Turned a step at a time as it is dragged round, eased so each step reads as movement rather than a jump */
+	transition: rotate 80ms ease-out;
+
+	/* A rim, so it reads as something raised off the face rather than printed on it */
+	box-shadow: inset 0 0 0 max(1px, 3cqmin) color-mix(in srgb, var(--color-border-strong) 45%, transparent);
+
+	&::after {
+		content: '';
+		position: absolute;
+	}
+}
+
+/* A knob: a pointer at twelve o'clock */
+.surface-control-detail-encoder::after {
+	top: 8cqmin;
+	left: 50%;
+	width: max(2px, 5cqmin);
+	height: 22cqmin;
+	translate: -50% 0;
+
+	border-radius: 9999px;
+	background-color: color-mix(in srgb, var(--color-light) 80%, transparent);
+}
+
+/* A jog wheel: the dimple a finger spins it by */
+.surface-control-detail-jog::after {
+	top: 16cqmin;
+	left: 60cqmin;
+	width: 18cqmin;
+	height: 18cqmin;
+
+	border-radius: 50%;
+	background-color: color-mix(in srgb, var(--color-light) 12%, transparent);
+	box-shadow:
+		inset 0 1px 3px color-mix(in srgb, var(--color-shadow) 80%, transparent),
+		0 0 0 1px color-mix(in srgb, var(--color-border-strong) 45%, transparent);
+}
+
+/* A shuttle ring: ridges around its outer edge. Whatever sits inside it (the jog, usually) is drawn on top. */
+.surface-control-detail-shuttle::after {
+	inset: 0;
+	border-radius: 50%;
+
+	background: repeating-conic-gradient(
+		color-mix(in srgb, var(--color-light) 35%, transparent) 0deg 3deg,
+		transparent 3deg 15deg
+	);
+	mask: radial-gradient(closest-side, transparent 84%, black 85% 95%, transparent 96%);
+}

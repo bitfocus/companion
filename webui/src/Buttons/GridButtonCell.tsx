@@ -1,10 +1,14 @@
 import { useDraggable, useDragOperation, useDroppable } from '@dnd-kit/react'
-import { memo, useCallback, useMemo } from 'react'
+import { memo, useCallback, useMemo, useState } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { PreviewRenderSize } from '@companion-app/shared/Model/Preview.js'
 import type { SurfaceSchemaLedsConfig } from '@companion-app/shared/Model/Surfaces.js'
-import type { SurfaceControlFeedback } from '@companion-app/shared/SurfaceLayout.js'
+import {
+	isRotaryKind,
+	type SurfaceControlFeedback,
+	type SurfaceControlKind,
+} from '@companion-app/shared/SurfaceLayout.js'
 import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import {
 	useButtonGridView,
@@ -19,12 +23,16 @@ import {
 import { GRID_BUTTON_DRAG_TYPE, type GridButtonDragItem } from './GridButtonDragItem.js'
 import { makeGridButtonDroppableId } from './GridButtonDroppableId.js'
 import { GridButtonPreview, type GridButtonModifiers } from './GridButtonPreview.js'
+import { ROTARY_STEP_DEGREES } from './SurfaceView/rotaryDrag.js'
+import { SurfaceControlDetail } from './SurfaceView/SurfaceControlDetail.js'
 import { SurfaceLeds } from './SurfaceView/SurfaceLeds.js'
 
 export interface GridButtonCellProps {
 	location: ControlLocation
 	/** The size to draw this button's image at */
 	renderSize: PreviewRenderSize
+	/** What sort of control it is, so it is drawn as one: a knob rather than a round key */
+	kind: SurfaceControlKind
 	/**
 	 * What the control shows of the button. One which shows only a colour is drawn as that colour, as the image
 	 * would be squeezed into something too small to read and is not what the device shows anyway.
@@ -47,6 +55,7 @@ export interface GridButtonCellProps {
 export const GridButtonCell = memo(function GridButtonCell({
 	location,
 	renderSize,
+	kind,
 	feedback,
 	leds,
 	style,
@@ -108,18 +117,35 @@ export const GridButtonCell = memo(function GridButtonCell({
 		(pressLocation: ControlLocation, isDown: boolean) => store.handlePress(pressLocation, isDown, actions),
 		[store, actions]
 	)
+	// How far this control has been turned from here, so each step sent turns what is drawn with it. A knob has no
+	// position to read back, so this counts turns made, not where the knob is.
+	const [turn, setTurn] = useState(0)
+	const onRotate = useCallback(
+		(rotateLocation: ControlLocation, delta: number) => {
+			setTurn((degrees) => degrees + delta * ROTARY_STEP_DEGREES)
+			store.handleRotate(rotateLocation, delta, actions)
+		},
+		[store, actions]
+	)
 
 	return (
 		<GridButtonPreview
 			location={location}
+			kind={kind}
 			image={isUsed && !colorOnly ? image : null}
 			color={isUsed && colorOnly ? color : null}
-			overlay={leds && <SurfaceLeds config={leds} leds={isUsed ? ledGauge : null} />}
+			overlay={
+				<>
+					<SurfaceControlDetail kind={kind} turn={turn} />
+					{leds && <SurfaceLeds config={leds} leds={isUsed ? ledGauge : null} />}
+				</>
+			}
 			style={style}
 			title={locationKey}
 			placeholder={`${row}/${column}`}
 			pressMode={pressMode}
 			onPress={onPress}
+			onRotate={isRotaryKind(kind) ? onRotate : null}
 			onTap={onTap}
 			onContextMenu={onContextMenu}
 			selected={selected}

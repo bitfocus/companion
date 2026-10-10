@@ -310,23 +310,23 @@ export function createControlsTrpcRouter(
 			.input(
 				z.object({
 					location: zodLocation,
-					direction: z.boolean(),
+					/** Signed: the sign is the direction (positive is right), the size how many steps it turned by */
+					delta: z
+						.number()
+						.int()
+						.refine((delta) => delta !== 0, 'A rotation must turn by at least one step'),
 					surfaceId: z.string(),
 				})
 			)
 			.mutation(async ({ input }) => {
 				logger.silly(
-					`being told from gui to hot rotate ${formatLocation(input.location)} ${input.direction} ${input.surfaceId}`
+					`being told from gui to hot rotate ${formatLocation(input.location)} by ${input.delta} ${input.surfaceId}`
 				)
 
 				const controlId = pageStore.getControlIdAt(input.location)
 				if (!controlId) return
 
-				controlsController.rotateControl(
-					controlId,
-					input.direction ? 1 : -1,
-					input.surfaceId ? `hot:${input.surfaceId}` : undefined
-				)
+				controlsController.rotateControl(controlId, input.delta, input.surfaceId ? `hot:${input.surfaceId}` : undefined)
 			}),
 
 		hotAbortControl: publicProcedure

@@ -29,12 +29,12 @@ export function ControlHotPressButtons({
 	}, [hotPressMutation, location])
 	const hotRotateLeft = useCallback(() => {
 		hotRotateMutation
-			.mutateAsync({ location, direction: false, surfaceId: 'edit' })
+			.mutateAsync({ location, delta: -1, surfaceId: 'edit' })
 			.catch((e) => console.error(`Hot rotate failed: ${e}`))
 	}, [hotRotateMutation, location])
 	const hotRotateRight = useCallback(() => {
 		hotRotateMutation
-			.mutateAsync({ location, direction: true, surfaceId: 'edit' })
+			.mutateAsync({ location, delta: 1, surfaceId: 'edit' })
 			.catch((e) => console.error(`Hot rotate failed: ${e}`))
 	}, [hotRotateMutation, location])
 	const hotAbortActions = useCallback(() => {
