@@ -3,6 +3,7 @@ import path from 'node:path'
 import prettier from 'prettier'
 import { z } from 'zod'
 import { SatelliteConfigFieldsSchema } from '../companion/lib/Service/Satellite/SatelliteConfigFieldsSchema.js'
+import { SatelliteSurfaceAppearanceSchema } from '../companion/lib/Service/Satellite/SatelliteSurfaceAppearanceSchema.js'
 import { SatelliteSurfaceLayoutSchema } from '../companion/lib/Service/Satellite/SatelliteSurfaceManifestSchema.js'
 
 /**
@@ -18,6 +19,10 @@ const schemas: { schema: z.ZodType; outputPath: string }[] = [
 	{
 		schema: SatelliteSurfaceLayoutSchema,
 		outputPath: path.join(import.meta.dirname, '../assets/satellite-surface.schema.json'),
+	},
+	{
+		schema: SatelliteSurfaceAppearanceSchema,
+		outputPath: path.join(import.meta.dirname, '../assets/satellite-surface-appearance.schema.json'),
 	},
 	{
 		schema: SatelliteConfigFieldsSchema,
