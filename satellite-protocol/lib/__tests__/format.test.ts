@@ -25,6 +25,12 @@ describe('formatSatelliteMessage', () => {
 	test('escapes backslashes and quotes in string values', () => {
 		expect(formatSatelliteMessage('X', null, 'a\\"b', { V: '"\\' })).toBe('X DEVICEID="a\\\\\\"b" V="\\"\\\\" \n')
 	})
+
+	test('rejects newlines in string values and the device id', () => {
+		expect(() => formatSatelliteMessage('X', null, null, { V: 'a\nb' })).toThrow()
+		expect(() => formatSatelliteMessage('X', null, null, { V: 'a\rb' })).toThrow()
+		expect(() => formatSatelliteMessage('X', null, 'a\nb', {})).toThrow()
+	})
 })
 
 describe('parseSatelliteBitmapFormat', () => {

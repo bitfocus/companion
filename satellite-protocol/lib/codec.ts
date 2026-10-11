@@ -151,16 +151,18 @@ export function parseLineParameters(line: string): ParsedParams {
 }
 
 /**
- * Quote a string value, escaping the characters {@link parseLineParameters} treats specially inside quotes
+ * Quote a string value, escaping the characters {@link parseLineParameters} treats specially inside quotes.
+ * A newline can't be escaped, as messages are split into lines before they are parsed.
  */
 function quoteValue(value: string): string {
+	if (/[\r\n]/.test(value)) throw new Error('Satellite message values must not contain newlines')
 	return `"${value.replace(/[\\"]/g, (c) => `\\${c}`)}"`
 }
 
 /**
  * Format a Satellite API message, including the terminating newline.
  * Booleans are sent as `1`/`0`, numbers bare and strings quoted (with `\` and `"` escaped).
- * The values must not contain newlines, as those terminate the message.
+ * Throws if a string value contains a newline, as that would terminate the message.
  */
 export function formatSatelliteMessage(
 	messageName: string,

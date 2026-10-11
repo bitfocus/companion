@@ -1,13 +1,13 @@
-import type {
-	CheckboxField,
-	CommonFields,
-	ConfigField,
-	DropdownField,
-	NumberField,
-	StaticTextField,
-	TextInputField,
+import {
+	BANNED_PROPS,
+	type CheckboxField,
+	type CommonFields,
+	type ConfigField,
+	type DropdownField,
+	type NumberField,
+	type StaticTextField,
+	type TextInputField,
 } from '@companion-app/satellite-protocol'
-import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type {
 	CompanionInputFieldBaseExtended,
 	CompanionInputFieldCheckboxExtended,

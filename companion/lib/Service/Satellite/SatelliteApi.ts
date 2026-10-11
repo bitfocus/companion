@@ -560,7 +560,7 @@ export class ServiceSatelliteApi {
 			}
 			const controlId = `${params.CONTROLID}`
 
-			if (!params.DIRECTION) {
+			if (params.DIRECTION === undefined) {
 				return this.#formatAndSendError(socket, messageName, id, 'Missing DIRECTION')
 			}
 			const delta = parseSatelliteRotationDelta(params)
@@ -576,7 +576,7 @@ export class ServiceSatelliteApi {
 			if (!xy) {
 				return this.#formatAndSendError(socket, messageName, id, 'Invalid KEY')
 			}
-			if (!params.DIRECTION) {
+			if (params.DIRECTION === undefined) {
 				return this.#formatAndSendError(socket, messageName, id, 'Missing DIRECTION')
 			}
 
@@ -815,7 +815,7 @@ export class ServiceSatelliteApi {
 			return this.#formatAndSendError(socket, messageName, undefined, 'Unknown SUBID')
 		}
 
-		if (!params.DIRECTION) {
+		if (params.DIRECTION === undefined) {
 			return this.#formatAndSendError(socket, messageName, undefined, 'Missing DIRECTION')
 		}
 		const delta = parseSatelliteRotationDelta(params)

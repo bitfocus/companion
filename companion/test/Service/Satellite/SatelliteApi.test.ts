@@ -1143,6 +1143,7 @@ describe('ServiceSatelliteApi', () => {
 				['-7.25', -7],
 				['1e300', 100],
 				['-1e300', -100],
+				['', -1],
 			])('DIRECTION=%s is normalised to %d steps', (direction, expected) => {
 				const { api, logger, surfaceController } = createService()
 				const { socket, processMessage } = createSocketAndInit(api, logger)

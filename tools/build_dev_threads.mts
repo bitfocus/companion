@@ -38,7 +38,8 @@ const externalizeNodeModules: esbuild.Plugin = {
 			if (
 				args.path === '@companion-app/shared' ||
 				args.path.startsWith('@companion-app/shared/') ||
-				args.path === '@companion-app/satellite-protocol'
+				args.path === '@companion-app/satellite-protocol' ||
+				args.path.startsWith('@companion-app/satellite-protocol/')
 			) {
 				return null // let esbuild resolve + bundle it from source
 			}

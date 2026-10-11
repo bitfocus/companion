@@ -31,10 +31,8 @@
  *          amount (velocity/step count): sign is the direction, magnitude is the number of steps.
  *          `0` still means a single counter-clockwise step for backwards compatibility. Support is
  *          advertised via ROTARY_AMOUNT in CAPS.
- * 1.14.1 - `\` and `"` inside quoted string values are now escaped with a `\`, so values containing
- *          them are no longer corrupted.
  */
-export const API_VERSION = '1.14.1'
+export const API_VERSION = '1.14.0'
 
 /**
  * Maximum length of a single line (command) the receive buffer will accumulate before the

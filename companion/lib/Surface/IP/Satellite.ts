@@ -11,13 +11,13 @@
 import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
-import type {
-	SatelliteBitmapFormat,
-	SatelliteControlStylePreset,
-	SatelliteMessageArgs,
-	SatelliteSurfaceLayout,
+import {
+	BANNED_PROPS,
+	type SatelliteBitmapFormat,
+	type SatelliteControlStylePreset,
+	type SatelliteMessageArgs,
+	type SatelliteSurfaceLayout,
 } from '@companion-app/satellite-protocol'
-import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type {
 	CompanionSurfaceConfigField,
 	GridSize,

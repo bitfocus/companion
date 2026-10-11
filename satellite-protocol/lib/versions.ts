@@ -82,11 +82,6 @@ export const SATELLITE_FEATURES = {
 		capsFlag: 'ROTARY_AMOUNT',
 		description: 'DIRECTION on KEY-ROTATE and SUB-ROTATE may be a signed step count',
 	},
-	escapedValues: {
-		since: '1.14.1',
-		capsFlag: null,
-		description: '`\\` and `"` inside quoted string values are escaped with a `\\`',
-	},
 } as const satisfies Record<string, SatelliteFeatureDefinition>
 
 export type SatelliteFeatureId = keyof typeof SATELLITE_FEATURES
