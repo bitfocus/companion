@@ -18,6 +18,7 @@
   - text style properties (#4337)
   - smooth text autosizing
   - support corner radius for box elements #4359
+  - allow rotating composite elements
 
 - Misc UX
   - rework button grid interactions (#4434)
@@ -51,6 +52,10 @@
   - prometheus metrics for monitoring (#4304)
   - streaming json parsing/generation (#4390)
   - report collection-disabled connections as disabled, add connection collection status variables #4479
+  - add 'Surface: When connected' feedback #4124
+  - randomInt() is not re-evaluated in Trigger conditions #3297
+  - Add duration to press and release internal action #3389
+  - add $(internal:date_monthname) variable #3819
 
 ### 🐞 BUG FIXES
 
@@ -77,6 +82,9 @@
 - dropdown freezing when selecting from a large list #4494
 - expose pressed state to surfaces
 - don't recreate desktop shortcut when updating
+- static-text fields should not show expression toggles
+- draw a placeholder for missing or cyclic composite elements
+- update bonjour lib to limit query answer rate #4499
 
 ## Companion v5.0.7 - Release Notes
 
