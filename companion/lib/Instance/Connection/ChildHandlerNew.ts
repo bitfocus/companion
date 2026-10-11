@@ -21,7 +21,7 @@ import type { SharedUdpSocketMessageJoin, SharedUdpSocketMessageLeave } from '@c
 import type { JsonValue } from '@companion-module/host'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
-import LogController, { type Logger } from '../../Log/Controller.js'
+import LogController, { stringifyLogValue, type Logger } from '../../Log/Controller.js'
 import type { DataChannelServer } from '../Common/DataChannelServer.js'
 import { HostFramedTransport } from '../Common/FramedMessageChannel.js'
 import { IpcWrapper, type IpcEventHandlers, type IpcMessagePacket } from '../Common/IpcWrapper.js'
@@ -524,7 +524,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		}
 
 		// Send everything to the 'debug' page
-		this.#deps.debugLogLine(this.connectionId, msg.time, msg.source || '/', msg.level, msg.message.toString())
+		this.#deps.debugLogLine(this.connectionId, msg.time, msg.source || '/', msg.level, stringifyLogValue(msg.message))
 	}
 
 	/**

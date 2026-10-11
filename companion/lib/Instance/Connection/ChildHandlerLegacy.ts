@@ -65,7 +65,7 @@ import type {
 import type { CompanionOptionValues as CompanionOptionValuesNew } from '@companion-module/host'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
-import LogController, { type Logger } from '../../Log/Controller.js'
+import LogController, { stringifyLogValue, type Logger } from '../../Log/Controller.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import {
 	doesModuleExpectLabelUpdates,
@@ -742,7 +742,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		}
 
 		// Send everything to the 'debug' page
-		this.#sendToModuleLog(msg.level, msg.message.toString())
+		this.#sendToModuleLog(msg.level, stringifyLogValue(msg.message))
 	}
 
 	/**

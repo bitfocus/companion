@@ -40,8 +40,25 @@ const SentrySeverity = {
 	error: 'error',
 }
 
-type LogLineFn = (line: any) => void
-class ToMemoryTransport extends Transport {
+/**
+ * Coerce a logged value to a string. Loggers accept `any`, and values from modules are not validated
+ */
+export function stringifyLogValue(value: unknown): string {
+	if (typeof value === 'string') return value
+	if (value === undefined || value === null) return ''
+	if (typeof value === 'object') {
+		try {
+			return JSON.stringify(value)
+		} catch (_e) {
+			// Fall through
+		}
+	}
+	// eslint-disable-next-line @typescript-eslint/no-base-to-string
+	return String(value)
+}
+
+type LogLineFn = (line: ClientLogLine) => void
+export class ToMemoryTransport extends Transport {
 	readonly #addToHistory: LogLineFn
 
 	constructor(opts: Transport.TransportStreamOptions | undefined, addToHistory: LogLineFn) {
@@ -50,10 +67,20 @@ class ToMemoryTransport extends Transport {
 		this.#addToHistory = addToHistory
 	}
 
-	log(info: any, callback: () => void) {
-		this.#addToHistory(info)
-
-		callback()
+	log(info: Record<string, unknown>, callback: () => void): void {
+		// The callback must always be called, otherwise winston stops writing to every transport #4509
+		try {
+			this.#addToHistory({
+				time: info.timestamp as number,
+				source: stripAnsi(stringifyLogValue(info.source)),
+				level: stringifyLogValue(info.level),
+				message: stripAnsi(stringifyLogValue(info.message)),
+			})
+		} catch (_e) {
+			// Ignore
+		} finally {
+			callback()
+		}
 	}
 }
 
@@ -250,14 +277,7 @@ class LogController {
 	/**
 	 * Add a line logged to winston to the log history
 	 */
-	#addToHistory(line: any) {
-		const uiLine: ClientLogLine = {
-			time: line.timestamp,
-			source: stripAnsi(line.source),
-			level: line.level,
-			message: stripAnsi(line.message),
-		}
-
+	#addToHistory(uiLine: ClientLogLine) {
 		this.#pendingLines.push(uiLine)
 		this.debounceSendLines()
 
@@ -270,8 +290,8 @@ class LogController {
 			this.#addBreadcrumb({
 				category: 'source',
 				// @ts-expect-error Can't use string as index
-				level: SentrySeverity[line.level] || SentrySeverity.debug,
-				message: `${line.source}: ${line.message}`,
+				level: SentrySeverity[uiLine.level] || SentrySeverity.debug,
+				message: `${uiLine.source}: ${uiLine.message}`,
 			})
 		}
 	}
