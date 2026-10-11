@@ -91,7 +91,7 @@ Since Companion 4.1, there has been limited support for Local Variables. These a
 
 The value of them cannot be accessed from outside of their parent. They can be accessed in any supported field with the `$(local:` naming scheme. Support for using these is indicated by the globe icon.
 
-Since Companion 5.1, pages can have local variables too. These are shared by every button on the page, and are used with the `$(page:` naming scheme. See [Page variables](./buttons/pages.md#page-variables) for more.
+Pages can have local variables too. These are shared by every button on the page, and are used with the `$(page:` naming scheme. See [Page variables](./buttons/pages.md#page-variables) for more.
 
 Local variables can take their values from many ways:
 

@@ -50,7 +50,7 @@ This toggle doesn't apply to surfaces connected over Satellite
 
 ## Showing surface status on buttons
 
-Since Companion 5.1, the internal **Surface: When connected** feedback changes a button's style while a chosen
+The internal **Surface: When connected** feedback changes a button's style while a chosen
 surface is connected. This is useful for spotting at a glance when a surface on another machine, such as one
 connected over Satellite, has dropped out.
 

@@ -72,7 +72,7 @@ The track is the part of the gauge which isn't filled.
 
 ## Showing a gauge on surface LEDs
 
-Since Companion 5.1, a gauge can also be shown on the lights of a surface, such as the light rings around the
+A gauge can also be shown on the lights of a surface, such as the light rings around the
 dials of a Stream Deck Studio. The lights show the same colors as the gauge on screen. This needs a surface whose
 module supports it.
 

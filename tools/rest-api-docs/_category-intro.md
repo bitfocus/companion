@@ -3,8 +3,7 @@ proper, versioned API, which will grow over time to cover most of what can be do
 eventually replace the older [HTTP Remote Control](../http-remote-control.md) API.
 
 :::note
-The REST API is new in Companion 5.1, and so far only covers managing [connections](./connections.md) and
-[surfaces](./surfaces.md). More areas will be added in future releases.
+The REST API is limited in coverage so far. More areas will be added in future releases.
 :::
 
 ## Enabling the API

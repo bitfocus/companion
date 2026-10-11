@@ -92,7 +92,7 @@ accept the risk.
 
 - **Header notifications** — whether to show version-related notifications in the admin interface
   header. You can turn these off if you don't want to see update prompts.
-- **Installation name** — a fixed name for this Companion installation (new in 5.1). When set, it replaces the
+- **Installation name** — a fixed name for this Companion installation. When set, it replaces the
   **Installation Name** in [Settings](../3_config/settings.md#general) and can no longer be changed there, and it
   isn't lost if the database is reset. This is useful when deploying many Companion installations from a script
   or image. On a desktop install this can be set with the `COMPANION_INSTALL_NAME` environment variable.

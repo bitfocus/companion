@@ -34,7 +34,7 @@ The **Font** dropdown chooses the typeface:
 - **Monospace** — a fixed-width font where every character is the same width. Handy for numbers,
   timers and tables that you want to stay neatly aligned as the value changes.
 
-Since Companion 5.1, you can also style the text:
+You can also style the text:
 
 - **Weight** — **Normal** or **Bold**.
 - **Styles** — toggle **Italic**, **Underline** and **Strikethrough**. Any combination can be used together.

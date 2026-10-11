@@ -21,6 +21,20 @@ curl -H "Authorization: Bearer cpn_..." http://127.0.0.1:8000/api/v2/surfaces/v1
 A request without a valid key is rejected with `401 Unauthorized`. A request whose key does not have the
 scope an endpoint needs is rejected with `403 Forbidden`.
 
+## Why API keys are required
+
+You may notice that the rest of Companion does not ask for this. The admin interface has no real
+authentication yet (the [Admin UI Password](../../3_config/settings.md#admin-ui-password) only stops casual
+browsers), and the older remote control protocols such as [HTTP Remote Control](../http-remote-control.md),
+[TCP/UDP](../tcp-udp.md) and [OSC](../osc-control.md) accept requests from anyone who can reach them.
+
+Adding proper authentication to Companion is something we intend to work on. Requiring API keys from
+the start means that the REST API will not need a breaking change when that happens: scripts and integrations
+written today will keep working, rather than suddenly needing credentials they were never given.
+
+Keys also give you some control in the meantime. Each script or system can have its own key, limited to just
+the [scopes](#scopes) it needs, and a key can be revoked without affecting anything else.
+
 ## Managing API keys
 
 API keys are managed in **Settings > Protocols**, in the **REST API** section. This section only shows

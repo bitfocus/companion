@@ -7,9 +7,8 @@ description: The Canvas layer, the topbar, status icons and button state indicat
 # The canvas & button indicators
 
 Every button's stack of [elements](./index.md) sits on top of a special **Canvas** layer. To edit it,
-click the **Canvas** button at the bottom of the elements list. Unlike the other elements, the Canvas is
-always present and can't be deleted, renamed or reordered — it's the surface your design is drawn onto, and it controls the "chrome" around
-the button: the topbar and the status icons.
+click the **Canvas** button at the bottom of the elements list. The Canvas is the surface your design is
+drawn onto, and it controls the "chrome" around the button: the topbar and the status icons.
 
 :::note
 Don't confuse the Canvas with the **Background** element. The Background is just an ordinary

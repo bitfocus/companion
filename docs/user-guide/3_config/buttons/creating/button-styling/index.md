@@ -94,7 +94,7 @@ Each row in the elements list has a few controls:
 
 ## Editing on the preview
 
-Since Companion 5.1, you can edit the layout of a button directly on the preview, much like in a drawing
+You can edit the layout of a button directly on the preview, much like in a drawing
 program:
 
 - **Click** an element on the preview to select it. The top-most element under the pointer is selected. Click

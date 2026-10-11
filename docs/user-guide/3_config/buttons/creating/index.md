@@ -35,7 +35,7 @@ group at the same level at once.
 
 ### Linked or copied presets
 
-Since Companion 5.1, there are two ways a preset can be placed. Choose between them with the **When placed**
+There are two ways a preset can be placed. Choose between them with the **When placed**
 toggle at the top of the Presets tab:
 
 - **Linked** (the default) — the button stays linked to the preset. When the module updates the preset, for

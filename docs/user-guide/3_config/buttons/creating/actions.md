@@ -50,7 +50,7 @@ The **Logic: If statement** action runs its **Then** actions only when all of it
 true, and its **Else** actions otherwise. The **Logic: While loop** action repeats its actions for as long as all
 of its **While True** conditions are true.
 
-The conditions are feedbacks. Since Companion 5.1, the built-in (internal) feedbacks in these conditions are
+The conditions are feedbacks. The built-in (internal) feedbacks in these conditions are
 checked at the moment the action runs, rather than using a value which was calculated earlier. This means:
 
 - they see variable values as they are right now, including values changed by actions which ran just before

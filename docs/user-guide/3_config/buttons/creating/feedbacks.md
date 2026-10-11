@@ -114,7 +114,7 @@ next to the **Style Overrides** heading to see which type a feedback is.
 
 ### Value feedbacks
 
-Since Companion 5.1, value feedbacks can also be used to restyle a button. These are the feedbacks which
+Value feedbacks can also be used to restyle a button. These are the feedbacks which
 produce a value rather than being on or off, such as a connection reporting the current level of a fader, or the
 built-in **Evaluate Expression** feedback.
 

@@ -53,12 +53,9 @@ connections table, give the collection a name, and then drag connections into it
 inside other collections.
 
 Each collection has its own enable switch. Disabling a collection disables every connection inside it (including
-those in collections inside it), which is handy for switching off a whole area of a show at once. The
+those in collections inside it), which is handy for switching off many things at once. The
 connections keep their own enabled setting, so they go back to how they were when the collection is enabled
 again.
-
-Since Companion 5.1, connections inside a disabled collection are reported as disabled everywhere, including in
-the variables and feedbacks below.
 
 ## Monitoring connections
 
@@ -109,7 +106,7 @@ You can install more versions of a module or uninstall versions from the [Module
 Sometimes a module, or a particular version of a module, is deprecated by its maintainers. This usually means it
 is no longer being updated, or that a newer version or a different module should be used instead.
 
-Since Companion 5.1, this is shown clearly:
+This is shown clearly:
 
 - a yellow **Deprecated** or **Deprecated version** badge appears next to the module name in the connections
   list (hover over it to see why),

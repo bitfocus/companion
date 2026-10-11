@@ -4,7 +4,7 @@ sidebar_position: 10
 description: Monitor the health and performance of Companion with Prometheus and Grafana.
 ---
 
-Since Companion 5.1, Companion can provide metrics for [Prometheus](https://prometheus.io/), a popular tool for
+Companion can provide metrics for [Prometheus](https://prometheus.io/), a popular tool for
 monitoring servers and applications. This lets you keep an eye on the health of your Companion installations, and
 investigate problems such as high memory usage or slow drawing, alongside the rest of your systems.
 

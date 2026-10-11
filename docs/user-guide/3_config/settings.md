@@ -156,7 +156,7 @@ _If enabled, Companion will listen for UDP messages, allowing for external devic
 
 ### REST API
 
-_New in Companion 5.1. A versioned API for configuring Companion from scripts and other software. It is disabled by
+_A versioned API for configuring Companion from scripts and other software. It is disabled by
 default._
 
 - **REST API**  
@@ -174,7 +174,7 @@ When enabled, a table of **API keys** is shown. Every request to the REST API mu
 
 ### Prometheus Metrics
 
-_New in Companion 5.1. Disabled by default._
+_Disabled by default._
 
 - **Prometheus metrics endpoint**  
   Check to enable a [Prometheus](https://prometheus.io/) compatible metrics endpoint, for monitoring Companion.

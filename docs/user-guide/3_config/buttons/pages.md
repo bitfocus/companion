@@ -20,7 +20,7 @@ Be careful when reordering pages or inserting pages into the middle. Any referen
 
 ## Page variables
 
-Since Companion 5.1, each page can have its own variables. These work just like the
+Each page can have its own variables. These work just like the
 [local variables](../variables.md#local-variables) of a button, but are shared by every button on the page.
 They are a good fit for values which belong to the page as a whole, such as which camera a page of buttons is
 controlling, or the name of the person a page is set up for.
