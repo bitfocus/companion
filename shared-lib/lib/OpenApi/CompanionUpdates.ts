@@ -400,6 +400,23 @@ export interface operations {
 						imageLibraryCount?: number
 						/** @description Number of enabled backup rules */
 						enabledBackupRuleCount?: number
+						/** @description Indicates if the REST API (/api/v2) is enabled */
+						restApiEnabled?: boolean
+						/** @description Number of REST API keys configured */
+						apiKeyCount?: number
+						/** @description Indicates if the Prometheus metrics endpoint is enabled */
+						prometheusEnabled?: boolean
+						/** @description Total number of page variables across all pages */
+						pageVariableCount?: number
+						/** @description Number of button-reference controls */
+						buttonReferenceCount?: number
+						/** @description Number of preset-reference controls */
+						presetReferenceCount?: number
+						/**
+						 * @description The default export format
+						 * @enum {string}
+						 */
+						defaultExportFormat?: 'json' | 'json-gz' | 'yaml'
 					}
 				}
 			}

@@ -154,6 +154,14 @@ export class DataUsageStatistics {
 				enabledBackupRuleCount: (this.#userConfigController.getKey('backups') ?? ([] as BackupRulesConfig[])).filter(
 					(rule: BackupRulesConfig) => rule.enabled
 				).length,
+
+				restApiEnabled: !!this.#userConfigController.getKey('rest_api_enabled'),
+				apiKeyCount: this.#serviceController.restApi.tokenStore.list().length,
+				prometheusEnabled: !!this.#userConfigController.getKey('prometheus_enabled'),
+				pageVariableCount: this.#controlController.getPageVariableCount(),
+				buttonReferenceCount: this.#controlController.getControlCountOfType('button-reference'),
+				presetReferenceCount: this.#controlController.getControlCountOfType('preset-reference'),
+				defaultExportFormat: this.#userConfigController.getKey('default_export_format'),
 			},
 		}
 
