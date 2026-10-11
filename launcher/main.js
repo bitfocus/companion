@@ -212,6 +212,12 @@ if (!lock) {
 		init({
 			dsn: sentryDsn,
 			release: `companion@${appInfo.appVersion}`,
+			// Keep the v7 privacy defaults: no auto user info, cookies or http bodies
+			dataCollection: {
+				userInfo: false,
+				cookies: false,
+				httpBodies: [],
+			},
 			beforeSend(event) {
 				// if (event.exception) {
 				// 	showReportDialog()
