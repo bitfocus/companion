@@ -474,7 +474,7 @@ export class ServiceSatelliteApi {
 					line = receivebuffer.substr(offset, i - offset)
 					offset = i + 1
 					try {
-						this.#handleCommand(socketLogger, socket, socketState, line.toString().replace(/\r/, ''))
+						this.#handleCommand(socketLogger, socket, socketState, line.endsWith('\r') ? line.slice(0, -1) : line)
 					} catch (e) {
 						socketLogger.error(`Error processing command: ${stringifyError(e)}`)
 					}
@@ -955,6 +955,12 @@ interface SatelliteSubscription {
 	bitmapFormat: SatelliteBitmapFormat
 }
 
+/**
+ * Upper bound on the number of steps a single KEY-ROTATE/SUB-ROTATE can carry, so a client can't hand
+ * actions an absurd rotation amount
+ */
+const MAX_ROTATION_STEPS = 100
+
 interface SatelliteSocketState {
 	clientId: string
 	subscriptions: Map<string, SatelliteSubscription>
@@ -967,13 +973,18 @@ interface SatelliteSocketState {
  * (added in API 1.14.0). `0` is kept as -1 (a single counter-clockwise step) for backwards compatibility
  * with clients that used `0`/`1` as a boolean direction. A non-numeric DIRECTION falls back to the legacy
  * "truthy means clockwise" behaviour.
+ * The step count is truncated to a whole number of at least one step, and clamped to {@link MAX_ROTATION_STEPS}.
  */
 function parseSatelliteRotationDelta(params: ParsedParams): number {
 	const raw = params.DIRECTION
 
 	if (typeof raw === 'string') {
 		const num = Number(raw)
-		if (Number.isFinite(num)) return num === 0 ? -1 : num
+		if (Number.isFinite(num)) {
+			if (num === 0) return -1
+			const steps = Math.max(1, Math.min(MAX_ROTATION_STEPS, Math.trunc(Math.abs(num))))
+			return num < 0 ? -steps : steps
+		}
 	}
 
 	return raw !== undefined && raw >= '1' ? 1 : -1

@@ -175,6 +175,14 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.writtenData).toHaveLength(1)
 			expect(socket.lastMessage).toContain('PONG test')
 		})
+
+		test('only strips a trailing carriage return', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('PING a\rb\r\n')
+			expect(socket.lastMessage).toBe('PONG a\rb \n')
+		})
 	})
 
 	describe('PING', () => {
@@ -1115,6 +1123,27 @@ describe('ServiceSatelliteApi', () => {
 				processMessage('KEY-ROTATE DEVICEID="dev1" KEY=3 DIRECTION=-3\n')
 
 				expect(mockDevice.doRotate).toHaveBeenCalledWith(1, 2, -3)
+				expect(socket.lastMessage).toContain('OK')
+			})
+
+			test.each([
+				['0.5', 1],
+				['-0.5', -1],
+				['2.9', 2],
+				['-7.25', -7],
+				['1e300', 100],
+				['-1e300', -100],
+			])('DIRECTION=%s is normalised to %d steps', (direction, expected) => {
+				const { api, logger, surfaceController } = createService()
+				const { socket, processMessage } = createSocketAndInit(api, logger)
+
+				const mockDevice = addDeviceToSocket(api, logger, surfaceController, socket, processMessage, 'dev1')
+				mockDevice.parseKeyParam.mockReturnValue([1, 2])
+				mockDevice.doRotate.mockReturnValue(undefined)
+
+				processMessage(`KEY-ROTATE DEVICEID="dev1" KEY=3 DIRECTION=${direction}\n`)
+
+				expect(mockDevice.doRotate).toHaveBeenCalledWith(1, 2, expected)
 				expect(socket.lastMessage).toContain('OK')
 			})
 		})
