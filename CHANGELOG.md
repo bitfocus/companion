@@ -59,7 +59,6 @@
 
 ### 🐞 BUG FIXES
 
-- better logging in internal actions when not finding local variable to update #4466
 - module versions refresh button not indicating progress
 - keep unicode glyphs together when breaking a line #3671
 - rework line breaking to work as is was long ago (#4372)
@@ -69,15 +68,11 @@
 - propagate image import errors #4438
 - better report import progress to the ui
 - sort to the connection selection dropdown (#4402)
-- limit preset advanced-feedback style overrides to affectedProperties #4410
 - backup file renaming failing #4394
 - try to ensure module are shutdown cleanly when companion exits
 - adjust line draw bounds to not hide the line #4359
 - measure font ascent/descent for better positioning #4359
 - avoid excessive button-drawn events upon a cache hit
-- make element type clearer in list #4331
-- emulator long press suppress buzz #4322
-- standalone pipe for child ipc (#4312)
 - colors when downscaling oversampled images
 - dropdown freezing when selecting from a large list #4494
 - expose pressed state to surfaces
@@ -85,6 +80,7 @@
 - static-text fields should not show expression toggles
 - draw a placeholder for missing or cyclic composite elements
 - update bonjour lib to limit query answer rate #4499
+- logging stopping entirely after a non-string message is logged #4509
 
 ## Companion v5.0.7 - Release Notes
 
