@@ -41,6 +41,8 @@ published with the `next` dist-tag, others as `latest`.
 ### Prereleases for testing
 
 Run the `Publish satellite-protocol` workflow manually (workflow_dispatch) on any branch to publish a
-build of it as a prerelease, without tagging. It is versioned `<version>-<dist-tag>.<run>.<attempt>.g<sha>`
-(e.g. `0.1.0-dev.12.1.gabc1234`) and published under the chosen dist-tag (`dev` by default), so
-`latest` is never affected. Install it with `npm install @companion-app/satellite-protocol@dev`.
+build of it as a prerelease, without tagging. Choose the `bump` the change will be released as
+(`patch`, `minor` or `major` from the version in `package.json`, or `as-is` when `package.json` has
+already been bumped). It is versioned `<next version>-<dist-tag>.<run>.<attempt>.g<sha>`, e.g.
+`0.1.1-dev.12.1.gabc1234` for a patch bump of 0.1.0. It is published under the chosen dist-tag (`dev` by
+default), so `latest` is never affected. Install it with `npm install @companion-app/satellite-protocol@dev`.

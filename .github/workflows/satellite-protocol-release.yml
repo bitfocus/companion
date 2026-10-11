@@ -6,6 +6,16 @@ on:
   # Publish a prerelease build of the current branch, for testing before tagging a release
   workflow_dispatch:
     inputs:
+      bump:
+        description: "Version bump the prerelease is for, from the version in satellite-protocol/package.json ('as-is' when it has already been bumped)"
+        type: choice
+        required: true
+        default: "patch"
+        options:
+          - patch
+          - minor
+          - major
+          - as-is
       dist-tag:
         description: "npm dist-tag to publish the prerelease under"
         required: true
@@ -44,6 +54,7 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           TAG: ${{ github.ref_name }}
+          INPUT_BUMP: ${{ inputs.bump }}
           INPUT_DIST_TAG: ${{ inputs.dist-tag }}
           SHA: ${{ github.sha }}
           RUN_NUMBER: ${{ github.run_number }}
@@ -69,8 +80,21 @@ jobs:
             fi
             DIST_TAG="$INPUT_DIST_TAG"
 
-            # A unique prerelease version for this run, eg 0.1.0-dev.12.1.gabc1234
-            VERSION="${VERSION%%-*}-${DIST_TAG}.${RUN_NUMBER}.${RUN_ATTEMPT}.g${SHA:0:7}"
+            # The version this will be released as, without any prerelease suffix
+            IFS=. read -r MAJOR MINOR PATCH <<< "${VERSION%%-*}"
+            case "$INPUT_BUMP" in
+              major) BASE="$((MAJOR + 1)).0.0" ;;
+              minor) BASE="${MAJOR}.$((MINOR + 1)).0" ;;
+              patch) BASE="${MAJOR}.${MINOR}.$((PATCH + 1))" ;;
+              as-is) BASE="${MAJOR}.${MINOR}.${PATCH}" ;;
+              *)
+                echo "Invalid bump '$INPUT_BUMP'"
+                exit 1
+                ;;
+            esac
+
+            # A unique prerelease version for this run, eg 0.1.1-dev.12.1.gabc1234
+            VERSION="${BASE}-${DIST_TAG}.${RUN_NUMBER}.${RUN_ATTEMPT}.g${SHA:0:7}"
             node -e "
               const fs = require('node:fs')
               const file = 'satellite-protocol/package.json'
