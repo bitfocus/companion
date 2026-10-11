@@ -14,6 +14,12 @@ For new installations, Companion starts off with 1 page, but you can add as many
 It is a good idea to name each of your pages, to help you identify them easily
 :::
 
+:::tip
+If you have several surfaces, there are two common ways to lay out your buttons. Some people give each surface
+its own pages, while others share pages between surfaces and give each surface its own area of the page, using
+the [offset in grid](../surfaces.md#surface-settings) settings. Choose whichever works best for you.
+:::
+
 :::danger
 Be careful when reordering pages or inserting pages into the middle. Any references to page numbers will not be automatically updated, so you can break your existing buttons.
 :::

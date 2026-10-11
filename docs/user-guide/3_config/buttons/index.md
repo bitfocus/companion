@@ -44,8 +44,7 @@ The first group of tools changes how you select buttons:
   several buttons on a touchscreen.
 - **Arrange** — drag any button to move it, without opening it in the editor.
 - **Press** — clicking a button presses it for real, running its actions, just as if you had pressed it on a
-  surface. While this tool is active the toolbar shows a warning, as a reminder that clicks will run real
-  actions.
+  surface.
 
 The second group of tools rearranges buttons. Pick a tool, click the button you want to use (unless you
 already have buttons selected), then click where it should go. The text at the end of the toolbar tells you

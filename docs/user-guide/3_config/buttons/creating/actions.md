@@ -62,6 +62,12 @@ checked at the moment the action runs, rather than using a value which was calcu
 Feedbacks from connections can also be used as conditions, but they still use the most recent value reported
 by the connection.
 
+:::tip
+Put a **Wait** action inside a **While loop**. Without one, the loop repeats as fast as it can, up to hundreds of
+times a second, which can use a lot of CPU and flood your devices with commands. Waiting even a short time, such
+as 100ms, between repeats is usually plenty.
+:::
+
 ## Storing an action's result
 
 Some module actions return a result — for example fetching a value from a device, or running a query.

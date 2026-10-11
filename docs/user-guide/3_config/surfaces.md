@@ -48,12 +48,6 @@ This toggle doesn't apply to surfaces connected over Satellite
 
 :::
 
-## Showing surface status on buttons
-
-The internal **Surface: When connected** feedback changes a button's style while a chosen
-surface is connected. This is useful for spotting at a glance when a surface on another machine, such as one
-connected over Satellite, has dropped out.
-
 ## Surface Settings
 
 Click on any Surface in the table to open the settings for that surface.

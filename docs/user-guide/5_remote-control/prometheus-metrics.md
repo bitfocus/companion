@@ -8,6 +8,12 @@ Companion can provide metrics for [Prometheus](https://prometheus.io/), a popula
 monitoring servers and applications. This lets you keep an eye on the health of your Companion installations, and
 investigate problems such as high memory usage or slow drawing, alongside the rest of your systems.
 
+:::note
+So far, the metrics are the ones the Companion developers have found useful for monitoring test installations. We
+aren't yet sure how useful they are for monitoring real installations. If there is something you would like to
+see, let us know and we will look at adding it.
+:::
+
 ## Enabling the metrics endpoint
 
 The metrics endpoint is **disabled** by default.

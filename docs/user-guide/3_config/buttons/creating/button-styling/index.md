@@ -141,6 +141,13 @@ This only changes the preview in the editor, and is remembered by your browser. 
 percentages of the button, so the same design works on every shape; see
 [Position & Size](#position--size) below.
 
+:::tip
+Because positions and sizes are percentages, shapes stretch to fit the button. If part of your design must look
+the same on every shape, such as an arrow or an icon, put it in a [group](./groups-and-references.md) with
+[Square Aspect Ratio](./groups-and-references.md#square-aspect-ratio) turned on. Its contents are then drawn in a
+square in the middle of the group, whatever shape the button is.
+:::
+
 ## Element properties
 
 Select an element to edit its properties. If you only want the handful of properties you change most

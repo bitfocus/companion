@@ -1,4 +1,4 @@
-Companion 5.1 introduces a new REST API for configuring Companion from scripts and other software. It is a
+The REST API is for configuring Companion from scripts and other software. It is a
 proper, versioned API, which will grow over time to cover most of what can be done in the UI. It will
 eventually replace the older [HTTP Remote Control](../http-remote-control.md) API.
 

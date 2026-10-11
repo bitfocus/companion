@@ -129,8 +129,8 @@ milliseconds, so 1000ms = 1 second). See [Actions](./actions.md) for the full de
 When **Rotary actions** is enabled, the button gets two extra groups of actions: **Rotate left actions** and
 **Rotate right actions**. These run when the dial or encoder for this button is turned.
 
-Many surfaces report how far the dial was turned in one go, especially when it is turned quickly. Since
-Companion 5.1, the rotate actions run once for each movement of the dial, and the variable `$(this:delta)`
+Many surfaces report how far the dial was turned in one go, especially when it is turned quickly. The
+rotate actions run once for each movement of the dial, and the variable `$(this:delta)`
 tells them how far it moved: a positive number for a turn to the right (clockwise), and a negative number for a
 turn to the left. For example, an action which changes a value by `$(this:delta)` will change it faster the
 faster the dial is turned.
