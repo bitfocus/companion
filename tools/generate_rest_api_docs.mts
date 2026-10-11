@@ -2,7 +2,7 @@
  * Generate Docusaurus-compatible markdown documentation from the REST API OpenAPI spec.
  *
  * Usage:  tsx tools/generate_rest_api_docs.mts
- * Output: docs/user-guide/5_remote-control/rest-api/ (committed, CI checks it is up to date)
+ * Output: docs/user-guide/5_remote-control/rest-api/ (gitignored, generated before building or syncing the docs)
  */
 
 import fs from 'fs'

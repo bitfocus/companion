@@ -159,6 +159,7 @@ await $`yarn workspace companion build`
 // Build webui
 await $`yarn workspace @companion-app/webui build`
 await $`yarn workspace @companion-app/launcher-ui build`
+await $`yarn build:rest-api-docs`
 await $`yarn workspace @companion-app/docs build`
 
 // generate the 'static' zip files to serve

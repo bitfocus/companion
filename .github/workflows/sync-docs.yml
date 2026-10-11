@@ -7,6 +7,11 @@ on:
       - stable-*
     paths:
       - "docs/user-guide/**"
+      # The REST API reference is generated from these, rather than committed
+      - "tools/rest-api-docs/**"
+      - "tools/generate_rest_api_docs.mts"
+      - "companion/lib/Service/RestApi/**"
+      - "companion/lib/**/*RestApi*.ts"
   workflow_dispatch:
 
 concurrency:
@@ -21,6 +26,18 @@ jobs:
         uses: actions/checkout@v7
         with:
           path: companion
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: "companion/.node-version"
+
+      - name: Generate REST API docs
+        working-directory: companion
+        run: |
+          corepack enable
+          yarn install --immutable
+          yarn build:rest-api-docs
 
       - name: Checkout website repository
         uses: actions/checkout@v7

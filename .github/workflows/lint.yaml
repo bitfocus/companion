@@ -64,12 +64,6 @@ jobs:
           yarn build:config-reference
           git diff --exit-code docs/user-guide/1_getting-started/config-reference.generated.md
 
-      - name: Check generated REST API docs are up to date
-        run: |
-          yarn build:rest-api-docs
-          git add --intent-to-add docs/user-guide/5_remote-control/rest-api
-          git diff --exit-code docs/user-guide/5_remote-control/rest-api
-
       - name: Check generated satellite schemas are up to date
         run: yarn build:satellite-schema --check
 
