@@ -36,4 +36,11 @@ The package version is independent of the API version it implements. `API_VERSIO
 2. Push a tag `satellite-protocol-v<version>` (e.g. `satellite-protocol-v0.1.0`)
 
 The `satellite-protocol-release` workflow publishes it to npm. Versions containing a `-` are
-published with the `next` dist-tag.
+published with the `next` dist-tag, others as `latest`.
+
+### Prereleases for testing
+
+Run the `Publish satellite-protocol` workflow manually (workflow_dispatch) on any branch to publish a
+build of it as a prerelease, without tagging. It is versioned `<version>-<dist-tag>.<run>.<attempt>.g<sha>`
+(e.g. `0.1.0-dev.12.1.gabc1234`) and published under the chosen dist-tag (`dev` by default), so
+`latest` is never affected. Install it with `npm install @companion-app/satellite-protocol@dev`.
