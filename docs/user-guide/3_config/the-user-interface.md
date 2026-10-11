@@ -16,6 +16,9 @@ buttons, variables or triggers; or performing other tasks and diagnostics.
   lock the Admin interface with a single click.)
 - The main area of the page is typically split into a large main panel (left) for primary tasks and a secondary panel
   (right) for details, previews, or contextual settings.
+- On wide screens, you can drag the divider between the main and secondary panels to give either of them more room.
+  Double-click the divider to put it back in the middle. Each page remembers its own divider position in your
+  browser.
 - On smaller screens, the main and secondary panels will be combined using additional navigation controls to reduce
   scrolling and keep contextual settings accessible.
 
@@ -28,14 +31,17 @@ right mouse-click).
 
 ![Sidebar context-menu](./images/sidebar-context-menu.png 'Sidebar context-menu')
 
-- **Collapse/Expand All Groups** will collapse or expand all top-level groups (indicated with the caret in the
-  right-hand margin, such as Surfaces and Variables).
+- **Collapse All Groups**/**Expand All Groups** will collapse or expand all top-level groups (indicated with the caret
+  in the right-hand margin, such as Surfaces and Variables).
 - **Auto-Collapse Groups** will allow only a single top-level group to be open at a time. Opening one group will close
   all others (this is sometimes called accordion mode). When active, a check-mark is shown beside it in the
   context-menu.
-- **Folding Sidebar**/**Fixed-Width Sidebar** toggles between these two modes. When in Folding mode, the sidebar
+- **Folding Sidebar**/**Full-width Sidebar** toggles between these two modes. When in Folding mode, the sidebar
   shows only the icons until you hover over it. (You can also toggle these modes from the icon in the bottom-left of the
   sidebar.) Note that this option is not available if the window is very narrow (mobile-mode).
+- **Keep Sidebar Folded** keeps the sidebar narrow, even when you hover over it.
+- **Hide Module Variables**/**Show Module Variables** toggles whether each connection is listed under Variables in the
+  sidebar. They are always available from the main Variables page.
 - **Show/Hide Sidebar Help** toggles visibility of the Help and Support options in the lower non-scrolling section of
   the sidebar. Since the same options are available from the help menu in the upper-right corner of the window, removing
   them from here can allow you to see more navigation buttons without needing to scroll.
@@ -48,3 +54,9 @@ the lower part of the sidebar. The [Sidebar Options](#sidebar-options) section, 
 in the sidebar by hiding the duplicated help entries.
 
 ![Header help-menu](./images/header-help-menu.png 'Header help menu')
+
+## Lists and trees
+
+Many lists in Companion, such as the presets, the variables and the list of actions and feedbacks you can add, are
+grouped into sections which you can expand and collapse. Hold **Alt** while clicking a section to expand or
+collapse all of the sections at the same level at once.

@@ -50,14 +50,19 @@ button you're building.
 Because buttons in Companion 5.0 are built from layered [graphics elements](./button-styling/index.md),
 a feedback works by **overriding properties on those elements** while its condition is true.
 
-When you add a style override to a feedback, you:
+Each feedback has a **Style Overrides** table listing the element properties it changes. To add one:
 
-1. Click to **Add Element Properties** and pick **which element** to affect — for example the **Text**
-   element, the **Image** element, or the **Background**.
-2. Pick **which properties** of that element to override — for example a Text element's **Color**,
-   **Text Size** or the text itself; or the Background's **Color**.
-3. Set the value to apply. While the feedback is active, those properties take over from whatever the
-   element is normally set to.
+1. Click **+** (_Add override_) in the table header. This opens the **Add Element Properties** window.
+2. Pick **which element** to affect — for example the **Text** element, the **Image** element, or the
+   **Background**.
+3. Pick **which properties** of that element to override — for example a Text element's **Color**,
+   **Text Size** or the text itself; or the Background's **Color**. You can select several, then click
+   **Add Properties**.
+4. Set the value to apply in the **Value** column. While the feedback is active, those properties take over
+   from whatever the element is normally set to.
+
+Use the pencil on a row to change which element and property it overrides, and the bin to remove it. A
+feedback with no overrides has no effect, and says so.
 
 ![Add Element Properties](images/feedback-add-element-properties.png?raw=true)
 
@@ -75,8 +80,8 @@ precedence, whereas in 5.0 the lower (later) one wins.
 Say you want a button's text to turn red when a custom variable `alarm` is true:
 
 1. Add the built-in feedback that checks an expression, and set the expression to `$(custom:alarm)`.
-2. On that feedback, **Add Element Properties**, choose your **Text** element, and add its **Color**
-   property.
+2. On that feedback, click **+** in the **Style Overrides** table, choose your **Text** element, and add its
+   **Color** property.
 3. Set the color to red.
 
 Now the text is red whenever `alarm` is true, and returns to its normal color when it isn't.
@@ -94,13 +99,43 @@ converts your old feedbacks to target the standard Text, Image and Background el
 looking exactly as they did before.
 :::
 
-## Boolean feedbacks vs. module style feedbacks
+## Types of feedback
+
+There are three types of feedback, which apply their style overrides in different ways. Hover over the icon
+next to the **Style Overrides** heading to see which type a feedback is.
 
 - **Boolean feedbacks** are on/off: when their condition is true, your configured overrides are
   applied. The expression/variable feedbacks above are a good example.
-- **Module (advanced) feedbacks** are provided by a connection and return a whole style based on the
-  device — for example a meter or a status color. A module declares which properties its feedback
-  affects, and you map those onto the elements on your button.
+- **Value feedbacks** produce a value, such as a level, a name or a number. See
+  [Value feedbacks](#value-feedbacks) below.
+- **Legacy style feedbacks** are provided by some connections and return a whole style based on the
+  device — for example a meter or a status color. Each override picks one of the style properties the
+  feedback produces, and copies it onto an element property on your button.
+
+### Value feedbacks
+
+Value feedbacks can also be used to restyle a button. These are the feedbacks which
+produce a value rather than being on or off, such as a connection reporting the current level of a fader, or the
+built-in **Evaluate Expression** feedback.
+
+For a value feedback, the value of each override is always an [expression](../../../4_expressions/index.md),
+which can use `$(this:value)` to get the feedback's current value. A new override starts off as just
+`$(this:value)`, which copies the value straight onto the property — for example to show a value from a
+connection as the text of an element. You can also transform it, for example to turn the text red when a
+level gets too high:
+
+```
+$(this:value) > -6 ? 0xff4040 : 0xffffff
+```
+
+If the expression returns nothing (`undefined`), or fails, the element keeps its own value for that property.
+
+![Value feedback style override](images/feedback-value-override.png?raw=true)
+
+As with element properties, Companion shows what each override's expression currently evaluates to, underneath
+the name of the property.
+
+### Generated images
 
 Some modules also provide feedbacks that draw a complete generated image, typically to show a complex
 status in a well-arranged way.

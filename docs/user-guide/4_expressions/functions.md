@@ -48,15 +48,15 @@ If the value is negative, the positive will be returned.
 
 eg `abs(-4)` and `abs(4)` both give `4`
 
-**fromRadix(val)**
+**fromRadix(val, [radix])**
 
-Converts a string from the specified radix to an int.
+Converts a string from the specified radix to an int. The radix defaults to 10.
 
 eg `fromRadix("f", 16)` gives `15`
 
-**toRadix(val)**
+**toRadix(val, [radix])**
 
-Converts an int to a string in the specified radix.
+Converts an int to a string in the specified radix, between 2 and 36. The radix defaults to 10.
 
 eg `toRadix(15, 16)` gives `"f"`
 
@@ -84,9 +84,9 @@ Finds the smallest of the provided values.
 
 eg `min(3, 7, 5)` gives `3`. Combine with `max` to clamp a value to a range: `min(100, max(0, $(custom:level)))` keeps the value between 0 and 100.
 
-**randomInt(min, max)**
+**randomInt([min], [max])**
 
-Generate a random integer in the specified range (inclusive).
+Generate a random integer in the specified range (inclusive). If not provided, the range is 0 to 10.
 
 eg `randomInt(1, 6)` gives a dice roll between 1 and 6.
 
@@ -223,7 +223,7 @@ Join an array of values into a single string separated by the specified separato
 
 eg `join([1, 30, 45], ":")` gives `"1:30:45"`
 
-**concat(str1, str2)**
+**concat(str1, [str2, ...])**
 
 Combine one or more values into a single string
 
@@ -402,8 +402,8 @@ eg `getVariable('internal:time_hms')` or `getVariable('internal', 'time_hms')`
 **blink(number, ?number)**
 
 Generate a pulsing 0/1 value that alternates between on/off.  
-The provided number specifies the duration of each cycle.  
-The second parameter is an optional value between 0 - 1 which specifies the portion of the time to spend in the on state.
+The provided number specifies the duration of each cycle in milliseconds, with a minimum of 100.  
+The second parameter is an optional value between 0 - 1 which specifies the portion of the time to spend in the on state. It defaults to 0.5.
 
 eg `blink(1000)` to flash once a second, on for 500ms then off for 500ms. `blink(1000, 0.25)` flashes once a second, on for 250ms off for 750ms
 
@@ -412,6 +412,34 @@ eg `blink(1000)` to flash once a second, on for 500ms then off for 500ms. `blink
 - The 0/1 returned from this function can be treated as a boolean, you do not need to explicitly do this yourself
 - If you prefer specifying the number of flashes per second, use `1000/n` for the first parameter. For example, to flash three times per second write `blink(1000/3)`.
 
+:::
+
+**oscillate(period, ?waveform, ?phase)**
+
+Generate a value which smoothly cycles between 0 and 1. This is useful for animating a button, such as pulsing
+the opacity of an element, sweeping a gauge, or slowly changing a color.
+
+- `period` is how long each cycle takes, in milliseconds. The minimum is 100.
+- `waveform` is the shape of the cycle:
+  - `'sine'` (the default) starts at 0, rises smoothly to 1 halfway through the cycle, and falls back to 0.
+  - `'triangle'` rises steadily from 0 to 1 and falls back again.
+  - `'sawtooth'` rises steadily from 0 to 1, then jumps straight back to 0.
+  - `'square'` is 1 for the first half of the cycle and 0 for the second half.
+- `phase` shifts the cycle by a fraction of the period, from 0 to 1. Use this to make several oscillators run
+  out of step with each other. For example, with a `phase` of `0.5` the value is 1 when an oscillator without a
+  phase is 0.
+
+eg `oscillate(2000) * 100` as the **Opacity** of an element makes it fade in and out every 2 seconds.
+
+eg `oscillate(1000, 'sawtooth')` rises from 0 to 1 every second.
+
+All oscillators with the same period are kept in step with each other, even across different buttons.
+
+:::note
+`oscillate` is updated 10 times a second, so very short periods will look jumpy. It can be used for the
+properties of button elements, in feedbacks, in local and expression variables, and in trigger conditions. It
+can't be used in action options, as an action only runs at a single moment rather than being continually
+updated.
 :::
 
 ### Bool operations
@@ -466,7 +494,7 @@ Check if an array includes a value
 
 If this encounters invalid input, it will return false
 
-**arrayIndexOf(arr, val)**
+**arrayIndexOf(arr, val, [offset])**
 
 Find the index of the first occurrence of a value within the provided array.
 
@@ -679,5 +707,5 @@ eg `dateFormat(dateAdd(unixNow(), 1, 'months'), 'YYYY-MM-DD')` formats the date 
 Note: when adding months, if the resulting day exceeds the target month's length, the date overflows into the next month (e.g. January 31 + 1 month overflows into March, not February).
 
 :::tip
-The date component functions and `dateFormat` accept an optional IANA timezone string (e.g. `'UTC'`, `'Europe/London'`, `'America/New_York'`). When omitted, local time is used. All date functions return `null` (or `''` for `dateFormat`) for invalid input.
+The date component functions and `dateFormat` accept an optional IANA timezone string (e.g. `'UTC'`, `'Europe/London'`, `'America/New_York'`). When omitted, the timezone set in [Settings](../3_config/settings.md#general) is used. All date functions return `null` (or `''` for `dateFormat`) for invalid input.
 :::

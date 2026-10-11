@@ -72,7 +72,9 @@ restarts Companion.
   the internal **Run shell command** action. Off by default.
 - **Restricted modules** — allows loading modules that are otherwise held back for safety, such as
   importing custom modules sent from a remote client. Importing a module from the computer Companion
-  is running on is always allowed; this setting is specifically about remote clients.
+  is running on is always allowed; this setting is specifically about remote clients. This is off by
+  default on desktop installs. On headless installs, where modules are usually imported from another
+  computer, the config-tool turns it on by default.
 
 :::caution
 These features let code run on the machine hosting Companion. Only enable them if you understand and
@@ -90,3 +92,7 @@ accept the risk.
 
 - **Header notifications** — whether to show version-related notifications in the admin interface
   header. You can turn these off if you don't want to see update prompts.
+- **Installation name** — a fixed name for this Companion installation. When set, it replaces the
+  **Installation Name** in [Settings](../3_config/settings.md#general) and can no longer be changed there, and it
+  isn't lost if the database is reset. This is useful when deploying many Companion installations from a script
+  or image. On a desktop install this can be set with the `COMPANION_INSTALL_NAME` environment variable.

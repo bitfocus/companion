@@ -46,6 +46,37 @@ Once you have added your connections, you can reorder or filter them in the tabl
 
 A full list of supported devices can also be found on the website. [Companion Module Support List](https://l.companion.free/q/5LT04sXCC)
 
+## Collections
+
+If you have a lot of connections, you can organise them into collections. Click **Create Collection** above the
+connections table, give the collection a name, and then drag connections into it. Collections can also be placed
+inside other collections.
+
+Each collection has its own enable switch. Disabling a collection disables every connection inside it (including
+those in collections inside it), which is handy for switching off many things at once. The
+connections keep their own enabled setting, so they go back to how they were when the collection is enabled
+again.
+
+## Monitoring connections
+
+Companion provides some internal variables to keep an eye on your connections:
+
+| Variable                                        | Value                                                                     |
+| ----------------------------------------------- | ------------------------------------------------------------------------- |
+| `$(internal:instance_total)`                    | The number of connections                                                 |
+| `$(internal:instance_oks)`                      | The number of connections which are OK                                    |
+| `$(internal:instance_warns)`                    | The number of connections with a warning                                  |
+| `$(internal:instance_errors)`                   | The number of connections with an error                                   |
+| `$(internal:instance_disabled)`                 | The number of disabled connections                                        |
+| `$(internal:connection_<label>_status)`         | The status of a connection: `good`, `warning`, `error` or `disabled`      |
+| `$(internal:connection_collection_<id>_status)` | Whether a connection collection is enabled (`true`) or disabled (`false`) |
+
+The collection status variables use an internal id for the collection rather than its name. The easiest way to
+find the right one is to look in the **Internal** section of the [Variables page](./variables.md), where each is
+described as **Connection Collection Status:** followed by the collection's name.
+
+There are also internal feedbacks to show the status of a connection on a button.
+
 ## Configuring a connection
 
 Once you have added a connection, you can click on it in the connection list to open its configuration in the right panel.
@@ -69,5 +100,22 @@ This panel will offer the latest available version and any installed versions. C
 :::tip
 You can install more versions of a module or uninstall versions from the [Modules page](./modules.md)
 :::
+
+## Deprecated modules
+
+Sometimes a module, or a particular version of a module, is deprecated by its maintainers. This usually means it
+is no longer being updated, or that a newer version or a different module should be used instead.
+
+This is shown clearly:
+
+- a yellow **Deprecated** or **Deprecated version** badge appears next to the module name in the connections
+  list (hover over it to see why),
+- a warning is shown at the top of the connection's configuration panel and in the module's help.
+
+If a version is deprecated, update the connection to a newer version of the module as described above. If the
+whole module is deprecated, look for an alternative module for your device.
+
+This information comes from the module store, so it is only shown when Companion has been able to reach the
+store.
 
 In case you need it, you are able to force a connection to use a different module. This should not be needed for normal use, it is an escape hatch for edge cases that we haven't thought of.

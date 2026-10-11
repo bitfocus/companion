@@ -29,7 +29,7 @@ These are read-only variables and are produced by the connections you have setup
 ![Connection Variables](images/variables-connection.png)
 
 :::note
-There is also a section of variables here called 'internal'. These are similar to connection variables but are produced by Companion itself for your use
+There is also a section of variables here called 'internal'. These are similar to connection variables but are produced by Companion itself for your use. They include the current date and time (such as `$(internal:time_hms)` or `$(internal:date_monthname)` for the name of the month), the status of your connections and surfaces, and more.
 :::
 
 ## Custom Variables
@@ -91,6 +91,8 @@ Since Companion 4.1, there has been limited support for Local Variables. These a
 
 The value of them cannot be accessed from outside of their parent. They can be accessed in any supported field with the `$(local:` naming scheme. Support for using these is indicated by the globe icon.
 
+Pages can have local variables too. These are shared by every button on the page, and are used with the `$(page:` naming scheme. See [Page variables](./buttons/pages.md#page-variables) for more.
+
 Local variables can take their values from many ways:
 
 |                                                                                                                 |                                                               |
@@ -100,6 +102,10 @@ Local variables can take their values from many ways:
 | **Feedback**<br/>You can use most feedbacks from your connections. This allows you to use them in boolean logic | ![Feedback variable](images/variables-local-feedback.png)     |
 
 Be careful to avoid creating cyclical loops between local variables, Companion will attempt to limit how often they update but it will consume excess CPU.
+
+When a local variable is collapsed, its row shows the name to use it by (such as `$(local:count)`) along with its current value, so you can check on a list of variables at a glance.
+
+![Collapsed local variables showing their values](images/variables-page-collapsed.png)
 
 :::tip
 The value of these variables cannot be read from outside of their parent, but for any 'User Value' variables it can be updated from elsewhere
@@ -121,21 +127,25 @@ button:
 For example, to increment a counter called `count` on the button at `1/0/0`, target that location and
 variable and set the value expression to `$(this:current) + 1`.
 
-Additionally, in some places there are some builtin local variables under the `$(this:` name. Some of these are
+Additionally, in some places there are some builtin local variables under the `$(this:` name:
 
-- Page number of the button
-  - Variable: `this:page`
-- Column number of the button
-  - Variable: `this:column`
-- Row number of the button
-  - Variable: `this:row`
-- Location of the button
-  - Variable: `this:location`
-- The current step of this button
-  - Variable: `this:step`
-- Page name of the current page
-  - Variable: `this:page_name`
-- The id of the surface triggering this action
-  - Variable: `this:surface_id`
-- The rotation amount of a rotary action (positive = right/clockwise, negative = left/counter-clockwise; only set while a rotary action is running)
-  - Variable: `this:delta`
+| Variable               | Value                                                                                                                                    |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `this:page`            | Page number of the button                                                                                                                |
+| `this:page_name`       | Page name of the current page                                                                                                            |
+| `this:column`          | Column number of the button                                                                                                              |
+| `this:row`             | Row number of the button                                                                                                                 |
+| `this:location`        | Location of the button (eg `1/2/3`)                                                                                                      |
+| `this:active`          | Whether the button is currently pressed                                                                                                  |
+| `this:step`            | The current step of the button                                                                                                           |
+| `this:step_count`      | The number of steps the button has                                                                                                       |
+| `this:button_status`   | The status of the button                                                                                                                 |
+| `this:actions_running` | Whether actions are running from the button                                                                                              |
+| `this:surface_id`      | The id of the surface which triggered the actions. Only available in actions                                                             |
+| `this:delta`           | The rotation amount of a rotary action (positive = right/clockwise, negative = left/counter-clockwise). Only available in rotary actions |
+| `this:current`         | When setting a variable, its current value                                                                                               |
+| `this:value`           | In a feedback's style overrides, the current value of the feedback                                                                       |
+
+`this:surface_id` and `this:delta` are only available to the built-in (internal) actions, and the conditions
+of the **Logic: If statement** and **Logic: While loop** actions. They are not passed to actions from
+connections.

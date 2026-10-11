@@ -44,18 +44,46 @@ These groups have a few modes of execution
 
 ![Action Group Sequential](images/action-group-sequential.png?raw=true 'Action Group Sequential')
 
+## Conditional actions and loops
+
+The **Logic: If statement** action runs its **Then** actions only when all of its **When True** conditions are
+true, and its **Else** actions otherwise. The **Logic: While loop** action repeats its actions for as long as all
+of its **While True** conditions are true.
+
+The conditions are feedbacks. The built-in (internal) feedbacks in these conditions are
+checked at the moment the action runs, rather than using a value which was calculated earlier. This means:
+
+- they see variable values as they are right now, including values changed by actions which ran just before
+  them. A **While loop** checks the latest values on every repeat, so the actions inside it can change the
+  variable which ends the loop.
+- they can use the details of what caused the actions to run, such as `$(this:surface_id)` for the surface
+  which was pressed, or `$(this:delta)` inside a rotary action.
+
+Feedbacks from connections can also be used as conditions, but they still use the most recent value reported
+by the connection.
+
+:::tip
+Put a **Wait** action inside a **While loop**. Without one, the loop repeats as fast as it can, up to hundreds of
+times a second, which can use a lot of CPU and flood your devices with commands. Waiting even a short time, such
+as 100ms, between repeats is usually plenty.
+:::
+
 ## Storing an action's result
 
 Some module actions return a result — for example fetching a value from a device, or running a query.
 For these actions you'll see a **Store Action Result** option, which lets you capture that result for
 use elsewhere instead of discarding it.
 
-You can store the result into either:
+You can store the result into:
 
 - a **Local variable** — choose a button location (such as `$(this:page)/$(this:row)/$(this:column)`
-  for this button) and the local variable name to write to, or
+  for this button) and the local variable name to write to,
+- a **Page variable** — choose a page and the [page variable](../pages.md#page-variables) name to write
+  to, or
 - a **Custom variable** — choose an existing [custom variable](../../variables.md#custom-variables),
   with an option to create it if it doesn't exist yet.
+
+Choose **&lt;discard&gt;** if you don't need the result.
 
 Once stored, the value is just a normal variable you can reference in button text, feedbacks or other
 actions. This only appears on actions that actually return a result; most actions don't.

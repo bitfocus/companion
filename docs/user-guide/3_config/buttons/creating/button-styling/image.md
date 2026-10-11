@@ -9,7 +9,7 @@ description: Show an image on a button, from your computer or the Image Library.
 An **Image** element shows a picture on your button — an icon, a logo, a camera thumbnail, anything
 you like. You can stack a Text element on top of an Image element to label it.
 
-As well as the shared **Layer** and **Position & Size** sections (see
+As well as the shared **Drawing** and **Position & Size** sections (see
 [Button styling](./index.md#element-properties)), an Image element has a **Content** section.
 
 ![Image element properties](images/image-element-properties.png?raw=true)

@@ -6,6 +6,12 @@ description: Use REST-style HTTP API to remotely control Companion.
 
 Remote triggering can be done by sending `HTTP` Requests to the same IP and port Companion is running on.
 
+:::tip
+Companion 5.1 introduces a new [REST API](./rest-api/index.md), for configuring Companion from scripts and other
+software. It will grow over time to replace this API. For now it covers different things, so you may want to use
+both.
+:::
+
 ## Commands
 
 This API tries to follow REST principles, and the convention that a `POST` request will modify a value, and a `GET` request will retrieve values.
