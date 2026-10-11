@@ -507,6 +507,8 @@ describe('InternalSurface', () => {
 
 		test('surface_connected is rechecked when a surface connects or disconnects', () => {
 			const { surface, surfaceController } = createSurface()
+			// The handlers also schedule a debounced updateVariables
+			surfaceController.getDevicesList.mockReturnValue([])
 			const checkFeedbacks = vi.fn()
 			surface.on('checkFeedbacks', checkFeedbacks)
 
