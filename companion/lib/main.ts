@@ -11,12 +11,13 @@ import logger from './Log/Controller.js'
 import net, { isIPv6 } from 'node:net'
 import os from 'node:os'
 import path from 'node:path'
+import type { SyslogSinkOptions } from '@logtape/syslog'
 // Now we can think about startup
 import { Command } from 'commander'
 import envPaths from 'env-paths'
 import fs from 'fs-extra'
 import { nanoid } from 'nanoid'
-import { type SyslogTransportOptions } from 'winston-syslog'
+import { parseLogLevel } from '@companion-app/shared/LaunchOptions.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { registerLaunchOptions } from './LaunchOptionsCli.js'
@@ -68,18 +69,21 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 	}
 
 	if (options.syslogEnable) {
-		const opt: SyslogTransportOptions = {}
-		if (net.isIPv4(options.syslogHost)) opt.host = options.syslogHost
+		let port: number | undefined
 		if (options.syslogPort) {
-			const port = Number.parseInt(options.syslogPort)
-			if (!Number.isNaN(port) && port > 100 && port <= 65535) opt.port = port
+			const parsedPort = Number.parseInt(options.syslogPort)
+			if (!Number.isNaN(parsedPort) && parsedPort > 100 && parsedPort <= 65535) port = parsedPort
 		}
-		if (options.syslogTcp) opt.protocol = 'tcp4'
 		const localhost: string = options.syslogLocalhost
 			?.replaceAll(/[^a-zA-Z0-9-_. ]/gm, '')
 			.substring(0, 254)
 			.trim()
-		opt.localhost = localhost || os.hostname()
+		const opt: SyslogSinkOptions = {
+			hostname: net.isIPv4(options.syslogHost) ? options.syslogHost : undefined,
+			port,
+			protocol: options.syslogTcp ? 'tcp' : 'udp',
+			syslogHostname: localhost || os.hostname(),
+		}
 		logger.addSyslogHost(opt)
 	}
 
@@ -198,7 +202,17 @@ program.command('start', { isDefault: true, hidden: true }).action(() => {
 	}
 
 	if (options.logLevel) {
-		logger.setLogLevel(options.logLevel)
+		const logLevel = parseLogLevel(options.logLevel)
+		if (logLevel) {
+			logger.setLogLevel(logLevel)
+			if (logLevel !== options.logLevel) {
+				logger
+					.createLogger('Main')
+					.warn(`Log level "${options.logLevel}" is no longer supported, using "${logLevel}" instead`)
+			}
+		} else {
+			logger.createLogger('Main').warn(`Unknown log level "${options.logLevel}"`)
+		}
 	}
 
 	let machineId = options.machineId

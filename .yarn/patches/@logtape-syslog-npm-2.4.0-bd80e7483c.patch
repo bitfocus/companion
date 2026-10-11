@@ -1,0 +1,145 @@
+diff --git a/dist/syslog.cjs b/dist/syslog.cjs
+index e642a1393238a93499b22dcf0efc2bb248932dd7..4d4b1bb55ae5eaa18f99073e92bd28262e7be0df 100644
+--- a/dist/syslog.cjs
++++ b/dist/syslog.cjs
+@@ -1,5 +1,6 @@
+ const require_rolldown_runtime = require('./_virtual/rolldown_runtime.cjs');
+ const require_circular = require('./circular.cjs');
++const __logtape = require("@logtape/logtape");
+ const node_dgram = require_rolldown_runtime.__toESM(require("node:dgram"));
+ const node_net = require_rolldown_runtime.__toESM(require("node:net"));
+ const node_os = require_rolldown_runtime.__toESM(require("node:os"));
+@@ -378,8 +379,12 @@ var NodeTcpSyslogConnection = class {
+ 				});
+ 				socket.on("error", (error) => {
+ 					clearTimeout(timeout);
++					socket.destroy();
+ 					reject(error);
+ 				});
++				socket.on("close", () => {
++					if (this.connection === socket) this.connection = void 0;
++				});
+ 				if (!this.secure) socket.connect(this.port, this.hostname);
+ 			});
+ 		} catch (error) {
+@@ -528,22 +533,41 @@ function getSyslogSink(options = {}) {
+ 		else return protocol === "tcp" ? new NodeTcpSyslogConnection(hostname$1, port, timeout, secure, tlsOptions) : new NodeUdpSyslogConnection(hostname$1, port, timeout);
+ 	})();
+ 	let isConnected = false;
++	let isFailing = false;
+ 	let lastPromise = Promise.resolve();
++	let queue = Promise.resolve();
+ 	const sink = (record) => {
+ 		const syslogMessage = formatSyslogMessage(record, formatOptions);
+-		lastPromise = lastPromise.then(async () => {
+-			if (!isConnected) {
+-				await connection.connect();
+-				isConnected = true;
++		const promise = queue.then(async () => {
++			if (isConnected) try {
++				await connection.send(syslogMessage);
++				isFailing = false;
++				return;
++			} catch {
++				connection.close();
++				isConnected = false;
+ 			}
++			await connection.connect();
++			isConnected = true;
+ 			await connection.send(syslogMessage);
+-		}).catch((error) => {
++			isFailing = false;
++		});
++		lastPromise = promise;
++		queue = promise.catch((error) => {
+ 			isConnected = false;
+-			throw error;
++			connection.close();
++			if (!isFailing) {
++				isFailing = true;
++				__logtape.getLogger([
++					"logtape",
++					"meta",
++					"syslog"
++				]).error("Failed to send a log record to the syslog server: {error}", { error });
++			}
+ 		});
+ 	};
+ 	sink[Symbol.asyncDispose] = async () => {
+-		await lastPromise.catch(() => {});
++		await queue;
+ 		connection.close();
+ 		isConnected = false;
+ 	};
+diff --git a/dist/syslog.js b/dist/syslog.js
+index 8bf49557c6f6708c6d84df0f43e908fd704e9dfe..cdd7e3d499b4becaec9bf119ce7f8a1a3031e4ab 100644
+--- a/dist/syslog.js
++++ b/dist/syslog.js
+@@ -1,4 +1,5 @@
+ import { stringifyWithoutCycles } from "./circular.js";
++import { getLogger } from "@logtape/logtape";
+ import { createSocket } from "node:dgram";
+ import { Socket } from "node:net";
+ import { hostname } from "node:os";
+@@ -377,8 +378,12 @@ var NodeTcpSyslogConnection = class {
+ 				});
+ 				socket.on("error", (error) => {
+ 					clearTimeout(timeout);
++					socket.destroy();
+ 					reject(error);
+ 				});
++				socket.on("close", () => {
++					if (this.connection === socket) this.connection = void 0;
++				});
+ 				if (!this.secure) socket.connect(this.port, this.hostname);
+ 			});
+ 		} catch (error) {
+@@ -527,22 +532,41 @@ function getSyslogSink(options = {}) {
+ 		else return protocol === "tcp" ? new NodeTcpSyslogConnection(hostname$1, port, timeout, secure, tlsOptions) : new NodeUdpSyslogConnection(hostname$1, port, timeout);
+ 	})();
+ 	let isConnected = false;
++	let isFailing = false;
+ 	let lastPromise = Promise.resolve();
++	let queue = Promise.resolve();
+ 	const sink = (record) => {
+ 		const syslogMessage = formatSyslogMessage(record, formatOptions);
+-		lastPromise = lastPromise.then(async () => {
+-			if (!isConnected) {
+-				await connection.connect();
+-				isConnected = true;
++		const promise = queue.then(async () => {
++			if (isConnected) try {
++				await connection.send(syslogMessage);
++				isFailing = false;
++				return;
++			} catch {
++				connection.close();
++				isConnected = false;
+ 			}
++			await connection.connect();
++			isConnected = true;
+ 			await connection.send(syslogMessage);
+-		}).catch((error) => {
++			isFailing = false;
++		});
++		lastPromise = promise;
++		queue = promise.catch((error) => {
+ 			isConnected = false;
+-			throw error;
++			connection.close();
++			if (!isFailing) {
++				isFailing = true;
++				getLogger([
++					"logtape",
++					"meta",
++					"syslog"
++				]).error("Failed to send a log record to the syslog server: {error}", { error });
++			}
+ 		});
+ 	};
+ 	sink[Symbol.asyncDispose] = async () => {
+-		await lastPromise.catch(() => {});
++		await queue;
+ 		connection.close();
+ 		isConnected = false;
+ 	};

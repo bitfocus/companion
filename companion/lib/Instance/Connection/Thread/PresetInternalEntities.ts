@@ -43,7 +43,7 @@ import type { IdGenerator } from '../../../Resources/IdGenerator.js'
  * ids this build doesn't know yet.
  */
 
-/** A logger that can emit warnings. Satisfied by both ModuleLogger (thread) and winston Logger (legacy) */
+/** A logger that can emit warnings. Satisfied by both ModuleLogger (thread) and Logger (legacy) */
 export type PresetEntryWarnLogger = Pick<ModuleLogger, 'warn'>
 
 export interface PresetEntryConversionContext {

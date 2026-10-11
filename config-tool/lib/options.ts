@@ -36,7 +36,8 @@ export function coerceValue(option: LaunchOption, raw: unknown): CoerceResult {
 			return { value: num }
 		}
 		case 'enum': {
-			const str = String(raw)
+			let str = String(raw)
+			if (option.enumAliases && Object.hasOwn(option.enumAliases, str)) str = option.enumAliases[str]
 			if (option.enumValues && !option.enumValues.includes(str)) {
 				return { value: null, error: `Expected one of: ${option.enumValues.join(', ')}` }
 			}

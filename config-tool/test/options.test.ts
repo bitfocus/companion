@@ -44,6 +44,14 @@ describe('coerceValue', () => {
 		expect(coerceValue(enumOpt, 'silly').error).toBeDefined()
 	})
 
+	it('maps enum aliases onto their replacement', () => {
+		const aliasedOpt: LaunchOption = { ...enumOpt, enumAliases: { verbose: 'debug' } }
+		expect(coerceValue(aliasedOpt, 'verbose').value).toBe('debug')
+		expect(coerceValue(aliasedOpt, 'debug').value).toBe('debug')
+		expect(coerceValue(aliasedOpt, 'toString').error).toBeDefined()
+		expect(coerceValue(enumOpt, 'verbose').error).toBeDefined()
+	})
+
 	it('rejects lists and objects instead of stringifying them', () => {
 		expect(coerceValue(stringOpt, { a: 1 }).error).toBeDefined()
 		expect(coerceValue(stringOpt, ['a', 'b']).error).toBeDefined()

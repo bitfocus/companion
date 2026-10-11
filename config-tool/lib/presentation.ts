@@ -39,7 +39,7 @@ export const PRESENTATION: Record<string, OptionPresentation> = {
 	logLevel: {
 		page: 'Logging',
 		label: 'Console log level',
-		help: 'How verbose console logging is. One of error, warn, info, http, verbose, debug, silly. Leave unset for the default (info).',
+		help: 'How verbose console logging is. One of error, warn, info, debug, silly. Leave unset for the default (info).',
 	},
 	syslogEnable: {
 		page: 'Syslog',

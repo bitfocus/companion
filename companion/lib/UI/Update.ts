@@ -117,9 +117,9 @@ export class UIUpdate {
 				maxRetryTime: REQUEST_TIMEOUT_MS * 2,
 				onFailedAttempt: (error) => {
 					if ((error instanceof Error && error.name === 'AbortError') || error instanceof AbortError) {
-						this.#logger.verbose(`update request aborted after ${REQUEST_TIMEOUT_MS}ms`)
+						this.#logger.debug(`update request aborted after ${REQUEST_TIMEOUT_MS}ms`)
 					} else {
-						this.#logger.verbose('update server said something unexpected!', error)
+						this.#logger.debug('update server said something unexpected!', error)
 					}
 				},
 			}
