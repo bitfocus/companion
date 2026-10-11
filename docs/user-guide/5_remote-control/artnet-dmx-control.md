@@ -7,7 +7,7 @@ Companion can listen for Artnet messages, allowing lighting consoles and other A
 
 ## Enabling
 
-Artnet control must be enabled in [Settings](../3_config/settings.md#artnet-listener) before it can be used.
+Artnet control must be enabled in [Settings](../3_config/settings.md#artnet-ii-listener) before it can be used.
 
 The relevant options are:
 

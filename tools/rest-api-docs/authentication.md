@@ -6,13 +6,37 @@ description: How to authenticate with the REST API
 
 # Authentication
 
-The REST API uses **Bearer token** authentication. Include your token in every request:
+The REST API uses **Bearer token** authentication. Include your API key in every request:
 
 ```http
 Authorization: Bearer <token>
 ```
 
-Tokens can be created in the admin UI (in development).
+For example, using `curl`:
+
+```bash
+curl -H "Authorization: Bearer cpn_..." http://127.0.0.1:8000/api/v2/surfaces/v1
+```
+
+A request without a valid key is rejected with `401 Unauthorized`. A request whose key does not have the
+scope an endpoint needs is rejected with `403 Forbidden`.
+
+## Managing API keys
+
+API keys are managed in **Settings > Protocols**, in the **REST API** section. This section only shows
+the keys once the REST API is turned on.
+
+- Click **+** (_Add API key_) to create a key. Give it a **Name** so you can recognise it later, and pick
+  the **Scopes** it should have. Only give a key the scopes it needs.
+- When a key is created it is shown once. Copy it straight away: Companion only stores a hash of it, so
+  it cannot be shown again. If you lose a key, revoke it and create a new one.
+- The table shows the start of each key and when it was **Last used**, to help you find keys which are
+  no longer in use.
+- Use the pencil button to rename a key or change its scopes, and the bin button to revoke it. A revoked
+  key stops working immediately.
+
+API keys are separate from the [Admin UI Password](../../3_config/settings.md#admin-ui-password),
+which does not protect the REST API.
 
 ## Scopes
 

@@ -1,0 +1,8 @@
+{
+	"label": "REST API",
+	"position": 1,
+	"link": {
+		"type": "doc",
+		"id": "remote-control/rest-api/index"
+	}
+}

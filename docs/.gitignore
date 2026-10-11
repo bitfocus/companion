@@ -7,7 +7,6 @@
 # Generated files
 .docusaurus
 .cache-loader
-/user-guide/5_remote-control/rest-api/
 
 # Misc
 .DS_Store

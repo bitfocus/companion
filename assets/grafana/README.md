@@ -7,8 +7,8 @@ if you want those.
 
 ## 1. Enable the metrics endpoint in Companion
 
-The endpoint is opt-in and behind a bearer token. Enable it under **Settings → Experiments →
-Prometheus metrics** (or via the userconfig keys `prometheus_enabled` / `prometheus_token`). A
+The endpoint is opt-in and behind a bearer token. Enable it under **Settings → Protocols →
+Prometheus Metrics** (or via the userconfig keys `prometheus_enabled` / `prometheus_token`). A
 token is generated automatically when you enable it; copy it for the scrape config below.
 
 ## 2. Scrape it with Prometheus

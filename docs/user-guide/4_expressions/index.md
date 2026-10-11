@@ -17,6 +17,7 @@ secondsToTimestamp(max(0, timeDiff($(internal:time_hms), '19:30:00')), 'HH:mm:ss
 Expressions can be used in many places throughout Companion:
 
 - **Button text** — enable the expression mode toggle on a text element to compute the text instead of writing it literally.
+- **Any button element property** — the color, position, size, visibility and every other property of a [button element](../3_config/buttons/creating/button-styling/index.md) can be an expression.
 - **Internal actions** — for example, the value of the **Custom Variable: Set value** action can be set with an expression.
 - **Internal feedbacks** — **Variable: Check boolean expression** lets you style a button whenever an expression evaluates to true, and **Evaluate Expression** exposes the result for use in styling.
 - **Expression variables and local variables** — variables whose value is recalculated automatically from an expression. See [Variables](../3_config/variables.md).
@@ -213,6 +214,16 @@ bool($(obs:streaming)) && blink(500)
 ```
 
 While streaming, the feedback alternates between true and false every 500ms, making the button flash. When not streaming, it stays off.
+
+### Pulsing a button while live
+
+For a softer effect than flashing, use `oscillate` as the **Opacity** of a red Box element on the button:
+
+```
+bool($(obs:streaming)) ? oscillate(2000) * 100 : 0
+```
+
+While streaming, the box smoothly fades in and out every 2 seconds. When not streaming, it is hidden.
 
 ### Cycling through a set of values
 

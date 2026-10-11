@@ -10,7 +10,7 @@ The most common way to use this is with the [Companion Satellite](https://l.comp
 ## Setup
 
 1. Install and run **Companion Satellite** on the remote machine.
-2. In Companion's [Settings](../3_config/settings.md#satellite), confirm the **Satellite Listen Port** (default: `16622`).
+2. In Companion's [Settings](../3_config/settings.md#satellite), confirm the **Satellite TCP Listen Port** (default: `16622`).
 3. In Companion Satellite, point it at the IP address of the machine running Companion.
 4. Once connected, the remote surfaces will appear in Companion's [Surfaces](../3_config/surfaces.md) page, just like locally connected devices.
 

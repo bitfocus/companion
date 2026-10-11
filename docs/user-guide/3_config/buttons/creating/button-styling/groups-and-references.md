@@ -39,6 +39,12 @@ arrows looking right.
 A **Reference** element mirrors the rendered graphics of _another_ button. Whatever that button draws,
 this element draws too.
 
+:::tip
+A Reference element only copies how the other button looks, and you can place it anywhere among the other
+elements of your button. If you want a whole button to act as another button, including pressing it, use a
+[Button reference](../index.md#button-references) instead.
+:::
+
 This is perfect for reusable designs. You can build one button exactly how you like it, then point
 Reference elements on other buttons at it — change the original and they all follow.
 
