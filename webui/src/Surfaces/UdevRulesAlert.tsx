@@ -32,7 +32,7 @@ export const UdevRulesAlert = observer(function UdevRulesAlert(): React.JSX.Elem
 	// automatically on success. Otherwise the user applies manually, so we offer the command and a "I've done
 	// this" re-check. Either way the actions sit in a right-aligned row below the command.
 	return (
-		<StaticAlert color="warning" role="alert">
+		<StaticAlert color="warning" role="alert" className="mb-0">
 			<p>
 				To use your USB surfaces, the system USB permissions need updating. This is needed because the configured
 				surface modules have changed.

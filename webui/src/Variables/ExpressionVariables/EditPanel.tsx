@@ -237,6 +237,7 @@ const ExpressionVariableAddRootEntity = observer(function ExpressionVariableAddR
 				entityType={EntityModelType.Feedback}
 				feedbackListType={FeedbackEntitySubType.Value}
 				entityTypeLabel="definition"
+				anyEntities={false}
 			/>
 		</>
 	)

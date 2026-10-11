@@ -141,7 +141,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 					<NotesStrip key={controlId} state={notesState} />
 				</MyErrorBoundary>
 
-				<TabArea.Root variant="pills" value={activeTab} onValueChange={setActiveTab}>
+				<TabArea.Root variant="pills" value={activeTab} onValueChange={setActiveTab} className="mt-1">
 					<TabArea.List>
 						<TabArea.Tab value="behaviour">Behaviour</TabArea.Tab>
 						<TabArea.Tab value="variables">
@@ -157,7 +157,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 			</div>
 
 			{activeTab === 'variables' ? (
-				<div className="page-scroll p-4">
+				<div className="page-scroll p-4 pt-2">
 					<div className="max-w-readable">
 						<MyErrorBoundary>
 							<LocalVariablesEditor
@@ -170,7 +170,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 					</div>
 				</div>
 			) : (
-				<div className="page-scroll p-4">
+				<div className="page-scroll p-4 pt-2">
 					<div className="max-w-readable">
 						{/* ─── STAGE 1: WHEN (Events) ─────────────────────────────────── */}
 						<div className="rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
