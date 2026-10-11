@@ -135,9 +135,7 @@ tells them how far it moved: a positive number for a turn to the right (clockwis
 turn to the left. For example, an action which changes a value by `$(this:delta)` will change it faster the
 faster the dial is turned.
 
-`$(this:delta)` is only available inside the rotate actions, and only in internal actions (and their
-conditions). To use it with an action from a connection, first store it in a local variable with
-**Local Variable: Set value**, then use that variable in the connection's action.
+`$(this:delta)` is only available inside the rotate actions.
 
 The **Button: Trigger rotate** action rotates another button, as if its dial was turned. Its **Amount** is the
 number of steps to rotate: positive numbers rotate to the right and negative numbers to the left. You can set

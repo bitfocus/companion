@@ -20,7 +20,7 @@ import {
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { convertExpressionOptionsWithoutParsing } from '@companion-app/shared/Model/Options.js'
-import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { CompanionOptionValues, Complete } from '@companion-module/base'
@@ -43,6 +43,7 @@ import type { AppInfo } from '../Registry.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
+import { buildActionExecutionOverrides } from '../Variables/Util.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { InternalActionRecorder } from './ActionRecorder.js'
@@ -818,16 +819,5 @@ export class InternalController {
 				fragment.updateBindIp(bindIp, bindPort)
 			}
 		}
-	}
-}
-
-/**
- * The `$(this:*)` overrides derived from an action's execution context. Shared by the parser for the
- * action's own options and by the one for its child feedbacks, so both see the same variables.
- */
-export function buildActionExecutionOverrides(extras: RunActionExtras): VariableValues {
-	return {
-		'this:surface_id': extras.surfaceId,
-		'this:delta': extras.rotationDelta ?? undefined,
 	}
 }

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, test } from 'vitest'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
@@ -8,7 +8,8 @@ import {
 	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
-import { visitEntityOptionsForVariables } from '../../lib/Variables/Util.js'
+import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandlerApi.js'
+import { buildActionExecutionOverrides, visitEntityOptionsForVariables } from '../../lib/Variables/Util.js'
 
 function createDefinition(
 	partial: Pick<ClientEntityDefinition, 'label' | 'options'> & Partial<ClientEntityDefinition>
@@ -671,5 +672,31 @@ describe('visitEntityOptionsForVariables', () => {
 			})
 			expect(results[1].fieldType).toBe(null)
 		})
+	})
+})
+
+describe('buildActionExecutionOverrides', () => {
+	function makeExtras(overrides: Partial<RunActionExtras>): RunActionExtras {
+		return {
+			controlId: 'control1',
+			surfaceId: undefined,
+			location: undefined,
+			abortDelayed: new AbortController().signal,
+			executionMode: 'concurrent',
+			rotationDelta: null,
+			...overrides,
+		}
+	}
+
+	test('exposes this:surface_id and this:delta for a rotary execution', () => {
+		const overrides = buildActionExecutionOverrides(makeExtras({ surfaceId: 'surface0', rotationDelta: -3 }))
+		expect(overrides['this:surface_id']).toBe('surface0')
+		expect(overrides['this:delta']).toBe(-3)
+	})
+
+	test('this:delta is undefined for a non-rotary execution', () => {
+		const overrides = buildActionExecutionOverrides(makeExtras({ surfaceId: 'surface0', rotationDelta: null }))
+		expect(overrides['this:surface_id']).toBe('surface0')
+		expect(overrides['this:delta']).toBeUndefined()
 	})
 })

@@ -145,7 +145,3 @@ Additionally, in some places there are some builtin local variables under the `$
 | `this:delta`           | The rotation amount of a rotary action (positive = right/clockwise, negative = left/counter-clockwise). Only available in rotary actions |
 | `this:current`         | When setting a variable, its current value                                                                                               |
 | `this:value`           | In a feedback's style overrides, the current value of the feedback                                                                       |
-
-`this:surface_id` and `this:delta` are only available to the built-in (internal) actions, and the conditions
-of the **Logic: If statement** and **Logic: While loop** actions. They are not passed to actions from
-connections.

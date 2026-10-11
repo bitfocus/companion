@@ -66,6 +66,7 @@ import type { CompanionOptionValues as CompanionOptionValuesNew } from '@compani
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
 import LogController, { stringifyLogValue, type Logger } from '../../Log/Controller.js'
+import { buildActionExecutionOverrides } from '../../Variables/Util.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
 import {
 	doesModuleExpectLabelUpdates,
@@ -597,9 +598,13 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				if (!actionDefinition) throw new Error(`Failed to find action definition for ${action.definitionId}`)
 
 				// Note: for actions, this doesn't need to be reactive
-				const parser = this.#deps.controls.createVariablesAndExpressionParser(extras.controlId, null, {
-					allowClockSensitive: false,
-				})
+				const parser = this.#deps.controls.createVariablesAndExpressionParser(
+					extras.controlId,
+					buildActionExecutionOverrides(extras),
+					{
+						allowClockSensitive: false,
+					}
+				)
 				const parseRes = parser.parseEntityOptions(actionDefinition, action.options)
 				if (!parseRes.ok) {
 					this.logger.warn(

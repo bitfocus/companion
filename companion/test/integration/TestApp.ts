@@ -109,6 +109,8 @@ export interface TestApp {
 	getFeedbackValue(controlId: string, entityId: string): any
 	/** Press or release the button at a grid location */
 	pressButton(location: ControlLocation, pressed: boolean): void
+	/** Rotate the button at a grid location by `delta` steps (positive is right) */
+	rotateButton(location: ControlLocation, delta: number): void
 	/** Create a custom variable, throwing on failure */
 	createCustomVariable(name: string, defaultValue: VariableValue | undefined): void
 	/** Read the current value of a custom variable */
@@ -489,6 +491,12 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 			const controlId = registry.page.store.getControlIdAt(location)
 			if (!controlId) throw new Error(`No control at ${location.pageNumber}/${location.row}/${location.column}`)
 			registry.controls.pressControl(controlId, pressed, 'test-surface')
+		},
+
+		rotateButton(location, delta) {
+			const controlId = registry.page.store.getControlIdAt(location)
+			if (!controlId) throw new Error(`No control at ${location.pageNumber}/${location.row}/${location.column}`)
+			registry.controls.rotateControl(controlId, delta, 'test-surface')
 		},
 
 		createCustomVariable(name, defaultValue) {
