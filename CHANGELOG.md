@@ -2,8 +2,6 @@
 
 ## Companion v5.1.0 - Release Notes
 
-<!-- DRAFT -->
-
 ### 📣 CORE FEATURES AND IMPROVEMENTS
 
 - Graphics improvements
