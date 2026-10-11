@@ -135,10 +135,12 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 		this.#surfaceController.on('surface-add', () => {
 			debounceUpdateVariableDefinitions()
 			debounceUpdateVariables()
+			this.emit('checkFeedbacks', 'surface_connected')
 		})
 		this.#surfaceController.on('surface-delete', () => {
 			debounceUpdateVariableDefinitions()
 			debounceUpdateVariables()
+			this.emit('checkFeedbacks', 'surface_connected')
 		})
 		this.#surfaceController.on('surface-in-group', () => debounceUpdateVariables())
 		this.#surfaceController.on('surface_name', () => debounceUpdateVariables())
@@ -727,6 +729,28 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 				optionsSupportExpressions: true,
 			},
 
+			surface_connected: {
+				feedbackType: FeedbackEntitySubType.Boolean,
+				label: 'Surface: When connected',
+				description: 'Change style when a surface is connected',
+				feedbackStyle: {
+					color: 0xffffff,
+					bgcolor: 0x00aa00,
+				},
+				showInvert: true,
+				options: [
+					{
+						type: 'internal:surface_serial',
+						label: 'Surface',
+						id: 'surfaceId',
+						includeSelf: false,
+						default: '',
+						listMode: 'surfaces',
+					},
+				],
+				optionsSupportExpressions: true,
+			},
+
 			outbound_surface_enabled: {
 				feedbackType: FeedbackEntitySubType.Boolean,
 				label: 'Remote surface: When enabled',
@@ -752,6 +776,12 @@ export class InternalSurface extends EventEmitter<InternalModuleFragmentEvents> 
 			const currentPage = this.#surfaceController.devicePageGet(surfaceId, true)
 
 			return currentPage == thePage
+		}
+		if (feedback.definitionId == 'surface_connected') {
+			const surfaceId = stringifyVariableValue(feedback.options.surfaceId)?.trim()
+			if (!surfaceId) return false
+
+			return this.#surfaceController.isSurfaceConnected(surfaceId, true)
 		}
 		if (feedback.definitionId == 'outbound_surface_enabled') {
 			const surfaceId = stringifyVariableValue(feedback.options.surfaceId)?.trim()

@@ -392,6 +392,23 @@ describe('ListInputField', () => {
 			expect(screen.getAllByRole('button', { name: /expression mode|value mode/i })).toHaveLength(2)
 		})
 
+		it('does not render an expression toggle for static-text fields', () => {
+			render(
+				<Controlled
+					definition={{
+						...definition,
+						fields: [
+							{ id: 'note', type: 'static-text', label: 'Attention', value: 'Read me' },
+							{ id: 'value', type: 'number', label: 'Value', min: 0, max: 100, step: 1, default: 0 },
+						],
+					}}
+					initialValue={[{ value: val(50) }]}
+					fieldSupportsExpression={true}
+				/>
+			)
+			expect(screen.getAllByRole('button', { name: /expression mode|value mode/i })).toHaveLength(1)
+		})
+
 		it('calls setValue with an expression cell when the toggle is activated', async () => {
 			const setValue = vi.fn()
 			const user = userEvent.setup()

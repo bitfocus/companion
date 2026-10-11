@@ -10,6 +10,16 @@ It is also synced to https://github.com/bitfocus/website to publish on https://c
 yarn
 ```
 
+## Generated pages
+
+The REST API reference (`user-guide/5_remote-control/rest-api/`) is generated from the API definition rather than committed. Generate it before starting or building the docs, otherwise links to it will be broken:
+
+```bash
+yarn build:rest-api-docs
+```
+
+This is done automatically when building Companion, and when syncing the docs to the website.
+
 ## Local Development
 
 ```bash

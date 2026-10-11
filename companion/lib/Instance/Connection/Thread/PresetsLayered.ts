@@ -251,6 +251,7 @@ function convertLayeredPresetElement(
 				...convertElementBasicProperties(element, 'Composite', forceNewIds, generateId),
 
 				...convertElementSize(element),
+				rotation: convertModuleExpressionOrValue(element.rotation, { value: 0, isExpression: false }),
 
 				connectionId,
 				elementId: element.elementId,

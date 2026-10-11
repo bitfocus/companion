@@ -202,7 +202,8 @@ export interface ButtonGraphicsCircleElement
 	borderOnlyArc: ExpressionOrValue<boolean>
 }
 
-export interface ButtonGraphicsCompositeElement extends ButtonGraphicsElementBase, ButtonGraphicsBounds {
+export interface ButtonGraphicsCompositeElement
+	extends ButtonGraphicsElementBase, ButtonGraphicsBounds, ButtonGraphicsRotation {
 	type: 'composite'
 	connectionId: string
 	elementId: string

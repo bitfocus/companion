@@ -35,7 +35,7 @@ export function UsageDataModal(): React.JSX.Element {
 								The id field is a randomly generated identifier for your Companion instance when you first launched it.
 								It helps us distinguish between different users while ensuring your anonymity.
 							</p>
-							{!isLoading && (
+							{isLoading && (
 								<div className="text-center py-12">
 									<FontAwesomeIcon icon={faSpinner} spin size="2x" />
 								</div>

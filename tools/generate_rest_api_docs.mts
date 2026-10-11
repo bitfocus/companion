@@ -2,11 +2,13 @@
  * Generate Docusaurus-compatible markdown documentation from the REST API OpenAPI spec.
  *
  * Usage:  tsx tools/generate_rest_api_docs.mts
- * Output: docs/user-guide/5_remote-control/rest-api/ (gitignored)
+ * Output: docs/user-guide/5_remote-control/rest-api/ (gitignored, generated before building or syncing the docs)
  */
 
 import fs from 'fs'
 import path from 'path'
+import { $, usePowerShell } from 'zx'
+import { REST_API_BASE_PATH } from '../companion/lib/Service/RestApi/constants.js'
 import { generateOpenApiDocument } from '../companion/lib/Service/RestApi/openapi.js'
 
 const OUT_DIR = path.resolve(import.meta.dirname, '../docs/user-guide/5_remote-control/rest-api')
@@ -216,7 +218,7 @@ function renderEndpointExample(method: HttpMethod, apiPath: string, op: Operatio
 
 	lines.push('**Example:**')
 	lines.push('')
-	lines.push(`\`${method.toUpperCase()} /api${examplePath}\``)
+	lines.push(`\`${method.toUpperCase()} ${REST_API_BASE_PATH}${examplePath}\``)
 
 	if (requestSchema) {
 		lines.push('')
@@ -273,8 +275,14 @@ function writeCategoryIndexDoc(): void {
 
 // ── Main ─────────────────────────────────────────────────────────────
 
+if (process.platform === 'win32') {
+	usePowerShell() // to enable powershell
+}
+
 const doc = generateOpenApiDocument({ appVersion: '0.0.0-docs' })
 
+// Start from a clean folder, so pages for removed tags don't linger
+fs.rmSync(OUT_DIR, { recursive: true, force: true })
 ensureDir(OUT_DIR)
 
 // Write category metadata
@@ -387,5 +395,8 @@ for (const [tag, operations] of tagGroups) {
 
 writeCategoryIndexDoc()
 const staticDocCount = copyStaticMarkdownDocs()
+
+// The output is committed, so format it to match what `yarn format` would produce
+await $`prettier --write ${OUT_DIR}`
 
 console.log(`\nDone! Generated ${tagGroups.size + staticDocCount + 1} files in ${OUT_DIR}`)

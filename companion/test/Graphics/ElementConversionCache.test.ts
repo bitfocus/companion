@@ -115,7 +115,9 @@ describe('ElementConversionCache', () => {
 			const compositeId = makeCompositeId('button-A')
 			cache.set(
 				'elem1',
-				makeEntry({ compositeElement: { elementId: compositeId, childPropOverrides: {}, childIdPrefix: '' } })
+				makeEntry({
+					compositeElement: { elementId: compositeId, childPropOverrides: {}, childIdPrefix: '', isPlaceholder: false },
+				})
 			)
 			cache.set('elem2', makeEntry()) // no composite — should survive
 			cache.queueInvalidateCompositeType([compositeId])
@@ -130,7 +132,9 @@ describe('ElementConversionCache', () => {
 			const dropId = makeCompositeId('drop')
 			cache.set(
 				'elem1',
-				makeEntry({ compositeElement: { elementId: keepId, childPropOverrides: {}, childIdPrefix: '' } })
+				makeEntry({
+					compositeElement: { elementId: keepId, childPropOverrides: {}, childIdPrefix: '', isPlaceholder: false },
+				})
 			)
 			cache.queueInvalidateCompositeType([dropId])
 			cache.applyQueuedInvalidations()
@@ -141,8 +145,18 @@ describe('ElementConversionCache', () => {
 			const cache = new ElementConversionCache()
 			const idA = makeCompositeId('A')
 			const idB = makeCompositeId('B')
-			cache.set('elemA', makeEntry({ compositeElement: { elementId: idA, childPropOverrides: {}, childIdPrefix: '' } }))
-			cache.set('elemB', makeEntry({ compositeElement: { elementId: idB, childPropOverrides: {}, childIdPrefix: '' } }))
+			cache.set(
+				'elemA',
+				makeEntry({
+					compositeElement: { elementId: idA, childPropOverrides: {}, childIdPrefix: '', isPlaceholder: false },
+				})
+			)
+			cache.set(
+				'elemB',
+				makeEntry({
+					compositeElement: { elementId: idB, childPropOverrides: {}, childIdPrefix: '', isPlaceholder: false },
+				})
+			)
 			cache.queueInvalidateCompositeType([idA, idB])
 			cache.applyQueuedInvalidations()
 			expect(cache.get('elemA')).toBeUndefined()
@@ -157,7 +171,9 @@ describe('ElementConversionCache', () => {
 			// Re-add; second apply must not remove it
 			cache.set(
 				'elem1',
-				makeEntry({ compositeElement: { elementId: compositeId, childPropOverrides: {}, childIdPrefix: '' } })
+				makeEntry({
+					compositeElement: { elementId: compositeId, childPropOverrides: {}, childIdPrefix: '', isPlaceholder: false },
+				})
 			)
 			cache.applyQueuedInvalidations()
 			expect(cache.get('elem1')).toBeDefined()
@@ -289,7 +305,9 @@ describe('ElementConversionCache', () => {
 			cache.set('direct', makeEntry())
 			cache.set(
 				'composite',
-				makeEntry({ compositeElement: { elementId: compositeId, childPropOverrides: {}, childIdPrefix: '' } })
+				makeEntry({
+					compositeElement: { elementId: compositeId, childPropOverrides: {}, childIdPrefix: '', isPlaceholder: false },
+				})
 			)
 			cache.set('variable', makeEntry({ usedVariables: new Set(['var:v']) }))
 			cache.set('survivor', makeEntry({ usedVariables: new Set(['var:other']) }))

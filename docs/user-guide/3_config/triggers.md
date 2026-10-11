@@ -38,9 +38,14 @@ This allows you to apply a filter on the events.
 
 ![Condition](images/triggers/condition.png?raw=true 'Condition')
 
+When the trigger fires from an event, the built-in (internal) conditions are checked again at that moment. This
+means a condition such as **Variable: Check boolean expression** with `randomInt(1, 10) > 7` is re-rolled every
+time an event happens, so you can use it to make a trigger run only some of the time. Conditions using
+feedbacks from connections use the most recent value reported by the connection.
+
 ### Actions
 
 This defines what will happen when the trigger executes and condition is met.  
- Every action that can be used on a button can also be used here. If you want, you can make it press a button using the 'internal: Press and release' action.
+ Every action that can be used on a button can also be used here. If you want, you can make it press a button using the **Button: Trigger press and release** action. Its **Hold duration (ms)** option lets you hold the button down for a while before releasing it, which is useful for buttons with long-press actions. Leave it at `0` to release straight away.
 
 ![Actions](images/triggers/actions.png?raw=true 'Actions')

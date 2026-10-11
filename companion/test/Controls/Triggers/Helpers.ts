@@ -57,7 +57,7 @@ export function createMockControlDependencies(): MockControlDependencies {
 			definitions: null as any,
 			processManager: null as any,
 		} as any,
-		variableValues: null as any,
+		variableValues: { createVariablesAndExpressionParser: vi.fn(() => ({}) as any) } as any,
 		userconfig: mockUserConfig({ timezone: '' }),
 		graphics: null as any,
 		actionRunner: {

@@ -2,8 +2,6 @@
 
 ## Companion v5.1.0 - Release Notes
 
-<!-- DRAFT -->
-
 ### 📣 CORE FEATURES AND IMPROVEMENTS
 
 - Graphics improvements
@@ -18,6 +16,7 @@
   - text style properties (#4337)
   - smooth text autosizing
   - support corner radius for box elements #4359
+  - allow rotating composite elements
 
 - Misc UX
   - rework button grid interactions (#4434)
@@ -25,6 +24,7 @@
   - make split panel layouts resizable #2781
   - Show local variable value when collapsed (#4386)
   - configurable default export format #4349
+  - make module deprecation more visible to users (#4495)
 
 - APIs
   - Prototype of new full system REST API (#4259)
@@ -49,10 +49,14 @@
   - add COMPANION_INSTALL_NAME env var to set the installation name
   - prometheus metrics for monitoring (#4304)
   - streaming json parsing/generation (#4390)
+  - report collection-disabled connections as disabled, add connection collection status variables #4479
+  - add 'Surface: When connected' feedback #4124
+  - randomInt() is not re-evaluated in Trigger conditions #3297
+  - Add duration to press and release internal action #3389
+  - add $(internal:date_monthname) variable #3819
 
 ### 🐞 BUG FIXES
 
-- better logging in internal actions when not finding local variable to update #4466
 - module versions refresh button not indicating progress
 - keep unicode glyphs together when breaking a line #3671
 - rework line breaking to work as is was long ago (#4372)
@@ -62,15 +66,19 @@
 - propagate image import errors #4438
 - better report import progress to the ui
 - sort to the connection selection dropdown (#4402)
-- limit preset advanced-feedback style overrides to affectedProperties #4410
 - backup file renaming failing #4394
 - try to ensure module are shutdown cleanly when companion exits
 - adjust line draw bounds to not hide the line #4359
 - measure font ascent/descent for better positioning #4359
 - avoid excessive button-drawn events upon a cache hit
-- make element type clearer in list #4331
-- emulator long press suppress buzz #4322
-- standalone pipe for child ipc (#4312)
+- colors when downscaling oversampled images
+- dropdown freezing when selecting from a large list #4494
+- expose pressed state to surfaces
+- don't recreate desktop shortcut when updating
+- static-text fields should not show expression toggles
+- draw a placeholder for missing or cyclic composite elements
+- update bonjour lib to limit query answer rate #4499
+- logging stopping entirely after a non-string message is logged #4509
 
 ## Companion v5.0.7 - Release Notes
 

@@ -3,7 +3,7 @@ import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { exprVal } from '@companion-app/shared/Model/Options.js'
+import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
 import nodeVersions from '../../../assets/nodejs-versions.json' with { type: 'json' }
 import fixtureVersions from './modules/fixture-versions.json' with { type: 'json' }
 import { hasApiFeature } from './modules/src/api-gates.js'
@@ -41,7 +41,7 @@ describe('real module children across module-api versions', () => {
 
 	test.each(fixtureVersions.versions.map((v, index) => ({ ...v, index })))(
 		'module built with @companion-module/base@$apiVersion works end to end',
-		async ({ apiVersion, runtime, index }) => {
+		async ({ apiVersion, contract, runtime, index }) => {
 			const label = `mod_${apiVersion.replaceAll('.', '_')}`
 
 			// The module was discovered from the extra-module-path, so it can be added as a connection
@@ -153,6 +153,36 @@ describe('real module children across module-api versions', () => {
 			await vi.waitFor(() => {
 				expect(app.getFeedbackValue(controlId, feedbackId!)).toBe(false)
 			}, 30_000)
+
+			if (contract === 'v2') {
+				// The execution context reaches connection action options as $(this:*) variables. Only
+				// 2.x modules accept expressions in their options
+				expect(await app.trpc().controls.setOptionsField({ controlId, key: 'rotaryActions', value: true })).toBe(true)
+				const rotateLocation = { stepId, setId: 'rotate_right' } as const
+				const rotateActionId = await app.trpc().controls.entities.add({
+					controlId,
+					entityLocation: rotateLocation,
+					ownerId: null,
+					connectionId,
+					entityType: EntityModelType.Action,
+					entityDefinition: 'set_var',
+				})
+				expect(rotateActionId).toBeTruthy()
+				expect(
+					await app.trpc().controls.entities.setOption({
+						controlId,
+						entityLocation: rotateLocation,
+						entityId: rotateActionId!,
+						key: 'value',
+						value: exprExpr('`d=${$(this:delta)} s=${$(this:surface_id)}`'),
+					})
+				).toBe(true)
+
+				app.rotateButton(location, 3)
+				await vi.waitFor(() => {
+					expect(app.registry.variables.values.getVariableValue(label, 'last_value')).toBe('P-d=3 s=test-surface')
+				}, 30_000)
+			}
 
 			// Behaviours that appeared in a specific api version are registered by the fixture only
 			// when its base library supports them - the same feature map drives what to expect here

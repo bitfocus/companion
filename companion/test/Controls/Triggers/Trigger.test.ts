@@ -154,6 +154,14 @@ describe('ControlTrigger', () => {
 			trigger.executeActions(2, TriggerExecutionSource.ConditionChange)
 			expect(runMultipleActions).toHaveBeenCalledTimes(1)
 		})
+
+		test('the condition is evaluated live when an event fires', () => {
+			const { trigger } = createEnabledTrigger()
+			const condition = vi.spyOn(trigger.entities, 'checkConditionValue').mockReturnValue(true)
+
+			trigger.executeActions(1, TriggerExecutionSource.Other)
+			expect(condition).toHaveBeenCalledWith(true)
+		})
 	})
 
 	describe('options', () => {
@@ -395,6 +403,8 @@ describe('ControlTrigger', () => {
 			trigger.triggerInvalidation()
 			vi.runAllTimers()
 			expect(runMultipleActions).toHaveBeenCalledTimes(1)
+			// Edges are detected from the cached values
+			expect(condition).not.toHaveBeenCalledWith(true)
 
 			// Falling does not fire a condition_true event
 			condition.mockReturnValue(false)

@@ -75,7 +75,7 @@ describe('ControlEntityListPoolTrigger', () => {
 		test('an empty condition is treated as true', () => {
 			const { pool } = createTriggerPool()
 
-			expect(pool.checkConditionValue()).toBe(true)
+			expect(pool.checkConditionValue(false)).toBe(true)
 		})
 
 		test('reflects the boolean value of the condition feedbacks', () => {
@@ -84,10 +84,42 @@ describe('ControlEntityListPoolTrigger', () => {
 			pool.entityAdd('feedbacks', null, feedback)
 
 			pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: true }))
-			expect(pool.checkConditionValue()).toBe(true)
+			expect(pool.checkConditionValue(false)).toBe(true)
 
 			pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: false }))
-			expect(pool.checkConditionValue()).toBe(false)
+			expect(pool.checkConditionValue(false)).toBe(false)
+		})
+
+		test('live evaluation re-runs internal feedbacks instead of using the cached value', () => {
+			const { pool, internalModule, variableValues } = createTriggerPool()
+			const feedback = feedbackModel({ connectionId: 'internal' })
+			pool.entityAdd('feedbacks', null, feedback)
+			pool.updateFeedbackValues('internal', feedbackValues({ [feedback.id]: false }))
+
+			internalModule.evaluateFeedbackValue.mockReturnValue(true)
+
+			expect(pool.checkConditionValue(false)).toBe(false)
+			expect(internalModule.evaluateFeedbackValue).not.toHaveBeenCalled()
+
+			expect(pool.checkConditionValue(true)).toBe(true)
+			expect(internalModule.evaluateFeedbackValue).toHaveBeenCalledTimes(1)
+			expect(variableValues.createVariablesAndExpressionParser).toHaveBeenLastCalledWith(
+				null,
+				expect.anything(),
+				null,
+				null,
+				{ allowClockSensitive: true }
+			)
+		})
+
+		test('live evaluation still uses cached values for module feedbacks', () => {
+			const { pool, internalModule } = createTriggerPool()
+			const feedback = feedbackModel()
+			pool.entityAdd('feedbacks', null, feedback)
+			pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: true }))
+
+			expect(pool.checkConditionValue(true)).toBe(true)
+			expect(internalModule.evaluateFeedbackValue).not.toHaveBeenCalled()
 		})
 	})
 

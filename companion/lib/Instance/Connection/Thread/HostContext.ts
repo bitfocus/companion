@@ -196,6 +196,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 			convertedElements.push({
 				id,
 				name: rawElement.name,
+				sortKey: rawElement.sortName ? String(rawElement.sortName) : null,
 				description: rawElement.description,
 				options: translateEntityInputFields(rawElement.options || [], EntityModelType.Feedback),
 				elements: ConvertLayerPresetElements(
@@ -204,7 +205,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 					undefined,
 					rawElement.elements || [],
 					randomIdGenerator,
-					true // Force new unique IDs for elements within composite definitions
+					true // Force new unique IDs, so the conversion cache drops children of a changed definition
 				).slice(
 					1 // Crop off the canvas element
 				),

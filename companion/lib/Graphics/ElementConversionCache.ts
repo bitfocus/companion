@@ -21,6 +21,8 @@ export interface ElementConversionCacheEntry {
 		readonly childPropOverrides: VariableValues
 		/** Prefix applied to child element IDs */
 		readonly childIdPrefix: string
+		/** Whether the draw element is a placeholder (missing definition or cycle), with no children to convert */
+		readonly isPlaceholder: boolean
 	} | null
 
 	/**

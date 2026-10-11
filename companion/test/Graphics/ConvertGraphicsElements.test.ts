@@ -6,6 +6,7 @@ import type {
 	ButtonGraphicsBoxDrawElement,
 	ButtonGraphicsBoxElement,
 	ButtonGraphicsCanvasDrawElement,
+	ButtonGraphicsCompositeElement,
 	ButtonGraphicsGaugeDrawElement,
 	ButtonGraphicsGaugeElement,
 	ButtonGraphicsGroupDrawElement,
@@ -1257,6 +1258,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					myComposite: {
 						id: 'myComposite',
 						name: 'My Composite',
+						sortKey: null,
 						description: undefined,
 						elements: [makeTextEl({ id: 'inner-text', text: val('inner') })],
 						options: [],
@@ -1268,6 +1270,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				id: 'composite1',
 				name: '',
 				type: 'composite',
+				rotation: val(0),
 				usage: USAGE,
 				connectionId: 'test',
 				elementId: 'myComposite',
@@ -1369,6 +1372,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					myComposite: {
 						id: 'myComposite',
 						name: 'My Composite',
+						sortKey: null,
 						description: undefined,
 						elements: compositeElements,
 						options: [],
@@ -1381,6 +1385,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'composite1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					connectionId: 'test',
@@ -1629,6 +1634,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'composite1',
 				name: 'Test Composite',
+				sortKey: null,
 				description: '',
 				options: [],
 				elements: [makeTextEl({ id: 'child1', text: val('Inside Composite') })],
@@ -1645,6 +1651,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -1680,52 +1687,152 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			})
 		})
 
-		test('returns nothing for missing composite definition', async () => {
-			const compositeDefinition: CompositeElementDefinition = {
-				id: 'composite1',
-				name: 'Test Composite',
-				description: '',
-				options: [],
-				elements: [],
-			}
+		function makeCompositeEl(elementId: string, overrides: Partial<ButtonGraphicsCompositeElement> = {}) {
+			return {
+				id: 'comp1',
+				name: '',
+				type: 'composite',
+				rotation: val(0),
+				pinnedProperties: [],
+				usage: USAGE,
+				enabled: val(true),
+				opacity: val(100),
+				x: val(0),
+				y: val(0),
+				width: val(100),
+				height: val(100),
+				connectionId: 'test-connection',
+				elementId,
+				...overrides,
+			} satisfies ButtonGraphicsCompositeElement
+		}
 
-			const instanceDefs = createMockInstanceDefinitions({
-				'test-connection': {
-					composite1: compositeDefinition,
-				},
-			})
+		function makeDefinition(id: string, elements: SomeButtonGraphicsElement[]): CompositeElementDefinition {
+			return { id, name: id, sortKey: null, description: '', options: [], elements }
+		}
 
-			const elements: SomeButtonGraphicsElement[] = [
-				{
-					id: 'comp1',
-					name: '',
-					type: 'composite',
-					pinnedProperties: [],
-					usage: USAGE,
-					enabled: val(true),
-					opacity: val(100),
-					x: val(0),
-					y: val(0),
-					width: val(100),
-					height: val(100),
-					connectionId: 'test-connection',
-					elementId: 'nonexistent',
-				},
-			]
-
-			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+		async function convert(
+			instanceDefs: InstanceDefinitions,
+			elements: SomeButtonGraphicsElement[],
+			cache: ElementConversionCache | null
+		) {
+			return ConvertSomeButtonGraphicsElementForDrawing(
 				instanceDefs,
 				createMockParser(),
 				mockDrawPixelBuffers,
 				elements,
 				new Map(),
 				true,
-				null,
+				cache,
 				null,
 				null
 			)
+		}
+
+		function placeholderText(element: SomeButtonGraphicsDrawElement | undefined): string | undefined {
+			const group = element as ButtonGraphicsGroupDrawElement
+			const text = group.children.find((c) => c.type === 'text')
+			return text?.text
+		}
+
+		test('applies rotation to the group', async () => {
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': { composite1: makeDefinition('composite1', [makeTextEl({ id: 'child1' })]) },
+			})
+
+			const result = await convert(instanceDefs, [makeCompositeEl('composite1', { rotation: val(45) })], null)
+
+			expect(result.elements[0]).toMatchObject({ type: 'group', rotation: 45 })
+		})
+
+		test('defaults rotation to 0 when absent', async () => {
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': { composite1: makeDefinition('composite1', [makeTextEl({ id: 'child1' })]) },
+			})
+			const { rotation: _rotation, ...element } = makeCompositeEl('composite1')
+
+			const result = await convert(instanceDefs, [element as SomeButtonGraphicsElement], null)
+
+			expect(result.elements[0]).toMatchObject({ type: 'group', rotation: 0 })
+		})
+
+		test('draws a placeholder for a missing composite definition', async () => {
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': { composite1: makeDefinition('composite1', []) },
+			})
+
+			const result = await convert(instanceDefs, [makeCompositeEl('nonexistent')], null)
+
+			expect(result.elements).toHaveLength(1)
+			expect(result.elements[0].type).toBe('group')
+			expect(placeholderText(result.elements[0])).toBe('Missing\nElement')
+			expect([...result.compositeElements.drawn]).toEqual(['test-connection:nonexistent'])
+		})
+
+		test('draws nothing for a disabled composite with a missing definition', async () => {
+			const instanceDefs = createMockInstanceDefinitions({})
+
+			const result = await convert(instanceDefs, [makeCompositeEl('nonexistent', { enabled: val(false) })], null)
 
 			expect(result.elements).toHaveLength(0)
+		})
+
+		test('draws a placeholder for a composite that contains itself', async () => {
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': {
+					loop: makeDefinition('loop', [makeTextEl({ id: 'text' }), makeCompositeEl('loop', { id: 'self' })]),
+				},
+			})
+
+			const result = await convert(instanceDefs, [makeCompositeEl('loop')], null)
+
+			const outer = result.elements[0] as ButtonGraphicsGroupDrawElement
+			expect(outer.children).toHaveLength(2)
+			expect(outer.children[0].type).toBe('text')
+			expect(placeholderText(outer.children[1])).toBe('\u221e')
+		})
+
+		test('draws a placeholder for an indirect composite cycle', async () => {
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': {
+					a: makeDefinition('a', [makeCompositeEl('b', { id: 'to-b' })]),
+					b: makeDefinition('b', [makeCompositeEl('a', { id: 'to-a' })]),
+				},
+			})
+
+			const cache = new ElementConversionCache()
+			for (let i = 0; i < 2; i++) {
+				// Second pass is served from the cache
+				const result = await convert(instanceDefs, [makeCompositeEl('a')], cache)
+
+				const a = result.elements[0] as ButtonGraphicsGroupDrawElement
+				const b = a.children[0] as ButtonGraphicsGroupDrawElement
+				expect(placeholderText(b.children[0])).toBe('\u221e')
+			}
+		})
+
+		test('draws the new children after the definition is replaced', async () => {
+			const definitions: Record<string, Record<string, CompositeElementDefinition>> = {
+				'test-connection': {
+					composite1: makeDefinition('composite1', [makeTextEl({ id: 'gen-1', text: val('Old') })]),
+				},
+			}
+			const instanceDefs = createMockInstanceDefinitions(definitions)
+			const cache = new ElementConversionCache()
+
+			const before = await convert(instanceDefs, [makeCompositeEl('composite1')], cache)
+			expect((before.elements[0] as ButtonGraphicsGroupDrawElement).children[0]).toMatchObject({ text: 'Old' })
+
+			// A module update gives every child a fresh id
+			definitions['test-connection'].composite1 = makeDefinition('composite1', [
+				makeTextEl({ id: 'gen-2', text: val('New') }),
+			])
+			cache.queueInvalidateCompositeType(['test-connection:composite1'])
+
+			const after = await convert(instanceDefs, [makeCompositeEl('composite1')], cache)
+			const children = (after.elements[0] as ButtonGraphicsGroupDrawElement).children
+			expect(children).toHaveLength(1)
+			expect(children[0]).toMatchObject({ text: 'New' })
 		})
 	})
 
@@ -1757,6 +1864,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'composite1',
 				name: 'Test Composite',
+				sortKey: null,
 				description: '',
 				options: [],
 				elements: [makeTextEl({ id: 'inner1', text: val('Inside Composite') })],
@@ -1773,6 +1881,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -1946,6 +2055,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'labelComposite',
 				name: 'Label Composite',
+				sortKey: null,
 				description: '',
 				options: [
 					{
@@ -1970,6 +2080,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -2004,6 +2115,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'labelComposite',
 				name: 'Label Composite',
+				sortKey: null,
 				description: '',
 				options: [
 					{
@@ -2027,6 +2139,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -2061,6 +2174,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'labelComposite',
 				name: 'Label Composite',
+				sortKey: null,
 				description: '',
 				options: [],
 				// Authored by the module - must NOT be able to reach global variables
@@ -2078,6 +2192,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -2112,6 +2227,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const innerComposite: CompositeElementDefinition = {
 				id: 'innerComposite',
 				name: 'Inner Composite',
+				sortKey: null,
 				description: '',
 				options: [
 					{
@@ -2131,6 +2247,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const outerComposite: CompositeElementDefinition = {
 				id: 'outerComposite',
 				name: 'Outer Composite',
+				sortKey: null,
 				description: '',
 				options: [
 					{
@@ -2147,6 +2264,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 						id: 'inner-instance',
 						name: '',
 						type: 'composite',
+						rotation: val(0),
 						pinnedProperties: [],
 						usage: USAGE,
 						enabled: val(true),
@@ -2174,6 +2292,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -2214,6 +2333,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'simpleComposite',
 				name: 'Simple',
+				sortKey: null,
 				description: '',
 				options: [],
 				elements: [makeBoxEl({ id: 'child', color: val(0xff0000) })],
@@ -2230,6 +2350,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -2389,6 +2510,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'checkboxComposite',
 				name: 'Checkbox Composite',
+				sortKey: null,
 				description: '',
 				options: [
 					{
@@ -2412,6 +2534,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -2446,6 +2569,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'numberComposite',
 				name: 'Number Composite',
+				sortKey: null,
 				description: '',
 				options: [
 					{
@@ -2471,6 +2595,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),
@@ -2504,6 +2629,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const compositeDefinition: CompositeElementDefinition = {
 				id: 'dropdownComposite',
 				name: 'Dropdown Composite',
+				sortKey: null,
 				description: '',
 				options: [
 					{
@@ -2532,6 +2658,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					id: 'comp1',
 					name: '',
 					type: 'composite',
+					rotation: val(0),
 					pinnedProperties: [],
 					usage: USAGE,
 					enabled: val(true),

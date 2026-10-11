@@ -10,6 +10,7 @@
  */
 
 import EventEmitter from 'node:events'
+import { setTimeout } from 'node:timers/promises'
 import debounceFn from 'debounce-fn'
 import { formatLocation, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { ControlLocationOption } from '@companion-app/shared/ControlLocation.js'
@@ -154,6 +155,15 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 						id: 'force',
 						default: false,
 						disableAutoExpression: true,
+					},
+					{
+						type: 'number',
+						label: 'Hold duration (ms)',
+						id: 'duration',
+						default: 0,
+						min: 0,
+						max: Number.MAX_SAFE_INTEGER,
+						description: 'How long to hold the button down before releasing it. 0 releases immediately',
 					},
 				],
 				optionsSupportExpressions: true,
@@ -569,9 +579,18 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			action.options.delta = { value: delta, isExpression: false }
 			return action
 		}
+
+		// Hold duration was added later; existing actions released immediately
+		if (action.definitionId === 'button_pressrelease' && action.options.duration === undefined) {
+			action.options.duration = { value: 0, isExpression: false }
+			return action
+		}
 	}
 
-	executeAction(action: ActionForInternalExecution, extras: RunActionExtras): InternalActionResult {
+	executeAction(
+		action: ActionForInternalExecution,
+		extras: RunActionExtras
+	): Promise<InternalActionResult> | InternalActionResult {
 		switch (action.definitionId) {
 			case 'button_pressrelease': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
@@ -579,6 +598,18 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 					const forcePress = !!action.options.force
 
 					this.#controlsStore.pressControl(theControlId, true, extras.surfaceId, forcePress)
+
+					const duration = Number(action.options.duration)
+					if (Number.isFinite(duration) && duration > 0 && !extras.abortDelayed.aborted) {
+						// Release even if aborted, otherwise the button is left held and its hold timers keep running
+						return setTimeout(duration, undefined, { signal: extras.abortDelayed })
+							.catch(() => undefined)
+							.then(() => {
+								this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, forcePress)
+								return { result: undefined }
+							})
+					}
+
 					this.#controlsStore.pressControl(theControlId, false, extras.surfaceId, forcePress)
 				}
 				break

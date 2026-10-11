@@ -1,7 +1,7 @@
 import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { HIDDevice, RemoteSurfaceConnectionInfo, SurfaceModuleManifest } from '@companion-surface/base'
-import LogController, { type Logger } from '../../Log/Controller.js'
+import LogController, { stringifyLogValue, type Logger } from '../../Log/Controller.js'
 import type { SurfaceController, SurfaceScanHandler } from '../../Surface/Controller.js'
 import { createSurfaceConfigPayload, sanitizePluginConfigFields } from '../../Surface/PluginConfigFields.js'
 import { SurfacePluginPanel } from '../../Surface/PluginPanel.js'
@@ -545,7 +545,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 		}
 
 		// Send everything to the 'debug' page
-		this.#deps.debugLogLine(this.instanceId, msg.time, msg.source || '/', msg.level, msg.message.toString())
+		this.#deps.debugLogLine(this.instanceId, msg.time, msg.source || '/', msg.level, stringifyLogValue(msg.message))
 	}
 
 	async #handleInputPress(msg: InputPressMessage): Promise<void> {

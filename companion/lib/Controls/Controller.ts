@@ -341,6 +341,28 @@ export class ControlsController {
 		return variables
 	}
 
+	/**
+	 * Count the controls of a given type
+	 */
+	getControlCountOfType(type: string): number {
+		let count = 0
+		for (const control of this.#store.controls.values()) {
+			if (control.type === type) count++
+		}
+		return count
+	}
+
+	/**
+	 * Count the page variables across all pages
+	 */
+	getPageVariableCount(): number {
+		let count = 0
+		for (const control of this.#store.controls.values()) {
+			if (control instanceof ControlPage) count += control.entities.getLocalVariableEntities().length
+		}
+		return count
+	}
+
 	getExpressionVariableByName(name: string): ControlExpressionVariable | undefined {
 		if (!name) return undefined
 

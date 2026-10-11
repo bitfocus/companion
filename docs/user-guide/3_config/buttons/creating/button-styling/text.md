@@ -10,7 +10,7 @@ A **Text** element shows some text on your button. That can be a fixed label, a
 [variable](../../../variables.md), or the result of an [expression](../../../../4_expressions/index.md).
 Most buttons have at least one Text element.
 
-As well as the shared **Layer** and **Position & Size** sections (see
+As well as the shared **Drawing** and **Position & Size** sections (see
 [Button styling](./index.md#element-properties)), a Text element has a **Content** section.
 
 ## The text itself
@@ -34,6 +34,14 @@ The **Font** dropdown chooses the typeface:
 - **Monospace** — a fixed-width font where every character is the same width. Handy for numbers,
   timers and tables that you want to stay neatly aligned as the value changes.
 
+You can also style the text:
+
+- **Weight** — **Normal** or **Bold**.
+- **Styles** — toggle **Italic**, **Underline** and **Strikethrough**. Any combination can be used together.
+  If you switch this to an expression, it should return a list of the styles to use, such as
+  `['italic', 'underline']`, or `[]` for none. For example
+  `$(custom:standby) ? ['italic'] : []` makes the text italic while a custom variable is true.
+
 ## Sizing the text
 
 In older versions of Companion a single font size setting tried to do two jobs at once. In 5.0 it's
@@ -42,8 +50,9 @@ split into two clearer controls:
 - **Text Size** — the size of the text, as a percentage of the element's height. Pick the size you'd
   ideally like the text to be.
 - **Shrink to fit** — when ticked, Companion is allowed to shrink the text _below_ your chosen size if
-  it would otherwise be too long to fit. When unticked, the text always stays at your chosen size,
-  even if that means it gets clipped.
+  it would otherwise be too long to fit. It uses the largest size at which the text fits, down to a tenth
+  of the element's height. When unticked, the text always stays at your chosen size, even if that means it
+  gets clipped.
 
 A common pattern is to set a comfortable **Text Size** and turn on **Shrink to fit** for fields that
 hold variable-length text (like a track name or a timer), so short values look bold and long values
