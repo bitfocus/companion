@@ -13,7 +13,9 @@ import {
 	parseStringParamWithBooleanFallback,
 	SATELLITE_BITMAP_FORMATS,
 	SatelliteConfigFieldsSchema,
+	SatelliteLineBuffer,
 	SatelliteSurfaceLayoutSchema,
+	splitSatelliteCommand,
 	type ParsedParams,
 	type SatelliteBitmapFormat,
 	type SatelliteConfigFields,
@@ -298,9 +300,7 @@ export class ServiceSatelliteApi {
 			socketLogger.silly(`received "${line}"`)
 		}
 
-		const i = line.indexOf(' ')
-		const cmd = i === -1 ? line : line.slice(0, i)
-		const body = i === -1 ? '' : line.slice(i + 1)
+		const { command: cmd, body } = splitSatelliteCommand(line)
 		const params = parseLineParameters(body)
 
 		switch (cmd.toUpperCase()) {
@@ -395,31 +395,23 @@ export class ServiceSatelliteApi {
 		// the value returned below).
 		this.#socketStates.set(socket, socketState)
 
-		let receivebuffer = ''
+		const lineBuffer = new SatelliteLineBuffer(MAX_LINE_LENGTH)
 		return {
 			processMessage: (data) => {
-				receivebuffer += data
+				const { lines, overflow } = lineBuffer.push(data)
 
-				let i = 0,
-					line = '',
-					offset = 0
-				while ((i = receivebuffer.indexOf('\n', offset)) !== -1) {
-					line = receivebuffer.substr(offset, i - offset)
-					offset = i + 1
+				for (const line of lines) {
 					try {
-						this.#handleCommand(socketLogger, socket, socketState, line.endsWith('\r') ? line.slice(0, -1) : line)
+						this.#handleCommand(socketLogger, socket, socketState, line)
 					} catch (e) {
 						socketLogger.error(`Error processing command: ${stringifyError(e)}`)
 					}
 				}
-				receivebuffer = receivebuffer.substr(offset)
 
-				// Guard against a client streaming data forever without ever sending a newline,
-				// which would otherwise grow the receive buffer unbounded ("buffer bomb").
-				if (receivebuffer.length > MAX_LINE_LENGTH) {
+				// A client streaming data without ever sending a newline ("buffer bomb")
+				if (overflow) {
 					socketLogger.warn(`Closing connection: line exceeded ${MAX_LINE_LENGTH} bytes`)
 					this.#formatAndSendError(socket, 'ERROR', undefined, 'Line too long')
-					receivebuffer = ''
 					socket.destroy()
 				}
 			},

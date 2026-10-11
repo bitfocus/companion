@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
-import { API_VERSION, parseLineParameters } from '@companion-app/satellite-protocol'
+import { API_VERSION, MAX_LINE_LENGTH, parseLineParameters } from '@companion-app/satellite-protocol'
 import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
 import type { ImageResult } from '../../../lib/Graphics/ImageResult.js'
 import type { Logger } from '../../../lib/Log/Controller.js'
@@ -171,6 +171,17 @@ describe('ServiceSatelliteApi', () => {
 			processMessage('PING test\r\n')
 			expect(socket.writtenData).toHaveLength(1)
 			expect(socket.lastMessage).toContain('PONG test')
+		})
+
+		test('closes the connection when a line exceeds the maximum length', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('PING 1\n' + 'x'.repeat(MAX_LINE_LENGTH + 1))
+
+			expect(socket.writtenData[0]).toBe('PONG 1 \n')
+			expect(socket.lastMessage).toBe('ERROR ERROR MESSAGE="Line too long" \n')
+			expect(socket.destroyed).toBe(true)
 		})
 
 		test('only strips a trailing carriage return', () => {

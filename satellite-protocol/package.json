@@ -9,11 +9,32 @@
     "directory": "satellite-protocol"
   },
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": {
       "companion:source": "./lib/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./codec": {
+      "companion:source": "./lib/codec.ts",
+      "types": "./dist/codec.d.ts",
+      "default": "./dist/codec.js"
+    },
+    "./constants": {
+      "companion:source": "./lib/constants.ts",
+      "types": "./dist/constants.d.ts",
+      "default": "./dist/constants.js"
+    },
+    "./versions": {
+      "companion:source": "./lib/versions.ts",
+      "types": "./dist/versions.d.ts",
+      "default": "./dist/versions.js"
+    },
+    "./schemas": {
+      "companion:source": "./lib/schemas.ts",
+      "types": "./dist/schemas.d.ts",
+      "default": "./dist/schemas.js"
     },
     "./assets/*": "./assets/*"
   },

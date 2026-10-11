@@ -189,3 +189,71 @@ export function formatSatelliteMessage(
 	chunks.push('\n')
 	return chunks.join(' ')
 }
+
+/**
+ * Split a received line into the command name and the parameters body, at the first space.
+ * The command is returned as received; Companion matches it case-insensitively.
+ */
+export function splitSatelliteCommand(line: string): { command: string; body: string } {
+	const i = line.indexOf(' ')
+	return {
+		command: i === -1 ? line : line.slice(0, i),
+		body: i === -1 ? '' : line.slice(i + 1),
+	}
+}
+
+export interface SatelliteLineBufferResult {
+	/** The complete lines received, without their terminating newline (or a trailing carriage return) */
+	lines: string[]
+	/**
+	 * True when the pending incomplete line exceeded the maximum length. It has been discarded, and the
+	 * connection should be closed as it can't be resynchronised.
+	 */
+	overflow: boolean
+}
+
+/**
+ * Accumulates data received from a socket and splits it into lines (messages).
+ */
+export class SatelliteLineBuffer {
+	readonly #maxLineLength: number
+	#buffer = ''
+
+	/**
+	 * @param maxLineLength - the maximum length of an incomplete line to hold, eg `MAX_LINE_LENGTH`
+	 */
+	constructor(maxLineLength: number) {
+		this.#maxLineLength = maxLineLength
+	}
+
+	/**
+	 * Add received data
+	 */
+	push(data: string): SatelliteLineBufferResult {
+		this.#buffer += data
+
+		const lines: string[] = []
+		let offset = 0
+		let i: number
+		while ((i = this.#buffer.indexOf('\n', offset)) !== -1) {
+			const line = this.#buffer.slice(offset, i)
+			lines.push(line.endsWith('\r') ? line.slice(0, -1) : line)
+			offset = i + 1
+		}
+		this.#buffer = this.#buffer.slice(offset)
+
+		// Guard against a peer streaming data forever without ever sending a newline,
+		// which would otherwise grow the buffer unbounded ("buffer bomb").
+		const overflow = this.#buffer.length > this.#maxLineLength
+		if (overflow) this.#buffer = ''
+
+		return { lines, overflow }
+	}
+
+	/**
+	 * Discard any incomplete line, eg when the connection is reset
+	 */
+	clear(): void {
+		this.#buffer = ''
+	}
+}
