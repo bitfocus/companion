@@ -72,9 +72,9 @@ The track is the part of the gauge which isn't filled.
 
 ## Showing a gauge on surface LEDs
 
-Since Companion 5.1, a gauge can also be shown on the lights of a surface, such as a ring of LEDs around a dial
-or a strip of LEDs next to a button. The lights show the same colors as the gauge on screen. This needs a surface
-whose module supports it.
+Since Companion 5.1, a gauge can also be shown on the lights of a surface, such as the light rings around the
+dials of a Stream Deck Studio. The lights show the same colors as the gauge on screen. This needs a surface whose
+module supports it.
 
 When a button with a gauge is placed on such a control, Companion shows the button's first gauge on its lights. If
 the button has more than one gauge and the wrong one is being used, set the **External Usage** of the gauge you
