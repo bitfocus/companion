@@ -324,7 +324,7 @@ export function CreateCollectionButton({ className }: { className?: string } = {
 	const createMutation = useMutationExt(trpc.instances.connections.collections.add.mutationOptions())
 
 	const doCreateCollection = useCallback(() => {
-		createMutation.mutateAsync({ collectionName: 'New Folder' }).catch((e) => {
+		createMutation.mutateAsync({ collectionName: 'New Collection' }).catch((e) => {
 			console.error('Failed to add collection', e)
 		})
 	}, [createMutation])
@@ -334,9 +334,9 @@ export function CreateCollectionButton({ className }: { className?: string } = {
 			color="secondary"
 			className={classNames('h-9 inline-flex items-center justify-center', className)}
 			onClick={doCreateCollection}
-			title="Create new folder to organize connections"
+			title="Create new collection to organize connections"
 		>
-			<FontAwesomeIcon icon={faFolderPlus} className="me-1" /> New Folder
+			<FontAwesomeIcon icon={faFolderPlus} className="me-1" /> New Collection
 		</Button>
 	)
 }
