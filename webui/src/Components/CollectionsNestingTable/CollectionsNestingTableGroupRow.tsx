@@ -39,14 +39,7 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 		[collectionsApi, collection.id]
 	)
 
-	const handleNameFieldBlur = useCallback(
-		() =>
-			// Delay to ensure if the check is clicked it doesn't fire twice
-			setTimeout(() => {
-				setIsEditing(false)
-			}, 100),
-		[]
-	)
+	const handleNameFieldBlur = useCallback(() => setIsEditing(false), [])
 
 	const handleNameFieldKeyDown = useCallback((e: React.KeyboardEvent) => {
 		if (e.key === 'Enter') {
@@ -84,6 +77,7 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 					{isEditing ? (
 						<TextInputFieldSimple
 							id={undefined}
+							className="collection-name-input"
 							value={collection.label ?? ''}
 							placeholder={`Give this collection a name`}
 							setValue={handleSetName}
@@ -104,11 +98,20 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 					{!!collectionsApi && (
 						<>
 							{isEditing ? (
-								<Button color="secondary" onClick={handleNameFieldBlur} variant="ghost">
+								<Button
+									color="secondary"
+									title="Finish renaming collection"
+									// Keep the input focused until click, so blur cannot replace this button with the pencil.
+									onPointerDown={(e) => {
+										if (e.button === 0) e.preventDefault()
+									}}
+									onClick={handleNameFieldBlur}
+									variant="ghost"
+								>
 									<FontAwesomeIcon icon={faCheckCircle} />
 								</Button>
 							) : (
-								<Button color="secondary" onClick={clickEditName} variant="ghost">
+								<Button color="secondary" title="Rename collection" onClick={clickEditName} variant="ghost">
 									<FontAwesomeIcon icon={faPencilAlt} />
 								</Button>
 							)}

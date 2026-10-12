@@ -104,6 +104,12 @@
 			}
 		}
 
+		/* Match the action buttons so entering rename mode does not increase the row height. */
+		.collection-name-input {
+			font-size: 0.9rem;
+			border-width: 1px;
+		}
+
 		.button-link {
 			padding: 0 6px;
 			color: var(--color-text-secondary);
