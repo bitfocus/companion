@@ -3,10 +3,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useId, useState } from 'react'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { Button } from '~/Components/Button'
-import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Modal } from '~/Components/Modal'
 import { NumberInputField } from '~/Components/NumberInputField'
+import { SwitchInputFieldWithLabel } from '~/Components/SwitchInputField'
 import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { PreventDefaultHandler, useMountEffect } from '~/Resources/util.js'
 
@@ -124,17 +124,20 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 										</div>
 
 										<div className="space-y-2.5 bg-surface-muted/30 p-3 rounded-xl border border-border/70">
-											<CheckboxInputFieldWithLabel
+											<SwitchInputFieldWithLabel
+												className="flex items-center gap-1"
 												label="Hide configure button"
 												value={!!query['noconfigure']}
 												setValue={(val) => updateQueryUrl('noconfigure', val)}
 											/>
-											<CheckboxInputFieldWithLabel
+											<SwitchInputFieldWithLabel
+												className="flex items-center gap-1"
 												label="Hide fullscreen button"
 												value={!!query['nofullscreen']}
 												setValue={(val) => updateQueryUrl('nofullscreen', val)}
 											/>
-											<CheckboxInputFieldWithLabel
+											<SwitchInputFieldWithLabel
+												className="flex items-center gap-1"
 												label="Show page headings"
 												value={!!query['showpages']}
 												setValue={(val) => updateQueryUrl('showpages', val)}

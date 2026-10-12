@@ -17,7 +17,8 @@
 /* ─── Positioner ─────────────────────────────────────────────────────────────── */
 
 .popover2-positioner {
-	z-index: 1030;
+	/* Match context menus: above the fixed sidebar (1035) and modal panels (1055). */
+	z-index: 1070;
 }
 
 /* ─── Popup panel ─────────────────────────────────────────────────────────────── */
