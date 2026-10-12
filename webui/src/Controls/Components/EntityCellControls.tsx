@@ -32,75 +32,13 @@ interface EntityCellControlProps {
 	localVariablePrefix: string | null
 }
 
-function EntityOptionPills({
-	entity,
-	entityDefinition,
-}: {
-	entity: SomeEntityModel
-	entityDefinition: ClientEntityDefinition | undefined
-}) {
-	const pills: { key: string; label?: string; value: string; isDelay?: boolean }[] = []
-
-	// 1. Delay pill
-	if ('delay' in entity && typeof entity.delay === 'number' && entity.delay > 0) {
-		pills.push({
-			key: 'delay',
-			value: `⏱️ ${entity.delay}ms`,
-			isDelay: true,
-		})
-	}
-
-	// 2. Option pills
-	if (entity.options && entityDefinition?.options) {
-		for (const optDef of entityDefinition.options) {
-			if (pills.length >= 3) break
-			const rawVal: unknown = entity.options[optDef.id]
-			if (rawVal === undefined || rawVal === '' || rawVal === false) continue
-
-			let valStr = ''
-			if (typeof rawVal === 'object' && rawVal !== null && 'isExpression' in rawVal) {
-				const expVal = (rawVal as { value?: unknown }).value
-				valStr = typeof expVal === 'string' || typeof expVal === 'number' ? `${expVal}` : JSON.stringify(expVal ?? '')
-			} else if (typeof rawVal === 'boolean') {
-				if (rawVal) valStr = optDef.label || optDef.id
-			} else if (optDef.type === 'dropdown' && 'choices' in optDef && Array.isArray(optDef.choices)) {
-				const rawStr = typeof rawVal === 'string' || typeof rawVal === 'number' ? `${rawVal}` : ''
-				const choice = optDef.choices.find((c) => `${c.id}` === rawStr)
-				valStr = choice?.label ?? rawStr
-			} else if (typeof rawVal === 'string' || typeof rawVal === 'number') {
-				valStr = `${rawVal}`
-			} else {
-				valStr = JSON.stringify(rawVal)
-			}
-
-			if (valStr) {
-				pills.push({
-					key: optDef.id,
-					label: optDef.label,
-					value: valStr,
-				})
-			}
-		}
-	}
-
-	if (pills.length === 0) return null
+function EntityDelayPill({ entity }: { entity: SomeEntityModel }) {
+	if (!('delay' in entity) || typeof entity.delay !== 'number' || entity.delay <= 0) return null
 
 	return (
-		<div className="flex items-center gap-1.5 flex-wrap">
-			{pills.map((pill) => (
-				<span
-					key={pill.key}
-					className={`inline-flex items-center px-2 py-0.5 rounded-md text-3xs font-medium ${
-						pill.isDelay
-							? 'bg-tone-warning-fill/10 text-tone-warning-text border border-tone-warning-fill/20 font-semibold'
-							: 'bg-surface-muted text-muted border border-border/70'
-					}`}
-				>
-					{pill.label && <span className="opacity-60 mr-1">{pill.label}:</span>}
-					<span className="font-semibold text-body truncate entity-pill-value">{pill.value}</span>
-				</span>
-			))}
-		</div>
+		<span className="inline-flex items-center px-2 py-0.5 rounded-md text-3xs font-semibold bg-tone-warning-fill/10 text-tone-warning-text border border-tone-warning-fill/20 shrink-0">
+			⏱️ {entity.delay}ms
+		</span>
 	)
 }
 
@@ -108,7 +46,6 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	service,
 	entityTypeLabel,
 	entity,
-	entityDefinition,
 	connectionLabel,
 	ownerId,
 	isPanelCollapsed,
@@ -156,9 +93,9 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 
 	return (
 		<div className="editor-grid-header flex items-center justify-between gap-3">
-			{/* Left section: Connection badge + Title + Parameter Pills */}
+			{/* Left section: connection badge, name, and any compact status indicators */}
 			<div
-				className={`flex items-center gap-2.5 grow min-w-0 select-none py-0.5 ${hasDetails ? 'cursor-pointer' : ''}`}
+				className={`flex items-center gap-2.5 flex-1 min-w-0 select-none py-0.5 ${hasDetails ? 'cursor-pointer' : ''}`}
 				onClick={(e) => {
 					// Don't toggle if user clicked inside an input
 					if ((e.target as HTMLElement).closest('input, textarea, button')) return
@@ -166,12 +103,15 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 				}}
 			>
 				{connectionLabel && (
-					<span className="px-1.5 py-0.5 rounded text-3xs font-semibold tracking-wide uppercase bg-primary/10 text-primary border border-primary/20 shrink-0">
+					<span
+						className="px-1.5 py-0.5 rounded text-3xs font-semibold tracking-wide uppercase bg-primary/10 text-primary border border-primary/20 shrink-0 max-w-[30%] truncate"
+						title={connectionLabel}
+					>
 						{connectionLabel}
 					</span>
 				)}
 
-				<div className="flex flex-col grow min-w-0 gap-0.5">
+				<div className="flex flex-col flex-1 min-w-0 gap-0.5">
 					{localVariableValueName !== null && localVariablesStore ? (
 						<div className="cell-name-local-variable">
 							<span className="cell-name-local-variable-label font-semibold text-xs text-body" title={cleanHeadline}>
@@ -185,7 +125,10 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 							</div>
 						</div>
 					) : (
-						<span className="font-semibold text-xs text-body whitespace-normal break-words leading-tight">
+						<span
+							className={`font-semibold text-xs text-body leading-tight ${isPanelCollapsed ? 'truncate' : 'whitespace-normal break-words'}`}
+							title={cleanHeadline}
+						>
 							{cleanHeadline}
 						</span>
 					)}
@@ -214,7 +157,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 									event.stopPropagation()
 									setNoteEditing(true)
 								}}
-								className="w-fit max-w-full whitespace-normal break-words leading-snug border-0 bg-transparent p-0 text-left text-3xs font-normal text-action-text hover:text-body disabled:hover:text-action-text disabled:cursor-default"
+								className={`w-fit max-w-full leading-snug border-0 bg-transparent p-0 text-left text-3xs font-normal text-action-text hover:text-body disabled:hover:text-action-text disabled:cursor-default ${isPanelCollapsed ? 'truncate' : 'whitespace-normal break-words'}`}
 								title={isPanelCollapsed ? entity.headline : `Edit note: ${entity.headline}`}
 							>
 								{entity.headline}
@@ -223,7 +166,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 					)}
 				</div>
 
-				{isPanelCollapsed && <EntityOptionPills entity={entity} entityDefinition={entityDefinition} />}
+				{isPanelCollapsed && <EntityDelayPill entity={entity} />}
 			</div>
 
 			{/* Right section: Clean ghost buttons + switch toggle + smooth accordion caret */}
