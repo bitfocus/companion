@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useMemo, useRef } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { ModuleInstanceType, type InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
 import { EditPanelTabLink } from '~/Components/EditPanelTabs.js'
@@ -26,17 +26,18 @@ import { trpc, useMutationExt, type RouterInput } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ConnectionDiagnosticsTab } from './ConnectionDiagnosticsTab.js'
 import { ConnectionEditPanelHeading } from './ConnectionEditPanelHeading.js'
+import type { ConnectionEditTab } from './connectionEditTabs.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
+	activeTab: ConnectionEditTab
+	setActiveTab: (tab: ConnectionEditTab) => void
 }
 
-type EditTab = 'settings' | 'help' | 'diagnostics'
-
 interface EditTabButtonProps {
-	tab: EditTab
-	activeTab: EditTab
-	setActiveTab: (tab: EditTab) => void
+	tab: ConnectionEditTab
+	activeTab: ConnectionEditTab
+	setActiveTab: (tab: ConnectionEditTab) => void
 	icon: IconDefinition
 	label: string
 	showAttentionDot?: boolean
@@ -93,9 +94,12 @@ function SidebarHelpTab({ helpPath }: { helpPath: string }) {
 	)
 }
 
-export const ConnectionEditPanel = observer(function ConnectionEditPanel({ connectionId }: ConnectionEditPanelProps) {
+export const ConnectionEditPanel = observer(function ConnectionEditPanel({
+	connectionId,
+	activeTab,
+	setActiveTab,
+}: ConnectionEditPanelProps) {
 	const { connections, instanceStatuses, modules } = useContext(RootAppStoreContext)
-	const [activeTab, setActiveTab] = useState<EditTab>('settings')
 
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 	const service = useInstanceEditPanelService(confirmModalRef, connectionId)
@@ -134,7 +138,7 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 				/>
 
 				{moduleVersion?.helpPath && (
-					<EditTabButton tab="help" activeTab={activeTab} setActiveTab={setActiveTab} icon={faFileLines} label="Docs" />
+					<EditTabButton tab="docs" activeTab={activeTab} setActiveTab={setActiveTab} icon={faFileLines} label="Docs" />
 				)}
 
 				<EditTabButton
@@ -166,7 +170,7 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 			)}
 
 			{/* Tab 2: Docs */}
-			{activeTab === 'help' && moduleVersion?.helpPath && <SidebarHelpTab helpPath={moduleVersion.helpPath} />}
+			{activeTab === 'docs' && moduleVersion?.helpPath && <SidebarHelpTab helpPath={moduleVersion.helpPath} />}
 
 			{/* Tab 3: Diagnostics */}
 			{activeTab === 'diagnostics' && (

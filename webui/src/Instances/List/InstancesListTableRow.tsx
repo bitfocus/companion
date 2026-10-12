@@ -33,6 +33,7 @@ export interface InstancesListTableRowProps<TMetaData extends { enabled?: boolea
 	labelStr: string
 	doDelete: () => void
 	doEdit: () => void
+	onShowDocs?: () => void
 	doToggleEnabled: () => void
 	debugLogUrl: string | null
 	cannotEnableReason?: string | null
@@ -47,6 +48,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 	labelStr,
 	doDelete,
 	doEdit,
+	onShowDocs,
 	doToggleEnabled,
 	debugLogUrl,
 	cannotEnableReason,
@@ -156,7 +158,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 						<FontAwesomeIcon icon={faBars} className="text-xs" />
 					</Popover.Trigger>
 					<Popover.Popup arrow side="right" align="center">
-						<Popover.Item onClick={doShowHelp} title="Docs" disabled={!moduleVersion?.helpPath}>
+						<Popover.Item onClick={onShowDocs ?? doShowHelp} title="Docs" disabled={!moduleVersion?.helpPath}>
 							<FontAwesomeIcon icon={faFileLines} className="me-2 opacity-70" />
 							Docs
 						</Popover.Item>
