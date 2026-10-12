@@ -7,6 +7,7 @@ import {
 	faClipboardList,
 	faClock,
 	faCloud,
+	faDesktop,
 	faExternalLinkSquare,
 	faFileImport,
 	faGamepad,
@@ -422,10 +423,8 @@ export const MySidebar = memo(function MySidebar() {
 					/>
 					<SidebarMenuItem name="Surfaces" icon={faGamepad} notifications={SurfacesTabNotifyIcon} path="/surfaces" />
 					<SidebarMenuItem name="Modules" icon={faPuzzlePiece} path="/modules" />
-					<SidebarNavGroup name="Interactive Buttons" icon={faTabletScreenButton} basePaths={['/emulator', '/tablet']}>
-						<SidebarSubMenuItem name="Emulator" path="/emulator" target="_blank" isActive={false} />
-						<SidebarSubMenuItem name="Web Buttons" path="/tablet" target="_blank" isActive={false} />
-					</SidebarNavGroup>
+					<SidebarMenuItem name="Emulator" icon={faDesktop} path="/emulator" target="_blank" />
+					<SidebarMenuItem name="Web Buttons" icon={faTabletScreenButton} path="/tablet" target="_blank" />
 
 					{/* Category: System */}
 					<li className="nav-title">System</li>
