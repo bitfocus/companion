@@ -149,7 +149,7 @@ describe('which page is being looked at', () => {
 		setup()
 
 		expect(panelProps.pageNumber).toBe(3)
-		expect(navigateMock).toHaveBeenCalledWith({ to: '/buttons/3' })
+		expect(navigateMock).toHaveBeenCalledWith({ to: '/buttons/3', replace: true })
 	})
 
 	it('carries on where it was left when the URL names no page', () => {
@@ -168,7 +168,7 @@ describe('which page is being looked at', () => {
 			panelProps.changePage(3)
 		})
 
-		expect(navigateMock).toHaveBeenCalledWith({ to: '/buttons/3' })
+		expect(navigateMock).toHaveBeenCalledWith({ to: '/buttons/3', replace: true })
 		expect(window.sessionStorage.getItem('lastButtonsPage')).toBe('3')
 	})
 })
@@ -263,7 +263,7 @@ describe('the panel beside the grid', () => {
 			editButtonProps.navigateToControl(at(2, 3, 3))
 		})
 
-		expect(navigateMock).toHaveBeenCalledWith({ to: '/buttons/3' })
+		expect(navigateMock).toHaveBeenCalledWith({ to: '/buttons/3', replace: true })
 		expect(view.store.selectedLocations).toEqual([at(2, 3, 3)])
 		expect(editButtonProps.location).toEqual(at(2, 3, 3))
 	})
