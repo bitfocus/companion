@@ -31,19 +31,40 @@ interface ButtonPickerProps {
 export const ButtonPicker = observer(function ButtonPicker({ selectButton, saving = false }: ButtonPickerProps) {
 	const { pages, userConfig } = useContext(RootAppStoreContext)
 
-	const { pageNumber, setPageNumber, changePage } = usePagePicker(pages.data.length, 1)
+	const { pageNumber, setPageNumber: setPickerPage, changePage: changePickerPage } = usePagePicker(pages.data.length, 1)
 
 	const [selectedLocation, setSelectedLocation] = useState<ControlLocation | null>(null)
 	const [selectedStep, setSelectedStep] = useState<string | null>(null)
 	const [selectedSet, setSelectedSet] = useState<ActionSetId | null>(null)
 
+	const clearSelection = useCallback(() => {
+		setSelectedLocation(null)
+		setSelectedStep(null)
+		setSelectedSet(null)
+	}, [])
+	const setPageNumber = useCallback(
+		(nextPage: number) => {
+			if (nextPage !== pageNumber) clearSelection()
+			setPickerPage(nextPage)
+		},
+		[pageNumber, clearSelection, setPickerPage]
+	)
+	const changePage = useCallback(
+		(delta: number) => {
+			clearSelection()
+			changePickerPage(delta)
+		},
+		[clearSelection, changePickerPage]
+	)
+
 	const buttonClick = useCallback((location: ControlLocation, pressed: boolean) => {
 		if (pressed) setSelectedLocation(location)
 	}, [])
 
-	const selectedControl = selectedLocation
-		? pages.getControlIdAt(pageNumber, selectedLocation.row, selectedLocation.column)
-		: undefined
+	const selectedControl =
+		selectedLocation?.pageNumber === pageNumber
+			? pages.getControlIdAt(selectedLocation.pageNumber, selectedLocation.row, selectedLocation.column)
+			: undefined
 
 	// Reset set when control is changed
 	useEffect(() => setSelectedSet(null), [selectedControl])
