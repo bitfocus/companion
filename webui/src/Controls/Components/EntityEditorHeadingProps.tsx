@@ -35,7 +35,7 @@ export const EntityEditorHeading = observer(function EntityEditorHeading({
 					'mb-0': !!subheading,
 				})}
 			>
-				<div className="entity-editor-heading-title text-sm font-semibold text-body">{heading}</div>
+				<div className="entity-editor-heading-title text-base font-semibold text-body">{heading}</div>
 
 				<div className="entity-editor-heading-actions flex items-center gap-1 shrink-0">
 					{childEntityIds.length >= 1 && panelCollapseHelper.canExpandAll(ownerIdString, childEntityIds) && (

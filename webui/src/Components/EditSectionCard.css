@@ -25,14 +25,14 @@
 
 	h4 {
 		margin: 0;
-		font-size: 0.8125rem;
+		font-size: 1rem;
 		font-weight: 600;
 		color: var(--color-text-strong);
 	}
 
 	> summary {
 		cursor: pointer;
-		font-size: 0.8125rem;
+		font-size: 1rem;
 
 		h4 {
 			display: inline;
