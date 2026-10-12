@@ -45,13 +45,16 @@ function ToastList() {
 								isError ? 'border-l-4 border-l-tone-error-fill' : 'border-l-4 border-l-primary'
 							)}
 						>
-							<Toast.Content className="notification-content p-3.5">
+							<Toast.Content className="notification-content">
 								{showHeader && (
-									<div className="notification-header flex items-center justify-between gap-2 mb-1">
+									<div className="notification-header">
 										<div className="flex items-center gap-2 min-w-0">
 											<FontAwesomeIcon
 												icon={isError ? faCircleExclamation : faInfoCircle}
-												className={isError ? 'text-tone-error-text text-sm shrink-0' : 'text-primary text-sm shrink-0'}
+												className={classNames(
+													'notification-icon shrink-0',
+													isError ? 'text-tone-error-text' : 'text-primary'
+												)}
 											/>
 											{toast.title && (
 												<Toast.Title className="notification-title font-bold text-sm text-body truncate">
@@ -67,9 +70,7 @@ function ToastList() {
 										</Toast.Close>
 									</div>
 								)}
-								<Toast.Description className="notification-body text-xs text-muted leading-relaxed">
-									{toast.description}
-								</Toast.Description>
+								<Toast.Description className="notification-body text-muted">{toast.description}</Toast.Description>
 							</Toast.Content>
 						</Toast.Root>
 					)

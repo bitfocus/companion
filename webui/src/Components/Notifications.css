@@ -1,6 +1,4 @@
-/* ─── Notifications (Toast) ────────────────────────────────────────────────────
-   Styles based on CoreUI's .toast, .toast-container, .toast-header, .toast-body
-   Adapted for the @base-ui/react/toast component structure. */
+/* Notifications share one padding layer, with a compact gap between heading and message. */
 
 .notification-viewport,
 .notification {
@@ -63,6 +61,10 @@
 /* ─── Content wrapper ───────────────────────────────────────────────────────── */
 
 .notification-content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	padding: var(--notification-padding-y) var(--notification-padding-x);
 	overflow: hidden;
 	border-radius: inherit;
 }
@@ -72,22 +74,16 @@
 .notification-header {
 	display: flex;
 	align-items: center;
-	padding: var(--notification-padding-y) var(--notification-padding-x);
-	color: var(--notification-header-color);
-	background-color: var(--notification-header-bg);
-	background-clip: padding-box;
-	border-bottom: var(--notification-border-width) solid var(--notification-header-border-color);
-	border-top-left-radius: calc(var(--notification-border-radius) - var(--notification-border-width));
-	border-top-right-radius: calc(var(--notification-border-radius) - var(--notification-border-width));
-
-	/* Mirror CoreUI's .toast-header .btn-close margin */
-	.btn-close {
-		margin-inline: var(--notification-padding-x) calc(-0.5 * var(--notification-padding-x));
-		filter: invert(1) grayscale(1);
-	}
+	justify-content: space-between;
+	gap: 0.5rem;
 }
 
 /* ─── Title (replaces .toast-header strong / label) ─────────────────────────── */
+
+.notification-icon {
+	width: 0.875rem;
+	font-size: 0.875rem;
+}
 
 .notification-title {
 	flex-grow: 1;
@@ -99,6 +95,13 @@
 /* ─── Body (replaces .toast-body) ───────────────────────────────────────────── */
 
 .notification-body {
-	padding: var(--notification-padding-x);
-	word-wrap: break-word;
+	margin: 0;
+	font-size: 0.8125rem;
+	line-height: 1.5;
+	overflow-wrap: anywhere;
+}
+
+/* Align the message with the title text after the header's icon and gap. */
+.notification-header + .notification-body {
+	padding-inline-start: calc(0.875rem + 0.5rem);
 }
