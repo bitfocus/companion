@@ -1,4 +1,4 @@
-import { faClockRotateLeft, faFolderOpen, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faFolderOpen, faPlus, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { go as fuzzySearch } from 'fuzzysort'
 import { observer } from 'mobx-react-lite'
@@ -219,14 +219,6 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 		return results
 	}, [browseNodes])
 
-	const recentResults = useComputed(() => {
-		const resultsById = new Map(allEntityResults.map((result) => [result.leaf.fullId, result]))
-		return recentlyUsed.recentIds
-			.map((id) => resultsById.get(id))
-			.filter((result): result is EntitySearchResult => result !== undefined)
-			.slice(0, 6)
-	}, [allEntityResults, recentlyUsed.recentIds])
-
 	const searchResults = useComputed(() => {
 		if (!filter) return []
 
@@ -334,22 +326,6 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 									)
 								) : (
 									<>
-										{recentResults.length > 0 && (
-											<section className="add-entity-recent-section" aria-labelledby="add-entity-recent-title">
-												<h3 id="add-entity-recent-title">
-													<FontAwesomeIcon icon={faClockRotateLeft} /> Recently used
-												</h3>
-												<div className="add-entity-search-results" role="listbox">
-													{recentResults.map((result) => (
-														<EntityResultRow
-															key={result.leaf.fullId}
-															result={result}
-															onSelect={() => addAndTrackRecentUsage(result.leaf.fullId)}
-														/>
-													))}
-												</div>
-											</section>
-										)}
 										<CollapsibleTree
 											nodes={browseNodes.nodes}
 											ungroupedNodes={browseNodes.ungroupedNodes}
