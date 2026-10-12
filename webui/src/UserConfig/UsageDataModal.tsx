@@ -54,7 +54,7 @@ export function UsageDataModal(): React.JSX.Element {
 									}}
 									className="text-sm"
 								>
-									<code>{jsonData}</code>
+									<code className="text-body">{jsonData}</code>
 								</pre>
 							)}
 						</Modal.Body>

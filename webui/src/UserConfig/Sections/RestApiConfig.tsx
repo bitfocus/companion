@@ -97,7 +97,7 @@ function RestApiKeyRow({ apiKey, editKey, deleteKey }: RestApiKeyRowProps) {
 					))}
 				</div>
 				<div className="text-2xs text-muted mt-0.5">
-					<code>{apiKey.tokenPrefix}…</code>
+					<code className="text-muted">{apiKey.tokenPrefix}…</code>
 					<span className="mx-1.5">·</span>
 					{apiKey.lastUsedAt ? `Last used ${new Date(apiKey.lastUsedAt).toLocaleString()}` : 'Never used'}
 				</div>

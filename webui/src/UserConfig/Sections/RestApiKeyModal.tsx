@@ -125,7 +125,7 @@ export const RestApiKeyModal = forwardRef<RestApiKeyModalRef, RestApiKeyModalPro
 											again.
 										</p>
 										<div className="flex items-center gap-2">
-											<code className="flex-1 min-w-0 break-all">{createdToken}</code>
+											<code className="flex-1 min-w-0 break-all text-body">{createdToken}</code>
 											<CopyButton text={createdToken} />
 										</div>
 									</StaticAlert>
