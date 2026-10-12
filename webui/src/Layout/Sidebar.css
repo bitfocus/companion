@@ -710,6 +710,18 @@
 		}
 	}
 
+	/* Collapsed, each item is just its icon: shrink the hover/active highlight to a square the size of the logo tile
+	   rather than the full-width row. After the group-item padding rules above so it wins the tie. */
+	&.sidebar-narrow-unfoldable:not(.show, .sidebar-unfolded) .sidebar-nav .nav-link,
+	&.sidebar-narrow .sidebar-nav .nav-link {
+		flex: none;
+		justify-content: center;
+		width: 2.75rem;
+		height: 2.75rem;
+		padding: 0;
+		margin-inline: auto;
+	}
+
 	.sidebar-footer2 {
 		justify-content: left;
 		border-top: var(--border-width) solid var(--color-border);
