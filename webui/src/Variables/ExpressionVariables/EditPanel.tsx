@@ -152,7 +152,10 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 	return (
 		<>
 			<EditSectionCard title="General Settings">
-				<VariableReferenceRow reference={`$(expression:${options.variableName})`} notesState={notesState} />
+				<VariableReferenceRow
+					reference={options.variableName?.trim() ? `$(expression:${options.variableName})` : null}
+					notesState={notesState}
+				/>
 				<div className="edit-field-row">
 					<label htmlFor={nameFieldId} className="text-xs font-semibold text-body">
 						Name

@@ -287,7 +287,7 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 			})
 	}, [cloneMutation, item.id])
 
-	const fullname = item.variableName ? `$(expression:${item.variableName})` : null
+	const fullname = item.variableName?.trim() ? `$(expression:${item.variableName})` : null
 
 	return (
 		<div
@@ -307,7 +307,9 @@ const ExpressionVariableTableRow = observer(function ExpressionVariableTableRow2
 						<CopyButton size="sm" title="Copy variable name" color="primary" variant="ghost" text={fullname} />
 					</span>
 				) : (
-					<b className="text-sm text-body">Unnamed</b>
+					<span className="variable-style truncate" style={{ color: 'var(--color-muted)' }}>
+						No name defined
+					</span>
 				)}
 
 				<span className="text-xs text-muted truncate">{item.description ?? ''}</span>
