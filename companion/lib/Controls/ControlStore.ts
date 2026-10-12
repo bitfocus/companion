@@ -4,6 +4,7 @@ import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { IPageStore } from '../Page/Store.js'
+import { MAX_REFERENCE_DEPTH } from '../Surface/ReferenceSurfaceId.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type {
 	ExpressionParserOptions,
@@ -60,6 +61,26 @@ export class ControlStore implements IControlStore {
 	getControl(controlId: string): SomeControl<any> | undefined {
 		if (!controlId) return undefined
 		return this.controls.get(controlId)
+	}
+
+	/**
+	 * Get a control by id, following button-references through to the control they currently mirror.
+	 * Returns undefined for an unresolved reference or a reference cycle
+	 */
+	getControlFollowingReferences(controlId: string | null): SomeControl<any> | undefined {
+		const visited = new Set<string>()
+		while (controlId && !visited.has(controlId) && visited.size <= MAX_REFERENCE_DEPTH) {
+			visited.add(controlId)
+
+			const control = this.getControl(controlId)
+			if (!control) return undefined
+
+			const targetControlId = control.getReferenceTargetControlId()
+			if (!targetControlId) return control
+
+			controlId = targetControlId
+		}
+		return undefined
 	}
 
 	/**

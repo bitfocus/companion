@@ -556,7 +556,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 			const theStep = feedback.options.step
 
-			const control = theControlId && this.#controlsStore.getControl(theControlId)
+			const control = this.#controlsStore.getControlFollowingReferences(theControlId)
 			if (control && control.supportsActionSets) {
 				return control.actionSets.getActiveStepIndex() + 1 === Number(theStep)
 			} else {
@@ -745,23 +745,17 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			}
 			case 'bank_current_step': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-				if (theControlId) {
-					const control = this.#controlsStore.getControl(theControlId)
-
-					if (control && control.supportsActionSets) {
-						control.actionSets.stepMakeCurrent(Number(action.options.step))
-					}
+				const control = this.#controlsStore.getControlFollowingReferences(theControlId)
+				if (control && control.supportsActionSets) {
+					control.actionSets.stepMakeCurrent(Number(action.options.step))
 				}
 				break
 			}
 			case 'bank_current_step_delta': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-				if (theControlId) {
-					const control = this.#controlsStore.getControl(theControlId)
-
-					if (control && control.supportsActionSets) {
-						control.actionSets.stepAdvanceDelta(Number(action.options.amount))
-					}
+				const control = this.#controlsStore.getControlFollowingReferences(theControlId)
+				if (control && control.supportsActionSets) {
+					control.actionSets.stepAdvanceDelta(Number(action.options.amount))
 				}
 				break
 			}

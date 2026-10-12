@@ -138,16 +138,16 @@ export class ControlButtonReference
 		return { location: ParseLocationString(raw, myLocation ?? undefined), referencedVariableIds }
 	}
 
-	#resolveTargetControlId(): string | undefined {
+	override getReferenceTargetControlId(): string | null {
 		const { location } = this.#resolveTargetLocation()
-		return (location ? this.deps.pageStore.getControlIdAt(location) : undefined) ?? undefined
+		return (location ? this.deps.pageStore.getControlIdAt(location) : null) ?? null
 	}
 
 	pressControl(pressed: boolean, surfaceId: string | undefined, force?: boolean): void {
 		// Loop guard: stop forwarding once a press has hopped through too many references
 		if (referenceSurfaceIdDepth(surfaceId) >= MAX_REFERENCE_DEPTH) return
 
-		const targetControlId = this.#resolveTargetControlId()
+		const targetControlId = this.getReferenceTargetControlId()
 		if (!targetControlId || targetControlId === this.controlId) return
 
 		this.deps.controlsAccessor.pressControl(
@@ -161,7 +161,7 @@ export class ControlButtonReference
 	override rotateControl(delta: number, surfaceId: string | undefined): boolean {
 		if (referenceSurfaceIdDepth(surfaceId) >= MAX_REFERENCE_DEPTH) return false
 
-		const targetControlId = this.#resolveTargetControlId()
+		const targetControlId = this.getReferenceTargetControlId()
 		if (!targetControlId || targetControlId === this.controlId) return false
 
 		return this.deps.controlsAccessor.rotateControl(
@@ -197,7 +197,7 @@ export class ControlButtonReference
 	 * be resolved, produce a blank layered button.
 	 */
 	convertControl(): SomeButtonModel {
-		const targetControlId = this.#resolveTargetControlId()
+		const targetControlId = this.getReferenceTargetControlId()
 		const target = targetControlId ? this.deps.controlsAccessor.getControl(targetControlId) : undefined
 		if (target) {
 			return structuredClone(target.toJSON(true)) as SomeButtonModel

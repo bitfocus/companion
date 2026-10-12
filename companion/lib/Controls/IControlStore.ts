@@ -19,6 +19,12 @@ export interface IControlStore {
 	getControl(controlId: string): SomeControl<any> | undefined
 
 	/**
+	 * Get a control by id, following button-references through to the control they currently mirror.
+	 * Returns undefined for an unresolved reference or a reference cycle
+	 */
+	getControlFollowingReferences(controlId: string | null): SomeControl<any> | undefined
+
+	/**
 	 * Get all populated controls
 	 */
 	getAllControls(): ReadonlyMap<string, SomeControl<any>>
