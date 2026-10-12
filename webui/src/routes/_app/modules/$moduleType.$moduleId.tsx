@@ -11,6 +11,7 @@ const RouteComponent = observer(function RouteComponent() {
 	const { modules } = useContext(RootAppStoreContext)
 
 	const { moduleType, moduleId } = Route.useParams()
+	const { tab, docsVersion } = Route.useSearch()
 
 	const moduleTypeCast = moduleType as ModuleInstanceType
 
@@ -29,11 +30,23 @@ const RouteComponent = observer(function RouteComponent() {
 
 	return (
 		<MyErrorBoundary>
-			{moduleId && <ModuleManagePanel key={moduleId} moduleType={moduleTypeCast} moduleId={moduleId} />}
+			{moduleId && (
+				<ModuleManagePanel
+					key={`${moduleType}:${moduleId}`}
+					moduleType={moduleTypeCast}
+					moduleId={moduleId}
+					tab={tab}
+					docsVersion={docsVersion}
+				/>
+			)}
 		</MyErrorBoundary>
 	)
 })
 
 export const Route = createFileRoute('/_app/modules/$moduleType/$moduleId')({
+	validateSearch: (search: Record<string, unknown>): { tab?: 'docs'; docsVersion?: string } => ({
+		tab: search.tab === 'docs' ? 'docs' : undefined,
+		docsVersion: typeof search.docsVersion === 'string' ? search.docsVersion : undefined,
+	}),
 	component: RouteComponent,
 })

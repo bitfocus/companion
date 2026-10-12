@@ -1,8 +1,9 @@
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
 import './modules-manage.css'
-import { faBug, faFileLines, faStore } from '@fortawesome/free-solid-svg-icons'
+import { faBug, faFileLines, faInfoCircle, faStore } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Link, useNavigate } from '@tanstack/react-router'
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
@@ -10,19 +11,34 @@ import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.j
 import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
 import { capitalize } from '@companion-app/shared/Util.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { EditPanelTabLink } from '~/Components/EditPanelTabs.js'
+import {
+	EDIT_TAB_ACTIVE_CLASS,
+	EDIT_TAB_BAR_CLASS,
+	EDIT_TAB_CLASS,
+	EDIT_TAB_INACTIVE_CLASS,
+} from '~/Components/editPanelTabStyles.js'
 import { Grid } from '~/Components/Grid'
 import { CloseButton } from '~/Layout/PanelIcons.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ModuleDeprecationAlert, useModuleDeprecation } from './ModuleDeprecation.js'
+import { ModuleDocsPanel } from './ModuleDocsPanel.js'
 import { ModuleVersionsTable } from './ModuleVersionsTable.js'
 import { useModuleStoreInfo } from './useModuleStoreInfo.js'
 
 interface ModuleManagePanelProps {
 	moduleType: ModuleInstanceType
 	moduleId: string
+	tab?: 'docs'
+	docsVersion?: string
 }
 
-export const ModuleManagePanel = observer(function ModuleManagePanel({ moduleType, moduleId }: ModuleManagePanelProps) {
+export const ModuleManagePanel = observer(function ModuleManagePanel({
+	moduleType,
+	moduleId,
+	tab,
+	docsVersion,
+}: ModuleManagePanelProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
 	const moduleInfo = modules.getModuleInfo(moduleType, moduleId)?.display
@@ -42,13 +58,15 @@ export const ModuleManagePanel = observer(function ModuleManagePanel({ moduleTyp
 		<ModuleManagePanelInner
 			moduleType={moduleType}
 			moduleId={moduleId}
+			tab={tab}
+			docsVersion={docsVersion}
 			moduleInfo={moduleInfo}
 			moduleStoreBaseInfo={moduleStoreInfo}
 		/>
 	)
 })
 
-interface ModuleManagePanelInnerProps {
+interface ModuleManagePanelInnerProps extends ModuleManagePanelProps {
 	moduleType: ModuleInstanceType
 	moduleId: string
 	moduleInfo: ModuleDisplayInfo | undefined
@@ -60,10 +78,12 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 	moduleId,
 	moduleInfo,
 	moduleStoreBaseInfo,
+	tab,
+	docsVersion,
 }: ModuleManagePanelInnerProps) {
 	const moduleStoreInfo = useModuleStoreInfo(moduleType, moduleId)
 	const navigate = useNavigate()
-	const { modules, connections, surfaceInstances, helpViewer } = useContext(RootAppStoreContext)
+	const { modules, connections, surfaceInstances } = useContext(RootAppStoreContext)
 	const installedInfo = modules.getModuleInfo(moduleType, moduleId)
 	const isConnection = moduleType === ModuleInstanceType.Connection
 	const usages = (
@@ -78,14 +98,37 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 		installedInfo?.betaVersion ??
 		installedInfo?.builtinVersion
 	const helpPath = version?.helpPath || moduleStoreBaseInfo?.helpUrl
+	const docsInstalledVersion = docsVersion
+		? [...(installedInfo?.installedVersions ?? []), installedInfo?.devVersion, installedInfo?.builtinVersion].find(
+				(candidate) => candidate?.versionId === docsVersion
+			)
+		: version
+	const docsHelpPath = docsVersion
+		? (docsInstalledVersion?.helpPath ??
+			moduleStoreInfo?.versions.find((candidate) => candidate.id === docsVersion)?.helpUrl ??
+			(docsVersion === version?.versionId ? helpPath : undefined))
+		: helpPath
+	const showDocs = useCallback(
+		(versionId?: string) => {
+			void navigate({
+				to: '/modules/$moduleType/$moduleId',
+				params: { moduleType, moduleId },
+				search: { tab: 'docs', docsVersion: versionId },
+			})
+		},
+		[navigate, moduleType, moduleId]
+	)
 	const issueUrl = moduleInfo?.bugUrl || moduleStoreBaseInfo?.githubUrl
 	const badges = [
 		...(installedInfo?.builtinVersion ? ['Built-in'] : []),
 		...(installedInfo?.devVersion ? ['Development'] : []),
 	]
 
-	// This panel covers the module as a whole, so no single version is in context here
-	const deprecation = useModuleDeprecation(moduleType, moduleId, null)
+	const deprecation = useModuleDeprecation(
+		moduleType,
+		moduleId,
+		tab === 'docs' ? (docsVersion ?? version?.versionId ?? null) : null
+	)
 
 	const baseInfo = moduleInfo || moduleStoreBaseInfo
 	const moduleName = baseInfo?.name ?? moduleId
@@ -125,99 +168,103 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 				<CloseButton closeFn={doCloseModule} className="absolute top-2.5 right-3" />
 			</div>
 
+			<nav className={EDIT_TAB_BAR_CLASS} aria-label="Module views">
+				{(['overview', 'docs'] as const).map((view) => (
+					<Link
+						key={view}
+						to="/modules/$moduleType/$moduleId"
+						params={{ moduleType, moduleId }}
+						search={view === 'docs' ? { tab: 'docs', docsVersion: docsVersion ?? version?.versionId } : {}}
+						aria-current={(tab === 'docs' ? view === 'docs' : view === 'overview') ? 'page' : undefined}
+						className={classNames(
+							EDIT_TAB_CLASS,
+							(tab === 'docs' ? view === 'docs' : view === 'overview')
+								? EDIT_TAB_ACTIVE_CLASS
+								: EDIT_TAB_INACTIVE_CLASS,
+							'no-underline'
+						)}
+					>
+						<FontAwesomeIcon icon={view === 'docs' ? faFileLines : faInfoCircle} className="text-muted" />
+						<span>{view === 'docs' ? 'Docs' : 'Overview'}</span>
+					</Link>
+				))}
+				{moduleStoreBaseInfo?.githubUrl && (
+					<EditPanelTabLink href={moduleStoreBaseInfo.githubUrl} icon={faGithub} label="GitHub" />
+				)}
+				{moduleStoreBaseInfo?.storeUrl && (
+					<EditPanelTabLink href={moduleStoreBaseInfo.storeUrl} icon={faStore} label="Store" />
+				)}
+				{issueUrl && <EditPanelTabLink href={issueUrl} icon={faBug} label="Known issues" />}
+			</nav>
 			<div className="secondary-panel-simple-body p-4 space-y-4 overflow-y-auto flex-1">
-				<div className="max-w-readable space-y-4">
-					{extraProducts.length > 0 && (
-						<div className="flex flex-col gap-3 border-b border-border/70 pb-4">
-							<h4 className="text-2xs font-medium uppercase tracking-wider text-muted mb-0">Supported products</h4>
-							<ul className="flex flex-wrap gap-x-3 gap-y-2 list-none m-0 p-0 text-xs leading-relaxed text-muted">
-								{extraProducts.map((product) => (
-									<li key={product} className="rounded bg-surface-muted/50 px-2 py-1">
-										{product}
-									</li>
-								))}
-							</ul>
-						</div>
-					)}
-					<div className="flex flex-wrap items-center gap-3 text-xs">
-						{helpPath && (
-							<button
-								type="button"
-								className="inline-flex items-center gap-1.5 text-action-text hover:text-body hover:underline cursor-pointer"
-								onClick={() =>
-									helpViewer.current?.showFromUrl(moduleType, moduleId, version?.versionId ?? '', helpPath)
-								}
-							>
-								<FontAwesomeIcon icon={faFileLines} />
-								Docs
-							</button>
-						)}
-						{moduleStoreBaseInfo?.githubUrl && (
-							<a
-								target="_blank"
-								rel="noreferrer"
-								href={moduleStoreBaseInfo.githubUrl}
-								className="inline-flex items-center gap-1.5 text-muted hover:text-body"
-							>
-								<FontAwesomeIcon icon={faGithub} />
-								GitHub
-							</a>
-						)}
-						{moduleStoreBaseInfo && (
-							<a
-								target="_blank"
-								rel="noreferrer"
-								href={moduleStoreBaseInfo.storeUrl}
-								className="inline-flex items-center gap-1.5 text-muted hover:text-body"
-							>
-								<FontAwesomeIcon icon={faStore} />
-								Store
-							</a>
-						)}
-						{issueUrl && (
-							<a
-								target="_blank"
-								rel="noreferrer"
-								href={issueUrl}
-								className="inline-flex items-center gap-1.5 text-muted hover:text-body no-underline"
-							>
-								<FontAwesomeIcon icon={faBug} />
-								Known issues
-							</a>
-						)}
-					</div>
-				</div>
-				{deprecation && <ModuleDeprecationAlert deprecation={deprecation} />}
-				{moduleStoreInfo?.updateWarning && <StaticAlert color="danger">{moduleStoreInfo.updateWarning}</StaticAlert>}
-				{usages.length > 0 && (
-					<section className="space-y-2" aria-label="Module usage">
-						<h4 className="text-xs font-medium text-muted mb-0">
-							{`Used by ${usages.length} ${isConnection ? 'connection' : 'surface instance'}${usages.length === 1 ? '' : 's'}`}
-						</h4>
-						{usages.length > 0 && (
-							<div className="list-card overflow-hidden">
-								{usages.map((instance) => (
-									<Link
-										key={instance.id}
-										to={isConnection ? '/connections/$connectionId' : '/surfaces/integrations/$instanceId'}
-										params={isConnection ? { connectionId: instance.id } : { instanceId: instance.id }}
-										className="list-row flex items-center justify-between gap-3 px-3 py-2 hover:bg-surface-muted/60"
-									>
-										<span className="text-sm font-medium text-body truncate">{instance.label}</span>
-										<span className="text-2xs font-mono text-muted shrink-0">
-											{instance.moduleVersionId ?? 'Default'}
-											{!instance.enabled && <span className="ml-2 font-sans">Disabled</span>}
-										</span>
-									</Link>
-								))}
+				{tab === 'docs' ? (
+					<>
+						{(docsVersion ?? version?.versionId) && (
+							<div className="w-full rounded-lg border border-border bg-surface-muted px-3 py-2 text-sm text-muted">
+								Documentation for <span className="font-semibold text-body">{docsVersion ?? version?.versionId}</span>
 							</div>
 						)}
-					</section>
-				)}
+						<div className="max-w-readable space-y-4">
+							{deprecation && <ModuleDeprecationAlert deprecation={deprecation} />}
+							<ModuleDocsPanel helpPath={docsHelpPath} />
+						</div>
+					</>
+				) : (
+					<>
+						{extraProducts.length > 0 && (
+							<div className="max-w-readable space-y-4">
+								<div className="flex flex-col gap-3 border-b border-border/70 pb-4">
+									<h4 className="text-2xs font-medium uppercase tracking-wider text-muted mb-0">Supported products</h4>
+									<ul className="flex flex-wrap gap-x-3 gap-y-2 list-none m-0 p-0 text-xs leading-relaxed text-muted">
+										{extraProducts.map((product) => (
+											<li key={product} className="rounded bg-surface-muted/50 px-2 py-1">
+												{product}
+											</li>
+										))}
+									</ul>
+								</div>
+							</div>
+						)}
+						{deprecation && <ModuleDeprecationAlert deprecation={deprecation} />}
+						{moduleStoreInfo?.updateWarning && (
+							<StaticAlert color="danger">{moduleStoreInfo.updateWarning}</StaticAlert>
+						)}
+						{usages.length > 0 && (
+							<section className="space-y-2" aria-label="Module usage">
+								<h4 className="text-xs font-medium text-muted mb-0">
+									{`Used by ${usages.length} ${isConnection ? 'connection' : 'surface instance'}${usages.length === 1 ? '' : 's'}`}
+								</h4>
+								{usages.length > 0 && (
+									<div className="list-card overflow-hidden">
+										{usages.map((instance) => (
+											<Link
+												key={instance.id}
+												to={isConnection ? '/connections/$connectionId' : '/surfaces/integrations/$instanceId'}
+												params={isConnection ? { connectionId: instance.id } : { instanceId: instance.id }}
+												className="list-row flex items-center justify-between gap-3 px-3 py-2 hover:bg-surface-muted/60"
+											>
+												<span className="text-sm font-medium text-body truncate">{instance.label}</span>
+												<span className="text-2xs font-mono text-muted shrink-0">
+													{instance.moduleVersionId ?? 'Default'}
+													{!instance.enabled && <span className="ml-2 font-sans">Disabled</span>}
+												</span>
+											</Link>
+										))}
+									</div>
+								)}
+							</section>
+						)}
 
-				<div className="max-w-readable">
-					<ModuleVersionsTable moduleType={moduleType} moduleId={moduleId} moduleStoreInfo={moduleStoreInfo} />
-				</div>
+						<div className="max-w-readable">
+							<ModuleVersionsTable
+								moduleType={moduleType}
+								moduleId={moduleId}
+								moduleStoreInfo={moduleStoreInfo}
+								onShowDocs={showDocs}
+							/>
+						</div>
+					</>
+				)}
 			</div>
 		</>
 	)

@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
@@ -48,6 +49,7 @@ const storeInfo: ModuleStoreModuleInfoStore = {
 }
 
 function renderTable(moduleType: ModuleInstanceType, inUse: boolean, builtin = false) {
+	const onShowDocs = vi.fn()
 	const installed = {
 		moduleType,
 		installedVersions: builtin ? [] : [version],
@@ -68,9 +70,15 @@ function renderTable(moduleType: ModuleInstanceType, inUse: boolean, builtin = f
 	} as unknown as RootAppStore
 	render(
 		<RootAppStoreContext.Provider value={root}>
-			<ModuleVersionsTable moduleType={moduleType} moduleId="example" moduleStoreInfo={builtin ? null : storeInfo} />
+			<ModuleVersionsTable
+				moduleType={moduleType}
+				moduleId="example"
+				moduleStoreInfo={builtin ? null : storeInfo}
+				onShowDocs={onShowDocs}
+			/>
 		</RootAppStoreContext.Provider>
 	)
+	return { onShowDocs }
 }
 
 beforeEach(() => {
@@ -85,6 +93,12 @@ beforeEach(() => {
 })
 
 describe('ModuleVersionsTable', () => {
+	it('opens documentation for the clicked version in the panel', async () => {
+		const { onShowDocs } = renderTable(ModuleInstanceType.Surface, false)
+		const row = screen.getByText('1.0.0').closest('tr')!
+		await userEvent.setup().click(within(row).getByRole('button', { name: 'Show documentation' }))
+		expect(onShowDocs).toHaveBeenCalledExactlyOnceWith('1.0.0')
+	})
 	it('keeps installed beta and deprecated versions visible and protects surface versions in use', () => {
 		renderTable(ModuleInstanceType.Surface, true)
 		const row = screen.getByText('1.0.0').closest('tr')!

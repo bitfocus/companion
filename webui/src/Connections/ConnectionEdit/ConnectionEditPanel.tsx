@@ -1,5 +1,5 @@
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
-import { faArrowUpRightFromSquare, faBug, faCogs, faFileLines, faStethoscope } from '@fortawesome/free-solid-svg-icons'
+import { faBug, faCogs, faFileLines, faStethoscope } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
@@ -8,6 +8,13 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { ModuleInstanceType, type InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
+import { EditPanelTabLink } from '~/Components/EditPanelTabs.js'
+import {
+	EDIT_TAB_ACTIVE_CLASS,
+	EDIT_TAB_BAR_CLASS,
+	EDIT_TAB_CLASS,
+	EDIT_TAB_INACTIVE_CLASS,
+} from '~/Components/editPanelTabStyles.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
 import { InstanceGenericEditPanel } from '~/Instances/InstanceEdit/InstanceEditPanel.js'
@@ -35,40 +42,17 @@ interface EditTabButtonProps {
 	showAttentionDot?: boolean
 }
 
-const EDIT_TAB_CLASS =
-	'inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-lg transition-all border cursor-pointer whitespace-nowrap'
-const EDIT_TAB_INACTIVE_CLASS = 'bg-transparent border-transparent text-action-text hover:text-body hover:bg-surface/50'
-
 function EditTabButton({ tab, activeTab, setActiveTab, icon, label, showAttentionDot }: EditTabButtonProps) {
 	return (
 		<button
 			type="button"
 			onClick={() => setActiveTab(tab)}
-			className={classNames(
-				EDIT_TAB_CLASS,
-				activeTab === tab ? 'bg-surface border-border text-body shadow-xs font-semibold' : EDIT_TAB_INACTIVE_CLASS
-			)}
+			className={classNames(EDIT_TAB_CLASS, activeTab === tab ? EDIT_TAB_ACTIVE_CLASS : EDIT_TAB_INACTIVE_CLASS)}
 		>
 			<FontAwesomeIcon icon={icon} className="text-muted" />
 			<span>{label}</span>
 			{showAttentionDot && <span className="w-1.5 h-1.5 rounded-full bg-tone-warning-fill animate-pulse" />}
 		</button>
-	)
-}
-
-/** A tab-bar entry that opens an external page (rather than switching tab), marked as such */
-function EditTabLink({ href, icon, label }: { href: string; icon: IconDefinition; label: string }) {
-	return (
-		<a
-			href={href}
-			target="_blank"
-			rel="noopener noreferrer"
-			className={classNames(EDIT_TAB_CLASS, EDIT_TAB_INACTIVE_CLASS, 'no-underline')}
-		>
-			<FontAwesomeIcon icon={icon} className="text-muted" />
-			<span>{label}</span>
-			<FontAwesomeIcon icon={faArrowUpRightFromSquare} className="text-3xs text-muted" />
-		</a>
 	)
 }
 
@@ -140,7 +124,7 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 			<ConnectionEditPanelHeading connectionInfo={connectionInfo} closeConfigurePanel={service.closePanel} />
 
 			{/* Segmented Tab Bar */}
-			<div className="px-4 py-2 border-b border-border bg-surface-muted/20 flex items-center gap-1.5 shrink-0 select-none overflow-x-auto">
+			<div className={EDIT_TAB_BAR_CLASS}>
 				<EditTabButton
 					tab="settings"
 					activeTab={activeTab}
@@ -162,7 +146,9 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 					showAttentionDot={!!status?.category && status.category !== 'good'}
 				/>
 
-				{!!moduleInfo?.display?.bugUrl && <EditTabLink href={moduleInfo.display.bugUrl} icon={faBug} label="Issues" />}
+				{!!moduleInfo?.display?.bugUrl && (
+					<EditPanelTabLink href={moduleInfo.display.bugUrl} icon={faBug} label="Issues" />
+				)}
 			</div>
 
 			{/* Tab 1: Settings Form */}

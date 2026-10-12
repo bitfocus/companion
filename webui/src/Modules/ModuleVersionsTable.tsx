@@ -34,12 +34,14 @@ interface ModuleVersionsTableProps {
 	moduleType: ModuleInstanceType
 	moduleId: string
 	moduleStoreInfo: ModuleStoreModuleInfoStore | null
+	onShowDocs: (versionId: string) => void
 }
 
 export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 	moduleType,
 	moduleId,
 	moduleStoreInfo,
+	onShowDocs,
 }: ModuleVersionsTableProps) {
 	const { modules } = useContext(RootAppStoreContext)
 	const moduleInstalledInfo = modules.getModuleInfo(moduleType, moduleId)
@@ -98,6 +100,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 
 			return (
 				<ModuleVersionRow
+					onShowDocs={onShowDocs}
 					key={versionId}
 					moduleType={moduleType}
 					moduleId={moduleId}
@@ -200,6 +203,7 @@ interface VisibleVersionsState {
 }
 
 interface ModuleVersionRowProps {
+	onShowDocs: (versionId: string) => void
 	moduleType: ModuleInstanceType
 	moduleId: string
 	versionId: string
@@ -215,16 +219,17 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 	installedInfo,
 	storeInfo,
 	installationKind,
+	onShowDocs,
 }: ModuleVersionRowProps) {
-	const { helpViewer, connections, surfaceInstances } = useContext(RootAppStoreContext)
+	const { connections, surfaceInstances } = useContext(RootAppStoreContext)
 
 	const versionDisplayName = installedInfo?.versionId ?? storeInfo?.id ?? ''
 	const helpPath = installedInfo?.helpPath ?? storeInfo?.helpUrl
 
 	const doShowHelp = useCallback(() => {
 		if (!helpPath) return
-		helpViewer.current?.showFromUrl(moduleType, moduleId, versionDisplayName, helpPath)
-	}, [helpViewer, moduleType, moduleId, versionDisplayName, helpPath])
+		onShowDocs(versionDisplayName)
+	}, [onShowDocs, versionDisplayName, helpPath])
 
 	if (!storeInfo && !installedInfo) return null // Should never happen
 
