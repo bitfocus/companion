@@ -152,6 +152,7 @@ export function useButtonContextMenu({
 			{ isSeparator: true },
 			{
 				label: forCount('Clear'),
+				tone: 'danger',
 				disabled: isEmpty && !isMultiple,
 				do: () => actions.clearButtons(targets),
 			}

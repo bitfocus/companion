@@ -82,9 +82,33 @@
 
 	&:disabled,
 	&[aria-disabled='true'] {
-		opacity: 0.4;
+		opacity: 0.65;
 		cursor: not-allowed;
 		pointer-events: none;
+	}
+}
+
+.popover2-item[data-tone='danger'] {
+	--popover2-link-color: var(--color-action-danger-text);
+	--popover2-link-hover-color: var(--color-action-danger-text);
+	--popover2-link-hover-bg: var(--color-action-danger-hover);
+}
+
+/* Shared grouping for action menus, including popovers outside ContextMenu. */
+.popover2-popup {
+	.dropdown-divider {
+		border: none;
+		border-top: 1px solid var(--color-border);
+		opacity: 1;
+		margin: 0.375rem 0.5rem;
+	}
+
+	.dropdown-group-label {
+		cursor: default;
+		padding: 0.125rem 0.875rem 0.25rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--color-muted);
 	}
 }
 

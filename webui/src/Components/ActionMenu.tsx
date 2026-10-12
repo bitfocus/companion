@@ -11,6 +11,7 @@ import { Popover } from './Popover.js'
 interface MenuItemBaseProps {
 	readonly label: string
 	readonly id?: string
+	readonly tone?: 'danger'
 	readonly icon?: IconDefinition | (() => ReactElement) | 'none'
 	readonly fullWidth?: boolean
 	readonly tooltip?: string
@@ -95,6 +96,7 @@ function PopoverRouteItem({
 	return (
 		<Popover.Item
 			className={data.id ? `dropdown-item-${data.id}` : undefined}
+			data-tone={data.tone}
 			title={data.tooltip}
 			onClick={() => void navigate({ to: data.to })}
 		>
@@ -140,6 +142,7 @@ function PopoverMenuItem({ data }: { data: MenuItemProps }): React.JSX.Element {
 	return (
 		<Popover.Item
 			className={data.id ? `dropdown-item-${data.id}` : undefined}
+			data-tone={data.tone}
 			title={data.tooltip}
 			onClick={handleClick}
 			disabled={'disabled' in data ? data.disabled : undefined}
