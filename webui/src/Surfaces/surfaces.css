@@ -3,7 +3,8 @@
 .surfaces-list {
 	display: flex;
 	flex-direction: column;
-	padding: 0.25rem;
+	/* Balanced inset keeps rounded groups clear of overlay scrollbars without an empty trailing strip. */
+	padding: 0.5rem;
 	gap: 0.125rem;
 }
 
