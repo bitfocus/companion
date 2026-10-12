@@ -33,7 +33,8 @@
 	}
 
 	.collections-nesting-table-row-item {
-		padding: 4px 8px;
+		--collection-row-padding-y: 4px;
+		padding: var(--collection-row-padding-y) 10px;
 		border-bottom: 1px solid var(--color-border);
 
 		.row-reorder-handle {
@@ -44,9 +45,9 @@
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			margin: -4px 0 -4px -8px;
+			margin: -4px 0 -4px -10px;
 			/* Tighter on the trailing side: the row's own leading padding already spaces the label off it */
-			padding: 0 4px 0 8px;
+			padding: 0 4px 0 10px;
 			background-color: transparent;
 			opacity: 0.5;
 
@@ -83,7 +84,8 @@
 	}
 
 	.collections-nesting-table-row-group {
-		padding: 5px 10px;
+		--collection-row-padding-y: 5px;
+		padding: var(--collection-row-padding-y) 10px;
 		border-bottom: 1px solid var(--color-border);
 
 		background-color: var(--color-surface-muted);
@@ -157,29 +159,32 @@
 	}
 
 	.collections-nesting-table-nesting {
-		padding-left: calc(var(--collection-nesting-level) * 10px) !important;
+		padding-inline-start: calc(var(--collection-nesting-level) * 10px) !important;
 		position: relative;
 
 		&:before {
 			content: '';
 			position: absolute;
-			left: 0px; /* calc((var(--collection-nesting-level) - 1) * 10px); */
-			top: -5px;
-			height: calc(100% + 10px);
+			inset-inline-start: 0;
+			/* Include this row's padding and bottom border so adjacent stems meet exactly. */
+			top: calc(-1 * var(--collection-row-padding-y, 5px));
+			bottom: calc(-1 * var(--collection-row-padding-y, 5px) - 1px);
 			width: 1px;
 			background-color: var(--color-line);
 			z-index: 1;
+			pointer-events: none;
 		}
 
 		&:after {
 			content: '';
 			position: absolute;
-			left: 0px; /* calc((var(--collection-nesting-level) - 1) * 10px); */
+			inset-inline-start: 0;
 			top: 50%;
 			width: calc(var(--collection-nesting-level) * 10px - 5px);
 			height: 1px;
 			background-color: var(--color-line);
 			z-index: 1;
+			pointer-events: none;
 		}
 	}
 
