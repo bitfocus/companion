@@ -125,19 +125,16 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 
 										<div className="space-y-2.5 bg-surface-muted/30 p-3 rounded-xl border border-border/70">
 											<CheckboxInputFieldWithLabel
-												className="my-1"
 												label="Hide configure button"
 												value={!!query['noconfigure']}
 												setValue={(val) => updateQueryUrl('noconfigure', val)}
 											/>
 											<CheckboxInputFieldWithLabel
-												className="my-1"
 												label="Hide fullscreen button"
 												value={!!query['nofullscreen']}
 												setValue={(val) => updateQueryUrl('nofullscreen', val)}
 											/>
 											<CheckboxInputFieldWithLabel
-												className="my-1"
 												label="Show page headings"
 												value={!!query['showpages']}
 												setValue={(val) => updateQueryUrl('showpages', val)}

@@ -1,5 +1,13 @@
 .checkbox-input-with-label {
-	/* TODO */
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+
+	> .form-label {
+		margin: 0;
+		min-width: 0;
+		cursor: pointer;
+	}
 }
 
 .checkbox-field {
