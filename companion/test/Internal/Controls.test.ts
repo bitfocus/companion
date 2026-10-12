@@ -203,3 +203,50 @@ describe('button_rotate execution', () => {
 		expect(controlsStore.rotateControl).not.toHaveBeenCalled()
 	})
 })
+
+describe('step actions through button-references', () => {
+	function setupTarget() {
+		const ctx = createControls()
+		ctx.pageStore.getControlIdAt.mockReturnValue('control:ref')
+
+		const target = {
+			supportsActionSets: true,
+			actionSets: { stepMakeCurrent: vi.fn(), stepAdvanceDelta: vi.fn(), getActiveStepIndex: () => 1 },
+		}
+		ctx.controlsStore.getControlFollowingReferences.mockImplementation((id) =>
+			id === 'control:ref' ? (target as any) : undefined
+		)
+		return { ...ctx, target }
+	}
+
+	test('bank_current_step changes the step of the referenced control', () => {
+		const { controls, target } = setupTarget()
+
+		void controls.executeAction(makeExecAction('bank_current_step', { location: '1/2/3', step: 2 }), fakeExtras)
+
+		expect(target.actionSets.stepMakeCurrent).toHaveBeenCalledWith(2)
+	})
+
+	test('bank_current_step_delta changes the step of the referenced control', () => {
+		const { controls, target } = setupTarget()
+
+		void controls.executeAction(makeExecAction('bank_current_step_delta', { location: '1/2/3', amount: 1 }), fakeExtras)
+
+		expect(target.actionSets.stepAdvanceDelta).toHaveBeenCalledWith(1)
+	})
+
+	test('bank_current_step feedback reports the step of the referenced control', () => {
+		const { controls } = setupTarget()
+
+		const feedback = (step: number) =>
+			controls.executeFeedback({
+				id: 'fb1',
+				definitionId: 'bank_current_step',
+				options: { location: '1/2/3', step },
+				location: undefined,
+			} as any)
+
+		expect(feedback(2)).toBe(true)
+		expect(feedback(1)).toBe(false)
+	})
+})

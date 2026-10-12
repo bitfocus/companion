@@ -9,6 +9,7 @@ function makeControl(
 		supportsEntities?: boolean
 		supportsActions?: boolean
 		rotateResult?: boolean
+		referenceTargetControlId?: string | null
 		entityParser?: object
 		localVariableEntities?: object[]
 	} = {}
@@ -20,6 +21,7 @@ function makeControl(
 		renameVariables: vi.fn(),
 		pressControl: vi.fn(),
 		rotateControl: vi.fn(() => opts.rotateResult ?? true),
+		getReferenceTargetControlId: vi.fn(() => opts.referenceTargetControlId ?? null),
 		abortDelayedActions: vi.fn(),
 		entities: {
 			forgetConnection: vi.fn(),
@@ -82,6 +84,35 @@ describe('ControlStore', () => {
 
 		it('returns undefined for an empty id (without hitting the map)', () => {
 			expect(store.getControl('')).toBeUndefined()
+		})
+	})
+
+	describe('getControlFollowingReferences', () => {
+		it('returns a non-reference control directly', () => {
+			const control = addControl('bank:1')
+			expect(store.getControlFollowingReferences('bank:1')).toBe(control)
+		})
+
+		it('follows a chain of references to the target', () => {
+			addControl('bank:ref1', { referenceTargetControlId: 'bank:ref2' })
+			addControl('bank:ref2', { referenceTargetControlId: 'bank:target' })
+			const target = addControl('bank:target')
+			expect(store.getControlFollowingReferences('bank:ref1')).toBe(target)
+		})
+
+		it('returns undefined for a reference to a missing control', () => {
+			addControl('bank:ref', { referenceTargetControlId: 'bank:missing' })
+			expect(store.getControlFollowingReferences('bank:ref')).toBeUndefined()
+		})
+
+		it('returns undefined for a reference cycle', () => {
+			addControl('bank:ref1', { referenceTargetControlId: 'bank:ref2' })
+			addControl('bank:ref2', { referenceTargetControlId: 'bank:ref1' })
+			expect(store.getControlFollowingReferences('bank:ref1')).toBeUndefined()
+		})
+
+		it('returns undefined for a null id', () => {
+			expect(store.getControlFollowingReferences(null)).toBeUndefined()
 		})
 	})
 

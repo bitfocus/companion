@@ -123,6 +123,20 @@ describe('ControlButtonReference', () => {
 		})
 	})
 
+	describe('getReferenceTargetControlId', () => {
+		it('returns the control at the resolved location', () => {
+			getControlIdAt.mockReturnValue('bank:target')
+			const control = createControl(plainLocation('4/0/0'))
+			expect(control.getReferenceTargetControlId()).toBe('bank:target')
+		})
+
+		it('returns null when the location does not resolve to a control', () => {
+			getControlIdAt.mockReturnValue(undefined)
+			const control = createControl(plainLocation('4/0/0'))
+			expect(control.getReferenceTargetControlId()).toBeNull()
+		})
+	})
+
 	describe('pressControl', () => {
 		it('forwards to the resolved target with a mangled surfaceId', () => {
 			getControlIdAt.mockReturnValue('bank:target')
