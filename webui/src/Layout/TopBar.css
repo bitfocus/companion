@@ -69,14 +69,6 @@
 		font-weight: 600;
 		line-height: inherit;
 	}
-
-	a {
-		color: inherit;
-
-		&:hover {
-			text-decoration: underline;
-		}
-	}
 }
 
 /* ─── Actions ────────────────────────────────────────────────────────────────── */

@@ -11,7 +11,7 @@ import {
 	faPalette,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { Link, useLocation } from '@tanstack/react-router'
+import { useLocation } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
 import { PopoverActionMenu, type MenuItemProps } from '~/Components/ActionMenu.js'
@@ -81,7 +81,7 @@ export const TopBar = observer(function TopBar({ page }: TopBarProps) {
 
 /**
  * Section › Page for a page inside a section, whose own title is only the section's name; otherwise the page's own
- * title. The page crumb links back to the page, for when a child route of it (an item from its list) is open.
+ * title.
  */
 function TopBarBreadcrumb({ page }: { page: TopBarPage | null }) {
 	const { pathname } = useLocation()
@@ -107,11 +107,7 @@ function TopBarBreadcrumb({ page }: { page: TopBarPage | null }) {
 				<li className="top-bar-breadcrumb-page">
 					{/* The page's own heading, now that the page doesn't draw one */}
 					<h1>
-						{location && pathname !== location.page.path ? (
-							<Link to={location.page.path}>{pageLabel}</Link>
-						) : (
-							<span aria-current="page">{pageLabel}</span>
-						)}
+						<span aria-current="page">{pageLabel}</span>
 					</h1>
 				</li>
 			</ol>
