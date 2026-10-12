@@ -80,7 +80,7 @@ export const SettingsBackupsPage = observer(function UserConfig() {
 							</p>
 						</div>
 
-						<div className="flex-1 min-h-0 scrollable-content list-card p-2">
+						<div className="flex-1 min-h-0 scrollable-container list-card p-2">
 							<BackupsTable editRule={doEditRule} />
 						</div>
 					</div>
