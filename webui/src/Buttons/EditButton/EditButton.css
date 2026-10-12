@@ -1,6 +1,7 @@
 @import '../../breakpoints.css';
 
 .edit-button-panel {
+	--button-editor-section-gap: 0.75rem;
 	height: 100%;
 
 	display: flex;
@@ -44,7 +45,7 @@
 	/* Keep the header inside the scrollport: negative inline margins let tab focus
 	   scroll the panel horizontally and shift the whole summary. */
 	margin: -1rem 0 0;
-	padding: 1rem 0 0.375rem;
+	padding: 1rem 0 calc(var(--button-editor-section-gap) / 2);
 	background: var(--color-surface);
 
 	&::before {
@@ -67,6 +68,11 @@
 	}
 }
 
+.edit-button-sticky-header > .notes-card,
+.edit-button-sticky-header > .notes-preview {
+	margin-top: var(--button-editor-section-gap);
+}
+
 .edit-button-summary {
 	display: grid;
 	grid-template-columns: auto minmax(0, 1fr) auto;
@@ -80,7 +86,7 @@
 
 .edit-button-panel .edit-sticky-body {
 	/* One shared gap for every tab, also clearing the sticky header's bottom cover. */
-	padding-top: 0.375rem;
+	padding-top: calc(var(--button-editor-section-gap) / 2);
 }
 
 .button-editor-tab-content {
@@ -151,7 +157,16 @@
 	box-shadow: 0 1px 2px var(--color-shadow-6);
 }
 
+.button-editor-steps {
+	margin-bottom: var(--button-editor-section-gap);
+}
+
+.edit-button-action-sections {
+	display: flow-root;
+}
+
 .edit-button-action-sections > .entity-category {
+	margin-top: var(--button-editor-section-gap);
 	padding-top: 0;
 
 	&:first-child {

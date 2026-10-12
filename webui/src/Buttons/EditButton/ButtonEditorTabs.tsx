@@ -139,7 +139,7 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 				{activeMainTab === 'actions' ? (
 					<>
 						{/* Inside Actions: Modern Step Navigator Bar */}
-						<div className="flex items-center justify-between gap-3 p-1.5 bg-surface-muted/50 rounded-xl border border-border/70 mb-2 flex-wrap">
+						<div className="button-editor-steps flex items-center justify-between gap-3 p-1.5 bg-surface-muted/50 rounded-xl border border-border/70 flex-wrap">
 							<div className="flex items-center gap-1.5 flex-wrap">
 								<span className="text-3xs font-semibold uppercase tracking-wider text-muted px-1.5">Steps:</span>
 								{stepKeys.map((stepId, i) => (
