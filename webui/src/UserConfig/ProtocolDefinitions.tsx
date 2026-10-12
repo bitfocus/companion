@@ -22,6 +22,91 @@ function webInterfacePort(): string {
 
 export const PROTOCOLS: SettingsItemDefinition[] = [
 	{
+		id: 'artnet',
+		name: 'Artnet',
+		description:
+			'Listens for Artnet, so lighting consoles can press buttons. Each button maps to a DMX channel, counting up from the channel below.',
+		enabledField: 'artnet_enabled',
+		summary: (config) => `Universe ${config.artnet_universe} · Channel ${config.artnet_channel}`,
+		docs: '/user-guide/remote-control/artnet-dmx-control',
+		docsLabel: 'Artnet guide',
+		Settings: ArtnetConfig,
+		Section: null,
+	},
+	{
+		id: 'emberplus',
+		name: 'Ember+',
+		description:
+			"Runs an Ember+ provider that exposes Companion's buttons and variables to Ember+ consumers. Its port is fixed.",
+		enabledField: 'emberplus_enabled',
+		summary: () => 'Port 9092',
+		docs: '/user-guide/remote-control/emberplus-control',
+		docsLabel: 'Parameter reference',
+		Settings: EmberPlusConfig,
+		Section: null,
+	},
+	{
+		id: 'http',
+		name: 'HTTP API',
+		description:
+			'Accepts HTTP requests on the same address as this web interface, so other devices and software can press buttons, change styles and set variables.',
+		enabledField: 'http_api_enabled',
+		summary: () => `Port ${webInterfacePort()}`,
+		docs: '/user-guide/remote-control/http-remote-control',
+		docsLabel: 'Command reference',
+		Settings: HttpConfig,
+		Section: null,
+	},
+	{
+		id: 'osc',
+		name: 'OSC',
+		description:
+			'Listens for OSC messages, so other devices and software can press buttons, change styles and set variables.',
+		enabledField: 'osc_enabled',
+		summary: (config) => `Port ${config.osc_listen_port}`,
+		docs: '/user-guide/remote-control/osc-control',
+		docsLabel: 'Command reference',
+		Settings: OscConfig,
+		Section: null,
+	},
+	{
+		id: 'metrics',
+		name: 'Prometheus Metrics',
+		description:
+			'A Prometheus-compatible endpoint at /api/metrics reporting memory usage, the drawing pipeline and high-level counts. Scrape it with the bearer token below.',
+		enabledField: 'prometheus_enabled',
+		summary: () => `Port ${webInterfacePort()}, at /api/metrics`,
+		docs: '/user-guide/config/settings#protocols',
+		docsLabel: 'Settings guide',
+		Settings: MetricsConfig,
+		Section: null,
+	},
+	{
+		id: 'rest',
+		name: 'REST API',
+		description:
+			'A versioned REST API at /api/v2 for configuring Companion from scripts and other software. Requests are authenticated with a bearer token, using the API keys below.',
+		enabledField: 'rest_api_enabled',
+		summary: () => `Port ${webInterfacePort()}, at /api/v2`,
+		// The REST API documents itself, rather than in the user guide
+		docs: () => windowLinkOpen({ href: makeAbsolutePath('/api/v2/docs') }),
+		docsLabel: 'Interactive API docs',
+		Settings: null,
+		Section: RestApiKeysSection,
+	},
+	{
+		id: 'rosstalk',
+		name: 'RossTalk',
+		description:
+			"Listens for RossTalk, Ross Video's text-based control protocol, so Ross switchers and other devices can press buttons. Its port is fixed.",
+		enabledField: 'rosstalk_enabled',
+		summary: () => 'Port 7788',
+		docs: '/user-guide/remote-control/rosstalk-control',
+		docsLabel: 'Command reference',
+		Settings: RosstalkConfig,
+		Section: null,
+	},
+	{
 		id: 'satellite',
 		name: 'Satellite',
 		description:
@@ -55,91 +140,6 @@ export const PROTOCOLS: SettingsItemDefinition[] = [
 		docs: '/user-guide/remote-control/tcp-udp',
 		docsLabel: 'Command reference',
 		Settings: UdpConfig,
-		Section: null,
-	},
-	{
-		id: 'http',
-		name: 'HTTP API',
-		description:
-			'Accepts HTTP requests on the same address as this web interface, so other devices and software can press buttons, change styles and set variables.',
-		enabledField: 'http_api_enabled',
-		summary: () => `Port ${webInterfacePort()}`,
-		docs: '/user-guide/remote-control/http-remote-control',
-		docsLabel: 'Command reference',
-		Settings: HttpConfig,
-		Section: null,
-	},
-	{
-		id: 'rest',
-		name: 'REST API',
-		description:
-			'A versioned REST API at /api/v2 for configuring Companion from scripts and other software. Requests are authenticated with a bearer token, using the API keys below.',
-		enabledField: 'rest_api_enabled',
-		summary: () => `Port ${webInterfacePort()}, at /api/v2`,
-		// The REST API documents itself, rather than in the user guide
-		docs: () => windowLinkOpen({ href: makeAbsolutePath('/api/v2/docs') }),
-		docsLabel: 'Interactive API docs',
-		Settings: null,
-		Section: RestApiKeysSection,
-	},
-	{
-		id: 'metrics',
-		name: 'Prometheus Metrics',
-		description:
-			'A Prometheus-compatible endpoint at /api/metrics reporting memory usage, the drawing pipeline and high-level counts. Scrape it with the bearer token below.',
-		enabledField: 'prometheus_enabled',
-		summary: () => `Port ${webInterfacePort()}, at /api/metrics`,
-		docs: '/user-guide/config/settings#protocols',
-		docsLabel: 'Settings guide',
-		Settings: MetricsConfig,
-		Section: null,
-	},
-	{
-		id: 'osc',
-		name: 'OSC',
-		description:
-			'Listens for OSC messages, so other devices and software can press buttons, change styles and set variables.',
-		enabledField: 'osc_enabled',
-		summary: (config) => `Port ${config.osc_listen_port}`,
-		docs: '/user-guide/remote-control/osc-control',
-		docsLabel: 'Command reference',
-		Settings: OscConfig,
-		Section: null,
-	},
-	{
-		id: 'rosstalk',
-		name: 'RossTalk',
-		description:
-			"Listens for RossTalk, Ross Video's text-based control protocol, so Ross switchers and other devices can press buttons. Its port is fixed.",
-		enabledField: 'rosstalk_enabled',
-		summary: () => 'Port 7788',
-		docs: '/user-guide/remote-control/rosstalk-control',
-		docsLabel: 'Command reference',
-		Settings: RosstalkConfig,
-		Section: null,
-	},
-	{
-		id: 'emberplus',
-		name: 'Ember+',
-		description:
-			"Runs an Ember+ provider that exposes Companion's buttons and variables to Ember+ consumers. Its port is fixed.",
-		enabledField: 'emberplus_enabled',
-		summary: () => 'Port 9092',
-		docs: '/user-guide/remote-control/emberplus-control',
-		docsLabel: 'Parameter reference',
-		Settings: EmberPlusConfig,
-		Section: null,
-	},
-	{
-		id: 'artnet',
-		name: 'Artnet',
-		description:
-			'Listens for Artnet, so lighting consoles can press buttons. Each button maps to a DMX channel, counting up from the channel below.',
-		enabledField: 'artnet_enabled',
-		summary: (config) => `Universe ${config.artnet_universe} · Channel ${config.artnet_channel}`,
-		docs: '/user-guide/remote-control/artnet-dmx-control',
-		docsLabel: 'Artnet guide',
-		Settings: ArtnetConfig,
 		Section: null,
 	},
 ]
