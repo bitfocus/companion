@@ -309,7 +309,7 @@ const DangerZoneSection = observer(function DangerZoneSection<TConfig extends Cl
 	const doDelete = useCallback(() => panelStore.service.deleteInstance(panelStore.labelValue), [panelStore])
 
 	return (
-		<EditSectionCard title={`Delete ${panelStore.service.moduleTypeDisplayName}`} collapsible danger>
+		<EditSectionCard title={`Delete ${panelStore.service.moduleTypeDisplayName}`} danger>
 			<div className="flex items-center justify-between gap-3">
 				<div>
 					<p className="text-xs text-muted mb-0">

@@ -239,7 +239,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 				<ImageInfoRow label="Modified">{formatDate(imageInfo.modifiedAt)}</ImageInfoRow>
 			</EditSectionCard>
 
-			<EditSectionCard title="Delete Image" collapsible danger>
+			<EditSectionCard title="Delete Image" danger>
 				<div className="flex items-center justify-between gap-3">
 					<p className="text-xs text-muted mb-0">Permanently delete this image from the library.</p>
 					<Button color="danger" size="sm" onClick={handleDelete}>
