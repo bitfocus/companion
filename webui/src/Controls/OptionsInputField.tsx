@@ -172,13 +172,10 @@ export const OptionsInputField = observer(function OptionsInputField({
 		<>
 			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames({ hidden: !visibility })}>
 				<OptionLabel option={option} features={isInExpressionMode ? ExpressionModeFeatures : features} />
-				{/* The value preview needs the room under the label; a bare status sits under the field instead, so
-				    the label stays level with the field beside it */}
-				{isInExpressionMode && !previewStatusOnly && expressionPreview}
+				{isInExpressionMode && expressionPreview}
 			</FormLabel>
 			<Grid.Col sm={8} className={classNames({ hidden: !visibility })}>
 				{control}
-				{isInExpressionMode && previewStatusOnly && expressionPreview}
 				{description && <div className="form-text">{description}</div>}
 			</Grid.Col>
 		</>

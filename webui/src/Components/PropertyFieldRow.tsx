@@ -107,31 +107,29 @@ export function PropertyFieldRow({
 	if (layout === 'inspector') {
 		return (
 			<div className={classNames('property-inspector-row', { hidden })}>
-				<label htmlFor={inputId} className={classNames('property-inspector-label', labelClassName)}>
+				<label htmlFor={inputId} className={classNames('form-label property-inspector-label', labelClassName)}>
 					{label}
+					{activeFeatures && <InputFeatureIcons {...activeFeatures} />}
 					{tooltip && <InlineHelpIcon className="ms-1">{tooltip}</InlineHelpIcon>}
+					{value.isExpression && (
+						<ExpressionValuePreview
+							expression={stringifyVariableValue(value.value) ?? ''}
+							controlId={controlId}
+							fieldDefinition={fieldDefinition}
+							contextResolution={buildContextResolutionForPreview(
+								fieldDefinition.contextVariableResolution,
+								allRawOptions
+							)}
+						/>
+					)}
 				</label>
 				<div className="property-inspector-input">{inputControl}</div>
 				<div className="property-inspector-pin">{pinToggle}</div>
-				{(activeFeatures?.variables || activeFeatures?.local || isOverridden || value.isExpression) && (
+				{isOverridden && (
 					<div className="property-inspector-status">
-						{activeFeatures && <InputFeatureIcons {...activeFeatures} />}
-						{isOverridden && (
-							<span title="Value has a linked feedback override">
-								<FontAwesomeIcon icon={faLayerGroup} /> Linked feedback
-							</span>
-						)}
-						{value.isExpression && (
-							<ExpressionValuePreview
-								expression={stringifyVariableValue(value.value) ?? ''}
-								controlId={controlId}
-								fieldDefinition={fieldDefinition}
-								contextResolution={buildContextResolutionForPreview(
-									fieldDefinition.contextVariableResolution,
-									allRawOptions
-								)}
-							/>
-						)}
+						<span title="Value has a linked feedback override">
+							<FontAwesomeIcon icon={faLayerGroup} /> Linked feedback
+						</span>
 					</div>
 				)}
 				{activeDescription && <div className="property-inspector-description">{activeDescription}</div>}

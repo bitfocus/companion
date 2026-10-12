@@ -1,4 +1,4 @@
-import { faDollarSign, faGlobe, faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
+import { faDollarSign, faGlobe } from '@fortawesome/free-solid-svg-icons'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { JsonValue } from 'type-fest'
@@ -156,11 +156,11 @@ describe('OptionsInputField', () => {
 
 		it('renders a help icon only when the option has a tooltip', () => {
 			const { container, unmount } = renderField(textOption)
-			expect(hasIcon(container, faQuestionCircle)).toBe(false)
+			expect(container.querySelector('.lucide-circle-help')).toBeNull()
 			unmount()
 
 			const { container: withTooltip } = renderField({ ...textOption, tooltip: 'Some help' })
-			expect(hasIcon(withTooltip, faQuestionCircle)).toBe(true)
+			expect(withTooltip.querySelector('.lucide-circle-help')).not.toBeNull()
 		})
 
 		it('renders the description below the control', () => {
@@ -317,6 +317,7 @@ describe('OptionsInputField', () => {
 		it('shows a status-only preview when the editor context asks for it', () => {
 			renderField(textOption, { value: expr('1'), fieldSupportsExpression: true, previewStatusOnly: true })
 			expect(captured.preview.at(-1).statusOnly).toBe(true)
+			expect(screen.getByTestId('expression-preview').closest('label')).not.toBeNull()
 		})
 
 		it('resolves the preview context from the sibling options', () => {
