@@ -104,11 +104,11 @@ export const CollectionsNestingTableCollectionRow = observer(function Collection
 					{!!collectionsApi && (
 						<>
 							{isEditing ? (
-								<Button color="secondary" onClick={handleNameFieldBlur}>
+								<Button color="secondary" onClick={handleNameFieldBlur} variant="ghost">
 									<FontAwesomeIcon icon={faCheckCircle} />
 								</Button>
 							) : (
-								<Button color="secondary" onClick={clickEditName}>
+								<Button color="secondary" onClick={clickEditName} variant="ghost">
 									<FontAwesomeIcon icon={faPencilAlt} />
 								</Button>
 							)}
