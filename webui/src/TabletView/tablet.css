@@ -2,9 +2,7 @@
 
 .page-tablet {
 	background-color: var(--remote-bg);
-	color: var(--remote-accent);
-	/* Muted text (the `text-muted` utility reads this) uses the tablet's themed muted accent. */
-	--color-muted: var(--remote-accent-muted);
+	color: var(--remote-fg);
 
 	height: 100vh;
 
@@ -15,15 +13,6 @@
 		h1 {
 			padding: 0 25px;
 		}
-	}
-
-	.form-label {
-		margin-top: 0.5rem;
-	}
-
-	/* Muted helper text is slightly smaller in the tablet view (colour comes from --color-muted above). */
-	.text-muted {
-		font-size: 0.93em;
 	}
 
 	.page-container {
@@ -50,18 +39,12 @@
 
 		border: 1px solid var(--remote-border);
 		background-color: var(--remote-surface);
-		padding: 10px;
-		margin: 10px 0 10px;
-	}
+		padding: 0.75rem;
+		margin: 0.75rem;
+		border-radius: 0.75rem;
 
-	.button {
-		margin: 0 5px;
-		color: var(--btn-color);
-		border: 1px solid var(--btn-border-color);
-
-		&:disabled {
-			opacity: 1;
-			color: var(--color-action-disabled-text);
+		.button + .button {
+			margin-inline-start: 0.5rem;
 		}
 	}
 

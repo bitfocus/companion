@@ -44,17 +44,14 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 					<Modal.Viewport>
 						<Modal.Popup size="lg">
 							<Modal.Header closeButton>
-								<Modal.Title>Configure Tablet View</Modal.Title>
+								<Modal.Title>Configure Web Buttons</Modal.Title>
 							</Modal.Header>
 							<Modal.Body>
 								<Form onSubmit={PreventDefaultHandler} className="space-y-4">
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 										<div className="space-y-3">
 											<div>
-												<FormLabel
-													htmlFor={pagesFieldId}
-													className="text-xs font-semibold text-muted uppercase tracking-wider mb-1 block"
-												>
+												<FormLabel htmlFor={pagesFieldId} className="mb-1 block">
 													Pages
 												</FormLabel>
 												<TextInputFieldSimple
@@ -63,14 +60,14 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 													setValue={(val) => updateQueryUrl('pages', val)}
 													placeholder={'1..99'}
 												/>
-												<p className="text-3xs text-muted mt-1 mb-0">
-													Use <code>1..6</code> for ranges, and commas for multiple selections.
+												<p className="text-sm text-muted mt-1 mb-0">
+													Use <code className="text-body">1..6</code> for ranges, and commas for multiple selections.
 												</p>
 											</div>
 
 											<div className="grid grid-cols-2 gap-2">
 												<div>
-													<FormLabel htmlFor={minColFieldId} className="text-2xs text-muted mb-1 block">
+													<FormLabel htmlFor={minColFieldId} className="mb-1 block">
 														Min Col
 													</FormLabel>
 													<NumberInputField
@@ -82,7 +79,7 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 													/>
 												</div>
 												<div>
-													<FormLabel htmlFor={maxColFieldId} className="text-2xs text-muted mb-1 block">
+													<FormLabel htmlFor={maxColFieldId} className="mb-1 block">
 														Max Col
 													</FormLabel>
 													<NumberInputField
@@ -97,7 +94,7 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 
 											<div className="grid grid-cols-2 gap-2">
 												<div>
-													<FormLabel htmlFor={minRowFieldId} className="text-2xs text-muted mb-1 block">
+													<FormLabel htmlFor={minRowFieldId} className="mb-1 block">
 														Min Row
 													</FormLabel>
 													<NumberInputField
@@ -109,7 +106,7 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 													/>
 												</div>
 												<div>
-													<FormLabel htmlFor={maxRowFieldId} className="text-2xs text-muted mb-1 block">
+													<FormLabel htmlFor={maxRowFieldId} className="mb-1 block">
 														Max Row
 													</FormLabel>
 													<NumberInputField
@@ -144,7 +141,7 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 											/>
 
 											<div className="pt-2">
-												<FormLabel htmlFor={displayColumnFieldId} className="text-2xs text-muted mb-1 block">
+												<FormLabel htmlFor={displayColumnFieldId} className="mb-1 block">
 													Display Columns (0 for dynamic)
 												</FormLabel>
 												<NumberInputField
@@ -166,7 +163,7 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 				</Modal.Portal>
 			</Modal.Root>
 
-			<div className="absolute top-2 right-2 z-40 flex items-center gap-1.5 opacity-60 hover:opacity-100 transition-opacity">
+			<div className="absolute top-2 right-2 z-40 flex items-center gap-1.5 opacity-60 hover:opacity-100 focus-within:opacity-100 transition-opacity">
 				{(!fullscreen || !query['noconfigure']) && !query['nofullscreen'] && (
 					<Button
 						color="secondary"
@@ -178,12 +175,19 @@ export function ConfigurePanel({ updateQueryUrl, query, gridSize }: ConfigurePan
 						}}
 						disabled={!document.documentElement.requestFullscreen}
 						title="Fullscreen"
+						aria-label="Fullscreen"
 					>
 						<FontAwesomeIcon icon={faExpand} />
 					</Button>
 				)}
 				{!query['noconfigure'] && (
-					<Button color="secondary" size="sm" onClick={() => setShow(true)} title="Configure">
+					<Button
+						color="secondary"
+						size="sm"
+						onClick={() => setShow(true)}
+						title="Configure"
+						aria-label="Configure Web Buttons"
+					>
 						<FontAwesomeIcon icon={faCog} />
 					</Button>
 				)}

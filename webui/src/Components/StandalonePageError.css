@@ -1,6 +1,6 @@
 @import '../remote-view.css';
 
-/* Full-screen status overlay for the standalone dark pages (emulator, tablet).
+/* Full-screen status overlay for the standalone pages (emulator, tablet).
    Used by StandalonePageError: a loading spinner, plus a friendly message and Refresh
    button when the page can't reach Companion (load error or lost connection). */
 
@@ -63,29 +63,8 @@
 		overflow-wrap: anywhere;
 	}
 
-	/* Deterministic button styling: these pages set a gold `color` on their root
-	   (.page-emulator-base / .page-tablet) which otherwise bleeds into the button via
-	   coreui's `.btn` base. Scope + specificity here keeps it a clean neutral button. */
 	.button {
 		margin-top: clamp(0.25rem, 1vh, 0.75rem);
 		min-width: 140px;
-		color: var(--remote-fg);
-		background-color: var(--remote-btn-bg);
-		border: 1px solid var(--remote-btn-border);
-		border-radius: 0.5rem;
-
-		&:hover,
-		&:focus-visible {
-			color: var(--remote-fg-strong);
-			background-color: var(--remote-btn-bg-hover);
-			border-color: var(--remote-btn-border-hover);
-		}
-
-		&:active,
-		&:not([disabled]):active {
-			color: var(--remote-fg-strong);
-			background-color: var(--remote-btn-bg-active);
-			border-color: var(--remote-btn-border-active);
-		}
 	}
 }

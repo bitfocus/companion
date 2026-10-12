@@ -1,4 +1,4 @@
-import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faDesktop } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
 import type { EmulatorListItem } from '@companion-app/shared/Model/Emulator.js'
@@ -22,7 +22,7 @@ export function EmulatorListCard({ surface }: EmulatorListCardProps): React.JSX.
 				})
 			}
 		>
-			<span className="emulator-card-grid" aria-hidden="true" />
+			<FontAwesomeIcon icon={faDesktop} className="emulator-card-icon" />
 			<span className="emulator-card-body">
 				<span className="emulator-card-name">{surface.name || 'Emulator'}</span>
 			</span>
