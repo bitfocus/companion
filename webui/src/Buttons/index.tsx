@@ -47,7 +47,7 @@ function useUrlPageNumber(): number {
 }
 
 function navigateToButtonsPage(navigate: UseNavigateResult<'/buttons'>, pageNumber: number): void {
-	void navigate({ to: `/buttons/${pageNumber}` })
+	void navigate({ to: `/buttons/${pageNumber}`, replace: true })
 	rememberViewedPage(pageNumber)
 }
 
