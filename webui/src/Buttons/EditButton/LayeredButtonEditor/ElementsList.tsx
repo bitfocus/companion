@@ -1,7 +1,7 @@
 import { pointerIntersection } from '@dnd-kit/collision'
 import { useDragDropMonitor, useDroppable } from '@dnd-kit/react'
 import { isSortable, useSortable } from '@dnd-kit/react/sortable'
-import { faCog, faSliders, faSort, faThumbtack } from '@fortawesome/free-solid-svg-icons'
+import { faCog, faSort, faThumbtack } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
@@ -225,11 +225,6 @@ const ElementsListFooter = observer(function ElementsListFooter({
 	// which the canvas row used to provide.
 	const { ref } = useDroppable({ id: ROOT_BOTTOM_DROPPABLE, accept: DRAG_ID, collisionDetector: pointerIntersection })
 
-	const allPropertiesElement = styleStore.visualElements[0]?.element ?? canvasElement
-	const showAllProperties = useCallback(() => {
-		styleStore.setSelectedEntryId(allPropertiesElement?.id ?? null)
-	}, [styleStore, allPropertiesElement?.id])
-
 	return (
 		<div ref={ref} className="button-layer-elementlist-footer">
 			<ButtonGroup>
@@ -243,17 +238,6 @@ const ElementsListFooter = observer(function ElementsListFooter({
 				>
 					<FontAwesomeIcon icon={faThumbtack} className="me-1" fixedWidth />
 					Pinned
-				</Button>
-				<Button
-					size="sm"
-					color="secondary"
-					aria-pressed={!styleStore.isPinnedViewSelected && styleStore.selectedEntryId !== canvasElement?.id}
-					onClick={showAllProperties}
-					disabled={!allPropertiesElement}
-					title="Show all properties for a layer"
-				>
-					<FontAwesomeIcon icon={faSliders} className="me-1" fixedWidth />
-					All properties
 				</Button>
 				{canvasElement && (
 					<Button
