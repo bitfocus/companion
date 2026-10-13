@@ -273,6 +273,9 @@
 			&.selected-row {
 				background-color: var(--color-surface-hover);
 			}
+			&.element-missing .element-name {
+				color: var(--color-danger);
+			}
 
 			.element-name {
 				cursor: pointer;
