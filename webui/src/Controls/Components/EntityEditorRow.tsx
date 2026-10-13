@@ -4,7 +4,7 @@ import { faSort } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { useContext, useState } from 'react'
+import { useContext } from 'react'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
@@ -184,9 +184,6 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 		? `${connectionLabel}: ${entityDefinition.label}`
 		: `${connectionLabel}: ${entity.definitionId} (undefined)`
 
-	const canSetHeadline = !!entityService.setHeadline
-	const [noteEditing, setNoteEditing] = useState(false)
-
 	const { isCollapsed, setCollapsed } = usePanelCollapseHelperContextForPanel(
 		stringifyEntityOwnerId(ownerId),
 		entity.id
@@ -227,12 +224,9 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 				connectionLabel={connectionLabel}
 				ownerId={ownerId}
 				isPanelCollapsed={isPanelCollapsed}
-				hasDetails={hasDetails}
+				canCollapse={hasDetails}
 				setPanelCollapsed={setCollapsed}
 				definitionName={definitionName}
-				canSetHeadline={canSetHeadline}
-				noteEditing={noteEditing}
-				setNoteEditing={setNoteEditing}
 				readonly={readonly}
 				localVariablesStore={localVariablesStore}
 				localVariablePrefix={localVariablePrefix}
@@ -240,16 +234,20 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 
 			{hasDetails && !isPanelCollapsed && (
 				<LazyEditorGrid entity={entity} disableLazyMount={disableLazyMount}>
-					<div className="cell-description">
-						<div className="grow">
-							{entityDefinition?.description && <div className="description">{entityDefinition.description || ''}</div>}
-						</div>
-						{entityDefinition?.hasLearn && !!entityService.performLearn && (
-							<div>
-								<LearnButton id={entity.id} doLearn={entityService.performLearn} disabled={readonly} />
+					{(entityDefinition?.description || (entityDefinition?.hasLearn && !!entityService.performLearn)) && (
+						<div className="cell-description">
+							<div className="grow">
+								{entityDefinition?.description && (
+									<div className="description">{entityDefinition.description || ''}</div>
+								)}
 							</div>
-						)}
-					</div>
+							{entityDefinition?.hasLearn && !!entityService.performLearn && (
+								<div>
+									<LearnButton id={entity.id} doLearn={entityService.performLearn} disabled={readonly} />
+								</div>
+							)}
+						</div>
+					)}
 
 					<EntityCommonCells
 						entity={entity}

@@ -1,7 +1,7 @@
 import { faChevronDown, faPencil, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, type EntityOwner, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { Button } from '~/Components/Button.js'
@@ -21,12 +21,9 @@ interface EntityCellControlProps {
 	connectionLabel: string
 	ownerId: EntityOwner | null
 	isPanelCollapsed: boolean
-	hasDetails: boolean
+	canCollapse: boolean
 	setPanelCollapsed: (collapsed: boolean) => void
 	definitionName: string
-	canSetHeadline: boolean
-	noteEditing: boolean
-	setNoteEditing: (editing: boolean) => void
 	readonly: boolean
 	localVariablesStore: LocalVariablesStore | null
 	localVariablePrefix: string | null
@@ -49,21 +46,21 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	connectionLabel,
 	ownerId,
 	isPanelCollapsed,
-	hasDetails,
+	canCollapse,
 	setPanelCollapsed,
 	definitionName,
-	canSetHeadline,
-	noteEditing,
-	setNoteEditing,
 	readonly,
 	localVariablesStore,
 	localVariablePrefix,
 }: EntityCellControlProps) {
+	const canSetHeadline = !!service.setHeadline
+	const [noteEditing, setNoteEditing] = useState(false)
+
 	const toggleCollapse = useCallback(() => {
-		if (!hasDetails) return
+		if (!canCollapse) return
 		if (!isPanelCollapsed) setNoteEditing(false)
 		setPanelCollapsed(!isPanelCollapsed)
-	}, [hasDetails, isPanelCollapsed, setNoteEditing, setPanelCollapsed])
+	}, [canCollapse, isPanelCollapsed, setPanelCollapsed])
 
 	// When a local variable is collapsed, show its name and current value instead of the definition name
 	const { headline, localVariableValueName } = getEntityRowHeaderDisplay(
@@ -95,7 +92,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 		<div className="editor-grid-header flex items-center justify-between gap-3">
 			{/* Left section: connection badge, name, and any compact status indicators */}
 			<div
-				className={`flex items-center gap-2.5 flex-1 min-w-0 select-none py-0.5 ${hasDetails ? 'cursor-pointer' : ''}`}
+				className={`flex items-center gap-2.5 flex-1 min-w-0 select-none py-0.5 ${canCollapse ? 'cursor-pointer' : ''}`}
 				onClick={(e) => {
 					// Don't toggle if user clicked inside an input
 					if ((e.target as HTMLElement).closest('input, textarea, button')) return
@@ -219,7 +216,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 					</div>
 				)}
 
-				{hasDetails && (
+				{canCollapse && (
 					<Button
 						variant="ghost"
 						size="sm"

@@ -212,8 +212,8 @@
 		.cell-description {
 			display: flex;
 
-			margin-top: 0.5rem;
-			margin-bottom: 0.75rem;
+			margin-top: 0;
+			margin-bottom: 0.5rem;
 
 			.name {
 				font-weight: bold;

@@ -40,12 +40,9 @@ function renderAction(
 			connectionLabel="Internal"
 			ownerId={null}
 			isPanelCollapsed
-			hasDetails
+			canCollapse
 			setPanelCollapsed={setPanelCollapsed}
 			definitionName="Internal: Local Variable: Set value"
-			canSetHeadline={false}
-			noteEditing={false}
-			setNoteEditing={vi.fn()}
 			readonly={false}
 			localVariablesStore={null}
 			localVariablePrefix={null}
