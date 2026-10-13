@@ -37,7 +37,7 @@ export interface InstancesListTableRowProps<TMetaData extends { enabled?: boolea
 	doToggleEnabled: () => void
 	debugLogUrl: string | null
 	cannotEnableReason?: string | null
-	isSelected?: boolean
+	isSelected: boolean
 }
 
 export const InstancesListTableRow = observer(function InstancesListTableRow<TMetaData extends { enabled?: boolean }>({
