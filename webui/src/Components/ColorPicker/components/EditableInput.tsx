@@ -92,6 +92,7 @@ export function EditableInput({
 
 	return (
 		<div className={cssStyles.inputWrap}>
+			{/* eslint-disable-next-line react/forbid-elements -- The colour picker is self-contained, with its own css module */}
 			<input
 				id={inputId}
 				className={cssStyles.inputElement}

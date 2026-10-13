@@ -1,10 +1,11 @@
 import { faDownload, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext, useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useId, useRef, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
 import { CopyButton } from '~/Components/CopyButton.js'
+import { FileInputButton } from '~/Components/FileInputButton.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
@@ -31,7 +32,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	const { imageLibrary } = useContext(RootAppStoreContext)
 	const [uploading, setUploading] = useState(false)
 	const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null)
-	const fileInputRef = useRef<HTMLInputElement>(null)
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 
 	// Get image info from the store
@@ -110,18 +110,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		[uploadImageFile, selectedImageName]
 	)
 
-	const handleReplaceImage = useCallback(
-		(event: React.ChangeEvent<HTMLInputElement>) => {
-			const file = event.currentTarget.files?.[0]
-			event.currentTarget.value = '' // Reset file input
-
-			if (!file) return
-
-			uploadFile(file)
-		},
-		[uploadFile]
-	)
-
 	const handleImageNameChanged = useCallback(
 		(oldName: string, newName: string) => {
 			onImageNameChanged?.(oldName, newName)
@@ -167,13 +155,11 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 						<FontAwesomeIcon icon={faDownload} /> Download
 					</Button>
 
-					<Button color="warning" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+					<FileInputButton color="warning" onFileSelected={uploadFile} accept="image/*" disabled={uploading}>
 						<FontAwesomeIcon icon={faUpload} />
 						{uploading ? ' Replacing...' : ' Replace'}
-					</Button>
+					</FileInputButton>
 				</div>
-
-				<input ref={fileInputRef} type="file" accept="image/*" onChange={handleReplaceImage} className="hidden" />
 			</div>
 
 			<Form row className="mb-4">

@@ -146,6 +146,7 @@ function ResolvedLocationRow({ controlId, location, navigateToControl }: Resolve
 			<div className="flex items-center gap-2">
 				<span className="form-text m-0 shrink-0">Resolves to</span>
 				<div className="input-validity-wrapper">
+					{/* eslint-disable-next-line react/forbid-elements -- TODO: TextInputField has no readOnly or external validity */}
 					<input
 						className={classNames('form-input text-input-field', {
 							'invalid-value': validity === 'invalid',

@@ -19,6 +19,7 @@ import { useImageLibraryUpload } from '~/ImageLibrary/useImageLibraryUpload.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { DismissableAlert } from './Alert.js'
+import { FileInputButton } from './FileInputButton.js'
 
 const allowedImageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml']
 
@@ -145,7 +146,6 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 	const [imageName, setImageName] = useState(() => humanId({ separator: '-', capitalize: false }))
 	const [isUploading, setIsUploading] = useState(false)
 	const [errorMessage, setErrorMessage] = useState<string | null>(null)
-	const fileInputRef = useRef<HTMLInputElement>(null)
 
 	const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null)
 	const imageFile = imageSource?.kind === 'file' ? imageSource.file : null
@@ -175,13 +175,7 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 	const createMutation = useMutationExt(trpc.imageLibrary.create.mutationOptions())
 	const { uploadImageFile, uploadDataUrl } = useImageLibraryUpload()
 
-	const handleFileClick = useCallback(() => {
-		setErrorMessage(null)
-		if (fileInputRef.current) {
-			fileInputRef.current.value = ''
-			fileInputRef.current.click()
-		}
-	}, [])
+	const handleFileClick = useCallback(() => setErrorMessage(null), [])
 
 	const handleFile = useCallback(
 		(file: File) => {
@@ -199,15 +193,6 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 			setErrorMessage(null)
 		},
 		[onSharedDataUrlChange]
-	)
-
-	const handleFileChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			const file = e.currentTarget.files?.[0]
-			if (!file) return
-			handleFile(file)
-		},
-		[handleFile]
 	)
 
 	const handleUpload = useCallback(() => {
@@ -266,17 +251,15 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 			</Grid.Row>
 
 			<div>
-				<Button color="primary" onClick={handleFileClick} disabled={isUploading}>
-					<FontAwesomeIcon icon={faFolderOpen} /> Choose File
-				</Button>
-				<input
-					ref={fileInputRef}
-					type="file"
+				<FileInputButton
+					color="primary"
+					onClick={handleFileClick}
+					onFileSelected={handleFile}
 					accept="image/*"
-					className="hidden"
-					onChange={handleFileChange}
 					disabled={isUploading}
-				/>
+				>
+					<FontAwesomeIcon icon={faFolderOpen} /> Choose File
+				</FileInputButton>
 			</div>
 
 			<ImagePreviewBox src={previewUrl} onFileDrop={handleFile} dragOverMessage="Drop image to preview" />
@@ -306,7 +289,6 @@ function CustomImageTab({
 	onSharedDataUrlChange,
 }: CustomImageTabProps) {
 	const [errorMessage, setErrorMessage] = useState<string | null>(null)
-	const fileInputRef = useRef<HTMLInputElement>(null)
 
 	const apiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
 
@@ -338,13 +320,7 @@ function CustomImageTab({
 		[max]
 	)
 
-	const handleFileClick = useCallback(() => {
-		setErrorMessage(null)
-		if (fileInputRef.current) {
-			fileInputRef.current.value = ''
-			fileInputRef.current.click()
-		}
-	}, [])
+	const handleFileClick = useCallback(() => setErrorMessage(null), [])
 
 	const handleFile = useCallback(
 		(file: File) => {
@@ -383,15 +359,6 @@ function CustomImageTab({
 		[min, max, imageResize, onSharedDataUrlChange]
 	)
 
-	const handleFileChange = useCallback(
-		(e: React.ChangeEvent<HTMLInputElement>) => {
-			const file = e.currentTarget.files?.[0]
-			if (!file) return
-			handleFile(file)
-		},
-		[handleFile]
-	)
-
 	const handleUseImage = useCallback(() => {
 		if (sharedDataUrl) {
 			onComplete(sharedDataUrl)
@@ -409,17 +376,15 @@ function CustomImageTab({
 			</DismissableAlert>
 
 			<div>
-				<Button color="primary" onClick={handleFileClick} disabled={!apiIsSupported}>
-					<FontAwesomeIcon icon={faFolderOpen} /> Choose File
-				</Button>
-				<input
-					ref={fileInputRef}
-					type="file"
+				<FileInputButton
+					color="primary"
+					onClick={handleFileClick}
+					onFileSelected={handleFile}
 					accept="image/*"
-					className="hidden"
-					onChange={handleFileChange}
 					disabled={!apiIsSupported}
-				/>
+				>
+					<FontAwesomeIcon icon={faFolderOpen} /> Choose File
+				</FileInputButton>
 			</div>
 
 			<ImagePreviewBox src={sharedDataUrl} onFileDrop={handleFile} dragOverMessage="Drop image to preview" />

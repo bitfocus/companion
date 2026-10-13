@@ -311,6 +311,7 @@ export default [
 				{
 					forbid: [
 						{ element: 'button', message: 'Use <Button> from ~/Components/Button.js instead' },
+						{ element: 'input', message: 'Use one of the *InputField components, or <FileInputButton>, instead' },
 						{ element: 'label', message: 'Use <FormLabel> from ~/Components/Form.js instead' },
 						{ element: 'form', message: 'Use <Form> from ~/Components/Form.js instead' },
 						{ element: 'table', message: 'Use <Table> from ~/Components/Table.js instead' },

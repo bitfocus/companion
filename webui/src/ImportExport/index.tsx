@@ -2,12 +2,12 @@ import { faFileImport } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import CryptoJS from 'crypto-js'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useRef, useState } from 'react'
+import { useCallback, useContext, useState } from 'react'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { StaticAlert } from '~/Components/Alert.js'
-import { Button } from '~/Components/Button.js'
 import { Callout } from '~/Components/Callout.js'
+import { FileInputButton } from '~/Components/FileInputButton.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { base64EncodeUint8Array } from '~/Resources/util.js'
@@ -22,7 +22,6 @@ export const ImportExportPage = observer(function ImportExport() {
 	const { notifier, connections } = useContext(RootAppStoreContext)
 
 	const [loadError, setLoadError] = useState<string | null>(null)
-	const fileInputRef = useRef<HTMLInputElement>(null)
 
 	const abortImportMutation = useMutationExt(trpc.importExport.abort.mutationOptions())
 
@@ -43,15 +42,7 @@ export const ImportExportPage = observer(function ImportExport() {
 	const completePrepareImportMutation = useMutationExt(trpc.importExport.prepareImport.complete.mutationOptions())
 
 	const loadSnapshot = useCallback(
-		(e: React.FormEvent<HTMLInputElement>) => {
-			const newFile = e.currentTarget.files?.[0]
-			e.currentTarget.value = null as any
-
-			if (newFile === undefined || newFile.type === undefined) {
-				setLoadError('Unable to read config file')
-				return
-			}
-
+		(newFile: File) => {
 			setLoadError(null)
 			notifier.show('Importing config...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
 			console.log(`start import of ${newFile.size} bytes`)
@@ -197,17 +188,14 @@ export const ImportExportPage = observer(function ImportExport() {
 						<div>
 							{loadError ? <StaticAlert color="warning">{loadError}</StaticAlert> : ''}
 
-							<Button color="warning" onClick={() => fileInputRef.current?.click()}>
+							<FileInputButton
+								color="warning"
+								onFileSelected={loadSnapshot}
+								accept={isMobileSafari ? undefined : '.companionconfig,.yaml'} // Mobile safari doesn't support custom file extensions https://github.com/bitfocus/companion/issues/3676
+							>
 								<FontAwesomeIcon icon={faFileImport} className="me-2" />
 								Import configuration
-							</Button>
-							<input
-								ref={fileInputRef}
-								type="file"
-								onChange={loadSnapshot}
-								className="hidden"
-								accept={isMobileSafari ? undefined : '.companionconfig,.yaml'} // Mobile safari doesn't support custom file extensions https://github.com/bitfocus/companion/issues/3676
-							/>
+							</FileInputButton>
 						</div>
 					</>
 				)}

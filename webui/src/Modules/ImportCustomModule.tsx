@@ -4,9 +4,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import CryptoJS from 'crypto-js'
-import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useState } from 'react'
 import { DismissableAlert } from '~/Components/Alert'
-import { Button } from '~/Components/Button.js'
+import { FileInputButton } from '~/Components/FileInputButton.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { base64EncodeUint8Array } from '~/Resources/util'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -52,20 +52,10 @@ export function ImportModules(): React.JSX.Element {
 	}, [notifier, importSessionId])
 
 	const [importError, setImportError] = useState<string | null>(null)
-	const moduleFileInputRef = useRef<HTMLInputElement>(null)
-	const bundleFileInputRef = useRef<HTMLInputElement>(null)
 
 	const installTarMutation = useMutationExt(trpc.instances.modulesManager.installModuleTar.mutationOptions())
 	const loadModuleFile = useCallback(
-		(e: React.FormEvent<HTMLInputElement>) => {
-			const newFile = e.currentTarget.files?.[0]
-			e.currentTarget.value = null as any
-
-			if (newFile === undefined || newFile.type === undefined) {
-				setImportError('Unable to read config file')
-				return
-			}
-
+		(newFile: File) => {
 			Promise.resolve()
 				.then(async () => {
 					const buffer = await newFile.arrayBuffer()
@@ -110,16 +100,8 @@ export function ImportModules(): React.JSX.Element {
 	)
 
 	const loadModuleBundle = useCallback(
-		(e: React.FormEvent<HTMLInputElement>) => {
-			const newFile = e.currentTarget.files?.[0]
-			e.currentTarget.value = null as any
-
+		(newFile: File) => {
 			setImportSessionId(null)
-
-			if (newFile === undefined || newFile.type === undefined) {
-				setImportError('Unable to read module bundle')
-				return
-			}
 
 			setImportError(null)
 			notifier.show('Importing module bundle...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
@@ -214,20 +196,18 @@ export function ImportModules(): React.JSX.Element {
 	return (
 		<div className="import-module">
 			<span title={importDisabledTooltip}>
-				<Button color="warning" onClick={() => moduleFileInputRef.current?.click()} disabled={!importAllowed}>
+				<FileInputButton color="warning" onFileSelected={loadModuleFile} accept=".tgz" disabled={!importAllowed}>
 					<FontAwesomeIcon icon={faFileImport} className="me-2" />
 					Import module package
-				</Button>
+				</FileInputButton>
 			</span>
-			<input ref={moduleFileInputRef} type="file" onChange={loadModuleFile} className="hidden" accept=".tgz" />
 			&nbsp;
 			<span title={importDisabledTooltip}>
-				<Button color="info" onClick={() => bundleFileInputRef.current?.click()} disabled={!importAllowed}>
+				<FileInputButton color="info" onFileSelected={loadModuleBundle} accept=".tgz,.gz" disabled={!importAllowed}>
 					<FontAwesomeIcon icon={faFileImport} className="me-2" />
 					Import offline module bundle
-				</Button>
+				</FileInputButton>
 			</span>
-			<input ref={bundleFileInputRef} type="file" onChange={loadModuleBundle} className="hidden" accept=".tgz,.gz" />
 			{importError ? (
 				<DismissableAlert color="warning" onClose={() => setImportError(null)}>
 					{importError}
