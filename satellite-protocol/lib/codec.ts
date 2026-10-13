@@ -151,6 +151,11 @@ export function parseLineParameters(line: string): ParsedParams {
 }
 
 /**
+ * The keys a message can carry. Anything else (a space, `=` or `"`) would break the message apart
+ */
+const MESSAGE_KEY_PATTERN = /^[A-Za-z0-9_-]+$/
+
+/**
  * Quote a string value, escaping the characters {@link parseLineParameters} treats specially inside quotes.
  * A newline can't be escaped, as messages are split into lines before they are parsed.
  */
@@ -162,7 +167,8 @@ function quoteValue(value: string): string {
 /**
  * Format a Satellite API message, including the terminating newline.
  * Booleans are sent as `1`/`0`, numbers bare and strings quoted (with `\` and `"` escaped).
- * Throws if a string value contains a newline, as that would terminate the message.
+ * Throws if a key isn't a plain identifier, a number isn't finite, or a string value contains a newline,
+ * as any of those would produce a message the receiver can't parse back.
  */
 export function formatSatelliteMessage(
 	messageName: string,
@@ -175,10 +181,13 @@ export function formatSatelliteMessage(
 	if (deviceId) chunks.push(`DEVICEID=${quoteValue(deviceId)}`)
 
 	for (const [key, value] of Object.entries(args)) {
+		if (!MESSAGE_KEY_PATTERN.test(key)) throw new Error(`Invalid satellite message key: ${JSON.stringify(key)}`)
+
 		let valueStr: string
 		if (typeof value === 'boolean') {
 			valueStr = value ? '1' : '0'
 		} else if (typeof value === 'number') {
+			if (!Number.isFinite(value)) throw new Error(`Satellite message value for ${key} must be a finite number`)
 			valueStr = value.toString()
 		} else {
 			valueStr = quoteValue(value)

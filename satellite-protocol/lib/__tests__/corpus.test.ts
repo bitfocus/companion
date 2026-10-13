@@ -13,6 +13,7 @@ interface Corpus {
 		args: SatelliteMessageArgs
 		expected: string
 	}[]
+	formatErrors: { name: string; deviceId: string | null; args: SatelliteMessageArgs }[]
 	roundTrip: string[]
 }
 
@@ -30,6 +31,12 @@ describe('satellite protocol corpus', () => {
 	describe('format', () => {
 		test.each(corpus.format.map((c) => [c.name, c] as const))('%s', (_name, c) => {
 			expect(formatSatelliteMessage(c.message, c.status, c.deviceId, c.args)).toBe(c.expected)
+		})
+	})
+
+	describe('format errors', () => {
+		test.each(corpus.formatErrors.map((c) => [c.name, c] as const))('%s', (_name, c) => {
+			expect(() => formatSatelliteMessage('TEST', null, c.deviceId, c.args)).toThrow()
 		})
 	})
 

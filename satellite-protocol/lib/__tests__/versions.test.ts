@@ -18,6 +18,10 @@ describe('parseApiVersion', () => {
 		expect(parseApiVersion('1.2.3+abc')).toEqual([1, 2, 3])
 	})
 
+	test('ignores surrounding whitespace', () => {
+		expect(parseApiVersion(' 1.2.3 ')).toEqual([1, 2, 3])
+	})
+
 	test('rejects invalid versions', () => {
 		expect(parseApiVersion('')).toBeNull()
 		expect(parseApiVersion('1.2')).toBeNull()
@@ -33,6 +37,11 @@ describe('compareApiVersions', () => {
 		expect(compareApiVersions('1.10.1', '1.10.0')).toBeGreaterThan(0)
 		expect(compareApiVersions('2.0.0', '1.99.99')).toBeGreaterThan(0)
 		expect(compareApiVersions('1.10.0', '1.10.0')).toBe(0)
+	})
+
+	test('the major version outranks minor and patch', () => {
+		expect(compareApiVersions('2.0.0', '1.99.99')).toBeGreaterThan(0)
+		expect(compareApiVersions('1.2.0', '1.1.99')).toBeGreaterThan(0)
 	})
 
 	test('sorts invalid versions first', () => {
@@ -95,6 +104,16 @@ describe('getSatelliteFeatures', () => {
 		expect(features.bitmapFormats).toBe(true)
 		expect(features.rotaryAmount).toBe(false)
 		expect(features.leds).toBe(true)
+	})
+
+	test('a caps flag given without a value enables the feature, an empty value does not', () => {
+		const features = getSatelliteFeatures(API_VERSION, { SUBSCRIPTIONS: true, NONSQUARE: '' })
+		expect(features.subscriptions).toBe(true)
+		expect(features.nonSquareBitmaps).toBe(false)
+	})
+
+	test('returns every feature', () => {
+		expect(Object.keys(getSatelliteFeatures(API_VERSION, null)).sort()).toEqual(Object.keys(SATELLITE_FEATURES).sort())
 	})
 
 	test('features with a caps flag are unavailable before CAPS is received', () => {

@@ -59,53 +59,7 @@ jobs:
           SHA: ${{ github.sha }}
           RUN_NUMBER: ${{ github.run_number }}
           RUN_ATTEMPT: ${{ github.run_attempt }}
-        run: |
-          VERSION=$(node -p "require('./satellite-protocol/package.json').version")
-
-          if [[ "$EVENT_NAME" == "push" ]]; then
-            if [[ "$TAG" != "satellite-protocol-v$VERSION" ]]; then
-              echo "Tag $TAG does not match satellite-protocol/package.json version $VERSION"
-              exit 1
-            fi
-
-            if [[ "$VERSION" == *-* ]]; then
-              DIST_TAG=next
-            else
-              DIST_TAG=latest
-            fi
-          else
-            if [[ ! "$INPUT_DIST_TAG" =~ ^[a-z][a-z0-9-]*$ || "$INPUT_DIST_TAG" == "latest" || "$INPUT_DIST_TAG" == "next" ]]; then
-              echo "Invalid dist-tag '$INPUT_DIST_TAG': must be lowercase, and not 'latest' or 'next'"
-              exit 1
-            fi
-            DIST_TAG="$INPUT_DIST_TAG"
-
-            # The version this will be released as, without any prerelease suffix
-            IFS=. read -r MAJOR MINOR PATCH <<< "${VERSION%%-*}"
-            case "$INPUT_BUMP" in
-              major) BASE="$((MAJOR + 1)).0.0" ;;
-              minor) BASE="${MAJOR}.$((MINOR + 1)).0" ;;
-              patch) BASE="${MAJOR}.${MINOR}.$((PATCH + 1))" ;;
-              as-is) BASE="${MAJOR}.${MINOR}.${PATCH}" ;;
-              *)
-                echo "Invalid bump '$INPUT_BUMP'"
-                exit 1
-                ;;
-            esac
-
-            # A unique prerelease version for this run, eg 0.1.1-dev.12.1.gabc1234
-            VERSION="${BASE}-${DIST_TAG}.${RUN_NUMBER}.${RUN_ATTEMPT}.g${SHA:0:7}"
-            node -e "
-              const fs = require('node:fs')
-              const file = 'satellite-protocol/package.json'
-              const pkg = JSON.parse(fs.readFileSync(file, 'utf8'))
-              pkg.version = process.argv[1]
-              fs.writeFileSync(file, JSON.stringify(pkg, null, 2) + '\n')
-            " "$VERSION"
-          fi
-
-          echo "Publishing $VERSION with dist-tag $DIST_TAG"
-          echo "dist-tag=$DIST_TAG" >> "$GITHUB_OUTPUT"
+        run: yarn tsx tools/satellite_protocol_release_version.mts
 
       - name: Test
         run: yarn vitest run --project satellite-protocol

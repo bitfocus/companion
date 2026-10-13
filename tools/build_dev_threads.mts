@@ -31,16 +31,21 @@ export const devThreadOutDir = path.join(companionDir, 'dist', 'threads')
  * @companion-app/satellite-protocol) are the exception: they must be bundled from their TypeScript source,
  * since there is no compiled output to resolve at runtime.
  */
+/** The workspace packages, which have no compiled output in dev so must be bundled from source */
+const SOURCE_BUNDLED_PACKAGES = ['@companion-app/shared', '@companion-app/satellite-protocol']
+
+/**
+ * Whether a bare import should be bundled from source, rather than left external and loaded at runtime
+ */
+export function shouldBundleFromSource(importPath: string): boolean {
+	return SOURCE_BUNDLED_PACKAGES.some((name) => importPath === name || importPath.startsWith(`${name}/`))
+}
+
 const externalizeNodeModules: esbuild.Plugin = {
 	name: 'dev-externalize-node-modules',
 	setup(build) {
 		build.onResolve({ filter: /^[^./]/ }, (args) => {
-			if (
-				args.path === '@companion-app/shared' ||
-				args.path.startsWith('@companion-app/shared/') ||
-				args.path === '@companion-app/satellite-protocol' ||
-				args.path.startsWith('@companion-app/satellite-protocol/')
-			) {
+			if (shouldBundleFromSource(args.path)) {
 				return null // let esbuild resolve + bundle it from source
 			}
 			return { path: args.path, external: true }

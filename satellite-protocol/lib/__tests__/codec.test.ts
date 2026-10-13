@@ -1,5 +1,38 @@
 import { describe, expect, test } from 'vitest'
-import { isFalsey, isTruthy, parseLineParameters, parseStringParamWithBooleanFallback } from '../codec.js'
+import {
+	BANNED_PROPS,
+	formatSatelliteMessage,
+	isFalsey,
+	isTruthy,
+	parseLineParameters,
+	parseSatelliteBitmapFormat,
+	parseStringParamWithBooleanFallback,
+	SatelliteLineBuffer,
+	splitSatelliteCommand,
+} from '../codec.js'
+
+// ── BANNED_PROPS ──────────────────────────────────────────────────────────────
+
+describe('BANNED_PROPS', () => {
+	const expected = [
+		'__proto__',
+		'constructor',
+		'prototype',
+		'__defineGetter__',
+		'__defineSetter__',
+		'__lookupGetter__',
+		'__lookupSetter__',
+	]
+
+	test('contains the prototype-polluting keys', () => {
+		expect([...BANNED_PROPS].sort()).toEqual([...expected].sort())
+	})
+
+	test.each(expected)('parseLineParameters drops %s as a key=value and as a flag', (key) => {
+		const params = parseLineParameters(`${key}=x ${key} OK=1`)
+		expect(Object.keys(params)).toEqual(['OK'])
+	})
+})
 
 // ── isFalsey ──────────────────────────────────────────────────────────────────
 
@@ -282,5 +315,177 @@ describe('parseStringParamWithBooleanFallback', () => {
 		expect(parseStringParamWithBooleanFallback([...list], 'fit', 'false')).toBeNull()
 		expect(parseStringParamWithBooleanFallback([...list], 'fit', '0')).toBeNull()
 		expect(parseStringParamWithBooleanFallback([...list], 'fit', false)).toBeNull()
+	})
+})
+
+// ── isTruthy / isFalsey edge cases ────────────────────────────────────────────
+
+describe('isTruthy / isFalsey edge cases', () => {
+	test.each([
+		[true, true, false],
+		['', false, true],
+		['yes', true, false],
+		['no', false, false],
+		['2.5', true, false],
+		['0.5', false, false],
+		[Number.NaN, false, true],
+	])('%j: truthy=%s falsey=%s', (value, truthy, falsey) => {
+		expect(isTruthy(value)).toBe(truthy)
+		expect(isFalsey(value)).toBe(falsey)
+	})
+})
+
+// ── formatSatelliteMessage ───────────────────────────────────────────────────
+
+describe('formatSatelliteMessage', () => {
+	test('terminates the message with a space and newline', () => {
+		expect(formatSatelliteMessage('PING', null, null, {})).toBe('PING \n')
+	})
+
+	test('includes the status and quoted device id', () => {
+		expect(formatSatelliteMessage('ADD-DEVICE', 'ERROR', 'dev 1', { MESSAGE: 'Bad' })).toBe(
+			'ADD-DEVICE ERROR DEVICEID="dev 1" MESSAGE="Bad" \n'
+		)
+	})
+
+	test('omits an empty device id', () => {
+		expect(formatSatelliteMessage('X', null, '', {})).toBe('X \n')
+	})
+
+	test('sends booleans as 1/0 and numbers bare', () => {
+		expect(formatSatelliteMessage('X', null, null, { A: true, B: false, C: -2, D: 1.5 })).toBe(
+			'X A=1 B=0 C=-2 D=1.5 \n'
+		)
+	})
+
+	test('escapes backslashes and quotes in string values', () => {
+		expect(formatSatelliteMessage('X', null, 'a\\"b', { V: '"\\' })).toBe('X DEVICEID="a\\\\\\"b" V="\\"\\\\" \n')
+	})
+
+	test('rejects newlines in string values and the device id', () => {
+		expect(() => formatSatelliteMessage('X', null, null, { V: 'a\nb' })).toThrow()
+		expect(() => formatSatelliteMessage('X', null, null, { V: 'a\rb' })).toThrow()
+		expect(() => formatSatelliteMessage('X', null, 'a\nb', {})).toThrow()
+	})
+
+	test('sends an empty string as an empty quoted value', () => {
+		expect(formatSatelliteMessage('X', null, null, { V: '' })).toBe('X V="" \n')
+	})
+
+	test('keeps the argument order', () => {
+		expect(formatSatelliteMessage('X', null, null, { B: 1, A: 2, C: 'c' })).toBe('X B=1 A=2 C="c" \n')
+	})
+
+	test.each([Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY])('rejects the number %s', (value) => {
+		expect(() => formatSatelliteMessage('X', null, null, { V: value })).toThrow(/finite/)
+	})
+
+	test.each(['', 'A B', 'A=B', 'A"B', 'A\nB'])('rejects the key %j', (key) => {
+		expect(() => formatSatelliteMessage('X', null, null, { [key]: 1 })).toThrow(/key/)
+	})
+
+	test('accepts keys with letters, digits, - and _', () => {
+		expect(formatSatelliteMessage('X', null, null, { ApiVersion: 1, KEY_2: 2, 'a-b': 3 })).toBe(
+			'X ApiVersion=1 KEY_2=2 a-b=3 \n'
+		)
+	})
+})
+
+// ── parseSatelliteBitmapFormat ────────────────────────────────────────────────
+
+describe('parseSatelliteBitmapFormat', () => {
+	test('accepts the known formats', () => {
+		expect(parseSatelliteBitmapFormat('rgb')).toBe('rgb')
+		expect(parseSatelliteBitmapFormat('png')).toBe('png')
+		expect(parseSatelliteBitmapFormat('webp')).toBe('webp')
+	})
+
+	test('falls back to rgb for missing or unknown values', () => {
+		expect(parseSatelliteBitmapFormat(undefined)).toBe('rgb')
+		expect(parseSatelliteBitmapFormat(true)).toBe('rgb')
+		expect(parseSatelliteBitmapFormat('jpeg')).toBe('rgb')
+	})
+
+	test('is case sensitive, and rejects the empty string', () => {
+		expect(parseSatelliteBitmapFormat('PNG')).toBe('rgb')
+		expect(parseSatelliteBitmapFormat('')).toBe('rgb')
+	})
+})
+
+// ── framing ───────────────────────────────────────────────────────────────────
+
+describe('splitSatelliteCommand', () => {
+	test('splits at the first space', () => {
+		expect(splitSatelliteCommand('KEY-PRESS DEVICEID="a b" KEY=1')).toEqual({
+			command: 'KEY-PRESS',
+			body: 'DEVICEID="a b" KEY=1',
+		})
+	})
+
+	test('a command without parameters has an empty body', () => {
+		expect(splitSatelliteCommand('PING')).toEqual({ command: 'PING', body: '' })
+	})
+
+	test('keeps the command as received', () => {
+		expect(splitSatelliteCommand('ping 1').command).toBe('ping')
+	})
+
+	test('a leading space gives an empty command', () => {
+		expect(splitSatelliteCommand(' PING')).toEqual({ command: '', body: 'PING' })
+	})
+
+	test('only the first space separates, trailing spaces stay in the body', () => {
+		expect(splitSatelliteCommand('PING  a ')).toEqual({ command: 'PING', body: ' a ' })
+		expect(splitSatelliteCommand('PING ')).toEqual({ command: 'PING', body: '' })
+	})
+})
+
+describe('SatelliteLineBuffer', () => {
+	test('returns complete lines and holds an incomplete one', () => {
+		const buffer = new SatelliteLineBuffer(100)
+		expect(buffer.push('PING 1\nPING')).toEqual({ lines: ['PING 1'], overflow: false })
+		expect(buffer.push(' 2\n')).toEqual({ lines: ['PING 2'], overflow: false })
+		expect(buffer.push('')).toEqual({ lines: [], overflow: false })
+	})
+
+	test('handles many lines in one chunk, including empty ones', () => {
+		const buffer = new SatelliteLineBuffer(100)
+		expect(buffer.push('A\n\nB\n').lines).toEqual(['A', '', 'B'])
+	})
+
+	test('strips only a trailing carriage return', () => {
+		const buffer = new SatelliteLineBuffer(100)
+		expect(buffer.push('A\r\nB\rC\r\n').lines).toEqual(['A', 'B\rC'])
+	})
+
+	test('a carriage return split from its newline is still stripped', () => {
+		const buffer = new SatelliteLineBuffer(100)
+		expect(buffer.push('A\r').lines).toEqual([])
+		expect(buffer.push('\n').lines).toEqual(['A'])
+	})
+
+	test('reports overflow once an incomplete line exceeds the limit, and discards it', () => {
+		const buffer = new SatelliteLineBuffer(5)
+		expect(buffer.push('OK\n12345')).toEqual({ lines: ['OK'], overflow: false })
+		expect(buffer.push('6')).toEqual({ lines: [], overflow: true })
+		expect(buffer.push('X\n')).toEqual({ lines: ['X'], overflow: false })
+	})
+
+	test('a complete line longer than the limit is not an overflow', () => {
+		const buffer = new SatelliteLineBuffer(5)
+		expect(buffer.push('1234567890\n')).toEqual({ lines: ['1234567890'], overflow: false })
+	})
+
+	test('clear discards an incomplete line', () => {
+		const buffer = new SatelliteLineBuffer(100)
+		buffer.push('PARTIAL')
+		buffer.clear()
+		expect(buffer.push('A\n').lines).toEqual(['A'])
+	})
+
+	test('an incomplete line of exactly the limit is not an overflow', () => {
+		const buffer = new SatelliteLineBuffer(5)
+		expect(buffer.push('12345')).toEqual({ lines: [], overflow: false })
+		expect(buffer.push('\n')).toEqual({ lines: ['12345'], overflow: false })
 	})
 })
