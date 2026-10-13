@@ -351,6 +351,12 @@ describe('SatelliteLineBuffer', () => {
 		expect(buffer.push('X\n')).toEqual({ lines: ['X'], overflow: false })
 	})
 
+	test('reports overflow for a complete line over the limit, keeping only the lines before it', () => {
+		const buffer = new SatelliteLineBuffer(5)
+		expect(buffer.push('OK\n123456\nNEXT\n')).toEqual({ lines: ['OK'], overflow: true })
+		expect(buffer.push('X\n')).toEqual({ lines: ['X'], overflow: false })
+	})
+
 	test('clear discards an incomplete line', () => {
 		const buffer = new SatelliteLineBuffer(100)
 		buffer.push('PARTIAL')

@@ -215,8 +215,8 @@ export interface SatelliteLineBufferResult {
 	/** The complete lines received, without their terminating newline (or a trailing carriage return) */
 	lines: string[]
 	/**
-	 * True when the pending incomplete line exceeded the maximum length. It has been discarded, and the
-	 * connection should be closed as it can't be resynchronised.
+	 * True when a line exceeded the maximum length, whether complete or not. It and anything after it have been
+	 * discarded, and the connection should be closed as it can't be resynchronised.
 	 */
 	overflow: boolean
 }
@@ -229,7 +229,7 @@ export class SatelliteLineBuffer {
 	#buffer = ''
 
 	/**
-	 * @param maxLineLength - the maximum length of an incomplete line to hold, eg `MAX_LINE_LENGTH`
+	 * @param maxLineLength - the maximum length of a line, eg `MAX_LINE_LENGTH`
 	 */
 	constructor(maxLineLength: number) {
 		this.#maxLineLength = maxLineLength
@@ -244,16 +244,21 @@ export class SatelliteLineBuffer {
 		const lines: string[] = []
 		let offset = 0
 		let i: number
+		let overflow = false
 		while ((i = this.#buffer.indexOf('\n', offset)) !== -1) {
 			const line = this.#buffer.slice(offset, i)
+			if (line.length > this.#maxLineLength) {
+				overflow = true
+				break
+			}
 			lines.push(line.endsWith('\r') ? line.slice(0, -1) : line)
 			offset = i + 1
 		}
 		this.#buffer = this.#buffer.slice(offset)
 
-		// Guard against a peer streaming data forever without ever sending a newline,
+		// Also guard against a peer streaming data forever without ever sending a newline,
 		// which would otherwise grow the buffer unbounded ("buffer bomb").
-		const overflow = this.#buffer.length > this.#maxLineLength
+		if (this.#buffer.length > this.#maxLineLength) overflow = true
 		if (overflow) this.#buffer = ''
 
 		return { lines, overflow }

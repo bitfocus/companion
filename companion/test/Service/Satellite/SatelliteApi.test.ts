@@ -288,6 +288,17 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.lastMessage).toContain('Device already added')
 		})
 
+		test('does not run a complete line that exceeds the maximum length', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('PING ' + 'x'.repeat(MAX_LINE_LENGTH) + '\n')
+
+			expect(socket.writtenData.some((m) => m.startsWith('PONG'))).toBe(false)
+			expect(socket.lastMessage).toContain('Line too long')
+			expect(socket.destroyed).toBe(true)
+		})
+
 		test('escapes a DEVICEID containing quotes and backslashes in the reply', () => {
 			const { api, logger, surfaceController } = createService()
 			const { socket, processMessage } = createSocketAndInit(api, logger)
