@@ -65,6 +65,7 @@ const StepSelectorStep = memo(function StepSelectorStep({
 }: StepSelectorStepProps): React.JSX.Element {
 	return (
 		<li className={classNames('step-selector-step', `step-selector-step-${status}`)}>
+			{/* eslint-disable-next-line react/forbid-elements -- A step marker, not a styled button */}
 			<button
 				type="button"
 				className="step-selector-button"

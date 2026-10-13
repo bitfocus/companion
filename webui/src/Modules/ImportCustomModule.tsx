@@ -4,8 +4,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import CryptoJS from 'crypto-js'
-import { useCallback, useContext, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { DismissableAlert } from '~/Components/Alert'
+import { Button } from '~/Components/Button.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { base64EncodeUint8Array } from '~/Resources/util'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -51,6 +52,8 @@ export function ImportModules(): React.JSX.Element {
 	}, [notifier, importSessionId])
 
 	const [importError, setImportError] = useState<string | null>(null)
+	const moduleFileInputRef = useRef<HTMLInputElement>(null)
+	const bundleFileInputRef = useRef<HTMLInputElement>(null)
 
 	const installTarMutation = useMutationExt(trpc.instances.modulesManager.installModuleTar.mutationOptions())
 	const loadModuleFile = useCallback(
@@ -208,21 +211,23 @@ export function ImportModules(): React.JSX.Element {
 				? 'enable remote custom module imports in the Companion launcher settings, under "Dangerous Features".'
 				: 'start Companion with --enable-restricted-modules (or set COMPANION_ENABLE_RESTRICTED_MODULES=1) to allow remote clients.')
 
-	const disabledButtonStyle = importAllowed ? undefined : { opacity: 0.65, cursor: 'not-allowed' as const }
-
 	return (
 		<div className="import-module">
-			<label className="button button-warning button-file" title={importDisabledTooltip} style={disabledButtonStyle}>
-				<FontAwesomeIcon icon={faFileImport} style={{ marginRight: 8, marginLeft: -3 }} />
-				Import module package
-				<input type="file" onChange={loadModuleFile} className="hidden" accept=".tgz" disabled={!importAllowed} />
-			</label>
+			<span title={importDisabledTooltip}>
+				<Button color="warning" onClick={() => moduleFileInputRef.current?.click()} disabled={!importAllowed}>
+					<FontAwesomeIcon icon={faFileImport} className="me-2" />
+					Import module package
+				</Button>
+			</span>
+			<input ref={moduleFileInputRef} type="file" onChange={loadModuleFile} className="hidden" accept=".tgz" />
 			&nbsp;
-			<label className="button button-info button-file" title={importDisabledTooltip} style={disabledButtonStyle}>
-				<FontAwesomeIcon icon={faFileImport} style={{ marginRight: 8, marginLeft: -3 }} />
-				Import offline module bundle
-				<input type="file" onChange={loadModuleBundle} className="hidden" accept=".tgz,.gz" disabled={!importAllowed} />
-			</label>
+			<span title={importDisabledTooltip}>
+				<Button color="info" onClick={() => bundleFileInputRef.current?.click()} disabled={!importAllowed}>
+					<FontAwesomeIcon icon={faFileImport} className="me-2" />
+					Import offline module bundle
+				</Button>
+			</span>
+			<input ref={bundleFileInputRef} type="file" onChange={loadModuleBundle} className="hidden" accept=".tgz,.gz" />
 			{importError ? (
 				<DismissableAlert color="warning" onClose={() => setImportError(null)}>
 					{importError}

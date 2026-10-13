@@ -15,6 +15,7 @@ export interface FormProps extends FormHTMLAttributes<HTMLFormElement> {
 
 export const Form = forwardRef<HTMLFormElement, FormProps>(({ children, className, row, ...rest }, ref) => {
 	return (
+		// eslint-disable-next-line react/forbid-elements -- This is the wrapper
 		<form className={classNames(row && 'row', className)} {...rest} ref={ref}>
 			{children}
 		</form>
@@ -49,6 +50,7 @@ export const FormLabel = forwardRef<HTMLLabelElement, FormLabelProps>(
 			className
 		)
 		return (
+			// eslint-disable-next-line react/forbid-elements -- This is the wrapper
 			<label className={classes} {...rest} ref={ref}>
 				{children}
 			</label>

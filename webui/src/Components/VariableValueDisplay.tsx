@@ -5,6 +5,7 @@ import { useCallback, useRef, useState } from 'react'
 import type { PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import { VARIABLE_UNKNOWN_VALUE } from '~/Resources/Constants.js'
 import { StaticAlert } from './Alert.js'
+import { Button } from './Button.js'
 import { CopyButton } from './CopyButton.js'
 import { Popover } from './Popover.js'
 import { VariableTypeIcon, type VariableTypeIconType } from './VariableTypeIcon.js'
@@ -135,8 +136,6 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 		typeDescription = 'JSON Object or Array'
 	}
 
-	const btnstyle = { marginLeft: '4px', borderRadius: '4px' }
-
 	const valuePill = (
 		<div
 			style={{
@@ -217,13 +216,13 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 					(valueStr.length <= TRUNCATE_LENGTH ? (
 						''
 					) : collapser.isPanelCollapsed() ? (
-						<button style={btnstyle} onClick={() => collapser.setPanelCollapsed(false)}>
+						<Button color="secondary" size="sm" className="ms-1" onClick={() => collapser.setPanelCollapsed(false)}>
 							More
-						</button>
+						</Button>
 					) : (
-						<button style={btnstyle} onClick={() => collapser.setPanelCollapsed(true)}>
+						<Button color="secondary" size="sm" className="ms-1" onClick={() => collapser.setPanelCollapsed(true)}>
 							Less
-						</button>
+						</Button>
 					))}
 			</code>
 		</div>

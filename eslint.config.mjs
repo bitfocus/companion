@@ -301,6 +301,31 @@ export default [
 		},
 	},
 
+	{
+		// launcher-ui has its own components, so this is webui only
+		files: ['webui/**/*.tsx', 'webui/**/*.jsx'],
+		ignores: ['**/__tests__/**', '**/*.stories.tsx'],
+		rules: {
+			'react/forbid-elements': [
+				'error',
+				{
+					forbid: [
+						{ element: 'button', message: 'Use <Button> from ~/Components/Button.js instead' },
+						{ element: 'label', message: 'Use <FormLabel> from ~/Components/Form.js instead' },
+						{ element: 'form', message: 'Use <Form> from ~/Components/Form.js instead' },
+						{ element: 'table', message: 'Use <Table> from ~/Components/Table.js instead' },
+						{
+							element: 'textarea',
+							message: 'Use <TextInputField multiline> from ~/Components/TextInputField.js instead',
+						},
+						{ element: 'select', message: 'Use <DropdownInputField> from ~/Components/DropdownInputField.js instead' },
+						{ element: 'progress', message: 'Use <ProgressBar> from ~/Components/ProgressBar.js instead' },
+						{ element: 'dialog', message: 'Use <Modal> from ~/Components/Modal.js instead' },
+					],
+				},
+			],
+		},
+	},
 	...pluginQuery.configs['flat/recommended'].map((config) => ({
 		...config,
 		files: ['webui/**/*.tsx', 'webui/**/*.jsx', 'webui/**/*.ts', 'webui/**/*.js'],

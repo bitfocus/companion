@@ -4,6 +4,7 @@ import { PencilIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type { ClientSurfaceButtonSizesItem } from '@companion-app/shared/Model/Surfaces.js'
 import type { DropdownChoice } from '@companion-module/base'
+import { Button } from '~/Components/Button.js'
 import { InputGroup, InputGroupText } from '~/Components/Form.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { Popover } from '~/Components/Popover.js'
@@ -41,15 +42,14 @@ export function AspectRatioPicker({
 				{ASPECT_RATIO_OPTIONS.map((option) => {
 					const id = String(option.id)
 					return (
-						<button
+						<Button
 							key={id}
-							type="button"
 							title={option.label}
 							className={`button-layer-aspect-option${value === id ? ' active' : ''}`}
 							onClick={() => setValue(id)}
 						>
 							<AspectRatioGlyph ratio={parseAspectRatio(id)} />
-						</button>
+						</Button>
 					)
 				})}
 				<CustomAspectRatioButton value={value} setValue={setValue} active={!PRESET_ASPECT_RATIO_IDS.includes(value)} />

@@ -54,8 +54,7 @@
 		}
 	}
 
-	/* The custom option is a popover trigger, which always carries the `btn` class - undo its metrics
-	   so it keeps the same 24x24 box as the preset buttons */
+	/* Undo the `btn` metrics so every option keeps the same 24x24 box */
 	.button-layer-aspect-option.btn {
 		line-height: 1;
 		font-size: inherit;

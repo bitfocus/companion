@@ -72,6 +72,7 @@ export const MyHeader = observer(function MyHeader({ canLock, setLocked }: MyHea
 		<div className="header p-0">
 			<Grid.Container>
 				{mobileMode && (
+					// eslint-disable-next-line react/forbid-elements -- Styled to sit in the header bar
 					<button type="button" className="header-toggler ps-1" onClick={handleShowSidebar}>
 						<FontAwesomeIcon icon={faBars} />
 					</button>

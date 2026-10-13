@@ -54,6 +54,7 @@ function ToolbarButton({
 	disabledReason,
 }: ToolbarButtonProps): React.JSX.Element {
 	const button = (
+		// eslint-disable-next-line react/forbid-elements -- Toolbar buttons have their own compact look
 		<button
 			type="button"
 			title={disabledReason ? undefined : title}

@@ -2,10 +2,11 @@ import { faFileImport } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import CryptoJS from 'crypto-js'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useState } from 'react'
+import { useCallback, useContext, useRef, useState } from 'react'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Button } from '~/Components/Button.js'
 import { Callout } from '~/Components/Callout.js'
 import { ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -21,6 +22,7 @@ export const ImportExportPage = observer(function ImportExport() {
 	const { notifier, connections } = useContext(RootAppStoreContext)
 
 	const [loadError, setLoadError] = useState<string | null>(null)
+	const fileInputRef = useRef<HTMLInputElement>(null)
 
 	const abortImportMutation = useMutationExt(trpc.importExport.abort.mutationOptions())
 
@@ -195,16 +197,17 @@ export const ImportExportPage = observer(function ImportExport() {
 						<div>
 							{loadError ? <StaticAlert color="warning">{loadError}</StaticAlert> : ''}
 
-							<label className="button button-warning button-file">
+							<Button color="warning" onClick={() => fileInputRef.current?.click()}>
 								<FontAwesomeIcon icon={faFileImport} className="me-2" />
 								Import configuration
-								<input
-									type="file"
-									onChange={loadSnapshot}
-									className="hidden"
-									accept={isMobileSafari ? undefined : '.companionconfig,.yaml'} // Mobile safari doesn't support custom file extensions https://github.com/bitfocus/companion/issues/3676
-								/>
-							</label>
+							</Button>
+							<input
+								ref={fileInputRef}
+								type="file"
+								onChange={loadSnapshot}
+								className="hidden"
+								accept={isMobileSafari ? undefined : '.companionconfig,.yaml'} // Mobile safari doesn't support custom file extensions https://github.com/bitfocus/companion/issues/3676
+							/>
 						</div>
 					</>
 				)}
