@@ -118,14 +118,15 @@ jobs:
 
       - name: Pack
         working-directory: satellite-protocol
+        # Outside the checkout, and not a hidden directory (upload-artifact skips hidden files)
         run: |
-          mkdir -p ../.pack
-          npm pack --pack-destination ../.pack
+          mkdir -p "$RUNNER_TEMP/satellite-protocol-pack"
+          npm pack --pack-destination "$RUNNER_TEMP/satellite-protocol-pack"
 
       - uses: actions/upload-artifact@v7
         with:
           name: satellite-protocol-package
-          path: .pack/*.tgz
+          path: ${{ runner.temp }}/satellite-protocol-pack/*.tgz
           if-no-files-found: error
           retention-days: 7
 
@@ -153,9 +154,9 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: satellite-protocol-package
-          path: .pack
+          path: ${{ runner.temp }}/satellite-protocol-pack
 
       - name: Publish
         env:
           DIST_TAG: ${{ needs.build.outputs.dist-tag }}
-        run: npm publish .pack/*.tgz --provenance --access public --tag "$DIST_TAG"
+        run: npm publish "$RUNNER_TEMP"/satellite-protocol-pack/*.tgz --provenance --access public --tag "$DIST_TAG"
