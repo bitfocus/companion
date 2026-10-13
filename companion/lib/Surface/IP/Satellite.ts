@@ -71,21 +71,18 @@ export interface SatelliteTransferableValue {
 	name: string
 	description: string | undefined
 }
-export interface SatelliteInputVariableInfo {
+interface SatelliteInputVariableInfo {
 	id: string
 	lastValue: VariableValue
 }
-export interface SatelliteOutputVariableInfo {
+interface SatelliteOutputVariableInfo {
 	id: string
 	lastReferencedVariables: ReadonlySet<string> | null
 	lastValue: JsonValue | undefined
 	triggerUpdate?: () => void
 }
 
-/**
- * Build the config fields of a satellite surface, registering its transfer variables into the given records
- */
-export function generateConfigFields(
+function generateConfigFields(
 	deviceInfo: SatelliteDeviceInfo,
 	inputVariables: Record<string, SatelliteInputVariableInfo>,
 	outputVariables: Record<string, SatelliteOutputVariableInfo>

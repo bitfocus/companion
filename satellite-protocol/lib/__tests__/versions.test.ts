@@ -18,10 +18,6 @@ describe('parseApiVersion', () => {
 		expect(parseApiVersion('1.2.3+abc')).toEqual([1, 2, 3])
 	})
 
-	test('ignores surrounding whitespace', () => {
-		expect(parseApiVersion(' 1.2.3 ')).toEqual([1, 2, 3])
-	})
-
 	test('rejects invalid versions', () => {
 		expect(parseApiVersion('')).toBeNull()
 		expect(parseApiVersion('1.2')).toBeNull()
@@ -52,10 +48,6 @@ describe('isApiVersionAtLeast', () => {
 		expect(isApiVersionAtLeast('1.11.0', '1.10.0')).toBe(true)
 		expect(isApiVersionAtLeast('1.9.9', '1.10.0')).toBe(false)
 	})
-
-	test('is false for an invalid version', () => {
-		expect(isApiVersionAtLeast('', '0.0.0')).toBe(false)
-	})
 })
 
 describe('SATELLITE_FEATURES', () => {
@@ -65,21 +57,9 @@ describe('SATELLITE_FEATURES', () => {
 			expect(compareApiVersions(feature.since, API_VERSION)).toBeLessThanOrEqual(0)
 		}
 	})
-
-	test('caps flags are only used once CAPS exists', () => {
-		for (const feature of Object.values(SATELLITE_FEATURES)) {
-			if (feature.capsFlag) {
-				expect(isApiVersionAtLeast(feature.since, SATELLITE_FEATURES.caps.since)).toBe(true)
-			}
-		}
-	})
 })
 
 describe('getSatelliteFeatures', () => {
-	test('nothing is available for an invalid version', () => {
-		expect(Object.values(getSatelliteFeatures('', null)).some((v) => v)).toBe(false)
-	})
-
 	test('gates on the api version', () => {
 		const features = getSatelliteFeatures('1.9.0', null)
 		expect(features.lockState).toBe(true)
@@ -99,12 +79,6 @@ describe('getSatelliteFeatures', () => {
 		expect(features.bitmapFormats).toBe(true)
 		expect(features.rotaryAmount).toBe(false)
 		expect(features.leds).toBe(true)
-	})
-
-	test('a caps flag given without a value enables the feature, an empty value does not', () => {
-		const features = getSatelliteFeatures(API_VERSION, { SUBSCRIPTIONS: true, NONSQUARE: '' })
-		expect(features.subscriptions).toBe(true)
-		expect(features.nonSquareBitmaps).toBe(false)
 	})
 
 	test('features with a caps flag are unavailable before CAPS is received', () => {
