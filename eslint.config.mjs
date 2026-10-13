@@ -145,7 +145,13 @@ export default [
 				{
 					// stream-json's `exports` map only exposes `./*` -> `./src/*.js`; the resolver rewrites
 					// the `.js` subpath imports to `.ts` and fails to find a source, so allow the package.
-					allowModules: ['@companion-app/shared', '@companion-module/base', 'type-fest', 'stream-json'],
+					allowModules: [
+						'@companion-app/shared',
+						'@companion-app/satellite-protocol',
+						'@companion-module/base',
+						'type-fest',
+						'stream-json',
+					],
 				},
 			],
 			'n/prefer-node-protocol': 'error',
@@ -167,6 +173,19 @@ export default [
 				{
 					// @companion-app/shared resolves to its TS sources during dev/test
 					allowModules: ['@companion-app/shared'],
+				},
+			],
+		},
+	},
+	{
+		files: ['satellite-protocol/lib/**/*.ts'],
+		ignores: ['satellite-protocol/lib/**/__tests__/**'],
+		rules: {
+			// The package must stay isomorphic (browser, node, bundlers), so may not use node built-ins
+			'no-restricted-imports': [
+				'error',
+				{
+					patterns: [{ group: ['node:*'], message: 'satellite-protocol must not depend on node built-ins' }],
 				},
 			],
 		},
@@ -282,6 +301,32 @@ export default [
 		},
 	},
 
+	{
+		// launcher-ui has its own components, so this is webui only
+		files: ['webui/**/*.tsx', 'webui/**/*.jsx'],
+		ignores: ['**/__tests__/**', '**/*.stories.tsx'],
+		rules: {
+			'react/forbid-elements': [
+				'error',
+				{
+					forbid: [
+						{ element: 'button', message: 'Use <Button> from ~/Components/Button.js instead' },
+						{ element: 'input', message: 'Use one of the *InputField components, or <FileInputButton>, instead' },
+						{ element: 'label', message: 'Use <FormLabel> from ~/Components/Form.js instead' },
+						{ element: 'form', message: 'Use <Form> from ~/Components/Form.js instead' },
+						{ element: 'table', message: 'Use <Table> from ~/Components/Table.js instead' },
+						{
+							element: 'textarea',
+							message: 'Use <TextInputField multiline> from ~/Components/TextInputField.js instead',
+						},
+						{ element: 'select', message: 'Use <DropdownInputField> from ~/Components/DropdownInputField.js instead' },
+						{ element: 'progress', message: 'Use <ProgressBar> from ~/Components/ProgressBar.js instead' },
+						{ element: 'dialog', message: 'Use <Modal> from ~/Components/Modal.js instead' },
+					],
+				},
+			],
+		},
+	},
 	...pluginQuery.configs['flat/recommended'].map((config) => ({
 		...config,
 		files: ['webui/**/*.tsx', 'webui/**/*.jsx', 'webui/**/*.ts', 'webui/**/*.js'],

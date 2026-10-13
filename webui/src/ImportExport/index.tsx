@@ -6,6 +6,7 @@ import { useCallback, useContext, useState } from 'react'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { FileInputButton } from '~/Components/FileInputButton.js'
 import { PageHeader } from '~/Layout/PageHeader.js'
 import { PageIntro } from '~/Layout/PageIntro'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -41,15 +42,7 @@ export const ImportExportPage = observer(function ImportExport() {
 	const completePrepareImportMutation = useMutationExt(trpc.importExport.prepareImport.complete.mutationOptions())
 
 	const loadSnapshot = useCallback(
-		(e: React.FormEvent<HTMLInputElement>) => {
-			const newFile = e.currentTarget.files?.[0]
-			e.currentTarget.value = null as any
-
-			if (newFile === undefined || newFile.type === undefined) {
-				setLoadError('Unable to read config file')
-				return
-			}
-
+		(newFile: File) => {
 			setLoadError(null)
 			notifier.show('Importing config...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
 			console.log(`start import of ${newFile.size} bytes`)
@@ -219,16 +212,15 @@ export const ImportExportPage = observer(function ImportExport() {
 							) : (
 								<>
 									{loadError && <StaticAlert color="warning">{loadError}</StaticAlert>}
-									<label className="button button-secondary button-file w-full flex items-center justify-center gap-2 font-semibold">
+									<FileInputButton
+										color="secondary"
+										className="w-full flex items-center justify-center gap-2 font-semibold"
+										onFileSelected={loadSnapshot}
+										accept={isMobileSafari ? undefined : '.companionconfig,.yaml'} // Mobile safari doesn't support custom file extensions https://github.com/bitfocus/companion/issues/3676
+									>
 										<FontAwesomeIcon icon={faFileImport} />
 										Import Configuration
-										<input
-											type="file"
-											onChange={loadSnapshot}
-											className="hidden"
-											accept={isMobileSafari ? undefined : '.companionconfig,.yaml'}
-										/>
-									</label>
+									</FileInputButton>
 								</>
 							)}
 						</div>

@@ -191,6 +191,7 @@ export function TextInputFieldSimple({
 				{ 'invalid-value': valueIsInvalid, 'has-validity-icon': validity !== 'unknown' },
 				className
 			)}
+			// eslint-disable-next-line react/forbid-elements -- This is the wrapper
 			render={multiline ? <textarea rows={2} /> : undefined}
 			disabled={disabled}
 			value={showValue}

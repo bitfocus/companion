@@ -184,4 +184,12 @@ export abstract class ControlBase<TJson> {
 	rotateControl(_delta: number, _surfaceId: string | undefined): boolean {
 		return false
 	}
+
+	/**
+	 * The control id this control currently forwards to, for controls that mirror another (button-reference).
+	 * Controls that don't (the default) return null.
+	 */
+	getReferenceTargetControlId(): string | null {
+		return null
+	}
 }

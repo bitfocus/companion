@@ -249,8 +249,9 @@ export const WizardModal = observer(function WizardModal(): React.JSX.Element {
 		<>
 			{import.meta.env.DEV && show && (
 				<div className="wizard-dev-controls">
+					{/* eslint-disable-next-line react/forbid-elements -- Dev-only control */}
 					<label>
-						🛠 Preview from version:{' '}
+						🛠 Preview from version: {/* eslint-disable-next-line react/forbid-elements -- Dev-only control */}
 						<select
 							value={devFromVersion ?? ''}
 							onChange={(e) => {

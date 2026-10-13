@@ -526,13 +526,25 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		} else if (feedback.definitionId === 'bank_pushed') {
 			const { theControlId, theLocation } = this.#fetchLocationAndControlId(feedback.options, feedback)
 
-			if (theLocation) {
-				this.#pushStateSubscriptions.set(feedback.id, formatLocation(theLocation))
+			const control = this.#controlsStore.getControlFollowingReferences(theControlId)
+
+			// Through a button-reference, the push state comes from the target's location, and a redraw of the
+			// reference (it was re-pointed) means the target may have changed
+			const pushedLocation =
+				control && control.controlId !== theControlId
+					? this.#pageStore.getLocationOfControlId(control.controlId)
+					: theLocation
+			if (pushedLocation) {
+				this.#pushStateSubscriptions.set(feedback.id, formatLocation(pushedLocation))
 			} else {
 				this.#pushStateSubscriptions.delete(feedback.id)
 			}
+			if (theLocation && theControlId && control?.controlId !== theControlId) {
+				this.#buttonDrawnSubscriptions.set(feedback.id, formatLocation(theLocation))
+			} else {
+				this.#buttonDrawnSubscriptions.delete(feedback.id)
+			}
 
-			const control = theControlId && this.#controlsStore.getControl(theControlId)
 			if (control && control.supportsPushed) {
 				let isPushed = !!control.pushed
 
@@ -556,7 +568,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 			const theStep = feedback.options.step
 
-			const control = theControlId && this.#controlsStore.getControl(theControlId)
+			const control = this.#controlsStore.getControlFollowingReferences(theControlId)
 			if (control && control.supportsActionSets) {
 				return control.actionSets.getActiveStepIndex() + 1 === Number(theStep)
 			} else {
@@ -745,23 +757,17 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 			}
 			case 'bank_current_step': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-				if (theControlId) {
-					const control = this.#controlsStore.getControl(theControlId)
-
-					if (control && control.supportsActionSets) {
-						control.actionSets.stepMakeCurrent(Number(action.options.step))
-					}
+				const control = this.#controlsStore.getControlFollowingReferences(theControlId)
+				if (control && control.supportsActionSets) {
+					control.actionSets.stepMakeCurrent(Number(action.options.step))
 				}
 				break
 			}
 			case 'bank_current_step_delta': {
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
-				if (theControlId) {
-					const control = this.#controlsStore.getControl(theControlId)
-
-					if (control && control.supportsActionSets) {
-						control.actionSets.stepAdvanceDelta(Number(action.options.amount))
-					}
+				const control = this.#controlsStore.getControlFollowingReferences(theControlId)
+				if (control && control.supportsActionSets) {
+					control.actionSets.stepAdvanceDelta(Number(action.options.amount))
 				}
 				break
 			}

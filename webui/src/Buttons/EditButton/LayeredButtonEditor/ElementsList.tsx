@@ -1,17 +1,18 @@
 import { pointerIntersection } from '@dnd-kit/collision'
 import { useDragDropMonitor, useDroppable } from '@dnd-kit/react'
 import { isSortable, useSortable } from '@dnd-kit/react/sortable'
-import { faCog, faSort, faThumbtack } from '@fortawesome/free-solid-svg-icons'
+import { faCog, faSort, faThumbtack, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useRef } from 'react'
+import React, { useCallback, useContext, useRef } from 'react'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { capitalize } from '@companion-app/shared/Util.js'
 import { Button, ButtonGroup } from '~/Components/Button.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { DragCloneOverlay } from '~/Resources/DragCloneOverlay.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import {
 	AddElementDropdownButton,
 	DuplicateElementButton,
@@ -19,6 +20,7 @@ import {
 	RemoveElementButton,
 	ToggleVisibilityButton,
 } from './Buttons.js'
+import { getMissingCompositeElementReason } from './MissingCompositeElement.js'
 import { PINNED_PROPERTIES_ENTRY_ID, type LayeredStyleStore } from './StyleStore.js'
 
 const DRAG_ID = 'button-element-item'
@@ -287,6 +289,9 @@ const ElementListItem = observer(function ElementListItem({
 		collisionDetector: pointerIntersection,
 	})
 
+	const { compositeElementDefinitions, connections } = useContext(RootAppStoreContext)
+	const missingReason = getMissingCompositeElementReason(element, compositeElementDefinitions, connections)
+
 	const commonClasses = styleStore.selectedEntryId === element.id ? 'selected-row' : ''
 	const elementType = capitalize(element.type)
 
@@ -294,7 +299,10 @@ const ElementListItem = observer(function ElementListItem({
 		<>
 			<div
 				ref={ref}
-				className={classNames(commonClasses, 'button-layer-elementlist-table-row', { 'row-dragging': isDragging })}
+				className={classNames(commonClasses, 'button-layer-elementlist-table-row', {
+					'row-dragging': isDragging,
+					'element-missing': !!missingReason,
+				})}
 				style={{
 					// @ts-expect-error custom variable
 					'--elementlist-depth': depth,
@@ -305,8 +313,12 @@ const ElementListItem = observer(function ElementListItem({
 				</div>
 
 				<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedEntryId(element.id)}>
-					<span title={elementType}>
-						<FontAwesomeIcon icon={getElementTypeIcon(element.type)} className="me-1" fixedWidth />
+					<span title={missingReason ?? elementType}>
+						<FontAwesomeIcon
+							icon={missingReason ? faTriangleExclamation : getElementTypeIcon(element.type)}
+							className="me-1"
+							fixedWidth
+						/>
 					</span>
 					{element.name || elementType}
 				</div>

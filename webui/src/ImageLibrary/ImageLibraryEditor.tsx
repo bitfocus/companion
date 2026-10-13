@@ -1,11 +1,13 @@
 import { faDownload, faImages, faTrashAlt, faUpload } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext, useEffect, useId, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useId, useRef, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
 import { CopyButton } from '~/Components/CopyButton.js'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
+import { FileInputButton } from '~/Components/FileInputButton.js'
+import { FormLabel } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { trpc, trpcClient, useMutationExt } from '~/Resources/TRPC.js'
@@ -31,7 +33,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	const { imageLibrary } = useContext(RootAppStoreContext)
 	const [uploading, setUploading] = useState(false)
 	const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null)
-	const fileInputRef = useRef<HTMLInputElement>(null)
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 
 	// Get image info from the store
@@ -110,18 +111,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 		[uploadImageFile, selectedImageName]
 	)
 
-	const handleReplaceImage = useCallback(
-		(event: React.ChangeEvent<HTMLInputElement>) => {
-			const file = event.currentTarget.files?.[0]
-			event.currentTarget.value = '' // Reset file input
-
-			if (!file) return
-
-			uploadFile(file)
-		},
-		[uploadFile]
-	)
-
 	const handleImageNameChanged = useCallback(
 		(oldName: string, newName: string) => {
 			onImageNameChanged?.(oldName, newName)
@@ -155,7 +144,6 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 	return (
 		<div className="edit-panel image-library-editor">
 			<GenericConfirmModal ref={confirmModalRef} />
-			<input ref={fileInputRef} type="file" accept="image/*" onChange={handleReplaceImage} className="hidden" />
 
 			<EditSectionCard title="Image">
 				<ImagePreviewBox
@@ -174,16 +162,17 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 				<div className="flex items-center justify-between gap-2">
 					<span className="text-xs text-muted">Drop an image on the preview to replace it</span>
 					<div className="flex items-center gap-1">
-						<Button
+						<FileInputButton
 							variant="ghost"
 							size="sm"
 							color="primary"
-							onClick={() => fileInputRef.current?.click()}
+							onFileSelected={uploadFile}
+							accept="image/*"
 							disabled={uploading}
 						>
 							<FontAwesomeIcon icon={faUpload} className="me-1.5" />
 							{uploading ? 'Replacing…' : 'Replace'}
-						</Button>
+						</FileInputButton>
 						<Button variant="ghost" size="sm" color="primary" onClick={handleDownload}>
 							<FontAwesomeIcon icon={faDownload} className="me-1.5" />
 							Download
@@ -208,9 +197,9 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					</div>
 				</div>
 				<div className="edit-field-row">
-					<label htmlFor={descriptionFieldId} className="text-xs font-semibold text-body">
+					<FormLabel htmlFor={descriptionFieldId} className="text-xs font-semibold text-body mb-0">
 						Description
-					</label>
+					</FormLabel>
 					<ImageDescriptionEditor
 						id={descriptionFieldId}
 						imageName={selectedImageName}
@@ -218,9 +207,9 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					/>
 				</div>
 				<div className="edit-field-row">
-					<label htmlFor={backgroundColorFieldId} className="text-xs font-semibold text-body">
+					<FormLabel htmlFor={backgroundColorFieldId} className="text-xs font-semibold text-body mb-0">
 						Preview background
-					</label>
+					</FormLabel>
 					<div className="flex items-center">
 						<ImageBackgroundColorEditor
 							id={backgroundColorFieldId}

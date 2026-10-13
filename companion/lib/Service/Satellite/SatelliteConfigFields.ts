@@ -1,4 +1,13 @@
-import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
+import {
+	BANNED_PROPS,
+	type CheckboxField,
+	type CommonFields,
+	type ConfigField,
+	type DropdownField,
+	type NumberField,
+	type StaticTextField,
+	type TextInputField,
+} from '@companion-app/satellite-protocol'
 import type {
 	CompanionInputFieldBaseExtended,
 	CompanionInputFieldCheckboxExtended,
@@ -12,15 +21,6 @@ import type {
 } from '@companion-app/shared/Model/Surfaces.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { Complete } from '@companion-module/base'
-import type {
-	CheckboxField,
-	CommonFields,
-	ConfigField,
-	DropdownField,
-	NumberField,
-	StaticTextField,
-	TextInputField,
-} from './SatelliteConfigFieldsSchema.js'
 
 export function translateSatelliteConfigFields(fields: ConfigField[]): CompanionSurfaceConfigField[] {
 	return fields

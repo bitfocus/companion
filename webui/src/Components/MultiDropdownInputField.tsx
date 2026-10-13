@@ -169,6 +169,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 					{currentValue.map((item) => (
 						<span className="dropdown-field-pill" key={String(item.id)}>
 							<span className="dropdown-field-pill-label">{item.label}</span>
+							{/* eslint-disable-next-line react/forbid-elements -- The pill's remove control, styled as part of the pill */}
 							<button
 								type="button"
 								className="dropdown-field-pill-remove"

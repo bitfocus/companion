@@ -31,5 +31,5 @@
 		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true
 	},
-	"references": [{ "path": "../shared-lib" }]
+	"references": [{ "path": "../shared-lib" }, { "path": "../satellite-protocol" }]
 }

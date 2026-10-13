@@ -1,5 +1,4 @@
 import { faFileImport } from '@fortawesome/free-solid-svg-icons'
-import classNames from 'classnames'
 import './modules-manage.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
@@ -7,6 +6,7 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import CryptoJS from 'crypto-js'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import { DismissableAlert } from '~/Components/Alert'
+import { FileInputButton } from '~/Components/FileInputButton.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { base64EncodeUint8Array } from '~/Resources/util'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -55,15 +55,7 @@ export function ImportModules(): React.JSX.Element {
 
 	const installTarMutation = useMutationExt(trpc.instances.modulesManager.installModuleTar.mutationOptions())
 	const loadModuleFile = useCallback(
-		(e: React.FormEvent<HTMLInputElement>) => {
-			const newFile = e.currentTarget.files?.[0]
-			e.currentTarget.value = null as any
-
-			if (newFile === undefined || newFile.type === undefined) {
-				setImportError('Unable to read config file')
-				return
-			}
-
+		(newFile: File) => {
 			Promise.resolve()
 				.then(async () => {
 					const buffer = await newFile.arrayBuffer()
@@ -108,16 +100,8 @@ export function ImportModules(): React.JSX.Element {
 	)
 
 	const loadModuleBundle = useCallback(
-		(e: React.FormEvent<HTMLInputElement>) => {
-			const newFile = e.currentTarget.files?.[0]
-			e.currentTarget.value = null as any
-
+		(newFile: File) => {
 			setImportSessionId(null)
-
-			if (newFile === undefined || newFile.type === undefined) {
-				setImportError('Unable to read module bundle')
-				return
-			}
 
 			setImportError(null)
 			notifier.show('Importing module bundle...', 'This may take a while', null, NOTIFICATION_ID_IMPORT)
@@ -211,29 +195,33 @@ export function ImportModules(): React.JSX.Element {
 
 	return (
 		<div className="flex items-center gap-2 flex-wrap">
-			<label
-				className={classNames(
-					'button button-outline-primary button-sm inline-flex items-center justify-center gap-1.5 cursor-pointer font-semibold text-xs h-9 px-3 rounded-md transition-colors shadow-xs mb-0',
-					!importAllowed && 'opacity-65 cursor-not-allowed'
-				)}
-				title={importDisabledTooltip ?? 'Install a single module package (.tgz)'}
-			>
-				<FontAwesomeIcon icon={faFileImport} />
-				<span>Import Package</span>
-				<input type="file" onChange={loadModuleFile} className="hidden" accept=".tgz" disabled={!importAllowed} />
-			</label>
+			<span title={importDisabledTooltip ?? 'Install a single module package (.tgz)'}>
+				<FileInputButton
+					color="primary"
+					variant="outline"
+					size="sm"
+					onFileSelected={loadModuleFile}
+					accept=".tgz"
+					disabled={!importAllowed}
+				>
+					<FontAwesomeIcon icon={faFileImport} className="me-1.5" />
+					Import Package
+				</FileInputButton>
+			</span>
 
-			<label
-				className={classNames(
-					'button button-outline-primary button-sm inline-flex items-center justify-center gap-1.5 cursor-pointer font-semibold text-xs h-9 px-3 rounded-md transition-colors shadow-xs mb-0',
-					!importAllowed && 'opacity-65 cursor-not-allowed'
-				)}
-				title={importDisabledTooltip ?? 'Import a module bundle containing multiple packages (.tgz or .gz)'}
-			>
-				<FontAwesomeIcon icon={faFileImport} />
-				<span>Import Bundle</span>
-				<input type="file" onChange={loadModuleBundle} className="hidden" accept=".tgz,.gz" disabled={!importAllowed} />
-			</label>
+			<span title={importDisabledTooltip ?? 'Import a module bundle containing multiple packages (.tgz or .gz)'}>
+				<FileInputButton
+					color="primary"
+					variant="outline"
+					size="sm"
+					onFileSelected={loadModuleBundle}
+					accept=".tgz,.gz"
+					disabled={!importAllowed}
+				>
+					<FontAwesomeIcon icon={faFileImport} className="me-1.5" />
+					Import Bundle
+				</FileInputButton>
+			</span>
 
 			{importError && (
 				<DismissableAlert color="warning" onClose={() => setImportError(null)} className="w-full mt-2 mb-0 text-xs">

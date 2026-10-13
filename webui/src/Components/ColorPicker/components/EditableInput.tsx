@@ -84,6 +84,7 @@ export function EditableInput({
 	)
 
 	const labelElement = label ? (
+		// eslint-disable-next-line react/forbid-elements -- The colour picker is self-contained, with its own css module
 		<label htmlFor={inputId} className={cssStyles.inputLabel}>
 			{label}
 		</label>
@@ -91,6 +92,7 @@ export function EditableInput({
 
 	return (
 		<div className={cssStyles.inputWrap}>
+			{/* eslint-disable-next-line react/forbid-elements -- The colour picker is self-contained, with its own css module */}
 			<input
 				id={inputId}
 				className={cssStyles.inputElement}

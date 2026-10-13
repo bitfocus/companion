@@ -35,6 +35,7 @@ export const Table = forwardRef<HTMLTableElement, TableProps>(
 			className
 		)
 		return (
+			// eslint-disable-next-line react/forbid-elements -- This is the wrapper
 			<table className={classes} {...rest} ref={ref}>
 				{children}
 			</table>

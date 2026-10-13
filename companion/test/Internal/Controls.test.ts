@@ -31,7 +31,7 @@ function createControls() {
 
 	const controls = new InternalControls(graphicsController, controlsStore, pageStore, controlEvents)
 
-	return { controls, controlsStore, pageStore }
+	return { controls, controlsStore, pageStore, controlEvents, graphicsController }
 }
 
 function makeStoredAction(definitionId: string): ActionEntityModel {
@@ -201,5 +201,113 @@ describe('button_rotate execution', () => {
 		void controls.executeAction(makeExecAction('button_rotate', { location: '1/2/3', delta: 'nope' }), fakeExtras)
 
 		expect(controlsStore.rotateControl).not.toHaveBeenCalled()
+	})
+})
+
+describe('step actions through button-references', () => {
+	function setupTarget() {
+		const ctx = createControls()
+		ctx.pageStore.getControlIdAt.mockReturnValue('control:ref')
+
+		const target = {
+			supportsActionSets: true,
+			actionSets: { stepMakeCurrent: vi.fn(), stepAdvanceDelta: vi.fn(), getActiveStepIndex: () => 1 },
+		}
+		ctx.controlsStore.getControlFollowingReferences.mockImplementation((id) =>
+			id === 'control:ref' ? (target as any) : undefined
+		)
+		return { ...ctx, target }
+	}
+
+	test('bank_current_step changes the step of the referenced control', () => {
+		const { controls, target } = setupTarget()
+
+		void controls.executeAction(makeExecAction('bank_current_step', { location: '1/2/3', step: 2 }), fakeExtras)
+
+		expect(target.actionSets.stepMakeCurrent).toHaveBeenCalledWith(2)
+	})
+
+	test('bank_current_step_delta changes the step of the referenced control', () => {
+		const { controls, target } = setupTarget()
+
+		void controls.executeAction(makeExecAction('bank_current_step_delta', { location: '1/2/3', amount: 1 }), fakeExtras)
+
+		expect(target.actionSets.stepAdvanceDelta).toHaveBeenCalledWith(1)
+	})
+
+	test('bank_current_step feedback reports the step of the referenced control', () => {
+		const { controls } = setupTarget()
+
+		const feedback = (step: number) =>
+			controls.executeFeedback({
+				id: 'fb1',
+				definitionId: 'bank_current_step',
+				options: { location: '1/2/3', step },
+				location: undefined,
+			} as any)
+
+		expect(feedback(2)).toBe(true)
+		expect(feedback(1)).toBe(false)
+	})
+})
+
+describe('bank_pushed through button-references', () => {
+	const refLocation = { pageNumber: 1, row: 2, column: 3 }
+	const targetLocation = { pageNumber: 4, row: 0, column: 1 }
+
+	function setup(pushed: boolean) {
+		const ctx = createControls()
+		ctx.pageStore.getControlIdAt.mockReturnValue('control:ref')
+		ctx.pageStore.getLocationOfControlId.mockImplementation((id) =>
+			id === 'control:target' ? targetLocation : undefined
+		)
+		ctx.controlsStore.getControlFollowingReferences.mockImplementation((id) =>
+			id === 'control:ref' ? ({ controlId: 'control:target', supportsPushed: true, pushed } as any) : undefined
+		)
+
+		const checked: string[][] = []
+		ctx.controls.on('checkFeedbacksById', (...ids) => checked.push(ids))
+
+		const result = ctx.controls.executeFeedback({
+			id: 'fb1',
+			definitionId: 'bank_pushed',
+			options: { location: '1/2/3' },
+			location: undefined,
+		} as any)
+
+		return { ...ctx, result, checked }
+	}
+
+	test('reports the push state of the referenced control', () => {
+		expect(setup(true).result).toBe(true)
+		expect(setup(false).result).toBe(false)
+	})
+
+	test('rechecks when the referenced control changes push state', () => {
+		const { controlEvents, checked } = setup(false)
+
+		controlEvents.emit('updateButtonState', refLocation, false, undefined)
+		expect(checked).toEqual([])
+
+		controlEvents.emit('updateButtonState', targetLocation, true, undefined)
+		expect(checked).toEqual([['fb1']])
+	})
+
+	test('rechecks when the reference is redrawn, as it may now point elsewhere', async () => {
+		vi.useFakeTimers()
+		try {
+			const { graphicsController, checked } = setup(false)
+			await vi.runOnlyPendingTimersAsync() // the button_drawn listener is attached on setImmediate
+
+			const onButtonDrawn = graphicsController.on.mock.calls.find(([event]) => event === 'button_drawn')?.[1]
+			expect(onButtonDrawn).toBeDefined()
+
+			onButtonDrawn!(refLocation, {} as any)
+			await vi.runAllTimersAsync()
+
+			expect(checked).toEqual([['fb1']])
+		} finally {
+			vi.useRealTimers()
+		}
 	})
 })
