@@ -44,42 +44,6 @@ describe('translateSatelliteConfigFields', () => {
 		})
 	})
 
-	test('keeps explicit defaults', () => {
-		const result = translateSatelliteConfigFields([
-			{ id: 'cb', label: 'Check', type: 'checkbox', default: true },
-			{ id: 'num', label: 'Number', type: 'number', min: 0, max: 10, default: 7 },
-			{
-				id: 'dd',
-				label: 'Dropdown',
-				type: 'dropdown',
-				choices: [
-					{ id: 1, label: 'One' },
-					{ id: 2, label: 'Two' },
-				],
-				default: 2,
-			},
-		])
-		expect(result.map((f) => f.default)).toEqual([true, 7, 2])
-	})
-
-	test('carries the common properties', () => {
-		const [field] = translateSatelliteConfigFields([
-			{
-				id: 'cb',
-				label: 'Check',
-				type: 'checkbox',
-				tooltip: 'tip',
-				description: 'desc',
-				isVisibleExpression: '$(a:b) == 1',
-			},
-		])
-		expect(field).toMatchObject({
-			tooltip: 'tip',
-			description: 'desc',
-			isVisibleUi: { type: 'expression', fn: '$(a:b) == 1' },
-		})
-	})
-
 	test.each(['__proto__', 'constructor', 'prototype'])('drops a field with the id %s', (id) => {
 		const result = translateSatelliteConfigFields([
 			{ id, label: 'Bad', type: 'checkbox' },

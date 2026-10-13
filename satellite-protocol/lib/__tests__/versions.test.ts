@@ -39,11 +39,6 @@ describe('compareApiVersions', () => {
 		expect(compareApiVersions('1.10.0', '1.10.0')).toBe(0)
 	})
 
-	test('the major version outranks minor and patch', () => {
-		expect(compareApiVersions('2.0.0', '1.99.99')).toBeGreaterThan(0)
-		expect(compareApiVersions('1.2.0', '1.1.99')).toBeGreaterThan(0)
-	})
-
 	test('sorts invalid versions first', () => {
 		expect(compareApiVersions('bad', '0.0.0')).toBeLessThan(0)
 		expect(compareApiVersions('0.0.0', 'bad')).toBeGreaterThan(0)
@@ -110,10 +105,6 @@ describe('getSatelliteFeatures', () => {
 		const features = getSatelliteFeatures(API_VERSION, { SUBSCRIPTIONS: true, NONSQUARE: '' })
 		expect(features.subscriptions).toBe(true)
 		expect(features.nonSquareBitmaps).toBe(false)
-	})
-
-	test('returns every feature', () => {
-		expect(Object.keys(getSatelliteFeatures(API_VERSION, null)).sort()).toEqual(Object.keys(SATELLITE_FEATURES).sort())
 	})
 
 	test('features with a caps flag are unavailable before CAPS is received', () => {

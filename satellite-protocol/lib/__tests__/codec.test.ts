@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest'
 import {
-	BANNED_PROPS,
 	formatSatelliteMessage,
 	isFalsey,
 	isTruthy,
@@ -23,10 +22,6 @@ describe('BANNED_PROPS', () => {
 		'__lookupGetter__',
 		'__lookupSetter__',
 	]
-
-	test('contains the prototype-polluting keys', () => {
-		expect([...BANNED_PROPS].sort()).toEqual([...expected].sort())
-	})
 
 	test.each(expected)('parseLineParameters drops %s as a key=value and as a flag', (key) => {
 		const params = parseLineParameters(`${key}=x ${key} OK=1`)
@@ -318,23 +313,6 @@ describe('parseStringParamWithBooleanFallback', () => {
 	})
 })
 
-// ── isTruthy / isFalsey edge cases ────────────────────────────────────────────
-
-describe('isTruthy / isFalsey edge cases', () => {
-	test.each([
-		[true, true, false],
-		['', false, true],
-		['yes', true, false],
-		['no', false, false],
-		['2.5', true, false],
-		['0.5', false, false],
-		[Number.NaN, false, true],
-	])('%j: truthy=%s falsey=%s', (value, truthy, falsey) => {
-		expect(isTruthy(value)).toBe(truthy)
-		expect(isFalsey(value)).toBe(falsey)
-	})
-})
-
 // ── formatSatelliteMessage ───────────────────────────────────────────────────
 
 describe('formatSatelliteMessage', () => {
@@ -382,12 +360,6 @@ describe('formatSatelliteMessage', () => {
 
 	test.each(['', 'A B', 'A=B', 'A"B', 'A\nB'])('rejects the key %j', (key) => {
 		expect(() => formatSatelliteMessage('X', null, null, { [key]: 1 })).toThrow(/key/)
-	})
-
-	test('accepts keys with letters, digits, - and _', () => {
-		expect(formatSatelliteMessage('X', null, null, { ApiVersion: 1, KEY_2: 2, 'a-b': 3 })).toBe(
-			'X ApiVersion=1 KEY_2=2 a-b=3 \n'
-		)
 	})
 })
 

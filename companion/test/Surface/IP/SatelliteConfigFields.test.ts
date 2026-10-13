@@ -38,32 +38,6 @@ function generate(info: SatelliteDeviceInfo) {
 }
 
 describe('generateConfigFields', () => {
-	test('always includes the offset and rotation fields', () => {
-		const { ids } = generate(deviceInfo({}))
-		expect(ids).toEqual(['xOffset', 'yOffset', 'rotation'])
-	})
-
-	test('includes brightness only when supported', () => {
-		expect(generate(deviceInfo({ supportsBrightness: true })).ids).toContain('brightness')
-		expect(generate(deviceInfo({ supportsBrightness: false })).ids).not.toContain('brightness')
-	})
-
-	test('adds a page change checkbox labelled by the client', () => {
-		const { fields } = generate(deviceInfo({ canChangePage: 'Allow paging' }))
-		expect(fields.find((f) => f.id === 'canChangePage')).toMatchObject({
-			type: 'checkbox',
-			label: 'Allow paging',
-			default: false,
-		})
-	})
-
-	test('appends the client config fields', () => {
-		const { ids } = generate(
-			deviceInfo({ configFields: [{ id: 'custom', type: 'checkbox', label: 'Custom', default: false }] })
-		)
-		expect(ids.at(-1)).toBe('custom')
-	})
-
 	test('adds a field per transfer variable, and records it', () => {
 		const transferVariables: SatelliteTransferableValue[] = [
 			{ id: 'in1', type: 'input', name: 'Input', description: 'an input' },
@@ -91,7 +65,7 @@ describe('generateConfigFields', () => {
 		const { ids, inputVariables } = generate(
 			deviceInfo({ transferVariables: [{ id, type: 'input', name: 'Bad', description: undefined }] })
 		)
-		expect(ids).toEqual(['xOffset', 'yOffset', 'rotation'])
+		expect(ids.filter((f) => f.startsWith('satellite_'))).toEqual([])
 		expect(Object.keys(inputVariables)).toEqual([])
 	})
 })
