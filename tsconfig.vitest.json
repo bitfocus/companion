@@ -8,7 +8,8 @@
 		"shared-lib/lib/**/*spec.ts",
 		"shared-lib/lib/**/*test.ts",
 		"shared-lib/lib/**/__tests__/*",
-		"shared-lib/lib/**/__mocks__/*"
+		"shared-lib/lib/**/__mocks__/*",
+		"satellite-protocol/lib/**/__tests__/*"
 	],
 	"compilerOptions": {
 		"composite": true,
@@ -27,5 +28,10 @@
 		"target": "es2024",
 		"lib": ["es2024", "ESNext.Collection", "ESNext.Iterator", "ESNext.TypedArrays"]
 	},
-	"references": [{ "path": "./companion" }, { "path": "./config-tool" }, { "path": "./shared-lib" }]
+	"references": [
+		{ "path": "./companion" },
+		{ "path": "./config-tool" },
+		{ "path": "./shared-lib" },
+		{ "path": "./satellite-protocol" }
+	]
 }

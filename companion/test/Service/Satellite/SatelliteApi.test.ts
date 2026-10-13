@@ -1,13 +1,10 @@
 import { describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
+import { API_VERSION, MAX_LINE_LENGTH, parseLineParameters } from '@companion-app/satellite-protocol'
 import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
 import type { ImageResult } from '../../../lib/Graphics/ImageResult.js'
 import type { Logger } from '../../../lib/Log/Controller.js'
-import {
-	API_VERSION,
-	SatelliteSocketWrapper,
-	ServiceSatelliteApi,
-} from '../../../lib/Service/Satellite/SatelliteApi.js'
+import { SatelliteSocketWrapper, ServiceSatelliteApi } from '../../../lib/Service/Satellite/SatelliteApi.js'
 import type { ServiceApi } from '../../../lib/Service/ServiceApi.js'
 import type { SurfaceController } from '../../../lib/Surface/Controller.js'
 import type { SurfaceIPSatellite } from '../../../lib/Surface/IP/Satellite.js'
@@ -176,6 +173,17 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.lastMessage).toContain('PONG test')
 		})
 
+		test('closes the connection when a line exceeds the maximum length', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('PING 1\n' + 'x'.repeat(MAX_LINE_LENGTH + 1))
+
+			expect(socket.writtenData[0]).toContain('PONG 1')
+			expect(socket.lastMessage).toContain('Line too long')
+			expect(socket.destroyed).toBe(true)
+		})
+
 		test('only strips a trailing carriage return', () => {
 			const { api, logger } = createService()
 			const { socket, processMessage } = createSocketAndInit(api, logger)
@@ -278,6 +286,29 @@ describe('ServiceSatelliteApi', () => {
 
 			expect(socket.lastMessage).toContain('ERROR')
 			expect(socket.lastMessage).toContain('Device already added')
+		})
+
+		test('does not run a complete line that exceeds the maximum length', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('PING ' + 'x'.repeat(MAX_LINE_LENGTH) + '\n')
+
+			expect(socket.writtenData.some((m) => m.startsWith('PONG'))).toBe(false)
+			expect(socket.lastMessage).toContain('Line too long')
+			expect(socket.destroyed).toBe(true)
+		})
+
+		test('escapes a DEVICEID containing quotes and backslashes in the reply', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage('ADD-DEVICE DEVICEID="a\\"b\\\\c" PRODUCT_NAME="Test"\n')
+
+			expect(parseLineParameters(socket.lastMessage!.slice('ADD-DEVICE '.length, -1)).DEVICEID).toBe('a"b\\c')
 		})
 
 		test('error when device exists on different socket', () => {
@@ -1133,6 +1164,7 @@ describe('ServiceSatelliteApi', () => {
 				['-7.25', -7],
 				['1e300', 100],
 				['-1e300', -100],
+				['', -1],
 			])('DIRECTION=%s is normalised to %d steps', (direction, expected) => {
 				const { api, logger, surfaceController } = createService()
 				const { socket, processMessage } = createSocketAndInit(api, logger)

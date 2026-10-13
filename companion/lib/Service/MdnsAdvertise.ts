@@ -1,11 +1,11 @@
 import os from 'node:os'
 import { Bonjour } from '@julusian/bonjour-service'
+import { API_VERSION as SATELLITE_API_VERSION } from '@companion-app/satellite-protocol'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { AppInfo } from '../Registry.js'
 import { DISABLE_IPv6 } from '../Resources/Constants.js'
 import { ServiceBase } from './Base.js'
-import { API_VERSION as SATELLITE_API_VERSION } from './Satellite/SatelliteApi.js'
 
 /**
  * Class providing mDNS/Bonjour advertisement of Companion's satellite ports,
