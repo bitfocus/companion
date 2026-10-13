@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { resolveReleaseVersion } from '../satellite-protocol/release-version.mts'
+import { resolveReleaseVersion } from '../satellite_protocol_release_version.mts'
 
 describe('resolveReleaseVersion', () => {
 	describe('tag push', () => {
