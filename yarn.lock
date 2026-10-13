@@ -1757,6 +1757,7 @@ __metadata:
   resolution: "@companion-app/satellite-protocol@workspace:satellite-protocol"
   dependencies:
     typescript: "npm:@typescript/typescript6@^6.0.2"
+    typescript-7: "npm:typescript@^7.0.2"
     zod: "npm:^4.6.5"
   languageName: unknown
   linkType: soft
