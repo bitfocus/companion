@@ -124,7 +124,7 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 			<div className="flex flex-wrap items-center justify-between gap-2">
 				<div className="flex flex-wrap items-center gap-2">
 					<h4 className="text-xs font-bold uppercase tracking-wider text-muted mb-0">Module Versions</h4>
-					<RefreshModuleInfo moduleType={moduleType} moduleId={moduleId} iconOnly />
+					<RefreshModuleInfo moduleType={moduleType} moduleId={moduleId} />
 					<span className="text-2xs text-muted">
 						<StoreLastUpdatedTimestamp timestamp={moduleStoreInfo?.lastUpdated} />
 					</span>
