@@ -8,7 +8,6 @@ import {
 	faPlug,
 	faRotate,
 	faSearch,
-	faTableCells,
 	faTrash,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -27,7 +26,6 @@ import { THEME_CHOICES } from '~/Theme/themeChoices.js'
 import { themeStore } from '~/Theme/ThemeState.js'
 import { commandPaletteOpen } from './CommandPaletteState.js'
 import { ALL_NAV_PAGES } from './navRegistry.js'
-import { pageMatrixOpen } from './PageMatrixState.js'
 
 interface CommandItem {
 	id: string
@@ -110,19 +108,6 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 		}
 
 		// 2. Quick Actions
-		items.push({
-			id: 'action:page-matrix',
-			category: 'Quick Actions',
-			title: 'Page Matrix Overview',
-			subtitle: 'Visual overview of every page',
-			icon: faTableCells,
-			onSelect: () => {
-				void navigate({ to: '/buttons' })
-				pageMatrixOpen.set(true)
-				closePalette()
-			},
-		})
-
 		items.push({
 			id: 'action:rescan-usb',
 			category: 'Quick Actions',
