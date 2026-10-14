@@ -412,15 +412,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 	)
 }
 
-function ImportToggleField({
-	name,
-	disabled,
-	sub,
-}: {
-	name: (typeof CONTENT_OPTION_KEYS)[number]
-	disabled: boolean
-	sub?: boolean
-}) {
+function ImportToggleField({ name, disabled }: { name: (typeof CONTENT_OPTION_KEYS)[number]; disabled: boolean }) {
 	const field = useFieldContext<ImportOrResetType>()
 	const meta = CONFIG_OPTION_META[name]
 
@@ -429,7 +421,6 @@ function ImportToggleField({
 			icon={meta.icon}
 			label={meta.label}
 			disabled={disabled}
-			sub={sub}
 			value={field.state.value !== 'unchanged' && !disabled}
 			setValue={(val) => field.handleChange(val ? 'reset-and-import' : 'unchanged')}
 			onBlur={field.handleBlur}

@@ -15,13 +15,11 @@ import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { buildContextResolutionForPreview, ExpressionValuePreview } from './ExpressionValuePreview.js'
 import { FieldOrExpression } from './FieldOrExpression.js'
 import { FormLabel } from './Form.js'
-import { Grid } from './Grid.js'
 import { InlineHelpIcon } from './InlineHelp.js'
 
 type SetInnerValueFn = (value: JsonValue | undefined) => void
 
 export interface PropertyFieldRowProps {
-	layout?: 'form' | 'inspector'
 	label: string
 	tooltip?: string
 	/** Hint shown below the field. Replaced by expressionDescription when in expression mode. */
@@ -55,7 +53,6 @@ export interface PropertyFieldRowProps {
 }
 
 export function PropertyFieldRow({
-	layout = 'form',
 	label,
 	tooltip,
 	description,
@@ -104,51 +101,12 @@ export function PropertyFieldRow({
 		</FieldOrExpression>
 	)
 
-	if (layout === 'inspector') {
-		return (
-			<div className={classNames('property-inspector-row', { hidden })}>
-				<FormLabel htmlFor={inputId} className={classNames('property-inspector-label', labelClassName)}>
-					{label}
-					{activeFeatures && <InputFeatureIcons {...activeFeatures} />}
-					{tooltip && <InlineHelpIcon className="ms-1">{tooltip}</InlineHelpIcon>}
-					{value.isExpression && (
-						<ExpressionValuePreview
-							expression={stringifyVariableValue(value.value) ?? ''}
-							controlId={controlId}
-							fieldDefinition={fieldDefinition}
-							contextResolution={buildContextResolutionForPreview(
-								fieldDefinition.contextVariableResolution,
-								allRawOptions
-							)}
-						/>
-					)}
-				</FormLabel>
-				<div className="property-inspector-input">{inputControl}</div>
-				<div className="property-inspector-pin">{pinToggle}</div>
-				{isOverridden && (
-					<div className="property-inspector-status">
-						<span title="Value has a linked feedback override">
-							<FontAwesomeIcon icon={faLayerGroup} /> Linked feedback
-						</span>
-					</div>
-				)}
-				{activeDescription && <div className="property-inspector-description">{activeDescription}</div>}
-			</div>
-		)
-	}
-
 	return (
-		<>
-			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames(labelClassName, { hidden: hidden })}>
+		<div className={classNames('property-inspector-row', { hidden })}>
+			<FormLabel htmlFor={inputId} className={classNames('property-inspector-label', labelClassName)}>
 				{label}
 				{activeFeatures && <InputFeatureIcons {...activeFeatures} />}
 				{tooltip && <InlineHelpIcon className="ms-1">{tooltip}</InlineHelpIcon>}
-				{isOverridden && (
-					<span title="Value has a linked feedback override">
-						<FontAwesomeIcon icon={faLayerGroup} />
-					</span>
-				)}
-				{pinToggle}
 				{value.isExpression && (
 					<ExpressionValuePreview
 						expression={stringifyVariableValue(value.value) ?? ''}
@@ -161,10 +119,16 @@ export function PropertyFieldRow({
 					/>
 				)}
 			</FormLabel>
-			<Grid.Col sm={8} className={classNames({ hidden: hidden })}>
-				{inputControl}
-				{activeDescription && <div className="form-text">{activeDescription}</div>}
-			</Grid.Col>
-		</>
+			<div className="property-inspector-input">{inputControl}</div>
+			<div className="property-inspector-pin">{pinToggle}</div>
+			{isOverridden && (
+				<div className="property-inspector-status">
+					<span title="Value has a linked feedback override">
+						<FontAwesomeIcon icon={faLayerGroup} /> Linked feedback
+					</span>
+				</div>
+			)}
+			{activeDescription && <div className="property-inspector-description">{activeDescription}</div>}
+		</div>
 	)
 }

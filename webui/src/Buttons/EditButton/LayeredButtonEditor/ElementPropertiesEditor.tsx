@@ -219,7 +219,6 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 	return (
 		<>
 			<PropertyFieldRow
-				layout="inspector"
 				label={field.label}
 				tooltip={field.tooltip}
 				features={getInputFeatures(field)}
@@ -260,7 +259,6 @@ const ListSchemaFieldWrapper = observer(function ListSchemaFieldWrapper({
 							updateCell(rowIndex, cellField.id, newCell)
 						return (
 							<PropertyFieldRow
-								layout="inspector"
 								key={cellField.id}
 								label={cellField.label}
 								tooltip={cellField.tooltip}

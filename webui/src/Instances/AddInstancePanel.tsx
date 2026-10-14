@@ -18,7 +18,6 @@ import { StatusFilterPill } from '~/Components/StatusFilterPill.js'
 import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { filterProducts, useAllModuleProducts, type FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
-import { CloseButton, ContextHelpButton, type ContextHelpButtonProps } from '~/Layout/PanelIcons.js'
 import { LastUpdatedTimestamp } from '~/Modules/LastUpdatedTimestamp.js'
 import { getModuleProductName, groupModuleCatalog } from '~/Modules/ModuleCatalog.js'
 import { RefreshModulesList } from '~/Modules/RefreshModulesList.js'
@@ -32,20 +31,9 @@ import { useModuleVersionSelectOptions } from './useModuleVersionSelectOptions.j
 
 interface AddInstancePanelProps {
 	service: AddInstanceService
-
-	title: string
-	helpAction: ContextHelpButtonProps['action']
-	isSubpanel?: boolean
-	isModal?: boolean
 }
 
-export const AddInstancePanel = observer(function AddInstancePanel({
-	service,
-	title,
-	helpAction,
-	isSubpanel,
-	isModal,
-}: AddInstancePanelProps) {
+export const AddInstancePanel = observer(function AddInstancePanel({ service }: AddInstancePanelProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
 	const [filter, setFilter] = useState('')
@@ -119,16 +107,6 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 
 	return (
 		<>
-			{!isModal && (
-				<div className="secondary-panel-simple-header">
-					<h4 className="panel-title">{selectedModule ? `Configure ${selectedModule.product}` : title}</h4>
-					<div className="header-buttons">
-						<ContextHelpButton action={helpAction} />
-						<CloseButton closeFn={service.closeAddInstance} visibilityClass={isSubpanel ? '' : 'xl:hidden'} />
-					</div>
-				</div>
-			)}
-
 			<div className="secondary-panel-simple-body">
 				{selectedModule ? (
 					<AddInstanceConfigureStep
@@ -137,7 +115,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 						onBack={() => setSelectedModule(null)}
 					/>
 				) : (
-					<div className={classNames('w-full', !isModal && 'max-w-3xl mx-auto')}>
+					<div className="w-full">
 						<div className="mb-3 space-y-3 px-1 pt-1">
 							<SearchBox filter={filter} setFilter={setFilter} placeholder="Filter modules..." className="w-full h-9" />
 							<div className="flex flex-wrap items-center justify-between gap-2">

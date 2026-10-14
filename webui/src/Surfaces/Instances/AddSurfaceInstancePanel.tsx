@@ -9,14 +9,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC'
 export const AddSurfaceInstancePanel = observer(function AddSurfaceInstancePanel() {
 	const service = useAddSurfaceInstanceService()
 
-	return (
-		<AddInstancePanel
-			service={service}
-			isModal={true}
-			title="Add Surface Integration"
-			helpAction="/user-guide/surfaces/"
-		/>
-	)
+	return <AddInstancePanel service={service} />
 })
 
 function useAddSurfaceInstanceService(): AddInstanceService {
@@ -27,11 +20,6 @@ function useAddSurfaceInstanceService(): AddInstanceService {
 		() => ({
 			moduleType: ModuleInstanceType.Surface,
 
-			closeAddInstance: () => {
-				// it's always safe to return to /surfaces/integrations (i.e. it will always display correctly)
-				// if the window is wide-enough, ConfigureSurfacesPage will remove the last part of the path.
-				void navigate({ to: '/surfaces/integrations' })
-			},
 			openConfigureInstance: (instanceId) => {
 				void navigate({ to: '/surfaces/integrations/$instanceId', params: { instanceId } })
 			},

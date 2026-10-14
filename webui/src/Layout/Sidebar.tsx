@@ -206,7 +206,6 @@ function SidebarMenuItem(item: SidebarMenuItemProps) {
 interface SidebarSubMenuItemProps {
 	name: string
 	path: string
-	target?: string
 	/**
 	 * Whether this is the page of its section that is open, including on that page's own child routes (an item
 	 * selected from its list). The link's own matching is exact, since a section's pages nest inside each other.
@@ -214,18 +213,16 @@ interface SidebarSubMenuItemProps {
 	isActive: boolean
 }
 
-function SidebarSubMenuItem({ name, path, target, isActive }: SidebarSubMenuItemProps) {
+function SidebarSubMenuItem({ name, path, isActive }: SidebarSubMenuItemProps) {
 	return (
 		<li>
 			<Link
 				className={classNames('nav-link nav-sub-link', { active: isActive })}
 				to={path}
-				target={target}
 				activeOptions={{ exact: true }}
 			>
 				<span className="nav-sub-dot" />
 				{name}
-				{target === '_blank' && <FontAwesomeIcon icon={faExternalLinkSquare} className="ms-1 full-label" />}
 			</Link>
 		</li>
 	)

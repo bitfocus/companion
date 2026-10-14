@@ -9,17 +9,10 @@ import type { AddInstanceService } from '~/Instances/AddInstanceService'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 
-export const AddConnectionsPanel = observer(function AddConnectionsPanel({ isModal }: { isModal?: boolean }) {
+export const AddConnectionsPanel = observer(function AddConnectionsPanel() {
 	const service = useAddConnectionService()
 
-	return (
-		<AddInstancePanel
-			service={service}
-			isModal={isModal}
-			title="Add New Connection"
-			helpAction="/user-guide/config/connections#adding-a-connection"
-		/>
-	)
+	return <AddInstancePanel service={service} />
 })
 
 function useAddConnectionService(): AddInstanceService {
@@ -31,9 +24,6 @@ function useAddConnectionService(): AddInstanceService {
 		() => ({
 			moduleType: ModuleInstanceType.Connection,
 
-			closeAddInstance: () => {
-				void navigate({ to: '/connections' })
-			},
 			openConfigureInstance: (connectionId) => {
 				void navigate({ to: '/connections/$connectionId', params: { connectionId } })
 			},

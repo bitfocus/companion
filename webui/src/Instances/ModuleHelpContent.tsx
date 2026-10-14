@@ -14,20 +14,12 @@ export function resolveModuleHelpUrl(helpPath: string): string {
  * from. Shared by the help modal and the connection edit panel's Help tab so both parse and
  * sanitize identically.
  */
-export function ModuleHelpContent({
-	markdown,
-	helpUrl,
-	className,
-}: {
-	markdown: string
-	helpUrl: string
-	className?: string
-}): React.JSX.Element {
+export function ModuleHelpContent({ markdown, helpUrl }: { markdown: string; helpUrl: string }): React.JSX.Element {
 	const html = useMemo(() => {
 		const marked = new Marked()
 		if (helpUrl) marked.use(baseUrl(helpUrl))
 		return { __html: sanitizeHtmlString(marked.parse(markdown) as string, { allowImages: true }) }
 	}, [markdown, helpUrl])
 
-	return <div dangerouslySetInnerHTML={html} className={className ? `markdown ${className}` : 'markdown'} />
+	return <div dangerouslySetInnerHTML={html} className="markdown" />
 }

@@ -91,7 +91,7 @@ export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.El
 							</Modal.Header>
 							<Modal.Body>
 								<MyErrorBoundary>
-									<AddConnectionsPanel isModal={true} />
+									<AddConnectionsPanel />
 								</MyErrorBoundary>
 							</Modal.Body>
 						</Modal.Popup>

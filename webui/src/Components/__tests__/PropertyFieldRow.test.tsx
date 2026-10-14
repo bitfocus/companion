@@ -8,10 +8,9 @@ vi.mock('../ExpressionValuePreview.js', () => ({
 }))
 
 describe('PropertyFieldRow', () => {
-	it.each(['form', 'inspector'] as const)('keeps variable icons and previews with the label in %s layout', (layout) => {
+	it('keeps variable icons and previews with the label', () => {
 		const { container } = render(
 			<PropertyFieldRow
-				layout={layout}
 				label="Text"
 				value={{ isExpression: true, value: '1 + 1' }}
 				setValue={vi.fn()}

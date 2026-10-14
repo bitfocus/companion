@@ -68,7 +68,6 @@ export const FormPropertyField = observer(function FormPropertyField({
 
 	return (
 		<PropertyFieldRow
-			layout="inspector"
 			label={label}
 			tooltip={tooltip}
 			description={description}
