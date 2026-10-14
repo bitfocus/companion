@@ -227,7 +227,6 @@
 	--color-canvas-workspace: rgb(228, 228, 228); /* darker fill behind the layer canvas */
 	--color-toolbar-bg: rgb(245, 245, 245); /* quick-actions / canvas footer strips */
 	--color-toolbar-fg: #4a4a4a; /* toolbar icon & label text */
-	--color-resize-bar-bg-hover: #dedede; /* panel resize bar hover (base is --color-surface-muted-hover) */
 	--color-mode-toggle-bg: #ececec;
 	--color-mode-toggle-border: #c8c8c8;
 
@@ -464,7 +463,6 @@
 		--color-canvas-workspace: #0f1114;
 		--color-toolbar-bg: #1a1d22;
 		--color-toolbar-fg: #c9ced6;
-		--color-resize-bar-bg-hover: #2f343d;
 		--color-mode-toggle-bg: #23272e;
 		--color-mode-toggle-border: #3a3f49;
 

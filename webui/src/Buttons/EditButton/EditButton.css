@@ -270,39 +270,84 @@
 	background-color: var(--color-surface-dark);
 }
 
+/* The divide between the preview and the options, styled as the SplitPanels handle turned on its side: a
+   full-width rule with an opaque grip of dots over its centre. */
 .button-layer-resize-handle {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	height: 10px;
-	background-color: var(--color-surface-muted-hover);
-	cursor: row-resize;
+	position: relative;
 	flex-shrink: 0;
-	border-block: 1px solid var(--color-border);
-	/* Lift the bar slightly so it reads as a distinct divider between panels */
-	box-shadow:
-		0 1px 3px var(--color-shadow-10),
-		0 -1px 2px var(--color-shadow-4);
+	height: 1rem;
 	z-index: 1;
+	cursor: row-resize;
+	touch-action: none;
+	--divider-color: var(--color-action-border);
+	background-image: linear-gradient(var(--divider-color), var(--divider-color));
+	background-position: center;
+	background-size: 100% 1px;
+	background-repeat: no-repeat;
+
+	&::before,
+	&::after {
+		content: '';
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		pointer-events: none;
+	}
+
+	&::before {
+		transform: translate(-50%, -50%);
+		width: 36px;
+		height: 16px;
+		border-radius: 6px;
+		background-color: var(--color-action-bg);
+		border: 1px solid var(--divider-color);
+		transition: background-color 0.15s ease;
+	}
+
+	&::after {
+		/* Two rows of three dots, centred inside the grip. */
+		transform: translate(-8.5px, -4.5px);
+		width: 3px;
+		height: 3px;
+		border-radius: 50%;
+		background-color: var(--color-action-text);
+		box-shadow:
+			7px 0 0 var(--color-action-text),
+			14px 0 0 var(--color-action-text),
+			0 6px 0 var(--color-action-text),
+			7px 6px 0 var(--color-action-text),
+			14px 6px 0 var(--color-action-text);
+	}
 
 	/* `active` is a drag in progress, `focus` a keyboard resize */
 	&:hover,
 	&[data-separator='active'],
 	&[data-separator='focus'] {
-		background-color: var(--color-resize-bar-bg-hover);
-
-		.button-layer-resize-grip {
-			background-color: var(--color-border-strong);
-		}
+		--divider-color: var(--color-action-border-hover);
 	}
 
-	/* A short rounded bar in the middle: the least fussy way to say "drag me" */
-	.button-layer-resize-grip {
-		width: 2rem;
-		height: 3px;
-		border-radius: 2px;
-		background-color: var(--color-border-medium);
-		transition: background-color 0.15s ease-in-out;
+	&:hover::before,
+	&[data-separator='focus']::before {
+		background-color: var(--color-action-hover);
+	}
+
+	&[data-separator='active']::before {
+		background-color: var(--color-action-pressed);
+	}
+
+	&:focus-visible {
+		outline: none;
+	}
+
+	&[data-separator='focus']::before {
+		outline: 2px solid var(--color-action-focus);
+		outline-offset: 2px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.button-layer-resize-handle::before {
+		transition: none;
 	}
 }
 

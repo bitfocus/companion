@@ -181,10 +181,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 					<ElementsList styleStore={styleStore} controlId={controlId} />
 				</div>
 			</Panel>
-			<Separator className="button-layer-resize-handle">
-				{/* A grip, so the bar reads as something to drag rather than a gap between the panels */}
-				<span className="button-layer-resize-grip" />
-			</Separator>
+			<Separator className="button-layer-resize-handle" />
 			<Panel id="bottom" className="button-layer-options" minSize="250px">
 				{isPinnedViewSelected ? (
 					<PinnedPropertiesEditor
