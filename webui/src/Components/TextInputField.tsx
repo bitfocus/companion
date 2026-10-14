@@ -186,11 +186,8 @@ export function TextInputFieldSimple({
 			id={id}
 			ref={inputRef}
 			type="text"
-			className={classNames(
-				'form-input text-input-field',
-				{ 'invalid-value': valueIsInvalid, 'has-validity-icon': validity !== 'unknown' },
-				className
-			)}
+			className={classNames('form-input text-input-field', { 'has-validity-icon': validity !== 'unknown' }, className)}
+			aria-invalid={valueIsInvalid}
 			// eslint-disable-next-line react/forbid-elements -- This is the wrapper
 			render={multiline ? <textarea rows={2} /> : undefined}
 			disabled={disabled}

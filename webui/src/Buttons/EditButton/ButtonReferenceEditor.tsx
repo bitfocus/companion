@@ -143,9 +143,9 @@ function ResolvedLocationRow({ controlId, location, navigateToControl }: Resolve
 					{/* eslint-disable-next-line react/forbid-elements -- TODO: TextInputField has no readOnly or external validity */}
 					<input
 						className={classNames('form-input text-input-field', {
-							'invalid-value': validity === 'invalid',
 							'has-validity-icon': validity !== 'unknown',
 						})}
+						aria-invalid={validity === 'invalid'}
 						readOnly
 						value={displayValue}
 						title={error !== undefined ? error : displayValue}

@@ -73,6 +73,7 @@ export const SecretTextInputField = observer(function SecretTextInputField({
 						{ 'has-validity-icon': validity !== 'unknown' },
 						inputClassName
 					)}
+					aria-invalid={validity === 'invalid'}
 					value={showValue}
 					title={tooltip}
 					placeholder={placeholder}

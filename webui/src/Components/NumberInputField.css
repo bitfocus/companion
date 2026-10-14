@@ -72,7 +72,7 @@
 	}
 
 	/* Invalid: the input and its stepper buttons share one red outline */
-	.number-field-group:has(.number-field-input.invalid-value) {
+	.number-field-group:has(.number-field-input[aria-invalid='true']) {
 		.number-field-input,
 		.number-field-input:focus-visible,
 		.number-field-decrement,

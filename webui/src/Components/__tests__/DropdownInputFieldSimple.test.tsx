@@ -237,6 +237,11 @@ describe('Validity (checkValid and isKnownValue)', () => {
 		expect(container.querySelector('.dropdown-field')).toHaveClass('dropdown-field-invalid')
 	})
 
+	it('marks the trigger aria-invalid when the value is not in choices', () => {
+		const { container } = renderField({ initialValue: 'unknown-id' })
+		expect(container.querySelector('.dropdown-field-select-trigger')).toHaveAttribute('aria-invalid', 'true')
+	})
+
 	it('does not apply dropdown-field-invalid when value is in choices', () => {
 		const { container } = renderField({ initialValue: 'apple' })
 		expect(container.querySelector('.dropdown-field')).not.toHaveClass('dropdown-field-invalid')

@@ -145,15 +145,10 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 	const isAtMinimum = typeof minSelection === 'number' && currentValue.length <= minSelection
 	const isMaxReached = typeof maxSelection === 'number' && value.length >= maxSelection
 
+	const isInvalid = checkValid?.(currentValue.map((v) => v.id)) === false
+
 	return (
-		<div
-			className={classNames(
-				'dropdown-field',
-				{ 'dropdown-field-invalid': checkValid?.(currentValue.map((v) => v.id)) === false },
-				className
-			)}
-			title={tooltip}
-		>
+		<div className={classNames('dropdown-field', { 'dropdown-field-invalid': isInvalid }, className)} title={tooltip}>
 			<Combobox.Root<DropdownChoiceId, true, FuzzyChoice>
 				multiple={true}
 				virtualized={!hasGroups}
@@ -185,7 +180,7 @@ export const MultiDropdownInputField = observer(function MultiDropdownInputField
 							</button>
 						</span>
 					))}
-					<Combobox.Input className="dropdown-field-input" name={htmlName} onBlur={onBlur} />
+					<Combobox.Input className="dropdown-field-input" name={htmlName} onBlur={onBlur} aria-invalid={isInvalid} />
 					<Combobox.Trigger className="dropdown-field-trigger">
 						<ChevronDownIcon className="dropdown-field-icon" />
 					</Combobox.Trigger>

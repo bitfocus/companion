@@ -49,10 +49,6 @@
 		color: var(--color-muted);
 	}
 
-	.text-input-field.invalid-value {
-		border-color: var(--color-danger);
-	}
-
 	/* A label/value row already spaces its rows, and the margin would pull the label off-centre */
 	.edit-field-row & {
 		margin-bottom: 0;
