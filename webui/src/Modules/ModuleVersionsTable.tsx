@@ -26,6 +26,8 @@ import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { LastUpdatedTimestamp as StoreLastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
+import { ModuleInstallationBadge } from './ModuleInstallationBadge.js'
+import type { ModuleInstallationKind } from './ModuleInstallState.js'
 import { getModuleInstances } from './ModuleInstances.js'
 import { RefreshModuleInfo } from './RefreshModuleInfo.js'
 
@@ -209,7 +211,7 @@ interface ModuleVersionRowProps {
 	moduleId: string
 	versionId: string
 	installedInfo: ClientModuleVersionInfo | undefined
-	installationKind: string
+	installationKind: Exclude<ModuleInstallationKind, 'Available'>
 	storeInfo: ModuleStoreModuleInfoVersion | undefined
 }
 
@@ -266,11 +268,7 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 			<td className="py-2 px-3 font-mono text-xs font-semibold text-body">
 				<div className="flex flex-wrap items-center gap-1.5">
 					<span>{installedInfo?.displayName ?? versionId}</span>
-					{installedInfo && (
-						<span className="px-1.5 py-0.5 rounded text-3xs bg-primary/10 text-primary font-sans">
-							{installationKind}
-						</span>
-					)}
+					{installedInfo && <ModuleInstallationBadge kind={installationKind} />}
 					{storeInfo?.releaseChannel === 'beta' && (
 						<span
 							title="Beta"

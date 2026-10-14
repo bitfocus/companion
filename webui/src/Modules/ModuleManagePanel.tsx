@@ -24,6 +24,8 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { formatModuleProduct, getModuleProducts } from './ModuleCatalog.js'
 import { ModuleDeprecationAlert, useModuleDeprecation } from './ModuleDeprecation.js'
 import { ModuleDocsPanel } from './ModuleDocsPanel.js'
+import { ModuleInstallationBadge } from './ModuleInstallationBadge.js'
+import { getPreferredModuleVersion, type ModuleInstallationKind } from './ModuleInstallState.js'
 import { getModuleInstances } from './ModuleInstances.js'
 import { ModuleVersionsTable } from './ModuleVersionsTable.js'
 import { useModuleStoreInfo } from './useModuleStoreInfo.js'
@@ -90,11 +92,7 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 	const isConnection = moduleType === ModuleInstanceType.Connection
 	const usages = getModuleInstances(rootStore, moduleType, moduleId)
 	const { manufacturer, products } = getModuleProducts(moduleInfo, moduleStoreBaseInfo)
-	const version =
-		installedInfo?.devVersion ??
-		installedInfo?.stableVersion ??
-		installedInfo?.betaVersion ??
-		installedInfo?.builtinVersion
+	const version = getPreferredModuleVersion(installedInfo)
 	const helpPath = version?.helpPath || moduleStoreBaseInfo?.helpUrl
 	const docsInstalledVersion = docsVersion
 		? [...(installedInfo?.installedVersions ?? []), installedInfo?.devVersion, installedInfo?.builtinVersion].find(
@@ -117,9 +115,9 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 	)
 	const docsTabVersion = docsVersion ?? version?.versionId
 	const issueUrl = moduleInfo?.bugUrl || moduleStoreBaseInfo?.githubUrl
-	const badges = [
-		...(installedInfo?.builtinVersion ? ['Built-in'] : []),
-		...(installedInfo?.devVersion ? ['Development'] : []),
+	const installationKinds: ModuleInstallationKind[] = [
+		...(installedInfo?.builtinVersion ? (['Built-in'] as const) : []),
+		...(installedInfo?.devVersion ? (['Development'] as const) : []),
 	]
 
 	const deprecation = useModuleDeprecation(
@@ -150,10 +148,8 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 					<h3 className="text-base font-bold truncate text-body mb-0" title={moduleId}>
 						{moduleName}
 					</h3>
-					{badges.map((badge) => (
-						<span key={badge} className="shrink-0 rounded-md bg-surface-muted px-2 py-1 text-2xs font-medium text-body">
-							{badge}
-						</span>
+					{installationKinds.map((kind) => (
+						<ModuleInstallationBadge key={kind} kind={kind} />
 					))}
 				</div>
 

@@ -26,6 +26,8 @@ import { ImportModules } from './ImportCustomModule.js'
 import { LastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
 import { getModuleProductName, groupModuleCatalog } from './ModuleCatalog.js'
 import { ModuleDeprecationBadge, useModuleDeprecation } from './ModuleDeprecation.js'
+import { ModuleInstallationBadge } from './ModuleInstallationBadge.js'
+import { getModuleInstallationKind, getModuleVersionLabel, isModuleInstalled } from './ModuleInstallState.js'
 import { RefreshModulesList } from './RefreshModulesList.js'
 import { useModuleStoreInfo } from './useModuleStoreInfo.js'
 
@@ -61,15 +63,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 	const filteredTypeProducts = allProducts.filter((p) => !filterType || filterType === p.moduleType)
 	const typeProducts = filteredTypeProducts.filter((p) => {
 		let isVisible = false
-		if (p.installedInfo) {
-			if (
-				(p.installedInfo.installedVersions.length > 0 ||
-					p.installedInfo.devVersion ||
-					p.installedInfo.builtinVersion) &&
-				visibleModules.visibility.installed
-			)
-				isVisible = true
-		}
+		if (isModuleInstalled(p.installedInfo) && visibleModules.visibility.installed) isVisible = true
 		if (
 			p.storeInfo &&
 			visibleModules.visibility.available &&
@@ -143,15 +137,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 		allProducts.filter((product) => product.moduleType === ModuleInstanceType.Connection)
 	)
 	const surfaceCount = countModules(allProducts.filter((product) => product.moduleType === ModuleInstanceType.Surface))
-	const installedCount = countModules(
-		allProducts.filter(
-			(product) =>
-				product.installedInfo &&
-				(product.installedInfo.installedVersions.length > 0 ||
-					!!product.installedInfo.devVersion ||
-					!!product.installedInfo.builtinVersion)
-		)
-	)
+	const installedCount = countModules(allProducts.filter((product) => isModuleInstalled(product.installedInfo)))
 	const availableCount = countModules(allProducts.filter((product) => !!product.storeInfo))
 	const deprecatedCount = countModules(allProducts.filter((product) => !!product.storeInfo?.deprecationReason))
 
@@ -289,26 +275,8 @@ const ModulesListRow = observer(function ModulesListRow({
 	const installedInfo = modules.getModuleInfo(moduleInfo.moduleType, moduleInfo.moduleId)
 	const displayName = getModuleProductName(moduleInfo)
 	const installedVersions = installedInfo?.installedVersions ?? []
-	const version =
-		installedInfo?.devVersion ??
-		installedInfo?.stableVersion ??
-		installedInfo?.betaVersion ??
-		installedInfo?.builtinVersion
-	const installationLabel = installedInfo?.devVersion
-		? 'Development'
-		: installedVersions.length > 0
-			? 'Installed'
-			: installedInfo?.builtinVersion
-				? 'Built-in'
-				: 'Available'
-	const versionLabel =
-		installedVersions.length > 1 && !installedInfo?.devVersion
-			? `${installedVersions.length} versions`
-			: version && (version.versionId === 'dev' || version.versionId === 'builtin')
-				? version.displayName
-				: version
-					? `v${version.versionId}`
-					: undefined
+	const installationKind = getModuleInstallationKind(installedInfo)
+	const versionLabel = getModuleVersionLabel(installedInfo)
 
 	// No single version is in context in this list, so only the module as a whole can be deprecated here
 	const deprecation = useModuleDeprecation(moduleInfo.moduleType, moduleInfo.moduleId, null)
@@ -393,20 +361,7 @@ const ModulesListRow = observer(function ModulesListRow({
 							{versionLabel}
 						</span>
 					)}
-					<span
-						className={classNames(
-							'shrink-0 rounded-md px-1.5 py-0.5 text-2xs font-medium',
-							installationLabel === 'Development'
-								? 'bg-tone-warning-fill/10 text-tone-warning-text'
-								: installationLabel === 'Available'
-									? 'bg-surface-muted text-muted'
-									: installationLabel === 'Installed'
-										? 'bg-tone-good-fill/10 text-tone-good-text'
-										: 'bg-primary/10 text-primary'
-						)}
-					>
-						{installationLabel}
-					</span>
+					<ModuleInstallationBadge kind={installationKind} />
 				</div>
 			</td>
 		</tr>

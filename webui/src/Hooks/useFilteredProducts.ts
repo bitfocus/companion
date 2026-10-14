@@ -4,6 +4,7 @@ import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
 import { getModuleProductEntries, getModuleProducts } from '~/Modules/ModuleCatalog.js'
+import { getPreferredModuleVersion } from '~/Modules/ModuleInstallState.js'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 
@@ -22,9 +23,7 @@ export function useAllModuleProducts(
 		for (const moduleInfo of modules.allModules.values()) {
 			if (onlyModuleType && moduleInfo.moduleType !== onlyModuleType) continue
 
-			// Prefer the dev version to highlight any pending changes, then chain through the stability levels
-			const latestVersion =
-				moduleInfo.devVersion ?? moduleInfo.stableVersion ?? moduleInfo.betaVersion ?? moduleInfo.builtinVersion
+			const latestVersion = getPreferredModuleVersion(moduleInfo)
 			if (!latestVersion) continue // shouldn't happen, but just in case
 
 			const productInfo = getModuleProducts(moduleInfo.display, null)

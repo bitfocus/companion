@@ -17,6 +17,7 @@ import { useCallback, useContext, useEffect, useId, useMemo, useState } from 're
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { Badge } from '~/Components/Badge.js'
 import { Button, LinkButton } from '~/Components/Button.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { Form, FormLabel } from '~/Components/Form.js'
@@ -33,6 +34,8 @@ import {
 	getModuleProducts,
 	groupModuleCatalog,
 } from '~/Modules/ModuleCatalog.js'
+import { ModuleInstallationBadge } from '~/Modules/ModuleInstallationBadge.js'
+import { getModuleInstallationKind, getModuleVersionLabel } from '~/Modules/ModuleInstallState.js'
 import { RefreshModulesList } from '~/Modules/RefreshModulesList.js'
 import { useModuleStoreInfo } from '~/Modules/useModuleStoreInfo.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
@@ -193,12 +196,6 @@ interface AddInstanceEntryProps {
 const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addInstance }: AddInstanceEntryProps) {
 	const { surfaceInstances } = useContext(RootAppStoreContext)
 	const installedInfo = moduleInfo.installedInfo
-	const version =
-		installedInfo?.devVersion ??
-		installedInfo?.stableVersion ??
-		installedInfo?.betaVersion ??
-		installedInfo?.builtinVersion ??
-		installedInfo?.installedVersions[0]
 	const existingSurfaceCount =
 		moduleInfo.moduleType === ModuleInstanceType.Surface
 			? surfaceInstances.getAllOfModuleId(moduleInfo.moduleId).length
@@ -209,19 +206,8 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 		existingSurfaceCount > 0 ? moduleInfo.moduleId : undefined
 	)
 	const isLimitReached = isSurfaceInstanceLimitReached(installedInfo, storeInfo, existingSurfaceCount)
-	const installationLabel = installedInfo?.devVersion
-		? 'Development'
-		: installedInfo?.installedVersions.length
-			? 'Installed'
-			: installedInfo?.builtinVersion
-				? 'Built-in'
-				: 'Available'
-	const versionLabel =
-		installedInfo && installedInfo.installedVersions.length > 1 && !installedInfo.devVersion
-			? `${installedInfo.installedVersions.length} versions`
-			: version && version.versionId !== 'dev' && version.versionId !== 'builtin'
-				? `v${version.versionId}`
-				: undefined
+	const installationKind = getModuleInstallationKind(installedInfo)
+	const versionLabel = getModuleVersionLabel(installedInfo)
 	const productLabels = getModuleProductEntries(
 		getModuleProducts(installedInfo?.display, moduleInfo.storeInfo),
 		moduleInfo.name
@@ -249,18 +235,13 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 						{versionLabel}
 					</span>
 				)}
-				<span
-					className={classNames(
-						'shrink-0 rounded-md px-1.5 py-0.5 text-2xs font-medium',
-						installationLabel === 'Installed'
-							? 'bg-tone-good-fill/10 text-tone-good-text'
-							: installationLabel === 'Development'
-								? 'bg-tone-warning-fill/10 text-tone-warning-text'
-								: 'bg-surface-muted text-muted'
-					)}
-				>
-					{isLimitReached ? 'Limit reached' : installationLabel}
-				</span>
+				{isLimitReached ? (
+					<Badge color="secondary" variant="tonal" className="shrink-0">
+						Limit reached
+					</Badge>
+				) : (
+					<ModuleInstallationBadge kind={installationKind} />
+				)}
 			</span>
 			<FontAwesomeIcon icon={faPlus} className="shrink-0 text-xs text-action-text" aria-hidden="true" />
 		</Button>
