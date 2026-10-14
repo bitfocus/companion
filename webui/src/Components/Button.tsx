@@ -5,19 +5,7 @@ import classNames from 'classnames'
 import * as React from 'react'
 import type { Complete } from '@companion-module/base'
 
-export type ButtonColor =
-	| 'primary'
-	| 'secondary'
-	| 'success'
-	| 'danger'
-	| 'warning'
-	| 'info'
-	| 'light'
-	| 'dark'
-	| 'gray'
-	| 'disabled'
-	| 'link'
-	| 'variable'
+export type ButtonColor = 'primary' | 'secondary' | 'danger'
 
 interface ButtonVisualProps {
 	className?: string
@@ -41,7 +29,6 @@ interface ButtonVisualProps {
 function getColorClasses(props: ButtonVisualProps): string {
 	return classNames(
 		'button',
-		'btn', // For backwards compatibility with coreui - should be removed eventually
 		{
 			[`button-${props.variant}-${props.color}`]: props.variant && props.color,
 			[`button-${props.variant}`]: props.variant && !props.color,

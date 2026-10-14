@@ -116,8 +116,6 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 												{ label: 'Mini (3×2)', rows: 2, columns: 3 },
 												{ label: 'Standard (5×3)', rows: 3, columns: 5 },
 												{ label: 'XL (8×4)', rows: 4, columns: 8 },
-												{ label: 'Plus (4×2)', rows: 2, columns: 4 },
-												{ label: 'Loupedeck (4×3)', rows: 3, columns: 4 },
 											].map((preset) => (
 												<Button
 													key={preset.label}

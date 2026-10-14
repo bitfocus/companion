@@ -20,7 +20,7 @@ import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/G
 import { Modal } from '~/Components/Modal'
 import { SearchBox } from '~/Components/SearchBox.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { makeAbsolutePath } from '~/Resources/util.js'
+import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { THEME_CHOICES } from '~/Theme/themeChoices.js'
 import { themeStore } from '~/Theme/ThemeState.js'
@@ -89,7 +89,7 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 	}, [])
 
 	// Build the complete searchable catalog
-	const allItems = useMemo((): CommandItem[] => {
+	const allItems = useComputed((): CommandItem[] => {
 		const items: CommandItem[] = []
 
 		// 1. Navigation — every page the sidebar and section tabs can reach

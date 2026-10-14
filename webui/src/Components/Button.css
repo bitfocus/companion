@@ -124,49 +124,16 @@
 	--btn-active-border-color: var(--color-action-danger-pressed-solid);
 }
 
-/* Legacy safe-action colours now share the default neutral treatment. The props remain compatible
-   with integrations and wrapper components; status tones live in badges, alerts and pills. */
-.button-secondary,
-.button-success,
-.button-info,
-.button-warning,
-.button-light,
-.button-dark,
-.button-gray,
-.button-white,
-.button-variable {
-	--btn-color: var(--color-action-text);
-}
-
-.button-disabled {
-	--btn-color: var(--color-action-disabled-text);
-	--btn-hover-bg: var(--color-action-disabled-bg);
-	--btn-active-bg: var(--color-action-disabled-bg);
-}
-
 .button-outline,
 .button-outline-primary,
-.button-outline-secondary,
-.button-outline-success,
-.button-outline-info,
-.button-outline-warning,
-.button-outline-light,
-.button-outline-dark,
-.button-outline-variable {
+.button-outline-secondary {
 	--btn-bg: transparent;
 	--btn-disabled-bg: transparent;
 }
 
 .button-ghost,
 .button-ghost-primary,
-.button-ghost-secondary,
-.button-ghost-success,
-.button-ghost-info,
-.button-ghost-warning,
-.button-ghost-light,
-.button-ghost-dark,
-.button-ghost-variable,
-.button-link {
+.button-ghost-secondary {
 	--btn-bg: transparent;
 	--btn-border-color: transparent;
 	--btn-hover-border-color: transparent;

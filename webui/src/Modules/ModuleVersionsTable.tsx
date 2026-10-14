@@ -388,11 +388,9 @@ function ModuleUninstallButton({ moduleType, moduleId, versionId, disabled }: Mo
 			{isRunningInstallOrUninstall ? (
 				<FontAwesomeIcon icon={faSync} spin className="text-xs" />
 			) : (
-				<FontAwesomeIcon
-					icon={faTrash}
-					className="text-xs"
-					title={disabled ? 'Cannot remove version, it is in use' : 'Remove version'}
-				/>
+				<span title={disabled ? 'Cannot remove version, it is in use' : 'Remove version'}>
+					<FontAwesomeIcon icon={faTrash} className="text-xs" />
+				</span>
 			)}
 		</Button>
 	)
@@ -465,7 +463,9 @@ function ModuleInstallButton({ moduleType, moduleId, versionId, apiVersion, hasT
 			{isRunningInstallOrUninstall ? (
 				<FontAwesomeIcon icon={faSync} spin className="text-xs" />
 			) : (
-				<FontAwesomeIcon icon={faPlus} className="text-xs" title="Install version" />
+				<span title="Install version">
+					<FontAwesomeIcon icon={faPlus} className="text-xs" />
+				</span>
 			)}
 		</Button>
 	)

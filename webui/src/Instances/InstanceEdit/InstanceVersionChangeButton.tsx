@@ -220,7 +220,7 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 										onOpenChange={handleAdvancedModeChange}
 										className={classNames(getGridColClasses({ sm: 12 }), 'instance-version-advanced p-0')}
 									>
-										<Collapse.Trigger className="button button-link button-sm p-0">
+										<Collapse.Trigger className="button button-ghost button-sm p-0">
 											<span className="me-1">{advancedMode ? '▼' : '▶'}</span>
 											Advanced Options
 										</Collapse.Trigger>

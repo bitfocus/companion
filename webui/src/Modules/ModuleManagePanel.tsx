@@ -169,25 +169,32 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 			</div>
 
 			<nav className={EDIT_TAB_BAR_CLASS} aria-label="Module views">
-				{(['overview', 'docs'] as const).map((view) => (
-					<Link
-						key={view}
-						to="/modules/$moduleType/$moduleId"
-						params={{ moduleType, moduleId }}
-						search={view === 'docs' ? { tab: 'docs', docsVersion: docsVersion ?? version?.versionId } : {}}
-						aria-current={(tab === 'docs' ? view === 'docs' : view === 'overview') ? 'page' : undefined}
-						className={classNames(
-							EDIT_TAB_CLASS,
-							(tab === 'docs' ? view === 'docs' : view === 'overview')
-								? EDIT_TAB_ACTIVE_CLASS
-								: EDIT_TAB_INACTIVE_CLASS,
-							'no-underline'
-						)}
-					>
-						<FontAwesomeIcon icon={view === 'docs' ? faFileLines : faInfoCircle} className="text-muted" />
-						<span>{view === 'docs' ? 'Docs' : 'Overview'}</span>
-					</Link>
-				))}
+				<Link
+					to="/modules/$moduleType/$moduleId"
+					params={{ moduleType, moduleId }}
+					search={{}}
+					aria-current={!tab ? 'page' : undefined}
+					className={classNames(EDIT_TAB_CLASS, !tab ? EDIT_TAB_ACTIVE_CLASS : EDIT_TAB_INACTIVE_CLASS, 'no-underline')}
+				>
+					<FontAwesomeIcon icon={faInfoCircle} className="text-muted" />
+					<span>Overview</span>
+				</Link>
+
+				<Link
+					to="/modules/$moduleType/$moduleId"
+					params={{ moduleType, moduleId }}
+					search={{ tab: 'docs', docsVersion: docsVersion ?? version?.versionId }}
+					aria-current={tab === 'docs' ? 'page' : undefined}
+					className={classNames(
+						EDIT_TAB_CLASS,
+						tab === 'docs' ? EDIT_TAB_ACTIVE_CLASS : EDIT_TAB_INACTIVE_CLASS,
+						'no-underline'
+					)}
+				>
+					<FontAwesomeIcon icon={faFileLines} className="text-muted" />
+					<span>Docs</span>
+				</Link>
+
 				{moduleStoreBaseInfo?.githubUrl && (
 					<EditPanelTabLink href={moduleStoreBaseInfo.githubUrl} icon={faGithub} label="GitHub" />
 				)}

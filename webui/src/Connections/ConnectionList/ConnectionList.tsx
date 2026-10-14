@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useRef, useState } from 'react'
 import type { ClientConnectionConfig, ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
@@ -83,7 +83,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 
 	const [searchText, setSearchText] = useState('')
 
-	const filteredConnections = useMemo(() => {
+	const filteredConnections = useComputed(() => {
 		const query = searchText.trim().toLowerCase()
 		if (!query) return allConnections
 
@@ -97,7 +97,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 		})
 	}, [allConnections, searchText, modules])
 
-	const counts = useMemo(() => {
+	const counts = useComputed(() => {
 		let disabled = 0
 		let ok = 0
 		let warning = 0

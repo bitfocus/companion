@@ -99,18 +99,7 @@ export const AllColors: Story = {
 		disabled: { control: 'boolean' },
 	},
 	render: function Render({ variant, size, disabled }) {
-		const colors = [
-			'primary',
-			'secondary',
-			'success',
-			'danger',
-			'warning',
-			'info',
-			'light',
-			'dark',
-			'disabled',
-			'link',
-		] as const
+		const colors = ['primary', 'secondary', 'danger'] as const
 		return (
 			<div className="flex gap-2 flex-wrap">
 				{colors.map((color) => (
@@ -136,7 +125,7 @@ export const ExternalLink: StoryObj<typeof LinkButtonExternal> = {
 	render: (args) => <LinkButtonExternal {...args} />,
 	args: {
 		children: 'Open docs',
-		color: 'info',
+		color: 'secondary',
 		href: 'https://bitfocus.io',
 		target: '_blank',
 		rel: 'noopener noreferrer',
@@ -166,8 +155,8 @@ export const GroupVertical: StoryObj<typeof ButtonGroup> = {
 export const GroupMixedColors: StoryObj<typeof ButtonGroup> = {
 	render: (args) => (
 		<ButtonGroup {...args}>
-			<Button color="success">Save</Button>
-			<Button color="warning">Reset</Button>
+			<Button color="primary">Save</Button>
+			<Button color="secondary">Reset</Button>
 			<Button color="danger">Delete</Button>
 		</ButtonGroup>
 	),

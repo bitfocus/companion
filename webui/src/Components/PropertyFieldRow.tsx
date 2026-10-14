@@ -85,22 +85,6 @@ export function PropertyFieldRow({
 	const activeDescription =
 		value.isExpression && expressionDescription !== undefined ? expressionDescription : description
 
-	const inputControl = disableAutoExpression ? (
-		children({ value: value.value }, setInnerValue, inputId)
-	) : (
-		<FieldOrExpression
-			inputId={inputId}
-			value={value}
-			setValue={setValue}
-			localVariablesStore={localVariablesStore}
-			entityType={entityType}
-			isLocatedInGrid={isLocatedInGrid}
-			disabled={disabled}
-		>
-			{children({ value: value.value }, setInnerValue, inputId)}
-		</FieldOrExpression>
-	)
-
 	return (
 		<div className={classNames('property-inspector-row', { hidden })}>
 			<FormLabel htmlFor={inputId} className={classNames('property-inspector-label', labelClassName)}>
@@ -119,7 +103,23 @@ export function PropertyFieldRow({
 					/>
 				)}
 			</FormLabel>
-			<div className="property-inspector-input">{inputControl}</div>
+			<div className="property-inspector-input">
+				{disableAutoExpression ? (
+					children({ value: value.value }, setInnerValue, inputId)
+				) : (
+					<FieldOrExpression
+						inputId={inputId}
+						value={value}
+						setValue={setValue}
+						localVariablesStore={localVariablesStore}
+						entityType={entityType}
+						isLocatedInGrid={isLocatedInGrid}
+						disabled={disabled}
+					>
+						{children({ value: value.value }, setInnerValue, inputId)}
+					</FieldOrExpression>
+				)}
+			</div>
 			<div className="property-inspector-pin">{pinToggle}</div>
 			{isOverridden && (
 				<div className="property-inspector-status">
