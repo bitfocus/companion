@@ -94,7 +94,7 @@ export const SidebarFooter = observer(function SidebarFooter({
 	}
 
 	return (
-		<div className="sidebar-footer2 flex flex-col gap-2 p-3 border-t border-border/80 shrink-0">
+		<div className="sidebar-footer2 sidebar-footer-full flex flex-col gap-2 p-3 border-t border-border/80 shrink-0">
 			{/* Row 1: Full-width Version (Bigger) & Update Channel Tag */}
 			<div className="flex items-center justify-between gap-2 w-full min-w-0">
 				<span className="version font-bold text-sm text-body truncate" title={versionBuild || undefined}>

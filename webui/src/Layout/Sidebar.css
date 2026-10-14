@@ -94,6 +94,18 @@
 	}
 }
 
+/* The expanded footer lays out at the full sidebar width and clips, so while the sidebar animates open from
+   narrow its rows slide into view instead of wrapping into the narrow width first. 16rem is the sidebar's
+   width, less the footer's padding (p-3) and the sidebar's right border. */
+.sidebar-footer-full {
+	overflow: hidden;
+	white-space: nowrap;
+
+	> * {
+		min-width: calc(16rem - 1.5rem - 1px);
+	}
+}
+
 .sidebar-logo-mark-narrow {
 	width: 2.75rem;
 	height: 2.75rem;
