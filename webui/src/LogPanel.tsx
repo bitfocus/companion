@@ -37,7 +37,7 @@ function isLevelEnabled(config: LogConfig, key: keyof LogConfig): boolean {
 }
 
 interface ClientLogLineExt extends Omit<ClientLogLine, 'time'> {
-	id?: string
+	id: string
 	time: number | null
 }
 

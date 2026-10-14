@@ -41,10 +41,10 @@ function TriggerPickerRow({ id, trigger, selectTrigger, saving }: TriggerPickerR
 	)
 }
 interface TriggerPickerProps {
-	saving?: boolean
+	saving: boolean
 	selectControl: (controlId: string, stepId: string, setId: ActionSetId, mode: 'append' | 'replace') => void
 }
-export const TriggerPicker = observer(function TriggerPicker({ selectControl, saving = false }: TriggerPickerProps) {
+export const TriggerPicker = observer(function TriggerPicker({ selectControl, saving }: TriggerPickerProps) {
 	const [search, setSearch] = useState('')
 	const { triggersList } = useContext(RootAppStoreContext)
 

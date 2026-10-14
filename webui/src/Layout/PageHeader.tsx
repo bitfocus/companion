@@ -7,7 +7,7 @@ import { useSidebarState } from './Sidebar.js'
 import { TopBarPageContext } from './TopBarContext.js'
 
 export interface PageHeaderProps {
-	icon?: IconDefinition
+	icon: IconDefinition
 	title: string
 	helpAction?: ContextHelpButtonProps['action']
 	className?: string
@@ -34,7 +34,7 @@ export function PageHeader({ icon, title, helpAction, className }: PageHeaderPro
 		<div className={classNames('page-header', mobileMode && 'justify-center text-center', className)}>
 			<div className={classNames('page-header-info', mobileMode && 'flex flex-col items-center')}>
 				<h1 className={classNames('page-title', mobileMode && 'justify-center')}>
-					{icon && <FontAwesomeIcon icon={icon} className="page-title-icon" />}
+					<FontAwesomeIcon icon={icon} className="page-title-icon" />
 					<span>{title}</span>
 					{helpAction && <ContextHelpButton action={helpAction} />}
 				</h1>

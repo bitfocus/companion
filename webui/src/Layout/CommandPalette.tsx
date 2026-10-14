@@ -31,7 +31,7 @@ interface CommandItem {
 	id: string
 	category: 'Navigation' | 'Connections' | 'Variables' | 'Quick Actions'
 	title: string
-	subtitle?: string
+	subtitle: string
 	icon: IconDefinition
 	badge?: string
 	onSelect: () => void
@@ -371,9 +371,7 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 																</span>
 															)}
 														</div>
-														{item.subtitle && (
-															<p className="text-2xs text-muted truncate mb-0 mt-0.5">{item.subtitle}</p>
-														)}
+														<p className="text-2xs text-muted truncate mb-0 mt-0.5">{item.subtitle}</p>
 													</div>
 												</div>
 

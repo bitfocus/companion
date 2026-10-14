@@ -418,7 +418,7 @@ function ImportToggleField({
 	sub,
 }: {
 	name: (typeof CONTENT_OPTION_KEYS)[number]
-	disabled?: boolean
+	disabled: boolean
 	sub?: boolean
 }) {
 	const field = useFieldContext<ImportOrResetType>()
@@ -446,7 +446,7 @@ function ImportToggleGroup({
 }: {
 	icon: IconDefinition
 	label: React.ReactNode
-	disabled?: boolean
+	disabled: boolean
 	defaultChecked: Record<string, ImportOrResetType>
 	defaultUnchecked: Record<string, ImportOrResetType>
 }) {

@@ -16,7 +16,7 @@ test.each(['replace', 'append'] as const)('%s preserves the trigger control ID f
 	const selectControl = vi.fn()
 	render(
 		<RootAppStoreContext.Provider value={{ triggersList } as RootAppStore}>
-			<TriggerPicker selectControl={selectControl} />
+			<TriggerPicker selectControl={selectControl} saving={false} />
 		</RootAppStoreContext.Provider>
 	)
 	await userEvent.setup().click(

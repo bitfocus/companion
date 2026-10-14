@@ -20,7 +20,7 @@ import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 interface ButtonPickerProps {
-	saving?: boolean
+	saving: boolean
 	selectButton: (
 		selectedControl: string,
 		selectedStep: string,
@@ -28,7 +28,7 @@ interface ButtonPickerProps {
 		mode: 'replace' | 'append'
 	) => void
 }
-export const ButtonPicker = observer(function ButtonPicker({ selectButton, saving = false }: ButtonPickerProps) {
+export const ButtonPicker = observer(function ButtonPicker({ selectButton, saving }: ButtonPickerProps) {
 	const { pages, userConfig } = useContext(RootAppStoreContext)
 
 	const { pageNumber, setPageNumber: setPickerPage, changePage: changePickerPage } = usePagePicker(pages.data.length, 1)

@@ -55,7 +55,7 @@ describe('Recorder button destination', () => {
 			} as unknown as RootAppStore
 			render(
 				<RootAppStoreContext.Provider value={store}>
-					<ButtonPicker selectButton={selectButton} />
+					<ButtonPicker selectButton={selectButton} saving={false} />
 				</RootAppStoreContext.Provider>
 			)
 			await user.click(screen.getByRole('button', { name: 'Select page 1 button' }))

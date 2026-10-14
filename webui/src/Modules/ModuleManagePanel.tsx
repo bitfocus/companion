@@ -29,8 +29,8 @@ import { useModuleStoreInfo } from './useModuleStoreInfo.js'
 interface ModuleManagePanelProps {
 	moduleType: ModuleInstanceType
 	moduleId: string
-	tab?: 'docs'
-	docsVersion?: string
+	tab: 'docs' | undefined
+	docsVersion: string | undefined
 }
 
 export const ModuleManagePanel = observer(function ModuleManagePanel({
