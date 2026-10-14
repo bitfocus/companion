@@ -29,16 +29,6 @@ interface EntityCellControlProps {
 	localVariablePrefix: string | null
 }
 
-function EntityDelayPill({ entity }: { entity: SomeEntityModel }) {
-	if (!('delay' in entity) || typeof entity.delay !== 'number' || entity.delay <= 0) return null
-
-	return (
-		<span className="inline-flex items-center px-2 py-0.5 rounded-md text-3xs font-semibold bg-tone-warning-fill/10 text-tone-warning-text border border-tone-warning-fill/20 shrink-0">
-			⏱️ {entity.delay}ms
-		</span>
-	)
-}
-
 export const EntityRowHeader = observer(function EntityRowHeader({
 	service,
 	entityTypeLabel,
@@ -162,8 +152,6 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 						)
 					)}
 				</div>
-
-				{isPanelCollapsed && <EntityDelayPill entity={entity} />}
 			</div>
 
 			{/* Right section: Clean ghost buttons + switch toggle + smooth accordion caret */}

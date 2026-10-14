@@ -7,10 +7,7 @@ import { EntityRowHeader } from '../EntityCellControls.js'
 
 type Props = ComponentProps<typeof EntityRowHeader>
 
-function renderAction(
-	delay = 0,
-	entityType: EntityModelType.Action | EntityModelType.Feedback = EntityModelType.Action
-) {
+function renderAction(entityType: EntityModelType.Action | EntityModelType.Feedback) {
 	const setPanelCollapsed = vi.fn()
 	render(
 		<EntityRowHeader
@@ -26,8 +23,6 @@ function renderAction(
 					variable: { isExpression: false, value: 'gauge' },
 				},
 				upgradeIndex: undefined,
-				// Legacy actions can still carry a delay field even though the current model uses duration groups.
-				...(delay > 0 ? { delay } : {}),
 			}}
 			entityDefinition={
 				{
@@ -53,7 +48,7 @@ function renderAction(
 
 describe('Collapsed action header', () => {
 	it('shows the action name without partial option-value summaries and can expand', async () => {
-		const { setPanelCollapsed } = renderAction()
+		const { setPanelCollapsed } = renderAction(EntityModelType.Action)
 		expect(screen.getByText('Local Variable: Set value')).toHaveAttribute('title', 'Local Variable: Set value')
 		expect(screen.queryByText('1/2/3')).not.toBeInTheDocument()
 		expect(screen.queryByText('gauge')).not.toBeInTheDocument()
@@ -62,14 +57,8 @@ describe('Collapsed action header', () => {
 	})
 
 	it('hides option-value summaries on collapsed conditions too', () => {
-		renderAction(0, EntityModelType.Feedback)
+		renderAction(EntityModelType.Feedback)
 		expect(screen.queryByText('1/2/3')).not.toBeInTheDocument()
-		expect(screen.queryByText('gauge')).not.toBeInTheDocument()
-	})
-
-	it('retains the action delay indicator', () => {
-		renderAction(500)
-		expect(screen.getByText('⏱️ 500ms')).toBeInTheDocument()
 		expect(screen.queryByText('gauge')).not.toBeInTheDocument()
 	})
 })
