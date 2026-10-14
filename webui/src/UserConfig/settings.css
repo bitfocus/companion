@@ -25,7 +25,7 @@
 
 .table-settings td:first-child {
 	font-weight: 500;
-	color: var(--color-text-body);
+	color: var(--color-body-text);
 	text-align: left;
 }
 
@@ -50,7 +50,7 @@
 	font-size: 0.75rem;
 	text-transform: uppercase;
 	letter-spacing: 0.06em;
-	color: var(--color-text-muted);
+	color: var(--color-muted);
 	background-color: var(--color-surface-muted);
 	padding: 0.625rem 1rem;
 	border-bottom: 1px solid var(--color-border-muted);
