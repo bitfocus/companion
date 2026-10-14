@@ -94,6 +94,18 @@
 	opacity: 0.8;
 }
 
+/* A note asking for attention: warning-tinted, with the body colour for the text so it stays readable */
+.edit-note-warning {
+	border-color: color-mix(in srgb, var(--color-tone-warning-fill) 35%, transparent);
+	background-color: color-mix(in srgb, var(--color-tone-warning-fill) 8%, transparent);
+	color: var(--color-body-text);
+
+	.edit-note-icon {
+		color: var(--color-tone-warning-text);
+		opacity: 1;
+	}
+}
+
 .edit-note-icon-good {
 	color: var(--color-tone-good-text);
 	opacity: 1;

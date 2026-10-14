@@ -1,9 +1,8 @@
-import { faDownload } from '@fortawesome/free-solid-svg-icons'
+import { faDownload, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext } from 'react'
-import type { ClientInstanceConfigBase, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import { StaticAlert } from '~/Components/Alert'
+import { useCallback, useContext, useState } from 'react'
+import { ModuleInstanceType, type ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
 import { Button } from '~/Components/Button'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useComputed } from '~/Resources/util.js'
@@ -57,22 +56,38 @@ export const MissingVersionsWarning = observer(function MissingVersionsWarning({
 
 	const installMissingMutation = useMutationExt(trpc.instances.modulesManager.installAllMissing.mutationOptions())
 
+	const [installing, setInstalling] = useState(false)
 	const doInstallAllMissing = useCallback(() => {
-		installMissingMutation.mutateAsync({ moduleType }).catch((e) => {
-			console.error('Install all missing failed', e)
-		})
+		setInstalling(true)
+		installMissingMutation
+			.mutateAsync({ moduleType })
+			.catch((e) => {
+				console.error('Install all missing failed', e)
+			})
+			.finally(() => setInstalling(false))
 	}, [installMissingMutation, moduleType])
 
 	if (missingCount === 0) return null
 
+	const noun = moduleType === ModuleInstanceType.Connection ? 'connection' : 'surface integration'
+
 	return (
-		<StaticAlert color="info">
-			Some modules do not have versions specified, or are not installed.
-			<br />
-			<Button color="secondary" className="mt-2" onClick={doInstallAllMissing}>
-				<FontAwesomeIcon icon={faDownload} />
-				&nbsp;Download &amp; Install missing versions
+		<div className="edit-note edit-note-warning flex-wrap" role="status">
+			<FontAwesomeIcon icon={faTriangleExclamation} className="edit-note-icon" aria-hidden="true" />
+			<span className="grow">
+				{missingCount === 1 ? `1 ${noun} has` : `${missingCount} ${noun}s have`} no installed module version
+			</span>
+			<Button
+				variant="outline"
+				size="sm"
+				className="inline-flex items-center gap-1.5"
+				onClick={doInstallAllMissing}
+				disabled={installing}
+				aria-busy={installing}
+			>
+				<FontAwesomeIcon icon={faDownload} aria-hidden="true" />
+				Install missing
 			</Button>
-		</StaticAlert>
+		</div>
 	)
 })

@@ -128,7 +128,7 @@ export const ConnectionsList = observer(function ConnectionsList({ selectedConne
 
 	return (
 		<div className="connections-list-container flex-column-layout h-full min-h-0 gap-3">
-			<div className="px-3">
+			<div className="px-1">
 				<MissingVersionsWarning moduleType={ModuleInstanceType.Connection} instances={connections.connections} />
 				<GenericConfirmModal ref={confirmModalRef} />
 				<ConnectionVariablesModal ref={variablesModalRef} />
