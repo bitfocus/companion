@@ -18,12 +18,6 @@
 	display: none !important;
 }
 
-/* Off-scale widths used by list toolbars and table cells. Tailwind has no utility at these sizes
-   and the codebase does not use arbitrary values, so they live here as named utilities. */
-.list-toolbar-search {
-	min-width: 200px;
-}
-
 .table-cell-version {
 	max-width: 100px;
 }
@@ -37,10 +31,6 @@
 
 .dialog-max-h {
 	max-height: 75vh;
-}
-
-.page-empty-state {
-	min-height: 75vh;
 }
 
 .log-source-cell {

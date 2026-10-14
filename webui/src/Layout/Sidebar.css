@@ -117,64 +117,6 @@
 	align-items: center;
 	justify-content: space-between;
 	padding: 1rem 1rem;
-
-	.btn-close {
-		padding: calc(1rem * 0.5) calc(1rem * 0.5);
-		margin-inline-end: calc(-0.5 * 1rem);
-		margin-top: calc(-0.5 * 1rem);
-		margin-bottom: calc(-0.5 * 1rem);
-	}
-}
-
-.sidebar-toggler {
-	position: relative;
-	box-sizing: content-box;
-	width: 0.5rem;
-	height: 0.5rem;
-	padding: 0.25rem 0.25rem;
-	background-color: transparent;
-	border: 0;
-	border-radius: 0.375rem;
-
-	&::before {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		content: '';
-		background-color: var(--color-text-faint);
-		mask: url("data:image/svg+xml,%0A%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cg xmlns='http://www.w3.org/2000/svg' transform='matrix%28-1 0 0 -1 512 512%29'%3E%3Cpath fill='%23000' d='M472,16H40A24.028,24.028,0,0,0,16,40V200H48V48H464V464H48V304H16V472a24.028,24.028,0,0,0,24,24H472a24.028,24.028,0,0,0,24-24V40A24.028,24.028,0,0,0,472,16Z'/%3E%3Cpolygon fill='%23000' points='209.377 363.306 232.004 385.933 366.627 251.31 232.004 116.687 209.377 139.313 305.374 235.311 16 235.311 16 267.311 305.372 267.311 209.377 363.306'/%3E%3C/g%3E%3C/svg%3E")
-			no-repeat center;
-		transition: transform 0.15s;
-
-		@media (prefers-reduced-motion: reduce) {
-			transition: none;
-		}
-	}
-
-	/* Override <a>'s hover style */
-	&:hover {
-		text-decoration: none;
-
-		&::before {
-			background-color: var(--color-muted);
-		}
-	}
-
-	&:focus {
-		position: relative;
-		outline: 0;
-		box-shadow: 0 0 0 0.25rem color-mix(in srgb, var(--color-brand) 25%, transparent);
-
-		&::before {
-			background-color: var(--color-muted);
-		}
-	}
-
-	@media (--bp-lg-down) {
-		display: none;
-	}
 }
 
 /* Backdrop background (mobile overlay) */
@@ -221,12 +163,6 @@
 	overflow-x: hidden;
 	overflow-y: auto;
 	list-style: none;
-
-	.nav-item + .nav-item,
-	.nav-item + .nav-group,
-	.nav-group + .nav-item {
-		margin-top: 1px;
-	}
 
 	.nav-link {
 		position: relative;
@@ -349,47 +285,6 @@
 		/* fix chrome 105+ width issue */
 	}
 
-	.nav-group {
-		position: relative;
-		border: 0 solid transparent;
-		border-radius: var(--radius);
-		transition: background 0.15s ease-in-out;
-
-		@media (prefers-reduced-motion: reduce) {
-			transition: none;
-		}
-
-		.nav-group-items {
-			padding: 0 0;
-			overflow: hidden;
-			transition: height 0.15s ease;
-
-			@media (prefers-reduced-motion: reduce) {
-				transition: none;
-			}
-		}
-
-		&:not(.show) .nav-group-items {
-			display: none;
-		}
-
-		&.show {
-			background: transparent;
-
-			.nav-group-toggle {
-				color: var(--color-text);
-			}
-
-			> .nav-group-toggle::after {
-				transform: rotate(180deg);
-			}
-
-			+ .show {
-				margin-top: 1px;
-			}
-		}
-	}
-
 	.nav-group-toggle {
 		cursor: pointer;
 
@@ -406,21 +301,6 @@
 			@media (prefers-reduced-motion: reduce) {
 				transition: none;
 			}
-		}
-	}
-
-	.nav-group-items {
-		padding: 0;
-		list-style: none;
-
-		.nav-link {
-			padding-inline-start: calc(
-				var(--sidebar-nav-link-padding-x) + 1.25rem + 0.75rem
-			); /* stylelint-disable-line function-disallowed-list */
-		}
-
-		.nav-icon {
-			margin-inline-start: calc(-1 * (1.25rem + 0.75rem)); /* stylelint-disable-line function-disallowed-list */
 		}
 	}
 }
@@ -456,29 +336,12 @@
 		.nav-icon {
 			flex: 0 0 calc(var(--sidebar-narrow-width) - (0.5rem * 2) - (var(--sidebar-nav-link-padding-x) * 2)); /* stylelint-disable-line function-disallowed-list */
 		}
-
-		.nav-group-items,
-		.nav-group.show .nav-group-items {
-			height: 0 !important; /* stylelint-disable-line declaration-no-important */
-			padding: 0 !important; /* stylelint-disable-line declaration-no-important */
-			margin: 0 !important; /* stylelint-disable-line declaration-no-important */
-			visibility: hidden;
-			opacity: 0;
-		}
-
-		.sidebar-toggler::before {
-			transform: rotate(-180deg);
-		}
 	}
 }
 
 .sidebar-narrow-unfoldable {
 	&.sidebar-unfolded {
 		box-shadow: 0 0.5rem 1rem var(--color-shadow-15);
-
-		.sidebar-toggler::before {
-			transform: rotate(-180deg);
-		}
 	}
 }
 
@@ -567,13 +430,6 @@
 		}
 	}
 
-	.nav-two-line .nav-link {
-		padding-top: 0.35rem;
-		padding-bottom: 0.35rem;
-
-		line-height: calc(1.5 * 0.85);
-	}
-
 	/* specific mobile-mode overrides for narrow mode. The .show is not necessary but makes the intent clearer. */
 	/* i.e., .sidebar.show indicates mobile-mode. In all other modes, CUI correctly handles these properties already. */
 	&.sidebar-narrow.show {
@@ -634,10 +490,6 @@
 			inset-inline-end: 0.125rem;
 			margin: 0;
 		}
-
-		.sidebar-nav .nav-group-items .nav-link {
-			padding-right: 0;
-		}
 	}
 
 	/* Folding is visual state only, so an accordion can still be open in React while the sidebar is
@@ -661,31 +513,6 @@
 		background-color: var(--color-surface-muted-hover);
 	}
 
-	.nav-secondary {
-		flex: none;
-		border-top: var(--border-width) solid var(--color-border);
-
-		.nav-group-toggle::after {
-			transform: rotate(180deg);
-		}
-
-		.show > .nav-group-toggle::after {
-			transform: rotate(0deg);
-		}
-	}
-
-	/* Sidebar groups, DOM: */
-	/*    .nav-group (".show" = when open) */
-	/*       .nav-link.nav-group-toggle */
-	/*           .nav-link */
-	/*       .nav-group-items */
-	.nav-group {
-		&.show > .nav-link {
-			/* make the toggler "active" when open (this only affects the caret in the "split-button", i.e. label is in a separate div) */
-			background: var(--sidebar-nav-link-active-bg);
-		}
-	}
-
 	.nav-group-toggle {
 		padding: var(--sidebar-nav-link-padding-y) var(--sidebar-nav-link-padding-x);
 
@@ -695,37 +522,6 @@
 
 		.nav-link {
 			margin-bottom: 0;
-		}
-	}
-
-	/* highlighting for the group-items container */
-	.nav-group-items {
-		padding-left: 0.75rem;
-		/* Indent sub-items to make hierarchy clear */
-	}
-
-	/* override CUI so nav-group-items show when sidebar is narrow */
-	&.sidebar-narrow .nav-group.show .nav-group-items,
-	&.sidebar-narrow-unfoldable:not(.show, .sidebar-unfolded) .nav-group-items {
-		height: auto;
-		visibility: visible;
-		opacity: 1;
-		padding-left: 0;
-		/* No indentation in narrow/folded mode to keep icons centered */
-
-		.nav-link {
-			padding-left: 0;
-		}
-	}
-
-	/* the individual buttons in a group */
-	.sidebar-nav .nav-group-items .nav-link {
-		padding-left: var(--sidebar-nav-link-padding-x);
-		transition: padding-left 0.1s;
-		justify-content: center;
-
-		&.nav-group-toggle {
-			padding-left: 0;
 		}
 	}
 
@@ -744,51 +540,6 @@
 	.sidebar-footer2 {
 		justify-content: left;
 		border-top: var(--border-width) solid var(--color-border);
-
-		.sidebar-footer-toggler {
-			display: flex;
-			overflow: hidden;
-
-			background: none;
-			border: none;
-
-			&:hover {
-				background: none;
-				border: none;
-			}
-
-			.nav-icon-wrapper {
-				cursor: pointer;
-
-				display: flex;
-				align-items: center;
-
-				.sidebar-toggler {
-					display: block;
-					width: 100%;
-				}
-			}
-
-			.version,
-			.version-sub {
-				display: block;
-
-				overflow: hidden;
-				white-space: nowrap;
-				text-overflow: ellipsis;
-			}
-
-			.version {
-				font-size: 0.95em;
-				color: var(--color-text);
-				display: block;
-			}
-
-			.version-sub {
-				font-size: 0.85em;
-				color: var(--color-muted);
-			}
-		}
 	}
 
 	/* the scrolling container in the sidebar: */

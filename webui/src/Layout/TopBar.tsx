@@ -20,7 +20,7 @@ import { Popover } from '~/Components/Popover.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { THEME_CHOICES } from '~/Theme/themeChoices.js'
 import { themeStore } from '~/Theme/ThemeState.js'
-import { AdminLockContext } from './AdminLockContext.js'
+import { useAdminLock } from './AdminLockContext.js'
 import { commandPaletteOpen } from './CommandPaletteState.js'
 import { navLocationForPath } from './navRegistry.js'
 import { ContextHelpButton } from './PanelIcons.js'
@@ -43,7 +43,7 @@ interface TopBarProps {
  */
 export const TopBar = observer(function TopBar({ page }: TopBarProps) {
 	const { userConfig } = useContext(RootAppStoreContext)
-	const { canLock, setLocked } = useContext(AdminLockContext)
+	const { canLock, setLocked } = useAdminLock()
 	const { mobileMode, handleShowSidebar } = useSidebarState()
 
 	const installName = userConfig.properties?.installName?.trim()

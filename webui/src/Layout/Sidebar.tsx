@@ -98,14 +98,10 @@ export function SidebarStateProvider({ children }: React.PropsWithChildren): Rea
 
 interface SidebarMenuItemProps {
 	name: string
-	subheading?: string
 	icon: IconDefinition | null | 'empty'
 	notifications?: React.ComponentType<Record<string, never>>
-	path?: string
-	activePath?: string
-	onClick?: () => void
+	path: string
 	target?: string
-	title?: string
 }
 
 /**
@@ -126,7 +122,7 @@ function NarrowModePopover({ title, children }: { title: React.ReactNode; childr
 	)
 }
 
-function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
+function SidebarMenuItemLabel(item: Omit<SidebarMenuItemProps, 'path'>) {
 	return (
 		<>
 			<span className="nav-icon-wrapper">
@@ -143,12 +139,6 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 
 			<span className="flex-auto truncate full-label">
 				<span>{item.name}</span>
-				{!!item.subheading && (
-					<>
-						<br />
-						<small>{item.subheading}</small>
-					</>
-				)}
 			</span>
 
 			{item.target === '_blank' && (
@@ -163,50 +153,17 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 }
 
 function SidebarMenuItem(item: SidebarMenuItemProps) {
-	const isNarrow = useContext(NarrowModeContext)
-	const onClick2 = (e: React.MouseEvent) => {
-		if (!item.onClick) return
-		e.preventDefault()
-		item.onClick()
-	}
-
-	// const groupCtx = useContext(SidebarGroupContext)
-	// Ensure the active link is visible
-	// TODO: this is a bit flawed, it doesn't allow the current group to be collapsed
-	// Maybe it could be hooked into the router so that it only changes when entering/leaving the group..
-	// useEffect(() => {
-	// 	if (active && groupCtx) groupCtx.setGroupVisible()
-	// }, [active, groupCtx])
-
 	// note: NarrowModePopover must wrap CNavLink directly to get a ref-forwarding component. It didn't work with CNavItem
 	return (
-		<li className={item.subheading ? 'nav-two-line' : undefined} onContextMenu={blockPropagation}>
-			<NarrowModePopover title={item.title || item.name}>
-				{item.path ? (
-					<Link
-						className="nav-link"
-						to={item.path}
-						target={item.target}
-						onClick={onClick2}
-						title={isNarrow ? undefined : item.title /* In narrow mode we put the title in the popover */}
-					>
-						<SidebarMenuItemLabel {...item} />
-					</Link>
-				) : (
-					<a className="nav-link cursor-pointer" onClick={onClick2} title={isNarrow ? undefined : item.title}>
-						<SidebarMenuItemLabel {...item} />
-					</a>
-				)}
+		<li onContextMenu={blockPropagation}>
+			<NarrowModePopover title={item.name}>
+				<Link className="nav-link" to={item.path} target={item.target}>
+					<SidebarMenuItemLabel {...item} />
+				</Link>
 			</NarrowModePopover>
 		</li>
 	)
 }
-
-// const SidebarGroupContext = createContext<{
-// 	setGroupVisible: () => void
-// }>({
-// 	setGroupVisible: () => {},
-// })
 
 interface SidebarSubMenuItemProps {
 	name: string
