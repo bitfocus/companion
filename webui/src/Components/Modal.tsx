@@ -6,7 +6,7 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type HTMLAttributes } from 'react'
-import type { ButtonColor } from './Button'
+import { Button, type ButtonColor } from './Button'
 import { MenuPortalContext } from './MenuPortalContext'
 
 // ─── Static Pulse Context ────────────────────────────────────────────────────
@@ -215,7 +215,7 @@ function ModalHeader({ className, children, closeButton, ...props }: ModalHeader
 		<div className={classNames('modal2-header', className)} {...props}>
 			{children}
 			{closeButton && (
-				<Dialog.Close className="panel-icon-button ms-auto" aria-label="Close modal" tabIndex={-1}>
+				<Dialog.Close render={<Button variant="icon" className="ms-auto" />} aria-label="Close modal" tabIndex={-1}>
 					<FontAwesomeIcon icon={faTimes} className="text-sm" />
 				</Dialog.Close>
 			)}

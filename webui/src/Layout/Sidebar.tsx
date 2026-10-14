@@ -38,6 +38,7 @@ import {
 import { createPortal } from 'react-dom'
 import { Transition } from 'react-transition-group'
 import type { MenuItemProps } from '~/Components/ActionMenu.js'
+import { Button } from '~/Components/Button.js'
 import { ContextMenu } from '~/Components/ContextMenu'
 import { Popover } from '~/Components/Popover.js'
 import { Tooltip } from '~/Components/Tooltip.js'
@@ -308,8 +309,7 @@ function SidebarNavGroup({ name, icon, basePaths, children }: SidebarNavGroupPro
 	return (
 		<li className="nav-group-wrapper" onContextMenu={blockPropagation}>
 			<NarrowModePopover title={name}>
-				<button
-					type="button"
+				<Button
 					aria-expanded={isOpen}
 					className={classNames('nav-link cursor-pointer nav-group-toggle', {
 						active: isGroupActive,
@@ -324,7 +324,7 @@ function SidebarNavGroup({ name, icon, basePaths, children }: SidebarNavGroupPro
 							'rotate-90': isOpen,
 						})}
 					/>
-				</button>
+				</Button>
 			</NarrowModePopover>
 			{isOpen && <ul className="nav-sub-list">{children}</ul>}
 		</li>

@@ -1,5 +1,5 @@
 /* The shared log row, used by the system log and the per-instance debug log. The level tint comes
-   from the same --color-tone-* tokens as Badge and PillButton, so all three agree. */
+   from the same --color-tone-* tokens as Badge and the pill Button tones, so all three agree. */
 .log-line {
 	display: flex;
 	align-items: flex-start;

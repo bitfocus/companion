@@ -26,8 +26,11 @@ interface ButtonVisualProps {
 	 * 'ghost' renders a text-only button with no background or border.
 	 * 'inline' goes further: no padding, border or line-height of its own either, for an icon or word sitting
 	 * inside a line of other content (a form label, a table cell) which it must not push around.
+	 * 'icon' is a square, icon-only button that only shows a ground on hover; give it a title or aria-label.
+	 * 'pill' is a standalone toolbar toggle; add a `pill-tone-*` class to colour it by status when active.
+	 * 'filter' is one borderless, fully rounded option in a row of filters.
 	 */
-	variant?: 'ghost' | 'outline' | 'inline'
+	variant?: 'ghost' | 'outline' | 'inline' | 'icon' | 'pill' | 'filter'
 	size?: 'sm' | 'lg'
 	hidden?: boolean
 

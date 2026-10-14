@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
+import { FormLabel } from '~/Components/Form.js'
 import './EditPanel.css'
 import { useCallback, useContext, useId, useMemo, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
@@ -157,12 +158,12 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 					notesState={notesState}
 				/>
 				<div className="edit-field-row">
-					<label htmlFor={nameFieldId} className="text-xs font-semibold text-body">
+					<FormLabel htmlFor={nameFieldId}>
 						Name
 						<InlineHelpIcon className="ms-1">
 							The name for the variable. It will get wrapped with <code>$(expression:X)</code> for you
 						</InlineHelpIcon>
-					</label>
+					</FormLabel>
 					<TextInputFieldSimple
 						id={nameFieldId}
 						setValue={setName}
@@ -171,9 +172,7 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 					/>
 				</div>
 				<div className="edit-field-row">
-					<label htmlFor={descriptionFieldId} className="text-xs font-semibold text-body">
-						Description
-					</label>
+					<FormLabel htmlFor={descriptionFieldId}>Description</FormLabel>
 					<TextInputFieldSimple id={descriptionFieldId} setValue={setDescription} value={options.description} />
 				</div>
 			</EditSectionCard>

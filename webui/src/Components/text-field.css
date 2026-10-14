@@ -95,19 +95,4 @@ textarea.text-input-field {
 	right: 0.375rem;
 	top: 50%;
 	transform: translateY(-50%);
-	display: grid;
-	place-items: center;
-	width: 1.5rem;
-	height: 1.5rem;
-	border: 0;
-	border-radius: 0.25rem;
-	background: transparent;
-	color: var(--color-text-faint);
-	cursor: pointer;
-}
-
-.search-box-clear:hover,
-.search-box-clear:focus-visible {
-	background: var(--color-surface-muted);
-	color: var(--color-text);
 }

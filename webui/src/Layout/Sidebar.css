@@ -228,6 +228,7 @@
 		background: var(--sidebar-nav-link-bg);
 		border: 0 solid transparent;
 		border-radius: var(--sidebar-nav-link-border-radius);
+		box-shadow: none;
 		transition:
 			background 0.15s ease,
 			color 0.15s ease,

@@ -5,7 +5,6 @@ import {
 	faClock,
 	faDollarSign,
 	faDownload,
-	faMagnifyingGlass,
 	faPlug,
 	faRotate,
 	faSearch,
@@ -20,6 +19,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Modal } from '~/Components/Modal'
+import { SearchBox } from '~/Components/SearchBox.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -334,14 +334,12 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 						<Modal.Popup className="w-full max-w-2xl bg-surface border border-border/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col dialog-max-h animate-in fade-in zoom-in-95 duration-150">
 							{/* Search Input Header */}
 							<div className="flex items-center px-4 py-3.5 border-b border-border/70 gap-3 bg-surface">
-								<FontAwesomeIcon icon={faMagnifyingGlass} className="text-muted text-base shrink-0" />
-								<input
-									type="text"
-									value={query}
-									onChange={(e) => setQuery(e.target.value)}
-									onKeyDown={handleKeyDown}
+								<SearchBox
+									className="flex-1"
 									placeholder="Search buttons, connections, variables, or actions..."
-									className="w-full bg-transparent border-none outline-none text-sm text-body placeholder:text-muted/70 font-medium"
+									filter={query}
+									setFilter={setQuery}
+									onKeyDown={handleKeyDown}
 									autoFocus
 								/>
 								<kbd className="hidden sm:inline-flex items-center px-2 py-0.5 text-3xs font-semibold text-muted bg-surface-muted border border-border/70 rounded-md">

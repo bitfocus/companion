@@ -67,14 +67,14 @@ export function NotesStrip({ state }: { state: NotesEditorState }): React.JSX.El
 	return (
 		<div className="notes-preview">
 			<FontAwesomeIcon icon={faNoteSticky} className="notes-preview-icon" />
-			<button
-				type="button"
+			<Button
+				variant="inline"
 				className={classNames('notes-preview-text', { 'line-clamp-3': !expanded })}
 				onClick={() => setExpanded((value) => !value)}
 				title={expanded ? 'Show less' : 'Show all'}
 			>
 				{state.notes}
-			</button>
+			</Button>
 			<Button color="secondary" variant="ghost" size="sm" onClick={state.startEditing}>
 				Edit
 			</Button>

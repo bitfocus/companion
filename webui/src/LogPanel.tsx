@@ -3,13 +3,14 @@ import { useQuery } from '@tanstack/react-query'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import copy from 'copy-to-clipboard'
 import dayjs from 'dayjs'
-import { AlertCircle, AlertTriangle, Bug, Check, Copy, Download, FileText, Info, Search, Trash2, X } from 'lucide-react'
+import { AlertCircle, AlertTriangle, Bug, Check, Copy, Download, FileText, Info, Trash2 } from 'lucide-react'
 import { nanoid } from 'nanoid'
 import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ClientLogLine } from '@companion-app/shared/Model/LogLine.js'
+import { Button, LinkButtonExternal } from '~/Components/Button.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { LogLine, LogNoticeLine, VirtualLogList } from '~/Components/LogViewer.js'
-import { PillButton, type PillTone } from '~/Components/PillButton.js'
+import { SearchBox } from '~/Components/SearchBox.js'
 import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
 import { PageHeader } from '~/Layout/PageHeader.js'
 import { assertNever, makeAbsolutePath, useDebounced } from '~/Resources/util.js'
@@ -24,11 +25,11 @@ interface LogConfig {
 }
 
 const LOG_LEVELS = [
-	{ key: 'error', label: 'Error', icon: AlertCircle, tone: 'error' },
-	{ key: 'warn', label: 'Warn', icon: AlertTriangle, tone: 'warning' },
-	{ key: 'info', label: 'Info', icon: Info, tone: 'info' },
-	{ key: 'debug', label: 'Debug', icon: Bug, tone: 'neutral' },
-] as const satisfies readonly { key: keyof LogConfig; label: string; icon: typeof Info; tone: PillTone }[]
+	{ key: 'error', label: 'Error', icon: AlertCircle, toneClass: 'pill-tone-error' },
+	{ key: 'warn', label: 'Warn', icon: AlertTriangle, toneClass: 'pill-tone-warning' },
+	{ key: 'info', label: 'Info', icon: Info, toneClass: 'pill-tone-info' },
+	{ key: 'debug', label: 'Debug', icon: Bug, toneClass: 'pill-tone-neutral' },
+] as const satisfies readonly { key: keyof LogConfig; label: string; icon: typeof Info; toneClass: string }[]
 
 /** `error` defaults to on, so it is the only level where `undefined` means enabled. */
 function isLevelEnabled(config: LogConfig, key: keyof LogConfig): boolean {
@@ -165,11 +166,12 @@ export const LogPanel = memo(function LogPanel() {
 						<div className="flex items-center gap-1.5 flex-wrap">
 							<span className="text-xs font-semibold text-body me-1">Filters:</span>
 
-							{LOG_LEVELS.map(({ key, label, icon: Icon, tone }) => (
-								<PillButton
+							{LOG_LEVELS.map(({ key, label, icon: Icon, toneClass }) => (
+								<Button
 									key={key}
-									small
-									tone={tone}
+									variant="pill"
+									size="sm"
+									className={toneClass}
 									active={isLevelEnabled(config, key)}
 									onClick={() => doToggleConfig(key)}
 								>
@@ -177,81 +179,73 @@ export const LogPanel = memo(function LogPanel() {
 									<span>
 										{label} ({counts[key]})
 									</span>
-								</PillButton>
+								</Button>
 							))}
 						</div>
 
 						{/* Top Actions */}
 						<div className="flex items-center gap-2 flex-wrap">
-							<PillButton
-								tone="primary"
+							<Button
+								variant="pill"
 								active={deduplicate}
 								onClick={() => setDeduplicate(!deduplicate)}
 								title="Collapse repetitive consecutive log lines"
 							>
 								<span>Group Repeats</span>
-							</PillButton>
+							</Button>
 
-							<PillButton tone="primary" active={false} onClick={handleCopyAll} title="Copy filtered logs to clipboard">
+							<Button
+								variant="outline"
+								size="sm"
+								className="inline-flex items-center gap-1.5"
+								onClick={handleCopyAll}
+								title="Copy filtered logs to clipboard"
+							>
 								{copiedAll ? <Check className="w-3.5 h-3.5 text-tone-good-text" /> : <Copy className="w-3.5 h-3.5" />}
 								<span>Copy</span>
-							</PillButton>
+							</Button>
 
-							<PillButton
-								tone="primary"
-								active={false}
+							<Button
+								variant="outline"
+								color="danger"
+								size="sm"
+								className="inline-flex items-center gap-1.5"
 								onClick={doClearLog}
-								className="hover:text-action-danger-text"
 								title="Clear active log history"
 							>
 								<Trash2 className="w-3.5 h-3.5" />
 								<span>Clear</span>
-							</PillButton>
+							</Button>
 
-							<a
+							<LinkButtonExternal
 								href={makeAbsolutePath('/int/export/log')}
-								target="_blank"
-								rel="noopener noreferrer"
-								className="pill-button pill-tone-primary"
+								variant="outline"
+								size="sm"
+								className="inline-flex items-center gap-1.5"
 								title="Download raw log file"
 							>
 								<FileText className="w-3.5 h-3.5" />
 								<span>Export Log</span>
-							</a>
+							</LinkButtonExternal>
 
-							<PillButton
-								tone="primary"
-								active={false}
+							<Button
+								variant="outline"
+								size="sm"
+								className="inline-flex items-center gap-1.5"
 								onClick={exportSupportModal}
 								title="Download full support bundle"
 							>
 								<Download className="w-3.5 h-3.5" />
 								<span>Support Bundle</span>
-							</PillButton>
+							</Button>
 						</div>
 					</div>
 
-					{/* Search Filter Bar */}
-					<div className="relative flex items-center">
-						<Search className="w-4 h-4 absolute left-3 text-muted pointer-events-none" />
-						<input
-							type="text"
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							placeholder="Search logs by keyword, source, or message (e.g. atem, connection, timeout)..."
-							className="w-full bg-surface border border-border rounded-lg pl-9 pr-8 py-1.5 text-xs text-body placeholder:text-muted focus:outline-none focus:border-primary transition-colors"
-						/>
-						{searchQuery && (
-							<button
-								type="button"
-								onClick={() => setSearchQuery('')}
-								className="absolute right-2.5 text-action-text hover:text-body p-0.5"
-								title="Clear search"
-							>
-								<X className="w-3.5 h-3.5" />
-							</button>
-						)}
-					</div>
+					<SearchBox
+						placeholder="Search logs by keyword, source, or message (e.g. atem, connection, timeout)..."
+						filter={searchQuery}
+						setFilter={setSearchQuery}
+					/>
 				</div>
 
 				{/* Log Content Terminal Window */}
@@ -352,14 +346,15 @@ const SystemLogLine = memo(function SystemLogLine({ line }: { line: GroupedLogLi
 			sourceClassName="log-source-cell text-2xs pt-0.5"
 			alwaysReserveSource={false}
 			actions={
-				<button
-					type="button"
+				<Button
+					variant="icon"
+					size="sm"
 					onClick={handleCopy}
-					className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity p-1 text-action-text hover:text-body shrink-0 cursor-pointer bg-transparent border-0 shadow-none outline-none inline-flex items-center justify-center rounded hover:bg-surface-muted"
+					className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100 transition-opacity"
 					title="Copy log line"
 				>
 					{copied ? <Check className="w-3.5 h-3.5 text-tone-good-text" /> : <Copy className="w-3.5 h-3.5" />}
-				</button>
+				</Button>
 			}
 		/>
 	)

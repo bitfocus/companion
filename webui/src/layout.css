@@ -1,6 +1,6 @@
 /* App shell, the two-column page layout (primary/secondary panels), and a few generic layout
    utilities. Component-specific chrome lives with its component: the header in Layout/Header.css,
-   the panel close/help icons in Layout/PanelIcons.css, and the dropdown/context menus in
+   the panel close/help icons (Button variant="icon"), and the dropdown/context menus in
    Components/ContextMenu.css. */
 @import './breakpoints.css';
 

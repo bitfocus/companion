@@ -278,13 +278,13 @@ function StepPill({ controlId, stepId, stepIndex, stepOptions, isSelected, isCur
 
 	const pillClassName = `flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all select-none ${
 		isSelected
-			? 'bg-primary text-on-dark shadow-xs'
+			? 'bg-selection-bg text-selection-text border border-selection-border'
 			: 'bg-surface hover:bg-surface-hover text-muted hover:text-body border border-border/70'
 	}`
 
 	const liveDot = isCurrent && (
 		<span
-			className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-on-dark' : 'bg-tone-good-fill animate-pulse'}`}
+			className={`w-1.5 h-1.5 rounded-full bg-tone-good-fill ${isSelected ? '' : 'animate-pulse'}`}
 			title="Active live step"
 		/>
 	)
@@ -308,15 +308,9 @@ function StepPill({ controlId, stepId, stepIndex, stepOptions, isSelected, isCur
 	}
 
 	return (
-		<button
-			type="button"
-			onClick={onSelect}
-			onDoubleClick={() => setIsEditing(true)}
-			aria-pressed={isSelected}
-			className={`${pillClassName} cursor-pointer`}
-		>
+		<Button variant="pill" size="sm" active={isSelected} onClick={onSelect} onDoubleClick={() => setIsEditing(true)}>
 			{liveDot}
 			<span>{name}</span>
-		</button>
+		</Button>
 	)
 }

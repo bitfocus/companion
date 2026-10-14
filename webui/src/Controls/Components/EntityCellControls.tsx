@@ -147,18 +147,18 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 					) : (
 						!isCollapsedLocalVariable &&
 						entity.headline && (
-							<button
-								type="button"
+							<Button
+								variant="inline"
 								disabled={readonly || isPanelCollapsed || !service.setHeadline}
 								onClick={(event) => {
 									event.stopPropagation()
 									setNoteEditing(true)
 								}}
-								className={`w-fit max-w-full leading-snug border-0 bg-transparent p-0 text-left text-3xs font-normal text-action-text hover:text-body disabled:hover:text-action-text disabled:cursor-default ${isPanelCollapsed ? 'truncate' : 'whitespace-normal break-words'}`}
+								className={`w-fit max-w-full leading-snug p-0 text-left text-3xs font-normal text-action-text hover:text-body disabled:hover:text-action-text disabled:cursor-default disabled:pointer-events-auto ${isPanelCollapsed ? 'truncate' : 'whitespace-normal break-words'}`}
 								title={isPanelCollapsed ? entity.headline : `Edit note: ${entity.headline}`}
 							>
 								{entity.headline}
-							</button>
+							</Button>
 						)
 					)}
 				</div>

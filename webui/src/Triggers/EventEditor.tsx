@@ -280,15 +280,15 @@ const EventEditor = observer(function EventEditor({
 							/>
 						</div>
 					) : headline ? (
-						<button
-							type="button"
+						<Button
+							variant="inline"
 							disabled={isCollapsed || !service.setHeadline}
 							onClick={doEditHeadline}
-							className="w-fit max-w-full whitespace-normal break-words leading-snug border-0 bg-transparent p-0 text-left text-3xs font-normal text-action-text hover:text-body disabled:hover:text-action-text disabled:cursor-default"
+							className="w-fit max-w-full whitespace-normal break-words leading-snug p-0 text-left text-3xs font-normal text-action-text hover:text-body disabled:hover:text-action-text disabled:cursor-default disabled:pointer-events-auto"
 							title={isCollapsed ? headline : `Edit note: ${headline}`}
 						>
 							{headline}
-						</button>
+						</Button>
 					) : null}
 				</div>
 

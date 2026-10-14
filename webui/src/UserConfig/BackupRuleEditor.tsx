@@ -7,6 +7,7 @@ import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
+import { FormLabel } from '~/Components/Form.js'
 import { Table } from '~/Components/Table.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
@@ -127,18 +128,14 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				</div>
 
 				<div className="edit-field-row">
-					<label htmlFor={nameFieldId} className="text-xs font-semibold text-body">
-						Rule Name
-					</label>
+					<FormLabel htmlFor={nameFieldId}>Rule Name</FormLabel>
 					<div className="min-w-0">
 						<TextInputFieldSimple id={nameFieldId} value={rule.name} setValue={(value) => updateField('name', value)} />
 					</div>
 				</div>
 
 				<div className="edit-field-row">
-					<label htmlFor={cronFieldId} className="text-xs font-semibold text-body">
-						Cron Schedule
-					</label>
+					<FormLabel htmlFor={cronFieldId}>Cron Schedule</FormLabel>
 					<div className="min-w-0">
 						<TextInputFieldSimple id={cronFieldId} value={rule.cron} setValue={(value) => updateField('cron', value)} />
 					</div>
@@ -158,9 +155,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				</div>
 
 				<div className="edit-field-row">
-					<label htmlFor={backupTypeFieldId} className="text-xs font-semibold text-body">
-						Backup Type
-					</label>
+					<FormLabel htmlFor={backupTypeFieldId}>Backup Type</FormLabel>
 					<div className="min-w-0">
 						<SimpleDropdownInputField
 							id={backupTypeFieldId}
@@ -178,9 +173,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				</div>
 
 				<div className="edit-field-row">
-					<label htmlFor={backupPathFieldId} className="text-xs font-semibold text-body">
-						Backup Path
-					</label>
+					<FormLabel htmlFor={backupPathFieldId}>Backup Path</FormLabel>
 					<div className="min-w-0">
 						<TextInputFieldSimple
 							id={backupPathFieldId}
@@ -194,9 +187,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				</div>
 
 				<div className="edit-field-row">
-					<label htmlFor={backupNamePatternFieldId} className="text-xs font-semibold text-body">
-						Backup Name Pattern
-					</label>
+					<FormLabel htmlFor={backupNamePatternFieldId}>Backup Name Pattern</FormLabel>
 					<div className="min-w-0">
 						<TextInputField
 							id={backupNamePatternFieldId}
@@ -208,9 +199,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 				</div>
 
 				<div className="edit-field-row">
-					<label htmlFor={keepFieldId} className="text-xs font-semibold text-body">
-						Retention Count
-					</label>
+					<FormLabel htmlFor={keepFieldId}>Retention Count</FormLabel>
 					<div className="min-w-0">
 						<NumberInputField
 							id={keepFieldId}

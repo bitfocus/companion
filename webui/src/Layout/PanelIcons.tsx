@@ -1,7 +1,7 @@
-import { CircleHelp, X } from 'lucide-react'
-import './PanelIcons.css'
 import classNames from 'classnames'
+import { CircleHelp, X } from 'lucide-react'
 import { useCallback, useRef } from 'react'
+import { Button, LinkButtonExternal } from '~/Components/Button.js'
 import { InlineHelpCustom } from '~/Components/InlineHelp'
 import { makeAbsolutePath } from '~/Resources/util'
 
@@ -22,15 +22,9 @@ export interface ContextHelpButtonProps {
 */
 export function CloseButton({ closeFn, visibilityClass, className }: CloseButtonProps): React.JSX.Element {
 	return (
-		<button
-			type="button"
-			className={classNames('panel-icon-button', visibilityClass, className)}
-			onClick={closeFn}
-			title="Close panel"
-			aria-label="Close panel"
-		>
+		<Button variant="icon" className={classNames(visibilityClass, className)} onClick={closeFn} title="Close panel">
 			<X className="w-4 h-4" />
-		</button>
+		</Button>
 	)
 }
 
@@ -69,20 +63,17 @@ export function ContextHelpButton({ children, action, className }: ContextHelpBu
 			<HelpWrapper usePopover={!!children} help={children} className={className}>
 				{typeof action === 'string' ? (
 					// note: string is currently typed to link to /user-guide/, which is not a Tanstack route
-					<a
-						className="panel-icon-button"
+					<LinkButtonExternal
+						variant="icon"
 						href={makeAbsolutePath(action)}
-						target="_blank"
-						rel="noopener noreferrer"
 						title="Open help documentation in a new tab"
-						aria-label="Open help documentation in a new tab"
 					>
 						<CircleHelp className="w-4 h-4" aria-label="context help" />
-					</a>
+					</LinkButtonExternal>
 				) : (
-					<button type="button" className="panel-icon-button" onClick={onClickAction} title="Help" aria-label="Help">
+					<Button variant="icon" onClick={onClickAction} title="Help">
 						<CircleHelp className="w-4 h-4" aria-label="context help" />
-					</button>
+					</Button>
 				)}
 			</HelpWrapper>
 			<span ref={afterElementRef} tabIndex={-1} style={{ outline: 'none' }} aria-hidden="true" />

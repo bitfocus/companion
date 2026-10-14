@@ -1,12 +1,12 @@
 import { faArrowLeft, faClone, faLink, faSearch } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { Search, X } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
 import { useMemo, useState } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { UIPresetSection, UIPresetSections } from '@companion-app/shared/Model/Presets.js'
 import { StaticAlert } from '~/Components/Alert.js'
-import { Button } from '~/Components/Button'
+import { Button, ButtonGroup } from '~/Components/Button'
+import { SearchBox } from '~/Components/SearchBox.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { useComputed } from '~/Resources/util.js'
 import { NonIdealState } from '../../Components/NonIdealState.js'
@@ -144,21 +144,7 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 						{connectionInfo?.label || selectedConnectionId}
 					</span>
 				</div>
-				<div className="presets-search">
-					<Search size={16} aria-hidden="true" />
-					<input
-						type="search"
-						aria-label="Search presets"
-						placeholder="Search presets..."
-						value={searchQuery}
-						onChange={(event) => setSearchQuery(event.target.value)}
-					/>
-					{searchQuery && (
-						<button type="button" onClick={() => setSearchQuery('')} aria-label="Clear preset search">
-							<X size={14} />
-						</button>
-					)}
-				</div>
+				<SearchBox className="mb-3" placeholder="Search presets..." filter={searchQuery} setFilter={setSearchQuery} />
 				{allSections.length === 0 ? (
 					<StaticAlert color="primary">Connection has no presets.</StaticAlert>
 				) : visibleSections.length === 0 && searchQuery ? (
@@ -187,11 +173,12 @@ function PresetPlacementModeToggle({ supportsReferences }: { supportsReferences:
 
 	return (
 		<div className="presets-placement-mode" title={!supportsReferences ? unsupportedTitle : undefined}>
-			<div className="presets-placement-options" role="group" aria-label="Preset placement mode">
-				<button
-					type="button"
-					className={effectiveMode === 'reference' ? 'selected' : undefined}
-					aria-pressed={effectiveMode === 'reference'}
+			<ButtonGroup>
+				<Button
+					variant="outline"
+					size="sm"
+					className="inline-flex items-center gap-1.5"
+					active={effectiveMode === 'reference'}
 					disabled={!supportsReferences}
 					onClick={() => setMode('reference')}
 					title={
@@ -202,19 +189,20 @@ function PresetPlacementModeToggle({ supportsReferences }: { supportsReferences:
 				>
 					<FontAwesomeIcon icon={faLink} />
 					Linked
-				</button>
-				<button
-					type="button"
-					className={effectiveMode === 'copy' ? 'selected' : undefined}
-					aria-pressed={effectiveMode === 'copy'}
+				</Button>
+				<Button
+					variant="outline"
+					size="sm"
+					className="inline-flex items-center gap-1.5"
+					active={effectiveMode === 'copy'}
 					disabled={!supportsReferences}
 					onClick={() => setMode('copy')}
 					title={supportsReferences ? 'Newly placed presets are a one-off copy you can freely edit' : unsupportedTitle}
 				>
 					<FontAwesomeIcon icon={faClone} />
 					Copy
-				</button>
-			</div>
+				</Button>
+			</ButtonGroup>
 		</div>
 	)
 }

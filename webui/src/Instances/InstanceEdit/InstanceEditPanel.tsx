@@ -187,9 +187,7 @@ const InstanceLabelInputField = observer(function InstanceLabelInputField<TConfi
 
 	return (
 		<div className="edit-field-row">
-			<label htmlFor={labelId} className="text-xs font-semibold text-body">
-				Label
-			</label>
+			<FormLabel htmlFor={labelId}>Label</FormLabel>
 			<TextInputFieldSimple
 				id={labelId}
 				setValue={panelStore.setLabelValue}
@@ -218,9 +216,7 @@ const InstanceModuleVersionInputField = observer(function InstanceModuleVersionI
 
 	return (
 		<div className="edit-field-row">
-			<label htmlFor={moduleVersionId} className="text-xs font-semibold text-body">
-				Module Version
-			</label>
+			<FormLabel htmlFor={moduleVersionId}>Module Version</FormLabel>
 			<div className="instance-module-version-row">
 				<div className="instance-module-version-details">
 					<span className="instance-module-version-value text-xs font-mono font-medium text-body">
@@ -280,9 +276,7 @@ const InstanceEnabledInputField = observer(function InstanceEnabledInputField<
 
 	return (
 		<div className="edit-field-row">
-			<label htmlFor={enabledId} className="text-xs font-semibold text-body mb-0">
-				Enabled
-			</label>
+			<FormLabel htmlFor={enabledId}>Enabled</FormLabel>
 			<div className="shrink-0">
 				<SwitchInputField
 					id={enabledId}

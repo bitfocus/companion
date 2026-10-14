@@ -3,6 +3,7 @@ import { useId } from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
+import { FormLabel } from '~/Components/Form.js'
 import { NumberInputField } from '~/Components/NumberInputField.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputField } from '~/Components/TextInputField.js'
@@ -21,9 +22,7 @@ interface ConfigFieldRowProps {
 export function ConfigFieldRow({ label, htmlFor, help, children }: ConfigFieldRowProps): React.JSX.Element {
 	return (
 		<div className="edit-field-row">
-			<label htmlFor={htmlFor ?? undefined} className="text-xs font-semibold text-body">
-				{label}
-			</label>
+			<FormLabel htmlFor={htmlFor ?? undefined}>{label}</FormLabel>
 			<div className="flex items-center gap-2 min-w-0">{children}</div>
 			{help && <div className="edit-field-help text-xs text-muted">{help}</div>}
 		</div>

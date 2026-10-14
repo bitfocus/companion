@@ -8,6 +8,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useMemo, useRef } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { ModuleInstanceType, type InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
+import { Button } from '~/Components/Button.js'
 import { EditPanelTabLink } from '~/Components/EditPanelTabs.js'
 import {
 	EDIT_TAB_ACTIVE_CLASS,
@@ -45,15 +46,14 @@ interface EditTabButtonProps {
 
 function EditTabButton({ tab, activeTab, setActiveTab, icon, label, showAttentionDot }: EditTabButtonProps) {
 	return (
-		<button
-			type="button"
+		<Button
 			onClick={() => setActiveTab(tab)}
 			className={classNames(EDIT_TAB_CLASS, activeTab === tab ? EDIT_TAB_ACTIVE_CLASS : EDIT_TAB_INACTIVE_CLASS)}
 		>
 			<FontAwesomeIcon icon={icon} className="text-muted" />
 			<span>{label}</span>
 			{showAttentionDot && <span className="w-1.5 h-1.5 rounded-full bg-tone-warning-fill animate-pulse" />}
-		</button>
+		</Button>
 	)
 }
 

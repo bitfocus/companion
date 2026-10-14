@@ -319,15 +319,9 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 			<td className="compact py-2 px-3 text-end w-12">
 				<div className="flex items-center justify-end gap-1.5">
 					{helpPath && (
-						<button
-							type="button"
-							onClick={doShowHelp}
-							className="panel-icon-button panel-icon-button-sm"
-							title="Show documentation"
-							aria-label="Show documentation"
-						>
+						<Button variant="icon" size="sm" onClick={doShowHelp} title="Show documentation">
 							<FontAwesomeIcon icon={faFileLines} className="text-xs" />
-						</button>
+						</Button>
 					)}
 				</div>
 			</td>

@@ -1,4 +1,5 @@
 import { Input } from '@base-ui/react'
+import { Button } from './Button.js'
 import './text-field.css'
 import classNames from 'classnames'
 import { Search, X } from 'lucide-react'
@@ -50,9 +51,9 @@ export function SearchBox({
 				aria-activedescendant={ariaActiveDescendant}
 			/>
 			{filter && (
-				<button type="button" className="search-box-clear" onClick={clearFilter} aria-label="Clear search filter">
+				<Button variant="icon" size="sm" className="search-box-clear" onClick={clearFilter} title="Clear search filter">
 					<X size={14} aria-hidden="true" />
-				</button>
+				</Button>
 			)}
 		</div>
 	)

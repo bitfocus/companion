@@ -11,7 +11,7 @@ import type { ClientModuleVersionInfo } from '@companion-app/shared/Model/Module
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button, LinkButton } from '~/Components/Button.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
-import { Form } from '~/Components/Form.js'
+import { Form, FormLabel } from '~/Components/Form.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox.js'
 import { StatusFilterPill } from '~/Components/StatusFilterPill.js'
@@ -234,13 +234,13 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 				: undefined
 	const products = [...new Set([...(installedInfo?.display.products ?? []), ...(moduleInfo.storeInfo?.products ?? [])])]
 	return (
-		<button
-			type="button"
+		<Button
+			variant="ghost"
 			disabled={isLimitReached}
 			onClick={() => addInstance(moduleInfo)}
 			title={isLimitReached ? 'This module is limited to one instance' : products.join(', ')}
 			className={classNames(
-				'add-module-row list-row flex w-full items-center gap-2 border-0 border-b border-border bg-transparent py-2 text-start hover:bg-surface-muted/50 disabled:opacity-60 disabled:cursor-not-allowed'
+				'add-module-row list-row flex w-full items-center gap-2 rounded-none border-0 border-b border-border py-2 text-start hover:bg-surface-muted/50 disabled:opacity-60 disabled:cursor-not-allowed disabled:pointer-events-auto'
 			)}
 		>
 			<span className="inline-flex shrink-0 items-center justify-center w-7 h-7 rounded-md bg-surface-muted text-muted text-xs">
@@ -269,7 +269,7 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 				</span>
 			</span>
 			<FontAwesomeIcon icon={faPlus} className="shrink-0 text-xs text-action-text" aria-hidden="true" />
-		</button>
+		</Button>
 	)
 })
 
@@ -374,9 +374,9 @@ const AddInstanceConfigureStep = observer(function AddInstanceConfigureStep({
 				<Form className="space-y-4" onSubmit={PreventDefaultHandler}>
 					{/* Label Field */}
 					<div>
-						<label htmlFor={labelFieldId} className="block text-xs font-semibold text-body mb-1">
+						<FormLabel htmlFor={labelFieldId} className="block text-xs font-semibold text-body mb-1">
 							Connection Label
-						</label>
+						</FormLabel>
 						<TextInputField id={labelFieldId} value={instanceLabel} setValue={setInstanceLabel} immediateValue />
 						<p className="text-2xs text-muted mt-1 mb-0">
 							A unique name used to reference this connection across actions, feedbacks, and triggers.
@@ -386,20 +386,21 @@ const AddInstanceConfigureStep = observer(function AddInstanceConfigureStep({
 					{/* Version Field */}
 					<div>
 						<div className="flex items-center justify-between mb-1">
-							<label htmlFor={versionFieldId} className="text-xs font-semibold text-body mb-0">
+							<FormLabel htmlFor={versionFieldId} className="text-xs font-semibold text-body mb-0">
 								Module Version
-							</label>
+							</FormLabel>
 							<div className="flex items-center gap-2">
 								{selectedVersionInfo && (
-									<button
-										type="button"
-										className="text-action-text hover:text-primary text-xs cursor-pointer bg-transparent border-0 flex items-center gap-1 transition-colors"
+									<Button
+										variant="ghost"
+										size="sm"
+										className="inline-flex items-center gap-1"
 										onClick={showHelpClick}
 										title="View module documentation"
 									>
 										<FontAwesomeIcon icon={faFileLines} className="text-xs" />
 										<span>Docs</span>
-									</button>
+									</Button>
 								)}
 								{isModuleOnStore && (
 									<ModuleVersionsRefresh moduleType={moduleInfo.moduleType} moduleId={moduleInfo.moduleId} />

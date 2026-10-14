@@ -107,7 +107,7 @@ export function PropertyFieldRow({
 	if (layout === 'inspector') {
 		return (
 			<div className={classNames('property-inspector-row', { hidden })}>
-				<label htmlFor={inputId} className={classNames('form-label property-inspector-label', labelClassName)}>
+				<FormLabel htmlFor={inputId} className={classNames('property-inspector-label', labelClassName)}>
 					{label}
 					{activeFeatures && <InputFeatureIcons {...activeFeatures} />}
 					{tooltip && <InlineHelpIcon className="ms-1">{tooltip}</InlineHelpIcon>}
@@ -122,7 +122,7 @@ export function PropertyFieldRow({
 							)}
 						/>
 					)}
-				</label>
+				</FormLabel>
 				<div className="property-inspector-input">{inputControl}</div>
 				<div className="property-inspector-pin">{pinToggle}</div>
 				{isOverridden && (

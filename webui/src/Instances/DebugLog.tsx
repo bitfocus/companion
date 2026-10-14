@@ -1,25 +1,14 @@
 import { faBug } from '@fortawesome/free-solid-svg-icons'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { stringify as csvStringify } from 'csv-stringify/browser/esm/sync'
-import {
-	AlertCircle,
-	AlertTriangle,
-	Bug,
-	FileDown,
-	Info,
-	Play,
-	Search,
-	Square,
-	Terminal,
-	Trash2,
-	X,
-} from 'lucide-react'
+import { AlertCircle, AlertTriangle, Bug, FileDown, Info, Play, Square, Terminal, Trash2 } from 'lucide-react'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
+import { Button } from '~/Components/Button.js'
 import { LogLine, LogNoticeLine, VirtualLogList } from '~/Components/LogViewer.js'
-import { PillButton, type PillTone } from '~/Components/PillButton.js'
+import { SearchBox } from '~/Components/SearchBox.js'
 import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
 import { InstanceTableStatusCell } from '~/Instances/List/InstanceTableStatusCell.js'
 import { PageHeader } from '~/Layout/PageHeader.js'
@@ -42,12 +31,12 @@ interface DebugConfig {
 }
 
 const DEBUG_LEVELS = [
-	{ key: 'error', label: 'Error', icon: AlertCircle, tone: 'error' },
-	{ key: 'warn', label: 'Warn', icon: AlertTriangle, tone: 'warning' },
-	{ key: 'info', label: 'Info', icon: Info, tone: 'info' },
-	{ key: 'debug', label: 'Debug', icon: Bug, tone: 'neutral' },
-	{ key: 'console', label: 'Console', icon: Terminal, tone: 'media' },
-] as const satisfies readonly { key: keyof DebugConfig; label: string; icon: typeof Info; tone: PillTone }[]
+	{ key: 'error', label: 'Error', icon: AlertCircle, toneClass: 'pill-tone-error' },
+	{ key: 'warn', label: 'Warn', icon: AlertTriangle, toneClass: 'pill-tone-warning' },
+	{ key: 'info', label: 'Info', icon: Info, toneClass: 'pill-tone-info' },
+	{ key: 'debug', label: 'Debug', icon: Bug, toneClass: 'pill-tone-neutral' },
+	{ key: 'console', label: 'Console', icon: Terminal, toneClass: 'pill-tone-media' },
+] as const satisfies readonly { key: keyof DebugConfig; label: string; icon: typeof Info; toneClass: string }[]
 
 const LogsOnDiskInfoLine: DebugLogLine = {
 	time: null,
@@ -229,61 +218,60 @@ export const InstanceDebugLog = observer(function InstanceDebugLog({
 				<div className="flex items-center justify-between gap-3 flex-wrap">
 					<div className="flex items-center gap-1.5 flex-wrap">
 						<span className="text-xs font-semibold text-body me-1">Filters:</span>
-						{DEBUG_LEVELS.map(({ key, label: levelLabel, icon: Icon, tone }) => (
-							<PillButton key={key} small tone={tone} active={!!config[key]} onClick={() => doToggleConfig(key)}>
+						{DEBUG_LEVELS.map(({ key, label: levelLabel, icon: Icon, toneClass }) => (
+							<Button
+								key={key}
+								variant="pill"
+								size="sm"
+								className={toneClass}
+								active={!!config[key]}
+								onClick={() => doToggleConfig(key)}
+							>
 								<Icon className="w-3.5 h-3.5" />
 								<span>
 									{levelLabel} ({counts[key]})
 								</span>
-							</PillButton>
+							</Button>
 						))}
 					</div>
 
 					<div className="flex items-center gap-2 flex-wrap">
 						<InstanceTableStatusCell isEnabled={isEnabled} status={connectionStatus ?? undefined} />
-						<PillButton
-							tone="primary"
-							active={false}
+						<Button
+							variant="outline"
+							color="danger"
+							size="sm"
+							className="inline-flex items-center gap-1.5"
 							onClick={doClearLog}
 							title="Clear log history"
-							className="hover:text-action-danger-text"
 						>
 							<Trash2 className="w-3.5 h-3.5" />
 							<span>Clear</span>
-						</PillButton>
-						<PillButton tone="primary" active={false} onClick={doExportLog} title="Download log file">
+						</Button>
+						<Button
+							variant="outline"
+							size="sm"
+							className="inline-flex items-center gap-1.5"
+							onClick={doExportLog}
+							title="Download log file"
+						>
 							<FileDown className="w-3.5 h-3.5" />
 							<span>Export Log</span>
-						</PillButton>
-						<PillButton tone="primary" active={false} onClick={doToggleInstance}>
+						</Button>
+						<Button variant="outline" size="sm" className="inline-flex items-center gap-1.5" onClick={doToggleInstance}>
 							{isEnabled ? <Square className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
 							<span>
 								{isEnabled ? 'Stop' : 'Start'} {instanceTypeStr}
 							</span>
-						</PillButton>
+						</Button>
 					</div>
 				</div>
 
-				<div className="relative flex items-center">
-					<Search className="w-4 h-4 absolute left-3 text-muted pointer-events-none" />
-					<input
-						type="text"
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-						placeholder="Search logs by keyword, source, or message..."
-						className="w-full bg-surface border border-border rounded-lg pl-9 pr-8 py-1.5 text-xs text-body placeholder:text-muted focus:outline-none focus:border-primary transition-colors"
-					/>
-					{searchQuery && (
-						<button
-							type="button"
-							onClick={() => setSearchQuery('')}
-							className="absolute right-2.5 text-action-text hover:text-body p-0.5"
-							title="Clear search"
-						>
-							<X className="w-3.5 h-3.5" />
-						</button>
-					)}
-				</div>
+				<SearchBox
+					placeholder="Search logs by keyword, source, or message..."
+					filter={searchQuery}
+					setFilter={setSearchQuery}
+				/>
 			</div>
 
 			{/* Log Content Terminal Window */}

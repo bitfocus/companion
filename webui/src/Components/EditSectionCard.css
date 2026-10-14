@@ -69,8 +69,11 @@
 	align-items: center;
 	gap: 0.5rem 0.75rem;
 
-	> label {
+	> .form-label {
 		margin: 0;
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--color-body);
 	}
 }
 

@@ -197,9 +197,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					</div>
 				</div>
 				<div className="edit-field-row">
-					<FormLabel htmlFor={descriptionFieldId} className="text-xs font-semibold text-body mb-0">
-						Description
-					</FormLabel>
+					<FormLabel htmlFor={descriptionFieldId}>Description</FormLabel>
 					<ImageDescriptionEditor
 						id={descriptionFieldId}
 						imageName={selectedImageName}
@@ -207,9 +205,7 @@ export const ImageLibraryEditor = observer(function ImageLibraryEditor({
 					/>
 				</div>
 				<div className="edit-field-row">
-					<FormLabel htmlFor={backgroundColorFieldId} className="text-xs font-semibold text-body mb-0">
-						Preview background
-					</FormLabel>
+					<FormLabel htmlFor={backgroundColorFieldId}>Preview background</FormLabel>
 					<div className="flex items-center">
 						<ImageBackgroundColorEditor
 							id={backgroundColorFieldId}

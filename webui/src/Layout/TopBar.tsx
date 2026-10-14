@@ -15,6 +15,7 @@ import { useLocation } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
 import { PopoverActionMenu, type MenuItemProps } from '~/Components/ActionMenu.js'
+import { Button } from '~/Components/Button.js'
 import { Popover } from '~/Components/Popover.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { THEME_CHOICES } from '~/Theme/themeChoices.js'
@@ -50,9 +51,9 @@ export const TopBar = observer(function TopBar({ page }: TopBarProps) {
 	return (
 		<header className="top-bar">
 			{mobileMode && (
-				<button type="button" className="top-bar-icon-button" onClick={handleShowSidebar} title="Show navigation">
+				<Button variant="icon" className="top-bar-icon-button" onClick={handleShowSidebar} title="Show navigation">
 					<FontAwesomeIcon icon={faBars} />
-				</button>
+				</Button>
 			)}
 
 			<TopBarBreadcrumb page={page} />
@@ -70,9 +71,9 @@ export const TopBar = observer(function TopBar({ page }: TopBarProps) {
 				<TopBarHelpMenu />
 
 				{canLock && (
-					<button type="button" className="top-bar-icon-button" onClick={setLocked} title="Lock Admin UI">
+					<Button variant="icon" className="top-bar-icon-button" onClick={setLocked} title="Lock Admin UI">
 						<FontAwesomeIcon icon={faLock} />
-					</button>
+					</Button>
 				)}
 			</div>
 		</header>
@@ -120,8 +121,8 @@ function TopBarSearchButton() {
 	const shortcutLabel = IS_APPLE_PLATFORM ? '⌘K' : 'Ctrl+K'
 
 	return (
-		<button
-			type="button"
+		<Button
+			variant="outline"
 			className="top-bar-search"
 			onClick={() => commandPaletteOpen.set(true)}
 			title={`Search or jump to... (${shortcutLabel})`}
@@ -129,7 +130,7 @@ function TopBarSearchButton() {
 			<FontAwesomeIcon icon={faMagnifyingGlass} />
 			<span className="top-bar-search-label">Search or jump...</span>
 			<kbd className="top-bar-search-shortcut">{shortcutLabel}</kbd>
-		</button>
+		</Button>
 	)
 }
 

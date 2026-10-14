@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import type { MouseEventHandler } from 'react'
+import { Button } from '~/Components/Button.js'
 import { makeAbsolutePath } from '~/Resources/util'
 import { CHANNEL_BADGE, channelFromVersionBuild } from './updateChannel.js'
 import { useCompanionVersion } from './useCompanionVersion'
@@ -59,15 +60,16 @@ export const SidebarFooter = observer(function SidebarFooter({
 	if (mobileMode) {
 		return (
 			<div className="sidebar-footer2 flex flex-col gap-2 p-3 border-t border-border/80 shrink-0">
-				<button
-					type="button"
-					className="w-full h-9 flex items-center justify-center gap-2 bg-surface hover:bg-surface-hover border border-border rounded-md text-xs font-medium text-action-text hover:text-body transition cursor-pointer shadow-xs"
+				<Button
+					variant="outline"
+					size="sm"
+					className="w-full h-9 inline-flex items-center justify-center gap-2"
 					onClick={onCloseMobile}
 					title="Close navigation"
 				>
 					<FontAwesomeIcon icon={faXmark} className="w-3.5 h-3.5 text-muted" />
 					<span>Close navigation</span>
-				</button>
+				</Button>
 			</div>
 		)
 	}
@@ -77,15 +79,16 @@ export const SidebarFooter = observer(function SidebarFooter({
 
 		return (
 			<div className="sidebar-footer2 flex flex-col items-center gap-2 p-2 border-t border-border/80 shrink-0">
-				<button
-					type="button"
-					className="w-9 h-9 flex items-center justify-center bg-surface hover:bg-surface-hover border border-border rounded-md text-action-text hover:text-body transition cursor-pointer shadow-sm"
+				<Button
+					variant="outline"
+					size="sm"
+					className="w-9 h-9 inline-flex items-center justify-center"
 					onClick={handleExpand}
 					onContextMenu={onContextMenu}
 					title="Expand Sidebar"
 				>
 					<FontAwesomeIcon icon={faChevronRight} className="w-3.5 h-3.5 text-muted" />
-				</button>
+				</Button>
 			</div>
 		)
 	}
@@ -108,16 +111,17 @@ export const SidebarFooter = observer(function SidebarFooter({
 			</div>
 
 			{/* Row 2: Sidebar Folding Button */}
-			<button
-				type="button"
-				className="w-full h-7 flex items-center justify-center gap-1.5 bg-surface hover:bg-surface-hover border border-border rounded-md text-xs font-medium text-action-text hover:text-body transition cursor-pointer shadow-xs"
+			<Button
+				variant="outline"
+				size="sm"
+				className="w-full h-7 inline-flex items-center justify-center gap-1.5"
 				onClick={onToggleFolding}
 				onContextMenu={onContextMenu}
 				title={folding ? 'Keep Sidebar Open' : 'Collapse Sidebar'}
 			>
 				<FontAwesomeIcon icon={folding ? faChevronRight : faChevronLeft} className="w-3 h-3 text-muted" />
 				<span>{folding ? 'Keep Sidebar Open' : 'Collapse Sidebar'}</span>
-			</button>
+			</Button>
 		</div>
 	)
 })

@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId, useRef } from 'react'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
+import { FormLabel } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { SwitchInputField } from '~/Components/SwitchInputField'
@@ -48,9 +49,7 @@ export const CustomVariableEditPanel = observer(function CustomVariableEditPanel
 			<EditSectionCard title="General Settings">
 				<VariableReferenceRow reference={fullname} notesState={notesState} />
 				<div className="edit-field-row">
-					<label htmlFor={descriptionFieldId} className="text-xs font-semibold text-body">
-						Description
-					</label>
+					<FormLabel htmlFor={descriptionFieldId}>Description</FormLabel>
 					<TextInputFieldSimple
 						id={descriptionFieldId}
 						value={info.description}
@@ -63,9 +62,7 @@ export const CustomVariableEditPanel = observer(function CustomVariableEditPanel
 
 			<EditSectionCard title="Value">
 				<div className="edit-field-row">
-					<label htmlFor={currentValueFieldId} className="text-xs font-semibold text-body">
-						Current value
-					</label>
+					<FormLabel htmlFor={currentValueFieldId}>Current value</FormLabel>
 					<VariableInputGroup
 						id={currentValueFieldId}
 						value={value}
@@ -73,12 +70,12 @@ export const CustomVariableEditPanel = observer(function CustomVariableEditPanel
 					/>
 				</div>
 				<div className="edit-field-row">
-					<label htmlFor={persistFieldId} className="text-xs font-semibold text-body">
+					<FormLabel htmlFor={persistFieldId}>
 						Persist value
 						<InlineHelpIcon className="ms-1">
 							If enabled, variable value will be saved and restored when Companion restarts.
 						</InlineHelpIcon>
-					</label>
+					</FormLabel>
 					<div>
 						<SwitchInputField
 							id={persistFieldId}
@@ -88,9 +85,7 @@ export const CustomVariableEditPanel = observer(function CustomVariableEditPanel
 					</div>
 				</div>
 				<div className="edit-field-row">
-					<label htmlFor={startupValueFieldId} className="text-xs font-semibold text-body">
-						Startup value
-					</label>
+					<FormLabel htmlFor={startupValueFieldId}>Startup value</FormLabel>
 					<VariableInputGroup
 						id={startupValueFieldId}
 						disabled={!!info.persistCurrentValue}

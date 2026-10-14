@@ -115,10 +115,10 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 							}}
 						/>
 					) : (
-						<button
-							type="button"
+						<Button
+							variant="ghost"
 							onClick={() => setIsEditingName(true)}
-							className="group w-full h-8 px-1.5 flex items-center gap-2 rounded-md border border-transparent bg-transparent text-left hover:bg-surface-subtle hover:border-border transition-colors"
+							className="group w-full h-8 px-1.5 flex items-center gap-2 text-left"
 							aria-label="Edit trigger name"
 						>
 							<span className="grow min-w-0 truncate font-semibold text-base text-body">
@@ -128,7 +128,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 								icon={faPencil}
 								className="shrink-0 text-2xs text-muted opacity-50 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity"
 							/>
-						</button>
+						</Button>
 					)}
 				</div>
 				<div className="shrink-0">

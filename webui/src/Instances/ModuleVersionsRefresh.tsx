@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { Button } from '~/Components/Button.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -50,16 +51,16 @@ export const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({
 
 	if (isRefreshing) {
 		return (
-			<button
-				type="button"
+			<Button
+				variant="icon"
+				size="sm"
 				disabled
 				aria-busy
-				className="w-6 h-6 inline-flex items-center justify-center rounded-lg text-action-text transition-colors border-0 bg-transparent"
 				title={`Refreshing module info ${Math.round(refreshProgress * 100)}%`}
 				aria-label={`Refreshing module info ${Math.round(refreshProgress * 100)}%`}
 			>
 				<FontAwesomeIcon icon={faSync} spin={true} className="text-xs" />
-			</button>
+			</Button>
 		)
 	}
 
@@ -80,20 +81,8 @@ export const ModuleVersionsRefresh = observer(function ModuleVersionsRefresh({
 	}
 
 	return (
-		<button
-			type="button"
-			className="panel-icon-button panel-icon-button-sm"
-			onClick={doRefreshModules}
-			onKeyDown={(e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
-					e.preventDefault()
-					doRefreshModules()
-				}
-			}}
-			title="Refresh module versions"
-			aria-label="Refresh module versions"
-		>
+		<Button variant="icon" size="sm" onClick={doRefreshModules} title="Refresh module versions">
 			<FontAwesomeIcon icon={faSync} className="text-xs" />
-		</button>
+		</Button>
 	)
 })
