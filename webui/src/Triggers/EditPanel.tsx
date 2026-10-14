@@ -58,8 +58,6 @@ interface TriggerPanelContentProps {
 }
 
 function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): React.ReactNode {
-	const { notifier } = useContext(RootAppStoreContext)
-	const testActionsMutation = useMutationExt(trpc.controls.triggers.testActions.mutationOptions())
 	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
 	const triggerNameInputId = `trigger-name-${controlId}`
 	const [isEditingName, setIsEditingName] = useState(false)
@@ -67,17 +65,6 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 	const setControlNotes = useControlNotesSetter(controlId)
 	const notesState = useNotesEditor(controlId, config.options.notes, setControlNotes)
 	const [activeTab, setActiveTab] = useLocalStorage<'behaviour' | 'variables'>('triggerEditor.activeTab', 'behaviour')
-
-	const doTestRun = useCallback(() => {
-		testActionsMutation
-			.mutateAsync({ controlId })
-			.then(() => {
-				notifier.show('Trigger Tested', `Fired trigger "${config.options.name || 'Untitled'}"`, 3000)
-			})
-			.catch((err) => {
-				notifier.show('Test Failed', String(err), 4000)
-			})
-	}, [testActionsMutation, controlId, config.options.name, notifier])
 
 	const setName = useCallback(
 		(name: string) => {
@@ -260,16 +247,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 									<span className="text-3xs font-medium text-muted">
 										{config.actions.length} {config.actions.length === 1 ? 'action' : 'actions'}
 									</span>
-									<Button
-										variant="ghost"
-										size="sm"
-										onClick={doTestRun}
-										title="Test fire trigger actions immediately"
-										className="text-xs px-2.5 py-1 bg-action-bg hover:bg-action-hover border border-action-border flex items-center gap-1.5 font-medium shrink-0 rounded-lg transition-all"
-									>
-										<FontAwesomeIcon icon={faPlay} className="text-2xs" />
-										<span>Test Run</span>
-									</Button>
+									<TestActionsButton controlId={controlId} triggerName={config.options.name} />
 								</div>
 							</div>
 
@@ -294,5 +272,33 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 				</div>
 			)}
 		</div>
+	)
+}
+
+function TestActionsButton({ controlId, triggerName }: { controlId: string; triggerName: string }): React.JSX.Element {
+	const { notifier } = useContext(RootAppStoreContext)
+	const testActionsMutation = useMutationExt(trpc.controls.triggers.testActions.mutationOptions())
+
+	const doTestRun = useCallback(() => {
+		testActionsMutation
+			.mutateAsync({ controlId })
+			.then(() => {
+				notifier.show('Trigger Tested', `Fired trigger "${triggerName || 'Untitled'}"`, 3000)
+			})
+			.catch((err) => {
+				notifier.show('Test Failed', String(err), 4000)
+			})
+	}, [testActionsMutation, controlId, triggerName, notifier])
+
+	return (
+		<Button
+			size="sm"
+			className="inline-flex items-center gap-1.5 shrink-0"
+			onClick={doTestRun}
+			title="Test fire trigger actions immediately"
+		>
+			<FontAwesomeIcon icon={faPlay} className="text-2xs" />
+			<span>Test Run</span>
+		</Button>
 	)
 }

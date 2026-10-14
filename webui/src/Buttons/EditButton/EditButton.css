@@ -472,7 +472,7 @@
 			}
 
 			.td-reorder {
-				cursor: ns-resize;
+				cursor: grab;
 				background-color: var(--color-surface-alt);
 
 				height: 100%;

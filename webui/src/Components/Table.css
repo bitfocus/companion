@@ -106,7 +106,7 @@
 
 /* Drag-to-reorder handle cell */
 .table .td-reorder {
-	cursor: ns-resize;
+	cursor: grab;
 	background-color: var(--color-surface-alt);
 
 	padding-right: 10px;
