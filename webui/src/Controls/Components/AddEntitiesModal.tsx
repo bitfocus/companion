@@ -71,9 +71,9 @@ function EntityResultRow({
 	onSelect,
 }: {
 	result: EntitySearchResult
-	active?: boolean
-	id?: string
-	onActivate?: () => void
+	active: boolean
+	id: string
+	onActivate: () => void
 	onSelect: () => void
 }): React.JSX.Element {
 	return (
@@ -82,7 +82,6 @@ function EntityResultRow({
 			className={`add-entity-search-result${active ? ' active' : ''}`}
 			role="option"
 			aria-selected={active}
-			tabIndex={active === undefined ? 0 : undefined}
 			onMouseEnter={onActivate}
 			onMouseDown={(event) => event.preventDefault()}
 			onKeyDown={(event) => {
