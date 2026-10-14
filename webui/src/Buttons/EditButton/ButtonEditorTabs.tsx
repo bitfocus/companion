@@ -1,8 +1,7 @@
 import { faChevronLeft, faChevronRight, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
@@ -12,18 +11,32 @@ import { DuplicateIcon } from '~/Components/DuplicateIcon.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
-import useElementClientSize from '~/Hooks/useElementClientSize.js'
 import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useControlActionStepsAndSetsService } from '~/Services/Controls/ControlActionStepsAndSetsService.js'
 import type { LocalVariablesStore } from '../../Controls/LocalVariablesStore.js'
 import { ControlActionStepTab } from './ControlActionStepTab.js'
-import { EditButtonTabsSlotContext } from './EditButtonTabsSlot.js'
+import type { ButtonEditorMainTabState } from './useButtonEditorMainTab.js'
 
-export interface ButtonEditorExtraTabs {
-	id: string
-	name: string
-	position: 'start' | 'end'
+export function ButtonEditorTabBar({ tabs, activeTab, setActiveTab }: ButtonEditorMainTabState): React.JSX.Element {
+	return (
+		<TabArea.Root variant="pills" value={activeTab} onValueChange={setActiveTab}>
+			<TabArea.List>
+				{tabs.map((tab) => (
+					<TabArea.Tab key={tab.id} value={tab.id} title={tab.name}>
+						<div className="flex items-center gap-1.5">
+							<span>{tab.name}</span>
+							{tab.count !== undefined && (
+								<span className="px-1.5 py-0.5 rounded-full text-3xs font-semibold bg-primary/20 text-primary">
+									{tab.count}
+								</span>
+							)}
+						</div>
+					</TabArea.Tab>
+				))}
+			</TabArea.List>
+		</TabArea.Root>
+	)
 }
 
 interface ButtonEditorTabsProps {
@@ -34,7 +47,8 @@ interface ButtonEditorTabsProps {
 	runtimeProps: Record<string, any>
 	rotaryActions: boolean
 	localVariablesStore: LocalVariablesStore
-	extraTabs?: ButtonEditorExtraTabs[]
+	/** From useButtonEditorMainTab; the tab bar itself is rendered in the edit button summary card */
+	activeMainTab: string
 	children?: (currentTab: string) => React.ReactNode
 }
 
@@ -46,41 +60,13 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 	runtimeProps,
 	rotaryActions,
 	localVariablesStore,
-	extraTabs,
+	activeMainTab,
 	children,
 }: ButtonEditorTabsProps): React.JSX.Element {
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
-	const [tabBarRef, tabBarSize] = useElementClientSize<HTMLDivElement>()
-	const tabsSlot = useContext(EditButtonTabsSlotContext)
 
 	const stepKeys = useMemo(() => GetStepIds(steps), [steps])
 
-	// Top level tabs list: Actions + extra tabs
-	const mainTabs = useMemo(() => {
-		const tabs: { id: string; name: string; count?: number }[] = []
-
-		if (extraTabs) {
-			for (const t of extraTabs.filter((tab) => tab.position === 'start')) {
-				tabs.push({ id: t.id, name: t.name })
-			}
-		}
-
-		tabs.push({
-			id: 'actions',
-			name: 'Actions',
-			count: stepKeys.length > 1 ? stepKeys.length : undefined,
-		})
-
-		if (extraTabs) {
-			for (const t of extraTabs.filter((tab) => tab.position === 'end')) {
-				tabs.push({ id: t.id, name: t.name })
-			}
-		}
-
-		return tabs
-	}, [stepKeys.length, extraTabs])
-
-	const [activeMainTab, setActiveMainTab] = useLocalStorage('buttonEditor.activeMainTab', 'actions')
 	const [selectedStepId, setSelectedStepId] = useLocalStorage('buttonEditor.selectedStepId', stepKeys[0] || '0')
 
 	// Ensure selected step exists
@@ -89,13 +75,6 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 			setSelectedStepId(stepKeys[0] || '0')
 		}
 	}, [stepKeys, selectedStepId, setSelectedStepId])
-
-	// Fallback to 'actions' if selected tab is invalid
-	useEffect(() => {
-		if (!mainTabs.some((t) => t.id === activeMainTab)) {
-			setActiveMainTab('actions')
-		}
-	}, [mainTabs, activeMainTab, setActiveMainTab])
 
 	const service = useControlActionStepsAndSetsService(controlId, confirmRef, (newStepKey) => {
 		if (newStepKey.startsWith('step:')) {
@@ -111,31 +90,7 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 		<>
 			<GenericConfirmModal ref={confirmRef} />
 
-			{/* Rendered into the summary card, so the tabs stick with it */}
-			{tabsSlot &&
-				createPortal(
-					<div ref={tabBarRef} className="button-editor-tabs-shell">
-						<TabArea.Root variant="pills" value={activeMainTab} onValueChange={setActiveMainTab}>
-							<TabArea.List>
-								{mainTabs.map((tab) => (
-									<TabArea.Tab key={tab.id} value={tab.id} title={tab.name}>
-										<div className="flex items-center gap-1.5">
-											<span>{tab.name}</span>
-											{tab.count !== undefined && (
-												<span className="px-1.5 py-0.5 rounded-full text-3xs font-semibold bg-primary/20 text-primary">
-													{tab.count}
-												</span>
-											)}
-										</div>
-									</TabArea.Tab>
-								))}
-							</TabArea.List>
-						</TabArea.Root>
-					</div>,
-					tabsSlot
-				)}
-
-			<div className="edit-sticky-body" style={{ '--tab-bar-height': `${tabBarSize.height}px` } as React.CSSProperties}>
+			<div className="edit-sticky-body">
 				{activeMainTab === 'actions' ? (
 					<>
 						{/* Inside Actions: Modern Step Navigator Bar */}

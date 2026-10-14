@@ -219,13 +219,9 @@
 	}
 }
 
-/* The editor tabs' slot: the summary card's bottom row, under the preview, identity and actions */
+/* The editor tabs: the summary card's bottom row, under the preview, identity and actions */
 .edit-button-summary-tabs {
 	grid-column: 1 / -1;
-
-	&:empty {
-		display: none;
-	}
 }
 
 .add-dropdown-wrapper {

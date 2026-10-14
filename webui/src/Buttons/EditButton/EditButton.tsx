@@ -2,7 +2,7 @@ import { faFileArrowDown, faFileArrowUp, faFileLines, faSquarePlus } from '@fort
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import './EditButton.css'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useRef, useState } from 'react'
+import { useCallback, useContext, useRef } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -21,14 +21,15 @@ import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { assertNever, KeyReceiver } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ButtonEditorTabBar } from './ButtonEditorTabs.js'
 import { ButtonReferenceEditor } from './ButtonReferenceEditor.js'
 import { ControlClearButton } from './ControlClearButton.js'
 import { ControlHotPressButtons } from './ControlHotPressButtons.js'
 import { ConvertToNormalButton } from './ConvertToNormalButton.js'
 import { CreateButtonTypeButtons } from './CreateButtonTypeButtons.js'
-import { EditButtonTabsSlotContext } from './EditButtonTabsSlot.js'
 import { LayeredButtonEditor } from './LayeredButtonEditor/LayeredButtonEditor.js'
 import { PresetReferenceEditor } from './PresetReferenceEditor.js'
+import { LayeredButtonExtraTabs, useButtonEditorMainTab } from './useButtonEditorMainTab.js'
 
 interface EditButtonProps {
 	location: ControlLocation
@@ -146,10 +147,14 @@ const EditButtonContent = observer(function EditButton({
 		})
 	}, [resetControlsMutation, location])
 
-	const [tabsSlot, setTabsSlot] = useState<HTMLDivElement | null>(null)
+	// Only regular buttons have editor tabs. Their bar sits in the summary card, so it stays sticky with it
+	const editorTabs = useButtonEditorMainTab(
+		config.type === 'button-layered' && runtimeProps ? config.steps || {} : null,
+		LayeredButtonExtraTabs
+	)
 
 	return (
-		<EditButtonTabsSlotContext.Provider value={tabsSlot}>
+		<>
 			<div className="edit-button-sticky-header">
 				<div className="edit-button-summary">
 					<div className="edit-button-summary-preview">
@@ -184,8 +189,11 @@ const EditButtonContent = observer(function EditButton({
 							<ControlClearButton location={location} resetModalRef={resetModalRef} />
 						</MyErrorBoundary>
 					</div>
-					{/* The editor tabs (regular buttons only) portal in here, see EditButtonTabsSlotContext */}
-					<div className="edit-button-summary-tabs" ref={setTabsSlot} />
+					{editorTabs.tabs.length > 0 && (
+						<div className="edit-button-summary-tabs">
+							<ButtonEditorTabBar {...editorTabs} />
+						</div>
+					)}
 				</div>
 
 				{(config.type === 'button-layered' ||
@@ -246,8 +254,14 @@ const EditButtonContent = observer(function EditButton({
 			)}
 
 			{config.type === 'button-layered' && (
-				<LayeredButtonEditor config={config} controlId={controlId} runtimeProps={runtimeProps} location={location} />
+				<LayeredButtonEditor
+					config={config}
+					controlId={controlId}
+					runtimeProps={runtimeProps}
+					location={location}
+					activeMainTab={editorTabs.activeTab}
+				/>
 			)}
-		</EditButtonTabsSlotContext.Provider>
+		</>
 	)
 })
