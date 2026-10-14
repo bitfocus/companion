@@ -1,5 +1,5 @@
 import './PanelEmptyState.css'
-import type { IconProp } from '@fortawesome/fontawesome-svg-core'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { createContext, useContext } from 'react'
@@ -29,7 +29,7 @@ export function PanelEmptyListProvider({ value, children }: PanelEmptyListProvid
 }
 
 export interface PanelEmptyStateProps {
-	icon: IconProp
+	icon: IconDefinition
 	title: string
 	description: string
 }

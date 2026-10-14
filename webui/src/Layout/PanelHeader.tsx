@@ -1,9 +1,9 @@
 import './PanelHeader.css'
-import type { IconProp } from '@fortawesome/fontawesome-svg-core'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 export interface PanelHeaderProps {
-	icon: IconProp
+	icon: IconDefinition
 	title: string
 	/** The header's buttons (help, close, …), right-aligned. */
 	children: React.ReactNode
