@@ -619,8 +619,8 @@ describe('ServiceSatelliteApi', () => {
 				size: { width: 120, height: 200 },
 				bodyColor: '#1c1c1c',
 				controls: {
-					btn1: { x: 10, y: 10, width: 96, height: 96, shape: { type: 'rect', cornerRadius: 12 } },
-					strip: { x: 0, y: 120, width: 120, height: 16, type: 'lcd-segment' },
+					btn1: { x: 10, y: 10, width: 96, height: 96, shape: { shape: 'rect', cornerRadius: 12 } },
+					strip: { x: 0, y: 120, width: 120, height: 16, kind: 'lcd-segment' },
 				},
 			}
 			const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64')
