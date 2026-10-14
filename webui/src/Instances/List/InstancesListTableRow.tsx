@@ -121,7 +121,7 @@ export const InstancesListTableRow = observer(function InstancesListTableRow<TMe
 				<MyErrorBoundary>
 					{moduleVersion?.isLegacy && (
 						<span title="This module has not been updated for Companion 3.0, and may not work fully">
-							<FontAwesomeIcon icon={faExclamationTriangle} color="#f80" />{' '}
+							<FontAwesomeIcon icon={faExclamationTriangle} className="text-warning" />{' '}
 						</span>
 					)}
 					{moduleVersion?.isBeta && (

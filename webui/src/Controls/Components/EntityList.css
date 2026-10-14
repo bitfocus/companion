@@ -183,6 +183,9 @@
 				}
 			}
 		}
+		.cell-connection-label {
+			max-width: 30%;
+		}
 		.cell-controls {
 			text-align: right;
 			align-self: center;

@@ -327,7 +327,7 @@ export function useControlEntitiesEditorService(
 
 			confirmModal,
 			controlId,
-			// eslint-disable-next-line react-hooks/use-memo
+			// eslint-disable-next-line react-hooks/use-memo, react-hooks/exhaustive-deps
 			stringifySocketEntityLocation(listId),
 		]
 	)

@@ -91,7 +91,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 			>
 				{connectionLabel && (
 					<span
-						className="px-1.5 py-0.5 rounded text-3xs font-semibold tracking-wide uppercase bg-primary/10 text-primary border border-primary/20 shrink-0 max-w-[30%] truncate"
+						className="px-1.5 py-0.5 rounded text-3xs font-semibold tracking-wide uppercase bg-primary/10 text-primary border border-primary/20 shrink-0 truncate cell-connection-label"
 						title={connectionLabel}
 					>
 						{connectionLabel}

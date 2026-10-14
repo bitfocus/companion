@@ -1,13 +1,14 @@
 import { faPlay, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useId } from 'react'
+import { useCallback, useContext, useId, useRef } from 'react'
 import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/shared/Model/UserConfigModel.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { FormLabel } from '~/Components/Form.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Table } from '~/Components/Table.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
@@ -23,15 +24,21 @@ interface PreviousBackupRowProps {
 const PreviousBackupRow = observer(function PreviousBackupRow({ backup, ruleId }: PreviousBackupRowProps) {
 	const { notifier } = useContext(RootAppStoreContext)
 
+	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 	const deleteBackupFileMutation = useMutationExt(trpc.importExport.backupRules.deleteBackupFile.mutationOptions())
 
 	const deleteBackup = useCallback(() => {
-		if (confirm('Are you sure you want to delete this backup file?')) {
-			deleteBackupFileMutation.mutateAsync({ ruleId, filePath: backup.filePath }).catch((err) => {
-				console.error('Error deleting backup:', err)
-				notifier.show('Error', `Failed to delete backup file: ${err.message || err}`, 5000)
-			})
-		}
+		confirmModalRef.current?.show(
+			'Delete Backup',
+			'Are you sure you want to delete this backup file?',
+			'Delete',
+			() => {
+				deleteBackupFileMutation.mutateAsync({ ruleId, filePath: backup.filePath }).catch((err) => {
+					console.error('Error deleting backup:', err)
+					notifier.show('Error', `Failed to delete backup file: ${err.message || err}`, 5000)
+				})
+			}
+		)
 	}, [deleteBackupFileMutation, notifier, ruleId, backup.filePath])
 
 	const formatFileSize = (bytes: number): string => {
@@ -61,6 +68,7 @@ const PreviousBackupRow = observer(function PreviousBackupRow({ backup, ruleId }
 				<Button color="danger" size="sm" onClick={deleteBackup} title="Delete backup" variant="ghost">
 					<FontAwesomeIcon icon={faTrash} />
 				</Button>
+				<GenericConfirmModal ref={confirmModalRef} />
 			</td>
 		</tr>
 	)

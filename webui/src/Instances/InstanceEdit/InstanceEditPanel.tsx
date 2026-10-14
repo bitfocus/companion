@@ -404,7 +404,7 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 	}
 
 	return (
-		<div className={classNames('row edit-connection', configData.useNewLayout && 'instance-edit-horizontal-fields')}>
+		<Grid.Row className={classNames('edit-connection', configData.useNewLayout && 'instance-edit-horizontal-fields')}>
 			{configData.fields.map((fieldInfo) => {
 				const isVisible = panelStore.isVisible(fieldInfo)
 				if (!isVisible) return null
@@ -440,7 +440,7 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 					</InstanceFormRow>
 				)
 			})}
-		</div>
+		</Grid.Row>
 	)
 })
 

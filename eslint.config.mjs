@@ -9,6 +9,28 @@ import hookseslint from 'eslint-plugin-react-hooks'
 import reactRefreshEslint from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
+// Selectors for `no-restricted-syntax` in webui. Its options are replaced, not merged, by a later config block,
+// so each block that needs a different subset composes it from these.
+/** @param {string} pattern */
+const classNameMatches = (pattern) =>
+	`JSXAttribute[name.name='className'] :matches(Literal[value=/${pattern}/], TemplateElement[value.raw=/${pattern}/])`
+const restrictFontAwesomeTitle = {
+	selector: "JSXOpeningElement[name.name='FontAwesomeIcon'] > JSXAttribute[name.name='title']",
+	message: "FontAwesomeIcon's title prop is deprecated and broken. Put the title on a wrapping element instead",
+}
+const restrictFontAwesomeColor = {
+	selector: "JSXOpeningElement[name.name='FontAwesomeIcon'] > JSXAttribute[name.name='color']",
+	message: 'Use a text-* colour class from the theme instead of the color prop',
+}
+const restrictArbitraryClasses = {
+	selector: classNameMatches('\\['),
+	message: 'Arbitrary Tailwind values are not used. Add a custom class or a theme token instead',
+}
+const restrictGridClasses = {
+	selector: classNameMatches('(^|\\s)(row|col|col-(xs|sm|md|lg|xl|xxl)(-\\d+)?|col-\\d+|offset-\\S+)(\\s|$)'),
+	message: 'Use Grid.Row / Grid.Col from ~/Components/Grid.js instead of grid classes',
+}
+
 export default [
 	// setup the parser first
 	{
@@ -306,6 +328,28 @@ export default [
 		files: ['webui/**/*.tsx', 'webui/**/*.jsx'],
 		ignores: ['**/__tests__/**', '**/*.stories.tsx'],
 		rules: {
+			'no-restricted-syntax': [
+				'error',
+				restrictFontAwesomeTitle,
+				restrictFontAwesomeColor,
+				restrictArbitraryClasses,
+				restrictGridClasses,
+			],
+			'no-restricted-globals': [
+				'error',
+				...['alert', 'confirm', 'prompt'].map((name) => ({
+					name,
+					message: 'Use <GenericConfirmModal> or a notification instead of a blocking browser dialog',
+				})),
+			],
+			'no-restricted-properties': [
+				'error',
+				...['alert', 'confirm', 'prompt'].map((property) => ({
+					object: 'window',
+					property,
+					message: 'Use <GenericConfirmModal> or a notification instead of a blocking browser dialog',
+				})),
+			],
 			'react/forbid-elements': [
 				'error',
 				{
@@ -325,6 +369,14 @@ export default [
 					],
 				},
 			],
+		},
+	},
+	{
+		// The grid components themselves
+		files: ['webui/src/Components/**/*.tsx'],
+		ignores: ['**/__tests__/**', '**/*.stories.tsx'],
+		rules: {
+			'no-restricted-syntax': ['error', restrictFontAwesomeTitle, restrictFontAwesomeColor, restrictArbitraryClasses],
 		},
 	},
 	...pluginQuery.configs['flat/recommended'].map((config) => ({
