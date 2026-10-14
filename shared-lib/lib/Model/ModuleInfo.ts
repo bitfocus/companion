@@ -7,6 +7,9 @@ export interface ModuleDisplayInfo {
 	helpPath: string
 	bugUrl: string
 	shortname: string
+	/** null when the manifest doesn't declare one (surface modules) */
+	manufacturer: string | null
+	/** Product names as declared, without the manufacturer */
 	products: string[]
 	keywords: string[]
 }

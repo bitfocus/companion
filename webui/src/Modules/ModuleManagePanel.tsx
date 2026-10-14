@@ -21,6 +21,7 @@ import {
 import { Grid } from '~/Components/Grid'
 import { CloseButton } from '~/Layout/PanelIcons.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { formatModuleProduct, getModuleProducts } from './ModuleCatalog.js'
 import { ModuleDeprecationAlert, useModuleDeprecation } from './ModuleDeprecation.js'
 import { ModuleDocsPanel } from './ModuleDocsPanel.js'
 import { getModuleInstances } from './ModuleInstances.js'
@@ -88,7 +89,7 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 	const installedInfo = rootStore.modules.getModuleInfo(moduleType, moduleId)
 	const isConnection = moduleType === ModuleInstanceType.Connection
 	const usages = getModuleInstances(rootStore, moduleType, moduleId)
-	const products = [...new Set([...(moduleInfo?.products ?? []), ...(moduleStoreBaseInfo?.products ?? [])])]
+	const { manufacturer, products } = getModuleProducts(moduleInfo, moduleStoreBaseInfo)
 	const version =
 		installedInfo?.devVersion ??
 		installedInfo?.stableVersion ??
@@ -129,19 +130,13 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 
 	const baseInfo = moduleInfo || moduleStoreBaseInfo
 	const moduleName = baseInfo?.name ?? moduleId
-	const normalizeName = (value: string) => value.trim().toLocaleLowerCase()
-	const manufacturer = moduleName.includes(':') ? moduleName.slice(0, moduleName.indexOf(':')).trim() : null
-	const productName = (value: string) => {
-		const colon = value.indexOf(':')
-		return manufacturer && colon >= 0 && normalizeName(value.slice(0, colon)) === normalizeName(manufacturer)
-			? value.slice(colon + 1).trim()
-			: value.trim()
-	}
-	const displayProducts = [...new Set(products.map(productName))].filter(Boolean)
-	const extraProducts =
-		displayProducts.length === 1 && normalizeName(displayProducts[0]) === normalizeName(productName(moduleName))
-			? []
-			: displayProducts
+	// A module named after its only product doesn't need it listed again
+	const isNamedAfterProduct =
+		products.length === 1 &&
+		[products[0], formatModuleProduct(manufacturer, products[0])].some(
+			(name) => name.toLocaleLowerCase() === moduleName.toLocaleLowerCase()
+		)
+	const extraProducts = isNamedAfterProduct ? [] : products
 
 	const doCloseModule = useCallback(() => {
 		void navigate({ to: '/modules' })

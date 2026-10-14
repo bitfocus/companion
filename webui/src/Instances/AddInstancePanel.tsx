@@ -27,7 +27,12 @@ import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { filterProducts, useAllModuleProducts, type FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 import { LastUpdatedTimestamp } from '~/Modules/LastUpdatedTimestamp.js'
-import { getModuleProductName, groupModuleCatalog } from '~/Modules/ModuleCatalog.js'
+import {
+	getModuleProductEntries,
+	getModuleProductName,
+	getModuleProducts,
+	groupModuleCatalog,
+} from '~/Modules/ModuleCatalog.js'
 import { RefreshModulesList } from '~/Modules/RefreshModulesList.js'
 import { useModuleStoreInfo } from '~/Modules/useModuleStoreInfo.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
@@ -217,13 +222,17 @@ const AddInstanceEntry = observer(function AddInstanceEntry({ moduleInfo, addIns
 			: version && version.versionId !== 'dev' && version.versionId !== 'builtin'
 				? `v${version.versionId}`
 				: undefined
-	const products = [...new Set([...(installedInfo?.display.products ?? []), ...(moduleInfo.storeInfo?.products ?? [])])]
+	const productLabels = getModuleProductEntries(
+		getModuleProducts(installedInfo?.display, moduleInfo.storeInfo),
+		moduleInfo.name
+	).map((entry) => entry.label)
+
 	return (
 		<Button
 			variant="ghost"
 			disabled={isLimitReached}
 			onClick={() => addInstance(moduleInfo)}
-			title={isLimitReached ? 'This module is limited to one instance' : products.join(', ')}
+			title={isLimitReached ? 'This module is limited to one instance' : productLabels.join(', ')}
 			className={classNames(
 				'add-module-row list-row flex w-full items-center gap-2 rounded-none border-0 border-b border-border py-2 text-start hover:bg-surface-muted/50 disabled:opacity-60 disabled:cursor-not-allowed disabled:pointer-events-auto'
 			)}
@@ -346,7 +355,7 @@ const AddInstanceConfigureStep = observer(function AddInstanceConfigureStep({
 			{/* Hero Header Card */}
 			<div className="rounded-md border border-border/70 bg-surface-muted/30 p-4">
 				<div className="flex items-center justify-between gap-3">
-					<h3 className="text-base font-bold text-body mb-0">{moduleInfo.product || moduleInfo.name}</h3>
+					<h3 className="text-base font-bold text-body mb-0">{moduleInfo.label}</h3>
 
 					<Button color="secondary" size="sm" onClick={onBack}>
 						<FontAwesomeIcon icon={faArrowLeft} className="me-1" /> Back to Catalog

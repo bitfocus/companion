@@ -1,19 +1,46 @@
+import type { ModuleDisplayInfo } from '@companion-app/shared/Model/ModuleInfo.js'
+import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
 import type { FuzzyProduct } from '~/Hooks/useFilteredProducts.js'
 
-export function getModuleCatalogName(module: FuzzyProduct): string {
+export interface ModuleProducts {
+	manufacturer: string | null
+	/** Product names without the manufacturer; empty when the module declares none */
+	products: string[]
+}
+
+/** A module's manufacturer and products, combining its installed and store info. */
+export function getModuleProducts(
+	installed: ModuleDisplayInfo | null | undefined,
+	store: ModuleStoreListCacheEntry | null | undefined
+): ModuleProducts {
+	return {
+		manufacturer: installed?.manufacturer ?? store?.manufacturer ?? null,
+		products: [...new Set([...(installed?.products ?? []), ...(store?.products ?? [])])],
+	}
+}
+
+/** "Manufacturer: Product", the form a product is listed and searched by. */
+export function formatModuleProduct(manufacturer: string | null, product: string): string {
+	return manufacturer ? `${manufacturer}: ${product}` : product
+}
+
+/** Each product with its listed label; a module declaring none is listed by its name. */
+export function getModuleProductEntries(
+	{ manufacturer, products }: ModuleProducts,
+	moduleName: string
+): Array<{ product: string; label: string }> {
+	if (products.length === 0) return [{ product: moduleName, label: moduleName }]
+	return products.map((product) => ({ product, label: formatModuleProduct(manufacturer, product) }))
+}
+
+function getModuleCatalogName(module: FuzzyProduct): string {
 	return module.installedInfo?.display.name ?? module.storeInfo?.name ?? module.name
 }
 
-export function getModuleManufacturer(module: FuzzyProduct): string {
-	const name = getModuleCatalogName(module)
-	const colon = name.indexOf(':')
-	return colon > 0 ? name.slice(0, colon).trim() : 'Other'
-}
-
+/** The title of a module's catalog row, under its manufacturer's heading. */
 export function getModuleProductName(module: FuzzyProduct): string {
-	const name = getModuleCatalogName(module)
-	const colon = name.indexOf(':')
-	return (colon > 0 ? name.slice(colon + 1).trim() : name.trim()) || name
+	const { products } = getModuleProducts(module.installedInfo?.display, module.storeInfo)
+	return products.length > 0 ? products.join('; ') : getModuleCatalogName(module)
 }
 
 /** Keep the best search match per module, then group both catalog browsers consistently. */
@@ -28,7 +55,7 @@ export function groupModuleCatalog(
 	}
 	const groups = new Map<string, { name: string; modules: FuzzyProduct[] }>()
 	for (const module of unique.values()) {
-		const name = getModuleManufacturer(module)
+		const name = module.manufacturer ?? 'Other'
 		const key = name.toLocaleLowerCase()
 		let group = groups.get(key)
 		if (!group) {

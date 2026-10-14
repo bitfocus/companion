@@ -3,6 +3,7 @@ import { useContext } from 'react'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
+import { getModuleProductEntries, getModuleProducts } from '~/Modules/ModuleCatalog.js'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 
@@ -26,7 +27,8 @@ export function useAllModuleProducts(
 				moduleInfo.devVersion ?? moduleInfo.stableVersion ?? moduleInfo.betaVersion ?? moduleInfo.builtinVersion
 			if (!latestVersion) continue // shouldn't happen, but just in case
 
-			for (const product of moduleInfo.display.products) {
+			const productInfo = getModuleProducts(moduleInfo.display, null)
+			for (const { product, label } of getModuleProductEntries(productInfo, moduleInfo.display.name)) {
 				const key = `${moduleInfo.moduleType}-${moduleInfo.display.id}-${product}`
 				allProducts[key] = {
 					moduleType: moduleInfo.moduleType,
@@ -35,7 +37,9 @@ export function useAllModuleProducts(
 					installedInfo: moduleInfo,
 					storeInfo: null,
 
+					manufacturer: productInfo.manufacturer,
 					product,
+					label,
 					keywords: moduleInfo.display.keywords?.join(';') ?? '',
 					name: moduleInfo.display.name,
 					shortname: moduleInfo.display.shortname,
@@ -55,12 +59,18 @@ export function useAllModuleProducts(
 			// If we are hiding deprecated modules, skip these
 			if (!includeDeprecated && moduleInfo.deprecationReason) continue
 
-			for (const product of moduleInfo.products) {
+			const productInfo = getModuleProducts(null, moduleInfo)
+			for (const { product, label } of getModuleProductEntries(productInfo, moduleInfo.name)) {
 				const key = `${moduleInfo.moduleType}-${moduleInfo.id}-${product}`
 
 				const installedInfo = allProducts[key]
 				if (installedInfo) {
 					installedInfo.storeInfo = moduleInfo
+					// Surface manifests don't declare a manufacturer, but the store does
+					if (installedInfo.manufacturer === null && productInfo.manufacturer !== null) {
+						installedInfo.manufacturer = productInfo.manufacturer
+						installedInfo.label = label
+					}
 				} else {
 					allProducts[key] = {
 						moduleType: moduleInfo.moduleType,
@@ -69,7 +79,9 @@ export function useAllModuleProducts(
 						installedInfo: null,
 						storeInfo: moduleInfo,
 
+						manufacturer: productInfo.manufacturer,
 						product,
+						label,
 						keywords: moduleInfo.keywords?.join(';') ?? '',
 						name: moduleInfo.name,
 						shortname: moduleInfo.shortname,
@@ -88,7 +100,7 @@ export function useAllModuleProducts(
 export function filterProducts(allProducts: FuzzyProduct[], filter: string, includeType: boolean): FuzzyProduct[] {
 	if (!filter) return allProducts //.map((p) => p.info)
 
-	const keys: Array<keyof FuzzyProduct> = ['product', 'name', 'keywords']
+	const keys: Array<keyof FuzzyProduct> = ['label', 'name', 'keywords']
 	if (includeType) keys.push('moduleType')
 
 	const result = fuzzySearch(filter, allProducts, {
@@ -108,7 +120,11 @@ export interface FuzzyProduct {
 	installedInfo: ClientModuleInfo | null
 	storeInfo: ModuleStoreListCacheEntry | null
 
+	manufacturer: string | null
+	/** The product name as declared, without the manufacturer */
 	product: string
+	/** "Manufacturer: Product", as listed and searched */
+	label: string
 	keywords: string
 	name: string
 	shortname: string

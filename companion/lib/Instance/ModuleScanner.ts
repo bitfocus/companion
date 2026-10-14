@@ -132,10 +132,8 @@ export class InstanceModuleScanner {
 			helpPath: getHelpPathForInstalledModule(ModuleInstanceType.Connection, manifestJson.id, manifestJson.version),
 			bugUrl: manifestJson.bugs || manifestJson.repository,
 			shortname: manifestJson.shortname,
-			products:
-				manifestJson.products.length === 0
-					? [manifestJson.manufacturer]
-					: manifestJson.products.map((p) => `${manifestJson.manufacturer}: ${p}`),
+			manufacturer: manifestJson.manufacturer,
+			products: manifestJson.products,
 			keywords: manifestJson.keywords,
 		}
 
@@ -190,10 +188,8 @@ export class InstanceModuleScanner {
 			helpPath: getHelpPathForInstalledModule(ModuleInstanceType.Connection, manifestJson.id, manifestJson.version),
 			bugUrl: manifestJson.bugs || manifestJson.repository,
 			shortname: manifestJson.shortname,
-			products:
-				manifestJson.products.length === 0
-					? [manifestJson.manufacturer]
-					: manifestJson.products.map((p) => `${manifestJson.manufacturer}: ${p}`),
+			manufacturer: manifestJson.manufacturer,
+			products: manifestJson.products,
 			keywords: manifestJson.keywords,
 		}
 
@@ -238,6 +234,7 @@ export class InstanceModuleScanner {
 			helpPath: getHelpPathForInstalledModule(ModuleInstanceType.Surface, manifestJson.id, manifestJson.version),
 			bugUrl: manifestJson.bugs || manifestJson.repository,
 			shortname: manifestJson.id,
+			manufacturer: null,
 			products: manifestJson.products,
 			keywords: manifestJson.keywords,
 		}

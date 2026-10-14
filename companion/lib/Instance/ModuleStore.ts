@@ -27,6 +27,9 @@ import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 
+/** Bump when the shape of the cached store list entries changes */
+const STORE_LIST_FORMAT_VERSION = 2
+
 const baseUrl = process.env.STAGING_MODULE_API
 	? 'https://developer-staging.bitfocus.io/api'
 	: 'https://developer.bitfocus.io/api'
@@ -72,6 +75,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 			lastUpdated: 0,
 			lastUpdateAttempt: 0,
 			updateWarning: null,
+			formatVersion: STORE_LIST_FORMAT_VERSION,
 
 			connectionModuleApiVersion: null,
 			connectionModules: null,
@@ -79,6 +83,17 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 			surfaceModuleApiVersion: null,
 			surfaceModules: null,
 		} satisfies ModuleStoreListCacheStore)
+
+		// Entries cached in an older shape can't be used; drop them until the refresh below replaces them
+		if (this.#listStore.formatVersion !== STORE_LIST_FORMAT_VERSION) {
+			this.#listStore = {
+				...this.#listStore,
+				lastUpdated: 0,
+				formatVersion: STORE_LIST_FORMAT_VERSION,
+				connectionModules: null,
+				surfaceModules: null,
+			}
+		}
 
 		this.#infoStore = new Map<any, ModuleStoreModuleInfoStore>(Object.entries(this.#cacheTable.all()))
 
@@ -284,6 +299,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 					lastUpdated: Date.now(),
 					lastUpdateAttempt: Date.now(),
 					updateWarning: null,
+					formatVersion: STORE_LIST_FORMAT_VERSION,
 
 					connectionModuleApiVersion: JSON.stringify(MODULE_BASE_VERSIONS),
 					connectionModules: Object.fromEntries(
@@ -456,14 +472,13 @@ function getLatestModuleVersionInfo(
 function transformApiModuleToCache(
 	data: ModuleStoreOpenApiComponents['schemas']['CompanionModuleInfo']
 ): Complete<ModuleStoreListCacheEntry> {
-	const prefix = data.manufacturer ? `${data.manufacturer}: ` : ''
-
 	// Match what the on disk scanner generates
 	return {
 		id: data.id,
 		name: data.name,
 		shortname: data.shortname,
-		products: data.products.length === 0 ? [data.manufacturer ?? data.name] : data.products.map((p) => `${prefix}${p}`),
+		manufacturer: data.manufacturer || null,
+		products: data.products,
 		keywords: data.keywords,
 
 		storeUrl: data.storeUrl,

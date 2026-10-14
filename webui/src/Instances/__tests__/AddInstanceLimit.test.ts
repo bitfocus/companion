@@ -21,7 +21,16 @@ function makeVersion(versionId: string, allowMultipleInstances: boolean): Client
 function makeInfo(overrides: Partial<ClientModuleInfo>): ClientModuleInfo {
 	return {
 		moduleType: ModuleInstanceType.Surface,
-		display: { id: 'test', name: 'Test', helpPath: '', bugUrl: '', shortname: 'test', products: [], keywords: [] },
+		display: {
+			id: 'test',
+			name: 'Test',
+			helpPath: '',
+			bugUrl: '',
+			shortname: 'test',
+			manufacturer: null,
+			products: [],
+			keywords: [],
+		},
 		devVersion: null,
 		builtinVersion: null,
 		stableVersion: null,
