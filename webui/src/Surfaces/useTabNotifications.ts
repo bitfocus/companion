@@ -1,7 +1,7 @@
 import { useContext } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { useUdevRulesStatus } from '~/Hooks/useUdevRulesStatus'
-import { useMissingVersionsCount } from '~/Instances/MissingVersionsWarning'
+import { useMissingModuleVersions, type MissingModuleVersions } from '~/Instances/MissingVersionsWarning'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 export interface TabNotifications {
@@ -15,16 +15,16 @@ export function useSurfacesNotifications(): TabNotifications {
 	const { surfaces, surfaceInstances } = useContext(RootAppStoreContext)
 
 	const updateCount = surfaces.countFirmwareUpdates()
-	const missingCount = useMissingVersionsCount(ModuleInstanceType.Surface, surfaceInstances.instances)
+	const missing = useMissingModuleVersions(ModuleInstanceType.Surface, surfaceInstances.instances)
 
 	const udevStatus = useUdevRulesStatus()
 	const udevNeedsApply = !!udevStatus?.supported && udevStatus.needsApply
 
 	return {
-		count: updateCount + missingCount + (udevNeedsApply ? 1 : 0),
+		count: updateCount + missingModulesCount(missing) + (udevNeedsApply ? 1 : 0),
 		lines: [
 			updateCount > 0 ? `${updateCount} surfaces have firmware updates available` : null,
-			missingCount > 0 ? `Missing ${missingCount} needed modules` : null,
+			...missingModulesLines(missing),
 			udevNeedsApply ? `USB permissions need updating` : null,
 		].filter((line) => line !== null),
 	}
@@ -34,10 +34,21 @@ export function useSurfacesNotifications(): TabNotifications {
 export function useConnectionsNotifications(): TabNotifications {
 	const { connections } = useContext(RootAppStoreContext)
 
-	const missingCount = useMissingVersionsCount(ModuleInstanceType.Connection, connections.connections)
+	const missing = useMissingModuleVersions(ModuleInstanceType.Connection, connections.connections)
 
 	return {
-		count: missingCount,
-		lines: missingCount > 0 ? [`Missing ${missingCount} needed modules`] : [],
+		count: missingModulesCount(missing),
+		lines: missingModulesLines(missing),
 	}
+}
+
+function missingModulesCount(missing: MissingModuleVersions): number {
+	return missing.installable + missing.notLoaded.length
+}
+
+function missingModulesLines(missing: MissingModuleVersions): string[] {
+	return [
+		missing.installable > 0 ? `Missing ${missing.installable} needed modules` : null,
+		missing.notLoaded.length > 0 ? `${missing.notLoaded.length} dev or built-in modules not loaded` : null,
+	].filter((line) => line !== null)
 }

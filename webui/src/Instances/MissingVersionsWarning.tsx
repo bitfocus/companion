@@ -3,44 +3,60 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
 import { ModuleInstanceType, type ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
+import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { Button } from '~/Components/Button'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 
+export interface MissingModuleVersions {
+	/** Instances whose module version isn't installed but can be fetched from the store */
+	installable: number
+	/** Modules whose dev or builtin version isn't loaded. The store never has these, so they can't be installed */
+	notLoaded: { moduleId: string; versionId: 'dev' | 'builtin' }[]
+}
+
+/** Sorts the instances whose module version isn't available by whether installing from the store can fix them */
 // eslint-disable-next-line react-refresh/only-export-components
-export function useMissingVersionsCount(
-	moduleType: ModuleInstanceType,
-	instances: ReadonlyMap<string, ClientInstanceConfigBase>
-): number {
-	const { modules } = useContext(RootAppStoreContext)
+export function findMissingModuleVersions(
+	instances: Iterable<ClientInstanceConfigBase>,
+	getModuleInfo: (moduleId: string) => ClientModuleInfo | undefined
+): MissingModuleVersions {
+	let installable = 0
+	const notLoaded = new Map<string, MissingModuleVersions['notLoaded'][number]>()
 
-	return useComputed(() => {
-		let count = 0
-
-		for (const instance of instances.values()) {
-			if (instance.moduleVersionId === null) {
-				count++
-				continue
-			}
-
-			const moduleInfo = modules.getModuleInfo(moduleType, instance.moduleId)
-			if (!moduleInfo) {
-				count++
-				continue
-			}
-
-			// check for version
-			if (moduleInfo.devVersion && instance.moduleVersionId === 'dev') continue
-			if (moduleInfo.builtinVersion && instance.moduleVersionId === 'builtin') continue
-			if (moduleInfo.installedVersions.find((v) => v.versionId === instance.moduleVersionId)) continue
-
-			// Not found
-			count++
+	for (const instance of instances) {
+		const versionId = instance.moduleVersionId
+		if (versionId === null) {
+			installable++
+			continue
 		}
 
-		return count
-	}, [instances, modules, moduleType])
+		const moduleInfo = getModuleInfo(instance.moduleId)
+
+		if (versionId === 'dev' || versionId === 'builtin') {
+			const loaded = versionId === 'dev' ? moduleInfo?.devVersion : moduleInfo?.builtinVersion
+			if (!loaded) notLoaded.set(`${versionId}:${instance.moduleId}`, { moduleId: instance.moduleId, versionId })
+			continue
+		}
+
+		if (!moduleInfo?.installedVersions.some((v) => v.versionId === versionId)) installable++
+	}
+
+	return { installable, notLoaded: [...notLoaded.values()] }
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function useMissingModuleVersions(
+	moduleType: ModuleInstanceType,
+	instances: ReadonlyMap<string, ClientInstanceConfigBase>
+): MissingModuleVersions {
+	const { modules } = useContext(RootAppStoreContext)
+
+	return useComputed(
+		() => findMissingModuleVersions(instances.values(), (moduleId) => modules.getModuleInfo(moduleType, moduleId)),
+		[instances, modules, moduleType]
+	)
 }
 
 export interface MissingVersionsWarningProps {
@@ -52,7 +68,7 @@ export const MissingVersionsWarning = observer(function MissingVersionsWarning({
 	moduleType,
 	instances,
 }: MissingVersionsWarningProps) {
-	const missingCount = useMissingVersionsCount(moduleType, instances)
+	const { installable, notLoaded } = useMissingModuleVersions(moduleType, instances)
 
 	const installMissingMutation = useMutationExt(trpc.instances.modulesManager.installAllMissing.mutationOptions())
 
@@ -67,27 +83,57 @@ export const MissingVersionsWarning = observer(function MissingVersionsWarning({
 			.finally(() => setInstalling(false))
 	}, [installMissingMutation, moduleType])
 
-	if (missingCount === 0) return null
+	if (installable === 0 && notLoaded.length === 0) return null
 
 	const noun = moduleType === ModuleInstanceType.Connection ? 'connection' : 'surface integration'
+	const devModules = notLoaded.filter((m) => m.versionId === 'dev').map((m) => m.moduleId)
+	const builtinModules = notLoaded.filter((m) => m.versionId === 'builtin').map((m) => m.moduleId)
 
 	return (
-		<div className="edit-note edit-note-warning flex-wrap" role="status">
-			<FontAwesomeIcon icon={faTriangleExclamation} className="edit-note-icon" aria-hidden="true" />
-			<span className="grow">
-				{missingCount === 1 ? `1 ${noun} has` : `${missingCount} ${noun}s have`} no installed module version
-			</span>
-			<Button
-				variant="outline"
-				size="sm"
-				className="inline-flex items-center gap-1.5"
-				onClick={doInstallAllMissing}
-				disabled={installing}
-				aria-busy={installing}
-			>
-				<FontAwesomeIcon icon={faDownload} aria-hidden="true" />
-				Install missing
-			</Button>
+		<div className="flex flex-col gap-2">
+			{installable > 0 && (
+				<div className="edit-note edit-note-warning flex-wrap" role="status">
+					<FontAwesomeIcon icon={faTriangleExclamation} className="edit-note-icon" aria-hidden="true" />
+					<span className="grow">
+						{installable === 1 ? `1 ${noun} has` : `${installable} ${noun}s have`} no installed module version
+					</span>
+					<Button
+						variant="outline"
+						size="sm"
+						className="inline-flex items-center gap-1.5"
+						onClick={doInstallAllMissing}
+						disabled={installing}
+						aria-busy={installing}
+					>
+						<FontAwesomeIcon icon={faDownload} aria-hidden="true" />
+						Install missing
+					</Button>
+				</div>
+			)}
+			{devModules.length > 0 && (
+				<div className="edit-note edit-note-warning" role="status">
+					<FontAwesomeIcon icon={faTriangleExclamation} className="edit-note-icon" aria-hidden="true" />
+					<span>
+						{devModules.length === 1
+							? `Unable to load development version of module ${quoteList(devModules)}. Check that it exists in your developer modules folder.`
+							: `Unable to load development versions of modules ${quoteList(devModules)}. Check that they exist in your developer modules folder.`}
+					</span>
+				</div>
+			)}
+			{builtinModules.length > 0 && (
+				<div className="edit-note edit-note-warning" role="status">
+					<FontAwesomeIcon icon={faTriangleExclamation} className="edit-note-icon" aria-hidden="true" />
+					<span>
+						{builtinModules.length === 1
+							? `Unable to load built-in version of module ${quoteList(builtinModules)}. Your Companion installation may be incomplete.`
+							: `Unable to load built-in versions of modules ${quoteList(builtinModules)}. Your Companion installation may be incomplete.`}
+					</span>
+				</div>
+			)}
 		</div>
 	)
 })
+
+function quoteList(moduleIds: string[]): string {
+	return moduleIds.map((id) => `"${id}"`).join(', ')
+}
