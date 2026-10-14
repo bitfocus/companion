@@ -59,7 +59,10 @@ commit will fail if types or lint don't pass — expect that and fix it rather t
 - **New function parameters are required, not optional.** Backwards compatibility is NOT a good
   enough reason to make a parameter optional. When adding a parameter, thread it through all call
   sites rather than defaulting it. When a new argument has a "none" case, model it explicitly (e.g.
-  pass `null`) at every call site rather than leaving the parameter optional.
+  pass `null`) at every call site rather than leaving the parameter optional. This is about function
+  parameters and props: an opt-in field on a definition/data object that only a minority set (e.g.
+  `emphasis` on a child group definition) should be optional with a documented default, not repeated
+  everywhere.
 - Match the style, naming and comment density of the surrounding code.
 - When changing behaviour, improve unit-test coverage for it; do not rely on manual testing alone.
 - **Delete what's unused rather than keeping it "for compatibility".** The webui has no external

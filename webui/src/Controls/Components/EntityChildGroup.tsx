@@ -80,10 +80,6 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 	// Entities inside this child group are one level deeper, so bump the dnd collision priority for them.
 	const parentNestingLevel = useContext(EntityNestingLevelContext)
 
-	const labelLower = (groupInfo.label || '').toLowerCase()
-	const isIf = groupInfo.groupId === 'if' || labelLower.startsWith('if')
-	const isElse = groupInfo.groupId === 'else' || labelLower.startsWith('else')
-
 	return (
 		<div className="mt-2">
 			<EntityNestingLevelContext.Provider value={parentNestingLevel + 1}>
@@ -91,15 +87,7 @@ const EntityManageChildGroup = observer(function EntityManageChildGroup({
 					heading={
 						groupInfo.label ? (
 							<div className="flex items-center gap-1.5">
-								<span
-									className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-semibold uppercase tracking-wider ${
-										isIf
-											? 'bg-tone-good-fill/10 text-tone-good-text border border-tone-good-fill/20'
-											: isElse
-												? 'bg-tone-warning-fill/10 text-tone-warning-text border border-tone-warning-fill/20'
-												: 'bg-primary/10 text-primary border border-primary/20'
-									}`}
-								>
+								<span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-3xs font-semibold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20">
 									<FontAwesomeIcon icon={faCodeBranch} className="text-3xs" />
 									{groupInfo.label}
 								</span>
