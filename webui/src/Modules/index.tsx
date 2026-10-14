@@ -8,7 +8,7 @@ import { ModulesList, type ModuleTypeAndIdPair } from './ModulesList.js'
 
 export const ModulesPage = memo(function ModulesPage() {
 	const matchRoute = useMatchRoute()
-	const routeMatch = matchRoute({ to: '/modules/$moduleType/$moduleId' })
+	const routeMatch = matchRoute({ to: '/modules/$moduleType/$moduleId', fuzzy: true })
 	const selectedModuleInfo: ModuleTypeAndIdPair | null = routeMatch ? (routeMatch as ModuleTypeAndIdPair) : null
 
 	const navigate = useNavigate({ from: '/modules' })

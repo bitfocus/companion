@@ -75,6 +75,12 @@ commit will fail if types or lint don't pass — expect that and fix it rather t
   text (`groupId === 'if'`, `label.startsWith('else')`), and don't re-parse strings the backend already
   formatted (splitting `name` on `:`). Add a field to the shared model (`shared-lib/lib/Model/`) that
   says what the UI needs, and set it in the backend.
+- **Navigable state goes in the URL path, not the query string** (`webui`, TanStack Router): a tab or
+  version is `/modules/$moduleType/$moduleId/docs/$docsVersion`, not `?tab=docs&docsVersion=…`. Keep
+  search params for transient things like filters. When the page's component must stay mounted across
+  tabs (e.g. an editor with unsaved changes), add child route files with no component and have the parent
+  read the active one with `useMatchRoute`; matchers for the parent path elsewhere then need
+  `fuzzy: true`. See `routes/_app/connections/$connectionId*.tsx`.
 - **Render in place.** Don't portal part of a component into an unrelated part of the DOM to achieve a
   layout; lift the state up and render it where it belongs.
 

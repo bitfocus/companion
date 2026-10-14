@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useMatchRoute } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
@@ -11,7 +11,10 @@ const RouteComponent = observer(function RouteComponent() {
 	const { modules } = useContext(RootAppStoreContext)
 
 	const { moduleType, moduleId } = Route.useParams()
-	const { tab, docsVersion } = Route.useSearch()
+	const matchRoute = useMatchRoute()
+	const tab = matchRoute({ to: '/modules/$moduleType/$moduleId/docs', fuzzy: true }) ? 'docs' : undefined
+	const docsVersionMatch = matchRoute({ to: '/modules/$moduleType/$moduleId/docs/$docsVersion' })
+	const docsVersion = docsVersionMatch ? docsVersionMatch.docsVersion : undefined
 
 	const moduleTypeCast = moduleType as ModuleInstanceType
 
@@ -44,9 +47,5 @@ const RouteComponent = observer(function RouteComponent() {
 })
 
 export const Route = createFileRoute('/_app/modules/$moduleType/$moduleId')({
-	validateSearch: (search: Record<string, unknown>): { tab?: 'docs'; docsVersion?: string } => ({
-		tab: search.tab === 'docs' ? 'docs' : undefined,
-		docsVersion: typeof search.docsVersion === 'string' ? search.docsVersion : undefined,
-	}),
 	component: RouteComponent,
 })

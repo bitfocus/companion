@@ -16,7 +16,7 @@ export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.El
 	const navigate = useNavigate()
 	const matchRoute = useMatchRoute()
 	const addConnectionsMatch = !!matchRoute({ to: '/connections/add' })
-	const routeMatch = matchRoute({ to: '/connections/$connectionId' })
+	const routeMatch = matchRoute({ to: '/connections/$connectionId', fuzzy: true })
 	const selectedConnectionId = routeMatch && routeMatch.connectionId !== 'add' ? routeMatch.connectionId : null
 
 	const handleCloseModal = useCallback(() => {

@@ -106,15 +106,15 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 			(docsVersion === version?.versionId ? helpPath : undefined))
 		: helpPath
 	const showDocs = useCallback(
-		(versionId?: string) => {
+		(versionId: string) => {
 			void navigate({
-				to: '/modules/$moduleType/$moduleId',
-				params: { moduleType, moduleId },
-				search: { tab: 'docs', docsVersion: versionId },
+				to: '/modules/$moduleType/$moduleId/docs/$docsVersion',
+				params: { moduleType, moduleId, docsVersion: versionId },
 			})
 		},
 		[navigate, moduleType, moduleId]
 	)
+	const docsTabVersion = docsVersion ?? version?.versionId
 	const issueUrl = moduleInfo?.bugUrl || moduleStoreBaseInfo?.githubUrl
 	const badges = [
 		...(installedInfo?.builtinVersion ? ['Built-in'] : []),
@@ -169,7 +169,6 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 				<Link
 					to="/modules/$moduleType/$moduleId"
 					params={{ moduleType, moduleId }}
-					search={{}}
 					aria-current={!tab ? 'page' : undefined}
 					className={classNames(EDIT_TAB_CLASS, !tab ? EDIT_TAB_ACTIVE_CLASS : EDIT_TAB_INACTIVE_CLASS, 'no-underline')}
 				>
@@ -178,9 +177,12 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 				</Link>
 
 				<Link
-					to="/modules/$moduleType/$moduleId"
-					params={{ moduleType, moduleId }}
-					search={{ tab: 'docs', docsVersion: docsVersion ?? version?.versionId }}
+					{...(docsTabVersion
+						? {
+								to: '/modules/$moduleType/$moduleId/docs/$docsVersion',
+								params: { moduleType, moduleId, docsVersion: docsTabVersion },
+							}
+						: { to: '/modules/$moduleType/$moduleId/docs', params: { moduleType, moduleId } })}
 					aria-current={tab === 'docs' ? 'page' : undefined}
 					className={classNames(
 						EDIT_TAB_CLASS,
@@ -203,9 +205,9 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 			<div className="secondary-panel-simple-body p-4 space-y-4 overflow-y-auto flex-1">
 				{tab === 'docs' ? (
 					<>
-						{(docsVersion ?? version?.versionId) && (
+						{docsTabVersion && (
 							<div className="w-full rounded-lg border border-border bg-surface-muted px-3 py-2 text-sm text-muted">
-								Documentation for <span className="font-semibold text-body">{docsVersion ?? version?.versionId}</span>
+								Documentation for <span className="font-semibold text-body">{docsTabVersion}</span>
 							</div>
 						)}
 						<div className="max-w-readable space-y-4">

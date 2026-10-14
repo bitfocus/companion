@@ -63,6 +63,8 @@ import { Route as AppVariablesCustomRouteImport } from './routes/_app/variables/
 import { Route as AppVariablesExpressionRouteImport } from './routes/_app/variables/expression.tsx'
 import { Route as StandaloneConnectionDebugDotconnectionIdRouteImport } from './routes/_standalone/connection-debug.$connectionId.tsx'
 import { Route as StandaloneEmulatorIndexRouteImport } from './routes/_standalone/emulator/index.tsx'
+import { Route as AppConnectionsConnectionIdDotdiagnosticsRouteImport } from './routes/_app/connections/$connectionId.diagnostics.tsx'
+import { Route as AppConnectionsConnectionIdDotdocsRouteImport } from './routes/_app/connections/$connectionId.docs.tsx'
 import { Route as AppModulesModuleTypeDotmoduleIdRouteImport } from './routes/_app/modules/$moduleType.$moduleId.tsx'
 import { Route as AppSettingsAdvancedIndexRouteImport } from './routes/_app/settings/advanced/index.tsx'
 import { Route as AppSettingsAdvancedItemIdRouteImport } from './routes/_app/settings/advanced/$itemId.tsx'
@@ -83,7 +85,9 @@ import { Route as AppVariablesCustomNameRouteImport } from './routes/_app/variab
 import { Route as AppVariablesExpressionIndexRouteImport } from './routes/_app/variables/expression/index.tsx'
 import { Route as AppVariablesExpressionControlIdRouteImport } from './routes/_app/variables/expression/$controlId.tsx'
 import { Route as StandaloneSurfacesDotdebugDotinstanceIdRouteImport } from './routes/_standalone/surfaces.debug.$instanceId.tsx'
+import { Route as AppModulesModuleTypeDotmoduleIdDotdocsRouteImport } from './routes/_app/modules/$moduleType.$moduleId.docs.tsx'
 import { Route as AppVariablesConnectionsConnectionDotlabelRouteImport } from './routes/_app/variables/_connections/connection.$label.tsx'
+import { Route as AppModulesModuleTypeDotmoduleIdDotdocsDotdocsVersionRouteImport } from './routes/_app/modules/$moduleType.$moduleId.docs.$docsVersion.tsx'
 
 const StandaloneTabletDotlazyRouteImport = createFileRoute(
   '/_standalone/tablet',
@@ -371,6 +375,18 @@ const StandaloneEmulatorEmulatorIdDotlazyRoute =
       (d) => d.Route,
     ),
   )
+const AppConnectionsConnectionIdDotdiagnosticsRoute =
+  AppConnectionsConnectionIdDotdiagnosticsRouteImport.update({
+    id: '/diagnostics',
+    path: '/diagnostics',
+    getParentRoute: () => AppConnectionsConnectionIdRoute,
+  } as any)
+const AppConnectionsConnectionIdDotdocsRoute =
+  AppConnectionsConnectionIdDotdocsRouteImport.update({
+    id: '/docs',
+    path: '/docs',
+    getParentRoute: () => AppConnectionsConnectionIdRoute,
+  } as any)
 const AppModulesModuleTypeDotmoduleIdRoute =
   AppModulesModuleTypeDotmoduleIdRouteImport.update({
     id: '/$moduleType/$moduleId',
@@ -487,11 +503,23 @@ const StandaloneSurfacesDotdebugDotinstanceIdRoute =
     path: '/surfaces/debug/$instanceId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AppModulesModuleTypeDotmoduleIdDotdocsRoute =
+  AppModulesModuleTypeDotmoduleIdDotdocsRouteImport.update({
+    id: '/docs',
+    path: '/docs',
+    getParentRoute: () => AppModulesModuleTypeDotmoduleIdRoute,
+  } as any)
 const AppVariablesConnectionsConnectionDotlabelRoute =
   AppVariablesConnectionsConnectionDotlabelRouteImport.update({
     id: '/connection/$label',
     path: '/connection/$label',
     getParentRoute: () => AppVariablesConnectionsRoute,
+  } as any)
+const AppModulesModuleTypeDotmoduleIdDotdocsDotdocsVersionRoute =
+  AppModulesModuleTypeDotmoduleIdDotdocsDotdocsVersionRouteImport.update({
+    id: '/$docsVersion',
+    path: '/$docsVersion',
+    getParentRoute: () => AppModulesModuleTypeDotmoduleIdDotdocsRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -519,7 +547,7 @@ export interface FileRoutesByFullPath {
   '/emulator': typeof StandaloneEmulatorRouteWithChildren
   '/tablet': typeof StandaloneTabletDotlazyRoute
   '/buttons/$page': typeof AppButtonsPageRoute
-  '/connections/$connectionId': typeof AppConnectionsConnectionIdRoute
+  '/connections/$connectionId': typeof AppConnectionsConnectionIdRouteWithChildren
   '/connections/add': typeof AppConnectionsAddRoute
   '/image-library/$imageName': typeof AppImageLibraryImageNameRoute
   '/settings/advanced': typeof AppSettingsAdvancedRouteWithChildren
@@ -548,7 +576,9 @@ export interface FileRoutesByFullPath {
   '/surfaces/': typeof AppSurfacesIndexRoute
   '/triggers/': typeof AppTriggersIndexRoute
   '/emulator/': typeof StandaloneEmulatorIndexRoute
-  '/modules/$moduleType/$moduleId': typeof AppModulesModuleTypeDotmoduleIdRoute
+  '/connections/$connectionId/diagnostics': typeof AppConnectionsConnectionIdDotdiagnosticsRoute
+  '/connections/$connectionId/docs': typeof AppConnectionsConnectionIdDotdocsRoute
+  '/modules/$moduleType/$moduleId': typeof AppModulesModuleTypeDotmoduleIdRouteWithChildren
   '/settings/advanced/$itemId': typeof AppSettingsAdvancedItemIdRoute
   '/settings/backups/$ruleId': typeof AppSettingsBackupsRuleIdRoute
   '/settings/protocols/$protocolId': typeof AppSettingsProtocolsProtocolIdRoute
@@ -568,7 +598,9 @@ export interface FileRoutesByFullPath {
   '/variables/': typeof AppVariablesConnectionsIndexRoute
   '/variables/custom/': typeof AppVariablesCustomIndexRoute
   '/variables/expression/': typeof AppVariablesExpressionIndexRoute
+  '/modules/$moduleType/$moduleId/docs': typeof AppModulesModuleTypeDotmoduleIdDotdocsRouteWithChildren
   '/variables/connection/$label': typeof AppVariablesConnectionsConnectionDotlabelRoute
+  '/modules/$moduleType/$moduleId/docs/$docsVersion': typeof AppModulesModuleTypeDotmoduleIdDotdocsDotdocsVersionRoute
 }
 export interface FileRoutesByTo {
   '/emulator.html': typeof RedirectsEmulatorHtmlRoute
@@ -589,7 +621,7 @@ export interface FileRoutesByTo {
   '/tablet': typeof StandaloneTabletDotlazyRoute
   '/': typeof AppIndexRoute
   '/buttons/$page': typeof AppButtonsPageRoute
-  '/connections/$connectionId': typeof AppConnectionsConnectionIdRoute
+  '/connections/$connectionId': typeof AppConnectionsConnectionIdRouteWithChildren
   '/connections/add': typeof AppConnectionsAddRoute
   '/image-library/$imageName': typeof AppImageLibraryImageNameRoute
   '/settings/buttons': typeof AppSettingsButtonsRoute
@@ -610,7 +642,9 @@ export interface FileRoutesByTo {
   '/surfaces': typeof AppSurfacesIndexRoute
   '/triggers': typeof AppTriggersIndexRoute
   '/emulator': typeof StandaloneEmulatorIndexRoute
-  '/modules/$moduleType/$moduleId': typeof AppModulesModuleTypeDotmoduleIdRoute
+  '/connections/$connectionId/diagnostics': typeof AppConnectionsConnectionIdDotdiagnosticsRoute
+  '/connections/$connectionId/docs': typeof AppConnectionsConnectionIdDotdocsRoute
+  '/modules/$moduleType/$moduleId': typeof AppModulesModuleTypeDotmoduleIdRouteWithChildren
   '/settings/advanced/$itemId': typeof AppSettingsAdvancedItemIdRoute
   '/settings/backups/$ruleId': typeof AppSettingsBackupsRuleIdRoute
   '/settings/protocols/$protocolId': typeof AppSettingsProtocolsProtocolIdRoute
@@ -630,7 +664,9 @@ export interface FileRoutesByTo {
   '/variables': typeof AppVariablesConnectionsIndexRoute
   '/variables/custom': typeof AppVariablesCustomIndexRoute
   '/variables/expression': typeof AppVariablesExpressionIndexRoute
+  '/modules/$moduleType/$moduleId/docs': typeof AppModulesModuleTypeDotmoduleIdDotdocsRouteWithChildren
   '/variables/connection/$label': typeof AppVariablesConnectionsConnectionDotlabelRoute
+  '/modules/$moduleType/$moduleId/docs/$docsVersion': typeof AppModulesModuleTypeDotmoduleIdDotdocsDotdocsVersionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -659,7 +695,7 @@ export interface FileRoutesById {
   '/_standalone/tablet': typeof StandaloneTabletDotlazyRoute
   '/_app/': typeof AppIndexRoute
   '/_app/buttons/$page': typeof AppButtonsPageRoute
-  '/_app/connections/$connectionId': typeof AppConnectionsConnectionIdRoute
+  '/_app/connections/$connectionId': typeof AppConnectionsConnectionIdRouteWithChildren
   '/_app/connections/add': typeof AppConnectionsAddRoute
   '/_app/image-library/$imageName': typeof AppImageLibraryImageNameRoute
   '/_app/settings/advanced': typeof AppSettingsAdvancedRouteWithChildren
@@ -688,7 +724,9 @@ export interface FileRoutesById {
   '/_app/surfaces/': typeof AppSurfacesIndexRoute
   '/_app/triggers/': typeof AppTriggersIndexRoute
   '/_standalone/emulator/': typeof StandaloneEmulatorIndexRoute
-  '/_app/modules/$moduleType/$moduleId': typeof AppModulesModuleTypeDotmoduleIdRoute
+  '/_app/connections/$connectionId/diagnostics': typeof AppConnectionsConnectionIdDotdiagnosticsRoute
+  '/_app/connections/$connectionId/docs': typeof AppConnectionsConnectionIdDotdocsRoute
+  '/_app/modules/$moduleType/$moduleId': typeof AppModulesModuleTypeDotmoduleIdRouteWithChildren
   '/_app/settings/advanced/$itemId': typeof AppSettingsAdvancedItemIdRoute
   '/_app/settings/backups/$ruleId': typeof AppSettingsBackupsRuleIdRoute
   '/_app/settings/protocols/$protocolId': typeof AppSettingsProtocolsProtocolIdRoute
@@ -708,7 +746,9 @@ export interface FileRoutesById {
   '/_app/variables/_connections/': typeof AppVariablesConnectionsIndexRoute
   '/_app/variables/custom/': typeof AppVariablesCustomIndexRoute
   '/_app/variables/expression/': typeof AppVariablesExpressionIndexRoute
+  '/_app/modules/$moduleType/$moduleId/docs': typeof AppModulesModuleTypeDotmoduleIdDotdocsRouteWithChildren
   '/_app/variables/_connections/connection/$label': typeof AppVariablesConnectionsConnectionDotlabelRoute
+  '/_app/modules/$moduleType/$moduleId/docs/$docsVersion': typeof AppModulesModuleTypeDotmoduleIdDotdocsDotdocsVersionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -766,6 +806,8 @@ export interface FileRouteTypes {
     | '/surfaces/'
     | '/triggers/'
     | '/emulator/'
+    | '/connections/$connectionId/diagnostics'
+    | '/connections/$connectionId/docs'
     | '/modules/$moduleType/$moduleId'
     | '/settings/advanced/$itemId'
     | '/settings/backups/$ruleId'
@@ -786,7 +828,9 @@ export interface FileRouteTypes {
     | '/variables/'
     | '/variables/custom/'
     | '/variables/expression/'
+    | '/modules/$moduleType/$moduleId/docs'
     | '/variables/connection/$label'
+    | '/modules/$moduleType/$moduleId/docs/$docsVersion'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/emulator.html'
@@ -828,6 +872,8 @@ export interface FileRouteTypes {
     | '/surfaces'
     | '/triggers'
     | '/emulator'
+    | '/connections/$connectionId/diagnostics'
+    | '/connections/$connectionId/docs'
     | '/modules/$moduleType/$moduleId'
     | '/settings/advanced/$itemId'
     | '/settings/backups/$ruleId'
@@ -848,7 +894,9 @@ export interface FileRouteTypes {
     | '/variables'
     | '/variables/custom'
     | '/variables/expression'
+    | '/modules/$moduleType/$moduleId/docs'
     | '/variables/connection/$label'
+    | '/modules/$moduleType/$moduleId/docs/$docsVersion'
   id:
     | '__root__'
     | '/_app'
@@ -905,6 +953,8 @@ export interface FileRouteTypes {
     | '/_app/surfaces/'
     | '/_app/triggers/'
     | '/_standalone/emulator/'
+    | '/_app/connections/$connectionId/diagnostics'
+    | '/_app/connections/$connectionId/docs'
     | '/_app/modules/$moduleType/$moduleId'
     | '/_app/settings/advanced/$itemId'
     | '/_app/settings/backups/$ruleId'
@@ -925,7 +975,9 @@ export interface FileRouteTypes {
     | '/_app/variables/_connections/'
     | '/_app/variables/custom/'
     | '/_app/variables/expression/'
+    | '/_app/modules/$moduleType/$moduleId/docs'
     | '/_app/variables/_connections/connection/$label'
+    | '/_app/modules/$moduleType/$moduleId/docs/$docsVersion'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1325,6 +1377,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StandaloneEmulatorEmulatorIdDotlazyRouteImport
       parentRoute: typeof StandaloneEmulatorRoute
     }
+    '/_app/connections/$connectionId/diagnostics': {
+      id: '/_app/connections/$connectionId/diagnostics'
+      path: '/diagnostics'
+      fullPath: '/connections/$connectionId/diagnostics'
+      preLoaderRoute: typeof AppConnectionsConnectionIdDotdiagnosticsRouteImport
+      parentRoute: typeof AppConnectionsConnectionIdRoute
+    }
+    '/_app/connections/$connectionId/docs': {
+      id: '/_app/connections/$connectionId/docs'
+      path: '/docs'
+      fullPath: '/connections/$connectionId/docs'
+      preLoaderRoute: typeof AppConnectionsConnectionIdDotdocsRouteImport
+      parentRoute: typeof AppConnectionsConnectionIdRoute
+    }
     '/_app/modules/$moduleType/$moduleId': {
       id: '/_app/modules/$moduleType/$moduleId'
       path: '/$moduleType/$moduleId'
@@ -1465,12 +1531,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StandaloneSurfacesDotdebugDotinstanceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/modules/$moduleType/$moduleId/docs': {
+      id: '/_app/modules/$moduleType/$moduleId/docs'
+      path: '/docs'
+      fullPath: '/modules/$moduleType/$moduleId/docs'
+      preLoaderRoute: typeof AppModulesModuleTypeDotmoduleIdDotdocsRouteImport
+      parentRoute: typeof AppModulesModuleTypeDotmoduleIdRoute
+    }
     '/_app/variables/_connections/connection/$label': {
       id: '/_app/variables/_connections/connection/$label'
       path: '/connection/$label'
       fullPath: '/variables/connection/$label'
       preLoaderRoute: typeof AppVariablesConnectionsConnectionDotlabelRouteImport
       parentRoute: typeof AppVariablesConnectionsRoute
+    }
+    '/_app/modules/$moduleType/$moduleId/docs/$docsVersion': {
+      id: '/_app/modules/$moduleType/$moduleId/docs/$docsVersion'
+      path: '/$docsVersion'
+      fullPath: '/modules/$moduleType/$moduleId/docs/$docsVersion'
+      preLoaderRoute: typeof AppModulesModuleTypeDotmoduleIdDotdocsDotdocsVersionRouteImport
+      parentRoute: typeof AppModulesModuleTypeDotmoduleIdDotdocsRoute
     }
   }
 }
@@ -1487,14 +1567,32 @@ const AppButtonsRouteWithChildren = AppButtonsRoute._addFileChildren(
   AppButtonsRouteChildren,
 )
 
+interface AppConnectionsConnectionIdRouteChildren {
+  AppConnectionsConnectionIdDotdiagnosticsRoute: typeof AppConnectionsConnectionIdDotdiagnosticsRoute
+  AppConnectionsConnectionIdDotdocsRoute: typeof AppConnectionsConnectionIdDotdocsRoute
+}
+
+const AppConnectionsConnectionIdRouteChildren: AppConnectionsConnectionIdRouteChildren =
+  {
+    AppConnectionsConnectionIdDotdiagnosticsRoute:
+      AppConnectionsConnectionIdDotdiagnosticsRoute,
+    AppConnectionsConnectionIdDotdocsRoute:
+      AppConnectionsConnectionIdDotdocsRoute,
+  }
+
+const AppConnectionsConnectionIdRouteWithChildren =
+  AppConnectionsConnectionIdRoute._addFileChildren(
+    AppConnectionsConnectionIdRouteChildren,
+  )
+
 interface AppConnectionsRouteChildren {
-  AppConnectionsConnectionIdRoute: typeof AppConnectionsConnectionIdRoute
+  AppConnectionsConnectionIdRoute: typeof AppConnectionsConnectionIdRouteWithChildren
   AppConnectionsAddRoute: typeof AppConnectionsAddRoute
   AppConnectionsIndexRoute: typeof AppConnectionsIndexRoute
 }
 
 const AppConnectionsRouteChildren: AppConnectionsRouteChildren = {
-  AppConnectionsConnectionIdRoute: AppConnectionsConnectionIdRoute,
+  AppConnectionsConnectionIdRoute: AppConnectionsConnectionIdRouteWithChildren,
   AppConnectionsAddRoute: AppConnectionsAddRoute,
   AppConnectionsIndexRoute: AppConnectionsIndexRoute,
 }
@@ -1517,14 +1615,45 @@ const AppImageLibraryRouteWithChildren = AppImageLibraryRoute._addFileChildren(
   AppImageLibraryRouteChildren,
 )
 
+interface AppModulesModuleTypeDotmoduleIdDotdocsRouteChildren {
+  AppModulesModuleTypeDotmoduleIdDotdocsDotdocsVersionRoute: typeof AppModulesModuleTypeDotmoduleIdDotdocsDotdocsVersionRoute
+}
+
+const AppModulesModuleTypeDotmoduleIdDotdocsRouteChildren: AppModulesModuleTypeDotmoduleIdDotdocsRouteChildren =
+  {
+    AppModulesModuleTypeDotmoduleIdDotdocsDotdocsVersionRoute:
+      AppModulesModuleTypeDotmoduleIdDotdocsDotdocsVersionRoute,
+  }
+
+const AppModulesModuleTypeDotmoduleIdDotdocsRouteWithChildren =
+  AppModulesModuleTypeDotmoduleIdDotdocsRoute._addFileChildren(
+    AppModulesModuleTypeDotmoduleIdDotdocsRouteChildren,
+  )
+
+interface AppModulesModuleTypeDotmoduleIdRouteChildren {
+  AppModulesModuleTypeDotmoduleIdDotdocsRoute: typeof AppModulesModuleTypeDotmoduleIdDotdocsRouteWithChildren
+}
+
+const AppModulesModuleTypeDotmoduleIdRouteChildren: AppModulesModuleTypeDotmoduleIdRouteChildren =
+  {
+    AppModulesModuleTypeDotmoduleIdDotdocsRoute:
+      AppModulesModuleTypeDotmoduleIdDotdocsRouteWithChildren,
+  }
+
+const AppModulesModuleTypeDotmoduleIdRouteWithChildren =
+  AppModulesModuleTypeDotmoduleIdRoute._addFileChildren(
+    AppModulesModuleTypeDotmoduleIdRouteChildren,
+  )
+
 interface AppModulesRouteChildren {
   AppModulesIndexRoute: typeof AppModulesIndexRoute
-  AppModulesModuleTypeDotmoduleIdRoute: typeof AppModulesModuleTypeDotmoduleIdRoute
+  AppModulesModuleTypeDotmoduleIdRoute: typeof AppModulesModuleTypeDotmoduleIdRouteWithChildren
 }
 
 const AppModulesRouteChildren: AppModulesRouteChildren = {
   AppModulesIndexRoute: AppModulesIndexRoute,
-  AppModulesModuleTypeDotmoduleIdRoute: AppModulesModuleTypeDotmoduleIdRoute,
+  AppModulesModuleTypeDotmoduleIdRoute:
+    AppModulesModuleTypeDotmoduleIdRouteWithChildren,
 }
 
 const AppModulesRouteWithChildren = AppModulesRoute._addFileChildren(

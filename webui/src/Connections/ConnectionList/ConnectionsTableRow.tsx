@@ -25,9 +25,8 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	const navigate = useNavigate()
 	const showDocs = useCallback(() => {
 		void navigate({
-			to: '/connections/$connectionId',
+			to: '/connections/$connectionId/docs',
 			params: { connectionId: id },
-			search: { tab: 'docs' },
 		})
 	}, [navigate, id])
 
