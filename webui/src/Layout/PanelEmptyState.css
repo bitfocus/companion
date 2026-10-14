@@ -7,7 +7,7 @@
 	text-align: center;
 }
 
-/* Same soft tile as the lock and loading cards (App.css), so the three read as one family */
+/* Same soft tile as the lock and loading cards (AppSplash.css), so the three read as one family */
 .panel-empty-state-icon {
 	display: flex;
 	align-items: center;

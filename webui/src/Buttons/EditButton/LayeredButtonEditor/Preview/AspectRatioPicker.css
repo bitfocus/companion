@@ -55,8 +55,8 @@
 		}
 	}
 
-	/* Undo the `btn` metrics so every option keeps the same 24x24 box */
-	.button-layer-aspect-option.btn {
+	/* Undo the `button` metrics so every option keeps the same 24x24 box */
+	.button-layer-aspect-option.button {
 		line-height: 1;
 		font-size: inherit;
 		min-width: 0;

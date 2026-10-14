@@ -157,7 +157,7 @@ export function VirtualLogList<TLine>({
 	const items = virtualizer.getVirtualItems()
 
 	return (
-		<div ref={parentRef} className={className} onScroll={onScroll}>
+		<div ref={parentRef} className={classNames('log-viewer', className)} onScroll={onScroll}>
 			<div style={{ height: virtualizer.getTotalSize(), width: '100%', position: 'relative' }}>
 				<div
 					style={{

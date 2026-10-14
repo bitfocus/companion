@@ -26,6 +26,7 @@ import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { LastUpdatedTimestamp as StoreLastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
+import { getModuleInstances } from './ModuleInstances.js'
 import { RefreshModuleInfo } from './RefreshModuleInfo.js'
 
 dayjs.extend(relativeTime)
@@ -221,7 +222,7 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 	installationKind,
 	onShowDocs,
 }: ModuleVersionRowProps) {
-	const { connections, surfaceInstances } = useContext(RootAppStoreContext)
+	const rootStore = useContext(RootAppStoreContext)
 
 	const versionDisplayName = installedInfo?.versionId ?? storeInfo?.id ?? ''
 	const helpPath = installedInfo?.helpPath ?? storeInfo?.helpUrl
@@ -233,13 +234,8 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 
 	if (!storeInfo && !installedInfo) return null // Should never happen
 
-	const instances =
-		moduleType === ModuleInstanceType.Connection
-			? Array.from(connections.connections.values())
-			: Array.from(surfaceInstances.instances.values())
-	const matchingInstances = instances.filter(
-		(instance) =>
-			instance.moduleType === moduleType && instance.moduleId === moduleId && instance.moduleVersionId === versionId
+	const matchingInstances = getModuleInstances(rootStore, moduleType, moduleId).filter(
+		(instance) => instance.moduleVersionId === versionId
 	).length
 	const isCompatible = storeInfo ? isSomeModuleApiVersionCompatible(moduleType, storeInfo.apiVersion) : undefined
 

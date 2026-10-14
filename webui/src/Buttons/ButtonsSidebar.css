@@ -78,11 +78,6 @@
 		}
 	}
 
-	.action-recorder-panel,
-	.action-recorder-session-heading {
-		min-width: 0;
-	}
-
 	.buttons-sidebar-section > p {
 		margin: 0 0 0.75rem;
 		color: var(--color-muted);

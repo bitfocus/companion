@@ -23,6 +23,7 @@ import { CloseButton } from '~/Layout/PanelIcons.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ModuleDeprecationAlert, useModuleDeprecation } from './ModuleDeprecation.js'
 import { ModuleDocsPanel } from './ModuleDocsPanel.js'
+import { getModuleInstances } from './ModuleInstances.js'
 import { ModuleVersionsTable } from './ModuleVersionsTable.js'
 import { useModuleStoreInfo } from './useModuleStoreInfo.js'
 
@@ -83,14 +84,10 @@ const ModuleManagePanelInner = observer(function ModuleManagePanelInner({
 }: ModuleManagePanelInnerProps) {
 	const moduleStoreInfo = useModuleStoreInfo(moduleType, moduleId)
 	const navigate = useNavigate()
-	const { modules, connections, surfaceInstances } = useContext(RootAppStoreContext)
-	const installedInfo = modules.getModuleInfo(moduleType, moduleId)
+	const rootStore = useContext(RootAppStoreContext)
+	const installedInfo = rootStore.modules.getModuleInfo(moduleType, moduleId)
 	const isConnection = moduleType === ModuleInstanceType.Connection
-	const usages = (
-		isConnection ? Array.from(connections.connections.values()) : Array.from(surfaceInstances.instances.values())
-	)
-		.filter((instance) => instance.moduleType === moduleType && instance.moduleId === moduleId)
-		.sort((a, b) => a.label.localeCompare(b.label))
+	const usages = getModuleInstances(rootStore, moduleType, moduleId)
 	const products = [...new Set([...(moduleInfo?.products ?? []), ...(moduleStoreBaseInfo?.products ?? [])])]
 	const version =
 		installedInfo?.devVersion ??

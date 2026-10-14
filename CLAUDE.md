@@ -62,6 +62,21 @@ commit will fail if types or lint don't pass — expect that and fix it rather t
   pass `null`) at every call site rather than leaving the parameter optional.
 - Match the style, naming and comment density of the surrounding code.
 - When changing behaviour, improve unit-test coverage for it; do not rely on manual testing alone.
+- **Delete what's unused rather than keeping it "for compatibility".** The webui has no external
+  consumers, so an unused prop value, CSS class, component or file is dead code: remove it and fix the
+  call sites. Before removing something that still has an effect (a style, a state), check what it
+  changes and say so.
+- **Look for existing logic before writing more.** If a pattern (a keyboard shortcut, a store filter, a
+  version-picking chain) already exists elsewhere, reuse it or extract it into a shared hook/helper
+  (`webui/src/Hooks/`, or next to its feature) rather than adding another copy.
+- **Keep components small.** Split long files and monolithic components into focused pieces, e.g.
+  separate screens out of `App.tsx` into their own files under `Layout/`.
+- **The UI renders what the model describes; it doesn't guess.** Don't branch on hard-coded ids or label
+  text (`groupId === 'if'`, `label.startsWith('else')`), and don't re-parse strings the backend already
+  formatted (splitting `name` on `:`). Add a field to the shared model (`shared-lib/lib/Model/`) that
+  says what the UI needs, and set it in the backend.
+- **Render in place.** Don't portal part of a component into an unrelated part of the DOM to achieve a
+  layout; lift the state up and render it where it belongs.
 
 ### Formatting (enforced by Prettier, via ESLint)
 
@@ -96,6 +111,12 @@ commit will fail if types or lint don't pass — expect that and fix it rather t
   in `Components/Button.css` (etc.), so the next feature that needs it does not reinvent it. Only what is
   specific to one feature — which of its rows reveal a control on hover, say — stays in the feature's own
   CSS.
+- **One root class per stylesheet.** A component/feature CSS file should define one (or as few as
+  possible) top-level classes, applied to the component's root element, with all its other rules nested
+  inside, so short class names can't collide with other files. Style a feature's defaults in its own
+  file, not from the parent that happens to host it.
+- **New shared components get a Storybook story** (`<Name>.stories.tsx` next to it), so they can be
+  demoed and styled without running Companion. Keep stories to the component's real props, not legacy ones.
 - **No arbitrary values.** The codebase uses none — do not introduce `w-[30px]` / `bg-[#abc]`. If a
   static value has no clean utility (off-scale px, `em`/`vh`, a one-off colour), give it a custom class
   or a theme token rather than reaching for `[…]` or leaving it inline.

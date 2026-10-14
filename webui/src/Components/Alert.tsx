@@ -99,7 +99,7 @@ export const DismissableAlert = forwardRef<HTMLDivElement, DismissableAlertProps
 						{children}
 						<BaseButton
 							type="button"
-							className="btn btn-close"
+							className="btn-close"
 							aria-label="Close alert"
 							onClick={() => setVisible(false)}
 						/>

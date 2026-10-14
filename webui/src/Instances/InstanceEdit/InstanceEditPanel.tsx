@@ -12,7 +12,7 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import classNames from 'classnames'
 import { observable } from 'mobx'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useContext, useEffect, useId, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useId, useMemo, useState } from 'react'
 import {
 	InstanceVersionUpdatePolicy,
 	ModuleInstanceType,
@@ -33,6 +33,7 @@ import { StatusBadge } from '~/Components/StatusBadge.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
+import { useSaveShortcut } from '~/Hooks/useSaveShortcut.js'
 import { InstanceEditField } from '~/Instances/InstanceEdit/InstanceEditField.js'
 import type { InstanceEditPanelService } from '~/Instances/InstanceEdit/InstanceEditPanelService.js'
 import { InstanceEditPanelStore, isConfigFieldSecret } from '~/Instances/InstanceEdit/InstanceEditPanelStore.js'
@@ -73,7 +74,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 
 	const moduleInfo = modules.getModuleInfo(panelStore.instanceInfo.moduleType, panelStore.instanceInfo.moduleId)
 
-	const isSaving = observable.box(false)
+	const isSaving = useMemo(() => observable.box(false), [])
 	const [saveError, setSaveError] = useState<string | null>(null)
 	const performSave = useCallback(() => {
 		if (isSaving.get()) return
@@ -98,17 +99,7 @@ export const InstanceGenericEditPanel = observer(function InstanceGenericEditPan
 			})
 	}, [service, panelStore, isSaving])
 
-	// Cmd+S / Ctrl+S keyboard shortcut to save
-	useEffect(() => {
-		const handleKeyDown = (e: KeyboardEvent) => {
-			if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-				e.preventDefault()
-				performSave()
-			}
-		}
-		window.addEventListener('keydown', handleKeyDown)
-		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [performSave])
+	useSaveShortcut(performSave)
 
 	return (
 		<>

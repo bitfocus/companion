@@ -63,7 +63,7 @@ export const ActionRecorder = observer(function ActionRecorder(): React.JSX.Elem
 	)
 
 	return (
-		<div className="page-shell">
+		<div className="page-shell action-recorder-page">
 			<GenericConfirmModal ref={confirmRef} />
 
 			{sessionsStore.isFinishing && selectedSessionId ? (

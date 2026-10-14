@@ -1,5 +1,3 @@
-/* Full-screen overlays are now managed by ConnectionLostOverlay.tsx using Tailwind classes */
-
 /* Centred card shared by the loading and lock screens */
 .app-splash {
 	display: flex;

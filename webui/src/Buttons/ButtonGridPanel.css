@@ -200,12 +200,3 @@
 		}
 	}
 }
-
-.dropdown-zoom {
-	position: inherit;
-	display: inline-block;
-
-	> .btn {
-		border-radius: var(--radius) !important; /* fix coreui bug for toggles w/o caret */
-	}
-}

@@ -1,9 +1,10 @@
 import { faPlug } from '@fortawesome/free-solid-svg-icons'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useEffect } from 'react'
+import { useCallback, useContext } from 'react'
 import { Modal } from '~/Components/Modal.js'
 import { AddConnectionsPanel } from '~/Connections/AddConnectionPanel.js'
+import { useEscapeToClose } from '~/Hooks/useEscapeToClose.js'
 import { PageHeader } from '~/Layout/PageHeader.js'
 import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
@@ -23,27 +24,7 @@ export const ConnectionsPage = observer(function ConnectionsPage(): React.JSX.El
 	}, [navigate])
 
 	// Close configuration panel on Escape key
-	useEffect(() => {
-		if (!selectedConnectionId) return
-
-		const handleKeyDown = (e: KeyboardEvent) => {
-			// Let focused controls and dialogs consume Escape without also discarding the editor.
-			const target = e.target instanceof Element ? e.target : null
-			if (
-				e.defaultPrevented ||
-				addConnectionsMatch ||
-				document.querySelector('[role="dialog"]') ||
-				target?.closest('input, textarea, select, [contenteditable="true"], [role="listbox"], [role="combobox"]')
-			)
-				return
-			if (e.key === 'Escape') {
-				void navigate({ to: '/connections' })
-			}
-		}
-
-		window.addEventListener('keydown', handleKeyDown)
-		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [selectedConnectionId, addConnectionsMatch, navigate])
+	useEscapeToClose(!!selectedConnectionId && !addConnectionsMatch, handleCloseModal)
 
 	const { connections } = useContext(RootAppStoreContext)
 	const emptyList: PanelEmptyListState | null =
