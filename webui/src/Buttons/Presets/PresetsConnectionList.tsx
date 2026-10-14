@@ -4,6 +4,7 @@ import { observer } from 'mobx-react-lite'
 import { createContext, memo, useCallback, useContext } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { ButtonsSidebarSection } from '~/Buttons/ButtonsSidebarSection.js'
 import { CollapsibleTree, type CollapsibleTreeHeaderProps } from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import {
 	useConnectionLeafTree,
@@ -88,10 +89,7 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 
 	return (
 		<PresetsStoreContext.Provider value={presetsDefinitionsStore}>
-			<div className="buttons-sidebar-section presets-panel">
-				<div className="buttons-sidebar-heading-row">
-					<h5 className="buttons-sidebar-heading">Presets</h5>
-				</div>
+			<ButtonsSidebarSection className="presets-panel" title="Presets" actions={null}>
 				<p className="presets-intro">Choose a connection, then drag a ready-made button onto the grid.</p>
 				<div className="presets-list-heading">Available connections</div>
 
@@ -114,7 +112,7 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 				)}
 
 				<p className="presets-footnote">Not every module provides presets. You can also build buttons manually.</p>
-			</div>
+			</ButtonsSidebarSection>
 		</PresetsStoreContext.Provider>
 	)
 })

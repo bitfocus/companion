@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
 import { CreatePageControlId } from '@companion-app/shared/ControlId.js'
+import { ButtonsSidebarSection } from '~/Buttons/ButtonsSidebarSection.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
@@ -33,14 +34,12 @@ export const PageVariablesPanel = observer(function PageVariablesPanel({ pageNum
 	const dataReady = !error && !!config && config.type === 'page'
 
 	return (
-		<div className="page-variables-panel buttons-sidebar-section">
-			<div className="buttons-sidebar-heading-row">
-				<h5 className="buttons-sidebar-heading">Page Variables</h5>
-			</div>
+		<ButtonsSidebarSection className={undefined} title="Page Variables" actions={null}>
 			<LoadingRetryOrError dataReady={dataReady} error={error} doRetry={reloadConfig} design="pulse" />
 			{dataReady && controlId && (
 				<MyErrorBoundary>
 					<LocalVariablesEditor
+						className="mt-0"
 						heading={null}
 						controlId={controlId}
 						location={undefined}
@@ -50,6 +49,6 @@ export const PageVariablesPanel = observer(function PageVariablesPanel({ pageNum
 					/>
 				</MyErrorBoundary>
 			)}
-		</div>
+		</ButtonsSidebarSection>
 	)
 })

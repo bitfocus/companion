@@ -35,6 +35,13 @@ export const Pills: Story = {
 	},
 }
 
+export const Compact: Story = {
+	args: {
+		variant: 'compact',
+		defaultValue: 'tab1',
+	},
+}
+
 export const SecondTabActive: Story = {
 	args: {
 		variant: 'underline',

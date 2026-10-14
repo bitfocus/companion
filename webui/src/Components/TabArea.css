@@ -207,3 +207,43 @@
 		}
 	}
 }
+
+/* The `compact` variant: small bordered tabs on a muted strip, with tighter panels, for a narrow side panel.
+   Child combinators keep it off any tab areas nested inside its panels. */
+.tab-area.tab-area-compact {
+	min-width: 0;
+
+	> .tab-bar {
+		gap: 0.25rem;
+		padding: 0.25rem 0.5rem;
+		overflow-x: auto;
+		background: var(--color-surface-muted);
+
+		&.tab-bar--overflowing {
+			overflow-x: auto;
+		}
+
+		.tab-bar__tab {
+			flex: 0 0 auto;
+			margin: 0;
+			padding: 0.375rem 0.5rem;
+			border: 1px solid transparent;
+			border-radius: 0.5rem;
+			font-size: 0.75rem;
+			line-height: 1.25;
+			text-align: center;
+			white-space: nowrap;
+
+			&[data-active] {
+				border: 1px solid var(--color-border);
+				background: var(--color-surface);
+			}
+		}
+	}
+
+	> .tab-panel {
+		min-width: 0;
+		padding: 1rem;
+		overflow-x: hidden;
+	}
+}

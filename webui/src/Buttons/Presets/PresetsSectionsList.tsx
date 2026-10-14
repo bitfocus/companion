@@ -4,6 +4,7 @@ import { observer } from 'mobx-react-lite'
 import { useMemo, useState } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import type { UIPresetSection, UIPresetSections } from '@companion-app/shared/Model/Presets.js'
+import { ButtonsSidebarSection } from '~/Buttons/ButtonsSidebarSection.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button, ButtonGroup } from '~/Components/Button'
 import { SearchBox } from '~/Components/SearchBox.js'
@@ -132,10 +133,7 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 			defaultCollapsed={true}
 			evictionOwner={{ kind: 'connection', id: selectedConnectionId }}
 		>
-			<div className="buttons-sidebar-section presets-panel">
-				<div className="buttons-sidebar-heading-row">
-					<h5 className="buttons-sidebar-heading">Presets</h5>
-				</div>
+			<ButtonsSidebarSection className="presets-panel" title="Presets" actions={null}>
 				<div className="presets-detail-navigation">
 					<Button variant="ghost" size="sm" onClick={clearSelectedConnectionId}>
 						<FontAwesomeIcon icon={faArrowLeft} /> Back
@@ -158,7 +156,7 @@ export const PresetsSectionsList = observer(function PresetsCategoryList({
 						<div className="collapsible-tree presets-sections-tree">{sections}</div>
 					</>
 				)}
-			</div>
+			</ButtonsSidebarSection>
 		</PanelCollapseHelperProvider>
 	)
 })

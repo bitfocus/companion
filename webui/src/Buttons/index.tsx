@@ -22,7 +22,6 @@ import { useGridZoom } from './GridZoom.js'
 import { PagesList } from './Pages.js'
 import { PageVariablesPanel } from './PageVariablesPanel.js'
 import { ConnectionPresets } from './Presets/Presets.js'
-import './ButtonsSidebar.css'
 import { useButtonContextMenu } from './useButtonContextMenu.js'
 import { useGridDropMonitor } from './useGridDropMonitor.js'
 import { useGridKeyboard } from './useGridKeyboard.js'
@@ -202,12 +201,7 @@ export const ButtonsPage = observer(function ButtonsPage() {
 				<SplitPanels.Secondary>
 					<div className="secondary-panel-simple">
 						<div className="secondary-panel-inner">
-							<TabArea.Root
-								variant="underline"
-								value={activeTab}
-								onValueChange={setActiveTab}
-								className="buttons-sidebar-tabs"
-							>
+							<TabArea.Root variant="compact" value={activeTab} onValueChange={setActiveTab}>
 								<TabArea.List>
 									{!isLargeScreen && (
 										<TabArea.Tab value="grid">

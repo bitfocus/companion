@@ -11,13 +11,21 @@ export interface TabAreaRootProps extends Omit<Tabs.Root.Props, 'className'> {
 	/**
 	 * `underline` is a full-width tab bar with the active tab underlined, for switching a whole page or modal.
 	 * `pills` is a compact row of text pills with no bar, for switching between views inside an edit panel.
+	 * `compact` is small bordered tabs on a muted strip, with tighter panels, for a narrow side panel.
 	 */
-	variant: 'underline' | 'pills'
+	variant: 'underline' | 'pills' | 'compact'
 }
 
 function TabAreaRoot({ className, variant, ...props }: TabAreaRootProps): React.JSX.Element {
 	return (
-		<Tabs.Root className={classNames('tab-area', { 'tab-area-pills': variant === 'pills' }, className)} {...props} />
+		<Tabs.Root
+			className={classNames(
+				'tab-area',
+				{ 'tab-area-pills': variant === 'pills', 'tab-area-compact': variant === 'compact' },
+				className
+			)}
+			{...props}
+		/>
 	)
 }
 

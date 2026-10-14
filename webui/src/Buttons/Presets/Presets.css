@@ -2,7 +2,7 @@
 	min-width: 0;
 
 	.presets-intro {
-		margin: 0 0 1rem;
+		margin: 0 0 0.75rem;
 		color: var(--color-muted);
 		font-size: 0.75rem;
 		line-height: 1.5;
@@ -69,9 +69,9 @@
 	}
 
 	.presets-footnote {
-		margin: 0.75rem 0 0;
+		margin: 0.75rem 0;
 		color: var(--color-muted);
-		font-size: 0.6875rem;
+		font-size: 0.75rem;
 		line-height: 1.4;
 	}
 

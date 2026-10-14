@@ -5,6 +5,7 @@ import { faPlus, faShareFromSquare, faSort, faTrash } from '@fortawesome/free-so
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
+import { ButtonsSidebarSection } from '~/Buttons/ButtonsSidebarSection.js'
 import { Button } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
@@ -105,14 +106,16 @@ export const PagesList = observer(function PagesList({ pageNumber, setPageNumber
 	})
 
 	return (
-		<div className="buttons-sidebar-section pages-list-section">
-			<div className="buttons-sidebar-heading-row">
-				<h5 className="buttons-sidebar-heading">Pages</h5>
+		<ButtonsSidebarSection
+			className="pages-list-section"
+			title="Pages"
+			actions={
 				<Button color="primary" size="sm" onClick={doInsertPage} data-page={pages.data.length + 1}>
 					<FontAwesomeIcon icon={faPlus} />
 					Add Page
 				</Button>
-			</div>
+			}
+		>
 			<GenericConfirmModal ref={deleteRef} />
 			<EditPagePropertiesModal ref={editRef} includeName={false} />
 
@@ -139,7 +142,7 @@ export const PagesList = observer(function PagesList({ pageNumber, setPageNumber
 				))}
 				<DragCloneOverlay disabled={(source) => source?.type !== 'page-list'} />
 			</div>
-		</div>
+		</ButtonsSidebarSection>
 	)
 })
 
