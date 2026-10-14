@@ -157,7 +157,7 @@ export const AddInstancePanel = observer(function AddInstancePanel({
 								</div>
 								<div className="flex items-center gap-1.5 text-xs text-muted">
 									<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
-									<RefreshModulesList btnSize="sm" color="secondary" iconOnly className="inline-flex h-7" />
+									<RefreshModulesList className="inline-flex h-7" />
 									<LinkButton to="/modules" color="secondary" size="sm" className="inline-flex h-7 items-center">
 										Modules Manager
 									</LinkButton>

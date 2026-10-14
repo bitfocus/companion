@@ -3,23 +3,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
 import { StaticAlert } from '~/Components/Alert'
-import { Button, type ButtonColor } from '~/Components/Button'
+import { Button } from '~/Components/Button'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
-export const RefreshModulesList = observer(function RefreshModulesList({
-	btnSize,
-	className,
-	iconOnly,
-	color = 'primary',
-	variant,
-}: {
-	btnSize?: 'sm' | 'lg'
-	className?: string
-	iconOnly?: boolean
-	color?: ButtonColor
-	variant?: 'ghost' | 'outline'
-}) {
+export const RefreshModulesList = observer(function RefreshModulesList({ className }: { className: string }) {
 	const { modules } = useContext(RootAppStoreContext)
 
 	const { percent: refreshProgress } = modules.getStoreListRefreshProgress()
@@ -41,28 +29,24 @@ export const RefreshModulesList = observer(function RefreshModulesList({
 
 			{refreshProgress !== 1 ? (
 				<Button
-					color={color}
-					variant={variant}
+					color="secondary"
 					disabled
 					aria-busy
-					size={btnSize}
+					size="sm"
 					title={`Refreshing modules list ${Math.round(refreshProgress * 100)}%`}
 					className="h-full inline-flex items-center justify-center"
 				>
 					<FontAwesomeIcon icon={faSync} spin={true} />
-					{!iconOnly && <>&nbsp;Refreshing {Math.round(refreshProgress * 100)}%</>}
 				</Button>
 			) : (
 				<Button
-					color={color}
-					variant={variant}
+					color="secondary"
 					onClick={doRefreshModules}
-					size={btnSize}
+					size="sm"
 					title="Refresh modules list"
 					className="h-full inline-flex items-center justify-center"
 				>
 					<FontAwesomeIcon icon={faSync} />
-					{!iconOnly && <>&nbsp;Refresh modules list</>}
 				</Button>
 			)}
 		</div>

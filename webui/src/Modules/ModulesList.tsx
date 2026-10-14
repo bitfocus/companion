@@ -209,7 +209,7 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 
 					<div className="text-xs text-muted flex items-center gap-1.5 shrink-0">
 						<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
-						<RefreshModulesList btnSize="sm" color="secondary" iconOnly className="inline-flex" />
+						<RefreshModulesList className="inline-flex" />
 					</div>
 				</div>
 			</div>
