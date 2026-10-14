@@ -39,7 +39,7 @@ export class ModuleInfoStore {
 
 	readonly storeUpdateInfo: Omit<
 		ModuleStoreListCacheStore,
-		'connectionModules' | 'connectionModuleApiVersion' | 'surfaceModules' | 'surfaceModuleApiVersion'
+		'formatVersion' | 'connectionModules' | 'connectionModuleApiVersion' | 'surfaceModules' | 'surfaceModuleApiVersion'
 	> = observable.object({
 		lastUpdated: 0,
 		lastUpdateAttempt: 0,
@@ -115,6 +115,7 @@ export class ModuleInfoStore {
 			lastUpdated: 0,
 			lastUpdateAttempt: 0,
 			updateWarning: null,
+			formatVersion: null,
 			connectionModuleApiVersion: null,
 			connectionModules: null,
 			surfaceModuleApiVersion: null,

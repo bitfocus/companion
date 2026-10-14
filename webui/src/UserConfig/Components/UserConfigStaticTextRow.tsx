@@ -14,10 +14,11 @@ export const UserConfigStaticTextRow = observer(function UserConfigStaticTextRow
 	return (
 		<tr>
 			<td>{label}</td>
-			<td colSpan={2} className="text-center">
+			<td className="settings-value-end">
 				{text}
 				{textHelp && <InlineHelpIcon className="ms-1">{textHelp}</InlineHelpIcon>}
 			</td>
+			<td />
 		</tr>
 	)
 })

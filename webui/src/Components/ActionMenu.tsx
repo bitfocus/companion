@@ -11,6 +11,7 @@ import { Popover } from './Popover.js'
 interface MenuItemBaseProps {
 	readonly label: string
 	readonly id?: string
+	readonly tone?: 'danger'
 	readonly icon?: IconDefinition | (() => ReactElement) | 'none'
 	readonly fullWidth?: boolean
 	readonly tooltip?: string
@@ -67,7 +68,7 @@ function PopoverMenuItemContents({ data }: { data: MenuActionItemProps }): React
 	return (
 		<>
 			{!data.fullWidth && data.icon !== 'none' && (
-				<span className="dropdown-item-icon">
+				<span className="dropdown-item-icon inline-flex items-center justify-center w-5 me-2.5 shrink-0 text-center">
 					{typeof data.icon === 'function' ? (
 						data.icon()
 					) : (
@@ -78,7 +79,7 @@ function PopoverMenuItemContents({ data }: { data: MenuActionItemProps }): React
 					)}
 				</span>
 			)}
-			<span className="dropdown-item-label">{data.label}</span>
+			<span className="dropdown-item-label flex-1">{data.label}</span>
 			{!data.fullWidth && (data.inNewTab ? <FontAwesomeIcon className="ms-auto" icon={faExternalLinkSquare} /> : ' ')}
 		</>
 	)
@@ -95,6 +96,7 @@ function PopoverRouteItem({
 	return (
 		<Popover.Item
 			className={data.id ? `dropdown-item-${data.id}` : undefined}
+			data-tone={data.tone}
 			title={data.tooltip}
 			onClick={() => void navigate({ to: data.to })}
 		>
@@ -140,6 +142,7 @@ function PopoverMenuItem({ data }: { data: MenuItemProps }): React.JSX.Element {
 	return (
 		<Popover.Item
 			className={data.id ? `dropdown-item-${data.id}` : undefined}
+			data-tone={data.tone}
 			title={data.tooltip}
 			onClick={handleClick}
 			disabled={'disabled' in data ? data.disabled : undefined}

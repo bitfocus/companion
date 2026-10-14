@@ -1,21 +1,15 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { expect, gotoApp, test, type Page } from '../support/fixtures.js'
-
-function variableRow(page: Page, name: string) {
-	return page.locator('.editor-grid').filter({ hasText: `$(custom:${name})` })
-}
+import { expect, gotoApp, test } from '../support/fixtures.js'
+import { createCustomVariable, customVariableRow as variableRow } from '../support/variables.js'
 
 // An import reloads the page and touches global state, so keep this file serial
 test.describe.configure({ mode: 'serial' })
 
 test('a config export can be imported back through the ui', async ({ page }) => {
 	// Create a custom variable worth exporting
-	await gotoApp(page, '/variables/custom')
-	await page.getByPlaceholder('variableName').fill('exported_var')
-	await page.getByRole('button', { name: 'Add' }).click()
-	await expect(variableRow(page, 'exported_var')).toBeVisible()
+	await createCustomVariable(page, 'exported_var')
 
 	// Export the config as json through the export wizard
 	await gotoApp(page, '/import-export')
@@ -39,7 +33,7 @@ test('a config export can be imported back through the ui', async ({ page }) => 
 
 	// Delete the variable, then restore it by importing the export
 	await gotoApp(page, '/variables/custom')
-	await variableRow(page, 'exported_var').getByTitle('Delete custom variable').click()
+	await variableRow(page, 'exported_var').getByTitle('Delete').click()
 	await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click()
 	await expect(variableRow(page, 'exported_var')).toHaveCount(0)
 
@@ -58,15 +52,16 @@ test('a config export can be imported back through the ui', async ({ page }) => 
 		'Remote Surfaces',
 		'Image Library',
 	]) {
+		// Sections the export doesn't contain are shown disabled and are never imported
 		const checkbox = page.getByRole('checkbox', { name: label, exact: true })
-		if ((await checkbox.count()) > 0) await checkbox.uncheck()
+		if ((await checkbox.count()) > 0 && (await checkbox.isEnabled())) await checkbox.uncheck()
 	}
 	// A successful import reloads the whole page. The sidebar stays visible throughout the wizard,
 	// so it cannot signal the reload - wait for the load event itself, armed before the click, or a
 	// later navigation races the app-initiated reload (net::ERR_ABORTED)
 	await Promise.all([
 		page.waitForEvent('load', { timeout: 30_000 }),
-		page.getByRole('button', { name: 'Import Preserving Unselected' }).click(),
+		page.getByRole('button', { name: 'Import (Preserve Unselected)' }).click(),
 	])
 	await expect(page.locator('.sidebar-nav').first()).toBeVisible({ timeout: 30_000 })
 

@@ -4,6 +4,8 @@ export interface ModuleStoreListCacheStore {
 	lastUpdated: number
 	lastUpdateAttempt: number
 	updateWarning: string | null
+	/** Shape of the cached entries. Note: this does not exist for older cache data */
+	formatVersion: number | null
 
 	// The version of the module API that the check was made with. Note: this may not exist for older cache data
 	connectionModuleApiVersion: string | null
@@ -17,6 +19,8 @@ export interface ModuleStoreListCacheEntry {
 	id: string
 	name: string
 	shortname: string
+	manufacturer: string | null
+	/** Product names as declared, without the manufacturer */
 	products: string[]
 	keywords: string[]
 

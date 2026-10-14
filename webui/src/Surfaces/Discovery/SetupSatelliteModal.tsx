@@ -113,6 +113,7 @@ export const SetupSatelliteModal = forwardRef<SetupSatelliteModalRef>(function S
 								color="primary"
 								onClick={doAction}
 								disabled={!externalAddressesQuery.data || !selectedAddress || saveMutation.isPending}
+								aria-busy={saveMutation.isPending}
 							>
 								Setup
 							</Button>

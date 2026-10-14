@@ -2,9 +2,9 @@ import postcss from 'postcss'
 
 /**
  * Assigns each app CSS file to a cascade layer by path, so Tailwind utilities (which live in the
- * `utilities` layer, declared last in tailwind.css) win over app styles without needing `!important`.
+ * `utilities` layer, declared last) win over app styles without needing `!important`.
  *
- * The layer *order* is declared once in tailwind.css; this plugin only decides which layer a given
+ * The layer *order* is declared once, in index.html's <head>; this plugin only decides which layer a given
  * file's rules land in. Changing the mapping here is the single place to retune the architecture — no
  * CSS file or import has to move.
  *
@@ -28,10 +28,11 @@ const APP_BASE = new Set([
 	'flex-layout.css',
 	'transitions.css',
 	'loading.css',
-	'App.css',
 	// Split out of layout.css into a file co-located with the component, but must stay in the layer
 	// it always sat in — page CSS (features) relies on being able to override it (see Layout/SplitPanels.css).
 	'Layout/SplitPanels.css',
+	// The loading and lock screens, split out of App.css.
+	'Layout/AppSplash.css',
 ])
 
 // Files that must not be wrapped, keyed by basename.

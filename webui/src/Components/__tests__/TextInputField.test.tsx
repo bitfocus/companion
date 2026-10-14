@@ -92,19 +92,19 @@ describe('TextInputField', () => {
 			expect(screen.getByRole('textbox')).toHaveAttribute('placeholder', 'Enter text...')
 		})
 
-		it('applies invalid-value class when checkValid returns false', () => {
-			const { container } = renderField({ initialValue: 'bad', checkValid: () => false })
-			expect(container.querySelector('.invalid-value')).toBeInTheDocument()
+		it('marks the input aria-invalid when checkValid returns false', () => {
+			renderField({ initialValue: 'bad', checkValid: () => false })
+			expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'true')
 		})
 
-		it('does not apply invalid-value class when checkValid returns true', () => {
-			const { container } = renderField({ initialValue: 'good', checkValid: () => true })
-			expect(container.querySelector('.invalid-value')).toBeNull()
+		it('does not mark the input aria-invalid when checkValid returns true', () => {
+			renderField({ initialValue: 'good', checkValid: () => true })
+			expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'false')
 		})
 
-		it('does not apply invalid-value class without checkValid', () => {
-			const { container } = renderField({ initialValue: 'anything' })
-			expect(container.querySelector('.invalid-value')).toBeNull()
+		it('does not mark the input aria-invalid without checkValid', () => {
+			renderField({ initialValue: 'anything' })
+			expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'false')
 		})
 	})
 

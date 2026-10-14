@@ -24,11 +24,11 @@ export function FeedbackOverridesTab({
 		<ControlEntitiesEditor
 			heading="Feedbacks"
 			subheading={
-				<div className="mb-2">
+				<span className="text-xs text-muted">
 					Here you can use feedbacks to override properties of the elements you have setup.
 					<br />
 					Alternatively, you can use expressions directly in the element properties with local variables.
-				</div>
+				</span>
 			}
 			controlId={controlId}
 			entities={feedbacks}

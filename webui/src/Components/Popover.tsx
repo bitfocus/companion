@@ -26,7 +26,6 @@ function PopoverTrigger({ className, color, size, caret, ...props }: PopoverTrig
 		<BasePopover.Trigger
 			className={classNames(
 				'button',
-				'btn',
 				color !== null && `button-${color || 'secondary'}`,
 				size && `button-${size}`,
 				caret && 'popover2-trigger-caret',

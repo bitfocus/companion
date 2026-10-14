@@ -1,5 +1,6 @@
 import { faDollarSign } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import { Popover } from '~/Components/Popover.js'
@@ -21,6 +22,13 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 	const { showVariables, deleteModalRef, configureConnection } = useConnectionListContext()
 
 	const id = connection.id
+	const navigate = useNavigate()
+	const showDocs = useCallback(() => {
+		void navigate({
+			to: '/connections/$connectionId/docs',
+			params: { connectionId: id },
+		})
+	}, [navigate, id])
 
 	const deleteMutation = useMutationExt(trpc.instances.connections.delete.mutationOptions())
 	const setEnabledMutation = useMutationExt(trpc.instances.connections.setEnabled.mutationOptions())
@@ -61,6 +69,7 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			collectionsStore={connections}
 			instance={connection}
 			instanceStatus={connection.status}
+			isSelected={isSelected}
 			extraMenuItems={
 				<Popover.Item
 					onClick={doShowVariables}
@@ -74,6 +83,7 @@ export const ConnectionsTableRow = observer(function ConnectionsTableRow({
 			labelStr="connection"
 			doDelete={doDelete}
 			doEdit={doEdit}
+			onShowDocs={showDocs}
 			doToggleEnabled={doToggleEnabled}
 			debugLogUrl={`/connection-debug/${id}`}
 		/>

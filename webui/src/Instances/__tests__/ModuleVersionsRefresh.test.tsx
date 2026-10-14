@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { runInAction } from 'mobx'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
@@ -130,19 +131,25 @@ describe('ModuleVersionsRefresh', () => {
 		expect(mutateAsync).toHaveBeenCalledWith({ moduleType: ModuleInstanceType.Surface, moduleId: MODULE_ID })
 	})
 
-	it.each(['Enter', ' '])('requests a refresh when activated with the %s key', (key) => {
+	it.each(['{Enter}', ' '])('requests a refresh when activated with the %s key', async (key) => {
+		vi.useRealTimers()
+		const user = userEvent.setup()
 		renderRefresh(new ModuleInfoStore())
 
-		fireEvent.keyDown(screen.getByRole('button', { name: 'Refresh module versions' }), { key })
+		screen.getByRole('button', { name: 'Refresh module versions' }).focus()
+		await user.keyboard(key)
 
 		expect(mutateAsync).toHaveBeenCalledTimes(1)
 		expect(mutateAsync).toHaveBeenCalledWith({ moduleType: ModuleInstanceType.Surface, moduleId: MODULE_ID })
 	})
 
-	it('ignores other keys', () => {
+	it('ignores other keys', async () => {
+		vi.useRealTimers()
+		const user = userEvent.setup()
 		renderRefresh(new ModuleInfoStore())
 
-		fireEvent.keyDown(screen.getByRole('button', { name: 'Refresh module versions' }), { key: 'a' })
+		screen.getByRole('button', { name: 'Refresh module versions' }).focus()
+		await user.keyboard('a')
 
 		expect(mutateAsync).not.toHaveBeenCalled()
 	})

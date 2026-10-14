@@ -127,11 +127,14 @@ export function ColorInputField<T extends 'string' | 'number'>({
 		},
 		swatch: {
 			padding: '2px',
-			background:
-				'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQAWJ84A0+ScZRAxiGSRgQSAb40wkoDAgBvAlt1AAGcEIiBGgbiAAgXwixcH9GzgAAAABJRU5ErkJggg==") left center',
+			// An opaque backing keeps the transparency checkerboard readable on dark panels.
+			backgroundColor: 'var(--color-surface-muted)',
+			backgroundImage:
+				'url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAMUlEQVQ4T2NkYGAQAWJ84A0+ScZRAxiGSRgQSAb40wkoDAgBvAlt1AAGcEIiBGgbiAAgXwixcH9GzgAAAABJRU5ErkJggg==")',
+			backgroundPosition: 'left center',
 			backgroundClip: 'content-box',
 			borderRadius: '3px',
-			boxShadow: '0 0 0 1px rgba(0,0,0,.3)',
+			boxShadow: '0 0 0 1px var(--color-border-strong)',
 			display: 'inline-block',
 			cursor: 'pointer',
 		},

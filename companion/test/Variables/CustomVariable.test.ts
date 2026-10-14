@@ -104,6 +104,7 @@ describe('VariablesCustomVariable', () => {
 			expect(custom.hasCustomVariable('__proto__')).toBe(false)
 			expect(custom.setValue('__proto__', 'polluted')).toBe('Unknown name')
 			expect(custom.setVariableDescription('__proto__', 'polluted')).toBe('Unknown name')
+			expect(custom.setVariableNotes('__proto__', 'polluted')).toBe('Unknown name')
 			expect(custom.setPersistence('__proto__', true)).toBe('Unknown name')
 			expect(custom.setVariableDefaultValue('__proto__', 'polluted')).toBe('Unknown name')
 			expect(custom.getVariableDescription('__proto__')).toBe('Unknown name')
@@ -114,6 +115,7 @@ describe('VariablesCustomVariable', () => {
 			// Object.prototype was not polluted by any of the above
 			const probe: any = {}
 			expect(probe.description).toBe(undefined)
+			expect(probe.notes).toBe(undefined)
 			expect(probe.persistCurrentValue).toBe(undefined)
 			expect(probe.defaultValue).toBe(undefined)
 			expect(probe.sortOrder).toBe(undefined)
@@ -253,6 +255,19 @@ describe('VariablesCustomVariable', () => {
 
 			expect(custom.setVariableDescription('unknown', 'x')).toBe('Unknown name')
 			expect(custom.getVariableDescription('unknown')).toBe('Unknown name')
+		})
+	})
+
+	describe('notes', () => {
+		test('set', () => {
+			const { custom, table, definitionChanged } = createCustomVariables({ my_var: makeDef() })
+
+			expect(custom.setVariableNotes('my_var', 'Cue the house lights')).toBe(null)
+			expect(table.data['my_var'].notes).toBe('Cue the house lights')
+			// Notes are internal, so they don't change the variable's definition
+			expect(definitionChanged).not.toHaveBeenCalled()
+
+			expect(custom.setVariableNotes('unknown', 'x')).toBe('Unknown name')
 		})
 	})
 

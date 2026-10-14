@@ -38,6 +38,7 @@ function makeInstalledModule(
 			helpPath: '/help',
 			bugUrl: 'https://bugs.example.com',
 			shortname: id,
+			manufacturer: moduleType === ModuleInstanceType.Surface ? null : 'Acme',
 			products,
 			keywords: ['kw1', 'kw2'],
 		},
@@ -61,6 +62,7 @@ function makeStoreEntry(
 		moduleType,
 		name: `Store ${id}`,
 		shortname: id,
+		manufacturer: 'Acme',
 		products,
 		keywords: ['store-kw'],
 		storeUrl: 'https://store.example.com',
@@ -240,6 +242,40 @@ describe('useAllModuleProducts', () => {
 			expect(installed.storeInfo).toBeNull()
 			expect(storeOnly.installedInfo).toBeNull()
 			expect(storeOnly.storeInfo).toBe(entry)
+		})
+	})
+
+	describe('manufacturer and labels', () => {
+		it('keeps the product plain and lists it with its manufacturer', () => {
+			const mod = makeInstalledModule('bmd-atem', ['ATEM Mini'])
+			const store = makeModules(new Map([['connection:bmd-atem', mod]]))
+			const { result } = renderHookWithStore(store, () => useAllModuleProducts(null))
+
+			expect(result.current[0]).toMatchObject({ manufacturer: 'Acme', product: 'ATEM Mini', label: 'Acme: ATEM Mini' })
+		})
+
+		it('lists a module that declares no products by its name', () => {
+			const mod = makeInstalledModule('generic', [])
+			const store = makeModules(new Map([['connection:generic', mod]]))
+			const { result } = renderHookWithStore(store, () => useAllModuleProducts(null))
+
+			expect(result.current).toHaveLength(1)
+			expect(result.current[0]).toMatchObject({ product: 'Module generic', label: 'Module generic' })
+		})
+
+		it('takes the manufacturer from the store for an installed surface module', () => {
+			const mod = makeInstalledModule('deck', ['Stream Deck'], ModuleInstanceType.Surface)
+			const entry = makeStoreEntry('deck', ['Stream Deck'], ModuleInstanceType.Surface)
+			const store = makeModules(new Map([['surface:deck', mod]]), new Map([['surface:deck', entry]]))
+			const { result } = renderHookWithStore(store, () => useAllModuleProducts(null))
+
+			expect(result.current).toHaveLength(1)
+			expect(result.current[0]).toMatchObject({
+				installedInfo: mod,
+				storeInfo: entry,
+				manufacturer: 'Acme',
+				label: 'Acme: Stream Deck',
+			})
 		})
 	})
 

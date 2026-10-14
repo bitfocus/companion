@@ -10,7 +10,7 @@ import { useLocalVariablesStore, type LocalVariablesStore } from '~/Controls/Loc
 import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { LocalVariablesEditor } from '../../../Controls/LocalVariablesEditor.js'
-import { ButtonEditorTabs, type ButtonEditorExtraTabs } from '../ButtonEditorTabs.js'
+import { ButtonEditorTabs } from '../ButtonEditorTabs.js'
 import { FeedbackOverridesTab } from '../FeedbackOverridesTab.js'
 import { ControlOptionsEditor } from './ControlOptionsEditor.js'
 import { ElementPropertiesEditor } from './ElementPropertiesEditor.js'
@@ -19,23 +19,18 @@ import { PinnedPropertiesEditor } from './PinnedPropertiesEditor.js'
 import { LayeredButtonPreviewRenderer } from './Preview/LayeredButtonPreviewRenderer.js'
 import { LayeredStyleStore } from './StyleStore.js'
 
-const LayeredButtonExtraTabs: ButtonEditorExtraTabs[] = [
-	{ id: 'style', name: 'Style', position: 'end' },
-	{ id: 'feedbacks', name: 'Feedbacks', position: 'end' },
-	{ id: 'variables', name: 'Local Variables', position: 'end' },
-	{ id: 'options', name: 'Options', position: 'end' },
-]
-
 export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 	config,
 	controlId,
 	runtimeProps,
 	location,
+	activeMainTab,
 }: {
 	config: LayeredButtonModel
 	controlId: string
 	runtimeProps: Record<string, any> | false
 	location: ControlLocation
+	activeMainTab: string
 }) {
 	const configRef = useRef<SomeButtonModel>(config || undefined)
 	configRef.current = config || undefined // update the ref every render
@@ -65,14 +60,14 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 						steps={config.steps || {}}
 						runtimeProps={runtimeProps}
 						rotaryActions={config?.options?.rotaryActions}
-						extraTabs={LayeredButtonExtraTabs}
+						activeMainTab={activeMainTab}
 						localVariablesStore={localVariablesStore}
 						disabledSetStep={config?.options?.stepProgression === 'expression'}
 					>
 						{(currentTab) => {
 							if (currentTab === 'style') {
 								return (
-									<div className="mt-2 h-full">
+									<div className="button-editor-tab-content h-full">
 										{/* Wrap the entity-category, for :first-child to work */}
 										<MyErrorBoundary>
 											<LayeredButtonEditorStyle
@@ -88,7 +83,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 
 							if (currentTab === 'feedbacks') {
 								return (
-									<div className="mt-2">
+									<div className="button-editor-tab-content">
 										<MyErrorBoundary>
 											<LayeredStyleElementsProvider styleStore={styleStore}>
 												<FeedbackOverridesTab
@@ -105,7 +100,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 
 							if (currentTab === 'variables') {
 								return (
-									<div className="mt-2">
+									<div className="button-editor-tab-content">
 										<MyErrorBoundary>
 											<LocalVariablesEditor
 												controlId={controlId}
@@ -120,7 +115,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 
 							if (currentTab === 'options') {
 								return (
-									<div className="mt-2">
+									<div className="button-editor-tab-content">
 										{/* Wrap the entity-category, for :first-child to work */}
 										<MyErrorBoundary>
 											<ControlOptionsEditor options={config.options} configRef={configRef} controlId={controlId} />
@@ -181,10 +176,7 @@ const LayeredButtonEditorStyle = observer(function LayeredButtonEditorStyle({
 					<ElementsList styleStore={styleStore} controlId={controlId} />
 				</div>
 			</Panel>
-			<Separator className="button-layer-resize-handle">
-				{/* A grip, so the bar reads as something to drag rather than a gap between the panels */}
-				<span className="button-layer-resize-grip" />
-			</Separator>
+			<Separator className="button-layer-resize-handle" />
 			<Panel id="bottom" className="button-layer-options" minSize="250px">
 				{isPinnedViewSelected ? (
 					<PinnedPropertiesEditor

@@ -86,7 +86,7 @@ export const ImagePickerModal = observer(
 								<Modal.Title>Select Image</Modal.Title>
 							</Modal.Header>
 							<Modal.Body style={{ minHeight: '500px', display: 'flex', flexDirection: 'column' }}>
-								<TabArea.Root value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)}>
+								<TabArea.Root variant="underline" value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)}>
 									<TabArea.List>
 										<TabArea.Tab value="library">Library</TabArea.Tab>
 										<TabArea.Tab value="upload">Upload to Library</TabArea.Tab>
@@ -252,9 +252,10 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 
 			<div>
 				<FileInputButton
-					color="primary"
+					color="secondary"
 					onClick={handleFileClick}
 					onFileSelected={handleFile}
+					aria-busy={isUploading}
 					accept="image/*"
 					disabled={isUploading}
 				>
@@ -377,7 +378,7 @@ function CustomImageTab({
 
 			<div>
 				<FileInputButton
-					color="primary"
+					color="secondary"
 					onClick={handleFileClick}
 					onFileSelected={handleFile}
 					accept="image/*"

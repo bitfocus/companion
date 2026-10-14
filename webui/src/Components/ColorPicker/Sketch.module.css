@@ -1,11 +1,11 @@
 .sketchPicker {
 	padding: 10px 10px 0;
 	box-sizing: initial;
-	background: #fff;
+	background: var(--color-surface);
 	border-radius: 4px;
 	box-shadow:
-		0 0 0 1px rgba(0, 0, 0, 0.15),
-		0 8px 16px rgba(0, 0, 0, 0.15);
+		0 0 0 1px var(--color-border),
+		0 8px 16px var(--color-shadow-15);
 }
 
 .sketchSaturation {

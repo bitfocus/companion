@@ -30,10 +30,10 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 		<>
 			{canBeNamed && (
 				<>
-					<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
+					<FormLabel htmlFor={nameFieldId} column="sm">
 						Element Name
 					</FormLabel>
-					<Grid.Col sm={8}>
+					<Grid.Col>
 						<FieldElementNameInput elementProps={elementProps} inputId={nameFieldId} />
 					</Grid.Col>
 				</>
@@ -41,7 +41,7 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 
 			{elementProps.type !== 'canvas' && elementProps.type !== 'group' && (
 				<>
-					<FormLabel htmlFor={usageFieldId} sm={4} column="sm">
+					<FormLabel htmlFor={usageFieldId} column="sm">
 						External Usage
 						<InlineHelpIcon className="ms-1">
 							Some surfaces do not have full rgb displays and require specific elements for providing feedback in
@@ -51,7 +51,7 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 							for this element
 						</InlineHelpIcon>
 					</FormLabel>
-					<Grid.Col sm={8}>
+					<Grid.Col>
 						<FieldElementUsageInput elementProps={elementProps} inputId={usageFieldId} />
 					</Grid.Col>
 				</>

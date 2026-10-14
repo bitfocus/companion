@@ -10,7 +10,7 @@ test.describe('emulator', () => {
 	test('add an emulator through the surfaces page', async ({ page }) => {
 		await gotoApp(page, '/surfaces')
 
-		await page.getByRole('button', { name: 'Add Emulator' }).click()
+		await page.locator('.primary-panel').getByRole('button', { name: 'Add Emulator' }).click()
 		const dialog = page.getByRole('dialog')
 		await dialog.getByLabel(/^Name/).fill('E2E Emulator')
 		await dialog.getByLabel(/^Id/).fill('e2etest')

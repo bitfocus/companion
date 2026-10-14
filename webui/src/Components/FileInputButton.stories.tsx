@@ -21,7 +21,7 @@ export const Default: Story = {}
 
 export const WithIcon: Story = {
 	args: {
-		color: 'warning',
+		color: 'primary',
 		accept: '.companionconfig,.yaml',
 		children: (
 			<>

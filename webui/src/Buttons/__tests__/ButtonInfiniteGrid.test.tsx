@@ -134,6 +134,21 @@ describe('what the grid draws', () => {
 		expect(setViewportMinHeight).toHaveBeenCalledWith(2 * TILE + 15)
 	})
 
+	it('tells an adaptive viewport the height of the whole grid', () => {
+		const setViewportPreferredHeight = vi.fn()
+
+		setup({ extra: { setViewportPreferredHeight } })
+
+		expect(setViewportPreferredHeight).toHaveBeenCalledWith(4 * TILE + 30)
+	})
+
+	it('can fill a viewport wider than its canvas', () => {
+		const { grid } = setup({ extra: { fillViewportWidth: true } })
+
+		expect(grid.style.width).toBe('100%')
+		expect(grid.style.maxWidth).toBe('none')
+	})
+
 	it('caps itself to the grid when asked, for the pages that show one whole grid', () => {
 		const { grid } = setup({ extra: { maxHeightToMatchCanvas: true } })
 

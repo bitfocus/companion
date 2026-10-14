@@ -489,12 +489,11 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 
 		const editableEntities = control.supportsEntities && control.entities.isEditable ? control.entities : null
 		if (!editableEntities) throw new Error('Not supported by control')
+		const listId: SomeSocketEntityLocation = control.type === 'trigger' ? 'trigger_actions' : { stepId, setId }
 
 		if (mode === 'append') {
-			if (!editableEntities.entityAdd({ stepId, setId }, null, ...this.#currentSession.actions))
-				throw new Error('Unknown set')
+			if (!editableEntities.entityAdd(listId, null, ...this.#currentSession.actions)) throw new Error('Unknown set')
 		} else {
-			const listId: SomeSocketEntityLocation = { stepId, setId }
 			if (!editableEntities.entityReplaceAll(listId, this.#currentSession.actions)) throw new Error('Unknown set')
 		}
 

@@ -1,4 +1,4 @@
-import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import { faChevronDown, faChevronUp, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import './VariableValueDisplay.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef, useState } from 'react'
@@ -108,8 +108,10 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 		}
 	})
 
-	const color = invalidReason ? '#c83232' : '#0000c8'
-	const backgroundColor = invalidReason ? '#f9e5e5' : '#e5e5f9'
+	const color = invalidReason ? 'var(--color-tone-error-text)' : 'var(--color-tone-accent-text)'
+	const backgroundColor = invalidReason
+		? 'color-mix(in srgb, var(--color-tone-error-fill) 12%, transparent)'
+		: 'color-mix(in srgb, var(--color-tone-accent-fill) 12%, transparent)'
 
 	let typeDescription = 'unknown'
 	let iconPath: VariableTypeIconType = 'unknown'
@@ -211,19 +213,6 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 				title={compact && showHoverTitle ? compactValue : undefined}
 			>
 				{elms /*displayValue */}
-				{!compact &&
-					!forceExpanded &&
-					(valueStr.length <= TRUNCATE_LENGTH ? (
-						''
-					) : collapser.isPanelCollapsed() ? (
-						<Button color="secondary" size="sm" className="ms-1" onClick={() => collapser.setPanelCollapsed(false)}>
-							More
-						</Button>
-					) : (
-						<Button color="secondary" size="sm" className="ms-1" onClick={() => collapser.setPanelCollapsed(true)}>
-							Less
-						</Button>
-					))}
 			</code>
 		</div>
 	)
@@ -233,9 +222,21 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 			<div className="flex items-center min-w-0">
 				{valuePill}
 				{showCopy && (
-					<CopyButton size="sm" title="Copy variable value" text={valueStr} color="variable" variant="ghost" />
+					<CopyButton size="sm" title="Copy variable value" text={valueStr} color="secondary" variant="ghost" />
 				)}
 			</div>
+			{!compact &&
+				!forceExpanded &&
+				valueStr.length > TRUNCATE_LENGTH &&
+				(collapser.isPanelCollapsed() ? (
+					<Button size="sm" color="secondary" className="mt-2" onClick={() => collapser.setPanelCollapsed(false)}>
+						<FontAwesomeIcon icon={faChevronDown} /> Show more
+					</Button>
+				) : (
+					<Button size="sm" color="secondary" className="mt-2" onClick={() => collapser.setPanelCollapsed(true)}>
+						<FontAwesomeIcon icon={faChevronUp} /> Show less
+					</Button>
+				))}
 		</div>
 	)
 }

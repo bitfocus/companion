@@ -9,7 +9,7 @@ import type {
 	ClientDiscoveredSurfaceInfoPlugin,
 	ClientDiscoveredSurfaceInfoSatellite,
 } from '@companion-app/shared/Model/Surfaces.js'
-import { Button, ButtonGroup } from '~/Components/Button'
+import { Button } from '~/Components/Button'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { Table } from '~/Components/Table.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -138,11 +138,9 @@ function SatelliteRow({ surfaceInfo, showSetupSatellite }: SatelliteRowProps) {
 				})}
 			</td>
 			<td>
-				<ButtonGroup>
-					<Button onClick={() => showSetupSatellite(surfaceInfo)} title="Setup">
-						<FontAwesomeIcon icon={faPlus} /> Setup
-					</Button>
-				</ButtonGroup>
+				<Button color="primary" size="sm" onClick={() => showSetupSatellite(surfaceInfo)} title="Setup Satellite">
+					<FontAwesomeIcon icon={faPlus} className="me-1.5" /> Setup
+				</Button>
 			</td>
 		</tr>
 	)
@@ -221,17 +219,15 @@ const PluginSurfaceRow = observer(function PluginSurfaceRow({ surfaceInfo, addCo
 				<p className="m-0">{surfaceInfo.address ?? '-'}</p>
 			</td>
 			<td>
-				<ButtonGroup>
-					{isAlreadyAdded ? (
-						<Button title={'Already added'} disabled>
-							<FontAwesomeIcon icon={faCheck} /> Already added
-						</Button>
-					) : (
-						<Button onClick={() => addConnection(surfaceInfo)} title="Add Connection">
-							<FontAwesomeIcon icon={faPlus} /> Add Connection
-						</Button>
-					)}
-				</ButtonGroup>
+				{isAlreadyAdded ? (
+					<Button size="sm" variant="outline" title="Already added" disabled>
+						<FontAwesomeIcon icon={faCheck} className="me-1.5" /> Already added
+					</Button>
+				) : (
+					<Button color="primary" size="sm" onClick={() => addConnection(surfaceInfo)} title="Add Connection">
+						<FontAwesomeIcon icon={faPlus} className="me-1.5" /> Add Connection
+					</Button>
+				)}
 			</td>
 		</tr>
 	)

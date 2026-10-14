@@ -1,7 +1,6 @@
 import { NumberField } from '@base-ui/react/number-field'
 import './NumberInputField.css'
 import { Slider } from '@base-ui/react/slider'
-import classNames from 'classnames'
 import { MinusIcon, PlusIcon } from 'lucide-react'
 import { useCallback, useState } from 'react'
 
@@ -125,7 +124,8 @@ export function NumberInputField({
 		>
 			<NumberField.Group className="number-field-group">
 				<NumberField.Input
-					className={classNames('form-input', 'number-field-input', { 'invalid-value': valueIsInvalid })}
+					className="form-input number-field-input"
+					aria-invalid={valueIsInvalid}
 					placeholder={allowNull ? 'auto' : undefined}
 				/>
 
@@ -136,11 +136,7 @@ export function NumberInputField({
 					<MinusIcon />
 				</NumberField.Decrement>
 
-				{!!showOverlayValue && (
-					<span className={classNames('number-field-inf-overlay', { 'invalid-value': valueIsInvalid })}>
-						{showOverlayValue}
-					</span>
-				)}
+				{!!showOverlayValue && <span className="number-field-inf-overlay">{showOverlayValue}</span>}
 			</NumberField.Group>
 		</NumberField.Root>
 	)

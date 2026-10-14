@@ -7,7 +7,7 @@ import { Button } from '~/Components/Button'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
-export const RefreshModulesList = observer(function RefreshModulesList({ btnSize }: { btnSize?: 'sm' | 'lg' }) {
+export const RefreshModulesList = observer(function RefreshModulesList({ className }: { className: string }) {
 	const { modules } = useContext(RootAppStoreContext)
 
 	const { percent: refreshProgress } = modules.getStoreListRefreshProgress()
@@ -24,18 +24,29 @@ export const RefreshModulesList = observer(function RefreshModulesList({ btnSize
 	}, [refreshListMutation])
 
 	return (
-		<div>
+		<div className={className}>
 			{refreshError ? <StaticAlert color="warning">{refreshError}</StaticAlert> : ''}
 
 			{refreshProgress !== 1 ? (
-				<Button color="primary" disabled size={btnSize}>
+				<Button
+					color="secondary"
+					disabled
+					aria-busy
+					size="sm"
+					title={`Refreshing modules list ${Math.round(refreshProgress * 100)}%`}
+					className="h-full inline-flex items-center justify-center"
+				>
 					<FontAwesomeIcon icon={faSync} spin={true} />
-					&nbsp;Refreshing modules list {Math.round(refreshProgress * 100)}%
 				</Button>
 			) : (
-				<Button color="primary" onClick={doRefreshModules} size={btnSize}>
+				<Button
+					color="secondary"
+					onClick={doRefreshModules}
+					size="sm"
+					title="Refresh modules list"
+					className="h-full inline-flex items-center justify-center"
+				>
 					<FontAwesomeIcon icon={faSync} />
-					&nbsp;Refresh modules list
 				</Button>
 			)}
 		</div>

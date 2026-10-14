@@ -1,3 +1,4 @@
+import classNames from 'classnames'
 import { useCallback } from 'react'
 import type { EntityModelType, EntityOwner, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
@@ -11,6 +12,7 @@ interface AddEntityPanelProps {
 	entityType: EntityModelType
 	feedbackListType: FeedbackEntitySubType | null
 	entityTypeLabel: string
+	anyEntities: boolean
 }
 
 export function AddEntityPanel({
@@ -18,6 +20,7 @@ export function AddEntityPanel({
 	entityType,
 	feedbackListType,
 	entityTypeLabel,
+	anyEntities,
 }: AddEntityPanelProps): React.JSX.Element {
 	const { serviceFactory, readonly } = useEntityEditorContext()
 
@@ -41,7 +44,11 @@ export function AddEntityPanel({
 	)
 
 	return (
-		<div className="add-dropdown-wrapper">
+		<div
+			className={classNames('add-dropdown-wrapper', {
+				'mt-0': !anyEntities,
+			})}
+		>
 			<AddEntityDropdown
 				onSelect={addEntity}
 				entityType={entityType}

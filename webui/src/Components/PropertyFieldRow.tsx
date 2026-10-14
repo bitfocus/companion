@@ -15,7 +15,6 @@ import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { buildContextResolutionForPreview, ExpressionValuePreview } from './ExpressionValuePreview.js'
 import { FieldOrExpression } from './FieldOrExpression.js'
 import { FormLabel } from './Form.js'
-import { Grid } from './Grid.js'
 import { InlineHelpIcon } from './InlineHelp.js'
 
 type SetInnerValueFn = (value: JsonValue | undefined) => void
@@ -87,17 +86,11 @@ export function PropertyFieldRow({
 		value.isExpression && expressionDescription !== undefined ? expressionDescription : description
 
 	return (
-		<>
-			<FormLabel htmlFor={inputId} sm={4} column="sm" className={classNames(labelClassName, { hidden: hidden })}>
+		<div className={classNames('property-inspector-row', { hidden })}>
+			<FormLabel htmlFor={inputId} className={classNames('property-inspector-label', labelClassName)}>
 				{label}
 				{activeFeatures && <InputFeatureIcons {...activeFeatures} />}
 				{tooltip && <InlineHelpIcon className="ms-1">{tooltip}</InlineHelpIcon>}
-				{isOverridden && (
-					<span title="Value has a linked feedback override">
-						<FontAwesomeIcon icon={faLayerGroup} />
-					</span>
-				)}
-				{pinToggle}
 				{value.isExpression && (
 					<ExpressionValuePreview
 						expression={stringifyVariableValue(value.value) ?? ''}
@@ -110,7 +103,7 @@ export function PropertyFieldRow({
 					/>
 				)}
 			</FormLabel>
-			<Grid.Col sm={8} className={classNames({ hidden: hidden })}>
+			<div className="property-inspector-input">
 				{disableAutoExpression ? (
 					children({ value: value.value }, setInnerValue, inputId)
 				) : (
@@ -126,8 +119,16 @@ export function PropertyFieldRow({
 						{children({ value: value.value }, setInnerValue, inputId)}
 					</FieldOrExpression>
 				)}
-				{activeDescription && <div className="form-text">{activeDescription}</div>}
-			</Grid.Col>
-		</>
+			</div>
+			<div className="property-inspector-pin">{pinToggle}</div>
+			{isOverridden && (
+				<div className="property-inspector-status">
+					<span title="Value has a linked feedback override">
+						<FontAwesomeIcon icon={faLayerGroup} /> Linked feedback
+					</span>
+				</div>
+			)}
+			{activeDescription && <div className="property-inspector-description">{activeDescription}</div>}
+		</div>
 	)
 }

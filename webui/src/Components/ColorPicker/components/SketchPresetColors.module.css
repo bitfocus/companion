@@ -1,7 +1,7 @@
 .swatchRoot {
 	margin: 0 -10px;
 	padding: 10px 0 0 10px;
-	border-top: 1px solid #eee;
+	border-top: 1px solid var(--color-border-subtle);
 	display: flex;
 	flex-wrap: wrap;
 	position: relative;

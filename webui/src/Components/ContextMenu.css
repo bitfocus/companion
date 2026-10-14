@@ -11,8 +11,8 @@
 	/* gather the color scheme up front: */
 	--menu-color: var(--color-text-strong);
 	--menu-bg: var(--color-surface-subtle); /* or just use white? */
-	--menu-hover-color: var(--color-on-dark);
-	--menu-hover-bg: var(--color-info);
+	--menu-hover-color: var(--color-text-strong);
+	--menu-hover-bg: var(--color-surface-hover);
 
 	.popover2-popup {
 		--popover2-bg: var(--menu-bg);
@@ -44,21 +44,8 @@
 			}
 
 			.dropdown-item-label {
-				padding-left: 0.75em;
-				padding-right: 1.5em;
+				padding: 0;
 			}
-		}
-
-		.dropdown-divider {
-			border: none;
-			border-top: 1px solid var(--color-shadow-25); /* Light divider */
-			margin: 0.4em 0.6em;
-		}
-
-		.dropdown-group-label {
-			cursor: default;
-			padding-left: 0.75em;
-			color: color-mix(in srgb, var(--color-text-strong) 50%, transparent);
 		}
 
 		.dropdown-item-version {

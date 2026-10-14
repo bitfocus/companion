@@ -168,12 +168,12 @@ export const CollectionItemsCollapseButtons = observer(function CollectionItemsC
 	return (
 		<>
 			{hasCollapsed && (
-				<Button size="sm" color="link" onClick={expandAll} title="Expand all items">
+				<Button size="sm" color="secondary" onClick={expandAll} title="Expand all items">
 					<FontAwesomeIcon icon={faExpandArrowsAlt} />
 				</Button>
 			)}
 			{hasExpanded && (
-				<Button size="sm" color="link" onClick={collapseAll} title="Collapse all items">
+				<Button size="sm" color="secondary" onClick={collapseAll} title="Collapse all items">
 					<FontAwesomeIcon icon={faCompressArrowsAlt} />
 				</Button>
 			)}

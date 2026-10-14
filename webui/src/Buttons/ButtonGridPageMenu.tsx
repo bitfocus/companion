@@ -81,7 +81,7 @@ export function ButtonGridPageMenu({ pageNumber, pageInfo }: ButtonGridPageMenuP
 			<ConfirmExportModal ref={exportModalRef} title="Export Page" />
 
 			<Popover.Root>
-				<Popover.Trigger color="light" className="ms-1" title="Page actions">
+				<Popover.Trigger color="secondary" className="ms-1" title="Page actions">
 					<FontAwesomeIcon icon={faEllipsis} />
 				</Popover.Trigger>
 				<Popover.Popup positionerClassName="action-menu" align="end">

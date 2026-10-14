@@ -96,8 +96,8 @@
 	z-index: 2000;
 	padding: 0.4rem 0.6rem;
 	border-radius: 0.4rem;
-	background-color: rgba(0, 0, 0, 0.8);
-	color: #fff;
+	background-color: color-mix(in srgb, var(--color-backdrop) 80%, transparent);
+	color: var(--color-on-dark);
 	font-size: 0.8rem;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+	box-shadow: 0 2px 8px var(--color-shadow-40);
 }

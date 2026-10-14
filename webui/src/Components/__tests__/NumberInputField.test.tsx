@@ -82,24 +82,24 @@ describe('NumberInputField', () => {
 	// -------------------------------------------------------------------------
 
 	describe('checkValid', () => {
-		it('applies invalid-value class when checkValid=false', () => {
+		it('is aria-invalid when checkValid=false', () => {
 			render(<NumberInputField id={undefined} value={5} setValue={vi.fn()} checkValid={false} />)
-			expect(screen.getByRole('textbox')).toHaveClass('invalid-value')
+			expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'true')
 		})
 
-		it('does not apply invalid-value class when checkValid=true', () => {
+		it('is not aria-invalid when checkValid=true', () => {
 			render(<NumberInputField id={undefined} value={5} setValue={vi.fn()} checkValid={true} />)
-			expect(screen.getByRole('textbox')).not.toHaveClass('invalid-value')
+			expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'false')
 		})
 
-		it('applies invalid-value class when checkValid function returns false', () => {
+		it('is aria-invalid when checkValid function returns false', () => {
 			render(<NumberInputField id={undefined} value={5} setValue={vi.fn()} checkValid={() => false} />)
-			expect(screen.getByRole('textbox')).toHaveClass('invalid-value')
+			expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'true')
 		})
 
-		it('does not apply invalid-value class when checkValid function returns true', () => {
+		it('is not aria-invalid when checkValid function returns true', () => {
 			render(<NumberInputField id={undefined} value={5} setValue={vi.fn()} checkValid={() => true} />)
-			expect(screen.getByRole('textbox')).not.toHaveClass('invalid-value')
+			expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'false')
 		})
 
 		it('passes the current value to checkValid', () => {
@@ -112,7 +112,7 @@ describe('NumberInputField', () => {
 		it('is conditionally invalid based on checkValid function result', () => {
 			render(<NumberInputField id={undefined} value={5} setValue={vi.fn()} checkValid={(v) => v > 10} />)
 			// 5 is NOT > 10, so checkValid returns false → invalid
-			expect(screen.getByRole('textbox')).toHaveClass('invalid-value')
+			expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'true')
 		})
 
 		it('receives 0 (not NaN) when value is undefined', () => {
@@ -155,8 +155,8 @@ describe('NumberInputField', () => {
 			expect(screen.queryByText('-∞')).toBeNull()
 		})
 
-		it('-∞ overlay also shows invalid-value class when checkValid=false', () => {
-			const { container } = render(
+		it('stays aria-invalid while the -∞ overlay is shown', () => {
+			render(
 				<NumberInputField
 					id={undefined}
 					value={0}
@@ -166,8 +166,8 @@ describe('NumberInputField', () => {
 					checkValid={false}
 				/>
 			)
-			const overlay = container.querySelector('.number-field-inf-overlay')
-			expect(overlay).toHaveClass('invalid-value')
+			expect(screen.getByText('-∞')).toBeInTheDocument()
+			expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'true')
 		})
 	})
 

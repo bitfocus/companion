@@ -4,21 +4,9 @@
    `--sidebar-*` custom properties are our own layout knobs:
      --sidebar-occupy-start   read by layout.css to pad the main content
      --sidebar-narrow-width   read by the narrow-mode rules
-     --sidebar-nav-link-bg / -active-bg / -border-radius / -icon-color / -padding-x
-   The sidebar is always dark (see Sidebar.tsx), so `.sidebar` overrides the theme's text/surface/
-   border tokens with dark values for its whole subtree. */
+     --sidebar-nav-link-bg / -active-bg / -border-radius / -icon-color / -padding-x */
 
 .sidebar {
-	/* Always-dark: override the theme's text/surface/border tokens for the whole sidebar subtree. */
-	--color-text: rgba(255, 255, 255, 0.87);
-	--color-text-strong: #fff;
-	--color-muted: rgba(255, 255, 255, 0.6);
-	--color-text-faint: rgba(255, 255, 255, 0.38);
-	--color-surface-dark: #212631;
-	--color-surface-muted: #323a49;
-	--color-surface-subtle: rgb(41.5, 48, 61);
-	--color-border: #323a49;
-
 	position: relative;
 	display: flex;
 	flex: 0 0 16rem;
@@ -27,15 +15,16 @@
 	order: -1;
 	width: 16rem;
 	color: var(--color-text);
-	background: #111;
-	box-shadow: none;
+	background: var(--color-surface-muted);
+	border-right: 1px solid var(--color-border);
+	box-shadow: 1px 0 3px var(--color-shadow-6);
 	margin-inline-start: 0;
 	transition:
-		margin-left 0.15s,
-		margin-right 0.15s,
+		margin-left 0.22s ease,
+		margin-right 0.22s ease,
 		box-shadow 0.075s,
-		transform 0.15s,
-		width 0.15s,
+		transform 0.22s ease,
+		width 0.22s ease,
 		z-index 0s ease 0.15s;
 
 	@media (prefers-reduced-motion: reduce) {
@@ -81,74 +70,59 @@
 	}
 }
 
+.sidebar-logo-mark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	padding: 0.1875rem;
+	flex-shrink: 0;
+	border-radius: 0.5rem;
+	/* The logo is white on transparent, so it sits on a graphite tile like the macOS app icon: a top-to-bottom
+	   fade with a faint light rim */
+	background: linear-gradient(to bottom, var(--color-logo-tile-top), var(--color-logo-tile-bottom));
+	box-shadow:
+		inset 0 0 0 1px color-mix(in srgb, var(--color-on-dark) 12%, transparent),
+		0 1px 3px var(--color-shadow-20);
+
+	img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+	}
+}
+
+/* The expanded footer lays out at the full sidebar width and clips, so while the sidebar animates open from
+   narrow its rows slide into view instead of wrapping into the narrow width first. 16rem is the sidebar's
+   width, less the footer's padding (p-3) and the sidebar's right border. */
+.sidebar-footer-full {
+	overflow: hidden;
+	white-space: nowrap;
+
+	> * {
+		min-width: calc(16rem - 1.5rem - 1px);
+	}
+}
+
+.sidebar-logo-mark-narrow {
+	width: 2.75rem;
+	height: 2.75rem;
+	padding: 0.125rem;
+}
+
 .sidebar-header {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	padding: 1rem 1rem;
-
-	.btn-close {
-		padding: calc(1rem * 0.5) calc(1rem * 0.5);
-		margin-inline-end: calc(-0.5 * 1rem);
-		margin-top: calc(-0.5 * 1rem);
-		margin-bottom: calc(-0.5 * 1rem);
-	}
-}
-
-.sidebar-toggler {
-	position: relative;
-	box-sizing: content-box;
-	width: 0.5rem;
-	height: 0.5rem;
-	padding: 0.25rem 0.25rem;
-	background-color: transparent;
-	border: 0;
-	border-radius: 0.375rem;
-
-	&::before {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		content: '';
-		background-color: var(--color-text-faint);
-		mask: url("data:image/svg+xml,%0A%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cg xmlns='http://www.w3.org/2000/svg' transform='matrix%28-1 0 0 -1 512 512%29'%3E%3Cpath fill='%23000' d='M472,16H40A24.028,24.028,0,0,0,16,40V200H48V48H464V464H48V304H16V472a24.028,24.028,0,0,0,24,24H472a24.028,24.028,0,0,0,24-24V40A24.028,24.028,0,0,0,472,16Z'/%3E%3Cpolygon fill='%23000' points='209.377 363.306 232.004 385.933 366.627 251.31 232.004 116.687 209.377 139.313 305.374 235.311 16 235.311 16 267.311 305.372 267.311 209.377 363.306'/%3E%3C/g%3E%3C/svg%3E")
-			no-repeat center;
-		transition: transform 0.15s;
-
-		@media (prefers-reduced-motion: reduce) {
-			transition: none;
-		}
-	}
-
-	/* Override <a>'s hover style */
-	&:hover {
-		text-decoration: none;
-		&::before {
-			background-color: var(--color-muted);
-		}
-	}
-
-	&:focus {
-		position: relative;
-		outline: 0;
-		box-shadow: 0 0 0 0.25rem rgba(213, 2, 21, 0.25);
-
-		&::before {
-			background-color: var(--color-muted);
-		}
-	}
-
-	@media (--bp-lg-down) {
-		display: none;
-	}
 }
 
 /* Backdrop background (mobile overlay) */
 .sidebar-backdrop {
 	--sidebar-backdrop-zindex: 1034;
-	--sidebar-backdrop-bg: #080a0c;
+	--sidebar-backdrop-bg: var(--color-backdrop);
 	--sidebar-backdrop-opacity: 0.5;
 
 	@media (--bp-lg-down) {
@@ -163,6 +137,7 @@
 		&.fade {
 			opacity: 0;
 		}
+
 		&.show {
 			opacity: var(--sidebar-backdrop-opacity);
 		}
@@ -172,38 +147,39 @@
 .sidebar-nav {
 	/* Kept custom properties (set/overridden by our own rules below): */
 	--sidebar-nav-link-bg: transparent;
-	--sidebar-nav-link-active-bg: var(--color-surface-subtle);
+	--sidebar-nav-link-active-bg: color-mix(in srgb, var(--color-accent-active) 9%, transparent);
 	--sidebar-nav-link-border-radius: var(--radius);
 	--sidebar-nav-link-icon-color: var(--color-text-faint);
 	--sidebar-nav-link-padding-x: 0.5rem;
+	--sidebar-nav-link-padding-y: 0.45rem;
 
 	position: relative;
 	display: flex;
 	flex: 1;
 	flex-direction: column;
-	padding: 0.5rem 0.5rem;
+	min-height: 0;
+	padding: 0.375rem 0.5rem;
 	margin-bottom: 0;
 	overflow-x: hidden;
 	overflow-y: auto;
 	list-style: none;
 
-	.nav-item + .nav-item,
-	.nav-item + .nav-group,
-	.nav-group + .nav-item {
-		margin-top: 1px;
-	}
-
 	.nav-link {
+		position: relative;
 		display: flex;
 		flex: 1;
+		width: 100%; /* buttons (nav-group-toggle) don't stretch to fill like a block element otherwise */
 		align-items: center;
-		padding: 0.75rem var(--sidebar-nav-link-padding-x);
+		padding: var(--sidebar-nav-link-padding-y) var(--sidebar-nav-link-padding-x);
+		font: inherit;
 		color: var(--color-text);
+		text-align: start;
 		text-decoration: none;
 		white-space: nowrap;
 		background: var(--sidebar-nav-link-bg);
 		border: 0 solid transparent;
 		border-radius: var(--sidebar-nav-link-border-radius);
+		box-shadow: none;
 		transition:
 			background 0.15s ease,
 			color 0.15s ease,
@@ -219,6 +195,17 @@
 
 			.nav-icon {
 				color: var(--color-text-strong);
+			}
+
+			&::before {
+				content: '';
+				position: absolute;
+				left: 4px;
+				top: 20%;
+				height: 60%;
+				width: 3px;
+				background-color: var(--color-accent-active);
+				border-radius: 9999px;
 			}
 		}
 
@@ -270,7 +257,7 @@
 		align-items: center;
 		justify-content: center;
 		height: 1.25rem;
-		margin-inline-end: 0.75rem;
+		margin-inline-end: 0.875rem;
 		font-size: 1.25rem;
 		color: var(--sidebar-nav-link-icon-color);
 		text-align: center;
@@ -294,48 +281,8 @@
 
 	/* stylelint-disable-next-line selector-no-qualifying-type */
 	svg.nav-icon {
-		overflow: hidden; /* fix chrome 105+ width issue */
-	}
-
-	.nav-group {
-		position: relative;
-		border: 0 solid transparent;
-		border-radius: var(--radius);
-		transition: background 0.15s ease-in-out;
-
-		@media (prefers-reduced-motion: reduce) {
-			transition: none;
-		}
-
-		.nav-group-items {
-			padding: 0 0;
-			overflow: hidden;
-			transition: height 0.15s ease;
-
-			@media (prefers-reduced-motion: reduce) {
-				transition: none;
-			}
-		}
-
-		&:not(.show) .nav-group-items {
-			display: none;
-		}
-
-		&.show {
-			background: transparent;
-
-			.nav-group-toggle {
-				color: var(--color-text);
-			}
-
-			> .nav-group-toggle::after {
-				transform: rotate(180deg);
-			}
-
-			+ .show {
-				margin-top: 1px;
-			}
-		}
+		overflow: hidden;
+		/* fix chrome 105+ width issue */
 	}
 
 	.nav-group-toggle {
@@ -356,25 +303,10 @@
 			}
 		}
 	}
-
-	.nav-group-items {
-		padding: 0;
-		list-style: none;
-
-		.nav-link {
-			padding-inline-start: calc(
-				var(--sidebar-nav-link-padding-x) + 1.25rem + 0.75rem
-			); /* stylelint-disable-line function-disallowed-list */
-		}
-
-		.nav-icon {
-			margin-inline-start: calc(-1 * (1.25rem + 0.75rem)); /* stylelint-disable-line function-disallowed-list */
-		}
-	}
 }
 
 .sidebar-narrow,
-.sidebar-narrow-unfoldable:not(:hover) {
+.sidebar-narrow-unfoldable:not(.sidebar-unfolded) {
 	--sidebar-narrow-width: 4rem;
 
 	@media (--bp-lg-up) {
@@ -404,29 +336,12 @@
 		.nav-icon {
 			flex: 0 0 calc(var(--sidebar-narrow-width) - (0.5rem * 2) - (var(--sidebar-nav-link-padding-x) * 2)); /* stylelint-disable-line function-disallowed-list */
 		}
-
-		.nav-group-items,
-		.nav-group.show .nav-group-items {
-			height: 0 !important; /* stylelint-disable-line declaration-no-important */
-			padding: 0 !important; /* stylelint-disable-line declaration-no-important */
-			margin: 0 !important; /* stylelint-disable-line declaration-no-important */
-			visibility: hidden;
-			opacity: 0;
-		}
-
-		.sidebar-toggler::before {
-			transform: rotate(-180deg);
-		}
 	}
 }
 
 .sidebar-narrow-unfoldable {
-	&:hover {
+	&.sidebar-unfolded {
 		box-shadow: 0 0.5rem 1rem var(--color-shadow-15);
-
-		.sidebar-toggler::before {
-			transform: rotate(-180deg);
-		}
 	}
 }
 
@@ -453,10 +368,6 @@
 
 		.sidebar-brand-full {
 			white-space: nowrap;
-
-			img {
-				margin-top: -5px;
-			}
 		}
 
 		.sidebar-brand-narrow {
@@ -466,31 +377,44 @@
 	}
 
 	.sidebar-header {
-		min-height: calc(4rem + 1px); /* stylelint-disable-line function-disallowed-list */
+		min-height: calc(3.25rem + 1px); /* stylelint-disable-line function-disallowed-list */
 
-		background-color: #a20210;
+		background: transparent;
 		justify-content: left;
-		padding-left: 11px;
+		padding: 0 11px;
+		/* Align vertical height with main header */
+		flex-shrink: 0;
+	}
+
+	.nav-title {
+		padding: 0.75rem 1rem 0.25rem 1.25rem;
+		font-size: 0.65rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--color-muted);
 	}
 
 	.nav-link {
-		--sidebar-nav-link-bg: #191919;
+		--sidebar-nav-link-bg: transparent;
 
 		/* note: .nav-group-toggle, below, overrides these three lines. */
-		margin-bottom: 0.15rem;
-		padding-top: 0.7rem;
-		padding-bottom: 0.7rem;
+		margin-bottom: 0.075rem;
+		padding-top: var(--sidebar-nav-link-padding-y);
+		padding-bottom: var(--sidebar-nav-link-padding-y);
 
 		small {
-			color: #aaa;
+			color: var(--color-muted);
 			font-size: 0.75rem;
 		}
 
 		.nav-icon-wrapper {
 			width: 32px;
 			min-width: 32px;
-			min-height: calc(1.5 * 1em); /* so nav-link height doesn't change when we hide the text */
-			margin: 0; /* let .full-label handle the margin so the icon can be on its own in narrow sidebars */
+			min-height: calc(1.5 * 1em);
+			/* so nav-link height doesn't change when we hide the text */
+			margin: 0;
+			/* let .full-label handle the margin so the icon can be on its own in narrow sidebars */
 			text-align: center;
 			justify-content: center;
 
@@ -506,193 +430,116 @@
 		}
 	}
 
-	.nav-two-line .nav-link {
-		padding-top: 0.5rem;
-		padding-bottom: 0.5rem;
-
-		line-height: calc(1.5 * 0.85);
-	}
-
 	/* specific mobile-mode overrides for narrow mode. The .show is not necessary but makes the intent clearer. */
 	/* i.e., .sidebar.show indicates mobile-mode. In all other modes, CUI correctly handles these properties already. */
 	&.sidebar-narrow.show {
 		/* CoreUI CSS only allows narrow width for "non-mobile" mode (@media (min-width: 992px)), so make it universal here: */
 		width: var(--sidebar-narrow-width);
 
-		.sidebar-brand-narrow {
-			display: block;
+		.sidebar-header {
+			justify-content: center;
+			padding-left: 0;
+			padding-right: 0;
 		}
+
+		.sidebar-brand-narrow {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
 		.sidebar-brand-full {
 			display: none;
 		}
 	}
 
 	/* note: in .sidebar, .show is present in mobile mode, during which we ignore sidebar-narrow-unfoldable but not sidebar-narrow */
-	&.sidebar-narrow-unfoldable:not(.show, :hover),
+	&.sidebar-narrow-unfoldable:not(.show, .sidebar-unfolded),
 	&.sidebar-narrow {
-		/* when sidebar is narrow hide things including the label and toggler */
-		.nav-group-toggle::after,
-		.full-label {
+		.sidebar-header {
+			justify-content: center;
+			padding-left: 0;
+			padding-right: 0;
+		}
+
+		.sidebar-brand-full {
 			display: none;
 		}
 
-		/* if there's a notification, cozy it up to the icon when the sidebar is narrow. */
-		.notification-count {
-			margin-left: -0.75rem;
-			margin-top: -0.25rem;
+		.sidebar-brand-narrow {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			width: 100%;
+			margin-left: 0;
+			margin-right: 0;
 		}
 
-		.sidebar-nav .nav-group-items .nav-link {
-			padding-right: 0;
+		/* when sidebar is narrow hide things including the label and toggler */
+		.nav-group-toggle::after,
+		.full-label,
+		.nav-title {
+			display: none;
+		}
+
+		/* With only the icon showing, pin a notification to the corner of the link as a badge. Placing it in the
+		   flow with negative margins left wider counts past the link's clipped edge. */
+		.notification-count {
+			position: absolute;
+			top: 0.125rem;
+			inset-inline-end: 0.125rem;
+			margin: 0;
+		}
+	}
+
+	/* Folding is visual state only, so an accordion can still be open in React while the sidebar is
+	   narrow. Keep its contents and disclosure chevron out of the folded layout; they return with the
+	   same open state when the sidebar expands on hover. */
+	&.sidebar-narrow-unfoldable:not(.show, .sidebar-unfolded) {
+		.nav-sub-list,
+		.sidebar-group-chevron {
+			display: none;
 		}
 	}
 
 	/* In unfolding mode (but not narrow- or mobile-mode), hide the context menu when the sidebar folds */
-	&.sidebar-narrow-unfoldable:not(.show, :hover, .sidebar-narrow) {
+	&.sidebar-narrow-unfoldable:not(.show, .sidebar-unfolded, .sidebar-narrow) {
 		.context-menu {
 			display: none;
 		}
 	}
 
 	.nav-link:hover {
-		background-color: #262626 !important;
-	}
-
-	.nav-secondary {
-		flex: none;
-		border-top: var(--border-width) solid var(--color-border);
-
-		.nav-group-toggle::after {
-			transform: rotate(180deg);
-		}
-		.show > .nav-group-toggle::after {
-			transform: rotate(0deg);
-		}
-	}
-
-	/* Sidebar groups, DOM: */
-	/*    .nav-group (".show" = when open) */
-	/*       .nav-link.nav-group-toggle */
-	/*           .nav-link */
-	/*       .nav-group-items */
-	.nav-group {
-		/* border to include the toggler. A subsequent rule thickens the border for the group items section. */
-		border-left: 1px solid var(--sidebar-nav-link-icon-color);
-		/* border-bottom: 1px solid var(--sidebar-nav-link-icon-color); optional bottom edge */
-
-		> .nav-link > .nav-link {
-			/* compensate for the border, so the icons stays centered relative to non-group items */
-			padding-left: calc(var(--sidebar-nav-link-padding-x) - 1px);
-		}
-
-		&.show > .nav-link {
-			/* make the toggler "active" when open (this only affects the caret in the "split-button", i.e. label is in a separate div) */
-			background: var(--sidebar-nav-link-active-bg);
-		}
+		background-color: var(--color-surface-muted-hover);
 	}
 
 	.nav-group-toggle {
-		/* override the default padding so we don't double-pad: only the nested nav-link is padded (see Sidebar groups, DOM comment, above) */
-		padding: 0;
+		padding: var(--sidebar-nav-link-padding-y) var(--sidebar-nav-link-padding-x);
 
 		&::after {
-			/* affects the caret */
-			margin-left: 16px;
-			margin-right: 16px;
-			background-color: white;
-			mask-repeat: no-repeat;
+			display: none;
 		}
+
 		.nav-link {
 			margin-bottom: 0;
 		}
 	}
 
-	/* highlighting for the group-items container (contains all the items excluding the group-toggler line) */
-	/* we need specificity here to override padding and margin on .nav-group-items when sidebar is narrow (CUI wants them 0) */
-	&.sidebar-narrow .nav-group.show .nav-group-items, /* override CUI in narrow mode */
-	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items, /* override CUI */
-	.nav-group-items {
-		/* the box underneath and containing the expanded group */
-		padding-left: 1px !important; /* to separate nested groups */
-		border-left: 2px solid var(--sidebar-nav-link-icon-color); /* to visually group the items in a group */
-		border-bottom-left-radius: var(--sidebar-nav-link-border-radius);
-	}
-
-	/* override CUI so nav-group-items show when sidebar is narrow (CoreUI tries to override these with !important, so we have to as well) */
-	&.sidebar-narrow .nav-group.show .nav-group-items, /* override CUI so nav-group-items show in narrow mode */
-	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-group-items {
-		height: auto !important;
-		visibility: visible !important; /* !important is not currently necessary on this, but CUI could change it */
-		opacity: 1 !important; /* !important is not currently necessary on this, but CUI could change it */
-
-		.nav-link {
-			/* when narrow, remove the default padding set in the next rule. */
-			/* the borders defined above still provide a bit of offset in this case. */
-			padding-left: 0;
-		}
-	}
-
-	/* the individual buttons in a group (overrides something CUI? - spacing is odd when narrow otherwise) */
-	.sidebar-nav .nav-group-items .nav-link {
-		/* even though this is the default padding, CUI does something strange to it with `padding-inline-start` so we need to override it here */
-		padding-left: var(--sidebar-nav-link-padding-x);
-		/* smoother transition for icons when expanding the sidebar. The exact number isn't critical. */
-		transition: padding-left 0.1s;
+	/* Collapsed, each item is just its icon: shrink the hover/active highlight to a square the size of the logo tile
+	   rather than the full-width row. After the group-item padding rules above so it wins the tie. */
+	&.sidebar-narrow-unfoldable:not(.show, .sidebar-unfolded) .sidebar-nav .nav-link,
+	&.sidebar-narrow .sidebar-nav .nav-link {
+		flex: none;
 		justify-content: center;
-
-		&.nav-group-toggle {
-			padding-left: 0;
-		}
+		width: 2.75rem;
+		height: 2.75rem;
+		padding: 0;
+		margin-inline: auto;
 	}
 
 	.sidebar-footer2 {
 		justify-content: left;
-		padding: 0.5rem 1rem;
 		border-top: var(--border-width) solid var(--color-border);
-
-		.sidebar-footer-toggler {
-			display: flex;
-			overflow: hidden;
-
-			background: none !important;
-			border: none !important;
-
-			&:hover {
-				background: none !important;
-				border: none !important;
-			}
-
-			.nav-icon-wrapper {
-				cursor: pointer;
-
-				display: flex;
-				align-items: center;
-
-				.sidebar-toggler {
-					display: block;
-					width: 100%;
-				}
-			}
-
-			.version,
-			.version-sub {
-				display: block;
-
-				overflow: hidden;
-				white-space: nowrap;
-				text-overflow: ellipsis;
-			}
-
-			.version {
-				font-size: 0.95em;
-				color: #aaa;
-				display: block;
-			}
-			.version-sub {
-				font-size: 0.85em;
-				color: #888;
-			}
-		}
 	}
 
 	/* the scrolling container in the sidebar: */
@@ -701,7 +548,7 @@
 	}
 
 	/* when the sidebar is narrow, make more space for the contents and let centering create what margins there will be. */
-	&.sidebar-narrow-unfoldable:not(.show, :hover) .nav-main-scroller,
+	&.sidebar-narrow-unfoldable:not(.show, .sidebar-unfolded) .nav-main-scroller,
 	&.sidebar-narrow .nav-main-scroller {
 		scrollbar-width: thin;
 		padding-left: 0;
@@ -718,7 +565,7 @@
 			left: 0;
 			right: 0;
 			height: 20px;
-			background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 1));
+			background: linear-gradient(to bottom, transparent, var(--color-surface-muted));
 			pointer-events: none;
 			z-index: 1;
 		}
@@ -726,8 +573,8 @@
 }
 
 .notification-count {
-	background-color: var(--color-primary);
-	color: #fff;
+	background-color: var(--color-brand);
+	color: var(--color-on-dark);
 	font-weight: bold;
 
 	border-radius: 50%;
@@ -739,4 +586,107 @@
 	/* margin-right: -0.5rem; */
 	min-width: calc(1.5 * 1em);
 	display: inline-block;
+}
+
+/* Sidebar Submenus / Accordion Nested Lists */
+.nav-sub-list {
+	list-style: none;
+	padding: 0.125rem 0 0.25rem 0;
+	margin: 0;
+	position: relative;
+}
+
+/* Vertical indented line connecting sub-items */
+.nav-sub-list::before {
+	content: '';
+	position: absolute;
+	left: 1.5rem;
+	top: 0;
+	bottom: 0.75rem;
+	width: 1px;
+	background-color: var(--color-border);
+}
+
+/* Nested under `.sidebar-nav` so these match the specificity of the `.nav-link` rules above and
+   win on order, rather than needing `!important` on every declaration. */
+.sidebar-nav {
+	.nav-sub-link {
+		padding: 0.375rem 1rem 0.375rem 2.5rem;
+		font-size: 13px;
+		color: var(--color-muted);
+		display: flex;
+		align-items: center;
+		background: transparent;
+		border-radius: var(--sidebar-nav-link-border-radius);
+		transition:
+			color 0.15s ease,
+			background-color 0.15s ease;
+
+		&:hover {
+			color: var(--color-text-strong);
+			background-color: var(--color-surface-muted-hover);
+		}
+
+		&.active {
+			color: var(--color-text-strong);
+			background-color: var(--sidebar-nav-link-active-bg);
+
+			&::before {
+				content: '';
+				position: absolute;
+				left: 1.4rem; /* Aligns exactly with the vertical tree line */
+				top: 35%;
+				height: 30%;
+				width: 3px;
+				background-color: var(--color-accent-active);
+				border-radius: 9999px;
+			}
+		}
+	}
+}
+/* Floating "show sidebar" button, rendered by App.tsx in mobile mode. */
+
+/* Popover menu shown for a nav group when the sidebar is narrow. */
+.sidebar-popover-menu {
+	display: flex;
+	flex-direction: column;
+	padding: 0.375rem;
+	min-width: 140px;
+
+	.sidebar-popover-list,
+	ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	li {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.nav-sub-link {
+		padding: 0.375rem 0.625rem;
+		font-size: 13px;
+		color: var(--color-muted);
+		border-radius: var(--radius);
+		display: flex;
+		align-items: center;
+		text-decoration: none;
+		transition:
+			color 0.15s ease,
+			background-color 0.15s ease;
+
+		&:hover {
+			color: var(--color-text-strong);
+			background-color: var(--color-surface-muted-hover);
+		}
+
+		&.active {
+			color: var(--color-text-strong);
+			background-color: color-mix(in srgb, var(--color-accent-active) 9%, transparent);
+			font-weight: 600;
+		}
+	}
 }

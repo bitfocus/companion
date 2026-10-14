@@ -25,6 +25,7 @@ import { createRoot } from 'react-dom/client'
 import { evictBySizeIfNeeded } from '~/Helpers/CollapseStorage.js'
 import { makeAbsolutePath } from '~/Resources/util.js'
 import './Resources/TRPC.js' // Ensure TRPC is loaded ASAP
+import './Theme/ThemeState.js' // Takes over the theme the inline script in index.html applied
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen.js'

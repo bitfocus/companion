@@ -137,7 +137,7 @@ small {
 }
 
 a {
-	color: var(--color-primary);
+	color: var(--color-brand);
 	text-decoration: none;
 }
 a:hover {
@@ -213,6 +213,12 @@ button {
 
 button:focus:not(:focus-visible) {
 	outline: 0;
+}
+
+button:focus-visible,
+[role='button']:focus-visible {
+	outline: 2px solid var(--color-action-focus);
+	outline-offset: 2px;
 }
 
 input,

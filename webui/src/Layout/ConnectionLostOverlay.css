@@ -1,0 +1,4 @@
+/* Sits above modals (--modal2-zindex: 1055) - the app is unusable while either overlay is showing. */
+.fullscreen-overlay {
+	z-index: 15000;
+}

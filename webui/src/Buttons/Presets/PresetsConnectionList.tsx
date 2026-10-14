@@ -4,7 +4,7 @@ import { observer } from 'mobx-react-lite'
 import { createContext, memo, useCallback, useContext } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import { assertNever } from '@companion-app/shared/Util.js'
-import { Callout } from '~/Components/Callout'
+import { ButtonsSidebarSection } from '~/Buttons/ButtonsSidebarSection.js'
 import { CollapsibleTree, type CollapsibleTreeHeaderProps } from '~/Components/CollapsibleTree/CollapsibleTree.js'
 import {
 	useConnectionLeafTree,
@@ -48,21 +48,12 @@ const PresetLeaf = observer(function PresetLeaf({ leaf }: { leaf: ConnectionLeaf
 
 	return (
 		<>
-			<div className="collapsible-tree-leaf-text">
-				<div className="flex justify-between items-center w-full">
-					<div>
-						<span className="collapsible-tree-connection-label">{leaf.connectionLabel}</span>
-						{leaf.moduleDisplayName && (
-							<>
-								<br />
-								<small className="opacity-70">{leaf.moduleDisplayName}</small>
-							</>
-						)}
-					</div>
-					<small style={{ opacity: 0.7, marginLeft: '1em' }}>
-						{presetCount} {presetCount === 1 ? 'preset' : 'presets'}
-					</small>
+			<div className="collapsible-tree-leaf-text presets-connection-leaf">
+				<div className="presets-connection-name">
+					<span className="collapsible-tree-connection-label">{leaf.connectionLabel}</span>
+					{leaf.moduleDisplayName && <small>{leaf.moduleDisplayName}</small>}
 				</div>
+				<span className="presets-connection-count">{presetCount}</span>
 			</div>
 			<FontAwesomeIcon icon={faArrowRight} className="collapsible-tree-leaf-arrow-icon" />
 		</>
@@ -98,34 +89,30 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 
 	return (
 		<PresetsStoreContext.Provider value={presetsDefinitionsStore}>
-			<div>
-				<h5>Presets</h5>
-				<p>
-					Ready made buttons with text, actions and feedback which you can drop onto a button to help you get started
-					quickly.
-				</p>
+			<ButtonsSidebarSection className="presets-panel" title="Presets" actions={null}>
+				<p className="presets-intro">Choose a connection, then drag a ready-made button onto the grid.</p>
+				<div className="presets-list-heading">Available connections</div>
 
 				{!hasAnyConnections ? (
-					<div style={{ border: '1px solid #e9e9e9', borderRadius: 5 }}>
+					<div className="presets-empty-state">
 						<NonIdealState icon={faLifeRing} text="You have no connections that support presets at the moment." />
 					</div>
 				) : (
 					<CollapsibleTree
+						className="presets-connection-tree"
 						nodes={nodes}
 						ungroupedLeaves={ungroupedLeaves}
 						ungroupedLabel="Ungrouped Connections"
 						collapseHelper={collapseHelper}
+						selectedLeafKey={null}
 						HeaderComponent={PresetGroupHeader}
 						LeafComponent={PresetLeaf}
 						onLeafClick={(leaf) => setConnectionId(leaf.connectionId)}
 					/>
 				)}
 
-				<Callout color="warning">
-					Not every module provides presets, and you can do a lot more by editing the actions and feedbacks on a button
-					manually.
-				</Callout>
-			</div>
+				<p className="presets-footnote">Not every module provides presets. You can also build buttons manually.</p>
+			</ButtonsSidebarSection>
 		</PresetsStoreContext.Provider>
 	)
 })

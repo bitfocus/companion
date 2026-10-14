@@ -1,9 +1,8 @@
 import {
 	faCircleMinus,
 	faEyeSlash,
-	faFlask,
+	faFileLines,
 	faPlus,
-	faQuestionCircle,
 	faSync,
 	faTrash,
 	faWarning,
@@ -14,7 +13,7 @@ import relativeTime from 'dayjs/plugin/relativeTime.js'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
 import semver from 'semver'
-import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import type {
 	ModuleStoreModuleInfoStore,
@@ -23,10 +22,14 @@ import type {
 import { isSomeModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { Button, ButtonGroup } from '~/Components/Button'
 import { Table } from '~/Components/Table.js'
-import { useTableVisibilityHelper, VisibilityButton } from '~/Components/TableVisibility.js'
+import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { ModuleVersionUsageIcon } from './ModuleVersionUsageIcon.js'
+import { LastUpdatedTimestamp as StoreLastUpdatedTimestamp } from './LastUpdatedTimestamp.js'
+import { ModuleInstallationBadge } from './ModuleInstallationBadge.js'
+import type { ModuleInstallationKind } from './ModuleInstallState.js'
+import { getModuleInstances } from './ModuleInstances.js'
+import { RefreshModuleInfo } from './RefreshModuleInfo.js'
 
 dayjs.extend(relativeTime)
 
@@ -34,12 +37,14 @@ interface ModuleVersionsTableProps {
 	moduleType: ModuleInstanceType
 	moduleId: string
 	moduleStoreInfo: ModuleStoreModuleInfoStore | null
+	onShowDocs: (versionId: string) => void
 }
 
 export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 	moduleType,
 	moduleId,
 	moduleStoreInfo,
+	onShowDocs,
 }: ModuleVersionsTableProps) {
 	const { modules } = useContext(RootAppStoreContext)
 	const moduleInstalledInfo = modules.getModuleInfo(moduleType, moduleId)
@@ -58,14 +63,24 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 		allVersionsSet.add(version.id)
 	}
 
-	const allVersionNumbers = Array.from(allVersionsSet).sort((a, b) => semver.compare(b, a, true))
+	for (const version of [moduleInstalledInfo?.devVersion, moduleInstalledInfo?.builtinVersion]) {
+		if (version) {
+			installedModuleVersions.set(version.versionId, version)
+			allVersionsSet.add(version.versionId)
+		}
+	}
+	const allVersionNumbers = Array.from(allVersionsSet).sort((a, b) => {
+		if (!semver.valid(a, true)) return semver.valid(b, true) ? -1 : a.localeCompare(b)
+		if (!semver.valid(b, true)) return 1
+		return semver.compare(b, a, true)
+	})
 
 	const visibleVersions = useTableVisibilityHelper<VisibleVersionsState>(`modules_visible_versions:${moduleId}`, {
 		availableStable: true,
-		availableDeprecated: false,
 		availableBeta: false,
 	})
-	const allHidden = Object.values(visibleVersions.visibility).every((v) => !v)
+	const [showDeprecated, setShowDeprecated] = useState(false)
+	const allHidden = Object.values(visibleVersions.visibility).every((v) => !v) && !showDeprecated
 
 	const versionRows = allVersionNumbers
 		.map((versionId) => {
@@ -73,8 +88,9 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 			const installedInfo = installedModuleVersions.get(versionId)
 			if (storeInfo) {
 				// Hide based on visibility settings
-				if (storeInfo.deprecationReason && !visibleVersions.visibility.availableDeprecated) return null
-				if (storeInfo.releaseChannel === 'beta' && !visibleVersions.visibility.availableBeta) return null
+				if (storeInfo.deprecationReason && !showDeprecated && !installedInfo) return null
+				if (storeInfo.releaseChannel === 'beta' && !visibleVersions.visibility.availableBeta && !installedInfo)
+					return null
 
 				if (
 					!storeInfo.deprecationReason &&
@@ -87,66 +103,115 @@ export const ModuleVersionsTable = observer(function ModuleVersionsTable({
 
 			return (
 				<ModuleVersionRow
+					onShowDocs={onShowDocs}
 					key={versionId}
 					moduleType={moduleType}
 					moduleId={moduleId}
 					versionId={versionId}
 					storeInfo={storeInfo}
 					installedInfo={installedInfo}
+					installationKind={
+						versionId === moduleInstalledInfo?.devVersion?.versionId
+							? 'Development'
+							: versionId === moduleInstalledInfo?.builtinVersion?.versionId
+								? 'Built-in'
+								: 'Installed'
+					}
 				/>
 			)
 		})
 		.filter((r) => !!r)
 
 	return (
-		<Table className="table-tight">
-			<thead>
-				<tr>
-					<th>Version</th>
-					<th>&nbsp;</th>
-					<th colSpan={3} className="fit">
-						<ButtonGroup className="table-header-buttons">
-							<VisibilityButton {...visibleVersions} keyId="availableStable" color="success" label="Stable" />
-							<VisibilityButton {...visibleVersions} keyId="availableBeta" color="warning" label="Beta" />
-							<VisibilityButton {...visibleVersions} keyId="availableDeprecated" color="primary" label="Deprecated" />
-						</ButtonGroup>
-					</th>
-				</tr>
-			</thead>
-			<tbody>
-				{versionRows}
-				{!allHidden && versionRows.length === 0 && (
-					<tr>
-						<td colSpan={4} style={{ padding: '10px 5px' }}>
-							<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
-							<strong>There are no matching versions for the current filters</strong>
-						</td>
-					</tr>
-				)}
-				{allHidden && (
-					<tr>
-						<td colSpan={4} style={{ padding: '10px 5px' }}>
-							<FontAwesomeIcon icon={faEyeSlash} style={{ marginRight: '0.5em', color: 'red' }} />
-							<strong>All versions are hidden by the filters</strong>
-						</td>
-					</tr>
-				)}
-			</tbody>
-		</Table>
+		<div className="space-y-3">
+			<div className="flex flex-wrap items-center justify-between gap-2">
+				<div className="flex flex-wrap items-center gap-2">
+					<h4 className="text-xs font-bold uppercase tracking-wider text-muted mb-0">Module Versions</h4>
+					<RefreshModuleInfo moduleType={moduleType} moduleId={moduleId} />
+					<span className="text-2xs text-muted">
+						<StoreLastUpdatedTimestamp timestamp={moduleStoreInfo?.lastUpdated} />
+					</span>
+				</div>
+				<ButtonGroup className="shrink-0">
+					<Button
+						color="secondary"
+						size="sm"
+						active={visibleVersions.visibility.availableStable}
+						onClick={() => visibleVersions.toggleVisibility('availableStable')}
+					>
+						Stable
+					</Button>
+					<Button
+						color="secondary"
+						size="sm"
+						active={visibleVersions.visibility.availableBeta}
+						onClick={() => visibleVersions.toggleVisibility('availableBeta')}
+					>
+						Beta
+					</Button>
+					<Button
+						color="secondary"
+						size="sm"
+						active={showDeprecated}
+						onClick={() => setShowDeprecated((visible) => !visible)}
+					>
+						Deprecated
+					</Button>
+				</ButtonGroup>
+			</div>
+
+			<div className="rounded-md border border-border/70 bg-surface overflow-hidden">
+				<Table className="table-tight mb-0">
+					<thead>
+						<tr className="bg-surface-muted/40 border-b border-border/70 text-xs text-muted">
+							<th className="w-12 py-2 px-3">Action</th>
+							<th className="py-2 px-3">Version</th>
+							<th className="py-2 px-3">Released</th>
+							<th className="py-2 px-3">Usage</th>
+							<th className="py-2 px-3 text-end w-12">Docs</th>
+						</tr>
+					</thead>
+					<tbody>
+						{versionRows}
+						{versionRows.length === 0 && !allHidden && (
+							<tr>
+								<td colSpan={5} className="p-3 text-xs text-muted">
+									<div className="flex items-center gap-2">
+										<FontAwesomeIcon icon={faEyeSlash} className="text-tone-warning-text" />
+										<span>There are no matching versions for the current filters.</span>
+									</div>
+								</td>
+							</tr>
+						)}
+						{allHidden && versionRows.length === 0 && (
+							<tr>
+								<td colSpan={5} className="p-3 text-xs text-muted">
+									<div className="flex items-center gap-2">
+										<FontAwesomeIcon icon={faEyeSlash} className="text-tone-warning-text" />
+										<span>All versions are hidden by active filter toggles.</span>
+									</div>
+								</td>
+							</tr>
+						)}
+					</tbody>
+				</Table>
+			</div>
+		</div>
 	)
 })
 
 interface VisibleVersionsState {
 	availableStable: boolean
-	availableDeprecated: boolean
 	availableBeta: boolean
 }
 
 interface ModuleVersionRowProps {
+	onShowDocs: (versionId: string) => void
 	moduleType: ModuleInstanceType
 	moduleId: string
 	versionId: string
 	installedInfo: ClientModuleVersionInfo | undefined
+	installationKind: Exclude<ModuleInstallationKind, 'Available'>
 	storeInfo: ModuleStoreModuleInfoVersion | undefined
 }
 
@@ -156,37 +221,39 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 	versionId,
 	installedInfo,
 	storeInfo,
+	installationKind,
+	onShowDocs,
 }: ModuleVersionRowProps) {
-	const { helpViewer, connections } = useContext(RootAppStoreContext)
+	const rootStore = useContext(RootAppStoreContext)
 
 	const versionDisplayName = installedInfo?.versionId ?? storeInfo?.id ?? ''
 	const helpPath = installedInfo?.helpPath ?? storeInfo?.helpUrl
 
 	const doShowHelp = useCallback(() => {
 		if (!helpPath) return
-		helpViewer.current?.showFromUrl(moduleType, moduleId, versionDisplayName, helpPath)
-	}, [helpViewer, moduleType, moduleId, versionDisplayName, helpPath])
+		onShowDocs(versionDisplayName)
+	}, [onShowDocs, versionDisplayName, helpPath])
 
 	if (!storeInfo && !installedInfo) return null // Should never happen
 
-	let matchingConnections = 0
-	for (const connection of connections.connections.values()) {
-		if (connection.moduleId !== moduleId) continue
-
-		if (versionId && connection.moduleVersionId === versionId) {
-			matchingConnections++
-		}
-	}
+	const matchingInstances = getModuleInstances(rootStore, moduleType, moduleId).filter(
+		(instance) => instance.moduleVersionId === versionId
+	).length
+	const isCompatible = storeInfo ? isSomeModuleApiVersionCompatible(moduleType, storeInfo.apiVersion) : undefined
 
 	return (
-		<tr>
-			<td className="compact">
-				{installedInfo ? (
+		<tr className="hover:bg-surface-muted/50 transition-colors">
+			<td className="compact py-2 px-3 w-12">
+				{installedInfo && installationKind !== 'Installed' ? (
+					<span className="text-2xs text-muted" title={`${installationKind} versions are managed outside this table`}>
+						—
+					</span>
+				) : installedInfo ? (
 					<ModuleUninstallButton
 						moduleType={moduleType}
 						moduleId={moduleId}
 						versionId={versionId}
-						disabled={matchingConnections > 0}
+						disabled={matchingInstances > 0}
 					/>
 				) : (
 					<ModuleInstallButton
@@ -198,33 +265,59 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 					/>
 				)}
 			</td>
-			<td>
-				{versionId}
-				{storeInfo?.releaseChannel === 'beta' && (
-					<span title="Beta">
-						<FontAwesomeIcon className="ms-2" icon={faFlask} />
-					</span>
-				)}
-				{storeInfo?.deprecationReason && (
-					<span title="Deprecated">
-						<FontAwesomeIcon className="ms-2" icon={faWarning} />
-					</span>
-				)}
-			</td>
-			<td>
-				{!!storeInfo && (
-					<>
-						Released <LastUpdatedTimestamp releasedAt={storeInfo.releasedAt} />
-					</>
-				)}
-			</td>
-			<td className="compact">
-				<ModuleVersionUsageIcon matchingConnections={matchingConnections} isInstalled={!!installedInfo} />
-				{helpPath && (
-					<div className="float_right" onClick={doShowHelp}>
-						<FontAwesomeIcon icon={faQuestionCircle} />
+			<td className="py-2 px-3 font-mono text-xs font-semibold text-body">
+				<div className="flex flex-wrap items-center gap-1.5">
+					<span>{installedInfo?.displayName ?? versionId}</span>
+					{installedInfo && <ModuleInstallationBadge kind={installationKind} />}
+					{storeInfo?.releaseChannel === 'beta' && (
+						<span
+							title="Beta"
+							className="px-1.5 py-0.5 rounded text-3xs bg-tone-warning-fill/10 text-tone-warning-text font-sans"
+						>
+							Beta
+						</span>
+					)}
+					{storeInfo?.deprecationReason && (
+						<span
+							title={storeInfo.deprecationReason}
+							className="px-1.5 py-0.5 rounded text-3xs bg-tone-error-fill/10 text-tone-error-text font-sans"
+						>
+							Deprecated
+						</span>
+					)}
+				</div>
+				{isCompatible === false && (
+					<div
+						className="mt-1 text-2xs font-sans font-normal text-tone-warning-text"
+						title={`Module API ${storeInfo?.apiVersion}`}
+					>
+						Requires a different Companion version
 					</div>
 				)}
+			</td>
+			<td className="py-2 px-3 text-xs text-muted">
+				{!!storeInfo && <LastUpdatedTimestamp releasedAt={storeInfo.releasedAt} />}
+			</td>
+			<td className="py-2 px-3 text-xs text-muted">
+				{matchingInstances > 0 ? (
+					<span
+						className="text-primary font-medium"
+						title={`${matchingInstances} ${moduleType === ModuleInstanceType.Connection ? 'connection' : 'surface instance'}${matchingInstances === 1 ? '' : 's'} ${matchingInstances === 1 ? 'uses' : 'use'} this version`}
+					>
+						In use · {matchingInstances}
+					</span>
+				) : (
+					<span>Not in use</span>
+				)}
+			</td>
+			<td className="compact py-2 px-3 text-end w-12">
+				<div className="flex items-center justify-end gap-1.5">
+					{helpPath && (
+						<Button variant="icon" size="sm" onClick={doShowHelp} title="Show documentation">
+							<FontAwesomeIcon icon={faFileLines} className="text-xs" />
+						</Button>
+					)}
+				</div>
 			</td>
 		</tr>
 	)
@@ -277,14 +370,20 @@ function ModuleUninstallButton({ moduleType, moduleId, versionId, disabled }: Mo
 	}, [uninstallModuleMutation, notifier, moduleType, moduleId, versionId])
 
 	return (
-		<Button disabled={isRunningInstallOrUninstall || disabled} onClick={doRemove}>
+		<Button
+			color="danger"
+			size="sm"
+			className="w-7 h-7 p-0 inline-flex items-center justify-center"
+			disabled={isRunningInstallOrUninstall || disabled}
+			onClick={doRemove}
+			aria-busy={isRunningInstallOrUninstall}
+			variant="ghost"
+		>
 			{isRunningInstallOrUninstall ? (
-				<span title="Removing">
-					<FontAwesomeIcon icon={faSync} spin />
-				</span>
+				<FontAwesomeIcon icon={faSync} spin className="text-xs" />
 			) : (
-				<span title={disabled ? 'Cannot remove version, it is in use by connections' : 'Remove version'}>
-					<FontAwesomeIcon icon={faTrash} />
+				<span title={disabled ? 'Cannot remove version, it is in use' : 'Remove version'}>
+					<FontAwesomeIcon icon={faTrash} className="text-xs" />
 				</span>
 			)}
 		</Button>
@@ -326,29 +425,40 @@ function ModuleInstallButton({ moduleType, moduleId, versionId, apiVersion, hasT
 
 	if (!hasTarUrl) {
 		return (
-			<span title="Module is no longer available">
-				<FontAwesomeIcon icon={faCircleMinus} className="disabled button-size" />
+			<span
+				title="Module is no longer available"
+				className="inline-flex items-center justify-center w-7 h-7 text-muted"
+			>
+				<FontAwesomeIcon icon={faCircleMinus} className="text-xs" />
 			</span>
 		)
 	}
 
 	if (!isSomeModuleApiVersionCompatible(moduleType, apiVersion)) {
 		return (
-			<span title="Module is not compatible with this version of Companion">
-				<FontAwesomeIcon icon={faWarning} className="disabled button-size" />
+			<span
+				title="Module is not compatible with this version of Companion"
+				className="inline-flex items-center justify-center w-7 h-7 text-tone-warning-text"
+			>
+				<FontAwesomeIcon icon={faWarning} className="text-xs" />
 			</span>
 		)
 	}
 
 	return (
-		<Button disabled={isRunningInstallOrUninstall} onClick={doInstall}>
+		<Button
+			color="secondary"
+			size="sm"
+			className="w-7 h-7 p-0 inline-flex items-center justify-center"
+			disabled={isRunningInstallOrUninstall}
+			onClick={doInstall}
+			aria-busy={isRunningInstallOrUninstall}
+		>
 			{isRunningInstallOrUninstall ? (
-				<span title="Installing">
-					<FontAwesomeIcon icon={faSync} />
-				</span>
+				<FontAwesomeIcon icon={faSync} spin className="text-xs" />
 			) : (
 				<span title="Install version">
-					<FontAwesomeIcon icon={faPlus} />
+					<FontAwesomeIcon icon={faPlus} className="text-xs" />
 				</span>
 			)}
 		</Button>

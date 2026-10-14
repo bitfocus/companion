@@ -2742,6 +2742,13 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(refEl.children).toHaveLength(2)
 			expect(refEl.children[0].type).toBe('box')
 			expect(refEl.children[1].type).toBe('text')
+			expect(refEl.children[0]).toMatchObject({ color: 0xf9b115 })
+			expect(refEl.children[1]).toMatchObject({
+				text: 'Unresolved\nReference',
+				weight: 'bold',
+				color: 0x3a2c0a,
+				outlineColor: 'transparent',
+			})
 		})
 
 		test('produces an empty reference element when location is empty', async () => {

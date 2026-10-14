@@ -1,0 +1,16 @@
+.instance-version-modal {
+	.instance-version-fields {
+		align-items: start;
+	}
+
+	.form-label {
+		margin-bottom: 0;
+		font-size: 0.8125rem;
+		font-weight: 600;
+	}
+
+	.instance-version-advanced {
+		padding-top: 0.75rem;
+		border-top: 1px solid var(--color-border);
+	}
+}

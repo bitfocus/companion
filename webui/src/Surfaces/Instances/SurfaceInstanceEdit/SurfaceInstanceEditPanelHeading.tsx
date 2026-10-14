@@ -1,8 +1,10 @@
+import { faPlug } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientSurfaceInstanceConfig } from '@companion-app/shared/Model/SurfaceInstance.js'
 import { getModuleVersionInfo } from '~/Instances/Util.js'
+import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -33,16 +35,16 @@ export const SurfaceInstanceEditPanelHeading = observer(function SurfaceInstance
 	)
 
 	return (
-		<div className="secondary-panel-simple-header">
-			<h4 className="panel-title">Edit Surface Integration: {moduleInfo?.display?.name ?? instanceInfo.moduleId}</h4>
-			<div className="header-buttons">
-				{moduleVersion?.helpPath && (
-					<ContextHelpButton action={doShowHelp}>
-						Change properties of the surface integration here. Click the icon to show instructions for this module.
-					</ContextHelpButton>
-				)}
-				<CloseButton closeFn={closeConfigurePanel} />
-			</div>
-		</div>
+		<PanelHeader
+			icon={faPlug}
+			title={`Edit Surface Integration: ${moduleInfo?.display?.name ?? instanceInfo.moduleId}`}
+		>
+			{moduleVersion?.helpPath && (
+				<ContextHelpButton action={doShowHelp}>
+					Change properties of the surface integration here. Click the icon to show instructions for this module.
+				</ContextHelpButton>
+			)}
+			<CloseButton closeFn={closeConfigurePanel} />
+		</PanelHeader>
 	)
 })

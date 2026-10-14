@@ -1,5 +1,9 @@
 import type { ClientEditInstanceConfigState } from '@companion-app/shared/Model/Common.js'
-import type { ClientInstanceConfigBase, ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import type {
+	ClientInstanceConfigBase,
+	InstanceVersionUpdatePolicy,
+	ModuleInstanceType,
+} from '@companion-app/shared/Model/Instance.js'
 import type { InstanceEditPanelStore } from './InstanceEditPanelStore'
 
 export interface InstanceConfigSubscriptionHandlers {
@@ -26,7 +30,11 @@ export interface InstanceEditPanelService<TConfig extends ClientInstanceConfigBa
 	 * Change the module and/or version for this instance. Returns an error message to display, or null
 	 * on success. Routed to the connection or surface endpoint by the concrete service implementation.
 	 */
-	setModuleAndVersion: (moduleId: string, versionId: string | null) => Promise<string | null>
+	setModuleAndVersion: (
+		moduleId: string,
+		versionId: string | null,
+		updatePolicy: InstanceVersionUpdatePolicy
+	) => Promise<string | null>
 
 	deleteInstance: (currentLabel: string) => void
 

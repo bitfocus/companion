@@ -1,4 +1,5 @@
-import { faExclamationTriangle, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faCircleExclamation, faExclamationTriangle, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { Note, NoteDetail } from '~/Components/Note.js'
 import './VariablesTable.css'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { prepare as fuzzyPrepare } from 'fuzzysort'
@@ -13,7 +14,6 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { VariableDefinitionExt } from '~/Stores/VariablesStore.js'
 import { fuzzyFilterSort } from '~/util/fuzzy.js'
 import { useVariablesValuesForLabel } from '~/Variables/useVariablesValuesForLabel.js'
-import { StaticAlert } from './Alert.js'
 import { CopyButton } from './CopyButton.js'
 import { SearchBox } from './SearchBox.js'
 import { VariableValueDisplay } from './VariableValueDisplay.js'
@@ -71,7 +71,7 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 	const virtualizer = useVirtualizer({
 		count: candidates?.length ?? 0,
 		getScrollElement: () => parentRef.current,
-		estimateSize: () => 45,
+		estimateSize: () => 80,
 		overscan: 20,
 	})
 
@@ -84,29 +84,26 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 
 	return (
 		<>
-			<SearchBox placeholder="Filter ..." filter={filter} setFilter={setFilter} className="mb-1 mt-2" />
-			<p className="variables-table-count">
-				{filter ? (
-					<>
-						Showing <strong>{shownCount}</strong> of <strong>{totalCount}</strong> variables
-					</>
-				) : (
-					<>
-						<strong>{totalCount}</strong> variables
-					</>
-				)}
-			</p>
+			<div className="variables-table-toolbar">
+				<SearchBox placeholder="Filter variables..." filter={filter} setFilter={setFilter} className="flex-1" />
+				<span className="variables-table-count">
+					{filter ? (
+						<>
+							<strong>{shownCount}</strong> of <strong>{totalCount}</strong>
+						</>
+					) : (
+						<>
+							<strong>{totalCount}</strong> variables
+						</>
+					)}
+				</span>
+			</div>
 			<div className="variables-table-scroller" ref={parentRef}>
-				<div className="variables-table-header">
-					<div>Variable</div>
-					<div>Value</div>
-				</div>
 				{errorMsg && (
-					<StaticAlert color="warning" role="alert">
-						Failed to build list of variables:
-						<br />
-						{errorMsg}
-					</StaticAlert>
+					<Note tone="danger" icon={faCircleExclamation} actions={null}>
+						Failed to build list of variables
+						<NoteDetail>{errorMsg}</NoteDetail>
+					</Note>
 				)}
 				{candidates?.length === 0 && !!filter && <NonIdealState icon={faSearch} text="No variables match the filter" />}
 				<div
@@ -163,27 +160,19 @@ const VariablesTableRow = observer(function VariablesTableRow({
 
 	return (
 		<div className="variables-table-row">
-			<div className="variables-table-cell">
-				<div className="grid grid-col">
-					<div className="flex flex-row min-w-0">
-						<span className="variable-style truncate min-w-0" title={variableId}>
-							{variableId}
-						</span>
-						<CopyButton
-							size="sm"
-							title="Copy variable name"
-							text={variableId}
-							color="primary"
-							variant="ghost"
-							className="shrink-0"
-						/>
-					</div>
-					<div className="truncate min-w-0" title={variable.description}>
-						{variable.description}
-					</div>
-				</div>
+			<div className="variables-table-name">
+				<span className="variable-style min-w-0">{variableId}</span>
+				<CopyButton
+					size="sm"
+					title="Copy variable name"
+					text={variableId}
+					color="primary"
+					variant="ghost"
+					className="shrink-0"
+				/>
 			</div>
-			<div className="variables-table-cell">
+			{!!variable.description && <div className="variables-table-description">{variable.description}</div>}
+			<div className="variables-table-value">
 				<VariableValueDisplay
 					value={toJS(value)}
 					collapsePanelId={variable.name}

@@ -84,7 +84,8 @@ label.disabled {
 
 /* Shared base for our custom text-style inputs (the number field, and the text inputs via
    `text-input-field`) so they share one input base rather than each re-declaring it. Add `form-input`
-   in the markup, then layer the component's own rules on top. */
+   in the markup, then layer the component's own rules on top. A field marks an invalid value with
+   `aria-invalid`, which gives it the red border below. */
 .form-input {
 	padding: 0.375rem 0.75rem;
 	font-size: 1rem;
@@ -104,20 +105,18 @@ label.disabled {
 		transition: none;
 	}
 
-	&.invalid-value {
-		color: var(--color-input-invalid);
-	}
-
 	&:focus-visible {
 		color: var(--color-text);
 		background-color: var(--color-input-bg);
 		border-color: var(--color-primary-soft);
 		outline: 0;
 		box-shadow: 0 0 0 0.25rem var(--color-focus-ring);
+	}
 
-		&.invalid-value {
-			color: var(--color-input-invalid);
-		}
+	/* Invalid: a red border, kept through focus. Mark it with aria-invalid, so assistive tech hears it too. */
+	&[aria-invalid='true'],
+	&[aria-invalid='true']:focus-visible {
+		border-color: var(--color-danger);
 	}
 
 	&::placeholder {

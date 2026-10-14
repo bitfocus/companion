@@ -1,0 +1,78 @@
+.inline-note {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 0.75rem;
+	border: 1px solid var(--color-border-soft);
+	border-radius: 0.5rem;
+	background-color: var(--color-surface-subtle);
+	font-size: 0.8125rem;
+	color: var(--color-muted);
+
+	.inline-note-icon {
+		flex-shrink: 0;
+		opacity: 0.8;
+	}
+
+	/* A message with block content (a list, several lines, error detail) runs to several lines: pin the icon
+	   level with its first line, and the actions to the top, rather than centring them on the whole block */
+	&:has(.inline-note-body > :is(ul, ol, div, p, .inline-note-detail)) {
+		align-items: flex-start;
+
+		.inline-note-icon {
+			margin-top: calc((1lh - 1em) / 2);
+		}
+	}
+
+	.inline-note-body {
+		/* Takes the rest of the line, and lets the actions wrap below once it can't keep a readable width */
+		flex: 1 1 12rem;
+		min-width: 0;
+	}
+
+	.inline-note-actions {
+		display: flex;
+		gap: 0.5rem;
+		flex-shrink: 0;
+		margin-inline-start: auto;
+	}
+
+	.inline-note-detail {
+		display: block;
+		margin-top: 0.25rem;
+		font-family: var(--font-mono);
+		font-size: 0.75rem;
+		color: var(--color-muted);
+		white-space: pre-wrap;
+		overflow-wrap: anywhere;
+	}
+
+	&.inline-note-good .inline-note-icon {
+		color: var(--color-tone-good-text);
+		opacity: 1;
+	}
+
+	/* Notes asking for attention are tinted, with the body colour for the text so it stays readable */
+	&.inline-note-warning,
+	&.inline-note-danger {
+		border-color: color-mix(in srgb, var(--note-tone-fill) 35%, transparent);
+		background-color: color-mix(in srgb, var(--note-tone-fill) 8%, transparent);
+		color: var(--color-body-text);
+
+		.inline-note-icon {
+			color: var(--note-tone-text);
+			opacity: 1;
+		}
+	}
+
+	&.inline-note-warning {
+		--note-tone-fill: var(--color-tone-warning-fill);
+		--note-tone-text: var(--color-tone-warning-text);
+	}
+
+	&.inline-note-danger {
+		--note-tone-fill: var(--color-tone-error-fill);
+		--note-tone-text: var(--color-tone-error-text);
+	}
+}

@@ -183,7 +183,6 @@ export const ElementsList = observer(function ElementsList({
 			<div className="button-layer-elementlist-table-row heading">
 				<div className="td-reorder-placeholder">&nbsp;</div>
 				<div>Name</div>
-				<div></div>
 				<div className="element-buttons">
 					<AddElementDropdownButton styleStore={styleStore} controlId={controlId} />
 				</div>
@@ -231,10 +230,10 @@ const ElementsListFooter = observer(function ElementsListFooter({
 	return (
 		<div ref={ref} className="button-layer-elementlist-footer">
 			<ButtonGroup>
-				{/* Grey rather than primary red when selected: these pick a view, like a selected tab */}
+				{/* These pick a view, so use the shared neutral selection state */}
 				<Button
 					size="sm"
-					color={styleStore.isPinnedViewSelected ? 'gray' : 'secondary'}
+					color="secondary"
 					aria-pressed={styleStore.isPinnedViewSelected}
 					onClick={() => styleStore.setSelectedEntryId(PINNED_PROPERTIES_ENTRY_ID)}
 					title="The properties pinned from across this button's elements"
@@ -245,7 +244,7 @@ const ElementsListFooter = observer(function ElementsListFooter({
 				{canvasElement && (
 					<Button
 						size="sm"
-						color={styleStore.selectedEntryId === canvasElement.id ? 'gray' : 'secondary'}
+						color="secondary"
 						aria-pressed={styleStore.selectedEntryId === canvasElement.id}
 						onClick={() => styleStore.setSelectedEntryId(canvasElement.id)}
 						title="The topbar, status icons and empty-button look"
@@ -331,13 +330,10 @@ const ElementListItem = observer(function ElementListItem({
 				</div>
 			</div>
 
-			{element.type === 'group' && element.children.length === 0 && (
-				<ElementGroupPlaceholder groupId={element.id} depth={depth + 1} />
-			)}
-			{element.type === 'group' &&
-				element.children
-					.toReversed()
-					.map((child, childIndex) => (
+			{element.type === 'group' && (
+				<div className="button-layer-group-children" style={{ '--elementlist-depth': depth } as React.CSSProperties}>
+					{element.children.length === 0 && <ElementGroupPlaceholder groupId={element.id} depth={depth + 1} />}
+					{element.children.toReversed().map((child, childIndex) => (
 						<ElementListItem
 							key={child.id}
 							element={child}
@@ -349,6 +345,8 @@ const ElementListItem = observer(function ElementListItem({
 							controlId={controlId}
 						/>
 					))}
+				</div>
+			)}
 		</>
 	)
 })

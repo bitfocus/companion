@@ -36,7 +36,7 @@ describe('getEntityRowHeaderDisplay', () => {
 	test('collapsed named local variable shows the variable name and previews its value', () => {
 		const result = getEntityRowHeaderDisplay(feedback({ variableName: 'foo' }), null, 'conn: Def', true, 'local')
 
-		expect(result).toEqual({ headline: '$(local:foo) ', localVariableValueName: 'foo' })
+		expect(result).toEqual({ headline: '$(local:foo)', localVariableValueName: 'foo' })
 	})
 
 	test('collapsed named local variable includes the headline text after the name', () => {
@@ -54,8 +54,17 @@ describe('getEntityRowHeaderDisplay', () => {
 	test('respects a non-default local variable prefix', () => {
 		const result = getEntityRowHeaderDisplay(feedback({ variableName: 'foo' }), null, 'conn: Def', true, 'page')
 
-		expect(result).toEqual({ headline: '$(page:foo) ', localVariableValueName: 'foo' })
+		expect(result).toEqual({ headline: '$(page:foo)', localVariableValueName: 'foo' })
 	})
+
+	test.each([undefined, '', '   '])(
+		'omits the separator for an unnamed local variable with headline %j',
+		(headline) => {
+			const result = getEntityRowHeaderDisplay(feedback({ headline }), null, 'conn: Def', true, 'local')
+
+			expect(result).toEqual({ headline: 'Unnamed', localVariableValueName: null })
+		}
+	)
 
 	test('collapsed local variable without a name is labelled Unnamed and has no value to preview', () => {
 		const result = getEntityRowHeaderDisplay(feedback({ headline: 'My note' }), null, 'conn: Def', true, 'local')

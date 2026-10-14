@@ -7,15 +7,12 @@ import { Button } from '~/Components/Button'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
-interface RefreshModulesListProps {
+interface RefreshModuleInfoProps {
 	moduleType: ModuleInstanceType
 	moduleId: string
 }
 
-export const RefreshModuleInfo = observer(function RefreshModuleInfo({
-	moduleType,
-	moduleId,
-}: RefreshModulesListProps) {
+export const RefreshModuleInfo = observer(function RefreshModuleInfo({ moduleType, moduleId }: RefreshModuleInfoProps) {
 	const { modules } = useContext(RootAppStoreContext)
 
 	const { percent: refreshProgress } = modules.getStoreRefreshProgress(moduleType, moduleId)
@@ -30,16 +27,15 @@ export const RefreshModuleInfo = observer(function RefreshModuleInfo({
 
 	if (refreshProgress === 1) {
 		return (
-			<Button color="primary" onClick={doRefreshModules}>
-				<FontAwesomeIcon icon={faSync} />
-				&nbsp;Refresh module info
+			<Button variant="icon" size="sm" onClick={doRefreshModules} title="Refresh module info">
+				<FontAwesomeIcon icon={faSync} className="text-xs" />
 			</Button>
 		)
 	} else {
 		return (
-			<Button color="primary" disabled>
-				<FontAwesomeIcon icon={faSync} spin={true} />
-				&nbsp;Refreshing module info {Math.round(refreshProgress * 100)}%
+			<Button variant="ghost" size="sm" disabled aria-busy title="Refreshing module info">
+				<FontAwesomeIcon icon={faSync} spin={true} className="me-1" />
+				{Math.round(refreshProgress * 100)}%
 			</Button>
 		)
 	}

@@ -1,15 +1,14 @@
-import { faQuestionCircle, faTimes } from '@fortawesome/free-solid-svg-icons'
-import './PanelIcons.css'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
+import { CircleHelp, X } from 'lucide-react'
 import { useCallback, useRef } from 'react'
-import { Button, LinkButtonExternal } from '~/Components/Button'
+import { Button, LinkButtonExternal } from '~/Components/Button.js'
 import { InlineHelpCustom } from '~/Components/InlineHelp'
 import { makeAbsolutePath } from '~/Resources/util'
 
 interface CloseButtonProps {
 	closeFn: () => void
 	visibilityClass?: string
+	className?: string
 }
 
 export interface ContextHelpButtonProps {
@@ -21,17 +20,10 @@ export interface ContextHelpButtonProps {
 /*
  CloseButton - meant for panels that can be stacked, as in Connections and Surfaces
 */
-export function CloseButton({ closeFn, visibilityClass }: CloseButtonProps): React.JSX.Element {
+export function CloseButton({ closeFn, visibilityClass, className }: CloseButtonProps): React.JSX.Element {
 	return (
-		<Button
-			color="dark"
-			className={`float_right${visibilityClass ? ' ' + visibilityClass : ''} p-1 ms-2 panel-close-button`}
-			onClick={closeFn}
-			title="Close"
-			aria-label="Close"
-		>
-			{/* The inline styling here is to make the icon square */}
-			<FontAwesomeIcon icon={faTimes} />
+		<Button variant="icon" className={classNames(visibilityClass, className)} onClick={closeFn} title="Close panel">
+			<X className="w-4 h-4" />
 		</Button>
 	)
 }
@@ -66,30 +58,21 @@ export function ContextHelpButton({ children, action, className }: ContextHelpBu
 		children += ' Click the icon for further help.'
 	}
 
-	// note some styling here needs to be on the FontAwesomeIcon, not .context-help-button or the Button,
-	//  in order to get the shadowing right. However it will have to be hand-coded for different sizes even if using em units
-	//  See _layout.scss for the context-help-button-2xl example (FontAwesomeIcons get class 'fa-<size>')
-	// NOTE: removed the float_right class here -- we end up fighting against its margin and it doesn't seem to do much else...
 	return (
 		<>
 			<HelpWrapper usePopover={!!children} help={children} className={className}>
 				{typeof action === 'string' ? (
 					// note: string is currently typed to link to /user-guide/, which is not a Tanstack route
 					<LinkButtonExternal
-						variant="ghost"
-						className="context-help-button-btn p-0"
+						variant="icon"
 						href={makeAbsolutePath(action)}
-						target="_blank"
-						rel="noopener noreferrer"
-						// onClick={removeFocus}
-						title="Open help in a new tab"
-						aria-label="Open help in a new tab"
+						title="Open help documentation in a new tab"
 					>
-						<FontAwesomeIcon icon={faQuestionCircle} aria-label="context help" />
+						<CircleHelp className="w-4 h-4" aria-label="context help" />
 					</LinkButtonExternal>
 				) : (
-					<Button variant="ghost" className="context-help-button-btn p-0" onClick={onClickAction}>
-						<FontAwesomeIcon icon={faQuestionCircle} aria-label="context help" />
+					<Button variant="icon" onClick={onClickAction} title="Help">
+						<CircleHelp className="w-4 h-4" aria-label="context help" />
 					</Button>
 				)}
 			</HelpWrapper>
@@ -104,10 +87,15 @@ interface HelpWrapperProps extends React.ComponentProps<typeof InlineHelpCustom>
 }
 function HelpWrapper({ usePopover, children, className, ...props }: HelpWrapperProps) {
 	return usePopover ? (
-		<InlineHelpCustom {...props} className={classNames('context-help-button', className)}>
+		<InlineHelpCustom
+			{...props}
+			className={classNames('context-help-button inline-flex items-center self-center', className)}
+		>
 			{children}
 		</InlineHelpCustom>
 	) : (
-		<span className={classNames('context-help-button', className)}>{children}</span>
+		<span className={classNames('context-help-button inline-flex items-center self-center', className)}>
+			{children}
+		</span>
 	)
 }

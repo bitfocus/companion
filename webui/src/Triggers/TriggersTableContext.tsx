@@ -5,6 +5,7 @@ import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js
 export interface TriggersTableContextType {
 	deleteModalRef: RefObject<GenericConfirmModalRef | null>
 	selectTrigger: (triggerId: string | null) => void
+	selectedTriggerId: string | null
 }
 
 const TriggersTableContext = createContext<TriggersTableContextType | null>(null)
@@ -20,14 +21,16 @@ type TriggersTableContextProviderProps = TriggersTableContextType
 export function TriggersTableContextProvider({
 	deleteModalRef,
 	selectTrigger,
+	selectedTriggerId,
 	children,
 }: React.PropsWithChildren<TriggersTableContextProviderProps>): React.JSX.Element {
 	const value = useMemo<TriggersTableContextType>(() => {
 		return {
 			deleteModalRef,
 			selectTrigger,
+			selectedTriggerId,
 		}
-	}, [deleteModalRef, selectTrigger])
+	}, [deleteModalRef, selectTrigger, selectedTriggerId])
 
 	return <TriggersTableContext.Provider value={value}>{children}</TriggersTableContext.Provider>
 }

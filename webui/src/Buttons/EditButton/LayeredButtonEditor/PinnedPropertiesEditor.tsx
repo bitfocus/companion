@@ -1,4 +1,4 @@
-import { faArrowRight, faBan, faEyeSlash, faThumbtack } from '@fortawesome/free-solid-svg-icons'
+import { faBan, faEyeSlash, faSliders, faThumbtack } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
@@ -99,7 +99,7 @@ export const PinnedPropertiesEditor = observer(function PinnedPropertiesEditor({
 					beside a property to pin it here, where it can be edited without selecting that element first.
 				</NonIdealState>
 			) : (
-				<Form row className="gap-2" onSubmit={PreventDefaultHandler}>
+				<Form row className="gap-2 property-inspector" onSubmit={PreventDefaultHandler}>
 					<Accordion.Root value={sectionAccordion.value} onValueChange={sectionAccordion.onValueChange} multiple>
 						{sections.map((section) => (
 							<Accordion.Item key={section.element.id} value={section.element.id}>
@@ -109,7 +109,7 @@ export const PinnedPropertiesEditor = observer(function PinnedPropertiesEditor({
 									triggerProps={sectionAccordion.getTriggerProps(section.element.id)}
 								/>
 								<Accordion.Panel>
-									<Grid.Row className="gap-2 p-2">
+									<Grid.Row className="property-inspector-fields">
 										{section.fields.map((field) => (
 											<SchemaFieldWrapper
 												key={field.id}
@@ -167,7 +167,7 @@ const PinnedSectionHeader = observer(function PinnedSectionHeader({
 				aria-label="Edit all properties"
 				onClick={openElement}
 			>
-				<FontAwesomeIcon icon={faArrowRight} />
+				<FontAwesomeIcon icon={faSliders} />
 			</Button>
 		</Accordion.Header>
 	)

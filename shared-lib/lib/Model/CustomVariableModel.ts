@@ -3,6 +3,8 @@ import type { VariableValue } from './Variables.js'
 
 export interface CustomVariableDefinition {
 	description: string
+	/** Internal notes for whoever maintains the configuration. Absent on variables saved before notes existed */
+	notes?: string
 	defaultValue: VariableValue
 	persistCurrentValue: boolean
 	sortOrder: number

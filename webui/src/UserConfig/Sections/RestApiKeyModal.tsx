@@ -125,7 +125,7 @@ export const RestApiKeyModal = forwardRef<RestApiKeyModalRef, RestApiKeyModalPro
 											again.
 										</p>
 										<div className="flex items-center gap-2">
-											<code className="flex-1 min-w-0 break-all">{createdToken}</code>
+											<code className="flex-1 min-w-0 break-all text-body">{createdToken}</code>
 											<CopyButton text={createdToken} />
 										</div>
 									</StaticAlert>
@@ -171,7 +171,7 @@ export const RestApiKeyModal = forwardRef<RestApiKeyModalRef, RestApiKeyModalPro
 								</Modal.Body>
 								<Modal.Footer>
 									<Modal.Close disabled={saving}>Cancel</Modal.Close>
-									<Button color="primary" onClick={doSave} disabled={!isValid || saving}>
+									<Button color="primary" onClick={doSave} disabled={!isValid || saving} aria-busy={saving}>
 										{editingId === null ? 'Create' : 'Save'}
 									</Button>
 								</Modal.Footer>

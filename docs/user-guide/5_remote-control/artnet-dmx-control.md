@@ -26,4 +26,4 @@ Channels are mapped sequentially starting from the configured **Artnet Channel**
 
 ## Fixture File
 
-An example fixture file for GrandMA2 is available at the bottom of the Artnet settings tab in Companion. This can be imported into your lighting console to label the channels correctly.
+Fixture files for Avolites, GrandMA2 and Vista consoles can be downloaded from the Artnet entry in Companion's Protocols settings. This can be imported into your lighting console to label the channels correctly.

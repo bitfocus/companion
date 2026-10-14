@@ -338,6 +338,28 @@ describe('ActionRecorder', () => {
 			expect(control.entities.entityReplaceAll).toHaveBeenCalledWith({ stepId: 'step1', setId: 0 }, actions)
 		})
 
+		test.each(['append', 'replace'] as const)('%s mode saves to the trigger action list', (mode) => {
+			const { recorder, controls } = createRecorder()
+			const control = { ...makeEntityControl(), type: 'trigger' }
+			controls['trigger:test'] = control
+			control.entities.entityAdd.mockImplementation((...args: unknown[]) => args[0] === 'trigger_actions')
+			control.entities.entityReplaceAll.mockImplementation((...args: unknown[]) => args[0] === 'trigger_actions')
+			recorder.setSelectedConnectionIds(['conn1'])
+			recorder.receiveAction('conn1', 'act1', {}, 0, undefined)
+			const actions = recorder.getSession().actions
+			const sessionId = recorder.getSession().id
+
+			recorder.saveToControlId('trigger:test', '', 0, mode)
+
+			if (mode === 'append') {
+				expect(control.entities.entityAdd).toHaveBeenCalledWith('trigger_actions', null, ...actions)
+			} else {
+				expect(control.entities.entityReplaceAll).toHaveBeenCalledWith('trigger_actions', actions)
+			}
+			expect(recorder.getSession().id).not.toBe(sessionId)
+			expect(recorder.getSession().actions).toEqual([])
+		})
+
 		test('failures throw without destroying the session', () => {
 			const { recorder, controls } = createRecorder()
 			const sessionId = recorder.getSession().id

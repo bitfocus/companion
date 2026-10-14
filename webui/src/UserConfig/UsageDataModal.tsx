@@ -1,8 +1,9 @@
-import { faSpinner } from '@fortawesome/free-solid-svg-icons'
+import { faCircleExclamation, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Modal } from '~/Components/Modal'
+import { Note } from '~/Components/Note.js'
 import { trpc } from '~/Resources/TRPC.js'
 
 export function UsageDataModal(): React.JSX.Element {
@@ -41,20 +42,20 @@ export function UsageDataModal(): React.JSX.Element {
 								</div>
 							)}
 							{errorMessage && (
-								<div className="alert alert-danger" role="alert">
+								<Note tone="danger" icon={faCircleExclamation} actions={null}>
 									{errorMessage}
-								</div>
+								</Note>
 							)}
 							{!isLoading && !error && data && (
 								<pre
 									style={{
-										backgroundColor: '#f5f5f5',
+										backgroundColor: 'var(--color-surface-muted)',
 										padding: '1rem',
 										borderRadius: '4px',
 									}}
 									className="text-sm"
 								>
-									<code>{jsonData}</code>
+									<code className="text-body">{jsonData}</code>
 								</pre>
 							)}
 						</Modal.Body>

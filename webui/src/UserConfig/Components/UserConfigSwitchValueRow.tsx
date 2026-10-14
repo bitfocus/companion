@@ -21,15 +21,17 @@ export const UserConfigSwitchValueRow = observer(function UserConfigSwitchValueR
 }: UserConfigSwitchValueRowProps<TKey>) {
 	return (
 		<tr title={title}>
-			<td className="w-full">{label}</td>
-			<td>
-				<SwitchInputField
-					id={undefined} // Future: set this for better accessibility
-					value={userConfig.config[field] === activeValue}
-					setValue={(value) => userConfig.setValue(field, value ? activeValue : inactiveValue)}
-				/>
+			<td>{label}</td>
+			<td className="settings-value-end">
+				<div className="flex justify-end items-center">
+					<SwitchInputField
+						id={undefined} // Future: set this for better accessibility
+						value={userConfig.config[field] === activeValue}
+						setValue={(value) => userConfig.setValue(field, value ? activeValue : inactiveValue)}
+					/>
+				</div>
 			</td>
-			<td className="pe-4">
+			<td>
 				<ResetButton userConfig={userConfig} field={field} />
 			</td>
 		</tr>

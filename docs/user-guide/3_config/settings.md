@@ -12,6 +12,12 @@ way as when Companion was first installed.
 
 ## General
 
+### Appearance
+
+Choose a **Light** or **Dark** theme for the web interface, or **System** to follow your device's light or dark setting (the default). The choice is saved in each browser, so different stations can use different themes. You can also switch it from the theme button in the top bar, or by searching "theme" in the command palette.
+
+The button grid, button previews, the emulator and the web buttons page stay dark in both themes, to match the hardware.
+
 ### Installation Settings
 
 - **Installation Name**  
@@ -76,9 +82,7 @@ way as when Companion was first installed.
 
 ## Surfaces
 
-Surfaces are now controlled via [Surface Integrations](../7_surfaces/index.md).
-All surface settings and integration options have been moved to the **Surfaces** page. Clicking **Surfaces** in the
-Settings menu takes you there, to the **Surface Integrations and General Settings** panel.
+These settings affect all surfaces. Individual surface integrations are configured via [Surface Integrations](../7_surfaces/index.md).
 More details on supported surfaces are available in the chapter on [Surfaces](../7_surfaces/index.md).
 
 - **Watch for new USB Devices**  
@@ -110,11 +114,9 @@ These settings are also on the **Surfaces** page.
 
 ## Protocols
 
-The protocols Companion can be controlled with. The panel on the right of this page explains how to use each of
-them; there is more detail in the [Remote control](../5_remote-control/http-remote-control.md) section of this
-guide.
+The Protocols page lists each network endpoint for controlling Companion remotely, with a switch to turn it on or off. Select a protocol to open its settings, such as the port it listens on, and use the help button there to find its API reference. There is more detail in the [Remote control](../5_remote-control/http-remote-control.md) section of this guide.
 
-Several of the older protocols have a **Deprecated ... API** switch below their main switch. This enables the
+Several of the older protocols have a **Deprecated ... API** switch in their settings. This enables the
 older commands of that protocol, which will be removed in a future release. Only turn these on if you have
 something which still needs them.
 
@@ -212,7 +214,7 @@ _If enabled, Companion will provide an Ember+ tree, allowing for external device
 
 ### Artnet II Listener
 
-_If enabled, Companion will listen for Artnet messages, allowing for external devices to control Companion. An example GrandMA2 fixture file for controlling Companion can be found on the bottom of that tab._
+_If enabled, Companion will listen for Artnet messages, allowing for external devices to control Companion. Fixture files for Avolites, GrandMA2 and Vista consoles can be downloaded from the Artnet settings._
 
 - **Artnet Listener**  
   Check to allow Companion to be controlled over Artnet.
@@ -252,6 +254,8 @@ Raw database backups _cannot_ be imported using Companion's UI.
 A list of previous backups can be found at the bottom of the **Edit Backup Rule** pane after clicking the backup rule. Backups can be deleted using Companion's UI.
 
 ## Advanced
+
+The Advanced page lists the admin password, the HTTPS web server and experimental features. Admin password and HTTPS each have a switch to turn them on or off; select one to open its settings.
 
 ### Admin UI Password
 

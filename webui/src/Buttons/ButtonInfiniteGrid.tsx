@@ -83,6 +83,9 @@ interface ButtonInfiniteGridProps {
 	drawScale: number
 	maxHeightToMatchCanvas?: boolean
 	setViewportMinHeight?: React.Dispatch<React.SetStateAction<number>>
+	setViewportPreferredHeight?: React.Dispatch<React.SetStateAction<number>>
+	/** Fill the containing viewport even when the button canvas itself is narrower. */
+	fillViewportWidth?: boolean
 }
 
 export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfiniteGridProps>(
@@ -102,6 +105,8 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 			drawScale,
 			maxHeightToMatchCanvas,
 			setViewportMinHeight,
+			setViewportPreferredHeight,
+			fillViewportWidth,
 		},
 		ref
 	) {
@@ -125,6 +130,10 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 				setViewportMinHeight(2 * tileSize + SCROLLBAR_PADDING)
 			}
 		}, [setViewportMinHeight, tileSize])
+
+		useEffect(() => {
+			setViewportPreferredHeight?.(countRows * tileSize + 2 * SCROLLBAR_PADDING)
+		}, [setViewportPreferredHeight, countRows, tileSize])
 
 		// Update last valid values only when we have non-trivial sizes (grid is actually visible)
 		useEffect(() => {
@@ -434,11 +443,11 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		const gridWrapperStyle = useMemo(
 			() => ({
 				maxHeight: maxHeightToMatchCanvas ? countRows * tileSize + 2 * SCROLLBAR_PADDING : 'none', // Pad for possible scrollbar
-				maxWidth: canvasWidth + SCROLLBAR_PADDING,
+				maxWidth: fillViewportWidth ? 'none' : canvasWidth + SCROLLBAR_PADDING,
+				width: fillViewportWidth ? '100%' : undefined,
 			}),
-			[maxHeightToMatchCanvas, countRows, tileSize, canvasWidth]
+			[maxHeightToMatchCanvas, countRows, tileSize, canvasWidth, fillViewportWidth]
 		)
-
 		return (
 			<div
 				ref={setRef}

@@ -153,7 +153,7 @@ export const GridSizeModal = observer(function GridSizeModal() {
 
 	return (
 		<Modal.Root open={show} onOpenChange={onOpenChange}>
-			<Modal.Trigger color="secondary" size="sm" className="mt-1">
+			<Modal.Trigger color="secondary" size="sm" className="mt-1.5">
 				Edit size
 			</Modal.Trigger>
 

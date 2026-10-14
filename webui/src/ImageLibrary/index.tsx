@@ -1,12 +1,18 @@
+import { faImages } from '@fortawesome/free-solid-svg-icons'
 import { Outlet, useMatchRoute, useNavigate } from '@tanstack/react-router'
 import './image-library.css'
 import { observer } from 'mobx-react-lite'
-import { useCallback } from 'react'
+import { useCallback, useContext } from 'react'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
+import { PageHeader } from '~/Layout/PageHeader'
+import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
+import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { MyErrorBoundary } from '~/Resources/Error'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImageLibraryGrid } from './ImageLibraryGrid'
+import { useImportImageFiles } from './useImportImageFiles'
 
 export const ImageLibraryPage = observer(function ImageLibraryPage() {
 	const matchRoute = useMatchRoute()
@@ -37,28 +43,45 @@ export const ImageLibraryPage = observer(function ImageLibraryPage() {
 	}, [navigate])
 
 	const twoPanelMode = useTwoPanelMode()
+	const { imageLibrary } = useContext(RootAppStoreContext)
+	const importImages = useImportImageFiles()
+	const emptyList: PanelEmptyListState | null =
+		imageLibrary.count === 0
+			? {
+					title: 'No images yet',
+					description: 'Import images to reuse on your buttons, or to expose through variables.',
+					actionLabel: 'Import images',
+					onAction: importImages,
+				}
+			: null
 
 	return (
-		<SplitPanels.Root
-			showing={selectedImageName ? 'secondary' : 'primary'}
-			className="image-library-page"
-			resize={{ storageKey: 'image-library' }}
-		>
-			<SplitPanels.Primary>
-				<MyErrorBoundary>
-					<ImageLibraryGrid selectedImageName={selectedImageName} onSelectImage={handleSelectImage} />
-				</MyErrorBoundary>
-			</SplitPanels.Primary>
+		<div className="page-shell">
+			<PageHeader icon={faImages} title="Image Library" helpAction="/user-guide/config/image-library" />
 
-			<SplitPanels.Secondary>
-				<div className="secondary-panel-simple">
-					{!!selectedImageName && <ImageEditPanelHeading doClose={doCloseImage} twoPanelMode={twoPanelMode} />}
+			<SplitPanels.Root
+				showing={selectedImageName ? 'secondary' : 'primary'}
+				className="image-library-page"
+				resize={{ storageKey: 'image-library' }}
+			>
+				<SplitPanels.Primary>
 					<MyErrorBoundary>
-						<Outlet />
+						<ImageLibraryGrid selectedImageName={selectedImageName} onSelectImage={handleSelectImage} />
 					</MyErrorBoundary>
-				</div>
-			</SplitPanels.Secondary>
-		</SplitPanels.Root>
+				</SplitPanels.Primary>
+
+				<SplitPanels.Secondary>
+					<div className="secondary-panel-simple">
+						{!!selectedImageName && <ImageEditPanelHeading doClose={doCloseImage} twoPanelMode={twoPanelMode} />}
+						<MyErrorBoundary>
+							<PanelEmptyListProvider value={emptyList}>
+								<Outlet />
+							</PanelEmptyListProvider>
+						</MyErrorBoundary>
+					</div>
+				</SplitPanels.Secondary>
+			</SplitPanels.Root>
+		</div>
 	)
 })
 
@@ -69,12 +92,9 @@ interface ImageEditPanelHeadingProps {
 
 function ImageEditPanelHeading({ doClose, twoPanelMode }: ImageEditPanelHeadingProps) {
 	return (
-		<div className="secondary-panel-simple-header">
-			<h4 className="panel-title">Edit Image</h4>
-			<div className="header-buttons">
-				<ContextHelpButton action="/user-guide/config/image-library#editing">Define your image here.</ContextHelpButton>
-				{!twoPanelMode && <CloseButton closeFn={doClose} />}
-			</div>
-		</div>
+		<PanelHeader icon={faImages} title="Edit Image">
+			<ContextHelpButton action="/user-guide/config/image-library#editing">Define your image here.</ContextHelpButton>
+			{!twoPanelMode && <CloseButton closeFn={doClose} />}
+		</PanelHeader>
 	)
 }

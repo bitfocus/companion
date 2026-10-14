@@ -1,23 +1,18 @@
-/* ─── Notifications (Toast) ────────────────────────────────────────────────────
-   Styles based on CoreUI's .toast, .toast-container, .toast-header, .toast-body
-   Adapted for the @base-ui/react/toast component structure. */
+/* Notifications share one padding layer, with a compact gap between heading and message. */
 
 .notification-viewport,
 .notification {
 	--notification-zindex: 1090;
-	--notification-max-width: 350px;
-	--notification-padding-x: 0.75rem;
-	--notification-padding-y: 0.5rem;
+	--notification-max-width: 380px;
+	--notification-padding-x: 0.875rem;
+	--notification-padding-y: 0.625rem;
 	--notification-spacing: 0.75rem;
 	--notification-font-size: 0.875rem;
-	--notification-bg: color-mix(in srgb, var(--color-surface-dark) 85%, transparent);
-	--notification-border-width: var(--border-width);
-	--notification-border-color: var(--color-border-translucent);
-	--notification-border-radius: var(--radius);
-	--notification-box-shadow: 0 0.5rem 1rem var(--color-shadow-15);
-	--notification-header-color: var(--color-on-dark-muted);
-	--notification-header-bg: color-mix(in srgb, var(--color-surface-dark) 85%, transparent);
-	--notification-header-border-color: var(--color-border-translucent);
+	--notification-bg: var(--color-surface);
+	--notification-border-width: 1px;
+	--notification-border-color: var(--color-border-muted);
+	--notification-border-radius: 0.75rem;
+	--notification-box-shadow: 0 20px 25px -5px var(--color-shadow-25), 0 8px 10px -6px var(--color-shadow-15);
 }
 
 /* ─── Viewport (replaces .toast-container) ──────────────────────────────────── */
@@ -41,7 +36,7 @@
 	width: var(--notification-max-width);
 	max-width: 100%;
 	font-size: var(--notification-font-size);
-	color: var(--color-on-dark);
+	color: var(--color-text-body);
 	pointer-events: auto;
 	background-color: var(--notification-bg);
 	background-clip: padding-box;
@@ -66,6 +61,10 @@
 /* ─── Content wrapper ───────────────────────────────────────────────────────── */
 
 .notification-content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	padding: var(--notification-padding-y) var(--notification-padding-x);
 	overflow: hidden;
 	border-radius: inherit;
 }
@@ -75,22 +74,16 @@
 .notification-header {
 	display: flex;
 	align-items: center;
-	padding: var(--notification-padding-y) var(--notification-padding-x);
-	color: var(--notification-header-color);
-	background-color: var(--notification-header-bg);
-	background-clip: padding-box;
-	border-bottom: var(--notification-border-width) solid var(--notification-header-border-color);
-	border-top-left-radius: calc(var(--notification-border-radius) - var(--notification-border-width));
-	border-top-right-radius: calc(var(--notification-border-radius) - var(--notification-border-width));
-
-	/* Mirror CoreUI's .toast-header .btn-close margin */
-	.btn-close {
-		margin-inline: var(--notification-padding-x) calc(-0.5 * var(--notification-padding-x));
-		filter: invert(1) grayscale(1);
-	}
+	justify-content: space-between;
+	gap: 0.5rem;
 }
 
 /* ─── Title (replaces .toast-header strong / label) ─────────────────────────── */
+
+.notification-icon {
+	width: 0.875rem;
+	font-size: 0.875rem;
+}
 
 .notification-title {
 	flex-grow: 1;
@@ -102,6 +95,13 @@
 /* ─── Body (replaces .toast-body) ───────────────────────────────────────────── */
 
 .notification-body {
-	padding: var(--notification-padding-x);
-	word-wrap: break-word;
+	margin: 0;
+	font-size: 0.8125rem;
+	line-height: 1.5;
+	overflow-wrap: anywhere;
+}
+
+/* Align the message with the title text after the header's icon and gap. */
+.notification-header + .notification-body {
+	padding-inline-start: calc(0.875rem + 0.5rem);
 }

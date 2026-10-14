@@ -1,25 +1,22 @@
 import { DragDropProvider } from '@dnd-kit/react'
-import './loading.css'
-import './App.css'
 import { Outlet } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { Suspense, useCallback, useContext, useEffect, useState } from 'react'
 import { useIdleTimer } from 'react-idle-timer'
-import { PuffLoader } from 'react-spinners'
 import { Grid } from '~/Components/Grid'
 import { useEvictDeadCollapseState } from '~/Helpers/useEvictDeadCollapseState.js'
 import { useMountEffect } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { Button } from './Components/Button.js'
-import { Form, InputGroup } from './Components/Form.js'
-import { ProgressBar } from './Components/ProgressBar.js'
-import { SecretTextInputField } from './Components/SecretTextInputField.js'
 import { ContextData } from './ContextData.js'
 import { EntityDragLayer } from './Controls/Components/EntityDragLayer.js'
 import { TRPCConnectionStatus, useTRPCConnectionStatus } from './Hooks/useTRPCConnectionStatus.js'
-import { MyHeader } from './Layout/Header.js'
+import { AdminLockContext } from './Layout/AdminLockContext.js'
+import { AppAuthWrapper, AppLoading } from './Layout/AppSplash.js'
+import { CommandPalette } from './Layout/CommandPalette.js'
+import { ConfigImportingOverlay, ConnectionLostOverlay } from './Layout/ConnectionLostOverlay.js'
 import { MySidebar, SidebarStateProvider } from './Layout/Sidebar.js'
-import { PRIMARY_COLOR } from './Resources/Constants.js'
+import { TopBar } from './Layout/TopBar.js'
+import { TopBarPageContext, type TopBarPage } from './Layout/TopBarContext.js'
 import { MyErrorBoundary } from './Resources/Error.js'
 import { MonacoLoader } from './Resources/MonacoLoader.js'
 import { SortableHysteresis } from './Resources/SortableHysteresis.js'
@@ -45,30 +42,9 @@ export default function App(): React.JSX.Element {
 		<ContextData>
 			{(loadingProgress, loadingComplete) => (
 				<>
-					<div id="error-container" className={wasConnected ? 'show-error' : ''}>
-						<Grid.Row>
-							<Grid.Col md={{ span: 6, offset: 3 }}>
-								<div className="clearfix">
-									<h4 className="pt-4">Houston, we have a problem!</h4>
-									<p className="text-muted">It seems that we have lost connection to the companion app.</p>
-									<ul className="text-muted">
-										<li>Check that the application is still running</li>
-										<li>If you're using the Admin GUI over a network - check your connection</li>
-									</ul>
-								</div>
-							</Grid.Col>
-						</Grid.Row>
-					</div>
+					{wasConnected && <ConnectionLostOverlay />}
 					<ImportTaskOverlay wasConnected={wasConnected} />
-					<Suspense
-						fallback={
-							<Grid.Row className={'loading'}>
-								<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '300px' }}>
-									<PuffLoader loading={true} size={80} color={PRIMARY_COLOR} />
-								</div>
-							</Grid.Row>
-						}
-					>
+					<Suspense fallback={<AppLoading progress={loadingProgress} connected={connected} />}>
 						<MonacoLoader />
 						{/*
 						 * Single global dnd-kit provider for all drag and drop. Each feature subscribes to its
@@ -100,17 +76,9 @@ const ImportTaskOverlay = observer(function ImportTaskOverlay({ wasConnected }: 
 	const { importTaskStatus } = useContext(RootAppStoreContext)
 	const taskRunning = importTaskStatus.get()?.status === 'running'
 
-	return (
-		<div id="current-import-container" className={!wasConnected && taskRunning ? 'show-error' : ''}>
-			<Grid.Row>
-				<Grid.Col md={{ span: 6, offset: 3 }}>
-					<div className="clearfix">
-						<h4 className="pt-4">Stand by, the config is being updated!</h4>
-					</div>
-				</Grid.Col>
-			</Grid.Row>
-		</div>
-	)
+	if (wasConnected || !taskRunning) return null
+
+	return <ConfigImportingOverlay />
 })
 
 interface AppMainProps {
@@ -128,6 +96,7 @@ const AppMain = observer(function AppMain({ connected, loadingComplete, loadingP
 	const [unlocked, setUnlocked] = useState(false)
 
 	const canLock = !!userConfig.properties?.admin_lockout
+	const locked = canLock && !unlocked
 	const setLocked = useCallback(() => {
 		if (canLock) {
 			setUnlocked(false)
@@ -163,31 +132,62 @@ const AppMain = observer(function AppMain({ connected, loadingComplete, loadingP
 
 	return (
 		<div className="c-app">
-			<SidebarStateProvider>
-				{canLock && unlocked && (userConfig.properties?.admin_timeout ?? 0) > 0 ? (
-					<IdleTimerWrapper setLocked={setLocked} timeoutMinutes={userConfig.properties?.admin_timeout} />
-				) : (
-					''
-				)}
-				<MySidebar />
-				<div className="wrapper flex flex-col min-h-screen bg-app-frame-bg">
-					<MyHeader setLocked={setLocked} canLock={canLock && unlocked} />
-					<div className="body grow">
-						{connected && loadingComplete ? (
-							!canLock || unlocked ? (
-								<AppContent />
-							) : (
-								<AppAuthWrapper setUnlocked={setUnlockedInner} />
-							)
-						) : (
-							<AppLoading progress={loadingProgress} connected={connected} />
-						)}
-					</div>
-				</div>
-			</SidebarStateProvider>
+			<AdminLockContext.Provider value={{ canLock: canLock && unlocked, setLocked }}>
+				<SidebarStateProvider>
+					{canLock && unlocked && (userConfig.properties?.admin_timeout ?? 0) > 0 ? (
+						<IdleTimerWrapper setLocked={setLocked} timeoutMinutes={userConfig.properties?.admin_timeout} />
+					) : (
+						''
+					)}
+					{!locked && (
+						<>
+							<MySidebar />
+							<CommandPalette />
+						</>
+					)}
+					<AppWrapper
+						connected={connected}
+						loadingComplete={loadingComplete}
+						loadingProgress={loadingProgress}
+						locked={locked}
+						setUnlockedInner={setUnlockedInner}
+					/>
+				</SidebarStateProvider>
+			</AdminLockContext.Provider>
 		</div>
 	)
 })
+
+interface AppWrapperProps {
+	connected: boolean
+	loadingComplete: boolean
+	loadingProgress: number
+	locked: boolean
+	setUnlockedInner: () => void
+}
+
+function AppWrapper({ connected, loadingComplete, loadingProgress, locked, setUnlockedInner }: AppWrapperProps) {
+	const [topBarPage, setTopBarPage] = useState<TopBarPage | null>(null)
+
+	return (
+		<div className="wrapper flex flex-col min-h-screen bg-app-frame-bg relative">
+			{connected && loadingComplete && !locked && <TopBar page={topBarPage} />}
+			<div className="body grow">
+				{connected && loadingComplete ? (
+					locked ? (
+						<AppAuthWrapper setUnlocked={setUnlockedInner} />
+					) : (
+						<TopBarPageContext.Provider value={setTopBarPage}>
+							<AppContent />
+						</TopBarPageContext.Provider>
+					)
+				) : (
+					<AppLoading progress={loadingProgress} connected={connected} />
+				)}
+			</div>
+		</div>
+	)
+}
 
 interface IdleTimerWrapperProps {
 	setLocked: () => void
@@ -268,94 +268,6 @@ function IdleTimerWrapper({ setLocked, timeoutMinutes }: IdleTimerWrapperProps) 
 
 	return null
 }
-
-interface AppLoadingProps {
-	progress: number
-	connected: boolean
-}
-
-function AppLoading({ progress, connected }: AppLoadingProps) {
-	const message = connected ? 'Syncing' : 'Connecting'
-	return (
-		<Grid.Container className="fadeIn loading">
-			<Grid.Row>
-				<Grid.Col xxl={4} md={3} sm={2} xs={1}></Grid.Col>
-				<Grid.Col xxl={4} md={6} sm={8} xs={10}>
-					<h3>{message}</h3>
-					{connected ? (
-						<ProgressBar className="mt-6" value={progress} />
-					) : (
-						<div className="flex items-center justify-center mt-6">
-							<PuffLoader loading={true} size={80} color={PRIMARY_COLOR} />
-						</div>
-					)}
-				</Grid.Col>
-			</Grid.Row>
-		</Grid.Container>
-	)
-}
-
-interface AppAuthWrapperProps {
-	setUnlocked: () => void
-}
-
-const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: AppAuthWrapperProps) {
-	const { userConfig } = useContext(RootAppStoreContext)
-
-	const [password, setPassword] = useState('')
-	const [showError, setShowError] = useState(false)
-
-	const passwordChanged = useCallback((newValue: string) => {
-		setPassword(newValue)
-		setShowError(false)
-	}, [])
-
-	const tryLogin = useCallback(
-		(e: React.FormEvent<HTMLFormElement>) => {
-			e.preventDefault()
-
-			setPassword((currentPassword) => {
-				if (currentPassword === userConfig.properties?.admin_password) {
-					setShowError(false)
-					setUnlocked()
-					return ''
-				} else {
-					setShowError(true)
-					// preserve current entered value
-					return currentPassword
-				}
-			})
-
-			return false
-		},
-		[userConfig, setUnlocked]
-	)
-
-	return (
-		<Grid.Container className="fadeIn loading">
-			<Grid.Row>
-				<Grid.Col xxl={4} md={3} sm={2} xs={1}></Grid.Col>
-				<Grid.Col xxl={4} md={6} sm={8} xs={10}>
-					<h3>Companion is locked</h3>
-					<Form onSubmit={tryLogin}>
-						<InputGroup>
-							<SecretTextInputField
-								id={undefined}
-								value={password}
-								setValue={passwordChanged}
-								checkValid={showError ? false : undefined}
-								immediateValue
-							/>
-							<Button type="submit" color="primary">
-								Unlock
-							</Button>
-						</InputGroup>
-					</Form>
-				</Grid.Col>
-			</Grid.Row>
-		</Grid.Container>
-	)
-})
 
 const AppContent = observer(function AppContent() {
 	const { userConfig } = useContext(RootAppStoreContext)

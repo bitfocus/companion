@@ -1,28 +1,115 @@
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { faBug, faCogs, faFileLines, faStethoscope } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useMemo, useRef } from 'react'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
-import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { ModuleInstanceType, type InstanceVersionUpdatePolicy } from '@companion-app/shared/Model/Instance.js'
+import { Button } from '~/Components/Button.js'
+import { EditPanelTabLink } from '~/Components/EditPanelTabs.js'
+import {
+	EDIT_TAB_ACTIVE_CLASS,
+	EDIT_TAB_BAR_CLASS,
+	EDIT_TAB_CLASS,
+	EDIT_TAB_INACTIVE_CLASS,
+} from '~/Components/editPanelTabStyles.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
 import { InstanceGenericEditPanel } from '~/Instances/InstanceEdit/InstanceEditPanel.js'
 import type { InstanceEditPanelService } from '~/Instances/InstanceEdit/InstanceEditPanelService.js'
 import type { InstanceEditPanelStore } from '~/Instances/InstanceEdit/InstanceEditPanelStore.js'
+import { ModuleHelpContent, resolveModuleHelpUrl } from '~/Instances/ModuleHelpContent.js'
+import { getModuleVersionInfo } from '~/Instances/Util.js'
 import { trpc, useMutationExt, type RouterInput } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ConnectionDiagnosticsTab } from './ConnectionDiagnosticsTab.js'
 import { ConnectionEditPanelHeading } from './ConnectionEditPanelHeading.js'
+import type { ConnectionEditTab } from './connectionEditTabs.js'
 
 interface ConnectionEditPanelProps {
 	connectionId: string
+	activeTab: ConnectionEditTab
+	setActiveTab: (tab: ConnectionEditTab) => void
 }
 
-export const ConnectionEditPanel = observer(function ConnectionEditPanel({ connectionId }: ConnectionEditPanelProps) {
-	const { connections } = useContext(RootAppStoreContext)
+interface EditTabButtonProps {
+	tab: ConnectionEditTab
+	activeTab: ConnectionEditTab
+	setActiveTab: (tab: ConnectionEditTab) => void
+	icon: IconDefinition
+	label: string
+	showAttentionDot?: boolean
+}
+
+function EditTabButton({ tab, activeTab, setActiveTab, icon, label, showAttentionDot }: EditTabButtonProps) {
+	return (
+		<Button
+			onClick={() => setActiveTab(tab)}
+			className={classNames(EDIT_TAB_CLASS, activeTab === tab ? EDIT_TAB_ACTIVE_CLASS : EDIT_TAB_INACTIVE_CLASS)}
+		>
+			<FontAwesomeIcon icon={icon} className="text-muted" />
+			<span>{label}</span>
+			{showAttentionDot && <span className="w-1.5 h-1.5 rounded-full bg-tone-warning-fill animate-pulse" />}
+		</Button>
+	)
+}
+
+function SidebarHelpTab({ helpPath }: { helpPath: string }) {
+	const helpUrl = resolveModuleHelpUrl(helpPath)
+
+	const {
+		data: markdown,
+		isLoading,
+		error,
+	} = useQuery({
+		queryKey: ['module-help', helpUrl],
+		queryFn: async () => {
+			const response = await fetch(helpUrl)
+			return response.text()
+		},
+		staleTime: Infinity,
+	})
+
+	if (isLoading) {
+		return <div className="p-4 text-xs text-muted">Loading documentation...</div>
+	}
+
+	if (error || !markdown) {
+		return (
+			<div className="p-4 text-xs text-tone-error-text">
+				{error ? `Failed to load help documentation: ${error}` : 'No help documentation available.'}
+			</div>
+		)
+	}
+
+	return (
+		<div className="page-scroll p-4 text-sm text-body leading-relaxed">
+			<div className="max-w-readable space-y-3">
+				<ModuleHelpContent markdown={markdown} helpUrl={helpUrl} />
+			</div>
+		</div>
+	)
+}
+
+export const ConnectionEditPanel = observer(function ConnectionEditPanel({
+	connectionId,
+	activeTab,
+	setActiveTab,
+}: ConnectionEditPanelProps) {
+	const { connections, instanceStatuses, modules } = useContext(RootAppStoreContext)
 
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 	const service = useInstanceEditPanelService(confirmModalRef, connectionId)
 
 	const connectionInfo: ClientConnectionConfig | undefined = connections.getInfo(connectionId)
+	const status = instanceStatuses.getStatus(connectionId)
+	const moduleInfo = connectionInfo
+		? modules.getModuleInfo(connectionInfo.moduleType, connectionInfo.moduleId)
+		: undefined
+	const moduleVersion = getModuleVersionInfo(moduleInfo, connectionInfo ? connectionInfo.moduleVersionId : null)
 
 	if (!connectionInfo) {
 		return (
@@ -35,22 +122,66 @@ export const ConnectionEditPanel = observer(function ConnectionEditPanel({ conne
 	}
 
 	return (
-		<>
+		<div className="flex flex-col h-full min-h-0 grow overflow-hidden">
 			<GenericConfirmModal ref={confirmModalRef} />
 
 			<ConnectionEditPanelHeading connectionInfo={connectionInfo} closeConfigurePanel={service.closePanel} />
 
-			<InstanceGenericEditPanel<ClientConnectionConfig>
-				instanceInfo={connectionInfo}
-				service={service}
-				changeModuleDangerMessage={
-					<>
-						Changing the module type can break the connection and corrupt any existing actions and feedbacks. Only use
-						this if you are sure of what you are doing.
-					</>
-				}
-			/>
-		</>
+			{/* Segmented Tab Bar */}
+			<div className={EDIT_TAB_BAR_CLASS}>
+				<EditTabButton
+					tab="settings"
+					activeTab={activeTab}
+					setActiveTab={setActiveTab}
+					icon={faCogs}
+					label="Settings"
+				/>
+
+				{moduleVersion?.helpPath && (
+					<EditTabButton tab="docs" activeTab={activeTab} setActiveTab={setActiveTab} icon={faFileLines} label="Docs" />
+				)}
+
+				<EditTabButton
+					tab="diagnostics"
+					activeTab={activeTab}
+					setActiveTab={setActiveTab}
+					icon={faStethoscope}
+					label="Diagnostics"
+					showAttentionDot={!!status?.category && status.category !== 'good'}
+				/>
+
+				{!!moduleInfo?.display?.bugUrl && (
+					<EditPanelTabLink href={moduleInfo.display.bugUrl} icon={faBug} label="Issues" />
+				)}
+			</div>
+
+			{/* Tab 1: Settings Form */}
+			{activeTab === 'settings' && (
+				<InstanceGenericEditPanel<ClientConnectionConfig>
+					instanceInfo={connectionInfo}
+					service={service}
+					changeModuleDangerMessage={
+						<>
+							Changing the module type can break the connection and corrupt any existing actions and feedbacks. Only use
+							this if you are sure of what you are doing.
+						</>
+					}
+				/>
+			)}
+
+			{/* Tab 2: Docs */}
+			{activeTab === 'docs' && moduleVersion?.helpPath && <SidebarHelpTab helpPath={moduleVersion.helpPath} />}
+
+			{/* Tab 3: Diagnostics */}
+			{activeTab === 'diagnostics' && (
+				<ConnectionDiagnosticsTab
+					connectionInfo={connectionInfo}
+					status={status}
+					moduleInfo={moduleInfo}
+					moduleVersion={moduleVersion}
+				/>
+			)}
+		</div>
 	)
 })
 
@@ -68,8 +199,12 @@ function useInstanceEditPanelService(
 	const deleteMutation = useMutationExt(trpc.instances.connections.delete.mutationOptions())
 
 	const setModuleAndVersion = useCallback(
-		async (moduleId: string, versionId: string | null): Promise<string | null> =>
-			setModuleAndVersionMutation.mutateAsync({ connectionId: instanceId, moduleId, versionId }),
+		async (
+			moduleId: string,
+			versionId: string | null,
+			updatePolicy: InstanceVersionUpdatePolicy
+		): Promise<string | null> =>
+			setModuleAndVersionMutation.mutateAsync({ connectionId: instanceId, moduleId, versionId, updatePolicy }),
 		[setModuleAndVersionMutation, instanceId]
 	)
 

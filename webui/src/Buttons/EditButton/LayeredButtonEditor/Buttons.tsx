@@ -70,7 +70,7 @@ export function RemoveElementButton({
 	}, [removeElementMutation, confirmModalRef, controlId, elementId])
 
 	return (
-		<Button size="sm" onClick={removeElement} title="Remove">
+		<Button size="sm" onClick={removeElement} title="Remove" variant="ghost" color="danger">
 			<FontAwesomeIcon icon={faTrash} />
 		</Button>
 	)
@@ -92,7 +92,7 @@ export function DuplicateElementButton({
 	}, [duplicateElementMutation, controlId, elementId])
 
 	return (
-		<Button size="sm" onClick={duplicateElement} title="Duplicate">
+		<Button size="sm" onClick={duplicateElement} title="Duplicate" variant="ghost">
 			<FontAwesomeIcon icon={faCopy} />
 		</Button>
 	)
@@ -110,7 +110,12 @@ export const ToggleVisibilityButton = observer(function ToggleVisibilityButton({
 	const isVisible = styleStore.isElementVisible(elementId)
 
 	return (
-		<Button size="sm" onClick={toggleVisibility} title={isVisible ? 'Preview visible' : 'Preview hidden'}>
+		<Button
+			size="sm"
+			onClick={toggleVisibility}
+			title={isVisible ? 'Preview visible' : 'Preview hidden'}
+			variant="ghost"
+		>
 			<FontAwesomeIcon icon={faEye} style={{ opacity: isVisible ? undefined : 0.3 }} />
 		</Button>
 	)

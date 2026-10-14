@@ -39,9 +39,9 @@ describe('Popover.Trigger', () => {
 		expect(screen.getByRole('button', { name: 'Options' })).toBeInTheDocument()
 	})
 
-	it('applies the btn class', () => {
+	it('applies the button class', () => {
 		renderMenu()
-		expect(screen.getByRole('button', { name: 'Options' })).toHaveClass('btn')
+		expect(screen.getByRole('button', { name: 'Options' })).toHaveClass('button')
 	})
 
 	it('applies the color class', () => {

@@ -1,0 +1,30 @@
+.panel-header-title {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.panel-header-icon {
+	display: inline-flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	font-size: 0.75rem;
+	color: var(--color-muted);
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 0.375rem;
+}
+
+.panel-header-heading {
+	margin: 0;
+	overflow: hidden;
+	font-size: 0.875rem;
+	font-weight: 700;
+	color: var(--color-text);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}

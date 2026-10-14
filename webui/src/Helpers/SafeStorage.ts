@@ -16,6 +16,15 @@ export function safeSetLocalStorage(key: string, value: string): void {
 	}
 }
 
+export function safeGetLocalStorage(key: string): string | null {
+	try {
+		return window.localStorage.getItem(key)
+	} catch (e) {
+		console.warn(`Failed to read "${key}" from localStorage:`, e)
+		return null
+	}
+}
+
 export function safeSetSessionStorage(key: string, value: string): void {
 	try {
 		window.sessionStorage.setItem(key, value)

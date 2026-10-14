@@ -70,17 +70,10 @@ export const SimpleDropdownInputField = observer(function SimpleDropdownInputFie
 
 	const noOptionsMessageFull = noOptionsMessage || 'No options available'
 
+	const isInvalid = !isKnownValue || checkValid?.(value) === false
+
 	return (
-		<div
-			className={classNames(
-				'dropdown-field',
-				{
-					'dropdown-field-invalid': !isKnownValue || checkValid?.(value) === false,
-				},
-				className
-			)}
-			title={tooltip}
-		>
+		<div className={classNames('dropdown-field', { 'dropdown-field-invalid': isInvalid }, className)} title={tooltip}>
 			<Select.Root<DropdownChoiceId>
 				id={id}
 				value={options.length === 0 ? null : value}
@@ -88,7 +81,7 @@ export const SimpleDropdownInputField = observer(function SimpleDropdownInputFie
 				items={itemsForLookup}
 				disabled={disabled}
 			>
-				<Select.Trigger className="form-input dropdown-field-select-trigger" onBlur={onBlur}>
+				<Select.Trigger className="form-input dropdown-field-select-trigger" onBlur={onBlur} aria-invalid={isInvalid}>
 					<Select.Value
 						className="dropdown-field-select-value"
 						placeholder={options.length === 0 ? noOptionsMessageFull : 'Select...'}

@@ -186,15 +186,10 @@ export const DropdownInputField = observer(function DropdownInputField({
 		[disableEditingCustom, allowCustom, flatItems]
 	)
 
+	const isInvalid = !isKnownValue || checkValid?.(localDisplayValue) === false
+
 	return (
-		<div
-			className={classNames(
-				'dropdown-field',
-				{ 'dropdown-field-invalid': !isKnownValue || checkValid?.(localDisplayValue) === false },
-				className
-			)}
-			title={tooltip}
-		>
+		<div className={classNames('dropdown-field', { 'dropdown-field-invalid': isInvalid }, className)} title={tooltip}>
 			<Combobox.Root<DropdownChoiceId, false, FuzzyChoice>
 				virtualized={!hasGroups}
 				autoHighlight
@@ -222,6 +217,7 @@ export const DropdownInputField = observer(function DropdownInputField({
 						})}
 						name={htmlName}
 						placeholder={inputPlaceholder}
+						aria-invalid={isInvalid}
 						onFocus={onInputFocus}
 						onBlur={onInputBlur}
 					/>

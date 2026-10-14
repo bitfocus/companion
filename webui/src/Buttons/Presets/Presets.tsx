@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { Grid } from '~/Components/Grid'
+import './Presets.css'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { PresetDefinitionsStore, usePresetsDefinitions } from './PresetDefinitionsStore.js'

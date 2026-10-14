@@ -1,52 +1,58 @@
-.settings-category-spacer:not(:first-child) {
-	height: 20px;
-}
-
-.settings-category-row {
-	th {
-		font-weight: bold;
-		font-size: 18px;
-		padding-top: 10px !important;
-		padding-bottom: 10px !important;
-		/* background-color: #fff !important; */
-		border-bottom: 1px solid var(--color-border-muted) !important;
-	}
-}
-
-.remote-control-tabs .nav-link {
-	cursor: pointer;
-}
-
-.settings-grid-card {
-	color: inherit;
-	display: block;
-
-	> :hover {
-		background-color: var(--color-surface-hover);
-	}
-}
-
-/* Layout for the contents of a backup rule row */
-.backup-rule-content {
-	display: flex;
-	align-items: center;
-	gap: 1rem;
+.table-settings {
 	width: 100%;
-	min-width: 0;
+	border-collapse: collapse;
+}
 
-	.backup-rule-info,
-	.backup-rule-cron {
-		flex: 1 1 0;
-		min-width: 0;
-	}
+.table-settings tr {
+	border-bottom: 1px solid var(--color-border-subtle);
+	transition: background-color 0.15s ease;
+}
 
-	.backup-rule-actions {
-		flex: 0 0 auto;
-		margin-left: auto;
+.table-settings tr:last-child {
+	border-bottom: none;
+}
 
-		.button {
-			padding-left: 0.25rem;
-			padding-right: 0.25rem;
-		}
-	}
+.table-settings tr:hover:not(.settings-category-row) {
+	background-color: var(--color-surface-hover);
+}
+
+.table-settings td {
+	padding: 0.75rem 1rem;
+	vertical-align: middle;
+	font-size: 0.875rem;
+	text-align: left;
+}
+
+.table-settings td:first-child {
+	font-weight: 500;
+	color: var(--color-body-text);
+	text-align: left;
+}
+
+.table-settings td:nth-child(2) {
+	width: 320px;
+	text-align: left;
+}
+
+.table-settings td:last-child {
+	width: 48px;
+	text-align: left;
+}
+
+/* Value cells that hold a control rather than an input (switch, static text, a button) sit at the
+   end of the column, so they line up with each other and with the reset buttons. */
+.table-settings td.settings-value-end {
+	text-align: end;
+}
+
+.settings-category-row th {
+	font-weight: 700;
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--color-muted);
+	background-color: var(--color-surface-muted);
+	padding: 0.625rem 1rem;
+	border-bottom: 1px solid var(--color-border-muted);
+	border-top: none;
 }

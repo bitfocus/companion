@@ -46,6 +46,7 @@ export function AspectRatioPicker({
 							key={id}
 							title={option.label}
 							className={`button-layer-aspect-option${value === id ? ' active' : ''}`}
+							aria-pressed={value === id}
 							onClick={() => setValue(id)}
 						>
 							<AspectRatioGlyph ratio={parseAspectRatio(id)} />

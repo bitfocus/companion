@@ -1,3 +1,4 @@
+import { faNetworkWired } from '@fortawesome/free-solid-svg-icons'
 import { useForm } from '@tanstack/react-form'
 import { useNavigate } from '@tanstack/react-router'
 import classNames from 'classnames'
@@ -12,6 +13,7 @@ import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { usePlainOptionsVisibility } from '~/Hooks/useOptionsAndIsVisible'
+import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton } from '~/Layout/PanelIcons'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
@@ -30,12 +32,9 @@ export const RemoteSurfaceEditPanel = observer<SurfaceEditPanelProps>(function R
 
 	return (
 		<>
-			<div className="secondary-panel-simple-header">
-				<h4 className="panel-title">Settings for {remoteInfo?.displayName}</h4>
-				<div className="header-buttons">
-					<CloseButton closeFn={doCloseSurface} />
-				</div>
-			</div>
+			<PanelHeader icon={faNetworkWired} title={`Settings for ${remoteInfo?.displayName ?? 'remote surface'}`}>
+				<CloseButton closeFn={doCloseSurface} />
+			</PanelHeader>
 
 			<SurfaceEditPanelContent remoteInfo={remoteInfo} doClose={doCloseSurface} />
 		</>
@@ -206,10 +205,11 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							<div className="flex flex-row">
 								<div className="grow">
 									<Button
-										color="success"
+										color="primary"
 										className="md:me-1"
 										disabled={!isDirty || !isValid || isSubmitting}
 										type="submit"
+										aria-busy={isSubmitting}
 									>
 										Save {isSubmitting ? '...' : ''}
 									</Button>

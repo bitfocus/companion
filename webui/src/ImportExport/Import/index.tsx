@@ -1,7 +1,10 @@
+import { faArrowLeft, faFileImport } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import './import-wizard.css'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { Button } from '~/Components/Button'
+import { PageHeader } from '~/Layout/PageHeader.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ImportFullWizard } from './Full.js'
@@ -35,10 +38,6 @@ export function ImportWizard({ importInfo, clearImport }: ImportWizardProps): Re
 				.then((_res) => {
 					notifier.show(`Import successful`, `Page was imported successfully`, 10000)
 					clearImport()
-					// console.log('remap response', res)
-					// if (res) {
-					// 	setConnectionRemap(res)
-					// }
 				})
 				.catch((e) => {
 					notifier.show(`Import failed`, `Page import failed with: "${e}"`, 10000)
@@ -48,31 +47,39 @@ export function ImportWizard({ importInfo, clearImport }: ImportWizardProps): Re
 		[importSinglePageMutation, clearImport, notifier]
 	)
 
-	return snapshot.type === 'page' ? (
-		<div className="import-wizard single-page px-1">
-			<h4>
-				Import Single Page
-				<Button color="danger" size="sm" onClick={clearImport}>
-					Cancel
-				</Button>
-			</h4>
+	const isSinglePage = snapshot.type === 'page'
+	const title = isSinglePage ? 'Import Single Page' : 'Import Configuration'
 
-			<ImportPageWizard
-				snapshot={snapshot}
-				connectionRemap={connectionRemap}
-				setConnectionRemap={setConnectionRemap}
-				doImport={doSinglePageImport}
-			/>
-		</div>
-	) : (
-		<div className="import-wizard import-full">
-			<h4>
-				Import Configuration
-				<Button color="danger" size="sm" onClick={clearImport}>
-					Cancel
+	return (
+		<div className="page-shell">
+			<div className="flex items-center justify-between flex-wrap gap-2">
+				<PageHeader icon={faFileImport} title={title} />
+				<Button color="secondary" size="sm" onClick={clearImport} className="flex items-center gap-1.5">
+					<FontAwesomeIcon icon={faArrowLeft} />
+					Cancel Import
 				</Button>
-			</h4>
-			<ImportFullWizard snapshot={snapshot} connectionRemap={connectionRemap} setConnectionRemap={setConnectionRemap} />
+			</div>
+
+			<div className="page-scroll">
+				{isSinglePage ? (
+					<div className="import-wizard single-page p-1">
+						<ImportPageWizard
+							snapshot={snapshot}
+							connectionRemap={connectionRemap}
+							setConnectionRemap={setConnectionRemap}
+							doImport={doSinglePageImport}
+						/>
+					</div>
+				) : (
+					<div className="import-wizard import-full">
+						<ImportFullWizard
+							snapshot={snapshot}
+							connectionRemap={connectionRemap}
+							setConnectionRemap={setConnectionRemap}
+						/>
+					</div>
+				)}
+			</div>
 		</div>
 	)
 }

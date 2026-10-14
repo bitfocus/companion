@@ -13,6 +13,9 @@ import { useResizeObserver } from '~/Hooks/useResizeObserver.js'
 /**
  * Which panel to show while there is only room for one. `null` when the panels are not alternatives
  * to each other, and both should stay on show at every width.
+ *
+ * Once both fit, both are always shown, whichever this is: the secondary shows its empty state while
+ * nothing is open in it, rather than collapsing, so opening something never reflows the primary.
  */
 export type SplitPanelsShowing = 'primary' | 'secondary' | null
 
@@ -105,8 +108,7 @@ function ResizableSplitPanelsRoot({
 	style,
 	...rest
 }: ResizableSplitPanelsRootProps): React.JSX.Element {
-	const twoPanelMode = useTwoPanelMode()
-	const resizable = twoPanelMode
+	const resizable = useTwoPanelMode()
 
 	const minPrimaryPx = resize.minPrimaryPx ?? SPLIT_PANELS_DEFAULT_MIN_PX
 	const minSecondaryPx = resize.minSecondaryPx ?? SPLIT_PANELS_DEFAULT_MIN_PX
@@ -170,15 +172,19 @@ function ResizableSplitPanelsRoot({
 				positionHandle()
 			}
 			const onUp = () => {
-				handleEl.releasePointerCapture(e.pointerId)
+				delete handleEl.dataset.dragging
+				if (handleEl.hasPointerCapture(e.pointerId)) handleEl.releasePointerCapture(e.pointerId)
 				handleEl.removeEventListener('pointermove', onMove)
 				handleEl.removeEventListener('pointerup', onUp)
+				handleEl.removeEventListener('pointercancel', onUp)
 				setPrimaryPercent(latestPercent)
 			}
 
+			handleEl.dataset.dragging = 'true'
 			handleEl.setPointerCapture(e.pointerId)
 			handleEl.addEventListener('pointermove', onMove)
 			handleEl.addEventListener('pointerup', onUp)
+			handleEl.addEventListener('pointercancel', onUp)
 		},
 		[minPrimaryPx, minSecondaryPx, primaryPercent, positionHandle, setPrimaryPercent]
 	)
@@ -188,6 +194,37 @@ function ResizableSplitPanelsRoot({
 	}, [defaultPrimaryPercent, setPrimaryPercent])
 
 	const primaryPercentSafe = Number.isFinite(primaryPercent) ? primaryPercent : defaultPrimaryPercent
+
+	const handleKeyDown = useCallback(
+		(e: React.KeyboardEvent<HTMLDivElement>) => {
+			let delta = 0
+			if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+				delta = e.shiftKey ? -10 : -2
+			} else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+				delta = e.shiftKey ? 10 : 2
+			} else if (e.key === 'Home') {
+				e.preventDefault()
+				setPrimaryPercent(20)
+				return
+			} else if (e.key === 'End') {
+				e.preventDefault()
+				setPrimaryPercent(80)
+				return
+			} else if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault()
+				setPrimaryPercent(defaultPrimaryPercent)
+				return
+			} else {
+				return
+			}
+
+			e.preventDefault()
+			const newPercent = Math.min(80, Math.max(20, primaryPercentSafe + delta))
+			setPrimaryPercent(newPercent)
+		},
+		[primaryPercentSafe, defaultPrimaryPercent, setPrimaryPercent]
+	)
+
 	const mergedStyle = resizable
 		? { ...style, gridTemplateColumns: gridTemplateColumnsFor(minPrimaryPx, minSecondaryPx, primaryPercentSafe) }
 		: style
@@ -206,8 +243,15 @@ function ResizableSplitPanelsRoot({
 					className="split-panels-resize-handle"
 					onPointerDown={handlePointerDown}
 					onDoubleClick={handleDoubleClick}
+					onKeyDown={handleKeyDown}
 					role="separator"
+					tabIndex={0}
 					aria-orientation="vertical"
+					aria-label="Resize panel split"
+					title="Drag to resize · Double-click to reset"
+					aria-valuenow={Math.round(primaryPercentSafe)}
+					aria-valuemin={20}
+					aria-valuemax={80}
 				/>
 			)}
 		</div>
@@ -216,8 +260,8 @@ function ResizableSplitPanelsRoot({
 
 export type SplitPanelProps = HTMLAttributes<HTMLDivElement>
 
-// The panels only ever *hide*, below the width at which both fit. Nothing sets a display for the
-// visible state, so a panel keeps whatever its own classes give it (`.flex-column-layout`, say).
+// The panels only ever *hide*, and only below the width at which both fit. Nothing sets a display for
+// the visible state, so a panel keeps whatever its own classes give it (`.flex-column-layout`, say).
 function SplitPanelsPrimary({ className, ...rest }: SplitPanelProps): React.JSX.Element {
 	const showing = useContext(ShowingContext)
 

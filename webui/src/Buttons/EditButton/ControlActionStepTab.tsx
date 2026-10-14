@@ -1,9 +1,9 @@
-import { faChevronLeft, faChevronRight, faClone, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faHandPointer, faPlus, faRotateLeft, faRotateRight } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { Button, ButtonGroup } from '~/Components/Button'
+import { Button } from '~/Components/Button'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
@@ -29,14 +29,10 @@ export function ControlActionStepTab({
 	service,
 	controlId,
 	location,
-	runtimeProps,
 	rotaryActions,
-	stepKeys,
-	selectedIndex,
 	selectedKey,
 	selectedStepProps,
 	localVariablesStore,
-	disabledSetStep,
 }: ControlActionStepTabProps): React.JSX.Element {
 	// Heading with an inline hint (no extra vertical space) pointing at the $(this:delta) variable, which is
 	// available to expressions inside rotary actions.
@@ -52,60 +48,17 @@ export function ControlActionStepTab({
 
 	return (
 		<>
-			{stepKeys.length > 1 && (
-				<ButtonGroup className="mt-2">
-					<Button
-						color="primary"
-						title="Move step before"
-						disabled={selectedIndex === 0}
-						onClick={() => service.swapSteps(selectedKey, stepKeys[selectedIndex - 1])}
-					>
-						<FontAwesomeIcon icon={faChevronLeft} />
-					</Button>
-					<Button
-						color="primary"
-						title="Move step after"
-						disabled={selectedIndex === stepKeys.length - 1}
-						onClick={() => service.swapSteps(selectedKey, stepKeys[selectedIndex + 1])}
-					>
-						<FontAwesomeIcon icon={faChevronRight} />
-					</Button>
-
-					<Button
-						color="success"
-						className="font-medium"
-						variant={runtimeProps.current_step_id === selectedKey || disabledSetStep ? 'outline' : undefined}
-						disabled={runtimeProps.current_step_id === selectedKey || disabledSetStep}
-						onClick={() => service.setCurrentStep(selectedKey)}
-						title="Make this step the current step, without executing any actions."
-					>
-						Select
-					</Button>
-					<Button color="secondary" title="Add step" disabled={stepKeys.length === 1} onClick={service.appendStep}>
-						<FontAwesomeIcon icon={faPlus} />
-					</Button>
-					<Button color="secondary" title="Duplicate step" onClick={() => service.duplicateStep(selectedKey)}>
-						<FontAwesomeIcon icon={faClone} />
-					</Button>
-					<Button
-						color="secondary"
-						title="Delete step"
-						disabled={stepKeys.length === 1}
-						onClick={() => service.removeStep(selectedKey)}
-					>
-						<FontAwesomeIcon icon={faTrash} />
-					</Button>
-				</ButtonGroup>
-			)}
-
-			<div className="mt-2">
-				{' '}
-				{/* Wrap the entity-category, for :first-child to work */}
+			<div className="edit-button-action-sections">
 				{rotaryActions && selectedStepProps && (
 					<>
 						<MyErrorBoundary>
 							<ControlEntitiesEditor
-								heading={rotaryHeading('Rotate left actions')}
+								heading={
+									<div className="flex items-center gap-2">
+										<FontAwesomeIcon icon={faRotateLeft} className="text-primary text-xs" />
+										{rotaryHeading('Rotate Left actions')}
+									</div>
+								}
 								controlId={controlId}
 								location={location}
 								listId={{ stepId: selectedKey, setId: 'rotate_left' }}
@@ -120,7 +73,12 @@ export function ControlActionStepTab({
 
 						<MyErrorBoundary>
 							<ControlEntitiesEditor
-								heading={rotaryHeading('Rotate right actions')}
+								heading={
+									<div className="flex items-center gap-2">
+										<FontAwesomeIcon icon={faRotateRight} className="text-primary text-xs" />
+										{rotaryHeading('Rotate Right actions')}
+									</div>
+								}
 								controlId={controlId}
 								location={location}
 								listId={{ stepId: selectedKey, setId: 'rotate_right' }}
@@ -138,7 +96,12 @@ export function ControlActionStepTab({
 					<>
 						<MyErrorBoundary>
 							<ControlEntitiesEditor
-								heading={`Press actions`}
+								heading={
+									<div className="flex items-center gap-2">
+										<FontAwesomeIcon icon={faHandPointer} className="text-primary text-xs" />
+										<span>Press actions</span>
+									</div>
+								}
 								controlId={controlId}
 								location={location}
 								listId={{ stepId: selectedKey, setId: 'down' }}
@@ -164,8 +127,8 @@ export function ControlActionStepTab({
 				)}
 			</div>
 
-			<div className="my-4">
-				<Button onClick={() => service.appendSet(selectedKey)} color="primary">
+			<div className="edit-button-add-duration">
+				<Button onClick={() => service.appendSet(selectedKey)} color="primary" variant="outline" size="sm">
 					<FontAwesomeIcon icon={faPlus} /> Add duration group
 				</Button>
 			</div>

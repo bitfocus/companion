@@ -6,12 +6,6 @@
 	display: block;
 	min-width: 0;
 
-	&.dropdown-field-invalid {
-		.dropdown-field-select-value {
-			color: var(--color-input-invalid);
-		}
-	}
-
 	.dropdown-field-input-group {
 		position: relative;
 		display: flex;

@@ -23,7 +23,7 @@ const RouteComponent = observer(function RouteComponent() {
 	}, [navigate, expressionVariablesList, fullControlId])
 
 	return (
-		<div className="secondary-panel-simple-body">
+		<div className="page-scroll edit-panel-scroll">
 			<MyErrorBoundary>
 				<EditExpressionVariablePanel key={controlId} controlId={fullControlId} />
 			</MyErrorBoundary>

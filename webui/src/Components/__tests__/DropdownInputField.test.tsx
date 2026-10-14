@@ -102,6 +102,16 @@ describe('Rendering (static)', () => {
 		expect(container.querySelector('.dropdown-field-invalid')).toBeTruthy()
 	})
 
+	it('marks the input aria-invalid when checkValid returns false', () => {
+		const { input } = renderField({ checkValid: () => false })
+		expect(input).toHaveAttribute('aria-invalid', 'true')
+	})
+
+	it('does not mark the input aria-invalid when checkValid returns true', () => {
+		const { input } = renderField({ checkValid: () => true })
+		expect(input).toHaveAttribute('aria-invalid', 'false')
+	})
+
 	it('does not apply dropdown-field-invalid class when checkValid returns true', () => {
 		const { container } = renderField({ checkValid: () => true })
 		expect(container.querySelector('.dropdown-field-invalid')).toBeNull()

@@ -48,14 +48,15 @@
 		}
 
 		&.active {
-			background: var(--color-toolbar-accent);
-			border-color: var(--color-toolbar-accent);
-			color: var(--color-on-dark);
+			background: var(--color-selection-bg);
+			border-color: var(--color-selection-border);
+			color: var(--color-selection-text);
+			box-shadow: inset 0 0 0 1px var(--color-selection-border);
 		}
 	}
 
-	/* Undo the `btn` metrics so every option keeps the same 24x24 box */
-	.button-layer-aspect-option.btn {
+	/* Undo the `button` metrics so every option keeps the same 24x24 box */
+	.button-layer-aspect-option.button {
 		line-height: 1;
 		font-size: inherit;
 		min-width: 0;
@@ -108,8 +109,9 @@
 	}
 
 	&.active {
-		background: var(--color-toolbar-accent);
-		color: var(--color-on-dark);
+		background: var(--color-selection-bg);
+		color: var(--color-selection-text);
+		box-shadow: inset 0 0 0 1px var(--color-selection-border);
 	}
 }
 

@@ -39,9 +39,8 @@ export const EditableEntityList = observer(function EditableEntityList({
 				ownerId={ownerId}
 				childEntityIds={entities?.map((f) => f.id) ?? []}
 				headingActions={headingActions}
+				subheading={subheading}
 			/>
-
-			{subheading}
 
 			<MinimalEntityList
 				ownerId={ownerId}
@@ -55,6 +54,7 @@ export const EditableEntityList = observer(function EditableEntityList({
 				entityType={entityType}
 				feedbackListType={feedbackListType}
 				entityTypeLabel={entityTypeLabel}
+				anyEntities={!!entities && entities.length > 0}
 			/>
 		</>
 	)

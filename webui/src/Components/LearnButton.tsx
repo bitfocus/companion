@@ -19,7 +19,7 @@ export const LearnButton = observer(function LearnButton({ id, disabled, doLearn
 	return (
 		<Button
 			disabled={isActive || disabled}
-			color="info"
+			color="secondary"
 			size="sm"
 			onClick={doLearn}
 			title="Capture the current values from the device"

@@ -32,7 +32,7 @@ const RouteComponent = observer(function RouteComponent() {
 	}
 
 	return (
-		<div className="secondary-panel-simple-body">
+		<div className="page-scroll edit-panel-scroll">
 			<MyErrorBoundary>
 				<ImageLibraryEditor
 					key={imageName}

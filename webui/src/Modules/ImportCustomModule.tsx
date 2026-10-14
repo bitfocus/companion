@@ -194,26 +194,39 @@ export function ImportModules(): React.JSX.Element {
 				: 'start Companion with --enable-restricted-modules (or set COMPANION_ENABLE_RESTRICTED_MODULES=1) to allow remote clients.')
 
 	return (
-		<div className="import-module">
-			<span title={importDisabledTooltip}>
-				<FileInputButton color="warning" onFileSelected={loadModuleFile} accept=".tgz" disabled={!importAllowed}>
-					<FontAwesomeIcon icon={faFileImport} className="me-2" />
-					Import module package
+		<div className="flex items-center gap-2 flex-wrap">
+			<span title={importDisabledTooltip ?? 'Install a single module package (.tgz)'}>
+				<FileInputButton
+					color="primary"
+					variant="outline"
+					size="sm"
+					onFileSelected={loadModuleFile}
+					accept=".tgz"
+					disabled={!importAllowed}
+				>
+					<FontAwesomeIcon icon={faFileImport} className="me-1.5" />
+					Import Package
 				</FileInputButton>
 			</span>
-			&nbsp;
-			<span title={importDisabledTooltip}>
-				<FileInputButton color="info" onFileSelected={loadModuleBundle} accept=".tgz,.gz" disabled={!importAllowed}>
-					<FontAwesomeIcon icon={faFileImport} className="me-2" />
-					Import offline module bundle
+
+			<span title={importDisabledTooltip ?? 'Import a module bundle containing multiple packages (.tgz or .gz)'}>
+				<FileInputButton
+					color="primary"
+					variant="outline"
+					size="sm"
+					onFileSelected={loadModuleBundle}
+					accept=".tgz,.gz"
+					disabled={!importAllowed}
+				>
+					<FontAwesomeIcon icon={faFileImport} className="me-1.5" />
+					Import Bundle
 				</FileInputButton>
 			</span>
-			{importError ? (
-				<DismissableAlert color="warning" onClose={() => setImportError(null)}>
+
+			{importError && (
+				<DismissableAlert color="warning" onClose={() => setImportError(null)} className="w-full mt-2 mb-0 text-xs">
 					{importError}
 				</DismissableAlert>
-			) : (
-				''
 			)}
 		</div>
 	)

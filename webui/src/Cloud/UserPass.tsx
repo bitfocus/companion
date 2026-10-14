@@ -58,7 +58,7 @@ export const CloudUserPass = memo(function CloudUserPass({
 				<Grid.Col sm={6}></Grid.Col>
 
 				<Grid.Col sm={6}>
-					<Button color="success" type="submit" disabled={working || !email || !password}>
+					<Button color="primary" type="submit" disabled={working || !email || !password} aria-busy={working}>
 						Log in
 					</Button>
 				</Grid.Col>

@@ -5,19 +5,7 @@ import classNames from 'classnames'
 import * as React from 'react'
 import type { Complete } from '@companion-module/base'
 
-export type ButtonColor =
-	| 'primary'
-	| 'secondary'
-	| 'success'
-	| 'danger'
-	| 'warning'
-	| 'info'
-	| 'light'
-	| 'dark'
-	| 'gray'
-	| 'disabled'
-	| 'link'
-	| 'variable'
+export type ButtonColor = 'primary' | 'secondary' | 'danger'
 
 interface ButtonVisualProps {
 	className?: string
@@ -26,8 +14,11 @@ interface ButtonVisualProps {
 	 * 'ghost' renders a text-only button with no background or border.
 	 * 'inline' goes further: no padding, border or line-height of its own either, for an icon or word sitting
 	 * inside a line of other content (a form label, a table cell) which it must not push around.
+	 * 'icon' is a square, icon-only button that only shows a ground on hover; give it a title or aria-label.
+	 * 'pill' is a standalone toolbar toggle; add a `pill-tone-*` class to colour it by status when active.
+	 * 'filter' is one borderless, fully rounded option in a row of filters.
 	 */
-	variant?: 'ghost' | 'outline' | 'inline'
+	variant?: 'ghost' | 'outline' | 'inline' | 'icon' | 'pill' | 'filter'
 	size?: 'sm' | 'lg'
 	hidden?: boolean
 
@@ -38,7 +29,6 @@ interface ButtonVisualProps {
 function getColorClasses(props: ButtonVisualProps): string {
 	return classNames(
 		'button',
-		'btn', // For backwards compatibility with coreui - should be removed eventually
 		{
 			[`button-${props.variant}-${props.color}`]: props.variant && props.color,
 			[`button-${props.variant}`]: props.variant && !props.color,
@@ -58,6 +48,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
 	{ className, color, variant, size, hidden, active, disabled, children, ...rest },
 	ref
 ) {
+	const ariaLabel = rest['aria-label'] ?? rest.title
+
 	return (
 		<ButtonBase
 			className={getColorClasses({
@@ -69,7 +61,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
 				active,
 				disabled,
 			} satisfies Complete<ButtonVisualProps>)}
-			{...(active && { 'aria-current': 'page' })}
+			aria-label={ariaLabel}
+			{...(active && { 'aria-pressed': true })}
 			{...rest}
 			disabled={disabled}
 			hidden={hidden}

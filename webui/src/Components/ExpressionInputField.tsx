@@ -8,8 +8,13 @@ import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import { ParseExpression } from '@companion-app/shared/Expressions.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
-import { COMPANION_EXPRESSION_LANGUAGE_ID } from '~/Resources/Expression.monarch'
+import {
+	COMPANION_EXPRESSION_LANGUAGE_ID,
+	COMPANION_EXPRESSION_THEME_DARK,
+	COMPANION_EXPRESSION_THEME_LIGHT,
+} from '~/Resources/Expression.monarch'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
+import { themeStore } from '~/Theme/ThemeState.js'
 
 // WebKit (Safari, and all browsers on iOS) paints the native CSS `resize` grabber underneath child
 // content, so the Monaco editor permanently covers it and the handle can't be dragged. Only there do
@@ -165,7 +170,7 @@ export const ExpressionInputField = observer(function ExpressionInputField({
 					onChange={storeValue2}
 					defaultLanguage={COMPANION_EXPRESSION_LANGUAGE_ID}
 					onMount={handleEditorDidMount}
-					theme="companion-expression-light"
+					theme={themeStore.resolved === 'dark' ? COMPANION_EXPRESSION_THEME_DARK : COMPANION_EXPRESSION_THEME_LIGHT}
 					options={{
 						readOnly: disabled,
 						minimap: { enabled: false },

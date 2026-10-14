@@ -1,14 +1,11 @@
-import classNames from 'classnames'
 import { useCallback, useEffect, useState } from 'react'
 import { safeSetLocalStorage } from '~/Helpers/SafeStorage.js'
-import { Button, type ButtonColor } from './Button'
 
 export interface TableVisibilityHelper<T extends Record<string, any>> {
 	visibility: T
 	toggleVisibility: (key: keyof T, forceState?: boolean) => void
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function useTableVisibilityHelper<T extends Record<string, any>>(
 	localStorageKey: string,
 	defaultValue: T
@@ -48,34 +45,4 @@ export function useTableVisibilityHelper<T extends Record<string, any>>(
 		visibility,
 		toggleVisibility,
 	}
-}
-
-interface VisibilityButtonProps<T extends Record<string, boolean>> extends TableVisibilityHelper<T> {
-	keyId: keyof T
-	color: ButtonColor
-	label: string
-	title?: string
-}
-
-export function VisibilityButton<T extends Record<string, any>>({
-	keyId,
-	color,
-	label,
-	title,
-	visibility,
-	toggleVisibility,
-}: VisibilityButtonProps<T>): React.JSX.Element {
-	const doToggle = useCallback(() => toggleVisibility(keyId), [keyId, toggleVisibility])
-
-	return (
-		<Button
-			size="sm"
-			color={color}
-			className={classNames({ active: visibility[keyId] })}
-			onClick={doToggle}
-			title={title}
-		>
-			{label}
-		</Button>
-	)
 }

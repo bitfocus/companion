@@ -94,7 +94,7 @@
 		border: 1px solid transparent;
 		border-radius: 3px;
 		background: transparent;
-		color: var(--color-toolbar-fg);
+		color: var(--color-action-text);
 		cursor: pointer;
 
 		&:hover:not(:disabled):not(.active) {
@@ -103,13 +103,14 @@
 		}
 
 		&.active {
-			background: var(--color-toolbar-accent);
-			border-color: var(--color-toolbar-accent);
-			color: var(--color-on-dark);
+			background: var(--color-selection-bg);
+			border-color: var(--color-selection-border);
+			color: var(--color-selection-text);
+			box-shadow: inset 0 0 0 1px var(--color-selection-border);
 
 			&:hover:not(:disabled) {
-				background: var(--color-toolbar-accent-hover);
-				border-color: var(--color-toolbar-accent-hover);
+				background: var(--color-action-pressed);
+				border-color: var(--color-selection-border);
 			}
 		}
 
@@ -117,6 +118,8 @@
 		&.toolbar-button-danger.active {
 			background: var(--color-danger);
 			border-color: var(--color-danger);
+			color: var(--color-on-dark);
+			box-shadow: none;
 
 			&:hover:not(:disabled) {
 				background: var(--color-danger);
@@ -125,10 +128,16 @@
 		}
 
 		&:disabled {
-			opacity: 0.3;
+			color: var(--color-action-disabled-text);
+			opacity: 1;
 			cursor: default;
 			/* Let the wrapping tooltip trigger receive the hover instead */
 			pointer-events: none;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--color-action-focus);
+			outline-offset: 2px;
 		}
 	}
 

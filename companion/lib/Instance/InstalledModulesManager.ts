@@ -175,6 +175,12 @@ export class InstanceInstalledModulesManager {
 			return
 		}
 
+		// These come from the developer modules folder or ship with Companion, so the store never has them
+		if (versionId === 'dev' || versionId === 'builtin') {
+			this.#logger.warn(`Module "${moduleId}" v${versionId} is not loaded, and can't be installed from the store`)
+			return
+		}
+
 		// Future: track as pending install in the db, and write some retry logic
 
 		const installingModuleId = `${moduleType}-${moduleId}-${versionId ?? 'latest'}`
