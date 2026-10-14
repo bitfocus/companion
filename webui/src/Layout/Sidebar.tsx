@@ -151,7 +151,12 @@ function SidebarMenuItemLabel(item: SidebarMenuItemProps) {
 				)}
 			</span>
 
-			{item.target === '_blank' && <FontAwesomeIcon icon={faExternalLinkSquare} className="ms-1 full-label" />}
+			{item.target === '_blank' && (
+				// Hidden via the wrapper: FontAwesome's unlayered svg styles would override `.full-label` on the icon itself
+				<span className="ms-1 full-label">
+					<FontAwesomeIcon icon={faExternalLinkSquare} />
+				</span>
+			)}
 			{!!item.notifications && <item.notifications />}
 		</>
 	)

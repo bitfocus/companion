@@ -611,10 +611,13 @@
 			display: none;
 		}
 
-		/* if there's a notification, cozy it up to the icon when the sidebar is narrow. */
+		/* With only the icon showing, pin a notification to the corner of the link as a badge. Placing it in the
+		   flow with negative margins left wider counts past the link's clipped edge. */
 		.notification-count {
-			margin-left: -0.75rem;
-			margin-top: -0.25rem;
+			position: absolute;
+			top: 0.125rem;
+			inset-inline-end: 0.125rem;
+			margin: 0;
 		}
 
 		.sidebar-nav .nav-group-items .nav-link {
