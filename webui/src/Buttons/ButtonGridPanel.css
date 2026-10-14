@@ -49,11 +49,6 @@
 	}
 }
 
-.c-sidebar-nav-link,
-.c-sidebar-nav-dropdown-toggle {
-	transition: none;
-}
-
 .button-grid-panel {
 	display: flex;
 	flex-direction: column;

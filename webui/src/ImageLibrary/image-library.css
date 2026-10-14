@@ -51,12 +51,7 @@
 	}
 
 	.image-library-preview-empty {
-		svg,
-		.fa,
-		.fas,
-		.far,
-		.fal,
-		.fab {
+		svg {
 			width: 150px !important;
 			height: 150px !important;
 			font-size: 150px !important;

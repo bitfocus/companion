@@ -15,10 +15,6 @@
 		/* This is a hack, but fixing it properly is a messy task */
 		font-size: 1rem;
 	}
-
-	.button-zero-display-height {
-		margin-bottom: -100%;
-	}
 }
 
 .edit-button-panel .empty-button-state {
@@ -500,9 +496,6 @@
 				}
 			}
 
-			&.last-row {
-				border-bottom: none;
-			}
 			&.selected-row {
 				background-color: var(--color-surface-hover);
 			}
@@ -761,22 +754,6 @@
 		&:focus-visible {
 			color: var(--color-text-strong);
 		}
-	}
-}
-
-.add-layered-element-popover {
-	max-width: 300px;
-	width: 300px;
-
-	.button {
-		width: 100%;
-
-		white-space: nowrap;
-		text-overflow: ellipsis;
-	}
-
-	.button-group-vertical {
-		width: 100%;
 	}
 }
 
