@@ -5,6 +5,7 @@ import { useCallback, useContext, useState } from 'react'
 import { ModuleInstanceType, type ClientInstanceConfigBase } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { Button } from '~/Components/Button'
+import { Note } from '~/Components/Note.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
@@ -92,43 +93,39 @@ export const MissingVersionsWarning = observer(function MissingVersionsWarning({
 	return (
 		<div className="flex flex-col gap-2">
 			{installable > 0 && (
-				<div className="edit-note edit-note-warning flex-wrap" role="status">
-					<FontAwesomeIcon icon={faTriangleExclamation} className="edit-note-icon" aria-hidden="true" />
-					<span className="grow">
-						{installable === 1 ? `1 ${noun} has` : `${installable} ${noun}s have`} no installed module version
-					</span>
-					<Button
-						variant="outline"
-						size="sm"
-						className="inline-flex items-center gap-1.5"
-						onClick={doInstallAllMissing}
-						disabled={installing}
-						aria-busy={installing}
-					>
-						<FontAwesomeIcon icon={faDownload} aria-hidden="true" />
-						Install missing
-					</Button>
-				</div>
+				<Note
+					tone="warning"
+					icon={faTriangleExclamation}
+					actions={
+						<Button
+							variant="outline"
+							size="sm"
+							className="inline-flex items-center gap-1.5"
+							onClick={doInstallAllMissing}
+							disabled={installing}
+							aria-busy={installing}
+						>
+							<FontAwesomeIcon icon={faDownload} aria-hidden="true" />
+							Install missing
+						</Button>
+					}
+				>
+					{installable === 1 ? `1 ${noun} has` : `${installable} ${noun}s have`} no installed module version
+				</Note>
 			)}
 			{devModules.length > 0 && (
-				<div className="edit-note edit-note-warning" role="status">
-					<FontAwesomeIcon icon={faTriangleExclamation} className="edit-note-icon" aria-hidden="true" />
-					<span>
-						{devModules.length === 1
-							? `Unable to load development version of module ${quoteList(devModules)}. Check that it exists in your developer modules folder.`
-							: `Unable to load development versions of modules ${quoteList(devModules)}. Check that they exist in your developer modules folder.`}
-					</span>
-				</div>
+				<Note tone="warning" icon={faTriangleExclamation} actions={null}>
+					{devModules.length === 1
+						? `Unable to load development version of module ${quoteList(devModules)}. Check that it exists in your developer modules folder.`
+						: `Unable to load development versions of modules ${quoteList(devModules)}. Check that they exist in your developer modules folder.`}
+				</Note>
 			)}
 			{builtinModules.length > 0 && (
-				<div className="edit-note edit-note-warning" role="status">
-					<FontAwesomeIcon icon={faTriangleExclamation} className="edit-note-icon" aria-hidden="true" />
-					<span>
-						{builtinModules.length === 1
-							? `Unable to load built-in version of module ${quoteList(builtinModules)}. Your Companion installation may be incomplete.`
-							: `Unable to load built-in versions of modules ${quoteList(builtinModules)}. Your Companion installation may be incomplete.`}
-					</span>
-				</div>
+				<Note tone="warning" icon={faTriangleExclamation} actions={null}>
+					{builtinModules.length === 1
+						? `Unable to load built-in version of module ${quoteList(builtinModules)}. Your Companion installation may be incomplete.`
+						: `Unable to load built-in versions of modules ${quoteList(builtinModules)}. Your Companion installation may be incomplete.`}
+				</Note>
 			)}
 		</div>
 	)

@@ -1,5 +1,11 @@
 import './modules-manage.css'
-import { faEyeSlash, faGamepad, faPlug, type IconDefinition } from '@fortawesome/free-solid-svg-icons'
+import {
+	faCircleExclamation,
+	faEyeSlash,
+	faGamepad,
+	faPlug,
+	type IconDefinition,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
@@ -7,8 +13,8 @@ import { useCallback, useContext, useState } from 'react'
 import semver from 'semver'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { isSomeModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
-import { StaticAlert } from '~/Components/Alert.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { Note, NoteDetail } from '~/Components/Note.js'
 import { SearchBox } from '~/Components/SearchBox.js'
 import { StatusFilterPill } from '~/Components/StatusFilterPill.js'
 import { Table } from '~/Components/Table.js'
@@ -120,11 +126,10 @@ export const ModulesList = observer(function ModulesList({ doManageModule, selec
 		components.push(
 			<tr key="module-list-build-error">
 				<td colSpan={3}>
-					<StaticAlert color="warning" role="alert">
-						Failed to build list of modules:
-						<br />
-						{e?.toString()}
-					</StaticAlert>
+					<Note tone="danger" icon={faCircleExclamation} actions={null}>
+						Failed to build list of modules
+						<NoteDetail>{e?.toString()}</NoteDetail>
+					</Note>
 				</td>
 			</tr>
 		)

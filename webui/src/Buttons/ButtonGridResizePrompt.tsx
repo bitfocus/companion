@@ -1,9 +1,9 @@
-import { faExpand } from '@fortawesome/free-solid-svg-icons'
+import { faTriangleExclamation, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
-import { DismissableAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
+import { Note } from '~/Components/Note.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
@@ -25,20 +25,29 @@ export const ButtonGridResizePrompt = observer(function ButtonGridResizePrompt()
 		setConfigKeyMutation.mutate({ key: 'gridSizePromptGrow', value: false })
 	}
 
+	const count = overflowing.surfaces.length
+
 	return (
-		<>
-			<DismissableAlert color="info" onClose={doDismiss} className="m-0">
-				You have some surfaces which overflow the current grid bounds
-				<ul>
-					{overflowing.surfaces.map((s) => (
-						<li key={s.id}>{s.displayName}</li>
-					))}
-				</ul>
-				<Button color="secondary" onClick={doAutoResize}>
-					<FontAwesomeIcon icon={faExpand} />
-					&nbsp;Resize grid to fit
-				</Button>
-			</DismissableAlert>
-		</>
+		<Note
+			tone="warning"
+			icon={faTriangleExclamation}
+			actions={
+				<>
+					<Button variant="outline" size="sm" onClick={doAutoResize}>
+						Resize grid to fit
+					</Button>
+					<Button variant="icon" size="sm" onClick={doDismiss} title="Don't ask again">
+						<FontAwesomeIcon icon={faXmark} />
+					</Button>
+				</>
+			}
+		>
+			{count === 1 ? '1 surface overflows' : `${count} surfaces overflow`} the grid:
+			<ul className="mt-1 mb-0 ps-4 list-disc">
+				{overflowing.surfaces.map((s) => (
+					<li key={s.id}>{s.displayName}</li>
+				))}
+			</ul>
+		</Note>
 	)
 })

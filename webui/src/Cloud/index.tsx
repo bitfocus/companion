@@ -1,12 +1,19 @@
-import { faCloud, faKey, faLock, faServer, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import {
+	faCircleInfo,
+	faCloud,
+	faKey,
+	faLock,
+	faServer,
+	faTriangleExclamation,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
+import { Note } from '~/Components/Note.js'
 import './cloud.css'
 import { memo, useId, useState } from 'react'
 import type { CloudControllerState } from '@companion-app/shared/Model/Cloud.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button'
-import { Callout } from '~/Components/Callout.js'
 import { CopyButton } from '~/Components/CopyButton.js'
 import { FormLabel } from '~/Components/Form.js'
 import { SwitchInputFieldWithLabel } from '~/Components/SwitchInputField.js'
@@ -199,9 +206,9 @@ function RegionsList({ regionIds, cloudActive, canActivate }: RegionsListProps) 
 				)}
 
 				{cloudActive && (
-					<Callout color="info" className="mb-3">
+					<Note tone="neutral" icon={faCircleInfo} actions={null} className="mb-3">
 						Companion Cloud is currently activated. Deactivate above to change regions.
-					</Callout>
+					</Note>
 				)}
 
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-3">

@@ -12,11 +12,11 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { Button } from '~/Components/Button'
-import '~/Components/EditSectionCard.css'
 import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { InputValidityIcon, type InputValidity } from '~/Components/InputValidity.js'
+import { Note } from '~/Components/Note.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { EntityListActionContext, useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -61,14 +61,11 @@ export const ButtonReferenceEditor = observer(function ButtonReferenceEditor({
 
 	return (
 		<>
-			<div className="edit-note my-2">
-				<FontAwesomeIcon icon={faClone} className="edit-note-icon" aria-hidden="true" />
-				<div>
-					<strong className="block text-text-strong font-medium">Mirrored button</strong>
-					<div>Appearance and presses follow the source button.</div>
-					<div className="mt-1">Choose Edit above to make an independent, editable copy.</div>
-				</div>
-			</div>
+			<Note tone="neutral" icon={faClone} actions={null} className="my-2">
+				<strong className="block text-text-strong font-medium">Mirrored button</strong>
+				<div>Appearance and presses follow the source button.</div>
+				<div className="mt-1">Choose Edit above to make an independent, editable copy.</div>
+			</Note>
 
 			<Form row className="gap-2" onSubmit={PreventDefaultHandler}>
 				<FormLabel htmlFor={fieldId} sm={4} column="sm">

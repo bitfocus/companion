@@ -28,6 +28,7 @@ import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { Note } from '~/Components/Note.js'
 import { StatusBadge } from '~/Components/StatusBadge.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
@@ -361,10 +362,9 @@ const InstanceConfigArea = observer(function InstanceConfigArea<TConfig extends 
 	if (panelStore.notRunningReason === 'disabled' || panelStore.notRunningReason === 'missing') {
 		return (
 			<EditSectionCard title="Configuration">
-				<div className="edit-note">
-					<FontAwesomeIcon icon={faPowerOff} className="edit-note-icon" />
+				<Note tone="neutral" icon={faPowerOff} actions={null}>
 					Enable this {panelStore.service.moduleTypeDisplayName} to edit its configuration
-				</div>
+				</Note>
 			</EditSectionCard>
 		)
 	}
@@ -406,10 +406,9 @@ const InstanceConfigFields = observer(function InstanceConfigFields<TConfig exte
 
 	if (configData.fields.length === 0) {
 		return (
-			<div className="edit-note">
-				<FontAwesomeIcon icon={faCircleCheck} className="edit-note-icon edit-note-icon-good" />
+			<Note tone="good" icon={faCircleCheck} actions={null}>
 				This {panelStore.service.moduleTypeDisplayName} requires no configuration
-			</div>
+			</Note>
 		)
 	}
 

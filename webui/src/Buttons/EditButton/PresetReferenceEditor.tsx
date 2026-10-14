@@ -1,14 +1,13 @@
-import { faLink } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faLink, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId } from 'react'
 import type { PresetReferenceButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation, DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
-import { Callout } from '~/Components/Callout.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
+import { Note } from '~/Components/Note.js'
 import VariableInputGroup from '~/Components/VariableInputGroup.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler, useComputed } from '~/Resources/util.js'
@@ -58,22 +57,16 @@ export const PresetReferenceEditor = observer(function PresetReferenceEditor({
 
 	return (
 		<>
-			<Callout color="info" className="my-2">
-				<div className="flex gap-2">
-					<FontAwesomeIcon icon={faLink} className="mt-1" />
-					<div>
-						This button is <strong>linked</strong> to a preset. It updates automatically when the preset changes.
-						<br />
-						Use <strong>Edit</strong> above to unlink it into a normal, fully editable button.
-					</div>
-				</div>
-			</Callout>
+			<Note tone="neutral" icon={faLink} actions={null} className="my-2">
+				This button is <strong>linked</strong> to a preset, and updates automatically when the preset changes. Use{' '}
+				<strong>Edit</strong> above to unlink it into a normal, fully editable button.
+			</Note>
 
 			{!sourceAvailable && (
-				<Callout color="warning" className="my-2">
+				<Note tone="warning" icon={faTriangleExclamation} actions={null} className="my-2">
 					The source {connectionInfo ? 'connection is disabled' : 'connection no longer exists'}. This button is showing
 					its last known state.
-				</Callout>
+				</Note>
 			)}
 
 			<Form row className="gap-2" onSubmit={PreventDefaultHandler}>

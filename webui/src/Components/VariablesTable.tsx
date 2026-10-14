@@ -1,4 +1,5 @@
-import { faExclamationTriangle, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faCircleExclamation, faExclamationTriangle, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { Note, NoteDetail } from '~/Components/Note.js'
 import './VariablesTable.css'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { prepare as fuzzyPrepare } from 'fuzzysort'
@@ -13,7 +14,6 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { VariableDefinitionExt } from '~/Stores/VariablesStore.js'
 import { fuzzyFilterSort } from '~/util/fuzzy.js'
 import { useVariablesValuesForLabel } from '~/Variables/useVariablesValuesForLabel.js'
-import { StaticAlert } from './Alert.js'
 import { CopyButton } from './CopyButton.js'
 import { SearchBox } from './SearchBox.js'
 import { VariableValueDisplay } from './VariableValueDisplay.js'
@@ -100,11 +100,10 @@ export const VariablesTable = observer(function VariablesTable({ label }: Variab
 			</div>
 			<div className="variables-table-scroller" ref={parentRef}>
 				{errorMsg && (
-					<StaticAlert color="warning" role="alert">
-						Failed to build list of variables:
-						<br />
-						{errorMsg}
-					</StaticAlert>
+					<Note tone="danger" icon={faCircleExclamation} actions={null}>
+						Failed to build list of variables
+						<NoteDetail>{errorMsg}</NoteDetail>
+					</Note>
 				)}
 				{candidates?.length === 0 && !!filter && <NonIdealState icon={faSearch} text="No variables match the filter" />}
 				<div

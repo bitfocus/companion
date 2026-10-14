@@ -75,38 +75,3 @@
 		grid-column: 1;
 	}
 }
-
-/* Compact one-line note shown in place of the config fields (none defined, or not editable right now) */
-.edit-note {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	padding: 0.5rem 0.75rem;
-	border: 1px solid var(--color-border-soft);
-	border-radius: 0.5rem;
-	background-color: var(--color-surface-subtle);
-	font-size: 0.8125rem;
-	color: var(--color-muted);
-}
-
-.edit-note-icon {
-	flex-shrink: 0;
-	opacity: 0.8;
-}
-
-/* A note asking for attention: warning-tinted, with the body colour for the text so it stays readable */
-.edit-note-warning {
-	border-color: color-mix(in srgb, var(--color-tone-warning-fill) 35%, transparent);
-	background-color: color-mix(in srgb, var(--color-tone-warning-fill) 8%, transparent);
-	color: var(--color-body-text);
-
-	.edit-note-icon {
-		color: var(--color-tone-warning-text);
-		opacity: 1;
-	}
-}
-
-.edit-note-icon-good {
-	color: var(--color-tone-good-text);
-	opacity: 1;
-}

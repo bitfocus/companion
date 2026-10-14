@@ -1,6 +1,14 @@
 import '../Modules/modules-manage.css'
+import { Note, NoteDetail } from '~/Components/Note.js'
 import './AddInstancePanel.css'
-import { faArrowLeft, faFileLines, faGamepad, faPlug, faPlus } from '@fortawesome/free-solid-svg-icons'
+import {
+	faArrowLeft,
+	faCircleExclamation,
+	faFileLines,
+	faGamepad,
+	faPlug,
+	faPlus,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Link } from '@tanstack/react-router'
 import classNames from 'classnames'
@@ -89,11 +97,10 @@ export const AddInstancePanel = observer(function AddInstancePanel({ service }: 
 
 		candidates = []
 		candidates.push(
-			<StaticAlert color="warning" role="alert" key="error">
-				Failed to build list of modules:
-				<br />
-				{e?.toString()}
-			</StaticAlert>
+			<Note key="error" tone="danger" icon={faCircleExclamation} actions={null}>
+				Failed to build list of modules
+				<NoteDetail>{e?.toString()}</NoteDetail>
+			</Note>
 		)
 	}
 
