@@ -202,30 +202,26 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton, savin
 					{selectedLocation && !controlInfo && <span>Select a configured button to save actions.</span>}
 				</div>
 				<div className="recorder-destination-fields">
-					{
-						<div>
-							<FormLabel htmlFor={stepInputId}>Step</FormLabel>
-							<SimpleDropdownInputField
-								id={stepInputId}
-								choices={actionStepOptions}
-								value={selectedStep ?? ''}
-								setValue={setSelectedStep as (val: DropdownChoiceId) => void}
-								disabled={!controlInfo || saving}
-							/>
-						</div>
-					}
-					{
-						<div>
-							<FormLabel htmlFor={setInputId}>Action group</FormLabel>
-							<SimpleDropdownInputField
-								id={setInputId}
-								choices={actionSetOptions}
-								value={selectedSet ?? ''}
-								setValue={setSelectedSet as (val: DropdownChoiceId) => void}
-								disabled={!controlInfo || saving}
-							/>
-						</div>
-					}
+					<div>
+						<FormLabel htmlFor={stepInputId}>Step</FormLabel>
+						<SimpleDropdownInputField
+							id={stepInputId}
+							choices={actionStepOptions}
+							value={selectedStep ?? ''}
+							setValue={setSelectedStep as (val: DropdownChoiceId) => void}
+							disabled={!controlInfo || saving}
+						/>
+					</div>
+					<div>
+						<FormLabel htmlFor={setInputId}>Action group</FormLabel>
+						<SimpleDropdownInputField
+							id={setInputId}
+							choices={actionSetOptions}
+							value={selectedSet ?? ''}
+							setValue={setSelectedSet as (val: DropdownChoiceId) => void}
+							disabled={!controlInfo || saving}
+						/>
+					</div>
 				</div>
 				<div className="recorder-destination-buttons">
 					<Button

@@ -19,7 +19,7 @@ import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { KeyReceiver } from '~/Resources/util.js'
+import { assertNever, KeyReceiver } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ButtonReferenceEditor } from './ButtonReferenceEditor.js'
 import { ControlClearButton } from './ControlClearButton.js'
@@ -93,6 +93,26 @@ export const EditButton = observer(function EditButton({ location, onKeyUp, navi
 	)
 })
 
+function buttonTypeLabel(type: SomeButtonModel['type']): string {
+	switch (type) {
+		case 'button-layered':
+			return 'Regular button'
+		case 'preset-reference':
+			return 'Preset reference'
+		case 'button-reference':
+			return 'Button reference'
+		case 'pageup':
+			return 'Page up'
+		case 'pagedown':
+			return 'Page down'
+		case 'pagenum':
+			return 'Page number'
+		default:
+			assertNever(type)
+			return 'Unknown'
+	}
+}
+
 interface EditButtonContentProps {
 	resetModalRef: React.RefObject<GenericConfirmModalRef | null>
 	controlId: string
@@ -117,18 +137,7 @@ const EditButtonContent = observer(function EditButton({
 			: undefined
 	const setControlNotes = useControlNotesSetter(controlId)
 	const notesState = useNotesEditor(controlId, controlNotes, setControlNotes)
-	const typeLabel =
-		config.type === 'button-layered'
-			? 'Regular button'
-			: config.type === 'preset-reference'
-				? 'Preset reference'
-				: config.type === 'button-reference'
-					? 'Button reference'
-					: config.type === 'pageup'
-						? 'Page up'
-						: config.type === 'pagedown'
-							? 'Page down'
-							: 'Page number'
+	const typeLabel = buttonTypeLabel(config.type)
 
 	const resetControlsMutation = useMutationExt(trpc.controls.resetControls.mutationOptions())
 	const changeToRegularButton = useCallback(() => {
