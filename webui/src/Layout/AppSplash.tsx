@@ -8,6 +8,7 @@ import { ProgressBar } from '~/Components/ProgressBar.js'
 import { SecretTextInputField } from '~/Components/SecretTextInputField.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import './AppSplash.css'
+import { makeAbsolutePath } from '~/Resources/util.js'
 
 interface AppLoadingProps {
 	progress: number
@@ -19,7 +20,7 @@ export function AppLoading({ progress, connected }: AppLoadingProps): React.JSX.
 		<div className="app-splash select-none">
 			<div className="app-splash-card">
 				<div className="app-splash-logo">
-					<img src="/img/icons/128x128.png" alt="Bitfocus Companion" />
+					<img src={makeAbsolutePath('/img/icons/128x128.png')} alt="Bitfocus Companion" />
 				</div>
 
 				<h3 className="text-lg font-bold text-body mb-1">
@@ -96,7 +97,7 @@ export const AppAuthWrapper = observer(function AppAuthWrapper({ setUnlocked }: 
 		<div className="app-splash fadeIn">
 			<div className="app-splash-card">
 				<div className="app-splash-logo">
-					<img src="/img/icons/128x128.png" alt="Bitfocus Companion" />
+					<img src={makeAbsolutePath('/img/icons/128x128.png')} alt="Bitfocus Companion" />
 					<span className="app-splash-logo-badge">
 						<FontAwesomeIcon icon={faLock} />
 					</span>
