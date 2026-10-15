@@ -30,6 +30,7 @@ export const FONT_DEFINITIONS = [
 	{ pathOnDisk: generateFontUrl('NotoSansLinearA-Regular.ttf'), name: 'Companion-symbols5' },
 	{ pathOnDisk: generateFontUrl('NotoSansLinearB-Regular.ttf'), name: 'Companion-symbols6' },
 	{ pathOnDisk: generateFontUrl('NotoSansGurmukhi-Regular.ttf'), name: 'Companion-gurmukhi' },
+	{ pathOnDisk: generateFontUrl('NotoSansTamil-Regular.ttf'), name: 'Companion-tamil' },
 	{ pathOnDisk: generateFontUrl('NotoSansSC-Regular.ttf'), name: 'Companion-simplified-chinese' },
 	{ pathOnDisk: generateFontUrl('NotoSansKR-Regular.ttf'), name: 'Companion-korean' },
 	{ pathOnDisk: generateFontUrl('NotoColorEmoji-compat.ttf'), name: 'Companion-emoji' },

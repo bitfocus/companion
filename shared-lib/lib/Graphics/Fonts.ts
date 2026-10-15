@@ -9,6 +9,7 @@ const DEFAULT_FONTS = [
 	'Companion-symbols5',
 	'Companion-symbols6',
 	'Companion-gurmukhi',
+	'Companion-tamil',
 	'Companion-simplified-chinese',
 	'Companion-korean',
 	'Companion-emoji',
