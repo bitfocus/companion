@@ -451,7 +451,7 @@ export const ButtonInfiniteGrid = forwardRef<ButtonInfiniteGridRef, ButtonInfini
 		return (
 			<div
 				ref={setRef}
-				className={classNames('button-infinite-grid', {
+				className={classNames('button-grid-scroller', 'button-infinite-grid', {
 					'button-armed': isHot,
 					'button-grid-panning': isPanning,
 				})}
@@ -506,6 +506,8 @@ export const PrimaryButtonGridIcon = memo(function PrimaryButtonGridIcon({
 		<GridButtonCell
 			location={location}
 			renderSize={DEFAULT_PREVIEW_RENDER_SIZE}
+			feedback="bitmap"
+			leds={null}
 			style={style}
 			contextMenuOpen={contextMenuOpen}
 		/>

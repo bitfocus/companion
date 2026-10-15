@@ -104,7 +104,9 @@
     "@types/express-serve-static-core": "^5.1.0",
     "node-gyp": "^12.3.0",
     "serialize-javascript": "^7.0.3",
-    "webpack-bundle-analyzer": "^5.0.0"
+    "webpack-bundle-analyzer": "^5.0.0",
+    "@companion-surface/host": "1.5.0-nightly-main-20261014-213723-0afe929",
+    "@companion-surface/base": "1.5.0-nightly-main-20261014-213444-0afe929"
   },
   "dependenciesMeta": {
     "@sentry/cli": {

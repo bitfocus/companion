@@ -15,6 +15,8 @@ function setup(props: Partial<Props> = {}) {
 	const baseProps: Props = {
 		location,
 		image: null,
+		color: null,
+		overlay: null,
 		style: { left: 0, top: 0 },
 		title: '1/2/3',
 		placeholder: '2/3',
@@ -44,6 +46,23 @@ function setup(props: Partial<Props> = {}) {
 }
 
 describe('GridButtonPreview', () => {
+	describe('a control which shows only a colour', () => {
+		it('is filled with the colour, with no placeholder over it', () => {
+			const { root } = setup({ color: 'rgba(255, 0, 0, 1)' })
+			const border = root.querySelector('.button-border') as HTMLElement
+
+			expect(border.style.backgroundColor).toBe('rgb(255, 0, 0)')
+			expect(border.style.backgroundImage).toBe('')
+			expect(root.querySelector('.button-placeholder')).toBeNull()
+		})
+
+		it('shows the placeholder when there is no colour, as an empty button does', () => {
+			const { root } = setup({ color: null })
+
+			expect(root.querySelector('.button-placeholder')).toHaveTextContent('2/3')
+		})
+	})
+
 	describe('select mode', () => {
 		it('commits a tap on release, not on press', () => {
 			const { root, onTap } = setup()
@@ -190,6 +209,33 @@ describe('GridButtonPreview', () => {
 			unmount()
 
 			expect(onPress).toHaveBeenNthCalledWith(2, location, false)
+		})
+
+		it('keeps a button held through a re-render which hands it a new but equal location', () => {
+			// A surface view builds each control's location afresh every render, and the hover alone re-renders it
+			const { root, onPress, rerender } = setup({ pressMode: true })
+
+			fireEvent.pointerDown(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50 })
+			rerender({ location: { ...location } })
+
+			expect(onPress).toHaveBeenCalledTimes(1)
+
+			fireEvent.pointerUp(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50 })
+			expect(onPress).toHaveBeenNthCalledWith(2, location, false)
+		})
+
+		it('releases the location that was pressed when the location changes mid-press', () => {
+			// A surface view keeps the cell mounted across a page change
+			const { root, onPress, rerender } = setup({ pressMode: true })
+
+			fireEvent.pointerDown(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50 })
+			rerender({ location: { ...location, pageNumber: 2 } })
+
+			fireEvent.pointerUp(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50 })
+			expect(onPress.mock.calls).toEqual([
+				[location, true],
+				[location, false],
+			])
 		})
 	})
 

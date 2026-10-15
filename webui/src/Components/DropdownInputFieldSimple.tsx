@@ -116,6 +116,7 @@ export const SimpleDropdownInputField = observer(function SimpleDropdownInputFie
 														key={JSON.stringify(opt.value)}
 														value={opt.value}
 														className="dropdown-field-item"
+														disabled={opt.disabled}
 													>
 														<Select.ItemText>{opt.label}</Select.ItemText>
 													</Select.Item>
@@ -124,7 +125,12 @@ export const SimpleDropdownInputField = observer(function SimpleDropdownInputFie
 										)
 									}
 									return (
-										<Select.Item key={JSON.stringify(item.value)} value={item.value} className="dropdown-field-item">
+										<Select.Item
+											key={JSON.stringify(item.value)}
+											value={item.value}
+											className="dropdown-field-item"
+											disabled={item.disabled}
+										>
 											<Select.ItemText>{item.label}</Select.ItemText>
 										</Select.Item>
 									)

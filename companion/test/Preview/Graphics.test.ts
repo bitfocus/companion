@@ -25,6 +25,7 @@ const STRIP_SIZE: PreviewRenderSize = { width: 480, height: 240 }
 function makeRender(tag: string): ImageResult {
 	return {
 		style: { type: 'button' },
+		bgcolor: 0xff0000,
 		drawNativeEncoded: vi.fn(async (width: number, height: number) => `${tag}:${width}x${height}`),
 	} as unknown as ImageResult
 }
@@ -59,7 +60,12 @@ describe('PreviewGraphics location subscription', () => {
 	test('draws at the default size when none is asked for', async () => {
 		const sub = new SubscriptionTester(await watchLocation())
 
-		expect(await sub.next()).toEqual({ image: 'initial:288x288', isUsed: true })
+		expect(await sub.next()).toEqual({
+			image: 'initial:288x288',
+			isUsed: true,
+			color: 'rgba(255, 0, 0, 1)',
+			leds: null,
+		})
 
 		await sub.cleanup()
 	})
@@ -67,7 +73,12 @@ describe('PreviewGraphics location subscription', () => {
 	test('draws at the size that was asked for', async () => {
 		const sub = new SubscriptionTester(await watchLocation(STRIP_SIZE))
 
-		expect(await sub.next()).toEqual({ image: 'initial:480x240', isUsed: true })
+		expect(await sub.next()).toEqual({
+			image: 'initial:480x240',
+			isUsed: true,
+			color: 'rgba(255, 0, 0, 1)',
+			leds: null,
+		})
 
 		await sub.cleanup()
 	})
@@ -82,8 +93,18 @@ describe('PreviewGraphics location subscription', () => {
 		const redraw = makeRender('redraw')
 		graphics.emit('button_drawn', location, redraw)
 
-		expect(await square.next()).toEqual({ image: 'redraw:288x288', isUsed: true })
-		expect(await strip.next()).toEqual({ image: 'redraw:480x240', isUsed: true })
+		expect(await square.next()).toEqual({
+			image: 'redraw:288x288',
+			isUsed: true,
+			color: 'rgba(255, 0, 0, 1)',
+			leds: null,
+		})
+		expect(await strip.next()).toEqual({
+			image: 'redraw:480x240',
+			isUsed: true,
+			color: 'rgba(255, 0, 0, 1)',
+			leds: null,
+		})
 
 		await square.cleanup()
 		await strip.cleanup()
@@ -100,7 +121,12 @@ describe('PreviewGraphics location subscription', () => {
 		const redraw = makeRender('redraw')
 		graphics.emit('button_drawn', location, redraw)
 
-		expect(await square.next()).toEqual({ image: 'redraw:288x288', isUsed: true })
+		expect(await square.next()).toEqual({
+			image: 'redraw:288x288',
+			isUsed: true,
+			color: 'rgba(255, 0, 0, 1)',
+			leds: null,
+		})
 
 		// The strip is no longer watched, so nothing was drawn for it
 		const drawnSizes = (redraw.drawNativeEncoded as any).mock.calls.map(([w, h]: [number, number]) => `${w}x${h}`)

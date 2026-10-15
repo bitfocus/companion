@@ -1,6 +1,7 @@
 import EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 import z from 'zod'
+import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
 import {
 	ExpressionableOptionsObjectSchema,
@@ -124,7 +125,9 @@ export class PreviewGraphics {
 					this.#renderEvents.emit(`location:${subId}`, {
 						image: await render.drawNativeEncoded(size.width, size.height, null, 'png'),
 						isUsed: !!render.style,
-					})
+						color: parseColor(render.bgcolor),
+						leds: render.style?.leds ?? null,
+					} satisfies WrappedImage)
 				}
 
 				for (const previewSession of this.#buttonReferencePreviews.values()) {
@@ -178,7 +181,12 @@ export class PreviewGraphics {
 
 						const render = self.#graphicsController.getCachedRenderOrGeneratePlaceholder(location)
 						const dataUrl = await render.drawNativeEncoded(size.width, size.height, null, 'png')
-						yield { image: dataUrl, isUsed: !!render.style } satisfies WrappedImage
+						yield {
+							image: dataUrl,
+							isUsed: !!render.style,
+							color: parseColor(render.bgcolor),
+							leds: render.style?.leds ?? null,
+						} satisfies WrappedImage
 
 						for await (const [image] of changes) {
 							yield image

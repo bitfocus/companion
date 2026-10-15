@@ -1,5 +1,5 @@
 import classnames from 'classnames'
-import { memo, useCallback, useEffect, useRef } from 'react'
+import { memo, useCallback, useEffect, useEffectEvent, useRef } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { useImagePreloader } from '~/Components/ButtonPreview.js'
 import type { GridPendingChange } from './GridGeometry.js'
@@ -21,6 +21,10 @@ export interface GridButtonModifiers {
 export interface GridButtonPreviewProps {
 	location: ControlLocation
 	image: string | null
+	/** Fill the button with this colour instead of an image, for a control which shows only a colour */
+	color: string | null
+	/** Drawn over the button, for what a surface control shows besides it (its leds) */
+	overlay: React.ReactNode
 	style: React.CSSProperties
 	title: string
 	placeholder: string
@@ -68,6 +72,8 @@ export interface GridButtonPreviewProps {
 export const GridButtonPreview = memo(function GridButtonPreview({
 	location,
 	image,
+	color,
+	overlay,
 	style,
 	title,
 	placeholder,
@@ -92,23 +98,27 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 
 	// Tracks the in-flight gesture. Null between gestures.
 	const gestureRef = useRef<{ pointerId: number; startX: number; startY: number; moved: boolean } | null>(null)
-	// Whether a real press is outstanding, so we can guarantee a matching release
-	const isPressedRef = useRef(false)
+	// Where an outstanding press went down, so the release goes there even if the location changes mid-press
+	// (e.g. a page change while a surface view keeps this cell mounted)
+	const pressedLocationRef = useRef<ControlLocation | null>(null)
 
 	const releaseIfPressed = useCallback(() => {
-		if (!isPressedRef.current) return
-		isPressedRef.current = false
-		onPress(location, false)
-	}, [onPress, location])
+		const pressedLocation = pressedLocationRef.current
+		if (!pressedLocation) return
+		pressedLocationRef.current = null
+		onPress(pressedLocation, false)
+	}, [onPress])
 
 	// The pointer events match every press with a release in the normal cases, but two escape them:
 	// press mode being turned off mid-press, and this cell unmounting while the finger is still down
 	// (the grid virtualises cells, so one can vanish under a held press). Both arrive here as cleanup,
-	// so the control is never left stuck down.
+	// so the control is never left stuck down. An effect event, as a re-render mid-press recreates the callback,
+	// which must not count as either.
+	const releaseOnExit = useEffectEvent(releaseIfPressed)
 	useEffect(() => {
 		if (!pressMode) return
-		return () => releaseIfPressed()
-	}, [pressMode, releaseIfPressed])
+		return () => releaseOnExit()
+	}, [pressMode])
 
 	const handlePointerDown = useCallback(
 		(e: React.PointerEvent<HTMLDivElement>) => {
@@ -120,7 +130,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 			if (pressMode) {
 				// Capture so the release still reaches us if the finger slides off the button
 				e.currentTarget.setPointerCapture?.(e.pointerId)
-				isPressedRef.current = true
+				pressedLocationRef.current = location
 				onPress(location, true)
 			}
 		},
@@ -213,10 +223,14 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 		>
 			<div
 				className="button-border"
-				style={{ backgroundImage: preloadedImage ? `url(${preloadedImage})` : undefined }}
+				style={{
+					backgroundImage: preloadedImage ? `url(${preloadedImage})` : undefined,
+					backgroundColor: color ?? undefined,
+				}}
 				title={title}
 			>
-				{!preloadedImage && <div className="button-placeholder">{placeholder}</div>}
+				{!preloadedImage && !color && <div className="button-placeholder">{placeholder}</div>}
+				{overlay}
 				{/* Drawn for any cell something is heading to, image or not: with no image it paints an
 				    empty button, which is how the end of a swap that empties is shown. Without it that
 				    cell would still be showing the button that is about to leave it. */}

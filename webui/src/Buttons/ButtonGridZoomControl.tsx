@@ -1,20 +1,23 @@
-import { faMagnifyingGlass, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faCheck, faMagnifyingGlass, faMinus, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Button } from '~/Components/Button.js'
 import { InputGroup, InputGroupText } from '~/Components/Form.js'
 import { NumberInputField, SliderInputField } from '~/Components/NumberInputField.js'
 import { Popover } from '~/Components/Popover.js'
-import { ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, type GridZoomController } from './GridZoom.js'
+import { ZOOM_MAX, ZOOM_MIN, ZOOM_STEP, type GridZoomController, type ZoomFit } from './GridZoom.js'
 
 export interface ButtonGridZoomControlProps {
 	useCompactButtons: boolean
 	gridZoomValue: number
 	gridZoomController: GridZoomController
+	/** The fit mode, for a zoom which can follow the space it is shown in; null where there is none */
+	fit: ZoomFit | null
 }
 export function ButtonGridZoomControl({
 	useCompactButtons,
 	gridZoomValue,
 	gridZoomController,
+	fit,
 }: ButtonGridZoomControlProps): React.JSX.Element {
 	return (
 		<Popover.Root>
@@ -50,6 +53,11 @@ export function ButtonGridZoomControl({
 					<InputGroupText>%</InputGroupText>
 				</InputGroup>
 				<Popover.Item onClick={gridZoomController.zoomReset}>Scale to 100%</Popover.Item>
+				{fit && (
+					<Popover.Item onClick={fit.enable} title="Keep the whole surface in view as the space changes">
+						Fit to panel {fit.active && <FontAwesomeIcon icon={faCheck} className="ms-1" />}
+					</Popover.Item>
+				)}
 			</Popover.Popup>
 		</Popover.Root>
 	)
