@@ -223,6 +223,20 @@ describe('GridButtonPreview', () => {
 			fireEvent.pointerUp(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50 })
 			expect(onPress).toHaveBeenNthCalledWith(2, location, false)
 		})
+
+		it('releases the location that was pressed when the location changes mid-press', () => {
+			// A surface view keeps the cell mounted across a page change
+			const { root, onPress, rerender } = setup({ pressMode: true })
+
+			fireEvent.pointerDown(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50 })
+			rerender({ location: { ...location, pageNumber: 2 } })
+
+			fireEvent.pointerUp(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50 })
+			expect(onPress.mock.calls).toEqual([
+				[location, true],
+				[location, false],
+			])
+		})
 	})
 
 	describe('context menu', () => {

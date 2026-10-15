@@ -98,20 +98,22 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 
 	// Tracks the in-flight gesture. Null between gestures.
 	const gestureRef = useRef<{ pointerId: number; startX: number; startY: number; moved: boolean } | null>(null)
-	// Whether a real press is outstanding, so we can guarantee a matching release
-	const isPressedRef = useRef(false)
+	// Where an outstanding press went down, so the release goes there even if the location changes mid-press
+	// (e.g. a page change while a surface view keeps this cell mounted)
+	const pressedLocationRef = useRef<ControlLocation | null>(null)
 
 	const releaseIfPressed = useCallback(() => {
-		if (!isPressedRef.current) return
-		isPressedRef.current = false
-		onPress(location, false)
-	}, [onPress, location])
+		const pressedLocation = pressedLocationRef.current
+		if (!pressedLocation) return
+		pressedLocationRef.current = null
+		onPress(pressedLocation, false)
+	}, [onPress])
 
 	// The pointer events match every press with a release in the normal cases, but two escape them:
 	// press mode being turned off mid-press, and this cell unmounting while the finger is still down
 	// (the grid virtualises cells, so one can vanish under a held press). Both arrive here as cleanup,
-	// so the control is never left stuck down. An effect event, as a re-render mid-press recreates the callback (a
-	// surface view hands over a new but equal location each time), which must not count as either.
+	// so the control is never left stuck down. An effect event, as a re-render mid-press recreates the callback,
+	// which must not count as either.
 	const releaseOnExit = useEffectEvent(releaseIfPressed)
 	useEffect(() => {
 		if (!pressMode) return
@@ -128,7 +130,7 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 			if (pressMode) {
 				// Capture so the release still reaches us if the finger slides off the button
 				e.currentTarget.setPointerCapture?.(e.pointerId)
-				isPressedRef.current = true
+				pressedLocationRef.current = location
 				onPress(location, true)
 			}
 		},

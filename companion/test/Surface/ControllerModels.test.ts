@@ -47,7 +47,7 @@ function createController() {
 		return undefined
 	})
 
-	return { controller: new SurfaceController(db as any, deps), db }
+	return { controller: new SurfaceController(db as any, deps, true), db }
 }
 
 describe('surface models', () => {
