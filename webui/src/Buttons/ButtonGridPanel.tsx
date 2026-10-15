@@ -1,6 +1,7 @@
 import { faHome, faTableCells } from '@fortawesome/free-solid-svg-icons'
 import './ButtonGridPanel.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -146,11 +147,12 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 	const contentStyle = useMemo(
 		() => ({
 			minHeight: viewportMinHeight,
-			height: viewportPreferredHeight,
+			// A surface sizes the panel to its face instead, as it is rarely the shape of the grid
+			height: surfaceView ? undefined : viewportPreferredHeight,
 			'--pending-change-color':
 				pendingChangesJoin === 'held-buttons' ? 'var(--color-copy-source)' : 'var(--color-grid-selection)',
 		}),
-		[viewportMinHeight, viewportPreferredHeight, pendingChangesJoin]
+		[viewportMinHeight, viewportPreferredHeight, surfaceView, pendingChangesJoin]
 	)
 	const focus = useGridFocus()
 
@@ -220,7 +222,13 @@ export const ButtonsGridPanel = observer(function ButtonsPage({
 			{/* Rendered inside the grid's own styles, so the ghost is drawn the way the grid draws buttons */}
 			<GridButtonDragOverlay />
 
-			<div className="button-grid-panel-content" style={contentStyle} ref={setContentElement}>
+			<div
+				className={classNames('button-grid-panel-content', {
+					'button-grid-panel-content-fit': !!surfaceView,
+				})}
+				style={contentStyle}
+				ref={setContentElement}
+			>
 				{hasBeenInView &&
 					gridSize &&
 					(surfaceView ? (

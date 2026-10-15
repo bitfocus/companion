@@ -117,6 +117,18 @@
 	min-height: 0;
 	border-radius: 8px;
 	background-color: var(--color-surface-dark);
+
+	/* Wrapped tightly around what it shows, scrolling only once the panel has no more room to give */
+	&.button-grid-panel-content-fit {
+		display: flex;
+		flex-direction: column;
+		width: fit-content;
+
+		> * {
+			flex: 0 1 auto;
+			min-height: 0;
+		}
+	}
 }
 
 /* The dark scrolling face shared by the button grid and by a surface drawn in its place: the same

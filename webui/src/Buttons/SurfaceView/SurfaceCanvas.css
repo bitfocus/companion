@@ -4,9 +4,8 @@
 /* The scrolling surface itself is `.button-grid-scroller` (the dark ground and scrollbars shared with
    the infinite grid); only its own max-width lives here. */
 .surface-canvas-viewport {
-	/* Fill the space so a face taller or wider than it scrolls, rather than growing the panel. Matches
-	   `.button-infinite-grid`, which fills the same way to get its scrollbars. */
-	height: 100%;
+	/* The panel content sizes itself to this, and shrinks it once it has no more room, so a face too big to
+	   fit scrolls rather than growing the panel */
 	max-width: 100%;
 	box-sizing: border-box;
 
@@ -18,6 +17,7 @@
    ground to frame, and the rounding only clips the ends off the scrollbars. */
 .button-grid-panel-content:has(> .surface-canvas-viewport.has-face:not(.button-armed)) {
 	border-radius: 0;
+	background-color: transparent;
 }
 
 /* A surface which describes its own face is the device itself, so it sits on the page rather than on the

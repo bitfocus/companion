@@ -161,15 +161,16 @@ describe('viewing as a surface', () => {
 
 	// The banner says the grid is not showing all of itself
 	it('shows no banner while the view is off', () => {
-		const { container } = setup({ viewAs: { resolution: { status: 'off' } } })
+		setup({ viewAs: { resolution: { status: 'off' } } })
 
-		expect(container.querySelector('.grid-view-as-banner')).toBeNull()
+		expect(screen.queryByText('Choose a surface')).toBeNull()
 	})
 
 	it('shows the banner while the grid is not showing all of itself', () => {
-		const { container } = setup({ viewAs: { resolution: { status: 'noSelection' } } })
+		setup({ viewAs: { resolution: { status: 'noSelection' } } })
 
-		expect(container.querySelector('.grid-view-as-banner')).not.toBeNull()
+		expect(screen.getByText(/No surface has been chosen/)).toBeInTheDocument()
+		expect(screen.getByText('Choose a surface')).toBeInTheDocument()
 	})
 })
 

@@ -1,9 +1,7 @@
-import { Button as BaseButton } from '@base-ui/react'
-import { EyeIcon, TriangleAlertIcon } from 'lucide-react'
-import './GridViewAs.css'
-import '../Components/close-button.css'
-import classNames from 'classnames'
+import { faEye, faTriangleExclamation, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Button } from '~/Components/Button.js'
+import { Note } from '~/Components/Note.js'
 import type { GridViewAsResolution } from './GridViewAs.js'
 
 interface GridViewAsBannerProps {
@@ -26,34 +24,25 @@ export function GridViewAsBanner({ resolution, onConfigure, onExit }: GridViewAs
 	const isViewing = resolution.status === 'ready'
 
 	return (
-		<div
-			className={classNames(
-				'grid-view-as-banner',
-				isViewing ? 'grid-view-as-banner-viewing' : 'grid-view-as-banner-warning'
-			)}
-			role="status"
+		<Note
+			tone={isViewing ? 'neutral' : 'warning'}
+			icon={isViewing ? faEye : faTriangleExclamation}
+			className="mb-2"
+			actions={
+				<>
+					{!isViewing && (
+						<Button variant="outline" size="sm" onClick={onConfigure}>
+							Choose a surface
+						</Button>
+					)}
+					<Button variant="icon" size="sm" onClick={onExit} title="Show the whole grid again">
+						<FontAwesomeIcon icon={faXmark} />
+					</Button>
+				</>
+			}
 		>
-			{isViewing ? <EyeIcon size={16} /> : <TriangleAlertIcon size={16} />}
-
-			<div className="grow min-w-0">
-				<GridViewAsBannerMessage resolution={resolution} />
-			</div>
-
-			{!isViewing && (
-				<Button color="secondary" size="sm" onClick={onConfigure}>
-					Choose a surface
-				</Button>
-			)}
-
-			{/* The app's canonical dismiss, the same one modals and alerts carry */}
-			<BaseButton
-				type="button"
-				className="btn-close"
-				onClick={onExit}
-				title="Show the whole grid again"
-				aria-label="Show the whole grid again"
-			/>
-		</div>
+			<GridViewAsBannerMessage resolution={resolution} />
+		</Note>
 	)
 }
 
