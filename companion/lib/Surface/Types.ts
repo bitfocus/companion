@@ -82,6 +82,7 @@ export interface SurfacePanelEvents {
 
 	firmwareUpdateInfo: []
 
+	/** The grid size, layout or appearance of the surface has changed */
 	resized: []
 }
 

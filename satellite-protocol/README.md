@@ -18,7 +18,8 @@ bundle zod (the package is side-effect free, so bundlers drop it from the root i
 - **`/versions`**: `SATELLITE_FEATURES`, `getSatelliteFeatures(apiVersion, caps)`, `isApiVersionAtLeast`,
   `compareApiVersions`. An API version says whether a feature _exists_; a CAPS flag says whether it is
   _enabled_ on this connection.
-- **`/schemas`**: `SatelliteSurfaceLayoutSchema` and `SatelliteConfigFieldsSchema` (zod), with inferred types
+- **`/schemas`**: `SatelliteSurfaceLayoutSchema`, `SatelliteConfigFieldsSchema` and
+  `SatelliteSurfaceAppearanceSchema` (zod), with inferred types
 
 ```ts
 import {
@@ -48,8 +49,9 @@ parses to `{ ERROR: true, SUBID: '1', MESSAGE: '…' }`.
 
 ## Assets (for clients in other languages)
 
-- `assets/satellite-surface.schema.json`, `assets/satellite-config-fields.schema.json`: JSON schemas
-  for `LAYOUT_MANIFEST` and `CONFIG_FIELDS`
+- `assets/satellite-surface.schema.json`, `assets/satellite-config-fields.schema.json`,
+  `assets/satellite-surface-appearance.schema.json`: JSON schemas for `LAYOUT_MANIFEST`, `CONFIG_FIELDS` and the
+  `APPEARANCE` of `DEVICE-APPEARANCE`
 - `assets/satellite-api-features.json`: the feature table
 - `assets/satellite-protocol-corpus.json`: conformance cases for parsing and formatting lines. Any
   implementation of the protocol can load this and check it agrees.

@@ -26,7 +26,7 @@ import {
 	type SatelliteSurfaceLayout,
 } from '@companion-app/satellite-protocol'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { GridSize } from '@companion-app/shared/Model/Surfaces.js'
+import type { GridSize, SurfaceSchemaLayoutDefinition } from '@companion-app/shared/Model/Surfaces.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../../Data/UserConfig.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
@@ -212,11 +212,6 @@ export class ServiceSatelliteApi {
 			surfaceManifest.stylePresets.default.textStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
 		}
 
-		// Optional, unlike the layout: a bad one is logged and dropped, never refusing the surface
-		const surfaceAppearance = params.APPEARANCE
-			? parseSurfaceAppearance(socketLogger, id, params.APPEARANCE, surfaceManifest)
-			: null
-
 		socketLogger.debug(`add surface "${id}"`)
 
 		// Negotiate the bitmap encoding. Defaults to rgb when absent or unknown, so older satellites
@@ -270,7 +265,6 @@ export class ServiceSatelliteApi {
 			supportsLockedState,
 			surfaceManifestFromClient,
 			surfaceManifest,
-			surfaceAppearance,
 			configFields: processedConfigFields,
 			canChangePage,
 			bitmapFormat,
@@ -347,6 +341,9 @@ export class ServiceSatelliteApi {
 				break
 			case 'CHANGE-PAGE':
 				this.#changePage(socket, params)
+				break
+			case 'DEVICE-APPEARANCE':
+				this.#deviceAppearance(socket, params)
 				break
 			case 'PING':
 				socket.sendMessage(`PONG ${body}`, null, null, {})
@@ -626,6 +623,33 @@ export class ServiceSatelliteApi {
 		const updateUrl = `${params.UPDATE_URL}`
 		device.device.updateFirmwareUpdateInfo(updateUrl || null)
 
+		socket.sendMessage(messageName, 'OK', id, {})
+	}
+
+	/**
+	 * Describe how to draw the face of the surface. This is its own message rather than part of ADD-DEVICE, as the
+	 * body image can be large, and the line length is limited
+	 */
+	#deviceAppearance(socket: SatelliteSocketWrapper, params: ParsedParams): void {
+		const messageName = 'DEVICE-APPEARANCE'
+		const device = this.#parseDeviceFromMessageAndReportError(socket, messageName, params)
+		if (!device) return
+		const id = device.id
+
+		if (!params.APPEARANCE || params.APPEARANCE === true) {
+			return this.#formatAndSendError(socket, messageName, id, 'Missing APPEARANCE')
+		}
+
+		let appearance: SatelliteSurfaceAppearance
+		try {
+			appearance = parseSurfaceAppearance(params.APPEARANCE, device.device.surfaceLayout)
+		} catch (e) {
+			// The reason may span lines (from zod), which a message value cannot
+			const reason = (e instanceof Error ? e.message : String(e)).replace(/\s*[\r\n]+\s*/g, ' ')
+			return this.#formatAndSendError(socket, messageName, id, `Invalid APPEARANCE: ${reason}`)
+		}
+
+		device.device.updateAppearance(appearance)
 		socket.sendMessage(messageName, 'OK', id, {})
 	}
 
@@ -924,38 +948,30 @@ function parseSatelliteRotationDelta(params: ParsedParams): number {
 }
 
 /**
- * Read the APPEARANCE of an ADD-DEVICE: a base64 JSON description of how to draw the face of the surface.
+ * Read the APPEARANCE of a DEVICE-APPEARANCE: a base64 JSON description of how to draw the face of the surface.
  *
- * Null when it cannot be used, rather than refusing the surface: the appearance is optional, and the face is
- * estimated from the layout without one. It is all or nothing, so one which does not place every control of the
- * layout is dropped whole, rather than drawing a face with holes in it.
+ * Throws when it cannot be used. It is all or nothing, so one which does not place every control of the layout is
+ * refused whole, rather than drawing a face with holes in it.
  */
 function parseSurfaceAppearance(
-	logger: Logger,
-	deviceId: string,
-	input: string | true,
-	surfaceManifest: SatelliteSurfaceLayout
-): SatelliteSurfaceAppearance | null {
-	let appearance: SatelliteSurfaceAppearance
+	input: string,
+	surfaceLayout: SurfaceSchemaLayoutDefinition
+): SatelliteSurfaceAppearance {
+	let decoded: unknown
 	try {
-		const parsed = SatelliteSurfaceAppearanceSchema.safeParse(
-			JSON.parse(Buffer.from(String(input), 'base64').toString())
-		)
-		if (!parsed.success) throw new Error(z.prettifyError(parsed.error))
-
-		appearance = parsed.data
-	} catch (e) {
-		logger.warn(`Ignoring the APPEARANCE of "${deviceId}", it is not valid: ${stringifyError(e)}`)
-		return null
+		decoded = JSON.parse(Buffer.from(input, 'base64').toString())
+	} catch {
+		throw new Error('it is not base64 encoded JSON')
 	}
 
-	const uncovered = Object.keys(surfaceManifest.controls).filter(
+	const parsed = SatelliteSurfaceAppearanceSchema.safeParse(decoded)
+	if (!parsed.success) throw new Error(z.prettifyError(parsed.error))
+
+	const appearance = parsed.data
+	const uncovered = Object.keys(surfaceLayout.controls).filter(
 		(controlId) => !Object.hasOwn(appearance.controls, controlId)
 	)
-	if (uncovered.length > 0) {
-		logger.warn(`Ignoring the APPEARANCE of "${deviceId}", it is missing controls: ${uncovered.join(', ')}`)
-		return null
-	}
+	if (uncovered.length > 0) throw new Error(`it is missing controls: ${uncovered.join(', ')}`)
 
 	return appearance
 }

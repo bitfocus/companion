@@ -59,8 +59,6 @@ export interface SatelliteDeviceInfo {
 
 	surfaceManifestFromClient: boolean
 	surfaceManifest: SatelliteSurfaceLayout
-	/** How to draw the face of the surface; null when it described none, or none which could be used */
-	surfaceAppearance: SatelliteSurfaceAppearance | null
 
 	configFields: CompanionSurfaceConfigField[] | undefined
 
@@ -212,11 +210,13 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 	readonly surfaceLayout: SurfaceSchemaLayoutDefinition
-	readonly surfaceAppearance: SurfaceAppearanceDefinition | null
 	// Satellite has no declared models for a surface to be one of
 	readonly surfaceModelId: string | null = null
 	readonly deviceId: string
 	readonly socket: SatelliteSocketWrapper
+
+	/** How to draw the face of the surface; null until the client describes one with DEVICE-APPEARANCE */
+	surfaceAppearance: SurfaceAppearanceDefinition | null = null
 
 	// Cache for generated lock images by dimension
 	#lockImage: ImageResult | null = null
@@ -234,7 +234,6 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 
 		this.surfaceManifestFromClient = deviceInfo.surfaceManifestFromClient
 		this.surfaceLayout = deviceInfo.surfaceManifest
-		this.surfaceAppearance = deviceInfo.surfaceAppearance
 		this.#surfaceManifest = deviceInfo.surfaceManifest
 		this.#controlDefinitions = resolveControlDefinitions(deviceInfo.surfaceManifest)
 		this.#supportsLockedState = deviceInfo.supportsLockedState
@@ -546,6 +545,11 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		const configValues = createSurfaceConfigPayload(this.info.configFields, this.#config)
 		const encoded = Buffer.from(JSON.stringify(configValues)).toString('base64')
 		this.socket.sendMessage('DEVICE-CONFIG', null, this.deviceId, { CONFIG: encoded })
+	}
+
+	updateAppearance(appearance: SatelliteSurfaceAppearance): void {
+		this.surfaceAppearance = appearance
+		this.emit('resized')
 	}
 
 	updateFirmwareUpdateInfo(firmwareUpdateUrl: string | null): void {

@@ -94,7 +94,6 @@ function satelliteDeviceInfo(overrides: Partial<SatelliteDeviceInfo> = {}): Sate
 		supportsLockedState: false,
 		surfaceManifestFromClient: true,
 		surfaceManifest: neoLayout,
-		surfaceAppearance: null,
 		configFields: undefined,
 		canChangePage: undefined,
 		bitmapFormat: 'rgb',
@@ -159,7 +158,7 @@ describe('SurfaceController layouts', () => {
 		expect(layouts[ids[0]].layout).toEqual(neoLayout)
 	})
 
-	test('reports the appearance a satellite surface described, and keeps it once the surface disconnects', () => {
+	describe('satellite appearance', () => {
 		const appearance = {
 			size: { width: 120, height: 200 },
 			bodyColor: '#1c1c1c',
@@ -168,19 +167,46 @@ describe('SurfaceController layouts', () => {
 				'1/0': { x: 0, y: 120, width: 120, height: 58 },
 			},
 		}
-		const device = controller.addSatelliteDevice(satelliteDeviceInfo({ surfaceAppearance: appearance }))
-		const surfaceId = device.info.surfaceId
 
-		expect(controller.getSurfaceLayouts()[surfaceId].appearance).toEqual(appearance)
+		test('reports no appearance until the surface describes one', () => {
+			const device = controller.addSatelliteDevice(satelliteDeviceInfo())
 
-		controller.removeDevice(surfaceId)
-		expect(controller.getSurfaceLayouts()[surfaceId].appearance).toEqual(appearance)
-	})
+			expect(controller.getSurfaceLayouts()[device.info.surfaceId].appearance).toBeNull()
+		})
 
-	test('reports no appearance for a satellite surface which described none', () => {
-		const device = controller.addSatelliteDevice(satelliteDeviceInfo())
+		test('reports the appearance a surface described after being added, and keeps it once it disconnects', () => {
+			const device = controller.addSatelliteDevice(satelliteDeviceInfo())
+			const surfaceId = device.info.surfaceId
 
-		expect(controller.getSurfaceLayouts()[device.info.surfaceId].appearance).toBeNull()
+			device.updateAppearance(appearance)
+			expect(controller.getSurfaceLayouts()[surfaceId].appearance).toEqual(appearance)
+			expect(db.getTableView('surfaces').get(surfaceId)?.appearance).toEqual(appearance)
+
+			controller.removeDevice(surfaceId)
+			expect(controller.getSurfaceLayouts()[surfaceId].appearance).toEqual(appearance)
+		})
+
+		test('replaces the appearance when the surface describes another', () => {
+			const device = controller.addSatelliteDevice(satelliteDeviceInfo())
+			const surfaceId = device.info.surfaceId
+
+			device.updateAppearance(appearance)
+			const recoloured = { ...appearance, bodyColor: '#ff0000' }
+			device.updateAppearance(recoloured)
+
+			expect(controller.getSurfaceLayouts()[surfaceId].appearance).toEqual(recoloured)
+		})
+
+		test('forgets the appearance when the surface is added again, until it describes one again', () => {
+			const device = controller.addSatelliteDevice(satelliteDeviceInfo())
+			const surfaceId = device.info.surfaceId
+			device.updateAppearance(appearance)
+			controller.removeDevice(surfaceId)
+
+			controller.addSatelliteDevice(satelliteDeviceInfo())
+
+			expect(controller.getSurfaceLayouts()[surfaceId].appearance).toBeNull()
+		})
 	})
 
 	test('reports a connected surface once, not also as a stored one', () => {

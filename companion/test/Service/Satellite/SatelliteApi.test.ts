@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
-import { API_VERSION, MAX_LINE_LENGTH, parseLineParameters } from '@companion-app/satellite-protocol'
+import { API_VERSION, MAX_KEYS_TOTAL, MAX_LINE_LENGTH, parseLineParameters } from '@companion-app/satellite-protocol'
 import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
 import type { ImageResult } from '../../../lib/Graphics/ImageResult.js'
 import type { Logger } from '../../../lib/Log/Controller.js'
@@ -605,93 +605,6 @@ describe('ServiceSatelliteApi', () => {
 			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
 			expect(callArgs.surfaceManifestFromClient).toBe(true)
 			expect(callArgs.gridSize).toEqual({ columns: 2, rows: 2 })
-		})
-
-		describe('APPEARANCE', () => {
-			const manifest = {
-				controls: {
-					btn1: { row: 0, column: 0 },
-					strip: { row: 1, column: 0 },
-				},
-				stylePresets: { default: {} },
-			}
-			const appearance = {
-				size: { width: 120, height: 200 },
-				bodyColor: '#1c1c1c',
-				controls: {
-					btn1: { x: 10, y: 10, width: 96, height: 96, shape: { shape: 'rect', cornerRadius: 12 } },
-					strip: { x: 0, y: 120, width: 120, height: 16, kind: 'lcd-segment' },
-				},
-			}
-			const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64')
-
-			function addWith(args: string) {
-				const service = createService()
-				const { socket, processMessage } = createSocketAndInit(service.api, service.logger)
-				service.surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDeep<SurfaceIPSatellite>(mockOptions))
-
-				processMessage(`ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" ${args}\n`)
-
-				return { ...service, socket }
-			}
-
-			test('passes on the appearance the surface describes', () => {
-				const { socket, surfaceController, logger } = addWith(
-					`LAYOUT_MANIFEST="${encode(manifest)}" APPEARANCE="${encode(appearance)}"`
-				)
-
-				expect(socket.lastMessage).toContain('OK')
-				expect(surfaceController.addSatelliteDevice.mock.calls[0][0].surfaceAppearance).toEqual(appearance)
-				expect(logger.warn).not.toHaveBeenCalled()
-			})
-
-			test('passes on no appearance when the surface describes none', () => {
-				const { surfaceController } = addWith(`LAYOUT_MANIFEST="${encode(manifest)}"`)
-
-				expect(surfaceController.addSatelliteDevice.mock.calls[0][0].surfaceAppearance).toBeNull()
-			})
-
-			test('accepts an appearance for a simple mode surface, by the ids its controls are given', () => {
-				const simple = {
-					size: { width: 200, height: 100 },
-					bodyColor: '#000000',
-					controls: {
-						'0/0': { x: 0, y: 0, width: 100, height: 100 },
-						'0/1': { x: 100, y: 0, width: 100, height: 100 },
-					},
-				}
-				const { surfaceController } = addWith(`KEYS_TOTAL=2 KEYS_PER_ROW=2 APPEARANCE="${encode(simple)}"`)
-
-				expect(surfaceController.addSatelliteDevice.mock.calls[0][0].surfaceAppearance).toEqual(simple)
-			})
-
-			test.each([
-				['is not base64 json', 'not-valid-base64!!!'],
-				['does not match the schema', encode({ ...appearance, bodyColor: 'red' })],
-				[
-					'has body art which is not an inline image',
-					encode({ ...appearance, bodyImage: 'https://example.com/face.svg' }),
-				],
-				['is missing a control of the layout', encode({ ...appearance, controls: { btn1: appearance.controls.btn1 } })],
-			])('adds the surface without an appearance, and says why, when it %s', (_, value) => {
-				const { socket, surfaceController, logger } = addWith(
-					`LAYOUT_MANIFEST="${encode(manifest)}" APPEARANCE="${value}"`
-				)
-
-				expect(socket.lastMessage).toContain('OK')
-				expect(surfaceController.addSatelliteDevice.mock.calls[0][0].surfaceAppearance).toBeNull()
-				expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('APPEARANCE'))
-			})
-
-			test('ignores ids the layout does not have', () => {
-				const extra = {
-					...appearance,
-					controls: { ...appearance.controls, ghost: { x: 0, y: 0, width: 1, height: 1 } },
-				}
-				const { surfaceController } = addWith(`LAYOUT_MANIFEST="${encode(manifest)}" APPEARANCE="${encode(extra)}"`)
-
-				expect(surfaceController.addSatelliteDevice.mock.calls[0][0].surfaceAppearance).toEqual(extra)
-			})
 		})
 
 		test('error for invalid LAYOUT_MANIFEST base64', () => {
@@ -1503,6 +1416,159 @@ describe('ServiceSatelliteApi', () => {
 
 			expect(mockDevice.updateFirmwareUpdateInfo).toHaveBeenCalledWith(null)
 			expect(socket.lastMessage).toContain('OK')
+		})
+	})
+
+	describe('DEVICE-APPEARANCE', () => {
+		const layout = {
+			controls: {
+				btn1: { row: 0, column: 0 },
+				strip: { row: 1, column: 0 },
+			},
+			stylePresets: { default: {} },
+		}
+		const appearance = {
+			size: { width: 120, height: 200 },
+			bodyColor: '#1c1c1c',
+			controls: {
+				btn1: { x: 10, y: 10, width: 96, height: 96, shape: { shape: 'rect', cornerRadius: 12 } },
+				strip: { x: 0, y: 120, width: 120, height: 16, kind: 'lcd-segment' },
+			},
+		}
+		const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64')
+
+		function setupDevice(surfaceLayout: unknown = layout) {
+			const service = createService()
+			const { socket, processMessage } = createSocketAndInit(service.api, service.logger)
+			const mockDevice = addDeviceToSocket(
+				service.api,
+				service.logger,
+				service.surfaceController,
+				socket,
+				processMessage,
+				'dev1'
+			)
+			Object.defineProperty(mockDevice, 'surfaceLayout', { value: surfaceLayout })
+			mockDevice.updateAppearance.mockReturnValue(undefined)
+
+			return { ...service, socket, processMessage, mockDevice }
+		}
+
+		test('error when device not found', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage(`DEVICE-APPEARANCE DEVICEID="nonexist" APPEARANCE="${encode(appearance)}"\n`)
+
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Device not found')
+		})
+
+		test('error when missing APPEARANCE', () => {
+			const { socket, processMessage, mockDevice } = setupDevice()
+
+			processMessage('DEVICE-APPEARANCE DEVICEID="dev1"\n')
+
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Missing APPEARANCE')
+			expect(mockDevice.updateAppearance).not.toHaveBeenCalled()
+		})
+
+		test('applies the appearance the surface describes', () => {
+			const { socket, processMessage, mockDevice } = setupDevice()
+
+			processMessage(`DEVICE-APPEARANCE DEVICEID="dev1" APPEARANCE="${encode(appearance)}"\n`)
+
+			expect(mockDevice.updateAppearance).toHaveBeenCalledWith(appearance)
+			expect(socket.lastMessage).toContain('DEVICE-APPEARANCE')
+			expect(socket.lastMessage).toContain('OK')
+			expect(socket.lastMessage).toContain('DEVICEID="dev1"')
+		})
+
+		test('replaces the appearance when sent again', () => {
+			const { processMessage, mockDevice } = setupDevice()
+			const recoloured = { ...appearance, bodyColor: '#ff0000' }
+
+			processMessage(`DEVICE-APPEARANCE DEVICEID="dev1" APPEARANCE="${encode(appearance)}"\n`)
+			processMessage(`DEVICE-APPEARANCE DEVICEID="dev1" APPEARANCE="${encode(recoloured)}"\n`)
+
+			expect(mockDevice.updateAppearance).toHaveBeenCalledTimes(2)
+			expect(mockDevice.updateAppearance).toHaveBeenLastCalledWith(recoloured)
+		})
+
+		test.each([
+			['is not base64 json', 'not-valid-base64!!!', 'Invalid APPEARANCE: it is not base64 encoded JSON'],
+			['does not match the schema', encode({ ...appearance, bodyColor: 'red' }), 'bodyColor'],
+			[
+				'has body art which is not an inline image',
+				encode({ ...appearance, bodyImage: 'https://example.com/face.svg' }),
+				'bodyImage',
+			],
+			[
+				'is missing a control of the layout',
+				encode({ ...appearance, controls: { btn1: appearance.controls.btn1 } }),
+				'missing controls: strip',
+			],
+		])('refuses an appearance which %s, and keeps the current one', (_, value, reason) => {
+			const { socket, processMessage, mockDevice } = setupDevice()
+
+			processMessage(`DEVICE-APPEARANCE DEVICEID="dev1" APPEARANCE="${value}"\n`)
+
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('DEVICEID="dev1"')
+			expect(socket.lastMessage).toContain(reason)
+			expect(mockDevice.updateAppearance).not.toHaveBeenCalled()
+			expect(socket.destroyed).toBe(false)
+		})
+
+		test('ignores ids the layout does not have', () => {
+			const { processMessage, mockDevice } = setupDevice()
+			const extra = {
+				...appearance,
+				controls: { ...appearance.controls, ghost: { x: 0, y: 0, width: 1, height: 1 } },
+			}
+
+			processMessage(`DEVICE-APPEARANCE DEVICEID="dev1" APPEARANCE="${encode(extra)}"\n`)
+
+			expect(mockDevice.updateAppearance).toHaveBeenCalledWith(extra)
+		})
+
+		test('the largest appearance fits within the line length limit', () => {
+			// Every control of the largest layout, with the largest body image the schema accepts
+			const controlIds = Array.from({ length: MAX_KEYS_TOTAL }, (_, i) => `${Math.floor(i / 100)}/${i % 100}`)
+			const largeLayout = {
+				controls: Object.fromEntries(controlIds.map((id) => [id, { row: 0, column: 0 }])),
+				stylePresets: { default: {} },
+			}
+			const imagePrefix = 'data:image/png;base64,'
+			const largest = {
+				size: { width: 123456.789, height: 123456.789 },
+				bodyColor: '#1c1c1c',
+				bodyImage: imagePrefix + 'A'.repeat(Math.floor((512 * 1024 - imagePrefix.length) / 4) * 4),
+				controls: Object.fromEntries(
+					controlIds.map((id) => [
+						id,
+						{
+							x: 123456.789,
+							y: 123456.789,
+							width: 123456.789,
+							height: 123456.789,
+							shape: { shape: 'rect', cornerRadius: 123456.789 },
+							kind: 'lcd-segment',
+							label: 'L'.repeat(64),
+						},
+					])
+				),
+			}
+			const { socket, processMessage, mockDevice } = setupDevice(largeLayout)
+
+			const line = `DEVICE-APPEARANCE DEVICEID="dev1" APPEARANCE="${encode(largest)}"`
+			expect(line.length).toBeLessThan(MAX_LINE_LENGTH)
+
+			processMessage(`${line}\n`)
+
+			expect(socket.lastMessage).toContain('OK')
+			expect(mockDevice.updateAppearance).toHaveBeenCalledWith(largest)
 		})
 	})
 

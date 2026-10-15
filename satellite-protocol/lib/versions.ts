@@ -85,7 +85,7 @@ export const SATELLITE_FEATURES = {
 	appearance: {
 		since: '1.15.0',
 		capsFlag: null,
-		description: 'ADD-DEVICE may include APPEARANCE, describing how to draw the face of the surface',
+		description: 'DEVICE-APPEARANCE describes how to draw the face of the surface',
 	},
 } as const satisfies Record<string, SatelliteFeatureDefinition>
 

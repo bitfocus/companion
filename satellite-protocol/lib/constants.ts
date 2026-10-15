@@ -31,7 +31,7 @@
  *          amount (velocity/step count): sign is the direction, magnitude is the number of steps.
  *          `0` still means a single counter-clockwise step for backwards compatibility. Support is
  *          advertised via ROTARY_AMOUNT in CAPS.
- * 1.15.0 - Add APPEARANCE to ADD-DEVICE, describing how to draw the face of the surface
+ * 1.15.0 - Add DEVICE-APPEARANCE message, describing how to draw the face of the surface
  */
 export const API_VERSION = '1.15.0'
 
