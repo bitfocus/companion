@@ -99,11 +99,11 @@
 		justify-content: center;
 
 		padding: 2px;
-		border: 1px dashed color-mix(in srgb, var(--color-text-muted, #888888) 60%, transparent);
+		border: 1px dashed color-mix(in srgb, var(--color-muted) 60%, transparent);
 		border-radius: var(--control-radius, 12%);
 
-		color: var(--color-text-muted, #888888);
-		background-color: color-mix(in srgb, var(--color-text-muted, #888888) 8%, transparent);
+		color: var(--color-muted);
+		background-color: color-mix(in srgb, var(--color-muted) 8%, transparent);
 
 		cursor: pointer;
 		opacity: 0.6;

@@ -5,30 +5,35 @@
 	flex-direction: column;
 	gap: 0.5rem;
 
-	/* The popup pads itself vertically only, because its usual children are full-width menu items
-	   which pad themselves. These are form fields, which need the inset drawing around them. */
-	padding-inline: 0.75rem;
+	/* The popup pads itself only thinly, and vertically only, because its usual children are
+	   full-width menu items which pad themselves. These are form fields, which need an even inset. */
+	padding: 0.75rem;
 
 	/* Wide enough for a surface name, and no wider - the notes between the fields would otherwise
 	   stretch the popover out until it hangs off the side of the page */
 	width: 20rem;
 	max-width: 100%;
-}
 
-/* A label sitting tight above its field - the tight gap is what tells the popover's fields apart
-   from the gap between them. The label text itself is `text-muted small` in the markup. */
-.grid-view-as-field {
-	display: flex;
-	flex-direction: column;
-	gap: 0.15rem;
-}
+	/* The spacing comes from the gaps here, not the label's own margin */
+	.form-label {
+		margin-bottom: 0;
+	}
 
-.grid-view-as-offsets {
-	display: flex;
-	gap: 0.5rem;
+	/* A label sitting tight above its field - the tight gap is what tells the popover's fields apart
+	   from the gap between them. The label text itself is `text-muted small` in the markup. */
+	.grid-view-as-field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+	}
 
-	> * {
-		flex: 1 1 0;
-		min-width: 0;
+	.grid-view-as-offsets {
+		display: flex;
+		gap: 0.5rem;
+
+		> * {
+			flex: 1 1 0;
+			min-width: 0;
+		}
 	}
 }
