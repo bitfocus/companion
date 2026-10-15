@@ -1,0 +1,6 @@
+<!-- Cascade-layer order, as index.html declares it for the app. Without it the layers rank in the order their
+     stylesheets happen to load, so a story's feature CSS can lose to the components it builds on. Keep in sync
+     with index.html and src/tailwind.css. -->
+<style>
+	@layer theme, tw-base, base, layout-grid, app-base, components, features, utilities;
+</style>

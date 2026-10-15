@@ -17,6 +17,10 @@ export class PressTool extends GridToolBase {
 		ctx.actions.press(location, isDown)
 	}
 
+	override onRotate(ctx: GridToolContext, location: ControlLocation, delta: number): void {
+		ctx.actions.rotate(location, delta)
+	}
+
 	override onEnter(ctx: GridToolContext, _carriedOver: readonly ControlLocation[]): void {
 		// Nothing here acts on a selection, and leaving buttons highlighted while the grid is live
 		// only muddles what is about to happen - so anything in hand is put down rather than handed on

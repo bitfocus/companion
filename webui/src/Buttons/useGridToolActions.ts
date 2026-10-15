@@ -39,6 +39,7 @@ export function useGridToolActions({
 	const resetControlsMutation = useMutationExt(trpc.controls.resetControls.mutationOptions())
 	const gridBatchTransferMutation = useMutationExt(trpc.controls.gridBatchTransfer.mutationOptions())
 	const hotPressMutation = useMutationExt(trpc.controls.hotPressControl.mutationOptions())
+	const hotRotateMutation = useMutationExt(trpc.controls.hotRotateControl.mutationOptions())
 
 	// A button placed outside the grid is somewhere nothing can reach it, so the tools refuse a
 	// placement that would do that rather than clamping it to the edge. Viewing as a surface narrows
@@ -138,6 +139,11 @@ export function useGridToolActions({
 					.mutateAsync({ location, direction: isDown, surfaceId: 'grid' })
 					.catch((e) => console.error(`Hot press failed: ${e}`))
 			},
+			rotate: (location, delta) => {
+				hotRotateMutation
+					.mutateAsync({ location, delta, surfaceId: 'grid' })
+					.catch((e) => console.error(`Hot rotate failed: ${e}`))
+			},
 			clearButtons: (locations) => {
 				if (locations.length === 0) return
 
@@ -151,7 +157,17 @@ export function useGridToolActions({
 				})
 			},
 		}),
-		[openEditor, fitsOnGrid, isOccupied, transfer, pasteAt, hotPressMutation, resetControlsMutation, confirmRef]
+		[
+			openEditor,
+			fitsOnGrid,
+			isOccupied,
+			transfer,
+			pasteAt,
+			hotPressMutation,
+			hotRotateMutation,
+			resetControlsMutation,
+			confirmRef,
+		]
 	)
 }
 

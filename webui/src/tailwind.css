@@ -1,8 +1,9 @@
 @charset "UTF-8";
 
 /*
-  Cascade layers, low -> high priority. The order is declared in index.html's <head> (not here — the
-  prod build injects this file late, so an in-CSS @layer statement loses). Keep that list in sync.
+  Cascade layers, low -> high priority. The order is declared in index.html's <head>, and again in
+  .storybook/preview-head.html (not here — the prod build injects this file late, so an in-CSS @layer
+  statement loses). Keep those lists in sync.
     theme          Tailwind design tokens (@theme).
     tw-base        Tailwind Preflight, the reset we are migrating towards. Enabled but currently
                    masked: every declaration it introduces is overridden by the `base` layer above
