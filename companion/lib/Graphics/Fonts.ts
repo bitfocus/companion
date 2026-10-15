@@ -34,5 +34,6 @@ export const FONT_DEFINITIONS = [
 	{ pathOnDisk: generateFontUrl('NotoSansSC-Regular.ttf'), name: 'Companion-simplified-chinese' },
 	{ pathOnDisk: generateFontUrl('NotoSansKR-Regular.ttf'), name: 'Companion-korean' },
 	{ pathOnDisk: generateFontUrl('NotoColorEmoji-compat.ttf'), name: 'Companion-emoji' },
+	{ pathOnDisk: generateFontUrl('AND-Regular.otf'), name: 'Companion-notdef' },
 	{ pathOnDisk: generateFontUrl('pf_tempesta_seven.ttf'), name: '5x7' },
 ]
