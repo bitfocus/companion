@@ -37,7 +37,7 @@ export const SatelliteControlShapeSchema = z
 					.optional()
 					.meta({ default: 0 })
 					.describe(
-						'Corner radius in face units. Omit or use `0` for square corners; a capsule (a touch strip segment) is half the shorter side.'
+						'Corner radius in face units. Omit or use `0` for square corners, or half the shorter side for fully rounded ends, as on a touch strip segment.'
 					),
 			})
 			.describe('A rectangle filling the control bounds, optionally with rounded corners.'),
@@ -58,7 +58,7 @@ export const SatelliteControlAppearanceSchema = z
 		width: z.number().positive().describe('Width of the control, in face units.'),
 		height: z.number().positive().describe('Height of the control, in face units.'),
 		shape: SatelliteControlShapeSchema.optional().describe(
-			'How the control is drawn. An `encoder` is always round, so this is ignored for one. Defaults to an ellipse for a `jog` or `shuttle`, and otherwise a square-cornered rectangle filling the bounds.'
+			'How the control is drawn. An `encoder` is always an ellipse, so this is ignored for one. Defaults to an ellipse for a `jog` or `shuttle`, and otherwise a square-cornered rectangle filling the bounds.'
 		),
 		kind: z
 			.enum(['button', 'encoder', 'jog', 'shuttle', 'lcd-segment'])
@@ -96,12 +96,12 @@ export const SatelliteSurfaceAppearanceSchema = z
 			.max(MAX_BODY_IMAGE_LENGTH, 'body image is too large; a face should be simple vector art, not a photograph')
 			.optional()
 			.describe(
-				'Artwork for the face, drawn under the controls, as a base64 `data:` URI. SVG is preferred. An SVG must use a `viewBox` of `0 0 <size.width> <size.height>` so that the art and the control positions share one coordinate system; a raster is scaled to fill `size` exactly.'
+				'Artwork for the face, drawn over `bodyColor` and under the controls, as a base64 `data:` URI. SVG is preferred; a raster is accepted for simple cases, but the whole URI is limited to 512KiB. An SVG must use a `viewBox` of `0 0 <size.width> <size.height>` so that the art and the control positions share one coordinate system; a raster is scaled to fill `size` exactly.'
 			),
 		controls: z
 			.record(z.string().regex(/^[a-zA-Z0-9\-/]+$/), SatelliteControlAppearanceSchema)
 			.describe(
-				'Where each control sits, keyed by the same control ids as the layout manifest. Must cover every control of the layout, or the whole appearance is ignored. Ids the layout does not have are ignored.'
+				'Where each control sits, keyed by the same control ids as the layout manifest. Must cover every control the layout has, or the whole appearance is ignored. Ids the layout does not have are ignored.'
 			),
 	})
 	.meta({
