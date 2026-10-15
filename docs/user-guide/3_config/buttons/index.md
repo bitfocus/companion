@@ -120,7 +120,7 @@ face of that surface:
   around an encoder are lit as they will be on the device.
 
 The cell coordinates are unchanged — they are still the grid's own, not the surface's. A surface which
-reaches beyond your grid has those controls drawn but locked; choosing one offers to **Grow grid to fit**
+reaches beyond your grid has those controls drawn but un-editable; choosing one offers to **Grow grid to fit**
 the whole surface.
 
 While the view is on, a banner above the grid says which surface it is showing, and turns it off
