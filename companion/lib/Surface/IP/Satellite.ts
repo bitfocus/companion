@@ -16,6 +16,7 @@ import {
 	type SatelliteBitmapFormat,
 	type SatelliteControlStylePreset,
 	type SatelliteMessageArgs,
+	type SatelliteSurfaceAppearance,
 	type SatelliteSurfaceLayout,
 } from '@companion-app/satellite-protocol'
 import type {
@@ -58,6 +59,8 @@ export interface SatelliteDeviceInfo {
 
 	surfaceManifestFromClient: boolean
 	surfaceManifest: SatelliteSurfaceLayout
+	/** How to draw the face of the surface; null when it described none, or none which could be used */
+	surfaceAppearance: SatelliteSurfaceAppearance | null
 
 	configFields: CompanionSurfaceConfigField[] | undefined
 
@@ -209,8 +212,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 	readonly info: SurfacePanelInfo
 	readonly gridSize: GridSize
 	readonly surfaceLayout: SurfaceSchemaLayoutDefinition
-	// Satellite surfaces describe only their layout; the face is derived from it
-	readonly surfaceAppearance: SurfaceAppearanceDefinition | null = null
+	readonly surfaceAppearance: SurfaceAppearanceDefinition | null
 	// Satellite has no declared models for a surface to be one of
 	readonly surfaceModelId: string | null = null
 	readonly deviceId: string
@@ -232,6 +234,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 
 		this.surfaceManifestFromClient = deviceInfo.surfaceManifestFromClient
 		this.surfaceLayout = deviceInfo.surfaceManifest
+		this.surfaceAppearance = deviceInfo.surfaceAppearance
 		this.#surfaceManifest = deviceInfo.surfaceManifest
 		this.#controlDefinitions = resolveControlDefinitions(deviceInfo.surfaceManifest)
 		this.#supportsLockedState = deviceInfo.supportsLockedState

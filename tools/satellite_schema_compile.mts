@@ -4,6 +4,7 @@ import prettier from 'prettier'
 import { z } from 'zod'
 import { API_VERSION } from '../satellite-protocol/lib/constants.js'
 import { SatelliteConfigFieldsSchema } from '../satellite-protocol/lib/SatelliteConfigFieldsSchema.js'
+import { SatelliteSurfaceAppearanceSchema } from '../satellite-protocol/lib/SatelliteSurfaceAppearanceSchema.js'
 import { SatelliteSurfaceLayoutSchema } from '../satellite-protocol/lib/SatelliteSurfaceManifestSchema.js'
 import { SATELLITE_FEATURES } from '../satellite-protocol/lib/versions.js'
 
@@ -20,10 +21,12 @@ const packageAssetsDir = path.join(import.meta.dirname, '../satellite-protocol/a
 
 // `io: 'input'` ensures unknown properties are not forbidden, so that the schema is forwards compatible
 const surfaceSchema = z.toJSONSchema(SatelliteSurfaceLayoutSchema, { target: 'draft-2020-12', io: 'input' })
+const appearanceSchema = z.toJSONSchema(SatelliteSurfaceAppearanceSchema, { target: 'draft-2020-12', io: 'input' })
 const configFieldsSchema = z.toJSONSchema(SatelliteConfigFieldsSchema, { target: 'draft-2020-12', io: 'input' })
 
 const outputs: { content: unknown; outputPath: string }[] = [
 	{ content: surfaceSchema, outputPath: path.join(packageAssetsDir, 'satellite-surface.schema.json') },
+	{ content: appearanceSchema, outputPath: path.join(packageAssetsDir, 'satellite-surface-appearance.schema.json') },
 	{ content: configFieldsSchema, outputPath: path.join(packageAssetsDir, 'satellite-config-fields.schema.json') },
 	{
 		content: { apiVersion: API_VERSION, features: SATELLITE_FEATURES },

@@ -82,6 +82,11 @@ export const SATELLITE_FEATURES = {
 		capsFlag: 'ROTARY_AMOUNT',
 		description: 'DIRECTION on KEY-ROTATE and SUB-ROTATE may be a signed step count',
 	},
+	appearance: {
+		since: '1.15.0',
+		capsFlag: null,
+		description: 'ADD-DEVICE may include APPEARANCE, describing how to draw the face of the surface',
+	},
 } as const satisfies Record<string, SatelliteFeatureDefinition>
 
 export type SatelliteFeatureId = keyof typeof SATELLITE_FEATURES

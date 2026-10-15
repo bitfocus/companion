@@ -14,6 +14,7 @@ import {
 	SATELLITE_BITMAP_FORMATS,
 	SatelliteConfigFieldsSchema,
 	SatelliteLineBuffer,
+	SatelliteSurfaceAppearanceSchema,
 	SatelliteSurfaceLayoutSchema,
 	splitSatelliteCommand,
 	type ParsedParams,
@@ -21,6 +22,7 @@ import {
 	type SatelliteConfigFields,
 	type SatelliteControlStylePreset,
 	type SatelliteMessageArgs,
+	type SatelliteSurfaceAppearance,
 	type SatelliteSurfaceLayout,
 } from '@companion-app/satellite-protocol'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -210,6 +212,11 @@ export class ServiceSatelliteApi {
 			surfaceManifest.stylePresets.default.textStyle = params.TEXT_STYLE !== undefined && isTruthy(params.TEXT_STYLE)
 		}
 
+		// Optional, unlike the layout: a bad one is logged and dropped, never refusing the surface
+		const surfaceAppearance = params.APPEARANCE
+			? parseSurfaceAppearance(socketLogger, id, params.APPEARANCE, surfaceManifest)
+			: null
+
 		socketLogger.debug(`add surface "${id}"`)
 
 		// Negotiate the bitmap encoding. Defaults to rgb when absent or unknown, so older satellites
@@ -263,6 +270,7 @@ export class ServiceSatelliteApi {
 			supportsLockedState,
 			surfaceManifestFromClient,
 			surfaceManifest,
+			surfaceAppearance,
 			configFields: processedConfigFields,
 			canChangePage,
 			bitmapFormat,
@@ -913,6 +921,43 @@ function parseSatelliteRotationDelta(params: ParsedParams): number {
 	}
 
 	return raw !== undefined && raw >= '1' ? 1 : -1
+}
+
+/**
+ * Read the APPEARANCE of an ADD-DEVICE: a base64 JSON description of how to draw the face of the surface.
+ *
+ * Null when it cannot be used, rather than refusing the surface: the appearance is optional, and the face is
+ * estimated from the layout without one. It is all or nothing, so one which does not place every control of the
+ * layout is dropped whole, rather than drawing a face with holes in it.
+ */
+function parseSurfaceAppearance(
+	logger: Logger,
+	deviceId: string,
+	input: string | true,
+	surfaceManifest: SatelliteSurfaceLayout
+): SatelliteSurfaceAppearance | null {
+	let appearance: SatelliteSurfaceAppearance
+	try {
+		const parsed = SatelliteSurfaceAppearanceSchema.safeParse(
+			JSON.parse(Buffer.from(String(input), 'base64').toString())
+		)
+		if (!parsed.success) throw new Error(z.prettifyError(parsed.error))
+
+		appearance = parsed.data
+	} catch (e) {
+		logger.warn(`Ignoring the APPEARANCE of "${deviceId}", it is not valid: ${stringifyError(e)}`)
+		return null
+	}
+
+	const uncovered = Object.keys(surfaceManifest.controls).filter(
+		(controlId) => !Object.hasOwn(appearance.controls, controlId)
+	)
+	if (uncovered.length > 0) {
+		logger.warn(`Ignoring the APPEARANCE of "${deviceId}", it is missing controls: ${uncovered.join(', ')}`)
+		return null
+	}
+
+	return appearance
 }
 
 function parseTransferableValues(input: string | true | undefined): SatelliteTransferableValue[] {
