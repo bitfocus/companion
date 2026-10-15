@@ -22,7 +22,7 @@ class TestDatabase extends DataStoreBase<any> {
 	protected migrateFileToSqlite(): void {}
 }
 
-function createController(usbHotplug: boolean) {
+function createController(usbHotplug: boolean, usbAvailable: boolean) {
 	const deps = mockDeep<SurfaceHandlerDependencies>({
 		fallbackMockImplementation: () => undefined,
 	})
@@ -33,7 +33,7 @@ function createController(usbHotplug: boolean) {
 	})
 	deps.pageStore.getFirstPageId.mockReturnValue('page1')
 
-	return new SurfaceController(new TestDatabase() as any, deps)
+	return new SurfaceController(new TestDatabase() as any, deps, usbAvailable)
 }
 
 describe('SurfaceController usb hotplug lifecycle', () => {
@@ -43,7 +43,7 @@ describe('SurfaceController usb hotplug lifecycle', () => {
 	})
 
 	test('quit stops watching for usb connect events', () => {
-		const controller = createController(true)
+		const controller = createController(true, true)
 
 		expect(usb.addEventListener).toHaveBeenCalledTimes(1)
 		const [event, listener] = vi.mocked(usb.addEventListener).mock.calls[0]
@@ -59,7 +59,20 @@ describe('SurfaceController usb hotplug lifecycle', () => {
 	})
 
 	test('quit does not touch usb when hotplug was never enabled', () => {
-		const controller = createController(false)
+		const controller = createController(false, true)
+		expect(usb.addEventListener).not.toHaveBeenCalled()
+
+		controller.quit()
+		expect(usb.removeEventListener).not.toHaveBeenCalled()
+	})
+
+	test('hotplug is not started when usb is unavailable', () => {
+		const controller = createController(true, false)
+		expect(usb.addEventListener).not.toHaveBeenCalled()
+
+		// Toggling the setting must not start it either
+		controller.updateUserConfig('usb_hotplug', false)
+		controller.updateUserConfig('usb_hotplug', true)
 		expect(usb.addEventListener).not.toHaveBeenCalled()
 
 		controller.quit()

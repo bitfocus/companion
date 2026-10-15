@@ -1,6 +1,7 @@
 import type { JsonValue } from 'type-fest'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import { CheckboxInputFieldWithLabel } from '~/Components/CheckboxInputField'
+import { useUsbAvailable } from '~/Hooks/useUsbAvailable'
 
 interface SurfacesStepProps {
 	config: Partial<UserConfigModel>
@@ -8,6 +9,8 @@ interface SurfacesStepProps {
 }
 
 export function SurfacesStep({ config, setValue }: SurfacesStepProps): React.JSX.Element {
+	const usbAvailable = useUsbAvailable()
+
 	return (
 		<div>
 			<h5>USB Surface Detection Configuration</h5>
@@ -18,9 +21,11 @@ export function SurfacesStep({ config, setValue }: SurfacesStepProps): React.JSX
 			<div className="ms-2 mb-1">
 				<CheckboxInputFieldWithLabel
 					label="Watch for newly connected USB devices"
-					value={!!config.usb_hotplug}
+					value={usbAvailable && !!config.usb_hotplug}
 					setValue={(val) => setValue('usb_hotplug', val)}
+					disabled={!usbAvailable}
 				/>
+				{!usbAvailable && <p className="text-xs text-muted ms-6 mb-0">USB is not available on this machine</p>}
 			</div>
 			<div className="ms-2 mb-1">
 				<CheckboxInputFieldWithLabel

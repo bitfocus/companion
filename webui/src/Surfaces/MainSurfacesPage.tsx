@@ -17,6 +17,7 @@ import { AddSurfaceGroupModal, type AddSurfaceGroupModalRef } from './AddGroupMo
 import { KnownSurfacesTable } from './KnownSurfacesTable'
 import { SurfacesNav } from './SurfacesNav'
 import { UdevRulesAlert } from './UdevRulesAlert'
+import { UsbUnavailableNote } from './UsbUnavailableNote'
 
 export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.Element {
 	const navigate = useNavigate()
@@ -94,6 +95,8 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 								{scanError}
 							</StaticAlert>
 						)}
+
+						<UsbUnavailableNote />
 
 						<UdevRulesAlert />
 

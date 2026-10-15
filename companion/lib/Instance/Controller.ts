@@ -187,7 +187,9 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		this.#variablesController = variables
 		this.#surfacesController = surfaces
 		this.#controlsStore = controlsStore
-		this.#udevRules = new InstanceUdevRulesController(appInfo.udevRulesDir, () => this.#collectSurfaceUsbIds())
+		this.#udevRules = new InstanceUdevRulesController(appInfo.udevRulesDir, () => this.#collectSurfaceUsbIds(), {
+			usbAvailable: surfaces.usbAvailable,
+		})
 
 		this.#configStore = new InstanceConfigStore(db, (instanceIds, updateProcessManager) => {
 			// Ensure any changes to collectionId update the enabled state
