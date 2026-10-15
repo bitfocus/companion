@@ -37,6 +37,8 @@ export interface InstanceUdevRulesControllerOptions {
 	 * Defaults to the `COMPANION_IN_CONTAINER` env var, which the container tooling sets.
 	 */
 	isContainer?: boolean
+	/** Whether this machine has usb at all, as the rules are pointless without it. */
+	usbAvailable: boolean
 	/** The directory the rules must be installed to. Defaults to `/etc/udev/rules.d`. */
 	systemRulesDir?: string
 	/** Runs a shell command. Injectable for testing. */
@@ -70,6 +72,7 @@ export class InstanceUdevRulesController extends EventEmitter<InstanceUdevRulesE
 	readonly #syncCommand: string | undefined
 	readonly #platform: NodeJS.Platform
 	readonly #isContainer: boolean
+	readonly #usbAvailable: boolean
 	readonly #systemRulesDir: string
 	readonly #execAsync: ExecAsyncFn
 
@@ -79,7 +82,7 @@ export class InstanceUdevRulesController extends EventEmitter<InstanceUdevRulesE
 	constructor(
 		udevRulesDir: string,
 		collectSurfaceUsbIds: () => UdevRuleDefinition[],
-		options: InstanceUdevRulesControllerOptions = {}
+		options: InstanceUdevRulesControllerOptions
 	) {
 		super()
 		this.setMaxListeners(0)
@@ -91,13 +94,14 @@ export class InstanceUdevRulesController extends EventEmitter<InstanceUdevRulesE
 		this.#syncCommand = options.syncCommand ?? process.env.COMPANION_SYNC_UDEV_RULES_COMMAND
 		this.#platform = options.platform ?? process.platform
 		this.#isContainer = options.isContainer ?? !!process.env.COMPANION_IN_CONTAINER
+		this.#usbAvailable = options.usbAvailable
 		this.#systemRulesDir = options.systemRulesDir ?? DEFAULT_SYSTEM_UDEV_RULES_DIR
 		this.#execAsync = options.execAsync ?? defaultExecAsync
 	}
 
 	/** Whether udev rules can do anything useful for this installation */
 	#isSupported(): boolean {
-		return this.#platform === 'linux' && !this.#isContainer
+		return this.#platform === 'linux' && !this.#isContainer && this.#usbAvailable
 	}
 
 	/** Trigger a (debounced) regeneration of the udev rules. Safe to call on any platform. */

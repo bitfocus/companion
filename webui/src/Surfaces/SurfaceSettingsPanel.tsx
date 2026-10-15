@@ -2,6 +2,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import { Table } from '~/Components/Table.js'
+import { useUsbAvailable } from '~/Hooks/useUsbAvailable'
 import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { SurfaceInstancesList } from '~/Surfaces/Instances/SurfaceInstanceList/SurfaceInstanceList'
 import { UserConfigHeadingRow } from '~/UserConfig/Components/UserConfigHeadingRow'
@@ -13,6 +14,7 @@ import { PinLockoutConfig } from '~/UserConfig/Sections/PinLockoutConfig'
 //  Shows surface user-settings and the integrations table (SurfaceInstancesList)
 export const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 	const userConfigProps = useUserConfigProps()
+	const usbAvailable = useUsbAvailable()
 
 	return (
 		<>
@@ -47,6 +49,7 @@ export const SurfaceSettingsPanel = observer(function SurfaceSettingsPanel() {
 								label="Watch for new USB Devices"
 								field="usb_hotplug"
 								title="Automatically scan for new devices when they are plugged in."
+								disabledReason={usbAvailable ? undefined : 'USB is not available on this machine'}
 							/>
 
 							<UserConfigSwitchRow

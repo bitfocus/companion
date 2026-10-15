@@ -146,6 +146,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 */
 	#runningUsbHotplug: boolean = false
 
+	/**
+	 * Whether this machine has usb available. When it doesn't, hotplug is never started
+	 */
+	readonly #usbAvailable: boolean
+
 	readonly #hotplugRescan = new HotplugRescan(() => {
 		this.triggerRefreshDevices().catch((e) => {
 			this.#logger.warn(`Hotplug device refresh failed: ${e}`)
@@ -179,12 +184,19 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 	readonly #outboundController: SurfaceOutboundController
 
+	/** Whether this machine has usb available */
+	get usbAvailable(): boolean {
+		return this.#usbAvailable
+	}
+
 	get outbound(): SurfaceOutboundController {
 		return this.#outboundController
 	}
 
-	constructor(db: DataDatabase, handlerDependencies: SurfaceHandlerDependencies) {
+	constructor(db: DataDatabase, handlerDependencies: SurfaceHandlerDependencies, usbAvailable: boolean) {
 		super()
+
+		this.#usbAvailable = usbAvailable
 
 		this.#dbTableSurfaces = db.getTableView('surfaces')
 		this.#dbTableGroups = db.getTableView('surface_groups')
@@ -235,8 +247,12 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		this.triggerRefreshDevicesEvent = this.triggerRefreshDevicesEvent.bind(this)
 
+		if (!this.#usbAvailable) {
+			this.#logger.warn('USB is not available on this machine, USB surfaces and hotplug are disabled')
+		}
+
 		const runHotplug = this.#handlerDependencies.userconfig.getKey('usb_hotplug')
-		if (runHotplug) {
+		if (runHotplug && this.#usbAvailable) {
 			try {
 				usb.addEventListener('connect', this.triggerRefreshDevicesEvent)
 			} catch (e) {
@@ -268,7 +284,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					usb.removeEventListener('connect', this.triggerRefreshDevicesEvent)
 					this.#hotplugRescan.cancel()
 					this.#runningUsbHotplug = false
-				} else if (value && !this.#runningUsbHotplug) {
+				} else if (value && !this.#runningUsbHotplug && this.#usbAvailable) {
 					// Start watching
 					usb.addEventListener('connect', this.triggerRefreshDevicesEvent)
 					this.#runningUsbHotplug = true
@@ -533,6 +549,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						if (surfaceId === input.surfaceId) yield change
 					}
 				}),
+
+			usbAvailable: publicProcedure.query(() => self.#usbAvailable),
 
 			rescanUsb: publicProcedure.mutation(async () => {
 				try {

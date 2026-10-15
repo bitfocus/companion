@@ -10,6 +10,8 @@ interface UserConfigSwitchRowProps {
 	requiresRestart?: boolean
 	inverted?: boolean
 	title?: string
+	/** Why the setting can't be changed here, which disables it and shows it as off */
+	disabledReason?: string
 }
 export const UserConfigSwitchRow = observer(function UserConfigSwitchRow({
 	userConfig,
@@ -18,6 +20,7 @@ export const UserConfigSwitchRow = observer(function UserConfigSwitchRow({
 	requiresRestart,
 	inverted,
 	title,
+	disabledReason,
 }: UserConfigSwitchRowProps) {
 	const invertIfNeeded = (value: boolean) => (inverted ? !value : value)
 	return (
@@ -30,13 +33,15 @@ export const UserConfigSwitchRow = observer(function UserConfigSwitchRow({
 						<em>(Requires Companion restart)</em>
 					</>
 				)}
+				{!!disabledReason && <div className="text-xs text-muted">{disabledReason}</div>}
 			</td>
 			<td>
 				<div className="float-right">
 					<SwitchInputField
 						id={undefined} // Future: set this for better accessibility
-						value={invertIfNeeded(!!userConfig.config[field])}
+						value={!disabledReason && invertIfNeeded(!!userConfig.config[field])}
 						setValue={(val) => userConfig.setValue(field, invertIfNeeded(val))}
+						disabled={!!disabledReason}
 					/>
 				</div>
 			</td>

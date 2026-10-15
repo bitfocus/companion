@@ -73,7 +73,7 @@ function createController() {
 	})
 	deps.pageStore.getFirstPageId.mockReturnValue('page1')
 
-	const controller = new SurfaceController(db as any, deps)
+	const controller = new SurfaceController(db as any, deps, true)
 
 	return { controller, db }
 }

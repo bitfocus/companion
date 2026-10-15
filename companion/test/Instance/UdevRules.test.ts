@@ -41,6 +41,7 @@ async function setup(options: Partial<InstanceUdevRulesControllerOptions> & { us
 			platform: 'linux',
 			isDesktopBuild: false,
 			isContainer: false,
+			usbAvailable: true,
 			systemRulesDir: systemDir,
 			execAsync,
 			...controllerOptions,
@@ -135,6 +136,15 @@ describe('InstanceUdevRulesController', () => {
 		// date. They can only be applied on the host, and our images don't support USB passthrough anyway.
 		it('is not supported inside a container', async () => {
 			const { controller, generatedDir } = await setup({ isContainer: true })
+			await fs.writeFile(path.join(generatedDir, HEADLESS_FILENAME), SAMPLE_RULES)
+
+			const status = await readStatus(controller)
+			expect(status.supported).toBe(false)
+			expect(status.needsApply).toBe(false)
+		})
+
+		it('is not supported when the machine has no usb', async () => {
+			const { controller, generatedDir } = await setup({ usbAvailable: false })
 			await fs.writeFile(path.join(generatedDir, HEADLESS_FILENAME), SAMPLE_RULES)
 
 			const status = await readStatus(controller)

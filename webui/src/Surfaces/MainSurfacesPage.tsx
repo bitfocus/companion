@@ -17,6 +17,7 @@ import { AddEmulatorModal, type AddEmulatorModalRef } from './AddEmulatorModal'
 import { AddSurfaceGroupModal, type AddSurfaceGroupModalRef } from './AddGroupModal'
 import { KnownSurfacesTable } from './KnownSurfacesTable'
 import { UdevRulesAlert } from './UdevRulesAlert'
+import { UsbUnavailableNote } from './UsbUnavailableNote'
 
 export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.Element {
 	const twoPanelMode = useTwoPanelMode()
@@ -118,6 +119,8 @@ export const MainSurfacesPage = observer(function MainSurfacesPage(): React.JSX.
 							{scanError}
 						</StaticAlert>
 					)}
+
+					<UsbUnavailableNote />
 
 					<UdevRulesAlert />
 

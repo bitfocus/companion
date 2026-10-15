@@ -32,6 +32,7 @@ import { ServiceController } from './Service/Controller.js'
 import { ServiceOscSender } from './Service/OscSender.js'
 import { ServiceApi } from './Service/ServiceApi.js'
 import { SurfaceController } from './Surface/Controller.js'
+import { detectUsbAvailable } from './Surface/UsbAvailability.js'
 import { UIController } from './UI/Controller.js'
 import { createTrpcRouter } from './UI/TRPC.js'
 import { VariablesController } from './Variables/Controller.js'
@@ -240,13 +241,17 @@ export class Registry {
 			this.#renderClock
 		)
 
-		this.surfaces = new SurfaceController(this.db, {
-			controls: controlStore,
-			graphics: this.graphics,
-			pageStore: pageStore,
-			userconfig: this.userconfig,
-			variables: this.variables,
-		})
+		this.surfaces = new SurfaceController(
+			this.db,
+			{
+				controls: controlStore,
+				graphics: this.graphics,
+				pageStore: pageStore,
+				userconfig: this.userconfig,
+				variables: this.variables,
+			},
+			detectUsbAvailable()
+		)
 
 		const oscSender = new ServiceOscSender(this.userconfig)
 
