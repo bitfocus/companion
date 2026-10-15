@@ -1,5 +1,5 @@
 import classnames from 'classnames'
-import { memo, useCallback, useEffect, useRef } from 'react'
+import { memo, useCallback, useEffect, useEffectEvent, useRef } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { useImagePreloader } from '~/Components/ButtonPreview.js'
 import type { GridPendingChange } from './GridGeometry.js'
@@ -110,11 +110,13 @@ export const GridButtonPreview = memo(function GridButtonPreview({
 	// The pointer events match every press with a release in the normal cases, but two escape them:
 	// press mode being turned off mid-press, and this cell unmounting while the finger is still down
 	// (the grid virtualises cells, so one can vanish under a held press). Both arrive here as cleanup,
-	// so the control is never left stuck down.
+	// so the control is never left stuck down. An effect event, as a re-render mid-press recreates the callback (a
+	// surface view hands over a new but equal location each time), which must not count as either.
+	const releaseOnExit = useEffectEvent(releaseIfPressed)
 	useEffect(() => {
 		if (!pressMode) return
-		return () => releaseIfPressed()
-	}, [pressMode, releaseIfPressed])
+		return () => releaseOnExit()
+	}, [pressMode])
 
 	const handlePointerDown = useCallback(
 		(e: React.PointerEvent<HTMLDivElement>) => {

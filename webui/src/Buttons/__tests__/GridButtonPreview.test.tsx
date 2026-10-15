@@ -210,6 +210,19 @@ describe('GridButtonPreview', () => {
 
 			expect(onPress).toHaveBeenNthCalledWith(2, location, false)
 		})
+
+		it('keeps a button held through a re-render which hands it a new but equal location', () => {
+			// A surface view builds each control's location afresh every render, and the hover alone re-renders it
+			const { root, onPress, rerender } = setup({ pressMode: true })
+
+			fireEvent.pointerDown(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50 })
+			rerender({ location: { ...location } })
+
+			expect(onPress).toHaveBeenCalledTimes(1)
+
+			fireEvent.pointerUp(root, { button: 0, pointerId: 1, clientX: 50, clientY: 50 })
+			expect(onPress).toHaveBeenNthCalledWith(2, location, false)
+		})
 	})
 
 	describe('context menu', () => {
