@@ -4,6 +4,7 @@ import type {
 	ButtonModelBase,
 	ButtonReferenceButtonModel,
 	LayeredButtonModel,
+	LinkButtonModel,
 	PresetReferenceButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
@@ -205,6 +206,25 @@ export function fixupButtonReferenceControl(
 
 	return {
 		type: 'button-reference',
+		options,
+	}
+}
+
+export function fixupLinkButtonControl(
+	control: ExportControlv6,
+	referencesUpdater: VisitorReferencesUpdater
+): LinkButtonModel {
+	const options = structuredClone(control.options) ?? {}
+
+	if (!isExpressionOrValue(options.location)) options.location = { value: '', isExpression: false }
+	if (typeof options.peerId !== 'string') options.peerId = ''
+
+	// The peer is identified by its Link id, which is global so needs no remapping. Connection labels used in the
+	// location are remapped like for a button-reference
+	referencesUpdater.visitExpressionOrValue(options.location, true)
+
+	return {
+		type: 'link-button',
 		options,
 	}
 }

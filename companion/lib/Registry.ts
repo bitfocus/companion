@@ -22,6 +22,7 @@ import { GraphicsController } from './Graphics/Controller.js'
 import { ImportExportController } from './ImportExport/Controller.js'
 import { InstanceController } from './Instance/Controller.js'
 import { InternalController } from './Internal/Controller.js'
+import { LinkController } from './Link/Controller.js'
 import LogController, { type Logger } from './Log/Controller.js'
 import { PageController } from './Page/Controller.js'
 import { PageStore } from './Page/Store.js'
@@ -93,6 +94,10 @@ export class Registry {
 	 */
 	readonly cloud: CloudController
 	/**
+	 * Companion Link, for linking Companion installations together
+	 */
+	readonly link: LinkController
+	/**
 	 * The core controls controller
 	 */
 	readonly controls: ControlsController
@@ -144,6 +149,7 @@ export class Registry {
 	readonly metrics: DataMetrics
 
 	readonly #renderClock: RenderClock
+	readonly #serviceApi: ServiceApi
 
 	/**
 	 * The 'data' controller
@@ -279,6 +285,8 @@ export class Registry {
 
 		const localVariables = new LocalVariablesController(controlStore, pageStore)
 
+		this.link = new LinkController(this.#appInfo, this.db, this.userconfig, pageStore)
+
 		const actionRunner = new ActionRunner(this.instance, this.internalModule, this.variables, localVariables)
 
 		this.controls = new ControlsController(this.db, controlStore, controlEvents, activeLearningStore, {
@@ -291,6 +299,7 @@ export class Registry {
 			graphics: this.graphics,
 			actionRunner: actionRunner,
 			renderClock: this.#renderClock,
+			linkButtons: this.link.buttonClient,
 		})
 		this.preview = new PreviewController(
 			this.instance.definitions,
@@ -331,7 +340,7 @@ export class Registry {
 			this.variables
 		)
 
-		const serviceApi = new ServiceApi(
+		const serviceApi = (this.#serviceApi = new ServiceApi(
 			this.#appInfo,
 			pageStore,
 			controlStore,
@@ -341,7 +350,7 @@ export class Registry {
 			this.graphics,
 			controlEvents,
 			this.instance
-		)
+		))
 
 		this.services = new ServiceController(
 			this.#appInfo,
@@ -435,6 +444,7 @@ export class Registry {
 		this.graphics.on('button_drawn', (location, render) => {
 			this.controls.onButtonDrawn(location, render)
 			this.services.onButtonDrawn(location, render)
+			this.link.onButtonDrawn(location, render)
 		})
 	}
 
@@ -513,6 +523,9 @@ export class Registry {
 			})
 			this.rebindHttp(bindIp, bindPort)
 
+			// Everything is ready to serve buttons, so start linking with other installations
+			this.link.start(this.#serviceApi)
+
 			// Startup has completed, run triggers
 			this.controls.triggerEvents.emit('startup')
 
@@ -578,6 +591,11 @@ export class Registry {
 		this.services.close()
 		this.cloud.stop()
 		this.usageStatistics.stop()
+
+		// Say goodbye to linked installations before the database closes
+		await this.link.stop().catch((e) => {
+			this.#logger.warn(`Failed to stop link: ${e}`)
+		})
 
 		this.ui.close()
 

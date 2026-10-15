@@ -1,4 +1,11 @@
-import { faClone, faFileArrowDown, faFileArrowUp, faFileLines, faSquarePlus } from '@fortawesome/free-solid-svg-icons'
+import {
+	faClone,
+	faFileArrowDown,
+	faFileArrowUp,
+	faFileLines,
+	faLink,
+	faSquarePlus,
+} from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -40,6 +47,16 @@ export function CreateButtonTypeButtons({ location }: { location: ControlLocatio
 				>
 					<FontAwesomeIcon icon={faClone} />
 					<span>Button reference</span>
+				</Button>
+
+				<Button
+					variant="outline"
+					className="empty-button-type-tile empty-button-type-tile-primary"
+					onClick={() => setButtonType('link-button')}
+					title="Create a button that shows and presses a button on another Companion installation."
+				>
+					<FontAwesomeIcon icon={faLink} />
+					<span>Remote button</span>
 				</Button>
 
 				<Button

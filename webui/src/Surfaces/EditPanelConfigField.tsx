@@ -2,6 +2,7 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useId } from 'react'
 import type { JsonValue } from 'type-fest'
+import type { CompanionInputFieldSecretExtended } from '@companion-app/shared/Model/Options.js'
 import type { CompanionSurfaceConfigField } from '@companion-app/shared/Model/Surfaces.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
@@ -12,6 +13,7 @@ import { FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
 import { NumberInputField } from '~/Components/NumberInputField'
+import { SecretTextInputField } from '~/Components/SecretTextInputField'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { TextInputFieldSimple } from '~/Components/TextInputField'
 import { InputFeatureIcons, type InputFeatureIconsProps } from '~/Controls/InputFeatures'
@@ -21,7 +23,7 @@ import { assertNever } from '~/Resources/util'
 
 interface EditPanelConfigFieldProps {
 	setValue: (key: string, value: JsonValue | undefined) => void
-	definition: CompanionSurfaceConfigField
+	definition: CompanionSurfaceConfigField | CompanionInputFieldSecretExtended
 	value: JsonValue | undefined
 	isVisible: boolean
 }
@@ -133,6 +135,16 @@ export const EditPanelConfigField = observer(function EditPanelConfigField({
 					allowCustom={definition.allowCustom}
 					regex={definition.regex}
 					value={value as any}
+					setValue={setValue2}
+					checkValid={checkValid}
+				/>
+			)
+			break
+		case 'secret-text':
+			control = (
+				<SecretTextInputField
+					id={inputId}
+					value={stringifyVariableValue(value) ?? ''}
 					setValue={setValue2}
 					checkValid={checkValid}
 				/>

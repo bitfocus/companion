@@ -1,87 +1,107 @@
+import type { JsonValue } from 'type-fest'
+import type { CompanionInputFieldSecretExtended } from './Options.js'
+import type { CompanionSurfaceConfigField } from './Surfaces.js'
+
 /**
- * Companion Link shared types
- * Used by both backend and frontend
+ * Companion Link: linking Companion installations together, over one or more transports.
+ * These types are shared between the backend and the UI.
  */
 
-/** Configuration for a single transport instance */
-export interface LinkTransportConfig {
-	/** Unique ID for this transport instance */
-	id: string
-	/** Transport type (mqtt, etc.) */
-	type: LinkTransportType
-	/** User-defined label for this transport instance */
-	label: string
-	/** Whether this transport instance is enabled */
-	enabled: boolean
-	/** Transport-specific configuration */
-	config: LinkTransportTypeConfig
-}
+/** A config field of a transport. The UI renders the transport config editor from these */
+export type LinkTransportConfigField = CompanionSurfaceConfigField | CompanionInputFieldSecretExtended
 
-/** Supported transport types */
-export type LinkTransportType = 'mqtt'
-
-/** Union of all transport-specific configs */
-export type LinkTransportTypeConfig = LinkMqttConfig
-
-/** MQTT-specific transport configuration */
-export interface LinkMqttConfig {
-	/** Broker URL (e.g., mqtt://broker.example.com:1883) */
-	brokerUrl: string
-	/** Username for broker auth */
-	username: string
-	/** Password for broker auth */
-	password: string
-	/** Whether to use TLS */
-	tls: boolean
-}
-
-/** Connection status of a transport instance */
-export type LinkTransportStatus = 'disconnected' | 'connecting' | 'connected' | 'error'
-
-/** Runtime state of a transport instance for UI */
-export interface LinkTransportState {
-	/** Transport config ID */
-	id: string
-	/** Current connection status */
-	status: LinkTransportStatus
-	/** Error message if status is 'error' */
-	error: string | null
-}
-
-/** A discovered peer instance */
-export interface LinkPeerInfo {
-	/** Peer's unique ID */
-	id: string
-	/** Human-readable name */
+/** A kind of transport, as described by the backend so that the UI can be built from it */
+export interface ClientLinkTransportType {
+	/** Unique id of the transport type, stored in each transport config */
+	type: string
+	/** Short name, eg 'MQTT broker' */
 	name: string
-	/** Companion version string */
-	version: string
-	/** Protocol version number */
-	protocolVersion: number
-	/** Number of pages */
+	/** One or two sentences, shown when choosing a transport to add */
+	description: string
+	/** The fields of the transport config */
+	configFields: LinkTransportConfigField[]
+}
+
+/** A configured transport */
+export interface LinkTransportConfig {
+	id: string
+	/** The ClientLinkTransportType['type'] of this transport */
+	type: string
+	label: string
+	enabled: boolean
+	/** Values of the transport type's config fields */
+	config: Record<string, JsonValue | undefined>
+	sortOrder: number
+}
+
+export type LinkTransportStatus = 'disabled' | 'connecting' | 'connected' | 'error'
+
+/** A read-only fact a transport reports about itself, eg the address it is listening on */
+export interface LinkTransportInfoItem {
+	label: string
+	value: string
+	/** Show a copy button next to the value, for things the user will need to enter on another installation */
+	copyable?: boolean
+}
+
+/** The runtime state of a configured transport */
+export interface LinkTransportState {
+	status: LinkTransportStatus
+	/** Explanation of the status, eg the error */
+	message: string | null
+	info: LinkTransportInfoItem[]
+}
+
+export type LinkTransportsUpdate =
+	| { type: 'init'; items: Record<string, LinkTransportConfig> }
+	| { type: 'add'; itemId: string; info: LinkTransportConfig }
+	| { type: 'remove'; itemId: string }
+
+export type LinkTransportStatesUpdate =
+	| { type: 'init'; items: Record<string, LinkTransportState> }
+	| { type: 'update'; itemId: string; state: LinkTransportState }
+	| { type: 'remove'; itemId: string }
+
+/** A Companion installation discovered on at least one transport */
+export interface LinkPeerInfo {
+	id: string
+	name: string
+	companionVersion: string
+	protocolVersion: string
+	/** Whether we speak a compatible protocol version. Incompatible peers are listed but can't be used */
+	compatible: boolean
 	pageCount: number
-	/** Grid dimensions */
-	gridSize: { rows: number; cols: number }
-	/** Whether the peer is online (reachable on at least one transport) */
+	grid: { minRow: number; maxRow: number; minColumn: number; maxColumn: number }
+	/** Ids of the transports the peer is currently reachable on */
+	transportIds: string[]
+	/** Whether the peer is reachable on any transport */
 	online: boolean
-	/** Which transport instance IDs this peer is reachable on */
-	transports: string[]
-	/** Unix timestamp of last announcement (across all transports) */
+	/** Unix timestamp (ms) of the last announcement received */
 	lastSeen: number
 }
 
-/** Overall Link controller state for the UI */
-export interface LinkControllerState {
-	/** Whether the Link service is enabled */
-	enabled: boolean
-	/** This instance's UUID */
-	uuid: string
+/** Information about this installation, as seen by peers */
+export interface LinkSelfInfo {
+	id: string
+	name: string
+	protocolVersion: string
 }
 
-/** Default MQTT config for new transport instances */
-export const DEFAULT_MQTT_CONFIG: LinkMqttConfig = {
-	brokerUrl: 'mqtt://localhost:1883',
-	username: '',
-	password: '',
-	tls: false,
+/**
+ * Why a link button is showing what it is showing
+ * - `unconfigured`: no peer or location chosen, or the location could not be resolved
+ * - `unknown_peer`: the peer has not been discovered on any transport
+ * - `incompatible`: the peer speaks an incompatible protocol version
+ * - `offline`: the peer is known but not currently reachable
+ * - `loading`: subscribed, waiting for the first image
+ * - `loop`: the remote button is (indirectly) linked back to this installation
+ * - `ok`: showing the remote button
+ */
+export type LinkButtonStatus = 'unconfigured' | 'unknown_peer' | 'incompatible' | 'offline' | 'loading' | 'loop' | 'ok'
+
+/** Runtime (non-persisted) state of a link button, for the button editor */
+export interface LinkButtonRuntimeProps {
+	status: LinkButtonStatus
+	/** Name of the target peer, when it is known */
+	peerName: string | null
 }

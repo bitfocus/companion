@@ -1,210 +1,151 @@
-import EventEmitter from 'node:events'
-import LogController from '../Log/Controller.js'
+import { EventEmitter } from 'node:events'
 import type { LinkPeerInfo } from '@companion-app/shared/Model/Link.js'
-import type { AnnouncementPayload } from './Protocol.js'
+import LogController from '../Log/Controller.js'
+import type { LinkAnnouncementPayload } from './Protocol/Schemas.js'
+import { LINK_ANNOUNCE_MISSED_LIMIT } from './Protocol/Topics.js'
+import { isLinkProtocolCompatible } from './Protocol/Versions.js'
 
-/** Internal per-transport peer data */
-interface PeerTransportEntry {
-	/** Last seen timestamp from this transport */
-	lastSeen: number
-	/** Whether considered online on this transport */
-	online: boolean
-}
-
-/** Internal peer record */
 interface PeerRecord {
-	/** Core peer info from announcement */
-	info: Omit<LinkPeerInfo, 'online' | 'transports' | 'lastSeen'>
-	/** Per-transport reachability state */
-	transports: Map<string, PeerTransportEntry>
+	announcement: LinkAnnouncementPayload
+	/** When the peer was last heard from, on each transport it is reachable on */
+	transports: Map<string, number>
+	lastSeen: number
 }
 
-export type PeerRegistryEvents = {
-	/** Emitted whenever the peers list changes */
-	peersChanged: [peers: LinkPeerInfo[]]
+export interface PeerRegistryEvents {
+	/** The list of peers, or the reachability of one, changed */
+	changed: []
+	/** A peer has become reachable on a transport */
+	peerReachable: [peerId: string, transportId: string]
 }
+
+/** How often to look for peers that have stopped announcing */
+const EXPIRY_CHECK_INTERVAL_MS = 5_000
 
 /**
- * Tracks discovered peers across all transports.
- * Aggregates per-transport reachability into a unified peer list.
+ * The installations discovered on any transport, and which transports each is reachable on.
+ *
+ * Peers stay listed after they go offline (for the session), so that buttons linked to them can explain why they
+ * are not working.
  */
-export class PeerRegistry extends EventEmitter<PeerRegistryEvents> {
+export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 	readonly #logger = LogController.createLogger('Link/PeerRegistry')
 
-	/** Map of peer UUID → PeerRecord */
 	readonly #peers = new Map<string, PeerRecord>()
+	#selfId: string
+	#expiryTimer: NodeJS.Timeout | null = null
 
-	/** Our own UUID, so we don't track ourselves */
-	#selfUuid: string
-
-	/** Offline timeout in ms (2× announcement interval) */
-	readonly #offlineTimeout: number
-
-	/** Interval handle for checking stale peers */
-	#checkInterval: ReturnType<typeof setInterval> | null = null
-
-	constructor(selfUuid: string, offlineTimeoutMs = 120_000) {
+	constructor(selfId: string) {
 		super()
 		this.setMaxListeners(0)
-		this.#selfUuid = selfUuid
-		this.#offlineTimeout = offlineTimeoutMs
+		this.#selfId = selfId
 	}
 
-	/** Start the periodic stale-check timer */
 	start(): void {
-		this.stop()
-		this.#checkInterval = setInterval(() => this.#checkStalePeers(), 30_000)
+		this.#expiryTimer ??= setInterval(() => this.expireStale(Date.now()), EXPIRY_CHECK_INTERVAL_MS)
 	}
 
-	/** Stop the periodic stale-check timer */
 	stop(): void {
-		if (this.#checkInterval) {
-			clearInterval(this.#checkInterval)
-			this.#checkInterval = null
-		}
+		if (this.#expiryTimer) clearInterval(this.#expiryTimer)
+		this.#expiryTimer = null
 	}
 
-	/** Update our own UUID (e.g., after regeneration) */
-	setSelfUuid(uuid: string): void {
-		this.#selfUuid = uuid
-		// Remove ourselves if we were somehow tracked
-		if (this.#peers.delete(uuid)) {
-			this.#emitPeers()
-		}
+	setSelfId(selfId: string): void {
+		this.#selfId = selfId
+		if (this.#peers.delete(selfId)) this.emit('changed')
 	}
 
-	/**
-	 * Process an announcement from a peer on a specific transport.
-	 * @param transportId - The transport instance ID the announcement arrived on
-	 * @param announcement - The announcement payload
-	 */
-	handleAnnouncement(transportId: string, announcement: AnnouncementPayload): void {
-		if (announcement.id === this.#selfUuid) return
+	/** Process an announcement received on a transport */
+	handleAnnouncement(transportId: string, announcement: LinkAnnouncementPayload, now: number): void {
+		if (announcement.id === this.#selfId) return
 
 		let record = this.#peers.get(announcement.id)
 		if (!record) {
-			record = {
-				info: {
-					id: announcement.id,
-					name: announcement.name,
-					version: announcement.version,
-					protocolVersion: announcement.protocolVersion,
-					pageCount: announcement.pageCount,
-					gridSize: announcement.gridSize,
-				},
-				transports: new Map(),
-			}
+			this.#logger.info(`Discovered ${announcement.name} (${announcement.id})`)
+			record = { announcement, transports: new Map(), lastSeen: now }
 			this.#peers.set(announcement.id, record)
-			this.#logger.info(`Discovered new peer: ${announcement.name} (${announcement.id})`)
 		}
 
-		// Update peer info (may have changed)
-		record.info.name = announcement.name
-		record.info.version = announcement.version
-		record.info.protocolVersion = announcement.protocolVersion
-		record.info.pageCount = announcement.pageCount
-		record.info.gridSize = announcement.gridSize
+		const wasReachable = record.transports.has(transportId)
+		record.announcement = announcement
+		record.transports.set(transportId, now)
+		record.lastSeen = now
 
-		// Update transport entry
-		record.transports.set(transportId, {
-			lastSeen: Date.now(),
-			online: true,
-		})
-
-		this.#emitPeers()
+		this.emit('changed')
+		if (!wasReachable) this.emit('peerReachable', announcement.id, transportId)
 	}
 
-	/**
-	 * Handle a peer going offline on a specific transport.
-	 * Called when an empty retained message is received (graceful offline).
-	 */
-	handlePeerOffline(transportId: string, peerId: string): void {
+	/** A peer said it is going offline on a transport */
+	handleGoodbye(transportId: string, peerId: string): void {
 		const record = this.#peers.get(peerId)
-		if (!record) return
-
-		const entry = record.transports.get(transportId)
-		if (entry) {
-			entry.online = false
-		}
-
-		this.#emitPeers()
+		if (record?.transports.delete(transportId)) this.emit('changed')
 	}
 
-	/**
-	 * Remove all peer entries associated with a transport instance.
-	 * Called when a transport is removed or disconnects.
-	 */
-	removeTransport(transportId: string): void {
-		for (const record of this.#peers.values()) {
-			record.transports.delete(transportId)
-		}
-		this.#emitPeers()
-	}
-
-	/**
-	 * Delete a peer entirely (user action from UI).
-	 */
-	deletePeer(peerId: string): boolean {
-		const deleted = this.#peers.delete(peerId)
-		if (deleted) {
-			this.#emitPeers()
-		}
-		return deleted
-	}
-
-	/** Get the current list of peers for the UI */
-	getPeers(): LinkPeerInfo[] {
-		return this.#buildPeerList()
-	}
-
-	/** Check for peers that haven't been seen recently and mark them offline */
-	#checkStalePeers(): void {
-		const now = Date.now()
+	/** A transport has stopped, so nothing is reachable through it any more */
+	handleTransportDisconnected(transportId: string): void {
 		let changed = false
-
 		for (const record of this.#peers.values()) {
-			for (const [, entry] of record.transports) {
-				if (entry.online && now - entry.lastSeen > this.#offlineTimeout) {
-					entry.online = false
+			if (record.transports.delete(transportId)) changed = true
+		}
+		if (changed) this.emit('changed')
+	}
+
+	/** Mark peers unreachable on transports they have stopped announcing on */
+	expireStale(now: number): void {
+		let changed = false
+		for (const record of this.#peers.values()) {
+			const timeout = record.announcement.announceIntervalMs * LINK_ANNOUNCE_MISSED_LIMIT
+			for (const [transportId, lastSeen] of record.transports) {
+				if (now - lastSeen > timeout) {
+					record.transports.delete(transportId)
 					changed = true
 				}
 			}
 		}
-
-		if (changed) {
-			this.#emitPeers()
-		}
+		if (changed) this.emit('changed')
 	}
 
-	/** Build the flat peer list from internal records */
-	#buildPeerList(): LinkPeerInfo[] {
-		const peers: LinkPeerInfo[] = []
-
-		for (const record of this.#peers.values()) {
-			const onlineTransports: string[] = []
-			let latestSeen = 0
-
-			for (const [transportId, entry] of record.transports) {
-				if (entry.online) {
-					onlineTransports.push(transportId)
-				}
-				if (entry.lastSeen > latestSeen) {
-					latestSeen = entry.lastSeen
-				}
-			}
-
-			peers.push({
-				...record.info,
-				online: onlineTransports.length > 0,
-				transports: onlineTransports,
-				lastSeen: latestSeen,
-			})
-		}
-
-		return peers
+	/** Forget a peer. It will be rediscovered if it is still announcing */
+	forget(peerId: string): void {
+		if (this.#peers.delete(peerId)) this.emit('changed')
 	}
 
-	#emitPeers(): void {
-		this.emit('peersChanged', this.#buildPeerList())
+	clear(): void {
+		this.#peers.clear()
+		this.emit('changed')
+	}
+
+	/** The transports a peer can currently be reached on, most recently heard from first */
+	getReachableTransports(peerId: string): string[] {
+		const record = this.#peers.get(peerId)
+		if (!record) return []
+		return Array.from(record.transports.entries())
+			.sort((a, b) => b[1] - a[1])
+			.map(([id]) => id)
+	}
+
+	getPeer(peerId: string): LinkPeerInfo | undefined {
+		const record = this.#peers.get(peerId)
+		return record ? toPeerInfo(record) : undefined
+	}
+
+	getPeers(): LinkPeerInfo[] {
+		return Array.from(this.#peers.values(), toPeerInfo)
+	}
+}
+
+function toPeerInfo(record: PeerRecord): LinkPeerInfo {
+	const { announcement } = record
+	return {
+		id: announcement.id,
+		name: announcement.name,
+		companionVersion: announcement.companionVersion,
+		protocolVersion: announcement.protocolVersion,
+		compatible: isLinkProtocolCompatible(announcement.protocolVersion),
+		pageCount: announcement.pageCount,
+		grid: announcement.grid,
+		transportIds: Array.from(record.transports.keys()),
+		online: record.transports.size > 0,
+		lastSeen: record.lastSeen,
 	}
 }

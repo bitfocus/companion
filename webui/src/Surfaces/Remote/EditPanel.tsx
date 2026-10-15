@@ -5,14 +5,14 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useId, useMemo, useState } from 'react'
 import type { JsonValue } from 'type-fest'
-import type { CompanionSurfaceConfigField, OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
+import type { OutboundSurfaceInfo } from '@companion-app/shared/Model/Surfaces.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { TextInputFieldSimple } from '~/Components/TextInputField'
-import { usePlainOptionsVisibility } from '~/Hooks/useOptionsAndIsVisible'
+import { OptionsVisibility } from '~/Hooks/OptionsVisibility.js'
 import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton } from '~/Layout/PanelIcons'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -225,18 +225,4 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 			/>
 		</Form>
 	)
-})
-
-// Minimal wrapper component to allow using a hook inside a nested render function
-const OptionsVisibility = observer(function OptionsVisibility({
-	options,
-	values,
-	children,
-}: {
-	options: CompanionSurfaceConfigField[]
-	values: Record<string, JsonValue | undefined>
-	children: (visibility: ReadonlyMap<string, boolean>) => React.ReactNode
-}) {
-	const visibility = usePlainOptionsVisibility(options, values)
-	return <>{children(visibility)}</>
 })
