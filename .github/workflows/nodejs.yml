@@ -47,6 +47,10 @@ jobs:
     runs-on: ubuntu-22.04
     needs: check-types
     timeout-minutes: 20
+    # A newer push to the same branch supersedes this build (once its check-types passes). Tag builds are never cancelled.
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-linux-x64
+      cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
     outputs:
       version: ${{ steps.filenames.outputs.longversion }}
@@ -151,6 +155,9 @@ jobs:
     runs-on: ubuntu-22.04-arm
     needs: check-types
     timeout-minutes: 20
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-linux-arm64
+      cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
     outputs:
       upload-url: ${{ steps.upload-beta.outputs.upload-url || steps.upload-stable.outputs.upload-url }}
@@ -265,6 +272,9 @@ jobs:
     runs-on: macos-26
     needs: check-types
     timeout-minutes: 60
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-osx-x64
+      cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
     steps:
       - uses: actions/checkout@v7
@@ -366,6 +376,9 @@ jobs:
     runs-on: macos-26
     needs: check-types
     timeout-minutes: 60
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-osx-arm64
+      cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
     steps:
       - uses: actions/checkout@v7
@@ -469,6 +482,9 @@ jobs:
     runs-on: ${{ (startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[build-signed]')) && fromJSON('["self-hosted", "Windows", "codecert", "X64"]') || 'windows-latest'}}
     needs: check-types
     timeout-minutes: 60
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-win32-x64
+      cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
     steps:
       - uses: actions/checkout@v7
@@ -583,6 +599,9 @@ jobs:
     runs-on: ${{ (startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[build-signed]')) && fromJSON('["self-hosted", "Windows", "codecert", "X64"]') || 'windows-11-arm'}}
     needs: check-types
     timeout-minutes: 60
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-win32-arm64
+      cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
     steps:
       - uses: actions/checkout@v7
@@ -698,6 +717,9 @@ jobs:
   docker-image:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-docker-image
+      cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
     needs:
       - linux-x64
