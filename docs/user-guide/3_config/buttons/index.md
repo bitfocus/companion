@@ -109,8 +109,8 @@ some of them would land outside of the grid, nothing is pasted.
 ## Viewing the grid as a surface
 
 The grid is rarely the same size as any one surface, and a surface is not always a plain rectangle of
-square buttons. The eye button above the grid views the grid as one of your surfaces, drawing the grid as the
-face of that surface:
+square buttons. The eye button above the grid allows you to view the grid as one of your surfaces, drawing the grid as a
+realistic representation of that surface:
 
 - each control is drawn where the surface has it, so it is clear where things like the encoders of a
   Stream Deck +XL sit among the buttons above them,
