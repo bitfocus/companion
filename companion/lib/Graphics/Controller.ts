@@ -476,6 +476,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			// Try and set the correct content type
 			if (definition.pathOnDisk.endsWith('.ttf')) {
 				res.setHeader('Content-Type', 'font/ttf')
+			} else if (definition.pathOnDisk.endsWith('.otf')) {
+				res.setHeader('Content-Type', 'font/otf')
 			}
 
 			// Cache aggressively
