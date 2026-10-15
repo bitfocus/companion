@@ -21,6 +21,7 @@ function control(id: string, row: number, column: number): ResolvedSurfaceContro
 		cell: { row, column },
 		bounds: { x: column * 100, y: row * 100, width: 96, height: 96 },
 		shape: { type: 'rect', cornerRadiusRatio: 0.12 },
+		kind: 'button',
 		feedback: 'bitmap',
 		leds: null,
 		aspectRatio: null,
