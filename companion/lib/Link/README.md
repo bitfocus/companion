@@ -21,7 +21,7 @@ To add a new transport, see [Transports/README.md](./Transports/README.md).
           └───────────────────────────────────────┬──────────────────┘
                                                   │ publish / subscribe on topics
                                     ┌─────────────┼──────────────┐
-                                 Direct/      (your transport)
+                                 Direct/      Mqtt/         (your transport)
 ```
 
 - **LinkTransportManager** owns the configured transports: persisting them, running the enabled ones, and fanning

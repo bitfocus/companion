@@ -12,6 +12,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import './AddTransportModal.css'
+import { ExperimentalBadge } from './LinkStatusBadges.js'
 import { useLinkStore } from './LinkStoreContext.js'
 
 /** Add a transport: first choose its type, then name it */
@@ -70,7 +71,10 @@ const ChooseTypeStep = observer(function ChooseTypeStep({
 						onClick={() => onChoose(type)}
 					>
 						<span className="flex flex-col items-start gap-1 min-w-0 grow">
-							<span className="flex items-center gap-2 text-base font-semibold text-body-strong">{type.name}</span>
+							<span className="flex items-center gap-2 text-base font-semibold text-body-strong">
+								{type.name}
+								{type.experimental && <ExperimentalBadge />}
+							</span>
 							<span className="text-sm text-muted whitespace-normal">{type.description}</span>
 						</span>
 						<FontAwesomeIcon icon={faChevronRight} className="shrink-0 text-muted" aria-hidden="true" />
@@ -115,7 +119,9 @@ const NameTransportStep = observer(function NameTransportStep({
 	return (
 		<>
 			<Modal.Body>
-				<p className="text-sm text-muted">{type.description}</p>
+				<p className="text-sm text-muted">
+					{type.description} {type.experimental && <ExperimentalBadge />}
+				</p>
 				<Form onSubmit={PreventDefaultHandler}>
 					<FormLabel htmlFor={labelId}>Name</FormLabel>
 					<TextInputField id={labelId} value={label} setValue={setLabel} immediateValue />

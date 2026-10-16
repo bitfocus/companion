@@ -1,5 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import type { LinkPeerInfo, LinkTransportState } from '@companion-app/shared/Model/Link.js'
+import { Badge } from '~/Components/Badge.js'
 import { StatusBadge } from '~/Components/StatusBadge.js'
 import { assertNever } from '~/Resources/util.js'
 
@@ -59,3 +60,12 @@ export const PeerStatusBadge = observer(function PeerStatusBadge({
 		<StatusBadge tone="disabled">Offline</StatusBadge>
 	)
 })
+
+/** Warns that a transport type may change or be removed in a later release */
+export function ExperimentalBadge(): React.JSX.Element {
+	return (
+		<Badge color="warning" variant="tonal" title="This may change or be removed in a later release">
+			Experimental
+		</Badge>
+	)
+}

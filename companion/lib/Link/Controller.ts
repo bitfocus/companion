@@ -382,6 +382,7 @@ export class LinkController {
 					type: def.type,
 					name: def.name,
 					description: def.description,
+					experimental: def.experimental ?? false,
 					configFields: def.configFields,
 				}))
 			),
