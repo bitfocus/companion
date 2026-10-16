@@ -4,7 +4,6 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useId } from 'react'
-import type { JsonValue } from 'type-fest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ExpressionStreamResult } from '@companion-app/shared/ExpressionResult.js'
 import type { ButtonReferenceButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
@@ -12,15 +11,13 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { Button } from '~/Components/Button'
-import { FieldOrExpression } from '~/Components/FieldOrExpression.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { InputValidityIcon, type InputValidity } from '~/Components/InputValidity.js'
 import { Note } from '~/Components/Note.js'
-import { TextInputField } from '~/Components/TextInputField.js'
-import { EntityListActionContext, useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
+import { ButtonLocationInput } from './ButtonLocationInput.js'
 
 interface ButtonReferenceEditorProps {
 	config: ButtonReferenceButtonModel
@@ -40,21 +37,13 @@ export const ButtonReferenceEditor = observer(function ButtonReferenceEditor({
 	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
 
 	const setLocation = useCallback(
-		(value: ExpressionOrValue<JsonValue | undefined>) => {
+		(value: ExpressionOrValue<string>) => {
 			setOptionsFieldMutation
 				.mutateAsync({ controlId, key: 'location', value })
 				.catch((e) => console.error(`Failed to set reference location: ${e}`))
 		},
 		[setOptionsFieldMutation, controlId]
 	)
-
-	const localVariablesStore = useLocalVariablesStore(controlId, null)
-	const localVariables = localVariablesStore.getOptions({
-		entityType: null,
-		internalParser: true,
-		isLocatedInGrid: true,
-		actionContext: EntityListActionContext.NotActions,
-	})
 
 	const location = config.options.location
 	const fieldId = useId()
@@ -72,24 +61,7 @@ export const ButtonReferenceEditor = observer(function ButtonReferenceEditor({
 					Mirrored location
 				</FormLabel>
 				<Grid.Col sm={8}>
-					<FieldOrExpression
-						inputId={fieldId}
-						localVariablesStore={localVariablesStore}
-						value={location}
-						setValue={setLocation}
-						disabled={false}
-						entityType={null}
-						isLocatedInGrid={true}
-					>
-						<TextInputField
-							id={fieldId}
-							value={String(location.value ?? '')}
-							setValue={(value) => setLocation({ isExpression: false, value })}
-							useVariables
-							localVariables={localVariables}
-							placeholder="page/row/column, e.g. 1/0/0"
-						/>
-					</FieldOrExpression>
+					<ButtonLocationInput inputId={fieldId} controlId={controlId} value={location} setValue={setLocation} />
 				</Grid.Col>
 
 				<ResolvedLocationRow controlId={controlId} location={location} navigateToControl={navigateToControl} />
