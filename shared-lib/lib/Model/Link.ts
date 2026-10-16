@@ -53,6 +53,8 @@ export interface ClientLinkTransportType {
 	name: string
 	/** One or two sentences, shown when choosing a transport to add */
 	description: string
+	/** May change or be removed in a later release */
+	experimental: boolean
 	/** The fields of the transport config */
 	configFields: LinkTransportConfigField[]
 	/**

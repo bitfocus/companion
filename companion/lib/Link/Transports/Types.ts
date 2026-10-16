@@ -125,6 +125,11 @@ export interface LinkTransportDefinition<TConfig extends Record<string, JsonValu
 	readonly name: string
 	readonly description: string
 	/**
+	 * Mark a transport type that may change or be removed in a later release, so the UI can warn the user. Default
+	 * false
+	 */
+	readonly experimental?: boolean
+	/**
 	 * Fields of the config. Values are validated and sanitised against these, with defaults filled in, before
 	 * they reach `create`
 	 */

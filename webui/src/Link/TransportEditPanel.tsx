@@ -24,7 +24,7 @@ import { useSaveShortcut } from '~/Hooks/useSaveShortcut.js'
 import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton } from '~/Layout/PanelIcons.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { TransportStatusBadge } from './LinkStatusBadges.js'
+import { ExperimentalBadge, TransportStatusBadge } from './LinkStatusBadges.js'
 import { useLinkStore } from './LinkStoreContext.js'
 import { PeerLink } from './PeerLink.js'
 import { TransportConfigField } from './TransportConfigField.js'
@@ -215,6 +215,11 @@ const TransportEditForm = observer(function TransportEditForm({
 				<EditSectionCard title="General Settings">
 					<Note tone="neutral" icon={faCircleInfo} actions={null}>
 						<b>{transportType.name}</b>: {transportType.description}
+						{transportType.experimental && (
+							<div className="mt-1">
+								<ExperimentalBadge /> It may change or be removed in a later release.
+							</div>
+						)}
 					</Note>
 
 					<form.Field
