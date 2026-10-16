@@ -144,7 +144,10 @@ describe('ControlButtonLink', () => {
 
 		const style = await control.drawing.getDrawStyle()
 		expect(style.pushed).toBe(true)
-		expect(style.elements).toMatchObject([{ type: 'image', base64Image: state.dataUrl }])
+		expect(style.elements).toMatchObject([
+			{ type: 'canvas', decoration: 'none' },
+			{ type: 'image', base64Image: state.dataUrl },
+		])
 		expect(control.toRuntimeJSON()).toEqual({ status: 'ok', peerName: 'Peer' })
 	})
 

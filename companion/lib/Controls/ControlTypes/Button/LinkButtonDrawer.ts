@@ -1,8 +1,16 @@
 import debounceFn from 'debounce-fn'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { LinkButtonStatus } from '@companion-app/shared/Model/Link.js'
-import type { ButtonGraphicsImageDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { ButtonGraphicsElementUsage, type DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
+import type {
+	ButtonGraphicsCanvasDrawElement,
+	ButtonGraphicsImageDrawElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
+import {
+	ButtonGraphicsDecorationType,
+	ButtonGraphicsElementUsage,
+	ButtonGraphicsShowStatusIcons,
+	type DrawStyleLayeredButtonModel,
+} from '@companion-app/shared/Model/StyleModel.js'
 import { makeReferencePlaceholder } from '../../../Graphics/ConvertGraphicsElements.js'
 import { computeElementContentHash } from '../../../Graphics/ConvertGraphicsElements/Util.js'
 import type { ImageResult } from '../../../Graphics/ImageResult.js'
@@ -59,7 +67,7 @@ export class LinkButtonDrawer implements IButtonDrawer {
 			action_running: undefined,
 			elements:
 				state.status === 'ok' && state.dataUrl
-					? [makeImageElement(this.#controlId, state.dataUrl)]
+					? makeRemoteImageElements(this.#controlId, state.dataUrl)
 					: makeReferencePlaceholder(this.#controlId, state.status === 'ok' ? '' : PLACEHOLDER_TEXT[state.status]),
 			referencedLocations: undefined,
 			style: 'button-layered',
@@ -95,8 +103,25 @@ export class LinkButtonDrawer implements IButtonDrawer {
 	})
 }
 
-function makeImageElement(parentId: string, dataUrl: string): ButtonGraphicsImageDrawElement {
-	const element: ButtonGraphicsImageDrawElement = {
+/**
+ * The remote image fills the button. It already includes the decoration (eg the top bar) drawn by the remote
+ * installation, so none is added here
+ */
+function makeRemoteImageElements(
+	parentId: string,
+	dataUrl: string
+): [ButtonGraphicsCanvasDrawElement, ButtonGraphicsImageDrawElement] {
+	const canvas: ButtonGraphicsCanvasDrawElement = {
+		id: `${parentId}:canvas`,
+		type: 'canvas',
+		usage: ButtonGraphicsElementUsage.Automatic,
+		decoration: ButtonGraphicsDecorationType.None,
+		showStatusIcons: ButtonGraphicsShowStatusIcons.None,
+		contentHash: '',
+	}
+	canvas.contentHash = computeElementContentHash(canvas)
+
+	const image: ButtonGraphicsImageDrawElement = {
 		id: `${parentId}:remote`,
 		type: 'image',
 		usage: ButtonGraphicsElementUsage.Automatic,
@@ -113,6 +138,7 @@ function makeImageElement(parentId: string, dataUrl: string): ButtonGraphicsImag
 		fillMode: 'fit',
 		contentHash: '',
 	}
-	element.contentHash = computeElementContentHash(element)
-	return element
+	image.contentHash = computeElementContentHash(image)
+
+	return [canvas, image]
 }

@@ -86,9 +86,9 @@ const TransportStateSummary = observer(function TransportStateSummary({
 						<React.Fragment key={item.label}>
 							<dt className="text-muted">{item.label}</dt>
 							<dd className="col-span-2 m-0 flex items-center gap-1 min-w-0">
-								<code className="truncate" title={item.value}>
+								<span className="truncate font-mono" title={item.value}>
 									{item.value}
-								</code>
+								</span>
 								{item.copyable && <CopyButton text={item.value} variant="ghost" />}
 							</dd>
 						</React.Fragment>

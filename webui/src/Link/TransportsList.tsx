@@ -91,6 +91,10 @@ const TransportRow = observer(function TransportRow({
 	}, [confirmModalRef, removeMutation, transport, isSelected, navigate])
 
 	const typeName = linkStore.transportTypes.get(transport.type)?.name ?? `Unknown type "${transport.type}"`
+	const state = linkStore.transportStates.get(transport.id)
+	// The label defaults to the type name, so then describe the transport with what it reports about itself instead
+	const firstInfo = state?.info[0]
+	const subtitle = transport.label === typeName && firstInfo ? `${firstInfo.label}: ${firstInfo.value}` : typeName
 
 	return (
 		<div
@@ -101,10 +105,12 @@ const TransportRow = observer(function TransportRow({
 		>
 			<div onClick={doEdit} className={classNames('flex flex-col grow min-w-0', { disabled: !transport.enabled })}>
 				<b className="truncate">{transport.label}</b>
-				<span className="truncate text-muted text-sm">{typeName}</span>
+				<span className="truncate text-muted text-sm" title={typeName}>
+					{subtitle}
+				</span>
 			</div>
 
-			<TransportStatusBadge state={linkStore.transportStates.get(transport.id)} />
+			<TransportStatusBadge state={state} />
 
 			<div className="flex items-center ps-2">
 				<SwitchInputField
