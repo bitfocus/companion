@@ -49,6 +49,13 @@ function fakeDefinition(instances: FakeTransport[]): LinkTransportDefinition<{ h
 	}
 }
 
+/** Add a fake transport with its default config */
+function addFake(manager: LinkTransportManager, label: string): string {
+	const result = manager.add('fake', label, {})
+	if (!result.ok) throw new Error('Failed to add')
+	return result.id
+}
+
 function createManager() {
 	const instances: FakeTransport[] = []
 	const definition = fakeDefinition(instances)
@@ -73,7 +80,7 @@ describe('LinkTransportManager', () => {
 
 	test('adding a transport starts it with the default config', () => {
 		ctx.manager.start()
-		const id = ctx.manager.add('fake', 'My fake')
+		const id = addFake(ctx.manager, 'My fake')
 
 		expect(ctx.instances).toHaveLength(1)
 		expect(ctx.instances[0].config).toEqual({ host: 'localhost' })
@@ -81,18 +88,79 @@ describe('LinkTransportManager', () => {
 		expect(ctx.db.getTableView('link_transports').data[id]).toBeDefined()
 	})
 
+	test('a built-in transport starts with Link, follows its config, and is not saved or changed by the user', async () => {
+		await ctx.manager.setBuiltin('builtin', 'fake', 'Built in', { host: 'one' })
+		expect(ctx.instances).toHaveLength(0)
+
+		ctx.manager.start()
+		expect(ctx.instances.map((t) => t.config)).toEqual([{ host: 'one' }])
+		expect(ctx.manager.getConfigs().builtin).toMatchObject({ label: 'Built in', enabled: true, builtin: true })
+		expect(ctx.db.getTableView('link_transports').data.builtin).toBeUndefined()
+
+		// Unchanged, so left running
+		await ctx.manager.setBuiltin('builtin', 'fake', 'Built in', { host: 'one' })
+		expect(ctx.instances).toHaveLength(1)
+
+		await ctx.manager.setBuiltin('builtin', 'fake', 'Built in', { host: 'two' })
+		expect(ctx.instances[0].destroyed).toBe(true)
+		expect(ctx.instances[1].config).toEqual({ host: 'two' })
+
+		await expect(ctx.manager.setEnabled('builtin', false)).rejects.toThrow()
+		await expect(ctx.manager.remove('builtin')).rejects.toThrow()
+		await expect(ctx.manager.update('builtin', 'Renamed', { host: 'three' })).rejects.toThrow()
+
+		await ctx.manager.setBuiltin('builtin', 'fake', 'Built in', null)
+		expect(ctx.instances[1].destroyed).toBe(true)
+		expect(ctx.manager.getStates().builtin.status).toBe('disabled')
+	})
+
+	test('adding a transport validates its config', () => {
+		expect(ctx.manager.add('fake', 'Bad', { host: 'NOT VALID' })).toMatchObject({
+			ok: false,
+			errors: { host: expect.any(String) },
+		})
+		expect(ctx.instances).toHaveLength(0)
+
+		const result = ctx.manager.add('fake', 'Good', { host: 'other' })
+		expect(result.ok).toBe(true)
+		expect(ctx.instances[0].config).toEqual({ host: 'other' })
+	})
+
+	test('a saved transport of a built-in type is not started, and can be deleted', async () => {
+		const id = addFake(ctx.manager, 'Old')
+		ctx.instances.length = 0
+
+		const fresh = new LinkTransportManager(
+			ctx.db.asDataDatabase(),
+			[fakeDefinition(ctx.instances)],
+			() => identity,
+			() => 'Self',
+			() => ({ buttons: false }),
+			() => ({ topic: 'discovery/self', payload: '', retain: true })
+		)
+		await fresh.setBuiltin('builtin', 'fake', 'Built in', { host: 'one' })
+		fresh.start()
+
+		expect(ctx.instances).toHaveLength(1)
+		expect(fresh.getStates()[id].status).toBe('error')
+		expect(() => fresh.add('fake', 'New', {})).toThrow()
+
+		await fresh.remove(id)
+		expect(fresh.getConfigs()[id]).toBeUndefined()
+	})
+
 	test('rejects unknown types', () => {
-		expect(() => ctx.manager.add('nope', 'Nope')).toThrow()
+		expect(() => ctx.manager.add('nope', 'Nope', {})).toThrow()
 	})
 
 	test('applies existing subscriptions to new transports', () => {
 		ctx.manager.subscribe('a/+')
-		ctx.manager.add('fake', 'One')
+		addFake(ctx.manager, 'One')
 		expect([...ctx.instances[0].subscriptions]).toEqual(['a/+'])
 	})
 
 	test('reference counts subscriptions', () => {
-		ctx.manager.add('fake', 'One')
+		addFake(ctx.manager, 'One')
 		ctx.manager.subscribe('a/+')
 		ctx.manager.subscribe('a/+')
 		ctx.manager.unsubscribe('a/+')
@@ -102,7 +170,7 @@ describe('LinkTransportManager', () => {
 	})
 
 	test('only publishes on connected transports', () => {
-		ctx.manager.add('fake', 'One')
+		addFake(ctx.manager, 'One')
 		ctx.manager.publishAll('a', 'b', { retain: false, requires: null })
 		expect(ctx.instances[0].published).toEqual([])
 
@@ -119,7 +187,7 @@ describe('LinkTransportManager', () => {
 		ctx.manager.events.on('transportDisconnected', disconnected)
 		ctx.manager.events.on('message', message)
 
-		const id = ctx.manager.add('fake', 'One')
+		const id = addFake(ctx.manager, 'One')
 		const transport = ctx.instances[0]
 		transport.context.setStatus('connected', null)
 		transport.context.receive('topic', 'payload', origin)
@@ -132,7 +200,7 @@ describe('LinkTransportManager', () => {
 	})
 
 	test('updating the config validates it and replaces the running transport', async () => {
-		const id = ctx.manager.add('fake', 'One')
+		const id = addFake(ctx.manager, 'One')
 
 		expect(await ctx.manager.update(id, 'One', { host: 'NOT VALID' })).toMatchObject({ ok: false })
 		expect(ctx.instances).toHaveLength(1)
@@ -145,7 +213,7 @@ describe('LinkTransportManager', () => {
 	})
 
 	test('says goodbye when stopping a transport', async () => {
-		const id = ctx.manager.add('fake', 'One')
+		const id = addFake(ctx.manager, 'One')
 		ctx.instances[0].context.setStatus('connected', null)
 
 		await ctx.manager.setEnabled(id, false)
@@ -158,7 +226,7 @@ describe('LinkTransportManager', () => {
 		const message = vi.fn()
 		ctx.manager.events.on('message', message)
 
-		const id = ctx.manager.add('fake', 'One')
+		const id = addFake(ctx.manager, 'One')
 		const transport = ctx.instances[0]
 		await ctx.manager.setEnabled(id, false)
 
@@ -167,7 +235,7 @@ describe('LinkTransportManager', () => {
 	})
 
 	test('does not start a transport with an incomplete config, and says why', () => {
-		const id = ctx.manager.add('fake', 'One')
+		const id = addFake(ctx.manager, 'One')
 		ctx.instances.length = 0
 
 		// Simulate a config saved before a required field was added
@@ -191,7 +259,7 @@ describe('LinkTransportManager', () => {
 	})
 
 	test('passes actions to the transport, and reports sections', async () => {
-		const id = ctx.manager.add('fake', 'One')
+		const id = addFake(ctx.manager, 'One')
 		const section = { id: 's', title: 'S', description: null, attention: true, entries: [] }
 		ctx.instances[0].context.setSections([section])
 
@@ -202,8 +270,8 @@ describe('LinkTransportManager', () => {
 	})
 
 	test('subscribes on one transport only, when asked', () => {
-		ctx.manager.add('fake', 'One')
-		ctx.manager.add('fake', 'Two')
+		addFake(ctx.manager, 'One')
+		addFake(ctx.manager, 'Two')
 		const [one, two] = ctx.instances
 		const [oneId] = Object.keys(ctx.manager.getStates())
 
@@ -216,13 +284,13 @@ describe('LinkTransportManager', () => {
 	})
 
 	test('transports ask the core what an installation may use', () => {
-		ctx.manager.add('fake', 'One')
+		addFake(ctx.manager, 'One')
 		expect(ctx.instances[0].context.getPermissions('shared')).toEqual({ buttons: true })
 		expect(ctx.instances[0].context.getPermissions('other')).toEqual({ buttons: false })
 	})
 
 	test('removing a transport deletes its config and storage', async () => {
-		const id = ctx.manager.add('fake', 'One')
+		const id = addFake(ctx.manager, 'One')
 		ctx.instances[0].context.storage.set('key', 'value')
 		expect(ctx.db.getTableView('link_transport_storage').data[id]).toEqual({ key: 'value' })
 

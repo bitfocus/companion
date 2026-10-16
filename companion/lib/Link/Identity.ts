@@ -5,6 +5,11 @@ import crypto, { type KeyObject } from 'node:crypto'
  * stable, and transports can prove it: by signing what they send (eg over a broker), or by authenticating with it
  * (eg the handshake of a direct connection).
  */
+/** A short, readable form of a Link id, for the user to recognise an installation by */
+export function formatLinkIdFingerprint(linkId: string): string {
+	return linkId.slice(0, 16).match(/.{4}/g)?.join('-') ?? linkId
+}
+
 export class LinkIdentity {
 	/** The Link id: the public key, base64url encoded */
 	readonly id: string
@@ -38,7 +43,7 @@ export class LinkIdentity {
 		return this.#privateKey.export({ format: 'der', type: 'pkcs8' }).toString('base64')
 	}
 
-	sign(data: Buffer): Buffer {
+	sign(data: Uint8Array): Buffer {
 		return crypto.sign(null, data, this.#privateKey)
 	}
 
@@ -59,7 +64,7 @@ export class LinkIdentity {
 	}
 
 	/** Whether a signature was made by the installation with a Link id */
-	static verify(id: string, data: Buffer, signature: Buffer): boolean {
+	static verify(id: string, data: Uint8Array, signature: Uint8Array): boolean {
 		if (!LinkIdentity.publicKeyOf(id)) return false
 		try {
 			const publicKey = crypto.createPublicKey({ key: { kty: 'OKP', crv: 'Ed25519', x: id }, format: 'jwk' })

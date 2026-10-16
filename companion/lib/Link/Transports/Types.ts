@@ -7,6 +7,8 @@ import type {
 	LinkTransportSection,
 	LinkTransportStatus,
 } from '@companion-app/shared/Model/Link.js'
+import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { DataUserConfig } from '../../Data/UserConfig.js'
 import type { Logger } from '../../Log/Controller.js'
 import type { LinkIdentity } from '../Identity.js'
 
@@ -132,3 +134,19 @@ export interface LinkTransportDefinition<TConfig extends Record<string, JsonValu
 }
 
 export type SomeLinkTransportDefinition = LinkTransportDefinition<any>
+
+/**
+ * A transport that is part of Link rather than added by the user: there is always exactly one of it, switched on and
+ * configured in the settings like Companion's other protocols (eg accepting direct connections)
+ */
+export interface LinkBuiltinTransport<TConfig extends Record<string, JsonValue | undefined>> {
+	/** The fixed id of its instance, which keeps its storage across restarts */
+	readonly id: string
+	readonly definition: LinkTransportDefinition<TConfig>
+	/** The user config keys `getConfig` reads, so that it is restarted when one of them changes */
+	readonly userConfigKeys: readonly (keyof UserConfigModel)[]
+	/** Its config, from the user config, or null when it is switched off */
+	getConfig(userconfig: DataUserConfig): TConfig | null
+}
+
+export type SomeLinkBuiltinTransport = LinkBuiltinTransport<any>

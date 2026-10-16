@@ -54,7 +54,9 @@ export const LinkOverviewPanel = observer(function LinkOverviewPanel(): React.JS
 
 						<dt className="text-muted">Link id</dt>
 						<dd className="col-span-2 m-0 flex items-center gap-2 min-w-0">
-							<span className="truncate font-mono">{self?.id ?? '…'}</span>
+							<span className="truncate font-mono" title={self?.id}>
+								{self?.fingerprint ?? '…'}
+							</span>
 							{self && <CopyButton text={self.id} variant="ghost" />}
 							<Button
 								size="sm"

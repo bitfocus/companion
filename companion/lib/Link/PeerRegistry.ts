@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 import type { LinkPeerInfo, LinkPermission, LinkPermissions } from '@companion-app/shared/Model/Link.js'
 import LogController from '../Log/Controller.js'
+import { formatLinkIdFingerprint } from './Identity.js'
 import { LINK_ANNOUNCE_MISSED_LIMIT, type LinkAnnouncement } from './Protocol/Announcement.js'
 import { LINK_PROTOCOL_VERSIONS, negotiateLinkProtocolVersion } from './Protocol/Versions.js'
 
@@ -220,6 +221,7 @@ function toPeerInfo(record: PeerRecord, sharedByUs: LinkPermissions): LinkPeerIn
 	const protocolVersion = negotiateLinkProtocolVersion(LINK_PROTOCOL_VERSIONS, announcement.protocolVersions)
 	return {
 		id: record.id,
+		fingerprint: formatLinkIdFingerprint(record.id),
 		name: announcement.name,
 		companionVersion: announcement.companionVersion,
 		protocolVersions: announcement.protocolVersions,

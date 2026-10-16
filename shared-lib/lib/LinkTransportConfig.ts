@@ -1,6 +1,6 @@
 import type { JsonValue } from 'type-fest'
-import type { LinkTransportConfigField } from '@companion-app/shared/Model/Link.js'
-import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
+import type { LinkTransportConfigField } from './Model/Link.js'
+import { validateInputValue } from './ValidateInputValue.js'
 
 /** The default config of a transport type, built from the defaults of its fields */
 export function getDefaultLinkTransportConfig(

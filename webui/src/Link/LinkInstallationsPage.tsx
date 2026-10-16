@@ -7,6 +7,7 @@ import { MyErrorBoundary } from '~/Resources/Error.js'
 import { LinkNav } from './LinkNav.js'
 import { LinkStoreProvider } from './LinkStoreProvider.js'
 import { PeersList } from './PeersList.js'
+import { AttentionSections } from './TransportSections.js'
 
 /** The other installations found on the transports, and what is shared with each */
 export const LinkInstallationsPage = observer(function LinkInstallationsPage(): React.JSX.Element {
@@ -36,6 +37,8 @@ export const LinkInstallationsPage = observer(function LinkInstallationsPage(): 
 										with each.
 									</p>
 								</div>
+
+								<AttentionSections />
 
 								<div className="flex-1 min-h-0 scrollable-content list-card">
 									<PeersList selectedPeerId={selectedPeerId} />

@@ -50,6 +50,11 @@ const PeerStatusSection = observer(function PeerStatusSection({ peer }: { peer: 
 			title="Status"
 			summary={<PeerStatusBadge peer={peer} ourProtocolVersions={linkStore.self?.protocolVersions} />}
 		>
+			<ConfigFieldRow label="Link id" htmlFor={null} help={null}>
+				<span className="font-mono" title={peer.id}>
+					{peer.fingerprint}
+				</span>
+			</ConfigFieldRow>
 			<ConfigFieldRow label="Companion" htmlFor={null} help={null}>
 				{/* The protocol only matters when it is incompatible, which the status badge explains */}
 				<span title={`Link protocol ${peer.protocolVersion ?? peer.protocolVersions.join(', ')}`}>

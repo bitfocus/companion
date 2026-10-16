@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { LinkIdentity } from '../../lib/Link/Identity.js'
+import { formatLinkIdFingerprint, LinkIdentity } from '../../lib/Link/Identity.js'
 
 describe('LinkIdentity', () => {
 	test('the id is the public key, and survives being stored', () => {
@@ -25,5 +25,11 @@ describe('LinkIdentity', () => {
 	test('rejects invalid stored identities', () => {
 		expect(LinkIdentity.fromStored('')).toBeNull()
 		expect(LinkIdentity.fromStored('garbage')).toBeNull()
+	})
+})
+
+describe('formatLinkIdFingerprint', () => {
+	test('is short and readable, with dashes so that its end is clear', () => {
+		expect(formatLinkIdFingerprint('abcdEF0123456789ffff')).toBe('abcd-EF01-2345-6789')
 	})
 })
