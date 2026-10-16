@@ -28,6 +28,7 @@ import { ControlHotPressButtons } from './ControlHotPressButtons.js'
 import { ConvertToNormalButton } from './ConvertToNormalButton.js'
 import { CreateButtonTypeButtons } from './CreateButtonTypeButtons.js'
 import { LayeredButtonEditor } from './LayeredButtonEditor/LayeredButtonEditor.js'
+import { LinkButtonEditor } from './LinkButtonEditor.js'
 import { PresetReferenceEditor } from './PresetReferenceEditor.js'
 import { LayeredButtonExtraTabs, useButtonEditorMainTab } from './useButtonEditorMainTab.js'
 
@@ -102,6 +103,8 @@ function buttonTypeLabel(type: SomeButtonModel['type']): string {
 			return 'Preset reference'
 		case 'button-reference':
 			return 'Button reference'
+		case 'link-button':
+			return 'Remote button'
 		case 'pageup':
 			return 'Page up'
 		case 'pagedown':
@@ -133,7 +136,10 @@ const EditButtonContent = observer(function EditButton({
 	navigateToControl,
 }: EditButtonContentProps) {
 	const controlNotes =
-		config.type === 'button-layered' || config.type === 'preset-reference' || config.type === 'button-reference'
+		config.type === 'button-layered' ||
+		config.type === 'preset-reference' ||
+		config.type === 'button-reference' ||
+		config.type === 'link-button'
 			? config.options.notes
 			: undefined
 	const setControlNotes = useControlNotesSetter(controlId)
@@ -165,12 +171,17 @@ const EditButtonContent = observer(function EditButton({
 						<span>{typeLabel}</span>
 						{(config.type === 'button-layered' ||
 							config.type === 'preset-reference' ||
-							config.type === 'button-reference') && (
+							config.type === 'button-reference' ||
+							config.type === 'link-button') && (
 							<div className="edit-button-summary-test">
 								<MyErrorBoundary>
 									<ControlHotPressButtons
 										location={location}
-										showRotaries={config.type === 'button-reference' || config.options.rotaryActions}
+										showRotaries={
+											config.type === 'button-reference' ||
+											config.type === 'link-button' ||
+											config.options.rotaryActions
+										}
 									/>
 								</MyErrorBoundary>
 							</div>
@@ -180,7 +191,8 @@ const EditButtonContent = observer(function EditButton({
 						<MyErrorBoundary>
 							{(config.type === 'button-layered' ||
 								config.type === 'preset-reference' ||
-								config.type === 'button-reference') && <AddNoteButton state={notesState} />}
+								config.type === 'button-reference' ||
+								config.type === 'link-button') && <AddNoteButton state={notesState} />}
 							{(config.type === 'pageup' ||
 								config.type === 'pagenum' ||
 								config.type === 'pagedown' ||
@@ -198,7 +210,8 @@ const EditButtonContent = observer(function EditButton({
 
 				{(config.type === 'button-layered' ||
 					config.type === 'preset-reference' ||
-					config.type === 'button-reference') && (
+					config.type === 'button-reference' ||
+					config.type === 'link-button') && (
 					<MyErrorBoundary>
 						<NotesStrip key={controlId} state={notesState} />
 					</MyErrorBoundary>
@@ -250,6 +263,12 @@ const EditButtonContent = observer(function EditButton({
 			{config.type === 'button-reference' && (
 				<MyErrorBoundary>
 					<ButtonReferenceEditor config={config} controlId={controlId} navigateToControl={navigateToControl} />
+				</MyErrorBoundary>
+			)}
+
+			{config.type === 'link-button' && (
+				<MyErrorBoundary>
+					<LinkButtonEditor config={config} controlId={controlId} runtimeProps={runtimeProps} />
 				</MyErrorBoundary>
 			)}
 

@@ -1,15 +1,25 @@
 import { EventEmitter } from 'node:events'
 import os from 'node:os'
 import z from 'zod'
-import type { ClientLinkTransportType, LinkPeerInfo, LinkSelfInfo } from '@companion-app/shared/Model/Link.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type {
+	ClientLinkTransportType,
+	LinkPeerInfo,
+	LinkPermission,
+	LinkSelfInfo,
+} from '@companion-app/shared/Model/Link.js'
 import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
 import LogController from '../Log/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import { LinkButtonClient } from './ButtonClient.js'
+import { LinkButtonServer, type LinkButtonServerHost } from './ButtonServer.js'
 import { LinkIdentity } from './Identity.js'
 import { LinkPeerRegistry } from './PeerRegistry.js'
 import { LinkPermissionStore } from './PermissionStore.js'
@@ -23,10 +33,13 @@ import {
 	parseLinkDiscoveryTopic,
 } from './Protocol/Announcement.js'
 import { decodeLinkMessage, encodeLinkMessage } from './Protocol/v1/Schemas.js'
-import { linkInboxTopic } from './Protocol/v1/Topics.js'
+import { linkInboxTopic, linkPeerTopicPrefix } from './Protocol/v1/Topics.js'
 import { LINK_PROTOCOL_VERSIONS } from './Protocol/Versions.js'
 import { LinkTransportManager } from './TransportManager.js'
 import type { LinkMessageOrigin, SomeLinkTransportDefinition } from './Transports/Types.js'
+
+/** What Link needs from the rest of Companion to serve buttons to peers */
+export type LinkHost = Omit<LinkButtonServerHost, 'publish' | 'getSourceChain'>
 
 interface LinkControllerEvents {
 	self: [info: LinkSelfInfo]
@@ -42,6 +55,7 @@ export class LinkController {
 
 	readonly #appInfo: AppInfo
 	readonly #userconfig: DataUserConfig
+	readonly #pageStore: IPageStore
 	readonly #table: DataStoreTableView<{ identity: string }>
 
 	readonly #events = new EventEmitter<LinkControllerEvents>()
@@ -50,8 +64,11 @@ export class LinkController {
 	readonly #peers: LinkPeerRegistry
 	readonly #pinger: LinkPinger
 	readonly #permissions: LinkPermissionStore
+	readonly #buttonServer: LinkButtonServer
+	/** Used by link buttons to subscribe to remote buttons */
+	readonly buttonClient: LinkButtonClient
 
-	#started = false
+	#host: LinkHost | null = null
 	#identity: LinkIdentity
 	#selfId: string
 	#announceTimer: NodeJS.Timeout | null = null
@@ -63,10 +80,12 @@ export class LinkController {
 		appInfo: AppInfo,
 		db: DataDatabase,
 		userconfig: DataUserConfig,
+		pageStore: IPageStore,
 		transportDefinitions: readonly SomeLinkTransportDefinition[]
 	) {
 		this.#appInfo = appInfo
 		this.#userconfig = userconfig
+		this.#pageStore = pageStore
 		this.#table = db.getTableView('link')
 		this.#transportDefinitions = transportDefinitions
 		this.#events.setMaxListeners(0)
@@ -90,19 +109,43 @@ export class LinkController {
 				requires: null,
 			})
 		)
+		this.buttonClient = new LinkButtonClient(() => this.#selfId, this.#peers, {
+			publishTo: (transportId, topic, payload) =>
+				this.#transports.publishTo(transportId, topic, payload, { retain: false, requires: null }),
+			subscribeOn: (transportId, pattern) => this.#transports.subscribeOn(transportId, pattern),
+			unsubscribeFrom: (transportId, pattern) => this.#transports.unsubscribeFrom(transportId, pattern),
+		})
+		this.#buttonServer = new LinkButtonServer(
+			{
+				getCachedRenderOrGeneratePlaceholder: (location) =>
+					this.#requireHost().getCachedRenderOrGeneratePlaceholder(location),
+				getControlIdAt: (location) => this.#requireHost().getControlIdAt(location),
+				pressControl: (controlId, pressed, surfaceId) =>
+					this.#requireHost().pressControl(controlId, pressed, surfaceId),
+				rotateControl: (controlId, delta, surfaceId) => this.#requireHost().rotateControl(controlId, delta, surfaceId),
+				getSourceChain: (location) => this.#getSourceChain(location),
+				// Only to those allowed to see our buttons
+				publish: (transportId, topic, payload) =>
+					this.#transports.publishTo(transportId, topic, payload, { retain: false, requires: 'buttons' }),
+			},
+			() => this.#selfId
+		)
 
 		this.#transports.events.on('message', (transportId, topic, payload, origin) =>
 			this.#handleMessage(transportId, topic, payload, origin)
 		)
-		this.#permissions.on('changed', (peerId) => {
+		this.#permissions.on('changed', (peerId, permissions) => {
 			this.#events.emit('peers', this.#peers.getPeers())
 			for (const transportId of this.#peers.getReachableTransports(peerId, null)) this.#sendAccess(peerId, transportId)
+			// Stop serving anything it is no longer allowed straight away, rather than when its lease runs out
+			if (!permissions.buttons) this.#buttonServer.revoke(peerId)
 		})
 		this.#transports.events.on('transportConnected', (transportId) => this.#announce(transportId))
 		this.#transports.events.on('transportDisconnected', (transportId) =>
 			this.#peers.handleTransportDisconnected(transportId)
 		)
 		this.#peers.on('changed', () => this.#events.emit('peers', this.#peers.getPeers()))
+		this.#peers.on('peerUnreachable', (peerId) => this.#buttonServer.releaseHeldBy(peerId))
 		this.#peers.on('peerReachable', (peerId, transportId) => {
 			this.#sendAccess(peerId, transportId)
 			this.#pinger.ping(peerId, transportId, Date.now())
@@ -116,19 +159,21 @@ export class LinkController {
 		})
 	}
 
-	/** Start linking. Called once the rest of Companion is ready */
-	start(): void {
-		this.#started = true
+	/** Start linking. Called once the rest of Companion is ready to serve buttons */
+	start(host: LinkHost): void {
+		this.#host = host
 
 		this.#transports.subscribe(LINK_DISCOVERY_WILDCARD)
 		this.#subscribeInbox()
 
 		this.#peers.start()
+		this.buttonClient.start()
 		this.#transports.start()
 
 		this.#announceTimer = setInterval(() => {
 			this.#announce(null)
 			this.#pinger.pingAll(Date.now())
+			this.#buttonServer.expireLeases(Date.now())
 		}, LINK_ANNOUNCE_INTERVAL_MS)
 	}
 
@@ -138,9 +183,20 @@ export class LinkController {
 		this.#announceTimer = null
 		this.#pinger.clear()
 
+		this.buttonClient.stop()
 		this.#peers.stop()
+		this.#buttonServer.clear()
 
 		await this.#transports.stopAll()
+	}
+
+	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
+		this.#buttonServer.onButtonDrawn(location, render)
+	}
+
+	#requireHost(): LinkHost {
+		if (!this.#host) throw new Error('Link has not been started')
+		return this.#host
 	}
 
 	#subscribeInbox(): void {
@@ -181,6 +237,11 @@ export class LinkController {
 		} else {
 			this.#transports.publishAll(topic, payload, { retain: true, requires: null })
 		}
+	}
+
+	#getSourceChain(location: ControlLocation): string[] {
+		const controlId = this.#pageStore.getControlIdAt(location)
+		return (controlId && this.buttonClient.getState(controlId)?.sourceChain) || []
 	}
 
 	/** Tell a peer what it may use of this installation, over a transport it is reachable on */
@@ -249,11 +310,39 @@ export class LinkController {
 			case 'pong':
 				if (isForUs) this.#pinger.handlePong(senderId, transportId, message.payload.nonce, Date.now())
 				break
+			case 'subscribe':
+				if (isForUs && this.#isAllowed(senderId, 'buttons', topic)) {
+					this.#buttonServer.handleSubscribe(senderId, transportId, message.payload, Date.now())
+				}
+				break
+			case 'unsubscribe':
+				if (isForUs) this.#buttonServer.handleUnsubscribe(senderId, message.payload)
+				break
+			case 'button.press':
+				if (isForUs && this.#isAllowed(senderId, 'buttons', topic)) {
+					this.#buttonServer.handlePress(senderId, message.payload)
+				}
+				break
+			case 'button.rotate':
+				if (isForUs && this.#isAllowed(senderId, 'buttons', topic)) {
+					this.#buttonServer.handleRotate(senderId, message.payload)
+				}
+				break
+			case 'button.update':
+				// Updates are published on the topics of the peer that owns the button
+				if (topic.startsWith(linkPeerTopicPrefix(senderId))) this.buttonClient.handleUpdate(topic, message.payload)
+				break
 			default:
-				// Button messages are not handled yet
 				this.#logger.debug(`Unhandled message type on ${topic}`)
 				break
 		}
+	}
+
+	/** Whether the installation a message came from may use something, as chosen by the user */
+	#isAllowed(peerId: string, permission: LinkPermission, topic: string): boolean {
+		if (this.#permissions.get(peerId)[permission]) return true
+		this.#logger.debug(`Ignoring a request on ${topic}, ${peerId} is not allowed ${permission}`)
+		return false
 	}
 
 	/** The identity of this installation, generated the first time */
@@ -275,8 +364,9 @@ export class LinkController {
 		this.#table.setPrimitive('identity', this.#identity.toStored())
 		this.#selfId = this.#identity.id
 		this.#peers.setSelfId(this.#selfId)
+		this.#buttonServer.clear()
 
-		if (this.#started) {
+		if (this.#host) {
 			this.#subscribeInbox()
 			this.#transports.start()
 		}

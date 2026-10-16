@@ -160,3 +160,24 @@ export interface LinkSelfInfo {
 	/** The Link protocol versions this installation speaks, one per major version */
 	protocolVersions: string[]
 }
+
+/**
+ * Why a link button is showing what it is showing
+ * - `unconfigured`: no peer or location chosen, or the location could not be resolved
+ * - `unknown_peer`: the peer has not been discovered on any transport
+ * - `incompatible`: the peer speaks an incompatible protocol version
+ * - `offline`: the peer is known but not currently reachable
+ * - `denied`: the peer does not share its buttons with this installation
+ * - `loading`: subscribed, waiting for the first image
+ * - `loop`: the remote button is (indirectly) linked back to this installation
+ * - `ok`: showing the remote button
+ */
+export type LinkButtonStatus =
+	'unconfigured' | 'unknown_peer' | 'incompatible' | 'offline' | 'denied' | 'loading' | 'loop' | 'ok'
+
+/** Runtime (non-persisted) state of a link button, for the button editor */
+export interface LinkButtonRuntimeProps {
+	status: LinkButtonStatus
+	/** Name of the target peer, when it is known */
+	peerName: string | null
+}
