@@ -4683,10 +4683,10 @@ __metadata:
 
 "@logtape/syslog@patch:@logtape/syslog@npm%3A2.4.0#~/.yarn/patches/@logtape-syslog-npm-2.4.0-bd80e7483c.patch":
   version: 2.4.0
-  resolution: "@logtape/syslog@patch:@logtape/syslog@npm%3A2.4.0#~/.yarn/patches/@logtape-syslog-npm-2.4.0-bd80e7483c.patch::version=2.4.0&hash=fe71dd"
+  resolution: "@logtape/syslog@patch:@logtape/syslog@npm%3A2.4.0#~/.yarn/patches/@logtape-syslog-npm-2.4.0-bd80e7483c.patch::version=2.4.0&hash=154846"
   peerDependencies:
     "@logtape/logtape": ^2.4.0
-  checksum: 10c0/f62f062dbbe44c9bde96aefd6b7c94fa2efdd5c4e977e7b6f5464107d226e72870cbd26722b769fa5b71db6f0358147db560ac366769ff97ec89bc36d9b14cce
+  checksum: 10c0/251b843e7e60117a0543d88b8539ab23657ad4dd3b1d1f6af53a4d7cb6cf61935893f7f36bda7950752cae68ba546d249cfd3a9f50757314c454c7270e5d2889
   languageName: node
   linkType: hard
 

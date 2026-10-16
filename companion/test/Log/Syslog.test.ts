@@ -125,27 +125,42 @@ describe('syslog sink', () => {
 		}
 	})
 
-	test('drops records once maxBufferedBytes is reached', async () => {
+	test('drops the oldest records once maxBufferedBytes is reached', async () => {
 		let received = ''
 		const server = net.createServer((conn) => conn.on('data', (data) => (received += data.toString())))
 		await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
 		const port = (server.address() as net.AddressInfo).port
 
-		// Each record is around 60 bytes, so only the first few fit
+		// Each record is around 60 bytes, so only the newest few fit
 		const sink = getSyslogSink({ hostname: '127.0.0.1', port, protocol: 'tcp', maxBufferedBytes: 200 })
 		try {
-			// Nothing is sent until the connection is made, so these all wait in the buffer
+			// The first record is sent straight away, and the rest wait for the connection to be made
 			for (let i = 0; i < 10; i++) sink(makeRecord(`record-${i}`))
-			await waitFor(() => received.includes('record-0'))
-			await delay(100)
+			await waitFor(() => received.includes('record-9'))
 
 			expect(received).toContain('record-0')
-			expect(received).not.toContain('record-9')
+			expect(received).not.toContain('record-1\n')
+			expect(received).toContain('record-9')
+		} finally {
+			await sink[Symbol.asyncDispose]()
+			server.close()
+		}
+	})
 
-			// Once the buffer has been sent, records are accepted again
-			sink(makeRecord('later'))
-			await waitFor(() => received.includes('later'))
-			expect(received).toContain('later')
+	test('drops a record larger than maxBufferedBytes', async () => {
+		let received = ''
+		const server = net.createServer((conn) => conn.on('data', (data) => (received += data.toString())))
+		await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+		const port = (server.address() as net.AddressInfo).port
+
+		const sink = getSyslogSink({ hostname: '127.0.0.1', port, protocol: 'tcp', maxBufferedBytes: 200 })
+		try {
+			sink(makeRecord('x'.repeat(300)))
+			sink(makeRecord('after'))
+			await waitFor(() => received.includes('after'))
+
+			expect(received).toContain('after')
+			expect(received).not.toContain('xxx')
 		} finally {
 			await sink[Symbol.asyncDispose]()
 			server.close()
