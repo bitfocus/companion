@@ -30,6 +30,8 @@ export const ExampleTransportDefinition: LinkTransportDefinition<ExampleTranspor
 	name: 'Example service',
 	// One or two sentences: what it is, and when to choose it
 	description: 'Connect through the Example service. Works anywhere with internet access.',
+	// Optional: shown as experimental, as it may change or be removed in a later release
+	experimental: true,
 	// The config editor is built from these
 	configFields: [
 		{ id: 'apiKey', type: 'secret-text', label: 'API key', default: '' },
@@ -180,3 +182,6 @@ behaviour, and the status reported when the backend is unreachable.
     outer layer, the Noise handshake is what authenticates the other end.
   - **Reconnecting**: the first retry is almost immediate, then it backs off to 30 seconds. Each reconnect runs a
     fresh handshake (no code needed once paired), and the core then resends everything (see the Link README).
+- [`Mqtt/`](./Mqtt) (experimental): a client of any MQTT 5 broker. The simplest transport, as MQTT is already
+  publish/subscribe. A broker can't tell its clients apart, so sharing buttons is one config field for everyone on
+  the broker.

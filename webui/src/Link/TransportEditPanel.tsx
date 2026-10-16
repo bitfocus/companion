@@ -22,7 +22,7 @@ import { OptionsVisibility } from '~/Hooks/OptionsVisibility.js'
 import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton } from '~/Layout/PanelIcons.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { TransportStatusBadge } from './LinkStatusBadges.js'
+import { ExperimentalBadge, TransportStatusBadge } from './LinkStatusBadges.js'
 import { useLinkStore } from './LinkStoreContext.js'
 import { TransportConfigField } from './TransportConfigField.js'
 import { TransportSections } from './TransportSections.js'
@@ -158,6 +158,11 @@ const TransportEditForm = observer(function TransportEditForm({
 			<div className="flex-auto">
 				<Note tone="neutral" icon={faCircleInfo} actions={null} className="mb-3">
 					<b>{transportType.name}</b>: {transportType.description}
+					{transportType.experimental && (
+						<div className="mt-1">
+							<ExperimentalBadge /> It may change or be removed in a later release.
+						</div>
+					)}
 				</Note>
 
 				<TransportStateSummary state={state} />

@@ -7,6 +7,7 @@ import type { ClientLinkTransportType } from '@companion-app/shared/Model/Link.j
 import { Popover } from '~/Components/Popover.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ExperimentalBadge } from './LinkStatusBadges.js'
 import { useLinkStore } from './LinkStoreContext.js'
 
 /** Offers the transport types reported by the backend */
@@ -48,7 +49,10 @@ function AddTransportItem({ type }: { type: ClientLinkTransportType }) {
 	return (
 		<Popover.Item onClick={doAdd} title={type.description}>
 			<div className="flex flex-col items-start text-start max-w-80">
-				<span className="font-semibold">{type.name}</span>
+				<span className="flex items-center gap-2 font-semibold">
+					{type.name}
+					{type.experimental && <ExperimentalBadge />}
+				</span>
 				<span className="text-xs text-muted whitespace-normal">{type.description}</span>
 			</div>
 		</Popover.Item>

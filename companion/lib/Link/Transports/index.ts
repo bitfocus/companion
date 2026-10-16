@@ -1,4 +1,5 @@
 import { DirectClientTransportDefinition, DirectServerTransportDefinition } from './Direct/index.js'
+import { MqttTransportDefinition } from './Mqtt/index.js'
 import type { SomeLinkTransportDefinition } from './Types.js'
 
 /**
@@ -8,4 +9,5 @@ import type { SomeLinkTransportDefinition } from './Types.js'
 export const LINK_TRANSPORT_DEFINITIONS: readonly SomeLinkTransportDefinition[] = [
 	DirectServerTransportDefinition,
 	DirectClientTransportDefinition,
+	MqttTransportDefinition,
 ]
