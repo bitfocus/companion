@@ -52,6 +52,19 @@ describe('LinkPeerRegistry', () => {
 		expect(registry.getPeer('a')).toMatchObject({ online: false, transportIds: [] })
 	})
 
+	test('reports when a peer is no longer reachable on any transport', () => {
+		const registry = new LinkPeerRegistry('self')
+		const unreachable = vi.fn()
+		registry.on('peerUnreachable', unreachable)
+		registry.handleAnnouncement('t1', announcement('a'), 0)
+		registry.handleAnnouncement('t2', announcement('a'), 0)
+
+		registry.handleTransportDisconnected('t1')
+		expect(unreachable).not.toHaveBeenCalled()
+		registry.handleGoodbye('t2', 'a')
+		expect(unreachable).toHaveBeenCalledWith('a')
+	})
+
 	test('expires peers that stop announcing', () => {
 		const registry = new LinkPeerRegistry('self')
 		registry.handleAnnouncement('t1', announcement('a', { announceIntervalMs: 1000 }), 0)

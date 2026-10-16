@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { LINK_BUTTON_BITMAP_SIZE, LinkButtonClient } from '../../lib/Link/ButtonClient.js'
+import { LINK_BUTTON_BITMAP_SIZE, LINK_UNREACHABLE_GRACE_MS, LinkButtonClient } from '../../lib/Link/ButtonClient.js'
 import { LinkPeerRegistry } from '../../lib/Link/PeerRegistry.js'
 import { decodeLinkMessage, type LinkAnnouncementPayload } from '../../lib/Link/Protocol/Schemas.js'
 import { linkButtonUpdateTopic, linkInboxTopic } from '../../lib/Link/Protocol/Topics.js'
@@ -99,11 +99,70 @@ describe('LinkButtonClient', () => {
 		expect(ctx.client.getState('c1')?.status).toBe('loop')
 	})
 
-	test('reports offline and incompatible peers', () => {
-		ctx.peers.handleAnnouncement('t1', announcement('peer'), 0)
+	test('keeps showing the last image briefly when a peer drops out, then shows it offline', () => {
+		vi.useFakeTimers()
+		try {
+			const client = createClient()
+			client.peers.handleAnnouncement('t1', announcement('peer'), 0)
+			client.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
+			client.client.handleUpdate(updateTopic, update(['peer']))
+
+			client.peers.handleTransportDisconnected('t1')
+			expect(client.client.getState('c1')?.status).toBe('ok')
+
+			vi.advanceTimersByTime(LINK_UNREACHABLE_GRACE_MS)
+			expect(client.client.getState('c1')?.status).toBe('offline')
+
+			// Back again: it asks for the current state
+			client.sent.length = 0
+			client.peers.handleAnnouncement('t1', announcement('peer'), 0)
+			expect(client.client.getState('c1')?.status).toBe('ok')
+			expect(client.sent).toMatchObject([{ type: 'subscribe', payload: { sendCurrent: true } }])
+		} finally {
+			vi.useRealTimers()
+		}
+	})
+
+	test('a brief drop goes unnoticed', () => {
+		vi.useFakeTimers()
+		try {
+			const client = createClient()
+			const onChange = vi.fn()
+			client.peers.handleAnnouncement('t1', announcement('peer'), 0)
+			client.client.setTarget('c1', { peerId: 'peer', location }, onChange)
+			client.client.handleUpdate(updateTopic, update(['peer']))
+			onChange.mockClear()
+
+			client.peers.handleTransportDisconnected('t1')
+			vi.advanceTimersByTime(1000)
+			client.peers.handleAnnouncement('t1', announcement('peer'), 0)
+			vi.advanceTimersByTime(LINK_UNREACHABLE_GRACE_MS)
+
+			expect(client.client.getState('c1')?.status).toBe('ok')
+			expect(onChange).not.toHaveBeenCalled()
+		} finally {
+			vi.useRealTimers()
+		}
+	})
+
+	test('a peer that dropped out before the button was made is shown offline once the grace period is over', () => {
+		vi.useFakeTimers()
+		try {
+			const client = createClient()
+			client.peers.handleAnnouncement('t1', announcement('peer'), 0)
+			client.peers.handleTransportDisconnected('t1')
+			client.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
+			expect(client.client.getState('c1')?.status).toBe('loading')
+
+			vi.advanceTimersByTime(LINK_UNREACHABLE_GRACE_MS)
+			expect(client.client.getState('c1')?.status).toBe('offline')
+		} finally {
+			vi.useRealTimers()
+		}
+	})
+
+	test('reports incompatible peers', () => {
 		ctx.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
-		ctx.peers.handleTransportDisconnected('t1')
-		expect(ctx.client.getState('c1')?.status).toBe('offline')
 
 		ctx.peers.handleAnnouncement('t1', announcement('peer', '2.0.0'), 0)
 		expect(ctx.client.getState('c1')?.status).toBe('incompatible')

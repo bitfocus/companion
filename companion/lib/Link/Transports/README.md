@@ -156,3 +156,8 @@ behaviour, and the status reported when the backend is unreachable.
     need no code, and a different key is refused. This uses `setSections` for the requests and the paired list.
   - **Broker emulation**: as this is point to point, it emulates the broker features itself in
     `PeerConnectionBus`.
+  - **Addresses** (`Address.ts`): the connecting end takes either a host (with an optional port), or a full
+    `ws://`/`wss://` url, so it can go through a reverse proxy, on a subpath if need be. TLS from a proxy is only an
+    outer layer, the Noise handshake is what authenticates the other end.
+  - **Reconnecting**: the first retry is almost immediate, then it backs off to 30 seconds. Each reconnect runs a
+    fresh handshake (no code needed once paired), and the core then resends everything (see the Link README).

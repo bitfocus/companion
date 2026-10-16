@@ -19,6 +19,12 @@ import { getLinkPeerFeatures } from './Protocol/Versions.js'
  */
 export const LINK_BUTTON_BITMAP_SIZE = 144
 
+/**
+ * How long buttons keep showing the last image of a peer that has become unreachable, before showing it as
+ * offline. Covers brief drops (eg a proxy closing the connection), so that they don't flicker
+ */
+export const LINK_UNREACHABLE_GRACE_MS = 10_000
+
 export interface LinkButtonTarget {
 	peerId: string
 	location: ControlLocation
@@ -74,6 +80,11 @@ export class LinkButtonClient {
 
 	#renewTimer: NodeJS.Timeout | null = null
 
+	/** When each peer became unreachable, and the timer to show it as offline once the grace period is over */
+	readonly #unreachable = new Map<string, { since: number; timer: NodeJS.Timeout }>()
+	/** Peers last seen reachable, so that only a peer that drops out gets the grace period */
+	readonly #reachable = new Set<string>()
+
 	constructor(selfId: () => string, peers: LinkPeerRegistry, transports: LinkButtonClientTransports) {
 		this.#selfId = selfId
 		this.#peers = peers
@@ -91,6 +102,9 @@ export class LinkButtonClient {
 	stop(): void {
 		if (this.#renewTimer) clearInterval(this.#renewTimer)
 		this.#renewTimer = null
+
+		for (const { timer } of this.#unreachable.values()) clearTimeout(timer)
+		this.#unreachable.clear()
 	}
 
 	/**
@@ -260,14 +274,53 @@ export class LinkButtonClient {
 	}
 
 	#refreshAllStates(): void {
+		this.#trackUnreachable()
 		for (const button of this.#buttons.values()) this.#refreshState(button)
+	}
+
+	/** Note when peers become unreachable or reachable again, for the grace period */
+	#trackUnreachable(): void {
+		const now = Date.now()
+		const peers = this.#peers.getPeers()
+
+		// Forget about peers that have been forgotten
+		const knownIds = new Set(peers.map((p) => p.id))
+		for (const peerId of this.#reachable) if (!knownIds.has(peerId)) this.#reachable.delete(peerId)
+
+		for (const { id: peerId, online } of peers) {
+			const entry = this.#unreachable.get(peerId)
+			if (online) {
+				this.#reachable.add(peerId)
+				if (entry) {
+					clearTimeout(entry.timer)
+					this.#unreachable.delete(peerId)
+				}
+			} else if (this.#reachable.delete(peerId)) {
+				const timer = setTimeout(() => {
+					for (const button of this.#buttons.values()) this.#refreshState(button)
+				}, LINK_UNREACHABLE_GRACE_MS)
+				this.#unreachable.set(peerId, { since: now, timer })
+			}
+		}
+	}
+
+	/** Whether a peer is unreachable, but recently enough that it may come back without anyone noticing */
+	#isInGracePeriod(peerId: string): boolean {
+		const entry = this.#unreachable.get(peerId)
+		return !!entry && Date.now() - entry.since < LINK_UNREACHABLE_GRACE_MS
 	}
 
 	#refreshState(button: LinkedButton): void {
 		const subscription = button.topic ? this.#subscriptions.get(button.topic) : undefined
 		const peer = button.target ? (this.#peers.getPeer(button.target.peerId) ?? null) : null
 
-		const newState = computeState(button.target, peer, subscription?.lastUpdate ?? null, this.#selfId())
+		const inGracePeriod = !!button.target && this.#isInGracePeriod(button.target.peerId)
+		const newState = computeState(
+			button.target,
+			peer && inGracePeriod ? { ...peer, online: true } : peer,
+			subscription?.lastUpdate ?? null,
+			this.#selfId()
+		)
 		if (isEqual(newState, button.state)) return
 
 		button.state = newState

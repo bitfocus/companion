@@ -107,6 +107,7 @@ export class LinkController {
 			this.#peers.handleTransportDisconnected(transportId)
 		)
 		this.#peers.on('changed', () => this.#events.emit('peers', this.#peers.getPeers()))
+		this.#peers.on('peerUnreachable', (peerId) => this.#buttonServer.releaseHeldBy(peerId))
 
 		this.#pageStore.on('pagecount', () => this.#announce(null))
 		this.#userconfig.on('keyChanged', (key) => {

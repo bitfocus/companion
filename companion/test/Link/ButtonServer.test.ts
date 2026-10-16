@@ -19,7 +19,7 @@ function createServer() {
 	const published: { topic: string; payload: string }[] = []
 	const host = {
 		getCachedRenderOrGeneratePlaceholder: vi.fn((_location: ControlLocation) => fakeRender(false)),
-		getControlIdAt: vi.fn((_location: ControlLocation): string | null => 'control1'),
+		getControlIdAt: vi.fn((location: ControlLocation): string | null => `control${location.column}`),
 		pressControl: vi.fn(() => true),
 		rotateControl: vi.fn(() => true),
 		getSourceChain: vi.fn((_location: ControlLocation): string[] => []),
@@ -112,7 +112,7 @@ describe('LinkButtonServer', () => {
 
 	test('presses with a surface id namespaced by the source', () => {
 		ctx.server.handlePress({ page: 1, row: 0, column: 2, sourceId: 'peer', pressed: true, surfaceId: 'deck' })
-		expect(ctx.host.pressControl).toHaveBeenCalledWith('control1', true, 'link:peer:deck')
+		expect(ctx.host.pressControl).toHaveBeenCalledWith('control2', true, 'link:peer:deck')
 	})
 
 	test('drops presses that have been forwarded too many times', () => {
@@ -121,8 +121,26 @@ describe('LinkButtonServer', () => {
 		expect(ctx.host.pressControl).not.toHaveBeenCalled()
 	})
 
+	test('releases buttons held by a peer that becomes unreachable', () => {
+		ctx.server.handlePress({ page: 1, row: 0, column: 2, sourceId: 'peer', pressed: true, surfaceId: 'deck' })
+		ctx.server.handlePress({ page: 1, row: 0, column: 3, sourceId: 'peer', pressed: true, surfaceId: 'deck' })
+		ctx.server.handlePress({ page: 1, row: 0, column: 3, sourceId: 'peer', pressed: false, surfaceId: 'deck' })
+		ctx.host.pressControl.mockClear()
+
+		ctx.server.releaseHeldBy('other')
+		expect(ctx.host.pressControl).not.toHaveBeenCalled()
+
+		// Only the one still held is released
+		ctx.server.releaseHeldBy('peer')
+		expect(ctx.host.pressControl.mock.calls).toEqual([['control2', false, 'link:peer:deck']])
+
+		ctx.host.pressControl.mockClear()
+		ctx.server.releaseHeldBy('peer')
+		expect(ctx.host.pressControl).not.toHaveBeenCalled()
+	})
+
 	test('rotates', () => {
 		ctx.server.handleRotate({ page: 1, row: 0, column: 2, sourceId: 'peer', delta: -2, surfaceId: 'deck' })
-		expect(ctx.host.rotateControl).toHaveBeenCalledWith('control1', -2, 'link:peer:deck')
+		expect(ctx.host.rotateControl).toHaveBeenCalledWith('control2', -2, 'link:peer:deck')
 	})
 })

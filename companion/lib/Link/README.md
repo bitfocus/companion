@@ -74,6 +74,16 @@ renewals, to avoid resending unchanged images.
 Subscriptions are sent on every transport the peer is reachable on, so updates keep flowing if one fails. Presses are
 only sent on one transport, so they are not performed twice.
 
+### Connection drops
+
+There is no session resumption: after a drop, everything needed is sent again, which is cheap (an announcement, and
+one image per subscribed button). When a peer becomes reachable again, the subscriber re-subscribes asking for the
+current state.
+
+To make brief drops (eg a reverse proxy closing a connection) unnoticeable, Remote buttons keep showing the last
+image of a peer for 10 seconds after it becomes unreachable, before showing it as offline. And as a release could be
+lost in a drop, buttons held by a peer are released as soon as it becomes unreachable.
+
 ### Loops
 
 A Remote button can show a button that is itself a Remote button. `button.update` carries a `sourceChain` of the

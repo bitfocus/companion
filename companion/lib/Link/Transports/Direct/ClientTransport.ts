@@ -3,20 +3,25 @@ import { z } from 'zod'
 import type { LinkTransportInfoItem, LinkTransportSection } from '@companion-app/shared/Model/Link.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { LinkTransportContext } from '../Types.js'
+import { resolveDirectAddress } from './Address.js'
+import { DIRECT_DEFAULT_PORT } from './Constants.js'
 import { DIRECT_HANDSHAKE_TIMEOUT_MS, DIRECT_MAX_MESSAGE_SIZE, DirectTransportBase } from './DirectTransportBase.js'
 import { derivePairingCode, DirectAuthFrameSchema, formatKeyFingerprint } from './Pairing.js'
 import { SecureChannel } from './SecureChannel.js'
 
 export type DirectClientTransportConfig = {
-	host: string
-	port: number
+	address: string
 }
 
 const PAIRED_STORAGE_KEY = 'pairedServer'
 const PairedServerSchema = z.object({ publicKey: z.string(), name: z.string() })
 type PairedServer = z.infer<typeof PairedServerSchema>
 
-const RECONNECT_DELAY_MS = 5_000
+/**
+ * Delays between reconnect attempts. The first is short, so that a brief drop (eg a proxy closing the connection)
+ * goes unnoticed; later ones back off so that an installation that is down isn't hammered
+ */
+const RECONNECT_DELAYS_MS = [250, 1_000, 2_000, 5_000, 10_000, 20_000, 30_000]
 
 /**
  * Connects directly to another installation that is accepting direct connections. The connection is encrypted with
@@ -24,10 +29,12 @@ const RECONNECT_DELAY_MS = 5_000
  * that, the other installation's identity is remembered and a different one is refused.
  */
 export class DirectClientTransport extends DirectTransportBase {
-	readonly #url: string
+	readonly #url: string | null
 
 	#socket: WebSocket | null = null
 	#reconnectTimer: NodeJS.Timeout | null = null
+	/** Reconnect attempts since the connection was last working, to pick the delay */
+	#reconnectAttempt = 0
 	#destroyed = false
 	/** Set when retrying would not help, until the user does something about it */
 	#stopped = false
@@ -38,7 +45,12 @@ export class DirectClientTransport extends DirectTransportBase {
 
 	constructor(context: LinkTransportContext, config: DirectClientTransportConfig) {
 		super(context)
-		this.#url = `ws://${config.host.includes(':') ? `[${config.host}]` : config.host}:${config.port}`
+		const resolved = resolveDirectAddress(config.address, DIRECT_DEFAULT_PORT)
+		this.#url = resolved.ok ? resolved.url : null
+		if (!resolved.ok) {
+			this.#stop(resolved.error)
+			return
+		}
 
 		this.#connect()
 	}
@@ -50,18 +62,25 @@ export class DirectClientTransport extends DirectTransportBase {
 
 	#connect(): void {
 		this.#reconnectTimer = null
-		if (this.#destroyed || this.#stopped) return
+		const url = this.#url
+		if (this.#destroyed || this.#stopped || !url) return
 
 		this.#pairingCode = null
-		this.context.setStatus('connecting', null)
 		this.#updateInfo()
 
-		const socket = new WebSocket(this.#url, { maxPayload: 65535, handshakeTimeout: 10_000 })
+		let lastError: string | null = null
+		const socket = new WebSocket(url, {
+			maxPayload: 65535,
+			handshakeTimeout: 10_000,
+			// When there is TLS (wss://, eg through a reverse proxy) it is only an outer layer: the other end is
+			// authenticated by the Noise handshake, so a self-signed proxy certificate shouldn't stop it working
+			rejectUnauthorized: false,
+		})
 		this.#socket = socket
 
 		socket.on('error', (e) => {
 			this.context.logger.debug(`Connection error: ${stringifyError(e)}`)
-			if (!this.#stopped) this.context.setStatus('error', stringifyError(e))
+			lastError = stringifyError(e)
 		})
 		socket.on('close', () => {
 			if (this.#socket !== socket) return
@@ -70,11 +89,17 @@ export class DirectClientTransport extends DirectTransportBase {
 			this.#updateInfo()
 			if (this.#destroyed || this.#stopped) return
 
-			if (this.linkedCount === 0) this.context.setStatus('connecting', 'Connection lost, retrying')
-			this.#reconnectTimer = setTimeout(() => this.#connect(), RECONNECT_DELAY_MS)
+			// Reported as connecting rather than an error while retrying, so that a brief drop doesn't look like a fault
+			const delay = RECONNECT_DELAYS_MS[Math.min(this.#reconnectAttempt, RECONNECT_DELAYS_MS.length - 1)]
+			this.#reconnectAttempt++
+			this.#reconnectTimer = setTimeout(() => this.#connect(), delay)
+			this.context.setStatus(
+				this.#reconnectAttempt > 3 ? 'error' : 'connecting',
+				lastError ? `${lastError}, retrying` : 'Connection lost, retrying'
+			)
 		})
 		socket.on('open', () => {
-			this.keepAlive(socket, this.#url)
+			this.keepAlive(socket, url)
 
 			SecureChannel.establish(
 				socket,
@@ -118,6 +143,8 @@ export class DirectClientTransport extends DirectTransportBase {
 
 			switch (frame.status) {
 				case 'pairing-required':
+					// The connection works, it is just waiting for the user
+					this.#reconnectAttempt = 0
 					this.#pairingCode = derivePairingCode(channel.handshakeHash)
 					this.context.setStatus(
 						'connecting',
@@ -162,6 +189,7 @@ export class DirectClientTransport extends DirectTransportBase {
 		}
 
 		this.#stopped = false
+		this.#reconnectAttempt = 0
 		this.#socket?.close()
 		if (!this.#socket && !this.#reconnectTimer) this.#connect()
 		this.#updateInfo()
@@ -170,13 +198,16 @@ export class DirectClientTransport extends DirectTransportBase {
 
 	protected linksChanged(): void {
 		if (this.#destroyed) return
-		if (this.linkedCount > 0) this.context.setStatus('connected', null)
+		if (this.linkedCount > 0) {
+			this.#reconnectAttempt = 0
+			this.context.setStatus('connected', null)
+		}
 		this.#updateInfo()
 	}
 
 	#updateInfo(): void {
 		const info: LinkTransportInfoItem[] = [
-			{ label: 'Address', value: this.#url },
+			...(this.#url ? [{ label: 'Address', value: this.#url }] : []),
 			{ label: 'Identity', value: formatKeyFingerprint(this.identity.publicKey.toString('hex')) },
 		]
 		if (this.#pairingCode) info.unshift({ label: 'Pairing code', value: this.#pairingCode })

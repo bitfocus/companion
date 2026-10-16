@@ -45,6 +45,9 @@ export class LinkButtonServer {
 
 	readonly #renderQueue: ImageWriteQueue<string, [ImageResult]>
 
+	/** Buttons held by each peer, keyed by control and surface */
+	readonly #held = new Map<string, Map<string, { controlId: string; surfaceId: string }>>()
+
 	constructor(host: LinkButtonServerHost, selfId: () => string) {
 		this.#host = host
 		this.#selfId = selfId
@@ -96,7 +99,37 @@ export class LinkButtonServer {
 		if (!surfaceId) return
 
 		const controlId = this.#host.getControlIdAt(toControlLocation(payload))
-		if (controlId) this.#host.pressControl(controlId, payload.pressed, surfaceId)
+		if (!controlId) return
+
+		// Track what is held, so it can be released if the peer goes away before releasing it
+		let held = this.#held.get(payload.sourceId)
+		if (payload.pressed) {
+			if (!held) {
+				held = new Map()
+				this.#held.set(payload.sourceId, held)
+			}
+			held.set(`${controlId}\n${surfaceId}`, { controlId, surfaceId })
+		} else if (held) {
+			held.delete(`${controlId}\n${surfaceId}`)
+			if (held.size === 0) this.#held.delete(payload.sourceId)
+		}
+
+		this.#host.pressControl(controlId, payload.pressed, surfaceId)
+	}
+
+	/**
+	 * A peer has become unreachable: release the buttons it was holding, as the release may never arrive (eg the
+	 * connection dropped while the button was held)
+	 */
+	releaseHeldBy(sourceId: string): void {
+		const held = this.#held.get(sourceId)
+		if (!held) return
+		this.#held.delete(sourceId)
+
+		for (const { controlId, surfaceId } of held.values()) {
+			this.#logger.debug(`Releasing ${controlId}, held by ${sourceId} which is no longer reachable`)
+			this.#host.pressControl(controlId, false, surfaceId)
+		}
 	}
 
 	handleRotate(payload: LinkPayloadOfType<'button.rotate'>): void {
@@ -141,6 +174,7 @@ export class LinkButtonServer {
 
 	clear(): void {
 		this.#served.clear()
+		for (const sourceId of Array.from(this.#held.keys())) this.releaseHeldBy(sourceId)
 	}
 
 	async #publishRender(topic: string, render: ImageResult): Promise<void> {

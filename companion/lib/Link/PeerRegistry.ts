@@ -17,6 +17,8 @@ export interface PeerRegistryEvents {
 	changed: []
 	/** A peer has become reachable on a transport */
 	peerReachable: [peerId: string, transportId: string]
+	/** A peer is no longer reachable on any transport */
+	peerUnreachable: [peerId: string]
 }
 
 /** How often to look for peers that have stopped announcing */
@@ -78,36 +80,48 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 	/** A peer said it is going offline on a transport */
 	handleGoodbye(transportId: string, peerId: string): void {
 		const record = this.#peers.get(peerId)
-		if (record?.transports.delete(transportId)) this.emit('changed')
+		if (record?.transports.delete(transportId)) this.#emitChanged([record])
 	}
 
 	/** A transport has stopped, so nothing is reachable through it any more */
 	handleTransportDisconnected(transportId: string): void {
-		let changed = false
+		const changed: PeerRecord[] = []
 		for (const record of this.#peers.values()) {
-			if (record.transports.delete(transportId)) changed = true
+			if (record.transports.delete(transportId)) changed.push(record)
 		}
-		if (changed) this.emit('changed')
+		this.#emitChanged(changed)
 	}
 
 	/** Mark peers unreachable on transports they have stopped announcing on */
 	expireStale(now: number): void {
-		let changed = false
+		const changed: PeerRecord[] = []
 		for (const record of this.#peers.values()) {
 			const timeout = record.announcement.announceIntervalMs * LINK_ANNOUNCE_MISSED_LIMIT
 			for (const [transportId, lastSeen] of record.transports) {
 				if (now - lastSeen > timeout) {
 					record.transports.delete(transportId)
-					changed = true
+					if (!changed.includes(record)) changed.push(record)
 				}
 			}
 		}
-		if (changed) this.emit('changed')
+		this.#emitChanged(changed)
+	}
+
+	/** Emit the change, and that peers which can no longer be reached on any transport are gone */
+	#emitChanged(changedRecords: PeerRecord[]): void {
+		if (changedRecords.length === 0) return
+		this.emit('changed')
+		for (const record of changedRecords) {
+			if (record.transports.size === 0) this.emit('peerUnreachable', record.announcement.id)
+		}
 	}
 
 	/** Forget a peer. It will be rediscovered if it is still announcing */
 	forget(peerId: string): void {
-		if (this.#peers.delete(peerId)) this.emit('changed')
+		if (this.#peers.delete(peerId)) {
+			this.emit('changed')
+			this.emit('peerUnreachable', peerId)
+		}
 	}
 
 	clear(): void {

@@ -32,7 +32,7 @@ export class MqttTransport implements LinkTransport {
 			password: config.password || undefined,
 			clientId: `companion-link-${context.peerId}-${Math.random().toString(16).slice(2, 8)}`,
 			clean: true,
-			reconnectPeriod: 5000,
+			reconnectPeriod: 1000,
 			connectTimeout: 10000,
 			rejectUnauthorized: !config.allowUntrustedCertificate,
 			will: {
