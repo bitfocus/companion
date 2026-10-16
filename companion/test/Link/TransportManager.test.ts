@@ -23,14 +23,16 @@ class FakeTransport implements LinkTransport {
 	unsubscribe(pattern: string): void {
 		this.subscriptions.delete(pattern)
 	}
+	async handleAction(entryId: string, actionId: string, input: string | null): Promise<string | null> {
+		return entryId === 'entry' && actionId === 'go' ? null : `Unknown ${entryId}/${actionId}/${input}`
+	}
 	async destroy(): Promise<void> {
 		this.destroyed = true
 	}
 }
 
-function createManager() {
-	const instances: FakeTransport[] = []
-	const definition: LinkTransportDefinition<{ host: string }> = {
+function fakeDefinition(instances: FakeTransport[]): LinkTransportDefinition<{ host: string }> {
+	return {
 		type: 'fake',
 		name: 'Fake',
 		description: 'A fake transport',
@@ -41,12 +43,18 @@ function createManager() {
 			return transport
 		},
 	}
+}
+
+function createManager() {
+	const instances: FakeTransport[] = []
+	const definition = fakeDefinition(instances)
 
 	const db = new FakeDataDatabase()
 	const manager = new LinkTransportManager(
 		db.asDataDatabase(),
 		[definition],
 		() => 'self',
+		() => 'Self',
 		() => ({ topic: 'discovery/self', payload: '', retain: true })
 	)
 	return { manager, instances, db }
@@ -115,7 +123,7 @@ describe('LinkTransportManager', () => {
 		expect(connected).toHaveBeenCalledWith(id)
 		expect(message).toHaveBeenCalledWith(id, 'topic', 'payload')
 		expect(disconnected).toHaveBeenCalledWith(id)
-		expect(ctx.manager.getStates()[id]).toEqual({ status: 'error', message: 'boom', info: [] })
+		expect(ctx.manager.getStates()[id]).toEqual({ status: 'error', message: 'boom', info: [], sections: [] })
 	})
 
 	test('updating the config validates it and replaces the running transport', async () => {
@@ -151,6 +159,40 @@ describe('LinkTransportManager', () => {
 
 		transport.context.receive('topic', 'payload')
 		expect(message).not.toHaveBeenCalled()
+	})
+
+	test('does not start a transport with an incomplete config, and says why', () => {
+		const id = ctx.manager.add('fake', 'One')
+		ctx.instances.length = 0
+
+		// Simulate a config saved before a required field was added
+		ctx.db.getTableView('link_transports').data[id].config = { host: '' }
+		const fresh = new LinkTransportManager(
+			ctx.db.asDataDatabase(),
+			[
+				{
+					...fakeDefinition(ctx.instances),
+					configFields: [{ id: 'host', type: 'textinput', label: 'Host', default: '', minLength: 1 }],
+				},
+			],
+			() => 'self',
+			() => 'Self',
+			() => ({ topic: 'discovery/self', payload: '', retain: true })
+		)
+		fresh.start()
+		expect(ctx.instances).toHaveLength(0)
+		expect(fresh.getStates()[id]).toMatchObject({ status: 'error', message: 'Complete the settings: Host' })
+	})
+
+	test('passes actions to the transport, and reports sections', async () => {
+		const id = ctx.manager.add('fake', 'One')
+		const section = { id: 's', title: 'S', description: null, attention: true, entries: [] }
+		ctx.instances[0].context.setSections([section])
+
+		expect(ctx.manager.getStates()[id].sections).toEqual([section])
+		expect(await ctx.manager.handleAction(id, 'entry', 'go', null)).toBeNull()
+		expect(await ctx.manager.handleAction(id, 'entry', 'nope', 'x')).toBe('Unknown entry/nope/x')
+		expect(await ctx.manager.handleAction('missing', 'entry', 'go', null)).toMatch(/not running/)
 	})
 
 	test('removing a transport deletes its config and storage', async () => {

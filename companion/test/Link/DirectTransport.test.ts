@@ -1,7 +1,11 @@
 import getPort from 'get-port'
 import type { JsonValue } from 'type-fest'
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import type { LinkTransportInfoItem, LinkTransportStatus } from '@companion-app/shared/Model/Link.js'
+import type {
+	LinkTransportInfoItem,
+	LinkTransportSection,
+	LinkTransportStatus,
+} from '@companion-app/shared/Model/Link.js'
 import { DirectClientTransport } from '../../lib/Link/Transports/Direct/ClientTransport.js'
 import { DirectServerTransport } from '../../lib/Link/Transports/Direct/ServerTransport.js'
 import type { LinkTransport, LinkTransportContext } from '../../lib/Link/Transports/Types.js'
@@ -12,41 +16,45 @@ vi.hoisted(() => {
 	process.env.DISABLE_IPV6 = '1'
 })
 
-function createContext(peerId: string) {
-	const storage = new Map<string, JsonValue>()
+function createContext(name: string, storage = new Map<string, JsonValue>()) {
 	const received: [string, string][] = []
-	let status: LinkTransportStatus = 'disabled'
-	let message: string | null = null
-	let info: LinkTransportInfoItem[] = []
+	const state = {
+		status: 'disabled' as LinkTransportStatus,
+		message: null as string | null,
+		info: [] as LinkTransportInfoItem[],
+		sections: [] as LinkTransportSection[],
+	}
 
 	const context: LinkTransportContext = {
-		logger: LogController.createLogger(`test/${peerId}`),
-		peerId,
-		lastWill: { topic: `discovery/${peerId}`, payload: '', retain: true },
+		logger: LogController.createLogger(`test/${name}`),
+		peerId: name,
+		getName: () => name,
+		lastWill: { topic: `discovery/${name}`, payload: '', retain: true },
 		storage: { get: (key) => storage.get(key), set: (key, value) => storage.set(key, value) },
 		receive: (topic, payload) => received.push([topic, payload]),
-		setStatus: (newStatus, newMessage) => {
-			status = newStatus
-			message = newMessage
+		setStatus: (status, message) => {
+			state.status = status
+			state.message = message
 		},
-		setInfo: (newInfo) => {
-			info = newInfo
+		setInfo: (info) => {
+			state.info = info
+		},
+		setSections: (sections) => {
+			state.sections = sections
 		},
 	}
 
-	return {
-		context,
-		received,
-		get status() {
-			return status
-		},
-		get message() {
-			return message
-		},
-		get info() {
-			return info
-		},
-	}
+	return { context, received, state, storage }
+}
+
+type TestContext = ReturnType<typeof createContext>
+
+function pendingEntryId(ctx: TestContext): string | undefined {
+	return ctx.state.sections.find((s) => s.id === 'pending')?.entries[0]?.id
+}
+
+function pairingCode(ctx: TestContext): string | undefined {
+	return ctx.state.info.find((i) => i.label === 'Pairing code')?.value
 }
 
 describe('direct transport', { timeout: 20_000 }, () => {
@@ -56,36 +64,49 @@ describe('direct transport', { timeout: 20_000 }, () => {
 		transports.length = 0
 	})
 
-	async function startServer() {
-		const port = await getPort()
-		const ctx = createContext('server')
+	async function startServer(ctx = createContext('server'), port?: number) {
+		port ??= await getPort()
 		const server = new DirectServerTransport(ctx.context, { port })
 		transports.push(server)
-		await vi.waitFor(() => expect(ctx.status).toBe('connected'), { timeout: 15_000 })
-
-		const fingerprint = ctx.info.find((i) => i.label === 'Certificate fingerprint')?.value
-		if (!fingerprint) throw new Error('No fingerprint reported')
-
-		return { server, ctx, port, fingerprint }
+		await vi.waitFor(() => expect(ctx.state.status).toBe('connected'))
+		return { server, ctx, port }
 	}
 
-	test('exchanges messages, including retained ones and the last will', async () => {
-		const { server, ctx: serverCtx, port, fingerprint } = await startServer()
+	function startClient(port: number, ctx = createContext('client')) {
+		const client = new DirectClientTransport(ctx.context, { host: '127.0.0.1', port })
+		transports.push(client)
+		return { client, ctx }
+	}
 
+	/** Connect a client and pair it, by entering its code on the server */
+	async function pair(server: DirectServerTransport, serverCtx: TestContext, port: number) {
+		const { client, ctx } = startClient(port)
+
+		await vi.waitFor(() => expect(pairingCode(ctx)).toBeDefined())
+		await vi.waitFor(() => expect(pendingEntryId(serverCtx)).toBeDefined())
+		expect(ctx.state.message).toContain(pairingCode(ctx))
+
+		expect(await server.handleAction(pendingEntryId(serverCtx)!, 'pair', pairingCode(ctx)!)).toBeNull()
+		await vi.waitFor(() => expect(ctx.state.status).toBe('connected'))
+
+		return { client, ctx }
+	}
+
+	test('pairs by entering the code shown on the client, then exchanges messages', async () => {
+		const { server, ctx: serverCtx, port } = await startServer()
 		server.subscribe('discovery/+')
 		server.subscribe('inbox/server')
 		server.publish('discovery/server', 'server hello', { retain: true })
 
-		const clientCtx = createContext('client')
-		const client = new DirectClientTransport(clientCtx.context, { url: `wss://127.0.0.1:${port}`, fingerprint })
-		transports.push(client)
+		const { client, ctx: clientCtx } = await pair(server, serverCtx, port)
 		client.subscribe('discovery/+')
 		client.publish('discovery/client', 'client hello', { retain: true })
 
-		await vi.waitFor(() => expect(clientCtx.status).toBe('connected'))
-		expect(clientCtx.message).toBeNull()
+		// The pairing request has gone, and the client is listed as paired
+		expect(serverCtx.state.sections.find((s) => s.id === 'pending')).toBeUndefined()
+		expect(serverCtx.state.sections.find((s) => s.id === 'paired')?.entries.map((e) => e.title)).toEqual(['client'])
 
-		// The retained messages are exchanged once each side subscribes
+		// Retained messages are exchanged once each side subscribes
 		await vi.waitFor(() => expect(clientCtx.received).toContainEqual(['discovery/server', 'server hello']))
 		await vi.waitFor(() => expect(serverCtx.received).toContainEqual(['discovery/client', 'client hello']))
 
@@ -95,45 +116,87 @@ describe('direct transport', { timeout: 20_000 }, () => {
 		await vi.waitFor(() => expect(serverCtx.received).toContainEqual(['inbox/server', 'press']))
 		expect(serverCtx.received).not.toContainEqual(['inbox/elsewhere', 'nope'])
 
+		// Messages larger than one Noise message are split and reassembled
+		const large = 'x'.repeat(200_000)
+		client.publish('inbox/server', large, { retain: false })
+		await vi.waitFor(() => expect(serverCtx.received).toContainEqual(['inbox/server', large]))
+
 		// When the client goes, its retained announcement is cleared on the server
 		await client.destroy()
 		await vi.waitFor(() => expect(serverCtx.received).toContainEqual(['discovery/client', '']))
 	})
 
-	test('warns when the certificate is not pinned', async () => {
-		const { port } = await startServer()
+	test('nothing is exchanged before pairing', async () => {
+		const { server, ctx: serverCtx, port } = await startServer()
+		server.subscribe('#')
 
-		const clientCtx = createContext('client')
-		transports.push(new DirectClientTransport(clientCtx.context, { url: `wss://127.0.0.1:${port}`, fingerprint: '' }))
+		const { client, ctx: clientCtx } = startClient(port)
+		client.publish('discovery/client', 'hello', { retain: true })
+		await vi.waitFor(() => expect(pendingEntryId(serverCtx)).toBeDefined())
 
-		await vi.waitFor(() => expect(clientCtx.status).toBe('connected'))
-		expect(clientCtx.message).toMatch(/not pinned/)
-		expect(clientCtx.info.some((i) => i.label === 'Server certificate fingerprint')).toBe(true)
+		expect(clientCtx.state.status).toBe('connecting')
+		expect(serverCtx.received).toEqual([])
 	})
 
-	test('refuses a server with a different certificate', async () => {
-		const { port } = await startServer()
+	test('a wrong code is refused, and too many reject the request', async () => {
+		const { server, ctx: serverCtx, port } = await startServer()
+		const { ctx: clientCtx } = startClient(port)
+		await vi.waitFor(() => expect(pendingEntryId(serverCtx)).toBeDefined())
+		const entryId = pendingEntryId(serverCtx)!
 
-		const clientCtx = createContext('client')
-		transports.push(
-			new DirectClientTransport(clientCtx.context, { url: `wss://127.0.0.1:${port}`, fingerprint: 'AB:CD:EF' })
-		)
+		expect(await server.handleAction(entryId, 'pair', '0000-0000')).toMatch(/doesn't match/)
+		expect(await server.handleAction(entryId, 'pair', '1111-1111')).toMatch(/doesn't match/)
+		expect(await server.handleAction(entryId, 'pair', '2222-2222')).toMatch(/too many/)
 
-		await vi.waitFor(() => expect(clientCtx.message).toMatch(/does not match/))
-		expect(clientCtx.status).toBe('error')
+		await vi.waitFor(() => expect(clientCtx.state.message).toMatch(/rejected/))
+		expect(clientCtx.state.status).toBe('error')
 	})
 
-	test('keeps its certificate across restarts', async () => {
-		const port = await getPort()
-		const ctx = createContext('server')
+	test('rejecting a request stops the client retrying, until asked to', async () => {
+		const { server, ctx: serverCtx, port } = await startServer()
+		const { client, ctx: clientCtx } = startClient(port)
+		await vi.waitFor(() => expect(pendingEntryId(serverCtx)).toBeDefined())
 
-		const first = new DirectServerTransport(ctx.context, { port })
-		await vi.waitFor(() => expect(ctx.status).toBe('connected'), { timeout: 15_000 })
-		const fingerprint = ctx.info.find((i) => i.label === 'Certificate fingerprint')?.value
-		await first.destroy()
+		expect(await server.handleAction(pendingEntryId(serverCtx)!, 'reject', null)).toBeNull()
+		await vi.waitFor(() => expect(clientCtx.state.message).toMatch(/rejected/))
+		expect(clientCtx.state.sections[0]?.entries[0]?.actions.map((a) => a.id)).toEqual(['retry'])
 
-		const second = new DirectServerTransport(ctx.context, { port })
-		transports.push(second)
-		await vi.waitFor(() => expect(ctx.info.find((i) => i.label === 'Certificate fingerprint')?.value).toBe(fingerprint))
+		expect(await client.handleAction('pairing', 'retry', null)).toBeNull()
+		await vi.waitFor(() => expect(pendingEntryId(serverCtx)).toBeDefined())
+	})
+
+	test('once paired, reconnecting needs no code', async () => {
+		const { server, ctx: serverCtx, port } = await startServer()
+		const { client, ctx: clientCtx } = await pair(server, serverCtx, port)
+		await client.destroy()
+
+		// A new instance, as after a restart, with the same storage
+		const again = startClient(port, createContext('client', clientCtx.storage))
+		await vi.waitFor(() => expect(again.ctx.state.status).toBe('connected'))
+		expect(pendingEntryId(serverCtx)).toBeUndefined()
+	})
+
+	test('refuses a server whose identity has changed', async () => {
+		const { server, ctx: serverCtx, port } = await startServer()
+		const { client, ctx: clientCtx } = await pair(server, serverCtx, port)
+		await client.destroy()
+		await server.destroy()
+
+		// A different installation (new identity) on the same address
+		await startServer(createContext('impostor'), port)
+		const again = startClient(port, createContext('client', clientCtx.storage))
+		await vi.waitFor(() => expect(again.ctx.state.message).toMatch(/different identity/))
+		expect(again.ctx.state.status).toBe('error')
+	})
+
+	test('unpairing disconnects the client, and it must pair again', async () => {
+		const { server, ctx: serverCtx, port } = await startServer()
+		const { ctx: clientCtx } = await pair(server, serverCtx, port)
+
+		const pairedEntry = serverCtx.state.sections.find((s) => s.id === 'paired')!.entries[0]
+		expect(await server.handleAction(pairedEntry.id, 'unpair', null)).toBeNull()
+
+		await vi.waitFor(() => expect(pairingCode(clientCtx)).toBeDefined(), { timeout: 10_000 })
+		await vi.waitFor(() => expect(pendingEntryId(serverCtx)).toBeDefined())
 	})
 })

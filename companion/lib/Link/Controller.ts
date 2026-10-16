@@ -75,6 +75,7 @@ export class LinkController {
 			db,
 			LINK_TRANSPORT_DEFINITIONS,
 			() => this.#selfId,
+			() => this.#getSelfInfo().name,
 			() => ({ topic: linkDiscoveryTopic(this.#selfId), payload: '', retain: true })
 		)
 		this.#peers = new LinkPeerRegistry(this.#selfId)
@@ -313,6 +314,19 @@ export class LinkController {
 			setTransportEnabled: publicProcedure
 				.input(z.object({ id: z.string(), enabled: z.boolean() }))
 				.mutation(async ({ input }) => this.#transports.setEnabled(input.id, input.enabled)),
+
+			transportAction: publicProcedure
+				.input(
+					z.object({
+						transportId: z.string(),
+						entryId: z.string(),
+						actionId: z.string(),
+						input: z.string().max(1000).nullable(),
+					})
+				)
+				.mutation(async ({ input }) =>
+					this.#transports.handleAction(input.transportId, input.entryId, input.actionId, input.input)
+				),
 
 			removeTransport: publicProcedure
 				.input(z.object({ id: z.string() }))

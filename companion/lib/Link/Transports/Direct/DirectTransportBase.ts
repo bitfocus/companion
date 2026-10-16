@@ -1,27 +1,37 @@
-import type { WebSocket } from 'ws'
+import type { NoiseKeyPair } from 'noise-handshake'
 import type { LinkPublishOptions, LinkTransport, LinkTransportContext } from '../Types.js'
+import { loadOrCreateDirectIdentity } from './Identity.js'
 import { PeerConnectionBus } from './PeerConnectionBus.js'
+import type { SecureChannel } from './SecureChannel.js'
 
 /** How often a direct connection is checked for liveness */
 const KEEPALIVE_INTERVAL_MS = 10_000
 
+/** Largest message accepted over a direct connection, comfortably above a large button bitmap */
+export const DIRECT_MAX_MESSAGE_SIZE = 4 * 1024 * 1024
+
+/** How long the Noise handshake may take */
+export const DIRECT_HANDSHAKE_TIMEOUT_MS = 10_000
+
 /**
- * Common parts of the direct server and client: tracking our subscriptions and retained messages, and fanning
- * them out to the connections.
+ * Common parts of the direct server and client: the identity key, keeping the sockets alive, and once a connection
+ * is trusted, exchanging Link messages over it.
  */
 export abstract class DirectTransportBase implements LinkTransport {
 	protected readonly context: LinkTransportContext
+	protected readonly identity: NoiseKeyPair
 
 	readonly #retained = new Map<string, string>()
 	readonly #subscriptions = new Set<string>()
 	readonly #buses = new Set<PeerConnectionBus>()
 
-	protected get connectionCount(): number {
+	protected get linkedCount(): number {
 		return this.#buses.size
 	}
 
 	constructor(context: LinkTransportContext) {
 		this.context = context
+		this.identity = loadOrCreateDirectIdentity(context.storage)
 	}
 
 	publish(topic: string, payload: string, options: LinkPublishOptions): void {
@@ -43,53 +53,58 @@ export abstract class DirectTransportBase implements LinkTransport {
 		for (const bus of this.#buses) bus.unsubscribe(pattern)
 	}
 
+	abstract handleAction(entryId: string, actionId: string, input: string | null): Promise<string | null>
+
 	abstract destroy(): Promise<void>
 
-	/** Called when the number of open connections changes */
-	protected abstract connectionsChanged(): void
+	/** Called when the number of linked connections changes */
+	protected abstract linksChanged(): void
 
 	/**
-	 * Start exchanging messages over an open socket. Liveness is checked with websocket pings, and the socket is
-	 * terminated if it stops responding
+	 * Check a socket for liveness with websocket pings, terminating it if it stops responding. Started as soon as
+	 * the socket opens, so that a connection waiting for pairing is also cleaned up
 	 */
-	protected attachSocket(socket: WebSocket, name: string): void {
+	protected keepAlive(channelSocket: SecureChannel['socket'], name: string): void {
+		let alive = true
+		const timer = setInterval(() => {
+			if (!alive) {
+				this.context.logger.info(`Connection to ${name} timed out`)
+				channelSocket.terminate()
+				return
+			}
+			alive = false
+			channelSocket.ping()
+		}, KEEPALIVE_INTERVAL_MS)
+
+		channelSocket.on('pong', () => {
+			alive = true
+		})
+		channelSocket.on('message', () => {
+			alive = true
+		})
+		channelSocket.on('close', () => clearInterval(timer))
+	}
+
+	/** Start exchanging Link messages over a trusted channel */
+	protected link(channel: SecureChannel, name: string): void {
 		const bus = new PeerConnectionBus(
-			(frame) => socket.send(frame),
+			(frame) => channel.send(frame),
 			(topic, payload) => this.context.receive(topic, payload),
 			this.#retained,
 			this.#subscriptions
 		)
 		this.#buses.add(bus)
 
-		let alive = true
-		const keepalive = setInterval(() => {
-			if (!alive) {
-				this.context.logger.info(`Connection to ${name} timed out`)
-				socket.terminate()
-				return
-			}
-			alive = false
-			socket.ping()
-		}, KEEPALIVE_INTERVAL_MS)
-
-		socket.on('pong', () => {
-			alive = true
-		})
-		socket.on('message', (data, isBinary) => {
-			alive = true
-			if (isBinary) return
-
-			// eslint-disable-next-line @typescript-eslint/no-base-to-string
-			const result = bus.handleFrame(data.toString())
+		channel.setHandler((text) => {
+			const result = bus.handleFrame(text)
 			if (!result.ok) this.context.logger.warn(`Invalid frame from ${name}: ${result.error}`)
 		})
-		socket.on('close', () => {
-			clearInterval(keepalive)
+		channel.socket.on('close', () => {
 			this.#buses.delete(bus)
 			bus.close()
-			this.connectionsChanged()
+			this.linksChanged()
 		})
 
-		this.connectionsChanged()
+		this.linksChanged()
 	}
 }

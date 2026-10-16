@@ -44,12 +44,40 @@ export interface LinkTransportInfoItem {
 	copyable?: boolean
 }
 
+/** Something the user can do to an entry reported by a transport */
+export interface LinkTransportAction {
+	id: string
+	label: string
+	color: 'primary' | 'secondary' | 'danger'
+}
+
+/** An item reported by a transport, that the user may act on, eg a pairing request */
+export interface LinkTransportEntry {
+	id: string
+	title: string
+	description: string | null
+	/** When set, the user is asked for a value (eg a pairing code), which is passed with the action */
+	inputLabel: string | null
+	actions: LinkTransportAction[]
+}
+
+/** A group of entries reported by a transport, eg the installations paired with it */
+export interface LinkTransportSection {
+	id: string
+	title: string
+	description: string | null
+	/** Whether the section needs the user's attention, eg there is a pairing request waiting */
+	attention: boolean
+	entries: LinkTransportEntry[]
+}
+
 /** The runtime state of a configured transport */
 export interface LinkTransportState {
 	status: LinkTransportStatus
 	/** Explanation of the status, eg the error */
 	message: string | null
 	info: LinkTransportInfoItem[]
+	sections: LinkTransportSection[]
 }
 
 export type LinkTransportsUpdate =

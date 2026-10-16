@@ -90,6 +90,10 @@ export class MqttTransport implements LinkTransport {
 		})
 	}
 
+	async handleAction(_entryId: string, _actionId: string, _input: string | null): Promise<string | null> {
+		return 'Unknown action'
+	}
+
 	async destroy(): Promise<void> {
 		this.#subscriptions.clear()
 		// Force when not connected, as there is nothing to flush and it would otherwise wait for a connection

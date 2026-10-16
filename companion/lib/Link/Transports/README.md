@@ -45,7 +45,8 @@ Then add it to `LINK_TRANSPORT_DEFINITIONS` in [`index.ts`](./index.ts), in the 
 Config fields are the same input fields used elsewhere in Companion (`LinkTransportConfigField`: text, secret,
 number, checkbox, dropdown, static text, …). Give every field a `default`. Values are validated and sanitised
 against the fields, and missing values are filled in from the defaults, before they reach `create`, so the config
-your transport receives always matches `TConfig`. Use `isVisibleUi` to hide fields that don't apply, and a
+your transport receives always matches `TConfig`. A transport whose config is incomplete (eg a required field that
+is empty) is not started, and the user is told which fields to fill in. Use `isVisibleUi` to hide fields that don't apply, and a
 `static-text` field to explain something (eg security implications).
 
 ### 2. The transport
@@ -62,6 +63,9 @@ export class ExampleTransport implements LinkTransport {
 	publish(topic: string, payload: string, options: LinkPublishOptions): void {}
 	subscribe(pattern: string): void {}
 	unsubscribe(pattern: string): void {}
+	async handleAction(entryId: string, actionId: string, input: string | null): Promise<string | null> {
+		return 'Unknown action'
+	}
 	async destroy(): Promise<void> {}
 }
 ```
@@ -77,10 +81,24 @@ The `context` is how the transport talks to the core:
 | `receive(topic, payload)`    | Hand over a message that arrived on a subscribed topic                                             |
 | `setStatus(status, message)` | Report `connecting` / `connected` / `error`, with an explanation the user can act on               |
 | `setInfo(items)`             | Facts to show the user, eg the address being listened on. Mark values they must copy as `copyable` |
+| `setSections(sections)`      | Things the user can act on, eg pairing requests (see below)                                        |
 | `logger`                     | Logs under the transport's name                                                                    |
 | `peerId`                     | Our Link id, eg for a client id                                                                    |
+| `getName()`                  | The name of this installation, eg to introduce it to the other end                                 |
 | `lastWill`                   | What to publish for us if we vanish without saying goodbye (see below)                             |
 | `storage`                    | Persistent key-value storage for state that isn't user config (eg a generated key)                 |
+
+### Interacting with the user
+
+Some transports need the user to do something that isn't config, like accepting a pairing request. Rather than
+adding UI for it, report it with `context.setSections`: each section is a titled list of entries, and each entry can
+offer actions (buttons), optionally asking for a value first (eg a pairing code). The UI renders these in the
+transport's panel, and when the user chooses an action it arrives at `handleAction(entryId, actionId, input)`.
+Return an error message to show next to the entry, or `null` on success, and report the new sections. A transport
+with nothing to show never calls `setSections`, and returns an error from `handleAction`.
+
+Mark a section with `attention` when the user should act on it, and use the status message to say so too, as that
+is what shows in the list of transports.
 
 ## What a transport must guarantee
 
@@ -107,12 +125,12 @@ The `context` is how the transport talks to the core:
   transports; it is written so that this is harmless.
 
 What a transport does **not** need to do: ordering, delivery guarantees beyond best effort, encryption of the
-payload (do secure the connection itself, eg with TLS), or knowing anything about the messages.
+payload (do secure the connection itself, eg with TLS, or encryption in the stream like `Direct/`), or knowing anything about the messages.
 
 ## Security
 
 The Link protocol has no authentication of its own: anyone who can publish to an installation's topics can press its
-buttons. Securing who can connect is the job of the transport (broker credentials, TLS, certificate pinning, …).
+buttons. Securing who can connect is the job of the transport (broker credentials, TLS, pairing, …).
 Explain the implications in the transport's description or a `static-text` field when they are not obvious.
 
 ## Testing
@@ -126,7 +144,15 @@ behaviour, and the status reported when the backend is unreachable.
 ## Existing transports
 
 - [`Mqtt/`](./Mqtt): a client of any MQTT 5 broker. The simplest example, as MQTT is already publish/subscribe.
-- [`Direct/`](./Direct): installations connect directly to each other over a websocket secured with a self-signed
-  certificate, with optional fingerprint pinning. As this is point to point, it emulates the broker features
-  itself in `PeerConnectionBus`. It is two transport types sharing a folder: one accepts connections, the other
-  makes one.
+- [`Direct/`](./Direct): installations connect directly to each other over a websocket. Two transport types share
+  the folder: one accepts connections, the other makes one.
+  - **Encryption**: every connection runs a Noise XX handshake (`Noise_XX_25519_ChaChaPoly_BLAKE2b`, using
+    [noise-handshake](https://github.com/holepunchto/noise-handshake)), and everything after it is encrypted
+    (`SecureChannel.ts`). Each transport has a long-term static key (`Identity.ts`).
+  - **Pairing** (`Pairing.ts`): the first time, the accepting end doesn't know the connecting end's key, so it shows a
+    pairing request. Both ends derive an 8 digit code from the handshake hash; the connecting end shows it, and the
+    user enters it on the accepting end, which only accepts a matching code. A man in the middle would have run two
+    separate handshakes, so the codes would not match. Both ends then remember each other's key: later connections
+    need no code, and a different key is refused. This uses `setSections` for the requests and the paired list.
+  - **Broker emulation**: as this is point to point, it emulates the broker features itself in
+    `PeerConnectionBus`.

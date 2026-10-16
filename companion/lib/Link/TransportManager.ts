@@ -50,17 +50,21 @@ export class LinkTransportManager {
 
 	readonly #configs = new Map<string, LinkTransportConfig>()
 	readonly #running = new Map<string, RunningTransport>()
+	/** Enabled transports that could not be started, eg because their config is incomplete */
+	readonly #failed = new Map<string, LinkTransportState>()
 
 	/** Reference counts of the patterns the core wants to receive, applied to every running transport */
 	readonly #subscriptions = new Map<string, number>()
 
 	readonly #peerId: () => string
+	readonly #selfName: () => string
 	readonly #lastWill: () => LinkTransportLastWill
 
 	constructor(
 		db: DataDatabase,
 		definitions: readonly SomeLinkTransportDefinition[],
 		peerId: () => string,
+		selfName: () => string,
 		lastWill: () => LinkTransportLastWill
 	) {
 		this.events.setMaxListeners(0)
@@ -69,6 +73,7 @@ export class LinkTransportManager {
 		this.#configTable = db.getTableView('link_transports')
 		this.#storageTable = db.getTableView('link_transport_storage')
 		this.#peerId = peerId
+		this.#selfName = selfName
 		this.#lastWill = lastWill
 
 		for (const [id, config] of Object.entries(this.#configTable.all())) {
@@ -179,11 +184,28 @@ export class LinkTransportManager {
 		await this.#stop(id)
 
 		this.#configs.delete(id)
+		this.#failed.delete(id)
 		this.#configTable.delete(id)
 		this.#storageTable.delete(id)
 
 		this.events.emit('configs', { type: 'remove', itemId: id })
 		this.events.emit('states', { type: 'remove', itemId: id })
+	}
+
+	/**
+	 * Pass an action the user chose on an entry reported by a transport
+	 * @returns an error to show the user, or null on success
+	 */
+	async handleAction(id: string, entryId: string, actionId: string, input: string | null): Promise<string | null> {
+		const running = this.#running.get(id)
+		if (!running) return 'The transport is not running'
+
+		try {
+			return await running.transport.handleAction(entryId, actionId, input)
+		} catch (e) {
+			this.#logger.warn(`Action ${actionId} on transport ${id} failed: ${stringifyError(e)}`)
+			return stringifyError(e)
+		}
 	}
 
 	/** Publish a message on every connected transport */
@@ -231,7 +253,10 @@ export class LinkTransportManager {
 	}
 
 	#getState(id: string): LinkTransportState {
-		return this.#running.get(id)?.state ?? { status: 'disabled', message: null, info: [] }
+		return (
+			this.#running.get(id)?.state ??
+			this.#failed.get(id) ?? { status: 'disabled', message: null, info: [], sections: [] }
+		)
 	}
 
 	#emitState(id: string): void {
@@ -239,7 +264,11 @@ export class LinkTransportManager {
 	}
 
 	#startStop(config: LinkTransportConfig): void {
-		if (!config.enabled || this.#running.has(config.id)) return
+		this.#failed.delete(config.id)
+		if (!config.enabled || this.#running.has(config.id)) {
+			this.#emitState(config.id)
+			return
+		}
 
 		const definition = this.#definitions.get(config.type)
 		if (!definition) {
@@ -249,8 +278,11 @@ export class LinkTransportManager {
 
 		// Fill in defaults for any fields added since the config was saved
 		const { config: resolvedConfig, errors } = resolveLinkTransportConfig(definition.configFields, config.config)
-		if (Object.keys(errors).length > 0) {
+		const invalidFields = definition.configFields.filter((field) => errors[field.id] !== undefined)
+		if (invalidFields.length > 0) {
 			this.#logger.warn(`Transport "${config.label}" has an invalid config: ${JSON.stringify(errors)}`)
+			this.#setFailed(config.id, `Complete the settings: ${invalidFields.map((field) => field.label).join(', ')}`)
+			return
 		}
 
 		const id = config.id
@@ -258,13 +290,14 @@ export class LinkTransportManager {
 		const storageTable = this.#storageTable
 
 		let running: RunningTransport | null = null
-		const state: LinkTransportState = { status: 'connecting', message: null, info: [] }
+		const state: LinkTransportState = { status: 'connecting', message: null, info: [], sections: [] }
 
 		try {
 			const transport = definition.create(
 				{
 					logger,
 					peerId: this.#peerId(),
+					getName: this.#selfName,
 					lastWill: this.#lastWill(),
 					storage: {
 						get: (key) => storageTable.get(id)?.[key],
@@ -287,18 +320,17 @@ export class LinkTransportManager {
 						state.info = info
 						if (running && this.#running.get(id) === running) this.#emitState(id)
 					},
+					setSections: (sections) => {
+						state.sections = sections
+						if (running && this.#running.get(id) === running) this.#emitState(id)
+					},
 				},
 				resolvedConfig
 			)
 			running = { transport, state }
 		} catch (e) {
 			logger.error(`Failed to start: ${stringifyError(e)}`)
-			this.#running.delete(id)
-			this.events.emit('states', {
-				type: 'update',
-				itemId: id,
-				state: { status: 'error', message: stringifyError(e), info: [] },
-			})
+			this.#setFailed(id, stringifyError(e))
 			return
 		}
 
@@ -311,7 +343,13 @@ export class LinkTransportManager {
 		if (state.status === 'connected') this.events.emit('transportConnected', id)
 	}
 
+	#setFailed(id: string, message: string): void {
+		this.#failed.set(id, { status: 'error', message, info: [], sections: [] })
+		this.#emitState(id)
+	}
+
 	async #stop(id: string): Promise<void> {
+		this.#failed.delete(id)
 		const running = this.#running.get(id)
 		if (!running) return
 

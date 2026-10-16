@@ -25,6 +25,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { EditPanelConfigField } from '~/Surfaces/EditPanelConfigField.js'
 import { TransportStatusBadge } from './LinkStatusBadges.js'
 import { useLinkStore } from './LinkStoreContext.js'
+import { TransportSections } from './TransportSections.js'
 
 export const TransportEditPanel = observer(function TransportEditPanel({
 	transport,
@@ -160,6 +161,9 @@ const TransportEditForm = observer(function TransportEditForm({
 				</Note>
 
 				<TransportStateSummary state={state} />
+				{state && state.sections.length > 0 && (
+					<TransportSections transportId={transport.id} sections={state.sections} />
+				)}
 
 				<Grid.Row className="sm:gap-2">
 					{saveError && (

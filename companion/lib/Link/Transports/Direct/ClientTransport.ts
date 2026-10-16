@@ -1,122 +1,223 @@
-import type { TLSSocket } from 'node:tls'
 import { WebSocket } from 'ws'
+import { z } from 'zod'
+import type { LinkTransportInfoItem, LinkTransportSection } from '@companion-app/shared/Model/Link.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { LinkTransportContext } from '../Types.js'
-import { normaliseFingerprint } from './Certificate.js'
-import { DirectTransportBase } from './DirectTransportBase.js'
-import { DIRECT_MAX_PAYLOAD } from './ServerTransport.js'
+import { DIRECT_HANDSHAKE_TIMEOUT_MS, DIRECT_MAX_MESSAGE_SIZE, DirectTransportBase } from './DirectTransportBase.js'
+import { derivePairingCode, DirectAuthFrameSchema, formatKeyFingerprint } from './Pairing.js'
+import { SecureChannel } from './SecureChannel.js'
 
 export type DirectClientTransportConfig = {
-	url: string
-	fingerprint: string
+	host: string
+	port: number
 }
+
+const PAIRED_STORAGE_KEY = 'pairedServer'
+const PairedServerSchema = z.object({ publicKey: z.string(), name: z.string() })
+type PairedServer = z.infer<typeof PairedServerSchema>
 
 const RECONNECT_DELAY_MS = 5_000
 
 /**
- * Connects directly to another installation that is accepting direct connections.
- *
- * The connection is encrypted, but the server's certificate is self-signed, so it is only authenticated if the
- * user has pinned its fingerprint.
- * TODO: this needs a proper authentication story (eg a pairing flow exchanging keys) before it can be called secure.
+ * Connects directly to another installation that is accepting direct connections. The connection is encrypted with
+ * Noise. The first time, the user pairs the two by entering the code shown here on the other installation; after
+ * that, the other installation's identity is remembered and a different one is refused.
  */
 export class DirectClientTransport extends DirectTransportBase {
 	readonly #url: string
-	readonly #pinnedFingerprint: string
 
 	#socket: WebSocket | null = null
 	#reconnectTimer: NodeJS.Timeout | null = null
-	#observedFingerprint: string | null = null
-	/** Why we closed the connection ourselves, which explains the error the socket then reports */
-	#rejectReason: string | null = null
-	#isOpen = false
 	#destroyed = false
+	/** Set when retrying would not help, until the user does something about it */
+	#stopped = false
+
+	/** The code to enter on the other installation, while it is waiting for it */
+	#pairingCode: string | null = null
+	#serverName: string | null = null
 
 	constructor(context: LinkTransportContext, config: DirectClientTransportConfig) {
 		super(context)
-		this.#url = config.url
-		this.#pinnedFingerprint = normaliseFingerprint(config.fingerprint)
+		this.#url = `ws://${config.host.includes(':') ? `[${config.host}]` : config.host}:${config.port}`
 
 		this.#connect()
 	}
 
+	#getPaired(): PairedServer | null {
+		const parsed = PairedServerSchema.safeParse(this.context.storage.get(PAIRED_STORAGE_KEY))
+		return parsed.success ? parsed.data : null
+	}
+
 	#connect(): void {
 		this.#reconnectTimer = null
-		if (this.#destroyed) return
+		if (this.#destroyed || this.#stopped) return
 
-		this.#rejectReason = null
+		this.#pairingCode = null
 		this.context.setStatus('connecting', null)
 		this.#updateInfo()
 
-		const socket = new WebSocket(this.#url, {
-			// The certificate is self-signed, so it is checked against the pinned fingerprint instead
-			rejectUnauthorized: false,
-			maxPayload: DIRECT_MAX_PAYLOAD,
-			handshakeTimeout: 10_000,
-		})
+		const socket = new WebSocket(this.#url, { maxPayload: 65535, handshakeTimeout: 10_000 })
 		this.#socket = socket
-
-		socket.on('upgrade', (res) => {
-			const tlsSocket = res.socket as TLSSocket
-			if (typeof tlsSocket.getPeerCertificate !== 'function') {
-				this.#rejectReason = 'Connection is not encrypted, the url must start with wss://'
-				socket.terminate()
-				return
-			}
-
-			const fingerprint = tlsSocket.getPeerCertificate().fingerprint256
-			this.#observedFingerprint = fingerprint ?? null
-			if (this.#pinnedFingerprint && normaliseFingerprint(fingerprint ?? '') !== this.#pinnedFingerprint) {
-				this.#rejectReason =
-					'The certificate fingerprint does not match the pinned one. If the other installation was reset, update the pinned fingerprint'
-				this.#updateInfo()
-				socket.terminate()
-			}
-		})
-
-		socket.on('open', () => {
-			this.#isOpen = true
-			this.context.logger.info(`Connected to ${this.#url}`)
-			this.context.setStatus(
-				'connected',
-				this.#pinnedFingerprint ? null : 'The certificate is not pinned, so the other end is not verified'
-			)
-			this.#updateInfo()
-			this.attachSocket(socket, this.#url)
-		})
 
 		socket.on('error', (e) => {
 			this.context.logger.debug(`Connection error: ${stringifyError(e)}`)
-			this.context.setStatus('error', this.#rejectReason ?? stringifyError(e))
+			if (!this.#stopped) this.context.setStatus('error', stringifyError(e))
 		})
-
 		socket.on('close', () => {
 			if (this.#socket !== socket) return
-			const wasOpen = this.#isOpen
-			this.#isOpen = false
 			this.#socket = null
-			if (this.#destroyed) return
+			this.#pairingCode = null
+			this.#updateInfo()
+			if (this.#destroyed || this.#stopped) return
 
-			if (this.#rejectReason) {
-				this.context.setStatus('error', this.#rejectReason)
-			} else if (wasOpen) {
-				this.context.setStatus('connecting', 'Connection lost, retrying')
-			}
-
+			if (this.linkedCount === 0) this.context.setStatus('connecting', 'Connection lost, retrying')
 			this.#reconnectTimer = setTimeout(() => this.#connect(), RECONNECT_DELAY_MS)
 		})
+		socket.on('open', () => {
+			this.keepAlive(socket, this.#url)
+
+			SecureChannel.establish(
+				socket,
+				true,
+				this.identity,
+				this.context.getName(),
+				DIRECT_MAX_MESSAGE_SIZE,
+				DIRECT_HANDSHAKE_TIMEOUT_MS
+			)
+				.then((channel) => this.#authenticate(channel))
+				.catch((e) => {
+					this.context.logger.info(`Handshake failed: ${stringifyError(e)}`)
+					this.context.setStatus('error', stringifyError(e))
+					socket.terminate()
+				})
+		})
+	}
+
+	#authenticate(channel: SecureChannel): void {
+		this.#serverName = channel.remoteName
+
+		const paired = this.#getPaired()
+		if (paired && paired.publicKey !== channel.remotePublicKey) {
+			// Either the other installation was reset, or something is impersonating it
+			this.#stop(
+				`${channel.remoteName} has a different identity (${formatKeyFingerprint(channel.remotePublicKey)}) to when it was paired. If it was reset, forget the pairing and pair again.`
+			)
+			channel.socket.close()
+			return
+		}
+
+		channel.setHandler((text) => {
+			let frame
+			try {
+				frame = DirectAuthFrameSchema.parse(JSON.parse(text))
+			} catch {
+				this.context.logger.warn('Invalid message while pairing')
+				channel.socket.close()
+				return
+			}
+
+			switch (frame.status) {
+				case 'pairing-required':
+					this.#pairingCode = derivePairingCode(channel.handshakeHash)
+					this.context.setStatus(
+						'connecting',
+						`Waiting for pairing. Enter the code ${this.#pairingCode} on ${channel.remoteName} to pair`
+					)
+					this.#updateInfo()
+					break
+				case 'paired':
+					this.#pairingCode = null
+					if (!paired) {
+						this.context.storage.set(PAIRED_STORAGE_KEY, {
+							publicKey: channel.remotePublicKey,
+							name: channel.remoteName,
+						} satisfies PairedServer)
+					}
+					this.context.logger.info(`Connected to ${channel.remoteName}`)
+					this.link(channel, channel.remoteName)
+					break
+				case 'rejected':
+					this.#stop(`${channel.remoteName} rejected the pairing`)
+					channel.socket.close()
+					break
+			}
+		})
+	}
+
+	/** Stop retrying, as it would not help, until the user acts */
+	#stop(reason: string): void {
+		this.#stopped = true
+		this.#pairingCode = null
+		this.context.setStatus('error', reason)
+		this.#updateInfo()
+	}
+
+	async handleAction(entryId: string, actionId: string, _input: string | null): Promise<string | null> {
+		if (entryId !== 'pairing') return 'Unknown action'
+
+		if (actionId === 'forget') {
+			this.context.storage.set(PAIRED_STORAGE_KEY, null)
+		} else if (actionId !== 'retry') {
+			return 'Unknown action'
+		}
+
+		this.#stopped = false
+		this.#socket?.close()
+		if (!this.#socket && !this.#reconnectTimer) this.#connect()
+		this.#updateInfo()
+		return null
+	}
+
+	protected linksChanged(): void {
+		if (this.#destroyed) return
+		if (this.linkedCount > 0) this.context.setStatus('connected', null)
+		this.#updateInfo()
 	}
 
 	#updateInfo(): void {
-		const info = [{ label: 'Address', value: this.#url }]
-		if (this.#observedFingerprint) {
-			info.push({ label: 'Server certificate fingerprint', value: this.#observedFingerprint })
-		}
+		const info: LinkTransportInfoItem[] = [
+			{ label: 'Address', value: this.#url },
+			{ label: 'Identity', value: formatKeyFingerprint(this.identity.publicKey.toString('hex')) },
+		]
+		if (this.#pairingCode) info.unshift({ label: 'Pairing code', value: this.#pairingCode })
 		this.context.setInfo(info)
-	}
 
-	protected connectionsChanged(): void {
-		// Status is driven by the socket events instead
+		const paired = this.#getPaired()
+		const sections: LinkTransportSection[] = []
+		if (paired) {
+			sections.push({
+				id: 'pairing',
+				title: 'Pairing',
+				description: null,
+				attention: this.#stopped,
+				entries: [
+					{
+						id: 'pairing',
+						title: `Paired with ${paired.name}`,
+						description: `Identity ${formatKeyFingerprint(paired.publicKey)}. Forget it to pair again, eg if it was reset.`,
+						inputLabel: null,
+						actions: [{ id: 'forget', label: 'Forget pairing', color: 'danger' }],
+					},
+				],
+			})
+		} else if (this.#stopped) {
+			sections.push({
+				id: 'pairing',
+				title: 'Pairing',
+				description: null,
+				attention: true,
+				entries: [
+					{
+						id: 'pairing',
+						title: `Not paired with ${this.#serverName ?? 'the other installation'}`,
+						description: 'Try again to get a new pairing code.',
+						inputLabel: null,
+						actions: [{ id: 'retry', label: 'Try again', color: 'primary' }],
+					},
+				],
+			})
+		}
+		this.context.setSections(sections)
 	}
 
 	async destroy(): Promise<void> {

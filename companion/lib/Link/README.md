@@ -95,9 +95,8 @@ announcement:
 ## Security
 
 The protocol has no authentication or encryption of its own: anyone who can publish to an installation's inbox can
-press its buttons. Securing who can connect is the job of the transports (broker credentials and TLS for MQTT, a
-self-signed certificate with optional fingerprint pinning for direct connections). A proper story for authenticating
-direct connections (eg pairing) is still to do.
+press its buttons. Securing who can connect is the job of the transports: broker credentials and TLS for MQTT, and for direct
+connections Noise encryption with an explicit pairing step (see [Transports/README.md](./Transports/README.md)).
 
 ## Not done yet
 

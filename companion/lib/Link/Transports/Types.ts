@@ -2,6 +2,7 @@ import type { JsonValue } from 'type-fest'
 import type {
 	LinkTransportConfigField,
 	LinkTransportInfoItem,
+	LinkTransportSection,
 	LinkTransportStatus,
 } from '@companion-app/shared/Model/Link.js'
 import type { Logger } from '../../Log/Controller.js'
@@ -25,6 +26,8 @@ export interface LinkTransportContext {
 	readonly logger: Logger
 	/** The Link id of this installation */
 	readonly peerId: string
+	/** The name of this installation, as shown to the user. It can change while the transport runs */
+	getName(): string
 	/** Published (retained) by the transport on our behalf if we vanish without saying goodbye */
 	readonly lastWill: LinkTransportLastWill
 	/**
@@ -39,6 +42,11 @@ export interface LinkTransportContext {
 	setStatus(status: LinkTransportStatus, message: string | null): void
 	/** Report facts to show to the user, eg the address being listened on */
 	setInfo(info: LinkTransportInfoItem[]): void
+	/**
+	 * Report things the user can act on, eg pairing requests. Actions on the entries arrive at
+	 * {@link LinkTransport.handleAction}
+	 */
+	setSections(sections: LinkTransportSection[]): void
 }
 
 export interface LinkTransportStorage {
@@ -68,6 +76,12 @@ export interface LinkTransport {
 	subscribe(pattern: string): void
 	/** Stop receiving messages on a pattern previously subscribed to */
 	unsubscribe(pattern: string): void
+	/**
+	 * The user chose an action on an entry reported with `setSections`
+	 * @param input - the value the user entered, when the entry asked for one
+	 * @returns an error to show the user, or null on success
+	 */
+	handleAction(entryId: string, actionId: string, input: string | null): Promise<string | null>
 	/** Disconnect and release all resources. Should publish nothing; the core says goodbye before calling this */
 	destroy(): Promise<void>
 }

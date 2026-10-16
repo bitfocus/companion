@@ -23,7 +23,7 @@ export const DirectServerTransportDefinition: LinkTransportDefinition<DirectServ
 			type: 'static-text',
 			label: 'Security',
 			value:
-				'Connections are encrypted with a self-signed certificate. Anyone who can reach this port can use the buttons of this installation, so only use this on a trusted network.',
+				'Connections are encrypted. An installation can only connect once it has been paired, by entering the code it shows into the pairing request that appears here.',
 		},
 	],
 
@@ -33,25 +33,25 @@ export const DirectServerTransportDefinition: LinkTransportDefinition<DirectServ
 export const DirectClientTransportDefinition: LinkTransportDefinition<DirectClientTransportConfig> = {
 	type: 'direct-client',
 	name: 'Connect directly',
-	description: 'Connect directly to another installation that is accepting direct connections.',
+	description:
+		'Connect directly to another installation that is accepting direct connections. The first time, you pair them by entering a code shown here on the other installation.',
 	configFields: [
 		{
-			id: 'url',
+			id: 'host',
 			type: 'textinput',
 			label: 'Address',
-			placeholder: `wss://192.168.1.10:${DIRECT_DEFAULT_PORT}`,
-			default: `wss://127.0.0.1:${DIRECT_DEFAULT_PORT}`,
-			regex: '/^wss:\\/\\/.+/',
-			description: 'The address of the other installation, starting with wss://',
+			placeholder: '192.168.1.10',
+			default: '',
+			minLength: 1,
+			description: 'The IP address or hostname of the other installation',
 		},
 		{
-			id: 'fingerprint',
-			type: 'textinput',
-			label: 'Certificate fingerprint',
-			default: '',
-			placeholder: 'AB:CD:EF:…',
-			description:
-				'Shown on the other installation. When set, the connection is refused unless the other end presents this certificate',
+			id: 'port',
+			type: 'number',
+			label: 'Port',
+			default: DIRECT_DEFAULT_PORT,
+			min: 1,
+			max: 65535,
 		},
 	],
 
