@@ -2,7 +2,19 @@
  * Warning: this file needs to not reference any 'real' code in the codebase, or we end up with import cycle issues
  */
 import EventEmitter from 'node:events'
-import { configureSync, getLogger, withFilter, type LogRecord, type Sink } from '@logtape/logtape'
+import util from 'node:util'
+import {
+	ansiColorFormatter,
+	configureSync,
+	defaultTextFormatter,
+	getConsoleSink,
+	getLogger,
+	withFilter,
+	type LogRecord,
+	type LogLevel as LogTapeLevel,
+	type Logger as LogTapeLogger,
+	type Sink,
+} from '@logtape/logtape'
 import { getSyslogSink, type SyslogSinkOptions } from '@logtape/syslog'
 import { addBreadcrumb, getCurrentScope, httpIntegration, init, rewriteFramesIntegration } from '@sentry/node'
 import debounceFn from 'debounce-fn'
@@ -14,15 +26,6 @@ import type { ClientLogLine, ClientLogUpdate } from '@companion-app/shared/Model
 import type { AppInfo } from '../Registry.js'
 import { isPackaged } from '../Resources/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import {
-	formatConsoleLine,
-	formatLogMessage,
-	formatTestLine,
-	fromLogTapeLevel,
-	getRecordMessage,
-	getRecordSource,
-	toLogTapeLevel,
-} from './Format.js'
 
 export type LeveledLogMethod = (message: unknown, ...args: unknown[]) => void
 
@@ -43,6 +46,27 @@ export interface Logger {
 }
 
 const SYSLOG_MAX_BUFFERED_BYTES = 1024 * 1024
+
+const LogTapeLevels: Record<LogLevel, LogTapeLevel> = {
+	error: 'error',
+	warn: 'warning',
+	info: 'info',
+	debug: 'debug',
+	silly: 'trace',
+}
+
+const CompanionLevels: Record<LogTapeLevel, LogLevel> = {
+	fatal: 'error',
+	error: 'error',
+	warning: 'warn',
+	info: 'info',
+	debug: 'debug',
+	trace: 'silly',
+}
+
+// Each source logs to its own category. Records from LogTape itself use a longer category, and may have values in the message
+const getRecordSource = (record: LogRecord): string => record.category.join('/')
+const getRecordMessage = (record: LogRecord): string => record.message.join('')
 
 const SentrySeverity = {
 	debug: 'debug',
@@ -91,7 +115,6 @@ class LogController {
 
 	#history: ClientLogLine[] = []
 
-	readonly #logTape = getLogger(['companion'])
 	#level: LogLevel
 	/** Index of the current level in LOG_LEVELS, or -1 when logging is suppressed */
 	#levelIndex: number
@@ -116,7 +139,7 @@ class LogController {
 			this.#levelIndex = testLogLevel ? LOG_LEVELS.indexOf(this.#level) : -1
 
 			sinks = {
-				console: (record) => process.stdout.write(formatTestLine(record)),
+				console: getConsoleSink({ formatter: defaultTextFormatter }),
 				memory: () => {},
 				syslog: () => {},
 			}
@@ -124,9 +147,8 @@ class LogController {
 			this.#level = 'info'
 			this.#levelIndex = LOG_LEVELS.indexOf(this.#level)
 
-			const useColor = !!supportsColor.stdout
 			sinks = {
-				console: (record) => process.stdout.write(formatConsoleLine(record, useColor)),
+				console: getConsoleSink({ formatter: supportsColor.stdout ? ansiColorFormatter : defaultTextFormatter }),
 				// The UI log never shows silly lines
 				memory: withFilter((record) => this.#addToHistory(record), 'debug'),
 				syslog: (record) => {
@@ -143,9 +165,14 @@ class LogController {
 			reset: true,
 			sinks,
 			loggers: [
-				{ category: ['companion'], lowestLevel: 'trace', sinks: ['console', 'memory', 'syslog'] },
+				{ category: [], lowestLevel: 'trace', sinks: ['console', 'memory', 'syslog'] },
 				// Report problems with logging itself (such as being unable to reach the syslog server)
-				{ category: ['logtape', 'meta'], lowestLevel: 'warning', sinks: ['console', 'memory'] },
+				{
+					category: ['logtape', 'meta'],
+					lowestLevel: 'warning',
+					sinks: ['console', 'memory'],
+					parentSinks: 'override',
+				},
 			],
 		})
 
@@ -172,14 +199,14 @@ class LogController {
 		return LOG_LEVELS.indexOf(level) <= this.#levelIndex
 	}
 
-	#emit(source: string, level: LogLevel, message: string): void {
-		this.#logTape.emit({
-			level: toLogTapeLevel(level),
+	#emit(logTape: LogTapeLogger, level: LogLevel, message: string): void {
+		logTape.emit({
+			level: LogTapeLevels[level],
 			timestamp: Date.now(),
 			// Pass the message as a single value, so that LogTape doesn't try to interpret any placeholders in it
 			message: [message],
 			rawMessage: message,
-			properties: { source },
+			properties: {},
 		})
 	}
 
@@ -187,10 +214,11 @@ class LogController {
 	 * Create a child logger
 	 */
 	createLogger(source: string): Logger {
+		const logTape = getLogger([source])
 		const leveledLogMethod =
 			(level: LogLevel): LeveledLogMethod =>
 			(message, ...args) => {
-				if (this.#isLevelEnabled(level)) this.#emit(source, level, formatLogMessage(message, args))
+				if (this.#isLevelEnabled(level)) this.#emit(logTape, level, util.format(message, ...args))
 			}
 
 		return {
@@ -201,7 +229,7 @@ class LogController {
 			},
 
 			log: (level, message) => {
-				if (this.#isLevelEnabled(level)) this.#emit(source, level, message)
+				if (this.#isLevelEnabled(level)) this.#emit(logTape, level, message)
 			},
 
 			error: leveledLogMethod('error'),
@@ -271,7 +299,7 @@ class LogController {
 	 * Add a logged line to the log history
 	 */
 	#addToHistory(record: LogRecord) {
-		const level = fromLogTapeLevel(record.level)
+		const level = CompanionLevels[record.level]
 		const source = getRecordSource(record)
 		const message = getRecordMessage(record)
 
