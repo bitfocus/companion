@@ -11,7 +11,7 @@ import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useLinkStore } from './LinkStoreContext.js'
 
-/** Shown when no transport is selected: what other installations see of this one */
+/** Shown when no installation is selected: what other installations see of this one */
 export const LinkOverviewPanel = observer(function LinkOverviewPanel(): React.JSX.Element {
 	const linkStore = useLinkStore()
 	const self = linkStore.self
@@ -74,7 +74,10 @@ export const LinkOverviewPanel = observer(function LinkOverviewPanel(): React.JS
 				</EditSectionCard>
 
 				<NonIdealState icon={faLink}>
-					<p className="mb-0">Select a transport to edit it.</p>
+					<p className="mb-1">Select an installation to choose what it may use, and see what it uses.</p>
+					<p className="text-sm text-muted mb-0">
+						To show a button from another installation, choose <b>Remote button</b> when creating a button.
+					</p>
 				</NonIdealState>
 			</div>
 		</>

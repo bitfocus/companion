@@ -1,6 +1,8 @@
+import { EventEmitter } from 'node:events'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { LinkTransportConfig } from '@companion-app/shared/Model/Link.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
+import type { ImageResult } from '../../lib/Graphics/ImageResult.js'
 import { LinkController } from '../../lib/Link/Controller.js'
 import { encodeLinkAnnouncement, linkDiscoveryTopic } from '../../lib/Link/Protocol/Announcement.js'
 import { decodeLinkMessage, encodeLinkMessage, type LinkMessage } from '../../lib/Link/Protocol/v1/Schemas.js'
@@ -12,6 +14,7 @@ import type {
 	LinkTransportContext,
 	LinkTransportDefinition,
 } from '../../lib/Link/Transports/Types.js'
+import type { IPageStore } from '../../lib/Page/Store.js'
 import { FakeDataDatabase } from '../utils/FakeTableView.js'
 
 class FakeTransport implements LinkTransport {
@@ -39,6 +42,11 @@ class FakeTransport implements LinkTransport {
 }
 
 const fromPeer: LinkMessageOrigin = { peerId: 'peer' }
+const button = { type: 'location', page: 1, row: 0, column: 0 } as const
+
+async function flush(): Promise<void> {
+	for (let i = 0; i < 5; i++) await new Promise((resolve) => setImmediate(resolve))
+}
 
 /** A controller with one transport, connected, on a database that can be reused to restart it */
 function createController(db = new FakeDataDatabase()) {
@@ -68,10 +76,27 @@ function createController(db = new FakeDataDatabase()) {
 		getKey: () => 'Self',
 		on: vi.fn(),
 	} as unknown as DataUserConfig
+	const pageStore = Object.assign(new EventEmitter(), {
+		getControlIdAt: () => null,
+	}) as unknown as IPageStore
 
-	const controller = new LinkController({ appVersion: '5.0.0' } as any, db.asDataDatabase(), userconfig, [definition])
+	const controller = new LinkController({ appVersion: '5.0.0' } as any, db.asDataDatabase(), userconfig, pageStore, [
+		definition,
+	])
 
-	controller.start()
+	const host = {
+		getCachedRenderOrGeneratePlaceholder: vi.fn(
+			() =>
+				({
+					style: { type: 'button', state: { pushed: false } },
+					drawNativeEncoded: async () => 'data:image/png;base64,AAAA',
+				}) as unknown as ImageResult
+		),
+		getControlIdAt: vi.fn(() => 'control1'),
+		pressControl: vi.fn(() => true),
+		rotateControl: vi.fn(() => true),
+	}
+	controller.start(host)
 
 	/** The running instance of the transport, which is replaced when it is restarted */
 	const transport = () => instances[instances.length - 1]
@@ -101,7 +126,7 @@ function createController(db = new FakeDataDatabase()) {
 			.setPeerPermissions({ peerId: 'peer', permissions: { buttons } })
 	}
 
-	return { db, controller, transport, announcePeer, sendToSelf, shareButtons }
+	return { db, controller, host, transport, announcePeer, sendToSelf, shareButtons }
 }
 
 describe('LinkController', () => {
@@ -170,5 +195,67 @@ describe('LinkController', () => {
 		expect(ctx.transport().messagesOfType('pong')).toMatchObject([
 			{ topic: linkInboxTopic('peer'), message: { payload: { nonce: 'abc' } } },
 		])
+	})
+})
+
+describe('LinkController buttons', () => {
+	let ctx: ReturnType<typeof createController>
+	beforeEach(() => {
+		ctx = createController()
+	})
+	afterEach(async () => {
+		await ctx.controller.stop()
+	})
+
+	test('ignores button requests from a peer that is not allowed them', async () => {
+		ctx.announcePeer(fromPeer)
+		ctx.sendToSelf(
+			fromPeer,
+			encodeLinkMessage('subscribe', {
+				buttons: [{ button, width: 72, height: 72 }],
+				sendCurrent: true,
+			})
+		)
+		ctx.sendToSelf(fromPeer, encodeLinkMessage('button.press', { button, pressed: true, surfaceId: 's' }))
+		ctx.sendToSelf(fromPeer, encodeLinkMessage('button.rotate', { button, delta: 1, surfaceId: 's' }))
+		await flush()
+
+		expect(ctx.transport().messagesOfType('button.update')).toEqual([])
+		expect(ctx.host.pressControl).not.toHaveBeenCalled()
+		expect(ctx.host.rotateControl).not.toHaveBeenCalled()
+	})
+
+	test('serves an allowed peer, publishing images only to those allowed buttons', async () => {
+		await ctx.shareButtons(true)
+		ctx.announcePeer(fromPeer)
+		ctx.sendToSelf(
+			fromPeer,
+			encodeLinkMessage('subscribe', {
+				buttons: [{ button, width: 72, height: 72 }],
+				sendCurrent: true,
+			})
+		)
+		ctx.sendToSelf(fromPeer, encodeLinkMessage('button.press', { button, pressed: true, surfaceId: 's' }))
+		await flush()
+
+		const updates = ctx.transport().messagesOfType('button.update')
+		expect(updates).toHaveLength(1)
+		expect(updates[0].options.requires).toBe('buttons')
+		expect(ctx.host.pressControl).toHaveBeenCalledWith('control1', true, 'link:peer:s')
+	})
+
+	test('when a peer loses permission, it is told, and what it held is released', async () => {
+		await ctx.shareButtons(true)
+		ctx.announcePeer(fromPeer)
+		ctx.sendToSelf(fromPeer, encodeLinkMessage('button.press', { button, pressed: true, surfaceId: 's' }))
+		ctx.host.pressControl.mockClear()
+		ctx.transport().published.length = 0
+
+		await ctx.shareButtons(false)
+
+		expect(ctx.transport().messagesOfType('access')).toMatchObject([
+			{ topic: linkInboxTopic('peer'), message: { payload: { permissions: { buttons: false } } } },
+		])
+		expect(ctx.host.pressControl).toHaveBeenCalledWith('control1', false, 'link:peer:s')
 	})
 })

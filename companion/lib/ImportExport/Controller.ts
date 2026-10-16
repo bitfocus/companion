@@ -28,6 +28,7 @@ import {
 import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
 import type {
 	ButtonGraphicsReferenceElement,
+	ButtonGraphicsTextElement,
 	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
@@ -426,6 +427,14 @@ export class ImportExportController {
 							const referenceElement = CreateElementOfType('reference') as ButtonGraphicsReferenceElement
 							referenceElement.location = controlObjLayered.options.location
 							rawElements = [referenceElement]
+							break
+						}
+						case 'link-button': {
+							// The remote button can't be shown in the import preview, so describe it instead
+							drawType = 'button'
+							const textElement = CreateElementOfType('text') as ButtonGraphicsTextElement
+							textElement.text = { value: 'Remote button', isExpression: false }
+							rawElements = [textElement]
 							break
 						}
 						case 'pagenum':
