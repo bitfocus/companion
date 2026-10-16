@@ -56,9 +56,9 @@ Disable IPv6 support. When enabled the various api and web interface ports in Co
 
 ### `logLevel`
 
-one of `error`, `warn`, `info`, `http`, `verbose`, `debug`, `silly` · cli `--log-level`
+one of `error`, `warn`, `info`, `debug`, `silly` · cli `--log-level`
 
-How verbose console logging is. One of error, warn, info, http, verbose, debug, silly. Leave unset for the default (info).
+How verbose console logging is. One of error, warn, info, debug, silly. Leave unset for the default (info).
 
 ## Syslog
 
