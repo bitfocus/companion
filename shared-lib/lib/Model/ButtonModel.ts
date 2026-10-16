@@ -11,6 +11,7 @@ export type SomeButtonModel =
 	| LayeredButtonModel
 	| PresetReferenceButtonModel
 	| ButtonReferenceButtonModel
+	| LinkButtonModel
 
 export interface PageNumberButtonModel {
 	readonly type: 'pagenum'
@@ -108,6 +109,22 @@ export interface ButtonReferenceButtonModel {
 
 	options: {
 		/** The grid location (page/row/column) of the button to mirror. */
+		location: ExpressionOrValue<string>
+		notes?: string
+	}
+}
+
+/**
+ * A button that mirrors a button on another Companion installation, over Companion Link. It shows the remote
+ * button's image and forwards presses and rotation to it.
+ */
+export interface LinkButtonModel {
+	readonly type: 'link-button'
+
+	options: {
+		/** The Link id of the installation to mirror a button from. Empty when not chosen yet */
+		peerId: string
+		/** The grid location (page/row/column) of the button on that installation */
 		location: ExpressionOrValue<string>
 		notes?: string
 	}

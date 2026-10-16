@@ -5,6 +5,7 @@ import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import LogController from '../Log/Controller.js'
 import type { ControlDependencies } from './ControlDependencies.js'
 import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
+import { ControlButtonLink } from './ControlTypes/Button/Link.js'
 import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 import { ControlButtonPresetReference } from './ControlTypes/Button/PresetReference.js'
 import { ControlButtonReference } from './ControlTypes/Button/Reference.js'
@@ -54,6 +55,8 @@ export class ControlsFactory {
 				return new ControlButtonPresetReference(this.#controlDeps, controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'button-reference' || (controlType === 'button-reference' && !controlObj2)) {
 				return new ControlButtonReference(this.#controlDeps, controlId, controlObj2, isImport)
+			} else if (controlObj2?.type === 'link-button' || (controlType === 'link-button' && !controlObj2)) {
+				return new ControlButtonLink(this.#controlDeps, controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pagenum' || (controlType === 'pagenum' && !controlObj2)) {
 				return new ControlButtonPageNumber(this.#controlDeps, controlId, controlObj2, isImport)
 			} else if (controlObj2?.type === 'pageup' || (controlType === 'pageup' && !controlObj2)) {

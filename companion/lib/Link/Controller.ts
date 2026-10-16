@@ -2,16 +2,25 @@ import { EventEmitter } from 'node:events'
 import os from 'node:os'
 import { nanoid } from 'nanoid'
 import z from 'zod'
-import type { ClientLinkTransportType, LinkPeerInfo, LinkSelfInfo } from '@companion-app/shared/Model/Link.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type {
+	ClientLinkTransportType,
+	LinkPeerInfo,
+	LinkPermission,
+	LinkSelfInfo,
+} from '@companion-app/shared/Model/Link.js'
 import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import { LinkButtonClient } from './ButtonClient.js'
+import { LinkButtonServer, type LinkButtonServerHost } from './ButtonServer.js'
 import { LinkPeerRegistry } from './PeerRegistry.js'
 import { decodeLinkMessage, encodeLinkMessage } from './Protocol/Schemas.js'
 import {
@@ -24,6 +33,9 @@ import {
 import { LINK_PROTOCOL_VERSION } from './Protocol/Versions.js'
 import { LinkTransportManager } from './TransportManager.js'
 import type { LinkMessageOrigin, SomeLinkTransportDefinition } from './Transports/Types.js'
+
+/** What Link needs from the rest of Companion to serve buttons to peers */
+export type LinkHost = Omit<LinkButtonServerHost, 'publish' | 'getSourceChain'>
 
 interface LinkControllerEvents {
 	self: [info: LinkSelfInfo]
@@ -46,8 +58,11 @@ export class LinkController {
 
 	readonly #transports: LinkTransportManager
 	readonly #peers: LinkPeerRegistry
+	readonly #buttonServer: LinkButtonServer
+	/** Used by link buttons to subscribe to remote buttons */
+	readonly buttonClient: LinkButtonClient
 
-	#started = false
+	#host: LinkHost | null = null
 	#selfId: string
 	#announceTimer: NodeJS.Timeout | null = null
 	#subscribedInbox: string | null = null
@@ -78,6 +93,27 @@ export class LinkController {
 			() => ({ topic: linkDiscoveryTopic(this.#selfId), payload: '', retain: true })
 		)
 		this.#peers = new LinkPeerRegistry(this.#selfId)
+		this.buttonClient = new LinkButtonClient(() => this.#selfId, this.#peers, {
+			publishTo: (transportId, topic, payload) =>
+				this.#transports.publishTo(transportId, topic, payload, { retain: false, requires: null }),
+			subscribe: (pattern) => this.#transports.subscribe(pattern),
+			unsubscribe: (pattern) => this.#transports.unsubscribe(pattern),
+		})
+		this.#buttonServer = new LinkButtonServer(
+			{
+				getCachedRenderOrGeneratePlaceholder: (location) =>
+					this.#requireHost().getCachedRenderOrGeneratePlaceholder(location),
+				getControlIdAt: (location) => this.#requireHost().getControlIdAt(location),
+				pressControl: (controlId, pressed, surfaceId) =>
+					this.#requireHost().pressControl(controlId, pressed, surfaceId),
+				rotateControl: (controlId, delta, surfaceId) => this.#requireHost().rotateControl(controlId, delta, surfaceId),
+				getSourceChain: (location) => this.#getSourceChain(location),
+				// Only to those allowed to see our buttons
+				publish: (topic, payload) =>
+					this.#transports.publishAll(topic, payload, { retain: false, requires: 'buttons' }),
+			},
+			() => this.#selfId
+		)
 
 		this.#transports.events.on('message', (transportId, topic, payload, origin) =>
 			this.#handleMessage(transportId, topic, payload, origin)
@@ -85,6 +121,8 @@ export class LinkController {
 		this.#transports.events.on('permissionsChanged', (transportId, connectionId, permissions) => {
 			for (const peerId of this.#peers.updateConnectionPermissions(transportId, connectionId, permissions)) {
 				this.#sendAccess(peerId, transportId)
+				// Stop serving anything it is no longer allowed straight away, rather than when its lease runs out
+				if (!permissions.buttons) this.#buttonServer.revoke(peerId)
 			}
 		})
 		this.#transports.events.on('transportConnected', (transportId) => this.#announce(transportId))
@@ -92,6 +130,7 @@ export class LinkController {
 			this.#peers.handleTransportDisconnected(transportId)
 		)
 		this.#peers.on('changed', () => this.#events.emit('peers', this.#peers.getPeers()))
+		this.#peers.on('peerUnreachable', (peerId) => this.#buttonServer.releaseHeldBy(peerId))
 		this.#peers.on('peerReachable', (peerId, transportId) => this.#sendAccess(peerId, transportId))
 
 		this.#pageStore.on('pagecount', () => this.#announce(null))
@@ -105,17 +144,21 @@ export class LinkController {
 		})
 	}
 
-	/** Start linking. Called once the rest of Companion is ready */
-	start(): void {
-		this.#started = true
+	/** Start linking. Called once the rest of Companion is ready to serve buttons */
+	start(host: LinkHost): void {
+		this.#host = host
 
 		this.#transports.subscribe(LINK_DISCOVERY_WILDCARD)
 		this.#subscribeInbox()
 
 		this.#peers.start()
+		this.buttonClient.start()
 		this.#transports.start()
 
-		this.#announceTimer = setInterval(() => this.#announce(null), LINK_ANNOUNCE_INTERVAL_MS)
+		this.#announceTimer = setInterval(() => {
+			this.#announce(null)
+			this.#buttonServer.expireLeases(Date.now())
+		}, LINK_ANNOUNCE_INTERVAL_MS)
 	}
 
 	/** Say goodbye to peers and stop all transports */
@@ -123,9 +166,20 @@ export class LinkController {
 		if (this.#announceTimer) clearInterval(this.#announceTimer)
 		this.#announceTimer = null
 
+		this.buttonClient.stop()
 		this.#peers.stop()
+		this.#buttonServer.clear()
 
 		await this.#transports.stopAll()
+	}
+
+	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
+		this.#buttonServer.onButtonDrawn(location, render)
+	}
+
+	#requireHost(): LinkHost {
+		if (!this.#host) throw new Error('Link has not been started')
+		return this.#host
 	}
 
 	#subscribeInbox(): void {
@@ -172,6 +226,11 @@ export class LinkController {
 		}
 	}
 
+	#getSourceChain(location: ControlLocation): string[] {
+		const controlId = this.#pageStore.getControlIdAt(location)
+		return (controlId && this.buttonClient.getState(controlId)?.sourceChain) || []
+	}
+
 	/** Tell a peer what it may use of this installation over a transport */
 	#sendAccess(peerId: string, transportId: string): void {
 		const permissions = this.#peers.getSharedByUs(peerId, transportId)
@@ -210,11 +269,34 @@ export class LinkController {
 			case 'access':
 				if (isForUs) this.#peers.handleAccess(transportId, message.payload.sourceId, message.payload.permissions)
 				break
+			case 'subscribe':
+				if (isForUs && this.#isAllowed(origin, 'buttons', topic)) {
+					this.#buttonServer.handleSubscribe(message.payload, Date.now())
+				}
+				break
+			case 'unsubscribe':
+				if (isForUs) this.#buttonServer.handleUnsubscribe(message.payload)
+				break
+			case 'button.press':
+				if (isForUs && this.#isAllowed(origin, 'buttons', topic)) this.#buttonServer.handlePress(message.payload)
+				break
+			case 'button.rotate':
+				if (isForUs && this.#isAllowed(origin, 'buttons', topic)) this.#buttonServer.handleRotate(message.payload)
+				break
+			case 'button.update':
+				this.buttonClient.handleUpdate(topic, message.payload)
+				break
 			default:
-				// Button messages are not handled yet
 				this.#logger.debug(`Unhandled message type on ${topic}`)
 				break
 		}
+	}
+
+	/** Whether the connection a message came from may use something. The transport decides what each may use */
+	#isAllowed(origin: LinkMessageOrigin, permission: LinkPermission, topic: string): boolean {
+		if (origin.permissions[permission]) return true
+		this.#logger.debug(`Ignoring a request on ${topic}, the connection it came from is not allowed ${permission}`)
+		return false
 	}
 
 	async #regenerateId(): Promise<void> {
@@ -225,8 +307,9 @@ export class LinkController {
 		this.#selfId = nanoid()
 		this.#table.setPrimitive('id', this.#selfId)
 		this.#peers.setSelfId(this.#selfId)
+		this.#buttonServer.clear()
 
-		if (this.#started) {
+		if (this.#host) {
 			this.#subscribeInbox()
 			this.#transports.start()
 		}
