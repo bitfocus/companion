@@ -67,6 +67,9 @@ jobs:
       - name: Check generated satellite schemas are up to date
         run: yarn build:satellite-schema --check
 
+      - name: Check generated link schemas are up to date
+        run: yarn build:link-schema --check
+
   spelling:
     name: Spell Check with Typos
     runs-on: ubuntu-latest

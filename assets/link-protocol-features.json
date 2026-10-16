@@ -1,0 +1,14 @@
+{
+	"protocolVersion": "1.0.0",
+	"features": {
+		"access": {
+			"since": "1.0.0",
+			"description": "access tells a peer what it may use. Without it, a peer may assume it has access"
+		},
+		"buttons": {
+			"since": "1.0.0",
+			"description": "Button subscriptions (subscribe, unsubscribe, button.update) and button.press"
+		},
+		"rotate": { "since": "1.0.0", "description": "Rotating encoder buttons with button.rotate" }
+	}
+}

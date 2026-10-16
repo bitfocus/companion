@@ -43,6 +43,7 @@
     "build:openapi": "zx ./tools/generate_openapi.mjs",
     "build:graphics-types": "tsx ./tools/generate_graphics_types.mts",
     "build:rest-api-docs": "tsx --conditions=companion:source ./tools/generate_rest_api_docs.mts",
+    "build:link-schema": "tsx --conditions=companion:source ./tools/link_schema_compile.mts",
     "build:satellite-schema": "tsx ./tools/satellite_schema_compile.mts",
     "rest-api:update-stable-contract": "tsx ./tools/update_rest_api_stable_contract.mts",
     "draft:changelog": "tsx ./tools/draft_changelog.mts",
