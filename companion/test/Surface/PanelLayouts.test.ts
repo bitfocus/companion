@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { describe, expect, test, vi } from 'vitest'
 import type { SatelliteSurfaceLayout } from '@companion-app/satellite-protocol'
+import type { EmulatorImage } from '@companion-app/shared/Model/Common.js'
 import type { SurfaceSchemaLayoutDefinition } from '@companion-app/shared/Model/Surfaces.js'
 import { PREVIEW_RENDER_SIZE } from '../../lib/Graphics/ImageResult.js'
 import { SurfaceIPElgatoEmulator } from '../../lib/Surface/IP/ElgatoEmulator.js'
@@ -78,6 +79,61 @@ describe('SurfaceIPElgatoEmulator', () => {
 
 		expect(emulator.gridSize).toEqual({ columns: 3, rows: 2 })
 		expect(Object.keys(emulator.surfaceLayout.controls)).toEqual(['0/0', '0/1', '0/2', '1/0', '1/1', '1/2'])
+	})
+
+	const pngRender = () => ({ drawNativeEncoded: vi.fn(async () => 'data:image/png;base64,abc') }) as any
+
+	test('a resize with no client connected leaves no blanks for a later client', async () => {
+		const events = new EventEmitter()
+		const emulator = new SurfaceIPElgatoEmulator(events as any, 'emu1')
+
+		emulator.setConfig({ emulator_columns: 3, emulator_rows: 2 } as any, true)
+
+		// The client connects some time after startup
+		await new Promise((resolve) => setTimeout(resolve, 100))
+		const emitted: unknown[][] = []
+		events.on('emulatorImages', (...args) => emitted.push(args))
+
+		emulator.draw({ x: 1, y: 0, defaultRender: pngRender(), location: null })
+
+		await vi.waitFor(() => expect(emitted).toHaveLength(1))
+		// Only the drawn button is sent, no stale blanks from the resize
+		expect(emitted[0]).toEqual(['emu1', [{ x: 1, y: 0, buffer: 'data:image/png;base64,abc' }], false])
+	})
+
+	test('a resize keeps unsent renders for cells within the new size', async () => {
+		const events = new EventEmitter()
+		const emitted: EmulatorImage[][] = []
+		events.on('emulatorImages', (_id, images: EmulatorImage[]) => emitted.push(images))
+		const emulator = new SurfaceIPElgatoEmulator(events as any, 'emu1')
+
+		const defaultRender = pngRender()
+		emulator.draw({ x: 1, y: 0, defaultRender, location: null })
+		await vi.waitFor(() => expect(defaultRender.drawNativeEncoded).toHaveBeenCalled(), { interval: 1 })
+		await new Promise((resolve) => setImmediate(resolve))
+
+		// Resize before the render is flushed to the client
+		expect(emitted).toHaveLength(0)
+		emulator.setConfig({ emulator_columns: 3, emulator_rows: 2 } as any, true)
+
+		await vi.waitFor(() => expect(emitted).toHaveLength(1))
+		expect(emitted[0]).toContainEqual({ x: 1, y: 0, buffer: 'data:image/png;base64,abc' })
+	})
+
+	test('a resize blanks only the cells outside the new size', async () => {
+		const events = new EventEmitter()
+		const emitted: EmulatorImage[][] = []
+		events.on('emulatorImages', (_id, images: EmulatorImage[]) => emitted.push(images))
+		const emulator = new SurfaceIPElgatoEmulator(events as any, 'emu1')
+
+		emulator.setConfig({ emulator_columns: 3, emulator_rows: 2 } as any, true)
+		emulator.draw({ x: 1, y: 0, defaultRender: pngRender(), location: null })
+
+		await vi.waitFor(() => expect(emitted).toHaveLength(1))
+		const images = emitted[0]
+		expect(images.filter((img) => img.buffer === false)).toHaveLength(8 * 4 - 3 * 2)
+		expect(images.some((img) => img.buffer === false && img.x < 3 && img.y < 2)).toBe(false)
+		expect(images).toContainEqual({ x: 1, y: 0, buffer: 'data:image/png;base64,abc' })
 	})
 })
 
