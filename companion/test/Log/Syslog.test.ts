@@ -1,13 +1,13 @@
 /**
  * These exercise @logtape/syslog, to guard the local patch which stops it from producing an unhandled rejection
- * (and never recovering) when the syslog server can't be reached
+ * (and never recovering) when the syslog server can't be reached, and from buffering without limit
  */
 import dgram from 'node:dgram'
 import net from 'node:net'
 import { setTimeout as delay } from 'node:timers/promises'
 import type { LogRecord } from '@logtape/logtape'
 import { getSyslogSink } from '@logtape/syslog'
-import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
 function makeRecord(message: string): LogRecord {
 	return {
@@ -122,6 +122,54 @@ describe('syslog sink', () => {
 		} finally {
 			await sink[Symbol.asyncDispose]()
 			server.close()
+		}
+	})
+
+	test('drops records once maxBufferedBytes is reached', async () => {
+		let received = ''
+		const server = net.createServer((conn) => conn.on('data', (data) => (received += data.toString())))
+		await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+		const port = (server.address() as net.AddressInfo).port
+
+		// Each record is around 60 bytes, so only the first few fit
+		const sink = getSyslogSink({ hostname: '127.0.0.1', port, protocol: 'tcp', maxBufferedBytes: 200 })
+		try {
+			// Nothing is sent until the connection is made, so these all wait in the buffer
+			for (let i = 0; i < 10; i++) sink(makeRecord(`record-${i}`))
+			await waitFor(() => received.includes('record-0'))
+			await delay(100)
+
+			expect(received).toContain('record-0')
+			expect(received).not.toContain('record-9')
+
+			// Once the buffer has been sent, records are accepted again
+			sink(makeRecord('later'))
+			await waitFor(() => received.includes('later'))
+			expect(received).toContain('later')
+		} finally {
+			await sink[Symbol.asyncDispose]()
+			server.close()
+		}
+	})
+
+	test('drops records queued before a failure, rather than connecting for each', async () => {
+		const connectSpy = vi.spyOn(net.Socket.prototype, 'connect')
+		const port = await getFreePort()
+		const sink = getSyslogSink({ hostname: '127.0.0.1', port, protocol: 'tcp', timeout: 500 })
+		try {
+			// Nothing is listening, and these are all queued behind the first connection attempt
+			for (let i = 0; i < 10; i++) sink(makeRecord(`lost-${i}`))
+			await delay(200)
+			expect(connectSpy).toHaveBeenCalledTimes(1)
+
+			// A record logged after the failure tries again
+			sink(makeRecord('retry'))
+			await delay(200)
+			expect(connectSpy).toHaveBeenCalledTimes(2)
+			expect(unhandled).toEqual([])
+		} finally {
+			await sink[Symbol.asyncDispose]()
+			connectSpy.mockRestore()
 		}
 	})
 })

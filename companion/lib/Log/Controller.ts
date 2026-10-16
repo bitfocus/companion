@@ -42,6 +42,8 @@ export interface Logger {
 	isSillyEnabled(): boolean
 }
 
+const SYSLOG_MAX_BUFFERED_BYTES = 1024 * 1024
+
 const SentrySeverity = {
 	debug: 'debug',
 	info: 'info',
@@ -143,7 +145,7 @@ class LogController {
 			loggers: [
 				{ category: ['companion'], lowestLevel: 'trace', sinks: ['console', 'memory', 'syslog'] },
 				// Report problems with logging itself (such as being unable to reach the syslog server)
-				{ category: ['logtape', 'meta'], lowestLevel: 'warning', sinks: ['console'] },
+				{ category: ['logtape', 'meta'], lowestLevel: 'warning', sinks: ['console', 'memory'] },
 			],
 		})
 
@@ -319,7 +321,12 @@ class LogController {
 	 */
 	addSyslogHost(options: SyslogSinkOptions): void {
 		try {
-			this.#syslogSink = getSyslogSink({ ...options, appName: 'Companion' })
+			this.#syslogSink = getSyslogSink({
+				...options,
+				appName: 'Companion',
+				// Drop log lines rather than buffering without limit, if the server is slow or unreachable
+				maxBufferedBytes: SYSLOG_MAX_BUFFERED_BYTES,
+			})
 			this.#logger.debug(`Syslog transport initialized. Options: ${JSON.stringify(options)}`)
 		} catch (e) {
 			this.#logger.error(`Failed to initialise syslog transport ${e}`)

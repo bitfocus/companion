@@ -1,5 +1,5 @@
 diff --git a/dist/syslog.cjs b/dist/syslog.cjs
-index e642a1393238a93499b22dcf0efc2bb248932dd7..4d4b1bb55ae5eaa18f99073e92bd28262e7be0df 100644
+index e642a1393238a93499b22dcf0efc2bb248932dd7..b8ecd83bed86972c364961c6ef3ee0d86db40edc 100644
 --- a/dist/syslog.cjs
 +++ b/dist/syslog.cjs
 @@ -1,5 +1,6 @@
@@ -22,20 +22,49 @@ index e642a1393238a93499b22dcf0efc2bb248932dd7..4d4b1bb55ae5eaa18f99073e92bd2826
  				if (!this.secure) socket.connect(this.port, this.hostname);
  			});
  		} catch (error) {
-@@ -528,22 +533,41 @@ function getSyslogSink(options = {}) {
+@@ -513,6 +518,7 @@ function getSyslogSink(options = {}) {
+ 	const syslogHostname = options.syslogHostname ?? getSystemHostname();
+ 	const processId = options.processId ?? getProcessId();
+ 	const timeout = options.timeout ?? 5e3;
++	const maxBufferedBytes = options.maxBufferedBytes ?? Infinity;
+ 	const includeStructuredData = options.includeStructuredData ?? false;
+ 	const structuredDataId = options.structuredDataId ?? "logtape@32473";
+ 	const formatOptions = {
+@@ -528,22 +534,62 @@ function getSyslogSink(options = {}) {
  		else return protocol === "tcp" ? new NodeTcpSyslogConnection(hostname$1, port, timeout, secure, tlsOptions) : new NodeUdpSyslogConnection(hostname$1, port, timeout);
  	})();
  	let isConnected = false;
 +	let isFailing = false;
++	let isBufferFull = false;
++	let bufferedBytes = 0;
++	let failures = 0;
  	let lastPromise = Promise.resolve();
 +	let queue = Promise.resolve();
++	const metaLogger = __logtape.getLogger([
++		"logtape",
++		"meta",
++		"syslog"
++	]);
++	const encoder = new TextEncoder();
  	const sink = (record) => {
  		const syslogMessage = formatSyslogMessage(record, formatOptions);
 -		lastPromise = lastPromise.then(async () => {
 -			if (!isConnected) {
 -				await connection.connect();
 -				isConnected = true;
++		const size = maxBufferedBytes === Infinity ? 0 : encoder.encode(syslogMessage).byteLength;
++		if (bufferedBytes + size > maxBufferedBytes) {
++			if (!isBufferFull) {
++				isBufferFull = true;
++				metaLogger.warn("The syslog buffer is full, dropping log records until it has been sent");
++			}
++			return;
++		}
++		bufferedBytes += size;
++		const generation = failures;
 +		const promise = queue.then(async () => {
++			// Drop records queued before a failure, rather than retrying the connection for each of them
++			if (generation !== failures) return;
 +			if (isConnected) try {
 +				await connection.send(syslogMessage);
 +				isFailing = false;
@@ -49,19 +78,19 @@ index e642a1393238a93499b22dcf0efc2bb248932dd7..4d4b1bb55ae5eaa18f99073e92bd2826
  			await connection.send(syslogMessage);
 -		}).catch((error) => {
 +			isFailing = false;
++		}).finally(() => {
++			bufferedBytes -= size;
++			if (bufferedBytes === 0) isBufferFull = false;
 +		});
 +		lastPromise = promise;
 +		queue = promise.catch((error) => {
++			failures++;
  			isConnected = false;
 -			throw error;
 +			connection.close();
 +			if (!isFailing) {
 +				isFailing = true;
-+				__logtape.getLogger([
-+					"logtape",
-+					"meta",
-+					"syslog"
-+				]).error("Failed to send a log record to the syslog server: {error}", { error });
++				metaLogger.error("Failed to send a log record to the syslog server: {error}", { error });
 +			}
  		});
  	};
@@ -71,8 +100,42 @@ index e642a1393238a93499b22dcf0efc2bb248932dd7..4d4b1bb55ae5eaa18f99073e92bd2826
  		connection.close();
  		isConnected = false;
  	};
+diff --git a/dist/syslog.d.cts b/dist/syslog.d.cts
+index cb5de2f2ee70c1e118d105ee2da74c7b4e22e5e3..1d7e43fa08504d5862fbadd92d8a5bce1d594120 100644
+--- a/dist/syslog.d.cts
++++ b/dist/syslog.d.cts
+@@ -88,6 +88,12 @@ interface SyslogSinkOptions {
+    * @default 5000
+    */
+   readonly timeout?: number;
++  /**
++   * The maximum size of the log records waiting to be sent, in bytes.
++   * Records logged while the buffer is full are dropped.
++   * @default `Infinity`
++   */
++  readonly maxBufferedBytes?: number;
+   /**
+    * Whether to include structured data in syslog messages.
+    * @default `false`
+diff --git a/dist/syslog.d.ts b/dist/syslog.d.ts
+index a08b067d4a6ac80b4ba82185bea345184354451b..f8b30dbb5152802bd9c7ff3b7e3d134c4e4f8288 100644
+--- a/dist/syslog.d.ts
++++ b/dist/syslog.d.ts
+@@ -88,6 +88,12 @@ interface SyslogSinkOptions {
+    * @default 5000
+    */
+   readonly timeout?: number;
++  /**
++   * The maximum size of the log records waiting to be sent, in bytes.
++   * Records logged while the buffer is full are dropped.
++   * @default `Infinity`
++   */
++  readonly maxBufferedBytes?: number;
+   /**
+    * Whether to include structured data in syslog messages.
+    * @default `false`
 diff --git a/dist/syslog.js b/dist/syslog.js
-index 8bf49557c6f6708c6d84df0f43e908fd704e9dfe..cdd7e3d499b4becaec9bf119ce7f8a1a3031e4ab 100644
+index 8bf49557c6f6708c6d84df0f43e908fd704e9dfe..7a69fbbf00a3ccb9fcf35801d36fb6f258a099b2 100644
 --- a/dist/syslog.js
 +++ b/dist/syslog.js
 @@ -1,4 +1,5 @@
@@ -94,20 +157,49 @@ index 8bf49557c6f6708c6d84df0f43e908fd704e9dfe..cdd7e3d499b4becaec9bf119ce7f8a1a
  				if (!this.secure) socket.connect(this.port, this.hostname);
  			});
  		} catch (error) {
-@@ -527,22 +532,41 @@ function getSyslogSink(options = {}) {
+@@ -512,6 +517,7 @@ function getSyslogSink(options = {}) {
+ 	const syslogHostname = options.syslogHostname ?? getSystemHostname();
+ 	const processId = options.processId ?? getProcessId();
+ 	const timeout = options.timeout ?? 5e3;
++	const maxBufferedBytes = options.maxBufferedBytes ?? Infinity;
+ 	const includeStructuredData = options.includeStructuredData ?? false;
+ 	const structuredDataId = options.structuredDataId ?? "logtape@32473";
+ 	const formatOptions = {
+@@ -527,22 +533,62 @@ function getSyslogSink(options = {}) {
  		else return protocol === "tcp" ? new NodeTcpSyslogConnection(hostname$1, port, timeout, secure, tlsOptions) : new NodeUdpSyslogConnection(hostname$1, port, timeout);
  	})();
  	let isConnected = false;
 +	let isFailing = false;
++	let isBufferFull = false;
++	let bufferedBytes = 0;
++	let failures = 0;
  	let lastPromise = Promise.resolve();
 +	let queue = Promise.resolve();
++	const metaLogger = getLogger([
++		"logtape",
++		"meta",
++		"syslog"
++	]);
++	const encoder = new TextEncoder();
  	const sink = (record) => {
  		const syslogMessage = formatSyslogMessage(record, formatOptions);
 -		lastPromise = lastPromise.then(async () => {
 -			if (!isConnected) {
 -				await connection.connect();
 -				isConnected = true;
++		const size = maxBufferedBytes === Infinity ? 0 : encoder.encode(syslogMessage).byteLength;
++		if (bufferedBytes + size > maxBufferedBytes) {
++			if (!isBufferFull) {
++				isBufferFull = true;
++				metaLogger.warn("The syslog buffer is full, dropping log records until it has been sent");
++			}
++			return;
++		}
++		bufferedBytes += size;
++		const generation = failures;
 +		const promise = queue.then(async () => {
++			// Drop records queued before a failure, rather than retrying the connection for each of them
++			if (generation !== failures) return;
 +			if (isConnected) try {
 +				await connection.send(syslogMessage);
 +				isFailing = false;
@@ -121,19 +213,19 @@ index 8bf49557c6f6708c6d84df0f43e908fd704e9dfe..cdd7e3d499b4becaec9bf119ce7f8a1a
  			await connection.send(syslogMessage);
 -		}).catch((error) => {
 +			isFailing = false;
++		}).finally(() => {
++			bufferedBytes -= size;
++			if (bufferedBytes === 0) isBufferFull = false;
 +		});
 +		lastPromise = promise;
 +		queue = promise.catch((error) => {
++			failures++;
  			isConnected = false;
 -			throw error;
 +			connection.close();
 +			if (!isFailing) {
 +				isFailing = true;
-+				getLogger([
-+					"logtape",
-+					"meta",
-+					"syslog"
-+				]).error("Failed to send a log record to the syslog server: {error}", { error });
++				metaLogger.error("Failed to send a log record to the syslog server: {error}", { error });
 +			}
  		});
  	};
