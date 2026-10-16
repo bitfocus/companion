@@ -150,9 +150,19 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 				this.#logger.verbose('draw call had no data-url')
 				return
 			}
-			this.#pendingBufferUpdates.set(key, [item.x, item.y, dataUrl])
-			this.#emitChanged()
+			this.#queueImageUpdate(key, item.x, item.y, dataUrl)
 		})
+	}
+
+	/**
+	 * Queue an image to be sent to connected clients.
+	 * Skipped when none are connected, as a client connecting later gets the full set from latestImages()
+	 */
+	#queueImageUpdate(key: string, x: number, y: number, buffer: string | false): void {
+		if (this.#events.listenerCount('emulatorImages') === 0) return
+
+		this.#pendingBufferUpdates.set(key, [x, y, buffer])
+		this.#emitChanged()
 	}
 
 	get gridSize(): GridSize {
@@ -213,14 +223,14 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 		// Handle resize
 		const oldSize = this.gridSize
 		if (config.emulator_columns !== oldSize.columns || config.emulator_rows !== oldSize.rows) {
-			// Clear the cache to ensure no bleed
-			this.#imageCache.clear()
-			this.#pendingBufferUpdates.clear()
-
-			// Tell the client of empty images for the old size
+			// Cells within the new size are about to be redrawn, so only those outside it need clearing
 			for (let y = 0; y < oldSize.rows; y++) {
 				for (let x = 0; x < oldSize.columns; x++) {
-					this.#pendingBufferUpdates.set(`${x}/${y}`, [x, y, false])
+					if (x < config.emulator_columns && y < config.emulator_rows) continue
+
+					const key = getCacheKey(x, y)
+					this.#imageCache.delete(key)
+					this.#queueImageUpdate(key, x, y, false)
 				}
 			}
 
