@@ -119,3 +119,46 @@ export type LinkTransportStatesUpdate =
 	| { type: 'init'; items: Record<string, LinkTransportState> }
 	| { type: 'update'; itemId: string; state: LinkTransportState }
 	| { type: 'remove'; itemId: string }
+
+/** How a peer is reachable on one transport */
+export interface LinkPeerRoute {
+	transportId: string
+	/** The last measured round trip time over this transport, or null until one has been */
+	latencyMs: number | null
+}
+
+/** A Companion installation discovered on at least one transport */
+export interface LinkPeerInfo {
+	id: string
+	name: string
+	companionVersion: string
+	/** The Link protocol versions the peer speaks, one per major version */
+	protocolVersions: string[]
+	/** The peer's version of the highest major version both speak, or null if there is none */
+	protocolVersion: string | null
+	/** Whether we share a protocol major version. Incompatible peers are listed but can't be used */
+	compatible: boolean
+	/** The transports the peer is currently reachable on */
+	routes: LinkPeerRoute[]
+	/** Whether the peer is reachable on any transport */
+	online: boolean
+	/** Unix timestamp (ms) of the last announcement received */
+	lastSeen: number
+	/**
+	 * What this installation lets the peer use, over the transports it is reachable on (shared if shared over any
+	 * of them). Decided by each transport, eg per paired installation
+	 */
+	sharedByUs: LinkPermissions
+	/** What the peer lets this installation use, or null until it has said */
+	sharedWithUs: LinkPermissions | null
+}
+
+/** Information about this installation, as seen by peers */
+export interface LinkSelfInfo {
+	id: string
+	/** A short, readable form of the id, as shown to the user here and on other installations */
+	fingerprint: string
+	name: string
+	/** The Link protocol versions this installation speaks, one per major version */
+	protocolVersions: string[]
+}
