@@ -8,7 +8,7 @@ import createClient from 'openapi-fetch'
 import pQueue from 'p-queue'
 import pRetry, { AbortError } from 'p-retry'
 import * as tarfs from 'tar-fs'
-import { $, fs, usePowerShell } from 'zx'
+import { $, argv, fs, usePowerShell } from 'zx'
 import {
 	isModuleApiVersionCompatible,
 	isSurfaceApiVersionCompatible,
@@ -22,6 +22,11 @@ const gunzipP = promisify(gunzip)
 if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
 }
+
+// --skip-zip: leave the extracted modules in offline-bundle/ instead of producing offline-bundle.tar.gz
+const skipZip = !!argv['skip-zip']
+// --include-all-licenses: also fetch modules with COPYLEFT or UNKNOWN licenses
+const includeAllLicenses = !!argv['include-all-licenses']
 
 const baseUrl = process.env.STAGING_MODULE_API
 	? 'https://developer-staging.bitfocus.io/api'
@@ -119,8 +124,9 @@ const processModule = async (
 				}
 
 				if (
-					latestCompatibleVersion.licenseCategory === 'COPYLEFT' ||
-					latestCompatibleVersion.licenseCategory === 'UNKNOWN'
+					!includeAllLicenses &&
+					(latestCompatibleVersion.licenseCategory === 'COPYLEFT' ||
+						latestCompatibleVersion.licenseCategory === 'UNKNOWN')
 				) {
 					console.log(`Skipping ${moduleInfo.id} (${latestCompatibleVersion.licenseCategory} license)`)
 					return
@@ -192,8 +198,12 @@ await moduleQueue.onIdle()
 
 console.log('All modules processed')
 
-await $`tar -czf ${offlinePath + '.tar.gz'} -C ${offlinePath} .`
+if (skipZip) {
+	console.log(`Skipping zip, modules left in ${offlinePath}`)
+} else {
+	await $`tar -czf ${offlinePath + '.tar.gz'} -C ${offlinePath} .`
 
-await fs.rm(offlinePath, { recursive: true, force: true })
+	await fs.rm(offlinePath, { recursive: true, force: true })
+}
 
 console.log('all done!')
