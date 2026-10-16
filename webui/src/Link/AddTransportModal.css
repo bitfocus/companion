@@ -1,0 +1,18 @@
+.add-transport-modal {
+	/* Few types, so each gets room for its description */
+	.add-transport-type {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		width: 100%;
+		padding: 0.875rem 1rem;
+		border: 0;
+		border-bottom: 1px solid var(--color-border);
+		border-radius: 0;
+		text-align: start;
+
+		&:last-child {
+			border-bottom: 0;
+		}
+	}
+}
