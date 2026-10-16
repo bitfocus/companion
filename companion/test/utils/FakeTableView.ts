@@ -25,6 +25,14 @@ export class FakeTableView<T> {
 		return structuredClone(this.data[key])
 	}
 
+	getPrimitiveOrDefault(key: string, defaultValue: T): T {
+		return this.getOrDefault(key, defaultValue)
+	}
+
+	setPrimitive(key: string, value: T): void {
+		this.set(key, value)
+	}
+
 	set(key: string, value: T): void {
 		this.data[key] = structuredClone(value)
 	}

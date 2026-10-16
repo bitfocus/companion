@@ -1,0 +1,342 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"oneOf": [
+		{
+			"type": "object",
+			"properties": {
+				"version": { "type": "number", "const": 1 },
+				"type": { "type": "string", "const": "announcement" },
+				"payload": {
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "string",
+							"minLength": 1,
+							"maxLength": 64,
+							"description": "Unique id of a Companion installation"
+						},
+						"name": { "type": "string", "maxLength": 200, "description": "Human readable name of the installation" },
+						"companionVersion": { "type": "string", "description": "Companion application version" },
+						"protocolVersion": {
+							"type": "string",
+							"description": "Link protocol version (semver). Peers can only talk if the major versions match"
+						},
+						"pageCount": {
+							"type": "integer",
+							"minimum": 0,
+							"maximum": 9007199254740991,
+							"description": "Number of pages"
+						},
+						"grid": {
+							"type": "object",
+							"properties": {
+								"minRow": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 },
+								"maxRow": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 },
+								"minColumn": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 },
+								"maxColumn": { "type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991 }
+							},
+							"required": ["minRow", "maxRow", "minColumn", "maxColumn"],
+							"description": "Bounds of the button grid"
+						},
+						"announceIntervalMs": {
+							"type": "integer",
+							"exclusiveMinimum": 0,
+							"maximum": 9007199254740991,
+							"description": "How often this announcement is repeated. Peers consider it gone after missing a few"
+						}
+					},
+					"required": ["id", "name", "companionVersion", "protocolVersion", "pageCount", "grid", "announceIntervalMs"],
+					"description": "Periodic announcement of an installation. Published retained, an empty payload means it went offline"
+				}
+			},
+			"required": ["version", "type", "payload"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"version": { "type": "number", "const": 1 },
+				"type": { "type": "string", "const": "subscribe" },
+				"payload": {
+					"type": "object",
+					"properties": {
+						"requestorId": {
+							"type": "string",
+							"minLength": 1,
+							"maxLength": 64,
+							"description": "Unique id of a Companion installation"
+						},
+						"buttons": {
+							"maxItems": 1000,
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"page": {
+										"type": "integer",
+										"minimum": 1,
+										"maximum": 9007199254740991,
+										"description": "Page number"
+									},
+									"row": {
+										"type": "integer",
+										"minimum": -9007199254740991,
+										"maximum": 9007199254740991,
+										"description": "Row number"
+									},
+									"column": {
+										"type": "integer",
+										"minimum": -9007199254740991,
+										"maximum": 9007199254740991,
+										"description": "Column number"
+									},
+									"width": {
+										"type": "integer",
+										"minimum": 8,
+										"maximum": 1024,
+										"description": "Bitmap width in pixels"
+									},
+									"height": {
+										"type": "integer",
+										"minimum": 8,
+										"maximum": 1024,
+										"description": "Bitmap height in pixels"
+									}
+								},
+								"required": ["page", "row", "column", "width", "height"],
+								"description": "A button, and the size the subscriber wants its bitmap rendered at"
+							}
+						},
+						"sendCurrent": {
+							"type": "boolean",
+							"description": "Whether the current state of the buttons should be sent straight away. False for renewals, to avoid resending unchanged images"
+						}
+					},
+					"required": ["requestorId", "buttons", "sendCurrent"],
+					"description": "Ask a peer to start (or keep) publishing updates for some buttons. Subscriptions are leases: they must be renewed by repeating this message before LINK_SUBSCRIPTION_LEASE_MS elapses"
+				}
+			},
+			"required": ["version", "type", "payload"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"version": { "type": "number", "const": 1 },
+				"type": { "type": "string", "const": "unsubscribe" },
+				"payload": {
+					"type": "object",
+					"properties": {
+						"requestorId": {
+							"type": "string",
+							"minLength": 1,
+							"maxLength": 64,
+							"description": "Unique id of a Companion installation"
+						},
+						"buttons": {
+							"maxItems": 1000,
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"page": {
+										"type": "integer",
+										"minimum": 1,
+										"maximum": 9007199254740991,
+										"description": "Page number"
+									},
+									"row": {
+										"type": "integer",
+										"minimum": -9007199254740991,
+										"maximum": 9007199254740991,
+										"description": "Row number"
+									},
+									"column": {
+										"type": "integer",
+										"minimum": -9007199254740991,
+										"maximum": 9007199254740991,
+										"description": "Column number"
+									},
+									"width": {
+										"type": "integer",
+										"minimum": 8,
+										"maximum": 1024,
+										"description": "Bitmap width in pixels"
+									},
+									"height": {
+										"type": "integer",
+										"minimum": 8,
+										"maximum": 1024,
+										"description": "Bitmap height in pixels"
+									}
+								},
+								"required": ["page", "row", "column", "width", "height"],
+								"description": "A button, and the size the subscriber wants its bitmap rendered at"
+							}
+						}
+					},
+					"required": ["requestorId", "buttons"],
+					"description": "Release some subscriptions before their lease expires"
+				}
+			},
+			"required": ["version", "type", "payload"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"version": { "type": "number", "const": 1 },
+				"type": { "type": "string", "const": "button.update" },
+				"payload": {
+					"type": "object",
+					"properties": {
+						"page": { "type": "integer", "minimum": 1, "maximum": 9007199254740991, "description": "Page number" },
+						"row": {
+							"type": "integer",
+							"minimum": -9007199254740991,
+							"maximum": 9007199254740991,
+							"description": "Row number"
+						},
+						"column": {
+							"type": "integer",
+							"minimum": -9007199254740991,
+							"maximum": 9007199254740991,
+							"description": "Column number"
+						},
+						"width": { "type": "integer", "minimum": 8, "maximum": 1024, "description": "Bitmap width in pixels" },
+						"height": { "type": "integer", "minimum": 8, "maximum": 1024, "description": "Bitmap height in pixels" },
+						"dataUrl": {
+							"description": "PNG data url of the rendered button, or null if there is nothing to show",
+							"type": ["string", "null"]
+						},
+						"pressed": { "type": "boolean", "description": "Whether the button is currently pressed" },
+						"sourceChain": {
+							"maxItems": 16,
+							"type": "array",
+							"items": {
+								"type": "string",
+								"minLength": 1,
+								"maxLength": 64,
+								"description": "Unique id of a Companion installation"
+							},
+							"description": "Ids of the installations this image has passed through, used to detect loops"
+						}
+					},
+					"required": ["page", "row", "column", "width", "height", "dataUrl", "pressed", "sourceChain"],
+					"description": "The current rendered state of a subscribed button"
+				}
+			},
+			"required": ["version", "type", "payload"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"version": { "type": "number", "const": 1 },
+				"type": { "type": "string", "const": "button.press" },
+				"payload": {
+					"type": "object",
+					"properties": {
+						"page": { "type": "integer", "minimum": 1, "maximum": 9007199254740991, "description": "Page number" },
+						"row": {
+							"type": "integer",
+							"minimum": -9007199254740991,
+							"maximum": 9007199254740991,
+							"description": "Row number"
+						},
+						"column": {
+							"type": "integer",
+							"minimum": -9007199254740991,
+							"maximum": 9007199254740991,
+							"description": "Column number"
+						},
+						"sourceId": {
+							"type": "string",
+							"minLength": 1,
+							"maxLength": 64,
+							"description": "Unique id of a Companion installation"
+						},
+						"pressed": { "type": "boolean" },
+						"surfaceId": {
+							"type": "string",
+							"maxLength": 512,
+							"description": "Id of the originating surface on the source, so that held buttons are tracked per surface"
+						}
+					},
+					"required": ["page", "row", "column", "sourceId", "pressed", "surfaceId"],
+					"description": "Press or release a button on a peer"
+				}
+			},
+			"required": ["version", "type", "payload"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"version": { "type": "number", "const": 1 },
+				"type": { "type": "string", "const": "button.rotate" },
+				"payload": {
+					"type": "object",
+					"properties": {
+						"page": { "type": "integer", "minimum": 1, "maximum": 9007199254740991, "description": "Page number" },
+						"row": {
+							"type": "integer",
+							"minimum": -9007199254740991,
+							"maximum": 9007199254740991,
+							"description": "Row number"
+						},
+						"column": {
+							"type": "integer",
+							"minimum": -9007199254740991,
+							"maximum": 9007199254740991,
+							"description": "Column number"
+						},
+						"sourceId": {
+							"type": "string",
+							"minLength": 1,
+							"maxLength": 64,
+							"description": "Unique id of a Companion installation"
+						},
+						"delta": {
+							"type": "integer",
+							"minimum": -9007199254740991,
+							"maximum": 9007199254740991,
+							"description": "Signed number of rotation steps, positive is clockwise"
+						},
+						"surfaceId": { "type": "string", "maxLength": 512 }
+					},
+					"required": ["page", "row", "column", "sourceId", "delta", "surfaceId"],
+					"description": "Rotate an encoder button on a peer"
+				}
+			},
+			"required": ["version", "type", "payload"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"version": { "type": "number", "const": 1 },
+				"type": { "type": "string", "const": "access" },
+				"payload": {
+					"type": "object",
+					"properties": {
+						"sourceId": {
+							"type": "string",
+							"minLength": 1,
+							"maxLength": 64,
+							"description": "Unique id of a Companion installation"
+						},
+						"permissions": {
+							"type": "object",
+							"properties": {
+								"buttons": {
+									"type": "boolean",
+									"description": "Whether the recipient may subscribe to, press and rotate buttons"
+								}
+							},
+							"required": ["buttons"],
+							"description": "What the recipient may use. Kinds of things added later are optional, and default to false"
+						}
+					},
+					"required": ["sourceId", "permissions"],
+					"description": "Tells a peer what it may use of the sender, over the transport this arrives on. Sent when the peer becomes reachable, and whenever it changes. Requests for anything not granted are ignored"
+				}
+			},
+			"required": ["version", "type", "payload"]
+		}
+	]
+}

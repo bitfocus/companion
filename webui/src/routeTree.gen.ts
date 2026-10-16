@@ -29,6 +29,7 @@ import { Route as AppCloudRouteImport } from './routes/_app/cloud.tsx'
 import { Route as AppConnectionsRouteImport } from './routes/_app/connections.tsx'
 import { Route as AppImageLibraryRouteImport } from './routes/_app/image-library.tsx'
 import { Route as AppImportExportRouteImport } from './routes/_app/import-export.tsx'
+import { Route as AppLinkRouteImport } from './routes/_app/link.tsx'
 import { Route as AppLogRouteImport } from './routes/_app/log.tsx'
 import { Route as AppModulesRouteImport } from './routes/_app/modules.tsx'
 import { Route as AppSurfacesRouteImport } from './routes/_app/surfaces.tsx'
@@ -40,6 +41,8 @@ import { Route as AppConnectionsConnectionIdRouteImport } from './routes/_app/co
 import { Route as AppConnectionsAddRouteImport } from './routes/_app/connections/add.tsx'
 import { Route as AppImageLibraryIndexRouteImport } from './routes/_app/image-library/index.tsx'
 import { Route as AppImageLibraryImageNameRouteImport } from './routes/_app/image-library/$imageName.tsx'
+import { Route as AppLinkIndexRouteImport } from './routes/_app/link/index.tsx'
+import { Route as AppLinkTransportIdRouteImport } from './routes/_app/link/$transportId.tsx'
 import { Route as AppModulesIndexRouteImport } from './routes/_app/modules/index.tsx'
 import { Route as AppSettingsIndexRouteImport } from './routes/_app/settings/index.tsx'
 import { Route as AppSettingsAdvancedRouteImport } from './routes/_app/settings/advanced.tsx'
@@ -185,6 +188,11 @@ const AppImportExportRoute = AppImportExportRouteImport.update({
   path: '/import-export',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLinkRoute = AppLinkRouteImport.update({
+  id: '/link',
+  path: '/link',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppLogRoute = AppLogRouteImport.update({
   id: '/log',
   path: '/log',
@@ -249,6 +257,16 @@ const AppImageLibraryImageNameRoute =
     path: '/$imageName',
     getParentRoute: () => AppImageLibraryRoute,
   } as any)
+const AppLinkIndexRoute = AppLinkIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppLinkRoute,
+} as any)
+const AppLinkTransportIdRoute = AppLinkTransportIdRouteImport.update({
+  id: '/$transportId',
+  path: '/$transportId',
+  getParentRoute: () => AppLinkRoute,
+} as any)
 const AppModulesIndexRoute = AppModulesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -540,6 +558,7 @@ export interface FileRoutesByFullPath {
   '/connections': typeof AppConnectionsRouteWithChildren
   '/image-library': typeof AppImageLibraryRouteWithChildren
   '/import-export': typeof AppImportExportRoute
+  '/link': typeof AppLinkRouteWithChildren
   '/log': typeof AppLogRoute
   '/modules': typeof AppModulesRouteWithChildren
   '/surfaces': typeof AppSurfacesRouteWithChildren
@@ -550,6 +569,7 @@ export interface FileRoutesByFullPath {
   '/connections/$connectionId': typeof AppConnectionsConnectionIdRouteWithChildren
   '/connections/add': typeof AppConnectionsAddRoute
   '/image-library/$imageName': typeof AppImageLibraryImageNameRoute
+  '/link/$transportId': typeof AppLinkTransportIdRoute
   '/settings/advanced': typeof AppSettingsAdvancedRouteWithChildren
   '/settings/backups': typeof AppSettingsBackupsRouteWithChildren
   '/settings/buttons': typeof AppSettingsButtonsRoute
@@ -571,6 +591,7 @@ export interface FileRoutesByFullPath {
   '/emulator/$emulatorId': typeof StandaloneEmulatorEmulatorIdDotlazyRoute
   '/connections/': typeof AppConnectionsIndexRoute
   '/image-library/': typeof AppImageLibraryIndexRoute
+  '/link/': typeof AppLinkIndexRoute
   '/modules/': typeof AppModulesIndexRoute
   '/settings/': typeof AppSettingsIndexRoute
   '/surfaces/': typeof AppSurfacesIndexRoute
@@ -624,6 +645,7 @@ export interface FileRoutesByTo {
   '/connections/$connectionId': typeof AppConnectionsConnectionIdRouteWithChildren
   '/connections/add': typeof AppConnectionsAddRoute
   '/image-library/$imageName': typeof AppImageLibraryImageNameRoute
+  '/link/$transportId': typeof AppLinkTransportIdRoute
   '/settings/buttons': typeof AppSettingsButtonsRoute
   '/settings/general': typeof AppSettingsGeneralRoute
   '/settings/surfaces': typeof AppSettingsSurfacesRoute
@@ -637,6 +659,7 @@ export interface FileRoutesByTo {
   '/emulator/$emulatorId': typeof StandaloneEmulatorEmulatorIdDotlazyRoute
   '/connections': typeof AppConnectionsIndexRoute
   '/image-library': typeof AppImageLibraryIndexRoute
+  '/link': typeof AppLinkIndexRoute
   '/modules': typeof AppModulesIndexRoute
   '/settings': typeof AppSettingsIndexRoute
   '/surfaces': typeof AppSurfacesIndexRoute
@@ -687,6 +710,7 @@ export interface FileRoutesById {
   '/_app/connections': typeof AppConnectionsRouteWithChildren
   '/_app/image-library': typeof AppImageLibraryRouteWithChildren
   '/_app/import-export': typeof AppImportExportRoute
+  '/_app/link': typeof AppLinkRouteWithChildren
   '/_app/log': typeof AppLogRoute
   '/_app/modules': typeof AppModulesRouteWithChildren
   '/_app/surfaces': typeof AppSurfacesRouteWithChildren
@@ -698,6 +722,7 @@ export interface FileRoutesById {
   '/_app/connections/$connectionId': typeof AppConnectionsConnectionIdRouteWithChildren
   '/_app/connections/add': typeof AppConnectionsAddRoute
   '/_app/image-library/$imageName': typeof AppImageLibraryImageNameRoute
+  '/_app/link/$transportId': typeof AppLinkTransportIdRoute
   '/_app/settings/advanced': typeof AppSettingsAdvancedRouteWithChildren
   '/_app/settings/backups': typeof AppSettingsBackupsRouteWithChildren
   '/_app/settings/buttons': typeof AppSettingsButtonsRoute
@@ -719,6 +744,7 @@ export interface FileRoutesById {
   '/_standalone/emulator/$emulatorId': typeof StandaloneEmulatorEmulatorIdDotlazyRoute
   '/_app/connections/': typeof AppConnectionsIndexRoute
   '/_app/image-library/': typeof AppImageLibraryIndexRoute
+  '/_app/link/': typeof AppLinkIndexRoute
   '/_app/modules/': typeof AppModulesIndexRoute
   '/_app/settings/': typeof AppSettingsIndexRoute
   '/_app/surfaces/': typeof AppSurfacesIndexRoute
@@ -770,6 +796,7 @@ export interface FileRouteTypes {
     | '/connections'
     | '/image-library'
     | '/import-export'
+    | '/link'
     | '/log'
     | '/modules'
     | '/surfaces'
@@ -780,6 +807,7 @@ export interface FileRouteTypes {
     | '/connections/$connectionId'
     | '/connections/add'
     | '/image-library/$imageName'
+    | '/link/$transportId'
     | '/settings/advanced'
     | '/settings/backups'
     | '/settings/buttons'
@@ -801,6 +829,7 @@ export interface FileRouteTypes {
     | '/emulator/$emulatorId'
     | '/connections/'
     | '/image-library/'
+    | '/link/'
     | '/modules/'
     | '/settings/'
     | '/surfaces/'
@@ -854,6 +883,7 @@ export interface FileRouteTypes {
     | '/connections/$connectionId'
     | '/connections/add'
     | '/image-library/$imageName'
+    | '/link/$transportId'
     | '/settings/buttons'
     | '/settings/general'
     | '/settings/surfaces'
@@ -867,6 +897,7 @@ export interface FileRouteTypes {
     | '/emulator/$emulatorId'
     | '/connections'
     | '/image-library'
+    | '/link'
     | '/modules'
     | '/settings'
     | '/surfaces'
@@ -916,6 +947,7 @@ export interface FileRouteTypes {
     | '/_app/connections'
     | '/_app/image-library'
     | '/_app/import-export'
+    | '/_app/link'
     | '/_app/log'
     | '/_app/modules'
     | '/_app/surfaces'
@@ -927,6 +959,7 @@ export interface FileRouteTypes {
     | '/_app/connections/$connectionId'
     | '/_app/connections/add'
     | '/_app/image-library/$imageName'
+    | '/_app/link/$transportId'
     | '/_app/settings/advanced'
     | '/_app/settings/backups'
     | '/_app/settings/buttons'
@@ -948,6 +981,7 @@ export interface FileRouteTypes {
     | '/_standalone/emulator/$emulatorId'
     | '/_app/connections/'
     | '/_app/image-library/'
+    | '/_app/link/'
     | '/_app/modules/'
     | '/_app/settings/'
     | '/_app/surfaces/'
@@ -1125,6 +1159,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppImportExportRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/link': {
+      id: '/_app/link'
+      path: '/link'
+      fullPath: '/link'
+      preLoaderRoute: typeof AppLinkRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/log': {
       id: '/_app/log'
       path: '/log'
@@ -1208,6 +1249,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/image-library/$imageName'
       preLoaderRoute: typeof AppImageLibraryImageNameRouteImport
       parentRoute: typeof AppImageLibraryRoute
+    }
+    '/_app/link/': {
+      id: '/_app/link/'
+      path: '/'
+      fullPath: '/link/'
+      preLoaderRoute: typeof AppLinkIndexRouteImport
+      parentRoute: typeof AppLinkRoute
+    }
+    '/_app/link/$transportId': {
+      id: '/_app/link/$transportId'
+      path: '/$transportId'
+      fullPath: '/link/$transportId'
+      preLoaderRoute: typeof AppLinkTransportIdRouteImport
+      parentRoute: typeof AppLinkRoute
     }
     '/_app/modules/': {
       id: '/_app/modules/'
@@ -1615,6 +1670,19 @@ const AppImageLibraryRouteWithChildren = AppImageLibraryRoute._addFileChildren(
   AppImageLibraryRouteChildren,
 )
 
+interface AppLinkRouteChildren {
+  AppLinkTransportIdRoute: typeof AppLinkTransportIdRoute
+  AppLinkIndexRoute: typeof AppLinkIndexRoute
+}
+
+const AppLinkRouteChildren: AppLinkRouteChildren = {
+  AppLinkTransportIdRoute: AppLinkTransportIdRoute,
+  AppLinkIndexRoute: AppLinkIndexRoute,
+}
+
+const AppLinkRouteWithChildren =
+  AppLinkRoute._addFileChildren(AppLinkRouteChildren)
+
 interface AppModulesModuleTypeDotmoduleIdDotdocsRouteChildren {
   AppModulesModuleTypeDotmoduleIdDotdocsDotdocsVersionRoute: typeof AppModulesModuleTypeDotmoduleIdDotdocsDotdocsVersionRoute
 }
@@ -1834,6 +1902,7 @@ interface AppRouteChildren {
   AppConnectionsRoute: typeof AppConnectionsRouteWithChildren
   AppImageLibraryRoute: typeof AppImageLibraryRouteWithChildren
   AppImportExportRoute: typeof AppImportExportRoute
+  AppLinkRoute: typeof AppLinkRouteWithChildren
   AppLogRoute: typeof AppLogRoute
   AppModulesRoute: typeof AppModulesRouteWithChildren
   AppSurfacesRoute: typeof AppSurfacesRouteWithChildren
@@ -1862,6 +1931,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppConnectionsRoute: AppConnectionsRouteWithChildren,
   AppImageLibraryRoute: AppImageLibraryRouteWithChildren,
   AppImportExportRoute: AppImportExportRoute,
+  AppLinkRoute: AppLinkRouteWithChildren,
   AppLogRoute: AppLogRoute,
   AppModulesRoute: AppModulesRouteWithChildren,
   AppSurfacesRoute: AppSurfacesRouteWithChildren,
