@@ -22,6 +22,8 @@ import { GraphicsController } from './Graphics/Controller.js'
 import { ImportExportController } from './ImportExport/Controller.js'
 import { InstanceController } from './Instance/Controller.js'
 import { InternalController } from './Internal/Controller.js'
+import { LinkController } from './Link/Controller.js'
+import { LINK_TRANSPORT_DEFINITIONS } from './Link/Transports/index.js'
 import LogController, { type Logger } from './Log/Controller.js'
 import { PageController } from './Page/Controller.js'
 import { PageStore } from './Page/Store.js'
@@ -92,6 +94,10 @@ export class Registry {
 	 * The cloud controller
 	 */
 	readonly cloud: CloudController
+	/**
+	 * Companion Link, for linking Companion installations together
+	 */
+	readonly link: LinkController
 	/**
 	 * The core controls controller
 	 */
@@ -278,6 +284,8 @@ export class Registry {
 		)
 
 		const localVariables = new LocalVariablesController(controlStore, pageStore)
+
+		this.link = new LinkController(this.#appInfo, this.db, this.userconfig, pageStore, LINK_TRANSPORT_DEFINITIONS)
 
 		const actionRunner = new ActionRunner(this.instance, this.internalModule, this.variables, localVariables)
 
@@ -513,6 +521,9 @@ export class Registry {
 			})
 			this.rebindHttp(bindIp, bindPort)
 
+			// Everything is ready, so start linking with other installations
+			this.link.start()
+
 			// Startup has completed, run triggers
 			this.controls.triggerEvents.emit('startup')
 
@@ -578,6 +589,11 @@ export class Registry {
 		this.services.close()
 		this.cloud.stop()
 		this.usageStatistics.stop()
+
+		// Say goodbye to linked installations before the database closes
+		await this.link.stop().catch((e) => {
+			this.#logger.warn(`Failed to stop link: ${e}`)
+		})
 
 		this.ui.close()
 

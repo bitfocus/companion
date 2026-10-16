@@ -128,3 +128,35 @@ export type LinkTransportStatesUpdate =
 	| { type: 'init'; items: Record<string, LinkTransportState> }
 	| { type: 'update'; itemId: string; state: LinkTransportState }
 	| { type: 'remove'; itemId: string }
+
+/** A Companion installation discovered on at least one transport */
+export interface LinkPeerInfo {
+	id: string
+	name: string
+	companionVersion: string
+	protocolVersion: string
+	/** Whether we speak a compatible protocol version. Incompatible peers are listed but can't be used */
+	compatible: boolean
+	pageCount: number
+	grid: { minRow: number; maxRow: number; minColumn: number; maxColumn: number }
+	/** Ids of the transports the peer is currently reachable on */
+	transportIds: string[]
+	/** Whether the peer is reachable on any transport */
+	online: boolean
+	/** Unix timestamp (ms) of the last announcement received */
+	lastSeen: number
+	/**
+	 * What this installation lets the peer use, over the transports it is reachable on (shared if shared over any
+	 * of them). Decided by each transport, eg per paired installation
+	 */
+	sharedByUs: LinkPermissions
+	/** What the peer lets this installation use, or null until it has said */
+	sharedWithUs: LinkPermissions | null
+}
+
+/** Information about this installation, as seen by peers */
+export interface LinkSelfInfo {
+	id: string
+	name: string
+	protocolVersion: string
+}
