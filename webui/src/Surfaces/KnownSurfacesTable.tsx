@@ -11,6 +11,8 @@ import './surfaces.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import copy from 'copy-to-clipboard'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime.js'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
 import type { ClientDevicesListItem, ClientSurfaceItem } from '@companion-app/shared/Model/Surfaces.js'
@@ -23,6 +25,8 @@ import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import { makeAbsolutePath } from '~/Resources/util'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+
+dayjs.extend(relativeTime)
 
 interface KnownSurfacesTableProps {
 	selectedItemId: string | null
@@ -315,6 +319,8 @@ const SurfaceRow = observer(function SurfaceRow({
 				</LinkButtonExternal>
 			)}
 
+			{!surface.isConnected && surface.lastSeen !== null && <SurfaceLastSeen lastSeen={surface.lastSeen} />}
+
 			<SurfaceStatusBadge isConnected={surface.isConnected} isDisabled={surfaceDisabled} />
 
 			<SurfaceRowMenu copyId={surface.id} copyLabel="Copy surface ID">
@@ -335,6 +341,15 @@ const SurfaceRow = observer(function SurfaceRow({
 		</div>
 	)
 })
+
+function SurfaceLastSeen({ lastSeen }: { lastSeen: number }) {
+	const time = dayjs(lastSeen)
+	return (
+		<span className="surface-row-last-seen" title={`Last seen ${time.format('YYYY-MM-DD HH:mm:ss')}`}>
+			{time.fromNow()}
+		</span>
+	)
+}
 
 interface SurfaceStatusBadgeProps {
 	isConnected: boolean

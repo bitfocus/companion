@@ -132,6 +132,9 @@ export interface ClientSurfaceItem {
 
 	hasFirmwareUpdates: SurfaceFirmwareUpdateInfo | null
 
+	/** When the surface was last connected, as a unix timestamp in ms; null if that was never recorded */
+	lastSeen: number | null
+
 	size: RowsAndColumns | null
 	rotation: SurfaceRotation | null
 	brightness: number | null
@@ -173,6 +176,11 @@ export interface SurfaceConfig {
 	 * named none; undefined for configs saved before this was persisted
 	 */
 	modelId: string | null | undefined
+	/**
+	 * When the surface was last connected, as a unix timestamp in ms. Stamped on connect and disconnect, so a
+	 * surface connected when Companion stopped uncleanly shows when it connected. undefined if never recorded
+	 */
+	lastSeen: number | undefined
 }
 
 export interface SurfaceGroupConfig {

@@ -84,6 +84,9 @@ export interface SurfaceScanHandler extends SurfaceOpener {
 // Force it to load the hidraw driver just in case
 HID.setDriverType('hidraw')
 
+/** How often the last seen time of the connected surfaces is re-stamped */
+const LAST_SEEN_REFRESH_INTERVAL = 2 * 60 * 60 * 1000
+
 export interface SurfaceControllerEvents {
 	surface_name: [surfaceId: string, name: string]
 	surface_page: [surfaceId: string, pageId: string]
@@ -147,6 +150,12 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * Timer for lockout checking
 	 */
 	#surfaceLockoutTimer: NodeJS.Timeout | null = null
+
+	/**
+	 * Periodically re-stamps when the connected surfaces were last seen, so that it stays roughly accurate
+	 * when Companion stops without disconnecting them
+	 */
+	readonly #lastSeenTimer: NodeJS.Timeout
 
 	/**
 	 * If lockouts are linked, track whether they are currently locked
@@ -219,6 +228,12 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#outboundController = new SurfaceOutboundController(db)
 
 		this.#surfacesAllLocked = !!this.#handlerDependencies.userconfig.getKey('link_lockouts')
+
+		this.#lastSeenTimer = setInterval(() => {
+			for (const handler of this.#surfaceHandlers.values()) {
+				handler?.markSeen()
+			}
+		}, LAST_SEEN_REFRESH_INTERVAL)
 
 		setImmediate(() => {
 			// Setup groups
@@ -1115,6 +1130,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				enabled: config?.enabled !== false, // Default to true if not specified
 				canChangeEnabled: !surfaceHandler?.panel.info.isRemote,
 				hasFirmwareUpdates: null,
+				lastSeen: config.lastSeen ?? null,
 
 				size: config.gridSize || null,
 				rotation: config?.config?.rotation,
@@ -1910,6 +1926,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			layout: undefined,
 			appearance: undefined,
 			modelId: undefined,
+			lastSeen: Date.now(),
 		}
 
 		this.setDeviceConfig(surfaceId, minimalConfig)
@@ -1979,6 +1996,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			this.#runningUsbHotplug = false
 		}
 		this.#hotplugRescan.cancel()
+		clearInterval(this.#lastSeenTimer)
 
 		for (const surface of this.#surfaceHandlers.values()) {
 			if (!surface) continue

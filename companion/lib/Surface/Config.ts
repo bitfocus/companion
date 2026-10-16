@@ -82,6 +82,7 @@ export function createOrSanitizeSurfaceHandlerConfig(
 		layout: panel.surfaceLayout,
 		appearance: panel.surfaceAppearance,
 		modelId: panel.surfaceModelId,
+		lastSeen: Date.now(),
 	}
 
 	// Forget old values

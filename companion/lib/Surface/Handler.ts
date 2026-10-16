@@ -588,6 +588,14 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	}
 
 	/**
+	 * Record that this surface is connected now
+	 */
+	markSeen(): void {
+		this.#surfaceConfig.lastSeen = Date.now()
+		this.#saveConfig()
+	}
+
+	/**
 	 * Get the full config blob for this surface
 	 */
 	getFullConfig(): SurfaceConfig {
@@ -701,6 +709,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		if (purge && surfaceId) {
 			this.emit('configUpdated', undefined)
+		} else {
+			this.markSeen()
 		}
 	}
 }

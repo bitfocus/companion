@@ -77,6 +77,7 @@ function createSurface(id: string, props: Partial<ClientSurfaceItem>): ClientSur
 		enabled: true,
 		canChangeEnabled: true,
 		hasFirmwareUpdates: null,
+		lastSeen: null,
 		size: { rows: 4, columns: 8 },
 		rotation: null,
 		brightness: 80,

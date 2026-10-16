@@ -71,6 +71,7 @@ function makeSurfaceItem(overrides: Partial<ClientSurfaceItem>): ClientSurfaceIt
 		enabled: true,
 		canChangeEnabled: true,
 		hasFirmwareUpdates: null,
+		lastSeen: null,
 		size: null,
 		rotation: null,
 		brightness: 100,

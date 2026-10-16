@@ -1,5 +1,5 @@
 import { initTRPC } from '@trpc/server'
-import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
 import type {
 	ClientSurfaceButtonSizesItem,
@@ -59,6 +59,7 @@ function makeStoredConfig(partial: Partial<SurfaceConfig>): SurfaceConfig {
 		layout: undefined,
 		appearance: undefined,
 		modelId: undefined,
+		lastSeen: undefined,
 		...partial,
 	}
 }
@@ -212,6 +213,72 @@ describe('SurfaceController layouts', () => {
 		controller.setDeviceConfig(surfaceId, undefined)
 
 		expect(controller.getSurfaceLayouts()).toEqual({})
+	})
+})
+
+describe('SurfaceController last seen', () => {
+	let controller: SurfaceController
+	let db: TestDatabase
+
+	beforeEach(() => {
+		vi.useFakeTimers()
+		;({ controller, db } = createController())
+	})
+
+	afterEach(() => {
+		vi.useRealTimers()
+	})
+
+	function findSurface(surfaceId: string) {
+		return controller
+			.getDevicesList()
+			.flatMap((group) => group.surfaces)
+			.find((surface) => surface.id === surfaceId)
+	}
+
+	test('reports null for a stored surface which predates tracking it', () => {
+		db.getTableView('surfaces').set('old1', makeStoredConfig({}))
+
+		expect(findSurface('old1')?.lastSeen).toBeNull()
+	})
+
+	test('records when a surface connected', () => {
+		vi.setSystemTime(1000)
+		const device = controller.addSatelliteDevice(satelliteDeviceInfo())
+
+		expect(findSurface(device.info.surfaceId)?.lastSeen).toBe(1000)
+	})
+
+	test('records when a surface disconnected', () => {
+		vi.setSystemTime(1000)
+		const device = controller.addSatelliteDevice(satelliteDeviceInfo())
+		const surfaceId = device.info.surfaceId
+
+		vi.setSystemTime(5000)
+		controller.removeDevice(surfaceId)
+
+		expect(findSurface(surfaceId)).toMatchObject({ isConnected: false, lastSeen: 5000 })
+		expect(db.getTableView('surfaces').get(surfaceId)?.lastSeen).toBe(5000)
+	})
+
+	test('periodically re-stamps the connected surfaces', () => {
+		vi.setSystemTime(1000)
+		const device = controller.addSatelliteDevice(satelliteDeviceInfo())
+		const surfaceId = device.info.surfaceId
+
+		vi.advanceTimersByTime(2 * 60 * 60 * 1000)
+
+		expect(db.getTableView('surfaces').get(surfaceId)?.lastSeen).toBe(1000 + 2 * 60 * 60 * 1000)
+	})
+
+	test('records when the surfaces were shut down', () => {
+		vi.setSystemTime(1000)
+		const device = controller.addSatelliteDevice(satelliteDeviceInfo())
+
+		vi.setSystemTime(5000)
+		controller.quit()
+
+		expect(db.getTableView('surfaces').get(device.info.surfaceId)?.lastSeen).toBe(5000)
 	})
 })
 

@@ -104,6 +104,13 @@
 	color: var(--color-primary);
 }
 
+.surface-row-last-seen {
+	flex-shrink: 0;
+	font-size: 0.75rem;
+	color: var(--color-muted);
+	white-space: nowrap;
+}
+
 .surface-row-menu-trigger {
 	display: inline-flex;
 	flex-shrink: 0;
