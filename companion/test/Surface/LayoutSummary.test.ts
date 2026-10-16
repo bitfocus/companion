@@ -24,6 +24,7 @@ function makeConfig(partial: Partial<SurfaceConfig>): SurfaceConfig {
 		layout: undefined,
 		appearance: undefined,
 		modelId: undefined,
+		lastSeen: undefined,
 		...partial,
 	}
 }

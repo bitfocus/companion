@@ -581,15 +581,16 @@ export class Registry {
 
 		this.ui.close()
 
-		// Save the db to disk
-		this.db.close()
-		this.#data.cache.close()
-
+		// Before closing the db, so that the surfaces can record when they were last seen
 		try {
 			this.surfaces.quit()
 		} catch (_e) {
 			//do nothing
 		}
+
+		// Save the db to disk
+		this.db.close()
+		this.#data.cache.close()
 
 		try {
 			await this.instance.shutdownAllInstances()

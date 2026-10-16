@@ -8,8 +8,6 @@ import {
 	faWarning,
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime.js'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useState } from 'react'
 import semver from 'semver'
@@ -21,6 +19,7 @@ import type {
 } from '@companion-app/shared/Model/ModulesStore.js'
 import { isSomeModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { Button, ButtonGroup } from '~/Components/Button'
+import { RelativeTime } from '~/Components/RelativeTime.js'
 import { Table } from '~/Components/Table.js'
 import { useTableVisibilityHelper } from '~/Components/TableVisibility.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -30,8 +29,6 @@ import { ModuleInstallationBadge } from './ModuleInstallationBadge.js'
 import type { ModuleInstallationKind } from './ModuleInstallState.js'
 import { getModuleInstances } from './ModuleInstances.js'
 import { RefreshModuleInfo } from './RefreshModuleInfo.js'
-
-dayjs.extend(relativeTime)
 
 interface ModuleVersionsTableProps {
 	moduleType: ModuleInstanceType
@@ -324,17 +321,13 @@ const ModuleVersionRow = observer(function ModuleVersionRow({
 })
 
 function LastUpdatedTimestamp({ releasedAt }: { releasedAt: number | undefined }) {
-	let releaseStr = 'at some point'
-	let titleStr: string | undefined = undefined
 	if (releasedAt !== undefined && releasedAt > 0) {
-		releaseStr = dayjs(releasedAt).fromNow()
-		titleStr = dayjs(releasedAt).format('YYYY-MM-DD')
+		return <RelativeTime timestamp={releasedAt} titleFormat="YYYY-MM-DD" />
 	} else if (releasedAt === 0) {
-		releaseStr = 'a long time ago'
-		titleStr = 'Unknown'
+		return <span title="Unknown">a long time ago</span>
+	} else {
+		return <span>at some point</span>
 	}
-
-	return <span title={titleStr}>{releaseStr}</span>
 }
 
 interface ModuleUninstallButtonProps {

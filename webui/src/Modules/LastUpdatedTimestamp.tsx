@@ -1,21 +1,16 @@
-import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime.js'
-
-dayjs.extend(relativeTime)
+import { RelativeTime } from '~/Components/RelativeTime.js'
 
 export function LastUpdatedTimestamp({ timestamp }: { timestamp: number | undefined }): React.JSX.Element {
-	let timeStr = 'Unknown'
-	let titleStr: string | undefined = undefined
+	let time: React.ReactNode = 'Unknown'
 	if (timestamp === 0) {
-		timeStr = 'Never'
+		time = 'Never'
 	} else if (timestamp !== undefined) {
-		timeStr = dayjs(timestamp).fromNow()
-		titleStr = dayjs(timestamp).format('YYYY-MM-DD HH:mm:ss')
+		time = <RelativeTime timestamp={timestamp} />
 	}
 
 	return (
-		<span className="last-updated" title={titleStr}>
-			<span className="bold">Last updated:</span> {timeStr}
+		<span className="last-updated">
+			<span className="bold">Last updated:</span> {time}
 		</span>
 	)
 }

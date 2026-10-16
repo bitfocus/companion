@@ -18,6 +18,7 @@ import { LinkButtonExternal } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { Popover } from '~/Components/Popover'
+import { RelativeTime } from '~/Components/RelativeTime.js'
 import { StatusBadge } from '~/Components/StatusBadge.js'
 import { WindowLinkOpen } from '~/Helpers/Window.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -313,6 +314,15 @@ const SurfaceRow = observer(function SurfaceRow({
 				>
 					<FontAwesomeIcon icon={faArrowUpRightFromSquare} />
 				</LinkButtonExternal>
+			)}
+
+			{!surface.isConnected && surface.lastSeen !== null && (
+				<RelativeTime
+					timestamp={surface.lastSeen}
+					titlePrefix="Last seen"
+					titleFormat="YYYY-MM-DD HH:mm"
+					className="surface-row-last-seen"
+				/>
 			)}
 
 			<SurfaceStatusBadge isConnected={surface.isConnected} isDisabled={surfaceDisabled} />
