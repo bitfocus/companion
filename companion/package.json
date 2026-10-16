@@ -79,6 +79,7 @@
     "node-cron": "^4.6.0",
     "node-hid": "^3.4.0",
     "node-machine-id": "^1.1.12",
+    "noise-handshake": "^4.2.0",
     "on-headers": "^1.1.0",
     "openapi-fetch": "^0.17.0",
     "osc": "2.4.5",

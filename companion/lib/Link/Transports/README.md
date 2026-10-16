@@ -138,7 +138,7 @@ is what shows in the list of transports.
 - **Last will.** If this installation disappears without saying goodbye (crash, network loss), peers should
   receive `context.lastWill`. A broker with a last will feature does this for you; a point to point transport can
   emulate it by delivering an empty payload locally for each retained topic the other side had published when the
-  connection drops. If neither is possible,
+  connection drops (see [`Direct/PeerConnectionBus.ts`](./Direct/PeerConnectionBus.ts)). If neither is possible,
   peers still notice after a few missed announcements.
 - **Status.** Only report `connected` when messages can actually flow. The core announces itself on every transport
   as it becomes connected, and treats peers as unreachable through a transport when it stops being connected.
@@ -148,7 +148,7 @@ is what shows in the list of transports.
   transports; it is written so that this is harmless.
 
 What a transport does **not** need to do: ordering, delivery guarantees beyond best effort, encryption of the
-payload (do secure the connection itself, eg with TLS), or knowing anything about the messages.
+payload (do secure the connection itself, eg with TLS, or encryption in the stream like `Direct/`), or knowing anything about the messages.
 
 ## Security
 
@@ -159,13 +159,31 @@ Explain the implications in the transport's description or a `static-text` field
 ## Testing
 
 Test the transport against fakes of the context, as in
-[`test/Link/MockTransport.test.ts`](../../../test/Link/MockTransport.test.ts). Where the backend can be run
+[`test/Link/DirectTransport.test.ts`](../../../test/Link/DirectTransport.test.ts). Where the backend can be run
 in-process, an end to end test of two instances exchanging messages is the most valuable test to have. Check at
 least: messages only arrive for subscribed patterns, retained messages reach late subscribers, the last will
 behaviour, and the status reported when the backend is unreachable.
 
 ## Existing transports
 
-- [`Mock/`](./Mock): a stand-in for developing Link until a real transport exists, to be replaced. Every installation
-  using it multicasts every message to the others on the local network, with no security at all. It has a toggle for
-  each installation seen, to share buttons with it.
+- [`Direct/`](./Direct): installations connect directly to each other over a websocket. Two transport types share
+  the folder: one accepts connections, the other makes one. This is the recommended transport: for installations on
+  different networks, connect them over a VPN, rather than exposing the port to the internet.
+  - **Encryption**: every connection runs a Noise XX handshake (`Noise_XX_25519_ChaChaPoly_BLAKE2b`, using
+    [noise-handshake](https://github.com/holepunchto/noise-handshake)), and everything after it is encrypted
+    (`SecureChannel.ts`). Each transport has its own Noise static key (`Identity.ts`), which each end signs with its
+    installation identity in the handshake, proving its Link id.
+  - **Pairing** (`Pairing.ts`): the first time, the accepting end doesn't know the connecting end's Link id, so it shows a
+    pairing request. Both ends derive an 8 digit code from the handshake hash; the connecting end shows it, and the
+    user enters it on the accepting end, which only accepts a matching code. A man in the middle would have run two
+    separate handshakes, so the codes would not match. Both ends then remember each other's Link id: later
+    connections need no code, and a different one is refused. This uses `setSections` for the requests and the paired list.
+  - **Permissions**: pairing only decides who may connect. What each end shares with the other is chosen in the core,
+    and the transport only delivers what needs permission to a connection whose Link id has it.
+  - **Broker emulation**: as this is point to point, it emulates the broker features itself in
+    `PeerConnectionBus`.
+  - **Addresses** (`Address.ts`): the connecting end takes either a host (with an optional port), or a full
+    `ws://`/`wss://` url, so it can go through a reverse proxy, on a subpath if need be. TLS from a proxy is only an
+    outer layer, the Noise handshake is what authenticates the other end.
+  - **Reconnecting**: the first retry is almost immediate, then it backs off to 30 seconds. Each reconnect runs a
+    fresh handshake (no code needed once paired), and the core then resends everything (see the Link README).
