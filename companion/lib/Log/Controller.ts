@@ -21,7 +21,7 @@ import debounceFn from 'debounce-fn'
 import fs from 'fs-extra'
 import stripAnsi from 'strip-ansi'
 import supportsColor from 'supports-color'
-import { LOG_LEVELS, type LogLevel } from '@companion-app/shared/LaunchOptions.js'
+import { LOG_LEVELS, parseLogLevel, type LogLevel } from '@companion-app/shared/LaunchOptions.js'
 import type { ClientLogLine, ClientLogUpdate } from '@companion-app/shared/Model/LogLine.js'
 import type { AppInfo } from '../Registry.js'
 import { isPackaged } from '../Resources/Util.js'
@@ -135,7 +135,7 @@ class LogController {
 			// Enable logging for a whole run with e.g. `COMPANION_TEST_LOG_LEVEL=debug yarn test`,
 			// or within a single test with `LogController.setLogLevel('debug')`.
 			const testLogLevel = process.env.COMPANION_TEST_LOG_LEVEL
-			this.#level = (testLogLevel as LogLevel) || 'silly'
+			this.#level = (testLogLevel && parseLogLevel(testLogLevel)) || 'silly'
 			this.#levelIndex = testLogLevel ? LOG_LEVELS.indexOf(this.#level) : -1
 
 			sinks = {
