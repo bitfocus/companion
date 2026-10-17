@@ -52,7 +52,8 @@ export function getHiddenCompositeOptionFields(
 
 	const allowedReferences = new Set<string>()
 	for (const option of options) {
-		if (option.disableAutoExpression) allowedReferences.add(stripCompositeOptionPrefix(option.id))
+		if (option.disableAutoExpression && option.type !== 'expression')
+			allowedReferences.add(stripCompositeOptionPrefix(option.id))
 	}
 
 	const getOptionValue = createRestrictedGetOptionValue(

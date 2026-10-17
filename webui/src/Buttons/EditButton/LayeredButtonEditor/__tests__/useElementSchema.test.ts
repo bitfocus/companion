@@ -44,6 +44,23 @@ const OPTIONS: SomeCompanionInputField[] = [
 		max: 100,
 	},
 	{
+		id: 'opt:expr',
+		type: 'expression',
+		label: 'Expr',
+		default: '',
+		disableAutoExpression: true,
+	},
+	{
+		id: 'opt:exprDependent',
+		type: 'number',
+		label: 'Expr dependent',
+		default: 0,
+		min: 0,
+		max: 100,
+		// expression fields are always expressions, so may not be referenced
+		isVisibleUi: { type: 'expression', fn: "$(options:expr) == 'x'", data: undefined },
+	},
+	{
 		id: 'opt:label',
 		type: 'textinput',
 		label: 'Label',
@@ -79,6 +96,11 @@ describe('getHiddenCompositeOptionFields', () => {
 		const hidden = getHiddenCompositeOptionFields(composite({ 'opt:shape': 'circle', 'opt:size': 5 }), OPTIONS)
 		expect(hidden.has('opt:label')).toBe(false)
 	})
+
+	test('an expression referencing an expression field leaves the field visible', () => {
+		const hidden = getHiddenCompositeOptionFields(composite({ 'opt:shape': 'circle', 'opt:expr': 'y' }), OPTIONS)
+		expect(hidden.has('opt:exprDependent')).toBe(false)
+	})
 })
 
 describe('getElementSchemaSections', () => {
@@ -91,6 +113,13 @@ describe('getElementSchemaSections', () => {
 
 		const sections = getElementSchemaSections(composite({ 'opt:shape': 'rect' }), definitions)
 		const properties = sections?.find((section) => section.id === 'properties')
-		expect(properties?.fields.map((field) => field.id)).toEqual(['opt:shape', 'opt:width', 'opt:size', 'opt:label'])
+		expect(properties?.fields.map((field) => field.id)).toEqual([
+			'opt:shape',
+			'opt:width',
+			'opt:size',
+			'opt:expr',
+			'opt:exprDependent',
+			'opt:label',
+		])
 	})
 })

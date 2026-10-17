@@ -2726,11 +2726,32 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 					max: 100,
 					isVisibleUi: { type: 'expression', fn: "$(options:shape) == 'rect'", data: undefined },
 				},
+				{
+					id: 'expr',
+					type: 'expression',
+					label: 'Expr',
+					default: '',
+					disableAutoExpression: true,
+				},
+				{
+					id: 'exprDependent',
+					type: 'number',
+					label: 'Expr dependent',
+					default: 0,
+					min: 0,
+					max: 100,
+					// expression fields are always expressions, so may not be referenced
+					isVisibleUi: { type: 'expression', fn: "$(options:expr) == 'x'", data: undefined },
+				},
 			],
 			elements: [
 				makeTextEl({
 					id: 'label',
 					text: expr("`${$(options:shape)}|${$(options:radius) ?? 'null'}|${$(options:width) ?? 'null'}`"),
+				}),
+				makeTextEl({
+					id: 'exprLabel',
+					text: expr("`${$(options:expr)}|${$(options:exprDependent) ?? 'null'}`"),
 				}),
 			],
 		}
@@ -2775,6 +2796,43 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			const groupElement = result.elements[0] as ButtonGraphicsGroupDrawElement
 			return (groupElement.children[0] as { text: string }).text
 		}
+
+		test('an expression referencing an expression field leaves the field visible', async () => {
+			const instanceDefs = createMockInstanceDefinitions({ 'test-connection': { shapeComposite } })
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				instanceDefs,
+				createMockParser(),
+				mockDrawPixelBuffers,
+				[
+					{
+						id: 'comp1',
+						name: '',
+						type: 'composite',
+						rotation: val(0),
+						pinnedProperties: [],
+						usage: USAGE,
+						enabled: val(true),
+						opacity: val(100),
+						x: val(0),
+						y: val(0),
+						width: val(100),
+						height: val(100),
+						connectionId: 'test-connection',
+						elementId: 'shapeComposite',
+						'opt:expr': val("'y'"),
+						'opt:exprDependent': val(7),
+					},
+				],
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			const groupElement = result.elements[0] as ButtonGraphicsGroupDrawElement
+			expect((groupElement.children[1] as { text: string }).text).toBe('y|7')
+		})
 
 		test('nulls options hidden by their isVisible expression', async () => {
 			expect(
