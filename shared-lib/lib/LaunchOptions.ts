@@ -19,6 +19,8 @@ export interface LaunchOption {
 	type: LaunchOptionType
 	/** Allowed values for `type: 'enum'`. */
 	enumValues?: readonly string[]
+	/** Retired values for `type: 'enum'`, still accepted and mapped onto their replacement in `enumValues`. */
+	enumAliases?: Readonly<Record<string, string>>
 	/**
 	 * Semantic default.
 	 * - Only passed to commander for non-boolean options (to preserve the exact existing cli behaviour).
@@ -37,7 +39,23 @@ export interface LaunchOption {
 	validate?: (value: unknown) => string | undefined
 }
 
-const LOG_LEVELS = ['error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly'] as const
+export const LOG_LEVELS = ['error', 'warn', 'info', 'debug', 'silly'] as const
+export type LogLevel = (typeof LOG_LEVELS)[number]
+
+/** Log levels that have been removed, mapped onto the level that now covers them */
+export const LEGACY_LOG_LEVELS: Readonly<Record<string, LogLevel>> = {
+	http: 'info',
+	verbose: 'debug',
+}
+
+/**
+ * Parse a log level, accepting the retired levels too
+ * @returns the level, or null if it is not recognised
+ */
+export function parseLogLevel(value: string): LogLevel | null {
+	if ((LOG_LEVELS as readonly string[]).includes(value)) return value as LogLevel
+	return Object.hasOwn(LEGACY_LOG_LEVELS, value) ? LEGACY_LOG_LEVELS[value] : null
+}
 
 function makePortValidator(min: number, max = 65535, note = ''): (value: unknown) => string | undefined {
 	return (value) => {
@@ -87,6 +105,7 @@ export const LAUNCH_OPTIONS: readonly LaunchOption[] = [
 		key: 'logLevel',
 		type: 'enum',
 		enumValues: LOG_LEVELS,
+		enumAliases: LEGACY_LOG_LEVELS,
 		short: 'Log level to output to console',
 		cliFlag: '--log-level <string>',
 	},

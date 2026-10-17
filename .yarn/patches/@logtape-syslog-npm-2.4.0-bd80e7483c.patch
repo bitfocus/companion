@@ -1,0 +1,357 @@
+diff --git a/dist/syslog.cjs b/dist/syslog.cjs
+index e642a1393238a93499b22dcf0efc2bb248932dd7..3b4c95603b5760f93a7d2485640c8abb4c7a6705 100644
+--- a/dist/syslog.cjs
++++ b/dist/syslog.cjs
+@@ -1,5 +1,6 @@
+ const require_rolldown_runtime = require('./_virtual/rolldown_runtime.cjs');
+ const require_circular = require('./circular.cjs');
++const __logtape_logtape = require_rolldown_runtime.__toESM(require("@logtape/logtape"));
+ const node_dgram = require_rolldown_runtime.__toESM(require("node:dgram"));
+ const node_net = require_rolldown_runtime.__toESM(require("node:net"));
+ const node_os = require_rolldown_runtime.__toESM(require("node:os"));
+@@ -7,6 +8,7 @@ const node_process = require_rolldown_runtime.__toESM(require("node:process"));
+ const node_tls = require_rolldown_runtime.__toESM(require("node:tls"));
+ 
+ //#region src/syslog.ts
++const asyncDisposeSymbol = Symbol.asyncDispose ?? Symbol.for("Symbol.asyncDispose");
+ /**
+ * Syslog facility code mapping.
+ * @since 0.12.0
+@@ -378,8 +380,12 @@ var NodeTcpSyslogConnection = class {
+ 				});
+ 				socket.on("error", (error) => {
+ 					clearTimeout(timeout);
++					socket.destroy();
+ 					reject(error);
+ 				});
++				socket.on("close", () => {
++					if (this.connection === socket) this.connection = void 0;
++				});
+ 				if (!this.secure) socket.connect(this.port, this.hostname);
+ 			});
+ 		} catch (error) {
+@@ -513,6 +519,7 @@ function getSyslogSink(options = {}) {
+ 	const syslogHostname = options.syslogHostname ?? getSystemHostname();
+ 	const processId = options.processId ?? getProcessId();
+ 	const timeout = options.timeout ?? 5e3;
++	const maxBufferedBytes = options.maxBufferedBytes ?? Infinity;
+ 	const includeStructuredData = options.includeStructuredData ?? false;
+ 	const structuredDataId = options.structuredDataId ?? "logtape@32473";
+ 	const formatOptions = {
+@@ -528,22 +535,85 @@ function getSyslogSink(options = {}) {
+ 		else return protocol === "tcp" ? new NodeTcpSyslogConnection(hostname$1, port, timeout, secure, tlsOptions) : new NodeUdpSyslogConnection(hostname$1, port, timeout);
+ 	})();
+ 	let isConnected = false;
++	let isFailing = false;
++	let isBufferFull = false;
++	const pending = [];
++	let bufferedBytes = 0;
++	let draining;
+ 	let lastPromise = Promise.resolve();
+-	const sink = (record) => {
+-		const syslogMessage = formatSyslogMessage(record, formatOptions);
+-		lastPromise = lastPromise.then(async () => {
+-			if (!isConnected) {
+-				await connection.connect();
+-				isConnected = true;
+-			}
+-			await connection.send(syslogMessage);
+-		}).catch((error) => {
++	const encoder = new TextEncoder();
++	const metaLogger = (0, __logtape_logtape.getLogger)([
++		"logtape",
++		"meta",
++		"syslog"
++	]);
++	async function send(message) {
++		if (isConnected) try {
++			await connection.send(message);
++			return;
++		} catch {
++			connection.close();
+ 			isConnected = false;
+-			throw error;
++		}
++		await connection.connect();
++		isConnected = true;
++		await connection.send(message);
++	}
++	function dropOldest() {
++		const record = pending.shift();
++		bufferedBytes -= record.size;
++		record.resolve();
++	}
++	async function drain() {
++		while (pending.length > 0) {
++			const record = pending.shift();
++			bufferedBytes -= record.size;
++			try {
++				await send(record.message);
++				isFailing = false;
++				record.resolve();
++			} catch (error) {
++				record.reject(error);
++				isConnected = false;
++				connection.close();
++				while (pending.length > 0) dropOldest();
++				if (!isFailing) {
++					isFailing = true;
++					metaLogger.error("Failed to send a log record to the syslog server: {error}", { error });
++				}
++			}
++		}
++		isBufferFull = false;
++		draining = void 0;
++	}
++	const sink = (record) => {
++		const message = formatSyslogMessage(record, formatOptions);
++		const size = maxBufferedBytes === Infinity ? 0 : encoder.encode(message).byteLength;
++		let resolve;
++		let reject;
++		lastPromise = new Promise((res, rej) => {
++			resolve = res;
++			reject = rej;
++		});
++		lastPromise.catch(() => {});
++		pending.push({
++			message,
++			size,
++			resolve,
++			reject
+ 		});
++		bufferedBytes += size;
++		if (bufferedBytes > maxBufferedBytes) {
++			while (bufferedBytes > maxBufferedBytes) dropOldest();
++			if (!isBufferFull) {
++				isBufferFull = true;
++				metaLogger.warn("The syslog buffer is full; dropping the oldest log records.");
++			}
++		}
++		if (pending.length > 0) draining ??= drain();
+ 	};
+-	sink[Symbol.asyncDispose] = async () => {
+-		await lastPromise.catch(() => {});
++	sink[asyncDisposeSymbol] = async () => {
++		while (draining !== void 0) await draining;
+ 		connection.close();
+ 		isConnected = false;
+ 	};
+diff --git a/dist/syslog.d.cts b/dist/syslog.d.cts
+index cb5de2f2ee70c1e118d105ee2da74c7b4e22e5e3..4881f48ee5c9a5e0016f2b6ba2af0a9f8292cbc6 100644
+--- a/dist/syslog.d.cts
++++ b/dist/syslog.d.cts
+@@ -88,6 +88,15 @@ interface SyslogSinkOptions {
+    * @default 5000
+    */
+   readonly timeout?: number;
++  /**
++   * The maximum total size, in bytes, of the formatted messages waiting to be
++   * sent.  When a record would take it over this, the oldest records waiting
++   * are dropped to make room, and a warning is logged to the meta logger.  This
++   * bounds memory use when the syslog server is slow to accept records.
++   * @default `Infinity`
++   * @since 2.5.0
++   */
++  readonly maxBufferedBytes?: number;
+   /**
+    * Whether to include structured data in syslog messages.
+    * @default `false`
+@@ -100,6 +109,11 @@ interface SyslogSinkOptions {
+    */
+   readonly structuredDataId?: string;
+ }
++/**
++ * Base interface for syslog connections.
++ * @since 0.12.0
++ */
++
+ /**
+  * Creates a syslog sink that sends log messages to a syslog server using the
+  * RFC 5424 syslog protocol format.
+@@ -194,6 +208,7 @@ interface SyslogSinkOptions {
+  * @see {@link SyslogSinkOptions} for detailed configuration options
+  */
+ declare function getSyslogSink(options?: SyslogSinkOptions): Sink & AsyncDisposable;
++//# sourceMappingURL=syslog.d.ts.map
+ //#endregion
+ export { SyslogFacility, SyslogProtocol, SyslogSinkOptions, SyslogTlsOptions, getSyslogSink };
+ //# sourceMappingURL=syslog.d.cts.map
+\ No newline at end of file
+diff --git a/dist/syslog.d.ts b/dist/syslog.d.ts
+index a08b067d4a6ac80b4ba82185bea345184354451b..2b3eba206bc5aa6d845a9ee794cdbee65a59db2e 100644
+--- a/dist/syslog.d.ts
++++ b/dist/syslog.d.ts
+@@ -88,6 +88,15 @@ interface SyslogSinkOptions {
+    * @default 5000
+    */
+   readonly timeout?: number;
++  /**
++   * The maximum total size, in bytes, of the formatted messages waiting to be
++   * sent.  When a record would take it over this, the oldest records waiting
++   * are dropped to make room, and a warning is logged to the meta logger.  This
++   * bounds memory use when the syslog server is slow to accept records.
++   * @default `Infinity`
++   * @since 2.5.0
++   */
++  readonly maxBufferedBytes?: number;
+   /**
+    * Whether to include structured data in syslog messages.
+    * @default `false`
+@@ -100,6 +109,11 @@ interface SyslogSinkOptions {
+    */
+   readonly structuredDataId?: string;
+ }
++/**
++ * Base interface for syslog connections.
++ * @since 0.12.0
++ */
++
+ /**
+  * Creates a syslog sink that sends log messages to a syslog server using the
+  * RFC 5424 syslog protocol format.
+@@ -194,6 +208,7 @@ interface SyslogSinkOptions {
+  * @see {@link SyslogSinkOptions} for detailed configuration options
+  */
+ declare function getSyslogSink(options?: SyslogSinkOptions): Sink & AsyncDisposable;
++//# sourceMappingURL=syslog.d.ts.map
+ //#endregion
+ export { SyslogFacility, SyslogProtocol, SyslogSinkOptions, SyslogTlsOptions, getSyslogSink };
+ //# sourceMappingURL=syslog.d.ts.map
+\ No newline at end of file
+diff --git a/dist/syslog.js b/dist/syslog.js
+index 8bf49557c6f6708c6d84df0f43e908fd704e9dfe..6f2687c794f039f445cf28e8bca591e16e57413e 100644
+--- a/dist/syslog.js
++++ b/dist/syslog.js
+@@ -1,4 +1,5 @@
+ import { stringifyWithoutCycles } from "./circular.js";
++import { getLogger } from "@logtape/logtape";
+ import { createSocket } from "node:dgram";
+ import { Socket } from "node:net";
+ import { hostname } from "node:os";
+@@ -6,6 +7,7 @@ import process from "node:process";
+ import * as tls from "node:tls";
+ 
+ //#region src/syslog.ts
++const asyncDisposeSymbol = Symbol.asyncDispose ?? Symbol.for("Symbol.asyncDispose");
+ /**
+ * Syslog facility code mapping.
+ * @since 0.12.0
+@@ -377,8 +379,12 @@ var NodeTcpSyslogConnection = class {
+ 				});
+ 				socket.on("error", (error) => {
+ 					clearTimeout(timeout);
++					socket.destroy();
+ 					reject(error);
+ 				});
++				socket.on("close", () => {
++					if (this.connection === socket) this.connection = void 0;
++				});
+ 				if (!this.secure) socket.connect(this.port, this.hostname);
+ 			});
+ 		} catch (error) {
+@@ -512,6 +518,7 @@ function getSyslogSink(options = {}) {
+ 	const syslogHostname = options.syslogHostname ?? getSystemHostname();
+ 	const processId = options.processId ?? getProcessId();
+ 	const timeout = options.timeout ?? 5e3;
++	const maxBufferedBytes = options.maxBufferedBytes ?? Infinity;
+ 	const includeStructuredData = options.includeStructuredData ?? false;
+ 	const structuredDataId = options.structuredDataId ?? "logtape@32473";
+ 	const formatOptions = {
+@@ -527,22 +534,85 @@ function getSyslogSink(options = {}) {
+ 		else return protocol === "tcp" ? new NodeTcpSyslogConnection(hostname$1, port, timeout, secure, tlsOptions) : new NodeUdpSyslogConnection(hostname$1, port, timeout);
+ 	})();
+ 	let isConnected = false;
++	let isFailing = false;
++	let isBufferFull = false;
++	const pending = [];
++	let bufferedBytes = 0;
++	let draining;
+ 	let lastPromise = Promise.resolve();
+-	const sink = (record) => {
+-		const syslogMessage = formatSyslogMessage(record, formatOptions);
+-		lastPromise = lastPromise.then(async () => {
+-			if (!isConnected) {
+-				await connection.connect();
+-				isConnected = true;
+-			}
+-			await connection.send(syslogMessage);
+-		}).catch((error) => {
++	const encoder = new TextEncoder();
++	const metaLogger = getLogger([
++		"logtape",
++		"meta",
++		"syslog"
++	]);
++	async function send(message) {
++		if (isConnected) try {
++			await connection.send(message);
++			return;
++		} catch {
++			connection.close();
+ 			isConnected = false;
+-			throw error;
++		}
++		await connection.connect();
++		isConnected = true;
++		await connection.send(message);
++	}
++	function dropOldest() {
++		const record = pending.shift();
++		bufferedBytes -= record.size;
++		record.resolve();
++	}
++	async function drain() {
++		while (pending.length > 0) {
++			const record = pending.shift();
++			bufferedBytes -= record.size;
++			try {
++				await send(record.message);
++				isFailing = false;
++				record.resolve();
++			} catch (error) {
++				record.reject(error);
++				isConnected = false;
++				connection.close();
++				while (pending.length > 0) dropOldest();
++				if (!isFailing) {
++					isFailing = true;
++					metaLogger.error("Failed to send a log record to the syslog server: {error}", { error });
++				}
++			}
++		}
++		isBufferFull = false;
++		draining = void 0;
++	}
++	const sink = (record) => {
++		const message = formatSyslogMessage(record, formatOptions);
++		const size = maxBufferedBytes === Infinity ? 0 : encoder.encode(message).byteLength;
++		let resolve;
++		let reject;
++		lastPromise = new Promise((res, rej) => {
++			resolve = res;
++			reject = rej;
++		});
++		lastPromise.catch(() => {});
++		pending.push({
++			message,
++			size,
++			resolve,
++			reject
+ 		});
++		bufferedBytes += size;
++		if (bufferedBytes > maxBufferedBytes) {
++			while (bufferedBytes > maxBufferedBytes) dropOldest();
++			if (!isBufferFull) {
++				isBufferFull = true;
++				metaLogger.warn("The syslog buffer is full; dropping the oldest log records.");
++			}
++		}
++		if (pending.length > 0) draining ??= drain();
+ 	};
+-	sink[Symbol.asyncDispose] = async () => {
+-		await lastPromise.catch(() => {});
++	sink[asyncDisposeSymbol] = async () => {
++		while (draining !== void 0) await draining;
+ 		connection.close();
+ 		isConnected = false;
+ 	};

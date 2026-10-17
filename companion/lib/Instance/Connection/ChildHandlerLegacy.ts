@@ -743,7 +743,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	async #handleLogMessage(msg: LogMessageMessage): Promise<void> {
 		if (msg.level === 'error' || msg.level === 'warn' || msg.level === 'info') {
 			// Ignore debug from modules in main log
-			this.logger.log(msg.level, msg.message)
+			this.logger.log(msg.level, stringifyLogValue(msg.message))
 		}
 
 		// Send everything to the 'debug' page

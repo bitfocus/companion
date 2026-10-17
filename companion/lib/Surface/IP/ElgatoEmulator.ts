@@ -148,7 +148,7 @@ export class SurfaceIPElgatoEmulator extends EventEmitter<SurfacePanelEvents> im
 			const dataUrl = await item.defaultRender.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
 			if (this.#imageCache.get(key) !== item.defaultRender) return // Discard render if the cache has already moved on
 			if (!dataUrl) {
-				this.#logger.verbose('draw call had no data-url')
+				this.#logger.debug('draw call had no data-url')
 				return
 			}
 			this.#queueImageUpdate(key, item.x, item.y, dataUrl)

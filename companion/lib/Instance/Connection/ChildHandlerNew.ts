@@ -521,11 +521,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	async #handleLogMessage(msg: LogMessageMessage): Promise<void> {
 		if (msg.level === 'error' || msg.level === 'warn' || msg.level === 'info') {
 			// Ignore debug from modules in main log
-			this.logger.log({
-				source: msg.source ? `${this.logger.source}/${msg.source}` : this.logger.source,
-				level: msg.level,
-				message: msg.message,
-			})
+			const logger = msg.source ? this.logger.child({ source: msg.source }) : this.logger
+			logger.log(msg.level, stringifyLogValue(msg.message))
 		}
 
 		// Send everything to the 'debug' page

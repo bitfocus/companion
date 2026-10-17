@@ -273,9 +273,9 @@ export class DataUsageStatistics {
 					maxRetryTime: REQUEST_TIMEOUT_MS * 2,
 					onFailedAttempt: (error) => {
 						if ((error instanceof Error && error.name === 'AbortError') || error instanceof AbortError) {
-							this.#logger.verbose(`usage metrics aborted after ${REQUEST_TIMEOUT_MS}ms`)
+							this.#logger.debug(`usage metrics aborted after ${REQUEST_TIMEOUT_MS}ms`)
 						} else {
-							this.#logger.verbose('usage metrics server said something unexpected!', error)
+							this.#logger.debug('usage metrics server said something unexpected!', error)
 						}
 					},
 				}

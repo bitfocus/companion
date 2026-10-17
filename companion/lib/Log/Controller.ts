@@ -2,36 +2,71 @@
  * Warning: this file needs to not reference any 'real' code in the codebase, or we end up with import cycle issues
  */
 import EventEmitter from 'node:events'
+import util from 'node:util'
+import {
+	ansiColorFormatter,
+	configureSync,
+	defaultTextFormatter,
+	getConsoleSink,
+	getLogger,
+	withFilter,
+	type LogRecord,
+	type LogLevel as LogTapeLevel,
+	type Logger as LogTapeLogger,
+	type Sink,
+} from '@logtape/logtape'
+import { getSyslogSink, type SyslogSinkOptions } from '@logtape/syslog'
 import { addBreadcrumb, getCurrentScope, httpIntegration, init, rewriteFramesIntegration } from '@sentry/node'
 import debounceFn from 'debounce-fn'
 import fs from 'fs-extra'
 import stripAnsi from 'strip-ansi'
 import supportsColor from 'supports-color'
-import winston, { type LeveledLogMethod, type LogMethod } from 'winston'
-import { Syslog, type SyslogTransportOptions } from 'winston-syslog'
-import Transport from 'winston-transport'
+import { LOG_LEVELS, parseLogLevel, type LogLevel } from '@companion-app/shared/LaunchOptions.js'
 import type { ClientLogLine, ClientLogUpdate } from '@companion-app/shared/Model/LogLine.js'
 import type { AppInfo } from '../Registry.js'
 import { isPackaged } from '../Resources/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import { LogColors } from './Colors.js'
+
+export type LeveledLogMethod = (message: unknown, ...args: unknown[]) => void
 
 export interface Logger {
 	readonly source: string
 
 	child(options: { source: string }): Logger
 
-	log: LogMethod
+	log(level: LogLevel, message: string): void
 	error: LeveledLogMethod
 	warn: LeveledLogMethod
 	info: LeveledLogMethod
 	debug: LeveledLogMethod
-	verbose: LeveledLogMethod
 	silly: LeveledLogMethod
 
 	isDebugEnabled(): boolean
 	isSillyEnabled(): boolean
 }
+
+const SYSLOG_MAX_BUFFERED_BYTES = 1024 * 1024
+
+const LogTapeLevels: Record<LogLevel, LogTapeLevel> = {
+	error: 'error',
+	warn: 'warning',
+	info: 'info',
+	debug: 'debug',
+	silly: 'trace',
+}
+
+const CompanionLevels: Record<LogTapeLevel, LogLevel> = {
+	fatal: 'error',
+	error: 'error',
+	warning: 'warn',
+	info: 'info',
+	debug: 'debug',
+	trace: 'silly',
+}
+
+// Each source logs to its own category. Records from LogTape itself use a longer category, and may have values in the message
+const getRecordSource = (record: LogRecord): string => record.category.join('/')
+const getRecordMessage = (record: LogRecord): string => record.message.join('')
 
 const SentrySeverity = {
 	debug: 'debug',
@@ -57,33 +92,6 @@ export function stringifyLogValue(value: unknown): string {
 	return String(value)
 }
 
-type LogLineFn = (line: ClientLogLine) => void
-export class ToMemoryTransport extends Transport {
-	readonly #addToHistory: LogLineFn
-
-	constructor(opts: Transport.TransportStreamOptions | undefined, addToHistory: LogLineFn) {
-		super(opts)
-
-		this.#addToHistory = addToHistory
-	}
-
-	log(info: Record<string, unknown>, callback: () => void): void {
-		// The callback must always be called, otherwise winston stops writing to every transport #4509
-		try {
-			this.#addToHistory({
-				time: info.timestamp as number,
-				source: stripAnsi(stringifyLogValue(info.source)),
-				level: stringifyLogValue(info.level),
-				message: stripAnsi(stringifyLogValue(info.message)),
-			})
-		} catch (_e) {
-			// Ignore
-		} finally {
-			callback()
-		}
-	}
-}
-
 /**
  * Logger for messages to send to the user in the UI
  *
@@ -107,7 +115,10 @@ class LogController {
 
 	#history: ClientLogLine[] = []
 
-	#winston: winston.Logger
+	#level: LogLevel
+	/** Index of the current level in LOG_LEVELS, or -1 when logging is suppressed */
+	#levelIndex: number
+	#syslogSink: Sink | null = null
 	#logger: Logger
 
 	readonly #events = new EventEmitter<{ update: [ClientLogUpdate] }>()
@@ -118,63 +129,52 @@ class LogController {
 	constructor() {
 		this.#events.setMaxListeners(0)
 
-		/**
-		 * Select a color for a log namespace
-		 */
-		function selectColor(namespace: string): number {
-			let hash = 0
-
-			for (let i = 0; i < namespace.length; i++) {
-				hash = (hash << 5) - hash + namespace.charCodeAt(i)
-				hash |= 0 // Convert to 32bit integer
-			}
-
-			return LogColors[Math.abs(hash) % LogColors.length]
-		}
-
+		let sinks: Record<'console' | 'memory' | 'syslog', Sink>
 		if (process.env.VITEST_WORKER_ID) {
 			// Use a simpler log setup in tests, and suppress all logging by default to keep test output readable.
 			// Enable logging for a whole run with e.g. `COMPANION_TEST_LOG_LEVEL=debug yarn test`,
 			// or within a single test with `LogController.setLogLevel('debug')`.
 			const testLogLevel = process.env.COMPANION_TEST_LOG_LEVEL
-			this.#winston = winston.createLogger({
-				level: testLogLevel || 'silly',
-				silent: !testLogLevel,
-				transports: [
-					new winston.transports.Console({
-						format: winston.format.simple(),
-					}),
-				],
-			})
+			this.#level = (testLogLevel && parseLogLevel(testLogLevel)) || 'silly'
+			this.#levelIndex = testLogLevel ? LOG_LEVELS.indexOf(this.#level) : -1
+
+			sinks = {
+				console: getConsoleSink({ formatter: defaultTextFormatter }),
+				memory: () => {},
+				syslog: () => {},
+			}
 		} else {
-			const consoleFormat = [
-				winston.format.timestamp(),
-				winston.format.printf(({ level, message, timestamp, source }) => {
-					const color = selectColor(String(source))
-					const colorCode = '\u001B[3' + (color < 8 ? color : '8;5;' + color)
-					const prefix = `${colorCode};1m${source}\u001B[0m`
+			this.#level = 'info'
+			this.#levelIndex = LOG_LEVELS.indexOf(this.#level)
 
-					return `${timestamp} ${level} ${prefix} ${message} `
-				}),
-			]
-			if (supportsColor.stdout) consoleFormat.unshift(winston.format.colorize())
-
-			this.#winston = winston.createLogger({
-				level: 'info',
-				transports: [
-					new winston.transports.Console({
-						format: winston.format.combine(...consoleFormat),
-					}),
-					new ToMemoryTransport(
-						{
-							level: 'debug',
-							format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
-						},
-						this.#addToHistory.bind(this)
-					),
-				],
-			})
+			sinks = {
+				console: getConsoleSink({ formatter: supportsColor.stdout ? ansiColorFormatter : defaultTextFormatter }),
+				// The UI log never shows silly lines
+				memory: withFilter((record) => this.#addToHistory(record), 'debug'),
+				syslog: (record) => {
+					if (!this.#syslogSink) return
+					// Syslog has no field for the source, so include it in the message
+					const message = `${getRecordSource(record)}: ${getRecordMessage(record)}`
+					this.#syslogSink({ ...record, message: [message], rawMessage: message })
+				},
+			}
 		}
+
+		configureSync({
+			// LogTape is global, and can outlive this module (eg between test files)
+			reset: true,
+			sinks,
+			loggers: [
+				{ category: [], lowestLevel: 'trace', sinks: ['console', 'memory', 'syslog'] },
+				// Report problems with logging itself (such as being unable to reach the syslog server)
+				{
+					category: ['logtape', 'meta'],
+					lowestLevel: 'warning',
+					sinks: ['console', 'memory'],
+					parentSinks: 'override',
+				},
+			],
+		})
 
 		this.#logger = this.createLogger('Log/Controller')
 	}
@@ -182,24 +182,44 @@ class LogController {
 	/**
 	 * Get the log level
 	 */
-	getLogLevel(): string {
-		return this.#winston.level
+	getLogLevel(): LogLevel {
+		return this.#level
 	}
 
 	/**
 	 * Set the log level to output
 	 */
-	setLogLevel(level: string): void {
-		this.#winston.level = level
-		// Re-enable logging if it was suppressed (the default in tests)
-		this.#winston.silent = false
+	setLogLevel(level: LogLevel): void {
+		this.#level = level
+		// Re-enables logging if it was suppressed (the default in tests)
+		this.#levelIndex = LOG_LEVELS.indexOf(level)
+	}
+
+	#isLevelEnabled(level: LogLevel): boolean {
+		return LOG_LEVELS.indexOf(level) <= this.#levelIndex
+	}
+
+	#emit(logTape: LogTapeLogger, level: LogLevel, message: string): void {
+		logTape.emit({
+			level: LogTapeLevels[level],
+			timestamp: Date.now(),
+			// Pass the message as a single value, so that LogTape doesn't try to interpret any placeholders in it
+			message: [message],
+			rawMessage: message,
+			properties: {},
+		})
 	}
 
 	/**
 	 * Create a child logger
 	 */
 	createLogger(source: string): Logger {
-		const winstonLogger = this.#winston.child({ source })
+		const logTape = getLogger([source])
+		const leveledLogMethod =
+			(level: LogLevel): LeveledLogMethod =>
+			(message, ...args) => {
+				if (this.#isLevelEnabled(level)) this.#emit(logTape, level, util.format(message, ...args))
+			}
 
 		return {
 			source,
@@ -208,17 +228,18 @@ class LogController {
 				return this.createLogger(`${source}/${options.source}`)
 			},
 
-			log: winstonLogger.log.bind(winstonLogger),
+			log: (level, message) => {
+				if (this.#isLevelEnabled(level)) this.#emit(logTape, level, message)
+			},
 
-			error: winstonLogger.error.bind(winstonLogger),
-			warn: winstonLogger.warn.bind(winstonLogger),
-			info: winstonLogger.info.bind(winstonLogger),
-			debug: winstonLogger.debug.bind(winstonLogger),
-			verbose: winstonLogger.verbose.bind(winstonLogger),
-			silly: winstonLogger.silly.bind(winstonLogger),
+			error: leveledLogMethod('error'),
+			warn: leveledLogMethod('warn'),
+			info: leveledLogMethod('info'),
+			debug: leveledLogMethod('debug'),
+			silly: leveledLogMethod('silly'),
 
-			isDebugEnabled: () => winstonLogger.isDebugEnabled(),
-			isSillyEnabled: () => winstonLogger.isSillyEnabled(),
+			isDebugEnabled: () => this.#isLevelEnabled('debug'),
+			isSillyEnabled: () => this.#isLevelEnabled('silly'),
 		}
 	}
 
@@ -275,9 +296,20 @@ class LogController {
 	)
 
 	/**
-	 * Add a line logged to winston to the log history
+	 * Add a logged line to the log history
 	 */
-	#addToHistory(uiLine: ClientLogLine) {
+	#addToHistory(record: LogRecord) {
+		const level = CompanionLevels[record.level]
+		const source = getRecordSource(record)
+		const message = getRecordMessage(record)
+
+		const uiLine: ClientLogLine = {
+			time: record.timestamp,
+			source: stripAnsi(source),
+			level,
+			message: stripAnsi(message),
+		}
+
 		this.#pendingLines.push(uiLine)
 		this.debounceSendLines()
 
@@ -290,8 +322,8 @@ class LogController {
 			this.#addBreadcrumb({
 				category: 'source',
 				// @ts-expect-error Can't use string as index
-				level: SentrySeverity[uiLine.level] || SentrySeverity.debug,
-				message: `${uiLine.source}: ${uiLine.message}`,
+				level: SentrySeverity[level] || SentrySeverity.debug,
+				message: `${source}: ${message}`,
 			})
 		}
 	}
@@ -315,11 +347,14 @@ class LogController {
 	/**
 	 * Initialize send messages to syslog host
 	 */
-
-	addSyslogHost(options: SyslogTransportOptions): void {
+	addSyslogHost(options: SyslogSinkOptions): void {
 		try {
-			options.app_name = 'Companion'
-			this.#winston.add(new Syslog(options))
+			this.#syslogSink = getSyslogSink({
+				...options,
+				appName: 'Companion',
+				// Drop log lines rather than buffering without limit, if the server is slow or unreachable
+				maxBufferedBytes: SYSLOG_MAX_BUFFERED_BYTES,
+			})
 			this.#logger.debug(`Syslog transport initialized. Options: ${JSON.stringify(options)}`)
 		} catch (e) {
 			this.#logger.error(`Failed to initialise syslog transport ${e}`)

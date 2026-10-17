@@ -501,7 +501,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 
 			const child = this.#children.get(instanceId)
 			if (!child) {
-				this.#logger.verbose(`Lost tracking object for instance: "${baseChild.lastLabel}"`)
+				this.#logger.debug(`Lost tracking object for instance: "${baseChild.lastLabel}"`)
 				return
 			}
 
@@ -634,14 +634,14 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 			monitor.on('stdout', (data) => {
 				if (moduleInfo.versionId === 'dev') {
 					// Only show stdout for modules which are being developed
-					child.logger.verbose(`stdout: ${data.toString()}`)
+					child.logger.debug(`stdout: ${data.toString()}`)
 				}
 
 				this.#connectionDeps.debugLogLine(instanceId, Date.now(), 'Console', 'console', data.toString())
 			})
 			monitor.on('stderr', (data) => {
 				const str = data.toString()
-				child.logger.verbose(`stderr: ${str}`)
+				child.logger.debug(`stderr: ${str}`)
 				this.#connectionDeps.debugLogLine(instanceId, Date.now(), 'Console', 'error', str)
 			})
 
@@ -741,7 +741,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 			// TODO module-lib - can we get this in a cleaner way?
 			const config = this.#instanceConfigStore.getConfigOfTypeForId(child.instanceId, child.moduleType)
 			if (!config) {
-				this.#logger.verbose(`Missing config for instance "${child.lastLabel}"`)
+				this.#logger.debug(`Missing config for instance "${child.lastLabel}"`)
 				forceRestart()
 				return
 			}
