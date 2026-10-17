@@ -27,7 +27,7 @@ export function useOptionsVisibility(
 		for (const option of itemOptions ?? []) {
 			const isVisibleFn = parseIsVisibleFn(option)
 			if (isVisibleFn) isVisibleFns.set(option.id, isVisibleFn)
-			if (option.disableAutoExpression) allowedReferences.add(option.id)
+			if (option.disableAutoExpression && option.type !== 'expression') allowedReferences.add(option.id)
 		}
 
 		return [isVisibleFns, allowedReferences]

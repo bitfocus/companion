@@ -163,7 +163,7 @@ export function computeHiddenOptionFields(
 
 	const allowedReferences = new Set<string>()
 	for (const field of fields) {
-		if (field.disableAutoExpression) allowedReferences.add(field.id)
+		if (field.disableAutoExpression && field.type !== 'expression') allowedReferences.add(field.id)
 	}
 
 	const restrictedGetOptionValue = (optionId: string): JsonValue | undefined => {
