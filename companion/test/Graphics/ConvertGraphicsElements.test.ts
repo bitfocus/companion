@@ -23,6 +23,7 @@ import {
 	ButtonGraphicsDecorationType,
 	ButtonGraphicsElementUsage,
 	ButtonGraphicsShowStatusIcons,
+	type CompositeElementOptionKey,
 } from '@companion-app/shared/Model/StyleModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
@@ -2686,6 +2687,123 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			)
 
 			expect(result.elements).toHaveLength(1)
+		})
+	})
+
+	describe('composite option visibility and disableAutoExpression', () => {
+		const shapeComposite: CompositeElementDefinition = {
+			id: 'shapeComposite',
+			name: 'Shape Composite',
+			sortKey: null,
+			description: '',
+			options: [
+				{
+					id: 'shape',
+					type: 'dropdown',
+					label: 'Shape',
+					default: 'circle',
+					choices: [
+						{ id: 'circle', label: 'Circle' },
+						{ id: 'rect', label: 'Rectangle' },
+					],
+					disableAutoExpression: true,
+				},
+				{
+					id: 'radius',
+					type: 'number',
+					label: 'Radius',
+					default: 10,
+					min: 0,
+					max: 100,
+					isVisibleUi: { type: 'expression', fn: "$(options:shape) == 'circle'", data: undefined },
+				},
+				{
+					id: 'width',
+					type: 'number',
+					label: 'Width',
+					default: 20,
+					min: 0,
+					max: 100,
+					isVisibleUi: { type: 'expression', fn: "$(options:shape) == 'rect'", data: undefined },
+				},
+			],
+			elements: [
+				makeTextEl({
+					id: 'label',
+					text: expr("`${$(options:shape)}|${$(options:radius) ?? 'null'}|${$(options:width) ?? 'null'}`"),
+				}),
+			],
+		}
+
+		async function convertShapeComposite(options: Record<CompositeElementOptionKey, ExpressionOrValue<any>>) {
+			const instanceDefs = createMockInstanceDefinitions({
+				'test-connection': { shapeComposite },
+			})
+
+			const elements: SomeButtonGraphicsElement[] = [
+				{
+					id: 'comp1',
+					name: '',
+					type: 'composite',
+					rotation: val(0),
+					pinnedProperties: [],
+					usage: USAGE,
+					enabled: val(true),
+					opacity: val(100),
+					x: val(0),
+					y: val(0),
+					width: val(100),
+					height: val(100),
+					connectionId: 'test-connection',
+					elementId: 'shapeComposite',
+					...options,
+				},
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				instanceDefs,
+				createMockParser({ custom: { shape: 'rect' } }),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				null,
+				null
+			)
+
+			const groupElement = result.elements[0] as ButtonGraphicsGroupDrawElement
+			return (groupElement.children[0] as { text: string }).text
+		}
+
+		test('nulls options hidden by their isVisible expression', async () => {
+			expect(
+				await convertShapeComposite({ 'opt:shape': val('circle'), 'opt:radius': val(5), 'opt:width': val(30) })
+			).toBe('circle|5|null')
+			expect(
+				await convertShapeComposite({ 'opt:shape': val('rect'), 'opt:radius': val(5), 'opt:width': val(30) })
+			).toBe('rect|null|30')
+		})
+
+		test('does not evaluate a stored expression for a disableAutoExpression option', async () => {
+			// The raw expression text is not a valid choice, so falls back to the default
+			expect(
+				await convertShapeComposite({
+					'opt:shape': expr('$(custom:shape)'),
+					'opt:radius': val(5),
+					'opt:width': val(30),
+				})
+			).toBe('circle|5|null')
+		})
+
+		test('still evaluates expressions for other options', async () => {
+			expect(
+				await convertShapeComposite({
+					'opt:shape': val('rect'),
+					'opt:radius': val(5),
+					'opt:width': expr('10 + 5'),
+				})
+			).toBe('rect|null|15')
 		})
 	})
 

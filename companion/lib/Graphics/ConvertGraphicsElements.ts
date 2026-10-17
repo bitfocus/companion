@@ -55,6 +55,7 @@ import type {
 	InstanceDefinitions,
 } from '../Instance/Definitions.js'
 import { ParseLocationString } from '../Internal/Util.js'
+import { computeHiddenOptionFields } from '../Variables/Util.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import {
 	createParseElementsContext,
@@ -467,15 +468,49 @@ export function makeReferencePlaceholder(
 	return [boxEl, textEl]
 }
 
+/**
+ * Make the composite element's own values for its `disableAutoExpression` options plain values, so that one stored
+ * as an expression (eg from a preset or import) is never evaluated, matching how entity options are parsed.
+ * Feedback overrides are unaffected.
+ */
+function stripDisallowedCompositeExpressions(
+	element: ButtonGraphicsCompositeElement,
+	elementDefinition: CompositeElementDefinition
+): ButtonGraphicsCompositeElement {
+	let result: ButtonGraphicsCompositeElement | null = null
+
+	for (const option of elementDefinition.options) {
+		// An expression field is always parsed as an expression
+		if (!option.disableAutoExpression || option.type === 'expression') continue
+
+		const optionKey: CompositeElementOptionKey = `opt:${option.id}`
+		const rawValue = element[optionKey]
+		if (!rawValue?.isExpression) continue
+
+		result ??= { ...element }
+		result[optionKey] = { isExpression: false, value: rawValue.value }
+	}
+
+	return result ?? element
+}
+
 function parseCompositeElementChildOptions(
 	helper: ElementExpressionHelper<ButtonGraphicsCompositeElement>,
 	elementDefinition: CompositeElementDefinition,
 	element: ButtonGraphicsCompositeElement
 ): VariableValues {
+	const hiddenOptions = computeHiddenOptionFields(elementDefinition.options, (id) => element[`opt:${id}`]?.value)
+
 	// Inject new values
 	const propOverrides: VariableValues = {}
 
 	for (const option of elementDefinition.options) {
+		// Hidden options are not evaluated, and are nulled so the child elements can't use a stale value
+		if (hiddenOptions.has(option.id)) {
+			propOverrides[`options:${option.id}`] = null
+			continue
+		}
+
 		const optionKey: CompositeElementOptionKey = `opt:${option.id}`
 		let overrideValue: VariableValue
 		switch (option.type) {
@@ -577,6 +612,9 @@ async function convertCompositeElementForDrawing(
 	element: ButtonGraphicsCompositeElement,
 	idPrefix: string
 ): Promise<ElementConversionCacheEntry> {
+	const childElement = context.resolveCompositeElement(element.connectionId, element.elementId)
+	if (childElement) element = stripDisallowedCompositeExpressions(element, childElement)
+
 	const { helper, references } = context.createHelper(element)
 
 	const compositeElementId: CompositeElementIdString = `${element.connectionId}:${element.elementId}`
@@ -586,8 +624,6 @@ async function convertCompositeElementForDrawing(
 
 	// Perform enabled check first, to avoid executing expressions when not needed
 	const enabled = helper.getBoolean('enabled', true)
-
-	const childElement = context.resolveCompositeElement(element.connectionId, element.elementId)
 	const placeholderText = !childElement
 		? 'Missing\nElement'
 		: context.compositeAncestors.has(compositeElementId)
