@@ -143,12 +143,26 @@ export function computeHiddenEntityOptionFields(
 	definition: ClientEntityDefinition,
 	options: ExpressionableOptionsObject
 ): Set<string> {
+	if (!definition.optionsSupportExpressions) return new Set()
+
+	return computeHiddenOptionFields(definition.options, (optionId) => options[optionId]?.value)
+}
+
+/**
+ * Determine which of a list of option fields are currently hidden by their `isVisible` expression.
+ *
+ * An `isVisible` expression may only reference sibling options that cannot themselves be expressions
+ * (`disableAutoExpression`); `getOptionValue` is only called for those, and should return their plain value.
+ * Evaluation fails open (treated as visible) on any error, and the function form is never run on the backend.
+ */
+export function computeHiddenOptionFields(
+	fields: ReadonlyArray<SomeCompanionInputField>,
+	getOptionValue: (optionId: string) => JsonValue | undefined
+): Set<string> {
 	const hiddenFields = new Set<string>()
 
-	if (!definition.optionsSupportExpressions) return hiddenFields
-
 	const allowedReferences = new Set<string>()
-	for (const field of definition.options) {
+	for (const field of fields) {
 		if (field.disableAutoExpression) allowedReferences.add(field.id)
 	}
 
@@ -156,14 +170,14 @@ export function computeHiddenEntityOptionFields(
 		if (!allowedReferences.has(optionId)) {
 			throw new Error(`Access to option "${optionId}" not allowed, as it is either unknown or can be an expression.`)
 		}
-		return options[optionId]?.value
+		return getOptionValue(optionId)
 	}
 
-	for (const field of definition.options) {
+	for (const field of fields) {
 		if (!field.isVisibleUi) continue
 
 		// The function form is a stringified module function and must never run on the backend;
-		// leave those fields visible (validated as before).
+		// leave those fields visible.
 		const compiled = getCompiledIsVisibleExpressionFn(field.isVisibleUi)
 		if (!compiled) continue
 

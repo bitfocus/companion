@@ -43,13 +43,10 @@ export function useOptionsVisibility(
 				if (entry && typeof entry === 'function') {
 					if (optionsSupportExpressions) {
 						// We only support the expression syntax functions here
-						const restrictedGetOptionValue = (optionId: string): JsonValue | undefined => {
-							if (!allowedReferences.has(optionId))
-								throw new Error(
-									`Access to option "${optionId}" not allowed, as it is either unknown or can be an expression.`
-								)
-							return optionValues[optionId]?.value
-						}
+						const restrictedGetOptionValue = createRestrictedGetOptionValue(
+							allowedReferences,
+							(optionId) => optionValues[optionId]?.value
+						)
 						visibility.set(id, entry({}, restrictedGetOptionValue))
 					} else {
 						// Fallback to simpler behaviour
@@ -64,6 +61,21 @@ export function useOptionsVisibility(
 
 		return visibility
 	}, [isVisibleFns, optionValues, allowedReferences, optionsSupportExpressions])
+}
+
+/**
+ * Wrap an option value getter so that an `isVisible` expression can only read the options in `allowedReferences`
+ * (those which can't be expressions), throwing for any other
+ */
+export function createRestrictedGetOptionValue(
+	allowedReferences: ReadonlySet<string>,
+	getOptionValue: (id: string) => JsonValue | undefined
+): (id: string) => JsonValue | undefined {
+	return (optionId) => {
+		if (!allowedReferences.has(optionId))
+			throw new Error(`Access to option "${optionId}" not allowed, as it is either unknown or can be an expression.`)
+		return getOptionValue(optionId)
+	}
 }
 
 export function usePlainOptionsVisibility(
