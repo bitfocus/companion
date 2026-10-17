@@ -2844,14 +2844,14 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		})
 
 		test('does not evaluate a stored expression for a disableAutoExpression option', async () => {
-			// The raw expression text is not a valid choice, so falls back to the default
+			// The raw expression text is not a valid choice, so the dropdown falls back to the default, and hides both
 			expect(
 				await convertShapeComposite({
 					'opt:shape': expr('$(custom:shape)'),
 					'opt:radius': val(5),
 					'opt:width': val(30),
 				})
-			).toBe('circle|5|null')
+			).toBe('circle|null|null')
 		})
 
 		test('still evaluates expressions for other options', async () => {
