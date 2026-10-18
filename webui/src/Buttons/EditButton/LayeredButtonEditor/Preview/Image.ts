@@ -1,5 +1,7 @@
+import { selectFrameIndex, snapToRenderClock } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import { ImageBase, ImagePoolBase, type TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
 import type { MinimalLogger } from '@companion-app/shared/Logger.js'
+import { decodeAnimatedImage, type DecodedAnimation } from './AnimatedImageDecoder.js'
 import { LastUsedCache } from './DrawStyleParser.js'
 
 const logger: MinimalLogger = {
@@ -32,11 +34,24 @@ class GraphicsImagePool extends ImagePoolBase<GraphicsImage> {
 	}
 }
 
-export class GraphicsImage extends ImageBase<HTMLImageElement | HTMLCanvasElement> {
+type ParsedImage = { type: 'static'; image: HTMLImageElement } | ({ type: 'animated' } & DecodedAnimation)
+
+type DrawableImage = HTMLImageElement | HTMLCanvasElement | ImageBitmap
+
+export class GraphicsImage extends ImageBase<DrawableImage> {
 	readonly #canvas: HTMLCanvasElement
 	readonly #context2d: CanvasRenderingContext2D
 
-	readonly #parseCache = new LastUsedCache<HTMLImageElement>()
+	readonly #parseCache = new LastUsedCache<ParsedImage>()
+
+	/** Whether an animated image has been drawn since the last `drawComplete` */
+	#drawingAnimation = false
+	#lastDrawWasAnimated = false
+
+	/** Whether the last completed draw included an animated image, so it needs drawing again on the next tick */
+	get lastDrawWasAnimated(): boolean {
+		return this.#lastDrawWasAnimated
+	}
 
 	protected get canvasImage(): HTMLCanvasElement {
 		return this.#canvas
@@ -77,7 +92,7 @@ export class GraphicsImage extends ImageBase<HTMLImageElement | HTMLCanvasElemen
 	}
 
 	protected drawImage(
-		image: HTMLImageElement | HTMLCanvasElement,
+		image: DrawableImage,
 		sx: number,
 		sy: number,
 		sw: number,
@@ -89,7 +104,7 @@ export class GraphicsImage extends ImageBase<HTMLImageElement | HTMLCanvasElemen
 	): void {
 		this.#context2d.drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh)
 	}
-	protected async loadBase64Image(base64Image: string): Promise<HTMLImageElement> {
+	protected async loadBase64Image(base64Image: string): Promise<DrawableImage> {
 		base64Image = base64Image.trim()
 
 		// Ensure the base64 image is a data URL, from older companion it may not be
@@ -97,29 +112,54 @@ export class GraphicsImage extends ImageBase<HTMLImageElement | HTMLCanvasElemen
 			base64Image = 'data:image/png;base64,' + base64Image
 		}
 
-		const cached = this.#parseCache.get(base64Image)
-		if (cached) return cached
+		let parsed = this.#parseCache.get(base64Image)
+		if (!parsed) {
+			parsed = await this.#parseImage(base64Image)
+			if (parsed.type === 'animated') {
+				const frames = parsed.frames
+				this.#parseCache.set(base64Image, parsed, () => {
+					for (const frame of frames) frame.close()
+				})
+			} else {
+				this.#parseCache.set(base64Image, parsed)
+			}
+		}
 
-		return new Promise<HTMLImageElement>((resolve, reject) => {
+		if (parsed.type === 'static') return parsed.image
+
+		// Show the same frame as the button does at this moment
+		this.#drawingAnimation = true
+		return parsed.frames[selectFrameIndex(parsed.frameStartMs, parsed.durationMs, snapToRenderClock(Date.now()))]
+	}
+
+	async #parseImage(dataUrl: string): Promise<ParsedImage> {
+		try {
+			const animation = await decodeAnimatedImage(dataUrl)
+			if (animation) return { type: 'animated', ...animation }
+		} catch (e) {
+			logger.warn('Failed to decode animated image, showing it as a still', e)
+		}
+
+		return new Promise<ParsedImage>((resolve, reject) => {
 			const image = new Image()
 
-			image.onload = () => {
-				this.#parseCache.set(base64Image, image)
-				resolve(image)
-			}
+			image.onload = () => resolve({ type: 'static', image })
 			image.onerror = (e) => {
 				reject(new Error(typeof e === 'string' ? e : 'Failed to load image'))
 			}
 
-			image.src = base64Image
+			image.src = dataUrl
 		})
 	}
-	protected loadPixelBuffer(_data: Uint8Array, _width: number, _height: number): HTMLImageElement | null {
+	protected loadPixelBuffer(_data: Uint8Array, _width: number, _height: number): DrawableImage | null {
 		// TODO - implement this
 		return null
 	}
 
 	public drawComplete(): void {
 		this.#parseCache.disposeUnused()
+
+		this.#lastDrawWasAnimated = this.#drawingAnimation
+		this.#drawingAnimation = false
 	}
 }

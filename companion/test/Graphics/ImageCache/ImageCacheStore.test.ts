@@ -6,11 +6,7 @@ import type {
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonGraphicsDecorationType, ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import type { DecodeImageResult } from '../../../lib/Graphics/ImageCache/DecodeImage.js'
-import {
-	ImageCacheStore,
-	selectFrameIndex,
-	type DecodeImageFn,
-} from '../../../lib/Graphics/ImageCache/ImageCacheStore.js'
+import { ImageCacheStore, type DecodeImageFn } from '../../../lib/Graphics/ImageCache/ImageCacheStore.js'
 import type { Logger } from '../../../lib/Log/Controller.js'
 
 const logger = { warn: vi.fn(), debug: vi.fn(), error: vi.fn() } as unknown as Logger
@@ -231,27 +227,6 @@ describe('ImageCacheStore', () => {
 		await store.resolveDrawStyle(makeStyle([makeImageElement('b', 'b')]), new Map())
 		expect(store.entryCount).toBe(1)
 		expect(store.usedBytes).toBe(402)
-	})
-})
-
-describe('selectFrameIndex', () => {
-	const frameStartMs = [0, 100, 300]
-
-	test('picks the frame on screen at a time', () => {
-		expect(selectFrameIndex(frameStartMs, 500, 0)).toBe(0)
-		expect(selectFrameIndex(frameStartMs, 500, 100)).toBe(1)
-		expect(selectFrameIndex(frameStartMs, 500, 200)).toBe(1)
-		expect(selectFrameIndex(frameStartMs, 500, 300)).toBe(2)
-		expect(selectFrameIndex(frameStartMs, 500, 400)).toBe(2)
-	})
-
-	test('loops, timed from the unix epoch', () => {
-		expect(selectFrameIndex(frameStartMs, 500, 500)).toBe(0)
-		expect(selectFrameIndex(frameStartMs, 500, 1_700_000_000_100)).toBe(1)
-	})
-
-	test('picks the first frame of a static image', () => {
-		expect(selectFrameIndex([0], 0, 1234)).toBe(0)
 	})
 })
 

@@ -20,6 +20,7 @@ import type Express from 'express'
 import QuickLRU from 'quick-lru'
 import workerPool from 'workerpool'
 import { isLocationOnGrid, ParseControlId, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
+import { snapToRenderClock } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import {
 	resolveButtonStyleProperties,
 	type ResolveButtonStylePropertiesConfig,
@@ -32,7 +33,7 @@ import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ControlButtonPreset } from '../Controls/ControlTypes/Button/Preset.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
-import { RENDER_CLOCK_INTERVAL_MS, type RenderClock } from '../Controls/RenderClock.js'
+import type { RenderClock } from '../Controls/RenderClock.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { MetricsRegistry } from '../Data/Metrics.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -72,7 +73,7 @@ const IMAGE_CACHE_MAX_BYTES = 128 * 1024 * 1024
 
 // Renders of animations with a loop up to this long are kept in the render cache, so that they are reused on each
 // loop. Longer animations would push everything else out of the cache, so they are drawn again each time
-const RENDER_CACHE_MAX_ANIMATION_DURATION_MS = 1000
+const RENDER_CACHE_MAX_ANIMATION_DURATION_MS = 5000
 
 const NO_ANIMATION_FRAMES: AnimationFrames = { frameIndices: new Map(), maxDurationMs: 0 }
 
@@ -908,9 +909,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * Choose the frame of each animated image to draw now
 	 */
 	async #selectAnimationFrames(elements: SomeButtonGraphicsDrawElement[]): Promise<AnimationFrames> {
-		// Snap to the render clock, so that every button drawn in the same tick shows the same moment
-		const timeMs = Math.round(Date.now() / RENDER_CLOCK_INTERVAL_MS) * RENDER_CLOCK_INTERVAL_MS
-		return this.#imageCache.selectAnimationFrames(elements, timeMs)
+		return this.#imageCache.selectAnimationFrames(elements, snapToRenderClock(Date.now()))
 	}
 
 	#generateImageResult(

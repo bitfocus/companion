@@ -1,11 +1,8 @@
 import * as imageRs from '@julusian/image-rs'
 import { Canvas } from '@napi-rs/canvas'
+import { MAX_ANIMATION_DURATION_MS, RENDER_CLOCK_INTERVAL_MS } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import { trimBase64ImageToValid } from '@companion-app/shared/Graphics/ImageBase.js'
-import { RENDER_CLOCK_INTERVAL_MS } from '../../Controls/RenderClock.js'
 import { loadBase64Image } from '../Image.js'
-
-/** Animations longer than this are cut short, to bound the memory they use */
-const MAX_ANIMATION_DURATION_MS = 30_000
 
 /**
  * The result of decoding an image source string for the image cache

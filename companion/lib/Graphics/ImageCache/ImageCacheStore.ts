@@ -1,3 +1,4 @@
+import { selectFrameIndex } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import type { DecodedRasterImage, RendererDrawStyle } from '@companion-app/shared/Model/Render.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { Logger } from '../../Log/Controller.js'
@@ -11,24 +12,6 @@ export interface AnimationFrames {
 	readonly frameIndices: ReadonlyMap<string, number>
 	/** The longest loop of any of the animations, in ms. 0 when there are none */
 	readonly maxDurationMs: number
-}
-
-/**
- * Choose the frame of an animation to show at a point in time.
- * Every animation is timed from the unix epoch, so that all copies of an animation stay in sync
- * @param frameStartMs When each frame starts being shown, in ms from the start of the animation
- * @param durationMs The length of one loop of the animation
- * @param timeMs The time to show
- */
-export function selectFrameIndex(frameStartMs: readonly number[], durationMs: number, timeMs: number): number {
-	if (durationMs <= 0) return 0
-
-	const position = timeMs % durationMs
-	let frameIndex = 0
-	for (let i = 1; i < frameStartMs.length && frameStartMs[i] <= position; i++) {
-		frameIndex = i
-	}
-	return frameIndex
 }
 
 interface CacheEntry {

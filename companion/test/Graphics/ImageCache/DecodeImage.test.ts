@@ -1,5 +1,6 @@
 import { Canvas } from '@napi-rs/canvas'
 import { describe, expect, test } from 'vitest'
+import { AnimationFrameSampler, MAX_ANIMATION_DURATION_MS } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import { decodeImage, type DecodeImageResult } from '../../../lib/Graphics/ImageCache/DecodeImage.js'
 import { makeAnimatedGif, makeAnimatedPng, toDataUrl, type FixtureFrame } from './AnimatedImageFixtures.js'
 
@@ -172,6 +173,38 @@ describe('decodeImage animations', () => {
 			[255, 0, 0, 255],
 			[0, 0, 255, 255],
 		])
+	})
+
+	// The webui decodes animations in the browser, resampling them with the shared AnimationFrameSampler, so that must
+	// time them the same as image-rs does here
+	test.each([
+		[[50, 120, 230]],
+		[[50, 30, 120]],
+		[[40, 40, 40, 40, 40, 40, 40, 40, 40, 40]],
+		[[0, 10, 20, 330]],
+		[[150]],
+	])('times frames the same as the shared sampler, for delays %j', async (delaysMs) => {
+		const colors: [number, number, number][] = [RED, GREEN, BLUE]
+		const gif = makeAnimatedGif(
+			2,
+			2,
+			delaysMs.map((delayMs, i) => ({ color: colors[i % 3], delayMs }))
+		)
+		const result = await decodeImage(toDataUrl('image/gif', gif), MAX_BYTES)
+
+		const sampler = new AnimationFrameSampler(MAX_ANIMATION_DURATION_MS)
+		const frameStartMs: number[] = []
+		for (const delayMs of delaysMs) {
+			const sample = sampler.next(delayMs)
+			if (sample.type === 'keep') frameStartMs.push(sample.startMs)
+		}
+
+		if (frameStartMs.length > 1) {
+			expect(result).toMatchObject({ frameStartMs, durationMs: sampler.durationMs })
+		} else {
+			// A single frame is decoded as a static image
+			expect(result).toMatchObject({ frameCount: 1 })
+		}
 	})
 
 	test('decodes every frame of an apng', async () => {
