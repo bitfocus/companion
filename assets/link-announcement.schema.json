@@ -1,0 +1,22 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"type": "object",
+	"properties": {
+		"name": { "type": "string", "maxLength": 200, "description": "Human readable name of the installation" },
+		"companionVersion": { "type": "string", "description": "Companion application version" },
+		"protocolVersions": {
+			"minItems": 1,
+			"type": "array",
+			"items": { "type": "string" },
+			"description": "The Link protocol versions (semver) this installation speaks, one per major version. Two installations use the highest major version they both speak"
+		},
+		"announceIntervalMs": {
+			"type": "integer",
+			"exclusiveMinimum": 0,
+			"maximum": 9007199254740991,
+			"description": "How often this announcement is repeated. Peers consider it gone after missing a few"
+		}
+	},
+	"required": ["name", "companionVersion", "protocolVersions", "announceIntervalMs"],
+	"description": "Periodic announcement of an installation, on the discovery topic of its id. Published retained, an empty payload means it went offline. Readable by anyone who can see the discovery topics, including installations that are not allowed to use this one, so it carries only what is needed to find it: add anything else to a message that is only sent to peers allowed it"
+}

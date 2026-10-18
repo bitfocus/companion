@@ -1,0 +1,380 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"oneOf": [
+		{
+			"type": "object",
+			"properties": {
+				"type": { "type": "string", "const": "subscribe" },
+				"payload": {
+					"type": "object",
+					"properties": {
+						"buttons": {
+							"maxItems": 1000,
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"button": {
+										"oneOf": [
+											{
+												"type": "object",
+												"properties": {
+													"type": { "type": "string", "const": "location" },
+													"page": {
+														"type": "integer",
+														"minimum": 1,
+														"maximum": 9007199254740991,
+														"description": "Page number"
+													},
+													"row": {
+														"type": "integer",
+														"minimum": -9007199254740991,
+														"maximum": 9007199254740991,
+														"description": "Row number"
+													},
+													"column": {
+														"type": "integer",
+														"minimum": -9007199254740991,
+														"maximum": 9007199254740991,
+														"description": "Column number"
+													}
+												},
+												"required": ["type", "page", "row", "column"],
+												"description": "A button by its position in the grid"
+											}
+										],
+										"description": "Identifies a button on a peer. More ways of referring to a button may be added, as new `type`s"
+									},
+									"width": {
+										"type": "integer",
+										"minimum": 8,
+										"maximum": 1024,
+										"description": "Bitmap width in pixels"
+									},
+									"height": {
+										"type": "integer",
+										"minimum": 8,
+										"maximum": 1024,
+										"description": "Bitmap height in pixels"
+									}
+								},
+								"required": ["button", "width", "height"],
+								"description": "A button, and the size the subscriber wants its bitmap rendered at"
+							}
+						},
+						"sendCurrent": {
+							"type": "boolean",
+							"description": "Whether the current state of the buttons should be sent straight away. False for renewals, to avoid resending unchanged images"
+						}
+					},
+					"required": ["buttons", "sendCurrent"],
+					"description": "Ask a peer to start (or keep) publishing updates for some buttons. Subscriptions are leases: they must be renewed by repeating this message before LINK_SUBSCRIPTION_LEASE_MS elapses"
+				}
+			},
+			"required": ["type", "payload"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"type": { "type": "string", "const": "unsubscribe" },
+				"payload": {
+					"type": "object",
+					"properties": {
+						"buttons": {
+							"maxItems": 1000,
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"button": {
+										"oneOf": [
+											{
+												"type": "object",
+												"properties": {
+													"type": { "type": "string", "const": "location" },
+													"page": {
+														"type": "integer",
+														"minimum": 1,
+														"maximum": 9007199254740991,
+														"description": "Page number"
+													},
+													"row": {
+														"type": "integer",
+														"minimum": -9007199254740991,
+														"maximum": 9007199254740991,
+														"description": "Row number"
+													},
+													"column": {
+														"type": "integer",
+														"minimum": -9007199254740991,
+														"maximum": 9007199254740991,
+														"description": "Column number"
+													}
+												},
+												"required": ["type", "page", "row", "column"],
+												"description": "A button by its position in the grid"
+											}
+										],
+										"description": "Identifies a button on a peer. More ways of referring to a button may be added, as new `type`s"
+									},
+									"width": {
+										"type": "integer",
+										"minimum": 8,
+										"maximum": 1024,
+										"description": "Bitmap width in pixels"
+									},
+									"height": {
+										"type": "integer",
+										"minimum": 8,
+										"maximum": 1024,
+										"description": "Bitmap height in pixels"
+									}
+								},
+								"required": ["button", "width", "height"],
+								"description": "A button, and the size the subscriber wants its bitmap rendered at"
+							}
+						}
+					},
+					"required": ["buttons"],
+					"description": "Release some subscriptions before their lease expires"
+				}
+			},
+			"required": ["type", "payload"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"type": { "type": "string", "const": "button.update" },
+				"payload": {
+					"type": "object",
+					"properties": {
+						"button": {
+							"oneOf": [
+								{
+									"type": "object",
+									"properties": {
+										"type": { "type": "string", "const": "location" },
+										"page": {
+											"type": "integer",
+											"minimum": 1,
+											"maximum": 9007199254740991,
+											"description": "Page number"
+										},
+										"row": {
+											"type": "integer",
+											"minimum": -9007199254740991,
+											"maximum": 9007199254740991,
+											"description": "Row number"
+										},
+										"column": {
+											"type": "integer",
+											"minimum": -9007199254740991,
+											"maximum": 9007199254740991,
+											"description": "Column number"
+										}
+									},
+									"required": ["type", "page", "row", "column"],
+									"description": "A button by its position in the grid"
+								}
+							],
+							"description": "Identifies a button on a peer. More ways of referring to a button may be added, as new `type`s"
+						},
+						"width": { "type": "integer", "minimum": 8, "maximum": 1024, "description": "Bitmap width in pixels" },
+						"height": { "type": "integer", "minimum": 8, "maximum": 1024, "description": "Bitmap height in pixels" },
+						"dataUrl": {
+							"description": "PNG data url of the rendered button, or null if there is nothing to show",
+							"type": ["string", "null"]
+						},
+						"pressed": { "type": "boolean", "description": "Whether the button is currently pressed" },
+						"sourceChain": {
+							"maxItems": 16,
+							"type": "array",
+							"items": {
+								"type": "string",
+								"minLength": 1,
+								"maxLength": 64,
+								"description": "Unique id of a Companion installation"
+							},
+							"description": "Ids of the installations this image has passed through, used to detect loops"
+						}
+					},
+					"required": ["button", "width", "height", "dataUrl", "pressed", "sourceChain"],
+					"description": "The current rendered state of a subscribed button"
+				}
+			},
+			"required": ["type", "payload"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"type": { "type": "string", "const": "button.press" },
+				"payload": {
+					"type": "object",
+					"properties": {
+						"button": {
+							"oneOf": [
+								{
+									"type": "object",
+									"properties": {
+										"type": { "type": "string", "const": "location" },
+										"page": {
+											"type": "integer",
+											"minimum": 1,
+											"maximum": 9007199254740991,
+											"description": "Page number"
+										},
+										"row": {
+											"type": "integer",
+											"minimum": -9007199254740991,
+											"maximum": 9007199254740991,
+											"description": "Row number"
+										},
+										"column": {
+											"type": "integer",
+											"minimum": -9007199254740991,
+											"maximum": 9007199254740991,
+											"description": "Column number"
+										}
+									},
+									"required": ["type", "page", "row", "column"],
+									"description": "A button by its position in the grid"
+								}
+							],
+							"description": "Identifies a button on a peer. More ways of referring to a button may be added, as new `type`s"
+						},
+						"pressed": { "type": "boolean" },
+						"surfaceId": {
+							"type": "string",
+							"maxLength": 512,
+							"description": "Id of the originating surface on the source, so that held buttons are tracked per surface"
+						}
+					},
+					"required": ["button", "pressed", "surfaceId"],
+					"description": "Press or release a button on a peer"
+				}
+			},
+			"required": ["type", "payload"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"type": { "type": "string", "const": "button.rotate" },
+				"payload": {
+					"type": "object",
+					"properties": {
+						"button": {
+							"oneOf": [
+								{
+									"type": "object",
+									"properties": {
+										"type": { "type": "string", "const": "location" },
+										"page": {
+											"type": "integer",
+											"minimum": 1,
+											"maximum": 9007199254740991,
+											"description": "Page number"
+										},
+										"row": {
+											"type": "integer",
+											"minimum": -9007199254740991,
+											"maximum": 9007199254740991,
+											"description": "Row number"
+										},
+										"column": {
+											"type": "integer",
+											"minimum": -9007199254740991,
+											"maximum": 9007199254740991,
+											"description": "Column number"
+										}
+									},
+									"required": ["type", "page", "row", "column"],
+									"description": "A button by its position in the grid"
+								}
+							],
+							"description": "Identifies a button on a peer. More ways of referring to a button may be added, as new `type`s"
+						},
+						"delta": {
+							"type": "integer",
+							"minimum": -9007199254740991,
+							"maximum": 9007199254740991,
+							"description": "Signed number of rotation steps, positive is clockwise"
+						},
+						"surfaceId": {
+							"type": "string",
+							"maxLength": 512,
+							"description": "Id of the originating surface on the source, so that held buttons are tracked per surface"
+						}
+					},
+					"required": ["button", "delta", "surfaceId"],
+					"description": "Rotate an encoder button on a peer"
+				}
+			},
+			"required": ["type", "payload"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"type": { "type": "string", "const": "access" },
+				"payload": {
+					"type": "object",
+					"properties": {
+						"permissions": {
+							"type": "object",
+							"properties": {
+								"buttons": {
+									"type": "boolean",
+									"description": "Whether the recipient may subscribe to, press and rotate buttons"
+								}
+							},
+							"required": ["buttons"],
+							"description": "What the recipient may use. Kinds of things added later are optional, and default to false"
+						}
+					},
+					"required": ["permissions"],
+					"description": "Tells a peer what it may use of the sender, over the transport this arrives on. Sent when the peer becomes reachable, and whenever it changes. Requests for anything not granted are ignored"
+				}
+			},
+			"required": ["type", "payload"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"type": { "type": "string", "const": "ping" },
+				"payload": {
+					"type": "object",
+					"properties": {
+						"nonce": {
+							"type": "string",
+							"minLength": 1,
+							"maxLength": 64,
+							"description": "Echoed in the pong, to match it to this ping"
+						}
+					},
+					"required": ["nonce"],
+					"description": "Asks the recipient to reply with a pong, over the transport this arrived on, to measure the round trip time. Needs no permission"
+				}
+			},
+			"required": ["type", "payload"]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"type": { "type": "string", "const": "pong" },
+				"payload": {
+					"type": "object",
+					"properties": {
+						"nonce": {
+							"type": "string",
+							"minLength": 1,
+							"maxLength": 64,
+							"description": "The nonce of the ping this answers"
+						}
+					},
+					"required": ["nonce"],
+					"description": "The reply to a ping"
+				}
+			},
+			"required": ["type", "payload"]
+		}
+	]
+}
