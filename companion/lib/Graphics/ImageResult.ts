@@ -126,15 +126,23 @@ export class ImageResult {
 	 */
 	readonly cacheKey: string | undefined
 
+	/**
+	 * The length of the longest animation loop on this render, in ms, or 0 if it shows no animation.
+	 * A long loop is drawn differently every tick, so its renders are rarely seen again
+	 */
+	readonly animationLoopMs: number
+
 	constructor(
 		cacheKey: string | undefined,
 		style: ImageResultProcessedStyle | null,
+		animationLoopMs: number,
 		drawNative: ImageResultNativeDrawFn,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> = new Set()
 	) {
 		this.cacheKey = cacheKey
 		this.style = style
+		this.animationLoopMs = animationLoopMs
 		this.#drawNative = drawNative
 		this.drawElements = drawElements
 		this.referencedLocations = referencedLocations

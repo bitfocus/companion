@@ -94,6 +94,13 @@ export interface SatelliteStyleSocket {
 	sendMessage(messageName: string, status: null, deviceId: string | null, args: SatelliteMessageArgs): void
 }
 
+/**
+ * Animations with a loop longer than this aren't cached by satellite clients. Each frame of a long loop is seen again
+ * only after many others, so unless every frame fits in the client's cache, it gets evicted just before it is needed
+ * again. That would make every frame cost an id and an eviction on top of the bitmap, which is worse than no caching
+ */
+export const SATELLITE_CACHE_MAX_ANIMATION_LOOP_MS = 10_000
+
 /** Most bitmap ids to list in one BITMAP-EVICT, to keep the line well within the length limit */
 const MAX_EVICT_IDS_PER_MESSAGE = 1000
 
@@ -128,7 +135,9 @@ export async function sendSatelliteStyleMessage(
 ): Promise<void> {
 	const bitmapSize = style.bitmap
 	const bitmapId =
-		bitmapSize && socket.bitmapCache ? computeBitmapId(image, bitmapSize.w, bitmapSize.h, rotation, bitmapFormat) : null
+		bitmapSize && socket.bitmapCache && image.animationLoopMs <= SATELLITE_CACHE_MAX_ANIMATION_LOOP_MS
+			? computeBitmapId(image, bitmapSize.w, bitmapSize.h, rotation, bitmapFormat)
+			: null
 	if (!bitmapSize || !bitmapId) {
 		// Nothing to cache, so send it as it always has been
 		const styleArgs = await buildSatelliteStyleArgs(image, style, rotation, bitmapFormat)

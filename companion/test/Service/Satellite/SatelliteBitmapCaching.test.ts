@@ -8,6 +8,7 @@ import { SatelliteSocketWrapper, ServiceSatelliteApi } from '../../../lib/Servic
 import { SatelliteBitmapCache } from '../../../lib/Service/Satellite/SatelliteBitmapCache.js'
 import {
 	buildSatelliteStyleArgs,
+	SATELLITE_CACHE_MAX_ANIMATION_LOOP_MS,
 	sendSatelliteStyleMessage,
 } from '../../../lib/Service/Satellite/SatelliteRenderUtil.js'
 import type { ServiceApi } from '../../../lib/Service/ServiceApi.js'
@@ -31,7 +32,7 @@ function parseMessage(line: string) {
 
 function makeImage(cacheKey: string | undefined, size = 8) {
 	const drawNative = vi.fn(async () => new Uint8Array(size * size * 3).fill(cacheKey ? cacheKey.length : 1))
-	return { image: new ImageResult(cacheKey, { type: 'button' }, drawNative), drawNative }
+	return { image: new ImageResult(cacheKey, { type: 'button' }, 0, drawNative), drawNative }
 }
 
 const SMALL_STYLE = { bitmap: { w: 8, h: 8 } }
@@ -98,6 +99,28 @@ describe('sendSatelliteStyleMessage', () => {
 		expect(socket.bitmapCache.entryCount).toBe(0)
 	})
 
+	test('sends frames of a long animation without caching them', async () => {
+		const socket = new TestSocketWrapper()
+		socket.bitmapCache = new SatelliteBitmapCache(10 * SMALL_COST)
+		const drawNative = async () => new Uint8Array(8 * 8 * 3)
+		const longLoop = new ImageResult(
+			'frame-a',
+			{ type: 'button' },
+			SATELLITE_CACHE_MAX_ANIMATION_LOOP_MS + 100,
+			drawNative
+		)
+		const shortLoop = new ImageResult('frame-b', { type: 'button' }, SATELLITE_CACHE_MAX_ANIMATION_LOOP_MS, drawNative)
+
+		await sendSatelliteStyleMessage(socket, 'KEY-STATE', 'dev', {}, longLoop, SMALL_STYLE, null, 'rgb')
+		await sendSatelliteStyleMessage(socket, 'KEY-STATE', 'dev', {}, shortLoop, SMALL_STYLE, null, 'rgb')
+
+		const [long, short] = socket.writtenData.map((line) => parseMessage(line).params)
+		expect(long.BITMAP).toBeTruthy()
+		expect(long.BITMAP_ID).toBeUndefined()
+		expect(short.BITMAP_ID).toBeTruthy()
+		expect(socket.bitmapCache.entryCount).toBe(1)
+	})
+
 	test('sends a bitmap larger than the whole budget without storing it', async () => {
 		const socket = new TestSocketWrapper()
 		socket.bitmapCache = new SatelliteBitmapCache(SMALL_COST - 1)
@@ -112,7 +135,7 @@ describe('sendSatelliteStyleMessage', () => {
 	test('sends the bitmap without an id if caching is turned off while drawing', async () => {
 		const socket = new TestSocketWrapper()
 		socket.bitmapCache = new SatelliteBitmapCache(10 * SMALL_COST)
-		const image = new ImageResult('frame-a', { type: 'button' }, async () => {
+		const image = new ImageResult('frame-a', { type: 'button' }, 0, async () => {
 			socket.bitmapCache = null
 			return new Uint8Array(8 * 8 * 3)
 		})
@@ -225,7 +248,7 @@ describe('bitmap caching consistency', () => {
 
 		// Frames of an animation, each drawn after a random delay so that sends overlap with each other
 		const frames = Array.from({ length: 12 }, (_, i) => {
-			return new ImageResult(`frame-${i}`, { type: 'button' }, async () => {
+			return new ImageResult(`frame-${i}`, { type: 'button' }, 0, async () => {
 				for (let n = Math.floor(random() * 4); n > 0; n--) await new Promise((resolve) => setImmediate(resolve))
 				return new Uint8Array(8 * 8 * 3).fill(i)
 			})
