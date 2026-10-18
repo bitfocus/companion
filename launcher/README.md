@@ -4,12 +4,20 @@ This is the small 'launcher' window that shows when you run the desktop version 
 
 ### Development
 
-The launcher's windows are built from the `launcher-ui` package. Run its dev server alongside the launcher:
+The launcher's windows are built from the `launcher-ui` package. Run its dev server alongside the launcher, each in
+its own terminal, as the dev server keeps running:
 
-```bash
-yarn workspace @companion-app/launcher-ui dev
-yarn workspace @companion-app/launcher dev
-```
+1. In one terminal, start the `launcher-ui` dev server:
+
+   ```bash
+   yarn workspace @companion-app/launcher-ui dev
+   ```
+
+2. In a second terminal, start the launcher:
+
+   ```bash
+   yarn workspace @companion-app/launcher dev
+   ```
 
 Without the dev server running, the launcher falls back to a local build of `launcher-ui`
 (`yarn workspace @companion-app/launcher-ui build`).
