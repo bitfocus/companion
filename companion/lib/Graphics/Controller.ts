@@ -82,7 +82,7 @@ const IMAGE_CACHE_MAX_BYTES = 128 * 1024 * 1024
 // loop. Longer animations would push everything else out of the cache, so they are drawn again each time
 const RENDER_CACHE_MAX_ANIMATION_DURATION_MS = 5000
 
-const NO_ANIMATION_FRAMES: AnimationFrames = { frameIndices: new Map(), maxDurationMs: 0 }
+const NO_ANIMATION_FRAMES: AnimationFrames = { frameIndices: new Map(), maxDurationMs: 0, cycleRenderCount: 1 }
 
 function shouldCacheAnimationRenders(animationFrames: AnimationFrames): boolean {
 	return animationFrames.maxDurationMs <= RENDER_CACHE_MAX_ANIMATION_DURATION_MS
@@ -986,7 +986,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const render = new ImageResult(
 			cacheKey,
 			processedStyle,
-			animationFrames.maxDurationMs,
+			animationFrames.cycleRenderCount,
 			async (width, height, rotation, format) =>
 				this.#executePoolDrawButtonImageBuffer(
 					drawStyle,

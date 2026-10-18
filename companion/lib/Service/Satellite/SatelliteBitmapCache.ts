@@ -88,12 +88,19 @@ export class SatelliteBitmapCache {
 	 * This does not count as a use of the bitmap, so it doesn't change which bitmaps are evicted first. When a higher
 	 * cost takes the total over budget, the bitmap competes on its true recency like any other, so it can be the one
 	 * evicted. Protecting it would mean evicting bitmaps which were used more recently, and are more likely to be
-	 * needed again, while evicting it only costs sending it again if it is ever drawn
+	 * needed again, while evicting it only costs sending it again if it is ever drawn.
+	 * A bitmap which costs more than the whole budget can never fit, so it alone is evicted
 	 * @returns The ids the client must evict, if the total is now over budget
 	 */
 	setCost(id: string, bytes: number): string[] {
 		const previous = this.#costs.get(id)
 		if (previous === undefined) return []
+
+		if (bytes > this.#budgetBytes) {
+			this.#costs.delete(id)
+			this.#usedBytes -= previous
+			return [id]
+		}
 
 		this.#costs.set(id, bytes)
 		this.#usedBytes += bytes - previous
