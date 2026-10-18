@@ -45,13 +45,18 @@ export function SyslogSection(): React.JSX.Element {
 	}
 
 	const handleSyslogPortBlur = () => {
-		let port = Number.parseInt(syslogPort)
-		port = Number.isNaN(port) ? 514 : port
+		const savedPort = config.syslog_port || 514
+		let port = syslogPort.trim() === '' ? 514 : Number(syslogPort)
+		if (!Number.isInteger(port)) {
+			// Not a whole number, so put back the saved port rather than guess
+			setSyslogPort(String(savedPort))
+			return
+		}
 		// The server ignores ports of 100 or below
 		port = port < 101 ? 101 : port
 		port = port > 65535 ? 65535 : port
 		setSyslogPort(String(port))
-		if (port !== (config.syslog_port || 514)) updateConfig({ syslog_port: port })
+		if (port !== savedPort) updateConfig({ syslog_port: port })
 	}
 
 	const handleSyslogTcpChange = (checked: boolean) => {
