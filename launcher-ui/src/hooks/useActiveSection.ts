@@ -25,6 +25,18 @@ export function pickActiveSection(sections: SectionPosition[], offset: number, a
 }
 
 /**
+ * Whether scrolling a section to the top would move the page: it moves by the section's distance from its scroll
+ * position, but no further than the page can scroll either way.
+ * @param scrollY - how far the page is scrolled now
+ * @param distance - how far below its scroll position the section is (negative when above)
+ * @param maxScrollY - the furthest the page can scroll (negative when it is shorter than the window)
+ */
+export function scrollWouldMove(scrollY: number, distance: number, maxScrollY: number): boolean {
+	const target = Math.min(Math.max(scrollY + distance, 0), Math.max(maxScrollY, 0))
+	return Math.abs(target - scrollY) >= 1
+}
+
+/**
  * Track which of the sections (by element id) the window is scrolled to, and scroll to one on request.
  * A requested section stays active until that scroll ends, even if the page can't scroll far enough to bring it to
  * the top.
@@ -71,7 +83,13 @@ export function useActiveSection(ids: readonly string[]): [string | null, (id: s
 		const element = document.getElementById(id)
 		if (!element) return
 
-		scrollingToRef.current = id
+		// Hold the requested section until the scroll ends. A request that won't move the page gets no scrollend, so
+		// it must not hold it, or the next manual scroll could not update the active section
+		const scrollMargin = Number.parseFloat(getComputedStyle(element).scrollMarginTop) || 0
+		const distance = element.getBoundingClientRect().top - scrollMargin
+		const maxScrollY = document.documentElement.scrollHeight - window.innerHeight
+		scrollingToRef.current = scrollWouldMove(window.scrollY, distance, maxScrollY) ? id : null
+
 		setActiveId(id)
 		element.scrollIntoView({ behavior: 'smooth', block: 'start' })
 	}, [])

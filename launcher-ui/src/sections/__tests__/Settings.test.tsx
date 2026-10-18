@@ -85,6 +85,22 @@ describe('Advanced settings', () => {
 		expect(screen.getByRole('link', { name: 'General' }).getAttribute('aria-current')).toBeNull()
 	})
 
+	test('keeps following the scroll after picking a section that is already in place', async () => {
+		renderSettings(CONFIG)
+
+		// jsdom has no layout, so the page fits the window and picking a section does not scroll it
+		const developer = screen.getByRole('link', { name: 'Developer' })
+		fireEvent.click(developer)
+		expect(developer.getAttribute('aria-current')).toBe('true')
+
+		await act(async () => {
+			window.dispatchEvent(new Event('scroll'))
+			await new Promise((resolve) => requestAnimationFrame(resolve))
+		})
+
+		expect(developer.getAttribute('aria-current')).toBeNull()
+	})
+
 	test('saves a text field when it loses focus, not on every keystroke', () => {
 		renderSettings(CONFIG)
 
