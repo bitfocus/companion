@@ -6,7 +6,11 @@ import type {
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonGraphicsDecorationType, ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import type { DecodeImageResult } from '../../../lib/Graphics/ImageCache/DecodeImage.js'
-import { ImageCacheStore, type DecodeImageFn } from '../../../lib/Graphics/ImageCache/ImageCacheStore.js'
+import {
+	countCycleRenders,
+	ImageCacheStore,
+	type DecodeImageFn,
+} from '../../../lib/Graphics/ImageCache/ImageCacheStore.js'
 import type { Logger } from '../../../lib/Log/Controller.js'
 
 const logger = { warn: vi.fn(), debug: vi.fn(), error: vi.fn() } as unknown as Logger
@@ -274,6 +278,8 @@ describe('ImageCacheStore animations', () => {
 			['long', 1],
 		])
 		expect(frames.maxDurationMs).toBe(3000)
+		// The short animation changes on every tick of the 3s cycle of the long one
+		expect(frames.cycleRenderCount).toBe(30)
 	})
 
 	test('chooses no frames for static images', async () => {
@@ -282,6 +288,7 @@ describe('ImageCacheStore animations', () => {
 		const frames = await store.selectAnimationFrames([makeImageElement('static', 'static')], 1100)
 		expect(frames.frameIndices.size).toBe(0)
 		expect(frames.maxDurationMs).toBe(0)
+		expect(frames.cycleRenderCount).toBe(1)
 	})
 
 	test('draws the chosen frame', async () => {
@@ -302,5 +309,45 @@ describe('ImageCacheStore animations', () => {
 			new Map([['short', 5]])
 		)
 		expect(resolved.decodedImages?.get('short')?.frameIndex).toBe(1)
+	})
+})
+
+describe('countCycleRenders', () => {
+	test('is 1 with no animations', () => {
+		expect(countCycleRenders([])).toBe(1)
+	})
+
+	test('is the frame count of a single animation, however slow', () => {
+		expect(countCycleRenders([{ frameCount: 4, durationMs: 10_000 }])).toBe(4)
+	})
+
+	test('counts the frames of each animation over their combined cycle', () => {
+		// They repeat together after 1.2s, in which the first shows 6 frames and the second 2
+		expect(
+			countCycleRenders([
+				{ frameCount: 2, durationMs: 400 },
+				{ frameCount: 1, durationMs: 600 },
+			])
+		).toBe(8)
+	})
+
+	test('is at most one per tick of the render clock', () => {
+		expect(
+			countCycleRenders([
+				{ frameCount: 3, durationMs: 300 },
+				{ frameCount: 3, durationMs: 300 },
+			])
+		).toBe(3)
+	})
+
+	test('is effectively endless when the loops barely line up', () => {
+		const count = countCycleRenders([
+			{ frameCount: 299, durationMs: 29_900 },
+			{ frameCount: 300, durationMs: 30_000 },
+			{ frameCount: 293, durationMs: 29_300 },
+			{ frameCount: 283, durationMs: 28_300 },
+		])
+		expect(count).toBeGreaterThan(1_000_000)
+		expect(Number.isSafeInteger(count)).toBe(true)
 	})
 })
