@@ -133,6 +133,11 @@
 	/* The tile behind the white-on-transparent logo mark: the graphite gradient macOS puts the app icon on. Fixed */
 	--color-logo-tile-top: #424242;
 	--color-logo-tile-bottom: #1c1c1c;
+	/* The desktop launcher window (launcher-ui): a red body, a darker red status band and a dark header. Fixed: the
+	   launcher keeps its brand look in every theme */
+	--color-launcher-body: #d50215;
+	--color-launcher-status: #b80012;
+	--color-launcher-header: #1b1f27;
 	--color-app-bg: #f9f9f9; /* main content area background */
 	--color-app-frame-bg: #f3f4f7; /* outer app frame behind the sidebar/header/body */
 	--color-body-bg: #f3f4f7; /* <body> element backing, behind the app chrome */

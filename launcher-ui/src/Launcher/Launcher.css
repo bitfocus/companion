@@ -1,37 +1,24 @@
 html,
 body {
 	overflow: hidden;
-	background: #d50215;
-	font-family:
-		system-ui,
-		-apple-system,
-		'Segoe UI',
-		Roboto,
-		'Helvetica Neue',
-		'Noto Sans',
-		Arial,
-		sans-serif;
+	background: var(--color-launcher-body);
 }
 
 .launcher {
-	--launcher-brand: #d50215;
-	--launcher-brand-deep: #b80012;
-	--launcher-ink: #1b1f27;
-	--launcher-on-muted: rgb(255 255 255 / 0.74);
-	--launcher-hairline: rgb(255 255 255 / 0.22);
-	--launcher-good: #4ade80;
-	--launcher-warn: #fcd34d;
-	--launcher-idle: rgb(255 255 255 / 0.5);
+	/* White tints on the red and dark surfaces */
+	--launcher-on-faint: color-mix(in srgb, var(--color-on-dark) 50%, transparent);
+	--launcher-hairline: color-mix(in srgb, var(--color-on-dark) 22%, transparent);
+	--launcher-tint: color-mix(in srgb, var(--color-on-dark) 10%, transparent);
 
 	/* Theme tokens for controls on the red surface: white is the primary colour here */
-	--primary: #fff;
-	--primary-foreground: var(--launcher-brand);
-	--input: rgb(255 255 255 / 0.42);
-	--ring: rgb(255 255 255 / 0.7);
+	--primary: var(--color-on-dark);
+	--primary-foreground: var(--color-launcher-body);
+	--input: color-mix(in srgb, var(--color-on-dark) 42%, transparent);
+	--ring: color-mix(in srgb, var(--color-on-dark) 70%, transparent);
 
 	position: relative;
 	color: var(--foreground);
-	background: var(--launcher-brand);
+	background: var(--color-launcher-body);
 	font-size: 14px;
 	line-height: 1.4;
 	user-select: none;
@@ -52,8 +39,12 @@ body {
 		align-items: center;
 		gap: 10px;
 		padding: 28px 20px 16px;
-		background: var(--launcher-ink);
-		background-image: radial-gradient(120% 90% at 50% 0%, rgb(255 255 255 / 0.07), transparent 60%);
+		background: var(--color-launcher-header);
+		background-image: radial-gradient(
+			120% 90% at 50% 0%,
+			color-mix(in srgb, var(--color-on-dark) 7%, transparent),
+			transparent 60%
+		);
 	}
 
 	.launcher-ident {
@@ -70,10 +61,10 @@ body {
 
 	.launcher-version {
 		padding: 1px 8px;
-		border: 1px solid rgb(255 255 255 / 0.1);
+		border: 1px solid var(--launcher-tint);
 		border-radius: 999px;
-		background: rgb(255 255 255 / 0.08);
-		color: var(--launcher-on-muted);
+		background: var(--launcher-tint);
+		color: var(--color-on-dark-muted);
 		font-family: var(--font-mono);
 		font-size: 11px;
 		user-select: text;
@@ -91,17 +82,17 @@ body {
 		align-items: center;
 		gap: 10px;
 		padding: 18px 20px 20px;
-		background: var(--launcher-brand-deep);
-		box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.15);
+		background: var(--color-launcher-status);
+		box-shadow: inset 0 -1px 0 var(--color-shadow-15);
 
 		&[data-status='running'] {
-			--launcher-dot: var(--launcher-good);
+			--launcher-dot: var(--color-tone-good-text);
 		}
 		&[data-status='starting'] {
-			--launcher-dot: var(--launcher-idle);
+			--launcher-dot: var(--launcher-on-faint);
 		}
 		&[data-status='error'] {
-			--launcher-dot: var(--launcher-warn);
+			--launcher-dot: var(--color-tone-warning-text);
 		}
 	}
 
@@ -135,9 +126,9 @@ body {
 		gap: 4px;
 		max-width: 100%;
 		padding: 2px;
-		border: 1px solid rgb(255 255 255 / 0.14);
+		border: 1px solid var(--launcher-tint);
 		border-radius: 999px;
-		background: rgb(0 0 0 / 0.18);
+		background: var(--color-shadow-20);
 	}
 
 	.launcher-status-detail {
@@ -152,9 +143,9 @@ body {
 		gap: 10px;
 		margin: 16px 20px 0;
 		padding: 10px 12px;
-		border: 1px solid rgb(252 211 77 / 0.55);
+		border: 1px solid color-mix(in srgb, var(--color-tone-warning-text) 55%, transparent);
 		border-radius: 8px;
-		background: rgb(0 0 0 / 0.22);
+		background: var(--color-shadow-20);
 		font-size: 12.5px;
 		line-height: 1.45;
 
@@ -163,7 +154,7 @@ body {
 			width: 18px;
 			height: 18px;
 			margin-top: 1px;
-			color: var(--launcher-warn);
+			color: var(--color-tone-warning-text);
 		}
 
 		strong {
