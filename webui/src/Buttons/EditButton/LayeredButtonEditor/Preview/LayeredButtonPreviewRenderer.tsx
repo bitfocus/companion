@@ -275,8 +275,15 @@ const LayeredButtonCanvas = observer(function LayeredButtonCanvas({
 		drawContext.current.draw(drawStyle)
 	}, [canvas, location, drawStyle, hiddenElements, selectedElementId])
 
-	// Stop any animation from drawing once the canvas is gone
-	useEffect(() => () => drawContext.current?.dispose(), [])
+	// Stop any animation from drawing once the canvas is gone. A disposed context can't be reused, so a remount
+	// (as StrictMode does) creates a new one
+	useEffect(
+		() => () => {
+			drawContext.current?.dispose()
+			drawContext.current = null
+		},
+		[]
+	)
 
 	// The first paint can happen before the custom fonts finish loading, so text gets measured against the
 	// fallback font. Once the fonts are ready, drop the stale measurements and redraw at the correct size.
@@ -397,6 +404,8 @@ class RendererDrawContext {
 
 	/** Redraws an animated image on the next tick of the render clock */
 	#animationTimer: ReturnType<typeof setTimeout> | null = null
+	/** Set once the canvas is no longer shown, so a draw still in flight doesn't schedule another */
+	#disposed = false
 
 	constructor(canvas: HTMLCanvasElement, onGeometry: (geometry: readonly ElementGeometry[]) => void) {
 		const textLayoutCache: TextLayoutCache = new QuickLRU({ maxSize: 200 })
@@ -412,6 +421,7 @@ class RendererDrawContext {
 
 	#lastDrawStyle: RendererButtonStyle | null = null
 	#debounceDraw = async () => {
+		if (this.#disposed) return
 		try {
 			if (!this.#lastDrawStyle) throw new Error('No draw style!')
 
@@ -443,7 +453,7 @@ class RendererDrawContext {
 			this.#image.drawComplete()
 			this.#onGeometry(geometry)
 
-			if (this.#image.lastDrawWasAnimated && !this.#animationTimer) {
+			if (!this.#disposed && this.#image.lastDrawWasAnimated && !this.#animationTimer) {
 				this.#animationTimer = setTimeout(() => {
 					this.#animationTimer = null
 					this.#debounce.trigger()
@@ -466,6 +476,7 @@ class RendererDrawContext {
 
 	/** Stop drawing, as the canvas is no longer shown */
 	dispose() {
+		this.#disposed = true
 		if (this.#animationTimer) clearTimeout(this.#animationTimer)
 		this.#animationTimer = null
 	}

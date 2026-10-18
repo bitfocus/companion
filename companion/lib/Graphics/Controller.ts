@@ -20,7 +20,7 @@ import type Express from 'express'
 import QuickLRU from 'quick-lru'
 import workerPool from 'workerpool'
 import { isLocationOnGrid, ParseControlId, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
-import { snapToRenderClock } from '@companion-app/shared/Graphics/AnimationTiming.js'
+import { MAX_DECODED_IMAGE_BYTES, snapToRenderClock } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import {
 	resolveButtonStyleProperties,
 	type ResolveButtonStylePropertiesConfig,
@@ -66,9 +66,7 @@ const RENDER_CACHE_MAX_SIZE = 1000
 const RENDER_CACHE_RESIZE_DEBOUNCE_MS = 500
 
 // Decoded images are stored at their own size, so that a large image can be drawn in segments across many
-// buttons. Any single image larger than this (~2900x2900) is drawn from its source instead, so it can't push
-// everything else out of the cache
-const IMAGE_CACHE_MAX_ENTRY_BYTES = 32 * 1024 * 1024
+// buttons. Each is limited to MAX_DECODED_IMAGE_BYTES, so it can't push everything else out of the cache
 const IMAGE_CACHE_MAX_BYTES = 128 * 1024 * 1024
 
 // Renders of animations with a loop up to this long are kept in the render cache, so that they are reused on each
@@ -127,7 +125,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 */
 	readonly #imageCache = new ImageCacheStore(
 		this.#logger,
-		async (source) => this.#poolExec('decodeImage', [source, IMAGE_CACHE_MAX_ENTRY_BYTES], CRASHED_WORKER_RETRY_COUNT),
+		async (source) => this.#poolExec('decodeImage', [source, MAX_DECODED_IMAGE_BYTES], CRASHED_WORKER_RETRY_COUNT),
 		IMAGE_CACHE_MAX_BYTES
 	)
 

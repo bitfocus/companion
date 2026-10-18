@@ -1,5 +1,11 @@
 import { describe, expect, test } from 'vitest'
-import { AnimationFrameSampler, selectFrameIndex, snapToRenderClock } from '../AnimationTiming.js'
+import {
+	AnimationFrameSampler,
+	fitAnimationFrames,
+	selectFrameIndex,
+	shrinkToPixels,
+	snapToRenderClock,
+} from '../AnimationTiming.js'
 
 /** Run the sampler over some frame delays, giving each frame's start time, or what happened to it */
 function sample(
@@ -81,5 +87,56 @@ describe('snapToRenderClock', () => {
 		expect(snapToRenderClock(1_000)).toBe(1_000)
 		expect(snapToRenderClock(1_049)).toBe(1_000)
 		expect(snapToRenderClock(1_051)).toBe(1_100)
+	})
+})
+
+describe('shrinkToPixels', () => {
+	// The same cases as image-rs
+	test('fits within the pixel count', () => {
+		expect(shrinkToPixels({ width: 64, height: 32 }, { width: 64, height: 32 }, 1000)).toEqual({
+			width: 44,
+			height: 22,
+		})
+	})
+	test('never grows past the current size', () => {
+		expect(shrinkToPixels({ width: 64, height: 32 }, { width: 10, height: 5 }, 1000)).toEqual({ width: 10, height: 5 })
+	})
+	test('still fits a very wide or tall image once the short side reaches 1', () => {
+		expect(shrinkToPixels({ width: 1000, height: 1 }, { width: 1000, height: 1 }, 100)).toEqual({
+			width: 100,
+			height: 1,
+		})
+		expect(shrinkToPixels({ width: 1, height: 1000 }, { width: 1, height: 1000 }, 100)).toEqual({
+			width: 1,
+			height: 100,
+		})
+	})
+	test('never goes below 1x1', () => {
+		expect(shrinkToPixels({ width: 64, height: 32 }, { width: 64, height: 32 }, 0)).toEqual({ width: 1, height: 1 })
+	})
+})
+
+describe('fitAnimationFrames', () => {
+	test('keeps the size while the frames fit', () => {
+		const size = { width: 64, height: 32 }
+		expect(fitAnimationFrames(size, size, 4, 40_000)).toBe(size)
+	})
+
+	test('shrinks in steps as frames are added, as image-rs does', () => {
+		// 64x32 fits 4 frames. Shrinks to 44x22 at the 5th frame, then to 30x15 at the 11th
+		const base = { width: 64, height: 32 }
+		const sizes: { width: number; height: number }[] = []
+		let current = base
+		for (let count = 1; count <= 20; count++) {
+			current = fitAnimationFrames(base, current, count, 40_000)
+			sizes.push(current)
+		}
+
+		expect(sizes[3]).toEqual({ width: 64, height: 32 })
+		expect(sizes[4]).toEqual({ width: 44, height: 22 })
+		expect(sizes[9]).toEqual({ width: 44, height: 22 })
+		expect(sizes[10]).toEqual({ width: 30, height: 15 })
+		expect(sizes[19]).toEqual({ width: 30, height: 15 })
+		expect(20 * 30 * 15 * 4).toBeLessThanOrEqual(40_000)
 	})
 })

@@ -10,6 +10,12 @@ export const RENDER_CLOCK_INTERVAL_MS = 100
 export const MAX_ANIMATION_DURATION_MS = 30_000
 
 /**
+ * The most memory the decoded pixels of one image may use (~2900x2900). An animation larger than this has its
+ * frames scaled down to fit, while the backend draws a larger static image from its source instead
+ */
+export const MAX_DECODED_IMAGE_BYTES = 32 * 1024 * 1024
+
+/**
  * Snap a time to the render clock, so that everything drawn in the same tick shows the same moment
  */
 export function snapToRenderClock(timeMs: number): number {
@@ -91,4 +97,46 @@ export class AnimationFrameSampler {
 		const ticks = Math.min(Math.max(1, this.#toTicks(this.#elapsedMs)), this.#maxTicks)
 		return ticks * RENDER_CLOCK_INTERVAL_MS
 	}
+}
+
+export interface FrameSize {
+	width: number
+	height: number
+}
+
+/**
+ * Scale a size down, keeping its aspect ratio, to at most this many pixels. Never grows past `current`, or goes
+ * below 1x1
+ * @param base The size of the frames before any shrinking
+ * @param current The size the frames are currently kept at
+ */
+export function shrinkToPixels(base: FrameSize, current: FrameSize, maxPixels: number): FrameSize {
+	const scale = Math.sqrt(maxPixels / (base.width * base.height))
+	let width = Math.min(Math.max(Math.floor(base.width * scale), 1), current.width)
+	let height = Math.min(Math.max(Math.floor(base.height * scale), 1), current.height)
+	// When one side is clamped to 1, the other must give way so the total still fits
+	width = Math.min(width, Math.max(Math.floor(maxPixels / height), 1))
+	height = Math.min(height, Math.max(Math.floor(maxPixels / width), 1))
+	return { width, height }
+}
+
+/**
+ * The size to keep the frames of an animation at once another frame is added, so that they all fit in `maxBytes`.
+ * When the new frame would go over the limit, everything shrinks to fit in half of it, which leaves room for as many
+ * frames again before the next shrink. The frames already kept must be rescaled to the returned size.
+ *
+ * This must match how image-rs applies `maxBytes`, so that a large animation is the same size in both
+ * @param base The size of the frames before any shrinking
+ * @param current The size the frames are currently kept at
+ * @param frameCount The number of frames, including the one being added
+ */
+export function fitAnimationFrames(
+	base: FrameSize,
+	current: FrameSize,
+	frameCount: number,
+	maxBytes: number
+): FrameSize {
+	if (frameCount * current.width * current.height * 4 <= maxBytes) return current
+
+	return shrinkToPixels(base, current, Math.floor(maxBytes / 2 / 4 / frameCount))
 }
