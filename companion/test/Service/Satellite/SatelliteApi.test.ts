@@ -130,6 +130,15 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.writtenData[1]).toContain('BITMAP_FORMATS="rgb,png,webp"')
 		})
 
+		test('CAPS advertises BITMAP_CACHE', () => {
+			const { api, logger } = createService()
+			const socket = new TestSocketWrapper()
+
+			api.initSocket(logger, socket)
+
+			expect(socket.writtenData[1]).toContain('BITMAP_CACHE=1')
+		})
+
 		test('returns processMessage and cleanupDevices', () => {
 			const { api, logger } = createService()
 			const socket = new TestSocketWrapper()
@@ -1621,6 +1630,154 @@ describe('ServiceSatelliteApi', () => {
 
 			expect(mockDevice.doChangePage).toHaveBeenCalledWith(false)
 			expect(socket.lastMessage).toContain('OK')
+		})
+	})
+
+	describe('BITMAP-CACHE', () => {
+		test('opts in to caching with the given budget', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-CACHE BYTES=100000\n')
+
+			expect(socket.writtenData).toEqual(['BITMAP-CACHE OK BYTES=100000 \n'])
+			expect(socket.bitmapCache?.budgetBytes).toBe(100000)
+		})
+
+		test('shrinking evicts the least recently used bitmaps before the OK', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-CACHE BYTES=300\n')
+			socket.bitmapCache!.store('a', 5, 5)
+			socket.bitmapCache!.store('b', 5, 5)
+			socket.bitmapCache!.store('c', 5, 5)
+			socket.clearMessages()
+
+			processMessage('BITMAP-CACHE BYTES=200\n')
+
+			expect(socket.writtenData).toEqual(['BITMAP-EVICT BITMAP_IDS="a" \n', 'BITMAP-CACHE OK BYTES=200 \n'])
+			expect(socket.bitmapCache?.entryCount).toBe(2)
+		})
+
+		test('growing keeps every bitmap', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-CACHE BYTES=100\n')
+			socket.bitmapCache!.store('a', 5, 5)
+			socket.clearMessages()
+
+			processMessage('BITMAP-CACHE BYTES=1000\n')
+
+			expect(socket.writtenData).toEqual(['BITMAP-CACHE OK BYTES=1000 \n'])
+			expect(socket.bitmapCache?.has('a')).toBe(true)
+		})
+
+		test('shrinking past every bitmap evicts them all at once', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-CACHE BYTES=200\n')
+			socket.bitmapCache!.store('a', 5, 5)
+			socket.bitmapCache!.store('b', 5, 5)
+			socket.clearMessages()
+
+			processMessage('BITMAP-CACHE BYTES=50\n')
+
+			expect(socket.writtenData).toEqual(['BITMAP-EVICT ALL=1 \n', 'BITMAP-CACHE OK BYTES=50 \n'])
+			expect(socket.bitmapCache?.entryCount).toBe(0)
+		})
+
+		test('a budget of 0 evicts everything, then turns caching off', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-CACHE BYTES=200\n')
+			socket.bitmapCache!.store('a', 5, 5)
+			socket.clearMessages()
+
+			processMessage('BITMAP-CACHE BYTES=0\n')
+
+			expect(socket.writtenData).toEqual(['BITMAP-EVICT ALL=1 \n', 'BITMAP-CACHE OK BYTES=0 \n'])
+			expect(socket.bitmapCache).toBeNull()
+		})
+
+		test('a budget of 0 when not caching just replies OK', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-CACHE BYTES=0\n')
+
+			expect(socket.writtenData).toEqual(['BITMAP-CACHE OK BYTES=0 \n'])
+			expect(socket.bitmapCache).toBeNull()
+		})
+
+		test.each(['', 'BYTES=abc', 'BYTES=-1', 'BYTES=1.5', 'BYTES'])('rejects an invalid budget: %s', (args) => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage(`BITMAP-CACHE ${args}\n`)
+
+			expect(socket.lastMessage).toContain('BITMAP-CACHE ERROR')
+			expect(socket.lastMessage).toContain('Invalid BYTES')
+			expect(socket.bitmapCache).toBeNull()
+		})
+	})
+
+	describe('BITMAP-COST', () => {
+		test('a lower cost changes nothing the client can see', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-CACHE BYTES=200\n')
+			socket.bitmapCache!.store('a', 5, 5)
+			socket.clearMessages()
+
+			processMessage('BITMAP-COST BITMAP_ID=a BYTES=10\n')
+
+			expect(socket.writtenData).toEqual([])
+			expect(socket.bitmapCache?.usedBytes).toBe(10)
+		})
+
+		test('a higher cost evicts bitmaps to get back within budget', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-CACHE BYTES=200\n')
+			socket.bitmapCache!.store('a', 5, 5)
+			socket.bitmapCache!.store('b', 5, 5)
+			socket.clearMessages()
+
+			processMessage('BITMAP-COST BITMAP_ID=b BYTES=150\n')
+
+			expect(socket.writtenData).toEqual(['BITMAP-EVICT BITMAP_IDS="a" \n'])
+		})
+
+		test('is ignored for a bitmap which has been evicted, or when not caching', () => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage('BITMAP-COST BITMAP_ID=a BYTES=10\n')
+			processMessage('BITMAP-CACHE BYTES=200\n')
+			socket.clearMessages()
+			processMessage('BITMAP-COST BITMAP_ID=a BYTES=10\n')
+
+			expect(socket.writtenData).toEqual([])
+		})
+
+		test.each([
+			['BYTES=10', 'Missing BITMAP_ID'],
+			['BITMAP_ID=a', 'Invalid BYTES'],
+			['BITMAP_ID=a BYTES=-5', 'Invalid BYTES'],
+		])('rejects invalid params: %s', (args, error) => {
+			const { api, logger } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			processMessage(`BITMAP-COST ${args}\n`)
+
+			expect(socket.lastMessage).toContain('BITMAP-COST ERROR')
+			expect(socket.lastMessage).toContain(error)
 		})
 	})
 

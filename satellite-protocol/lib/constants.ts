@@ -32,8 +32,10 @@
  *          `0` still means a single counter-clockwise step for backwards compatibility. Support is
  *          advertised via ROTARY_AMOUNT in CAPS.
  * 1.15.0 - Add DEVICE-APPEARANCE message, describing how to draw the face of the surface
+ * 1.16.0 - Add bitmap caching: BITMAP_CACHE in CAPS, BITMAP-CACHE and BITMAP-COST messages from the client,
+ *          BITMAP-EVICT from Companion, and BITMAP_ID on KEY-STATE and SUB-STATE
  */
-export const API_VERSION = '1.15.0'
+export const API_VERSION = '1.16.0'
 
 /**
  * Maximum length of a single line (command) the receive buffer will accumulate before the

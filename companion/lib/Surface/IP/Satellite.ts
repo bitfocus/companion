@@ -33,7 +33,7 @@ import { GraphicsRenderer } from '../../Graphics/Renderer.js'
 import LogController from '../../Log/Controller.js'
 import { ImageWriteQueue } from '../../Resources/ImageWriteQueue.js'
 import type { SatelliteSocketWrapper } from '../../Service/Satellite/SatelliteApi.js'
-import { buildSatelliteStyleArgs } from '../../Service/Satellite/SatelliteRenderUtil.js'
+import { sendSatelliteStyleMessage } from '../../Service/Satellite/SatelliteRenderUtil.js'
 import { BrightnessConfigField, OffsetConfigFields, RotationConfigField } from '../CommonConfigFields.js'
 import { createSurfaceConfigPayload } from '../PluginConfigFields.js'
 import type {
@@ -353,17 +353,16 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			params['LOCATION'] = `${drawItem.location.pageNumber}/${drawItem.location.row}/${drawItem.location.column}`
 		}
 
-		const styleArgs = await buildSatelliteStyleArgs(
+		await sendSatelliteStyleMessage(
+			this.socket,
+			'KEY-STATE',
+			this.deviceId,
+			params,
 			drawItem.defaultRender,
 			controlDefinition.style,
 			this.#config.rotation,
 			this.#bitmapFormat
 		)
-		Object.assign(params, styleArgs)
-
-		if (!this.socket) return
-
-		this.socket.sendMessage('KEY-STATE', null, this.deviceId, params)
 	}
 
 	/**
