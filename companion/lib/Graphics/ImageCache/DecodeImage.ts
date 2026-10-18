@@ -56,68 +56,23 @@ function isSvgImage(trimmedImage: string): boolean {
 	return false
 }
 
-/** Enough of the start of an image to find whether it is animated, as base64 characters (~64KB) */
-const ANIMATION_SNIFF_LENGTH = 4 * 1024 * 16
-
-/**
- * Whether an image source string is in a format which can be animated, and claims to be.
- * Only the start of the image is decoded to check
- */
-function isAnimatedImage(trimmedImage: string): boolean {
-	let base64Start = 0
-	if (trimmedImage.startsWith('data:')) {
-		const headerEnd = trimmedImage.indexOf(',')
-		if (!trimmedImage.slice(0, headerEnd).includes(';base64')) return false
-		base64Start = headerEnd + 1
-	}
-	const bytes = Buffer.from(trimmedImage.slice(base64Start, base64Start + ANIMATION_SNIFF_LENGTH), 'base64')
-
-	// GIF: anything could have more frames, so let the decoder find out
-	if (bytes.subarray(0, 4).toString('latin1') === 'GIF8') return true
-
-	// WebP: the extended header has a flag for animation
-	if (bytes.subarray(0, 4).toString('latin1') === 'RIFF' && bytes.subarray(8, 16).toString('latin1') === 'WEBPVP8X') {
-		return bytes.length > 20 && (bytes[20] & 0x02) !== 0
-	}
-
-	// PNG: an APNG has an animation control chunk before its image data
-	if (bytes.subarray(0, 8).equals(PNG_SIGNATURE)) {
-		let offset = 8
-		while (offset + 8 <= bytes.length) {
-			const chunkType = bytes.subarray(offset + 4, offset + 8).toString('latin1')
-			if (chunkType === 'acTL') return true
-			if (chunkType === 'IDAT') return false
-			offset += 12 + bytes.readUInt32BE(offset)
-		}
-	}
-
-	return false
-}
-
-const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
-
 /**
  * Decode the frames of an animated image, resampled onto the render clock.
  * The frames are stored at the image's own size, unless together they would be larger than maxBytes, in which case
  * they are scaled down just enough to fit. Unlike a static image, an animation can't be drawn from its source instead
+ * @returns The frames, or null if the image is not animated
  */
-async function decodeAnimatedImage(trimmedImage: string, maxBytes: number): Promise<DecodeImageResult> {
+async function decodeAnimatedImage(trimmedImage: string, maxBytes: number): Promise<DecodeImageResult | null> {
 	// Data urls are decoded by image-rs, but it needs the bytes of a bare base64 string
 	const input = trimmedImage.startsWith('data:') ? trimmedImage : Buffer.from(trimmedImage, 'base64')
-	const options: imageRs.DecodeFramesOptions = {
+
+	const frames = await imageRs.decodeFrames(input, {
 		sampleIntervalMs: RENDER_CLOCK_INTERVAL_MS,
 		maxDurationMs: MAX_ANIMATION_DURATION_MS,
-	}
-
-	let frames = await imageRs.decodeFrames(input, options)
-	if (frames.buffer.byteLength > maxBytes) {
-		const scale = Math.sqrt(maxBytes / frames.buffer.byteLength)
-		frames = await imageRs.decodeFrames(input, {
-			...options,
-			maxWidth: Math.max(1, Math.floor(frames.width * scale)),
-			maxHeight: Math.max(1, Math.floor(frames.height * scale)),
-		})
-	}
+		maxBytes,
+		animatedOnly: true,
+	})
+	if (!frames) return null
 
 	const buffer = new SharedArrayBuffer(frames.buffer.byteLength)
 	new Uint8Array(buffer).set(frames.buffer)
@@ -147,14 +102,11 @@ export async function decodeImage(source: string, maxBytes: number): Promise<Dec
 	const trimmedImage = trimBase64ImageToValid(source.trim())
 	if (trimmedImage.length <= 40 || isSvgImage(trimmedImage)) return { type: 'passthrough' }
 
-	if (isAnimatedImage(trimmedImage)) {
-		try {
-			const result = await decodeAnimatedImage(trimmedImage, maxBytes)
-			// A single frame is drawn as a static image, so that it matches how it would be drawn from its source
-			if (result.type !== 'raster' || result.frameCount > 1) return result
-		} catch (_e) {
-			// Fall back to decoding a single frame
-		}
+	try {
+		const animation = await decodeAnimatedImage(trimmedImage, maxBytes)
+		if (animation) return animation
+	} catch (_e) {
+		// Not a format image-rs understands, so leave it to the canvas
 	}
 
 	let image: Awaited<ReturnType<typeof loadBase64Image>>

@@ -53,8 +53,11 @@ function writePngChunk(type: string, data: Buffer): Buffer {
 	return Buffer.concat([header, data, crc])
 }
 
-/** Create an animated PNG, with each frame filled with a solid colour */
-export function makeAnimatedPng(width: number, height: number, frames: FixtureFrame[]): Buffer {
+/**
+ * Create an animated PNG, with each frame filled with a solid colour
+ * @param paddingBytes Size of a text chunk to put before the animation control chunk
+ */
+export function makeAnimatedPng(width: number, height: number, frames: FixtureFrame[], paddingBytes = 0): Buffer {
 	const framePngs = frames.map((frame) => {
 		const canvas = new Canvas(width, height)
 		const ctx = canvas.getContext('2d')
@@ -65,6 +68,7 @@ export function makeAnimatedPng(width: number, height: number, frames: FixtureFr
 
 	const output: Buffer[] = [Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])]
 	output.push(writePngChunk('IHDR', framePngs[0].find((chunk) => chunk.type === 'IHDR')!.data))
+	if (paddingBytes > 0) output.push(writePngChunk('tEXt', Buffer.alloc(paddingBytes, 'x')))
 
 	const animationControl = Buffer.alloc(8)
 	animationControl.writeUInt32BE(frames.length, 0) // frame count

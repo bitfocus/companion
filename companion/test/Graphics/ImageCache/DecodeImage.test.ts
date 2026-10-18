@@ -218,6 +218,11 @@ describe('decodeImage animations', () => {
 		])
 	})
 
+	test('decodes every frame of an apng with a lot of data before its animation chunk', async () => {
+		const result = await decodeImage(toDataUrl('image/png', makeAnimatedPng(4, 2, frames, 100_000)), MAX_BYTES)
+		expect(result).toMatchObject({ type: 'raster', frameCount: 3 })
+	})
+
 	test('decodes a single frame gif as a static image', async () => {
 		const result = await decodeImage(
 			toDataUrl('image/gif', makeAnimatedGif(4, 2, [{ color: GREEN, delayMs: 100 }])),
@@ -236,10 +241,20 @@ describe('decodeImage animations', () => {
 	test('scales an animation down to fit within the byte limit', async () => {
 		const gif = makeAnimatedGif(64, 32, frames)
 		// Room for the 3 frames at half the size
-		const result = await decodeImage(toDataUrl('image/gif', gif), 3 * 32 * 16 * 4)
+		const maxBytes = 3 * 32 * 16 * 4
+		const result = await decodeImage(toDataUrl('image/gif', gif), maxBytes)
 
-		expect(result).toMatchObject({ type: 'raster', width: 32, height: 16, frameCount: 3 })
 		if (result.type !== 'raster') throw new Error('Expected a raster')
-		expect(result.buffer.byteLength).toBeLessThanOrEqual(3 * 32 * 16 * 4)
+		expect(result.frameCount).toBe(3)
+		expect(result.buffer.byteLength).toBeLessThanOrEqual(maxBytes)
+		expect(result.buffer.byteLength).toBe(result.frameCount * result.width * result.height * 4)
+		expect(result.width).toBeLessThanOrEqual(32)
+		// Keeps the aspect ratio, allowing for rounding
+		expect(result.width / result.height).toBeCloseTo(2, 0)
+		expect(frameColors(result)).toEqual([
+			[255, 0, 0, 255],
+			[0, 255, 0, 255],
+			[0, 0, 255, 255],
+		])
 	})
 })
