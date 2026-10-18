@@ -70,28 +70,12 @@
 	}
 }
 
+/* The sidebar's size of the shared .logo-mark tile (Components/LogoMark.css) */
 .sidebar-logo-mark {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
 	width: 2.25rem;
 	height: 2.25rem;
 	padding: 0.1875rem;
-	flex-shrink: 0;
 	border-radius: 0.5rem;
-	/* The logo is white on transparent, so it sits on a graphite tile like the macOS app icon: a top-to-bottom
-	   fade with a faint light rim */
-	background: linear-gradient(to bottom, var(--color-logo-tile-top), var(--color-logo-tile-bottom));
-	box-shadow:
-		inset 0 0 0 1px color-mix(in srgb, var(--color-on-dark) 12%, transparent),
-		0 1px 3px var(--color-shadow-20);
-
-	img {
-		display: block;
-		width: 100%;
-		height: 100%;
-		object-fit: contain;
-	}
 }
 
 /* The expanded footer lays out at the full sidebar width and clips, so while the sidebar animates open from

@@ -1,7 +1,3 @@
-// Fix fontsource css imports
-declare module '@fontsource/*' {}
-declare module '@fontsource-variable/*' {}
-
 // The IPC bridge exposed by the launcher's preload scripts
 interface Window {
 	api: {

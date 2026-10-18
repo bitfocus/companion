@@ -1,0 +1,7 @@
+/* The launcher's size of the web UI's .logo-mark tile */
+.logo-mark {
+	width: 72px;
+	height: 72px;
+	padding: 6px;
+	border-radius: 16px;
+}

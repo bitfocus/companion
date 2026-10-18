@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
+import { Switch } from '~/components/ui/switch'
 import { useConfig } from '~/hooks/useConfig'
+import { SettingsCard, SettingsRow } from './SettingsCard'
 
 export function SyslogSection(): React.JSX.Element {
 	const { state, updateConfig } = useConfig()
@@ -12,7 +13,7 @@ export function SyslogSection(): React.JSX.Element {
 	// Local state for form inputs
 	const [enableSyslog, setEnableSyslog] = useState(config.enable_syslog)
 	const [syslogHost, setSyslogHost] = useState(config.syslog_host || '127.0.0.1')
-	const [syslogPort, setSyslogPort] = useState(config.syslog_port || 514)
+	const [syslogPort, setSyslogPort] = useState(String(config.syslog_port || 514))
 	const [syslogTcp, setSyslogTcp] = useState(config.syslog_use_tcp)
 	const [syslogLocalHost, setSyslogLocalHost] = useState(config.syslog_local_hostname || '')
 
@@ -20,7 +21,7 @@ export function SyslogSection(): React.JSX.Element {
 	useEffect(() => {
 		setEnableSyslog(config.enable_syslog)
 		setSyslogHost(config.syslog_host || '127.0.0.1')
-		setSyslogPort(config.syslog_port || 514)
+		setSyslogPort(String(config.syslog_port || 514))
 		setSyslogTcp(config.syslog_use_tcp)
 		setSyslogLocalHost(config.syslog_local_hostname || '')
 	}, [
@@ -37,17 +38,20 @@ export function SyslogSection(): React.JSX.Element {
 		updateConfig({ enable_syslog: checked })
 	}
 
-	const handleSyslogHostChange = (value: string) => {
-		setSyslogHost(value)
-		updateConfig({ syslog_host: value })
+	// The text fields save when they lose focus, and only when changed, as each change restarts Companion. They
+	// compare against the same defaults the fields start from
+	const handleSyslogHostBlur = () => {
+		if (syslogHost !== (config.syslog_host || '127.0.0.1')) updateConfig({ syslog_host: syslogHost })
 	}
-	const handleSyslogPortChange = (value: string) => {
-		let port = Number.parseInt(value)
+
+	const handleSyslogPortBlur = () => {
+		let port = Number.parseInt(syslogPort)
 		port = Number.isNaN(port) ? 514 : port
-		port = port < 100 ? 100 : port
+		// The server ignores ports of 100 or below
+		port = port < 101 ? 101 : port
 		port = port > 65535 ? 65535 : port
-		setSyslogPort(port)
-		updateConfig({ syslog_port: port })
+		setSyslogPort(String(port))
+		if (port !== (config.syslog_port || 514)) updateConfig({ syslog_port: port })
 	}
 
 	const handleSyslogTcpChange = (checked: boolean) => {
@@ -55,92 +59,65 @@ export function SyslogSection(): React.JSX.Element {
 		updateConfig({ syslog_use_tcp: checked })
 	}
 
-	const handleSyslogLocalHostChange = (value: string) => {
-		setSyslogLocalHost(value)
-		updateConfig({ syslog_local_hostname: value })
+	const handleSyslogLocalHostBlur = () => {
+		if (syslogLocalHost !== (config.syslog_local_hostname || ''))
+			updateConfig({ syslog_local_hostname: syslogLocalHost })
 	}
 
 	return (
-		<div className="space-y-6">
-			<div>
-				<p className="text-muted-foreground mb-4 text-sm">Configure Companion syslog client</p>
-				<div className="space-y-4">
-					<div className="grid grid-cols-4 gap-4 items-center">
-						<Label htmlFor="enable-syslog">Enable</Label>
-						<div className="flex items-center col-span-3 ">
-							<input
-								type="checkbox"
-								id="enable_syslog"
-								checked={enableSyslog}
-								onChange={(e) => handleEnableSyslog(e.target.checked)}
-								className="rounded"
-							/>
-						</div>
-					</div>
-					<div className="grid grid-cols-4 gap-4 items-center">
-						<Label htmlFor="syslog-host">Syslog Server</Label>
-						<div className="col-span-3">
-							<div className="flex">
-								<Input
-									id="syslog_host"
-									type="text"
-									value={syslogHost}
-									onChange={(e) => handleSyslogHostChange(e.target.value)}
-									placeholder=""
-									className="flex-1 rounded-r-none"
-								/>
-							</div>
-							<p className="text-sm text-muted-foreground mt-1">IP of Syslog Server</p>
-						</div>
-					</div>
-					<div className="grid grid-cols-4 gap-4 items-center">
-						<Label htmlFor="syslog-port">Port</Label>
-						<div className="col-span-3">
-							<div className="flex">
-								<Input
-									id="syslog_port"
-									type="number"
-									value={syslogPort}
-									onChange={(e) => handleSyslogPortChange(e.target.value)}
-									className="flex-1 rounded-r-none"
-									min={101}
-									max={65535}
-								/>
-							</div>
-						</div>
-					</div>
-					<div className="grid grid-cols-4 gap-4 items-center">
-						<Label htmlFor="syslog-tcp">Use TCP</Label>
-						<div className="flex items-center col-span-3 ">
-							<input
-								type="checkbox"
-								id="syslog_use_tcp"
-								checked={syslogTcp}
-								onChange={(e) => handleSyslogTcpChange(e.target.checked)}
-								className="rounded"
-							/>
-						</div>
-					</div>
-					<div className="grid grid-cols-4 gap-4 items-center">
-						<Label htmlFor="syslog-local-host">Local Hostname</Label>
-						<div className="col-span-3">
-							<div className="flex">
-								<Input
-									id="syslog_local_hostname"
-									type="text"
-									value={syslogLocalHost}
-									onChange={(e) => handleSyslogLocalHostChange(e.target.value)}
-									className="flex-1 rounded-r-none"
-									placeholder={state.data?.hostname}
-								/>
-							</div>
-							<p className="text-sm text-muted-foreground mt-1">
-								Change the hostname this companion instance will report. If not set the system hostname will be used
-							</p>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+		<>
+			<p className="text-muted-foreground text-sm">Configure Companion syslog client</p>
+			<SettingsCard>
+				<SettingsRow label="Enable" htmlFor="enable_syslog" help={null}>
+					<Switch
+						id="enable_syslog"
+						checked={enableSyslog}
+						onCheckedChange={(checked: boolean) => handleEnableSyslog(checked)}
+					/>
+				</SettingsRow>
+				<SettingsRow label="Syslog server" htmlFor="syslog_host" help="IP of Syslog Server">
+					<Input
+						id="syslog_host"
+						type="text"
+						value={syslogHost}
+						onChange={(e) => setSyslogHost(e.target.value)}
+						onBlur={handleSyslogHostBlur}
+					/>
+				</SettingsRow>
+				<SettingsRow label="Port" htmlFor="syslog_port" help={null}>
+					<Input
+						id="syslog_port"
+						type="number"
+						value={syslogPort}
+						onChange={(e) => setSyslogPort(e.target.value)}
+						onBlur={handleSyslogPortBlur}
+						className="w-32"
+						min={101}
+						max={65535}
+					/>
+				</SettingsRow>
+				<SettingsRow label="Use TCP" htmlFor="syslog_use_tcp" help={null}>
+					<Switch
+						id="syslog_use_tcp"
+						checked={syslogTcp}
+						onCheckedChange={(checked: boolean) => handleSyslogTcpChange(checked)}
+					/>
+				</SettingsRow>
+				<SettingsRow
+					label="Local hostname"
+					htmlFor="syslog_local_hostname"
+					help="Change the hostname this companion instance will report. If not set the system hostname will be used"
+				>
+					<Input
+						id="syslog_local_hostname"
+						type="text"
+						value={syslogLocalHost}
+						onChange={(e) => setSyslogLocalHost(e.target.value)}
+						onBlur={handleSyslogLocalHostBlur}
+						placeholder={state.data?.hostname}
+					/>
+				</SettingsRow>
+			</SettingsCard>
+		</>
 	)
 }

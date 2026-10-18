@@ -1,7 +1,7 @@
 // import './Resources/Sentry.js'
 
-import '@fontsource/roboto'
 import './tailwind.css'
+import './Settings.css'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { Settings } from './Settings.js'

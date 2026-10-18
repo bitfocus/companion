@@ -1,0 +1,51 @@
+/* The advanced settings window, laid out like the web UI's settings pages */
+.settings-window {
+	/* Fills the window, so the loading and error states can centre in it */
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+
+	.settings-content {
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+		width: 100%;
+		max-width: var(--container-readable);
+		margin-inline: auto;
+		padding: 1.5rem;
+	}
+
+	.settings-section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		scroll-margin-top: 1.5rem;
+	}
+
+	.settings-section-title {
+		margin: 0;
+		font-size: 1.125rem;
+		font-weight: 700;
+		color: var(--color-text-strong);
+	}
+
+	/* Label to the left of the control, as the web UI lays out its settings */
+	.settings-row {
+		display: grid;
+		grid-template-columns: 150px minmax(0, 1fr);
+		align-items: center;
+		gap: 0.375rem 0.75rem;
+		padding: 0.75rem 1rem;
+
+		& + & {
+			border-top: 1px solid var(--border);
+		}
+	}
+
+	.settings-row-help {
+		grid-column: 2;
+		margin: 0;
+		font-size: 0.75rem;
+		color: var(--muted-foreground);
+	}
+}

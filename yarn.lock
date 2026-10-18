@@ -1699,7 +1699,6 @@ __metadata:
   dependencies:
     "@base-ui/react": "npm:^1.8.0"
     "@companion-app/shared": "npm:*"
-    "@fontsource/roboto": "npm:^5.3.0"
     "@tailwindcss/vite": "npm:^4.3.3"
     "@testing-library/dom": "npm:^10.4.2"
     "@testing-library/react": "npm:^16.3.3"
