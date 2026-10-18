@@ -1,0 +1,248 @@
+html,
+body {
+	overflow: hidden;
+	background: #d50215;
+	font-family:
+		system-ui,
+		-apple-system,
+		'Segoe UI',
+		Roboto,
+		'Helvetica Neue',
+		'Noto Sans',
+		Arial,
+		sans-serif;
+}
+
+.launcher {
+	--launcher-brand: #d50215;
+	--launcher-brand-deep: #b80012;
+	--launcher-ink: #1b1f27;
+	--launcher-on-muted: rgb(255 255 255 / 0.74);
+	--launcher-hairline: rgb(255 255 255 / 0.22);
+	--launcher-good: #4ade80;
+	--launcher-warn: #fcd34d;
+	--launcher-idle: rgb(255 255 255 / 0.5);
+	--launcher-logo-tile-top: #424242;
+	--launcher-logo-tile-bottom: #1c1c1c;
+
+	/* Theme tokens for controls on the red surface: white is the primary colour here */
+	--primary: #fff;
+	--primary-foreground: var(--launcher-brand);
+	--input: rgb(255 255 255 / 0.42);
+	--ring: rgb(255 255 255 / 0.7);
+
+	position: relative;
+	color: var(--foreground);
+	background: var(--launcher-brand);
+	font-size: 14px;
+	line-height: 1.4;
+	user-select: none;
+	/* The window is frameless, so the whole background drags it */
+	-webkit-app-region: drag;
+
+	button,
+	input,
+	label,
+	[role='combobox'],
+	[role='switch'] {
+		-webkit-app-region: no-drag;
+	}
+
+	.launcher-header {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 10px;
+		padding: 28px 20px 16px;
+		background: var(--launcher-ink);
+		background-image: radial-gradient(120% 90% at 50% 0%, rgb(255 255 255 / 0.07), transparent 60%);
+	}
+
+	/* The same graphite tile as the web UI's sidebar logo, scaled up */
+	.launcher-logo-mark {
+		display: grid;
+		place-items: center;
+		width: 72px;
+		height: 72px;
+		padding: 6px;
+		border-radius: 16px;
+		background: linear-gradient(to bottom, var(--launcher-logo-tile-top), var(--launcher-logo-tile-bottom));
+		box-shadow:
+			inset 0 0 0 1px rgb(255 255 255 / 0.12),
+			0 2px 6px rgb(0 0 0 / 0.25);
+
+		img {
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+		}
+	}
+
+	.launcher-ident {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.launcher-wordmark {
+		font-size: 1.3em;
+		font-weight: 700;
+	}
+
+	.launcher-version {
+		padding: 1px 8px;
+		border: 1px solid rgb(255 255 255 / 0.1);
+		border-radius: 999px;
+		background: rgb(255 255 255 / 0.08);
+		color: var(--launcher-on-muted);
+		font-family: var(--font-mono);
+		font-size: 11px;
+		user-select: text;
+	}
+
+	.launcher-settings-button {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+	}
+
+	.launcher-status {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 10px;
+		padding: 18px 20px 20px;
+		background: var(--launcher-brand-deep);
+		box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.15);
+
+		&[data-status='running'] {
+			--launcher-dot: var(--launcher-good);
+		}
+		&[data-status='starting'] {
+			--launcher-dot: var(--launcher-idle);
+		}
+		&[data-status='error'] {
+			--launcher-dot: var(--launcher-warn);
+		}
+	}
+
+	.launcher-state {
+		position: relative;
+		font-size: 26px;
+		font-weight: 600;
+		letter-spacing: -0.01em;
+	}
+
+	/* Hung outside the label so the status word itself is centred, not the dot + word group */
+	.launcher-state-dot {
+		position: absolute;
+		top: 50%;
+		right: 100%;
+		translate: -12px -50%;
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background: var(--launcher-dot);
+		box-shadow: 0 0 0 4px color-mix(in srgb, var(--launcher-dot) 25%, transparent);
+	}
+
+	[data-status='starting'] .launcher-state-dot {
+		animation: launcher-pulse 1.4s ease-in-out infinite;
+	}
+
+	.launcher-url {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		max-width: 100%;
+		padding: 2px;
+		border: 1px solid rgb(255 255 255 / 0.14);
+		border-radius: 999px;
+		background: rgb(0 0 0 / 0.18);
+	}
+
+	.launcher-status-detail {
+		font-size: 13px;
+		text-align: center;
+		text-wrap: balance;
+	}
+
+	.launcher-warning {
+		display: flex;
+		align-items: flex-start;
+		gap: 10px;
+		margin: 16px 20px 0;
+		padding: 10px 12px;
+		border: 1px solid rgb(252 211 77 / 0.55);
+		border-radius: 8px;
+		background: rgb(0 0 0 / 0.22);
+		font-size: 12.5px;
+		line-height: 1.45;
+
+		svg {
+			flex: none;
+			width: 18px;
+			height: 18px;
+			margin-top: 1px;
+			color: var(--launcher-warn);
+		}
+
+		strong {
+			display: block;
+			margin-bottom: 2px;
+			font-weight: 600;
+		}
+	}
+
+	.launcher-body {
+		display: flex;
+		flex-direction: column;
+		gap: 18px;
+		padding: 20px;
+	}
+
+	.launcher-fields {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		gap: 12px;
+	}
+
+	.launcher-field {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		min-width: 0;
+	}
+
+	.launcher-toggles {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 10px 16px;
+	}
+
+	.launcher-actions {
+		display: grid;
+		grid-template-columns: 1.5fr 1fr 1fr;
+		gap: 8px;
+		padding-top: 18px;
+		border-top: 1px solid var(--launcher-hairline);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		[data-status='starting'] .launcher-state-dot {
+			animation: none;
+		}
+	}
+}
+
+/* The dropdown is portaled to <body>, out of reach of the no-drag rules above, yet it sits over the window's drag region */
+[data-slot='select-content'] {
+	-webkit-app-region: no-drag;
+}
+
+@keyframes launcher-pulse {
+	50% {
+		opacity: 0.35;
+	}
+}

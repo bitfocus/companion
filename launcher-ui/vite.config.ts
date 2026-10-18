@@ -15,6 +15,12 @@ export default defineConfig(({ mode }) => {
 			outDir: 'build',
 			chunkSizeWarningLimit: 1 * 1000 * 1000, // Disable warning about large chunks
 			sourcemap: true,
+			rolldownOptions: {
+				input: {
+					launcher: path.join(import.meta.dirname, 'launcher.html'),
+					settings: path.join(import.meta.dirname, 'index.html'),
+				},
+			},
 		},
 		plugins: [
 			reactPlugin(),

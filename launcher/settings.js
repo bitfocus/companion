@@ -1,6 +1,7 @@
 // @ts-check
 import { fileURLToPath } from 'node:url'
-import { app, BrowserWindow, dialog, shell } from 'electron'
+import { BrowserWindow, shell } from 'electron'
+import { loadLauncherUiPage } from './launcher-ui.js'
 
 /** @type {BrowserWindow | null} */
 let settingsWindow = null
@@ -39,17 +40,7 @@ export function showSettings(/** @type {BrowserWindow | null} */ parentWindow) {
 		},
 	})
 
-	if (app.isPackaged) {
-		settingsWindow.loadURL(`file://${process.resourcesPath}/settings-ui/index.html`).catch((err) => {
-			console.error('Failed to load settings.html:', err)
-			dialog.showErrorBox('Error', 'Failed to load settings window.')
-		})
-	} else {
-		settingsWindow.loadURL('http://localhost:5177/').catch((err) => {
-			console.error('Failed to load settings.html:', err)
-			dialog.showErrorBox('Error', 'Failed to load settings window.')
-		})
-	}
+	void loadLauncherUiPage(settingsWindow, 'index.html')
 
 	settingsWindow.webContents.setWindowOpenHandler(({ url }) => {
 		// config.fileProtocol is my custom file protocol

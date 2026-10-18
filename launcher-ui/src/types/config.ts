@@ -1,3 +1,5 @@
+import type { LauncherAppInfo } from '@companion-app/shared/Model/LauncherAppInfo.js'
+
 export interface LauncherConfig {
 	http_port: number
 	bind_ip: string
@@ -16,16 +18,9 @@ export interface LauncherConfig {
 	trusted_proxies: string
 }
 
-export interface AppInfo {
-	appVersion: string
-	appStatus: string
-	appURL: string
-	appLaunch: string | null
-}
-
 export interface ConfigData {
 	config: LauncherConfig
-	appInfo: AppInfo
+	appInfo: LauncherAppInfo
 	platform: string
 	hostname: string
 }

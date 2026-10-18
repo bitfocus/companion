@@ -27,7 +27,7 @@ yarn lint             # eslint (prettier runs inside eslint)
 yarn format           # prettier --write .
 ```
 
-Vitest projects are `companion`, `webui`, `shared-lib`, and `config-tool` (config at the repo root
+Vitest projects are `companion`, `webui`, `shared-lib`, `launcher-ui`, and `config-tool` (config at the repo root
 `vitest.config.ts`). Scope with `--project <name>` and/or a path to keep runs fast.
 
 Finer-grained invocations when you don't want the whole suite:

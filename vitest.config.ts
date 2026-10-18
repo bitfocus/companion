@@ -19,6 +19,7 @@ export default defineConfig({
 	test: {
 		projects: [
 			'webui/vitest.config.ts',
+			'launcher-ui/vitest.config.ts',
 
 			{
 				test: {
