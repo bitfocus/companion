@@ -94,6 +94,18 @@ describe('SatelliteBitmapCache', () => {
 		expect(cache.has('b')).toBe(true)
 	})
 
+	test('a cost larger than the whole budget evicts only that bitmap, even when it is not the oldest', () => {
+		const cache = new SatelliteBitmapCache(3 * SMALL)
+		cache.store('a', 80, 80)
+		cache.store('b', 80, 80)
+		cache.store('c', 80, 80)
+
+		expect(cache.setCost('c', 3 * SMALL + 1)).toEqual(['c'])
+		expect(cache.has('a')).toBe(true)
+		expect(cache.has('b')).toBe(true)
+		expect(cache.usedBytes).toBe(2 * SMALL)
+	})
+
 	test('reporting a cost does not count as using the bitmap', () => {
 		const cache = new SatelliteBitmapCache(3 * SMALL)
 		cache.store('a', 80, 80)
@@ -193,7 +205,7 @@ describe('SatelliteBitmapCache', () => {
 
 describe('computeBitmapId', () => {
 	function makeImage(cacheKey: string | undefined): ImageResult {
-		return new ImageResult(cacheKey, { type: 'button' }, 0, async () => new Uint8Array())
+		return new ImageResult(cacheKey, { type: 'button' }, 1, async () => new Uint8Array())
 	}
 
 	test('is stable for the same render and output', () => {

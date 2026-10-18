@@ -268,7 +268,7 @@ function createMockImageResult(
 	drawElements: SomeButtonGraphicsDrawElement[] = [],
 	referencedLocations: ReadonlySet<string> = new Set()
 ): ImageResult {
-	return new ImageResult(undefined, null, 0, async () => Buffer.alloc(0), drawElements, referencedLocations)
+	return new ImageResult(undefined, null, 1, async () => Buffer.alloc(0), drawElements, referencedLocations)
 }
 
 /**

@@ -121,7 +121,7 @@ export class GraphicsRenderer {
 			? `blank:${location ? `${location.pageNumber}/${location.row}/${location.column}` : 'bar'}`
 			: `blank:no-bar`
 
-		return new ImageResult(cacheKey, null, 0, async (width, height, rotation, format) => {
+		return new ImageResult(cacheKey, null, 1, async (width, height, rotation, format) => {
 			const dimensions = rotateResolution(width, height, rotation)
 			return GraphicsRenderer.#getCachedImage(
 				dimensions[0],
@@ -289,7 +289,7 @@ export class GraphicsRenderer {
 	 */
 	static drawLockIcon(): ImageResult {
 		// The lock icon is an invariant render, so it has a single fixed content key.
-		return new ImageResult('lock-icon', LOCK_ICON_STYLE, 0, async (width, height, rotation, format) => {
+		return new ImageResult('lock-icon', LOCK_ICON_STYLE, 1, async (width, height, rotation, format) => {
 			const dimensions = rotateResolution(width, height, rotation)
 			return GraphicsRenderer.#getCachedImage(
 				dimensions[0],

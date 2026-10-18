@@ -1,4 +1,4 @@
-import { selectFrameIndex } from '@companion-app/shared/Graphics/AnimationTiming.js'
+import { RENDER_CLOCK_INTERVAL_MS, selectFrameIndex } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import type { DecodedRasterImage, RendererDrawStyle } from '@companion-app/shared/Model/Render.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { Logger } from '../../Log/Controller.js'
@@ -41,6 +41,50 @@ export interface AnimationFrames {
 	readonly frameIndices: ReadonlyMap<string, number>
 	/** The longest loop of any of the animations, in ms. 0 when there are none */
 	readonly maxDurationMs: number
+	/**
+	 * How many different renders there can be in one cycle of all the animations together, before they repeat.
+	 * This is an upper bound, and 1 when there are no animations
+	 */
+	readonly cycleRenderCount: number
+}
+
+/** One animation drawn on a render, for counting the renders in a cycle */
+export interface CycleAnimation {
+	readonly frameCount: number
+	/** The length of one loop, in ms, which is a multiple of the render clock interval */
+	readonly durationMs: number
+}
+
+/** Beyond this many render clock ticks a cycle is effectively endless, which also keeps the maths exact */
+const MAX_CYCLE_TICKS = 1_000_000_000
+
+function greatestCommonDivisor(a: number, b: number): number {
+	while (b) [a, b] = [b, a % b]
+	return a
+}
+
+/**
+ * Count how many different renders there can be in one cycle of some animations drawn together.
+ * The animations repeat together after the least common multiple of their loops, and within that the render only
+ * changes when one of them moves to its next frame, so the count is at most the total number of frames shown in the
+ * cycle, and at most one per tick of the render clock
+ */
+export function countCycleRenders(animations: readonly CycleAnimation[]): number {
+	if (animations.length === 0) return 1
+
+	let cycleTicks = 1
+	for (const { durationMs } of animations) {
+		const ticks = Math.max(1, Math.round(durationMs / RENDER_CLOCK_INTERVAL_MS))
+		cycleTicks = Math.min(MAX_CYCLE_TICKS, (cycleTicks / greatestCommonDivisor(cycleTicks, ticks)) * ticks)
+	}
+
+	let framesInCycle = 0
+	for (const { frameCount, durationMs } of animations) {
+		const ticks = Math.max(1, Math.round(durationMs / RENDER_CLOCK_INTERVAL_MS))
+		framesInCycle += frameCount * Math.ceil(cycleTicks / ticks)
+	}
+
+	return Math.min(cycleTicks, framesInCycle)
 }
 
 interface CacheEntry {
@@ -111,6 +155,7 @@ export class ImageCacheStore {
 	 */
 	async selectAnimationFrames(elements: SomeButtonGraphicsDrawElement[], timeMs: number): Promise<AnimationFrames> {
 		const frameIndices = new Map<string, number>()
+		const animations: CycleAnimation[] = []
 		let maxDurationMs = 0
 
 		const visit = async (elements: SomeButtonGraphicsDrawElement[]): Promise<void> => {
@@ -123,8 +168,9 @@ export class ImageCacheStore {
 							const entry = await this.#getEntry(element.base64Image)
 							if (!entry || entry.result.type !== 'raster' || entry.result.frameCount <= 1) return
 
-							const { frameStartMs, durationMs } = entry.result
+							const { frameStartMs, durationMs, frameCount } = entry.result
 							frameIndices.set(element.id, selectFrameIndex(frameStartMs, durationMs, timeMs))
+							animations.push({ frameCount, durationMs })
 							maxDurationMs = Math.max(maxDurationMs, durationMs)
 							return
 						}
@@ -140,7 +186,7 @@ export class ImageCacheStore {
 		}
 		await visit(elements)
 
-		return { frameIndices, maxDurationMs }
+		return { frameIndices, maxDurationMs, cycleRenderCount: countCycleRenders(animations) }
 	}
 
 	/**

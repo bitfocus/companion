@@ -95,11 +95,24 @@ export interface SatelliteStyleSocket {
 }
 
 /**
- * Animations with a loop longer than this aren't cached by satellite clients. Each frame of a long loop is seen again
- * only after many others, so unless every frame fits in the client's cache, it gets evicted just before it is needed
- * again. That would make every frame cost an id and an eviction on top of the bitmap, which is worse than no caching
+ * The most of a client's cache budget which the frames of one animation may take, for its frames to be cached.
+ * Each frame of an animation is seen again only after all of the others, so unless they all fit in the client's
+ * cache, each gets evicted just before it is needed again. That would make every frame cost an id and an eviction on
+ * top of the bitmap, which is worse than no caching.
+ *
+ * This is a heuristic: it counts each frame at its size as RGBA rather than what the client reports, and leaves room
+ * for the other buttons, but several animations at once can still take more than the whole budget between them
  */
-export const SATELLITE_CACHE_MAX_ANIMATION_LOOP_MS = 10_000
+export const SATELLITE_CACHE_MAX_ANIMATION_SHARE = 0.5
+
+/**
+ * Whether the renders of an animation could all stay in a client's cache together, so caching them is worthwhile
+ */
+function shouldCacheRender(cache: SatelliteBitmapCache, image: ImageResult, width: number, height: number): boolean {
+	// A static render is cached whenever it fits at all
+	if (image.cycleRenderCount <= 1) return true
+	return image.cycleRenderCount * width * height * 4 <= cache.budgetBytes * SATELLITE_CACHE_MAX_ANIMATION_SHARE
+}
 
 /** Most bitmap ids to list in one BITMAP-EVICT, to keep the line well within the length limit */
 const MAX_EVICT_IDS_PER_MESSAGE = 1000
@@ -135,7 +148,7 @@ export async function sendSatelliteStyleMessage(
 ): Promise<void> {
 	const bitmapSize = style.bitmap
 	const bitmapId =
-		bitmapSize && socket.bitmapCache && image.animationLoopMs <= SATELLITE_CACHE_MAX_ANIMATION_LOOP_MS
+		bitmapSize && socket.bitmapCache && shouldCacheRender(socket.bitmapCache, image, bitmapSize.w, bitmapSize.h)
 			? computeBitmapId(image, bitmapSize.w, bitmapSize.h, rotation, bitmapFormat)
 			: null
 	if (!bitmapSize || !bitmapId) {
