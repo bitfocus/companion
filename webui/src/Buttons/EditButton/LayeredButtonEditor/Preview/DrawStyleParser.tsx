@@ -315,6 +315,7 @@ class LayeredButtonDrawStyleParser {
 
 				...resolveButtonStyleProperties(this.#drawConfig, elements),
 				location: this.#location,
+				decodedImages: null, // The browser decodes images itself
 			})
 		},
 		DRAW_DEBOUNCE,

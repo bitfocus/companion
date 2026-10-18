@@ -27,6 +27,7 @@ function makeButtonStyle(
 		stepCount: 1,
 		button_status: undefined,
 		action_running: undefined,
+		decodedImages: null,
 		...overrides,
 	}
 }

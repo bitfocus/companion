@@ -130,21 +130,13 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 	}
 
 	protected async loadBase64Image(base64Image: string): Promise<CanvasImage> {
-		const trimmedImage = base64Image.trim()
-		if (trimmedImage.startsWith('data:image')) {
-			return loadImage(trimmedImage)
-		} else if (isBase64(trimmedImage)) {
-			// Ideally we could avoid this check for a valid base64 image, but that can result in the canvas segfaulting
-			return loadImage(Buffer.from(trimmedImage, 'base64'))
-		} else {
-			throw new Error('Invalid base64 image format')
-		}
+		return loadBase64Image(base64Image)
 	}
 
 	protected loadPixelBuffer(data: Uint8Array, width: number, height: number): CanvasImage | Canvas | null {
 		let imageData: ImageData
 		try {
-			imageData = new ImageData(new Uint8ClampedArray(data), width, height)
+			imageData = new ImageData(new Uint8ClampedArray(data.buffer, data.byteOffset, data.byteLength), width, height)
 		} catch (error: any) {
 			this.logger.error(`Can't draw pixel buffer, creating ImageData from buffer failed: ` + error.stack)
 			return null
@@ -182,6 +174,21 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 		return this.#canvas.toDataURL('image/png')
 	}
 }
+/**
+ * Load an image from a data url or a bare base64 string
+ */
+export async function loadBase64Image(base64Image: string): Promise<CanvasImage> {
+	const trimmedImage = base64Image.trim()
+	if (trimmedImage.startsWith('data:image')) {
+		return loadImage(trimmedImage)
+	} else if (isBase64(trimmedImage)) {
+		// Ideally we could avoid this check for a valid base64 image, but that can result in the canvas segfaulting
+		return loadImage(Buffer.from(trimmedImage, 'base64'))
+	} else {
+		throw new Error('Invalid base64 image format')
+	}
+}
+
 function isBase64(trimmedImage: string): boolean {
 	// Basic check: valid base64 string (no data URL prefix, only base64 chars, length multiple of 4)
 	const base64Regex = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/

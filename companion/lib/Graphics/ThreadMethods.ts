@@ -9,10 +9,12 @@
  * this program.
  */
 
+import { decodeImage } from './ImageCache/DecodeImage.js'
 import { GraphicsRenderer } from './Renderer.js'
 
 export const GraphicsThreadMethods = Object.freeze({
 	drawButtonImageBuffer: GraphicsRenderer.drawButtonImageBuffer.bind(GraphicsRenderer),
 	createImagePreview: GraphicsRenderer.createImagePreview.bind(GraphicsRenderer),
 	drawImageBuffers: GraphicsRenderer.drawImageBuffers.bind(GraphicsRenderer),
+	decodeImage: decodeImage,
 })

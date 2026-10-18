@@ -44,6 +44,7 @@ import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
 import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
 import { FONT_DEFINITIONS } from './Fonts.js'
+import { ImageCacheStore } from './ImageCache/ImageCacheStore.js'
 import { ImageLibrary } from './ImageLibrary.js'
 import { getImageResultStats, ImageResult, setDrawNativeRenderObserver } from './ImageResult.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
@@ -62,6 +63,12 @@ const RENDER_CACHE_PER_BUTTON_RATIO = 0.1 // Proportion of states to keep cached
 const RENDER_CACHE_MIN_SIZE = 100
 const RENDER_CACHE_MAX_SIZE = 1000
 const RENDER_CACHE_RESIZE_DEBOUNCE_MS = 500
+
+// Decoded images are stored at their own size, so that a large image can be drawn in segments across many
+// buttons. Any single image larger than this (~2900x2900) is drawn from its source instead, so it can't push
+// everything else out of the cache
+const IMAGE_CACHE_MAX_ENTRY_BYTES = 32 * 1024 * 1024
+const IMAGE_CACHE_MAX_BYTES = 128 * 1024 * 1024
 
 interface GraphicsControllerEvents {
 	button_drawn: [location: ControlLocation, render: ImageResult]
@@ -103,6 +110,15 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	readonly #renderLRUCache: QuickLRU<string, ImageResult>
 
 	readonly #renderQueue: ImageWriteQueue<string, [RenderArguments, boolean]>
+
+	/**
+	 * Decoded images, shared with the render threads
+	 */
+	readonly #imageCache = new ImageCacheStore(
+		this.#logger,
+		async (source) => this.#poolExec('decodeImage', [source, IMAGE_CACHE_MAX_ENTRY_BYTES], CRASHED_WORKER_RETRY_COUNT),
+		IMAGE_CACHE_MAX_BYTES
+	)
 
 	/**
 	 * Image library for storing and managing images
@@ -314,6 +330,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									...buttonStyle,
 									...resolveButtonStyleProperties(this.#drawOptions, buttonStyle.elements),
 									location: undefined, // Presets don't have a location, and it isn't needed for rendering
+									decodedImages: null, // Resolved when drawn
 								}
 
 								render = this.#generateImageResult(cacheKey, renderStyle)
@@ -349,12 +366,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
 						const showButtonConfig = resolveButtonStyleProperties(this.#drawOptions, buttonStyle.elements)
 
-						const renderStyle = {
+						const renderStyle: RendererDrawStyle = {
 							...buttonStyle,
 
 							...showButtonConfig,
 							// Only needed if the topbar is shown
 							location: showButtonConfig.decoration === ButtonGraphicsDecorationType.TopBar ? location : undefined,
+							decodedImages: null, // Resolved when drawn
 						}
 
 						// Track clock-sensitive locations so we can re-render them on each clock tick
@@ -569,6 +587,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			...resolveButtonStyleProperties(this.#drawOptions, elements),
 
 			location: undefined,
+			decodedImages: null, // Resolved when drawn
 		}
 
 		// One-off preview: never cached or emitted, so it has no content key (never deduped).
@@ -850,6 +869,16 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			}
 		)
 
+		metrics.gauge('companion_image_cache_bytes', 'Approximate bytes retained by the decoded image cache', () => {
+			return this.#imageCache.usedBytes
+		})
+		metrics.gauge('companion_image_cache_max_bytes', 'Byte budget of the decoded image cache', () => {
+			return this.#imageCache.maxBytes
+		})
+		metrics.gauge('companion_image_cache_entries', 'Images held by the decoded image cache', () => {
+			return this.#imageCache.entryCount
+		})
+
 		// Render worker terminations since startup
 		metrics.counter('companion_render_worker_terminations_total', 'Render worker terminations since startup', () => {
 			return this.#workerTerminationsTotal
@@ -891,7 +920,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		format: imageRs.PixelFormat,
 		remainingAttempts: number
 	): Promise<Uint8Array> {
-		return this.#poolExec('drawButtonImageBuffer', [drawStyle, resolution, rotation, format], remainingAttempts)
+		const resolvedDrawStyle = await this.#imageCache.resolveDrawStyle(drawStyle)
+
+		return this.#poolExec('drawButtonImageBuffer', [resolvedDrawStyle, resolution, rotation, format], remainingAttempts)
 	}
 
 	/**

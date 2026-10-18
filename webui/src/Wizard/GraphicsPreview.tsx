@@ -189,6 +189,7 @@ export function GraphicsPreviewButton({
 						elements
 					),
 					location: undefined, // a preview has no real location; the top bar shows an "x/x/x" placeholder
+					decodedImages: null,
 				}
 
 				image.clear()

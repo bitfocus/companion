@@ -19,6 +19,7 @@
 
 import type QuickLRU from 'quick-lru'
 import type { MinimalLogger } from '../Logger.js'
+import type { DecodedRasterImage } from '../Model/Render.js'
 import type { ButtonGraphicsTextDrawElement } from '../Model/StyleLayersModel.js'
 import { resolveFontName } from './Fonts.js'
 import {
@@ -586,6 +587,58 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			return false
 		}
 
+		return this.#drawLoadedImage(canvasImage, xStart, yStart, width, height, halign, valign, scale)
+	}
+
+	/**
+	 * Draws an already decoded image to the canvas
+	 * the image can be fitted and cropped to the canvas in the same variations as `drawBase64Image`
+	 * @param image the decoded image
+	 * @param xStart left position where to place the image
+	 * @param yStart top position where to place the image
+	 * @param width width of the bounding box where to place the image
+	 * @param height height of the bounding box where to place the image
+	 * @param halign horizontal alignment of the image in the bounding box
+	 * @param valign vertical alignment of the image in the bounding box
+	 * @param scale the size factor of the image, as for `drawBase64Image`
+	 */
+	drawDecodedImage(
+		image: DecodedRasterImage,
+		xStart: number,
+		yStart: number,
+		width: number,
+		height: number,
+		halign: HorizontalAlignment,
+		valign: VerticalAlignment,
+		scale: number | 'crop' | 'fill' | 'fit' | 'fit_or_shrink'
+	): true | false | null {
+		const frameBytes = image.width * image.height * 4
+		const frameOffset = image.frameIndex * frameBytes
+		if (frameBytes === 0 || frameOffset + frameBytes > image.buffer.byteLength) {
+			this.logger.error('Decoded image frame is out of bounds of its buffer')
+			return false
+		}
+
+		const canvasImage = this.loadPixelBuffer(
+			new Uint8Array(image.buffer, frameOffset, frameBytes),
+			image.width,
+			image.height
+		)
+		if (!canvasImage) return false
+
+		return this.#drawLoadedImage(canvasImage, xStart, yStart, width, height, halign, valign, scale)
+	}
+
+	#drawLoadedImage(
+		canvasImage: TDrawImageType,
+		xStart: number,
+		yStart: number,
+		width: number,
+		height: number,
+		halign: HorizontalAlignment,
+		valign: VerticalAlignment,
+		scale: number | 'crop' | 'fill' | 'fit' | 'fit_or_shrink'
+	): true | false | null {
 		const imageWidth = canvasImage.width
 		const imageHeight = canvasImage.height
 
@@ -1070,12 +1123,10 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 		format?: 'RGB' | 'RGBA' | 'ARGB',
 		scale?: number
 	): void {
-		let buffer: Buffer
+		let buffer: Uint8Array
 		if (typeof bufferRaw == 'object') {
-			if (bufferRaw instanceof Buffer) {
+			if (bufferRaw instanceof Buffer || bufferRaw instanceof Uint8Array) {
 				buffer = bufferRaw
-			} else if (bufferRaw instanceof Uint8Array) {
-				buffer = Buffer.from(bufferRaw.buffer, bufferRaw.byteOffset, bufferRaw.byteLength)
 			} else {
 				this.logger.error(`Pixelbuffer is of unknown type (${typeof bufferRaw})`)
 				return
@@ -1109,7 +1160,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			// Buffer is packed ok
 		} else if (buffer.length == rgbaByteCount && (!format || format === 'ARGB')) {
 			// ARGB: swap order from ARGB to RGBA
-			const argb = Uint8Array.from(buffer)
+			const argb = buffer
 
 			buffer = Buffer.alloc(width * height * 4)
 			for (let i = 0; i < buffer.length; i += 4) {
@@ -1122,7 +1173,7 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 			}
 		} else if (buffer.length == rgbByteCount) {
 			// RGB: add alpha channel
-			const rgb = Uint8Array.from(buffer)
+			const rgb = buffer
 
 			buffer = Buffer.alloc(width * height * 4)
 			for (let i = 0; i < rgb.length / 3; i += 1) {
