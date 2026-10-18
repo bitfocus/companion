@@ -3,6 +3,13 @@
  */
 export type LauncherAppStatus = 'starting' | 'running' | 'error'
 
+/** How each status is named in the launcher window and its menu bar/tray menu */
+export const LAUNCHER_STATUS_LABELS: Record<LauncherAppStatus, string> = {
+	starting: 'Starting',
+	running: 'Running',
+	error: 'Error',
+}
+
 export interface LauncherHttpStatus {
 	appStatus: LauncherAppStatus
 	/** Detail shown under the status, eg why binding failed */

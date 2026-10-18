@@ -1,12 +1,6 @@
 import { Copy } from 'lucide-react'
-import type { LauncherAppStatus } from '@companion-app/shared/Model/LauncherAppInfo.js'
+import { LAUNCHER_STATUS_LABELS, type LauncherAppStatus } from '@companion-app/shared/Model/LauncherAppInfo.js'
 import { Button } from '~/components/ui/button'
-
-const STATUS_LABELS: Record<LauncherAppStatus, string> = {
-	starting: 'Starting',
-	running: 'Running',
-	error: 'Error',
-}
 
 interface LauncherStatusProps {
 	status: LauncherAppStatus
@@ -21,7 +15,7 @@ export function LauncherStatus({ status, message, launchUrl }: LauncherStatusPro
 		<div className="launcher-status" data-status={status} aria-live="polite">
 			<div className="launcher-state">
 				<span className="launcher-state-dot" aria-hidden="true" />
-				{STATUS_LABELS[status]}
+				{LAUNCHER_STATUS_LABELS[status]}
 			</div>
 
 			{launchUrl && (

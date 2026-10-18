@@ -13,6 +13,7 @@ import { nanoid } from 'nanoid'
 import { parse as parsePlist } from 'plist'
 import stripAnsi from 'strip-ansi'
 import systeminformation from 'systeminformation'
+import { LAUNCHER_STATUS_LABELS } from '@companion-app/shared/Model/LauncherAppInfo.js'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
 import { loadLauncherUiPage } from './launcher-ui.js'
@@ -247,6 +248,8 @@ if (!lock) {
 		if (settingsWindow) {
 			settingsWindow.webContents.send('info', configData, appInfo, process.platform, os.hostname())
 		}
+
+		updateTrayMenu()
 	}
 
 	/** @type {RespawnMonitor} */
@@ -680,6 +683,10 @@ if (!lock) {
 			window = null
 		})
 
+		// The tray menu's show/hide item follows the window
+		window.on('show', updateTrayMenu)
+		window.on('hide', updateTrayMenu)
+
 		window.on('ready-to-show', () => {
 			if (!uiConfig.get('start_minimised')) {
 				showWindow()
@@ -704,44 +711,49 @@ if (!lock) {
 			tray.on('click', toggleWindow)
 		}
 
-		const menu = new electron.Menu()
-		menu.append(
-			new electron.MenuItem({
-				label: 'Show/Hide window',
-				click: toggleWindow,
-			})
+		updateTrayMenu()
+	}
+
+	/** Rebuild the tray (macOS menu bar) menu, which shows the current status and window state */
+	function updateTrayMenu() {
+		if (!tray) return
+
+		tray.setContextMenu(
+			electron.Menu.buildFromTemplate([
+				{
+					label: `Companion ${appInfo.appVersion} — ${LAUNCHER_STATUS_LABELS[appInfo.appStatus]}`,
+					enabled: false,
+				},
+				{ type: 'separator' },
+				{
+					label: 'Launch GUI',
+					enabled: appInfo.appStatus === 'running',
+					click: launchUI,
+				},
+				{
+					label: window?.isVisible() ? 'Hide Launcher' : 'Show Launcher',
+					click: toggleWindow,
+				},
+				{ type: 'separator' },
+				{
+					label: 'Scan USB Devices',
+					click: scanUsb,
+				},
+				{
+					label: 'Show Config Folder',
+					click: showConfigFolder,
+				},
+				{
+					label: 'Advanced Settings…',
+					click: () => showSettings(window),
+				},
+				{ type: 'separator' },
+				{
+					label: 'Quit Companion…',
+					click: promptToQuit,
+				},
+			])
 		)
-		menu.append(
-			new electron.MenuItem({
-				label: 'Launch GUI',
-				click: launchUI,
-			})
-		)
-		menu.append(
-			new electron.MenuItem({
-				label: 'Scan USB Devices',
-				click: scanUsb,
-			})
-		)
-		menu.append(
-			new electron.MenuItem({
-				label: 'Show config folder',
-				click: showConfigFolder,
-			})
-		)
-		menu.append(
-			new electron.MenuItem({
-				label: 'Advanced Settings',
-				click: () => showSettings(window),
-			})
-		)
-		menu.append(
-			new electron.MenuItem({
-				label: 'Quit',
-				click: promptToQuit,
-			})
-		)
-		tray.setContextMenu(menu)
 	}
 
 	function launchUI() {
