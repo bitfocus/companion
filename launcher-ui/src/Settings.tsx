@@ -2,8 +2,12 @@ import { RotateCw } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert'
 import { LoadingSpinner } from '~/components/ui/loading-spinner'
 import { ConfigProvider } from './contexts/ConfigContext'
+import { useActiveSection } from './hooks/useActiveSection'
 import { useConfig } from './hooks/useConfig'
 import { SectionDefinitions, type SectionDefinition } from './Sections'
+import { SettingsNav } from './SettingsNav'
+
+const SECTION_IDS = SectionDefinitions.map((section) => section.id)
 
 function SettingsSection({ section }: { section: SectionDefinition }): React.JSX.Element {
 	const SectionComponent = section.component
@@ -18,6 +22,7 @@ function SettingsSection({ section }: { section: SectionDefinition }): React.JSX
 
 function SettingsContent(): React.JSX.Element {
 	const { state } = useConfig()
+	const [activeSectionId, scrollToSection] = useActiveSection(SECTION_IDS)
 
 	if (state.isLoading) {
 		return (
@@ -55,17 +60,20 @@ function SettingsContent(): React.JSX.Element {
 	}
 
 	return (
-		<div className="settings-content">
-			<Alert variant="warning">
-				<RotateCw />
-				<AlertTitle>
-					Changed settings are saved immediately, and Companion restarts when needed to apply them
-				</AlertTitle>
-				<AlertDescription>This may disconnect your surfaces and connections.</AlertDescription>
-			</Alert>
-			{SectionDefinitions.map((section) => (
-				<SettingsSection key={section.id} section={section} />
-			))}
+		<div className="settings-layout">
+			<SettingsNav sections={SectionDefinitions} activeId={activeSectionId} onSelect={scrollToSection} />
+			<div className="settings-content">
+				<Alert variant="warning">
+					<RotateCw />
+					<AlertTitle>
+						Changed settings are saved immediately, and Companion restarts when needed to apply them
+					</AlertTitle>
+					<AlertDescription>This may disconnect your surfaces and connections.</AlertDescription>
+				</Alert>
+				{SectionDefinitions.map((section) => (
+					<SettingsSection key={section.id} section={section} />
+				))}
+			</div>
 		</div>
 	)
 }

@@ -23,10 +23,10 @@ export function showSettings(/** @type {BrowserWindow | null} */ parentWindow) {
 		// A child of the launcher, so it stays above it (on macOS it also moves with it). Not modal, as then the window
 		// decoration disappears on mac
 		parent: parentWindow ?? undefined,
-		// A single column of settings cards, at the web UI's readable width
-		width: 760,
+		// The section list beside a single column of settings cards
+		width: 920,
 		height: 760,
-		minWidth: 560,
+		minWidth: 680,
 		minHeight: 480,
 		// Shown once the page has loaded, so it opens already painted in the system theme
 		show: false,

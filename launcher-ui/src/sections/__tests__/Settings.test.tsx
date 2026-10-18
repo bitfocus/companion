@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from 'vitest'
 import type { LauncherAppInfo } from '@companion-app/shared/Model/LauncherAppInfo.js'
 import { Settings } from '~/Settings.js'
@@ -53,6 +53,8 @@ beforeEach(() => {
 			return () => listeners.delete(channel)
 		},
 	}
+	// jsdom doesn't scroll
+	Element.prototype.scrollIntoView = vi.fn()
 	globalThis.ResizeObserver = class {
 		observe(): void {}
 		unobserve(): void {}
@@ -63,6 +65,26 @@ beforeEach(() => {
 afterEach(() => cleanup())
 
 describe('Advanced settings', () => {
+	test('lists the sections down the side, marking the one scrolled to', () => {
+		renderSettings(CONFIG)
+
+		const nav = screen.getByRole('navigation', { name: 'Settings sections' })
+		const links = within(nav).getAllByRole('link')
+		expect(links.map((link) => link.textContent)).toEqual(['General', 'Syslog', 'Developer', 'Dangerous Features'])
+		expect(links[0].getAttribute('aria-current')).toBe('true')
+	})
+
+	test('scrolls to a section picked in the list, and marks it', () => {
+		renderSettings(CONFIG)
+
+		const developer = screen.getByRole('link', { name: 'Developer' })
+		fireEvent.click(developer)
+
+		expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' })
+		expect(developer.getAttribute('aria-current')).toBe('true')
+		expect(screen.getByRole('link', { name: 'General' }).getAttribute('aria-current')).toBeNull()
+	})
+
 	test('saves a text field when it loses focus, not on every keystroke', () => {
 		renderSettings(CONFIG)
 
