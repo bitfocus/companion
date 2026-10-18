@@ -54,6 +54,7 @@ process.stderr.write = (chunk: string | Uint8Array, ...rest: unknown[]): boolean
 
 // base-ui uses matchMedia for responsive behaviour
 Object.defineProperty(window, 'matchMedia', {
+	configurable: true,
 	writable: true,
 	value: (query: string) => ({
 		matches: false,

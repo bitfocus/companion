@@ -13,6 +13,7 @@ export default defineConfig({
 		name: 'webui',
 		exclude: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**'],
 		environment: 'jsdom',
+		pool: 'vmThreads',
 		css: true,
 		setupFiles: ['./src/test-setup.ts'],
 	},
