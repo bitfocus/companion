@@ -94,6 +94,42 @@ describe('SatelliteBitmapCache', () => {
 		expect(cache.has('b')).toBe(true)
 	})
 
+	test('reporting a cost does not count as using the bitmap', () => {
+		const cache = new SatelliteBitmapCache(3 * SMALL)
+		cache.store('a', 80, 80)
+		cache.store('b', 80, 80)
+		cache.store('c', 80, 80)
+
+		// Lower and then raise the cost of `a`, keeping within budget
+		expect(cache.setCost('a', 100)).toEqual([])
+		expect(cache.setCost('a', SMALL)).toEqual([])
+
+		// `a` is still the least recently used, so it is the one to make room
+		expect(cache.store('d', 80, 80)).toEqual(['a'])
+	})
+
+	test('a cost which takes the total over budget evicts the least recently used, which can be that bitmap', () => {
+		const cache = new SatelliteBitmapCache(3 * SMALL)
+		cache.store('a', 80, 80)
+		cache.store('b', 80, 80)
+		cache.store('c', 80, 80)
+
+		// `a` is the oldest, so it is evicted first, even though `a` is the one reported
+		expect(cache.setCost('a', 2 * SMALL)).toEqual(['a'])
+		expect(cache.usedBytes).toBe(2 * SMALL)
+		expect(cache.has('b')).toBe(true)
+		expect(cache.has('c')).toBe(true)
+	})
+
+	test('a budget of 0 evicts bitmaps reported to cost nothing', () => {
+		const cache = new SatelliteBitmapCache(SMALL)
+		cache.store('a', 80, 80)
+		cache.setCost('a', 0)
+
+		expect(cache.resize(0)).toEqual(['a'])
+		expect(cache.entryCount).toBe(0)
+	})
+
 	test('a cost for a bitmap the client does not have is ignored', () => {
 		const cache = new SatelliteBitmapCache(SMALL)
 
