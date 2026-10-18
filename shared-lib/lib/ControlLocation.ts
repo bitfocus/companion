@@ -11,6 +11,18 @@ export const ControlLocationOption = {
 	useVariables: CompanionFieldVariablesSupport.InternalParser,
 } as const satisfies CompanionInputFieldTextInputExtended
 
+/**
+ * The location of a local variable. Controls without a grid location default to themselves
+ */
+export const LocalVariableLocationOption = {
+	...ControlLocationOption,
+	defaultForControlType: {
+		trigger: 'this',
+		'expression-variable': 'this',
+		page: 'this',
+	},
+} as const satisfies CompanionInputFieldTextInputExtended
+
 export type ThisLocationVariable =
 	| 'this:page'
 	| 'this:column'

@@ -43,6 +43,7 @@ export function translateConnectionConfigFields(fields: SomeCompanionConfigField
 						...translateCommonFields(o),
 						type: 'bonjour-device',
 						width: o.width,
+						default: undefined,
 					} satisfies Complete<CompanionInputFieldBonjourDeviceExtended>
 				case 'secret-text':
 					return {
@@ -251,7 +252,7 @@ function translateCustomVariableField(
 function translateCommonFields(
 	field: CompanionInputFieldBase
 ): Pick<
-	Complete<CompanionInputFieldBaseExtended>,
+	Complete<CompanionInputFieldBaseExtended<undefined>>,
 	| 'id'
 	| 'label'
 	| 'tooltip'
@@ -262,6 +263,7 @@ function translateCommonFields(
 	| 'allowInvalidValues'
 	| 'deferParsing'
 	| 'contextVariableResolution'
+	| 'defaultForControlType'
 > {
 	return {
 		id: field.id,
@@ -280,5 +282,6 @@ function translateCommonFields(
 		allowInvalidValues: field.allowInvalidValues ?? false,
 		deferParsing: undefined,
 		contextVariableResolution: undefined,
+		defaultForControlType: undefined, // Only supported for internal
 	}
 }

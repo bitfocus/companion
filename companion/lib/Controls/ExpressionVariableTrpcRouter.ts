@@ -57,6 +57,7 @@ export function createExpressionVariableTrpcRouter(
 				'internal',
 				EntityModelType.Feedback,
 				'expression_value',
+				'expression-variable',
 				null
 			)
 			if (!rootEntity) throw new Error('Failed to get initial entity for expression variable')
