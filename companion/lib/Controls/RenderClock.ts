@@ -1,3 +1,4 @@
+import { RENDER_CLOCK_INTERVAL_MS } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController from '../Log/Controller.js'
 
@@ -20,7 +21,7 @@ export class RenderClock {
 					this.#logger.warn(`listener threw an error: ${stringifyError(e)}`)
 				}
 			}
-		}, 100)
+		}, RENDER_CLOCK_INTERVAL_MS)
 	}
 
 	subscribe(listener: () => void): () => void {

@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import QuickLRU from 'quick-lru'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { RENDER_CLOCK_INTERVAL_MS } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import type { ElementGeometry } from '@companion-app/shared/Graphics/Geometry.js'
 import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
@@ -262,6 +263,7 @@ const LayeredButtonCanvas = observer(function LayeredButtonCanvas({
 		if (!drawContext.current || drawContext.current.canvas !== canvas) {
 			// Drop the previous canvas' geometry rather than hit-testing against a stale layout
 			setGeometry([])
+			drawContext.current?.dispose()
 			drawContext.current = new RendererDrawContext(canvas, setGeometry)
 		}
 
@@ -272,6 +274,16 @@ const LayeredButtonCanvas = observer(function LayeredButtonCanvas({
 		// Pass the new draw style to the context
 		drawContext.current.draw(drawStyle)
 	}, [canvas, location, drawStyle, hiddenElements, selectedElementId])
+
+	// Stop any animation from drawing once the canvas is gone. A disposed context can't be reused, so a remount
+	// (as StrictMode does) creates a new one
+	useEffect(
+		() => () => {
+			drawContext.current?.dispose()
+			drawContext.current = null
+		},
+		[]
+	)
 
 	// The first paint can happen before the custom fonts finish loading, so text gets measured against the
 	// fallback font. Once the fonts are ready, drop the stale measurements and redraw at the correct size.
@@ -390,6 +402,11 @@ class RendererDrawContext {
 	#hiddenElements: ReadonlySet<string> = new Set()
 	#selectedElementId: string | null = null
 
+	/** Redraws an animated image on the next tick of the render clock */
+	#animationTimer: ReturnType<typeof setTimeout> | null = null
+	/** Set once the canvas is no longer shown, so a draw still in flight doesn't schedule another */
+	#disposed = false
+
 	constructor(canvas: HTMLCanvasElement, onGeometry: (geometry: readonly ElementGeometry[]) => void) {
 		const textLayoutCache: TextLayoutCache = new QuickLRU({ maxSize: 200 })
 		const image = GraphicsImage.create(canvas, textLayoutCache)
@@ -404,6 +421,7 @@ class RendererDrawContext {
 
 	#lastDrawStyle: RendererButtonStyle | null = null
 	#debounceDraw = async () => {
+		if (this.#disposed) return
 		try {
 			if (!this.#lastDrawStyle) throw new Error('No draw style!')
 
@@ -434,6 +452,13 @@ class RendererDrawContext {
 
 			this.#image.drawComplete()
 			this.#onGeometry(geometry)
+
+			if (!this.#disposed && this.#image.lastDrawWasAnimated && !this.#animationTimer) {
+				this.#animationTimer = setTimeout(() => {
+					this.#animationTimer = null
+					this.#debounce.trigger()
+				}, RENDER_CLOCK_INTERVAL_MS)
+			}
 		} catch (e) {
 			console.error('draw failed!', e)
 		}
@@ -447,6 +472,13 @@ class RendererDrawContext {
 	setSelectedElementId(selectedElementId: string | null) {
 		this.#selectedElementId = selectedElementId
 		this.#debounce.trigger()
+	}
+
+	/** Stop drawing, as the canvas is no longer shown */
+	dispose() {
+		this.#disposed = true
+		if (this.#animationTimer) clearTimeout(this.#animationTimer)
+		this.#animationTimer = null
 	}
 
 	draw(drawStyleFull: RendererButtonStyle) {

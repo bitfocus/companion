@@ -4588,10 +4588,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@julusian/image-rs@npm:^2.3.0":
-  version: 2.3.0
-  resolution: "@julusian/image-rs@npm:2.3.0"
-  checksum: 10c0/1da76d3d51fd2dea2f03ef07ef169d40ba1d4d9ef729612b30bda32f63826ff631e5a4a7e3bad945564bacfa03b30a19cb7e22301d885426b7a48bf538f2959e
+"@julusian/image-rs@npm:^2.5.0":
+  version: 2.5.0
+  resolution: "@julusian/image-rs@npm:2.5.0"
+  checksum: 10c0/97bc298bc6a3a06700c6e397ab9af961ff2e32c0602478e0a4a875aaf75f7ab80dc58db5f63333b2309f69b0557d84fdea639d646418f1a6a5028d30bb2b2b59
   languageName: node
   linkType: hard
 
@@ -10703,7 +10703,7 @@ __metadata:
     "@companion-module/host": "npm:1.2.1"
     "@companion-surface/host": "npm:1.4.2"
     "@julusian/bonjour-service": "npm:^1.4.6"
-    "@julusian/image-rs": "npm:^2.3.0"
+    "@julusian/image-rs": "npm:^2.5.0"
     "@julusian/segfault-raub": "npm:^2.3.3"
     "@logtape/logtape": "npm:^2.4.0"
     "@logtape/syslog": "patch:@logtape/syslog@npm%3A2.4.0#~/.yarn/patches/@logtape-syslog-npm-2.4.0-bd80e7483c.patch"

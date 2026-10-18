@@ -1,4 +1,6 @@
+import * as imageRs from '@julusian/image-rs'
 import { Canvas } from '@napi-rs/canvas'
+import { MAX_ANIMATION_DURATION_MS, RENDER_CLOCK_INTERVAL_MS } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import { trimBase64ImageToValid } from '@companion-app/shared/Graphics/ImageBase.js'
 import { loadBase64Image } from '../Image.js'
 
@@ -17,6 +19,13 @@ export type DecodeImageResult =
 			width: number
 			height: number
 			frameCount: number
+			/**
+			 * When each frame starts being shown, in ms from the start of the animation.
+			 * These are all multiples of the render clock interval
+			 */
+			frameStartMs: number[]
+			/** The length of one loop of the animation, in ms. 0 for a static image */
+			durationMs: number
 	  }
 	| { type: 'passthrough' }
 
@@ -48,8 +57,43 @@ function isSvgImage(trimmedImage: string): boolean {
 }
 
 /**
+ * Decode the frames of an animated image, resampled onto the render clock.
+ * The frames are stored at the image's own size, unless together they would be larger than maxBytes, in which case
+ * they are scaled down just enough to fit. Unlike a static image, an animation can't be drawn from its source instead
+ * @returns The frames, or null if the image is not animated
+ */
+async function decodeAnimatedImage(trimmedImage: string, maxBytes: number): Promise<DecodeImageResult | null> {
+	// Data urls are decoded by image-rs, but it needs the bytes of a bare base64 string
+	const input = trimmedImage.startsWith('data:') ? trimmedImage : Buffer.from(trimmedImage, 'base64')
+
+	const frames = await imageRs.decodeFrames(input, {
+		sampleIntervalMs: RENDER_CLOCK_INTERVAL_MS,
+		maxDurationMs: MAX_ANIMATION_DURATION_MS,
+		maxBytes,
+		animatedOnly: true,
+	})
+	if (!frames) return null
+
+	// Copy the frames buffer into a SharedArrayBuffer so it can be shared across render threads
+	const buffer = new SharedArrayBuffer(frames.buffer.byteLength)
+	new Uint8Array(buffer).set(frames.buffer)
+
+	return {
+		type: 'raster',
+		buffer,
+		width: frames.width,
+		height: frames.height,
+		frameCount: frames.frameCount,
+		frameStartMs: frames.frameStartMs,
+		durationMs: frames.durationMs,
+	}
+}
+
+/**
  * Decode an image source string into a buffer of pixels, shared with the other render threads.
  * The image is stored at its own size, so that it draws the same as it would from its source at any size.
+ * Animated GIF, APNG and WebP images have all of their frames decoded, while anything else is decoded by the canvas,
+ * so that it matches how it would be drawn from its source.
  * This is run in a render thread, so that the main thread never handles pixel data.
  * @param source The image, as a data url or a bare base64 string
  * @param maxBytes The largest decoded image to store. Anything larger is left to be drawn from its source
@@ -58,6 +102,13 @@ export async function decodeImage(source: string, maxBytes: number): Promise<Dec
 	// Match how the renderer treats a source string
 	const trimmedImage = trimBase64ImageToValid(source.trim())
 	if (trimmedImage.length <= 40 || isSvgImage(trimmedImage)) return { type: 'passthrough' }
+
+	try {
+		const animation = await decodeAnimatedImage(trimmedImage, maxBytes)
+		if (animation) return animation
+	} catch (_e) {
+		// Not a format image-rs understands, so leave it to the canvas
+	}
 
 	let image: Awaited<ReturnType<typeof loadBase64Image>>
 	try {
@@ -74,6 +125,7 @@ export async function decodeImage(source: string, maxBytes: number): Promise<Dec
 	context2d.drawImage(image, 0, 0)
 	const pixels = context2d.getImageData(0, 0, width, height).data
 
+	// Copy the pixels buffer into a SharedArrayBuffer so it can be shared across render threads
 	const buffer = new SharedArrayBuffer(pixels.byteLength)
 	new Uint8Array(buffer).set(pixels)
 
@@ -83,5 +135,7 @@ export async function decodeImage(source: string, maxBytes: number): Promise<Dec
 		width,
 		height,
 		frameCount: 1,
+		frameStartMs: [0],
+		durationMs: 0,
 	}
 }

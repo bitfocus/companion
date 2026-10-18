@@ -13,6 +13,7 @@ import { decodeImage } from '../../lib/Graphics/ImageCache/DecodeImage.js'
 import { ImageCacheStore } from '../../lib/Graphics/ImageCache/ImageCacheStore.js'
 import { computeOversampling, GraphicsRenderer } from '../../lib/Graphics/Renderer.js'
 import type { Logger } from '../../lib/Log/Controller.js'
+import { makeAnimatedGif, toDataUrl } from './ImageCache/AnimatedImageFixtures.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const FONTS_DIR = join(__dirname, '../../../assets/Fonts')
@@ -262,7 +263,7 @@ describe('GraphicsRenderer', () => {
 					async (source) => decodeImage(source, 32 * 1024 * 1024),
 					64 * 1024 * 1024
 				)
-				return store.resolveDrawStyle(style)
+				return store.resolveDrawStyle(style, new Map())
 			}
 
 			test.each(['fit', 'fill', 'crop'] as const)(
@@ -288,6 +289,36 @@ describe('GraphicsRenderer', () => {
 				const fromSource = await GraphicsRenderer.drawButtonImageBuffer(style, resolution, null, 'rgba')
 				const fromDecoded = await GraphicsRenderer.drawButtonImageBuffer(resolved, resolution, null, 'rgba')
 				expect(Buffer.from(fromDecoded).equals(Buffer.from(fromSource))).toBe(true)
+			})
+
+			test.each([
+				[0, [255, 0, 0, 255]],
+				[100, [0, 255, 0, 255]],
+				[250, [0, 0, 255, 255]],
+				// Looped back round
+				[300, [255, 0, 0, 255]],
+			])('draws the frame of an animated gif on screen at %ims', async (timeMs, expectedColor) => {
+				const gif = makeAnimatedGif(8, 8, [
+					{ color: [255, 0, 0], delayMs: 100 },
+					{ color: [0, 255, 0], delayMs: 100 },
+					{ color: [0, 0, 255], delayMs: 100 },
+				])
+				const style = makeImageStyle(toDataUrl('image/gif', gif), 'fill')
+
+				const logger = { warn: vi.fn() } as unknown as Logger
+				const store = new ImageCacheStore(logger, async (source) => decodeImage(source, 1024 * 1024), 1024 * 1024)
+				const frames = await store.selectAnimationFrames(style.elements, timeMs)
+				expect(frames.maxDurationMs).toBe(300)
+				const resolved = await store.resolveDrawStyle(style, frames.frameIndices)
+
+				const buffer = await GraphicsRenderer.drawButtonImageBuffer(
+					resolved,
+					{ width: 72, height: 72, oversampling: 1 },
+					null,
+					'rgba'
+				)
+				const centre = (36 * 72 + 36) * 4
+				expect([...buffer.subarray(centre, centre + 4)]).toEqual(expectedColor)
 			})
 
 			test('draws a segment of an image spanning several buttons the same as the source image', async () => {
