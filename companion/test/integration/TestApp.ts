@@ -7,6 +7,7 @@ import path from 'node:path'
 import { initTRPC, type TRPCRouterCaller } from '@trpc/server'
 import type { BuildOptions } from 'esbuild'
 import supertest from 'supertest'
+import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	EntityModelType,
@@ -408,7 +409,13 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 	): string => {
 		const entities = getEditableEntities(controlId)
 
-		const entityModel = registry.instance.definitions.createEntityItem('internal', entityType, definitionId, null)
+		const entityModel = registry.instance.definitions.createEntityItem(
+			'internal',
+			entityType,
+			definitionId,
+			ParseControlId(controlId)?.type ?? null,
+			null
+		)
 		if (!entityModel) throw new Error(`Unknown internal ${entityType} definition "${definitionId}"`)
 		Object.assign(entityModel.options, options)
 

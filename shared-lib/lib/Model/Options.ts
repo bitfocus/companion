@@ -1,6 +1,7 @@
 import type { JsonValue } from 'type-fest'
 import z from 'zod'
 import type { CompanionOptionValues, CompanionPresetOptionValues } from '@companion-module/host'
+import type { ControlIdKind } from '../ControlId.js'
 import type { DropdownChoice, DropdownChoiceId } from './Common.js'
 
 export const JsonValueSchema: z.ZodType<JsonValue> = z.json()
@@ -44,7 +45,23 @@ export enum CompanionFieldVariablesSupport {
 	Basic = 'basic',
 }
 
-export interface CompanionInputFieldBaseExtended {
+/**
+ * The base of every input field. `default` is required unless `TDefault` includes `undefined`
+ * @typeParam TDefault - the type of the field's `default` value, `undefined` for fields without one
+ */
+export type CompanionInputFieldBaseExtended<TDefault extends JsonValue | undefined> =
+	CompanionInputFieldCommonExtended<TDefault> &
+		(undefined extends TDefault
+			? {
+					/** The default value */
+					default?: TDefault
+				}
+			: {
+					/** The default value */
+					default: TDefault
+				})
+
+interface CompanionInputFieldCommonExtended<TDefault extends JsonValue | undefined> {
 	/** The unique id of this input field within the input group */
 	id: string
 	/** The type of this input field */
@@ -116,6 +133,12 @@ export interface CompanionInputFieldBaseExtended {
 	 * Only valid alongside deferParsing: true.
 	 */
 	contextVariableResolution?: ContextVariableResolution
+
+	/**
+	 * Replaces `default` when creating an entity on the given kinds of control, eg a trigger has no grid location.
+	 * Only available for internal connections
+	 */
+	defaultForControlType?: Partial<Record<ControlIdKind, Exclude<TDefault, undefined>>>
 }
 
 export type ContextVariableResolution =
@@ -123,49 +146,42 @@ export type ContextVariableResolution =
 	| { type: 'pageVariable'; pageFieldId: string; nameFieldId: string }
 	| { type: 'customVariable'; nameFieldId: string }
 
-export interface InternalInputFieldTime extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldTime extends CompanionInputFieldBaseExtended<undefined> {
 	type: 'internal:time'
 }
-export interface InternalInputFieldDate extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldDate extends CompanionInputFieldBaseExtended<undefined> {
 	type: 'internal:date'
 }
-export interface InternalInputFieldVariable extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldVariable extends CompanionInputFieldBaseExtended<undefined> {
 	type: 'internal:variable'
-	// default: string
 	supportsLocal: boolean
 }
-export interface InternalInputFieldCustomVariable extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldCustomVariable extends CompanionInputFieldBaseExtended<undefined> {
 	type: 'internal:custom_variable'
 	includeNone?: boolean
 }
-export interface InternalInputFieldVariableValue extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldVariableValue extends CompanionInputFieldBaseExtended<JsonValue> {
 	type: 'internal:variable_value'
-	default: JsonValue
 }
-export interface InternalInputFieldTrigger extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldTrigger extends CompanionInputFieldBaseExtended<string | undefined> {
 	type: 'internal:trigger'
 	includeSelf?: boolean | 'abort'
-	default?: string
 }
-export interface InternalInputFieldTriggerCollection extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldTriggerCollection extends CompanionInputFieldBaseExtended<string | undefined> {
 	type: 'internal:trigger_collection'
-	default?: string
 }
-export interface InternalInputFieldConnectionCollection extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldConnectionCollection extends CompanionInputFieldBaseExtended<string | undefined> {
 	type: 'internal:connection_collection'
-	default?: string
 }
-export interface InternalInputFieldConnectionId extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldConnectionId extends CompanionInputFieldBaseExtended<string[] | undefined> {
 	type: 'internal:connection_id'
 	multiple: boolean
 	includeAll?: boolean
 	filterActionsRecorder?: boolean
-	default?: string[]
 }
-export interface InternalInputFieldSurfaceSerial extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldSurfaceSerial extends CompanionInputFieldBaseExtended<string> {
 	type: 'internal:surface_serial'
 	includeSelf: boolean
-	default: string
 	/**
 	 * Which entries to offer in the picker:
 	 * - `groups`: surface groups only (group-level actions, e.g. lock, set page)
@@ -174,52 +190,47 @@ export interface InternalInputFieldSurfaceSerial extends CompanionInputFieldBase
 	 */
 	listMode: 'groups' | 'surfaces' | 'groups-and-surfaces'
 }
-export interface InternalInputFieldOutboundSurfaceId extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldOutboundSurfaceId extends CompanionInputFieldBaseExtended<undefined> {
 	type: 'internal:outbound_surface_id'
 }
-export interface InternalInputFieldPage extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldPage extends CompanionInputFieldBaseExtended<number> {
 	type: 'internal:page'
 	includeStartup: boolean
 	includeDirection: boolean
-	default: number
 }
-export interface InternalInputFieldHorizontalAlignment extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldHorizontalAlignment extends CompanionInputFieldBaseExtended<
+	'left' | 'center' | 'right'
+> {
 	type: 'internal:horizontal-alignment'
-	/** The default value */
-	default: 'left' | 'center' | 'right'
 }
-export interface InternalInputFieldVerticalAlignment extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldVerticalAlignment extends CompanionInputFieldBaseExtended<
+	'top' | 'center' | 'bottom'
+> {
 	type: 'internal:vertical-alignment'
-	/** The default value */
-	default: 'top' | 'center' | 'bottom'
 }
-export interface InternalInputFieldTextStyles extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldTextStyles extends CompanionInputFieldBaseExtended<
+	('italic' | 'underline' | 'strikethrough')[]
+> {
 	type: 'internal:text-styles'
-	/** The default value */
-	default: ('italic' | 'underline' | 'strikethrough')[]
 }
-export interface InternalInputFieldPngImage extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldPngImage extends CompanionInputFieldBaseExtended<string | null> {
 	type: 'internal:image-file'
-	/** The default value */
-	default: string | null
 	/** Minimum image dimensions */
 	min?: { width: number; height: number }
 	/** Maximum image dimensions */
 	max?: { width: number; height: number }
 }
 
-export interface InternalInputFieldTable extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldTable extends CompanionInputFieldBaseExtended<Record<string, JsonValue>[]> {
 	type: 'internal:table'
 	columns: SomeCompanionInputField[]
-	default: Record<string, JsonValue>[]
 }
 
-export interface InternalInputFieldList extends CompanionInputFieldBaseExtended {
+export interface InternalInputFieldList extends CompanionInputFieldBaseExtended<Record<string, JsonValue>[]> {
 	type: 'internal:list'
 	fields: SomeCompanionInputField[]
 	addLabel?: string
 	minItems?: number
-	default: Record<string, JsonValue>[]
 }
 
 export type InternalInputField =
@@ -242,16 +253,14 @@ export type InternalInputField =
 	| InternalInputFieldTable
 	| InternalInputFieldList
 
-export interface CompanionInputFieldStaticTextExtended extends CompanionInputFieldBaseExtended {
+export interface CompanionInputFieldStaticTextExtended extends CompanionInputFieldBaseExtended<undefined> {
 	type: 'static-text'
 
 	value: string
-	default?: never
 }
-export interface CompanionInputFieldColorExtended extends CompanionInputFieldBaseExtended {
+export interface CompanionInputFieldColorExtended extends CompanionInputFieldBaseExtended<string | number> {
 	type: 'colorpicker'
 
-	default: string | number
 	enableAlpha: boolean
 	returnType: 'string' | 'number'
 
@@ -271,10 +280,9 @@ export const DEFAULT_COLOR_EXPRESSION_DESCRIPTION =
 export function colorFieldExpressionHint(field: SomeCompanionInputField): string | undefined {
 	return field.type === 'colorpicker' ? DEFAULT_COLOR_EXPRESSION_DESCRIPTION : undefined
 }
-export interface CompanionInputFieldTextInputExtended extends CompanionInputFieldBaseExtended {
+export interface CompanionInputFieldTextInputExtended extends CompanionInputFieldBaseExtended<string | undefined> {
 	type: 'textinput'
 
-	default?: string
 	minLength?: number
 
 	regex?: string
@@ -297,26 +305,21 @@ export interface CompanionInputFieldTextInputExtended extends CompanionInputFiel
 	 */
 	unwrapPastedVariableNamespace?: string
 }
-export interface CompanionInputFieldExpressionExtended extends CompanionInputFieldBaseExtended {
+export interface CompanionInputFieldExpressionExtended extends CompanionInputFieldBaseExtended<string | undefined> {
 	type: 'expression'
-
-	default?: string
 
 	// placeholder?: string
 }
-export interface CompanionInputFieldDropdownExtended extends CompanionInputFieldBaseExtended {
+export interface CompanionInputFieldDropdownExtended extends CompanionInputFieldBaseExtended<DropdownChoiceId> {
 	type: 'dropdown'
 	choices: DropdownChoice[]
-	default: DropdownChoiceId
 	allowCustom?: boolean
 	regex?: string
 }
-export interface CompanionInputFieldMultiDropdownExtended extends CompanionInputFieldBaseExtended {
+export interface CompanionInputFieldMultiDropdownExtended extends CompanionInputFieldBaseExtended<DropdownChoiceId[]> {
 	type: 'multidropdown'
 	/** The possible choices */
 	choices: DropdownChoice[]
-	/** The default selected values */
-	default: DropdownChoiceId[]
 	/** The minimum number of selected values */
 	minSelection?: number
 	/** The maximum number of selected values */
@@ -330,10 +333,8 @@ export interface CompanionInputFieldMultiDropdownExtended extends CompanionInput
 	allowCustom?: boolean
 	regex?: string
 }
-export interface CompanionInputFieldNumberExtended extends CompanionInputFieldBaseExtended {
+export interface CompanionInputFieldNumberExtended extends CompanionInputFieldBaseExtended<number | null> {
 	type: 'number'
-	/** The default value. `null` is only valid together with `allowNull` and represents the "auto" state. */
-	default: number | null
 	/**
 	 * The minimum value to allow
 	 * Note: values may not conform to this
@@ -359,20 +360,17 @@ export interface CompanionInputFieldNumberExtended extends CompanionInputFieldBa
 	asInteger?: boolean
 	/**
 	 * When true, the field can be cleared to `null`, shown in the UI as "auto". The consumer decides what
-	 * "auto" resolves to. Requires the value type to permit `null`.
+	 * "auto" resolves to. Requires the value type to permit `null`. A `null` default is only valid with this set.
 	 */
 	allowNull?: boolean
 }
-export interface CompanionInputFieldCheckboxExtended extends CompanionInputFieldBaseExtended {
+export interface CompanionInputFieldCheckboxExtended extends CompanionInputFieldBaseExtended<boolean> {
 	type: 'checkbox'
-	/** The default value */
-	default: boolean
 	/** Display as a toggle */
 	displayToggle?: boolean
 }
-export interface CompanionInputFieldCustomVariableExtended extends CompanionInputFieldBaseExtended {
+export interface CompanionInputFieldCustomVariableExtended extends CompanionInputFieldBaseExtended<undefined> {
 	type: 'custom-variable'
-	default?: never // needed to avoid TypeScript errors (all other input fields have default props)
 }
 
 export type ExtendedInputField =
@@ -386,15 +384,11 @@ export type ExtendedInputField =
 	| CompanionInputFieldCheckboxExtended
 	| CompanionInputFieldCustomVariableExtended
 
-export interface CompanionInputFieldBonjourDeviceExtended extends CompanionInputFieldBaseExtended {
+export interface CompanionInputFieldBonjourDeviceExtended extends CompanionInputFieldBaseExtended<undefined> {
 	type: 'bonjour-device'
 }
-export interface CompanionInputFieldSecretExtended extends CompanionInputFieldBaseExtended {
+export interface CompanionInputFieldSecretExtended extends CompanionInputFieldBaseExtended<string | undefined> {
 	type: 'secret-text'
-	/**
-	 * The default text value
-	 */
-	default?: string
 	/**
 	 * Whether a value is required
 	 */
@@ -449,6 +443,27 @@ export function convertExpressionOptionsWithoutParsing(options: ExpressionableOp
 	}
 
 	return res
+}
+
+/** The values a field's default can take, including any per-control-type override */
+type FieldDefaultValue<TField extends SomeCompanionInputField> = TField extends unknown
+	? | TField['default']
+		| ('defaultForControlType' extends keyof TField
+				? NonNullable<TField['defaultForControlType']>[keyof NonNullable<TField['defaultForControlType']>]
+				: never)
+	: never
+
+/**
+ * The default value of a field, for a new entity on a control of the given kind
+ */
+export function getFieldDefaultForControl<TField extends SomeCompanionInputField>(
+	field: TField,
+	controlKind: ControlIdKind | null
+): FieldDefaultValue<TField> {
+	// An undefined override counts as unset, as it would be dropped when the definition is sent as JSON
+	const override = controlKind ? field.defaultForControlType?.[controlKind] : undefined
+	if (override !== undefined) return override as FieldDefaultValue<TField>
+	return field.default as FieldDefaultValue<TField>
 }
 
 export function exprVal<T extends JsonValue | undefined>(value: T): ExpressionOrValue<T> {

@@ -117,7 +117,7 @@ function translateDropdownField(field: DropdownField): Complete<CompanionInputFi
 function translateCommonFields(
 	field: CommonFields
 ): Pick<
-	Complete<CompanionInputFieldBaseExtended>,
+	Complete<CompanionInputFieldBaseExtended<undefined>>,
 	| 'id'
 	| 'label'
 	| 'tooltip'
@@ -129,6 +129,7 @@ function translateCommonFields(
 	| 'allowInvalidValues'
 	| 'deferParsing'
 	| 'contextVariableResolution'
+	| 'defaultForControlType'
 > {
 	return {
 		id: field.id,
@@ -148,5 +149,6 @@ function translateCommonFields(
 		allowInvalidValues: false,
 		deferParsing: undefined,
 		contextVariableResolution: undefined,
+		defaultForControlType: undefined,
 	}
 }

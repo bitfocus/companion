@@ -440,7 +440,7 @@ describe('InstanceDefinitions', () => {
 		it('returns null when definition does not exist', () => {
 			const { defs } = createInstanceDefinitions()
 
-			expect(defs.createEntityItem('conn1', EntityModelType.Action, 'nonexistent', null)).toBeNull()
+			expect(defs.createEntityItem('conn1', EntityModelType.Action, 'nonexistent', null, null)).toBeNull()
 		})
 
 		it('creates an action with correct structure', () => {
@@ -453,7 +453,7 @@ describe('InstanceDefinitions', () => {
 			})
 			defs.setActionDefinitions('conn1', { act1: def })
 
-			const result = defs.createEntityItem('conn1', EntityModelType.Action, 'act1', null)
+			const result = defs.createEntityItem('conn1', EntityModelType.Action, 'act1', null, null)
 
 			expect(result).toMatchSnapshot()
 		})
@@ -462,17 +462,42 @@ describe('InstanceDefinitions', () => {
 			const { defs } = createInstanceDefinitions()
 			defs.setActionDefinitions('conn1', { act1: makeActionDefinition() })
 
-			const result = defs.createEntityItem('conn1', EntityModelType.Action, 'act1', null)
+			const result = defs.createEntityItem('conn1', EntityModelType.Action, 'act1', null, null)
 
 			expect(result).not.toBeNull()
 			expect(result!.upgradeIndex).toBe(5) // from makeConnectionConfig defaults
+		})
+
+		it('uses defaultForControlType for the given control kind', () => {
+			const { defs } = createInstanceDefinitions()
+			const def = makeActionDefinition({
+				options: [
+					{
+						id: 'location',
+						type: 'textinput',
+						label: 'Location',
+						default: 'grid',
+						defaultForControlType: { trigger: 'this' },
+					} as never,
+				],
+			})
+			defs.setActionDefinitions('conn1', { act1: def })
+
+			const onTrigger = defs.createEntityItem('conn1', EntityModelType.Action, 'act1', 'trigger', null)
+			expect(onTrigger!.options.location).toEqual({ isExpression: false, value: 'this' })
+
+			const onButton = defs.createEntityItem('conn1', EntityModelType.Action, 'act1', 'bank', null)
+			expect(onButton!.options.location).toEqual({ isExpression: false, value: 'grid' })
+
+			const noControl = defs.createEntityItem('conn1', EntityModelType.Action, 'act1', null, null)
+			expect(noControl!.options.location).toEqual({ isExpression: false, value: 'grid' })
 		})
 
 		it('sets upgradeIndex undefined when no config', () => {
 			const { defs } = createInstanceDefinitions()
 			defs.setActionDefinitions('unknown', { act1: makeActionDefinition() })
 
-			const result = defs.createEntityItem('unknown', EntityModelType.Action, 'act1', null)
+			const result = defs.createEntityItem('unknown', EntityModelType.Action, 'act1', null, null)
 
 			expect(result).not.toBeNull()
 			expect(result!.upgradeIndex).toBeUndefined()
@@ -488,7 +513,7 @@ describe('InstanceDefinitions', () => {
 			})
 			defs.setActionDefinitions('conn1', { act1: def })
 
-			const result = defs.createEntityItem('conn1', EntityModelType.Action, 'act1', null)
+			const result = defs.createEntityItem('conn1', EntityModelType.Action, 'act1', null, null)
 
 			expect(result).not.toBeNull()
 			expect(result!.options).not.toHaveProperty('info')
@@ -502,7 +527,7 @@ describe('InstanceDefinitions', () => {
 			})
 			defs.setActionDefinitions('conn1', { act1: def })
 
-			const result = defs.createEntityItem('conn1', EntityModelType.Action, 'act1', null)
+			const result = defs.createEntityItem('conn1', EntityModelType.Action, 'act1', null, null)
 
 			expect(result!.options['myText']).toEqual({ isExpression: false, value: 'hello' })
 		})
@@ -515,7 +540,7 @@ describe('InstanceDefinitions', () => {
 			})
 			defs.setFeedbackDefinitions('conn1', { fb1: def })
 
-			const result = defs.createEntityItem('conn1', EntityModelType.Feedback, 'fb1', null)
+			const result = defs.createEntityItem('conn1', EntityModelType.Feedback, 'fb1', null, null)
 
 			expect(result).toMatchSnapshot()
 		})
@@ -528,7 +553,7 @@ describe('InstanceDefinitions', () => {
 			})
 			defs.setFeedbackDefinitions('conn1', { fb1: def })
 
-			const result = defs.createEntityItem('conn1', EntityModelType.Feedback, 'fb1', null)
+			const result = defs.createEntityItem('conn1', EntityModelType.Feedback, 'fb1', null, null)
 
 			expect(result).not.toBeNull()
 			expect(result!.type).toBe(EntityModelType.Feedback)
@@ -545,7 +570,7 @@ describe('InstanceDefinitions', () => {
 			})
 			defs.setFeedbackDefinitions('conn1', { fb1: def })
 
-			const result = defs.createEntityItem('conn1', EntityModelType.Feedback, 'fb1', null)
+			const result = defs.createEntityItem('conn1', EntityModelType.Feedback, 'fb1', null, null)
 
 			expect(result).not.toBeNull()
 			if (result!.type === EntityModelType.Feedback) {
@@ -561,7 +586,7 @@ describe('InstanceDefinitions', () => {
 			})
 			defs.setFeedbackDefinitions('conn1', { fb1: def })
 
-			const result = defs.createEntityItem('conn1', EntityModelType.Feedback, 'fb1', {
+			const result = defs.createEntityItem('conn1', EntityModelType.Feedback, 'fb1', 'bank', {
 				[ButtonGraphicsElementUsage.Automatic]: undefined,
 				[ButtonGraphicsElementUsage.Text]: 'text-el',
 				[ButtonGraphicsElementUsage.Color]: 'color-el',
@@ -587,7 +612,7 @@ describe('InstanceDefinitions', () => {
 			})
 			defs.setFeedbackDefinitions('conn1', { fb1: def })
 
-			const result = defs.createEntityItem('conn1', EntityModelType.Feedback, 'fb1', {
+			const result = defs.createEntityItem('conn1', EntityModelType.Feedback, 'fb1', 'bank', {
 				[ButtonGraphicsElementUsage.Automatic]: undefined,
 				[ButtonGraphicsElementUsage.Text]: 'text-el',
 				[ButtonGraphicsElementUsage.Color]: 'color-el',
@@ -610,7 +635,7 @@ describe('InstanceDefinitions', () => {
 			const { defs } = createInstanceDefinitions()
 			defs.setFeedbackDefinitions('conn1', { fb1: makeFeedbackDefinition() })
 
-			const result = defs.createEntityItem('conn1', EntityModelType.Feedback, 'fb1', null)
+			const result = defs.createEntityItem('conn1', EntityModelType.Feedback, 'fb1', null, null)
 
 			expect(result).not.toBeNull()
 			if (result!.type === EntityModelType.Feedback) {
@@ -622,7 +647,7 @@ describe('InstanceDefinitions', () => {
 			const { defs } = createInstanceDefinitions()
 			defs.setActionDefinitions('conn1', { act1: makeActionDefinition({ options: [] }) })
 
-			const result = defs.createEntityItem('conn1', EntityModelType.Action, 'act1', null)
+			const result = defs.createEntityItem('conn1', EntityModelType.Action, 'act1', null, null)
 
 			expect(result).not.toBeNull()
 			expect(result!.options).toEqual({})
@@ -636,7 +661,7 @@ describe('InstanceDefinitions', () => {
 			})
 			defs.setFeedbackDefinitions('conn1', { fb1: def })
 
-			const result = defs.createEntityItem('conn1', EntityModelType.Feedback, 'fb1', null)
+			const result = defs.createEntityItem('conn1', EntityModelType.Feedback, 'fb1', null, null)
 
 			expect(result).not.toBeNull()
 			if (result!.type === EntityModelType.Feedback) {
@@ -652,7 +677,7 @@ describe('InstanceDefinitions', () => {
 			})
 			defs.setActionDefinitions('conn1', { act1: def })
 
-			const result = defs.createEntityItem('conn1', EntityModelType.Action, 'act1', null)
+			const result = defs.createEntityItem('conn1', EntityModelType.Action, 'act1', null, null)
 
 			// Mutate the original default
 			arrayDefault.push(999)
@@ -1492,8 +1517,8 @@ describe('InstanceDefinitions', () => {
 			})
 
 			// Create entities
-			const action = defs.createEntityItem('conn1', EntityModelType.Action, 'doSomething', null)
-			const feedback = defs.createEntityItem('conn1', EntityModelType.Feedback, 'isOn', null)
+			const action = defs.createEntityItem('conn1', EntityModelType.Action, 'doSomething', null, null)
+			const feedback = defs.createEntityItem('conn1', EntityModelType.Feedback, 'isOn', null, null)
 
 			expect(action).toMatchSnapshot()
 			expect(feedback).toMatchSnapshot()

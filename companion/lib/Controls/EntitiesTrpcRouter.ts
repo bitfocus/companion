@@ -1,4 +1,5 @@
 import z from 'zod'
+import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
 	schemaFeedbackEntityStyleOverride,
@@ -64,6 +65,7 @@ export function createEntitiesTrpcRouter(
 					connectionId,
 					entityType,
 					entityDefinition,
+					ParseControlId(controlId)?.type ?? null,
 					control.supportsLayeredStyle && entityLocation === 'feedbacks'
 						? control.layeredStyleSelectedElementIds()
 						: null

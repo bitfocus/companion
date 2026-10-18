@@ -3,6 +3,7 @@ import { EventEmitter } from 'node:events'
 import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
+import type { ControlIdKind } from '@companion-app/shared/ControlId.js'
 import { diffObjects } from '@companion-app/shared/Diff.js'
 import type {
 	LayeredButtonModel,
@@ -27,6 +28,7 @@ import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import {
 	exprVal,
+	getFieldDefaultForControl,
 	isExpressionOrValue,
 	type ExpressionableOptionsObject,
 	type ExpressionOrValue,
@@ -197,12 +199,14 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 	 * @param connectionId - the id of the instance
 	 * @param entityType - the type of the entity
 	 * @param definitionId - the id of the definition
+	 * @param controlKind - the kind of control the entity is for, to pick option defaults
 	 * @param layeredStyleSelectedElementIds - selected element ids for layered style controls
 	 */
 	createEntityItem(
 		connectionId: string,
 		entityType: EntityModelType,
 		definitionId: string,
+		controlKind: ControlIdKind | null,
 		layeredStyleSelectedElementIds: { [usage in ButtonGraphicsElementUsage]: string | undefined } | null
 	): SomeEntityModel | null {
 		const definition = this.getEntityDefinition(entityType, connectionId, definitionId)
@@ -222,7 +226,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 			for (const opt of definition.options) {
 				if (opt.type === 'static-text') continue
 
-				const defaultValue = 'default' in opt ? structuredClone<JsonValue | undefined>(opt.default) : undefined
+				const defaultValue = structuredClone(getFieldDefaultForControl(opt, controlKind))
 				entity.options[opt.id] = {
 					isExpression: false,
 					value: defaultValue,
