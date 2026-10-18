@@ -1,6 +1,9 @@
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController from '../Log/Controller.js'
 
+/** How often the render clock ticks */
+export const RENDER_CLOCK_INTERVAL_MS = 100
+
 /**
  * A 10hz render clock for driving clock-sensitive expression re-evaluation.
  * Listeners are notified on each tick, approximately every 100ms.
@@ -20,7 +23,7 @@ export class RenderClock {
 					this.#logger.warn(`listener threw an error: ${stringifyError(e)}`)
 				}
 			}
-		}, 100)
+		}, RENDER_CLOCK_INTERVAL_MS)
 	}
 
 	subscribe(listener: () => void): () => void {

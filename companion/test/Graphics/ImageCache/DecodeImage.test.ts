@@ -1,6 +1,7 @@
 import { Canvas } from '@napi-rs/canvas'
 import { describe, expect, test } from 'vitest'
-import { decodeImage } from '../../../lib/Graphics/ImageCache/DecodeImage.js'
+import { decodeImage, type DecodeImageResult } from '../../../lib/Graphics/ImageCache/DecodeImage.js'
+import { makeAnimatedGif, makeAnimatedPng, toDataUrl, type FixtureFrame } from './AnimatedImageFixtures.js'
 
 /** Create a PNG data URL, with the left half red and the right half blue */
 function makePngDataUrl(width: number, height: number): string {
@@ -105,5 +106,107 @@ describe('decodeImage', () => {
 			MAX_BYTES
 		)
 		expect(result).toEqual({ type: 'passthrough' })
+	})
+})
+
+const RED: [number, number, number] = [255, 0, 0]
+const GREEN: [number, number, number] = [0, 255, 0]
+const BLUE: [number, number, number] = [0, 0, 255]
+
+/** Read the colour of the first pixel of each frame */
+function frameColors(result: DecodeImageResult): number[][] {
+	if (result.type !== 'raster') throw new Error('Expected a raster')
+	const pixels = new Uint8Array(result.buffer)
+	const frameBytes = result.width * result.height * 4
+	return Array.from({ length: result.frameCount }, (_, i) => [...pixels.subarray(i * frameBytes, i * frameBytes + 4)])
+}
+
+describe('decodeImage animations', () => {
+	const frames: FixtureFrame[] = [
+		{ color: RED, delayMs: 50 },
+		{ color: GREEN, delayMs: 120 },
+		{ color: BLUE, delayMs: 230 },
+	]
+
+	test('decodes every frame of a gif, resampled onto the render clock', async () => {
+		const result = await decodeImage(toDataUrl('image/gif', makeAnimatedGif(4, 2, frames)), MAX_BYTES)
+
+		expect(result).toMatchObject({
+			type: 'raster',
+			width: 4,
+			height: 2,
+			frameCount: 3,
+			// Each frame is shown from the first tick it is on screen: red at 0ms, green at 50ms, blue at 170ms
+			frameStartMs: [0, 100, 200],
+			durationMs: 400,
+		})
+		expect(result.type === 'raster' && result.buffer).toBeInstanceOf(SharedArrayBuffer)
+		expect(frameColors(result)).toEqual([
+			[255, 0, 0, 255],
+			[0, 255, 0, 255],
+			[0, 0, 255, 255],
+		])
+	})
+
+	test('decodes every frame of a bare base64 gif', async () => {
+		const result = await decodeImage(makeAnimatedGif(4, 2, frames).toString('base64'), MAX_BYTES)
+		expect(result).toMatchObject({ type: 'raster', frameCount: 3 })
+	})
+
+	test('drops frames which are never on screen at a tick', async () => {
+		const result = await decodeImage(
+			toDataUrl(
+				'image/gif',
+				makeAnimatedGif(4, 2, [
+					// Shown 0-50ms, 50-80ms and 80-200ms, so green is never on screen at a tick
+					{ color: RED, delayMs: 50 },
+					{ color: GREEN, delayMs: 30 },
+					{ color: BLUE, delayMs: 120 },
+				])
+			),
+			MAX_BYTES
+		)
+
+		expect(result).toMatchObject({ frameCount: 2, frameStartMs: [0, 100], durationMs: 200 })
+		expect(frameColors(result)).toEqual([
+			[255, 0, 0, 255],
+			[0, 0, 255, 255],
+		])
+	})
+
+	test('decodes every frame of an apng', async () => {
+		const result = await decodeImage(toDataUrl('image/png', makeAnimatedPng(4, 2, frames)), MAX_BYTES)
+
+		expect(result).toMatchObject({ type: 'raster', width: 4, height: 2, frameCount: 3, frameStartMs: [0, 100, 200] })
+		expect(frameColors(result)).toEqual([
+			[255, 0, 0, 255],
+			[0, 255, 0, 255],
+			[0, 0, 255, 255],
+		])
+	})
+
+	test('decodes a single frame gif as a static image', async () => {
+		const result = await decodeImage(
+			toDataUrl('image/gif', makeAnimatedGif(4, 2, [{ color: GREEN, delayMs: 100 }])),
+			MAX_BYTES
+		)
+
+		expect(result).toMatchObject({ type: 'raster', frameCount: 1, frameStartMs: [0], durationMs: 0 })
+		expect(frameColors(result)).toEqual([[0, 255, 0, 255]])
+	})
+
+	test('decodes a png as a static image', async () => {
+		const result = await decodeImage(makePngDataUrl(8, 4), MAX_BYTES)
+		expect(result).toMatchObject({ type: 'raster', frameCount: 1, frameStartMs: [0], durationMs: 0 })
+	})
+
+	test('scales an animation down to fit within the byte limit', async () => {
+		const gif = makeAnimatedGif(64, 32, frames)
+		// Room for the 3 frames at half the size
+		const result = await decodeImage(toDataUrl('image/gif', gif), 3 * 32 * 16 * 4)
+
+		expect(result).toMatchObject({ type: 'raster', width: 32, height: 16, frameCount: 3 })
+		if (result.type !== 'raster') throw new Error('Expected a raster')
+		expect(result.buffer.byteLength).toBeLessThanOrEqual(3 * 32 * 16 * 4)
 	})
 })

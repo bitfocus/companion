@@ -19,7 +19,7 @@ There are two ways to get images into the library:
 - **Drag and drop** one or more image files straight onto the Image Library page.
 - Use the **upload** button to pick files from your computer.
 
-Any standard image format works (PNG, JPEG, SVG and so on). For button backgrounds, square images
+Any standard image format works (PNG, JPEG, SVG and so on), including animated GIF, PNG and WebP images. For button backgrounds, square images
 (such as 72×72px or larger) generally look best, since Companion scales them to fit the button.
 
 ![Image Library edit](images/image-library-edit.png?raw=true)

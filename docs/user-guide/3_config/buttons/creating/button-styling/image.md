@@ -19,7 +19,8 @@ As well as the shared **Drawing** and **Position & Size** sections (see
 The **Image** field is a picker. There are two ways to give it an image:
 
 1. **Upload one directly.** Click **Select image** and choose a file from your computer. The image is
-   stored inside that button.
+   stored inside that button, so this is limited to images up to 512KB. Put anything larger in the
+   Image Library instead.
 2. **Reference the Image Library.** Pick an image you've already uploaded to the
    [Image Library](../../../image-library.md). This is the recommended approach when you want to reuse
    the same image on lots of buttons — update it once in the library and every button that references
@@ -29,6 +30,16 @@ A library image is referenced by name using the `$(image:name)` syntax, so you c
 a reference into an expression if you prefer.
 
 ![Image picker](images/image-picker.png?raw=true)
+
+## Animated images
+
+Animated GIF, PNG (APNG) and WebP images play on the button, looping forever.
+
+- Animations play at up to 10 frames per second, which is how often Companion redraws buttons.
+  A faster animation still plays at its own speed, but skips the frames in between.
+- Every copy of the same animation stays in sync, even across different buttons and surfaces.
+- Animations longer than 30 seconds are cut short.
+- A very large animation is scaled down to limit how much memory it uses.
 
 ## Fitting and positioning
 
