@@ -346,7 +346,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									decodedImages: null, // Resolved when drawn
 								}
 
-								render = this.#generateImageResult(cacheKey, renderStyle, animationFrames.frameIndices)
+								render = this.#generateImageResult(cacheKey, renderStyle, animationFrames)
 								if (shouldCacheAnimationRenders(animationFrames)) this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
@@ -416,7 +416,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							render = this.#generateImageResult(
 								cacheKey,
 								renderStyle,
-								animationFrames.frameIndices,
+								animationFrames,
 								buttonStyle.elements,
 								buttonStyle.referencedLocations
 							)
@@ -609,7 +609,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		// One-off preview: never cached or emitted, so it has no content key (never deduped).
 		// It is a still, so any animations show their first frame
-		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES.frameIndices)
+		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES)
 	}
 
 	/**
@@ -913,7 +913,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	#generateImageResult(
 		cacheKey: string | undefined,
 		drawStyle: RendererButtonStyle,
-		animationFrameIndices: ReadonlyMap<string, number>,
+		animationFrames: AnimationFrames,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> | undefined = undefined
 	): ImageResult {
@@ -922,10 +922,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		return new ImageResult(
 			cacheKey,
 			processedStyle,
+			animationFrames.maxDurationMs,
 			async (width, height, rotation, format) =>
 				this.#executePoolDrawButtonImageBuffer(
 					drawStyle,
-					animationFrameIndices,
+					animationFrames.frameIndices,
 					{ width, height, oversampling: computeOversampling(width, height) },
 					rotation,
 					format,
