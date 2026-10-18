@@ -106,7 +106,7 @@ type RenderArguments = RenderArgumentsButton | RenderArgumentsPreset
 /** What a render of a button was drawn from, to draw it again without its decoration */
 interface ButtonRenderSource {
 	readonly drawStyle: RendererButtonStyle
-	readonly animationFrameIndices: ReadonlyMap<string, number>
+	readonly animationFrames: AnimationFrames
 }
 
 /** A render of the content of a button without its decoration, and the state to decorate it with */
@@ -402,7 +402,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									decodedImages: null, // Resolved when drawn
 								}
 
-								render = this.#generateImageResult(cacheKey, renderStyle, animationFrames.frameIndices, true)
+								render = this.#generateImageResult(cacheKey, renderStyle, animationFrames, true)
 								if (shouldCacheAnimationRenders(animationFrames)) this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
@@ -472,7 +472,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							render = this.#generateImageResult(
 								cacheKey,
 								renderStyle,
-								animationFrames.frameIndices,
+								animationFrames,
 								true,
 								buttonStyle.elements,
 								buttonStyle.referencedLocations
@@ -669,7 +669,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		// One-off preview: never cached or emitted, so it has no content key (never deduped).
 		// It is a still, so any animations show their first frame
-		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES.frameIndices, true)
+		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES, true)
 	}
 
 	/**
@@ -975,7 +975,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	#generateImageResult(
 		cacheKey: string | undefined,
 		drawStyle: RendererButtonStyle,
-		animationFrameIndices: ReadonlyMap<string, number>,
+		animationFrames: AnimationFrames,
 		waitForRemoteImages: boolean,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> | undefined = undefined
@@ -985,10 +985,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const render = new ImageResult(
 			cacheKey,
 			processedStyle,
+			animationFrames.maxDurationMs,
 			async (width, height, rotation, format) =>
 				this.#executePoolDrawButtonImageBuffer(
 					drawStyle,
-					animationFrameIndices,
+					animationFrames.frameIndices,
 					waitForRemoteImages,
 					{ width, height, oversampling: computeOversampling(width, height) },
 					rotation,
@@ -998,7 +999,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			drawElements,
 			referencedLocations ?? new Set()
 		)
-		this.#renderSources.set(render, { drawStyle, animationFrameIndices })
+		this.#renderSources.set(render, { drawStyle, animationFrames })
 		return render
 	}
 
@@ -1023,7 +1024,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						show_status_icons: false,
 						location: undefined,
 					},
-					source.animationFrameIndices,
+					source.animationFrames,
 					// Served onwards (by Link), where it is better to send what is there and the rest when it comes, than
 					// to hold up serving every other button
 					false
@@ -1032,7 +1033,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 				contentKey: JSON.stringify({
 					drawType: drawStyle.drawType,
 					elements: collectContentHashes(drawStyle.elements),
-					animationFrames: [...source.animationFrameIndices],
+					animationFrames: [...source.animationFrames.frameIndices],
 				}),
 				state: {
 					pushed: drawStyle.pushed,
