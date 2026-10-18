@@ -217,8 +217,6 @@ export interface InternalInputFieldPngImage extends CompanionInputFieldBaseExten
 	type: 'internal:image-file'
 	/** Minimum image dimensions */
 	min?: { width: number; height: number }
-	/** Maximum image dimensions */
-	max?: { width: number; height: number }
 }
 
 export interface InternalInputFieldTable extends CompanionInputFieldBaseExtended<Record<string, JsonValue>[]> {

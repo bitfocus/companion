@@ -21,7 +21,6 @@ interface ImageInputFieldProps {
 	setValue: (value: string | null) => void
 	disabled?: boolean
 	min?: MinMaxDimension
-	max?: MinMaxDimension
 }
 
 interface LibraryImageThumbnailProps {
@@ -70,7 +69,6 @@ export const ImageInputField = observer(function ImageInputField({
 	setValue,
 	disabled,
 	min,
-	max,
 }: ImageInputFieldProps): React.JSX.Element {
 	const { imageLibrary } = useContext(RootAppStoreContext)
 	const modalRef = useRef<ImagePickerModalRef>(null)
@@ -125,7 +123,7 @@ export const ImageInputField = observer(function ImageInputField({
 
 	return (
 		<>
-			<ImagePickerModal ref={modalRef} setValue={setValue} min={min} max={max} />
+			<ImagePickerModal ref={modalRef} setValue={setValue} min={min} />
 			<div id={id} className="image-input-field flex items-center gap-2">
 				<div
 					className="image-input-field__preview image-preview-checkerboard"

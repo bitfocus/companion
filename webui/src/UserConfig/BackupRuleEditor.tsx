@@ -10,6 +10,7 @@ import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { FormLabel } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Table } from '~/Components/Table.js'
+import { formatFileSize } from '~/Helpers/FileUpload.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { NumberInputField } from '../Components/NumberInputField.js'
 import { TextInputField, TextInputFieldSimple } from '../Components/TextInputField.js'
@@ -40,14 +41,6 @@ const PreviousBackupRow = observer(function PreviousBackupRow({ backup, ruleId }
 			}
 		)
 	}, [deleteBackupFileMutation, notifier, ruleId, backup.filePath])
-
-	const formatFileSize = (bytes: number): string => {
-		if (bytes === 0) return '0 Bytes'
-		const k = 1024
-		const sizes = ['Bytes', 'KB', 'MB', 'GB']
-		const i = Math.floor(Math.log(bytes) / Math.log(k))
-		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-	}
 
 	const getFileName = (filePath: string): string => {
 		return filePath.split('/').pop() || filePath

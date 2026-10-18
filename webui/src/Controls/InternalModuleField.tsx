@@ -119,16 +119,7 @@ export function InternalModuleField(
 		case 'internal:text-styles':
 			return <TextStylesInputField id={id} value={value} setValue={setValue} disabled={readonly} />
 		case 'internal:image-file': {
-			return (
-				<ImageInputField
-					id={id}
-					value={value}
-					setValue={setValue}
-					disabled={readonly}
-					min={option.min}
-					max={option.max}
-				/>
-			)
+			return <ImageInputField id={id} value={value} setValue={setValue} disabled={readonly} min={option.min} />
 		}
 		default:
 			// Use fallback
