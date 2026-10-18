@@ -74,6 +74,7 @@ async function decodeAnimatedImage(trimmedImage: string, maxBytes: number): Prom
 	})
 	if (!frames) return null
 
+	// Copy the frames buffer into a SharedArrayBuffer so it can be shared across render threads
 	const buffer = new SharedArrayBuffer(frames.buffer.byteLength)
 	new Uint8Array(buffer).set(frames.buffer)
 
@@ -124,6 +125,7 @@ export async function decodeImage(source: string, maxBytes: number): Promise<Dec
 	context2d.drawImage(image, 0, 0)
 	const pixels = context2d.getImageData(0, 0, width, height).data
 
+	// Copy the pixels buffer into a SharedArrayBuffer so it can be shared across render threads
 	const buffer = new SharedArrayBuffer(pixels.byteLength)
 	new Uint8Array(buffer).set(pixels)
 
