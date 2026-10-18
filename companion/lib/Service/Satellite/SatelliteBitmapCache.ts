@@ -14,33 +14,30 @@ import type { ImageResult } from '../../Graphics/ImageResult.js'
  * Each entry is assumed to cost its size as RGBA, until the client reports what it really costs to store.
  */
 export class SatelliteBitmapCache {
-	#entries: LRUCache<string, number>
+	/**
+	 * The bitmaps the client holds, in order of use. The cache is only used for that order: it never evicts by itself,
+	 * as the costs are tracked here, so that a cost can change without counting as a use of the bitmap
+	 */
+	readonly #entries = new LRUCache<string, { id: string; cost: number }>({
+		maxSize: Number.MAX_SAFE_INTEGER,
+		sizeCalculation: () => 1,
+	})
 
-	/** Collects the ids evicted by the current `set`, so they can be returned to the caller */
-	#evicted: string[] | null = null
+	#budgetBytes: number
+	#usedBytes = 0
 
 	constructor(budgetBytes: number) {
-		this.#entries = this.#createEntries(budgetBytes)
-	}
-
-	#createEntries(budgetBytes: number): LRUCache<string, number> {
-		return new LRUCache<string, number>({
-			maxSize: budgetBytes,
-			sizeCalculation: (cost) => cost,
-			dispose: (_cost, id, reason) => {
-				if (reason === 'evict') this.#evicted?.push(id)
-			},
-		})
+		this.#budgetBytes = budgetBytes
 	}
 
 	/** The budget in bytes, as given by the client */
 	get budgetBytes(): number {
-		return this.#entries.maxSize
+		return this.#budgetBytes
 	}
 
 	/** The total cost of the bitmaps the client is holding */
 	get usedBytes(): number {
-		return this.#entries.calculatedSize
+		return this.#usedBytes
 	}
 
 	get entryCount(): number {
@@ -68,26 +65,31 @@ export class SatelliteBitmapCache {
 	 */
 	store(id: string, width: number, height: number): string[] | null {
 		const cost = width * height * 4
-		if (cost <= 0 || cost > this.budgetBytes) return null
+		if (cost <= 0 || cost > this.#budgetBytes) return null
 
-		return this.#setCollectingEvictions(id, cost)
+		const existing = this.#entries.peek(id)
+		if (existing) this.#usedBytes -= existing.cost
+
+		// As the most recently used, it is never evicted to make room for itself
+		this.#entries.set(id, { id, cost })
+		this.#usedBytes += cost
+
+		return this.#evictToFit()
 	}
 
 	/**
 	 * Record what a bitmap really costs the client to store.
-	 * As lru-cache has no way to change the size of an entry in place, this also counts as a use of the bitmap.
+	 * This does not count as a use of the bitmap, so it doesn't change which bitmaps are evicted first
 	 * @returns The ids the client must evict, if the bitmap now takes the total over budget
 	 */
 	setCost(id: string, bytes: number): string[] {
-		if (!this.#entries.has(id)) return []
+		const entry = this.#entries.peek(id)
+		if (!entry) return []
 
-		if (bytes > this.budgetBytes) {
-			// It can no longer fit at all, so this is the one to go
-			this.#entries.delete(id)
-			return [id]
-		}
+		this.#usedBytes += bytes - entry.cost
+		entry.cost = bytes
 
-		return this.#setCollectingEvictions(id, Math.max(bytes, 1))
+		return this.#evictToFit()
 	}
 
 	/**
@@ -95,31 +97,24 @@ export class SatelliteBitmapCache {
 	 * @returns The ids the client must evict
 	 */
 	resize(budgetBytes: number): string[] {
-		const previous = this.#entries
-		if (budgetBytes <= 0) {
-			const evicted = [...previous.keys()]
-			previous.clear()
-			return evicted
-		}
+		this.#budgetBytes = budgetBytes
 
-		const next = this.#createEntries(budgetBytes)
-		// Insert from least to most recently used, so the order is kept and the oldest are the ones to go
-		for (const id of previous.rkeys()) {
-			const cost = previous.peek(id)
-			if (cost !== undefined && cost <= budgetBytes) next.set(id, cost)
-		}
-		this.#entries = next
-
-		return [...previous.keys()].filter((id) => !next.has(id))
+		return this.#evictToFit()
 	}
 
-	#setCollectingEvictions(id: string, cost: number): string[] {
+	/**
+	 * Evict the least recently used bitmaps until the total is within budget
+	 * @returns The evicted ids
+	 */
+	#evictToFit(): string[] {
 		const evicted: string[] = []
-		this.#evicted = evicted
-		try {
-			this.#entries.set(id, cost)
-		} finally {
-			this.#evicted = null
+		// A budget of 0 empties the cache, even of any bitmaps reported to cost nothing
+		while (this.#usedBytes > this.#budgetBytes || (this.#budgetBytes <= 0 && this.#entries.size > 0)) {
+			const entry = this.#entries.pop()
+			if (!entry) break
+
+			this.#usedBytes -= entry.cost
+			evicted.push(entry.id)
 		}
 		return evicted
 	}
