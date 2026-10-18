@@ -10740,7 +10740,6 @@ __metadata:
     fflate: "npm:^0.8.3"
     fs-extra: "npm:^11.4.1"
     get-port: "npm:^7.2.0"
-    lru-cache: "npm:^11.5.3"
     nanoid: "npm:^6.0.2"
     node-cron: "npm:^4.6.0"
     node-hid: "npm:^3.4.0"
