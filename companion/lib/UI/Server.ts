@@ -34,7 +34,15 @@ export class UIServer extends HttpServer {
 		}
 		try {
 			if (this.#errorListener) this.off('error', this.#errorListener)
+			let listening = false
 			this.#errorListener = (e: any) => {
+				// Once listening, an error (eg EMFILE when accepting a connection) doesn't stop the server, so it is
+				// not a status for the launcher
+				if (listening) {
+					this.#logger.error(`http server error: ${e?.message ?? e}`)
+					return
+				}
+
 				this.#logger.error(`Failed to bind to ${bindIp}:${bindPort}: ${e?.message ?? e}`)
 				sendOverIpc({
 					messageType: 'http-bind-status',
@@ -46,6 +54,8 @@ export class UIServer extends HttpServer {
 			this.on('error', this.#errorListener)
 
 			this.listen(bindPort, bindIp, () => {
+				listening = true
+
 				const address0 = this.address()
 				const address = typeof address0 === 'object' ? address0 : undefined
 

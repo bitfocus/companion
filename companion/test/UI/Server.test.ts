@@ -106,6 +106,18 @@ describe('UIServer.rebindHttp', () => {
 		)
 	})
 
+	test('does not report an error the server hits after it is listening', async () => {
+		const server = new UIServer(express())
+		servers.push(server)
+		server.rebindHttp('127.0.0.1', 0)
+		await vi.waitFor(() => expect(sendOverIpc).toHaveBeenCalledWith(expect.objectContaining({ appStatus: 'running' })))
+		vi.mocked(sendOverIpc).mockClear()
+
+		server.emit('error', Object.assign(new Error('accept EMFILE'), { code: 'EMFILE' }))
+
+		expect(sendOverIpc).not.toHaveBeenCalled()
+	})
+
 	test('reports any other bind failure as an error', async () => {
 		const server = new UIServer(express())
 		servers.push(server)
