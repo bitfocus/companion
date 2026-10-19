@@ -3,6 +3,7 @@ import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import { nanoid } from 'nanoid'
 import z from 'zod'
+import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import {
 	CreateBankControlId,
 	CreatePageControlId,
@@ -19,6 +20,8 @@ import {
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { zodStoredControlId, type UIControlState, type UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
+import type { CustomActionCollection, CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type {
 	ExpressionVariableCollection,
 	ExpressionVariableModel,
@@ -47,12 +50,15 @@ import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
 import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
 import type { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 import { ControlButtonPresetReference } from './ControlTypes/Button/PresetReference.js'
+import { ControlCustomAction } from './ControlTypes/CustomAction.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import { ControlPage } from './ControlTypes/Page.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
 import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
 import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
+import { CustomActionCollections } from './CustomActionCollections.js'
+import { createCustomActionTrpcRouter } from './CustomActionTrpcRouter.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import { createEntitiesTrpcRouter } from './EntitiesTrpcRouter.js'
@@ -112,6 +118,11 @@ export class ControlsController {
 
 	readonly #expressionVariableNamesMap: ExpressionVariableNameMap
 
+	/**
+	 * The custom action collections
+	 */
+	readonly #customActionCollections: CustomActionCollections
+
 	readonly #controlChangeEvents = new EventEmitter<ControlChangeEvents>()
 
 	/** Resolve a page's local-variable entities (its `page:<pageId>` control), for `$(page:x)` injection. */
@@ -155,7 +166,46 @@ export class ControlsController {
 		this.#expressionVariableCollections = new ExpressionVariableCollections(db, (validCollectionIds) =>
 			this.#cleanUnknownExpressionVariableCollectionIds(validCollectionIds)
 		)
+
+		this.#customActionCollections = new CustomActionCollections(db, (validCollectionIds) =>
+			this.#cleanUnknownCustomActionCollectionIds(validCollectionIds)
+		)
+
+		this.#controlEvents.on('customActionDefinitionChanged', () => this.#publishCustomActionDefinitions())
 	}
+
+	#cleanUnknownCustomActionCollectionIds(validCollectionIds: ReadonlySet<string>): void {
+		for (const control of this.#store.controls.values()) {
+			if (control instanceof ControlCustomAction) {
+				control.checkCollectionIdIsValid(validCollectionIds)
+			}
+		}
+	}
+
+	/**
+	 * Publish each custom action as an action, so that it can be used by other controls
+	 */
+	#publishCustomActionDefinitions = debounceFn(
+		(): void => {
+			const definitions: Record<string, ClientEntityDefinition> = {}
+			for (const control of this.#store.controls.values()) {
+				if (!(control instanceof ControlCustomAction)) continue
+
+				const parsedId = ParseControlId(control.controlId)
+				if (parsedId?.type !== 'custom-action') continue
+
+				definitions[parsedId.customActionId] = control.toActionDefinition()
+			}
+
+			this.#deps.instance.definitions.setActionDefinitions(CUSTOM_ACTIONS_CONNECTION_ID, definitions)
+		},
+		{
+			before: false,
+			after: true,
+			wait: 10,
+			maxWait: 50,
+		}
+	)
 
 	#cleanUnknownTriggerCollectionIds(validCollectionIds: ReadonlySet<string>): void {
 		for (const control of this.#store.controls.values()) {
@@ -237,6 +287,12 @@ export class ControlsController {
 			triggers: createTriggersTrpcRouter(
 				this.#controlChangeEvents,
 				this.#triggerCollections,
+				this.#store,
+				this.#factory
+			),
+			customActions: createCustomActionTrpcRouter(
+				this.#controlChangeEvents,
+				this.#customActionCollections,
 				this.#store,
 				this.#factory
 			),
@@ -352,6 +408,19 @@ export class ControlsController {
 			}
 		}
 		return variables
+	}
+
+	/**
+	 * Get all of the custom action controls
+	 */
+	getAllCustomActions(): ControlCustomAction[] {
+		const customActions: ControlCustomAction[] = []
+		for (const control of this.#store.controls.values()) {
+			if (control instanceof ControlCustomAction) {
+				customActions.push(control)
+			}
+		}
+		return customActions
 	}
 
 	/**
@@ -480,6 +549,30 @@ export class ControlsController {
 	}
 
 	/**
+	 * Import a custom action
+	 */
+	importCustomAction(controlId: string, definition: CustomActionModel): boolean {
+		if (!validateCustomActionControlId(controlId)) {
+			// Control id is not valid!
+			return false
+		}
+
+		if (this.#store.controls.has(controlId)) throw new Error(`Custom action ${controlId} already exists`)
+
+		const newControl = this.#factory.createClassForControl(controlId, 'custom-action', definition, true)
+		if (newControl) {
+			this.#store.controls.set(controlId, newControl)
+
+			// Ensure it is stored to the db
+			newControl.commitChange()
+
+			return true
+		}
+
+		return false
+	}
+
+	/**
 	 * Initialise the controls
 	 */
 	init(): void {
@@ -503,6 +596,10 @@ export class ControlsController {
 		this.#cleanUnknownTriggerCollectionIds(this.#triggerCollections.collectAllCollectionIds())
 
 		this.#cleanUnknownExpressionVariableCollectionIds(this.#expressionVariableCollections.collectAllCollectionIds())
+
+		this.#cleanUnknownCustomActionCollectionIds(this.#customActionCollections.collectAllCollectionIds())
+
+		this.#publishCustomActionDefinitions()
 
 		// Initialize expression variable names map
 		this.#expressionVariableNamesMap.rebuildMap()
@@ -629,6 +726,14 @@ export class ControlsController {
 
 	replaceExpressionVariableCollections(collections: ExpressionVariableCollection[]): void {
 		this.#expressionVariableCollections.replaceCollections(collections)
+	}
+
+	exportCustomActionCollections(): CustomActionCollection[] {
+		return this.#customActionCollections.collectionData
+	}
+
+	replaceCustomActionCollections(collections: CustomActionCollection[]): void {
+		this.#customActionCollections.replaceCollections(collections)
 	}
 
 	/**
