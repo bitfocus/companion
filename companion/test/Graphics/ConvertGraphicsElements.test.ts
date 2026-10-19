@@ -1959,8 +1959,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		})
 	})
 
-	describe('clockSensitive', () => {
-		test('reports clockSensitive when an element expression uses oscillate', async () => {
+	describe('clockCycleMs', () => {
+		test('reports the clock cycle when an element expression uses oscillate', async () => {
 			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: expr('oscillate(1000)') })]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -1975,10 +1975,10 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				null
 			)
 
-			expect(result.clockSensitive).toBe(true)
+			expect(result.clockCycleMs).toBe(1000)
 		})
 
-		test('reports clockSensitive false for a plain element', async () => {
+		test('reports no clock cycle for a plain element', async () => {
 			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Hello') })]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -1993,7 +1993,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				null
 			)
 
-			expect(result.clockSensitive).toBe(false)
+			expect(result.clockCycleMs).toBe(0)
 		})
 
 		test('does not cache a clock-sensitive element, but does cache a plain one', async () => {
@@ -2015,7 +2015,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				null
 			)
 
-			expect(result.clockSensitive).toBe(true)
+			expect(result.clockCycleMs).toBe(1000)
 			// The clock-sensitive element must recompute each tick, so it is not cached
 			expect(cache.get('osc')).toBeUndefined()
 			// A plain element running alongside a clock-sensitive one is not itself
@@ -2045,7 +2045,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				null
 			)
 
-			expect(result.clockSensitive).toBe(true)
+			expect(result.clockCycleMs).toBe(2000)
 			expect(cache.get('osc1')).toBeUndefined()
 			expect(cache.get('osc2')).toBeUndefined()
 		})

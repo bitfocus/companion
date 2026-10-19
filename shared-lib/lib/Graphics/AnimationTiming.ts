@@ -1,6 +1,7 @@
 /**
- * Timing of animated images, shared by the backend (which decodes animations with image-rs) and the webui (which
- * decodes them in the browser), so that both play an animation the same way.
+ * Timing of animated images and other things drawn on the render clock, shared by the backend (which decodes
+ * animations with image-rs) and the webui (which decodes them in the browser), so that both play an animation the
+ * same way.
  */
 
 /** How often buttons are redrawn, and so the finest steps an animation can play in */
@@ -14,6 +15,62 @@ export const MAX_ANIMATION_DURATION_MS = 30_000
  * frames scaled down to fit, while the backend draws a larger static image from its source instead
  */
 export const MAX_DECODED_IMAGE_BYTES = 32 * 1024 * 1024
+
+/** Beyond this a cycle is effectively endless, which also keeps the maths exact */
+const MAX_CYCLE_MS = 100_000_000_000
+
+function greatestCommonDivisor(a: number, b: number): number {
+	while (b) [a, b] = [b, a % b]
+	return a
+}
+
+/**
+ * The time after which something repeating every periodMs looks the same on the render clock again.
+ * As it is only seen on each tick, that is the first whole number of ticks which is also a whole number of periods
+ */
+export function clockCycleOfPeriod(periodMs: number): number {
+	return combineClockCycles(RENDER_CLOCK_INTERVAL_MS, Math.max(1, Math.round(periodMs)))
+}
+
+/**
+ * The time after which two things which repeat every aMs and every bMs both repeat together.
+ * 0 means something which never changes, so the other one decides
+ */
+export function combineClockCycles(aMs: number, bMs: number): number {
+	if (aMs === 0) return bMs
+	if (bMs === 0) return aMs
+	return Math.min(MAX_CYCLE_MS, (aMs / greatestCommonDivisor(aMs, bMs)) * bMs)
+}
+
+/** Something drawn on a button which changes on the render clock, and repeats */
+export interface CycleAnimation {
+	/** How many different frames it shows in one loop */
+	readonly frameCount: number
+	/** The length of one loop, in ms, which is a whole number of render clock ticks */
+	readonly durationMs: number
+}
+
+/**
+ * Count how many different renders there can be in one cycle of some animations drawn together.
+ * The animations repeat together once all of their loops line up, and within that the render only changes when one
+ * of them moves to its next frame, so the count is at most the total number of frames shown in the cycle, and at
+ * most one per tick of the render clock. This is an upper bound, and 1 when there are no animations
+ */
+export function countCycleRenders(animations: readonly CycleAnimation[]): number {
+	if (animations.length === 0) return 1
+
+	let cycleMs = 0
+	for (const { durationMs } of animations) {
+		cycleMs = combineClockCycles(cycleMs, clockCycleOfPeriod(durationMs))
+	}
+
+	let framesInCycle = 0
+	for (const { frameCount, durationMs } of animations) {
+		framesInCycle += frameCount * Math.ceil(cycleMs / clockCycleOfPeriod(durationMs))
+	}
+
+	return Math.min(cycleMs / RENDER_CLOCK_INTERVAL_MS, framesInCycle)
+}
 
 /**
  * Snap a time to the render clock, so that everything drawn in the same tick shows the same moment

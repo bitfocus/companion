@@ -183,7 +183,7 @@ export class PreviewElementStream {
 			session.trackedExpressions = newValue.referencedVariableIds
 			session.trackedCompositeElements = newValue.referencedCompositeElements
 			session.trackedReferencedLocations = newValue.referencedLocations
-			session.isClockSensitive = newValue.clockSensitive
+			session.isClockSensitive = newValue.clockCycleMs > 0
 
 			session.changes.emit('change', { ok: true, element: newValue.element })
 		} catch (err) {
@@ -238,7 +238,7 @@ export class PreviewElementStream {
 		referencedVariableIds: Set<string>
 		referencedCompositeElements: Set<CompositeElementIdString>
 		referencedLocations: Set<string>
-		clockSensitive: boolean
+		clockCycleMs: number
 	}> {
 		const control = this.#controlsController.getControl(controlId)
 		if (!control || !control.supportsLayeredStyle || !control.supportsEntities) {
@@ -247,7 +247,7 @@ export class PreviewElementStream {
 				referencedVariableIds: new Set(),
 				referencedCompositeElements: new Set(),
 				referencedLocations: new Set(),
-				clockSensitive: false,
+				clockCycleMs: 0,
 			}
 		}
 
@@ -258,7 +258,7 @@ export class PreviewElementStream {
 				referencedVariableIds: new Set(),
 				referencedCompositeElements: new Set(),
 				referencedLocations: new Set(),
-				clockSensitive: false,
+				clockCycleMs: 0,
 			}
 		}
 
@@ -270,7 +270,7 @@ export class PreviewElementStream {
 				referencedVariableIds: new Set(),
 				referencedCompositeElements: new Set(),
 				referencedLocations: new Set(),
-				clockSensitive: false,
+				clockCycleMs: 0,
 			}
 		}
 
@@ -289,7 +289,7 @@ export class PreviewElementStream {
 
 			// Convert the single element to its draw representation
 			// We wrap it in an array since ConvertSomeButtonGraphicsElementForDrawing expects an array
-			const { elements, variables, compositeElements, referencedLocations, clockSensitive } =
+			const { elements, variables, compositeElements, referencedLocations, clockCycleMs } =
 				await ConvertSomeButtonGraphicsElementForDrawing(
 					this.#instanceDefinitions,
 					parser,
@@ -315,7 +315,7 @@ export class PreviewElementStream {
 				referencedVariableIds: variables.drawn,
 				referencedCompositeElements: compositeElements.drawn,
 				referencedLocations: referencedLocations.drawn,
-				clockSensitive,
+				clockCycleMs,
 			}
 		} catch (error) {
 			this.#logger.error('Error evaluating element:', error)

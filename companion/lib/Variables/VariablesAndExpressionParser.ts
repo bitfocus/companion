@@ -266,7 +266,7 @@ export class VariablesAndExpressionParser {
 			}
 
 			// Track clock sensitivity
-			if (parsedValue.clockSensitive) clockSensitive = true
+			if (parsedValue.clockCycleMs > 0) clockSensitive = true
 
 			if (!parsedValue.ok) {
 				// The expression failed to evaluate; record the error and fall back to the field default
@@ -312,7 +312,7 @@ export class VariablesAndExpressionParser {
 		try {
 			// No object, so just return undefined
 			if (!rawValue) {
-				return { ok: true, value: undefined, variableIds: new Set(), clockSensitive: false }
+				return { ok: true, value: undefined, variableIds: new Set(), clockCycleMs: 0 }
 			}
 
 			if ((rawValue.isExpression && options.allowExpression) || options.forceExpression) {
@@ -324,10 +324,10 @@ export class VariablesAndExpressionParser {
 				// Note - we don't need to care about the granularity given in `useVariables`,
 				const parseResult = this.parseVariables(stringifyVariableValue(rawValue.value) ?? '')
 
-				return { ok: true, value: parseResult.text, variableIds: parseResult.variableIds, clockSensitive: false }
+				return { ok: true, value: parseResult.text, variableIds: parseResult.variableIds, clockCycleMs: 0 }
 			} else {
 				// 'expression-or-variables' with isExpression=false - just use the value as-is
-				return { ok: true, value: rawValue.value, variableIds: new Set(), clockSensitive: false }
+				return { ok: true, value: rawValue.value, variableIds: new Set(), clockCycleMs: 0 }
 			}
 		} catch (e) {
 			// Backstop: parseEntityOption must never throw, so callers can always rely on the result shape
@@ -335,7 +335,7 @@ export class VariablesAndExpressionParser {
 				ok: false,
 				error: stringifyError(e, true) || 'Unknown error',
 				variableIds: new Set(),
-				clockSensitive: false,
+				clockCycleMs: 0,
 			}
 		}
 	}

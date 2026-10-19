@@ -316,7 +316,7 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 			const feedbackOverrides =
 				this.#host.entities?.getFeedbackStyleOverrides(this.resolveDefaultNoTopBar()) ?? emptyFeedbackOverrides
 
-			const { elements, variables, compositeElements, referencedLocations, cyclicLocations, clockSensitive } =
+			const { elements, variables, compositeElements, referencedLocations, cyclicLocations, clockCycleMs } =
 				await ConvertSomeButtonGraphicsElementForDrawing(
 					this.deps.instance.definitions,
 					parser,
@@ -342,7 +342,7 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 
 				elements,
 				referencedLocations: referencedLocations.drawn,
-				clockSensitive: clockSensitive || undefined,
+				clockCycleMs: clockCycleMs || undefined,
 
 				style: 'button-layered',
 				drawType: this.#drawType,
