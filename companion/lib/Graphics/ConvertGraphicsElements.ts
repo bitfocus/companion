@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { JsonValue } from 'type-fest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { combineClockCycles } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import {
 	FONTSIZE_SHRINK_DEFAULT,
 	getElementSchemaProperty,
@@ -399,6 +400,9 @@ async function convertReferenceElementForDrawing(
 						targetRender.drawElements.filter((el) => el.type !== 'canvas'),
 						drawElement.id + '/'
 					)
+
+					// The embedded elements change whenever the target's do, so this element follows the target's clock
+					references.clockCycleMs = combineClockCycles(references.clockCycleMs, targetRender.clockCycleMs)
 
 					// Track transitive referenced locations for loop detection in parent renders
 					for (const loc of targetRender.referencedLocations) {

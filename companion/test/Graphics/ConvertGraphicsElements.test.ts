@@ -268,7 +268,7 @@ function createMockImageResult(
 	drawElements: SomeButtonGraphicsDrawElement[] = [],
 	referencedLocations: ReadonlySet<string> = new Set()
 ): ImageResult {
-	return new ImageResult(undefined, null, 1, async () => Buffer.alloc(0), drawElements, referencedLocations)
+	return new ImageResult(undefined, null, 1, 0, async () => Buffer.alloc(0), drawElements, referencedLocations)
 }
 
 /**
@@ -2021,6 +2021,37 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			// A plain element running alongside a clock-sensitive one is not itself
 			// clock-sensitive, so it is still cached
 			expect(cache.get('plain')).toBeDefined()
+		})
+
+		test('follows the clock cycle of a referenced button', async () => {
+			const target = new ImageResult(
+				undefined,
+				null,
+				1,
+				3000,
+				async () => Buffer.alloc(0),
+				[makeTextDrawEl({ id: 'ref-text', text: 'Hi' })],
+				new Set()
+			)
+			const elements: SomeButtonGraphicsElement[] = [
+				makeReferenceEl({ location: val('2/0/0') }),
+				makeTextEl({ id: 'osc', text: expr('oscillate(2000)') }),
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				vi.fn(() => target)
+			)
+
+			// The 3s cycle of the referenced button and the local 2s oscillate repeat together every 6s
+			expect(result.clockCycleMs).toBe(6000)
 		})
 
 		test('does not cache either of two clock-sensitive siblings', async () => {

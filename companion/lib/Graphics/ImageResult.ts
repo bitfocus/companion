@@ -132,10 +132,17 @@ export class ImageResult {
 	 */
 	readonly cycleRenderCount: number
 
+	/**
+	 * How long until everything on this render which depends on the render clock (e.g. oscillate()) repeats, in ms,
+	 * or 0 if nothing does. A button which embeds this render changes with it
+	 */
+	readonly clockCycleMs: number
+
 	constructor(
 		cacheKey: string | undefined,
 		style: ImageResultProcessedStyle | null,
 		cycleRenderCount: number,
+		clockCycleMs: number,
 		drawNative: ImageResultNativeDrawFn,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> = new Set()
@@ -143,6 +150,7 @@ export class ImageResult {
 		this.cacheKey = cacheKey
 		this.style = style
 		this.cycleRenderCount = cycleRenderCount
+		this.clockCycleMs = clockCycleMs
 		this.#drawNative = drawNative
 		this.drawElements = drawElements
 		this.referencedLocations = referencedLocations
