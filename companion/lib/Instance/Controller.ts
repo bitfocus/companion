@@ -13,7 +13,7 @@ import { EventEmitter } from 'node:events'
 import express from 'express'
 import type { UdevRuleDefinition } from 'udev-generator'
 import z from 'zod'
-import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
+import { isLabelValid } from '@companion-app/shared/Label.js'
 import type { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
@@ -1402,7 +1402,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		if (config.moduleInstanceType === ModuleInstanceType.Connection) {
 			// Ensure that the label is valid according to the new rules
 			// This is excessive to do at every activation, but it needs to be done once everything is loaded, not when upgrades are run
-			const safeLabel = makeLabelSafe(config.label)
+			const safeLabel = this.#configStore.makeLabelValid(ModuleInstanceType.Connection, config.label, id)
 			if (safeLabel !== config.label) {
 				this.setConnectionLabelAndConfig(
 					id,
