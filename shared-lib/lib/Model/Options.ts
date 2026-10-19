@@ -114,6 +114,12 @@ const CompanionInputFieldCommonShape = {
 	 * Only valid alongside deferParsing: true.
 	 */
 	contextVariableResolution: ContextVariableResolutionSchema.optional(),
+
+	/**
+	 * Hide this field when the entity is on one of the given kinds of control, as it has no meaning there.
+	 * Only available for internal connections
+	 */
+	hiddenForControlTypes: z.array(ControlIdKindSchema).optional(),
 }
 
 /**
@@ -562,6 +568,13 @@ export function getFieldDefaultForControl<TField extends SomeCompanionInputField
 	const override = controlKind ? field.defaultForControlType?.[controlKind] : undefined
 	if (override !== undefined) return override as FieldDefaultValue<TField>
 	return field.default as FieldDefaultValue<TField>
+}
+
+/**
+ * Whether a field should be hidden for an entity on a control of the given kind
+ */
+export function isFieldHiddenForControl(field: SomeCompanionInputField, controlKind: ControlIdKind | null): boolean {
+	return !!controlKind && !!field.hiddenForControlTypes?.includes(controlKind)
 }
 
 export function exprVal<T extends JsonValue | undefined>(value: T): ExpressionOrValue<T> {

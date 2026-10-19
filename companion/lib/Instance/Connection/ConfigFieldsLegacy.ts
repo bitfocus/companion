@@ -279,6 +279,7 @@ function translateCommonFields(
 	| 'deferParsing'
 	| 'contextVariableResolution'
 	| 'defaultForControlType'
+	| 'hiddenForControlTypes'
 > {
 	return {
 		id: field.id,
@@ -292,6 +293,7 @@ function translateCommonFields(
 		deferParsing: undefined,
 		contextVariableResolution: undefined,
 		defaultForControlType: undefined, // Only supported for internal
+		hiddenForControlTypes: undefined, // Only supported for internal
 	}
 }
 

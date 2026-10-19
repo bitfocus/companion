@@ -1,9 +1,10 @@
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useId } from 'react'
+import { useCallback, useContext, useId, useMemo } from 'react'
 import type { JsonValue } from 'type-fest'
 import { isInternalConnectionId, isVirtualConnectionId } from '@companion-app/shared/ConnectionId.js'
+import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
@@ -11,7 +12,11 @@ import {
 	FeedbackEntitySubType,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { CompanionInputFieldCheckboxExtended, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import {
+	isFieldHiddenForControl,
+	type CompanionInputFieldCheckboxExtended,
+	type ExpressionOrValue,
+} from '@companion-app/shared/Model/Options.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { CopyButton } from '~/Components/CopyButton.js'
 import { Form, FormLabel } from '~/Components/Form.js'
@@ -59,8 +64,14 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 
 	const showButtonPreview = isInternalConnectionId(entity?.connectionId) && entityDefinition?.showButtonPreview
 
+	const controlKind = ParseControlId(controlId)?.type ?? null
+	const visibleOptions = useMemo(
+		() => entityDefinition?.options.filter((opt) => !isFieldHiddenForControl(opt, controlKind)),
+		[entityDefinition?.options, controlKind]
+	)
+
 	const optionVisibility = useOptionsVisibility(
-		entityDefinition?.options,
+		visibleOptions,
 		!!entityDefinition?.optionsSupportExpressions,
 		entity?.options
 	)
@@ -159,7 +170,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 						/>
 					)}
 
-					{entityDefinition?.options.map((opt, i) => (
+					{visibleOptions?.map((opt, i) => (
 						<MyErrorBoundary key={i}>
 							<OptionsInputField
 								key={i}
@@ -173,7 +184,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								visibility={optionVisibility.get(opt.id) ?? true}
 								readonly={readonly}
 								localVariablesStore={localVariablesStore}
-								fieldSupportsExpression={entityDefinition.optionsSupportExpressions && !opt.disableAutoExpression}
+								fieldSupportsExpression={!!entityDefinition?.optionsSupportExpressions && !opt.disableAutoExpression}
 								allRawOptions={entity.options || {}}
 							/>
 						</MyErrorBoundary>
