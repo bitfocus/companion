@@ -205,7 +205,7 @@ describe('SatelliteBitmapCache', () => {
 
 describe('computeBitmapId', () => {
 	function makeImage(cacheKey: string | undefined): ImageResult {
-		return new ImageResult(cacheKey, { type: 'button' }, 1, async () => new Uint8Array())
+		return new ImageResult(cacheKey, { type: 'button' }, 1, 0, async () => new Uint8Array())
 	}
 
 	test('is stable for the same render and output', () => {

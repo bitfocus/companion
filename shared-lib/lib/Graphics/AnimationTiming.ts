@@ -29,7 +29,10 @@ function greatestCommonDivisor(a: number, b: number): number {
  * As it is only seen on each tick, that is the first whole number of ticks which is also a whole number of periods
  */
 export function clockCycleOfPeriod(periodMs: number): number {
-	return combineClockCycles(RENDER_CLOCK_INTERVAL_MS, Math.max(1, Math.round(periodMs)))
+	// Work in microseconds, so that a fractional period (eg 100.25ms, which lines up with the ticks every 40.1s) isn't
+	// rounded to one which lines up much sooner
+	const periodUs = Math.max(1, Math.round(periodMs * 1000))
+	return combineClockCycles(RENDER_CLOCK_INTERVAL_MS * 1000, periodUs) / 1000
 }
 
 /**

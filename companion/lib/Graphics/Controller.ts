@@ -420,7 +420,14 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								}
 
 								const cycleRenderCount = countButtonCycleRenders(animationFrames, buttonStyle.clockCycleMs ?? 0)
-								render = this.#generateImageResult(cacheKey, renderStyle, animationFrames, cycleRenderCount, true)
+								render = this.#generateImageResult(
+									cacheKey,
+									renderStyle,
+									animationFrames,
+									cycleRenderCount,
+									buttonStyle.clockCycleMs ?? 0,
+									true
+								)
 								if (cycleRenderCount <= RENDER_CACHE_MAX_CYCLE_RENDERS) this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
@@ -493,6 +500,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								renderStyle,
 								animationFrames,
 								cycleRenderCount,
+								buttonStyle.clockCycleMs ?? 0,
 								true,
 								buttonStyle.elements,
 								buttonStyle.referencedLocations
@@ -689,7 +697,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		// One-off preview: never cached or emitted, so it has no content key (never deduped).
 		// It is a still, so any animations show their first frame
-		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES, 1, true)
+		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES, 1, 0, true)
 	}
 
 	/**
@@ -997,6 +1005,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		drawStyle: RendererButtonStyle,
 		animationFrames: AnimationFrames,
 		cycleRenderCount: number,
+		clockCycleMs: number,
 		waitForRemoteImages: boolean,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> | undefined = undefined
@@ -1007,6 +1016,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			cacheKey,
 			processedStyle,
 			cycleRenderCount,
+			clockCycleMs,
 			async (width, height, rotation, format) =>
 				this.#executePoolDrawButtonImageBuffer(
 					drawStyle,
@@ -1047,6 +1057,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					},
 					source.animationFrames,
 					render.cycleRenderCount,
+					render.clockCycleMs,
 					// Served onwards (by Link), where it is better to send what is there and the rest when it comes, than
 					// to hold up serving every other button
 					false

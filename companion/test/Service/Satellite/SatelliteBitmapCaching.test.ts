@@ -32,7 +32,7 @@ function parseMessage(line: string) {
 
 function makeImage(cacheKey: string | undefined, size = 8) {
 	const drawNative = vi.fn(async () => new Uint8Array(size * size * 3).fill(cacheKey ? cacheKey.length : 1))
-	return { image: new ImageResult(cacheKey, { type: 'button' }, 1, drawNative), drawNative }
+	return { image: new ImageResult(cacheKey, { type: 'button' }, 1, 0, drawNative), drawNative }
 }
 
 const SMALL_STYLE = { bitmap: { w: 8, h: 8 } }
@@ -104,8 +104,8 @@ describe('sendSatelliteStyleMessage', () => {
 		socket.bitmapCache = new SatelliteBitmapCache(10 * SMALL_COST)
 		const drawNative = async () => new Uint8Array(8 * 8 * 3)
 		const fitsFrames = Math.floor(10 * SATELLITE_CACHE_MAX_ANIMATION_SHARE)
-		const tooMany = new ImageResult('frame-a', { type: 'button' }, fitsFrames + 1, drawNative)
-		const fits = new ImageResult('frame-b', { type: 'button' }, fitsFrames, drawNative)
+		const tooMany = new ImageResult('frame-a', { type: 'button' }, fitsFrames + 1, 0, drawNative)
+		const fits = new ImageResult('frame-b', { type: 'button' }, fitsFrames, 0, drawNative)
 
 		await sendSatelliteStyleMessage(socket, 'KEY-STATE', 'dev', {}, tooMany, SMALL_STYLE, null, 'rgb')
 		await sendSatelliteStyleMessage(socket, 'KEY-STATE', 'dev', {}, fits, SMALL_STYLE, null, 'rgb')
@@ -131,7 +131,7 @@ describe('sendSatelliteStyleMessage', () => {
 	test('sends the bitmap without an id if caching is turned off while drawing', async () => {
 		const socket = new TestSocketWrapper()
 		socket.bitmapCache = new SatelliteBitmapCache(10 * SMALL_COST)
-		const image = new ImageResult('frame-a', { type: 'button' }, 1, async () => {
+		const image = new ImageResult('frame-a', { type: 'button' }, 1, 0, async () => {
 			socket.bitmapCache = null
 			return new Uint8Array(8 * 8 * 3)
 		})
@@ -244,7 +244,7 @@ describe('bitmap caching consistency', () => {
 
 		// Frames of an animation, each drawn after a random delay so that sends overlap with each other
 		const frames = Array.from({ length: 12 }, (_, i) => {
-			return new ImageResult(`frame-${i}`, { type: 'button' }, 1, async () => {
+			return new ImageResult(`frame-${i}`, { type: 'button' }, 1, 0, async () => {
 				for (let n = Math.floor(random() * 4); n > 0; n--) await new Promise((resolve) => setImmediate(resolve))
 				return new Uint8Array(8 * 8 * 3).fill(i)
 			})
