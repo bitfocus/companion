@@ -71,11 +71,11 @@ function evaluateBoolean(
 
 	const parsed = parser.executeExpression(exprOrVal.value, 'boolean')
 	return parsed.ok
-		? { ok: true, variableIds: parsed.variableIds, clockSensitive: parsed.clockSensitive, value: !!parsed.value }
+		? { ok: true, variableIds: parsed.variableIds, clockSensitive: parsed.clockCycleMs > 0, value: !!parsed.value }
 		: {
 				ok: false,
 				variableIds: parsed.variableIds,
-				clockSensitive: parsed.clockSensitive,
+				clockSensitive: parsed.clockCycleMs > 0,
 				error: parsed.error,
 			}
 }
@@ -116,14 +116,14 @@ function evaluateString(
 		? {
 				ok: true,
 				variableIds: parsed.variableIds,
-				clockSensitive: parsed.clockSensitive,
+				clockSensitive: parsed.clockCycleMs > 0,
 				// eslint-disable-next-line @typescript-eslint/no-base-to-string
 				value: String(parsed.value),
 			}
 		: {
 				ok: false,
 				variableIds: parsed.variableIds,
-				clockSensitive: parsed.clockSensitive,
+				clockSensitive: parsed.clockCycleMs > 0,
 				error: parsed.error,
 			}
 }

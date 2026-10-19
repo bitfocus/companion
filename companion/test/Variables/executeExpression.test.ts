@@ -408,11 +408,11 @@ describe('executeExpression', () => {
 			vi.useRealTimers()
 		})
 
-		test('sine is the default waveform and marks the result as clock-sensitive', () => {
+		test('sine is the default waveform and reports its cycle', () => {
 			// At the start of a cycle the sine wave sits at its trough (0)
 			vi.setSystemTime(10_000)
 			const res = executeExpression(mockBlinker, 'oscillate(1000)', {}, undefined, new Map())
-			expect(res).toMatchObject({ value: expect.closeTo(0), clockSensitive: true })
+			expect(res).toMatchObject({ value: expect.closeTo(0), clockCycleMs: 1000 })
 
 			// Half way through the cycle it reaches its peak (1)
 			vi.setSystemTime(10_500)
@@ -456,26 +456,26 @@ describe('executeExpression', () => {
 			vi.setSystemTime(10_000)
 			const clamped = executeExpression(mockBlinker, 'oscillate(50)', {}, undefined, new Map())
 			const floor = executeExpression(mockBlinker, 'oscillate(100)', {}, undefined, new Map())
-			expect(clamped).toMatchObject({ value: floor.ok ? floor.value : undefined, clockSensitive: true })
+			expect(clamped).toMatchObject({ value: floor.ok ? floor.value : undefined, clockCycleMs: 100 })
 		})
 
 		test('an invalid period returns 0 and is not clock-sensitive', () => {
 			vi.setSystemTime(10_000)
 			const res = executeExpression(mockBlinker, "oscillate('abc')", {}, undefined, new Map())
-			expect(res).toMatchObject({ value: 0, clockSensitive: false })
+			expect(res).toMatchObject({ value: 0, clockCycleMs: 0 })
 		})
 
 		test('a zero-argument call returns 0 and is not clock-sensitive', () => {
 			vi.setSystemTime(10_000)
 			const res = executeExpression(mockBlinker, 'oscillate()', {}, undefined, new Map())
-			expect(res).toMatchObject({ value: 0, clockSensitive: false })
+			expect(res).toMatchObject({ value: 0, clockCycleMs: 0 })
 		})
 
 		test('a negative period clamps to the 100ms floor', () => {
 			vi.setSystemTime(10_000)
 			const negative = executeExpression(mockBlinker, 'oscillate(-5)', {}, undefined, new Map())
 			const floor = executeExpression(mockBlinker, 'oscillate(100)', {}, undefined, new Map())
-			expect(negative).toMatchObject({ value: floor.ok ? floor.value : undefined, clockSensitive: true })
+			expect(negative).toMatchObject({ value: floor.ok ? floor.value : undefined, clockCycleMs: 100 })
 		})
 
 		test('sawtooth ramps up to 1.0 at the last step before the wrap', () => {
@@ -553,7 +553,7 @@ describe('executeExpression', () => {
 			expect(res).toMatchObject({
 				ok: false,
 				error: 'Error: oscillate() is not supported in this context',
-				clockSensitive: false,
+				clockCycleMs: 0,
 			})
 		})
 	})

@@ -862,7 +862,7 @@ describe('VariablesAndExpressionParser', () => {
 			it('should handle undefined with different options', () => {
 				const parser = createParser()
 
-				const emptyOk = { ok: true, value: undefined, variableIds: new Set(), clockSensitive: false }
+				const emptyOk = { ok: true, value: undefined, variableIds: new Set(), clockCycleMs: 0 }
 				expect(parser.parseEntityOption(undefined, parseExpressionOnly)).toEqual(emptyOk)
 				expect(parser.parseEntityOption(undefined, parseVariablesOnly)).toEqual(emptyOk)
 				expect(parser.parseEntityOption(undefined, parseNothing)).toEqual(emptyOk)
@@ -1625,41 +1625,43 @@ describe('VariablesAndExpressionParser', () => {
 		})
 	})
 
-	describe('clockSensitive propagation', () => {
-		it('executeExpression reports clockSensitive only when oscillate is used', () => {
+	describe('clock cycle propagation', () => {
+		it('executeExpression reports a clock cycle only when oscillate is used', () => {
 			const parser = createParser()
-			expect(parser.executeExpression('oscillate(1000)', undefined).clockSensitive).toBe(true)
-			expect(parser.executeExpression('1 + 2', undefined).clockSensitive).toBe(false)
+			expect(parser.executeExpression('oscillate(1000)', undefined).clockCycleMs).toBe(1000)
+			expect(parser.executeExpression('1 + 2', undefined).clockCycleMs).toBe(0)
 		})
 
-		it('parseEntityOption passes through clockSensitive from an expression', () => {
+		it('executeExpression reports when several oscillates repeat together', () => {
+			const parser = createParser()
+			expect(parser.executeExpression('oscillate(400) + oscillate(600)', undefined).clockCycleMs).toBe(1200)
+		})
+
+		it('parseEntityOption passes through the clock cycle of an expression', () => {
 			const parser = createParser()
 			const sensitive = parser.parseEntityOption(exprExpr('oscillate(1000)'), {
 				allowExpression: true,
 				parseVariables: false,
 			})
-			expect(sensitive.clockSensitive).toBe(true)
+			expect(sensitive.clockCycleMs).toBe(1000)
 
 			const plain = parser.parseEntityOption(exprExpr('1 + 2'), { allowExpression: true, parseVariables: false })
-			expect(plain.clockSensitive).toBe(false)
+			expect(plain.clockCycleMs).toBe(0)
 		})
 
-		it('parseEntityOption is never clockSensitive on the variable-interpolation or passthrough paths', () => {
+		it('parseEntityOption never has a clock cycle on the variable-interpolation or passthrough paths', () => {
 			const parser = createParser()
 			// A variable string is parsed by parseVariables, which cannot be clock-sensitive
 			expect(
-				parser.parseEntityOption(exprVal('$(test:var1)'), { allowExpression: false, parseVariables: true })
-					.clockSensitive
-			).toBe(false)
+				parser.parseEntityOption(exprVal('$(test:var1)'), { allowExpression: false, parseVariables: true }).clockCycleMs
+			).toBe(0)
 			// A passthrough (nothing enabled) value is never clock-sensitive
 			expect(
 				parser.parseEntityOption(exprVal('$(test:var1)'), { allowExpression: false, parseVariables: false })
-					.clockSensitive
-			).toBe(false)
+					.clockCycleMs
+			).toBe(0)
 			// A missing value is never clock-sensitive
-			expect(parser.parseEntityOption(undefined, { allowExpression: true, parseVariables: true }).clockSensitive).toBe(
-				false
-			)
+			expect(parser.parseEntityOption(undefined, { allowExpression: true, parseVariables: true }).clockCycleMs).toBe(0)
 		})
 
 		it('parseEntityOptions ORs clockSensitive across all fields', () => {
@@ -1732,7 +1734,7 @@ describe('VariablesAndExpressionParser', () => {
 			})
 			const result = parser.executeExpression('oscillate(1000)', undefined)
 			expect(result.ok).toBe(false)
-			expect(result.clockSensitive).toBe(false)
+			expect(result.clockCycleMs).toBe(0)
 		})
 
 		it('child parsers inherit the allowClockSensitive setting', () => {
