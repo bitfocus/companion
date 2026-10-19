@@ -1,7 +1,7 @@
 import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
-import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
+import { isInternalConnectionId, isVirtualConnectionId } from '@companion-app/shared/ConnectionId.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { LocalVariableNameRegex } from '@companion-app/shared/LocalVariable.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
@@ -293,7 +293,7 @@ export class ControlEntityInstance {
 		// Inform relevant module
 		if (isInternalConnectionId(this.#data.connectionId)) {
 			this.#internalModule.entityDelete(this.asEntityModel())
-		} else {
+		} else if (!isVirtualConnectionId(this.#data.connectionId)) {
 			this.#processManager.connectionEntityDelete(this.asEntityModel(), this.#controlId).catch((e) => {
 				this.#logger.silly(`entityDelete to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
 			})
@@ -325,7 +325,7 @@ export class ControlEntityInstance {
 			if (isInternalConnectionId(thisData.connectionId)) {
 				// Children-of-actions are cached here too, not just evaluated live - see getBooleanFeedbackValue.
 				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
-			} else {
+			} else if (!isVirtualConnectionId(thisData.connectionId)) {
 				// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
 				// The EntityManager will not subscribe disabled entities to the module.
 				this.#processManager.connectionEntityUpdate(this, this.#controlId).catch((e) => {
@@ -770,7 +770,8 @@ export class ControlEntityInstance {
 
 	/**
 	 * Resolve the value of this feedback (boolean feedbacks as a boolean, otherwise the raw value).
-	 * `context` selects cached vs live evaluation - see {@link getBooleanFeedbackValue}.
+	 * `context` selects cached vs live evaluation - see {@link getBooleanFeedbackValue}. A user value is state
+	 * held by this entity rather than something computed, so it always comes from the cache.
 	 */
 	getResolvedFeedbackValue(context: FeedbackExecutionContext | null): any {
 		if (this.#data.type !== EntityModelType.Feedback) return null
@@ -779,9 +780,23 @@ export class ControlEntityInstance {
 
 		if (definition?.feedbackType === FeedbackEntitySubType.Boolean) {
 			return this.getBooleanFeedbackValue(context)
-		} else {
-			return this.feedbackValue
 		}
+
+		// Lazy path (internal feedbacks only); module feedbacks fall through to the cache below.
+		if (
+			context &&
+			!this.#data.disabled &&
+			isInternalConnectionId(this.#data.connectionId) &&
+			!isInternalUserValueFeedback(this)
+		) {
+			return this.#internalModule.evaluateFeedbackValue(
+				this.asEntityModel(false) as FeedbackEntityModel,
+				this.#controlId,
+				context.parser
+			)
+		}
+
+		return this.feedbackValue
 	}
 
 	/**

@@ -2,7 +2,7 @@ import z from 'zod'
 import type { ObjectPatch } from '../Diff.js'
 import type { CollectionBase } from './Collections.js'
 import { SomeEntityModelSchema } from './EntityModel.js'
-import { SomeCompanionInputFieldSchema } from './Options.js'
+import { AuthorableInputFieldSchema, type AuthorableInputField } from './Options.js'
 
 export type CustomActionCollection = CollectionBase<null>
 
@@ -18,6 +18,27 @@ export const CustomActionOptionsSchema = z.object({
 
 export type CustomActionOptions = z.output<typeof CustomActionOptionsSchema>
 
+/** The pattern the id of an input of a custom action must match, as it is used in `$(options:<id>)` */
+export const CUSTOM_ACTION_INPUT_ID_PATTERN = /^[\w-]+$/
+
+/**
+ * Schema of an input of a custom action.
+ * An input must be a type of field which a user can author, and its visibility can only be an expression, as a
+ * function would be code from the user run in the ui.
+ */
+export const CustomActionInputSchema = AuthorableInputFieldSchema.refine(
+	(field) =>
+		(!field.isVisibleUi || field.isVisibleUi.type === 'expression') && CUSTOM_ACTION_INPUT_ID_PATTERN.test(field.id),
+	{ message: "Can't be used as an input of a custom action" }
+)
+
+/**
+ * Check if an input field definition is valid for an input of a custom action
+ */
+export function isValidCustomActionInput(field: unknown): field is AuthorableInputField {
+	return CustomActionInputSchema.safeParse(field).success
+}
+
 /**
  * A user defined action, made of a list of other actions, with user defined inputs
  */
@@ -26,7 +47,7 @@ export const CustomActionModelSchema = z.object({
 	options: CustomActionOptionsSchema.default(() => CustomActionOptionsSchema.parse({})),
 
 	/** The inputs of the action, available to its actions as `$(options:<id>)` */
-	inputs: z.array(SomeCompanionInputFieldSchema).default(() => []),
+	inputs: z.array(CustomActionInputSchema).default(() => []),
 
 	actions: z.array(SomeEntityModelSchema).default(() => []),
 

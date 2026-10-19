@@ -88,6 +88,7 @@ const fakeExtras: RunActionExtras = {
 	abortDelayed: new AbortController().signal,
 	executionMode: 'sequential',
 	rotationDelta: null,
+	frame: null,
 }
 
 function makeAction(definitionId: string, options: Record<string, unknown>): ActionForInternalExecution {

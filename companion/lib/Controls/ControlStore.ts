@@ -13,6 +13,7 @@ import type {
 	VariablesAndExpressionParser,
 } from '../Variables/VariablesAndExpressionParser.js'
 import { repairControl } from './ControlRepair.js'
+import { ControlCustomAction } from './ControlTypes/CustomAction.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import type { SomeControl } from './IControlFragments.js'
@@ -201,6 +202,15 @@ export class ControlStore implements IControlStore {
 	}
 
 	createActionExecutionParser(extras: RunActionExtras): VariablesAndExpressionParser {
+		// Inside a run of a custom action, its local variables are those of the run
+		const frame = extras.frame
+		if (frame) {
+			const customAction = this.getControl(frame.customActionControlId)
+			if (customAction instanceof ControlCustomAction) {
+				return customAction.createRunParser({ ...extras, frame }, { allowClockSensitive: false })
+			}
+		}
+
 		return this.createVariablesAndExpressionParser(extras.controlId, buildActionExecutionOverrides(extras), {
 			allowClockSensitive: false,
 		})

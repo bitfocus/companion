@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
-import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
+import { isCustomActionsConnectionId, isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
+import { CreateCustomActionControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { assertNever, type JsonValue } from '@companion-module/host'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
@@ -8,7 +9,9 @@ import type { InternalController } from '../Internal/Controller.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
+import { ControlCustomAction } from './ControlTypes/CustomAction.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
+import type { IControlStore } from './IControlStore.js'
 
 /**
  * Class to handle execution of actions.
@@ -29,17 +32,20 @@ export class ActionRunner {
 	readonly #logger = LogController.createLogger('Control/ActionRunner')
 
 	readonly #instanceController: InstanceController
+	readonly #controlStore: IControlStore
 	readonly #internalModule: InternalController
 	readonly #variablesController: VariablesController
 	readonly #localVariablesController: LocalVariablesController
 
 	constructor(
 		instanceController: InstanceController,
+		controlStore: IControlStore,
 		internalModule: InternalController,
 		variablesController: VariablesController,
 		localVariablesController: LocalVariablesController
 	) {
 		this.#instanceController = instanceController
+		this.#controlStore = controlStore
 		this.#internalModule = internalModule
 		this.#variablesController = variablesController
 		this.#localVariablesController = localVariablesController
@@ -59,6 +65,8 @@ export class ActionRunner {
 		let result: JsonValue | undefined
 		if (isInternalConnectionId(action.connectionId)) {
 			result = await this.#internalModule.executeAction(action, extras)
+		} else if (isCustomActionsConnectionId(action.connectionId)) {
+			result = await this.#runCustomAction(action, extras)
 		} else {
 			const instance = this.#instanceController.processManager.getConnectionChild(action.connectionId)
 			if (!instance) {
@@ -122,6 +130,29 @@ export class ActionRunner {
 				this.#logger.warn(`Invalid store result target: ${JSON.stringify(storeResult)}`)
 				break
 		}
+	}
+
+	/**
+	 * Run a custom action, with the options of the action as its inputs
+	 */
+	async #runCustomAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<JsonValue | undefined> {
+		const customAction = this.#controlStore.getControl(CreateCustomActionControlId(action.definitionId))
+		if (!(customAction instanceof ControlCustomAction)) {
+			this.#logger.silly('trying to run an unknown custom action.', action.definitionId)
+			return undefined
+		}
+
+		// Parse the inputs in the context of the caller. An input with an invalid value gets its default value, so
+		// that a change to the inputs of the custom action doesn't stop the actions using it from running
+		const parser = this.#controlStore.createActionExecutionParser(extras)
+		const parseRes = parser.parseEntityOptions(customAction.toActionDefinition(), action.rawOptions, extras.controlId)
+		if (!parseRes.ok) {
+			this.#logger.debug(
+				`Using defaults for invalid inputs of custom action "${customAction.options.name}": ${JSON.stringify(parseRes.optionErrors)}`
+			)
+		}
+
+		return customAction.executeCall(parseRes.ok ? parseRes.parsedOptions : parseRes.parsedOptionsWithDefaults, extras)
 	}
 
 	/**
@@ -229,6 +260,18 @@ export class ControlActionRunner {
 		actions: ControlEntityInstance[],
 		extras: Omit<RunActionExtras, 'controlId' | 'abortDelayed' | 'executionMode'>
 	): Promise<void> {
+		return this.runChain(extras, async (chainExtras) => this.#actionRunner.runMultipleActions(actions, chainExtras))
+	}
+
+	/**
+	 * Run something as a chain of actions of this control, so that it is tracked as running and can be aborted
+	 * @param extras The execution context
+	 * @param run The function to run, given the full execution context of the chain
+	 */
+	async runChain(
+		extras: Omit<RunActionExtras, 'controlId' | 'abortDelayed' | 'executionMode'>,
+		run: (extras: RunActionExtras) => Promise<void>
+	): Promise<void> {
 		const controller = new AbortController()
 
 		const chainId = nanoid()
@@ -239,19 +282,17 @@ export class ControlActionRunner {
 			this.#triggerRedraw()
 		}
 
-		return this.#actionRunner
-			.runMultipleActions(actions, {
-				...extras,
-				controlId: this.#controlId,
-				abortDelayed: controller.signal,
-				executionMode: 'concurrent',
-			})
-			.finally(() => {
-				// If this removes the last chain, trigger a redraw
-				if (this.#runningChains.delete(chainId) && this.#runningChains.size === 0) {
-					this.#triggerRedraw()
-				}
-			})
+		return run({
+			...extras,
+			controlId: this.#controlId,
+			abortDelayed: controller.signal,
+			executionMode: 'concurrent',
+		}).finally(() => {
+			// If this removes the last chain, trigger a redraw
+			if (this.#runningChains.delete(chainId) && this.#runningChains.size === 0) {
+				this.#triggerRedraw()
+			}
+		})
 	}
 
 	abortAll(exceptSignal: AbortSignal | null): boolean {
