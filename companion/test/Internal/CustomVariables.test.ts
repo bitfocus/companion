@@ -41,6 +41,7 @@ const fakeExtras: RunActionExtras = {
 	abortDelayed: new AbortController().signal,
 	executionMode: 'sequential',
 	rotationDelta: null,
+	frame: null,
 }
 
 function makeVariablesController(currentValue: unknown, exists = true) {

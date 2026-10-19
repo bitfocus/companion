@@ -49,6 +49,7 @@ function makeExtras(overrides: Partial<RunActionExtras> = {}): RunActionExtras {
 		abortDelayed: new AbortController().signal,
 		executionMode: 'sequential',
 		rotationDelta: null,
+		frame: null,
 		...overrides,
 	}
 }

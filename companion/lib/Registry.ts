@@ -303,7 +303,13 @@ export class Registry {
 			LINK_BUILTIN_TRANSPORTS
 		)
 
-		const actionRunner = new ActionRunner(this.instance, this.internalModule, this.variables, localVariables)
+		const actionRunner = new ActionRunner(
+			this.instance,
+			controlStore,
+			this.internalModule,
+			this.variables,
+			localVariables
+		)
 
 		this.controls = new ControlsController(this.db, controlStore, controlEvents, activeLearningStore, {
 			surfaces: this.surfaces,
