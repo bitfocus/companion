@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import type { LinkTransportConfigField } from '@companion-app/shared/Model/Link.js'
-import { getDefaultLinkTransportConfig, resolveLinkTransportConfig } from '../../lib/Link/TransportConfig.js'
+import { getDefaultLinkTransportConfig, resolveLinkTransportConfig } from '../LinkTransportConfig.js'
+import type { LinkTransportConfigField } from '../Model/Link.js'
 
 const fields: LinkTransportConfigField[] = [
 	{ id: 'info', type: 'static-text', label: 'Info', value: 'Hello' },

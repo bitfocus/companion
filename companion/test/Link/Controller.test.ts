@@ -52,6 +52,7 @@ function createController(db = new FakeDataDatabase()) {
 		enabled: true,
 		config: {},
 		sortOrder: 0,
+		builtin: false,
 	} satisfies LinkTransportConfig
 
 	const instances: FakeTransport[] = []
@@ -72,7 +73,13 @@ function createController(db = new FakeDataDatabase()) {
 		on: vi.fn(),
 	} as unknown as DataUserConfig
 
-	const controller = new LinkController({ appVersion: '5.0.0' } as any, db.asDataDatabase(), userconfig, [definition])
+	const controller = new LinkController(
+		{ appVersion: '5.0.0' } as any,
+		db.asDataDatabase(),
+		userconfig,
+		[definition],
+		[]
+	)
 
 	controller.start()
 
@@ -185,6 +192,29 @@ describe('LinkController', () => {
 			peerId: 'peer',
 			message: { payload: { permissions: { buttons: true } } },
 		})
+	})
+
+	test('lists what the transports say needs attention, for the navigation to count', async () => {
+		ctx.transport().context.setSections([
+			{
+				id: 'pending',
+				title: 'Pairing requests',
+				description: null,
+				attention: true,
+				entries: [{ id: 'a', title: 'Studio', description: null, inputLabel: null, actions: [] }],
+			},
+			{ id: 'paired', title: 'Paired', description: null, attention: false, entries: [] },
+		])
+
+		const abort = new AbortController()
+		const updates = await ctx.controller
+			.createTrpcRouter()
+			.createCaller({} as any, { signal: abort.signal })
+			.watchAttention()
+		const first = await updates[Symbol.asyncIterator]().next()
+		abort.abort()
+
+		expect(first.value).toEqual(['Pairing requests: Studio'])
 	})
 
 	test('answers a ping with a pong, and pings a newly reachable peer', () => {

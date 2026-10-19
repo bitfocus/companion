@@ -55,6 +55,11 @@ export interface ClientLinkTransportType {
 	description: string
 	/** The fields of the transport config */
 	configFields: LinkTransportConfigField[]
+	/**
+	 * Whether it is part of Link rather than added by the user: there is one of it, switched on and configured in
+	 * Settings, under Protocols
+	 */
+	builtin: boolean
 }
 
 /** A configured transport */
@@ -67,6 +72,11 @@ export interface LinkTransportConfig {
 	/** Values of the transport type's config fields */
 	config: Record<string, JsonValue | undefined>
 	sortOrder: number
+	/**
+	 * Whether this is the instance of a transport that is part of Link, which is configured in Settings, under
+	 * Protocols, rather than here
+	 */
+	builtin: boolean
 }
 
 export type LinkTransportStatus = 'disabled' | 'connecting' | 'connected' | 'error'
@@ -77,6 +87,8 @@ export interface LinkTransportInfoItem {
 	value: string
 	/** Show a copy button next to the value, for things the user will need to enter on another installation */
 	copyable?: boolean
+	/** When the value is another installation, its Link id, so that the UI can link to it */
+	peerId?: string
 }
 
 /** Something the user can do to an entry reported by a transport */
@@ -93,6 +105,8 @@ export interface LinkTransportEntry {
 	description: string | null
 	/** When set, the user is asked for a value (eg a pairing code), which is passed with the action */
 	inputLabel: string | null
+	/** When the entry is another installation, its Link id, so that the UI can link to it */
+	peerId?: string
 	actions: LinkTransportSectionAction[]
 }
 
@@ -135,6 +149,8 @@ export interface LinkPeerRoute {
 /** A Companion installation discovered on at least one transport */
 export interface LinkPeerInfo {
 	id: string
+	/** A short, readable form of the id, for the user to recognise it by */
+	fingerprint: string
 	name: string
 	companionVersion: string
 	/** The Link protocol versions the peer speaks, one per major version */

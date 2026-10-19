@@ -43,7 +43,7 @@ export class LinkIdentity {
 		return this.#privateKey.export({ format: 'der', type: 'pkcs8' }).toString('base64')
 	}
 
-	sign(data: Buffer): Buffer {
+	sign(data: Uint8Array): Buffer {
 		return crypto.sign(null, data, this.#privateKey)
 	}
 
@@ -64,7 +64,7 @@ export class LinkIdentity {
 	}
 
 	/** Whether a signature was made by the installation with a Link id */
-	static verify(id: string, data: Buffer, signature: Buffer): boolean {
+	static verify(id: string, data: Uint8Array, signature: Uint8Array): boolean {
 		if (!LinkIdentity.publicKeyOf(id)) return false
 		try {
 			const publicKey = crypto.createPublicKey({ key: { kty: 'OKP', crv: 'Ed25519', x: id }, format: 'jwk' })

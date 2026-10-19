@@ -1,4 +1,5 @@
-import { faCircleExclamation, faCircleInfo, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
+import { faCircleExclamation, faCircleInfo, faGear, faNetworkWired } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm } from '@tanstack/react-form'
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
@@ -25,6 +26,7 @@ import { CloseButton } from '~/Layout/PanelIcons.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { TransportStatusBadge } from './LinkStatusBadges.js'
 import { useLinkStore } from './LinkStoreContext.js'
+import { PeerLink } from './PeerLink.js'
 import { TransportConfigField } from './TransportConfigField.js'
 import { TransportSection } from './TransportSections.js'
 
@@ -47,7 +49,9 @@ export const TransportEditPanel = observer(function TransportEditPanel({
 				<CloseButton closeFn={doClose} />
 			</PanelHeader>
 
-			{transportType ? (
+			{transport.builtin && transportType ? (
+				<BuiltinTransportBody transport={transport} transportType={transportType} state={state} />
+			) : transportType ? (
 				<TransportEditForm transport={transport} transportType={transportType} state={state} doClose={doClose} />
 			) : (
 				<div className="secondary-panel-simple-body p-4">
@@ -82,13 +86,56 @@ const TransportStatusSection = observer(function TransportStatusSection({
 					<span className="form-label">{item.label}</span>
 					<span className="flex items-center gap-1 min-w-0 text-sm">
 						<span className="truncate font-mono" title={item.value}>
-							{item.value}
+							<PeerLink peerId={item.peerId}>{item.value}</PeerLink>
 						</span>
 						{item.copyable && <CopyButton text={item.value} variant="ghost" />}
 					</span>
 				</div>
 			))}
 		</EditSectionCard>
+	)
+})
+
+/**
+ * A transport that is part of Link has nothing to edit here: it is switched on and configured in the settings, like
+ * Companion's other protocols
+ */
+const BuiltinTransportBody = observer(function BuiltinTransportBody({
+	transport,
+	transportType,
+	state,
+}: {
+	transport: LinkTransportConfig
+	transportType: ClientLinkTransportType
+	state: LinkTransportState | undefined
+}) {
+	const navigate = useNavigate()
+	const doOpenSettings = useCallback(
+		() => void navigate({ to: '/settings/protocols/$protocolId', params: { protocolId: 'link' } }),
+		[navigate]
+	)
+
+	return (
+		<div className="edit-panel flex flex-col flex-1 min-h-0 overflow-hidden">
+			<div className="page-scroll edit-panel-scroll">
+				<TransportStatusSection state={state} />
+
+				{state?.sections.map((section) => (
+					<TransportSection key={section.id} transportId={transport.id} section={section} />
+				))}
+
+				<EditSectionCard title="General Settings">
+					<Note tone="neutral" icon={faCircleInfo} actions={null}>
+						<b>{transportType.name}</b>: {transportType.description}
+					</Note>
+					<div>
+						<Button color="secondary" size="sm" onClick={doOpenSettings}>
+							<FontAwesomeIcon icon={faGear} className="me-1" /> Open settings
+						</Button>
+					</div>
+				</EditSectionCard>
+			</div>
+		</div>
 	)
 })
 
