@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid'
 import type z from 'zod'
-import { makeLabelSafe } from '@companion-app/shared/Label.js'
+import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import {
 	InstanceConfigSchema,
@@ -323,6 +323,17 @@ export class InstanceConfigStore {
 		}
 
 		return label
+	}
+
+	/**
+	 * Make a label valid according to the current rules, without changing it if it is already valid.
+	 * A label which is a reserved word is given a suffix, made unique against the other labels
+	 */
+	makeLabelValid(moduleType: ModuleInstanceType, label: string, ignoreId: string): string {
+		const safeLabel = makeLabelSafe(label)
+		if (!safeLabel || isLabelValid(safeLabel)) return safeLabel
+
+		return this.makeLabelUnique(moduleType, `${safeLabel}_1`, ignoreId)
 	}
 
 	moveInstance(
