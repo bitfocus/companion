@@ -283,6 +283,7 @@ describe('ControlStore', () => {
 				abortDelayed: new AbortController().signal,
 				executionMode: 'concurrent',
 				rotationDelta: 2,
+				frame: null,
 			})
 
 			expect(result).toBe(entityParser)

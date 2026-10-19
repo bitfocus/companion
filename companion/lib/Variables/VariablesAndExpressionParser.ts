@@ -228,11 +228,14 @@ export class VariablesAndExpressionParser {
 		| {
 				ok: false
 				optionErrors: Record<string, string | undefined>
+				/** The options, with the default value used for each option which has an error */
+				parsedOptionsWithDefaults: CompanionOptionValues
 				referencedVariableIds: Set<string>
 				clockSensitive: boolean
 		  } {
 		const referencedVariableIds = new Set<string>()
 		const parseErrors: Record<string, string | undefined> = {}
+		const defaultsForErrors: CompanionOptionValues = {}
 		let clockSensitive = false
 
 		// Fields hidden by their isVisible logic must not be parsed/validated - the user can't see
@@ -281,13 +284,20 @@ export class VariablesAndExpressionParser {
 			// Ensure values are valid, or report the error
 			if (!field.allowInvalidValues && validationError) {
 				parseErrors[field.id] = validationError
+				defaultsForErrors[field.id] = 'default' in field ? structuredClone(field.default) : undefined
 			}
 
 			return sanitisedValue
 		})
 
 		if (Object.keys(parseErrors).length > 0) {
-			return { ok: false, optionErrors: parseErrors, referencedVariableIds, clockSensitive }
+			return {
+				ok: false,
+				optionErrors: parseErrors,
+				parsedOptionsWithDefaults: { ...parsedOptions, ...defaultsForErrors },
+				referencedVariableIds,
+				clockSensitive,
+			}
 		} else {
 			return { ok: true, parsedOptions, referencedVariableIds, clockSensitive }
 		}

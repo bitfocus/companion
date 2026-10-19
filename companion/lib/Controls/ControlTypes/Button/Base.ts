@@ -316,6 +316,7 @@ export abstract class ButtonControlRuntimeBase<
 							surfaceId,
 							location,
 							rotationDelta: null,
+							frame: null,
 						})
 						.catch((e) => {
 							this.logger.error(`action execution failed: ${e}`)
@@ -363,6 +364,7 @@ export abstract class ButtonControlRuntimeBase<
 				surfaceId,
 				location,
 				rotationDelta: delta,
+				frame: null,
 			})
 			.catch((e) => {
 				this.logger.error(`action execution failed: ${e}`)
