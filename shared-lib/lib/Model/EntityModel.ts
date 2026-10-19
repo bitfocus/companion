@@ -195,6 +195,7 @@ const zodActionSetId: z.ZodSchema<ActionSetId> = z.union([
 export const zodEntityLocation = z.union([
 	z.literal('feedbacks'),
 	z.literal('trigger_actions'),
+	z.literal('custom_action_actions'),
 	z.literal('local-variables'),
 	z.object({
 		stepId: z.string(),

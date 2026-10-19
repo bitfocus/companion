@@ -62,6 +62,7 @@ export const EditButton = observer(function EditButton({ location, onKeyUp, navi
 					{dataReady &&
 						(controlConfig.config.type === 'trigger' ||
 						controlConfig.config.type === 'expression-variable' ||
+						controlConfig.config.type === 'custom-action' ||
 						controlConfig.config.type === 'page' ? (
 							<StaticAlert color="warning">
 								An incompatible control was selected! This is likely a bug, please report it.
