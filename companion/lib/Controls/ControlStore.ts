@@ -3,8 +3,10 @@ import { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { IPageStore } from '../Page/Store.js'
 import { MAX_REFERENCE_DEPTH } from '../Surface/ReferenceSurfaceId.js'
+import { buildActionExecutionOverrides } from '../Variables/Util.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type {
 	ExpressionParserOptions,
@@ -196,6 +198,12 @@ export class ControlStore implements IControlStore {
 				control.entities.updateFeedbackValues(connectionId, newValues)
 			}
 		}
+	}
+
+	createActionExecutionParser(extras: RunActionExtras): VariablesAndExpressionParser {
+		return this.createVariablesAndExpressionParser(extras.controlId, buildActionExecutionOverrides(extras), {
+			allowClockSensitive: false,
+		})
 	}
 
 	createVariablesAndExpressionParser(
