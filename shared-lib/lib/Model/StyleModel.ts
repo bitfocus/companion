@@ -34,8 +34,7 @@ export interface DrawStyleLayeredButtonModel extends DrawStyleButtonStateProps {
 
 	/**
 	 * How long until every expression in this button's elements which depends on the render clock (e.g.
-	 * oscillate()) repeats, in ms. When set, the button must be re-rendered on each clock tick, and this must
-	 * NOT be included in the graphics LRU cache key.
+	 * oscillate()) repeats, in ms. When set, the button must be re-rendered on each clock tick.
 	 */
 	clockCycleMs?: number
 }
