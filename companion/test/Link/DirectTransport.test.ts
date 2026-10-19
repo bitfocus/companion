@@ -1,111 +1,27 @@
 import getPort from 'get-port'
 import { generateKeyPair } from 'noise-handshake/dh.js'
-import type { JsonValue } from 'type-fest'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import { WebSocketServer } from 'ws'
-import type {
-	LinkTransportInfoItem,
-	LinkTransportSection,
-	LinkTransportStatus,
-} from '@companion-app/shared/Model/Link.js'
 import { LinkIdentity } from '../../lib/Link/Identity.js'
 import { DirectClientTransport } from '../../lib/Link/Transports/Direct/ClientTransport.js'
-import { DirectServerTransport } from '../../lib/Link/Transports/Direct/ServerTransport.js'
 import { websocketMessagePipe } from '../../lib/Link/Transports/Secure/MessagePipe.js'
 import { SecureChannel } from '../../lib/Link/Transports/Secure/SecureChannel.js'
-import type { LinkMessageOrigin, LinkTransport, LinkTransportContext } from '../../lib/Link/Transports/Types.js'
-import LogController from '../../lib/Log/Controller.js'
+import { DirectTestTransports, pairingCode, pendingEntryId } from './helpers/DirectTestHelpers.js'
+import { describeLinkTransportContract, type TransportContractSetup } from './helpers/TransportContract.js'
+import { createTransportTestContext } from './helpers/TransportTestContext.js'
 
 // Bind to ipv4: some sandboxed environments have no ipv6 at all. Hoisted so it is set before the constants load
 vi.hoisted(() => {
 	process.env.DISABLE_IPV6 = '1'
 })
 
-/** The identity of each installation, by its storage, so that reusing the storage is the same installation */
-const identities = new WeakMap<Map<string, JsonValue>, LinkIdentity>()
-
-function createContext(name: string, storage = new Map<string, JsonValue>()) {
-	let identity = identities.get(storage)
-	if (!identity) {
-		identity = LinkIdentity.generate()
-		identities.set(storage, identity)
-	}
-
-	const announcements: [string, string | null][] = []
-	const received: [string, LinkMessageOrigin][] = []
-	const state = {
-		status: 'disabled' as LinkTransportStatus,
-		message: null as string | null,
-		info: [] as LinkTransportInfoItem[],
-		sections: [] as LinkTransportSection[],
-	}
-
-	const context: LinkTransportContext = {
-		logger: LogController.createLogger(`test/${name}`),
-		identity,
-		getName: () => name,
-		storage: { get: (key) => storage.get(key), set: (key, value) => storage.set(key, value) },
-		receiveAnnouncement: (peerId, payload) => announcements.push([peerId, payload]),
-		receive: (payload, origin) => received.push([payload, origin]),
-		setStatus: (status, message) => {
-			state.status = status
-			state.message = message
-		},
-		setInfo: (info) => {
-			state.info = info
-		},
-		setSections: (sections) => {
-			state.sections = sections
-		},
-	}
-
-	return { context, announcements, received, state, storage }
-}
-
-type TestContext = ReturnType<typeof createContext>
-
-function pendingEntryId(ctx: TestContext): string | undefined {
-	return ctx.state.sections.find((s) => s.id === 'pending')?.entries[0]?.id
-}
-
-function pairingCode(ctx: TestContext): string | undefined {
-	return ctx.state.info.find((i) => i.label === 'Pairing code')?.value
-}
-
 describe('direct transport', { timeout: 20_000 }, () => {
-	const transports: LinkTransport[] = []
-	afterEach(async () => {
-		await Promise.all(transports.map(async (t) => t.destroy()))
-		transports.length = 0
-	})
+	const direct = new DirectTestTransports()
+	afterEach(async () => direct.destroyAll())
 
-	async function startServer(ctx = createContext('server'), port?: number) {
-		port ??= await getPort()
-		const server = new DirectServerTransport(ctx.context, { port })
-		transports.push(server)
-		await vi.waitFor(() => expect(ctx.state.status).toBe('connected'))
-		return { server, ctx, port }
-	}
-
-	function startClient(port: number, ctx = createContext('client')) {
-		const client = new DirectClientTransport(ctx.context, { address: `127.0.0.1:${port}` })
-		transports.push(client)
-		return { client, ctx }
-	}
-
-	/** Connect a client and pair it, by entering its code on the server */
-	async function pair(server: DirectServerTransport, serverCtx: TestContext, port: number) {
-		const { client, ctx } = startClient(port)
-
-		await vi.waitFor(() => expect(pairingCode(ctx)).toBeDefined())
-		await vi.waitFor(() => expect(pendingEntryId(serverCtx)).toBeDefined())
-		expect(ctx.state.message).toContain(pairingCode(ctx))
-
-		expect(await server.handleSectionAction(pendingEntryId(serverCtx)!, 'pair', pairingCode(ctx)!)).toBeNull()
-		await vi.waitFor(() => expect(ctx.state.status).toBe('connected'))
-
-		return { client, ctx }
-	}
+	const startServer = direct.startServer.bind(direct)
+	const startClient = direct.startClient.bind(direct)
+	const pair = direct.pair.bind(direct)
 
 	test('pairs by entering the code shown on the client, then exchanges messages', async () => {
 		const { server, ctx: serverCtx, port } = await startServer()
@@ -159,16 +75,6 @@ describe('direct transport', { timeout: 20_000 }, () => {
 		}
 	})
 
-	test('a message only goes to the installation it is for', async () => {
-		const { server, ctx: serverCtx, port } = await startServer()
-		const { ctx: clientCtx } = await pair(server, serverCtx, port)
-		const clientId = clientCtx.context.identity.id
-
-		server.send('someone-else', 'not for you')
-		server.send(clientId, 'for you')
-		await vi.waitFor(() => expect(clientCtx.received.map(([payload]) => payload)).toEqual(['for you']))
-	})
-
 	test('nothing is exchanged before pairing', async () => {
 		const { server, ctx: serverCtx, port } = await startServer()
 		server.announce('server hello')
@@ -215,7 +121,7 @@ describe('direct transport', { timeout: 20_000 }, () => {
 		await client.destroy()
 
 		// A new instance, as after a restart, with the same storage
-		const again = startClient(port, createContext('client', clientCtx.storage))
+		const again = startClient(port, createTransportTestContext('client', clientCtx.storage))
 		await vi.waitFor(() => expect(again.ctx.state.status).toBe('connected'))
 		expect(pendingEntryId(serverCtx)).toBeUndefined()
 	})
@@ -230,15 +136,15 @@ describe('direct transport', { timeout: 20_000 }, () => {
 
 		// The same installation comes back
 		const restarted = Date.now()
-		await startServer(createContext('server', serverCtx.storage), port)
+		await startServer(createTransportTestContext('server', serverCtx.storage), port)
 		await vi.waitFor(() => expect(clientCtx.state.status).toBe('connected'), { timeout: 10_000 })
 		expect(Date.now() - restarted).toBeLessThan(5_000)
 	})
 
 	test('connects through a full ws:// url with a path, as through a reverse proxy', async () => {
 		const { server, ctx: serverCtx, port } = await startServer()
-		const ctx = createContext('client')
-		transports.push(new DirectClientTransport(ctx.context, { address: `ws://127.0.0.1:${port}/some/sub/path` }))
+		const ctx = createTransportTestContext('client')
+		direct.track(new DirectClientTransport(ctx.context, { address: `ws://127.0.0.1:${port}/some/sub/path` }))
 
 		await vi.waitFor(() => expect(pendingEntryId(serverCtx)).toBeDefined())
 		await vi.waitFor(() => expect(pairingCode(ctx)).toBeDefined())
@@ -247,8 +153,8 @@ describe('direct transport', { timeout: 20_000 }, () => {
 	})
 
 	test('reports an invalid address without connecting', () => {
-		const ctx = createContext('client')
-		transports.push(new DirectClientTransport(ctx.context, { address: 'not a host' }))
+		const ctx = createTransportTestContext('client')
+		direct.track(new DirectClientTransport(ctx.context, { address: 'not a host' }))
 		expect(ctx.state.status).toBe('error')
 		expect(ctx.state.message).toMatch(/not a valid address/)
 	})
@@ -260,8 +166,8 @@ describe('direct transport', { timeout: 20_000 }, () => {
 		await server.destroy()
 
 		// A different installation (new identity) on the same address
-		await startServer(createContext('impostor'), port)
-		const again = startClient(port, createContext('client', clientCtx.storage))
+		await startServer(createTransportTestContext('impostor'), port)
+		const again = startClient(port, createTransportTestContext('client', clientCtx.storage))
 		await vi.waitFor(() => expect(again.ctx.state.message).toMatch(/different identity/))
 		expect(again.ctx.state.status).toBe('error')
 	})
@@ -318,3 +224,30 @@ describe('direct transport', { timeout: 20_000 }, () => {
 		await vi.waitFor(() => expect(pendingEntryId(serverCtx)).toBeDefined())
 	})
 })
+
+describeLinkTransportContract(
+	'direct',
+	async () => {
+		const direct = new DirectTestTransports()
+		const serverCtx = createTransportTestContext('server')
+		const started = await direct.startServer(serverCtx)
+		const { client, ctx: clientCtx } = await direct.pair(started.server, serverCtx, started.port)
+
+		const setup: TransportContractSetup = {
+			a: { transport: started.server, ctx: serverCtx },
+			b: { transport: client, ctx: clientCtx },
+			dropB: async () => client.destroy(),
+			reconnect: async () => {
+				// The server restarts, as the same installation on the same port
+				await setup.a.transport.destroy()
+				await vi.waitFor(() => expect(clientCtx.state.status).not.toBe('connected'))
+				const restarted = await direct.startServer(serverCtx, started.port)
+				setup.a = { transport: restarted.server, ctx: serverCtx }
+				await vi.waitFor(() => expect(clientCtx.state.status).toBe('connected'), { timeout: 10_000 })
+			},
+			destroy: async () => direct.destroyAll(),
+		}
+		return setup
+	},
+	{ timeout: 20_000 }
+)
