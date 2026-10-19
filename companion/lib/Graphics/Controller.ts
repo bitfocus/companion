@@ -344,11 +344,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							// Check if the image is already present in the render cache and if so, return it
 							// Use collected contentHashes instead of JSON.stringify on entire buttonStyle to avoid
 							// serializing large binary data (images can be 100KB+)
-							// clockCycleMs is excluded from the cache key — it's metadata, not part of the visual output
-							const { clockCycleMs: _cc, ...buttonStyleForKey } = buttonStyle
+							// clockCycleMs is part of the key even though it doesn't change what is drawn, so that a render is
+							// never reused with the cycle metadata of an older one
 							const cacheKey = JSON.stringify({
 								options: this.#drawOptions,
-								...buttonStyleForKey,
+								...buttonStyle,
 								elements: collectContentHashes(buttonStyle.elements),
 								animationFrames: [...animationFrames.frameIndices],
 							})
@@ -421,15 +421,15 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							this.#clockSensitiveLocations.delete(locationKey)
 						}
 
-						// clockCycleMs must NOT appear in the cache key — it's metadata, not part of the visual output.
-						// The actual rendered content differs per clock tick and is content-hashed via elements.
+						// The rendered content differs per clock tick and is content-hashed via elements. clockCycleMs is part
+						// of the key even though it doesn't change what is drawn, so that a render is never reused with the
+						// cycle metadata of an older one
 						const cacheKeyObj: Record<string, unknown> = {
 							...renderStyle,
 							elements: collectContentHashes(buttonStyle.elements), // use hashes of elements for the key
 							referencedLocations: [...(buttonStyle.referencedLocations ?? [])].sort(), // Sets serialize as {} in JSON.stringify
 							animationFrames: [...animationFrames.frameIndices],
 						}
-						delete cacheKeyObj['clockCycleMs']
 						const cacheKey = JSON.stringify(cacheKeyObj)
 
 						// Check if the image is already present in the render cache and if so, return it
