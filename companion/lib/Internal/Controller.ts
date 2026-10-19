@@ -398,7 +398,7 @@ export class InternalController {
 			// Parse the options if enabled
 			let parsedOptions: CompanionOptionValues
 			if (entityDefinition.optionsSupportExpressions) {
-				const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options)
+				const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options, controlId)
 
 				// Always track the dependencies, for accurate re-evaluation when something changes
 				if (tracking) {
@@ -568,7 +568,7 @@ export class InternalController {
 
 			let parsedOptions: CompanionOptionValues
 			if (entityDefinition.optionsSupportExpressions) {
-				const parseRes = parser.parseEntityOptions(entityDefinition, action.rawOptions)
+				const parseRes = parser.parseEntityOptions(entityDefinition, action.rawOptions, extras.controlId)
 				if (!parseRes.ok) {
 					this.#logger.warn(
 						`Failed to parse options for action ${action.definitionId} in control ${extras.controlId}: ${JSON.stringify(parseRes.optionErrors)}`

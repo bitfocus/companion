@@ -286,7 +286,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			const learnTimeout = entityDefinition.learnTimeout
 
 			const parser = this.#deps.controls.createVariablesAndExpressionParser(controlId, null)
-			const parseRes = parser.parseEntityOptions(entityDefinition, entity.options)
+			const parseRes = parser.parseEntityOptions(entityDefinition, entity.options, controlId)
 			if (!parseRes.ok) {
 				this.logger.warn(
 					`Failed to parse action options for ${entity.type} ${entity.definitionId}: ${JSON.stringify(parseRes.optionErrors)}`
@@ -384,7 +384,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 					allowClockSensitive: false,
 				}
 			)
-			const parseRes = parser.parseEntityOptions(actionDefinition, action.options)
+			const parseRes = parser.parseEntityOptions(actionDefinition, action.options, extras.controlId)
 			if (!parseRes.ok) {
 				let location = 'Unknown'
 

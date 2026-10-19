@@ -599,7 +599,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 						allowClockSensitive: false,
 					}
 				)
-				const parseRes = parser.parseEntityOptions(actionDefinition, action.options)
+				const parseRes = parser.parseEntityOptions(actionDefinition, action.options, extras.controlId)
 				if (!parseRes.ok) {
 					this.logger.warn(
 						`Failed to parse action options for action ${action.definitionId}: ${JSON.stringify(parseRes.optionErrors)}`

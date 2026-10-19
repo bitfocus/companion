@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { elementSchemas } from '../../Graphics/ElementPropertiesSchemas.js'
-import { SomeCompanionInputFieldSchema, type SomeCompanionInputField } from '../Options.js'
+import { isFieldDisabledForControl, SomeCompanionInputFieldSchema, type SomeCompanionInputField } from '../Options.js'
 
 describe('SomeCompanionInputFieldSchema', () => {
 	test('accepts every element property definition', () => {
@@ -80,5 +80,33 @@ describe('SomeCompanionInputFieldSchema', () => {
 		expect(
 			SomeCompanionInputFieldSchema.safeParse({ ...base, defaultForControlType: { 'not-a-kind': 2 } }).success
 		).toBe(false)
+	})
+})
+
+describe('isFieldDisabledForControl', () => {
+	const field: SomeCompanionInputField = {
+		type: 'checkbox',
+		id: 'a',
+		label: 'A',
+		default: false,
+		disabledForControlTypes: ['trigger'],
+	}
+
+	test('disabled for a listed control kind', () => {
+		expect(isFieldDisabledForControl(field, 'trigger')).toBe(true)
+	})
+
+	test('enabled for other control kinds', () => {
+		expect(isFieldDisabledForControl(field, 'bank')).toBe(false)
+		expect(isFieldDisabledForControl(field, null)).toBe(false)
+	})
+
+	test('enabled when no kinds are listed', () => {
+		expect(isFieldDisabledForControl({ ...field, disabledForControlTypes: undefined }, 'trigger')).toBe(false)
+	})
+
+	test('is validated by the schema', () => {
+		expect(SomeCompanionInputFieldSchema.safeParse(field).success).toBe(true)
+		expect(SomeCompanionInputFieldSchema.safeParse({ ...field, disabledForControlTypes: ['nope'] }).success).toBe(false)
 	})
 })

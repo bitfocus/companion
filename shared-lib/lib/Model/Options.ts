@@ -114,6 +114,13 @@ const CompanionInputFieldCommonShape = {
 	 * Only valid alongside deferParsing: true.
 	 */
 	contextVariableResolution: ContextVariableResolutionSchema.optional(),
+
+	/**
+	 * Disable this field when the entity is on one of the given kinds of control, as it has no meaning there.
+	 * It is hidden in the editor, and parsed as its `defaultForControlType` (or `default`) instead of its value.
+	 * Only available for internal connections
+	 */
+	disabledForControlTypes: z.array(ControlIdKindSchema).optional(),
 }
 
 /**
@@ -560,6 +567,13 @@ export function getFieldDefaultForControl<TField extends SomeCompanionInputField
 	const override = controlKind ? field.defaultForControlType?.[controlKind] : undefined
 	if (override !== undefined) return override as FieldDefaultValue<TField>
 	return field.default as FieldDefaultValue<TField>
+}
+
+/**
+ * Whether a field is disabled for an entity on a control of the given kind
+ */
+export function isFieldDisabledForControl(field: SomeCompanionInputField, controlKind: ControlIdKind | null): boolean {
+	return !!controlKind && !!field.disabledForControlTypes?.includes(controlKind)
 }
 
 export function exprVal<T extends JsonValue | undefined>(value: T): ExpressionOrValue<T> {
