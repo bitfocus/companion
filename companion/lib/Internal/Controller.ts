@@ -44,7 +44,6 @@ import type { AppInfo } from '../Registry.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
-import { buildActionExecutionOverrides } from '../Variables/Util.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { InternalActionRecorder } from './ActionRecorder.js'
@@ -547,21 +546,14 @@ export class InternalController {
 			)
 			if (!entityDefinition) return
 
-			const overrideVariableValues = buildActionExecutionOverrides(extras)
-			// Actions are sampled once at execution and never re-evaluated, so clock-sensitive
-			// expressions (e.g. oscillate()) would be misleading - reject them, matching module actions.
-			const parser = this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues, {
-				allowClockSensitive: false,
-			})
+			const parser = this.#controlsStore.createActionExecutionParser(extras)
 
 			// Context for lazily evaluating this action's child feedbacks. A parser snapshots local/page
 			// variable values at construction, so we build a fresh one per call rather than reusing the
 			// action's `parser`: logic_while re-checks its condition each iteration and must see values that
 			// its own body changed mid-loop.
 			const createFeedbackContext = (): FeedbackExecutionContext => ({
-				parser: this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues, {
-					allowClockSensitive: false,
-				}),
+				parser: this.#controlsStore.createActionExecutionParser(extras),
 			})
 
 			let parsedOptions: CompanionOptionValues

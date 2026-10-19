@@ -271,6 +271,28 @@ describe('ControlStore', () => {
 	// The grid location sourced here feeds the `this:*` variables. A control with an entity pool uses its own
 	// parser; a located control without one (e.g. a button reference) must still have its location injected so
 	// `$(this:page)` resolves rather than yielding `$NA`.
+	describe('createActionExecutionParser', () => {
+		it('uses the execution overrides and rejects clock sensitive expressions', () => {
+			const entityParser = {} as any
+			const control = addControl('bank:2', { supportsEntities: true, entityParser })
+
+			const result = store.createActionExecutionParser({
+				controlId: 'bank:2',
+				surfaceId: 'surface0',
+				location: undefined,
+				abortDelayed: new AbortController().signal,
+				executionMode: 'concurrent',
+				rotationDelta: 2,
+			})
+
+			expect(result).toBe(entityParser)
+			expect(control.entities.createVariablesAndExpressionParser).toHaveBeenCalledWith(
+				{ 'this:surface_id': 'surface0', 'this:delta': 2 },
+				{ allowClockSensitive: false }
+			)
+		})
+	})
+
 	describe('createVariablesAndExpressionParser', () => {
 		it('injects the grid location for a located control without an entity pool', () => {
 			const location = { pageNumber: 3, row: 1, column: 2 }
