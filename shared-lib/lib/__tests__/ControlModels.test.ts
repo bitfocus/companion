@@ -7,6 +7,7 @@ import {
 	SomeButtonModelSchema,
 } from '../Model/ButtonModel.js'
 import { SomeControlModelSchema } from '../Model/Controls.js'
+import { CustomActionModelSchema } from '../Model/CustomActionModel.js'
 import { EventInstanceSchema } from '../Model/EventModel.js'
 import { ExpressionVariableModelSchema } from '../Model/ExpressionVariableModel.js'
 import { PageControlModelSchema } from '../Model/PageControlModel.js'
@@ -256,6 +257,23 @@ describe('ExpressionVariableModelSchema', () => {
 	})
 })
 
+describe('CustomActionModelSchema', () => {
+	test('a minimal custom action gets the defaults', () => {
+		expect(CustomActionModelSchema.parse({ type: 'custom-action' })).toEqual({
+			type: 'custom-action',
+			options: { name: 'New custom action', description: '', sortOrder: 0, resultVariable: null },
+			inputs: [],
+			actions: [],
+			localVariables: [],
+		})
+	})
+
+	test('an input must be a valid input field', () => {
+		const result = CustomActionModelSchema.safeParse({ type: 'custom-action', inputs: [{ type: 'sparkle', id: 'a' }] })
+		expect(result.success).toBe(false)
+	})
+})
+
 describe('PageControlModelSchema', () => {
 	test('a page control without local variables has none', () => {
 		expect(PageControlModelSchema.parse({ type: 'page' })).toEqual({ type: 'page', localVariables: [] })
@@ -267,6 +285,7 @@ describe('SomeControlModelSchema', () => {
 		['button-layered', { type: 'button-layered' }],
 		['trigger', { type: 'trigger' }],
 		['expression-variable', { type: 'expression-variable' }],
+		['custom-action', { type: 'custom-action' }],
 		['page', { type: 'page' }],
 		['pageup', { type: 'pageup' }],
 	])('parses a %s control', (type, control) => {
