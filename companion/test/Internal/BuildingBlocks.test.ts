@@ -14,6 +14,7 @@ function makeExtras(overrides: Partial<RunActionExtras> = {}): RunActionExtras {
 		abortDelayed: new AbortController().signal,
 		executionMode: 'concurrent',
 		rotationDelta: null,
+		frame: null,
 		...overrides,
 	}
 }

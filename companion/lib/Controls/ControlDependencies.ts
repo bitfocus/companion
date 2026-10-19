@@ -1,6 +1,7 @@
 import type { EventEmitter } from 'node:events'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
+import type { CustomActionsUpdate } from '@companion-app/shared/Model/CustomActionModel.js'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableUpdate,
@@ -75,6 +76,8 @@ export interface ControlCommonEvents {
 	invalidateControlRender: [controlId: string]
 	invalidateLocationRender: [location: ControlLocation]
 	expressionVariableDefinitionChanged: [id: string, info: ClientExpressionVariableData | null]
+	/** Emitted when a custom action is changed or deleted, so that its action definition can be updated */
+	customActionDefinitionChanged: [controlId: string]
 	layeredStyleElementChanged: [controlId: string, elementId: string]
 
 	presetDrawn: [controlId: string, render: ImageResult]
@@ -98,4 +101,5 @@ export interface ControlCommonEvents {
 export type ControlChangeEvents = {
 	triggerChange: [controlId: string, diff: TriggersUpdate]
 	expressionVariableChange: [controlId: string, diff: ExpressionVariableUpdate]
+	customActionChange: [controlId: string, diff: CustomActionsUpdate]
 }

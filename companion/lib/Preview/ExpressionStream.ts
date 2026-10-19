@@ -242,6 +242,7 @@ export class PreviewExpressionStream {
 			const localVariable = this.#localVariables.localVariableFor(locationRes.value, nameRes.value, {
 				controlId: session.controlId || '',
 				location: undefined,
+				frame: null,
 			})
 			if (!localVariable) {
 				// No control at the resolved location
