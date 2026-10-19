@@ -1,8 +1,8 @@
 # Writing a Companion Link transport
 
 A transport is one way for Companion installations to reach each other: a direct websocket, an MQTT broker, and so
-on. The user can configure any number of transports, of any supported type, and Link uses all of them: a peer reachable
-on more than one transport is reached through one of them at a time, and moves to another if that one stops working.
+on. The user can configure any number of transports, of any type, and Link uses all of them: a peer reachable on more
+than one transport is reached through one of them at a time, and moves to another if that one stops working.
 
 Transports are deliberately dumb. A transport moves opaque string payloads between installations, and does two
 things with them: it makes this installation's **announcement** known to every installation it can reach, and it
@@ -41,6 +41,11 @@ export const ExampleTransportDefinition: LinkTransportDefinition<ExampleTranspor
 ```
 
 Then add it to `LINK_TRANSPORT_DEFINITIONS` in [`index.ts`](./index.ts), in the order it should be offered.
+
+A transport that every installation should run, without the user adding it, can instead be built in
+(`LinkBuiltinTransport`, in `LINK_BUILTIN_TRANSPORTS`): it has one instance with a fixed id, switched on and
+configured from the user config, so it appears in Settings under Protocols like Companion's other listeners. Accepting
+direct connections is one.
 
 Config fields are a subset of the input fields used elsewhere in Companion (`LinkTransportConfigField`: text,
 secret, number, checkbox, dropdown and static text), holding plain values. Give every field a `default`. Values are validated and sanitised
@@ -96,7 +101,8 @@ claimed. Establish it as part of the connection where you can, eg by signing you
 A transport whose backend can't tell (eg a broker) wraps each payload in an envelope of its own that carries the
 sender and their signature of it, and drops what doesn't verify (`LinkIdentity.verify`). That includes goodbyes: an
 installation's announcement must only be withdrawn by that installation, or by the transport itself when it can tell
-it has gone.
+it has gone. Sign with a context of the transport's own (eg `companion-link mqtt envelope`), so that its signatures
+can't be passed off as any other kind.
 
 ### Permissions
 
@@ -153,18 +159,21 @@ credentials, …).
 
 Prefer encrypting end to end, between the two installations, in the transport itself, rather than relying on TLS: TLS
 may end at a reverse proxy before it reaches the other installation, and its certificates are hard to manage between
-installations.
+installations. Use the secure channels and pairing in [`Secure/`](./Secure/README.md) for this, as the direct transport
+does, rather than writing your own: anything that carries messages between two installations can run them. A transport
+that can't keep what it carries private (eg a broker without encryption of its own) must say so, in its description or
+a `static-text` field.
 
 ## Testing
 
 Test the transport against fakes of the context, as in
-[`test/Link/MockTransport.test.ts`](../../../test/Link/MockTransport.test.ts). Where the backend can be run
+[`test/Link/DirectTransport.test.ts`](../../../test/Link/DirectTransport.test.ts). Where the backend can be run
 in-process, an end to end test of two instances exchanging messages is the most valuable test to have. Check at
 least: announcements reach installations that arrive later, messages only reach their recipient, goodbyes (including
 when an installation vanishes), and the status reported when the backend is unreachable.
 
 ## Existing transports
 
-- [`Mock/`](./Mock): a stand-in for developing Link until a real transport exists, to be replaced. Every installation
-  using it multicasts everything to the others on the local network, which drop what isn't theirs, with no security
-  at all.
+Each transport documents how it works in a README in its folder:
+
+- [Direct](./Direct/README.md): installations connect directly to each other over a websocket, encrypted and paired

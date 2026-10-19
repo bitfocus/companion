@@ -14,12 +14,15 @@ describe('LinkIdentity', () => {
 		const a = LinkIdentity.generate()
 		const b = LinkIdentity.generate()
 		const data = Buffer.from('hello')
-		const signature = a.sign(data)
+		const signature = a.sign('test', data)
 
-		expect(LinkIdentity.verify(a.id, data, signature)).toBe(true)
-		expect(LinkIdentity.verify(b.id, data, signature)).toBe(false)
-		expect(LinkIdentity.verify(a.id, Buffer.from('hellO'), signature)).toBe(false)
-		expect(LinkIdentity.verify('not-an-id', data, signature)).toBe(false)
+		expect(LinkIdentity.verify(a.id, 'test', data, signature)).toBe(true)
+		expect(LinkIdentity.verify(b.id, 'test', data, signature)).toBe(false)
+		expect(LinkIdentity.verify(a.id, 'test', Buffer.from('hellO'), signature)).toBe(false)
+		expect(LinkIdentity.verify('not-an-id', 'test', data, signature)).toBe(false)
+		// Made for another purpose
+		expect(LinkIdentity.verify(a.id, 'other', data, signature)).toBe(false)
+		expect(LinkIdentity.verify(a.id, 'tes', Buffer.concat([Buffer.from('t'), data]), signature)).toBe(false)
 	})
 
 	test('rejects invalid stored identities', () => {

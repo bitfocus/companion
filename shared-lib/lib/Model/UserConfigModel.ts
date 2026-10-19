@@ -78,6 +78,9 @@ export const UserConfigModelSchema = z.object({
 	prometheus_enabled: z.boolean().default(false),
 	prometheus_token: z.string().default(''),
 
+	link_direct_enabled: z.boolean().default(true),
+	link_direct_port: numberSetting(16624),
+
 	tcp_enabled: z.boolean().default(false),
 	tcp_listen_port: numberSetting(16759),
 	tcp_legacy_api_enabled: z.boolean().default(false),

@@ -1,6 +1,8 @@
 import { EventEmitter } from 'node:events'
+import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
+import { resolveLinkTransportConfig } from '@companion-app/shared/LinkTransportConfig.js'
 import type {
 	LinkTransportConfig,
 	LinkTransportState,
@@ -12,7 +14,6 @@ import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/Tables/TableView.js'
 import LogController from '../Log/Controller.js'
 import type { LinkIdentity } from './Identity.js'
-import { getDefaultLinkTransportConfig, resolveLinkTransportConfig } from './TransportConfig.js'
 import type { LinkMessageOrigin, LinkTransport, SomeLinkTransportDefinition } from './Transports/Types.js'
 
 export type TransportManagerEvents = {
@@ -47,14 +48,19 @@ export class LinkTransportManager {
 	readonly #storageTable: DataStoreTableView<Record<string, Record<string, JsonValue>>>
 
 	readonly #configs = new Map<string, LinkTransportConfig>()
+	/** The types of the transports that are part of Link, which the user can't add */
+	readonly #builtinTypes = new Set<string>()
 	readonly #running = new Map<string, RunningTransport>()
 	/** Transports being stopped, which are no longer in #running */
-	readonly #stopping = new Set<Promise<void>>()
+	/** Instances being destroyed, by id, so that a replacement waits for the old one to have stopped */
+	readonly #stopping = new Map<string, Promise<void>>()
 	/** Enabled transports that could not be started, eg because their config is incomplete */
 	readonly #failed = new Map<string, LinkTransportState>()
 
 	readonly #identity: () => LinkIdentity
 	readonly #selfName: () => string
+
+	#started = false
 
 	constructor(
 		db: DataDatabase,
@@ -71,7 +77,8 @@ export class LinkTransportManager {
 		this.#selfName = selfName
 
 		for (const [id, config] of Object.entries(this.#configTable.all())) {
-			this.#configs.set(id, config)
+			// Only the transports the user added are saved
+			this.#configs.set(id, { ...config, builtin: false })
 		}
 	}
 
@@ -81,13 +88,15 @@ export class LinkTransportManager {
 
 	/** Start all the enabled transports */
 	start(): void {
+		this.#started = true
 		for (const config of this.#configs.values()) this.#startStop(config)
 	}
 
 	/** Say goodbye on and stop all transports */
 	async stopAll(): Promise<void> {
+		this.#started = false
 		// Including those already stopping, which are no longer in #running, so that all have stopped when this returns
-		await Promise.all([...Array.from(this.#running.keys(), async (id) => this.#stop(id)), ...this.#stopping])
+		await Promise.all([...Array.from(this.#running.keys(), async (id) => this.#stop(id)), ...this.#stopping.values()])
 	}
 
 	/** Stop and start all transports, eg because our peer id changed */
@@ -114,24 +123,67 @@ export class LinkTransportManager {
 		return this.#running.get(transportId)?.state.status === 'connected'
 	}
 
-	add(type: string, label: string): string {
+	/**
+	 * Set the config of a transport that is part of Link, (re)starting it if it changed. It is not saved, as it comes
+	 * from the user config
+	 * @param config - its config, or null when it is switched off
+	 */
+	async setBuiltin(
+		id: string,
+		type: string,
+		label: string,
+		config: Record<string, JsonValue | undefined> | null
+	): Promise<void> {
+		const existing = this.#configs.get(id)
+		const updated: LinkTransportConfig = {
+			id,
+			type,
+			label,
+			enabled: config !== null,
+			config: config ?? existing?.config ?? {},
+			// Listed before the ones the user added
+			sortOrder: -1,
+			builtin: true,
+		}
+		if (existing && isEqual(existing, updated)) return
+
+		this.#builtinTypes.add(type)
+		this.#configs.set(id, updated)
+		this.events.emit('configs', { type: 'add', itemId: id, info: updated })
+
+		await this.#restart(id)
+	}
+
+	/**
+	 * Add a transport, and start it. The config is validated against the fields of the type
+	 * @returns the id of the new transport, or the validation errors by field id if the config was rejected
+	 */
+	add(
+		type: string,
+		label: string,
+		rawConfig: Record<string, JsonValue | undefined>
+	): { ok: true; id: string } | { ok: false; errors: Record<string, string> } {
 		const definition = this.#definitions.get(type)
-		if (!definition) throw new Error(`Unknown transport type "${type}"`)
+		if (!definition || this.#builtinTypes.has(type)) throw new Error(`Unknown transport type "${type}"`)
+
+		const { config, errors } = resolveLinkTransportConfig(definition.configFields, rawConfig)
+		if (Object.keys(errors).length > 0) return { ok: false, errors }
 
 		const sortOrder = Math.max(-1, ...Array.from(this.#configs.values(), (c) => c.sortOrder)) + 1
 
-		const config: LinkTransportConfig = {
+		const transport: LinkTransportConfig = {
 			id: nanoid(),
 			type,
 			label,
 			enabled: true,
-			config: getDefaultLinkTransportConfig(definition.configFields),
+			config,
 			sortOrder,
+			builtin: false,
 		}
-		this.#save(config)
-		this.#startStop(config)
+		this.#save(transport)
+		this.#startStop(transport)
 
-		return config.id
+		return { ok: true, id: transport.id }
 	}
 
 	/**
@@ -143,8 +195,7 @@ export class LinkTransportManager {
 		label: string,
 		rawConfig: Record<string, JsonValue | undefined>
 	): Promise<{ ok: true } | { ok: false; errors: Record<string, string> }> {
-		const existing = this.#configs.get(id)
-		if (!existing) throw new Error(`Unknown transport "${id}"`)
+		const existing = this.#getUserConfig(id)
 
 		const definition = this.#definitions.get(existing.type)
 		if (!definition) throw new Error(`Unknown transport type "${existing.type}"`)
@@ -155,26 +206,26 @@ export class LinkTransportManager {
 		const updated: LinkTransportConfig = { ...existing, label, config }
 		this.#save(updated)
 
-		// Transports don't handle reconfiguration, so replace the running instance
-		await this.#stop(id)
-		this.#startStop(updated)
+		await this.#restart(id)
 
 		return { ok: true }
 	}
 
 	async setEnabled(id: string, enabled: boolean): Promise<void> {
-		const existing = this.#configs.get(id)
-		if (!existing) throw new Error(`Unknown transport "${id}"`)
+		const existing = this.#getUserConfig(id)
 
 		const updated: LinkTransportConfig = { ...existing, enabled }
 		this.#save(updated)
 
+		// Enabling waits for an instance still being stopped, so the replacement doesn't overlap it
 		if (!enabled) await this.#stop(id)
-		this.#startStop(updated)
+		else await this.#stopping.get(id)
+		this.#startLatest(id)
 	}
 
 	async remove(id: string): Promise<void> {
 		if (!this.#configs.has(id)) return
+		this.#getUserConfig(id)
 
 		await this.#stop(id)
 
@@ -228,6 +279,14 @@ export class LinkTransportManager {
 	#getConnected(transportId: string): RunningTransport | null {
 		const running = this.#running.get(transportId)
 		return running?.state.status === 'connected' ? running : null
+	}
+
+	/** The config of a transport the user added, as only those can be changed by the user */
+	#getUserConfig(id: string): LinkTransportConfig {
+		const existing = this.#configs.get(id)
+		if (!existing) throw new Error(`Unknown transport "${id}"`)
+		if (existing.builtin) throw new Error(`"${existing.label}" is configured in the settings`)
+		return existing
 	}
 
 	#save(config: LinkTransportConfig): void {
@@ -287,14 +346,23 @@ export class LinkTransportManager {
 						get: (key) => storageTable.get(id)?.[key],
 						set: (key, value) => storageTable.set(id, { ...storageTable.get(id), [key]: value }),
 					},
+					// A throw while handling what a peer sent would otherwise reach the transport's socket, and could crash
 					receiveAnnouncement: (peerId, payload) => {
 						if (running && this.#running.get(id) === running) {
-							this.events.emit('announcement', id, peerId, payload)
+							try {
+								this.events.emit('announcement', id, peerId, payload)
+							} catch (e) {
+								logger.error(`Failed to handle an announcement from ${peerId}: ${stringifyError(e)}`)
+							}
 						}
 					},
 					receive: (payload, origin) => {
 						if (running && this.#running.get(id) === running) {
-							this.events.emit('message', id, payload, origin)
+							try {
+								this.events.emit('message', id, payload, origin)
+							} catch (e) {
+								logger.error(`Failed to handle a message from ${origin.peerId}: ${stringifyError(e)}`)
+							}
 						}
 					},
 					setStatus: (status, message) => {
@@ -336,17 +404,39 @@ export class LinkTransportManager {
 		this.#emitState(id)
 	}
 
+	/**
+	 * Replace the running instance with one for the current config, as transports don't handle reconfiguration. The
+	 * config is read once the old instance has stopped, as another change may have been made while waiting
+	 */
+	async #restart(id: string): Promise<void> {
+		await this.#stop(id)
+		this.#startLatest(id)
+	}
+
+	/** Start or stop the transport for its current config, which may have changed while waiting for a stop */
+	#startLatest(id: string): void {
+		const latest = this.#configs.get(id)
+		if (!latest) return
+		// Built-in transports are configured before Link starts, and all wait for it, eg while it regenerates its id
+		if (this.#started) this.#startStop(latest)
+		else this.#emitState(id)
+	}
+
+	/** Stop the running instance, or wait for the one already being stopped */
 	async #stop(id: string): Promise<void> {
 		this.#failed.delete(id)
 		const running = this.#running.get(id)
-		if (!running) return
+		if (!running) {
+			await this.#stopping.get(id)
+			return
+		}
 
 		const stopping = this.#destroy(id, running)
-		this.#stopping.add(stopping)
+		this.#stopping.set(id, stopping)
 		try {
 			await stopping
 		} finally {
-			this.#stopping.delete(stopping)
+			if (this.#stopping.get(id) === stopping) this.#stopping.delete(id)
 		}
 	}
 

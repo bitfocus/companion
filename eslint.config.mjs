@@ -165,14 +165,15 @@ export default [
 			'n/no-missing-import': [
 				'error',
 				{
-					// stream-json's `exports` map only exposes `./*` -> `./src/*.js`; the resolver rewrites
-					// the `.js` subpath imports to `.ts` and fails to find a source, so allow the package.
+					// The resolver rewrites `.js` subpath imports (stream-json's `./*` -> `./src/*.js` exports map,
+					// noise-handshake's plain files) to `.ts` and fails to find a source, so allow those packages.
 					allowModules: [
 						'@companion-app/shared',
 						'@companion-app/satellite-protocol',
 						'@companion-module/base',
 						'type-fest',
 						'stream-json',
+						'noise-handshake',
 					],
 				},
 			],

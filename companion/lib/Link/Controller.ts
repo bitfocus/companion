@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events'
 import os from 'node:os'
+import isEqual from 'fast-deep-equal'
 import z from 'zod'
 import type { ClientLinkTransportType, LinkPeerInfo, LinkSelfInfo } from '@companion-app/shared/Model/Link.js'
 import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
@@ -18,7 +19,7 @@ import { decodeLinkAnnouncement, encodeLinkAnnouncement, LINK_ANNOUNCE_INTERVAL_
 import { decodeLinkMessage, encodeLinkMessage } from './Protocol/v1/Schemas.js'
 import { LINK_PROTOCOL_VERSIONS } from './Protocol/Versions.js'
 import { LinkTransportManager } from './TransportManager.js'
-import type { LinkMessageOrigin, SomeLinkTransportDefinition } from './Transports/Types.js'
+import type { LinkMessageOrigin, SomeLinkBuiltinTransport, SomeLinkTransportDefinition } from './Transports/Types.js'
 
 const LinkTableSchemas = {
 	/** Empty until one is generated */
@@ -56,17 +57,20 @@ export class LinkController {
 	#regenerating: Promise<void> = Promise.resolve()
 
 	readonly #transportDefinitions: readonly SomeLinkTransportDefinition[]
+	readonly #builtinTransports: readonly SomeLinkBuiltinTransport[]
 
 	constructor(
 		appInfo: AppInfo,
 		db: DataDatabase,
 		userconfig: DataUserConfig,
-		transportDefinitions: readonly SomeLinkTransportDefinition[]
+		transportDefinitions: readonly SomeLinkTransportDefinition[],
+		builtinTransports: readonly SomeLinkBuiltinTransport[]
 	) {
 		this.#appInfo = appInfo
 		this.#userconfig = userconfig
 		this.#table = db.getKeyedSchemaTableView('link', LinkTableSchemas)
 		this.#transportDefinitions = transportDefinitions
+		this.#builtinTransports = builtinTransports
 		this.#events.setMaxListeners(0)
 
 		this.#identity = this.#loadIdentity()
@@ -75,7 +79,7 @@ export class LinkController {
 		this.#permissions = new LinkPermissionStore(db)
 		this.#transports = new LinkTransportManager(
 			db,
-			transportDefinitions,
+			[...transportDefinitions, ...builtinTransports.map((builtin) => builtin.definition)],
 			() => this.#identity,
 			() => this.#getSelfInfo().name
 		)
@@ -104,12 +108,24 @@ export class LinkController {
 			this.#pinger.ping(peerId, transportId, Date.now())
 		})
 
+		for (const builtin of builtinTransports) this.#applyBuiltin(builtin)
+
 		this.#userconfig.on('keyChanged', (key) => {
 			if (key === 'installName') {
 				this.#events.emit('self', this.#getSelfInfo())
 				this.#announce(null)
 			}
+			for (const builtin of builtinTransports) {
+				if (builtin.userConfigKeys.includes(key)) this.#applyBuiltin(builtin)
+			}
 		})
+	}
+
+	/** Configure a built-in transport from the user config */
+	#applyBuiltin(builtin: SomeLinkBuiltinTransport): void {
+		this.#transports
+			.setBuiltin(builtin.id, builtin.definition.type, builtin.definition.name, builtin.getConfig(this.#userconfig))
+			.catch((e) => this.#logger.error(`Failed to configure ${builtin.definition.name}: ${stringifyError(e)}`))
 	}
 
 	/** Start linking. Called once the rest of Companion is ready */
@@ -262,17 +278,34 @@ export class LinkController {
 		this.#events.emit('self', this.#getSelfInfo())
 	}
 
+	/** The entries reported by transports that need the user's attention, eg pairing requests */
+	#getAttention(): string[] {
+		return Object.values(this.#transports.getStates()).flatMap((state) =>
+			state.sections
+				.filter((section) => section.attention)
+				.flatMap((section) => section.entries.map((entry) => `${section.title}: ${entry.title}`))
+		)
+	}
+
 	createTrpcRouter() {
 		const self = this
 		return router({
-			transportTypes: publicProcedure.query((): ClientLinkTransportType[] =>
-				self.#transportDefinitions.map((def) => ({
+			transportTypes: publicProcedure.query((): ClientLinkTransportType[] => [
+				...self.#transportDefinitions.map((def) => ({
 					type: def.type,
 					name: def.name,
 					description: def.description,
 					configFields: def.configFields,
-				}))
-			),
+					builtin: false,
+				})),
+				...self.#builtinTransports.map(({ definition }) => ({
+					type: definition.type,
+					name: definition.name,
+					description: definition.description,
+					configFields: definition.configFields,
+					builtin: true,
+				})),
+			]),
 
 			watchSelf: publicProcedure.subscription(async function* ({ signal }) {
 				const changes = toIterable(self.#events, 'self', signal)
@@ -292,6 +325,19 @@ export class LinkController {
 				for await (const [update] of changes) yield update
 			}),
 
+			/** What needs the user's attention (eg pairing requests), for the navigation to show a count of */
+			watchAttention: publicProcedure.subscription(async function* ({ signal }) {
+				const changes = toIterable(self.#transports.events, 'states', signal)
+				let last = self.#getAttention()
+				yield last
+				for await (const _change of changes) {
+					const attention = self.#getAttention()
+					if (isEqual(attention, last)) continue
+					last = attention
+					yield attention
+				}
+			}),
+
 			watchTransportStates: publicProcedure.subscription(async function* ({ signal }) {
 				const changes = toIterable(self.#transports.events, 'states', signal)
 				yield { type: 'init', items: self.#transports.getStates() } as const
@@ -299,8 +345,8 @@ export class LinkController {
 			}),
 
 			addTransport: publicProcedure
-				.input(z.object({ type: z.string(), label: z.string().trim().min(1).max(100) }))
-				.mutation(({ input }) => this.#transports.add(input.type, input.label)),
+				.input(z.object({ type: z.string(), label: z.string().trim().min(1).max(100), config: JsonObjectSchema }))
+				.mutation(({ input }) => this.#transports.add(input.type, input.label, input.config)),
 
 			updateTransport: publicProcedure
 				.input(z.object({ id: z.string(), label: z.string().trim().min(1).max(100), config: JsonObjectSchema }))

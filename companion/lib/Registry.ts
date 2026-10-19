@@ -24,7 +24,7 @@ import { ImportExportController } from './ImportExport/Controller.js'
 import { InstanceController } from './Instance/Controller.js'
 import { InternalController } from './Internal/Controller.js'
 import { LinkController } from './Link/Controller.js'
-import { LINK_TRANSPORT_DEFINITIONS } from './Link/Transports/index.js'
+import { LINK_BUILTIN_TRANSPORTS, LINK_TRANSPORT_DEFINITIONS } from './Link/Transports/index.js'
 import LogController, { type Logger } from './Log/Controller.js'
 import { PageController } from './Page/Controller.js'
 import { PageStore } from './Page/Store.js'
@@ -286,7 +286,13 @@ export class Registry {
 
 		const localVariables = new LocalVariablesController(controlStore, pageStore)
 
-		this.link = new LinkController(this.#appInfo, this.db, this.userconfig, LINK_TRANSPORT_DEFINITIONS)
+		this.link = new LinkController(
+			this.#appInfo,
+			this.db,
+			this.userconfig,
+			LINK_TRANSPORT_DEFINITIONS,
+			LINK_BUILTIN_TRANSPORTS
+		)
 
 		const actionRunner = new ActionRunner(this.instance, this.internalModule, this.variables, localVariables)
 
