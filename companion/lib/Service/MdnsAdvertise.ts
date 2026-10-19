@@ -3,13 +3,17 @@ import { Bonjour } from '@julusian/bonjour-service'
 import { API_VERSION as SATELLITE_API_VERSION } from '@companion-app/satellite-protocol'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { LinkController } from '../Link/Controller.js'
+import { LINK_PROTOCOL_VERSIONS } from '../Link/Protocol/Versions.js'
+import { DIRECT_MDNS_LINK_ID_TXT, DIRECT_MDNS_SERVICE_TYPE } from '../Link/Transports/Direct/Constants.js'
 import type { AppInfo } from '../Registry.js'
 import { DISABLE_IPv6 } from '../Resources/Constants.js'
 import { ServiceBase } from './Base.js'
 
 /**
  * Class providing mDNS/Bonjour advertisement of Companion's satellite ports,
- * so that the Companion Satellite app can auto-discover this Companion.
+ * so that the Companion Satellite app can auto-discover this Companion, and of the port
+ * accepting direct Link connections, so that other installations can.
  *
  * This is the reverse direction of {@link ServiceBonjourDiscovery}: here Companion
  * advertises itself, mirroring the conventions used by the satellite app's own announcer.
@@ -23,8 +27,11 @@ import { ServiceBase } from './Base.js'
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
+const REPUBLISH_KEYS = new Set<string>(['installName', 'link_direct_enabled', 'link_direct_port'])
+
 export class ServiceMdnsAdvertise extends ServiceBase {
 	readonly #appInfo: AppInfo
+	readonly #link: LinkController
 
 	#bonjour: Bonjour | undefined = undefined
 
@@ -34,10 +41,13 @@ export class ServiceMdnsAdvertise extends ServiceBase {
 	 */
 	#restartTimeout: NodeJS.Timeout | undefined = undefined
 
-	constructor(userconfig: DataUserConfig, appInfo: AppInfo) {
+	constructor(userconfig: DataUserConfig, appInfo: AppInfo, link: LinkController) {
 		super(userconfig, 'Service/MdnsAdvertise', 'mdns_announcements_enabled', null)
 
 		this.#appInfo = appInfo
+		this.#link = link
+		// The Link id is announced, so announce again when it is regenerated
+		link.on('self', () => this.#scheduleRepublish())
 
 		this.init()
 	}
@@ -60,9 +70,25 @@ export class ServiceMdnsAdvertise extends ServiceBase {
 			this.#publish(name, txt, 'companion-satellite-tcp', 16622)
 			this.#publish(name, txt, 'companion-satellite-ws', 16623)
 
+			const linkDirectEnabled = !!this.userconfig.getKey('link_direct_enabled')
+			if (linkDirectEnabled) {
+				this.#publish(
+					name,
+					{
+						version: this.#appInfo.appVersion,
+						protocolVersions: LINK_PROTOCOL_VERSIONS.join(','),
+						[DIRECT_MDNS_LINK_ID_TXT]: this.#link.id,
+					},
+					DIRECT_MDNS_SERVICE_TYPE,
+					Number(this.userconfig.getKey('link_direct_port'))
+				)
+			}
+
 			this.currentState = true
 
-			this.logger.info('Advertising Companion satellite ports via mDNS')
+			this.logger.info(
+				`Advertising Companion satellite ports${linkDirectEnabled ? ' and direct Link connections' : ''} via mDNS`
+			)
 		} catch (e) {
 			this.logger.error(`Could not launch: ${stringifyError(e)}`)
 
@@ -99,13 +125,17 @@ export class ServiceMdnsAdvertise extends ServiceBase {
 		// Let the base class handle enable/disable via the mdns_announcements_enabled key
 		super.updateUserConfig(key, value)
 
-		// The advertised service name is derived from the install name, so republish when it changes
-		if (key === 'installName' && this.currentState) {
-			if (this.#restartTimeout) clearTimeout(this.#restartTimeout)
-			this.#restartTimeout = setTimeout(() => {
-				this.#restartTimeout = undefined
-				this.restartModule()
-			}, 50)
-		}
+		// The advertised services are derived from these, so republish when they change
+		if (REPUBLISH_KEYS.has(key)) this.#scheduleRepublish()
+	}
+
+	#scheduleRepublish(): void {
+		if (!this.currentState) return
+
+		if (this.#restartTimeout) clearTimeout(this.#restartTimeout)
+		this.#restartTimeout = setTimeout(() => {
+			this.#restartTimeout = undefined
+			this.restartModule()
+		}, 50)
 	}
 }

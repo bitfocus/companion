@@ -1,6 +1,6 @@
 import type { LinkBuiltinTransport, LinkTransportDefinition } from '../Types.js'
 import { DirectClientTransport, type DirectClientTransportConfig } from './ClientTransport.js'
-import { DIRECT_DEFAULT_PORT } from './Constants.js'
+import { DIRECT_DEFAULT_PORT, DIRECT_MDNS_SERVICE_TYPE } from './Constants.js'
 import { DirectServerTransport, type DirectServerTransportConfig } from './ServerTransport.js'
 
 const DirectServerTransportDefinition: LinkTransportDefinition<DirectServerTransportConfig> = {
@@ -41,15 +41,24 @@ export const DirectClientTransportDefinition: LinkTransportDefinition<DirectClie
 		'Connect directly to another installation, on the same network or over a VPN. The first time, you pair them by entering a code shown here on the other installation.',
 	configFields: [
 		{
+			id: 'bonjourHost',
+			type: 'bonjour-device',
+			label: 'Installation',
+			tooltip: 'Installations on this network that accept direct connections, or Manual to enter an address',
+		},
+		{
 			id: 'address',
 			type: 'textinput',
 			label: 'Address',
 			placeholder: '192.168.1.10',
 			default: '',
-			minLength: 1,
 			description: `The IP address or hostname of the other installation (port ${DIRECT_DEFAULT_PORT} unless given, eg 192.168.1.10:1234), or its full address if it is behind a reverse proxy (eg wss://proxy.example.com/companion-link)`,
+			isVisibleUi: { type: 'expression', fn: '!$(options:bonjourHost)' },
 		},
 	],
+	bonjourQueries: {
+		bonjourHost: { type: DIRECT_MDNS_SERVICE_TYPE, protocol: 'tcp', addressFamily: 'ipv4' },
+	},
 
 	create: (context, config) => new DirectClientTransport(context, config),
 }

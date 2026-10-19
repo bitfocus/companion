@@ -1,4 +1,5 @@
 import type { JsonValue } from 'type-fest'
+import type { BonjourQuery } from '@companion-app/shared/Model/Common.js'
 import type {
 	LinkTransportConfigField,
 	LinkTransportInfoItem,
@@ -103,6 +104,8 @@ export interface LinkTransportDefinition<TConfig extends Record<string, JsonValu
 	 * they reach `create`
 	 */
 	readonly configFields: LinkTransportConfigField[]
+	/** The services each `bonjour-device` field discovers, by field id */
+	readonly bonjourQueries?: Readonly<Record<string, BonjourQuery>>
 
 	create(context: LinkTransportContext, config: TConfig): LinkTransport
 }

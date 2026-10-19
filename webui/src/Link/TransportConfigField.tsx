@@ -5,6 +5,7 @@ import type { LinkTransportConfigField } from '@companion-app/shared/Model/Link.
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { StaticAlert } from '~/Components/Alert.js'
+import { BonjourDeviceInputField } from '~/Components/BonjourDeviceInputField.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { FormLabel } from '~/Components/Form.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
@@ -16,6 +17,8 @@ import { StaticTextFieldText } from '~/Controls/StaticTextField.js'
 import { assertNever } from '~/Resources/util.js'
 
 interface TransportConfigFieldProps {
+	/** The type of the transport, which says what a bonjour-device field discovers */
+	transportType: string
 	definition: LinkTransportConfigField
 	value: JsonValue | undefined
 	setValue: (value: JsonValue | undefined) => void
@@ -26,6 +29,7 @@ interface TransportConfigFieldProps {
 
 /** A row of the transport config editor: the label, and the input for the type of field */
 export const TransportConfigField = observer(function TransportConfigField({
+	transportType,
 	definition,
 	value,
 	setValue,
@@ -107,6 +111,16 @@ export const TransportConfigField = observer(function TransportConfigField({
 					value={value as any}
 					setValue={setValue}
 					checkValid={checkValid}
+				/>
+			)
+			break
+		case 'bonjour-device':
+			control = (
+				<BonjourDeviceInputField
+					id={inputId}
+					value={typeof value === 'string' ? value : null}
+					setValue={(v) => setValue(v === null ? null : String(v))}
+					source={{ type: 'link-transport', transportType, fieldId: definition.id }}
 				/>
 			)
 			break

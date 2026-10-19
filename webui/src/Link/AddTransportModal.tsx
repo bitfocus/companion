@@ -144,6 +144,7 @@ const ConfigureTransportStep = observer(function ConfigureTransportStep({
 						{(visibility) =>
 							type.configFields.map((field) => (
 								<TransportConfigField
+									transportType={type.type}
 									key={field.id}
 									definition={field}
 									value={config[field.id]}

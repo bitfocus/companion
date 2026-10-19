@@ -144,7 +144,9 @@ describe('direct transport', { timeout: 20_000 }, () => {
 	test('connects through a full ws:// url with a path, as through a reverse proxy', async () => {
 		const { server, ctx: serverCtx, port } = await startServer()
 		const ctx = createTransportTestContext('client')
-		direct.track(new DirectClientTransport(ctx.context, { address: `ws://127.0.0.1:${port}/some/sub/path` }))
+		direct.track(
+			new DirectClientTransport(ctx.context, { bonjourHost: null, address: `ws://127.0.0.1:${port}/some/sub/path` })
+		)
 
 		await vi.waitFor(() => expect(pendingEntryId(serverCtx)).toBeDefined())
 		await vi.waitFor(() => expect(pairingCode(ctx)).toBeDefined())
@@ -152,9 +154,27 @@ describe('direct transport', { timeout: 20_000 }, () => {
 		await vi.waitFor(() => expect(ctx.state.status).toBe('connected'))
 	})
 
+	test('connects to the installation chosen from those discovered, rather than the address', async () => {
+		const { server, ctx: serverCtx, port } = await startServer()
+		const ctx = createTransportTestContext('client')
+		direct.track(new DirectClientTransport(ctx.context, { bonjourHost: `127.0.0.1:${port}`, address: 'not a host' }))
+
+		await vi.waitFor(() => expect(pendingEntryId(serverCtx)).toBeDefined())
+		await vi.waitFor(() => expect(pairingCode(ctx)).toBeDefined())
+		expect(await server.handleSectionAction(pendingEntryId(serverCtx)!, 'pair', pairingCode(ctx)!)).toBeNull()
+		await vi.waitFor(() => expect(ctx.state.status).toBe('connected'))
+	})
+
+	test('asks for an installation or an address when neither is set', () => {
+		const ctx = createTransportTestContext('client')
+		direct.track(new DirectClientTransport(ctx.context, { bonjourHost: null, address: ' ' }))
+		expect(ctx.state.status).toBe('error')
+		expect(ctx.state.message).toBe('Choose an installation, or enter its address')
+	})
+
 	test('reports an invalid address without connecting', () => {
 		const ctx = createTransportTestContext('client')
-		direct.track(new DirectClientTransport(ctx.context, { address: 'not a host' }))
+		direct.track(new DirectClientTransport(ctx.context, { bonjourHost: null, address: 'not a host' }))
 		expect(ctx.state.status).toBe('error')
 		expect(ctx.state.message).toMatch(/not a valid address/)
 	})

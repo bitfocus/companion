@@ -2,6 +2,7 @@ import { EventEmitter } from 'node:events'
 import os from 'node:os'
 import isEqual from 'fast-deep-equal'
 import z from 'zod'
+import type { BonjourQuery } from '@companion-app/shared/Model/Common.js'
 import type { ClientLinkTransportType, LinkPeerInfo, LinkSelfInfo } from '@companion-app/shared/Model/Link.js'
 import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
@@ -19,6 +20,7 @@ import { decodeLinkAnnouncement, encodeLinkAnnouncement, LINK_ANNOUNCE_INTERVAL_
 import { decodeLinkMessage, encodeLinkMessage } from './Protocol/v1/Schemas.js'
 import { LINK_PROTOCOL_VERSIONS } from './Protocol/Versions.js'
 import { LinkTransportManager } from './TransportManager.js'
+import { DIRECT_MDNS_LINK_ID_TXT } from './Transports/Direct/Constants.js'
 import type { LinkMessageOrigin, SomeLinkBuiltinTransport, SomeLinkTransportDefinition } from './Transports/Types.js'
 
 interface LinkControllerEvents {
@@ -30,14 +32,12 @@ interface LinkControllerEvents {
  * Companion Link: linking Companion installations together, so that one can show and press the buttons of
  * another. See Transports/README.md for an overview of how the pieces fit together.
  */
-export class LinkController {
+export class LinkController extends EventEmitter<LinkControllerEvents> {
 	readonly #logger = LogController.createLogger('Link/Controller')
 
 	readonly #appInfo: AppInfo
 	readonly #userconfig: DataUserConfig
 	readonly #table: DataStoreTableView<{ identity: string }>
-
-	readonly #events = new EventEmitter<LinkControllerEvents>()
 
 	readonly #transports: LinkTransportManager
 	readonly #peers: LinkPeerRegistry
@@ -61,12 +61,14 @@ export class LinkController {
 		transportDefinitions: readonly SomeLinkTransportDefinition[],
 		builtinTransports: readonly SomeLinkBuiltinTransport[]
 	) {
+		super()
+		this.setMaxListeners(0)
+
 		this.#appInfo = appInfo
 		this.#userconfig = userconfig
 		this.#table = db.getTableView('link')
 		this.#transportDefinitions = transportDefinitions
 		this.#builtinTransports = builtinTransports
-		this.#events.setMaxListeners(0)
 
 		this.#identity = this.#loadIdentity()
 		this.#selfId = this.#identity.id
@@ -90,14 +92,14 @@ export class LinkController {
 			this.#handleMessage(transportId, payload, origin)
 		)
 		this.#permissions.on('changed', (peerId) => {
-			this.#events.emit('peers', this.#peers.getPeers())
+			this.emit('peers', this.#peers.getPeers())
 			for (const transportId of this.#peers.getReachableTransports(peerId, null)) this.#sendAccess(peerId, transportId)
 		})
 		this.#transports.events.on('transportConnected', (transportId) => this.#announce(transportId))
 		this.#transports.events.on('transportDisconnected', (transportId) =>
 			this.#peers.handleTransportDisconnected(transportId)
 		)
-		this.#peers.on('changed', () => this.#events.emit('peers', this.#peers.getPeers()))
+		this.#peers.on('changed', () => this.emit('peers', this.#peers.getPeers()))
 		this.#peers.on('peerReachable', (peerId, transportId) => {
 			this.#sendAccess(peerId, transportId)
 			this.#pinger.ping(peerId, transportId, Date.now())
@@ -107,7 +109,7 @@ export class LinkController {
 
 		this.#userconfig.on('keyChanged', (key) => {
 			if (key === 'installName') {
-				this.#events.emit('self', this.#getSelfInfo())
+				this.emit('self', this.#getSelfInfo())
 				this.#announce(null)
 			}
 			for (const builtin of builtinTransports) {
@@ -270,7 +272,7 @@ export class LinkController {
 
 		if (this.#started) this.#transports.start()
 
-		this.#events.emit('self', this.#getSelfInfo())
+		this.emit('self', this.#getSelfInfo())
 	}
 
 	/** The entries reported by transports that need the user's attention, eg pairing requests */
@@ -282,8 +284,21 @@ export class LinkController {
 		)
 	}
 
+	/** The services a `bonjour-device` field of a transport type discovers, or null if it isn't one */
+	getBonjourQueries(transportType: string, fieldId: string): BonjourQuery[] | null {
+		const query = this.#transports.definitions.get(transportType)?.bonjourQueries?.[fieldId]
+		// Not this installation's own announcement
+		return query ? [{ ...query, excludeTxt: { ...query.excludeTxt, [DIRECT_MDNS_LINK_ID_TXT]: this.#selfId } }] : null
+	}
+
+	/** The Link id of this installation */
+	get id(): string {
+		return this.#selfId
+	}
+
 	createTrpcRouter() {
 		const self = this
+		const selfEmitter: EventEmitter<LinkControllerEvents> = this
 		return router({
 			transportTypes: publicProcedure.query((): ClientLinkTransportType[] => [
 				...self.#transportDefinitions.map((def) => ({
@@ -303,13 +318,13 @@ export class LinkController {
 			]),
 
 			watchSelf: publicProcedure.subscription(async function* ({ signal }) {
-				const changes = toIterable(self.#events, 'self', signal)
+				const changes = toIterable(selfEmitter, 'self', signal)
 				yield self.#getSelfInfo()
 				for await (const [info] of changes) yield info
 			}),
 
 			watchPeers: publicProcedure.subscription(async function* ({ signal }) {
-				const changes = toIterable(self.#events, 'peers', signal)
+				const changes = toIterable(selfEmitter, 'peers', signal)
 				yield self.#peers.getPeers()
 				for await (const [peers] of changes) yield peers
 			}),

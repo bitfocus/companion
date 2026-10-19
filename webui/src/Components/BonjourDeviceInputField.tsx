@@ -1,6 +1,11 @@
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { useCallback, useMemo, useState } from 'react'
-import type { ClientBonjourService, DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
+import type {
+	BonjourQuerySource,
+	ClientBonjourService,
+	DropdownChoice,
+	DropdownChoiceId,
+} from '@companion-app/shared/Model/Common.js'
 import { trpc } from '~/Resources/TRPC.js'
 import { DropdownInputField } from './DropdownInputField.js'
 
@@ -10,16 +15,15 @@ interface BonjourDeviceInputFieldProps {
 	id: string | undefined
 	value: string | null
 	setValue: (value: DropdownChoiceId | null) => void
-	connectionId: string
-	queryId: string
+	/** What to discover */
+	source: BonjourQuerySource
 }
 
 export function BonjourDeviceInputField({
 	id,
 	value,
 	setValue,
-	connectionId,
-	queryId,
+	source,
 }: BonjourDeviceInputFieldProps): React.JSX.Element {
 	const [services, setServices] = useState<Record<string, ClientBonjourService | undefined>>({})
 
@@ -33,35 +37,32 @@ export function BonjourDeviceInputField({
 	)
 
 	/*const bonjourSub = */ useSubscription(
-		trpc.bonjour.watchQuery.subscriptionOptions(
-			{ connectionId, queryId },
-			{
-				onStarted: () => {
-					setServices({}) // Clear services when the subscription starts
-				},
-				onData: (data) => {
-					// TODO - should this debounce?
+		trpc.bonjour.watchQuery.subscriptionOptions(source, {
+			onStarted: () => {
+				setServices({}) // Clear services when the subscription starts
+			},
+			onData: (data) => {
+				// TODO - should this debounce?
 
-					setServices((services) => {
-						const newServices = { ...services }
-						switch (data.type) {
-							case 'up': {
-								newServices[data.service.fqdn] = data.service
-								break
-							}
-							case 'down': {
-								delete newServices[data.fqdn]
-								break
-							}
-							default:
-								console.warn('Unknown bonjour event type', data)
+				setServices((services) => {
+					const newServices = { ...services }
+					switch (data.type) {
+						case 'up': {
+							newServices[data.service.fqdn] = data.service
+							break
 						}
+						case 'down': {
+							delete newServices[data.fqdn]
+							break
+						}
+						default:
+							console.warn('Unknown bonjour event type', data)
+					}
 
-						return newServices
-					})
-				},
-			}
-		)
+					return newServices
+				})
+			},
+		})
 	)
 
 	const choicesRaw = useMemo(() => {
