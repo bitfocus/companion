@@ -1,0 +1,93 @@
+import type { Decorator, Meta, StoryObj } from '@storybook/react'
+import { useMemo, useState } from 'react'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import { withMockStore } from '../../../.storybook/mockRootAppStore.js'
+import { MenuPortalContext } from '../MenuPortalContext.js'
+import { InputFieldDefinitionsEditor, type InputFieldDefinitionsService } from './InputFieldDefinitionsEditor.js'
+
+const withPortal: Decorator = (Story) => (
+	<MenuPortalContext.Provider value={document.body}>
+		<div style={{ padding: 16, maxWidth: 700 }}>
+			<Story />
+		</div>
+	</MenuPortalContext.Provider>
+)
+
+function StatefulEditor({
+	initialFields,
+	readonly,
+}: {
+	initialFields: SomeCompanionInputField[]
+	readonly: boolean
+}): React.JSX.Element {
+	const [fields, setFields] = useState(initialFields)
+
+	const service = useMemo(
+		(): InputFieldDefinitionsService => ({
+			addField: (field) => setFields((fields) => [...fields, field]),
+			removeField: (fieldId) => setFields((fields) => fields.filter((field) => field.id !== fieldId)),
+			moveField: (fieldId, direction) =>
+				setFields((fields) => {
+					const index = fields.findIndex((field) => field.id === fieldId)
+					const target = index + direction
+					if (index === -1 || target < 0 || target >= fields.length) return fields
+					const updated = [...fields]
+					;[updated[index], updated[target]] = [updated[target], updated[index]]
+					return updated
+				}),
+			updateField: (fieldId, newField) =>
+				setFields((fields) => fields.map((field) => (field.id === fieldId ? newField : field))),
+		}),
+		[]
+	)
+
+	return (
+		<>
+			<InputFieldDefinitionsEditor fields={fields} service={service} readonly={readonly} localVariablesStore={null} />
+			<pre style={{ marginTop: 16, fontSize: 11 }}>{JSON.stringify(fields, null, 2)}</pre>
+		</>
+	)
+}
+
+const meta = {
+	title: 'Components/InputFieldDefinitionsEditor',
+	decorators: [withMockStore, withPortal],
+	render: (args) => <StatefulEditor {...args} />,
+} satisfies Meta<typeof StatefulEditor>
+
+export default meta
+type Story = StoryObj<typeof meta>
+
+export const Empty: Story = {
+	args: {
+		initialFields: [],
+		readonly: false,
+	},
+}
+
+export const SomeInputs: Story = {
+	args: {
+		initialFields: [
+			{ type: 'number', id: 'input', label: 'Input', default: 1, min: 1, max: 20, asInteger: true },
+			{
+				type: 'dropdown',
+				id: 'position',
+				label: 'Position',
+				default: 'left',
+				choices: [
+					{ id: 'left', label: 'Left' },
+					{ id: 'right', label: 'Right' },
+				],
+			},
+			{ type: 'checkbox', id: 'auto', label: 'Auto transition', default: true },
+		],
+		readonly: false,
+	},
+}
+
+export const Readonly: Story = {
+	args: {
+		initialFields: [{ type: 'textinput', id: 'name', label: 'Name', default: 'Camera 1' }],
+		readonly: true,
+	},
+}
