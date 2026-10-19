@@ -160,37 +160,32 @@ export async function sendSatelliteStyleMessage(
 
 	const otherArgs = await buildSatelliteStyleArgs(image, { ...style, bitmap: undefined }, rotation, bitmapFormat)
 
-	let bitmap: string | null = null
-	for (;;) {
-		// Each decision is made in the same synchronous step as writing the message, so the cache can't change between
-		const cache = socket.bitmapCache
-		if (cache?.reference(bitmapId)) {
-			socket.sendMessage(messageName, null, deviceId, { ...baseArgs, ...otherArgs, BITMAP_ID: bitmapId })
-			return
-		}
+	// Each decision is made in the same synchronous step as writing the message, so the cache can't change between
+	const sendReference = (): boolean => {
+		if (!socket.bitmapCache?.reference(bitmapId)) return false
 
-		if (bitmap !== null) {
-			const evicted = cache?.store(bitmapId, bitmapSize.w, bitmapSize.h) ?? null
-			if (evicted === null) {
-				// Caching was turned off while drawing, or the bitmap is too large to cache, so it isn't stored
-				socket.sendMessage(messageName, null, deviceId, { ...baseArgs, ...otherArgs, BITMAP: bitmap })
-			} else {
-				sendBitmapEvictions(socket, evicted)
-				socket.sendMessage(messageName, null, deviceId, {
-					...baseArgs,
-					...otherArgs,
-					BITMAP: bitmap,
-					BITMAP_ID: bitmapId,
-				})
-			}
-			return
-		}
+		socket.sendMessage(messageName, null, deviceId, { ...baseArgs, ...otherArgs, BITMAP_ID: bitmapId })
+		return true
+	}
 
-		// The client doesn't have it, so draw it. The cache may change while drawing, so this decides again after
-		bitmap = await drawSatelliteBitmap(image, bitmapSize, rotation, bitmapFormat)
-		if (bitmap === null) {
-			socket.sendMessage(messageName, null, deviceId, { ...baseArgs, ...otherArgs })
-			return
-		}
+	if (sendReference()) return
+
+	// The client doesn't have it, so draw it
+	const bitmap = await drawSatelliteBitmap(image, bitmapSize, rotation, bitmapFormat)
+	if (bitmap === null) {
+		socket.sendMessage(messageName, null, deviceId, { ...baseArgs, ...otherArgs })
+		return
+	}
+
+	// The cache may have changed while drawing, eg the same bitmap was sent by another draw, so decide again
+	if (sendReference()) return
+
+	const evicted = socket.bitmapCache?.store(bitmapId, bitmapSize.w, bitmapSize.h) ?? null
+	if (evicted === null) {
+		// Caching was turned off while drawing, or the bitmap is too large to cache, so it isn't stored
+		socket.sendMessage(messageName, null, deviceId, { ...baseArgs, ...otherArgs, BITMAP: bitmap })
+	} else {
+		sendBitmapEvictions(socket, evicted)
+		socket.sendMessage(messageName, null, deviceId, { ...baseArgs, ...otherArgs, BITMAP: bitmap, BITMAP_ID: bitmapId })
 	}
 }
