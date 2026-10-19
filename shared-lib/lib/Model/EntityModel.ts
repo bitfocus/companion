@@ -1,5 +1,6 @@
 import z from 'zod'
 import type { CompanionFeedbackButtonStyleResult, JsonValue } from '@companion-module/host'
+import { isInternalConnectionId } from '../ConnectionId.js'
 import type { ActionSetId } from './ActionModel.js'
 import {
 	createExpressionOrValueSchema,
@@ -49,7 +50,7 @@ export const INVALID_ENTITY_DEFINITION_ID = 'invalid_entity'
 export function isInternalUserValueFeedback(entity: EntityModelBase): boolean {
 	return (
 		entity.type === EntityModelType.Feedback &&
-		entity.connectionId === 'internal' &&
+		isInternalConnectionId(entity.connectionId) &&
 		entity.definitionId === 'user_value'
 	)
 }

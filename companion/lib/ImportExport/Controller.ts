@@ -14,6 +14,7 @@ import type express from 'express'
 import { nanoid } from 'nanoid'
 import workerPool from 'workerpool'
 import z from 'zod'
+import { isVirtualConnectionId } from '@companion-app/shared/ConnectionId.js'
 import {
 	EXPORT_VERSION,
 	type ExportFull,
@@ -201,7 +202,7 @@ export class ImportExportController {
 		}
 
 		for (const [connectionId, connectionConfig] of Object.entries(importObject.instances || {})) {
-			if (!connectionConfig || connectionId === 'internal' || connectionId === 'bitfocus-companion') continue
+			if (!connectionConfig || isVirtualConnectionId(connectionId) || connectionId === 'bitfocus-companion') continue
 
 			clientObject.connections[connectionId] = {
 				moduleId: connectionConfig.moduleId,
