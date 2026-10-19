@@ -3,6 +3,7 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId } from 'react'
 import type { JsonValue } from 'type-fest'
+import { isInternalConnectionId, isVirtualConnectionId } from '@companion-app/shared/ConnectionId.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
@@ -54,9 +55,9 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 	const { connections } = useContext(RootAppStoreContext)
 
 	const isConnectionEnabled =
-		entity.connectionId === 'internal' || !!connections.connections.get(entity.connectionId)?.enabled
+		isVirtualConnectionId(entity.connectionId) || !!connections.connections.get(entity.connectionId)?.enabled
 
-	const showButtonPreview = entity?.connectionId === 'internal' && entityDefinition?.showButtonPreview
+	const showButtonPreview = isInternalConnectionId(entity?.connectionId) && entityDefinition?.showButtonPreview
 
 	const optionVisibility = useOptionsVisibility(
 		entityDefinition?.options,
@@ -133,7 +134,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								<OptionsInputField
 									isLocatedInGrid={!!location}
 									entityType={entity.type}
-									allowInternalFields={entity.connectionId === 'internal'}
+									allowInternalFields={isVirtualConnectionId(entity.connectionId)}
 									controlId={controlId}
 									option={FeedbackInvertOption}
 									value={'isInverted' in entity ? entity.isInverted : undefined}
@@ -164,7 +165,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								key={i}
 								isLocatedInGrid={!!location}
 								entityType={entity.type}
-								allowInternalFields={entity.connectionId === 'internal'}
+								allowInternalFields={isVirtualConnectionId(entity.connectionId)}
 								controlId={controlId}
 								option={opt}
 								value={(entity.options || {})[opt.id]}
@@ -232,7 +233,7 @@ const EntityLocalVariableValueField = observer(function EntityLocalVariableValue
 				Current Value
 			</FormLabel>
 			<Grid.Col sm={8}>
-				{entity.connectionId === 'internal' && entity.definitionId === 'user_value' ? (
+				{isInternalConnectionId(entity.connectionId) && entity.definitionId === 'user_value' ? (
 					<VariableInputGroup
 						id={invertFieldId}
 						disabled={!entity.variableName || readonly}

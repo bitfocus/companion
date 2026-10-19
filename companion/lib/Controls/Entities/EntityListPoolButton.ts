@@ -1,4 +1,5 @@
 import type { JsonValue } from 'type-fest'
+import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { ButtonModelBase, ButtonOptionsBase, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
@@ -242,7 +243,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 			if (!overrides || overrides.length === 0) return
 
 			// Special case to flatten the 'conditionalise existing feedbacks'
-			if (feedback.connectionId === 'internal' && feedback.definitionId === 'logic_conditionalise_advanced') {
+			if (isInternalConnectionId(feedback.connectionId) && feedback.definitionId === 'logic_conditionalise_advanced') {
 				// Check if the condition (all 'children' boolean feedbacks) is true
 				if (!feedback.getBooleanFeedbackValue(null)) return
 

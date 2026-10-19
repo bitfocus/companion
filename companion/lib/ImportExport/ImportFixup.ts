@@ -1,3 +1,4 @@
+import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
 import type {
@@ -277,7 +278,7 @@ export function fixupEntitiesRecursive(
 		if (!instanceInfo) continue
 
 		let newChildren: Record<string, SomeEntityModel[]> | undefined
-		if (entity.connectionId === 'internal' && entity.children) {
+		if (isInternalConnectionId(entity.connectionId) && entity.children) {
 			newChildren = {}
 			for (const [group, childEntities] of Object.entries(entity.children)) {
 				if (!childEntities) continue

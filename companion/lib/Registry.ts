@@ -4,6 +4,7 @@ import path from 'node:path'
 import express from 'express'
 import fs from 'fs-extra'
 import type { PackageJson } from 'type-fest'
+import { getVirtualConnectionIds } from '@companion-app/shared/ConnectionId.js'
 import { CreatePageControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { CloudController } from './Cloud/Controller.js'
@@ -496,7 +497,7 @@ export class Registry {
 			this.page.ensurePageControlsExist()
 
 			const knownConnectionIds = new Set(this.instance.getAllConnectionIds())
-			knownConnectionIds.add('internal')
+			for (const id of getVirtualConnectionIds()) knownConnectionIds.add(id)
 			this.controls.verifyConnectionIds(knownConnectionIds)
 
 			this.variables.custom.init()
