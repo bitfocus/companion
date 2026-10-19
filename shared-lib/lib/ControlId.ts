@@ -70,6 +70,13 @@ export function CreateExpressionVariableControlId(variableId: string): string {
 }
 
 /**
+ * Create full custom action control id
+ */
+export function CreateCustomActionControlId(customActionId: string): string {
+	return `custom-action:${customActionId}`
+}
+
+/**
  * Create the full control id for a page's local-variables control (one per page, keyed by page id).
  */
 export function CreatePageControlId(pageId: string): string {
@@ -95,6 +102,10 @@ export interface ParsedControlIdExpressionVariable {
 	type: 'expression-variable'
 	variableId: string
 }
+export interface ParsedControlIdCustomAction {
+	type: 'custom-action'
+	customActionId: string
+}
 export interface ParsedControlIdPage {
 	type: 'page'
 	pageId: string
@@ -109,6 +120,7 @@ export type ParsedControlIdType =
 	| ParsedControlIdBank
 	| ParsedControlIdTrigger
 	| ParsedControlIdExpressionVariable
+	| ParsedControlIdCustomAction
 	| ParsedControlIdPage
 	| ParsedControlIdPreset
 
@@ -119,6 +131,7 @@ const CONTROL_ID_KINDS: Record<ControlIdKind, true> = {
 	bank: true,
 	trigger: true,
 	'expression-variable': true,
+	'custom-action': true,
 	page: true,
 	preset: true,
 }
@@ -154,6 +167,14 @@ export function ParseControlId(controlId: string): ParsedControlIdType | undefin
 			return {
 				type: 'expression-variable',
 				variableId: matchCv[1],
+			}
+		}
+
+		const matchCustomAction = controlId.match(/^custom-action:(.*)$/)
+		if (matchCustomAction) {
+			return {
+				type: 'custom-action',
+				customActionId: matchCustomAction[1],
 			}
 		}
 
