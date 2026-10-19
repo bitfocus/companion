@@ -322,7 +322,7 @@ describe('GraphicsRenderer', () => {
 				const logger = { warn: vi.fn() } as unknown as Logger
 				const store = new ImageCacheStore(logger, async (source) => decodeImage(source, 1024 * 1024), 1024 * 1024)
 				const frames = await store.selectAnimationFrames(style.elements, timeMs)
-				expect(frames.maxDurationMs).toBe(300)
+				expect(frames.animations).toEqual([{ frameCount: 3, durationMs: 300 }])
 				const resolved = await store.resolveDrawStyle(
 					style,
 					frames.frameIndices,

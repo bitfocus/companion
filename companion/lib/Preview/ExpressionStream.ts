@@ -91,7 +91,7 @@ export class PreviewExpressionStream {
 								contextResolution: input.contextResolution,
 								resolvedTargetControlId: undefined,
 
-								latestResult: { ok: true, value: undefined, variableIds: new Set(), clockSensitive: false },
+								latestResult: { ok: true, value: undefined, variableIds: new Set(), clockCycleMs: 0 },
 								changes: new EventEmitter(),
 							}
 							self.#sessions.set(expressionId, session)
@@ -126,7 +126,7 @@ export class PreviewExpressionStream {
 
 	#onRenderClockTick = (): void => {
 		for (const [, session] of this.#sessions) {
-			if (!session.latestResult.clockSensitive) continue
+			if (session.latestResult.clockCycleMs === 0) continue
 
 			const newValue = session.isVariableString ? this.#parseVariables(session) : this.#executeExpression(session)
 			session.latestResult = newValue
@@ -342,7 +342,7 @@ export class PreviewExpressionStream {
 
 		const res = parser.parseVariables(session.expression)
 		return this.#withContextTracking(
-			{ ok: true, value: res.text, variableIds: res.variableIds, clockSensitive: false },
+			{ ok: true, value: res.text, variableIds: res.variableIds, clockCycleMs: 0 },
 			extraVariableIds
 		)
 	}

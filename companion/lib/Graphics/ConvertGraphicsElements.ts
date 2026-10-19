@@ -119,7 +119,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 		compositeElements: { drawn: new Set(), hidden: new Set() },
 		referencedLocations: { drawn: new Set(), hidden: new Set() },
 		cyclicLocations: new Set(),
-		clockSensitive: false,
+		clockCycleMs: 0,
 	}
 
 	// Track all processed element IDs (with prefixes) for cache purging
@@ -214,7 +214,7 @@ async function convertElements(
 
 				// Cache the result for cacheable element types (not groups/composites as they have children cached separately)
 				// Clock-sensitive elements are not cached since their output changes with the render clock
-				if (context.cache && !cacheEntry.references.clockSensitive) {
+				if (context.cache && cacheEntry.references.clockCycleMs === 0) {
 					context.cache.set(elementId, cacheEntry)
 				}
 			}
