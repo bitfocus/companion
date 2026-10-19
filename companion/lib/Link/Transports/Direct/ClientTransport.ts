@@ -12,6 +12,8 @@ import { DIRECT_DEFAULT_PORT } from './Constants.js'
 import { DIRECT_HANDSHAKE_TIMEOUT_MS, DIRECT_MAX_MESSAGE_SIZE, DirectTransportBase } from './DirectTransportBase.js'
 
 export type DirectClientTransportConfig = {
+	/** The installation chosen from those discovered with mDNS, as `ip:port`, or null to use `address` */
+	bonjourHost: string | null | undefined
 	address: string
 }
 
@@ -51,7 +53,11 @@ export class DirectClientTransport extends DirectTransportBase {
 
 	constructor(context: LinkTransportContext, config: DirectClientTransportConfig) {
 		super(context)
-		const resolved = resolveDirectAddress(config.address, DIRECT_DEFAULT_PORT)
+		const resolved = config.bonjourHost
+			? resolveDirectAddress(config.bonjourHost, DIRECT_DEFAULT_PORT)
+			: config.address.trim()
+				? resolveDirectAddress(config.address, DIRECT_DEFAULT_PORT)
+				: ({ ok: false, error: 'Choose an installation, or enter its address' } as const)
 		this.#url = resolved.ok ? resolved.url : null
 		if (!resolved.ok) {
 			this.#stop(resolved.error)

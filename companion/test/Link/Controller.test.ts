@@ -61,6 +61,7 @@ function createController(db = new FakeDataDatabase()) {
 		name: 'Fake',
 		description: 'Fake',
 		configFields: [],
+		bonjourQueries: { host: { type: 'fake-service', protocol: 'tcp' } },
 		create: (context) => {
 			const instance = new FakeTransport(context)
 			instances.push(instance)
@@ -192,6 +193,14 @@ describe('LinkController', () => {
 			peerId: 'peer',
 			message: { payload: { permissions: { buttons: true } } },
 		})
+	})
+
+	test('discovers what a transport field asks for, leaving out this installation', () => {
+		expect(ctx.controller.getBonjourQueries('fake', 'host')).toEqual([
+			{ type: 'fake-service', protocol: 'tcp', excludeTxt: { linkId: ctx.controller.id } },
+		])
+		expect(ctx.controller.getBonjourQueries('fake', 'other')).toBeNull()
+		expect(ctx.controller.getBonjourQueries('unknown', 'host')).toBeNull()
 	})
 
 	test('lists what the transports say needs attention, for the navigation to count', async () => {

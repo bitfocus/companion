@@ -250,6 +250,7 @@ const TransportEditForm = observer(function TransportEditForm({
 												validators={{ onChange: ({ value }) => validateInputValue(fieldDef, value).validationError }}
 												children={(field) => (
 													<TransportConfigField
+														transportType={transportType.type}
 														definition={fieldDef}
 														setValue={(v) => field.handleChange(v)}
 														value={field.state.value}

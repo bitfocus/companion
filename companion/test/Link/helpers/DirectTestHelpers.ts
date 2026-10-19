@@ -31,7 +31,7 @@ export class DirectTestTransports {
 	}
 
 	startClient(port: number, ctx = createTransportTestContext('client')) {
-		const client = new DirectClientTransport(ctx.context, { address: `127.0.0.1:${port}` })
+		const client = new DirectClientTransport(ctx.context, { bonjourHost: null, address: `127.0.0.1:${port}` })
 		this.#transports.push(client)
 		return { client, ctx }
 	}

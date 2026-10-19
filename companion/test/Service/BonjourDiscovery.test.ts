@@ -1,9 +1,10 @@
 import { initTRPC } from '@trpc/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
-import type { ClientBonjourEvent } from '@companion-app/shared/Model/Common.js'
+import type { BonjourQuery, BonjourQuerySource, ClientBonjourEvent } from '@companion-app/shared/Model/Common.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { InstanceController } from '../../lib/Instance/Controller.js'
+import type { LinkController } from '../../lib/Link/Controller.js'
 import { ServiceBonjourDiscovery } from '../../lib/Service/BonjourDiscovery.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
 import { createMockTrpcContext } from '../Util.js'
@@ -78,7 +79,10 @@ type FakeServer = {
 
 const DEFAULT_QUERIES = { q1: { type: 'http', protocol: 'tcp' } }
 
-function createService(bonjourQueries: Record<string, any> = DEFAULT_QUERIES) {
+function createService(
+	bonjourQueries: Record<string, any> = DEFAULT_QUERIES,
+	linkQueries: Record<string, BonjourQuery[]> = {}
+) {
 	const userconfig = mockDeep<DataUserConfig>(mockOptions, {
 		getKey: () => false,
 	})
@@ -86,10 +90,20 @@ function createService(bonjourQueries: Record<string, any> = DEFAULT_QUERIES) {
 		getManifestForConnection: vi.fn().mockReturnValue({ bonjourQueries } as any),
 	})
 
-	const service = new ServiceBonjourDiscovery(userconfig, instanceController)
+	const getLinkBonjourQueries = vi.fn(
+		(transportType: string, fieldId: string) => linkQueries[`${transportType}/${fieldId}`] ?? null
+	)
+
+	const linkSelfListeners: Array<() => void> = []
+	const linkController = mockDeep<LinkController>(mockOptions, {
+		getBonjourQueries: getLinkBonjourQueries,
+		on: vi.fn((_event: string, listener: () => void) => linkSelfListeners.push(listener)) as any,
+	})
+
+	const service = new ServiceBonjourDiscovery(userconfig, instanceController, linkController)
 	const server = hoisted.instances.at(-1) as FakeServer | undefined
 
-	return { service, server, instanceController, userconfig }
+	return { service, server, instanceController, userconfig, getLinkBonjourQueries, linkSelfListeners }
 }
 
 // function lastServer(): FakeServer {
@@ -98,7 +112,7 @@ function createService(bonjourQueries: Record<string, any> = DEFAULT_QUERIES) {
 
 async function subscribe(
 	service: ServiceBonjourDiscovery,
-	input: { connectionId: string; queryId: string }
+	input: BonjourQuerySource
 ): Promise<SubscriptionTester<ClientBonjourEvent>> {
 	const caller = t.createCallerFactory(service.createTrpcRouter())(testCtx)
 	const iterable = (await caller.watchQuery(input)) as AsyncIterable<ClientBonjourEvent>
@@ -155,7 +169,7 @@ function expectedSvc(overrides: Record<string, any> = {}): Record<string, any> {
 	}
 }
 
-const INPUT = { connectionId: 'conn1', queryId: 'q1' }
+const INPUT = { type: 'connection', connectionId: 'conn1', queryId: 'q1' } as const
 
 describe('ServiceBonjourDiscovery', () => {
 	beforeEach(() => {
@@ -277,6 +291,63 @@ describe('ServiceBonjourDiscovery', () => {
 			await sub.cleanup()
 		})
 
+		it('takes the query of a Link transport field from Link, not a module manifest', async () => {
+			const { service, server, instanceController, getLinkBonjourQueries } = createService(
+				{},
+				{ 'direct-client/bonjourHost': [{ type: 'companion-link-ws', protocol: 'tcp', addressFamily: 'ipv4' }] }
+			)
+			const sub = await subscribe(service, {
+				type: 'link-transport',
+				transportType: 'direct-client',
+				fieldId: 'bonjourHost',
+			})
+			const p = kick(sub)
+
+			const browser = await getBrowser(server!)
+			expect(getLinkBonjourQueries).toHaveBeenCalledWith('direct-client', 'bonjourHost')
+			expect(instanceController.getManifestForConnection).not.toHaveBeenCalled()
+			expect(browser.filter).toMatchObject({ type: 'companion-link-ws', protocol: 'tcp', addressFamily: 'ipv4' })
+
+			browser.emit('up', makeSvc())
+			expect(await p).toEqual({ type: 'up', service: expectedSvc({ subId: 'link:direct-client::bonjourHost' }) })
+			await sub.cleanup()
+		})
+
+		it("leaves out this installation's new Link id once it is regenerated", async () => {
+			const linkQueries = {
+				'direct-client/bonjourHost': [{ type: 'companion-link-ws', protocol: 'tcp', excludeTxt: { linkId: 'old' } }],
+			} satisfies Record<string, BonjourQuery[]>
+			const { service, server, linkSelfListeners } = createService({}, linkQueries)
+			const sub = await subscribe(service, {
+				type: 'link-transport',
+				transportType: 'direct-client',
+				fieldId: 'bonjourHost',
+			})
+			const p = kick(sub)
+			const browser = await getBrowser(server!)
+
+			linkQueries['direct-client/bonjourHost'] = [
+				{ type: 'companion-link-ws', protocol: 'tcp', excludeTxt: { linkId: 'new' } },
+			]
+			for (const listener of linkSelfListeners) listener()
+
+			browser.emit('up', makeSvc({ fqdn: 'self', txt: { linkId: 'new' } }))
+			browser.emit('up', makeSvc({ txt: { linkId: 'old' } }))
+			expect(await p).toEqual({ type: 'up', service: expectedSvc({ subId: 'link:direct-client::bonjourHost' }) })
+			await sub.cleanup()
+		})
+
+		it('throws when a Link transport field has no query', async () => {
+			const { service } = createService()
+			const caller = t.createCallerFactory(service.createTrpcRouter())(testCtx)
+			const iterable = (await caller.watchQuery({
+				type: 'link-transport',
+				transportType: 'direct-client',
+				fieldId: 'address',
+			})) as AsyncIterable<ClientBonjourEvent>
+			await expect(iterable[Symbol.asyncIterator]().next()).rejects.toThrow('Missing bonjour query')
+		})
+
 		it('throws when the manifest has no such query', async () => {
 			const { service } = createService({})
 			const caller = t.createCallerFactory(service.createTrpcRouter())(testCtx)
@@ -389,6 +460,20 @@ describe('ServiceBonjourDiscovery', () => {
 			// the first value the client receives is the next, matching, service
 			browser.emit('up', makeSvc())
 
+			expect(await p).toEqual({ type: 'up', service: expectedSvc() })
+			await sub.cleanup()
+		})
+
+		it('leaves out a service whose txt record matches the exclusion', async () => {
+			const { service, server } = createService({
+				q1: { type: 'http', protocol: 'tcp', excludeTxt: { linkId: 'self' } },
+			})
+			const sub = await subscribe(service, INPUT)
+			const p = kick(sub)
+
+			const browser = await getBrowser(server!)
+			browser.emit('up', makeSvc({ fqdn: 'self._http._tcp.local', txt: { linkId: 'self', other: 'x' } }))
+			browser.emit('up', makeSvc({ txt: { linkId: 'someone-else' } }))
 			expect(await p).toEqual({ type: 'up', service: expectedSvc() })
 			await sub.cleanup()
 		})
@@ -543,11 +628,11 @@ describe('ServiceBonjourDiscovery', () => {
 				q2: { type: 'https', protocol: 'tcp' },
 			})
 
-			const sub1 = await subscribe(service, { connectionId: 'conn1', queryId: 'q1' })
+			const sub1 = await subscribe(service, { type: 'connection', connectionId: 'conn1', queryId: 'q1' })
 			const p1 = kick(sub1)
 			const browser0 = await getBrowser(server!, 0)
 
-			const sub2 = await subscribe(service, { connectionId: 'conn1', queryId: 'q2' })
+			const sub2 = await subscribe(service, { type: 'connection', connectionId: 'conn1', queryId: 'q2' })
 			const p2 = kick(sub2)
 			const browser1 = await getBrowser(server!, 1)
 

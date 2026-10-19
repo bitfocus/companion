@@ -1,5 +1,6 @@
 import type { JsonValue } from 'type-fest'
 import type {
+	CompanionInputFieldBonjourDeviceExtended,
 	CompanionInputFieldCheckboxExtended,
 	CompanionInputFieldDropdownExtended,
 	CompanionInputFieldNumberExtended,
@@ -42,6 +43,7 @@ export const LINK_PERMISSION_DEFINITIONS: readonly { id: LinkPermission; label: 
  * transport config has nothing to evaluate variables or expressions against
  */
 export type LinkTransportConfigField =
+	| CompanionInputFieldBonjourDeviceExtended
 	| CompanionInputFieldStaticTextExtended
 	| Omit<CompanionInputFieldTextInputExtended, 'useVariables'>
 	| CompanionInputFieldSecretExtended
