@@ -17,7 +17,7 @@ function makeImage(
 	style: ImageResultProcessedStyle | null,
 	drawNative = vi.fn().mockResolvedValue(new Uint8Array(0))
 ): ImageResult {
-	return new ImageResult(undefined, style, 1, drawNative)
+	return new ImageResult(undefined, style, 1, 0, drawNative)
 }
 
 describe('buildSatelliteStyleArgs', () => {

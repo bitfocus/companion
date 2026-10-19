@@ -363,7 +363,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								}
 
 								const cycleRenderCount = countButtonCycleRenders(animationFrames, buttonStyle.clockCycleMs ?? 0)
-								render = this.#generateImageResult(cacheKey, renderStyle, animationFrames, cycleRenderCount)
+								render = this.#generateImageResult(
+									cacheKey,
+									renderStyle,
+									animationFrames,
+									cycleRenderCount,
+									buttonStyle.clockCycleMs ?? 0
+								)
 								if (cycleRenderCount <= RENDER_CACHE_MAX_CYCLE_RENDERS) this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
@@ -436,6 +442,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								renderStyle,
 								animationFrames,
 								cycleRenderCount,
+								buttonStyle.clockCycleMs ?? 0,
 								buttonStyle.elements,
 								buttonStyle.referencedLocations
 							)
@@ -628,7 +635,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		// One-off preview: never cached or emitted, so it has no content key (never deduped).
 		// It is a still, so any animations show their first frame
-		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES, 1)
+		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES, 1, 0)
 	}
 
 	/**
@@ -934,6 +941,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		drawStyle: RendererButtonStyle,
 		animationFrames: AnimationFrames,
 		cycleRenderCount: number,
+		clockCycleMs: number,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> | undefined = undefined
 	): ImageResult {
@@ -943,6 +951,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			cacheKey,
 			processedStyle,
 			cycleRenderCount,
+			clockCycleMs,
 			async (width, height, rotation, format) =>
 				this.#executePoolDrawButtonImageBuffer(
 					drawStyle,

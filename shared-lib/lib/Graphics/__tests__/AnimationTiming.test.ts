@@ -195,6 +195,11 @@ describe('clockCycleOfPeriod', () => {
 		expect(clockCycleOfPeriod(150)).toBe(300)
 		expect(clockCycleOfPeriod(50)).toBe(100)
 	})
+
+	test('keeps a fractional period, rather than rounding it to one which lines up sooner', () => {
+		expect(clockCycleOfPeriod(100.25)).toBe(40_100)
+		expect(clockCycleOfPeriod(150.5)).toBe(30_100)
+	})
 })
 
 describe('combineClockCycles', () => {
