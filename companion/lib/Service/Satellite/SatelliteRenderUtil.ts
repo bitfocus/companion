@@ -161,14 +161,10 @@ export async function sendSatelliteStyleMessage(
 	const otherArgs = await buildSatelliteStyleArgs(image, { ...style, bitmap: undefined }, rotation, bitmapFormat)
 
 	// Each decision is made in the same synchronous step as writing the message, so the cache can't change between
-	const sendReference = (): boolean => {
-		if (!socket.bitmapCache?.reference(bitmapId)) return false
-
+	if (socket.bitmapCache?.reference(bitmapId)) {
 		socket.sendMessage(messageName, null, deviceId, { ...baseArgs, ...otherArgs, BITMAP_ID: bitmapId })
-		return true
+		return
 	}
-
-	if (sendReference()) return
 
 	// The client doesn't have it, so draw it
 	const bitmap = await drawSatelliteBitmap(image, bitmapSize, rotation, bitmapFormat)
@@ -178,7 +174,10 @@ export async function sendSatelliteStyleMessage(
 	}
 
 	// The cache may have changed while drawing, eg the same bitmap was sent by another draw, so decide again
-	if (sendReference()) return
+	if (socket.bitmapCache?.reference(bitmapId)) {
+		socket.sendMessage(messageName, null, deviceId, { ...baseArgs, ...otherArgs, BITMAP_ID: bitmapId })
+		return
+	}
 
 	const evicted = socket.bitmapCache?.store(bitmapId, bitmapSize.w, bitmapSize.h) ?? null
 	if (evicted === null) {
