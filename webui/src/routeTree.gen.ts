@@ -27,6 +27,7 @@ import { Route as AppActionRecorderRouteImport } from './routes/_app/action-reco
 import { Route as AppButtonsRouteImport } from './routes/_app/buttons.tsx'
 import { Route as AppCloudRouteImport } from './routes/_app/cloud.tsx'
 import { Route as AppConnectionsRouteImport } from './routes/_app/connections.tsx'
+import { Route as AppCustomActionsRouteImport } from './routes/_app/custom-actions.tsx'
 import { Route as AppImageLibraryRouteImport } from './routes/_app/image-library.tsx'
 import { Route as AppImportExportRouteImport } from './routes/_app/import-export.tsx'
 import { Route as AppLogRouteImport } from './routes/_app/log.tsx'
@@ -38,6 +39,8 @@ import { Route as AppButtonsPageRouteImport } from './routes/_app/buttons/$page.
 import { Route as AppConnectionsIndexRouteImport } from './routes/_app/connections/index.tsx'
 import { Route as AppConnectionsConnectionIdRouteImport } from './routes/_app/connections/$connectionId.tsx'
 import { Route as AppConnectionsAddRouteImport } from './routes/_app/connections/add.tsx'
+import { Route as AppCustomActionsIndexRouteImport } from './routes/_app/custom-actions/index.tsx'
+import { Route as AppCustomActionsControlIdRouteImport } from './routes/_app/custom-actions/$controlId.tsx'
 import { Route as AppImageLibraryIndexRouteImport } from './routes/_app/image-library/index.tsx'
 import { Route as AppImageLibraryImageNameRouteImport } from './routes/_app/image-library/$imageName.tsx'
 import { Route as AppModulesIndexRouteImport } from './routes/_app/modules/index.tsx'
@@ -175,6 +178,11 @@ const AppConnectionsRoute = AppConnectionsRouteImport.update({
   path: '/connections',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCustomActionsRoute = AppCustomActionsRouteImport.update({
+  id: '/custom-actions',
+  path: '/custom-actions',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppImageLibraryRoute = AppImageLibraryRouteImport.update({
   id: '/image-library',
   path: '/image-library',
@@ -238,6 +246,17 @@ const AppConnectionsAddRoute = AppConnectionsAddRouteImport.update({
   path: '/add',
   getParentRoute: () => AppConnectionsRoute,
 } as any)
+const AppCustomActionsIndexRoute = AppCustomActionsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppCustomActionsRoute,
+} as any)
+const AppCustomActionsControlIdRoute =
+  AppCustomActionsControlIdRouteImport.update({
+    id: '/$controlId',
+    path: '/$controlId',
+    getParentRoute: () => AppCustomActionsRoute,
+  } as any)
 const AppImageLibraryIndexRoute = AppImageLibraryIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -538,6 +557,7 @@ export interface FileRoutesByFullPath {
   '/buttons': typeof AppButtonsRouteWithChildren
   '/cloud': typeof AppCloudRoute
   '/connections': typeof AppConnectionsRouteWithChildren
+  '/custom-actions': typeof AppCustomActionsRouteWithChildren
   '/image-library': typeof AppImageLibraryRouteWithChildren
   '/import-export': typeof AppImportExportRoute
   '/log': typeof AppLogRoute
@@ -549,6 +569,7 @@ export interface FileRoutesByFullPath {
   '/buttons/$page': typeof AppButtonsPageRoute
   '/connections/$connectionId': typeof AppConnectionsConnectionIdRouteWithChildren
   '/connections/add': typeof AppConnectionsAddRoute
+  '/custom-actions/$controlId': typeof AppCustomActionsControlIdRoute
   '/image-library/$imageName': typeof AppImageLibraryImageNameRoute
   '/settings/advanced': typeof AppSettingsAdvancedRouteWithChildren
   '/settings/backups': typeof AppSettingsBackupsRouteWithChildren
@@ -570,6 +591,7 @@ export interface FileRoutesByFullPath {
   '/connection-debug/$connectionId': typeof StandaloneConnectionDebugDotconnectionIdRoute
   '/emulator/$emulatorId': typeof StandaloneEmulatorEmulatorIdDotlazyRoute
   '/connections/': typeof AppConnectionsIndexRoute
+  '/custom-actions/': typeof AppCustomActionsIndexRoute
   '/image-library/': typeof AppImageLibraryIndexRoute
   '/modules/': typeof AppModulesIndexRoute
   '/settings/': typeof AppSettingsIndexRoute
@@ -623,6 +645,7 @@ export interface FileRoutesByTo {
   '/buttons/$page': typeof AppButtonsPageRoute
   '/connections/$connectionId': typeof AppConnectionsConnectionIdRouteWithChildren
   '/connections/add': typeof AppConnectionsAddRoute
+  '/custom-actions/$controlId': typeof AppCustomActionsControlIdRoute
   '/image-library/$imageName': typeof AppImageLibraryImageNameRoute
   '/settings/buttons': typeof AppSettingsButtonsRoute
   '/settings/general': typeof AppSettingsGeneralRoute
@@ -636,6 +659,7 @@ export interface FileRoutesByTo {
   '/connection-debug/$connectionId': typeof StandaloneConnectionDebugDotconnectionIdRoute
   '/emulator/$emulatorId': typeof StandaloneEmulatorEmulatorIdDotlazyRoute
   '/connections': typeof AppConnectionsIndexRoute
+  '/custom-actions': typeof AppCustomActionsIndexRoute
   '/image-library': typeof AppImageLibraryIndexRoute
   '/modules': typeof AppModulesIndexRoute
   '/settings': typeof AppSettingsIndexRoute
@@ -685,6 +709,7 @@ export interface FileRoutesById {
   '/_app/buttons': typeof AppButtonsRouteWithChildren
   '/_app/cloud': typeof AppCloudRoute
   '/_app/connections': typeof AppConnectionsRouteWithChildren
+  '/_app/custom-actions': typeof AppCustomActionsRouteWithChildren
   '/_app/image-library': typeof AppImageLibraryRouteWithChildren
   '/_app/import-export': typeof AppImportExportRoute
   '/_app/log': typeof AppLogRoute
@@ -697,6 +722,7 @@ export interface FileRoutesById {
   '/_app/buttons/$page': typeof AppButtonsPageRoute
   '/_app/connections/$connectionId': typeof AppConnectionsConnectionIdRouteWithChildren
   '/_app/connections/add': typeof AppConnectionsAddRoute
+  '/_app/custom-actions/$controlId': typeof AppCustomActionsControlIdRoute
   '/_app/image-library/$imageName': typeof AppImageLibraryImageNameRoute
   '/_app/settings/advanced': typeof AppSettingsAdvancedRouteWithChildren
   '/_app/settings/backups': typeof AppSettingsBackupsRouteWithChildren
@@ -718,6 +744,7 @@ export interface FileRoutesById {
   '/_standalone/connection-debug/$connectionId': typeof StandaloneConnectionDebugDotconnectionIdRoute
   '/_standalone/emulator/$emulatorId': typeof StandaloneEmulatorEmulatorIdDotlazyRoute
   '/_app/connections/': typeof AppConnectionsIndexRoute
+  '/_app/custom-actions/': typeof AppCustomActionsIndexRoute
   '/_app/image-library/': typeof AppImageLibraryIndexRoute
   '/_app/modules/': typeof AppModulesIndexRoute
   '/_app/settings/': typeof AppSettingsIndexRoute
@@ -768,6 +795,7 @@ export interface FileRouteTypes {
     | '/buttons'
     | '/cloud'
     | '/connections'
+    | '/custom-actions'
     | '/image-library'
     | '/import-export'
     | '/log'
@@ -779,6 +807,7 @@ export interface FileRouteTypes {
     | '/buttons/$page'
     | '/connections/$connectionId'
     | '/connections/add'
+    | '/custom-actions/$controlId'
     | '/image-library/$imageName'
     | '/settings/advanced'
     | '/settings/backups'
@@ -800,6 +829,7 @@ export interface FileRouteTypes {
     | '/connection-debug/$connectionId'
     | '/emulator/$emulatorId'
     | '/connections/'
+    | '/custom-actions/'
     | '/image-library/'
     | '/modules/'
     | '/settings/'
@@ -853,6 +883,7 @@ export interface FileRouteTypes {
     | '/buttons/$page'
     | '/connections/$connectionId'
     | '/connections/add'
+    | '/custom-actions/$controlId'
     | '/image-library/$imageName'
     | '/settings/buttons'
     | '/settings/general'
@@ -866,6 +897,7 @@ export interface FileRouteTypes {
     | '/connection-debug/$connectionId'
     | '/emulator/$emulatorId'
     | '/connections'
+    | '/custom-actions'
     | '/image-library'
     | '/modules'
     | '/settings'
@@ -914,6 +946,7 @@ export interface FileRouteTypes {
     | '/_app/buttons'
     | '/_app/cloud'
     | '/_app/connections'
+    | '/_app/custom-actions'
     | '/_app/image-library'
     | '/_app/import-export'
     | '/_app/log'
@@ -926,6 +959,7 @@ export interface FileRouteTypes {
     | '/_app/buttons/$page'
     | '/_app/connections/$connectionId'
     | '/_app/connections/add'
+    | '/_app/custom-actions/$controlId'
     | '/_app/image-library/$imageName'
     | '/_app/settings/advanced'
     | '/_app/settings/backups'
@@ -947,6 +981,7 @@ export interface FileRouteTypes {
     | '/_standalone/connection-debug/$connectionId'
     | '/_standalone/emulator/$emulatorId'
     | '/_app/connections/'
+    | '/_app/custom-actions/'
     | '/_app/image-library/'
     | '/_app/modules/'
     | '/_app/settings/'
@@ -1111,6 +1146,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppConnectionsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/custom-actions': {
+      id: '/_app/custom-actions'
+      path: '/custom-actions'
+      fullPath: '/custom-actions'
+      preLoaderRoute: typeof AppCustomActionsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/image-library': {
       id: '/_app/image-library'
       path: '/image-library'
@@ -1194,6 +1236,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/connections/add'
       preLoaderRoute: typeof AppConnectionsAddRouteImport
       parentRoute: typeof AppConnectionsRoute
+    }
+    '/_app/custom-actions/': {
+      id: '/_app/custom-actions/'
+      path: '/'
+      fullPath: '/custom-actions/'
+      preLoaderRoute: typeof AppCustomActionsIndexRouteImport
+      parentRoute: typeof AppCustomActionsRoute
+    }
+    '/_app/custom-actions/$controlId': {
+      id: '/_app/custom-actions/$controlId'
+      path: '/$controlId'
+      fullPath: '/custom-actions/$controlId'
+      preLoaderRoute: typeof AppCustomActionsControlIdRouteImport
+      parentRoute: typeof AppCustomActionsRoute
     }
     '/_app/image-library/': {
       id: '/_app/image-library/'
@@ -1601,6 +1657,19 @@ const AppConnectionsRouteWithChildren = AppConnectionsRoute._addFileChildren(
   AppConnectionsRouteChildren,
 )
 
+interface AppCustomActionsRouteChildren {
+  AppCustomActionsControlIdRoute: typeof AppCustomActionsControlIdRoute
+  AppCustomActionsIndexRoute: typeof AppCustomActionsIndexRoute
+}
+
+const AppCustomActionsRouteChildren: AppCustomActionsRouteChildren = {
+  AppCustomActionsControlIdRoute: AppCustomActionsControlIdRoute,
+  AppCustomActionsIndexRoute: AppCustomActionsIndexRoute,
+}
+
+const AppCustomActionsRouteWithChildren =
+  AppCustomActionsRoute._addFileChildren(AppCustomActionsRouteChildren)
+
 interface AppImageLibraryRouteChildren {
   AppImageLibraryImageNameRoute: typeof AppImageLibraryImageNameRoute
   AppImageLibraryIndexRoute: typeof AppImageLibraryIndexRoute
@@ -1832,6 +1901,7 @@ interface AppRouteChildren {
   AppButtonsRoute: typeof AppButtonsRouteWithChildren
   AppCloudRoute: typeof AppCloudRoute
   AppConnectionsRoute: typeof AppConnectionsRouteWithChildren
+  AppCustomActionsRoute: typeof AppCustomActionsRouteWithChildren
   AppImageLibraryRoute: typeof AppImageLibraryRouteWithChildren
   AppImportExportRoute: typeof AppImportExportRoute
   AppLogRoute: typeof AppLogRoute
@@ -1860,6 +1930,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppButtonsRoute: AppButtonsRouteWithChildren,
   AppCloudRoute: AppCloudRoute,
   AppConnectionsRoute: AppConnectionsRouteWithChildren,
+  AppCustomActionsRoute: AppCustomActionsRouteWithChildren,
   AppImageLibraryRoute: AppImageLibraryRouteWithChildren,
   AppImportExportRoute: AppImportExportRoute,
   AppLogRoute: AppLogRoute,

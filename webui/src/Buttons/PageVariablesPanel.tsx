@@ -29,7 +29,7 @@ export const PageVariablesPanel = observer(function PageVariablesPanel({ pageNum
 	const config = controlConfig?.config
 	const localVariables = config?.type === 'page' ? config.localVariables : null
 
-	const localVariablesStore = useLocalVariablesStore(controlId ?? '', localVariables)
+	const localVariablesStore = useLocalVariablesStore(controlId ?? '', localVariables, null, null)
 
 	const dataReady = !error && !!config && config.type === 'page'
 

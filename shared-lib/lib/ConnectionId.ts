@@ -36,6 +36,20 @@ export function isVirtualConnectionId(connectionId: string | null | undefined): 
 }
 
 /**
+ * Get the label to show for a connection id provided by Companion itself, or undefined for any other connection id
+ */
+export function getVirtualConnectionLabel(connectionId: string): string | undefined {
+	switch (connectionId) {
+		case INTERNAL_CONNECTION_ID:
+			return 'internal'
+		case CUSTOM_ACTIONS_CONNECTION_ID:
+			return 'Custom action'
+		default:
+			return undefined
+	}
+}
+
+/**
  * Get all of the connection ids provided by Companion itself
  */
 export function getVirtualConnectionIds(): ReadonlySet<string> {
