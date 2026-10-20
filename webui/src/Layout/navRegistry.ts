@@ -5,6 +5,7 @@ import {
 	faClock,
 	faCog,
 	faCogs,
+	faCubes,
 	faDollarSign,
 	faFileImport,
 	faFloppyDisk,
@@ -117,6 +118,7 @@ export const LINK_SECTION: NavSection = {
 export const TOP_LEVEL_PAGES: readonly NavPage[] = [
 	{ id: 'buttons', label: 'Buttons', path: '/buttons', icon: faBorderAll },
 	{ id: 'triggers', label: 'Triggers', path: '/triggers', icon: faClock },
+	{ id: 'custom-actions', label: 'Custom Actions', path: '/custom-actions', icon: faCubes },
 	{ id: 'action-recorder', label: 'Action Recorder', path: '/action-recorder', icon: faVideoCamera },
 	{ id: 'connections', label: 'Connections', path: '/connections', icon: faPlug },
 	{ id: 'modules', label: 'Modules', path: '/modules', icon: faPuzzlePiece },

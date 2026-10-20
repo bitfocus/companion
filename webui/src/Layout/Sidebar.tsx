@@ -7,6 +7,7 @@ import {
 	faClipboardList,
 	faClock,
 	faCloud,
+	faCubes,
 	faDesktop,
 	faExternalLinkSquare,
 	faFileImport,
@@ -370,6 +371,7 @@ export const MySidebar = memo(function MySidebar() {
 					<li className="nav-title">Program</li>
 					<SidebarMenuItem name="Buttons" icon={faTableCells} path="/buttons" />
 					<SidebarMenuItem name="Triggers" icon={faClock} path="/triggers" />
+					<SidebarMenuItem name="Custom Actions" icon={faCubes} path="/custom-actions" />
 					<SidebarSectionNavGroup section={VARIABLES_SECTION} />
 					<SidebarMenuItem name="Action Recorder" icon={faVideoCamera} path="/action-recorder" />
 					<SidebarMenuItem name="Image Library" icon={faImages} path="/image-library" />

@@ -38,7 +38,7 @@ const PageVariablesEditor = observer(function PageVariablesEditor({ controlId }:
 
 	const localVariables = controlConfig?.config.localVariables ?? null
 
-	const localVariablesStore = useLocalVariablesStore(controlId, localVariables)
+	const localVariablesStore = useLocalVariablesStore(controlId, localVariables, null, null)
 
 	const dataReady = !error && !!controlConfig
 
