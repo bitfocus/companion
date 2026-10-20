@@ -1,4 +1,6 @@
 import z from 'zod'
+import { CUSTOM_ACTIONS_CONNECTION_ID } from '../ConnectionId.js'
+import { ParseControlId } from '../ControlId.js'
 import type { ObjectPatch } from '../Diff.js'
 import type { CollectionBase } from './Collections.js'
 import { SomeEntityModelSchema } from './EntityModel.js'
@@ -17,6 +19,19 @@ export const CustomActionOptionsSchema = z.object({
 })
 
 export type CustomActionOptions = z.output<typeof CustomActionOptionsSchema>
+
+/**
+ * The action which runs a control, if the control is a custom action. A custom action can't contain this action, as
+ * it would run itself
+ */
+export function getCustomActionCallDefinition(
+	controlId: string
+): { connectionId: string; definitionId: string } | null {
+	const parsedId = ParseControlId(controlId)
+	if (parsedId?.type !== 'custom-action') return null
+
+	return { connectionId: CUSTOM_ACTIONS_CONNECTION_ID, definitionId: parsedId.customActionId }
+}
 
 /** The pattern the id of an input of a custom action must match, as it is used in `$(options:<id>)` */
 export const CUSTOM_ACTION_INPUT_ID_PATTERN = /^[\w-]+$/

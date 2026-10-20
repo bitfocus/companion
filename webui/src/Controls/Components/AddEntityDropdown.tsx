@@ -20,6 +20,8 @@ interface AddEntityDropdownProps {
 	entityType: EntityModelType
 	entityTypeLabel: string
 	feedbackListType: ClientEntityDefinition['feedbackType']
+	/** A definition which can't be added here, such as a custom action running itself */
+	excludedDefinition: { connectionId: string; definitionId: string } | null
 	disabled: boolean
 }
 export const AddEntityDropdown = observer(function AddEntityDropdown({
@@ -27,6 +29,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 	entityType,
 	entityTypeLabel,
 	feedbackListType,
+	excludedDefinition,
 	disabled,
 }: AddEntityDropdownProps) {
 	const { entityDefinitions, connections } = useContext(RootAppStoreContext)
@@ -57,6 +60,10 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 			})
 		}
 
+		const excludedId = excludedDefinition
+			? `${excludedDefinition.connectionId}:${excludedDefinition.definitionId}`
+			: null
+
 		return [
 			...baseGroups,
 			{
@@ -65,8 +72,10 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 				showWhenUnfiltered: true,
 				items: recents,
 			},
-		].map(scopeGroupItemIds)
-	}, [baseGroups, definitions, connections, recentlyUsedStore.recentIds, feedbackListType])
+		]
+			.map((group) => (excludedId ? { ...group, items: group.items.filter((item) => item.id !== excludedId) } : group))
+			.map(scopeGroupItemIds)
+	}, [baseGroups, definitions, connections, recentlyUsedStore.recentIds, feedbackListType, excludedDefinition])
 	const collection = useComboboxCollection(options, getComboboxItemLabel)
 
 	const onChange = useCallback(

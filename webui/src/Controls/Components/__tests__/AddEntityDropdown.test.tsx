@@ -28,7 +28,7 @@ const BASE_GROUPS: AddEntityGroup[] = [
 	{ id: '__common__', label: 'Common', showWhenUnfiltered: true, items: [option('internal:alpha', 'Alpha')] },
 ]
 
-function renderDropdown() {
+function renderDropdown(excludedDefinition: { connectionId: string; definitionId: string } | null = null) {
 	const onSelect = vi.fn()
 	const trackId = vi.fn()
 	// Deep partial of the root store - the dropdown only reaches for these
@@ -52,6 +52,7 @@ function renderDropdown() {
 					entityType={EntityModelType.Action}
 					entityTypeLabel="action"
 					feedbackListType={null}
+					excludedDefinition={excludedDefinition}
 					disabled={false}
 				/>
 			</MenuPortalContext.Provider>
@@ -111,5 +112,12 @@ describe('AddEntityDropdown — selection', () => {
 		await user.type(input, 'beta')
 		await user.click(within(screen.getByRole('listbox')).getByRole('option', { name: 'Conn One: Beta' }))
 		expect(onSelect).toHaveBeenCalledWith('conn1', 'beta')
+	})
+
+	it('omits an excluded entity', async () => {
+		const { user, input } = renderDropdown({ connectionId: 'conn1', definitionId: 'beta' })
+		await user.click(input)
+		await user.type(input, 'beta')
+		expect(within(screen.getByRole('listbox')).queryByRole('option', { name: 'Conn One: Beta' })).toBeNull()
 	})
 })
