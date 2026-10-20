@@ -1,4 +1,5 @@
 import { action, observable } from 'mobx'
+import { getVirtualConnectionLabel } from '@companion-app/shared/ConnectionId.js'
 import type {
 	ClientConnectionConfig,
 	ClientConnectionsUpdate,
@@ -41,7 +42,7 @@ export class ConnectionsStore implements GenericCollectionsStore<ConnectionColle
 	}
 
 	public getLabel(connectionId: string): string | undefined {
-		return this.connections.get(connectionId)?.label
+		return this.connections.get(connectionId)?.label ?? getVirtualConnectionLabel(connectionId)
 	}
 
 	public getAllOfModuleId(moduleId: string): ClientConnectionConfig[] {
