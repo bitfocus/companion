@@ -341,6 +341,19 @@ describe('ControlCustomAction', () => {
 			expect(seen).toEqual([3, 3])
 		})
 
+		test('a missing text input uses its default', async () => {
+			const { control, executeAction, evaluate, runAsButton } = createHarness({ actions: [action('record')] })
+			control.inputAdd({ type: 'textinput', id: 'text', label: 'Text', default: 'fallback' })
+			const seen: any[] = []
+			executeAction.mockImplementation(async (_action, extras) => {
+				seen.push(evaluate(extras, '$(options:text)'))
+			})
+
+			await runAsButton([callAction({ text: exprVal('given') }), callAction({})], { executionMode: 'sequential' })
+
+			expect(seen).toEqual(['given', 'fallback'])
+		})
+
 		test('the $(this:*) variables are those of the caller', async () => {
 			const { executeAction, evaluate, runAsButton } = createHarness({ actions: [action('record')] })
 			const seen: any[] = []
