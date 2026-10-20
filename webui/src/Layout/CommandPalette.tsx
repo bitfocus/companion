@@ -3,6 +3,7 @@ import {
 	faArrowRight,
 	faBorderAll,
 	faClock,
+	faCubes,
 	faDollarSign,
 	faDownload,
 	faPlug,
@@ -15,6 +16,7 @@ import { useNavigate } from '@tanstack/react-router'
 import copy from 'copy-to-clipboard'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Modal } from '~/Components/Modal'
 import { SearchBox } from '~/Components/SearchBox.js'
@@ -66,7 +68,8 @@ export const CommandPalette = observer(function CommandPalette() {
 })
 
 const CommandPaletteContents = observer(function CommandPaletteContents() {
-	const { pages, connections, triggersList, variablesStore, notifier } = useContext(RootAppStoreContext)
+	const { pages, connections, triggersList, customActionsList, variablesStore, notifier } =
+		useContext(RootAppStoreContext)
 	const navigate = useNavigate()
 
 	const [query, setQuery] = useState('')
@@ -207,7 +210,25 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 			}
 		}
 
-		// 5. Pages
+		// 5. Custom actions
+		for (const [controlId, customAction] of customActionsList.customActions.entries()) {
+			const parsedId = ParseControlId(controlId)
+			if (parsedId?.type !== 'custom-action') continue
+
+			items.push({
+				id: controlId,
+				category: 'Quick Actions',
+				title: customAction.name || 'Custom action',
+				subtitle: customAction.description || 'Custom action',
+				icon: faCubes,
+				onSelect: () => {
+					void navigate({ to: '/custom-actions/$controlId', params: { controlId: parsedId.customActionId } })
+					closePalette()
+				},
+			})
+		}
+
+		// 6. Pages
 		if (pages?.data) {
 			pages.data.forEach((page, index) => {
 				const pageNumber = index + 1
@@ -250,7 +271,7 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 		}
 
 		return items
-	}, [pages, connections, triggersList, variablesStore, navigate, closePalette, notifier])
+	}, [pages, connections, triggersList, customActionsList, variablesStore, navigate, closePalette, notifier])
 
 	// Fuzzy-filter items based on query
 	const filteredItems = useMemo(() => {
