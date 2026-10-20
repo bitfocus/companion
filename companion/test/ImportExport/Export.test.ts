@@ -84,6 +84,8 @@ describe('ExportController', () => {
 		controls.exportTriggerCollections.mockReturnValue([])
 		controls.getAllExpressionVariables.mockReturnValue([])
 		controls.exportExpressionVariableCollections.mockReturnValue([])
+		controls.getAllCustomActions.mockReturnValue([])
+		controls.exportCustomActionCollections.mockReturnValue([])
 
 		graphics.imageLibrary.exportImageLibraryData.mockReturnValue([])
 		graphics.imageLibrary.exportCollections.mockReturnValue([])
@@ -402,7 +404,7 @@ describe('ExportController', () => {
 
 	describe('custom export', () => {
 		const validQuery =
-			'buttons=true&connections=true&triggers=true&customVariables=true&expressionVariables=true' +
+			'buttons=true&connections=true&triggers=true&customVariables=true&expressionVariables=true&customActions=true' +
 			'&includeSecrets=true&imageLibrary=true&surfaces.known=true&surfaces.instances=true&surfaces.remote=true&format=json'
 
 		test('rejects an invalid selection with a 400 and zod issues', async () => {
@@ -430,7 +432,7 @@ describe('ExportController', () => {
 		test('deselecting sections omits them from the export', async () => {
 			const { app } = createController()
 			const query =
-				'buttons=false&connections=false&triggers=false&customVariables=false&expressionVariables=false' +
+				'buttons=false&connections=false&triggers=false&customVariables=false&expressionVariables=false&customActions=false' +
 				'&includeSecrets=false&imageLibrary=false&surfaces.known=false&surfaces.instances=false&surfaces.remote=false&format=json'
 
 			const res = await get(app, `/int/api/export/custom?${query}`)

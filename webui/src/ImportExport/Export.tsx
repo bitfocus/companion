@@ -34,6 +34,7 @@ export const ExportWizardModal = observer(function ExportWizardModal() {
 		triggers: true,
 		customVariables: true,
 		expressionVariables: true,
+		customActions: true,
 		includeSecrets: true,
 		imageLibrary: true,
 		// userconfig: true,

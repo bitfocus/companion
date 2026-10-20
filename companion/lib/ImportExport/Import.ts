@@ -1,5 +1,10 @@
 import { nanoid } from 'nanoid'
-import { CreateExpressionVariableControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
+import { getVirtualConnectionIds, INTERNAL_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import {
+	CreateCustomActionControlId,
+	CreateExpressionVariableControlId,
+	CreateTriggerControlId,
+} from '@companion-app/shared/ControlId.js'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type {
@@ -29,6 +34,7 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import {
 	fixupButtonReferenceControl,
+	fixupCustomActionControl,
 	fixupExpressionVariableControl,
 	fixupLayeredButtonControl,
 	fixupPageVariables,
@@ -185,6 +191,23 @@ export class ImportController {
 				)
 
 				this.#controlsController.importExpressionVariable(controlId, fixedControlObj)
+			}
+		}
+
+		// Import custom actions
+		if (isImporting(config.customActions)) {
+			this.#controlsController.replaceCustomActionCollections(data.customActionCollections || [])
+
+			for (const [id, customActionDefinition] of Object.entries(data.customActions || {})) {
+				const controlId = CreateCustomActionControlId(id)
+				const fixedControlObj = fixupCustomActionControl(
+					this.#internalModule,
+					customActionDefinition,
+					instanceIdMap,
+					outboundSurfaceIdRemap
+				)
+
+				this.#controlsController.importCustomAction(controlId, fixedControlObj)
 			}
 		}
 
@@ -496,9 +519,11 @@ export class ImportController {
 			}
 		}
 
-		// Force the internal module mapping
-		instanceIdMap['internal'] = { id: 'internal', label: 'internal' }
-		instanceIdMap['bitfocus-companion'] = { id: 'internal', label: 'internal' }
+		// Force the mappings of the connections provided by Companion itself, such as the internal module
+		for (const id of getVirtualConnectionIds()) {
+			instanceIdMap[id] = { id, label: id }
+		}
+		instanceIdMap['bitfocus-companion'] = { id: INTERNAL_CONNECTION_ID, label: INTERNAL_CONNECTION_ID }
 
 		// Ensure any group references are valid
 		this.#instancesController.connectionCollections.removeUnknownCollectionReferences()

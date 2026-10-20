@@ -607,6 +607,26 @@ export class ExportController {
 			}
 		}
 
+		if (!config || config.customActions) {
+			exp.customActions = {}
+			exp.customActionCollections = this.#controlsController.exportCustomActionCollections()
+
+			for (const control of this.#controlsController.getAllCustomActions()) {
+				const parsedId = ParseControlId(control.controlId)
+				if (parsedId?.type === 'custom-action') {
+					exp.customActions[parsedId.customActionId] = control.toJSON(false)
+
+					control.collectReferencedConnectionsAndVariables(
+						referencedConnectionIds,
+						referencedConnectionLabels,
+						referencedVariables
+					)
+				} else {
+					this.#logger.warn(`Control ${control.controlId} is not a valid custom action control!`)
+				}
+			}
+		}
+
 		if (!config || config.connections) {
 			exp.instances = this.#instancesController.exportAllConnections(!config || config.includeSecrets)
 			exp.connectionCollections = this.#instancesController.connectionCollections.collectionData

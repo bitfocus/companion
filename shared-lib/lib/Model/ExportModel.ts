@@ -1,4 +1,5 @@
 import type { ConnectionCollection } from './Connections.js'
+import type { CustomActionCollection, CustomActionModel } from './CustomActionModel.js'
 import type { CustomVariableCollection, CustomVariablesModel } from './CustomVariableModel.js'
 import type { SomeEntityModel } from './EntityModel.js'
 import type { ExpressionVariableCollection, ExpressionVariableModel } from './ExpressionVariableModel.js'
@@ -25,6 +26,8 @@ export interface ExportFullv6 extends ExportBase<'full'> {
 	customVariablesCollections?: CustomVariableCollection[] // Added in v4.1
 	expressionVariables?: Record<string, ExpressionVariableModel> // Added in v4.1
 	expressionVariablesCollections?: ExpressionVariableCollection[] // Added in v4.1
+	customActions?: Record<string, CustomActionModel> // Added in v5.2
+	customActionCollections?: CustomActionCollection[] // Added in v5.2
 	instances?: ExportInstancesv6
 	connectionCollections?: ConnectionCollection[] // Added in v4.1
 	surfaces?: unknown // Record<number, SurfaceConfig>

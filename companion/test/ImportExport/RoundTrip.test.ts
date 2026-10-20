@@ -3,7 +3,11 @@ import Express from 'express'
 import supertest from 'supertest'
 import { describe, expect, test } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
-import { CreateExpressionVariableControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
+import {
+	CreateCustomActionControlId,
+	CreateExpressionVariableControlId,
+	CreateTriggerControlId,
+} from '@companion-app/shared/ControlId.js'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
@@ -67,6 +71,14 @@ function makeExpressionVariable(variableId: string, expression: string) {
 	} as any
 }
 
+function makeCustomAction(customActionId: string, name: string) {
+	return {
+		controlId: CreateCustomActionControlId(customActionId),
+		toJSON: () => ({ type: 'custom-action', options: { name }, inputs: [], actions: [], localVariables: [] }),
+		collectReferencedConnectionsAndVariables: () => {},
+	} as any
+}
+
 /**
  * Build an ExportController backed by a representative, fully-populated config: a page with a button,
  * a trigger, an expression variable, a connection, surfaces (known/remote/instances) and image
@@ -104,6 +116,8 @@ function createExportController() {
 	])
 	controls.getAllExpressionVariables.mockReturnValue([makeExpressionVariable('ev-1', '1 + 1')])
 	controls.exportExpressionVariableCollections.mockReturnValue([])
+	controls.getAllCustomActions.mockReturnValue([makeCustomAction('ca-1', 'My Custom Action')])
+	controls.exportCustomActionCollections.mockReturnValue([])
 
 	instance.exportAllConnections.mockReturnValue({
 		'conn-1': {
@@ -236,6 +250,7 @@ describe('export/import round-trip', () => {
 			expect(exp.pages[1].controls[0][0].type).toBe('button-layered')
 			expect(Object.keys(exp.triggers)).toContain('trig-1')
 			expect(Object.keys(exp.expressionVariables)).toContain('ev-1')
+			expect(Object.keys(exp.customActions)).toContain('ca-1')
 			expect(exp.custom_variables.myvar).toBeDefined()
 			expect(exp.instances['conn-1'].label).toBe('my-connection')
 			expect(exp.surfaces['surface-1']).toBeDefined()
