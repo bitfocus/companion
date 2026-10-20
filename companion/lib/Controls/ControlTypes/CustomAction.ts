@@ -238,6 +238,11 @@ export class ControlCustomAction
 	 * @returns The result of the custom action
 	 */
 	async executeCall(options: CompanionOptionValues, extras: RunActionExtras): Promise<JsonValue | undefined> {
+		if (extras.frame?.customActionControlId === this.controlId) {
+			this.logger.warn(`Not running "${this.options.name}", as a custom action can't run itself`)
+			return undefined
+		}
+
 		const depth = (extras.frame?.depth ?? 0) + 1
 		if (depth > MAX_CUSTOM_ACTION_DEPTH) {
 			this.logger.warn(`Not running "${this.options.name}", as custom actions are nested too deeply`)

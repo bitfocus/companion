@@ -1,10 +1,12 @@
-import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
+import { isCustomActionsConnectionId, isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
+import { getCustomActionCallDefinition, type CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
+	type EntityOwner,
 	type ResolvedFeedbackStyleOverride,
+	type SomeEntityModel,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
@@ -122,6 +124,42 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 		}
 
 		return createParser(values)
+	}
+
+	/**
+	 * A custom action can't run itself, so refuse to add any action which would
+	 */
+	override entityAdd(
+		listId: SomeSocketEntityLocation,
+		ownerId: EntityOwner | null,
+		...entityModels: SomeEntityModel[]
+	): boolean {
+		if (this.#containsSelfCall(entityModels)) return false
+		return super.entityAdd(listId, ownerId, ...entityModels)
+	}
+
+	override entityReplaceAll(listId: SomeSocketEntityLocation, entities: SomeEntityModel[]): boolean {
+		if (this.#containsSelfCall(entities)) return false
+		return super.entityReplaceAll(listId, entities)
+	}
+
+	override entitySetConnection(listId: SomeSocketEntityLocation, id: string, connectionId: string | number): boolean {
+		if (isCustomActionsConnectionId(String(connectionId))) return false
+		return super.entitySetConnection(listId, id, connectionId)
+	}
+
+	/**
+	 * Check if any of some entities (or their children) is an action which runs this custom action
+	 */
+	#containsSelfCall(entityModels: SomeEntityModel[]): boolean {
+		const selfCall = getCustomActionCallDefinition(this.controlId)
+		if (!selfCall) return false
+
+		return entityModels.some(
+			(entity) =>
+				(entity.connectionId === selfCall.connectionId && entity.definitionId === selfCall.definitionId) ||
+				Object.values(entity.children ?? {}).some((children) => this.#containsSelfCall(children ?? []))
+		)
 	}
 
 	/**

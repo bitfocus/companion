@@ -245,6 +245,20 @@ describe('ControlCustomAction', () => {
 		})
 	})
 
+	describe('actions', () => {
+		test('an action which calls the custom action itself can not be added', () => {
+			const { control } = createHarness({})
+
+			expect(control.entities.entityAdd('custom_action_actions', null, callAction())).toBe(false)
+			expect(control.entities.entityAdd('custom_action_actions', null, callAction({}, 'other'))).toBe(true)
+
+			const group: ActionEntityModel = { ...action('logic_if'), children: { actions: [callAction()] } }
+			expect(control.entities.entityReplaceAll('custom_action_actions', [group])).toBe(false)
+
+			expect(control.entities.getActionEntities()).toHaveLength(1)
+		})
+	})
+
 	describe('inputs', () => {
 		test('adds, moves and removes inputs', () => {
 			const { control } = createHarness({})
@@ -498,7 +512,8 @@ describe('ControlCustomAction', () => {
 			expect(ran).toEqual(['first'])
 		})
 
-		test('recursion is limited', async () => {
+		test('a custom action which calls itself does not run itself', async () => {
+			// Saved before calling itself was prevented
 			const { executeAction, runAsButton } = createHarness({ actions: [action('count'), callAction()] })
 			let count = 0
 			executeAction.mockImplementation(async () => {
@@ -507,7 +522,36 @@ describe('ControlCustomAction', () => {
 
 			await runAsButton([callAction()], { executionMode: 'sequential' })
 
-			expect(count).toBe(16)
+			expect(count).toBe(1)
+		})
+
+		test('custom actions calling each other are limited in depth', async () => {
+			const { deps, controlStore, executeAction, runAsButton } = createHarness({
+				actions: [action('count'), callAction({}, 'other')],
+			})
+			const other = new ControlCustomAction(
+				deps,
+				CreateCustomActionControlId('other'),
+				{
+					type: 'custom-action',
+					options: { ...ControlCustomAction.DefaultOptions },
+					inputs: [],
+					actions: [callAction()],
+					localVariables: [],
+				},
+				false
+			)
+			controlStore.controls.set(other.controlId, other)
+
+			let count = 0
+			executeAction.mockImplementation(async () => {
+				count++
+			})
+
+			await runAsButton([callAction()], { executionMode: 'sequential' })
+
+			// The first custom action runs on every other level, of the 16 allowed
+			expect(count).toBe(8)
 		})
 
 		test('an unknown custom action does nothing', async () => {

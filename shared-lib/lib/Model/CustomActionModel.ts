@@ -1,9 +1,24 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import { CUSTOM_ACTIONS_CONNECTION_ID } from '../ConnectionId.js'
+import { ParseControlId } from '../ControlId.js'
 import type { CollectionBase } from './Collections.js'
 import type { SomeEntityModel } from './EntityModel.js'
 import { SomeCompanionInputFieldSchema, type SomeCompanionInputField } from './Options.js'
 
 export type CustomActionCollection = CollectionBase<null>
+
+/**
+ * The action which runs a control, if the control is a custom action. A custom action can't contain this action, as
+ * it would run itself
+ */
+export function getCustomActionCallDefinition(
+	controlId: string
+): { connectionId: string; definitionId: string } | null {
+	const parsedId = ParseControlId(controlId)
+	if (parsedId?.type !== 'custom-action') return null
+
+	return { connectionId: CUSTOM_ACTIONS_CONNECTION_ID, definitionId: parsedId.customActionId }
+}
 
 /** The types of input field which can't be used for the inputs of a custom action */
 const DISALLOWED_INPUT_TYPES: ReadonlySet<SomeCompanionInputField['type']> = new Set(['secret-text', 'bonjour-device'])
