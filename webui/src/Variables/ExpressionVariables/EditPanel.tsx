@@ -61,7 +61,9 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 
 	const localVariablesStore = useLocalVariablesStore(
 		controlId,
-		controlConfig?.config?.type === 'expression-variable' ? controlConfig.config.localVariables : null
+		controlConfig?.config?.type === 'expression-variable' ? controlConfig.config.localVariables : null,
+		null,
+		null
 	)
 
 	return (

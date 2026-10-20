@@ -23,7 +23,7 @@ export const ButtonLocationInput = observer(function ButtonLocationInput({
 	value,
 	setValue,
 }: ButtonLocationInputProps) {
-	const localVariablesStore = useLocalVariablesStore(controlId, null)
+	const localVariablesStore = useLocalVariablesStore(controlId, null, null, null)
 	const localVariables = localVariablesStore.getOptions({
 		entityType: null,
 		internalParser: true,

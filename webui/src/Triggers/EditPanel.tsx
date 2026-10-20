@@ -81,7 +81,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 		[setOptionsFieldMutation, controlId]
 	)
 
-	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables)
+	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables, null, null)
 
 	return (
 		<div className="flex-1 min-h-0 flex flex-col overflow-hidden">
