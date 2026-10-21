@@ -186,6 +186,17 @@ export abstract class ControlBase<TJson> {
 	}
 
 	/**
+	 * Abort the in progress action runs of this control. A remote button forwards it to the button it shows. Controls
+	 * that run no actions (the default) have nothing to abort
+	 * @param skip_up Mark the button as released
+	 * @param exceptSignal A run to leave running
+	 * @param linkHops How many installations the abort has come through over Link, so that a loop of remote buttons ends
+	 */
+	abortDelayedActions(_skip_up: boolean, _exceptSignal: AbortSignal | null, _linkHops: number): void {
+		// Nothing to do
+	}
+
+	/**
 	 * The control id this control currently forwards to, for controls that mirror another (button-reference).
 	 * Controls that don't (the default) return null.
 	 */

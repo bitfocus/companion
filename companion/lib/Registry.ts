@@ -150,6 +150,7 @@ export class Registry {
 	readonly metrics: DataMetrics
 
 	readonly #renderClock: RenderClock
+	readonly #serviceApi: ServiceApi
 
 	/**
 	 * The 'data' controller
@@ -289,6 +290,7 @@ export class Registry {
 			this.#appInfo,
 			this.db,
 			this.userconfig,
+			pageStore,
 			LINK_TRANSPORT_DEFINITIONS,
 			LINK_BUILTIN_TRANSPORTS
 		)
@@ -305,6 +307,7 @@ export class Registry {
 			graphics: this.graphics,
 			actionRunner: actionRunner,
 			renderClock: this.#renderClock,
+			linkButtons: this.link.buttonClient,
 		})
 		this.preview = new PreviewController(
 			this.instance.definitions,
@@ -345,7 +348,7 @@ export class Registry {
 			this.variables
 		)
 
-		const serviceApi = new ServiceApi(
+		this.#serviceApi = new ServiceApi(
 			this.#appInfo,
 			pageStore,
 			controlStore,
@@ -359,7 +362,7 @@ export class Registry {
 
 		this.services = new ServiceController(
 			this.#appInfo,
-			serviceApi,
+			this.#serviceApi,
 			this.userconfig,
 			oscSender,
 			this.surfaces,
@@ -449,6 +452,7 @@ export class Registry {
 		this.graphics.on('button_drawn', (location, render) => {
 			this.controls.onButtonDrawn(location, render)
 			this.services.onButtonDrawn(location, render)
+			this.link.onButtonDrawn(location, render)
 		})
 	}
 
@@ -527,8 +531,8 @@ export class Registry {
 			})
 			this.rebindHttp(bindIp, bindPort)
 
-			// Everything is ready, so start linking with other installations
-			this.link.start()
+			// Everything is ready to serve buttons, so start linking with other installations
+			this.link.start(this.#serviceApi)
 
 			// Startup has completed, run triggers
 			this.controls.triggerEvents.emit('startup')

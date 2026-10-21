@@ -693,23 +693,22 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 
 					break
 				} else if (rawControlId === 'this-all-runs') {
-					const control = this.#controlsStore.getControl(extras.controlId)
-					if (control && control.supportsActions) {
-						control.abortDelayedActions(Boolean(action.options.unlatch), null)
-					}
+					this.#controlsStore
+						.getControl(extras.controlId)
+						?.abortDelayedActions(Boolean(action.options.unlatch), null, 0)
 
 					break
 				}
 
 				const { theControlId } = this.#fetchLocationAndControlId(action.options, extras)
 				if (theControlId) {
-					const control = this.#controlsStore.getControl(theControlId)
-					if (control && control.supportsActions) {
-						control.abortDelayedActions(
+					this.#controlsStore
+						.getControl(theControlId)
+						?.abortDelayedActions(
 							Boolean(action.options.unlatch),
-							theControlId === extras.controlId ? extras.abortDelayed : null
+							theControlId === extras.controlId ? extras.abortDelayed : null,
+							0
 						)
-					}
 				}
 				break
 			}
@@ -723,10 +722,9 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 					for (const controlId of controlIdsOnPage) {
 						if (action.options.ignoreSelf && controlId === extras.controlId) continue
 
-						const control = this.#controlsStore.getControl(controlId)
-						if (control && control.supportsActions) {
-							control.abortDelayedActions(false, action.options.ignoreCurrent ? extras.abortDelayed : null)
-						}
+						this.#controlsStore
+							.getControl(controlId)
+							?.abortDelayedActions(false, action.options.ignoreCurrent ? extras.abortDelayed : null, 0)
 					}
 				}
 				break
@@ -740,11 +738,11 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 					const control = this.#controlsStore.getControl(controlId)
 					if (control && control.supportsActions) {
 						if (rawControlId === 'self') {
-							control.abortDelayedActions(false, extras.abortDelayed)
+							control.abortDelayedActions(false, extras.abortDelayed, 0)
 						} else if (rawControlId === 'self:only-this-run') {
 							control.abortDelayedActionsSingle(false, extras.abortDelayed)
 						} else {
-							control.abortDelayedActions(false, null)
+							control.abortDelayedActions(false, null, 0)
 						}
 					}
 				}

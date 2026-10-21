@@ -1,10 +1,11 @@
 import getPort from 'get-port'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	DirectClientTransportDefinition,
 	DirectServerBuiltinTransport,
 } from '../../lib/Link/Transports/Direct/index.js'
-import { LinkInstallation } from './helpers/LinkInstallation.js'
+import { fakeRender, LinkInstallation } from './helpers/LinkInstallation.js'
 import { LoopbackNetwork, loopbackTransportDefinition, type LoopbackTransport } from './helpers/LoopbackTransport.js'
 
 // Bind to ipv4: some sandboxed environments have no ipv6 at all. Hoisted so it is set before the constants load
@@ -87,6 +88,8 @@ const NETWORKS = [
 	{ name: 'direct', link: linkDirectly, pair: pairDirectly },
 ]
 
+const location: ControlLocation = { pageNumber: 1, row: 0, column: 0 }
+
 describe.each(NETWORKS)('two installations linked over $name', { timeout: 20_000 }, (network) => {
 	let a: LinkInstallation
 	let b: LinkInstallation
@@ -110,6 +113,13 @@ describe.each(NETWORKS)('two installations linked over $name', { timeout: 20_000
 		await Promise.all([a.stop(), b.stop()])
 	})
 
+	/** Show a button of A on B, as a Remote button there would */
+	function showOnB(controlId: string, target: ControlLocation) {
+		const onChange = vi.fn()
+		b.controller.buttonClient.setTarget(controlId, { peerId: aId, location: target }, onChange)
+		return { onChange, state: () => b.controller.buttonClient.getState(controlId) }
+	}
+
 	async function shareButtons(from: LinkInstallation, withId: string, buttons: boolean) {
 		await from.api.setPeerPermissions({ peerId: withId, permissions: { buttons } })
 	}
@@ -128,18 +138,90 @@ describe.each(NETWORKS)('two installations linked over $name', { timeout: 20_000
 		})
 	})
 
-	test('what is shared is told to the other installation', async () => {
-		expect((await b.peers()).find((p) => p.id === aId)?.sharedWithUs).toEqual({ buttons: false })
+	test('nothing is shared until the user says so', async () => {
+		const button = showOnB('remote', location)
+		await vi.waitFor(() => expect(button.state()?.status).toBe('denied'))
+		// Not even sent, as A has said it doesn't share its buttons. A refusing a peer that sends anyway is tested in
+		// Controller.test.ts
+		b.controller.buttonClient.press('remote', true, 'surface')
 
+		// Once shared, the button loads: everything sent before that has arrived, and nothing was pressed
 		await shareButtons(a, bId, true)
-		await vi.waitFor(async () =>
-			expect((await b.peers()).find((p) => p.id === aId)?.sharedWithUs).toEqual({ buttons: true })
+		await vi.waitFor(() => expect(button.state()?.status).toBe('ok'))
+		expect(a.host.pressControl).not.toHaveBeenCalled()
+	})
+
+	test('a shared button is shown, redrawn, pressed, rotated and aborted over the link', async () => {
+		await shareButtons(a, bId, true)
+		const button = showOnB('remote', location)
+
+		await vi.waitFor(() =>
+			expect(button.state()).toMatchObject({
+				status: 'ok',
+				peerName: 'Studio A',
+				dataUrl: 'data:image/png;base64,Studio A-1/0/0',
+				pressed: false,
+			})
+		)
+
+		a.controller.onButtonDrawn(location, fakeRender('Studio A-redrawn', true))
+		await vi.waitFor(() =>
+			expect(button.state()).toMatchObject({ dataUrl: 'data:image/png;base64,Studio A-redrawn', pressed: true })
+		)
+
+		b.controller.buttonClient.press('remote', true, 'surface')
+		expect(b.controller.buttonClient.rotate('remote', -1, 'surface')).toBe(true)
+		b.controller.buttonClient.abort('remote', true, 0)
+		await vi.waitFor(() => {
+			expect(a.host.pressControl).toHaveBeenCalledWith('control-1/0/0', true, `link:${bId}:surface`)
+			expect(a.host.rotateControl).toHaveBeenCalledWith('control-1/0/0', -1, `link:${bId}:surface`)
+			expect(a.host.abortControl).toHaveBeenCalledWith('control-1/0/0', true, 1)
+		})
+	})
+
+	test('what is in use is counted on both installations', async () => {
+		await shareButtons(a, bId, true)
+		const button = showOnB('remote', location)
+		showOnB('same', location)
+		showOnB('other', { ...location, column: 1 })
+		await vi.waitFor(() => expect(button.state()?.status).toBe('ok'))
+
+		await vi.waitFor(async () => {
+			expect((await a.api.peerUsage({ peerId: bId })).buttons).toEqual({ oursUsedThere: 2, theirsUsedHere: 0 })
+			expect((await b.api.peerUsage({ peerId: aId })).buttons).toEqual({ oursUsedThere: 0, theirsUsedHere: 2 })
+		})
+	})
+
+	test('stopping sharing applies straight away, releasing what was held', async () => {
+		await shareButtons(a, bId, true)
+		const button = showOnB('remote', location)
+		await vi.waitFor(() => expect(button.state()?.status).toBe('ok'))
+		b.controller.buttonClient.press('remote', true, 'surface')
+		await vi.waitFor(() =>
+			expect(a.host.pressControl).toHaveBeenCalledWith('control-1/0/0', true, `link:${bId}:surface`)
 		)
 
 		await shareButtons(a, bId, false)
-		await vi.waitFor(async () =>
-			expect((await b.peers()).find((p) => p.id === aId)?.sharedWithUs).toEqual({ buttons: false })
-		)
+		expect(a.host.pressControl).toHaveBeenLastCalledWith('control-1/0/0', false, `link:${bId}:surface`)
+		await vi.waitFor(() => expect(button.state()?.status).toBe('denied'))
+		expect((await a.api.peerUsage({ peerId: bId })).buttons.oursUsedThere).toBe(0)
+	})
+
+	test('a button linked back to the installation it shows is reported as a loop', async () => {
+		await shareButtons(a, bId, true)
+		await shareButtons(b, aId, true)
+
+		// B shows A's button, at a location that A shows from B: each image would carry the other's
+		const locationOnA = location
+		const locationOnB = { ...location, column: 1 }
+		b.placeRemoteButton(locationOnB, 'remote-on-b')
+		a.placeRemoteButton(locationOnA, 'remote-on-a')
+
+		const onB = showOnB('remote-on-b', locationOnA)
+		await vi.waitFor(() => expect(onB.state()?.status).toBe('ok'))
+
+		a.controller.buttonClient.setTarget('remote-on-a', { peerId: bId, location: locationOnB }, vi.fn())
+		await vi.waitFor(() => expect(a.controller.buttonClient.getState('remote-on-a')?.status).toBe('loop'))
 	})
 
 	test('when an installation stops, the other sees it go offline', async () => {

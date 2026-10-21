@@ -2,16 +2,26 @@ import { EventEmitter } from 'node:events'
 import os from 'node:os'
 import isEqual from 'fast-deep-equal'
 import z from 'zod'
-import type { BonjourQuery } from '@companion-app/shared/Model/Common.js'
-import type { ClientLinkTransportType, LinkPeerInfo, LinkSelfInfo } from '@companion-app/shared/Model/Link.js'
+import type { BonjourQuery, ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type {
+	ClientLinkTransportType,
+	LinkPeerInfo,
+	LinkPeerUsage,
+	LinkPermission,
+	LinkSelfInfo,
+} from '@companion-app/shared/Model/Link.js'
 import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { ImageResult } from '../Graphics/ImageResult.js'
 import LogController from '../Log/Controller.js'
+import type { IPageStore } from '../Page/Store.js'
 import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import { LinkButtonClient } from './ButtonClient.js'
+import { LinkButtonServer, type LinkButtonServerHost } from './ButtonServer.js'
 import { formatLinkIdFingerprint, LinkIdentity } from './Identity.js'
 import { LinkPeerRegistry } from './PeerRegistry.js'
 import { LinkPermissionStore } from './PermissionStore.js'
@@ -28,6 +38,9 @@ import { LinkTransportManager } from './TransportManager.js'
 import { DIRECT_MDNS_LINK_ID_TXT } from './Transports/Direct/Constants.js'
 import type { LinkMessageOrigin, SomeLinkBuiltinTransport, SomeLinkTransportDefinition } from './Transports/Types.js'
 
+/** What Link needs from the rest of Companion to serve buttons to peers */
+export type LinkHost = Omit<LinkButtonServerHost, 'send' | 'getSourceChain' | 'getClockOffset'>
+
 interface LinkControllerEvents {
 	self: [info: LinkSelfInfo]
 	peers: [peers: LinkPeerInfo[]]
@@ -42,13 +55,18 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 
 	readonly #appInfo: AppInfo
 	readonly #userconfig: DataUserConfig
+	readonly #pageStore: IPageStore
 	readonly #table: DataStoreTableView<{ identity: string }>
 
 	readonly #transports: LinkTransportManager
 	readonly #peers: LinkPeerRegistry
 	readonly #pinger: LinkPinger
 	readonly #permissions: LinkPermissionStore
+	readonly #buttonServer: LinkButtonServer
+	/** Used by link buttons to subscribe to remote buttons */
+	readonly buttonClient: LinkButtonClient
 
+	#host: LinkHost | null = null
 	#started = false
 	#identity: LinkIdentity
 	#selfId: string
@@ -63,6 +81,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		appInfo: AppInfo,
 		db: DataDatabase,
 		userconfig: DataUserConfig,
+		pageStore: IPageStore,
 		transportDefinitions: readonly SomeLinkTransportDefinition[],
 		builtinTransports: readonly SomeLinkBuiltinTransport[]
 	) {
@@ -71,6 +90,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 
 		this.#appInfo = appInfo
 		this.#userconfig = userconfig
+		this.#pageStore = pageStore
 		this.#table = db.getTableView('link')
 		this.#transportDefinitions = transportDefinitions
 		this.#builtinTransports = builtinTransports
@@ -94,6 +114,27 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		this.#pinger = new LinkPinger(this.#peers, (peerId, transportId, nonce) =>
 			this.#transports.sendTo(transportId, peerId, encodeLinkMessage('ping', { nonce }))
 		)
+		this.buttonClient = new LinkButtonClient(
+			() => this.#selfId,
+			this.#peers,
+			(transportId, peerId, payload) => this.#transports.sendTo(transportId, peerId, payload)
+		)
+		this.#buttonServer = new LinkButtonServer(
+			{
+				getCachedRenderOrGeneratePlaceholder: (location) =>
+					this.#requireHost().getCachedRenderOrGeneratePlaceholder(location),
+				getControlIdAt: (location) => this.#requireHost().getControlIdAt(location),
+				pressControl: (controlId, pressed, surfaceId) =>
+					this.#requireHost().pressControl(controlId, pressed, surfaceId),
+				rotateControl: (controlId, delta, surfaceId) => this.#requireHost().rotateControl(controlId, delta, surfaceId),
+				abortControl: (controlId, unlatch, hops) => this.#requireHost().abortControl(controlId, unlatch, hops),
+				getSourceChain: (location) => this.#getSourceChain(location),
+				getClockOffset: (peerId) => this.#peers.getClockOffset(peerId),
+				// Images only go to leaseholders, which are only allowed peers, and are dropped when that changes (see revoke)
+				send: (transportId, peerId, payload) => this.#transports.sendTo(transportId, peerId, payload),
+			},
+			() => this.#selfId
+		)
 
 		this.#transports.events.on('announcement', (transportId, peerId, payload) =>
 			this.#handleAnnouncement(transportId, peerId, payload)
@@ -101,9 +142,11 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		this.#transports.events.on('message', (transportId, payload, origin) =>
 			this.#handleMessage(transportId, payload, origin)
 		)
-		this.#permissions.on('changed', (peerId) => {
+		this.#permissions.on('changed', (peerId, permissions) => {
 			this.emit('peers', this.#peers.getPeers())
 			for (const transportId of this.#peers.getReachableTransports(peerId, null)) this.#sendAccess(peerId, transportId)
+			// Stop serving anything it is no longer allowed straight away, rather than when its lease runs out
+			if (!permissions.buttons) this.#buttonServer.revoke(peerId)
 		})
 		this.#transports.events.on('transportConnected', (transportId) => this.#announce(transportId))
 		this.#transports.events.on('transportDisconnected', (transportId) =>
@@ -135,16 +178,19 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			.catch((e) => this.#logger.error(`Failed to configure ${builtin.definition.name}: ${stringifyError(e)}`))
 	}
 
-	/** Start linking. Called once the rest of Companion is ready */
-	start(): void {
+	/** Start linking. Called once the rest of Companion is ready to serve buttons */
+	start(host: LinkHost): void {
+		this.#host = host
 		this.#started = true
 
 		this.#peers.start()
+		this.buttonClient.start()
 		this.#transports.start()
 
 		this.#announceTimer = setInterval(() => {
 			this.#announce(null)
 			this.#pinger.pingAll(Date.now())
+			this.#buttonServer.expireLeases(Date.now())
 		}, LINK_ANNOUNCE_INTERVAL_MS)
 	}
 
@@ -156,11 +202,22 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		this.#announceTimer = null
 		this.#pinger.clear()
 
+		this.buttonClient.stop()
 		this.#peers.stop()
+		this.#buttonServer.clear()
 
 		await this.#transports.stopAll()
 		// An id regeneration in progress saves the new identity, which must happen before the database is closed
 		await this.#regenerating.catch(() => {})
+	}
+
+	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
+		this.#buttonServer.onButtonDrawn(location, render)
+	}
+
+	#requireHost(): LinkHost {
+		if (!this.#host) throw new Error('Link has not been started')
+		return this.#host
 	}
 
 	#getSelfInfo(): LinkSelfInfo {
@@ -193,6 +250,11 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		} else {
 			this.#transports.announceAll(payload)
 		}
+	}
+
+	#getSourceChain(location: ControlLocation): string[] {
+		const controlId = this.#pageStore.getControlIdAt(location)
+		return (controlId && this.buttonClient.getState(controlId)?.sourceChain) || []
 	}
 
 	/** Tell a peer what it may use of this installation, over a transport it is reachable on */
@@ -248,11 +310,46 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			case 'pong':
 				this.#pinger.handlePong(senderId, transportId, message.payload.nonce, message.payload.time, Date.now())
 				break
-			default:
-				// Button messages are not handled yet
-				this.#logger.debug(`Unhandled message type ${message.type} from ${senderId}`)
+			case 'subscribe':
+				if (this.#isAllowed(senderId, 'buttons', message.type)) {
+					this.#buttonServer.handleSubscribe(senderId, transportId, message.payload, Date.now())
+				} else {
+					this.#buttonServer.refuseSubscribe(senderId, transportId, message.payload, 'denied')
+				}
+				break
+			case 'unsubscribe':
+				this.#buttonServer.handleUnsubscribe(senderId, message.payload)
+				break
+			case 'button.press':
+				if (this.#isAllowed(senderId, 'buttons', message.type)) {
+					this.#buttonServer.handlePress(senderId, message.payload, Date.now())
+				}
+				break
+			case 'button.rotate':
+				if (this.#isAllowed(senderId, 'buttons', message.type)) {
+					this.#buttonServer.handleRotate(senderId, message.payload, Date.now())
+				}
+				break
+			case 'button.abort':
+				if (this.#isAllowed(senderId, 'buttons', message.type)) {
+					this.#buttonServer.handleAbort(senderId, message.payload, Date.now())
+				}
+				break
+			case 'subscribe.refused':
+				this.buttonClient.handleRefused(senderId, message.payload)
+				break
+			case 'button.update':
+				// Only accepted for a button we are subscribed to with its sender
+				this.buttonClient.handleUpdate(senderId, message.payload)
 				break
 		}
+	}
+
+	/** Whether the installation a message came from may use something, as chosen by the user */
+	#isAllowed(peerId: string, permission: LinkPermission, type: string): boolean {
+		if (this.#permissions.get(peerId)[permission]) return true
+		this.#logger.debug(`Ignoring ${type} from ${peerId}, it is not allowed ${permission}`)
+		return false
 	}
 
 	/** The identity of this installation, generated the first time */
@@ -280,6 +377,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		this.#table.setPrimitive('identity', this.#identity.toStored())
 		this.#selfId = this.#identity.id
 		this.#peers.setSelfId(this.#selfId)
+		this.#buttonServer.clear()
 
 		if (this.#started) this.#transports.start()
 
@@ -393,6 +491,13 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			removeTransport: publicProcedure
 				.input(z.object({ id: z.string() }))
 				.mutation(async ({ input }) => this.#transports.remove(input.id)),
+
+			peerUsage: publicProcedure.input(z.object({ peerId: z.string() })).query(({ input }): LinkPeerUsage => ({
+				buttons: {
+					oursUsedThere: this.#buttonServer.countSubscribedBy(input.peerId),
+					theirsUsedHere: this.buttonClient.countSubscribedTo(input.peerId),
+				},
+			})),
 
 			forgetPeer: publicProcedure.input(z.object({ peerId: z.string() })).mutation(({ input }) => {
 				// Before it is forgotten, so that it is told it no longer has access while it can still be reached

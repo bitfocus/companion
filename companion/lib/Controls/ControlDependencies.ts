@@ -12,6 +12,7 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
+import type { LinkButtonClient } from '../Link/ButtonClient.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
@@ -44,6 +45,9 @@ export interface ControlExternalDependencies {
 	readonly actionRunner: ActionRunner
 
 	readonly renderClock: RenderClock
+
+	/** Subscribes link buttons to the remote buttons they show */
+	readonly linkButtons: LinkButtonClient
 }
 
 export interface ControlDependencies extends ControlExternalDependencies {
