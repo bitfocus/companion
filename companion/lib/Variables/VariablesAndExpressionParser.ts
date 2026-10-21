@@ -36,6 +36,11 @@ export interface ExpressionParserOptions {
 	 * (e.g. when parsing action options), so such expressions are rejected rather than silently frozen.
 	 */
 	allowClockSensitive?: boolean
+	/**
+	 * `this:*` variables to leave unresolved, for contexts where they would be self-referential
+	 * (e.g. `this:step` within the step expression which defines it).
+	 */
+	blockedThisVariables?: ReadonlySet<string>
 }
 
 /**
@@ -96,6 +101,10 @@ export class VariablesAndExpressionParser {
 		this.#options = options ?? {}
 		this.#rawVariableValues = rawVariableValues
 		this.#thisValues = thisValues
+		if (this.#options.blockedThisVariables) {
+			const blocked = this.#options.blockedThisVariables
+			this.#thisValues = new Map([...thisValues].filter(([id]) => !blocked.has(id)))
+		}
 		this.#overrideVariableValues = overrideVariableValues || {}
 
 		if (localValues) this.#bindLocalVariables(localValues)

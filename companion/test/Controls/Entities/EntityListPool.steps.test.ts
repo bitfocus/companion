@@ -312,6 +312,19 @@ describe('EntityListPool - expression step progression', () => {
 		expect(pool.getActiveStepIndex()).toBe(1)
 	})
 
+	test('the step expression may not reference this:step', () => {
+		const { pool, variableValues } = createPool()
+		pool.stepExpressionUpdate({ stepProgression: 'expression', stepExpression: '$(this:step)' })
+
+		expect(variableValues.createVariablesAndExpressionParser).toHaveBeenLastCalledWith(
+			null,
+			[],
+			null,
+			null,
+			expect.objectContaining({ blockedThisVariables: new Set(['this:step']) })
+		)
+	})
+
 	test('manual navigation is rejected while in expression mode', () => {
 		const { pool } = createPool()
 		pool.stepAdd() // '1'

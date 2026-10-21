@@ -123,7 +123,12 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 									<div className="mt-2">
 										{/* Wrap the entity-category, for :first-child to work */}
 										<MyErrorBoundary>
-											<ControlOptionsEditor options={config.options} configRef={configRef} controlId={controlId} />
+											<ControlOptionsEditor
+												options={config.options}
+												configRef={configRef}
+												controlId={controlId}
+												localVariablesStore={localVariablesStore}
+											/>
 										</MyErrorBoundary>
 									</div>
 								)

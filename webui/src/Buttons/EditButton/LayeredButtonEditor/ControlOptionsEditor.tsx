@@ -1,5 +1,7 @@
+import { observer } from 'mobx-react-lite'
 import { useCallback, useId, useRef, type MutableRefObject } from 'react'
 import type { JsonValue } from 'type-fest'
+import { StepExpressionBlockedVariables } from '@companion-app/shared/ControlLocation.js'
 import type { LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import type { DropdownChoice } from '@companion-module/base'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
@@ -10,7 +12,7 @@ import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { InputFeatureIcons } from '~/Controls/InputFeatures'
-import { ControlLocalVariables } from '~/Controls/LocalVariablesStore.js'
+import { EntityListActionContext, type LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 
@@ -18,12 +20,14 @@ interface ControlOptionsEditorProps {
 	controlId: string
 	options: LayeredButtonOptions
 	configRef: MutableRefObject<any> // TODO
+	localVariablesStore: LocalVariablesStore
 }
 
-export function ControlOptionsEditor({
+export const ControlOptionsEditor = observer(function ControlOptionsEditor({
 	controlId,
 	options,
 	configRef,
+	localVariablesStore,
 }: ControlOptionsEditorProps): React.JSX.Element | null {
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
@@ -67,6 +71,15 @@ export function ControlOptionsEditor({
 		[setValueInner]
 	)
 
+	const localVariables = localVariablesStore
+		.getOptions({
+			entityType: null,
+			internalParser: false,
+			isLocatedInGrid: true,
+			actionContext: EntityListActionContext.NotActions,
+		})
+		.filter((v) => !StepExpressionBlockedVariables.has(String(v.value)))
+
 	const stepProgressionId = useId()
 	const stepExpressionId = useId()
 	const rotaryActionsId = useId()
@@ -101,7 +114,7 @@ export function ControlOptionsEditor({
 								id={stepExpressionId}
 								setValue={setStepExpressionValue}
 								value={options.stepExpression ?? ''}
-								localVariables={ControlLocalVariables}
+								localVariables={localVariables}
 							/>
 						</Grid.Col>
 					</>
@@ -131,7 +144,7 @@ export function ControlOptionsEditor({
 			</Form>
 		</>
 	)
-}
+})
 
 const STEP_PROGRESSION_CHOICES: DropdownChoice[] = [
 	{ id: 'auto', label: 'On button release' },

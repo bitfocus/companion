@@ -1,5 +1,6 @@
 import type { JsonValue } from 'type-fest'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
+import { StepExpressionBlockedVariables } from '@companion-app/shared/ControlLocation.js'
 import type { ActionSetId, ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { ButtonModelBase, ButtonOptionsBase, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import {
@@ -457,7 +458,10 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 
 		const stepIds = this.getStepIds()
 
-		const parser = this.createVariablesAndExpressionParser(null)
+		// The expression defines the step, so it must not depend on it
+		const parser = this.createVariablesAndExpressionParser(null, {
+			blockedThisVariables: StepExpressionBlockedVariables,
+		})
 
 		const latestValue = parser.executeExpression(this.currentStep.expression, 'number')
 		if (latestValue.ok) {
