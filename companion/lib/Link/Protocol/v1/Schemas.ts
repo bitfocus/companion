@@ -156,6 +156,20 @@ export const LinkButtonRotatePayloadSchema = z
 	})
 	.describe('Rotate an encoder button on a peer')
 
+export const LinkButtonAbortPayloadSchema = z
+	.object({
+		id: MessageIdSchema,
+		expiresAt: ExpiresAtSchema,
+		button: LinkButtonRefSchema,
+		unlatch: z.boolean().describe('Whether to also release the button, if it is latched'),
+		hops: z
+			.number()
+			.int()
+			.min(0)
+			.describe('How many installations this abort has already been forwarded through, used to detect loops'),
+	})
+	.describe('Abort the running actions of a button on a peer')
+
 export const LinkPingPayloadSchema = z
 	.object({ nonce: z.string().min(1).max(64).describe('Echoed in the pong, to match it to this ping') })
 	.describe(
@@ -188,6 +202,7 @@ export const LinkMessageSchema = z.discriminatedUnion('type', [
 	envelope('button.update', LinkButtonUpdatePayloadSchema),
 	envelope('button.press', LinkButtonPressPayloadSchema),
 	envelope('button.rotate', LinkButtonRotatePayloadSchema),
+	envelope('button.abort', LinkButtonAbortPayloadSchema),
 	envelope('access', LinkAccessPayloadSchema),
 	envelope('ping', LinkPingPayloadSchema),
 	envelope('pong', LinkPongPayloadSchema),
@@ -201,6 +216,15 @@ export type LinkPayloadOfType<T extends LinkMessageType> = LinkMessageOfType<T>[
 export type LinkButtonRef = z.infer<typeof LinkButtonRefSchema>
 export type LinkButtonSubscription = z.infer<typeof LinkButtonSubscriptionSchema>
 export type LinkButtonRevision = z.infer<typeof LinkButtonRevisionSchema>
+export type LinkSubscribeRefusedReason = LinkPayloadOfType<'subscribe.refused'>['buttons'][number]['reason']
+
+/** A key identifying a button at a size, eg to keep the subscriptions to it in a map */
+export function linkButtonSubscriptionKey(sub: Pick<LinkButtonSubscription, 'button' | 'width' | 'height'>): string {
+	switch (sub.button.type) {
+		case 'location':
+			return `location/${sub.button.page}/${sub.button.row}/${sub.button.column}/${sub.width}x${sub.height}`
+	}
+}
 
 /** Serialise a message for the wire */
 export function encodeLinkMessage<T extends LinkMessageType>(type: T, payload: LinkPayloadOfType<T>): string {

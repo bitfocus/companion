@@ -186,6 +186,10 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 		return this.#controlStore.rotateControl(controlId, delta, surfaceId)
 	}
 
+	abortControl(controlId: string, unlatch: boolean, linkHops: number): void {
+		this.#controlStore.getControl(controlId)?.abortDelayedActions(unlatch, null, linkHops)
+	}
+
 	getControl(controlId: string): ServiceApiControl | null {
 		const control = this.#controlStore.getControl(controlId)
 		if (!control) return null

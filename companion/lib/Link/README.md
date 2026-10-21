@@ -50,6 +50,7 @@ definition.
 | `button.update`     | a subscriber | The render of a button, at a size                             |
 | `button.press`      | a peer       | Press or release a button of the peer                         |
 | `button.rotate`     | a peer       | Rotate an encoder button of the peer                          |
+| `button.abort`      | a peer       | Abort the running actions of a button of the peer             |
 | `ping`              | a peer       | Asks the peer for a `pong`, to measure the round trip         |
 | `pong`              | a peer       | The reply to a `ping`, with its time, over the same transport |
 
@@ -105,7 +106,7 @@ unnoticed (eg a press isn't held up waiting for it to time out). The protocol is
 already safe to receive more than once, in any order:
 
 - `button.update` has a revision: anything not newer than what is held is dropped
-- `button.press` and `button.rotate` have an `id`, unique to the sender, and an `expiresAt`: the receiver acts on the
+- `button.press`, `button.rotate` and `button.abort` have an `id`, unique to the sender, and an `expiresAt`: the receiver acts on the
   first copy, drops the rest, and drops any that arrive once expired (2 seconds after being sent), as acting on one
   late (eg a camera cut seconds after the button was pressed) is worse than not at all. So the receiver only remembers
   an id until it expires
@@ -175,7 +176,7 @@ Permissions are by Link id, stored in the core ([PermissionStore.ts](./Permissio
 installations. As the transports prove who sent each message, they are the same over every transport an installation
 is reachable on, however many there are. The core enforces them:
 
-- **Incoming**: button requests (`subscribe`, `button.press`, `button.rotate`) from an installation without
+- **Incoming**: button requests (`subscribe`, `button.press`, `button.rotate`, `button.abort`) from an installation without
   `buttons` are ignored
 - **Outgoing**: as every message goes to one installation, the core only sends one what it is allowed (button images
   need `buttons`)

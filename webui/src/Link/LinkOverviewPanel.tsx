@@ -1,6 +1,5 @@
 import { faLink, faRotate } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { Link } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useRef } from 'react'
 import { Button } from '~/Components/Button.js'
@@ -77,9 +76,10 @@ export const LinkOverviewPanel = observer(function LinkOverviewPanel(): React.JS
 				</EditSectionCard>
 
 				<NonIdealState icon={faLink}>
-					<p className="mb-1">Select an installation to choose what it may use.</p>
+					<p className="mb-1">Select an installation to choose what it may use, and see what it uses.</p>
 					<p className="text-sm text-muted mb-0">
-						Choose how to reach them under <Link to="/link/transports">Transports</Link>.
+						To show a button from another installation, choose <b>Remote button</b> when creating a button, or drag one
+						from <b>Other installations</b> in the <b>Presets</b> tab of the Buttons page.
 					</p>
 				</NonIdealState>
 			</div>

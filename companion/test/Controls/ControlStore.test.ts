@@ -200,21 +200,22 @@ describe('ControlStore', () => {
 	})
 
 	describe('abortAllDelayedActions', () => {
-		it('aborts only on action-backed controls, forwarding the exempt signal', () => {
+		it('aborts every control, forwarding the exempt signal', () => {
 			const withActions = addControl('bank:1', { supportsActions: true })
+			// Eg a remote button, which forwards it
 			const withoutActions = addControl('bank:2', { supportsActions: false })
 			const signal = new AbortController().signal
 
 			store.abortAllDelayedActions(signal)
 
-			expect(withActions.abortDelayedActions).toHaveBeenCalledWith(false, signal)
-			expect(withoutActions.abortDelayedActions).not.toHaveBeenCalled()
+			expect(withActions.abortDelayedActions).toHaveBeenCalledWith(false, signal, 0)
+			expect(withoutActions.abortDelayedActions).toHaveBeenCalledWith(false, signal, 0)
 		})
 
 		it('accepts a null signal', () => {
 			const withActions = addControl('bank:1', { supportsActions: true })
 			store.abortAllDelayedActions(null)
-			expect(withActions.abortDelayedActions).toHaveBeenCalledWith(false, null)
+			expect(withActions.abortDelayedActions).toHaveBeenCalledWith(false, null, 0)
 		})
 	})
 

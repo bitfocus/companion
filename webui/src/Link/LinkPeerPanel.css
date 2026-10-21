@@ -1,7 +1,7 @@
 /* What is shared with an installation, one row per thing that can be shared, with a column for each direction */
 .link-sharing-table {
 	display: grid;
-	/* Fixed widths, so that toggling a switch doesn't move the columns */
+	/* Fixed widths, so that toggling a switch (and its usage text) doesn't move the columns */
 	grid-template-columns: minmax(0, 1fr) 9rem 9rem;
 	align-items: center;
 	gap: 0.5rem 1.5rem;

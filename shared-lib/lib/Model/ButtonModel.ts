@@ -145,6 +145,47 @@ export const ButtonReferenceButtonModelSchema = z.object({
 
 export type ButtonReferenceButtonModel = z.output<typeof ButtonReferenceButtonModelSchema>
 
+/** The options of a link button, as stored. Each has a default, which an option that is missing or not valid gets */
+export const LinkButtonOptionsSchema = z.object({
+	/** The Link id of the installation to mirror a button from. Empty when not chosen yet */
+	peerId: z.string().default(''),
+	/** The grid location (page/row/column) of the button on that installation */
+	location: createExpressionOrValueSchema(z.string()).default({ value: '', isExpression: false }),
+	notes: z.string().optional(),
+})
+export type LinkButtonOptions = z.output<typeof LinkButtonOptionsSchema>
+
+/**
+ * A button that mirrors a button on another Companion installation, over Companion Link. It shows the remote
+ * button's image and forwards presses and rotation to it.
+ */
+export const LinkButtonModelSchema = z.object({
+	type: z.literal('link-button'),
+	options: LinkButtonOptionsSchema,
+})
+export type LinkButtonModel = z.output<typeof LinkButtonModelSchema>
+
+/**
+ * The options of a link button from data that may not be valid, eg as loaded or imported. Each option that is not
+ * valid is replaced by its default, so that one bad option doesn't lose the rest
+ * @returns the options, and the keys of those that were replaced
+ */
+export function parseLinkButtonOptions(raw: unknown): { options: LinkButtonOptions; invalidKeys: string[] } {
+	const input: Record<string, unknown> = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
+
+	const options: Record<string, unknown> = LinkButtonOptionsSchema.parse({})
+	const invalidKeys: string[] = []
+	for (const [key, schema] of Object.entries(LinkButtonOptionsSchema.shape)) {
+		if (input[key] === undefined) continue
+
+		const result = schema.safeParse(input[key])
+		if (result.success) options[key] = result.data
+		else invalidKeys.push(key)
+	}
+
+	return { options: options as LinkButtonOptions, invalidKeys }
+}
+
 export const SomeButtonModelSchema = z.discriminatedUnion('type', [
 	PageNumberButtonModelSchema,
 	PageUpButtonModelSchema,
@@ -152,6 +193,7 @@ export const SomeButtonModelSchema = z.discriminatedUnion('type', [
 	LayeredButtonModelSchema,
 	PresetReferenceButtonModelSchema,
 	ButtonReferenceButtonModelSchema,
+	LinkButtonModelSchema,
 ])
 
 export type SomeButtonModel = z.output<typeof SomeButtonModelSchema>

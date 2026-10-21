@@ -1,10 +1,12 @@
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetsModel } from '@companion-app/shared/Model/ActionModel.js'
-import type {
-	ButtonModelBase,
-	ButtonReferenceButtonModel,
-	LayeredButtonModel,
-	PresetReferenceButtonModel,
+import {
+	parseLinkButtonOptions,
+	type ButtonModelBase,
+	type ButtonReferenceButtonModel,
+	type LayeredButtonModel,
+	type LinkButtonModel,
+	type PresetReferenceButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExportControlv6, ExportTriggerContentv6 } from '@companion-app/shared/Model/ExportModel.js'
@@ -205,6 +207,23 @@ export function fixupButtonReferenceControl(
 
 	return {
 		type: 'button-reference',
+		options,
+	}
+}
+
+export function fixupLinkButtonControl(
+	control: ExportControlv6,
+	referencesUpdater: VisitorReferencesUpdater
+): LinkButtonModel {
+	// Anything not valid is replaced by its default, rather than refusing the whole button
+	const { options } = parseLinkButtonOptions(structuredClone(control.options))
+
+	// The peer is identified by its Link id, which is global so needs no remapping. Connection labels used in the
+	// location are remapped like for a button-reference
+	referencesUpdater.visitExpressionOrValue(options.location, true)
+
+	return {
+		type: 'link-button',
 		options,
 	}
 }

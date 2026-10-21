@@ -1,10 +1,5 @@
 import crypto, { type KeyObject } from 'node:crypto'
 
-/** A short, readable form of a Link id, for the user to recognise an installation by */
-export function formatLinkIdFingerprint(linkId: string): string {
-	return linkId.slice(0, 16).match(/.{4}/g)?.join('-') ?? linkId
-}
-
 /**
  * The identity of this installation: an Ed25519 key pair, generated once. Its public key is the Link id, so the id is
  * stable, and transports can prove it: by signing what they send (eg over a broker), or by authenticating with it
