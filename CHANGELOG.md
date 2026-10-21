@@ -1,5 +1,23 @@
 # Bitfocus Companion
 
+## Companion v5.1.1 - Release Notes
+
+### 🐞 BUG FIXES
+
+- offer page variables in step progression expression #4545
+- default local variable location to `this` on triggers #4526
+- block isVisibleExpression from referencing expression type fields
+- Support isVisibleExpression on composite element options #4531
+- emulator buttons blanking on first press when not 4x8 #4527
+- add fallback font to make missing glyphs consistent #4519
+- add NotoSansTamil font #4519
+- detect when usb is not available and don't enable hotplug
+- highlight missing composite elements in the layer list #4514
+- resolve through references for bank_pushed feedback
+- resolve through references for internal step actions and feedbacks
+- RecentlyUsedIdsStore wrong storage key
+- skip extra history entry when visiting /buttons
+
 ## Companion v5.1.0 - Release Notes
 
 ### 📣 CORE FEATURES AND IMPROVEMENTS
