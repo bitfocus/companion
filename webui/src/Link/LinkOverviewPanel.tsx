@@ -12,7 +12,7 @@ import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { useLinkStore } from './LinkStoreContext.js'
 
-/** What other installations see of this one */
+/** Shown when no installation is selected: what other installations see of this one */
 export const LinkOverviewPanel = observer(function LinkOverviewPanel(): React.JSX.Element {
 	const linkStore = useLinkStore()
 	const self = linkStore.self
@@ -77,7 +77,7 @@ export const LinkOverviewPanel = observer(function LinkOverviewPanel(): React.JS
 				</EditSectionCard>
 
 				<NonIdealState icon={faLink}>
-					<p className="mb-1">Other installations are listed once they are reachable on one of the transports.</p>
+					<p className="mb-1">Select an installation to choose what it may use.</p>
 					<p className="text-sm text-muted mb-0">
 						Choose how to reach them under <Link to="/link/transports">Transports</Link>.
 					</p>

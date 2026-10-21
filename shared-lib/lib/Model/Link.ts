@@ -28,6 +28,15 @@ export type LinkPermission = keyof LinkPermissions
 /** Nothing is shared until the user says so */
 export const LINK_NO_PERMISSIONS: Readonly<LinkPermissions> = { buttons: false }
 
+/** The things that can be shared with another installation, in the order they are shown */
+export const LINK_PERMISSION_DEFINITIONS: readonly { id: LinkPermission; label: string; description: string }[] = [
+	{
+		id: 'buttons',
+		label: 'Buttons',
+		description: 'Show and press the shared buttons as remote buttons, on the installation they are shared with',
+	},
+]
+
 /**
  * A config field of a transport. The UI renders the transport config editor from these. Plain values only: a
  * transport config has nothing to evaluate variables or expressions against

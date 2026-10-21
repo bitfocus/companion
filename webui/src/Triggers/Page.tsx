@@ -29,6 +29,7 @@ import { SearchBox } from '~/Components/SearchBox'
 import { StatusBadge } from '~/Components/StatusBadge.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
+import { useActivateOnKey } from '~/Hooks/useActivateOnKey.js'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
 import { PageHeader } from '~/Layout/PageHeader'
 import { PanelEmptyListProvider, type PanelEmptyListState } from '~/Layout/PanelEmptyState.js'
@@ -307,15 +308,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 	const doEdit = useCallback(() => {
 		tableContext.selectTrigger(item.id)
 	}, [tableContext, item.id])
-	const doEditKey = useCallback(
-		(e: React.KeyboardEvent) => {
-			if (e.key === 'Enter' || e.key === ' ') {
-				e.preventDefault()
-				tableContext.selectTrigger(item.id)
-			}
-		},
-		[tableContext, item.id]
-	)
+	const doEditKey = useActivateOnKey(doEdit)
 	const doClone = useCallback(() => {
 		cloneMutation
 			.mutateAsync({ controlId: CreateTriggerControlId(item.id) })
