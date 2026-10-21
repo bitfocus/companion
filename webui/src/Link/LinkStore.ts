@@ -18,12 +18,15 @@ export class LinkStore {
 	/** Whether the initial list of transports has arrived */
 	transportsLoaded = false
 	peers: LinkPeerInfo[] = []
+	/** Whether the initial list of peers has arrived */
+	peersLoaded = false
 	self: LinkSelfInfo | null = null
 
 	constructor() {
 		makeObservable(this, {
 			transportsLoaded: observable,
 			peers: observable.ref,
+			peersLoaded: observable,
 			self: observable.ref,
 			sortedTransports: computed,
 			sortedPeers: computed,
@@ -44,6 +47,7 @@ export class LinkStore {
 
 	setPeers = action((peers: LinkPeerInfo[] | null) => {
 		this.peers = peers ?? []
+		this.peersLoaded = peers !== null
 	})
 
 	setSelf = action((self: LinkSelfInfo | null) => {

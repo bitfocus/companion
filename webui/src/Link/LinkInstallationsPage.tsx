@@ -1,5 +1,5 @@
 import { faLink } from '@fortawesome/free-solid-svg-icons'
-import { Outlet } from '@tanstack/react-router'
+import { Outlet, useMatchRoute } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { PageHeader } from '~/Layout/PageHeader.js'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
@@ -10,6 +10,10 @@ import { PeersList } from './PeersList.js'
 
 /** The other installations found on the transports, and what is shared with each */
 export const LinkInstallationsPage = observer(function LinkInstallationsPage(): React.JSX.Element {
+	const matchRoute = useMatchRoute()
+	const routeMatch = matchRoute({ to: '/link/$peerId' })
+	const selectedPeerId = routeMatch ? routeMatch.peerId : null
+
 	return (
 		<div className="page-shell">
 			<PageHeader icon={faLink} title="Link" />
@@ -17,7 +21,10 @@ export const LinkInstallationsPage = observer(function LinkInstallationsPage(): 
 			<LinkNav />
 
 			<LinkStoreProvider>
-				<SplitPanels.Root showing="primary" resize={{ storageKey: 'link-installations' }}>
+				<SplitPanels.Root
+					showing={selectedPeerId ? 'secondary' : 'primary'}
+					resize={{ storageKey: 'link-installations' }}
+				>
 					<SplitPanels.Primary>
 						<MyErrorBoundary>
 							<div className="flex flex-col h-full min-h-0 gap-2">
@@ -31,7 +38,7 @@ export const LinkInstallationsPage = observer(function LinkInstallationsPage(): 
 								</div>
 
 								<div className="flex-1 min-h-0 scrollable-content list-card">
-									<PeersList />
+									<PeersList selectedPeerId={selectedPeerId} />
 								</div>
 							</div>
 						</MyErrorBoundary>
