@@ -13,6 +13,7 @@ function version(versionId: string): ClientModuleVersionInfo {
 		displayName: `v${versionId}`,
 		isLegacy: false,
 		isBeta: false,
+		isRuntimeOverridden: false,
 		helpPath: '',
 		versionId,
 		allowMultipleInstances: false,

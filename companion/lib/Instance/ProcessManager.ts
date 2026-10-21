@@ -26,7 +26,13 @@ import { ConnectionChildHandlerLegacy } from './Connection/ChildHandlerLegacy.js
 import { ConnectionChildHandlerNew } from './Connection/ChildHandlerNew.js'
 import { PreserveEnvVars } from './Environment.js'
 import type { InstanceModules } from './Modules.js'
-import { getNodeJsPath, getNodeJsPermissionArguments, realPathOrSelf } from './NodePath.js'
+import {
+	getNodeJsPath,
+	getNodeJsPermissionArguments,
+	isNodeJsRuntimeOverridden,
+	realPathOrSelf,
+	resolveNodeJsRuntime,
+} from './NodePath.js'
 import { SurfaceChildHandler, type SurfaceChildHandlerDependencies } from './Surface/ChildHandler.js'
 import type { SomeModuleVersionInfo } from './Types.js'
 
@@ -565,6 +571,15 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 				'system',
 				`** API version: ${runtimeInfo.apiVersion} **`
 			)
+			if (isNodeJsRuntimeOverridden(moduleInfo.manifest.runtime.type)) {
+				this.#connectionDeps.debugLogLine(
+					instanceId,
+					Date.now(),
+					'System',
+					'warn',
+					`** Module requested the unsupported "${moduleInfo.manifest.runtime.type}" runtime, running it on "${resolveNodeJsRuntime(moduleInfo.manifest.runtime.type)}" instead. It may not work correctly **`
+				)
+			}
 
 			// New connections + surfaces carry their messages over a data channel socket (see DataChannelServer);
 			// legacy children only have the 'ipc' channel. The socket must be listening before the child is

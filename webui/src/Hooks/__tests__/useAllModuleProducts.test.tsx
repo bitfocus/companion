@@ -16,6 +16,7 @@ function makeVersion(versionId = '1.0.0'): ClientModuleVersionInfo {
 		displayName: `v${versionId}`,
 		isLegacy: false,
 		isBeta: false,
+		isRuntimeOverridden: false,
 		helpPath: `/help/${versionId}`,
 		versionId,
 		allowMultipleInstances: false,

@@ -18,6 +18,8 @@ export interface ClientModuleVersionInfo {
 	displayName: string
 	isLegacy: boolean
 	isBeta: boolean
+	/** Whether the module requested an end-of-life runtime, and is being run on a newer one instead */
+	isRuntimeOverridden: boolean
 	helpPath: string
 	versionId: string
 	/** Only applicable for surface modules. Whether multiple instances are allowed */
