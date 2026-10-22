@@ -21155,16 +21155,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"seroval-plugins@npm:^1.6.7":
-  version: 1.6.7
-  resolution: "seroval-plugins@npm:1.6.7"
-  peerDependencies:
-    seroval: ^1.0
-  checksum: 10c0/278f174c85b9c127e5404bc9939c316f935703696c88d250ff3a55cc19a6c8092a249b1524a873eff1665b56bc3124152c7d9ef16b6ac10c6d648961989638cd
-  languageName: node
-  linkType: hard
-
-"seroval-plugins@npm:~1.6.8":
+"seroval-plugins@npm:^1.6.7, seroval-plugins@npm:~1.6.8":
   version: 1.6.11
   resolution: "seroval-plugins@npm:1.6.11"
   peerDependencies:
