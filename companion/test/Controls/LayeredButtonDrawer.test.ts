@@ -25,7 +25,7 @@ const sleep = async (ms: number): Promise<void> => {
 	await new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-/** A minimal conversion result; each set defaults to empty and `clockSensitive` to false. */
+/** A minimal conversion result; each set defaults to empty and `clockCycleMs` to 0. */
 function conversionResult(
 	opts: {
 		elements?: any[]
@@ -33,7 +33,7 @@ function conversionResult(
 		usedCompositeElements?: Set<string>
 		referencedLocations?: Set<string>
 		cyclicLocations?: Set<string>
-		clockSensitive?: boolean
+		clockCycleMs?: number
 		hiddenVariables?: Set<string>
 		hiddenCompositeElements?: Set<string>
 		hiddenReferencedLocations?: Set<string>
@@ -51,7 +51,7 @@ function conversionResult(
 			hidden: opts.hiddenReferencedLocations ?? new Set<string>(),
 		},
 		cyclicLocations: opts.cyclicLocations ?? new Set<string>(),
-		clockSensitive: opts.clockSensitive ?? false,
+		clockCycleMs: opts.clockCycleMs ?? 0,
 	}
 }
 
@@ -127,12 +127,12 @@ describe('LayeredButtonDrawer', () => {
 			expect(style.drawType).toBe('pageup')
 		})
 
-		it('maps a falsy clockSensitive to undefined and a truthy one through', async () => {
-			convertMock.mockResolvedValueOnce(conversionResult({ clockSensitive: false }))
-			expect((await drawer.getDrawStyle()).clockSensitive).toBeUndefined()
+		it('maps no clock cycle to undefined and passes one through', async () => {
+			convertMock.mockResolvedValueOnce(conversionResult({ clockCycleMs: 0 }))
+			expect((await drawer.getDrawStyle()).clockCycleMs).toBeUndefined()
 
-			convertMock.mockResolvedValueOnce(conversionResult({ clockSensitive: true }))
-			expect((await drawer.getDrawStyle()).clockSensitive).toBe(true)
+			convertMock.mockResolvedValueOnce(conversionResult({ clockCycleMs: 1000 }))
+			expect((await drawer.getDrawStyle()).clockCycleMs).toBe(1000)
 		})
 
 		it('passes referencedLocations through to the style', async () => {

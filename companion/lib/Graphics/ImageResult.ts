@@ -126,15 +126,31 @@ export class ImageResult {
 	 */
 	readonly cacheKey: string | undefined
 
+	/**
+	 * How many different renders the animations on this render cycle through before repeating (an upper bound),
+	 * or 1 if it shows no animation. The more there are, the longer until each of them is seen again
+	 */
+	readonly cycleRenderCount: number
+
+	/**
+	 * How long until everything on this render which depends on the render clock (e.g. oscillate()) repeats, in ms,
+	 * or 0 if nothing does. A button which embeds this render changes with it
+	 */
+	readonly clockCycleMs: number
+
 	constructor(
 		cacheKey: string | undefined,
 		style: ImageResultProcessedStyle | null,
+		cycleRenderCount: number,
+		clockCycleMs: number,
 		drawNative: ImageResultNativeDrawFn,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> = new Set()
 	) {
 		this.cacheKey = cacheKey
 		this.style = style
+		this.cycleRenderCount = cycleRenderCount
+		this.clockCycleMs = clockCycleMs
 		this.#drawNative = drawNative
 		this.drawElements = drawElements
 		this.referencedLocations = referencedLocations

@@ -273,7 +273,10 @@ describe('ImageCacheStore animations', () => {
 			['short', 1],
 			['long', 1],
 		])
-		expect(frames.maxDurationMs).toBe(3000)
+		expect(frames.animations).toEqual([
+			{ frameCount: 2, durationMs: 200 },
+			{ frameCount: 3, durationMs: 3000 },
+		])
 	})
 
 	test('chooses no frames for static images', async () => {
@@ -281,7 +284,7 @@ describe('ImageCacheStore animations', () => {
 
 		const frames = await store.selectAnimationFrames([makeImageElement('static', 'static')], 1100)
 		expect(frames.frameIndices.size).toBe(0)
-		expect(frames.maxDurationMs).toBe(0)
+		expect(frames.animations).toEqual([])
 	})
 
 	test('draws the chosen frame', async () => {
