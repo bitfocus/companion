@@ -74,6 +74,9 @@ const RENDER_CACHE_RESIZE_DEBOUNCE_MS = 500
 // Decoded images are stored at their own size, so that a large image can be drawn in segments across many
 // buttons. Each is limited to MAX_DECODED_IMAGE_BYTES, so it can't push everything else out of the cache
 const IMAGE_CACHE_MAX_BYTES = 128 * 1024 * 1024
+// Images of remote buttons (Link) are kept apart, as they change often and would push the others out. Only the newest
+// of each button at each size is kept
+const REMOTE_IMAGE_CACHE_MAX_BYTES = 64 * 1024 * 1024
 
 // Renders of animations with a loop up to this long are kept in the render cache, so that they are reused on each
 // loop. Longer animations would push everything else out of the cache, so they are drawn again each time
@@ -145,7 +148,8 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	readonly #imageCache = new ImageCacheStore(
 		this.#logger,
 		async (source) => this.#poolExec('decodeImage', [source, MAX_DECODED_IMAGE_BYTES], CRASHED_WORKER_RETRY_COUNT),
-		IMAGE_CACHE_MAX_BYTES
+		IMAGE_CACHE_MAX_BYTES,
+		REMOTE_IMAGE_CACHE_MAX_BYTES
 	)
 
 	/**

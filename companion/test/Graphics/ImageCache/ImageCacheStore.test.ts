@@ -77,7 +77,7 @@ function makeDecoder(byteLength = 16): ReturnType<typeof vi.fn<DecodeImageFn>> {
 describe('ImageCacheStore', () => {
 	test('a style without images is returned unchanged', async () => {
 		const decode = makeDecoder()
-		const store = new ImageCacheStore(logger, decode, 1024)
+		const store = new ImageCacheStore(logger, decode, 1024, 1024)
 
 		const style = makeStyle([makeImageElement('empty', null)])
 		expect(await store.resolveDrawStyle(style, new Map(), { width: 72, height: 72 }, NO_REMOTE_IMAGES, true)).toBe(
@@ -88,7 +88,7 @@ describe('ImageCacheStore', () => {
 
 	test('decodes images, removing their source from the elements', async () => {
 		const decode = makeDecoder()
-		const store = new ImageCacheStore(logger, decode, 1024)
+		const store = new ImageCacheStore(logger, decode, 1024, 1024)
 
 		const style = makeStyle([makeImageElement('a', 'source-a')])
 		const resolved = await store.resolveDrawStyle(style, new Map(), { width: 72, height: 72 }, NO_REMOTE_IMAGES, true)
@@ -108,7 +108,7 @@ describe('ImageCacheStore', () => {
 	})
 
 	test('decodes images nested in groups and references', async () => {
-		const store = new ImageCacheStore(logger, makeDecoder(), 1024)
+		const store = new ImageCacheStore(logger, makeDecoder(), 1024, 1024)
 
 		const text: SomeButtonGraphicsDrawElement = {
 			...makeImageElement('text', null),
@@ -148,7 +148,7 @@ describe('ImageCacheStore', () => {
 
 	test('reuses the decoded image for the same source', async () => {
 		const decode = makeDecoder()
-		const store = new ImageCacheStore(logger, decode, 1024)
+		const store = new ImageCacheStore(logger, decode, 1024, 1024)
 
 		const first = await store.resolveDrawStyle(
 			makeStyle([makeImageElement('a', 'source')]),
@@ -171,7 +171,7 @@ describe('ImageCacheStore', () => {
 
 	test('decodes a source only once while a decode is in progress', async () => {
 		const decode = makeDecoder()
-		const store = new ImageCacheStore(logger, decode, 1024)
+		const store = new ImageCacheStore(logger, decode, 1024, 1024)
 
 		const [first, second] = await Promise.all([
 			store.resolveDrawStyle(
@@ -197,7 +197,7 @@ describe('ImageCacheStore', () => {
 
 	test('leaves a passthrough image to be drawn from its source, without decoding it again', async () => {
 		const decode = vi.fn<DecodeImageFn>(async () => ({ type: 'passthrough' }))
-		const store = new ImageCacheStore(logger, decode, 1024)
+		const store = new ImageCacheStore(logger, decode, 1024, 1024)
 
 		const style = makeStyle([makeImageElement('svg', 'source-svg')])
 		expect(await store.resolveDrawStyle(style, new Map(), { width: 72, height: 72 }, NO_REMOTE_IMAGES, true)).toBe(
@@ -214,7 +214,7 @@ describe('ImageCacheStore', () => {
 			.fn<DecodeImageFn>()
 			.mockRejectedValueOnce(new Error('Worker crashed'))
 			.mockResolvedValue(makeRaster(16))
-		const store = new ImageCacheStore(logger, decode, 1024)
+		const store = new ImageCacheStore(logger, decode, 1024, 1024)
 
 		const style = makeStyle([makeImageElement('a', 'source')])
 		expect(await store.resolveDrawStyle(style, new Map(), { width: 72, height: 72 }, NO_REMOTE_IMAGES, true)).toBe(
@@ -228,7 +228,7 @@ describe('ImageCacheStore', () => {
 	})
 
 	test('tracks the bytes retained by the cache', async () => {
-		const store = new ImageCacheStore(logger, makeDecoder(100), 10_000)
+		const store = new ImageCacheStore(logger, makeDecoder(100), 10_000, 10_000)
 
 		await store.resolveDrawStyle(
 			makeStyle([makeImageElement('a', 'aa')]),
@@ -245,7 +245,7 @@ describe('ImageCacheStore', () => {
 	test('evicts the least recently used images once over budget', async () => {
 		const decode = makeDecoder(100)
 		// Room for two entries of 100 bytes plus their 2 byte keys
-		const store = new ImageCacheStore(logger, decode, 250)
+		const store = new ImageCacheStore(logger, decode, 250, 1024)
 
 		await store.resolveDrawStyle(
 			makeStyle([makeImageElement('a', 'a')]),
@@ -301,7 +301,7 @@ describe('ImageCacheStore', () => {
 	})
 
 	test('keeps an image larger than the whole budget, until the next one is cached', async () => {
-		const store = new ImageCacheStore(logger, makeDecoder(400), 100)
+		const store = new ImageCacheStore(logger, makeDecoder(400), 100, 1024)
 
 		const resolved = await store.resolveDrawStyle(
 			makeStyle([makeImageElement('a', 'a')]),
@@ -350,7 +350,7 @@ describe('ImageCacheStore animations', () => {
 	})
 
 	test('chooses a frame of each animated image, including nested ones', async () => {
-		const store = new ImageCacheStore(logger, decode, 1024)
+		const store = new ImageCacheStore(logger, decode, 1024, 1024)
 
 		const elements: SomeButtonGraphicsDrawElement[] = [
 			makeImageElement('static', 'static'),
@@ -372,7 +372,7 @@ describe('ImageCacheStore animations', () => {
 	})
 
 	test('chooses no frames for static images', async () => {
-		const store = new ImageCacheStore(logger, decode, 1024)
+		const store = new ImageCacheStore(logger, decode, 1024, 1024)
 
 		const frames = await store.selectAnimationFrames([makeImageElement('static', 'static')], 1100)
 		expect(frames.frameIndices.size).toBe(0)
@@ -380,7 +380,7 @@ describe('ImageCacheStore animations', () => {
 	})
 
 	test('draws the chosen frame', async () => {
-		const store = new ImageCacheStore(logger, decode, 1024)
+		const store = new ImageCacheStore(logger, decode, 1024, 1024)
 
 		const style = makeStyle([makeImageElement('short', 'short'), makeImageElement('static', 'static')])
 		const resolved = await store.resolveDrawStyle(
@@ -396,7 +396,7 @@ describe('ImageCacheStore animations', () => {
 	})
 
 	test('never draws a frame past the end of the image', async () => {
-		const store = new ImageCacheStore(logger, decode, 1024)
+		const store = new ImageCacheStore(logger, decode, 1024, 1024)
 
 		const resolved = await store.resolveDrawStyle(
 			makeStyle([makeImageElement('short', 'short')]),
@@ -445,9 +445,13 @@ describe('ImageCacheStore animations', () => {
 
 		test('fetch the image for the size they are drawn at, which is decoded once', async () => {
 			const decode = makeDecoder()
-			const store = new ImageCacheStore(logger, decode, 1000)
+			const store = new ImageCacheStore(logger, decode, 1000, 1024)
 			const remoteImages: RemoteImageSource = {
-				getImage: vi.fn(async (source: string) => ({ key: `key-${source}`, dataUrl: 'data:image/png;base64,AAAA' })),
+				getImage: vi.fn(async (source: string) => ({
+					slot: `slot-${source}`,
+					revision: 'r1',
+					dataUrl: 'data:image/png;base64,AAAA',
+				})),
 			}
 			// Within a reference half the width of the button
 			const style = makeStyle([makeReference([makeRemoteElement('remote', 0.5)])])
@@ -462,8 +466,41 @@ describe('ImageCacheStore animations', () => {
 			expect(decode).toHaveBeenCalledWith('data:image/png;base64,AAAA')
 		})
 
+		test('keep only the newest revision of each image, apart from the images of elements', async () => {
+			const decode = makeDecoder(400)
+			// Room for two of each
+			const store = new ImageCacheStore(logger, decode, 1000, 1000)
+			let revision = 'r1'
+			const remoteImages: RemoteImageSource = {
+				getImage: async (source: string) => ({ slot: source, revision, dataUrl: `data:${source}:${revision}` }),
+			}
+			const resolve = async (elements: SomeButtonGraphicsDrawElement[]) =>
+				store.resolveDrawStyle(makeStyle(elements), new Map(), { width: 72, height: 72 }, remoteImages, true)
+
+			await resolve([makeImageElement('local', 'local-image')])
+			await resolve([
+				{ ...makeRemoteElement('a', 1), source: 'a' },
+				{ ...makeRemoteElement('b', 1), source: 'b' },
+			])
+			// A new revision of one replaces the old, rather than being kept beside it
+			revision = 'r2'
+			await resolve([{ ...makeRemoteElement('a', 1), source: 'a' }])
+			expect(decode.mock.calls.map(([source]) => source)).toEqual([
+				'local-image',
+				'data:a:r1',
+				'data:b:r1',
+				'data:a:r2',
+			])
+
+			// Neither pushed the local image out, nor the other remote one
+			decode.mockClear()
+			revision = 'r1'
+			await resolve([makeImageElement('local', 'local-image'), { ...makeRemoteElement('b', 1), source: 'b' }])
+			expect(decode).not.toHaveBeenCalled()
+		})
+
 		test('are drawn empty when there is no image', async () => {
-			const store = new ImageCacheStore(logger, makeDecoder(), 1000)
+			const store = new ImageCacheStore(logger, makeDecoder(), 1000, 1024)
 			const style = makeStyle([makeRemoteElement('remote', 1)])
 
 			const noImage: RemoteImageSource = { getImage: vi.fn(async () => null) }

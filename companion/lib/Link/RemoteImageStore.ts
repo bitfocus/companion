@@ -106,7 +106,8 @@ export class LinkRemoteImageStore implements RemoteImageSource {
 
 		// Identified by its button, size and revision, so that the image data is never compared
 		return {
-			key: `${key}@${image.width}x${image.height}#${image.revision.stream}:${image.revision.seq}`,
+			slot: `${key}@${image.width}x${image.height}`,
+			revision: `${image.revision.stream}:${image.revision.seq}`,
 			dataUrl: image.dataUrl,
 		}
 	}

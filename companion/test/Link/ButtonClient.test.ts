@@ -300,7 +300,8 @@ describe('LinkButtonClient', () => {
 		expect(await imageAt(wide)).toBe('144x144-1')
 		// Identified by the remote button, size and revision, so that the image data is never compared
 		expect(await ctx.images.getImage(remoteKey, square, true)).toMatchObject({
-			key: 'peer/location/1/0/2/0x0@144x144#s1:1',
+			slot: 'peer/location/1/0/2/0x0@144x144',
+			revision: 's1:1',
 		})
 
 		// Just shown as a strip: its first image is waited for, rather than drawing the square first

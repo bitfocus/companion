@@ -14,9 +14,18 @@ export interface PixelSize {
 
 /** An image fetched for a remote element */
 export interface RemoteImage {
-	/** Identifies the image, for the decoded cache, so that the image data itself never has to be compared */
-	readonly key: string
+	/** Which image this is, eg a remote button at a size. Only the newest revision of each is kept decoded */
+	readonly slot: string
+	/** Which revision of it this is, so that the image data itself never has to be compared */
+	readonly revision: string
 	readonly dataUrl: string
+}
+
+/** A decoded remote image */
+interface RemoteCacheEntry {
+	readonly revision: string
+	readonly result: DecodeImageResult
+	readonly byteSize: number
 }
 
 /** Where the images of remote elements are fetched from */
@@ -66,10 +75,24 @@ export class ImageCacheStore {
 
 	#usedBytes = 0
 
-	constructor(logger: Logger, decodeImage: DecodeImageFn, maxBytes: number) {
+	/**
+	 * The decoded remote images, by slot, least recently used first. Kept apart from the other images, as they change
+	 * often and would push those out, and only the newest revision of each is kept
+	 */
+	readonly #remoteEntries = new Map<string, RemoteCacheEntry>()
+	readonly #remotePending = new Map<string, Promise<RemoteCacheEntry | null>>()
+	readonly #remoteMaxBytes: number
+	#remoteUsedBytes = 0
+
+	/**
+	 * @param maxBytes - the budget for the images of elements
+	 * @param remoteMaxBytes - the budget for the images of remote elements, which are kept apart
+	 */
+	constructor(logger: Logger, decodeImage: DecodeImageFn, maxBytes: number, remoteMaxBytes: number) {
 		this.#logger = logger
 		this.#decodeImage = decodeImage
 		this.#maxBytes = maxBytes
+		this.#remoteMaxBytes = remoteMaxBytes
 	}
 
 	/** Approximate bytes retained by the cache */
@@ -102,7 +125,7 @@ export class ImageCacheStore {
 						case 'image': {
 							if (!element.base64Image) return
 
-							const entry = await this.#getEntry(element.base64Image, element.base64Image)
+							const entry = await this.#getEntry(element.base64Image)
 							if (!entry || entry.result.type !== 'raster' || entry.result.frameCount <= 1) return
 
 							const { frameStartMs, durationMs } = entry.result
@@ -174,7 +197,7 @@ export class ImageCacheStore {
 					case 'image': {
 						if (!element.base64Image) return element
 
-						const entry = await this.#getEntry(element.base64Image, element.base64Image)
+						const entry = await this.#getEntry(element.base64Image)
 						if (!entry || entry.result.type !== 'raster') return element
 
 						decodedImages.set(element.id, {
@@ -196,13 +219,13 @@ export class ImageCacheStore {
 							scaleSize(parentSize, element),
 							waitForRemoteImages
 						)
-						const entry = image && (await this.#getEntry(image.key, image.dataUrl))
-						if (!entry || entry.result.type !== 'raster') return element
+						const result = image && (await this.#getRemoteEntry(image))
+						if (!result || result.type !== 'raster') return element
 
 						decodedImages.set(element.id, {
-							buffer: entry.result.buffer,
-							width: entry.result.width,
-							height: entry.result.height,
+							buffer: result.buffer,
+							width: result.width,
+							height: result.height,
 							frameIndex: 0,
 						})
 						return element
@@ -231,20 +254,68 @@ export class ImageCacheStore {
 		return changed ? result : elements
 	}
 
-	/**
-	 * @param key - identifies the image in the cache: the source itself, or something shorter that identifies it
-	 * @param source - the image to decode, when it isn't cached
-	 */
-	async #getEntry(key: string, source: string): Promise<CacheEntry | null> {
-		const entry = this.#entries.get(key)
+	/** The decoded form of a remote image, decoding it unless that revision of it is already */
+	async #getRemoteEntry(image: RemoteImage): Promise<DecodeImageResult | null> {
+		const held = this.#remoteEntries.get(image.slot)
+		if (held?.revision === image.revision) {
+			// Mark as most recently used
+			this.#remoteEntries.delete(image.slot)
+			this.#remoteEntries.set(image.slot, held)
+			return held.result
+		}
+
+		const pendingKey = `${image.slot}#${image.revision}`
+		let pending = this.#remotePending.get(pendingKey)
+		if (!pending) {
+			pending = this.#decodeImage(image.dataUrl)
+				.then((result) => {
+					const entry: RemoteCacheEntry = {
+						revision: image.revision,
+						result,
+						byteSize: result.type === 'raster' ? result.buffer.byteLength : 0,
+					}
+					this.#insertRemote(image.slot, entry)
+					return entry
+				})
+				.catch((e) => {
+					this.#logger.warn(`Failed to decode remote image: ${e?.message ?? e}`)
+					return null
+				})
+				.finally(() => this.#remotePending.delete(pendingKey))
+			this.#remotePending.set(pendingKey, pending)
+		}
+		return (await pending)?.result ?? null
+	}
+
+	/** Keep a decoded remote image, in place of any other revision of it */
+	#insertRemote(slot: string, entry: RemoteCacheEntry): void {
+		const replaced = this.#remoteEntries.get(slot)
+		if (replaced) {
+			this.#remoteEntries.delete(slot)
+			this.#remoteUsedBytes -= replaced.byteSize
+		}
+		this.#remoteEntries.set(slot, entry)
+		this.#remoteUsedBytes += entry.byteSize
+
+		// Evict the least recently used, but always keep the one just inserted
+		for (const [key, oldEntry] of this.#remoteEntries) {
+			if (this.#remoteUsedBytes <= this.#remoteMaxBytes || key === slot) break
+
+			this.#remoteEntries.delete(key)
+			this.#remoteUsedBytes -= oldEntry.byteSize
+		}
+	}
+
+	async #getEntry(source: string): Promise<CacheEntry | null> {
+		const entry = this.#entries.get(source)
 		if (entry) {
 			// Mark as most recently used
-			this.#entries.delete(key)
-			this.#entries.set(key, entry)
+			this.#entries.delete(source)
+			this.#entries.set(source, entry)
 			return entry
 		}
 
-		const pending = this.#pending.get(key)
+		const pending = this.#pending.get(source)
 		if (pending) return pending
 
 		const promise = this.#decodeImage(source)
@@ -252,9 +323,9 @@ export class ImageCacheStore {
 				const newEntry: CacheEntry = {
 					result,
 					// Strings are stored as up to 2 bytes per character
-					byteSize: key.length * 2 + (result.type === 'raster' ? result.buffer.byteLength : 0),
+					byteSize: source.length * 2 + (result.type === 'raster' ? result.buffer.byteLength : 0),
 				}
-				this.#insert(key, newEntry)
+				this.#insert(source, newEntry)
 				return newEntry
 			})
 			.catch((e) => {
@@ -263,10 +334,10 @@ export class ImageCacheStore {
 				return null
 			})
 			.finally(() => {
-				this.#pending.delete(key)
+				this.#pending.delete(source)
 			})
 
-		this.#pending.set(key, promise)
+		this.#pending.set(source, promise)
 		return promise
 	}
 

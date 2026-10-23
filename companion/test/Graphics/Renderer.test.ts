@@ -264,6 +264,7 @@ describe('GraphicsRenderer', () => {
 				const store = new ImageCacheStore(
 					logger,
 					async (source) => decodeImage(source, 32 * 1024 * 1024),
+					64 * 1024 * 1024,
 					64 * 1024 * 1024
 				)
 				return store.resolveDrawStyle(style, new Map(), { width: 72, height: 72 }, NO_REMOTE_IMAGES, true)
@@ -309,7 +310,12 @@ describe('GraphicsRenderer', () => {
 				const style = makeImageStyle(toDataUrl('image/gif', gif), 'fill')
 
 				const logger = { warn: vi.fn() } as unknown as Logger
-				const store = new ImageCacheStore(logger, async (source) => decodeImage(source, 1024 * 1024), 1024 * 1024)
+				const store = new ImageCacheStore(
+					logger,
+					async (source) => decodeImage(source, 1024 * 1024),
+					1024 * 1024,
+					1024 * 1024
+				)
 				const frames = await store.selectAnimationFrames(style.elements, timeMs)
 				expect(frames.maxDurationMs).toBe(300)
 				const resolved = await store.resolveDrawStyle(
