@@ -127,6 +127,7 @@ export class ControlButtonPreset
 				renderClock: deps.renderClock,
 				variableDependencies: deps.variableDependencies,
 				getPageVariableEntities: deps.getPageVariableEntities,
+				customActionInstances: deps.customActionInstances,
 			},
 			this.sendRuntimePropsChange.bind(this),
 			false

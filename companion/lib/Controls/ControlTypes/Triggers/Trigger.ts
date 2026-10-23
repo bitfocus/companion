@@ -174,6 +174,7 @@ export class ControlTrigger
 			renderClock: deps.renderClock,
 			variableDependencies: deps.variableDependencies,
 			getPageVariableEntities: deps.getPageVariableEntities,
+			customActionInstances: deps.customActionInstances,
 		})
 
 		this.#eventBus = eventBus
