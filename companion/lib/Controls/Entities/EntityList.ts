@@ -8,9 +8,9 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import { clamp } from '../../Resources/Util.js'
 import { ControlEntityInstance } from './EntityInstance.js'
-import type { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type {
+	EntityScope,
 	FeedbackExecutionContext,
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
@@ -27,7 +27,7 @@ export class ControlEntityList {
 	readonly #instanceDefinitions: InstanceDefinitionsForEntity
 	readonly #internalModule: InternalControllerForEntity
 	readonly #processManager: ProcessManagerForEntity
-	readonly #specialExpressionManager: EntityPoolSpecialExpressionManager
+	readonly #scope: EntityScope
 
 	/**
 	 * Id of the control this belongs to
@@ -52,7 +52,7 @@ export class ControlEntityList {
 		instanceDefinitions: InstanceDefinitionsForEntity,
 		internalModule: InternalControllerForEntity,
 		processManager: ProcessManagerForEntity,
-		specialExpressionManager: EntityPoolSpecialExpressionManager,
+		scope: EntityScope,
 		controlId: string,
 		ownerId: EntityOwner | null,
 		listDefinition: ControlEntityListDefinition
@@ -60,7 +60,7 @@ export class ControlEntityList {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
 		this.#processManager = processManager
-		this.#specialExpressionManager = specialExpressionManager
+		this.#scope = scope
 		this.#controlId = controlId
 		this.#ownerId = ownerId
 		this.#listDefinition = listDefinition
@@ -106,7 +106,7 @@ export class ControlEntityList {
 						this.#instanceDefinitions,
 						this.#internalModule,
 						this.#processManager,
-						this.#specialExpressionManager,
+						this.#scope,
 						this.#controlId,
 						entity,
 						!!isCloned
@@ -183,7 +183,7 @@ export class ControlEntityList {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#processManager,
-			this.#specialExpressionManager,
+			this.#scope,
 			this.#controlId,
 			entityModel,
 			!!isCloned
@@ -301,7 +301,7 @@ export class ControlEntityList {
 				this.#instanceDefinitions,
 				this.#internalModule,
 				this.#processManager,
-				this.#specialExpressionManager,
+				this.#scope,
 				this.#controlId,
 				entityModel,
 				true

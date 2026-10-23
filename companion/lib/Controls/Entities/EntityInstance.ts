@@ -21,14 +21,19 @@ import {
 	type SomeReplaceableEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
+import type {
+	ExpressionParserOptions,
+	VariablesAndExpressionParser,
+} from '../../Variables/VariablesAndExpressionParser.js'
 import { ControlEntityList } from './EntityList.js'
-import type { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type {
+	EntityScope,
 	FeedbackExecutionContext,
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
@@ -46,7 +51,7 @@ export class ControlEntityInstance {
 	readonly #instanceDefinitions: InstanceDefinitionsForEntity
 	readonly #internalModule: InternalControllerForEntity
 	readonly #processManager: ProcessManagerForEntity
-	readonly #specialExpressionManager: EntityPoolSpecialExpressionManager
+	readonly #scope: EntityScope
 
 	/**
 	 * Id of the control this belongs to
@@ -193,7 +198,7 @@ export class ControlEntityInstance {
 		instanceDefinitions: InstanceDefinitionsForEntity,
 		internalModule: InternalControllerForEntity,
 		processManager: ProcessManagerForEntity,
-		specialExpressionManager: EntityPoolSpecialExpressionManager,
+		scope: EntityScope,
 		controlId: string,
 		data: SomeEntityModel,
 		isCloned: boolean
@@ -203,7 +208,7 @@ export class ControlEntityInstance {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
 		this.#processManager = processManager
-		this.#specialExpressionManager = specialExpressionManager
+		this.#scope = scope
 		this.#controlId = controlId
 
 		{
@@ -253,7 +258,7 @@ export class ControlEntityInstance {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#processManager,
-			this.#specialExpressionManager,
+			this.#scope,
 			this.#controlId,
 			{ parentId: this.id, childGroup: listDefinition.groupId },
 			listDefinition
@@ -299,7 +304,7 @@ export class ControlEntityInstance {
 			})
 		}
 
-		this.#specialExpressionManager.forgetEntity(this.id)
+		this.#scope.specialExpressionManager.forgetEntity(this.id)
 
 		// Remove from cached feedback values
 		this.#cachedFeedbackValue = undefined
@@ -324,7 +329,9 @@ export class ControlEntityInstance {
 
 			if (isInternalConnectionId(thisData.connectionId)) {
 				// Children-of-actions are cached here too, not just evaluated live - see getBooleanFeedbackValue.
-				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
+				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId, () =>
+					this.createVariablesAndExpressionParser(null)
+				)
 			} else if (!isVirtualConnectionId(thisData.connectionId)) {
 				// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
 				// The EntityManager will not subscribe disabled entities to the module.
@@ -334,10 +341,10 @@ export class ControlEntityInstance {
 			}
 
 			if (thisData.disabled) {
-				this.#specialExpressionManager.forgetEntity(this.id)
+				this.#scope.specialExpressionManager.forgetEntity(this.id)
 			} else {
 				const specialExpression = thisData.type === EntityModelType.Feedback ? 'isInverted' : 'storeResult'
-				this.#specialExpressionManager.trackEntity(this, specialExpression)
+				this.#scope.specialExpressionManager.trackEntity(this, specialExpression)
 			}
 		}
 
@@ -500,6 +507,16 @@ export class ControlEntityInstance {
 
 		// Inform relevant module
 		this.subscribe(false)
+	}
+
+	/**
+	 * Create a parser for the options of this entity, using the variables of the scope it belongs to
+	 */
+	createVariablesAndExpressionParser(
+		overrideVariableValues: VariableValues | null,
+		options?: ExpressionParserOptions
+	): VariablesAndExpressionParser {
+		return this.#scope.createVariablesAndExpressionParser(overrideVariableValues, options)
 	}
 
 	getEntityDefinition(): ClientEntityDefinition | undefined {
