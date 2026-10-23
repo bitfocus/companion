@@ -95,6 +95,7 @@ export class LinkInstallation {
 			db.asDataDatabase(),
 			userconfig,
 			pageStore,
+			this.host,
 			options.transportDefinitions,
 			options.builtinTransports
 		)
@@ -124,7 +125,7 @@ export class LinkInstallation {
 	}
 
 	start(): void {
-		this.controller.start(this.host)
+		this.controller.start()
 	}
 
 	async stop(): Promise<void> {

@@ -66,7 +66,6 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 	/** Used by link buttons to subscribe to remote buttons */
 	readonly buttonClient: LinkButtonClient
 
-	#host: LinkHost | null = null
 	#started = false
 	#identity: LinkIdentity
 	#selfId: string
@@ -82,6 +81,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		db: DataDatabase,
 		userconfig: DataUserConfig,
 		pageStore: IPageStore,
+		host: LinkHost,
 		transportDefinitions: readonly SomeLinkTransportDefinition[],
 		builtinTransports: readonly SomeLinkBuiltinTransport[]
 	) {
@@ -121,13 +121,11 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		)
 		this.#buttonServer = new LinkButtonServer(
 			{
-				getCachedRenderOrGeneratePlaceholder: (location) =>
-					this.#requireHost().getCachedRenderOrGeneratePlaceholder(location),
-				getControlIdAt: (location) => this.#requireHost().getControlIdAt(location),
-				pressControl: (controlId, pressed, surfaceId) =>
-					this.#requireHost().pressControl(controlId, pressed, surfaceId),
-				rotateControl: (controlId, delta, surfaceId) => this.#requireHost().rotateControl(controlId, delta, surfaceId),
-				abortControl: (controlId, unlatch, hops) => this.#requireHost().abortControl(controlId, unlatch, hops),
+				getCachedRenderOrGeneratePlaceholder: (location) => host.getCachedRenderOrGeneratePlaceholder(location),
+				getControlIdAt: (location) => host.getControlIdAt(location),
+				pressControl: (controlId, pressed, surfaceId) => host.pressControl(controlId, pressed, surfaceId),
+				rotateControl: (controlId, delta, surfaceId) => host.rotateControl(controlId, delta, surfaceId),
+				abortControl: (controlId, unlatch, hops) => host.abortControl(controlId, unlatch, hops),
 				getSourceChain: (location) => this.#getSourceChain(location),
 				getClockOffset: (peerId) => this.#peers.getClockOffset(peerId),
 				// Images only go to leaseholders, which are only allowed peers, and are dropped when that changes (see revoke)
@@ -179,8 +177,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 	}
 
 	/** Start linking. Called once the rest of Companion is ready to serve buttons */
-	start(host: LinkHost): void {
-		this.#host = host
+	start(): void {
 		this.#started = true
 
 		this.#peers.start()
@@ -213,11 +210,6 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 
 	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
 		this.#buttonServer.onButtonDrawn(location, render)
-	}
-
-	#requireHost(): LinkHost {
-		if (!this.#host) throw new Error('Link has not been started')
-		return this.#host
 	}
 
 	#getSelfInfo(): LinkSelfInfo {

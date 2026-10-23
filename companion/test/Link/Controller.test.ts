@@ -85,15 +85,6 @@ function createController(db = new FakeDataDatabase(), installName = 'Self') {
 		getControlIdAt: () => null,
 	}) as unknown as IPageStore
 
-	const controller = new LinkController(
-		{ appVersion: '5.0.0' } as any,
-		db.asDataDatabase(),
-		userconfig,
-		pageStore,
-		[definition],
-		[]
-	)
-
 	const host = {
 		getCachedRenderOrGeneratePlaceholder: vi.fn(
 			() =>
@@ -107,7 +98,18 @@ function createController(db = new FakeDataDatabase(), installName = 'Self') {
 		rotateControl: vi.fn(() => true),
 		abortControl: vi.fn(),
 	}
-	controller.start(host)
+
+	const controller = new LinkController(
+		{ appVersion: '5.0.0' } as any,
+		db.asDataDatabase(),
+		userconfig,
+		pageStore,
+		host,
+		[definition],
+		[]
+	)
+
+	controller.start()
 
 	/** The running instance of the transport, which is replaced when it is restarted */
 	const transport = () => instances[instances.length - 1]

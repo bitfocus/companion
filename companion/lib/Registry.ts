@@ -291,6 +291,15 @@ export class Registry {
 			this.db,
 			this.userconfig,
 			pageStore,
+			{
+				getCachedRenderOrGeneratePlaceholder: (location) =>
+					this.graphics.getCachedRenderOrGeneratePlaceholder(location),
+				getControlIdAt: (location) => pageStore.getControlIdAt(location),
+				pressControl: (controlId, pressed, surfaceId) => controlStore.pressControl(controlId, pressed, surfaceId),
+				rotateControl: (controlId, delta, surfaceId) => controlStore.rotateControl(controlId, delta, surfaceId),
+				abortControl: (controlId, unlatch, hops) =>
+					controlStore.getControl(controlId)?.abortDelayedActions(unlatch, null, hops),
+			},
 			LINK_TRANSPORT_DEFINITIONS,
 			LINK_BUILTIN_TRANSPORTS
 		)
@@ -532,7 +541,7 @@ export class Registry {
 			this.rebindHttp(bindIp, bindPort)
 
 			// Everything is ready to serve buttons, so start linking with other installations
-			this.link.start(this.#serviceApi)
+			this.link.start()
 
 			// Startup has completed, run triggers
 			this.controls.triggerEvents.emit('startup')
