@@ -41,17 +41,26 @@ export const LINK_MAX_BUTTONS_PER_MESSAGE = 1000
 /** How many buttons a sender puts in one message, well under the limit so that each stays small */
 export const LINK_BUTTONS_PER_MESSAGE = 200
 
+/** The largest message a receiver must accept, once it trusts the sender. Enough for a large button bitmap */
+export const LINK_MAX_MESSAGE_SIZE = 16 * 1024 * 1024
+
+/** The largest edge of a bitmap, enough for a button filling a large tablet */
+export const LINK_BITMAP_MAX_EDGE = 2048
+
 const BitmapSizeShape = {
-	width: z.number().int().min(8).max(1024).describe('Bitmap width in pixels'),
-	height: z.number().int().min(8).max(1024).describe('Bitmap height in pixels'),
+	width: z.number().int().min(8).max(LINK_BITMAP_MAX_EDGE).describe('Bitmap width in pixels'),
+	height: z.number().int().min(8).max(LINK_BITMAP_MAX_EDGE).describe('Bitmap height in pixels'),
 }
+
+/** Bound on the coordinates of a button, far beyond any real grid */
+const MAX_COORDINATE = 10_000
 
 const LinkButtonLocationRefSchema = z
 	.object({
 		type: z.literal('location'),
-		page: z.number().int().min(1).describe('Page number'),
-		row: z.number().int().describe('Row number'),
-		column: z.number().int().describe('Column number'),
+		page: z.number().int().min(1).max(MAX_COORDINATE).describe('Page number'),
+		row: z.number().int().min(-MAX_COORDINATE).max(MAX_COORDINATE).describe('Row number'),
+		column: z.number().int().min(-MAX_COORDINATE).max(MAX_COORDINATE).describe('Column number'),
 	})
 	.describe('A button by its position in the grid')
 

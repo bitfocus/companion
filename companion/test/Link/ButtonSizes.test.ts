@@ -27,9 +27,11 @@ describe('linkBitmapSizesFor', () => {
 
 	test('scales small sizes up and large ones down, keeping their shape', () => {
 		expect(linkBitmapSizesFor([{ width: 50, height: 25 }])).toEqual([{ width: 288, height: 144 }])
-		expect(linkBitmapSizesFor([{ width: 2048, height: 512 }])).toEqual([{ width: 1024, height: 256 }])
+		expect(linkBitmapSizesFor([{ width: 4096, height: 1024 }])).toEqual([{ width: 2048, height: 512 }])
+		// Large enough for a button filling a tablet
+		expect(linkBitmapSizesFor([{ width: 2048, height: 1536 }])).toEqual([{ width: 2048, height: 1536 }])
 		// A shape too extreme to fit is cut short rather than asked for beyond what the protocol allows
-		expect(linkBitmapSizesFor([{ width: 800, height: 10 }])).toEqual([{ width: 1024, height: 13 }])
+		expect(linkBitmapSizesFor([{ width: 800, height: 10 }])).toEqual([{ width: 2048, height: 26 }])
 	})
 
 	test('nothing shown, nothing asked for', () => {

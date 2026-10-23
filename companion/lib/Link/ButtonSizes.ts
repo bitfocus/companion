@@ -1,4 +1,5 @@
 import type { DisplayedSize } from '../Graphics/DisplayedLocations.js'
+import { LINK_BITMAP_MAX_EDGE } from './Protocol/v1/Schemas.js'
 
 /**
  * The smallest short edge remote buttons are requested at. Larger than the 72px buttons are designed at, so that they
@@ -6,8 +7,6 @@ import type { DisplayedSize } from '../Graphics/DisplayedLocations.js'
  */
 export const LINK_BITMAP_MIN_SHORT_EDGE = 144
 
-/** The largest edge a bitmap can be requested at (see BitmapSizeShape) */
-export const LINK_BITMAP_MAX_EDGE = 1024
 const LINK_BITMAP_MIN_EDGE = 8
 
 /** How far apart the aspect ratios of two sizes can be, as a fraction, to be drawn from the same bitmap */

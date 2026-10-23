@@ -250,6 +250,10 @@ describe('ControlButtonLink', () => {
 		// Still showing the last image of an installation that has dropped out
 		linkButtons.getState.mockReturnValue({ ...state, unreachable: true })
 		expect((await control.drawing.getDrawStyle()).link_status).toBe('unreachable')
+
+		// A remote button with nothing on it is shown as that, decorated, rather than as still loading
+		linkButtons.getState.mockReturnValue({ ...state, images: [] })
+		expect((await control.drawing.getDrawStyle()).elements).toMatchObject([{ type: 'canvas' }])
 	})
 
 	it('is decorated as set, and tells the link client so', async () => {

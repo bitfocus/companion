@@ -175,7 +175,6 @@ export class LinkButtonDrawer implements IButtonDrawer {
 
 	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel> {
 		const state = this.#getState()
-		const images = state.status === 'ok' ? state.images : []
 
 		// Decorated here, from the state of the remote button, as for a button of this installation
 		const style: DrawStyleLayeredButtonModel = {
@@ -186,9 +185,12 @@ export class LinkButtonDrawer implements IButtonDrawer {
 			action_running: state.actionRunning,
 			elements: [
 				this.#makeCanvas(),
-				...(images.length > 0
-					? [makeRemoteElement(this.#controlId, state.remoteKey, images)]
-					: makePlaceholderElements(this.#controlId, state.status === 'ok' ? 'loading' : state.status)),
+				...(state.status === 'ok'
+					? // A remote button with nothing on it is sent with no images, and is shown as that
+						state.images.length > 0
+						? [makeRemoteElement(this.#controlId, state.remoteKey, state.images)]
+						: []
+					: makePlaceholderElements(this.#controlId, state.status)),
 			],
 			// A cloud in its top bar marks it as a remote button
 			link_status: state.status === 'ok' ? (state.unreachable ? 'unreachable' : 'ok') : undefined,

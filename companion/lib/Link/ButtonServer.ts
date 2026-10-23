@@ -8,6 +8,7 @@ import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import { MAX_REFERENCE_DEPTH, referenceSurfaceIdDepth } from '../Surface/ReferenceSurfaceId.js'
 import {
 	encodeLinkMessage,
+	LINK_MAX_MESSAGE_SIZE,
 	linkButtonSubscriptionKey,
 	type LinkButtonRef,
 	type LinkButtonRevision,
@@ -94,6 +95,12 @@ const MAX_SERVED_BUTTONS = 5000
 const MAX_SERVED_BUTTONS_PER_PEER = 2500
 
 /**
+ * Bound on the sizes one peer may subscribe to a button at. A subscriber asks for one per shape the button is shown at,
+ * which is a handful at most
+ */
+const MAX_SIZES_PER_BUTTON_PER_PEER = 8
+
+/**
  * Serves the buttons of this installation to peers: tracks what peers have subscribed to (as leases that must be
  * renewed), sends renders of those buttons to them when they change, and performs the presses peers send.
  */
@@ -145,25 +152,34 @@ export class LinkButtonServer {
 	 */
 	handleSubscribe(peerId: string, transportId: string, payload: LinkPayloadOfType<'subscribe'>, now: number): void {
 		const refused: LinkButtonSubscription[] = []
+		/** Why each was refused, for one log line rather than one per button */
+		const refusedWhy = new Map<string, number>()
+		const refuse = (sub: LinkButtonSubscription, why: string) => {
+			refused.push(sub)
+			refusedWhy.set(why, (refusedWhy.get(why) ?? 0) + 1)
+		}
+
 		let peerCount = this.countSubscribedBy(peerId)
 		for (const { have, ...sub } of payload.buttons) {
 			const key = linkButtonSubscriptionKey(sub)
+			const location = toControlLocation(sub.button)
 
 			let served = this.#served.get(key)
 			const isNewForPeer = !served?.leases.has(peerId)
 			if (isNewForPeer && peerCount >= MAX_SERVED_BUTTONS_PER_PEER) {
-				this.#logger.warn(`Refusing a subscription from ${peerId}, it has subscribed to too many buttons`)
-				refused.push(sub)
+				refuse(sub, 'it has subscribed to too many buttons')
+				continue
+			}
+			if (isNewForPeer && this.#countSizesSubscribedBy(peerId, location) >= MAX_SIZES_PER_BUTTON_PER_PEER) {
+				refuse(sub, 'it has subscribed to the button at too many sizes')
 				continue
 			}
 
 			if (!served) {
 				if (this.#served.size >= MAX_SERVED_BUTTONS) {
-					this.#logger.warn(`Refusing a subscription from ${peerId}, too many buttons subscribed`)
-					refused.push(sub)
+					refuse(sub, 'too many buttons are subscribed')
 					continue
 				}
-				const location = toControlLocation(sub.button)
 				served = {
 					sub,
 					leases: new Map(),
@@ -194,7 +210,20 @@ export class LinkButtonServer {
 			}
 		}
 
+		for (const [why, count] of refusedWhy) {
+			// A refused subscription is asked for again with each renewal, so this repeats while it is so
+			this.#logger.warn(`Refusing ${count} subscription(s) from ${peerId}, ${why}`)
+		}
 		this.#sendRefused(peerId, transportId, refused, 'limit')
+	}
+
+	/** How many sizes a peer is subscribed to a button at */
+	#countSizesSubscribedBy(peerId: string, location: ControlLocation): number {
+		let count = 0
+		for (const key of this.#locations.get(locationKey(location))?.keys ?? []) {
+			if (this.#served.get(key)?.leases.has(peerId)) count++
+		}
+		return count
 	}
 
 	/** Refuse all the buttons of a subscribe, eg because the peer isn't allowed buttons */
@@ -402,9 +431,11 @@ export class LinkButtonServer {
 		// Only drawn and sent again when it looks different, not when only its state (eg pressed) has changed
 		const unchanged =
 			content.contentKey !== null && served.image?.contentKey === content.contentKey ? served.image : null
-		const dataUrl = unchanged
-			? unchanged.dataUrl
-			: (await content.render.drawNativeEncoded(sub.width, sub.height, null, 'png')) || null
+		// A button with nothing on it is sent as that, rather than as an image of nothing
+		let dataUrl = unchanged?.dataUrl ?? null
+		if (!unchanged && content.render) {
+			dataUrl = (await content.render.drawNativeEncoded(sub.width, sub.height, null, 'png')) || null
+		}
 		// It may have been dropped while rendering, and replaced by a new serving of the button
 		const servedLocation = this.#locations.get(locationKey(location))
 		if (this.#served.get(key) !== served || !servedLocation) return
@@ -425,7 +456,13 @@ export class LinkButtonServer {
 			// The schema bounds the chain, a longer one is a loop anyway
 			sourceChain: [...this.#host.getSourceChain(location).slice(-15), this.#selfId()],
 		}
-		const withImage = encodeLinkMessage('button.update', { ...update, image: { type: 'image', dataUrl } })
+		let withImage = encodeLinkMessage('button.update', { ...update, image: { type: 'image', dataUrl } })
+		if (withImage.length > LINK_MAX_MESSAGE_SIZE) {
+			// Too large for the subscriber to accept, so it gets the state without the image, rather than nothing
+			this.#logger.warn(`Not sending the image of ${key}, it is too large (${withImage.length} bytes)`)
+			withImage = encodeLinkMessage('button.update', { ...update, image: { type: 'image', dataUrl: null } })
+			served.image = { contentKey: content.contentKey, revision, dataUrl: null }
+		}
 		const payload = unchanged
 			? encodeLinkMessage('button.update', { ...update, image: { type: 'unchanged', since: unchanged.revision } })
 			: withImage

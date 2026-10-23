@@ -1,6 +1,7 @@
 import type { KeyPair as NoiseKeyPair } from 'noise-handshake/dh.js'
 import type { WebSocket } from 'ws'
 import { z } from 'zod'
+import { LINK_MAX_MESSAGE_SIZE } from '../../Protocol/v1/Schemas.js'
 import { loadOrCreateNoiseKeyPair } from '../Secure/NoiseKey.js'
 import type { SecureChannel } from '../Secure/SecureChannel.js'
 import type { LinkTransport, LinkTransportContext } from '../Types.js'
@@ -8,8 +9,8 @@ import type { LinkTransport, LinkTransportContext } from '../Types.js'
 /** How often a direct connection is checked for liveness */
 const KEEPALIVE_INTERVAL_MS = 10_000
 
-/** Largest message accepted over a direct connection, comfortably above a large button bitmap */
-export const DIRECT_MAX_MESSAGE_SIZE = 4 * 1024 * 1024
+/** Largest message accepted over a direct connection */
+export const DIRECT_MAX_MESSAGE_SIZE = LINK_MAX_MESSAGE_SIZE
 
 /** Largest message accepted from the other end until it is trusted, comfortably above what is said while pairing */
 export const DIRECT_MAX_UNTRUSTED_MESSAGE_SIZE = 4 * 1024

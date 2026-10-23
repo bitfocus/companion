@@ -113,7 +113,8 @@ interface ButtonRenderSource {
 
 /** A render of the content of a button without its decoration, and the state to decorate it with */
 export interface UndecoratedRender {
-	readonly render: ImageResult
+	/** Null when there is nothing to draw, eg there is no button there */
+	readonly render: ImageResult | null
 	/**
 	 * Identifies what the render looks like, apart from its state (eg pressed), which only its decoration shows: two
 	 * with the same key draw the same. Null when that can't be told
@@ -1036,7 +1037,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 				},
 			}
 		} else {
-			undecorated = { render: GraphicsRenderer.generateBlankImage(false, null), contentKey: 'blank', state: null }
+			undecorated = { render: null, contentKey: 'blank', state: null }
 		}
 
 		this.#undecoratedRenders.set(render, undecorated)

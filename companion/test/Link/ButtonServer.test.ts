@@ -1,8 +1,13 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { UndecoratedRender } from '../../lib/Graphics/Controller.js'
 import type { ImageResult } from '../../lib/Graphics/ImageResult.js'
 import { LinkButtonServer, type LinkButtonServerHost } from '../../lib/Link/ButtonServer.js'
-import { decodeLinkMessage, type LinkButtonRevision } from '../../lib/Link/Protocol/v1/Schemas.js'
+import {
+	decodeLinkMessage,
+	LINK_MAX_MESSAGE_SIZE,
+	type LinkButtonRevision,
+} from '../../lib/Link/Protocol/v1/Schemas.js'
 import { LINK_SUBSCRIPTION_LEASE_MS } from '../../lib/Link/Protocol/v1/Timing.js'
 
 const button = { type: 'location', page: 1, row: 0, column: 2 } as const
@@ -65,7 +70,7 @@ function createServer() {
 		getSourceChain: vi.fn((_location: ControlLocation): string[] => []),
 		send: (transportId: string, peerId: string, payload: string) => sent.push({ transportId, peerId, payload }),
 		getClockOffset: vi.fn((_peerId: string): number | null => null),
-		getUndecoratedRender: vi.fn((render: ImageResult) => ({
+		getUndecoratedRender: vi.fn((render: ImageResult): UndecoratedRender => ({
 			render,
 			contentKey: (render as unknown as { contentKey?: string }).contentKey ?? null,
 			state: {
@@ -334,6 +339,38 @@ describe('LinkButtonServer', () => {
 		])
 		expect(refusalsTo('b')).toEqual([])
 		expect(ctx.server.countSubscribedBy('a')).toBe(2500)
+	})
+
+	test('refuses a peer a button at more sizes than it would show it at', async () => {
+		const sizes = Array.from({ length: 9 }, (_, i) => ({ ...sub, width: 72 + i, have: null }))
+		ctx.server.handleSubscribe('a', 't1', { buttons: sizes }, 0)
+		ctx.server.handleSubscribe('b', 't1', { buttons: [sizes[8]] }, 0)
+		// Renewing what it has is not more
+		ctx.server.handleSubscribe('a', 't1', { buttons: sizes.slice(0, 8) }, 0)
+		await flush()
+
+		expect(refusalsTo('a')).toEqual([{ buttons: [{ button, width: 80, height: 72, reason: 'limit' }] }])
+		expect(refusalsTo('b')).toEqual([])
+		expect(ctx.server.countSubscribedBy('a')).toBe(8)
+	})
+
+	test('sends a button with nothing on it as having no image, without drawing it', async () => {
+		ctx.host.getUndecoratedRender.mockReturnValue({ render: null, contentKey: 'blank', state: null })
+		ctx.server.handleSubscribe('a', 't1', { buttons: [subscribe(null)] }, 0)
+		await flush()
+
+		expect(updateOf(ctx.sent[0].payload)).toMatchObject({ image: { type: 'image', dataUrl: null }, pressed: false })
+	})
+
+	test('sends an image too large for the subscriber to accept as having none', async () => {
+		const huge = fakeRender(false)
+		vi.mocked(huge.drawNativeEncoded).mockResolvedValue(`data:image/png;base64,${'A'.repeat(LINK_MAX_MESSAGE_SIZE)}`)
+		ctx.host.getCachedRenderOrGeneratePlaceholder.mockReturnValue(huge)
+		ctx.server.handleSubscribe('a', 't1', { buttons: [subscribe(null)] }, 0)
+		await flush()
+
+		expect(ctx.sent).toHaveLength(1)
+		expect(updateOf(ctx.sent[0].payload).image).toEqual({ type: 'image', dataUrl: null })
 	})
 
 	test('refuses every button of a subscribe when asked to', () => {
