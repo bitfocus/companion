@@ -18,6 +18,7 @@ import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
 } from '../../Variables/VariablesAndExpressionParser.js'
+import type { CustomActionInstancesForEntity } from '../CustomActions/CustomActionInstanceManager.js'
 import type { RenderClock } from '../RenderClock.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
 import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
@@ -46,6 +47,8 @@ export interface ControlEntityListPoolProps {
 	renderClock: RenderClock
 	/** Resolve a page's local-variable entities, for `$(page:x)` injection (only used by button pools). */
 	getPageVariableEntities: (pageNumber: number) => ControlEntityInstance[] | null
+	/** Builds the copy of a custom action held by an action which calls it */
+	customActionInstances: CustomActionInstancesForEntity
 }
 
 /**
@@ -89,7 +92,13 @@ export abstract class ControlEntityListPoolBase {
 
 	// Public (not protected) so the editing mixins can extend this base via a generic constructor constraint.
 	// The class is abstract, so it still cannot be instantiated directly.
-	constructor(props: ControlEntityListPoolProps, isLayeredDrawing: boolean) {
+	/**
+	 * @param props The dependencies of the pool
+	 * @param isLayeredDrawing Whether the control is a layered button
+	 * @param customActionChain The custom actions the entities run inside, which is only the custom action itself for
+	 *   the pool of a custom action
+	 */
+	constructor(props: ControlEntityListPoolProps, isLayeredDrawing: boolean, customActionChain: ReadonlyArray<string>) {
 		this.logger = LogController.createLogger(`Controls/Fragments/EntityPool/${props.controlId}`)
 
 		this.controlId = props.controlId
@@ -112,6 +121,8 @@ export abstract class ControlEntityListPoolBase {
 		)
 		this.#scope = {
 			specialExpressionManager,
+			customActionChain,
+			customActionInstances: props.customActionInstances,
 			createVariablesAndExpressionParser: this.createVariablesAndExpressionParser.bind(this),
 		}
 	}

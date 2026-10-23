@@ -91,7 +91,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 	}
 
 	constructor(props: ControlEntityListPoolProps, sendRuntimePropsChange: () => void, isLayeredButton: boolean) {
-		super(props, isLayeredButton)
+		super(props, isLayeredButton, [])
 
 		this.#pageStore = props.pageStore
 		this.#getPageVariableEntities = props.getPageVariableEntities

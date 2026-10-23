@@ -76,6 +76,7 @@ export class ControlPage
 			pageStore: deps.pageStore,
 			renderClock: deps.renderClock,
 			getPageVariableEntities: deps.getPageVariableEntities,
+			customActionInstances: deps.customActionInstances,
 		})
 
 		if (!storage) {
