@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 import os from 'node:os'
 import isEqual from 'fast-deep-equal'
+import { nanoid } from 'nanoid'
 import z from 'zod'
 import type { BonjourQuery, ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
@@ -9,9 +10,11 @@ import {
 	type LinkPeerInfo,
 	type LinkPeerUsage,
 	type LinkPermission,
+	type LinkRemotePagesResult,
 	type LinkSelfInfo,
 } from '@companion-app/shared/Model/Link.js'
 import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
+import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
@@ -22,11 +25,13 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
+import { zodLocation } from '../Preview/Graphics.js'
 import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { LinkButtonClient } from './ButtonClient.js'
 import { LinkButtonServer } from './ButtonServer.js'
 import { LinkIdentity } from './Identity.js'
+import { describeLinkPages, LinkPagesClient } from './Pages.js'
 import { LinkPeerRegistry } from './PeerRegistry.js'
 import { LinkPermissionStore } from './PermissionStore.js'
 import { LinkPinger } from './Pinger.js'
@@ -57,6 +62,9 @@ interface LinkControllerEvents {
 	peers: [peers: LinkPeerInfo[]]
 }
 
+/** The size a remote button is previewed at, to choose it by */
+const REMOTE_PREVIEW_SIZE = { width: 72, height: 72 }
+
 /**
  * Companion Link: linking Companion installations together, so that one can show and press the buttons of
  * another. See Transports/README.md for an overview of how the pieces fit together.
@@ -72,6 +80,8 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 	readonly #transports: LinkTransportManager
 	readonly #peers: LinkPeerRegistry
 	readonly #pinger: LinkPinger
+	readonly #pagesClient: LinkPagesClient
+	readonly #remoteImages: LinkRemoteImageStore
 	readonly #permissions: LinkPermissionStore
 	readonly #buttonServer: LinkButtonServer
 	/** Used by link buttons to subscribe to remote buttons */
@@ -127,6 +137,10 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 				this.#transports.sendTo(transportId, peerId, encodeLinkMessage('ping', { nonce })),
 			() => performance.now()
 		)
+		this.#pagesClient = new LinkPagesClient(this.#peers, (transportId, peerId, payload) =>
+			this.#transports.sendTo(transportId, peerId, payload)
+		)
+		this.#remoteImages = deps.remoteImages
 		this.buttonClient = new LinkButtonClient(
 			() => this.#selfId,
 			this.#peers,
@@ -238,6 +252,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		if (this.#announceTimer) clearInterval(this.#announceTimer)
 		this.#announceTimer = null
 		this.#pinger.clear()
+		this.#pagesClient.clear()
 
 		this.buttonClient.stop()
 		this.#peers.stop()
@@ -366,6 +381,21 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 				if (this.#isAllowed(senderId, 'buttons', message.type)) {
 					this.#buttonServer.handleAbort(senderId, message.payload, Date.now())
 				}
+				break
+			case 'pages.request':
+				if (this.#isAllowed(senderId, 'buttons', message.type)) {
+					this.#transports.sendTo(
+						transportId,
+						senderId,
+						encodeLinkMessage(
+							'pages',
+							describeLinkPages(this.#pageStore, this.#userconfig.getKey('gridSize'), message.payload.id)
+						)
+					)
+				}
+				break
+			case 'pages':
+				this.#pagesClient.handlePages(senderId, message.payload)
 				break
 			case 'subscribe.refused':
 				this.buttonClient.handleRefused(senderId, message.payload)
@@ -539,6 +569,50 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 				this.#permissions.delete(input.peerId)
 				this.#peers.forget(input.peerId)
 			}),
+
+			/** The pages of buttons of another installation, to choose a remote button from */
+			remotePages: publicProcedure
+				.input(z.object({ peerId: z.string() }))
+				.query(async ({ input }): Promise<LinkRemotePagesResult> => self.#pagesClient.request(input.peerId)),
+
+			/**
+			 * The content of a button of another installation, as a preview to choose it by. Subscribed to as a remote
+			 * button is, for as long as it is watched
+			 */
+			watchRemoteButton: publicProcedure
+				.input(z.object({ peerId: z.string(), location: zodLocation }))
+				.subscription(async function* ({ signal, input }) {
+					const previewId = `preview:${nanoid()}`
+					const changes = new EventEmitter<{ changed: [] }>()
+					const iterator = toIterable(changes, 'changed', signal)
+
+					self.buttonClient.setTarget(previewId, { peerId: input.peerId, location: input.location }, () =>
+						changes.emit('changed')
+					)
+					// Drawn without decoration, as only its content is shown
+					self.buttonClient.setDecoration(previewId, ButtonGraphicsDecorationType.None)
+					self.buttonClient.setDisplayedSizes(previewId, [REMOTE_PREVIEW_SIZE])
+					try {
+						let last: string | null | undefined
+						const current = async () => {
+							const state = self.buttonClient.getState(previewId)
+							if (state?.status !== 'ok' || !state.remoteKey) return null
+							const image = await self.#remoteImages.getImage(state.remoteKey, REMOTE_PREVIEW_SIZE, false)
+							return image?.dataUrl ?? null
+						}
+
+						last = await current()
+						yield last
+						for await (const _change of iterator) {
+							const dataUrl = await current()
+							if (dataUrl === last) continue
+							last = dataUrl
+							yield dataUrl
+						}
+					} finally {
+						self.buttonClient.removeTarget(previewId)
+					}
+				}),
 
 			setPeerAlias: publicProcedure
 				.input(z.object({ peerId: z.string(), alias: z.string().max(100).nullable() }))

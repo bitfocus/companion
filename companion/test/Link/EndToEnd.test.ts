@@ -228,6 +228,34 @@ describe.each(NETWORKS)('two installations linked over $name', { timeout: 20_000
 		)
 	})
 
+	test('the pages of an installation can be browsed, and its buttons previewed, once it shares them', async () => {
+		expect(await b.api.remotePages({ peerId: aId })).toEqual({ ok: false, error: 'denied' })
+
+		await shareButtons(a, bId, true)
+		await vi.waitFor(async () => expect((await b.peers()).find((p) => p.id === aId)?.sharedWithUs?.buttons).toBe(true))
+		expect(await b.api.remotePages({ peerId: aId })).toEqual({
+			ok: true,
+			gridSize: { minRow: 0, maxRow: 1, minColumn: 0, maxColumn: 2 },
+			pages: [
+				{
+					pageNumber: 1,
+					name: 'Cameras',
+					buttons: [
+						{ row: 0, column: 0 },
+						{ row: 1, column: 2 },
+					],
+				},
+				{ pageNumber: 2, name: '', buttons: [] },
+			],
+		})
+
+		expect(await b.remoteButtonPreview(aId, { pageNumber: 1, row: 1, column: 2 })).toBe(
+			'data:image/png;base64,Studio A-1/1/2'
+		)
+		// Subscribed to only while it is previewed
+		await vi.waitFor(() => expect(b.controller.buttonClient.countSubscribedTo(aId)).toBe(0))
+	})
+
 	test('what is in use is counted on both installations', async () => {
 		await shareButtons(a, bId, true)
 		const button = showOnB('remote', location)

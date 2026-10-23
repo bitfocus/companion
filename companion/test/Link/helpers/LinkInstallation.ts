@@ -115,7 +115,11 @@ export class LinkInstallation {
 			db.getTableView('link_transports').data[transport.id] = { ...transport, sortOrder, builtin: false }
 		})
 
-		const userConfigValues: Partial<UserConfigModel> = { installName: options.name, ...options.userConfig }
+		const userConfigValues: Partial<UserConfigModel> = {
+			installName: options.name,
+			gridSize: { minRow: 0, maxRow: 1, minColumn: 0, maxColumn: 2 },
+			...options.userConfig,
+		}
 		const userconfig = Object.assign(new EventEmitter(), {
 			getKey: (key: keyof UserConfigModel) => userConfigValues[key],
 		}) as unknown as DataUserConfig
@@ -123,6 +127,17 @@ export class LinkInstallation {
 		const pageStore = Object.assign(new EventEmitter(), {
 			getControlIdAt: (location: ControlLocation) =>
 				this.#controlsAt.get(locationKey(location)) ?? `control-${locationKey(location)}`,
+			// Two pages to choose from, the first with buttons on it, one of them outside the grid
+			getPageCount: () => 2,
+			getPageName: (pageNumber: number) => (pageNumber === 1 ? 'Cameras' : ''),
+			getAllPopulatedLocationsOnPage: (pageNumber: number): ControlLocation[] =>
+				pageNumber === 1
+					? [
+							{ pageNumber, row: 0, column: 0 },
+							{ pageNumber, row: 1, column: 2 },
+							{ pageNumber, row: 9, column: 9 },
+						]
+					: [],
 		}) as unknown as IPageStore
 
 		this.controller = new LinkController(
@@ -176,6 +191,19 @@ export class LinkInstallation {
 	async transportStates(): Promise<Record<string, LinkTransportState>> {
 		const update = await current(async (signal) => this.#caller(signal).watchTransportStates())
 		return update.type === 'init' ? update.items : {}
+	}
+
+	/** The preview of a button of a peer, as the UI shows it to choose it by, once it has arrived */
+	async remoteButtonPreview(peerId: string, location: ControlLocation): Promise<string> {
+		const abort = new AbortController()
+		try {
+			for await (const dataUrl of await this.#caller(abort.signal).watchRemoteButton({ peerId, location })) {
+				if (dataUrl) return dataUrl
+			}
+			throw new Error('Ended without a preview')
+		} finally {
+			abort.abort()
+		}
 	}
 
 	start(): void {

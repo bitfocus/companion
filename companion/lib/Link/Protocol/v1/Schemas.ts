@@ -225,6 +225,49 @@ export const LinkButtonAbortPayloadSchema = z
 	})
 	.describe('Abort the running actions of a button on a peer')
 
+/** The most pages a pages message may list */
+export const LINK_MAX_PAGES = 1000
+
+/** The most buttons a page in a pages message may list */
+export const LINK_MAX_BUTTONS_PER_PAGE = 10_000
+
+export const LinkPagesRequestPayloadSchema = z
+	.object({ id: MessageIdSchema.describe('Echoed in the reply, to match it to this request') })
+	.describe(
+		'Asks the recipient for its pages of buttons, eg for the user to choose a button from, answered with `pages`. Needs the buttons permission: it is ignored without it'
+	)
+
+export const LinkPagesPayloadSchema = z
+	.object({
+		id: MessageIdSchema.describe('The id of the request this answers'),
+		gridSize: z
+			.object({
+				minRow: z.number().int().min(-MAX_COORDINATE).max(MAX_COORDINATE),
+				maxRow: z.number().int().min(-MAX_COORDINATE).max(MAX_COORDINATE),
+				minColumn: z.number().int().min(-MAX_COORDINATE).max(MAX_COORDINATE),
+				maxColumn: z.number().int().min(-MAX_COORDINATE).max(MAX_COORDINATE),
+			})
+			.describe('The rows and columns of a page, which every page has'),
+		pages: z
+			.array(
+				z.object({
+					page: LinkButtonLocationRefSchema.shape.page,
+					name: z.string().max(256).describe('The name of the page, which may be empty'),
+					buttons: z
+						.array(
+							z.object({
+								row: LinkButtonLocationRefSchema.shape.row,
+								column: LinkButtonLocationRefSchema.shape.column,
+							})
+						)
+						.max(LINK_MAX_BUTTONS_PER_PAGE)
+						.describe('Where on the page there are buttons'),
+				})
+			)
+			.max(LINK_MAX_PAGES),
+	})
+	.describe('The pages of buttons of the sender, in answer to a `pages.request`')
+
 export const LinkPingPayloadSchema = z
 	.object({ nonce: z.string().min(1).max(64).describe('Echoed in the pong, to match it to this ping') })
 	.describe(
@@ -259,6 +302,8 @@ export const LinkMessageSchema = z.discriminatedUnion('type', [
 	envelope('button.rotate', LinkButtonRotatePayloadSchema),
 	envelope('button.abort', LinkButtonAbortPayloadSchema),
 	envelope('access', LinkAccessPayloadSchema),
+	envelope('pages.request', LinkPagesRequestPayloadSchema),
+	envelope('pages', LinkPagesPayloadSchema),
 	envelope('ping', LinkPingPayloadSchema),
 	envelope('pong', LinkPongPayloadSchema),
 ])

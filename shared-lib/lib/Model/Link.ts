@@ -8,6 +8,7 @@ import type {
 	CompanionInputFieldStaticTextExtended,
 	CompanionInputFieldTextInputExtended,
 } from './Options.js'
+import type { UserConfigGridSize } from './UserConfigModel.js'
 
 /**
  * Companion Link: linking Companion installations together, over one or more transports.
@@ -201,6 +202,20 @@ export interface LinkSelfInfo {
 	/** The Link protocol versions this installation speaks, one per major version */
 	protocolVersions: string[]
 }
+
+/** A page of buttons of another installation, to choose a remote button from */
+export interface LinkRemotePage {
+	pageNumber: number
+	/** May be empty */
+	name: string
+	/** Where on the page there are buttons */
+	buttons: { row: number; column: number }[]
+}
+
+/** The pages of buttons of another installation, or why they can't be had */
+export type LinkRemotePagesResult =
+	| { ok: true; gridSize: UserConfigGridSize; pages: LinkRemotePage[] }
+	| { ok: false; error: 'unknown_peer' | 'incompatible' | 'offline' | 'denied' | 'timeout' }
 
 /**
  * Why a link button is showing what it is showing
