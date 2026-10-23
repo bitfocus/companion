@@ -9,6 +9,7 @@ import type { ModuleVariableDefinitions, VariableValue } from '@companion-app/sh
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
+import type { DisplayedSize, ReleaseDisplayedLocation } from '../Graphics/DisplayedLocations.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { ActionRecorder, ActionRecorderEvents } from '../Instance/ActionRecorder.js'
 import type { InstanceController } from '../Instance/Controller.js'
@@ -232,6 +233,11 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 
 	getCachedRender(location: ControlLocation): ImageResult | undefined {
 		return this.#graphicsController.getCachedRender(location)
+	}
+
+	/** Note that a location is being shown at a size, until the returned function is called */
+	acquireDisplayedLocation(location: ControlLocation, size: DisplayedSize): ReleaseDisplayedLocation {
+		return this.#graphicsController.displayedLocations.acquire(location, size)
 	}
 
 	actionRecorderDiscardActions(): void {
