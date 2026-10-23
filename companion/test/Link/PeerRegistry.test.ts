@@ -207,15 +207,50 @@ describe('LinkPeerRegistry', () => {
 			announcement: announcement('a', { name: 'Renamed' }),
 			lastSeen: 5 * 60_000 + 30,
 			alias: null,
+			hasSharedWithUs: false,
 		})
 	})
 
-	test('drops stored peers that are invalid, or itself', () => {
+	test('remembers only the peers it shares something with, or has named', () => {
+		const store = new FakeTableView<any>()
+		const shared = new Map<string, boolean>()
+		const registry = new LinkPeerRegistry('self', (id) => ({ buttons: shared.get(id) ?? false }), store.asTableView())
+		registry.handleAnnouncement('t1', 'b', announcement('b'), 0)
+		expect(store.data).toEqual({})
+
+		registry.setAlias('b', 'Named')
+		expect(Object.keys(store.data)).toEqual(['b'])
+		registry.setAlias('b', null)
+		expect(store.data).toEqual({})
+
+		shared.set('b', true)
+		registry.sharedByUsChanged('b')
+		expect(Object.keys(store.data)).toEqual(['b'])
+		shared.set('b', false)
+		registry.sharedByUsChanged('b')
+		expect(store.data).toEqual({})
+	})
+
+	test('remembers a peer that only shares something with us, across a restart', () => {
+		const store = new FakeTableView<any>()
+		const before = new LinkPeerRegistry('self', sharedByUs, store.asTableView())
+		before.handleAnnouncement('t1', 'b', announcement('b'), 0)
+		before.handleAccess('b', { buttons: true })
+		// Still remembered once it stops sharing, so that buttons using it say it is offline rather than unknown
+		before.handleAccess('b', { buttons: false })
+		before.stop()
+
+		const after = new LinkPeerRegistry('self', sharedByUs, store.asTableView())
+		expect(after.getPeer('b')).toMatchObject({ online: false, name: 'Peer b' })
+	})
+
+	test('drops stored peers that are invalid, itself, or not worth remembering', () => {
 		const store = new FakeTableView<any>()
 		store.data = {
 			self: { announcement: announcement('self'), lastSeen: 0 },
 			bad: { lastSeen: 'yesterday' },
 			a: { announcement: announcement('a'), lastSeen: 5 },
+			unshared: { announcement: announcement('unshared'), lastSeen: 5 },
 		}
 		const registry = new LinkPeerRegistry('self', sharedByUs, store.asTableView())
 		expect(registry.getPeers().map((peer) => peer.id)).toEqual(['a'])

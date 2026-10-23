@@ -124,8 +124,11 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			db.getTableView('link_peers')
 		)
 		this.#permissions.retainOnly(new Set(this.#peers.getPeers().map((peer) => peer.id)))
-		this.#pinger = new LinkPinger(this.#peers, (peerId, transportId, nonce) =>
-			this.#transports.sendTo(transportId, peerId, encodeLinkMessage('ping', { nonce }))
+		this.#pinger = new LinkPinger(
+			this.#peers,
+			(peerId, transportId, nonce) =>
+				this.#transports.sendTo(transportId, peerId, encodeLinkMessage('ping', { nonce })),
+			() => performance.now()
 		)
 		this.buttonClient = new LinkButtonClient(
 			() => this.#selfId,
@@ -156,8 +159,13 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			this.#handleMessage(transportId, payload, origin)
 		)
 		this.#permissions.on('changed', (peerId, permissions) => {
+			this.#peers.sharedByUsChanged(peerId)
 			this.emit('peers', this.#peers.getPeers())
-			for (const transportId of this.#peers.getReachableTransports(peerId, null)) this.#sendAccess(peerId, transportId)
+			// Not to a peer we can't talk to: it is told once it announces a version in common (see peerReachable)
+			if (this.#peers.getPeer(peerId)?.compatible) {
+				for (const transportId of this.#peers.getReachableTransports(peerId, null))
+					this.#sendAccess(peerId, transportId)
+			}
 			// Stop serving anything it is no longer allowed straight away, rather than when its lease runs out
 			if (!permissions.buttons) this.#buttonServer.revoke(peerId)
 		})
@@ -169,7 +177,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		this.#peers.on('changed', () => this.emit('peers', this.#peers.getPeers()))
 		this.#peers.on('peerReachable', (peerId, transportId) => {
 			this.#sendAccess(peerId, transportId)
-			this.#pinger.ping(peerId, transportId, Date.now())
+			this.#pinger.ping(peerId, transportId)
 		})
 
 		for (const builtin of builtinTransports) this.#applyBuiltin(builtin)
@@ -202,7 +210,12 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 
 		this.#announceTimer = setInterval(() => {
 			this.#announce(null)
-			this.#pinger.pingAll(Date.now())
+			this.#pinger.pingAll()
+			// Again, in case it was lost, or arrived before our announcement and so was dropped
+			for (const peer of this.#peers.getPeers()) {
+				if (!peer.compatible) continue
+				for (const route of peer.routes) this.#sendAccess(peer.id, route.transportId)
+			}
 			this.#buttonServer.expireLeases(Date.now())
 		}, LINK_ANNOUNCE_INTERVAL_MS)
 	}

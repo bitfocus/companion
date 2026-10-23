@@ -13,6 +13,9 @@ import { LINK_ANNOUNCE_MISSED_LIMIT, LinkAnnouncementSchema, type LinkAnnounceme
 import { LINK_CLOCK_ESTIMATE_MAX_AGE_MS } from './Protocol/v1/Timing.js'
 import { LINK_PROTOCOL_VERSIONS, negotiateLinkProtocolVersion } from './Protocol/Versions.js'
 
+/** Allowance for timer jitter, when checking whether two measurements of a peer's clock agree */
+const CLOCK_AGREEMENT_MARGIN_MS = 20
+
 /** How a peer is reachable on one transport */
 interface PeerTransportRecord {
 	/** When the peer was last heard from on this transport */
@@ -33,6 +36,8 @@ interface PeerRecord {
 	savedLastSeen: number
 	/** What the peer lets us use, once it has said since it became reachable */
 	sharedWithUs: LinkPermissions | null
+	/** Whether it has shared something with us, kept once it has */
+	hasSharedWithUs: boolean
 	/** The transport to reach the peer through, while it is reachable (see `getRoute`) */
 	route: string | null
 	/** How far ahead of ours the peer's clock is, once measured (see `recordClockSample`) */
@@ -44,13 +49,17 @@ const StoredPeerSchema = z.object({
 	announcement: LinkAnnouncementSchema,
 	lastSeen: z.number(),
 	alias: z.string().nullable().default(null),
+	hasSharedWithUs: z.boolean().default(false),
 })
 type StoredPeer = z.infer<typeof StoredPeerSchema>
 
 export interface PeerRegistryEvents {
 	/** The list of peers, or the reachability of one, changed */
 	changed: []
-	/** A peer has become reachable on a transport */
+	/**
+	 * A peer we can talk to has become reachable on a transport: it is newly reachable there, or has just announced a
+	 * protocol version in common with us. Nothing is sent to a peer without one
+	 */
 	peerReachable: [peerId: string, transportId: string]
 	/** What a peer lets us use has changed */
 	sharedWithUsChanged: [peerId: string]
@@ -67,8 +76,9 @@ const LAST_SEEN_SAVE_INTERVAL_MS = 5 * 60_000
 /**
  * The installations discovered on any transport, and which transports each is reachable on.
  *
- * Peers stay listed after they go offline, and are remembered across restarts until forgotten, so that their
- * permissions can be changed and buttons linked to them can explain why they are not working.
+ * Peers stay listed after they go offline, and those worth keeping (see `#isRemembered`) are remembered across
+ * restarts until forgotten, so that their permissions can be changed and buttons linked to them can explain why they
+ * are not working.
  */
 export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 	readonly #logger = LogController.createLogger('Link/PeerRegistry')
@@ -96,7 +106,7 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 
 		for (const [peerId, raw] of Object.entries(store.all())) {
 			const stored = StoredPeerSchema.safeParse(raw)
-			if (!stored.success || peerId === selfId) {
+			if (!stored.success || peerId === selfId || !this.#isRemembered(peerId, stored.data)) {
 				store.delete(peerId)
 				continue
 			}
@@ -108,6 +118,7 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 				lastSeen: stored.data.lastSeen,
 				savedLastSeen: stored.data.lastSeen,
 				sharedWithUs: null,
+				hasSharedWithUs: stored.data.hasSharedWithUs,
 				route: null,
 				clock: null,
 			})
@@ -134,9 +145,32 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 		if (this.#peers.delete(selfId)) this.emit('changed')
 	}
 
+	/**
+	 * Whether a peer is remembered across restarts: once it is shared something, has shared something with us, or is
+	 * given a name here. Any other peer is found again when it is reachable, so isn't worth keeping
+	 */
+	#isRemembered(peerId: string, peer: Pick<StoredPeer, 'alias' | 'hasSharedWithUs'>): boolean {
+		return peer.alias !== null || peer.hasSharedWithUs || Object.values(this.#getSharedByUs(peerId)).some(Boolean)
+	}
+
 	#save(record: PeerRecord): void {
 		record.savedLastSeen = record.lastSeen
-		this.#store.set(record.id, { announcement: record.announcement, lastSeen: record.lastSeen, alias: record.alias })
+		if (this.#isRemembered(record.id, record)) {
+			this.#store.set(record.id, {
+				announcement: record.announcement,
+				lastSeen: record.lastSeen,
+				alias: record.alias,
+				hasSharedWithUs: record.hasSharedWithUs,
+			})
+		} else {
+			this.#store.delete(record.id)
+		}
+	}
+
+	/** What we share with a peer has changed, which decides whether it is remembered */
+	sharedByUsChanged(peerId: string): void {
+		const record = this.#peers.get(peerId)
+		if (record) this.#save(record)
 	}
 
 	/** Process an announcement received on a transport */
@@ -161,6 +195,7 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 				lastSeen: now,
 				savedLastSeen: now,
 				sharedWithUs: null,
+				hasSharedWithUs: false,
 				route: null,
 				clock: null,
 			}
@@ -168,13 +203,14 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 		}
 
 		const existing = record.transports.get(transportId)
+		const wasCompatible = !!existing && isCompatible(record.announcement)
 		record.announcement = announcement
 		record.transports.set(transportId, { lastSeen: now, latencyMs: existing?.latencyMs ?? null })
 		record.lastSeen = now
 		if (needsSave) this.#save(record)
 
 		this.emit('changed')
-		if (!existing) this.emit('peerReachable', peerId, transportId)
+		if (!wasCompatible && isCompatible(announcement)) this.emit('peerReachable', peerId, transportId)
 		if (!record.route) {
 			record.route = transportId
 			this.emit('routeChanged', peerId, transportId)
@@ -185,8 +221,14 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 	handleAccess(peerId: string, permissions: LinkPermissions): void {
 		const record = this.#peers.get(peerId)
 		if (!record || record.transports.size === 0) return
+		// Repeated every so often, in case one was lost
+		if (isEqual(record.sharedWithUs, permissions)) return
 
 		record.sharedWithUs = permissions
+		if (!record.hasSharedWithUs && Object.values(permissions).some(Boolean)) {
+			record.hasSharedWithUs = true
+			this.#save(record)
+		}
 		this.emit('changed')
 		this.emit('sharedWithUsChanged', peerId)
 	}
@@ -202,14 +244,21 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 
 	/**
 	 * Record a measurement of how far ahead of ours a peer's clock is. A measurement is accurate to within half its
-	 * round trip, so the one from the fastest round trip is kept, until it is too old to trust
+	 * round trip, so the one from the fastest round trip is kept, until it is too old to trust. Or until a measurement
+	 * can't agree with it, which means a clock has been changed (eg set by NTP once a device without a clock battery
+	 * has booted)
 	 */
 	recordClockSample(peerId: string, offsetMs: number, roundTripMs: number, now: number): void {
 		const record = this.#peers.get(peerId)
 		if (!record) return
 
 		const current = record.clock
-		if (current && current.roundTripMs < roundTripMs && now - current.measuredAt < LINK_CLOCK_ESTIMATE_MAX_AGE_MS)
+		if (
+			current &&
+			current.roundTripMs < roundTripMs &&
+			now - current.measuredAt < LINK_CLOCK_ESTIMATE_MAX_AGE_MS &&
+			Math.abs(offsetMs - current.offsetMs) <= (current.roundTripMs + roundTripMs) / 2 + CLOCK_AGREEMENT_MARGIN_MS
+		)
 			return
 		record.clock = { offsetMs, roundTripMs, measuredAt: now }
 	}
@@ -357,4 +406,9 @@ function chooseRoute(record: PeerRecord): string | null {
 		else if (a.latencyMs === b.latencyMs && a.lastSeen > b.lastSeen) best = entry
 	}
 	return best?.[0] ?? null
+}
+
+/** Whether a peer announces a protocol version in common with us, so that we can talk to it */
+function isCompatible(announcement: LinkAnnouncement): boolean {
+	return negotiateLinkProtocolVersion(LINK_PROTOCOL_VERSIONS, announcement.protocolVersions) !== null
 }

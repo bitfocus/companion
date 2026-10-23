@@ -6,7 +6,11 @@ import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { GraphicsController } from '../../lib/Graphics/Controller.js'
 import type { ImageResult } from '../../lib/Graphics/ImageResult.js'
 import { LinkController } from '../../lib/Link/Controller.js'
-import { decodeLinkAnnouncement, encodeLinkAnnouncement } from '../../lib/Link/Protocol/Announcement.js'
+import {
+	decodeLinkAnnouncement,
+	encodeLinkAnnouncement,
+	LINK_ANNOUNCE_INTERVAL_MS,
+} from '../../lib/Link/Protocol/Announcement.js'
 import { decodeLinkMessage, encodeLinkMessage, type LinkMessage } from '../../lib/Link/Protocol/v1/Schemas.js'
 import type {
 	LinkMessageOrigin,
@@ -237,6 +241,35 @@ describe('LinkController', () => {
 			peerId: 'peer',
 			message: { payload: { permissions: { buttons: true } } },
 		})
+	})
+
+	test('tells each peer what it may use again every so often, in case that was lost', async () => {
+		await ctx.controller.stop()
+		vi.useFakeTimers()
+		try {
+			ctx = createController()
+			ctx.announcePeer()
+			expect(ctx.transport().messagesOfType('access')).toHaveLength(1)
+
+			await vi.advanceTimersByTimeAsync(LINK_ANNOUNCE_INTERVAL_MS)
+			expect(ctx.transport().messagesOfType('access')).toHaveLength(2)
+		} finally {
+			vi.useRealTimers()
+		}
+	})
+
+	test('sends nothing to a peer it has no protocol version in common with, until it has one', async () => {
+		ctx.announcePeer(['2.0.0'])
+		await ctx.shareButtons(true)
+		expect(ctx.transport().messagesOfType('access')).toEqual([])
+		expect(ctx.transport().messagesOfType('ping')).toEqual([])
+
+		// Updated, to a version in common
+		ctx.announcePeer()
+		expect(ctx.transport().messagesOfType('access')).toMatchObject([
+			{ peerId: 'peer', message: { payload: { permissions: { buttons: true } } } },
+		])
+		expect(ctx.transport().messagesOfType('ping')).toMatchObject([{ peerId: 'peer' }])
 	})
 
 	test('forgetting a peer stops sharing with it, and is remembered across restarts', async () => {
