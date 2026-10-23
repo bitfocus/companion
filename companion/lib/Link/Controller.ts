@@ -143,10 +143,14 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			() => this.#selfId
 		)
 
-		// Link buttons are subscribed to at the sizes they are shown at
+		// Link buttons are subscribed to at the sizes they are shown at: when those change, and when a button is placed
+		// somewhere (it is created before it is placed, so can't tell itself)
 		deps.graphics.displayedLocations.on('changed', (location) => {
 			const controlId = deps.pageStore.getControlIdAt(location)
 			if (controlId) this.buttonClient.setDisplayedSizes(controlId, deps.graphics.displayedLocations.getSizes(location))
+		})
+		deps.pageStore.on('controlLocationChanged', (controlId, location) => {
+			this.buttonClient.setDisplayedSizes(controlId, location ? deps.graphics.displayedLocations.getSizes(location) : [])
 		})
 
 		this.#transports.events.on('announcement', (transportId, peerId, payload) =>
