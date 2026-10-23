@@ -101,6 +101,21 @@ describe('ControlButtonLink', () => {
 		})
 	})
 
+	it('replaces invalid stored options by their defaults, and saves the result', () => {
+		const storage = {
+			type: 'link-button',
+			options: { peerId: 'peer', location: { value: 5, isExpression: false }, notes: 'kept' },
+		} as unknown as LinkButtonModel
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, storage, false)
+
+		expect(control.toJSON().options).toEqual({
+			peerId: 'peer',
+			location: { value: '', isExpression: false },
+			notes: 'kept',
+		})
+		expect(deps.dbTable.set).toHaveBeenCalledWith(MY_CONTROL_ID, control.toJSON())
+	})
+
 	it('rejects invalid options', () => {
 		const control = new ControlButtonLink(deps, MY_CONTROL_ID, null, false)
 		expect(control.optionsSetField('peerId', 5)).toBe(false)

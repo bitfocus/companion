@@ -1,8 +1,13 @@
 import type { JsonValue } from 'type-fest'
-import type { LinkButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import {
+	LinkButtonOptionsSchema,
+	parseLinkButtonOptions,
+	type LinkButtonModel,
+	type LinkButtonOptions,
+} from '@companion-app/shared/Model/ButtonModel.js'
 import type { LinkButtonRuntimeProps } from '@companion-app/shared/Model/Link.js'
-import { exprVal, isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import { ParseLocationString } from '../../../Internal/Util.js'
 import type { LinkButtonState, LinkButtonTarget } from '../../../Link/ButtonClient.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
@@ -84,7 +89,7 @@ export class ControlButtonLink
 	constructor(deps: ControlDependencies, controlId: string, storage: LinkButtonModel | null, isImport: boolean) {
 		super(deps, controlId, 'Controls/Button/Link')
 
-		this.options = { peerId: '', location: exprVal('') }
+		this.options = parseLinkButtonOptions({}).options
 
 		this.#drawing = new LinkButtonDrawer(
 			deps,
@@ -98,13 +103,14 @@ export class ControlButtonLink
 		} else {
 			if (storage.type !== 'link-button') throw new Error(`Invalid type given to ControlButtonLink: "${storage.type}"`)
 
-			this.options = {
-				peerId: storage.options.peerId,
-				location: storage.options.location,
-				notes: storage.options.notes,
+			const { options, invalidKeys } = parseLinkButtonOptions(storage.options)
+			this.options = options
+			if (invalidKeys.length > 0) {
+				this.logger.warn(`Replaced invalid options with their defaults: ${invalidKeys.join(', ')}`)
 			}
 
-			if (isImport) this.commitChange()
+			// Saved again when anything had to be replaced, so that it is valid from now on
+			if (isImport || invalidKeys.length > 0) this.commitChange()
 		}
 
 		this.#updateTarget()
@@ -170,26 +176,25 @@ export class ControlButtonLink
 	 * Update an option field: `peerId`, `location` or `notes`
 	 */
 	optionsSetField(key: string, value: JsonValue | undefined): boolean {
-		switch (key) {
+		if (!Object.hasOwn(LinkButtonOptionsSchema.shape, key)) return false
+		const optionKey = key as keyof LinkButtonOptions
+
+		const parsed = LinkButtonOptionsSchema.shape[optionKey].safeParse(value)
+		if (!parsed.success) return false
+
+		this.options = { ...this.options, [optionKey]: parsed.data }
+		this.commitChange(false)
+
+		switch (optionKey) {
 			case 'notes':
-				if (typeof value !== 'string') return false
-				this.options.notes = value
-				this.commitChange(false)
-				return true
-			case 'peerId':
-				if (typeof value !== 'string') return false
-				this.options.peerId = value
 				break
+			case 'peerId':
 			case 'location':
-				if (!isExpressionOrValue(value) || typeof value.value !== 'string') return false
-				this.options.location = { value: value.value, isExpression: value.isExpression }
+				this.#updateTarget()
 				break
 			default:
-				return false
+				assertNever(optionKey)
 		}
-
-		this.commitChange(false)
-		this.#updateTarget()
 		return true
 	}
 
