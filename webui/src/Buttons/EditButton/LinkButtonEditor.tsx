@@ -153,7 +153,7 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 						setValue={(value) => setOption('showStatusIcons', String(value))}
 					/>
 					<div className="form-text">
-						The button is decorated here, as any button of this installation. With a top bar, a cloud among its status
+						The button is decorated here, as any button of this installation. With a top bar, a link among its status
 						icons marks it as a remote button.
 					</div>
 				</Grid.Col>

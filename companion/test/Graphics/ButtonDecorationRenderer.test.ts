@@ -187,13 +187,13 @@ describe('ButtonDecorationRenderer', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
-		test('remote button - a cloud', async () => {
+		test('remote button - a link', async () => {
 			const { img, topBarBounds } = makeCanvas(72, 58)
 			ButtonDecorationRenderer.drawIcons(img, makeButtonStyle({ link_status: 'ok' }), topBarBounds)
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
-		test('remote button unreachable - a red cloud, before the other icons', async () => {
+		test('remote button unreachable - a red link, before the other icons', async () => {
 			const { img, topBarBounds } = makeCanvas(72, 58)
 			ButtonDecorationRenderer.drawIcons(
 				img,

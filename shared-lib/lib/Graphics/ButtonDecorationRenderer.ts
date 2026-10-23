@@ -88,18 +88,18 @@ export class ButtonDecorationRenderer {
 		const iconSize = Math.floor(topBarBounds.height * 0.65)
 		const iconPadding = Math.floor(topBarBounds.height * 0.175)
 
-		// first a cloud for a remote button, as it has a top bar to put it in
+		// first a link for a remote button, as it has a top bar to put it in
 		if (drawStyle.link_status && drawStyle.decoration === ButtonGraphicsDecorationType.TopBar) {
-			const cloudWidth = Math.round(iconSize * 1.5)
-			ButtonDecorationRenderer.#drawCloud(
+			const linkWidth = Math.round(iconSize * 2.2)
+			ButtonDecorationRenderer.#drawLink(
 				img,
-				rightMax - (cloudWidth + iconPadding),
+				rightMax - (linkWidth + iconPadding),
 				topBarBounds.y + iconPadding,
-				cloudWidth,
+				linkWidth,
 				iconSize,
 				drawStyle.link_status === 'unreachable' ? 'red' : 'rgb(200, 200, 200)'
 			)
-			rightMax -= cloudWidth + iconPadding
+			rightMax -= linkWidth + iconPadding
 		}
 
 		let statusColor: string | undefined
@@ -151,21 +151,21 @@ export class ButtonDecorationRenderer {
 		}
 	}
 
-	/** A cloud, filling a box: a large puff over two small ones, on a flat base */
-	static #drawCloud(img: ImageBase<any>, x: number, y: number, width: number, height: number, color: string): void {
-		const small = height * 0.32
-		const baseY = y + height - small
-		img.circle(x + small, baseY, small, small, 0, Math.PI * 2, false, color)
-		img.circle(x + width - small, baseY, small, small, 0, Math.PI * 2, false, color)
-		img.circle(x + width * 0.5, y + height * 0.42, height * 0.42, height * 0.42, 0, Math.PI * 2, false, color)
-		img.drawFilledPath(
-			[
-				[x + small, baseY],
-				[x + width - small, baseY],
-				[x + width - small, y + height],
-				[x + small, y + height],
-			],
-			color
-		)
+	/** Two links of a chain side by side, overlapping, filling a box */
+	static #drawLink(img: ImageBase<any>, x: number, y: number, width: number, height: number, color: string): void {
+		const stroke = Math.max(1, height * 0.22)
+		const radius = (height - stroke) / 2
+		const centerY = y + height / 2
+		const linkLength = width * 0.6
+
+		for (const left of [x, x + width - linkLength]) {
+			const startX = left + stroke / 2 + radius
+			const endX = left + linkLength - stroke / 2 - radius
+			const style = { color, width: stroke }
+			img.arcStroke(startX, centerY, radius, Math.PI / 2, (Math.PI * 3) / 2, false, style)
+			img.arcStroke(endX, centerY, radius, -Math.PI / 2, Math.PI / 2, false, style)
+			img.line(startX, centerY - radius, endX, centerY - radius, style)
+			img.line(startX, centerY + radius, endX, centerY + radius, style)
+		}
 	}
 }

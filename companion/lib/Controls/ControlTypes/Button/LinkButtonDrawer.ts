@@ -192,7 +192,7 @@ export class LinkButtonDrawer implements IButtonDrawer {
 						: []
 					: makePlaceholderElements(this.#controlId, state.status)),
 			],
-			// A cloud in its top bar marks it as a remote button
+			// A link in its top bar marks it as a remote button
 			link_status: state.status === 'ok' ? (state.unreachable ? 'unreachable' : 'ok') : undefined,
 			referencedLocations: undefined,
 			style: 'button-layered',
