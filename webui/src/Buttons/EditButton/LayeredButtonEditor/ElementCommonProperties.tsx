@@ -1,7 +1,8 @@
 import { observer } from 'mobx-react-lite'
-import { useCallback, useId } from 'react'
+import { useCallback, useContext, useId } from 'react'
 import type { DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import {
+	type ButtonGraphicsCompositeElement,
 	type ButtonGraphicsElementBase,
 	type SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -12,6 +13,8 @@ import { Grid } from '~/Components/Grid'
 import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { getCompositeElementSource } from './CompositeElementSource.js'
 import { useElementPropertiesContext } from './useElementPropertiesContext.js'
 
 export const ElementCommonProperties = observer(function ElementCommonProperties({
@@ -28,6 +31,8 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 
 	return (
 		<>
+			{elementProps.type === 'composite' && <CompositeElementSourceRow elementProps={elementProps} />}
+
 			{canBeNamed && (
 				<>
 					<FormLabel htmlFor={nameFieldId} sm={4} column="sm">
@@ -56,6 +61,32 @@ export const ElementCommonProperties = observer(function ElementCommonProperties
 					</Grid.Col>
 				</>
 			)}
+		</>
+	)
+})
+
+const CompositeElementSourceRow = observer(function CompositeElementSourceRow({
+	elementProps,
+}: {
+	elementProps: Readonly<ButtonGraphicsCompositeElement>
+}) {
+	const sourceId = useId()
+	const { compositeElementDefinitions, connections } = useContext(RootAppStoreContext)
+
+	const source = getCompositeElementSource(elementProps, compositeElementDefinitions, connections)
+	const definition = compositeElementDefinitions.getDefinition(elementProps.connectionId, elementProps.elementId)
+
+	return (
+		<>
+			<FormLabel htmlFor={sourceId} column="sm">
+				Source
+			</FormLabel>
+			<Grid.Col className="flex flex-col justify-center px-2">
+				<span id={sourceId} className="text-muted">
+					{source}
+				</span>
+				{definition?.description && <div className="form-text">{definition.description}</div>}
+			</Grid.Col>
 		</>
 	)
 })

@@ -3,7 +3,7 @@ import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connect
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { CompositeElementDefinitionsStore } from '~/Stores/CompositeElementDefinitionsStore.js'
 import { ConnectionsStore } from '~/Stores/ConnectionsStore.js'
-import { getMissingCompositeElementReason } from '../MissingCompositeElement.js'
+import { getCompositeElementSource, getMissingCompositeElementReason } from '../CompositeElementSource.js'
 
 function makeStores() {
 	const definitions = new CompositeElementDefinitionsStore()
@@ -46,5 +46,28 @@ describe('getMissingCompositeElementReason', () => {
 		expect(getMissingCompositeElementReason(composite('gone', 'meter'), definitions, connections)).toBe(
 			'Missing element: the connection it came from no longer exists'
 		)
+	})
+})
+
+describe('getCompositeElementSource', () => {
+	test('names the connection and definition', () => {
+		const { definitions, connections } = makeStores()
+		expect(getCompositeElementSource(composite('conn1', 'meter'), definitions, connections)).toBe('mixer: Meter')
+	})
+
+	test('a non-composite element has no source', () => {
+		const { definitions, connections } = makeStores()
+		const text = { id: 'el1', name: '', type: 'text' } as SomeButtonGraphicsElement
+		expect(getCompositeElementSource(text, definitions, connections)).toBeNull()
+	})
+
+	test('falls back to the element id when the definition is missing', () => {
+		const { definitions, connections } = makeStores()
+		expect(getCompositeElementSource(composite('conn1', 'fader'), definitions, connections)).toBe('mixer: fader')
+	})
+
+	test('falls back to the connection id when the connection is gone', () => {
+		const { definitions, connections } = makeStores()
+		expect(getCompositeElementSource(composite('gone', 'meter'), definitions, connections)).toBe('gone: meter')
 	})
 })

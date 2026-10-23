@@ -20,7 +20,7 @@ import {
 	RemoveElementButton,
 	ToggleVisibilityButton,
 } from './Buttons.js'
-import { getMissingCompositeElementReason } from './MissingCompositeElement.js'
+import { getCompositeElementSource, getMissingCompositeElementReason } from './CompositeElementSource.js'
 import { PINNED_PROPERTIES_ENTRY_ID, type LayeredStyleStore } from './StyleStore.js'
 
 const DRAG_ID = 'button-element-item'
@@ -292,9 +292,11 @@ const ElementListItem = observer(function ElementListItem({
 
 	const { compositeElementDefinitions, connections } = useContext(RootAppStoreContext)
 	const missingReason = getMissingCompositeElementReason(element, compositeElementDefinitions, connections)
+	const compositeSource = getCompositeElementSource(element, compositeElementDefinitions, connections)
 
 	const commonClasses = styleStore.selectedEntryId === element.id ? 'selected-row' : ''
 	const elementType = capitalize(element.type)
+	const typeDescription = compositeSource ? `${elementType}: ${compositeSource}` : elementType
 
 	return (
 		<>
@@ -314,7 +316,7 @@ const ElementListItem = observer(function ElementListItem({
 				</div>
 
 				<div className="element-name" title={element.name} onClick={() => styleStore.setSelectedEntryId(element.id)}>
-					<span title={missingReason ?? elementType}>
+					<span title={missingReason ?? typeDescription}>
 						<FontAwesomeIcon
 							icon={missingReason ? faTriangleExclamation : getElementTypeIcon(element.type)}
 							className="me-1"
