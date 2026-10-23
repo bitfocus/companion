@@ -453,6 +453,7 @@ export class LinkButtonServer {
 			stepCount: content.state?.stepCount ?? 1,
 			status: content.state?.button_status ?? null,
 			actionRunning: content.state?.action_running ?? false,
+			unreachable: content.state?.link_status === 'unreachable',
 			// The schema bounds the chain, a longer one is a loop anyway
 			sourceChain: [...this.#host.getSourceChain(location).slice(-15), this.#selfId()],
 		}

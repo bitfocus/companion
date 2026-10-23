@@ -96,6 +96,7 @@ export class LinkInstallation {
 				stepCount: 1,
 				button_status: undefined,
 				action_running: false,
+				link_status: undefined,
 			},
 		})),
 		getContentSize: vi.fn((size: { width: number; height: number }) => size),

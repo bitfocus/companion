@@ -786,7 +786,8 @@ function computeState(
 		...state,
 		status: 'ok',
 		images: published.images,
-		unreachable,
+		// Here, or further up a chain of them
+		unreachable: unreachable || published.update.unreachable,
 		pressed: published.update.pressed,
 		stepCurrent: published.update.stepCurrent,
 		stepCount: published.update.stepCount,

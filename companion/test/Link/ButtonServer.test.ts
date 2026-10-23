@@ -79,6 +79,7 @@ function createServer() {
 				stepCount: 3,
 				button_status: 'error' as const,
 				action_running: true,
+				link_status: undefined,
 			},
 		})),
 		acquireDisplayedLocation: vi.fn((location: ControlLocation, size: { width: number; height: number }) => {
@@ -146,6 +147,7 @@ describe('LinkButtonServer', () => {
 					stepCount: 3,
 					status: 'error',
 					actionRunning: true,
+					unreachable: false,
 					sourceChain: ['self'],
 				},
 			},
@@ -352,6 +354,25 @@ describe('LinkButtonServer', () => {
 		expect(refusalsTo('a')).toEqual([{ buttons: [{ button, width: 80, height: 72, reason: 'limit' }] }])
 		expect(refusalsTo('b')).toEqual([])
 		expect(ctx.server.countSubscribedBy('a')).toBe(8)
+	})
+
+	test('says when a remote button it serves on is showing an installation that has dropped out', async () => {
+		ctx.host.getUndecoratedRender.mockImplementation((render) => ({
+			render,
+			contentKey: null,
+			state: {
+				pushed: false,
+				stepCurrent: 1,
+				stepCount: 1,
+				button_status: undefined,
+				action_running: false,
+				link_status: 'unreachable',
+			},
+		}))
+		ctx.server.handleSubscribe('a', 't1', { buttons: [subscribe(null)] }, 0)
+		await flush()
+
+		expect(updateOf(ctx.sent[0].payload).unreachable).toBe(true)
 	})
 
 	test('sends a button with nothing on it as having no image, without drawing it', async () => {

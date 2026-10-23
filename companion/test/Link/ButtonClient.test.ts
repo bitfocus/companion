@@ -53,6 +53,7 @@ function update(
 		stepCount: 3,
 		status: 'warning' as const,
 		actionRunning: true,
+		unreachable: false,
 		sourceChain,
 	}
 }
@@ -374,6 +375,18 @@ describe('LinkButtonClient', () => {
 		ctx.client.handleUpdate('peer', update(['self', 'peer']))
 
 		expect(ctx.client.getState('c1')?.status).toBe('loop')
+	})
+
+	test('shows a remote button as unreachable when it is so further up a chain', async () => {
+		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		show('c1')
+		await flushSubscribes()
+
+		ctx.client.handleUpdate('peer', { ...update(['far', 'peer']), unreachable: true })
+		expect(ctx.client.getState('c1')).toMatchObject({ status: 'ok', unreachable: true })
+
+		ctx.client.handleUpdate('peer', update(['far', 'peer'], { stream: 's1', seq: 2 }))
+		expect(ctx.client.getState('c1')).toMatchObject({ status: 'ok', unreachable: false })
 	})
 
 	test('forgets a peer that drops out and is then forgotten', async () => {

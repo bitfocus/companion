@@ -167,6 +167,11 @@ export const LinkButtonUpdatePayloadSchema = z
 			.nullable()
 			.describe('The status of the connections the button uses, for its decoration, or null for none'),
 		actionRunning: z.boolean().describe('Whether actions of the button are running, for its decoration'),
+		unreachable: z
+			.boolean()
+			.describe(
+				'Whether the button is itself a remote button, showing the last image from an installation that has dropped out'
+			),
 		sourceChain: z
 			.array(PeerIdSchema)
 			.max(16)

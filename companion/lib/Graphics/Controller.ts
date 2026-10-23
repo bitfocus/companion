@@ -121,7 +121,13 @@ export interface UndecoratedRender {
 	 */
 	readonly contentKey: string | null
 	/** Null when the render isn't of a button, eg a blank */
-	readonly state: DrawStyleButtonStateProps | null
+	readonly state: UndecoratedButtonState | null
+}
+
+/** What the decoration of a button is drawn from */
+export interface UndecoratedButtonState extends DrawStyleButtonStateProps {
+	/** Set when the button is itself a remote button (see DrawStyleLayeredButtonModel) */
+	link_status: 'ok' | 'unreachable' | undefined
 }
 
 export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
@@ -1034,6 +1040,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					stepCount: drawStyle.stepCount,
 					button_status: drawStyle.button_status,
 					action_running: drawStyle.action_running,
+					link_status: drawStyle.link_status,
 				},
 			}
 		} else {
