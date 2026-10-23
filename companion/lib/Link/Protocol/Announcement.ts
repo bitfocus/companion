@@ -14,10 +14,11 @@ export const LINK_NAME_MAX_LENGTH = 200
 export const LinkAnnouncementSchema = z
 	.object({
 		name: z.string().max(LINK_NAME_MAX_LENGTH).describe('Human readable name of the installation'),
-		companionVersion: z.string().describe('Companion application version'),
+		companionVersion: z.string().max(64).describe('Companion application version'),
 		protocolVersions: z
-			.array(z.string())
+			.array(z.string().max(32))
 			.min(1)
+			.max(16)
 			.describe(
 				'The Link protocol versions (semver) this installation speaks, one per major version. Two installations use the highest major version they both speak'
 			),

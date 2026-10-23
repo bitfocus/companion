@@ -67,6 +67,14 @@ describe('announcement', () => {
 		const result = decodeLinkAnnouncement(JSON.stringify({ ...announcement, somethingNew: 1 }))
 		expect(result.ok).toBe(true)
 	})
+
+	test('rejects fields too long to be real, as they are stored and shown', () => {
+		const decode = (fields: object) => decodeLinkAnnouncement(JSON.stringify({ ...announcement, ...fields })).ok
+		expect(decode({ companionVersion: 'x'.repeat(65) })).toBe(false)
+		expect(decode({ protocolVersions: ['1.0.0'.padEnd(33, '0')] })).toBe(false)
+		expect(decode({ protocolVersions: Array.from({ length: 17 }, (_, i) => `${i + 1}.0.0`) })).toBe(false)
+		expect(decode({ companionVersion: 'x'.repeat(64), protocolVersions: ['1.0.0', '2.0.0'] })).toBe(true)
+	})
 })
 
 describe('versions', () => {
