@@ -14,6 +14,7 @@ import { ActionRunner } from './Controls/ActionRunner.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import { ControlsController } from './Controls/Controller.js'
 import { ControlStore } from './Controls/ControlStore.js'
+import { CustomActionInstanceManager } from './Controls/CustomActions/CustomActionInstanceManager.js'
 import { RenderClock } from './Controls/RenderClock.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
@@ -303,12 +304,15 @@ export class Registry {
 			LINK_BUILTIN_TRANSPORTS
 		)
 
+		const customActionInstances = new CustomActionInstanceManager(controlStore, this.#renderClock)
+
 		const actionRunner = new ActionRunner(
 			this.instance,
 			controlStore,
 			this.internalModule,
 			this.variables,
-			localVariables
+			localVariables,
+			customActionInstances
 		)
 
 		this.controls = new ControlsController(this.db, controlStore, controlEvents, activeLearningStore, {
@@ -323,6 +327,7 @@ export class Registry {
 			actionRunner: actionRunner,
 			renderClock: this.#renderClock,
 			linkButtons: this.link.buttonClient,
+			customActionInstances,
 		})
 		this.preview = new PreviewController(
 			this.instance.definitions,

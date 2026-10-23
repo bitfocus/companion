@@ -20,7 +20,7 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariableDependencyRegistry } from '../Variables/DependencyRegistry.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { ActionRunner } from './ActionRunner.js'
-import type { CustomActionInstancesForEntity } from './CustomActions/CustomActionInstanceManager.js'
+import type { CustomActionInstanceManager } from './CustomActions/CustomActionInstanceManager.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import type { SomeControl } from './IControlFragments.js'
@@ -55,6 +55,9 @@ export interface ControlExternalDependencies {
 
 	/** Subscribes link buttons to the remote buttons they show */
 	readonly linkButtons: LinkButtonClient
+
+	/** Builds and runs the copies of custom actions held by the actions which call them */
+	readonly customActionInstances: CustomActionInstanceManager
 }
 
 export interface ControlDependencies extends ControlExternalDependencies {
@@ -78,8 +81,6 @@ export interface ControlDependencies extends ControlExternalDependencies {
 
 	/** Where drawers report the button locations their last draw referenced, so only those get told of a render. */
 	readonly referencedLocations: ReferencedLocationsIndex
-	/** Builds the copy of a custom action held by an action which calls it */
-	readonly customActionInstances: CustomActionInstancesForEntity
 }
 
 export interface ControlCommonEvents {

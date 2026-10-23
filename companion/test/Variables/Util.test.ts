@@ -714,7 +714,8 @@ describe('buildActionExecutionOverrides', () => {
 					customActionControlId: 'custom-action:abc',
 					options: { count: 3, name: 'cam' },
 					localValues: new Map(),
-					depth: 1,
+					getLocalVariableEntities: () => [],
+					localValueChanged: () => {},
 				},
 			})
 		)

@@ -29,8 +29,8 @@ import { ControlBase } from '../ControlBase.js'
 import type { ControlDependencies } from '../ControlDependencies.js'
 import {
 	buildCustomActionOptionsVariables,
-	MAX_CUSTOM_ACTION_DEPTH,
 	type CustomActionRunFrame,
+	type CustomActionValues,
 } from '../CustomActionRunFrame.js'
 import type { ControlEntityInstance } from '../Entities/EntityInstance.js'
 import type { ControlEntityListChangeProps } from '../Entities/EntityListPoolBase.js'
@@ -266,38 +266,20 @@ export class ControlCustomAction
 	}
 
 	/**
-	 * Run this custom action, as an action of another control
-	 * @param options The values of the inputs, already parsed by the caller
+	 * Run some actions as a run of this custom action
+	 * @param actions The actions to run, which are this custom action's own or a copy of them
+	 * @param frame The state of the run
 	 * @param extras The execution context of the caller
 	 * @returns The result of the custom action
 	 */
-	async executeCall(options: CompanionOptionValues, extras: RunActionExtras): Promise<JsonValue | undefined> {
-		if (extras.frame?.customActionControlId === this.controlId) {
-			this.logger.warn(`Not running "${this.options.name}", as a custom action can't run itself`)
-			return undefined
-		}
+	async runActions(
+		actions: ControlEntityInstance[],
+		frame: CustomActionRunFrame,
+		extras: RunActionExtras
+	): Promise<JsonValue | undefined> {
+		const runExtras: CustomActionRunExtras = { ...extras, frame }
 
-		const depth = (extras.frame?.depth ?? 0) + 1
-		if (depth > MAX_CUSTOM_ACTION_DEPTH) {
-			this.logger.warn(`Not running "${this.options.name}", as custom actions are nested too deeply`)
-			return undefined
-		}
-
-		const runExtras: CustomActionRunExtras = {
-			...extras,
-			frame: {
-				customActionControlId: this.controlId,
-				options: { ...this.#getDefaultOptions(), ...options },
-				localValues: new Map(),
-				depth,
-			},
-		}
-
-		await this.deps.actionRunner.runMultipleActions(
-			this.entities.getActionEntities(),
-			runExtras,
-			extras.executionMode === 'sequential'
-		)
+		await this.deps.actionRunner.runMultipleActions(actions, runExtras, extras.executionMode === 'sequential')
 
 		return this.#readResult(runExtras)
 	}
@@ -308,11 +290,20 @@ export class ControlCustomAction
 	testRun(): void {
 		this.logger.debug(`Test run ${this.options.name}`)
 
+		const frame: CustomActionRunFrame = {
+			customActionControlId: this.controlId,
+			options: this.#getDefaultOptions(),
+			localValues: new Map(),
+			getLocalVariableEntities: () => this.entities.getLocalVariableEntities(),
+			// The entities of the custom action itself are not specific to a run
+			localValueChanged: () => {},
+		}
+
 		this.#testActionRunner
 			.runChain(
 				{ surfaceId: this.controlId, location: undefined, rotationDelta: null, frame: null },
 				async (extras) => {
-					await this.executeCall({}, extras)
+					await this.runActions(this.entities.getActionEntities(), frame, extras)
 				}
 			)
 			.catch((e) => {
@@ -341,7 +332,7 @@ export class ControlCustomAction
 
 		return this.entities.createRunParser(
 			extras.frame,
-			this.entities.getLocalVariableEntities(),
+			extras.frame.getLocalVariableEntities(),
 			location,
 			pageEntities,
 			buildActionExecutionOverrides(extras),
@@ -351,14 +342,14 @@ export class ControlCustomAction
 
 	/**
 	 * A parser for the entities of a copy of this custom action, held by an action which calls it
-	 * @param frame The inputs and local variable values of the copy
+	 * @param values The inputs and local variable values of the copy
 	 * @param callerControlId The control which holds the copy, which provides the `this:*` and `page:*` variables
 	 * @param localVariableEntities The local variables of the copy
 	 * @param overrideVariableValues Any additional variables
 	 * @param options Options for the parser
 	 */
 	createCopyParser(
-		frame: CustomActionRunFrame,
+		values: CustomActionValues,
 		callerControlId: string,
 		localVariableEntities: ControlEntityInstance[],
 		overrideVariableValues: VariableValues | null,
@@ -368,11 +359,11 @@ export class ControlCustomAction
 		const pageEntities = location ? this.deps.getPageVariableEntities(location.pageNumber) : null
 
 		return this.entities.createRunParser(
-			frame,
+			values,
 			localVariableEntities,
 			location,
 			pageEntities,
-			{ ...buildCustomActionOptionsVariables(frame.options), ...overrideVariableValues },
+			{ ...buildCustomActionOptionsVariables(values.options), ...overrideVariableValues },
 			options
 		)
 	}

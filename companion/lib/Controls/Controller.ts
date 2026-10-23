@@ -58,7 +58,6 @@ import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
 import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
 import { CustomActionCollections } from './CustomActionCollections.js'
-import { CustomActionInstanceManager } from './CustomActions/CustomActionInstanceManager.js'
 import { createCustomActionTrpcRouter } from './CustomActionTrpcRouter.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
@@ -124,9 +123,6 @@ export class ControlsController {
 	 */
 	readonly #customActionCollections: CustomActionCollections
 
-	/** The copies of custom actions held by the actions which call them */
-	readonly #customActionInstances: CustomActionInstanceManager
-
 	readonly #controlChangeEvents = new EventEmitter<ControlChangeEvents>()
 
 	/** Resolve a page's local-variable entities (its `page:<pageId>` control), for `$(page:x)` injection. */
@@ -147,7 +143,6 @@ export class ControlsController {
 		this.#activeLearningStore = activeLearningStore
 
 		this.#expressionVariableNamesMap = new ExpressionVariableNameMap(this.#deps.variableValues, this.#store.controls)
-		this.#customActionInstances = new CustomActionInstanceManager(this.#store, this.#deps.renderClock)
 
 		this.#factory = new ControlsFactory({
 			...this.#deps,
@@ -159,7 +154,6 @@ export class ControlsController {
 			expressionVariableNamesMap: this.#expressionVariableNamesMap,
 			controlsAccessor: this.#store,
 			referencedLocations: this.#store.referencedLocations,
-			customActionInstances: this.#customActionInstances,
 		})
 
 		this.#triggerCollections = new TriggerCollections(
@@ -179,7 +173,7 @@ export class ControlsController {
 
 		this.#controlEvents.on('customActionDefinitionChanged', (controlId) => {
 			this.#publishCustomActionDefinitions()
-			this.#customActionInstances.onCustomActionChanged(controlId)
+			this.#deps.customActionInstances.onCustomActionChanged(controlId)
 		})
 	}
 
@@ -631,7 +625,7 @@ export class ControlsController {
 	): void {
 		this.#store.triggerEvents.emit('variables_changed', allChangedVariablesSet, controlIdFilter)
 
-		this.#customActionInstances.onVariablesChanged(allChangedVariablesSet, controlIdFilter)
+		this.#deps.customActionInstances.onVariablesChanged(allChangedVariablesSet, controlIdFilter)
 	}
 
 	/**

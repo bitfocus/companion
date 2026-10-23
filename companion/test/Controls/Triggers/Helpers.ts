@@ -75,7 +75,7 @@ export function createMockControlDependencies(): MockControlDependencies {
 		variableDependencies: new VariableDependencyRegistry(),
 		linkButtons: null as any,
 		referencedLocations: new ReferencedLocationsIndex(),
-		customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
+		customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() } as any,
 		controlsAccessor: {
 			getControl: vi.fn(() => undefined),
 			pressControl: vi.fn(() => false),

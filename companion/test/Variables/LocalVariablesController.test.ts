@@ -291,7 +291,13 @@ describe('LocalVariablesController', () => {
 
 	describe('inside a run of a custom action', () => {
 		function makeFrame(): CustomActionRunFrame {
-			return { customActionControlId: 'custom-action:abc', options: {}, localValues: new Map(), depth: 1 }
+			return {
+				customActionControlId: 'custom-action:abc',
+				options: {},
+				localValues: new Map(),
+				getLocalVariableEntities: () => [],
+				localValueChanged: vi.fn(),
+			}
 		}
 
 		test('the location "this" resolves to the custom action and its run', () => {
@@ -324,6 +330,7 @@ describe('LocalVariablesController', () => {
 			expect(controller.setLocalVariable({ controlId: 'custom-action:abc', name: 'my_var', frame }, 'value')).toBe(true)
 
 			expect(frame.localValues.get('my_var')).toBe('value')
+			expect(frame.localValueChanged).toHaveBeenCalledWith('my_var')
 			expect(control.entities.entitySetVariableValue).not.toHaveBeenCalled()
 		})
 
@@ -336,6 +343,7 @@ describe('LocalVariablesController', () => {
 				false
 			)
 			expect(frame.localValues.size).toBe(0)
+			expect(frame.localValueChanged).not.toHaveBeenCalled()
 		})
 
 		test('resetLocalVariable forgets the value of the run', () => {
@@ -347,6 +355,7 @@ describe('LocalVariablesController', () => {
 			expect(controller.resetLocalVariable({ controlId: 'custom-action:abc', name: 'my_var', frame })).toBe(true)
 
 			expect(frame.localValues.has('my_var')).toBe(false)
+			expect(frame.localValueChanged).toHaveBeenCalledWith('my_var')
 			expect(control.entities.entitySetVariableValue).not.toHaveBeenCalled()
 		})
 
