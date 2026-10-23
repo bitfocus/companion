@@ -46,6 +46,11 @@ interface EntityWrapper {
 	state: EntityState
 	/** The id of the subscription this entity is a member of, if it is subscribed to the module */
 	subscriptionId?: string
+	/**
+	 * Whether the subscription must be sent to the module again even if it is unchanged, as something which isn't
+	 * part of its id has changed (eg the image size of a feedback)
+	 */
+	resendRequested?: boolean
 	lastReferencedVariableIds?: ReadonlySet<string>
 	/** Whether the last parsed options for this feedback entity depended on the render clock */
 	lastClockSensitive?: boolean
@@ -216,13 +221,14 @@ export class ConnectionEntityManager {
 			const joinSubscription = (
 				entityId: string,
 				wrapper: EntityWrapper,
-				payload: EntityManagerActionEntity | EntityManagerFeedbackEntity
+				payload: EntityManagerActionEntity | EntityManagerFeedbackEntity,
+				resendRequested: boolean
 			) => {
 				const subscriptionId = getEntitySubscriptionId(wrapper.controlId, payload.entity, payload.parsedOptions)
 
 				if (wrapper.subscriptionId === subscriptionId) {
-					// Already a member, it has been re-parsed so resend it, as something other than the options may have changed
-					setSubscriptionPayload(subscriptionId, payload, payload.entity.type)
+					// Already a member. The id covers everything the module is sent, so it only needs sending again if asked for
+					if (resendRequested) setSubscriptionPayload(subscriptionId, payload, payload.entity.type)
 					return
 				}
 
@@ -311,6 +317,8 @@ export class ConnectionEntityManager {
 						// The entity is unloaded, it either needs to be upgraded or loaded
 						if (entity.upgradeIndex === undefined || entity.upgradeIndex === this.#currentUpgradeIndex) {
 							wrapper.state = EntityState.READY
+							const resendRequested = !!wrapper.resendRequested
+							wrapper.resendRequested = false
 
 							if (entity.disabled) {
 								// Disabled entities should not be subscribed to the module
@@ -349,11 +357,16 @@ export class ConnectionEntityManager {
 							}
 
 							if (updateOptions) {
-								joinSubscription(entityId, wrapper, {
-									controlId: wrapper.controlId,
-									entity: entityModel,
-									parsedOptions: updateOptions,
-								} as EntityManagerActionEntity | EntityManagerFeedbackEntity)
+								joinSubscription(
+									entityId,
+									wrapper,
+									{
+										controlId: wrapper.controlId,
+										entity: entityModel,
+										parsedOptions: updateOptions,
+									} as EntityManagerActionEntity | EntityManagerFeedbackEntity,
+									resendRequested
+								)
 							} else {
 								// The entity is inactive until its options can be parsed
 								leaveSubscription(entityId, wrapper)
@@ -627,6 +640,7 @@ export class ConnectionEntityManager {
 			controlId: controlId,
 			state: EntityState.UNLOADED,
 			subscriptionId: this.#entities.get(entity.id)?.subscriptionId,
+			resendRequested: this.#entities.get(entity.id)?.resendRequested,
 		})
 
 		this.#logger.silly(`Queued entity ${entity.id} in control ${controlId} as unloaded`)
@@ -690,6 +704,9 @@ export class ConnectionEntityManager {
 	resendFeedbacks(): void {
 		for (const entity of this.#entities.values()) {
 			if (entity.entity.deref()?.type !== EntityModelType.Feedback) continue
+
+			// The image size is not part of the subscription id, so it must be sent even though it looks unchanged
+			entity.resendRequested = true
 
 			switch (entity.state) {
 				case EntityState.UNLOADED:
@@ -786,6 +803,9 @@ export class ConnectionEntityManager {
 		for (const wrapper of this.#entities.values()) {
 			const entity = wrapper.entity.deref()
 			if (!entity || entity.type !== entityType) continue
+
+			// Send the subscriptions again even if they are unchanged, so the module sees them against its new definitions
+			wrapper.resendRequested = true
 
 			switch (wrapper.state) {
 				case EntityState.UNLOADED:
