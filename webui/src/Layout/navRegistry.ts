@@ -11,9 +11,11 @@ import {
 	faGamepad,
 	faGlobe,
 	faImages,
+	faLink,
 	faNetworkWired,
 	faPlug,
 	faPuzzlePiece,
+	faServer,
 	faSquareRootVariable,
 	faTh,
 	faVideoCamera,
@@ -101,6 +103,16 @@ export const SURFACES_SECTION: NavSection = {
 	],
 }
 
+export const LINK_SECTION: NavSection = {
+	id: 'link',
+	label: 'Link',
+	icon: faLink,
+	pages: [
+		{ id: 'installations', label: 'Installations', path: '/link', icon: faServer },
+		{ id: 'transports', label: 'Transports', path: '/link/transports', icon: faNetworkWired },
+	],
+}
+
 /** Top-level destinations that are not part of a section. */
 export const TOP_LEVEL_PAGES: readonly NavPage[] = [
 	{ id: 'buttons', label: 'Buttons', path: '/buttons', icon: faBorderAll },
@@ -113,7 +125,7 @@ export const TOP_LEVEL_PAGES: readonly NavPage[] = [
 	{ id: 'import-export', label: 'Import / Export', path: '/import-export', icon: faFileImport },
 ]
 
-export const NAV_SECTIONS: readonly NavSection[] = [VARIABLES_SECTION, SURFACES_SECTION, SETTINGS_SECTION]
+export const NAV_SECTIONS: readonly NavSection[] = [VARIABLES_SECTION, SURFACES_SECTION, LINK_SECTION, SETTINGS_SECTION]
 
 /** Every page reachable from the nav, flattened — what the command palette searches. */
 export const ALL_NAV_PAGES: readonly NavPage[] = [

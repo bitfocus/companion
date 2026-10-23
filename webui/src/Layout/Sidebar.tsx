@@ -12,6 +12,7 @@ import {
 	faFileImport,
 	faGamepad,
 	faImages,
+	faLink,
 	faPlug,
 	faPuzzlePiece,
 	faTableCells,
@@ -382,6 +383,7 @@ export const MySidebar = memo(function MySidebar() {
 					/>
 					<SidebarMenuItem name="Surfaces" icon={faGamepad} notifications={SurfacesTabNotifyIcon} path="/surfaces" />
 					<SidebarMenuItem name="Modules" icon={faPuzzlePiece} path="/modules" />
+					<SidebarMenuItem name="Link" icon={faLink} path="/link" />
 					<SidebarMenuItem name="Emulator" icon={faDesktop} path="/emulator" target="_blank" />
 					<SidebarMenuItem name="Web Buttons" icon={faTabletScreenButton} path="/tablet" target="_blank" />
 
