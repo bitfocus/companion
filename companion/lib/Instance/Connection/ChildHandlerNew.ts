@@ -1,6 +1,6 @@
 import type express from 'express'
 import semver from 'semver'
-import { isControlIdOfKind, isSomeControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
+import { isControlIdOfKind, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
 	type ActionEntityModel,
@@ -404,7 +404,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				'executeAction',
 				{
 					action: {
-						id: action.id,
+						// The module knows the action by its subscription, if it has one
+						id: this.#entityManager.getSubscriptionId(action.id) ?? action.id,
 						controlId: extras?.controlId,
 						actionId: action.definitionId,
 						options: parseRes.parsedOptions,
@@ -590,21 +591,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	async #handleUpdateFeedbackValues(msg: UpdateFeedbackValuesMessage): Promise<void> {
 		this.#deps.trackFeedbackValuesReceived(this.connectionId, msg.values.length)
 
-		this.#deps.controls.updateFeedbackValues(
-			this.connectionId,
-			// The control ids come back from the module, so are only trusted once checked
-			msg.values.flatMap((val) =>
-				isSomeControlId(val.controlId)
-					? [
-							{
-								entityId: val.id,
-								controlId: val.controlId,
-								value: val.value,
-							},
-						]
-					: []
-			)
-		)
+		// The values are for subscriptions, which can be shared by multiple entities
+		this.#entityManager.handleFeedbackValues(msg.values)
 	}
 
 	/**
@@ -791,7 +779,7 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 		for (const [id, value] of actions) {
 			if (value && !value.entity.disabled) {
 				updateMessage.actions[id] = {
-					id: value.entity.id,
+					id: id,
 					controlId: value.controlId,
 					actionId: value.entity.definitionId,
 					options: value.parsedOptions,
@@ -812,7 +800,7 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 				const control = this.#controlsStore.getControl(value.controlId)
 
 				updateMessage.feedbacks[id] = {
-					id: value.entity.id,
+					id: id,
 					controlId: value.controlId,
 					feedbackId: value.entity.definitionId,
 					options: value.parsedOptions,
