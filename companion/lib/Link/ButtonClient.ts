@@ -410,9 +410,9 @@ export class LinkButtonClient {
 		variant.refused = null
 		if (isNewer(payload.revision, remote.latestUpdate?.revision ?? null)) remote.latestUpdate = payload
 
-		// A draw waiting for the first image of this size has it straight away, without waiting for the other sizes
-		const image = currentImageOf(remote, variant)
-		if (image) this.#images.shapeArrived(remote.key, variant.sub, image)
+		// A draw waiting for the first image of this size has it straight away, without waiting for the other sizes. Or
+		// stops waiting, if there is no image to show
+		this.#images.shapeArrived(remote.key, variant.sub, currentImageOf(remote, variant))
 
 		this.#schedulePublish(remote)
 	}

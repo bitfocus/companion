@@ -50,6 +50,17 @@ describe('LinkRemoteImageStore', () => {
 		})
 	})
 
+	test('a shape subscribed to again, after the first wait gave up, is waited for again', async () => {
+		store.setImages('remote', [image(square)])
+		store.expectShape('remote', wide, Date.now() + 100)
+		await vi.advanceTimersByTimeAsync(200)
+
+		store.expectShape('remote', wide, Date.now() + 1000)
+		const waiting = store.getImage('remote', { width: 200, height: 100 }, true)
+		store.shapeArrived('remote', wide, image(wide))
+		await expect(waiting).resolves.toMatchObject({ dataUrl: 'data:image/png;base64,288x144' })
+	})
+
 	test('an older image is drawn only when there is no current one', async () => {
 		store.setImages('remote', [image(square), image(wide, false)])
 		await expect(store.getImage('remote', { width: 200, height: 100 }, true)).resolves.toMatchObject({

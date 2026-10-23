@@ -57,7 +57,10 @@ export class LinkRemoteImageStore implements RemoteImageSource {
 	 */
 	expectShape(key: string, size: PixelSize, until: number): void {
 		const button = this.#get(key)
-		if (button.expected.some((shape) => isSameShape(shape.size, size))) return
+		const existing = button.expected.find((shape) => isSameShape(shape.size, size))
+		// One that was given up on is replaced, as this is a new subscription to it
+		if (existing && existing.until > Date.now()) return
+		if (existing) this.shapeArrived(key, existing.size, null)
 		button.expected.push({ size, until, waiters: new Set() })
 	}
 
