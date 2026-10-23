@@ -517,6 +517,7 @@ export class ControlsController {
 
 				if (control.supportsEntities) control.entities.onVariablesChanged(allChangedVariablesSet)
 				control.drawing?.onVariablesChanged(allChangedVariablesSet)
+				control.onVariablesChanged(allChangedVariablesSet)
 			}
 		}
 	}

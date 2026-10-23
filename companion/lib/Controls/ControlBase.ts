@@ -186,6 +186,15 @@ export abstract class ControlBase<TJson> {
 	}
 
 	/**
+	 * Some variables changed. Controls whose own fields reference variables override this; entities and drawing are
+	 * told separately
+	 * @param _allChangedVariables The ids of the changed variables
+	 */
+	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {
+		// Nothing to do
+	}
+
+	/**
 	 * Abort the in progress action runs of this control. A remote button forwards it to the button it shows. Controls
 	 * that run no actions (the default) have nothing to abort
 	 * @param skip_up Mark the button as released

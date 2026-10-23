@@ -89,10 +89,7 @@ export class ControlButtonLink
 		this.#drawing = new LinkButtonDrawer(
 			deps,
 			controlId,
-			() => this.deps.linkButtons.getState(this.controlId) ?? UNCONFIGURED_STATE,
-			(changed) => {
-				if (!this.#locationVariables.isDisjointFrom(changed)) this.#updateTarget()
-			}
+			() => this.deps.linkButtons.getState(this.controlId) ?? UNCONFIGURED_STATE
 		)
 
 		if (!storage) {
@@ -224,6 +221,11 @@ export class ControlButtonLink
 			this.commitChange(false)
 			this.#updateTarget()
 		}
+	}
+
+	/** The location can reference variables, so resolve it again when any of them change */
+	override onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
+		if (!this.#locationVariables.isDisjointFrom(allChangedVariables)) this.#updateTarget()
 	}
 
 	/** The location can be relative to this button, so resolve it again */

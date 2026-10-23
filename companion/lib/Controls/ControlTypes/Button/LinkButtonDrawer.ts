@@ -153,20 +153,13 @@ export class LinkButtonDrawer implements IButtonDrawer {
 	readonly #deps: ControlDependencies
 	readonly #controlId: string
 	readonly #getState: () => LinkButtonState
-	readonly #onVariablesChanged: (allChangedVariables: ReadonlySet<string>) => void
 
 	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null
 
-	constructor(
-		deps: ControlDependencies,
-		controlId: string,
-		getState: () => LinkButtonState,
-		onVariablesChanged: (allChangedVariables: ReadonlySet<string>) => void
-	) {
+	constructor(deps: ControlDependencies, controlId: string, getState: () => LinkButtonState) {
 		this.#deps = deps
 		this.#controlId = controlId
 		this.#getState = getState
-		this.#onVariablesChanged = onVariablesChanged
 	}
 
 	dispose(): void {
@@ -203,10 +196,8 @@ export class LinkButtonDrawer implements IButtonDrawer {
 		return false
 	}
 
-	/** The location field of the control can reference variables, so it decides what to do */
-	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
-		this.#onVariablesChanged(allChangedVariables)
-	}
+	/** The remote image references no variables; the control resolves its location again itself */
+	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {}
 
 	onCompositeElementsChanged(_allChangedElementIds: ReadonlySet<CompositeElementIdString>): void {}
 

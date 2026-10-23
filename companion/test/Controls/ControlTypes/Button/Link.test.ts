@@ -113,10 +113,10 @@ describe('ControlButtonLink', () => {
 		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '$(custom:page)/0/0'), false)
 		linkButtons.setTarget.mockClear()
 
-		control.drawing.onVariablesChanged(new Set(['custom:other']))
+		control.onVariablesChanged(new Set(['custom:other']))
 		expect(linkButtons.setTarget).not.toHaveBeenCalled()
 
-		control.drawing.onVariablesChanged(new Set(['custom:page']))
+		control.onVariablesChanged(new Set(['custom:page']))
 		expect(linkButtons.setTarget).toHaveBeenCalled()
 	})
 
