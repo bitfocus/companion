@@ -85,6 +85,16 @@ describe('SurfaceHandler displayed locations', () => {
 		expect(displayedLocations.getSizes({ pageNumber: 1, row: 0, column: 1 })).toEqual([])
 	})
 
+	test('a draw still queued when the surface goes shows nothing', async () => {
+		const { handler, displayedLocations } = createHandler()
+		// Removed before the first draw, which is queued at creation, and with another deferred
+		handler.triggerRedraw(true)
+		handler.unload()
+		await new Promise((resolve) => setTimeout(resolve, 20))
+
+		expect(displayedLocations.getSizes({ pageNumber: 1, row: 0, column: 0 })).toEqual([])
+	})
+
 	test('a surface turned on its side draws each location turned too', () => {
 		const { handler, displayedLocations } = createHandler({ rotation: 'surface90' })
 		handler.triggerRedraw()

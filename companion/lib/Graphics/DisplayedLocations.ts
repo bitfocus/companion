@@ -1,7 +1,10 @@
 import { EventEmitter } from 'node:events'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 
-/** The size a location is shown at, in pixels, before any rotation the surface applies */
+/**
+ * The size a location is shown at, in pixels, as it is laid out: on a surface mounted on its side the button is laid
+ * out with its width and height swapped, then turned to fit, so this is the swapped size
+ */
 export interface DisplayedSize {
 	width: number
 	height: number

@@ -134,6 +134,11 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	 */
 	readonly #displayed: DisplayedLocationsSet
 
+	/**
+	 * Set once unloaded, so that a draw still queued doesn't show anything again
+	 */
+	#unloaded = false
+
 	readonly panel: SurfacePanel
 
 	constructor(
@@ -231,6 +236,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	#drawPage() {
 		// Ensure the debounce is not queued
 		this.#drawPageDebounced.cancel()
+		if (this.#unloaded) return
 
 		if (this.panel) {
 			if (this.#isSurfaceLocked) {
@@ -748,6 +754,8 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		this.#logger.error(this.panel.info.description + ' disconnected')
 		this.#logger.silly('unloading for ' + this.panel.info.surfaceId)
 		this.#graphics.off('button_drawn', this.#onButtonDrawn)
+		this.#unloaded = true
+		this.#drawPageDebounced.cancel()
 		this.#displayed.clear()
 
 		try {
