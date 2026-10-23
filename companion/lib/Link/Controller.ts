@@ -539,6 +539,10 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 				this.#peers.forget(input.peerId)
 			}),
 
+			setPeerAlias: publicProcedure
+				.input(z.object({ peerId: z.string(), alias: z.string().max(100).nullable() }))
+				.mutation(({ input }) => this.#peers.setAlias(input.peerId, input.alias)),
+
 			setPeerPermissions: publicProcedure
 				.input(z.object({ peerId: z.string(), permissions: z.object({ buttons: z.boolean() }) }))
 				.mutation(({ input }) => this.#permissions.set(input.peerId, input.permissions)),

@@ -153,7 +153,12 @@ export interface LinkPeerInfo {
 	id: string
 	/** A short, readable form of the id, for the user to recognise it by */
 	fingerprint: string
+	/** What to call it: the name given to it here, or else the one it announces */
 	name: string
+	/** The name it announces, which is its own name for itself */
+	announcedName: string
+	/** The name given to it here, or null to use the one it announces */
+	alias: string | null
 	companionVersion: string
 	/** The Link protocol versions the peer speaks, one per major version */
 	protocolVersions: string[]

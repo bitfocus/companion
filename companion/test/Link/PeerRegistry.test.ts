@@ -154,6 +154,26 @@ describe('LinkPeerRegistry', () => {
 		expect(store.data).toEqual({})
 	})
 
+	test('calls a peer by the name given to it here, across restarts, until that is cleared', () => {
+		const store = new FakeTableView<any>()
+		const before = new LinkPeerRegistry('self', sharedByUs, store.asTableView())
+		before.handleAnnouncement('t1', 'a', announcement('a'), 0)
+		const changed = vi.fn()
+		before.on('changed', changed)
+
+		before.setAlias('a', '  Studio A  ')
+		expect(changed).toHaveBeenCalled()
+		expect(before.getPeer('a')).toMatchObject({ name: 'Studio A', announcedName: 'Peer a', alias: 'Studio A' })
+		// Whatever it announces itself as
+		before.handleAnnouncement('t1', 'a', announcement('a', { name: 'Renamed' }), 10)
+		expect(before.getPeer('a')).toMatchObject({ name: 'Studio A', announcedName: 'Renamed' })
+
+		const after = new LinkPeerRegistry('self', sharedByUs, store.asTableView())
+		expect(after.getPeer('a')).toMatchObject({ name: 'Studio A', alias: 'Studio A' })
+		after.setAlias('a', '')
+		expect(after.getPeer('a')).toMatchObject({ name: 'Renamed', alias: null })
+	})
+
 	test('lists the peers seen before a restart as offline', () => {
 		const store = new FakeTableView<any>()
 		const before = new LinkPeerRegistry('self', sharedByUs, store.asTableView())
@@ -192,7 +212,11 @@ describe('LinkPeerRegistry', () => {
 		// Saved with when it was last seen as it goes offline
 		registry.handleTransportDisconnected('t1')
 		registry.handleTransportDisconnected('t2')
-		expect(store.data.a).toEqual({ announcement: announcement('a', { name: 'Renamed' }), lastSeen: 5 * 60_000 + 30 })
+		expect(store.data.a).toEqual({
+			announcement: announcement('a', { name: 'Renamed' }),
+			lastSeen: 5 * 60_000 + 30,
+			alias: null,
+		})
 	})
 
 	test('drops stored peers that are invalid, or itself', () => {

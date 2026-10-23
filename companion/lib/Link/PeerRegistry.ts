@@ -23,6 +23,8 @@ interface PeerTransportRecord {
 interface PeerRecord {
 	id: string
 	announcement: LinkAnnouncement
+	/** The name the user has given it here, in place of the one it announces */
+	alias: string | null
 	/** The transports the peer is reachable on */
 	transports: Map<string, PeerTransportRecord>
 	lastSeen: number
@@ -37,7 +39,11 @@ interface PeerRecord {
 }
 
 /** A peer seen before, kept so that it is listed after a restart */
-const StoredPeerSchema = z.object({ announcement: LinkAnnouncementSchema, lastSeen: z.number() })
+const StoredPeerSchema = z.object({
+	announcement: LinkAnnouncementSchema,
+	lastSeen: z.number(),
+	alias: z.string().nullable().default(null),
+})
 type StoredPeer = z.infer<typeof StoredPeerSchema>
 
 export interface PeerRegistryEvents {
@@ -101,6 +107,7 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 			this.#peers.set(peerId, {
 				id: peerId,
 				announcement: stored.data.announcement,
+				alias: stored.data.alias,
 				transports: new Map(),
 				lastSeen: stored.data.lastSeen,
 				savedLastSeen: stored.data.lastSeen,
@@ -133,7 +140,7 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 
 	#save(record: PeerRecord): void {
 		record.savedLastSeen = record.lastSeen
-		this.#store.set(record.id, { announcement: record.announcement, lastSeen: record.lastSeen })
+		this.#store.set(record.id, { announcement: record.announcement, lastSeen: record.lastSeen, alias: record.alias })
 	}
 
 	/** Process an announcement received on a transport */
@@ -153,6 +160,7 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 			record = {
 				id: peerId,
 				announcement,
+				alias: null,
 				transports: new Map(),
 				lastSeen: now,
 				savedLastSeen: now,
@@ -280,6 +288,16 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 		return this.#peers.get(peerId)?.route ?? null
 	}
 
+	/** Call a peer something else here than the name it announces, or null to use that again */
+	setAlias(peerId: string, alias: string | null): void {
+		const record = this.#peers.get(peerId)
+		if (!record) return
+
+		record.alias = alias?.trim() || null
+		this.#save(record)
+		this.emit('changed')
+	}
+
 	/** Forget a peer, so that it is no longer listed. It will be rediscovered if it is still announcing */
 	forget(peerId: string): void {
 		const record = this.#peers.get(peerId)
@@ -321,7 +339,9 @@ function toPeerInfo(record: PeerRecord, sharedByUs: LinkPermissions): LinkPeerIn
 	return {
 		id: record.id,
 		fingerprint: formatLinkIdFingerprint(record.id),
-		name: announcement.name,
+		name: record.alias ?? announcement.name,
+		announcedName: announcement.name,
+		alias: record.alias,
 		companionVersion: announcement.companionVersion,
 		protocolVersions: announcement.protocolVersions,
 		protocolVersion,
