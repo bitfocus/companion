@@ -17,7 +17,7 @@ first feature; more will be added the same way, each with its own messages and f
   ───────────────────────────────────────────────────
   core             peers  ·  permissions  ·  routing    who is out there, what they may use
   ───────────────────────────────────────────────────
-  transports       direct  ·  MQTT  ·  …                how messages get there
+  transports       direct  ·  (future: a relay, a broker)  how messages get there
 ```
 
 - **Transports** make this installation's announcement known, and send messages to one installation at a time. They
@@ -47,7 +47,7 @@ definition.
 | `subscribe`         | a peer       | Ask the peer to send some of its buttons (a lease, see below) |
 | `unsubscribe`       | a peer       | Release a lease early                                         |
 | `subscribe.refused` | a subscriber | The buttons of a `subscribe` that aren't served, and why      |
-| `button.update`     | a subscriber | The render of a button, at a size                             |
+| `button.update`     | a subscriber | The content of a button at a size, and its state              |
 | `button.press`      | a peer       | Press or release a button of the peer                         |
 | `button.rotate`     | a peer       | Rotate an encoder button of the peer                          |
 | `button.abort`      | a peer       | Abort the running actions of a button of the peer             |
@@ -79,13 +79,15 @@ unsubscribing.
 
 A button that is served gets no other answer than its updates. One that isn't is listed, by its button and size, in a
 `subscribe.refused` with the reason: `denied` when the subscriber isn't allowed buttons, or `limit` when the peer is
-already serving as many as it can. It is sent again for each renewal while that is still so, so a lost one is repaired
+already serving as many as it can, or the subscriber already has its share (of buttons, or of sizes of one button). It is sent again for each renewal while that is still so, so a lost one is repaired
 like a lost update, and the subscriber can say why a remote button is empty rather than waiting for it forever.
 
-Each `button.update` carries a **revision**: `seq` counts up each time the peer sends that button at that size, and
-`stream` is chosen at random when it starts serving it, so that the revisions of a restarted peer aren't mistaken for
-older ones. A subscriber drops an update that isn't newer than the one it has (the same stream, and no higher `seq`), so
-updates may arrive out of order, or over different routes, without an old image replacing a newer one.
+Each `button.update` carries a **revision**: `seq` counts the redraws of the button, and `stream` is chosen at random
+when the peer starts serving it, so that the revisions of a restarted peer aren't mistaken for older ones. The revision
+is shared by every size the button is served at, so updates at different sizes with the same revision are of the same
+render. A subscriber drops an update that isn't newer than the one it has (the same stream, and no higher `seq`), and
+any from a stream it has since seen replaced, so updates may arrive out of order, or over different routes, without an
+old image replacing a newer one.
 
 Transports only deliver on a best effort basis, so every `subscribe`, renewals included, says which revision the
 subscriber has of each button (`have`, null for none), and the peer sends the current render if it has a different
@@ -93,6 +95,29 @@ one. So it is sent straight away when subscribing, a lost update is repaired by 
 subscriber already has is never sent again.
 
 The peer that owns a button renders it once per size, however many subscribers it has.
+
+### Sizes and decoration
+
+A Remote button is drawn by the peer that owns the button, at the size it is shown at, rather than being scaled. The
+subscriber tracks where each of its buttons is shown, and at what sizes (surfaces, previews, satellite subscriptions,
+other buttons that embed it, and the peers it serves it on to), and subscribes once per **shape** (aspect ratio) at the
+largest size of that shape. A size it no longer shows is let go of after a couple of seconds, so paging back and forth
+doesn't churn.
+
+The peer sends the **content** of the button alone, without its decoration (its top bar and status icons), with the
+**state** that decoration is drawn from (pressed, step, status, actions running, and whether it is itself a
+remote button showing an installation that has dropped out). The subscriber decorates it as it
+does its own buttons, with its own settings and location, so it subscribes at the size of the content: what its
+decoration leaves of the button.
+
+An update only carries the image when it looks different: when only the state has changed (eg it was pressed), it
+says the image is unchanged since an earlier revision. A subscriber that doesn't have that image subscribes again
+holding nothing, to be sent it. A button with nothing on it is sent as having no image, rather than as an image of
+nothing.
+
+A new render is held back briefly until it has arrived at every shape, so that the shapes change together, and a
+shape just subscribed to is waited for briefly (by the latency to the peer) before drawing another shape in its place.
+Both waits are bounded, and serving a button on to another peer never waits.
 
 ### Routes
 
@@ -163,9 +188,15 @@ the UI makes a new key pair, so other installations see a new installation, and 
 ### Transports
 
 The protocol has no authentication or encryption of its own, and messages don't say who sent them. Securing who
-can connect, and saying who each message is from, is the job of the transports:
-Perhaps Noise encryption with an explicit pairing step, or relying on broker credentials (see
-[Transports/README.md](./Transports/README.md)).
+can connect, and saying who each message is from, is the job of the transports (see
+[Transports/README.md](./Transports/README.md)):
+
+- The direct transport encrypts each connection with Noise, in which each end proves its Link id by signing its key
+  with its identity, and only trusts an installation once the user has paired them, by entering the code one shows
+  into the other (see [Transports/Direct/README.md](./Transports/Direct/README.md)).
+- A transport over a shared service (a relay or broker) can't tell who sent a message, so it signs each of its own
+  envelopes with the identity, and drops what doesn't verify. Each kind of signature has its own context, so that a
+  signature made for one purpose is never valid for another.
 
 ### Permissions
 
@@ -188,7 +219,6 @@ is reachable on, however many there are. The core enforces them:
 
 ## Not done yet
 
-- Remote buttons request a fixed bitmap size (144px). They should request the sizes the surfaces showing them need.
 - Sharing variables between installations, and using connections of another installation.
 - Letting the user choose which routes to use for a peer, and then racing every message over all of them (see
   Routes). Today, everything about a peer's buttons goes over one.
