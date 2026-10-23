@@ -12,6 +12,7 @@ import type {
 } from '@companion-app/shared/Model/Link.js'
 import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
@@ -340,6 +341,9 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			case 'button.update':
 				// Only accepted for a button we are subscribed to with its sender
 				this.buttonClient.handleUpdate(senderId, message.payload)
+				break
+			default:
+				assertNever(message)
 				break
 		}
 	}
