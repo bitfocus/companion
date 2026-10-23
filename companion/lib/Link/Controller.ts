@@ -189,6 +189,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			this.#handleMessage(transportId, payload, origin)
 		)
 		this.#permissions.on('changed', (peerId, permissions) => {
+			this.#peers.sharedByUsChanged(peerId)
 			this.emit('peers', this.#peers.getPeers())
 			// Not to a peer we can't talk to: it is told once it announces a version in common (see peerReachable)
 			if (this.#peers.getPeer(peerId)?.compatible) {

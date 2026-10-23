@@ -104,7 +104,7 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 
 		for (const [peerId, raw] of Object.entries(store.all())) {
 			const stored = StoredPeerSchema.safeParse(raw)
-			if (!stored.success || peerId === selfId) {
+			if (!stored.success || peerId === selfId || !this.#isRemembered(peerId, stored.data.alias)) {
 				store.delete(peerId)
 				continue
 			}
@@ -142,9 +142,27 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 		if (this.#peers.delete(selfId)) this.emit('changed')
 	}
 
+	/**
+	 * Whether a peer is remembered across restarts: once it is shared something, or given a name here. Any other peer
+	 * is found again when it is reachable, so isn't worth keeping
+	 */
+	#isRemembered(peerId: string, alias: string | null): boolean {
+		return alias !== null || Object.values(this.#getSharedByUs(peerId)).some(Boolean)
+	}
+
 	#save(record: PeerRecord): void {
 		record.savedLastSeen = record.lastSeen
-		this.#store.set(record.id, { announcement: record.announcement, lastSeen: record.lastSeen, alias: record.alias })
+		if (this.#isRemembered(record.id, record.alias)) {
+			this.#store.set(record.id, { announcement: record.announcement, lastSeen: record.lastSeen, alias: record.alias })
+		} else {
+			this.#store.delete(record.id)
+		}
+	}
+
+	/** What we share with a peer has changed, which decides whether it is remembered */
+	sharedByUsChanged(peerId: string): void {
+		const record = this.#peers.get(peerId)
+		if (record) this.#save(record)
 	}
 
 	/** Process an announcement received on a transport */
