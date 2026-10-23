@@ -91,13 +91,14 @@ export class LinkRemoteImageStore implements RemoteImageSource {
 	 * shape has just been subscribed to. Otherwise the newest image of the closest shape
 	 * @param key - the remote button
 	 * @param size - of the content of the button, which the image is drawn in
+	 * @param wait - whether to wait for a shape just subscribed to (see above)
 	 */
-	async getImage(key: string, size: PixelSize): Promise<RemoteImage | null> {
+	async getImage(key: string, size: PixelSize, wait: boolean): Promise<RemoteImage | null> {
 		const button = this.#buttons.get(key)
 		if (!button) return null
 
 		let image: LinkButtonImage | null | undefined =
-			pickImage(button.images, size, true) ?? (await this.#waitForShape(button, size))
+			pickImage(button.images, size, true) ?? (wait ? await this.#waitForShape(button, size) : null)
 		// It may no longer be shown, once done waiting
 		if (this.#buttons.get(key) !== button) return null
 		image ??= pickImage(button.images, size, false)

@@ -292,14 +292,16 @@ describe('LinkButtonClient', () => {
 		// As the graphics fetch them for the remote element, by the remote button of the link button
 		const remoteKey = ctx.client.getState('c1')!.remoteKey!
 		const imageAt = async (size: { width: number; height: number }) =>
-			(await ctx.images.getImage(remoteKey, size))?.dataUrl.replace('data:image/png;base64,', '')
+			(await ctx.images.getImage(remoteKey, size, true))?.dataUrl.replace('data:image/png;base64,', '')
 
 		// Here already
 		expect(await imageAt(square)).toBe('144x144-1')
 		// Nothing of this shape is subscribed to, so there is nothing to wait for: the closest shape
 		expect(await imageAt(wide)).toBe('144x144-1')
 		// Identified by the remote button, size and revision, so that the image data is never compared
-		expect(await ctx.images.getImage(remoteKey, square)).toMatchObject({ key: 'peer/location/1/0/2/0x0@144x144#s1:1' })
+		expect(await ctx.images.getImage(remoteKey, square, true)).toMatchObject({
+			key: 'peer/location/1/0/2/0x0@144x144#s1:1',
+		})
 
 		// Just shown as a strip: its first image is waited for, rather than drawing the square first
 		ctx.client.setDisplayedSizes('c1', [square, wide])
@@ -314,11 +316,11 @@ describe('LinkButtonClient', () => {
 		await vi.advanceTimersByTimeAsync(linkImageWaitMs(null))
 		expect(await late).toBe('144x144-1')
 
-		expect(await ctx.images.getImage('unknown', square)).toBeNull()
+		expect(await ctx.images.getImage('unknown', square, true)).toBeNull()
 
 		// Gone once nothing shows it
 		ctx.client.removeTarget('c1')
-		expect(await ctx.images.getImage(remoteKey, square)).toBeNull()
+		expect(await ctx.images.getImage(remoteKey, square, true)).toBeNull()
 	})
 
 	test('waits less for a peer with a measured latency', () => {

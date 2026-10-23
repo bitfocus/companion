@@ -22,12 +22,13 @@ export interface RemoteImage {
 /** Where the images of remote elements are fetched from */
 export interface RemoteImageSource {
 	/**
-	 * The image to draw for a remote element at a size. May wait briefly for one on its way
+	 * The image to draw for a remote element at a size
 	 * @param source - the `source` of the element
 	 * @param size - the size the element is drawn at, in pixels
+	 * @param wait - whether to wait briefly for an image of that size on its way, rather than give the closest there is
 	 * @returns the image, or null when there is none
 	 */
-	getImage(source: string, size: PixelSize): Promise<RemoteImage | null>
+	getImage(source: string, size: PixelSize, wait: boolean): Promise<RemoteImage | null>
 }
 
 /** The frames of the animated images chosen for one render */
@@ -130,12 +131,14 @@ export class ImageCacheStore {
 	 * @param frameIndices The frame to draw of each animated image, keyed by the id of its element
 	 * @param contentSize The size of the content of the button being drawn, in pixels, for the remote elements in it
 	 * @param remoteImages Where the images of remote elements are fetched from
+	 * @param waitForRemoteImages Whether to wait briefly for the image of a remote element on its way (see getImage)
 	 */
 	async resolveDrawStyle(
 		drawStyle: RendererDrawStyle,
 		frameIndices: ReadonlyMap<string, number>,
 		contentSize: PixelSize,
-		remoteImages: RemoteImageSource
+		remoteImages: RemoteImageSource,
+		waitForRemoteImages: boolean
 	): Promise<RendererDrawStyle> {
 		const decodedImages = new Map<string, DecodedRasterImage>()
 		const elements = await this.#resolveElements(
@@ -143,7 +146,8 @@ export class ImageCacheStore {
 			frameIndices,
 			decodedImages,
 			contentSize,
-			remoteImages
+			remoteImages,
+			waitForRemoteImages
 		)
 		if (decodedImages.size === 0) return drawStyle
 
@@ -160,7 +164,8 @@ export class ImageCacheStore {
 		frameIndices: ReadonlyMap<string, number>,
 		decodedImages: Map<string, DecodedRasterImage>,
 		parentSize: PixelSize,
-		remoteImages: RemoteImageSource
+		remoteImages: RemoteImageSource,
+		waitForRemoteImages: boolean
 	): Promise<SomeButtonGraphicsDrawElement[]> {
 		let changed = false
 		const result = await Promise.all(
@@ -186,7 +191,11 @@ export class ImageCacheStore {
 						return { ...element, base64Image: null }
 					}
 					case 'remote': {
-						const image = await remoteImages.getImage(element.source, scaleSize(parentSize, element))
+						const image = await remoteImages.getImage(
+							element.source,
+							scaleSize(parentSize, element),
+							waitForRemoteImages
+						)
 						const entry = image && (await this.#getEntry(image.key, image.dataUrl))
 						if (!entry || entry.result.type !== 'raster') return element
 
@@ -205,7 +214,8 @@ export class ImageCacheStore {
 							frameIndices,
 							decodedImages,
 							scaleSize(parentSize, element),
-							remoteImages
+							remoteImages,
+							waitForRemoteImages
 						)
 						if (children === element.children) return element
 

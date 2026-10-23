@@ -27,7 +27,7 @@ describe('LinkRemoteImageStore', () => {
 		store.setImages('remote', [image(square)])
 		store.expectShape('remote', wide, Date.now() + 1000)
 
-		const waiting = store.getImage('remote', { width: 200, height: 100 })
+		const waiting = store.getImage('remote', { width: 200, height: 100 }, true)
 		store.delete('remote')
 		await expect(waiting).resolves.toBeNull()
 	})
@@ -36,19 +36,28 @@ describe('LinkRemoteImageStore', () => {
 		store.setImages('remote', [image(square)])
 		store.expectShape('remote', wide, Date.now() + 1000)
 
-		const waiting = store.getImage('remote', { width: 200, height: 100 })
+		const waiting = store.getImage('remote', { width: 200, height: 100 }, true)
 		store.shapeArrived('remote', wide, null)
 		await expect(waiting).resolves.toMatchObject({ dataUrl: 'data:image/png;base64,144x144' })
 	})
 
+	test('does not wait for a shape when told not to, eg when serving onwards', async () => {
+		store.setImages('remote', [image(square)])
+		store.expectShape('remote', wide, Date.now() + 1000)
+
+		await expect(store.getImage('remote', { width: 200, height: 100 }, false)).resolves.toMatchObject({
+			dataUrl: 'data:image/png;base64,144x144',
+		})
+	})
+
 	test('an older image is drawn only when there is no current one', async () => {
 		store.setImages('remote', [image(square), image(wide, false)])
-		await expect(store.getImage('remote', { width: 200, height: 100 })).resolves.toMatchObject({
+		await expect(store.getImage('remote', { width: 200, height: 100 }, true)).resolves.toMatchObject({
 			dataUrl: 'data:image/png;base64,144x144',
 		})
 
 		store.setImages('remote', [image(wide, false)])
-		await expect(store.getImage('remote', { width: 200, height: 100 })).resolves.toMatchObject({
+		await expect(store.getImage('remote', { width: 200, height: 100 }, true)).resolves.toMatchObject({
 			dataUrl: 'data:image/png;base64,288x144',
 		})
 	})

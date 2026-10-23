@@ -266,7 +266,7 @@ describe('GraphicsRenderer', () => {
 					async (source) => decodeImage(source, 32 * 1024 * 1024),
 					64 * 1024 * 1024
 				)
-				return store.resolveDrawStyle(style, new Map(), { width: 72, height: 72 }, NO_REMOTE_IMAGES)
+				return store.resolveDrawStyle(style, new Map(), { width: 72, height: 72 }, NO_REMOTE_IMAGES, true)
 			}
 
 			test.each(['fit', 'fill', 'crop'] as const)(
@@ -316,7 +316,8 @@ describe('GraphicsRenderer', () => {
 					style,
 					frames.frameIndices,
 					{ width: 72, height: 72 },
-					NO_REMOTE_IMAGES
+					NO_REMOTE_IMAGES,
+					true
 				)
 
 				const buffer = await GraphicsRenderer.drawButtonImageBuffer(
