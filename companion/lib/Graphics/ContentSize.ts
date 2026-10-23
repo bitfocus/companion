@@ -11,11 +11,3 @@ export function contentSizeOf(size: DisplayedSize, decoration: ButtonGraphicsDec
 	)
 	return { width: content.width, height: content.height }
 }
-
-/** The size of a button whose content area is a size (the inverse of contentSizeOf) */
-export function decoratedSizeOf(contentSize: DisplayedSize, decoration: ButtonGraphicsDecorationType): DisplayedSize {
-	return {
-		width: contentSize.width,
-		height: GraphicsLayeredButtonRenderer.computeHeightForContent(contentSize.height, decoration),
-	}
-}

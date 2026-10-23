@@ -207,6 +207,12 @@ describe('LinkButtonClient', () => {
 		ctx.client.setDecoration('c1', ButtonGraphicsDecorationType.TopBar)
 		await flushSubscribes()
 		expect(ctx.sent.at(-1)).toMatchObject({ type: 'subscribe', payload: { buttons: [{ width: 288, height: 144 }] } })
+
+		// Shown as its content alone, as when it is served onwards: used as it is, whatever the decoration
+		ctx.sent.length = 0
+		ctx.client.setDisplayedSizes('c1', [{ width: 300, height: 200, contentOnly: true }])
+		await flushSubscribes()
+		expect(ctx.sent.at(-1)).toMatchObject({ type: 'subscribe', payload: { buttons: [{ width: 300, height: 200 }] } })
 	})
 
 	test('subscribes, renews and unsubscribes in chunks a peer accepts, however many buttons are shown', async () => {

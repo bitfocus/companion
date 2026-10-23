@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
-import { contentSizeOf, decoratedSizeOf } from '../../lib/Graphics/ContentSize.js'
+import { contentSizeOf } from '../../lib/Graphics/ContentSize.js'
 
 describe('contentSizeOf', () => {
 	test('a top bar takes the top of the button', () => {
@@ -24,32 +24,5 @@ describe('contentSizeOf', () => {
 			width: 72,
 			height: 72,
 		})
-	})
-})
-
-describe('decoratedSizeOf', () => {
-	test('is the size of the button around the content', () => {
-		for (const height of [20, 58, 80, 116, 300]) {
-			const decorated = decoratedSizeOf({ width: 100, height }, ButtonGraphicsDecorationType.TopBar)
-			expect(contentSizeOf(decorated, ButtonGraphicsDecorationType.TopBar)).toEqual({ width: 100, height })
-		}
-		expect(decoratedSizeOf({ width: 72, height: 58 }, ButtonGraphicsDecorationType.TopBar)).toEqual({
-			width: 72,
-			height: 72,
-		})
-		expect(decoratedSizeOf({ width: 72, height: 72 }, ButtonGraphicsDecorationType.None)).toEqual({
-			width: 72,
-			height: 72,
-		})
-	})
-
-	test('is the smallest button around the content, for every height', () => {
-		for (let height = 1; height <= 2000; height++) {
-			const decorated = decoratedSizeOf({ width: 100, height }, ButtonGraphicsDecorationType.TopBar)
-			expect(contentSizeOf(decorated, ButtonGraphicsDecorationType.TopBar).height).toBe(height)
-			expect(
-				contentSizeOf({ width: 100, height: decorated.height - 1 }, ButtonGraphicsDecorationType.TopBar).height
-			).toBeLessThan(height)
-		}
 	})
 })

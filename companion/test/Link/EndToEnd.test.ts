@@ -189,9 +189,10 @@ describe.each(NETWORKS)('two installations linked over $name', { timeout: 20_000
 		await vi.waitFor(() =>
 			expect(imagesOf(button.state())).toEqual(['288x144:Studio A-1/0/0', '144x144:Studio A-1/0/0'])
 		)
+		// Served as its content alone, for B to decorate
 		expect(a.displayedLocations.getSizes(location)).toEqual([
-			{ width: 288, height: 144 },
-			{ width: 144, height: 144 },
+			{ width: 288, height: 144, contentOnly: true },
+			{ width: 144, height: 144, contentOnly: true },
 		])
 
 		button.onChange.mockClear()
@@ -215,7 +216,9 @@ describe.each(NETWORKS)('two installations linked over $name', { timeout: 20_000
 		// Once B shows it, as a strip, A subscribes to B's button at that shape. (B is then shown its own button back,
 		// which is a loop, but that is tested elsewhere)
 		showOnB('remote-on-b', locationOnA, [{ width: 200, height: 100 }])
-		await vi.waitFor(() => expect(b.displayedLocations.getSizes(location)).toEqual([{ width: 288, height: 144 }]))
+		await vi.waitFor(() =>
+			expect(b.displayedLocations.getSizes(location)).toEqual([{ width: 288, height: 144, contentOnly: true }])
+		)
 	})
 
 	test('what is in use is counted on both installations', async () => {

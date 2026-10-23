@@ -1,6 +1,5 @@
 import { EventEmitter } from 'node:events'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { LinkTransportConfig } from '@companion-app/shared/Model/Link.js'
 import type { IControlStore } from '../../lib/Controls/IControlStore.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
@@ -100,7 +99,6 @@ function createController(db = new FakeDataDatabase(), installName = 'Self') {
 		displayedLocations: new DisplayedLocations(),
 		getUndecoratedRender: vi.fn((render: ImageResult) => ({ render, state: null })),
 		getContentSize: vi.fn((size: { width: number; height: number }) => size),
-		getDecoratedSize: vi.fn((_location: ControlLocation, size: { width: number; height: number }) => size),
 		getCachedRenderOrGeneratePlaceholder: vi.fn(
 			() =>
 				({

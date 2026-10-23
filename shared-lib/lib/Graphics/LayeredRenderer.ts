@@ -61,21 +61,6 @@ export class GraphicsLayeredButtonRenderer {
 		)
 	}
 
-	/**
-	 * The smallest height of a button whose content area is at least a height: the inverse of computeContentBounds
-	 */
-	static computeHeightForContent(contentHeight: number, decoration: ButtonGraphicsDecorationType): number {
-		if (decoration !== ButtonGraphicsDecorationType.TopBar) return contentHeight
-
-		// While the top bar is its minimum height, it simply adds that
-		const minBarHeight = ButtonDecorationRenderer.DEFAULT_HEIGHT
-		const withMinBar = contentHeight + minBarHeight
-		if (Math.floor(withMinBar / TOP_BAR_HEIGHT_DIVISOR) <= minBarHeight) return withMinBar
-
-		// Beyond that the content is the rest of the height, which is (divisor - 1) / divisor of it rounded up
-		return Math.floor((TOP_BAR_HEIGHT_DIVISOR * (contentHeight - 1)) / (TOP_BAR_HEIGHT_DIVISOR - 1)) + 1
-	}
-
 	static async draw(
 		img: ImageBase<any>,
 		drawStyle: RendererButtonStyle,

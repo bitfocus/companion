@@ -47,7 +47,7 @@ import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import { resolveThreadEntrypoint, rotateResolution } from '../Resources/Util.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
-import { contentSizeOf, decoratedSizeOf } from './ContentSize.js'
+import { contentSizeOf } from './ContentSize.js'
 import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
 import { DisplayedLocations, type DisplayedSize } from './DisplayedLocations.js'
 import { EmbeddedLocations } from './EmbeddedLocations.js'
@@ -1040,18 +1040,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 				? this.#userConfigController.getKey('buttons_decoration')
 				: decoration
 		)
-	}
-
-	/**
-	 * The size of the button at a location whose content area is a size, by how it is decorated now (the inverse of
-	 * getContentSize)
-	 */
-	getDecoratedSize(location: ControlLocation, contentSize: DisplayedSize): DisplayedSize {
-		const render = this.getCachedRender(location)
-		const decoration =
-			(render && this.#renderSources.get(render)?.drawStyle.decoration) ??
-			this.#userConfigController.getKey('buttons_decoration')
-		return decoratedSizeOf(contentSize, decoration)
 	}
 
 	/**

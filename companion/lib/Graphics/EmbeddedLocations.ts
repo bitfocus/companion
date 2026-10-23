@@ -1,6 +1,11 @@
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { DisplayedLocationsSet, type DisplayedLocations, type DisplayedSize } from './DisplayedLocations.js'
+import {
+	DisplayedLocationsSet,
+	displayedSizeKey,
+	type DisplayedLocations,
+	type DisplayedSize,
+} from './DisplayedLocations.js'
 
 /**
  * Shows the locations each shown location embeds (with reference elements, or as a mirror of another button) wherever
@@ -54,15 +59,15 @@ export class EmbeddedLocations {
 		const byEmbedding = this.#shownByEmbedding.get(key)
 		const sizes = this.#displayed
 			.getSizeCounts(location)
-			.filter((size) => size.count > (byEmbedding?.get(sizeKey(size)) ?? 0))
+			.filter((size) => size.count > (byEmbedding?.get(displayedSizeKey(size)) ?? 0))
 		const embedded = sizes.length > 0 ? this.#getEmbedded(location) : null
 
 		const entries: EmbeddedEntry[] = []
 		for (const embeddedKey of embedded ?? []) {
 			const embeddedLocation = parseLocation(embeddedKey)
 			if (!embeddedLocation || embeddedKey === key) continue
-			for (const { width, height } of sizes) {
-				entries.push({ key: embeddedKey, location: embeddedLocation, size: { width, height } })
+			for (const { count: _count, ...size } of sizes) {
+				entries.push({ key: embeddedKey, location: embeddedLocation, size })
 			}
 		}
 
@@ -88,9 +93,9 @@ export class EmbeddedLocations {
 				counts = new Map()
 				this.#shownByEmbedding.set(entry.key, counts)
 			}
-			const count = (counts.get(sizeKey(entry.size)) ?? 0) + delta
-			if (count > 0) counts.set(sizeKey(entry.size), count)
-			else counts.delete(sizeKey(entry.size))
+			const count = (counts.get(displayedSizeKey(entry.size)) ?? 0) + delta
+			if (count > 0) counts.set(displayedSizeKey(entry.size), count)
+			else counts.delete(displayedSizeKey(entry.size))
 			if (counts.size === 0) this.#shownByEmbedding.delete(entry.key)
 		}
 	}
@@ -101,10 +106,6 @@ interface EmbeddedEntry {
 	readonly key: string
 	readonly location: ControlLocation
 	readonly size: DisplayedSize
-}
-
-function sizeKey(size: DisplayedSize): string {
-	return `${size.width}x${size.height}`
 }
 
 /** A location from the form formatLocation gives it */

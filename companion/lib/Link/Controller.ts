@@ -142,9 +142,9 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 				rotateControl: (controlId, delta, surfaceId) => deps.controls.rotateControl(controlId, delta, surfaceId),
 				abortControl: (controlId, unlatch, hops) =>
 					deps.controls.getControl(controlId)?.abortDelayedActions(unlatch, null, hops),
-				// Served as content only, so shown as the button whose content is that size
+				// Served as its content alone, for the subscriber to decorate
 				acquireDisplayedLocation: (location, contentSize) =>
-					deps.graphics.displayedLocations.acquire(location, deps.graphics.getDecoratedSize(location, contentSize)),
+					deps.graphics.displayedLocations.acquire(location, { ...contentSize, contentOnly: true }),
 				getUndecoratedRender: (render) => deps.graphics.getUndecoratedRender(render),
 				getSourceChain: (location) => this.#getSourceChain(location),
 				getClockOffset: (peerId) => this.#peers.getClockOffset(peerId),

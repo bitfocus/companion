@@ -282,7 +282,7 @@ export class LinkButtonClient {
 		const button = this.#buttons.get(controlId)
 		if (!button || isEqual(button.displayedSizes, sizes)) return
 
-		button.displayedSizes = sizes.map(({ width, height }) => ({ width, height }))
+		button.displayedSizes = sizes.map((size) => ({ ...size }))
 		const remote = button.key ? this.#remotes.get(button.key) : undefined
 		if (remote) this.#updateDemand(remote)
 	}
@@ -488,7 +488,11 @@ export class LinkButtonClient {
 		const shownSizes: DisplayedSize[] = []
 		for (const controlId of remote.controlIds) {
 			const button = this.#buttons.get(controlId)
-			if (button) shownSizes.push(...button.displayedSizes.map((size) => this.#contentSize(size, button.decoration)))
+			if (!button) continue
+			for (const size of button.displayedSizes) {
+				// Its content alone when it is served onwards, for the subscriber to decorate
+				shownSizes.push(size.contentOnly ? size : this.#contentSize(size, button.decoration))
+			}
 		}
 
 		const wanted = new Set<string>()
