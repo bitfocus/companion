@@ -109,6 +109,7 @@ export abstract class ButtonControlRuntimeBase<
 				renderClock: deps.renderClock,
 				variableDependencies: deps.variableDependencies,
 				getPageVariableEntities: deps.getPageVariableEntities,
+				customActionInstances: deps.customActionInstances,
 			},
 			this.sendRuntimePropsChange.bind(this),
 			isLayered

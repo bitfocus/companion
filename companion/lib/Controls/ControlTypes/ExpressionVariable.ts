@@ -107,6 +107,7 @@ export class ControlExpressionVariable
 			renderClock: deps.renderClock,
 			variableDependencies: deps.variableDependencies,
 			getPageVariableEntities: deps.getPageVariableEntities,
+			customActionInstances: deps.customActionInstances,
 		})
 
 		this.options = this.optionsSchema.parse({})

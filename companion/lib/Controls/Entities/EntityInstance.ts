@@ -1,7 +1,11 @@
 import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
-import { isInternalConnectionId, isVirtualConnectionId } from '@companion-app/shared/ConnectionId.js'
+import {
+	isCustomActionsConnectionId,
+	isInternalConnectionId,
+	isVirtualConnectionId,
+} from '@companion-app/shared/ConnectionId.js'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { LocalVariableNameRegex } from '@companion-app/shared/LocalVariable.js'
@@ -305,6 +309,8 @@ export class ControlEntityInstance {
 		// Inform relevant module
 		if (isInternalConnectionId(this.#data.connectionId)) {
 			this.#internalModule.entityDelete(this.asEntityModel())
+		} else if (isCustomActionsConnectionId(this.#data.connectionId)) {
+			this.#scope.customActionInstances.entityDelete(this, this.#controlId)
 		} else if (!isVirtualConnectionId(this.#data.connectionId)) {
 			this.#processManager.connectionEntityDelete(this.asEntityModel(), this.#controlId).catch((e: unknown) => {
 				this.#logger.silly(`entityDelete to connection "${this.connectionId}" failed: ${stringifyError(e)}`)
@@ -396,6 +402,9 @@ export class ControlEntityInstance {
 				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId, () =>
 					this.createVariablesAndExpressionParser(null)
 				)
+			} else if (isCustomActionsConnectionId(thisData.connectionId)) {
+				// Build or update the copy of the custom action held by this action
+				this.#scope.customActionInstances.entityUpdate(this, this.#controlId, this.#scope)
 			} else if (!isVirtualConnectionId(thisData.connectionId)) {
 				// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
 				// The EntityManager will not subscribe disabled entities to the module.

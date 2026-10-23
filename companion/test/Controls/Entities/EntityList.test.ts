@@ -55,8 +55,11 @@ function createList(
 		trackEntity: vi.fn(),
 		forgetEntity: vi.fn(),
 	} as any
+	const customActionInstances = { entityUpdate: vi.fn(), entityDelete: vi.fn() }
 	const scope: EntityScope = {
 		specialExpressionManager,
+		customActionChain: [],
+		customActionInstances,
 		createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
 	}
 	const internalController: InternalControllerForEntity = {
@@ -114,6 +117,7 @@ function createList(
 		internalController,
 		processManager,
 		specialExpressionManager,
+		customActionInstances,
 		scope,
 		newActionModel,
 		newAction,
@@ -2084,6 +2088,8 @@ describe('transient child groups', () => {
 	function createTransientScope(): EntityScope {
 		return {
 			specialExpressionManager: { trackEntity: vi.fn(), forgetEntity: vi.fn() } as any,
+			customActionChain: ['custom-action:1'],
+			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
 			createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
 		}
 	}
