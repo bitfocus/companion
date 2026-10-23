@@ -1,0 +1,68 @@
+name: "Setup Windows code signing"
+description: "Prepare jsign to sign Windows builds with the Bitfocus code signing key in Google Cloud KMS"
+inputs:
+  workload-identity-provider:
+    description: "Full resource name of the Google Cloud Workload Identity Federation provider"
+    required: true
+  service-account:
+    description: "Email of the service account that may sign with the KMS key"
+    required: true
+  kms-keyring:
+    description: "Key ring resource name, projects/<project>/locations/<location>/keyRings/<keyring>"
+    required: true
+  kms-key:
+    description: "Key version relative to the key ring, <key>/cryptoKeyVersions/<version>"
+    required: true
+  certificate:
+    description: "PEM encoded code signing certificate followed by its intermediate certificates"
+    required: true
+outputs:
+  access-token:
+    description: "Short-lived Google Cloud access token for jsign, pass it as BF_CODESIGN_ACCESS_TOKEN"
+    value: ${{ steps.auth.outputs.access_token }}
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+      with:
+        distribution: microsoft
+        java-version: "21"
+
+    - name: Install jsign
+      shell: pwsh
+      env:
+        JSIGN_VERSION: "7.6"
+        JSIGN_SHA256: "6cf58aa080e7ff82656f320cff8d4a3bff30408df8766806dcba3740dd839fa5"
+        CODESIGN_CERTIFICATE: ${{ inputs.certificate }}
+        CODESIGN_KMS_KEYRING: ${{ inputs.kms-keyring }}
+        CODESIGN_KMS_KEY: ${{ inputs.kms-key }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $ProgressPreference = 'SilentlyContinue'
+
+        if (-not $env:CODESIGN_CERTIFICATE) { throw 'The code signing certificate is empty' }
+        if (-not $env:CODESIGN_KMS_KEYRING) { throw 'The KMS key ring is empty' }
+        if (-not $env:CODESIGN_KMS_KEY) { throw 'The KMS key is empty' }
+
+        $Jar = Join-Path $env:RUNNER_TEMP "jsign-$env:JSIGN_VERSION.jar"
+        Invoke-WebRequest -Uri "https://github.com/ebourg/jsign/releases/download/$env:JSIGN_VERSION/jsign-$env:JSIGN_VERSION.jar" -OutFile $Jar
+        $Hash = (Get-FileHash -LiteralPath $Jar -Algorithm SHA256).Hash
+        if ($Hash -ne $env:JSIGN_SHA256) { throw "jsign checksum mismatch: $Hash" }
+
+        $Certificate = Join-Path $env:RUNNER_TEMP 'codesign-chain.pem'
+        Set-Content -LiteralPath $Certificate -Value $env:CODESIGN_CERTIFICATE -NoNewline
+
+        "BF_CODESIGN_JSIGN_JAR=$Jar" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "BF_CODESIGN_CERT_FILE=$Certificate" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "BF_CODESIGN_KMS_KEYRING=$env:CODESIGN_KMS_KEYRING" | Out-File -FilePath $env:GITHUB_ENV -Append
+        "BF_CODESIGN_KMS_KEY=$env:CODESIGN_KMS_KEY" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+    # Authenticate last so the one hour token lifetime starts as late as possible.
+    - id: auth
+      uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+      with:
+        workload_identity_provider: ${{ inputs.workload-identity-provider }}
+        service_account: ${{ inputs.service-account }}
+        token_format: access_token
+        create_credentials_file: false
+        export_environment_variables: false

@@ -164,8 +164,10 @@ if (process.env.ELECTRON !== '0') {
 					signingHashAlgorithms: ['sha256'],
 
 					sign: async function sign(config, packager) {
-						// Do not sign if no certificate is provided.
-						if (!config.cscInfo) {
+						// The setup-windows-codesign workflow step prepares jsign and the certificate.
+						// Without it this is an unsigned build.
+						const jsignJar = process.env.BF_CODESIGN_JSIGN_JAR
+						if (!jsignJar) {
 							return
 						}
 
@@ -177,12 +179,45 @@ if (process.env.ELECTRON !== '0') {
 							return
 						}
 
-						if (!process.env.BF_CODECERT_KEY) throw new Error('BF_CODECERT_KEY variable is not set')
+						const requireEnv = (name: string): string => {
+							const value = process.env[name]
+							if (!value) throw new Error(`${name} variable is not set`)
+							return value
+						}
+						const keyring = requireEnv('BF_CODESIGN_KMS_KEYRING')
+						const key = requireEnv('BF_CODESIGN_KMS_KEY')
+						const certFile = requireEnv('BF_CODESIGN_CERT_FILE')
+						requireEnv('BF_CODESIGN_ACCESS_TOKEN')
 
 						const vm = await packager.vm.value
 						await vm.exec(
-							'powershell.exe',
-							['c:\\actions-runner-bitfocus\\sign.ps1', targetPath, `-Description`, 'Bitfocus Companion'],
+							'java',
+							[
+								'-jar',
+								jsignJar,
+								'--storetype',
+								'GOOGLECLOUD',
+								'--keystore',
+								keyring,
+								// jsign reads the access token from the environment, keeping it off the command line
+								'--storepass',
+								'env:BF_CODESIGN_ACCESS_TOKEN',
+								'--alias',
+								key,
+								'--certfile',
+								certFile,
+								'--alg',
+								'SHA-256',
+								'--tsmode',
+								'RFC3161',
+								'--tsaurl',
+								'http://timestamp.digicert.com,http://timestamp.sectigo.com',
+								'--name',
+								'Bitfocus Companion',
+								'--url',
+								'https://bitfocus.io',
+								targetPath,
+							],
 							{
 								timeout: 10 * 60 * 1000,
 								env: process.env,
