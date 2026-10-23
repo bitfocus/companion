@@ -9,6 +9,9 @@ import { LINK_ANNOUNCE_MISSED_LIMIT, LinkAnnouncementSchema, type LinkAnnounceme
 import { LINK_CLOCK_ESTIMATE_MAX_AGE_MS } from './Protocol/v1/Timing.js'
 import { LINK_PROTOCOL_VERSIONS, negotiateLinkProtocolVersion } from './Protocol/Versions.js'
 
+/** Allowance for timer jitter, when checking whether two measurements of a peer's clock agree */
+const CLOCK_AGREEMENT_MARGIN_MS = 20
+
 /** How a peer is reachable on one transport */
 interface PeerTransportRecord {
 	/** When the peer was last heard from on this transport */
@@ -196,14 +199,21 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 
 	/**
 	 * Record a measurement of how far ahead of ours a peer's clock is. A measurement is accurate to within half its
-	 * round trip, so the one from the fastest round trip is kept, until it is too old to trust
+	 * round trip, so the one from the fastest round trip is kept, until it is too old to trust. Or until a measurement
+	 * can't agree with it, which means a clock has been changed (eg set by NTP once a device without a clock battery
+	 * has booted)
 	 */
 	recordClockSample(peerId: string, offsetMs: number, roundTripMs: number, now: number): void {
 		const record = this.#peers.get(peerId)
 		if (!record) return
 
 		const current = record.clock
-		if (current && current.roundTripMs < roundTripMs && now - current.measuredAt < LINK_CLOCK_ESTIMATE_MAX_AGE_MS)
+		if (
+			current &&
+			current.roundTripMs < roundTripMs &&
+			now - current.measuredAt < LINK_CLOCK_ESTIMATE_MAX_AGE_MS &&
+			Math.abs(offsetMs - current.offsetMs) <= (current.roundTripMs + roundTripMs) / 2 + CLOCK_AGREEMENT_MARGIN_MS
+		)
 			return
 		record.clock = { offsetMs, roundTripMs, measuredAt: now }
 	}

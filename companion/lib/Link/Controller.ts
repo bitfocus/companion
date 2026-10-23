@@ -120,8 +120,11 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			db.getTableView('link_peers')
 		)
 		this.#permissions.retainOnly(new Set(this.#peers.getPeers().map((peer) => peer.id)))
-		this.#pinger = new LinkPinger(this.#peers, (peerId, transportId, nonce) =>
-			this.#transports.sendTo(transportId, peerId, encodeLinkMessage('ping', { nonce }))
+		this.#pinger = new LinkPinger(
+			this.#peers,
+			(peerId, transportId, nonce) =>
+				this.#transports.sendTo(transportId, peerId, encodeLinkMessage('ping', { nonce })),
+			() => performance.now()
 		)
 		this.buttonClient = new LinkButtonClient(
 			() => this.#selfId,
@@ -187,7 +190,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		this.#peers.on('changed', () => this.emit('peers', this.#peers.getPeers()))
 		this.#peers.on('peerReachable', (peerId, transportId) => {
 			this.#sendAccess(peerId, transportId)
-			this.#pinger.ping(peerId, transportId, Date.now())
+			this.#pinger.ping(peerId, transportId)
 		})
 
 		for (const builtin of builtinTransports) this.#applyBuiltin(builtin)
@@ -222,7 +225,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 
 		this.#announceTimer = setInterval(() => {
 			this.#announce(null)
-			this.#pinger.pingAll(Date.now())
+			this.#pinger.pingAll()
 			this.#buttonServer.expireLeases(Date.now())
 		}, LINK_ANNOUNCE_INTERVAL_MS)
 	}
