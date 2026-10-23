@@ -8,9 +8,12 @@ import { z } from 'zod'
  * fields to the announcement.
  */
 
+/** The longest name an installation can give itself, in the announcement and the secure channel handshake */
+export const LINK_NAME_MAX_LENGTH = 200
+
 export const LinkAnnouncementSchema = z
 	.object({
-		name: z.string().max(200).describe('Human readable name of the installation'),
+		name: z.string().max(LINK_NAME_MAX_LENGTH).describe('Human readable name of the installation'),
 		companionVersion: z.string().describe('Companion application version'),
 		protocolVersions: z
 			.array(z.string())

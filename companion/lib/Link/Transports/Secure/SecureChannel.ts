@@ -3,6 +3,7 @@ import CipherState from 'noise-handshake/cipher.js'
 import type { KeyPair as NoiseKeyPair } from 'noise-handshake/dh.js'
 import { z } from 'zod'
 import { LinkIdentity } from '../../Identity.js'
+import { LINK_NAME_MAX_LENGTH } from '../../Protocol/Announcement.js'
 import type { MessagePipe } from './MessagePipe.js'
 
 /** Binds the handshake to this protocol, so it can't be confused with any other use of Noise */
@@ -24,7 +25,7 @@ const HelloSchema = z.object({
 	 */
 	keySignature: z.string().max(200),
 	/** The name of the installation, to show the user */
-	name: z.string().max(200),
+	name: z.string().max(LINK_NAME_MAX_LENGTH),
 })
 type Hello = z.infer<typeof HelloSchema>
 

@@ -16,7 +16,12 @@ import { formatLinkIdFingerprint, LinkIdentity } from './Identity.js'
 import { LinkPeerRegistry } from './PeerRegistry.js'
 import { LinkPermissionStore } from './PermissionStore.js'
 import { LinkPinger } from './Pinger.js'
-import { decodeLinkAnnouncement, encodeLinkAnnouncement, LINK_ANNOUNCE_INTERVAL_MS } from './Protocol/Announcement.js'
+import {
+	decodeLinkAnnouncement,
+	encodeLinkAnnouncement,
+	LINK_ANNOUNCE_INTERVAL_MS,
+	LINK_NAME_MAX_LENGTH,
+} from './Protocol/Announcement.js'
 import { decodeLinkMessage, encodeLinkMessage } from './Protocol/v1/Schemas.js'
 import { LINK_PROTOCOL_VERSIONS } from './Protocol/Versions.js'
 import { LinkTransportManager } from './TransportManager.js'
@@ -163,7 +168,8 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		return {
 			id: this.#selfId,
 			fingerprint: formatLinkIdFingerprint(this.#selfId),
-			name: installName || os.hostname(),
+			// Longer would be rejected by the other installations
+			name: (installName || os.hostname()).slice(0, LINK_NAME_MAX_LENGTH),
 			protocolVersions: [...LINK_PROTOCOL_VERSIONS],
 		}
 	}
