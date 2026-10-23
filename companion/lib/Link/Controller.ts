@@ -3,12 +3,13 @@ import os from 'node:os'
 import isEqual from 'fast-deep-equal'
 import z from 'zod'
 import type { BonjourQuery, ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type {
-	ClientLinkTransportType,
-	LinkPeerInfo,
-	LinkPeerUsage,
-	LinkPermission,
-	LinkSelfInfo,
+import {
+	formatLinkIdFingerprint,
+	type ClientLinkTransportType,
+	type LinkPeerInfo,
+	type LinkPeerUsage,
+	type LinkPermission,
+	type LinkSelfInfo,
 } from '@companion-app/shared/Model/Link.js'
 import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
@@ -25,7 +26,7 @@ import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { LinkButtonClient } from './ButtonClient.js'
 import { LinkButtonServer } from './ButtonServer.js'
-import { formatLinkIdFingerprint, LinkIdentity } from './Identity.js'
+import { LinkIdentity } from './Identity.js'
 import { LinkPeerRegistry } from './PeerRegistry.js'
 import { LinkPermissionStore } from './PermissionStore.js'
 import { LinkPinger } from './Pinger.js'

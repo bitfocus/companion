@@ -1,10 +1,13 @@
 import { nanoid } from 'nanoid'
 import { WebSocketServer } from 'ws'
 import { z } from 'zod'
-import { type LinkTransportEntry, type LinkTransportSection } from '@companion-app/shared/Model/Link.js'
+import {
+	formatLinkIdFingerprint,
+	type LinkTransportEntry,
+	type LinkTransportSection,
+} from '@companion-app/shared/Model/Link.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { GLOBAL_BIND_ADDRESS } from '../../../Resources/Constants.js'
-import { formatLinkIdFingerprint } from '../../Identity.js'
 import { websocketMessagePipe } from '../Secure/MessagePipe.js'
 import { acceptAuthentication, type PairingRequest } from '../Secure/PairingSession.js'
 import { SecureChannel } from '../Secure/SecureChannel.js'

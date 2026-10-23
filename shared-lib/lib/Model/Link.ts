@@ -233,3 +233,8 @@ export interface LinkButtonRuntimeProps {
 	/** Name of the target peer, when it is known */
 	peerName: string | null
 }
+
+/** A short, readable form of a Link id, for the user to recognise an installation by */
+export function formatLinkIdFingerprint(linkId: string): string {
+	return linkId.slice(0, 16).match(/.{4}/g)?.join('-') ?? linkId
+}

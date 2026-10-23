@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { formatLinkIdFingerprint, LinkIdentity } from '../../lib/Link/Identity.js'
+import { formatLinkIdFingerprint } from '@companion-app/shared/Model/Link.js'
+import { LinkIdentity } from '../../lib/Link/Identity.js'
 
 describe('LinkIdentity', () => {
 	test('the id is the public key, and survives being stored', () => {

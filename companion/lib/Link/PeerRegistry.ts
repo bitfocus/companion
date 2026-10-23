@@ -1,10 +1,14 @@
 import { EventEmitter } from 'node:events'
 import isEqual from 'fast-deep-equal'
 import { z } from 'zod'
-import type { LinkPeerInfo, LinkPermission, LinkPermissions } from '@companion-app/shared/Model/Link.js'
+import {
+	formatLinkIdFingerprint,
+	type LinkPeerInfo,
+	type LinkPermission,
+	type LinkPermissions,
+} from '@companion-app/shared/Model/Link.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import LogController from '../Log/Controller.js'
-import { formatLinkIdFingerprint } from './Identity.js'
 import { LINK_ANNOUNCE_MISSED_LIMIT, LinkAnnouncementSchema, type LinkAnnouncement } from './Protocol/Announcement.js'
 import { LINK_CLOCK_ESTIMATE_MAX_AGE_MS } from './Protocol/v1/Timing.js'
 import { LINK_PROTOCOL_VERSIONS, negotiateLinkProtocolVersion } from './Protocol/Versions.js'

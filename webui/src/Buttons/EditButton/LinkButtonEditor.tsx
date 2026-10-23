@@ -9,7 +9,6 @@ import {
 	BUTTON_STATUS_ICONS_CHOICES,
 } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { LinkButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { LinkButtonRuntimeProps, LinkButtonStatus } from '@companion-app/shared/Model/Link.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { Button } from '~/Components/Button.js'
@@ -21,6 +20,7 @@ import { Note } from '~/Components/Note.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { ButtonLocationInput } from './ButtonLocationInput.js'
+import { linkPeerChoices } from './LinkPeerChoices.js'
 
 /** What to tell the user about each status, when it needs explaining */
 const STATUS_EXPLANATIONS: Record<LinkButtonStatus, string | null> = {
@@ -64,20 +64,10 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 	)
 
 	const peers = useSubscription(trpc.link.watchPeers.subscriptionOptions())
-	const peerChoices = useMemo(() => {
-		const choices: DropdownChoice[] = (peers.data ?? [])
-			.toSorted((a, b) => a.name.localeCompare(b.name))
-			.map((peer) => ({
-				id: peer.id,
-				label: peer.online ? peer.name : `${peer.name} (offline)`,
-			}))
-
-		// Keep the chosen installation selectable even when it hasn't been discovered
-		if (config.options.peerId && !choices.some((c) => c.id === config.options.peerId)) {
-			choices.unshift({ id: config.options.peerId, label: `Unknown installation (${config.options.peerId})` })
-		}
-		return choices
-	}, [peers.data, config.options.peerId])
+	const peerChoices = useMemo(
+		() => linkPeerChoices(peers.data ?? [], config.options.peerId),
+		[peers.data, config.options.peerId]
+	)
 
 	const status = runtimeProps ? (runtimeProps as LinkButtonRuntimeProps).status : null
 	const explanation = status ? STATUS_EXPLANATIONS[status] : null

@@ -1,8 +1,11 @@
 import { WebSocket } from 'ws'
 import { z } from 'zod'
-import { type LinkTransportInfoItem, type LinkTransportSection } from '@companion-app/shared/Model/Link.js'
+import {
+	formatLinkIdFingerprint,
+	type LinkTransportInfoItem,
+	type LinkTransportSection,
+} from '@companion-app/shared/Model/Link.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { formatLinkIdFingerprint } from '../../Identity.js'
 import { websocketMessagePipe } from '../Secure/MessagePipe.js'
 import { requestAuthentication } from '../Secure/PairingSession.js'
 import { SecureChannel } from '../Secure/SecureChannel.js'
