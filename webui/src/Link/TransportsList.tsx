@@ -9,6 +9,7 @@ import { Button } from '~/Components/Button.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
+import { useActivateOnKey } from '~/Hooks/useActivateOnKey.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { TransportStatusBadge } from './LinkStatusBadges.js'
 import { useLinkStore } from './LinkStoreContext.js'
@@ -67,6 +68,7 @@ const TransportRow = observer(function TransportRow({
 				: { to: '/link/transports/$transportId', params: { transportId: transport.id } }
 		)
 	}, [navigate, isSelected, transport.id])
+	const doEditKey = useActivateOnKey(doEdit)
 
 	const doToggleEnabled = useCallback(
 		(enabled: boolean) => {
@@ -108,7 +110,14 @@ const TransportRow = observer(function TransportRow({
 				isSelected ? 'list-row-selected' : 'hover:bg-surface-muted/60'
 			)}
 		>
-			<div onClick={doEdit} className={classNames('flex flex-col grow min-w-0', { disabled: !transport.enabled })}>
+			<div
+				role="button"
+				tabIndex={0}
+				aria-pressed={isSelected}
+				onClick={doEdit}
+				onKeyDown={doEditKey}
+				className={classNames('flex flex-col grow min-w-0', { disabled: !transport.enabled })}
+			>
 				<b className="truncate">{transport.label}</b>
 				{subtitle && (
 					<span className="truncate text-muted text-sm" title={typeName}>

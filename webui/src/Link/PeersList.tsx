@@ -5,6 +5,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback } from 'react'
 import { LINK_PERMISSION_DEFINITIONS, type LinkPeerInfo } from '@companion-app/shared/Model/Link.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { useActivateOnKey } from '~/Hooks/useActivateOnKey.js'
 import { PeerStatusBadge } from './LinkStatusBadges.js'
 import { useLinkStore } from './LinkStoreContext.js'
 
@@ -41,14 +42,19 @@ const PeerRow = observer(function PeerRow({ peer, isSelected }: { peer: LinkPeer
 	const doSelect = useCallback(() => {
 		void navigate(isSelected ? { to: '/link' } : { to: '/link/$peerId', params: { peerId: peer.id } })
 	}, [navigate, isSelected, peer.id])
+	const doSelectKey = useActivateOnKey(doSelect)
 
 	return (
 		<div
+			role="button"
+			tabIndex={0}
+			aria-pressed={isSelected}
 			className={classNames(
 				'list-row flex flex-row items-center gap-2 py-2 pe-3',
 				isSelected ? 'list-row-selected' : 'hover:bg-surface-muted/60'
 			)}
 			onClick={doSelect}
+			onKeyDown={doSelectKey}
 		>
 			<div className="flex flex-col grow min-w-0">
 				<b className="truncate">{peer.name}</b>
