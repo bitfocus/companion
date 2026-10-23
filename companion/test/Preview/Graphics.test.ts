@@ -141,3 +141,34 @@ describe('PreviewGraphics location subscription', () => {
 		await square.cleanup()
 	})
 })
+
+describe('PreviewGraphics reference subscription', () => {
+	test('counts the location it shows as shown, at the size it is drawn at, until it ends', async () => {
+		const graphics = Object.assign(new EventEmitter(), {
+			displayedLocations: new DisplayedLocations(),
+			getCachedRenderOrGeneratePlaceholder: vi.fn(() => makeRender('ref')),
+		}) as unknown as GraphicsController & EventEmitter
+		const pageStore = {
+			getLocationOfControlId: vi.fn(() => ({ pageNumber: 2, row: 0, column: 0 })),
+		} as unknown as IPageStore
+		const controls = {
+			createVariablesAndExpressionParser: vi.fn(() => ({
+				parseEntityOption: (option: { value: string }) => ({ ok: true, value: option.value, variableIds: new Set() }),
+			})),
+		} as unknown as ControlsController
+		const preview = new PreviewGraphics(graphics, pageStore, controls, new EventEmitter<ControlCommonEvents>())
+
+		const caller = t.createCallerFactory(preview.createTrpcRouter())(testCtx)
+		const sub = new SubscriptionTester(
+			(await caller.reference({
+				controlId: 'control-1',
+				options: { location: { value: '1/2/3', isExpression: false } },
+			})) as AsyncIterable<string | null>
+		)
+		await sub.next()
+		expect(graphics.displayedLocations.getSizes(location)).toEqual([{ width: 288, height: 288 }])
+
+		await sub.cleanup()
+		expect(graphics.displayedLocations.getSizes(location)).toEqual([])
+	})
+})

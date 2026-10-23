@@ -82,6 +82,13 @@ export class DisplayedLocations extends EventEmitter<DisplayedLocationsEvents> {
 		this.emit('changed', entry.location)
 	}
 
+	/** The distinct sizes a location is being shown at, and by how many things at each */
+	getSizeCounts(location: ControlLocation): (DisplayedSize & { count: number })[] {
+		const entry = this.#locations.get(locationKey(location))
+		if (!entry) return []
+		return Array.from(entry.sizes.values(), ({ width, height, count }) => ({ width, height, count }))
+	}
+
 	/** The distinct sizes a location is being shown at */
 	getSizes(location: ControlLocation): DisplayedSize[] {
 		const entry = this.#locations.get(locationKey(location))

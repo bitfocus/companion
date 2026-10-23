@@ -50,6 +50,7 @@ import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js
 import { contentSizeOf, decoratedSizeOf } from './ContentSize.js'
 import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
 import { DisplayedLocations, type DisplayedSize } from './DisplayedLocations.js'
+import { EmbeddedLocations } from './EmbeddedLocations.js'
 import { FONT_DEFINITIONS } from './Fonts.js'
 import { ImageCacheStore, type AnimationFrames, type RemoteImageSource } from './ImageCache/ImageCacheStore.js'
 import { ImageLibrary } from './ImageLibrary.js'
@@ -161,6 +162,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * Which locations are being shown right now, and at what sizes
 	 */
 	readonly displayedLocations = new DisplayedLocations()
+
+	/** What each shown location's render embeds, which is shown wherever it is, at the same sizes */
+	readonly #embeddedLocations = new EmbeddedLocations(
+		this.displayedLocations,
+		(location) => this.getCachedRender(location)?.referencedLocations ?? null
+	)
 
 	/** Where the images of remote elements are fetched from */
 	readonly #remoteImageSource: RemoteImageSource
@@ -618,7 +625,10 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const previous = rowCache.get(location.column)
 		rowCache.set(location.column, render)
 
-		return !render.cacheKey || previous?.cacheKey !== render.cacheKey
+		const changed = !render.cacheKey || previous?.cacheKey !== render.cacheKey
+		// It may embed other locations now, or no longer
+		if (changed) this.#embeddedLocations.refresh(location)
+		return changed
 	}
 
 	/**
