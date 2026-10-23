@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { ActionRunner, ControlActionRunner } from '../../lib/Controls/ActionRunner.js'
+import type { CustomActionInstanceManager } from '../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
 import type { StoreResult } from '../../lib/Controls/Entities/Types.js'
 import type { IControlStore } from '../../lib/Controls/IControlStore.js'
@@ -70,12 +71,15 @@ function createRunner() {
 	const localVariablesController = mock<LocalVariablesController>()
 	const controlStore = mock<IControlStore>()
 
+	const customActionInstances = mock<CustomActionInstanceManager>()
+
 	const runner = new ActionRunner(
 		instanceController,
 		controlStore,
 		internalModule,
 		variablesController,
-		localVariablesController
+		localVariablesController,
+		customActionInstances
 	)
 
 	const actionRun = vi.fn(async (): Promise<any> => undefined)

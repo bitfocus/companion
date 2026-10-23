@@ -183,6 +183,7 @@ export class LocalVariablesController {
 		// Inside a custom action, the value is only for the run
 		if (localVariable.frame) {
 			localVariable.frame.localValues.set(localVariable.name, value)
+			localVariable.frame.localValueChanged(localVariable.name)
 			return true
 		}
 
@@ -204,6 +205,7 @@ export class LocalVariablesController {
 		// Inside a custom action, a variable which has not been set in the run has its startup value
 		if (localVariable.frame) {
 			localVariable.frame.localValues.delete(localVariable.name)
+			localVariable.frame.localValueChanged(localVariable.name)
 			return true
 		}
 

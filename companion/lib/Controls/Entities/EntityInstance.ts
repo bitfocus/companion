@@ -309,7 +309,7 @@ export class ControlEntityInstance {
 		if (isInternalConnectionId(this.#data.connectionId)) {
 			this.#internalModule.entityDelete(this.asEntityModel())
 		} else if (isCustomActionsConnectionId(this.#data.connectionId)) {
-			this.#scope.customActionInstances.entityDelete(this, this.#controlId)
+			this.#scope.customActionInstances.entityDelete(this)
 		} else if (!isVirtualConnectionId(this.#data.connectionId)) {
 			this.#processManager.connectionEntityDelete(this.asEntityModel(), this.#controlId).catch((e) => {
 				this.#logger.silly(`entityDelete to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
@@ -1085,6 +1085,19 @@ export class ControlEntityInstance {
 		}
 
 		return changed
+	}
+
+	/**
+	 * Take the runtime values (feedback value, isInverted and storeResult) of another entity, which is a copy of the
+	 * same entity in the same circumstances. This lets a new copy be used straight away, without waiting for them to
+	 * be recomputed
+	 */
+	copyRuntimeValuesFrom(other: ControlEntityInstance): void {
+		if (other.type !== this.type || other.definitionId !== this.definitionId) return
+
+		this.#cachedFeedbackValue = other.#cachedFeedbackValue
+		this.#cachedIsInverted = other.#cachedIsInverted
+		this.#cachedStoreResult = other.#cachedStoreResult
 	}
 
 	/**

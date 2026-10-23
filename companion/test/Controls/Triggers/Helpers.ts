@@ -70,7 +70,7 @@ export function createMockControlDependencies(): MockControlDependencies {
 		events: new EventEmitter() as any,
 		changeEvents: new EventEmitter() as any,
 		renderClock: { subscribe: vi.fn(() => () => {}) } as any,
-		customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
+		customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() } as any,
 		controlsAccessor: {
 			getControl: vi.fn(() => undefined),
 			pressControl: vi.fn(() => false),
