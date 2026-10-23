@@ -590,6 +590,10 @@ describe('LinkButtonClient', () => {
 		// A new stream, eg the peer restarted, replaces it
 		ctx.client.handleUpdate('peer', update(['peer'], { stream: 's2', seq: 0 }, false))
 		expect(ctx.client.getState('c1')?.pressed).toBe(false)
+
+		// And a late update from before it restarted doesn't replace that
+		ctx.client.handleUpdate('peer', update(['peer'], { stream: 's1', seq: 3 }, true))
+		expect(ctx.client.getState('c1')?.pressed).toBe(false)
 	})
 
 	test('moves to another route when the current one stops reaching the peer, saying what it has', async () => {

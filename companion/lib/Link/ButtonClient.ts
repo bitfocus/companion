@@ -33,6 +33,9 @@ export const LINK_UNREACHABLE_GRACE_MS = 10_000
  */
 export const LINK_SIZE_RELEASE_GRACE_MS = 2_000
 
+/** How many replaced streams of a remote button are remembered, to drop late updates from */
+const MAX_RETIRED_STREAMS = 8
+
 /** How long a draw waits for the bitmap of its shape before drawing another, given the latency to the peer */
 export function linkImageWaitMs(latencyMs: number | null): number {
 	// Allowing for the peer to draw it too
@@ -129,6 +132,11 @@ interface RemoteButton {
 	readonly variants: Map<string, Variant>
 	/** The newest update received, at any size */
 	latestUpdate: LinkPayloadOfType<'button.update'> | null
+	/**
+	 * Streams replaced by a newer one (when the peer restarted, or served the button afresh), oldest first, so that late
+	 * updates from them aren't taken for newer ones
+	 */
+	readonly retiredStreams: string[]
 	published: PublishedRender | null
 	/** Set while a new render is held back for its other sizes to arrive */
 	publishTimer: NodeJS.Timeout | null
@@ -251,6 +259,7 @@ export class LinkButtonClient {
 						controlIds: new Set(),
 						variants: new Map(),
 						latestUpdate: null,
+						retiredStreams: [],
 						published: null,
 						publishTimer: null,
 					}
@@ -397,6 +406,7 @@ export class LinkButtonClient {
 		// Updates may arrive out of order, eg over different transports. Keep the newest
 		const held = variant.lastUpdate?.revision
 		if (held && held.stream === payload.revision.stream && held.seq >= payload.revision.seq) return
+		if (remote.retiredStreams.includes(payload.revision.stream)) return
 
 		if (payload.image.type === 'image') {
 			variant.image = { dataUrl: payload.image.dataUrl, revision: payload.revision }
@@ -408,7 +418,14 @@ export class LinkButtonClient {
 
 		variant.lastUpdate = payload
 		variant.refused = null
-		if (isNewer(payload.revision, remote.latestUpdate?.revision ?? null)) remote.latestUpdate = payload
+		if (isNewer(payload.revision, remote.latestUpdate?.revision ?? null)) {
+			const replaced = remote.latestUpdate?.revision.stream
+			if (replaced && replaced !== payload.revision.stream) {
+				remote.retiredStreams.push(replaced)
+				if (remote.retiredStreams.length > MAX_RETIRED_STREAMS) remote.retiredStreams.shift()
+			}
+			remote.latestUpdate = payload
+		}
 
 		// A draw waiting for the first image of this size has it straight away, without waiting for the other sizes. Or
 		// stops waiting, if there is no image to show
