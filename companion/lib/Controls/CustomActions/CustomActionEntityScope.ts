@@ -1,10 +1,11 @@
+import debounceFn from 'debounce-fn'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
 } from '../../Variables/VariablesAndExpressionParser.js'
 import type { ControlCustomAction } from '../ControlTypes/CustomAction.js'
-import type { CustomActionRunFrame } from '../CustomActionRunFrame.js'
+import type { CustomActionValues } from '../CustomActionRunFrame.js'
 import type { ControlEntityList } from '../Entities/EntityList.js'
 import { EntityPoolSpecialExpressionManager } from '../Entities/EntitySpecialExpressionManager.js'
 import type { EntityScope } from '../Entities/Types.js'
@@ -12,7 +13,8 @@ import type { RenderClock } from '../RenderClock.js'
 import type { CustomActionInstancesForEntity } from './CustomActionInstanceManager.js'
 
 /**
- * The scope of the entities of a copy of a custom action, held by an action which calls it.
+ * The scope of the entities of a copy of a custom action, held by an action which calls it, either while it waits to
+ * be run or for one run of it.
  * The entities see the `this:*` variables of the control holding the copy, the inputs of the copy as
  * `$(options:*)`, and the local variables of the copy.
  */
@@ -24,12 +26,12 @@ export class CustomActionEntityScope implements EntityScope {
 	readonly #customAction: ControlCustomAction
 	readonly #callerControlId: string
 
-	#frame: CustomActionRunFrame
+	#values: CustomActionValues
 	#actions: ControlEntityList | null = null
 	#localVariables: ControlEntityList | null = null
 
-	get frame(): CustomActionRunFrame {
-		return this.#frame
+	get values(): CustomActionValues {
+		return this.#values
 	}
 
 	/**
@@ -38,7 +40,7 @@ export class CustomActionEntityScope implements EntityScope {
 	 * @param customActionChain The custom actions this copy is running inside, ending with this one
 	 * @param customActionInstances For any copies of custom actions called by this copy
 	 * @param renderClock The render clock, for special expressions which depend on it
-	 * @param frame The inputs and local variable values of the copy
+	 * @param values The inputs and local variable values of the copy
 	 */
 	constructor(
 		customAction: ControlCustomAction,
@@ -46,13 +48,13 @@ export class CustomActionEntityScope implements EntityScope {
 		customActionChain: ReadonlyArray<string>,
 		customActionInstances: CustomActionInstancesForEntity,
 		renderClock: RenderClock,
-		frame: CustomActionRunFrame
+		values: CustomActionValues
 	) {
 		this.#customAction = customAction
 		this.#callerControlId = callerControlId
 		this.customActionChain = customActionChain
 		this.customActionInstances = customActionInstances
-		this.#frame = frame
+		this.#values = values
 
 		this.specialExpressionManager = new EntityPoolSpecialExpressionManager(
 			callerControlId,
@@ -79,11 +81,31 @@ export class CustomActionEntityScope implements EntityScope {
 	}
 
 	/**
-	 * Replace the inputs and local variable values of the copy. The caller is responsible for re-subscribing the
-	 * entities, so that they are parsed with the new values
+	 * Replace the inputs and local variable values of the copy, and re-subscribe its entities so that they are parsed
+	 * with the new values
 	 */
-	setFrame(frame: CustomActionRunFrame): void {
-		this.#frame = frame
+	setValues(values: CustomActionValues): void {
+		this.#values = values
+
+		this.#resubscribeEntities()
+	}
+
+	/**
+	 * A local variable of the copy has been set, so re-parse anything which may use it
+	 * @param name The name of the variable, without the `local:` prefix
+	 */
+	localValueChanged(name: string): void {
+		this.specialExpressionManager.onVariablesChanged(new Set([`local:${name}`]))
+
+		// A run may set its variables many times in quick succession
+		this.#debounceResubscribeEntities()
+	}
+
+	readonly #debounceResubscribeEntities = debounceFn(() => this.#resubscribeEntities(), { wait: 10, maxWait: 50 })
+
+	#resubscribeEntities(): void {
+		this.#localVariables?.subscribe(true)
+		this.#actions?.subscribe(true)
 	}
 
 	createVariablesAndExpressionParser(
@@ -91,7 +113,7 @@ export class CustomActionEntityScope implements EntityScope {
 		options?: ExpressionParserOptions
 	): VariablesAndExpressionParser {
 		return this.#customAction.createCopyParser(
-			this.#frame,
+			this.#values,
 			this.#callerControlId,
 			this.#localVariables?.getDirectEntities() ?? [],
 			overrideVariableValues,
@@ -100,6 +122,7 @@ export class CustomActionEntityScope implements EntityScope {
 	}
 
 	destroy(): void {
+		this.#debounceResubscribeEntities.cancel()
 		this.specialExpressionManager.destroy()
 	}
 }

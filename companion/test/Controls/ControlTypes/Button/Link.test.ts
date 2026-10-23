@@ -87,7 +87,7 @@ describe('ControlButtonLink', () => {
 			controlsAccessor: null as any,
 			linkButtons: linkButtons as unknown as LinkButtonClient,
 			referencedLocations: new ReferencedLocationsIndex(),
-			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
+			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() } as any,
 		}
 	})
 

@@ -14,7 +14,7 @@ import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
 } from '../../Variables/VariablesAndExpressionParser.js'
-import type { CustomActionRunFrame } from '../CustomActionRunFrame.js'
+import type { CustomActionValues } from '../CustomActionRunFrame.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
@@ -96,7 +96,7 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 	 * @param options Options for the parser
 	 */
 	createRunParser(
-		frame: CustomActionRunFrame,
+		frame: CustomActionValues,
 		localVariableEntities: ControlEntityInstance[],
 		callerLocation: ControlLocation | null,
 		callerPageEntities: ControlEntityInstance[] | null,
