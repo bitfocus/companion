@@ -497,7 +497,7 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 		pressButton(location, pressed) {
 			const controlId = registry.page.store.getControlIdAt(location)
 			if (!controlId) throw new Error(`No control at ${location.pageNumber}/${location.row}/${location.column}`)
-			registry.controls.pressControl(controlId, pressed, 'test-surface')
+			registry.controls.pressControl(controlId, pressed, 'test-surface', null)
 		},
 
 		rotateButton(location, delta) {

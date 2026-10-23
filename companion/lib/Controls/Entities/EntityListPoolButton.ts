@@ -375,8 +375,6 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 		existingActions: ActionSetsModel | null,
 		existingOptions: ActionStepOptions | null
 	): ControlEntityListActionStep {
-		const options = existingOptions || structuredClone(ButtonEntityListPoolBase.DefaultStepOptions)
-
 		const downList = this.createActionEntityList(existingActions?.down || [], false, !!existingActions)
 		const upList = this.createActionEntityList(existingActions?.up || [], false, !!existingActions)
 
@@ -402,10 +400,38 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 			}
 		}
 
+		const options = existingOptions
+			? structuredClone(existingOptions)
+			: structuredClone(ButtonEntityListPoolBase.DefaultStepOptions)
+		const rawControlEventsDisabledSets: unknown = options.controlEventsDisabledSets
+		if (Array.isArray(rawControlEventsDisabledSets)) {
+			const controlEventsDisabledSets = rawControlEventsDisabledSets.filter(
+				(setId, index): setId is ActionSetId =>
+					(setId === 'down' ||
+						setId === 'up' ||
+						(typeof setId === 'number' && Number.isFinite(setId) && sets.has(setId))) &&
+					rawControlEventsDisabledSets.indexOf(setId) === index
+			)
+			if (controlEventsDisabledSets.length > 0) options.controlEventsDisabledSets = controlEventsDisabledSets
+			else delete options.controlEventsDisabledSets
+		} else {
+			delete options.controlEventsDisabledSets
+		}
+
 		return {
 			sets: sets,
 			options: options,
 		}
+	}
+
+	isActionSetControlEventsEnabled(stepId: string, setId: ActionSetId): boolean {
+		const step = this.steps.get(stepId)
+		if (!step) return false
+
+		if (setId !== 'down' && setId !== 'up' && (typeof setId !== 'number' || !Number.isFinite(setId))) return false
+		if (!step.sets.has(setId)) return false
+
+		return !step.options.controlEventsDisabledSets?.includes(setId)
 	}
 
 	/**

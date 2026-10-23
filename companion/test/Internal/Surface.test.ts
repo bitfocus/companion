@@ -92,6 +92,36 @@ function makeGroup(overrides: Partial<ClientDevicesListItem>): ClientDevicesList
 }
 
 describe('InternalSurface', () => {
+	describe('executeAction: surface cue', () => {
+		const location = { pageNumber: 2, row: 1, column: 3 }
+
+		test('self selects the invoking surface, and an explicit selection uses that device', () => {
+			const { surface, surfaceController } = createSurface()
+			surface.executeAction(
+				makeExecAction('surface_cue', { surfaceId: 'self', event: 'press' }),
+				makeExtras({ surfaceId: 'deck-7', location })
+			)
+			expect(surfaceController.sendDeviceControlEvent).toHaveBeenLastCalledWith('deck-7', location, 'press')
+			surface.executeAction(
+				makeExecAction('surface_cue', { surfaceId: 'deck-8', event: 'hold' }),
+				makeExtras({ location })
+			)
+			expect(surfaceController.sendDeviceControlEvent).toHaveBeenLastCalledWith('deck-8', location, 'hold')
+			expect(surfaceController.getGroupIdFromDeviceId).not.toHaveBeenCalled()
+		})
+
+		test('missing self, empty targets and actions without a button do nothing', () => {
+			const { surface, surfaceController } = createSurface()
+			surface.executeAction(
+				makeExecAction('surface_cue', { surfaceId: 'self', event: 'press' }),
+				makeExtras({ surfaceId: undefined, location })
+			)
+			surface.executeAction(makeExecAction('surface_cue', { surfaceId: '', event: 'press' }), makeExtras({ location }))
+			surface.executeAction(makeExecAction('surface_cue', { surfaceId: 'deck-8', event: 'press' }), fakeExtras)
+			expect(surfaceController.sendDeviceControlEvent).not.toHaveBeenCalled()
+		})
+	})
+
 	describe('executeAction: brightness', () => {
 		test('set_brightness sets the device brightness', () => {
 			const { surface, surfaceController } = createSurface()
@@ -623,6 +653,7 @@ describe('InternalSurface', () => {
 
 			expect(Object.keys(surface.getActionDefinitions()).sort()).toEqual(
 				[
+					'surface_cue',
 					'set_brightness',
 					'adjust_brightness',
 					'set_page',

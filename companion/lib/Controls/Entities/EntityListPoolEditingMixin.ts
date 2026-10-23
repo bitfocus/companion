@@ -545,6 +545,10 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 
 			// Forget the step from the options
 			step.options.runWhileHeld = step.options.runWhileHeld.filter((id) => id !== setIdNumber)
+			step.options.controlEventsDisabledSets = step.options.controlEventsDisabledSets?.filter(
+				(id) => id !== setIdNumber
+			)
+			if (step.options.controlEventsDisabledSets?.length === 0) delete step.options.controlEventsDisabledSets
 
 			// Assume it exists
 			step.sets.delete(setIdNumber)
@@ -579,6 +583,34 @@ export function WithStepEditing<TBase extends AbstractConstructor<ButtonEntityLi
 			// Update the runWhileHeld options
 			const runWhileHeldIndex = step.options.runWhileHeld.indexOf(oldSetIdNumber)
 			if (runWhileHeldIndex !== -1) step.options.runWhileHeld[runWhileHeldIndex] = newSetIdNumber
+
+			const controlEventsDisabledIndex = step.options.controlEventsDisabledSets?.indexOf(oldSetIdNumber) ?? -1
+			if (controlEventsDisabledIndex !== -1)
+				step.options.controlEventsDisabledSets![controlEventsDisabledIndex] = newSetIdNumber
+
+			this.reportChange({ redraw: false })
+
+			return true
+		}
+
+		actionSetControlEvents(stepId: string, setId: ActionSetId, enabled: boolean): boolean {
+			const step = this.steps.get(stepId)
+			if (!step) return false
+
+			if (setId !== 'down' && setId !== 'up' && (typeof setId !== 'number' || !Number.isFinite(setId))) return false
+			if (!step.sets.has(setId)) return false
+
+			const controlEventsDisabledSets = step.options.controlEventsDisabledSets ?? []
+			const disabledIndex = controlEventsDisabledSets.indexOf(setId)
+			if ((enabled && disabledIndex === -1) || (!enabled && disabledIndex !== -1)) return true
+
+			if (!enabled) {
+				controlEventsDisabledSets.push(setId)
+				step.options.controlEventsDisabledSets = controlEventsDisabledSets
+			} else {
+				controlEventsDisabledSets.splice(disabledIndex, 1)
+				if (controlEventsDisabledSets.length === 0) delete step.options.controlEventsDisabledSets
+			}
 
 			this.reportChange({ redraw: false })
 

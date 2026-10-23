@@ -22,6 +22,7 @@ import type { JsonValue } from 'type-fest'
 import { usb } from 'usb'
 import z from 'zod'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 import type {
@@ -41,6 +42,7 @@ import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { Complete } from '@companion-module/base'
+import type { SurfaceControlEvent } from '@companion-surface/base'
 import type { HIDDevice } from '@companion-surface/host'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
@@ -2264,6 +2266,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		if (device) {
 			device.setPosition(xOffset, yOffset)
 		}
+	}
+
+	/** An explicit cue targets one connected device, never every member of a group. */
+	sendDeviceControlEvent(surfaceId: string, location: ControlLocation, event: SurfaceControlEvent): void {
+		this.#getSurfaceHandlerForId(surfaceId, true)?.sendControlEventAt(location, event)
 	}
 
 	/**

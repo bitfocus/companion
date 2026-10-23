@@ -87,6 +87,12 @@ function createExportController() {
 		type: 'button-layered',
 		style: { layers: [{ type: 'text', text: 'Hello', size: 14 }] },
 		options: { relativeDelay: false },
+		steps: {
+			'0': {
+				options: { runWhileHeld: [1000], controlEventsDisabledSets: ['down', 1000] },
+				action_sets: { down: [], up: [], 1000: [] },
+			},
+		},
 	}
 
 	const pageOne = { id: 'page-1', name: 'Page One', controls: { 0: { 0: 'control-1' } } } as any
@@ -234,6 +240,7 @@ describe('export/import round-trip', () => {
 			expect(exp.version).toBe(FILE_VERSION)
 			expect(Object.keys(exp.pages)).toHaveLength(1)
 			expect(exp.pages[1].controls[0][0].type).toBe('button-layered')
+			expect(exp.pages[1].controls[0][0].steps['0'].options.controlEventsDisabledSets).toEqual(['down', 1000])
 			expect(Object.keys(exp.triggers)).toContain('trig-1')
 			expect(Object.keys(exp.expressionVariables)).toContain('ev-1')
 			expect(exp.custom_variables.myvar).toBeDefined()

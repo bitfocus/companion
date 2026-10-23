@@ -28,6 +28,7 @@ import type {
 import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
+import type { SurfaceControlEvent } from '@companion-surface/base'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 import { GraphicsRenderer } from '../../Graphics/Renderer.js'
 import LogController from '../../Log/Controller.js'
@@ -66,6 +67,9 @@ export interface SatelliteDeviceInfo {
 
 	/** The bitmap encoding (rgb/png/webp) this surface negotiated for button images */
 	bitmapFormat: SatelliteBitmapFormat
+
+	/** Whether the client asked for CONTROL-EVENT messages */
+	supportsControlEvents?: boolean
 }
 export interface SatelliteTransferableValue {
 	id: string
@@ -248,6 +252,7 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 			location: deviceInfo.socket.remoteAddress ?? null,
 			isRemote: true, // Satellite connections are always remote
 			canChangePage: !!deviceInfo.canChangePage,
+			supportsControlEvents: !!deviceInfo.supportsControlEvents,
 		}
 
 		this.#logger.info(`Adding Satellite device "${this.deviceId}"`)
@@ -329,7 +334,40 @@ export class SurfaceIPSatellite extends EventEmitter<SurfacePanelEvents> impleme
 		return this.#lockImage
 	}
 
-	quit(): void {}
+	#closed = false
+
+	quit(): void {
+		this.#closed = true
+	}
+
+	/**
+	 * Tell the client about an event on the control(s) at this position
+	 */
+	controlEvent(x: number, y: number, event: SurfaceControlEvent): void {
+		// A reconnecting client gets a new panel, so a press that started on this one must not reach it
+		if (this.#closed || !this.info.supportsControlEvents || !this.socket) return
+
+		const definitions = this.#controlDefinitions.get(formatSurfaceXy(x, y))
+		if (!definitions) return
+
+		for (const definition of definitions) {
+			const params: SatelliteMessageArgs = { EVENT: event }
+			if (!this.surfaceManifestFromClient) {
+				const keyIndex = convertXYToIndexForPanel(definition.column, definition.row, this.gridSize)
+				if (keyIndex === null) continue
+
+				params['KEY'] = keyIndex
+			} else {
+				params['CONTROLID'] = definition.id
+			}
+
+			try {
+				this.socket.sendMessage('CONTROL-EVENT', null, this.deviceId, params)
+			} catch (e) {
+				this.#logger.debug(`Control event failed: ${stringifyError(e)}`)
+			}
+		}
+	}
 
 	/**
 	 * Draw a button
