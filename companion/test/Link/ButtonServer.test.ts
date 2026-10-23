@@ -150,20 +150,50 @@ describe('LinkButtonServer', () => {
 		expect(decodeLinkMessage(ctx.sent[1].payload)).toMatchObject({ message: { payload: { pressed: true } } })
 	})
 
-	test('refuses buttons beyond how many it can serve, saying why', async () => {
-		const many = Array.from({ length: 5001 }, (_, column) => ({
-			button: { ...button, column },
+	/** Subscribe a peer to the buttons in some columns */
+	function subscribeColumns(peerId: string, from: number, count: number) {
+		const buttons = Array.from({ length: count }, (_, i) => ({
+			button: { ...button, column: from + i },
 			width: 72,
 			height: 72,
 			have: null,
 		}))
-		ctx.server.handleSubscribe('peer', 't1', { buttons: many }, 0)
+		ctx.server.handleSubscribe(peerId, 't1', { buttons }, 0)
+	}
+
+	function refusalsTo(peerId: string) {
+		return ctx.sent
+			.filter((p) => p.peerId === peerId)
+			.map((p) => messageOf(p.payload))
+			.filter((m) => m?.type === 'subscribe.refused')
+			.map((m) => m?.payload)
+	}
+
+	test('refuses buttons beyond how many it can serve, saying why', async () => {
+		subscribeColumns('a', 0, 2500)
+		subscribeColumns('b', 2500, 2500)
+		subscribeColumns('c', 5000, 1)
 		await flush()
 
-		const refusals = ctx.sent.map((p) => messageOf(p.payload)).filter((m) => m?.type === 'subscribe.refused')
-		expect(refusals.map((m) => m?.payload)).toEqual([
+		expect(refusalsTo('a')).toEqual([])
+		expect(refusalsTo('b')).toEqual([])
+		expect(refusalsTo('c')).toEqual([
 			{ buttons: [{ button: { ...button, column: 5000 }, width: 72, height: 72, reason: 'limit' }] },
 		])
+	})
+
+	test('refuses a peer more than its share, leaving the rest for the others', async () => {
+		subscribeColumns('a', 0, 2501)
+		subscribeColumns('b', 2501, 1)
+		// Renewing what it has is not more
+		subscribeColumns('a', 0, 2500)
+		await flush()
+
+		expect(refusalsTo('a')).toEqual([
+			{ buttons: [{ button: { ...button, column: 2500 }, width: 72, height: 72, reason: 'limit' }] },
+		])
+		expect(refusalsTo('b')).toEqual([])
+		expect(ctx.server.countSubscribedBy('a')).toBe(2500)
 	})
 
 	test('refuses every button of a subscribe when asked to', () => {

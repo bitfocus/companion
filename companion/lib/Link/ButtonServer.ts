@@ -65,6 +65,9 @@ const MAX_SEEN_IDS = 1000
 /** Bound on the number of distinct (button, size) pairs served, so a misbehaving peer can't exhaust memory */
 const MAX_SERVED_BUTTONS = 5000
 
+/** Bound on the (button, size) pairs one peer may subscribe to, so that one peer can't use up the whole budget */
+const MAX_SERVED_BUTTONS_PER_PEER = 2500
+
 /**
  * Serves the buttons of this installation to peers: tracks what peers have subscribed to (as leases that must be
  * renewed), sends renders of those buttons to them when they change, and performs the presses peers send.
@@ -112,10 +115,18 @@ export class LinkButtonServer {
 	 */
 	handleSubscribe(peerId: string, transportId: string, payload: LinkPayloadOfType<'subscribe'>, now: number): void {
 		const refused: LinkButtonSubscription[] = []
+		let peerCount = this.countSubscribedBy(peerId)
 		for (const { have, ...sub } of payload.buttons) {
 			const key = linkButtonSubscriptionKey(sub)
 
 			let served = this.#served.get(key)
+			const isNewForPeer = !served?.leases.has(peerId)
+			if (isNewForPeer && peerCount >= MAX_SERVED_BUTTONS_PER_PEER) {
+				this.#logger.warn(`Refusing a subscription from ${peerId}, it has subscribed to too many buttons`)
+				refused.push(sub)
+				continue
+			}
+
 			if (!served) {
 				if (this.#served.size >= MAX_SERVED_BUTTONS) {
 					this.#logger.warn(`Refusing a subscription from ${peerId}, too many buttons subscribed`)
@@ -129,6 +140,7 @@ export class LinkButtonServer {
 			}
 
 			served.leases.set(peerId, { expires: now + LINK_SUBSCRIPTION_LEASE_MS, transportId })
+			if (isNewForPeer) peerCount++
 
 			// Send the latest update to a subscriber that doesn't have it, eg it is new, or an update was lost
 			if (served.last && !isSameRevision(have, served.last.revision)) {
