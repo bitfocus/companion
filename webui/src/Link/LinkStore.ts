@@ -4,6 +4,7 @@ import type {
 	LinkPeerInfo,
 	LinkSelfInfo,
 	LinkTransportConfig,
+	LinkTransportSection,
 	LinkTransportState,
 	LinkTransportStatesUpdate,
 	LinkTransportsUpdate,
@@ -18,20 +19,39 @@ export class LinkStore {
 	/** Whether the initial list of transports has arrived */
 	transportsLoaded = false
 	peers: LinkPeerInfo[] = []
+	/** Whether the initial list of peers has arrived */
+	peersLoaded = false
 	self: LinkSelfInfo | null = null
 
 	constructor() {
 		makeObservable(this, {
 			transportsLoaded: observable,
 			peers: observable.ref,
+			peersLoaded: observable,
 			self: observable.ref,
 			sortedTransports: computed,
+			addableTransportTypes: computed,
+			attentionSections: computed,
 			sortedPeers: computed,
 		})
 	}
 
 	get sortedTransports(): LinkTransportConfig[] {
 		return Array.from(this.transports.values()).sort((a, b) => a.sortOrder - b.sortOrder)
+	}
+
+	/** The transport types the user can add, in the order the backend offers them */
+	get addableTransportTypes(): ClientLinkTransportType[] {
+		return Array.from(this.transportTypes.values()).filter((type) => !type.builtin)
+	}
+
+	/** The sections of every transport that need the user's attention, eg pairing requests */
+	get attentionSections(): { transportId: string; section: LinkTransportSection }[] {
+		return this.sortedTransports.flatMap((transport) =>
+			(this.transportStates.get(transport.id)?.sections ?? [])
+				.filter((section) => section.attention)
+				.map((section) => ({ transportId: transport.id, section }))
+		)
 	}
 
 	get sortedPeers(): LinkPeerInfo[] {
@@ -44,6 +64,7 @@ export class LinkStore {
 
 	setPeers = action((peers: LinkPeerInfo[] | null) => {
 		this.peers = peers ?? []
+		this.peersLoaded = peers !== null
 	})
 
 	setSelf = action((self: LinkSelfInfo | null) => {

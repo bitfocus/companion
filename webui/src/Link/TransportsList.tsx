@@ -94,7 +94,8 @@ const TransportRow = observer(function TransportRow({
 		)
 	}, [confirmModalRef, removeMutation, transport, isSelected, navigate])
 
-	const typeName = linkStore.transportTypes.get(transport.type)?.name ?? `Unknown type "${transport.type}"`
+	const transportType = linkStore.transportTypes.get(transport.type)
+	const typeName = transportType?.name ?? `Unknown type "${transport.type}"`
 	const state = linkStore.transportStates.get(transport.id)
 	// The label defaults to the type name, so then describe the transport with what it reports about itself instead
 	const firstInfo = state?.info[0]
@@ -118,17 +119,20 @@ const TransportRow = observer(function TransportRow({
 
 			<TransportStatusBadge state={state} />
 
-			<div className="flex items-center ps-2">
-				<SwitchInputField
-					id={undefined}
-					value={transport.enabled}
-					setValue={doToggleEnabled}
-					tooltip={transport.enabled ? 'Disable transport' : 'Enable transport'}
-				/>
-				<Button onClick={doDelete} title="Delete" className="p-1" color="danger" variant="ghost">
-					<FontAwesomeIcon icon={faTrash} />
-				</Button>
-			</div>
+			{/* A built-in transport is switched on and off in the settings, and can't be deleted */}
+			{!transport.builtin && (
+				<div className="flex items-center ps-2">
+					<SwitchInputField
+						id={undefined}
+						value={transport.enabled}
+						setValue={doToggleEnabled}
+						tooltip={transport.enabled ? 'Disable transport' : 'Enable transport'}
+					/>
+					<Button onClick={doDelete} title="Delete" className="p-1" color="danger" variant="ghost">
+						<FontAwesomeIcon icon={faTrash} />
+					</Button>
+				</div>
+			)}
 		</div>
 	)
 })

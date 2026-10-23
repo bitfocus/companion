@@ -3,6 +3,7 @@ import { makeAbsolutePath } from '~/Resources/util.js'
 import { ArtnetConfig } from './Sections/ArtnetConfig.js'
 import { EmberPlusConfig } from './Sections/EmberPlusConfig.js'
 import { HttpConfig } from './Sections/HttpConfig.js'
+import { LinkConfig } from './Sections/LinkConfig.js'
 import { MetricsConfig } from './Sections/MetricsConfig.js'
 import { OscConfig } from './Sections/OscConfig.js'
 import { RestApiKeysSection } from './Sections/RestApiConfig.js'
@@ -31,6 +32,18 @@ export const PROTOCOLS: SettingsItemDefinition[] = [
 		docs: '/user-guide/remote-control/artnet-dmx-control',
 		docsLabel: 'Artnet guide',
 		Settings: ArtnetConfig,
+		Section: null,
+	},
+	{
+		id: 'link',
+		name: 'Companion Link',
+		description:
+			'Accepts direct connections from other Companion installations, so they can be linked with this one. One that connects can do nothing until you pair it, by entering the code it shows into its pairing request on the Link page. For installations on different networks, connect them over a VPN rather than exposing this port to the internet.',
+		enabledField: 'link_direct_enabled',
+		summary: (config) => `Port ${config.link_direct_port}`,
+		docs: '/user-guide/config/settings#protocols',
+		docsLabel: 'Settings guide',
+		Settings: LinkConfig,
 		Section: null,
 	},
 	{

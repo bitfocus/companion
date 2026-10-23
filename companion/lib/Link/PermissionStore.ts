@@ -34,4 +34,18 @@ export class LinkPermissionStore extends EventEmitter<LinkPermissionStoreEvents>
 		this.#table.set(peerId, permissions)
 		this.emit('changed', peerId, permissions)
 	}
+
+	/** Stop sharing anything with an installation, and forget what was */
+	delete(peerId: string): void {
+		if (this.#table.get(peerId) === undefined) return
+		this.#table.delete(peerId)
+		this.emit('changed', peerId, { ...LINK_NO_PERMISSIONS })
+	}
+
+	/** Forget what is shared with any installation not in the list, so nothing is kept for one that can't be seen */
+	retainOnly(peerIds: ReadonlySet<string>): void {
+		for (const peerId of Object.keys(this.#table.all())) {
+			if (!peerIds.has(peerId)) this.#table.delete(peerId)
+		}
+	}
 }

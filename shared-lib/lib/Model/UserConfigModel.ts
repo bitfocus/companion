@@ -27,6 +27,9 @@ export type UserConfigModel = {
 	prometheus_enabled: boolean
 	prometheus_token: string
 
+	link_direct_enabled: boolean
+	link_direct_port: number
+
 	tcp_enabled: boolean
 	tcp_listen_port: number
 	tcp_legacy_api_enabled: boolean

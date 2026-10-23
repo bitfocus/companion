@@ -79,8 +79,7 @@ function ControlledField({
 					setValue(v !== null ? String(v) : null)
 					onSetValue?.(v)
 				}}
-				connectionId={connectionId}
-				queryId={queryId}
+				source={{ type: 'connection', connectionId, queryId }}
 			/>
 		</MenuPortalContext.Provider>
 	)
@@ -148,9 +147,9 @@ describe('BonjourDeviceInputField', () => {
 	// -------------------------------------------------------------------------
 
 	describe('subscription wiring', () => {
-		it('passes connectionId and queryId to the subscription', () => {
+		it('passes the query source to the subscription', () => {
 			renderField({ connectionId: 'myConn', queryId: 'myQuery' })
-			expect(bonjourMock.getLastInput()).toEqual({ connectionId: 'myConn', queryId: 'myQuery' })
+			expect(bonjourMock.getLastInput()).toEqual({ type: 'connection', connectionId: 'myConn', queryId: 'myQuery' })
 		})
 
 		it('clears discovered services when the subscription restarts (onStarted)', async () => {

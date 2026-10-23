@@ -73,6 +73,9 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		prometheus_enabled: false,
 		prometheus_token: '',
 
+		link_direct_enabled: true,
+		link_direct_port: 16624,
+
 		tcp_enabled: false,
 		tcp_listen_port: 16759,
 		tcp_legacy_api_enabled: false,

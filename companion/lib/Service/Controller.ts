@@ -81,8 +81,8 @@ export class ServiceController {
 		this.satelliteApi = new ServiceSatelliteApi(serviceApi, surfaceController, userconfig)
 		this.satelliteTcp = new ServiceSatelliteTcp(this.satelliteApi, userconfig)
 		this.satelliteWebsocket = new ServiceSatelliteWebsocket(this.satelliteApi, userconfig)
-		this.bonjourDiscovery = new ServiceBonjourDiscovery(userconfig, instanceController)
-		this.mdnsAdvertise = new ServiceMdnsAdvertise(userconfig, appInfo)
+		this.bonjourDiscovery = new ServiceBonjourDiscovery(userconfig, instanceController, registry.link)
+		this.mdnsAdvertise = new ServiceMdnsAdvertise(userconfig, appInfo, registry.link)
 	}
 
 	/**

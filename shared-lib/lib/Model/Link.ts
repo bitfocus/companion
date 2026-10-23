@@ -1,5 +1,6 @@
 import type { JsonValue } from 'type-fest'
 import type {
+	CompanionInputFieldBonjourDeviceExtended,
 	CompanionInputFieldCheckboxExtended,
 	CompanionInputFieldDropdownExtended,
 	CompanionInputFieldNumberExtended,
@@ -28,11 +29,17 @@ export type LinkPermission = keyof LinkPermissions
 /** Nothing is shared until the user says so */
 export const LINK_NO_PERMISSIONS: Readonly<LinkPermissions> = { buttons: false }
 
+/** The things that can be shared with another installation, in the order they are shown */
+export const LINK_PERMISSION_DEFINITIONS: readonly { id: LinkPermission; label: string; description: string }[] = [
+	{ id: 'buttons', label: 'Buttons', description: 'Show and press the buttons of the other installation' },
+]
+
 /**
  * A config field of a transport. The UI renders the transport config editor from these. Plain values only: a
  * transport config has nothing to evaluate variables or expressions against
  */
 export type LinkTransportConfigField =
+	| CompanionInputFieldBonjourDeviceExtended
 	| CompanionInputFieldStaticTextExtended
 	| Omit<CompanionInputFieldTextInputExtended, 'useVariables'>
 	| CompanionInputFieldSecretExtended
@@ -50,6 +57,11 @@ export interface ClientLinkTransportType {
 	description: string
 	/** The fields of the transport config */
 	configFields: LinkTransportConfigField[]
+	/**
+	 * Whether it is part of Link rather than added by the user: there is one of it, switched on and configured in
+	 * Settings, under Protocols
+	 */
+	builtin: boolean
 }
 
 /** A configured transport */
@@ -62,6 +74,11 @@ export interface LinkTransportConfig {
 	/** Values of the transport type's config fields */
 	config: Record<string, JsonValue | undefined>
 	sortOrder: number
+	/**
+	 * Whether this is the instance of a transport that is part of Link, which is configured in Settings, under
+	 * Protocols, rather than here
+	 */
+	builtin: boolean
 }
 
 export type LinkTransportStatus = 'disabled' | 'connecting' | 'connected' | 'error'
@@ -72,6 +89,8 @@ export interface LinkTransportInfoItem {
 	value: string
 	/** Show a copy button next to the value, for things the user will need to enter on another installation */
 	copyable?: boolean
+	/** When the value is another installation, its Link id, so that the UI can link to it */
+	peerId?: string
 }
 
 /** Something the user can do to an entry reported by a transport */
@@ -88,6 +107,8 @@ export interface LinkTransportEntry {
 	description: string | null
 	/** When set, the user is asked for a value (eg a pairing code), which is passed with the action */
 	inputLabel: string | null
+	/** When the entry is another installation, its Link id, so that the UI can link to it */
+	peerId?: string
 	actions: LinkTransportSectionAction[]
 }
 
@@ -130,6 +151,8 @@ export interface LinkPeerRoute {
 /** A Companion installation discovered on at least one transport */
 export interface LinkPeerInfo {
 	id: string
+	/** A short, readable form of the id, for the user to recognise it by */
+	fingerprint: string
 	name: string
 	companionVersion: string
 	/** The Link protocol versions the peer speaks, one per major version */
