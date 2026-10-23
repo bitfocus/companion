@@ -170,6 +170,7 @@ export class ControlTrigger
 			pageStore: deps.pageStore,
 			renderClock: deps.renderClock,
 			getPageVariableEntities: deps.getPageVariableEntities,
+			customActionInstances: deps.customActionInstances,
 		})
 
 		this.#eventBus = eventBus

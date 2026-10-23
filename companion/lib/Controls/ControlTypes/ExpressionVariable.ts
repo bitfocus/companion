@@ -110,6 +110,7 @@ export class ControlExpressionVariable
 			pageStore: deps.pageStore,
 			renderClock: deps.renderClock,
 			getPageVariableEntities: deps.getPageVariableEntities,
+			customActionInstances: deps.customActionInstances,
 		})
 
 		this.options = structuredClone(ControlExpressionVariable.DefaultOptions)

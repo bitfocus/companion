@@ -39,7 +39,8 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 	#localVariables: ControlEntityList
 
 	constructor(props: ControlEntityListPoolCustomActionProps) {
-		super(props, false)
+		// Its entities run inside the custom action itself
+		super(props, false, [props.controlId])
 
 		this.#getDefaultOptionsVariables = props.getDefaultOptionsVariables
 
@@ -88,6 +89,7 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 	 * The `this:*` and `page:*` variables are those of the control which called the custom action, and the
 	 * `local:*` variables are those of this custom action, with the values they have in this run.
 	 * @param frame The run of the custom action
+	 * @param localVariableEntities The local variables to use, either those of this custom action or of a copy of it
 	 * @param callerLocation The location of the control which called the custom action
 	 * @param callerPageEntities The page variables of the control which called the custom action
 	 * @param overrideVariableValues The execution context variables, including the `options:*` of the run
@@ -95,6 +97,7 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 	 */
 	createRunParser(
 		frame: CustomActionRunFrame,
+		localVariableEntities: ControlEntityInstance[],
 		callerLocation: ControlLocation | null,
 		callerPageEntities: ControlEntityInstance[] | null,
 		overrideVariableValues: VariableValues,
@@ -107,7 +110,7 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 		const values: VariableValues = { ...overrideVariableValues }
 
 		// Resolve the variables in order, so that a computed variable can use the values of those before it
-		for (const entity of this.getLocalVariableEntities()) {
+		for (const entity of localVariableEntities) {
 			const name = entity.rawLocalVariableName
 			if (!name) continue
 

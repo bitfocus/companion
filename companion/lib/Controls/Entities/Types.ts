@@ -13,6 +13,7 @@ import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
 } from '../../Variables/VariablesAndExpressionParser.js'
+import type { CustomActionInstancesForEntity } from '../CustomActions/CustomActionInstanceManager.js'
 import type { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 
 export type { FeedbackExecutionContext } from '../../Internal/Types.js'
@@ -36,6 +37,13 @@ export type InternalControllerForEntity = Pick<
 export interface EntityScope {
 	/** Tracks the expressions of the entities which are not part of their options, such as isInverted */
 	readonly specialExpressionManager: EntityPoolSpecialExpressionManager
+	/**
+	 * The control ids of the custom actions the entities are running inside, outermost first.
+	 * Empty for the entities of an ordinary control
+	 */
+	readonly customActionChain: ReadonlyArray<string>
+	/** Builds the copy of a custom action held by an action which calls it */
+	readonly customActionInstances: CustomActionInstancesForEntity
 	/** Create a parser for the options of the entities */
 	createVariablesAndExpressionParser(
 		overrideVariableValues: VariableValues | null,
