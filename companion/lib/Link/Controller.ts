@@ -80,7 +80,11 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			() => this.#identity,
 			() => this.#getSelfInfo().name
 		)
-		this.#peers = new LinkPeerRegistry(this.#selfId, (peerId) => this.#permissions.get(peerId))
+		this.#peers = new LinkPeerRegistry(
+			this.#selfId,
+			(peerId) => this.#permissions.get(peerId),
+			db.getTableView('link_peers')
+		)
 		this.#pinger = new LinkPinger(this.#peers, (peerId, transportId, nonce) =>
 			this.#transports.sendTo(transportId, peerId, encodeLinkMessage('ping', { nonce }))
 		)
