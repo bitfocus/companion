@@ -126,4 +126,49 @@
 	.presets-sections-tree .presets-section-row {
 		font-size: 0.75rem;
 	}
+
+	.presets-installations {
+		border-radius: 0.75rem;
+		overflow: hidden;
+		font-size: 0.75rem;
+		background: var(--color-surface);
+	}
+
+	.presets-installation-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		padding: 0.625rem 0.75rem;
+		cursor: pointer;
+
+		& + & {
+			border-top: 1px solid var(--color-border);
+		}
+
+		&:hover:not(.disabled) {
+			background: var(--color-surface-muted);
+		}
+
+		&.disabled {
+			cursor: default;
+			opacity: 0.6;
+		}
+	}
+
+	/* A page of another installation, in as many columns as it has, shrinking rather than wrapping */
+	.presets-link-grid {
+		display: grid;
+		gap: 3px;
+		padding: 5px;
+		background-color: var(--color-surface-dark);
+	}
+
+	.presets-link-empty {
+		aspect-ratio: 1;
+		margin: Min(5px, 10%);
+		border: 1px dashed var(--color-border);
+		border-radius: 4px;
+		opacity: 0.4;
+	}
 }

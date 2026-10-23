@@ -13,7 +13,7 @@ export function linkPeerChoices(peers: readonly LinkPeerInfo[], chosenPeerId: st
 		.toSorted((a, b) => a.name.localeCompare(b.name))
 		.map((peer) => {
 			const name = (nameCounts.get(peer.name) ?? 0) > 1 ? `${peer.name} (${peer.fingerprint})` : peer.name
-			const why = whyUnusable(peer)
+			const why = whyLinkPeerUnusable(peer)
 			return { id: peer.id, label: why ? `${name} - ${why}` : name }
 		})
 
@@ -24,7 +24,8 @@ export function linkPeerChoices(peers: readonly LinkPeerInfo[], chosenPeerId: st
 	return choices
 }
 
-function whyUnusable(peer: LinkPeerInfo): string | null {
+/** Why buttons of an installation can't be used now, in a word or two, or null if they can */
+export function whyLinkPeerUnusable(peer: LinkPeerInfo): string | null {
 	if (!peer.compatible) return 'incompatible'
 	if (!peer.online) return 'offline'
 	if (peer.sharedWithUs?.buttons === false) return 'not shared'

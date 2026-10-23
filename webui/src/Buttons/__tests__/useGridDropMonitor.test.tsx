@@ -239,7 +239,7 @@ describe('when a button is dropped on the grid', () => {
 describe('when a preset is dropped on the grid', () => {
 	const preset = {
 		type: 'preset',
-		data: { connectionId: 'conn1', presetId: 'preset1', variableValues: { a: 1 }, mode: 'button' },
+		data: { kind: 'connection', connectionId: 'conn1', presetId: 'preset1', variableValues: { a: 1 }, mode: 'button' },
 	}
 
 	it('imports it at the cell it landed on', () => {
@@ -258,6 +258,20 @@ describe('when a preset is dropped on the grid', () => {
 					mode: 'button',
 				},
 			},
+		])
+	})
+
+	it('places a button of another installation as a remote button showing it', () => {
+		const { drop } = setup()
+
+		const remote = { pageNumber: 4, row: 1, column: 2 }
+		drop({
+			source: { type: 'preset', data: { kind: 'link', peerId: 'peer', location: remote } },
+			target: { id: cellId(at(2, 3)) },
+		})
+
+		expect(sent).toEqual([
+			{ path: 'controls.importLinkButton', input: { location: at(2, 3), peerId: 'peer', remoteLocation: remote } },
 		])
 	})
 
