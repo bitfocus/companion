@@ -112,6 +112,21 @@ describe('ControlButtonLink', () => {
 		)
 	})
 
+	it('says when the location given is not a button location, rather than that nothing is set', async () => {
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', 'nonsense'), false)
+		expect(linkButtons.setTarget).toHaveBeenLastCalledWith(MY_CONTROL_ID, null, expect.any(Function))
+		expect(control.toRuntimeJSON().status).toBe('bad_location')
+		expect((await control.drawing.getDrawStyle()).elements).toMatchObject([
+			{ type: 'canvas' },
+			{ type: 'box' },
+			{ type: 'image', base64Image: LINK_SLASH_ICON_SVG },
+			{ type: 'text', text: 'Remote\nbad location' },
+		])
+
+		control.optionsSetField('location', { value: '', isExpression: false })
+		expect(control.toRuntimeJSON().status).toBe('unconfigured')
+	})
+
 	it('has no target until both the peer and location are set', () => {
 		const control = new ControlButtonLink(deps, MY_CONTROL_ID, null, false)
 		expect(linkButtons.setTarget).toHaveBeenLastCalledWith(MY_CONTROL_ID, null, expect.any(Function))

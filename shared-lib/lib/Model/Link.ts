@@ -199,7 +199,8 @@ export interface LinkSelfInfo {
 
 /**
  * Why a link button is showing what it is showing
- * - `unconfigured`: no peer or location chosen, or the location could not be resolved
+ * - `unconfigured`: no peer or location chosen
+ * - `bad_location`: the location could not be resolved to a button location
  * - `unknown_peer`: the peer has not been discovered on any transport
  * - `incompatible`: the peer speaks an incompatible protocol version
  * - `offline`: the peer is known but not currently reachable
@@ -210,7 +211,16 @@ export interface LinkSelfInfo {
  * - `ok`: showing the remote button
  */
 export type LinkButtonStatus =
-	'unconfigured' | 'unknown_peer' | 'incompatible' | 'offline' | 'denied' | 'over_limit' | 'loading' | 'loop' | 'ok'
+	| 'unconfigured'
+	| 'bad_location'
+	| 'unknown_peer'
+	| 'incompatible'
+	| 'offline'
+	| 'denied'
+	| 'over_limit'
+	| 'loading'
+	| 'loop'
+	| 'ok'
 
 /** Runtime (non-persisted) state of a link button, for the button editor */
 export interface LinkButtonRuntimeProps {

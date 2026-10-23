@@ -31,6 +31,7 @@ import { LINK_ICON_SVG, LINK_SLASH_ICON_SVG } from './LinkButtonIcons.js'
 /** The placeholder text shown for each status, when there is no remote image to show */
 const PLACEHOLDER_TEXT: Record<Exclude<LinkButtonStatus, 'ok'>, string> = {
 	unconfigured: 'Remote\nbutton',
+	bad_location: 'Remote\nbad location',
 	unknown_peer: 'Unknown\nremote',
 	incompatible: 'Remote\nincompatible',
 	offline: 'Remote\noffline',

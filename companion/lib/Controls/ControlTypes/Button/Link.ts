@@ -88,6 +88,9 @@ export class ControlButtonLink
 	/** Variables the location depends on, so that it is resolved again when any of them change */
 	#locationVariables: ReadonlySet<string> = new Set()
 
+	/** Whether a location has been given that can't be resolved, which the link client isn't told about */
+	#locationInvalid = false
+
 	protected triggerInvalidation = (): void => {
 		this.#drawing.invalidate()
 	}
@@ -100,7 +103,7 @@ export class ControlButtonLink
 		this.#drawing = new LinkButtonDrawer(
 			deps,
 			controlId,
-			() => this.deps.linkButtons.getState(this.controlId) ?? UNCONFIGURED_STATE,
+			() => this.#getState(),
 			() => this.options
 		)
 
@@ -129,13 +132,21 @@ export class ControlButtonLink
 		super.destroy()
 	}
 
+	#getState(): LinkButtonState {
+		const state = this.deps.linkButtons.getState(this.controlId) ?? UNCONFIGURED_STATE
+		return state.status === 'unconfigured' && this.#locationInvalid ? { ...state, status: 'bad_location' } : state
+	}
+
 	/** Resolve the location, and tell the link client what this button should show, and at what sizes */
 	#updateTarget(): void {
+		const wasInvalid = this.#locationInvalid
 		const target = this.#resolveTarget()
-		this.deps.linkButtons.setTarget(this.controlId, target, () => {
+		const onChange = () => {
 			this.sendRuntimePropsChange()
 			this.#drawing.invalidate()
-		})
+		}
+		this.deps.linkButtons.setTarget(this.controlId, target, onChange)
+		if (this.#locationInvalid !== wasInvalid) onChange()
 
 		this.deps.linkButtons.setDecoration(this.controlId, this.options.decoration)
 
@@ -170,6 +181,7 @@ export class ControlButtonLink
 
 		// `this` (and page 0) means the same location as this button, but on the remote installation
 		const resolved = ParseLocationString(raw, myLocation ?? undefined)
+		this.#locationInvalid = !resolved && raw.trim() !== ''
 		if (!this.options.peerId || !resolved) return null
 
 		return { peerId: this.options.peerId, location: resolved }
@@ -260,7 +272,7 @@ export class ControlButtonLink
 	}
 
 	toRuntimeJSON(): LinkButtonRuntimeProps {
-		const state = this.deps.linkButtons.getState(this.controlId) ?? UNCONFIGURED_STATE
+		const state = this.#getState()
 		return { status: state.status, peerName: state.peerName }
 	}
 

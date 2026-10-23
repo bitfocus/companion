@@ -25,9 +25,13 @@ import { ButtonLocationInput } from './ButtonLocationInput.js'
 /** What to tell the user about each status, when it needs explaining */
 const STATUS_EXPLANATIONS: Record<LinkButtonStatus, string | null> = {
 	unconfigured: 'Choose an installation and a button location.',
-	unknown_peer: 'This installation has not been found on any transport.',
-	incompatible: 'This installation runs an incompatible version of Companion Link.',
-	offline: 'This installation is not reachable right now.',
+	bad_location: "The button location isn't one this can show. Check it, and the variables it uses.",
+	unknown_peer:
+		'This installation has not been found on any transport. Check that it is running, and that one of the transports on the Link page can reach it, or choose another.',
+	incompatible:
+		'This installation runs an incompatible version of Companion Link. Update both installations to the same version of Companion.',
+	offline:
+		'This installation is not reachable right now. Check that it is running and on the network; this button shows it again once it is back.',
 	denied:
 		"This installation doesn't share its buttons with this one. On its Link page, select this installation and turn on sharing its buttons.",
 	over_limit:
