@@ -1,4 +1,4 @@
-import { faPlay, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
+import { faPlay } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useContext, useId, useMemo } from 'react'
 import type { JsonValue } from 'type-fest'
@@ -27,7 +27,6 @@ import { MyErrorBoundary } from '~/Resources/Error.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { findModuleFeedbacksUsingRunValues } from './RunValueReferences.js'
 
 interface EditCustomActionPanelProps {
 	controlId: string
@@ -138,7 +137,6 @@ function CustomActionPanelContent({ config, controlId, testRunning }: CustomActi
 
 					{activeTab === 'actions' && (
 						<MyErrorBoundary>
-							<ModuleFeedbacksWarning config={config} />
 							<div className="flex items-center justify-end mb-2">
 								<TestRunButton controlId={controlId} name={config.options.name} running={testRunning} />
 							</div>
@@ -270,26 +268,6 @@ function CustomActionInputsEditor({ controlId, inputs }: { controlId: string; in
 	)
 
 	return <InputFieldDefinitionsEditor fields={inputs} service={service} readonly={false} localVariablesStore={null} />
-}
-
-/**
- * Warn about module feedbacks which reference the values of a run, as they are evaluated with the default inputs
- */
-function ModuleFeedbacksWarning({ config }: { config: CustomActionModel }) {
-	const count = useMemo(
-		() => findModuleFeedbacksUsingRunValues([...config.actions, ...config.localVariables]).length,
-		[config.actions, config.localVariables]
-	)
-	if (count === 0) return null
-
-	return (
-		<StaticAlert color="warning" className="mb-2">
-			<FontAwesomeIcon icon={faTriangleExclamation} className="me-1" />
-			{count === 1 ? 'A connection feedback uses' : `${count} connection feedbacks use`} <code>$(options:…)</code> or{' '}
-			<code>$(local:…)</code>. Connection feedbacks are evaluated ahead of time with the default inputs, so they
-			can&apos;t see the values of each run. Use an internal condition, such as a check expression, instead.
-		</StaticAlert>
-	)
 }
 
 function TestRunButton({ controlId, name, running }: { controlId: string; name: string; running: boolean }) {
