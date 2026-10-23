@@ -273,6 +273,14 @@ export abstract class ControlEntityListPoolBase {
 	}
 
 	/**
+	 * Recursively get all the entities, including those in transient child groups which are never persisted.
+	 * This is for things which run the entities, such as subscribing them to a connection.
+	 */
+	getAllEntitiesWithTransient(): ControlEntityInstance[] {
+		return this.getAllEntityLists().flatMap((entityList) => entityList.getAllEntitiesWithTransient())
+	}
+
+	/**
 	 *
 	 * @param listId
 	 * @returns

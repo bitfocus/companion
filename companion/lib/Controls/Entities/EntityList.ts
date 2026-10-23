@@ -74,6 +74,13 @@ export class ControlEntityList {
 	}
 
 	/**
+	 * Recursively get all the entities, including those in transient child groups
+	 */
+	getAllEntitiesWithTransient(): ControlEntityInstance[] {
+		return this.#entities.flatMap((e) => [e, ...e.getAllChildrenWithTransient()])
+	}
+
+	/**
 	 * Get the entities directly contained in this list
 	 */
 	getDirectEntities(): ControlEntityInstance[] {

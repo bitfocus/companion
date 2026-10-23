@@ -2015,3 +2015,156 @@ describe('scope', () => {
 		expect(createParser()).toBe(parser)
 	})
 })
+
+describe('transient child groups', () => {
+	const callerModel: ActionEntityModel = {
+		type: EntityModelType.Action,
+		id: 'caller',
+		connectionId: '__custom-actions__',
+		definitionId: 'custom-action-1',
+		options: {},
+		upgradeIndex: undefined,
+	}
+	const transientAction: ActionEntityModel = {
+		type: EntityModelType.Action,
+		id: 'caller:action',
+		connectionId: 'conn01',
+		definitionId: 'act01',
+		options: {},
+		upgradeIndex: undefined,
+	}
+	const transientFeedback: FeedbackEntityModel = {
+		type: EntityModelType.Feedback,
+		id: 'caller:feedback',
+		connectionId: 'conn01',
+		definitionId: 'fb01',
+		options: {},
+		upgradeIndex: undefined,
+	}
+
+	function createTransientScope(): EntityScope {
+		return {
+			specialExpressionManager: { trackEntity: vi.fn(), forgetEntity: vi.fn() } as any,
+			createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
+		}
+	}
+
+	function setup(caller: ActionEntityModel = callerModel) {
+		const res = createList('test01')
+		res.list.loadStorage([caller], false, false)
+		const callerEntity = res.list.findById(caller.id)!
+		res.connectionEntityUpdate.mockClear()
+
+		const transientScope = createTransientScope()
+		const group = callerEntity.setTransientChildGroup('instance', transientScope, { type: EntityModelType.Action }, [
+			transientAction,
+			transientFeedback,
+		])
+
+		return { ...res, callerEntity, transientScope, group }
+	}
+
+	test('entities are subscribed, parsing their options in the scope of the group', () => {
+		const { group, transientScope, connectionEntityUpdate, specialExpressionManager } = setup()
+
+		const action = group.findById(transientAction.id)!
+		expect(connectionEntityUpdate).toHaveBeenCalledWith(action, 'test01')
+		expect(connectionEntityUpdate).toHaveBeenCalledTimes(2)
+
+		const parser = {} as any
+		vi.mocked(transientScope.createVariablesAndExpressionParser).mockReturnValue(parser)
+		expect(action.createVariablesAndExpressionParser(null)).toBe(parser)
+
+		// The special expressions are tracked in the scope of the group
+		expect(transientScope.specialExpressionManager.trackEntity).toHaveBeenCalledWith(action, 'storeResult')
+		expect(vi.mocked(specialExpressionManager.trackEntity).mock.calls.some(([entity]) => entity === action)).toBe(false)
+	})
+
+	test('entities are not persisted or listed, but can be found and run', () => {
+		const { list, callerEntity } = setup()
+
+		expect(callerEntity.asEntityModel()).toEqual(callerModel)
+		expect(list.getAllEntities().map((e) => e.id)).toEqual(['caller'])
+
+		expect(list.getAllEntitiesWithTransient().map((e) => e.id)).toEqual([
+			'caller',
+			transientAction.id,
+			transientFeedback.id,
+		])
+		expect(list.findById(transientFeedback.id)?.id).toBe(transientFeedback.id)
+		expect(callerEntity.getTransientChildGroup('instance')?.getDirectEntities()).toHaveLength(2)
+	})
+
+	test('entities can not be edited through the list', () => {
+		const { list } = setup()
+
+		expect(list.removeEntity(transientAction.id)).toBeUndefined()
+		expect(list.findById(transientAction.id)).toBeTruthy()
+	})
+
+	test('feedback values reach the entities', () => {
+		const { list, group } = setup()
+
+		const changed = list.updateFeedbackValues(
+			'conn01',
+			new Map<string, NewFeedbackValue>([
+				[transientFeedback.id, { entityId: transientFeedback.id, controlId: 'test01', value: 'abc' }],
+			])
+		)
+
+		const feedback = group.findById(transientFeedback.id)!
+		expect(changed).toEqual([feedback])
+		expect(feedback.feedbackValue).toBe('abc')
+	})
+
+	test('replacing the group cleans up the old entities', () => {
+		const { callerEntity, connectionEntityDelete, connectionEntityUpdate } = setup()
+		connectionEntityUpdate.mockClear()
+
+		const newGroup = callerEntity.setTransientChildGroup(
+			'instance',
+			createTransientScope(),
+			{
+				type: EntityModelType.Action,
+			},
+			[transientAction]
+		)
+
+		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
+		expect(connectionEntityDelete).toHaveBeenCalledWith(expect.objectContaining({ id: transientFeedback.id }), 'test01')
+		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
+		expect(callerEntity.getTransientChildGroup('instance')).toBe(newGroup)
+	})
+
+	test('removing the group cleans up its entities', () => {
+		const { list, callerEntity, connectionEntityDelete } = setup()
+
+		callerEntity.removeTransientChildGroup('instance')
+
+		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
+		expect(callerEntity.getTransientChildGroup('instance')).toBeUndefined()
+		expect(list.findById(transientAction.id)).toBeUndefined()
+
+		// Removing again does nothing
+		callerEntity.removeTransientChildGroup('instance')
+		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
+	})
+
+	test('the group follows the lifecycle of its entity', () => {
+		const { callerEntity, connectionEntityDelete, connectionEntityUpdate } = setup()
+		connectionEntityUpdate.mockClear()
+
+		callerEntity.setEnabled(false)
+		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)
+
+		callerEntity.setEnabled(true)
+		expect(connectionEntityUpdate).toHaveBeenCalledTimes(2)
+	})
+
+	test('the group of a disabled entity is not subscribed', () => {
+		const { callerEntity, connectionEntityUpdate } = setup({ ...callerModel, disabled: true })
+		expect(callerEntity.disabled).toBe(true)
+
+		expect(connectionEntityUpdate).not.toHaveBeenCalled()
+	})
+})
