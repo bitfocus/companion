@@ -80,6 +80,13 @@ const ChooseTypeStep = observer(function ChooseTypeStep({
 					</Button>
 				))}
 			</div>
+			<p className="text-sm text-muted mt-3 mb-0">
+				More ways to reach other installations are planned. If you need one that isn't here, let us know on{' '}
+				<a href="https://github.com/bitfocus/companion/issues" target="_blank" rel="noreferrer">
+					GitHub
+				</a>
+				.
+			</p>
 		</Modal.Body>
 	)
 })
