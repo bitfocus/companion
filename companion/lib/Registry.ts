@@ -290,16 +290,7 @@ export class Registry {
 			this.#appInfo,
 			this.db,
 			this.userconfig,
-			pageStore,
-			{
-				getCachedRenderOrGeneratePlaceholder: (location) =>
-					this.graphics.getCachedRenderOrGeneratePlaceholder(location),
-				getControlIdAt: (location) => pageStore.getControlIdAt(location),
-				pressControl: (controlId, pressed, surfaceId) => controlStore.pressControl(controlId, pressed, surfaceId),
-				rotateControl: (controlId, delta, surfaceId) => controlStore.rotateControl(controlId, delta, surfaceId),
-				abortControl: (controlId, unlatch, hops) =>
-					controlStore.getControl(controlId)?.abortDelayedActions(unlatch, null, hops),
-			},
+			{ pageStore, controls: controlStore, graphics: this.graphics },
 			LINK_TRANSPORT_DEFINITIONS,
 			LINK_BUILTIN_TRANSPORTS
 		)

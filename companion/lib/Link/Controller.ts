@@ -12,16 +12,18 @@ import type {
 } from '@companion-app/shared/Model/Link.js'
 import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreTableView } from '../Data/StoreBase.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
+import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { LinkButtonClient } from './ButtonClient.js'
-import { LinkButtonServer, type LinkButtonServerHost } from './ButtonServer.js'
+import { LinkButtonServer } from './ButtonServer.js'
 import { formatLinkIdFingerprint, LinkIdentity } from './Identity.js'
 import { LinkPeerRegistry } from './PeerRegistry.js'
 import { LinkPermissionStore } from './PermissionStore.js'
@@ -38,8 +40,12 @@ import { LinkTransportManager } from './TransportManager.js'
 import { DIRECT_MDNS_LINK_ID_TXT } from './Transports/Direct/Constants.js'
 import type { LinkMessageOrigin, SomeLinkBuiltinTransport, SomeLinkTransportDefinition } from './Transports/Types.js'
 
-/** What Link needs from the rest of Companion to serve buttons to peers */
-export type LinkHost = Omit<LinkButtonServerHost, 'send' | 'getSourceChain' | 'getClockOffset'>
+/** The parts of Companion that Link uses, to show buttons of peers and serve buttons to them */
+export interface LinkDependencies {
+	readonly pageStore: IPageStore
+	readonly controls: Pick<IControlStore, 'getControl' | 'pressControl' | 'rotateControl'>
+	readonly graphics: Pick<GraphicsController, 'getCachedRenderOrGeneratePlaceholder'>
+}
 
 interface LinkControllerEvents {
 	self: [info: LinkSelfInfo]
@@ -80,8 +86,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		appInfo: AppInfo,
 		db: DataDatabase,
 		userconfig: DataUserConfig,
-		pageStore: IPageStore,
-		host: LinkHost,
+		deps: LinkDependencies,
 		transportDefinitions: readonly SomeLinkTransportDefinition[],
 		builtinTransports: readonly SomeLinkBuiltinTransport[]
 	) {
@@ -90,7 +95,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 
 		this.#appInfo = appInfo
 		this.#userconfig = userconfig
-		this.#pageStore = pageStore
+		this.#pageStore = deps.pageStore
 		this.#table = db.getTableView('link')
 		this.#transportDefinitions = transportDefinitions
 		this.#builtinTransports = builtinTransports
@@ -121,11 +126,13 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		)
 		this.#buttonServer = new LinkButtonServer(
 			{
-				getCachedRenderOrGeneratePlaceholder: (location) => host.getCachedRenderOrGeneratePlaceholder(location),
-				getControlIdAt: (location) => host.getControlIdAt(location),
-				pressControl: (controlId, pressed, surfaceId) => host.pressControl(controlId, pressed, surfaceId),
-				rotateControl: (controlId, delta, surfaceId) => host.rotateControl(controlId, delta, surfaceId),
-				abortControl: (controlId, unlatch, hops) => host.abortControl(controlId, unlatch, hops),
+				getCachedRenderOrGeneratePlaceholder: (location) =>
+					deps.graphics.getCachedRenderOrGeneratePlaceholder(location),
+				getControlIdAt: (location) => deps.pageStore.getControlIdAt(location),
+				pressControl: (controlId, pressed, surfaceId) => deps.controls.pressControl(controlId, pressed, surfaceId),
+				rotateControl: (controlId, delta, surfaceId) => deps.controls.rotateControl(controlId, delta, surfaceId),
+				abortControl: (controlId, unlatch, hops) =>
+					deps.controls.getControl(controlId)?.abortDelayedActions(unlatch, null, hops),
 				getSourceChain: (location) => this.#getSourceChain(location),
 				getClockOffset: (peerId) => this.#peers.getClockOffset(peerId),
 				// Images only go to leaseholders, which are only allowed peers, and are dropped when that changes (see revoke)

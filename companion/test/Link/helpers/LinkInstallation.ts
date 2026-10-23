@@ -53,25 +53,34 @@ async function current<T>(subscribe: (signal: AbortSignal) => Promise<AsyncItera
 
 /**
  * A Companion installation running a real LinkController, with fakes of the rest of Companion: the buttons it
- * serves (`host`, every location has a button, drawn as `<name>-<location>`), which locations of its pages hold a
- * remote button (`placeRemoteButton`), and its user config
+ * serves (every location has a button, drawn as `<name>-<location>`, pressed through `controls`), which locations of
+ * its pages hold a remote button (`placeRemoteButton`), and its user config
  */
 export class LinkInstallation {
 	readonly name: string
 	readonly controller: LinkController
-	readonly host = {
+	/** The aborts of the actions of each control */
+	readonly abortControl = vi.fn((_controlId: string, _unlatch: boolean, _hops: number) => undefined)
+	readonly controls = {
+		pressControl: vi.fn((_controlId: string, _pressed: boolean, _surfaceId: string | undefined) => true),
+		rotateControl: vi.fn((_controlId: string, _delta: number, _surfaceId: string | undefined) => true),
+		getControl: vi.fn(
+			(controlId: string) =>
+				({
+					abortDelayedActions: (unlatch: boolean, _except: unknown, hops: number) =>
+						this.abortControl(controlId, unlatch, hops),
+				}) as any
+		),
+	}
+	readonly graphics = {
 		getCachedRenderOrGeneratePlaceholder: vi.fn((location: ControlLocation) =>
 			fakeRender(`${this.name}-${locationKey(location)}`, false)
 		),
-		getControlIdAt: vi.fn((location: ControlLocation) => `control-${locationKey(location)}`),
-		pressControl: vi.fn((_controlId: string, _pressed: boolean, _surfaceId: string) => true),
-		rotateControl: vi.fn((_controlId: string, _delta: number, _surfaceId: string) => true),
-		abortControl: vi.fn((_controlId: string, _unlatch: boolean, _hops: number) => undefined),
 	}
 	/** Link's tRPC api, called as the UI would */
 	readonly api: LinkApi
 
-	/** The control at each location that is a remote button, for loop detection */
+	/** The control at each location that is a remote button */
 	readonly #controlsAt = new Map<string, string>()
 
 	constructor(options: LinkInstallationOptions) {
@@ -86,16 +95,17 @@ export class LinkInstallation {
 		const userconfig = Object.assign(new EventEmitter(), {
 			getKey: (key: keyof UserConfigModel) => userConfigValues[key],
 		}) as unknown as DataUserConfig
+		// Every location has a button, a remote button where one has been placed
 		const pageStore = Object.assign(new EventEmitter(), {
-			getControlIdAt: (location: ControlLocation) => this.#controlsAt.get(locationKey(location)) ?? null,
+			getControlIdAt: (location: ControlLocation) =>
+				this.#controlsAt.get(locationKey(location)) ?? `control-${locationKey(location)}`,
 		}) as unknown as IPageStore
 
 		this.controller = new LinkController(
 			{ appVersion: '5.2.0' } as any,
 			db.asDataDatabase(),
 			userconfig,
-			pageStore,
-			this.host,
+			{ pageStore, controls: this.controls, graphics: this.graphics },
 			options.transportDefinitions,
 			options.builtinTransports
 		)

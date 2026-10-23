@@ -82,10 +82,16 @@ function createController(db = new FakeDataDatabase(), installName = 'Self') {
 		on: vi.fn(),
 	} as unknown as DataUserConfig
 	const pageStore = Object.assign(new EventEmitter(), {
-		getControlIdAt: () => null,
+		getControlIdAt: () => 'control1',
 	}) as unknown as IPageStore
 
-	const host = {
+	const abortControl = vi.fn()
+	const controls = {
+		pressControl: vi.fn(() => true),
+		rotateControl: vi.fn(() => true),
+		getControl: vi.fn(() => ({ abortDelayedActions: abortControl }) as any),
+	}
+	const graphics = {
 		getCachedRenderOrGeneratePlaceholder: vi.fn(
 			() =>
 				({
@@ -93,18 +99,13 @@ function createController(db = new FakeDataDatabase(), installName = 'Self') {
 					drawNativeEncoded: async () => 'data:image/png;base64,AAAA',
 				}) as unknown as ImageResult
 		),
-		getControlIdAt: vi.fn(() => 'control1'),
-		pressControl: vi.fn(() => true),
-		rotateControl: vi.fn(() => true),
-		abortControl: vi.fn(),
 	}
 
 	const controller = new LinkController(
 		{ appVersion: '5.0.0' } as any,
 		db.asDataDatabase(),
 		userconfig,
-		pageStore,
-		host,
+		{ pageStore, controls, graphics },
 		[definition],
 		[]
 	)
@@ -133,7 +134,7 @@ function createController(db = new FakeDataDatabase(), installName = 'Self') {
 			.setPeerPermissions({ peerId: 'peer', permissions: { buttons } })
 	}
 
-	return { db, controller, instances, host, transport, announcePeer, sendToSelf, shareButtons }
+	return { db, controller, instances, controls, abortControl, transport, announcePeer, sendToSelf, shareButtons }
 }
 
 describe('LinkController', () => {
@@ -375,9 +376,9 @@ describe('LinkController buttons', () => {
 		await flush()
 
 		expect(ctx.transport().messagesOfType('button.update')).toEqual([])
-		expect(ctx.host.pressControl).not.toHaveBeenCalled()
-		expect(ctx.host.rotateControl).not.toHaveBeenCalled()
-		expect(ctx.host.abortControl).not.toHaveBeenCalled()
+		expect(ctx.controls.pressControl).not.toHaveBeenCalled()
+		expect(ctx.controls.rotateControl).not.toHaveBeenCalled()
+		expect(ctx.abortControl).not.toHaveBeenCalled()
 
 		// The subscriber is told why, rather than left waiting for the image
 		expect(ctx.transport().messagesOfType('subscribe.refused')).toMatchObject([
@@ -408,7 +409,7 @@ describe('LinkController buttons', () => {
 
 		const updates = ctx.transport().messagesOfType('button.update')
 		expect(updates).toMatchObject([{ peerId: 'peer' }])
-		expect(ctx.host.pressControl).toHaveBeenCalledWith('control1', true, 'link:peer:s')
+		expect(ctx.controls.pressControl).toHaveBeenCalledWith('control1', true, 'link:peer:s')
 	})
 
 	test('a button held by a peer stays held when it becomes unreachable, as with an unplugged surface', async () => {
@@ -424,10 +425,10 @@ describe('LinkController buttons', () => {
 				surfaceId: 's',
 			})
 		)
-		ctx.host.pressControl.mockClear()
+		ctx.controls.pressControl.mockClear()
 
 		ctx.transport().context.receiveAnnouncement('peer', null)
-		expect(ctx.host.pressControl).not.toHaveBeenCalled()
+		expect(ctx.controls.pressControl).not.toHaveBeenCalled()
 	})
 
 	test('when a peer loses permission, it is told, and what it held is released', async () => {
@@ -443,7 +444,7 @@ describe('LinkController buttons', () => {
 				surfaceId: 's',
 			})
 		)
-		ctx.host.pressControl.mockClear()
+		ctx.controls.pressControl.mockClear()
 		ctx.transport().sent.length = 0
 
 		await ctx.shareButtons(false)
@@ -451,6 +452,6 @@ describe('LinkController buttons', () => {
 		expect(ctx.transport().messagesOfType('access')).toMatchObject([
 			{ peerId: 'peer', message: { payload: { permissions: { buttons: false } } } },
 		])
-		expect(ctx.host.pressControl).toHaveBeenCalledWith('control1', false, 'link:peer:s')
+		expect(ctx.controls.pressControl).toHaveBeenCalledWith('control1', false, 'link:peer:s')
 	})
 })

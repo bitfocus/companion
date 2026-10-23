@@ -148,7 +148,7 @@ describe.each(NETWORKS)('two installations linked over $name', { timeout: 20_000
 		// Once shared, the button loads: everything sent before that has arrived, and nothing was pressed
 		await shareButtons(a, bId, true)
 		await vi.waitFor(() => expect(button.state()?.status).toBe('ok'))
-		expect(a.host.pressControl).not.toHaveBeenCalled()
+		expect(a.controls.pressControl).not.toHaveBeenCalled()
 	})
 
 	test('a shared button is shown, redrawn, pressed, rotated and aborted over the link', async () => {
@@ -173,9 +173,9 @@ describe.each(NETWORKS)('two installations linked over $name', { timeout: 20_000
 		expect(b.controller.buttonClient.rotate('remote', -1, 'surface')).toBe(true)
 		b.controller.buttonClient.abort('remote', true, 0)
 		await vi.waitFor(() => {
-			expect(a.host.pressControl).toHaveBeenCalledWith('control-1/0/0', true, `link:${bId}:surface`)
-			expect(a.host.rotateControl).toHaveBeenCalledWith('control-1/0/0', -1, `link:${bId}:surface`)
-			expect(a.host.abortControl).toHaveBeenCalledWith('control-1/0/0', true, 1)
+			expect(a.controls.pressControl).toHaveBeenCalledWith('control-1/0/0', true, `link:${bId}:surface`)
+			expect(a.controls.rotateControl).toHaveBeenCalledWith('control-1/0/0', -1, `link:${bId}:surface`)
+			expect(a.abortControl).toHaveBeenCalledWith('control-1/0/0', true, 1)
 		})
 	})
 
@@ -198,11 +198,11 @@ describe.each(NETWORKS)('two installations linked over $name', { timeout: 20_000
 		await vi.waitFor(() => expect(button.state()?.status).toBe('ok'))
 		b.controller.buttonClient.press('remote', true, 'surface')
 		await vi.waitFor(() =>
-			expect(a.host.pressControl).toHaveBeenCalledWith('control-1/0/0', true, `link:${bId}:surface`)
+			expect(a.controls.pressControl).toHaveBeenCalledWith('control-1/0/0', true, `link:${bId}:surface`)
 		)
 
 		await shareButtons(a, bId, false)
-		expect(a.host.pressControl).toHaveBeenLastCalledWith('control-1/0/0', false, `link:${bId}:surface`)
+		expect(a.controls.pressControl).toHaveBeenLastCalledWith('control-1/0/0', false, `link:${bId}:surface`)
 		await vi.waitFor(() => expect(button.state()?.status).toBe('denied'))
 		expect((await a.api.peerUsage({ peerId: bId })).buttons.oursUsedThere).toBe(0)
 	})
