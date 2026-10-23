@@ -141,9 +141,11 @@ function pickImage(
 	size: PixelSize,
 	sameShapeOnly: boolean
 ): LinkButtonImage | undefined {
-	const current = images.filter((image) => image.current)
+	// The largest of each shape first, eg while a shape is held at a size it has grown from as well as the new one
+	const largestFirst = images.toSorted((a, b) => b.width * b.height - a.width * a.height)
+	const current = largestFirst.filter((image) => image.current)
 	if (sameShapeOnly) return current.find((image) => isSameShape(image, size))
 
 	// A newer image at another shape is better than an older one at this shape
-	return closestShape(current.length > 0 ? current : images, size)
+	return closestShape(current.length > 0 ? current : largestFirst, size)
 }

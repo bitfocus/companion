@@ -61,6 +61,16 @@ describe('LinkRemoteImageStore', () => {
 		await expect(waiting).resolves.toMatchObject({ dataUrl: 'data:image/png;base64,288x144' })
 	})
 
+	test('draws the largest image of a shape, eg once a shape has grown, before the smaller is let go of', async () => {
+		store.setImages('remote', [image(square), image({ width: 200, height: 200 })])
+		await expect(store.getImage('remote', square, true)).resolves.toMatchObject({
+			dataUrl: 'data:image/png;base64,200x200',
+		})
+		await expect(store.getImage('remote', wide, true)).resolves.toMatchObject({
+			dataUrl: 'data:image/png;base64,200x200',
+		})
+	})
+
 	test('an older image is drawn only when there is no current one', async () => {
 		store.setImages('remote', [image(square), image(wide, false)])
 		await expect(store.getImage('remote', { width: 200, height: 100 }, true)).resolves.toMatchObject({
