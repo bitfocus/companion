@@ -9,6 +9,7 @@ import { linkBitmapSizesFor } from './ButtonSizes.js'
 import type { LinkPeerRegistry } from './PeerRegistry.js'
 import {
 	encodeLinkMessage,
+	LINK_BUTTONS_PER_MESSAGE,
 	linkButtonSubscriptionKey,
 	type LinkButtonRef,
 	type LinkButtonRevision,
@@ -556,13 +557,7 @@ export class LinkButtonClient {
 			}
 			this.#pendingSubscribes.clear()
 
-			for (const [peerId, variants] of byPeer) {
-				if (variants.length === 0) continue
-				const buttons = variants.map((variant) => ({ ...variant.sub, have: variant.lastUpdate?.revision ?? null }))
-				if (this.#sendToPeer(peerId, 'subscribe', { buttons })) {
-					for (const variant of variants) variant.subscribed = true
-				}
-			}
+			for (const [peerId, variants] of byPeer) this.#sendSubscribe(peerId, variants)
 		})
 	}
 
@@ -578,11 +573,16 @@ export class LinkButtonClient {
 		for (const remote of this.#remotes.values()) {
 			if (remote.peerId === peerId) variants.push(...remote.variants.values())
 		}
-		if (variants.length === 0) return
+		this.#sendSubscribe(peerId, variants)
+	}
 
-		const buttons = variants.map((variant) => ({ ...variant.sub, have: variant.lastUpdate?.revision ?? null }))
-		if (this.#sendToPeer(peerId, 'subscribe', { buttons })) {
-			for (const variant of variants) variant.subscribed = true
+	/** Subscribe to (or renew) some subscriptions to a peer, saying what we have so that it sends what we miss */
+	#sendSubscribe(peerId: string, variants: readonly Variant[]): void {
+		for (const chunk of chunked(variants, LINK_BUTTONS_PER_MESSAGE)) {
+			const buttons = chunk.map((variant) => ({ ...variant.sub, have: variant.lastUpdate?.revision ?? null }))
+			if (this.#sendToPeer(peerId, 'subscribe', { buttons })) {
+				for (const variant of chunk) variant.subscribed = true
+			}
 		}
 	}
 
@@ -609,7 +609,9 @@ export class LinkButtonClient {
 		this.#images.delete(remote.key)
 
 		const subs = Array.from(remote.variants.values(), (v) => v.sub)
-		if (subs.length > 0) this.#sendToPeer(remote.peerId, 'unsubscribe', { buttons: subs })
+		for (const chunk of chunked(subs, LINK_BUTTONS_PER_MESSAGE)) {
+			this.#sendToPeer(remote.peerId, 'unsubscribe', { buttons: chunk })
+		}
 	}
 
 	/** The latency to a peer over its route, if it has been measured */
@@ -786,4 +788,11 @@ function sizeKey(size: Pick<LinkButtonSubscription, 'width' | 'height'>): string
 
 function toLinkButtonRef(location: ControlLocation): LinkButtonRef {
 	return { type: 'location', page: location.pageNumber, row: location.row, column: location.column }
+}
+
+/** Split a list into chunks of at most a size */
+function chunked<T>(items: readonly T[], size: number): T[][] {
+	const chunks: T[][] = []
+	for (let i = 0; i < items.length; i += size) chunks.push(items.slice(i, i + size))
+	return chunks
 }

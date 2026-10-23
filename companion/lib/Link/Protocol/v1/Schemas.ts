@@ -35,6 +35,12 @@ const ExpiresAtSchema = z
 		"When it is too late to act on it, in the sender's clock (unix ms). The receiver converts it with its estimate of how far apart their clocks are (see pong), and drops it once expired"
 	)
 
+/** The most buttons a subscribe, unsubscribe or refusal may list. A receiver rejects a message with more */
+export const LINK_MAX_BUTTONS_PER_MESSAGE = 1000
+
+/** How many buttons a sender puts in one message, well under the limit so that each stays small */
+export const LINK_BUTTONS_PER_MESSAGE = 200
+
 const BitmapSizeShape = {
 	width: z.number().int().min(8).max(1024).describe('Bitmap width in pixels'),
 	height: z.number().int().min(8).max(1024).describe('Bitmap height in pixels'),
@@ -88,7 +94,7 @@ export const LinkSubscribePayloadSchema = z
 					),
 				})
 			)
-			.max(1000),
+			.max(LINK_MAX_BUTTONS_PER_MESSAGE),
 	})
 	.describe(
 		'Ask a peer to start (or keep) sending updates for some buttons. Subscriptions are leases: they must be renewed by repeating this message before LINK_SUBSCRIPTION_LEASE_MS elapses'
@@ -96,7 +102,7 @@ export const LinkSubscribePayloadSchema = z
 
 export const LinkUnsubscribePayloadSchema = z
 	.object({
-		buttons: z.array(LinkButtonSubscriptionSchema).max(1000),
+		buttons: z.array(LinkButtonSubscriptionSchema).max(LINK_MAX_BUTTONS_PER_MESSAGE),
 	})
 	.describe('Release some subscriptions before their lease expires')
 
@@ -112,7 +118,7 @@ export const LinkSubscribeRefusedPayloadSchema = z
 						),
 				})
 			)
-			.max(1000),
+			.max(LINK_MAX_BUTTONS_PER_MESSAGE),
 	})
 	.describe(
 		'The answer to a subscribe (renewals included), for the buttons in it that are not served, matched by their button and size. Sent again for each renewal while it is still so. A served button gets no answer: its update is the answer'

@@ -209,6 +209,28 @@ describe('LinkButtonClient', () => {
 		expect(ctx.sent.at(-1)).toMatchObject({ type: 'subscribe', payload: { buttons: [{ width: 288, height: 144 }] } })
 	})
 
+	test('subscribes, renews and unsubscribes in chunks a peer accepts, however many buttons are shown', async () => {
+		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		for (let column = 0; column < 450; column++) {
+			ctx.client.setTarget(`c${column}`, { peerId: 'peer', location: { ...location, column } }, vi.fn())
+			ctx.client.setDisplayedSizes(`c${column}`, [square])
+		}
+		await flushSubscribes()
+
+		// Each is decoded as the peer would, which rejects a message listing too many
+		const counts = (type: string) => ctx.sent.filter((m) => m.type === type).map((m) => m.payload.buttons.length)
+		expect(counts('subscribe')).toEqual([200, 200, 50])
+
+		ctx.sent.length = 0
+		ctx.client.renewAll()
+		expect(counts('subscribe')).toEqual([200, 200, 50])
+
+		ctx.sent.length = 0
+		for (let column = 0; column < 450; column++) ctx.client.removeTarget(`c${column}`)
+		expect(counts('unsubscribe').reduce((a, b) => a + b, 0)).toBe(450)
+		expect(Math.max(...counts('unsubscribe'))).toBeLessThanOrEqual(200)
+	})
+
 	test('buttons showing the same remote button share its subscriptions', async () => {
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
 		show('c1')
