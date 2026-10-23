@@ -1,13 +1,15 @@
-import { faServer } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faServer } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { useCallback } from 'react'
+import { useCallback, useContext } from 'react'
 import { LINK_PERMISSION_DEFINITIONS, type LinkPeerInfo } from '@companion-app/shared/Model/Link.js'
+import { LinkButton } from '~/Components/Button.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { useActivateOnKey } from '~/Hooks/useActivateOnKey.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { PeerStatusBadge } from './LinkStatusBadges.js'
-import { useLinkStore } from './LinkStoreContext.js'
 
 /** The other installations discovered on any transport. Selecting one opens what is shared with it */
 export const PeersList = observer(function PeersList({
@@ -15,13 +17,24 @@ export const PeersList = observer(function PeersList({
 }: {
 	selectedPeerId: string | null
 }): React.JSX.Element {
-	const linkStore = useLinkStore()
+	const { link: linkStore } = useContext(RootAppStoreContext)
 	const peers = linkStore.sortedPeers
 
 	if (peers.length === 0) {
 		return (
 			<NonIdealState icon={faServer}>
-				No other installations found yet. They appear here once they are reachable on one of the transports.
+				<p className="my-2 text-sm text-muted">
+					No other installations found yet. They appear here once they are reachable on one of the transports: add a
+					Direct connection to one, or pair one that connects to this one.
+				</p>
+				<div className="flex flex-wrap justify-center gap-2 mt-2">
+					<LinkButton to="/link/transports/add" color="primary" size="sm">
+						<FontAwesomeIcon icon={faPlus} className="me-1.5" /> Add Transport
+					</LinkButton>
+					<LinkButton to="/link/transports" variant="outline" size="sm">
+						Transports
+					</LinkButton>
+				</div>
 			</NonIdealState>
 		)
 	}
@@ -36,7 +49,7 @@ export const PeersList = observer(function PeersList({
 })
 
 const PeerRow = observer(function PeerRow({ peer, isSelected }: { peer: LinkPeerInfo; isSelected: boolean }) {
-	const linkStore = useLinkStore()
+	const { link: linkStore } = useContext(RootAppStoreContext)
 	const navigate = useNavigate()
 
 	const doSelect = useCallback(() => {

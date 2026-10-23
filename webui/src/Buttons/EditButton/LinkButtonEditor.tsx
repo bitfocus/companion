@@ -1,9 +1,8 @@
 import { faCircleExclamation, faLink, faLinkSlash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useId, useMemo } from 'react'
+import { useCallback, useContext, useId, useMemo } from 'react'
 import {
 	BUTTON_DECORATION_CHOICES,
 	BUTTON_STATUS_ICONS_CHOICES,
@@ -19,6 +18,7 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { Note } from '~/Components/Note.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ButtonLocationInput } from './ButtonLocationInput.js'
 import { linkPeerChoices } from './LinkPeerChoices.js'
 
@@ -63,10 +63,10 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 		[setOptionsFieldMutation, controlId]
 	)
 
-	const peers = useSubscription(trpc.link.watchPeers.subscriptionOptions())
+	const { link } = useContext(RootAppStoreContext)
 	const peerChoices = useMemo(
-		() => linkPeerChoices(peers.data ?? [], config.options.peerId),
-		[peers.data, config.options.peerId]
+		() => linkPeerChoices(link.peers, config.options.peerId),
+		[link.peers, config.options.peerId]
 	)
 
 	const status = runtimeProps ? (runtimeProps as LinkButtonRuntimeProps).status : null
@@ -78,7 +78,7 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 	const statusIconsFieldId = useId()
 
 	// Nothing to choose from until another installation has been found
-	if (peers.data && peerChoices.length === 0) return <NoInstallations />
+	if (peerChoices.length === 0) return <NoInstallations />
 
 	return (
 		<>

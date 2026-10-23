@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useRef } from 'react'
+import { useCallback, useContext, useRef } from 'react'
 import type { LinkTransportConfig } from '@companion-app/shared/Model/Link.js'
 import { Button } from '~/Components/Button.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -11,15 +11,15 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { useActivateOnKey } from '~/Hooks/useActivateOnKey.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { TransportStatusBadge } from './LinkStatusBadges.js'
-import { useLinkStore } from './LinkStoreContext.js'
 
 export const TransportsList = observer(function TransportsList({
 	selectedTransportId,
 }: {
 	selectedTransportId: string | null
 }): React.JSX.Element {
-	const linkStore = useLinkStore()
+	const { link: linkStore } = useContext(RootAppStoreContext)
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 
 	const transports = linkStore.sortedTransports
@@ -55,7 +55,7 @@ const TransportRow = observer(function TransportRow({
 	isSelected: boolean
 	confirmModalRef: React.RefObject<GenericConfirmModalRef | null>
 }) {
-	const linkStore = useLinkStore()
+	const { link: linkStore } = useContext(RootAppStoreContext)
 	const navigate = useNavigate()
 
 	const removeMutation = useMutationExt(trpc.link.removeTransport.mutationOptions())

@@ -1,11 +1,12 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
-import { useLinkStore } from '~/Link/LinkStoreContext.js'
+import { useContext } from 'react'
 import { TransportEditPanel } from '~/Link/TransportEditPanel.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 const RouteComponent = observer(function RouteComponent() {
-	const linkStore = useLinkStore()
+	const { link: linkStore } = useContext(RootAppStoreContext)
 	const { transportId } = Route.useParams()
 
 	const transport = linkStore.transports.get(transportId)

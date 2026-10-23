@@ -1,7 +1,7 @@
 import { faLink, faRotate } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useRef } from 'react'
+import { useCallback, useContext, useRef } from 'react'
 import { Button } from '~/Components/Button.js'
 import { CopyButton } from '~/Components/CopyButton.js'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
@@ -9,11 +9,11 @@ import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/G
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { useLinkStore } from './LinkStoreContext.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 
 /** Shown when no installation is selected: what other installations see of this one */
 export const LinkOverviewPanel = observer(function LinkOverviewPanel(): React.JSX.Element {
-	const linkStore = useLinkStore()
+	const { link: linkStore } = useContext(RootAppStoreContext)
 	const self = linkStore.self
 
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)

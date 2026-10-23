@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useForm } from '@tanstack/react-form'
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
-import React, { useCallback, useId, useState } from 'react'
+import React, { useCallback, useContext, useId, useState } from 'react'
 import type { JsonValue } from 'type-fest'
 import type {
 	ClientLinkTransportType,
@@ -24,8 +24,8 @@ import { useSaveShortcut } from '~/Hooks/useSaveShortcut.js'
 import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton } from '~/Layout/PanelIcons.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { TransportStatusBadge } from './LinkStatusBadges.js'
-import { useLinkStore } from './LinkStoreContext.js'
 import { PeerLink } from './PeerLink.js'
 import { TransportConfigField } from './TransportConfigField.js'
 import { TransportSection } from './TransportSections.js'
@@ -35,7 +35,7 @@ export const TransportEditPanel = observer(function TransportEditPanel({
 }: {
 	transport: LinkTransportConfig
 }): React.JSX.Element {
-	const linkStore = useLinkStore()
+	const { link: linkStore } = useContext(RootAppStoreContext)
 	const navigate = useNavigate()
 
 	const doClose = useCallback(() => void navigate({ to: '/link/transports' }), [navigate])

@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useId } from 'react'
+import { useCallback, useContext, useId } from 'react'
 import { LINK_PERMISSION_DEFINITIONS, type LinkPeerInfo, type LinkUsage } from '@companion-app/shared/Model/Link.js'
 import { Button } from '~/Components/Button.js'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
@@ -13,9 +13,9 @@ import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton } from '~/Layout/PanelIcons.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ConfigFieldRow } from '~/UserConfig/Components/ConfigFieldRows.js'
 import { PeerStatusBadge } from './LinkStatusBadges.js'
-import { useLinkStore } from './LinkStoreContext.js'
 import './LinkPeerPanel.css'
 
 /** How often the usage counts are refreshed while the panel is open */
@@ -44,7 +44,7 @@ export const LinkPeerPanel = observer(function LinkPeerPanel({ peer }: { peer: L
 })
 
 const PeerStatusSection = observer(function PeerStatusSection({ peer }: { peer: LinkPeerInfo }) {
-	const linkStore = useLinkStore()
+	const { link: linkStore } = useContext(RootAppStoreContext)
 
 	const setAliasMutation = useMutationExt(trpc.link.setPeerAlias.mutationOptions())
 	const setAlias = useCallback(

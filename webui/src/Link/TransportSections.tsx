@@ -1,6 +1,6 @@
 import { faCircleExclamation, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useId, useState } from 'react'
+import { useCallback, useContext, useId, useState } from 'react'
 import type { LinkTransportEntry, LinkTransportSection } from '@companion-app/shared/Model/Link.js'
 import { Button } from '~/Components/Button.js'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
@@ -9,7 +9,7 @@ import { Note } from '~/Components/Note.js'
 import { StatusBadge } from '~/Components/StatusBadge.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { useLinkStore } from './LinkStoreContext.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { PeerLink } from './PeerLink.js'
 
 /** A section a transport reports about itself (eg pairing requests), with the actions it offers on its entries */
@@ -40,7 +40,7 @@ export const TransportSection = observer(function TransportSection({
  * seen and dealt with without opening the transport
  */
 export const AttentionSections = observer(function AttentionSections(): React.JSX.Element | null {
-	const linkStore = useLinkStore()
+	const { link: linkStore } = useContext(RootAppStoreContext)
 
 	const sections = linkStore.attentionSections
 	if (sections.length === 0) return null

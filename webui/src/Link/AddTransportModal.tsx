@@ -15,7 +15,6 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import './AddTransportModal.css'
-import { useLinkStore } from './LinkStoreContext.js'
 import { TransportConfigField } from './TransportConfigField.js'
 
 /** Add a transport: first choose its type, then name and configure it */
@@ -59,7 +58,7 @@ const ChooseTypeStep = observer(function ChooseTypeStep({
 }: {
 	onChoose: (type: ClientLinkTransportType) => void
 }) {
-	const linkStore = useLinkStore()
+	const { link: linkStore } = useContext(RootAppStoreContext)
 
 	return (
 		<Modal.Body>

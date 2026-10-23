@@ -3,7 +3,8 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
 import { useSubscription } from '@trpc/tanstack-react-query'
-import { useMemo } from 'react'
+import { observer } from 'mobx-react-lite'
+import { useContext, useMemo } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { LinkRemotePage, LinkRemotePagesResult } from '@companion-app/shared/Model/Link.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
@@ -14,6 +15,7 @@ import { ButtonPreviewBase, RedImage } from '~/Components/ButtonPreview.js'
 import { PanelCollapseHelperProvider, usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc } from '~/Resources/TRPC.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { PRESET_FEEDBACK_PLUGINS, type PresetDragItem } from './PresetDragItem.js'
 import { PresetSectionHeader } from './PresetSectionHeader.js'
 
@@ -35,9 +37,12 @@ interface LinkPresetsPagesProps {
 }
 
 /** The pages of another installation, each as its grid of buttons, to drag onto the grid as remote buttons */
-export function LinkPresetsPages({ peerId, clearSelection }: LinkPresetsPagesProps): React.JSX.Element {
-	const peers = useSubscription(trpc.link.watchPeers.subscriptionOptions())
-	const peer = peers.data?.find((p) => p.id === peerId)
+export const LinkPresetsPages = observer(function LinkPresetsPages({
+	peerId,
+	clearSelection,
+}: LinkPresetsPagesProps): React.JSX.Element {
+	const { link } = useContext(RootAppStoreContext)
+	const peer = link.peers.find((p) => p.id === peerId)
 
 	const query = useQuery(trpc.link.remotePages.queryOptions({ peerId }, { refetchInterval: PAGES_REFRESH_MS }))
 	const result = query.data
@@ -79,7 +84,7 @@ export function LinkPresetsPages({ peerId, clearSelection }: LinkPresetsPagesPro
 			</ButtonsSidebarSection>
 		</PanelCollapseHelperProvider>
 	)
-}
+})
 
 interface LinkPresetPageProps {
 	peerId: string
