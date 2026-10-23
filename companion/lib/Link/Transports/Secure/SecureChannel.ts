@@ -52,7 +52,7 @@ export class SecureChannel {
 
 	readonly #sendCipher: CipherState
 	readonly #receiveCipher: CipherState
-	readonly #maxMessageSize: number
+	#maxMessageSize: number
 
 	#partial: Buffer[] = []
 	#partialSize = 0
@@ -80,7 +80,8 @@ export class SecureChannel {
 	 * @param keyPair - the Noise static key pair of this end
 	 * @param identity - the identity of this installation, which signs the static key to prove its Link id
 	 * @param localName - the name to give the other end
-	 * @param maxMessageSize - the largest message accepted from the other end, after reassembly
+	 * @param maxMessageSize - the largest message accepted from the other end, after reassembly, until more is allowed
+	 *   (see acceptMessagesUpTo)
 	 */
 	static async establish(
 		pipe: MessagePipe,
@@ -164,6 +165,14 @@ export class SecureChannel {
 
 			if (initiator) pipe.send(noise.send())
 		})
+	}
+
+	/**
+	 * Accept larger messages from the other end, once it is trusted. Until then only the size it was established with,
+	 * which only needs to fit what is said while authenticating, so that an untrusted end can't make this buffer much
+	 */
+	acceptMessagesUpTo(maxMessageSize: number): void {
+		this.#maxMessageSize = maxMessageSize
 	}
 
 	/** Set what receives the decrypted messages. Anything received before this is delivered now */

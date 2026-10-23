@@ -9,7 +9,11 @@ import { SecureChannel } from '../Secure/SecureChannel.js'
 import type { LinkTransportContext } from '../Types.js'
 import { resolveDirectAddress } from './Address.js'
 import { DIRECT_DEFAULT_PORT } from './Constants.js'
-import { DIRECT_HANDSHAKE_TIMEOUT_MS, DIRECT_MAX_MESSAGE_SIZE, DirectTransportBase } from './DirectTransportBase.js'
+import {
+	DIRECT_HANDSHAKE_TIMEOUT_MS,
+	DIRECT_MAX_UNTRUSTED_MESSAGE_SIZE,
+	DirectTransportBase,
+} from './DirectTransportBase.js'
 
 export type DirectClientTransportConfig = {
 	/** The installation chosen from those discovered with mDNS, as `ip:port`, or null to use `address` */
@@ -130,7 +134,7 @@ export class DirectClientTransport extends DirectTransportBase {
 				this.noiseKeyPair,
 				this.context.identity,
 				this.context.getName(),
-				DIRECT_MAX_MESSAGE_SIZE,
+				DIRECT_MAX_UNTRUSTED_MESSAGE_SIZE,
 				DIRECT_HANDSHAKE_TIMEOUT_MS
 			)
 				.then((channel) => this.#authenticate(channel))
