@@ -34,6 +34,7 @@ import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import { CreateElementOfType } from '../Controls/ControlTypes/Button/LayerDefaults.js'
+import { makeLinkButtonPreviewElements } from '../Controls/ControlTypes/Button/LinkButtonDrawer.js'
 import { pageDownElements } from '../Controls/ControlTypes/PageDown.js'
 import { pageNumberElements } from '../Controls/ControlTypes/PageNumber.js'
 import { pageUpElements } from '../Controls/ControlTypes/PageUp.js'
@@ -428,6 +429,11 @@ export class ImportExportController {
 							rawElements = [referenceElement]
 							break
 						}
+						case 'link-button':
+							// The remote button can't be shown in the import preview
+							drawType = 'button'
+							rawElements = makeLinkButtonPreviewElements()
+							break
 						case 'pagenum':
 							drawType = 'pagenum'
 							rawElements = structuredClone(pageNumberElements)

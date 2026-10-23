@@ -403,6 +403,8 @@ export class ControlsController {
 			this.#store.controls.set(newControlId, newControl)
 
 			this.#controlEvents.emit('controlPlacedAt', location, newControlId)
+			// It was made before it was placed, so anything relative to its location must be resolved again
+			newControl.triggerLocationHasChanged()
 
 			// Ensure it is stored to the db
 			newControl.commitChange(true)
@@ -517,6 +519,7 @@ export class ControlsController {
 
 				if (control.supportsEntities) control.entities.onVariablesChanged(allChangedVariablesSet)
 				control.drawing?.onVariablesChanged(allChangedVariablesSet)
+				control.onVariablesChanged(allChangedVariablesSet)
 			}
 		}
 	}

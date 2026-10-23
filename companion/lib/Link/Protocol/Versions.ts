@@ -9,7 +9,7 @@ import { parseApiVersion } from '@companion-app/satellite-protocol/versions'
  * To give users a transition period when bumping the major version, keep speaking the previous one alongside it for
  * a few releases, so that installations can be upgraded one at a time.
  *
- * 1.0.0 - Initial release: discovery, access (permissions), ping, button subscriptions, press and rotate
+ * 1.0.0 - Initial release: discovery, access (permissions), ping, button subscriptions, press, rotate and abort
  */
 export const LINK_PROTOCOL_VERSIONS: readonly string[] = ['1.0.0']
 

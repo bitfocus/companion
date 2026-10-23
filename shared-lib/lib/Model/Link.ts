@@ -176,6 +176,17 @@ export interface LinkPeerInfo {
 	sharedWithUs: LinkPermissions | null
 }
 
+/** How much of what is shared is in use, in each direction, eg the buttons subscribed to (once per button and size) */
+export interface LinkUsage {
+	/** Of what we share with it, how much it is using */
+	oursUsedThere: number
+	/** Of what it shares with us, how much is in use here */
+	theirsUsedHere: number
+}
+
+/** How much two installations are using of each other, for each thing that can be shared */
+export type LinkPeerUsage = Record<LinkPermission, LinkUsage>
+
 /** Information about this installation, as seen by peers */
 export interface LinkSelfInfo {
 	id: string
@@ -184,4 +195,26 @@ export interface LinkSelfInfo {
 	name: string
 	/** The Link protocol versions this installation speaks, one per major version */
 	protocolVersions: string[]
+}
+
+/**
+ * Why a link button is showing what it is showing
+ * - `unconfigured`: no peer or location chosen, or the location could not be resolved
+ * - `unknown_peer`: the peer has not been discovered on any transport
+ * - `incompatible`: the peer speaks an incompatible protocol version
+ * - `offline`: the peer is known but not currently reachable
+ * - `denied`: the peer does not share its buttons with this installation
+ * - `over_limit`: the peer is already serving as many buttons as it can, so refused this one
+ * - `loading`: subscribed, waiting for the first image
+ * - `loop`: the remote button is (indirectly) linked back to this installation
+ * - `ok`: showing the remote button
+ */
+export type LinkButtonStatus =
+	'unconfigured' | 'unknown_peer' | 'incompatible' | 'offline' | 'denied' | 'over_limit' | 'loading' | 'loop' | 'ok'
+
+/** Runtime (non-persisted) state of a link button, for the button editor */
+export interface LinkButtonRuntimeProps {
+	status: LinkButtonStatus
+	/** Name of the target peer, when it is known */
+	peerName: string | null
 }

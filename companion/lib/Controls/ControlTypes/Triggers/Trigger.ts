@@ -218,7 +218,7 @@ export class ControlTrigger
 		}
 	}
 
-	abortDelayedActions(_skip_up: boolean, exceptSignal: AbortSignal | null): void {
+	override abortDelayedActions(_skip_up: boolean, exceptSignal: AbortSignal | null, _linkHops: number): void {
 		this.#actionRunner.abortAll(exceptSignal)
 	}
 

@@ -1,9 +1,10 @@
 import { faServer, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useId } from 'react'
-import { LINK_PERMISSION_DEFINITIONS, type LinkPeerInfo } from '@companion-app/shared/Model/Link.js'
+import { LINK_PERMISSION_DEFINITIONS, type LinkPeerInfo, type LinkUsage } from '@companion-app/shared/Model/Link.js'
 import { Button } from '~/Components/Button.js'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { FormLabel } from '~/Components/Form.js'
@@ -16,7 +17,10 @@ import { PeerStatusBadge } from './LinkStatusBadges.js'
 import { useLinkStore } from './LinkStoreContext.js'
 import './LinkPeerPanel.css'
 
-/** Another installation: how it is reached, and what is shared each way */
+/** How often the usage counts are refreshed while the panel is open */
+const USAGE_REFRESH_MS = 5000
+
+/** Another installation: how it is reached, what is shared each way, and how much of that is in use */
 export const LinkPeerPanel = observer(function LinkPeerPanel({ peer }: { peer: LinkPeerInfo }): React.JSX.Element {
 	const navigate = useNavigate()
 	const doClose = useCallback(() => void navigate({ to: '/link' }), [navigate])
@@ -83,9 +87,13 @@ const PeerStatusSection = observer(function PeerStatusSection({ peer }: { peer: 
 
 /**
  * What is shared each way, one row per thing that can be shared: what we let it use (chosen here) and what it lets us
- * use (chosen over there)
+ * use (chosen over there), each with how much of it is in use
  */
 const PeerSharingSection = observer(function PeerSharingSection({ peer }: { peer: LinkPeerInfo }) {
+	const usage = useQuery(
+		trpc.link.peerUsage.queryOptions({ peerId: peer.id }, { refetchInterval: USAGE_REFRESH_MS })
+	).data
+
 	return (
 		<EditSectionCard title="Sharing">
 			<div className="link-sharing-table">
@@ -94,7 +102,12 @@ const PeerSharingSection = observer(function PeerSharingSection({ peer }: { peer
 				<span className="link-sharing-head">They share</span>
 
 				{LINK_PERMISSION_DEFINITIONS.map((permission) => (
-					<PeerSharingRow key={permission.id} peer={peer} permission={permission} />
+					<PeerSharingRow
+						key={permission.id}
+						peer={peer}
+						permission={permission}
+						usage={usage?.[permission.id] ?? null}
+					/>
 				))}
 			</div>
 		</EditSectionCard>
@@ -104,9 +117,11 @@ const PeerSharingSection = observer(function PeerSharingSection({ peer }: { peer
 const PeerSharingRow = observer(function PeerSharingRow({
 	peer,
 	permission,
+	usage,
 }: {
 	peer: LinkPeerInfo
 	permission: (typeof LINK_PERMISSION_DEFINITIONS)[number]
+	usage: LinkUsage | null
 }) {
 	const switchId = useId()
 	const permissionsMutation = useMutationExt(trpc.link.setPeerPermissions.mutationOptions())
@@ -132,12 +147,16 @@ const PeerSharingRow = observer(function PeerSharingRow({
 			</FormLabel>
 			<span className="link-sharing-cell">
 				<SwitchInputField id={switchId} value={ours} setValue={doSetShared} tooltip={undefined} />
+				{ours && usage && <span className="text-muted">{usage.oursUsedThere} in use</span>}
 			</span>
 			<span className="link-sharing-cell">
 				{theirs === null ? (
 					<span className="text-muted">Unknown</span>
 				) : theirs ? (
-					'Yes'
+					<>
+						Yes
+						{usage && <span className="text-muted">{usage.theirsUsedHere} in use</span>}
+					</>
 				) : (
 					<span className="text-muted">No</span>
 				)}
