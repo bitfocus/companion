@@ -12,14 +12,13 @@ import { establishPair } from './helpers/MemoryPipe.js'
 const logger = LogController.createLogger('test/PairingSession')
 
 /** Run both ends of the authentication over a fresh channel */
-async function authenticate(options: { acceptingRemembers: boolean; connectingPaired: boolean; maxPending?: number }) {
+async function authenticate(options: { acceptingRemembers: boolean; connectingPaired: boolean }) {
 	const { connecting, accepting } = await establishPair()
 
 	const requests: PairingRequest[] = []
 	const acceptingHost = {
 		logger,
 		isPaired: vi.fn((linkId: string) => options.acceptingRemembers && linkId === connecting.identity.id),
-		canRequestPairing: vi.fn(() => requests.length < (options.maxPending ?? 10)),
 		requestPairing: vi.fn((request: PairingRequest) => {
 			requests.push(request)
 		}),
@@ -30,7 +29,8 @@ async function authenticate(options: { acceptingRemembers: boolean; connectingPa
 		paired: options.connectingPaired,
 		showCode: vi.fn((_code: string) => {}),
 		trusted: vi.fn(() => {}),
-		refused: vi.fn((_reason: 'rejected' | 'not-paired') => {}),
+		refused: vi.fn((_reason: 'rejected' | 'expired' | 'not-paired') => {}),
+		busy: vi.fn(() => {}),
 	}
 	const acceptingClosed = vi.fn()
 	accepting.channel.onClose(acceptingClosed)
@@ -102,13 +102,6 @@ describe('pairing sessions', () => {
 		expect(request.enterCode('0000-0000')).toBe('rejected')
 	})
 
-	test('a pairing request is refused while too many are waiting', async () => {
-		const ctx = await authenticate({ acceptingRemembers: false, connectingPaired: false, maxPending: 0 })
-
-		await vi.waitFor(() => expect(ctx.connectingHost.refused).toHaveBeenCalledWith('rejected'))
-		expect(ctx.acceptingHost.requestPairing).not.toHaveBeenCalled()
-	})
-
 	test('the connecting end refuses an end that claims to be paired with it when it never was', async () => {
 		const { connecting, accepting } = await establishPair()
 		const host = {
@@ -117,6 +110,7 @@ describe('pairing sessions', () => {
 			showCode: vi.fn(),
 			trusted: vi.fn(),
 			refused: vi.fn(),
+			busy: vi.fn(),
 		}
 		requestAuthentication(connecting.channel, host)
 
@@ -128,7 +122,7 @@ describe('pairing sessions', () => {
 
 	test('the connecting end closes the channel when the revealed nonce does not match its commitment', async () => {
 		const { connecting, accepting } = await establishPair()
-		const host = { logger, paired: false, showCode: vi.fn(), trusted: vi.fn(), refused: vi.fn() }
+		const host = { logger, paired: false, showCode: vi.fn(), trusted: vi.fn(), refused: vi.fn(), busy: vi.fn() }
 		const closed = vi.fn()
 		connecting.channel.onClose(closed)
 		requestAuthentication(connecting.channel, host)
@@ -145,7 +139,7 @@ describe('pairing sessions', () => {
 		expect(host.showCode).not.toHaveBeenCalled()
 	})
 
-	test('a request that waits too long is rejected', async () => {
+	test('a request that waits too long expires', async () => {
 		// Only timeouts are faked, so that the pipe still delivers
 		vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
 		const ctx = await authenticate({ acceptingRemembers: false, connectingPaired: false })
@@ -158,6 +152,6 @@ describe('pairing sessions', () => {
 
 		await vi.advanceTimersByTimeAsync(2 * 60 * 1000)
 		expect(ended).toHaveBeenCalled()
-		await vi.waitFor(() => expect(ctx.connectingHost.refused).toHaveBeenCalledWith('rejected'))
+		await vi.waitFor(() => expect(ctx.connectingHost.refused).toHaveBeenCalledWith('expired'))
 	})
 })

@@ -77,3 +77,16 @@ export function formatRemoteAddress(ip: string | undefined, port: number | undef
 	const address = (ip ?? 'unknown').replace(/^::ffff:(?=\d+\.\d+\.\d+\.\d+$)/i, '')
 	return address.includes(':') ? `[${address}]:${port}` : `${address}:${port}`
 }
+
+/**
+ * The host a connection counts towards the limits as: its IPv4 address, or its IPv6 address's /64, as one host can use
+ * any address in its /64
+ */
+export function remoteHostKey(ip: string): string {
+	const address = ip.replace(/^::ffff:(?=\d+\.\d+\.\d+\.\d+$)/i, '').replace(/%.*$/, '')
+	if (!address.includes(':')) return address
+
+	const [head, tail] = address.split('::').map((part) => (part ? part.split(':') : []))
+	const groups = tail ? [...head, ...Array<string>(8 - head.length - tail.length).fill('0'), ...tail] : head
+	return `${groups.slice(0, 4).join(':')}::/64`
+}

@@ -18,8 +18,10 @@ export const AuthFrameSchema = z.discriminatedUnion('op', [
 		/**
 		 * - `paired`: the connection is trusted, Link messages can flow
 		 * - `rejected`: the user rejected the pairing, or entered the wrong code too often
+		 * - `expired`: the request timed out, or a newer one took its place
+		 * - `busy`: too many requests are waiting, try again later
 		 */
-		status: z.enum(['paired', 'rejected']),
+		status: z.enum(['paired', 'rejected', 'expired', 'busy']),
 	}),
 	/** From the accepting end, when pairing is needed: its commitment to its nonce */
 	z.object({ op: z.literal('pairing-commit'), commit: NonceSchema }),

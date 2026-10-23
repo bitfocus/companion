@@ -10,8 +10,12 @@ import { websocketMessagePipe } from '../Secure/MessagePipe.js'
 import { acceptAuthentication, type PairingRequest } from '../Secure/PairingSession.js'
 import { SecureChannel } from '../Secure/SecureChannel.js'
 import type { LinkTransportContext } from '../Types.js'
-import { formatRemoteAddress } from './Address.js'
-import { DIRECT_HANDSHAKE_TIMEOUT_MS, DIRECT_MAX_MESSAGE_SIZE, DirectTransportBase } from './DirectTransportBase.js'
+import { formatRemoteAddress, remoteHostKey } from './Address.js'
+import {
+	DIRECT_HANDSHAKE_TIMEOUT_MS,
+	DIRECT_MAX_UNTRUSTED_MESSAGE_SIZE,
+	DirectTransportBase,
+} from './DirectTransportBase.js'
 
 export type DirectServerTransportConfig = {
 	port: number
@@ -23,10 +27,19 @@ type PairedClients = z.infer<typeof PairedClientsSchema>
 
 /** Bound on waiting pairing requests, so that they can't be used to flood the UI */
 const PAIRING_MAX_PENDING = 10
+/** Bound on the waiting pairing requests from one address, so that one host can't hold every slot */
+const PAIRING_MAX_PENDING_PER_HOST = 3
+
+/** Bound on connections that are not trusted yet, so that they can't be used to exhaust memory */
+const MAX_UNTRUSTED_CONNECTIONS = 32
+/** Bound on the connections from one address that are not trusted yet */
+const MAX_UNTRUSTED_CONNECTIONS_PER_HOST = 8
 
 interface PendingPairing {
 	readonly request: PairingRequest
 	readonly address: string
+	/** The host it counts towards the limits as */
+	readonly host: string
 }
 
 /**
@@ -42,8 +55,9 @@ export class DirectServerTransport extends DirectTransportBase {
 	readonly #server: WebSocketServer
 
 	readonly #pending = new Map<string, PendingPairing>()
-	/** The channels of linked installations, by their public key, so that unpairing can disconnect them */
-	readonly #linked = new Map<string, Set<SecureChannel>>()
+	/** How many connections from each host are not trusted yet */
+	readonly #untrusted = new Map<string, number>()
+	#untrustedTotal = 0
 
 	#listening = false
 
@@ -72,7 +86,17 @@ export class DirectServerTransport extends DirectTransportBase {
 		})
 		this.#server.on('connection', (socket, req) => {
 			const address = formatRemoteAddress(req.socket.remoteAddress, req.socket.remotePort)
+			const host = remoteHostKey(req.socket.remoteAddress ?? 'unknown')
 			socket.on('error', (e) => this.context.logger.debug(`Socket error from ${address}: ${stringifyError(e)}`))
+
+			const untrusted = this.#countUntrusted(host)
+			if (!untrusted) {
+				this.context.logger.warn(`Refusing a connection from ${address}, too many are not trusted yet`)
+				socket.terminate()
+				return
+			}
+			socket.on('close', untrusted.release)
+
 			this.keepAlive(socket, address)
 
 			SecureChannel.establish(
@@ -81,10 +105,10 @@ export class DirectServerTransport extends DirectTransportBase {
 				this.noiseKeyPair,
 				this.context.identity,
 				this.context.getName(),
-				DIRECT_MAX_MESSAGE_SIZE,
+				DIRECT_MAX_UNTRUSTED_MESSAGE_SIZE,
 				DIRECT_HANDSHAKE_TIMEOUT_MS
 			)
-				.then((channel) => this.#accept(channel, address))
+				.then((channel) => this.#accept(channel, address, host, untrusted.release))
 				.catch((e) => {
 					this.context.logger.info(`Handshake with ${address} failed: ${stringifyError(e)}`)
 					socket.terminate()
@@ -109,21 +133,66 @@ export class DirectServerTransport extends DirectTransportBase {
 		this.context.storage.set(PAIRED_STORAGE_KEY, paired)
 	}
 
-	#accept(channel: SecureChannel, address: string): void {
+	/**
+	 * Count a connection from a host as not trusted yet, if there is room for it
+	 * @returns how to stop counting it, once it is trusted or closed, or null when there is no room
+	 */
+	#countUntrusted(host: string): { release: () => void } | null {
+		const fromHost = this.#untrusted.get(host) ?? 0
+		if (this.#untrustedTotal >= MAX_UNTRUSTED_CONNECTIONS || fromHost >= MAX_UNTRUSTED_CONNECTIONS_PER_HOST) return null
+
+		this.#untrusted.set(host, fromHost + 1)
+		this.#untrustedTotal++
+
+		let released = false
+		return {
+			release: () => {
+				if (released) return
+				released = true
+				this.#untrustedTotal--
+				const remaining = (this.#untrusted.get(host) ?? 1) - 1
+				if (remaining > 0) this.#untrusted.set(host, remaining)
+				else this.#untrusted.delete(host)
+			},
+		}
+	}
+
+	/**
+	 * Make room for a pairing request from a host: one that waits from the same installation, its host's oldest, or the
+	 * oldest of all
+	 */
+	#makeRoomForPairing(linkId: string, host: string): void {
+		const fromHost: PendingPairing[] = []
+		for (const pending of this.#pending.values()) {
+			// The same installation asking again, eg after reconnecting: the new request replaces it
+			if (pending.request.channel.remoteLinkId === linkId) pending.request.expire()
+			else if (pending.host === host) fromHost.push(pending)
+		}
+		// Oldest first, as they were added
+		while (fromHost.length >= PAIRING_MAX_PENDING_PER_HOST) fromHost.shift()?.request.expire()
+		for (const pending of this.#pending.values()) {
+			if (this.#pending.size < PAIRING_MAX_PENDING) break
+			pending.request.expire()
+		}
+	}
+
+	#accept(channel: SecureChannel, address: string, host: string, releaseUntrusted: () => void): void {
 		acceptAuthentication(channel, {
 			logger: this.context.logger,
 			isPaired: (linkId) => !!this.#getPaired()[linkId],
-			canRequestPairing: () => this.#pending.size < PAIRING_MAX_PENDING,
 			requestPairing: (request) => {
 				this.context.logger.info(`Pairing requested by ${channel.remoteName} (${address})`)
+				// Only now, as requests arriving together could otherwise all find room
+				this.#makeRoomForPairing(channel.remoteLinkId, host)
 				const id = nanoid()
-				this.#pending.set(id, { request, address })
+				this.#pending.set(id, { request, address, host })
 				request.onEnd(() => {
 					if (this.#pending.delete(id)) this.#updateState()
 				})
 				this.#updateState()
 			},
 			trusted: (trustedChannel, newlyPaired) => {
+				releaseUntrusted()
 				const paired = this.#getPaired()
 				const known = paired[trustedChannel.remoteLinkId]
 				if (newlyPaired || known?.name !== trustedChannel.remoteName) {
@@ -140,26 +209,10 @@ export class DirectServerTransport extends DirectTransportBase {
 				this.context.logger.info(
 					`${newlyPaired ? 'Paired with' : 'Accepted connection from'} ${trustedChannel.remoteName} (${address})`
 				)
-				this.#establishLink(trustedChannel, address)
+				this.link(trustedChannel, `${trustedChannel.remoteName} (${address})`)
 				this.#updateState()
 			},
 		})
-	}
-
-	#establishLink(channel: SecureChannel, address: string): void {
-		const key = channel.remoteLinkId
-		let channels = this.#linked.get(key)
-		if (!channels) {
-			channels = new Set()
-			this.#linked.set(key, channels)
-		}
-		channels.add(channel)
-		channel.onClose(() => {
-			channels.delete(channel)
-			if (channels.size === 0) this.#linked.delete(key)
-		})
-
-		this.link(channel, `${channel.remoteName} (${address})`)
 	}
 
 	async handleSectionAction(entryId: string, actionId: string, input: string | null): Promise<string | null> {
@@ -191,7 +244,7 @@ export class DirectServerTransport extends DirectTransportBase {
 			delete paired[id]
 			this.#setPaired(paired)
 
-			for (const channel of this.#linked.get(id) ?? []) channel.close()
+			this.closeLinks(id)
 			this.#updateState()
 			return null
 		}
@@ -213,14 +266,14 @@ export class DirectServerTransport extends DirectTransportBase {
 		)
 		this.context.setInfo([
 			{ label: 'Port', value: String(this.#port) },
-			{ label: 'Identity', value: formatLinkIdFingerprint(this.context.identity.id) },
+			{ label: 'Link id', value: formatLinkIdFingerprint(this.context.identity.id) },
 			{ label: 'Connected installations', value: String(this.linkedCount) },
 		])
 
 		const pendingEntries: LinkTransportEntry[] = Array.from(this.#pending, ([id, { request, address }]) => ({
 			id: `pending:${id}`,
 			title: request.channel.remoteName,
-			description: `From ${address}, identity ${formatLinkIdFingerprint(request.channel.remoteLinkId)}. Enter the pairing code it shows.`,
+			description: `From ${address}, Link id ${formatLinkIdFingerprint(request.channel.remoteLinkId)}. Enter the pairing code it shows.`,
 			inputLabel: 'Pairing code',
 			actions: [
 				{ id: 'pair', label: 'Pair', color: 'primary', requiresInput: true },
@@ -232,7 +285,7 @@ export class DirectServerTransport extends DirectTransportBase {
 			id: `paired:${key}`,
 			title: info.name,
 			peerId: key,
-			description: `${this.#linked.has(key) ? 'Connected' : 'Not connected'} · identity ${formatLinkIdFingerprint(key)} · paired ${new Date(info.pairedAt).toLocaleDateString()}`,
+			description: `${this.isLinked(key) ? 'Connected' : 'Not connected'} · Link id ${formatLinkIdFingerprint(key)} · paired ${new Date(info.pairedAt).toLocaleDateString()}`,
 			inputLabel: null,
 			actions: [{ id: 'unpair', label: 'Unpair', color: 'danger' }],
 		}))

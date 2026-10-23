@@ -31,6 +31,25 @@ describe('SecureChannel', () => {
 		await vi.waitFor(() => expect(receivedByConnecting).toEqual(['hi']))
 	})
 
+	test('accepts only the messages it was established for until allowed more, as the other end is not trusted yet', async () => {
+		// Established to accept 1MB
+		const large = 'x'.repeat(1.5 * 1024 * 1024)
+
+		const untrusted = await establishPair()
+		const onClose = vi.fn()
+		untrusted.accepting.channel.onClose(onClose)
+		untrusted.accepting.channel.setHandler(() => {})
+		untrusted.connecting.channel.send(large)
+		await vi.waitFor(() => expect(onClose).toHaveBeenCalled())
+
+		const trusted = await establishPair()
+		const received: string[] = []
+		trusted.accepting.channel.acceptMessagesUpTo(2 * 1024 * 1024)
+		trusted.accepting.channel.setHandler((text) => received.push(text))
+		trusted.connecting.channel.send(large)
+		await vi.waitFor(() => expect(received).toEqual([large]))
+	})
+
 	test('closes when a message has been tampered with', async () => {
 		const { connecting, accepting } = await establishPair()
 		const onClose = vi.fn()

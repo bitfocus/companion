@@ -11,6 +11,9 @@ const KEEPALIVE_INTERVAL_MS = 10_000
 /** Largest message accepted over a direct connection, comfortably above a large button bitmap */
 export const DIRECT_MAX_MESSAGE_SIZE = 4 * 1024 * 1024
 
+/** Largest message accepted from the other end until it is trusted, comfortably above what is said while pairing */
+export const DIRECT_MAX_UNTRUSTED_MESSAGE_SIZE = 4 * 1024
+
 /** How long the Noise handshake may take */
 export const DIRECT_HANDSHAKE_TIMEOUT_MS = 10_000
 
@@ -41,6 +44,16 @@ export abstract class DirectTransportBase implements LinkTransport {
 	 * connection it replaces
 	 */
 	readonly #links = new Map<string, SecureChannel[]>()
+
+	/** Whether an installation is linked over this transport */
+	protected isLinked(peerId: string): boolean {
+		return this.#links.has(peerId)
+	}
+
+	/** Close the connections linked to an installation, eg because it is no longer paired */
+	protected closeLinks(peerId: string): void {
+		for (const channel of this.#links.get(peerId) ?? []) channel.close()
+	}
 
 	protected get linkedCount(): number {
 		let count = 0
@@ -101,6 +114,8 @@ export abstract class DirectTransportBase implements LinkTransport {
 	protected link(channel: SecureChannel, name: string): void {
 		// The other end proved who it is in the handshake, so everything over this channel is from it
 		const peerId = channel.remoteLinkId
+		// Trusted now, so it may send button images
+		channel.acceptMessagesUpTo(DIRECT_MAX_MESSAGE_SIZE)
 
 		let channels = this.#links.get(peerId)
 		if (!channels) {

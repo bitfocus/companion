@@ -2,7 +2,7 @@ import net from 'node:net'
 import getPort from 'get-port'
 import { generateKeyPair } from 'noise-handshake/dh.js'
 import { afterEach, describe, expect, test, vi } from 'vitest'
-import { WebSocketServer } from 'ws'
+import { WebSocket, WebSocketServer } from 'ws'
 import { LinkIdentity } from '../../lib/Link/Identity.js'
 import { DirectClientTransport } from '../../lib/Link/Transports/Direct/ClientTransport.js'
 import { websocketMessagePipe } from '../../lib/Link/Transports/Secure/MessagePipe.js'
@@ -87,6 +87,64 @@ describe('direct transport', { timeout: 20_000 }, () => {
 		expect(clientCtx.state.status).toBe('connecting')
 		expect(serverCtx.announcements).toEqual([])
 		expect(clientCtx.announcements).toEqual([])
+	})
+
+	test('one host can not hold every pairing request, its oldest makes way for its newest', async () => {
+		const { ctx: serverCtx, port } = await startServer()
+		const waiting = () => serverCtx.state.sections.find((s) => s.id === 'pending')?.entries.map((e) => e.title) ?? []
+
+		for (const name of ['client1', 'client2', 'client3', 'client4']) {
+			startClient(port, createTransportTestContext(name))
+			await vi.waitFor(() => expect(waiting()).toContain(name))
+		}
+		expect(waiting()).toEqual(['client2', 'client3', 'client4'])
+	})
+
+	test('pairing requests from one host arriving together can not hold more than their share', async () => {
+		const { ctx: serverCtx, port } = await startServer()
+		const waiting = () => serverCtx.state.sections.find((s) => s.id === 'pending')?.entries.map((e) => e.title) ?? []
+
+		const clients = ['client1', 'client2', 'client3', 'client4', 'client5'].map((name) =>
+			startClient(port, createTransportTestContext(name))
+		)
+		// The two that made way are told theirs has gone
+		await vi.waitFor(() =>
+			expect(clients.filter(({ ctx }) => /timed out/.test(ctx.state.message ?? ''))).toHaveLength(2)
+		)
+		expect(waiting()).toHaveLength(3)
+	})
+
+	test('an installation asking to pair again replaces its waiting request', async () => {
+		const { ctx: serverCtx, port } = await startServer()
+		const clientCtx = createTransportTestContext('client')
+		startClient(port, clientCtx)
+		await vi.waitFor(() => expect(pendingEntryId(serverCtx)).toBeDefined())
+		const first = pendingEntryId(serverCtx)
+
+		// Eg after reconnecting
+		startClient(port, clientCtx)
+		await vi.waitFor(() => expect(pendingEntryId(serverCtx)).not.toBe(first))
+		expect(serverCtx.state.sections.find((s) => s.id === 'pending')?.entries).toHaveLength(1)
+	})
+
+	test('refuses connections from a host with too many that are not trusted yet', async () => {
+		const { port } = await startServer()
+		const sockets = Array.from({ length: 9 }, () => direct.trackSocket(new WebSocket(`ws://127.0.0.1:${port}`)))
+		const closed = sockets.map(() => false)
+		sockets.forEach((socket, i) => socket.on('close', () => (closed[i] = true)))
+		await Promise.all(
+			sockets.map(
+				async (socket) =>
+					new Promise((resolve) => {
+						socket.on('open', resolve)
+						socket.on('close', resolve)
+					})
+			)
+		)
+
+		// Each is waiting to start a handshake, except the one too many
+		await vi.waitFor(() => expect(closed.filter(Boolean)).toHaveLength(1))
+		expect(closed.slice(0, 8)).toEqual(Array.from({ length: 8 }, () => false))
 	})
 
 	test('a wrong code is refused, and too many reject the request', async () => {
@@ -211,7 +269,7 @@ describe('direct transport', { timeout: 20_000 }, () => {
 		// A different installation (new identity) on the same address
 		await startServer(createTransportTestContext('impostor'), port)
 		const again = startClient(port, createTransportTestContext('client', clientCtx.storage))
-		await vi.waitFor(() => expect(again.ctx.state.message).toMatch(/different identity/))
+		await vi.waitFor(() => expect(again.ctx.state.message).toMatch(/different Link id/))
 		expect(again.ctx.state.status).toBe('error')
 	})
 
@@ -253,6 +311,50 @@ describe('direct transport', { timeout: 20_000 }, () => {
 		} finally {
 			for (const client of impostor.clients) client.terminate()
 			await new Promise((resolve) => impostor.close(resolve))
+		}
+	})
+
+	test('a client retrying after a failed handshake shows why it failed', async () => {
+		const port = await getPort()
+		const garbled = new WebSocketServer({ host: '127.0.0.1', port })
+		garbled.on('connection', (socket) => socket.send(Buffer.from('not a handshake')))
+		try {
+			const { ctx } = startClient(port)
+			await vi.waitFor(() => expect(ctx.state.message).toBe('Error: Handshake failed: Insufficient bytes, retrying'))
+		} finally {
+			for (const client of garbled.clients) client.terminate()
+			await new Promise((resolve) => garbled.close(resolve))
+		}
+	})
+
+	test('a client retries a server that is busy with other pairing requests', async () => {
+		const port = await getPort()
+		const busy = new WebSocketServer({ host: '127.0.0.1', port })
+		let connections = 0
+		busy.on('connection', (socket) => {
+			connections++
+			SecureChannel.establish(
+				websocketMessagePipe(socket),
+				false,
+				generateKeyPair(),
+				LinkIdentity.generate(),
+				'busy',
+				65535,
+				5000
+			)
+				.then((channel) => {
+					channel.setHandler(() => {})
+					channel.send(JSON.stringify({ op: 'auth', status: 'busy' }))
+				})
+				.catch(() => socket.terminate())
+		})
+		try {
+			const { ctx } = startClient(port)
+			await vi.waitFor(() => expect(ctx.state.message).toBe('busy is busy with other pairing requests, retrying'))
+			await vi.waitFor(() => expect(connections).toBeGreaterThan(1))
+		} finally {
+			for (const client of busy.clients) client.terminate()
+			await new Promise((resolve) => busy.close(resolve))
 		}
 	})
 

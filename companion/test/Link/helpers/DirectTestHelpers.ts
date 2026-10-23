@@ -1,5 +1,6 @@
 import getPort from 'get-port'
 import { expect, vi } from 'vitest'
+import type { WebSocket } from 'ws'
 import { DirectClientTransport } from '../../../lib/Link/Transports/Direct/ClientTransport.js'
 import { DirectServerTransport } from '../../../lib/Link/Transports/Direct/ServerTransport.js'
 import type { LinkTransport } from '../../../lib/Link/Transports/Types.js'
@@ -21,6 +22,7 @@ export function pairingCode(ctx: TransportTestContext): string | undefined {
  */
 export class DirectTestTransports {
 	readonly #transports: LinkTransport[] = []
+	readonly #sockets: WebSocket[] = []
 
 	async startServer(ctx = createTransportTestContext('server'), port?: number) {
 		port ??= await getPort()
@@ -61,7 +63,15 @@ export class DirectTestTransports {
 		return transport
 	}
 
+	/** Close a raw socket after the test too */
+	trackSocket(socket: WebSocket): WebSocket {
+		this.#sockets.push(socket)
+		return socket
+	}
+
 	async destroyAll(): Promise<void> {
+		for (const socket of this.#sockets) socket.terminate()
+		this.#sockets.length = 0
 		await Promise.all(this.#transports.map(async (t) => t.destroy()))
 		this.#transports.length = 0
 	}

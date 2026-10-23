@@ -21,8 +21,6 @@ export interface AcceptingAuthHost {
 	readonly logger: Logger
 	/** Whether this end has paired with the installation */
 	isPaired(linkId: string): boolean
-	/** Whether another pairing request may wait for the user, so that they can't be used to flood the UI */
-	canRequestPairing(): boolean
 	/** The user must pair the other end, by entering the code it shows into the request */
 	requestPairing(request: PairingRequest): void
 	/** The channel is trusted: exchange Link messages over it. `newlyPaired` when the user has just paired it */
@@ -50,9 +48,6 @@ export function acceptAuthentication(channel: SecureChannel, host: AcceptingAuth
 		if (frame.paired && host.isPaired(channel.remoteLinkId)) {
 			sendFrame(channel, { op: 'auth', status: 'paired' })
 			host.trusted(channel, false)
-		} else if (!host.canRequestPairing()) {
-			host.logger.warn(`Refusing pairing request from ${channel.remoteName}, too many are waiting`)
-			rejectChannel(channel)
 		} else {
 			startPairing(channel, host)
 		}
@@ -99,7 +94,7 @@ export class PairingRequest {
 		this.channel = channel
 		this.#expectedCode = expectedCode
 		this.#host = host
-		this.#timeout = setTimeout(() => this.reject(), PAIRING_TIMEOUT_MS)
+		this.#timeout = setTimeout(() => this.expire(), PAIRING_TIMEOUT_MS)
 		channel.onClose(() => this.#end())
 	}
 
@@ -126,9 +121,18 @@ export class PairingRequest {
 	}
 
 	reject(): void {
+		this.#refuse('rejected')
+	}
+
+	/** Stop waiting without the user rejecting it: it timed out, or another request took its place */
+	expire(): void {
+		this.#refuse('expired')
+	}
+
+	#refuse(status: 'rejected' | 'expired'): void {
 		if (this.#ended) return
 		this.#end()
-		rejectChannel(this.channel)
+		rejectChannel(this.channel, status)
 	}
 
 	#end(): void {
@@ -149,10 +153,12 @@ export interface ConnectingAuthHost {
 	/** The other end trusts this one: exchange Link messages over the channel */
 	trusted(): void
 	/**
-	 * Retrying wouldn't help: the user rejected the pairing (`rejected`), or the other end claimed a pairing that never
-	 * happened (`not-paired`)
+	 * Retrying wouldn't help: the user rejected the pairing (`rejected`), the request timed out or was replaced
+	 * (`expired`), or the other end claimed a pairing that never happened (`not-paired`)
 	 */
-	refused(reason: 'rejected' | 'not-paired'): void
+	refused(reason: 'rejected' | 'expired' | 'not-paired'): void
+	/** The other end has too many pairing requests waiting: try again later */
+	busy(): void
 }
 
 /**
@@ -203,7 +209,12 @@ export function requestAuthentication(channel: SecureChannel, host: ConnectingAu
 				host.trusted()
 				return
 			case 'rejected':
-				host.refused('rejected')
+			case 'expired':
+				host.refused(frame.status)
+				channel.close()
+				return
+			case 'busy':
+				host.busy()
 				channel.close()
 				return
 		}
@@ -216,7 +227,7 @@ function sendFrame(channel: SecureChannel, frame: AuthFrame): void {
 	channel.send(JSON.stringify(frame))
 }
 
-function rejectChannel(channel: SecureChannel): void {
-	sendFrame(channel, { op: 'auth', status: 'rejected' })
+function rejectChannel(channel: SecureChannel, status: 'rejected' | 'expired' | 'busy'): void {
+	sendFrame(channel, { op: 'auth', status })
 	channel.close()
 }

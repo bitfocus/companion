@@ -9,7 +9,11 @@ import { SecureChannel } from '../Secure/SecureChannel.js'
 import type { LinkTransportContext } from '../Types.js'
 import { resolveDirectAddress } from './Address.js'
 import { DIRECT_DEFAULT_PORT } from './Constants.js'
-import { DIRECT_HANDSHAKE_TIMEOUT_MS, DIRECT_MAX_MESSAGE_SIZE, DirectTransportBase } from './DirectTransportBase.js'
+import {
+	DIRECT_HANDSHAKE_TIMEOUT_MS,
+	DIRECT_MAX_UNTRUSTED_MESSAGE_SIZE,
+	DirectTransportBase,
+} from './DirectTransportBase.js'
 
 export type DirectClientTransportConfig = {
 	/** The installation chosen from those discovered with mDNS, as `ip:port`, or null to use `address` */
@@ -46,6 +50,8 @@ export class DirectClientTransport extends DirectTransportBase {
 	#destroyed = false
 	/** Set when retrying would not help, until the user does something about it */
 	#stopped = false
+	/** Why the connection was closed, to show while retrying, when the other end said */
+	#retryReason: string | null = null
 
 	/** The code to enter on the other installation, while it is waiting for it */
 	#pairingCode: string | null = null
@@ -113,12 +119,14 @@ export class DirectClientTransport extends DirectTransportBase {
 			if (this.#destroyed || this.#stopped) return
 
 			// Reported as connecting rather than an error while retrying, so that a brief drop doesn't look like a fault
+			const reason = this.#retryReason ?? lastError
+			this.#retryReason = null
 			const delay = RECONNECT_DELAYS_MS[Math.min(this.#reconnectAttempt, RECONNECT_DELAYS_MS.length - 1)]
 			this.#reconnectAttempt++
 			this.#reconnectTimer = setTimeout(() => this.#connect(), delay)
 			this.context.setStatus(
 				this.#reconnectAttempt > 3 ? 'error' : 'connecting',
-				lastError ? `${lastError}, retrying` : 'Connection lost, retrying'
+				reason ? `${reason}, retrying` : 'Connection lost, retrying'
 			)
 		})
 		socket.on('open', () => {
@@ -130,13 +138,14 @@ export class DirectClientTransport extends DirectTransportBase {
 				this.noiseKeyPair,
 				this.context.identity,
 				this.context.getName(),
-				DIRECT_MAX_MESSAGE_SIZE,
+				DIRECT_MAX_UNTRUSTED_MESSAGE_SIZE,
 				DIRECT_HANDSHAKE_TIMEOUT_MS
 			)
 				.then((channel) => this.#authenticate(channel))
 				.catch((e) => {
 					this.context.logger.info(`Handshake failed: ${stringifyError(e)}`)
-					this.context.setStatus('error', stringifyError(e))
+					// Shown once it has closed, rather than replaced by it
+					if (this.#socket === socket) this.#retryReason = stringifyError(e, true)
 					socket.terminate()
 				})
 		})
@@ -149,7 +158,7 @@ export class DirectClientTransport extends DirectTransportBase {
 		if (paired && paired.linkId !== channel.remoteLinkId) {
 			// Either the other installation was reset, or something is impersonating it
 			this.#stop(
-				`${channel.remoteName} has a different identity (${formatLinkIdFingerprint(channel.remoteLinkId)}) to when it was paired. If it was reset, forget the pairing and pair again.`
+				`${channel.remoteName} has a different Link id (${formatLinkIdFingerprint(channel.remoteLinkId)}) to when it was paired. If it was reset, forget the pairing and pair again.`
 			)
 			channel.close()
 			return
@@ -164,7 +173,7 @@ export class DirectClientTransport extends DirectTransportBase {
 				this.#pairingCode = code
 				this.context.setStatus(
 					'connecting',
-					`Waiting for pairing. Enter the code ${code} into the pairing request on the Link page of ${channel.remoteName} (identity ${formatLinkIdFingerprint(channel.remoteLinkId)})`
+					`Waiting for pairing. Enter the code ${code} into the pairing request on the Link page of ${channel.remoteName} (Link id ${formatLinkIdFingerprint(channel.remoteLinkId)})`
 				)
 				this.#updateInfo()
 			},
@@ -175,11 +184,19 @@ export class DirectClientTransport extends DirectTransportBase {
 				this.link(channel, channel.remoteName)
 			},
 			refused: (reason) => {
-				this.#stop(
-					reason === 'rejected'
-						? `${channel.remoteName} rejected the pairing`
-						: `${channel.remoteName} (${formatLinkIdFingerprint(channel.remoteLinkId)}) said it is paired with this installation, but it never was. Try again to pair.`
-				)
+				switch (reason) {
+					case 'rejected':
+						return this.#stop(`${channel.remoteName} rejected the pairing`)
+					case 'expired':
+						return this.#stop(`The pairing request to ${channel.remoteName} timed out. Try again to pair.`)
+					case 'not-paired':
+						return this.#stop(
+							`${channel.remoteName} (${formatLinkIdFingerprint(channel.remoteLinkId)}) said it is paired with this installation, but it never was. Try again to pair.`
+						)
+				}
+			},
+			busy: () => {
+				this.#retryReason = `${channel.remoteName} is busy with other pairing requests`
 			},
 		})
 	}
@@ -221,7 +238,7 @@ export class DirectClientTransport extends DirectTransportBase {
 	#updateInfo(): void {
 		const info: LinkTransportInfoItem[] = [
 			...(this.#url ? [{ label: 'Address', value: this.#url }] : []),
-			{ label: 'Identity', value: formatLinkIdFingerprint(this.context.identity.id) },
+			{ label: 'Link id', value: formatLinkIdFingerprint(this.context.identity.id) },
 		]
 		if (this.#pairingCode) info.unshift({ label: 'Pairing code', value: this.#pairingCode })
 
@@ -248,7 +265,7 @@ export class DirectClientTransport extends DirectTransportBase {
 					{
 						id: 'pairing',
 						title: `Paired with ${paired.name}`,
-						description: `Identity ${formatLinkIdFingerprint(paired.linkId)}. If ${paired.name} was reset, forget it to pair again.`,
+						description: `Link id ${formatLinkIdFingerprint(paired.linkId)}. If ${paired.name} was reset, forget it to pair again.`,
 						inputLabel: null,
 						actions: [{ id: 'forget', label: 'Forget pairing', color: 'danger' }],
 					},

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { formatRemoteAddress, resolveDirectAddress } from '../../lib/Link/Transports/Direct/Address.js'
+import { formatRemoteAddress, remoteHostKey, resolveDirectAddress } from '../../lib/Link/Transports/Direct/Address.js'
 
 describe('resolveDirectAddress', () => {
 	test.each([
@@ -35,5 +35,19 @@ describe('formatRemoteAddress', () => {
 		['::ffff:abcd', 1234, '[::ffff:abcd]:1234'],
 	])('%s, port %s → %s', (ip, port, expected) => {
 		expect(formatRemoteAddress(ip, port)).toBe(expected)
+	})
+})
+
+describe('remoteHostKey', () => {
+	test.each([
+		['192.168.1.10', '192.168.1.10'],
+		['::ffff:192.168.1.10', '192.168.1.10'],
+		['2001:db8:1:2:3:4:5:6', '2001:db8:1:2::/64'],
+		['2001:db8:1:2::7', '2001:db8:1:2::/64'],
+		['2001:db8::1:2:3:4:5', '2001:db8:0:1::/64'],
+		['fe80::1%eth0', 'fe80:0:0:0::/64'],
+		['::1', '0:0:0:0::/64'],
+	])('%s → %s', (ip, expected) => {
+		expect(remoteHostKey(ip)).toBe(expected)
 	})
 })

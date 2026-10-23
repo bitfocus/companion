@@ -26,6 +26,9 @@ The connecting end takes either a host (with an optional port), or a full `ws://
 reverse proxy, on a subpath if need be (`Address.ts`). TLS from a proxy is only an outer layer: the Noise handshake is
 what authenticates the other end.
 
+The limits on connections and pairing requests that are not trusted yet count per host, an IPv6 address by its /64,
+so behind a reverse proxy every client counts as the proxy.
+
 ## Reconnecting
 
 The first retry is almost immediate, then it backs off to 30 seconds. Each reconnect runs a fresh handshake (no code
