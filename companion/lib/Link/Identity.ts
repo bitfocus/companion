@@ -43,8 +43,13 @@ export class LinkIdentity {
 		return this.#privateKey.export({ format: 'der', type: 'pkcs8' }).toString('base64')
 	}
 
-	sign(data: Uint8Array): Buffer {
-		return crypto.sign(null, data, this.#privateKey)
+	/**
+	 * Sign some data, for a purpose. The purpose is signed too, so that a signature made for one purpose is never valid
+	 * for another, eg a transport's envelope can't be passed off as the key of a handshake
+	 * @param context - what the signature is for, eg `companion-link secure-channel static-key`
+	 */
+	sign(context: string, data: Uint8Array): Buffer {
+		return crypto.sign(null, signedMessage(context, data), this.#privateKey)
 	}
 
 	/**
@@ -63,14 +68,19 @@ export class LinkIdentity {
 		return publicKey.length === 32 && publicKey.toString('base64url') === id ? publicKey : null
 	}
 
-	/** Whether a signature was made by the installation with a Link id */
-	static verify(id: string, data: Uint8Array, signature: Uint8Array): boolean {
+	/** Whether a signature was made by the installation with a Link id, for a purpose (see sign) */
+	static verify(id: string, context: string, data: Uint8Array, signature: Uint8Array): boolean {
 		if (!LinkIdentity.publicKeyOf(id)) return false
 		try {
 			const publicKey = crypto.createPublicKey({ key: { kty: 'OKP', crv: 'Ed25519', x: id }, format: 'jwk' })
-			return crypto.verify(null, data, publicKey, signature)
+			return crypto.verify(null, signedMessage(context, data), publicKey, signature)
 		} catch {
 			return false
 		}
 	}
+}
+
+/** What is signed: the purpose, then a separator no purpose contains, then the data */
+function signedMessage(context: string, data: Uint8Array): Buffer {
+	return Buffer.concat([Buffer.from(context, 'utf8'), Buffer.from([0]), data])
 }

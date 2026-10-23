@@ -6,6 +6,9 @@ import { LinkIdentity } from '../../Identity.js'
 import { LINK_NAME_MAX_LENGTH } from '../../Protocol/Announcement.js'
 import type { MessagePipe } from './MessagePipe.js'
 
+/** What the signature of the Noise static key is for (see LinkIdentity.sign) */
+const STATIC_KEY_SIGNATURE_CONTEXT = 'companion-link secure-channel static-key'
+
 /** Binds the handshake to this protocol, so it can't be confused with any other use of Noise */
 const PROLOGUE = Buffer.from('companion-link-secure/1')
 
@@ -93,7 +96,7 @@ export class SecureChannel {
 		const hello = Buffer.from(
 			JSON.stringify({
 				linkId: identity.id,
-				keySignature: identity.sign(keyPair.publicKey).toString('base64'),
+				keySignature: identity.sign(STATIC_KEY_SIGNATURE_CONTEXT, keyPair.publicKey).toString('base64'),
 				name: localName,
 			} satisfies Hello)
 		)
@@ -118,7 +121,12 @@ export class SecureChannel {
 				if (!remoteHello) return reject(new Error('Invalid handshake payload'))
 				if (
 					!noise.rs ||
-					!LinkIdentity.verify(remoteHello.linkId, noise.rs, Buffer.from(remoteHello.keySignature, 'base64'))
+					!LinkIdentity.verify(
+						remoteHello.linkId,
+						STATIC_KEY_SIGNATURE_CONTEXT,
+						noise.rs,
+						Buffer.from(remoteHello.keySignature, 'base64')
+					)
 				) {
 					return reject(new Error('The other end could not prove its Link id'))
 				}

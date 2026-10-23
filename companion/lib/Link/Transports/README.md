@@ -101,7 +101,8 @@ claimed. Establish it as part of the connection where you can, eg by signing you
 A transport whose backend can't tell (eg a broker) wraps each payload in an envelope of its own that carries the
 sender and their signature of it, and drops what doesn't verify (`LinkIdentity.verify`). That includes goodbyes: an
 installation's announcement must only be withdrawn by that installation, or by the transport itself when it can tell
-it has gone.
+it has gone. Sign with a context of the transport's own (eg `companion-link mqtt envelope`), so that its signatures
+can't be passed off as any other kind.
 
 ### Permissions
 
