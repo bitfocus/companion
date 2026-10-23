@@ -68,11 +68,7 @@ import type { IControlStore } from '../../Controls/IControlStore.js'
 import LogController, { stringifyLogValue, type Logger } from '../../Log/Controller.js'
 import { buildActionExecutionOverrides } from '../../Variables/Util.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
-import {
-	doesModuleExpectLabelUpdates,
-	doesModuleUseNewConfigLayout,
-	doesModuleUseSeparateUpgradeMethod,
-} from './ApiVersions.js'
+import { doesModuleExpectLabelUpdates, doesModuleUseSeparateUpgradeMethod } from './ApiVersions.js'
 import type {
 	ConnectionChildHandlerApi,
 	ConnectionChildHandlerDependencies,
@@ -110,7 +106,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	#hasHttpHandler = false
 
 	hasRecordActionsHandler: boolean = false
-	usesNewConfigLayout: boolean = false
+	usesNewConfigLayout: boolean = true
 
 	#expectsLabelUpdates: boolean = false
 
@@ -185,8 +181,6 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			5000
 		)
 
-		this.usesNewConfigLayout = doesModuleUseNewConfigLayout(apiVersion0)
-
 		this.#entityManager = doesModuleUseSeparateUpgradeMethod(apiVersion)
 			? new ConnectionEntityManager(
 					new ConnectionLegacyEntityManagerAdapter(this.#ipcWrapper, this.#deps.controls),
@@ -253,7 +247,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		// Save the resulting values
 		this.#hasHttpHandler = !!msg.hasHttpHandler
 		this.hasRecordActionsHandler = !!msg.hasRecordActionsHandler
-		this.usesNewConfigLayout = this.usesNewConfigLayout && !msg.disableNewConfigLayout
+		this.usesNewConfigLayout = !msg.disableNewConfigLayout
 		this.#currentUpgradeIndex = config.lastUpgradeIndex = msg.newUpgradeIndex
 		this.#deps.setConnectionConfig(this.connectionId, msg.updatedConfig, msg.updatedSecrets, msg.newUpgradeIndex)
 
