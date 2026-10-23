@@ -247,6 +247,20 @@ describe('LinkController', () => {
 		})
 	})
 
+	test('sends nothing to a peer it has no protocol version in common with, until it has one', async () => {
+		ctx.announcePeer(['2.0.0'])
+		await ctx.shareButtons(true)
+		expect(ctx.transport().messagesOfType('access')).toEqual([])
+		expect(ctx.transport().messagesOfType('ping')).toEqual([])
+
+		// Updated, to a version in common
+		ctx.announcePeer()
+		expect(ctx.transport().messagesOfType('access')).toMatchObject([
+			{ peerId: 'peer', message: { payload: { permissions: { buttons: true } } } },
+		])
+		expect(ctx.transport().messagesOfType('ping')).toMatchObject([{ peerId: 'peer' }])
+	})
+
 	test('forgetting a peer stops sharing with it, and is remembered across restarts', async () => {
 		ctx.announcePeer()
 		await ctx.shareButtons(true)

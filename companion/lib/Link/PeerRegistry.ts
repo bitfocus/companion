@@ -40,7 +40,10 @@ type StoredPeer = z.infer<typeof StoredPeerSchema>
 export interface PeerRegistryEvents {
 	/** The list of peers, or the reachability of one, changed */
 	changed: []
-	/** A peer has become reachable on a transport */
+	/**
+	 * A peer we can talk to has become reachable on a transport: it is newly reachable there, or has just announced a
+	 * protocol version in common with us. Nothing is sent to a peer without one
+	 */
 	peerReachable: [peerId: string, transportId: string]
 	/** A peer is no longer reachable on any transport */
 	peerUnreachable: [peerId: string]
@@ -158,13 +161,14 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 		}
 
 		const existing = record.transports.get(transportId)
+		const wasCompatible = !!existing && isCompatible(record.announcement)
 		record.announcement = announcement
 		record.transports.set(transportId, { lastSeen: now, latencyMs: existing?.latencyMs ?? null })
 		record.lastSeen = now
 		if (needsSave) this.#save(record)
 
 		this.emit('changed')
-		if (!existing) this.emit('peerReachable', peerId, transportId)
+		if (!wasCompatible && isCompatible(announcement)) this.emit('peerReachable', peerId, transportId)
 		if (!record.route) {
 			record.route = transportId
 			this.emit('routeChanged', peerId, transportId)
@@ -334,4 +338,9 @@ function chooseRoute(record: PeerRecord): string | null {
 		else if (a.latencyMs === b.latencyMs && a.lastSeen > b.lastSeen) best = entry
 	}
 	return best?.[0] ?? null
+}
+
+/** Whether a peer announces a protocol version in common with us, so that we can talk to it */
+function isCompatible(announcement: LinkAnnouncement): boolean {
+	return negotiateLinkProtocolVersion(LINK_PROTOCOL_VERSIONS, announcement.protocolVersions) !== null
 }

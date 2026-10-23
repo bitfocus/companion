@@ -172,7 +172,11 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		)
 		this.#permissions.on('changed', (peerId, permissions) => {
 			this.emit('peers', this.#peers.getPeers())
-			for (const transportId of this.#peers.getReachableTransports(peerId, null)) this.#sendAccess(peerId, transportId)
+			// Not to a peer we can't talk to: it is told once it announces a version in common (see peerReachable)
+			if (this.#peers.getPeer(peerId)?.compatible) {
+				for (const transportId of this.#peers.getReachableTransports(peerId, null))
+					this.#sendAccess(peerId, transportId)
+			}
 			// Stop serving anything it is no longer allowed straight away, rather than when its lease runs out
 			if (!permissions.buttons) this.#buttonServer.revoke(peerId)
 		})
