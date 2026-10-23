@@ -204,6 +204,29 @@ describe('LinkButtonServer', () => {
 		expect(ctx.displayed).toEqual([])
 	})
 
+	test('a redraw renders only the sizes of the button that was redrawn, however many others are served', async () => {
+		const many = Array.from({ length: 200 }, (_, column) => ({
+			button: { ...button, column },
+			width: 72,
+			height: 72,
+			have: null,
+		}))
+		ctx.server.handleSubscribe('peer', 't1', { buttons: [...many, { ...many[2], width: 144, height: 72 }] }, 0)
+		// Each size is sent once rendered for the first time
+		await vi.waitFor(() => expect(ctx.sent).toHaveLength(201))
+		ctx.sent.length = 0
+
+		const render = fakeRender(true)
+		ctx.server.onButtonDrawn({ pageNumber: 1, row: 0, column: 2 }, render)
+		await vi.waitFor(() => expect(ctx.sent).toHaveLength(2))
+		expect(
+			vi
+				.mocked(render.drawNativeEncoded)
+				.mock.calls.map(([w, h]) => `${w}x${h}`)
+				.sort()
+		).toEqual(['144x72', '72x72'])
+	})
+
 	test('sends redraws of subscribed buttons only', async () => {
 		ctx.server.handleSubscribe('peer', 't1', { buttons: [subscribe(null)] }, 0)
 		await flush()
