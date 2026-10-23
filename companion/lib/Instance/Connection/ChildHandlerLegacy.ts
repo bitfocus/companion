@@ -220,7 +220,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		for (const [controlId, control] of allControls.entries()) {
 			if (!control.supportsEntities) continue
 
-			for (const entity of control.entities.getAllEntities()) {
+			for (const entity of control.entities.getAllEntitiesWithTransient()) {
 				if (entity.connectionId !== this.connectionId) continue
 
 				if (entity.upgradeIndex === undefined) {

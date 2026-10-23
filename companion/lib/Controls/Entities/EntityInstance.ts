@@ -30,7 +30,7 @@ import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
 } from '../../Variables/VariablesAndExpressionParser.js'
-import { ControlEntityList } from './EntityList.js'
+import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type {
 	EntityScope,
@@ -76,6 +76,12 @@ export class ControlEntityInstance {
 	#cachedStoreResult: StoreResult | undefined
 
 	#children = new Map<string, ControlEntityList>()
+
+	/**
+	 * Child groups which exist only while Companion is running (eg the copy of a custom action held by an action
+	 * which calls it). They are never persisted or shown in the ui, and parse their options in their own scope.
+	 */
+	#transientChildren = new Map<string, ControlEntityList>()
 
 	/**
 	 * Get the id of this entity
@@ -312,6 +318,63 @@ export class ControlEntityInstance {
 		for (const childGroup of this.#children.values()) {
 			childGroup.cleanup()
 		}
+		for (const childGroup of this.#transientChildren.values()) {
+			childGroup.cleanup()
+		}
+	}
+
+	/**
+	 * Set the entities of a transient child group, replacing any existing group with the same id.
+	 * The group is never persisted or shown in the ui, and its entities parse their options in the given scope.
+	 * @param groupId Id of the group
+	 * @param scope The scope the entities of the group parse their options in
+	 * @param listDefinition The type of entities in the group
+	 * @param entities The entities of the group. Their ids are used as is, so must be unique within the control
+	 * @returns The new group
+	 */
+	setTransientChildGroup(
+		groupId: string,
+		scope: EntityScope,
+		listDefinition: ControlEntityListDefinition,
+		entities: SomeEntityModel[]
+	): ControlEntityList {
+		this.removeTransientChildGroup(groupId)
+
+		const childGroup = new ControlEntityList(
+			this.#instanceDefinitions,
+			this.#internalModule,
+			this.#processManager,
+			scope,
+			this.#controlId,
+			{ parentId: this.id, childGroup: groupId },
+			listDefinition
+		)
+		this.#transientChildren.set(groupId, childGroup)
+
+		// A disabled entity has nothing subscribed, so neither should its children
+		childGroup.loadStorage(entities, this.disabled, false)
+
+		return childGroup
+	}
+
+	/**
+	 * Get a transient child group
+	 * @param groupId Id of the group
+	 */
+	getTransientChildGroup(groupId: string): ControlEntityList | undefined {
+		return this.#transientChildren.get(groupId)
+	}
+
+	/**
+	 * Remove a transient child group, cleaning up its entities
+	 * @param groupId Id of the group
+	 */
+	removeTransientChildGroup(groupId: string): void {
+		const childGroup = this.#transientChildren.get(groupId)
+		if (!childGroup) return
+
+		this.#transientChildren.delete(groupId)
+		childGroup.cleanup()
 	}
 
 	/**
@@ -350,6 +413,9 @@ export class ControlEntityInstance {
 
 		if (recursive) {
 			for (const childGroup of this.#children.values()) {
+				childGroup.subscribe(recursive, onlyType, onlyConnectionId)
+			}
+			for (const childGroup of this.#transientChildren.values()) {
 				childGroup.subscribe(recursive, onlyType, onlyConnectionId)
 			}
 		}
@@ -577,6 +643,11 @@ export class ControlEntityInstance {
 			const result = childGroup.findById(id)
 			if (result) return result
 		}
+		// Transient children are included, so that they can be found to be upgraded and given values
+		for (const childGroup of this.#transientChildren.values()) {
+			const result = childGroup.findById(id)
+			if (result) return result
+		}
 		return undefined
 	}
 
@@ -668,6 +739,24 @@ export class ControlEntityInstance {
 
 		for (const childGroup of this.#children.values()) {
 			entities.push(...childGroup.getAllEntities())
+		}
+
+		return entities
+	}
+
+	/**
+	 * Recursively get all the child entities, including those in transient child groups
+	 */
+	getAllChildrenWithTransient(): ControlEntityInstance[] {
+		const entities: ControlEntityInstance[] = []
+
+		if (isInternalConnectionId(this.connectionId)) {
+			for (const childGroup of this.#children.values()) {
+				entities.push(...childGroup.getAllEntitiesWithTransient())
+			}
+		}
+		for (const childGroup of this.#transientChildren.values()) {
+			entities.push(...childGroup.getAllEntitiesWithTransient())
 		}
 
 		return entities
@@ -776,7 +865,7 @@ export class ControlEntityInstance {
 			changed = true
 		}
 
-		for (const childGroup of this.#children.values()) {
+		for (const childGroup of [...this.#children.values(), ...this.#transientChildren.values()]) {
 			if (childGroup.clearCachedValueForConnectionId(connectionId)) {
 				changed = true
 			}
@@ -908,6 +997,10 @@ export class ControlEntityInstance {
 			}
 		}
 
+		for (const childGroup of this.#transientChildren.values()) {
+			changed.push(...childGroup.updateFeedbackValues(connectionId, newValues))
+		}
+
 		for (const childGroup of this.#children.values()) {
 			const childrenChanged = childGroup.updateFeedbackValues(connectionId, newValues)
 			changed.push(...childrenChanged)
@@ -939,6 +1032,10 @@ export class ControlEntityInstance {
 				changed.push(this)
 				thisChanged = true
 			}
+		}
+
+		for (const childGroup of this.#transientChildren.values()) {
+			changed.push(...childGroup.updateIsInvertedValues(newValues))
 		}
 
 		for (const childGroup of this.#children.values()) {
@@ -973,7 +1070,7 @@ export class ControlEntityInstance {
 			}
 		}
 
-		for (const childGroup of this.#children.values()) {
+		for (const childGroup of [...this.#children.values(), ...this.#transientChildren.values()]) {
 			const childrenChanged = childGroup.updateStoreResultValues(newValues)
 			changed.push(...childrenChanged)
 		}
