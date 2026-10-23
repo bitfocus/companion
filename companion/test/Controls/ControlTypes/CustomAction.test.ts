@@ -141,16 +141,22 @@ function createHarness(model: Partial<CustomActionModel>) {
 	const variablesController = mockDeep<VariablesController>()
 	const instanceController = mockDeep<InstanceController>()
 
+	const processManager = {
+		connectionEntityUpdate: vi.fn(async (_entity: ControlEntityInstance, _controlId: string) => true),
+		connectionEntityDelete: vi.fn(async (_entity: SomeEntityModel, _controlId: string) => true),
+	}
+
+	const renderClock = { subscribe: vi.fn(() => () => {}) } as any
+	const customActionInstances = new CustomActionInstanceManager(controlStore, renderClock)
+
 	const actionRunner = new ActionRunner(
 		instanceController,
 		controlStore,
 		internalModule,
 		variablesController,
-		localVariables
+		localVariables,
+		customActionInstances
 	)
-
-	const renderClock = { subscribe: vi.fn(() => () => {}) } as any
-	const customActionInstances = new CustomActionInstanceManager(controlStore, renderClock)
 
 	const deps: ControlDependencies = {
 		surfaces: null as any,
@@ -161,7 +167,7 @@ function createHarness(model: Partial<CustomActionModel>) {
 		internalModule,
 		instance: {
 			definitions: { getEntityDefinition },
-			processManager: null,
+			processManager,
 		} as any,
 		variableValues,
 		userconfig: mockUserConfig({ timezone: '' }),
@@ -242,6 +248,7 @@ function createHarness(model: Partial<CustomActionModel>) {
 		localVariables,
 		executeAction,
 		internalModule,
+		processManager,
 		variablesController,
 		variableValues,
 		customActionInstances,
@@ -475,27 +482,31 @@ describe('ControlCustomAction', () => {
 		})
 
 		test('the result is read from the result variable', async () => {
-			const { control, executeAction, localVariables, evaluate } = createHarness({
-				options: { ...ControlCustomAction.DefaultOptions, resultVariable: 'v' },
-				actions: [action('set')],
-				localVariables: [userValue('v', 0)],
-			})
+			const { executeAction, localVariables, evaluate, createCaller, customActionInstances, controlStore } =
+				createHarness({
+					options: { ...ControlCustomAction.DefaultOptions, resultVariable: 'v' },
+					actions: [action('set')],
+					localVariables: [userValue('v', 0)],
+				})
 			executeAction.mockImplementation(async (_action, extras) => {
 				const variable = localVariables.localVariableFor('this', 'v', extras)!
 				localVariables.setLocalVariable(variable, (evaluate(extras, '$(options:n)') as number) + 100)
 			})
 
-			const result = await control.executeCall(
-				{ n: 7 },
-				{
-					controlId: 'bank:caller',
-					surfaceId: undefined,
-					location: undefined,
-					abortDelayed: new AbortController().signal,
-					executionMode: 'concurrent',
-					rotationDelta: null,
-					frame: null,
-				}
+			const caller = createCaller([callAction({ n: exprVal(7) })])
+			const extras: RunActionExtras = {
+				controlId: caller.controlId,
+				surfaceId: undefined,
+				location: undefined,
+				abortDelayed: new AbortController().signal,
+				executionMode: 'concurrent',
+				rotationDelta: null,
+				frame: null,
+			}
+			const result = await customActionInstances.runCall(
+				caller.entities.getActionEntities()[0],
+				controlStore.createActionExecutionParser(extras),
+				extras
 			)
 
 			expect(result).toBe(107)
@@ -566,7 +577,7 @@ describe('ControlCustomAction', () => {
 			expect(count).toBe(1)
 		})
 
-		test('custom actions calling each other are limited in depth', async () => {
+		test('custom actions calling each other stop before they loop', async () => {
 			const { deps, controlStore, executeAction, runAsButton } = createHarness({
 				actions: [action('count'), callAction({}, 'other')],
 			})
@@ -591,8 +602,8 @@ describe('ControlCustomAction', () => {
 
 			await runAsButton([callAction()], { executionMode: 'sequential' })
 
-			// The first custom action runs on every other level, of the 16 allowed
-			expect(count).toBe(8)
+			// The first custom action runs, and calls the other one, but that calling it back again does nothing
+			expect(count).toBe(1)
 		})
 
 		test('an unknown custom action does nothing', async () => {
@@ -612,7 +623,7 @@ describe('ControlCustomAction', () => {
 			callerEntity: ControlEntityInstance,
 			expression: string
 		) => {
-			const scope = customActionInstances.getCopyScope(callerEntity, caller.controlId)
+			const scope = customActionInstances.getCopyScope(callerEntity)
 			if (!scope) return 'no copy'
 			const res = scope.createVariablesAndExpressionParser(null).executeExpression(expression, undefined)
 			return res.ok ? res.value : undefined
@@ -717,6 +728,163 @@ describe('ControlCustomAction', () => {
 			expect(internalModule.entityUpdate).not.toHaveBeenCalled()
 		})
 
+		/** Run the custom action called by an action, as a button would */
+		const runCall = async (
+			harness: ReturnType<typeof createHarness>,
+			caller: ControlCustomAction,
+			callerEntity: ControlEntityInstance,
+			extras: Partial<RunActionExtras> = {}
+		) => {
+			const fullExtras: RunActionExtras = {
+				controlId: caller.controlId,
+				surfaceId: 'surface0',
+				location: undefined,
+				abortDelayed: new AbortController().signal,
+				executionMode: 'sequential',
+				rotationDelta: null,
+				frame: null,
+				...extras,
+			}
+			return harness.customActionInstances.runCall(
+				callerEntity,
+				harness.controlStore.createActionExecutionParser(fullExtras),
+				fullExtras
+			)
+		}
+
+		/** A local variable which is the value of a connection feedback */
+		const connectionLocal = (variableName: string): FeedbackEntityModel => ({
+			type: EntityModelType.Feedback,
+			id: `local-${nextId++}`,
+			connectionId: 'conn1',
+			definitionId: 'tally',
+			options: {},
+			upgradeIndex: undefined,
+			variableName,
+		})
+
+		test('a run uses a copy of its own, with the inputs as they were when it started', async () => {
+			const recordAction = action('record')
+			const harness = createHarness({ actions: [recordAction, action('second')] })
+			const { createCaller, customActionInstances, executeAction, evaluate } = harness
+
+			const caller = createCaller([callAction({ n: exprVal(5) })])
+			const callerEntity = caller.entities.getActionEntities()[0]
+
+			const ranIds: string[] = []
+			const seen: any[] = []
+			executeAction.mockImplementation(async (entity, extras) => {
+				ranIds.push(entity.id)
+				// Change the input part way through the run
+				if (entity.definitionId === 'record') {
+					caller.entities.entitySetOption('custom_action_actions', callerEntity.id, 'n', exprVal(9))
+				}
+				seen.push(evaluate(extras, '$(options:n)'))
+			})
+
+			await runCall(harness, caller, callerEntity)
+
+			// The run kept the inputs it started with
+			expect(seen).toEqual([5, 5])
+			// But the copy held by the caller follows the change
+			expect(evaluateInCopy(customActionInstances, caller, callerEntity, '$(options:n)')).toBe(9)
+
+			// The run used its own copy of the actions, which is removed once it is done
+			expect(ranIds[0]).toMatch(new RegExp(`^${callerEntity.id}@.+/${recordAction.id}$`))
+			expect(caller.entities.getAllEntitiesWithTransient().some((entity) => entity.id.includes('@'))).toBe(false)
+		})
+
+		test('a run starts with the values of the copy held by the caller', async () => {
+			const local = connectionLocal('camera')
+			const harness = createHarness({ actions: [action('record')], localVariables: [local] })
+			const { createCaller, executeAction, evaluate } = harness
+
+			const caller = createCaller([callAction({ n: exprVal(5) })])
+			const callerEntity = caller.entities.getActionEntities()[0]
+
+			// The connection reports a value for the copy
+			const copyLocalId = `${callerEntity.id}/${local.id}`
+			caller.entities.updateFeedbackValues(
+				'conn1',
+				new Map([[copyLocalId, { entityId: copyLocalId, controlId: caller.controlId, value: 'live' }]])
+			)
+
+			const seen: any[] = []
+			executeAction.mockImplementation(async (_entity, extras) => {
+				seen.push(evaluate(extras, '$(local:camera)'))
+			})
+
+			await runCall(harness, caller, callerEntity)
+
+			expect(seen).toEqual(['live'])
+		})
+
+		test('a run with different inputs to the copy does not start with its values', async () => {
+			const local = connectionLocal('camera')
+			const harness = createHarness({ actions: [action('record')], localVariables: [local] })
+			const { createCaller, executeAction, evaluate } = harness
+
+			// The input is different when run, as the copy has no surface
+			const caller = createCaller([callAction({ n: exprExpr(`$(this:surface_id) == 'surface0' ? 1 : 2`) })])
+			const callerEntity = caller.entities.getActionEntities()[0]
+
+			const copyLocalId = `${callerEntity.id}/${local.id}`
+			caller.entities.updateFeedbackValues(
+				'conn1',
+				new Map([[copyLocalId, { entityId: copyLocalId, controlId: caller.controlId, value: 'live' }]])
+			)
+
+			const seen: any[] = []
+			executeAction.mockImplementation(async (_entity, extras) => {
+				seen.push([evaluate(extras, '$(options:n)'), evaluate(extras, '$(local:camera)')])
+			})
+
+			await runCall(harness, caller, callerEntity)
+
+			expect(seen).toEqual([[1, undefined]])
+		})
+
+		test('the connection entities of a run are re-parsed when its local variables change', async () => {
+			const moduleAction: ActionEntityModel = {
+				type: EntityModelType.Action,
+				id: `module-${nextId++}`,
+				connectionId: 'conn1',
+				definitionId: 'do',
+				options: { text: exprVal('$(local:v)') },
+				upgradeIndex: undefined,
+				// Not run, it is only here to be subscribed
+				disabled: true,
+			}
+			const harness = createHarness({
+				actions: [action('set'), moduleAction, action('check')],
+				localVariables: [userValue('v', 0)],
+			})
+			const { createCaller, executeAction, localVariables, processManager } = harness
+
+			const caller = createCaller([callAction({ n: exprVal(5) })])
+			const callerEntity = caller.entities.getActionEntities()[0]
+
+			const runSubscriptions = () =>
+				processManager.connectionEntityUpdate.mock.calls.filter(([entity]) => entity.id.includes('@')).length
+
+			let subscriptionsBeforeSet = 0
+			let subscriptionsAfterSet = 0
+			executeAction.mockImplementation(async (entity, extras) => {
+				if (entity.definitionId === 'set') {
+					subscriptionsBeforeSet = runSubscriptions()
+					localVariables.setLocalVariable(localVariables.localVariableFor('this', 'v', extras)!, 1)
+				} else if (entity.definitionId === 'check') {
+					await vi.waitFor(() => expect(runSubscriptions()).toBeGreaterThan(subscriptionsBeforeSet))
+					subscriptionsAfterSet = runSubscriptions()
+				}
+			})
+
+			await runCall(harness, caller, callerEntity)
+
+			expect(subscriptionsBeforeSet).toBe(1)
+			expect(subscriptionsAfterSet).toBe(2)
+		})
+
 		test('the copy is rebuilt when the custom action changes', async () => {
 			const { control, createCaller } = createHarness({ actions: [action('first')] })
 
@@ -751,7 +919,7 @@ describe('ControlCustomAction', () => {
 			await vi.waitFor(() => {
 				expect(callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)).toBeUndefined()
 			})
-			expect(customActionInstances.getCopyScope(callerEntity, caller.controlId)).toBeUndefined()
+			expect(customActionInstances.getCopyScope(callerEntity)).toBeUndefined()
 		})
 
 		test('the copy is removed when the calling action is disabled or removed', () => {
@@ -764,7 +932,7 @@ describe('ControlCustomAction', () => {
 
 			caller.entities.entityEnabled('custom_action_actions', callerEntity.id, false)
 			expect(callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)).toBeUndefined()
-			expect(customActionInstances.getCopyScope(callerEntity, caller.controlId)).toBeUndefined()
+			expect(customActionInstances.getCopyScope(callerEntity)).toBeUndefined()
 			expect(internalModule.entityDelete).toHaveBeenCalledWith(expect.objectContaining({ id: copyId }))
 
 			caller.entities.entityEnabled('custom_action_actions', callerEntity.id, true)
@@ -772,7 +940,7 @@ describe('ControlCustomAction', () => {
 
 			internalModule.entityDelete.mockClear()
 			caller.entities.entityRemove('custom_action_actions', callerEntity.id)
-			expect(customActionInstances.getCopyScope(callerEntity, caller.controlId)).toBeUndefined()
+			expect(customActionInstances.getCopyScope(callerEntity)).toBeUndefined()
 			expect(internalModule.entityDelete).toHaveBeenCalledWith(expect.objectContaining({ id: copyId }))
 		})
 
@@ -835,7 +1003,7 @@ describe('ControlCustomAction', () => {
 
 			// But that calls the first custom action again, so isn't copied
 			expect(callBack.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)).toBeUndefined()
-			expect(customActionInstances.getCopyScope(callBack, caller.controlId)).toBeUndefined()
+			expect(customActionInstances.getCopyScope(callBack)).toBeUndefined()
 		})
 
 		test('custom actions nested too deeply are not copied', () => {

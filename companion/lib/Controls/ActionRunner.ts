@@ -1,6 +1,5 @@
 import { nanoid } from 'nanoid'
 import { isCustomActionsConnectionId, isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
-import { CreateCustomActionControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { assertNever, type JsonValue } from '@companion-module/host'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
@@ -9,7 +8,7 @@ import type { InternalController } from '../Internal/Controller.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
-import { ControlCustomAction } from './ControlTypes/CustomAction.js'
+import type { CustomActionInstanceManager } from './CustomActions/CustomActionInstanceManager.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { IControlStore } from './IControlStore.js'
 
@@ -36,19 +35,22 @@ export class ActionRunner {
 	readonly #internalModule: InternalController
 	readonly #variablesController: VariablesController
 	readonly #localVariablesController: LocalVariablesController
+	readonly #customActionInstances: CustomActionInstanceManager
 
 	constructor(
 		instanceController: InstanceController,
 		controlStore: IControlStore,
 		internalModule: InternalController,
 		variablesController: VariablesController,
-		localVariablesController: LocalVariablesController
+		localVariablesController: LocalVariablesController,
+		customActionInstances: CustomActionInstanceManager
 	) {
 		this.#instanceController = instanceController
 		this.#controlStore = controlStore
 		this.#internalModule = internalModule
 		this.#variablesController = variablesController
 		this.#localVariablesController = localVariablesController
+		this.#customActionInstances = customActionInstances
 	}
 
 	/**
@@ -136,20 +138,8 @@ export class ActionRunner {
 	 * Run a custom action, with the options of the action as its inputs
 	 */
 	async #runCustomAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<JsonValue | undefined> {
-		const customAction = this.#controlStore.getControl(CreateCustomActionControlId(action.definitionId))
-		if (!(customAction instanceof ControlCustomAction)) {
-			this.#logger.silly('trying to run an unknown custom action.', action.definitionId)
-			return undefined
-		}
-
-		// Parse the inputs in the context of the caller
-		const { options } = customAction.parseCallInputs(
-			action.rawOptions,
-			this.#controlStore.createActionExecutionParser(extras),
-			extras.controlId
-		)
-
-		return customAction.executeCall(options, extras)
+		// The inputs are parsed in the execution context of the caller
+		return this.#customActionInstances.runCall(action, this.#controlStore.createActionExecutionParser(extras), extras)
 	}
 
 	/**
