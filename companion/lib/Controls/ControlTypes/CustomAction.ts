@@ -32,6 +32,7 @@ import {
 	MAX_CUSTOM_ACTION_DEPTH,
 	type CustomActionRunFrame,
 } from '../CustomActionRunFrame.js'
+import type { ControlEntityInstance } from '../Entities/EntityInstance.js'
 import type { ControlEntityListChangeProps } from '../Entities/EntityListPoolBase.js'
 import { ControlEntityListPoolCustomAction } from '../Entities/EntityListPoolCustomAction.js'
 import type {
@@ -143,6 +144,7 @@ export class ControlCustomAction
 			pageStore: deps.pageStore,
 			renderClock: deps.renderClock,
 			getPageVariableEntities: deps.getPageVariableEntities,
+			customActionInstances: deps.customActionInstances,
 			getDefaultOptionsVariables: () => buildCustomActionOptionsVariables(this.#getDefaultOptions()),
 		})
 
@@ -232,6 +234,35 @@ export class ControlCustomAction
 	}
 
 	/**
+	 * Parse the options of an action which calls this custom action into the values of the inputs.
+	 * An input which is missing or has an invalid value gets its default value, so that a change to the inputs of
+	 * the custom action doesn't stop the actions using it from running
+	 * @param rawOptions The options of the calling action
+	 * @param parser A parser in the context of the caller
+	 */
+	parseCallInputs(
+		rawOptions: ExpressionableOptionsObject,
+		parser: VariablesAndExpressionParser
+	): { options: CompanionOptionValues; referencedVariableIds: ReadonlySet<string> } {
+		const optionsWithDefaults: ExpressionableOptionsObject = { ...rawOptions }
+		for (const input of this.#inputs) {
+			if (optionsWithDefaults[input.id] === undefined && 'default' in input) {
+				optionsWithDefaults[input.id] = { isExpression: false, value: input.default }
+			}
+		}
+
+		const parseRes = parser.parseEntityOptions(this.toActionDefinition(), optionsWithDefaults)
+		if (!parseRes.ok) {
+			this.logger.debug(`Using defaults for invalid inputs: ${JSON.stringify(parseRes.optionErrors)}`)
+		}
+
+		return {
+			options: parseRes.ok ? parseRes.parsedOptions : parseRes.parsedOptionsWithDefaults,
+			referencedVariableIds: parseRes.referencedVariableIds,
+		}
+	}
+
+	/**
 	 * Run this custom action, as an action of another control
 	 * @param options The values of the inputs, already parsed by the caller
 	 * @param extras The execution context of the caller
@@ -307,9 +338,38 @@ export class ControlCustomAction
 
 		return this.entities.createRunParser(
 			extras.frame,
+			this.entities.getLocalVariableEntities(),
 			location,
 			pageEntities,
 			buildActionExecutionOverrides(extras),
+			options
+		)
+	}
+
+	/**
+	 * A parser for the entities of a copy of this custom action, held by an action which calls it
+	 * @param frame The inputs and local variable values of the copy
+	 * @param callerControlId The control which holds the copy, which provides the `this:*` and `page:*` variables
+	 * @param localVariableEntities The local variables of the copy
+	 * @param overrideVariableValues Any additional variables
+	 * @param options Options for the parser
+	 */
+	createCopyParser(
+		frame: CustomActionRunFrame,
+		callerControlId: string,
+		localVariableEntities: ControlEntityInstance[],
+		overrideVariableValues: VariableValues | null,
+		options: ExpressionParserOptions
+	): VariablesAndExpressionParser {
+		const location = this.deps.pageStore.getLocationOfControlId(callerControlId) ?? null
+		const pageEntities = location ? this.deps.getPageVariableEntities(location.pageNumber) : null
+
+		return this.entities.createRunParser(
+			frame,
+			localVariableEntities,
+			location,
+			pageEntities,
+			{ ...buildCustomActionOptionsVariables(frame.options), ...overrideVariableValues },
 			options
 		)
 	}

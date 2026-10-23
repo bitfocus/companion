@@ -17,6 +17,11 @@ import { ActionRunner } from '../../../lib/Controls/ActionRunner.js'
 import type { ControlDependencies } from '../../../lib/Controls/ControlDependencies.js'
 import { ControlStore } from '../../../lib/Controls/ControlStore.js'
 import { ControlCustomAction } from '../../../lib/Controls/ControlTypes/CustomAction.js'
+import {
+	CUSTOM_ACTION_COPY_ACTIONS_GROUP,
+	CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP,
+	CustomActionInstanceManager,
+} from '../../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
 import { renameCustomActionInputInCallers } from '../../../lib/Controls/CustomActionTrpcRouter.js'
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
 import type { RunActionExtras } from '../../../lib/Instance/Connection/ChildHandlerApi.js'
@@ -144,6 +149,9 @@ function createHarness(model: Partial<CustomActionModel>) {
 		localVariables
 	)
 
+	const renderClock = { subscribe: vi.fn(() => () => {}) } as any
+	const customActionInstances = new CustomActionInstanceManager(controlStore, renderClock)
+
 	const deps: ControlDependencies = {
 		surfaces: null as any,
 		pageStore: pageStore as any,
@@ -162,9 +170,18 @@ function createHarness(model: Partial<CustomActionModel>) {
 		dbTable: { set: vi.fn(), delete: vi.fn() } as any,
 		events: new EventEmitter() as any,
 		changeEvents: new EventEmitter() as any,
-		renderClock: { subscribe: vi.fn(() => () => {}) } as any,
+		renderClock,
 		controlsAccessor: controlStore,
+		customActionInstances,
 	}
+
+	// As the controls controller does, keep the copies held by calling actions up to date
+	deps.events.on('customActionDefinitionChanged', (controlId: string) =>
+		customActionInstances.onCustomActionChanged(controlId)
+	)
+	variableValues.on('variablesChanged', (changed, _labels, controlId) =>
+		customActionInstances.onVariablesChanged(changed, controlId ? new Set([controlId]) : null)
+	)
 
 	const storage: CustomActionModel = {
 		type: 'custom-action',
@@ -209,7 +226,28 @@ function createHarness(model: Partial<CustomActionModel>) {
 		await actionRunner.runMultipleActions(actions, fullExtras, fullExtras.executionMode === 'sequential')
 	}
 
-	return { deps, control, controlStore, localVariables, executeAction, variablesController, evaluate, runAsButton }
+	/** Create a control holding some actions which call custom actions */
+	const createCaller = (entities: SomeEntityModel[]) => {
+		const caller = new ControlCustomAction(deps, 'custom-action:caller', null, false)
+		for (const entity of entities) caller.entities.entityAdd('custom_action_actions', null, entity)
+		controlStore.controls.set(caller.controlId, caller)
+		return caller
+	}
+
+	return {
+		deps,
+		control,
+		controlStore,
+		localVariables,
+		executeAction,
+		internalModule,
+		variablesController,
+		variableValues,
+		customActionInstances,
+		evaluate,
+		runAsButton,
+		createCaller,
+	}
 }
 
 describe('ControlCustomAction', () => {
@@ -560,6 +598,276 @@ describe('ControlCustomAction', () => {
 			await runAsButton([callAction({}, 'unknown')])
 
 			expect(executeAction).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('copies held by calling actions', () => {
+		/** Evaluate an expression in the scope of the copy held by an action */
+		const evaluateInCopy = (
+			customActionInstances: CustomActionInstanceManager,
+			caller: ControlCustomAction,
+			callerEntity: ControlEntityInstance,
+			expression: string
+		) => {
+			const scope = customActionInstances.getCopyScope(callerEntity, caller.controlId)
+			if (!scope) return 'no copy'
+			const res = scope.createVariablesAndExpressionParser(null).executeExpression(expression, undefined)
+			return res.ok ? res.value : undefined
+		}
+
+		test('a calling action holds a copy of the actions and local variables', () => {
+			const recordAction = action('record', { text: exprVal('$(options:n)') })
+			const local = userValue('v', 7)
+			const { createCaller, internalModule } = createHarness({ actions: [recordAction], localVariables: [local] })
+
+			const caller = createCaller([callAction({ n: exprVal(5) })])
+			const callerEntity = caller.entities.getActionEntities()[0]
+
+			const copyActions = callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)
+			expect(copyActions?.getDirectEntities().map((e) => e.id)).toEqual([`${callerEntity.id}/${recordAction.id}`])
+			const copyLocals = callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
+			expect(copyLocals?.getDirectEntities().map((e) => e.id)).toEqual([`${callerEntity.id}/${local.id}`])
+
+			// The copy is subscribed in the control holding it
+			expect(internalModule.entityUpdate).toHaveBeenCalledWith(
+				expect.objectContaining({ id: `${callerEntity.id}/${recordAction.id}` }),
+				caller.controlId,
+				expect.any(Function)
+			)
+
+			// The copy is never persisted
+			expect(callerEntity.asEntityModel()).not.toHaveProperty('children')
+			expect(caller.toJSON().actions).toEqual([expect.not.objectContaining({ children: expect.anything() })])
+		})
+
+		test('the copy sees the inputs given by the calling action, and the local variables at their startup values', () => {
+			const { createCaller, customActionInstances } = createHarness({
+				localVariables: [userValue('v', 7), computedValue('double', '$(options:n) * 2')],
+			})
+
+			const caller = createCaller([callAction({ n: exprVal(5) }), callAction({})])
+			const [given, missing] = caller.entities.getActionEntities()
+
+			expect(evaluateInCopy(customActionInstances, caller, given, '$(options:n)')).toBe(5)
+			expect(evaluateInCopy(customActionInstances, caller, given, '$(local:v)')).toBe(7)
+			expect(evaluateInCopy(customActionInstances, caller, given, '$(local:double)')).toBe(10)
+
+			// An input which isn't given has its default value
+			expect(evaluateInCopy(customActionInstances, caller, missing, '$(options:n)')).toBe(3)
+		})
+
+		test('the inputs of the copy follow the options of the calling action', () => {
+			const recordAction = action('record')
+			const { createCaller, customActionInstances, internalModule } = createHarness({ actions: [recordAction] })
+
+			const caller = createCaller([callAction({ n: exprVal(5) })])
+			const callerEntity = caller.entities.getActionEntities()[0]
+			internalModule.entityUpdate.mockClear()
+
+			caller.entities.entitySetOption('custom_action_actions', callerEntity.id, 'n', exprVal(6))
+
+			expect(evaluateInCopy(customActionInstances, caller, callerEntity, '$(options:n)')).toBe(6)
+
+			// The entities of the copy are re-subscribed, so that they parse with the new inputs
+			expect(internalModule.entityUpdate).toHaveBeenCalledWith(
+				expect.objectContaining({ id: `${callerEntity.id}/${recordAction.id}` }),
+				caller.controlId,
+				expect.any(Function)
+			)
+		})
+
+		test('the inputs of the copy follow the variables they use', () => {
+			const recordAction = action('record')
+			const { createCaller, customActionInstances, internalModule, variableValues } = createHarness({
+				actions: [recordAction],
+			})
+			variableValues.setVariableValues('test', [{ id: 'num', value: 1 }])
+
+			const caller = createCaller([callAction({ n: exprExpr('$(test:num) + 1') })])
+			const callerEntity = caller.entities.getActionEntities()[0]
+			expect(evaluateInCopy(customActionInstances, caller, callerEntity, '$(options:n)')).toBe(2)
+			internalModule.entityUpdate.mockClear()
+
+			// An unrelated variable doesn't re-subscribe the copy
+			variableValues.setVariableValues('test', [{ id: 'other', value: 1 }])
+			expect(internalModule.entityUpdate).not.toHaveBeenCalled()
+
+			variableValues.setVariableValues('test', [{ id: 'num', value: 4 }])
+
+			expect(evaluateInCopy(customActionInstances, caller, callerEntity, '$(options:n)')).toBe(5)
+			expect(internalModule.entityUpdate).toHaveBeenCalledWith(
+				expect.objectContaining({ id: `${callerEntity.id}/${recordAction.id}` }),
+				caller.controlId,
+				expect.any(Function)
+			)
+		})
+
+		test('the copy is not re-subscribed when a variable change leaves its inputs the same', () => {
+			const { createCaller, internalModule, variableValues } = createHarness({ actions: [action('record')] })
+			variableValues.setVariableValues('test', [{ id: 'num', value: 1 }])
+
+			createCaller([callAction({ n: exprExpr('$(test:num) * 0 + 5') })])
+			internalModule.entityUpdate.mockClear()
+
+			variableValues.setVariableValues('test', [{ id: 'num', value: 2 }])
+
+			expect(internalModule.entityUpdate).not.toHaveBeenCalled()
+		})
+
+		test('the copy is rebuilt when the custom action changes', async () => {
+			const { control, createCaller } = createHarness({ actions: [action('first')] })
+
+			const caller = createCaller([callAction({ n: exprVal(5) })])
+			const callerEntity = caller.entities.getActionEntities()[0]
+
+			const added = action('second')
+			control.entities.entityAdd('custom_action_actions', null, added)
+
+			await vi.waitFor(() => {
+				expect(
+					callerEntity
+						.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)
+						?.getDirectEntities()
+						.map((e) => e.definitionId)
+				).toEqual(['first', 'second'])
+			})
+		})
+
+		test('the copy is removed with the custom action', async () => {
+			const { control, controlStore, createCaller, customActionInstances } = createHarness({
+				actions: [action('first')],
+			})
+
+			const caller = createCaller([callAction({ n: exprVal(5) })])
+			const callerEntity = caller.entities.getActionEntities()[0]
+
+			// As the controls controller deletes a control
+			control.destroy()
+			controlStore.controls.delete(control.controlId)
+
+			await vi.waitFor(() => {
+				expect(callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)).toBeUndefined()
+			})
+			expect(customActionInstances.getCopyScope(callerEntity, caller.controlId)).toBeUndefined()
+		})
+
+		test('the copy is removed when the calling action is disabled or removed', () => {
+			const recordAction = action('record')
+			const { createCaller, customActionInstances, internalModule } = createHarness({ actions: [recordAction] })
+
+			const caller = createCaller([callAction({ n: exprVal(5) })])
+			const callerEntity = caller.entities.getActionEntities()[0]
+			const copyId = `${callerEntity.id}/${recordAction.id}`
+
+			caller.entities.entityEnabled('custom_action_actions', callerEntity.id, false)
+			expect(callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)).toBeUndefined()
+			expect(customActionInstances.getCopyScope(callerEntity, caller.controlId)).toBeUndefined()
+			expect(internalModule.entityDelete).toHaveBeenCalledWith(expect.objectContaining({ id: copyId }))
+
+			caller.entities.entityEnabled('custom_action_actions', callerEntity.id, true)
+			expect(callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)).toBeDefined()
+
+			internalModule.entityDelete.mockClear()
+			caller.entities.entityRemove('custom_action_actions', callerEntity.id)
+			expect(customActionInstances.getCopyScope(callerEntity, caller.controlId)).toBeUndefined()
+			expect(internalModule.entityDelete).toHaveBeenCalledWith(expect.objectContaining({ id: copyId }))
+		})
+
+		test('a copy holds copies of the custom actions it calls, with their own inputs', () => {
+			const { deps, controlStore, createCaller, customActionInstances } = createHarness({
+				actions: [callAction({ n: exprExpr('$(options:n) + 1') }, 'inner')],
+			})
+			const inner = new ControlCustomAction(
+				deps,
+				CreateCustomActionControlId('inner'),
+				{
+					type: 'custom-action',
+					options: { ...ControlCustomAction.DefaultOptions },
+					inputs: [numberInput],
+					actions: [action('record')],
+					localVariables: [],
+				},
+				false
+			)
+			controlStore.controls.set(inner.controlId, inner)
+
+			const caller = createCaller([callAction({ n: exprVal(5) })])
+			const callerEntity = caller.entities.getActionEntities()[0]
+
+			const nestedCall = callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)!.getDirectEntities()[0]
+			expect(evaluateInCopy(customActionInstances, caller, nestedCall, '$(options:n)')).toBe(6)
+			expect(
+				nestedCall
+					.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)
+					?.getDirectEntities()
+					.map((e) => e.definitionId)
+			).toEqual(['record'])
+		})
+
+		test('a loop of custom actions is not copied', () => {
+			const { deps, controlStore, createCaller, customActionInstances } = createHarness({
+				actions: [callAction({}, 'other')],
+			})
+			const other = new ControlCustomAction(
+				deps,
+				CreateCustomActionControlId('other'),
+				{
+					type: 'custom-action',
+					options: { ...ControlCustomAction.DefaultOptions },
+					inputs: [],
+					actions: [callAction()],
+					localVariables: [],
+				},
+				false
+			)
+			controlStore.controls.set(other.controlId, other)
+
+			const caller = createCaller([callAction()])
+			const callerEntity = caller.entities.getActionEntities()[0]
+
+			// The caller holds a copy of the custom action, which holds a copy of the other one
+			const callOther = callerEntity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)!.getDirectEntities()[0]
+			const callBack = callOther.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)!.getDirectEntities()[0]
+			expect(callBack.definitionId).toBe(CUSTOM_ACTION_ID)
+
+			// But that calls the first custom action again, so isn't copied
+			expect(callBack.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)).toBeUndefined()
+			expect(customActionInstances.getCopyScope(callBack, caller.controlId)).toBeUndefined()
+		})
+
+		test('custom actions nested too deeply are not copied', () => {
+			const { deps, controlStore, createCaller } = createHarness({ actions: [callAction({}, 'level-1')] })
+
+			// A chain of custom actions, each calling the next
+			for (let i = 1; i <= 20; i++) {
+				const level = new ControlCustomAction(
+					deps,
+					CreateCustomActionControlId(`level-${i}`),
+					{
+						type: 'custom-action',
+						options: { ...ControlCustomAction.DefaultOptions },
+						inputs: [],
+						actions: [callAction({}, `level-${i + 1}`)],
+						localVariables: [],
+					},
+					false
+				)
+				controlStore.controls.set(level.controlId, level)
+			}
+
+			const caller = createCaller([callAction({}, 'level-1')])
+
+			let depth = 0
+			let entity: ControlEntityInstance | undefined = caller.entities.getActionEntities()[0]
+			while (entity) {
+				const group = entity.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)
+				if (!group) break
+				depth++
+				entity = group.getDirectEntities()[0]
+			}
+
+			// The caller here is a custom action itself, so is the first of the levels allowed
+			expect(depth).toBe(15)
 		})
 	})
 })

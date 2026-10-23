@@ -17,6 +17,7 @@ import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { ActionRunner } from './ActionRunner.js'
+import type { CustomActionInstancesForEntity } from './CustomActions/CustomActionInstanceManager.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import type { SomeControl } from './IControlFragments.js'
@@ -65,6 +66,9 @@ export interface ControlDependencies extends ControlExternalDependencies {
 
 	/** The expression-variable name registry (used only by expression-variable controls). */
 	readonly expressionVariableNamesMap: ExpressionVariableNameMap
+
+	/** Builds the copy of a custom action held by an action which calls it */
+	readonly customActionInstances: CustomActionInstancesForEntity
 }
 
 export interface ControlCommonEvents {

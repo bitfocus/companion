@@ -2,7 +2,6 @@ import { nanoid } from 'nanoid'
 import { isCustomActionsConnectionId, isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import { CreateCustomActionControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import { assertNever, type JsonValue } from '@companion-module/host'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../Instance/Controller.js'
@@ -143,24 +142,13 @@ export class ActionRunner {
 			return undefined
 		}
 
-		// Parse the inputs in the context of the caller. An input which is missing or has an invalid value gets its
-		// default value, so that a change to the inputs of the custom action doesn't stop the actions using it from running
-		const rawOptions: ExpressionableOptionsObject = { ...action.rawOptions }
-		for (const input of customAction.inputs) {
-			if (rawOptions[input.id] === undefined && 'default' in input) {
-				rawOptions[input.id] = { isExpression: false, value: input.default }
-			}
-		}
+		// Parse the inputs in the context of the caller
+		const { options } = customAction.parseCallInputs(
+			action.rawOptions,
+			this.#controlStore.createActionExecutionParser(extras)
+		)
 
-		const parser = this.#controlStore.createActionExecutionParser(extras)
-		const parseRes = parser.parseEntityOptions(customAction.toActionDefinition(), rawOptions)
-		if (!parseRes.ok) {
-			this.#logger.debug(
-				`Using defaults for invalid inputs of custom action "${customAction.options.name}": ${JSON.stringify(parseRes.optionErrors)}`
-			)
-		}
-
-		return customAction.executeCall(parseRes.ok ? parseRes.parsedOptions : parseRes.parsedOptionsWithDefaults, extras)
+		return customAction.executeCall(options, extras)
 	}
 
 	/**
