@@ -8,13 +8,17 @@ import { z } from 'zod'
  * fields to the announcement.
  */
 
+/** The longest name an installation can give itself, in the announcement and the secure channel handshake */
+export const LINK_NAME_MAX_LENGTH = 200
+
 export const LinkAnnouncementSchema = z
 	.object({
-		name: z.string().max(200).describe('Human readable name of the installation'),
-		companionVersion: z.string().describe('Companion application version'),
+		name: z.string().max(LINK_NAME_MAX_LENGTH).describe('Human readable name of the installation'),
+		companionVersion: z.string().max(64).describe('Companion application version'),
 		protocolVersions: z
-			.array(z.string())
+			.array(z.string().max(32))
 			.min(1)
+			.max(16)
 			.describe(
 				'The Link protocol versions (semver) this installation speaks, one per major version. Two installations use the highest major version they both speak'
 			),
@@ -22,8 +26,10 @@ export const LinkAnnouncementSchema = z
 			.number()
 			.int()
 			.positive()
-			.max(600_000)
-			.describe('How often this announcement is repeated. Peers consider it gone after missing a few'),
+			.max(60_000)
+			.describe(
+				'How often this announcement is repeated. Peers consider it gone after missing a few, so it is bounded to keep a peer that has gone from being listed as reachable for long'
+			),
 	})
 	.describe(
 		'Periodic announcement of an installation, made known by each transport to every installation it can reach (see LinkTransport.announce). Readable by all of them, including installations that are not allowed to use this one, so it carries only what is needed to find it: add anything else to a message that is only sent to peers allowed it'

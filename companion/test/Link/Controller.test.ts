@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { LinkTransportConfig } from '@companion-app/shared/Model/Link.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import { LinkController } from '../../lib/Link/Controller.js'
-import { encodeLinkAnnouncement } from '../../lib/Link/Protocol/Announcement.js'
+import { decodeLinkAnnouncement, encodeLinkAnnouncement } from '../../lib/Link/Protocol/Announcement.js'
 import { decodeLinkMessage, encodeLinkMessage, type LinkMessage } from '../../lib/Link/Protocol/v1/Schemas.js'
 import type {
 	LinkMessageOrigin,
@@ -44,7 +44,7 @@ class FakeTransport implements LinkTransport {
 const fromPeer: LinkMessageOrigin = { peerId: 'peer' }
 
 /** A controller with one transport, connected, on a database that can be reused to restart it */
-function createController(db = new FakeDataDatabase()) {
+function createController(db = new FakeDataDatabase(), installName = 'Self') {
 	db.getTableView('link_transports').data.t1 = {
 		id: 't1',
 		type: 'fake',
@@ -70,7 +70,7 @@ function createController(db = new FakeDataDatabase()) {
 	}
 
 	const userconfig = {
-		getKey: () => 'Self',
+		getKey: () => installName,
 		on: vi.fn(),
 	} as unknown as DataUserConfig
 
@@ -126,6 +126,15 @@ describe('LinkController', () => {
 		await ctx.controller.stop()
 		ctx = createController(ctx.db)
 		expect(ctx.transport().context.identity.id).toBe(id)
+	})
+
+	test('shortens a long name to what other installations accept', async () => {
+		await ctx.controller.stop()
+		ctx = createController(new FakeDataDatabase(), 'x'.repeat(300))
+
+		const announced = decodeLinkAnnouncement(ctx.transport().announced[0] ?? '')
+		expect(announced.ok && announced.announcement.name).toBe('x'.repeat(200))
+		expect(ctx.transport().context.getName()).toBe('x'.repeat(200))
 	})
 
 	test('says goodbye when it stops', async () => {
@@ -193,6 +202,46 @@ describe('LinkController', () => {
 			peerId: 'peer',
 			message: { payload: { permissions: { buttons: true } } },
 		})
+	})
+
+	test('forgetting a peer stops sharing with it, and is remembered across restarts', async () => {
+		ctx.announcePeer()
+		await ctx.shareButtons(true)
+
+		await ctx.controller
+			.createTrpcRouter()
+			.createCaller({} as any)
+			.forgetPeer({ peerId: 'peer' })
+		expect(ctx.transport().messagesOfType('access').at(-1)).toMatchObject({
+			peerId: 'peer',
+			message: { payload: { permissions: { buttons: false } } },
+		})
+		expect(ctx.db.getTableView('link_permissions').data).toEqual({})
+		expect(ctx.db.getTableView('link_peers').data).toEqual({})
+
+		// When it is rediscovered, nothing is shared with it until the user says so again
+		ctx.announcePeer()
+		expect(ctx.transport().messagesOfType('access').at(-1)).toMatchObject({
+			message: { payload: { permissions: { buttons: false } } },
+		})
+	})
+
+	test('lists the peers seen before a restart, and drops permissions for any it no longer knows', async () => {
+		ctx.announcePeer()
+		await ctx.shareButtons(true)
+		ctx.db.getTableView('link_permissions').data.gone = { buttons: true }
+		await ctx.controller.stop()
+
+		ctx = createController(ctx.db)
+		const abort = new AbortController()
+		const updates = await ctx.controller
+			.createTrpcRouter()
+			.createCaller({} as any, { signal: abort.signal })
+			.watchPeers()
+		const peers = (await updates[Symbol.asyncIterator]().next()).value
+		abort.abort()
+		expect(peers).toEqual([expect.objectContaining({ id: 'peer', online: false, sharedByUs: { buttons: true } })])
+		expect(Object.keys(ctx.db.getTableView('link_permissions').data)).toEqual(['peer'])
 	})
 
 	test('discovers what a transport field asks for, leaving out this installation', () => {

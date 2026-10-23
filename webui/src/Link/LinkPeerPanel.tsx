@@ -8,6 +8,7 @@ import { Button } from '~/Components/Button.js'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { FormLabel } from '~/Components/Form.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
+import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton } from '~/Layout/PanelIcons.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -41,11 +42,34 @@ export const LinkPeerPanel = observer(function LinkPeerPanel({ peer }: { peer: L
 const PeerStatusSection = observer(function PeerStatusSection({ peer }: { peer: LinkPeerInfo }) {
 	const linkStore = useLinkStore()
 
+	const setAliasMutation = useMutationExt(trpc.link.setPeerAlias.mutationOptions())
+	const setAlias = useCallback(
+		(alias: string) => {
+			setAliasMutation.mutateAsync({ peerId: peer.id, alias: alias || null }).catch((e) => {
+				console.error('Failed to rename installation', e)
+			})
+		},
+		[setAliasMutation, peer.id]
+	)
+	const nameFieldId = useId()
+
 	return (
 		<EditSectionCard
 			title="Status"
 			summary={<PeerStatusBadge peer={peer} ourProtocolVersions={linkStore.self?.protocolVersions} />}
 		>
+			<ConfigFieldRow
+				label="Name"
+				htmlFor={nameFieldId}
+				help={`What it is called here. It calls itself "${peer.announcedName}".`}
+			>
+				<TextInputFieldSimple
+					id={nameFieldId}
+					value={peer.alias ?? ''}
+					placeholder={peer.announcedName}
+					setValue={setAlias}
+				/>
+			</ConfigFieldRow>
 			<ConfigFieldRow label="Link id" htmlFor={null} help={null}>
 				<span className="font-mono" title={peer.id}>
 					{peer.fingerprint}
@@ -169,7 +193,7 @@ const PeerForgetSection = observer(function PeerForgetSection({
 			<p className="text-sm text-muted mb-0">
 				{peer.online
 					? 'It can only be forgotten once it is offline, as it would reappear straight away.'
-					: 'Remove it from the list. It reappears if it is reachable again. What is shared with it is kept.'}
+					: 'Remove it from the list, and stop sharing anything with it. It reappears if it is reachable again, with nothing shared.'}
 			</p>
 			<div>
 				<Button color="danger" variant="outline" size="sm" onClick={doForget} disabled={peer.online}>
