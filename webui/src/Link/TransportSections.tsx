@@ -150,6 +150,7 @@ function useEntryActions(transportId: string, entry: LinkTransportEntry): EntryA
 /** The value an entry asks for (eg a pairing code), and its action buttons, on one line */
 function EntryActions({ entry, state }: { entry: LinkTransportEntry; state: EntryActionsState }): React.JSX.Element {
 	const inputId = useId()
+	const submitAction = entry.actions.find((action) => action.requiresInput)
 
 	return (
 		<div className="flex shrink-0 items-center gap-2">
@@ -164,6 +165,11 @@ function EntryActions({ entry, state }: { entry: LinkTransportEntry; state: Entr
 						setValue={state.setInput}
 						placeholder={entry.inputLabel}
 						immediateValue
+						onKeyDown={(e) => {
+							if (e.key !== 'Enter' || !submitAction || state.busy || !state.input) return
+							e.preventDefault()
+							state.doAction(submitAction.id)
+						}}
 					/>
 				</div>
 			)}
@@ -174,7 +180,7 @@ function EntryActions({ entry, state }: { entry: LinkTransportEntry; state: Entr
 					// Beside an input, match its height
 					size={entry.inputLabel ? undefined : 'sm'}
 					variant={action.color === 'danger' ? 'outline' : undefined}
-					disabled={state.busy || (action.color === 'primary' && !!entry.inputLabel && !state.input)}
+					disabled={state.busy || (!!action.requiresInput && !state.input)}
 					onClick={() => state.doAction(action.id)}
 				>
 					{action.label}

@@ -287,7 +287,7 @@ export class DirectServerTransport extends DirectTransportBase {
 			description: `From ${address}, Link id ${formatLinkIdFingerprint(request.channel.remoteLinkId)}. Enter the pairing code it shows.`,
 			inputLabel: 'Pairing code',
 			actions: [
-				{ id: 'pair', label: 'Pair', color: 'primary' },
+				{ id: 'pair', label: 'Pair', color: 'primary', requiresInput: true },
 				{ id: 'reject', label: 'Reject', color: 'secondary' },
 			],
 		}))

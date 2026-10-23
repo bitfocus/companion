@@ -137,6 +137,13 @@ describe('direct transport', { timeout: 20_000 }, () => {
 		const { ctx: clientCtx } = startClient(port)
 		await vi.waitFor(() => expect(pendingEntryId(serverCtx)).toBeDefined())
 		const entryId = pendingEntryId(serverCtx)!
+		// Pairing needs the code, so can be submitted with it, rejecting doesn't
+		const pending = serverCtx.state.sections.find((s) => s.id === 'pending')?.entries[0]
+		expect(pending?.actions[1].requiresInput).toBeFalsy()
+		expect(pending).toMatchObject({
+			inputLabel: 'Pairing code',
+			actions: [{ id: 'pair', requiresInput: true }, { id: 'reject' }],
+		})
 
 		expect(await server.handleSectionAction(entryId, 'pair', '0000-0000')).toMatch(/doesn't match/)
 		expect(await server.handleSectionAction(entryId, 'pair', '1111-1111')).toMatch(/doesn't match/)

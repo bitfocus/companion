@@ -99,6 +99,11 @@ export interface LinkTransportSectionAction {
 	id: string
 	label: string
 	color: 'primary' | 'secondary' | 'danger'
+	/**
+	 * Whether it needs the value the entry asks for (see inputLabel), so can't be done without one. It is done when
+	 * the value is submitted, eg with Enter. Defaults to false
+	 */
+	requiresInput?: boolean
 }
 
 /** An item reported by a transport, that the user may act on, eg a pairing request */
