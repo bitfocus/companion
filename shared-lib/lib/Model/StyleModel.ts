@@ -20,6 +20,13 @@ export interface DrawStyleLayeredButtonModel extends DrawStyleButtonStateProps {
 	elements: SomeButtonGraphicsDrawElement[]
 
 	/**
+	 * Set when the button shows a button of another installation (a remote button), to mark it as one in its status
+	 * icons when it has a top bar: `unreachable` while it shows the last image from an installation that has dropped out.
+	 * Undefined for any other button
+	 */
+	link_status?: 'ok' | 'unreachable'
+
+	/**
 	 * Location strings (e.g. '1/0/0') transitively referenced by this button's elements.
 	 * Only populated for layered buttons that went through reference element resolution.
 	 */

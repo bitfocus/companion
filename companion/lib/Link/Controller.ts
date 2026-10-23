@@ -37,6 +37,7 @@ import {
 } from './Protocol/Announcement.js'
 import { decodeLinkMessage, encodeLinkMessage } from './Protocol/v1/Schemas.js'
 import { LINK_PROTOCOL_VERSIONS } from './Protocol/Versions.js'
+import type { LinkRemoteImageStore } from './RemoteImageStore.js'
 import { LinkTransportManager } from './TransportManager.js'
 import { DIRECT_MDNS_LINK_ID_TXT } from './Transports/Direct/Constants.js'
 import type { LinkMessageOrigin, SomeLinkBuiltinTransport, SomeLinkTransportDefinition } from './Transports/Types.js'
@@ -46,6 +47,8 @@ export interface LinkDependencies {
 	readonly pageStore: IPageStore
 	readonly controls: IControlStore
 	readonly graphics: GraphicsController
+	/** Where the images of the remote buttons shown are kept, for drawing them */
+	readonly remoteImages: LinkRemoteImageStore
 }
 
 interface LinkControllerEvents {
@@ -123,7 +126,9 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		this.buttonClient = new LinkButtonClient(
 			() => this.#selfId,
 			this.#peers,
-			(transportId, peerId, payload) => this.#transports.sendTo(transportId, peerId, payload)
+			(transportId, peerId, payload) => this.#transports.sendTo(transportId, peerId, payload),
+			(size, decoration) => deps.graphics.getContentSize(size, decoration),
+			deps.remoteImages
 		)
 		this.#buttonServer = new LinkButtonServer(
 			{
@@ -134,6 +139,10 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 				rotateControl: (controlId, delta, surfaceId) => deps.controls.rotateControl(controlId, delta, surfaceId),
 				abortControl: (controlId, unlatch, hops) =>
 					deps.controls.getControl(controlId)?.abortDelayedActions(unlatch, null, hops),
+				// Served as content only, so shown as the button whose content is that size
+				acquireDisplayedLocation: (location, contentSize) =>
+					deps.graphics.displayedLocations.acquire(location, deps.graphics.getDecoratedSize(location, contentSize)),
+				getUndecoratedRender: (render) => deps.graphics.getUndecoratedRender(render),
 				getSourceChain: (location) => this.#getSourceChain(location),
 				getClockOffset: (peerId) => this.#peers.getClockOffset(peerId),
 				// Images only go to leaseholders, which are only allowed peers, and are dropped when that changes (see revoke)
@@ -141,6 +150,19 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			},
 			() => this.#selfId
 		)
+
+		// Link buttons are subscribed to at the sizes they are shown at: when those change, and when a button is placed
+		// somewhere (it is created before it is placed, so can't tell itself)
+		deps.graphics.displayedLocations.on('changed', (location) => {
+			const controlId = deps.pageStore.getControlIdAt(location)
+			if (controlId) this.buttonClient.setDisplayedSizes(controlId, deps.graphics.displayedLocations.getSizes(location))
+		})
+		deps.pageStore.on('controlLocationChanged', (controlId, location) => {
+			this.buttonClient.setDisplayedSizes(
+				controlId,
+				location ? deps.graphics.displayedLocations.getSizes(location) : []
+			)
+		})
 
 		this.#transports.events.on('announcement', (transportId, peerId, payload) =>
 			this.#handleAnnouncement(transportId, peerId, payload)
@@ -171,6 +193,8 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 				this.emit('self', this.#getSelfInfo())
 				this.#announce(null)
 			}
+			// The content of a remote button, which is the size it is drawn at, changes with the decoration around it
+			if (key === 'buttons_decoration') this.buttonClient.refreshDisplayedSizes()
 			for (const builtin of builtinTransports) {
 				if (builtin.userConfigKeys.includes(key)) this.#applyBuiltin(builtin)
 			}

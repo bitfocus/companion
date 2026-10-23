@@ -1,13 +1,16 @@
 import { EventEmitter } from 'node:events'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { LinkTransportConfig } from '@companion-app/shared/Model/Link.js'
 import type { IControlStore } from '../../lib/Controls/IControlStore.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { GraphicsController } from '../../lib/Graphics/Controller.js'
+import { DisplayedLocations } from '../../lib/Graphics/DisplayedLocations.js'
 import type { ImageResult } from '../../lib/Graphics/ImageResult.js'
 import { LinkController } from '../../lib/Link/Controller.js'
 import { decodeLinkAnnouncement, encodeLinkAnnouncement } from '../../lib/Link/Protocol/Announcement.js'
 import { decodeLinkMessage, encodeLinkMessage, type LinkMessage } from '../../lib/Link/Protocol/v1/Schemas.js'
+import { LinkRemoteImageStore } from '../../lib/Link/RemoteImageStore.js'
 import type {
 	LinkMessageOrigin,
 	LinkTransport,
@@ -94,6 +97,10 @@ function createController(db = new FakeDataDatabase(), installName = 'Self') {
 		getControl: vi.fn(() => ({ abortDelayedActions: abortControl }) as any),
 	}
 	const graphics = {
+		displayedLocations: new DisplayedLocations(),
+		getUndecoratedRender: vi.fn((render: ImageResult) => ({ render, state: null })),
+		getContentSize: vi.fn((size: { width: number; height: number }) => size),
+		getDecoratedSize: vi.fn((_location: ControlLocation, size: { width: number; height: number }) => size),
 		getCachedRenderOrGeneratePlaceholder: vi.fn(
 			() =>
 				({
@@ -112,6 +119,7 @@ function createController(db = new FakeDataDatabase(), installName = 'Self') {
 			pageStore,
 			controls: controls as unknown as IControlStore,
 			graphics: graphics as unknown as GraphicsController,
+			remoteImages: new LinkRemoteImageStore(),
 		},
 		[definition],
 		[]

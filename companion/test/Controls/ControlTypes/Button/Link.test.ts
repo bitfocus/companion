@@ -1,18 +1,32 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { LinkButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import { parseLinkButtonOptions, type LinkButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ControlDependencies } from '../../../../lib/Controls/ControlDependencies.js'
 import { ControlButtonLink } from '../../../../lib/Controls/ControlTypes/Button/Link.js'
 import { LINK_ICON_SVG, LINK_SLASH_ICON_SVG } from '../../../../lib/Controls/ControlTypes/Button/LinkButtonIcons.js'
+import { DisplayedLocations } from '../../../../lib/Graphics/DisplayedLocations.js'
 import type { LinkButtonClient, LinkButtonState } from '../../../../lib/Link/ButtonClient.js'
+import type { LinkButtonImage } from '../../../../lib/Link/RemoteImageStore.js'
 import { mangleReferenceSurfaceId } from '../../../../lib/Surface/ReferenceSurfaceId.js'
 
 const MY_CONTROL_ID = 'bank:test01'
+
+const NO_DECORATION_STATE = {
+	remoteKey: 'peer/remote',
+	unreachable: false,
+	stepCurrent: 1,
+	stepCount: 1,
+	buttonStatus: undefined,
+	actionRunning: false,
+}
 const MY_LOCATION: ControlLocation = { pageNumber: 1, row: 2, column: 3 }
 
 function makeModel(peerId: string, location: string): LinkButtonModel {
-	return { type: 'link-button', options: { peerId, location: { value: location, isExpression: false } } }
+	return {
+		type: 'link-button',
+		options: parseLinkButtonOptions({ peerId, location: { value: location, isExpression: false } }).options,
+	}
 }
 
 describe('ControlButtonLink', () => {
@@ -24,8 +38,11 @@ describe('ControlButtonLink', () => {
 		press: ReturnType<typeof vi.fn>
 		rotate: ReturnType<typeof vi.fn>
 		abort: ReturnType<typeof vi.fn>
+		setDisplayedSizes: ReturnType<typeof vi.fn>
+		setDecoration: ReturnType<typeof vi.fn>
 	}
 	let parseVariables: ReturnType<typeof vi.fn>
+	let displayedLocations: DisplayedLocations
 
 	beforeEach(() => {
 		linkButtons = {
@@ -35,7 +52,10 @@ describe('ControlButtonLink', () => {
 			press: vi.fn(),
 			rotate: vi.fn(() => true),
 			abort: vi.fn(),
+			setDisplayedSizes: vi.fn(),
+			setDecoration: vi.fn(),
 		}
+		displayedLocations = new DisplayedLocations()
 
 		parseVariables = vi.fn((value: string) => ({ text: String(value), variableIds: new Set<string>() }))
 		const parser = {
@@ -53,7 +73,7 @@ describe('ControlButtonLink', () => {
 			instance: {} as any,
 			variableValues: { createVariablesAndExpressionParser: vi.fn(() => parser) } as any,
 			userconfig: {} as any,
-			graphics: new EventEmitter() as any,
+			graphics: Object.assign(new EventEmitter(), { displayedLocations }) as any,
 			actionRunner: {} as any,
 			dbTable: { set: vi.fn(), delete: vi.fn() } as any,
 			events: new EventEmitter() as any,
@@ -71,6 +91,16 @@ describe('ControlButtonLink', () => {
 			{ peerId: 'peer', location: { pageNumber: 2, row: 0, column: 1 } },
 			expect.any(Function)
 		)
+	})
+
+	it('tells the link client the sizes it is shown at, again when it moves', () => {
+		displayedLocations.acquire(MY_LOCATION, { width: 200, height: 100 })
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '2/0/1'), false)
+		expect(linkButtons.setDisplayedSizes).toHaveBeenLastCalledWith(MY_CONTROL_ID, [{ width: 200, height: 100 }])
+
+		vi.mocked(deps.pageStore.getLocationOfControlId).mockReturnValue({ ...MY_LOCATION, column: 4 })
+		control.triggerLocationHasChanged()
+		expect(linkButtons.setDisplayedSizes).toHaveBeenLastCalledWith(MY_CONTROL_ID, [])
 	})
 
 	it('resolves `this` to the location of the button itself', () => {
@@ -98,6 +128,8 @@ describe('ControlButtonLink', () => {
 		expect(control.toJSON().options).toEqual({
 			peerId: 'peer',
 			location: { value: '1/0/0', isExpression: false },
+			decoration: 'default',
+			showStatusIcons: 'default',
 		})
 	})
 
@@ -112,6 +144,8 @@ describe('ControlButtonLink', () => {
 			peerId: 'peer',
 			location: { value: '', isExpression: false },
 			notes: 'kept',
+			decoration: 'default',
+			showStatusIcons: 'default',
 		})
 		expect(deps.dbTable.set).toHaveBeenCalledWith(MY_CONTROL_ID, control.toJSON())
 	})
@@ -160,6 +194,7 @@ describe('ControlButtonLink', () => {
 		// Nothing to show yet: a link icon and why
 		const placeholder = await control.drawing.getDrawStyle()
 		expect(placeholder.elements).toMatchObject([
+			{ type: 'canvas' },
 			{ type: 'box' },
 			{ type: 'image', base64Image: LINK_ICON_SVG },
 			{ type: 'text', text: 'Remote\nbutton' },
@@ -169,11 +204,13 @@ describe('ControlButtonLink', () => {
 		linkButtons.getState.mockReturnValue({
 			status: 'offline',
 			peerName: 'Peer',
-			dataUrl: null,
+			...NO_DECORATION_STATE,
+			images: [],
 			pressed: false,
 			sourceChain: [],
 		} satisfies LinkButtonState)
 		expect((await control.drawing.getDrawStyle()).elements).toMatchObject([
+			{ type: 'canvas' },
 			{ type: 'box' },
 			{ type: 'image', base64Image: LINK_SLASH_ICON_SVG },
 			{ type: 'text', text: 'Remote\noffline' },
@@ -182,19 +219,93 @@ describe('ControlButtonLink', () => {
 		const state: LinkButtonState = {
 			status: 'ok',
 			peerName: 'Peer',
-			dataUrl: 'data:image/png;base64,AAAA',
+			remoteKey: 'peer/remote',
+			images: [image(144, 144, 'AAAA', true)],
+			unreachable: false,
 			pressed: true,
+			stepCurrent: 2,
+			stepCount: 3,
+			buttonStatus: 'error',
+			actionRunning: true,
 			sourceChain: ['peer'],
 		}
 		linkButtons.getState.mockReturnValue(state)
 
+		// Decorated here, from the state of the remote button
 		const style = await control.drawing.getDrawStyle()
-		expect(style.pushed).toBe(true)
+		expect(style).toMatchObject({
+			pushed: true,
+			stepCurrent: 2,
+			stepCount: 3,
+			button_status: 'error',
+			action_running: true,
+			link_status: 'ok',
+		})
 		expect(style.elements).toMatchObject([
-			{ type: 'canvas', decoration: 'none' },
-			{ type: 'image', base64Image: state.dataUrl },
+			{ type: 'canvas', decoration: 'default', showStatusIcons: 'default' },
+			{ type: 'remote', source: 'peer/remote' },
 		])
 		expect(control.toRuntimeJSON()).toEqual({ status: 'ok', peerName: 'Peer' })
+
+		// Still showing the last image of an installation that has dropped out
+		linkButtons.getState.mockReturnValue({ ...state, unreachable: true })
+		expect((await control.drawing.getDrawStyle()).link_status).toBe('unreachable')
+	})
+
+	it('is decorated as set, and tells the link client so', async () => {
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'), false)
+		expect(linkButtons.setDecoration).toHaveBeenLastCalledWith(MY_CONTROL_ID, 'default')
+
+		expect(control.optionsSetField('decoration', 'bogus')).toBe(false)
+		expect(control.optionsSetField('showStatusIcons', 'bogus')).toBe(false)
+		expect(control.optionsSetField('decoration', 'none')).toBe(true)
+		expect(control.optionsSetField('showStatusIcons', 'all')).toBe(true)
+		expect(linkButtons.setDecoration).toHaveBeenLastCalledWith(MY_CONTROL_ID, 'none')
+
+		expect((await control.drawing.getDrawStyle()).elements[0]).toMatchObject({
+			type: 'canvas',
+			decoration: 'none',
+			showStatusIcons: 'all',
+		})
+		expect(control.toJSON().options).toMatchObject({ decoration: 'none', showStatusIcons: 'all' })
+	})
+
+	function image(width: number, height: number, data: string, current: boolean): LinkButtonImage {
+		return {
+			width,
+			height,
+			dataUrl: `data:image/png;base64,${data}`,
+			revision: { stream: 's', seq: current ? 2 : 1 },
+			current,
+		}
+	}
+
+	it('draws the remote image as a remote element, fetched for the size it is drawn at', async () => {
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'), false)
+
+		linkButtons.getState.mockReturnValue({
+			status: 'ok',
+			peerName: 'Peer',
+			...NO_DECORATION_STATE,
+			images: [image(144, 144, 'SQUARE', true), image(288, 144, 'WIDE', false)],
+			pressed: false,
+			sourceChain: ['peer'],
+		} satisfies LinkButtonState)
+
+		const style = await control.drawing.getDrawStyle()
+		expect(style.elements).toMatchObject([
+			{ type: 'canvas' },
+			{
+				type: 'remote',
+				source: 'peer/remote',
+				x: 0,
+				y: 0,
+				width: 1,
+				height: 1,
+				// Changes with the images, so that renders of different ones are told apart without comparing them
+				revision: '144x144@s:2,288x144@s:1',
+			},
+		])
 	})
 
 	it('releases its subscription when destroyed', () => {

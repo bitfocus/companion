@@ -30,8 +30,14 @@ import { LinkButtonDrawer } from './LinkButtonDrawer.js'
 const UNCONFIGURED_STATE: LinkButtonState = {
 	status: 'unconfigured',
 	peerName: null,
-	dataUrl: null,
+	remoteKey: null,
+	images: [],
+	unreachable: false,
 	pressed: false,
+	stepCurrent: 1,
+	stepCount: 1,
+	buttonStatus: undefined,
+	actionRunning: false,
 	sourceChain: [],
 }
 
@@ -94,7 +100,8 @@ export class ControlButtonLink
 		this.#drawing = new LinkButtonDrawer(
 			deps,
 			controlId,
-			() => this.deps.linkButtons.getState(this.controlId) ?? UNCONFIGURED_STATE
+			() => this.deps.linkButtons.getState(this.controlId) ?? UNCONFIGURED_STATE,
+			() => this.options
 		)
 
 		if (!storage) {
@@ -122,13 +129,22 @@ export class ControlButtonLink
 		super.destroy()
 	}
 
-	/** Resolve the location, and tell the link client what this button should show */
+	/** Resolve the location, and tell the link client what this button should show, and at what sizes */
 	#updateTarget(): void {
 		const target = this.#resolveTarget()
 		this.deps.linkButtons.setTarget(this.controlId, target, () => {
 			this.sendRuntimePropsChange()
 			this.#drawing.invalidate()
 		})
+
+		this.deps.linkButtons.setDecoration(this.controlId, this.options.decoration)
+
+		// This button may have moved
+		const myLocation = this.deps.pageStore.getLocationOfControlId(this.controlId)
+		this.deps.linkButtons.setDisplayedSizes(
+			this.controlId,
+			myLocation ? this.deps.graphics.displayedLocations.getSizes(myLocation) : []
+		)
 	}
 
 	#resolveTarget(): LinkButtonTarget | null {
@@ -173,7 +189,7 @@ export class ControlButtonLink
 	}
 
 	/**
-	 * Update an option field: `peerId`, `location` or `notes`
+	 * Update an option field: `peerId`, `location`, `notes`, `decoration` or `showStatusIcons`
 	 */
 	optionsSetField(key: string, value: JsonValue | undefined): boolean {
 		if (!Object.hasOwn(LinkButtonOptionsSchema.shape, key)) return false
@@ -188,9 +204,14 @@ export class ControlButtonLink
 		switch (optionKey) {
 			case 'notes':
 				break
+			case 'showStatusIcons':
+				this.#drawing.invalidate()
+				break
 			case 'peerId':
 			case 'location':
+			case 'decoration':
 				this.#updateTarget()
+				this.#drawing.invalidate()
 				break
 			default:
 				assertNever(optionKey)

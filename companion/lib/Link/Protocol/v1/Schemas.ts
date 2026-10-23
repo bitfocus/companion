@@ -55,7 +55,9 @@ export const LinkButtonRefSchema = z
 
 export const LinkButtonSubscriptionSchema = z
 	.object({ button: LinkButtonRefSchema, ...BitmapSizeShape })
-	.describe('A button, and the size the subscriber wants its bitmap rendered at')
+	.describe(
+		'A button, and the size the subscriber wants its bitmap rendered at. The bitmap is the content of the button only, without its decoration (eg top bar or status icons), which the subscriber draws itself from the state in each update'
+	)
 
 export const LinkButtonRevisionSchema = z
 	.object({
@@ -64,11 +66,17 @@ export const LinkButtonRevisionSchema = z
 			.min(1)
 			.max(64)
 			.describe(
-				'Chosen at random when the peer starts serving the button at this size, so that the revisions of a restarted peer are not mistaken for older ones'
+				'Chosen at random when the peer starts serving the button (at any size), so that the revisions of a restarted peer are not mistaken for older ones'
 			),
-		seq: z.number().int().nonnegative().describe('Counts up each time the button is sent at this size'),
+		seq: z
+			.number()
+			.int()
+			.nonnegative()
+			.describe(
+				'Counts up each time the button is redrawn. Shared by every size the button is served at, so updates of it at different sizes with the same revision are of the same render. Numbers may be skipped'
+			),
 	})
-	.describe('Which render of a button at a size an update is, to put updates in order and to say which one is held')
+	.describe('Which render of a button an update is, to put updates in order and to say which one is held')
 
 export const LinkSubscribePayloadSchema = z
 	.object({
@@ -115,8 +123,18 @@ export const LinkButtonUpdatePayloadSchema = z
 		button: LinkButtonRefSchema,
 		...BitmapSizeShape,
 		revision: LinkButtonRevisionSchema.describe('Older revisions than the one held are dropped'),
-		dataUrl: z.string().nullable().describe('PNG data url of the rendered button, or null if there is nothing to show'),
+		dataUrl: z
+			.string()
+			.nullable()
+			.describe('PNG data url of the content of the button, or null if there is nothing to show'),
 		pressed: z.boolean().describe('Whether the button is currently pressed'),
+		stepCurrent: z.number().int().describe('The current step of the button, for its decoration'),
+		stepCount: z.number().int().nonnegative().describe('How many steps the button has, for its decoration'),
+		status: z
+			.enum(['good', 'warning', 'error'])
+			.nullable()
+			.describe('The status of the connections the button uses, for its decoration, or null for none'),
+		actionRunning: z.boolean().describe('Whether actions of the button are running, for its decoration'),
 		sourceChain: z
 			.array(PeerIdSchema)
 			.max(16)

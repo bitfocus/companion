@@ -1,6 +1,6 @@
 import { formatLocation } from '../ControlId.js'
 import type { RendererButtonStyle } from '../Model/Render.js'
-import type { DrawStyleButtonStateProps } from '../Model/StyleModel.js'
+import { ButtonGraphicsDecorationType, type DrawStyleButtonStateProps } from '../Model/StyleModel.js'
 import type { ImageBase } from './ImageBase.js'
 import type { DrawBounds } from './Util.js'
 
@@ -88,6 +88,20 @@ export class ButtonDecorationRenderer {
 		const iconSize = Math.floor(topBarBounds.height * 0.65)
 		const iconPadding = Math.floor(topBarBounds.height * 0.175)
 
+		// first a cloud for a remote button, as it has a top bar to put it in
+		if (drawStyle.link_status && drawStyle.decoration === ButtonGraphicsDecorationType.TopBar) {
+			const cloudWidth = Math.round(iconSize * 1.5)
+			ButtonDecorationRenderer.#drawCloud(
+				img,
+				rightMax - (cloudWidth + iconPadding),
+				topBarBounds.y + iconPadding,
+				cloudWidth,
+				iconSize,
+				drawStyle.link_status === 'unreachable' ? 'red' : 'rgb(200, 200, 200)'
+			)
+			rightMax -= cloudWidth + iconPadding
+		}
+
 		let statusColor: string | undefined
 		switch (drawStyle.button_status) {
 			case 'error':
@@ -135,5 +149,23 @@ export class ButtonDecorationRenderer {
 			)
 			rightMax -= iconSize
 		}
+	}
+
+	/** A cloud, filling a box: a large puff over two small ones, on a flat base */
+	static #drawCloud(img: ImageBase<any>, x: number, y: number, width: number, height: number, color: string): void {
+		const small = height * 0.32
+		const baseY = y + height - small
+		img.circle(x + small, baseY, small, small, 0, Math.PI * 2, false, color)
+		img.circle(x + width - small, baseY, small, small, 0, Math.PI * 2, false, color)
+		img.circle(x + width * 0.5, y + height * 0.42, height * 0.42, height * 0.42, 0, Math.PI * 2, false, color)
+		img.drawFilledPath(
+			[
+				[x + small, baseY],
+				[x + width - small, baseY],
+				[x + width - small, y + height],
+				[x + small, y + height],
+			],
+			color
+		)
 	}
 }

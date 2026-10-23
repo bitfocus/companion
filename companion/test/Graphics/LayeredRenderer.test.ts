@@ -12,6 +12,7 @@ import type {
 	ButtonGraphicsGroupDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsLineDrawElement,
+	ButtonGraphicsRemoteDrawElement,
 	ButtonGraphicsTextDrawElement,
 	SomeButtonGraphicsDrawElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -293,6 +294,50 @@ describe('GraphicsLayeredButtonRenderer', () => {
 
 	describe('element types', () => {
 		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
+
+		test('remote element draws its fetched image, fitted', async () => {
+			// A red 2:1 image, drawn into a squarer button
+			const buffer = new SharedArrayBuffer(4 * 2 * 4)
+			new Uint8Array(buffer).set(Array.from({ length: 8 }, () => [255, 0, 0, 255]).flat())
+			const remote: ButtonGraphicsRemoteDrawElement = {
+				...ELEMENT_BASE,
+				id: 'remote',
+				type: 'remote',
+				x: 0,
+				y: 0,
+				width: 1,
+				height: 1,
+				source: 'control1',
+				revision: 'r1',
+			}
+
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					...drawOpts,
+					elements: [remote],
+					decodedImages: new Map([['remote', { buffer, width: 4, height: 2, frameIndex: 0 }]]),
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+
+			// Nothing fetched for it, so nothing drawn
+			const empty = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				empty,
+				makeStyle({ ...drawOpts, elements: [remote] }),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			const blank = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(blank, makeStyle({ ...drawOpts }), new Set(), null, DEFAULT_PADDING)
+			expect(empty.buffer()).toEqual(blank.buffer())
+		})
 
 		test('text element', async () => {
 			const img = Image.create(72, 58, 1, null)

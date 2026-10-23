@@ -1,5 +1,7 @@
 import { nanoid } from 'nanoid'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { UndecoratedRender } from '../Graphics/Controller.js'
+import type { DisplayedSize, ReleaseDisplayedLocation } from '../Graphics/DisplayedLocations.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import LogController from '../Log/Controller.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
@@ -35,6 +37,13 @@ export interface LinkButtonServerHost {
 	send(transportId: string, peerId: string, payload: string): void
 	/** How far ahead of ours a peer's clock is, or null if that hasn't been measured */
 	getClockOffset(peerId: string): number | null
+	/**
+	 * Note that a location is shown while it is served, so that a link button there is drawn for it too. The size is of
+	 * the content of the button, as that is what is served. Released by calling the returned function
+	 */
+	acquireDisplayedLocation(location: ControlLocation, contentSize: DisplayedSize): ReleaseDisplayedLocation
+	/** The content of a render without its decoration, which the subscriber draws itself, and the state to draw it from */
+	getUndecoratedRender(render: ImageResult): UndecoratedRender
 }
 
 interface Lease {
@@ -47,10 +56,17 @@ interface ServedButton {
 	readonly sub: LinkButtonSubscription
 	/** The lease of each subscriber */
 	readonly leases: Map<string, Lease>
-	/** Identifies this serving of the button, for the revisions of its updates */
-	readonly stream: string
 	/** The last update sent, to send to a subscriber that doesn't have it. Null until it has been rendered */
 	last: { revision: LinkButtonRevision; payload: string } | null
+	readonly releaseDisplayed: ReleaseDisplayedLocation
+}
+
+/** The revision of a button, shared by every size it is served at, so that updates at different sizes can be matched */
+interface ButtonGeneration {
+	/** Identifies this serving of the button */
+	readonly stream: string
+	/** Counts the redraws of the button */
+	seq: number
 }
 
 /**
@@ -80,8 +96,11 @@ export class LinkButtonServer {
 
 	/** Subscribed buttons, by button and size (see linkButtonSubscriptionKey) */
 	readonly #served = new Map<string, ServedButton>()
+	/** The revision of each button served at any size, by location (see locationKey) */
+	readonly #generations = new Map<string, ButtonGeneration>()
 
-	readonly #renderQueue: ImageWriteQueue<string, [ImageResult]>
+	/** Renders to send, with the revision of the button they are of */
+	readonly #renderQueue: ImageWriteQueue<string, [ImageResult, number]>
 
 	/** Buttons held by each peer, keyed by control and surface */
 	readonly #held = new Map<string, Map<string, { controlId: string; surfaceId: string }>>()
@@ -96,7 +115,9 @@ export class LinkButtonServer {
 		this.#host = host
 		this.#selfId = selfId
 
-		this.#renderQueue = new ImageWriteQueue(this.#logger, async (key, render) => this.#sendRender(key, render))
+		this.#renderQueue = new ImageWriteQueue(this.#logger, async (key, render, seq) =>
+			this.#sendRender(key, render, seq)
+		)
 	}
 
 	get servedCount(): number {
@@ -133,10 +154,24 @@ export class LinkButtonServer {
 					refused.push(sub)
 					continue
 				}
-				served = { sub, leases: new Map(), stream: nanoid(), last: null }
+				const location = toControlLocation(sub.button)
+				served = {
+					sub,
+					leases: new Map(),
+					last: null,
+					releaseDisplayed: this.#host.acquireDisplayedLocation(location, { width: sub.width, height: sub.height }),
+				}
 				this.#served.set(key, served)
+
+				// The same render as any other size of it has, so the same revision
+				let generation = this.#generations.get(locationKey(location))
+				if (!generation) {
+					generation = { stream: nanoid(), seq: 0 }
+					this.#generations.set(locationKey(location), generation)
+				}
+
 				// Rendered for the first time, which sends it to every subscriber
-				this.#renderQueue.queue(key, this.#host.getCachedRenderOrGeneratePlaceholder(toControlLocation(sub.button)))
+				this.#renderQueue.queue(key, this.#host.getCachedRenderOrGeneratePlaceholder(location), generation.seq)
 			}
 
 			served.leases.set(peerId, { expires: now + LINK_SUBSCRIPTION_LEASE_MS, transportId })
@@ -185,8 +220,20 @@ export class LinkButtonServer {
 			if (!served) continue
 
 			served.leases.delete(peerId)
-			if (served.leases.size === 0) this.#served.delete(key)
+			if (served.leases.size === 0) this.#dropServed(key, served)
 		}
+	}
+
+	/** Stop serving a button at a size, once no one holds a lease on it */
+	#dropServed(key: string, served: ServedButton): void {
+		this.#served.delete(key)
+		served.releaseDisplayed()
+
+		const location = toControlLocation(served.sub.button)
+		for (const other of this.#served.values()) {
+			if (isSameLocation(toControlLocation(other.sub.button), location)) return
+		}
+		this.#generations.delete(locationKey(location))
 	}
 
 	handlePress(peerId: string, payload: LinkPayloadOfType<'button.press'>, now: number): void {
@@ -218,7 +265,7 @@ export class LinkButtonServer {
 	revoke(peerId: string): void {
 		for (const [key, served] of this.#served) {
 			served.leases.delete(peerId)
-			if (served.leases.size === 0) this.#served.delete(key)
+			if (served.leases.size === 0) this.#dropServed(key, served)
 		}
 		this.#releaseHeldBy(peerId)
 	}
@@ -305,14 +352,14 @@ export class LinkButtonServer {
 
 	/** A button has been redrawn, send it to anyone subscribed */
 	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
+		const generation = this.#generations.get(locationKey(location))
+		if (!generation) return
+
+		// Once for the button, whatever sizes it is sent at
+		generation.seq++
 		for (const [key, served] of this.#served) {
-			const target = toControlLocation(served.sub.button)
-			if (
-				target.pageNumber === location.pageNumber &&
-				target.row === location.row &&
-				target.column === location.column
-			) {
-				this.#renderQueue.queue(key, render)
+			if (isSameLocation(toControlLocation(served.sub.button), location)) {
+				this.#renderQueue.queue(key, render, generation.seq)
 			}
 		}
 	}
@@ -323,34 +370,45 @@ export class LinkButtonServer {
 			for (const [requestorId, { expires }] of served.leases) {
 				if (expires <= now) served.leases.delete(requestorId)
 			}
-			if (served.leases.size === 0) this.#served.delete(key)
+			if (served.leases.size === 0) this.#dropServed(key, served)
 		}
 	}
 
 	clear(): void {
+		for (const served of this.#served.values()) served.releaseDisplayed()
 		this.#served.clear()
+		this.#generations.clear()
 		this.#seenIds.clear()
 		for (const sourceId of Array.from(this.#held.keys())) this.#releaseHeldBy(sourceId)
 	}
 
-	async #sendRender(key: string, render: ImageResult): Promise<void> {
+	/**
+	 * @param seq - the revision of the button the render is of
+	 */
+	async #sendRender(key: string, render: ImageResult, seq: number): Promise<void> {
 		const served = this.#served.get(key)
 		if (!served) return
 
 		const { sub } = served
 		const location = toControlLocation(sub.button)
-		const dataUrl = await render.drawNativeEncoded(sub.width, sub.height, null, 'png')
+		const content = this.#host.getUndecoratedRender(render)
+		const dataUrl = await content.render.drawNativeEncoded(sub.width, sub.height, null, 'png')
 		// It may have been dropped while rendering, and replaced by a new serving of the button
-		if (this.#served.get(key) !== served) return
+		const generation = this.#generations.get(locationKey(location))
+		if (this.#served.get(key) !== served || !generation) return
 
-		const revision: LinkButtonRevision = { stream: served.stream, seq: (served.last?.revision.seq ?? -1) + 1 }
+		const revision: LinkButtonRevision = { stream: generation.stream, seq }
 		const payload = encodeLinkMessage('button.update', {
 			button: sub.button,
 			width: sub.width,
 			height: sub.height,
 			revision,
 			dataUrl: dataUrl || null,
-			pressed: !!render.style?.state?.pushed,
+			pressed: content.state?.pushed ?? false,
+			stepCurrent: content.state?.stepCurrent ?? 1,
+			stepCount: content.state?.stepCount ?? 1,
+			status: content.state?.button_status ?? null,
+			actionRunning: content.state?.action_running ?? false,
 			// The schema bounds the chain, a longer one is a loop anyway
 			sourceChain: [...this.#host.getSourceChain(location).slice(-15), this.#selfId()],
 		})
@@ -363,6 +421,14 @@ export class LinkButtonServer {
 
 function isSameRevision(a: LinkButtonRevision | null, b: LinkButtonRevision): boolean {
 	return a !== null && a.stream === b.stream && a.seq === b.seq
+}
+
+function isSameLocation(a: ControlLocation, b: ControlLocation): boolean {
+	return a.pageNumber === b.pageNumber && a.row === b.row && a.column === b.column
+}
+
+function locationKey(location: ControlLocation): string {
+	return `${location.pageNumber}/${location.row}/${location.column}`
 }
 
 function toControlLocation(ref: LinkButtonRef): ControlLocation {

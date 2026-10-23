@@ -39,6 +39,8 @@ function fakeRender(pushed: boolean): ImageResult {
 
 function createServer() {
 	const sent: { transportId: string; peerId: string; payload: string }[] = []
+	/** What is shown, as `<column>@<size>`, for each time it is */
+	const displayed: string[] = []
 	const host = {
 		getCachedRenderOrGeneratePlaceholder: vi.fn((_location: ControlLocation) => fakeRender(false)),
 		getControlIdAt: vi.fn((location: ControlLocation): string | null => `control${location.column}`),
@@ -48,9 +50,24 @@ function createServer() {
 		getSourceChain: vi.fn((_location: ControlLocation): string[] => []),
 		send: (transportId: string, peerId: string, payload: string) => sent.push({ transportId, peerId, payload }),
 		getClockOffset: vi.fn((_peerId: string): number | null => null),
+		getUndecoratedRender: vi.fn((render: ImageResult) => ({
+			render,
+			state: {
+				pushed: !!render.style?.state?.pushed,
+				stepCurrent: 2,
+				stepCount: 3,
+				button_status: 'error' as const,
+				action_running: true,
+			},
+		})),
+		acquireDisplayedLocation: vi.fn((location: ControlLocation, size: { width: number; height: number }) => {
+			const entry = `${location.column}@${size.width}x${size.height}`
+			displayed.push(entry)
+			return () => displayed.splice(displayed.indexOf(entry), 1)
+		}),
 	} satisfies LinkButtonServerHost
 	const server = new LinkButtonServer(host, () => 'self')
-	return { server, host, sent }
+	return { server, host, sent, displayed }
 }
 
 async function flush(): Promise<void> {
@@ -99,7 +116,18 @@ describe('LinkButtonServer', () => {
 		const decoded = decodeLinkMessage(ctx.sent[0].payload)
 		expect(decoded).toMatchObject({
 			ok: true,
-			message: { type: 'button.update', payload: { ...sub, pressed: false, sourceChain: ['self'] } },
+			message: {
+				type: 'button.update',
+				payload: {
+					...sub,
+					pressed: false,
+					stepCurrent: 2,
+					stepCount: 3,
+					status: 'error',
+					actionRunning: true,
+					sourceChain: ['self'],
+				},
+			},
 		})
 	})
 
@@ -136,6 +164,44 @@ describe('LinkButtonServer', () => {
 		ctx.server.handleSubscribe('peer', 't1', { buttons: [subscribe(second)] }, 1000)
 		await flush()
 		expect(revisionOf(ctx.sent[2].payload).stream).not.toBe(first.stream)
+	})
+
+	test('numbers the updates of a button the same at every size it is served at', async () => {
+		const wide = { button, width: 144, height: 72 }
+		ctx.server.handleSubscribe('a', 't1', { buttons: [subscribe(null)] }, 0)
+		await flush()
+		ctx.server.onButtonDrawn({ pageNumber: 1, row: 0, column: 2 }, fakeRender(true))
+		await flush()
+
+		// A size subscribed to later is of the same render, so has the same revision
+		ctx.server.handleSubscribe('b', 't1', { buttons: [{ ...wide, have: null }] }, 0)
+		await flush()
+		const [, redrawn, wideFirst] = ctx.sent.map((p) => revisionOf(p.payload))
+		expect(wideFirst).toEqual(redrawn)
+
+		ctx.sent.length = 0
+		ctx.server.onButtonDrawn({ pageNumber: 1, row: 0, column: 2 }, fakeRender(false))
+		await flush()
+		const [squareNext, wideNext] = ctx.sent.map((p) => revisionOf(p.payload))
+		expect(squareNext).toEqual(wideNext)
+		expect(squareNext.seq).toBeGreaterThan(redrawn.seq)
+	})
+
+	test('counts a button as shown at each size it is served at, until it is no longer served', () => {
+		const wide = { button, width: 144, height: 72 }
+		ctx.server.handleSubscribe('a', 't1', { buttons: [subscribe(null), { ...wide, have: null }] }, 0)
+		ctx.server.handleSubscribe('b', 't1', { buttons: [subscribe(null)] }, 0)
+		expect(ctx.displayed).toEqual(['2@72x72', '2@144x72'])
+
+		ctx.server.handleUnsubscribe('a', { buttons: [sub, wide] })
+		expect(ctx.displayed).toEqual(['2@72x72'])
+
+		ctx.server.expireLeases(LINK_SUBSCRIPTION_LEASE_MS)
+		expect(ctx.displayed).toEqual([])
+
+		ctx.server.handleSubscribe('a', 't1', { buttons: [subscribe(null)] }, 0)
+		ctx.server.clear()
+		expect(ctx.displayed).toEqual([])
 	})
 
 	test('sends redraws of subscribed buttons only', async () => {

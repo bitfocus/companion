@@ -1,5 +1,6 @@
 import debounceFn from 'debounce-fn'
 import { FONTSIZE_SHRINK_DEFAULT } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
+import type { LinkButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { LinkButtonStatus } from '@companion-app/shared/Model/Link.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
@@ -9,22 +10,19 @@ import type {
 	ButtonGraphicsCanvasDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsImageElement,
+	ButtonGraphicsRemoteDrawElement,
 	ButtonGraphicsTextDrawElement,
 	ButtonGraphicsTextElement,
 	SomeButtonGraphicsDrawElement,
 	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import {
-	ButtonGraphicsDecorationType,
-	ButtonGraphicsElementUsage,
-	ButtonGraphicsShowStatusIcons,
-	type DrawStyleLayeredButtonModel,
-} from '@companion-app/shared/Model/StyleModel.js'
+import { ButtonGraphicsElementUsage, type DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { PLACEHOLDER_BACKGROUND_COLOR, PLACEHOLDER_TEXT_COLOR } from '../../../Graphics/ConvertGraphicsElements.js'
 import { computeElementContentHash } from '../../../Graphics/ConvertGraphicsElements/Util.js'
 import type { ImageResult } from '../../../Graphics/ImageResult.js'
 import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
 import type { LinkButtonState } from '../../../Link/ButtonClient.js'
+import type { LinkButtonImage } from '../../../Link/RemoteImageStore.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { IButtonDrawer } from '../../IButtonDrawer.js'
 import { CreateElementOfType } from './LayerDefaults.js'
@@ -148,18 +146,27 @@ function makePlaceholderElements(
 
 /**
  * The `drawing` for a link button: shows the image of the remote button, or a placeholder explaining why it can't.
+ * The remote button is drawn by its peer at each shape it is shown at, so its image is a remote element: fetched from
+ * the remote image store when it is drawn, for the size it is drawn at.
  */
 export class LinkButtonDrawer implements IButtonDrawer {
 	readonly #deps: ControlDependencies
 	readonly #controlId: string
 	readonly #getState: () => LinkButtonState
+	readonly #getOptions: () => LinkButtonModel['options']
 
 	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null
 
-	constructor(deps: ControlDependencies, controlId: string, getState: () => LinkButtonState) {
+	constructor(
+		deps: ControlDependencies,
+		controlId: string,
+		getState: () => LinkButtonState,
+		getOptions: () => LinkButtonModel['options']
+	) {
 		this.#deps = deps
 		this.#controlId = controlId
 		this.#getState = getState
+		this.#getOptions = getOptions
 	}
 
 	dispose(): void {
@@ -168,17 +175,23 @@ export class LinkButtonDrawer implements IButtonDrawer {
 
 	async getDrawStyle(): Promise<DrawStyleLayeredButtonModel> {
 		const state = this.#getState()
+		const images = state.status === 'ok' ? state.images : []
 
+		// Decorated here, from the state of the remote button, as for a button of this installation
 		const style: DrawStyleLayeredButtonModel = {
 			pushed: state.pressed,
-			stepCurrent: 0,
-			stepCount: 0,
-			button_status: undefined,
-			action_running: undefined,
-			elements:
-				state.status === 'ok' && state.dataUrl
-					? makeRemoteImageElements(this.#controlId, state.dataUrl)
-					: makePlaceholderElements(this.#controlId, state.status === 'ok' ? 'loading' : state.status),
+			stepCurrent: state.stepCurrent,
+			stepCount: state.stepCount,
+			button_status: state.buttonStatus,
+			action_running: state.actionRunning,
+			elements: [
+				this.#makeCanvas(),
+				...(images.length > 0
+					? [makeRemoteElement(this.#controlId, state.remoteKey, images)]
+					: makePlaceholderElements(this.#controlId, state.status === 'ok' ? 'loading' : state.status)),
+			],
+			// A cloud in its top bar marks it as a remote button
+			link_status: state.status === 'ok' ? (state.unreachable ? 'unreachable' : 'ok') : undefined,
 			referencedLocations: undefined,
 			style: 'button-layered',
 			drawType: 'button',
@@ -186,6 +199,21 @@ export class LinkButtonDrawer implements IButtonDrawer {
 
 		this.#lastDrawStyle = style
 		return style
+	}
+
+	/** How the button is decorated, which is done here rather than by the remote installation */
+	#makeCanvas(): ButtonGraphicsCanvasDrawElement {
+		const options = this.#getOptions()
+		const canvas: ButtonGraphicsCanvasDrawElement = {
+			id: `${this.#controlId}:canvas`,
+			type: 'canvas',
+			usage: ButtonGraphicsElementUsage.Automatic,
+			decoration: options.decoration,
+			showStatusIcons: options.showStatusIcons,
+			contentHash: '',
+		}
+		canvas.contentHash = computeElementContentHash(canvas)
+		return canvas
 	}
 
 	getLastDrawStyle(): DrawStyleLayeredButtonModel | null {
@@ -212,26 +240,18 @@ export class LinkButtonDrawer implements IButtonDrawer {
 }
 
 /**
- * The remote image fills the button. It already includes the decoration (eg the top bar) drawn by the remote
- * installation, so none is added here
+ * The remote image fills the content of the button. It is drawn without decoration by the remote installation, so that
+ * the decoration (eg the top bar) is drawn here, as it is for any button of this installation. Which of its images is
+ * drawn depends on the size it is drawn at, so it is fetched then, from the remote image store
  */
-function makeRemoteImageElements(
-	parentId: string,
-	dataUrl: string
-): [ButtonGraphicsCanvasDrawElement, ButtonGraphicsImageDrawElement] {
-	const canvas: ButtonGraphicsCanvasDrawElement = {
-		id: `${parentId}:canvas`,
-		type: 'canvas',
-		usage: ButtonGraphicsElementUsage.Automatic,
-		decoration: ButtonGraphicsDecorationType.None,
-		showStatusIcons: ButtonGraphicsShowStatusIcons.None,
-		contentHash: '',
-	}
-	canvas.contentHash = computeElementContentHash(canvas)
-
-	const image: ButtonGraphicsImageDrawElement = {
-		id: `${parentId}:remote`,
-		type: 'image',
+function makeRemoteElement(
+	controlId: string,
+	remoteKey: string | null,
+	images: readonly LinkButtonImage[]
+): ButtonGraphicsRemoteDrawElement {
+	const element: ButtonGraphicsRemoteDrawElement = {
+		id: `${controlId}:remote`,
+		type: 'remote',
 		usage: ButtonGraphicsElementUsage.Automatic,
 		enabled: true,
 		opacity: 1,
@@ -239,14 +259,14 @@ function makeRemoteImageElements(
 		y: 0,
 		width: 1,
 		height: 1,
-		rotation: 0,
-		base64Image: dataUrl,
-		halign: 'center',
-		valign: 'center',
-		fillMode: 'fit',
+		// Fetched from the remote image store
+		source: remoteKey ?? '',
+		// The revisions identify the images, so that the images themselves are never compared
+		revision: images
+			.map((image) => `${image.width}x${image.height}@${image.revision.stream}:${image.revision.seq}`)
+			.join(),
 		contentHash: '',
 	}
-	image.contentHash = computeElementContentHash(image)
-
-	return [canvas, image]
+	element.contentHash = computeElementContentHash(element)
+	return element
 }
