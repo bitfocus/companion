@@ -42,4 +42,14 @@ describe('decoratedSizeOf', () => {
 			height: 72,
 		})
 	})
+
+	test('is the smallest button around the content, for every height', () => {
+		for (let height = 1; height <= 2000; height++) {
+			const decorated = decoratedSizeOf({ width: 100, height }, ButtonGraphicsDecorationType.TopBar)
+			expect(contentSizeOf(decorated, ButtonGraphicsDecorationType.TopBar).height).toBe(height)
+			expect(
+				contentSizeOf({ width: 100, height: decorated.height - 1 }, ButtonGraphicsDecorationType.TopBar).height
+			).toBeLessThan(height)
+		}
+	})
 })

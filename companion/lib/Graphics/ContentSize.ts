@@ -14,7 +14,8 @@ export function contentSizeOf(size: DisplayedSize, decoration: ButtonGraphicsDec
 
 /** The size of a button whose content area is a size (the inverse of contentSizeOf) */
 export function decoratedSizeOf(contentSize: DisplayedSize, decoration: ButtonGraphicsDecorationType): DisplayedSize {
-	let height = contentSize.height
-	while (contentSizeOf({ width: contentSize.width, height }, decoration).height < contentSize.height) height++
-	return { width: contentSize.width, height }
+	return {
+		width: contentSize.width,
+		height: GraphicsLayeredButtonRenderer.computeHeightForContent(contentSize.height, decoration),
+	}
 }
