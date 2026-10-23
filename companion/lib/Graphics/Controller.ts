@@ -28,7 +28,11 @@ import {
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RendererButtonStyle, RendererDrawStyle } from '@companion-app/shared/Model/Render.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { ButtonGraphicsDecorationType, type DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
+import {
+	ButtonGraphicsDecorationType,
+	type DrawImageBuffer,
+	type DrawStyleButtonStateProps,
+} from '@companion-app/shared/Model/StyleModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ControlButtonPreset } from '../Controls/ControlTypes/Button/Preset.js'
@@ -44,8 +48,9 @@ import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
 import { resolveThreadEntrypoint, rotateResolution } from '../Resources/Util.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
+import { contentSizeOf, decoratedSizeOf } from './ContentSize.js'
 import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
-import { DisplayedLocations } from './DisplayedLocations.js'
+import { DisplayedLocations, type DisplayedSize } from './DisplayedLocations.js'
 import { FONT_DEFINITIONS } from './Fonts.js'
 import { ImageCacheStore, type AnimationFrames } from './ImageCache/ImageCacheStore.js'
 import { ImageLibrary } from './ImageLibrary.js'
@@ -97,6 +102,20 @@ interface RenderArgumentsPreset {
 }
 type RenderArguments = RenderArgumentsButton | RenderArgumentsPreset
 
+/** What a render of a button was drawn from, to draw it again without its decoration */
+interface ButtonRenderSource {
+	readonly drawStyle: RendererButtonStyle
+	readonly animationFrameIndices: ReadonlyMap<string, number>
+	readonly sizedDraw: ButtonSizedDraw | null
+}
+
+/** A render of the content of a button without its decoration, and the state to decorate it with */
+export interface UndecoratedRender {
+	readonly render: ImageResult
+	/** Null when the render isn't of a button, eg a blank */
+	readonly state: DrawStyleButtonStateProps | null
+}
+
 export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	readonly #logger = LogController.createLogger('Graphics/Controller')
 
@@ -140,6 +159,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * Which locations are being shown right now, and at what sizes
 	 */
 	readonly displayedLocations = new DisplayedLocations()
+
+	/** What each render of a button was drawn from */
+	readonly #renderSources = new WeakMap<ImageResult, ButtonRenderSource>()
+	/** The undecorated render of each render, made when first asked for */
+	readonly #undecoratedRenders = new WeakMap<ImageResult, UndecoratedRender>()
 
 	// null when render threading is disabled: the pool spawns its minWorkers eagerly at construction,
 	// so it must not be created at all when rendering runs in-process
@@ -930,14 +954,16 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	): ImageResult {
 		const processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 
-		return new ImageResult(
+		const render = new ImageResult(
 			cacheKey,
 			processedStyle,
 			async (width, height, rotation, format) => {
 				let sizedStyle = drawStyle
 				if (sizedDraw) {
+					// The elements fill the content area, which is what is left of the button by its decoration
 					const [drawWidth, drawHeight] = rotateResolution(width, height, rotation)
-					sizedStyle = { ...drawStyle, elements: await sizedDraw.elementsAt(drawWidth, drawHeight) }
+					const content = contentSizeOf({ width: drawWidth, height: drawHeight }, drawStyle.decoration)
+					sizedStyle = { ...drawStyle, elements: await sizedDraw.elementsAt(content.width, content.height) }
 				}
 
 				return this.#executePoolDrawButtonImageBuffer(
@@ -952,6 +978,58 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			drawElements,
 			referencedLocations ?? new Set()
 		)
+		this.#renderSources.set(render, { drawStyle, animationFrameIndices, sizedDraw })
+		return render
+	}
+
+	/**
+	 * The content of a render of a button, without its decoration (top bar, border or status icons), and the state to
+	 * decorate it with. For a render that is decorated somewhere else, eg by a Link button showing it
+	 */
+	getUndecoratedRender(render: ImageResult): UndecoratedRender {
+		const cached = this.#undecoratedRenders.get(render)
+		if (cached) return cached
+
+		const source = this.#renderSources.get(render)
+		let undecorated: UndecoratedRender
+		if (source) {
+			const { drawStyle } = source
+			undecorated = {
+				render: this.#generateImageResult(
+					render.cacheKey && `undecorated:${render.cacheKey}`,
+					{
+						...drawStyle,
+						decoration: ButtonGraphicsDecorationType.None,
+						show_status_icons: false,
+						location: undefined,
+					},
+					source.animationFrameIndices,
+					source.sizedDraw
+				),
+				state: {
+					pushed: drawStyle.pushed,
+					stepCurrent: drawStyle.stepCurrent,
+					stepCount: drawStyle.stepCount,
+					button_status: drawStyle.button_status,
+					action_running: drawStyle.action_running,
+				},
+			}
+		} else {
+			undecorated = { render: GraphicsRenderer.generateBlankImage(false, null), state: null }
+		}
+
+		this.#undecoratedRenders.set(render, undecorated)
+		return undecorated
+	}
+
+	/** The size of the content area of a button of a size, by the default decoration */
+	getContentSize(size: DisplayedSize): DisplayedSize {
+		return contentSizeOf(size, this.#userConfigController.getKey('buttons_decoration'))
+	}
+
+	/** The size of a button whose content area is a size, by the default decoration (the inverse of getContentSize) */
+	getDecoratedSize(contentSize: DisplayedSize): DisplayedSize {
+		return decoratedSizeOf(contentSize, this.#userConfigController.getKey('buttons_decoration'))
 	}
 
 	/**

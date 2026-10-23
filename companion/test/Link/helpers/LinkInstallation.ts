@@ -83,6 +83,19 @@ export class LinkInstallation {
 			fakeRender(`${this.name}-${locationKey(location)}`, false)
 		),
 		displayedLocations: this.displayedLocations,
+		// Undecorated: what is drawn is the whole of the button
+		getUndecoratedRender: vi.fn((render: ImageResult) => ({
+			render,
+			state: {
+				pushed: !!render.style?.state?.pushed,
+				stepCurrent: 1,
+				stepCount: 1,
+				button_status: undefined,
+				action_running: false,
+			},
+		})),
+		getContentSize: vi.fn((size: { width: number; height: number }) => size),
+		getDecoratedSize: vi.fn((size: { width: number; height: number }) => size),
 	}
 	/** Link's tRPC api, called as the UI would */
 	readonly api: LinkApi

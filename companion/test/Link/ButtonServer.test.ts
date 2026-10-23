@@ -50,6 +50,16 @@ function createServer() {
 		getSourceChain: vi.fn((_location: ControlLocation): string[] => []),
 		send: (transportId: string, peerId: string, payload: string) => sent.push({ transportId, peerId, payload }),
 		getClockOffset: vi.fn((_peerId: string): number | null => null),
+		getUndecoratedRender: vi.fn((render: ImageResult) => ({
+			render,
+			state: {
+				pushed: !!render.style?.state?.pushed,
+				stepCurrent: 2,
+				stepCount: 3,
+				button_status: 'error' as const,
+				action_running: true,
+			},
+		})),
 		acquireDisplayedLocation: vi.fn((location: ControlLocation, size: { width: number; height: number }) => {
 			const entry = `${location.column}@${size.width}x${size.height}`
 			displayed.push(entry)
@@ -106,7 +116,18 @@ describe('LinkButtonServer', () => {
 		const decoded = decodeLinkMessage(ctx.sent[0].payload)
 		expect(decoded).toMatchObject({
 			ok: true,
-			message: { type: 'button.update', payload: { ...sub, pressed: false, sourceChain: ['self'] } },
+			message: {
+				type: 'button.update',
+				payload: {
+					...sub,
+					pressed: false,
+					stepCurrent: 2,
+					stepCount: 3,
+					status: 'error',
+					actionRunning: true,
+					sourceChain: ['self'],
+				},
+			},
 		})
 	})
 

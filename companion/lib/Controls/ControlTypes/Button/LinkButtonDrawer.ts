@@ -205,12 +205,13 @@ export class LinkButtonDrawer implements IButtonDrawer {
 		// What is drawn at no size in particular, eg where a reference element shows this button: the largest image
 		const largest = pickLargestImage(images)
 
+		// Decorated here, from the state of the remote button, as for a button of this installation
 		const style: DrawStyleLayeredButtonModel = {
 			pushed: state.pressed,
-			stepCurrent: 0,
-			stepCount: 0,
-			button_status: undefined,
-			action_running: undefined,
+			stepCurrent: state.stepCurrent,
+			stepCount: state.stepCount,
+			button_status: state.buttonStatus,
+			action_running: state.actionRunning,
 			elements: largest
 				? makeRemoteImageElements(this.#controlId, largest.dataUrl)
 				: makePlaceholderElements(this.#controlId, state.status === 'ok' ? 'loading' : state.status),
@@ -280,8 +281,8 @@ function pickLargestImage(images: readonly LinkButtonImage[]): LinkButtonImage |
 }
 
 /**
- * The remote image fills the button. It already includes the decoration (eg the top bar) drawn by the remote
- * installation, so none is added here
+ * The remote image fills the content of the button. It is drawn without decoration by the remote installation, so that
+ * the decoration (eg the top bar) is drawn here, as it is for any button of this installation
  */
 function makeRemoteImageElements(
 	parentId: string,
@@ -291,8 +292,8 @@ function makeRemoteImageElements(
 		id: `${parentId}:canvas`,
 		type: 'canvas',
 		usage: ButtonGraphicsElementUsage.Automatic,
-		decoration: ButtonGraphicsDecorationType.None,
-		showStatusIcons: ButtonGraphicsShowStatusIcons.None,
+		decoration: ButtonGraphicsDecorationType.FollowDefault,
+		showStatusIcons: ButtonGraphicsShowStatusIcons.FollowDefault,
 		contentHash: '',
 	}
 	canvas.contentHash = computeElementContentHash(canvas)

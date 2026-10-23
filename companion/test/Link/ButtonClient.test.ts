@@ -44,11 +44,20 @@ function update(
 		revision: updateRevision,
 		dataUrl: `data:image/png;base64,${size.width}x${size.height}-${updateRevision.seq}`,
 		pressed,
+		stepCurrent: 2,
+		stepCount: 3,
+		status: 'warning' as const,
+		actionRunning: true,
 		sourceChain,
 	}
 }
 
-function createClient() {
+/** No decoration: the content of a button is the whole of it */
+function noDecoration(size: { width: number; height: number }) {
+	return size
+}
+
+function createClient(contentSize = noDecoration) {
 	const peers = new LinkPeerRegistry('self', () => ({ buttons: false }), new FakeTableView<any>().asTableView())
 	const sent: { transportId: string; peerId: string; type: string; payload: any }[] = []
 	const client = new LinkButtonClient(
@@ -58,7 +67,8 @@ function createClient() {
 			const decoded = decodeLinkMessage(payload)
 			if (!decoded.ok) throw new Error(decoded.error)
 			sent.push({ transportId, peerId, type: decoded.message.type, payload: decoded.message.payload })
-		}
+		},
+		contentSize
 	)
 	return { client, peers, sent }
 }
@@ -112,6 +122,10 @@ describe('LinkButtonClient', () => {
 		expect(ctx.client.getState('c1')).toMatchObject({
 			status: 'ok',
 			pressed: true,
+			stepCurrent: 2,
+			stepCount: 3,
+			buttonStatus: 'warning',
+			actionRunning: true,
 			peerName: 'Peer peer',
 			images: [{ width: 144, height: 144, dataUrl: update(['peer']).dataUrl, revision, current: true }],
 		})
@@ -162,6 +176,22 @@ describe('LinkButtonClient', () => {
 			},
 		])
 		expect(ctx.client.countSubscribedTo('peer')).toBe(1)
+	})
+
+	test('subscribes at the size of the content of the button, under its decoration', async () => {
+		// A top bar a quarter of the height
+		let topBar = true
+		ctx = createClient((size) => (topBar ? { width: size.width, height: (size.height * 3) / 4 } : size))
+		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		show('c1', [{ width: 200, height: 200 }])
+		await flushSubscribes()
+		expect(ctx.sent.at(-1)).toMatchObject({ type: 'subscribe', payload: { buttons: [{ width: 200, height: 150 }] } })
+
+		// The decoration changes
+		topBar = false
+		ctx.client.refreshDisplayedSizes()
+		await flushSubscribes()
+		expect(ctx.sent.at(-1)).toMatchObject({ type: 'subscribe', payload: { buttons: [{ width: 200, height: 200 }] } })
 	})
 
 	test('buttons showing the same remote button share its subscriptions', async () => {

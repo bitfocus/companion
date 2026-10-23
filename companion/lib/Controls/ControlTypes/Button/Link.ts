@@ -32,6 +32,10 @@ const UNCONFIGURED_STATE: LinkButtonState = {
 	peerName: null,
 	images: [],
 	pressed: false,
+	stepCurrent: 1,
+	stepCount: 1,
+	buttonStatus: undefined,
+	actionRunning: false,
 	sourceChain: [],
 }
 

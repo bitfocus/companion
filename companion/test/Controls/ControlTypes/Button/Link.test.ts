@@ -10,6 +10,8 @@ import type { LinkButtonClient, LinkButtonImage, LinkButtonState } from '../../.
 import { mangleReferenceSurfaceId } from '../../../../lib/Surface/ReferenceSurfaceId.js'
 
 const MY_CONTROL_ID = 'bank:test01'
+
+const NO_DECORATION_STATE = { stepCurrent: 1, stepCount: 1, buttonStatus: undefined, actionRunning: false }
 const MY_LOCATION: ControlLocation = { pageNumber: 1, row: 2, column: 3 }
 
 function makeModel(peerId: string, location: string): LinkButtonModel {
@@ -186,6 +188,7 @@ describe('ControlButtonLink', () => {
 		linkButtons.getState.mockReturnValue({
 			status: 'offline',
 			peerName: 'Peer',
+			...NO_DECORATION_STATE,
 			images: [],
 			pressed: false,
 			sourceChain: [],
@@ -201,14 +204,25 @@ describe('ControlButtonLink', () => {
 			peerName: 'Peer',
 			images: [image(144, 144, 'AAAA', true)],
 			pressed: true,
+			stepCurrent: 2,
+			stepCount: 3,
+			buttonStatus: 'error',
+			actionRunning: true,
 			sourceChain: ['peer'],
 		}
 		linkButtons.getState.mockReturnValue(state)
 
+		// Decorated here, from the state of the remote button
 		const style = await control.drawing.getDrawStyle()
-		expect(style.pushed).toBe(true)
+		expect(style).toMatchObject({
+			pushed: true,
+			stepCurrent: 2,
+			stepCount: 3,
+			button_status: 'error',
+			action_running: true,
+		})
 		expect(style.elements).toMatchObject([
-			{ type: 'canvas', decoration: 'none' },
+			{ type: 'canvas', decoration: 'default', showStatusIcons: 'default' },
 			{ type: 'image', base64Image: 'data:image/png;base64,AAAA' },
 		])
 		expect(control.toRuntimeJSON()).toEqual({ status: 'ok', peerName: 'Peer' })
@@ -232,6 +246,7 @@ describe('ControlButtonLink', () => {
 			status: 'ok',
 			peerName: 'Peer',
 			// The strip is yet to catch up with the newest render
+			...NO_DECORATION_STATE,
 			images: [image(144, 144, 'SQUARE', true), image(288, 144, 'WIDE', false), image(144, 288, 'TALL', true)],
 			pressed: false,
 			sourceChain: ['peer'],

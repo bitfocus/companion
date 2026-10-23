@@ -123,7 +123,8 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		this.buttonClient = new LinkButtonClient(
 			() => this.#selfId,
 			this.#peers,
-			(transportId, peerId, payload) => this.#transports.sendTo(transportId, peerId, payload)
+			(transportId, peerId, payload) => this.#transports.sendTo(transportId, peerId, payload),
+			(size) => deps.graphics.getContentSize(size)
 		)
 		this.#buttonServer = new LinkButtonServer(
 			{
@@ -134,7 +135,10 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 				rotateControl: (controlId, delta, surfaceId) => deps.controls.rotateControl(controlId, delta, surfaceId),
 				abortControl: (controlId, unlatch, hops) =>
 					deps.controls.getControl(controlId)?.abortDelayedActions(unlatch, null, hops),
-				acquireDisplayedLocation: (location, size) => deps.graphics.displayedLocations.acquire(location, size),
+				// Served as content only, so shown as the button whose content is that size
+				acquireDisplayedLocation: (location, contentSize) =>
+					deps.graphics.displayedLocations.acquire(location, deps.graphics.getDecoratedSize(contentSize)),
+				getUndecoratedRender: (render) => deps.graphics.getUndecoratedRender(render),
 				getSourceChain: (location) => this.#getSourceChain(location),
 				getClockOffset: (peerId) => this.#peers.getClockOffset(peerId),
 				// Images only go to leaseholders, which are only allowed peers, and are dropped when that changes (see revoke)
@@ -182,6 +186,8 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 				this.emit('self', this.#getSelfInfo())
 				this.#announce(null)
 			}
+			// The content of a remote button, which is the size it is drawn at, changes with the decoration around it
+			if (key === 'buttons_decoration') this.buttonClient.refreshDisplayedSizes()
 			for (const builtin of builtinTransports) {
 				if (builtin.userConfigKeys.includes(key)) this.#applyBuiltin(builtin)
 			}

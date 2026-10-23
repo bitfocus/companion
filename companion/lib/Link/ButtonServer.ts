@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { UndecoratedRender } from '../Graphics/Controller.js'
 import type { DisplayedSize, ReleaseDisplayedLocation } from '../Graphics/DisplayedLocations.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import LogController from '../Log/Controller.js'
@@ -37,10 +38,12 @@ export interface LinkButtonServerHost {
 	/** How far ahead of ours a peer's clock is, or null if that hasn't been measured */
 	getClockOffset(peerId: string): number | null
 	/**
-	 * Note that a location is shown at a size while it is served at it, so that a link button there is drawn for it
-	 * too. Released by calling the returned function
+	 * Note that a location is shown while it is served, so that a link button there is drawn for it too. The size is of
+	 * the content of the button, as that is what is served. Released by calling the returned function
 	 */
-	acquireDisplayedLocation(location: ControlLocation, size: DisplayedSize): ReleaseDisplayedLocation
+	acquireDisplayedLocation(location: ControlLocation, contentSize: DisplayedSize): ReleaseDisplayedLocation
+	/** The content of a render without its decoration, which the subscriber draws itself, and the state to draw it from */
+	getUndecoratedRender(render: ImageResult): UndecoratedRender
 }
 
 interface Lease {
@@ -388,7 +391,8 @@ export class LinkButtonServer {
 
 		const { sub } = served
 		const location = toControlLocation(sub.button)
-		const dataUrl = await render.drawNativeEncoded(sub.width, sub.height, null, 'png')
+		const content = this.#host.getUndecoratedRender(render)
+		const dataUrl = await content.render.drawNativeEncoded(sub.width, sub.height, null, 'png')
 		// It may have been dropped while rendering, and replaced by a new serving of the button
 		const generation = this.#generations.get(locationKey(location))
 		if (this.#served.get(key) !== served || !generation) return
@@ -400,7 +404,11 @@ export class LinkButtonServer {
 			height: sub.height,
 			revision,
 			dataUrl: dataUrl || null,
-			pressed: !!render.style?.state?.pushed,
+			pressed: content.state?.pushed ?? false,
+			stepCurrent: content.state?.stepCurrent ?? 1,
+			stepCount: content.state?.stepCount ?? 1,
+			status: content.state?.button_status ?? null,
+			actionRunning: content.state?.action_running ?? false,
 			// The schema bounds the chain, a longer one is a loop anyway
 			sourceChain: [...this.#host.getSourceChain(location).slice(-15), this.#selfId()],
 		})

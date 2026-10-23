@@ -33,6 +33,9 @@ export interface IButtonDrawer {
 export interface ButtonSizedDraw {
 	/** Identifies what is drawn at every size, for the cache key of the render */
 	readonly key: string
-	/** The elements to draw at a size, before it is turned for the surface. May wait briefly for them */
+	/**
+	 * The elements to draw at a size: of the content of the button, under its decoration, before it is turned for the
+	 * surface. May wait briefly for them
+	 */
 	elementsAt(width: number, height: number): Promise<SomeButtonGraphicsDrawElement[]>
 }

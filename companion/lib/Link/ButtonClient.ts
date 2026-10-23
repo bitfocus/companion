@@ -65,12 +65,20 @@ export interface LinkButtonState {
 	/** The latest images of the remote button, when status is `ok` */
 	images: LinkButtonImage[]
 	pressed: boolean
+	/** The state of the remote button, for drawing its decoration */
+	stepCurrent: number
+	stepCount: number
+	buttonStatus: 'good' | 'warning' | 'error' | undefined
+	actionRunning: boolean
 	/** The installations the image came through, for loop detection when we serve this button onwards */
 	sourceChain: string[]
 }
 
 /** Send a message to a peer over a transport */
 export type LinkButtonClientSend = (transportId: string, peerId: string, payload: string) => void
+
+/** The size of the content of a button of a size, which is what remote buttons are drawn at, under their decoration */
+export type LinkButtonContentSize = (size: DisplayedSize) => DisplayedSize
 
 interface LinkedButton {
 	target: LinkButtonTarget | null
@@ -149,6 +157,7 @@ export class LinkButtonClient {
 	readonly #selfId: () => string
 	readonly #peers: LinkPeerRegistry
 	readonly #send: LinkButtonClientSend
+	readonly #contentSize: LinkButtonContentSize
 
 	readonly #buttons = new Map<string, LinkedButton>()
 	/** By peer and button (see remoteKey) */
@@ -165,10 +174,16 @@ export class LinkButtonClient {
 	/** Peers last seen reachable, so that only a peer that drops out gets the grace period */
 	readonly #reachable = new Set<string>()
 
-	constructor(selfId: () => string, peers: LinkPeerRegistry, send: LinkButtonClientSend) {
+	constructor(
+		selfId: () => string,
+		peers: LinkPeerRegistry,
+		send: LinkButtonClientSend,
+		contentSize: LinkButtonContentSize
+	) {
 		this.#selfId = selfId
 		this.#peers = peers
 		this.#send = send
+		this.#contentSize = contentSize
 
 		peers.on('changed', () => this.#refreshAllStates())
 		// It is reachable (again), or a different way: we may have missed updates, which the peer sends when it is told
@@ -251,6 +266,11 @@ export class LinkButtonClient {
 		this.#refreshState(button)
 	}
 
+	/** Subscribe again to the sizes everything is shown at, as the content of a button of a size has changed size */
+	refreshDisplayedSizes(): void {
+		for (const remote of this.#remotes.values()) this.#updateDemand(remote)
+	}
+
 	/**
 	 * Set the sizes a link button is being shown at, which are the sizes its remote button is subscribed to. A button
 	 * that isn't shown anywhere isn't subscribed to at all
@@ -305,6 +325,7 @@ export class LinkButtonClient {
 	/**
 	 * Wait for the image of a link button at the shape of a size, when it has just been subscribed to at that shape
 	 * and no image of it has arrived yet. Gives up after a time based on the latency to the peer
+	 * @param size - of the content of the button, which the image is drawn in
 	 * @returns the image, or null if there is none of that shape to wait for or it didn't arrive in time
 	 */
 	async waitForImage(controlId: string, size: DisplayedSize): Promise<LinkButtonImage | null> {
@@ -498,10 +519,11 @@ export class LinkButtonClient {
 
 	/** Subscribe to the sizes the remote button is shown at, and let go of those it no longer is */
 	#updateDemand(remote: RemoteButton): void {
+		// The remote button is drawn as the content of the button, under its decoration
 		const shownSizes: DisplayedSize[] = []
 		for (const controlId of remote.controlIds) {
 			const button = this.#buttons.get(controlId)
-			if (button) shownSizes.push(...button.displayedSizes)
+			if (button) shownSizes.push(...button.displayedSizes.map(this.#contentSize))
 		}
 
 		const wanted = new Set<string>()
@@ -715,6 +737,10 @@ function computeState(
 		peerName: peer?.name ?? null,
 		images: [],
 		pressed: false,
+		stepCurrent: 1,
+		stepCount: 1,
+		buttonStatus: undefined,
+		actionRunning: false,
 		sourceChain: [],
 	}
 
@@ -732,6 +758,10 @@ function computeState(
 		status: 'ok',
 		images: published.images,
 		pressed: published.update.pressed,
+		stepCurrent: published.update.stepCurrent,
+		stepCount: published.update.stepCount,
+		buttonStatus: published.update.status ?? undefined,
+		actionRunning: published.update.actionRunning,
 		sourceChain: published.update.sourceChain,
 	}
 }
