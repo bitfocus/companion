@@ -68,7 +68,8 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 	}
 
 	/**
-	 * A parser for when the custom action is not being run (eg evaluating its entities for the editor).
+	 * A parser for the entities of the custom action itself, which are only run from the editor. Each action which
+	 * calls the custom action holds a copy of its entities with their own scope (see `CustomActionInstanceManager`).
 	 * It has no location, so gets no `this:*` context, and its inputs have their default values.
 	 */
 	createVariablesAndExpressionParser(
