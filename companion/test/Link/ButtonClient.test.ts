@@ -44,7 +44,10 @@ function update(
 		width: size.width,
 		height: size.height,
 		revision: updateRevision,
-		dataUrl: `data:image/png;base64,${size.width}x${size.height}-${updateRevision.seq}`,
+		image: {
+			type: 'image' as const,
+			dataUrl: `data:image/png;base64,${size.width}x${size.height}-${updateRevision.seq}`,
+		},
 		pressed,
 		stepCurrent: 2,
 		stepCount: 3,
@@ -131,7 +134,7 @@ describe('LinkButtonClient', () => {
 			buttonStatus: 'warning',
 			actionRunning: true,
 			peerName: 'Peer peer',
-			images: [{ width: 144, height: 144, dataUrl: update(['peer']).dataUrl, revision, current: true }],
+			images: [{ width: 144, height: 144, dataUrl: 'data:image/png;base64,144x144-1', revision, current: true }],
 		})
 		expect(onChange).toHaveBeenCalled()
 	})
@@ -336,6 +339,33 @@ describe('LinkButtonClient', () => {
 		expect(linkImageWaitMs(1000)).toBe(300)
 		expect(linkCoalesceWaitMs(5)).toBe(25)
 		expect(linkCoalesceWaitMs(1000)).toBe(100)
+	})
+
+	test('keeps the image it holds when an update says only the state changed, and asks again for one it missed', async () => {
+		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		show('c1')
+		await flushSubscribes()
+		ctx.client.handleUpdate('peer', update(['peer']))
+		ctx.sent.length = 0
+
+		const unchangedSince = (since: LinkButtonRevision, seq: number) => ({
+			...update(['peer'], { stream: 's1', seq }, false),
+			image: { type: 'unchanged' as const, since },
+		})
+
+		// Released
+		ctx.client.handleUpdate('peer', unchangedSince(revision, 2))
+		expect(ctx.client.getState('c1')).toMatchObject({
+			pressed: false,
+			// Still the one it was sent with, so that it isn't taken for a new image
+			images: [{ dataUrl: 'data:image/png;base64,144x144-1', revision }],
+		})
+		expect(ctx.sent).toEqual([])
+
+		// Unchanged since one it never got: asks for the image, saying nothing is held
+		ctx.client.handleUpdate('peer', unchangedSince({ stream: 's1', seq: 5 }, 6))
+		expect(ctx.client.getState('c1')?.pressed).toBe(false)
+		expect(ctx.sent).toMatchObject([{ type: 'subscribe', payload: { buttons: [{ ...sub, have: null }] } }])
 	})
 
 	test('detects loops', async () => {

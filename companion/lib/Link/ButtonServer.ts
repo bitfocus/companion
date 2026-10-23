@@ -56,8 +56,13 @@ interface ServedButton {
 	readonly sub: LinkButtonSubscription
 	/** The lease of each subscriber */
 	readonly leases: Map<string, Lease>
-	/** The last update sent, to send to a subscriber that doesn't have it. Null until it has been rendered */
+	/**
+	 * The last update sent, to send to a subscriber that doesn't have it, always with its image. Null until it has been
+	 * rendered
+	 */
 	last: { revision: LinkButtonRevision; payload: string } | null
+	/** The image last sent, so that it is sent again only when it changes */
+	image: { contentKey: string | null; revision: LinkButtonRevision; dataUrl: string | null } | null
 	readonly releaseDisplayed: ReleaseDisplayedLocation
 }
 
@@ -163,6 +168,7 @@ export class LinkButtonServer {
 					sub,
 					leases: new Map(),
 					last: null,
+					image: null,
 					releaseDisplayed: this.#host.acquireDisplayedLocation(location, { width: sub.width, height: sub.height }),
 				}
 				this.#served.set(key, served)
@@ -392,18 +398,25 @@ export class LinkButtonServer {
 		const { sub } = served
 		const location = toControlLocation(sub.button)
 		const content = this.#host.getUndecoratedRender(render)
-		const dataUrl = await content.render.drawNativeEncoded(sub.width, sub.height, null, 'png')
+
+		// Only drawn and sent again when it looks different, not when only its state (eg pressed) has changed
+		const unchanged =
+			content.contentKey !== null && served.image?.contentKey === content.contentKey ? served.image : null
+		const dataUrl = unchanged
+			? unchanged.dataUrl
+			: (await content.render.drawNativeEncoded(sub.width, sub.height, null, 'png')) || null
 		// It may have been dropped while rendering, and replaced by a new serving of the button
 		const servedLocation = this.#locations.get(locationKey(location))
 		if (this.#served.get(key) !== served || !servedLocation) return
 
 		const revision: LinkButtonRevision = { stream: servedLocation.stream, seq }
-		const payload = encodeLinkMessage('button.update', {
+		if (!unchanged) served.image = { contentKey: content.contentKey, revision, dataUrl }
+
+		const update = {
 			button: sub.button,
 			width: sub.width,
 			height: sub.height,
 			revision,
-			dataUrl: dataUrl || null,
 			pressed: content.state?.pushed ?? false,
 			stepCurrent: content.state?.stepCurrent ?? 1,
 			stepCount: content.state?.stepCount ?? 1,
@@ -411,8 +424,13 @@ export class LinkButtonServer {
 			actionRunning: content.state?.action_running ?? false,
 			// The schema bounds the chain, a longer one is a loop anyway
 			sourceChain: [...this.#host.getSourceChain(location).slice(-15), this.#selfId()],
-		})
-		served.last = { revision, payload }
+		}
+		const withImage = encodeLinkMessage('button.update', { ...update, image: { type: 'image', dataUrl } })
+		const payload = unchanged
+			? encodeLinkMessage('button.update', { ...update, image: { type: 'unchanged', since: unchanged.revision } })
+			: withImage
+		// Sent with its image to a subscriber that missed it
+		served.last = { revision, payload: withImage }
 
 		// Rendered once, and sent to each subscriber over the transport its lease came on
 		for (const [peerId, lease] of served.leases) this.#host.send(lease.transportId, peerId, payload)

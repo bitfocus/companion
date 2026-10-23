@@ -114,6 +114,11 @@ interface ButtonRenderSource {
 /** A render of the content of a button without its decoration, and the state to decorate it with */
 export interface UndecoratedRender {
 	readonly render: ImageResult
+	/**
+	 * Identifies what the render looks like, apart from its state (eg pressed), which only its decoration shows: two
+	 * with the same key draw the same. Null when that can't be told
+	 */
+	readonly contentKey: string | null
 	/** Null when the render isn't of a button, eg a blank */
 	readonly state: DrawStyleButtonStateProps | null
 }
@@ -1016,6 +1021,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					// to hold up serving every other button
 					false
 				),
+				// Without decoration, the state isn't drawn: only the elements, as they are on this frame of any animations
+				contentKey: JSON.stringify({
+					drawType: drawStyle.drawType,
+					elements: collectContentHashes(drawStyle.elements),
+					animationFrames: [...source.animationFrameIndices],
+				}),
 				state: {
 					pushed: drawStyle.pushed,
 					stepCurrent: drawStyle.stepCurrent,
@@ -1025,7 +1036,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 				},
 			}
 		} else {
-			undecorated = { render: GraphicsRenderer.generateBlankImage(false, null), state: null }
+			undecorated = { render: GraphicsRenderer.generateBlankImage(false, null), contentKey: 'blank', state: null }
 		}
 
 		this.#undecoratedRenders.set(render, undecorated)

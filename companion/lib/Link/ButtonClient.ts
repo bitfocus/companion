@@ -98,6 +98,11 @@ interface LinkedButton {
 interface Variant {
 	readonly sub: LinkButtonSubscription
 	lastUpdate: LinkPayloadOfType<'button.update'> | null
+	/**
+	 * The image held, and the revision it was sent with. Updates that only change the state (eg pressed) say it is
+	 * unchanged since then, rather than sending it again
+	 */
+	image: { dataUrl: string | null; revision: LinkButtonRevision } | null
 	/** Why the peer said it doesn't serve the button at this size, until an update says it does */
 	refused: LinkSubscribeRefusedReason | null
 	/** Set once nothing shows this size, to unsubscribe from it when the grace period is over */
@@ -393,6 +398,14 @@ export class LinkButtonClient {
 		const held = variant.lastUpdate?.revision
 		if (held && held.stream === payload.revision.stream && held.seq >= payload.revision.seq) return
 
+		if (payload.image.type === 'image') {
+			variant.image = { dataUrl: payload.image.dataUrl, revision: payload.revision }
+		} else if (!variant.image || !isSameRevision(payload.image.since, variant.image.revision)) {
+			// The image it is the same as was missed, so ask for it again, saying nothing is held
+			this.#sendToPeer(remote.peerId, 'subscribe', { buttons: [{ ...variant.sub, have: null }] })
+			return
+		}
+
 		variant.lastUpdate = payload
 		variant.refused = null
 		if (isNewer(payload.revision, remote.latestUpdate?.revision ?? null)) remote.latestUpdate = payload
@@ -455,14 +468,15 @@ export class LinkButtonClient {
 		if (update) {
 			const images: LinkButtonImage[] = []
 			for (const variant of remote.variants.values()) {
-				const { lastUpdate } = variant
-				if (!lastUpdate?.dataUrl) continue
+				const { lastUpdate, image } = variant
+				if (!lastUpdate || !image?.dataUrl) continue
 
 				images.push({
 					width: lastUpdate.width,
 					height: lastUpdate.height,
-					dataUrl: lastUpdate.dataUrl,
-					revision: lastUpdate.revision,
+					dataUrl: image.dataUrl,
+					// The revision it was sent with, so that it isn't taken for a new image when only the state changed
+					revision: image.revision,
 					current: isSameRevision(lastUpdate.revision, update.revision),
 				})
 			}
@@ -509,6 +523,7 @@ export class LinkButtonClient {
 				remote.variants.set(key, {
 					sub: { button: remote.button, width: size.width, height: size.height },
 					lastUpdate: null,
+					image: null,
 					refused: null,
 					releaseTimer: null,
 					subscribed: false,
@@ -759,14 +774,15 @@ function getRefused(remote: RemoteButton): LinkSubscribeRefusedReason | null {
 
 /** The image of a size of a remote button, if it has the newest render */
 function currentImageOf(remote: RemoteButton, variant: Variant): LinkButtonImage | null {
-	const { lastUpdate } = variant
-	if (!lastUpdate?.dataUrl || !isSameRevision(lastUpdate.revision, remote.latestUpdate?.revision ?? null)) return null
+	const { lastUpdate, image } = variant
+	if (!lastUpdate || !image?.dataUrl) return null
+	if (!isSameRevision(lastUpdate.revision, remote.latestUpdate?.revision ?? null)) return null
 
 	return {
 		width: lastUpdate.width,
 		height: lastUpdate.height,
-		dataUrl: lastUpdate.dataUrl,
-		revision: lastUpdate.revision,
+		dataUrl: image.dataUrl,
+		revision: image.revision,
 		current: true,
 	}
 }

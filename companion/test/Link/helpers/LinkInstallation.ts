@@ -23,8 +23,9 @@ import { FakeDataDatabase } from '../../utils/FakeTableView.js'
 /** A render of a button, whose image says which installation drew it and which version it is */
 export function fakeRender(image: string, pushed: boolean): ImageResult {
 	return {
+		image,
 		style: { type: 'button', state: { pushed } },
-		drawNativeEncoded: async () => `data:image/png;base64,${image}`,
+		drawNativeEncoded: vi.fn(async () => `data:image/png;base64,${image}`),
 	} as unknown as ImageResult
 }
 
@@ -87,6 +88,8 @@ export class LinkInstallation {
 		// Undecorated: what is drawn is the whole of the button
 		getUndecoratedRender: vi.fn((render: ImageResult) => ({
 			render,
+			// What the fake render draws
+			contentKey: (render as unknown as { image: string }).image,
 			state: {
 				pushed: !!render.style?.state?.pushed,
 				stepCurrent: 1,

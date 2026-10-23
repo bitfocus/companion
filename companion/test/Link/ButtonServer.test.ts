@@ -37,6 +37,21 @@ function fakeRender(pushed: boolean): ImageResult {
 	} as unknown as ImageResult
 }
 
+/** A render that says what it draws, apart from its state, so that it can be told whether it looks different */
+function fakeRenderOf(contentKey: string, pushed: boolean): ImageResult {
+	return {
+		contentKey,
+		style: { type: 'button', state: { pushed } },
+		drawNativeEncoded: vi.fn(async () => `data:image/png;base64,${contentKey}`),
+	} as unknown as ImageResult
+}
+
+function updateOf(payload: string) {
+	const decoded = decodeLinkMessage(payload)
+	if (!decoded.ok || decoded.message.type !== 'button.update') throw new Error('Not an update')
+	return decoded.message.payload
+}
+
 function createServer() {
 	const sent: { transportId: string; peerId: string; payload: string }[] = []
 	/** What is shown, as `<column>@<size>`, for each time it is */
@@ -52,6 +67,7 @@ function createServer() {
 		getClockOffset: vi.fn((_peerId: string): number | null => null),
 		getUndecoratedRender: vi.fn((render: ImageResult) => ({
 			render,
+			contentKey: (render as unknown as { contentKey?: string }).contentKey ?? null,
 			state: {
 				pushed: !!render.style?.state?.pushed,
 				stepCurrent: 2,
@@ -225,6 +241,41 @@ describe('LinkButtonServer', () => {
 				.mock.calls.map(([w, h]) => `${w}x${h}`)
 				.sort()
 		).toEqual(['144x72', '72x72'])
+	})
+
+	test('sends the image again only when it looks different, not when only its state changes', async () => {
+		ctx.server.handleSubscribe('peer', 't1', { buttons: [subscribe(null)] }, 0)
+		await flush()
+		const location = { pageNumber: 1, row: 0, column: 2 }
+
+		ctx.server.onButtonDrawn(location, fakeRenderOf('a', true))
+		await flush()
+		const first = updateOf(ctx.sent.at(-1)!.payload)
+		expect(first).toMatchObject({ pressed: true, image: { type: 'image', dataUrl: 'data:image/png;base64,a' } })
+
+		// Released: the same image, so not drawn or sent again
+		const released = fakeRenderOf('a', false)
+		ctx.server.onButtonDrawn(location, released)
+		await flush()
+		expect(released.drawNativeEncoded).not.toHaveBeenCalled()
+		expect(updateOf(ctx.sent.at(-1)!.payload)).toMatchObject({
+			pressed: false,
+			image: { type: 'unchanged', since: first.revision },
+		})
+
+		// A subscriber that missed it is sent it with its image
+		ctx.server.handleSubscribe('peer', 't1', { buttons: [subscribe(null)] }, 1000)
+		expect(updateOf(ctx.sent.at(-1)!.payload)).toMatchObject({
+			pressed: false,
+			image: { type: 'image', dataUrl: 'data:image/png;base64,a' },
+		})
+
+		// Something new is drawn and sent
+		ctx.server.onButtonDrawn(location, fakeRenderOf('b', false))
+		await flush()
+		expect(updateOf(ctx.sent.at(-1)!.payload)).toMatchObject({
+			image: { type: 'image', dataUrl: 'data:image/png;base64,b' },
+		})
 	})
 
 	test('sends redraws of subscribed buttons only', async () => {

@@ -169,6 +169,13 @@ describe.each(NETWORKS)('two installations linked over $name', { timeout: 20_000
 		await vi.waitFor(() => expect(button.state()).toMatchObject({ pressed: true }))
 		expect(imagesOf(button.state())).toEqual(['144x144:Studio A-redrawn'])
 
+		// Released, looking the same: the image isn't drawn or sent again
+		const released = fakeRender('Studio A-redrawn', false)
+		a.controller.onButtonDrawn(location, released)
+		await vi.waitFor(() => expect(button.state()).toMatchObject({ pressed: false }))
+		expect(imagesOf(button.state())).toEqual(['144x144:Studio A-redrawn'])
+		expect(released.drawNativeEncoded).not.toHaveBeenCalled()
+
 		b.controller.buttonClient.press('remote', true, 'surface')
 		expect(b.controller.buttonClient.rotate('remote', -1, 'surface')).toBe(true)
 		b.controller.buttonClient.abort('remote', true, 0)

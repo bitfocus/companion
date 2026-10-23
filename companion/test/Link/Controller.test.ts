@@ -97,7 +97,7 @@ function createController(db = new FakeDataDatabase(), installName = 'Self') {
 	}
 	const graphics = {
 		displayedLocations: new DisplayedLocations(),
-		getUndecoratedRender: vi.fn((render: ImageResult) => ({ render, state: null })),
+		getUndecoratedRender: vi.fn((render: ImageResult) => ({ render, contentKey: null, state: null })),
 		getContentSize: vi.fn((size: { width: number; height: number }) => size),
 		getCachedRenderOrGeneratePlaceholder: vi.fn(
 			() =>

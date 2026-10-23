@@ -124,15 +124,32 @@ export const LinkSubscribeRefusedPayloadSchema = z
 		'The answer to a subscribe (renewals included), for the buttons in it that are not served, matched by their button and size. Sent again for each renewal while it is still so. A served button gets no answer: its update is the answer'
 	)
 
+export const LinkButtonImageSchema = z
+	.discriminatedUnion('type', [
+		z.object({
+			type: z.literal('image'),
+			dataUrl: z
+				.string()
+				.nullable()
+				.describe('PNG data url of the content of the button, or null if there is nothing to show'),
+		}),
+		z.object({
+			type: z.literal('unchanged'),
+			since: LinkButtonRevisionSchema.describe(
+				'The revision the image was sent with. A subscriber without it subscribes again holding nothing, to be sent it'
+			),
+		}),
+	])
+	.describe(
+		'The content of the button at this size, or that it is the same as it was, when only its state (eg pressed) has changed'
+	)
+
 export const LinkButtonUpdatePayloadSchema = z
 	.object({
 		button: LinkButtonRefSchema,
 		...BitmapSizeShape,
 		revision: LinkButtonRevisionSchema.describe('Older revisions than the one held are dropped'),
-		dataUrl: z
-			.string()
-			.nullable()
-			.describe('PNG data url of the content of the button, or null if there is nothing to show'),
+		image: LinkButtonImageSchema,
 		pressed: z.boolean().describe('Whether the button is currently pressed'),
 		stepCurrent: z.number().int().describe('The current step of the button, for its decoration'),
 		stepCount: z.number().int().nonnegative().describe('How many steps the button has, for its decoration'),
@@ -240,6 +257,7 @@ export type LinkPayloadOfType<T extends LinkMessageType> = LinkMessageOfType<T>[
 export type LinkButtonRef = z.infer<typeof LinkButtonRefSchema>
 export type LinkButtonSubscription = z.infer<typeof LinkButtonSubscriptionSchema>
 export type LinkButtonRevision = z.infer<typeof LinkButtonRevisionSchema>
+export type LinkButtonImage = z.infer<typeof LinkButtonImageSchema>
 export type LinkSubscribeRefusedReason = LinkPayloadOfType<'subscribe.refused'>['buttons'][number]['reason']
 
 /** A key identifying a button at a size, eg to keep the subscriptions to it in a map */
