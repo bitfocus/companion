@@ -3,6 +3,7 @@ import type { ActionSetsModel, ActionStepOptions } from './ActionModel.js'
 import type { SomeEntityModel } from './EntityModel.js'
 import { createExpressionOrValueSchema, type ExpressionOrValue } from './Options.js'
 import type { SomeButtonGraphicsElement } from './StyleLayersModel.js'
+import { ButtonGraphicsDecorationType, ButtonGraphicsShowStatusIcons } from './StyleModel.js'
 import type { VariableValues } from './Variables.js'
 
 export type SomeButtonModel =
@@ -122,6 +123,10 @@ export const LinkButtonOptionsSchema = z.object({
 	/** The grid location (page/row/column) of the button on that installation */
 	location: createExpressionOrValueSchema(z.string()).default({ value: '', isExpression: false }),
 	notes: z.string().optional(),
+	/** How the button is decorated here */
+	decoration: z.enum(ButtonGraphicsDecorationType).default(ButtonGraphicsDecorationType.FollowDefault),
+	/** Whether the button shows status icons here */
+	showStatusIcons: z.enum(ButtonGraphicsShowStatusIcons).default(ButtonGraphicsShowStatusIcons.FollowDefault),
 })
 export type LinkButtonOptions = z.output<typeof LinkButtonOptionsSchema>
 

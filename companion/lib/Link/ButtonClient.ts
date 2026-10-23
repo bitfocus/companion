@@ -2,6 +2,7 @@ import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { LinkButtonStatus, LinkPeerInfo } from '@companion-app/shared/Model/Link.js'
+import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
 import type { DisplayedSize } from '../Graphics/DisplayedLocations.js'
 import LogController from '../Log/Controller.js'
 import { isSameShape, linkBitmapSizesFor } from './ButtonSizes.js'
@@ -65,6 +66,8 @@ export interface LinkButtonState {
 	/** The latest images of the remote button, when status is `ok` */
 	images: LinkButtonImage[]
 	pressed: boolean
+	/** Whether the installation has dropped out, and the image is the last it sent */
+	unreachable: boolean
 	/** The state of the remote button, for drawing its decoration */
 	stepCurrent: number
 	stepCount: number
@@ -78,7 +81,7 @@ export interface LinkButtonState {
 export type LinkButtonClientSend = (transportId: string, peerId: string, payload: string) => void
 
 /** The size of the content of a button of a size, which is what remote buttons are drawn at, under their decoration */
-export type LinkButtonContentSize = (size: DisplayedSize) => DisplayedSize
+export type LinkButtonContentSize = (size: DisplayedSize, decoration: ButtonGraphicsDecorationType) => DisplayedSize
 
 interface LinkedButton {
 	target: LinkButtonTarget | null
@@ -86,6 +89,8 @@ interface LinkedButton {
 	key: string | null
 	/** The sizes this button is being shown at */
 	displayedSizes: DisplayedSize[]
+	/** How this button is decorated, which leaves the rest of it for the remote button */
+	decoration: ButtonGraphicsDecorationType
 	onChange: () => void
 	state: LinkButtonState
 	/**
@@ -266,6 +271,16 @@ export class LinkButtonClient {
 		this.#refreshState(button)
 	}
 
+	/** Set how a link button is decorated, as the remote button is drawn in what is left of it */
+	setDecoration(controlId: string, decoration: ButtonGraphicsDecorationType): void {
+		const button = this.#buttons.get(controlId)
+		if (!button || button.decoration === decoration) return
+
+		button.decoration = decoration
+		const remote = button.key ? this.#remotes.get(button.key) : undefined
+		if (remote) this.#updateDemand(remote)
+	}
+
 	/** Subscribe again to the sizes everything is shown at, as the content of a button of a size has changed size */
 	refreshDisplayedSizes(): void {
 		for (const remote of this.#remotes.values()) this.#updateDemand(remote)
@@ -291,8 +306,9 @@ export class LinkButtonClient {
 				target: null,
 				key: null,
 				displayedSizes: [],
+				decoration: ButtonGraphicsDecorationType.FollowDefault,
 				onChange,
-				state: computeState(null, null, null, '', null),
+				state: computeState(null, null, null, '', null, false),
 				held: new Map(),
 			}
 			this.#buttons.set(controlId, button)
@@ -523,7 +539,7 @@ export class LinkButtonClient {
 		const shownSizes: DisplayedSize[] = []
 		for (const controlId of remote.controlIds) {
 			const button = this.#buttons.get(controlId)
-			if (button) shownSizes.push(...button.displayedSizes.map(this.#contentSize))
+			if (button) shownSizes.push(...button.displayedSizes.map((size) => this.#contentSize(size, button.decoration)))
 		}
 
 		const wanted = new Set<string>()
@@ -716,7 +732,8 @@ export class LinkButtonClient {
 			peer && inGracePeriod ? { ...peer, online: true } : peer,
 			remote?.published ?? null,
 			this.#selfId(),
-			remote ? getRefused(remote) : null
+			remote ? getRefused(remote) : null,
+			!!peer && inGracePeriod
 		)
 		if (isEqual(newState, button.state)) return
 
@@ -730,12 +747,14 @@ function computeState(
 	peer: Pick<LinkPeerInfo, 'name' | 'compatible' | 'online' | 'sharedWithUs'> | null,
 	published: PublishedRender | null,
 	selfId: string,
-	refused: LinkSubscribeRefusedReason | null
+	refused: LinkSubscribeRefusedReason | null,
+	unreachable: boolean
 ): LinkButtonState {
 	const state: LinkButtonState = {
 		status: 'unconfigured',
 		peerName: peer?.name ?? null,
 		images: [],
+		unreachable: false,
 		pressed: false,
 		stepCurrent: 1,
 		stepCount: 1,
@@ -757,6 +776,7 @@ function computeState(
 		...state,
 		status: 'ok',
 		images: published.images,
+		unreachable,
 		pressed: published.update.pressed,
 		stepCurrent: published.update.stepCurrent,
 		stepCount: published.update.stepCount,

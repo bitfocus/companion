@@ -4,6 +4,10 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useId, useMemo } from 'react'
+import {
+	BUTTON_DECORATION_CHOICES,
+	BUTTON_STATUS_ICONS_CHOICES,
+} from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { LinkButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import type { LinkButtonRuntimeProps, LinkButtonStatus } from '@companion-app/shared/Model/Link.js'
@@ -47,7 +51,7 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 }: LinkButtonEditorProps) {
 	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
 	const setOption = useCallback(
-		(key: 'peerId' | 'location', value: string | ExpressionOrValue<string>) => {
+		(key: 'peerId' | 'location' | 'decoration' | 'showStatusIcons', value: string | ExpressionOrValue<string>) => {
 			setOptionsFieldMutation
 				.mutateAsync({ controlId, key, value })
 				.catch((e) => console.error(`Failed to set link button ${key}: ${e}`))
@@ -76,6 +80,8 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 
 	const peerFieldId = useId()
 	const locationFieldId = useId()
+	const decorationFieldId = useId()
+	const statusIconsFieldId = useId()
 
 	// Nothing to choose from until another installation has been found
 	if (peers.data && peerChoices.length === 0) return <NoInstallations />
@@ -121,6 +127,34 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 					/>
 					<div className="form-text">
 						The location on the other installation. <code>this</code> means the same location as this button.
+					</div>
+				</Grid.Col>
+
+				<FormLabel htmlFor={decorationFieldId} sm={4} column="sm">
+					Decoration
+				</FormLabel>
+				<Grid.Col sm={8}>
+					<DropdownInputField
+						htmlName={decorationFieldId}
+						choices={BUTTON_DECORATION_CHOICES}
+						value={config.options.decoration}
+						setValue={(value) => setOption('decoration', String(value))}
+					/>
+				</Grid.Col>
+
+				<FormLabel htmlFor={statusIconsFieldId} sm={4} column="sm">
+					Show status icons
+				</FormLabel>
+				<Grid.Col sm={8}>
+					<DropdownInputField
+						htmlName={statusIconsFieldId}
+						choices={BUTTON_STATUS_ICONS_CHOICES}
+						value={config.options.showStatusIcons}
+						setValue={(value) => setOption('showStatusIcons', String(value))}
+					/>
+					<div className="form-text">
+						The button is decorated here, as any button of this installation. With a top bar, a cloud among its status
+						icons marks it as a remote button.
 					</div>
 				</Grid.Col>
 			</Form>

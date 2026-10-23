@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
 import {
 	LINK_SIZE_RELEASE_GRACE_MS,
 	LINK_UNREACHABLE_GRACE_MS,
@@ -53,7 +54,7 @@ function update(
 }
 
 /** No decoration: the content of a button is the whole of it */
-function noDecoration(size: { width: number; height: number }) {
+function noDecoration(size: { width: number; height: number }, _decoration: ButtonGraphicsDecorationType) {
 	return size
 }
 
@@ -179,9 +180,15 @@ describe('LinkButtonClient', () => {
 	})
 
 	test('subscribes at the size of the content of the button, under its decoration', async () => {
-		// A top bar a quarter of the height
+		// A top bar a quarter of the height by default, and a button can have one of half its height
 		let topBar = true
-		ctx = createClient((size) => (topBar ? { width: size.width, height: (size.height * 3) / 4 } : size))
+		ctx = createClient((size, decoration) => {
+			if (decoration === ButtonGraphicsDecorationType.TopBar) return { width: size.width, height: size.height / 2 }
+			if (decoration === ButtonGraphicsDecorationType.FollowDefault && topBar) {
+				return { width: size.width, height: (size.height * 3) / 4 }
+			}
+			return size
+		})
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
 		show('c1', [{ width: 200, height: 200 }])
 		await flushSubscribes()
@@ -192,6 +199,11 @@ describe('LinkButtonClient', () => {
 		ctx.client.refreshDisplayedSizes()
 		await flushSubscribes()
 		expect(ctx.sent.at(-1)).toMatchObject({ type: 'subscribe', payload: { buttons: [{ width: 200, height: 200 }] } })
+
+		// The button has a top bar of its own
+		ctx.client.setDecoration('c1', ButtonGraphicsDecorationType.TopBar)
+		await flushSubscribes()
+		expect(ctx.sent.at(-1)).toMatchObject({ type: 'subscribe', payload: { buttons: [{ width: 288, height: 144 }] } })
 	})
 
 	test('buttons showing the same remote button share its subscriptions', async () => {
@@ -294,8 +306,9 @@ describe('LinkButtonClient', () => {
 		await vi.advanceTimersByTimeAsync(0)
 		ctx.client.handleUpdate('peer', update(['peer']))
 
+		expect(ctx.client.getState('c1')?.unreachable).toBe(false)
 		ctx.peers.handleTransportDisconnected('t1')
-		expect(ctx.client.getState('c1')?.status).toBe('ok')
+		expect(ctx.client.getState('c1')).toMatchObject({ status: 'ok', unreachable: true })
 
 		await vi.advanceTimersByTimeAsync(LINK_UNREACHABLE_GRACE_MS)
 		expect(ctx.client.getState('c1')?.status).toBe('offline')
@@ -307,7 +320,7 @@ describe('LinkButtonClient', () => {
 		expect(ctx.sent).toMatchObject([{ type: 'subscribe', payload: { buttons: [{ have: revision }] } }])
 	})
 
-	test('a brief drop goes unnoticed', async () => {
+	test('a brief drop keeps showing the button, marked as unreachable until it is back', async () => {
 		vi.useFakeTimers()
 		ctx = createClient()
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
@@ -318,11 +331,13 @@ describe('LinkButtonClient', () => {
 
 		ctx.peers.handleTransportDisconnected('t1')
 		await vi.advanceTimersByTimeAsync(1000)
+		expect(ctx.client.getState('c1')).toMatchObject({ status: 'ok', unreachable: true })
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
 		await vi.advanceTimersByTimeAsync(LINK_UNREACHABLE_GRACE_MS)
 
-		expect(ctx.client.getState('c1')?.status).toBe('ok')
-		expect(onChange).not.toHaveBeenCalled()
+		expect(ctx.client.getState('c1')).toMatchObject({ status: 'ok', unreachable: false })
+		// Only marked and unmarked, never shown as offline
+		expect(onChange).toHaveBeenCalledTimes(2)
 	})
 
 	test('a peer that dropped out before the button was made is shown offline once the grace period is over', async () => {

@@ -31,6 +31,7 @@ const UNCONFIGURED_STATE: LinkButtonState = {
 	status: 'unconfigured',
 	peerName: null,
 	images: [],
+	unreachable: false,
 	pressed: false,
 	stepCurrent: 1,
 	stepCount: 1,
@@ -99,6 +100,7 @@ export class ControlButtonLink
 			deps,
 			controlId,
 			() => this.deps.linkButtons.getState(this.controlId) ?? UNCONFIGURED_STATE,
+			() => this.options,
 			async (size) => this.deps.linkButtons.waitForImage(this.controlId, size)
 		)
 
@@ -134,6 +136,8 @@ export class ControlButtonLink
 			this.sendRuntimePropsChange()
 			this.#drawing.invalidate()
 		})
+
+		this.deps.linkButtons.setDecoration(this.controlId, this.options.decoration)
 
 		// This button may have moved
 		const myLocation = this.deps.pageStore.getLocationOfControlId(this.controlId)
@@ -185,7 +189,7 @@ export class ControlButtonLink
 	}
 
 	/**
-	 * Update an option field: `peerId`, `location` or `notes`
+	 * Update an option field: `peerId`, `location`, `notes`, `decoration` or `showStatusIcons`
 	 */
 	optionsSetField(key: string, value: JsonValue | undefined): boolean {
 		if (!Object.hasOwn(LinkButtonOptionsSchema.shape, key)) return false
@@ -200,9 +204,14 @@ export class ControlButtonLink
 		switch (optionKey) {
 			case 'notes':
 				break
+			case 'showStatusIcons':
+				this.#drawing.invalidate()
+				break
 			case 'peerId':
 			case 'location':
+			case 'decoration':
 				this.#updateTarget()
+				this.#drawing.invalidate()
 				break
 			default:
 				assertNever(optionKey)

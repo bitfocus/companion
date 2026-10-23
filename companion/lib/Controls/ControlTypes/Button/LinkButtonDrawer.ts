@@ -1,5 +1,6 @@
 import debounceFn from 'debounce-fn'
 import { FONTSIZE_SHRINK_DEFAULT } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
+import type { LinkButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { LinkButtonStatus } from '@companion-app/shared/Model/Link.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
@@ -14,12 +15,7 @@ import type {
 	SomeButtonGraphicsDrawElement,
 	SomeButtonGraphicsElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
-import {
-	ButtonGraphicsDecorationType,
-	ButtonGraphicsElementUsage,
-	ButtonGraphicsShowStatusIcons,
-	type DrawStyleLayeredButtonModel,
-} from '@companion-app/shared/Model/StyleModel.js'
+import { ButtonGraphicsElementUsage, type DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { PLACEHOLDER_BACKGROUND_COLOR, PLACEHOLDER_TEXT_COLOR } from '../../../Graphics/ConvertGraphicsElements.js'
 import { computeElementContentHash } from '../../../Graphics/ConvertGraphicsElements/Util.js'
 import type { DisplayedSize } from '../../../Graphics/DisplayedLocations.js'
@@ -176,6 +172,7 @@ export class LinkButtonDrawer implements IButtonDrawer {
 	readonly #deps: ControlDependencies
 	readonly #controlId: string
 	readonly #getState: () => LinkButtonState
+	readonly #getOptions: () => LinkButtonModel['options']
 	readonly #waitForImage: LinkButtonWaitForImage
 
 	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null
@@ -186,11 +183,13 @@ export class LinkButtonDrawer implements IButtonDrawer {
 		deps: ControlDependencies,
 		controlId: string,
 		getState: () => LinkButtonState,
+		getOptions: () => LinkButtonModel['options'],
 		waitForImage: LinkButtonWaitForImage
 	) {
 		this.#deps = deps
 		this.#controlId = controlId
 		this.#getState = getState
+		this.#getOptions = getOptions
 		this.#waitForImage = waitForImage
 	}
 
@@ -204,6 +203,7 @@ export class LinkButtonDrawer implements IButtonDrawer {
 
 		// What is drawn at no size in particular, eg where a reference element shows this button: the largest image
 		const largest = pickLargestImage(images)
+		const canvas = this.#makeCanvas()
 
 		// Decorated here, from the state of the remote button, as for a button of this installation
 		const style: DrawStyleLayeredButtonModel = {
@@ -212,9 +212,14 @@ export class LinkButtonDrawer implements IButtonDrawer {
 			stepCount: state.stepCount,
 			button_status: state.buttonStatus,
 			action_running: state.actionRunning,
-			elements: largest
-				? makeRemoteImageElements(this.#controlId, largest.dataUrl)
-				: makePlaceholderElements(this.#controlId, state.status === 'ok' ? 'loading' : state.status),
+			elements: [
+				canvas,
+				...(largest
+					? [makeRemoteImageElement(this.#controlId, largest.dataUrl)]
+					: makePlaceholderElements(this.#controlId, state.status === 'ok' ? 'loading' : state.status)),
+			],
+			// A cloud in its top bar marks it as a remote button
+			link_status: state.status === 'ok' ? (state.unreachable ? 'unreachable' : 'ok') : undefined,
 			referencedLocations: undefined,
 			style: 'button-layered',
 			drawType: 'button',
@@ -228,6 +233,7 @@ export class LinkButtonDrawer implements IButtonDrawer {
 	getSizedDraw(): ButtonSizedDraw | null {
 		const images = this.#lastImages
 		if (images.length === 0) return null
+		const canvas = this.#makeCanvas()
 
 		return {
 			key: images
@@ -241,11 +247,29 @@ export class LinkButtonDrawer implements IButtonDrawer {
 					(await this.#waitForImage(size)) ??
 					pickLinkButtonImage(images, size, false)
 
-				return image
-					? makeRemoteImageElements(this.#controlId, image.dataUrl)
-					: makePlaceholderElements(this.#controlId, 'loading')
+				return [
+					canvas,
+					...(image
+						? [makeRemoteImageElement(this.#controlId, image.dataUrl)]
+						: makePlaceholderElements(this.#controlId, 'loading')),
+				]
 			},
 		}
+	}
+
+	/** How the button is decorated, which is done here rather than by the remote installation */
+	#makeCanvas(): ButtonGraphicsCanvasDrawElement {
+		const options = this.#getOptions()
+		const canvas: ButtonGraphicsCanvasDrawElement = {
+			id: `${this.#controlId}:canvas`,
+			type: 'canvas',
+			usage: ButtonGraphicsElementUsage.Automatic,
+			decoration: options.decoration,
+			showStatusIcons: options.showStatusIcons,
+			contentHash: '',
+		}
+		canvas.contentHash = computeElementContentHash(canvas)
+		return canvas
 	}
 
 	getLastDrawStyle(): DrawStyleLayeredButtonModel | null {
@@ -284,20 +308,7 @@ function pickLargestImage(images: readonly LinkButtonImage[]): LinkButtonImage |
  * The remote image fills the content of the button. It is drawn without decoration by the remote installation, so that
  * the decoration (eg the top bar) is drawn here, as it is for any button of this installation
  */
-function makeRemoteImageElements(
-	parentId: string,
-	dataUrl: string
-): [ButtonGraphicsCanvasDrawElement, ButtonGraphicsImageDrawElement] {
-	const canvas: ButtonGraphicsCanvasDrawElement = {
-		id: `${parentId}:canvas`,
-		type: 'canvas',
-		usage: ButtonGraphicsElementUsage.Automatic,
-		decoration: ButtonGraphicsDecorationType.FollowDefault,
-		showStatusIcons: ButtonGraphicsShowStatusIcons.FollowDefault,
-		contentHash: '',
-	}
-	canvas.contentHash = computeElementContentHash(canvas)
-
+function makeRemoteImageElement(parentId: string, dataUrl: string): ButtonGraphicsImageDrawElement {
 	const image: ButtonGraphicsImageDrawElement = {
 		id: `${parentId}:remote`,
 		type: 'image',
@@ -316,6 +327,5 @@ function makeRemoteImageElements(
 		contentHash: '',
 	}
 	image.contentHash = computeElementContentHash(image)
-
-	return [canvas, image]
+	return image
 }

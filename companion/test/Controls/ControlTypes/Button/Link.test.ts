@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { LinkButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import { parseLinkButtonOptions, type LinkButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ControlDependencies } from '../../../../lib/Controls/ControlDependencies.js'
 import { ControlButtonLink } from '../../../../lib/Controls/ControlTypes/Button/Link.js'
@@ -11,11 +11,20 @@ import { mangleReferenceSurfaceId } from '../../../../lib/Surface/ReferenceSurfa
 
 const MY_CONTROL_ID = 'bank:test01'
 
-const NO_DECORATION_STATE = { stepCurrent: 1, stepCount: 1, buttonStatus: undefined, actionRunning: false }
+const NO_DECORATION_STATE = {
+	unreachable: false,
+	stepCurrent: 1,
+	stepCount: 1,
+	buttonStatus: undefined,
+	actionRunning: false,
+}
 const MY_LOCATION: ControlLocation = { pageNumber: 1, row: 2, column: 3 }
 
 function makeModel(peerId: string, location: string): LinkButtonModel {
-	return { type: 'link-button', options: { peerId, location: { value: location, isExpression: false } } }
+	return {
+		type: 'link-button',
+		options: parseLinkButtonOptions({ peerId, location: { value: location, isExpression: false } }).options,
+	}
 }
 
 describe('ControlButtonLink', () => {
@@ -28,6 +37,7 @@ describe('ControlButtonLink', () => {
 		rotate: ReturnType<typeof vi.fn>
 		abort: ReturnType<typeof vi.fn>
 		setDisplayedSizes: ReturnType<typeof vi.fn>
+		setDecoration: ReturnType<typeof vi.fn>
 		waitForImage: ReturnType<typeof vi.fn>
 	}
 	let parseVariables: ReturnType<typeof vi.fn>
@@ -42,6 +52,7 @@ describe('ControlButtonLink', () => {
 			rotate: vi.fn(() => true),
 			abort: vi.fn(),
 			setDisplayedSizes: vi.fn(),
+			setDecoration: vi.fn(),
 			waitForImage: vi.fn(async () => null),
 		}
 		displayedLocations = new DisplayedLocations()
@@ -117,6 +128,8 @@ describe('ControlButtonLink', () => {
 		expect(control.toJSON().options).toEqual({
 			peerId: 'peer',
 			location: { value: '1/0/0', isExpression: false },
+			decoration: 'default',
+			showStatusIcons: 'default',
 		})
 	})
 
@@ -131,6 +144,8 @@ describe('ControlButtonLink', () => {
 			peerId: 'peer',
 			location: { value: '', isExpression: false },
 			notes: 'kept',
+			decoration: 'default',
+			showStatusIcons: 'default',
 		})
 		expect(deps.dbTable.set).toHaveBeenCalledWith(MY_CONTROL_ID, control.toJSON())
 	})
@@ -179,6 +194,7 @@ describe('ControlButtonLink', () => {
 		// Nothing to show yet: a link icon and why
 		const placeholder = await control.drawing.getDrawStyle()
 		expect(placeholder.elements).toMatchObject([
+			{ type: 'canvas' },
 			{ type: 'box' },
 			{ type: 'image', base64Image: LINK_ICON_SVG },
 			{ type: 'text', text: 'Remote\nbutton' },
@@ -194,6 +210,7 @@ describe('ControlButtonLink', () => {
 			sourceChain: [],
 		} satisfies LinkButtonState)
 		expect((await control.drawing.getDrawStyle()).elements).toMatchObject([
+			{ type: 'canvas' },
 			{ type: 'box' },
 			{ type: 'image', base64Image: LINK_SLASH_ICON_SVG },
 			{ type: 'text', text: 'Remote\noffline' },
@@ -203,6 +220,7 @@ describe('ControlButtonLink', () => {
 			status: 'ok',
 			peerName: 'Peer',
 			images: [image(144, 144, 'AAAA', true)],
+			unreachable: false,
 			pressed: true,
 			stepCurrent: 2,
 			stepCount: 3,
@@ -220,12 +238,35 @@ describe('ControlButtonLink', () => {
 			stepCount: 3,
 			button_status: 'error',
 			action_running: true,
+			link_status: 'ok',
 		})
 		expect(style.elements).toMatchObject([
 			{ type: 'canvas', decoration: 'default', showStatusIcons: 'default' },
 			{ type: 'image', base64Image: 'data:image/png;base64,AAAA' },
 		])
 		expect(control.toRuntimeJSON()).toEqual({ status: 'ok', peerName: 'Peer' })
+
+		// Still showing the last image of an installation that has dropped out
+		linkButtons.getState.mockReturnValue({ ...state, unreachable: true })
+		expect((await control.drawing.getDrawStyle()).link_status).toBe('unreachable')
+	})
+
+	it('is decorated as set, and tells the link client so', async () => {
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'), false)
+		expect(linkButtons.setDecoration).toHaveBeenLastCalledWith(MY_CONTROL_ID, 'default')
+
+		expect(control.optionsSetField('decoration', 'bogus')).toBe(false)
+		expect(control.optionsSetField('showStatusIcons', 'bogus')).toBe(false)
+		expect(control.optionsSetField('decoration', 'none')).toBe(true)
+		expect(control.optionsSetField('showStatusIcons', 'all')).toBe(true)
+		expect(linkButtons.setDecoration).toHaveBeenLastCalledWith(MY_CONTROL_ID, 'none')
+
+		expect((await control.drawing.getDrawStyle()).elements[0]).toMatchObject({
+			type: 'canvas',
+			decoration: 'none',
+			showStatusIcons: 'all',
+		})
+		expect(control.toJSON().options).toMatchObject({ decoration: 'none', showStatusIcons: 'all' })
 	})
 
 	function image(width: number, height: number, data: string, current: boolean): LinkButtonImage {

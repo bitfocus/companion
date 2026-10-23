@@ -124,7 +124,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			() => this.#selfId,
 			this.#peers,
 			(transportId, peerId, payload) => this.#transports.sendTo(transportId, peerId, payload),
-			(size) => deps.graphics.getContentSize(size)
+			(size, decoration) => deps.graphics.getContentSize(size, decoration)
 		)
 		this.#buttonServer = new LinkButtonServer(
 			{
@@ -137,7 +137,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 					deps.controls.getControl(controlId)?.abortDelayedActions(unlatch, null, hops),
 				// Served as content only, so shown as the button whose content is that size
 				acquireDisplayedLocation: (location, contentSize) =>
-					deps.graphics.displayedLocations.acquire(location, deps.graphics.getDecoratedSize(contentSize)),
+					deps.graphics.displayedLocations.acquire(location, deps.graphics.getDecoratedSize(location, contentSize)),
 				getUndecoratedRender: (render) => deps.graphics.getUndecoratedRender(render),
 				getSourceChain: (location) => this.#getSourceChain(location),
 				getClockOffset: (peerId) => this.#peers.getClockOffset(peerId),
@@ -154,7 +154,10 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			if (controlId) this.buttonClient.setDisplayedSizes(controlId, deps.graphics.displayedLocations.getSizes(location))
 		})
 		deps.pageStore.on('controlLocationChanged', (controlId, location) => {
-			this.buttonClient.setDisplayedSizes(controlId, location ? deps.graphics.displayedLocations.getSizes(location) : [])
+			this.buttonClient.setDisplayedSizes(
+				controlId,
+				location ? deps.graphics.displayedLocations.getSizes(location) : []
+			)
 		})
 
 		this.#transports.events.on('announcement', (transportId, peerId, payload) =>

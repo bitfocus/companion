@@ -1022,14 +1022,26 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		return undecorated
 	}
 
-	/** The size of the content area of a button of a size, by the default decoration */
-	getContentSize(size: DisplayedSize): DisplayedSize {
-		return contentSizeOf(size, this.#userConfigController.getKey('buttons_decoration'))
+	/** The size of the content area of a button of a size, with a decoration (which can be to follow the default) */
+	getContentSize(size: DisplayedSize, decoration: ButtonGraphicsDecorationType): DisplayedSize {
+		return contentSizeOf(
+			size,
+			decoration === ButtonGraphicsDecorationType.FollowDefault
+				? this.#userConfigController.getKey('buttons_decoration')
+				: decoration
+		)
 	}
 
-	/** The size of a button whose content area is a size, by the default decoration (the inverse of getContentSize) */
-	getDecoratedSize(contentSize: DisplayedSize): DisplayedSize {
-		return decoratedSizeOf(contentSize, this.#userConfigController.getKey('buttons_decoration'))
+	/**
+	 * The size of the button at a location whose content area is a size, by how it is decorated now (the inverse of
+	 * getContentSize)
+	 */
+	getDecoratedSize(location: ControlLocation, contentSize: DisplayedSize): DisplayedSize {
+		const render = this.getCachedRender(location)
+		const decoration =
+			(render && this.#renderSources.get(render)?.drawStyle.decoration) ??
+			this.#userConfigController.getKey('buttons_decoration')
+		return decoratedSizeOf(contentSize, decoration)
 	}
 
 	/**
