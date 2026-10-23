@@ -105,6 +105,8 @@ describe('ControlButtonLink', () => {
 		const control = new ControlButtonLink(deps, MY_CONTROL_ID, null, false)
 		expect(control.optionsSetField('peerId', 5)).toBe(false)
 		expect(control.optionsSetField('location', 'nope')).toBe(false)
+		expect(control.optionsSetField('location', { value: 5, isExpression: false })).toBe(false)
+		expect(control.optionsSetField('location', { isExpression: true })).toBe(false)
 		expect(control.optionsSetField('other', 'x')).toBe(false)
 	})
 

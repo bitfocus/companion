@@ -216,7 +216,9 @@ export function fixupLinkButtonControl(
 ): LinkButtonModel {
 	const options = structuredClone(control.options) ?? {}
 
-	if (!isExpressionOrValue(options.location)) options.location = { value: '', isExpression: false }
+	if (!isExpressionOrValue(options.location) || typeof options.location.value !== 'string') {
+		options.location = { value: '', isExpression: false }
+	}
 	if (typeof options.peerId !== 'string') options.peerId = ''
 
 	// The peer is identified by its Link id, which is global so needs no remapping. Connection labels used in the

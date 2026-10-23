@@ -181,8 +181,8 @@ export class ControlButtonLink
 				this.options.peerId = value
 				break
 			case 'location':
-				if (!isExpressionOrValue(value)) return false
-				this.options.location = value
+				if (!isExpressionOrValue(value) || typeof value.value !== 'string') return false
+				this.options.location = { value: value.value, isExpression: value.isExpression }
 				break
 			default:
 				return false
