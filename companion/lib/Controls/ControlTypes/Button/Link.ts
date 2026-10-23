@@ -30,6 +30,7 @@ import { LinkButtonDrawer } from './LinkButtonDrawer.js'
 const UNCONFIGURED_STATE: LinkButtonState = {
 	status: 'unconfigured',
 	peerName: null,
+	remoteKey: null,
 	images: [],
 	unreachable: false,
 	pressed: false,
@@ -100,8 +101,7 @@ export class ControlButtonLink
 			deps,
 			controlId,
 			() => this.deps.linkButtons.getState(this.controlId) ?? UNCONFIGURED_STATE,
-			() => this.options,
-			async (size) => this.deps.linkButtons.waitForImage(this.controlId, size)
+			() => this.options
 		)
 
 		if (!storage) {

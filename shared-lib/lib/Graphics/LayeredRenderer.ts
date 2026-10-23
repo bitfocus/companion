@@ -6,6 +6,7 @@ import type {
 	ButtonGraphicsGaugeDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsLineDrawElement,
+	ButtonGraphicsRemoteDrawElement,
 	ButtonGraphicsTextDrawElement,
 	SomeButtonGraphicsDrawElement,
 } from '../Model/StyleLayersModel.js'
@@ -239,6 +240,15 @@ export class GraphicsLayeredButtonRenderer {
 					case 'gauge':
 						elementBounds = await this.#drawGaugeElement(img, drawBounds, element, skipDraw)
 						break
+					case 'remote':
+						elementBounds = await this.#drawRemoteElement(
+							img,
+							drawBounds,
+							element,
+							decodedImages?.get(element.id) ?? null,
+							skipDraw
+						)
+						break
 					default:
 						assertNever(element)
 				}
@@ -267,6 +277,32 @@ export class GraphicsLayeredButtonRenderer {
 		if (!backgroundElement) return
 
 		// img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY, parseColor(backgroundElement.color))
+	}
+
+	/** The fetched image fills the element, at its own shape. Nothing is drawn when there was none to fetch */
+	static async #drawRemoteElement(
+		img: ImageBase<any>,
+		parentBounds: DrawBounds,
+		element: ButtonGraphicsRemoteDrawElement,
+		decodedImage: DecodedRasterImage | null,
+		skipDraw: boolean
+	): Promise<DrawBounds> {
+		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
+		if (skipDraw || !decodedImage) return drawBounds
+
+		await img.usingAlpha(element.opacity, async () => {
+			img.drawDecodedImage(
+				decodedImage,
+				drawBounds.x,
+				drawBounds.y,
+				drawBounds.width,
+				drawBounds.height,
+				'center',
+				'center',
+				'fit'
+			)
+		})
+		return drawBounds
 	}
 
 	static async #drawImageElement(

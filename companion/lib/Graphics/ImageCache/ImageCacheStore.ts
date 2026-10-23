@@ -6,6 +6,30 @@ import type { DecodeImageResult } from './DecodeImage.js'
 
 export type DecodeImageFn = (source: string) => Promise<DecodeImageResult>
 
+/** A size in pixels */
+export interface PixelSize {
+	width: number
+	height: number
+}
+
+/** An image fetched for a remote element */
+export interface RemoteImage {
+	/** Identifies the image, for the decoded cache, so that the image data itself never has to be compared */
+	readonly key: string
+	readonly dataUrl: string
+}
+
+/** Where the images of remote elements are fetched from */
+export interface RemoteImageSource {
+	/**
+	 * The image to draw for a remote element at a size. May wait briefly for one on its way
+	 * @param source - the `source` of the element
+	 * @param size - the size the element is drawn at, in pixels
+	 * @returns the image, or null when there is none
+	 */
+	getImage(source: string, size: PixelSize): Promise<RemoteImage | null>
+}
+
 /** The frames of the animated images chosen for one render */
 export interface AnimationFrames {
 	/** The frame to draw of each animated image, keyed by the id of its element */
@@ -77,7 +101,7 @@ export class ImageCacheStore {
 						case 'image': {
 							if (!element.base64Image) return
 
-							const entry = await this.#getEntry(element.base64Image)
+							const entry = await this.#getEntry(element.base64Image, element.base64Image)
 							if (!entry || entry.result.type !== 'raster' || entry.result.frameCount <= 1) return
 
 							const { frameStartMs, durationMs } = entry.result
@@ -104,13 +128,23 @@ export class ImageCacheStore {
 	 * Resolve the images in a draw style to their decoded form, ready to send to a render thread
 	 * @param drawStyle The style to draw
 	 * @param frameIndices The frame to draw of each animated image, keyed by the id of its element
+	 * @param contentSize The size of the content of the button being drawn, in pixels, for the remote elements in it
+	 * @param remoteImages Where the images of remote elements are fetched from
 	 */
 	async resolveDrawStyle(
 		drawStyle: RendererDrawStyle,
-		frameIndices: ReadonlyMap<string, number>
+		frameIndices: ReadonlyMap<string, number>,
+		contentSize: PixelSize,
+		remoteImages: RemoteImageSource
 	): Promise<RendererDrawStyle> {
 		const decodedImages = new Map<string, DecodedRasterImage>()
-		const elements = await this.#resolveElements(drawStyle.elements, frameIndices, decodedImages)
+		const elements = await this.#resolveElements(
+			drawStyle.elements,
+			frameIndices,
+			decodedImages,
+			contentSize,
+			remoteImages
+		)
 		if (decodedImages.size === 0) return drawStyle
 
 		return { ...drawStyle, elements, decodedImages }
@@ -118,12 +152,15 @@ export class ImageCacheStore {
 
 	/**
 	 * Resolve the images in some elements to their decoded form, collecting them into decodedImages
+	 * @param parentSize The size, in pixels, of what the elements are positioned within
 	 * @returns The elements, with the source of each decoded image removed. The same array when nothing was changed
 	 */
 	async #resolveElements(
 		elements: SomeButtonGraphicsDrawElement[],
 		frameIndices: ReadonlyMap<string, number>,
-		decodedImages: Map<string, DecodedRasterImage>
+		decodedImages: Map<string, DecodedRasterImage>,
+		parentSize: PixelSize,
+		remoteImages: RemoteImageSource
 	): Promise<SomeButtonGraphicsDrawElement[]> {
 		let changed = false
 		const result = await Promise.all(
@@ -132,7 +169,7 @@ export class ImageCacheStore {
 					case 'image': {
 						if (!element.base64Image) return element
 
-						const entry = await this.#getEntry(element.base64Image)
+						const entry = await this.#getEntry(element.base64Image, element.base64Image)
 						if (!entry || entry.result.type !== 'raster') return element
 
 						decodedImages.set(element.id, {
@@ -148,9 +185,28 @@ export class ImageCacheStore {
 						// Avoid copying the source to the render thread, as it is no longer needed
 						return { ...element, base64Image: null }
 					}
+					case 'remote': {
+						const image = await remoteImages.getImage(element.source, scaleSize(parentSize, element))
+						const entry = image && (await this.#getEntry(image.key, image.dataUrl))
+						if (!entry || entry.result.type !== 'raster') return element
+
+						decodedImages.set(element.id, {
+							buffer: entry.result.buffer,
+							width: entry.result.width,
+							height: entry.result.height,
+							frameIndex: 0,
+						})
+						return element
+					}
 					case 'group':
 					case 'reference': {
-						const children = await this.#resolveElements(element.children, frameIndices, decodedImages)
+						const children = await this.#resolveElements(
+							element.children,
+							frameIndices,
+							decodedImages,
+							scaleSize(parentSize, element),
+							remoteImages
+						)
 						if (children === element.children) return element
 
 						changed = true
@@ -165,16 +221,20 @@ export class ImageCacheStore {
 		return changed ? result : elements
 	}
 
-	async #getEntry(source: string): Promise<CacheEntry | null> {
-		const entry = this.#entries.get(source)
+	/**
+	 * @param key - identifies the image in the cache: the source itself, or something shorter that identifies it
+	 * @param source - the image to decode, when it isn't cached
+	 */
+	async #getEntry(key: string, source: string): Promise<CacheEntry | null> {
+		const entry = this.#entries.get(key)
 		if (entry) {
 			// Mark as most recently used
-			this.#entries.delete(source)
-			this.#entries.set(source, entry)
+			this.#entries.delete(key)
+			this.#entries.set(key, entry)
 			return entry
 		}
 
-		const pending = this.#pending.get(source)
+		const pending = this.#pending.get(key)
 		if (pending) return pending
 
 		const promise = this.#decodeImage(source)
@@ -182,9 +242,9 @@ export class ImageCacheStore {
 				const newEntry: CacheEntry = {
 					result,
 					// Strings are stored as up to 2 bytes per character
-					byteSize: source.length * 2 + (result.type === 'raster' ? result.buffer.byteLength : 0),
+					byteSize: key.length * 2 + (result.type === 'raster' ? result.buffer.byteLength : 0),
 				}
-				this.#insert(source, newEntry)
+				this.#insert(key, newEntry)
 				return newEntry
 			})
 			.catch((e) => {
@@ -193,10 +253,10 @@ export class ImageCacheStore {
 				return null
 			})
 			.finally(() => {
-				this.#pending.delete(source)
+				this.#pending.delete(key)
 			})
 
-		this.#pending.set(source, promise)
+		this.#pending.set(key, promise)
 		return promise
 	}
 
@@ -211,5 +271,13 @@ export class ImageCacheStore {
 			this.#entries.delete(key)
 			this.#usedBytes -= oldEntry.byteSize
 		}
+	}
+}
+
+/** The size in pixels of an element positioned within something of a size */
+function scaleSize(parentSize: PixelSize, bounds: { width: number; height: number }): PixelSize {
+	return {
+		width: Math.max(1, Math.round(parentSize.width * bounds.width)),
+		height: Math.max(1, Math.round(parentSize.height * bounds.height)),
 	}
 }

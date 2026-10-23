@@ -15,6 +15,7 @@ import { DisplayedLocations } from '../../../lib/Graphics/DisplayedLocations.js'
 import type { ImageResult } from '../../../lib/Graphics/ImageResult.js'
 import type { LinkButtonTarget } from '../../../lib/Link/ButtonClient.js'
 import { LinkController } from '../../../lib/Link/Controller.js'
+import { LinkRemoteImageStore } from '../../../lib/Link/RemoteImageStore.js'
 import type { SomeLinkBuiltinTransport, SomeLinkTransportDefinition } from '../../../lib/Link/Transports/Types.js'
 import type { IPageStore } from '../../../lib/Page/Store.js'
 import { FakeDataDatabase } from '../../utils/FakeTableView.js'
@@ -130,6 +131,7 @@ export class LinkInstallation {
 				pageStore,
 				controls: this.controls as unknown as IControlStore,
 				graphics: this.graphics as unknown as GraphicsController,
+				remoteImages: new LinkRemoteImageStore(),
 			},
 			options.transportDefinitions,
 			options.builtinTransports

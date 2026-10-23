@@ -23,6 +23,7 @@ import { ImportExportController } from './ImportExport/Controller.js'
 import { InstanceController } from './Instance/Controller.js'
 import { InternalController } from './Internal/Controller.js'
 import { LinkController } from './Link/Controller.js'
+import { LinkRemoteImageStore } from './Link/RemoteImageStore.js'
 import { LINK_BUILTIN_TRANSPORTS, LINK_TRANSPORT_DEFINITIONS } from './Link/Transports/index.js'
 import LogController, { type Logger } from './Log/Controller.js'
 import { PageController } from './Page/Controller.js'
@@ -237,6 +238,9 @@ export class Registry {
 
 		this.#renderClock = new RenderClock()
 
+		// The images of the remote buttons that link buttons show, kept by Link and drawn by the graphics
+		const linkRemoteImages = new LinkRemoteImageStore()
+
 		this.graphics = new GraphicsController(
 			controlStore,
 			pageStore,
@@ -245,7 +249,8 @@ export class Registry {
 			this.db,
 			this.#internalApiRouter,
 			this.metrics,
-			this.#renderClock
+			this.#renderClock,
+			linkRemoteImages
 		)
 
 		this.surfaces = new SurfaceController(
@@ -290,7 +295,7 @@ export class Registry {
 			this.#appInfo,
 			this.db,
 			this.userconfig,
-			{ pageStore, controls: controlStore, graphics: this.graphics },
+			{ pageStore, controls: controlStore, graphics: this.graphics, remoteImages: linkRemoteImages },
 			LINK_TRANSPORT_DEFINITIONS,
 			LINK_BUILTIN_TRANSPORTS
 		)

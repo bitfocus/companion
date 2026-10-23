@@ -10,6 +10,7 @@ import type { ImageResult } from '../../lib/Graphics/ImageResult.js'
 import { LinkController } from '../../lib/Link/Controller.js'
 import { decodeLinkAnnouncement, encodeLinkAnnouncement } from '../../lib/Link/Protocol/Announcement.js'
 import { decodeLinkMessage, encodeLinkMessage, type LinkMessage } from '../../lib/Link/Protocol/v1/Schemas.js'
+import { LinkRemoteImageStore } from '../../lib/Link/RemoteImageStore.js'
 import type {
 	LinkMessageOrigin,
 	LinkTransport,
@@ -118,6 +119,7 @@ function createController(db = new FakeDataDatabase(), installName = 'Self') {
 			pageStore,
 			controls: controls as unknown as IControlStore,
 			graphics: graphics as unknown as GraphicsController,
+			remoteImages: new LinkRemoteImageStore(),
 		},
 		[definition],
 		[]

@@ -36,7 +36,6 @@ import {
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ControlButtonPreset } from '../Controls/ControlTypes/Button/Preset.js'
-import type { ButtonSizedDraw } from '../Controls/IButtonDrawer.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { RenderClock } from '../Controls/RenderClock.js'
 import type { DataDatabase } from '../Data/Database.js'
@@ -52,7 +51,7 @@ import { contentSizeOf, decoratedSizeOf } from './ContentSize.js'
 import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
 import { DisplayedLocations, type DisplayedSize } from './DisplayedLocations.js'
 import { FONT_DEFINITIONS } from './Fonts.js'
-import { ImageCacheStore, type AnimationFrames } from './ImageCache/ImageCacheStore.js'
+import { ImageCacheStore, type AnimationFrames, type RemoteImageSource } from './ImageCache/ImageCacheStore.js'
 import { ImageLibrary } from './ImageLibrary.js'
 import { getImageResultStats, ImageResult, setDrawNativeRenderObserver } from './ImageResult.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
@@ -106,7 +105,6 @@ type RenderArguments = RenderArgumentsButton | RenderArgumentsPreset
 interface ButtonRenderSource {
 	readonly drawStyle: RendererButtonStyle
 	readonly animationFrameIndices: ReadonlyMap<string, number>
-	readonly sizedDraw: ButtonSizedDraw | null
 }
 
 /** A render of the content of a button without its decoration, and the state to decorate it with */
@@ -159,6 +157,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * Which locations are being shown right now, and at what sizes
 	 */
 	readonly displayedLocations = new DisplayedLocations()
+
+	/** Where the images of remote elements are fetched from */
+	readonly #remoteImageSource: RemoteImageSource
 
 	/** What each render of a button was drawn from */
 	readonly #renderSources = new WeakMap<ImageResult, ButtonRenderSource>()
@@ -304,9 +305,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		db: DataDatabase,
 		internalApiRouter: Express.Router,
 		metrics: MetricsRegistry,
-		renderClock: RenderClock
+		renderClock: RenderClock,
+		remoteImageSource: RemoteImageSource
 	) {
 		super()
+
+		this.#remoteImageSource = remoteImageSource
 
 		this.controlsStore = controlsStore
 		this.#pageStore = pageStore
@@ -377,7 +381,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									decodedImages: null, // Resolved when drawn
 								}
 
-								render = this.#generateImageResult(cacheKey, renderStyle, animationFrames.frameIndices, null)
+								render = this.#generateImageResult(cacheKey, renderStyle, animationFrames.frameIndices)
 								if (shouldCacheAnimationRenders(animationFrames)) this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
@@ -405,7 +409,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					const controlId = this.#pageStore.getControlIdAt(location)
 					const control = controlId ? this.controlsStore.getControl(controlId) : undefined
 					const buttonStyle = (await control?.drawing?.getDrawStyle()) ?? undefined
-					const sizedDraw = (buttonStyle && control?.drawing?.getSizedDraw?.()) ?? null
 
 					let render: ImageResult | undefined
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
@@ -437,7 +440,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							elements: collectContentHashes(buttonStyle.elements), // use hashes of elements for the key
 							referencedLocations: [...(buttonStyle.referencedLocations ?? [])].sort(), // Sets serialize as {} in JSON.stringify
 							animationFrames: [...animationFrames.frameIndices],
-							sizedDraw: sizedDraw?.key,
 						}
 						delete cacheKeyObj['clockSensitive']
 						const cacheKey = JSON.stringify(cacheKeyObj)
@@ -450,7 +452,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								cacheKey,
 								renderStyle,
 								animationFrames.frameIndices,
-								sizedDraw,
 								buttonStyle.elements,
 								buttonStyle.referencedLocations
 							)
@@ -643,7 +644,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		// One-off preview: never cached or emitted, so it has no content key (never deduped).
 		// It is a still, so any animations show their first frame
-		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES.frameIndices, null)
+		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES.frameIndices)
 	}
 
 	/**
@@ -948,7 +949,6 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		cacheKey: string | undefined,
 		drawStyle: RendererButtonStyle,
 		animationFrameIndices: ReadonlyMap<string, number>,
-		sizedDraw: ButtonSizedDraw | null,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> | undefined = undefined
 	): ImageResult {
@@ -957,28 +957,19 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const render = new ImageResult(
 			cacheKey,
 			processedStyle,
-			async (width, height, rotation, format) => {
-				let sizedStyle = drawStyle
-				if (sizedDraw) {
-					// The elements fill the content area, which is what is left of the button by its decoration
-					const [drawWidth, drawHeight] = rotateResolution(width, height, rotation)
-					const content = contentSizeOf({ width: drawWidth, height: drawHeight }, drawStyle.decoration)
-					sizedStyle = { ...drawStyle, elements: await sizedDraw.elementsAt(content.width, content.height) }
-				}
-
-				return this.#executePoolDrawButtonImageBuffer(
-					sizedStyle,
+			async (width, height, rotation, format) =>
+				this.#executePoolDrawButtonImageBuffer(
+					drawStyle,
 					animationFrameIndices,
 					{ width, height, oversampling: computeOversampling(width, height) },
 					rotation,
 					format,
 					CRASHED_WORKER_RETRY_COUNT
-				)
-			},
+				),
 			drawElements,
 			referencedLocations ?? new Set()
 		)
-		this.#renderSources.set(render, { drawStyle, animationFrameIndices, sizedDraw })
+		this.#renderSources.set(render, { drawStyle, animationFrameIndices })
 		return render
 	}
 
@@ -1003,8 +994,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						show_status_icons: false,
 						location: undefined,
 					},
-					source.animationFrameIndices,
-					source.sizedDraw
+					source.animationFrameIndices
 				),
 				state: {
 					pushed: drawStyle.pushed,
@@ -1056,7 +1046,16 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		format: imageRs.PixelFormat,
 		remainingAttempts: number
 	): Promise<Uint8Array> {
-		const resolvedDrawStyle = await this.#imageCache.resolveDrawStyle(drawStyle, animationFrameIndices)
+		// The elements fill the content area, which is what is left of the button by its decoration
+		const [drawWidth, drawHeight] = rotateResolution(resolution.width, resolution.height, rotation)
+		const contentSize = contentSizeOf({ width: drawWidth, height: drawHeight }, drawStyle.decoration)
+
+		const resolvedDrawStyle = await this.#imageCache.resolveDrawStyle(
+			drawStyle,
+			animationFrameIndices,
+			contentSize,
+			this.#remoteImageSource
+		)
 
 		return this.#poolExec('drawButtonImageBuffer', [resolvedDrawStyle, resolution, rotation, format], remainingAttempts)
 	}

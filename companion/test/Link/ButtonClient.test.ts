@@ -10,6 +10,7 @@ import {
 import { LinkPeerRegistry } from '../../lib/Link/PeerRegistry.js'
 import type { LinkAnnouncement } from '../../lib/Link/Protocol/Announcement.js'
 import { decodeLinkMessage, type LinkButtonRevision } from '../../lib/Link/Protocol/v1/Schemas.js'
+import { LinkRemoteImageStore } from '../../lib/Link/RemoteImageStore.js'
 import { FakeTableView } from '../utils/FakeTableView.js'
 
 function announcement(id: string, protocolVersions = ['1.0.0']): LinkAnnouncement {
@@ -59,6 +60,7 @@ function noDecoration(size: { width: number; height: number }, _decoration: Butt
 }
 
 function createClient(contentSize = noDecoration) {
+	const images = new LinkRemoteImageStore()
 	const peers = new LinkPeerRegistry('self', () => ({ buttons: false }), new FakeTableView<any>().asTableView())
 	const sent: { transportId: string; peerId: string; type: string; payload: any }[] = []
 	const client = new LinkButtonClient(
@@ -69,9 +71,10 @@ function createClient(contentSize = noDecoration) {
 			if (!decoded.ok) throw new Error(decoded.error)
 			sent.push({ transportId, peerId, type: decoded.message.type, payload: decoded.message.payload })
 		},
-		contentSize
+		contentSize,
+		images
 	)
-	return { client, peers, sent }
+	return { client, peers, sent, images }
 }
 
 /** Let the subscriptions made together be sent */
@@ -256,7 +259,7 @@ describe('LinkButtonClient', () => {
 		])
 	})
 
-	test('a draw at a shape just shown waits for its image, but not for long', async () => {
+	test('the image to draw at a size is of its shape, waiting briefly for one just subscribed to', async () => {
 		vi.useFakeTimers()
 		ctx = createClient()
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
@@ -264,22 +267,36 @@ describe('LinkButtonClient', () => {
 		await vi.advanceTimersByTimeAsync(0)
 		ctx.client.handleUpdate('peer', update(['peer']))
 
-		// Nothing of this shape is subscribed to, so there is nothing to wait for
-		await expect(ctx.client.waitForImage('c1', wide)).resolves.toBeNull()
+		// As the graphics fetch them for the remote element, by the remote button of the link button
+		const remoteKey = ctx.client.getState('c1')!.remoteKey!
+		const imageAt = async (size: { width: number; height: number }) =>
+			(await ctx.images.getImage(remoteKey, size))?.dataUrl.replace('data:image/png;base64,', '')
+
 		// Here already
-		await expect(ctx.client.waitForImage('c1', square)).resolves.toMatchObject({ width: 144, current: true })
+		expect(await imageAt(square)).toBe('144x144-1')
+		// Nothing of this shape is subscribed to, so there is nothing to wait for: the closest shape
+		expect(await imageAt(wide)).toBe('144x144-1')
+		// Identified by the remote button, size and revision, so that the image data is never compared
+		expect(await ctx.images.getImage(remoteKey, square)).toMatchObject({ key: 'peer/location/1/0/2/0x0@144x144#s1:1' })
 
+		// Just shown as a strip: its first image is waited for, rather than drawing the square first
 		ctx.client.setDisplayedSizes('c1', [square, wide])
-		const waiting = ctx.client.waitForImage('c1', wide)
+		const waiting = imageAt(wide)
 		ctx.client.handleUpdate('peer', update(['peer'], revision, true, wideSub))
-		await expect(waiting).resolves.toMatchObject({ width: 288, height: 144, current: true })
+		expect(await waiting).toBe('288x144-1')
 
-		// One that doesn't arrive in time
+		// One that doesn't arrive in time is drawn from the closest shape
 		const tall = { width: 100, height: 200 }
 		ctx.client.setDisplayedSizes('c1', [square, wide, tall])
-		const late = ctx.client.waitForImage('c1', tall)
+		const late = imageAt(tall)
 		await vi.advanceTimersByTimeAsync(linkImageWaitMs(null))
-		await expect(late).resolves.toBeNull()
+		expect(await late).toBe('144x144-1')
+
+		expect(await ctx.images.getImage('unknown', square)).toBeNull()
+
+		// Gone once nothing shows it
+		ctx.client.removeTarget('c1')
+		expect(await ctx.images.getImage(remoteKey, square)).toBeNull()
 	})
 
 	test('waits less for a peer with a measured latency', () => {

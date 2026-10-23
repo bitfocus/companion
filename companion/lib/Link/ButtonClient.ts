@@ -5,7 +5,7 @@ import type { LinkButtonStatus, LinkPeerInfo } from '@companion-app/shared/Model
 import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
 import type { DisplayedSize } from '../Graphics/DisplayedLocations.js'
 import LogController from '../Log/Controller.js'
-import { isSameShape, linkBitmapSizesFor } from './ButtonSizes.js'
+import { linkBitmapSizesFor } from './ButtonSizes.js'
 import type { LinkPeerRegistry } from './PeerRegistry.js'
 import {
 	encodeLinkMessage,
@@ -18,6 +18,7 @@ import {
 	type LinkSubscribeRefusedReason,
 } from './Protocol/v1/Schemas.js'
 import { LINK_PRESS_EXPIRY_MS, LINK_SUBSCRIPTION_RENEW_MS } from './Protocol/v1/Timing.js'
+import type { LinkButtonImage, LinkRemoteImageStore } from './RemoteImageStore.js'
 
 /**
  * How long buttons keep showing the last image of a peer that has become unreachable, before showing it as
@@ -50,19 +51,11 @@ export interface LinkButtonTarget {
 	location: ControlLocation
 }
 
-/** An image of the remote button, at one of the sizes it is subscribed to */
-export interface LinkButtonImage {
-	width: number
-	height: number
-	dataUrl: string
-	revision: LinkButtonRevision
-	/** Whether it is of the newest render of the button, rather than one from before it at a size yet to catch up */
-	current: boolean
-}
-
 export interface LinkButtonState {
 	status: LinkButtonStatus
 	peerName: string | null
+	/** Identifies the remote button, for fetching its images from the remote image store */
+	remoteKey: string | null
 	/** The latest images of the remote button, when status is `ok` */
 	images: LinkButtonImage[]
 	pressed: boolean
@@ -110,11 +103,6 @@ interface Variant {
 	releaseTimer: NodeJS.Timeout | null
 	/** Whether a subscribe for it has been sent */
 	subscribed: boolean
-	/**
-	 * Until when a draw waits for its first image. From when it was first wanted rather than from each draw, so that
-	 * a page of buttons from a peer that doesn't answer holds up the surface showing it once, not once per button
-	 */
-	readonly waitUntil: number
 }
 
 /** What the link buttons showing a remote button are given */
@@ -124,13 +112,10 @@ interface PublishedRender {
 	readonly images: LinkButtonImage[]
 }
 
-interface ImageWaiter {
-	readonly variant: Variant
-	readonly done: (image: LinkButtonImage | null) => void
-}
-
 /** A remote button shown by one or more link buttons, at the sizes they are shown at */
 interface RemoteButton {
+	/** See remoteKey */
+	readonly key: string
 	readonly peerId: string
 	readonly button: LinkButtonRef
 	readonly controlIds: Set<string>
@@ -141,7 +126,6 @@ interface RemoteButton {
 	published: PublishedRender | null
 	/** Set while a new render is held back for its other sizes to arrive */
 	publishTimer: NodeJS.Timeout | null
-	readonly waiters: Set<ImageWaiter>
 }
 
 /**
@@ -163,6 +147,7 @@ export class LinkButtonClient {
 	readonly #peers: LinkPeerRegistry
 	readonly #send: LinkButtonClientSend
 	readonly #contentSize: LinkButtonContentSize
+	readonly #images: LinkRemoteImageStore
 
 	readonly #buttons = new Map<string, LinkedButton>()
 	/** By peer and button (see remoteKey) */
@@ -183,12 +168,14 @@ export class LinkButtonClient {
 		selfId: () => string,
 		peers: LinkPeerRegistry,
 		send: LinkButtonClientSend,
-		contentSize: LinkButtonContentSize
+		contentSize: LinkButtonContentSize,
+		images: LinkRemoteImageStore
 	) {
 		this.#selfId = selfId
 		this.#peers = peers
 		this.#send = send
 		this.#contentSize = contentSize
+		this.#images = images
 
 		peers.on('changed', () => this.#refreshAllStates())
 		// It is reachable (again), or a different way: we may have missed updates, which the peer sends when it is told
@@ -227,8 +214,8 @@ export class LinkButtonClient {
 				if (variant.releaseTimer) clearTimeout(variant.releaseTimer)
 				variant.releaseTimer = null
 			}
-			for (const waiter of remote.waiters) waiter.done(null)
 		}
+		this.#images.clear()
 	}
 
 	/**
@@ -252,6 +239,7 @@ export class LinkButtonClient {
 				let remote = this.#remotes.get(button.key)
 				if (!remote) {
 					remote = {
+						key: button.key,
 						peerId: target.peerId,
 						button: ref,
 						controlIds: new Set(),
@@ -259,7 +247,6 @@ export class LinkButtonClient {
 						latestUpdate: null,
 						published: null,
 						publishTimer: null,
-						waiters: new Set(),
 					}
 					this.#remotes.set(button.key, remote)
 				}
@@ -308,7 +295,7 @@ export class LinkButtonClient {
 				displayedSizes: [],
 				decoration: ButtonGraphicsDecorationType.FollowDefault,
 				onChange,
-				state: computeState(null, null, null, '', null, false),
+				state: computeState(null, null, null, '', null, false, null),
 				held: new Map(),
 			}
 			this.#buttons.set(controlId, button)
@@ -336,44 +323,6 @@ export class LinkButtonClient {
 
 	getState(controlId: string): LinkButtonState | undefined {
 		return this.#buttons.get(controlId)?.state
-	}
-
-	/**
-	 * Wait for the image of a link button at the shape of a size, when it has just been subscribed to at that shape
-	 * and no image of it has arrived yet. Gives up after a time based on the latency to the peer
-	 * @param size - of the content of the button, which the image is drawn in
-	 * @returns the image, or null if there is none of that shape to wait for or it didn't arrive in time
-	 */
-	async waitForImage(controlId: string, size: DisplayedSize): Promise<LinkButtonImage | null> {
-		const button = this.#buttons.get(controlId)
-		const remote = button?.key ? this.#remotes.get(button.key) : undefined
-		if (!remote) return null
-
-		// Each size subscribed to is a different shape, so at most one is this one
-		const variant = Array.from(remote.variants.values()).find(
-			(v) => !v.releaseTimer && !v.refused && isSameShape(v.sub, size)
-		)
-		if (!variant) return null
-
-		const image = currentImageOf(remote, variant)
-		if (image) return image
-
-		// Only a first image is waited for: a newer render still to arrive is drawn when it does
-		const waitMs = variant.waitUntil - Date.now()
-		if (variant.lastUpdate || waitMs <= 0) return null
-
-		return new Promise((resolve) => {
-			const timer = setTimeout(() => waiter.done(null), waitMs)
-			const waiter: ImageWaiter = {
-				variant,
-				done: (result) => {
-					clearTimeout(timer)
-					remote.waiters.delete(waiter)
-					resolve(result)
-				},
-			}
-			remote.waiters.add(waiter)
-		})
 	}
 
 	press(controlId: string, pressed: boolean, surfaceId: string): void {
@@ -447,11 +396,9 @@ export class LinkButtonClient {
 		variant.refused = null
 		if (isNewer(payload.revision, remote.latestUpdate?.revision ?? null)) remote.latestUpdate = payload
 
-		// A draw waiting for this size has it straight away, without waiting for the other sizes
+		// A draw waiting for the first image of this size has it straight away, without waiting for the other sizes
 		const image = currentImageOf(remote, variant)
-		if (image) {
-			for (const waiter of remote.waiters) if (waiter.variant === variant) waiter.done(image)
-		}
+		if (image) this.#images.shapeArrived(remote.key, variant.sub, image)
 
 		this.#schedulePublish(remote)
 	}
@@ -464,7 +411,7 @@ export class LinkButtonClient {
 			if (!remote || !variant || variant.refused === reason) continue
 
 			variant.refused = reason
-			for (const waiter of remote.waiters) if (waiter.variant === variant) waiter.done(null)
+			this.#images.shapeArrived(remote.key, variant.sub, null)
 
 			// A size that won't arrive mustn't hold back the others
 			if (remote.publishTimer) this.#schedulePublish(remote)
@@ -522,6 +469,7 @@ export class LinkButtonClient {
 		} else {
 			remote.published = null
 		}
+		this.#images.setImages(remote.key, remote.published?.images ?? [])
 
 		this.#refreshRemote(remote)
 	}
@@ -559,8 +507,10 @@ export class LinkButtonClient {
 					refused: null,
 					releaseTimer: null,
 					subscribed: false,
-					waitUntil: Date.now() + linkImageWaitMs(this.#getLatency(remote.peerId)),
 				})
+				// A draw at this shape waits briefly for its first image, from now rather than from each draw, so that a page
+				// of buttons from a peer that doesn't answer holds up the surface showing it once, not once per button
+				this.#images.expectShape(remote.key, size, Date.now() + linkImageWaitMs(this.#getLatency(remote.peerId)))
 				this.#queueSubscribe(remote)
 			}
 		}
@@ -579,7 +529,7 @@ export class LinkButtonClient {
 
 		remote.variants.delete(key)
 		this.#sendToPeer(remote.peerId, 'unsubscribe', { buttons: [variant.sub] })
-		for (const waiter of remote.waiters) if (waiter.variant === variant) waiter.done(null)
+		this.#images.shapeArrived(remote.key, variant.sub, null)
 
 		// Its image is no longer shown
 		this.#publish(remote)
@@ -656,7 +606,7 @@ export class LinkButtonClient {
 		for (const variant of remote.variants.values()) {
 			if (variant.releaseTimer) clearTimeout(variant.releaseTimer)
 		}
-		for (const waiter of remote.waiters) waiter.done(null)
+		this.#images.delete(remote.key)
 
 		const subs = Array.from(remote.variants.values(), (v) => v.sub)
 		if (subs.length > 0) this.#sendToPeer(remote.peerId, 'unsubscribe', { buttons: subs })
@@ -733,7 +683,8 @@ export class LinkButtonClient {
 			remote?.published ?? null,
 			this.#selfId(),
 			remote ? getRefused(remote) : null,
-			!!peer && inGracePeriod
+			!!peer && inGracePeriod,
+			button.key
 		)
 		if (isEqual(newState, button.state)) return
 
@@ -748,11 +699,13 @@ function computeState(
 	published: PublishedRender | null,
 	selfId: string,
 	refused: LinkSubscribeRefusedReason | null,
-	unreachable: boolean
+	unreachable: boolean,
+	remoteKey: string | null
 ): LinkButtonState {
 	const state: LinkButtonState = {
 		status: 'unconfigured',
 		peerName: peer?.name ?? null,
+		remoteKey,
 		images: [],
 		unreachable: false,
 		pressed: false,

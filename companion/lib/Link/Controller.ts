@@ -37,6 +37,7 @@ import {
 } from './Protocol/Announcement.js'
 import { decodeLinkMessage, encodeLinkMessage } from './Protocol/v1/Schemas.js'
 import { LINK_PROTOCOL_VERSIONS } from './Protocol/Versions.js'
+import type { LinkRemoteImageStore } from './RemoteImageStore.js'
 import { LinkTransportManager } from './TransportManager.js'
 import { DIRECT_MDNS_LINK_ID_TXT } from './Transports/Direct/Constants.js'
 import type { LinkMessageOrigin, SomeLinkBuiltinTransport, SomeLinkTransportDefinition } from './Transports/Types.js'
@@ -46,6 +47,8 @@ export interface LinkDependencies {
 	readonly pageStore: IPageStore
 	readonly controls: IControlStore
 	readonly graphics: GraphicsController
+	/** Where the images of the remote buttons shown are kept, for drawing them */
+	readonly remoteImages: LinkRemoteImageStore
 }
 
 interface LinkControllerEvents {
@@ -124,7 +127,8 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			() => this.#selfId,
 			this.#peers,
 			(transportId, peerId, payload) => this.#transports.sendTo(transportId, peerId, payload),
-			(size, decoration) => deps.graphics.getContentSize(size, decoration)
+			(size, decoration) => deps.graphics.getContentSize(size, decoration),
+			deps.remoteImages
 		)
 		this.#buttonServer = new LinkButtonServer(
 			{

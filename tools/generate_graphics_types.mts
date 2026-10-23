@@ -258,6 +258,17 @@ for (const [id, sections] of Object.entries(elementSchemas)) {
 	}
 }
 
+// Draw only elements, which no button is configured with: the backend makes them for buttons it draws itself
+generatedFile += `/**\n * Draws an image that is fetched when the button is drawn, at the size it is drawn at: the button of another\n * installation shown by a remote button. Only made by the backend, never configured\n */\n`
+generatedFile += `export interface ButtonGraphicsRemoteDrawElement extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds {\n`
+generatedFile += `\ttype: 'remote'\n`
+generatedFile += `\t/** What to fetch the image of, from the remote image source */\n`
+generatedFile += `\tsource: string\n`
+generatedFile += `\t/** Changes whenever the image does, so that renders of different images are told apart */\n`
+generatedFile += `\trevision: string\n`
+generatedFile += '}\n\n'
+allDrawElementTypes.push('ButtonGraphicsRemoteDrawElement')
+
 generatedFile += `export type SomeButtonGraphicsDrawElement =\n`
 for (const typeName of allDrawElementTypes) {
 	generatedFile += `\t| ${typeName}\n`

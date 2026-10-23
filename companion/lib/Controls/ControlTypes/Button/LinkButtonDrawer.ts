@@ -10,6 +10,7 @@ import type {
 	ButtonGraphicsCanvasDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsImageElement,
+	ButtonGraphicsRemoteDrawElement,
 	ButtonGraphicsTextDrawElement,
 	ButtonGraphicsTextElement,
 	SomeButtonGraphicsDrawElement,
@@ -18,13 +19,12 @@ import type {
 import { ButtonGraphicsElementUsage, type DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { PLACEHOLDER_BACKGROUND_COLOR, PLACEHOLDER_TEXT_COLOR } from '../../../Graphics/ConvertGraphicsElements.js'
 import { computeElementContentHash } from '../../../Graphics/ConvertGraphicsElements/Util.js'
-import type { DisplayedSize } from '../../../Graphics/DisplayedLocations.js'
 import type { ImageResult } from '../../../Graphics/ImageResult.js'
 import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
-import type { LinkButtonImage, LinkButtonState } from '../../../Link/ButtonClient.js'
-import { closestShape, isSameShape } from '../../../Link/ButtonSizes.js'
+import type { LinkButtonState } from '../../../Link/ButtonClient.js'
+import type { LinkButtonImage } from '../../../Link/RemoteImageStore.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
-import type { ButtonSizedDraw, IButtonDrawer } from '../../IButtonDrawer.js'
+import type { IButtonDrawer } from '../../IButtonDrawer.js'
 import { CreateElementOfType } from './LayerDefaults.js'
 import { LINK_ICON_SVG, LINK_SLASH_ICON_SVG } from './LinkButtonIcons.js'
 
@@ -144,53 +144,29 @@ function makePlaceholderElements(
 	return elements
 }
 
-/** Wait briefly for the image of the remote button at the shape of a size, if it is on its way */
-export type LinkButtonWaitForImage = (size: DisplayedSize) => Promise<LinkButtonImage | null>
-
-/**
- * The image to draw at a size: of the newest render, at the closest shape to it
- * @param sameShapeOnly - only an image of the newest render, at the shape of the size
- */
-export function pickLinkButtonImage(
-	images: readonly LinkButtonImage[],
-	size: DisplayedSize,
-	sameShapeOnly: boolean
-): LinkButtonImage | undefined {
-	const current = images.filter((image) => image.current)
-	if (sameShapeOnly) return current.find((image) => isSameShape(image, size))
-
-	// A newer image at another shape is better than an older one at this shape
-	return closestShape(current.length > 0 ? current : images, size)
-}
-
 /**
  * The `drawing` for a link button: shows the image of the remote button, or a placeholder explaining why it can't.
- * The remote button is drawn by its peer at each shape it is shown at, so each size here is drawn from the image of
- * its shape (see getSizedDraw).
+ * The remote button is drawn by its peer at each shape it is shown at, so its image is a remote element: fetched from
+ * the remote image store when it is drawn, for the size it is drawn at.
  */
 export class LinkButtonDrawer implements IButtonDrawer {
 	readonly #deps: ControlDependencies
 	readonly #controlId: string
 	readonly #getState: () => LinkButtonState
 	readonly #getOptions: () => LinkButtonModel['options']
-	readonly #waitForImage: LinkButtonWaitForImage
 
 	#lastDrawStyle: DrawStyleLayeredButtonModel | null = null
-	/** The images the last draw style was computed from */
-	#lastImages: readonly LinkButtonImage[] = []
 
 	constructor(
 		deps: ControlDependencies,
 		controlId: string,
 		getState: () => LinkButtonState,
-		getOptions: () => LinkButtonModel['options'],
-		waitForImage: LinkButtonWaitForImage
+		getOptions: () => LinkButtonModel['options']
 	) {
 		this.#deps = deps
 		this.#controlId = controlId
 		this.#getState = getState
 		this.#getOptions = getOptions
-		this.#waitForImage = waitForImage
 	}
 
 	dispose(): void {
@@ -201,10 +177,6 @@ export class LinkButtonDrawer implements IButtonDrawer {
 		const state = this.#getState()
 		const images = state.status === 'ok' ? state.images : []
 
-		// What is drawn at no size in particular, eg where a reference element shows this button: the largest image
-		const largest = pickLargestImage(images)
-		const canvas = this.#makeCanvas()
-
 		// Decorated here, from the state of the remote button, as for a button of this installation
 		const style: DrawStyleLayeredButtonModel = {
 			pushed: state.pressed,
@@ -213,9 +185,9 @@ export class LinkButtonDrawer implements IButtonDrawer {
 			button_status: state.buttonStatus,
 			action_running: state.actionRunning,
 			elements: [
-				canvas,
-				...(largest
-					? [makeRemoteImageElement(this.#controlId, largest.dataUrl)]
+				this.#makeCanvas(),
+				...(images.length > 0
+					? [makeRemoteElement(this.#controlId, state.remoteKey, images)]
 					: makePlaceholderElements(this.#controlId, state.status === 'ok' ? 'loading' : state.status)),
 			],
 			// A cloud in its top bar marks it as a remote button
@@ -226,35 +198,7 @@ export class LinkButtonDrawer implements IButtonDrawer {
 		}
 
 		this.#lastDrawStyle = style
-		this.#lastImages = images
 		return style
-	}
-
-	getSizedDraw(): ButtonSizedDraw | null {
-		const images = this.#lastImages
-		if (images.length === 0) return null
-		const canvas = this.#makeCanvas()
-
-		return {
-			key: images
-				.map((image) => `${image.width}x${image.height}@${image.revision.stream}:${image.revision.seq}`)
-				.join(),
-			elementsAt: async (width, height) => {
-				const size = { width, height }
-				// Just shown at this shape, so its image may be on its way
-				const image =
-					pickLinkButtonImage(images, size, true) ??
-					(await this.#waitForImage(size)) ??
-					pickLinkButtonImage(images, size, false)
-
-				return [
-					canvas,
-					...(image
-						? [makeRemoteImageElement(this.#controlId, image.dataUrl)]
-						: makePlaceholderElements(this.#controlId, 'loading')),
-				]
-			},
-		}
 	}
 
 	/** How the button is decorated, which is done here rather than by the remote installation */
@@ -295,23 +239,19 @@ export class LinkButtonDrawer implements IButtonDrawer {
 	})
 }
 
-function pickLargestImage(images: readonly LinkButtonImage[]): LinkButtonImage | undefined {
-	let largest: LinkButtonImage | undefined
-	for (const image of images) {
-		if (!image.current) continue
-		if (!largest || image.width * image.height > largest.width * largest.height) largest = image
-	}
-	return largest
-}
-
 /**
  * The remote image fills the content of the button. It is drawn without decoration by the remote installation, so that
- * the decoration (eg the top bar) is drawn here, as it is for any button of this installation
+ * the decoration (eg the top bar) is drawn here, as it is for any button of this installation. Which of its images is
+ * drawn depends on the size it is drawn at, so it is fetched then, from the remote image store
  */
-function makeRemoteImageElement(parentId: string, dataUrl: string): ButtonGraphicsImageDrawElement {
-	const image: ButtonGraphicsImageDrawElement = {
-		id: `${parentId}:remote`,
-		type: 'image',
+function makeRemoteElement(
+	controlId: string,
+	remoteKey: string | null,
+	images: readonly LinkButtonImage[]
+): ButtonGraphicsRemoteDrawElement {
+	const element: ButtonGraphicsRemoteDrawElement = {
+		id: `${controlId}:remote`,
+		type: 'remote',
 		usage: ButtonGraphicsElementUsage.Automatic,
 		enabled: true,
 		opacity: 1,
@@ -319,13 +259,14 @@ function makeRemoteImageElement(parentId: string, dataUrl: string): ButtonGraphi
 		y: 0,
 		width: 1,
 		height: 1,
-		rotation: 0,
-		base64Image: dataUrl,
-		halign: 'center',
-		valign: 'center',
-		fillMode: 'fit',
+		// Fetched from the remote image store
+		source: remoteKey ?? '',
+		// The revisions identify the images, so that the images themselves are never compared
+		revision: images
+			.map((image) => `${image.width}x${image.height}@${image.revision.stream}:${image.revision.seq}`)
+			.join(),
 		contentHash: '',
 	}
-	image.contentHash = computeElementContentHash(image)
-	return image
+	element.contentHash = computeElementContentHash(element)
+	return element
 }

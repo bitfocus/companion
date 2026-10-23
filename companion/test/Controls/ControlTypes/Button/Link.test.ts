@@ -6,12 +6,14 @@ import type { ControlDependencies } from '../../../../lib/Controls/ControlDepend
 import { ControlButtonLink } from '../../../../lib/Controls/ControlTypes/Button/Link.js'
 import { LINK_ICON_SVG, LINK_SLASH_ICON_SVG } from '../../../../lib/Controls/ControlTypes/Button/LinkButtonIcons.js'
 import { DisplayedLocations } from '../../../../lib/Graphics/DisplayedLocations.js'
-import type { LinkButtonClient, LinkButtonImage, LinkButtonState } from '../../../../lib/Link/ButtonClient.js'
+import type { LinkButtonClient, LinkButtonState } from '../../../../lib/Link/ButtonClient.js'
+import type { LinkButtonImage } from '../../../../lib/Link/RemoteImageStore.js'
 import { mangleReferenceSurfaceId } from '../../../../lib/Surface/ReferenceSurfaceId.js'
 
 const MY_CONTROL_ID = 'bank:test01'
 
 const NO_DECORATION_STATE = {
+	remoteKey: 'peer/remote',
 	unreachable: false,
 	stepCurrent: 1,
 	stepCount: 1,
@@ -38,7 +40,6 @@ describe('ControlButtonLink', () => {
 		abort: ReturnType<typeof vi.fn>
 		setDisplayedSizes: ReturnType<typeof vi.fn>
 		setDecoration: ReturnType<typeof vi.fn>
-		waitForImage: ReturnType<typeof vi.fn>
 	}
 	let parseVariables: ReturnType<typeof vi.fn>
 	let displayedLocations: DisplayedLocations
@@ -53,7 +54,6 @@ describe('ControlButtonLink', () => {
 			abort: vi.fn(),
 			setDisplayedSizes: vi.fn(),
 			setDecoration: vi.fn(),
-			waitForImage: vi.fn(async () => null),
 		}
 		displayedLocations = new DisplayedLocations()
 
@@ -219,6 +219,7 @@ describe('ControlButtonLink', () => {
 		const state: LinkButtonState = {
 			status: 'ok',
 			peerName: 'Peer',
+			remoteKey: 'peer/remote',
 			images: [image(144, 144, 'AAAA', true)],
 			unreachable: false,
 			pressed: true,
@@ -242,7 +243,7 @@ describe('ControlButtonLink', () => {
 		})
 		expect(style.elements).toMatchObject([
 			{ type: 'canvas', decoration: 'default', showStatusIcons: 'default' },
-			{ type: 'image', base64Image: 'data:image/png;base64,AAAA' },
+			{ type: 'remote', source: 'peer/remote' },
 		])
 		expect(control.toRuntimeJSON()).toEqual({ status: 'ok', peerName: 'Peer' })
 
@@ -279,37 +280,32 @@ describe('ControlButtonLink', () => {
 		}
 	}
 
-	it('draws each size from the image of its shape', async () => {
+	it('draws the remote image as a remote element, fetched for the size it is drawn at', async () => {
 		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'), false)
-		expect(control.drawing.getSizedDraw()).toBeNull()
 
 		linkButtons.getState.mockReturnValue({
 			status: 'ok',
 			peerName: 'Peer',
-			// The strip is yet to catch up with the newest render
 			...NO_DECORATION_STATE,
-			images: [image(144, 144, 'SQUARE', true), image(288, 144, 'WIDE', false), image(144, 288, 'TALL', true)],
+			images: [image(144, 144, 'SQUARE', true), image(288, 144, 'WIDE', false)],
 			pressed: false,
 			sourceChain: ['peer'],
 		} satisfies LinkButtonState)
-		await control.drawing.getDrawStyle()
-		const sized = control.drawing.getSizedDraw()!
 
-		const imageAt = async (width: number, height: number) =>
-			(await sized.elementsAt(width, height)).find((e) => e.type === 'image')
-		expect(await imageAt(72, 72)).toMatchObject({ base64Image: 'data:image/png;base64,SQUARE' })
-		expect(await imageAt(100, 200)).toMatchObject({ base64Image: 'data:image/png;base64,TALL' })
-		expect(linkButtons.waitForImage).not.toHaveBeenCalled()
-
-		// Waits for the newest strip, and without it draws the closest newest shape
-		expect(await imageAt(200, 100)).toMatchObject({ base64Image: 'data:image/png;base64,SQUARE' })
-		expect(linkButtons.waitForImage).toHaveBeenCalledWith(MY_CONTROL_ID, { width: 200, height: 100 })
-
-		linkButtons.waitForImage.mockResolvedValueOnce(image(288, 144, 'WIDE-NEW', true))
-		expect(await imageAt(200, 100)).toMatchObject({ base64Image: 'data:image/png;base64,WIDE-NEW' })
-
-		// What is drawn changes with the images, so is part of the cache key
-		expect(sized.key).toBe('144x144@s:2,288x144@s:1,144x288@s:2')
+		const style = await control.drawing.getDrawStyle()
+		expect(style.elements).toMatchObject([
+			{ type: 'canvas' },
+			{
+				type: 'remote',
+				source: 'peer/remote',
+				x: 0,
+				y: 0,
+				width: 1,
+				height: 1,
+				// Changes with the images, so that renders of different ones are told apart without comparing them
+				revision: '144x144@s:2,288x144@s:1',
+			},
+		])
 	})
 
 	it('releases its subscription when destroyed', () => {
