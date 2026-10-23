@@ -85,6 +85,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			(peerId) => this.#permissions.get(peerId),
 			db.getTableView('link_peers')
 		)
+		this.#permissions.retainOnly(new Set(this.#peers.getPeers().map((peer) => peer.id)))
 		this.#pinger = new LinkPinger(this.#peers, (peerId, transportId, nonce) =>
 			this.#transports.sendTo(transportId, peerId, encodeLinkMessage('ping', { nonce }))
 		)
@@ -387,9 +388,11 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 				.input(z.object({ id: z.string() }))
 				.mutation(async ({ input }) => this.#transports.remove(input.id)),
 
-			forgetPeer: publicProcedure
-				.input(z.object({ peerId: z.string() }))
-				.mutation(({ input }) => this.#peers.forget(input.peerId)),
+			forgetPeer: publicProcedure.input(z.object({ peerId: z.string() })).mutation(({ input }) => {
+				// Before it is forgotten, so that it is told it no longer has access while it can still be reached
+				this.#permissions.delete(input.peerId)
+				this.#peers.forget(input.peerId)
+			}),
 
 			setPeerPermissions: publicProcedure
 				.input(z.object({ peerId: z.string(), permissions: z.object({ buttons: z.boolean() }) }))
