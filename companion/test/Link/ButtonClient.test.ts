@@ -217,6 +217,32 @@ describe('LinkButtonClient', () => {
 		})
 	})
 
+	test('releases what it holds where it pressed it, when it is given another target or deleted', () => {
+		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		ctx.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
+		ctx.client.press('c1', true, 'deck')
+		ctx.client.press('c1', true, 'other-deck')
+		ctx.sent.length = 0
+
+		ctx.client.setTarget('c1', { peerId: 'peer', location: { ...location, column: 3 } }, vi.fn())
+		const presses = () => ctx.sent.filter((m) => m.type === 'button.press').map((m) => m.payload)
+		expect(presses()).toMatchObject([
+			{ button, pressed: false, surfaceId: 'deck' },
+			{ button, pressed: false, surfaceId: 'other-deck' },
+		])
+
+		// Released already, so not released again, and not at the new target either
+		ctx.sent.length = 0
+		ctx.client.press('c1', false, 'deck')
+		expect(presses()).toEqual([])
+
+		// Pressed at the new target, then deleted while held
+		ctx.client.press('c1', true, 'deck')
+		ctx.sent.length = 0
+		ctx.client.removeTarget('c1')
+		expect(presses()).toMatchObject([{ button: { ...button, column: 3 }, pressed: false, surfaceId: 'deck' }])
+	})
+
 	test('sends aborts to the remote button', () => {
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
 		ctx.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())

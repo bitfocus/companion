@@ -52,6 +52,11 @@ interface LinkedButton {
 	key: string | null
 	onChange: () => void
 	state: LinkButtonState
+	/**
+	 * The surfaces holding this button down, and the target each pressed, so that it is released there. Null once that
+	 * target has been released because the button was given another, so that the release is dropped
+	 */
+	held: Map<string, LinkButtonTarget | null>
 }
 
 interface RemoteSubscription {
@@ -128,12 +133,21 @@ export class LinkButtonClient {
 	setTarget(controlId: string, target: LinkButtonTarget | null, onChange: () => void): void {
 		let button = this.#buttons.get(controlId)
 		if (!button) {
-			button = { target: null, key: null, onChange, state: computeState(null, null, null, null, '') }
+			button = {
+				target: null,
+				key: null,
+				onChange,
+				state: computeState(null, null, null, null, ''),
+				held: new Map(),
+			}
 			this.#buttons.set(controlId, button)
 		}
 		button.onChange = onChange
 
 		if (!isEqual(button.target, target)) {
+			// What it was holding down is released there, not wherever it now points
+			this.#releaseHeld(button)
+
 			button.target = target
 			this.#releaseSubscription(controlId, button)
 
@@ -163,8 +177,17 @@ export class LinkButtonClient {
 		const button = this.#buttons.get(controlId)
 		if (!button) return
 
+		this.#releaseHeld(button)
 		this.#releaseSubscription(controlId, button)
 		this.#buttons.delete(controlId)
+	}
+
+	/** Release the remote button for each surface holding it down, as the button is changing what it shows */
+	#releaseHeld(button: LinkedButton): void {
+		for (const [surfaceId, target] of button.held) {
+			if (target) this.#sendPress(target, false, surfaceId)
+			button.held.set(surfaceId, null)
+		}
 	}
 
 	getState(controlId: string): LinkButtonState | undefined {
@@ -172,9 +195,22 @@ export class LinkButtonClient {
 	}
 
 	press(controlId: string, pressed: boolean, surfaceId: string): void {
-		const target = this.#buttons.get(controlId)?.target
-		if (!target) return
+		const button = this.#buttons.get(controlId)
+		if (!button) return
 
+		let target = button.target
+		if (pressed) {
+			if (target) button.held.set(surfaceId, target)
+		} else if (button.held.has(surfaceId)) {
+			// Released where it was pressed. Null when that was released already, as the button was given another target
+			target = button.held.get(surfaceId) ?? null
+			button.held.delete(surfaceId)
+		}
+
+		if (target) this.#sendPress(target, pressed, surfaceId)
+	}
+
+	#sendPress(target: LinkButtonTarget, pressed: boolean, surfaceId: string): void {
 		this.#sendToPeer(target.peerId, 'button.press', {
 			id: nanoid(),
 			expiresAt: Date.now() + LINK_PRESS_EXPIRY_MS,
