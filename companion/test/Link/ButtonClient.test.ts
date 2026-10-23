@@ -376,6 +376,38 @@ describe('LinkButtonClient', () => {
 		expect(ctx.client.getState('c1')?.status).toBe('loop')
 	})
 
+	test('forgets a peer that drops out and is then forgotten', async () => {
+		vi.useFakeTimers()
+		ctx = createClient()
+		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		show('c1')
+		await vi.advanceTimersByTimeAsync(0)
+		const timers = vi.getTimerCount()
+
+		ctx.peers.handleTransportDisconnected('t1')
+		expect(vi.getTimerCount()).toBe(timers + 1)
+		ctx.peers.forget('peer')
+		expect(vi.getTimerCount()).toBe(timers)
+		expect(ctx.client.getState('c1')?.status).toBe('unknown_peer')
+	})
+
+	test('once stopped, forgets what it was sent, and subscribes again holding nothing when started', async () => {
+		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		show('c1')
+		await flushSubscribes()
+		ctx.client.handleUpdate('peer', update(['peer']))
+		const remoteKey = ctx.client.getState('c1')!.remoteKey!
+		expect(await ctx.images.getImage(remoteKey, square, false)).not.toBeNull()
+
+		ctx.client.stop()
+		expect(ctx.client.getState('c1')?.status).toBe('loading')
+		expect(await ctx.images.getImage(remoteKey, square, false)).toBeNull()
+
+		ctx.sent.length = 0
+		ctx.client.renewAll()
+		expect(ctx.sent).toMatchObject([{ type: 'subscribe', payload: { buttons: [{ ...sub, have: null }] } }])
+	})
+
 	test('keeps showing the last image briefly when a peer drops out, then shows it offline', async () => {
 		vi.useFakeTimers()
 		ctx = createClient()

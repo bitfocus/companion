@@ -221,15 +221,29 @@ export class LinkButtonClient {
 		this.#pendingSubscribesImmediate = null
 		this.#pendingSubscribes.clear()
 
+		// Forget what was received, as its images are dropped too, but not what is shown, so that it is subscribed to
+		// again if started again
 		for (const remote of this.#remotes.values()) {
 			if (remote.publishTimer) clearTimeout(remote.publishTimer)
 			remote.publishTimer = null
-			for (const variant of remote.variants.values()) {
-				if (variant.releaseTimer) clearTimeout(variant.releaseTimer)
-				variant.releaseTimer = null
+			remote.latestUpdate = null
+			remote.retiredStreams.length = 0
+			remote.published = null
+			for (const [key, variant] of remote.variants) {
+				// A size being let go of is let go of now, rather than kept with no timer to drop it
+				if (variant.releaseTimer) {
+					clearTimeout(variant.releaseTimer)
+					remote.variants.delete(key)
+					continue
+				}
+				variant.lastUpdate = null
+				variant.image = null
+				variant.refused = null
+				variant.subscribed = false
 			}
 		}
 		this.#images.clear()
+		for (const button of this.#buttons.values()) this.#refreshState(button)
 	}
 
 	/**
@@ -686,6 +700,11 @@ export class LinkButtonClient {
 		// Forget about peers that have been forgotten
 		const knownIds = new Set(peers.map((p) => p.id))
 		for (const peerId of this.#reachable) if (!knownIds.has(peerId)) this.#reachable.delete(peerId)
+		for (const [peerId, { timer }] of this.#unreachable) {
+			if (knownIds.has(peerId)) continue
+			clearTimeout(timer)
+			this.#unreachable.delete(peerId)
+		}
 
 		for (const { id: peerId, online } of peers) {
 			const entry = this.#unreachable.get(peerId)
