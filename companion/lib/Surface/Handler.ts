@@ -20,19 +20,28 @@ import type {
 	SurfacePanelConfig,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
-import { rotateXYForPanel, unrotateXYForPanel } from '@companion-app/shared/SurfaceLayout.js'
+import { resolveControlStylePreset, rotateXYForPanel, unrotateXYForPanel } from '@companion-app/shared/SurfaceLayout.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
+import { DisplayedLocationsSet, type DisplayedSize } from '../Graphics/DisplayedLocations.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
+import { rotateResolution } from '../Resources/Util.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import { createDefaultSurfacePanelConfig } from './Config.js'
 import type { SurfaceController } from './Controller.js'
 import { SurfaceGroup } from './Group.js'
 import type { DrawButtonItem, SurfaceHandlerDependencies, SurfacePanel, UpdateEvents } from './Types.js'
 import { getSurfaceName } from './Util.js'
+
+/** A cell of the grid drawn to a panel, at its position on the panel */
+interface DisplayedCell {
+	x: number
+	y: number
+	location: ControlLocation
+}
 
 interface SurfaceHandlerEvents {
 	interaction: []
@@ -120,6 +129,11 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 	readonly #updateEvents: EventEmitter<UpdateEvents>
 
+	/**
+	 * The locations this surface is showing, and at what sizes
+	 */
+	readonly #displayed: DisplayedLocationsSet
+
 	readonly panel: SurfacePanel
 
 	constructor(
@@ -141,6 +155,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		this.#userconfig = deps.userconfig
 		this.#variables = deps.variables
 		this.#updateEvents = updateEvents
+		this.#displayed = new DisplayedLocationsSet(deps.graphics.displayedLocations)
 
 		this.panel = panel
 		this.#surfaceConfig = surfaceConfig
@@ -219,6 +234,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 		if (this.panel) {
 			if (this.#isSurfaceLocked) {
+				this.#displayed.clear()
 				this.panel.setLocked(this.#isSurfaceLocked, this.#currentPincodeEntry.length)
 			} else {
 				const { xOffset, yOffset } = this.#getCurrentOffset()
@@ -227,28 +243,65 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 
 				const pageNumber = this.#pageStore.getPageNumber(this.#currentPageId)
 
-				const rawEntries: DrawButtonItem[] = []
+				const rawCells: DisplayedCell[] = []
 
 				for (let y = 0; y < gridSize.rows; y++) {
 					for (let x = 0; x < gridSize.columns; x++) {
-						const location: ControlLocation = {
-							pageNumber: pageNumber ?? 0,
-							column: x + xOffset,
-							row: y + yOffset,
-						}
-						const image = this.#graphics.getCachedRenderOrGeneratePlaceholder(location)
-
-						rawEntries.push({
+						rawCells.push({
 							x,
 							y,
-							defaultRender: image,
-							location,
+							location: {
+								pageNumber: pageNumber ?? 0,
+								column: x + xOffset,
+								row: y + yOffset,
+							},
 						})
 					}
 				}
 
-				const transformedEntries = this.#transformButtonRenders(rawEntries)
-				this.#drawButtons(transformedEntries)
+				const cells = this.#transformButtonRenders(rawCells)
+
+				// Before fetching the renders, so that anything drawn for what is shown knows about it first
+				this.#displayed.replace(this.#getDisplayedEntries(cells))
+
+				this.#drawButtons(
+					cells.map((cell) => ({
+						...cell,
+						defaultRender: this.#graphics.getCachedRenderOrGeneratePlaceholder(cell.location),
+					}))
+				)
+			}
+		}
+	}
+
+	/**
+	 * The sizes each drawn location is shown at, from the controls of the layout at its position on the panel
+	 * @param cells - the cells to draw, with their positions transformed to the panel
+	 */
+	*#getDisplayedEntries(cells: DisplayedCell[]): Generator<{ location: ControlLocation; size: DisplayedSize }> {
+		const layout = this.panel.surfaceLayout
+		const rotation = this.#surfaceConfig.config.rotation
+
+		const sizesByXy = new Map<string, DisplayedSize[]>()
+		for (const control of Object.values(layout.controls)) {
+			const bitmap = resolveControlStylePreset(layout, control).bitmap
+			if (!bitmap) continue
+
+			// Drawn at the rotated size, then turned to fit the panel
+			const [width, height] = rotateResolution(bitmap.w, bitmap.h, rotation)
+
+			const xy = `${control.column}/${control.row}`
+			let sizes = sizesByXy.get(xy)
+			if (!sizes) {
+				sizes = []
+				sizesByXy.set(xy, sizes)
+			}
+			sizes.push({ width, height })
+		}
+
+		for (const cell of cells) {
+			for (const size of sizesByXy.get(`${cell.x}/${cell.y}`) ?? []) {
+				yield { location: cell.location, size }
 			}
 		}
 	}
@@ -256,7 +309,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	/**
 	 * Transform the coordinates of multiple images for a surface
 	 */
-	#transformButtonRenders(entries: DrawButtonItem[]): DrawButtonItem[] {
+	#transformButtonRenders<T extends { x: number; y: number }>(entries: T[]): T[] {
 		return entries.map((entry) => {
 			const [transformedX, transformedY] = rotateXYForPanel(
 				entry.x,
@@ -296,6 +349,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		if (this.#isSurfaceLocked === !!locked) return false
 
 		this.#isSurfaceLocked = !!locked
+		if (this.#isSurfaceLocked) this.#displayed.clear()
 
 		this.#surfaces.emit('surface_locked', this.surfaceId, this.#isSurfaceLocked)
 
@@ -694,6 +748,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		this.#logger.error(this.panel.info.description + ' disconnected')
 		this.#logger.silly('unloading for ' + this.panel.info.surfaceId)
 		this.#graphics.off('button_drawn', this.#onButtonDrawn)
+		this.#displayed.clear()
 
 		try {
 			this.panel.quit()

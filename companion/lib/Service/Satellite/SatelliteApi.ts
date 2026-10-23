@@ -29,6 +29,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { GridSize, SurfaceSchemaLayoutDefinition } from '@companion-app/shared/Model/Surfaces.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../../Data/UserConfig.js'
+import type { ReleaseDisplayedLocation } from '../../Graphics/DisplayedLocations.js'
 import type { ImageResult } from '../../Graphics/ImageResult.js'
 import { type Logger } from '../../Log/Controller.js'
 import { LEGACY_BUTTONS_PER_ROW, LEGACY_MAX_BUTTONS } from '../../Resources/Constants.js'
@@ -429,6 +430,8 @@ export class ServiceSatelliteApi {
 						count++
 					}
 				}
+				const socketState = this.#socketStates.get(socket)
+				if (socketState) for (const sub of socketState.subscriptions.values()) sub.releaseDisplayed?.()
 				this.#socketStates.delete(socket)
 				return count
 			},
@@ -755,6 +758,11 @@ export class ServiceSatelliteApi {
 			location,
 			style,
 			bitmapFormat,
+			// A STYLE is taken as given, so its size may not be usable
+			releaseDisplayed:
+				style.bitmap && Number.isFinite(style.bitmap.w) && Number.isFinite(style.bitmap.h)
+					? this.#serviceApi.acquireDisplayedLocation(location, { width: style.bitmap.w, height: style.bitmap.h })
+					: null,
 		}
 		socketState.subscriptions.set(subIdStr, sub)
 
@@ -784,6 +792,7 @@ export class ServiceSatelliteApi {
 			return this.#formatAndSendError(socket, messageName, undefined, 'Unknown SUBID')
 		}
 
+		socketState.subscriptions.get(subIdStr)?.releaseDisplayed?.()
 		socketState.subscriptions.delete(subIdStr)
 
 		socket.sendMessage(messageName, 'OK', null, { SUBID: subIdStr })
@@ -910,6 +919,8 @@ interface SatelliteSubscription {
 	location: ControlLocation
 	style: SatelliteControlStylePreset
 	bitmapFormat: SatelliteBitmapFormat
+	/** Stops the location counting as shown at the size of the bitmap. Null when no bitmap is sent */
+	releaseDisplayed: ReleaseDisplayedLocation | null
 }
 
 /**

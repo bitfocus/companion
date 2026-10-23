@@ -45,6 +45,7 @@ function createService({ subscriptionsEnabled = false }: { subscriptionsEnabled?
 	const userconfig = mockDeep<DataUserConfig>(mockOptions)
 
 	serviceApi.appInfo.appBuild = 'test-build-123'
+	serviceApi.acquireDisplayedLocation.mockReturnValue(() => undefined)
 	userconfig.getKey.mockReturnValue(subscriptionsEnabled)
 
 	const api = new ServiceSatelliteApi(serviceApi, surfaceController, userconfig)
@@ -1762,6 +1763,37 @@ describe('ServiceSatelliteApi', () => {
 			expect(mockRender.drawNativeEncoded).toHaveBeenCalledWith(72, 72, null, 'webp')
 			const subState = socket.writtenData.find((m) => m.includes('SUB-STATE'))
 			expect(subState).toContain('BITMAP="data:image/webp;base64,AQIDBA=="')
+		})
+
+		test('counts the location as shown at the bitmap size while subscribed', () => {
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
+			const { processMessage, cleanupDevices } = createSocketAndInit(api, logger)
+
+			serviceApi.getCachedRenderOrGeneratePlaceholder.mockReturnValue(mock<ImageResult>())
+			const releases = [vi.fn(), vi.fn()]
+			serviceApi.acquireDisplayedLocation.mockReturnValueOnce(releases[0]).mockReturnValueOnce(releases[1])
+
+			processMessage('ADD-SUB SUBID="sub1" LOCATION="1/2/3" BITMAP=128\n')
+			processMessage('ADD-SUB SUBID="sub2" LOCATION="1/2/4" BITMAP=72\n')
+			// Without a bitmap, nothing is drawn for it
+			processMessage('ADD-SUB SUBID="sub3" LOCATION="1/2/5"\n')
+			expect(serviceApi.acquireDisplayedLocation.mock.calls).toEqual([
+				[
+					{ pageNumber: 1, row: 2, column: 3 },
+					{ width: 128, height: 128 },
+				],
+				[
+					{ pageNumber: 1, row: 2, column: 4 },
+					{ width: 72, height: 72 },
+				],
+			])
+
+			processMessage('REMOVE-SUB SUBID="sub1"\n')
+			expect(releases[0]).toHaveBeenCalled()
+			expect(releases[1]).not.toHaveBeenCalled()
+
+			cleanupDevices()
+			expect(releases[1]).toHaveBeenCalled()
 		})
 
 		test('successfully adds subscription with base64 STYLE', () => {

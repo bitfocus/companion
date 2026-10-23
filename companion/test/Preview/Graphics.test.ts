@@ -6,6 +6,7 @@ import { DEFAULT_PREVIEW_RENDER_SIZE, type PreviewRenderSize } from '@companion-
 import type { ControlCommonEvents } from '../../lib/Controls/ControlDependencies.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'
 import type { GraphicsController } from '../../lib/Graphics/Controller.js'
+import { DisplayedLocations } from '../../lib/Graphics/DisplayedLocations.js'
 import type { ImageResult } from '../../lib/Graphics/ImageResult.js'
 import type { IPageStore } from '../../lib/Page/Store.js'
 import { PreviewGraphics } from '../../lib/Preview/Graphics.js'
@@ -38,7 +39,9 @@ describe('PreviewGraphics location subscription', () => {
 	function createPreview() {
 		render = makeRender('initial')
 
-		graphics = new EventEmitter() as GraphicsController & EventEmitter
+		graphics = Object.assign(new EventEmitter(), {
+			displayedLocations: new DisplayedLocations(),
+		}) as unknown as GraphicsController & EventEmitter
 		graphics.getCachedRenderOrGeneratePlaceholder = vi.fn(() => render)
 
 		const pageStore = { getControlIdAt: vi.fn(() => 'control-1') } as unknown as IPageStore
@@ -116,7 +119,10 @@ describe('PreviewGraphics location subscription', () => {
 
 		await square.next()
 		await strip.next()
+		// Counted as shown at each size while watched, so that what is drawn elsewhere (a Link button) is for it
+		expect(graphics.displayedLocations.getSizes(location)).toEqual([DEFAULT_PREVIEW_RENDER_SIZE, STRIP_SIZE])
 		await strip.cleanup()
+		expect(graphics.displayedLocations.getSizes(location)).toEqual([DEFAULT_PREVIEW_RENDER_SIZE])
 
 		const redraw = makeRender('redraw')
 		graphics.emit('button_drawn', location, redraw)

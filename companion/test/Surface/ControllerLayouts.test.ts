@@ -75,6 +75,7 @@ function createController() {
 		return undefined
 	})
 	deps.pageStore.getFirstPageId.mockReturnValue('page1')
+	deps.graphics.displayedLocations.acquire.mockReturnValue(() => undefined)
 
 	const controller = new SurfaceController(db as any, deps, true)
 
