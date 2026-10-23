@@ -25,7 +25,7 @@ import { isInternalUserValueFeedback, type ControlEntityInstance } from './Entit
 import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
 import { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
-import type { InstanceDefinitionsForEntity, NewFeedbackValue } from './Types.js'
+import type { EntityScope, InstanceDefinitionsForEntity, NewFeedbackValue } from './Types.js'
 
 export interface ControlEntityListChangeProps {
 	/** If true, do not save changes to the database/disk */
@@ -81,7 +81,7 @@ export abstract class ControlEntityListPoolBase {
 	readonly #processManager: InstanceProcessManager
 	protected readonly variableValues: VariablesValues
 	readonly #isLayeredDrawing: boolean
-	readonly #specialExpressionManager: EntityPoolSpecialExpressionManager
+	readonly #scope: EntityScope
 
 	protected readonly controlId: SomeControlId
 
@@ -104,7 +104,7 @@ export abstract class ControlEntityListPoolBase {
 		this.variableValues = props.variableValues
 		this.#isLayeredDrawing = isLayeredDrawing
 
-		this.#specialExpressionManager = new EntityPoolSpecialExpressionManager(
+		const specialExpressionManager = new EntityPoolSpecialExpressionManager(
 			props.controlId,
 			this.createVariablesAndExpressionParser.bind(this),
 			{
@@ -114,6 +114,10 @@ export abstract class ControlEntityListPoolBase {
 			props.renderClock,
 			props.variableDependencies
 		)
+		this.#scope = {
+			specialExpressionManager,
+			createVariablesAndExpressionParser: this.createVariablesAndExpressionParser.bind(this),
+		}
 	}
 
 	protected createEntityList(listDefinition: ControlEntityListDefinition): ControlEntityList {
@@ -121,7 +125,7 @@ export abstract class ControlEntityListPoolBase {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#processManager,
-			this.#specialExpressionManager,
+			this.#scope,
 			this.controlId,
 			null,
 			listDefinition
@@ -225,7 +229,7 @@ export abstract class ControlEntityListPoolBase {
 	 * @access public
 	 */
 	destroy(): void {
-		this.#specialExpressionManager.destroy()
+		this.#scope.specialExpressionManager.destroy()
 
 		for (const list of this.getAllEntityLists()) {
 			list.cleanup()
