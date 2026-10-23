@@ -97,6 +97,14 @@ describe('InstanceEntityManager', () => {
 			mockRenderClock as any
 		)
 
+		// An entity parses its options in its own scope. The mock entities here use the scope of their control
+		const trackEntity = entityManager.trackEntity.bind(entityManager)
+		entityManager.trackEntity = (entity, controlId) => {
+			;(entity as any).createVariablesAndExpressionParser ??= (overrides: any) =>
+				mockControlsController.createVariablesAndExpressionParser(controlId, overrides)
+			trackEntity(entity, controlId)
+		}
+
 		vi.useFakeTimers()
 	})
 

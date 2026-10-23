@@ -13,6 +13,7 @@ import { ControlEntityList, type ControlEntityListDefinition } from '../../../li
 import type { EntityPoolSpecialExpressionManager } from '../../../lib/Controls/Entities/EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from '../../../lib/Controls/Entities/SpecialExpressions.js'
 import type {
+	EntityScope,
 	FeedbackExecutionContext,
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
@@ -49,6 +50,10 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		trackEntity: vi.fn(),
 		forgetEntity: vi.fn(),
 	} as any
+	const scope: EntityScope = {
+		specialExpressionManager,
+		createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
+	}
 	const internalController: InternalControllerForEntity = {
 		entityUpdate: internalEntityUpdate,
 		entityDelete: internalEntityDelete,
@@ -61,7 +66,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		instanceDefinitions,
 		internalController,
 		processManager,
-		specialExpressionManager,
+		scope,
 		controlId,
 		ownerId ?? null,
 		listId ?? {
@@ -81,7 +86,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		instanceDefinitions,
 		internalController,
 		processManager,
-		specialExpressionManager,
+		scope,
 		controlId,
 		newActionModel,
 		false
@@ -104,6 +109,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		internalController,
 		processManager,
 		specialExpressionManager,
+		scope,
 		newActionModel,
 		newAction,
 	}
@@ -1142,7 +1148,7 @@ describe('duplicateEntity', () => {
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
 		expect(connectionEntityUpdate).toHaveBeenCalledWith(newEntityChild, 'test01')
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(1)
-		expect(internalEntityUpdate).toHaveBeenCalledWith(newEntity!.asEntityModel(), 'test01')
+		expect(internalEntityUpdate).toHaveBeenCalledWith(newEntity!.asEntityModel(), 'test01', expect.any(Function))
 	})
 
 	test('duplicate deep when root is full', () => {
@@ -1991,3 +1997,21 @@ function translateFeedbackValues(oldValues: Record<string, any>): Map<string, Ne
 	}
 	return map
 }
+
+describe('scope', () => {
+	test('an entity parses its options in the scope of its list', () => {
+		const { list, scope, internalEntityUpdate, newActionModel } = createList('test01')
+		const parser = {} as any
+		vi.mocked(scope.createVariablesAndExpressionParser).mockReturnValue(parser)
+
+		list.loadStorage([{ ...newActionModel, type: EntityModelType.Feedback }], false, false)
+		const entity = list.findById(newActionModel.id)!
+
+		expect(entity.createVariablesAndExpressionParser({ 'a:b': 1 })).toBe(parser)
+		expect(scope.createVariablesAndExpressionParser).toHaveBeenCalledWith({ 'a:b': 1 }, undefined)
+
+		// The internal module is given the same scope
+		const createParser = internalEntityUpdate.mock.calls[0][2]
+		expect(createParser()).toBe(parser)
+	})
+})
