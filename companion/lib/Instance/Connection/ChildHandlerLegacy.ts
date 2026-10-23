@@ -612,7 +612,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 			const result = await this.#ipcWrapper.sendWithCb('executeAction', {
 				action: {
-					id: action.id,
+					// The module knows the action by its subscription, if it has one
+					id: this.#entityManager?.getSubscriptionId(action.id) ?? action.id,
 					controlId: extras?.controlId,
 					actionId: action.definitionId,
 					options: actionOptions as OptionsObject,
@@ -858,6 +859,12 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 */
 	async #handleUpdateFeedbackValues(msg: UpdateFeedbackValuesMessage): Promise<void> {
 		this.#deps.trackFeedbackValuesReceived(this.connectionId, msg.values.length)
+
+		if (this.#entityManager) {
+			// The values are for subscriptions, which can be shared by multiple entities
+			this.#entityManager.handleFeedbackValues(msg.values)
+			return
+		}
 
 		this.#deps.controls.updateFeedbackValues(
 			this.connectionId,
@@ -1139,7 +1146,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 		for (const [id, value] of actions) {
 			if (value) {
 				updateMessage.actions[id] = {
-					id: value.entity.id,
+					id: id,
 					controlId: value.controlId,
 					actionId: value.entity.definitionId,
 					options: value.parsedOptions as OptionsObject,
@@ -1163,7 +1170,7 @@ class ConnectionLegacyEntityManagerAdapter implements EntityManagerAdapter {
 				const control = this.#controlsStore.getControl(value.controlId)
 
 				updateMessage.feedbacks[id] = {
-					id: value.entity.id,
+					id: id,
 					controlId: value.controlId,
 					feedbackId: value.entity.definitionId,
 					options: value.parsedOptions as OptionsObject,

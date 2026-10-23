@@ -1,17 +1,22 @@
+import { createHash } from 'node:crypto'
 import debounceFn from 'debounce-fn'
 import { nanoid } from 'nanoid'
 import {
 	EntityModelType,
 	type ActionEntityModel,
 	type FeedbackEntityModel,
+	type FeedbackValue,
 	type ReplaceableActionEntityModel,
 	type ReplaceableFeedbackEntityModel,
+	type SomeEntityModel,
 	type SomeReplaceableEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
+import type { NewFeedbackValue } from '../../Controls/Entities/Types.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
 import type { RenderClock } from '../../Controls/RenderClock.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
@@ -39,9 +44,57 @@ interface EntityWrapper {
 	readonly controlId: string
 
 	state: EntityState
+	/** The id of the subscription this entity is a member of, if it is subscribed to the module */
+	subscriptionId?: string
 	lastReferencedVariableIds?: ReadonlySet<string>
 	/** Whether the last parsed options for this feedback entity depended on the render clock */
 	lastClockSensitive?: boolean
+}
+
+/**
+ * A subscription sent to the module. Entities in the same control which parse to the same options share a
+ * subscription, so the module only sees it once. Its id is derived from what makes it unique, so no member
+ * owns it and it is unaffected by members coming and going.
+ */
+interface EntitySubscription {
+	readonly controlId: string
+	readonly type: EntityModelType
+	/** The ids of the entities which share this subscription */
+	readonly memberIds: Set<string>
+	/** The last value the module reported for this subscription, for a member which joins later */
+	lastValue?: { value: FeedbackValue }
+}
+
+/**
+ * A feedback value reported by the module, for a subscription
+ */
+export interface EntityManagerFeedbackValue {
+	/** The id of the subscription */
+	id: string
+	controlId: string
+	value: FeedbackValue
+}
+
+/**
+ * Get the id of the module subscription for an entity, from what makes the subscription unique
+ * @param controlId The control the entity belongs to
+ * @param entityModel The entity
+ * @param parsedOptions The options of the entity, as parsed for the module
+ */
+export function getEntitySubscriptionId(
+	controlId: string,
+	entityModel: SomeEntityModel,
+	parsedOptions: CompanionOptionValues
+): string {
+	const key = JSON.stringify([
+		controlId,
+		entityModel.type,
+		entityModel.definitionId,
+		createStableObjectHash(parsedOptions),
+		// Older modules are told whether a feedback is inverted
+		entityModel.type === EntityModelType.Feedback ? (entityModel.isInverted ?? null) : null,
+	])
+	return createHash('sha256').update(key).digest('base64url').slice(0, 22)
 }
 
 export interface EntityManagerActionEntity {
@@ -56,6 +109,7 @@ export interface EntityManagerFeedbackEntity {
 }
 
 export interface EntityManagerAdapter {
+	/** Send changes to the subscriptions, keyed by the id of each subscription. `null` deletes a subscription */
 	updateActions: (actions: Map<string, EntityManagerActionEntity | null>) => Promise<void>
 	updateFeedbacks: (feedbacks: Map<string, EntityManagerFeedbackEntity | null>) => Promise<void>
 
@@ -81,7 +135,9 @@ export class ConnectionEntityManager {
 	readonly #adapter: EntityManagerAdapter
 	readonly controlsStore: IControlStore
 
+	readonly #connectionId: string
 	readonly #entities = new Map<string, EntityWrapper>()
+	readonly #subscriptions = new Map<string, EntitySubscription>()
 
 	// Before the connection is ready, we need to not send any updates
 	#ready = false
@@ -101,6 +157,7 @@ export class ConnectionEntityManager {
 		renderClock: RenderClock
 	) {
 		this.#logger = LogController.createLogger(`Instance/Connection/EntityManager/${connectionId}`)
+		this.#connectionId = connectionId
 		this.#adapter = adapter
 		this.controlsStore = controlsStore
 		this.#unsubscribeRenderClock = renderClock.subscribe(() => this.onRenderClockTick())
@@ -117,6 +174,81 @@ export class ConnectionEntityManager {
 
 			let updateActionsPayload = new Map<string, EntityManagerActionEntity | null>()
 			let updateFeedbacksPayload = new Map<string, EntityManagerFeedbackEntity | null>()
+
+			// Values of existing subscriptions, for entities which have joined them
+			const joinedFeedbackValues: NewFeedbackValue[] = []
+
+			const setSubscriptionPayload = (
+				subscriptionId: string,
+				payload: EntityManagerActionEntity | EntityManagerFeedbackEntity | null,
+				type: EntityModelType
+			) => {
+				switch (type) {
+					case EntityModelType.Action:
+						updateActionsPayload.set(subscriptionId, payload as EntityManagerActionEntity | null)
+						break
+					case EntityModelType.Feedback:
+						updateFeedbacksPayload.set(subscriptionId, payload as EntityManagerFeedbackEntity | null)
+						break
+					default:
+						assertNever(type)
+						this.#logger.warn('Unknown entity type', type)
+				}
+			}
+
+			/** Remove an entity from its subscription, deleting the subscription if it was the last member */
+			const leaveSubscription = (entityId: string, wrapper: EntityWrapper) => {
+				const subscriptionId = wrapper.subscriptionId
+				if (subscriptionId === undefined) return
+				wrapper.subscriptionId = undefined
+
+				const subscription = this.#subscriptions.get(subscriptionId)
+				if (!subscription) return
+
+				subscription.memberIds.delete(entityId)
+				if (subscription.memberIds.size === 0) {
+					this.#subscriptions.delete(subscriptionId)
+					setSubscriptionPayload(subscriptionId, null, subscription.type)
+				}
+			}
+
+			/** Add an entity to the subscription for its parsed options, creating the subscription if needed */
+			const joinSubscription = (
+				entityId: string,
+				wrapper: EntityWrapper,
+				payload: EntityManagerActionEntity | EntityManagerFeedbackEntity
+			) => {
+				const subscriptionId = getEntitySubscriptionId(wrapper.controlId, payload.entity, payload.parsedOptions)
+
+				if (wrapper.subscriptionId === subscriptionId) {
+					// Already a member, it has been re-parsed so resend it, as something other than the options may have changed
+					setSubscriptionPayload(subscriptionId, payload, payload.entity.type)
+					return
+				}
+
+				leaveSubscription(entityId, wrapper)
+				wrapper.subscriptionId = subscriptionId
+
+				const subscription = this.#subscriptions.get(subscriptionId)
+				if (subscription) {
+					// The module already knows about this subscription, so the entity can use its current value
+					subscription.memberIds.add(entityId)
+					if (subscription.lastValue) {
+						joinedFeedbackValues.push({
+							entityId: entityId,
+							controlId: subscription.controlId,
+							value: subscription.lastValue.value,
+						})
+					}
+				} else {
+					this.#subscriptions.set(subscriptionId, {
+						controlId: wrapper.controlId,
+						type: payload.entity.type,
+						memberIds: new Set([entityId]),
+					})
+					setSubscriptionPayload(subscriptionId, payload, payload.entity.type)
+				}
+			}
 
 			const pushEntityToUpgrade = (wrapper: EntityWrapper, entity: ControlEntityInstance) => {
 				this.#logger.silly(
@@ -172,6 +304,7 @@ export class ConnectionEntityManager {
 						if (!entity) {
 							this.#logger.warn(`Entity ${wrapper.wrapperId} has been garbage collected, skipping upgrade`)
 							this.#entities.delete(entityId)
+							leaveSubscription(entityId, wrapper)
 							continue
 						}
 
@@ -181,12 +314,14 @@ export class ConnectionEntityManager {
 
 							if (entity.disabled) {
 								// Disabled entities should not be subscribed to the module
+								leaveSubscription(entityId, wrapper)
 								continue
 							}
 
 							const entityDefinition = entity.getEntityDefinition()
 							if (!entityDefinition || !entityDefinition.hasLifecycleFunctions) {
 								// The entity does not have lifecycle functions, so we can skip informing the module about it
+								leaveSubscription(entityId, wrapper)
 								continue
 							}
 
@@ -213,35 +348,15 @@ export class ConnectionEntityManager {
 								)
 							}
 
-							switch (entityModel.type) {
-								case EntityModelType.Action:
-									updateActionsPayload.set(
-										entityId,
-										updateOptions
-											? {
-													controlId: wrapper.controlId,
-													entity: entityModel,
-													parsedOptions: updateOptions,
-												}
-											: null
-									)
-									break
-								case EntityModelType.Feedback: {
-									updateFeedbacksPayload.set(
-										entityId,
-										updateOptions
-											? {
-													controlId: wrapper.controlId,
-													entity: entityModel,
-													parsedOptions: updateOptions,
-												}
-											: null
-									)
-									break
-								}
-								default:
-									assertNever(entityModel)
-									this.#logger.warn('Unknown entity type', entity.type)
+							if (updateOptions) {
+								joinSubscription(entityId, wrapper, {
+									controlId: wrapper.controlId,
+									entity: entityModel,
+									parsedOptions: updateOptions,
+								} as EntityManagerActionEntity | EntityManagerFeedbackEntity)
+							} else {
+								// The entity is inactive until its options can be parsed
+								leaveSubscription(entityId, wrapper)
 							}
 						} else {
 							wrapper.state = EntityState.UPGRADING
@@ -260,21 +375,7 @@ export class ConnectionEntityManager {
 						// Plan for deletion
 						this.#entities.delete(entityId)
 
-						const entity = wrapper.entity.deref()
-
-						if (entity) {
-							switch (entity.type) {
-								case EntityModelType.Action:
-									updateActionsPayload.set(entityId, null)
-									break
-								case EntityModelType.Feedback:
-									updateFeedbacksPayload.set(entityId, null)
-									break
-								default:
-									assertNever(entity.type)
-									this.#logger.warn('Unknown entity type', entity.type)
-							}
-						}
+						leaveSubscription(entityId, wrapper)
 						break
 					}
 
@@ -297,6 +398,10 @@ export class ConnectionEntityManager {
 					// Start a new batch
 					updateFeedbacksPayload = new Map()
 				}
+			}
+
+			if (joinedFeedbackValues.length > 0) {
+				this.controlsStore.updateFeedbackValues(this.#connectionId, joinedFeedbackValues)
 			}
 
 			// Start by sending the simple payloads
@@ -504,6 +609,7 @@ export class ConnectionEntityManager {
 		this.#debounceProcessPending.cancel()
 		this.#batchQueue.length = 0
 		this.#entities.clear()
+		this.#subscriptions.clear()
 		this.#ready = false
 	}
 
@@ -513,17 +619,51 @@ export class ConnectionEntityManager {
 	 * If the entity already exists, it will be replaced and the new entity will be processed as needed.
 	 */
 	trackEntity(entity: ControlEntityInstance, controlId: string): void {
-		// This may replace an existing entity, if so it needs to restart the process
+		// This may replace an existing entity, if so it needs to restart the process.
+		// It stays in the subscription of what it replaced until it has been processed
 		this.#entities.set(entity.id, {
 			wrapperId: nanoid(),
 			entity: new WeakRef(entity),
 			controlId: controlId,
 			state: EntityState.UNLOADED,
+			subscriptionId: this.#entities.get(entity.id)?.subscriptionId,
 		})
 
 		this.#logger.silly(`Queued entity ${entity.id} in control ${controlId} as unloaded`)
 
 		this.#debounceProcessPending()
+	}
+
+	/**
+	 * Get the id of the module subscription an entity is a member of.
+	 * This is the id the module knows the entity by, which can be shared with other identical entities in the same control.
+	 * @param entityId The id of the entity
+	 * @returns The id of the subscription, or undefined if the entity is not subscribed
+	 */
+	getSubscriptionId(entityId: string): string | undefined {
+		return this.#entities.get(entityId)?.subscriptionId
+	}
+
+	/**
+	 * Handle feedback values reported by the module, passing each to every entity which shares the subscription
+	 * @param values The values for each subscription
+	 */
+	handleFeedbackValues(values: EntityManagerFeedbackValue[]): void {
+		const entityValues: NewFeedbackValue[] = []
+
+		for (const { id, controlId, value } of values) {
+			const subscription = this.#subscriptions.get(id)
+			// The subscription may have been removed while the value was in flight
+			if (!subscription || subscription.controlId !== controlId) continue
+
+			subscription.lastValue = { value }
+
+			for (const entityId of subscription.memberIds) {
+				entityValues.push({ entityId, controlId, value })
+			}
+		}
+
+		if (entityValues.length > 0) this.controlsStore.updateFeedbackValues(this.#connectionId, entityValues)
 	}
 
 	/**
