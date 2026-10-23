@@ -10,6 +10,7 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { ConfigFieldRow } from '~/UserConfig/Components/ConfigFieldRows.js'
 
 /** Shown when no installation is selected: what other installations see of this one */
 export const LinkOverviewPanel = observer(function LinkOverviewPanel(): React.JSX.Element {
@@ -45,15 +46,11 @@ export const LinkOverviewPanel = observer(function LinkOverviewPanel(): React.JS
 
 			<div className="secondary-panel-simple-body p-4 flex flex-col gap-4">
 				<EditSectionCard title="Seen by others as">
-					<dl className="grid grid-cols-3 gap-x-4 gap-y-2 m-0 text-sm">
-						<dt className="text-muted">Name</dt>
-						<dd className="col-span-2 m-0">
-							{self?.name ?? '…'}
-							<div className="text-xs text-muted">Set by the Installation Name in Settings</div>
-						</dd>
-
-						<dt className="text-muted">Link id</dt>
-						<dd className="col-span-2 m-0 flex items-center gap-2 min-w-0">
+					<ConfigFieldRow label="Name" htmlFor={null} help="Set by the Installation Name in Settings">
+						{self?.name ?? '…'}
+					</ConfigFieldRow>
+					<ConfigFieldRow label="Link id" htmlFor={null} help={null}>
+						<div className="flex items-center gap-2 min-w-0">
 							<span className="truncate font-mono" title={self?.id}>
 								{self?.fingerprint ?? '…'}
 							</span>
@@ -68,11 +65,11 @@ export const LinkOverviewPanel = observer(function LinkOverviewPanel(): React.JS
 							>
 								<FontAwesomeIcon icon={faRotate} />
 							</Button>
-						</dd>
-
-						<dt className="text-muted">Protocol versions</dt>
-						<dd className="col-span-2 m-0">{self?.protocolVersions.join(', ') ?? '…'}</dd>
-					</dl>
+						</div>
+					</ConfigFieldRow>
+					<ConfigFieldRow label="Protocol versions" htmlFor={null} help={null}>
+						{self?.protocolVersions.join(', ') ?? '…'}
+					</ConfigFieldRow>
 				</EditSectionCard>
 
 				<NonIdealState icon={faLink}>

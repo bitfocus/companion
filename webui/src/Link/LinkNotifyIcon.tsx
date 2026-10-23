@@ -10,6 +10,10 @@ export function LinkTabNotifyIcon(): React.JSX.Element | null {
 		trpc.link.watchAttention.subscriptionOptions(undefined, {
 			onStarted: () => setLines([]),
 			onData: (data) => setLines(data),
+			onError: (error) => {
+				console.error('Failed to subscribe to link attention:', error)
+				setLines([])
+			},
 		})
 	)
 
