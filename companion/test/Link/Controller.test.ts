@@ -1,7 +1,9 @@
 import { EventEmitter } from 'node:events'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { LinkTransportConfig } from '@companion-app/shared/Model/Link.js'
+import type { IControlStore } from '../../lib/Controls/IControlStore.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
+import type { GraphicsController } from '../../lib/Graphics/Controller.js'
 import type { ImageResult } from '../../lib/Graphics/ImageResult.js'
 import { LinkController } from '../../lib/Link/Controller.js'
 import { decodeLinkAnnouncement, encodeLinkAnnouncement } from '../../lib/Link/Protocol/Announcement.js'
@@ -105,7 +107,12 @@ function createController(db = new FakeDataDatabase(), installName = 'Self') {
 		{ appVersion: '5.0.0' } as any,
 		db.asDataDatabase(),
 		userconfig,
-		{ pageStore, controls, graphics },
+		// Only what Link uses
+		{
+			pageStore,
+			controls: controls as unknown as IControlStore,
+			graphics: graphics as unknown as GraphicsController,
+		},
 		[definition],
 		[]
 	)

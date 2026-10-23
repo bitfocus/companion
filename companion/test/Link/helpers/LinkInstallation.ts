@@ -8,7 +8,9 @@ import type {
 	LinkTransportState,
 } from '@companion-app/shared/Model/Link.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { IControlStore } from '../../../lib/Controls/IControlStore.js'
 import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
+import type { GraphicsController } from '../../../lib/Graphics/Controller.js'
 import type { ImageResult } from '../../../lib/Graphics/ImageResult.js'
 import { LinkController } from '../../../lib/Link/Controller.js'
 import type { SomeLinkBuiltinTransport, SomeLinkTransportDefinition } from '../../../lib/Link/Transports/Types.js'
@@ -105,7 +107,12 @@ export class LinkInstallation {
 			{ appVersion: '5.2.0' } as any,
 			db.asDataDatabase(),
 			userconfig,
-			{ pageStore, controls: this.controls, graphics: this.graphics },
+			// Only what Link uses
+			{
+				pageStore,
+				controls: this.controls as unknown as IControlStore,
+				graphics: this.graphics as unknown as GraphicsController,
+			},
 			options.transportDefinitions,
 			options.builtinTransports
 		)

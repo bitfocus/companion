@@ -44,8 +44,8 @@ import type { LinkMessageOrigin, SomeLinkBuiltinTransport, SomeLinkTransportDefi
 /** The parts of Companion that Link uses, to show buttons of peers and serve buttons to them */
 export interface LinkDependencies {
 	readonly pageStore: IPageStore
-	readonly controls: Pick<IControlStore, 'getControl' | 'pressControl' | 'rotateControl'>
-	readonly graphics: Pick<GraphicsController, 'getCachedRenderOrGeneratePlaceholder'>
+	readonly controls: IControlStore
+	readonly graphics: GraphicsController
 }
 
 interface LinkControllerEvents {
