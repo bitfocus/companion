@@ -64,11 +64,17 @@ export const LinkButtonRevisionSchema = z
 			.min(1)
 			.max(64)
 			.describe(
-				'Chosen at random when the peer starts serving the button at this size, so that the revisions of a restarted peer are not mistaken for older ones'
+				'Chosen at random when the peer starts serving the button (at any size), so that the revisions of a restarted peer are not mistaken for older ones'
 			),
-		seq: z.number().int().nonnegative().describe('Counts up each time the button is sent at this size'),
+		seq: z
+			.number()
+			.int()
+			.nonnegative()
+			.describe(
+				'Counts up each time the button is redrawn. Shared by every size the button is served at, so updates of it at different sizes with the same revision are of the same render. Numbers may be skipped'
+			),
 	})
-	.describe('Which render of a button at a size an update is, to put updates in order and to say which one is held')
+	.describe('Which render of a button an update is, to put updates in order and to say which one is held')
 
 export const LinkSubscribePayloadSchema = z
 	.object({

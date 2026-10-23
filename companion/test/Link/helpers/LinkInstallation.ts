@@ -11,7 +11,9 @@ import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigMode
 import type { IControlStore } from '../../../lib/Controls/IControlStore.js'
 import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
 import type { GraphicsController } from '../../../lib/Graphics/Controller.js'
+import { DisplayedLocations } from '../../../lib/Graphics/DisplayedLocations.js'
 import type { ImageResult } from '../../../lib/Graphics/ImageResult.js'
+import type { LinkButtonTarget } from '../../../lib/Link/ButtonClient.js'
 import { LinkController } from '../../../lib/Link/Controller.js'
 import type { SomeLinkBuiltinTransport, SomeLinkTransportDefinition } from '../../../lib/Link/Transports/Types.js'
 import type { IPageStore } from '../../../lib/Page/Store.js'
@@ -56,11 +58,13 @@ async function current<T>(subscribe: (signal: AbortSignal) => Promise<AsyncItera
 /**
  * A Companion installation running a real LinkController, with fakes of the rest of Companion: the buttons it
  * serves (every location has a button, drawn as `<name>-<location>`, pressed through `controls`), which locations of
- * its pages hold a remote button (`placeRemoteButton`), and its user config
+ * its pages hold a remote button (`placeRemoteButton`), what is shown where (`displayedLocations`), and its user
+ * config
  */
 export class LinkInstallation {
 	readonly name: string
 	readonly controller: LinkController
+	readonly displayedLocations = new DisplayedLocations()
 	/** The aborts of the actions of each control */
 	readonly abortControl = vi.fn((_controlId: string, _unlatch: boolean, _hops: number) => undefined)
 	readonly controls = {
@@ -78,6 +82,7 @@ export class LinkInstallation {
 		getCachedRenderOrGeneratePlaceholder: vi.fn((location: ControlLocation) =>
 			fakeRender(`${this.name}-${locationKey(location)}`, false)
 		),
+		displayedLocations: this.displayedLocations,
 	}
 	/** Link's tRPC api, called as the UI would */
 	readonly api: LinkApi
@@ -126,6 +131,20 @@ export class LinkInstallation {
 	/** Mark a location as holding a remote button, as the page store would */
 	placeRemoteButton(location: ControlLocation, controlId: string): void {
 		this.#controlsAt.set(locationKey(location), controlId)
+	}
+
+	/** Point a remote button placed here at a button of a peer, telling it the sizes it is shown at as the control does */
+	targetRemoteButton(controlId: string, target: LinkButtonTarget): void {
+		this.controller.buttonClient.setTarget(controlId, target, () => undefined)
+
+		for (const [key, placed] of this.#controlsAt) {
+			if (placed !== controlId) continue
+			const [pageNumber, row, column] = key.split('/').map(Number)
+			this.controller.buttonClient.setDisplayedSizes(
+				controlId,
+				this.displayedLocations.getSizes({ pageNumber, row, column })
+			)
+		}
 	}
 
 	async self(): Promise<LinkSelfInfo> {

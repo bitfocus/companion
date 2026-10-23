@@ -32,6 +32,7 @@ import { ButtonGraphicsDecorationType, type DrawImageBuffer } from '@companion-a
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ControlButtonPreset } from '../Controls/ControlTypes/Button/Preset.js'
+import type { ButtonSizedDraw } from '../Controls/IButtonDrawer.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { RenderClock } from '../Controls/RenderClock.js'
 import type { DataDatabase } from '../Data/Database.js'
@@ -40,7 +41,7 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
-import { resolveThreadEntrypoint } from '../Resources/Util.js'
+import { resolveThreadEntrypoint, rotateResolution } from '../Resources/Util.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
 import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
@@ -352,7 +353,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									decodedImages: null, // Resolved when drawn
 								}
 
-								render = this.#generateImageResult(cacheKey, renderStyle, animationFrames.frameIndices)
+								render = this.#generateImageResult(cacheKey, renderStyle, animationFrames.frameIndices, null)
 								if (shouldCacheAnimationRenders(animationFrames)) this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
@@ -380,6 +381,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					const controlId = this.#pageStore.getControlIdAt(location)
 					const control = controlId ? this.controlsStore.getControl(controlId) : undefined
 					const buttonStyle = (await control?.drawing?.getDrawStyle()) ?? undefined
+					const sizedDraw = (buttonStyle && control?.drawing?.getSizedDraw?.()) ?? null
 
 					let render: ImageResult | undefined
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
@@ -411,6 +413,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							elements: collectContentHashes(buttonStyle.elements), // use hashes of elements for the key
 							referencedLocations: [...(buttonStyle.referencedLocations ?? [])].sort(), // Sets serialize as {} in JSON.stringify
 							animationFrames: [...animationFrames.frameIndices],
+							sizedDraw: sizedDraw?.key,
 						}
 						delete cacheKeyObj['clockSensitive']
 						const cacheKey = JSON.stringify(cacheKeyObj)
@@ -423,6 +426,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								cacheKey,
 								renderStyle,
 								animationFrames.frameIndices,
+								sizedDraw,
 								buttonStyle.elements,
 								buttonStyle.referencedLocations
 							)
@@ -615,7 +619,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		// One-off preview: never cached or emitted, so it has no content key (never deduped).
 		// It is a still, so any animations show their first frame
-		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES.frameIndices)
+		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES.frameIndices, null)
 	}
 
 	/**
@@ -920,6 +924,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		cacheKey: string | undefined,
 		drawStyle: RendererButtonStyle,
 		animationFrameIndices: ReadonlyMap<string, number>,
+		sizedDraw: ButtonSizedDraw | null,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> | undefined = undefined
 	): ImageResult {
@@ -928,15 +933,22 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		return new ImageResult(
 			cacheKey,
 			processedStyle,
-			async (width, height, rotation, format) =>
-				this.#executePoolDrawButtonImageBuffer(
-					drawStyle,
+			async (width, height, rotation, format) => {
+				let sizedStyle = drawStyle
+				if (sizedDraw) {
+					const [drawWidth, drawHeight] = rotateResolution(width, height, rotation)
+					sizedStyle = { ...drawStyle, elements: await sizedDraw.elementsAt(drawWidth, drawHeight) }
+				}
+
+				return this.#executePoolDrawButtonImageBuffer(
+					sizedStyle,
 					animationFrameIndices,
 					{ width, height, oversampling: computeOversampling(width, height) },
 					rotation,
 					format,
 					CRASHED_WORKER_RETRY_COUNT
-				),
+				)
+			},
 			drawElements,
 			referencedLocations ?? new Set()
 		)

@@ -30,7 +30,7 @@ import { LinkButtonDrawer } from './LinkButtonDrawer.js'
 const UNCONFIGURED_STATE: LinkButtonState = {
 	status: 'unconfigured',
 	peerName: null,
-	dataUrl: null,
+	images: [],
 	pressed: false,
 	sourceChain: [],
 }
@@ -94,7 +94,8 @@ export class ControlButtonLink
 		this.#drawing = new LinkButtonDrawer(
 			deps,
 			controlId,
-			() => this.deps.linkButtons.getState(this.controlId) ?? UNCONFIGURED_STATE
+			() => this.deps.linkButtons.getState(this.controlId) ?? UNCONFIGURED_STATE,
+			async (size) => this.deps.linkButtons.waitForImage(this.controlId, size)
 		)
 
 		if (!storage) {
@@ -122,13 +123,20 @@ export class ControlButtonLink
 		super.destroy()
 	}
 
-	/** Resolve the location, and tell the link client what this button should show */
+	/** Resolve the location, and tell the link client what this button should show, and at what sizes */
 	#updateTarget(): void {
 		const target = this.#resolveTarget()
 		this.deps.linkButtons.setTarget(this.controlId, target, () => {
 			this.sendRuntimePropsChange()
 			this.#drawing.invalidate()
 		})
+
+		// This button may have moved
+		const myLocation = this.deps.pageStore.getLocationOfControlId(this.controlId)
+		this.deps.linkButtons.setDisplayedSizes(
+			this.controlId,
+			myLocation ? this.deps.graphics.displayedLocations.getSizes(myLocation) : []
+		)
 	}
 
 	#resolveTarget(): LinkButtonTarget | null {

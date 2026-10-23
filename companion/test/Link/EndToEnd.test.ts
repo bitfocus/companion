@@ -1,6 +1,7 @@
 import getPort from 'get-port'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { LinkButtonState } from '../../lib/Link/ButtonClient.js'
 import {
 	DirectClientTransportDefinition,
 	DirectServerBuiltinTransport,
@@ -113,11 +114,17 @@ describe.each(NETWORKS)('two installations linked over $name', { timeout: 20_000
 		await Promise.all([a.stop(), b.stop()])
 	})
 
-	/** Show a button of A on B, as a Remote button there would */
-	function showOnB(controlId: string, target: ControlLocation) {
+	/** Show a button of A on B, as a Remote button there would, shown at some sizes */
+	function showOnB(controlId: string, target: ControlLocation, sizes = [{ width: 72, height: 72 }]) {
 		const onChange = vi.fn()
 		b.controller.buttonClient.setTarget(controlId, { peerId: aId, location: target }, onChange)
+		b.controller.buttonClient.setDisplayedSizes(controlId, sizes)
 		return { onChange, state: () => b.controller.buttonClient.getState(controlId) }
+	}
+
+	/** The images of a button, as `<width>x<height>:<image>` */
+	function imagesOf(state: LinkButtonState | undefined): string[] {
+		return (state?.images ?? []).map((i) => `${i.width}x${i.height}:${i.dataUrl.replace('data:image/png;base64,', '')}`)
 	}
 
 	async function shareButtons(from: LinkInstallation, withId: string, buttons: boolean) {
@@ -155,19 +162,12 @@ describe.each(NETWORKS)('two installations linked over $name', { timeout: 20_000
 		await shareButtons(a, bId, true)
 		const button = showOnB('remote', location)
 
-		await vi.waitFor(() =>
-			expect(button.state()).toMatchObject({
-				status: 'ok',
-				peerName: 'Studio A',
-				dataUrl: 'data:image/png;base64,Studio A-1/0/0',
-				pressed: false,
-			})
-		)
+		await vi.waitFor(() => expect(button.state()).toMatchObject({ status: 'ok', peerName: 'Studio A', pressed: false }))
+		expect(imagesOf(button.state())).toEqual(['144x144:Studio A-1/0/0'])
 
 		a.controller.onButtonDrawn(location, fakeRender('Studio A-redrawn', true))
-		await vi.waitFor(() =>
-			expect(button.state()).toMatchObject({ dataUrl: 'data:image/png;base64,Studio A-redrawn', pressed: true })
-		)
+		await vi.waitFor(() => expect(button.state()).toMatchObject({ pressed: true }))
+		expect(imagesOf(button.state())).toEqual(['144x144:Studio A-redrawn'])
 
 		b.controller.buttonClient.press('remote', true, 'surface')
 		expect(b.controller.buttonClient.rotate('remote', -1, 'surface')).toBe(true)
@@ -177,6 +177,45 @@ describe.each(NETWORKS)('two installations linked over $name', { timeout: 20_000
 			expect(a.controls.rotateControl).toHaveBeenCalledWith('control-1/0/0', -1, `link:${bId}:surface`)
 			expect(a.abortControl).toHaveBeenCalledWith('control-1/0/0', true, 1)
 		})
+	})
+
+	test('a button shown at other shapes is drawn by its peer at each of them, and redrawn at them together', async () => {
+		await shareButtons(a, bId, true)
+		const button = showOnB('remote', location, [
+			{ width: 72, height: 72 },
+			{ width: 200, height: 100 },
+		])
+
+		await vi.waitFor(() =>
+			expect(imagesOf(button.state())).toEqual(['288x144:Studio A-1/0/0', '144x144:Studio A-1/0/0'])
+		)
+		expect(a.displayedLocations.getSizes(location)).toEqual([
+			{ width: 288, height: 144 },
+			{ width: 144, height: 144 },
+		])
+
+		button.onChange.mockClear()
+		a.controller.onButtonDrawn(location, fakeRender('Studio A-redrawn', true))
+		await vi.waitFor(() =>
+			expect(imagesOf(button.state())).toEqual(['288x144:Studio A-redrawn', '144x144:Studio A-redrawn'])
+		)
+		expect(button.onChange).toHaveBeenCalledTimes(1)
+	})
+
+	test('a remote button served onwards is subscribed to at the size it is served at', async () => {
+		await shareButtons(a, bId, true)
+		await shareButtons(b, aId, true)
+
+		// A remote button on A, which nothing on A shows, showing B's button
+		const locationOnA = { ...location, column: 1 }
+		a.placeRemoteButton(locationOnA, 'remote-on-a')
+		a.targetRemoteButton('remote-on-a', { peerId: bId, location })
+		await vi.waitFor(async () => expect((await b.api.peerUsage({ peerId: aId })).buttons.oursUsedThere).toBe(0))
+
+		// Once B shows it, as a strip, A subscribes to B's button at that shape. (B is then shown its own button back,
+		// which is a loop, but that is tested elsewhere)
+		showOnB('remote-on-b', locationOnA, [{ width: 200, height: 100 }])
+		await vi.waitFor(() => expect(b.displayedLocations.getSizes(location)).toEqual([{ width: 288, height: 144 }]))
 	})
 
 	test('what is in use is counted on both installations', async () => {
@@ -220,7 +259,7 @@ describe.each(NETWORKS)('two installations linked over $name', { timeout: 20_000
 		const onB = showOnB('remote-on-b', locationOnA)
 		await vi.waitFor(() => expect(onB.state()?.status).toBe('ok'))
 
-		a.controller.buttonClient.setTarget('remote-on-a', { peerId: bId, location: locationOnB }, vi.fn())
+		a.targetRemoteButton('remote-on-a', { peerId: bId, location: locationOnB })
 		await vi.waitFor(() => expect(a.controller.buttonClient.getState('remote-on-a')?.status).toBe('loop'))
 	})
 

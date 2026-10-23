@@ -1,4 +1,5 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { CompositeElementIdString } from '../Instance/Definitions.js'
@@ -21,4 +22,17 @@ export interface IButtonDrawer {
 	onButtonDrawn(location: ControlLocation, render: ImageResult): void
 	/** Whether this button draws without a top bar, used to scale legacy (pre-5.0) feedback font sizes. */
 	resolveDefaultNoTopBar(): boolean
+	/**
+	 * For a button drawn from images made for particular sizes (a link button), what to draw at each size instead of the
+	 * elements of the draw style last computed. Null, or not implemented, to draw the draw style at every size.
+	 */
+	getSizedDraw?(): ButtonSizedDraw | null
+}
+
+/** What to draw for a button at each size it is drawn at */
+export interface ButtonSizedDraw {
+	/** Identifies what is drawn at every size, for the cache key of the render */
+	readonly key: string
+	/** The elements to draw at a size, before it is turned for the surface. May wait briefly for them */
+	elementsAt(width: number, height: number): Promise<SomeButtonGraphicsDrawElement[]>
 }

@@ -4,6 +4,7 @@ import type { LinkTransportConfig } from '@companion-app/shared/Model/Link.js'
 import type { IControlStore } from '../../lib/Controls/IControlStore.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { GraphicsController } from '../../lib/Graphics/Controller.js'
+import { DisplayedLocations } from '../../lib/Graphics/DisplayedLocations.js'
 import type { ImageResult } from '../../lib/Graphics/ImageResult.js'
 import { LinkController } from '../../lib/Link/Controller.js'
 import { decodeLinkAnnouncement, encodeLinkAnnouncement } from '../../lib/Link/Protocol/Announcement.js'
@@ -94,6 +95,7 @@ function createController(db = new FakeDataDatabase(), installName = 'Self') {
 		getControl: vi.fn(() => ({ abortDelayedActions: abortControl }) as any),
 	}
 	const graphics = {
+		displayedLocations: new DisplayedLocations(),
 		getCachedRenderOrGeneratePlaceholder: vi.fn(
 			() =>
 				({

@@ -134,6 +134,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 				rotateControl: (controlId, delta, surfaceId) => deps.controls.rotateControl(controlId, delta, surfaceId),
 				abortControl: (controlId, unlatch, hops) =>
 					deps.controls.getControl(controlId)?.abortDelayedActions(unlatch, null, hops),
+				acquireDisplayedLocation: (location, size) => deps.graphics.displayedLocations.acquire(location, size),
 				getSourceChain: (location) => this.#getSourceChain(location),
 				getClockOffset: (peerId) => this.#peers.getClockOffset(peerId),
 				// Images only go to leaseholders, which are only allowed peers, and are dropped when that changes (see revoke)
@@ -141,6 +142,12 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			},
 			() => this.#selfId
 		)
+
+		// Link buttons are subscribed to at the sizes they are shown at
+		deps.graphics.displayedLocations.on('changed', (location) => {
+			const controlId = deps.pageStore.getControlIdAt(location)
+			if (controlId) this.buttonClient.setDisplayedSizes(controlId, deps.graphics.displayedLocations.getSizes(location))
+		})
 
 		this.#transports.events.on('announcement', (transportId, peerId, payload) =>
 			this.#handleAnnouncement(transportId, peerId, payload)

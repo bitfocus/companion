@@ -1,8 +1,14 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { LINK_BUTTON_BITMAP_SIZE, LINK_UNREACHABLE_GRACE_MS, LinkButtonClient } from '../../lib/Link/ButtonClient.js'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import {
+	LINK_SIZE_RELEASE_GRACE_MS,
+	LINK_UNREACHABLE_GRACE_MS,
+	LinkButtonClient,
+	linkCoalesceWaitMs,
+	linkImageWaitMs,
+} from '../../lib/Link/ButtonClient.js'
 import { LinkPeerRegistry } from '../../lib/Link/PeerRegistry.js'
 import type { LinkAnnouncement } from '../../lib/Link/Protocol/Announcement.js'
-import { decodeLinkMessage } from '../../lib/Link/Protocol/v1/Schemas.js'
+import { decodeLinkMessage, type LinkButtonRevision } from '../../lib/Link/Protocol/v1/Schemas.js'
 import { FakeTableView } from '../utils/FakeTableView.js'
 
 function announcement(id: string, protocolVersions = ['1.0.0']): LinkAnnouncement {
@@ -16,12 +22,30 @@ function announcement(id: string, protocolVersions = ['1.0.0']): LinkAnnouncemen
 
 const location = { pageNumber: 1, row: 0, column: 2 }
 const button = { type: 'location', page: 1, row: 0, column: 2 } as const
-const sub = { button, width: LINK_BUTTON_BITMAP_SIZE, height: LINK_BUTTON_BITMAP_SIZE }
+/** Shown as a 72px square, which is asked for at 144px */
+const square = { width: 72, height: 72 }
+const sub = { button, width: 144, height: 144 }
+/** Shown as a 2:1 strip, which is asked for with a 144px short edge */
+const wide = { width: 200, height: 100 }
+const wideSub = { button, width: 288, height: 144 }
 
 const revision = { stream: 's1', seq: 1 }
 
-function update(sourceChain: string[], updateRevision = revision, pressed = true) {
-	return { ...sub, revision: updateRevision, dataUrl: 'data:image/png;base64,AAAA', pressed, sourceChain }
+function update(
+	sourceChain: string[],
+	updateRevision: LinkButtonRevision = revision,
+	pressed = true,
+	size: { width: number; height: number } = sub
+) {
+	return {
+		button,
+		width: size.width,
+		height: size.height,
+		revision: updateRevision,
+		dataUrl: `data:image/png;base64,${size.width}x${size.height}-${updateRevision.seq}`,
+		pressed,
+		sourceChain,
+	}
 }
 
 function createClient() {
@@ -39,24 +63,40 @@ function createClient() {
 	return { client, peers, sent }
 }
 
+/** Let the subscriptions made together be sent */
+async function flushSubscribes(): Promise<void> {
+	await new Promise((resolve) => setImmediate(resolve))
+}
+
 describe('LinkButtonClient', () => {
 	let ctx: ReturnType<typeof createClient>
 	beforeEach(() => {
 		ctx = createClient()
 	})
+	afterEach(() => {
+		ctx.client.stop()
+		vi.useRealTimers()
+	})
 
-	test('an unknown peer is reported, and nothing is sent', () => {
-		const onChange = vi.fn()
-		ctx.client.setTarget('c1', { peerId: 'peer', location }, onChange)
+	/** Show a link button to the remote button, at sizes */
+	function show(controlId: string, sizes = [square], onChange = vi.fn()) {
+		ctx.client.setTarget(controlId, { peerId: 'peer', location }, onChange)
+		ctx.client.setDisplayedSizes(controlId, sizes)
+		return onChange
+	}
+
+	test('an unknown peer is reported, and nothing is sent', async () => {
+		show('c1')
+		await flushSubscribes()
 
 		expect(ctx.client.getState('c1')?.status).toBe('unknown_peer')
 		expect(ctx.sent).toEqual([])
 	})
 
-	test('subscribes once the peer is discovered, and shows its updates', () => {
-		const onChange = vi.fn()
-		ctx.client.setTarget('c1', { peerId: 'peer', location }, onChange)
+	test('subscribes once the peer is discovered, and shows its updates', async () => {
+		const onChange = show('c1')
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		await flushSubscribes()
 
 		expect(ctx.client.getState('c1')?.status).toBe('loading')
 		expect(ctx.sent).toEqual([
@@ -69,14 +109,66 @@ describe('LinkButtonClient', () => {
 		])
 
 		ctx.client.handleUpdate('peer', update(['peer']))
-		expect(ctx.client.getState('c1')).toMatchObject({ status: 'ok', pressed: true, peerName: 'Peer peer' })
+		expect(ctx.client.getState('c1')).toMatchObject({
+			status: 'ok',
+			pressed: true,
+			peerName: 'Peer peer',
+			images: [{ width: 144, height: 144, dataUrl: update(['peer']).dataUrl, revision, current: true }],
+		})
 		expect(onChange).toHaveBeenCalled()
 	})
 
-	test('buttons showing the same remote button share a subscription', () => {
+	test('a button is only subscribed to while it is shown', async () => {
+		vi.useFakeTimers()
+		ctx = createClient()
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
 		ctx.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
-		ctx.client.setTarget('c2', { peerId: 'peer', location }, vi.fn())
+		await vi.advanceTimersByTimeAsync(0)
+		expect(ctx.sent).toEqual([])
+		expect(ctx.client.countSubscribedTo('peer')).toBe(0)
+
+		ctx.client.setDisplayedSizes('c1', [square])
+		await vi.advanceTimersByTimeAsync(0)
+		expect(ctx.sent.map((m) => m.type)).toEqual(['subscribe'])
+
+		// Gone and back within the grace period, eg paging past it: nothing changes
+		ctx.client.setDisplayedSizes('c1', [])
+		await vi.advanceTimersByTimeAsync(LINK_SIZE_RELEASE_GRACE_MS - 1)
+		ctx.client.setDisplayedSizes('c1', [square])
+		await vi.advanceTimersByTimeAsync(LINK_SIZE_RELEASE_GRACE_MS)
+		expect(ctx.sent.map((m) => m.type)).toEqual(['subscribe'])
+
+		ctx.client.setDisplayedSizes('c1', [])
+		await vi.advanceTimersByTimeAsync(LINK_SIZE_RELEASE_GRACE_MS)
+		expect(ctx.sent.at(-1)).toMatchObject({ type: 'unsubscribe', payload: { buttons: [sub] } })
+		expect(ctx.client.countSubscribedTo('peer')).toBe(0)
+	})
+
+	test('subscribes once for each shape it is shown at, at the largest size of that shape, together', async () => {
+		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		show('c1', [square, { width: 200, height: 200 }])
+		show('c2', [wide])
+		await flushSubscribes()
+
+		expect(ctx.sent).toMatchObject([
+			{
+				type: 'subscribe',
+				payload: {
+					buttons: [
+						{ ...sub, width: 200, height: 200, have: null },
+						{ ...wideSub, have: null },
+					],
+				},
+			},
+		])
+		expect(ctx.client.countSubscribedTo('peer')).toBe(1)
+	})
+
+	test('buttons showing the same remote button share its subscriptions', async () => {
+		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		show('c1')
+		show('c2')
+		await flushSubscribes()
 
 		expect(ctx.sent.filter((m) => m.type === 'subscribe')).toHaveLength(1)
 		expect(ctx.client.countSubscribedTo('peer')).toBe(1)
@@ -84,86 +176,143 @@ describe('LinkButtonClient', () => {
 		ctx.client.removeTarget('c1')
 		expect(ctx.sent.filter((m) => m.type === 'unsubscribe')).toHaveLength(0)
 
+		// Let go of straight away once no button shows it
 		ctx.client.removeTarget('c2')
 		expect(ctx.client.countSubscribedTo('peer')).toBe(0)
 		expect(ctx.sent.at(-1)).toMatchObject({ type: 'unsubscribe', payload: { buttons: [sub] } })
 	})
 
-	test('detects loops', () => {
+	test('a new render is held back until it has arrived at every size, so that they change together', async () => {
+		vi.useFakeTimers()
+		ctx = createClient()
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
-		ctx.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
+		const onChange = show('c1', [square, wide])
+		await vi.advanceTimersByTimeAsync(0)
+
+		ctx.client.handleUpdate('peer', update(['peer'], revision, true, sub))
+		expect(ctx.client.getState('c1')?.status).toBe('loading')
+
+		ctx.client.handleUpdate('peer', update(['peer'], revision, true, wideSub))
+		expect(ctx.client.getState('c1')?.images.map((i) => [i.width, i.current])).toEqual([
+			[288, true],
+			[144, true],
+		])
+		onChange.mockClear()
+
+		// A size that is slow to arrive holds it back only briefly
+		const next = { stream: 's1', seq: 2 }
+		ctx.client.handleUpdate('peer', update(['peer'], next, false, sub))
+		expect(ctx.client.getState('c1')?.pressed).toBe(true)
+		expect(onChange).not.toHaveBeenCalled()
+
+		await vi.advanceTimersByTimeAsync(linkCoalesceWaitMs(null))
+		expect(onChange).toHaveBeenCalledTimes(1)
+		expect(ctx.client.getState('c1')).toMatchObject({ pressed: false })
+		expect(ctx.client.getState('c1')?.images.map((i) => [i.width, i.revision.seq, i.current])).toEqual([
+			[288, 1, false],
+			[144, 2, true],
+		])
+	})
+
+	test('a draw at a shape just shown waits for its image, but not for long', async () => {
+		vi.useFakeTimers()
+		ctx = createClient()
+		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		show('c1', [square])
+		await vi.advanceTimersByTimeAsync(0)
+		ctx.client.handleUpdate('peer', update(['peer']))
+
+		// Nothing of this shape is subscribed to, so there is nothing to wait for
+		await expect(ctx.client.waitForImage('c1', wide)).resolves.toBeNull()
+		// Here already
+		await expect(ctx.client.waitForImage('c1', square)).resolves.toMatchObject({ width: 144, current: true })
+
+		ctx.client.setDisplayedSizes('c1', [square, wide])
+		const waiting = ctx.client.waitForImage('c1', wide)
+		ctx.client.handleUpdate('peer', update(['peer'], revision, true, wideSub))
+		await expect(waiting).resolves.toMatchObject({ width: 288, height: 144, current: true })
+
+		// One that doesn't arrive in time
+		const tall = { width: 100, height: 200 }
+		ctx.client.setDisplayedSizes('c1', [square, wide, tall])
+		const late = ctx.client.waitForImage('c1', tall)
+		await vi.advanceTimersByTimeAsync(linkImageWaitMs(null))
+		await expect(late).resolves.toBeNull()
+	})
+
+	test('waits less for a peer with a measured latency', () => {
+		expect(linkImageWaitMs(5)).toBe(35)
+		expect(linkImageWaitMs(0)).toBe(30)
+		expect(linkImageWaitMs(1000)).toBe(300)
+		expect(linkCoalesceWaitMs(5)).toBe(25)
+		expect(linkCoalesceWaitMs(1000)).toBe(100)
+	})
+
+	test('detects loops', async () => {
+		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		show('c1')
 		ctx.client.handleUpdate('peer', update(['self', 'peer']))
 
 		expect(ctx.client.getState('c1')?.status).toBe('loop')
 	})
 
-	test('keeps showing the last image briefly when a peer drops out, then shows it offline', () => {
+	test('keeps showing the last image briefly when a peer drops out, then shows it offline', async () => {
 		vi.useFakeTimers()
-		try {
-			const client = createClient()
-			client.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
-			client.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
-			client.client.handleUpdate('peer', update(['peer']))
-
-			client.peers.handleTransportDisconnected('t1')
-			expect(client.client.getState('c1')?.status).toBe('ok')
-
-			vi.advanceTimersByTime(LINK_UNREACHABLE_GRACE_MS)
-			expect(client.client.getState('c1')?.status).toBe('offline')
-
-			// Back again: it says what it has, to be sent anything it missed
-			client.sent.length = 0
-			client.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
-			expect(client.client.getState('c1')?.status).toBe('ok')
-			expect(client.sent).toMatchObject([{ type: 'subscribe', payload: { buttons: [{ have: revision }] } }])
-		} finally {
-			vi.useRealTimers()
-		}
-	})
-
-	test('a brief drop goes unnoticed', () => {
-		vi.useFakeTimers()
-		try {
-			const client = createClient()
-			const onChange = vi.fn()
-			client.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
-			client.client.setTarget('c1', { peerId: 'peer', location }, onChange)
-			client.client.handleUpdate('peer', update(['peer']))
-			onChange.mockClear()
-
-			client.peers.handleTransportDisconnected('t1')
-			vi.advanceTimersByTime(1000)
-			client.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
-			vi.advanceTimersByTime(LINK_UNREACHABLE_GRACE_MS)
-
-			expect(client.client.getState('c1')?.status).toBe('ok')
-			expect(onChange).not.toHaveBeenCalled()
-		} finally {
-			vi.useRealTimers()
-		}
-	})
-
-	test('a peer that dropped out before the button was made is shown offline once the grace period is over', () => {
-		vi.useFakeTimers()
-		try {
-			const client = createClient()
-			client.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
-			client.peers.handleTransportDisconnected('t1')
-			client.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
-			expect(client.client.getState('c1')?.status).toBe('loading')
-
-			vi.advanceTimersByTime(LINK_UNREACHABLE_GRACE_MS)
-			expect(client.client.getState('c1')?.status).toBe('offline')
-		} finally {
-			vi.useRealTimers()
-		}
-	})
-
-	test('a peer that does not share its buttons is reported, and not asked for them', () => {
+		ctx = createClient()
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
-		ctx.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
+		show('c1')
+		await vi.advanceTimersByTimeAsync(0)
+		ctx.client.handleUpdate('peer', update(['peer']))
+
+		ctx.peers.handleTransportDisconnected('t1')
+		expect(ctx.client.getState('c1')?.status).toBe('ok')
+
+		await vi.advanceTimersByTimeAsync(LINK_UNREACHABLE_GRACE_MS)
+		expect(ctx.client.getState('c1')?.status).toBe('offline')
+
+		// Back again: it says what it has, to be sent anything it missed
+		ctx.sent.length = 0
+		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		expect(ctx.client.getState('c1')?.status).toBe('ok')
+		expect(ctx.sent).toMatchObject([{ type: 'subscribe', payload: { buttons: [{ have: revision }] } }])
+	})
+
+	test('a brief drop goes unnoticed', async () => {
+		vi.useFakeTimers()
+		ctx = createClient()
+		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		const onChange = show('c1')
+		await vi.advanceTimersByTimeAsync(0)
+		ctx.client.handleUpdate('peer', update(['peer']))
+		onChange.mockClear()
+
+		ctx.peers.handleTransportDisconnected('t1')
+		await vi.advanceTimersByTimeAsync(1000)
+		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		await vi.advanceTimersByTimeAsync(LINK_UNREACHABLE_GRACE_MS)
+
+		expect(ctx.client.getState('c1')?.status).toBe('ok')
+		expect(onChange).not.toHaveBeenCalled()
+	})
+
+	test('a peer that dropped out before the button was made is shown offline once the grace period is over', async () => {
+		vi.useFakeTimers()
+		ctx = createClient()
+		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		ctx.peers.handleTransportDisconnected('t1')
+		show('c1')
+		expect(ctx.client.getState('c1')?.status).toBe('loading')
+
+		await vi.advanceTimersByTimeAsync(LINK_UNREACHABLE_GRACE_MS)
+		expect(ctx.client.getState('c1')?.status).toBe('offline')
+	})
+
+	test('a peer that does not share its buttons is reported, and not asked for them', async () => {
+		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		show('c1')
 		ctx.peers.handleAccess('peer', { buttons: false })
 		expect(ctx.client.getState('c1')?.status).toBe('denied')
+		await flushSubscribes()
 
 		ctx.sent.length = 0
 		ctx.client.press('c1', true, 'deck')
@@ -171,10 +320,11 @@ describe('LinkButtonClient', () => {
 		expect(ctx.sent).toEqual([])
 	})
 
-	test('subscribes again when a peer starts sharing its buttons', () => {
+	test('subscribes again when a peer starts sharing its buttons', async () => {
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
 		ctx.peers.handleAccess('peer', { buttons: false })
-		ctx.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
+		show('c1')
+		await flushSubscribes()
 		ctx.sent.length = 0
 
 		ctx.peers.handleAccess('peer', { buttons: true })
@@ -183,23 +333,25 @@ describe('LinkButtonClient', () => {
 	})
 
 	test('reports incompatible peers', () => {
-		ctx.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
+		show('c1')
 
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer', ['2.0.0']), 0)
 		expect(ctx.client.getState('c1')?.status).toBe('incompatible')
 	})
 
-	test('does not send to an incompatible peer', () => {
+	test('does not send to an incompatible peer', async () => {
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer', ['2.0.0']), 0)
-		ctx.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
+		show('c1')
 		ctx.client.press('c1', true, 'deck')
+		await flushSubscribes()
 		expect(ctx.sent).toEqual([])
 	})
 
-	test('sends everything over the route to the peer only', () => {
+	test('sends everything over the route to the peer only', async () => {
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
 		ctx.peers.handleAnnouncement('t2', 'peer', announcement('peer'), 10)
-		ctx.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
+		show('c1')
+		await flushSubscribes()
 		expect(ctx.sent.map((m) => [m.transportId, m.type])).toEqual([['t1', 'subscribe']])
 		ctx.sent.length = 0
 
@@ -243,9 +395,10 @@ describe('LinkButtonClient', () => {
 		expect(presses()).toMatchObject([{ button: { ...button, column: 3 }, pressed: false, surfaceId: 'deck' }])
 	})
 
-	test('sends aborts to the remote button', () => {
+	test('sends aborts to the remote button', async () => {
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
-		ctx.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
+		show('c1')
+		await flushSubscribes()
 		ctx.sent.length = 0
 
 		ctx.client.abort('c1', true, 2)
@@ -260,23 +413,25 @@ describe('LinkButtonClient', () => {
 		])
 	})
 
-	test('renews subscriptions saying which revision it has of each button', () => {
+	test('renews subscriptions saying which revision it has of each size', async () => {
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
-		ctx.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
+		show('c1', [square, wide])
+		await flushSubscribes()
 		ctx.sent.length = 0
 
-		ctx.client.renewAll()
 		ctx.client.handleUpdate('peer', update(['peer']))
 		ctx.client.renewAll()
-		expect(ctx.sent.map((m) => [m.transportId, m.type, m.payload.buttons[0].have])).toEqual([
-			['t1', 'subscribe', null],
-			['t1', 'subscribe', revision],
+		expect(ctx.sent.map((m) => m.payload.buttons.map((b: any) => [b.width, b.have]))).toEqual([
+			[
+				[288, null],
+				[144, revision],
+			],
 		])
 	})
 
-	test('says why a button is refused, until an update says it is served after all', () => {
+	test('says why a button is refused, until an update says it is served after all', async () => {
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
-		ctx.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
+		show('c1')
 
 		// Only for the button and size refused, from the peer subscribed to
 		ctx.client.handleRefused('other', { buttons: [{ ...sub, reason: 'limit' }] })
@@ -292,9 +447,18 @@ describe('LinkButtonClient', () => {
 		expect(ctx.client.getState('c1')?.status).toBe('ok')
 	})
 
+	test('a size that is refused does not hold back the others', () => {
+		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
+		show('c1', [square, wide])
+
+		ctx.client.handleRefused('peer', { buttons: [{ ...wideSub, reason: 'limit' }] })
+		ctx.client.handleUpdate('peer', update(['peer']))
+		expect(ctx.client.getState('c1')?.status).toBe('ok')
+	})
+
 	test('keeps the newest update, whatever order they arrive in', () => {
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
-		ctx.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
+		show('c1')
 
 		ctx.client.handleUpdate('peer', update(['peer'], { stream: 's1', seq: 2 }, true))
 		ctx.client.handleUpdate('peer', update(['peer'], { stream: 's1', seq: 1 }, false))
@@ -305,10 +469,11 @@ describe('LinkButtonClient', () => {
 		expect(ctx.client.getState('c1')?.pressed).toBe(false)
 	})
 
-	test('moves to another route when the current one stops reaching the peer, saying what it has', () => {
+	test('moves to another route when the current one stops reaching the peer, saying what it has', async () => {
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
 		ctx.peers.handleAnnouncement('t2', 'peer', announcement('peer'), 0)
-		ctx.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
+		show('c1')
+		await flushSubscribes()
 		ctx.client.handleUpdate('peer', update(['peer']))
 		ctx.sent.length = 0
 
@@ -318,21 +483,23 @@ describe('LinkButtonClient', () => {
 		])
 	})
 
-	test('changing the target moves the subscription', () => {
+	test('changing the target moves the subscriptions', async () => {
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
-		ctx.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
+		show('c1')
+		await flushSubscribes()
 		ctx.sent.length = 0
 		ctx.client.setTarget('c1', { peerId: 'peer', location: { ...location, column: 3 } }, vi.fn())
+		await flushSubscribes()
 
-		expect(ctx.sent.map((m) => [m.type, m.payload.buttons[0].button.column])).toEqual([
-			['unsubscribe', 2],
-			['subscribe', 3],
+		expect(ctx.sent.map((m) => [m.type, m.payload.buttons[0].button.column, m.payload.buttons[0].width])).toEqual([
+			['unsubscribe', 2, 144],
+			['subscribe', 3, 144],
 		])
 	})
 
-	test('only accepts updates for a button subscribed to with the peer that sent it', () => {
+	test('only accepts updates for a button and size subscribed to, from the peer that sent it', () => {
 		ctx.peers.handleAnnouncement('t1', 'peer', announcement('peer'), 0)
-		ctx.client.setTarget('c1', { peerId: 'peer', location }, vi.fn())
+		show('c1')
 
 		ctx.client.handleUpdate('someone-else', update(['someone-else']))
 		ctx.client.handleUpdate('peer', { ...update(['peer']), width: 72, height: 72 })
