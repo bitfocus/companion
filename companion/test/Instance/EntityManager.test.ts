@@ -190,6 +190,13 @@ describe('InstanceEntityManager', () => {
 				}),
 			}
 
+			// The parsed options are the raw options, so that the replacement parses differently
+			mockVariablesParser.parseEntityOptions.mockImplementation((_entityDefinition, options) => ({
+				ok: true,
+				parsedOptions: options,
+				referencedVariableIds: new Set(),
+			}))
+
 			entityManager.start(5)
 			entityManager.trackEntity(mockEntity1 as any, 'control-1')
 
@@ -201,11 +208,12 @@ describe('InstanceEntityManager', () => {
 			entityManager.trackEntity(mockEntity2 as any, 'control-1')
 			vi.runAllTimers()
 
-			// Verify the replacement was processed
+			// Verify the replacement was processed, moving it to a new subscription
 			expect(mockEntity2.asEntityModel).toHaveBeenCalled()
 			expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
 			expect(mockAdapter.updateActions).toHaveBeenCalledWith(
 				new Map<string, EntityManagerActionEntity | null>([
+					[getEntitySubscriptionId('control-1', mockEntity1.asEntityModel(), { replaced: false }), null],
 					subscriptionEntry({
 						controlId: 'control-1',
 						entity: {
@@ -215,7 +223,7 @@ describe('InstanceEntityManager', () => {
 							connectionId: 'connection-1',
 							options: { replaced: true },
 						} as any,
-						parsedOptions: { replaced: 'value-0' },
+						parsedOptions: { replaced: true },
 					} satisfies EntityManagerActionEntity),
 				])
 			)
@@ -498,13 +506,19 @@ describe('InstanceEntityManager', () => {
 			vi.runAllTimers()
 			mockAdapter.updateActions.mockClear()
 
-			// Simulate variables changing
+			// Simulate variables changing, so that the entity parses to something else
+			mockVariablesParser.parseEntityOptions.mockImplementation(() => ({
+				ok: true,
+				parsedOptions: { field1: 'new-value' },
+				referencedVariableIds: new Set(['var1']),
+			}))
 			entityManager.onVariablesChanged(new Set(['var1']), null)
 			vi.runAllTimers()
 
 			// Verify it triggered a re-process
 			expect(mockAdapter.updateActions).toHaveBeenCalledWith(
 				new Map<string, EntityManagerActionEntity | null>([
+					[getEntitySubscriptionId('control-1', mockEntity.asEntityModel(), { field1: 'value-0' }), null],
 					subscriptionEntry({
 						controlId: 'control-1',
 						entity: {
@@ -514,10 +528,43 @@ describe('InstanceEntityManager', () => {
 							connectionId: 'connection-1',
 							options: { field1: '$(var:test)' },
 						} as any,
-						parsedOptions: { field1: 'value-0' },
+						parsedOptions: { field1: 'new-value' },
 					} satisfies EntityManagerActionEntity),
 				])
 			)
+		})
+
+		it('should not resend an entity which re-parses to the same options', () => {
+			const mockEntity = {
+				id: 'entity-1',
+				type: EntityModelType.Action,
+				definitionId: 'action-1',
+				upgradeIndex: 5,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-1',
+					type: EntityModelType.Action,
+					definitionId: 'action-1',
+					connectionId: 'connection-1',
+					options: { field1: '$(var:test)' },
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [{ id: 'field1', type: 'textinput', useVariables: true }],
+					optionsToIgnoreForSubscribe: [],
+				}),
+			}
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+			vi.runAllTimers()
+			mockAdapter.updateActions.mockClear()
+
+			entityManager.onVariablesChanged(new Set(['var1']), null)
+			vi.runAllTimers()
+
+			// It was re-parsed, but nothing changed for the module
+			expect(mockVariablesParser.parseEntityOptions).toHaveBeenCalledTimes(2)
+			expect(mockAdapter.updateActions).not.toHaveBeenCalled()
 		})
 
 		it('should not invalidate entities if changed variables are not referenced', () => {
@@ -621,13 +668,19 @@ describe('InstanceEntityManager', () => {
 			vi.runAllTimers()
 			mockAdapter.updateActions.mockClear()
 
-			// Simulate variables changing for only control-1
+			// Simulate variables changing for only control-1, so that its entity parses to something else
+			mockVariablesParser.parseEntityOptions.mockImplementation(() => ({
+				ok: true,
+				parsedOptions: { field1: 'changed' },
+				referencedVariableIds: new Set(['var1', 'var2']),
+			}))
 			entityManager.onVariablesChanged(new Set(['var1']), new Set(['control-1']))
 			vi.runAllTimers()
 
 			// Should only have triggered a re-process for entity-1
 			expect(mockAdapter.updateActions).toHaveBeenCalledWith(
 				new Map<string, EntityManagerActionEntity | null>([
+					[getEntitySubscriptionId('control-1', mockEntity1.asEntityModel(), { field1: '$(var:test)' }), null],
 					subscriptionEntry({
 						controlId: 'control-1',
 						entity: {
@@ -637,7 +690,7 @@ describe('InstanceEntityManager', () => {
 							connectionId: 'connection-1',
 							options: { field1: '$(var:test)' },
 						} as any,
-						parsedOptions: { field1: '$(var:test)' },
+						parsedOptions: { field1: 'changed' },
 					} satisfies EntityManagerActionEntity),
 				])
 			)
@@ -700,13 +753,19 @@ describe('InstanceEntityManager', () => {
 			vi.runAllTimers()
 			mockAdapter.updateFeedbacks.mockClear()
 
-			// Simulate variables changing for only control-2
+			// Simulate variables changing for only control-2, so that its entity parses to something else
+			mockVariablesParser.parseEntityOptions.mockImplementation(() => ({
+				ok: true,
+				parsedOptions: { field1: 'changed' },
+				referencedVariableIds: new Set(['control-var']),
+			}))
 			entityManager.onVariablesChanged(new Set(['control-var']), new Set(['control-2']))
 			vi.runAllTimers()
 
 			// Should only have triggered a re-process for entity-2, not entity-1
 			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledWith(
 				new Map<string, EntityManagerFeedbackEntity | null>([
+					[getEntitySubscriptionId('control-2', mockEntity2.asEntityModel(), { field1: '$(var:test)' }), null],
 					subscriptionEntry({
 						controlId: 'control-2',
 						entity: {
@@ -716,7 +775,7 @@ describe('InstanceEntityManager', () => {
 							connectionId: 'connection-1',
 							options: { field1: '$(var:test)' },
 						} as any,
-						parsedOptions: { field1: '$(var:test)' },
+						parsedOptions: { field1: 'changed' },
 					} satisfies EntityManagerFeedbackEntity),
 				])
 			)
@@ -782,12 +841,11 @@ describe('InstanceEntityManager', () => {
 			entityManager.start(5)
 			entityManager.trackEntity(makeFeedback() as any, 'control-1')
 			vi.runAllTimers()
-			mockAdapter.updateFeedbacks.mockClear()
 
 			getTick()()
 			vi.runAllTimers()
 
-			expect(mockAdapter.updateFeedbacks).toHaveBeenCalled()
+			expect(mockVariablesParser.parseEntityOptions).toHaveBeenCalledTimes(2)
 		})
 
 		it('does not re-evaluate a clock-sensitive action on a clock tick (actions are excluded)', () => {
@@ -1244,7 +1302,7 @@ describe('InstanceEntityManager', () => {
 			vi.runAllTimers()
 
 			// Should have triggered a re-process because the expression variable changed
-			expect(mockAdapter.updateActions).toHaveBeenCalled()
+			expect(mockVariablesParser.parseEntityOptions).toHaveBeenCalledTimes(2)
 		})
 
 		it('should not invalidate entity when unrelated variables change with expressions', () => {
@@ -2493,7 +2551,7 @@ describe('InstanceEntityManager', () => {
 			)
 		})
 
-		it('should resend the subscription when a member is re-parsed to the same options', () => {
+		it('should not resend the subscription when members are re-parsed to the same options', () => {
 			const fb1 = createMockEntity('fb-1', EntityModelType.Feedback, { field1: 'a' })
 			const fb2 = createMockEntity('fb-2', EntityModelType.Feedback, { field1: 'a' })
 
@@ -2505,10 +2563,31 @@ describe('InstanceEntityManager', () => {
 			entityManager.onVariablesChanged(new Set(['var1']), null)
 			vi.runAllTimers()
 
-			// Both members re-parse to the same subscription, which is sent once
+			// Both members re-parse to the same subscription, which the module already has
+			expect(mockVariablesParser.parseEntityOptions).toHaveBeenCalledTimes(4)
+			expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
+
+			// Unless something not covered by the options has changed
+			entityManager.resendFeedbacks()
+			vi.runAllTimers()
 			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledTimes(1)
 			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledWith(
 				new Map([[subscriptionIdOf(fb1, 'control-1'), expect.anything()]])
+			)
+		})
+
+		it('should resend unchanged subscriptions when the definitions change', () => {
+			const action = createMockEntity('action-1', EntityModelType.Action, { field1: 'a' })
+
+			entityManager.trackEntity(action as any, 'control-1')
+			vi.runAllTimers()
+			mockAdapter.updateActions.mockClear()
+
+			entityManager.onEntityDefinitionsChanged(EntityModelType.Action)
+			vi.runAllTimers()
+
+			expect(mockAdapter.updateActions).toHaveBeenCalledWith(
+				new Map([[subscriptionIdOf(action, 'control-1'), expect.anything()]])
 			)
 		})
 
