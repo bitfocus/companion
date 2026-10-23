@@ -156,7 +156,7 @@ export class DirectClientTransport extends DirectTransportBase {
 		if (paired && paired.linkId !== channel.remoteLinkId) {
 			// Either the other installation was reset, or something is impersonating it
 			this.#stop(
-				`${channel.remoteName} has a different identity (${formatLinkIdFingerprint(channel.remoteLinkId)}) to when it was paired. If it was reset, forget the pairing and pair again.`
+				`${channel.remoteName} has a different Link id (${formatLinkIdFingerprint(channel.remoteLinkId)}) to when it was paired. If it was reset, forget the pairing and pair again.`
 			)
 			channel.close()
 			return
@@ -171,7 +171,7 @@ export class DirectClientTransport extends DirectTransportBase {
 				this.#pairingCode = code
 				this.context.setStatus(
 					'connecting',
-					`Waiting for pairing. Enter the code ${code} into the pairing request on the Link page of ${channel.remoteName} (identity ${formatLinkIdFingerprint(channel.remoteLinkId)})`
+					`Waiting for pairing. Enter the code ${code} into the pairing request on the Link page of ${channel.remoteName} (Link id ${formatLinkIdFingerprint(channel.remoteLinkId)})`
 				)
 				this.#updateInfo()
 			},
@@ -228,7 +228,7 @@ export class DirectClientTransport extends DirectTransportBase {
 	#updateInfo(): void {
 		const info: LinkTransportInfoItem[] = [
 			...(this.#url ? [{ label: 'Address', value: this.#url }] : []),
-			{ label: 'Identity', value: formatLinkIdFingerprint(this.context.identity.id) },
+			{ label: 'Link id', value: formatLinkIdFingerprint(this.context.identity.id) },
 		]
 		if (this.#pairingCode) info.unshift({ label: 'Pairing code', value: this.#pairingCode })
 
@@ -255,7 +255,7 @@ export class DirectClientTransport extends DirectTransportBase {
 					{
 						id: 'pairing',
 						title: `Paired with ${paired.name}`,
-						description: `Identity ${formatLinkIdFingerprint(paired.linkId)}. If ${paired.name} was reset, forget it to pair again.`,
+						description: `Link id ${formatLinkIdFingerprint(paired.linkId)}. If ${paired.name} was reset, forget it to pair again.`,
 						inputLabel: null,
 						actions: [{ id: 'forget', label: 'Forget pairing', color: 'danger' }],
 					},

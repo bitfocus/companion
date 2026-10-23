@@ -232,7 +232,7 @@ describe('direct transport', { timeout: 20_000 }, () => {
 		// A different installation (new identity) on the same address
 		await startServer(createTransportTestContext('impostor'), port)
 		const again = startClient(port, createTransportTestContext('client', clientCtx.storage))
-		await vi.waitFor(() => expect(again.ctx.state.message).toMatch(/different identity/))
+		await vi.waitFor(() => expect(again.ctx.state.message).toMatch(/different Link id/))
 		expect(again.ctx.state.status).toBe('error')
 	})
 

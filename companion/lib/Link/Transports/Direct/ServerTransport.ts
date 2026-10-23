@@ -277,14 +277,14 @@ export class DirectServerTransport extends DirectTransportBase {
 		)
 		this.context.setInfo([
 			{ label: 'Port', value: String(this.#port) },
-			{ label: 'Identity', value: formatLinkIdFingerprint(this.context.identity.id) },
+			{ label: 'Link id', value: formatLinkIdFingerprint(this.context.identity.id) },
 			{ label: 'Connected installations', value: String(this.linkedCount) },
 		])
 
 		const pendingEntries: LinkTransportEntry[] = Array.from(this.#pending, ([id, { request, address }]) => ({
 			id: `pending:${id}`,
 			title: request.channel.remoteName,
-			description: `From ${address}, identity ${formatLinkIdFingerprint(request.channel.remoteLinkId)}. Enter the pairing code it shows.`,
+			description: `From ${address}, Link id ${formatLinkIdFingerprint(request.channel.remoteLinkId)}. Enter the pairing code it shows.`,
 			inputLabel: 'Pairing code',
 			actions: [
 				{ id: 'pair', label: 'Pair', color: 'primary' },
@@ -296,7 +296,7 @@ export class DirectServerTransport extends DirectTransportBase {
 			id: `paired:${key}`,
 			title: info.name,
 			peerId: key,
-			description: `${this.#linked.has(key) ? 'Connected' : 'Not connected'} · identity ${formatLinkIdFingerprint(key)} · paired ${new Date(info.pairedAt).toLocaleDateString()}`,
+			description: `${this.#linked.has(key) ? 'Connected' : 'Not connected'} · Link id ${formatLinkIdFingerprint(key)} · paired ${new Date(info.pairedAt).toLocaleDateString()}`,
 			inputLabel: null,
 			actions: [{ id: 'unpair', label: 'Unpair', color: 'danger' }],
 		}))
