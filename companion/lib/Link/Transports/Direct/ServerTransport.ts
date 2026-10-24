@@ -59,8 +59,6 @@ export class DirectServerTransport extends DirectTransportBase {
 	/** How many connections from each host are not trusted yet */
 	readonly #untrusted = new Map<string, number>()
 	#untrustedTotal = 0
-	/** The channels of linked installations, by their public key, so that unpairing can disconnect them */
-	readonly #linked = new Map<string, Set<SecureChannel>>()
 
 	#listening = false
 
@@ -204,26 +202,10 @@ export class DirectServerTransport extends DirectTransportBase {
 				this.context.logger.info(
 					`${newlyPaired ? 'Paired with' : 'Accepted connection from'} ${trustedChannel.remoteName} (${address})`
 				)
-				this.#establishLink(trustedChannel, address)
+				this.link(trustedChannel, `${trustedChannel.remoteName} (${address})`)
 				this.#updateState()
 			},
 		})
-	}
-
-	#establishLink(channel: SecureChannel, address: string): void {
-		const key = channel.remoteLinkId
-		let channels = this.#linked.get(key)
-		if (!channels) {
-			channels = new Set()
-			this.#linked.set(key, channels)
-		}
-		channels.add(channel)
-		channel.onClose(() => {
-			channels.delete(channel)
-			if (channels.size === 0) this.#linked.delete(key)
-		})
-
-		this.link(channel, `${channel.remoteName} (${address})`)
 	}
 
 	async handleSectionAction(entryId: string, actionId: string, input: string | null): Promise<string | null> {
@@ -255,7 +237,7 @@ export class DirectServerTransport extends DirectTransportBase {
 			delete paired[id]
 			this.#setPaired(paired)
 
-			for (const channel of this.#linked.get(id) ?? []) channel.close()
+			this.closeLinks(id)
 			this.#updateState()
 			return null
 		}
@@ -296,7 +278,7 @@ export class DirectServerTransport extends DirectTransportBase {
 			id: `paired:${key}`,
 			title: info.name,
 			peerId: key,
-			description: `${this.#linked.has(key) ? 'Connected' : 'Not connected'} · Link id ${formatLinkIdFingerprint(key)} · paired ${new Date(info.pairedAt).toLocaleDateString()}`,
+			description: `${this.isLinked(key) ? 'Connected' : 'Not connected'} · Link id ${formatLinkIdFingerprint(key)} · paired ${new Date(info.pairedAt).toLocaleDateString()}`,
 			inputLabel: null,
 			actions: [{ id: 'unpair', label: 'Unpair', color: 'danger' }],
 		}))

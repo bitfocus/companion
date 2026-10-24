@@ -47,16 +47,6 @@ export class LinkIdentity {
 		return crypto.sign(null, signedMessage(context, data), this.#privateKey)
 	}
 
-	/**
-	 * The secret key in the (64 byte) form libsodium uses: the seed followed by the public key. For transports that
-	 * derive other keys from the identity (eg a Noise static key)
-	 */
-	get ed25519SecretKey(): Buffer {
-		const jwk = this.#privateKey.export({ format: 'jwk' })
-		if (!jwk.d) throw new Error('Not an Ed25519 key')
-		return Buffer.concat([Buffer.from(jwk.d, 'base64url'), this.publicKey])
-	}
-
 	/** The raw public key a Link id stands for, or null if it is not a valid id */
 	static publicKeyOf(id: string): Buffer | null {
 		const publicKey = Buffer.from(id, 'base64url')

@@ -46,6 +46,16 @@ export abstract class DirectTransportBase implements LinkTransport {
 	 */
 	readonly #links = new Map<string, SecureChannel[]>()
 
+	/** Whether an installation is linked over this transport */
+	protected isLinked(peerId: string): boolean {
+		return this.#links.has(peerId)
+	}
+
+	/** Close the connections linked to an installation, eg because it is no longer paired */
+	protected closeLinks(peerId: string): void {
+		for (const channel of this.#links.get(peerId) ?? []) channel.close()
+	}
+
 	protected get linkedCount(): number {
 		let count = 0
 		for (const channels of this.#links.values()) count += channels.length

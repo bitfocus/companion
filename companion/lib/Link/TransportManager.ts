@@ -51,7 +51,6 @@ export class LinkTransportManager {
 	/** The types of the transports that are part of Link, which the user can't add */
 	readonly #builtinTypes = new Set<string>()
 	readonly #running = new Map<string, RunningTransport>()
-	/** Transports being stopped, which are no longer in #running */
 	/** Instances being destroyed, by id, so that a replacement waits for the old one to have stopped */
 	readonly #stopping = new Map<string, Promise<void>>()
 	/** Enabled transports that could not be started, eg because their config is incomplete */
@@ -99,12 +98,6 @@ export class LinkTransportManager {
 		await Promise.all([...Array.from(this.#running.keys(), async (id) => this.#stop(id)), ...this.#stopping.values()])
 	}
 
-	/** Stop and start all transports, eg because our peer id changed */
-	async restartAll(): Promise<void> {
-		await this.stopAll()
-		this.start()
-	}
-
 	getConfigs(): Record<string, LinkTransportConfig> {
 		return Object.fromEntries(this.#configs)
 	}
@@ -113,14 +106,6 @@ export class LinkTransportManager {
 		const states: Record<string, LinkTransportState> = {}
 		for (const config of this.#configs.values()) states[config.id] = this.#getState(config.id)
 		return states
-	}
-
-	getLabel(transportId: string): string | undefined {
-		return this.#configs.get(transportId)?.label
-	}
-
-	isConnected(transportId: string): boolean {
-		return this.#running.get(transportId)?.state.status === 'connected'
 	}
 
 	/**
