@@ -2,8 +2,8 @@ import { EventEmitter } from 'node:events'
 import { nanoid } from 'nanoid'
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
-import type { DataStoreTableView } from '../Data/TableView.js'
+import type { PageModel, PageModelSchema } from '@companion-app/shared/Model/PageModel.js'
+import type { DataStoreSchemaTableView } from '../Data/SchemaTableView.js'
 
 interface PageStoreEvents {
 	pagecount: [count: number]
@@ -126,7 +126,7 @@ export interface IPageStore extends EventEmitter<PageStoreEvents> {
  * this program.
  */
 export class PageStore extends EventEmitter<PageStoreEvents> implements IPageStore {
-	readonly #dbTable: DataStoreTableView<Record<string, PageModel>>
+	readonly #dbTable: DataStoreSchemaTableView<typeof PageModelSchema>
 
 	/**
 	 * Cache the location of each control
@@ -155,7 +155,7 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 		return this.#createdDefaultPage
 	}
 
-	constructor(dbTable: DataStoreTableView<Record<string, PageModel>>) {
+	constructor(dbTable: DataStoreSchemaTableView<typeof PageModelSchema>) {
 		super()
 		this.setMaxListeners(0)
 

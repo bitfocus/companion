@@ -38,10 +38,40 @@ describe('PageStore', () => {
 			db.data['2'] = makePage('page-b', 'Second')
 			db.data['4'] = makePage('page-d', 'Orphan')
 
-			const store = new PageStore(db.asTableView())
+			const store = new PageStore(db.asSchemaTableView())
 
 			expect(store.getPageCount()).toBe(2)
 			expect(store.getPageIds()).toEqual(['page-a', 'page-b'])
+		})
+
+		test('a page keeps its valid grid entries, and the pages after it still load', () => {
+			const { store } = createStore([
+				{
+					id: 'page-a',
+					name: 'First',
+					controls: {
+						0: { 0: 'kept', 1: 5, abc: 'bad column' },
+						abc: { 0: 'bad row' },
+						1.5: { 0: 'fractional row' },
+						2: 'not a row',
+						'-1': { '-2': 'negative' },
+					},
+				} as any,
+				makePage('page-b', 'Second', { 0: { 0: 'control-b1' } }),
+			])
+
+			expect(store.getPageInfo(1)?.controls).toEqual({ 0: { 0: 'kept' }, '-1': { '-2': 'negative' } })
+			expect(store.getPageIds()).toEqual(['page-a', 'page-b'])
+			expect(store.getControlIdAt({ pageNumber: 2, row: 0, column: 0 })).toBe('control-b1')
+		})
+
+		test('a page with an invalid name or id still loads', () => {
+			const { store } = createStore([{ id: 5, name: { text: 'x' }, controls: { 0: { 0: 'kept' } } } as any])
+
+			expect(store.getPageName(1)).toBe('')
+			expect(store.getPageIds()[0]).toEqual(expect.any(String))
+			expect(store.getPageIds()[0]).not.toBe('')
+			expect(store.getControlIdAt({ pageNumber: 1, row: 0, column: 0 })).toBe('kept')
 		})
 
 		test('assigns an id to pages missing one, and persists it', () => {

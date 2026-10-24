@@ -6,6 +6,7 @@ import fs from 'fs-extra'
 import type { PackageJson } from 'type-fest'
 import { CreatePageControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
+import { PageModelSchema } from '@companion-app/shared/Model/PageModel.js'
 import { CloudController } from './Cloud/Controller.js'
 import { ActionRunner } from './Controls/ActionRunner.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
@@ -223,7 +224,7 @@ export class Registry {
 		this.ui = new UIController(this.#appInfo, this.#internalApiRouter, this.metrics.metricsRouter)
 
 		const activeLearningStore = new ActiveLearningStore()
-		const pageStore = new PageStore(this.db.getTableView('pages'))
+		const pageStore = new PageStore(this.db.getSchemaTableView('pages', PageModelSchema))
 
 		this.variables = new VariablesController(this.db, this.userconfig)
 		const controlStore = new ControlStore(this.db, this.variables.values, pageStore)

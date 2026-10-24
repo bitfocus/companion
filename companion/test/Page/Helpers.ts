@@ -1,29 +1,16 @@
-import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
-import type { DataStoreTableView } from '../../lib/Data/TableView.js'
+import { PageModelSchema, type PageModel } from '@companion-app/shared/Model/PageModel.js'
+import type { DataStoreSchemaTableView } from '../../lib/Data/SchemaTableView.js'
 import { PageStore } from '../../lib/Page/Store.js'
+import { FakeSchemaTableView, FakeTableView } from '../utils/FakeTableView.js'
 
 /**
- * A Map-backed stand-in for DataStoreTableView.
- * Values are cloned on read and write, mirroring the JSON round-trip of the real SQLite table,
- * so `data` can be used to assert exactly what would have been persisted.
+ * A Map-backed stand-in for the pages table.
+ * Rows are parsed with the page schema like the real table, and `data` holds exactly what would have been persisted.
  */
-export class FakePageTableView {
-	data: Record<string, PageModel> = {}
-
-	all(): Record<string, PageModel> {
-		return structuredClone(this.data)
-	}
-
-	set(key: string, value: PageModel): void {
-		this.data[key] = structuredClone(value)
-	}
-
-	delete(key: string): void {
-		delete this.data[key]
-	}
-
-	asTableView(): DataStoreTableView<Record<string, PageModel>> {
-		return this as unknown as DataStoreTableView<Record<string, PageModel>>
+export class FakePageTableView extends FakeTableView<PageModel> {
+	asSchemaTableView(): DataStoreSchemaTableView<typeof PageModelSchema> {
+		const view = new FakeSchemaTableView(this, PageModelSchema)
+		return view as unknown as DataStoreSchemaTableView<typeof PageModelSchema>
 	}
 }
 
@@ -39,7 +26,7 @@ export function createStore(initialPages?: PageModel[]): { db: FakePageTableView
 		})
 	}
 
-	const store = new PageStore(db.asTableView())
+	const store = new PageStore(db.asSchemaTableView())
 	return { db, store }
 }
 
