@@ -1,19 +1,22 @@
+import z from 'zod'
 import type { CollectionBase } from './Collections.js'
 
-export interface ImageLibraryInfo {
-	name: string
-	description: string
-	originalSize: number
-	previewSize: number
-	createdAt: number
-	modifiedAt: number
-	checksum: string
-	mimeType: string
-	collectionId?: string
-	sortOrder: number
+export const ImageLibraryInfoSchema = z.object({
+	name: z.string(),
+	description: z.string().default(''),
+	originalSize: z.number().default(0),
+	previewSize: z.number().default(0),
+	createdAt: z.number().default(0),
+	modifiedAt: z.number().default(0),
+	checksum: z.string().default(''),
+	mimeType: z.string().default(''),
+	collectionId: z.string().optional(),
+	sortOrder: z.number().default(0),
 	/** CSS color string used as the preview background (may be translucent). Undefined is treated as transparent. */
-	backgroundColor?: string
-}
+	backgroundColor: z.string().optional(),
+})
+
+export type ImageLibraryInfo = z.output<typeof ImageLibraryInfoSchema>
 
 export interface ImageLibraryExportData {
 	info: ImageLibraryInfo

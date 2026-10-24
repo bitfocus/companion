@@ -4,6 +4,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest'
 import type { ImageLibraryExportData, ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 import { DataDatabase } from '../../lib/Data/Database.js'
+import { BROKEN_ROWS_TABLE } from '../../lib/Data/SchemaTableView.js'
 import type { GraphicsController } from '../../lib/Graphics/Controller.js'
 import { ImageLibrary } from '../../lib/Graphics/ImageLibrary.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
@@ -109,6 +110,32 @@ describe('ImageLibrary', () => {
 				['logo', 'logo description'],
 				['empty', 'empty'],
 			])
+		})
+
+		test('fills in defaults for an old row', () => {
+			const { library } = createLibrary({ old: { info: { name: 'old' } } })
+
+			expect(library.getImageInfo('old')).toEqual({
+				name: 'old',
+				description: '',
+				originalSize: 0,
+				previewSize: 0,
+				createdAt: 0,
+				modifiedAt: 0,
+				checksum: '',
+				mimeType: '',
+				sortOrder: 0,
+			})
+			expect(library.getImageDataUrl('old', 'original')).toEqual({ image: '', checksum: '' })
+		})
+
+		test('moves an invalid row to the broken rows table', () => {
+			const { db, library, variableValues } = createLibrary({ good: row('good'), bad: { info: { sortOrder: 1 } } })
+
+			expect(library.listImages().map((i) => i.name)).toEqual(['good'])
+			expect(variableValues()).toEqual({ good: '' })
+			const broken = Object.values(db.getTableView<Record<string, any>>(BROKEN_ROWS_TABLE).all())
+			expect(broken).toEqual([expect.objectContaining({ table: TABLE, rowId: 'bad' })])
 		})
 
 		test('moves images out of collections that no longer exist', () => {
@@ -376,6 +403,22 @@ describe('ImageLibrary', () => {
 					.map((i) => i.name)
 					.sort()
 			).toEqual(['my_logo', 'my_logo_2'])
+		})
+
+		test('import skips an invalid image, and imports the rest', () => {
+			const { library } = createLibrary()
+
+			library.importImageLibrary([], [exported('bad', { sortOrder: 'first' as any }), exported('good')])
+
+			expect(library.listImages().map((i) => i.name)).toEqual(['good'])
+		})
+
+		test('import fills in defaults for an image from an old export', () => {
+			const { library } = createLibrary()
+
+			library.importImageLibrary([], [{ info: { name: 'old' }, originalImage: PNG, previewImage: PREVIEW } as any])
+
+			expect(library.getImageInfo('old')).toMatchObject({ name: 'old', description: '', sortOrder: 0 })
 		})
 
 		test('import moves images out of collections it does not include', () => {
