@@ -1,6 +1,7 @@
 import fs from 'fs-extra'
 import { describe, expect, test } from 'vitest'
 import type z from 'zod'
+import { SomeButtonModelSchema } from '@companion-app/shared/Model/ButtonModel.js'
 import { CustomVariableDefinitionSchema } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { SomeEntityModelSchema } from '@companion-app/shared/Model/EntityModel.js'
 import { InstanceConfigSchema } from '@companion-app/shared/Model/Instance.js'
@@ -105,6 +106,52 @@ describe('entities in controls', () => {
 			0
 		)
 		expect(entityCount).toBeGreaterThan(0)
+	})
+})
+
+describe('buttons in controls', () => {
+	const buttonTypes = new Set([
+		'pagenum',
+		'pageup',
+		'pagedown',
+		'button-layered',
+		'preset-reference',
+		'button-reference',
+	])
+
+	function collectButtons(controls: Record<string, unknown>): [controlId: string, button: unknown][] {
+		return Object.entries(controls).filter(([, control]) =>
+			buttonTypes.has((control as { type?: string } | null)?.type ?? '')
+		)
+	}
+
+	// Page buttons converted from old versions kept the empty fields of a normal button, which nothing reads
+	const droppedPageButtonFields = ['feedbacks', 'options', 'steps', 'style']
+	const pageButtonTypes = new Set(['pagenum', 'pageup', 'pagedown'])
+
+	test.each(upgradedRows)('every button of $fixture parses, losing nothing', ({ controls }) => {
+		for (const [controlId, button] of collectButtons(controls)) {
+			const result = SomeButtonModelSchema.safeParse(button)
+			expect(result.error, `button "${controlId}"`).toBeUndefined()
+
+			const isPageButton = pageButtonTypes.has((button as { type: string }).type)
+			const kept = withoutPaths(button, isPageButton ? droppedPageButtonFields : [])
+			expect(result.data, `button "${controlId}"`).toMatchObject(kept as object)
+		}
+	})
+
+	test('include layered buttons', () => {
+		const layeredCount = upgradedRows.reduce(
+			(count, { controls }) =>
+				count + collectButtons(controls).filter(([, b]) => (b as { type: string }).type === 'button-layered').length,
+			0
+		)
+		expect(layeredCount).toBeGreaterThan(0)
+	})
+
+	test('are covered by the fixtures', () => {
+		const buttonCount = upgradedRows.reduce((count, { controls }) => count + collectButtons(controls).length, 0)
+		expect(buttonCount).toBeGreaterThan(0)
 	})
 })
 

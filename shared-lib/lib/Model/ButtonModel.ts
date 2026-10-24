@@ -1,62 +1,95 @@
-import type { ActionSetsModel, ActionStepOptions } from './ActionModel.js'
-import type { SomeEntityModel } from './EntityModel.js'
-import type { ExpressionOrValue } from './Options.js'
-import type { SomeButtonGraphicsElement } from './StyleLayersModel.js'
-import type { VariableValues } from './Variables.js'
+import z from 'zod'
+import { ActionSetsModelSchema, ActionStepOptionsSchema } from './ActionModel.js'
+import { SomeEntityModelSchema } from './EntityModel.js'
+import { createExpressionOrValueSchema, JsonValueSchema } from './Options.js'
+import { SomeButtonGraphicsElementSchema } from './StyleLayersModel.js'
 
-export type SomeButtonModel =
-	| PageNumberButtonModel
-	| PageUpButtonModel
-	| PageDownButtonModel
-	| LayeredButtonModel
-	| PresetReferenceButtonModel
-	| ButtonReferenceButtonModel
+export const PageNumberButtonModelSchema = z.object({
+	type: z.literal('pagenum'),
+})
+export type PageNumberButtonModel = z.output<typeof PageNumberButtonModelSchema>
 
-export interface PageNumberButtonModel {
-	readonly type: 'pagenum'
+export const PageUpButtonModelSchema = z.object({
+	type: z.literal('pageup'),
+})
+export type PageUpButtonModel = z.output<typeof PageUpButtonModelSchema>
+
+export const PageDownButtonModelSchema = z.object({
+	type: z.literal('pagedown'),
+})
+export type PageDownButtonModel = z.output<typeof PageDownButtonModelSchema>
+
+const normalButtonStepSchema = z.object({
+	action_sets: ActionSetsModelSchema.default(() => ({
+		down: [],
+		up: [],
+		rotate_left: undefined,
+		rotate_right: undefined,
+	})),
+	options: ActionStepOptionsSchema.default(() => ({ runWhileHeld: [] })),
+})
+
+/** A button always has a step, so one without any is given an empty one */
+export const NormalButtonStepsSchema = z
+	.record(z.string(), normalButtonStepSchema)
+	.default(() => ({ '0': normalButtonStepSchema.parse({}) }))
+
+export type NormalButtonSteps = z.output<typeof NormalButtonStepsSchema>
+
+export const ButtonOptionsBaseSchema = z.object({
+	stepProgression: z.enum(['auto', 'manual', 'expression']).default('auto'),
+	stepExpression: z.string().optional(),
+})
+
+export type ButtonOptionsBase = z.output<typeof ButtonOptionsBaseSchema>
+
+export const LayeredButtonOptionsSchema = ButtonOptionsBaseSchema.extend({
+	rotaryActions: z.boolean().default(false),
+	canModifyStyleInApis: z.boolean().default(false),
+	notes: z.string().optional(),
+})
+
+export type LayeredButtonOptions = z.output<typeof LayeredButtonOptionsSchema>
+
+const buttonModelBaseShape = {
+	feedbacks: z.array(SomeEntityModelSchema).default(() => []),
+	steps: NormalButtonStepsSchema,
+	localVariables: z.array(SomeEntityModelSchema).default(() => []),
 }
-export interface PageUpButtonModel {
-	readonly type: 'pageup'
+
+export const ButtonModelBaseSchema = z.object(buttonModelBaseShape)
+
+export type ButtonModelBase = z.output<typeof ButtonModelBaseSchema>
+
+const layeredButtonShape = {
+	...buttonModelBaseShape,
+	options: LayeredButtonOptionsSchema.default(() => LayeredButtonOptionsSchema.parse({})),
+	style: z
+		.object({
+			layers: z.array(SomeButtonGraphicsElementSchema).default(() => []),
+		})
+		.default(() => ({ layers: [] })),
 }
 
-export interface PageDownButtonModel {
-	readonly type: 'pagedown'
-}
-
-export interface ButtonModelBase {
-	feedbacks: SomeEntityModel[]
-
-	steps: NormalButtonSteps
-
-	localVariables: SomeEntityModel[]
-}
-
-export interface PresetButtonModel extends ButtonModelBase {
-	readonly type: 'preset:button'
-
-	options: LayeredButtonOptions
-
-	style: {
-		layers: SomeButtonGraphicsElement[]
-	}
-
+export const PresetButtonModelSchema = z.object({
+	type: z.literal('preset:button'),
+	...layeredButtonShape,
 	/**
 	 * Content-based checksum of the source preset this was resolved from, produced atomically with the model
 	 * so the two cannot drift. The preview control uses it to skip rebuilding on a `updatePresets` that didn't
 	 * actually change the preset. Optional: absent on older/imported data (treated as "unknown" → rebuild once).
 	 */
-	checksum?: string
-}
+	checksum: z.string().optional(),
+})
 
-export interface LayeredButtonModel extends ButtonModelBase {
-	readonly type: 'button-layered'
+export type PresetButtonModel = z.output<typeof PresetButtonModelSchema>
 
-	options: LayeredButtonOptions
+export const LayeredButtonModelSchema = z.object({
+	type: z.literal('button-layered'),
+	...layeredButtonShape,
+})
 
-	style: {
-		layers: SomeButtonGraphicsElement[]
-	}
-}
+export type LayeredButtonModel = z.output<typeof LayeredButtonModelSchema>
 
 /**
  * A button that references a preset from a connection.
@@ -64,38 +97,35 @@ export interface LayeredButtonModel extends ButtonModelBase {
  * running in its 'last known' state if the source preset disappears or the connection stops, and refreshes
  * that cache when the source preset definition updates.
  */
-export interface PresetReferenceButtonModel extends ButtonModelBase {
-	readonly type: 'preset-reference'
-
-	options: LayeredButtonOptions
-
-	style: {
-		layers: SomeButtonGraphicsElement[]
-	}
+export const PresetReferenceButtonModelSchema = z.object({
+	type: z.literal('preset-reference'),
+	...layeredButtonShape,
 
 	/**
 	 * The reference to the source preset, and the user-editable templated variable overrides.
 	 * The keys of `variableValues` match `localVariable.variableName` of the templated local variables and
 	 * are the only fields the user is allowed to edit on a placed reference.
 	 */
-	presetRef: {
-		connectionId: string
+	presetRef: z.object({
+		connectionId: z.string(),
 		/**
 		 * The module-id of the source connection. Kept up to date with the referenced connection, so the user
 		 * can switch the reference to another connection of the same module (and so import can re-link).
 		 */
-		moduleId: string
-		presetId: string
-		variableValues: VariableValues | null
-	}
+		moduleId: z.string(),
+		presetId: z.string(),
+		variableValues: z.record(z.string(), JsonValueSchema.optional()).nullable().default(null),
+	}),
 
 	/**
 	 * Content-based checksum of the source preset this cache was resolved from, produced atomically with the
 	 * model so the two cannot drift. Used to skip rebuilding on a `updatePresets` that didn't actually change
 	 * the preset. Optional: absent on older/imported data (treated as "unknown" → rebuild once).
 	 */
-	checksum?: string
-}
+	checksum: z.string().optional(),
+})
+
+export type PresetReferenceButtonModel = z.output<typeof PresetReferenceButtonModelSchema>
 
 /**
  * A button that mirrors another button at a grid location. It has no style/entities of its own: it renders the
@@ -103,34 +133,28 @@ export interface PresetReferenceButtonModel extends ButtonModelBase {
  * The `location` is a page/row/column string, editable as plain text or an expression. Editing it in the UI
  * snapshots the target into a normal `button-layered` control (breaking the link).
  */
-export interface ButtonReferenceButtonModel {
-	readonly type: 'button-reference'
+export const ButtonReferenceButtonModelSchema = z.object({
+	type: z.literal('button-reference'),
 
-	options: {
+	options: z.object({
 		/** The grid location (page/row/column) of the button to mirror. */
-		location: ExpressionOrValue<string>
-		notes?: string
-	}
-}
+		location: createExpressionOrValueSchema(z.string()),
+		notes: z.string().optional(),
+	}),
+})
 
-export type NormalButtonSteps = Record<
-	string,
-	{
-		action_sets: ActionSetsModel
-		options: ActionStepOptions
-	}
->
+export type ButtonReferenceButtonModel = z.output<typeof ButtonReferenceButtonModelSchema>
 
-export type ButtonOptionsBase = {
-	stepProgression: 'auto' | 'manual' | 'expression'
-	stepExpression?: string
-}
+export const SomeButtonModelSchema = z.discriminatedUnion('type', [
+	PageNumberButtonModelSchema,
+	PageUpButtonModelSchema,
+	PageDownButtonModelSchema,
+	LayeredButtonModelSchema,
+	PresetReferenceButtonModelSchema,
+	ButtonReferenceButtonModelSchema,
+])
 
-export type LayeredButtonOptions = ButtonOptionsBase & {
-	rotaryActions: boolean
-	canModifyStyleInApis: boolean
-	notes?: string
-}
+export type SomeButtonModel = z.output<typeof SomeButtonModelSchema>
 
 export type ButtonStatus = 'good' | 'warning' | 'error'
 
