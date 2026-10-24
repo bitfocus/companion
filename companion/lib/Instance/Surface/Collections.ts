@@ -1,4 +1,5 @@
 import z from 'zod'
+import { createCollectionSchema, EnabledCollectionDataSchema } from '@companion-app/shared/Model/Collections.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type {
 	SurfaceInstanceCollection,
@@ -9,13 +10,15 @@ import { CollectionsBaseController } from '../../Resources/CollectionsBase.js'
 import { publicProcedure, router } from '../../UI/TRPC.js'
 import type { InstanceConfigStore } from '../ConfigStore.js'
 
+const SurfaceInstanceCollectionSchema = createCollectionSchema(EnabledCollectionDataSchema)
+
 export class SurfaceInstanceCollections extends CollectionsBaseController<SurfaceInstanceCollectionData> {
 	readonly #emitUpdated: () => void
 
 	readonly #configStore: InstanceConfigStore
 
 	constructor(db: DataDatabase, configStore: InstanceConfigStore, emitUpdated: () => void) {
-		super(db.getTableView<Record<string, SurfaceInstanceCollection>>('surface_instance_collections'))
+		super(db.getSchemaTableView('surface_instance_collections', SurfaceInstanceCollectionSchema))
 
 		this.#emitUpdated = emitUpdated
 		this.#configStore = configStore

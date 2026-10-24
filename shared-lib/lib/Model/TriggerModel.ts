@@ -1,5 +1,5 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
-import type { CollectionBase } from './Collections.js'
+import type { CollectionBase, EnabledCollectionData } from './Collections.js'
 import type { SomeEntityModel } from './EntityModel.js'
 import type { EventInstance } from './EventModel.js'
 
@@ -59,8 +59,6 @@ export interface TriggersUpdateUpdateOp {
 	patch: JsonPatchOperation<ClientTriggerData>[]
 }
 
-export interface TriggerCollectionData {
-	enabled: boolean
-}
+export type TriggerCollectionData = EnabledCollectionData
 
 export type TriggerCollection = CollectionBase<TriggerCollectionData>

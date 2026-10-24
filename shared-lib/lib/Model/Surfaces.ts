@@ -8,7 +8,7 @@ import type {
 	SurfaceSchemaLayoutDefinition,
 	SurfaceSchemaLedsConfig,
 } from '@companion-surface/base'
-import type { CollectionBase } from './Collections.js'
+import type { CollectionBase, EnabledCollectionData } from './Collections.js'
 import type { DropdownChoice } from './Common.js'
 import type {
 	CompanionInputFieldCheckboxExtended,
@@ -275,9 +275,7 @@ export const OutboundSurfaceInfoSchema = z.object({
 
 export type OutboundSurfaceInfo = z.output<typeof OutboundSurfaceInfoSchema>
 
-export interface OutboundSurfaceCollectionData {
-	enabled: boolean
-}
+export type OutboundSurfaceCollectionData = EnabledCollectionData
 
 export type OutboundSurfaceCollection = CollectionBase<OutboundSurfaceCollectionData>
 

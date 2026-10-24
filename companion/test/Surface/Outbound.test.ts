@@ -387,6 +387,22 @@ describe('SurfaceOutboundController', () => {
 			return { ...ctx, collectionId }
 		}
 
+		test('a collection saved before collections could be disabled is enabled', () => {
+			const db = new DataDatabase(':memory:', () => {})
+			db.getTableView<Record<string, any>>('surfaces_remote_collections').set('legacy', {
+				id: 'legacy',
+				label: 'Old',
+				sortOrder: 0,
+			})
+			db.getTableView<Record<string, any>>(TABLE).set('grouped', makeSurface({ id: 'grouped', collectionId: 'legacy' }))
+
+			const controller = new SurfaceOutboundController(db)
+			openControllers.push({ db, controller })
+			controller.init()
+
+			expect(controller.getAllEnabledConnectionsForInstance('inst').map((s) => s.id)).toEqual(['grouped'])
+		})
+
 		test('a surface in a disabled collection is not started', async () => {
 			const { controller, startStop } = await createWithCollection(false)
 

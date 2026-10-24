@@ -2,16 +2,20 @@ import EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 import z from 'zod'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
-import type { DataStoreTableView } from '../Data/TableView.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { DataStoreSchemaTableView } from '../Data/SchemaTableView.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import { publicProcedure, toIterable } from '../UI/TRPC.js'
 
 export abstract class CollectionsBaseController<TCollectionMetadata> {
-	readonly #dbTable: DataStoreTableView<Record<string, CollectionBase<TCollectionMetadata>>>
+	readonly #logger: Logger
+	readonly #dbTable: DataStoreSchemaTableView<z.ZodType<CollectionBase<TCollectionMetadata>>>
 	readonly #events = new EventEmitter<{ change: [rows: CollectionBase<TCollectionMetadata>[]] }>()
 
 	protected data: CollectionBase<TCollectionMetadata>[]
 
-	constructor(dbTable: DataStoreTableView<Record<string, CollectionBase<TCollectionMetadata>>>) {
+	constructor(dbTable: DataStoreSchemaTableView<z.ZodType<CollectionBase<TCollectionMetadata>>>) {
+		this.#logger = LogController.createLogger(`Resources/Collections/${dbTable.tableName}`)
 		this.#dbTable = dbTable
 
 		// Note: Storing in the database like this is not optimal, but it is much simpler
@@ -26,7 +30,6 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 	 * Recursively ensure children arrays exist and are sorted at all levels
 	 */
 	#sortCollectionRecursively(collection: CollectionBase<TCollectionMetadata>): void {
-		collection.children = collection.children || []
 		collection.children.sort((a, b) => a.sortOrder - b.sortOrder)
 
 		// Recursively sort children's children
@@ -61,12 +64,20 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		}
 
 		// Import new collections
-		for (const collection of collections) {
-			if (!merge || !this.#dbTable.get(collection.id)) {
-				this.#sortCollectionRecursively(collection)
-				this.data.push(collection)
-				this.#dbTable.set(collection.id, collection)
+		for (const rawCollection of collections) {
+			if (merge && this.#dbTable.get(rawCollection.id)) continue
+
+			let collection: CollectionBase<TCollectionMetadata>
+			try {
+				collection = this.#dbTable.set(rawCollection.id, rawCollection)
+			} catch (e) {
+				// Skip it, rather than abandon the rest
+				this.#logger.warn(`Skipping invalid collection "${rawCollection.id}": ${stringifyError(e)}`)
+				continue
 			}
+
+			this.#sortCollectionRecursively(collection)
+			this.data.push(collection)
 		}
 
 		// Sort root level collections

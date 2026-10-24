@@ -345,6 +345,27 @@ describe('VariablesCustomVariable', () => {
 		})
 	})
 
+	describe('collections', () => {
+		test('imported collections are normalised, and invalid ones skipped', () => {
+			const { custom, db } = createCustomVariables()
+
+			custom.replaceCollections([
+				{ id: 'col1', label: 'Outer', children: [{ id: 'col2', sortOrder: 1 }] },
+				{ id: 'bad', label: 5 },
+			] as any)
+
+			const expected = {
+				id: 'col1',
+				label: 'Outer',
+				sortOrder: 0,
+				metaData: null,
+				children: [{ id: 'col2', label: '', sortOrder: 1, metaData: null, children: [] }],
+			}
+			expect(custom.exportCollections()).toEqual([expected])
+			expect(db.getTableView('custom_variable_collections').data).toEqual({ col1: expected })
+		})
+	})
+
 	describe('reset', () => {
 		test('removes all variables', () => {
 			const { custom, table, definitionChanged } = createCustomVariables({
