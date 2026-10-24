@@ -57,19 +57,22 @@ export class LinkRemoteImageStore implements RemoteImageSource {
 	 */
 	expectShape(key: string, size: PixelSize, until: number): void {
 		const button = this.#get(key)
-		const existing = button.expected.find((shape) => isSameShape(shape.size, size))
+		const existing = button.expected.find((shape) => isSameSize(shape.size, size))
 		// One that was given up on is replaced, as this is a new subscription to it
 		if (existing && existing.until > Date.now()) return
 		if (existing) this.shapeArrived(key, existing.size, null)
 		button.expected.push({ size, until, waiters: new Set() })
 	}
 
-	/** The first image of a shape has arrived, or won't (eg it was refused): stop waiting for it */
+	/**
+	 * The first image of a shape has arrived, or won't (eg it was refused): stop waiting for it. Only for that exact
+	 * size, so that letting go of one size doesn't end the wait for another of the same shape
+	 */
 	shapeArrived(key: string, size: PixelSize, image: LinkButtonImage | null): void {
 		const button = this.#buttons.get(key)
 		if (!button) return
 
-		const index = button.expected.findIndex((shape) => isSameShape(shape.size, size))
+		const index = button.expected.findIndex((shape) => isSameSize(shape.size, size))
 		if (index === -1) return
 
 		const [shape] = button.expected.splice(index, 1)
@@ -148,4 +151,8 @@ function pickImage(
 
 	// A newer image at another shape is better than an older one at this shape
 	return closestShape(current.length > 0 ? current : largestFirst, size)
+}
+
+function isSameSize(a: PixelSize, b: PixelSize): boolean {
+	return a.width === b.width && a.height === b.height
 }
