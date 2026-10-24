@@ -1,18 +1,16 @@
 import { createHash } from 'node:crypto'
-import { DatabaseSync } from 'node:sqlite'
 import { describe, expect, test } from 'vitest'
-import { DataStoreTableView } from '../../../lib/Data/TableView.js'
+import { DataDatabase } from '../../../lib/Data/Database.js'
+import { BROKEN_ROWS_TABLE } from '../../../lib/Data/SchemaTableView.js'
+import type { DataStoreTableView } from '../../../lib/Data/TableView.js'
 import LogController from '../../../lib/Log/Controller.js'
 import { RestApiTokenStore } from '../../../lib/Service/RestApi/RestApiTokenStore.js'
 
 function createStore() {
 	const logger = LogController.createLogger('test/api-keys')
-	const db = new DatabaseSync(':memory:')
-	const table = new DataStoreTableView<any>(logger, db, 'api_keys', {
-		onDirty: () => {},
-		onOperation: () => {},
-	})
-	return { store: new RestApiTokenStore(logger, table), table }
+	const db = new DataDatabase(':memory:', () => {})
+	const table = db.getTableView<Record<string, any>>('api_keys')
+	return { store: new RestApiTokenStore(logger, db), table, db }
 }
 
 describe('RestApiTokenStore', () => {
@@ -116,7 +114,71 @@ describe('RestApiTokenStore', () => {
 		// and it remains untouched in the shared table
 		expect(table.get('foreign')).toMatchObject({ name: 'foreign', scopes: ['read'] })
 	})
+
+	describe('stored keys are validated', () => {
+		test('a key saved without lastUsedAt still works', () => {
+			const { store, table } = createStore()
+			const { lastUsedAt: _lastUsedAt, ...withoutLastUsed } = storedKey('old', 'oldtoken')
+			table.set('old', withoutLastUsed)
+
+			expect(store.list()).toEqual([expect.objectContaining({ id: 'old', lastUsedAt: null })])
+			expect(store.findByToken('oldtoken')).toMatchObject({ id: 'old', scopes: ['read'] })
+		})
+
+		test('a key with an unknown scope is never accepted, but is kept', () => {
+			const { store, table } = createStore()
+			table.set('odd', { ...storedKey('odd', 'oddtoken'), scopes: ['read', 'superuser'] })
+
+			expect(store.findByToken('oddtoken')).toBeUndefined()
+			expect(store.list()).toEqual([])
+			expect(store.update('odd', { name: 'x', scopes: ['admin'] })).toBeUndefined()
+			expect(store.delete('odd')).toBe(false)
+
+			expect(table.get('odd')).toMatchObject({ scopes: ['read', 'superuser'] })
+		})
+
+		test('a key with a malformed hash is never accepted', () => {
+			const { store, table } = createStore()
+			table.set('odd', { ...storedKey('odd', 'oddtoken'), tokenHash: 'not-a-hash' })
+
+			expect(store.list()).toEqual([])
+		})
+
+		test('a key missing its hash is moved to the broken rows table', () => {
+			const { store, table, db } = createStore()
+			const { tokenHash: _tokenHash, ...withoutHash } = storedKey('broken', 'brokentoken')
+			table.set('broken', withoutHash)
+
+			expect(store.list()).toEqual([])
+			expect(table.get('broken')).toBeUndefined()
+			expect(Object.values(db.getTableView<Record<string, any>>(BROKEN_ROWS_TABLE).all())).toEqual([
+				expect.objectContaining({ table: 'api_keys', rowId: 'broken' }),
+			])
+		})
+
+		test("another API's key is kept, even with scopes this API doesn't know", () => {
+			const { store, table } = createStore()
+			table.set('foreign', { ...storedKey('foreign', 'foreigntoken'), api: 'other-api', scopes: ['publish'] })
+
+			expect(store.list()).toEqual([])
+			expect(table.get('foreign')).toMatchObject({ api: 'other-api', scopes: ['publish'] })
+		})
+	})
 })
+
+/** A key as this store would have saved it, for the given plaintext token */
+function storedKey(id: string, token: string) {
+	return {
+		id,
+		name: id,
+		api: 'rest-v2',
+		scopes: ['read'],
+		tokenHash: createHash('sha256').update(token).digest('hex'),
+		tokenPrefix: 'cpn_xxxxxx',
+		createdAt: 1,
+		lastUsedAt: null,
+	}
+}
 
 /** Seed a record belonging to some other, future API surface into the shared `api_keys` table. */
 function seedForeignKey(table: DataStoreTableView<any>): void {

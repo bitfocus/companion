@@ -1,7 +1,14 @@
 import { createHash, timingSafeEqual } from 'node:crypto'
 import { nanoid } from 'nanoid'
-import type { ApiKeyAudience, ApiKeyInfo, ApiTokenScope } from '@companion-app/shared/Model/ApiKeys.js'
-import type { DataStoreTableView } from '../../Data/TableView.js'
+import z from 'zod'
+import {
+	API_KEY_SCOPES,
+	type ApiKeyAudience,
+	type ApiKeyInfo,
+	type ApiTokenScope,
+} from '@companion-app/shared/Model/ApiKeys.js'
+import type { DataDatabase } from '../../Data/Database.js'
+import type { DataStoreSchemaTableView } from '../../Data/SchemaTableView.js'
 import type { Logger } from '../../Log/Controller.js'
 import type { ApiToken, ApiTokenStore } from './RestApiAuth.js'
 
@@ -16,20 +23,28 @@ const DISPLAY_PREFIX_LENGTH = TOKEN_PREFIX.length + 6
 
 /**
  * The record persisted for each API key. The token itself is never stored - only its SHA-256 hash
- * and a short non-secret display prefix.
+ * and a short non-secret display prefix. The table is shared by every API audience, so this only
+ * describes what all keys have.
  */
-interface StoredApiKey {
-	id: string
-	name: string
-	api: ApiKeyAudience
-	scopes: ApiTokenScope[]
-	tokenHash: string
-	tokenPrefix: string
-	createdAt: number
-	lastUsedAt: number | null
-}
+const StoredApiKeySchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	api: z.string(),
+	scopes: z.array(z.string()),
+	tokenHash: z.string(),
+	tokenPrefix: z.string(),
+	createdAt: z.number(),
+	lastUsedAt: z.number().nullable().default(null),
+})
 
-type ApiKeyTable = Record<string, StoredApiKey>
+/** A key minted by this store. One that doesn't match can never be used */
+const RestApiKeySchema = StoredApiKeySchema.extend({
+	api: z.literal(REST_API_AUDIENCE),
+	scopes: z.array(z.enum(API_KEY_SCOPES)),
+	tokenHash: z.string().regex(/^[0-9a-f]{64}$/),
+})
+
+type RestApiKey = z.output<typeof RestApiKeySchema>
 
 /** SHA-256 hex digest of a plaintext token. Deterministic, so tokens can be matched by hash. */
 function hashToken(plaintext: string): string {
@@ -46,11 +61,29 @@ function hashToken(plaintext: string): string {
  */
 export class RestApiTokenStore implements ApiTokenStore {
 	readonly #logger: Logger
-	readonly #table: DataStoreTableView<ApiKeyTable>
+	readonly #table: DataStoreSchemaTableView<typeof StoredApiKeySchema>
 
-	constructor(logger: Logger, table: DataStoreTableView<ApiKeyTable>) {
+	constructor(logger: Logger, db: DataDatabase) {
 		this.#logger = logger
-		this.#table = table
+		this.#table = db.getSchemaTableView('api_keys', StoredApiKeySchema)
+	}
+
+	/** Parse a stored key as one of this API's keys, if it is one */
+	#asRestApiKey(record: z.output<typeof StoredApiKeySchema> | undefined): RestApiKey | undefined {
+		if (!record || record.api !== REST_API_AUDIENCE) return undefined
+
+		const result = RestApiKeySchema.safeParse(record)
+		if (!result.success) {
+			this.#logger.warn(`Ignoring invalid API key "${record.id}": ${z.prettifyError(result.error)}`)
+			return undefined
+		}
+		return result.data
+	}
+
+	#allRestApiKeys(): RestApiKey[] {
+		return Object.values(this.#table.all())
+			.map((record) => this.#asRestApiKey(record))
+			.filter((key) => key !== undefined)
 	}
 
 	/**
@@ -62,9 +95,7 @@ export class RestApiTokenStore implements ApiTokenStore {
 
 		const presentedHash = Buffer.from(hashToken(plaintext), 'hex')
 
-		for (const record of Object.values(this.#table.all())) {
-			if (record.api !== REST_API_AUDIENCE) continue
-
+		for (const record of this.#allRestApiKeys()) {
 			const storedHash = Buffer.from(record.tokenHash, 'hex')
 			if (storedHash.length !== presentedHash.length || !timingSafeEqual(storedHash, presentedHash)) continue
 
@@ -82,8 +113,7 @@ export class RestApiTokenStore implements ApiTokenStore {
 	 * hash. Keys minted for another API audience are excluded - the shared table may hold them.
 	 */
 	list(): ApiKeyInfo[] {
-		return Object.values(this.#table.all())
-			.filter((record) => record.api === REST_API_AUDIENCE)
+		return this.#allRestApiKeys()
 			.map(toApiKeyInfo)
 			.sort((a, b) => a.createdAt - b.createdAt)
 	}
@@ -96,7 +126,7 @@ export class RestApiTokenStore implements ApiTokenStore {
 		const id = nanoid()
 		const token = TOKEN_PREFIX + nanoid(40)
 
-		const record: StoredApiKey = {
+		const record: RestApiKey = {
 			id,
 			name,
 			api: REST_API_AUDIENCE,
@@ -118,10 +148,10 @@ export class RestApiTokenStore implements ApiTokenStore {
 	 * or undefined if no key with that id exists.
 	 */
 	update(id: string, changes: { name: string; scopes: ApiTokenScope[] }): ApiKeyInfo | undefined {
-		const existing = this.#table.get(id)
-		if (!existing || existing.api !== REST_API_AUDIENCE) return undefined
+		const existing = this.#asRestApiKey(this.#table.get(id))
+		if (!existing) return undefined
 
-		const updated: StoredApiKey = { ...existing, name: changes.name, scopes: changes.scopes }
+		const updated: RestApiKey = { ...existing, name: changes.name, scopes: changes.scopes }
 		this.#table.set(id, updated)
 		this.#logger.info(`Updated API key "${changes.name}" (${id}) scopes: ${changes.scopes.join(', ') || 'none'}`)
 
@@ -130,8 +160,8 @@ export class RestApiTokenStore implements ApiTokenStore {
 
 	/** Revoke a key by id. Returns whether a key was removed. */
 	delete(id: string): boolean {
-		const existing = this.#table.get(id)
-		if (!existing || existing.api !== REST_API_AUDIENCE) return false
+		const existing = this.#asRestApiKey(this.#table.get(id))
+		if (!existing) return false
 
 		this.#table.delete(id)
 		this.#logger.info(`Revoked API key "${existing.name}" (${id})`)
@@ -140,7 +170,7 @@ export class RestApiTokenStore implements ApiTokenStore {
 }
 
 /** Strip the secret fields, leaving only metadata safe to expose. */
-function toApiKeyInfo(record: StoredApiKey): ApiKeyInfo {
+function toApiKeyInfo(record: RestApiKey): ApiKeyInfo {
 	return {
 		id: record.id,
 		name: record.name,
