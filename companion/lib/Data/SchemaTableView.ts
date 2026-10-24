@@ -22,6 +22,14 @@ export interface BrokenRowRecord {
 	timestamp: number
 }
 
+export interface SchemaTableViewOptions {
+	/**
+	 * Whether rows are checked against the schema when written, as well as when read. Turn off for tables whose
+	 * rows are large and written often, where the check costs more than it is worth. Defaults to true
+	 */
+	validateWrites?: boolean
+}
+
 /**
  * A view of a table whose rows are parsed with a schema, to fill in defaults and normalise their shape.
  * The schema must accept its own output, as written rows are parsed again when read.
@@ -29,6 +37,7 @@ export interface BrokenRowRecord {
  */
 export class DataStoreSchemaTableView<TSchema extends z.ZodType<Record<string, any>>> extends DataStoreTableViewBase {
 	readonly schema: TSchema
+	readonly validateWrites: boolean
 	readonly #brokenRows: DataStoreTableView<Record<string, BrokenRowRecord>>
 
 	constructor(
@@ -37,12 +46,14 @@ export class DataStoreSchemaTableView<TSchema extends z.ZodType<Record<string, a
 		tableName: string,
 		hooks: DataStoreTableViewHooks,
 		brokenRows: DataStoreTableView<Record<string, BrokenRowRecord>>,
-		schema: TSchema
+		schema: TSchema,
+		options: SchemaTableViewOptions | undefined
 	) {
 		super(logger, store, tableName, hooks)
 
 		this.#brokenRows = brokenRows
 		this.schema = schema
+		this.validateWrites = options?.validateWrites ?? true
 	}
 
 	/**
@@ -73,14 +84,19 @@ export class DataStoreSchemaTableView<TSchema extends z.ZodType<Record<string, a
 	}
 
 	/**
-	 * Set a value in the table, normalised by the schema
+	 * Set a value in the table. When writes are validated, it is normalised by the schema
 	 * @param id - the key to be set
 	 * @param value - the value to be set
-	 * @returns the normalised value that was stored
-	 * @throws if the value does not match the schema
+	 * @returns the value that was stored
+	 * @throws if writes are validated and the value does not match the schema
 	 */
-	set(id: string, value: z.input<TSchema>): z.output<TSchema> {
+	set(id: string, value: z.output<TSchema>): z.output<TSchema> {
 		this.validateKey(id)
+
+		if (!this.validateWrites) {
+			this.setRaw(id, JSON.stringify(value))
+			return value
+		}
 
 		// Check the value as it will be stored, so that this agrees with reading it back.
 		// Encoding drops undefined properties and turns values like NaN into null, which the schema may accept

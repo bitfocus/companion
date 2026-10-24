@@ -122,6 +122,27 @@ describe('DataStoreSchemaTableView', () => {
 		expect(stats[0].counts.set).toBe(2)
 	})
 
+	test('without write validation, a set value is stored as it is, but still checked when read', () => {
+		const view = cache.getSchemaTableView('tbl', schema, { validateWrites: false })
+
+		expect(view.set('a', { name: 'x', extra: true } as any)).toEqual({ name: 'x', extra: true })
+		expect(rawTable().get('a')).toEqual({ name: 'x', extra: true })
+
+		// An invalid value isn't refused when written
+		expect(() => view.set('bad', { count: 3 } as any)).not.toThrow()
+		expect(rawTable().get('bad')).toEqual({ count: 3 })
+
+		// But reading normalises the row, and moves the invalid one to the broken rows table
+		expect(view.all()).toEqual({ a: { name: 'x', count: 0 } })
+		expect(brokenRows()).toEqual([expect.objectContaining({ rowId: 'bad' })])
+	})
+
+	test('refuses a view of the same table with different options', () => {
+		cache.getSchemaTableView('tbl', schema, { validateWrites: true })
+
+		expect(() => cache.getSchemaTableView('tbl', schema, { validateWrites: false })).toThrow('different options')
+	})
+
 	test('refuses to view the broken rows table', () => {
 		expect(() => cache.getSchemaTableView(BROKEN_ROWS_TABLE, schema)).toThrow()
 	})

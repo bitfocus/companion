@@ -5,7 +5,7 @@ import type z from 'zod'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { showErrorMessage, showFatalError } from '../Resources/Util.js'
-import { BROKEN_ROWS_TABLE, DataStoreSchemaTableView } from './SchemaTableView.js'
+import { BROKEN_ROWS_TABLE, DataStoreSchemaTableView, type SchemaTableViewOptions } from './SchemaTableView.js'
 import { DataStoreTableView } from './TableView.js'
 import {
 	DATABASE_OPERATIONS,
@@ -439,10 +439,12 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 * Rows that fail to parse when read are moved to the broken rows table.
 	 * @param tableName - the table to view
 	 * @param schema - the schema for each row
+	 * @param options - how the view treats writes
 	 */
 	public getSchemaTableView<TSchema extends z.ZodType<Record<string, any>>>(
 		tableName: string,
-		schema: TSchema
+		schema: TSchema,
+		options?: SchemaTableViewOptions
 	): DataStoreSchemaTableView<TSchema> {
 		if (!tableName || typeof tableName !== 'string') throw new Error('Invalid table name')
 		if (tableName === BROKEN_ROWS_TABLE) throw new Error('Cannot view the broken rows table with a schema')
@@ -450,6 +452,9 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 		const cachedTable = this.schemaTableCache.get(tableName)
 		if (cachedTable) {
 			if (cachedTable.schema !== schema) throw new Error(`Table "${tableName}" already has a different schema`)
+			if (cachedTable.validateWrites !== (options?.validateWrites ?? true)) {
+				throw new Error(`Table "${tableName}" already has different options`)
+			}
 			return cachedTable
 		}
 
@@ -459,7 +464,8 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 			tableName,
 			this.#createTableViewHooks(tableName),
 			this.getTableView(BROKEN_ROWS_TABLE),
-			schema
+			schema,
+			options
 		)
 		this.schemaTableCache.set(tableName, newTable)
 

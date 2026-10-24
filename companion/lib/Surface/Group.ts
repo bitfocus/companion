@@ -114,7 +114,8 @@ export class SurfaceGroup {
 
 			this.#isAutoGroup = true
 		} else {
-			this.groupConfig = this.#dbTable.get(this.groupId) ?? this.#dbTable.set(this.groupId, {})
+			this.groupConfig =
+				this.#dbTable.get(this.groupId) ?? this.#dbTable.set(this.groupId, structuredClone(SurfaceGroup.DefaultOptions))
 		}
 
 		// Live fixup the last_page config

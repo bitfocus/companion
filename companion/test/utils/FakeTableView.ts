@@ -1,5 +1,6 @@
 import type z from 'zod'
 import type { DataDatabase } from '../../lib/Data/Database.js'
+import type { SchemaTableViewOptions } from '../../lib/Data/SchemaTableView.js'
 import type { DataStoreTableView } from '../../lib/Data/TableView.js'
 
 /**
@@ -50,10 +51,12 @@ export class FakeTableView<T> {
 export class FakeSchemaTableView<TSchema extends z.ZodType<Record<string, any>>> {
 	readonly table: FakeTableView<unknown>
 	readonly schema: TSchema
+	readonly validateWrites: boolean
 
-	constructor(table: FakeTableView<unknown>, schema: TSchema) {
+	constructor(table: FakeTableView<unknown>, schema: TSchema, options?: SchemaTableViewOptions) {
 		this.table = table
 		this.schema = schema
+		this.validateWrites = options?.validateWrites ?? true
 	}
 
 	all(): Record<string, z.output<TSchema>> {
@@ -70,7 +73,12 @@ export class FakeSchemaTableView<TSchema extends z.ZodType<Record<string, any>>>
 		return result.success ? result.data : undefined
 	}
 
-	set(key: string, value: z.input<TSchema>): z.output<TSchema> {
+	set(key: string, value: z.output<TSchema>): z.output<TSchema> {
+		if (!this.validateWrites) {
+			this.table.set(key, value)
+			return value
+		}
+
 		const parsed = this.schema.parse(JSON.parse(JSON.stringify(value)))
 		this.table.set(key, parsed)
 		return structuredClone(parsed)
@@ -105,9 +113,10 @@ export class FakeDataDatabase {
 	/** The rows are stored in the same FakeTableView that {@link getTableView} returns for the table */
 	getSchemaTableView<TSchema extends z.ZodType<Record<string, any>>>(
 		name: string,
-		schema: TSchema
+		schema: TSchema,
+		options?: SchemaTableViewOptions
 	): FakeSchemaTableView<TSchema> {
-		return new FakeSchemaTableView(this.getTableView(name), schema)
+		return new FakeSchemaTableView(this.getTableView(name), schema, options)
 	}
 
 	get defaultTableView(): FakeTableView<any> {
