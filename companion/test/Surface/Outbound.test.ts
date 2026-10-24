@@ -261,6 +261,19 @@ describe('SurfaceOutboundController', () => {
 			expect(Object.keys(controller.exportAll())).toHaveLength(2)
 		})
 
+		test('a new surface is sorted after the others in the root', async () => {
+			const { controller, caller } = createController({
+				root: makeSurface({ id: 'root', sortOrder: 3 }),
+				grouped: makeSurface({ id: 'grouped', collectionId: 'col', sortOrder: 9 }),
+			})
+			supportRemote(controller)
+
+			const result = await caller.add({ instanceId: 'inst' })
+			if (!result.ok) throw new Error(result.error)
+
+			expect(controller.getById(result.id)).toMatchObject({ collectionId: null, sortOrder: 4 })
+		})
+
 		test('the new surface does not share the default config object', async () => {
 			const { controller, caller } = createController()
 			supportRemote(controller)
@@ -488,12 +501,30 @@ describe('SurfaceOutboundController', () => {
 			expect(Object.keys(table.all())).toEqual(['other'])
 			expect(clientInfo).toHaveBeenCalledWith({ type: 'remove', itemId: 'mine' })
 		})
+
+		test('removeAllForSurfaceInstance stops the removed surfaces', () => {
+			const { controller, startStop } = createController({ mine: makeSurface({ id: 'mine' }) })
+
+			controller.removeAllForSurfaceInstance('inst')
+
+			expect(startStopIds(startStop)).toEqual(['+mine', '-mine'])
+
+			// Its id is no longer tracked as running, so it would start again if re-added
+			controller.addOutboundConnection(makeSurface({ id: 'mine' }))
+			expect(startStopIds(startStop)).toEqual(['+mine', '-mine', '+mine'])
+		})
 	})
 
-	test('reset clears everything', () => {
-		const { controller, table, clientInfo } = createController({ surf1: makeSurface() })
+	test('reset stops and clears everything', () => {
+		const { controller, table, clientInfo, startStop } = createController({
+			surf1: makeSurface(),
+			off: makeSurface({ id: 'off', enabled: false }),
+		})
 
 		controller.reset()
+
+		expect(startStopIds(startStop)).toEqual(['+surf1', '-surf1'])
+		expect(controller.getAllEnabledConnectionsForInstance('inst')).toEqual([])
 
 		expect(controller.exportAll()).toEqual({})
 		expect(table.all()).toEqual({})

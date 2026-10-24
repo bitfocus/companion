@@ -222,7 +222,8 @@ export class SurfaceOutboundController {
 							0,
 							...this.#storage
 								.values()
-								.map((c) => (c?.collectionId ? c.sortOrder : null))
+								// The new surface goes in the root, so sort after the others there
+								.map((c) => (c.collectionId ? null : c.sortOrder))
 								.filter((n) => typeof n === 'number')
 						) || 0
 
@@ -445,7 +446,7 @@ export class SurfaceOutboundController {
 			// Cleanup connection
 			this.#storage.delete(connectionId)
 			this.#dbTable.delete(connectionId)
-			this.#startStopConnection(connectionInfo)
+			this.#startStopConnection({ ...connectionInfo, enabled: false })
 
 			this.events.emit('clientInfo', {
 				type: 'remove',
@@ -455,6 +456,10 @@ export class SurfaceOutboundController {
 	}
 
 	reset(): void {
+		for (const surfaceInfo of this.#storage.values()) {
+			this.#startStopConnection({ ...surfaceInfo, enabled: false })
+		}
+
 		this.events.emit('clientInfo', {
 			type: 'init',
 			items: {},
