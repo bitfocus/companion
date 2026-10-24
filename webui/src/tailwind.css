@@ -286,6 +286,8 @@
 	   same state at a glance. */
 	--color-switch-off: #b4bcc7;
 	--color-switch-off-hover: #a3acb9;
+	--color-switch-on: var(--color-primary);
+	--color-switch-on-hover: var(--color-primary-hover);
 
 	/* Tabs (tab-area, and the secondary-panel tabs in layout) */
 	--color-tab-bg: #f3f3f3; /* inactive tab background */
@@ -490,6 +492,9 @@
 
 		--color-switch-off: #3f4652;
 		--color-switch-off-hover: #4b5361;
+		/* The dark primary is too close to the off well, so on mirrors light mode: a light track for the dark thumb */
+		--color-switch-on: #d5dae1;
+		--color-switch-on-hover: #e6e8eb;
 
 		--color-tab-bg: #1a1d22;
 		--color-tab-fg: #a3a9b3;
