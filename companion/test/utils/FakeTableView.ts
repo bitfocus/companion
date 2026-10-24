@@ -1,5 +1,5 @@
 import type { DataDatabase } from '../../lib/Data/Database.js'
-import type { DataStoreTableView } from '../../lib/Data/StoreBase.js'
+import type { DataStoreTableView } from '../../lib/Data/TableView.js'
 
 /**
  * A Map-backed stand-in for DataStoreTableView.

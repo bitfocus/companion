@@ -1,6 +1,6 @@
 import z from 'zod'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreTableView } from '../Data/TableView.js'
 import { publicProcedure } from '../UI/TRPC.js'
 import { CollectionsBaseController } from './CollectionsBase.js'
 

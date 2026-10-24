@@ -10,7 +10,7 @@ import type {
 } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreTableView } from '../Data/TableView.js'
 import LogController from '../Log/Controller.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'

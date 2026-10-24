@@ -1,7 +1,7 @@
 import { createHash, timingSafeEqual } from 'node:crypto'
 import { nanoid } from 'nanoid'
 import type { ApiKeyAudience, ApiKeyInfo, ApiTokenScope } from '@companion-app/shared/Model/ApiKeys.js'
-import type { DataStoreTableView } from '../../Data/StoreBase.js'
+import type { DataStoreTableView } from '../../Data/TableView.js'
 import type { Logger } from '../../Log/Controller.js'
 import type { ApiToken, ApiTokenStore } from './RestApiAuth.js'
 

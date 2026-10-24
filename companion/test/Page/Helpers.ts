@@ -1,5 +1,5 @@
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
-import type { DataStoreTableView } from '../../lib/Data/StoreBase.js'
+import type { DataStoreTableView } from '../../lib/Data/TableView.js'
 import { PageStore } from '../../lib/Page/Store.js'
 
 /**
