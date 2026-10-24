@@ -70,4 +70,4 @@ Remote buttons can be chained: a remote button can show a button that is itself 
 
 ## Changing the Link id
 
-The Link id of an installation is generated the first time Companion starts. If a copy of an installation has been made, for example by cloning its disk, both copies have the same Link id and are taken for one installation. Regenerate the Link id of one of them from **This installation** on the **Installations** tab of its Link page. The installations it was paired with then need to pair with it again, and remote buttons on them that show it need to be edited to choose it again.
+The Link id of an installation is generated the first time Companion starts. If a copy of an installation has been made, for example by cloning its disk, both copies have the same Link id and are taken for one installation. Companion warns about this on the Link page when it notices it. Regenerate the Link id of one of them from **This installation** on the **Installations** tab of its Link page. The installations it was paired with then need to pair with it again, and remote buttons on them that show it need to be edited to choose it again.
