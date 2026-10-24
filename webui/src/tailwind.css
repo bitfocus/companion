@@ -345,43 +345,43 @@
 	:root[data-theme='dark'] {
 		--color-brand: #f0444f;
 		--color-brand-hover: #ff6b74;
-		--color-primary: #6b7689;
-		--color-primary-hover: #7b8699;
-		--color-primary-active: #5d6779;
+		--color-primary: #757575;
+		--color-primary-hover: #858585;
+		--color-primary-active: #666666;
 		/* `primary` is a mid-tone fill in this theme, too dim as text */
-		--color-primary-text: #e6e8eb;
+		--color-primary-text: #e8e8e8;
 
-		--color-action-primary: #6b7689;
-		--color-action-primary-hover: #7b8699;
-		--color-action-primary-pressed: #5d6779;
+		--color-action-primary: #757575;
+		--color-action-primary-hover: #858585;
+		--color-action-primary-pressed: #666666;
 		--color-action-on-primary: #fff;
-		--color-action-text: #c9ced6;
-		--color-action-bg: #22252c;
-		--color-action-hover: #2b2f37;
-		--color-action-pressed: #343943;
-		--color-action-border: #3a3f49;
-		--color-action-border-hover: #4a505c;
-		--color-action-disabled-text: #5d646f;
-		--color-action-disabled-bg: #1c1f25;
-		--color-action-disabled-border: #2a2e36;
-		--color-action-focus: #8a9bb0;
+		--color-action-text: #cecece;
+		--color-action-bg: #252525;
+		--color-action-hover: #2f2f2f;
+		--color-action-pressed: #393939;
+		--color-action-border: #3f3f3f;
+		--color-action-border-hover: #505050;
+		--color-action-disabled-text: #636363;
+		--color-action-disabled-bg: #1f1f1f;
+		--color-action-disabled-border: #2e2e2e;
+		--color-action-focus: #999999;
 		--color-action-danger-text: #ff7a8a;
 		--color-action-danger-hover: #3a1a20;
 		--color-action-danger-pressed: #4a1f27;
 		--color-action-danger-hover-solid: #f04a62;
 		--color-action-danger-pressed-solid: #c8203a;
-		--color-selection-bg: #2a313b;
-		--color-selection-text: #dfe4ea;
-		--color-selection-border: #8795a3;
+		--color-selection-bg: #303030;
+		--color-selection-text: #e3e3e3;
+		--color-selection-border: #939393;
 		--color-accent-active: #e0434a;
-		--color-secondary: #4a505a;
+		--color-secondary: #505050;
 		--color-success: #2fbf5a;
 		--color-danger: #e5354f;
 		--color-warning: #f9b115;
 		--color-info: #4da6ff;
 		/* Keep their roles: `light` a quiet neutral fill, `dark` a deep one that still carries white text */
-		--color-light: #3a3f48;
-		--color-dark: #4a505c;
+		--color-light: #3f3f3f;
+		--color-dark: #505050;
 
 		--color-tone-good-fill: #10b981;
 		--color-tone-good-text: #34d399;
@@ -403,9 +403,9 @@
 		--color-primary-bg-subtle: #2a2650;
 		--color-primary-border-subtle: #4a43a0;
 		--color-primary-text-emphasis: #c7c2f7;
-		--color-secondary-bg-subtle: #2a2e36;
-		--color-secondary-border-subtle: #454b56;
-		--color-secondary-text-emphasis: #d4d8de;
+		--color-secondary-bg-subtle: #2e2e2e;
+		--color-secondary-border-subtle: #4b4b4b;
+		--color-secondary-text-emphasis: #d8d8d8;
 		--color-success-bg-subtle: #13311f;
 		--color-success-border-subtle: #1f6b3a;
 		--color-success-text-emphasis: #8fe0a9;
@@ -418,101 +418,101 @@
 		--color-danger-bg-subtle: #3d1416;
 		--color-danger-border-subtle: #7d2a2e;
 		--color-danger-text-emphasis: #f5a9a9;
-		--color-light-bg-subtle: #1c1f25;
-		--color-light-border-subtle: #2f343d;
-		--color-light-text-emphasis: #c3cad6;
-		--color-dark-bg-subtle: #2a2e36;
-		--color-dark-border-subtle: #454b56;
-		--color-dark-text-emphasis: #e6e8eb;
+		--color-light-bg-subtle: #1f1f1f;
+		--color-light-border-subtle: #343434;
+		--color-light-text-emphasis: #c9c9c9;
+		--color-dark-bg-subtle: #2e2e2e;
+		--color-dark-border-subtle: #4b4b4b;
+		--color-dark-text-emphasis: #e8e8e8;
 
 		--color-status-ok-bg: #1f3d24;
 		--color-status-warn-bg: #3d3418;
 		--color-status-error-bg: #4a1f22;
 
-		--color-input-bg: #121418;
-		--color-input-readonly-bg: #1c1f25;
+		--color-input-bg: #141414;
+		--color-input-readonly-bg: #1f1f1f;
 		--color-syntax-error: var(--color-danger);
 
 		/* Elevation comes from lightness: the frame is darkest, cards and popovers lightest */
-		--color-surface: #16181d;
-		--color-surface-muted: #1d2026;
-		--color-surface-muted-hover: #242830;
-		--color-surface-hover: #23272e;
-		--color-surface-alt: #1a1d22;
-		--color-surface-subtle: #14161a;
-		--color-app-bg: #111317;
-		--color-app-frame-bg: #0c0e11;
-		--color-body-bg: #0c0e11;
+		--color-surface: #181818;
+		--color-surface-muted: #202020;
+		--color-surface-muted-hover: #282828;
+		--color-surface-hover: #272727;
+		--color-surface-alt: #1d1d1d;
+		--color-surface-subtle: #161616;
+		--color-app-bg: #131313;
+		--color-app-frame-bg: #0e0e0e;
+		--color-body-bg: #0e0e0e;
 
-		--color-border: #2c3038;
-		--color-border-alt: #2c3038;
-		--color-border-subtle: #23272e;
-		--color-border-muted: #2c3038;
-		--color-border-medium: #454b56;
-		--color-border-strong: #5c6370;
-		--color-border-hover: #5c6370;
-		--color-line: #3a3f49;
+		--color-border: #303030;
+		--color-border-alt: #303030;
+		--color-border-subtle: #272727;
+		--color-border-muted: #303030;
+		--color-border-medium: #4b4b4b;
+		--color-border-strong: #636363;
+		--color-border-hover: #636363;
+		--color-line: #3f3f3f;
 
-		--color-text: #e6e8eb;
-		--color-body-text: #dcdfe3;
+		--color-text: #e8e8e8;
+		--color-body-text: #dfdfdf;
 		--color-code: #f07fb8;
 		--color-text-strong: #fff;
-		--color-icon: #c9ced6;
-		--color-text-secondary: #a3a9b3;
-		--color-muted: #9aa1ab;
-		--color-text-faint: #6f7682;
-		--color-text-disabled: #4f5560;
+		--color-icon: #cecece;
+		--color-text-secondary: #a9a9a9;
+		--color-muted: #a0a0a0;
+		--color-text-faint: #757575;
+		--color-text-disabled: #555555;
 
 		--color-row-hover: rgba(255, 255, 255, 0.05);
 		--color-row-overlay: #fff;
 
-		--color-canvas-workspace: #0f1114;
-		--color-toolbar-bg: #1a1d22;
-		--color-toolbar-fg: #c9ced6;
-		--color-mode-toggle-bg: #23272e;
-		--color-mode-toggle-border: #3a3f49;
+		--color-canvas-workspace: #111111;
+		--color-toolbar-bg: #1d1d1d;
+		--color-toolbar-fg: #cecece;
+		--color-mode-toggle-bg: #272727;
+		--color-mode-toggle-border: #3f3f3f;
 
 		--color-step-highlight: #2eb85c;
 
-		--color-pill-bg: #2b2f37;
-		--color-pill-remove-bg: #363b45;
+		--color-pill-bg: #2f2f2f;
+		--color-pill-remove-bg: #3b3b3b;
 
 		--color-drop-target: #3d8bff;
-		--color-drag-row-bg: #262333;
-		--color-dropzone-border: #4a505c;
-		--color-tile-border: #2c3038;
-		--color-tile-handle-bg: #23272e;
-		--color-tile-handle-bg-hover: #2f343d;
-		--color-tile-handle-bg-active: #4a505c;
+		--color-drag-row-bg: #252525;
+		--color-dropzone-border: #505050;
+		--color-tile-border: #303030;
+		--color-tile-handle-bg: #272727;
+		--color-tile-handle-bg-hover: #343434;
+		--color-tile-handle-bg-active: #505050;
 
-		--color-primary-soft: #6f7a8d;
-		--color-primary-softer: #3a4250;
+		--color-primary-soft: #797979;
+		--color-primary-softer: #424242;
 
 		--color-shadow: #000;
 
-		--color-switch-off: #3f4652;
-		--color-switch-off-hover: #4b5361;
+		--color-switch-off: #464646;
+		--color-switch-off-hover: #535353;
 		/* The dark primary is too close to the off well, so on mirrors light mode: a light track for the dark thumb */
-		--color-switch-on: #d5dae1;
-		--color-switch-on-hover: #e6e8eb;
+		--color-switch-on: #d9d9d9;
+		--color-switch-on-hover: #e8e8e8;
 
-		--color-tab-bg: #1a1d22;
-		--color-tab-fg: #a3a9b3;
+		--color-tab-bg: #1d1d1d;
+		--color-tab-fg: #a9a9a9;
 		/* Lifted above the strip: a dark theme's surfaces get darker the lower they sit, so `surface` would sink */
-		--color-tab-active-bg: #343943;
-		--color-tab-active-border: #4a505c;
+		--color-tab-active-bg: #393939;
+		--color-tab-active-border: #505050;
 
 		/* Neutral text keeps variable references legible on dark and selected surfaces. */
-		--color-variable-text: #e6e8eb;
+		--color-variable-text: #e8e8e8;
 
-		--color-panel-header-btn: #aeb5bf;
-		--color-menu-bg: #1d2026;
-		--color-tooltip-bg: #3a3f49;
+		--color-panel-header-btn: #b4b4b4;
+		--color-menu-bg: #202020;
+		--color-tooltip-bg: #3f3f3f;
 
 		--color-image-accent: #4d94ff;
 		--color-upload-success: #2fbf71;
-		--color-text-emphasis: #c3c9d1;
-		--color-image-empty-text: #5c6570;
+		--color-text-emphasis: #c8c8c8;
+		--color-image-empty-text: #646464;
 		--color-preview-error-bg: #3d1a1e;
 		--color-preview-error-text: #f5a3ab;
 
