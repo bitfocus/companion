@@ -34,13 +34,15 @@ export const PageVariablesPanel = observer(function PageVariablesPanel({ pageNum
 	const dataReady = !error && !!config && config.type === 'page'
 
 	return (
-		<ButtonsSidebarSection className={undefined} title="Page Variables" actions={null}>
+		// Once loaded, the editor draws the title so its expand/collapse controls sit beside it
+		<ButtonsSidebarSection className={undefined} title={dataReady ? null : 'Page Variables'} actions={null}>
 			<LoadingRetryOrError dataReady={dataReady} error={error} doRetry={reloadConfig} design="pulse" />
 			{dataReady && controlId && (
 				<MyErrorBoundary>
 					<LocalVariablesEditor
-						className="mt-0"
-						heading={null}
+						// Cancels the heading row's top margin, so the title sits where the other sections' titles do
+						className="-mt-2"
+						heading={<h5 className="buttons-sidebar-heading">Page Variables</h5>}
 						controlId={controlId}
 						location={undefined}
 						variables={localVariables ?? []}
