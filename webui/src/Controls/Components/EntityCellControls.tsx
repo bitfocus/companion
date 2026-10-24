@@ -1,7 +1,7 @@
 import { faChevronDown, faPencil, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState, type FocusEvent } from 'react'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, type EntityOwner, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { Button } from '~/Components/Button.js'
@@ -45,6 +45,15 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 }: EntityCellControlProps) {
 	const canSetHeadline = !!service.setHeadline
 	const [noteEditing, setNoteEditing] = useState(false)
+	const noteInputRef = useRef<HTMLDivElement>(null)
+	const clearNoteRef = useRef<HTMLButtonElement>(null)
+
+	// Tabbing between the note field and its clear button keeps the note open
+	const onNoteBlur = useCallback((event: FocusEvent) => {
+		const next = event.relatedTarget
+		if (next instanceof Node && (noteInputRef.current?.contains(next) || clearNoteRef.current?.contains(next))) return
+		setNoteEditing(false)
+	}, [])
 
 	const toggleCollapse = useCallback(() => {
 		if (!canCollapse) return
@@ -122,14 +131,18 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 						// A note says what this is for, so it leads and the definition it runs follows
 						<>
 							{isNoteEditing && service.setHeadline ? (
-								<div className="px-0.5 py-0.5" onClick={(e) => e.stopPropagation()}>
+								<div
+									ref={noteInputRef}
+									className="px-0.5 py-0.5"
+									onClick={(e) => e.stopPropagation()}
+									onBlur={onNoteBlur}
+								>
 									<TextInputFieldSimple
 										id={undefined}
 										value={entity.headline ?? ''}
 										placeholder={`Describe the intent of the ${entityTypeLabel}`}
 										setValue={service.setHeadline}
 										autoFocus
-										onBlur={() => setNoteEditing(false)}
 										onKeyDown={(event) => {
 											if (event.key === 'Enter' || event.key === 'Escape') event.currentTarget.blur()
 										}}
@@ -173,11 +186,13 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 				)}
 				{isNoteEditing && service.setHeadline && (
 					<Button
+						ref={clearNoteRef}
 						variant="ghost"
 						size="sm"
 						disabled={readonly || !entity.headline}
 						// Keep the note field focused, so blurring it doesn't remove this button before the click lands
 						onMouseDown={(event) => event.preventDefault()}
+						onBlur={onNoteBlur}
 						onClick={() => {
 							service.setHeadline?.('')
 							setNoteEditing(false)

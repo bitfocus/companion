@@ -97,4 +97,28 @@ describe('Action header with a note', () => {
 		expect(setHeadline).toHaveBeenLastCalledWith('')
 		expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
 	})
+
+	it('keeps the clear button reachable from the note field by keyboard', async () => {
+		const { setHeadline } = renderAction(EntityModelType.Action, 'Fade the house lights', false)
+		const user = userEvent.setup()
+
+		await user.click(screen.getByRole('button', { name: 'Edit note: Fade the house lights' }))
+		await user.tab()
+		const clear = screen.getByRole('button', { name: 'Clear note' })
+		expect(clear).toHaveFocus()
+
+		await user.keyboard('{Enter}')
+		expect(setHeadline).toHaveBeenLastCalledWith('')
+		expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+	})
+
+	it('closes the note editor when focus leaves both the field and the clear button', async () => {
+		renderAction(EntityModelType.Action, 'Fade the house lights', false)
+		const user = userEvent.setup()
+
+		await user.click(screen.getByRole('button', { name: 'Edit note: Fade the house lights' }))
+		await user.tab()
+		await user.tab()
+		expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+	})
 })

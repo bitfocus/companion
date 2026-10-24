@@ -352,8 +352,9 @@
 		--color-primary-text: #e8e8e8;
 
 		--color-action-primary: #757575;
-		--color-action-primary-hover: #858585;
-		--color-action-primary-pressed: #666666;
+		/* Hover darkens rather than lightens: white text on anything lighter than the resting fill drops below 4.5:1 */
+		--color-action-primary-hover: #6b6b6b;
+		--color-action-primary-pressed: #5e5e5e;
 		--color-action-on-primary: #fff;
 		--color-action-text: #cecece;
 		--color-action-bg: #252525;
