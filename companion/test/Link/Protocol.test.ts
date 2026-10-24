@@ -122,6 +122,13 @@ describe('announcement', () => {
 		expect(decode({ protocolVersions: Array.from({ length: 17 }, (_, i) => `${i + 1}.0.0`) })).toBe(false)
 		expect(decode({ companionVersion: 'x'.repeat(64), protocolVersions: ['1.0.0', '2.0.0'] })).toBe(true)
 	})
+
+	test('rejects an announcement interval long enough to keep a peer that has gone listed for long', () => {
+		const decode = (announceIntervalMs: number) =>
+			decodeLinkAnnouncement(JSON.stringify({ ...announcement, announceIntervalMs })).ok
+		expect(decode(60_000)).toBe(true)
+		expect(decode(60_001)).toBe(false)
+	})
 })
 
 describe('versions', () => {

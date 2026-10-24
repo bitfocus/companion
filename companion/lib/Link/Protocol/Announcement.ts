@@ -26,8 +26,10 @@ export const LinkAnnouncementSchema = z
 			.number()
 			.int()
 			.positive()
-			.max(600_000)
-			.describe('How often this announcement is repeated. Peers consider it gone after missing a few'),
+			.max(60_000)
+			.describe(
+				'How often this announcement is repeated. Peers consider it gone after missing a few, so it is bounded to keep a peer that has gone from being listed as reachable for long'
+			),
 	})
 	.describe(
 		'Periodic announcement of an installation, made known by each transport to every installation it can reach (see LinkTransport.announce). Readable by all of them, including installations that are not allowed to use this one, so it carries only what is needed to find it: add anything else to a message that is only sent to peers allowed it'
