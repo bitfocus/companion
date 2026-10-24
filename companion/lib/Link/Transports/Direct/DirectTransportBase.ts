@@ -28,6 +28,7 @@ const DirectFrameSchema = z.discriminatedUnion('op', [
 	z.object({ op: z.literal('message'), payload: z.string() }),
 ])
 type DirectFrame = z.infer<typeof DirectFrameSchema>
+const DIRECT_FRAME_OPS = new Set<string>(DirectFrameSchema.options.map((option) => option.shape.op.value))
 
 /**
  * Common parts of the direct server and client: the identity key, keeping the sockets alive, and once a connection
@@ -129,6 +130,8 @@ export abstract class DirectTransportBase implements LinkTransport {
 			const parsed = parseFrame(text)
 			if (!parsed.ok) {
 				this.context.logger.warn(`Invalid frame from ${name}: ${parsed.error}`)
+			} else if (parsed.frame === null) {
+				// A kind of frame added since, which this version has no use for
 			} else if (parsed.frame.op === 'announce') {
 				this.context.receiveAnnouncement(peerId, parsed.frame.payload)
 			} else {
@@ -156,7 +159,8 @@ function sendFrame(channel: SecureChannel, frame: DirectFrame): void {
 	channel.send(JSON.stringify(frame))
 }
 
-function parseFrame(raw: string): { ok: true; frame: DirectFrame } | { ok: false; error: string } {
+/** Parse a frame. One of a kind this version doesn't know is null, so that a newer peer can add kinds */
+function parseFrame(raw: string): { ok: true; frame: DirectFrame | null } | { ok: false; error: string } {
 	let json: unknown
 	try {
 		json = JSON.parse(raw)
@@ -164,6 +168,10 @@ function parseFrame(raw: string): { ok: true; frame: DirectFrame } | { ok: false
 		return { ok: false, error: 'Invalid JSON' }
 	}
 	const parsed = DirectFrameSchema.safeParse(json)
-	if (!parsed.success) return { ok: false, error: z.prettifyError(parsed.error) }
+	if (!parsed.success) {
+		const op = (json as { op?: unknown } | null)?.op
+		if (typeof op === 'string' && !DIRECT_FRAME_OPS.has(op)) return { ok: true, frame: null }
+		return { ok: false, error: z.prettifyError(parsed.error) }
+	}
 	return { ok: true, frame: parsed.data }
 }

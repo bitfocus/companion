@@ -51,6 +51,53 @@ describe('message encoding', () => {
 	})
 })
 
+describe('values added by a newer version', () => {
+	const sub = { button: { type: 'location', page: 1, row: 0, column: 0 }, width: 72, height: 72 }
+
+	test('leaves out an item of a list it cannot read, keeping the rest', () => {
+		const raw = JSON.stringify({
+			type: 'subscribe',
+			payload: {
+				buttons: [
+					{ ...sub, button: { type: 'future', id: 'x' }, have: null },
+					{ ...sub, have: null },
+				],
+			},
+		})
+		expect(decodeLinkMessage(raw)).toEqual({
+			ok: true,
+			message: { type: 'subscribe', payload: { buttons: [{ ...sub, have: null }] } },
+		})
+	})
+
+	test('reads a refusal for a reason added since as the peer being busy', () => {
+		const raw = JSON.stringify({ type: 'subscribe.refused', payload: { buttons: [{ ...sub, reason: 'future' }] } })
+		expect(decodeLinkMessage(raw)).toMatchObject({
+			ok: true,
+			message: { payload: { buttons: [{ reason: 'limit' }] } },
+		})
+	})
+
+	test('reads a status added since as none', () => {
+		const raw = JSON.stringify({
+			type: 'button.update',
+			payload: {
+				...sub,
+				revision: { stream: 's', seq: 1 },
+				image: { type: 'image', dataUrl: null },
+				pressed: false,
+				stepCurrent: 1,
+				stepCount: 1,
+				status: 'future',
+				actionRunning: false,
+				unreachable: false,
+				sourceChain: [],
+			},
+		})
+		expect(decodeLinkMessage(raw)).toMatchObject({ ok: true, message: { payload: { status: null } } })
+	})
+})
+
 describe('announcement', () => {
 	const announcement = {
 		name: 'Somewhere',

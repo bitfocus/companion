@@ -47,6 +47,22 @@ export const LINK_MAX_MESSAGE_SIZE = 16 * 1024 * 1024
 /** The largest edge of a bitmap, enough for a button filling a large tablet */
 export const LINK_BITMAP_MAX_EDGE = 2048
 
+/**
+ * A list of items, each checked on its own: one this version can't read (eg of a kind of button added since) is left
+ * out, rather than the whole message being rejected
+ */
+function tolerantArray<TItem extends z.ZodType>(item: TItem, max: number) {
+	return z
+		.array(z.unknown())
+		.max(max)
+		.transform((items) =>
+			items.flatMap((raw): z.output<TItem>[] => {
+				const parsed = item.safeParse(raw)
+				return parsed.success ? [parsed.data] : []
+			})
+		)
+}
+
 const BitmapSizeShape = {
 	width: z.number().int().min(8).max(LINK_BITMAP_MAX_EDGE).describe('Bitmap width in pixels'),
 	height: z.number().int().min(8).max(LINK_BITMAP_MAX_EDGE).describe('Bitmap height in pixels'),
@@ -95,15 +111,14 @@ export const LinkButtonRevisionSchema = z
 
 export const LinkSubscribePayloadSchema = z
 	.object({
-		buttons: z
-			.array(
-				LinkButtonSubscriptionSchema.extend({
-					have: LinkButtonRevisionSchema.nullable().describe(
-						'The revision the subscriber has of the button, or null for none. The peer sends the current render if it has a different one'
-					),
-				})
-			)
-			.max(LINK_MAX_BUTTONS_PER_MESSAGE),
+		buttons: tolerantArray(
+			LinkButtonSubscriptionSchema.extend({
+				have: LinkButtonRevisionSchema.nullable().describe(
+					'The revision the subscriber has of the button, or null for none. The peer sends the current render if it has a different one'
+				),
+			}),
+			LINK_MAX_BUTTONS_PER_MESSAGE
+		),
 	})
 	.describe(
 		'Ask a peer to start (or keep) sending updates for some buttons. Subscriptions are leases: they must be renewed by repeating this message before LINK_SUBSCRIPTION_LEASE_MS elapses'
@@ -111,23 +126,23 @@ export const LinkSubscribePayloadSchema = z
 
 export const LinkUnsubscribePayloadSchema = z
 	.object({
-		buttons: z.array(LinkButtonSubscriptionSchema).max(LINK_MAX_BUTTONS_PER_MESSAGE),
+		buttons: tolerantArray(LinkButtonSubscriptionSchema, LINK_MAX_BUTTONS_PER_MESSAGE),
 	})
 	.describe('Release some subscriptions before their lease expires')
 
 export const LinkSubscribeRefusedPayloadSchema = z
 	.object({
-		buttons: z
-			.array(
-				LinkButtonSubscriptionSchema.extend({
-					reason: z
-						.enum(['denied', 'limit'])
-						.describe(
-							"Why it isn't served: `denied` when the subscriber isn't allowed buttons, `limit` when the peer is already serving as many as it can"
-						),
-				})
-			)
-			.max(LINK_MAX_BUTTONS_PER_MESSAGE),
+		buttons: tolerantArray(
+			LinkButtonSubscriptionSchema.extend({
+				reason: z
+					.enum(['denied', 'limit'])
+					.catch('limit')
+					.describe(
+						"Why it isn't served: `denied` when the subscriber isn't allowed buttons, `limit` when the peer is already serving as many as it can. A reason added since is read as `limit`"
+					),
+			}),
+			LINK_MAX_BUTTONS_PER_MESSAGE
+		),
 	})
 	.describe(
 		'The answer to a subscribe (renewals included), for the buttons in it that are not served, matched by their button and size. Sent again for each renewal while it is still so. A served button gets no answer: its update is the answer'
@@ -165,7 +180,10 @@ export const LinkButtonUpdatePayloadSchema = z
 		status: z
 			.enum(['good', 'warning', 'error'])
 			.nullable()
-			.describe('The status of the connections the button uses, for its decoration, or null for none'),
+			.catch(null)
+			.describe(
+				'The status of the connections the button uses, for its decoration, or null for none. A status added since is read as none'
+			),
 		actionRunning: z.boolean().describe('Whether actions of the button are running, for its decoration'),
 		unreachable: z
 			.boolean()
