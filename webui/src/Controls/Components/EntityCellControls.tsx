@@ -1,7 +1,7 @@
-import { faChevronDown, faPencil, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faChevronDown, faPencil, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState, type FocusEvent } from 'react'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, type EntityOwner, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { Button } from '~/Components/Button.js'
@@ -45,6 +45,15 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 }: EntityCellControlProps) {
 	const canSetHeadline = !!service.setHeadline
 	const [noteEditing, setNoteEditing] = useState(false)
+	const noteInputRef = useRef<HTMLDivElement>(null)
+	const clearNoteRef = useRef<HTMLButtonElement>(null)
+
+	// Tabbing between the note field and its clear button keeps the note open
+	const onNoteBlur = useCallback((event: FocusEvent) => {
+		const next = event.relatedTarget
+		if (next instanceof Node && (noteInputRef.current?.contains(next) || clearNoteRef.current?.contains(next))) return
+		setNoteEditing(false)
+	}, [])
 
 	const toggleCollapse = useCallback(() => {
 		if (!canCollapse) return
@@ -77,6 +86,9 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	) {
 		cleanHeadline = cleanHeadline.slice(connectionLabel.length + 1).trim()
 	}
+
+	const isNoteEditing = !isCollapsedLocalVariable && noteEditing && !isPanelCollapsed && !!service.setHeadline
+	const wrapClass = isPanelCollapsed ? 'truncate' : 'whitespace-normal break-words'
 
 	return (
 		<div className="editor-grid-header flex items-center justify-between gap-3">
@@ -111,45 +123,49 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 								/>
 							</div>
 						</div>
-					) : (
-						<span
-							className={`font-semibold text-xs text-body leading-tight ${isPanelCollapsed ? 'truncate' : 'whitespace-normal break-words'}`}
-							title={cleanHeadline}
-						>
+					) : isCollapsedLocalVariable || !(isNoteEditing || entity.headline) ? (
+						<span className={`font-semibold text-xs text-body leading-tight ${wrapClass}`} title={cleanHeadline}>
 							{cleanHeadline}
 						</span>
-					)}
-
-					{!isCollapsedLocalVariable && noteEditing && !isPanelCollapsed && service.setHeadline ? (
-						<div className="px-0.5 py-0.5" onClick={(e) => e.stopPropagation()}>
-							<TextInputFieldSimple
-								id={undefined}
-								value={entity.headline ?? ''}
-								placeholder={`Describe the intent of the ${entityTypeLabel}`}
-								setValue={service.setHeadline}
-								autoFocus
-								onBlur={() => setNoteEditing(false)}
-								onKeyDown={(event) => {
-									if (event.key === 'Enter' || event.key === 'Escape') event.currentTarget.blur()
-								}}
-							/>
-						</div>
 					) : (
-						!isCollapsedLocalVariable &&
-						entity.headline && (
-							<Button
-								variant="inline"
-								disabled={readonly || isPanelCollapsed || !service.setHeadline}
-								onClick={(event) => {
-									event.stopPropagation()
-									setNoteEditing(true)
-								}}
-								className={`w-fit max-w-full leading-snug p-0 text-left text-3xs font-normal text-action-text hover:text-body disabled:hover:text-action-text disabled:cursor-default disabled:pointer-events-auto ${isPanelCollapsed ? 'truncate' : 'whitespace-normal break-words'}`}
-								title={isPanelCollapsed ? entity.headline : `Edit note: ${entity.headline}`}
-							>
-								{entity.headline}
-							</Button>
-						)
+						// A note says what this is for, so it leads and the definition it runs follows
+						<>
+							{isNoteEditing && service.setHeadline ? (
+								<div
+									ref={noteInputRef}
+									className="px-0.5 py-0.5"
+									onClick={(e) => e.stopPropagation()}
+									onBlur={onNoteBlur}
+								>
+									<TextInputFieldSimple
+										id={undefined}
+										value={entity.headline ?? ''}
+										placeholder={`Describe the intent of the ${entityTypeLabel}`}
+										setValue={service.setHeadline}
+										autoFocus
+										onKeyDown={(event) => {
+											if (event.key === 'Enter' || event.key === 'Escape') event.currentTarget.blur()
+										}}
+									/>
+								</div>
+							) : (
+								<Button
+									variant="inline"
+									disabled={readonly || isPanelCollapsed || !service.setHeadline}
+									onClick={(event) => {
+										event.stopPropagation()
+										setNoteEditing(true)
+									}}
+									className={`w-fit max-w-full leading-tight p-0 text-left text-xs font-semibold text-body disabled:cursor-default disabled:pointer-events-auto ${wrapClass}`}
+									title={isPanelCollapsed ? entity.headline : `Edit note: ${entity.headline}`}
+								>
+									{entity.headline}
+								</Button>
+							)}
+							<span className={`text-3xs text-muted leading-snug ${wrapClass}`} title={cleanHeadline}>
+								{cleanHeadline}
+							</span>
+						</>
 					)}
 				</div>
 			</div>
@@ -166,6 +182,25 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 						className="p-1.5"
 					>
 						<FontAwesomeIcon icon={faPencil} className="text-xs" />
+					</Button>
+				)}
+				{isNoteEditing && service.setHeadline && (
+					<Button
+						ref={clearNoteRef}
+						variant="ghost"
+						size="sm"
+						disabled={readonly || !entity.headline}
+						// Keep the note field focused, so blurring it doesn't remove this button before the click lands
+						onMouseDown={(event) => event.preventDefault()}
+						onBlur={onNoteBlur}
+						onClick={() => {
+							service.setHeadline?.('')
+							setNoteEditing(false)
+						}}
+						title="Clear note"
+						className="p-1.5"
+					>
+						<FontAwesomeIcon icon={faXmark} className="text-xs" />
 					</Button>
 				)}
 

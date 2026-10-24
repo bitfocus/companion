@@ -80,7 +80,8 @@ function PopoverMenuItemContents({ data }: { data: MenuActionItemProps }): React
 				</span>
 			)}
 			<span className="dropdown-item-label flex-1">{data.label}</span>
-			{!data.fullWidth && (data.inNewTab ? <FontAwesomeIcon className="ms-auto" icon={faExternalLinkSquare} /> : ' ')}
+			{!data.fullWidth &&
+				(data.inNewTab ? <FontAwesomeIcon className="ms-4 shrink-0" icon={faExternalLinkSquare} /> : ' ')}
 		</>
 	)
 }

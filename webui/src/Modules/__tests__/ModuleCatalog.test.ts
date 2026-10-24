@@ -76,6 +76,20 @@ describe('shared module catalog', () => {
 		expect(groups[0][1].modules).toEqual([best, expect.objectContaining({ moduleId: 'audio' })])
 	})
 
+	it('orders groups by their best search match when searching', () => {
+		const groups = groupModuleCatalog(
+			[
+				product('vmix', 'StudioCoast', ['vMix']),
+				product('generic', null, ['Generic vMix thing']),
+				product('atem', 'Blackmagic Design', ['ATEM vMix bridge']),
+				product('vmix-2', 'StudioCoast', ['vMix 2']),
+			],
+			true
+		)
+		expect(groups.map(([key]) => key)).toEqual(['studiocoast', 'other', 'blackmagic design'])
+		expect(groups[0][1].modules.map((module) => module.moduleId)).toEqual(['vmix', 'vmix-2'])
+	})
+
 	it('titles a module by its products, or its name when it declares none', () => {
 		expect(getModuleProductName(product('atem', 'Blackmagic Design', ['ATEM Mini', 'ATEM 2']))).toBe(
 			'ATEM Mini; ATEM 2'
