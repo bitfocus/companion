@@ -1,7 +1,7 @@
 import { DatabaseSync } from 'node:sqlite'
 import express from 'express'
 import type { ApiTokenScope } from '../../../../shared-lib/lib/Model/ApiKeys.js'
-import { DataStoreTableView } from '../../../lib/Data/StoreBase.js'
+import { DataStoreTableView } from '../../../lib/Data/TableView.js'
 import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
 import LogController, { type Logger } from '../../../lib/Log/Controller.js'
 import type { Registry } from '../../../lib/Registry.js'

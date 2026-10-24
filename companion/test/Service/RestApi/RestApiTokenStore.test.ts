@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { DatabaseSync } from 'node:sqlite'
 import { describe, expect, test } from 'vitest'
-import { DataStoreTableView } from '../../../lib/Data/StoreBase.js'
+import { DataStoreTableView } from '../../../lib/Data/TableView.js'
 import LogController from '../../../lib/Log/Controller.js'
 import { RestApiTokenStore } from '../../../lib/Service/RestApi/RestApiTokenStore.js'
 

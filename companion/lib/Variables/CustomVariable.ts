@@ -23,7 +23,7 @@ import type {
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreTableView } from '../Data/TableView.js'
 import LogController from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { CustomVariableCollections } from './CustomVariableCollections.js'

@@ -2,7 +2,7 @@ import EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 import z from 'zod'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreTableView } from '../Data/TableView.js'
 import { publicProcedure, toIterable } from '../UI/TRPC.js'
 
 export abstract class CollectionsBaseController<TCollectionMetadata> {

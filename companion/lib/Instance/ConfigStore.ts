@@ -8,7 +8,7 @@ import {
 	type InstanceVersionUpdatePolicy,
 } from '@companion-app/shared/Model/Instance.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreTableView } from '../Data/TableView.js'
 
 export interface AddInstanceProps {
 	versionId: string | null
