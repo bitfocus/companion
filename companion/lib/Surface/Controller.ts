@@ -24,18 +24,19 @@ import z from 'zod'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
-import type {
-	ClientDevicesListItem,
-	ClientSurfaceButtonSizesItem,
-	ClientSurfaceItem,
-	ClientSurfaceLayoutItem,
-	ClientSurfaceModelItem,
-	OutboundSurfaceInfo,
-	SurfaceConfig,
-	SurfaceGroupConfig,
-	SurfaceModelsUpdate,
-	SurfacePanelConfig,
-	SurfacesUpdate,
+import {
+	SurfaceGroupConfigSchema,
+	type ClientDevicesListItem,
+	type ClientSurfaceButtonSizesItem,
+	type ClientSurfaceItem,
+	type ClientSurfaceLayoutItem,
+	type ClientSurfaceModelItem,
+	type OutboundSurfaceInfo,
+	type SurfaceConfig,
+	type SurfaceGroupConfig,
+	type SurfaceModelsUpdate,
+	type SurfacePanelConfig,
+	type SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
@@ -43,6 +44,7 @@ import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { Complete } from '@companion-module/base'
 import type { HIDDevice } from '@companion-surface/host'
 import type { DataDatabase } from '../Data/Database.js'
+import type { DataStoreSchemaTableView } from '../Data/SchemaTableView.js'
 import type { DataStoreTableView } from '../Data/TableView.js'
 import type { SurfaceChildFeatures } from '../Instance/Surface/ChildHandler.js'
 import {
@@ -107,7 +109,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	readonly #logger = LogController.createLogger('Surface/Controller')
 
 	readonly #dbTableSurfaces: DataStoreTableView<Record<string, SurfaceConfig>>
-	readonly #dbTableGroups: DataStoreTableView<Record<string, SurfaceGroupConfig>>
+	readonly #dbTableGroups: DataStoreSchemaTableView<typeof SurfaceGroupConfigSchema>
 	readonly #handlerDependencies: SurfaceHandlerDependencies
 
 	readonly #updateEvents = new EventEmitter<UpdateEvents>()
@@ -220,7 +222,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#usbAvailable = usbAvailable
 
 		this.#dbTableSurfaces = db.getTableView('surfaces')
-		this.#dbTableGroups = db.getTableView('surface_groups')
+		this.#dbTableGroups = db.getSchemaTableView('surface_groups', SurfaceGroupConfigSchema)
 		this.#handlerDependencies = handlerDependencies
 
 		this.#updateEvents.setMaxListeners(0)

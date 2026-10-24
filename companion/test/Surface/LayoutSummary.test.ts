@@ -16,6 +16,8 @@ function makeConfig(partial: Partial<SurfaceConfig>): SurfaceConfig {
 			startup_page_id: '1',
 			use_last_page: true,
 			never_lock: false,
+			restrict_pages: false,
+			allowed_page_ids: [],
 		},
 		groupId: null,
 		type: 'Test Surface',

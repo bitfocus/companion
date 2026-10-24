@@ -184,22 +184,24 @@ export interface SurfaceConfig {
 	lastSeen: number | undefined
 }
 
-export interface SurfaceGroupConfig {
-	name: string
-	last_page_id: string
-	startup_page_id: string
-	use_last_page: boolean
-	never_lock: boolean
-	restrict_pages?: boolean
-	allowed_page_ids?: string[]
+export const SurfaceGroupConfigSchema = z.object({
+	name: z.string().default('Unnamed group'),
+	last_page_id: z.string().default(''),
+	startup_page_id: z.string().default(''),
+	use_last_page: z.boolean().default(true),
+	never_lock: z.boolean().default(false),
+	restrict_pages: z.boolean().default(false),
+	allowed_page_ids: z.array(z.string()).default(() => []),
 
 	/** @deprecated. replaced by last_page_id but still used for export */
-	last_page?: number
+	last_page: z.number().optional(),
 	/** @deprecated. replaced by startup_page_id but still used for export */
-	startup_page?: number
+	startup_page: z.number().optional(),
 	/** @deprecated.  used for export */
-	allowed_pages?: number[]
-}
+	allowed_pages: z.array(z.number()).optional(),
+})
+
+export type SurfaceGroupConfig = z.output<typeof SurfaceGroupConfigSchema>
 
 export interface SurfacePanelConfig {
 	// defaults from the panel - TODO properly
