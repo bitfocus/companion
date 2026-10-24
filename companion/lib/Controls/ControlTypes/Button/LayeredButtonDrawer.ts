@@ -2,10 +2,12 @@ import debounceFn from 'debounce-fn'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
-import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import {
+	SomeButtonGraphicsElementSchema,
+	type SomeButtonGraphicsElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
 import {
 	ButtonGraphicsDecorationType,
-	ButtonGraphicsShowStatusIcons,
 	type DrawStyleButtonStateProps,
 	type DrawStyleLayeredButtonModel,
 } from '@companion-app/shared/Model/StyleModel.js'
@@ -22,7 +24,6 @@ import LogController, { type Logger } from '../../../Log/Controller.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlEntityInstance } from '../../Entities/EntityInstance.js'
 import type { IButtonDrawer } from '../../IButtonDrawer.js'
-import { CreateElementOfType } from './LayerDefaults.js'
 
 /** Anything that can visit the draw elements (e.g. the reference collector/updater visitors). */
 export interface DrawElementsVisitor {
@@ -236,24 +237,16 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 	 * so that nested layers stay consistent with top-level ones.
 	 */
 	#normalizeLoadedElement(element: SomeButtonGraphicsElement): void {
-		if (element.type !== 'canvas') {
-			try {
-				const defaults = CreateElementOfType(element.type)
-				for (const key of Object.keys(defaults)) {
-					if (key === 'id' || key === 'type' || key === 'name') continue
-					if (!(key in element)) {
-						;(element as any)[key] = (defaults as any)[key]
-					}
-				}
-			} catch (_e) {
-				// Ignore
+		// Fill in the properties added since the element was saved, with the defaults that keep it drawing as it did.
+		// Not the values a new element is created with, which can differ to show off what the element can do
+		const parsed = SomeButtonGraphicsElementSchema.safeParse(element)
+		if (parsed.success) {
+			for (const [key, value] of Object.entries(parsed.data)) {
+				if (!(key in element)) (element as Record<string, unknown>)[key] = value
 			}
 		}
+
 		switch (element.type) {
-			case 'canvas':
-				if (!element.showStatusIcons)
-					element.showStatusIcons = { value: ButtonGraphicsShowStatusIcons.FollowDefault, isExpression: false }
-				break
 			case 'image':
 				if (!element.fillMode.isExpression && (element.fillMode.value as string) === 'fit_or_shrink') {
 					element.fillMode.value = 'fit'

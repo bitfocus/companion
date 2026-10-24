@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { elementSchemas } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { LayeredButtonDrawer } from '../../lib/Controls/ControlTypes/Button/LayeredButtonDrawer.js'
 import type { CompositeElementIdString } from '../../lib/Instance/Definitions.js'
@@ -507,6 +508,11 @@ describe('LayeredButtonDrawer', () => {
 	})
 
 	describe('loadElements / drawElements / visit', () => {
+		function fieldDefault(type: keyof typeof elementSchemas, fieldId: string): unknown {
+			const field = elementSchemas[type].flatMap((section) => section.fields).find((field) => field.id === fieldId)
+			return field && 'default' in field ? field.default : undefined
+		}
+
 		it('exposes loaded elements and normalises them', () => {
 			const clearSpy = vi.spyOn(cacheOf(drawer), 'clear')
 
@@ -516,6 +522,16 @@ describe('LayeredButtonDrawer', () => {
 			expect(drawer.drawElements).toHaveLength(1)
 			// Canvas gains its defaulted showStatusIcons during normalisation
 			expect((drawer.drawElements[0] as any).showStatusIcons).toBeDefined()
+		})
+
+		it('fills in the missing properties of an existing element with the defaults that keep its drawing', () => {
+			drawer.loadElements([{ id: 'b', type: 'box', x: { isExpression: false, value: 10 } } as any])
+
+			const box = drawer.drawElements[0] as any
+			expect(box.x).toEqual({ isExpression: false, value: 10 })
+			// Not the red a new box is created with
+			expect(box.color).toEqual({ isExpression: false, value: fieldDefault('box', 'color') })
+			expect(box.cornerRadius).toEqual({ isExpression: false, value: 0 })
 		})
 
 		it('normalises nested group children', () => {

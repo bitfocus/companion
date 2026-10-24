@@ -30,6 +30,13 @@ const LINE_SIDE_CHOICES = [
 	{ id: 'right', label: 'Right' },
 ]
 
+/**
+ * The properties of an element type, in the sections they are edited in.
+ *
+ * The `default` of each field is the value for an existing element which doesn't have the property, as it was saved
+ * before the property existed. So it must be the value which keeps the element drawing as it did. New elements are
+ * created with their own values instead, by `CreateElementOfType`, which can differ to show off what they can do.
+ */
 export interface ElementSchemaSection {
 	id: string
 	label: string
