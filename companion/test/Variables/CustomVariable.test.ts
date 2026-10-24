@@ -285,6 +285,20 @@ describe('VariablesCustomVariable', () => {
 			expect(definitionChanged).toHaveBeenCalledTimes(2)
 			expect(definitionChanged).toHaveBeenCalledWith('var_a', makeDef({ defaultValue: 'a value' }))
 		})
+
+		test('fills in defaults for old rows and skips invalid ones', () => {
+			const { custom, values } = createCustomVariables({
+				old: { defaultValue: 'old value' },
+				invalid: { description: 5 },
+			} as any)
+
+			custom.init()
+
+			expect(custom.getDefinitions()).toEqual({
+				old: { description: '', defaultValue: 'old value', persistCurrentValue: false, sortOrder: 0 },
+			})
+			expect(values.getCustomVariableValue('old')).toBe('old value')
+		})
 	})
 
 	describe('replaceDefinitions', () => {
@@ -311,6 +325,23 @@ describe('VariablesCustomVariable', () => {
 			expect(definitionChanged).toHaveBeenCalledWith('kept', makeDef({ defaultValue: 'updated' }))
 			expect(definitionChanged).toHaveBeenCalledWith('added', makeDef({ defaultValue: 'fresh', sortOrder: 1 }))
 			expect(definitionChanged).toHaveBeenCalledWith('removed', null)
+		})
+
+		test('normalises the new definitions and skips invalid ones', () => {
+			const { custom, table, values } = createCustomVariables()
+
+			custom.replaceDefinitions({
+				partial: { defaultValue: 'fresh', extra: true },
+				invalid: { sortOrder: 'first' },
+				after: makeDef({ sortOrder: 1 }),
+			} as any)
+
+			const normalised = { description: '', defaultValue: 'fresh', persistCurrentValue: false, sortOrder: 0 }
+			expect(custom.getDefinitions()).toEqual({ partial: normalised, after: makeDef({ sortOrder: 1 }) })
+			expect(table.data['partial']).toEqual(normalised)
+			expect(table.data['invalid']).toBe(undefined)
+			expect(values.getCustomVariableValue('partial')).toBe('fresh')
+			expect(values.getCustomVariableValue('invalid')).toBe(undefined)
 		})
 	})
 

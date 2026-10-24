@@ -2,7 +2,8 @@ import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import LogController from '../Log/Controller.js'
 import { showFatalError } from '../Resources/Util.js'
-import type { DataDatabase } from './Database.js'
+import type { DataDatabaseDefaultTable } from './Database.js'
+import type { DataStoreBase } from './StoreBase.js'
 import v1tov2 from './Upgrades/v1tov2.js'
 import v2tov3 from './Upgrades/v2tov3.js'
 import v3tov4 from './Upgrades/v3tov4.js'
@@ -46,7 +47,7 @@ export const targetVersion = allUpgrades.length + 1
  * Upgrade the db to the latest version.
  * This has the raw db object before anything else has gotten access, so no need to worry about other components getting confused
  */
-export function upgradeStartup(db: DataDatabase): void {
+export function upgradeStartup(db: DataStoreBase<DataDatabaseDefaultTable>): void {
 	const currentVersion = db.defaultTableView.getOrDefault('page_config_version', 1)
 
 	// Ensure that the db isnt too new

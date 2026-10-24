@@ -1,3 +1,4 @@
+import type z from 'zod'
 import type { DataDatabase } from '../../lib/Data/Database.js'
 import type { DataStoreTableView } from '../../lib/Data/TableView.js'
 
@@ -43,6 +44,48 @@ export class FakeTableView<T> {
 }
 
 /**
+ * A stand-in for DataStoreSchemaTableView, storing its rows in a FakeTableView.
+ * Rows are parsed with the schema on read and write like the real view, but invalid rows are only skipped on read.
+ */
+export class FakeSchemaTableView<TSchema extends z.ZodType<Record<string, any>>> {
+	readonly table: FakeTableView<unknown>
+	readonly schema: TSchema
+
+	constructor(table: FakeTableView<unknown>, schema: TSchema) {
+		this.table = table
+		this.schema = schema
+	}
+
+	all(): Record<string, z.output<TSchema>> {
+		const out: Record<string, z.output<TSchema>> = {}
+		for (const [key, value] of Object.entries(this.table.all())) {
+			const result = this.schema.safeParse(value)
+			if (result.success) out[key] = result.data
+		}
+		return out
+	}
+
+	get(key: string): z.output<TSchema> | undefined {
+		const result = this.schema.safeParse(this.table.get(key))
+		return result.success ? result.data : undefined
+	}
+
+	set(key: string, value: z.input<TSchema>): z.output<TSchema> {
+		const parsed = this.schema.parse(value)
+		this.table.set(key, parsed)
+		return structuredClone(parsed)
+	}
+
+	delete(key: string): void {
+		this.table.delete(key)
+	}
+
+	clear(): void {
+		this.table.clear()
+	}
+}
+
+/**
  * A stand-in for DataDatabase that hands out FakeTableViews
  */
 export class FakeDataDatabase {
@@ -57,6 +100,14 @@ export class FakeDataDatabase {
 			this.tables.set(name, table)
 		}
 		return table
+	}
+
+	/** The rows are stored in the same FakeTableView that {@link getTableView} returns for the table */
+	getSchemaTableView<TSchema extends z.ZodType<Record<string, any>>>(
+		name: string,
+		schema: TSchema
+	): FakeSchemaTableView<TSchema> {
+		return new FakeSchemaTableView(this.getTableView(name), schema)
 	}
 
 	get defaultTableView(): FakeTableView<any> {
