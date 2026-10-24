@@ -24,6 +24,7 @@ import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { THEME_CHOICES } from '~/Theme/themeChoices.js'
 import { themeStore } from '~/Theme/ThemeState.js'
+import { isTypingTarget } from '~/util/isTypingTarget.js'
 import { commandPaletteOpen } from './CommandPaletteState.js'
 import { ALL_NAV_PAGES } from './navRegistry.js'
 
@@ -46,12 +47,9 @@ export const CommandPalette = observer(function CommandPalette() {
 			if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
 				e.preventDefault()
 				commandPaletteOpen.set(!commandPaletteOpen.get())
-			} else if (e.key === '/' && !commandPaletteOpen.get()) {
-				const tag = (document.activeElement?.tagName || '').toLowerCase()
-				if (tag !== 'input' && tag !== 'textarea' && !document.activeElement?.hasAttribute('contenteditable')) {
-					e.preventDefault()
-					commandPaletteOpen.set(true)
-				}
+			} else if (e.key === '/' && !commandPaletteOpen.get() && !isTypingTarget(e.target)) {
+				e.preventDefault()
+				commandPaletteOpen.set(true)
 			}
 		}
 
