@@ -54,8 +54,15 @@ export class InstanceConfigStore {
 				try {
 					this.#dbTable.set(instanceId, entry)
 				} catch (e) {
-					// Skip it, rather than abandon saving the rest
-					this.#logger.error(`Not saving invalid instance "${instanceId}": ${stringifyError(e)}`)
+					// Discard the change, so the instance matches what is saved, rather than abandon saving the rest
+					this.#logger.error(`Discarding an invalid change to instance "${instanceId}": ${stringifyError(e)}`)
+
+					const saved = this.#dbTable.get(instanceId)
+					if (saved) {
+						this.#store.set(instanceId, saved)
+					} else {
+						this.#store.delete(instanceId)
+					}
 				}
 			} else {
 				this.#dbTable.delete(instanceId)

@@ -108,6 +108,19 @@ describe('InstanceConfigStore loading and saving', () => {
 		expect(store.getAllInstanceIdsOfType(null)).toEqual(['good'])
 	})
 
+	test('an invalid change to an instance is discarded', () => {
+		const { store, table } = createStoreWith({ A: makeConnection(0) })
+
+		const config = store.getConfigOfTypeForId('A', null)!
+		config.label = 'Renamed'
+		config.sortOrder = 'first' as any
+
+		store.commitChanges(['A'], false)
+
+		expect(store.getConfigOfTypeForId('A', null)).toEqual(makeConnection(0))
+		expect(table.data['A']).toEqual(makeConnection(0))
+	})
+
 	test('an invalid instance is not saved, but the others still are', () => {
 		const { store, table, afterSave } = createStoreWith({})
 		const [goodId] = store.addConnection('test-module', 'good', undefined, {
@@ -125,6 +138,9 @@ describe('InstanceConfigStore loading and saving', () => {
 
 		expect(table.data[goodId]).toMatchObject({ label: 'good' })
 		expect(table.data[badId]).toBeUndefined()
+		// And it is forgotten, as it was never saved
+		expect(store.getConfigOfTypeForId(badId, null)).toBeUndefined()
+		expect(store.getConfigOfTypeForId(goodId, null)).toMatchObject({ label: 'good' })
 		expect(afterSave).toHaveBeenCalledWith([badId, goodId], false)
 	})
 })
