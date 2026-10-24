@@ -5,6 +5,7 @@ import { CustomVariableDefinitionSchema } from '@companion-app/shared/Model/Cust
 import { SomeEntityModelSchema } from '@companion-app/shared/Model/EntityModel.js'
 import { InstanceConfigSchema } from '@companion-app/shared/Model/Instance.js'
 import { PageModelSchema } from '@companion-app/shared/Model/PageModel.js'
+import { SomeButtonGraphicsElementSchema } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { OutboundSurfaceInfoSchema, SurfaceConfigSchema } from '@companion-app/shared/Model/Surfaces.js'
 import { createTables } from '../../lib/Data/Schema/v1.js'
 import { DataStoreBase } from '../../lib/Data/StoreBase.js'
@@ -104,6 +105,29 @@ describe('entities in controls', () => {
 			0
 		)
 		expect(entityCount).toBeGreaterThan(0)
+	})
+})
+
+// The elements of each layered button's style, with their children parsed with them
+describe('style elements in controls', () => {
+	function collectElements(controls: Record<string, unknown>): [controlId: string, element: unknown][] {
+		return Object.entries(controls).flatMap(([controlId, control]) => {
+			const layers = (control as { style?: { layers?: unknown } } | null)?.style?.layers
+			return Array.isArray(layers) ? layers.map((element): [string, unknown] => [controlId, element]) : []
+		})
+	}
+
+	test.each(upgradedRows)('every element of $fixture parses, losing nothing', ({ controls }) => {
+		for (const [controlId, element] of collectElements(controls)) {
+			const result = SomeButtonGraphicsElementSchema.safeParse(element)
+			expect(result.error, `element in "${controlId}"`).toBeUndefined()
+			expect(result.data, `element in "${controlId}"`).toMatchObject(element as object)
+		}
+	})
+
+	test('are covered by the fixtures', () => {
+		const elementCount = upgradedRows.reduce((count, { controls }) => count + collectElements(controls).length, 0)
+		expect(elementCount).toBeGreaterThan(0)
 	})
 })
 
