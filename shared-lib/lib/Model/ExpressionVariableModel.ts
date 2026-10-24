@@ -1,25 +1,30 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import z from 'zod'
 import type { CollectionBase } from './Collections.js'
-import type { SomeEntityModel } from './EntityModel.js'
+import { SomeEntityModelSchema } from './EntityModel.js'
 
 export type ExpressionVariableCollection = CollectionBase<null>
 
-export interface ExpressionVariableModel {
-	readonly type: 'expression-variable'
-	options: ExpressionVariableOptions
+export const ExpressionVariableOptionsSchema = z.object({
+	variableName: z.string().default(''),
+	description: z.string().default('An expression variable'),
+	sortOrder: z.number().default(0),
+	collectionId: z.string().optional(),
+	notes: z.string().optional(),
+})
 
-	entity: SomeEntityModel | null
+export type ExpressionVariableOptions = z.output<typeof ExpressionVariableOptionsSchema>
 
-	localVariables: SomeEntityModel[]
-}
+export const ExpressionVariableModelSchema = z.object({
+	type: z.literal('expression-variable'),
+	options: ExpressionVariableOptionsSchema.default(() => ExpressionVariableOptionsSchema.parse({})),
 
-export type ExpressionVariableOptions = {
-	variableName: string
-	description: string
-	sortOrder: number
-	collectionId?: string
-	notes?: string
-}
+	entity: SomeEntityModelSchema.nullable().default(null),
+
+	localVariables: z.array(SomeEntityModelSchema).default(() => []),
+})
+
+export type ExpressionVariableModel = z.output<typeof ExpressionVariableModelSchema>
 
 export interface ClientExpressionVariableData extends ExpressionVariableOptions {
 	type: 'expression-variable'

@@ -6,6 +6,11 @@ import {
 	PresetReferenceButtonModelSchema,
 	SomeButtonModelSchema,
 } from '../Model/ButtonModel.js'
+import { SomeControlModelSchema } from '../Model/Controls.js'
+import { EventInstanceSchema } from '../Model/EventModel.js'
+import { ExpressionVariableModelSchema } from '../Model/ExpressionVariableModel.js'
+import { PageControlModelSchema } from '../Model/PageControlModel.js'
+import { TriggerModelSchema } from '../Model/TriggerModel.js'
 
 const action = { type: 'action', id: 'a1', definitionId: 'send', connectionId: 'conn1', options: {} }
 const emptyStep = {
@@ -176,5 +181,99 @@ describe('SomeButtonModelSchema', () => {
 		})
 
 		expect(SomeButtonModelSchema.parse(once)).toEqual(once)
+	})
+})
+
+describe('TriggerModelSchema', () => {
+	test('a minimal trigger is given every default', () => {
+		expect(TriggerModelSchema.parse({ type: 'trigger' })).toEqual({
+			type: 'trigger',
+			options: { name: 'New Trigger', enabled: false, sortOrder: 0 },
+			actions: [],
+			condition: [],
+			events: [],
+			localVariables: [],
+		})
+	})
+
+	test('keeps its options, entities and events', () => {
+		const trigger = TriggerModelSchema.parse({
+			type: 'trigger',
+			options: { name: 'Show start', enabled: true, sortOrder: 3, collectionId: 'col', notes: 'n' },
+			actions: [action],
+			condition: [{ ...action, type: 'feedback', id: 'f1' }],
+			events: [{ id: 'e1', type: 'interval', enabled: true, options: { seconds: 5 } }],
+		})
+
+		expect(trigger.options).toEqual({
+			name: 'Show start',
+			enabled: true,
+			sortOrder: 3,
+			collectionId: 'col',
+			notes: 'n',
+		})
+		expect(trigger.actions).toHaveLength(1)
+		expect(trigger.condition[0]).toMatchObject({ type: 'feedback', id: 'f1' })
+		expect(trigger.events).toEqual([{ id: 'e1', type: 'interval', enabled: true, options: { seconds: 5 } }])
+	})
+
+	test('rejects an invalid entity or event', () => {
+		expect(TriggerModelSchema.safeParse({ type: 'trigger', actions: [{ ...action, id: 5 }] }).success).toBe(false)
+		expect(TriggerModelSchema.safeParse({ type: 'trigger', events: [{ type: 'interval' }] }).success).toBe(false)
+	})
+})
+
+describe('EventInstanceSchema', () => {
+	test('an event saved without being enabled is disabled, with no options', () => {
+		expect(EventInstanceSchema.parse({ id: 'e1', type: 'startup' })).toEqual({
+			id: 'e1',
+			type: 'startup',
+			enabled: false,
+			options: {},
+		})
+	})
+})
+
+describe('ExpressionVariableModelSchema', () => {
+	test('a minimal expression variable is given every default', () => {
+		expect(ExpressionVariableModelSchema.parse({ type: 'expression-variable' })).toEqual({
+			type: 'expression-variable',
+			options: { variableName: '', description: 'An expression variable', sortOrder: 0 },
+			entity: null,
+			localVariables: [],
+		})
+	})
+
+	test('keeps its entity', () => {
+		const variable = ExpressionVariableModelSchema.parse({
+			type: 'expression-variable',
+			options: { variableName: 'total' },
+			entity: { ...action, type: 'feedback' },
+		})
+
+		expect(variable.options.variableName).toBe('total')
+		expect(variable.entity).toMatchObject({ type: 'feedback', id: 'a1' })
+	})
+})
+
+describe('PageControlModelSchema', () => {
+	test('a page control without local variables has none', () => {
+		expect(PageControlModelSchema.parse({ type: 'page' })).toEqual({ type: 'page', localVariables: [] })
+	})
+})
+
+describe('SomeControlModelSchema', () => {
+	test.each([
+		['button-layered', { type: 'button-layered' }],
+		['trigger', { type: 'trigger' }],
+		['expression-variable', { type: 'expression-variable' }],
+		['page', { type: 'page' }],
+		['pageup', { type: 'pageup' }],
+	])('parses a %s control', (type, control) => {
+		expect(SomeControlModelSchema.parse(control).type).toBe(type)
+	})
+
+	test('rejects a control of an unknown type', () => {
+		expect(SomeControlModelSchema.safeParse({ type: 'sparkle' }).success).toBe(false)
 	})
 })

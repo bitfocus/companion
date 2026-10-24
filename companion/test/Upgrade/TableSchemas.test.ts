@@ -1,7 +1,7 @@
 import fs from 'fs-extra'
 import { describe, expect, test } from 'vitest'
 import type z from 'zod'
-import { SomeButtonModelSchema } from '@companion-app/shared/Model/ButtonModel.js'
+import { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
 import { CustomVariableDefinitionSchema } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { SomeEntityModelSchema } from '@companion-app/shared/Model/EntityModel.js'
 import { InstanceConfigSchema } from '@companion-app/shared/Model/Instance.js'
@@ -109,49 +109,47 @@ describe('entities in controls', () => {
 	})
 })
 
-describe('buttons in controls', () => {
-	const buttonTypes = new Set([
-		'pagenum',
-		'pageup',
-		'pagedown',
-		'button-layered',
-		'preset-reference',
-		'button-reference',
-	])
-
-	function collectButtons(controls: Record<string, unknown>): [controlId: string, button: unknown][] {
-		return Object.entries(controls).filter(([, control]) =>
-			buttonTypes.has((control as { type?: string } | null)?.type ?? '')
-		)
-	}
-
+describe('controls', () => {
 	// Page buttons converted from old versions kept the empty fields of a normal button, which nothing reads
 	const droppedPageButtonFields = ['feedbacks', 'options', 'steps', 'style']
 	const pageButtonTypes = new Set(['pagenum', 'pageup', 'pagedown'])
 
-	test.each(upgradedRows)('every button of $fixture parses, losing nothing', ({ controls }) => {
-		for (const [controlId, button] of collectButtons(controls)) {
-			const result = SomeButtonModelSchema.safeParse(button)
-			expect(result.error, `button "${controlId}"`).toBeUndefined()
+	/** A copy of a control without the old fields its schema drops */
+	function withoutDroppedFields(control: unknown): unknown {
+		const type = (control as { type: string }).type
+		const copy = withoutPaths(control, pageButtonTypes.has(type) ? droppedPageButtonFields : [])
 
-			const isPageButton = pageButtonTypes.has((button as { type: string }).type)
-			const kept = withoutPaths(button, isPageButton ? droppedPageButtonFields : [])
-			expect(result.data, `button "${controlId}"`).toMatchObject(kept as object)
+		// Feedbacks used as trigger conditions kept the style of the old button feedbacks, which nothing reads
+		const stripEntityStyles = (value: unknown): void => {
+			if (Array.isArray(value)) {
+				for (const item of value) stripEntityStyles(item)
+			} else if (value && typeof value === 'object') {
+				const record = value as Record<string, unknown>
+				if (record.type === 'feedback' && 'definitionId' in record) delete record.style
+				for (const child of Object.values(record)) stripEntityStyles(child)
+			}
+		}
+		stripEntityStyles(copy)
+
+		return copy
+	}
+
+	test.each(upgradedRows)('every control of $fixture parses, losing nothing', ({ controls }) => {
+		for (const [controlId, control] of Object.entries(controls)) {
+			const result = SomeControlModelSchema.safeParse(control)
+			expect(result.error, `control "${controlId}"`).toBeUndefined()
+			expect(result.data, `control "${controlId}"`).toMatchObject(withoutDroppedFields(control) as object)
 		}
 	})
 
-	test('include layered buttons', () => {
-		const layeredCount = upgradedRows.reduce(
-			(count, { controls }) =>
-				count + collectButtons(controls).filter(([, b]) => (b as { type: string }).type === 'button-layered').length,
+	test.each(['button-layered', 'trigger'])('include %s controls', (type) => {
+		const count = upgradedRows.reduce(
+			(total, { controls }) =>
+				total +
+				Object.values(controls).filter((control) => (control as { type?: string } | null)?.type === type).length,
 			0
 		)
-		expect(layeredCount).toBeGreaterThan(0)
-	})
-
-	test('are covered by the fixtures', () => {
-		const buttonCount = upgradedRows.reduce((count, { controls }) => count + collectButtons(controls).length, 0)
-		expect(buttonCount).toBeGreaterThan(0)
+		expect(count).toBeGreaterThan(0)
 	})
 })
 
