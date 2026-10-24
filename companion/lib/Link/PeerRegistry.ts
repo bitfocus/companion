@@ -212,6 +212,8 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 	handleAccess(peerId: string, permissions: LinkPermissions): void {
 		const record = this.#peers.get(peerId)
 		if (!record || record.transports.size === 0) return
+		// Repeated every so often, in case one was lost
+		if (isEqual(record.sharedWithUs, permissions)) return
 
 		record.sharedWithUs = permissions
 		this.emit('changed')

@@ -242,6 +242,11 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		this.#announceTimer = setInterval(() => {
 			this.#announce(null)
 			this.#pinger.pingAll()
+			// Again, in case it was lost, or arrived before our announcement and so was dropped
+			for (const peer of this.#peers.getPeers()) {
+				if (!peer.compatible) continue
+				for (const route of peer.routes) this.#sendAccess(peer.id, route.transportId)
+			}
 			this.#buttonServer.expireLeases(Date.now())
 		}, LINK_ANNOUNCE_INTERVAL_MS)
 	}
