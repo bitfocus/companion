@@ -176,12 +176,12 @@ Permissions are by Link id, stored in the core ([PermissionStore.ts](./Permissio
 installations. As the transports prove who sent each message, they are the same over every transport an installation
 is reachable on, however many there are. The core enforces them:
 
-- **Incoming**: button requests (`subscribe`, `button.press`, `button.rotate`, `button.abort`) from an installation without
-  `buttons` are ignored
+- **Incoming**: button requests (`subscribe`, `button.press`, `button.rotate`, `button.abort`) from an installation
+  without `buttons` are ignored
 - **Outgoing**: as every message goes to one installation, the core only sends one what it is allowed (button images
   need `buttons`)
-- **Telling the other side**: an `access` message tells a peer what it may use, when it becomes reachable and whenever
-  that changes. Its Remote buttons can then say they are not shared, rather than waiting forever, and it doesn't send
+- **Telling the other side**: an `access` message tells a peer what it may use, when it becomes reachable, whenever
+  that changes, and again with each announcement in case one was lost. Its Remote buttons can then say they are not shared, rather than waiting forever, and it doesn't send
   requests that would be ignored
 - **Revoking**: when an installation loses `buttons`, its subscriptions are dropped and anything it was holding is
   released straight away

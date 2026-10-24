@@ -14,13 +14,13 @@ Installations reach each other over **transports**, which you find on the **Tran
 
 1. On the installation to connect to, check that **Companion Link** is switched on in **Settings > Protocols**. It is on by default, and listens on port 16624.
 2. On the other installation, open **Link > Transports**, click **Add Transport** and choose **Direct connection**. Pick the installation from the list of those found on the network, or choose **Manual** and enter its address (eg `192.168.1.10`, or `192.168.1.10:1234` for another port).
-3. The new transport shows a **pairing code**. On the installation you are connecting to, a pairing request appears under **Incoming direct connections** on the **Transports** tab of its Link page, and the Link menu entry shows a count. Enter the code there and click **Pair**.
+3. The new transport shows a **pairing code**. On the installation you are connecting to, a pairing request appears under **Incoming direct connections** on the **Transports** tab of its Link page, and on its **Installations** tab, and the Link menu entry shows a count. Enter the code there and click **Pair**.
 
 Pairing is only needed once. After that, the two reconnect by themselves whenever they can reach each other.
 
 Both ends show the other's **Link id** while pairing: a short code such as `abcd-EF01-2345-6789` that identifies an installation. Each installation shows its own under **This installation** on the **Installations** tab of its Link page. If the Link id shown while pairing is not the one the other installation shows for itself, something else is answering: reject the request.
 
-A pairing request is rejected after a few wrong codes. To pair again later, for example after an installation was reset, remove the pairing on both ends (**Forget pairing** on the Direct connection, **Unpair** under Incoming direct connections) and start again.
+A pairing request is rejected after a few wrong codes, and times out if it isn't answered within 5 minutes. To pair again later, for example after an installation was reset, remove the pairing on both ends (**Forget pairing** on the Direct connection, **Unpair** under Incoming direct connections) and start again. Removing a pairing leaves what is shared with that installation as it was; to stop sharing, **Forget** it on the Installations tab.
 
 :::tip
 For installations on different networks, connect them over a VPN. Don't expose the Link port to the internet.
@@ -37,7 +37,7 @@ Turn on **Buttons** under **We share** to let the other installation show and pr
 
 You can also give an installation a **Name** of your own, which is used here in place of the name it gives itself. That is useful when several have the same name.
 
-**Forget** removes an installation from the list. It comes back if it is still reachable.
+**Forget** stops sharing with an installation, drops the name given to it here, and removes it from the list. It comes back if it is still reachable.
 
 ## Remote buttons
 
@@ -46,7 +46,7 @@ A **remote button** shows a button of another installation, and presses it when 
 - **Installation**: the installation to show a button of
 - **Button location**: where the button is on that installation, as page/row/column (eg `2/0/3`). `this` means the same location as the remote button itself. Variables can be used.
 
-The quickest way to place remote buttons is from the **Presets** tab of the Buttons page. Below the connections, **Other installations** lists the installations that share their buttons with this one. Choose one to see its pages laid out as they are there, and drag a button onto the grid.
+The quickest way to place remote buttons is from the **Presets** tab of the Buttons page. Below the connections, **Other installations** lists the installations linked with this one, and says why any can't be used yet, eg because it doesn't share its buttons. Choose one to see its pages laid out as they are there, and drag a button onto the grid.
 
 The other installation draws the button at the size it is shown here, so it stays sharp on any surface. The top bar and status icons are drawn here, with this button's own **Decoration** and **Status icons** settings, and a link icon in the top bar marks it as a remote button. The link turns red while the other installation can't be reached, and the last image is kept for a short while in case it comes back.
 
@@ -67,6 +67,10 @@ When a remote button can't show anything, it says why:
 The button editor explains each of these, and what to do about it.
 
 Remote buttons can be chained: a remote button can show a button that is itself a remote button of a third installation.
+
+Aborting the actions of a remote button, including with **Abort all actions** or **Abort actions on page**, aborts them on the other installation, on the button it shows. That includes runs of that button started from the other installation's own surfaces.
+
+Feedbacks on this installation that check whether a button is pushed, or which step it is on, don't see the state of a remote button.
 
 ## Changing the Link id
 

@@ -15,8 +15,8 @@ import type {
  */
 
 /**
- * What an installation lets another one use. Each installation decides this for itself, per connection (eg per
- * paired installation on a direct connection, or for everyone on an MQTT broker).
+ * What an installation lets another one use. Each installation decides this for itself, per other installation (by
+ * its Link id), whichever transport it is reached over.
  * For now this is all or nothing per kind of thing; it will grow (eg which pages, variables).
  */
 export interface LinkPermissions {
@@ -182,8 +182,7 @@ export interface LinkPeerInfo {
 	/** Unix timestamp (ms) of the last announcement received */
 	lastSeen: number
 	/**
-	 * What this installation lets the peer use, over the transports it is reachable on (shared if shared over any
-	 * of them). Decided by each transport, eg per paired installation
+	 * What this installation lets the peer use, whichever transport it is reached over
 	 */
 	sharedByUs: LinkPermissions
 	/** What the peer lets this installation use, or null until it has said */
