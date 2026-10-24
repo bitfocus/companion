@@ -191,12 +191,11 @@ const PeerForgetSection = observer(function PeerForgetSection({
 	return (
 		<EditSectionCard title="Forget" danger>
 			<p className="text-sm text-muted mb-0">
-				{peer.online
-					? 'It can only be forgotten once it is offline, as it would reappear straight away.'
-					: 'Remove it from the list, and stop sharing anything with it. It reappears if it is reachable again, with nothing shared.'}
+				Stop sharing anything with it, and forget its name here. It is listed again, with nothing shared, while it is
+				still reachable: to stop that, also remove its pairing on the Transports tab.
 			</p>
 			<div>
-				<Button color="danger" variant="outline" size="sm" onClick={doForget} disabled={peer.online}>
+				<Button color="danger" variant="outline" size="sm" onClick={doForget}>
 					<FontAwesomeIcon icon={faTrash} className="me-1" /> Forget installation
 				</Button>
 			</div>
