@@ -2,6 +2,7 @@ import fs from 'fs-extra'
 import { describe, expect, test } from 'vitest'
 import type z from 'zod'
 import { CustomVariableDefinitionSchema } from '@companion-app/shared/Model/CustomVariableModel.js'
+import { InstanceConfigSchema } from '@companion-app/shared/Model/Instance.js'
 import { PageModelSchema } from '@companion-app/shared/Model/PageModel.js'
 import { OutboundSurfaceInfoSchema } from '@companion-app/shared/Model/Surfaces.js'
 import { createTables } from '../../lib/Data/Schema/v1.js'
@@ -23,6 +24,7 @@ const FIXTURES = [
 const SCHEMA_TABLES: { table: string; schema: z.ZodType; hasFixtureRows: boolean }[] = [
 	{ table: 'custom_variables', schema: CustomVariableDefinitionSchema, hasFixtureRows: true },
 	{ table: 'pages', schema: PageModelSchema, hasFixtureRows: true },
+	{ table: 'instances', schema: InstanceConfigSchema, hasFixtureRows: true },
 	// No fixture has any remote surfaces
 	{ table: 'surfaces_remote', schema: OutboundSurfaceInfoSchema, hasFixtureRows: false },
 ]
