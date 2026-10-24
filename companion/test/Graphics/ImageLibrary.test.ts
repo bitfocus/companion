@@ -338,6 +338,15 @@ describe('ImageLibrary', () => {
 			expect(['a', 'b', 'c'].map((name) => table.get(name).info.sortOrder)).toEqual([1, 2, 0])
 		})
 
+		test('reordering or moving an image does not count as modifying it', () => {
+			const { library, table } = createThree()
+
+			library.setImageOrder(null, 'c', 0)
+			library.setImageOrder('col', 'a', 0)
+
+			expect(['a', 'b', 'c'].map((name) => table.get(name).info.modifiedAt)).toEqual([1, 1, 1])
+		})
+
 		test('a negative drop index moves to the end', () => {
 			const { library } = createThree()
 

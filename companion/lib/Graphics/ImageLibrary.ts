@@ -444,7 +444,6 @@ export class ImageLibrary {
 			if (data.info.sortOrder === index && name !== imageName) return // No change
 
 			data.info.sortOrder = index // Update the sort order
-			data.info.modifiedAt = Date.now()
 			this.#dbTable.set(name, data)
 
 			changes.push({ type: 'update', itemName: name, info: data.info })
