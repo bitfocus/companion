@@ -366,6 +366,32 @@ describe('CollectionsBaseController', () => {
 			expect(shape(collections.collectionData)).toEqual([{ a: ['b', { c: ['d'] }] }, 'e'])
 		})
 
+		test('merging keeps the new children of an imported collection with a nested id', () => {
+			const { collections, reload } = createTree()
+
+			collections.replaceCollections([collection('new', 2, [collection('b', 0, [collection('fresh', 0)])])], true)
+
+			// The imported "b" is dropped, and its new child takes its place
+			expect(shape(collections.collectionData)).toEqual([{ a: ['b', { c: ['d'] }] }, 'e', { new: ['fresh'] }])
+			expect(reload()).toEqual(collections.collectionData)
+		})
+
+		test('merging keeps the new children of an imported collection with a root id', () => {
+			const { collections } = createTree()
+
+			collections.replaceCollections([collection('e', 1, [collection('fresh', 2), collection('d', 3)])], true)
+
+			expect(shape(collections.collectionData)).toEqual([{ a: ['b', { c: ['d'] }] }, 'e', 'fresh'])
+		})
+
+		test('an id repeated within the import is only added once', () => {
+			const { collections } = createCollections()
+
+			collections.replaceCollections([collection('x', 0, [collection('y', 0)]), collection('y', 1)])
+
+			expect(shape(collections.collectionData)).toEqual([{ x: ['y'] }])
+		})
+
 		test('asks the subclass to clean up references', () => {
 			const { collections } = createTree()
 

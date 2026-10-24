@@ -2,7 +2,6 @@ import EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 import z from 'zod'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
-import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataStoreSchemaTableView } from '../Data/SchemaTableView.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { publicProcedure, toIterable } from '../UI/TRPC.js'
@@ -63,22 +62,23 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 			this.data = []
 		}
 
+		// Every id may only appear once in the tree. When merging, the existing collection with an id is kept
+		const knownIds = this.collectAllCollectionIds()
+
 		// Import new collections
 		for (const rawCollection of collections) {
-			// Keep the existing collection with the same id, wherever it is in the tree
-			if (merge && this.doesCollectionIdExist(rawCollection.id)) continue
-
-			let collection: CollectionBase<TCollectionMetadata>
-			try {
-				collection = this.#dbTable.set(rawCollection.id, rawCollection)
-			} catch (e) {
+			const result = this.#dbTable.schema.safeParse(rawCollection)
+			if (!result.success) {
 				// Skip it, rather than abandon the rest
-				this.#logger.warn(`Skipping invalid collection "${rawCollection.id}": ${stringifyError(e)}`)
+				this.#logger.warn(`Skipping invalid collection "${rawCollection?.id}": ${z.prettifyError(result.error)}`)
 				continue
 			}
 
-			this.#sortCollectionRecursively(collection)
-			this.data.push(collection)
+			for (const newCollection of this.#withoutKnownIds([result.data], knownIds)) {
+				const collection = this.#dbTable.set(newCollection.id, newCollection)
+				this.#sortCollectionRecursively(collection)
+				this.data.push(collection)
+			}
 		}
 
 		// Sort root level collections
@@ -87,6 +87,25 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		this.emitUpdate(this.data)
 		// remove collectionId fields from connection objects (i.e. this does not affect collection objects themselves)
 		this.removeUnknownCollectionReferences()
+	}
+
+	/**
+	 * Drop any collection whose id is already known, moving its children up into its place
+	 */
+	#withoutKnownIds(
+		collections: CollectionBase<TCollectionMetadata>[],
+		knownIds: Set<string>
+	): CollectionBase<TCollectionMetadata>[] {
+		const result: CollectionBase<TCollectionMetadata>[] = []
+		for (const collection of collections) {
+			if (knownIds.has(collection.id)) {
+				result.push(...this.#withoutKnownIds(collection.children, knownIds))
+			} else {
+				knownIds.add(collection.id)
+				result.push({ ...collection, children: this.#withoutKnownIds(collection.children, knownIds) })
+			}
+		}
+		return result
 	}
 
 	/**
