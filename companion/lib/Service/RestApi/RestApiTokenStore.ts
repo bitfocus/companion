@@ -62,6 +62,8 @@ function hashToken(plaintext: string): string {
 export class RestApiTokenStore implements ApiTokenStore {
 	readonly #logger: Logger
 	readonly #table: DataStoreSchemaTableView<typeof StoredApiKeySchema>
+	/** Invalid keys already warned about, as every request checks every key */
+	readonly #warnedInvalidKeyIds = new Set<string>()
 
 	constructor(logger: Logger, db: DataDatabase) {
 		this.#logger = logger
@@ -74,7 +76,10 @@ export class RestApiTokenStore implements ApiTokenStore {
 
 		const result = RestApiKeySchema.safeParse(record)
 		if (!result.success) {
-			this.#logger.warn(`Ignoring invalid API key "${record.id}": ${z.prettifyError(result.error)}`)
+			if (!this.#warnedInvalidKeyIds.has(record.id)) {
+				this.#warnedInvalidKeyIds.add(record.id)
+				this.#logger.warn(`Ignoring invalid API key "${record.id}": ${z.prettifyError(result.error)}`)
+			}
 			return undefined
 		}
 		return result.data

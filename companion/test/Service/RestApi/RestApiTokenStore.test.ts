@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { DataDatabase } from '../../../lib/Data/Database.js'
 import { BROKEN_ROWS_TABLE } from '../../../lib/Data/SchemaTableView.js'
 import type { DataStoreTableView } from '../../../lib/Data/TableView.js'
@@ -10,7 +10,7 @@ function createStore() {
 	const logger = LogController.createLogger('test/api-keys')
 	const db = new DataDatabase(':memory:', () => {})
 	const table = db.getTableView<Record<string, any>>('api_keys')
-	return { store: new RestApiTokenStore(logger, db), table, db }
+	return { store: new RestApiTokenStore(logger, db), table, db, logger }
 }
 
 describe('RestApiTokenStore', () => {
@@ -135,6 +135,18 @@ describe('RestApiTokenStore', () => {
 			expect(store.delete('odd')).toBe(false)
 
 			expect(table.get('odd')).toMatchObject({ scopes: ['read', 'superuser'] })
+		})
+
+		test('an invalid key is only warned about once', () => {
+			const { store, table, logger } = createStore()
+			table.set('odd', { ...storedKey('odd', 'oddtoken'), scopes: ['superuser'] })
+			const warn = vi.spyOn(logger, 'warn')
+
+			store.findByToken('sometoken')
+			store.findByToken('sometoken')
+			store.list()
+
+			expect(warn).toHaveBeenCalledTimes(1)
 		})
 
 		test('a key with a malformed hash is never accepted', () => {
