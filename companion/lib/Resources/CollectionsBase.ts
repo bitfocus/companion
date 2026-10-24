@@ -65,7 +65,8 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 
 		// Import new collections
 		for (const rawCollection of collections) {
-			if (merge && this.#dbTable.get(rawCollection.id)) continue
+			// Keep the existing collection with the same id, wherever it is in the tree
+			if (merge && this.doesCollectionIdExist(rawCollection.id)) continue
 
 			let collection: CollectionBase<TCollectionMetadata>
 			try {
@@ -197,10 +198,10 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 				child.sortOrder = i // Reset sortOrder for children
 			})
 
-			// Update the database
+			// Update the database, including the siblings whose sortOrder changed
 			this.#dbTable.delete(collectionId)
-			for (const child of collection.children) {
-				this.#dbTable.set(child.id, child)
+			for (const row of this.data) {
+				this.#dbTable.set(row.id, row)
 			}
 		} else {
 			// The collection exists, depeer in the hierarchy

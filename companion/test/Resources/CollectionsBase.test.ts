@@ -193,6 +193,31 @@ describe('CollectionsBaseController', () => {
 	})
 
 	describe('remove', () => {
+		test('removes a root collection, rehoming its children in its place', () => {
+			const { collections, table, reload } = createTree()
+
+			collections.remove('a')
+
+			expect(shape(collections.collectionData)).toEqual(['b', { c: ['d'] }, 'e'])
+			expect(collections.collectionData.map((c) => c.sortOrder)).toEqual([0, 1, 2])
+			expect(table.get('a')).toBeUndefined()
+			expect(reload()).toEqual(collections.collectionData)
+		})
+
+		test('removes a root collection without children, persisting the new order', () => {
+			const { collections, reload } = createCollections({
+				x: collection('x', 0),
+				y: collection('y', 1),
+				z: collection('z', 2),
+			})
+
+			collections.remove('x')
+			collections.create('New', true)
+
+			expect(shape(collections.collectionData)).toEqual(['y', 'z', expect.any(String)])
+			expect(reload()).toEqual(collections.collectionData)
+		})
+
 		test('removes a nested collection, rehoming its children into its parent', () => {
 			const { collections, reload } = createTree()
 
@@ -331,6 +356,14 @@ describe('CollectionsBaseController', () => {
 
 			expect(shape(collections.collectionData)).toEqual([{ a: ['b', { c: ['d'] }] }, 'e', 'new'])
 			expect(collections.collectionData[1].label).toBe('e')
+		})
+
+		test('merging skips a collection whose id is already nested', () => {
+			const { collections } = createTree()
+
+			collections.replaceCollections([collection('d', 2)], true)
+
+			expect(shape(collections.collectionData)).toEqual([{ a: ['b', { c: ['d'] }] }, 'e'])
 		})
 
 		test('asks the subclass to clean up references', () => {
