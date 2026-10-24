@@ -2,6 +2,7 @@ import fs from 'fs-extra'
 import { describe, expect, test } from 'vitest'
 import type z from 'zod'
 import { CustomVariableDefinitionSchema } from '@companion-app/shared/Model/CustomVariableModel.js'
+import { SomeEntityModelSchema } from '@companion-app/shared/Model/EntityModel.js'
 import { InstanceConfigSchema } from '@companion-app/shared/Model/Instance.js'
 import { PageModelSchema } from '@companion-app/shared/Model/PageModel.js'
 import { OutboundSurfaceInfoSchema, SurfaceConfigSchema } from '@companion-app/shared/Model/Surfaces.js'
@@ -60,8 +61,50 @@ class FixtureDatabase extends DataStoreBase<any> {
 const upgradedRows = FIXTURES.map((fixture) => {
 	const db = new FixtureDatabase(fixture)
 	const rows = Object.fromEntries(SCHEMA_TABLES.map(({ table }) => [table, db.getTableView(table).all()]))
+	const controls = db.getTableView<Record<string, unknown>>('controls').all()
 	db.close()
-	return { fixture, rows }
+	return { fixture, rows, controls }
+})
+
+/** The outermost entities within a value; their children are parsed with them */
+function collectEntities(value: unknown, found: unknown[] = []): unknown[] {
+	if (Array.isArray(value)) {
+		for (const item of value) collectEntities(item, found)
+	} else if (value && typeof value === 'object') {
+		const record = value as Record<string, unknown>
+		if ((record.type === 'action' || record.type === 'feedback') && 'definitionId' in record) {
+			found.push(record)
+		} else {
+			for (const child of Object.values(record)) collectEntities(child, found)
+		}
+	}
+	return found
+}
+
+// The controls table isn't schema-backed yet, but the schemas of its parts can already be checked
+describe('entities in controls', () => {
+	// Feedbacks used as trigger conditions kept the style of the old button feedbacks, which nothing reads
+	const droppedEntityFields = ['style']
+
+	test.each(upgradedRows)('every entity of $fixture parses, losing nothing', ({ controls }) => {
+		for (const [controlId, control] of Object.entries(controls)) {
+			for (const entity of collectEntities(control)) {
+				const result = SomeEntityModelSchema.safeParse(entity)
+				expect(result.error, `entity in "${controlId}"`).toBeUndefined()
+				expect(result.data, `entity in "${controlId}"`).toMatchObject(
+					withoutPaths(entity, droppedEntityFields) as object
+				)
+			}
+		}
+	})
+
+	test('are covered by the fixtures', () => {
+		const entityCount = upgradedRows.reduce(
+			(count, { controls }) => count + Object.values(controls).flatMap((control) => collectEntities(control)).length,
+			0
+		)
+		expect(entityCount).toBeGreaterThan(0)
+	})
 })
 
 /** A copy of the row without the given dotted paths */

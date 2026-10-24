@@ -3,6 +3,7 @@ import type { CompanionFeedbackButtonStyleResult, JsonValue } from '@companion-m
 import type { ActionSetId } from './ActionModel.js'
 import {
 	createExpressionOrValueSchema,
+	ExpressionableOptionsObjectSchema,
 	ExpressionOrJsonValueSchema,
 	type ExpressionableOptionsObject,
 	type ExpressionOrValue,
@@ -158,6 +159,55 @@ export interface EntityModelBase {
 	 */
 	children?: Record<string, SomeEntityModel[] | undefined>
 }
+
+/** The fields every entity has, except its recursive children */
+const entityBaseShape = {
+	id: z.string(),
+	definitionId: z.string(),
+	connectionId: z.string(),
+	headline: z.string().optional(),
+	options: ExpressionableOptionsObjectSchema.default(() => ({})),
+	disabled: z.boolean().optional(),
+	// Stored without it when undefined; the transform makes the key present, as the type requires
+	upgradeIndex: z
+		.number()
+		.optional()
+		.transform((upgradeIndex) => upgradeIndex),
+}
+
+/** The type is recursive, so the schemas are annotated with the hand-written types above */
+function entityChildrenSchema() {
+	return z.record(z.string(), z.array(SomeEntityModelSchema).optional()).optional()
+}
+
+// Kept as object schemas for the discriminated union, and exported with the hand-written types below
+const actionEntityObjectSchema = z.object({
+	type: z.literal(EntityModelType.Action),
+	...entityBaseShape,
+	get children() {
+		return entityChildrenSchema()
+	},
+	storeResult: zodRawStoreResult.optional(),
+})
+
+const feedbackEntityObjectSchema = z.object({
+	type: z.literal(EntityModelType.Feedback),
+	...entityBaseShape,
+	get children() {
+		return entityChildrenSchema()
+	},
+	isInverted: createExpressionOrValueSchema(z.boolean()).optional(),
+	variableName: z.string().optional(),
+	styleOverrides: z.array(schemaFeedbackEntityStyleOverride).optional(),
+})
+
+export const ActionEntityModelSchema: z.ZodType<ActionEntityModel> = actionEntityObjectSchema
+export const FeedbackEntityModelSchema: z.ZodType<FeedbackEntityModel> = feedbackEntityObjectSchema
+
+export const SomeEntityModelSchema: z.ZodType<SomeEntityModel> = z.discriminatedUnion('type', [
+	actionEntityObjectSchema,
+	feedbackEntityObjectSchema,
+])
 
 export interface EntityOwner {
 	parentId: string
