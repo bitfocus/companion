@@ -2002,12 +2002,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@companion-surface/base@npm:1.5.0-nightly-main-20261014-213444-0afe929":
-  version: 1.5.0-nightly-main-20261014-213444-0afe929
-  resolution: "@companion-surface/base@npm:1.5.0-nightly-main-20261014-213444-0afe929"
+"@companion-surface/base@npm:1.5.0-nightly-main-20261024-190955-ef4df7d":
+  version: 1.5.0-nightly-main-20261024-190955-ef4df7d
+  resolution: "@companion-surface/base@npm:1.5.0-nightly-main-20261024-190955-ef4df7d"
   dependencies:
     zod: "npm:^4.4.3"
-  checksum: 10c0/dee56b669e20b1bbc8d493eacf5a61feb1e6315a55409850d9fedb0adf6e7f2908d8bcbdc99ed309b7a66df6e84a6f5f8e7bbdcb95ba429c0726b56ab41b9f37
+  checksum: 10c0/7001c858f5cee8a17d24d1acb97b7925f3473f636b470c69badae1fe8a31a7661633a52b6da42da5a54e25f58aaca775a4500ec7cbb2a7c204e0d4cbee104146
   languageName: node
   linkType: hard
 
