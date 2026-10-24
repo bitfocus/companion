@@ -27,7 +27,7 @@ yarn lint             # eslint (prettier runs inside eslint)
 yarn format           # prettier --write .
 ```
 
-Vitest projects are `companion`, `webui`, `shared-lib`, and `config-tool` (config at the repo root
+Vitest projects are `companion`, `webui`, `shared-lib`, `launcher-ui`, and `config-tool` (config at the repo root
 `vitest.config.ts`). Scope with `--project <name>` and/or a path to keep runs fast.
 
 Finer-grained invocations when you don't want the whole suite:
@@ -128,9 +128,10 @@ commit will fail if types or lint don't pass — expect that and fix it rather t
 - **No arbitrary values.** The codebase uses none — do not introduce `w-[30px]` / `bg-[#abc]`. If a
   static value has no clean utility (off-scale px, `em`/`vh`, a one-off colour), give it a custom class
   or a theme token rather than reaching for `[…]` or leaving it inline.
-- **Colours and fonts come from theme tokens** in `webui/src/tailwind.css` (`@theme` `--color-*`,
-  `--font-sans`/`--font-mono`). Reference those (or the generated `bg-*`/`text-*` utilities); don't
-  hardcode hex. Add a new `--color-*` token there when one is genuinely missing.
+- **Colours and fonts come from theme tokens** in `webui/src/theme-tokens.css` (`@theme` `--color-*`,
+  `--font-sans`/`--font-mono`, with their dark values). Reference those (or the generated `bg-*`/`text-*`
+  utilities); don't hardcode hex. Add a new `--color-*` token there when one is genuinely missing. The
+  launcher's windows (`launcher-ui`) import the same file.
 - **Layout grid.** Use the `Grid` components (`webui/src/Components/Grid.tsx`), not grid classes in
   markup: `Grid.Container`, `Grid.Row` (a 12-column CSS grid; `columns={n}` for a different count) and
   `Grid.Col` (`xs`…`xxl`, each a span or `{ span, offset }`); `Form` and `Collapse.Panel` take a `row`

@@ -240,6 +240,7 @@ export default [
 			'**/electron-output/*',
 			'*/vite.config.ts',
 			'webui/vitest.config.ts',
+			'launcher-ui/vitest.config.ts',
 			'vitest.config.ts',
 			'vitest.workspace.ts',
 			'html/**/*',

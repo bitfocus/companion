@@ -9,7 +9,10 @@ const alertVariants = cva(
 			variant: {
 				default: 'bg-card text-card-foreground',
 				destructive:
-					'text-destructive bg-card *:data-[slot=alert-description]:text-destructive/90 *:[svg]:text-current',
+					'bg-danger-bg-subtle border-danger-border-subtle text-danger-text-emphasis *:data-[slot=alert-description]:text-danger-text-emphasis/90',
+				// A caution rather than a danger. Both tint the whole box, from the web UI's tokens
+				warning:
+					'bg-warning-bg-subtle border-warning-border-subtle text-warning-text-emphasis *:data-[slot=alert-description]:text-warning-text-emphasis/90',
 			},
 		},
 		defaultVariants: {
@@ -44,7 +47,7 @@ function AlertDescription({ className, ...props }: React.ComponentProps<'div'>):
 		<div
 			data-slot="alert-description"
 			className={cn(
-				'text-muted-foreground text-sm text-balance md:text-pretty [&_p:not(:last-child)]:mb-4 [&_a]:hover:text-foreground [&_a]:underline [&_a]:underline-offset-3',
+				'text-muted-foreground text-sm text-pretty [&_p:not(:last-child)]:mb-4 [&_a]:hover:text-foreground [&_a]:underline [&_a]:underline-offset-3',
 				className
 			)}
 			{...props}

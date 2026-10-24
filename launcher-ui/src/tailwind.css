@@ -1,0 +1,79 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+/* Vendored from the shadcn npm package (dist/tailwind.css) to drop the dependency */
+@import './shadcn-tailwind.css';
+
+/* The web UI's design tokens (colours, fonts, and their dark values), shared so these windows match it */
+@import '../../webui/src/theme-tokens.css';
+
+/* Like the web UI, the dark theme is applied with `data-theme="dark"` on <html> */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+@theme inline {
+	--color-ring: var(--ring);
+	--color-input: var(--input);
+	--color-border: var(--border);
+	--color-destructive: var(--destructive);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-accent: var(--accent);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-muted: var(--muted);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-secondary: var(--secondary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-primary: var(--primary);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-popover: var(--popover);
+	--color-card-foreground: var(--card-foreground);
+	--color-card: var(--card);
+	--color-foreground: var(--foreground);
+	--color-background: var(--background);
+	--radius-sm: calc(var(--radius) - 4px);
+	--radius-md: calc(var(--radius) - 2px);
+	--radius-lg: var(--radius);
+	--radius-xl: calc(var(--radius) + 4px);
+	--radius-2xl: calc(var(--radius) + 8px);
+	--radius-3xl: calc(var(--radius) + 12px);
+	--radius-4xl: calc(var(--radius) + 16px);
+}
+
+/*
+  The shadcn components' colour roles, in terms of the web UI tokens. These follow the dark theme on their own,
+  as the tokens they point at carry dark values.
+  The web UI also has tokens named --color-primary, --color-secondary, --color-muted and --color-border, which
+  the @theme above takes over for the shadcn roles, so they must not be referenced here.
+*/
+:root {
+	--radius: 0.375rem;
+
+	--background: var(--color-app-bg);
+	--foreground: var(--color-body-text);
+	--card: var(--color-surface);
+	--card-foreground: var(--color-text);
+	--popover: var(--color-surface);
+	--popover-foreground: var(--color-text);
+	--primary: var(--color-action-primary);
+	--primary-foreground: var(--color-action-on-primary);
+	--secondary: var(--color-action-bg);
+	--secondary-foreground: var(--color-action-text);
+	--muted: var(--color-surface-muted);
+	--muted-foreground: var(--color-text-secondary);
+	--accent: var(--color-action-hover);
+	--accent-foreground: var(--color-text-strong);
+	--destructive: var(--color-danger);
+	--border: var(--color-border-muted);
+	--input: var(--color-action-border);
+	--ring: var(--color-action-focus);
+}
+
+@layer base {
+	* {
+		@apply border-border outline-ring/50;
+	}
+	body {
+		@apply font-sans bg-background text-foreground;
+	}
+	html {
+		@apply font-sans;
+	}
+}

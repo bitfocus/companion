@@ -1,6 +1,6 @@
 /**
  * Colour tokens that keep one value in every theme, because what they colour doesn't follow the theme: the black
- * button canvas and its drop states, the always-dark button grid, the dark tile behind the logo, text on a dark or
+ * button canvas and its drop states, the always-dark button grid, the dark tile behind the logo, the desktop launcher's brand colours, text on a dark or
  * coloured fill, and the scrim behind overlays. The dark theme must not redefine them (themeTokens.test.ts checks).
  */
 export const FIXED_TOKENS: readonly string[] = [
@@ -15,6 +15,9 @@ export const FIXED_TOKENS: readonly string[] = [
 	'--color-surface-dark',
 	'--color-logo-tile-top',
 	'--color-logo-tile-bottom',
+	'--color-launcher-body',
+	'--color-launcher-status',
+	'--color-launcher-header',
 	'--color-button-armed',
 	'--color-armed-surface',
 	'--color-scrollbar-thumb',
