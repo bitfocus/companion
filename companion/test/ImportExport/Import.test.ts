@@ -346,6 +346,45 @@ describe('importFull config gating', () => {
 		expect(instance.addConnectionWithLabel).not.toHaveBeenCalled()
 	})
 
+	test('an invalid remote surface does not stop the rest being imported', async () => {
+		const { controller, surfaces } = createImportController()
+		surfaces.outbound.reset.mockReturnValue(undefined)
+		surfaces.outbound.addOutboundConnection.mockImplementation((info) => {
+			if (info.displayName === 'Bad') throw new Error('Invalid value')
+		})
+
+		const remote = (id: string, displayName: string) => ({
+			id,
+			type: 'plugin',
+			enabled: true,
+			displayName,
+			moduleId: 'mod',
+			instanceId: 'inst',
+			config: {},
+			collectionId: null,
+			sortOrder: 0,
+		})
+		const data = baseData()
+		data.surfacesRemote = { bad: remote('bad', 'Bad'), good: remote('good', 'Good') }
+
+		await controller.importFull(
+			data,
+			fullConfig({
+				buttons: 'unchanged',
+				triggers: 'unchanged',
+				customVariables: 'unchanged',
+				expressionVariables: 'unchanged',
+				imageLibrary: 'unchanged',
+				surfaces: { known: 'unchanged', instances: 'unchanged', remote: 'reset-and-import' },
+			})
+		)
+
+		expect(surfaces.outbound.addOutboundConnection).toHaveBeenCalledTimes(2)
+		expect(surfaces.outbound.addOutboundConnection).toHaveBeenLastCalledWith(
+			expect.objectContaining({ displayName: 'Good' })
+		)
+	})
+
 	test('inserts pages when the import references a page beyond the current count', async () => {
 		const { controller, page } = createImportController()
 

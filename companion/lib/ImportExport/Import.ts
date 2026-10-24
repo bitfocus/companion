@@ -16,6 +16,7 @@ import type {
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
@@ -303,13 +304,17 @@ export class ImportController {
 				// Use the pre-computed new ID to avoid conflicts
 				const newId = outboundSurfaceIdRemap[remoteInfo.id] ?? remoteInfo.id
 
-				// Future: validation
-				this.#surfacesController.outbound.addOutboundConnection({
-					...remoteInfo,
-					// Translate the instanceId
-					instanceId: instanceId,
-					id: newId,
-				})
+				try {
+					this.#surfacesController.outbound.addOutboundConnection({
+						...remoteInfo,
+						// Translate the instanceId
+						instanceId: instanceId,
+						id: newId,
+					})
+				} catch (e) {
+					// Skip it, rather than abandon the rest of the import
+					this.#logger.warn(`Skipping invalid remote surface "${remoteInfo.id}": ${stringifyError(e)}`)
+				}
 			}
 		}
 
