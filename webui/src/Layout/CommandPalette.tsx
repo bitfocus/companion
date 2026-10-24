@@ -147,7 +147,7 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 			items.push({
 				id: `action:theme-${choice.id}`,
 				category: 'Quick Actions',
-				title: `Use ${choice.label} Theme`,
+				title: `Color mode: ${choice.label}`,
 				subtitle: choice.description,
 				icon: choice.icon,
 				onSelect: () => {
