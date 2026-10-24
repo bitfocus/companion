@@ -1,10 +1,19 @@
 import path from 'node:path'
 import { DatabaseSync, backup as SqliteBackup } from 'node:sqlite'
 import fs from 'fs-extra'
+import type z from 'zod'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { showErrorMessage, showFatalError } from '../Resources/Util.js'
-import { DataStoreTableView, type DatabaseOperation, type TableOperationStats } from './TableView.js'
+import { BROKEN_ROWS_TABLE, DataStoreSchemaTableView } from './SchemaTableView.js'
+import { DataStoreTableView } from './TableView.js'
+import {
+	DATABASE_OPERATIONS,
+	type DatabaseOperation,
+	type DataStoreTableViewBase,
+	type DataStoreTableViewHooks,
+	type TableOperationStats,
+} from './TableViewBase.js'
 
 enum DatabaseStartupState {
 	Normal = 0,
@@ -91,6 +100,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 * Saved queries
 	 */
 	private tableCache = new Map<string, DataStoreTableView<any>>()
+	private schemaTableCache = new Map<string, DataStoreSchemaTableView<any>>()
 	/**
 	 * Sink for per-operation timings. Required and injected at construction, so it is immutable for the
 	 * store's lifetime and cannot be forgotten when a new store type is added.
@@ -223,7 +233,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	protected startSQLite(): void {
 		if (this.cfgDir == ':memory:') {
 			this.store = new DatabaseSync(this.cfgDir)
-			this.tableCache.clear()
+			this.#clearTableViews()
 			this.create()
 			this.defaultTableView.get('test')
 			this.loadDefaults()
@@ -233,7 +243,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 
 				try {
 					this.store = this.#createDatabase(this.cfgFile)
-					this.tableCache.clear()
+					this.#clearTableViews()
 					this.defaultTableView.get('test')
 				} catch (_e) {
 					// Release our handle on the unreadable file before touching it on disk. Windows keeps a
@@ -263,7 +273,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 			} else if (fs.existsSync(this.cfgLegacyFile)) {
 				try {
 					this.store = this.#createDatabase(this.cfgFile)
-					this.tableCache.clear()
+					this.#clearTableViews()
 					this.logger.info(`Legacy ${this.cfgLegacyFile} exists.  Attempting migration to SQLite.`)
 					this.migrateFileToSqlite()
 					this.defaultTableView.get('test')
@@ -284,7 +294,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 		if (!this.store) {
 			try {
 				this.store = new DatabaseSync(':memory:')
-				this.tableCache.clear()
+				this.#clearTableViews()
 				this.setStartupState(DatabaseStartupState.RAM)
 				this.create()
 				this.defaultTableView.get('test')
@@ -353,7 +363,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 
 				fs.copyFileSync(this.cfgBakFile, this.cfgFile)
 				this.store = this.#createDatabase(this.cfgFile)
-				this.tableCache.clear()
+				this.#clearTableViews()
 				this.defaultTableView.get('test')
 			} catch (e) {
 				this.setStartupState(DatabaseStartupState.Reset)
@@ -379,7 +389,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 		} finally {
 			try {
 				this.store = this.#createDatabase(this.cfgFile)
-				this.tableCache.clear()
+				this.#clearTableViews()
 				this.create()
 				this.defaultTableView.get('test')
 				this.loadDefaults()
@@ -393,25 +403,92 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 		return this.getTableView(this.defaultTable)
 	}
 
+	/** Drop the cached table views, as they are bound to the previous SQLite handle */
+	#clearTableViews(): void {
+		this.tableCache.clear()
+		this.schemaTableCache.clear()
+	}
+
+	#createTableViewHooks(tableName: string): DataStoreTableViewHooks {
+		return {
+			onDirty: () => this.setDirty(),
+			// The view knows the table; the store adds the database name when forwarding to the observer.
+			onOperation: (operation, seconds) => this.operationObserver(tableName, operation, seconds),
+		}
+	}
+
 	public getTableView<TableContent extends Record<string, any>>(tableName: string): DataStoreTableView<TableContent> {
 		if (!tableName || typeof tableName !== 'string') throw new Error('Invalid table name')
 
 		const cachedTable = this.tableCache.get(tableName)
 		if (cachedTable) return cachedTable
 
-		const newTable = new DataStoreTableView<TableContent>(this.logger, this.store, tableName, {
-			onDirty: () => this.setDirty(),
-			// The view knows the table; the store adds the database name when forwarding to the observer.
-			onOperation: (operation, seconds) => this.operationObserver(tableName, operation, seconds),
-		})
+		const newTable = new DataStoreTableView<TableContent>(
+			this.logger,
+			this.store,
+			tableName,
+			this.#createTableViewHooks(tableName)
+		)
 		this.tableCache.set(tableName, newTable)
 
 		return newTable
 	}
 
-	/** Operation/error counts, for metrics. Only covers tables that have a cached view (i.e. seen traffic). */
+	/**
+	 * Get a view of a table whose rows are parsed with a schema when read and written.
+	 * Rows that fail to parse when read are moved to the broken rows table.
+	 * @param tableName - the table to view
+	 * @param schema - the schema for each row
+	 */
+	public getSchemaTableView<TSchema extends z.ZodType<Record<string, any>>>(
+		tableName: string,
+		schema: TSchema
+	): DataStoreSchemaTableView<TSchema> {
+		if (!tableName || typeof tableName !== 'string') throw new Error('Invalid table name')
+		if (tableName === BROKEN_ROWS_TABLE) throw new Error('Cannot view the broken rows table with a schema')
+
+		const cachedTable = this.schemaTableCache.get(tableName)
+		if (cachedTable) {
+			if (cachedTable.schema !== schema) throw new Error(`Table "${tableName}" already has a different schema`)
+			return cachedTable
+		}
+
+		const newTable = new DataStoreSchemaTableView(
+			this.logger,
+			this.store,
+			tableName,
+			this.#createTableViewHooks(tableName),
+			this.getTableView(BROKEN_ROWS_TABLE),
+			schema
+		)
+		this.schemaTableCache.set(tableName, newTable)
+
+		return newTable
+	}
+
+	/**
+	 * Operation/error counts, for metrics. Only covers tables that have a cached view (i.e. seen traffic).
+	 * A table with both a plain and a schema view reports their combined counts.
+	 */
 	public getTableOperationStats(): TableOperationStats[] {
-		return Array.from(this.tableCache.values(), (view) => view.collectOperationStats())
+		const merged = new Map<string, TableOperationStats>()
+
+		const views: DataStoreTableViewBase[] = [...this.tableCache.values(), ...this.schemaTableCache.values()]
+		for (const view of views) {
+			const stats = view.collectOperationStats()
+			const existing = merged.get(stats.table)
+			if (!existing) {
+				merged.set(stats.table, stats)
+				continue
+			}
+
+			for (const operation of DATABASE_OPERATIONS) {
+				existing.counts[operation] += stats.counts[operation]
+				existing.errors[operation] += stats.errors[operation]
+			}
+		}
+
+		return Array.from(merged.values())
 	}
 
 	/** Row count of every table, enumerated from `sqlite_master` so untouched tables are included too. */
