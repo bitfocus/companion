@@ -300,7 +300,7 @@ export class DirectServerTransport extends DirectTransportBase {
 			description:
 				pairedEntries.length === 0
 					? 'None yet. Add a "Direct connection" transport on another installation, pointing at this one, to pair it.'
-					: null,
+					: 'Unpairing disconnects an installation. What is shared with it is kept until you forget it on the Installations tab.',
 			attention: false,
 			entries: pairedEntries,
 		})

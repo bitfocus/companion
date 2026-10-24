@@ -255,7 +255,7 @@ export class DirectClientTransport extends DirectTransportBase {
 					{
 						id: 'pairing',
 						title: `Paired with ${paired.name}`,
-						description: `Link id ${formatLinkIdFingerprint(paired.linkId)}. If ${paired.name} was reset, forget it to pair again.`,
+						description: `Link id ${formatLinkIdFingerprint(paired.linkId)}. If ${paired.name} was reset, forget it to pair again. What is shared with it is kept until you forget it on the Installations tab.`,
 						inputLabel: null,
 						actions: [{ id: 'forget', label: 'Forget pairing', color: 'danger' }],
 					},
