@@ -82,7 +82,9 @@ export class DataStoreSchemaTableView<TSchema extends z.ZodType<Record<string, a
 	set(id: string, value: z.input<TSchema>): z.output<TSchema> {
 		this.validateKey(id)
 
-		const result = this.schema.safeParse(value)
+		// Check the value as it will be stored, so that this agrees with reading it back.
+		// Encoding drops undefined properties and turns values like NaN into null, which the schema may accept
+		const result = this.schema.safeParse(JSON.parse(JSON.stringify(value)))
 		if (!result.success) {
 			throw new Error(`Invalid value for "${this.tableName}" row "${id}": ${z.prettifyError(result.error)}`)
 		}

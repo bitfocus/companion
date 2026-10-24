@@ -71,7 +71,7 @@ export class FakeSchemaTableView<TSchema extends z.ZodType<Record<string, any>>>
 	}
 
 	set(key: string, value: z.input<TSchema>): z.output<TSchema> {
-		const parsed = this.schema.parse(value)
+		const parsed = this.schema.parse(JSON.parse(JSON.stringify(value)))
 		this.table.set(key, parsed)
 		return structuredClone(parsed)
 	}

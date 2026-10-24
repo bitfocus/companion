@@ -40,6 +40,19 @@ describe('DataStoreSchemaTableView', () => {
 		expect(rawTable().get('a')).toEqual({ name: 'x', count: 0 })
 	})
 
+	test('checks a set value as it will be stored', () => {
+		const jsonSchema = z.object({ name: z.string(), value: z.json().optional() })
+		const view = cache.getSchemaTableView('tbl', jsonSchema)
+
+		// Encoding turns these into null and drops the undefined property, all of which the schema accepts
+		const unencodable: any = [Infinity, NaN, { dropped: undefined }]
+		expect(view.set('a', { name: 'x', value: unencodable })).toEqual({
+			name: 'x',
+			value: [null, null, {}],
+		})
+		expect(rawTable().get('a')).toEqual({ name: 'x', value: [null, null, {}] })
+	})
+
 	test('refuses to set a value that fails the schema', () => {
 		const view = cache.getSchemaTableView('tbl', schema)
 		expect(() => view.set('a', { count: 3 } as any)).toThrow(/Invalid value for "tbl" row "a"/)

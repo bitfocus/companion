@@ -196,6 +196,15 @@ describe('VariablesCustomVariable', () => {
 	})
 
 	describe('persistence', () => {
+		test('persisting a value JSON cannot represent stores what encoding gives', () => {
+			const { custom, table } = createCustomVariables({ my_var: makeDef({ persistCurrentValue: true }) })
+
+			expect(() => custom.setValue('my_var', Infinity)).not.toThrow()
+
+			expect(custom.getValue('my_var')).toBe(Infinity)
+			expect(table.data['my_var'].defaultValue).toBe(null)
+		})
+
 		test('enabling persistence captures the current value as the default', () => {
 			const { custom, table } = createCustomVariables({ my_var: makeDef() })
 			custom.init()
