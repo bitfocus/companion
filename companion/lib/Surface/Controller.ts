@@ -25,6 +25,7 @@ import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionRe
 import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 import {
+	SurfaceConfigSchema,
 	SurfaceGroupConfigSchema,
 	type ClientDevicesListItem,
 	type ClientSurfaceButtonSizesItem,
@@ -45,7 +46,6 @@ import type { Complete } from '@companion-module/base'
 import type { HIDDevice } from '@companion-surface/host'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreSchemaTableView } from '../Data/SchemaTableView.js'
-import type { DataStoreTableView } from '../Data/TableView.js'
 import type { SurfaceChildFeatures } from '../Instance/Surface/ChildHandler.js'
 import {
 	DiscoveredSurfaceRegistry,
@@ -108,7 +108,7 @@ export interface SurfaceControllerEvents {
 export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	readonly #logger = LogController.createLogger('Surface/Controller')
 
-	readonly #dbTableSurfaces: DataStoreTableView<Record<string, SurfaceConfig>>
+	readonly #dbTableSurfaces: DataStoreSchemaTableView<typeof SurfaceConfigSchema>
 	readonly #dbTableGroups: DataStoreSchemaTableView<typeof SurfaceGroupConfigSchema>
 	readonly #handlerDependencies: SurfaceHandlerDependencies
 
@@ -221,7 +221,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		this.#usbAvailable = usbAvailable
 
-		this.#dbTableSurfaces = db.getTableView('surfaces')
+		this.#dbTableSurfaces = db.getSchemaTableView('surfaces', SurfaceConfigSchema)
 		this.#dbTableGroups = db.getSchemaTableView('surface_groups', SurfaceGroupConfigSchema)
 		this.#handlerDependencies = handlerDependencies
 
@@ -1785,7 +1785,13 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				}
 			} else {
 				// Device is not loaded
-				this.setDeviceConfig(surfaceId, surfaceConfig)
+				try {
+					this.setDeviceConfig(surfaceId, surfaceConfig)
+				} catch (e) {
+					// Skip it, rather than abandon the rest
+					this.#logger.warn(`Skipping invalid surface "${surfaceId}": ${stringifyError(e)}`)
+					continue
+				}
 
 				if (surfaceId.startsWith('emulator:')) {
 					this.addEmulator(surfaceId.substring(9), undefined)

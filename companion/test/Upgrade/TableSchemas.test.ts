@@ -4,7 +4,7 @@ import type z from 'zod'
 import { CustomVariableDefinitionSchema } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { InstanceConfigSchema } from '@companion-app/shared/Model/Instance.js'
 import { PageModelSchema } from '@companion-app/shared/Model/PageModel.js'
-import { OutboundSurfaceInfoSchema } from '@companion-app/shared/Model/Surfaces.js'
+import { OutboundSurfaceInfoSchema, SurfaceConfigSchema } from '@companion-app/shared/Model/Surfaces.js'
 import { createTables } from '../../lib/Data/Schema/v1.js'
 import { DataStoreBase } from '../../lib/Data/StoreBase.js'
 import { upgradeStartup } from '../../lib/Data/Upgrade.js'
@@ -21,10 +21,23 @@ const FIXTURES = [
 	'v4tov5/db.v4.json',
 ]
 
-const SCHEMA_TABLES: { table: string; schema: z.ZodType; hasFixtureRows: boolean }[] = [
+const SCHEMA_TABLES: {
+	table: string
+	schema: z.ZodType
+	hasFixtureRows: boolean
+	/** Paths of old fields the schema deliberately drops, which may be missing after parsing */
+	dropped?: string[]
+}[] = [
 	{ table: 'custom_variables', schema: CustomVariableDefinitionSchema, hasFixtureRows: true },
 	{ table: 'pages', schema: PageModelSchema, hasFixtureRows: true },
 	{ table: 'instances', schema: InstanceConfigSchema, hasFixtureRows: true },
+	{
+		table: 'surfaces',
+		schema: SurfaceConfigSchema,
+		hasFixtureRows: true,
+		// Migrated into the group config
+		dropped: ['page', 'config.page', 'config.use_last_page', 'groupConfig.page'],
+	},
 	// No fixture has any remote surfaces
 	{ table: 'surfaces_remote', schema: OutboundSurfaceInfoSchema, hasFixtureRows: false },
 ]
@@ -51,13 +64,24 @@ const upgradedRows = FIXTURES.map((fixture) => {
 	return { fixture, rows }
 })
 
-describe.each(SCHEMA_TABLES)('$table', ({ table, schema, hasFixtureRows }) => {
+/** A copy of the row without the given dotted paths */
+function withoutPaths(row: unknown, paths: string[]): unknown {
+	const copy = structuredClone(row)
+	for (const path of paths) {
+		const keys = path.split('.')
+		const parent = keys.slice(0, -1).reduce<any>((value, key) => value?.[key], copy)
+		if (parent && typeof parent === 'object') delete parent[keys[keys.length - 1]]
+	}
+	return copy
+}
+
+describe.each(SCHEMA_TABLES)('$table', ({ table, schema, hasFixtureRows, dropped }) => {
 	test.each(upgradedRows)('every row of $fixture parses, losing nothing', ({ rows }) => {
 		for (const [id, row] of Object.entries(rows[table])) {
 			const result = schema.safeParse(row)
 			expect(result.error, `row "${id}"`).toBeUndefined()
 			// Defaults may be added, but nothing in the row may be dropped
-			expect(result.data, `row "${id}"`).toMatchObject(row as object)
+			expect(result.data, `row "${id}"`).toMatchObject(withoutPaths(row, dropped ?? []) as object)
 		}
 	})
 

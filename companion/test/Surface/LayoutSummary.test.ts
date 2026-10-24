@@ -10,6 +10,7 @@ import {
 function makeConfig(partial: Partial<SurfaceConfig>): SurfaceConfig {
 	return {
 		config: { brightness: 100, rotation: 0, xOffset: 0, yOffset: 0, groupId: null },
+		enabled: true,
 		groupConfig: {
 			name: '',
 			last_page_id: '1',
