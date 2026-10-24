@@ -355,6 +355,16 @@ describe('VariablesCustomVariable', () => {
 	})
 
 	describe('collections', () => {
+		test('invalid metadata on an imported collection is replaced', () => {
+			const { custom } = createCustomVariables()
+
+			custom.replaceCollections([{ id: 'col1', label: 'Outer', metaData: { unexpected: true } }] as any)
+
+			expect(custom.exportCollections()).toEqual([
+				{ id: 'col1', label: 'Outer', sortOrder: 0, metaData: null, children: [] },
+			])
+		})
+
 		test('imported collections are normalised, and invalid ones skipped', () => {
 			const { custom, db } = createCustomVariables()
 

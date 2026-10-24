@@ -22,14 +22,18 @@ export function createCollectionSchema<T>(metaDataSchema: z.ZodType<T>): z.ZodTy
 	return schema
 }
 
-/** Metadata of collections that can be disabled. Collections saved before they could be are enabled */
+/**
+ * Metadata of collections that can be disabled. Collections saved before they could be are enabled.
+ * Invalid metadata is replaced rather than failing the collection, which would take its children with it
+ */
 export const EnabledCollectionDataSchema = z
 	.object({
 		enabled: z.boolean().default(true),
 	})
 	.default(() => ({ enabled: true }))
+	.catch(() => ({ enabled: true }))
 
 export type EnabledCollectionData = z.output<typeof EnabledCollectionDataSchema>
 
 /** Metadata of collections that have none */
-export const EmptyCollectionDataSchema = z.null().default(null)
+export const EmptyCollectionDataSchema = z.null().default(null).catch(null)

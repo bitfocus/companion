@@ -125,6 +125,15 @@ describe('CollectionsBaseController', () => {
 			])
 		})
 
+		test('invalid metadata is replaced, keeping the collection and its children', () => {
+			const { collections } = createCollections({
+				odd: { ...collection('odd', 0, [collection('child', 0)]), metaData: { enabled: 'yes' } },
+			})
+
+			expect(shape(collections.collectionData)).toEqual([{ odd: ['child'] }])
+			expect(collections.collectionData[0].metaData).toEqual({ enabled: true })
+		})
+
 		test('moves an invalid row to the broken rows table', () => {
 			const { db, collections } = createCollections({
 				good: collection('good', 0),
