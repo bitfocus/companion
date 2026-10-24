@@ -22,6 +22,14 @@ export const LinkAnnouncementSchema = z
 			.describe(
 				'The Link protocol versions (semver) this installation speaks, one per major version. Two installations use the highest major version they both speak'
 			),
+		instanceId: z
+			.string()
+			.min(1)
+			.max(64)
+			.optional()
+			.describe(
+				'Chosen at random each time the installation starts, so that two installations with the same Link id (eg one cloned from the other) can be told apart, and the user warned'
+			),
 		announceIntervalMs: z
 			.number()
 			.int()

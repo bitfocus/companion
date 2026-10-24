@@ -1,4 +1,4 @@
-import { faServer, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faServer, faTrash, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
@@ -8,6 +8,7 @@ import { LINK_PERMISSION_DEFINITIONS, type LinkPeerInfo, type LinkUsage } from '
 import { Button } from '~/Components/Button.js'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { FormLabel } from '~/Components/Form.js'
+import { Note } from '~/Components/Note.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { PanelHeader } from '~/Layout/PanelHeader.js'
@@ -34,6 +35,12 @@ export const LinkPeerPanel = observer(function LinkPeerPanel({ peer }: { peer: L
 
 			<div className="edit-panel flex flex-col flex-1 min-h-0 overflow-hidden">
 				<div className="page-scroll edit-panel-scroll">
+					{peer.sharesLinkId && (
+						<Note tone="warning" icon={faTriangleExclamation} actions={null} className="m-2">
+							More than one installation is using this Link id, eg one was copied from the other, so they can't be told
+							apart. Regenerate the Link id of one of them, on its Link page.
+						</Note>
+					)}
 					<PeerStatusSection peer={peer} />
 					<PeerSharingSection peer={peer} />
 					<PeerForgetSection peer={peer} doClose={doClose} />

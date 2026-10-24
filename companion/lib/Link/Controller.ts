@@ -39,6 +39,7 @@ import {
 	decodeLinkAnnouncement,
 	encodeLinkAnnouncement,
 	LINK_ANNOUNCE_INTERVAL_MS,
+	LINK_ANNOUNCE_MISSED_LIMIT,
 	LINK_NAME_MAX_LENGTH,
 } from './Protocol/Announcement.js'
 import { decodeLinkMessage, encodeLinkMessage } from './Protocol/v1/Schemas.js'
@@ -90,6 +91,10 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 	#started = false
 	#identity: LinkIdentity
 	#selfId: string
+	/** Chosen each time Companion starts, so that another installation with our Link id can be told apart */
+	readonly #instanceId = nanoid()
+	/** When another installation was last seen with our Link id, eg one cloned from this one */
+	#sharesLinkIdSeenAt: number | null = null
 	#announceTimer: NodeJS.Timeout | null = null
 	/** The id regeneration in progress, which the next one waits for, so that they don't interleave */
 	#regenerating: Promise<void> = Promise.resolve()
@@ -241,6 +246,14 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		this.#transports.start()
 
 		this.#announceTimer = setInterval(() => {
+			// No longer seen, eg it was given a new Link id
+			if (
+				this.#sharesLinkIdSeenAt !== null &&
+				Date.now() - this.#sharesLinkIdSeenAt > LINK_ANNOUNCE_INTERVAL_MS * LINK_ANNOUNCE_MISSED_LIMIT
+			) {
+				this.#sharesLinkIdSeenAt = null
+				this.emit('self', this.#getSelfInfo())
+			}
 			this.#announce(null)
 			this.#pinger.pingAll()
 			// Again, in case it was lost, or arrived before our announcement and so was dropped
@@ -282,6 +295,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			// Longer would be rejected by the other installations
 			name: (installName || os.hostname()).slice(0, LINK_NAME_MAX_LENGTH),
 			protocolVersions: [...LINK_PROTOCOL_VERSIONS],
+			sharesLinkId: this.#sharesLinkIdSeenAt !== null,
 		}
 	}
 
@@ -296,6 +310,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			name: self.name,
 			companionVersion: this.#appInfo.appVersion,
 			protocolVersions: self.protocolVersions,
+			instanceId: this.#instanceId,
 			announceIntervalMs: LINK_ANNOUNCE_INTERVAL_MS,
 		})
 
@@ -324,7 +339,16 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		}
 
 		const decoded = decodeLinkAnnouncement(raw)
-		if (decoded.ok) {
+		if (decoded.ok && peerId === this.#selfId) {
+			// Another installation with our Link id, eg one cloned from this one
+			if (decoded.announcement.instanceId === this.#instanceId) return
+			const wasSeen = this.#sharesLinkIdSeenAt !== null
+			this.#sharesLinkIdSeenAt = Date.now()
+			if (!wasSeen) {
+				this.#logger.warn(`Another installation has the same Link id as this one, eg one cloned from this one`)
+				this.emit('self', this.#getSelfInfo())
+			}
+		} else if (decoded.ok) {
 			this.#peers.handleAnnouncement(transportId, peerId, decoded.announcement, Date.now())
 		} else {
 			this.#logger.debug(`Ignoring invalid announcement from ${peerId}: ${decoded.error}`)
@@ -448,6 +472,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		this.#identity = LinkIdentity.generate()
 		this.#table.setPrimitive('identity', this.#identity.toStored())
 		this.#selfId = this.#identity.id
+		this.#sharesLinkIdSeenAt = null
 		this.#peers.setSelfId(this.#selfId)
 		this.#buttonServer.clear()
 

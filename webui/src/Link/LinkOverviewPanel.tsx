@@ -1,4 +1,4 @@
-import { faLink, faRotate } from '@fortawesome/free-solid-svg-icons'
+import { faLink, faRotate, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
@@ -7,6 +7,7 @@ import { CopyButton } from '~/Components/CopyButton.js'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
+import { Note } from '~/Components/Note.js'
 import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -45,6 +46,12 @@ export const LinkOverviewPanel = observer(function LinkOverviewPanel(): React.JS
 			</PanelHeader>
 
 			<div className="secondary-panel-simple-body p-4 flex flex-col gap-4">
+				{self?.sharesLinkId && (
+					<Note tone="warning" icon={faTriangleExclamation} actions={null}>
+						Another installation is using the same Link id as this one, eg one was copied from the other. Other
+						installations can't tell the two apart. Regenerate the Link id of one of them.
+					</Note>
+				)}
 				<EditSectionCard title="Seen by others as">
 					<ConfigFieldRow label="Name" htmlFor={null} help="Set by the Installation Name in Settings">
 						{self?.name ?? '…'}

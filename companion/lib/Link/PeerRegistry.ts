@@ -31,6 +31,10 @@ interface PeerRecord {
 	protocolVersion: string | null
 	/** The name the user has given it here, in place of the one it announces */
 	alias: string | null
+	/** The instance ids it has announced with, newest first: the last two, to see it flip between two */
+	instanceIds: string[]
+	/** When it was last seen announcing with two instance ids at once, so is more than one installation */
+	sharesLinkIdSeenAt: number | null
 	/** The transports the peer is reachable on */
 	transports: Map<string, PeerTransportRecord>
 	lastSeen: number
@@ -117,6 +121,8 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 				announcement: stored.data.announcement,
 				protocolVersion: negotiateWith(stored.data.announcement),
 				alias: stored.data.alias,
+				instanceIds: [],
+				sharesLinkIdSeenAt: null,
 				transports: new Map(),
 				lastSeen: stored.data.lastSeen,
 				savedLastSeen: stored.data.lastSeen,
@@ -190,6 +196,8 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 				announcement,
 				protocolVersion: negotiateWith(announcement),
 				alias: null,
+				instanceIds: [],
+				sharesLinkIdSeenAt: null,
 				transports: new Map(),
 				lastSeen: now,
 				savedLastSeen: now,
@@ -204,7 +212,17 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 		const wasCompatible = !!existing && record.protocolVersion !== null
 		// Most announcements are a repeat, which changes nothing that is shown: only when it was last seen, which is shown
 		// once it goes offline (and so changes then)
-		const changed = isNew || !existing || !isEqual(record.announcement, announcement)
+		let changed = isNew || !existing || !isEqual(record.announcement, announcement)
+
+		// Restarting changes the instance id once. Flipping back to the one before means two are announcing
+		const { instanceId } = announcement
+		if (instanceId && instanceId !== record.instanceIds[0]) {
+			if (instanceId === record.instanceIds[1]) {
+				if (record.sharesLinkIdSeenAt === null) changed = true
+				record.sharesLinkIdSeenAt = now
+			}
+			record.instanceIds = [instanceId, ...record.instanceIds].slice(0, 2)
+		}
 		if (!isEqual(record.announcement, announcement)) {
 			record.announcement = announcement
 			record.protocolVersion = negotiateWith(announcement)
@@ -303,8 +321,14 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 	/** Mark peers unreachable on transports they have stopped announcing on */
 	expireStale(now: number): void {
 		const changed: PeerRecord[] = []
+		let sharingCleared = false
 		for (const record of this.#peers.values()) {
 			const timeout = record.announcement.announceIntervalMs * LINK_ANNOUNCE_MISSED_LIMIT
+			// No longer seen flipping between two, eg one was given a new Link id
+			if (record.sharesLinkIdSeenAt !== null && now - record.sharesLinkIdSeenAt > timeout) {
+				record.sharesLinkIdSeenAt = null
+				sharingCleared = true
+			}
 			for (const [transportId, { lastSeen }] of record.transports) {
 				if (now - lastSeen > timeout) {
 					record.transports.delete(transportId)
@@ -312,7 +336,8 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 				}
 			}
 		}
-		this.#emitChanged(changed)
+		if (changed.length > 0) this.#emitChanged(changed)
+		else if (sharingCleared) this.emit('changed')
 	}
 
 	/** Emit the change, and that peers which can no longer be reached on any transport are gone */
@@ -405,6 +430,7 @@ function toPeerInfo(record: PeerRecord, sharedByUs: LinkPermissions): LinkPeerIn
 		lastSeen: record.lastSeen,
 		sharedByUs,
 		sharedWithUs: record.sharedWithUs,
+		sharesLinkId: record.sharesLinkIdSeenAt !== null,
 	}
 }
 

@@ -169,6 +169,22 @@ describe('LinkPeerRegistry', () => {
 		expect(registry.getRouteLatency('a')).toBe(12)
 	})
 
+	test('notices two installations announcing with one Link id, but not one restarting', () => {
+		const registry = new LinkPeerRegistry('self', sharedByUs, emptyStore())
+		const interval = announcement('a').announceIntervalMs
+		registry.handleAnnouncement('t1', 'a', announcement('a', { instanceId: 'one' }), 0)
+		registry.handleAnnouncement('t1', 'a', announcement('a', { instanceId: 'two' }), 10)
+		expect(registry.getPeer('a')?.sharesLinkId).toBe(false)
+
+		registry.handleAnnouncement('t1', 'a', announcement('a', { instanceId: 'one' }), 20)
+		expect(registry.getPeer('a')?.sharesLinkId).toBe(true)
+
+		// Once only one is seen for a while, eg the other was given a new Link id
+		registry.handleAnnouncement('t1', 'a', announcement('a', { instanceId: 'one' }), 20 + interval * 3)
+		registry.expireStale(21 + interval * 3)
+		expect(registry.getPeer('a')?.sharesLinkId).toBe(false)
+	})
+
 	test('forgets peers', () => {
 		const store = new FakeTableView<any>()
 		const registry = new LinkPeerRegistry('self', sharedByUs, store.asTableView())

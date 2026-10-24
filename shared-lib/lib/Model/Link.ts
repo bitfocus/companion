@@ -185,6 +185,8 @@ export interface LinkPeerInfo {
 	sharedByUs: LinkPermissions
 	/** What the peer lets this installation use, or null until it has said */
 	sharedWithUs: LinkPermissions | null
+	/** Whether more than one installation is announcing with its Link id, eg one was cloned from the other */
+	sharesLinkId: boolean
 }
 
 /** How much of what is shared is in use, in each direction, eg the buttons subscribed to (once per button and size) */
@@ -206,6 +208,8 @@ export interface LinkSelfInfo {
 	name: string
 	/** The Link protocol versions this installation speaks, one per major version */
 	protocolVersions: string[]
+	/** Whether another installation has been seen with the same Link id, eg one cloned from this one */
+	sharesLinkId: boolean
 }
 
 /** A page of buttons of another installation, to choose a remote button from */

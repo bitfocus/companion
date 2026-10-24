@@ -249,6 +249,33 @@ describe('LinkController', () => {
 		})
 	})
 
+	test('warns when another installation announces with its Link id, but not for its own announcement', async () => {
+		const self = async () => {
+			const abort = new AbortController()
+			try {
+				const iterable = await ctx.controller
+					.createTrpcRouter()
+					.createCaller({} as any, { signal: abort.signal })
+					.watchSelf()
+				return (await iterable[Symbol.asyncIterator]().next()).value
+			} finally {
+				abort.abort()
+			}
+		}
+		const selfId = ctx.transport().context.identity.id
+
+		// Its own, eg reflected back by a transport
+		const own = decodeLinkAnnouncement(ctx.transport().announced[0]!)
+		if (!own.ok) throw new Error('Invalid announcement')
+		ctx.transport().context.receiveAnnouncement(selfId, encodeLinkAnnouncement(own.announcement))
+		expect((await self())?.sharesLinkId).toBe(false)
+
+		ctx
+			.transport()
+			.context.receiveAnnouncement(selfId, encodeLinkAnnouncement({ ...own.announcement, instanceId: 'a-clone' }))
+		expect((await self())?.sharesLinkId).toBe(true)
+	})
+
 	test('tells each peer what it may use again every so often, in case that was lost', async () => {
 		await ctx.controller.stop()
 		vi.useFakeTimers()
