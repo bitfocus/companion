@@ -20,6 +20,7 @@ import type Express from 'express'
 import QuickLRU from 'quick-lru'
 import workerPool from 'workerpool'
 import { isLocationOnGrid, ParseControlId, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
+import { MAX_DECODED_IMAGE_BYTES, snapToRenderClock } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import {
 	resolveButtonStyleProperties,
 	type ResolveButtonStylePropertiesConfig,
@@ -43,7 +44,9 @@ import { resolveThreadEntrypoint } from '../Resources/Util.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
 import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
+import { DisplayedLocations } from './DisplayedLocations.js'
 import { FONT_DEFINITIONS } from './Fonts.js'
+import { ImageCacheStore, type AnimationFrames } from './ImageCache/ImageCacheStore.js'
 import { ImageLibrary } from './ImageLibrary.js'
 import { getImageResultStats, ImageResult, setDrawNativeRenderObserver } from './ImageResult.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
@@ -62,6 +65,20 @@ const RENDER_CACHE_PER_BUTTON_RATIO = 0.1 // Proportion of states to keep cached
 const RENDER_CACHE_MIN_SIZE = 100
 const RENDER_CACHE_MAX_SIZE = 1000
 const RENDER_CACHE_RESIZE_DEBOUNCE_MS = 500
+
+// Decoded images are stored at their own size, so that a large image can be drawn in segments across many
+// buttons. Each is limited to MAX_DECODED_IMAGE_BYTES, so it can't push everything else out of the cache
+const IMAGE_CACHE_MAX_BYTES = 128 * 1024 * 1024
+
+// Renders of animations with a loop up to this long are kept in the render cache, so that they are reused on each
+// loop. Longer animations would push everything else out of the cache, so they are drawn again each time
+const RENDER_CACHE_MAX_ANIMATION_DURATION_MS = 5000
+
+const NO_ANIMATION_FRAMES: AnimationFrames = { frameIndices: new Map(), maxDurationMs: 0 }
+
+function shouldCacheAnimationRenders(animationFrames: AnimationFrames): boolean {
+	return animationFrames.maxDurationMs <= RENDER_CACHE_MAX_ANIMATION_DURATION_MS
+}
 
 interface GraphicsControllerEvents {
 	button_drawn: [location: ControlLocation, render: ImageResult]
@@ -105,9 +122,23 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	readonly #renderQueue: ImageWriteQueue<string, [RenderArguments, boolean]>
 
 	/**
+	 * Decoded images, shared with the render threads
+	 */
+	readonly #imageCache = new ImageCacheStore(
+		this.#logger,
+		async (source) => this.#poolExec('decodeImage', [source, MAX_DECODED_IMAGE_BYTES], CRASHED_WORKER_RETRY_COUNT),
+		IMAGE_CACHE_MAX_BYTES
+	)
+
+	/**
 	 * Image library for storing and managing images
 	 */
 	readonly imageLibrary: ImageLibrary
+
+	/**
+	 * Which locations are being shown right now, and at what sizes
+	 */
+	readonly displayedLocations = new DisplayedLocations()
 
 	// null when render threading is disabled: the pool spawns its minWorkers eagerly at construction,
 	// so it must not be created at all when rendering runs in-process
@@ -287,9 +318,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					if (args.type === 'preset') {
 						const control = this.controlsStore.getControl(args.controlId)
 						const buttonStyle = (await control?.drawing?.getDrawStyle()) ?? undefined
+						const animationFrames = buttonStyle
+							? await this.#selectAnimationFrames(buttonStyle.elements)
+							: NO_ANIMATION_FRAMES
 
 						// Track clock-sensitive presets so we can re-render them on each clock tick
-						if (buttonStyle && buttonStyle.clockSensitive) {
+						if (buttonStyle && (buttonStyle.clockSensitive || animationFrames.frameIndices.size > 0)) {
 							this.#clockSensitivePresets.add(args.controlId)
 						} else {
 							this.#clockSensitivePresets.delete(args.controlId)
@@ -306,6 +340,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 								options: this.#drawOptions,
 								...buttonStyleForKey,
 								elements: collectContentHashes(buttonStyle.elements),
+								animationFrames: [...animationFrames.frameIndices],
 							})
 							render = this.#renderLRUCache.get(cacheKey)
 
@@ -314,10 +349,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									...buttonStyle,
 									...resolveButtonStyleProperties(this.#drawOptions, buttonStyle.elements),
 									location: undefined, // Presets don't have a location, and it isn't needed for rendering
+									decodedImages: null, // Resolved when drawn
 								}
 
-								render = this.#generateImageResult(cacheKey, renderStyle)
-								this.#renderLRUCache.set(cacheKey, render)
+								render = this.#generateImageResult(cacheKey, renderStyle, animationFrames.frameIndices)
+								if (shouldCacheAnimationRenders(animationFrames)) this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
 							render = GraphicsRenderer.generateBlankImage(
@@ -349,17 +385,20 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 					if (location && locationIsInBounds && buttonStyle && buttonStyle.style) {
 						const showButtonConfig = resolveButtonStyleProperties(this.#drawOptions, buttonStyle.elements)
 
-						const renderStyle = {
+						const renderStyle: RendererDrawStyle = {
 							...buttonStyle,
 
 							...showButtonConfig,
 							// Only needed if the topbar is shown
 							location: showButtonConfig.decoration === ButtonGraphicsDecorationType.TopBar ? location : undefined,
+							decodedImages: null, // Resolved when drawn
 						}
+
+						const animationFrames = await this.#selectAnimationFrames(buttonStyle.elements)
 
 						// Track clock-sensitive locations so we can re-render them on each clock tick
 						const locationKey = `${location.pageNumber}/${location.row}/${location.column}`
-						if (buttonStyle.clockSensitive) {
+						if (buttonStyle.clockSensitive || animationFrames.frameIndices.size > 0) {
 							this.#clockSensitiveLocations.set(locationKey, location)
 						} else {
 							this.#clockSensitiveLocations.delete(locationKey)
@@ -371,6 +410,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							...renderStyle,
 							elements: collectContentHashes(buttonStyle.elements), // use hashes of elements for the key
 							referencedLocations: [...(buttonStyle.referencedLocations ?? [])].sort(), // Sets serialize as {} in JSON.stringify
+							animationFrames: [...animationFrames.frameIndices],
 						}
 						delete cacheKeyObj['clockSensitive']
 						const cacheKey = JSON.stringify(cacheKeyObj)
@@ -382,10 +422,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							render = this.#generateImageResult(
 								cacheKey,
 								renderStyle,
+								animationFrames.frameIndices,
 								buttonStyle.elements,
 								buttonStyle.referencedLocations
 							)
-							this.#renderLRUCache.set(cacheKey, render)
+							if (shouldCacheAnimationRenders(animationFrames)) this.#renderLRUCache.set(cacheKey, render)
 						}
 					} else {
 						render = GraphicsRenderer.generateBlankImage(
@@ -569,10 +610,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			...resolveButtonStyleProperties(this.#drawOptions, elements),
 
 			location: undefined,
+			decodedImages: null, // Resolved when drawn
 		}
 
 		// One-off preview: never cached or emitted, so it has no content key (never deduped).
-		return this.#generateImageResult(undefined, drawStyle)
+		// It is a still, so any animations show their first frame
+		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES.frameIndices)
 	}
 
 	/**
@@ -850,15 +893,33 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			}
 		)
 
+		metrics.gauge('companion_image_cache_bytes', 'Approximate bytes retained by the decoded image cache', () => {
+			return this.#imageCache.usedBytes
+		})
+		metrics.gauge('companion_image_cache_max_bytes', 'Byte budget of the decoded image cache', () => {
+			return this.#imageCache.maxBytes
+		})
+		metrics.gauge('companion_image_cache_entries', 'Images held by the decoded image cache', () => {
+			return this.#imageCache.entryCount
+		})
+
 		// Render worker terminations since startup
 		metrics.counter('companion_render_worker_terminations_total', 'Render worker terminations since startup', () => {
 			return this.#workerTerminationsTotal
 		})
 	}
 
+	/**
+	 * Choose the frame of each animated image to draw now
+	 */
+	async #selectAnimationFrames(elements: SomeButtonGraphicsDrawElement[]): Promise<AnimationFrames> {
+		return this.#imageCache.selectAnimationFrames(elements, snapToRenderClock(Date.now()))
+	}
+
 	#generateImageResult(
 		cacheKey: string | undefined,
 		drawStyle: RendererButtonStyle,
+		animationFrameIndices: ReadonlyMap<string, number>,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> | undefined = undefined
 	): ImageResult {
@@ -870,6 +931,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			async (width, height, rotation, format) =>
 				this.#executePoolDrawButtonImageBuffer(
 					drawStyle,
+					animationFrameIndices,
 					{ width, height, oversampling: computeOversampling(width, height) },
 					rotation,
 					format,
@@ -886,12 +948,15 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 */
 	async #executePoolDrawButtonImageBuffer(
 		drawStyle: RendererDrawStyle,
+		animationFrameIndices: ReadonlyMap<string, number>,
 		resolution: { width: number; height: number; oversampling: number },
 		rotation: SurfaceRotation | null,
 		format: imageRs.PixelFormat,
 		remainingAttempts: number
 	): Promise<Uint8Array> {
-		return this.#poolExec('drawButtonImageBuffer', [drawStyle, resolution, rotation, format], remainingAttempts)
+		const resolvedDrawStyle = await this.#imageCache.resolveDrawStyle(drawStyle, animationFrameIndices)
+
+		return this.#poolExec('drawButtonImageBuffer', [resolvedDrawStyle, resolution, rotation, format], remainingAttempts)
 	}
 
 	/**

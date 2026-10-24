@@ -85,12 +85,11 @@ export const WithLibraryImage: Story = {
 	args: { value: `$(image:${SAMPLE_IMAGE_ID})` },
 }
 
-/** Constrained dimensions — min 32×32, max 128×128 */
+/** Constrained dimensions — min 32×32 */
 export const WithSizeConstraints: Story = {
 	args: {
 		value: SAMPLE_PNG,
 		min: { width: 32, height: 32 },
-		max: { width: 128, height: 128 },
 	},
 }
 

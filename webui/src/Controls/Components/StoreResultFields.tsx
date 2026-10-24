@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import { useCallback, useRef } from 'react'
-import { ControlLocationOption } from '@companion-app/shared/ControlLocation.js'
+import { ParseControlId } from '@companion-app/shared/ControlId.js'
+import { LocalVariableLocationOption } from '@companion-app/shared/ControlLocation.js'
 import {
 	CustomVariableCreateIfNotExistsOption,
 	CustomVariableSelectorOption,
@@ -16,6 +17,7 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	exprVal,
+	getFieldDefaultForControl,
 	type CompanionInputFieldDropdownExtended,
 	type ExpressionOrValue,
 	type InternalInputFieldPage,
@@ -78,7 +80,7 @@ export const LocalVariableControls = observer(function LocalVariableControls({
 				isLocatedInGrid={isLocatedInGrid}
 				entityType={entityType}
 				controlId={controlId}
-				option={ControlLocationOption}
+				option={LocalVariableLocationOption}
 				value={value.location}
 				setValue={setLocation}
 				readonly={readonly}
@@ -305,7 +307,9 @@ export const StoreResultFields = observer(function StoreResultFields({
 			? storeResult
 			: {
 					type: 'local-variable',
-					location: exprVal(ControlLocationOption.default),
+					location: exprVal(
+						getFieldDefaultForControl(LocalVariableLocationOption, ParseControlId(controlId)?.type ?? null)
+					),
 					variableName: exprVal(LocalVariableNameOption.default),
 				}
 	)

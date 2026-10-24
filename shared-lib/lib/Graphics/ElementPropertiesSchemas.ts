@@ -241,7 +241,6 @@ export const imageElementSchema: ElementSchemaSection[] = [
 				label: 'Image',
 				default: null,
 				min: { width: 8, height: 8 },
-				max: { width: 400, height: 400 },
 			},
 			// Future: maybe the below is an 'appearance' section?
 			{

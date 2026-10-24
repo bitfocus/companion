@@ -12,6 +12,7 @@ function makeVersion(versionId: string, allowMultipleInstances: boolean): Client
 		displayName: `v${versionId}`,
 		isLegacy: false,
 		isBeta: false,
+		isRuntimeOverridden: false,
 		helpPath: '',
 		versionId,
 		allowMultipleInstances,

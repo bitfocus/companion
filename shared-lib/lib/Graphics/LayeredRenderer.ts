@@ -1,4 +1,4 @@
-import type { RendererButtonStyle } from '../Model/Render.js'
+import type { DecodedRasterImage, RendererButtonStyle } from '../Model/Render.js'
 import type {
 	ButtonGraphicsBoxDrawElement,
 	ButtonGraphicsCanvasDrawElement,
@@ -84,7 +84,16 @@ export class GraphicsLayeredButtonRenderer {
 		const clipBounds = paddingPx.x > 0 || paddingPx.y > 0 ? outerBounds : null
 		const elementGeometry: ElementGeometry[] = []
 		await img.usingClip(clipBounds, async () =>
-			this.#drawElements(img, drawStyle.elements, elementsToHide, drawBounds, false, [], elementGeometry)
+			this.#drawElements(
+				img,
+				drawStyle.elements,
+				drawStyle.decodedImages,
+				elementsToHide,
+				drawBounds,
+				false,
+				[],
+				elementGeometry
+			)
 		)
 
 		switch (decoration) {
@@ -130,6 +139,7 @@ export class GraphicsLayeredButtonRenderer {
 	static async #drawElements(
 		img: ImageBase<any>,
 		elements: SomeButtonGraphicsDrawElement[],
+		decodedImages: ReadonlyMap<string, DecodedRasterImage> | null,
 		elementsToHide: ReadonlySet<string>,
 		drawBounds: DrawBounds,
 		skipDrawParent: boolean,
@@ -170,6 +180,7 @@ export class GraphicsLayeredButtonRenderer {
 								await this.#drawElements(
 									img,
 									element.children,
+									decodedImages,
 									elementsToHide,
 									groupBounds,
 									skipDraw,
@@ -192,6 +203,7 @@ export class GraphicsLayeredButtonRenderer {
 								await this.#drawElements(
 									img,
 									element.children,
+									decodedImages,
 									elementsToHide,
 									referenceBounds,
 									skipDraw,
@@ -203,7 +215,13 @@ export class GraphicsLayeredButtonRenderer {
 						break
 					}
 					case 'image':
-						elementBounds = await this.#drawImageElement(img, drawBounds, element, skipDraw)
+						elementBounds = await this.#drawImageElement(
+							img,
+							drawBounds,
+							element,
+							decodedImages?.get(element.id) ?? null,
+							skipDraw
+						)
 
 						break
 					case 'text':
@@ -255,28 +273,42 @@ export class GraphicsLayeredButtonRenderer {
 		img: ImageBase<any>,
 		parentBounds: DrawBounds,
 		element: ButtonGraphicsImageDrawElement,
+		decodedImage: DecodedRasterImage | null,
 		skipDraw: boolean
 	): Promise<DrawBounds> {
 		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
-		if (skipDraw || !element.base64Image) return drawBounds
+		if (skipDraw || (!element.base64Image && !decodedImage)) return drawBounds
 
 		let imageDrawn: true | false | null = null
 
 		try {
-			const imageData = element.base64Image
+			const { base64Image } = element
 
 			await img.usingAlpha(element.opacity, async () => {
 				await img.usingRotation(drawBounds, element.rotation, async () => {
-					imageDrawn = await img.drawBase64Image(
-						imageData,
-						drawBounds.x,
-						drawBounds.y,
-						drawBounds.width,
-						drawBounds.height,
-						element.halign,
-						element.valign,
-						element.fillMode
-					)
+					if (decodedImage) {
+						imageDrawn = img.drawDecodedImage(
+							decodedImage,
+							drawBounds.x,
+							drawBounds.y,
+							drawBounds.width,
+							drawBounds.height,
+							element.halign,
+							element.valign,
+							element.fillMode
+						)
+					} else if (base64Image) {
+						imageDrawn = await img.drawBase64Image(
+							base64Image,
+							drawBounds.x,
+							drawBounds.y,
+							drawBounds.width,
+							drawBounds.height,
+							element.halign,
+							element.valign,
+							element.fillMode
+						)
+					}
 				})
 			})
 		} catch (e) {

@@ -143,6 +143,7 @@ if (process.env.ELECTRON !== '0') {
 			},
 			mac: {
 				target: 'dmg',
+				minimumSystemVersion: '13.5',
 				category: 'no.bitfocus.companion',
 				extendInfo: {
 					LSUIElement: 1,

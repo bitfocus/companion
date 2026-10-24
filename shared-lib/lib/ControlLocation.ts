@@ -11,6 +11,18 @@ export const ControlLocationOption = {
 	useVariables: CompanionFieldVariablesSupport.InternalParser,
 } as const satisfies CompanionInputFieldTextInputExtended
 
+/**
+ * The location of a local variable. Controls without a grid location default to themselves
+ */
+export const LocalVariableLocationOption = {
+	...ControlLocationOption,
+	defaultForControlType: {
+		trigger: 'this',
+		'expression-variable': 'this',
+		page: 'this',
+	},
+} as const satisfies CompanionInputFieldTextInputExtended
+
 export type ThisLocationVariable =
 	| 'this:page'
 	| 'this:column'
@@ -22,6 +34,11 @@ export type ThisLocationVariable =
 	| 'this:step_count'
 	| 'this:actions_running'
 	| 'this:button_status'
+
+/**
+ * The `this:*` variables a button's step progression expression may not reference, as it defines them
+ */
+export const StepExpressionBlockedVariables: ReadonlySet<string> = new Set<ThisLocationVariable>(['this:step'])
 
 /**
  * The builtin variables that are available for page variables

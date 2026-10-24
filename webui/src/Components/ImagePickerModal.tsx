@@ -11,17 +11,23 @@ import { Grid } from '~/Components/Grid'
 import { Modal } from '~/Components/Modal.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
-import { blobToDataURL } from '~/Helpers/FileUpload.js'
+import { blobToDataURL, formatFileSize, getDataUrlByteSize } from '~/Helpers/FileUpload.js'
 import { ImageLibrarySelector } from '~/ImageLibrary/ImageLibrarySelector.js'
 import { ImageNameInput } from '~/ImageLibrary/ImageNameInput.js'
 import { ImagePreviewBox } from '~/ImageLibrary/ImagePreviewBox.js'
 import { useImageLibraryUpload } from '~/ImageLibrary/useImageLibraryUpload.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import { DismissableAlert } from './Alert.js'
+import { DismissableAlert, StaticAlert } from './Alert.js'
 import { FileInputButton } from './FileInputButton.js'
 
 const allowedImageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml']
+
+/**
+ * Custom images are stored inline in the button, so are kept small.
+ * Anything larger should go in the image library instead
+ */
+const MAX_CUSTOM_IMAGE_BYTES = 512 * 1024
 
 interface MinMaxDimension {
 	width: number
@@ -34,14 +40,13 @@ export interface ImagePickerModalRef {
 
 interface ImagePickerModalProps {
 	setValue: (value: string | null) => void
-	min?: MinMaxDimension
-	max?: MinMaxDimension
+	min: MinMaxDimension | undefined
 }
 
 type TabKey = 'library' | 'upload' | 'custom'
 
 export const ImagePickerModal = observer(
-	forwardRef<ImagePickerModalRef, ImagePickerModalProps>(function ImagePickerModal({ setValue, min, max }, ref) {
+	forwardRef<ImagePickerModalRef, ImagePickerModalProps>(function ImagePickerModal({ setValue, min }, ref) {
 		const [open, setOpen] = useState(false)
 		const [activeTab, setActiveTab] = useState<TabKey>('library')
 		const [sharedDataUrl, setSharedDataUrl] = useState<string | null>(null)
@@ -67,6 +72,8 @@ export const ImagePickerModal = observer(
 			},
 			[setValue]
 		)
+
+		const handleSwitchToUpload = useCallback(() => setActiveTab('upload'), [])
 
 		const handleCustomSelect = useCallback(
 			(dataUrl: string | null) => {
@@ -109,8 +116,8 @@ export const ImagePickerModal = observer(
 									<TabArea.Panel value="custom">
 										<CustomImageTab
 											onComplete={handleCustomSelect}
+											onUploadToLibrary={handleSwitchToUpload}
 											min={min}
-											max={max}
 											sharedDataUrl={sharedDataUrl}
 											onSharedDataUrlChange={setSharedDataUrl}
 										/>
@@ -276,16 +283,16 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 
 interface CustomImageTabProps {
 	onComplete: (dataUrl: string | null) => void
-	min?: MinMaxDimension
-	max?: MinMaxDimension
+	onUploadToLibrary: () => void
+	min: MinMaxDimension | undefined
 	sharedDataUrl: string | null
 	onSharedDataUrlChange: (dataUrl: string) => void
 }
 
 function CustomImageTab({
 	onComplete,
+	onUploadToLibrary,
 	min = { width: 8, height: 8 },
-	max = { width: 400, height: 400 },
 	sharedDataUrl,
 	onSharedDataUrlChange,
 }: CustomImageTabProps) {
@@ -293,33 +300,7 @@ function CustomImageTab({
 
 	const apiIsSupported = !!(window.File && window.FileReader && window.FileList && window.Blob)
 
-	const imageResize = useCallback(
-		(img: HTMLImageElement): string => {
-			const canvas = document.createElement('canvas')
-			let width = img.width
-			let height = img.height
-
-			if (width >= height) {
-				if (width > max.width) {
-					height *= max.width / width
-					width = max.width
-				}
-			} else {
-				if (height > max.height) {
-					width *= max.height / height
-					height = max.height
-				}
-			}
-
-			canvas.width = width
-			canvas.height = height
-			const ctx = canvas.getContext('2d')
-			if (!ctx) throw new Error('Canvas not supported')
-			ctx.drawImage(img, 0, 0, width, height)
-			return canvas.toDataURL()
-		},
-		[max]
-	)
+	const isTooLarge = !!sharedDataUrl && getDataUrlByteSize(sharedDataUrl) > MAX_CUSTOM_IMAGE_BYTES
 
 	const handleFileClick = useCallback(() => setErrorMessage(null), [])
 
@@ -336,18 +317,13 @@ function CustomImageTab({
 					await new Promise<void>((resolve, reject) => {
 						const img = new Image()
 						img.onload = () => {
-							try {
-								if (max && (img.height > max.height || img.width > max.width)) {
-									onSharedDataUrlChange(imageResize(img))
-								} else if (min && (img.width < min.width || img.height < min.height)) {
-									setErrorMessage(`Image dimensions must be at least ${min.width}×${min.height}`)
-								} else {
-									onSharedDataUrlChange(imageSourceStr)
-								}
-								resolve()
-							} catch (err) {
-								reject(err instanceof Error ? err : new Error(String(err)))
+							if (min && (img.width < min.width || img.height < min.height)) {
+								setErrorMessage(`Image dimensions must be at least ${min.width}×${min.height}`)
+							} else {
+								// Keep the original file, so animations and vectors are preserved
+								onSharedDataUrlChange(imageSourceStr)
 							}
+							resolve()
 						}
 						img.onerror = () => reject(new Error('Failed to load image — the file may be corrupted or unsupported.'))
 						img.src = imageSourceStr
@@ -357,7 +333,7 @@ function CustomImageTab({
 					setErrorMessage(`Error reading file: ${err}`)
 				})
 		},
-		[min, max, imageResize, onSharedDataUrlChange]
+		[min, onSharedDataUrlChange]
 	)
 
 	const handleUseImage = useCallback(() => {
@@ -390,8 +366,20 @@ function CustomImageTab({
 
 			<ImagePreviewBox src={sharedDataUrl} onFileDrop={handleFile} dragOverMessage="Drop image to preview" />
 
+			{isTooLarge && (
+				<StaticAlert color="warning">
+					<p>
+						This image is larger than {formatFileSize(MAX_CUSTOM_IMAGE_BYTES)}, which is too large to store in a button.
+						Upload it to the image library instead, so that it can be reused without bloating the button.
+					</p>
+					<Button color="primary" onClick={onUploadToLibrary}>
+						Upload to Library
+					</Button>
+				</StaticAlert>
+			)}
+
 			<div>
-				<Button color="primary" disabled={!sharedDataUrl} onClick={handleUseImage}>
+				<Button color="primary" disabled={!sharedDataUrl || isTooLarge} onClick={handleUseImage}>
 					Use This Image
 				</Button>
 			</div>

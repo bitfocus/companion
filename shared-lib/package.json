@@ -23,7 +23,7 @@
     "quick-lru": "^7.3.0",
     "semver": "^7.8.5",
     "type-fest": "^5.10.0",
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/semver": "^7.8.0",

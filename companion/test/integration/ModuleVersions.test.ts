@@ -5,6 +5,7 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
 import nodeVersions from '../../../assets/nodejs-versions.json' with { type: 'json' }
+import { resolveNodeJsRuntime } from '../../lib/Instance/NodePath.js'
 import fixtureVersions from './modules/fixture-versions.json' with { type: 'json' }
 import { hasApiFeature } from './modules/src/api-gates.js'
 import { createTestApp, getFreeUdpPort, type TestApp } from './TestApp.js'
@@ -68,8 +69,8 @@ describe('real module children across module-api versions', () => {
 				).toBeTruthy()
 			}, 30_000)
 
-			// The child runs on exactly the node version its manifest requests
-			const expectedNodeVersion = (nodeVersions as Record<string, string>)[runtime]
+			// The child runs on exactly the node version its manifest requests, or what that runtime is aliased to
+			const expectedNodeVersion = (nodeVersions as Record<string, string>)[resolveNodeJsRuntime(runtime)]
 			await vi.waitFor(() => {
 				expect(app.registry.variables.values.getVariableValue(label, 'node_version')).toBe(expectedNodeVersion)
 			}, 30_000)

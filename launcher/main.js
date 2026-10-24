@@ -11,6 +11,7 @@ import fileStreamRotator from 'file-stream-rotator'
 import fs from 'fs-extra'
 import { nanoid } from 'nanoid'
 import { parse as parsePlist } from 'plist'
+import semver from 'semver'
 import stripAnsi from 'strip-ansi'
 import systeminformation from 'systeminformation'
 import { LAUNCHER_STATUS_LABELS } from '@companion-app/shared/Model/LauncherAppInfo.js'
@@ -26,9 +27,6 @@ let version_warning = null
 // Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
 if (process.platform === 'darwin') {
 	try {
-		// eslint-disable-next-line @typescript-eslint/no-require-imports
-		const semver = require('semver')
-
 		const minimumVersion = '13.5'
 		const supportedVersions = new semver.Range(`>=${minimumVersion}`)
 

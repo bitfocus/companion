@@ -13,7 +13,10 @@ export class ButtonDecorationRenderer {
 
 	static drawStatusBar(
 		img: ImageBase<any>,
-		drawStyle: Omit<RendererButtonStyle, 'style' | 'drawType' | 'decoration' | 'show_status_icons' | 'elements'>,
+		drawStyle: Omit<
+			RendererButtonStyle,
+			'style' | 'drawType' | 'decoration' | 'show_status_icons' | 'elements' | 'decodedImages'
+		>,
 		topBarBounds: DrawBounds,
 		emptyButton: boolean
 	): void {

@@ -112,6 +112,8 @@ export type ParsedControlIdType =
 	| ParsedControlIdPage
 	| ParsedControlIdPreset
 
+export type ControlIdKind = ParsedControlIdType['type']
+
 /**
  * Parse a controlId
  */

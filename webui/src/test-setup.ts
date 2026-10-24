@@ -19,14 +19,16 @@ class ResizeObserverStub {
 }
 window.ResizeObserver = ResizeObserverStub
 
-// @tanstack/react-virtual uses offsetHeight to calculate scroll range; jsdom always returns 0.
-// Without a non-zero value the virtualizer renders no items.
-Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
-	configurable: true,
-	get() {
-		return 400
-	},
-})
+// @tanstack/react-virtual measures the scroll element with clientHeight and items with offsetHeight;
+// jsdom always returns 0. Without a non-zero value the virtualizer renders no items.
+for (const prop of ['offsetHeight', 'clientHeight']) {
+	Object.defineProperty(HTMLElement.prototype, prop, {
+		configurable: true,
+		get() {
+			return 400
+		},
+	})
+}
 
 // base-ui wraps open/close in requestAnimationFrame (a macrotask). jsdom's RAF is never
 // flushed by React's act(), so popups never open. Use queueMicrotask instead — microtasks
@@ -54,6 +56,7 @@ process.stderr.write = (chunk: string | Uint8Array, ...rest: unknown[]): boolean
 
 // base-ui uses matchMedia for responsive behaviour
 Object.defineProperty(window, 'matchMedia', {
+	configurable: true,
 	writable: true,
 	value: (query: string) => ({
 		matches: false,

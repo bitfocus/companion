@@ -176,6 +176,7 @@ export class PreviewGraphics {
 					const subId = getLocationSizeSubId(locationId, size)
 
 					const releaseSize = self.#watchLocationSize(locationId, size)
+					const releaseDisplayed = self.#graphicsController.displayedLocations.acquire(location, size)
 					try {
 						const changes = toIterable(self.#renderEvents, `location:${subId}`, signal)
 
@@ -192,6 +193,7 @@ export class PreviewGraphics {
 							yield image
 						}
 					} finally {
+						releaseDisplayed()
 						releaseSize()
 					}
 				}),

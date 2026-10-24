@@ -1,11 +1,19 @@
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Canvas, GlobalFonts } from '@napi-rs/canvas'
-import { beforeAll, describe, expect, test } from 'vitest'
+import { beforeAll, describe, expect, test, vi } from 'vitest'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
-import { ButtonGraphicsDecorationType, type DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
+import {
+	ButtonGraphicsDecorationType,
+	ButtonGraphicsElementUsage,
+	type DrawImageBuffer,
+} from '@companion-app/shared/Model/StyleModel.js'
+import { decodeImage } from '../../lib/Graphics/ImageCache/DecodeImage.js'
+import { ImageCacheStore } from '../../lib/Graphics/ImageCache/ImageCacheStore.js'
 import { computeOversampling, GraphicsRenderer } from '../../lib/Graphics/Renderer.js'
+import type { Logger } from '../../lib/Log/Controller.js'
+import { makeAnimatedGif, toDataUrl } from './ImageCache/AnimatedImageFixtures.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const FONTS_DIR = join(__dirname, '../../../assets/Fonts')
@@ -33,6 +41,7 @@ function makeStyle(overrides: Partial<RendererButtonStyle> = {}): RendererButton
 		stepCount: 1,
 		button_status: undefined,
 		action_running: undefined,
+		decodedImages: null,
 		...overrides,
 	}
 }
@@ -206,6 +215,128 @@ describe('GraphicsRenderer', () => {
 				'rgba'
 			)
 			expect(buffer).toHaveLength(72 * 72 * CHANNELS.rgba)
+		})
+
+		describe('decoded images', () => {
+			/** A style which draws an image, by default filling the button */
+			function makeImageStyle(
+				base64Image: string,
+				fillMode: 'fit' | 'fill' | 'crop',
+				bounds = { x: 0, y: 0, width: 1, height: 1 }
+			): RendererButtonStyle {
+				return makeStyle({
+					elements: [
+						{
+							type: 'image',
+							id: 'img',
+							usage: ButtonGraphicsElementUsage.Image,
+							enabled: true,
+							opacity: 1,
+							contentHash: 'img',
+							...bounds,
+							rotation: 0,
+							base64Image,
+							halign: 'center',
+							valign: 'center',
+							fillMode,
+						},
+					],
+				})
+			}
+
+			/** Create a PNG with a different colour in each quadrant, so misplacement shows up */
+			function makeQuadrantPngDataUrl(width: number, height: number): string {
+				const canvas = new Canvas(width, height)
+				const ctx = canvas.getContext('2d')
+				const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00']
+				for (let i = 0; i < 4; i++) {
+					ctx.fillStyle = colors[i]
+					ctx.fillRect((i % 2) * (width / 2), Math.floor(i / 2) * (height / 2), width / 2, height / 2)
+				}
+				return canvas.toDataURL('image/png')
+			}
+
+			async function resolveImages(style: RendererButtonStyle): Promise<RendererButtonStyle> {
+				const logger = { warn: vi.fn() } as unknown as Logger
+				const store = new ImageCacheStore(
+					logger,
+					async (source) => decodeImage(source, 32 * 1024 * 1024),
+					64 * 1024 * 1024
+				)
+				return store.resolveDrawStyle(style, new Map())
+			}
+
+			test.each(['fit', 'fill', 'crop'] as const)(
+				'draws the same as the source image, with fillMode %s',
+				async (fillMode) => {
+					const style = makeImageStyle(makeQuadrantPngDataUrl(48, 32), fillMode)
+					const resolved = await resolveImages(style)
+					expect(resolved.decodedImages?.size).toBe(1)
+
+					const resolution = { width: 72, height: 72, oversampling: 2 }
+					const fromSource = await GraphicsRenderer.drawButtonImageBuffer(style, resolution, null, 'rgba')
+					const fromDecoded = await GraphicsRenderer.drawButtonImageBuffer(resolved, resolution, null, 'rgba')
+					expect(Buffer.from(fromDecoded).equals(Buffer.from(fromSource))).toBe(true)
+				}
+			)
+
+			test('draws a large image at its full resolution', async () => {
+				const style = makeImageStyle(makeQuadrantPngDataUrl(600, 400), 'fit')
+				const resolved = await resolveImages(style)
+				expect(resolved.decodedImages?.get('img')).toMatchObject({ width: 600, height: 400 })
+
+				const resolution = { width: 72, height: 72, oversampling: 1 }
+				const fromSource = await GraphicsRenderer.drawButtonImageBuffer(style, resolution, null, 'rgba')
+				const fromDecoded = await GraphicsRenderer.drawButtonImageBuffer(resolved, resolution, null, 'rgba')
+				expect(Buffer.from(fromDecoded).equals(Buffer.from(fromSource))).toBe(true)
+			})
+
+			test.each([
+				[0, [255, 0, 0, 255]],
+				[100, [0, 255, 0, 255]],
+				[250, [0, 0, 255, 255]],
+				// Looped back round
+				[300, [255, 0, 0, 255]],
+			])('draws the frame of an animated gif on screen at %ims', async (timeMs, expectedColor) => {
+				const gif = makeAnimatedGif(8, 8, [
+					{ color: [255, 0, 0], delayMs: 100 },
+					{ color: [0, 255, 0], delayMs: 100 },
+					{ color: [0, 0, 255], delayMs: 100 },
+				])
+				const style = makeImageStyle(toDataUrl('image/gif', gif), 'fill')
+
+				const logger = { warn: vi.fn() } as unknown as Logger
+				const store = new ImageCacheStore(logger, async (source) => decodeImage(source, 1024 * 1024), 1024 * 1024)
+				const frames = await store.selectAnimationFrames(style.elements, timeMs)
+				expect(frames.maxDurationMs).toBe(300)
+				const resolved = await store.resolveDrawStyle(style, frames.frameIndices)
+
+				const buffer = await GraphicsRenderer.drawButtonImageBuffer(
+					resolved,
+					{ width: 72, height: 72, oversampling: 1 },
+					null,
+					'rgba'
+				)
+				const centre = (36 * 72 + 36) * 4
+				expect([...buffer.subarray(centre, centre + 4)]).toEqual(expectedColor)
+			})
+
+			test('draws a segment of an image spanning several buttons the same as the source image', async () => {
+				// An image 4 buttons wide, positioned to show its second quarter, as for one control of an lcd strip
+				const style = makeImageStyle(makeQuadrantPngDataUrl(800, 100), 'fill', { x: -1, y: 0, width: 4, height: 1 })
+				const resolved = await resolveImages(style)
+				expect(resolved.decodedImages?.get('img')).toMatchObject({ width: 800, height: 100 })
+
+				const resolution = { width: 200, height: 100, oversampling: 1 }
+				const fromSource = await GraphicsRenderer.drawButtonImageBuffer(style, resolution, null, 'rgba')
+				const fromDecoded = await GraphicsRenderer.drawButtonImageBuffer(resolved, resolution, null, 'rgba')
+				expect(Buffer.from(fromDecoded).equals(Buffer.from(fromSource))).toBe(true)
+
+				// The second quarter is the right of the red (top) and blue (bottom) halves
+				const pixelAt = (x: number, y: number) => [...fromDecoded.subarray((y * 200 + x) * 4, (y * 200 + x) * 4 + 4)]
+				expect(pixelAt(100, 10)).toEqual([255, 0, 0, 255])
+				expect(pixelAt(100, 90)).toEqual([0, 0, 255, 255])
+			})
 		})
 	})
 

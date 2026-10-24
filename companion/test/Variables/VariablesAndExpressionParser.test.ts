@@ -1340,6 +1340,22 @@ describe('VariablesAndExpressionParser', () => {
 			expect(parser.parseVariables('$(this:row)').text).toBe('$NA')
 			expect(parser.parseVariables('$(this:column)').text).toBe('$NA')
 		})
+
+		it('blockedThisVariables leaves those this: variables unresolved, including in child parsers', () => {
+			const thisValues: VariablesCache = new Map([
+				['this:row', '2'],
+				['this:step', '$(internal:b_step_1_2_3)'],
+			])
+			const parser = newParser(mockUserConfig, null as any, {}, thisValues, null, null, null, {
+				blockedThisVariables: new Set(['this:step']),
+			})
+
+			expect(parser.parseVariables('$(this:row)').text).toBe('2')
+			const blocked = parser.parseVariables('$(this:step)')
+			expect(blocked.text).toBe('$NA')
+			expect(blocked.variableIds).not.toContain('internal:b_step_1_2_3')
+			expect(parser.createChildParser({}).parseVariables('$(this:step)').text).toBe('$NA')
+		})
 	})
 
 	describe('createChildParser', () => {

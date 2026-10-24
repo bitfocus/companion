@@ -3,6 +3,7 @@ import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js
 import type { ClientModuleInfo, ClientModuleVersionInfo } from '@companion-app/shared/Model/ModuleInfo.js'
 import { isSomeModuleApiVersionCompatible } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { getHelpPathForInstalledModule } from './ModuleScanner.js'
+import { isNodeJsRuntimeOverridden } from './NodePath.js'
 import type { SomeModuleVersionInfo } from './Types.js'
 
 /**
@@ -85,6 +86,7 @@ function translateStableVersion(
 			displayName: 'Builtin',
 			isLegacy: false,
 			isBeta: false,
+			isRuntimeOverridden: isNodeJsRuntimeOverridden(version.manifest.runtime.type),
 			helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
 			versionId: 'builtin',
 			allowMultipleInstances,
@@ -94,6 +96,7 @@ function translateStableVersion(
 			displayName: 'Dev',
 			isLegacy: false,
 			isBeta: false,
+			isRuntimeOverridden: isNodeJsRuntimeOverridden(version.manifest.runtime.type),
 			helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
 			versionId: 'dev',
 			allowMultipleInstances,
@@ -104,6 +107,7 @@ function translateStableVersion(
 			isLegacy: version.isLegacy,
 			helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
 			isBeta: version.isBeta,
+			isRuntimeOverridden: isNodeJsRuntimeOverridden(version.manifest.runtime.type),
 			versionId: version.versionId,
 			allowMultipleInstances,
 		}
@@ -118,6 +122,7 @@ function translateReleaseVersion(
 		displayName: `v${version.versionId}`,
 		isLegacy: version.isLegacy,
 		isBeta: version.isBeta,
+		isRuntimeOverridden: isNodeJsRuntimeOverridden(version.manifest.runtime.type),
 		helpPath: getHelpPathForInstalledModule(moduleType, version.manifest.id, version.versionId),
 		versionId: version.versionId,
 		allowMultipleInstances:
