@@ -1,4 +1,4 @@
-import { faArrowLeft, faChevronRight, faPlus } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
@@ -9,12 +9,11 @@ import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
 import { Button } from '~/Components/Button.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Modal } from '~/Components/Modal.js'
+import { RowButton } from '~/Components/RowButton.js'
 import { TextInputField } from '~/Components/TextInputField.js'
 import { OptionsVisibility } from '~/Hooks/OptionsVisibility.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
-import './AddTransportModal.css'
-import { useLinkStore } from './LinkStoreContext.js'
 import { TransportConfigField } from './TransportConfigField.js'
 
 /** Add a transport: first choose its type, then name and configure it */
@@ -37,7 +36,7 @@ export const AddTransportModal = observer(function AddTransportModal({ open }: {
 			<Modal.Portal>
 				<Modal.Backdrop />
 				<Modal.Viewport>
-					<Modal.Popup size="lg" scrollable className="add-transport-modal">
+					<Modal.Popup size="lg" scrollable>
 						<Modal.Header closeButton>
 							<Modal.Title>{selectedType ? `Add ${selectedType.name}` : 'Add Transport'}</Modal.Title>
 						</Modal.Header>
@@ -58,7 +57,7 @@ const ChooseTypeStep = observer(function ChooseTypeStep({
 }: {
 	onChoose: (type: ClientLinkTransportType) => void
 }) {
-	const linkStore = useLinkStore()
+	const { link: linkStore } = useContext(RootAppStoreContext)
 
 	return (
 		<Modal.Body>
@@ -66,18 +65,7 @@ const ChooseTypeStep = observer(function ChooseTypeStep({
 			{/* In the order the backend offers them, which puts the recommended ones first */}
 			<div className="list-card overflow-hidden">
 				{linkStore.addableTransportTypes.map((type) => (
-					<Button
-						key={type.type}
-						variant="ghost"
-						className="add-transport-type list-row"
-						onClick={() => onChoose(type)}
-					>
-						<span className="flex flex-col items-start gap-1 min-w-0 grow">
-							<span className="flex items-center gap-2 text-base font-semibold text-body-strong">{type.name}</span>
-							<span className="text-sm text-muted whitespace-normal">{type.description}</span>
-						</span>
-						<FontAwesomeIcon icon={faChevronRight} className="shrink-0 text-muted" aria-hidden="true" />
-					</Button>
+					<RowButton key={type.type} title={type.name} description={type.description} onClick={() => onChoose(type)} />
 				))}
 			</div>
 			<p className="text-sm text-muted mt-3 mb-0">

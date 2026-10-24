@@ -3,6 +3,7 @@ import { ActionSetsModelSchema, ActionStepOptionsSchema } from './ActionModel.js
 import { SomeEntityModelSchema } from './EntityModel.js'
 import { createExpressionOrValueSchema, JsonValueSchema } from './Options.js'
 import { SomeButtonGraphicsElementSchema } from './StyleLayersModel.js'
+import { ButtonGraphicsDecorationType, ButtonGraphicsShowStatusIcons } from './StyleModel.js'
 
 export const PageNumberButtonModelSchema = z.object({
 	type: z.literal('pagenum'),
@@ -152,6 +153,10 @@ export const LinkButtonOptionsSchema = z.object({
 	/** The grid location (page/row/column) of the button on that installation */
 	location: createExpressionOrValueSchema(z.string()).default({ value: '', isExpression: false }),
 	notes: z.string().optional(),
+	/** How the button is decorated here */
+	decoration: z.enum(ButtonGraphicsDecorationType).default(ButtonGraphicsDecorationType.FollowDefault),
+	/** Whether the button shows status icons here */
+	showStatusIcons: z.enum(ButtonGraphicsShowStatusIcons).default(ButtonGraphicsShowStatusIcons.FollowDefault),
 })
 export type LinkButtonOptions = z.output<typeof LinkButtonOptionsSchema>
 

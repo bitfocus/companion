@@ -1,11 +1,14 @@
 import { faCircleExclamation, faLink, faLinkSlash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useId, useMemo } from 'react'
+import { useCallback, useContext, useId, useMemo } from 'react'
+import {
+	BUTTON_DECORATION_CHOICES,
+	BUTTON_STATUS_ICONS_CHOICES,
+} from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { LinkButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import type { LinkButtonRuntimeProps, LinkButtonStatus } from '@companion-app/shared/Model/Link.js'
+import type { LinkButtonRuntimeProps } from '@companion-app/shared/Model/Link.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { Button } from '~/Components/Button.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
@@ -15,23 +18,9 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { Note } from '~/Components/Note.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ButtonLocationInput } from './ButtonLocationInput.js'
-import { linkPeerChoices } from './LinkPeerChoices.js'
-
-/** What to tell the user about each status, when it needs explaining */
-const STATUS_EXPLANATIONS: Record<LinkButtonStatus, string | null> = {
-	unconfigured: 'Choose an installation and a button location.',
-	unknown_peer: 'This installation has not been found on any transport.',
-	incompatible: 'This installation runs an incompatible version of Companion Link.',
-	offline: 'This installation is not reachable right now.',
-	denied:
-		"This installation doesn't share its buttons with this one. On its Link page, select this installation and turn on sharing its buttons.",
-	over_limit:
-		'This installation is already sending as many buttons as it can to the installations using it, so it refused this one.',
-	loading: null,
-	loop: 'This button leads back to itself through other installations, so it would show itself.',
-	ok: null,
-}
+import { linkPeerChoices, STATUS_EXPLANATIONS } from './LinkPeerChoices.js'
 
 interface LinkButtonEditorProps {
 	config: LinkButtonModel
@@ -47,7 +36,7 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 }: LinkButtonEditorProps) {
 	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
 	const setOption = useCallback(
-		(key: 'peerId' | 'location', value: string | ExpressionOrValue<string>) => {
+		(key: 'peerId' | 'location' | 'decoration' | 'showStatusIcons', value: string | ExpressionOrValue<string>) => {
 			setOptionsFieldMutation
 				.mutateAsync({ controlId, key, value })
 				.catch((e) => console.error(`Failed to set link button ${key}: ${e}`))
@@ -55,10 +44,10 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 		[setOptionsFieldMutation, controlId]
 	)
 
-	const peers = useSubscription(trpc.link.watchPeers.subscriptionOptions())
+	const { link } = useContext(RootAppStoreContext)
 	const peerChoices = useMemo(
-		() => linkPeerChoices(peers.data ?? [], config.options.peerId),
-		[peers.data, config.options.peerId]
+		() => linkPeerChoices(link.peers, config.options.peerId),
+		[link.peers, config.options.peerId]
 	)
 
 	const status = runtimeProps ? (runtimeProps as LinkButtonRuntimeProps).status : null
@@ -66,9 +55,11 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 
 	const peerFieldId = useId()
 	const locationFieldId = useId()
+	const decorationFieldId = useId()
+	const statusIconsFieldId = useId()
 
 	// Nothing to choose from until another installation has been found
-	if (peers.data && peerChoices.length === 0) return <NoInstallations />
+	if (peerChoices.length === 0) return <NoInstallations />
 
 	return (
 		<>
@@ -111,6 +102,34 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 					/>
 					<div className="form-text">
 						The location on the other installation. <code>this</code> means the same location as this button.
+					</div>
+				</Grid.Col>
+
+				<FormLabel htmlFor={decorationFieldId} sm={4} column="sm">
+					Decoration
+				</FormLabel>
+				<Grid.Col sm={8}>
+					<DropdownInputField
+						htmlName={decorationFieldId}
+						choices={BUTTON_DECORATION_CHOICES}
+						value={config.options.decoration}
+						setValue={(value) => setOption('decoration', String(value))}
+					/>
+				</Grid.Col>
+
+				<FormLabel htmlFor={statusIconsFieldId} sm={4} column="sm">
+					Show status icons
+				</FormLabel>
+				<Grid.Col sm={8}>
+					<DropdownInputField
+						htmlName={statusIconsFieldId}
+						choices={BUTTON_STATUS_ICONS_CHOICES}
+						value={config.options.showStatusIcons}
+						setValue={(value) => setOption('showStatusIcons', String(value))}
+					/>
+					<div className="form-text">
+						The button is decorated here, as any button of this installation. With a top bar, a link among its status
+						icons marks it as a remote button.
 					</div>
 				</Grid.Col>
 			</Form>

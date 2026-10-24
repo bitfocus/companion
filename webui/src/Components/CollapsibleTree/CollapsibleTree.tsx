@@ -148,7 +148,8 @@ interface CollapsibleTreeLeafWrapperProps<TLeafData> {
 	selectedLeafKey: string | null
 }
 
-function CollapsibleTreeLeafWrapper<TLeafData extends { key: string }>({
+/** `disabled` greys a leaf out so it can't be chosen, eg one that can't be used now. Defaults to false */
+function CollapsibleTreeLeafWrapper<TLeafData extends { key: string; disabled?: boolean }>({
 	leaf,
 	nestingLevel,
 	LeafComponent,
@@ -156,24 +157,26 @@ function CollapsibleTreeLeafWrapper<TLeafData extends { key: string }>({
 	selectedLeafKey,
 }: CollapsibleTreeLeafWrapperProps<TLeafData>) {
 	const isSelected = selectedLeafKey !== null && selectedLeafKey === leaf.key
+	const onClick = leaf.disabled ? undefined : onLeafClick
 
 	return (
 		<div
-			className={classNames('collapsible-tree-leaf-row', { selected: isSelected })}
+			className={classNames('collapsible-tree-leaf-row', { selected: isSelected, disabled: leaf.disabled })}
 			aria-current={isSelected ? 'true' : undefined}
+			aria-disabled={leaf.disabled || undefined}
 			role={onLeafClick ? 'button' : undefined}
-			tabIndex={onLeafClick ? 0 : undefined}
+			tabIndex={onClick ? 0 : undefined}
 			onKeyDown={
-				onLeafClick
+				onClick
 					? (e) => {
 							if (e.key === 'Enter' || e.key === ' ') {
 								e.preventDefault()
-								onLeafClick(leaf)
+								onClick(leaf)
 							}
 						}
 					: undefined
 			}
-			onClick={onLeafClick ? () => onLeafClick(leaf) : undefined}
+			onClick={onClick ? () => onClick(leaf) : undefined}
 		>
 			<CollapsibleTreeNesting nestingLevel={nestingLevel} className="collapsible-tree-leaf-content">
 				<LeafComponent leaf={leaf} />

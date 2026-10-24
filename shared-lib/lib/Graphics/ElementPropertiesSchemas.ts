@@ -1,3 +1,4 @@
+import type { DropdownChoice } from '../Model/Common.js'
 import { CompanionFieldVariablesSupport, type SomeCompanionInputField } from '../Model/Options.js'
 import type {
 	ButtonGraphicsBoxElement,
@@ -441,6 +442,21 @@ export const circleElementSchema: ElementSchemaSection[] = [
 	},
 ]
 
+/** The choices of decoration for a button, for its canvas or for a remote button */
+export const BUTTON_DECORATION_CHOICES: DropdownChoice[] = [
+	{ id: ButtonGraphicsDecorationType.FollowDefault, label: 'Follow default' },
+	{ id: ButtonGraphicsDecorationType.TopBar, label: 'Top bar' },
+	{ id: ButtonGraphicsDecorationType.Border, label: 'Border when pressed' },
+	{ id: ButtonGraphicsDecorationType.None, label: 'None' },
+]
+
+/** The choices of status icons for a button, for its canvas or for a remote button */
+export const BUTTON_STATUS_ICONS_CHOICES: DropdownChoice[] = [
+	{ id: ButtonGraphicsShowStatusIcons.FollowDefault, label: 'Follow default' },
+	{ id: ButtonGraphicsShowStatusIcons.ShowAll, label: 'Show all' },
+	{ id: ButtonGraphicsShowStatusIcons.None, label: 'None' },
+]
+
 export const canvasElementSchema: ElementSchemaSection[] = [
 	{
 		id: 'properties',
@@ -458,12 +474,7 @@ export const canvasElementSchema: ElementSchemaSection[] = [
 				type: 'dropdown',
 				id: 'decoration',
 				label: 'Decoration',
-				choices: [
-					{ id: ButtonGraphicsDecorationType.FollowDefault, label: 'Follow default' },
-					{ id: ButtonGraphicsDecorationType.TopBar, label: 'Top bar' },
-					{ id: ButtonGraphicsDecorationType.Border, label: 'Border when pressed' },
-					{ id: ButtonGraphicsDecorationType.None, label: 'None' },
-				],
+				choices: BUTTON_DECORATION_CHOICES,
 				default: ButtonGraphicsDecorationType.FollowDefault,
 			},
 			{
@@ -471,11 +482,7 @@ export const canvasElementSchema: ElementSchemaSection[] = [
 				id: 'showStatusIcons',
 				label: 'Show status icons',
 				tooltip: 'Whether to show status icons in the top right corner of the button',
-				choices: [
-					{ id: ButtonGraphicsShowStatusIcons.FollowDefault, label: 'Follow default' },
-					{ id: ButtonGraphicsShowStatusIcons.ShowAll, label: 'Show all' },
-					{ id: ButtonGraphicsShowStatusIcons.None, label: 'None' },
-				],
+				choices: BUTTON_STATUS_ICONS_CHOICES,
 				default: ButtonGraphicsShowStatusIcons.FollowDefault,
 			},
 		],

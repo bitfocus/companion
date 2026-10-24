@@ -43,6 +43,7 @@ import { Route as AppImageLibraryIndexRouteImport } from './routes/_app/image-li
 import { Route as AppImageLibraryImageNameRouteImport } from './routes/_app/image-library/$imageName.tsx'
 import { Route as AppLinkIndexRouteImport } from './routes/_app/link/index.tsx'
 import { Route as AppLinkPeerIdRouteImport } from './routes/_app/link/$peerId.tsx'
+import { Route as AppLinkSelfRouteImport } from './routes/_app/link/self.tsx'
 import { Route as AppLinkTransportsRouteImport } from './routes/_app/link_/transports.tsx'
 import { Route as AppModulesIndexRouteImport } from './routes/_app/modules/index.tsx'
 import { Route as AppSettingsIndexRouteImport } from './routes/_app/settings/index.tsx'
@@ -269,6 +270,11 @@ const AppLinkIndexRoute = AppLinkIndexRouteImport.update({
 const AppLinkPeerIdRoute = AppLinkPeerIdRouteImport.update({
   id: '/$peerId',
   path: '/$peerId',
+  getParentRoute: () => AppLinkRoute,
+} as any)
+const AppLinkSelfRoute = AppLinkSelfRouteImport.update({
+  id: '/self',
+  path: '/self',
   getParentRoute: () => AppLinkRoute,
 } as any)
 const AppLinkTransportsRoute = AppLinkTransportsRouteImport.update({
@@ -595,6 +601,7 @@ export interface FileRoutesByFullPath {
   '/connections/add': typeof AppConnectionsAddRoute
   '/image-library/$imageName': typeof AppImageLibraryImageNameRoute
   '/link/$peerId': typeof AppLinkPeerIdRoute
+  '/link/self': typeof AppLinkSelfRoute
   '/link/transports': typeof AppLinkTransportsRouteWithChildren
   '/settings/advanced': typeof AppSettingsAdvancedRouteWithChildren
   '/settings/backups': typeof AppSettingsBackupsRouteWithChildren
@@ -675,6 +682,7 @@ export interface FileRoutesByTo {
   '/connections/add': typeof AppConnectionsAddRoute
   '/image-library/$imageName': typeof AppImageLibraryImageNameRoute
   '/link/$peerId': typeof AppLinkPeerIdRoute
+  '/link/self': typeof AppLinkSelfRoute
   '/settings/buttons': typeof AppSettingsButtonsRoute
   '/settings/general': typeof AppSettingsGeneralRoute
   '/settings/surfaces': typeof AppSettingsSurfacesRoute
@@ -755,6 +763,7 @@ export interface FileRoutesById {
   '/_app/connections/add': typeof AppConnectionsAddRoute
   '/_app/image-library/$imageName': typeof AppImageLibraryImageNameRoute
   '/_app/link/$peerId': typeof AppLinkPeerIdRoute
+  '/_app/link/self': typeof AppLinkSelfRoute
   '/_app/link_/transports': typeof AppLinkTransportsRouteWithChildren
   '/_app/settings/advanced': typeof AppSettingsAdvancedRouteWithChildren
   '/_app/settings/backups': typeof AppSettingsBackupsRouteWithChildren
@@ -844,6 +853,7 @@ export interface FileRouteTypes {
     | '/connections/add'
     | '/image-library/$imageName'
     | '/link/$peerId'
+    | '/link/self'
     | '/link/transports'
     | '/settings/advanced'
     | '/settings/backups'
@@ -924,6 +934,7 @@ export interface FileRouteTypes {
     | '/connections/add'
     | '/image-library/$imageName'
     | '/link/$peerId'
+    | '/link/self'
     | '/settings/buttons'
     | '/settings/general'
     | '/settings/surfaces'
@@ -1003,6 +1014,7 @@ export interface FileRouteTypes {
     | '/_app/connections/add'
     | '/_app/image-library/$imageName'
     | '/_app/link/$peerId'
+    | '/_app/link/self'
     | '/_app/link_/transports'
     | '/_app/settings/advanced'
     | '/_app/settings/backups'
@@ -1309,6 +1321,13 @@ declare module '@tanstack/react-router' {
       path: '/$peerId'
       fullPath: '/link/$peerId'
       preLoaderRoute: typeof AppLinkPeerIdRouteImport
+      parentRoute: typeof AppLinkRoute
+    }
+    '/_app/link/self': {
+      id: '/_app/link/self'
+      path: '/self'
+      fullPath: '/link/self'
+      preLoaderRoute: typeof AppLinkSelfRouteImport
       parentRoute: typeof AppLinkRoute
     }
     '/_app/link_/transports': {
@@ -1747,11 +1766,13 @@ const AppImageLibraryRouteWithChildren = AppImageLibraryRoute._addFileChildren(
 
 interface AppLinkRouteChildren {
   AppLinkPeerIdRoute: typeof AppLinkPeerIdRoute
+  AppLinkSelfRoute: typeof AppLinkSelfRoute
   AppLinkIndexRoute: typeof AppLinkIndexRoute
 }
 
 const AppLinkRouteChildren: AppLinkRouteChildren = {
   AppLinkPeerIdRoute: AppLinkPeerIdRoute,
+  AppLinkSelfRoute: AppLinkSelfRoute,
   AppLinkIndexRoute: AppLinkIndexRoute,
 }
 

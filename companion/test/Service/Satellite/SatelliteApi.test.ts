@@ -1748,6 +1748,26 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.lastMessage).toContain('SUBID="sub1"')
 		})
 
+		test('counts a STYLE bitmap as shown at its own size, keeping its shape however large, but not a size of nothing', () => {
+			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
+			const { processMessage } = createSocketAndInit(api, logger)
+			serviceApi.getCachedRenderOrGeneratePlaceholder.mockReturnValue(mock<ImageResult>())
+			const addSub = (subId: string, bitmap: { w: number; h: number }) => {
+				const style = Buffer.from(JSON.stringify({ bitmap })).toString('base64')
+				processMessage(`ADD-SUB SUBID="${subId}" LOCATION="1/2/3" STYLE="${style}"\n`)
+			}
+
+			addSub('sub1', { w: 4096, h: 1024 })
+			expect(serviceApi.acquireDisplayedLocation).toHaveBeenCalledWith(
+				{ pageNumber: 1, row: 2, column: 3 },
+				{ width: 4096, height: 1024 }
+			)
+
+			serviceApi.acquireDisplayedLocation.mockClear()
+			addSub('sub2', { w: 0, h: 100000 })
+			expect(serviceApi.acquireDisplayedLocation).not.toHaveBeenCalled()
+		})
+
 		test('negotiates BITMAP_FORMAT and sends the encoded data url in SUB-STATE', async () => {
 			const { api, logger, serviceApi } = createService({ subscriptionsEnabled: true })
 			const { socket, processMessage } = createSocketAndInit(api, logger)

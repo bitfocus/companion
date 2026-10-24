@@ -280,7 +280,12 @@ export class DirectServerTransport extends DirectTransportBase {
 			inputLabel: 'Pairing code',
 			actions: [
 				{ id: 'pair', label: 'Pair', color: 'primary', requiresInput: true },
-				{ id: 'reject', label: 'Reject', color: 'secondary' },
+				{
+					id: 'reject',
+					label: 'Reject',
+					color: 'secondary',
+					confirm: `Reject the pairing request from ${request.channel.remoteName}? It will stop asking until it is told to try again.`,
+				},
 			],
 		}))
 
@@ -290,7 +295,14 @@ export class DirectServerTransport extends DirectTransportBase {
 			peerId: key,
 			description: `${this.isLinked(key) ? 'Connected' : 'Not connected'} · Link id ${formatLinkIdFingerprint(key)} · paired ${new Date(info.pairedAt).toLocaleDateString()}`,
 			inputLabel: null,
-			actions: [{ id: 'unpair', label: 'Unpair', color: 'danger' }],
+			actions: [
+				{
+					id: 'unpair',
+					label: 'Unpair',
+					color: 'danger',
+					confirm: `Unpair ${info.name}? It is disconnected, and must pair again to connect. What is shared with it is kept.`,
+				},
+			],
 		}))
 
 		const sections: LinkTransportSection[] = []

@@ -8,6 +8,7 @@ import type {
 	CompanionInputFieldStaticTextExtended,
 	CompanionInputFieldTextInputExtended,
 } from './Options.js'
+import type { UserConfigGridSize } from './UserConfigModel.js'
 
 /**
  * Companion Link: linking Companion installations together, over one or more transports.
@@ -107,6 +108,8 @@ export interface LinkTransportSectionAction {
 	 * the value is submitted, eg with Enter. Defaults to false
 	 */
 	requiresInput?: boolean
+	/** When set, the user is asked to confirm this before it is done. Defaults to not asking */
+	confirm?: string
 }
 
 /** An item reported by a transport, that the user may act on, eg a pairing request */
@@ -187,6 +190,8 @@ export interface LinkPeerInfo {
 	sharedByUs: LinkPermissions
 	/** What the peer lets this installation use, or null until it has said */
 	sharedWithUs: LinkPermissions | null
+	/** Whether more than one installation is announcing with its Link id, eg one was cloned from the other */
+	sharesLinkId: boolean
 }
 
 /** How much of what is shared is in use, in each direction, eg the buttons subscribed to (once per button and size) */
@@ -208,11 +213,28 @@ export interface LinkSelfInfo {
 	name: string
 	/** The Link protocol versions this installation speaks, one per major version */
 	protocolVersions: string[]
+	/** Whether another installation has been seen with the same Link id, eg one cloned from this one */
+	sharesLinkId: boolean
 }
+
+/** A page of buttons of another installation, to choose a remote button from */
+export interface LinkRemotePage {
+	pageNumber: number
+	/** May be empty */
+	name: string
+	/** Where on the page there are buttons */
+	buttons: { row: number; column: number }[]
+}
+
+/** The pages of buttons of another installation, or why they can't be had */
+export type LinkRemotePagesResult =
+	| { ok: true; gridSize: UserConfigGridSize; pages: LinkRemotePage[] }
+	| { ok: false; error: 'unknown_peer' | 'incompatible' | 'offline' | 'denied' | 'timeout' }
 
 /**
  * Why a link button is showing what it is showing
- * - `unconfigured`: no peer or location chosen, or the location could not be resolved
+ * - `unconfigured`: no peer or location chosen
+ * - `bad_location`: the location could not be resolved to a button location
  * - `unknown_peer`: the peer has not been discovered on any transport
  * - `incompatible`: the peer speaks an incompatible protocol version
  * - `offline`: the peer is known but not currently reachable
@@ -223,7 +245,16 @@ export interface LinkSelfInfo {
  * - `ok`: showing the remote button
  */
 export type LinkButtonStatus =
-	'unconfigured' | 'unknown_peer' | 'incompatible' | 'offline' | 'denied' | 'over_limit' | 'loading' | 'loop' | 'ok'
+	| 'unconfigured'
+	| 'bad_location'
+	| 'unknown_peer'
+	| 'incompatible'
+	| 'offline'
+	| 'denied'
+	| 'over_limit'
+	| 'loading'
+	| 'loop'
+	| 'ok'
 
 /** Runtime (non-persisted) state of a link button, for the button editor */
 export interface LinkButtonRuntimeProps {

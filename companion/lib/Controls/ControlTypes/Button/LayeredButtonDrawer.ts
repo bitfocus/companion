@@ -336,6 +336,7 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 				elements,
 				referencedLocations: referencedLocations.drawn,
 				clockSensitive: clockSensitive || undefined,
+				link_status: undefined,
 
 				style: 'button-layered',
 				drawType: this.#drawType,

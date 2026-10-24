@@ -16,6 +16,16 @@ describe('message encoding', () => {
 		expect(decoded).toEqual({ ok: true, message: { type: 'button.press', payload } })
 	})
 
+	test('accepts pages of a grid of a sane size, and rejects an inverted or huge one', () => {
+		const pages = (gridSize: { minRow: number; maxRow: number; minColumn: number; maxColumn: number }) =>
+			decodeLinkMessage(JSON.stringify({ type: 'pages', payload: { id: 'r1', gridSize, pages: [] } })).ok
+
+		expect(pages({ minRow: 0, maxRow: 3, minColumn: 0, maxColumn: 7 })).toBe(true)
+		expect(pages({ minRow: 3, maxRow: 0, minColumn: 0, maxColumn: 7 })).toBe(false)
+		// Each endpoint is within bounds, but the grid between them is too many buttons to lay out
+		expect(pages({ minRow: -10_000, maxRow: 10_000, minColumn: -10_000, maxColumn: 10_000 })).toBe(false)
+	})
+
 	test('rejects invalid json', () => {
 		expect(decodeLinkMessage('{nope')).toEqual({ ok: false, error: 'Invalid JSON' })
 	})
@@ -51,6 +61,53 @@ describe('message encoding', () => {
 	})
 })
 
+describe('values added by a newer version', () => {
+	const sub = { button: { type: 'location', page: 1, row: 0, column: 0 }, width: 72, height: 72 }
+
+	test('leaves out an item of a list it cannot read, keeping the rest', () => {
+		const raw = JSON.stringify({
+			type: 'subscribe',
+			payload: {
+				buttons: [
+					{ ...sub, button: { type: 'future', id: 'x' }, have: null },
+					{ ...sub, have: null },
+				],
+			},
+		})
+		expect(decodeLinkMessage(raw)).toEqual({
+			ok: true,
+			message: { type: 'subscribe', payload: { buttons: [{ ...sub, have: null }] } },
+		})
+	})
+
+	test('reads a refusal for a reason added since as the peer being busy', () => {
+		const raw = JSON.stringify({ type: 'subscribe.refused', payload: { buttons: [{ ...sub, reason: 'future' }] } })
+		expect(decodeLinkMessage(raw)).toMatchObject({
+			ok: true,
+			message: { payload: { buttons: [{ reason: 'limit' }] } },
+		})
+	})
+
+	test('reads a status added since as none', () => {
+		const raw = JSON.stringify({
+			type: 'button.update',
+			payload: {
+				...sub,
+				revision: { stream: 's', seq: 1 },
+				image: { type: 'image', dataUrl: null },
+				pressed: false,
+				stepCurrent: 1,
+				stepCount: 1,
+				status: 'future',
+				actionRunning: false,
+				unreachable: false,
+				sourceChain: [],
+			},
+		})
+		expect(decodeLinkMessage(raw)).toMatchObject({ ok: true, message: { payload: { status: null } } })
+	})
+})
+
 describe('announcement', () => {
 	const announcement = {
 		name: 'Somewhere',
@@ -68,19 +125,20 @@ describe('announcement', () => {
 		expect(result.ok).toBe(true)
 	})
 
-	test('rejects fields too long to be real, as they are stored and shown', () => {
-		const decode = (fields: object) => decodeLinkAnnouncement(JSON.stringify({ ...announcement, ...fields })).ok
-		expect(decode({ companionVersion: 'x'.repeat(65) })).toBe(false)
-		expect(decode({ protocolVersions: ['1.0.0'.padEnd(33, '0')] })).toBe(false)
-		expect(decode({ protocolVersions: Array.from({ length: 17 }, (_, i) => `${i + 1}.0.0`) })).toBe(false)
-		expect(decode({ companionVersion: 'x'.repeat(64), protocolVersions: ['1.0.0', '2.0.0'] })).toBe(true)
-	})
-
-	test('rejects an announcement interval long enough to keep a peer that has gone listed for long', () => {
-		const decode = (announceIntervalMs: number) =>
-			decodeLinkAnnouncement(JSON.stringify({ ...announcement, announceIntervalMs })).ok
-		expect(decode(60_000)).toBe(true)
-		expect(decode(60_001)).toBe(false)
+	test('cuts fields too long to be real, as they are stored and shown, rather than rejecting a later version', () => {
+		const decode = (fields: object) => decodeLinkAnnouncement(JSON.stringify({ ...announcement, ...fields }))
+		expect(decode({ companionVersion: 'x'.repeat(65) })).toMatchObject({
+			announcement: { companionVersion: 'x'.repeat(64) },
+		})
+		expect(decode({ protocolVersions: ['1.0.0'.padEnd(33, '0')] })).toMatchObject({
+			announcement: { protocolVersions: ['1.0.0'.padEnd(32, '0')] },
+		})
+		const versions = Array.from({ length: 17 }, (_, i) => `${i + 1}.0.0`)
+		expect(decode({ protocolVersions: versions })).toMatchObject({
+			announcement: { protocolVersions: versions.slice(0, 16) },
+		})
+		// So that a peer that has gone is not listed as reachable for long
+		expect(decode({ announceIntervalMs: 60_001 })).toMatchObject({ announcement: { announceIntervalMs: 60_000 } })
 	})
 })
 

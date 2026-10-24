@@ -11,8 +11,11 @@ import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigMode
 import type { IControlStore } from '../../../lib/Controls/IControlStore.js'
 import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
 import type { GraphicsController } from '../../../lib/Graphics/Controller.js'
+import { DisplayedLocations } from '../../../lib/Graphics/DisplayedLocations.js'
 import type { ImageResult } from '../../../lib/Graphics/ImageResult.js'
+import type { LinkButtonTarget } from '../../../lib/Link/ButtonClient.js'
 import { LinkController } from '../../../lib/Link/Controller.js'
+import { LinkRemoteImageStore } from '../../../lib/Link/RemoteImageStore.js'
 import type { SomeLinkBuiltinTransport, SomeLinkTransportDefinition } from '../../../lib/Link/Transports/Types.js'
 import type { IPageStore } from '../../../lib/Page/Store.js'
 import { FakeDataDatabase } from '../../utils/FakeTableView.js'
@@ -20,8 +23,9 @@ import { FakeDataDatabase } from '../../utils/FakeTableView.js'
 /** A render of a button, whose image says which installation drew it and which version it is */
 export function fakeRender(image: string, pushed: boolean): ImageResult {
 	return {
+		image,
 		style: { type: 'button', state: { pushed } },
-		drawNativeEncoded: async () => `data:image/png;base64,${image}`,
+		drawNativeEncoded: vi.fn(async () => `data:image/png;base64,${image}`),
 	} as unknown as ImageResult
 }
 
@@ -56,11 +60,13 @@ async function current<T>(subscribe: (signal: AbortSignal) => Promise<AsyncItera
 /**
  * A Companion installation running a real LinkController, with fakes of the rest of Companion: the buttons it
  * serves (every location has a button, drawn as `<name>-<location>`, pressed through `controls`), which locations of
- * its pages hold a remote button (`placeRemoteButton`), and its user config
+ * its pages hold a remote button (`placeRemoteButton`), what is shown where (`displayedLocations`), and its user
+ * config
  */
 export class LinkInstallation {
 	readonly name: string
 	readonly controller: LinkController
+	readonly displayedLocations = new DisplayedLocations()
 	/** The aborts of the actions of each control */
 	readonly abortControl = vi.fn((_controlId: string, _unlatch: boolean, _hops: number) => undefined)
 	readonly controls = {
@@ -78,6 +84,22 @@ export class LinkInstallation {
 		getCachedRenderOrGeneratePlaceholder: vi.fn((location: ControlLocation) =>
 			fakeRender(`${this.name}-${locationKey(location)}`, false)
 		),
+		displayedLocations: this.displayedLocations,
+		// Undecorated: what is drawn is the whole of the button
+		getUndecoratedRender: vi.fn((render: ImageResult) => ({
+			render,
+			// What the fake render draws
+			contentKey: (render as unknown as { image: string }).image,
+			state: {
+				pushed: !!render.style?.state?.pushed,
+				stepCurrent: 1,
+				stepCount: 1,
+				button_status: undefined,
+				action_running: false,
+				link_status: undefined,
+			},
+		})),
+		getContentSize: vi.fn((size: { width: number; height: number }) => size),
 	}
 	/** Link's tRPC api, called as the UI would */
 	readonly api: LinkApi
@@ -93,7 +115,11 @@ export class LinkInstallation {
 			db.getTableView('link_transports').data[transport.id] = { ...transport, sortOrder, builtin: false }
 		})
 
-		const userConfigValues: Partial<UserConfigModel> = { installName: options.name, ...options.userConfig }
+		const userConfigValues: Partial<UserConfigModel> = {
+			installName: options.name,
+			gridSize: { minRow: 0, maxRow: 1, minColumn: 0, maxColumn: 2 },
+			...options.userConfig,
+		}
 		const userconfig = Object.assign(new EventEmitter(), {
 			getKey: (key: keyof UserConfigModel) => userConfigValues[key],
 		}) as unknown as DataUserConfig
@@ -101,6 +127,17 @@ export class LinkInstallation {
 		const pageStore = Object.assign(new EventEmitter(), {
 			getControlIdAt: (location: ControlLocation) =>
 				this.#controlsAt.get(locationKey(location)) ?? `control-${locationKey(location)}`,
+			// Two pages to choose from, the first with buttons on it, one of them outside the grid
+			getPageCount: () => 2,
+			getPageName: (pageNumber: number) => (pageNumber === 1 ? 'Cameras' : ''),
+			getAllPopulatedLocationsOnPage: (pageNumber: number): ControlLocation[] =>
+				pageNumber === 1
+					? [
+							{ pageNumber, row: 0, column: 0 },
+							{ pageNumber, row: 1, column: 2 },
+							{ pageNumber, row: 9, column: 9 },
+						]
+					: [],
 		}) as unknown as IPageStore
 
 		this.controller = new LinkController(
@@ -112,6 +149,7 @@ export class LinkInstallation {
 				pageStore,
 				controls: this.controls as unknown as IControlStore,
 				graphics: this.graphics as unknown as GraphicsController,
+				remoteImages: new LinkRemoteImageStore(),
 			},
 			options.transportDefinitions,
 			options.builtinTransports
@@ -128,6 +166,20 @@ export class LinkInstallation {
 		this.#controlsAt.set(locationKey(location), controlId)
 	}
 
+	/** Point a remote button placed here at a button of a peer, telling it the sizes it is shown at as the control does */
+	targetRemoteButton(controlId: string, target: LinkButtonTarget): void {
+		this.controller.buttonClient.setTarget(controlId, target, () => undefined)
+
+		for (const [key, placed] of this.#controlsAt) {
+			if (placed !== controlId) continue
+			const [pageNumber, row, column] = key.split('/').map(Number)
+			this.controller.buttonClient.setDisplayedSizes(
+				controlId,
+				this.displayedLocations.getSizes({ pageNumber, row, column })
+			)
+		}
+	}
+
 	async self(): Promise<LinkSelfInfo> {
 		return current(async (signal) => this.#caller(signal).watchSelf())
 	}
@@ -139,6 +191,19 @@ export class LinkInstallation {
 	async transportStates(): Promise<Record<string, LinkTransportState>> {
 		const update = await current(async (signal) => this.#caller(signal).watchTransportStates())
 		return update.type === 'init' ? update.items : {}
+	}
+
+	/** The preview of a button of a peer, as the UI shows it to choose it by, once it has arrived */
+	async remoteButtonPreview(peerId: string, location: ControlLocation): Promise<string> {
+		const abort = new AbortController()
+		try {
+			for await (const { dataUrl } of await this.#caller(abort.signal).watchRemoteButton({ peerId, location })) {
+				if (dataUrl) return dataUrl
+			}
+			throw new Error('Ended without a preview')
+		} finally {
+			abort.abort()
+		}
 	}
 
 	start(): void {

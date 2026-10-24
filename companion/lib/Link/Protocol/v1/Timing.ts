@@ -6,6 +6,9 @@ export const LINK_SUBSCRIPTION_LEASE_MS = 60_000
 /** How often subscribers renew their subscriptions, comfortably inside the lease */
 export const LINK_SUBSCRIPTION_RENEW_MS = 20_000
 
+/** How long to wait for the answer to a `pages.request` */
+export const LINK_PAGES_TIMEOUT_MS = 5_000
+
 /** How long to wait for a pong before giving up on a ping */
 export const LINK_PING_TIMEOUT_MS = 2_000
 

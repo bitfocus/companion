@@ -6,6 +6,7 @@ import type {
 	ButtonGraphicsGaugeDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsLineDrawElement,
+	ButtonGraphicsRemoteDrawElement,
 	ButtonGraphicsTextDrawElement,
 	SomeButtonGraphicsDrawElement,
 } from '../Model/StyleLayersModel.js'
@@ -30,13 +31,16 @@ import { DrawBounds, parseColor, parseColorAlpha, rgbRev } from './Util.js'
  */
 const TEXT_OUTLINE_FACTOR = 1 / 16
 
+/** Once a button is tall enough, its top bar is this fraction of its height (as 1 / divisor) */
+const TOP_BAR_HEIGHT_DIVISOR = 5
+
 export class GraphicsLayeredButtonRenderer {
 	static #computeTopBarBounds(outerBounds: DrawBounds): DrawBounds {
 		return new DrawBounds(
 			outerBounds.x,
 			outerBounds.y,
 			outerBounds.width,
-			Math.max(ButtonDecorationRenderer.DEFAULT_HEIGHT, Math.floor(0.2 * outerBounds.height))
+			Math.max(ButtonDecorationRenderer.DEFAULT_HEIGHT, Math.floor(outerBounds.height / TOP_BAR_HEIGHT_DIVISOR))
 		)
 	}
 
@@ -239,6 +243,15 @@ export class GraphicsLayeredButtonRenderer {
 					case 'gauge':
 						elementBounds = await this.#drawGaugeElement(img, drawBounds, element, skipDraw)
 						break
+					case 'remote':
+						elementBounds = await this.#drawRemoteElement(
+							img,
+							drawBounds,
+							element,
+							decodedImages?.get(element.id) ?? null,
+							skipDraw
+						)
+						break
 					default:
 						assertNever(element)
 				}
@@ -267,6 +280,35 @@ export class GraphicsLayeredButtonRenderer {
 		if (!backgroundElement) return
 
 		// img.box(drawBounds.x, drawBounds.y, drawBounds.maxX, drawBounds.maxY, parseColor(backgroundElement.color))
+	}
+
+	/** The fetched image fills the element, at its own shape. Nothing is drawn when there was none to fetch */
+	static async #drawRemoteElement(
+		img: ImageBase<any>,
+		parentBounds: DrawBounds,
+		element: ButtonGraphicsRemoteDrawElement,
+		decodedImage: DecodedRasterImage | null,
+		skipDraw: boolean
+	): Promise<DrawBounds> {
+		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
+		if (skipDraw || !decodedImage) return drawBounds
+
+		// The image is of the largest size of its shape that the button is shown at, so may be drawn much smaller here
+		await img.usingScalingQualityFor(decodedImage, drawBounds, async () =>
+			img.usingAlpha(element.opacity, async () => {
+				img.drawDecodedImage(
+					decodedImage,
+					drawBounds.x,
+					drawBounds.y,
+					drawBounds.width,
+					drawBounds.height,
+					'center',
+					'center',
+					'fit'
+				)
+			})
+		)
+		return drawBounds
 	}
 
 	static async #drawImageElement(

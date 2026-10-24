@@ -10,6 +10,7 @@ import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js
 import { assertNever } from '@companion-app/shared/Util.js'
 import { ParseLocationString } from '../../../Internal/Util.js'
 import type { LinkButtonState, LinkButtonTarget } from '../../../Link/ButtonClient.js'
+import { LinkButtonLocationRefSchema } from '../../../Link/Protocol/v1/Schemas.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { mangleReferenceSurfaceId } from '../../../Surface/ReferenceSurfaceId.js'
@@ -30,8 +31,14 @@ import { LinkButtonDrawer } from './LinkButtonDrawer.js'
 const UNCONFIGURED_STATE: LinkButtonState = {
 	status: 'unconfigured',
 	peerName: null,
-	dataUrl: null,
+	remoteKey: null,
+	images: [],
+	unreachable: false,
 	pressed: false,
+	stepCurrent: 1,
+	stepCount: 1,
+	buttonStatus: undefined,
+	actionRunning: false,
 	sourceChain: [],
 }
 
@@ -82,6 +89,9 @@ export class ControlButtonLink
 	/** Variables the location depends on, so that it is resolved again when any of them change */
 	#locationVariables: ReadonlySet<string> = new Set()
 
+	/** Whether a location has been given that can't be resolved, which the link client isn't told about */
+	#locationInvalid = false
+
 	protected triggerInvalidation = (): void => {
 		this.#drawing.invalidate()
 	}
@@ -94,7 +104,8 @@ export class ControlButtonLink
 		this.#drawing = new LinkButtonDrawer(
 			deps,
 			controlId,
-			() => this.deps.linkButtons.getState(this.controlId) ?? UNCONFIGURED_STATE
+			() => this.#getState(),
+			() => this.options
 		)
 
 		if (!storage) {
@@ -122,13 +133,30 @@ export class ControlButtonLink
 		super.destroy()
 	}
 
-	/** Resolve the location, and tell the link client what this button should show */
+	#getState(): LinkButtonState {
+		const state = this.deps.linkButtons.getState(this.controlId) ?? UNCONFIGURED_STATE
+		return state.status === 'unconfigured' && this.#locationInvalid ? { ...state, status: 'bad_location' } : state
+	}
+
+	/** Resolve the location, and tell the link client what this button should show, and at what sizes */
 	#updateTarget(): void {
+		const wasInvalid = this.#locationInvalid
 		const target = this.#resolveTarget()
-		this.deps.linkButtons.setTarget(this.controlId, target, () => {
+		const onChange = () => {
 			this.sendRuntimePropsChange()
 			this.#drawing.invalidate()
-		})
+		}
+		this.deps.linkButtons.setTarget(this.controlId, target, onChange)
+		if (this.#locationInvalid !== wasInvalid) onChange()
+
+		this.deps.linkButtons.setDecoration(this.controlId, this.options.decoration)
+
+		// This button may have moved
+		const myLocation = this.deps.pageStore.getLocationOfControlId(this.controlId)
+		this.deps.linkButtons.setDisplayedSizes(
+			this.controlId,
+			myLocation ? this.deps.graphics.displayedLocations.getSizes(myLocation) : []
+		)
 	}
 
 	#resolveTarget(): LinkButtonTarget | null {
@@ -153,7 +181,13 @@ export class ControlButtonLink
 		}
 
 		// `this` (and page 0) means the same location as this button, but on the remote installation
-		const resolved = ParseLocationString(raw, myLocation ?? undefined)
+		let resolved = ParseLocationString(raw, myLocation ?? undefined)
+		if (
+			resolved &&
+			!LinkButtonLocationRefSchema.safeParse({ type: 'location', page: resolved.pageNumber, ...resolved }).success
+		)
+			resolved = null
+		this.#locationInvalid = !resolved && raw.trim() !== ''
 		if (!this.options.peerId || !resolved) return null
 
 		return { peerId: this.options.peerId, location: resolved }
@@ -173,7 +207,7 @@ export class ControlButtonLink
 	}
 
 	/**
-	 * Update an option field: `peerId`, `location` or `notes`
+	 * Update an option field: `peerId`, `location`, `notes`, `decoration` or `showStatusIcons`
 	 */
 	optionsSetField(key: string, value: JsonValue | undefined): boolean {
 		if (!Object.hasOwn(LinkButtonOptionsSchema.shape, key)) return false
@@ -188,9 +222,14 @@ export class ControlButtonLink
 		switch (optionKey) {
 			case 'notes':
 				break
+			case 'showStatusIcons':
+				this.#drawing.invalidate()
+				break
 			case 'peerId':
 			case 'location':
+			case 'decoration':
 				this.#updateTarget()
+				this.#drawing.invalidate()
 				break
 			default:
 				assertNever(optionKey)
@@ -239,7 +278,7 @@ export class ControlButtonLink
 	}
 
 	toRuntimeJSON(): LinkButtonRuntimeProps {
-		const state = this.deps.linkButtons.getState(this.controlId) ?? UNCONFIGURED_STATE
+		const state = this.#getState()
 		return { status: state.status, peerName: state.peerName }
 	}
 

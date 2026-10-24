@@ -14,6 +14,7 @@ import {
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { usePanelCollapseHelper } from '~/Helpers/CollapseHelper.js'
 import { useComputed } from '~/Resources/util'
+import { LinkPresetsInstallationList } from './LinkPresetsInstallationList.js'
 import type { PresetDefinitionsStore } from './PresetDefinitionsStore'
 
 const PresetsStoreContext = createContext<PresetDefinitionsStore | null>(null)
@@ -69,10 +70,12 @@ const PresetGroupHeader = memo(function PresetGroupHeader({
 interface PresetsConnectionListProps {
 	presetsDefinitionsStore: PresetDefinitionsStore
 	setConnectionId: (connectionId: string) => void
+	setPeerId: (peerId: string) => void
 }
 export const PresetsConnectionList = observer(function PresetsConnectionList({
 	presetsDefinitionsStore,
 	setConnectionId,
+	setPeerId,
 }: PresetsConnectionListProps) {
 	const filterConnection = useCallback(
 		(connectionId: string, _connectionInfo: ClientConnectionConfig) => {
@@ -112,6 +115,8 @@ export const PresetsConnectionList = observer(function PresetsConnectionList({
 				)}
 
 				<p className="presets-footnote">Not every module provides presets. You can also build buttons manually.</p>
+
+				<LinkPresetsInstallationList setPeerId={setPeerId} />
 			</ButtonsSidebarSection>
 		</PresetsStoreContext.Provider>
 	)

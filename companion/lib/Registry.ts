@@ -24,6 +24,7 @@ import { ImportExportController } from './ImportExport/Controller.js'
 import { InstanceController } from './Instance/Controller.js'
 import { InternalController } from './Internal/Controller.js'
 import { LinkController } from './Link/Controller.js'
+import { LinkRemoteImageStore } from './Link/RemoteImageStore.js'
 import { LINK_BUILTIN_TRANSPORTS, LINK_TRANSPORT_DEFINITIONS } from './Link/Transports/index.js'
 import LogController, { type Logger } from './Log/Controller.js'
 import { PageController } from './Page/Controller.js'
@@ -238,6 +239,9 @@ export class Registry {
 
 		this.#renderClock = new RenderClock()
 
+		// The images of the remote buttons that link buttons show, kept by Link and drawn by the graphics
+		const linkRemoteImages = new LinkRemoteImageStore()
+
 		this.graphics = new GraphicsController(
 			controlStore,
 			pageStore,
@@ -246,7 +250,8 @@ export class Registry {
 			this.db,
 			this.#internalApiRouter,
 			this.metrics,
-			this.#renderClock
+			this.#renderClock,
+			linkRemoteImages
 		)
 
 		this.surfaces = new SurfaceController(
@@ -291,7 +296,7 @@ export class Registry {
 			this.#appInfo,
 			this.db,
 			this.userconfig,
-			{ pageStore, controls: controlStore, graphics: this.graphics },
+			{ pageStore, controls: controlStore, graphics: this.graphics, remoteImages: linkRemoteImages },
 			LINK_TRANSPORT_DEFINITIONS,
 			LINK_BUILTIN_TRANSPORTS
 		)
@@ -601,19 +606,20 @@ export class Registry {
 		this.cloud.stop()
 		this.usageStatistics.stop()
 
+		// Before closing the db, so that the surfaces can record when they were last seen. Before stopping link, so that
+		// what they stop showing is let go of while it is running
+		try {
+			this.surfaces.quit()
+		} catch (_e) {
+			//do nothing
+		}
+
 		// Say goodbye to linked installations before the database closes
 		await this.link.stop().catch((e) => {
 			this.#logger.warn(`Failed to stop link: ${e}`)
 		})
 
 		this.ui.close()
-
-		// Before closing the db, so that the surfaces can record when they were last seen
-		try {
-			this.surfaces.quit()
-		} catch (_e) {
-			//do nothing
-		}
 
 		// Save the db to disk
 		this.db.close()

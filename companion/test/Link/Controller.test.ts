@@ -4,14 +4,17 @@ import type { LinkTransportConfig } from '@companion-app/shared/Model/Link.js'
 import type { IControlStore } from '../../lib/Controls/IControlStore.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { GraphicsController } from '../../lib/Graphics/Controller.js'
+import { DisplayedLocations } from '../../lib/Graphics/DisplayedLocations.js'
 import type { ImageResult } from '../../lib/Graphics/ImageResult.js'
 import { LinkController } from '../../lib/Link/Controller.js'
 import {
 	decodeLinkAnnouncement,
 	encodeLinkAnnouncement,
 	LINK_ANNOUNCE_INTERVAL_MS,
+	LINK_ANNOUNCE_MISSED_LIMIT,
 } from '../../lib/Link/Protocol/Announcement.js'
 import { decodeLinkMessage, encodeLinkMessage, type LinkMessage } from '../../lib/Link/Protocol/v1/Schemas.js'
+import { LinkRemoteImageStore } from '../../lib/Link/RemoteImageStore.js'
 import type {
 	LinkMessageOrigin,
 	LinkTransport,
@@ -98,6 +101,9 @@ function createController(db = new FakeDataDatabase(), installName = 'Self') {
 		getControl: vi.fn(() => ({ abortDelayedActions: abortControl }) as any),
 	}
 	const graphics = {
+		displayedLocations: new DisplayedLocations(),
+		getUndecoratedRender: vi.fn((render: ImageResult) => ({ render, contentKey: null, state: null })),
+		getContentSize: vi.fn((size: { width: number; height: number }) => size),
 		getCachedRenderOrGeneratePlaceholder: vi.fn(
 			() =>
 				({
@@ -116,6 +122,7 @@ function createController(db = new FakeDataDatabase(), installName = 'Self') {
 			pageStore,
 			controls: controls as unknown as IControlStore,
 			graphics: graphics as unknown as GraphicsController,
+			remoteImages: new LinkRemoteImageStore(),
 		},
 		[definition],
 		[]
@@ -243,6 +250,78 @@ describe('LinkController', () => {
 		})
 	})
 
+	test('warns when another installation announces with its Link id, but not for its own announcement', async () => {
+		const self = async () => {
+			const abort = new AbortController()
+			try {
+				const iterable = await ctx.controller
+					.createTrpcRouter()
+					.createCaller({} as any, { signal: abort.signal })
+					.watchSelf()
+				return (await iterable[Symbol.asyncIterator]().next()).value
+			} finally {
+				abort.abort()
+			}
+		}
+		const selfId = ctx.transport().context.identity.id
+
+		// Its own, eg reflected back by a transport
+		const own = decodeLinkAnnouncement(ctx.transport().announced[0]!)
+		if (!own.ok) throw new Error('Invalid announcement')
+		ctx.transport().context.receiveAnnouncement(selfId, encodeLinkAnnouncement(own.announcement))
+		expect((await self())?.sharesLinkId).toBe(false)
+
+		ctx
+			.transport()
+			.context.receiveAnnouncement(selfId, encodeLinkAnnouncement({ ...own.announcement, instanceId: 'a-clone' }))
+		expect((await self())?.sharesLinkId).toBe(true)
+
+		const abort = new AbortController()
+		const attention = await ctx.controller
+			.createTrpcRouter()
+			.createCaller({} as any, { signal: abort.signal })
+			.watchAttention()
+		const first = await attention[Symbol.asyncIterator]().next()
+		abort.abort()
+		expect(first.value).toEqual(['This installation: Link id shared with another'])
+	})
+
+	test('stops warning that its Link id is shared once that is no longer seen, even if the wall clock steps back', async () => {
+		await ctx.controller.stop()
+		vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'setTimeout', 'clearTimeout', 'Date', 'performance'] })
+		try {
+			ctx = createController()
+			const sharesLinkId = async () => {
+				const abort = new AbortController()
+				try {
+					const iterable = await ctx.controller
+						.createTrpcRouter()
+						.createCaller({} as any, { signal: abort.signal })
+						.watchSelf()
+					return (await iterable[Symbol.asyncIterator]().next()).value?.sharesLinkId
+				} finally {
+					abort.abort()
+				}
+			}
+			const own = decodeLinkAnnouncement(ctx.transport().announced[0]!)
+			if (!own.ok) throw new Error('Invalid announcement')
+			ctx
+				.transport()
+				.context.receiveAnnouncement(
+					ctx.transport().context.identity.id,
+					encodeLinkAnnouncement({ ...own.announcement, instanceId: 'a-clone' })
+				)
+			expect(await sharesLinkId()).toBe(true)
+
+			// Eg set back by NTP, once the clone has gone
+			vi.setSystemTime(Date.now() - 24 * 60 * 60_000)
+			await vi.advanceTimersByTimeAsync(LINK_ANNOUNCE_INTERVAL_MS * (LINK_ANNOUNCE_MISSED_LIMIT + 1))
+			expect(await sharesLinkId()).toBe(false)
+		} finally {
+			vi.useRealTimers()
+		}
+	})
+
 	test('tells each peer what it may use again every so often, in case that was lost', async () => {
 		await ctx.controller.stop()
 		vi.useFakeTimers()
@@ -251,6 +330,22 @@ describe('LinkController', () => {
 			ctx.announcePeer()
 			expect(ctx.transport().messagesOfType('access')).toHaveLength(1)
 
+			await vi.advanceTimersByTimeAsync(LINK_ANNOUNCE_INTERVAL_MS)
+			expect(ctx.transport().messagesOfType('access')).toHaveLength(2)
+		} finally {
+			vi.useRealTimers()
+		}
+	})
+
+	test('keeps a peer reachable when the wall clock is stepped, eg by NTP at boot', async () => {
+		await ctx.controller.stop()
+		vi.useFakeTimers()
+		try {
+			ctx = createController()
+			ctx.announcePeer()
+			vi.setSystemTime(Date.now() + 24 * 60 * 60_000)
+
+			// Told again, as it is still reachable
 			await vi.advanceTimersByTimeAsync(LINK_ANNOUNCE_INTERVAL_MS)
 			expect(ctx.transport().messagesOfType('access')).toHaveLength(2)
 		} finally {
@@ -284,7 +379,6 @@ describe('LinkController', () => {
 			peerId: 'peer',
 			message: { payload: { permissions: { buttons: false } } },
 		})
-		expect(ctx.db.getTableView('link_permissions').data).toEqual({})
 		expect(ctx.db.getTableView('link_peers').data).toEqual({})
 
 		// When it is rediscovered, nothing is shared with it until the user says so again
@@ -294,10 +388,11 @@ describe('LinkController', () => {
 		})
 	})
 
-	test('lists the peers seen before a restart, and drops permissions for any it no longer knows', async () => {
+	test('lists the peers seen before a restart, with what is shared with them, keeping any it cannot read', async () => {
 		ctx.announcePeer()
 		await ctx.shareButtons(true)
-		ctx.db.getTableView('link_permissions').data.gone = { buttons: true }
+		// Stored by a version that this one can't read
+		ctx.db.getTableView('link_peers').data.later = { lastSeen: 'yesterday', sharedByUs: { buttons: true } }
 		await ctx.controller.stop()
 
 		ctx = createController(ctx.db)
@@ -309,7 +404,7 @@ describe('LinkController', () => {
 		const peers = (await updates[Symbol.asyncIterator]().next()).value
 		abort.abort()
 		expect(peers).toEqual([expect.objectContaining({ id: 'peer', online: false, sharedByUs: { buttons: true } })])
-		expect(Object.keys(ctx.db.getTableView('link_permissions').data)).toEqual(['peer'])
+		expect(Object.keys(ctx.db.getTableView('link_peers').data)).toEqual(['peer', 'later'])
 	})
 
 	test('discovers what a transport field asks for, leaving out this installation', () => {
@@ -427,8 +522,8 @@ describe('LinkController buttons', () => {
 	})
 
 	test('serves an allowed peer, sending it images of the buttons it subscribed to', async () => {
-		await ctx.shareButtons(true)
 		ctx.announcePeer()
+		await ctx.shareButtons(true)
 		ctx.sendToSelf(
 			fromPeer,
 			encodeLinkMessage('subscribe', {
@@ -453,8 +548,8 @@ describe('LinkController buttons', () => {
 	})
 
 	test('a button held by a peer stays held when it becomes unreachable, as with an unplugged surface', async () => {
-		await ctx.shareButtons(true)
 		ctx.announcePeer()
+		await ctx.shareButtons(true)
 		ctx.sendToSelf(
 			fromPeer,
 			encodeLinkMessage('button.press', {
@@ -472,8 +567,8 @@ describe('LinkController buttons', () => {
 	})
 
 	test('when a peer loses permission, it is told, and what it held is released', async () => {
-		await ctx.shareButtons(true)
 		ctx.announcePeer()
+		await ctx.shareButtons(true)
 		ctx.sendToSelf(
 			fromPeer,
 			encodeLinkMessage('button.press', {
@@ -493,5 +588,16 @@ describe('LinkController buttons', () => {
 			{ peerId: 'peer', message: { payload: { permissions: { buttons: false } } } },
 		])
 		expect(ctx.controls.pressControl).toHaveBeenCalledWith('control1', false, 'link:peer:s')
+	})
+
+	test('answers a pages request from a peer that is not allowed buttons with what it may use', () => {
+		ctx.announcePeer()
+		ctx.transport().sent.length = 0
+		ctx.sendToSelf(fromPeer, encodeLinkMessage('pages.request', { id: 'r1' }))
+
+		expect(ctx.transport().messagesOfType('pages')).toEqual([])
+		expect(ctx.transport().messagesOfType('access')).toMatchObject([
+			{ peerId: 'peer', message: { payload: { permissions: { buttons: false } } } },
+		])
 	})
 })

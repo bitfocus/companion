@@ -1,15 +1,20 @@
 import { faCircleExclamation, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useId, useState } from 'react'
-import type { LinkTransportEntry, LinkTransportSection } from '@companion-app/shared/Model/Link.js'
+import { useCallback, useContext, useId, useRef, useState } from 'react'
+import type {
+	LinkTransportEntry,
+	LinkTransportSection,
+	LinkTransportSectionAction,
+} from '@companion-app/shared/Model/Link.js'
 import { Button } from '~/Components/Button.js'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { FormLabel } from '~/Components/Form.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Note } from '~/Components/Note.js'
 import { StatusBadge } from '~/Components/StatusBadge.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { useLinkStore } from './LinkStoreContext.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { PeerLink } from './PeerLink.js'
 
 /** A section a transport reports about itself (eg pairing requests), with the actions it offers on its entries */
@@ -40,7 +45,7 @@ export const TransportSection = observer(function TransportSection({
  * seen and dealt with without opening the transport
  */
 export const AttentionSections = observer(function AttentionSections(): React.JSX.Element | null {
-	const linkStore = useLinkStore()
+	const { link: linkStore } = useContext(RootAppStoreContext)
 
 	const sections = linkStore.attentionSections
 	if (sections.length === 0) return null
@@ -152,8 +157,18 @@ function EntryActions({ entry, state }: { entry: LinkTransportEntry; state: Entr
 	const inputId = useId()
 	const submitAction = entry.actions.find((action) => action.requiresInput)
 
+	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
+	const runAction = (action: LinkTransportSectionAction) => {
+		if (action.confirm) {
+			confirmModalRef.current?.show(action.label, action.confirm, action.label, () => state.doAction(action.id))
+		} else {
+			state.doAction(action.id)
+		}
+	}
+
 	return (
 		<div className="flex shrink-0 items-center gap-2">
+			<GenericConfirmModal ref={confirmModalRef} />
 			{entry.inputLabel && (
 				<div className="w-32">
 					<FormLabel htmlFor={inputId} className="sr-only">
@@ -168,7 +183,7 @@ function EntryActions({ entry, state }: { entry: LinkTransportEntry; state: Entr
 						onKeyDown={(e) => {
 							if (e.key !== 'Enter' || !submitAction || state.busy || !state.input) return
 							e.preventDefault()
-							state.doAction(submitAction.id)
+							runAction(submitAction)
 						}}
 					/>
 				</div>
@@ -181,7 +196,7 @@ function EntryActions({ entry, state }: { entry: LinkTransportEntry; state: Entr
 					size={entry.inputLabel ? undefined : 'sm'}
 					variant={action.color === 'danger' ? 'outline' : undefined}
 					disabled={state.busy || (!!action.requiresInput && !state.input)}
-					onClick={() => state.doAction(action.id)}
+					onClick={() => runAction(action)}
 				>
 					{action.label}
 				</Button>

@@ -11,22 +11,33 @@ import { z } from 'zod'
 /** The longest name an installation can give itself, in the announcement and the secure channel handshake */
 export const LINK_NAME_MAX_LENGTH = 200
 
+/** A string cut to a length, rather than rejected, so that a later version can send a longer one */
+const truncated = (max: number) => z.string().transform((value) => value.slice(0, max))
+
 export const LinkAnnouncementSchema = z
 	.object({
-		name: z.string().max(LINK_NAME_MAX_LENGTH).describe('Human readable name of the installation'),
-		companionVersion: z.string().max(64).describe('Companion application version'),
+		name: truncated(LINK_NAME_MAX_LENGTH).describe('Human readable name of the installation'),
+		companionVersion: truncated(64).describe('Companion application version'),
 		protocolVersions: z
-			.array(z.string().max(32))
+			.array(truncated(32))
 			.min(1)
-			.max(16)
+			.transform((versions) => versions.slice(0, 16))
 			.describe(
 				'The Link protocol versions (semver) this installation speaks, one per major version. Two installations use the highest major version they both speak'
+			),
+		instanceId: z
+			.string()
+			.min(1)
+			.transform((value) => value.slice(0, 64))
+			.optional()
+			.describe(
+				'Chosen at random each time the installation starts, so that two installations with the same Link id (eg one cloned from the other) can be told apart, and the user warned'
 			),
 		announceIntervalMs: z
 			.number()
 			.int()
 			.positive()
-			.max(60_000)
+			.transform((value) => Math.min(value, 60_000))
 			.describe(
 				'How often this announcement is repeated. Peers consider it gone after missing a few, so it is bounded to keep a peer that has gone from being listed as reachable for long'
 			),

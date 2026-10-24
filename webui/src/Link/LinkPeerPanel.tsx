@@ -1,21 +1,23 @@
-import { faServer, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faServer, faTrash, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useId } from 'react'
+import { useCallback, useContext, useEffect, useId, useRef, useState } from 'react'
 import { LINK_PERMISSION_DEFINITIONS, type LinkPeerInfo, type LinkUsage } from '@companion-app/shared/Model/Link.js'
 import { Button } from '~/Components/Button.js'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { FormLabel } from '~/Components/Form.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { Note } from '~/Components/Note.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { PanelHeader } from '~/Layout/PanelHeader.js'
 import { CloseButton } from '~/Layout/PanelIcons.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ConfigFieldRow } from '~/UserConfig/Components/ConfigFieldRows.js'
 import { PeerStatusBadge } from './LinkStatusBadges.js'
-import { useLinkStore } from './LinkStoreContext.js'
 import './LinkPeerPanel.css'
 
 /** How often the usage counts are refreshed while the panel is open */
@@ -34,6 +36,12 @@ export const LinkPeerPanel = observer(function LinkPeerPanel({ peer }: { peer: L
 
 			<div className="edit-panel flex flex-col flex-1 min-h-0 overflow-hidden">
 				<div className="page-scroll edit-panel-scroll">
+					{peer.sharesLinkId && (
+						<Note tone="warning" icon={faTriangleExclamation} actions={null} className="m-2">
+							More than one installation is using this Link id, eg one was copied from the other, so they can't be told
+							apart. Regenerate the Link id of one of them, on its Link page.
+						</Note>
+					)}
 					<PeerStatusSection peer={peer} />
 					<PeerSharingSection peer={peer} />
 					<PeerForgetSection peer={peer} doClose={doClose} />
@@ -44,17 +52,20 @@ export const LinkPeerPanel = observer(function LinkPeerPanel({ peer }: { peer: L
 })
 
 const PeerStatusSection = observer(function PeerStatusSection({ peer }: { peer: LinkPeerInfo }) {
-	const linkStore = useLinkStore()
+	const { link: linkStore, notifier } = useContext(RootAppStoreContext)
 
 	const setAliasMutation = useMutationExt(trpc.link.setPeerAlias.mutationOptions())
-	const setAlias = useCallback(
-		(alias: string) => {
-			setAliasMutation.mutateAsync({ peerId: peer.id, alias: alias || null }).catch((e) => {
-				console.error('Failed to rename installation', e)
-			})
-		},
-		[setAliasMutation, peer.id]
-	)
+	const [alias, setAlias] = useState(peer.alias ?? '')
+	useEffect(() => setAlias(peer.alias ?? ''), [peer.alias])
+	const commitAlias = useCallback(() => {
+		if (alias === (peer.alias ?? '')) return
+		setAliasMutation.mutateAsync({ peerId: peer.id, alias: alias || null }).catch((e) => {
+			notifier.show('Failed to rename installation', e?.message ?? String(e))
+		})
+	}, [setAliasMutation, peer.id, peer.alias, alias, notifier])
+	const blurOnEnter = useCallback((e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+		if (e.key === 'Enter') e.currentTarget.blur()
+	}, [])
 	const nameFieldId = useId()
 
 	return (
@@ -69,9 +80,12 @@ const PeerStatusSection = observer(function PeerStatusSection({ peer }: { peer: 
 			>
 				<TextInputFieldSimple
 					id={nameFieldId}
-					value={peer.alias ?? ''}
+					value={alias}
 					placeholder={peer.announcedName}
 					setValue={setAlias}
+					onBlur={commitAlias}
+					onKeyDown={blurOnEnter}
+					immediateValue
 				/>
 			</ConfigFieldRow>
 			<ConfigFieldRow label="Link id" htmlFor={null} help={null}>
@@ -147,6 +161,7 @@ const PeerSharingRow = observer(function PeerSharingRow({
 	permission: (typeof LINK_PERMISSION_DEFINITIONS)[number]
 	usage: LinkUsage | null
 }) {
+	const { notifier } = useContext(RootAppStoreContext)
 	const switchId = useId()
 	const permissionsMutation = useMutationExt(trpc.link.setPeerPermissions.mutationOptions())
 
@@ -155,10 +170,10 @@ const PeerSharingRow = observer(function PeerSharingRow({
 			permissionsMutation
 				.mutateAsync({ peerId: peer.id, permissions: { ...peer.sharedByUs, [permission.id]: shared } })
 				.catch((e) => {
-					console.error('Failed to change what is shared', e)
+					notifier.show('Failed to change what is shared', e?.message ?? String(e))
 				})
 		},
-		[permissionsMutation, peer.id, peer.sharedByUs, permission.id]
+		[permissionsMutation, peer.id, peer.sharedByUs, permission.id, notifier]
 	)
 
 	const ours = peer.sharedByUs[permission.id]
@@ -196,19 +211,29 @@ const PeerForgetSection = observer(function PeerForgetSection({
 	peer: LinkPeerInfo
 	doClose: () => void
 }) {
+	const { notifier } = useContext(RootAppStoreContext)
 	const forgetMutation = useMutationExt(trpc.link.forgetPeer.mutationOptions())
+	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 
 	const doForget = useCallback(() => {
-		forgetMutation
-			.mutateAsync({ peerId: peer.id })
-			.then(doClose)
-			.catch((e) => {
-				console.error('Failed to forget installation', e)
-			})
-	}, [forgetMutation, peer.id, doClose])
+		confirmModalRef.current?.show(
+			'Forget installation',
+			`Forget ${peer.name}? Nothing is shared with it any more, and its name here is forgotten.`,
+			'Forget',
+			() => {
+				forgetMutation
+					.mutateAsync({ peerId: peer.id })
+					.then(doClose)
+					.catch((e) => {
+						notifier.show('Failed to forget installation', e?.message ?? String(e))
+					})
+			}
+		)
+	}, [forgetMutation, peer.id, peer.name, doClose, notifier])
 
 	return (
 		<EditSectionCard title="Forget" danger>
+			<GenericConfirmModal ref={confirmModalRef} />
 			<p className="text-sm text-muted mb-0">
 				Stop sharing anything with it, and forget its name here. It is listed again, with nothing shared, while it is
 				still reachable: to stop that, also remove its pairing on the Transports tab.

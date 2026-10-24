@@ -1,17 +1,21 @@
 import { EventEmitter } from 'node:events'
 import os from 'node:os'
 import isEqual from 'fast-deep-equal'
+import { nanoid } from 'nanoid'
 import z from 'zod'
 import type { BonjourQuery, ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	formatLinkIdFingerprint,
 	type ClientLinkTransportType,
+	type LinkButtonStatus,
 	type LinkPeerInfo,
 	type LinkPeerUsage,
 	type LinkPermission,
+	type LinkRemotePagesResult,
 	type LinkSelfInfo,
 } from '@companion-app/shared/Model/Link.js'
 import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
+import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
@@ -22,22 +26,25 @@ import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
+import { zodLocation } from '../Preview/Graphics.js'
 import type { AppInfo } from '../Registry.js'
-import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import { mergeEventTriggers, publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { LinkButtonClient } from './ButtonClient.js'
 import { LinkButtonServer } from './ButtonServer.js'
 import { LinkIdentity } from './Identity.js'
+import { describeLinkPages, LinkPagesClient } from './Pages.js'
 import { LinkPeerRegistry } from './PeerRegistry.js'
-import { LinkPermissionStore } from './PermissionStore.js'
 import { LinkPinger } from './Pinger.js'
 import {
 	decodeLinkAnnouncement,
 	encodeLinkAnnouncement,
 	LINK_ANNOUNCE_INTERVAL_MS,
+	LINK_ANNOUNCE_MISSED_LIMIT,
 	LINK_NAME_MAX_LENGTH,
 } from './Protocol/Announcement.js'
 import { decodeLinkMessage, encodeLinkMessage } from './Protocol/v1/Schemas.js'
 import { LINK_PROTOCOL_VERSIONS } from './Protocol/Versions.js'
+import type { LinkRemoteImageStore } from './RemoteImageStore.js'
 import { LinkTransportManager } from './TransportManager.js'
 import { DIRECT_MDNS_LINK_ID_TXT } from './Transports/Direct/Constants.js'
 import type { LinkMessageOrigin, SomeLinkBuiltinTransport, SomeLinkTransportDefinition } from './Transports/Types.js'
@@ -52,6 +59,8 @@ export interface LinkDependencies {
 	readonly pageStore: IPageStore
 	readonly controls: IControlStore
 	readonly graphics: GraphicsController
+	/** Where the images of the remote buttons shown are kept, for drawing them */
+	readonly remoteImages: LinkRemoteImageStore
 }
 
 interface LinkControllerEvents {
@@ -59,6 +68,9 @@ interface LinkControllerEvents {
 	peers: [peers: LinkPeerInfo[]]
 	transportStates: []
 }
+
+/** The size a remote button is previewed at, to choose it by */
+const REMOTE_PREVIEW_SIZE = { width: 72, height: 72 }
 
 /**
  * Companion Link: linking Companion installations together, so that one can show and press the buttons of
@@ -75,7 +87,8 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 	readonly #transports: LinkTransportManager
 	readonly #peers: LinkPeerRegistry
 	readonly #pinger: LinkPinger
-	readonly #permissions: LinkPermissionStore
+	readonly #pagesClient: LinkPagesClient
+	readonly #remoteImages: LinkRemoteImageStore
 	readonly #buttonServer: LinkButtonServer
 	/** Used by link buttons to subscribe to remote buttons */
 	readonly buttonClient: LinkButtonClient
@@ -83,6 +96,10 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 	#started = false
 	#identity: LinkIdentity
 	#selfId: string
+	/** Chosen each time Companion starts, so that another installation with our Link id can be told apart */
+	readonly #instanceId = nanoid()
+	/** When another installation was last seen with our Link id, eg one cloned from this one */
+	#sharesLinkIdSeenAt: number | null = null
 	#announceTimer: NodeJS.Timeout | null = null
 	/** The id regeneration in progress, which the next one waits for, so that they don't interleave */
 	#regenerating: Promise<void> = Promise.resolve()
@@ -111,29 +128,29 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		this.#identity = this.#loadIdentity()
 		this.#selfId = this.#identity.id
 
-		this.#permissions = new LinkPermissionStore(db)
 		this.#transports = new LinkTransportManager(
 			db,
 			[...transportDefinitions, ...builtinTransports.map((builtin) => builtin.definition)],
 			() => this.#identity,
 			() => this.#getSelfInfo().name
 		)
-		this.#peers = new LinkPeerRegistry(
-			this.#selfId,
-			(peerId) => this.#permissions.get(peerId),
-			db.getTableView('link_peers')
-		)
-		this.#permissions.retainOnly(new Set(this.#peers.getPeers().map((peer) => peer.id)))
+		this.#peers = new LinkPeerRegistry(this.#selfId, db.getTableView('link_peers'))
 		this.#pinger = new LinkPinger(
 			this.#peers,
 			(peerId, transportId, nonce) =>
 				this.#transports.sendTo(transportId, peerId, encodeLinkMessage('ping', { nonce })),
 			() => performance.now()
 		)
+		this.#pagesClient = new LinkPagesClient(this.#peers, (transportId, peerId, payload) =>
+			this.#transports.sendTo(transportId, peerId, payload)
+		)
+		this.#remoteImages = deps.remoteImages
 		this.buttonClient = new LinkButtonClient(
 			() => this.#selfId,
 			this.#peers,
-			(transportId, peerId, payload) => this.#transports.sendTo(transportId, peerId, payload)
+			(transportId, peerId, payload) => this.#transports.sendTo(transportId, peerId, payload),
+			(size, decoration) => deps.graphics.getContentSize(size, decoration),
+			deps.remoteImages
 		)
 		this.#buttonServer = new LinkButtonServer(
 			{
@@ -144,6 +161,10 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 				rotateControl: (controlId, delta, surfaceId) => deps.controls.rotateControl(controlId, delta, surfaceId),
 				abortControl: (controlId, unlatch, hops) =>
 					deps.controls.getControl(controlId)?.abortDelayedActions(unlatch, null, hops),
+				// Served as its content alone, for the subscriber to decorate
+				acquireDisplayedLocation: (location, contentSize) =>
+					deps.graphics.displayedLocations.acquire(location, { ...contentSize, contentOnly: true }),
+				getUndecoratedRender: (render) => deps.graphics.getUndecoratedRender(render),
 				getSourceChain: (location) => this.#getSourceChain(location),
 				getClockOffset: (peerId) => this.#peers.getClockOffset(peerId),
 				// Images only go to leaseholders, which are only allowed peers, and are dropped when that changes (see revoke)
@@ -152,17 +173,28 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			() => this.#selfId
 		)
 
+		// Link buttons are subscribed to at the sizes they are shown at: when those change, and when a button is placed
+		// somewhere (it is created before it is placed, so can't tell itself)
+		deps.graphics.displayedLocations.on('changed', (location) => {
+			const controlId = deps.pageStore.getControlIdAt(location)
+			if (controlId) this.buttonClient.setDisplayedSizes(controlId, deps.graphics.displayedLocations.getSizes(location))
+		})
+		deps.pageStore.on('controlLocationChanged', (controlId, location) => {
+			this.buttonClient.setDisplayedSizes(
+				controlId,
+				location ? deps.graphics.displayedLocations.getSizes(location) : []
+			)
+		})
+
 		this.#transports.events.on('announcement', (transportId, peerId, payload) =>
 			this.#handleAnnouncement(transportId, peerId, payload)
 		)
 		this.#transports.events.on('message', (transportId, payload, origin) =>
 			this.#handleMessage(transportId, payload, origin)
 		)
-		this.#permissions.on('changed', (peerId, permissions) => {
-			this.#peers.sharedByUsChanged(peerId)
-			this.emit('peers', this.#peers.getPeers())
+		this.#peers.on('sharedByUsChanged', (peerId, permissions) => {
 			// Not to a peer we can't talk to: it is told once it announces a version in common (see peerReachable)
-			if (this.#peers.getPeer(peerId)?.compatible) {
+			if (this.#peers.isCompatible(peerId)) {
 				for (const transportId of this.#peers.getReachableTransports(peerId, null))
 					this.#sendAccess(peerId, transportId)
 			}
@@ -175,6 +207,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			this.#peers.handleTransportDisconnected(transportId)
 		)
 		this.#peers.on('changed', () => this.emit('peers', this.#peers.getPeers()))
+		this.#peers.on('latencyChanged', () => this.emit('peers', this.#peers.getPeers()))
 		this.#peers.on('peerReachable', (peerId, transportId) => {
 			this.#sendAccess(peerId, transportId)
 			this.#pinger.ping(peerId, transportId)
@@ -187,6 +220,8 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 				this.emit('self', this.#getSelfInfo())
 				this.#announce(null)
 			}
+			// The content of a remote button, which is the size it is drawn at, changes with the decoration around it
+			if (key === 'buttons_decoration') this.buttonClient.refreshDisplayedSizes()
 			for (const builtin of builtinTransports) {
 				if (builtin.userConfigKeys.includes(key)) this.#applyBuiltin(builtin)
 			}
@@ -209,6 +244,14 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		this.#transports.start()
 
 		this.#announceTimer = setInterval(() => {
+			// No longer seen, eg it was given a new Link id
+			if (
+				this.#sharesLinkIdSeenAt !== null &&
+				performance.now() - this.#sharesLinkIdSeenAt > LINK_ANNOUNCE_INTERVAL_MS * LINK_ANNOUNCE_MISSED_LIMIT
+			) {
+				this.#sharesLinkIdSeenAt = null
+				this.emit('self', this.#getSelfInfo())
+			}
 			this.#announce(null)
 			this.#pinger.pingAll()
 			// Again, in case it was lost, or arrived before our announcement and so was dropped
@@ -216,7 +259,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 				if (!peer.compatible) continue
 				for (const route of peer.routes) this.#sendAccess(peer.id, route.transportId)
 			}
-			this.#buttonServer.expireLeases(Date.now())
+			this.#buttonServer.expireLeases(performance.now())
 		}, LINK_ANNOUNCE_INTERVAL_MS)
 	}
 
@@ -227,6 +270,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		if (this.#announceTimer) clearInterval(this.#announceTimer)
 		this.#announceTimer = null
 		this.#pinger.clear()
+		this.#pagesClient.clear()
 
 		this.buttonClient.stop()
 		this.#peers.stop()
@@ -249,6 +293,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			// Longer would be rejected by the other installations
 			name: (installName || os.hostname()).slice(0, LINK_NAME_MAX_LENGTH),
 			protocolVersions: [...LINK_PROTOCOL_VERSIONS],
+			sharesLinkId: this.#sharesLinkIdSeenAt !== null,
 		}
 	}
 
@@ -263,6 +308,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			name: self.name,
 			companionVersion: this.#appInfo.appVersion,
 			protocolVersions: self.protocolVersions,
+			instanceId: this.#instanceId,
 			announceIntervalMs: LINK_ANNOUNCE_INTERVAL_MS,
 		})
 
@@ -280,7 +326,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 
 	/** Tell a peer what it may use of this installation, over a transport it is reachable on */
 	#sendAccess(peerId: string, transportId: string): void {
-		const permissions = this.#permissions.get(peerId)
+		const permissions = this.#peers.getSharedByUs(peerId)
 		this.#transports.sendTo(transportId, peerId, encodeLinkMessage('access', { permissions }))
 	}
 
@@ -291,8 +337,18 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		}
 
 		const decoded = decodeLinkAnnouncement(raw)
-		if (decoded.ok) {
-			this.#peers.handleAnnouncement(transportId, peerId, decoded.announcement, Date.now())
+		if (decoded.ok && peerId === this.#selfId) {
+			// Another installation with our Link id, eg one cloned from this one
+			if (decoded.announcement.instanceId === this.#instanceId) return
+			const wasSeen = this.#sharesLinkIdSeenAt !== null
+			// By the monotonic clock, as when it was seen is only compared, never shown
+			this.#sharesLinkIdSeenAt = performance.now()
+			if (!wasSeen) {
+				this.#logger.warn(`Another installation has the same Link id as this one, eg one cloned from this one`)
+				this.emit('self', this.#getSelfInfo())
+			}
+		} else if (decoded.ok) {
+			this.#peers.handleAnnouncement(transportId, peerId, decoded.announcement, performance.now())
 		} else {
 			this.#logger.debug(`Ignoring invalid announcement from ${peerId}: ${decoded.error}`)
 		}
@@ -304,7 +360,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 
 		// A message is in the major version negotiated with its sender, so it can only be read once the sender has
 		// announced itself. There is only version 1 so far
-		if (!this.#peers.getPeer(senderId)?.compatible) {
+		if (!this.#peers.isCompatible(senderId)) {
 			this.#logger.debug(`Ignoring a message from ${senderId}, as it has no protocol version in common with us`)
 			return
 		}
@@ -319,6 +375,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		switch (message.type) {
 			case 'access':
 				this.#peers.handleAccess(senderId, message.payload.permissions)
+				if (!message.payload.permissions.buttons) this.#pagesClient.handleDenied(senderId)
 				break
 			case 'ping':
 				// Answered over the transport it came on, so that the round trip is measured over it
@@ -333,7 +390,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 				break
 			case 'subscribe':
 				if (this.#isAllowed(senderId, 'buttons', message.type)) {
-					this.#buttonServer.handleSubscribe(senderId, transportId, message.payload, Date.now())
+					this.#buttonServer.handleSubscribe(senderId, transportId, message.payload, performance.now())
 				} else {
 					this.#buttonServer.refuseSubscribe(senderId, transportId, message.payload, 'denied')
 				}
@@ -356,6 +413,24 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 					this.#buttonServer.handleAbort(senderId, message.payload, Date.now())
 				}
 				break
+			case 'pages.request':
+				if (this.#isAllowed(senderId, 'buttons', message.type)) {
+					this.#transports.sendTo(
+						transportId,
+						senderId,
+						encodeLinkMessage(
+							'pages',
+							describeLinkPages(this.#pageStore, this.#userconfig.getKey('gridSize'), message.payload.id)
+						)
+					)
+				} else {
+					// So that it says why, rather than waiting for an answer
+					this.#sendAccess(senderId, transportId)
+				}
+				break
+			case 'pages':
+				this.#pagesClient.handlePages(senderId, message.payload)
+				break
 			case 'subscribe.refused':
 				this.buttonClient.handleRefused(senderId, message.payload)
 				break
@@ -371,7 +446,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 
 	/** Whether the installation a message came from may use something, as chosen by the user */
 	#isAllowed(peerId: string, permission: LinkPermission, type: string): boolean {
-		if (this.#permissions.get(peerId)[permission]) return true
+		if (this.#peers.getSharedByUs(peerId)[permission]) return true
 		this.#logger.debug(`Ignoring ${type} from ${peerId}, it is not allowed ${permission}`)
 		return false
 	}
@@ -400,6 +475,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		this.#identity = LinkIdentity.generate()
 		this.#table.set('identity', this.#identity.toStored())
 		this.#selfId = this.#identity.id
+		this.#sharesLinkIdSeenAt = null
 		this.#peers.setSelfId(this.#selfId)
 		this.#buttonServer.clear()
 
@@ -408,13 +484,18 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 		this.emit('self', this.#getSelfInfo())
 	}
 
-	/** The entries reported by transports that need the user's attention, eg pairing requests */
+	/** What needs the user's attention: the entries transports report as such, eg pairing requests, and shared Link ids */
 	#getAttention(): string[] {
-		return Object.values(this.#transports.getStates()).flatMap((state) =>
+		const attention = Object.values(this.#transports.getStates()).flatMap((state) =>
 			state.sections
 				.filter((section) => section.attention)
 				.flatMap((section) => section.entries.map((entry) => `${section.title}: ${entry.title}`))
 		)
+		if (this.#sharesLinkIdSeenAt !== null) attention.push('This installation: Link id shared with another')
+		for (const peer of this.#peers.getPeers()) {
+			if (peer.sharesLinkId) attention.push(`${peer.name}: Link id shared with another`)
+		}
+		return attention
 	}
 
 	/** The services a `bonjour-device` field of a transport type discovers, or null if it isn't one */
@@ -475,7 +556,12 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 
 			/** What needs the user's attention (eg pairing requests), for the navigation to show a count of */
 			watchAttention: publicProcedure.subscription(async function* ({ signal }) {
-				const changes = toIterable(self.#transports.events, 'states', signal)
+				if (!signal) throw new Error('No signal in watchAttention subscription')
+				const changes = mergeEventTriggers(signal, [
+					{ ee: self.#transports.events, key: 'states' },
+					{ ee: selfEmitter, key: 'self' },
+					{ ee: selfEmitter, key: 'peers' },
+				])
 				let last = self.#getAttention()
 				yield last
 				for await (const _change of changes) {
@@ -528,11 +614,53 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 				},
 			})),
 
-			forgetPeer: publicProcedure.input(z.object({ peerId: z.string() })).mutation(({ input }) => {
-				// Before it is forgotten, so that it is told it no longer has access while it can still be reached
-				this.#permissions.delete(input.peerId)
-				this.#peers.forget(input.peerId)
-			}),
+			forgetPeer: publicProcedure
+				.input(z.object({ peerId: z.string() }))
+				.mutation(({ input }) => this.#peers.forget(input.peerId)),
+
+			/** The pages of buttons of another installation, to choose a remote button from */
+			remotePages: publicProcedure
+				.input(z.object({ peerId: z.string() }))
+				.query(async ({ input }): Promise<LinkRemotePagesResult> => self.#pagesClient.request(input.peerId)),
+
+			/**
+			 * The content of a button of another installation, as a preview to choose it by. Subscribed to as a remote
+			 * button is, for as long as it is watched
+			 */
+			watchRemoteButton: publicProcedure
+				.input(z.object({ peerId: z.string(), location: zodLocation }))
+				.subscription(async function* ({ signal, input }) {
+					const previewId = `preview:${nanoid()}`
+					const changes = new EventEmitter<{ changed: [] }>()
+					const iterator = toIterable(changes, 'changed', signal)
+
+					self.buttonClient.setTarget(previewId, { peerId: input.peerId, location: input.location }, () =>
+						changes.emit('changed')
+					)
+					// Drawn without decoration, as only its content is shown
+					self.buttonClient.setDecoration(previewId, ButtonGraphicsDecorationType.None)
+					self.buttonClient.setDisplayedSizes(previewId, [REMOTE_PREVIEW_SIZE])
+					try {
+						const current = async (): Promise<{ status: LinkButtonStatus; dataUrl: string | null }> => {
+							const state = self.buttonClient.getState(previewId)
+							const status = state?.status ?? 'loading'
+							if (status !== 'ok' || !state?.remoteKey) return { status, dataUrl: null }
+							const image = await self.#remoteImages.getImage(state.remoteKey, REMOTE_PREVIEW_SIZE, false)
+							return { status, dataUrl: image?.dataUrl ?? null }
+						}
+
+						let last = await current()
+						yield last
+						for await (const _change of iterator) {
+							const next = await current()
+							if (next.status === last.status && next.dataUrl === last.dataUrl) continue
+							last = next
+							yield next
+						}
+					} finally {
+						self.buttonClient.removeTarget(previewId)
+					}
+				}),
 
 			setPeerAlias: publicProcedure
 				.input(z.object({ peerId: z.string(), alias: z.string().max(100).nullable() }))
@@ -540,7 +668,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 
 			setPeerPermissions: publicProcedure
 				.input(z.object({ peerId: z.string(), permissions: z.object({ buttons: z.boolean() }) }))
-				.mutation(({ input }) => this.#permissions.set(input.peerId, input.permissions)),
+				.mutation(({ input }) => this.#peers.setSharedByUs(input.peerId, input.permissions)),
 
 			regenerateId: publicProcedure.mutation(async () => {
 				await this.#regenerateId().catch((e) => {

@@ -157,7 +157,10 @@ describe('direct transport', { timeout: 20_000 }, () => {
 		expect(pending?.actions[1].requiresInput).toBeFalsy()
 		expect(pending).toMatchObject({
 			inputLabel: 'Pairing code',
-			actions: [{ id: 'pair', requiresInput: true }, { id: 'reject' }],
+			actions: [
+				{ id: 'pair', requiresInput: true },
+				{ id: 'reject', confirm: expect.any(String) },
+			],
 		})
 
 		expect(await server.handleSectionAction(entryId, 'pair', '0000-0000')).toMatch(/doesn't match/)

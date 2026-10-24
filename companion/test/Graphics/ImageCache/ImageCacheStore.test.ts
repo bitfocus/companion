@@ -2,12 +2,21 @@ import { describe, expect, test, vi } from 'vitest'
 import type { RendererDrawStyle } from '@companion-app/shared/Model/Render.js'
 import type {
 	ButtonGraphicsImageDrawElement,
+	ButtonGraphicsReferenceDrawElement,
+	ButtonGraphicsRemoteDrawElement,
 	SomeButtonGraphicsDrawElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ButtonGraphicsDecorationType, ButtonGraphicsElementUsage } from '@companion-app/shared/Model/StyleModel.js'
 import type { DecodeImageResult } from '../../../lib/Graphics/ImageCache/DecodeImage.js'
-import { ImageCacheStore, type DecodeImageFn } from '../../../lib/Graphics/ImageCache/ImageCacheStore.js'
+import {
+	ImageCacheStore,
+	type DecodeImageFn,
+	type RemoteImageSource,
+} from '../../../lib/Graphics/ImageCache/ImageCacheStore.js'
 import type { Logger } from '../../../lib/Log/Controller.js'
+
+/** Where no remote element has an image */
+const NO_REMOTE_IMAGES: RemoteImageSource = { getImage: async () => null, onReleased: () => {} }
 
 const logger = { warn: vi.fn(), debug: vi.fn(), error: vi.fn() } as unknown as Logger
 
@@ -71,7 +80,9 @@ describe('ImageCacheStore', () => {
 		const store = new ImageCacheStore(logger, decode, 1024)
 
 		const style = makeStyle([makeImageElement('empty', null)])
-		expect(await store.resolveDrawStyle(style, new Map())).toBe(style)
+		expect(await store.resolveDrawStyle(style, new Map(), { width: 72, height: 72 }, NO_REMOTE_IMAGES, true)).toBe(
+			style
+		)
 		expect(decode).not.toHaveBeenCalled()
 	})
 
@@ -80,7 +91,7 @@ describe('ImageCacheStore', () => {
 		const store = new ImageCacheStore(logger, decode, 1024)
 
 		const style = makeStyle([makeImageElement('a', 'source-a')])
-		const resolved = await store.resolveDrawStyle(style, new Map())
+		const resolved = await store.resolveDrawStyle(style, new Map(), { width: 72, height: 72 }, NO_REMOTE_IMAGES, true)
 
 		expect(decode).toHaveBeenCalledWith('source-a')
 		expect(resolved.elements).toEqual([makeImageElement('a', null)])
@@ -125,7 +136,7 @@ describe('ImageCacheStore', () => {
 			text,
 		])
 
-		const resolved = await store.resolveDrawStyle(style, new Map())
+		const resolved = await store.resolveDrawStyle(style, new Map(), { width: 72, height: 72 }, NO_REMOTE_IMAGES, true)
 		expect([...(resolved.decodedImages?.keys() ?? [])].sort()).toEqual(['deep', 'inner'])
 
 		const group = resolved.elements[0]
@@ -139,8 +150,20 @@ describe('ImageCacheStore', () => {
 		const decode = makeDecoder()
 		const store = new ImageCacheStore(logger, decode, 1024)
 
-		const first = await store.resolveDrawStyle(makeStyle([makeImageElement('a', 'source')]), new Map())
-		const second = await store.resolveDrawStyle(makeStyle([makeImageElement('b', 'source')]), new Map())
+		const first = await store.resolveDrawStyle(
+			makeStyle([makeImageElement('a', 'source')]),
+			new Map(),
+			{ width: 72, height: 72 },
+			NO_REMOTE_IMAGES,
+			true
+		)
+		const second = await store.resolveDrawStyle(
+			makeStyle([makeImageElement('b', 'source')]),
+			new Map(),
+			{ width: 72, height: 72 },
+			NO_REMOTE_IMAGES,
+			true
+		)
 
 		expect(decode).toHaveBeenCalledTimes(1)
 		expect(second.decodedImages?.get('b')?.buffer).toBe(first.decodedImages?.get('a')?.buffer)
@@ -151,8 +174,20 @@ describe('ImageCacheStore', () => {
 		const store = new ImageCacheStore(logger, decode, 1024)
 
 		const [first, second] = await Promise.all([
-			store.resolveDrawStyle(makeStyle([makeImageElement('a', 'source')]), new Map()),
-			store.resolveDrawStyle(makeStyle([makeImageElement('a', 'source'), makeImageElement('b', 'source')]), new Map()),
+			store.resolveDrawStyle(
+				makeStyle([makeImageElement('a', 'source')]),
+				new Map(),
+				{ width: 72, height: 72 },
+				NO_REMOTE_IMAGES,
+				true
+			),
+			store.resolveDrawStyle(
+				makeStyle([makeImageElement('a', 'source'), makeImageElement('b', 'source')]),
+				new Map(),
+				{ width: 72, height: 72 },
+				NO_REMOTE_IMAGES,
+				true
+			),
 		])
 
 		expect(decode).toHaveBeenCalledTimes(1)
@@ -165,8 +200,12 @@ describe('ImageCacheStore', () => {
 		const store = new ImageCacheStore(logger, decode, 1024)
 
 		const style = makeStyle([makeImageElement('svg', 'source-svg')])
-		expect(await store.resolveDrawStyle(style, new Map())).toBe(style)
-		expect(await store.resolveDrawStyle(style, new Map())).toBe(style)
+		expect(await store.resolveDrawStyle(style, new Map(), { width: 72, height: 72 }, NO_REMOTE_IMAGES, true)).toBe(
+			style
+		)
+		expect(await store.resolveDrawStyle(style, new Map(), { width: 72, height: 72 }, NO_REMOTE_IMAGES, true)).toBe(
+			style
+		)
 		expect(decode).toHaveBeenCalledTimes(1)
 	})
 
@@ -178,10 +217,12 @@ describe('ImageCacheStore', () => {
 		const store = new ImageCacheStore(logger, decode, 1024)
 
 		const style = makeStyle([makeImageElement('a', 'source')])
-		expect(await store.resolveDrawStyle(style, new Map())).toBe(style)
+		expect(await store.resolveDrawStyle(style, new Map(), { width: 72, height: 72 }, NO_REMOTE_IMAGES, true)).toBe(
+			style
+		)
 		expect(logger.warn).toHaveBeenCalled()
 
-		const resolved = await store.resolveDrawStyle(style, new Map())
+		const resolved = await store.resolveDrawStyle(style, new Map(), { width: 72, height: 72 }, NO_REMOTE_IMAGES, true)
 		expect(resolved.decodedImages?.size).toBe(1)
 		expect(decode).toHaveBeenCalledTimes(2)
 	})
@@ -189,7 +230,13 @@ describe('ImageCacheStore', () => {
 	test('tracks the bytes retained by the cache', async () => {
 		const store = new ImageCacheStore(logger, makeDecoder(100), 10_000)
 
-		await store.resolveDrawStyle(makeStyle([makeImageElement('a', 'aa')]), new Map())
+		await store.resolveDrawStyle(
+			makeStyle([makeImageElement('a', 'aa')]),
+			new Map(),
+			{ width: 72, height: 72 },
+			NO_REMOTE_IMAGES,
+			true
+		)
 		// Two bytes for each character of the key, plus the pixels
 		expect(store.usedBytes).toBe(2 * 2 + 100)
 		expect(store.entryCount).toBe(1)
@@ -200,31 +247,79 @@ describe('ImageCacheStore', () => {
 		// Room for two entries of 100 bytes plus their 2 byte keys
 		const store = new ImageCacheStore(logger, decode, 250)
 
-		await store.resolveDrawStyle(makeStyle([makeImageElement('a', 'a')]), new Map())
-		await store.resolveDrawStyle(makeStyle([makeImageElement('b', 'b')]), new Map())
+		await store.resolveDrawStyle(
+			makeStyle([makeImageElement('a', 'a')]),
+			new Map(),
+			{ width: 72, height: 72 },
+			NO_REMOTE_IMAGES,
+			true
+		)
+		await store.resolveDrawStyle(
+			makeStyle([makeImageElement('b', 'b')]),
+			new Map(),
+			{ width: 72, height: 72 },
+			NO_REMOTE_IMAGES,
+			true
+		)
 		// Use `a` again, so that `b` is the least recently used
-		await store.resolveDrawStyle(makeStyle([makeImageElement('a', 'a')]), new Map())
-		await store.resolveDrawStyle(makeStyle([makeImageElement('c', 'c')]), new Map())
+		await store.resolveDrawStyle(
+			makeStyle([makeImageElement('a', 'a')]),
+			new Map(),
+			{ width: 72, height: 72 },
+			NO_REMOTE_IMAGES,
+			true
+		)
+		await store.resolveDrawStyle(
+			makeStyle([makeImageElement('c', 'c')]),
+			new Map(),
+			{ width: 72, height: 72 },
+			NO_REMOTE_IMAGES,
+			true
+		)
 
 		expect(store.entryCount).toBe(2)
 		expect(store.usedBytes).toBe(2 * 102)
 		expect(decode).toHaveBeenCalledTimes(3)
 
 		// `a` is still cached, but `b` has to be decoded again
-		await store.resolveDrawStyle(makeStyle([makeImageElement('a', 'a')]), new Map())
+		await store.resolveDrawStyle(
+			makeStyle([makeImageElement('a', 'a')]),
+			new Map(),
+			{ width: 72, height: 72 },
+			NO_REMOTE_IMAGES,
+			true
+		)
 		expect(decode).toHaveBeenCalledTimes(3)
-		await store.resolveDrawStyle(makeStyle([makeImageElement('b', 'b')]), new Map())
+		await store.resolveDrawStyle(
+			makeStyle([makeImageElement('b', 'b')]),
+			new Map(),
+			{ width: 72, height: 72 },
+			NO_REMOTE_IMAGES,
+			true
+		)
 		expect(decode).toHaveBeenCalledTimes(4)
 	})
 
 	test('keeps an image larger than the whole budget, until the next one is cached', async () => {
 		const store = new ImageCacheStore(logger, makeDecoder(400), 100)
 
-		const resolved = await store.resolveDrawStyle(makeStyle([makeImageElement('a', 'a')]), new Map())
+		const resolved = await store.resolveDrawStyle(
+			makeStyle([makeImageElement('a', 'a')]),
+			new Map(),
+			{ width: 72, height: 72 },
+			NO_REMOTE_IMAGES,
+			true
+		)
 		expect(resolved.decodedImages?.size).toBe(1)
 		expect(store.entryCount).toBe(1)
 
-		await store.resolveDrawStyle(makeStyle([makeImageElement('b', 'b')]), new Map())
+		await store.resolveDrawStyle(
+			makeStyle([makeImageElement('b', 'b')]),
+			new Map(),
+			{ width: 72, height: 72 },
+			NO_REMOTE_IMAGES,
+			true
+		)
 		expect(store.entryCount).toBe(1)
 		expect(store.usedBytes).toBe(402)
 	})
@@ -288,7 +383,13 @@ describe('ImageCacheStore animations', () => {
 		const store = new ImageCacheStore(logger, decode, 1024)
 
 		const style = makeStyle([makeImageElement('short', 'short'), makeImageElement('static', 'static')])
-		const resolved = await store.resolveDrawStyle(style, new Map([['short', 1]]))
+		const resolved = await store.resolveDrawStyle(
+			style,
+			new Map([['short', 1]]),
+			{ width: 72, height: 72 },
+			NO_REMOTE_IMAGES,
+			true
+		)
 
 		expect(resolved.decodedImages?.get('short')?.frameIndex).toBe(1)
 		expect(resolved.decodedImages?.get('static')?.frameIndex).toBe(0)
@@ -299,8 +400,185 @@ describe('ImageCacheStore animations', () => {
 
 		const resolved = await store.resolveDrawStyle(
 			makeStyle([makeImageElement('short', 'short')]),
-			new Map([['short', 5]])
+			new Map([['short', 5]]),
+			{ width: 72, height: 72 },
+			NO_REMOTE_IMAGES,
+			true
 		)
 		expect(resolved.decodedImages?.get('short')?.frameIndex).toBe(1)
+	})
+
+	describe('remote elements', () => {
+		function makeRemoteElement(id: string, width: number): ButtonGraphicsRemoteDrawElement {
+			return {
+				type: 'remote',
+				id,
+				usage: ButtonGraphicsElementUsage.Automatic,
+				enabled: true,
+				opacity: 1,
+				contentHash: `hash-${id}`,
+				x: 0,
+				y: 0,
+				width,
+				height: 1,
+				source: 'control1',
+				revision: 'r1',
+			}
+		}
+
+		function makeReference(children: SomeButtonGraphicsDrawElement[]): ButtonGraphicsReferenceDrawElement {
+			return {
+				type: 'reference',
+				id: 'ref',
+				usage: ButtonGraphicsElementUsage.Automatic,
+				enabled: true,
+				opacity: 1,
+				contentHash: 'hash-ref',
+				x: 0,
+				y: 0,
+				width: 0.5,
+				height: 1,
+				rotation: 0,
+				children,
+			}
+		}
+
+		test('fetch the image for the size they are drawn at, which is decoded once', async () => {
+			const decode = makeDecoder()
+			const store = new ImageCacheStore(logger, decode, 1000)
+			const remoteImages: RemoteImageSource = {
+				getImage: vi.fn(async (source: string) => ({
+					slot: `slot-${source}`,
+					revision: 'r1',
+					dataUrl: 'data:image/png;base64,AAAA',
+				})),
+				onReleased: () => {},
+			}
+			// Within a reference half the width of the button
+			const style = makeStyle([makeReference([makeRemoteElement('remote', 0.5)])])
+
+			const resolved = await store.resolveDrawStyle(style, new Map(), { width: 200, height: 100 }, remoteImages, true)
+			await store.resolveDrawStyle(style, new Map(), { width: 200, height: 100 }, remoteImages, true)
+
+			expect(remoteImages.getImage).toHaveBeenCalledWith('control1', { width: 50, height: 100 }, true)
+			expect(resolved.decodedImages?.has('remote')).toBe(true)
+			// By its key, so the image data is never used to look it up
+			expect(decode).toHaveBeenCalledTimes(1)
+			expect(decode).toHaveBeenCalledWith('data:image/png;base64,AAAA')
+		})
+
+		test('keep only the newest revision of each image, in the budget of the images of elements', async () => {
+			const decode = makeDecoder(400)
+			// Room for the local image and two remote ones, but not a third
+			const store = new ImageCacheStore(logger, decode, 1600)
+			let revision = 'r1'
+			const remoteImages: RemoteImageSource = {
+				getImage: async (source: string) => ({ slot: source, revision, dataUrl: `data:${source}:${revision}` }),
+				onReleased: () => {},
+			}
+			const resolve = async (elements: SomeButtonGraphicsDrawElement[]) =>
+				store.resolveDrawStyle(makeStyle(elements), new Map(), { width: 72, height: 72 }, remoteImages, true)
+
+			await resolve([makeImageElement('local', 'local-image')])
+			await resolve([
+				{ ...makeRemoteElement('a', 1), source: 'a' },
+				{ ...makeRemoteElement('b', 1), source: 'b' },
+			])
+			// A new revision of one replaces the old, rather than being kept beside it
+			revision = 'r2'
+			await resolve([{ ...makeRemoteElement('a', 1), source: 'a' }])
+			expect(decode.mock.calls.map(([source]) => source)).toEqual([
+				'local-image',
+				'data:a:r1',
+				'data:b:r1',
+				'data:a:r2',
+			])
+
+			// Neither pushed the local image out, nor the other remote one
+			decode.mockClear()
+			revision = 'r1'
+			await resolve([makeImageElement('local', 'local-image'), { ...makeRemoteElement('b', 1), source: 'b' }])
+			expect(decode).not.toHaveBeenCalled()
+		})
+
+		test('keep a newer revision when an older one finishes decoding after it', async () => {
+			let finishOld!: () => void
+			const decode = vi.fn<DecodeImageFn>(async (source) => {
+				if (source === 'data:r1') await new Promise<void>((resolve) => (finishOld = resolve))
+				return makeRaster(16)
+			})
+			const store = new ImageCacheStore(logger, decode, 1000)
+			let revision = 'r1'
+			const remoteImages: RemoteImageSource = {
+				getImage: async () => ({ slot: 'slot', revision, dataUrl: `data:${revision}` }),
+				onReleased: () => {},
+			}
+			const resolve = async () =>
+				store.resolveDrawStyle(
+					makeStyle([makeRemoteElement('a', 1)]),
+					new Map(),
+					{ width: 72, height: 72 },
+					remoteImages,
+					true
+				)
+
+			const old = resolve()
+			await vi.waitFor(() => expect(finishOld).toBeDefined())
+			revision = 'r2'
+			await resolve()
+			finishOld()
+			await old
+
+			decode.mockClear()
+			await resolve()
+			expect(decode).not.toHaveBeenCalled()
+		})
+
+		test('drop the image of a slot that is let go of, and one still decoding for it', async () => {
+			let finishDecode: (() => void) | null = null
+			let slow = false
+			const decode = vi.fn<DecodeImageFn>(async () => {
+				if (slow) await new Promise<void>((resolve) => (finishDecode = resolve))
+				return makeRaster(16)
+			})
+			const store = new ImageCacheStore(logger, decode, 10_000)
+			let revision = 'r1'
+			const remoteImages: RemoteImageSource = {
+				getImage: async () => ({ slot: 'slot', revision, dataUrl: `data:${revision}` }),
+				onReleased: () => {},
+			}
+			const resolve = async () =>
+				store.resolveDrawStyle(
+					makeStyle([makeRemoteElement('a', 1)]),
+					new Map(),
+					{ width: 72, height: 72 },
+					remoteImages,
+					true
+				)
+
+			await resolve()
+			expect(store.usedBytes).toBeGreaterThan(0)
+			store.releaseRemote(['slot'])
+			expect(store.usedBytes).toBe(0)
+			expect(store.entryCount).toBe(0)
+
+			// Let go of while it is decoded, so not kept once it is
+			slow = true
+			revision = 'r2'
+			const decoding = resolve()
+			await vi.waitFor(() => expect(finishDecode).not.toBeNull())
+			store.releaseRemote(['slot'])
+			finishDecode!()
+			await decoding
+			expect(store.entryCount).toBe(0)
+		})
+
+		test('are drawn empty when there is no image', async () => {
+			const store = new ImageCacheStore(logger, makeDecoder(), 1000)
+			const style = makeStyle([makeRemoteElement('remote', 1)])
+
+			const noImage: RemoteImageSource = { getImage: vi.fn(async () => null), onReleased: () => {} }
+			expect(await store.resolveDrawStyle(style, new Map(), { width: 72, height: 72 }, noImage, true)).toBe(style)
+		})
 	})
 })

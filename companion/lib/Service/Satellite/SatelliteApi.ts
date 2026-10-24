@@ -758,10 +758,14 @@ export class ServiceSatelliteApi {
 			location,
 			style,
 			bitmapFormat,
-			// A STYLE is taken as given, so its size may not be usable
+			// A STYLE is taken as given, so its size may not be usable. One too large is scaled down by what draws it,
+			// keeping its shape
 			releaseDisplayed:
-				style.bitmap && Number.isFinite(style.bitmap.w) && Number.isFinite(style.bitmap.h)
-					? this.#serviceApi.acquireDisplayedLocation(location, { width: style.bitmap.w, height: style.bitmap.h })
+				style.bitmap && isUsableBitmapEdge(style.bitmap.w) && isUsableBitmapEdge(style.bitmap.h)
+					? this.#serviceApi.acquireDisplayedLocation(location, {
+							width: Math.round(style.bitmap.w),
+							height: Math.round(style.bitmap.h),
+						})
 					: null,
 		}
 		socketState.subscriptions.set(subIdStr, sub)
@@ -933,6 +937,11 @@ interface SatelliteSocketState {
 	clientId: string
 	subscriptions: Map<string, SatelliteSubscription>
 	writeQueue: ImageWriteQueue<string, [ImageResult]>
+}
+
+/** Whether an edge of a STYLE bitmap is a size it can be drawn at: a whole pixel at least */
+function isUsableBitmapEdge(edge: number): boolean {
+	return Number.isFinite(edge) && Math.round(edge) >= 1
 }
 
 /**

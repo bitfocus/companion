@@ -2,31 +2,53 @@ import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { LinkButtonStatus, LinkPeerInfo } from '@companion-app/shared/Model/Link.js'
+import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
+import type { DisplayedSize } from '../Graphics/DisplayedLocations.js'
 import LogController from '../Log/Controller.js'
+import { linkBitmapSizesFor } from './ButtonSizes.js'
 import type { LinkPeerRegistry } from './PeerRegistry.js'
 import {
 	encodeLinkMessage,
+	LINK_BUTTONS_PER_MESSAGE,
 	linkButtonSubscriptionKey,
 	type LinkButtonRef,
+	type LinkButtonRevision,
 	type LinkButtonSubscription,
 	type LinkMessageType,
 	type LinkPayloadOfType,
 	type LinkSubscribeRefusedReason,
 } from './Protocol/v1/Schemas.js'
 import { LINK_PRESS_EXPIRY_MS, LINK_SUBSCRIPTION_RENEW_MS } from './Protocol/v1/Timing.js'
-
-/**
- * The size remote buttons are requested at. Larger than the 72px buttons are designed at, so that they still look
- * sharp on surfaces with larger buttons.
- * TODO: request the sizes the surfaces showing the button actually need
- */
-export const LINK_BUTTON_BITMAP_SIZE = 144
+import type { LinkButtonImage, LinkRemoteImageStore } from './RemoteImageStore.js'
 
 /**
  * How long buttons keep showing the last image of a peer that has become unreachable, before showing it as
  * offline. Covers brief drops (eg a proxy closing the connection), so that they don't flicker
  */
 export const LINK_UNREACHABLE_GRACE_MS = 10_000
+
+/**
+ * How long a size stays subscribed to once nothing shows it any more, so that paging back and forth doesn't
+ * subscribe and unsubscribe each time
+ */
+export const LINK_SIZE_RELEASE_GRACE_MS = 2_000
+
+/** How many replaced streams of a remote button are remembered, to drop late updates from */
+const MAX_RETIRED_STREAMS = 8
+
+/** How long a draw waits for the bitmap of its shape before drawing another, given the latency to the peer */
+export function linkImageWaitMs(latencyMs: number | null): number {
+	// Allowing for the peer to draw it too
+	return latencyMs === null ? 300 : Math.min(300, Math.max(30, latencyMs + 30))
+}
+
+/**
+ * How long a new render of a button is held back for its other sizes to arrive, so that they are all shown together,
+ * given the latency to the peer
+ */
+export function linkCoalesceWaitMs(latencyMs: number | null): number {
+	return latencyMs === null ? 100 : Math.min(100, Math.max(20, latencyMs + 20))
+}
 
 export interface LinkButtonTarget {
 	peerId: string
@@ -36,20 +58,36 @@ export interface LinkButtonTarget {
 export interface LinkButtonState {
 	status: LinkButtonStatus
 	peerName: string | null
-	/** The latest image of the remote button, when status is `ok` */
-	dataUrl: string | null
+	/** Identifies the remote button, for fetching its images from the remote image store */
+	remoteKey: string | null
+	/** The latest images of the remote button, when status is `ok` */
+	images: LinkButtonImage[]
 	pressed: boolean
-	/** The installations the image came through, for loop detection when we serve this button onwards */
+	/** Whether the installation has dropped out, and the image is the last it sent */
+	unreachable: boolean
+	/** The state of the remote button, for drawing its decoration */
+	stepCurrent: number
+	stepCount: number
+	buttonStatus: 'good' | 'warning' | 'error' | undefined
+	actionRunning: boolean
+	/** The installations and buttons the image came through, for loop detection when we serve this button onwards */
 	sourceChain: string[]
 }
 
 /** Send a message to a peer over a transport */
 export type LinkButtonClientSend = (transportId: string, peerId: string, payload: string) => void
 
+/** The size of the content of a button of a size, which is what remote buttons are drawn at, under their decoration */
+export type LinkButtonContentSize = (size: DisplayedSize, decoration: ButtonGraphicsDecorationType) => DisplayedSize
+
 interface LinkedButton {
 	target: LinkButtonTarget | null
-	/** The key of the subscription this button uses (see subscriptionKey) */
+	/** The key of the remote button this button shows (see remoteKey) */
 	key: string | null
+	/** The sizes this button is being shown at */
+	displayedSizes: DisplayedSize[]
+	/** How this button is decorated, which leaves the rest of it for the remote button */
+	decoration: ButtonGraphicsDecorationType
 	onChange: () => void
 	state: LinkButtonState
 	/**
@@ -57,21 +95,62 @@ interface LinkedButton {
 	 * target has been released because the button was given another, so that the release is dropped
 	 */
 	held: Map<string, LinkButtonTarget | null>
+	/** What it showed before its target changed, shown until the new target first arrives */
+	previous: { key: string; published: PublishedRender; timer: NodeJS.Timeout } | null
 }
 
-interface RemoteSubscription {
-	readonly peerId: string
+/** A subscription to a remote button at one size */
+interface Variant {
 	readonly sub: LinkButtonSubscription
-	readonly controlIds: Set<string>
 	lastUpdate: LinkPayloadOfType<'button.update'> | null
-	/** Why the peer said it doesn't serve the button, until an update says it does */
+	/**
+	 * The image held, and the revision it was sent with. Updates that only change the state (eg pressed) say it is
+	 * unchanged since then, rather than sending it again
+	 */
+	image: { dataUrl: string | null; revision: LinkButtonRevision } | null
+	/** Why the peer said it doesn't serve the button at this size, until an update says it does */
 	refused: LinkSubscribeRefusedReason | null
+	/** Set once nothing shows this size, to unsubscribe from it when the grace period is over */
+	releaseTimer: NodeJS.Timeout | null
+	/** Whether a subscribe for it has been sent */
+	subscribed: boolean
+}
+
+/** What the link buttons showing a remote button are given */
+interface PublishedRender {
+	/** The newest update, for what goes with every image */
+	readonly update: LinkPayloadOfType<'button.update'>
+	readonly images: LinkButtonImage[]
+}
+
+/** A remote button shown by one or more link buttons, at the sizes they are shown at */
+interface RemoteButton {
+	/** See remoteKey */
+	readonly key: string
+	readonly peerId: string
+	readonly button: LinkButtonRef
+	readonly controlIds: Set<string>
+	/** By size (see sizeKey) */
+	readonly variants: Map<string, Variant>
+	/** The newest update received, at any size */
+	latestUpdate: LinkPayloadOfType<'button.update'> | null
+	/**
+	 * Streams replaced by a newer one (when the peer restarted, or served the button afresh), oldest first, so that late
+	 * updates from them aren't taken for newer ones
+	 */
+	readonly retiredStreams: string[]
+	published: PublishedRender | null
+	/** Set while a new render is held back for its other sizes to arrive */
+	publishTimer: NodeJS.Timeout | null
 }
 
 /**
  * The client side of the button protocol: subscribes to the remote buttons that link buttons on this
- * installation show, keeps the subscriptions alive, and forwards presses. Link buttons that show the same remote
- * button share one subscription.
+ * installation show, at the sizes they are being shown at, keeps the subscriptions alive, and forwards presses. Link
+ * buttons that show the same remote button share its subscriptions.
+ *
+ * Each shape the remote button is shown at is subscribed to separately, for the peer to draw it at that size. A new
+ * render is held back briefly until it has arrived at every size, so that the sizes change together.
  *
  * Everything about a peer goes over its route (see LinkPeerRegistry.getRoute), so that it is sent once. When the
  * route changes, the subscriptions are renewed over the new one. Every subscribe says which revision is held of each
@@ -83,10 +162,16 @@ export class LinkButtonClient {
 	readonly #selfId: () => string
 	readonly #peers: LinkPeerRegistry
 	readonly #send: LinkButtonClientSend
+	readonly #contentSize: LinkButtonContentSize
+	readonly #images: LinkRemoteImageStore
 
 	readonly #buttons = new Map<string, LinkedButton>()
-	/** Subscriptions by peer, button and size (see subscriptionKey) */
-	readonly #subscriptions = new Map<string, RemoteSubscription>()
+	/** By peer and button (see remoteKey) */
+	readonly #remotes = new Map<string, RemoteButton>()
+
+	/** New subscriptions, sent together once the current burst of changes (eg a page of buttons) is done */
+	readonly #pendingSubscribes = new Set<RemoteButton>()
+	#pendingSubscribesImmediate: NodeJS.Immediate | null = null
 
 	#renewTimer: NodeJS.Timeout | null = null
 
@@ -95,10 +180,18 @@ export class LinkButtonClient {
 	/** Peers last seen reachable, so that only a peer that drops out gets the grace period */
 	readonly #reachable = new Set<string>()
 
-	constructor(selfId: () => string, peers: LinkPeerRegistry, send: LinkButtonClientSend) {
+	constructor(
+		selfId: () => string,
+		peers: LinkPeerRegistry,
+		send: LinkButtonClientSend,
+		contentSize: LinkButtonContentSize,
+		images: LinkRemoteImageStore
+	) {
 		this.#selfId = selfId
 		this.#peers = peers
 		this.#send = send
+		this.#contentSize = contentSize
+		this.#images = images
 
 		peers.on('changed', () => this.#refreshAllStates())
 		// It is reachable (again), or a different way: we may have missed updates, which the peer sends when it is told
@@ -111,7 +204,7 @@ export class LinkButtonClient {
 	/** How many buttons of a peer are subscribed to, for the link buttons showing them */
 	countSubscribedTo(peerId: string): number {
 		let count = 0
-		for (const subscription of this.#subscriptions.values()) if (subscription.peerId === peerId) count++
+		for (const remote of this.#remotes.values()) if (remote.peerId === peerId && remote.variants.size > 0) count++
 		return count
 	}
 
@@ -125,23 +218,44 @@ export class LinkButtonClient {
 
 		for (const { timer } of this.#unreachable.values()) clearTimeout(timer)
 		this.#unreachable.clear()
+		this.#reachable.clear()
+
+		if (this.#pendingSubscribesImmediate) clearImmediate(this.#pendingSubscribesImmediate)
+		this.#pendingSubscribesImmediate = null
+		this.#pendingSubscribes.clear()
+
+		for (const button of this.#buttons.values()) this.#dropPrevious(button)
+
+		// Forget what was received, as its images are dropped too, but not what is shown, so that it is subscribed to
+		// again if started again
+		for (const remote of this.#remotes.values()) {
+			if (remote.publishTimer) clearTimeout(remote.publishTimer)
+			remote.publishTimer = null
+			remote.latestUpdate = null
+			remote.retiredStreams.length = 0
+			remote.published = null
+			for (const [key, variant] of remote.variants) {
+				// A size being let go of is let go of now, rather than kept with no timer to drop it
+				if (variant.releaseTimer) {
+					clearTimeout(variant.releaseTimer)
+					remote.variants.delete(key)
+					continue
+				}
+				variant.lastUpdate = null
+				variant.image = null
+				variant.refused = null
+				variant.subscribed = false
+			}
+		}
+		this.#images.clear()
+		this.#refreshEveryState(this.#peers.getPeers())
 	}
 
 	/**
 	 * Set (or change) what a link button shows. `onChange` is called whenever its state changes
 	 */
 	setTarget(controlId: string, target: LinkButtonTarget | null, onChange: () => void): void {
-		let button = this.#buttons.get(controlId)
-		if (!button) {
-			button = {
-				target: null,
-				key: null,
-				onChange,
-				state: computeState(null, null, null, null, ''),
-				held: new Map(),
-			}
-			this.#buttons.set(controlId, button)
-		}
+		const button = this.#getOrCreateButton(controlId, onChange)
 		button.onChange = onChange
 
 		if (!isEqual(button.target, target)) {
@@ -149,27 +263,91 @@ export class LinkButtonClient {
 			this.#releaseHeld(button)
 
 			button.target = target
-			this.#releaseSubscription(controlId, button)
+			// Kept until the new target first arrives, rather than flashing loading
+			const shown = button.key ? this.#remotes.get(button.key)?.published : null
+			if (!target) {
+				this.#dropPrevious(button)
+			} else if (button.key && shown) {
+				this.#dropPrevious(button)
+				const timer = setTimeout(() => {
+					this.#dropPrevious(button)
+					this.#refreshState(controlId, button, this.#peerOf(button))
+				}, LINK_SIZE_RELEASE_GRACE_MS)
+				button.previous = { key: button.key, published: shown, timer }
+			}
+			this.#detach(controlId, button)
 
 			if (target) {
-				const sub: LinkButtonSubscription = {
-					button: toLinkButtonRef(target.location),
-					width: LINK_BUTTON_BITMAP_SIZE,
-					height: LINK_BUTTON_BITMAP_SIZE,
-				}
-				button.key = subscriptionKey(target.peerId, sub)
+				const ref = toLinkButtonRef(target.location)
+				button.key = remoteKey(target.peerId, ref)
 
-				let subscription = this.#subscriptions.get(button.key)
-				if (!subscription) {
-					subscription = { peerId: target.peerId, sub, controlIds: new Set(), lastUpdate: null, refused: null }
-					this.#subscriptions.set(button.key, subscription)
-					this.#sendToPeer(target.peerId, 'subscribe', { buttons: [{ ...sub, have: null }] })
+				let remote = this.#remotes.get(button.key)
+				if (!remote) {
+					remote = {
+						key: button.key,
+						peerId: target.peerId,
+						button: ref,
+						controlIds: new Set(),
+						variants: new Map(),
+						latestUpdate: null,
+						retiredStreams: [],
+						published: null,
+						publishTimer: null,
+					}
+					this.#remotes.set(button.key, remote)
 				}
-				subscription.controlIds.add(controlId)
+				remote.controlIds.add(controlId)
+				this.#updateDemand(remote)
 			}
 		}
 
-		this.#refreshState(button)
+		this.#refreshState(controlId, button, this.#peerOf(button))
+	}
+
+	/** Set how a link button is decorated, as the remote button is drawn in what is left of it */
+	setDecoration(controlId: string, decoration: ButtonGraphicsDecorationType): void {
+		const button = this.#buttons.get(controlId)
+		if (!button || button.decoration === decoration) return
+
+		button.decoration = decoration
+		const remote = button.key ? this.#remotes.get(button.key) : undefined
+		if (remote) this.#updateDemand(remote)
+	}
+
+	/** Subscribe again to the sizes everything is shown at, as the content of a button of a size has changed size */
+	refreshDisplayedSizes(): void {
+		for (const remote of this.#remotes.values()) this.#updateDemand(remote)
+	}
+
+	/**
+	 * Set the sizes a link button is being shown at, which are the sizes its remote button is subscribed to. A button
+	 * that isn't shown anywhere isn't subscribed to at all
+	 */
+	setDisplayedSizes(controlId: string, sizes: readonly DisplayedSize[]): void {
+		const button = this.#buttons.get(controlId)
+		if (!button || isEqual(button.displayedSizes, sizes)) return
+
+		button.displayedSizes = sizes.map((size) => ({ ...size }))
+		const remote = button.key ? this.#remotes.get(button.key) : undefined
+		if (remote) this.#updateDemand(remote)
+	}
+
+	#getOrCreateButton(controlId: string, onChange: () => void): LinkedButton {
+		let button = this.#buttons.get(controlId)
+		if (!button) {
+			button = {
+				target: null,
+				key: null,
+				displayedSizes: [],
+				decoration: ButtonGraphicsDecorationType.FollowDefault,
+				onChange,
+				state: computeState(null, null, null, '', null, false, null),
+				held: new Map(),
+				previous: null,
+			}
+			this.#buttons.set(controlId, button)
+		}
+		return button
 	}
 
 	/** A link button has been deleted */
@@ -178,7 +356,8 @@ export class LinkButtonClient {
 		if (!button) return
 
 		this.#releaseHeld(button)
-		this.#releaseSubscription(controlId, button)
+		this.#dropPrevious(button)
+		this.#detach(controlId, button)
 		this.#buttons.delete(controlId)
 	}
 
@@ -251,67 +430,287 @@ export class LinkButtonClient {
 		})
 	}
 
-	/** An update arrived from a peer. Ignored unless we are subscribed to that button of that peer */
+	/** An update arrived from a peer. Ignored unless we are subscribed to that button of that peer, at that size */
 	handleUpdate(peerId: string, payload: LinkPayloadOfType<'button.update'>): void {
-		const subscription = this.#subscriptions.get(subscriptionKey(peerId, payload))
-		if (!subscription) return
+		const remote = this.#remotes.get(remoteKey(peerId, payload.button))
+		const variant = remote?.variants.get(sizeKey(payload))
+		if (!remote || !variant) return
 
 		// Updates may arrive out of order, eg over different transports. Keep the newest
-		const held = subscription.lastUpdate?.revision
+		const held = variant.lastUpdate?.revision
 		if (held && held.stream === payload.revision.stream && held.seq >= payload.revision.seq) return
+		if (remote.retiredStreams.includes(payload.revision.stream)) return
 
-		subscription.lastUpdate = payload
-		subscription.refused = null
-		this.#refreshSubscription(subscription)
+		if (payload.image.type === 'image') {
+			variant.image = { dataUrl: payload.image.dataUrl, revision: payload.revision }
+		} else if (
+			// After a catch-up, the image held is of a newer revision than the one it is unchanged since
+			!variant.image ||
+			variant.image.revision.stream !== payload.image.since.stream ||
+			variant.image.revision.seq < payload.image.since.seq
+		) {
+			// The image it is the same as was missed, so ask for it again, saying nothing is held
+			this.#sendToPeer(remote.peerId, 'subscribe', { buttons: [{ ...variant.sub, have: null }] })
+			return
+		}
+
+		variant.lastUpdate = payload
+		variant.refused = null
+		if (isNewer(payload.revision, remote.latestUpdate?.revision ?? null)) {
+			const replaced = remote.latestUpdate?.revision.stream
+			if (replaced && replaced !== payload.revision.stream) {
+				remote.retiredStreams.push(replaced)
+				if (remote.retiredStreams.length > MAX_RETIRED_STREAMS) remote.retiredStreams.shift()
+			}
+			remote.latestUpdate = payload
+		}
+
+		// A draw waiting for the first image of this size has it straight away, without waiting for the other sizes. Or
+		// stops waiting, if there is no image to show
+		this.#images.shapeArrived(remote.key, variant.sub, currentImageOf(remote, variant))
+
+		this.#schedulePublish(remote)
 	}
 
 	/** A peer said it doesn't serve some of the buttons we subscribed to, and why */
 	handleRefused(peerId: string, payload: LinkPayloadOfType<'subscribe.refused'>): void {
 		for (const { reason, ...sub } of payload.buttons) {
-			const subscription = this.#subscriptions.get(subscriptionKey(peerId, sub))
-			if (!subscription || subscription.refused === reason) continue
+			const remote = this.#remotes.get(remoteKey(peerId, sub.button))
+			const variant = remote?.variants.get(sizeKey(sub))
+			if (!remote || !variant || variant.refused === reason) continue
 
-			subscription.refused = reason
-			this.#refreshSubscription(subscription)
+			variant.refused = reason
+			this.#images.shapeArrived(remote.key, variant.sub, null)
+
+			// A size that won't arrive mustn't hold back the others
+			if (remote.publishTimer) this.#schedulePublish(remote)
+			this.#refreshRemote(remote)
 		}
 	}
 
-	#refreshSubscription(subscription: RemoteSubscription): void {
-		for (const controlId of subscription.controlIds) {
-			const button = this.#buttons.get(controlId)
-			if (button) this.#refreshState(button)
+	/**
+	 * Show the newest render to the link buttons: straight away once every size has it, or after a short wait for the
+	 * sizes still to arrive
+	 */
+	#schedulePublish(remote: RemoteButton): void {
+		if (this.#isCaughtUp(remote)) {
+			if (remote.publishTimer) clearTimeout(remote.publishTimer)
+			remote.publishTimer = null
+			this.#publish(remote)
+		} else {
+			remote.publishTimer ??= setTimeout(
+				() => {
+					remote.publishTimer = null
+					this.#publish(remote)
+				},
+				linkCoalesceWaitMs(this.#getLatency(remote.peerId))
+			)
 		}
+	}
+
+	/** Whether every size still wanted, and served, has the newest render */
+	#isCaughtUp(remote: RemoteButton): boolean {
+		const latest = remote.latestUpdate?.revision ?? null
+		for (const variant of remote.variants.values()) {
+			if (variant.releaseTimer || variant.refused) continue
+			if (!variant.lastUpdate || !isSameRevision(variant.lastUpdate.revision, latest)) return false
+		}
+		return true
+	}
+
+	#publish(remote: RemoteButton): void {
+		const update = remote.latestUpdate
+		// With no size of it held, eg all let go of, it is loading rather than empty
+		if (update && [...remote.variants.values()].some((variant) => variant.lastUpdate)) {
+			const images: LinkButtonImage[] = []
+			for (const variant of remote.variants.values()) {
+				const { lastUpdate, image } = variant
+				if (!lastUpdate || !image?.dataUrl) continue
+
+				images.push({
+					width: lastUpdate.width,
+					height: lastUpdate.height,
+					dataUrl: image.dataUrl,
+					// The revision it was sent with, so that it isn't taken for a new image when only the state changed
+					revision: image.revision,
+					current: isSameRevision(lastUpdate.revision, update.revision),
+				})
+			}
+			remote.published = { update, images }
+		} else {
+			remote.published = null
+		}
+		this.#images.setImages(remote.key, remote.published?.images ?? [])
+
+		this.#refreshRemote(remote)
+	}
+
+	#refreshRemote(remote: RemoteButton): void {
+		for (const controlId of remote.controlIds) {
+			const button = this.#buttons.get(controlId)
+			if (button) this.#refreshState(controlId, button, this.#peerOf(button))
+		}
+	}
+
+	/** Subscribe to the sizes the remote button is shown at, and let go of those it no longer is */
+	#updateDemand(remote: RemoteButton): void {
+		// The remote button is drawn as the content of the button, under its decoration
+		const shownSizes: DisplayedSize[] = []
+		for (const controlId of remote.controlIds) {
+			const button = this.#buttons.get(controlId)
+			if (!button) continue
+			for (const size of button.displayedSizes) {
+				// Its content alone when it is served onwards, for the subscriber to decorate
+				shownSizes.push(size.contentOnly ? size : this.#contentSize(size, button.decoration))
+			}
+		}
+
+		const wanted = new Set<string>()
+		for (const size of linkBitmapSizesFor(shownSizes)) {
+			const key = sizeKey(size)
+			wanted.add(key)
+
+			const variant = remote.variants.get(key)
+			if (variant) {
+				// Shown again before it was let go
+				if (variant.releaseTimer) clearTimeout(variant.releaseTimer)
+				variant.releaseTimer = null
+			} else {
+				remote.variants.set(key, {
+					sub: { button: remote.button, width: size.width, height: size.height },
+					lastUpdate: null,
+					image: null,
+					refused: null,
+					releaseTimer: null,
+					subscribed: false,
+				})
+				// A draw at this shape waits briefly for its first image, from now rather than from each draw, so that a page
+				// of buttons from a peer that doesn't answer holds up the surface showing it once, not once per button
+				this.#images.expectShape(remote.key, size, Date.now() + linkImageWaitMs(this.#getLatency(remote.peerId)))
+				this.#queueSubscribe(remote)
+			}
+		}
+
+		for (const [key, variant] of remote.variants) {
+			if (wanted.has(key) || variant.releaseTimer) continue
+			variant.releaseTimer = setTimeout(() => this.#dropVariant(remote, key, variant), LINK_SIZE_RELEASE_GRACE_MS)
+		}
+
+		// A size let go of mustn't hold back the others
+		if (remote.publishTimer) this.#schedulePublish(remote)
+	}
+
+	#dropVariant(remote: RemoteButton, key: string, variant: Variant): void {
+		if (remote.variants.get(key) !== variant) return
+
+		remote.variants.delete(key)
+		this.#sendToPeer(remote.peerId, 'unsubscribe', { buttons: [variant.sub] })
+		this.#images.shapeArrived(remote.key, variant.sub, null)
+
+		// It made room for a size refused for there being too many, so ask for that again now rather than at the renewal
+		const refused = Array.from(remote.variants.values()).filter((other) => other.refused === 'limit')
+		if (refused.length > 0) this.#sendSubscribe(remote.peerId, refused)
+
+		// Its image is no longer shown
+		this.#publish(remote)
+	}
+
+	/** Send the new subscriptions of a remote button with the others made at the same time */
+	#queueSubscribe(remote: RemoteButton): void {
+		this.#pendingSubscribes.add(remote)
+		this.#pendingSubscribesImmediate ??= setImmediate(() => {
+			this.#pendingSubscribesImmediate = null
+
+			const byPeer = new Map<string, Variant[]>()
+			for (const pending of this.#pendingSubscribes) {
+				// It may have been let go of since
+				if (this.#remotes.get(remoteKey(pending.peerId, pending.button)) !== pending) continue
+
+				let variants = byPeer.get(pending.peerId)
+				if (!variants) {
+					variants = []
+					byPeer.set(pending.peerId, variants)
+				}
+				// Not those sent since, eg by a renewal
+				for (const variant of pending.variants.values()) if (!variant.subscribed) variants.push(variant)
+			}
+			this.#pendingSubscribes.clear()
+
+			for (const [peerId, variants] of byPeer) this.#sendSubscribe(peerId, variants)
+		})
 	}
 
 	/** Renew the leases of all our subscriptions */
 	renewAll(): void {
-		const peerIds = new Set(Array.from(this.#subscriptions.values(), (s) => s.peerId))
+		const peerIds = new Set(Array.from(this.#remotes.values(), (s) => s.peerId))
 		for (const peerId of peerIds) this.#subscribeAllForPeer(peerId)
 	}
 
 	/** Subscribe to (or renew) all our subscriptions to a peer, saying what we have so that it sends what we miss */
 	#subscribeAllForPeer(peerId: string): void {
-		const buttons = Array.from(this.#subscriptions.values())
-			.filter((s) => s.peerId === peerId)
-			.map((s) => ({ ...s.sub, have: s.lastUpdate?.revision ?? null }))
-		if (buttons.length === 0) return
-
-		this.#sendToPeer(peerId, 'subscribe', { buttons })
+		const variants: Variant[] = []
+		for (const remote of this.#remotes.values()) {
+			if (remote.peerId === peerId) variants.push(...remote.variants.values())
+		}
+		this.#sendSubscribe(peerId, variants)
 	}
 
-	#releaseSubscription(controlId: string, button: LinkedButton): void {
+	/** Subscribe to (or renew) some subscriptions to a peer, saying what we have so that it sends what we miss */
+	#sendSubscribe(peerId: string, variants: readonly Variant[]): void {
+		for (const chunk of chunked(variants, LINK_BUTTONS_PER_MESSAGE)) {
+			const buttons = chunk.map((variant) => ({ ...variant.sub, have: variant.lastUpdate?.revision ?? null }))
+			if (this.#sendToPeer(peerId, 'subscribe', { buttons })) {
+				for (const variant of chunk) variant.subscribed = true
+			}
+		}
+	}
+
+	/** Stop a link button showing its remote button, unsubscribing from it if no other does */
+	#detach(controlId: string, button: LinkedButton): void {
 		if (!button.key) return
 
 		const key = button.key
-		const subscription = this.#subscriptions.get(key)
+		const remote = this.#remotes.get(key)
 		button.key = null
-		if (!subscription) return
+		if (!remote) return
 
-		subscription.controlIds.delete(controlId)
-		if (subscription.controlIds.size > 0) return
+		remote.controlIds.delete(controlId)
+		if (remote.controlIds.size > 0) {
+			this.#updateDemand(remote)
+			return
+		}
 
-		this.#subscriptions.delete(key)
-		this.#sendToPeer(subscription.peerId, 'unsubscribe', { buttons: [subscription.sub] })
+		this.#remotes.delete(key)
+		if (remote.publishTimer) clearTimeout(remote.publishTimer)
+		for (const variant of remote.variants.values()) {
+			if (variant.releaseTimer) clearTimeout(variant.releaseTimer)
+		}
+		if (!this.#isShownAsPrevious(key)) this.#images.delete(key)
+
+		const subs = Array.from(remote.variants.values(), (v) => v.sub)
+		for (const chunk of chunked(subs, LINK_BUTTONS_PER_MESSAGE)) {
+			this.#sendToPeer(remote.peerId, 'unsubscribe', { buttons: chunk })
+		}
+	}
+
+	/** Stop showing what a button showed before its target changed */
+	#dropPrevious(button: LinkedButton): void {
+		const previous = button.previous
+		if (!previous) return
+
+		clearTimeout(previous.timer)
+		button.previous = null
+		if (!this.#remotes.has(previous.key) && !this.#isShownAsPrevious(previous.key)) this.#images.delete(previous.key)
+	}
+
+	#isShownAsPrevious(key: string): boolean {
+		for (const button of this.#buttons.values()) if (button.previous?.key === key) return true
+		return false
+	}
+
+	/** The latency to a peer over its route, if it has been measured */
+	#getLatency(peerId: string): number | null {
+		return this.#peers.getRouteLatency(peerId)
 	}
 
 	/**
@@ -319,10 +718,9 @@ export class LinkButtonClient {
 	 * @returns whether it was sent
 	 */
 	#sendToPeer<T extends LinkMessageType>(peerId: string, type: T, payload: LinkPayloadOfType<T>): boolean {
-		const peer = this.#peers.getPeer(peerId)
 		const route = this.#peers.getRoute(peerId)
 		// Everything sent here is about buttons, so not to a peer that has said we may not use them
-		if (!peer?.compatible || !route || peer.sharedWithUs?.buttons === false) {
+		if (!route || !this.#peers.isCompatible(peerId) || this.#peers.getSharedWithUs(peerId)?.buttons === false) {
 			this.#logger.silly(`Not sending ${type} to ${peerId}, it is not reachable or doesn't share its buttons`)
 			return false
 		}
@@ -332,18 +730,31 @@ export class LinkButtonClient {
 	}
 
 	#refreshAllStates(): void {
-		this.#trackUnreachable()
-		for (const button of this.#buttons.values()) this.#refreshState(button)
+		const peers = this.#peers.getPeers()
+		this.#trackUnreachable(peers)
+		this.#refreshEveryState(peers)
+	}
+
+	/** Refresh the state of every link button, looking each peer up once rather than once per button */
+	#refreshEveryState(peers: readonly LinkPeerInfo[]): void {
+		const byId = new Map(peers.map((peer) => [peer.id, peer]))
+		for (const [controlId, button] of this.#buttons) {
+			this.#refreshState(controlId, button, button.target ? (byId.get(button.target.peerId) ?? null) : null)
+		}
 	}
 
 	/** Note when peers become unreachable or reachable again, for the grace period */
-	#trackUnreachable(): void {
+	#trackUnreachable(peers: readonly LinkPeerInfo[]): void {
 		const now = Date.now()
-		const peers = this.#peers.getPeers()
 
 		// Forget about peers that have been forgotten
 		const knownIds = new Set(peers.map((p) => p.id))
 		for (const peerId of this.#reachable) if (!knownIds.has(peerId)) this.#reachable.delete(peerId)
+		for (const [peerId, { timer }] of this.#unreachable) {
+			if (knownIds.has(peerId)) continue
+			clearTimeout(timer)
+			this.#unreachable.delete(peerId)
+		}
 
 		for (const { id: peerId, online } of peers) {
 			const entry = this.#unreachable.get(peerId)
@@ -354,9 +765,7 @@ export class LinkButtonClient {
 					this.#unreachable.delete(peerId)
 				}
 			} else if (this.#reachable.delete(peerId)) {
-				const timer = setTimeout(() => {
-					for (const button of this.#buttons.values()) this.#refreshState(button)
-				}, LINK_UNREACHABLE_GRACE_MS)
+				const timer = setTimeout(() => this.#refreshEveryState(this.#peers.getPeers()), LINK_UNREACHABLE_GRACE_MS)
 				this.#unreachable.set(peerId, { since: now, timer })
 			}
 		}
@@ -368,17 +777,24 @@ export class LinkButtonClient {
 		return !!entry && Date.now() - entry.since < LINK_UNREACHABLE_GRACE_MS
 	}
 
-	#refreshState(button: LinkedButton): void {
-		const subscription = button.key ? this.#subscriptions.get(button.key) : undefined
-		const peer = button.target ? (this.#peers.getPeer(button.target.peerId) ?? null) : null
+	/** The peer a link button shows a button of, if it is known */
+	#peerOf(button: LinkedButton): LinkPeerInfo | null {
+		return button.target ? (this.#peers.getPeer(button.target.peerId) ?? null) : null
+	}
+
+	#refreshState(controlId: string, button: LinkedButton, peer: LinkPeerInfo | null): void {
+		const remote = button.key ? this.#remotes.get(button.key) : undefined
+		if (remote?.published) this.#dropPrevious(button)
 
 		const inGracePeriod = !!button.target && this.#isInGracePeriod(button.target.peerId)
 		const newState = computeState(
 			button.target,
 			peer && inGracePeriod ? { ...peer, online: true } : peer,
-			subscription?.lastUpdate ?? null,
-			subscription?.refused ?? null,
-			this.#selfId()
+			remote?.published ?? button.previous?.published ?? null,
+			`${this.#selfId()}/${controlId}`,
+			remote ? getRefused(remote) : null,
+			!!peer && inGracePeriod,
+			button.previous?.key ?? button.key
 		)
 		if (isEqual(newState, button.state)) return
 
@@ -390,15 +806,23 @@ export class LinkButtonClient {
 function computeState(
 	target: LinkButtonTarget | null,
 	peer: Pick<LinkPeerInfo, 'name' | 'compatible' | 'online' | 'sharedWithUs'> | null,
-	lastUpdate: LinkPayloadOfType<'button.update'> | null,
+	published: PublishedRender | null,
+	selfEntry: string,
 	refused: LinkSubscribeRefusedReason | null,
-	selfId: string
+	unreachable: boolean,
+	remoteKey: string | null
 ): LinkButtonState {
 	const state: LinkButtonState = {
 		status: 'unconfigured',
 		peerName: peer?.name ?? null,
-		dataUrl: null,
+		remoteKey,
+		images: [],
+		unreachable: false,
 		pressed: false,
+		stepCurrent: 1,
+		stepCount: 1,
+		buttonStatus: undefined,
+		actionRunning: false,
 		sourceChain: [],
 	}
 
@@ -408,23 +832,77 @@ function computeState(
 	if (!peer.online) return { ...state, status: 'offline' }
 	if (peer.sharedWithUs?.buttons === false || refused === 'denied') return { ...state, status: 'denied' }
 	if (refused === 'limit') return { ...state, status: 'over_limit' }
-	if (!lastUpdate) return { ...state, status: 'loading' }
-	if (lastUpdate.sourceChain.includes(selfId)) return { ...state, status: 'loop' }
+	if (!published) return { ...state, status: 'loading' }
+	if (published.update.sourceChain.includes(selfEntry)) return { ...state, status: 'loop' }
 
 	return {
 		...state,
 		status: 'ok',
-		dataUrl: lastUpdate.dataUrl,
-		pressed: lastUpdate.pressed,
-		sourceChain: lastUpdate.sourceChain,
+		images: published.images,
+		// Here, or further up a chain of them
+		unreachable: unreachable || published.update.unreachable,
+		pressed: published.update.pressed,
+		stepCurrent: published.update.stepCurrent,
+		stepCount: published.update.stepCount,
+		buttonStatus: published.update.status ?? undefined,
+		actionRunning: published.update.actionRunning,
+		sourceChain: published.update.sourceChain,
 	}
 }
 
-/** A key identifying a subscription to a button of a peer, at a size */
-function subscriptionKey(peerId: string, sub: Pick<LinkButtonSubscription, 'button' | 'width' | 'height'>): string {
-	return `${peerId}/${linkButtonSubscriptionKey(sub)}`
+/** Why a remote button isn't shown, when the peer has refused it and sent nothing to show */
+function getRefused(remote: RemoteButton): LinkSubscribeRefusedReason | null {
+	if (remote.published) return null
+
+	let refused: LinkSubscribeRefusedReason | null = null
+	for (const variant of remote.variants.values()) {
+		if (variant.refused === 'denied') return 'denied'
+		refused ??= variant.refused
+	}
+	return refused
+}
+
+/** The image of a size of a remote button, if it has the newest render */
+function currentImageOf(remote: RemoteButton, variant: Variant): LinkButtonImage | null {
+	const { lastUpdate, image } = variant
+	if (!lastUpdate || !image?.dataUrl) return null
+	if (!isSameRevision(lastUpdate.revision, remote.latestUpdate?.revision ?? null)) return null
+
+	return {
+		width: lastUpdate.width,
+		height: lastUpdate.height,
+		dataUrl: image.dataUrl,
+		revision: image.revision,
+		current: true,
+	}
+}
+
+function isSameRevision(a: LinkButtonRevision, b: LinkButtonRevision | null): boolean {
+	return !!b && a.stream === b.stream && a.seq === b.seq
+}
+
+/** Whether a revision is newer than another. One of a different stream is, as the peer has started serving it again */
+function isNewer(revision: LinkButtonRevision, than: LinkButtonRevision | null): boolean {
+	return !than || revision.stream !== than.stream || revision.seq > than.seq
+}
+
+/** A key identifying a button of a peer */
+function remoteKey(peerId: string, button: LinkButtonRef): string {
+	return `${peerId}/${linkButtonSubscriptionKey({ button, width: 0, height: 0 })}`
+}
+
+/** A key identifying a size */
+function sizeKey(size: Pick<LinkButtonSubscription, 'width' | 'height'>): string {
+	return `${size.width}x${size.height}`
 }
 
 function toLinkButtonRef(location: ControlLocation): LinkButtonRef {
 	return { type: 'location', page: location.pageNumber, row: location.row, column: location.column }
+}
+
+/** Split a list into chunks of at most a size */
+function chunked<T>(items: readonly T[], size: number): T[][] {
+	const chunks: T[][] = []
+	for (let i = 0; i < items.length; i += size) chunks.push(items.slice(i, i + size))
+	return chunks
 }

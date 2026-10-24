@@ -18,6 +18,7 @@ function peer(id: string, name: string, overrides: Partial<LinkPeerInfo> = {}): 
 		lastSeen: 0,
 		sharedByUs: { buttons: false },
 		sharedWithUs: { buttons: true },
+		sharesLinkId: false,
 		...overrides,
 	}
 }

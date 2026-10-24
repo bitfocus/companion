@@ -10,7 +10,7 @@ function announcement(protocolVersions = ['1.0.0']): LinkAnnouncement {
 }
 
 function createPinger() {
-	const peers = new LinkPeerRegistry('self', () => ({ buttons: false }), new FakeTableView<any>().asTableView())
+	const peers = new LinkPeerRegistry('self', new FakeTableView<any>().asTableView())
 	const sent: { peerId: string; transportId: string; nonce: string }[] = []
 	/** The monotonic clock, which only the tests move */
 	let monotonic = 0
