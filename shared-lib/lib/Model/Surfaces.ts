@@ -1,4 +1,5 @@
 import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import z from 'zod'
 import type {
 	SurfaceAppearanceDefinition,
 	SurfaceSchemaBitmapConfig,
@@ -258,19 +259,21 @@ export interface SurfaceModelsUpdateReplaceOp {
 	info: ClientSurfaceModelItem
 }
 
-export interface OutboundSurfaceInfo {
-	id: string
-	enabled: boolean
+export const OutboundSurfaceInfoSchema = z.object({
+	id: z.string(),
+	enabled: z.boolean().default(true),
 
-	displayName: string
-	type: 'plugin'
-	moduleId: string
-	instanceId: string
-	config: Record<string, any>
+	displayName: z.string().default(''),
+	type: z.literal('plugin'),
+	moduleId: z.string(),
+	instanceId: z.string(),
+	config: z.record(z.string(), z.any()).default(() => ({})),
 
-	collectionId: string | null
-	sortOrder: number
-}
+	collectionId: z.string().nullable().default(null),
+	sortOrder: z.number().default(0),
+})
+
+export type OutboundSurfaceInfo = z.output<typeof OutboundSurfaceInfoSchema>
 
 export interface OutboundSurfaceCollectionData {
 	enabled: boolean
