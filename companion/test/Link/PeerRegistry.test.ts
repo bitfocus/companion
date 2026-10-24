@@ -145,6 +145,30 @@ describe('LinkPeerRegistry', () => {
 		expect(routeChanged.mock.calls.at(-1)).toEqual(['a', null])
 	})
 
+	test('says the list has changed only when something shown has, not for each repeated announcement', () => {
+		const registry = new LinkPeerRegistry('self', sharedByUs, emptyStore())
+		const changed = vi.fn()
+		const latencyChanged = vi.fn()
+		registry.on('changed', changed)
+		registry.on('latencyChanged', latencyChanged)
+
+		registry.handleAnnouncement('t1', 'a', announcement('a'), 0)
+		expect(changed).toHaveBeenCalledTimes(1)
+		registry.handleAnnouncement('t1', 'a', announcement('a'), 10)
+		expect(changed).toHaveBeenCalledTimes(1)
+
+		// Reachable another way, or renamed
+		registry.handleAnnouncement('t2', 'a', announcement('a'), 20)
+		registry.handleAnnouncement('t2', 'a', announcement('a', { name: 'Renamed' }), 30)
+		expect(changed).toHaveBeenCalledTimes(3)
+
+		// A round trip measured again is only shown
+		registry.setLatency('a', 't1', 12)
+		expect(changed).toHaveBeenCalledTimes(3)
+		expect(latencyChanged).toHaveBeenCalledWith('a')
+		expect(registry.getRouteLatency('a')).toBe(12)
+	})
+
 	test('forgets peers', () => {
 		const store = new FakeTableView<any>()
 		const registry = new LinkPeerRegistry('self', sharedByUs, store.asTableView())

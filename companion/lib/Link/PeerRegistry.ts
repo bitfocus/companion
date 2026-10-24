@@ -27,6 +27,8 @@ interface PeerTransportRecord {
 interface PeerRecord {
 	id: string
 	announcement: LinkAnnouncement
+	/** The peer's version of the highest major version both speak, or null if there is none. Set with the announcement */
+	protocolVersion: string | null
 	/** The name the user has given it here, in place of the one it announces */
 	alias: string | null
 	/** The transports the peer is reachable on */
@@ -53,6 +55,8 @@ type StoredPeer = z.infer<typeof StoredPeerSchema>
 export interface PeerRegistryEvents {
 	/** The list of peers, or the reachability of one, changed */
 	changed: []
+	/** The round trip time to a peer has been measured again, which is only shown */
+	latencyChanged: [peerId: string]
 	/**
 	 * A peer we can talk to has become reachable on a transport: it is newly reachable there, or has just announced a
 	 * protocol version in common with us. Nothing is sent to a peer without one
@@ -111,6 +115,7 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 			this.#peers.set(peerId, {
 				id: peerId,
 				announcement: stored.data.announcement,
+				protocolVersion: negotiateWith(stored.data.announcement),
 				alias: stored.data.alias,
 				transports: new Map(),
 				lastSeen: stored.data.lastSeen,
@@ -177,11 +182,13 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 			record.transports.size === 0 ||
 			!isEqual(record.announcement, announcement) ||
 			now - record.savedLastSeen >= LAST_SEEN_SAVE_INTERVAL_MS
+		const isNew = !record
 		if (!record) {
 			this.#logger.info(`Discovered ${announcement.name} (${peerId})`)
 			record = {
 				id: peerId,
 				announcement,
+				protocolVersion: negotiateWith(announcement),
 				alias: null,
 				transports: new Map(),
 				lastSeen: now,
@@ -194,14 +201,20 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 		}
 
 		const existing = record.transports.get(transportId)
-		const wasCompatible = !!existing && isCompatible(record.announcement)
-		record.announcement = announcement
+		const wasCompatible = !!existing && record.protocolVersion !== null
+		// Most announcements are a repeat, which changes nothing that is shown: only when it was last seen, which is shown
+		// once it goes offline (and so changes then)
+		const changed = isNew || !existing || !isEqual(record.announcement, announcement)
+		if (!isEqual(record.announcement, announcement)) {
+			record.announcement = announcement
+			record.protocolVersion = negotiateWith(announcement)
+		}
 		record.transports.set(transportId, { lastSeen: now, latencyMs: existing?.latencyMs ?? null })
 		record.lastSeen = now
 		if (needsSave) this.#save(record)
 
-		this.emit('changed')
-		if (!wasCompatible && isCompatible(announcement)) this.emit('peerReachable', peerId, transportId)
+		if (changed) this.emit('changed')
+		if (!wasCompatible && record.protocolVersion !== null) this.emit('peerReachable', peerId, transportId)
 		if (!record.route) {
 			record.route = transportId
 			this.emit('routeChanged', peerId, transportId)
@@ -226,7 +239,24 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 		if (!entry) return
 
 		entry.latencyMs = latencyMs
-		this.emit('changed')
+		this.emit('latencyChanged', peerId)
+	}
+
+	/** Whether messages can be exchanged with a peer: it has a protocol version in common with us */
+	isCompatible(peerId: string): boolean {
+		return (this.#peers.get(peerId)?.protocolVersion ?? null) !== null
+	}
+
+	/** What a peer lets us use, or null until it has said (or it isn't known) */
+	getSharedWithUs(peerId: string): LinkPermissions | null {
+		return this.#peers.get(peerId)?.sharedWithUs ?? null
+	}
+
+	/** The last measured round trip time to a peer over its route, or null */
+	getRouteLatency(peerId: string): number | null {
+		const record = this.#peers.get(peerId)
+		if (!record?.route) return null
+		return record.transports.get(record.route)?.latencyMs ?? null
 	}
 
 	/**
@@ -359,7 +389,7 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 
 function toPeerInfo(record: PeerRecord, sharedByUs: LinkPermissions): LinkPeerInfo {
 	const { announcement } = record
-	const protocolVersion = negotiateLinkProtocolVersion(LINK_PROTOCOL_VERSIONS, announcement.protocolVersions)
+	const { protocolVersion } = record
 	return {
 		id: record.id,
 		fingerprint: formatLinkIdFingerprint(record.id),
@@ -395,6 +425,6 @@ function chooseRoute(record: PeerRecord): string | null {
 }
 
 /** Whether a peer announces a protocol version in common with us, so that we can talk to it */
-function isCompatible(announcement: LinkAnnouncement): boolean {
-	return negotiateLinkProtocolVersion(LINK_PROTOCOL_VERSIONS, announcement.protocolVersions) !== null
+function negotiateWith(announcement: LinkAnnouncement): string | null {
+	return negotiateLinkProtocolVersion(LINK_PROTOCOL_VERSIONS, announcement.protocolVersions)
 }

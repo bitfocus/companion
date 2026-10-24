@@ -18,26 +18,33 @@ export interface LinkPermissionStoreEvents {
  */
 export class LinkPermissionStore extends EventEmitter<LinkPermissionStoreEvents> {
 	readonly #table: DataStoreTableView<Record<string, LinkPermissions>>
+	/** What is in the table, as it is checked for every message */
+	readonly #permissions = new Map<string, LinkPermissions>()
 
 	constructor(db: DataDatabase) {
 		super()
 		this.setMaxListeners(0)
 		this.#table = db.getTableView('link_permissions')
+
+		for (const [peerId, raw] of Object.entries(this.#table.all())) {
+			const stored = StoredPermissionsSchema.safeParse(raw)
+			if (stored.success) this.#permissions.set(peerId, stored.data)
+		}
 	}
 
 	get(peerId: string): LinkPermissions {
-		const stored = StoredPermissionsSchema.safeParse(this.#table.get(peerId))
-		return stored.success ? stored.data : { ...LINK_NO_PERMISSIONS }
+		return { ...(this.#permissions.get(peerId) ?? LINK_NO_PERMISSIONS) }
 	}
 
 	set(peerId: string, permissions: LinkPermissions): void {
 		this.#table.set(peerId, permissions)
+		this.#permissions.set(peerId, { ...permissions })
 		this.emit('changed', peerId, permissions)
 	}
 
 	/** Stop sharing anything with an installation, and forget what was */
 	delete(peerId: string): void {
-		if (this.#table.get(peerId) === undefined) return
+		if (!this.#permissions.delete(peerId)) return
 		this.#table.delete(peerId)
 		this.emit('changed', peerId, { ...LINK_NO_PERMISSIONS })
 	}
@@ -45,7 +52,9 @@ export class LinkPermissionStore extends EventEmitter<LinkPermissionStoreEvents>
 	/** Forget what is shared with any installation not in the list, so nothing is kept for one that can't be seen */
 	retainOnly(peerIds: ReadonlySet<string>): void {
 		for (const peerId of Object.keys(this.#table.all())) {
-			if (!peerIds.has(peerId)) this.#table.delete(peerId)
+			if (peerIds.has(peerId)) continue
+			this.#table.delete(peerId)
+			this.#permissions.delete(peerId)
 		}
 	}
 }

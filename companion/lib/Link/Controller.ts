@@ -192,7 +192,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			this.#peers.sharedByUsChanged(peerId)
 			this.emit('peers', this.#peers.getPeers())
 			// Not to a peer we can't talk to: it is told once it announces a version in common (see peerReachable)
-			if (this.#peers.getPeer(peerId)?.compatible) {
+			if (this.#peers.isCompatible(peerId)) {
 				for (const transportId of this.#peers.getReachableTransports(peerId, null))
 					this.#sendAccess(peerId, transportId)
 			}
@@ -204,6 +204,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			this.#peers.handleTransportDisconnected(transportId)
 		)
 		this.#peers.on('changed', () => this.emit('peers', this.#peers.getPeers()))
+		this.#peers.on('latencyChanged', () => this.emit('peers', this.#peers.getPeers()))
 		this.#peers.on('peerReachable', (peerId, transportId) => {
 			this.#sendAccess(peerId, transportId)
 			this.#pinger.ping(peerId, transportId)
@@ -336,7 +337,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 
 		// A message is in the major version negotiated with its sender, so it can only be read once the sender has
 		// announced itself. There is only version 1 so far
-		if (!this.#peers.getPeer(senderId)?.compatible) {
+		if (!this.#peers.isCompatible(senderId)) {
 			this.#logger.debug(`Ignoring a message from ${senderId}, as it has no protocol version in common with us`)
 			return
 		}

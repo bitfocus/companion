@@ -243,7 +243,7 @@ export class LinkButtonClient {
 			}
 		}
 		this.#images.clear()
-		for (const button of this.#buttons.values()) this.#refreshState(button)
+		this.#refreshEveryState(this.#peers.getPeers())
 	}
 
 	/**
@@ -284,7 +284,7 @@ export class LinkButtonClient {
 			}
 		}
 
-		this.#refreshState(button)
+		this.#refreshState(button, this.#peerOf(button))
 	}
 
 	/** Set how a link button is decorated, as the remote button is drawn in what is left of it */
@@ -523,7 +523,7 @@ export class LinkButtonClient {
 	#refreshRemote(remote: RemoteButton): void {
 		for (const controlId of remote.controlIds) {
 			const button = this.#buttons.get(controlId)
-			if (button) this.#refreshState(button)
+			if (button) this.#refreshState(button, this.#peerOf(button))
 		}
 	}
 
@@ -666,8 +666,7 @@ export class LinkButtonClient {
 
 	/** The latency to a peer over its route, if it has been measured */
 	#getLatency(peerId: string): number | null {
-		const route = this.#peers.getRoute(peerId)
-		return this.#peers.getPeer(peerId)?.routes.find((r) => r.transportId === route)?.latencyMs ?? null
+		return this.#peers.getRouteLatency(peerId)
 	}
 
 	/**
@@ -675,10 +674,9 @@ export class LinkButtonClient {
 	 * @returns whether it was sent
 	 */
 	#sendToPeer<T extends LinkMessageType>(peerId: string, type: T, payload: LinkPayloadOfType<T>): boolean {
-		const peer = this.#peers.getPeer(peerId)
 		const route = this.#peers.getRoute(peerId)
 		// Everything sent here is about buttons, so not to a peer that has said we may not use them
-		if (!peer?.compatible || !route || peer.sharedWithUs?.buttons === false) {
+		if (!route || !this.#peers.isCompatible(peerId) || this.#peers.getSharedWithUs(peerId)?.buttons === false) {
 			this.#logger.silly(`Not sending ${type} to ${peerId}, it is not reachable or doesn't share its buttons`)
 			return false
 		}
@@ -688,14 +686,22 @@ export class LinkButtonClient {
 	}
 
 	#refreshAllStates(): void {
-		this.#trackUnreachable()
-		for (const button of this.#buttons.values()) this.#refreshState(button)
+		const peers = this.#peers.getPeers()
+		this.#trackUnreachable(peers)
+		this.#refreshEveryState(peers)
+	}
+
+	/** Refresh the state of every link button, looking each peer up once rather than once per button */
+	#refreshEveryState(peers: readonly LinkPeerInfo[]): void {
+		const byId = new Map(peers.map((peer) => [peer.id, peer]))
+		for (const button of this.#buttons.values()) {
+			this.#refreshState(button, button.target ? (byId.get(button.target.peerId) ?? null) : null)
+		}
 	}
 
 	/** Note when peers become unreachable or reachable again, for the grace period */
-	#trackUnreachable(): void {
+	#trackUnreachable(peers: readonly LinkPeerInfo[]): void {
 		const now = Date.now()
-		const peers = this.#peers.getPeers()
 
 		// Forget about peers that have been forgotten
 		const knownIds = new Set(peers.map((p) => p.id))
@@ -715,9 +721,7 @@ export class LinkButtonClient {
 					this.#unreachable.delete(peerId)
 				}
 			} else if (this.#reachable.delete(peerId)) {
-				const timer = setTimeout(() => {
-					for (const button of this.#buttons.values()) this.#refreshState(button)
-				}, LINK_UNREACHABLE_GRACE_MS)
+				const timer = setTimeout(() => this.#refreshEveryState(this.#peers.getPeers()), LINK_UNREACHABLE_GRACE_MS)
 				this.#unreachable.set(peerId, { since: now, timer })
 			}
 		}
@@ -729,9 +733,13 @@ export class LinkButtonClient {
 		return !!entry && Date.now() - entry.since < LINK_UNREACHABLE_GRACE_MS
 	}
 
-	#refreshState(button: LinkedButton): void {
+	/** The peer a link button shows a button of, if it is known */
+	#peerOf(button: LinkedButton): LinkPeerInfo | null {
+		return button.target ? (this.#peers.getPeer(button.target.peerId) ?? null) : null
+	}
+
+	#refreshState(button: LinkedButton, peer: LinkPeerInfo | null): void {
 		const remote = button.key ? this.#remotes.get(button.key) : undefined
-		const peer = button.target ? (this.#peers.getPeer(button.target.peerId) ?? null) : null
 
 		const inGracePeriod = !!button.target && this.#isInGracePeriod(button.target.peerId)
 		const newState = computeState(
