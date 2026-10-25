@@ -1,11 +1,11 @@
 import fs from 'node:fs/promises'
 import { backup as SqliteBackup } from 'node:sqlite'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { targetVersion, upgradeStartup } from '../Upgrades/Upgrade.js'
 import { DataLegacyDatabase } from './Legacy/Database.js'
 import { createTables as createTablesV1 } from './Schema/v1.js'
 import { createTables as createTablesV8 } from './Schema/v8.js'
 import { DataStoreBase, type OperationObserver } from './StoreBase.js'
-import { targetVersion, upgradeStartup } from './Upgrade.js'
 
 export interface DataDatabaseDefaultTable {
 	page_config_version: number

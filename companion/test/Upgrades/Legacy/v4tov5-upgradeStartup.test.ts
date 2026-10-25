@@ -1,0 +1,41 @@
+import fs from 'fs-extra'
+import { describe, expect, it } from 'vitest'
+import { createTables } from '../../../lib/Data/Schema/v1.js'
+import { DataStoreBase } from '../../../lib/Data/StoreBase.js'
+import LogController from '../../../lib/Log/Controller.js'
+import v4tov5 from '../../../lib/Upgrades/Legacy/v4tov5.js'
+import { importTable } from '../util.js'
+
+function CreateDataDatabase() {
+	const db = new DataDatabase()
+
+	const data = fs.readFileSync('./companion/test/Upgrades/Legacy/v4tov5/db.v4.json', 'utf8')
+
+	importTable(db.defaultTableView, JSON.parse(data))
+
+	return db
+}
+
+class DataDatabase extends DataStoreBase<any> {
+	constructor() {
+		super(':memory:', '', 'main', 'Data/Database', () => {})
+		this.startSQLite()
+	}
+	protected create(): void {
+		createTables(this.store, this.defaultTable, this.logger)
+	}
+	protected loadDefaults(): void {}
+	protected migrateFileToSqlite(): void {}
+}
+
+describe('upgrade', () => {
+	const db = CreateDataDatabase()
+	const data = JSON.parse(fs.readFileSync('./companion/test/Upgrades/Legacy/v4tov5/db.v5.json', 'utf8'))
+	v4tov5.upgradeStartup(db, LogController.createLogger('test-logger'))
+	it('main', () => {
+		expect(db.getTableView('main').all()).toEqual(data['main'])
+	})
+	it('controls', () => {
+		expect(db.getTableView('controls').all()).toEqual(data['controls'])
+	})
+})
