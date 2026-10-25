@@ -20,6 +20,7 @@ import v13tov14 from './Upgrades/v13tov14.js'
 import v14tov15 from './Upgrades/v14tov15.js'
 import v15tov16 from './Upgrades/v15tov16.js'
 import v16tov17 from './Upgrades/v16tov17.js'
+import v17tov18 from './Upgrades/v17tov18.js'
 
 const logger = LogController.createLogger('Data/Upgrade')
 
@@ -40,6 +41,7 @@ const allUpgrades = [
 	v14tov15, // v5.0 - move surface never_lock to the surface group
 	v15tov16, // v5.0 - replace remove_topbar boolean with buttons_decoration enum
 	v16tov17, // v5.1 - give style elements their default pinned properties
+	v17tov18, // v5.2 - store the cloud uuid as JSON
 ]
 export const targetVersion = allUpgrades.length + 1
 
@@ -74,7 +76,8 @@ export function upgradeStartup(db: DataStoreBase<DataDatabaseDefaultTable>): voi
 	}
 
 	// Debug: uncomment to force the upgrade to run again
-	// db.defaultTableView.set('page_config_version', targetVersion - 1)
+	// TODO: comment out again before release. Reruns the in-progress v17tov18 step on every start, as it is still being added to
+	db.defaultTableView.set('page_config_version', targetVersion - 1)
 }
 
 /**

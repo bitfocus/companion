@@ -10,6 +10,7 @@ import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataCache, DataCacheDefaultTable } from '../Data/Cache.js'
 import type { DataDatabase } from '../Data/Database.js'
+import type { DataStoreKeyedSchemaTableView } from '../Data/Tables/KeyedSchemaTableView.js'
 import type { DataStoreTableView } from '../Data/TableView.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import { PREVIEW_RENDER_SIZE, type ImageResult } from '../Graphics/ImageResult.js'
@@ -50,16 +51,18 @@ function generateMachineId() {
  * this program.
  */
 
-interface CloudAuthData {
-	token: string
-	user: string
-	connections: { [region: string]: boolean }
-	cloudActive: boolean
-}
+const CloudAuthDataSchema = z.object({
+	token: z.string().default(''),
+	user: z.string().default(''),
+	connections: z.record(z.string(), z.boolean()).default(() => ({})),
+	cloudActive: z.boolean().default(false),
+})
+type CloudAuthData = z.output<typeof CloudAuthDataSchema>
 
-interface CloudDbTable {
-	uuid: string
-	auth: CloudAuthData
+const CloudTableSchemas = {
+	/** Empty until one is generated */
+	uuid: z.string().default(''),
+	auth: CloudAuthDataSchema.default(() => CloudAuthDataSchema.parse({})),
 }
 
 export type CloudUIEvents = {
@@ -71,7 +74,7 @@ export class CloudController {
 	readonly #logger = LogController.createLogger('Cloud/Controller')
 
 	readonly appInfo: AppInfo
-	readonly #dbTable: DataStoreTableView<CloudDbTable>
+	readonly #dbTable: DataStoreKeyedSchemaTableView<typeof CloudTableSchemas>
 	readonly #cacheTable: DataStoreTableView<DataCacheDefaultTable>
 	readonly controls: IControlStore
 	readonly #graphics: GraphicsController
@@ -138,7 +141,7 @@ export class CloudController {
 		pageStore: IPageStore
 	) {
 		this.appInfo = appInfo
-		this.#dbTable = db.getTableView(CLOUD_TABLE)
+		this.#dbTable = db.getKeyedSchemaTableView(CLOUD_TABLE, CloudTableSchemas)
 		this.#cacheTable = cache.defaultTableView
 		this.controls = controls
 		this.#graphics = graphics
@@ -171,15 +174,14 @@ export class CloudController {
 			}
 		)
 
-		this.data = this.#dbTable.getOrDefault('auth', {
-			token: '',
-			user: '',
-			connections: {},
-			cloudActive: false,
-		})
+		this.data = this.#dbTable.get('auth')
 
 		this.companionId = appInfo.machineId
-		const uuid = this.#dbTable.getPrimitiveOrDefault('uuid', generateMachineId())
+		let uuid = this.#dbTable.get('uuid')
+		if (!uuid) {
+			uuid = generateMachineId()
+			this.#dbTable.set('uuid', uuid)
+		}
 		this.#setState({ uuid })
 
 		const regions = this.#cacheTable.getOrDefault('cloud_servers', {})
@@ -482,7 +484,7 @@ export class CloudController {
 	async #handleCloudRegenerateUUID(): Promise<void> {
 		const newUuid = v4()
 		this.#setState({ uuid: newUuid })
-		this.#dbTable.setPrimitive('uuid', newUuid)
+		this.#dbTable.set('uuid', newUuid)
 
 		this.#setState({ cloudActive: false })
 		await delay(1000)
@@ -664,10 +666,6 @@ export class CloudController {
 	 * Save region enable state information
 	 */
 	saveConnection(region: string, enabled: boolean): void {
-		if (this.data.connections === undefined) {
-			this.data.connections = {}
-		}
-
 		this.data.connections[region] = enabled
 
 		this.#dbTable.set('auth', this.data)
