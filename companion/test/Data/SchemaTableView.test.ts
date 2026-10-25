@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import z from 'zod'
 import { DataCache } from '../../lib/Data/Cache.js'
-import { BROKEN_ROWS_TABLE, type BrokenRowRecord } from '../../lib/Data/SchemaTableView.js'
+import { BROKEN_ROWS_TABLE, type BrokenRowRecord, type SchemaTableViewRepair } from '../../lib/Data/SchemaTableView.js'
 
 const schema = z.object({ name: z.string(), count: z.number().default(0) })
 
@@ -96,6 +96,58 @@ describe('DataStoreSchemaTableView', () => {
 		const view = cache.getSchemaTableView('tbl', schema)
 		expect(view.all()).toEqual({})
 		expect(rawTable().get('bad')).toEqual({ count: 1 })
+	})
+
+	describe('repair', () => {
+		// Fill in a missing name, as a repair might replace something that failed
+		const fillName: SchemaTableViewRepair = (row) =>
+			row && typeof row === 'object' && !('name' in row)
+				? { row: { ...row, name: 'repaired' }, repairs: ['Filled in the name'] }
+				: null
+
+		test('a row that fails is repaired and stored, rather than moved to the broken rows', () => {
+			rawTable().setPrimitive('a', JSON.stringify({ count: 2 }))
+			const view = cache.getSchemaTableView('tbl', schema, { repair: fillName })
+
+			expect(view.all()).toEqual({ a: { name: 'repaired', count: 2 } })
+			expect(rawTable().get('a')).toEqual({ name: 'repaired', count: 2 })
+			expect(brokenRows()).toEqual([])
+		})
+
+		test('a row that cannot be repaired is still moved to the broken rows', () => {
+			rawTable().setPrimitive('a', JSON.stringify({ name: 5 }))
+			const view = cache.getSchemaTableView('tbl', schema, { repair: fillName })
+
+			expect(view.all()).toEqual({})
+			expect(brokenRows()).toEqual([expect.objectContaining({ rowId: 'a', value: '{"name":5}' })])
+		})
+
+		test('a repair can take more than one attempt', () => {
+			rawTable().setPrimitive('a', JSON.stringify({ count: 'x' }))
+			const repair: SchemaTableViewRepair = (row: any) =>
+				typeof row.count !== 'number'
+					? { row: { ...row, count: 1 }, repairs: ['Fixed the count'] }
+					: { row: { ...row, name: 'n' }, repairs: ['Filled in the name'] }
+			const view = cache.getSchemaTableView('tbl', schema, { repair })
+
+			expect(view.get('a')).toEqual({ name: 'n', count: 1 })
+		})
+
+		test('a repair that never succeeds moves the original row to the broken rows', () => {
+			rawTable().setPrimitive('a', JSON.stringify({ count: 'x' }))
+			const view = cache.getSchemaTableView('tbl', schema, {
+				repair: (row) => ({ row, repairs: ['Made no difference'] }),
+			})
+
+			expect(view.all()).toEqual({})
+			expect(brokenRows()).toEqual([expect.objectContaining({ rowId: 'a', value: '{"count":"x"}' })])
+		})
+
+		test('refuses a view of the same table with a different repair', () => {
+			cache.getSchemaTableView('tbl', schema, { repair: fillName })
+
+			expect(() => cache.getSchemaTableView('tbl', schema)).toThrow('different options')
+		})
 	})
 
 	test('get moves a broken row', () => {

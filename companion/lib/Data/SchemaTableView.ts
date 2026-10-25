@@ -28,7 +28,21 @@ export interface SchemaTableViewOptions {
 	 * rows are large and written often, where the check costs more than it is worth. Defaults to true
 	 */
 	validateWrites?: boolean
+
+	/**
+	 * Repair a row that fails to parse, from the issues found, instead of moving it to {@link BROKEN_ROWS_TABLE}.
+	 * A repaired row which then parses is stored, and each repair logged. Return null if it can't be repaired
+	 */
+	repair?: SchemaTableViewRepair
 }
+
+export type SchemaTableViewRepair = (
+	row: unknown,
+	issues: readonly z.core.$ZodIssue[]
+) => { row: unknown; repairs: string[] } | null
+
+/** A repair can reveal more to repair, so it is given a few attempts */
+const MAX_REPAIR_ATTEMPTS = 3
 
 /**
  * A view of a table whose rows are parsed with a schema, to fill in defaults and normalise their shape.
@@ -38,6 +52,7 @@ export interface SchemaTableViewOptions {
 export class DataStoreSchemaTableView<TSchema extends z.ZodType<Record<string, any>>> extends DataStoreTableViewBase {
 	readonly schema: TSchema
 	readonly validateWrites: boolean
+	readonly repair: SchemaTableViewRepair | undefined
 	readonly #brokenRows: DataStoreTableView<Record<string, BrokenRowRecord>>
 
 	constructor(
@@ -54,6 +69,7 @@ export class DataStoreSchemaTableView<TSchema extends z.ZodType<Record<string, a
 		this.#brokenRows = brokenRows
 		this.schema = schema
 		this.validateWrites = options?.validateWrites ?? true
+		this.repair = options?.repair
 	}
 
 	/**
@@ -123,10 +139,14 @@ export class DataStoreSchemaTableView<TSchema extends z.ZodType<Record<string, a
 	#parse(id: string, rawValue: string): z.output<TSchema> | undefined {
 		let reason: string
 		try {
-			const result = this.schema.safeParse(JSON.parse(rawValue))
+			const row: unknown = JSON.parse(rawValue)
+			const result = this.schema.safeParse(row)
 			if (result.success) return result.data
 
 			reason = z.prettifyError(result.error)
+
+			const repaired = this.#repair(id, row, result.error)
+			if (repaired !== undefined) return repaired
 		} catch (e) {
 			reason = `Invalid JSON: ${stringifyError(e)}`
 		}
@@ -144,6 +164,32 @@ export class DataStoreSchemaTableView<TSchema extends z.ZodType<Record<string, a
 		} else {
 			// Leave it in place rather than lose the only copy
 			this.logger.error(`Ignoring invalid row "${id}", unable to move it to ${BROKEN_ROWS_TABLE}: ${reason}`)
+		}
+
+		return undefined
+	}
+
+	/** Try to repair a row that failed to parse, storing it if that succeeds */
+	#repair(id: string, row: unknown, error: z.ZodError): z.output<TSchema> | undefined {
+		if (!this.repair) return undefined
+
+		const repairs: string[] = []
+		let current = row
+		let issues = error.issues
+		for (let attempt = 0; attempt < MAX_REPAIR_ATTEMPTS; attempt++) {
+			const repaired = this.repair(current, issues)
+			if (!repaired) return undefined
+
+			repairs.push(...repaired.repairs)
+			current = repaired.row
+
+			const result = this.schema.safeParse(current)
+			if (result.success) {
+				this.setRaw(id, JSON.stringify(result.data))
+				for (const repair of repairs) this.logger.warn(`Repaired row "${id}": ${repair}`)
+				return result.data
+			}
+			issues = result.error.issues
 		}
 
 		return undefined

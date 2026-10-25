@@ -452,7 +452,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 		const cachedTable = this.schemaTableCache.get(tableName)
 		if (cachedTable) {
 			if (cachedTable.schema !== schema) throw new Error(`Table "${tableName}" already has a different schema`)
-			if (cachedTable.validateWrites !== (options?.validateWrites ?? true)) {
+			if (cachedTable.validateWrites !== (options?.validateWrites ?? true) || cachedTable.repair !== options?.repair) {
 				throw new Error(`Table "${tableName}" already has different options`)
 			}
 			return cachedTable
