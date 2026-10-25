@@ -834,8 +834,40 @@
 									"surface"
 								]
 							},
-							"config": {},
-							"secrets": {},
+							"config": {
+								"default": null,
+								"anyOf": [
+									{
+										"type": "object",
+										"propertyNames": {
+											"type": "string"
+										},
+										"additionalProperties": {
+											"$ref": "#/$defs/__schema1"
+										}
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"secrets": {
+								"default": null,
+								"anyOf": [
+									{
+										"type": "object",
+										"propertyNames": {
+											"type": "string"
+										},
+										"additionalProperties": {
+											"$ref": "#/$defs/__schema1"
+										}
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
 							"isFirstInit": {
 								"type": "boolean"
 							},
@@ -1145,8 +1177,40 @@
 									"surface"
 								]
 							},
-							"config": {},
-							"secrets": {},
+							"config": {
+								"default": null,
+								"anyOf": [
+									{
+										"type": "object",
+										"propertyNames": {
+											"type": "string"
+										},
+										"additionalProperties": {
+											"$ref": "#/$defs/__schema1"
+										}
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"secrets": {
+								"default": null,
+								"anyOf": [
+									{
+										"type": "object",
+										"propertyNames": {
+											"type": "string"
+										},
+										"additionalProperties": {
+											"$ref": "#/$defs/__schema1"
+										}
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
 							"isFirstInit": {
 								"type": "boolean"
 							},
@@ -1860,8 +1924,40 @@
 									"surface"
 								]
 							},
-							"config": {},
-							"secrets": {},
+							"config": {
+								"default": null,
+								"anyOf": [
+									{
+										"type": "object",
+										"propertyNames": {
+											"type": "string"
+										},
+										"additionalProperties": {
+											"$ref": "#/$defs/__schema1"
+										}
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"secrets": {
+								"default": null,
+								"anyOf": [
+									{
+										"type": "object",
+										"propertyNames": {
+											"type": "string"
+										},
+										"additionalProperties": {
+											"$ref": "#/$defs/__schema1"
+										}
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
 							"isFirstInit": {
 								"type": "boolean"
 							},
@@ -2134,8 +2230,40 @@
 									"surface"
 								]
 							},
-							"config": {},
-							"secrets": {},
+							"config": {
+								"default": null,
+								"anyOf": [
+									{
+										"type": "object",
+										"propertyNames": {
+											"type": "string"
+										},
+										"additionalProperties": {
+											"$ref": "#/$defs/__schema1"
+										}
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"secrets": {
+								"default": null,
+								"anyOf": [
+									{
+										"type": "object",
+										"propertyNames": {
+											"type": "string"
+										},
+										"additionalProperties": {
+											"$ref": "#/$defs/__schema1"
+										}
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
 							"isFirstInit": {
 								"type": "boolean"
 							},

@@ -6,6 +6,7 @@ import { SomeEntityModelSchema } from '../EntityModel.js'
 import { ExpressionVariableModelSchema } from '../ExpressionVariableModel.js'
 import { ImageLibraryInfoSchema } from '../ImageLibraryModel.js'
 import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '../Instance.js'
+import { JsonObjectSchema } from '../Options.js'
 import {
 	OutboundSurfaceInfoSchema,
 	SurfaceConfigSchema,
@@ -43,8 +44,9 @@ export const ExportV17InstanceSchema = z.object({
 
 	// Only in a full export
 	moduleInstanceType: z.enum(ModuleInstanceType).optional(),
-	config: z.unknown().optional(),
-	secrets: z.unknown().optional(),
+	/** Null, like a missing one, means the module's default, which an invalid one is given rather than failing the import */
+	config: JsonObjectSchema.nullable().optional().catch(null),
+	secrets: JsonObjectSchema.nullable().optional().catch(null),
 	isFirstInit: z.boolean().optional(),
 	enabled: z.boolean().optional(),
 })

@@ -99,6 +99,13 @@ describe('upgradeImport', () => {
 		expect(fullExport.instances.a).toEqual({ ...full, updatePolicy: 'stable' })
 	})
 
+	test('gives an instance whose config is not a JSON object the module default', () => {
+		const instance = { moduleId: 'bmd-atem', label: 'atem', config: 'host=1.2.3.4', secrets: { password: 'x' } }
+
+		const result: any = upgradeImport({ type: 'full', version: EXPORT_VERSION, instances: { a: instance } }, userConfig)
+		expect(result.instances.a).toMatchObject({ config: null, secrets: { password: 'x' } })
+	})
+
 	test('keeps nested collections, enabling those from before they could be disabled', () => {
 		const result: any = upgradeImport(
 			{

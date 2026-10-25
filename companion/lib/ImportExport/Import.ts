@@ -277,7 +277,7 @@ export class ImportController {
 					this.#instancesController.setSurfaceInstanceLabelAndConfig(newId, {
 						label: null,
 						enabled: instanceConfig.enabled !== false,
-						config: 'config' in instanceConfig ? instanceConfig.config : null,
+						config: instanceConfig.config ?? null,
 						// secrets: 'secrets' in instanceConfig ? instanceConfig.secrets : null,
 						updatePolicy: null,
 						// upgradeIndex: instanceConfig.lastUpgradeIndex,
@@ -490,8 +490,8 @@ export class ImportController {
 						this.#instancesController.setConnectionLabelAndConfig(newId, {
 							label: null,
 							enabled: obj.enabled !== false,
-							config: 'config' in obj ? obj.config : null,
-							secrets: 'secrets' in obj ? obj.secrets : null,
+							config: obj.config ?? null,
+							secrets: obj.secrets ?? null,
 							updatePolicy: null,
 							upgradeIndex: obj.lastUpgradeIndex,
 						})
