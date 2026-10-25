@@ -1,6 +1,7 @@
 import type z from 'zod'
 import type { DataDatabase } from '../../lib/Data/Database.js'
 import type { SchemaTableViewOptions } from '../../lib/Data/SchemaTableView.js'
+import type { KeyedRowSchemas, KeyedSchemaTableViewOptions } from '../../lib/Data/Tables/KeyedSchemaTableView.js'
 import type { DataStoreTableView } from '../../lib/Data/TableView.js'
 
 /**
@@ -94,6 +95,49 @@ export class FakeSchemaTableView<TSchema extends z.ZodType<Record<string, any>>>
 }
 
 /**
+ * A stand-in for DataStoreKeyedSchemaTableView, storing its rows in a FakeTableView.
+ * A row that fails is repaired and stored like the real view, else it reads as its default but is left in place
+ */
+export class FakeKeyedSchemaTableView<TRows extends KeyedRowSchemas> {
+	readonly table: FakeTableView<unknown>
+	readonly schemas: TRows
+	readonly repair: KeyedSchemaTableViewOptions<TRows>['repair']
+
+	constructor(table: FakeTableView<unknown>, schemas: TRows, options?: KeyedSchemaTableViewOptions<TRows>) {
+		this.table = table
+		this.schemas = schemas
+		this.repair = options?.repair
+	}
+
+	get<K extends keyof TRows & string>(key: K): z.output<TRows[K]> {
+		const schema = this.schemas[key]
+		const stored = this.table.get(key)
+		if (stored === undefined) return schema.parse(undefined)
+
+		let result = schema.safeParse(stored)
+		const repair = this.repair?.[key]
+		if (!result.success && repair) {
+			const repaired = repair(stored, result.error.issues)
+			if (repaired) {
+				result = schema.safeParse(repaired.row)
+				if (result.success) this.table.set(key, result.data)
+			}
+		}
+		return result.success ? result.data : schema.parse(undefined)
+	}
+
+	set<K extends keyof TRows & string>(key: K, value: z.output<TRows[K]>): z.output<TRows[K]> {
+		const parsed = this.schemas[key].parse(JSON.parse(JSON.stringify(value)))
+		this.table.set(key, parsed)
+		return structuredClone(parsed)
+	}
+
+	delete(key: keyof TRows & string): void {
+		this.table.delete(key)
+	}
+}
+
+/**
  * A stand-in for DataDatabase that hands out FakeTableViews
  */
 export class FakeDataDatabase {
@@ -117,6 +161,15 @@ export class FakeDataDatabase {
 		options?: SchemaTableViewOptions
 	): FakeSchemaTableView<TSchema> {
 		return new FakeSchemaTableView(this.getTableView(name), schema, options)
+	}
+
+	/** The rows are stored in the same FakeTableView that {@link getTableView} returns for the table */
+	getKeyedSchemaTableView<TRows extends KeyedRowSchemas>(
+		name: string,
+		schemas: TRows,
+		options?: KeyedSchemaTableViewOptions<TRows>
+	): FakeKeyedSchemaTableView<TRows> {
+		return new FakeKeyedSchemaTableView(this.getTableView(name), schemas, options)
 	}
 
 	get defaultTableView(): FakeTableView<any> {

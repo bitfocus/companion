@@ -8,6 +8,7 @@ import { InstanceConfigSchema } from '@companion-app/shared/Model/Instance.js'
 import { PageModelSchema } from '@companion-app/shared/Model/PageModel.js'
 import { SomeButtonGraphicsElementSchema } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { OutboundSurfaceInfoSchema, SurfaceConfigSchema } from '@companion-app/shared/Model/Surfaces.js'
+import { UserConfigModelSchema } from '@companion-app/shared/Model/UserConfigModel.js'
 import { createTables } from '../../lib/Data/Schema/v1.js'
 import { DataStoreBase } from '../../lib/Data/StoreBase.js'
 import { upgradeStartup } from '../../lib/Data/Upgrade.js'
@@ -64,8 +65,9 @@ const upgradedRows = FIXTURES.map((fixture) => {
 	const db = new FixtureDatabase(fixture)
 	const rows = Object.fromEntries(SCHEMA_TABLES.map(({ table }) => [table, db.getTableView(table).all()]))
 	const controls = db.getTableView<Record<string, unknown>>('controls').all()
+	const userconfig: unknown = db.defaultTableView.get('userconfig')
 	db.close()
-	return { fixture, rows, controls }
+	return { fixture, rows, controls, userconfig }
 })
 
 /** The outermost entities within a value; their children are parsed with them */
@@ -83,7 +85,6 @@ function collectEntities(value: unknown, found: unknown[] = []): unknown[] {
 	return found
 }
 
-// The controls table isn't schema-backed yet, but the schemas of its parts can already be checked
 describe('entities in controls', () => {
 	// Feedbacks used as trigger conditions kept the style of the old button feedbacks, which nothing reads
 	const droppedEntityFields = ['style']
@@ -173,6 +174,43 @@ describe('style elements in controls', () => {
 	test('are covered by the fixtures', () => {
 		const elementCount = upgradedRows.reduce((count, { controls }) => count + collectElements(controls).length, 0)
 		expect(elementCount).toBeGreaterThan(0)
+	})
+})
+
+describe('userconfig', () => {
+	// Old settings, which the upgrades have already moved elsewhere
+	const droppedUserConfigFields = [
+		'remove_topbar',
+		'emulator_control_enable',
+		'xkeys_enable',
+		'xkeys_legacy_layout',
+		'elgato_plugin_enable',
+		'loupedeck_enable',
+		'contour_shuttle_enable',
+		'videohub_panel_enabled',
+		'vec_footpedal_enable',
+		'blackmagic_controller_enable',
+		'mystrix_enable',
+		'gridSizeInlineGrow',
+		'discoveryEnabled',
+	]
+
+	test.each(upgradedRows)('the userconfig of $fixture parses, losing nothing', ({ userconfig }) => {
+		const result = UserConfigModelSchema.safeParse(userconfig)
+		expect(result.error).toBeUndefined()
+
+		const expected = withoutPaths(userconfig, droppedUserConfigFields) as Record<string, unknown>
+		for (const [key, value] of Object.entries(expected)) {
+			// Old configs stored some numbers as strings
+			if (typeof value === 'string' && typeof result.data?.[key as keyof typeof result.data] === 'number') {
+				expected[key] = Number(value)
+			}
+		}
+		expect(result.data).toMatchObject(expected)
+	})
+
+	test('is covered by the fixtures', () => {
+		expect(upgradedRows.filter(({ userconfig }) => userconfig !== undefined).length).toBeGreaterThan(0)
 	})
 })
 
