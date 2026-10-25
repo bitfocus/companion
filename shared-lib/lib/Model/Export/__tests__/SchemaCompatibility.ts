@@ -1,5 +1,3 @@
-import { UNDESCRIBED } from '../Undescribed.js'
-
 type JsonSchema = Record<string, any>
 
 /** Keywords that describe a schema without changing what it accepts */
@@ -23,7 +21,7 @@ const COMPARED = new Set([
 /**
  * Find how a new version of a JSON schema is incompatible with the old: where it no longer accepts something the old
  * one did, or no longer has a property the old one had. Adding an optional property, or widening what is accepted, is
- * compatible, as is describing a part that was marked as not described yet.
+ * compatible.
  * @returns a description of each incompatibility, empty if there are none
  */
 export function findSchemaIncompatibilities(oldSchema: JsonSchema, newSchema: JsonSchema): string[] {
@@ -66,8 +64,6 @@ class SchemaComparison {
 
 		// Accepting anything accepts whatever the old one did
 		if (acceptsAnything(newNode)) return []
-		// Describing what wasn't described yet says what it already was, rather than changing it
-		if (oldNode.description === UNDESCRIBED) return []
 		if (acceptsAnything(oldNode)) return [`${at}: accepted anything, but is now restricted`]
 
 		// Each option of the old one must still be accepted

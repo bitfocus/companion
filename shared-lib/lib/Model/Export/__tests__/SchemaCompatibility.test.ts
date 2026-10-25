@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest'
 import z from 'zod'
-import { undescribed } from '../Undescribed.js'
 import { findSchemaIncompatibilities } from './SchemaCompatibility.js'
 
 function compare(oldSchema: z.ZodType, newSchema: z.ZodType): string[] {
@@ -24,12 +23,6 @@ describe('findSchemaIncompatibilities', () => {
 			['a property allowed anything', base.extend({ name: z.any() })],
 		])('%s', (_name, newSchema) => {
 			expect(compare(base, newSchema)).toEqual([])
-		})
-
-		test('a part that was not described yet being described', () => {
-			const before = z.object({ name: z.string(), settings: undescribed() })
-
-			expect(compare(before, before.extend({ settings: z.object({ a: z.number() }) }))).toEqual([])
 		})
 
 		test('an enum gaining a value', () => {
