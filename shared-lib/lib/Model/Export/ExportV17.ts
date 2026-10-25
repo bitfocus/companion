@@ -1,4 +1,5 @@
 import z from 'zod'
+import { undescribed } from './Undescribed.js'
 
 // Version 17 of the export format. The first version described by a schema; older exports are upgraded to it by the
 // legacy upgrade steps. Once released a version is append-only: it may gain optional properties, but anything else
@@ -8,12 +9,12 @@ import z from 'zod'
 
 export const EXPORT_V17 = 17
 
-// TODO - give each section its own schema
-const ExportV17ControlSchema = z.record(z.string(), z.any())
-const ExportV17TriggerContentSchema = z.record(z.string(), z.any())
-const ExportV17InstancesSchema = z.record(z.string(), z.any())
-const ExportV17CollectionsSchema = z.array(z.any())
-const ExportV17ImageLibrarySchema = z.array(z.any())
+// TODO - describe each section
+const ExportV17ControlSchema = z.record(z.string(), undescribed())
+const ExportV17TriggerContentSchema = z.record(z.string(), undescribed())
+const ExportV17InstancesSchema = z.record(z.string(), undescribed())
+const ExportV17CollectionsSchema = z.array(undescribed())
+const ExportV17ImageLibrarySchema = z.array(undescribed())
 
 const ExportV17GridSizeSchema = z.object({
 	minColumn: z.number(),
@@ -28,7 +29,7 @@ export const ExportV17PageContentSchema = z.object({
 	/** The controls of the page, by row then column */
 	controls: z.record(z.number(), z.record(z.number(), ExportV17ControlSchema)).default(() => ({})),
 	/** The page's local variables, the entities of its `page:<id>` control */
-	pageVariables: z.array(z.any()).optional(),
+	pageVariables: z.array(undescribed()).optional(),
 	/** Older exports don't have one, so the smallest grid that fits the controls is used */
 	gridSize: ExportV17GridSizeSchema.optional(),
 })
@@ -47,15 +48,15 @@ export const ExportV17FullSchema = z.object({
 	pages: z.record(z.number(), ExportV17PageContentSchema).optional(),
 	triggers: z.record(z.string(), ExportV17TriggerContentSchema).optional(),
 	triggerCollections: ExportV17CollectionsSchema.optional(),
-	custom_variables: z.record(z.string(), z.any()).optional(),
+	custom_variables: z.record(z.string(), undescribed()).optional(),
 	customVariablesCollections: ExportV17CollectionsSchema.optional(),
-	expressionVariables: z.record(z.string(), z.any()).optional(),
+	expressionVariables: z.record(z.string(), undescribed()).optional(),
 	expressionVariablesCollections: ExportV17CollectionsSchema.optional(),
 	instances: ExportV17InstancesSchema.optional(),
 	connectionCollections: ExportV17CollectionsSchema.optional(),
-	surfaces: z.any().optional(),
-	surfaceGroups: z.any().optional(),
-	surfacesRemote: z.record(z.string(), z.any()).optional(),
+	surfaces: undescribed().optional(),
+	surfaceGroups: undescribed().optional(),
+	surfacesRemote: z.record(z.string(), undescribed()).optional(),
 	surfaceInstances: ExportV17InstancesSchema.optional(),
 	surfaceInstanceCollections: ExportV17CollectionsSchema.optional(),
 	imageLibrary: ExportV17ImageLibrarySchema.optional(),

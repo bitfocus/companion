@@ -52,13 +52,17 @@
 										"propertyNames": {
 											"type": "string"
 										},
-										"additionalProperties": {}
+										"additionalProperties": {
+											"description": "Not described yet"
+										}
 									}
 								}
 							},
 							"pageVariables": {
 								"type": "array",
-								"items": {}
+								"items": {
+									"description": "Not described yet"
+								}
 							},
 							"gridSize": {
 								"type": "object",
@@ -96,73 +100,103 @@
 						"propertyNames": {
 							"type": "string"
 						},
-						"additionalProperties": {}
+						"additionalProperties": {
+							"description": "Not described yet"
+						}
 					}
 				},
 				"triggerCollections": {
 					"type": "array",
-					"items": {}
+					"items": {
+						"description": "Not described yet"
+					}
 				},
 				"custom_variables": {
 					"type": "object",
 					"propertyNames": {
 						"type": "string"
 					},
-					"additionalProperties": {}
+					"additionalProperties": {
+						"description": "Not described yet"
+					}
 				},
 				"customVariablesCollections": {
 					"type": "array",
-					"items": {}
+					"items": {
+						"description": "Not described yet"
+					}
 				},
 				"expressionVariables": {
 					"type": "object",
 					"propertyNames": {
 						"type": "string"
 					},
-					"additionalProperties": {}
+					"additionalProperties": {
+						"description": "Not described yet"
+					}
 				},
 				"expressionVariablesCollections": {
 					"type": "array",
-					"items": {}
+					"items": {
+						"description": "Not described yet"
+					}
 				},
 				"instances": {
 					"type": "object",
 					"propertyNames": {
 						"type": "string"
 					},
-					"additionalProperties": {}
+					"additionalProperties": {
+						"description": "Not described yet"
+					}
 				},
 				"connectionCollections": {
 					"type": "array",
-					"items": {}
+					"items": {
+						"description": "Not described yet"
+					}
 				},
-				"surfaces": {},
-				"surfaceGroups": {},
+				"surfaces": {
+					"description": "Not described yet"
+				},
+				"surfaceGroups": {
+					"description": "Not described yet"
+				},
 				"surfacesRemote": {
 					"type": "object",
 					"propertyNames": {
 						"type": "string"
 					},
-					"additionalProperties": {}
+					"additionalProperties": {
+						"description": "Not described yet"
+					}
 				},
 				"surfaceInstances": {
 					"type": "object",
 					"propertyNames": {
 						"type": "string"
 					},
-					"additionalProperties": {}
+					"additionalProperties": {
+						"description": "Not described yet"
+					}
 				},
 				"surfaceInstanceCollections": {
 					"type": "array",
-					"items": {}
+					"items": {
+						"description": "Not described yet"
+					}
 				},
 				"imageLibrary": {
 					"type": "array",
-					"items": {}
+					"items": {
+						"description": "Not described yet"
+					}
 				},
 				"imageLibraryCollections": {
 					"type": "array",
-					"items": {}
+					"items": {
+						"description": "Not described yet"
+					}
 				}
 			},
 			"required": [
@@ -215,13 +249,17 @@
 									"propertyNames": {
 										"type": "string"
 									},
-									"additionalProperties": {}
+									"additionalProperties": {
+										"description": "Not described yet"
+									}
 								}
 							}
 						},
 						"pageVariables": {
 							"type": "array",
-							"items": {}
+							"items": {
+								"description": "Not described yet"
+							}
 						},
 						"gridSize": {
 							"type": "object",
@@ -253,22 +291,30 @@
 					"propertyNames": {
 						"type": "string"
 					},
-					"additionalProperties": {}
+					"additionalProperties": {
+						"description": "Not described yet"
+					}
 				},
 				"connectionCollections": {
 					"type": "array",
-					"items": {}
+					"items": {
+						"description": "Not described yet"
+					}
 				},
 				"oldPageNumber": {
 					"type": "number"
 				},
 				"imageLibrary": {
 					"type": "array",
-					"items": {}
+					"items": {
+						"description": "Not described yet"
+					}
 				},
 				"imageLibraryCollections": {
 					"type": "array",
-					"items": {}
+					"items": {
+						"description": "Not described yet"
+					}
 				}
 			},
 			"required": [
@@ -305,31 +351,43 @@
 						"propertyNames": {
 							"type": "string"
 						},
-						"additionalProperties": {}
+						"additionalProperties": {
+							"description": "Not described yet"
+						}
 					}
 				},
 				"triggerCollections": {
 					"type": "array",
-					"items": {}
+					"items": {
+						"description": "Not described yet"
+					}
 				},
 				"instances": {
 					"type": "object",
 					"propertyNames": {
 						"type": "string"
 					},
-					"additionalProperties": {}
+					"additionalProperties": {
+						"description": "Not described yet"
+					}
 				},
 				"connectionCollections": {
 					"type": "array",
-					"items": {}
+					"items": {
+						"description": "Not described yet"
+					}
 				},
 				"imageLibrary": {
 					"type": "array",
-					"items": {}
+					"items": {
+						"description": "Not described yet"
+					}
 				},
 				"imageLibraryCollections": {
 					"type": "array",
-					"items": {}
+					"items": {
+						"description": "Not described yet"
+					}
 				}
 			},
 			"required": [
