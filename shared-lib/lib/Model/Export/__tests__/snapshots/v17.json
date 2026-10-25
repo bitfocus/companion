@@ -1,0 +1,341 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"oneOf": [
+		{
+			"type": "object",
+			"properties": {
+				"version": {
+					"type": "number",
+					"const": 17
+				},
+				"companionBuild": {
+					"type": "string"
+				},
+				"notes": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "full"
+				},
+				"pages": {
+					"type": "object",
+					"propertyNames": {
+						"type": "string",
+						"pattern": "^-?\\d+(?:\\.\\d+)?$"
+					},
+					"additionalProperties": {
+						"type": "object",
+						"properties": {
+							"id": {
+								"type": "string"
+							},
+							"name": {
+								"default": "",
+								"type": "string"
+							},
+							"controls": {
+								"default": {},
+								"type": "object",
+								"propertyNames": {
+									"type": "string",
+									"pattern": "^-?\\d+(?:\\.\\d+)?$"
+								},
+								"additionalProperties": {
+									"type": "object",
+									"propertyNames": {
+										"type": "string",
+										"pattern": "^-?\\d+(?:\\.\\d+)?$"
+									},
+									"additionalProperties": {
+										"type": "object",
+										"propertyNames": {
+											"type": "string"
+										},
+										"additionalProperties": {}
+									}
+								}
+							},
+							"pageVariables": {
+								"type": "array",
+								"items": {}
+							},
+							"gridSize": {
+								"type": "object",
+								"properties": {
+									"minColumn": {
+										"type": "number"
+									},
+									"maxColumn": {
+										"type": "number"
+									},
+									"minRow": {
+										"type": "number"
+									},
+									"maxRow": {
+										"type": "number"
+									}
+								},
+								"required": [
+									"minColumn",
+									"maxColumn",
+									"minRow",
+									"maxRow"
+								]
+							}
+						}
+					}
+				},
+				"triggers": {
+					"type": "object",
+					"propertyNames": {
+						"type": "string"
+					},
+					"additionalProperties": {
+						"type": "object",
+						"propertyNames": {
+							"type": "string"
+						},
+						"additionalProperties": {}
+					}
+				},
+				"triggerCollections": {
+					"type": "array",
+					"items": {}
+				},
+				"custom_variables": {
+					"type": "object",
+					"propertyNames": {
+						"type": "string"
+					},
+					"additionalProperties": {}
+				},
+				"customVariablesCollections": {
+					"type": "array",
+					"items": {}
+				},
+				"expressionVariables": {
+					"type": "object",
+					"propertyNames": {
+						"type": "string"
+					},
+					"additionalProperties": {}
+				},
+				"expressionVariablesCollections": {
+					"type": "array",
+					"items": {}
+				},
+				"instances": {
+					"type": "object",
+					"propertyNames": {
+						"type": "string"
+					},
+					"additionalProperties": {}
+				},
+				"connectionCollections": {
+					"type": "array",
+					"items": {}
+				},
+				"surfaces": {},
+				"surfaceGroups": {},
+				"surfacesRemote": {
+					"type": "object",
+					"propertyNames": {
+						"type": "string"
+					},
+					"additionalProperties": {}
+				},
+				"surfaceInstances": {
+					"type": "object",
+					"propertyNames": {
+						"type": "string"
+					},
+					"additionalProperties": {}
+				},
+				"surfaceInstanceCollections": {
+					"type": "array",
+					"items": {}
+				},
+				"imageLibrary": {
+					"type": "array",
+					"items": {}
+				},
+				"imageLibraryCollections": {
+					"type": "array",
+					"items": {}
+				}
+			},
+			"required": [
+				"version",
+				"type"
+			]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"version": {
+					"type": "number",
+					"const": 17
+				},
+				"companionBuild": {
+					"type": "string"
+				},
+				"notes": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "page"
+				},
+				"page": {
+					"type": "object",
+					"properties": {
+						"id": {
+							"type": "string"
+						},
+						"name": {
+							"default": "",
+							"type": "string"
+						},
+						"controls": {
+							"default": {},
+							"type": "object",
+							"propertyNames": {
+								"type": "string",
+								"pattern": "^-?\\d+(?:\\.\\d+)?$"
+							},
+							"additionalProperties": {
+								"type": "object",
+								"propertyNames": {
+									"type": "string",
+									"pattern": "^-?\\d+(?:\\.\\d+)?$"
+								},
+								"additionalProperties": {
+									"type": "object",
+									"propertyNames": {
+										"type": "string"
+									},
+									"additionalProperties": {}
+								}
+							}
+						},
+						"pageVariables": {
+							"type": "array",
+							"items": {}
+						},
+						"gridSize": {
+							"type": "object",
+							"properties": {
+								"minColumn": {
+									"type": "number"
+								},
+								"maxColumn": {
+									"type": "number"
+								},
+								"minRow": {
+									"type": "number"
+								},
+								"maxRow": {
+									"type": "number"
+								}
+							},
+							"required": [
+								"minColumn",
+								"maxColumn",
+								"minRow",
+								"maxRow"
+							]
+						}
+					}
+				},
+				"instances": {
+					"type": "object",
+					"propertyNames": {
+						"type": "string"
+					},
+					"additionalProperties": {}
+				},
+				"connectionCollections": {
+					"type": "array",
+					"items": {}
+				},
+				"oldPageNumber": {
+					"type": "number"
+				},
+				"imageLibrary": {
+					"type": "array",
+					"items": {}
+				},
+				"imageLibraryCollections": {
+					"type": "array",
+					"items": {}
+				}
+			},
+			"required": [
+				"version",
+				"type",
+				"page"
+			]
+		},
+		{
+			"type": "object",
+			"properties": {
+				"version": {
+					"type": "number",
+					"const": 17
+				},
+				"companionBuild": {
+					"type": "string"
+				},
+				"notes": {
+					"type": "string"
+				},
+				"type": {
+					"type": "string",
+					"const": "trigger_list"
+				},
+				"triggers": {
+					"default": {},
+					"type": "object",
+					"propertyNames": {
+						"type": "string"
+					},
+					"additionalProperties": {
+						"type": "object",
+						"propertyNames": {
+							"type": "string"
+						},
+						"additionalProperties": {}
+					}
+				},
+				"triggerCollections": {
+					"type": "array",
+					"items": {}
+				},
+				"instances": {
+					"type": "object",
+					"propertyNames": {
+						"type": "string"
+					},
+					"additionalProperties": {}
+				},
+				"connectionCollections": {
+					"type": "array",
+					"items": {}
+				},
+				"imageLibrary": {
+					"type": "array",
+					"items": {}
+				},
+				"imageLibraryCollections": {
+					"type": "array",
+					"items": {}
+				}
+			},
+			"required": [
+				"version",
+				"type"
+			]
+		}
+	]
+}

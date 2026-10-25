@@ -14,6 +14,14 @@ import {
 /** The version exports are made with */
 export const EXPORT_VERSION = EXPORT_V17
 
+/**
+ * The exact schema of each version of the export format. Once released, a version may only change compatibly, which
+ * a snapshot test checks
+ */
+export const ExportSchemaByVersion: Record<number, z.ZodType> = {
+	[EXPORT_V17]: SomeExportV17Schema,
+}
+
 /** Parses an export of any version described by a schema, giving the latest version */
 export const SomeExportSchema = SomeExportV17Schema
 export type SomeExport = z.output<typeof SomeExportSchema>
