@@ -1,4 +1,5 @@
 import z from 'zod'
+import { createCollectionSchema, EmptyCollectionDataSchema, EnabledCollectionDataSchema } from '../Collections.js'
 import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '../Instance.js'
 import { undescribed } from './Undescribed.js'
 
@@ -35,7 +36,8 @@ export const ExportV17InstanceSchema = z.object({
 	enabled: z.boolean().optional(),
 })
 const ExportV17InstancesSchema = z.record(z.string(), ExportV17InstanceSchema)
-const ExportV17CollectionsSchema = z.array(undescribed())
+const ExportV17EnabledCollectionsSchema = z.array(createCollectionSchema(EnabledCollectionDataSchema))
+const ExportV17EmptyCollectionsSchema = z.array(createCollectionSchema(EmptyCollectionDataSchema))
 const ExportV17ImageLibrarySchema = z.array(undescribed())
 
 const ExportV17GridSizeSchema = z.object({
@@ -69,20 +71,20 @@ export const ExportV17FullSchema = z.object({
 	type: z.literal('full'),
 	pages: z.record(z.number(), ExportV17PageContentSchema).optional(),
 	triggers: z.record(z.string(), ExportV17TriggerContentSchema).optional(),
-	triggerCollections: ExportV17CollectionsSchema.optional(),
+	triggerCollections: ExportV17EnabledCollectionsSchema.optional(),
 	custom_variables: z.record(z.string(), undescribed()).optional(),
-	customVariablesCollections: ExportV17CollectionsSchema.optional(),
+	customVariablesCollections: ExportV17EmptyCollectionsSchema.optional(),
 	expressionVariables: z.record(z.string(), undescribed()).optional(),
-	expressionVariablesCollections: ExportV17CollectionsSchema.optional(),
+	expressionVariablesCollections: ExportV17EmptyCollectionsSchema.optional(),
 	instances: ExportV17InstancesSchema.optional(),
-	connectionCollections: ExportV17CollectionsSchema.optional(),
+	connectionCollections: ExportV17EnabledCollectionsSchema.optional(),
 	surfaces: undescribed().optional(),
 	surfaceGroups: undescribed().optional(),
 	surfacesRemote: z.record(z.string(), undescribed()).optional(),
 	surfaceInstances: ExportV17InstancesSchema.optional(),
-	surfaceInstanceCollections: ExportV17CollectionsSchema.optional(),
+	surfaceInstanceCollections: ExportV17EnabledCollectionsSchema.optional(),
 	imageLibrary: ExportV17ImageLibrarySchema.optional(),
-	imageLibraryCollections: ExportV17CollectionsSchema.optional(),
+	imageLibraryCollections: ExportV17EmptyCollectionsSchema.optional(),
 })
 
 export const ExportV17PageModelSchema = z.object({
@@ -90,22 +92,22 @@ export const ExportV17PageModelSchema = z.object({
 	type: z.literal('page'),
 	page: ExportV17PageContentSchema,
 	instances: ExportV17InstancesSchema.optional(),
-	connectionCollections: ExportV17CollectionsSchema.optional(),
+	connectionCollections: ExportV17EnabledCollectionsSchema.optional(),
 	/** The number of the page it was exported from */
 	oldPageNumber: z.number().optional(),
 	imageLibrary: ExportV17ImageLibrarySchema.optional(),
-	imageLibraryCollections: ExportV17CollectionsSchema.optional(),
+	imageLibraryCollections: ExportV17EmptyCollectionsSchema.optional(),
 })
 
 export const ExportV17TriggersListSchema = z.object({
 	...exportV17Base,
 	type: z.literal('trigger_list'),
 	triggers: z.record(z.string(), ExportV17TriggerContentSchema).default(() => ({})),
-	triggerCollections: ExportV17CollectionsSchema.optional(),
+	triggerCollections: ExportV17EnabledCollectionsSchema.optional(),
 	instances: ExportV17InstancesSchema.optional(),
-	connectionCollections: ExportV17CollectionsSchema.optional(),
+	connectionCollections: ExportV17EnabledCollectionsSchema.optional(),
 	imageLibrary: ExportV17ImageLibrarySchema.optional(),
-	imageLibraryCollections: ExportV17CollectionsSchema.optional(),
+	imageLibraryCollections: ExportV17EmptyCollectionsSchema.optional(),
 })
 
 export const SomeExportV17Schema = z.discriminatedUnion('type', [

@@ -97,6 +97,33 @@ describe('upgradeImport', () => {
 		expect(fullExport.instances.a).toEqual({ ...full, updatePolicy: 'stable' })
 	})
 
+	test('keeps nested collections, enabling those from before they could be disabled', () => {
+		const result: any = upgradeImport(
+			{
+				type: 'full',
+				version: EXPORT_VERSION,
+				connectionCollections: [
+					{ id: 'a', label: 'A', sortOrder: 0, metaData: {}, children: [{ id: 'b', label: 'B', sortOrder: 0 }] },
+				],
+				customVariablesCollections: [{ id: 'c', label: 'C', sortOrder: 1, metaData: null, children: [] }],
+			},
+			userConfig
+		)
+
+		expect(result.connectionCollections).toEqual([
+			{
+				id: 'a',
+				label: 'A',
+				sortOrder: 0,
+				metaData: { enabled: true },
+				children: [{ id: 'b', label: 'B', sortOrder: 0, metaData: { enabled: true }, children: [] }],
+			},
+		])
+		expect(result.customVariablesCollections).toEqual([
+			{ id: 'c', label: 'C', sortOrder: 1, metaData: null, children: [] },
+		])
+	})
+
 	test('refuses an export that is not a valid envelope', () => {
 		expect(() => upgradeImport({ type: 'sparkle', version: EXPORT_VERSION }, userConfig)).toThrow(/Invalid export/)
 		expect(() => upgradeImport({ type: 'page', version: EXPORT_VERSION }, userConfig)).toThrow(/Invalid export/)

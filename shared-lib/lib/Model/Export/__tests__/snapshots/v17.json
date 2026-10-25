@@ -108,7 +108,7 @@
 				"triggerCollections": {
 					"type": "array",
 					"items": {
-						"description": "Not described yet"
+						"$ref": "#/$defs/__schema0"
 					}
 				},
 				"custom_variables": {
@@ -123,7 +123,7 @@
 				"customVariablesCollections": {
 					"type": "array",
 					"items": {
-						"description": "Not described yet"
+						"$ref": "#/$defs/__schema1"
 					}
 				},
 				"expressionVariables": {
@@ -138,7 +138,7 @@
 				"expressionVariablesCollections": {
 					"type": "array",
 					"items": {
-						"description": "Not described yet"
+						"$ref": "#/$defs/__schema1"
 					}
 				},
 				"instances": {
@@ -205,7 +205,7 @@
 				"connectionCollections": {
 					"type": "array",
 					"items": {
-						"description": "Not described yet"
+						"$ref": "#/$defs/__schema0"
 					}
 				},
 				"surfaces": {
@@ -287,7 +287,7 @@
 				"surfaceInstanceCollections": {
 					"type": "array",
 					"items": {
-						"description": "Not described yet"
+						"$ref": "#/$defs/__schema0"
 					}
 				},
 				"imageLibrary": {
@@ -299,7 +299,7 @@
 				"imageLibraryCollections": {
 					"type": "array",
 					"items": {
-						"description": "Not described yet"
+						"$ref": "#/$defs/__schema1"
 					}
 				}
 			},
@@ -454,7 +454,7 @@
 				"connectionCollections": {
 					"type": "array",
 					"items": {
-						"description": "Not described yet"
+						"$ref": "#/$defs/__schema0"
 					}
 				},
 				"oldPageNumber": {
@@ -469,7 +469,7 @@
 				"imageLibraryCollections": {
 					"type": "array",
 					"items": {
-						"description": "Not described yet"
+						"$ref": "#/$defs/__schema1"
 					}
 				}
 			},
@@ -515,7 +515,7 @@
 				"triggerCollections": {
 					"type": "array",
 					"items": {
-						"description": "Not described yet"
+						"$ref": "#/$defs/__schema0"
 					}
 				},
 				"instances": {
@@ -582,7 +582,7 @@
 				"connectionCollections": {
 					"type": "array",
 					"items": {
-						"description": "Not described yet"
+						"$ref": "#/$defs/__schema0"
 					}
 				},
 				"imageLibrary": {
@@ -594,7 +594,7 @@
 				"imageLibraryCollections": {
 					"type": "array",
 					"items": {
-						"description": "Not described yet"
+						"$ref": "#/$defs/__schema1"
 					}
 				}
 			},
@@ -603,5 +603,75 @@
 				"type"
 			]
 		}
-	]
+	],
+	"$defs": {
+		"__schema0": {
+			"type": "object",
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"label": {
+					"default": "",
+					"type": "string"
+				},
+				"sortOrder": {
+					"default": 0,
+					"type": "number"
+				},
+				"children": {
+					"default": [],
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/__schema0"
+					}
+				},
+				"metaData": {
+					"default": {
+						"enabled": true
+					},
+					"type": "object",
+					"properties": {
+						"enabled": {
+							"default": true,
+							"type": "boolean"
+						}
+					}
+				}
+			},
+			"required": [
+				"id"
+			]
+		},
+		"__schema1": {
+			"type": "object",
+			"properties": {
+				"id": {
+					"type": "string"
+				},
+				"label": {
+					"default": "",
+					"type": "string"
+				},
+				"sortOrder": {
+					"default": 0,
+					"type": "number"
+				},
+				"children": {
+					"default": [],
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/__schema1"
+					}
+				},
+				"metaData": {
+					"default": null,
+					"type": "null"
+				}
+			},
+			"required": [
+				"id"
+			]
+		}
+	}
 }
