@@ -40,7 +40,7 @@ function makeConnectionConfig(overrides: Partial<InstanceConfig> = {}): Instance
 		moduleVersionId: '1.0.0',
 		label: 'Test Connection',
 		config: {},
-		secrets: undefined,
+		secrets: {},
 		isFirstInit: false,
 		lastUpgradeIndex: 5,
 		enabled: true,

@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid'
+import type z from 'zod'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import {
@@ -29,6 +30,25 @@ export interface MoveInstanceOperation {
 export type MoveInstancesResult =
 	{ ok: true } | { ok: false; operationIndex: number; reason: 'not_found' | 'invalid_position'; message: string }
 
+/** A config or secrets that isn't a JSON object is reset, rather than losing the whole instance */
+function repairInstanceConfig(
+	row: unknown,
+	issues: readonly z.core.$ZodIssue[]
+): { row: unknown; repairs: string[] } | null {
+	if (!row || typeof row !== 'object') return null
+
+	const repaired: Record<string, unknown> = { ...row }
+	const resetKeys = new Set<string>()
+	for (const issue of issues) {
+		const key = issue.path[0]
+		if (key !== 'config' && key !== 'secrets') return null
+		resetKeys.add(key)
+	}
+
+	for (const key of resetKeys) repaired[key] = {}
+	return { row: repaired, repairs: [...resetKeys].map((key) => `Reset the ${key}, which wasn't a JSON object`) }
+}
+
 export class InstanceConfigStore {
 	readonly #logger = LogController.createLogger('Instance/ConfigStore')
 
@@ -38,7 +58,7 @@ export class InstanceConfigStore {
 	#store: Map<string, InstanceConfig>
 
 	constructor(db: DataDatabase, afterSave: (instanceIds: string[], updateProcessManager: boolean) => void) {
-		this.#dbTable = db.getSchemaTableView('instances', InstanceConfigSchema)
+		this.#dbTable = db.getSchemaTableView('instances', InstanceConfigSchema, { repair: repairInstanceConfig })
 		this.#afterSave = afterSave
 
 		this.#store = new Map(Object.entries(this.#dbTable.all()))
@@ -210,7 +230,8 @@ export class InstanceConfigStore {
 					result[id] = config
 				} else {
 					const newConfig = structuredClone(config)
-					delete newConfig.secrets
+					// Left out of the export, rather than exported as empty
+					delete (newConfig as Partial<InstanceConfig>).secrets
 					result[id] = newConfig
 				}
 			}

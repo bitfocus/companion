@@ -102,6 +102,18 @@ describe('InstanceConfigStore loading and saving', () => {
 		})
 	})
 
+	test('a config or secrets that is not a JSON object is reset, keeping the instance', () => {
+		const { store, table } = createStoreWith({
+			A: { ...makeConnection(0), config: 'host=x', secrets: [1, 2] },
+			B: { ...makeConnection(1), config: { host: 'y' } },
+		})
+
+		expect(store.getConfigOfTypeForId('A', null)).toEqual({ ...makeConnection(0), config: {}, secrets: {} })
+		expect(store.getConfigOfTypeForId('B', null)).toMatchObject({ config: { host: 'y' } })
+		// The repair is stored
+		expect(table.data['A']).toMatchObject({ config: {}, secrets: {} })
+	})
+
 	test('an instance missing its module is not loaded', () => {
 		const { store } = createStoreWith({ good: makeConnection(0), bad: { label: 'no module', config: {} } })
 

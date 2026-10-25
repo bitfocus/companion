@@ -691,8 +691,9 @@ const connectionEndpointSpecs: RestEndpointSpec<ConnectionsRestContext>[] = [
 						connectionId,
 						label,
 						enabled: disabled === undefined ? null : !disabled,
-						config,
-						secrets,
+						// Parsed from the JSON body, so are JSON. The body schema can't say so, as the OpenAPI docs can't describe it
+						config: config as InstanceConfig['config'] | undefined,
+						secrets: secrets as InstanceConfig['secrets'] | undefined,
 						updatePolicy,
 						versionId,
 						patchConfig: true,

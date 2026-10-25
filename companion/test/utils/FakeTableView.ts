@@ -47,30 +47,44 @@ export class FakeTableView<T> {
 
 /**
  * A stand-in for DataStoreSchemaTableView, storing its rows in a FakeTableView.
- * Rows are parsed with the schema on read and write like the real view, but invalid rows are only skipped on read.
+ * Rows are parsed with the schema on read and write like the real view. A row that fails is repaired and stored like
+ * the real view, else it is skipped on read but left in place.
  */
 export class FakeSchemaTableView<TSchema extends z.ZodType<Record<string, any>>> {
 	readonly table: FakeTableView<unknown>
 	readonly schema: TSchema
 	readonly validateWrites: boolean
+	readonly repair: SchemaTableViewOptions['repair']
 
 	constructor(table: FakeTableView<unknown>, schema: TSchema, options?: SchemaTableViewOptions) {
 		this.table = table
 		this.schema = schema
 		this.validateWrites = options?.validateWrites ?? true
+		this.repair = options?.repair
 	}
 
 	all(): Record<string, z.output<TSchema>> {
 		const out: Record<string, z.output<TSchema>> = {}
 		for (const [key, value] of Object.entries(this.table.all())) {
-			const result = this.schema.safeParse(value)
-			if (result.success) out[key] = result.data
+			const parsed = this.#parse(key, value)
+			if (parsed !== undefined) out[key] = parsed
 		}
 		return out
 	}
 
 	get(key: string): z.output<TSchema> | undefined {
-		const result = this.schema.safeParse(this.table.get(key))
+		return this.#parse(key, this.table.get(key))
+	}
+
+	#parse(key: string, value: unknown): z.output<TSchema> | undefined {
+		let result = this.schema.safeParse(value)
+		if (!result.success && this.repair) {
+			const repaired = this.repair(value, result.error.issues)
+			if (repaired) {
+				result = this.schema.safeParse(repaired.row)
+				if (result.success) this.table.set(key, result.data)
+			}
+		}
 		return result.success ? result.data : undefined
 	}
 

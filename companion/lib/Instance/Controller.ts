@@ -24,6 +24,7 @@ import {
 } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import type { ModuleManifestExt } from '@companion-app/shared/Model/ModuleManifest.js'
+import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
 import type {
 	ClientSurfaceInstanceConfig,
 	ClientSurfaceInstancesUpdate,
@@ -239,8 +240,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 						{
 							label: null,
 							enabled: null,
-							config,
-							secrets,
+							config: this.#jsonObjectFromModule(instanceId, 'config', config),
+							secrets: this.#jsonObjectFromModule(instanceId, 'secrets', secrets),
 							updatePolicy: null,
 							upgradeIndex,
 						},
@@ -700,8 +701,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		values: {
 			label: string | null
 			enabled: boolean | null
-			config: unknown | null
-			secrets: unknown | null
+			config: InstanceConfig['config'] | null
+			secrets: InstanceConfig['secrets'] | null
 			updatePolicy: InstanceVersionUpdatePolicy | null
 			upgradeIndex: number | null
 		},
@@ -733,7 +734,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			if (options?.patchConfig) {
 				// Patch the config, only updating those keys that are defined
 				connectionConfig.config = {
-					...(connectionConfig.config as any),
+					...connectionConfig.config,
 					...values.config,
 				}
 			} else {
@@ -746,7 +747,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			if (options?.patchSecrets) {
 				// Patch the secrets, only updating those that are defined
 				connectionConfig.secrets = {
-					...(connectionConfig.secrets as any),
+					...connectionConfig.secrets,
 					...values.secrets,
 				}
 			} else {
@@ -1112,7 +1113,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		data: {
 			label: string | null
 			enabled: boolean | null
-			config: unknown | null
+			config: InstanceConfig['config'] | null
 			updatePolicy: InstanceVersionUpdatePolicy | null
 		}
 	): { ok: true } | { ok: false; message: string } {
@@ -1317,6 +1318,21 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		if (this.listenerCount('uiConnectionsUpdate') > 0) {
 			this.emit('uiConnectionsUpdate', changes)
 		}
+	}
+
+	/** A config or secrets sent by a module, which must be a JSON object to be stored; anything else is ignored */
+	#jsonObjectFromModule(
+		instanceId: string,
+		kind: 'config' | 'secrets',
+		value: unknown
+	): InstanceConfig['config'] | null {
+		if (value === null || value === undefined) return null
+
+		const result = JsonObjectSchema.safeParse(value)
+		if (result.success) return result.data
+
+		this.#logger.warn(`Ignoring invalid ${kind} from connection ${instanceId}: ${z.prettifyError(result.error)}`)
+		return null
 	}
 
 	/**

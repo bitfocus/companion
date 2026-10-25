@@ -1,4 +1,5 @@
 import z from 'zod'
+import { JsonObjectSchema } from './Options.js'
 
 export enum InstanceVersionUpdatePolicy {
 	Manual = 'manual',
@@ -18,8 +19,9 @@ export const InstanceConfigSchema = z.object({
 	moduleVersionId: z.string().nullable().default(null),
 
 	label: z.string(),
-	config: z.unknown().default(() => ({})),
-	secrets: z.unknown().default(() => ({})),
+	/** Sent to the module, and to the ui, so must be JSON */
+	config: JsonObjectSchema.default(() => ({})),
+	secrets: JsonObjectSchema.default(() => ({})),
 	isFirstInit: z.boolean().default(false),
 	/** -1 runs every upgrade script, as the module does when it isn't given one */
 	lastUpgradeIndex: z.number().default(-1),
