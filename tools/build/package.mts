@@ -164,8 +164,10 @@ if (process.env.ELECTRON !== '0') {
 					signingHashAlgorithms: ['sha256'],
 
 					sign: async function sign(config, packager) {
-						// Do not sign if no certificate is provided.
-						if (!config.cscInfo) {
+						// The bitfocus/actions setup-windows-codesign step provides the signing script.
+						// Without it this is an unsigned build.
+						const script = process.env.BF_CODESIGN_SCRIPT
+						if (!script) {
 							return
 						}
 
@@ -177,12 +179,19 @@ if (process.env.ELECTRON !== '0') {
 							return
 						}
 
-						if (!process.env.BF_CODECERT_KEY) throw new Error('BF_CODECERT_KEY variable is not set')
-
 						const vm = await packager.vm.value
 						await vm.exec(
-							'powershell.exe',
-							['c:\\actions-runner-bitfocus\\sign.ps1', targetPath, `-Description`, 'Bitfocus Companion'],
+							'pwsh',
+							[
+								'-NoProfile',
+								'-ExecutionPolicy',
+								'Bypass',
+								'-File',
+								script,
+								targetPath,
+								'-Description',
+								'Bitfocus Companion',
+							],
 							{
 								timeout: 10 * 60 * 1000,
 								env: process.env,
