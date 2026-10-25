@@ -45,12 +45,15 @@ const neoLayout: SurfaceSchemaLayoutDefinition = {
 function makeStoredConfig(partial: Partial<SurfaceConfig>): SurfaceConfig {
 	return {
 		config: { brightness: 100, rotation: 0, xOffset: 0, yOffset: 0, groupId: null },
+		enabled: true,
 		groupConfig: {
 			name: '',
 			last_page_id: '1',
 			startup_page_id: '1',
 			use_last_page: true,
 			never_lock: false,
+			restrict_pages: false,
+			allowed_page_ids: [],
 		},
 		groupId: null,
 		type: 'Stream Deck Neo',
@@ -75,6 +78,7 @@ function createController() {
 		return undefined
 	})
 	deps.pageStore.getFirstPageId.mockReturnValue('page1')
+	deps.graphics.displayedLocations.acquire.mockReturnValue(() => undefined)
 
 	const controller = new SurfaceController(db as any, deps, true)
 

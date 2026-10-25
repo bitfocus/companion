@@ -1,6 +1,6 @@
 import z from 'zod'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreSchemaTableView } from '../Data/SchemaTableView.js'
 import { publicProcedure } from '../UI/TRPC.js'
 import { CollectionsBaseController } from './CollectionsBase.js'
 
@@ -13,7 +13,7 @@ export abstract class EnabledCollectionsBaseController<
 		return this.#enabledCollectionIds
 	}
 
-	constructor(dbTable: DataStoreTableView<Record<string, CollectionBase<TCollectionMetadata>>>) {
+	constructor(dbTable: DataStoreSchemaTableView<z.ZodType<CollectionBase<TCollectionMetadata>>>) {
 		super(dbTable)
 
 		this.rebuildEnabledCollectionIds()

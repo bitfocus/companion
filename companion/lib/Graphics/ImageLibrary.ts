@@ -2,15 +2,17 @@ import crypto from 'node:crypto'
 import EventEmitter from 'node:events'
 import z from 'zod'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
-import type {
-	ImageLibraryCollection,
-	ImageLibraryExportData,
-	ImageLibraryInfo,
-	ImageLibraryUpdate,
+import {
+	ImageLibraryInfoSchema,
+	type ImageLibraryCollection,
+	type ImageLibraryExportData,
+	type ImageLibraryInfo,
+	type ImageLibraryUpdate,
 } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreSchemaTableView } from '../Data/SchemaTableView.js'
 import LogController from '../Log/Controller.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
@@ -27,15 +29,17 @@ function base64ByteLength(base64: string): number {
 	return Math.floor((base64.length * 3) / 4) - padding
 }
 
-export interface ImageLibraryData {
-	originalImage: string // base64 data URL (empty string if not uploaded yet)
-	previewImage: string // base64 data URL (empty string if not uploaded yet)
-	info: ImageLibraryInfo
-}
+const ImageLibraryDataSchema = z.object({
+	originalImage: z.string().default(''), // base64 data URL (empty string if not uploaded yet)
+	previewImage: z.string().default(''), // base64 data URL (empty string if not uploaded yet)
+	info: ImageLibraryInfoSchema,
+})
+
+export type ImageLibraryData = z.output<typeof ImageLibraryDataSchema>
 
 export class ImageLibrary {
 	readonly #logger = LogController.createLogger('Graphics/ImageLibrary')
-	readonly #dbTable: DataStoreTableView<Record<string, ImageLibraryData>>
+	readonly #dbTable: DataStoreSchemaTableView<typeof ImageLibraryDataSchema>
 	readonly #multipartUploader: MultipartUploader<string, { imageName: string }>
 	readonly #graphicsController: GraphicsController
 	readonly #variablesController: VariablesController
@@ -44,7 +48,7 @@ export class ImageLibrary {
 	readonly #events = new EventEmitter<{ update: [ImageLibraryUpdate[]] }>()
 
 	constructor(db: DataDatabase, graphicsController: GraphicsController, variablesController: VariablesController) {
-		this.#dbTable = db.getTableView('image_library')
+		this.#dbTable = db.getSchemaTableView('image_library', ImageLibraryDataSchema)
 		this.#graphicsController = graphicsController
 		this.#variablesController = variablesController
 		this.#collections = new ImageLibraryCollections(db, (validCollectionIds) =>
@@ -440,7 +444,6 @@ export class ImageLibrary {
 			if (data.info.sortOrder === index && name !== imageName) return // No change
 
 			data.info.sortOrder = index // Update the sort order
-			data.info.modifiedAt = Date.now()
 			this.#dbTable.set(name, data)
 
 			changes.push({ type: 'update', itemName: name, info: data.info })
@@ -609,16 +612,21 @@ export class ImageLibrary {
 				continue
 			}
 
-			const info: ImageLibraryInfo = { ...imageData.info, name: safeName }
-			const fullImageData: ImageLibraryData = {
-				originalImage: imageData.originalImage,
-				previewImage: imageData.previewImage,
-				info,
+			let stored: ImageLibraryData
+			try {
+				stored = this.#dbTable.set(safeName, {
+					originalImage: imageData.originalImage,
+					previewImage: imageData.previewImage,
+					info: { ...imageData.info, name: safeName },
+				})
+			} catch (e) {
+				// Skip it, rather than abandon the rest
+				this.#logger.warn(`Skipping invalid image "${safeName}": ${stringifyError(e)}`)
+				continue
 			}
 
-			this.#dbTable.set(safeName, fullImageData)
 			this.#logger.info(`Imported image ${safeName} with image data`)
-			importedImages.push({ name: safeName, info })
+			importedImages.push({ name: safeName, info: stored.info })
 		}
 
 		// Update variables for imported images

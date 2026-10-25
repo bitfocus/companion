@@ -2,16 +2,19 @@ import EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 import z from 'zod'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreSchemaTableView } from '../Data/SchemaTableView.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import { publicProcedure, toIterable } from '../UI/TRPC.js'
 
 export abstract class CollectionsBaseController<TCollectionMetadata> {
-	readonly #dbTable: DataStoreTableView<Record<string, CollectionBase<TCollectionMetadata>>>
+	readonly #logger: Logger
+	readonly #dbTable: DataStoreSchemaTableView<z.ZodType<CollectionBase<TCollectionMetadata>>>
 	readonly #events = new EventEmitter<{ change: [rows: CollectionBase<TCollectionMetadata>[]] }>()
 
 	protected data: CollectionBase<TCollectionMetadata>[]
 
-	constructor(dbTable: DataStoreTableView<Record<string, CollectionBase<TCollectionMetadata>>>) {
+	constructor(dbTable: DataStoreSchemaTableView<z.ZodType<CollectionBase<TCollectionMetadata>>>) {
+		this.#logger = LogController.createLogger(`Resources/Collections/${dbTable.tableName}`)
 		this.#dbTable = dbTable
 
 		// Note: Storing in the database like this is not optimal, but it is much simpler
@@ -26,7 +29,6 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 	 * Recursively ensure children arrays exist and are sorted at all levels
 	 */
 	#sortCollectionRecursively(collection: CollectionBase<TCollectionMetadata>): void {
-		collection.children = collection.children || []
 		collection.children.sort((a, b) => a.sortOrder - b.sortOrder)
 
 		// Recursively sort children's children
@@ -60,12 +62,22 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 			this.data = []
 		}
 
+		// Every id may only appear once in the tree. When merging, the existing collection with an id is kept
+		const knownIds = this.collectAllCollectionIds()
+
 		// Import new collections
-		for (const collection of collections) {
-			if (!merge || !this.#dbTable.get(collection.id)) {
+		for (const rawCollection of collections) {
+			const result = this.#dbTable.schema.safeParse(rawCollection)
+			if (!result.success) {
+				// Skip it, rather than abandon the rest
+				this.#logger.warn(`Skipping invalid collection "${rawCollection?.id}": ${z.prettifyError(result.error)}`)
+				continue
+			}
+
+			for (const newCollection of this.#withoutKnownIds([result.data], knownIds)) {
+				const collection = this.#dbTable.set(newCollection.id, newCollection)
 				this.#sortCollectionRecursively(collection)
 				this.data.push(collection)
-				this.#dbTable.set(collection.id, collection)
 			}
 		}
 
@@ -75,6 +87,25 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 		this.emitUpdate(this.data)
 		// remove collectionId fields from connection objects (i.e. this does not affect collection objects themselves)
 		this.removeUnknownCollectionReferences()
+	}
+
+	/**
+	 * Drop any collection whose id is already known, moving its children up into its place
+	 */
+	#withoutKnownIds(
+		collections: CollectionBase<TCollectionMetadata>[],
+		knownIds: Set<string>
+	): CollectionBase<TCollectionMetadata>[] {
+		const result: CollectionBase<TCollectionMetadata>[] = []
+		for (const collection of collections) {
+			if (knownIds.has(collection.id)) {
+				result.push(...this.#withoutKnownIds(collection.children, knownIds))
+			} else {
+				knownIds.add(collection.id)
+				result.push({ ...collection, children: this.#withoutKnownIds(collection.children, knownIds) })
+			}
+		}
+		return result
 	}
 
 	/**
@@ -186,10 +217,10 @@ export abstract class CollectionsBaseController<TCollectionMetadata> {
 				child.sortOrder = i // Reset sortOrder for children
 			})
 
-			// Update the database
+			// Update the database, including the siblings whose sortOrder changed
 			this.#dbTable.delete(collectionId)
-			for (const child of collection.children) {
-				this.#dbTable.set(child.id, child)
+			for (const row of this.data) {
+				this.#dbTable.set(row.id, row)
 			}
 		} else {
 			// The collection exists, depeer in the hierarchy

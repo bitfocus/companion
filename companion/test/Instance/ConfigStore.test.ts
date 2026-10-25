@@ -48,9 +48,8 @@ describe('InstanceConfigStore.moveInstances', () => {
 		])
 
 		expect(result).toEqual({ ok: true })
-		expect(table.data.B).toMatchObject({ collectionId: undefined, sortOrder: 0 })
-		expect(table.data.C).toMatchObject({ collectionId: undefined, sortOrder: 1 })
-		expect(table.data.A).toMatchObject({ collectionId: undefined, sortOrder: 2 })
+		expect(['B', 'C', 'A'].map((id) => table.data[id].sortOrder)).toEqual([0, 1, 2])
+		expect(['B', 'C', 'A'].map((id) => table.data[id].collectionId)).toEqual([undefined, undefined, undefined])
 		expect(afterSave).toHaveBeenCalledTimes(1)
 		expect(new Set(afterSave.mock.calls[0][0])).toEqual(new Set(['A', 'B', 'C']))
 		expect(afterSave.mock.calls[0][1]).toBe(true)
@@ -73,5 +72,75 @@ describe('InstanceConfigStore.moveInstances', () => {
 		})
 		expect(table.data).toEqual(initialData)
 		expect(afterSave).not.toHaveBeenCalled()
+	})
+})
+
+describe('InstanceConfigStore loading and saving', () => {
+	function createStoreWith(rows: Record<string, unknown>) {
+		const db = new FakeDataDatabase()
+		const table = db.getTableView('instances')
+		table.data = structuredClone(rows)
+		const afterSave = vi.fn()
+		return { store: new InstanceConfigStore(db.asDataDatabase(), afterSave), table, afterSave }
+	}
+
+	test('fills in defaults for an old instance', () => {
+		const { store } = createStoreWith({ old: { moduleId: 'test-module', label: 'old', config: { host: 'x' } } })
+
+		expect(store.getConfigOfTypeForId('old', null)).toEqual({
+			moduleInstanceType: ModuleInstanceType.Connection,
+			moduleId: 'test-module',
+			moduleVersionId: null,
+			label: 'old',
+			config: { host: 'x' },
+			secrets: {},
+			isFirstInit: false,
+			lastUpgradeIndex: -1,
+			enabled: true,
+			sortOrder: 0,
+			updatePolicy: InstanceVersionUpdatePolicy.Stable,
+		})
+	})
+
+	test('an instance missing its module is not loaded', () => {
+		const { store } = createStoreWith({ good: makeConnection(0), bad: { label: 'no module', config: {} } })
+
+		expect(store.getAllInstanceIdsOfType(null)).toEqual(['good'])
+	})
+
+	test('an invalid change to an instance is discarded', () => {
+		const { store, table } = createStoreWith({ A: makeConnection(0) })
+
+		const config = store.getConfigOfTypeForId('A', null)!
+		config.label = 'Renamed'
+		config.sortOrder = 'first' as any
+
+		store.commitChanges(['A'], false)
+
+		expect(store.getConfigOfTypeForId('A', null)).toEqual(makeConnection(0))
+		expect(table.data['A']).toEqual(makeConnection(0))
+	})
+
+	test('an invalid instance is not saved, but the others still are', () => {
+		const { store, table, afterSave } = createStoreWith({})
+		const [goodId] = store.addConnection('test-module', 'good', undefined, {
+			versionId: null,
+			updatePolicy: InstanceVersionUpdatePolicy.Stable,
+			disabled: false,
+		})
+		const [badId] = store.addConnection('test-module', 'bad', undefined, {
+			versionId: null,
+			updatePolicy: 'sometimes' as any,
+			disabled: false,
+		})
+
+		store.commitChanges([badId, goodId], false)
+
+		expect(table.data[goodId]).toMatchObject({ label: 'good' })
+		expect(table.data[badId]).toBeUndefined()
+		// And it is forgotten, as it was never saved
+		expect(store.getConfigOfTypeForId(badId, null)).toBeUndefined()
+		expect(store.getConfigOfTypeForId(goodId, null)).toMatchObject({ label: 'good' })
+		expect(afterSave).toHaveBeenCalledWith([badId, goodId], false)
 	})
 })

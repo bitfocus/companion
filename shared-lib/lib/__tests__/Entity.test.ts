@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { canAddEntityToFeedbackList } from '../Entity.js'
 import type { ClientEntityDefinition } from '../Model/EntityDefinitionModel.js'
-import { FeedbackEntitySubType } from '../Model/EntityModel.js'
+import { EntityModelType, FeedbackEntitySubType, SomeEntityModelSchema } from '../Model/EntityModel.js'
 
 function feedbackDefinition(
 	feedbackType: FeedbackEntitySubType | null,
@@ -82,5 +82,63 @@ describe('canAddEntityToFeedbackList', () => {
 			expect(canAddEntityToFeedbackList(null, feedbackDefinition(FeedbackEntitySubType.Advanced))).toBe(true)
 			expect(canAddEntityToFeedbackList(null, feedbackDefinition(FeedbackEntitySubType.Value))).toBe(false)
 		})
+	})
+})
+
+describe('SomeEntityModelSchema', () => {
+	const action = { type: 'action', id: 'a1', definitionId: 'send', connectionId: 'conn1' }
+
+	test('fills in defaults for an action saved without its optional fields', () => {
+		// As stored: an undefined upgradeIndex is dropped by JSON
+		expect(SomeEntityModelSchema.parse(action)).toEqual({ ...action, options: {} })
+	})
+
+	test('keeps the fields of a feedback', () => {
+		const feedback = {
+			type: 'feedback',
+			id: 'f1',
+			definitionId: 'state',
+			connectionId: 'conn1',
+			options: { mode: { isExpression: false, value: 'on' } },
+			upgradeIndex: 2,
+			isInverted: { isExpression: false, value: true },
+			variableName: 'state',
+			styleOverrides: [
+				{ overrideId: 'o1', elementId: 'e1', elementProperty: 'color', override: { isExpression: false, value: 1 } },
+			],
+		}
+
+		expect(SomeEntityModelSchema.parse(feedback)).toEqual(feedback)
+	})
+
+	test('parses children recursively', () => {
+		const parent = {
+			...action,
+			connectionId: 'internal',
+			children: { default: [{ ...action, id: 'child', children: { inner: [{ ...action, id: 'grandchild' }] } }] },
+		}
+
+		const result = SomeEntityModelSchema.parse(parent)
+
+		expect(result.children?.default?.[0].children?.inner?.[0]).toEqual({ ...action, id: 'grandchild', options: {} })
+	})
+
+	test('rejects an entity of an unknown type, or missing its identity', () => {
+		expect(SomeEntityModelSchema.safeParse({ ...action, type: 'thing' }).success).toBe(false)
+		expect(SomeEntityModelSchema.safeParse({ ...action, definitionId: undefined }).success).toBe(false)
+		expect(SomeEntityModelSchema.safeParse({ ...action, connectionId: 5 }).success).toBe(false)
+	})
+
+	test('rejects an invalid child', () => {
+		const parent = { ...action, children: { default: [{ ...action, id: 7 }] } }
+
+		expect(SomeEntityModelSchema.safeParse(parent).success).toBe(false)
+	})
+
+	test('action fields are not accepted on a feedback, and the reverse', () => {
+		expect(SomeEntityModelSchema.parse({ ...action, variableName: 'x' })).not.toHaveProperty('variableName')
+		expect(
+			SomeEntityModelSchema.parse({ ...action, type: EntityModelType.Feedback, storeResult: {} })
+		).not.toHaveProperty('storeResult')
 	})
 })

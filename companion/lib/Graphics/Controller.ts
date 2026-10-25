@@ -44,6 +44,7 @@ import { resolveThreadEntrypoint } from '../Resources/Util.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
 import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
+import { DisplayedLocations } from './DisplayedLocations.js'
 import { FONT_DEFINITIONS } from './Fonts.js'
 import { ImageCacheStore, type AnimationFrames } from './ImageCache/ImageCacheStore.js'
 import { ImageLibrary } from './ImageLibrary.js'
@@ -133,6 +134,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * Image library for storing and managing images
 	 */
 	readonly imageLibrary: ImageLibrary
+
+	/**
+	 * Which locations are being shown right now, and at what sizes
+	 */
+	readonly displayedLocations = new DisplayedLocations()
 
 	// null when render threading is disabled: the pool spawns its minWorkers eagerly at construction,
 	// so it must not be created at all when rendering runs in-process

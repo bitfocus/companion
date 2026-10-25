@@ -196,6 +196,15 @@ describe('VariablesCustomVariable', () => {
 	})
 
 	describe('persistence', () => {
+		test('persisting a value JSON cannot represent stores what encoding gives', () => {
+			const { custom, table } = createCustomVariables({ my_var: makeDef({ persistCurrentValue: true }) })
+
+			expect(() => custom.setValue('my_var', Infinity)).not.toThrow()
+
+			expect(custom.getValue('my_var')).toBe(Infinity)
+			expect(table.data['my_var'].defaultValue).toBe(null)
+		})
+
 		test('enabling persistence captures the current value as the default', () => {
 			const { custom, table } = createCustomVariables({ my_var: makeDef() })
 			custom.init()
@@ -285,6 +294,20 @@ describe('VariablesCustomVariable', () => {
 			expect(definitionChanged).toHaveBeenCalledTimes(2)
 			expect(definitionChanged).toHaveBeenCalledWith('var_a', makeDef({ defaultValue: 'a value' }))
 		})
+
+		test('fills in defaults for old rows and skips invalid ones', () => {
+			const { custom, values } = createCustomVariables({
+				old: { defaultValue: 'old value' },
+				invalid: { description: 5 },
+			} as any)
+
+			custom.init()
+
+			expect(custom.getDefinitions()).toEqual({
+				old: { description: '', defaultValue: 'old value', persistCurrentValue: false, sortOrder: 0 },
+			})
+			expect(values.getCustomVariableValue('old')).toBe('old value')
+		})
 	})
 
 	describe('replaceDefinitions', () => {
@@ -311,6 +334,54 @@ describe('VariablesCustomVariable', () => {
 			expect(definitionChanged).toHaveBeenCalledWith('kept', makeDef({ defaultValue: 'updated' }))
 			expect(definitionChanged).toHaveBeenCalledWith('added', makeDef({ defaultValue: 'fresh', sortOrder: 1 }))
 			expect(definitionChanged).toHaveBeenCalledWith('removed', null)
+		})
+
+		test('normalises the new definitions and skips invalid ones', () => {
+			const { custom, table, values } = createCustomVariables()
+
+			custom.replaceDefinitions({
+				partial: { defaultValue: 'fresh', extra: true },
+				invalid: { sortOrder: 'first' },
+				after: makeDef({ sortOrder: 1 }),
+			} as any)
+
+			const normalised = { description: '', defaultValue: 'fresh', persistCurrentValue: false, sortOrder: 0 }
+			expect(custom.getDefinitions()).toEqual({ partial: normalised, after: makeDef({ sortOrder: 1 }) })
+			expect(table.data['partial']).toEqual(normalised)
+			expect(table.data['invalid']).toBe(undefined)
+			expect(values.getCustomVariableValue('partial')).toBe('fresh')
+			expect(values.getCustomVariableValue('invalid')).toBe(undefined)
+		})
+	})
+
+	describe('collections', () => {
+		test('invalid metadata on an imported collection is replaced', () => {
+			const { custom } = createCustomVariables()
+
+			custom.replaceCollections([{ id: 'col1', label: 'Outer', metaData: { unexpected: true } }] as any)
+
+			expect(custom.exportCollections()).toEqual([
+				{ id: 'col1', label: 'Outer', sortOrder: 0, metaData: null, children: [] },
+			])
+		})
+
+		test('imported collections are normalised, and invalid ones skipped', () => {
+			const { custom, db } = createCustomVariables()
+
+			custom.replaceCollections([
+				{ id: 'col1', label: 'Outer', children: [{ id: 'col2', sortOrder: 1 }] },
+				{ id: 'bad', label: 5 },
+			] as any)
+
+			const expected = {
+				id: 'col1',
+				label: 'Outer',
+				sortOrder: 0,
+				metaData: null,
+				children: [{ id: 'col2', label: '', sortOrder: 1, metaData: null, children: [] }],
+			}
+			expect(custom.exportCollections()).toEqual([expected])
+			expect(db.getTableView('custom_variable_collections').data).toEqual({ col1: expected })
 		})
 	})
 

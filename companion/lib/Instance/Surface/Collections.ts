@@ -1,41 +1,27 @@
 import z from 'zod'
+import { createCollectionSchema, EnabledCollectionDataSchema } from '@companion-app/shared/Model/Collections.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type {
 	SurfaceInstanceCollection,
 	SurfaceInstanceCollectionData,
 } from '@companion-app/shared/Model/SurfaceInstance.js'
 import type { DataDatabase } from '../../Data/Database.js'
-import { CollectionsBaseController } from '../../Resources/CollectionsBase.js'
+import { EnabledCollectionsBaseController } from '../../Resources/EnabledCollectionsBase.js'
 import { publicProcedure, router } from '../../UI/TRPC.js'
 import type { InstanceConfigStore } from '../ConfigStore.js'
 
-export class SurfaceInstanceCollections extends CollectionsBaseController<SurfaceInstanceCollectionData> {
+const SurfaceInstanceCollectionSchema = createCollectionSchema(EnabledCollectionDataSchema)
+
+export class SurfaceInstanceCollections extends EnabledCollectionsBaseController<SurfaceInstanceCollectionData> {
 	readonly #emitUpdated: () => void
 
 	readonly #configStore: InstanceConfigStore
 
 	constructor(db: DataDatabase, configStore: InstanceConfigStore, emitUpdated: () => void) {
-		super(db.getTableView<Record<string, SurfaceInstanceCollection>>('surface_instance_collections'))
+		super(db.getSchemaTableView('surface_instance_collections', SurfaceInstanceCollectionSchema))
 
 		this.#emitUpdated = emitUpdated
 		this.#configStore = configStore
-	}
-
-	isCollectionEnabled(collectionId: string | null | undefined): boolean {
-		if (!collectionId) return true
-
-		const info = this.findCollectionAndParent(collectionId)
-		return !!info?.collection.metaData.enabled
-	}
-
-	setCollectionEnabled(collectionId: string, enabled: boolean | 'toggle'): void {
-		this.collectionModifyMetaData(collectionId, (collection) => {
-			if (enabled === 'toggle') {
-				collection.metaData.enabled = !collection.metaData.enabled
-			} else {
-				collection.metaData.enabled = enabled
-			}
-		})
 	}
 
 	/**
@@ -59,19 +45,6 @@ export class SurfaceInstanceCollections extends CollectionsBaseController<Surfac
 					enabled: true,
 				})
 			}),
-
-			setEnabled: publicProcedure
-				.input(
-					z.object({
-						collectionId: z.string(),
-						enabled: z.boolean(),
-					})
-				)
-				.mutation(async ({ input }) => {
-					this.collectionModifyMetaData(input.collectionId, (collection) => {
-						collection.metaData.enabled = input.enabled
-					})
-				}),
 		})
 	}
 }

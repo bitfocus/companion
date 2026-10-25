@@ -1,14 +1,16 @@
-// import LogController from '../Log/Controller.js'
 import { nanoid } from 'nanoid'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import {
+	InstanceConfigSchema,
 	ModuleInstanceType,
 	type InstanceConfig,
 	type InstanceVersionUpdatePolicy,
 } from '@companion-app/shared/Model/Instance.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreSchemaTableView } from '../Data/SchemaTableView.js'
+import LogController from '../Log/Controller.js'
 
 export interface AddInstanceProps {
 	versionId: string | null
@@ -28,23 +30,18 @@ export type MoveInstancesResult =
 	{ ok: true } | { ok: false; operationIndex: number; reason: 'not_found' | 'invalid_position'; message: string }
 
 export class InstanceConfigStore {
-	// readonly #logger = LogController.createLogger('Instance/ConnectionConfigStore')
+	readonly #logger = LogController.createLogger('Instance/ConfigStore')
 
-	readonly #dbTable: DataStoreTableView<Record<string, InstanceConfig>>
+	readonly #dbTable: DataStoreSchemaTableView<typeof InstanceConfigSchema>
 	readonly #afterSave: (instanceIds: string[], updateProcessManager: boolean) => void
 
 	#store: Map<string, InstanceConfig>
 
 	constructor(db: DataDatabase, afterSave: (instanceIds: string[], updateProcessManager: boolean) => void) {
-		this.#dbTable = db.getTableView('instances')
+		this.#dbTable = db.getSchemaTableView('instances', InstanceConfigSchema)
 		this.#afterSave = afterSave
 
 		this.#store = new Map(Object.entries(this.#dbTable.all()))
-
-		// Ensure all entries are defined
-		for (const [id, config] of this.#store) {
-			if (!config) this.#store.delete(id)
-		}
 	}
 
 	/**
@@ -54,7 +51,19 @@ export class InstanceConfigStore {
 		for (const instanceId of instanceIds) {
 			const entry = this.#store.get(instanceId)
 			if (entry) {
-				this.#dbTable.set(instanceId, entry)
+				try {
+					this.#dbTable.set(instanceId, entry)
+				} catch (e) {
+					// Discard the change, so the instance matches what is saved, rather than abandon saving the rest
+					this.#logger.error(`Discarding an invalid change to instance "${instanceId}": ${stringifyError(e)}`)
+
+					const saved = this.#dbTable.get(instanceId)
+					if (saved) {
+						this.#store.set(instanceId, saved)
+					} else {
+						this.#store.delete(instanceId)
+					}
+				}
 			} else {
 				this.#dbTable.delete(instanceId)
 			}

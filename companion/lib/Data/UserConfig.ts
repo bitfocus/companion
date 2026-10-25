@@ -10,7 +10,7 @@ import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import type { DataDatabase, DataDatabaseDefaultTable } from './Database.js'
-import type { DataStoreTableView } from './StoreBase.js'
+import type { DataStoreTableView } from './TableView.js'
 
 export interface DataUserConfigEvents {
 	keyChanged: [key: keyof UserConfigModel, value: any, checkControlsInBounds: boolean]

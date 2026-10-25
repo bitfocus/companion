@@ -32,16 +32,89 @@ describe('PageStore', () => {
 			expect(store.createdDefaultPage).toBe(false)
 		})
 
-		test('loading stops at a gap in the page numbers', () => {
+		test('a gap in the page numbers is filled with a blank page, so later pages keep their numbers', () => {
 			const db = new FakePageTableView()
 			db.data['1'] = makePage('page-a', 'First')
 			db.data['2'] = makePage('page-b', 'Second')
-			db.data['4'] = makePage('page-d', 'Orphan')
+			db.data['4'] = makePage('page-d', 'Fourth', { 0: { 0: 'control-d1' } })
 
-			const store = new PageStore(db.asTableView())
+			const store = new PageStore(db.asSchemaTableView())
 
-			expect(store.getPageCount()).toBe(2)
+			expect(store.getPageCount()).toBe(4)
+			expect(store.getPageName(3)).toBe('PAGE')
+			expect(store.getPageInfo(3)?.controls).toEqual({})
+			expect(store.getPageId(4)).toBe('page-d')
+			expect(store.getControlIdAt({ pageNumber: 4, row: 0, column: 0 })).toBe('control-d1')
+
+			// The blank page is saved
+			expect(db.data['3']).toEqual(store.getPageInfo(3))
+		})
+
+		test('a page that fails to load is replaced with a blank page', () => {
+			const db = new FakePageTableView()
+			db.data['1'] = makePage('page-a', 'First')
+			db.data['2'] = 'not a page' as any
+			db.data['3'] = makePage('page-c', 'Third')
+
+			const store = new PageStore(db.asSchemaTableView())
+
+			expect(store.getPageCount()).toBe(3)
+			expect(store.getPageName(2)).toBe('PAGE')
+			expect(store.getPageId(3)).toBe('page-c')
+		})
+
+		test('a page far beyond the others is not loaded', () => {
+			const db = new FakePageTableView()
+			db.data['1'] = makePage('page-a', 'First')
+			db.data['2'] = makePage('page-b', 'Second')
+			db.data['99'] = makePage('page-far', 'Far away')
+
+			const store = new PageStore(db.asSchemaTableView())
+
 			expect(store.getPageIds()).toEqual(['page-a', 'page-b'])
+			expect(db.data['3']).toBeUndefined()
+		})
+
+		test('rows that are not a page number are ignored', () => {
+			const db = new FakePageTableView()
+			db.data['1'] = makePage('page-a', 'First')
+			db.data['0'] = makePage('page-zero', 'Zero')
+			db.data['01'] = makePage('page-padded', 'Padded')
+			db.data['abc'] = makePage('page-abc', 'Abc')
+
+			const store = new PageStore(db.asSchemaTableView())
+
+			expect(store.getPageIds()).toEqual(['page-a'])
+		})
+
+		test('a page keeps its valid grid entries, and the pages after it still load', () => {
+			const { store } = createStore([
+				{
+					id: 'page-a',
+					name: 'First',
+					controls: {
+						0: { 0: 'kept', 1: 5, abc: 'bad column' },
+						abc: { 0: 'bad row' },
+						1.5: { 0: 'fractional row' },
+						2: 'not a row',
+						'-1': { '-2': 'negative' },
+					},
+				} as any,
+				makePage('page-b', 'Second', { 0: { 0: 'control-b1' } }),
+			])
+
+			expect(store.getPageInfo(1)?.controls).toEqual({ 0: { 0: 'kept' }, '-1': { '-2': 'negative' } })
+			expect(store.getPageIds()).toEqual(['page-a', 'page-b'])
+			expect(store.getControlIdAt({ pageNumber: 2, row: 0, column: 0 })).toBe('control-b1')
+		})
+
+		test('a page with an invalid name or id still loads', () => {
+			const { store } = createStore([{ id: 5, name: { text: 'x' }, controls: { 0: { 0: 'kept' } } } as any])
+
+			expect(store.getPageName(1)).toBe('')
+			expect(store.getPageIds()[0]).toEqual(expect.any(String))
+			expect(store.getPageIds()[0]).not.toBe('')
+			expect(store.getControlIdAt({ pageNumber: 1, row: 0, column: 0 })).toBe('kept')
 		})
 
 		test('assigns an id to pages missing one, and persists it', () => {

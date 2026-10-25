@@ -1,4 +1,4 @@
-import type { CollectionBase } from './Collections.js'
+import type { CollectionBase, EnabledCollectionData } from './Collections.js'
 import type { ClientInstanceConfigBase, ModuleInstanceType } from './Instance.js'
 import type { CompanionSurfaceConfigField } from './Surfaces.js'
 
@@ -9,9 +9,7 @@ export interface ClientSurfaceInstanceConfig extends ClientInstanceConfigBase {
 	remoteConfigMatches: string | null
 }
 
-export interface SurfaceInstanceCollectionData {
-	enabled: boolean
-}
+export type SurfaceInstanceCollectionData = EnabledCollectionData
 
 export type SurfaceInstanceCollection = CollectionBase<SurfaceInstanceCollectionData>
 

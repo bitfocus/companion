@@ -5,7 +5,8 @@ import fs from 'fs-extra'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { DataCache } from '../../lib/Data/Cache.js'
 import { DataDatabase } from '../../lib/Data/Database.js'
-import type { DatabaseOperation, DataStoreTableView } from '../../lib/Data/StoreBase.js'
+import type { DataStoreTableView } from '../../lib/Data/TableView.js'
+import type { DatabaseOperation } from '../../lib/Data/TableViewBase.js'
 
 // DataCache is the simplest concrete DataStoreBase; ':memory:' keeps it entirely in RAM for tests.
 const noopObserver = () => {}
