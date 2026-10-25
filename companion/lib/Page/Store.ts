@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid'
 import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { PageModel, PageModelSchema } from '@companion-app/shared/Model/PageModel.js'
-import type { DataStoreSchemaTableView } from '../Data/SchemaTableView.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import LogController from '../Log/Controller.js'
 
 interface PageStoreEvents {

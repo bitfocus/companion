@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import z from 'zod'
-import { DataCache } from '../../lib/Data/Cache.js'
+import { DataCache } from '../../../lib/Data/Cache.js'
 import {
 	BROKEN_ROWS_TABLE,
 	type BrokenRowRecord,
 	type SchemaTableViewRepair,
-} from '../../lib/Data/Tables/ParsedTableViewBase.js'
+} from '../../../lib/Data/Tables/ParsedTableViewBase.js'
 
 const schema = z.object({ name: z.string(), count: z.number().default(0) })
 

@@ -5,21 +5,21 @@ import type z from 'zod'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { showErrorMessage, showFatalError } from '../Resources/Util.js'
-import { DataStoreSchemaTableView, type SchemaTableViewOptions } from './SchemaTableView.js'
 import {
 	DataStoreKeyedSchemaTableView,
 	type KeyedRowSchemas,
 	type KeyedSchemaTableViewOptions,
 } from './Tables/KeyedSchemaTableView.js'
 import { BROKEN_ROWS_TABLE } from './Tables/ParsedTableViewBase.js'
-import { DataStoreTableView } from './TableView.js'
+import { DataStoreSchemaTableView, type SchemaTableViewOptions } from './Tables/SchemaTableView.js'
+import { DataStoreTableView } from './Tables/TableView.js'
 import {
 	DATABASE_OPERATIONS,
 	type DatabaseOperation,
 	type DataStoreTableViewBase,
 	type DataStoreTableViewHooks,
 	type TableOperationStats,
-} from './TableViewBase.js'
+} from './Tables/TableViewBase.js'
 
 enum DatabaseStartupState {
 	Normal = 0,

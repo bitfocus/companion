@@ -11,7 +11,7 @@ import {
 	type OutboundSurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { DataStoreSchemaTableView } from '../Data/SchemaTableView.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import LogController from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { ServiceSurfaceDiscovery } from './Discovery.js'

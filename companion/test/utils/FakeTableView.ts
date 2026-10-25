@@ -1,8 +1,8 @@
 import type z from 'zod'
 import type { DataDatabase } from '../../lib/Data/Database.js'
-import type { SchemaTableViewOptions } from '../../lib/Data/SchemaTableView.js'
 import type { KeyedRowSchemas, KeyedSchemaTableViewOptions } from '../../lib/Data/Tables/KeyedSchemaTableView.js'
-import type { DataStoreTableView } from '../../lib/Data/TableView.js'
+import type { SchemaTableViewOptions } from '../../lib/Data/Tables/SchemaTableView.js'
+import type { DataStoreTableView } from '../../lib/Data/Tables/TableView.js'
 
 /**
  * A Map-backed stand-in for DataStoreTableView.

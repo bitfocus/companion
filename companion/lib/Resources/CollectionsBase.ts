@@ -2,7 +2,7 @@ import EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 import z from 'zod'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
-import type { DataStoreSchemaTableView } from '../Data/SchemaTableView.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { publicProcedure, toIterable } from '../UI/TRPC.js'
 

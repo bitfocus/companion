@@ -1,4 +1,4 @@
-import type { DataStoreTableView } from '../../lib/Data/TableView.js'
+import type { DataStoreTableView } from '../../lib/Data/Tables/TableView.js'
 
 /**
  * Import raw data into a table

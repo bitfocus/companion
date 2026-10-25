@@ -8,7 +8,7 @@ import {
 	type ApiTokenScope,
 } from '@companion-app/shared/Model/ApiKeys.js'
 import type { DataDatabase } from '../../Data/Database.js'
-import type { DataStoreSchemaTableView } from '../../Data/SchemaTableView.js'
+import type { DataStoreSchemaTableView } from '../../Data/Tables/SchemaTableView.js'
 import type { Logger } from '../../Log/Controller.js'
 import type { ApiToken, ApiTokenStore } from './RestApiAuth.js'
 

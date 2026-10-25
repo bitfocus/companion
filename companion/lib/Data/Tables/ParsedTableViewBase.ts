@@ -3,8 +3,8 @@ import { nanoid } from 'nanoid'
 import z from 'zod'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { Logger } from '../../Log/Controller.js'
-import type { DataStoreTableView } from '../TableView.js'
-import { DataStoreTableViewBase, type DataStoreTableViewHooks } from '../TableViewBase.js'
+import type { DataStoreTableView } from './TableView.js'
+import { DataStoreTableViewBase, type DataStoreTableViewHooks } from './TableViewBase.js'
 
 /** Table that rows failing their schema are moved to, so they aren't lost */
 export const BROKEN_ROWS_TABLE = 'broken_rows'

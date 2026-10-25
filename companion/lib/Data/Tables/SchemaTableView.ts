@@ -1,11 +1,11 @@
 import type { DatabaseSync } from 'node:sqlite'
 import type z from 'zod'
-import type { Logger } from '../Log/Controller.js'
+import type { Logger } from '../../Log/Controller.js'
 import {
 	DataStoreParsedTableViewBase,
 	type BrokenRowRecord,
 	type SchemaTableViewRepair,
-} from './Tables/ParsedTableViewBase.js'
+} from './ParsedTableViewBase.js'
 import type { DataStoreTableView } from './TableView.js'
 import type { DataStoreTableViewHooks } from './TableViewBase.js'
 

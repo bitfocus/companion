@@ -1,6 +1,6 @@
 import type { DatabaseSync, StatementSync } from 'node:sqlite'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import type { Logger } from '../Log/Controller.js'
+import type { Logger } from '../../Log/Controller.js'
 
 /**
  * The kinds of row-level operation a table view performs, used as a metrics label.

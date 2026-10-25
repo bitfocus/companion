@@ -12,7 +12,7 @@ import {
 import type { VariableDefinition } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { DataStoreSchemaTableView } from '../Data/SchemaTableView.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import LogController from '../Log/Controller.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'

@@ -9,7 +9,7 @@ import {
 } from '@companion-app/shared/Model/Instance.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { DataStoreSchemaTableView } from '../Data/SchemaTableView.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import LogController from '../Log/Controller.js'
 
 export interface AddInstanceProps {

@@ -45,7 +45,7 @@ import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { Complete } from '@companion-module/base'
 import type { HIDDevice } from '@companion-surface/host'
 import type { DataDatabase } from '../Data/Database.js'
-import type { DataStoreSchemaTableView } from '../Data/SchemaTableView.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import type { SurfaceChildFeatures } from '../Instance/Surface/ChildHandler.js'
 import {
 	DiscoveredSurfaceRegistry,

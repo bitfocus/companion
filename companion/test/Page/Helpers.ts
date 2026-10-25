@@ -1,5 +1,5 @@
 import { PageModelSchema, type PageModel } from '@companion-app/shared/Model/PageModel.js'
-import type { DataStoreSchemaTableView } from '../../lib/Data/SchemaTableView.js'
+import type { DataStoreSchemaTableView } from '../../lib/Data/Tables/SchemaTableView.js'
 import { PageStore } from '../../lib/Page/Store.js'
 import { FakeSchemaTableView, FakeTableView } from '../utils/FakeTableView.js'
 

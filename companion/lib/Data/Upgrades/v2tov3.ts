@@ -3,7 +3,7 @@ import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import type { Logger } from '../../Log/Controller.js'
 import { LEGACY_MAX_BUTTONS, LEGACY_PAGE_COUNT } from '../../Resources/Constants.js'
 import type { DataStoreBase } from '../StoreBase.js'
-import type { DataStoreTableView } from '../TableView.js'
+import type { DataStoreTableView } from '../Tables/TableView.js'
 
 function convertInstanceToV3(obj: any): any {
 	if (obj.config === undefined) {

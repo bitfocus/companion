@@ -6,7 +6,7 @@ import type {
 	ExpressionVariableUpdate,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import type { TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
-import type { DataStoreSchemaTableView } from '../Data/SchemaTableView.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
