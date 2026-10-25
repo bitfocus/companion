@@ -3,7 +3,14 @@ import { createCollectionSchema, EmptyCollectionDataSchema, EnabledCollectionDat
 import { CustomVariableDefinitionSchema } from '../CustomVariableModel.js'
 import { ExpressionVariableModelSchema } from '../ExpressionVariableModel.js'
 import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '../Instance.js'
+import {
+	OutboundSurfaceInfoSchema,
+	SurfaceConfigSchema,
+	SurfaceGroupConfigSchema,
+	SurfacePanelConfigSchema,
+} from '../Surfaces.js'
 import { undescribed } from './Undescribed.js'
+import { withoutDefaults } from './WithoutDefaults.js'
 
 // Version 17 of the export format. The first version described by a schema; older exports are upgraded to it by the
 // legacy upgrade steps. Once released a version is append-only: it may gain optional properties, but anything else
@@ -41,6 +48,18 @@ const ExportV17InstancesSchema = z.record(z.string(), ExportV17InstanceSchema)
 const ExportV17EnabledCollectionsSchema = z.array(createCollectionSchema(EnabledCollectionDataSchema))
 const ExportV17EmptyCollectionsSchema = z.array(createCollectionSchema(EmptyCollectionDataSchema))
 const ExportV17ImageLibrarySchema = z.array(undescribed())
+
+/** The config of a surface group. The import applies it field by field, over any existing group */
+const ExportV17SurfaceGroupConfigSchema = withoutDefaults(SurfaceGroupConfigSchema)
+
+/** A surface. Its group config is only used when it is in its own automatic group */
+const ExportV17SurfaceSchema = withoutDefaults(SurfaceConfigSchema.out).extend({
+	config: withoutDefaults(SurfacePanelConfigSchema).catchall(z.any()).optional(),
+	groupConfig: ExportV17SurfaceGroupConfigSchema.optional(),
+})
+
+/** A remote surface. One that is invalid is skipped, rather than failing the import */
+const ExportV17RemoteSurfaceSchema = OutboundSurfaceInfoSchema.optional().catch(undefined)
 
 const ExportV17GridSizeSchema = z.object({
 	minColumn: z.number(),
@@ -80,9 +99,9 @@ export const ExportV17FullSchema = z.object({
 	expressionVariablesCollections: ExportV17EmptyCollectionsSchema.optional(),
 	instances: ExportV17InstancesSchema.optional(),
 	connectionCollections: ExportV17EnabledCollectionsSchema.optional(),
-	surfaces: undescribed().optional(),
-	surfaceGroups: undescribed().optional(),
-	surfacesRemote: z.record(z.string(), undescribed()).optional(),
+	surfaces: z.record(z.string(), ExportV17SurfaceSchema).optional(),
+	surfaceGroups: z.record(z.string(), ExportV17SurfaceGroupConfigSchema).optional(),
+	surfacesRemote: z.record(z.string(), ExportV17RemoteSurfaceSchema).optional(),
 	surfaceInstances: ExportV17InstancesSchema.optional(),
 	surfaceInstanceCollections: ExportV17EnabledCollectionsSchema.optional(),
 	imageLibrary: ExportV17ImageLibrarySchema.optional(),

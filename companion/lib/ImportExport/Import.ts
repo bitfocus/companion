@@ -6,6 +6,8 @@ import type {
 	ExportFull,
 	ExportInstances,
 	ExportPageContent,
+	ExportSurface,
+	ExportSurfaceGroupConfig,
 	ExportTriggerContent,
 } from '@companion-app/shared/Model/Export/Latest.js'
 import type {
@@ -14,7 +16,6 @@ import type {
 	ImportOrResetType,
 } from '@companion-app/shared/Model/ImportExport.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import type { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { ControlsController } from '../Controls/Controller.js'
@@ -219,11 +220,11 @@ export class ImportController {
 		}
 
 		if (isImporting(config.surfaces.known)) {
-			const surfaces: Record<number, SurfaceConfig> = data.surfaces || {}
-			const surfaceGroups: Record<number, SurfaceGroupConfig> = data.surfaceGroups || {}
+			const surfaces: Record<string, ExportSurface> = data.surfaces || {}
+			const surfaceGroups: Record<string, ExportSurfaceGroupConfig> = data.surfaceGroups || {}
 			const getPageId = (val: number) =>
 				this.#pagesController.store.getPageId(val) ?? this.#pagesController.store.getFirstPageId()
-			const fixPageId = (groupConfig: SurfaceGroupConfig) => {
+			const fixPageId = (groupConfig: ExportSurfaceGroupConfig | undefined) => {
 				if (!groupConfig) return
 
 				if ('last_page' in groupConfig) {
@@ -295,6 +296,8 @@ export class ImportController {
 			}
 
 			for (const remoteInfo of Object.values(data.surfacesRemote || {})) {
+				if (!remoteInfo) continue
+
 				let instanceId = remoteInfo.instanceId
 				if (!surfaceInstances[instanceId]) {
 					// Try and remap the instance id, or fallback to using the module type

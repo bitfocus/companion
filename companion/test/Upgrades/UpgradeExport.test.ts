@@ -155,6 +155,34 @@ describe('upgradeImport', () => {
 		})
 	})
 
+	test('leaves out what a surface or group config left out, as the import applies them field by field', () => {
+		const result: any = upgradeImport(
+			{
+				type: 'full',
+				version: EXPORT_VERSION,
+				surfaces: { s1: { config: { brightness: 50, custom: 'x' }, groupConfig: { name: 'Auto', last_page: 3 } } },
+				surfaceGroups: { g1: { name: 'Group', startup_page: 2, allowed_pages: [1, 2] } },
+			},
+			userConfig
+		)
+
+		expect(result.surfaces).toEqual({
+			s1: { config: { brightness: 50, custom: 'x' }, groupConfig: { name: 'Auto', last_page: 3 } },
+		})
+		expect(result.surfaceGroups).toEqual({ g1: { name: 'Group', startup_page: 2, allowed_pages: [1, 2] } })
+	})
+
+	test('skips a remote surface that is invalid, keeping the others', () => {
+		const remote = { id: 'r1', type: 'plugin', moduleId: 'satellite', instanceId: 'i1' }
+		const result: any = upgradeImport(
+			{ type: 'full', version: EXPORT_VERSION, surfacesRemote: { r1: remote, r2: { id: 'r2', type: 'other' } } },
+			userConfig
+		)
+
+		expect(result.surfacesRemote.r1).toMatchObject(remote)
+		expect(result.surfacesRemote.r2).toBeUndefined()
+	})
+
 	test('refuses an export that is not a valid envelope', () => {
 		expect(() => upgradeImport({ type: 'sparkle', version: EXPORT_VERSION }, userConfig)).toThrow(/Invalid export/)
 		expect(() => upgradeImport({ type: 'page', version: EXPORT_VERSION }, userConfig)).toThrow(/Invalid export/)

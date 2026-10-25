@@ -28,15 +28,28 @@ const fixtures = FIXTURES.map((fixture) => {
 	return { fixture, raw, legacy: upgradeWithLegacySteps(raw) }
 })
 
-/** A copy of the export without the given root properties */
-function withoutKeys(obj: any, keys: string[]): any {
+/** A copy of the export without the given dotted paths, where `*` matches every key */
+function withoutPaths(obj: any, paths: string[]): any {
 	const copy = structuredClone(obj)
-	for (const key of keys) delete copy[key]
+	const remove = (value: any, keys: string[]): void => {
+		if (!value || typeof value !== 'object') return
+		const [key, ...rest] = keys
+		const targets = key === '*' ? Object.keys(value) : [key]
+		for (const target of targets) {
+			if (rest.length === 0) delete value[target]
+			else remove(value[target], rest)
+		}
+	}
+	for (const path of paths) remove(copy, path.split('.'))
 	return copy
 }
 
-// Written by the legacy steps, but read by nothing
-const droppedRootKeys = ['orig_version']
+// Written by the legacy steps or old versions, but read by nothing
+const droppedPaths = [
+	'orig_version',
+	// The page of a surface from before groups, which the db upgrades already moved into its group config
+	'surfaces.*.groupConfig.page',
+]
 
 describe('old exports', () => {
 	test.each(fixtures)('$fixture imports', ({ raw }) => {
@@ -47,7 +60,7 @@ describe('old exports', () => {
 	test.each(fixtures)('parsing $fixture loses nothing', ({ legacy }) => {
 		const parsed = SomeExportSchema.parse(structuredClone(legacy))
 
-		expect(parsed).toMatchObject(withoutKeys(legacy, droppedRootKeys))
+		expect(parsed).toMatchObject(withoutPaths(legacy, droppedPaths))
 	})
 
 	test.each(fixtures)('the instances of $fixture stay as minimal or full as they were', ({ legacy }) => {
