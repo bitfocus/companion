@@ -80,7 +80,7 @@
     "openapi-typescript": "^7.13.0",
     "p-retry": "^8.0.1",
     "prettier": "^3.9.9",
-    "socket": "^1.6.1",
+    "socket": "^1.10.0",
     "tsx": "^4.23.15",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-7": "npm:typescript@^7.0.2",
