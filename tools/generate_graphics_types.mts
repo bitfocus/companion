@@ -189,7 +189,9 @@ function exportSchemaAndType(name: string, schema: string): void {
 }
 
 // The parts shared by elements, for code that handles any element with them
-const commonFields = elementSchemas.text.flatMap((s) => s.fields).filter((f) => f.id === 'enabled' || f.id === 'opacity')
+const commonFields = elementSchemas.text
+	.flatMap((s) => s.fields)
+	.filter((f) => f.id === 'enabled' || f.id === 'opacity')
 let elementBase = 'z.object({\n'
 elementBase += `\tid: z.string(),\n`
 elementBase += `\tname: z.string().catch(''),\n`
