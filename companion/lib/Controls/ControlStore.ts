@@ -160,9 +160,7 @@ export class ControlStore implements IControlStore {
 	 */
 	abortAllDelayedActions(exceptSignal: AbortSignal | null): void {
 		for (const control of this.controls.values()) {
-			if (control.supportsActions) {
-				control.abortDelayedActions(false, exceptSignal)
-			}
+			control.abortDelayedActions(false, exceptSignal, 0)
 		}
 	}
 

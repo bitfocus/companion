@@ -32,6 +32,7 @@ import {
 	fixupButtonReferenceControl,
 	fixupExpressionVariableControl,
 	fixupLayeredButtonControl,
+	fixupLinkButtonControl,
 	fixupPageVariables,
 	fixupPresetReferenceControl,
 	fixupTriggerControl,
@@ -408,6 +409,8 @@ export class ImportController {
 					} else if (control.type === 'button-reference') {
 						// Keep it a live mirror: remap any connection labels used in the location expression.
 						fixedControlObj = fixupButtonReferenceControl(control, referencesUpdater)
+					} else if (control.type === 'link-button') {
+						fixedControlObj = fixupLinkButtonControl(control, referencesUpdater)
 					} else {
 						this.#logger.warn(`Unknown control type: ${control.type}`)
 						continue

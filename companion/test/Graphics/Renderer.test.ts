@@ -10,10 +10,13 @@ import {
 	type DrawImageBuffer,
 } from '@companion-app/shared/Model/StyleModel.js'
 import { decodeImage } from '../../lib/Graphics/ImageCache/DecodeImage.js'
-import { ImageCacheStore } from '../../lib/Graphics/ImageCache/ImageCacheStore.js'
+import { ImageCacheStore, type RemoteImageSource } from '../../lib/Graphics/ImageCache/ImageCacheStore.js'
 import { computeOversampling, GraphicsRenderer } from '../../lib/Graphics/Renderer.js'
 import type { Logger } from '../../lib/Log/Controller.js'
 import { makeAnimatedGif, toDataUrl } from './ImageCache/AnimatedImageFixtures.js'
+
+/** Where no remote element has an image */
+const NO_REMOTE_IMAGES: RemoteImageSource = { getImage: async () => null, onReleased: () => {} }
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const FONTS_DIR = join(__dirname, '../../../assets/Fonts')
@@ -263,7 +266,7 @@ describe('GraphicsRenderer', () => {
 					async (source) => decodeImage(source, 32 * 1024 * 1024),
 					64 * 1024 * 1024
 				)
-				return store.resolveDrawStyle(style, new Map())
+				return store.resolveDrawStyle(style, new Map(), { width: 72, height: 72 }, NO_REMOTE_IMAGES, true)
 			}
 
 			test.each(['fit', 'fill', 'crop'] as const)(
@@ -320,7 +323,13 @@ describe('GraphicsRenderer', () => {
 				const store = new ImageCacheStore(logger, async (source) => decodeImage(source, 1024 * 1024), 1024 * 1024)
 				const frames = await store.selectAnimationFrames(style.elements, timeMs)
 				expect(frames.maxDurationMs).toBe(300)
-				const resolved = await store.resolveDrawStyle(style, frames.frameIndices)
+				const resolved = await store.resolveDrawStyle(
+					style,
+					frames.frameIndices,
+					{ width: 72, height: 72 },
+					NO_REMOTE_IMAGES,
+					true
+				)
 
 				const buffer = await GraphicsRenderer.drawButtonImageBuffer(
 					resolved,

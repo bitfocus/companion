@@ -215,6 +215,8 @@ export const DropdownInputField = observer(function DropdownInputField({
 						className={classNames('dropdown-field-input', {
 							'dropdown-field-input-value-placeholder': inputPlaceholder !== undefined,
 						})}
+						// Both, so that a label for it names and focuses the input
+						id={htmlName}
 						name={htmlName}
 						placeholder={inputPlaceholder}
 						aria-invalid={isInvalid}

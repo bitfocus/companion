@@ -12,6 +12,7 @@ import type {
 	ButtonGraphicsGroupDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsLineDrawElement,
+	ButtonGraphicsRemoteDrawElement,
 	ButtonGraphicsTextDrawElement,
 	SomeButtonGraphicsDrawElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -293,6 +294,135 @@ describe('GraphicsLayeredButtonRenderer', () => {
 
 	describe('element types', () => {
 		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
+
+		test('remote element draws its fetched image, fitted', async () => {
+			// A red 2:1 image, drawn into a squarer button
+			const buffer = new SharedArrayBuffer(4 * 2 * 4)
+			new Uint8Array(buffer).set(Array.from({ length: 8 }, () => [255, 0, 0, 255]).flat())
+			const remote: ButtonGraphicsRemoteDrawElement = {
+				...ELEMENT_BASE,
+				id: 'remote',
+				type: 'remote',
+				x: 0,
+				y: 0,
+				width: 1,
+				height: 1,
+				source: 'control1',
+				revision: 'r1',
+			}
+
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					...drawOpts,
+					elements: [remote],
+					decodedImages: new Map([['remote', { buffer, width: 4, height: 2, frameIndex: 0 }]]),
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+
+			// Nothing fetched for it, so nothing drawn
+			const empty = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				empty,
+				makeStyle({ ...drawOpts, elements: [remote] }),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			const blank = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(blank, makeStyle({ ...drawOpts }), new Set(), null, DEFAULT_PADDING)
+			expect(empty.buffer()).toEqual(blank.buffer())
+		})
+
+		test('remote element scaled much smaller is averaged, rather than aliased', async () => {
+			// 1px black and white stripes, drawn about 8.5 times smaller
+			const size = 512
+			const buffer = new SharedArrayBuffer(size * size * 4)
+			const pixels = new Uint8Array(buffer)
+			for (let i = 0; i < size * size; i++) pixels.set(i % 2 ? [255, 255, 255, 255] : [0, 0, 0, 255], i * 4)
+			const remote: ButtonGraphicsRemoteDrawElement = {
+				...ELEMENT_BASE,
+				id: 'remote',
+				type: 'remote',
+				x: 0,
+				y: 0,
+				width: 1,
+				height: 1,
+				source: 'control1',
+				revision: 'r1',
+			}
+
+			const img = Image.create(60, 60, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					decoration: ButtonGraphicsDecorationType.None,
+					show_status_icons: false,
+					elements: [remote],
+					decodedImages: new Map([['remote', { buffer, width: size, height: size, frameIndex: 0 }]]),
+				}),
+				new Set(),
+				null,
+				{ x: 0, y: 0 }
+			)
+
+			// Away from the edges, every pixel is close to grey
+			const out = img.buffer()
+			const greys: number[] = []
+			for (let y = 8; y < 52; y++) for (let x = 8; x < 52; x++) greys.push(out[(y * 60 + x) * 4])
+			expect(Math.min(...greys)).toBeGreaterThan(96)
+			expect(Math.max(...greys)).toBeLessThan(160)
+		})
+
+		test('remote element at its own size in an oversampled canvas is copied exactly, so resolves to its pixels', async () => {
+			// A 1px checkerboard of the button's own size, drawn 4 times oversampled
+			const size = 16
+			const buffer = new SharedArrayBuffer(size * size * 4)
+			const pixels = new Uint8Array(buffer)
+			for (let y = 0; y < size; y++)
+				for (let x = 0; x < size; x++)
+					pixels.set((x + y) % 2 ? [255, 255, 255, 255] : [0, 0, 0, 255], (y * size + x) * 4)
+			const remote: ButtonGraphicsRemoteDrawElement = {
+				...ELEMENT_BASE,
+				id: 'remote',
+				type: 'remote',
+				x: 0,
+				y: 0,
+				width: 1,
+				height: 1,
+				source: 'control1',
+				revision: 'r1',
+			}
+
+			const img = Image.create(size, size, 4, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					decoration: ButtonGraphicsDecorationType.None,
+					show_status_icons: false,
+					elements: [remote],
+					decodedImages: new Map([['remote', { buffer, width: size, height: size, frameIndex: 0 }]]),
+				}),
+				new Set(),
+				null,
+				{ x: 0, y: 0 }
+			)
+
+			// Each pixel of it is a whole 4x4 block of the canvas, which the oversampling averages back to that pixel
+			const out = img.buffer()
+			const canvasWidth = size * 4
+			for (let y = 0; y < canvasWidth; y++) {
+				for (let x = 0; x < canvasWidth; x++) {
+					const source = pixels[(Math.floor(y / 4) * size + Math.floor(x / 4)) * 4]
+					expect(out[(y * canvasWidth + x) * 4]).toBe(source)
+				}
+			}
+		})
 
 		test('text element', async () => {
 			const img = Image.create(72, 58, 1, null)

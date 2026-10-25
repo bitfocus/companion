@@ -23,6 +23,9 @@ import { GraphicsController } from './Graphics/Controller.js'
 import { ImportExportController } from './ImportExport/Controller.js'
 import { InstanceController } from './Instance/Controller.js'
 import { InternalController } from './Internal/Controller.js'
+import { LinkController } from './Link/Controller.js'
+import { LinkRemoteImageStore } from './Link/RemoteImageStore.js'
+import { LINK_BUILTIN_TRANSPORTS, LINK_TRANSPORT_DEFINITIONS } from './Link/Transports/index.js'
 import LogController, { type Logger } from './Log/Controller.js'
 import { PageController } from './Page/Controller.js'
 import { PageStore } from './Page/Store.js'
@@ -94,6 +97,10 @@ export class Registry {
 	 */
 	readonly cloud: CloudController
 	/**
+	 * Companion Link, for linking Companion installations together
+	 */
+	readonly link: LinkController
+	/**
 	 * The core controls controller
 	 */
 	readonly controls: ControlsController
@@ -145,6 +152,7 @@ export class Registry {
 	readonly metrics: DataMetrics
 
 	readonly #renderClock: RenderClock
+	readonly #serviceApi: ServiceApi
 
 	/**
 	 * The 'data' controller
@@ -231,6 +239,9 @@ export class Registry {
 
 		this.#renderClock = new RenderClock()
 
+		// The images of the remote buttons that link buttons show, kept by Link and drawn by the graphics
+		const linkRemoteImages = new LinkRemoteImageStore()
+
 		this.graphics = new GraphicsController(
 			controlStore,
 			pageStore,
@@ -239,7 +250,8 @@ export class Registry {
 			this.db,
 			this.#internalApiRouter,
 			this.metrics,
-			this.#renderClock
+			this.#renderClock,
+			linkRemoteImages
 		)
 
 		this.surfaces = new SurfaceController(
@@ -280,6 +292,15 @@ export class Registry {
 
 		const localVariables = new LocalVariablesController(controlStore, pageStore)
 
+		this.link = new LinkController(
+			this.#appInfo,
+			this.db,
+			this.userconfig,
+			{ pageStore, controls: controlStore, graphics: this.graphics, remoteImages: linkRemoteImages },
+			LINK_TRANSPORT_DEFINITIONS,
+			LINK_BUILTIN_TRANSPORTS
+		)
+
 		const actionRunner = new ActionRunner(this.instance, this.internalModule, this.variables, localVariables)
 
 		this.controls = new ControlsController(this.db, controlStore, controlEvents, activeLearningStore, {
@@ -292,6 +313,7 @@ export class Registry {
 			graphics: this.graphics,
 			actionRunner: actionRunner,
 			renderClock: this.#renderClock,
+			linkButtons: this.link.buttonClient,
 		})
 		this.preview = new PreviewController(
 			this.instance.definitions,
@@ -332,7 +354,7 @@ export class Registry {
 			this.variables
 		)
 
-		const serviceApi = new ServiceApi(
+		this.#serviceApi = new ServiceApi(
 			this.#appInfo,
 			pageStore,
 			controlStore,
@@ -346,7 +368,7 @@ export class Registry {
 
 		this.services = new ServiceController(
 			this.#appInfo,
-			serviceApi,
+			this.#serviceApi,
 			this.userconfig,
 			oscSender,
 			this.surfaces,
@@ -436,6 +458,7 @@ export class Registry {
 		this.graphics.on('button_drawn', (location, render) => {
 			this.controls.onButtonDrawn(location, render)
 			this.services.onButtonDrawn(location, render)
+			this.link.onButtonDrawn(location, render)
 		})
 	}
 
@@ -514,6 +537,9 @@ export class Registry {
 			})
 			this.rebindHttp(bindIp, bindPort)
 
+			// Everything is ready to serve buttons, so start linking with other installations
+			this.link.start()
+
 			// Startup has completed, run triggers
 			this.controls.triggerEvents.emit('startup')
 
@@ -580,14 +606,20 @@ export class Registry {
 		this.cloud.stop()
 		this.usageStatistics.stop()
 
-		this.ui.close()
-
-		// Before closing the db, so that the surfaces can record when they were last seen
+		// Before closing the db, so that the surfaces can record when they were last seen. Before stopping link, so that
+		// what they stop showing is let go of while it is running
 		try {
 			this.surfaces.quit()
 		} catch (_e) {
 			//do nothing
 		}
+
+		// Say goodbye to linked installations before the database closes
+		await this.link.stop().catch((e) => {
+			this.#logger.warn(`Failed to stop link: ${e}`)
+		})
+
+		this.ui.close()
 
 		// Save the db to disk
 		this.db.close()

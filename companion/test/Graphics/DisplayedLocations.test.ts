@@ -32,6 +32,18 @@ describe('DisplayedLocations', () => {
 	})
 })
 
+describe('DisplayedLocations sizes of content alone', () => {
+	test('are counted apart from the same size of the whole button', () => {
+		const displayed = new DisplayedLocations()
+		displayed.acquire(location, square)
+		const release = displayed.acquire(location, { ...square, contentOnly: true })
+		expect(displayed.getSizes(location)).toEqual([square, { ...square, contentOnly: true }])
+
+		release()
+		expect(displayed.getSizes(location)).toEqual([square])
+	})
+})
+
 describe('DisplayedLocationsSet', () => {
 	test('acquires and releases only what changes', () => {
 		const displayed = new DisplayedLocations()

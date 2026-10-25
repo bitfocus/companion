@@ -416,6 +416,11 @@ async function convertReferenceElementForDrawing(
 	return { drawElement, references, compositeElement: null, referencedLocation: referencedLocationStr }
 }
 
+/** The background of the placeholder shown when a button can't show what it refers to: the app's warning yellow */
+export const PLACEHOLDER_BACKGROUND_COLOR = 0xf9b115
+/** The text of the placeholder */
+export const PLACEHOLDER_TEXT_COLOR = 0x3a2c0a
+
 export function makeReferencePlaceholder(
 	parentId: string,
 	text: string
@@ -431,7 +436,7 @@ export function makeReferencePlaceholder(
 		width: 1,
 		height: 1,
 		rotation: 0,
-		color: 0xf9b115, // Match the app's warning yellow.
+		color: PLACEHOLDER_BACKGROUND_COLOR,
 		cornerRadius: 0,
 		borderWidth: 0,
 		borderColor: 0,
@@ -457,7 +462,7 @@ export function makeReferencePlaceholder(
 		font: 'companion-sans',
 		weight: 'bold',
 		styles: [],
-		color: 0x3a2c0a,
+		color: PLACEHOLDER_TEXT_COLOR,
 		outlineColor: 'transparent',
 		halign: 'center',
 		valign: 'center',

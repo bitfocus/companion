@@ -1,7 +1,11 @@
 import type EventEmitter from 'node:events'
 import z from 'zod'
 import { formatLocation, isLocationOnGrid } from '@companion-app/shared/ControlId.js'
-import type { ButtonReferenceButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import {
+	parseLinkButtonOptions,
+	type ButtonReferenceButtonModel,
+	type SomeButtonModel,
+} from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -58,6 +62,19 @@ export function createControlsTrpcRouter(
 
 				return controlsController.importControl(input.location, model)
 			}),
+
+		/** Place a remote button showing a button of another installation, eg one chosen from its pages */
+		importLinkButton: publicProcedure
+			.input(z.object({ location: zodLocation, peerId: z.string(), remoteLocation: zodLocation }))
+			.mutation(({ input }) =>
+				controlsController.importControl(input.location, {
+					type: 'link-button',
+					options: parseLinkButtonOptions({
+						peerId: input.peerId,
+						location: { value: formatLocation(input.remoteLocation), isExpression: false },
+					}).options,
+				})
+			),
 
 		createReferenceControl: publicProcedure
 			.input(

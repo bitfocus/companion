@@ -8,6 +8,11 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 export interface DisplayedSize {
 	width: number
 	height: number
+	/**
+	 * The size is of the content of the button alone, without its decoration (eg the top bar), as when Link serves it
+	 * onwards for another installation to decorate. Defaults to false: the size of the whole button
+	 */
+	contentOnly?: boolean
 }
 
 interface DisplayedLocationsEvents {
@@ -22,8 +27,14 @@ function locationKey(location: ControlLocation): string {
 	return `${location.pageNumber}/${location.row}/${location.column}`
 }
 
-function sizeKey(size: DisplayedSize): string {
-	return `${size.width}x${size.height}`
+/** Identifies a size, for counting what shows a location at it */
+export function displayedSizeKey(size: DisplayedSize): string {
+	return `${size.width}x${size.height}${size.contentOnly ? ' content' : ''}`
+}
+
+/** A copy of a size, without anything else that came with it */
+function copySize({ width, height, contentOnly }: DisplayedSize): DisplayedSize {
+	return contentOnly ? { width, height, contentOnly } : { width, height }
 }
 
 /**
@@ -52,12 +63,12 @@ export class DisplayedLocations extends EventEmitter<DisplayedLocationsEvents> {
 			this.#locations.set(key, entry)
 		}
 
-		const sKey = sizeKey(size)
+		const sKey = displayedSizeKey(size)
 		const sizeEntry = entry.sizes.get(sKey)
 		if (sizeEntry) {
 			sizeEntry.count++
 		} else {
-			entry.sizes.set(sKey, { width: size.width, height: size.height, count: 1 })
+			entry.sizes.set(sKey, { ...copySize(size), count: 1 })
 			this.emit('changed', entry.location)
 		}
 
@@ -82,11 +93,18 @@ export class DisplayedLocations extends EventEmitter<DisplayedLocationsEvents> {
 		this.emit('changed', entry.location)
 	}
 
+	/** The distinct sizes a location is being shown at, and by how many things at each */
+	getSizeCounts(location: ControlLocation): (DisplayedSize & { count: number })[] {
+		const entry = this.#locations.get(locationKey(location))
+		if (!entry) return []
+		return Array.from(entry.sizes.values(), (size) => ({ ...copySize(size), count: size.count }))
+	}
+
 	/** The distinct sizes a location is being shown at */
 	getSizes(location: ControlLocation): DisplayedSize[] {
 		const entry = this.#locations.get(locationKey(location))
 		if (!entry) return []
-		return Array.from(entry.sizes.values(), ({ width, height }) => ({ width, height }))
+		return Array.from(entry.sizes.values(), copySize)
 	}
 }
 
@@ -106,7 +124,7 @@ export class DisplayedLocationsSet {
 	replace(entries: Iterable<{ location: ControlLocation; size: DisplayedSize }>): void {
 		const next = new Map<string, ReleaseDisplayedLocation>()
 		for (const { location, size } of entries) {
-			const key = `${locationKey(location)}@${sizeKey(size)}`
+			const key = `${locationKey(location)}@${displayedSizeKey(size)}`
 			if (next.has(key)) continue
 
 			const existing = this.#held.get(key)

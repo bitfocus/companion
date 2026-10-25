@@ -1,0 +1,452 @@
+import { EventEmitter } from 'node:events'
+import isEqual from 'fast-deep-equal'
+import { nanoid } from 'nanoid'
+import type { JsonValue } from 'type-fest'
+import { resolveLinkTransportConfig } from '@companion-app/shared/LinkTransportConfig.js'
+import type {
+	LinkTransportConfig,
+	LinkTransportState,
+	LinkTransportStatesUpdate,
+	LinkTransportsUpdate,
+} from '@companion-app/shared/Model/Link.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { DataDatabase } from '../Data/Database.js'
+import type { DataStoreTableView } from '../Data/Tables/TableView.js'
+import LogController from '../Log/Controller.js'
+import type { LinkIdentity } from './Identity.js'
+import type { LinkMessageOrigin, LinkTransport, SomeLinkTransportDefinition } from './Transports/Types.js'
+
+export type TransportManagerEvents = {
+	/** An installation announced itself on a transport, or said it has gone (null) */
+	announcement: [transportId: string, peerId: string, payload: string | null]
+	/** A message for this installation arrived on a transport */
+	message: [transportId: string, payload: string, origin: LinkMessageOrigin]
+	/** A transport connected, so anything that should be (re)sent on a new connection should be */
+	transportConnected: [transportId: string]
+	/** A transport stopped or lost its connection, so peers seen on it are no longer reachable through it */
+	transportDisconnected: [transportId: string]
+	configs: [update: LinkTransportsUpdate]
+	states: [update: LinkTransportStatesUpdate]
+}
+
+interface RunningTransport {
+	readonly transport: LinkTransport
+	state: LinkTransportState
+}
+
+/**
+ * Owns the configured transports: persisting their config, running the enabled ones, and passing announcements and
+ * messages to and from them. Nothing here knows about the Link protocol.
+ */
+export class LinkTransportManager {
+	readonly events = new EventEmitter<TransportManagerEvents>()
+
+	readonly #logger = LogController.createLogger('Link/TransportManager')
+
+	readonly #definitions: ReadonlyMap<string, SomeLinkTransportDefinition>
+	readonly #configTable: DataStoreTableView<Record<string, LinkTransportConfig>>
+	readonly #storageTable: DataStoreTableView<Record<string, Record<string, JsonValue>>>
+
+	readonly #configs = new Map<string, LinkTransportConfig>()
+	/** The types of the transports that are part of Link, which the user can't add */
+	readonly #builtinTypes = new Set<string>()
+	readonly #running = new Map<string, RunningTransport>()
+	/** Instances being destroyed, by id, so that a replacement waits for the old one to have stopped */
+	readonly #stopping = new Map<string, Promise<void>>()
+	/** Enabled transports that could not be started, eg because their config is incomplete */
+	readonly #failed = new Map<string, LinkTransportState>()
+
+	readonly #identity: () => LinkIdentity
+	readonly #selfName: () => string
+
+	#started = false
+
+	constructor(
+		db: DataDatabase,
+		definitions: readonly SomeLinkTransportDefinition[],
+		identity: () => LinkIdentity,
+		selfName: () => string
+	) {
+		this.events.setMaxListeners(0)
+
+		this.#definitions = new Map(definitions.map((def) => [def.type, def]))
+		this.#configTable = db.getTableView('link_transports')
+		this.#storageTable = db.getTableView('link_transport_storage')
+		this.#identity = identity
+		this.#selfName = selfName
+
+		for (const [id, config] of Object.entries(this.#configTable.all())) {
+			// Only the transports the user added are saved
+			this.#configs.set(id, { ...config, builtin: false })
+		}
+	}
+
+	get definitions(): ReadonlyMap<string, SomeLinkTransportDefinition> {
+		return this.#definitions
+	}
+
+	/** Start all the enabled transports */
+	start(): void {
+		this.#started = true
+		for (const config of this.#configs.values()) this.#startStop(config)
+	}
+
+	/** Say goodbye on and stop all transports */
+	async stopAll(): Promise<void> {
+		this.#started = false
+		// Including those already stopping, which are no longer in #running, so that all have stopped when this returns
+		await Promise.all([...Array.from(this.#running.keys(), async (id) => this.#stop(id)), ...this.#stopping.values()])
+	}
+
+	getConfigs(): Record<string, LinkTransportConfig> {
+		return Object.fromEntries(this.#configs)
+	}
+
+	getStates(): Record<string, LinkTransportState> {
+		const states: Record<string, LinkTransportState> = {}
+		for (const config of this.#configs.values()) states[config.id] = this.#getState(config.id)
+		return states
+	}
+
+	/**
+	 * Set the config of a transport that is part of Link, (re)starting it if it changed. It is not saved, as it comes
+	 * from the user config
+	 * @param config - its config, or null when it is switched off
+	 */
+	async setBuiltin(
+		id: string,
+		type: string,
+		label: string,
+		config: Record<string, JsonValue | undefined> | null
+	): Promise<void> {
+		const existing = this.#configs.get(id)
+		const updated: LinkTransportConfig = {
+			id,
+			type,
+			label,
+			enabled: config !== null,
+			config: config ?? existing?.config ?? {},
+			// Listed before the ones the user added
+			sortOrder: -1,
+			builtin: true,
+		}
+		if (existing && isEqual(existing, updated)) return
+
+		this.#builtinTypes.add(type)
+		this.#configs.set(id, updated)
+		this.events.emit('configs', { type: 'add', itemId: id, info: updated })
+
+		await this.#restart(id)
+	}
+
+	/**
+	 * Add a transport, and start it. The config is validated against the fields of the type
+	 * @returns the id of the new transport, or the validation errors by field id if the config was rejected
+	 */
+	add(
+		type: string,
+		label: string,
+		rawConfig: Record<string, JsonValue | undefined>
+	): { ok: true; id: string } | { ok: false; errors: Record<string, string> } {
+		const definition = this.#definitions.get(type)
+		if (!definition || this.#builtinTypes.has(type)) throw new Error(`Unknown transport type "${type}"`)
+
+		const { config, errors } = resolveLinkTransportConfig(definition.configFields, rawConfig)
+		if (Object.keys(errors).length > 0) return { ok: false, errors }
+
+		const sortOrder = Math.max(-1, ...Array.from(this.#configs.values(), (c) => c.sortOrder)) + 1
+
+		const transport: LinkTransportConfig = {
+			id: nanoid(),
+			type,
+			label,
+			enabled: true,
+			config,
+			sortOrder,
+			builtin: false,
+		}
+		this.#save(transport)
+		this.#startStop(transport)
+
+		return { ok: true, id: transport.id }
+	}
+
+	/**
+	 * Update the label and config of a transport. The config is validated against the fields of the type
+	 * @returns the validation errors by field id, if the config was rejected
+	 */
+	async update(
+		id: string,
+		label: string,
+		rawConfig: Record<string, JsonValue | undefined>
+	): Promise<{ ok: true } | { ok: false; errors: Record<string, string> }> {
+		const existing = this.#getUserConfig(id)
+
+		const definition = this.#definitions.get(existing.type)
+		if (!definition) throw new Error(`Unknown transport type "${existing.type}"`)
+
+		const { config, errors } = resolveLinkTransportConfig(definition.configFields, rawConfig)
+		if (Object.keys(errors).length > 0) return { ok: false, errors }
+
+		const updated: LinkTransportConfig = { ...existing, label, config }
+		this.#save(updated)
+
+		await this.#restart(id)
+
+		return { ok: true }
+	}
+
+	async setEnabled(id: string, enabled: boolean): Promise<void> {
+		const existing = this.#getUserConfig(id)
+
+		const updated: LinkTransportConfig = { ...existing, enabled }
+		this.#save(updated)
+
+		// Enabling waits for an instance still being stopped, so the replacement doesn't overlap it
+		if (!enabled) await this.#stop(id)
+		else await this.#stopping.get(id)
+		this.#startLatest(id)
+	}
+
+	async remove(id: string): Promise<void> {
+		if (!this.#configs.has(id)) return
+		this.#getUserConfig(id)
+
+		await this.#stop(id)
+
+		this.#configs.delete(id)
+		this.#failed.delete(id)
+		this.#configTable.delete(id)
+		this.#storageTable.delete(id)
+
+		this.events.emit('configs', { type: 'remove', itemId: id })
+		this.events.emit('states', { type: 'remove', itemId: id })
+	}
+
+	/**
+	 * Pass an action the user chose on an entry reported by a transport
+	 * @returns an error to show the user, or null on success
+	 */
+	async handleSectionAction(
+		id: string,
+		entryId: string,
+		actionId: string,
+		input: string | null
+	): Promise<string | null> {
+		const running = this.#running.get(id)
+		if (!running) return 'The transport is not running'
+
+		try {
+			return await running.transport.handleSectionAction(entryId, actionId, input)
+		} catch (e) {
+			this.#logger.warn(`Action ${actionId} on transport ${id} failed: ${stringifyError(e)}`)
+			return stringifyError(e)
+		}
+	}
+
+	/** Make our announcement known on every connected transport, or withdraw it (null) */
+	announceAll(payload: string | null): void {
+		for (const id of this.#running.keys()) this.announceOn(id, payload)
+	}
+
+	/** Make our announcement known on one transport, if it is connected, or withdraw it (null) */
+	announceOn(transportId: string, payload: string | null): void {
+		const running = this.#getConnected(transportId)
+		if (running) this.#callTransport(transportId, () => running.transport.announce(payload))
+	}
+
+	/** Send a message to a peer over one transport, if it is connected */
+	sendTo(transportId: string, peerId: string, payload: string): void {
+		const running = this.#getConnected(transportId)
+		if (running) this.#callTransport(transportId, () => running.transport.send(peerId, payload))
+	}
+
+	#getConnected(transportId: string): RunningTransport | null {
+		const running = this.#running.get(transportId)
+		return running?.state.status === 'connected' ? running : null
+	}
+
+	/** The config of a transport the user added, as only those can be changed by the user */
+	#getUserConfig(id: string): LinkTransportConfig {
+		const existing = this.#configs.get(id)
+		if (!existing) throw new Error(`Unknown transport "${id}"`)
+		if (existing.builtin) throw new Error(`"${existing.label}" is configured in the settings`)
+		return existing
+	}
+
+	#save(config: LinkTransportConfig): void {
+		this.#configs.set(config.id, config)
+		this.#configTable.set(config.id, config)
+		this.events.emit('configs', { type: 'add', itemId: config.id, info: config })
+	}
+
+	#getState(id: string): LinkTransportState {
+		return (
+			this.#running.get(id)?.state ??
+			this.#failed.get(id) ?? { status: 'disabled', message: null, info: [], sections: [] }
+		)
+	}
+
+	#emitState(id: string): void {
+		this.events.emit('states', { type: 'update', itemId: id, state: this.#getState(id) })
+	}
+
+	#startStop(config: LinkTransportConfig): void {
+		this.#failed.delete(config.id)
+		if (!config.enabled || this.#running.has(config.id)) {
+			this.#emitState(config.id)
+			return
+		}
+
+		const definition = this.#definitions.get(config.type)
+		if (!definition) {
+			this.#logger.warn(`Transport "${config.label}" has unknown type "${config.type}"`)
+			this.#setFailed(config.id, `Unknown transport type "${config.type}"`)
+			return
+		}
+
+		// Fill in defaults for any fields added since the config was saved
+		const { config: resolvedConfig, errors } = resolveLinkTransportConfig(definition.configFields, config.config)
+		const invalidFields = definition.configFields.filter((field) => errors[field.id] !== undefined)
+		if (invalidFields.length > 0) {
+			this.#logger.warn(`Transport "${config.label}" has an invalid config: ${JSON.stringify(errors)}`)
+			this.#setFailed(config.id, `Complete the settings: ${invalidFields.map((field) => field.label).join(', ')}`)
+			return
+		}
+
+		const id = config.id
+		const logger = LogController.createLogger(`Link/Transport/${config.label || id}`)
+		const storageTable = this.#storageTable
+
+		let running: RunningTransport | null = null
+		const state: LinkTransportState = { status: 'connecting', message: null, info: [], sections: [] }
+
+		try {
+			const transport = definition.create(
+				{
+					logger,
+					identity: this.#identity(),
+					getName: this.#selfName,
+					storage: {
+						get: (key) => storageTable.get(id)?.[key],
+						set: (key, value) => storageTable.set(id, { ...storageTable.get(id), [key]: value }),
+					},
+					// A throw while handling what a peer sent would otherwise reach the transport's socket, and could crash
+					receiveAnnouncement: (peerId, payload) => {
+						if (running && this.#running.get(id) === running) {
+							try {
+								this.events.emit('announcement', id, peerId, payload)
+							} catch (e) {
+								logger.error(`Failed to handle an announcement from ${peerId}: ${stringifyError(e)}`)
+							}
+						}
+					},
+					receive: (payload, origin) => {
+						if (running && this.#running.get(id) === running) {
+							try {
+								this.events.emit('message', id, payload, origin)
+							} catch (e) {
+								logger.error(`Failed to handle a message from ${origin.peerId}: ${stringifyError(e)}`)
+							}
+						}
+					},
+					setStatus: (status, message) => {
+						const wasConnected = state.status === 'connected'
+						state.status = status
+						state.message = message
+						if (!running || this.#running.get(id) !== running) return
+
+						this.#emitState(id)
+						if (status === 'connected' && !wasConnected) this.events.emit('transportConnected', id)
+						if (status !== 'connected' && wasConnected) this.events.emit('transportDisconnected', id)
+					},
+					setInfo: (info) => {
+						state.info = info
+						if (running && this.#running.get(id) === running) this.#emitState(id)
+					},
+					setSections: (sections) => {
+						state.sections = sections
+						if (running && this.#running.get(id) === running) this.#emitState(id)
+					},
+				},
+				resolvedConfig
+			)
+			running = { transport, state }
+		} catch (e) {
+			logger.error(`Failed to start: ${stringifyError(e)}`)
+			this.#setFailed(id, stringifyError(e))
+			return
+		}
+
+		this.#running.set(id, running)
+
+		this.#emitState(id)
+		if (state.status === 'connected') this.events.emit('transportConnected', id)
+	}
+
+	#setFailed(id: string, message: string): void {
+		this.#failed.set(id, { status: 'error', message, info: [], sections: [] })
+		this.#emitState(id)
+	}
+
+	/**
+	 * Replace the running instance with one for the current config, as transports don't handle reconfiguration. The
+	 * config is read once the old instance has stopped, as another change may have been made while waiting
+	 */
+	async #restart(id: string): Promise<void> {
+		await this.#stop(id)
+		this.#startLatest(id)
+	}
+
+	/** Start or stop the transport for its current config, which may have changed while waiting for a stop */
+	#startLatest(id: string): void {
+		const latest = this.#configs.get(id)
+		if (!latest) return
+		// Built-in transports are configured before Link starts, and all wait for it, eg while it regenerates its id
+		if (this.#started) this.#startStop(latest)
+		else this.#emitState(id)
+	}
+
+	/** Stop the running instance, or wait for the one already being stopped */
+	async #stop(id: string): Promise<void> {
+		this.#failed.delete(id)
+		const running = this.#running.get(id)
+		if (!running) {
+			await this.#stopping.get(id)
+			return
+		}
+
+		const stopping = this.#destroy(id, running)
+		this.#stopping.set(id, stopping)
+		try {
+			await stopping
+		} finally {
+			if (this.#stopping.get(id) === stopping) this.#stopping.delete(id)
+		}
+	}
+
+	async #destroy(id: string, running: RunningTransport): Promise<void> {
+		// Say goodbye, so that peers know we have gone rather than waiting for us to time out
+		this.announceOn(id, null)
+
+		this.#running.delete(id)
+		const wasConnected = running.state.status === 'connected'
+
+		try {
+			await running.transport.destroy()
+		} catch (e) {
+			this.#logger.warn(`Error stopping transport ${id}: ${stringifyError(e)}`)
+		}
+
+		this.#emitState(id)
+		if (wasConnected) this.events.emit('transportDisconnected', id)
+	}
+
+	#callTransport(id: string, fn: () => void): void {
+		try {
+			fn()
+		} catch (e) {
+			this.#logger.warn(`Transport ${id} failed: ${stringifyError(e)}`)
+		}
+	}
+}

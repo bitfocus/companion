@@ -29,6 +29,7 @@ import { Route as AppCloudRouteImport } from './routes/_app/cloud.tsx'
 import { Route as AppConnectionsRouteImport } from './routes/_app/connections.tsx'
 import { Route as AppImageLibraryRouteImport } from './routes/_app/image-library.tsx'
 import { Route as AppImportExportRouteImport } from './routes/_app/import-export.tsx'
+import { Route as AppLinkRouteImport } from './routes/_app/link.tsx'
 import { Route as AppLogRouteImport } from './routes/_app/log.tsx'
 import { Route as AppModulesRouteImport } from './routes/_app/modules.tsx'
 import { Route as AppSurfacesRouteImport } from './routes/_app/surfaces.tsx'
@@ -40,6 +41,10 @@ import { Route as AppConnectionsConnectionIdRouteImport } from './routes/_app/co
 import { Route as AppConnectionsAddRouteImport } from './routes/_app/connections/add.tsx'
 import { Route as AppImageLibraryIndexRouteImport } from './routes/_app/image-library/index.tsx'
 import { Route as AppImageLibraryImageNameRouteImport } from './routes/_app/image-library/$imageName.tsx'
+import { Route as AppLinkIndexRouteImport } from './routes/_app/link/index.tsx'
+import { Route as AppLinkPeerIdRouteImport } from './routes/_app/link/$peerId.tsx'
+import { Route as AppLinkSelfRouteImport } from './routes/_app/link/self.tsx'
+import { Route as AppLinkTransportsRouteImport } from './routes/_app/link_/transports.tsx'
 import { Route as AppModulesIndexRouteImport } from './routes/_app/modules/index.tsx'
 import { Route as AppSettingsIndexRouteImport } from './routes/_app/settings/index.tsx'
 import { Route as AppSettingsAdvancedRouteImport } from './routes/_app/settings/advanced.tsx'
@@ -65,6 +70,9 @@ import { Route as StandaloneConnectionDebugDotconnectionIdRouteImport } from './
 import { Route as StandaloneEmulatorIndexRouteImport } from './routes/_standalone/emulator/index.tsx'
 import { Route as AppConnectionsConnectionIdDotdiagnosticsRouteImport } from './routes/_app/connections/$connectionId.diagnostics.tsx'
 import { Route as AppConnectionsConnectionIdDotdocsRouteImport } from './routes/_app/connections/$connectionId.docs.tsx'
+import { Route as AppLinkTransportsIndexRouteImport } from './routes/_app/link_/transports/index.tsx'
+import { Route as AppLinkTransportsTransportIdRouteImport } from './routes/_app/link_/transports/$transportId.tsx'
+import { Route as AppLinkTransportsAddRouteImport } from './routes/_app/link_/transports/add.tsx'
 import { Route as AppModulesModuleTypeDotmoduleIdRouteImport } from './routes/_app/modules/$moduleType.$moduleId.tsx'
 import { Route as AppSettingsAdvancedIndexRouteImport } from './routes/_app/settings/advanced/index.tsx'
 import { Route as AppSettingsAdvancedItemIdRouteImport } from './routes/_app/settings/advanced/$itemId.tsx'
@@ -185,6 +193,11 @@ const AppImportExportRoute = AppImportExportRouteImport.update({
   path: '/import-export',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLinkRoute = AppLinkRouteImport.update({
+  id: '/link',
+  path: '/link',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppLogRoute = AppLogRouteImport.update({
   id: '/log',
   path: '/log',
@@ -249,6 +262,26 @@ const AppImageLibraryImageNameRoute =
     path: '/$imageName',
     getParentRoute: () => AppImageLibraryRoute,
   } as any)
+const AppLinkIndexRoute = AppLinkIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppLinkRoute,
+} as any)
+const AppLinkPeerIdRoute = AppLinkPeerIdRouteImport.update({
+  id: '/$peerId',
+  path: '/$peerId',
+  getParentRoute: () => AppLinkRoute,
+} as any)
+const AppLinkSelfRoute = AppLinkSelfRouteImport.update({
+  id: '/self',
+  path: '/self',
+  getParentRoute: () => AppLinkRoute,
+} as any)
+const AppLinkTransportsRoute = AppLinkTransportsRouteImport.update({
+  id: '/link_/transports',
+  path: '/link/transports',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppModulesIndexRoute = AppModulesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -387,6 +420,22 @@ const AppConnectionsConnectionIdDotdocsRoute =
     path: '/docs',
     getParentRoute: () => AppConnectionsConnectionIdRoute,
   } as any)
+const AppLinkTransportsIndexRoute = AppLinkTransportsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppLinkTransportsRoute,
+} as any)
+const AppLinkTransportsTransportIdRoute =
+  AppLinkTransportsTransportIdRouteImport.update({
+    id: '/$transportId',
+    path: '/$transportId',
+    getParentRoute: () => AppLinkTransportsRoute,
+  } as any)
+const AppLinkTransportsAddRoute = AppLinkTransportsAddRouteImport.update({
+  id: '/add',
+  path: '/add',
+  getParentRoute: () => AppLinkTransportsRoute,
+} as any)
 const AppModulesModuleTypeDotmoduleIdRoute =
   AppModulesModuleTypeDotmoduleIdRouteImport.update({
     id: '/$moduleType/$moduleId',
@@ -540,6 +589,7 @@ export interface FileRoutesByFullPath {
   '/connections': typeof AppConnectionsRouteWithChildren
   '/image-library': typeof AppImageLibraryRouteWithChildren
   '/import-export': typeof AppImportExportRoute
+  '/link': typeof AppLinkRouteWithChildren
   '/log': typeof AppLogRoute
   '/modules': typeof AppModulesRouteWithChildren
   '/surfaces': typeof AppSurfacesRouteWithChildren
@@ -550,6 +600,9 @@ export interface FileRoutesByFullPath {
   '/connections/$connectionId': typeof AppConnectionsConnectionIdRouteWithChildren
   '/connections/add': typeof AppConnectionsAddRoute
   '/image-library/$imageName': typeof AppImageLibraryImageNameRoute
+  '/link/$peerId': typeof AppLinkPeerIdRoute
+  '/link/self': typeof AppLinkSelfRoute
+  '/link/transports': typeof AppLinkTransportsRouteWithChildren
   '/settings/advanced': typeof AppSettingsAdvancedRouteWithChildren
   '/settings/backups': typeof AppSettingsBackupsRouteWithChildren
   '/settings/buttons': typeof AppSettingsButtonsRoute
@@ -571,6 +624,7 @@ export interface FileRoutesByFullPath {
   '/emulator/$emulatorId': typeof StandaloneEmulatorEmulatorIdDotlazyRoute
   '/connections/': typeof AppConnectionsIndexRoute
   '/image-library/': typeof AppImageLibraryIndexRoute
+  '/link/': typeof AppLinkIndexRoute
   '/modules/': typeof AppModulesIndexRoute
   '/settings/': typeof AppSettingsIndexRoute
   '/surfaces/': typeof AppSurfacesIndexRoute
@@ -578,6 +632,8 @@ export interface FileRoutesByFullPath {
   '/emulator/': typeof StandaloneEmulatorIndexRoute
   '/connections/$connectionId/diagnostics': typeof AppConnectionsConnectionIdDotdiagnosticsRoute
   '/connections/$connectionId/docs': typeof AppConnectionsConnectionIdDotdocsRoute
+  '/link/transports/$transportId': typeof AppLinkTransportsTransportIdRoute
+  '/link/transports/add': typeof AppLinkTransportsAddRoute
   '/modules/$moduleType/$moduleId': typeof AppModulesModuleTypeDotmoduleIdRouteWithChildren
   '/settings/advanced/$itemId': typeof AppSettingsAdvancedItemIdRoute
   '/settings/backups/$ruleId': typeof AppSettingsBackupsRuleIdRoute
@@ -590,6 +646,7 @@ export interface FileRoutesByFullPath {
   '/variables/custom/$name': typeof AppVariablesCustomNameRoute
   '/variables/expression/$controlId': typeof AppVariablesExpressionControlIdRoute
   '/surfaces/debug/$instanceId': typeof StandaloneSurfacesDotdebugDotinstanceIdRoute
+  '/link/transports/': typeof AppLinkTransportsIndexRoute
   '/settings/advanced/': typeof AppSettingsAdvancedIndexRoute
   '/settings/backups/': typeof AppSettingsBackupsIndexRoute
   '/settings/protocols/': typeof AppSettingsProtocolsIndexRoute
@@ -624,6 +681,8 @@ export interface FileRoutesByTo {
   '/connections/$connectionId': typeof AppConnectionsConnectionIdRouteWithChildren
   '/connections/add': typeof AppConnectionsAddRoute
   '/image-library/$imageName': typeof AppImageLibraryImageNameRoute
+  '/link/$peerId': typeof AppLinkPeerIdRoute
+  '/link/self': typeof AppLinkSelfRoute
   '/settings/buttons': typeof AppSettingsButtonsRoute
   '/settings/general': typeof AppSettingsGeneralRoute
   '/settings/surfaces': typeof AppSettingsSurfacesRoute
@@ -637,6 +696,7 @@ export interface FileRoutesByTo {
   '/emulator/$emulatorId': typeof StandaloneEmulatorEmulatorIdDotlazyRoute
   '/connections': typeof AppConnectionsIndexRoute
   '/image-library': typeof AppImageLibraryIndexRoute
+  '/link': typeof AppLinkIndexRoute
   '/modules': typeof AppModulesIndexRoute
   '/settings': typeof AppSettingsIndexRoute
   '/surfaces': typeof AppSurfacesIndexRoute
@@ -644,6 +704,8 @@ export interface FileRoutesByTo {
   '/emulator': typeof StandaloneEmulatorIndexRoute
   '/connections/$connectionId/diagnostics': typeof AppConnectionsConnectionIdDotdiagnosticsRoute
   '/connections/$connectionId/docs': typeof AppConnectionsConnectionIdDotdocsRoute
+  '/link/transports/$transportId': typeof AppLinkTransportsTransportIdRoute
+  '/link/transports/add': typeof AppLinkTransportsAddRoute
   '/modules/$moduleType/$moduleId': typeof AppModulesModuleTypeDotmoduleIdRouteWithChildren
   '/settings/advanced/$itemId': typeof AppSettingsAdvancedItemIdRoute
   '/settings/backups/$ruleId': typeof AppSettingsBackupsRuleIdRoute
@@ -656,6 +718,7 @@ export interface FileRoutesByTo {
   '/variables/custom/$name': typeof AppVariablesCustomNameRoute
   '/variables/expression/$controlId': typeof AppVariablesExpressionControlIdRoute
   '/surfaces/debug/$instanceId': typeof StandaloneSurfacesDotdebugDotinstanceIdRoute
+  '/link/transports': typeof AppLinkTransportsIndexRoute
   '/settings/advanced': typeof AppSettingsAdvancedIndexRoute
   '/settings/backups': typeof AppSettingsBackupsIndexRoute
   '/settings/protocols': typeof AppSettingsProtocolsIndexRoute
@@ -687,6 +750,7 @@ export interface FileRoutesById {
   '/_app/connections': typeof AppConnectionsRouteWithChildren
   '/_app/image-library': typeof AppImageLibraryRouteWithChildren
   '/_app/import-export': typeof AppImportExportRoute
+  '/_app/link': typeof AppLinkRouteWithChildren
   '/_app/log': typeof AppLogRoute
   '/_app/modules': typeof AppModulesRouteWithChildren
   '/_app/surfaces': typeof AppSurfacesRouteWithChildren
@@ -698,6 +762,9 @@ export interface FileRoutesById {
   '/_app/connections/$connectionId': typeof AppConnectionsConnectionIdRouteWithChildren
   '/_app/connections/add': typeof AppConnectionsAddRoute
   '/_app/image-library/$imageName': typeof AppImageLibraryImageNameRoute
+  '/_app/link/$peerId': typeof AppLinkPeerIdRoute
+  '/_app/link/self': typeof AppLinkSelfRoute
+  '/_app/link_/transports': typeof AppLinkTransportsRouteWithChildren
   '/_app/settings/advanced': typeof AppSettingsAdvancedRouteWithChildren
   '/_app/settings/backups': typeof AppSettingsBackupsRouteWithChildren
   '/_app/settings/buttons': typeof AppSettingsButtonsRoute
@@ -719,6 +786,7 @@ export interface FileRoutesById {
   '/_standalone/emulator/$emulatorId': typeof StandaloneEmulatorEmulatorIdDotlazyRoute
   '/_app/connections/': typeof AppConnectionsIndexRoute
   '/_app/image-library/': typeof AppImageLibraryIndexRoute
+  '/_app/link/': typeof AppLinkIndexRoute
   '/_app/modules/': typeof AppModulesIndexRoute
   '/_app/settings/': typeof AppSettingsIndexRoute
   '/_app/surfaces/': typeof AppSurfacesIndexRoute
@@ -726,6 +794,8 @@ export interface FileRoutesById {
   '/_standalone/emulator/': typeof StandaloneEmulatorIndexRoute
   '/_app/connections/$connectionId/diagnostics': typeof AppConnectionsConnectionIdDotdiagnosticsRoute
   '/_app/connections/$connectionId/docs': typeof AppConnectionsConnectionIdDotdocsRoute
+  '/_app/link_/transports/$transportId': typeof AppLinkTransportsTransportIdRoute
+  '/_app/link_/transports/add': typeof AppLinkTransportsAddRoute
   '/_app/modules/$moduleType/$moduleId': typeof AppModulesModuleTypeDotmoduleIdRouteWithChildren
   '/_app/settings/advanced/$itemId': typeof AppSettingsAdvancedItemIdRoute
   '/_app/settings/backups/$ruleId': typeof AppSettingsBackupsRuleIdRoute
@@ -738,6 +808,7 @@ export interface FileRoutesById {
   '/_app/variables/custom/$name': typeof AppVariablesCustomNameRoute
   '/_app/variables/expression/$controlId': typeof AppVariablesExpressionControlIdRoute
   '/_standalone/surfaces/debug/$instanceId': typeof StandaloneSurfacesDotdebugDotinstanceIdRoute
+  '/_app/link_/transports/': typeof AppLinkTransportsIndexRoute
   '/_app/settings/advanced/': typeof AppSettingsAdvancedIndexRoute
   '/_app/settings/backups/': typeof AppSettingsBackupsIndexRoute
   '/_app/settings/protocols/': typeof AppSettingsProtocolsIndexRoute
@@ -770,6 +841,7 @@ export interface FileRouteTypes {
     | '/connections'
     | '/image-library'
     | '/import-export'
+    | '/link'
     | '/log'
     | '/modules'
     | '/surfaces'
@@ -780,6 +852,9 @@ export interface FileRouteTypes {
     | '/connections/$connectionId'
     | '/connections/add'
     | '/image-library/$imageName'
+    | '/link/$peerId'
+    | '/link/self'
+    | '/link/transports'
     | '/settings/advanced'
     | '/settings/backups'
     | '/settings/buttons'
@@ -801,6 +876,7 @@ export interface FileRouteTypes {
     | '/emulator/$emulatorId'
     | '/connections/'
     | '/image-library/'
+    | '/link/'
     | '/modules/'
     | '/settings/'
     | '/surfaces/'
@@ -808,6 +884,8 @@ export interface FileRouteTypes {
     | '/emulator/'
     | '/connections/$connectionId/diagnostics'
     | '/connections/$connectionId/docs'
+    | '/link/transports/$transportId'
+    | '/link/transports/add'
     | '/modules/$moduleType/$moduleId'
     | '/settings/advanced/$itemId'
     | '/settings/backups/$ruleId'
@@ -820,6 +898,7 @@ export interface FileRouteTypes {
     | '/variables/custom/$name'
     | '/variables/expression/$controlId'
     | '/surfaces/debug/$instanceId'
+    | '/link/transports/'
     | '/settings/advanced/'
     | '/settings/backups/'
     | '/settings/protocols/'
@@ -854,6 +933,8 @@ export interface FileRouteTypes {
     | '/connections/$connectionId'
     | '/connections/add'
     | '/image-library/$imageName'
+    | '/link/$peerId'
+    | '/link/self'
     | '/settings/buttons'
     | '/settings/general'
     | '/settings/surfaces'
@@ -867,6 +948,7 @@ export interface FileRouteTypes {
     | '/emulator/$emulatorId'
     | '/connections'
     | '/image-library'
+    | '/link'
     | '/modules'
     | '/settings'
     | '/surfaces'
@@ -874,6 +956,8 @@ export interface FileRouteTypes {
     | '/emulator'
     | '/connections/$connectionId/diagnostics'
     | '/connections/$connectionId/docs'
+    | '/link/transports/$transportId'
+    | '/link/transports/add'
     | '/modules/$moduleType/$moduleId'
     | '/settings/advanced/$itemId'
     | '/settings/backups/$ruleId'
@@ -886,6 +970,7 @@ export interface FileRouteTypes {
     | '/variables/custom/$name'
     | '/variables/expression/$controlId'
     | '/surfaces/debug/$instanceId'
+    | '/link/transports'
     | '/settings/advanced'
     | '/settings/backups'
     | '/settings/protocols'
@@ -916,6 +1001,7 @@ export interface FileRouteTypes {
     | '/_app/connections'
     | '/_app/image-library'
     | '/_app/import-export'
+    | '/_app/link'
     | '/_app/log'
     | '/_app/modules'
     | '/_app/surfaces'
@@ -927,6 +1013,9 @@ export interface FileRouteTypes {
     | '/_app/connections/$connectionId'
     | '/_app/connections/add'
     | '/_app/image-library/$imageName'
+    | '/_app/link/$peerId'
+    | '/_app/link/self'
+    | '/_app/link_/transports'
     | '/_app/settings/advanced'
     | '/_app/settings/backups'
     | '/_app/settings/buttons'
@@ -948,6 +1037,7 @@ export interface FileRouteTypes {
     | '/_standalone/emulator/$emulatorId'
     | '/_app/connections/'
     | '/_app/image-library/'
+    | '/_app/link/'
     | '/_app/modules/'
     | '/_app/settings/'
     | '/_app/surfaces/'
@@ -955,6 +1045,8 @@ export interface FileRouteTypes {
     | '/_standalone/emulator/'
     | '/_app/connections/$connectionId/diagnostics'
     | '/_app/connections/$connectionId/docs'
+    | '/_app/link_/transports/$transportId'
+    | '/_app/link_/transports/add'
     | '/_app/modules/$moduleType/$moduleId'
     | '/_app/settings/advanced/$itemId'
     | '/_app/settings/backups/$ruleId'
@@ -967,6 +1059,7 @@ export interface FileRouteTypes {
     | '/_app/variables/custom/$name'
     | '/_app/variables/expression/$controlId'
     | '/_standalone/surfaces/debug/$instanceId'
+    | '/_app/link_/transports/'
     | '/_app/settings/advanced/'
     | '/_app/settings/backups/'
     | '/_app/settings/protocols/'
@@ -1125,6 +1218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppImportExportRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/link': {
+      id: '/_app/link'
+      path: '/link'
+      fullPath: '/link'
+      preLoaderRoute: typeof AppLinkRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/log': {
       id: '/_app/log'
       path: '/log'
@@ -1208,6 +1308,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/image-library/$imageName'
       preLoaderRoute: typeof AppImageLibraryImageNameRouteImport
       parentRoute: typeof AppImageLibraryRoute
+    }
+    '/_app/link/': {
+      id: '/_app/link/'
+      path: '/'
+      fullPath: '/link/'
+      preLoaderRoute: typeof AppLinkIndexRouteImport
+      parentRoute: typeof AppLinkRoute
+    }
+    '/_app/link/$peerId': {
+      id: '/_app/link/$peerId'
+      path: '/$peerId'
+      fullPath: '/link/$peerId'
+      preLoaderRoute: typeof AppLinkPeerIdRouteImport
+      parentRoute: typeof AppLinkRoute
+    }
+    '/_app/link/self': {
+      id: '/_app/link/self'
+      path: '/self'
+      fullPath: '/link/self'
+      preLoaderRoute: typeof AppLinkSelfRouteImport
+      parentRoute: typeof AppLinkRoute
+    }
+    '/_app/link_/transports': {
+      id: '/_app/link_/transports'
+      path: '/link/transports'
+      fullPath: '/link/transports'
+      preLoaderRoute: typeof AppLinkTransportsRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/modules/': {
       id: '/_app/modules/'
@@ -1390,6 +1518,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/connections/$connectionId/docs'
       preLoaderRoute: typeof AppConnectionsConnectionIdDotdocsRouteImport
       parentRoute: typeof AppConnectionsConnectionIdRoute
+    }
+    '/_app/link_/transports/': {
+      id: '/_app/link_/transports/'
+      path: '/'
+      fullPath: '/link/transports/'
+      preLoaderRoute: typeof AppLinkTransportsIndexRouteImport
+      parentRoute: typeof AppLinkTransportsRoute
+    }
+    '/_app/link_/transports/$transportId': {
+      id: '/_app/link_/transports/$transportId'
+      path: '/$transportId'
+      fullPath: '/link/transports/$transportId'
+      preLoaderRoute: typeof AppLinkTransportsTransportIdRouteImport
+      parentRoute: typeof AppLinkTransportsRoute
+    }
+    '/_app/link_/transports/add': {
+      id: '/_app/link_/transports/add'
+      path: '/add'
+      fullPath: '/link/transports/add'
+      preLoaderRoute: typeof AppLinkTransportsAddRouteImport
+      parentRoute: typeof AppLinkTransportsRoute
     }
     '/_app/modules/$moduleType/$moduleId': {
       id: '/_app/modules/$moduleType/$moduleId'
@@ -1615,6 +1764,21 @@ const AppImageLibraryRouteWithChildren = AppImageLibraryRoute._addFileChildren(
   AppImageLibraryRouteChildren,
 )
 
+interface AppLinkRouteChildren {
+  AppLinkPeerIdRoute: typeof AppLinkPeerIdRoute
+  AppLinkSelfRoute: typeof AppLinkSelfRoute
+  AppLinkIndexRoute: typeof AppLinkIndexRoute
+}
+
+const AppLinkRouteChildren: AppLinkRouteChildren = {
+  AppLinkPeerIdRoute: AppLinkPeerIdRoute,
+  AppLinkSelfRoute: AppLinkSelfRoute,
+  AppLinkIndexRoute: AppLinkIndexRoute,
+}
+
+const AppLinkRouteWithChildren =
+  AppLinkRoute._addFileChildren(AppLinkRouteChildren)
+
 interface AppModulesModuleTypeDotmoduleIdDotdocsRouteChildren {
   AppModulesModuleTypeDotmoduleIdDotdocsDotdocsVersionRoute: typeof AppModulesModuleTypeDotmoduleIdDotdocsDotdocsVersionRoute
 }
@@ -1706,6 +1870,21 @@ const AppTriggersRouteChildren: AppTriggersRouteChildren = {
 const AppTriggersRouteWithChildren = AppTriggersRoute._addFileChildren(
   AppTriggersRouteChildren,
 )
+
+interface AppLinkTransportsRouteChildren {
+  AppLinkTransportsTransportIdRoute: typeof AppLinkTransportsTransportIdRoute
+  AppLinkTransportsAddRoute: typeof AppLinkTransportsAddRoute
+  AppLinkTransportsIndexRoute: typeof AppLinkTransportsIndexRoute
+}
+
+const AppLinkTransportsRouteChildren: AppLinkTransportsRouteChildren = {
+  AppLinkTransportsTransportIdRoute: AppLinkTransportsTransportIdRoute,
+  AppLinkTransportsAddRoute: AppLinkTransportsAddRoute,
+  AppLinkTransportsIndexRoute: AppLinkTransportsIndexRoute,
+}
+
+const AppLinkTransportsRouteWithChildren =
+  AppLinkTransportsRoute._addFileChildren(AppLinkTransportsRouteChildren)
 
 interface AppSettingsAdvancedRouteChildren {
   AppSettingsAdvancedItemIdRoute: typeof AppSettingsAdvancedItemIdRoute
@@ -1834,11 +2013,13 @@ interface AppRouteChildren {
   AppConnectionsRoute: typeof AppConnectionsRouteWithChildren
   AppImageLibraryRoute: typeof AppImageLibraryRouteWithChildren
   AppImportExportRoute: typeof AppImportExportRoute
+  AppLinkRoute: typeof AppLinkRouteWithChildren
   AppLogRoute: typeof AppLogRoute
   AppModulesRoute: typeof AppModulesRouteWithChildren
   AppSurfacesRoute: typeof AppSurfacesRouteWithChildren
   AppTriggersRoute: typeof AppTriggersRouteWithChildren
   AppIndexRoute: typeof AppIndexRoute
+  AppLinkTransportsRoute: typeof AppLinkTransportsRouteWithChildren
   AppSettingsAdvancedRoute: typeof AppSettingsAdvancedRouteWithChildren
   AppSettingsBackupsRoute: typeof AppSettingsBackupsRouteWithChildren
   AppSettingsButtonsRoute: typeof AppSettingsButtonsRoute
@@ -1862,11 +2043,13 @@ const AppRouteChildren: AppRouteChildren = {
   AppConnectionsRoute: AppConnectionsRouteWithChildren,
   AppImageLibraryRoute: AppImageLibraryRouteWithChildren,
   AppImportExportRoute: AppImportExportRoute,
+  AppLinkRoute: AppLinkRouteWithChildren,
   AppLogRoute: AppLogRoute,
   AppModulesRoute: AppModulesRouteWithChildren,
   AppSurfacesRoute: AppSurfacesRouteWithChildren,
   AppTriggersRoute: AppTriggersRouteWithChildren,
   AppIndexRoute: AppIndexRoute,
+  AppLinkTransportsRoute: AppLinkTransportsRouteWithChildren,
   AppSettingsAdvancedRoute: AppSettingsAdvancedRouteWithChildren,
   AppSettingsBackupsRoute: AppSettingsBackupsRouteWithChildren,
   AppSettingsButtonsRoute: AppSettingsButtonsRoute,

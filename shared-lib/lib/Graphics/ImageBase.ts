@@ -196,6 +196,46 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 	}
 
 	/**
+	 * Perform some drawing of an image fitted into a box, scaled at the best quality for how it is drawn:
+	 * - each of its pixels exactly onto a whole block of canvas pixels, eg its own size into an oversampled canvas, is
+	 *   copied without smoothing, so that resolving the oversampling gives back exactly its pixels
+	 * - much smaller is mipmapped, as the default and cubic sampling both alias beyond half its size
+	 * @param image - the size of the image, in its pixels
+	 * @param box - the box it is fitted into, here
+	 */
+	async usingScalingQualityFor(
+		image: { width: number; height: number },
+		box: { x: number; y: number; width: number; height: number },
+		fcn: () => Promise<void>
+	): Promise<void> {
+		// In pixels of the canvas, which the transform includes any oversampling and scaling of
+		const transform = this.context2d.getTransform()
+		const pixelsPerUnit = Math.hypot(transform.a, transform.b)
+		const reduction = Math.max(image.width / (box.width * pixelsPerUnit), image.height / (box.height * pixelsPerUnit))
+
+		if (isExactBlocks(transform, image, box)) {
+			const oldEnabled = this.context2d.imageSmoothingEnabled
+			this.context2d.imageSmoothingEnabled = false
+			try {
+				await fcn()
+			} finally {
+				this.context2d.imageSmoothingEnabled = oldEnabled
+			}
+			return
+		}
+		if (!(reduction > 1)) return fcn()
+
+		const oldQuality = this.context2d.imageSmoothingQuality
+		this.context2d.imageSmoothingQuality = reduction > 2 ? 'medium' : 'high'
+
+		try {
+			await fcn()
+		} finally {
+			this.context2d.imageSmoothingQuality = oldQuality
+		}
+	}
+
+	/**
 	 * Perform some drawing with a given rotation about the midpoint of the drawBounds.
 	 */
 	async usingRotation(drawBounds: DrawBounds, rotation: number, fcn: () => Promise<void>): Promise<void> {
@@ -1321,4 +1361,27 @@ export function trimBase64ImageToValid(base64Image: string): string {
 	// A final base64 group is 4 chars, so keep the data plus the `=`(s) that complete that group.
 	const remainder = (paddingIndex - bodyStart) % 4
 	return base64Image.slice(0, paddingIndex + ((4 - remainder) % 4))
+}
+
+/**
+ * Whether an image fitted into a box covers whole blocks of canvas pixels, one block per pixel of it: the same whole
+ * number of canvas pixels for each of its pixels on both axes, starting on a canvas pixel, with no rotation or skew
+ */
+function isExactBlocks(
+	transform: ReturnType<CompanionImageContext2D['getTransform']>,
+	image: { width: number; height: number },
+	box: { x: number; y: number; width: number; height: number }
+): boolean {
+	if (transform.b !== 0 || transform.c !== 0 || image.width <= 0 || image.height <= 0) return false
+
+	const isWhole = (value: number) => Math.abs(value - Math.round(value)) < 1e-6
+	const factorX = (box.width * transform.a) / image.width
+	const factorY = (box.height * transform.d) / image.height
+	return (
+		factorX >= 1 &&
+		isWhole(factorX) &&
+		Math.abs(factorX - factorY) < 1e-6 &&
+		isWhole(transform.e + box.x * transform.a) &&
+		isWhole(transform.f + box.y * transform.d)
+	)
 }
