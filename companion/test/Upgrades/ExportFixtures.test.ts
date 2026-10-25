@@ -49,6 +49,11 @@ const droppedPaths = [
 	'orig_version',
 	// The page of a surface from before groups, which the db upgrades already moved into its group config
 	'surfaces.*.groupConfig.page',
+	// Feedbacks converted from old buttons kept their style, which nothing reads
+	...['pages.*.controls', 'page.controls'].flatMap((controls) => [
+		`${controls}.*.*.feedbacks.*.style`,
+		`${controls}.*.*.localVariables.*.style`,
+	]),
 ]
 
 describe('old exports', () => {
@@ -59,8 +64,8 @@ describe('old exports', () => {
 	// Compared with the same output of the legacy steps, as they generate new ids
 	test.each(fixtures)('parsing $fixture loses nothing', ({ legacy }) => {
 		const parsed = SomeExportSchema.parse(structuredClone(legacy))
-
-		expect(parsed).toMatchObject(withoutPaths(legacy, droppedPaths))
+		// As JSON, which can't hold an undefined property
+		expect(parsed).toMatchObject(JSON.parse(JSON.stringify(withoutPaths(legacy, droppedPaths))))
 	})
 
 	test.each(fixtures)('the instances of $fixture stay as minimal or full as they were', ({ legacy }) => {

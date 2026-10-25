@@ -1,11 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
-import type {
-	ExportInstances,
-	ExportPageContent,
-	ExportTriggerContent,
-} from '@companion-app/shared/Model/Export/Latest.js'
+import type { ExportInstances, ExportPageContent } from '@companion-app/shared/Model/Export/Latest.js'
 import type { ClientImportOrResetSelection, ImportOrResetType } from '@companion-app/shared/Model/ImportExport.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
@@ -183,7 +179,7 @@ describe('importSinglePage', () => {
 
 // ── importTriggers ──────────────────────────────────────────────────────────
 
-const oneTrigger: Record<string, ExportTriggerContent> = {
+const oneTrigger: Record<string, any> = {
 	t1: { type: 'trigger', options: { name: 'Trigger One' } },
 }
 

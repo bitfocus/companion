@@ -1,6 +1,8 @@
 import z from 'zod'
+import { SomeButtonModelSchema } from '../ButtonModel.js'
 import { createCollectionSchema, EmptyCollectionDataSchema, EnabledCollectionDataSchema } from '../Collections.js'
 import { CustomVariableDefinitionSchema } from '../CustomVariableModel.js'
+import { SomeEntityModelSchema } from '../EntityModel.js'
 import { ExpressionVariableModelSchema } from '../ExpressionVariableModel.js'
 import { ImageLibraryInfoSchema } from '../ImageLibraryModel.js'
 import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '../Instance.js'
@@ -10,7 +12,7 @@ import {
 	SurfaceGroupConfigSchema,
 	SurfacePanelConfigSchema,
 } from '../Surfaces.js'
-import { undescribed } from './Undescribed.js'
+import { TriggerModelSchema } from '../TriggerModel.js'
 import { withoutDefaults } from './WithoutDefaults.js'
 
 // Version 17 of the export format. The first version described by a schema; older exports are upgraded to it by the
@@ -21,9 +23,10 @@ import { withoutDefaults } from './WithoutDefaults.js'
 
 export const EXPORT_V17 = 17
 
-// TODO - describe each remaining section
-const ExportV17ControlSchema = z.record(z.string(), undescribed())
-const ExportV17TriggerContentSchema = z.record(z.string(), undescribed())
+/** A control on a page. One that is invalid is repaired by the import, or skipped */
+const ExportV17ControlSchema = SomeButtonModelSchema
+/** A trigger. One that is invalid is repaired by the import, or skipped */
+const ExportV17TriggerContentSchema = TriggerModelSchema
 /**
  * A connection or surface instance. A page or trigger export has only the minimal fields, without the config, which
  * the import tells apart by whether `config` is present, so the full fields have no defaults
@@ -86,7 +89,7 @@ export const ExportV17PageContentSchema = z.object({
 	/** The controls of the page, by row then column */
 	controls: z.record(z.number(), z.record(z.number(), ExportV17ControlSchema)).default(() => ({})),
 	/** The page's local variables, the entities of its `page:<id>` control */
-	pageVariables: z.array(undescribed()).optional(),
+	pageVariables: z.array(SomeEntityModelSchema).optional(),
 	/** Older exports don't have one, so the smallest grid that fits the controls is used */
 	gridSize: ExportV17GridSizeSchema.optional(),
 })

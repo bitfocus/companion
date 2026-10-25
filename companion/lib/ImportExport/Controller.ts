@@ -14,7 +14,6 @@ import type express from 'express'
 import { nanoid } from 'nanoid'
 import workerPool from 'workerpool'
 import z from 'zod'
-import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import {
 	EXPORT_VERSION,
 	type ExportFull,
@@ -427,7 +426,7 @@ export class ImportExportController {
 					const controlObj = importPage.controls?.[input.location.row]?.[input.location.column]
 					if (!controlObj) return null
 
-					const controlObjLayered = controlObj as SomeButtonModel
+					const controlObjLayered = controlObj
 
 					let drawType: RendererButtonStyle['drawType']
 					let rawElements: SomeButtonGraphicsElement[]

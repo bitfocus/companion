@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'vitest'
+import { LayeredButtonModelSchema } from '@companion-app/shared/Model/ButtonModel.js'
+import { INVALID_ENTITY_DEFINITION_ID } from '@companion-app/shared/Model/EntityModel.js'
 import { EXPORT_VERSION } from '@companion-app/shared/Model/Export/Latest.js'
 import { UserConfigModelSchema } from '@companion-app/shared/Model/UserConfigModel.js'
 import { LEGACY_VERSION } from '../../lib/Upgrades/LegacyUpgrades.js'
@@ -8,7 +10,7 @@ import { upgradeImport } from '../../lib/Upgrades/UpgradeExport.js'
 const userConfig = UserConfigModelSchema.parse({})
 const gridSize = { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 }
 
-const layeredButton = {
+const layeredButton = LayeredButtonModelSchema.parse({
 	type: 'button-layered',
 	options: { stepProgression: 'auto', rotaryActions: false, canModifyStyleInApis: false },
 	feedbacks: [],
@@ -28,7 +30,7 @@ const layeredButton = {
 			},
 		],
 	},
-}
+})
 
 describe('upgradeImport', () => {
 	test('the db and export versions continue separately from the legacy steps', () => {
@@ -194,6 +196,87 @@ describe('upgradeImport', () => {
 			{ ...image, info: expect.objectContaining({ name: 'logo', sortOrder: 0 }) },
 			undefined,
 		])
+	})
+
+	describe('repairs', () => {
+		const feedback = { type: 'feedback', id: 'f1', definitionId: 'state', connectionId: 'conn1', options: {} }
+		const action = { type: 'action', id: 'a1', definitionId: 'send', connectionId: 'conn1', options: {} }
+		const placeholder = { connectionId: 'internal', definitionId: INVALID_ENTITY_DEFINITION_ID, disabled: true }
+
+		test('replaces an invalid entity of a page control, keeping the rest of the page', () => {
+			const button = { ...layeredButton, feedbacks: [feedback, { ...feedback, id: 'f2', connectionId: 5 }] }
+			const result: any = upgradeImport(
+				{
+					type: 'page',
+					version: EXPORT_VERSION,
+					page: { name: 'P', controls: { 0: { 0: button, 1: { type: 'pageup' } } }, gridSize },
+				},
+				userConfig
+			)
+
+			const feedbacks = result.page.controls[0][0].feedbacks
+			expect(feedbacks[0]).toMatchObject({ id: 'f1', definitionId: 'state' })
+			expect(feedbacks[1]).toMatchObject({ id: 'f2', ...placeholder })
+			expect(result.page.controls[0][1]).toEqual({ type: 'pageup' })
+		})
+
+		test('skips a control that cannot be repaired, keeping the others', () => {
+			const result: any = upgradeImport(
+				{
+					type: 'full',
+					version: EXPORT_VERSION,
+					pages: { 1: { name: 'P', controls: { 0: { 0: { type: 'sparkle' }, 1: { type: 'pagenum' } } } } },
+				},
+				userConfig
+			)
+
+			expect(result.pages[1].controls[0]).toEqual({ 1: { type: 'pagenum' } })
+		})
+
+		test('repairs or skips a trigger', () => {
+			const trigger = { type: 'trigger', options: { name: 'T' }, actions: [action] }
+			const result: any = upgradeImport(
+				{
+					type: 'trigger_list',
+					version: EXPORT_VERSION,
+					triggers: {
+						t1: { ...trigger, actions: [{ ...action, options: 'none' }] },
+						t2: { ...trigger, options: { enabled: 'sometimes' } },
+						t3: trigger,
+					},
+				},
+				userConfig
+			)
+
+			expect(result.triggers.t1.actions[0]).toMatchObject({ id: 'a1', ...placeholder })
+			expect(result.triggers.t2).toBeUndefined()
+			expect(result.triggers.t3.actions[0]).toMatchObject({ id: 'a1', definitionId: 'send' })
+		})
+
+		test('replaces an invalid entity of an expression variable, or a page variable', () => {
+			const result: any = upgradeImport(
+				{
+					type: 'full',
+					version: EXPORT_VERSION,
+					expressionVariables: { e1: { type: 'expression-variable', entity: { ...feedback, options: [] } } },
+					pages: { 1: { name: 'P', pageVariables: [feedback, { ...feedback, id: 'f2', definitionId: 3 }] } },
+				},
+				userConfig
+			)
+
+			expect(result.expressionVariables.e1.entity).toMatchObject({ id: 'f1', ...placeholder })
+			expect(result.pages[1].pageVariables[0]).toMatchObject({ id: 'f1', definitionId: 'state' })
+			expect(result.pages[1].pageVariables[1]).toMatchObject({ id: 'f2', ...placeholder })
+		})
+
+		test('still refuses an export that fails outside of a control or trigger', () => {
+			expect(() =>
+				upgradeImport(
+					{ type: 'full', version: EXPORT_VERSION, custom_variables: { v: { sortOrder: 'x' } } },
+					userConfig
+				)
+			).toThrow(/Invalid export/)
+		})
 	})
 
 	test('refuses an export that is not a valid envelope', () => {

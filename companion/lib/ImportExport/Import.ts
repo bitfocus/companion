@@ -415,7 +415,7 @@ export class ImportController {
 					} else if (control.type === 'link-button') {
 						fixedControlObj = fixupLinkButtonControl(control, referencesUpdater)
 					} else {
-						this.#logger.warn(`Unknown control type: ${control.type}`)
+						this.#logger.warn(`Unknown control type: ${(control as { type: string }).type}`)
 						continue
 					}
 

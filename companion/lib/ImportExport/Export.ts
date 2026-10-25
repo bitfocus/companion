@@ -377,7 +377,7 @@ export class ExportController {
 			notes: string | undefined
 		}
 	): ExportTriggersList {
-		const triggersExport: ExportTriggerContent = {}
+		const triggersExport: Record<string, ExportTriggerContent> = {}
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
 		const referencedVariables = new Set<string>()
@@ -601,7 +601,7 @@ export class ExportController {
 		}
 
 		if (!config || config.triggers) {
-			const triggersExport: ExportTriggerContent = {}
+			const triggersExport: Record<string, ExportTriggerContent> = {}
 			const triggerControls = this.#controlsController.getAllTriggers()
 			for (const control of triggerControls) {
 				const parsedId = ParseControlId(control.controlId)

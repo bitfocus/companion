@@ -5,7 +5,7 @@ import { Writable } from 'node:stream'
 import zlib from 'node:zlib'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import yaml from 'yaml'
-import type { ExportPageContentv6 } from '@companion-app/shared/Model/ExportModel.js'
+import type { ExportPageContent } from '@companion-app/shared/Model/Export/Latest.js'
 import {
 	ExportTooLargeError,
 	find_smallest_grid_for_page,
@@ -80,7 +80,7 @@ describe('formatAttachmentFilename', () => {
 
 describe('find_smallest_grid_for_page', () => {
 	test('empty controls returns the full 8x4 default grid', () => {
-		const page: ExportPageContentv6 = {
+		const page: ExportPageContent = {
 			name: 'test',
 			controls: {},
 			gridSize: { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 },
@@ -89,34 +89,34 @@ describe('find_smallest_grid_for_page', () => {
 	})
 
 	test('control within default bounds keeps default grid', () => {
-		const page: ExportPageContentv6 = {
+		const page: ExportPageContent = {
 			name: 'test',
-			controls: { 2: { 5: { type: 'button' } } },
+			controls: { 2: { 5: { type: 'pagenum' } } },
 			gridSize: { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 },
 		}
 		expect(find_smallest_grid_for_page(page)).toEqual({ minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 })
 	})
 
 	test('control beyond default column bound expands maxColumn', () => {
-		const page: ExportPageContentv6 = {
+		const page: ExportPageContent = {
 			name: 'test',
-			controls: { 1: { 10: { type: 'button' } } },
+			controls: { 1: { 10: { type: 'pagenum' } } },
 			gridSize: { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 },
 		}
 		expect(find_smallest_grid_for_page(page).maxColumn).toBe(10)
 	})
 
 	test('control beyond default row bound expands maxRow', () => {
-		const page: ExportPageContentv6 = {
+		const page: ExportPageContent = {
 			name: 'test',
-			controls: { 5: { 0: { type: 'button' } } },
+			controls: { 5: { 0: { type: 'pagenum' } } },
 			gridSize: { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 },
 		}
 		expect(find_smallest_grid_for_page(page).maxRow).toBe(5)
 	})
 
 	test('null/falsy control value is skipped (does not affect row bounds)', () => {
-		const page: ExportPageContentv6 = {
+		const page: ExportPageContent = {
 			name: 'test',
 			controls: { 8: { 0: null as any } },
 			gridSize: { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 },
@@ -126,11 +126,11 @@ describe('find_smallest_grid_for_page', () => {
 	})
 
 	test('controls on multiple rows all update bounds', () => {
-		const page: ExportPageContentv6 = {
+		const page: ExportPageContent = {
 			name: 'test',
 			controls: {
-				0: { 0: { type: 'button' } },
-				6: { 9: { type: 'button' } },
+				0: { 0: { type: 'pagenum' } },
+				6: { 9: { type: 'pagenum' } },
 			},
 			gridSize: { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 },
 		}
