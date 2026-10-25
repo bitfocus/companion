@@ -181,7 +181,7 @@ if (process.env.ELECTRON !== '0') {
 
 						const vm = await packager.vm.value
 						await vm.exec(
-							'powershell.exe',
+							'pwsh',
 							[
 								'-NoProfile',
 								'-ExecutionPolicy',
