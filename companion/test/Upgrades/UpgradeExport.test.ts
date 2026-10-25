@@ -183,6 +183,19 @@ describe('upgradeImport', () => {
 		expect(result.surfacesRemote.r2).toBeUndefined()
 	})
 
+	test('skips an image that is invalid, keeping the others', () => {
+		const image = { info: { name: 'logo' }, originalImage: 'data:image/png;base64,AA', previewImage: 'data:,' }
+		const result: any = upgradeImport(
+			{ type: 'full', version: EXPORT_VERSION, imageLibrary: [image, { info: {} }] },
+			userConfig
+		)
+
+		expect(result.imageLibrary).toEqual([
+			{ ...image, info: expect.objectContaining({ name: 'logo', sortOrder: 0 }) },
+			undefined,
+		])
+	})
+
 	test('refuses an export that is not a valid envelope', () => {
 		expect(() => upgradeImport({ type: 'sparkle', version: EXPORT_VERSION }, userConfig)).toThrow(/Invalid export/)
 		expect(() => upgradeImport({ type: 'page', version: EXPORT_VERSION }, userConfig)).toThrow(/Invalid export/)

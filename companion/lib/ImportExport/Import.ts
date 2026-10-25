@@ -344,7 +344,7 @@ export class ImportController {
 		if (isImporting(config.imageLibrary)) {
 			this.#graphicsController.imageLibrary.importImageLibrary(
 				data.imageLibraryCollections || [],
-				data.imageLibrary || []
+				(data.imageLibrary || []).filter((image) => image !== undefined)
 			)
 		}
 	}

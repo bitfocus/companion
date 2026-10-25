@@ -598,7 +598,69 @@
 				"imageLibrary": {
 					"type": "array",
 					"items": {
-						"description": "Not described yet"
+						"type": "object",
+						"properties": {
+							"info": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string"
+									},
+									"description": {
+										"default": "",
+										"type": "string"
+									},
+									"originalSize": {
+										"default": 0,
+										"type": "number"
+									},
+									"previewSize": {
+										"default": 0,
+										"type": "number"
+									},
+									"createdAt": {
+										"default": 0,
+										"type": "number"
+									},
+									"modifiedAt": {
+										"default": 0,
+										"type": "number"
+									},
+									"checksum": {
+										"default": "",
+										"type": "string"
+									},
+									"mimeType": {
+										"default": "",
+										"type": "string"
+									},
+									"collectionId": {
+										"type": "string"
+									},
+									"sortOrder": {
+										"default": 0,
+										"type": "number"
+									},
+									"backgroundColor": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"name"
+								]
+							},
+							"originalImage": {
+								"type": "string"
+							},
+							"previewImage": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"info",
+							"originalImage",
+							"previewImage"
+						]
 					}
 				},
 				"imageLibraryCollections": {
@@ -768,7 +830,69 @@
 				"imageLibrary": {
 					"type": "array",
 					"items": {
-						"description": "Not described yet"
+						"type": "object",
+						"properties": {
+							"info": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string"
+									},
+									"description": {
+										"default": "",
+										"type": "string"
+									},
+									"originalSize": {
+										"default": 0,
+										"type": "number"
+									},
+									"previewSize": {
+										"default": 0,
+										"type": "number"
+									},
+									"createdAt": {
+										"default": 0,
+										"type": "number"
+									},
+									"modifiedAt": {
+										"default": 0,
+										"type": "number"
+									},
+									"checksum": {
+										"default": "",
+										"type": "string"
+									},
+									"mimeType": {
+										"default": "",
+										"type": "string"
+									},
+									"collectionId": {
+										"type": "string"
+									},
+									"sortOrder": {
+										"default": 0,
+										"type": "number"
+									},
+									"backgroundColor": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"name"
+								]
+							},
+							"originalImage": {
+								"type": "string"
+							},
+							"previewImage": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"info",
+							"originalImage",
+							"previewImage"
+						]
 					}
 				},
 				"imageLibraryCollections": {
@@ -893,7 +1017,69 @@
 				"imageLibrary": {
 					"type": "array",
 					"items": {
-						"description": "Not described yet"
+						"type": "object",
+						"properties": {
+							"info": {
+								"type": "object",
+								"properties": {
+									"name": {
+										"type": "string"
+									},
+									"description": {
+										"default": "",
+										"type": "string"
+									},
+									"originalSize": {
+										"default": 0,
+										"type": "number"
+									},
+									"previewSize": {
+										"default": 0,
+										"type": "number"
+									},
+									"createdAt": {
+										"default": 0,
+										"type": "number"
+									},
+									"modifiedAt": {
+										"default": 0,
+										"type": "number"
+									},
+									"checksum": {
+										"default": "",
+										"type": "string"
+									},
+									"mimeType": {
+										"default": "",
+										"type": "string"
+									},
+									"collectionId": {
+										"type": "string"
+									},
+									"sortOrder": {
+										"default": 0,
+										"type": "number"
+									},
+									"backgroundColor": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"name"
+								]
+							},
+							"originalImage": {
+								"type": "string"
+							},
+							"previewImage": {
+								"type": "string"
+							}
+						},
+						"required": [
+							"info",
+							"originalImage",
+							"previewImage"
+						]
 					}
 				},
 				"imageLibraryCollections": {

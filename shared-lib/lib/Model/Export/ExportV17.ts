@@ -2,6 +2,7 @@ import z from 'zod'
 import { createCollectionSchema, EmptyCollectionDataSchema, EnabledCollectionDataSchema } from '../Collections.js'
 import { CustomVariableDefinitionSchema } from '../CustomVariableModel.js'
 import { ExpressionVariableModelSchema } from '../ExpressionVariableModel.js'
+import { ImageLibraryInfoSchema } from '../ImageLibraryModel.js'
 import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '../Instance.js'
 import {
 	OutboundSurfaceInfoSchema,
@@ -47,7 +48,18 @@ export const ExportV17InstanceSchema = z.object({
 const ExportV17InstancesSchema = z.record(z.string(), ExportV17InstanceSchema)
 const ExportV17EnabledCollectionsSchema = z.array(createCollectionSchema(EnabledCollectionDataSchema))
 const ExportV17EmptyCollectionsSchema = z.array(createCollectionSchema(EmptyCollectionDataSchema))
-const ExportV17ImageLibrarySchema = z.array(undescribed())
+/** An image of the library. One that is invalid is skipped, rather than failing the import */
+const ExportV17ImageSchema = z
+	.object({
+		info: ImageLibraryInfoSchema,
+		/** A base64 data url */
+		originalImage: z.string(),
+		/** A base64 data url */
+		previewImage: z.string(),
+	})
+	.optional()
+	.catch(undefined)
+const ExportV17ImageLibrarySchema = z.array(ExportV17ImageSchema)
 
 /** The config of a surface group. The import applies it field by field, over any existing group */
 const ExportV17SurfaceGroupConfigSchema = withoutDefaults(SurfaceGroupConfigSchema)
