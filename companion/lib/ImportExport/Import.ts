@@ -3,11 +3,11 @@ import { CreateExpressionVariableControlId, CreateTriggerControlId } from '@comp
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type {
-	ExportFullv6,
-	ExportInstancesv6,
-	ExportPageContentv6,
-	ExportTriggerContentv6,
-} from '@companion-app/shared/Model/ExportModel.js'
+	ExportFull,
+	ExportInstances,
+	ExportPageContent,
+	ExportTriggerContent,
+} from '@companion-app/shared/Model/Export/Latest.js'
 import type {
 	ClientImportOrResetSelection,
 	ConnectionRemappings,
@@ -73,9 +73,9 @@ export class ImportController {
 	}
 
 	async importSinglePage(
-		instances: ExportInstancesv6 | undefined,
+		instances: ExportInstances | undefined,
 		connectionIdRemapping: Record<string, string | undefined>,
-		pageInfo: ExportPageContentv6,
+		pageInfo: ExportPageContent,
 		topage: number
 	): Promise<ConnectionRemappings> {
 		// Setup the new instances
@@ -100,9 +100,9 @@ export class ImportController {
 	}
 
 	importTriggers(
-		instances: ExportInstancesv6 | undefined,
+		instances: ExportInstances | undefined,
 		connectionIdRemapping: Record<string, string | undefined>,
-		triggers: Record<string, ExportTriggerContentv6>,
+		triggers: Record<string, ExportTriggerContent>,
 		selectedTriggerIds: string[],
 		replaceExisting: boolean
 	): ConnectionRemappings {
@@ -140,7 +140,7 @@ export class ImportController {
 		return instanceRemap2
 	}
 
-	async importFull(data: ExportFullv6, config: ClientImportOrResetSelection): Promise<void> {
+	async importFull(data: ExportFull, config: ClientImportOrResetSelection): Promise<void> {
 		const isImporting = (value: ImportOrResetType): boolean => value === 'reset-and-import'
 
 		const mergeConnections = config.connections === 'unchanged'
@@ -219,8 +219,8 @@ export class ImportController {
 		}
 
 		if (isImporting(config.surfaces.known)) {
-			const surfaces: Record<number, SurfaceConfig> = (data.surfaces || {}) as any
-			const surfaceGroups: Record<number, SurfaceGroupConfig> = (data.surfaceGroups || {}) as any
+			const surfaces: Record<number, SurfaceConfig> = data.surfaces || {}
+			const surfaceGroups: Record<number, SurfaceGroupConfig> = data.surfaceGroups || {}
 			const getPageId = (val: number) =>
 				this.#pagesController.store.getPageId(val) ?? this.#pagesController.store.getFirstPageId()
 			const fixPageId = (groupConfig: SurfaceGroupConfig) => {
@@ -347,7 +347,7 @@ export class ImportController {
 	}
 
 	#performPageImport = async (
-		pageInfo: ExportPageContentv6,
+		pageInfo: ExportPageContent,
 		topage: number,
 		instanceIdMap: InstanceAppliedRemappings,
 		outboundSurfaceIdRemap: Record<string, string> | undefined
@@ -446,7 +446,7 @@ export class ImportController {
 	}
 
 	#importInstances(
-		instances: ExportInstancesv6 | undefined,
+		instances: ExportInstances | undefined,
 		instanceRemapping: ConnectionRemappings
 	): InstanceAppliedRemappings {
 		const instanceIdMap: InstanceAppliedRemappings = {}
@@ -514,7 +514,7 @@ export class ImportController {
 		return instanceIdMap
 	}
 
-	#createDefaultConnectionRemap(instances: ExportInstancesv6 | undefined): ConnectionRemappings {
+	#createDefaultConnectionRemap(instances: ExportInstances | undefined): ConnectionRemappings {
 		const remap: ConnectionRemappings = {}
 		if (!instances) return remap
 

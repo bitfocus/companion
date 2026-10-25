@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
 import yaml from 'yaml'
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
+import { EXPORT_VERSION } from '@companion-app/shared/Model/Export/Latest.js'
 import {
 	EXPORT_NOTES_MAX_LENGTH,
 	zodClientExportRequest,
@@ -27,7 +28,6 @@ import LogController from '../../lib/Log/Controller.js'
 import type { IPageStore } from '../../lib/Page/Store.js'
 import type { AppInfo } from '../../lib/Registry.js'
 import type { SurfaceController } from '../../lib/Surface/Controller.js'
-import { EXPORT_VERSION } from '../../lib/Upgrades/UpgradeExport.js'
 import type { VariablesController } from '../../lib/Variables/Controller.js'
 
 const mockOptions = {

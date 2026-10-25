@@ -1,10 +1,12 @@
 import { describe, expect, test } from 'vitest'
+import { EXPORT_VERSION } from '@companion-app/shared/Model/Export/Latest.js'
 import { UserConfigModelSchema } from '@companion-app/shared/Model/UserConfigModel.js'
 import { LEGACY_VERSION } from '../../lib/Upgrades/LegacyUpgrades.js'
 import { DATA_VERSION } from '../../lib/Upgrades/UpgradeData.js'
-import { EXPORT_VERSION, upgradeImport } from '../../lib/Upgrades/UpgradeExport.js'
+import { upgradeImport } from '../../lib/Upgrades/UpgradeExport.js'
 
 const userConfig = UserConfigModelSchema.parse({})
+const gridSize = { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 }
 
 const layeredButton = {
 	type: 'button-layered',
@@ -34,8 +36,18 @@ describe('upgradeImport', () => {
 		expect(DATA_VERSION).toBeGreaterThanOrEqual(LEGACY_VERSION)
 	})
 
+	test('the export schemas start where the legacy steps end', () => {
+		const page = { type: 'page', version: LEGACY_VERSION, page: { name: 'P', controls: {}, gridSize } }
+
+		expect(upgradeImport(page, userConfig)).toMatchObject({ type: 'page', version: EXPORT_VERSION })
+	})
+
 	test('an export of the current version is only stamped', () => {
-		const page = { type: 'page', version: EXPORT_VERSION, page: { name: 'P', controls: { 0: { 0: layeredButton } } } }
+		const page = {
+			type: 'page',
+			version: EXPORT_VERSION,
+			page: { name: 'P', controls: { 0: { 0: layeredButton } }, gridSize },
+		}
 
 		expect(upgradeImport(structuredClone(page), userConfig)).toEqual(page)
 	})
@@ -49,11 +61,32 @@ describe('upgradeImport', () => {
 	// Exports were stamped with a fixed version of 12 while the format moved on, so their content is newer than their
 	// version claims. The legacy steps leave content that is already upgraded alone
 	test('an export stamped with the old fixed version keeps its newer content', () => {
-		const page = { type: 'page', version: 12, page: { name: 'P', controls: { 0: { 0: layeredButton } } } }
+		const page = { type: 'page', version: 12, page: { name: 'P', controls: { 0: { 0: layeredButton } }, gridSize } }
 
 		const result = upgradeImport(structuredClone(page), userConfig)
 
 		expect(result).toEqual({ ...page, version: EXPORT_VERSION })
+	})
+
+	test('fills in what an envelope may leave out', () => {
+		const result = upgradeImport({ type: 'page', version: EXPORT_VERSION, page: {} }, userConfig)
+
+		expect(result).toEqual({ type: 'page', version: EXPORT_VERSION, page: { name: '', controls: {} } })
+	})
+
+	test('drops the unknown parts of an envelope, as an older Companion would', () => {
+		const result = upgradeImport(
+			{ type: 'full', version: EXPORT_VERSION, pages: {}, somethingNew: { added: 'later' } },
+			userConfig
+		)
+
+		expect(result).toEqual({ type: 'full', version: EXPORT_VERSION, pages: {} })
+	})
+
+	test('refuses an export that is not a valid envelope', () => {
+		expect(() => upgradeImport({ type: 'sparkle', version: EXPORT_VERSION }, userConfig)).toThrow(/Invalid export/)
+		expect(() => upgradeImport({ type: 'page', version: EXPORT_VERSION }, userConfig)).toThrow(/Invalid export/)
+		expect(() => upgradeImport({ type: 'full', version: 'new' }, userConfig)).toThrow(/Invalid export version/)
 	})
 
 	test('refuses an export from a newer version of Companion', () => {
