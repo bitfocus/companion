@@ -7,5 +7,7 @@ test('the generated graphics types are up to date, else run `yarn build:graphics
 	const options = await prettier.resolveConfig(graphicsTypesPath)
 	const expected = await prettier.format(generatedGraphicsTypes, { ...options, filepath: graphicsTypesPath })
 
-	expect(await readFile(graphicsTypesPath, 'utf8')).toBe(expected)
+	// A Windows checkout can have CRLF line endings
+	const actual = (await readFile(graphicsTypesPath, 'utf8')).replaceAll('\r\n', '\n')
+	expect(actual).toBe(expected)
 })
