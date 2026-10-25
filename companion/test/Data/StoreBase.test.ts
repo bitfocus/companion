@@ -7,6 +7,7 @@ import { DataCache } from '../../lib/Data/Cache.js'
 import { DataDatabase } from '../../lib/Data/Database.js'
 import type { DataStoreTableView } from '../../lib/Data/Tables/TableView.js'
 import type { DatabaseOperation } from '../../lib/Data/Tables/TableViewBase.js'
+import { setRawRow } from '../utils/RawRows.js'
 
 // DataCache is the simplest concrete DataStoreBase; ':memory:' keeps it entirely in RAM for tests.
 const noopObserver = () => {}
@@ -86,40 +87,6 @@ describe('DataStoreTableView', () => {
 		})
 	})
 
-	describe('primitive helpers', () => {
-		test('setPrimitive / getPrimitiveOrDefault store a raw string without JSON encoding', () => {
-			const { cache, view } = makeView<Record<string, string>>()
-			try {
-				view.setPrimitive('k', 'plain-text')
-				expect(view.getPrimitiveOrDefault('k', 'fallback')).toBe('plain-text')
-			} finally {
-				cache.close()
-			}
-		})
-
-		test('getPrimitiveOrDefault persists the default when the key is missing', () => {
-			const { cache, view } = makeView<Record<string, string>>()
-			try {
-				expect(view.getPrimitiveOrDefault('missing', 'the-default')).toBe('the-default')
-				// The default should now be stored, so a second read returns it too
-				expect(view.getPrimitiveOrDefault('missing', 'other')).toBe('the-default')
-			} finally {
-				cache.close()
-			}
-		})
-
-		test('a primitive string is stored verbatim (not JSON-quoted)', () => {
-			const { cache, view } = makeView<Record<string, string>>()
-			try {
-				view.setPrimitive('k', 'hello')
-				// all() sees the raw stored string; a non-JSON value falls back to the raw string
-				expect(view.all()).toEqual({ k: 'hello' })
-			} finally {
-				cache.close()
-			}
-		})
-	})
-
 	describe('getOrDefault', () => {
 		test('returns the stored value when present, without overwriting', () => {
 			const { cache, view } = makeView<Record<string, { x: number }>>()
@@ -145,11 +112,10 @@ describe('DataStoreTableView', () => {
 		test('falls back to the default (without overwriting) when the stored value is unparsable', () => {
 			const { cache, view } = makeView<Record<string, any>>()
 			try {
-				// setPrimitive stores a value that is not valid JSON
-				view.setPrimitive('a', 'not-json')
+				setRawRow(cache.store, 'tbl', 'a', 'not-json')
 				expect(view.getOrDefault('a', { x: 1 })).toEqual({ x: 1 })
 				// The corrupt value is left in place (getOrDefault only writes when the key is absent)
-				expect(view.getPrimitiveOrDefault('a', 'x')).toBe('not-json')
+				expect(view.all()).toEqual({ a: 'not-json' })
 			} finally {
 				cache.close()
 			}
@@ -182,7 +148,7 @@ describe('DataStoreTableView', () => {
 			const { cache, view } = makeView<Record<string, any>>()
 			try {
 				view.set('json', { ok: true })
-				view.setPrimitive('raw' as any, 'just-a-string')
+				setRawRow(cache.store, 'tbl', 'raw', 'just-a-string')
 				expect(view.all()).toEqual({ json: { ok: true }, raw: 'just-a-string' })
 			} finally {
 				cache.close()
@@ -232,9 +198,7 @@ describe('DataStoreTableView', () => {
 		test.each([
 			['get', (v: DataStoreTableView<any>) => v.get('')],
 			['getOrDefault', (v: DataStoreTableView<any>) => v.getOrDefault('', 1)],
-			['getPrimitiveOrDefault', (v: DataStoreTableView<any>) => v.getPrimitiveOrDefault('', 'x')],
 			['set', (v: DataStoreTableView<any>) => v.set('', 1)],
-			['setPrimitive', (v: DataStoreTableView<any>) => v.setPrimitive('', 'x')],
 			['delete', (v: DataStoreTableView<any>) => v.delete('')],
 		])('%s throws on an empty-string key', (_name, op) => {
 			const { cache, view } = makeView()

@@ -51,7 +51,7 @@ class FixtureDatabase extends DataStoreBase<any> {
 		super(':memory:', '', 'main', 'Data/Database', () => {})
 		this.startSQLite()
 
-		importTable(this.defaultTableView, fs.readJsonSync(`./companion/test/Upgrades/Legacy/${fixture}`))
+		importTable(this, fs.readJsonSync(`./companion/test/Upgrades/Legacy/${fixture}`))
 		upgradeStartup(this)
 	}
 	protected create(): void {

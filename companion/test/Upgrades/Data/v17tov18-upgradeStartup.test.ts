@@ -3,6 +3,7 @@ import { createTables } from '../../../lib/Data/Schema/v1.js'
 import { DataStoreBase } from '../../../lib/Data/StoreBase.js'
 import LogController from '../../../lib/Log/Controller.js'
 import { convertDatabaseToV18 } from '../../../lib/Upgrades/Data/v17tov18.js'
+import { setRawRow } from '../../utils/RawRows.js'
 
 class DataDatabase extends DataStoreBase<any> {
 	constructor() {
@@ -92,7 +93,7 @@ describe('v17tov18 upgradeStartup', () => {
 		])('stores %s as JSON, leaving the other rows alone', (_name, uuid) => {
 			const db = new DataDatabase()
 			const cloud = db.getTableView('cloud')
-			cloud.setPrimitive('uuid', uuid)
+			setRawRow(db.store, 'cloud', 'uuid', uuid)
 			cloud.set('auth', { token: 'abc' })
 
 			convertDatabaseToV18(logger, db)

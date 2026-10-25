@@ -11,7 +11,7 @@ function CreateDataDatabase() {
 
 	const data = fs.readFileSync('./companion/test/Upgrades/Legacy/v3tov4/db.v3.json', 'utf8')
 
-	importTable(db.defaultTableView, JSON.parse(data))
+	importTable(db, JSON.parse(data))
 
 	return db
 }

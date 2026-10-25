@@ -6,6 +6,7 @@ import {
 	type BrokenRowRecord,
 	type SchemaTableViewRepair,
 } from '../../../lib/Data/Tables/ParsedTableViewBase.js'
+import { setRawRow } from '../../utils/RawRows.js'
 
 const schema = z.object({ name: z.string(), count: z.number().default(0) })
 
@@ -20,11 +21,12 @@ describe('DataStoreSchemaTableView', () => {
 	})
 
 	const rawTable = () => cache.getTableView<Record<string, any>>('tbl')
+	const setRaw = (id: string, value: string) => setRawRow(cache.store, 'tbl', id, value)
 	const brokenRows = () => Object.values(cache.getTableView<Record<string, BrokenRowRecord>>(BROKEN_ROWS_TABLE).all())
 
 	test('fills in defaults and strips unknown properties', () => {
-		rawTable().setPrimitive('a', JSON.stringify({ name: 'first' }))
-		rawTable().setPrimitive('b', JSON.stringify({ name: 'second', count: 2, extra: true }))
+		setRaw('a', JSON.stringify({ name: 'first' }))
+		setRaw('b', JSON.stringify({ name: 'second', count: 2, extra: true }))
 
 		const view = cache.getSchemaTableView('tbl', schema)
 		expect(view.all()).toEqual({ a: { name: 'first', count: 0 }, b: { name: 'second', count: 2 } })
@@ -65,8 +67,8 @@ describe('DataStoreSchemaTableView', () => {
 
 	test('moves rows that fail the schema to the broken rows table', () => {
 		rawTable().set('good', { name: 'ok', count: 1 })
-		rawTable().setPrimitive('bad', JSON.stringify({ count: 'nope' }))
-		rawTable().setPrimitive('raw', 'not-json')
+		setRaw('bad', JSON.stringify({ count: 'nope' }))
+		setRaw('raw', 'not-json')
 
 		const view = cache.getSchemaTableView('tbl', schema)
 		expect(view.all()).toEqual({ good: { name: 'ok', count: 1 } })
@@ -94,7 +96,7 @@ describe('DataStoreSchemaTableView', () => {
 	})
 
 	test('keeps a broken row in place when it cannot be moved', () => {
-		rawTable().setPrimitive('bad', JSON.stringify({ count: 1 }))
+		setRaw('bad', JSON.stringify({ count: 1 }))
 		vi.spyOn(cache.getTableView(BROKEN_ROWS_TABLE), 'set').mockReturnValue(false)
 
 		const view = cache.getSchemaTableView('tbl', schema)
@@ -110,7 +112,7 @@ describe('DataStoreSchemaTableView', () => {
 				: null
 
 		test('a row that fails is repaired and stored, rather than moved to the broken rows', () => {
-			rawTable().setPrimitive('a', JSON.stringify({ count: 2 }))
+			setRaw('a', JSON.stringify({ count: 2 }))
 			const view = cache.getSchemaTableView('tbl', schema, { repair: fillName })
 
 			expect(view.all()).toEqual({ a: { name: 'repaired', count: 2 } })
@@ -119,7 +121,7 @@ describe('DataStoreSchemaTableView', () => {
 		})
 
 		test('a row that cannot be repaired is still moved to the broken rows', () => {
-			rawTable().setPrimitive('a', JSON.stringify({ name: 5 }))
+			setRaw('a', JSON.stringify({ name: 5 }))
 			const view = cache.getSchemaTableView('tbl', schema, { repair: fillName })
 
 			expect(view.all()).toEqual({})
@@ -127,7 +129,7 @@ describe('DataStoreSchemaTableView', () => {
 		})
 
 		test('a repair can take more than one attempt', () => {
-			rawTable().setPrimitive('a', JSON.stringify({ count: 'x' }))
+			setRaw('a', JSON.stringify({ count: 'x' }))
 			const repair: SchemaTableViewRepair = (row: any) =>
 				typeof row.count !== 'number'
 					? { row: { ...row, count: 1 }, repairs: ['Fixed the count'] }
@@ -138,7 +140,7 @@ describe('DataStoreSchemaTableView', () => {
 		})
 
 		test('a repair that never succeeds moves the original row to the broken rows', () => {
-			rawTable().setPrimitive('a', JSON.stringify({ count: 'x' }))
+			setRaw('a', JSON.stringify({ count: 'x' }))
 			const view = cache.getSchemaTableView('tbl', schema, {
 				repair: (row) => ({ row, repairs: ['Made no difference'] }),
 			})
@@ -155,7 +157,7 @@ describe('DataStoreSchemaTableView', () => {
 	})
 
 	test('get moves a broken row', () => {
-		rawTable().setPrimitive('bad', JSON.stringify({ count: 1 }))
+		setRaw('bad', JSON.stringify({ count: 1 }))
 
 		const view = cache.getSchemaTableView('tbl', schema)
 		expect(view.get('bad')).toBeUndefined()
@@ -223,11 +225,12 @@ describe('DataStoreKeyedSchemaTableView', () => {
 	}
 
 	const rawTable = () => cache.getTableView<Record<string, any>>('tbl')
+	const setRaw = (id: string, value: string) => setRawRow(cache.store, 'tbl', id, value)
 	const brokenRows = () => Object.values(cache.getTableView<Record<string, BrokenRowRecord>>(BROKEN_ROWS_TABLE).all())
 
 	test('parses each row with its own schema', () => {
 		rawTable().set('version', 3)
-		rawTable().setPrimitive('settings', JSON.stringify({ name: 'x', extra: true }))
+		setRaw('settings', JSON.stringify({ name: 'x', extra: true }))
 
 		const view = cache.getKeyedSchemaTableView('tbl', schemas)
 		expect(view.get('version')).toBe(3)
@@ -242,7 +245,7 @@ describe('DataStoreKeyedSchemaTableView', () => {
 	})
 
 	test('moves a row that fails to the broken rows, and gives its default', () => {
-		rawTable().setPrimitive('version', '"three"')
+		setRaw('version', '"three"')
 
 		const view = cache.getKeyedSchemaTableView('tbl', schemas)
 		expect(view.get('version')).toBe(1)
@@ -251,7 +254,7 @@ describe('DataStoreKeyedSchemaTableView', () => {
 	})
 
 	test('repairs a row with the repair for its key', () => {
-		rawTable().setPrimitive('settings', JSON.stringify({ name: 5, count: 2 }))
+		setRaw('settings', JSON.stringify({ name: 5, count: 2 }))
 		const repair: SchemaTableViewRepair = (row: any) => ({
 			row: { ...row, name: 'fixed' },
 			repairs: ['fixed the name'],

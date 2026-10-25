@@ -2,7 +2,6 @@ import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { DataStoreTableViewBase } from './TableViewBase.js'
 
 type ValueIfJsonEncodable<T> = T extends number | { [key: string]: any } ? T : never
-type ValueIfString<T> = T extends string ? T : never
 
 export class DataStoreTableView<TableContent extends Record<string, any>> extends DataStoreTableViewBase {
 	/**
@@ -68,25 +67,6 @@ export class DataStoreTableView<TableContent extends Record<string, any>> extend
 	}
 
 	/**
-	 * Get a value from the table or set a default value
-	 * @param id - the key to be retrieved
-	 * @param defaultValue - the default value to store if the key doesn't exist
-	 */
-	getPrimitiveOrDefault<T extends keyof TableContent>(
-		id: T,
-		defaultValue: ValueIfString<TableContent[T]>
-	): ValueIfString<TableContent[T]> {
-		this.validateKey(id)
-
-		const value = this.getRaw(id)
-		if (value === undefined) {
-			this.setRaw(id, defaultValue)
-			return defaultValue
-		}
-		return value as any // The types match, but TS doesn't know that
-	}
-
-	/**
 	 * Set a value in the table
 	 * @param id - the key to be set
 	 * @param value - the value to be set
@@ -96,17 +76,6 @@ export class DataStoreTableView<TableContent extends Record<string, any>> extend
 		this.validateKey(id)
 
 		return this.setRaw(id, JSON.stringify(value))
-	}
-
-	/**
-	 * Set a value in the table
-	 * @param id - the key to be set
-	 * @param value - the value to be set
-	 */
-	setPrimitive<T extends keyof TableContent>(id: T, value: ValueIfString<TableContent[T]>): void {
-		this.validateKey(id)
-
-		this.setRaw(id, value)
 	}
 
 	/**
