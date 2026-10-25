@@ -1,6 +1,8 @@
 import type { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi'
 import Express from 'express'
 import z from 'zod'
+import { getCustomPrefixHeader } from '../../UI/middleware/rewriteRootUrl.js'
+import { REST_API_BASE_PATH } from './constants.js'
 import { RestApiError } from './errors.js'
 import { requireScopes, type ApiToken, type RequiredScope, type RestApiResponse } from './RestApiAuth.js'
 
@@ -92,6 +94,8 @@ export interface RestRouteContext<
 	query: InferSchema<QuerySchema>
 	body: InferSchema<BodySchema>
 	token: ApiToken
+	/** Path of the REST API as the client sees it, including any prefix Companion is hosted under. Use it to build urls */
+	basePath: string
 }
 
 export interface RestEndpointContract<
@@ -244,7 +248,7 @@ export function mountRestEndpoint(
 					'Invalid request body'
 				)
 
-				const result = await endpoint.handler({ params, query, body, token })
+				const result = await endpoint.handler({ params, query, body, token, basePath: getRestApiBasePath(req) })
 
 				if (result.status === 204) {
 					res.status(204).send()
@@ -272,6 +276,14 @@ export function mountRestEndpoint(
 			}
 		}
 	)
+}
+
+/**
+ * Get the path of the REST API as the client sees it. When Companion is hosted under a prefix by a reverse proxy, the
+ * proxy strips it from the request and says what it was in a header
+ */
+export function getRestApiBasePath(req: Express.Request): string {
+	return `${getCustomPrefixHeader(req).replace(/\/$/, '')}${REST_API_BASE_PATH}`
 }
 
 /**

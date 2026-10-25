@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import EventEmitter from 'node:events'
+import type Express from 'express'
 import z from 'zod'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import {
@@ -13,15 +14,15 @@ import type { VariableDefinition } from '@companion-app/shared/Model/Variables.j
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
-import LogController from '../Log/Controller.js'
+import LogController, { type Logger } from '../Log/Controller.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { GraphicsController } from './Controller.js'
 import { ImageLibraryCollections } from './ImageLibraryCollections.js'
-
-const MAX_IMPORT_FILE_SIZE = 1024 * 1024 * 10 // 10MB limit, just in case
+import { MAX_IMPORT_FILE_SIZE } from './ImageLibraryLimits.js'
+import { createImageLibraryRestApiRouter } from './ImageLibraryRestApi.js'
 
 /** Returns the decoded byte length of a base64 string (strips padding). */
 function base64ByteLength(base64: string): number {
@@ -59,9 +60,7 @@ export class ImageLibrary {
 			MAX_IMPORT_FILE_SIZE,
 			async (_name, data, userData) => {
 				// Process the uploaded image data and update the existing image
-				const imageInfo = await this.#updateImageWithData(userData.imageName, data)
-
-				this.#events.emit('update', [{ type: 'update', itemName: userData.imageName, info: imageInfo.info }])
+				await this.#updateImageWithData(userData.imageName, data.toString('utf-8'))
 
 				return userData.imageName
 			},
@@ -95,6 +94,10 @@ export class ImageLibrary {
 		if (this.#events.listenerCount('update') > 0 && changes.length > 0) {
 			this.#events.emit('update', changes)
 		}
+	}
+
+	createRestApiRouter(logger: Logger): Express.Router {
+		return createImageLibraryRestApiRouter(logger, this)
 	}
 
 	createTrpcRouter() {
@@ -223,6 +226,35 @@ export class ImageLibrary {
 	}
 
 	/**
+	 * Get image data as raw bytes, decoded from the stored data URL
+	 * @returns null if the image does not exist or has no data uploaded
+	 */
+	getImageBinary(
+		imageName: string,
+		type: 'original' | 'preview'
+	): { mimeType: string; data: Buffer; checksum: string } | null {
+		const dataUrl = this.getImageDataUrl(imageName, type)
+		if (!dataUrl) return null
+
+		const match = dataUrl.image.match(/^data:([^;,]+);base64,(.*)$/)
+		if (!match) return null
+
+		return {
+			mimeType: match[1],
+			data: Buffer.from(match[2], 'base64'),
+			checksum: dataUrl.checksum,
+		}
+	}
+
+	/**
+	 * Replace the data of an existing image with raw image bytes
+	 */
+	async setImageData(imageName: string, mimeType: string, data: Buffer): Promise<ImageLibraryInfo> {
+		const imageData = await this.#updateImageWithData(imageName, `data:${mimeType};base64,${data.toString('base64')}`)
+		return imageData.info
+	}
+
+	/**
 	 * Delete an image from the library
 	 */
 	deleteImage(imageName: string): boolean {
@@ -321,9 +353,7 @@ export class ImageLibrary {
 		const data = this.#dbTable.get(name)
 		if (!data) return false
 
-		// Update the description and modified timestamp
 		data.info.description = description
-		data.info.modifiedAt = Date.now()
 
 		this.#dbTable.set(name, data)
 
@@ -346,7 +376,6 @@ export class ImageLibrary {
 		if (!data) return false
 
 		data.info.backgroundColor = backgroundColor
-		data.info.modifiedAt = Date.now()
 
 		this.#dbTable.set(name, data)
 
@@ -383,7 +412,6 @@ export class ImageLibrary {
 
 		// Update the name in the info
 		data.info.name = safeNewName
-		data.info.modifiedAt = Date.now()
 
 		// Move the data to the new key and delete the old one
 		this.#dbTable.set(safeNewName, data)
@@ -472,14 +500,11 @@ export class ImageLibrary {
 	/**
 	 * Update an existing image with uploaded data
 	 */
-	async #updateImageWithData(imageName: string, data: Buffer): Promise<ImageLibraryData> {
+	async #updateImageWithData(imageName: string, dataUrlString: string): Promise<ImageLibraryData> {
 		const existingData = this.#dbTable.get(imageName)
 		if (!existingData) {
 			throw new Error('Image not found')
 		}
-
-		// Parse the data URL from the uploaded buffer
-		const dataUrlString = data.toString('utf-8')
 
 		const dataUrlMatch = dataUrlString.match(/^data:(image\/[\w+]+);base64,(.+)$/)
 		if (!dataUrlMatch) {
@@ -512,6 +537,9 @@ export class ImageLibrary {
 
 		// Update the variable for the image
 		this.#updateImageVariable(imageName, dataUrlString)
+
+		// Notify clients
+		this.#events.emit('update', [{ type: 'update', itemName: imageName, info: existingData.info }])
 
 		return existingData
 	}

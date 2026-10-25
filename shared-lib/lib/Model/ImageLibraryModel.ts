@@ -7,6 +7,7 @@ export const ImageLibraryInfoSchema = z.object({
 	originalSize: z.number().default(0),
 	previewSize: z.number().default(0),
 	createdAt: z.number().default(0),
+	/** When the image data was last replaced. Editing the details of an image, or moving it, doesn't count */
 	modifiedAt: z.number().default(0),
 	checksum: z.string().default(''),
 	mimeType: z.string().default(''),

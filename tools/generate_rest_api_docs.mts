@@ -24,6 +24,7 @@ interface Parameter {
 }
 
 interface SchemaObject {
+	$ref?: string
 	type?: string
 	format?: string
 	properties?: Record<string, SchemaObject>
@@ -84,6 +85,8 @@ function escapeTableCell(value: string): string {
 }
 
 function typeToMarkdown(schema: SchemaObject): string {
+	// Only a recursive reference is left unresolved, so name it
+	if (schema.$ref) return `\`${escapeTableCell(getSchemaRefName(schema.$ref))}\``
 	if (schema.enum) return schema.enum.map((v) => `\`${v}\``).join(' \\| ')
 
 	let type = schema.type ?? 'object'
@@ -305,7 +308,44 @@ if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
 }
 
-const doc = generateOpenApiDocument({ appVersion: '0.0.0-docs' })
+const SCHEMA_REF_PREFIX = '#/components/schemas/'
+
+function getSchemaRefName(ref: string): string {
+	return ref.startsWith(SCHEMA_REF_PREFIX) ? ref.slice(SCHEMA_REF_PREFIX.length) : ref
+}
+
+/**
+ * Replace each reference to a named schema with the schema itself, so the pages can render it like any other.
+ * A reference to a schema from inside itself is left in place, as it would never end
+ */
+function inlineSchemaRefs(value: unknown, schemas: Record<string, unknown>, expanding: ReadonlySet<string>): unknown {
+	if (Array.isArray(value)) return value.map((item) => inlineSchemaRefs(item, schemas, expanding))
+	if (!value || typeof value !== 'object') return value
+
+	const { $ref, ...rest } = value as Record<string, unknown>
+	const inlinedRest = Object.fromEntries(
+		Object.entries(rest).map(([key, item]) => [key, inlineSchemaRefs(item, schemas, expanding)])
+	)
+	if (typeof $ref !== 'string') return inlinedRest
+
+	const name = getSchemaRefName($ref)
+	const target = schemas[name]
+	if (!target || expanding.has(name)) return { $ref, ...inlinedRest }
+
+	// Properties beside the reference, such as its description, apply on top of the named schema
+	const inlinedTarget = inlineSchemaRefs(target, schemas, new Set([...expanding, name])) as Record<string, unknown>
+	return { ...inlinedTarget, ...inlinedRest }
+}
+
+const generatedDoc = generateOpenApiDocument({ appVersion: '0.0.0-docs' })
+const doc = {
+	...generatedDoc,
+	paths: inlineSchemaRefs(
+		generatedDoc.paths,
+		(generatedDoc.components?.schemas ?? {}) as Record<string, unknown>,
+		new Set()
+	) as typeof generatedDoc.paths,
+}
 
 // Start from a clean folder, so pages for removed tags don't linger
 fs.rmSync(OUT_DIR, { recursive: true, force: true })

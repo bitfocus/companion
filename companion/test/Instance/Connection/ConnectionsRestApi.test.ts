@@ -658,6 +658,37 @@ describe('REST API v1 — Connections', () => {
 			})
 		})
 
+		test('returns a location under the prefix Companion is hosted at', async () => {
+			const { app, instanceController, validToken } = createService()
+
+			const newConfig: InstanceConfig = {
+				moduleInstanceType: ModuleInstanceType.Connection,
+				moduleId: 'obs-websocket',
+				moduleVersionId: null,
+				label: 'New OBS',
+				config: {},
+				secrets: {},
+				isFirstInit: true,
+				lastUpgradeIndex: 0,
+				enabled: true,
+				sortOrder: 2,
+				updatePolicy: InstanceVersionUpdatePolicy.Stable,
+			}
+
+			instanceController.modules.hasModule.mockReturnValue(true)
+			instanceController.modules.getModuleManifest.mockReturnValue({} as any)
+			instanceController.addConnectionWithLabel.mockReturnValue(['new-id', newConfig])
+
+			const res = await supertest(app)
+				.post('/api/v2/connections/v1')
+				.set('Authorization', `Bearer ${validToken}`)
+				.set('companion-custom-prefix', 'companion')
+				.send({ moduleId: 'obs-websocket', label: 'New OBS' })
+
+			expect(res.status).toBe(201)
+			expect(res.headers.location).toBe('/companion/api/v2/connections/v1/new-id')
+		})
+
 		test('creates a connection for a store-known module that is not installed', async () => {
 			const { app, instanceController, validToken } = createService()
 

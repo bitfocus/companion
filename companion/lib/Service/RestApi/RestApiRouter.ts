@@ -8,6 +8,7 @@ import { restApiErrorHandler } from './middleware/errorHandler.js'
 import { generateOpenApiDocument } from './openapi.js'
 import { createAuthMiddleware, type ApiTokenStore } from './RestApiAuth.js'
 import { createSwaggerUiRouter } from './SwaggerUi.js'
+import { getRestApiBasePath } from './typedRoute.js'
 
 /**
  * Create the main REST API router.
@@ -38,8 +39,9 @@ export function createRestApiRouter(
 	// OpenAPI spec and Swagger UI — served without auth
 	const openApiDocument = generateOpenApiDocument(appInfo)
 
-	router.get('/openapi.json', (_req, res) => {
-		res.json(openApiDocument)
+	router.get('/openapi.json', (req, res) => {
+		// Point the docs at the API as the client sees it, which may be under a prefix
+		res.json({ ...openApiDocument, servers: [{ ...openApiDocument.servers?.[0], url: getRestApiBasePath(req) }] })
 	})
 
 	router.use('/docs', createSwaggerUiRouter())
@@ -60,6 +62,7 @@ export function createRestApiRouter(
 	router.use(createAuthMiddleware(logger, tokenStore))
 	router.use(registry.instance.createRestApiRouter(logger))
 	router.use(registry.surfaces.createRestApiRouter(logger))
+	router.use(registry.graphics.imageLibrary.createRestApiRouter(logger))
 
 	// Do not allow unknown v2 routes to fall through into the legacy /api router.
 	router.use((_req, _res, next) => next(RestApiError.notFound()))

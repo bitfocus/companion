@@ -202,6 +202,7 @@ describe('ImageLibrary', () => {
 				checksum: crypto.createHash('sha1').update(PNG).digest('hex'),
 			})
 			expect(variableValues()).toEqual({ logo: PNG })
+			expect(table.get('logo').info.modifiedAt).toBeGreaterThan(1)
 		})
 
 		test('rejects something that is not an image data URL', async () => {
@@ -251,7 +252,6 @@ describe('ImageLibrary', () => {
 			expect(await caller.setDescription({ imageName: 'logo', description: 'New' })).toBe(true)
 
 			expect(table.get('logo').info.description).toBe('New')
-			expect(table.get('logo').info.modifiedAt).toBeGreaterThan(1)
 			expect(variableDefinitions()).toEqual([['logo', 'New']])
 			expect(await caller.setDescription({ imageName: 'nope', description: '' })).toBe(false)
 		})
@@ -277,6 +277,16 @@ describe('ImageLibrary', () => {
 			expect(library.getImageInfo('logo')).toBeNull()
 			expect(variableValues()).toEqual({ brand_mark: PNG })
 			expect(variableDefinitions()).toEqual([['brand_mark', 'logo description']])
+		})
+
+		test('editing the details of an image does not count as modifying it', () => {
+			const { library, table } = createLibrary({ logo: row('logo') })
+
+			library.setImageDescription('logo', 'New')
+			library.setImageBackgroundColor('logo', '#ff0000')
+			library.setImageName('logo', 'brand')
+
+			expect(table.get('brand').info.modifiedAt).toBe(1)
 		})
 
 		test('setName to the same name does nothing', () => {
@@ -462,5 +472,93 @@ describe('ImageLibrary', () => {
 		await subscription.expectValue([{ type: 'remove', itemName: 'logo' }])
 
 		await subscription.cleanup()
+	})
+
+	describe('raw image data', () => {
+		const PNG_BYTES = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3])
+		const PNG_BYTES_URL = `data:image/png;base64,${PNG_BYTES.toString('base64')}`
+
+		test('setImageData stores the bytes as a data url and updates the info', async () => {
+			const { library, graphics, table } = createLibrary({ logo: row('logo') })
+
+			const stored = await library.setImageData('logo', 'image/png', PNG_BYTES)
+
+			expect(graphics.executeCreatePreview).toHaveBeenCalledWith(PNG_BYTES_URL)
+			expect(table.get('logo')).toMatchObject({ originalImage: PNG_BYTES_URL, previewImage: PREVIEW })
+			expect(stored).toMatchObject({
+				name: 'logo',
+				mimeType: 'image/png',
+				originalSize: PNG_BYTES.length,
+				checksum: crypto.createHash('sha1').update(PNG_BYTES_URL).digest('hex'),
+			})
+			expect(library.getImageInfo('logo')).toEqual(stored)
+		})
+
+		test('setImageData updates the image variable, so buttons using it redraw', async () => {
+			const { library, variableValues } = createLibrary({ logo: row('logo') })
+
+			await library.setImageData('logo', 'image/png', PNG_BYTES)
+
+			expect(variableValues()).toEqual({ logo: PNG_BYTES_URL })
+		})
+
+		test('setImageData notifies watchers', async () => {
+			const { library, caller } = createLibrary({ logo: row('logo') })
+
+			const subscription = new SubscriptionTester(await caller.watch())
+			await subscription.expectValue([{ type: 'init', images: [info('logo')] }])
+
+			const stored = await library.setImageData('logo', 'image/png', PNG_BYTES)
+			await subscription.expectValue([{ type: 'update', itemName: 'logo', info: stored }])
+
+			await subscription.cleanup()
+		})
+
+		test('setImageData changes the checksum when the data changes', async () => {
+			const { library } = createLibrary({ logo: row('logo') })
+
+			const first = await library.setImageData('logo', 'image/png', PNG_BYTES)
+			const second = await library.setImageData('logo', 'image/png', Buffer.concat([PNG_BYTES, PNG_BYTES]))
+
+			expect(second.checksum).not.toBe(first.checksum)
+		})
+
+		test('setImageData rejects an unknown image', async () => {
+			const { library } = createLibrary()
+
+			await expect(library.setImageData('nope', 'image/png', PNG_BYTES)).rejects.toThrow('Image not found')
+		})
+
+		test('setImageData leaves the image unchanged when it cannot be decoded', async () => {
+			const { library, graphics, table } = createLibrary({ logo: row('logo') })
+			graphics.executeCreatePreview.mockRejectedValueOnce(new Error('Unsupported image type'))
+
+			await expect(library.setImageData('logo', 'image/png', PNG_BYTES)).rejects.toThrow()
+
+			expect(table.get('logo')).toMatchObject({ originalImage: '', info: { checksum: '', mimeType: '' } })
+		})
+
+		test('getImageBinary returns the original and preview bytes, with the checksum', async () => {
+			const { library } = createLibrary({ logo: row('logo') })
+			const stored = await library.setImageData('logo', 'image/png', PNG_BYTES)
+
+			expect(library.getImageBinary('logo', 'original')).toEqual({
+				mimeType: 'image/png',
+				data: PNG_BYTES,
+				checksum: stored.checksum,
+			})
+			expect(library.getImageBinary('logo', 'preview')).toEqual({
+				mimeType: 'image/png',
+				data: Buffer.from(PREVIEW.split(',')[1], 'base64'),
+				checksum: stored.checksum,
+			})
+		})
+
+		test('getImageBinary returns null for an image with no data, or an unknown image', () => {
+			const { library } = createLibrary({ logo: row('logo') })
+
+			expect(library.getImageBinary('logo', 'original')).toBeNull()
+			expect(library.getImageBinary('nope', 'original')).toBeNull()
+		})
 	})
 })
