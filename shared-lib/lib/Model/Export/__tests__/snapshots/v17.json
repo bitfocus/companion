@@ -117,13 +117,36 @@
 						"type": "string"
 					},
 					"additionalProperties": {
-						"description": "Not described yet"
+						"type": "object",
+						"properties": {
+							"description": {
+								"default": "",
+								"type": "string"
+							},
+							"notes": {
+								"type": "string"
+							},
+							"defaultValue": {
+								"$ref": "#/$defs/__schema1"
+							},
+							"persistCurrentValue": {
+								"default": false,
+								"type": "boolean"
+							},
+							"sortOrder": {
+								"default": 0,
+								"type": "number"
+							},
+							"collectionId": {
+								"type": "string"
+							}
+						}
 					}
 				},
 				"customVariablesCollections": {
 					"type": "array",
 					"items": {
-						"$ref": "#/$defs/__schema1"
+						"$ref": "#/$defs/__schema2"
 					}
 				},
 				"expressionVariables": {
@@ -132,13 +155,66 @@
 						"type": "string"
 					},
 					"additionalProperties": {
-						"description": "Not described yet"
+						"type": "object",
+						"properties": {
+							"type": {
+								"type": "string",
+								"const": "expression-variable"
+							},
+							"options": {
+								"default": {
+									"variableName": "",
+									"description": "An expression variable",
+									"sortOrder": 0
+								},
+								"type": "object",
+								"properties": {
+									"variableName": {
+										"default": "",
+										"type": "string"
+									},
+									"description": {
+										"default": "An expression variable",
+										"type": "string"
+									},
+									"sortOrder": {
+										"default": 0,
+										"type": "number"
+									},
+									"collectionId": {
+										"type": "string"
+									},
+									"notes": {
+										"type": "string"
+									}
+								}
+							},
+							"entity": {
+								"anyOf": [
+									{
+										"$ref": "#/$defs/__schema3"
+									},
+									{
+										"type": "null"
+									}
+								]
+							},
+							"localVariables": {
+								"type": "array",
+								"items": {
+									"$ref": "#/$defs/__schema3"
+								}
+							}
+						},
+						"required": [
+							"type"
+						]
 					}
 				},
 				"expressionVariablesCollections": {
 					"type": "array",
 					"items": {
-						"$ref": "#/$defs/__schema1"
+						"$ref": "#/$defs/__schema2"
 					}
 				},
 				"instances": {
@@ -299,7 +375,7 @@
 				"imageLibraryCollections": {
 					"type": "array",
 					"items": {
-						"$ref": "#/$defs/__schema1"
+						"$ref": "#/$defs/__schema2"
 					}
 				}
 			},
@@ -469,7 +545,7 @@
 				"imageLibraryCollections": {
 					"type": "array",
 					"items": {
-						"$ref": "#/$defs/__schema1"
+						"$ref": "#/$defs/__schema2"
 					}
 				}
 			},
@@ -594,7 +670,7 @@
 				"imageLibraryCollections": {
 					"type": "array",
 					"items": {
-						"$ref": "#/$defs/__schema1"
+						"$ref": "#/$defs/__schema2"
 					}
 				}
 			},
@@ -644,6 +720,37 @@
 			]
 		},
 		"__schema1": {
+			"anyOf": [
+				{
+					"type": "string"
+				},
+				{
+					"type": "number"
+				},
+				{
+					"type": "boolean"
+				},
+				{
+					"type": "null"
+				},
+				{
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/__schema1"
+					}
+				},
+				{
+					"type": "object",
+					"propertyNames": {
+						"type": "string"
+					},
+					"additionalProperties": {
+						"$ref": "#/$defs/__schema1"
+					}
+				}
+			]
+		},
+		"__schema2": {
 			"type": "object",
 			"properties": {
 				"id": {
@@ -661,7 +768,7 @@
 					"default": [],
 					"type": "array",
 					"items": {
-						"$ref": "#/$defs/__schema1"
+						"$ref": "#/$defs/__schema2"
 					}
 				},
 				"metaData": {
@@ -671,6 +778,510 @@
 			},
 			"required": [
 				"id"
+			]
+		},
+		"__schema3": {
+			"oneOf": [
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"type": "string",
+							"const": "action"
+						},
+						"id": {
+							"type": "string"
+						},
+						"definitionId": {
+							"type": "string"
+						},
+						"connectionId": {
+							"type": "string"
+						},
+						"headline": {
+							"type": "string"
+						},
+						"options": {
+							"default": {},
+							"type": "object",
+							"propertyNames": {
+								"type": "string"
+							},
+							"additionalProperties": {
+								"anyOf": [
+									{
+										"type": "object",
+										"properties": {
+											"value": {
+												"$ref": "#/$defs/__schema1"
+											},
+											"isExpression": {
+												"type": "boolean",
+												"const": false
+											}
+										},
+										"required": [
+											"isExpression"
+										]
+									},
+									{
+										"type": "object",
+										"properties": {
+											"value": {
+												"type": "string"
+											},
+											"isExpression": {
+												"type": "boolean",
+												"const": true
+											}
+										},
+										"required": [
+											"value",
+											"isExpression"
+										]
+									}
+								]
+							}
+						},
+						"disabled": {
+							"type": "boolean"
+						},
+						"upgradeIndex": {
+							"type": "number"
+						},
+						"children": {
+							"type": "object",
+							"propertyNames": {
+								"type": "string"
+							},
+							"additionalProperties": {
+								"type": "array",
+								"items": {
+									"$ref": "#/$defs/__schema3"
+								}
+							}
+						},
+						"storeResult": {
+							"oneOf": [
+								{
+									"type": "object",
+									"properties": {
+										"type": {
+											"type": "string",
+											"const": "local-variable"
+										},
+										"location": {
+											"anyOf": [
+												{
+													"type": "object",
+													"properties": {
+														"value": {
+															"type": "string"
+														},
+														"isExpression": {
+															"type": "boolean",
+															"const": false
+														}
+													},
+													"required": [
+														"value",
+														"isExpression"
+													]
+												},
+												{
+													"type": "object",
+													"properties": {
+														"value": {
+															"type": "string"
+														},
+														"isExpression": {
+															"type": "boolean",
+															"const": true
+														}
+													},
+													"required": [
+														"value",
+														"isExpression"
+													]
+												}
+											]
+										},
+										"variableName": {
+											"anyOf": [
+												{
+													"type": "object",
+													"properties": {
+														"value": {
+															"type": "string"
+														},
+														"isExpression": {
+															"type": "boolean",
+															"const": false
+														}
+													},
+													"required": [
+														"value",
+														"isExpression"
+													]
+												},
+												{
+													"type": "object",
+													"properties": {
+														"value": {
+															"type": "string"
+														},
+														"isExpression": {
+															"type": "boolean",
+															"const": true
+														}
+													},
+													"required": [
+														"value",
+														"isExpression"
+													]
+												}
+											]
+										}
+									},
+									"required": [
+										"type",
+										"location",
+										"variableName"
+									]
+								},
+								{
+									"type": "object",
+									"properties": {
+										"type": {
+											"type": "string",
+											"const": "page-variable"
+										},
+										"page": {
+											"anyOf": [
+												{
+													"type": "object",
+													"properties": {
+														"value": {
+															"type": "string"
+														},
+														"isExpression": {
+															"type": "boolean",
+															"const": false
+														}
+													},
+													"required": [
+														"value",
+														"isExpression"
+													]
+												},
+												{
+													"type": "object",
+													"properties": {
+														"value": {
+															"type": "string"
+														},
+														"isExpression": {
+															"type": "boolean",
+															"const": true
+														}
+													},
+													"required": [
+														"value",
+														"isExpression"
+													]
+												}
+											]
+										},
+										"variableName": {
+											"anyOf": [
+												{
+													"type": "object",
+													"properties": {
+														"value": {
+															"type": "string"
+														},
+														"isExpression": {
+															"type": "boolean",
+															"const": false
+														}
+													},
+													"required": [
+														"value",
+														"isExpression"
+													]
+												},
+												{
+													"type": "object",
+													"properties": {
+														"value": {
+															"type": "string"
+														},
+														"isExpression": {
+															"type": "boolean",
+															"const": true
+														}
+													},
+													"required": [
+														"value",
+														"isExpression"
+													]
+												}
+											]
+										}
+									},
+									"required": [
+										"type",
+										"page",
+										"variableName"
+									]
+								},
+								{
+									"type": "object",
+									"properties": {
+										"type": {
+											"type": "string",
+											"const": "custom-variable"
+										},
+										"variableName": {
+											"anyOf": [
+												{
+													"type": "object",
+													"properties": {
+														"value": {
+															"type": "string"
+														},
+														"isExpression": {
+															"type": "boolean",
+															"const": false
+														}
+													},
+													"required": [
+														"value",
+														"isExpression"
+													]
+												},
+												{
+													"type": "object",
+													"properties": {
+														"value": {
+															"type": "string"
+														},
+														"isExpression": {
+															"type": "boolean",
+															"const": true
+														}
+													},
+													"required": [
+														"value",
+														"isExpression"
+													]
+												}
+											]
+										},
+										"createIfNotExists": {
+											"type": "boolean"
+										}
+									},
+									"required": [
+										"type",
+										"variableName",
+										"createIfNotExists"
+									]
+								}
+							]
+						}
+					},
+					"required": [
+						"type",
+						"id",
+						"definitionId",
+						"connectionId"
+					]
+				},
+				{
+					"type": "object",
+					"properties": {
+						"type": {
+							"type": "string",
+							"const": "feedback"
+						},
+						"id": {
+							"type": "string"
+						},
+						"definitionId": {
+							"type": "string"
+						},
+						"connectionId": {
+							"type": "string"
+						},
+						"headline": {
+							"type": "string"
+						},
+						"options": {
+							"default": {},
+							"type": "object",
+							"propertyNames": {
+								"type": "string"
+							},
+							"additionalProperties": {
+								"anyOf": [
+									{
+										"type": "object",
+										"properties": {
+											"value": {
+												"$ref": "#/$defs/__schema1"
+											},
+											"isExpression": {
+												"type": "boolean",
+												"const": false
+											}
+										},
+										"required": [
+											"isExpression"
+										]
+									},
+									{
+										"type": "object",
+										"properties": {
+											"value": {
+												"type": "string"
+											},
+											"isExpression": {
+												"type": "boolean",
+												"const": true
+											}
+										},
+										"required": [
+											"value",
+											"isExpression"
+										]
+									}
+								]
+							}
+						},
+						"disabled": {
+							"type": "boolean"
+						},
+						"upgradeIndex": {
+							"type": "number"
+						},
+						"children": {
+							"type": "object",
+							"propertyNames": {
+								"type": "string"
+							},
+							"additionalProperties": {
+								"type": "array",
+								"items": {
+									"$ref": "#/$defs/__schema3"
+								}
+							}
+						},
+						"isInverted": {
+							"anyOf": [
+								{
+									"type": "object",
+									"properties": {
+										"value": {
+											"type": "boolean"
+										},
+										"isExpression": {
+											"type": "boolean",
+											"const": false
+										}
+									},
+									"required": [
+										"value",
+										"isExpression"
+									]
+								},
+								{
+									"type": "object",
+									"properties": {
+										"value": {
+											"type": "string"
+										},
+										"isExpression": {
+											"type": "boolean",
+											"const": true
+										}
+									},
+									"required": [
+										"value",
+										"isExpression"
+									]
+								}
+							]
+						},
+						"variableName": {
+							"type": "string"
+						},
+						"styleOverrides": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"overrideId": {
+										"type": "string"
+									},
+									"elementId": {
+										"type": "string"
+									},
+									"elementProperty": {
+										"type": "string"
+									},
+									"override": {
+										"anyOf": [
+											{
+												"type": "object",
+												"properties": {
+													"value": {
+														"$ref": "#/$defs/__schema1"
+													},
+													"isExpression": {
+														"type": "boolean",
+														"const": false
+													}
+												},
+												"required": [
+													"isExpression"
+												]
+											},
+											{
+												"type": "object",
+												"properties": {
+													"value": {
+														"type": "string"
+													},
+													"isExpression": {
+														"type": "boolean",
+														"const": true
+													}
+												},
+												"required": [
+													"value",
+													"isExpression"
+												]
+											}
+										]
+									}
+								},
+								"required": [
+									"overrideId",
+									"elementId",
+									"elementProperty",
+									"override"
+								]
+							}
+						}
+					},
+					"required": [
+						"type",
+						"id",
+						"definitionId",
+						"connectionId"
+					]
+				}
 			]
 		}
 	}

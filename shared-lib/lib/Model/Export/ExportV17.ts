@@ -1,5 +1,7 @@
 import z from 'zod'
 import { createCollectionSchema, EmptyCollectionDataSchema, EnabledCollectionDataSchema } from '../Collections.js'
+import { CustomVariableDefinitionSchema } from '../CustomVariableModel.js'
+import { ExpressionVariableModelSchema } from '../ExpressionVariableModel.js'
 import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '../Instance.js'
 import { undescribed } from './Undescribed.js'
 
@@ -72,9 +74,9 @@ export const ExportV17FullSchema = z.object({
 	pages: z.record(z.number(), ExportV17PageContentSchema).optional(),
 	triggers: z.record(z.string(), ExportV17TriggerContentSchema).optional(),
 	triggerCollections: ExportV17EnabledCollectionsSchema.optional(),
-	custom_variables: z.record(z.string(), undescribed()).optional(),
+	custom_variables: z.record(z.string(), CustomVariableDefinitionSchema).optional(),
 	customVariablesCollections: ExportV17EmptyCollectionsSchema.optional(),
-	expressionVariables: z.record(z.string(), undescribed()).optional(),
+	expressionVariables: z.record(z.string(), ExpressionVariableModelSchema).optional(),
 	expressionVariablesCollections: ExportV17EmptyCollectionsSchema.optional(),
 	instances: ExportV17InstancesSchema.optional(),
 	connectionCollections: ExportV17EnabledCollectionsSchema.optional(),

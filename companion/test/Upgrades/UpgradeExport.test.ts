@@ -124,6 +124,37 @@ describe('upgradeImport', () => {
 		])
 	})
 
+	test('keeps custom and expression variables, filling in what they may leave out', () => {
+		const entity = {
+			type: 'feedback',
+			id: 'f1',
+			definitionId: 'expression',
+			connectionId: 'internal',
+			options: { expression: { isExpression: false, value: '1 + 1' } },
+		}
+		const result: any = upgradeImport(
+			{
+				type: 'full',
+				version: EXPORT_VERSION,
+				custom_variables: { counter: { description: 'Counts', defaultValue: 5 } },
+				expressionVariables: { e1: { type: 'expression-variable', options: { variableName: 'sum' }, entity } },
+			},
+			userConfig
+		)
+
+		expect(result.custom_variables.counter).toEqual({
+			description: 'Counts',
+			defaultValue: 5,
+			persistCurrentValue: false,
+			sortOrder: 0,
+		})
+		expect(result.expressionVariables.e1).toMatchObject({
+			options: { variableName: 'sum' },
+			entity,
+			localVariables: [],
+		})
+	})
+
 	test('refuses an export that is not a valid envelope', () => {
 		expect(() => upgradeImport({ type: 'sparkle', version: EXPORT_VERSION }, userConfig)).toThrow(/Invalid export/)
 		expect(() => upgradeImport({ type: 'page', version: EXPORT_VERSION }, userConfig)).toThrow(/Invalid export/)
