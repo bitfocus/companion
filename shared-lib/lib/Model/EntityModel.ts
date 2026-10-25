@@ -40,6 +40,12 @@ export function isValidFeedbackEntitySubType(value: FeedbackEntitySubType | stri
 	return Object.values(FeedbackEntitySubType).includes(value as any)
 }
 
+/**
+ * The internal definition of the placeholder that replaces an entity which couldn't be loaded. It is kept disabled,
+ * with the original stored in its options, so that nothing is lost and it shows where the entity was
+ */
+export const INVALID_ENTITY_DEFINITION_ID = 'invalid_entity'
+
 export function isInternalUserValueFeedback(entity: EntityModelBase): boolean {
 	return (
 		entity.type === EntityModelType.Feedback &&

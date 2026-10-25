@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { canAddEntityToFeedbackList } from '../Entity.js'
+import { canAddEntityToFeedbackList, canOfferEntityInPicker } from '../Entity.js'
 import type { ClientEntityDefinition } from '../Model/EntityDefinitionModel.js'
 import { EntityModelType, FeedbackEntitySubType, SomeEntityModelSchema } from '../Model/EntityModel.js'
 
@@ -140,5 +140,24 @@ describe('SomeEntityModelSchema', () => {
 		expect(
 			SomeEntityModelSchema.parse({ ...action, type: EntityModelType.Feedback, storeResult: {} })
 		).not.toHaveProperty('storeResult')
+	})
+})
+
+describe('canOfferEntityInPicker', () => {
+	test('never offers a definition hidden from the pickers', () => {
+		const hidden = feedbackDefinition(FeedbackEntitySubType.Boolean, { hiddenFromPicker: true })
+
+		for (const listType of [null, ...Object.values(FeedbackEntitySubType)]) {
+			expect(canOfferEntityInPicker(listType, hidden)).toBe(false)
+		}
+	})
+
+	test('otherwise offers what the list accepts', () => {
+		for (const listType of [null, ...Object.values(FeedbackEntitySubType)]) {
+			for (const feedbackType of [null, ...Object.values(FeedbackEntitySubType)]) {
+				const definition = feedbackDefinition(feedbackType)
+				expect(canOfferEntityInPicker(listType, definition)).toBe(canAddEntityToFeedbackList(listType, definition))
+			}
+		}
 	})
 })

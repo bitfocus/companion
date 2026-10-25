@@ -51,6 +51,7 @@ import { InternalBuildingBlocks } from './BuildingBlocks.js'
 import { InternalControls } from './Controls.js'
 import { InternalCustomVariables } from './CustomVariables.js'
 import { InternalInstance } from './Instance.js'
+import { InternalInvalidEntity } from './InvalidEntity.js'
 import { InternalPage } from './Page.js'
 import { InternalSurface } from './Surface.js'
 import { InternalSystem } from './System.js'
@@ -153,7 +154,8 @@ export class InternalController {
 			new InternalSurface(surfaceController, this.#controlsStore, this.#pageStore),
 			new InternalSystem(appInfo, userConfigController, this.#variablesController, requestExit),
 			new InternalTriggers(controls),
-			new InternalVariables(localVariablesController)
+			new InternalVariables(localVariablesController),
+			new InternalInvalidEntity()
 		)
 
 		// Listen for events from the fragments
@@ -703,6 +705,7 @@ export class InternalController {
 						feedbackAffectedProperties: undefined,
 						feedbackDisableStyleOverrides: false,
 						feedbackStyleOverridesUnsupported: false,
+						hiddenFromPicker: action.hiddenFromPicker ?? false,
 
 						optionsSupportExpressions: action.optionsSupportExpressions ?? false,
 
@@ -738,6 +741,7 @@ export class InternalController {
 						feedbackAffectedProperties: feedback.feedbackAffectedProperties ?? undefined,
 						feedbackDisableStyleOverrides: feedback.feedbackDisableStyleOverrides ?? false,
 						feedbackStyleOverridesUnsupported: feedback.feedbackStyleOverridesUnsupported ?? false,
+						hiddenFromPicker: feedback.hiddenFromPicker ?? false,
 
 						optionsSupportExpressions: feedback.optionsSupportExpressions ?? false,
 

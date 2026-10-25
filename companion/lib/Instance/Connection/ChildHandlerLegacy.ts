@@ -799,6 +799,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				feedbackAffectedProperties: undefined,
 				feedbackDisableStyleOverrides: false,
 				feedbackStyleOverridesUnsupported: false,
+				hiddenFromPicker: false,
 				optionsSupportExpressions: false, // Expressions not supported from 1.x modules
 			} satisfies Complete<ClientEntityDefinition>
 		}
@@ -843,6 +844,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				feedbackStyleOverridesUnsupported: false,
 				showButtonPreview: false,
 				supportsChildGroups: [],
+				hiddenFromPicker: false,
 				optionsSupportExpressions: false, // Expressions not supported from 1.x modules
 			} satisfies Complete<ClientEntityDefinition>
 		}

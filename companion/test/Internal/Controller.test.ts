@@ -4,6 +4,7 @@ import { mock, mockDeep } from 'vitest-mock-extended'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
+	INVALID_ENTITY_DEFINITION_ID,
 	type FeedbackEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { IControlStore } from '../../lib/Controls/IControlStore.js'
@@ -137,5 +138,40 @@ describe('evaluateFeedbackValue', () => {
 		expect(() => controller.evaluateFeedbackValue(model, 'control1', stubParser({}))).toThrow(
 			'Feedback is not for internal instance'
 		)
+	})
+})
+
+describe("the placeholder for an entity that couldn't be loaded", () => {
+	test('is published, hidden from the pickers, unlike the other internal definitions', () => {
+		const { instanceController } = createController()
+
+		const actions = instanceController.definitions.setActionDefinitions.mock.lastCall?.[1]
+		const feedbacks = instanceController.definitions.setFeedbackDefinitions.mock.lastCall?.[1]
+
+		expect(actions[INVALID_ENTITY_DEFINITION_ID]).toMatchObject({ hiddenFromPicker: true })
+		expect(feedbacks[INVALID_ENTITY_DEFINITION_ID]).toMatchObject({ hiddenFromPicker: true })
+		expect(actions['action_group']).toMatchObject({ hiddenFromPicker: false })
+		expect(feedbacks['logic_operator']).toMatchObject({ hiddenFromPicker: false })
+	})
+
+	test('as a feedback, is never true', () => {
+		const { controller, instanceController } = createController()
+
+		instanceController.definitions.getEntityDefinition.mockReturnValue({
+			entityType: EntityModelType.Feedback,
+			feedbackType: FeedbackEntitySubType.Boolean,
+			optionsSupportExpressions: false,
+		} as any)
+
+		const model: FeedbackEntityModel = {
+			type: EntityModelType.Feedback,
+			id: 'fb1',
+			connectionId: 'internal',
+			definitionId: INVALID_ENTITY_DEFINITION_ID,
+			options: { original: { isExpression: false, value: { broken: true } } },
+			upgradeIndex: undefined,
+		}
+
+		expect(controller.evaluateFeedbackValue(model, 'control1', stubParser({}))).toBe(false)
 	})
 })
