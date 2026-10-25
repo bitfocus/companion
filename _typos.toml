@@ -21,7 +21,7 @@ XPression = "XPression"
 extend-exclude = [
   'package.json',
   "assets/Fonts/*",
-  "companion/test/Upgrade/*/*.json",
+  "companion/test/Upgrades/**/*.json",
   "**/*.companionconfig",
   "assets/linux/*.rules",
   "shared-lib/lib/OpenApi/",
