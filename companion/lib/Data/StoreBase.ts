@@ -5,7 +5,13 @@ import type z from 'zod'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { showErrorMessage, showFatalError } from '../Resources/Util.js'
-import { BROKEN_ROWS_TABLE, DataStoreSchemaTableView, type SchemaTableViewOptions } from './SchemaTableView.js'
+import { DataStoreSchemaTableView, type SchemaTableViewOptions } from './SchemaTableView.js'
+import {
+	DataStoreKeyedSchemaTableView,
+	type KeyedRowSchemas,
+	type KeyedSchemaTableViewOptions,
+} from './Tables/KeyedSchemaTableView.js'
+import { BROKEN_ROWS_TABLE } from './Tables/ParsedTableViewBase.js'
 import { DataStoreTableView } from './TableView.js'
 import {
 	DATABASE_OPERATIONS,
@@ -101,6 +107,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 */
 	private tableCache = new Map<string, DataStoreTableView<any>>()
 	private schemaTableCache = new Map<string, DataStoreSchemaTableView<any>>()
+	private keyedSchemaTableCache = new Map<string, DataStoreKeyedSchemaTableView<any>>()
 	/**
 	 * Sink for per-operation timings. Required and injected at construction, so it is immutable for the
 	 * store's lifetime and cannot be forgotten when a new store type is added.
@@ -407,6 +414,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	#clearTableViews(): void {
 		this.tableCache.clear()
 		this.schemaTableCache.clear()
+		this.keyedSchemaTableCache.clear()
 	}
 
 	#createTableViewHooks(tableName: string): DataStoreTableViewHooks {
@@ -473,13 +481,53 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	}
 
 	/**
+	 * Get a view of a table with a fixed set of rows, each parsed with its own schema when read and written.
+	 * Rows that fail to parse when read are moved to the broken rows table.
+	 * @param tableName - the table to view
+	 * @param schemas - the schema for each row, by its key
+	 * @param options - how the view repairs rows
+	 */
+	public getKeyedSchemaTableView<TRows extends KeyedRowSchemas>(
+		tableName: string,
+		schemas: TRows,
+		options?: KeyedSchemaTableViewOptions<TRows>
+	): DataStoreKeyedSchemaTableView<TRows> {
+		if (!tableName || typeof tableName !== 'string') throw new Error('Invalid table name')
+		if (tableName === BROKEN_ROWS_TABLE) throw new Error('Cannot view the broken rows table with a schema')
+
+		const cachedTable = this.keyedSchemaTableCache.get(tableName)
+		if (cachedTable) {
+			if (cachedTable.schemas !== schemas) throw new Error(`Table "${tableName}" already has different schemas`)
+			if (cachedTable.repair !== options?.repair) throw new Error(`Table "${tableName}" already has different options`)
+			return cachedTable
+		}
+
+		const newTable = new DataStoreKeyedSchemaTableView(
+			this.logger,
+			this.store,
+			tableName,
+			this.#createTableViewHooks(tableName),
+			this.getTableView(BROKEN_ROWS_TABLE),
+			schemas,
+			options
+		)
+		this.keyedSchemaTableCache.set(tableName, newTable)
+
+		return newTable
+	}
+
+	/**
 	 * Operation/error counts, for metrics. Only covers tables that have a cached view (i.e. seen traffic).
 	 * A table with both a plain and a schema view reports their combined counts.
 	 */
 	public getTableOperationStats(): TableOperationStats[] {
 		const merged = new Map<string, TableOperationStats>()
 
-		const views: DataStoreTableViewBase[] = [...this.tableCache.values(), ...this.schemaTableCache.values()]
+		const views: DataStoreTableViewBase[] = [
+			...this.tableCache.values(),
+			...this.schemaTableCache.values(),
+			...this.keyedSchemaTableCache.values(),
+		]
 		for (const view of views) {
 			const stats = view.collectOperationStats()
 			const existing = merged.get(stats.table)

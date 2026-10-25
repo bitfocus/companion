@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto'
 import { describe, expect, test, vi } from 'vitest'
 import { DataDatabase } from '../../../lib/Data/Database.js'
-import { BROKEN_ROWS_TABLE } from '../../../lib/Data/SchemaTableView.js'
+import { BROKEN_ROWS_TABLE } from '../../../lib/Data/Tables/ParsedTableViewBase.js'
 import type { DataStoreTableView } from '../../../lib/Data/TableView.js'
 import LogController from '../../../lib/Log/Controller.js'
 import { RestApiTokenStore } from '../../../lib/Service/RestApi/RestApiTokenStore.js'

@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import z from 'zod'
 import { DataCache } from '../../lib/Data/Cache.js'
-import { BROKEN_ROWS_TABLE, type BrokenRowRecord, type SchemaTableViewRepair } from '../../lib/Data/SchemaTableView.js'
+import {
+	BROKEN_ROWS_TABLE,
+	type BrokenRowRecord,
+	type SchemaTableViewRepair,
+} from '../../lib/Data/Tables/ParsedTableViewBase.js'
 
 const schema = z.object({ name: z.string(), count: z.number().default(0) })
 
@@ -197,5 +201,104 @@ describe('DataStoreSchemaTableView', () => {
 
 	test('refuses to view the broken rows table', () => {
 		expect(() => cache.getSchemaTableView(BROKEN_ROWS_TABLE, schema)).toThrow()
+	})
+})
+
+describe('DataStoreKeyedSchemaTableView', () => {
+	let cache: DataCache
+
+	beforeEach(() => {
+		cache = new DataCache(':memory:', () => {})
+	})
+	afterEach(() => {
+		cache.close()
+	})
+
+	const schemas = {
+		version: z.number().default(1),
+		settings: z.object({ name: z.string().default('none'), count: z.number().default(0) }).default(() => ({
+			name: 'none',
+			count: 0,
+		})),
+	}
+
+	const rawTable = () => cache.getTableView<Record<string, any>>('tbl')
+	const brokenRows = () => Object.values(cache.getTableView<Record<string, BrokenRowRecord>>(BROKEN_ROWS_TABLE).all())
+
+	test('parses each row with its own schema', () => {
+		rawTable().set('version', 3)
+		rawTable().setPrimitive('settings', JSON.stringify({ name: 'x', extra: true }))
+
+		const view = cache.getKeyedSchemaTableView('tbl', schemas)
+		expect(view.get('version')).toBe(3)
+		expect(view.get('settings')).toEqual({ name: 'x', count: 0 })
+	})
+
+	test('gives the default for a missing row, without storing it', () => {
+		const view = cache.getKeyedSchemaTableView('tbl', schemas)
+		expect(view.get('version')).toBe(1)
+		expect(view.get('settings')).toEqual({ name: 'none', count: 0 })
+		expect(rawTable().all()).toEqual({})
+	})
+
+	test('moves a row that fails to the broken rows, and gives its default', () => {
+		rawTable().setPrimitive('version', '"three"')
+
+		const view = cache.getKeyedSchemaTableView('tbl', schemas)
+		expect(view.get('version')).toBe(1)
+		expect(rawTable().all()).toEqual({})
+		expect(brokenRows()).toEqual([expect.objectContaining({ table: 'tbl', rowId: 'version', value: '"three"' })])
+	})
+
+	test('repairs a row with the repair for its key', () => {
+		rawTable().setPrimitive('settings', JSON.stringify({ name: 5, count: 2 }))
+		const repair: SchemaTableViewRepair = (row: any) => ({
+			row: { ...row, name: 'fixed' },
+			repairs: ['fixed the name'],
+		})
+
+		const view = cache.getKeyedSchemaTableView('tbl', schemas, { repair: { settings: repair } })
+		expect(view.get('settings')).toEqual({ name: 'fixed', count: 2 })
+		expect(rawTable().get('settings')).toEqual({ name: 'fixed', count: 2 })
+		expect(brokenRows()).toEqual([])
+	})
+
+	test('normalises a set value, and refuses one that fails', () => {
+		const view = cache.getKeyedSchemaTableView('tbl', schemas)
+		expect(view.set('settings', { name: 'x' } as any)).toEqual({ name: 'x', count: 0 })
+		expect(rawTable().get('settings')).toEqual({ name: 'x', count: 0 })
+
+		expect(() => view.set('version', 'four' as any)).toThrow(/Invalid value for "tbl" row "version"/)
+		expect(rawTable().get('version')).toBeUndefined()
+	})
+
+	test('ignores rows without a schema, and refuses to use them', () => {
+		rawTable().set('legacy' as any, { old: true })
+
+		const view = cache.getKeyedSchemaTableView('tbl', schemas)
+		expect(() => view.get('legacy' as any)).toThrow(/has no row "legacy"/)
+		expect(() => view.set('legacy' as any, 1)).toThrow(/has no row "legacy"/)
+		expect(rawTable().get('legacy' as any)).toEqual({ old: true })
+	})
+
+	test('a deleted row reads as its default', () => {
+		const view = cache.getKeyedSchemaTableView('tbl', schemas)
+		view.set('version', 5)
+		view.delete('version')
+		expect(view.get('version')).toBe(1)
+	})
+
+	test('refuses a row schema without a default', () => {
+		expect(() => cache.getKeyedSchemaTableView('tbl', { version: z.number() })).toThrow(
+			/Row "version" of "tbl" has no default/
+		)
+	})
+
+	test('returns the same view for the same schemas, and refuses different ones or options', () => {
+		const view = cache.getKeyedSchemaTableView('tbl', schemas)
+		expect(cache.getKeyedSchemaTableView('tbl', schemas)).toBe(view)
+		expect(() => cache.getKeyedSchemaTableView('tbl', { ...schemas })).toThrow(/different schemas/)
+		expect(() => cache.getKeyedSchemaTableView('tbl', schemas, { repair: {} })).toThrow(/different options/)
+		expect(() => cache.getKeyedSchemaTableView(BROKEN_ROWS_TABLE, schemas)).toThrow(/broken rows/)
 	})
 })

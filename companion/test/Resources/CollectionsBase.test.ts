@@ -7,7 +7,7 @@ import {
 	type EnabledCollectionData,
 } from '@companion-app/shared/Model/Collections.js'
 import { DataDatabase } from '../../lib/Data/Database.js'
-import { BROKEN_ROWS_TABLE } from '../../lib/Data/SchemaTableView.js'
+import { BROKEN_ROWS_TABLE } from '../../lib/Data/Tables/ParsedTableViewBase.js'
 import { EnabledCollectionsBaseController } from '../../lib/Resources/EnabledCollectionsBase.js'
 import { router, type TrpcContext } from '../../lib/UI/TRPC.js'
 import { createMockTrpcContext } from '../Util.js'
