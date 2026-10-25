@@ -484,8 +484,8 @@ jobs:
       contents: read
       id-token: write
     env:
-      # Sign the builds that are kept: main and release tags. Forks and Dependabot runs cannot get the signing secrets.
-      SIGN_BUILD: ${{ github.repository == 'bitfocus/companion' && github.actor != 'dependabot[bot]' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) }}
+      # Sign the builds that are kept (main and release tags), or a push whose head commit message contains [build-signed]. Forks and Dependabot runs cannot get the signing secrets.
+      SIGN_BUILD: ${{ github.repository == 'bitfocus/companion' && github.actor != 'dependabot[bot]' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[build-signed]')) }}
     needs: check-types
     timeout-minutes: 60
     concurrency:
@@ -613,8 +613,8 @@ jobs:
       contents: read
       id-token: write
     env:
-      # Sign the builds that are kept: main and release tags. Forks and Dependabot runs cannot get the signing secrets.
-      SIGN_BUILD: ${{ github.repository == 'bitfocus/companion' && github.actor != 'dependabot[bot]' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) }}
+      # Sign the builds that are kept (main and release tags), or a push whose head commit message contains [build-signed]. Forks and Dependabot runs cannot get the signing secrets.
+      SIGN_BUILD: ${{ github.repository == 'bitfocus/companion' && github.actor != 'dependabot[bot]' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[build-signed]')) }}
     needs: check-types
     timeout-minutes: 60
     concurrency:
