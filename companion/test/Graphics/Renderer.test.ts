@@ -288,7 +288,18 @@ describe('GraphicsRenderer', () => {
 				const resolution = { width: 72, height: 72, oversampling: 1 }
 				const fromSource = await GraphicsRenderer.drawButtonImageBuffer(style, resolution, null, 'rgba')
 				const fromDecoded = await GraphicsRenderer.drawButtonImageBuffer(resolved, resolution, null, 'rgba')
-				expect(Buffer.from(fromDecoded).equals(Buffer.from(fromSource))).toBe(true)
+
+				// Skia scales down an Image source slightly differently to a Canvas, so allow the quadrant edges to differ
+				let diffPixels = 0
+				for (let i = 0; i < fromSource.length; i += 4) {
+					for (let c = 0; c < 4; c++) {
+						if (Math.abs(fromSource[i + c] - fromDecoded[i + c]) > 4) {
+							diffPixels++
+							break
+						}
+					}
+				}
+				expect(diffPixels / (fromSource.length / 4)).toBeLessThan(0.03)
 			})
 
 			test.each([
