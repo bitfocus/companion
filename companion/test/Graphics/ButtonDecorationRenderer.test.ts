@@ -219,6 +219,16 @@ describe('ButtonDecorationRenderer', () => {
 			expect(withCloud.img.buffer()).toEqual(without.img.buffer())
 		})
 
+		test('remote button - link beside a warning and action running', async () => {
+			const { img, topBarBounds } = makeCanvas(72, 58)
+			ButtonDecorationRenderer.drawIcons(
+				img,
+				makeButtonStyle({ link_status: 'ok', button_status: 'warning', action_running: true }),
+				topBarBounds
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
 		test('error status with action running', async () => {
 			const { img, topBarBounds } = makeCanvas(72, 58)
 			ButtonDecorationRenderer.drawIcons(
@@ -235,6 +245,8 @@ describe('ButtonDecorationRenderer', () => {
 			[72, 58, 'standard 72x58'],
 			[144, 116, 'double 144x116'],
 			[36, 29, 'half 36x29'],
+			// Wide and short like a Neo's strip, where the label's inset is limited by the height
+			[248, 58, 'wide 248x58'],
 		]
 
 		for (const [w, h, label] of sizes) {

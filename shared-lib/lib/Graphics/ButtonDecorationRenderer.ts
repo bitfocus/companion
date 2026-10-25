@@ -47,7 +47,8 @@ export class ButtonDecorationRenderer {
 			step = `.${drawStyle.stepCurrent}`
 		}
 
-		const locationDrawX = Math.round(topBarBounds.width * 0.05) + topBarBounds.x
+		// Inset by the width on square buttons, but clamped by the height so wide ones (eg a Neo's strip) aren't over-padded
+		const locationDrawX = Math.round(Math.min(topBarBounds.width * 0.05, topBarBounds.height * 0.3)) + topBarBounds.x
 		const locationDrawY = Math.round(topBarBounds.height * 0.15) + topBarBounds.y
 		const locationDrawSize = Math.round(topBarBounds.height * 0.65)
 
