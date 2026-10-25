@@ -170,6 +170,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	#runningUsbHotplug: boolean = false
 
 	/**
+	 * Set once quit has been called, after which the db may be closed
+	 */
+	#hasQuit: boolean = false
+
+	/**
 	 * Whether this machine has usb available. When it doesn't, hotplug is never started
 	 */
 	readonly #usbAvailable: boolean
@@ -1386,6 +1391,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	})
 
 	#updateDevicesList(): void {
+		if (this.#hasQuit) return
+
 		const newJsonArr = structuredClone(this.getDevicesList())
 
 		if (this.#updateEvents.listenerCount('emulatorList') > 0) {
@@ -2018,7 +2025,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#outboundController.quit()
 
 		this.#surfaceHandlers.clear()
-		this.triggerUpdateDevicesList()
+
+		// The db is closed straight after this, so don't emit any further updates
+		this.#hasQuit = true
+		this.triggerUpdateDevicesList.cancel()
 	}
 
 	/**

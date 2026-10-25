@@ -79,3 +79,24 @@ describe('SurfaceController usb hotplug lifecycle', () => {
 		expect(usb.removeEventListener).not.toHaveBeenCalled()
 	})
 })
+
+describe('SurfaceController quit', () => {
+	test('no devices list update runs after quit, as the db is closed', () => {
+		vi.useFakeTimers()
+		try {
+			const controller = createController(false, true)
+			const getDevicesList = vi.spyOn(controller, 'getDevicesList')
+
+			// Pending from before quit
+			controller.triggerUpdateDevicesList()
+			controller.quit()
+			// Triggered by instances shutting down after quit
+			controller.triggerUpdateDevicesList()
+
+			vi.advanceTimersByTime(1000)
+			expect(getDevicesList).not.toHaveBeenCalled()
+		} finally {
+			vi.useRealTimers()
+		}
+	})
+})
