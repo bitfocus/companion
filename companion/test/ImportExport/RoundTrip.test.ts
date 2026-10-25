@@ -8,7 +8,6 @@ import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { GraphicsController } from '../../lib/Graphics/Controller.js'
-import { FILE_VERSION } from '../../lib/ImportExport/Constants.js'
 import { ExportController } from '../../lib/ImportExport/Export.js'
 import { parseImportBuffer, type ParseImportResult } from '../../lib/ImportExport/ParseImport.js'
 import { ImportExportThreadMethods } from '../../lib/ImportExport/ThreadMethods.js'
@@ -17,6 +16,7 @@ import type { InstanceController } from '../../lib/Instance/Controller.js'
 import type { IPageStore } from '../../lib/Page/Store.js'
 import type { AppInfo } from '../../lib/Registry.js'
 import type { SurfaceController } from '../../lib/Surface/Controller.js'
+import { EXPORT_VERSION } from '../../lib/Upgrades/UpgradeExport.js'
 import type { VariablesController } from '../../lib/Variables/Controller.js'
 
 // These tests exercise the real download → parse pipeline end-to-end: a config is exported (through
@@ -231,7 +231,7 @@ describe('export/import round-trip', () => {
 			// Guard against a future refactor silently emptying the fixture (which would make the
 			// round-trip assertions vacuous).
 			expect(exp.type).toBe('full')
-			expect(exp.version).toBe(FILE_VERSION)
+			expect(exp.version).toBe(EXPORT_VERSION)
 			expect(Object.keys(exp.pages)).toHaveLength(1)
 			expect(exp.pages[1].controls[0][0].type).toBe('button-layered')
 			expect(Object.keys(exp.triggers)).toContain('trig-1')
@@ -274,7 +274,7 @@ describe('export/import round-trip', () => {
 
 				// ...and it must be a well-formed export of the expected type
 				expect((parsed['json'] as any).type).toBe(endpoint.type)
-				expect((parsed['json'] as any).version).toBe(FILE_VERSION)
+				expect((parsed['json'] as any).version).toBe(EXPORT_VERSION)
 			})
 		}
 	})

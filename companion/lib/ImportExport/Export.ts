@@ -48,8 +48,8 @@ import type { AppInfo } from '../Registry.js'
 import { getTimestamp } from '../Resources/Util.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import { compileUpdatePayload } from '../UI/UpdatePayload.js'
+import { EXPORT_VERSION } from '../Upgrades/UpgradeExport.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import { FILE_VERSION } from './Constants.js'
 import { formatAttachmentFilename, prepareExport, streamExport, type PreparedExport } from './Util.js'
 
 export class ExportController {
@@ -175,7 +175,7 @@ export class ExportController {
 
 			// Export file protocol version
 			const exp: ExportPageModelv6 = {
-				version: FILE_VERSION,
+				version: EXPORT_VERSION,
 				type: 'page',
 				companionBuild: this.#appInfo.appBuild,
 				page: pageExport,
@@ -399,7 +399,7 @@ export class ExportController {
 
 		const result: ExportTriggersListv6 = {
 			type: 'trigger_list',
-			version: FILE_VERSION,
+			version: EXPORT_VERSION,
 			companionBuild: this.#appInfo.appBuild,
 			triggers: triggersExport,
 			triggerCollections: triggerCollections,
@@ -536,7 +536,7 @@ export class ExportController {
 	generateCustomExport(config: ClientExportSelection | null): ExportFullv6 {
 		// Export file protocol version
 		const exp: ExportFullv6 = {
-			version: FILE_VERSION,
+			version: EXPORT_VERSION,
 			type: 'full',
 			companionBuild: this.#appInfo.appBuild,
 		}

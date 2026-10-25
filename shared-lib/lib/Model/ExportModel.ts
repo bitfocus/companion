@@ -12,7 +12,8 @@ import type { UserConfigGridSize } from './UserConfigModel.js'
 export type SomeExportv6 = ExportFullv6 | ExportPageModelv6 | ExportTriggersListv6
 
 export interface ExportBase<Type extends string> {
-	readonly version: 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18
+	/** The version of the export format, which the import upgrades from. Each step sets the version it reaches */
+	readonly version: number
 	readonly type: Type
 	readonly companionBuild: string | undefined // The build of the companion that exported this
 }

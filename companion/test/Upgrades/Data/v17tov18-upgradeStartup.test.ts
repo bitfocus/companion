@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createTables } from '../../../lib/Data/Schema/v1.js'
 import { DataStoreBase } from '../../../lib/Data/StoreBase.js'
 import LogController from '../../../lib/Log/Controller.js'
-import v17tov18 from '../../../lib/Upgrades/Data/v17tov18.js'
+import { convertDatabaseToV18 } from '../../../lib/Upgrades/Data/v17tov18.js'
 
 class DataDatabase extends DataStoreBase<any> {
 	constructor() {
@@ -23,10 +23,10 @@ describe('v17tov18 upgradeStartup', () => {
 	function upgradeUserConfig(userconfig: Record<string, unknown> | undefined) {
 		const db = new DataDatabase()
 		if (userconfig) db.defaultTableView.set('userconfig', userconfig)
-		v17tov18.upgradeStartup(db, logger)
+		convertDatabaseToV18(logger, db)
 		const upgraded = db.defaultTableView.get('userconfig')
 
-		v17tov18.upgradeStartup(db, logger)
+		convertDatabaseToV18(logger, db)
 		expect(db.defaultTableView.get('userconfig')).toEqual(upgraded)
 
 		return upgraded
@@ -95,22 +95,22 @@ describe('v17tov18 upgradeStartup', () => {
 			cloud.setPrimitive('uuid', uuid)
 			cloud.set('auth', { token: 'abc' })
 
-			v17tov18.upgradeStartup(db, logger)
+			convertDatabaseToV18(logger, db)
 			expect(cloud.get('uuid')).toBe(uuid)
 			expect(cloud.get('auth')).toEqual({ token: 'abc' })
 
 			// Running again changes nothing
-			v17tov18.upgradeStartup(db, logger)
+			convertDatabaseToV18(logger, db)
 			expect(cloud.get('uuid')).toBe(uuid)
 		})
 
 		it('does nothing without a uuid, or a cloud table', () => {
 			const db = new DataDatabase()
-			v17tov18.upgradeStartup(db, logger)
+			convertDatabaseToV18(logger, db)
 			expect(db.tableExists('cloud')).toBe(false)
 
 			const cloud = db.getTableView('cloud')
-			v17tov18.upgradeStartup(db, logger)
+			convertDatabaseToV18(logger, db)
 			expect(cloud.all()).toEqual({})
 		})
 	})

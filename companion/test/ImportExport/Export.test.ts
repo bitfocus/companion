@@ -13,13 +13,13 @@ import type { ControlsController } from '../../lib/Controls/Controller.js'
 import type { ControlTrigger } from '../../lib/Controls/ControlTypes/Triggers/Trigger.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { GraphicsController } from '../../lib/Graphics/Controller.js'
-import { FILE_VERSION } from '../../lib/ImportExport/Constants.js'
 import { ExportController } from '../../lib/ImportExport/Export.js'
 import type { InstanceController } from '../../lib/Instance/Controller.js'
 import LogController from '../../lib/Log/Controller.js'
 import type { IPageStore } from '../../lib/Page/Store.js'
 import type { AppInfo } from '../../lib/Registry.js'
 import type { SurfaceController } from '../../lib/Surface/Controller.js'
+import { EXPORT_VERSION } from '../../lib/Upgrades/UpgradeExport.js'
 import type { VariablesController } from '../../lib/Variables/Controller.js'
 
 const mockOptions = {
@@ -155,7 +155,7 @@ describe('ExportController', () => {
 			expect(res.body[1]).toBe(0x8b)
 
 			const decoded = decodeExport(res.body, 'json-gz')
-			expect(decoded).toMatchObject({ type: 'trigger_list', version: FILE_VERSION })
+			expect(decoded).toMatchObject({ type: 'trigger_list', version: EXPORT_VERSION })
 		})
 
 		test('format=json-gz streams gzip that round-trips', async () => {
@@ -187,7 +187,7 @@ describe('ExportController', () => {
 			expect(res.status).toBe(200)
 			const text = res.body.toString('utf-8')
 			expect(text).toContain('type: trigger_list')
-			expect(decodeExport(res.body, 'yaml')).toMatchObject({ type: 'trigger_list', version: FILE_VERSION })
+			expect(decodeExport(res.body, 'yaml')).toMatchObject({ type: 'trigger_list', version: EXPORT_VERSION })
 		})
 
 		test('an unrecognised format falls back to json-gz', async () => {
@@ -261,7 +261,7 @@ describe('ExportController', () => {
 
 			expect(exp).toMatchObject({
 				type: 'trigger_list',
-				version: FILE_VERSION,
+				version: EXPORT_VERSION,
 				companionBuild: 'test-build-1',
 			})
 			expect(exp.triggers.trig1).toMatchObject({ type: 'trigger', options: { name: 'My Trigger' } })
@@ -366,7 +366,7 @@ describe('ExportController', () => {
 			const exp = decodeExport(res.body, 'json')
 			expect(exp).toMatchObject({
 				type: 'page',
-				version: FILE_VERSION,
+				version: EXPORT_VERSION,
 				companionBuild: 'test-build-1',
 				oldPageNumber: 1,
 			})
@@ -421,7 +421,7 @@ describe('ExportController', () => {
 
 			expect(res.status).toBe(200)
 			const exp = decodeExport(res.body, 'json')
-			expect(exp).toMatchObject({ type: 'full', version: FILE_VERSION })
+			expect(exp).toMatchObject({ type: 'full', version: EXPORT_VERSION })
 			expect(exp.pages).toBeDefined()
 			expect(exp.triggers).toBeDefined()
 			expect(exp.instances).toBeDefined()
@@ -461,7 +461,7 @@ describe('ExportController', () => {
 
 			expect(res.status).toBe(200)
 			const exp = decodeExport(res.body, 'json')
-			expect(exp).toMatchObject({ type: 'full', version: FILE_VERSION })
+			expect(exp).toMatchObject({ type: 'full', version: EXPORT_VERSION })
 			expect(exp.pages).toBeDefined()
 			expect(exp.surfaces).toBeDefined()
 			// Full export always includes all connections (secrets included)

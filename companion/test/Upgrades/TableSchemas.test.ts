@@ -11,7 +11,7 @@ import { OutboundSurfaceInfoSchema, SurfaceConfigSchema } from '@companion-app/s
 import { UserConfigModelSchema } from '@companion-app/shared/Model/UserConfigModel.js'
 import { createTables } from '../../lib/Data/Schema/v1.js'
 import { DataStoreBase } from '../../lib/Data/StoreBase.js'
-import { upgradeStartup } from '../../lib/Upgrades/Upgrade.js'
+import { upgradeStartup } from '../../lib/Upgrades/UpgradeData.js'
 import { importTable } from './util.js'
 
 // Upgrade each fixture of a real old database to the current version, and check that every row of a schema-backed

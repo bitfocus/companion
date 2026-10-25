@@ -15,7 +15,7 @@ import { nanoid } from 'nanoid'
 import workerPool from 'workerpool'
 import z from 'zod'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ExportFullv6, ExportPageContentv6 } from '@companion-app/shared/Model/ExportModel.js'
+import type { ExportFullv6, ExportPageContentv6, SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
 import {
 	zodClientImportOrResetSelection,
 	type ClientImportObject,
@@ -52,10 +52,10 @@ import { MultipartUploader } from '../Resources/MultipartUploader.js'
 import { resolveThreadEntrypoint } from '../Resources/Util.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import { publicProcedure, router, toIterable, type TrpcContext } from '../UI/TRPC.js'
-import { upgradeImport } from '../Upgrades/Upgrade.js'
+import { EXPORT_VERSION, upgradeImport } from '../Upgrades/UpgradeExport.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import { BackupController } from './Backups.js'
-import { FILE_VERSION, MAX_IMPORT_FILE_SIZE } from './Constants.js'
+import { MAX_IMPORT_FILE_SIZE } from './Constants.js'
 import { ExportController } from './Export.js'
 import { ImportController } from './Import.js'
 import { parseImportBuffer, type ParseImportResult } from './ParseImport.js'
@@ -141,7 +141,12 @@ export class ImportExportController {
 	 * the minimal summary object sent back to the client.
 	 */
 	#buildClientImportObject(rawObject: unknown, sessionCtx: TrpcContext): [string | null, ClientImportObject | null] {
-		let importObject = upgradeImport(rawObject, this.#userConfigController.getAll())
+		let importObject: SomeExportv6
+		try {
+			importObject = upgradeImport(rawObject, this.#userConfigController.getAll())
+		} catch (e) {
+			return [stringifyError(e), null]
+		}
 
 		// fix any db instances missing the upgradeIndex property
 		if (importObject.instances) {
@@ -155,7 +160,7 @@ export class ImportExportController {
 		if (importObject.type === 'trigger_list') {
 			importObject = {
 				type: 'full',
-				version: FILE_VERSION,
+				version: EXPORT_VERSION,
 				companionBuild: importObject.companionBuild,
 				triggers: importObject.triggers,
 				triggerCollections: importObject.triggerCollections,

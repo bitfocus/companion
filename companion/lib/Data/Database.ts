@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises'
 import { backup as SqliteBackup } from 'node:sqlite'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
-import { targetVersion, upgradeStartup } from '../Upgrades/Upgrade.js'
+import { DATA_VERSION, upgradeStartup } from '../Upgrades/UpgradeData.js'
 import { DataLegacyDatabase } from './Legacy/Database.js'
 import { createTables as createTablesV1 } from './Schema/v1.js'
 import { createTables as createTablesV8 } from './Schema/v8.js'
@@ -51,7 +51,7 @@ export class DataDatabase extends DataStoreBase<DataDatabaseDefaultTable> {
 	 * Save the defaults since a file could not be found/loaded/parsed
 	 */
 	protected loadDefaults(): void {
-		this.defaultTableView.set('page_config_version', targetVersion)
+		this.defaultTableView.set('page_config_version', DATA_VERSION)
 
 		this.isFirstRun = true
 	}
