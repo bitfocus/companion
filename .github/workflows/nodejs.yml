@@ -524,7 +524,7 @@ jobs:
       - name: Setup code signing
         id: codesign
         if: ${{ env.SIGN_BUILD == 'true' }}
-        uses: ./.github/actions/setup-windows-codesign
+        uses: bitfocus/actions/setup-windows-codesign@main
         with:
           workload-identity-provider: ${{ secrets.WINDOWS_CODESIGN_WIF_PROVIDER }}
           service-account: ${{ secrets.WINDOWS_CODESIGN_SERVICE_ACCOUNT }}
@@ -653,7 +653,7 @@ jobs:
       - name: Setup code signing
         id: codesign
         if: ${{ env.SIGN_BUILD == 'true' }}
-        uses: ./.github/actions/setup-windows-codesign
+        uses: bitfocus/actions/setup-windows-codesign@main
         with:
           workload-identity-provider: ${{ secrets.WINDOWS_CODESIGN_WIF_PROVIDER }}
           service-account: ${{ secrets.WINDOWS_CODESIGN_SERVICE_ACCOUNT }}
