@@ -1,8 +1,8 @@
 import { CreatePageControlId } from '@companion-app/shared/ControlId.js'
-import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
+import { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { DataStoreTableView } from '../Data/TableView.js'
+import type { DataStoreSchemaTableView } from '../Data/SchemaTableView.js'
 import type { IPageStore } from '../Page/Store.js'
 import { MAX_REFERENCE_DEPTH } from '../Surface/ReferenceSurfaceId.js'
 import type { VariablesValues } from '../Variables/Values.js'
@@ -10,6 +10,7 @@ import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
 } from '../Variables/VariablesAndExpressionParser.js'
+import { repairControl } from './ControlRepair.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import type { SomeControl } from './IControlFragments.js'
@@ -21,7 +22,7 @@ import { TriggerEvents } from './TriggerEvents.js'
  * Owns the controls map, and the trigger event bus.
  */
 export class ControlStore implements IControlStore {
-	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
+	readonly dbTable: DataStoreSchemaTableView<typeof SomeControlModelSchema>
 
 	/**
 	 * The currently configured controls.
@@ -42,7 +43,15 @@ export class ControlStore implements IControlStore {
 		this.#variablesValues = variablesValues
 		this.#pageStore = pageStore
 
-		this.dbTable = db.getTableView('controls')
+		// Controls are large and written on every change, so are only checked when read. One that fails has what failed
+		// replaced, so that a single invalid entity or element doesn't lose the whole control
+		this.dbTable = db.getSchemaTableView('controls', SomeControlModelSchema, {
+			validateWrites: false,
+			repair: (row, issues) => {
+				const result = repairControl(row, issues)
+				return result && { row: result.control, repairs: result.repairs }
+			},
+		})
 	}
 
 	/**

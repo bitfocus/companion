@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CreatePageControlId } from '@companion-app/shared/ControlId.js'
+import { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
+import { INVALID_ENTITY_DEFINITION_ID } from '@companion-app/shared/Model/EntityModel.js'
 import { ControlStore } from '../../lib/Controls/ControlStore.js'
+import { DataDatabase } from '../../lib/Data/Database.js'
 
 /** A mock control exposing only what ControlStore touches, with vi.fn spies for the methods it calls. */
 function makeControl(
@@ -35,7 +38,7 @@ function makeControl(
 
 describe('ControlStore', () => {
 	let tableView: { delete: ReturnType<typeof vi.fn> }
-	let getTableView: ReturnType<typeof vi.fn>
+	let getSchemaTableView: ReturnType<typeof vi.fn>
 	let createParser: ReturnType<typeof vi.fn>
 	let getLocationOfControlId: ReturnType<typeof vi.fn>
 	let getPageId: ReturnType<typeof vi.fn>
@@ -43,12 +46,12 @@ describe('ControlStore', () => {
 
 	beforeEach(() => {
 		tableView = { delete: vi.fn() }
-		getTableView = vi.fn(() => tableView)
+		getSchemaTableView = vi.fn(() => tableView)
 		createParser = vi.fn(() => ({}) as any)
 		getLocationOfControlId = vi.fn(() => null)
 		getPageId = vi.fn(() => undefined)
 
-		const db = { getTableView } as any
+		const db = { getSchemaTableView } as any
 		const variablesValues = { createVariablesAndExpressionParser: createParser } as any
 		const pageStore = { getLocationOfControlId, getPageId } as any
 
@@ -62,9 +65,33 @@ describe('ControlStore', () => {
 	}
 
 	describe('construction', () => {
-		it('opens the controls table view', () => {
-			expect(getTableView).toHaveBeenCalledWith('controls')
+		it('opens the controls table, checked when read, and repaired if it fails', () => {
+			expect(getSchemaTableView).toHaveBeenCalledWith('controls', SomeControlModelSchema, {
+				validateWrites: false,
+				repair: expect.any(Function),
+			})
 			expect(store.dbTable).toBe(tableView)
+		})
+
+		it('repairs a stored control with an invalid entity, rather than losing it', () => {
+			const db = new DataDatabase(':memory:', () => {})
+			db.getTableView<Record<string, any>>('controls').set('bank:1', {
+				type: 'button-layered',
+				feedbacks: [{ type: 'feedback', id: 'f1', definitionId: 'state', connectionId: 5, options: {} }],
+			})
+
+			const realStore = new ControlStore(db, {} as any, {} as any)
+			const control = realStore.dbTable.get('bank:1')
+
+			expect(control).toMatchObject({
+				type: 'button-layered',
+				feedbacks: [{ type: 'feedback', id: 'f1', definitionId: INVALID_ENTITY_DEFINITION_ID, disabled: true }],
+			})
+			// And the repair is stored
+			expect(db.getTableView<Record<string, any>>('controls').get('bank:1').feedbacks[0].definitionId).toBe(
+				INVALID_ENTITY_DEFINITION_ID
+			)
+			db.close()
 		})
 
 		it('creates a trigger event bus', () => {
