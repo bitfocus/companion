@@ -1,4 +1,5 @@
 import z from 'zod'
+import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '../Instance.js'
 import { undescribed } from './Undescribed.js'
 
 // Version 17 of the export format. The first version described by a schema; older exports are upgraded to it by the
@@ -9,10 +10,31 @@ import { undescribed } from './Undescribed.js'
 
 export const EXPORT_V17 = 17
 
-// TODO - describe each section
+// TODO - describe each remaining section
 const ExportV17ControlSchema = z.record(z.string(), undescribed())
 const ExportV17TriggerContentSchema = z.record(z.string(), undescribed())
-const ExportV17InstancesSchema = z.record(z.string(), undescribed())
+/**
+ * A connection or surface instance. A page or trigger export has only the minimal fields, without the config, which
+ * the import tells apart by whether `config` is present, so the full fields have no defaults
+ */
+export const ExportV17InstanceSchema = z.object({
+	moduleId: z.string(),
+	label: z.string(),
+	/** -1 runs every upgrade script */
+	lastUpgradeIndex: z.number().default(-1),
+	moduleVersionId: z.string().nullable().optional(),
+	updatePolicy: z.enum(InstanceVersionUpdatePolicy).default(InstanceVersionUpdatePolicy.Stable),
+	sortOrder: z.number().optional(),
+	collectionId: z.string().optional(),
+
+	// Only in a full export
+	moduleInstanceType: z.enum(ModuleInstanceType).optional(),
+	config: z.unknown().optional(),
+	secrets: z.unknown().optional(),
+	isFirstInit: z.boolean().optional(),
+	enabled: z.boolean().optional(),
+})
+const ExportV17InstancesSchema = z.record(z.string(), ExportV17InstanceSchema)
 const ExportV17CollectionsSchema = z.array(undescribed())
 const ExportV17ImageLibrarySchema = z.array(undescribed())
 

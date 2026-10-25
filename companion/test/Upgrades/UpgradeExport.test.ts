@@ -83,6 +83,20 @@ describe('upgradeImport', () => {
 		expect(result).toEqual({ type: 'full', version: EXPORT_VERSION, pages: {} })
 	})
 
+	test('keeps a minimal instance minimal, and a full one full', () => {
+		const minimal = { moduleId: 'bmd-atem', label: 'atem', lastUpgradeIndex: 3, sortOrder: 1 }
+		const full = { ...minimal, config: { host: '1.2.3.4' }, secrets: { password: 'x' }, enabled: false }
+
+		const page: any = upgradeImport(
+			{ type: 'page', version: EXPORT_VERSION, page: {}, instances: { a: minimal } },
+			userConfig
+		)
+		expect(page.instances.a).toEqual({ ...minimal, updatePolicy: 'stable' })
+
+		const fullExport: any = upgradeImport({ type: 'full', version: EXPORT_VERSION, instances: { a: full } }, userConfig)
+		expect(fullExport.instances.a).toEqual({ ...full, updatePolicy: 'stable' })
+	})
+
 	test('refuses an export that is not a valid envelope', () => {
 		expect(() => upgradeImport({ type: 'sparkle', version: EXPORT_VERSION }, userConfig)).toThrow(/Invalid export/)
 		expect(() => upgradeImport({ type: 'page', version: EXPORT_VERSION }, userConfig)).toThrow(/Invalid export/)

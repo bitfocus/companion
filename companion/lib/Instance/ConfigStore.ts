@@ -221,8 +221,8 @@ export class InstanceConfigStore {
 		this.commitChanges([id], true)
 	}
 
-	exportAllConnections(includeSecrets: boolean): Record<string, InstanceConfig | undefined> {
-		const result: Record<string, InstanceConfig | undefined> = {}
+	exportAllConnections(includeSecrets: boolean): Record<string, InstanceConfig> {
+		const result: Record<string, InstanceConfig> = {}
 
 		for (const [id, config] of this.#store) {
 			if (config.moduleInstanceType === ModuleInstanceType.Connection) {
@@ -240,8 +240,8 @@ export class InstanceConfigStore {
 		return result
 	}
 
-	exportAllSurfaceInstances(): Record<string, InstanceConfig | undefined> {
-		const result: Record<string, InstanceConfig | undefined> = {}
+	exportAllSurfaceInstances(): Record<string, InstanceConfig> {
+		const result: Record<string, InstanceConfig> = {}
 
 		for (const [id, config] of this.#store) {
 			if (config.moduleInstanceType === ModuleInstanceType.Surface) {

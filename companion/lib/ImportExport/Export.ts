@@ -501,24 +501,26 @@ export class ExportController {
 
 		referencedConnectionIds.delete('internal') // Ignore the internal module
 		for (const connectionId of referencedConnectionIds) {
-			instancesExport[connectionId] = this.#instancesController.exportConnection(
+			const exported = this.#instancesController.exportConnection(
 				connectionId,
 				options.minimalExport,
 				true,
 				options.includeSecrets
 			)
+			if (exported) instancesExport[connectionId] = exported
 		}
 
 		referencedConnectionLabels.delete('internal') // Ignore the internal module
 		for (const label of referencedConnectionLabels) {
 			const connectionId = this.#instancesController.getIdForLabel(ModuleInstanceType.Connection, label)
 			if (connectionId) {
-				instancesExport[connectionId] = this.#instancesController.exportConnection(
+				const exported = this.#instancesController.exportConnection(
 					connectionId,
 					options.minimalExport,
 					true,
 					options.includeSecrets
 				)
+				if (exported) instancesExport[connectionId] = exported
 			}
 		}
 

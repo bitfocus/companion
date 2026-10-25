@@ -33,3 +33,4 @@ export type ExportPageContent = z.output<typeof ExportV17PageContentSchema>
 export type ExportControl = ExportPageContent['controls'][number][number]
 export type ExportTriggerContent = NonNullable<ExportFull['triggers']>[string]
 export type ExportInstances = NonNullable<ExportFull['instances']>
+export type ExportInstance = ExportInstances[string]

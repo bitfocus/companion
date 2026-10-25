@@ -16,7 +16,7 @@ import z from 'zod'
 import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
 import type { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
+import type { ExportInstance } from '@companion-app/shared/Model/Export/Latest.js'
 import {
 	InstanceVersionUpdatePolicy,
 	ModuleInstanceType,
@@ -1343,7 +1343,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		minimal = false,
 		clone = true,
 		includeSecrets = true
-	): ExportInstanceFullv6 | ExportInstanceMinimalv6 | undefined {
+	): ExportInstance | undefined {
 		const rawObj = this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)
 		if (!rawObj) return undefined
 
@@ -1356,22 +1356,24 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					updatePolicy: rawObj.updatePolicy,
 					sortOrder: rawObj.sortOrder,
 					collectionId: rawObj.collectionId,
-				} satisfies Complete<ExportInstanceMinimalv6>)
+				} satisfies Complete<
+					Omit<ExportInstance, 'moduleInstanceType' | 'config' | 'secrets' | 'isFirstInit' | 'enabled'>
+				>)
 			: ({
 					...rawObj,
 					moduleId: rawObj.moduleId, // Rename for export
 					moduleVersionId: rawObj.moduleVersionId ?? undefined,
 					secrets: includeSecrets ? rawObj.secrets : undefined,
-				} satisfies ExportInstanceFullv6)
+				} satisfies ExportInstance)
 
 		return clone ? structuredClone(obj) : obj
 	}
 
-	exportAllConnections(includeSecrets: boolean): Record<string, InstanceConfig | undefined> {
+	exportAllConnections(includeSecrets: boolean): Record<string, InstanceConfig> {
 		return this.#configStore.exportAllConnections(includeSecrets)
 	}
 
-	exportAllSurfaceInstances(): Record<string, InstanceConfig | undefined> {
+	exportAllSurfaceInstances(): Record<string, InstanceConfig> {
 		return this.#configStore.exportAllSurfaceInstances()
 	}
 

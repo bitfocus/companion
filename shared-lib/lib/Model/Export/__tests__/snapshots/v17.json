@@ -147,7 +147,59 @@
 						"type": "string"
 					},
 					"additionalProperties": {
-						"description": "Not described yet"
+						"type": "object",
+						"properties": {
+							"moduleId": {
+								"type": "string"
+							},
+							"label": {
+								"type": "string"
+							},
+							"lastUpgradeIndex": {
+								"default": -1,
+								"type": "number"
+							},
+							"moduleVersionId": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"updatePolicy": {
+								"default": "stable",
+								"type": "string",
+								"enum": [
+									"manual",
+									"stable",
+									"beta"
+								]
+							},
+							"sortOrder": {
+								"type": "number"
+							},
+							"collectionId": {
+								"type": "string"
+							},
+							"moduleInstanceType": {
+								"type": "string",
+								"enum": [
+									"connection",
+									"surface"
+								]
+							},
+							"config": {},
+							"secrets": {},
+							"isFirstInit": {
+								"type": "boolean"
+							},
+							"enabled": {
+								"type": "boolean"
+							}
+						},
+						"required": [
+							"moduleId",
+							"label"
+						]
 					}
 				},
 				"connectionCollections": {
@@ -177,7 +229,59 @@
 						"type": "string"
 					},
 					"additionalProperties": {
-						"description": "Not described yet"
+						"type": "object",
+						"properties": {
+							"moduleId": {
+								"type": "string"
+							},
+							"label": {
+								"type": "string"
+							},
+							"lastUpgradeIndex": {
+								"default": -1,
+								"type": "number"
+							},
+							"moduleVersionId": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"updatePolicy": {
+								"default": "stable",
+								"type": "string",
+								"enum": [
+									"manual",
+									"stable",
+									"beta"
+								]
+							},
+							"sortOrder": {
+								"type": "number"
+							},
+							"collectionId": {
+								"type": "string"
+							},
+							"moduleInstanceType": {
+								"type": "string",
+								"enum": [
+									"connection",
+									"surface"
+								]
+							},
+							"config": {},
+							"secrets": {},
+							"isFirstInit": {
+								"type": "boolean"
+							},
+							"enabled": {
+								"type": "boolean"
+							}
+						},
+						"required": [
+							"moduleId",
+							"label"
+						]
 					}
 				},
 				"surfaceInstanceCollections": {
@@ -292,7 +396,59 @@
 						"type": "string"
 					},
 					"additionalProperties": {
-						"description": "Not described yet"
+						"type": "object",
+						"properties": {
+							"moduleId": {
+								"type": "string"
+							},
+							"label": {
+								"type": "string"
+							},
+							"lastUpgradeIndex": {
+								"default": -1,
+								"type": "number"
+							},
+							"moduleVersionId": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"updatePolicy": {
+								"default": "stable",
+								"type": "string",
+								"enum": [
+									"manual",
+									"stable",
+									"beta"
+								]
+							},
+							"sortOrder": {
+								"type": "number"
+							},
+							"collectionId": {
+								"type": "string"
+							},
+							"moduleInstanceType": {
+								"type": "string",
+								"enum": [
+									"connection",
+									"surface"
+								]
+							},
+							"config": {},
+							"secrets": {},
+							"isFirstInit": {
+								"type": "boolean"
+							},
+							"enabled": {
+								"type": "boolean"
+							}
+						},
+						"required": [
+							"moduleId",
+							"label"
+						]
 					}
 				},
 				"connectionCollections": {
@@ -368,7 +524,59 @@
 						"type": "string"
 					},
 					"additionalProperties": {
-						"description": "Not described yet"
+						"type": "object",
+						"properties": {
+							"moduleId": {
+								"type": "string"
+							},
+							"label": {
+								"type": "string"
+							},
+							"lastUpgradeIndex": {
+								"default": -1,
+								"type": "number"
+							},
+							"moduleVersionId": {
+								"type": [
+									"string",
+									"null"
+								]
+							},
+							"updatePolicy": {
+								"default": "stable",
+								"type": "string",
+								"enum": [
+									"manual",
+									"stable",
+									"beta"
+								]
+							},
+							"sortOrder": {
+								"type": "number"
+							},
+							"collectionId": {
+								"type": "string"
+							},
+							"moduleInstanceType": {
+								"type": "string",
+								"enum": [
+									"connection",
+									"surface"
+								]
+							},
+							"config": {},
+							"secrets": {},
+							"isFirstInit": {
+								"type": "boolean"
+							},
+							"enabled": {
+								"type": "boolean"
+							}
+						},
+						"required": [
+							"moduleId",
+							"label"
+						]
 					}
 				},
 				"connectionCollections": {
