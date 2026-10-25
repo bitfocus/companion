@@ -24,9 +24,9 @@ import { withoutDefaults } from './WithoutDefaults.js'
 
 export const EXPORT_V17 = 17
 
-/** A control on a page. One that is invalid is repaired by the import, or skipped */
+/** A control on a page */
 const ExportV17ControlSchema = SomeButtonModelSchema
-/** A trigger. One that is invalid is repaired by the import, or skipped */
+/** A trigger */
 const ExportV17TriggerContentSchema = TriggerModelSchema
 /**
  * A connection or surface instance. A page or trigger export has only the minimal fields, without the config, which
@@ -44,26 +44,23 @@ export const ExportV17InstanceSchema = z.object({
 
 	// Only in a full export
 	moduleInstanceType: z.enum(ModuleInstanceType).optional(),
-	/** Null, like a missing one, means the module's default, which an invalid one is given rather than failing the import */
-	config: JsonObjectSchema.nullable().optional().catch(null),
-	secrets: JsonObjectSchema.nullable().optional().catch(null),
+	/** Null, like a missing one, means the module's default */
+	config: JsonObjectSchema.nullable().optional(),
+	secrets: JsonObjectSchema.nullable().optional(),
 	isFirstInit: z.boolean().optional(),
 	enabled: z.boolean().optional(),
 })
 const ExportV17InstancesSchema = z.record(z.string(), ExportV17InstanceSchema)
 const ExportV17EnabledCollectionsSchema = z.array(createCollectionSchema(EnabledCollectionDataSchema))
 const ExportV17EmptyCollectionsSchema = z.array(createCollectionSchema(EmptyCollectionDataSchema))
-/** An image of the library. One that is invalid is skipped, rather than failing the import */
-const ExportV17ImageSchema = z
-	.object({
-		info: ImageLibraryInfoSchema,
-		/** A base64 data url */
-		originalImage: z.string(),
-		/** A base64 data url */
-		previewImage: z.string(),
-	})
-	.optional()
-	.catch(undefined)
+/** An image of the library */
+const ExportV17ImageSchema = z.object({
+	info: ImageLibraryInfoSchema,
+	/** A base64 data url */
+	originalImage: z.string(),
+	/** A base64 data url */
+	previewImage: z.string(),
+})
 const ExportV17ImageLibrarySchema = z.array(ExportV17ImageSchema)
 
 /** The config of a surface group. The import applies it field by field, over any existing group */
@@ -75,8 +72,8 @@ const ExportV17SurfaceSchema = withoutDefaults(SurfaceConfigSchema.out).extend({
 	groupConfig: ExportV17SurfaceGroupConfigSchema.optional(),
 })
 
-/** A remote surface. One that is invalid is skipped, rather than failing the import */
-const ExportV17RemoteSurfaceSchema = OutboundSurfaceInfoSchema.optional().catch(undefined)
+/** A remote surface */
+const ExportV17RemoteSurfaceSchema = OutboundSurfaceInfoSchema
 
 const ExportV17GridSizeSchema = z.object({
 	minColumn: z.number(),

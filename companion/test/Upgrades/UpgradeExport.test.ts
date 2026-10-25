@@ -103,7 +103,8 @@ describe('upgradeImport', () => {
 		const instance = { moduleId: 'bmd-atem', label: 'atem', config: 'host=1.2.3.4', secrets: { password: 'x' } }
 
 		const result: any = upgradeImport({ type: 'full', version: EXPORT_VERSION, instances: { a: instance } }, userConfig)
-		expect(result.instances.a).toMatchObject({ config: null, secrets: { password: 'x' } })
+		expect(result.instances.a).not.toHaveProperty('config')
+		expect(result.instances.a).toMatchObject({ secrets: { password: 'x' } })
 	})
 
 	test('keeps nested collections, enabling those from before they could be disabled', () => {
@@ -199,10 +200,7 @@ describe('upgradeImport', () => {
 			userConfig
 		)
 
-		expect(result.imageLibrary).toEqual([
-			{ ...image, info: expect.objectContaining({ name: 'logo', sortOrder: 0 }) },
-			undefined,
-		])
+		expect(result.imageLibrary).toEqual([{ ...image, info: expect.objectContaining({ name: 'logo', sortOrder: 0 }) }])
 	})
 
 	describe('repairs', () => {
@@ -276,13 +274,65 @@ describe('upgradeImport', () => {
 			expect(result.pages[1].pageVariables[1]).toMatchObject({ id: 'f2', ...placeholder })
 		})
 
-		test('still refuses an export that fails outside of a control or trigger', () => {
-			expect(() =>
-				upgradeImport(
-					{ type: 'full', version: EXPORT_VERSION, custom_variables: { v: { sortOrder: 'x' } } },
-					userConfig
-				)
-			).toThrow(/Invalid export/)
+		test('resets an invalid property of an entry to its default, or drops an entry that is still invalid', () => {
+			const result: any = upgradeImport(
+				{
+					type: 'full',
+					version: EXPORT_VERSION,
+					custom_variables: { counter: { description: 'Counts', sortOrder: 'first' } },
+					instances: { good: { moduleId: 'bmd-atem', label: 'atem' }, bad: { label: 'no module' } },
+					surfaceInstances: 'not a record',
+				},
+				userConfig
+			)
+
+			expect(result.custom_variables.counter).toMatchObject({ description: 'Counts', sortOrder: 0 })
+			expect(Object.keys(result.instances)).toEqual(['good'])
+			expect(result).not.toHaveProperty('surfaceInstances')
+		})
+
+		test('leaves out an invalid field of a surface or group, as the import applies them field by field', () => {
+			const result: any = upgradeImport(
+				{
+					type: 'full',
+					version: EXPORT_VERSION,
+					surfaces: { s1: { name: 'Deck', config: { brightness: 'bright', custom: 1 } } },
+					surfaceGroups: { g1: { name: 'Group', allowed_pages: [1, 'two'], never_lock: true } },
+				},
+				userConfig
+			)
+
+			expect(result.surfaces.s1).toEqual({ name: 'Deck', config: { custom: 1 } })
+			expect(result.surfaceGroups.g1).toEqual({ name: 'Group', never_lock: true })
+		})
+
+		test('keeps the children of a collection that is dropped', () => {
+			const child = { id: 'child', label: 'Child', sortOrder: 0, metaData: { enabled: true }, children: [] }
+			const result: any = upgradeImport(
+				{
+					type: 'full',
+					version: EXPORT_VERSION,
+					connectionCollections: [
+						{ label: 'No id', children: [child] },
+						{ id: 'other', label: 5, children: [] },
+					],
+				},
+				userConfig
+			)
+
+			expect(result.connectionCollections).toEqual([
+				child,
+				{ id: 'other', label: '', sortOrder: 0, metaData: { enabled: true }, children: [] },
+			])
+		})
+
+		test('repairs the fields of a page, rather than failing a page export', () => {
+			const result: any = upgradeImport(
+				{ type: 'page', version: EXPORT_VERSION, page: { name: 7, gridSize: 'big', controls: {} } },
+				userConfig
+			)
+
+			expect(result.page).toEqual({ name: '', controls: {} })
 		})
 	})
 

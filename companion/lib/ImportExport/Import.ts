@@ -296,8 +296,6 @@ export class ImportController {
 			}
 
 			for (const remoteInfo of Object.values(data.surfacesRemote || {})) {
-				if (!remoteInfo) continue
-
 				let instanceId = remoteInfo.instanceId
 				if (!surfaceInstances[instanceId]) {
 					// Try and remap the instance id, or fallback to using the module type
@@ -344,7 +342,7 @@ export class ImportController {
 		if (isImporting(config.imageLibrary)) {
 			this.#graphicsController.imageLibrary.importImageLibrary(
 				data.imageLibraryCollections || [],
-				(data.imageLibrary || []).filter((image) => image !== undefined)
+				data.imageLibrary || []
 			)
 		}
 	}

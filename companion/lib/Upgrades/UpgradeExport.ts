@@ -7,7 +7,8 @@ import { LEGACY_VERSION, legacyUpgrades } from './LegacyUpgrades.js'
 
 const logger = LogController.createLogger('Upgrades/UpgradeExport')
 
-const MAX_REPAIR_ATTEMPTS = 3
+/** A repair can reveal more to repair, such as a property that is required once an invalid one is removed */
+const MAX_REPAIR_ATTEMPTS = 5
 
 /**
  * Upgrade an exported page or full configuration to the latest format. An export older than the first version with a
@@ -29,7 +30,6 @@ export function upgradeImport(obj: unknown, userConfig: UserConfigModel): SomeEx
 		upgraded = legacyUpgrades[i - 1].upgradeImport(upgraded, logger, userConfig)
 	}
 
-	// A repair can reveal more to repair, so it is given a few attempts
 	let result = SomeExportSchema.safeParse(upgraded)
 	for (let attempt = 0; !result.success && attempt < MAX_REPAIR_ATTEMPTS; attempt++) {
 		const repaired = repairExport(upgraded, result.error.issues)
