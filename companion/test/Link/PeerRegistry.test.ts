@@ -3,6 +3,7 @@ import { LinkPeerRegistry } from '../../lib/Link/PeerRegistry.js'
 import type { LinkAnnouncement } from '../../lib/Link/Protocol/Announcement.js'
 import { LINK_CLOCK_ESTIMATE_MAX_AGE_MS } from '../../lib/Link/Protocol/v1/Timing.js'
 import { FakeTableView } from '../utils/FakeTableView.js'
+import { peerStore } from './helpers/PeerStore.js'
 
 function announcement(id: string, overrides: Partial<LinkAnnouncement> = {}): LinkAnnouncement {
 	return {
@@ -14,21 +15,19 @@ function announcement(id: string, overrides: Partial<LinkAnnouncement> = {}): Li
 	}
 }
 
-const emptyStore = () => new FakeTableView<any>().asTableView()
-
 describe('LinkPeerRegistry', () => {
 	afterEach(() => {
 		vi.useRealTimers()
 	})
 
 	test('ignores its own announcements', () => {
-		const registry = new LinkPeerRegistry('self', emptyStore())
+		const registry = new LinkPeerRegistry('self', peerStore())
 		registry.handleAnnouncement('t1', 'self', announcement('self'), 0)
 		expect(registry.getPeers()).toEqual([])
 	})
 
 	test('tracks peers across transports', () => {
-		const registry = new LinkPeerRegistry('self', emptyStore())
+		const registry = new LinkPeerRegistry('self', peerStore())
 		const reachable = vi.fn()
 		registry.on('peerReachable', reachable)
 
@@ -46,7 +45,7 @@ describe('LinkPeerRegistry', () => {
 	})
 
 	test('goes offline after a goodbye on every transport', () => {
-		const registry = new LinkPeerRegistry('self', emptyStore())
+		const registry = new LinkPeerRegistry('self', peerStore())
 		registry.handleAnnouncement('t1', 'a', announcement('a'), 0)
 		registry.handleAnnouncement('t2', 'a', announcement('a'), 0)
 
@@ -58,7 +57,7 @@ describe('LinkPeerRegistry', () => {
 	})
 
 	test('expires peers that stop announcing', () => {
-		const registry = new LinkPeerRegistry('self', emptyStore())
+		const registry = new LinkPeerRegistry('self', peerStore())
 		registry.handleAnnouncement('t1', 'a', announcement('a', { announceIntervalMs: 1000 }), 0)
 
 		registry.expireStale(2000)
@@ -69,7 +68,7 @@ describe('LinkPeerRegistry', () => {
 	})
 
 	test('lists incompatible peers', () => {
-		const registry = new LinkPeerRegistry('self', emptyStore())
+		const registry = new LinkPeerRegistry('self', peerStore())
 		registry.handleAnnouncement('t1', 'a', announcement('a', { protocolVersions: ['2.0.0'] }), 0)
 		expect(registry.getPeer('a')).toMatchObject({ compatible: false, protocolVersion: null })
 
@@ -78,7 +77,7 @@ describe('LinkPeerRegistry', () => {
 	})
 
 	test('tracks what is shared each way, per peer', () => {
-		const registry = new LinkPeerRegistry('self', emptyStore())
+		const registry = new LinkPeerRegistry('self', peerStore())
 		const sharedChanged = vi.fn()
 		registry.on('sharedWithUsChanged', sharedChanged)
 
@@ -110,7 +109,7 @@ describe('LinkPeerRegistry', () => {
 	})
 
 	test('forgets what a peer shares when it is no longer reachable, as it says again when it is', () => {
-		const registry = new LinkPeerRegistry('self', emptyStore())
+		const registry = new LinkPeerRegistry('self', peerStore())
 		registry.handleAnnouncement('t1', 'a', announcement('a'), 0)
 		registry.handleAccess('a', { buttons: true })
 		const shown = vi.fn()
@@ -122,7 +121,7 @@ describe('LinkPeerRegistry', () => {
 	})
 
 	test('keeps one route to a peer while it works, and picks the fastest when it has to change', () => {
-		const registry = new LinkPeerRegistry('self', emptyStore())
+		const registry = new LinkPeerRegistry('self', peerStore())
 		const routeChanged = vi.fn()
 		registry.on('routeChanged', routeChanged)
 
@@ -146,7 +145,7 @@ describe('LinkPeerRegistry', () => {
 	})
 
 	test('says the list has changed only when something shown has, not for each repeated announcement', () => {
-		const registry = new LinkPeerRegistry('self', emptyStore())
+		const registry = new LinkPeerRegistry('self', peerStore())
 		const changed = vi.fn()
 		const latencyChanged = vi.fn()
 		registry.on('changed', changed)
@@ -170,7 +169,7 @@ describe('LinkPeerRegistry', () => {
 	})
 
 	test('notices two installations announcing with one Link id, but not one restarting', () => {
-		const registry = new LinkPeerRegistry('self', emptyStore())
+		const registry = new LinkPeerRegistry('self', peerStore())
 		const interval = announcement('a').announceIntervalMs
 		registry.handleAnnouncement('t1', 'a', announcement('a', { instanceId: 'one' }), 0)
 		registry.handleAnnouncement('t1', 'a', announcement('a', { instanceId: 'two' }), 10)
@@ -193,7 +192,7 @@ describe('LinkPeerRegistry', () => {
 	test('does not save or say the list changed for each flip between two instance ids', () => {
 		const store = new FakeTableView<any>()
 		const set = vi.spyOn(store, 'set')
-		const registry = new LinkPeerRegistry('self', store.asTableView())
+		const registry = new LinkPeerRegistry('self', peerStore(store))
 		for (const [i, instanceId] of ['one', 'two', 'one'].entries())
 			registry.handleAnnouncement('t1', 'a', announcement('a', { instanceId }), i * 10)
 		registry.setSharedByUs('a', { buttons: true })
@@ -206,7 +205,7 @@ describe('LinkPeerRegistry', () => {
 
 	test('forgets peers, keeping one that is still reachable listed until it is not', () => {
 		const store = new FakeTableView<any>()
-		const registry = new LinkPeerRegistry('self', store.asTableView())
+		const registry = new LinkPeerRegistry('self', peerStore(store))
 		registry.handleAnnouncement('t1', 'a', announcement('a'), 0)
 		registry.setAlias('a', 'Named')
 		registry.setSharedByUs('a', { buttons: true })
@@ -229,7 +228,7 @@ describe('LinkPeerRegistry', () => {
 
 	test('calls a peer by the name given to it here, across restarts, until that is cleared', () => {
 		const store = new FakeTableView<any>()
-		const before = new LinkPeerRegistry('self', store.asTableView())
+		const before = new LinkPeerRegistry('self', peerStore(store))
 		before.handleAnnouncement('t1', 'a', announcement('a'), 0)
 		const changed = vi.fn()
 		before.on('changed', changed)
@@ -241,7 +240,7 @@ describe('LinkPeerRegistry', () => {
 		before.handleAnnouncement('t1', 'a', announcement('a', { name: 'Renamed' }), 10)
 		expect(before.getPeer('a')).toMatchObject({ name: 'Studio A', announcedName: 'Renamed' })
 
-		const after = new LinkPeerRegistry('self', store.asTableView())
+		const after = new LinkPeerRegistry('self', peerStore(store))
 		expect(after.getPeer('a')).toMatchObject({ name: 'Studio A', alias: 'Studio A' })
 		after.setAlias('a', '')
 		expect(after.getPeer('a')).toMatchObject({ name: 'Renamed', alias: null })
@@ -249,14 +248,14 @@ describe('LinkPeerRegistry', () => {
 
 	test('lists the peers seen before a restart as offline', () => {
 		const store = new FakeTableView<any>()
-		const before = new LinkPeerRegistry('self', store.asTableView())
+		const before = new LinkPeerRegistry('self', peerStore(store))
 		before.handleAnnouncement('t1', 'a', announcement('a'), 100)
 		before.setSharedByUs('a', { buttons: true })
 		vi.useFakeTimers({ now: 200 })
 		before.handleAnnouncement('t1', 'a', announcement('a'), 200)
 		before.stop()
 
-		const after = new LinkPeerRegistry('self', store.asTableView())
+		const after = new LinkPeerRegistry('self', peerStore(store))
 		expect(after.getPeers()).toEqual([
 			expect.objectContaining({ id: 'a', name: 'Peer a', online: false, lastSeen: 200, sharedByUs: { buttons: true } }),
 		])
@@ -272,7 +271,7 @@ describe('LinkPeerRegistry', () => {
 		const store = new FakeTableView<any>()
 		const set = vi.spyOn(store, 'set')
 		vi.useFakeTimers({ now: 0 })
-		const registry = new LinkPeerRegistry('self', store.asTableView())
+		const registry = new LinkPeerRegistry('self', peerStore(store))
 		registry.handleAnnouncement('t1', 'a', announcement('a'), 0)
 		registry.setSharedByUs('a', { buttons: true })
 		registry.handleAnnouncement('t1', 'a', announcement('a'), 10)
@@ -305,7 +304,7 @@ describe('LinkPeerRegistry', () => {
 
 	test('remembers only the peers it shares something with, or has named', () => {
 		const store = new FakeTableView<any>()
-		const registry = new LinkPeerRegistry('self', store.asTableView())
+		const registry = new LinkPeerRegistry('self', peerStore(store))
 		registry.handleAnnouncement('t1', 'b', announcement('b'), 0)
 		expect(store.data).toEqual({})
 
@@ -322,14 +321,14 @@ describe('LinkPeerRegistry', () => {
 
 	test('remembers a peer that only shares something with us, across a restart', () => {
 		const store = new FakeTableView<any>()
-		const before = new LinkPeerRegistry('self', store.asTableView())
+		const before = new LinkPeerRegistry('self', peerStore(store))
 		before.handleAnnouncement('t1', 'b', announcement('b'), 0)
 		before.handleAccess('b', { buttons: true })
 		// Still remembered once it stops sharing, so that buttons using it say it is offline rather than unknown
 		before.handleAccess('b', { buttons: false })
 		before.stop()
 
-		const after = new LinkPeerRegistry('self', store.asTableView())
+		const after = new LinkPeerRegistry('self', peerStore(store))
 		expect(after.getPeer('b')).toMatchObject({ online: false, name: 'Peer b' })
 	})
 
@@ -343,7 +342,7 @@ describe('LinkPeerRegistry', () => {
 			// What is shared with it can't be read, so nothing is
 			odd: { announcement: announcement('odd'), lastSeen: 5, alias: 'Odd', sharedByUs: 'everything' },
 		}
-		const registry = new LinkPeerRegistry('self', store.asTableView())
+		const registry = new LinkPeerRegistry('self', peerStore(store))
 		expect(registry.getPeers().map((peer) => [peer.id, peer.sharedByUs])).toEqual([
 			['a', { buttons: true }],
 			['odd', { buttons: false }],
@@ -353,7 +352,7 @@ describe('LinkPeerRegistry', () => {
 
 	test("forgets how far ahead a peer's clock is once that was measured too long ago", () => {
 		vi.useFakeTimers({ now: 1_000_000 })
-		const registry = new LinkPeerRegistry('self', emptyStore())
+		const registry = new LinkPeerRegistry('self', peerStore())
 		registry.handleAnnouncement('t1', 'a', announcement('a'), Date.now())
 		registry.recordClockSample('a', 500, 10, Date.now())
 		expect(registry.getClockOffset('a')).toBe(500)

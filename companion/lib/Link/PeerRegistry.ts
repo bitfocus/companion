@@ -8,7 +8,7 @@ import {
 	type LinkPermission,
 	type LinkPermissions,
 } from '@companion-app/shared/Model/Link.js'
-import type { DataStoreTableView } from '../Data/Tables/TableView.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import LogController from '../Log/Controller.js'
 import { LINK_ANNOUNCE_MISSED_LIMIT, LinkAnnouncementSchema, type LinkAnnouncement } from './Protocol/Announcement.js'
 import { LINK_CLOCK_ESTIMATE_MAX_AGE_MS } from './Protocol/v1/Timing.js'
@@ -61,7 +61,7 @@ const StoredPermissionsSchema = z
 	.catch(() => ({ ...LINK_NO_PERMISSIONS }))
 
 /** A peer seen before, kept so that it is listed after a restart, with what we share with it */
-const StoredPeerSchema = z.object({
+export const StoredPeerSchema = z.object({
 	announcement: LinkAnnouncementSchema,
 	lastSeen: z.number(),
 	alias: z.string().nullable().default(null),
@@ -106,40 +106,37 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 
 	readonly #peers = new Map<string, PeerRecord>()
 	#selfId: string
-	readonly #store: DataStoreTableView<Record<string, StoredPeer>>
+	readonly #store: DataStoreSchemaTableView<typeof StoredPeerSchema>
 	#expiryTimer: NodeJS.Timeout | null = null
 
 	/**
 	 * @param store - the peers seen before, which are listed as offline until they are heard from
 	 */
-	constructor(selfId: string, store: DataStoreTableView<Record<string, StoredPeer>>) {
+	constructor(selfId: string, store: DataStoreSchemaTableView<typeof StoredPeerSchema>) {
 		super()
 		this.setMaxListeners(0)
 		this.#selfId = selfId
 		this.#store = store
 
-		for (const [peerId, raw] of Object.entries(store.all())) {
-			const stored = StoredPeerSchema.safeParse(raw)
-			// Kept, with what is shared with it, for a version that can read it
-			if (!stored.success) continue
-			if (peerId === selfId || !isRemembered(stored.data)) {
+		for (const [peerId, stored] of Object.entries(store.all())) {
+			if (peerId === selfId || !isRemembered(stored)) {
 				store.delete(peerId)
 				continue
 			}
 			this.#peers.set(peerId, {
 				id: peerId,
-				announcement: stored.data.announcement,
-				protocolVersion: negotiateWith(stored.data.announcement),
-				alias: stored.data.alias,
+				announcement: stored.announcement,
+				protocolVersion: negotiateWith(stored.announcement),
+				alias: stored.alias,
 				instanceIds: [],
 				flippedBack: false,
 				sharesLinkIdSeenAt: null,
 				transports: new Map(),
-				lastSeen: stored.data.lastSeen,
-				savedLastSeen: stored.data.lastSeen,
-				sharedByUs: stored.data.sharedByUs,
+				lastSeen: stored.lastSeen,
+				savedLastSeen: stored.lastSeen,
+				sharedByUs: stored.sharedByUs,
 				sharedWithUs: null,
-				hasSharedWithUs: stored.data.hasSharedWithUs,
+				hasSharedWithUs: stored.hasSharedWithUs,
 				route: null,
 				clock: null,
 			})

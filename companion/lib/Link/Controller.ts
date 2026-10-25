@@ -33,7 +33,7 @@ import { LinkButtonClient } from './ButtonClient.js'
 import { LinkButtonServer } from './ButtonServer.js'
 import { LinkIdentity } from './Identity.js'
 import { describeLinkPages, LinkPagesClient } from './Pages.js'
-import { LinkPeerRegistry } from './PeerRegistry.js'
+import { LinkPeerRegistry, StoredPeerSchema } from './PeerRegistry.js'
 import { LinkPinger } from './Pinger.js'
 import {
 	decodeLinkAnnouncement,
@@ -134,7 +134,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 			() => this.#identity,
 			() => this.#getSelfInfo().name
 		)
-		this.#peers = new LinkPeerRegistry(this.#selfId, db.getTableView('link_peers'))
+		this.#peers = new LinkPeerRegistry(this.#selfId, db.getSchemaTableView('link_peers', StoredPeerSchema))
 		this.#pinger = new LinkPinger(
 			this.#peers,
 			(peerId, transportId, nonce) =>

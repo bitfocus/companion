@@ -11,7 +11,7 @@ import { LinkPeerRegistry } from '../../lib/Link/PeerRegistry.js'
 import type { LinkAnnouncement } from '../../lib/Link/Protocol/Announcement.js'
 import { decodeLinkMessage, type LinkButtonRevision } from '../../lib/Link/Protocol/v1/Schemas.js'
 import { LinkRemoteImageStore } from '../../lib/Link/RemoteImageStore.js'
-import { FakeTableView } from '../utils/FakeTableView.js'
+import { peerStore } from './helpers/PeerStore.js'
 
 function announcement(id: string, protocolVersions = ['1.0.0']): LinkAnnouncement {
 	return {
@@ -65,7 +65,7 @@ function noDecoration(size: { width: number; height: number }, _decoration: Butt
 
 function createClient(contentSize = noDecoration) {
 	const images = new LinkRemoteImageStore()
-	const peers = new LinkPeerRegistry('self', new FakeTableView<any>().asTableView())
+	const peers = new LinkPeerRegistry('self', peerStore())
 	const sent: { transportId: string; peerId: string; type: string; payload: any }[] = []
 	const client = new LinkButtonClient(
 		() => 'self',

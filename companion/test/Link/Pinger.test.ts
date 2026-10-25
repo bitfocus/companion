@@ -3,14 +3,14 @@ import { LinkPeerRegistry } from '../../lib/Link/PeerRegistry.js'
 import { LinkPinger } from '../../lib/Link/Pinger.js'
 import type { LinkAnnouncement } from '../../lib/Link/Protocol/Announcement.js'
 import { LINK_CLOCK_ESTIMATE_MAX_AGE_MS, LINK_PING_TIMEOUT_MS } from '../../lib/Link/Protocol/v1/Timing.js'
-import { FakeTableView } from '../utils/FakeTableView.js'
+import { peerStore } from './helpers/PeerStore.js'
 
 function announcement(protocolVersions = ['1.0.0']): LinkAnnouncement {
 	return { name: 'Peer', companionVersion: '5.0.0', protocolVersions, announceIntervalMs: 15_000 }
 }
 
 function createPinger() {
-	const peers = new LinkPeerRegistry('self', new FakeTableView<any>().asTableView())
+	const peers = new LinkPeerRegistry('self', peerStore())
 	const sent: { peerId: string; transportId: string; nonce: string }[] = []
 	/** The monotonic clock, which only the tests move */
 	let monotonic = 0

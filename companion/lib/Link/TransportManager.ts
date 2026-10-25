@@ -2,6 +2,7 @@ import { EventEmitter } from 'node:events'
 import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
+import { z } from 'zod'
 import { resolveLinkTransportConfig } from '@companion-app/shared/LinkTransportConfig.js'
 import type {
 	LinkTransportConfig,
@@ -9,12 +10,27 @@ import type {
 	LinkTransportStatesUpdate,
 	LinkTransportsUpdate,
 } from '@companion-app/shared/Model/Link.js'
+import { JsonObjectSchema, JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { DataStoreTableView } from '../Data/Tables/TableView.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import LogController from '../Log/Controller.js'
 import type { LinkIdentity } from './Identity.js'
 import type { LinkMessageOrigin, LinkTransport, SomeLinkTransportDefinition } from './Transports/Types.js'
+
+/** A transport the user added. Those that are part of Link aren't saved */
+const StoredTransportSchema = z.object({
+	id: z.string(),
+	type: z.string(),
+	label: z.string().default(''),
+	enabled: z.boolean().default(false),
+	config: JsonObjectSchema.default({}),
+	sortOrder: z.number().default(0),
+	builtin: z.boolean().default(false),
+}) satisfies z.ZodType<LinkTransportConfig>
+
+/** What each transport keeps for itself, by key */
+const TransportStorageSchema = z.record(z.string(), JsonValueSchema)
 
 export type TransportManagerEvents = {
 	/** An installation announced itself on a transport, or said it has gone (null) */
@@ -44,8 +60,8 @@ export class LinkTransportManager {
 	readonly #logger = LogController.createLogger('Link/TransportManager')
 
 	readonly #definitions: ReadonlyMap<string, SomeLinkTransportDefinition>
-	readonly #configTable: DataStoreTableView<Record<string, LinkTransportConfig>>
-	readonly #storageTable: DataStoreTableView<Record<string, Record<string, JsonValue>>>
+	readonly #configTable: DataStoreSchemaTableView<typeof StoredTransportSchema>
+	readonly #storageTable: DataStoreSchemaTableView<typeof TransportStorageSchema>
 
 	readonly #configs = new Map<string, LinkTransportConfig>()
 	/** The types of the transports that are part of Link, which the user can't add */
@@ -70,8 +86,8 @@ export class LinkTransportManager {
 		this.events.setMaxListeners(0)
 
 		this.#definitions = new Map(definitions.map((def) => [def.type, def]))
-		this.#configTable = db.getTableView('link_transports')
-		this.#storageTable = db.getTableView('link_transport_storage')
+		this.#configTable = db.getSchemaTableView('link_transports', StoredTransportSchema)
+		this.#storageTable = db.getSchemaTableView('link_transport_storage', TransportStorageSchema)
 		this.#identity = identity
 		this.#selfName = selfName
 

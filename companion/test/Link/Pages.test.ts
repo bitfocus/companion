@@ -3,10 +3,10 @@ import { LinkPagesClient } from '../../lib/Link/Pages.js'
 import { LinkPeerRegistry } from '../../lib/Link/PeerRegistry.js'
 import { decodeLinkMessage } from '../../lib/Link/Protocol/v1/Schemas.js'
 import { LINK_PAGES_TIMEOUT_MS } from '../../lib/Link/Protocol/v1/Timing.js'
-import { FakeTableView } from '../utils/FakeTableView.js'
+import { peerStore } from './helpers/PeerStore.js'
 
 function createClient() {
-	const peers = new LinkPeerRegistry('self', new FakeTableView<any>().asTableView())
+	const peers = new LinkPeerRegistry('self', peerStore())
 	const sent: { transportId: string; peerId: string; id: string }[] = []
 	const client = new LinkPagesClient(peers, (transportId, peerId, payload) => {
 		const decoded = decodeLinkMessage(payload)
