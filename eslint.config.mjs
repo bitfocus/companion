@@ -249,7 +249,6 @@ export default [
 			'companion/test/integration/modules/fixtures-invalid/**/*',
 			'tools/**/*',
 			'module-local-dev/**/*',
-			'launcher/dev.cjs',
 			'webui/public/_deps/**/*',
 			'webui/post-install.ts',
 			'.yarnrc.yml',
