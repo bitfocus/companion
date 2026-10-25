@@ -70,7 +70,7 @@ Remote buttons can be chained: a remote button can show a button that is itself 
 
 Aborting the actions of a remote button, including with **Abort all actions** or **Abort actions on page**, aborts them on the other installation, on the button it shows. That includes runs of that button started from the other installation's own surfaces.
 
-Feedbacks on this installation that check whether a button is pushed, or which step it is on, don't see the state of a remote button.
+Feedbacks on this installation that check whether a remote button is pushed see whether the button it shows is pushed, from any surface on either installation. Feedbacks that check which step it is on don't see the step of the remote button.
 
 ## Changing the Link id
 

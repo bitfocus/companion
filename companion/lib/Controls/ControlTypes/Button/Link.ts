@@ -24,7 +24,7 @@ import type {
 	ControlWithoutEntities,
 	ControlWithoutEvents,
 	ControlWithoutLayeredStyle,
-	ControlWithoutPushed,
+	ControlWithPushed,
 } from '../../IControlFragments.js'
 import { LinkButtonDrawer } from './LinkButtonDrawer.js'
 
@@ -65,7 +65,7 @@ export class ControlButtonLink
 		ControlWithoutEvents,
 		ControlWithoutActionSets,
 		ControlWithOptions,
-		ControlWithoutPushed,
+		ControlWithPushed,
 		ControlWithoutConvert
 {
 	readonly type = 'link-button'
@@ -77,7 +77,7 @@ export class ControlButtonLink
 	readonly supportsEvents = false
 	readonly supportsLayeredStyle = false
 	readonly supportsOptions = true
-	readonly supportsPushed = false
+	readonly supportsPushed = true
 
 	options: LinkButtonModel['options']
 
@@ -91,6 +91,14 @@ export class ControlButtonLink
 
 	/** Whether a location has been given that can't be resolved, which the link client isn't told about */
 	#locationInvalid = false
+
+	/** The pushed state last reported to `updateButtonState` */
+	#reportedPushed = false
+
+	/** Whether the remote button is pushed, from any surface on either installation */
+	get pushed(): boolean {
+		return this.#getState().pressed
+	}
 
 	protected triggerInvalidation = (): void => {
 		this.#drawing.invalidate()
@@ -129,6 +137,7 @@ export class ControlButtonLink
 
 	destroy(): void {
 		this.deps.linkButtons.removeTarget(this.controlId)
+		this.#reportPushed(false)
 		this.#drawing.dispose()
 		super.destroy()
 	}
@@ -144,6 +153,7 @@ export class ControlButtonLink
 		const target = this.#resolveTarget()
 		const onChange = () => {
 			this.sendRuntimePropsChange()
+			this.#reportPushed(this.pushed)
 			this.#drawing.invalidate()
 		}
 		this.deps.linkButtons.setTarget(this.controlId, target, onChange)
@@ -191,6 +201,19 @@ export class ControlButtonLink
 		if (!this.options.peerId || !resolved) return null
 
 		return { peerId: this.options.peerId, location: resolved }
+	}
+
+	#reportPushed(pushed: boolean): void {
+		if (pushed === this.#reportedPushed) return
+		this.#reportedPushed = pushed
+
+		const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
+		if (location) this.deps.events.emit('updateButtonState', location, pushed, undefined)
+	}
+
+	/** The pushed state is that of the remote button, so this can't change it */
+	setPushed(_direction: boolean, _surfaceId: string | undefined): boolean {
+		return false
 	}
 
 	pressControl(pressed: boolean, surfaceId: string | undefined): void {

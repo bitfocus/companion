@@ -333,6 +333,63 @@ describe('ControlButtonLink', () => {
 		])
 	})
 
+	it('is pushed when the remote button is, and reports each change', () => {
+		const pushedState = (pressed: boolean): LinkButtonState => ({
+			status: 'ok',
+			peerName: 'Peer',
+			...NO_DECORATION_STATE,
+			images: [],
+			pressed,
+			sourceChain: ['peer'],
+		})
+		const reported: unknown[][] = []
+		deps.events.on('updateButtonState', (...args: unknown[]) => reported.push(args))
+
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'), false)
+		const onChange = linkButtons.setTarget.mock.lastCall![2] as () => void
+		expect(control.supportsPushed).toBe(true)
+		expect(control.pushed).toBe(false)
+
+		linkButtons.getState.mockReturnValue(pushedState(true))
+		onChange()
+		onChange()
+		expect(control.pushed).toBe(true)
+		expect(reported).toEqual([[MY_LOCATION, true, undefined]])
+
+		// It can't be changed from here
+		expect(control.setPushed(false, 'deck')).toBe(false)
+		expect(control.pushed).toBe(true)
+
+		linkButtons.getState.mockReturnValue(pushedState(false))
+		onChange()
+		expect(reported).toEqual([
+			[MY_LOCATION, true, undefined],
+			[MY_LOCATION, false, undefined],
+		])
+	})
+
+	it('reports being released when destroyed while pushed', () => {
+		const reported: unknown[][] = []
+		deps.events.on('updateButtonState', (...args: unknown[]) => reported.push(args))
+
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'), false)
+		linkButtons.getState.mockReturnValue({
+			status: 'ok',
+			peerName: 'Peer',
+			...NO_DECORATION_STATE,
+			images: [],
+			pressed: true,
+			sourceChain: ['peer'],
+		} satisfies LinkButtonState)
+		;(linkButtons.setTarget.mock.lastCall![2] as () => void)()
+
+		control.destroy()
+		expect(reported).toEqual([
+			[MY_LOCATION, true, undefined],
+			[MY_LOCATION, false, undefined],
+		])
+	})
+
 	it('releases its subscription when destroyed', () => {
 		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'), false)
 		control.destroy()
