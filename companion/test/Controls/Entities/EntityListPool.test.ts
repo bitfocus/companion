@@ -175,6 +175,36 @@ describe('EntityListPool - connection management', () => {
 		expect(reportChange).not.toHaveBeenCalled()
 	})
 
+	test('clearConnectionState drops feedback values and reports an invalidating change', () => {
+		const { pool, reportChange } = createPool({ isLayered: true })
+		const feedback = feedbackModel({ styleOverrides: [styleOverride()] })
+		pool.entityAdd('feedbacks', null, feedback)
+		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: true }))
+		expect(pool.getFeedbackStyleOverrides(undefined).size).toBe(1)
+		reportChange.mockClear()
+
+		pool.clearConnectionState('conn01')
+
+		expect(pool.getFeedbackStyleOverrides(undefined).size).toBe(0)
+		// Without invalidating, the drawer's element cache would keep the old overrides
+		expect(reportChange).toHaveBeenCalledWith({
+			redraw: true,
+			noSave: true,
+			invalidateAllElements: true,
+		} satisfies ControlEntityListChangeProps)
+	})
+
+	test('clearConnectionState for an unreferenced connection does not report a change', () => {
+		const { pool, reportChange } = createPool()
+
+		pool.entityAdd('feedbacks', null, feedbackModel())
+		reportChange.mockClear()
+
+		pool.clearConnectionState('conn-unknown')
+
+		expect(reportChange).not.toHaveBeenCalled()
+	})
+
 	test('getAllEnabledConnectionIds collects connection ids from enabled entities', () => {
 		const { pool } = createPool()
 
