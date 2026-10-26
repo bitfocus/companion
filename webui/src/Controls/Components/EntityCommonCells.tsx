@@ -192,13 +192,14 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 						)}
 
 					{!!entity &&
+						!!entityDefinition &&
 						entity.type === EntityModelType.Feedback &&
 						feedbackListType === FeedbackEntitySubType.StyleOverride &&
-						!entityDefinition?.feedbackDisableStyleOverrides &&
-						!entityDefinition?.feedbackStyleOverridesUnsupported && (
+						!entityDefinition.feedbackDisableStyleOverrides &&
+						!entityDefinition.feedbackStyleOverridesUnsupported && (
 							<LayeredStylesOverrides
 								feedback={entity}
-								feedbackType={entityDefinition?.feedbackType}
+								feedbackType={entityDefinition.feedbackType}
 								service={service}
 								localVariablesStore={localVariablesStore}
 							/>
