@@ -19,7 +19,7 @@ import { useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { CreateTriggerControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientTriggerData, TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import { Button, LinkButtonExternal } from '~/Components/Button'
+import { Button } from '~/Components/Button'
 import { CollectionsNestingTable } from '~/Components/CollectionsNestingTable/CollectionsNestingTable'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import { DuplicateIcon } from '~/Components/DuplicateIcon.js'
@@ -38,7 +38,7 @@ import { CloseButton, ContextHelpButton } from '~/Layout/PanelIcons'
 import { SplitPanels } from '~/Layout/SplitPanels.js'
 import { sanitizeHtmlString } from '~/Resources/SanitizeHtml.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
-import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
+import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { useTriggerCollectionsApi } from './TriggerCollectionsApi'
 import { TriggersTableContextProvider, useTriggersTableContext } from './TriggersTableContext'
@@ -69,7 +69,7 @@ export const TriggersPage = observer(function Triggers() {
 
 	const exportModalRef = useRef<ConfirmExportModalRef>(null)
 	const showExportModal = useCallback(() => {
-		exportModalRef.current?.show(makeAbsolutePath(`/int/export/triggers/all`))
+		exportModalRef.current?.show({ type: 'triggers' })
 	}, [])
 
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
@@ -138,7 +138,7 @@ export const TriggersPage = observer(function Triggers() {
 
 			<SplitPanels.Root showing={selectedTriggerId ? 'secondary' : 'primary'} resize={{ storageKey: 'triggers' }}>
 				<GenericConfirmModal ref={confirmModalRef} />
-				<ConfirmExportModal ref={exportModalRef} title="Export Triggers" />
+				<ConfirmExportModal ref={exportModalRef} />
 
 				<SplitPanels.Primary>
 					<div className="flex flex-col h-full min-h-0 gap-2">
@@ -174,6 +174,7 @@ export const TriggersPage = observer(function Triggers() {
 							>
 								<TriggersTableContextProvider
 									deleteModalRef={confirmModalRef}
+									exportModalRef={exportModalRef}
 									selectTrigger={selectTrigger}
 									selectedTriggerId={selectedTriggerId}
 								>
@@ -319,6 +320,9 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 				console.error('Failed to clone', e)
 			})
 	}, [cloneMutation, item.id])
+	const doExport = useCallback(() => {
+		tableContext.exportModalRef.current?.show({ type: 'trigger', triggerId: item.id })
+	}, [tableContext.exportModalRef, item.id])
 
 	const descriptionHtml = useMemo(
 		() => ({
@@ -397,15 +401,9 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 					<Button variant="ghost" size="sm" onClick={doClone} title="Clone Trigger" className="p-1.5">
 						<DuplicateIcon />
 					</Button>
-					<LinkButtonExternal
-						variant="ghost"
-						size="sm"
-						href={makeAbsolutePath(`/int/export/triggers/single/${item.id}`)}
-						title="Export Trigger"
-						className="p-1.5"
-					>
+					<Button variant="ghost" size="sm" onClick={doExport} title="Export Trigger" className="p-1.5">
 						<FontAwesomeIcon icon={faDownload} className="text-xs" />
-					</LinkButtonExternal>
+					</Button>
 					<Button variant="ghost" size="sm" onClick={doDelete} title="Delete Trigger" className="p-1.5" color="danger">
 						<FontAwesomeIcon icon={faTrash} className="text-xs" />
 					</Button>

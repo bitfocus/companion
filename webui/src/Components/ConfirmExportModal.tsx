@@ -1,33 +1,35 @@
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useId, useImperativeHandle, useRef, useState } from 'react'
 import { ExportFormatDefault } from '@companion-app/shared/Model/ExportFormat.js'
-import { EXPORT_NOTES_MAX_LENGTH } from '@companion-app/shared/Model/ImportExport.js'
+import { EXPORT_NOTES_MAX_LENGTH, type ClientExportTarget } from '@companion-app/shared/Model/ImportExport.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { Modal } from '~/Components/Modal'
-import { windowLinkOpen } from '~/Helpers/Window.js'
 import { SelectExportFormat } from '~/ImportExport/ExportFormat.js'
+import { useExportDownload } from '~/ImportExport/useExportDownload.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { InlineHelpIcon } from './InlineHelp.js'
 import { SwitchInputField } from './SwitchInputField.js'
 import { TextInputField } from './TextInputField.js'
 
-export interface ConfirmExportModalRef {
-	show(url: string): void
-}
+/** What to export; whether to include secrets is chosen in the modal */
+export type ConfirmExportTarget = DistributiveOmit<Exclude<ClientExportTarget, { type: 'custom' }>, 'includeSecrets'>
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never
 
-interface ConfirmExportModalProps {
-	title: string
+export interface ConfirmExportModalRef {
+	show(target: ConfirmExportTarget): void
 }
 
 export const ConfirmExportModal = observer(
-	forwardRef<ConfirmExportModalRef, ConfirmExportModalProps>(function ConfirmExportModal(props, ref) {
-		const { userConfig } = useContext(RootAppStoreContext)
+	forwardRef<ConfirmExportModalRef>(function ConfirmExportModal(_props, ref) {
+		const { userConfig, notifier } = useContext(RootAppStoreContext)
 
 		const defaultExportFormat = userConfig.properties?.default_export_format ?? ExportFormatDefault
 
-		const [data, setData] = useState<string | null>(null)
+		const [target, setTarget] = useState<ConfirmExportTarget | null>(null)
 		const [show, setShow] = useState(false)
 		const [format, setFormat] = useState(defaultExportFormat)
 		const [filename, setFilename] = useState<string>('')
@@ -37,29 +39,26 @@ export const ConfirmExportModal = observer(
 
 		const buttonRef = useRef<HTMLButtonElement>(null)
 
+		const exportDownload = useExportDownload()
 		const doAction = useCallback(() => {
-			if (!notesValid) return
+			if (!target || !notesValid) return
 
-			setData(null)
-			setShow(false)
-
-			if (data) {
-				const url = new URL(data, window.location.origin)
-				url.searchParams.set('format', format)
-				url.searchParams.set('filename', filename)
-				url.searchParams.set('includeSecrets', includeSecrets ? 'true' : 'false')
-				if (notes.trim()) url.searchParams.set('notes', notes)
-
-				windowLinkOpen({ href: url.toString() })
-			}
-		}, [data, format, filename, includeSecrets, notes, notesValid])
+			exportDownload({
+				target: { ...target, includeSecrets },
+				output: { format, filename, notes },
+			})
+				.then(() => setShow(false))
+				.catch((e) => {
+					notifier.show('Export failed', stringifyError(e), 10000)
+				})
+		}, [exportDownload, notifier, target, format, filename, includeSecrets, notes, notesValid])
 
 		const defaultExportFilename = userConfig.properties?.default_export_filename ?? ''
 		useImperativeHandle(
 			ref,
 			() => ({
-				show(url) {
-					setData(url)
+				show(target) {
+					setTarget(target)
 					setShow(true)
 
 					// Reset to defaults each time modal is opened
@@ -79,7 +78,7 @@ export const ConfirmExportModal = observer(
 
 		const onOpenChangeComplete = useCallback((open: boolean) => {
 			// Clear data
-			if (!open) setData(null)
+			if (!open) setTarget(null)
 		}, [])
 
 		return (
@@ -89,7 +88,7 @@ export const ConfirmExportModal = observer(
 					<Modal.Viewport>
 						<Modal.Popup initialFocus={buttonRef}>
 							<Modal.Header closeButton>
-								<Modal.Title>{props.title}</Modal.Title>
+								<Modal.Title>{target ? getExportTitle(target) : 'Export'}</Modal.Title>
 							</Modal.Header>
 							<Modal.Body>
 								<Form row className="gap-4" onSubmit={doAction}>
@@ -154,3 +153,17 @@ export const ConfirmExportModal = observer(
 		)
 	})
 )
+
+function getExportTitle(target: ConfirmExportTarget): string {
+	switch (target.type) {
+		case 'page':
+			return `Export Page ${target.pageNumber}`
+		case 'triggers':
+			return 'Export Triggers'
+		case 'trigger':
+			return 'Export Trigger'
+		default:
+			assertNever(target)
+			return 'Export'
+	}
+}

@@ -5,6 +5,7 @@ import { describe, expect, test } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
 import { CreateExpressionVariableControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
+import type { ClientExportTarget } from '@companion-app/shared/Model/ImportExport.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { GraphicsController } from '../../lib/Graphics/Controller.js'
@@ -248,19 +249,38 @@ describe('export/import round-trip', () => {
 	// ── download endpoints: all three formats parse back to the same object ──────
 
 	describe('every download format parses back to the same object', () => {
-		const endpoints = [
-			{ name: 'full', url: '/int/api/export/full', type: 'full' },
-			{ name: 'trigger list', url: '/int/api/export/triggers/all', type: 'trigger_list' },
-			{ name: 'single page', url: '/int/api/export/page/1', type: 'page' },
+		/** Prepare an export as the UI does, returning the url to download it from */
+		function preparedUrl(controller: ExportController, target: ClientExportTarget, format: ExportFormat): string {
+			const token = controller.prepareDownload({ target, output: { format, filename: '', notes: '' } }, '10.0.0.1')
+			return `/int/api/export/download/${token}`
+		}
+
+		const endpoints: {
+			name: string
+			type: string
+			url: (controller: ExportController, format: ExportFormat) => string
+		}[] = [
+			{ name: 'full', type: 'full', url: (_controller, format) => `/int/api/export/full?format=${format}` },
+			{
+				name: 'trigger list',
+				type: 'trigger_list',
+				url: (controller, format) => preparedUrl(controller, { type: 'triggers', includeSecrets: true }, format),
+			},
+			{
+				name: 'single page',
+				type: 'page',
+				url: (controller, format) =>
+					preparedUrl(controller, { type: 'page', pageNumber: 1, includeSecrets: true }, format),
+			},
 		]
 
 		for (const endpoint of endpoints) {
 			test(`${endpoint.name} export is format-equivalent and parses`, async () => {
-				const { app } = createExportController()
+				const { app, controller } = createExportController()
 
 				const parsed: Record<string, unknown> = {}
 				for (const format of ALL_FORMATS) {
-					const res = await download(app, `${endpoint.url}?format=${format}`)
+					const res = await download(app, endpoint.url(controller, format))
 					expect(res.status).toBe(200)
 
 					const result = await parseImportBuffer(res.body, parseYaml)

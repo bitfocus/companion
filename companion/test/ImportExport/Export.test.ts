@@ -9,7 +9,14 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
 import yaml from 'yaml'
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
-import { EXPORT_NOTES_MAX_LENGTH } from '@companion-app/shared/Model/ImportExport.js'
+import {
+	EXPORT_NOTES_MAX_LENGTH,
+	zodClientExportRequest,
+	type ClientExportOutput,
+	type ClientExportRequest,
+	type ClientExportSelection,
+	type ClientExportTarget,
+} from '@companion-app/shared/Model/ImportExport.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'
 import type { ControlTrigger } from '../../lib/Controls/ControlTypes/Triggers/Trigger.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
@@ -142,12 +149,28 @@ describe('ExportController', () => {
 		return supertest(app).get(url).buffer(true).parse(binaryParser)
 	}
 
+	const TRIGGERS: ClientExportTarget = { type: 'triggers', includeSecrets: true }
+
+	function makeRequest(target: ClientExportTarget, output: Partial<ClientExportOutput> = {}): ClientExportRequest {
+		return { target, output: { format: 'json', filename: 'export', notes: '', ...output } }
+	}
+
+	/** Prepare an export as the UI does, then download it */
+	function download(
+		ctx: ReturnType<typeof createController>,
+		target: ClientExportTarget,
+		output: Partial<ClientExportOutput> = {}
+	) {
+		const token = ctx.controller.prepareDownload(makeRequest(target, output), '10.0.0.1')
+		return get(ctx.app, `/int/api/export/download/${token}`)
+	}
+
 	// ── Download format handling (downloadBlob) ─────────────────────────────────
 
 	describe('download format handling', () => {
-		test('defaults to streamed json-gz when no format is given', async () => {
-			const { app } = createController()
-			const res = await get(app, '/int/api/export/triggers/all')
+		test('format=json-gz streams gzip that round-trips', async () => {
+			const ctx = createController()
+			const res = await download(ctx, TRIGGERS, { format: 'json-gz' })
 
 			expect(res.status).toBe(200)
 			expect(res.headers['content-type']).toBe('application/octet-stream')
@@ -159,19 +182,9 @@ describe('ExportController', () => {
 			expect(decoded).toMatchObject({ type: 'trigger_list', version: EXPORT_VERSION })
 		})
 
-		test('format=json-gz streams gzip that round-trips', async () => {
-			const { app } = createController()
-			const res = await get(app, '/int/api/export/triggers/all?format=json-gz')
-
-			expect(res.status).toBe(200)
-			expect(res.body[0]).toBe(0x1f)
-			const decoded = decodeExport(res.body, 'json-gz')
-			expect(decoded.type).toBe('trigger_list')
-		})
-
 		test('format=json returns a tab-indented buffer', async () => {
-			const { app } = createController()
-			const res = await get(app, '/int/api/export/triggers/all?format=json')
+			const ctx = createController()
+			const res = await download(ctx, TRIGGERS, { format: 'json' })
 
 			expect(res.status).toBe(200)
 			const text = res.body.toString('utf-8')
@@ -182,8 +195,8 @@ describe('ExportController', () => {
 		})
 
 		test('format=yaml returns a yaml buffer', async () => {
-			const { app } = createController()
-			const res = await get(app, '/int/api/export/triggers/all?format=yaml')
+			const ctx = createController()
+			const res = await download(ctx, TRIGGERS, { format: 'yaml' })
 
 			expect(res.status).toBe(200)
 			const text = res.body.toString('utf-8')
@@ -191,18 +204,9 @@ describe('ExportController', () => {
 			expect(decodeExport(res.body, 'yaml')).toMatchObject({ type: 'trigger_list', version: EXPORT_VERSION })
 		})
 
-		test('an unrecognised format falls back to json-gz', async () => {
-			const { app } = createController()
-			const res = await get(app, '/int/api/export/triggers/all?format=bson')
-
-			expect(res.status).toBe(200)
-			expect(res.body[0]).toBe(0x1f)
-			expect(res.body[1]).toBe(0x8b)
-		})
-
 		test('sets an attachment content-disposition with ascii and utf-8 filenames', async () => {
-			const { app } = createController()
-			const res = await get(app, '/int/api/export/triggers/all?filename=my-export')
+			const ctx = createController()
+			const res = await download(ctx, TRIGGERS, { filename: 'my-export' })
 
 			expect(res.headers['content-disposition']).toContain('attachment;')
 			expect(res.headers['content-disposition']).toContain('filename="my-export.companionconfig"')
@@ -214,25 +218,25 @@ describe('ExportController', () => {
 
 	describe('filename generation', () => {
 		test('a custom filename is used verbatim without an export-type suffix', async () => {
-			const { app } = createController()
-			const res = await get(app, '/int/api/export/triggers/all?filename=custom-name')
+			const ctx = createController()
+			const res = await download(ctx, TRIGGERS, { filename: 'custom-name' })
 
 			expect(res.headers['content-disposition']).toContain('filename="custom-name.companionconfig"')
 		})
 
 		test('the default filename gets the export type appended', async () => {
-			const { app } = createController()
+			const ctx = createController()
 			// filename matching the configured default → treated as "still using the default"
-			const res = await get(app, `/int/api/export/triggers/all?filename=${DEFAULT_EXPORT_FILENAME}`)
+			const res = await download(ctx, TRIGGERS, { filename: DEFAULT_EXPORT_FILENAME })
 
 			expect(res.headers['content-disposition']).toContain(
 				`filename="${DEFAULT_EXPORT_FILENAME}_trigger_list.companionconfig"`
 			)
 		})
 
-		test('an empty/undefined filename falls back to hostname_timestamp_type', async () => {
-			const { app } = createController()
-			const res = await get(app, '/int/api/export/triggers/all')
+		test('an empty filename falls back to hostname_timestamp_type', async () => {
+			const ctx = createController()
+			const res = await download(ctx, TRIGGERS, { filename: '' })
 
 			const disposition = res.headers['content-disposition']
 			// hostname_<timestamp>_trigger_list.companionconfig
@@ -240,13 +244,85 @@ describe('ExportController', () => {
 		})
 
 		test('variables in the filename are parsed', async () => {
-			const { app, variables } = createController()
-			variables.values.createVariablesAndExpressionParser.mockReturnValue({
+			const ctx = createController()
+			ctx.variables.values.createVariablesAndExpressionParser.mockReturnValue({
 				parseVariables: () => ({ text: 'parsed-value' }),
 			} as any)
 
-			const res = await get(app, '/int/api/export/triggers/all?filename=$(internal:foo)')
+			const res = await download(ctx, TRIGGERS, { filename: '$(internal:foo)' })
 			expect(res.headers['content-disposition']).toContain('filename="parsed-value.companionconfig"')
+		})
+	})
+
+	// ── Prepared downloads ──────────────────────────────────────────────────────
+
+	describe('prepared downloads', () => {
+		test('a token can only be downloaded once', async () => {
+			const { app, controller } = createController()
+			const token = controller.prepareDownload(makeRequest(TRIGGERS), '10.0.0.1')
+
+			expect((await get(app, `/int/api/export/download/${token}`)).status).toBe(200)
+			expect((await get(app, `/int/api/export/download/${token}`)).status).toBe(404)
+		})
+
+		test('an unknown token is a 404', async () => {
+			const { app } = createController()
+			const res = await get(app, '/int/api/export/download/nope')
+			expect(res.status).toBe(404)
+		})
+
+		test('a token expires if it is not downloaded', async () => {
+			vi.useFakeTimers()
+			try {
+				const { app, controller } = createController()
+				const token = controller.prepareDownload(makeRequest(TRIGGERS), '10.0.0.1')
+
+				vi.advanceTimersByTime(60_000)
+				vi.useRealTimers()
+
+				expect((await get(app, `/int/api/export/download/${token}`)).status).toBe(404)
+			} finally {
+				vi.useRealTimers()
+			}
+		})
+
+		test('preparing another download replaces the pending one from the same client', async () => {
+			const { app, controller } = createController()
+			const first = controller.prepareDownload(makeRequest(TRIGGERS), '10.0.0.1')
+			const second = controller.prepareDownload(makeRequest(TRIGGERS), '10.0.0.1')
+
+			expect((await get(app, `/int/api/export/download/${first}`)).status).toBe(404)
+			expect((await get(app, `/int/api/export/download/${second}`)).status).toBe(200)
+		})
+
+		test('different clients each keep a pending download', async () => {
+			const { app, controller } = createController()
+			const first = controller.prepareDownload(makeRequest(TRIGGERS), '10.0.0.1')
+			const second = controller.prepareDownload(makeRequest(TRIGGERS), '10.0.0.2')
+
+			expect((await get(app, `/int/api/export/download/${first}`)).status).toBe(200)
+			expect((await get(app, `/int/api/export/download/${second}`)).status).toBe(200)
+		})
+
+		test('overlong notes are rejected by the request schema', () => {
+			const parsed = zodClientExportRequest.safeParse(
+				makeRequest(TRIGGERS, { notes: 'a'.repeat(EXPORT_NOTES_MAX_LENGTH + 1) })
+			)
+			expect(parsed.success).toBe(false)
+		})
+
+		test('the notes are included, trimmed', async () => {
+			const ctx = createController()
+			const res = await download(ctx, TRIGGERS, { notes: '  Swapped camera pages\nAdded audio page  ' })
+
+			expect(decodeExport(res.body, 'json').notes).toBe('Swapped camera pages\nAdded audio page')
+		})
+
+		test('blank notes are omitted', async () => {
+			const ctx = createController()
+			const res = await download(ctx, TRIGGERS, { notes: '  ' })
+
+			expect(decodeExport(res.body, 'json')).not.toHaveProperty('notes')
 		})
 	})
 
@@ -254,10 +330,10 @@ describe('ExportController', () => {
 
 	describe('trigger list export', () => {
 		test('exports all triggers with the expected envelope', async () => {
-			const { app, controls } = createController()
-			controls.getAllTriggers.mockReturnValue([makeTrigger('trig1', 'My Trigger')])
+			const ctx = createController()
+			ctx.controls.getAllTriggers.mockReturnValue([makeTrigger('trig1', 'My Trigger')])
 
-			const res = await get(app, '/int/api/export/triggers/all?format=json')
+			const res = await download(ctx, TRIGGERS)
 			const exp = decodeExport(res.body, 'json')
 
 			expect(exp).toMatchObject({
@@ -270,73 +346,54 @@ describe('ExportController', () => {
 			expect(exp.triggerCollections).toEqual([])
 		})
 
-		test('includeSecrets defaults to true and is forwarded to exportConnection', async () => {
-			const { app, controls, instance } = createController()
+		test('includeSecrets=true is forwarded to exportConnection', async () => {
+			const ctx = createController()
 			const trigger = makeTrigger('trig1', 'Trig')
 			trigger.collectReferencedConnectionsAndVariables = (ids: Set<string>) => {
 				ids.add('conn-1')
 			}
-			controls.getAllTriggers.mockReturnValue([trigger])
+			ctx.controls.getAllTriggers.mockReturnValue([trigger])
 
-			await get(app, '/int/api/export/triggers/all?format=json')
-			expect(instance.exportConnection).toHaveBeenCalledWith('conn-1', false, true, true)
+			await download(ctx, TRIGGERS)
+			expect(ctx.instance.exportConnection).toHaveBeenCalledWith('conn-1', false, true, true)
 		})
 
 		test('includeSecrets=false is forwarded to exportConnection', async () => {
-			const { app, controls, instance } = createController()
+			const ctx = createController()
 			const trigger = makeTrigger('trig1', 'Trig')
 			trigger.collectReferencedConnectionsAndVariables = (ids: Set<string>) => {
 				ids.add('conn-1')
 			}
-			controls.getAllTriggers.mockReturnValue([trigger])
+			ctx.controls.getAllTriggers.mockReturnValue([trigger])
 
-			await get(app, '/int/api/export/triggers/all?format=json&includeSecrets=false')
-			expect(instance.exportConnection).toHaveBeenCalledWith('conn-1', false, true, false)
+			await download(ctx, { type: 'triggers', includeSecrets: false })
+			expect(ctx.instance.exportConnection).toHaveBeenCalledWith('conn-1', false, true, false)
 		})
 
 		test('ignores the internal connection', async () => {
-			const { app, controls, instance } = createController()
+			const ctx = createController()
 			const trigger = makeTrigger('trig1', 'Trig')
 			trigger.collectReferencedConnectionsAndVariables = (ids: Set<string>) => {
 				ids.add('internal')
 			}
-			controls.getAllTriggers.mockReturnValue([trigger])
+			ctx.controls.getAllTriggers.mockReturnValue([trigger])
 
-			const res = await get(app, '/int/api/export/triggers/all?format=json')
-			expect(instance.exportConnection).not.toHaveBeenCalled()
+			const res = await download(ctx, TRIGGERS)
+			expect(ctx.instance.exportConnection).not.toHaveBeenCalled()
 			expect(decodeExport(res.body, 'json').instances).toEqual({})
-		})
-
-		test('the notes are included, trimmed', async () => {
-			const { app, controls } = createController()
-			controls.getAllTriggers.mockReturnValue([makeTrigger('trig1', 'Trig')])
-
-			const res = await get(
-				app,
-				`/int/api/export/triggers/all?format=json&notes=${encodeURIComponent(' New trigger ')}`
-			)
-			expect(decodeExport(res.body, 'json').notes).toBe('New trigger')
-		})
-
-		test('overlong notes are rejected with a 400', async () => {
-			const { app, controls } = createController()
-			controls.getAllTriggers.mockReturnValue([makeTrigger('trig1', 'Trig')])
-
-			const res = await supertest(app).get(
-				`/int/api/export/triggers/all?format=json&notes=${'a'.repeat(EXPORT_NOTES_MAX_LENGTH + 1)}`
-			)
-			expect(res.status).toBe(400)
 		})
 	})
 
 	// ── Single trigger export ───────────────────────────────────────────────────
 
 	describe('single trigger export', () => {
-		test('exports a single trigger and derives the filename from its name', async () => {
-			const { app, controls } = createController()
-			controls.getTrigger.mockReturnValue(makeTrigger('trig1', 'Cool Trigger'))
+		const SINGLE: ClientExportTarget = { type: 'trigger', triggerId: 'trig1', includeSecrets: true }
 
-			const res = await get(app, '/int/api/export/triggers/single/trig1?format=json')
+		test('exports a single trigger and derives the filename from its name', async () => {
+			const ctx = createController()
+			ctx.controls.getTrigger.mockReturnValue(makeTrigger('trig1', 'Cool Trigger'))
+
+			const res = await download(ctx, SINGLE, { filename: DEFAULT_EXPORT_FILENAME })
 
 			expect(res.status).toBe(200)
 			const exp = decodeExport(res.body, 'json')
@@ -347,42 +404,52 @@ describe('ExportController', () => {
 		})
 
 		test('all non-word characters are stripped from the derived trigger filename', async () => {
-			const { app, controls } = createController()
-			controls.getTrigger.mockReturnValue(makeTrigger('trig1', 'My Cool Trigger! (v2)'))
+			const ctx = createController()
+			ctx.controls.getTrigger.mockReturnValue(makeTrigger('trig1', 'My Cool Trigger! (v2)'))
 
-			const res = await get(app, '/int/api/export/triggers/single/trig1?format=json')
+			const res = await download(ctx, SINGLE, { filename: DEFAULT_EXPORT_FILENAME })
 
 			// Every \W removed, not just the first - lower-cased and concatenated
 			expect(res.headers['content-disposition']).toContain('trigger_mycooltriggerv2.companionconfig')
 		})
 
 		test('a single trigger export never includes collections', async () => {
-			const { app, controls } = createController()
-			controls.getTrigger.mockReturnValue(makeTrigger('trig1', 'Trig', 'collection-1'))
+			const ctx = createController()
+			ctx.controls.getTrigger.mockReturnValue(makeTrigger('trig1', 'Trig', 'collection-1'))
 
-			const res = await get(app, '/int/api/export/triggers/single/trig1?format=json')
+			const res = await download(ctx, SINGLE)
 			expect(decodeExport(res.body, 'json').triggerCollections).toEqual([])
 			// getTrigger path must not fetch trigger collections
-			expect(controls.exportTriggerCollections).not.toHaveBeenCalled()
+			expect(ctx.controls.exportTriggerCollections).not.toHaveBeenCalled()
 		})
 
-		test('a missing trigger falls through to a 404', async () => {
-			const { app, controls } = createController()
+		test('a missing trigger is refused when preparing', () => {
+			const { controller, controls } = createController()
 			controls.getTrigger.mockReturnValue(undefined)
 
-			const res = await get(app, '/int/api/export/triggers/single/nope')
-			expect(res.status).toBe(404)
+			expect(() => controller.prepareDownload(makeRequest(SINGLE), '10.0.0.1')).toThrow('not found')
+		})
+
+		test('a trigger deleted before downloading is a 404', async () => {
+			const { app, controller, controls } = createController()
+			controls.getTrigger.mockReturnValue(makeTrigger('trig1', 'Trig'))
+			const token = controller.prepareDownload(makeRequest(SINGLE), '10.0.0.1')
+
+			controls.getTrigger.mockReturnValue(undefined)
+			expect((await get(app, `/int/api/export/download/${token}`)).status).toBe(404)
 		})
 	})
 
 	// ── Single page export ──────────────────────────────────────────────────────
 
 	describe('single page export', () => {
-		test('exports a page envelope', async () => {
-			const { app, pageStore } = createController()
-			pageStore.getPageInfo.mockReturnValue({ id: 'page-uuid-1', name: 'Page One', controls: {} })
+		const PAGE: ClientExportTarget = { type: 'page', pageNumber: 1, includeSecrets: true }
 
-			const res = await get(app, '/int/api/export/page/1?format=json')
+		test('exports a page envelope', async () => {
+			const ctx = createController()
+			ctx.pageStore.getPageInfo.mockReturnValue({ id: 'page-uuid-1', name: 'Page One', controls: {} })
+
+			const res = await download(ctx, PAGE, { notes: 'Line 1\nLine 2' })
 			expect(res.status).toBe(200)
 
 			const exp = decodeExport(res.body, 'json')
@@ -390,78 +457,58 @@ describe('ExportController', () => {
 				type: 'page',
 				version: EXPORT_VERSION,
 				companionBuild: 'test-build-1',
+				notes: 'Line 1\nLine 2',
 				oldPageNumber: 1,
 			})
 			expect(exp.page).toMatchObject({ id: 'page-uuid-1', name: 'Page One' })
 			expect(exp.page.gridSize).toEqual(DEFAULT_GRID_SIZE)
-			expect(pageStore.getPageInfo).toHaveBeenCalledWith(1, true)
+			expect(ctx.pageStore.getPageInfo).toHaveBeenCalledWith(1, true)
 		})
 
-		test('a non-numeric page falls through to a 404', async () => {
-			const { app } = createController()
-			const res = await get(app, '/int/api/export/page/abc')
-			expect(res.status).toBe(404)
-		})
-
-		test('a missing page results in a 500', async () => {
-			const { app, pageStore } = createController()
+		test('a missing page is refused when preparing', () => {
+			const { controller, pageStore } = createController()
 			pageStore.getPageInfo.mockReturnValue(undefined)
 
-			const res = await get(app, '/int/api/export/page/9')
-			expect(res.status).toBe(500)
+			expect(() => controller.prepareDownload(makeRequest(PAGE), '10.0.0.1')).toThrow('not found')
 		})
 
-		test('the export filename is derived from the page number', async () => {
-			const { app, pageStore } = createController()
-			pageStore.getPageInfo.mockReturnValue({ id: 'p2', name: 'P2', controls: {} })
-
-			const res = await get(app, '/int/api/export/page/2?filename=page2')
-			expect(res.headers['content-disposition']).toContain('filename="page2.companionconfig"')
-		})
-
-		test('the notes are included, and blank notes are omitted', async () => {
-			const { app, pageStore } = createController()
+		test('a page removed before downloading results in a 500', async () => {
+			const { app, controller, pageStore } = createController()
 			pageStore.getPageInfo.mockReturnValue({ id: 'p1', name: 'P1', controls: {} })
+			const token = controller.prepareDownload(makeRequest(PAGE), '10.0.0.1')
 
-			const withNotes = await get(
-				app,
-				`/int/api/export/page/1?format=json&notes=${encodeURIComponent('Line 1\nLine 2')}`
+			pageStore.getPageInfo.mockReturnValue(undefined)
+			expect((await get(app, `/int/api/export/download/${token}`)).status).toBe(500)
+		})
+
+		test('the default filename gets the page number appended', async () => {
+			const ctx = createController()
+			ctx.pageStore.getPageInfo.mockReturnValue({ id: 'p2', name: 'P2', controls: {} })
+
+			const res = await download(ctx, { ...PAGE, pageNumber: 2 }, { filename: DEFAULT_EXPORT_FILENAME })
+			expect(res.headers['content-disposition']).toContain(
+				`filename="${DEFAULT_EXPORT_FILENAME}_page2.companionconfig"`
 			)
-			expect(decodeExport(withNotes.body, 'json').notes).toBe('Line 1\nLine 2')
-
-			const blank = await get(app, '/int/api/export/page/1?format=json&notes=%20')
-			expect(decodeExport(blank.body, 'json')).not.toHaveProperty('notes')
-		})
-
-		test('overlong notes are rejected with a 400', async () => {
-			const { app, pageStore } = createController()
-			pageStore.getPageInfo.mockReturnValue({ id: 'p1', name: 'P1', controls: {} })
-
-			const res = await supertest(app).get(`/int/api/export/page/1?notes=${'a'.repeat(EXPORT_NOTES_MAX_LENGTH + 1)}`)
-			expect(res.status).toBe(400)
 		})
 	})
 
 	// ── Custom export ───────────────────────────────────────────────────────────
 
 	describe('custom export', () => {
-		const validQuery =
-			'buttons=true&connections=true&triggers=true&customVariables=true&expressionVariables=true' +
-			'&includeSecrets=true&imageLibrary=true&surfaces.known=true&surfaces.instances=true&surfaces.remote=true&format=json'
+		const allSelected: ClientExportSelection = {
+			buttons: true,
+			connections: true,
+			triggers: true,
+			customVariables: true,
+			expressionVariables: true,
+			includeSecrets: true,
+			imageLibrary: true,
+			surfaces: { known: true, instances: true, remote: true },
+		}
 
-		test('rejects an invalid selection with a 400 and zod issues', async () => {
-			const { app } = createController()
-			// Missing all the required boolean fields
-			const res = await supertest(app).get('/int/api/export/custom?format=json')
-
-			expect(res.status).toBe(400)
-			expect(res.body.error).toBe('Invalid query parameters')
-			expect(Array.isArray(res.body.details)).toBe(true)
-		})
-
-		test('a valid selection produces a full export', async () => {
-			const { app } = createController()
-			const res = await get(app, `/int/api/export/custom?${validQuery}`)
+		test('a full selection produces a full export', async () => {
+			const ctx = createController()
+			const res = await download(ctx, { type: 'custom', selection: allSelected })
 
 			expect(res.status).toBe(200)
 			const exp = decodeExport(res.body, 'json')
@@ -472,12 +519,20 @@ describe('ExportController', () => {
 		})
 
 		test('deselecting sections omits them from the export', async () => {
-			const { app } = createController()
-			const query =
-				'buttons=false&connections=false&triggers=false&customVariables=false&expressionVariables=false' +
-				'&includeSecrets=false&imageLibrary=false&surfaces.known=false&surfaces.instances=false&surfaces.remote=false&format=json'
-
-			const res = await get(app, `/int/api/export/custom?${query}`)
+			const ctx = createController()
+			const res = await download(ctx, {
+				type: 'custom',
+				selection: {
+					buttons: false,
+					connections: false,
+					triggers: false,
+					customVariables: false,
+					expressionVariables: false,
+					includeSecrets: false,
+					imageLibrary: false,
+					surfaces: null,
+				},
+			})
 			const exp = decodeExport(res.body, 'json')
 
 			expect(exp.pages).toBeUndefined()
@@ -489,36 +544,12 @@ describe('ExportController', () => {
 			expect(exp.instances).toEqual({})
 		})
 
-		test('the custom filename is honoured', async () => {
-			const { app } = createController()
-			const res = await get(app, `/int/api/export/custom?${validQuery}&filename=mine`)
-			expect(res.headers['content-disposition']).toContain('filename="mine.companionconfig"')
-		})
-
-		test('the notes are included, trimmed', async () => {
-			const { app } = createController()
-			const notes = encodeURIComponent('  Swapped camera pages\nAdded audio page  ')
-			const res = await get(app, `/int/api/export/custom?${validQuery}&notes=${notes}`)
-
-			const exp = decodeExport(res.body, 'json')
-			expect(exp.notes).toBe('Swapped camera pages\nAdded audio page')
-		})
-
-		test('blank notes are omitted', async () => {
-			const { app } = createController()
-			const res = await get(app, `/int/api/export/custom?${validQuery}&notes=%20%20`)
-
-			const exp = decodeExport(res.body, 'json')
-			expect(exp).not.toHaveProperty('notes')
-		})
-
-		test('overlong notes are rejected with a 400', async () => {
-			const { app } = createController()
-			const res = await supertest(app).get(
-				`/int/api/export/custom?${validQuery}&notes=${'a'.repeat(EXPORT_NOTES_MAX_LENGTH + 1)}`
+		test('the default filename gets custom_config appended', async () => {
+			const ctx = createController()
+			const res = await download(ctx, { type: 'custom', selection: allSelected }, { filename: DEFAULT_EXPORT_FILENAME })
+			expect(res.headers['content-disposition']).toContain(
+				`filename="${DEFAULT_EXPORT_FILENAME}_custom_config.companionconfig"`
 			)
-
-			expect(res.status).toBe(400)
 		})
 	})
 
@@ -537,6 +568,18 @@ describe('ExportController', () => {
 			// Full export always includes all connections (secrets included)
 			expect(instance.exportAllConnections).toHaveBeenCalledWith(true)
 			expect(surfaces.exportAll).toHaveBeenCalled()
+		})
+
+		test('defaults to json-gz, also for an unrecognised format', async () => {
+			const { app } = createController()
+			for (const url of ['/int/api/export/full', '/int/api/export/full?format=bson']) {
+				const res = await get(app, url)
+
+				expect(res.status).toBe(200)
+				// gzip magic bytes
+				expect(res.body[0]).toBe(0x1f)
+				expect(res.body[1]).toBe(0x8b)
+			}
 		})
 
 		test('uses the default export filename with a full_config suffix', async () => {

@@ -17,6 +17,7 @@ import z from 'zod'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ExportFullv6, ExportPageContentv6, SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
 import {
+	zodClientExportRequest,
 	zodClientImportOrResetSelection,
 	type ClientImportObject,
 	type ClientImportOrResetSelection,
@@ -378,6 +379,10 @@ export class ImportExportController {
 				for await (const [change] of changes) {
 					yield change
 				}
+			}),
+
+			prepareExport: publicProcedure.input(zodClientExportRequest).mutation(({ input, ctx }) => {
+				return this.#exportController.prepareDownload(input, ctx.clientIp)
 			}),
 
 			abort: publicProcedure.mutation(async ({ ctx }) => {
