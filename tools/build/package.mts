@@ -92,6 +92,13 @@ await fs.remove('dist/node_modules/usb/libusb')
 await fs.remove('dist/node_modules/usb/node_modules/node-addon-api')
 await fs.remove('dist/node_modules/node-addon-api')
 
+// Prebuilds for the Bare runtime (eg sodium-native), never loaded by node
+const bareFiles = await glob('dist/node_modules/**/prebuilds/**/*.bare', { onlyFiles: true })
+console.log(`Removing ${bareFiles.length} .bare prebuilds`)
+for (const file of bareFiles) {
+	await fs.remove(file)
+}
+
 // Now that dist/node_modules is installed and pruned, the shipped set is known. This writes dist/LICENSE and
 // dist/NOTICE, and fails the build on anything Companion cannot distribute, before electron-builder copies dist in.
 await generateLegalArtifacts('dist')
