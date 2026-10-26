@@ -1,41 +1,45 @@
-import type { SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
+import z from 'zod'
+import { EXPORT_VERSION, SomeExportSchema, type SomeExport } from '@companion-app/shared/Model/Export/Latest.js'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
-import LogController, { type Logger } from '../Log/Controller.js'
+import LogController from '../Log/Controller.js'
+import { repairExport } from './ExportRepair.js'
 import { LEGACY_VERSION, legacyUpgrades } from './LegacyUpgrades.js'
 
 const logger = LogController.createLogger('Upgrades/UpgradeExport')
 
-interface ExportUpgradeStep {
-	upgradeImport: (obj: any, logger: Logger, userConfig: UserConfigModel) => SomeExportv6
-}
-
-/** The steps that upgrade an export, after the legacy steps */
-const exportUpgrades: ExportUpgradeStep[] = []
-
-/** The version of the export format */
-export const EXPORT_VERSION = LEGACY_VERSION + exportUpgrades.length
+/** A repair can reveal more to repair, such as a property that is required once an invalid one is removed */
+const MAX_REPAIR_ATTEMPTS = 5
 
 /**
- * Upgrade an exported page or full configuration to the latest format
- * @throws if it is from a newer version of Companion
+ * Upgrade an exported page or full configuration to the latest format. An export older than the first version with a
+ * schema is upgraded by the legacy steps first, then the schema parses it, migrating it from any later version.
+ * An entity or element that fails is replaced with a placeholder, and a control or trigger that still fails is skipped
+ * @throws if it is from a newer version of Companion, or is otherwise invalid
  */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function upgradeImport(obj: any, userConfig: UserConfigModel): SomeExportv6 {
-	const currentVersion = obj.version || 1
+export function upgradeImport(obj: unknown, userConfig: UserConfigModel): SomeExport {
+	let upgraded: any = obj
+	const currentVersion = upgraded?.version || 1
+	if (typeof currentVersion !== 'number') throw new Error(`Invalid export version: ${String(currentVersion)}`)
 	if (currentVersion > EXPORT_VERSION) {
 		throw new Error(
 			`This file is from a newer version of Companion (export version ${currentVersion}, this supports up to ${EXPORT_VERSION})`
 		)
 	}
 
-	for (let i = currentVersion; i < EXPORT_VERSION; i++) {
-		if (i < LEGACY_VERSION) {
-			obj = legacyUpgrades[i - 1].upgradeImport(obj, logger, userConfig)
-		} else {
-			obj = exportUpgrades[i - LEGACY_VERSION].upgradeImport(obj, logger, userConfig)
-		}
+	for (let i = currentVersion; i < LEGACY_VERSION; i++) {
+		upgraded = legacyUpgrades[i - 1].upgradeImport(upgraded, logger, userConfig)
 	}
 
-	obj.version = EXPORT_VERSION
-	return obj
+	let result = SomeExportSchema.safeParse(upgraded)
+	for (let attempt = 0; !result.success && attempt < MAX_REPAIR_ATTEMPTS; attempt++) {
+		const repaired = repairExport(upgraded, result.error.issues)
+		if (!repaired) break
+
+		for (const repair of repaired.repairs) logger.warn(`Repaired import: ${repair}`)
+		upgraded = repaired.obj
+		result = SomeExportSchema.safeParse(upgraded)
+	}
+	if (!result.success) throw new Error(`Invalid export: ${z.prettifyError(result.error)}`)
+
+	return result.data
 }

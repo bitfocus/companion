@@ -3,18 +3,19 @@ import { CreateExpressionVariableControlId, CreateTriggerControlId } from '@comp
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type {
-	ExportFullv6,
-	ExportInstancesv6,
-	ExportPageContentv6,
-	ExportTriggerContentv6,
-} from '@companion-app/shared/Model/ExportModel.js'
+	ExportFull,
+	ExportInstances,
+	ExportPageContent,
+	ExportSurface,
+	ExportSurfaceGroupConfig,
+	ExportTriggerContent,
+} from '@companion-app/shared/Model/Export/Latest.js'
 import type {
 	ClientImportOrResetSelection,
 	ConnectionRemappings,
 	ImportOrResetType,
 } from '@companion-app/shared/Model/ImportExport.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
-import type { SurfaceConfig, SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { ControlsController } from '../Controls/Controller.js'
@@ -73,9 +74,9 @@ export class ImportController {
 	}
 
 	async importSinglePage(
-		instances: ExportInstancesv6 | undefined,
+		instances: ExportInstances | undefined,
 		connectionIdRemapping: Record<string, string | undefined>,
-		pageInfo: ExportPageContentv6,
+		pageInfo: ExportPageContent,
 		topage: number
 	): Promise<ConnectionRemappings> {
 		// Setup the new instances
@@ -100,9 +101,9 @@ export class ImportController {
 	}
 
 	importTriggers(
-		instances: ExportInstancesv6 | undefined,
+		instances: ExportInstances | undefined,
 		connectionIdRemapping: Record<string, string | undefined>,
-		triggers: Record<string, ExportTriggerContentv6>,
+		triggers: Record<string, ExportTriggerContent>,
 		selectedTriggerIds: string[],
 		replaceExisting: boolean
 	): ConnectionRemappings {
@@ -140,7 +141,7 @@ export class ImportController {
 		return instanceRemap2
 	}
 
-	async importFull(data: ExportFullv6, config: ClientImportOrResetSelection): Promise<void> {
+	async importFull(data: ExportFull, config: ClientImportOrResetSelection): Promise<void> {
 		const isImporting = (value: ImportOrResetType): boolean => value === 'reset-and-import'
 
 		const mergeConnections = config.connections === 'unchanged'
@@ -219,11 +220,11 @@ export class ImportController {
 		}
 
 		if (isImporting(config.surfaces.known)) {
-			const surfaces: Record<number, SurfaceConfig> = (data.surfaces || {}) as any
-			const surfaceGroups: Record<number, SurfaceGroupConfig> = (data.surfaceGroups || {}) as any
+			const surfaces: Record<string, ExportSurface> = data.surfaces || {}
+			const surfaceGroups: Record<string, ExportSurfaceGroupConfig> = data.surfaceGroups || {}
 			const getPageId = (val: number) =>
 				this.#pagesController.store.getPageId(val) ?? this.#pagesController.store.getFirstPageId()
-			const fixPageId = (groupConfig: SurfaceGroupConfig) => {
+			const fixPageId = (groupConfig: ExportSurfaceGroupConfig | undefined) => {
 				if (!groupConfig) return
 
 				if ('last_page' in groupConfig) {
@@ -276,7 +277,7 @@ export class ImportController {
 					this.#instancesController.setSurfaceInstanceLabelAndConfig(newId, {
 						label: null,
 						enabled: instanceConfig.enabled !== false,
-						config: 'config' in instanceConfig ? instanceConfig.config : null,
+						config: instanceConfig.config ?? null,
 						// secrets: 'secrets' in instanceConfig ? instanceConfig.secrets : null,
 						updatePolicy: null,
 						// upgradeIndex: instanceConfig.lastUpgradeIndex,
@@ -347,7 +348,7 @@ export class ImportController {
 	}
 
 	#performPageImport = async (
-		pageInfo: ExportPageContentv6,
+		pageInfo: ExportPageContent,
 		topage: number,
 		instanceIdMap: InstanceAppliedRemappings,
 		outboundSurfaceIdRemap: Record<string, string> | undefined
@@ -412,7 +413,7 @@ export class ImportController {
 					} else if (control.type === 'link-button') {
 						fixedControlObj = fixupLinkButtonControl(control, referencesUpdater)
 					} else {
-						this.#logger.warn(`Unknown control type: ${control.type}`)
+						this.#logger.warn(`Unknown control type: ${(control as { type: string }).type}`)
 						continue
 					}
 
@@ -446,7 +447,7 @@ export class ImportController {
 	}
 
 	#importInstances(
-		instances: ExportInstancesv6 | undefined,
+		instances: ExportInstances | undefined,
 		instanceRemapping: ConnectionRemappings
 	): InstanceAppliedRemappings {
 		const instanceIdMap: InstanceAppliedRemappings = {}
@@ -487,8 +488,8 @@ export class ImportController {
 						this.#instancesController.setConnectionLabelAndConfig(newId, {
 							label: null,
 							enabled: obj.enabled !== false,
-							config: 'config' in obj ? obj.config : null,
-							secrets: 'secrets' in obj ? obj.secrets : null,
+							config: obj.config ?? null,
+							secrets: obj.secrets ?? null,
 							updatePolicy: null,
 							upgradeIndex: obj.lastUpgradeIndex,
 						})
@@ -514,7 +515,7 @@ export class ImportController {
 		return instanceIdMap
 	}
 
-	#createDefaultConnectionRemap(instances: ExportInstancesv6 | undefined): ConnectionRemappings {
+	#createDefaultConnectionRemap(instances: ExportInstances | undefined): ConnectionRemappings {
 		const remap: ConnectionRemappings = {}
 		if (!instances) return remap
 

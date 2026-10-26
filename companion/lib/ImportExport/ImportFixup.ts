@@ -9,7 +9,7 @@ import {
 	type PresetReferenceButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import type { ExportControlv6, ExportTriggerContentv6 } from '@companion-app/shared/Model/ExportModel.js'
+import type { ExportTriggerContent } from '@companion-app/shared/Model/Export/Latest.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
@@ -24,7 +24,7 @@ export type InstanceAppliedRemappings = Record<
 
 export function fixupTriggerControl(
 	internalModule: InternalController,
-	control: ExportTriggerContentv6,
+	control: ExportTriggerContent,
 	instanceIdMap: InstanceAppliedRemappings,
 	outboundSurfaceIdRemap: Record<string, string> | undefined
 ): TriggerModel {
@@ -147,7 +147,7 @@ export function fixupPageVariables(
 
 export function fixupLayeredButtonControl(
 	logger: Logger,
-	control: ExportControlv6,
+	control: LayeredButtonModel,
 	referencesUpdater: VisitorReferencesUpdater,
 	instanceIdMap: InstanceAppliedRemappings
 ): LayeredButtonModel {
@@ -165,7 +165,7 @@ export function fixupLayeredButtonControl(
 
 export function fixupPresetReferenceControl(
 	logger: Logger,
-	control: ExportControlv6,
+	control: PresetReferenceButtonModel,
 	referencesUpdater: VisitorReferencesUpdater,
 	instanceIdMap: InstanceAppliedRemappings
 ): PresetReferenceButtonModel {
@@ -193,7 +193,7 @@ export function fixupPresetReferenceControl(
 }
 
 export function fixupButtonReferenceControl(
-	control: ExportControlv6,
+	control: ButtonReferenceButtonModel,
 	referencesUpdater: VisitorReferencesUpdater
 ): ButtonReferenceButtonModel {
 	const options = structuredClone(control.options) ?? {}
@@ -212,7 +212,7 @@ export function fixupButtonReferenceControl(
 }
 
 export function fixupLinkButtonControl(
-	control: ExportControlv6,
+	control: LinkButtonModel,
 	referencesUpdater: VisitorReferencesUpdater
 ): LinkButtonModel {
 	// Anything not valid is replaced by its default, rather than refusing the whole button
@@ -230,7 +230,7 @@ export function fixupLinkButtonControl(
 
 function fixupButtonControlBase(
 	logger: Logger,
-	control: ExportControlv6,
+	control: ButtonModelBase,
 	referencesUpdater: VisitorReferencesUpdater,
 	instanceIdMap: InstanceAppliedRemappings
 ): ButtonModelBase {

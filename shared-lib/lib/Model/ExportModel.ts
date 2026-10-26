@@ -9,6 +9,9 @@ import type { OutboundSurfaceInfo } from './Surfaces.js'
 import type { TriggerCollection } from './TriggerModel.js'
 import type { UserConfigGridSize } from './UserConfigModel.js'
 
+// The export format as the legacy upgrade steps see it, before the format was described by the schemas in Model/Export.
+// New code uses Model/Export/Latest.js instead
+
 export type SomeExportv6 = ExportFullv6 | ExportPageModelv6 | ExportTriggersListv6
 
 export interface ExportBase<Type extends string> {

@@ -20,16 +20,17 @@ import type { ParsedQs } from 'qs'
 import yazl from 'yazl'
 import { CreatePageControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
+import {
+	EXPORT_VERSION,
+	type ExportFull,
+	type ExportInstances,
+	type ExportPageContent,
+	type ExportPageModel,
+	type ExportTriggerContent,
+	type ExportTriggersList,
+	type SomeExport,
+} from '@companion-app/shared/Model/Export/Latest.js'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
-import type {
-	ExportFullv6,
-	ExportInstancesv6,
-	ExportPageContentv6,
-	ExportPageModelv6,
-	ExportTriggerContentv6,
-	ExportTriggersListv6,
-	SomeExportv6,
-} from '@companion-app/shared/Model/ExportModel.js'
 import type { ImageLibraryExportData } from '@companion-app/shared/Model/ImageLibraryModel.js'
 import type { ClientExportRequest, ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
@@ -48,7 +49,6 @@ import type { AppInfo } from '../Registry.js'
 import { getTimestamp } from '../Resources/Util.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import { compileUpdatePayload } from '../UI/UpdatePayload.js'
-import { EXPORT_VERSION } from '../Upgrades/UpgradeExport.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import { formatAttachmentFilename, prepareExport, streamExport, type PreparedExport } from './Util.js'
 
@@ -153,7 +153,7 @@ export class ExportController {
 		const { target, output } = request
 		const notes = output.notes.trim() || undefined
 
-		let exp: SomeExportv6
+		let exp: SomeExport
 		let exportType: string
 		switch (target.type) {
 			case 'custom':
@@ -198,7 +198,7 @@ export class ExportController {
 		await downloadBlob(this.#logger, res, next, exp, filename, output.format)
 	}
 
-	#generatePageExport(pageNumber: number, includeSecrets: boolean, notes: string | undefined): ExportPageModelv6 {
+	#generatePageExport(pageNumber: number, includeSecrets: boolean, notes: string | undefined): ExportPageModel {
 		const pageInfo = this.#pagesStore.getPageInfo(pageNumber, true)
 		if (!pageInfo) throw new Error(`Page "${pageNumber}" not found!`)
 
@@ -376,8 +376,8 @@ export class ExportController {
 			includeSecrets: boolean
 			notes: string | undefined
 		}
-	): ExportTriggersListv6 {
-		const triggersExport: ExportTriggerContentv6 = {}
+	): ExportTriggersList {
+		const triggersExport: Record<string, ExportTriggerContent> = {}
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
 		const referencedVariables = new Set<string>()
@@ -434,7 +434,7 @@ export class ExportController {
 			referencedImageLibraryCollectionIds
 		)
 
-		const result: ExportTriggersListv6 = {
+		const result: ExportTriggersList = {
 			type: 'trigger_list',
 			version: EXPORT_VERSION,
 			companionBuild: this.#appInfo.appBuild,
@@ -496,29 +496,31 @@ export class ExportController {
 			minimalExport: boolean
 			includeSecrets: boolean
 		}
-	): ExportInstancesv6 {
-		const instancesExport: ExportInstancesv6 = {}
+	): ExportInstances {
+		const instancesExport: ExportInstances = {}
 
 		referencedConnectionIds.delete('internal') // Ignore the internal module
 		for (const connectionId of referencedConnectionIds) {
-			instancesExport[connectionId] = this.#instancesController.exportConnection(
+			const exported = this.#instancesController.exportConnection(
 				connectionId,
 				options.minimalExport,
 				true,
 				options.includeSecrets
 			)
+			if (exported) instancesExport[connectionId] = exported
 		}
 
 		referencedConnectionLabels.delete('internal') // Ignore the internal module
 		for (const label of referencedConnectionLabels) {
 			const connectionId = this.#instancesController.getIdForLabel(ModuleInstanceType.Connection, label)
 			if (connectionId) {
-				instancesExport[connectionId] = this.#instancesController.exportConnection(
+				const exported = this.#instancesController.exportConnection(
 					connectionId,
 					options.minimalExport,
 					true,
 					options.includeSecrets
 				)
+				if (exported) instancesExport[connectionId] = exported
 			}
 		}
 
@@ -530,8 +532,8 @@ export class ExportController {
 		referencedConnectionIds: Set<string>,
 		referencedConnectionLabels: Set<string>,
 		referencedVariables: Set<string>
-	): ExportPageContentv6 {
-		const pageExport: ExportPageContentv6 = {
+	): ExportPageContent {
+		const pageExport: ExportPageContent = {
 			id: pageInfo.id,
 			name: pageInfo.name,
 			controls: {},
@@ -571,9 +573,9 @@ export class ExportController {
 		return pageExport
 	}
 
-	generateCustomExport(config: ClientExportSelection | null, notes: string | undefined): ExportFullv6 {
+	generateCustomExport(config: ClientExportSelection | null, notes: string | undefined): ExportFull {
 		// Export file protocol version
-		const exp: ExportFullv6 = {
+		const exp: ExportFull = {
 			version: EXPORT_VERSION,
 			type: 'full',
 			companionBuild: this.#appInfo.appBuild,
@@ -599,7 +601,7 @@ export class ExportController {
 		}
 
 		if (!config || config.triggers) {
-			const triggersExport: ExportTriggerContentv6 = {}
+			const triggersExport: Record<string, ExportTriggerContent> = {}
 			const triggerControls = this.#controlsController.getAllTriggers()
 			for (const control of triggerControls) {
 				const parsedId = ParseControlId(control.controlId)
@@ -763,7 +765,7 @@ async function downloadBlob(
 	logger: Logger,
 	res: express.Response,
 	next: express.NextFunction,
-	data: SomeExportv6,
+	data: SomeExport,
 	filename: string,
 	formatStr: string
 ): Promise<void> {

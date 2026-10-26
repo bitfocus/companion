@@ -14,8 +14,12 @@ import type express from 'express'
 import { nanoid } from 'nanoid'
 import workerPool from 'workerpool'
 import z from 'zod'
-import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ExportFullv6, ExportPageContentv6, SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
+import {
+	EXPORT_VERSION,
+	type ExportFull,
+	type ExportPageContent,
+	type SomeExport,
+} from '@companion-app/shared/Model/Export/Latest.js'
 import {
 	zodClientExportRequest,
 	zodClientImportOrResetSelection,
@@ -54,7 +58,7 @@ import { MultipartUploader } from '../Resources/MultipartUploader.js'
 import { resolveThreadEntrypoint } from '../Resources/Util.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import { publicProcedure, router, toIterable, type TrpcContext } from '../UI/TRPC.js'
-import { EXPORT_VERSION, upgradeImport } from '../Upgrades/UpgradeExport.js'
+import { upgradeImport } from '../Upgrades/UpgradeExport.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import { BackupController } from './Backups.js'
 import { MAX_IMPORT_FILE_SIZE } from './Constants.js'
@@ -143,7 +147,7 @@ export class ImportExportController {
 	 * the minimal summary object sent back to the client.
 	 */
 	#buildClientImportObject(rawObject: unknown, sessionCtx: TrpcContext): [string | null, ClientImportObject | null] {
-		let importObject: SomeExportv6
+		let importObject: SomeExport
 		try {
 			importObject = upgradeImport(rawObject, this.#userConfigController.getAll())
 		} catch (e) {
@@ -169,7 +173,7 @@ export class ImportExportController {
 				triggerCollections: importObject.triggerCollections,
 				instances: importObject.instances,
 				connectionCollections: importObject.connectionCollections,
-			} satisfies ExportFullv6
+			} satisfies ExportFull
 		}
 
 		// Store the object on the client
@@ -178,7 +182,7 @@ export class ImportExportController {
 			timeout: null, // TODO
 		}
 
-		const importContainsKey = (key: keyof (ExportFullv6 & ExportPageContentv6)): boolean =>
+		const importContainsKey = (key: keyof (ExportFull & ExportPageContent)): boolean =>
 			key in importObject && Object.keys(importObject[key as keyof typeof importObject] || {}).length > 0
 
 		// Build a minimal object to send back to the client
@@ -207,7 +211,7 @@ export class ImportExportController {
 			}
 		}
 
-		function simplifyPageForClient(pageInfo: ExportPageContentv6): ClientPageInfo {
+		function simplifyPageForClient(pageInfo: ExportPageContent): ClientPageInfo {
 			return {
 				name: pageInfo.name,
 				gridSize: find_smallest_grid_for_page(pageInfo),
@@ -411,7 +415,7 @@ export class ImportExportController {
 					const importObject = ctx.pendingImport?.object
 					if (!importObject) return null
 
-					let importPage: ExportPageContentv6 | undefined
+					let importPage: ExportPageContent | undefined
 					if (importObject.type === 'page') {
 						importPage = importObject.page
 					} else if (importObject.type === 'full') {
@@ -422,7 +426,7 @@ export class ImportExportController {
 					const controlObj = importPage.controls?.[input.location.row]?.[input.location.column]
 					if (!controlObj) return null
 
-					const controlObjLayered = controlObj as SomeButtonModel
+					const controlObjLayered = controlObj
 
 					let drawType: RendererButtonStyle['drawType']
 					let rawElements: SomeButtonGraphicsElement[]
@@ -509,7 +513,7 @@ export class ImportExportController {
 							if (!oldPageInfo) throw new Error('Invalid target page')
 						}
 
-						let pageInfo: ExportPageContentv6
+						let pageInfo: ExportPageContent
 
 						if (data.type === 'full' && data.pages) {
 							pageInfo = data.pages[frompage]

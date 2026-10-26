@@ -18,6 +18,8 @@ module-local-dev
 bundled-modules
 
 companion/test/Upgrades/Legacy/*/*.*.json
+shared-lib/lib/Model/Export/__tests__/snapshots/
+companion/test/Upgrades/Exports/*.json
 webui/public/_deps
 webui/public/whatsnew
 docs/.docusaurus/

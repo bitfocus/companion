@@ -5,7 +5,6 @@ import {
 	type FeedbackEntityModel,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { ExportControlv6, ExportTriggerContentv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import {
@@ -21,6 +20,10 @@ import {
 import type { InternalController } from '../../lib/Internal/Controller.js'
 import type { Logger } from '../../lib/Log/Controller.js'
 import { VisitorReferencesUpdater } from '../../lib/Resources/Visitors/ReferencesUpdater.js'
+
+// Partial controls, to check how the fixups handle what is missing
+type LooseControl = any
+type LooseTrigger = any
 
 // ── Test helpers ──────────────────────────────────────────────────────────────
 
@@ -217,7 +220,7 @@ describe('fixupTriggerControl', () => {
 		internalModule = mockInternalModule()
 	})
 
-	function makeTrigger(overrides: Partial<ExportTriggerContentv6> = {}): ExportTriggerContentv6 {
+	function makeTrigger(overrides: Partial<LooseTrigger> = {}): LooseTrigger {
 		return {
 			type: 'trigger',
 			options: { name: 'My Trigger', enabled: true, sortOrder: 0 },
@@ -483,7 +486,7 @@ describe('fixupLayeredButtonControl', () => {
 		return new VisitorReferencesUpdater(internalModule, labelRemap, idRemap, undefined)
 	}
 
-	function makeButton(overrides: Partial<ExportControlv6> = {}): ExportControlv6 {
+	function makeButton(overrides: Partial<LooseControl> = {}): LooseControl {
 		return {
 			type: 'button-layered',
 			options: { stepProgression: 'auto', rotaryActions: false, canModifyStyleInApis: false },
@@ -634,7 +637,7 @@ describe('fixupLayeredButtonControl', () => {
 describe('fixupPresetReferenceControl', () => {
 	const logger = { warn: vi.fn(), debug: vi.fn(), error: vi.fn() } as unknown as Logger
 
-	function makeReferenceExport(overrides: Record<string, any> = {}): ExportControlv6 {
+	function makeReferenceExport(overrides: Record<string, any> = {}): LooseControl {
 		return {
 			type: 'preset-reference',
 			options: { rotaryActions: false, stepProgression: 'auto', canModifyStyleInApis: false },
@@ -690,7 +693,7 @@ describe('fixupButtonReferenceControl', () => {
 		return new VisitorReferencesUpdater(internalModule, labelRemap, {}, undefined)
 	}
 
-	function makeExport(options: any): ExportControlv6 {
+	function makeExport(options: any): LooseControl {
 		return { type: 'button-reference', options }
 	}
 
