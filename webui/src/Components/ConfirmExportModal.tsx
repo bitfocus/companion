@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useId, useImperativeHandle, useRef, useState } from 'react'
 import { ExportFormatDefault } from '@companion-app/shared/Model/ExportFormat.js'
+import { EXPORT_NOTES_MAX_LENGTH } from '@companion-app/shared/Model/ImportExport.js'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
@@ -31,10 +32,14 @@ export const ConfirmExportModal = observer(
 		const [format, setFormat] = useState(defaultExportFormat)
 		const [filename, setFilename] = useState<string>('')
 		const [includeSecrets, setIncludeSecrets] = useState<boolean>(true)
+		const [notes, setNotes] = useState<string>('')
+		const notesValid = notes.length <= EXPORT_NOTES_MAX_LENGTH
 
 		const buttonRef = useRef<HTMLButtonElement>(null)
 
 		const doAction = useCallback(() => {
+			if (!notesValid) return
+
 			setData(null)
 			setShow(false)
 
@@ -43,10 +48,11 @@ export const ConfirmExportModal = observer(
 				url.searchParams.set('format', format)
 				url.searchParams.set('filename', filename)
 				url.searchParams.set('includeSecrets', includeSecrets ? 'true' : 'false')
+				if (notes.trim()) url.searchParams.set('notes', notes)
 
 				windowLinkOpen({ href: url.toString() })
 			}
-		}, [data, format, filename, includeSecrets])
+		}, [data, format, filename, includeSecrets, notes, notesValid])
 
 		const defaultExportFilename = userConfig.properties?.default_export_filename ?? ''
 		useImperativeHandle(
@@ -60,6 +66,7 @@ export const ConfirmExportModal = observer(
 					setFormat(defaultExportFormat)
 					setFilename(String(defaultExportFilename))
 					setIncludeSecrets(true)
+					setNotes('')
 				},
 			}),
 			[defaultExportFilename, defaultExportFormat]
@@ -68,6 +75,7 @@ export const ConfirmExportModal = observer(
 		const exportFormatId = useId()
 		const exportNameId = useId()
 		const exportSecretsId = useId()
+		const exportNotesId = useId()
 
 		const onOpenChangeComplete = useCallback((open: boolean) => {
 			// Clear data
@@ -115,11 +123,27 @@ export const ConfirmExportModal = observer(
 									<Grid.Col sm={8} className="flex items-center">
 										<SwitchInputField id={exportSecretsId} value={includeSecrets} setValue={setIncludeSecrets} />
 									</Grid.Col>
+
+									<FormLabel htmlFor={exportNotesId} sm={4} column="sm">
+										Notes
+										<InlineHelpIcon className="ms-1">Shown to whoever imports this file</InlineHelpIcon>
+									</FormLabel>
+									<Grid.Col sm={8}>
+										<TextInputField
+											id={exportNotesId}
+											value={notes}
+											setValue={setNotes}
+											checkValid={() => (notesValid ? undefined : false)}
+											placeholder="Optional. Describe what changed"
+											multiline
+											immediateValue
+										/>
+									</Grid.Col>
 								</Form>
 							</Modal.Body>
 							<Modal.Footer>
 								<Modal.Close>Cancel</Modal.Close>
-								<Button ref={buttonRef} color="primary" onClick={doAction}>
+								<Button ref={buttonRef} color="primary" onClick={doAction} disabled={!notesValid}>
 									Export
 								</Button>
 							</Modal.Footer>

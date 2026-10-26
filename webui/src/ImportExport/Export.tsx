@@ -4,7 +4,7 @@ import { useForm } from '@tanstack/react-form'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId, useRef, useState } from 'react'
 import { ExportFormatDefault } from '@companion-app/shared/Model/ExportFormat.js'
-import type { ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
+import { EXPORT_NOTES_MAX_LENGTH, type ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { flattenToQueryParams } from '@companion-app/shared/Util/QueryParamUtil.js'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
@@ -39,6 +39,7 @@ export const ExportWizardModal = observer(function ExportWizardModal() {
 		// userconfig: true,
 		format: userConfig.properties?.default_export_format ?? ExportFormatDefault,
 		filename: userConfig.properties?.default_export_filename ?? '',
+		notes: '',
 	}
 
 	const form = useForm({
@@ -86,6 +87,7 @@ export const ExportWizardModal = observer(function ExportWizardModal() {
 
 	const exportFormatId = useId()
 	const exportNameId = useId()
+	const exportNotesId = useId()
 
 	return (
 		<Modal.Root open={show} onOpenChange={onOpenChange} onOpenChangeComplete={onOpenChangeComplete}>
@@ -265,6 +267,32 @@ export const ExportWizardModal = observer(function ExportWizardModal() {
 												/>
 											</div>
 										</div>
+									</div>
+
+									<div className="config-selection-section">
+										<FormLabel htmlFor={exportNotesId} className="config-selection-title">
+											Notes
+										</FormLabel>
+										<form.Field
+											name="notes"
+											validators={{
+												onChange: ({ value }) =>
+													(value?.length ?? 0) > EXPORT_NOTES_MAX_LENGTH
+														? `Notes must be at most ${EXPORT_NOTES_MAX_LENGTH} characters`
+														: undefined,
+											}}
+											children={(field) => (
+												<TextInputField
+													id={exportNotesId}
+													value={field.state.value ?? ''}
+													setValue={(val) => field.handleChange(val)}
+													checkValid={(val) => (val.length > EXPORT_NOTES_MAX_LENGTH ? false : undefined)}
+													placeholder="Optional. Describe what changed, for whoever imports this file"
+													multiline
+													immediateValue
+												/>
+											)}
+										/>
 									</div>
 								</div>
 							</Modal.Body>

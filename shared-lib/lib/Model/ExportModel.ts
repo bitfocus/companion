@@ -16,6 +16,8 @@ export interface ExportBase<Type extends string> {
 	readonly version: number
 	readonly type: Type
 	readonly companionBuild: string | undefined // The build of the companion that exported this
+	/** Free-text notes written by the user when exporting, shown when importing. Added in v5.0 */
+	readonly notes?: string
 }
 
 export interface ExportFullv6 extends ExportBase<'full'> {

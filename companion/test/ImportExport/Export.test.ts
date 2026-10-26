@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
 import yaml from 'yaml'
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
+import { EXPORT_NOTES_MAX_LENGTH } from '@companion-app/shared/Model/ImportExport.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'
 import type { ControlTrigger } from '../../lib/Controls/ControlTypes/Triggers/Trigger.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
@@ -305,6 +306,27 @@ describe('ExportController', () => {
 			expect(instance.exportConnection).not.toHaveBeenCalled()
 			expect(decodeExport(res.body, 'json').instances).toEqual({})
 		})
+
+		test('the notes are included, trimmed', async () => {
+			const { app, controls } = createController()
+			controls.getAllTriggers.mockReturnValue([makeTrigger('trig1', 'Trig')])
+
+			const res = await get(
+				app,
+				`/int/api/export/triggers/all?format=json&notes=${encodeURIComponent(' New trigger ')}`
+			)
+			expect(decodeExport(res.body, 'json').notes).toBe('New trigger')
+		})
+
+		test('overlong notes are rejected with a 400', async () => {
+			const { app, controls } = createController()
+			controls.getAllTriggers.mockReturnValue([makeTrigger('trig1', 'Trig')])
+
+			const res = await supertest(app).get(
+				`/int/api/export/triggers/all?format=json&notes=${'a'.repeat(EXPORT_NOTES_MAX_LENGTH + 1)}`
+			)
+			expect(res.status).toBe(400)
+		})
 	})
 
 	// ── Single trigger export ───────────────────────────────────────────────────
@@ -396,6 +418,28 @@ describe('ExportController', () => {
 			const res = await get(app, '/int/api/export/page/2?filename=page2')
 			expect(res.headers['content-disposition']).toContain('filename="page2.companionconfig"')
 		})
+
+		test('the notes are included, and blank notes are omitted', async () => {
+			const { app, pageStore } = createController()
+			pageStore.getPageInfo.mockReturnValue({ id: 'p1', name: 'P1', controls: {} })
+
+			const withNotes = await get(
+				app,
+				`/int/api/export/page/1?format=json&notes=${encodeURIComponent('Line 1\nLine 2')}`
+			)
+			expect(decodeExport(withNotes.body, 'json').notes).toBe('Line 1\nLine 2')
+
+			const blank = await get(app, '/int/api/export/page/1?format=json&notes=%20')
+			expect(decodeExport(blank.body, 'json')).not.toHaveProperty('notes')
+		})
+
+		test('overlong notes are rejected with a 400', async () => {
+			const { app, pageStore } = createController()
+			pageStore.getPageInfo.mockReturnValue({ id: 'p1', name: 'P1', controls: {} })
+
+			const res = await supertest(app).get(`/int/api/export/page/1?notes=${'a'.repeat(EXPORT_NOTES_MAX_LENGTH + 1)}`)
+			expect(res.status).toBe(400)
+		})
 	})
 
 	// ── Custom export ───────────────────────────────────────────────────────────
@@ -449,6 +493,32 @@ describe('ExportController', () => {
 			const { app } = createController()
 			const res = await get(app, `/int/api/export/custom?${validQuery}&filename=mine`)
 			expect(res.headers['content-disposition']).toContain('filename="mine.companionconfig"')
+		})
+
+		test('the notes are included, trimmed', async () => {
+			const { app } = createController()
+			const notes = encodeURIComponent('  Swapped camera pages\nAdded audio page  ')
+			const res = await get(app, `/int/api/export/custom?${validQuery}&notes=${notes}`)
+
+			const exp = decodeExport(res.body, 'json')
+			expect(exp.notes).toBe('Swapped camera pages\nAdded audio page')
+		})
+
+		test('blank notes are omitted', async () => {
+			const { app } = createController()
+			const res = await get(app, `/int/api/export/custom?${validQuery}&notes=%20%20`)
+
+			const exp = decodeExport(res.body, 'json')
+			expect(exp).not.toHaveProperty('notes')
+		})
+
+		test('overlong notes are rejected with a 400', async () => {
+			const { app } = createController()
+			const res = await supertest(app).get(
+				`/int/api/export/custom?${validQuery}&notes=${'a'.repeat(EXPORT_NOTES_MAX_LENGTH + 1)}`
+			)
+
+			expect(res.status).toBe(400)
 		})
 	})
 

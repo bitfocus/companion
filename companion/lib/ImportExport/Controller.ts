@@ -163,6 +163,7 @@ export class ImportExportController {
 				type: 'full',
 				version: EXPORT_VERSION,
 				companionBuild: importObject.companionBuild,
+				notes: importObject.notes,
 				triggers: importObject.triggers,
 				triggerCollections: importObject.triggerCollections,
 				instances: importObject.instances,
@@ -182,6 +183,7 @@ export class ImportExportController {
 		// Build a minimal object to send back to the client
 		const clientObject: ClientImportObject = {
 			type: importObject.type,
+			notes: typeof importObject.notes === 'string' && importObject.notes.trim() ? importObject.notes : null,
 			connections: {},
 			buttons: 'pages' in importObject,
 			customVariables: importContainsKey('custom_variables'),

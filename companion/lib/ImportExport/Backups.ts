@@ -410,11 +410,11 @@ export class BackupController {
 				}
 
 				case 'export-gz':
-					return this.#generateExportBackup(logger, backupDir, backupName, 'json-gz')
+					return this.#generateExportBackup(logger, rule, backupDir, backupName, 'json-gz')
 				case 'export-json':
-					return this.#generateExportBackup(logger, backupDir, backupName, 'json')
+					return this.#generateExportBackup(logger, rule, backupDir, backupName, 'json')
 				case 'export-yaml':
-					return this.#generateExportBackup(logger, backupDir, backupName, 'yaml')
+					return this.#generateExportBackup(logger, rule, backupDir, backupName, 'yaml')
 
 				default:
 					throw new Error(`Unsupported backup type: ${rule.backupType}`)
@@ -427,11 +427,13 @@ export class BackupController {
 
 	async #generateExportBackup(
 		logger: Logger,
+		rule: BackupRulesConfig,
 		backupDir: string,
 		filename: string,
 		format: ExportFormat
 	): Promise<PreviousBackupInfo> {
-		const data = this.#exportController.generateCustomExport(null)
+		const notes = `Automated backup by the backup rule "${rule.name}", made at ${new Date().toISOString()}`
+		const data = this.#exportController.generateCustomExport(null, notes)
 
 		const filePath = path.join(backupDir, `${filename}.companionconfig`)
 

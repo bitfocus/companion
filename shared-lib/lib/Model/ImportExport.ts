@@ -38,6 +38,10 @@ const zodQueryNull = z.preprocess((val) => {
 	return val
 }, z.null())
 
+/** Notes travel in the export's query string, so keep them well within the request header limit */
+export const EXPORT_NOTES_MAX_LENGTH = 2000
+export const zodExportNotes = z.string().max(EXPORT_NOTES_MAX_LENGTH).optional()
+
 export const zodClientExportSelection = z.object({
 	buttons: zodQueryBoolean,
 	connections: zodQueryBoolean,
@@ -55,6 +59,7 @@ export const zodClientExportSelection = z.object({
 	imageLibrary: zodQueryBoolean,
 	format: zodExportFormat,
 	filename: z.string().optional(),
+	notes: zodExportNotes,
 })
 
 export type ClientExportSelection = z.infer<typeof zodClientExportSelection>
@@ -71,6 +76,8 @@ export interface ClientImportObjectInstance {
 }
 export interface ClientImportObject {
 	type: 'page' | 'full'
+	/** The notes written when the file was exported, or null if there are none */
+	notes: string | null
 	connections: Record<string, ClientImportObjectInstance>
 	buttons: boolean
 	surfacesKnown: boolean

@@ -214,7 +214,7 @@ describe('export/import round-trip', () => {
 		for (const format of ALL_FORMATS) {
 			test(`format=${format} round-trips to an identical object`, async () => {
 				const { controller } = createExportController()
-				const exp = controller.generateCustomExport(null)
+				const exp = controller.generateCustomExport(null, undefined)
 
 				const bytes = await serialiseAsDownload(exp, format)
 				const result = await parseImportBuffer(bytes, parseYaml)
@@ -226,7 +226,7 @@ describe('export/import round-trip', () => {
 
 		test('the exported object actually contains every major section', () => {
 			const { controller } = createExportController()
-			const exp = controller.generateCustomExport(null) as any
+			const exp = controller.generateCustomExport(null, undefined) as any
 
 			// Guard against a future refactor silently emptying the fixture (which would make the
 			// round-trip assertions vacuous).

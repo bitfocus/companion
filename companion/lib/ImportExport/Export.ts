@@ -31,7 +31,11 @@ import type {
 	SomeExportv6,
 } from '@companion-app/shared/Model/ExportModel.js'
 import type { ImageLibraryExportData } from '@companion-app/shared/Model/ImageLibraryModel.js'
-import { zodClientExportSelection, type ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
+import {
+	zodClientExportSelection,
+	zodExportNotes,
+	type ClientExportSelection,
+} from '@companion-app/shared/Model/ImportExport.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
@@ -95,11 +99,15 @@ export class ExportController {
 	}
 
 	#exportTriggerListHandler: RequestHandler = async (req, res, next) => {
+		const notes = parseNotesParam(req, res)
+		if (notes === null) return
+
 		const triggerControls = this.#controlsController.getAllTriggers()
 		const includeSecrets = req.query.includeSecrets !== 'false'
 		const exp = this.#generateTriggersExport(triggerControls, {
 			includeCollections: true,
 			includeSecrets: includeSecrets,
+			notes: notes.value,
 		})
 
 		const filename = this.#generateFilename(String(req.query.filename as any), 'trigger_list', 'companionconfig')
@@ -113,6 +121,7 @@ export class ExportController {
 			const exp = this.#generateTriggersExport([control], {
 				includeCollections: false,
 				includeSecrets: false,
+				notes: undefined,
 			})
 
 			const triggerName = control.options.name.toLowerCase().replace(/\W/g, '')
@@ -135,6 +144,9 @@ export class ExportController {
 		} else {
 			const pageInfo = this.#pagesStore.getPageInfo(page, true)
 			if (!pageInfo) throw new Error(`Page "${page}" not found!`)
+
+			const notes = parseNotesParam(req, res)
+			if (notes === null) return
 
 			const referencedConnectionIds = new Set<string>()
 			const referencedConnectionLabels = new Set<string>()
@@ -178,6 +190,7 @@ export class ExportController {
 				version: EXPORT_VERSION,
 				type: 'page',
 				companionBuild: this.#appInfo.appBuild,
+				notes: notes.value,
 				page: pageExport,
 				instances: connectionsExport,
 				connectionCollections: filteredConnectionCollections,
@@ -200,7 +213,7 @@ export class ExportController {
 			// Validate with Zod schema - it handles type coercion!
 			const config = zodClientExportSelection.parse(unflattened)
 
-			const exp = this.generateCustomExport(config)
+			const exp = this.generateCustomExport(config, normaliseNotes(config.notes))
 
 			const filename = this.#generateFilename(config.filename ?? '', 'custom_config', 'companionconfig')
 
@@ -218,7 +231,7 @@ export class ExportController {
 	}
 
 	#exportFullHandler: RequestHandler = async (req, res, next) => {
-		const exp = this.generateCustomExport(null)
+		const exp = this.generateCustomExport(null, undefined)
 
 		const filename = this.#generateFilename(
 			String(this.#userConfigController.getKey('default_export_filename')),
@@ -338,6 +351,7 @@ export class ExportController {
 		options: {
 			includeCollections: boolean
 			includeSecrets: boolean
+			notes: string | undefined
 		}
 	): ExportTriggersListv6 {
 		const triggersExport: ExportTriggerContentv6 = {}
@@ -401,6 +415,7 @@ export class ExportController {
 			type: 'trigger_list',
 			version: EXPORT_VERSION,
 			companionBuild: this.#appInfo.appBuild,
+			notes: options.notes,
 			triggers: triggersExport,
 			triggerCollections: triggerCollections,
 			instances: connectionsExport,
@@ -533,12 +548,13 @@ export class ExportController {
 		return pageExport
 	}
 
-	generateCustomExport(config: ClientExportSelection | null): ExportFullv6 {
+	generateCustomExport(config: ClientExportSelection | null, notes: string | undefined): ExportFullv6 {
 		// Export file protocol version
 		const exp: ExportFullv6 = {
 			version: EXPORT_VERSION,
 			type: 'full',
 			companionBuild: this.#appInfo.appBuild,
+			notes,
 		}
 
 		const referencedConnectionIds = new Set<string>()
@@ -704,6 +720,24 @@ export class ExportController {
 		}
 		return referencedCollectionIds
 	}
+}
+
+/** Blank notes are left out of the export */
+function normaliseNotes(notes: string | undefined): string | undefined {
+	return notes?.trim() || undefined
+}
+
+/** Read the optional `notes` query param, or respond with a 400 and return null if it is invalid */
+function parseNotesParam(req: express.Request, res: express.Response): { value: string | undefined } | null {
+	const parsed = zodExportNotes.safeParse(req.query.notes)
+	if (!parsed.success) {
+		res.status(400).json({
+			error: 'Invalid query parameters',
+			details: parsed.error.issues,
+		})
+		return null
+	}
+	return { value: normaliseNotes(parsed.data) }
 }
 
 function parseDownloadFormat(raw: ParsedQs[0]): ExportFormat | undefined {
