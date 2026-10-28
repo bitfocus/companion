@@ -46,7 +46,8 @@ class LayeredButtonDrawStyleParser {
 	 * text) are drawn by the backend for its canvas, and streamed as `raster` elements
 	 */
 	readonly #contextId = nanoid()
-	readonly #unsubContext: () => void
+	/** Aborted on dispose, which ends the preview context */
+	readonly #abort = new AbortController()
 	#canvas: ElementRasterCanvas
 
 	readonly #elementValues = new Map<string, CachedElementValue>()
@@ -68,7 +69,7 @@ class LayeredButtonDrawStyleParser {
 		this.#changed = changed
 		this.#canvas = canvas
 
-		const contextSub = trpcClient.preview.elementStream.previewContext.subscribe(
+		trpcClient.preview.elementStream.previewContext.subscribe(
 			{ contextId: this.#contextId, controlId, canvas },
 			{
 				// The context has opened, with the canvas it was subscribed with (also when it reopens after a reconnect).
@@ -79,9 +80,9 @@ class LayeredButtonDrawStyleParser {
 				onError: (error) => {
 					console.error('Subscription to preview context errored:', error)
 				},
+				signal: this.#abort.signal,
 			}
 		)
-		this.#unsubContext = () => contextSub.unsubscribe()
 	}
 
 	/** Change the canvas the elements are drawn for, which re-renders those drawn by the backend */
@@ -100,7 +101,7 @@ class LayeredButtonDrawStyleParser {
 
 	dispose() {
 		this.#disposed = true
-		this.#unsubContext()
+		this.#abort.abort()
 
 		// Unsubscribe from all streams
 		for (const sub of this.#elementValues.values()) {
