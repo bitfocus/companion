@@ -131,6 +131,7 @@ const defaultFullImportConfig: ClientImportSelection = {
 	triggers: 'reset-and-import',
 	customVariables: 'reset-and-import',
 	expressionVariables: 'reset-and-import',
+	customActions: 'reset-and-import',
 	imageLibrary: 'reset-and-import',
 }
 
@@ -313,16 +314,7 @@ function FullImportTab({ snapshot }: FullImportTabProps) {
 								<div className="config-selection-title">Content & Variables</div>
 								<div className="config-selection-list">
 									{CONTENT_OPTION_KEYS.map((key) => {
-										const isSnapshotAvailable =
-											key === 'buttons'
-												? !!snapshot.buttons
-												: key === 'triggers'
-													? !!snapshot.triggers
-													: key === 'customVariables'
-														? !!snapshot.customVariables
-														: key === 'expressionVariables'
-															? !!snapshot.expressionVariables
-															: !!snapshot.imageLibrary
+										const isSnapshotAvailable = !!snapshot[key]
 
 										return (
 											<form.AppField key={key} name={key}>
@@ -498,6 +490,7 @@ function sanitiseSelection(
 		triggers: processValue(!!snapshot.triggers, values.triggers),
 		customVariables: processValue(snapshot.customVariables, values.customVariables),
 		expressionVariables: processValue(snapshot.expressionVariables, values.expressionVariables),
+		customActions: processValue(snapshot.customActions, values.customActions),
 		imageLibrary: processValue(snapshot.imageLibrary, values.imageLibrary),
 
 		// These are not user selectable, so simply vary depending on whether this is a full reset or not
