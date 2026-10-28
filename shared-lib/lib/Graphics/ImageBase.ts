@@ -22,6 +22,7 @@ import type { MinimalLogger } from '../Logger.js'
 import type { DecodedRasterImage } from '../Model/Render.js'
 import type { ButtonGraphicsTextDrawElement } from '../Model/StyleLayersModel.js'
 import { resolveFontName } from './Fonts.js'
+import type { AffineTransform } from './Geometry.js'
 import {
 	computeTextLayout,
 	findBestFontSize,
@@ -178,6 +179,39 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 				this.context2d.restore()
 			})
 		})
+	}
+
+	/**
+	 * Draw an image from a base64 string at its own size, positioned by a transform that replaces the current one
+	 * (but not the clip or alpha)
+	 * @param transform Applied on top of the initial transform (eg any oversampling), in the image's coordinates
+	 */
+	async drawBase64ImageWithTransform(base64Image: string, transform: AffineTransform): Promise<boolean> {
+		let canvasImage: TDrawImageType
+		try {
+			canvasImage = await this.loadBase64Image(base64Image)
+		} catch (e) {
+			this.logger.error('Error loading image', e)
+			return false
+		}
+
+		this.context2d.save()
+		this.context2d.resetTransform()
+		this.initialiseContext()
+		this.context2d.transform(...transform)
+		this.drawImage(
+			canvasImage,
+			0,
+			0,
+			canvasImage.width,
+			canvasImage.height,
+			0,
+			0,
+			canvasImage.width,
+			canvasImage.height
+		)
+		this.context2d.restore()
+		return true
 	}
 
 	/**

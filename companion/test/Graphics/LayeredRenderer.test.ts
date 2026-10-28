@@ -12,6 +12,7 @@ import type {
 	ButtonGraphicsGroupDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsLineDrawElement,
+	ButtonGraphicsRasterDrawElement,
 	ButtonGraphicsRemoteDrawElement,
 	ButtonGraphicsTextDrawElement,
 	SomeButtonGraphicsDrawElement,
@@ -2040,6 +2041,154 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			)
 
 			expect(geometry.map((entry) => entry.id)).toEqual(['hidden', 'off', 'shown'])
+		})
+	})
+
+	describe('raster element', () => {
+		/** A raster of a 16x16 green square, at the top left of the canvas */
+		function makeRasterElement(
+			overrides: Partial<ButtonGraphicsRasterDrawElement> = {}
+		): ButtonGraphicsRasterDrawElement {
+			return {
+				...ELEMENT_BASE,
+				id: 'raster-1',
+				type: 'raster',
+				x: 0.25,
+				y: 0.25,
+				width: 0.5,
+				height: 0.5,
+				rotation: 0,
+				image: makeDataUrl(16, 16, '#00ff00'),
+				renderedAt: { bounds: { x: 0, y: 0, width: 1, height: 1 }, rotations: [] },
+				...overrides,
+			}
+		}
+
+		function pixelAt(img: Image, x: number, y: number): number[] {
+			return Array.from(img.canvasImage.getContext('2d').getImageData(x, y, 1, 1).data)
+		}
+
+		/**
+		 * Draw a raster, as rendered when its element was placed by `renderedWithin`
+		 * @param within The elements of the button now, given the raster to place
+		 */
+		async function drawRaster(
+			within: (raster: ButtonGraphicsRasterDrawElement) => SomeButtonGraphicsDrawElement[],
+			renderedWithin: (raster: ButtonGraphicsRasterDrawElement) => SomeButtonGraphicsDrawElement[] = within,
+			overrides: Partial<ButtonGraphicsRasterDrawElement> = {},
+			hidden: ReadonlySet<string> = new Set()
+		): Promise<{ img: Image; geometry: ElementGeometry[] }> {
+			const makeStyleOf = (elements: SomeButtonGraphicsDrawElement[]) =>
+				makeStyle({ decoration: ButtonGraphicsDecorationType.None, elements })
+
+			// Where the element was placed when its raster was rendered
+			const renderedGeometry = await GraphicsLayeredButtonRenderer.draw(
+				Image.create(72, 58, 1, null),
+				makeStyleOf(renderedWithin(makeRasterElement(overrides))),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			const renderedAt = renderedGeometry.find((entry) => entry.id === 'raster-1')!
+
+			const img = Image.create(72, 58, 1, null)
+			const geometry = await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyleOf(within(makeRasterElement({ ...overrides, renderedAt }))),
+				hidden,
+				null,
+				DEFAULT_PADDING
+			)
+			return { img, geometry }
+		}
+
+		test('is drawn 1:1 at the origin when still where it was rendered, whatever its transforms', async () => {
+			const { img } = await drawRaster((raster) => [makeGroupElement([raster], { rotation: 45, x: 0.5 })], undefined, {
+				rotation: 30,
+			})
+
+			expect(pixelAt(img, 8, 8)).toEqual([0, 255, 0, 255])
+			expect(pixelAt(img, 15, 15)).toEqual([0, 255, 0, 255])
+			// Still within the clip to the button
+			expect(pixelAt(img, 1, 1)[3]).toBe(0)
+			expect(pixelAt(img, 16, 16)[3]).toBe(0)
+		})
+
+		test('follows its element when it has moved since it was rendered', async () => {
+			const { img } = await drawRaster(
+				(raster) => [makeGroupElement([raster], { x: 0.25 })],
+				(raster) => [makeGroupElement([raster], { x: 0 })]
+			)
+
+			// A quarter of the 68px content area to the right
+			expect(pixelAt(img, 8, 8)[3]).toBe(0)
+			expect(pixelAt(img, 8 + 17, 8)).toEqual([0, 255, 0, 255])
+			expect(pixelAt(img, 15 + 17, 15)).toEqual([0, 255, 0, 255])
+			expect(pixelAt(img, 16 + 17, 8)[3]).toBe(0)
+		})
+
+		test('follows its element when a parent has rotated since it was rendered', async () => {
+			const { img } = await drawRaster(
+				(raster) => [makeGroupElement([raster], { rotation: 90 })],
+				(raster) => [makeGroupElement([raster], { rotation: 0 })]
+			)
+
+			// Rotated a quarter turn about the centre of the group, which fills the content area (2, 2, 68, 54)
+			expect(pixelAt(img, 8, 8)[3]).toBe(0)
+			const [x, y] = [36 - (14.5 - 29), 29 + (14.5 - 36)]
+			expect(pixelAt(img, Math.floor(x), Math.floor(y))).toEqual([0, 255, 0, 255])
+		})
+
+		test('is drawn with its opacity, and that of its parents', async () => {
+			const { img } = await drawRaster((raster) => [makeGroupElement([raster], { opacity: 0.5 })], undefined, {
+				opacity: 0.5,
+			})
+
+			expect(pixelAt(img, 8, 8)[3]).toBeCloseTo(64, -1)
+		})
+
+		test('is not drawn when hidden or disabled', async () => {
+			const hidden = await drawRaster((raster) => [raster], undefined, {}, new Set(['raster-1']))
+			expect(pixelAt(hidden.img, 8, 8)[3]).toBe(0)
+
+			const disabled = await drawRaster((raster) => [raster], undefined, { enabled: false })
+			expect(pixelAt(disabled.img, 8, 8)[3]).toBe(0)
+		})
+
+		test('is not drawn when it was rendered with no area to map from', async () => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					decoration: ButtonGraphicsDecorationType.None,
+					elements: [
+						makeRasterElement({ renderedAt: { bounds: { x: 0, y: 0, width: 0, height: 10 }, rotations: [] } }),
+					],
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			expect(pixelAt(img, 8, 8)[3]).toBe(0)
+		})
+
+		test('reports the geometry of the element it replaces', async () => {
+			const within = (element: SomeButtonGraphicsDrawElement) => [makeGroupElement([element], { rotation: 20 })]
+			const bounds = { x: 0.1, y: 0.2, width: 0.5, height: 0.3, rotation: 15 }
+
+			const { geometry: rasterGeometry } = await drawRaster((raster) => within(raster), undefined, bounds)
+			const textGeometry = await GraphicsLayeredButtonRenderer.draw(
+				Image.create(72, 58, 1, null),
+				makeStyle({
+					decoration: ButtonGraphicsDecorationType.None,
+					elements: within(makeTextElement({ id: 'raster-1', ...bounds })),
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+
+			expect(rasterGeometry).toEqual(textGeometry)
 		})
 	})
 })

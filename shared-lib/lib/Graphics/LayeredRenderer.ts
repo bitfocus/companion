@@ -6,6 +6,7 @@ import type {
 	ButtonGraphicsGaugeDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsLineDrawElement,
+	ButtonGraphicsRasterDrawElement,
 	ButtonGraphicsRemoteDrawElement,
 	ButtonGraphicsTextDrawElement,
 	SomeButtonGraphicsDrawElement,
@@ -17,6 +18,7 @@ import { buildGaugeColorModel, type GaugeColorRun, type GaugeRGBA } from './Gaug
 import {
 	appendRotation,
 	computeSelectionMarkerLines,
+	transformBetweenPlacements,
 	type ElementGeometry,
 	type MarkerRotation,
 	type SelectedElementMarker,
@@ -252,6 +254,9 @@ export class GraphicsLayeredButtonRenderer {
 							skipDraw
 						)
 						break
+					case 'raster':
+						elementBounds = await this.#drawRasterElement(img, drawBounds, element, parentRotations, skipDraw)
+						break
 					default:
 						assertNever(element)
 				}
@@ -399,6 +404,35 @@ export class GraphicsLayeredButtonRenderer {
 				})
 			})
 		}
+
+		return drawBounds
+	}
+
+	/**
+	 * Draw an element the backend has already drawn. Its image has every transform applied, so is drawn at its own
+	 * size, moved only if the element is no longer where it was drawn for (eg its group moved, which is streamed
+	 * separately). It is drawn here, inside any parent temporary layers, so z-order and the parents' opacity compose
+	 * as for any other element
+	 */
+	static async #drawRasterElement(
+		img: ImageBase<any>,
+		parentBounds: DrawBounds,
+		element: ButtonGraphicsRasterDrawElement,
+		parentRotations: MarkerRotation[],
+		skipDraw: boolean
+	): Promise<DrawBounds> {
+		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
+		if (skipDraw) return drawBounds
+
+		const transform = transformBetweenPlacements(element.renderedAt, {
+			bounds: drawBounds,
+			rotations: appendRotation(parentRotations, drawBounds, element.rotation),
+		})
+		if (!transform) return drawBounds
+
+		await img.usingAlpha(element.opacity, async () => {
+			await img.drawBase64ImageWithTransform(element.image, transform)
+		})
 
 		return drawBounds
 	}

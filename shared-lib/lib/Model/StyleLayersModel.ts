@@ -155,6 +155,35 @@ export interface ButtonGraphicsRemoteDrawElement extends ButtonGraphicsDrawBase,
 	revision: string
 }
 
+/**
+ * An element already drawn by the backend, for the editor preview to composite in its place: see ElementRaster.ts.
+ * Its bounds and rotation are those of the element it replaces. Only made by the backend, never configured
+ */
+export interface ButtonGraphicsRasterDrawElement
+	extends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawRotation {
+	type: 'raster'
+	/** A png data url covering the whole preview canvas, with every transform of the element already applied */
+	image: string
+	/**
+	 * Where the element was when it was drawn, in canvas pixels. If it has moved since (eg its group has, which is
+	 * streamed separately), the image is transformed to where it is now until it is drawn again
+	 */
+	renderedAt: ButtonGraphicsRasterGeometry
+}
+
+export interface ButtonGraphicsRasterBounds {
+	x: number
+	y: number
+	width: number
+	height: number
+}
+
+/** The bounds of an element, and the rotations applied to it (outermost first) */
+export interface ButtonGraphicsRasterGeometry {
+	bounds: ButtonGraphicsRasterBounds
+	rotations: { pivot: ButtonGraphicsRasterBounds; angle: number }[]
+}
+
 export type SomeButtonGraphicsDrawElement =
 	| ButtonGraphicsCanvasDrawElement
 	| ButtonGraphicsTextDrawElement
@@ -166,6 +195,7 @@ export type SomeButtonGraphicsDrawElement =
 	| ButtonGraphicsReferenceDrawElement
 	| ButtonGraphicsGaugeDrawElement
 	| ButtonGraphicsRemoteDrawElement
+	| ButtonGraphicsRasterDrawElement
 
 export const ButtonGraphicsElementBaseSchema = z.object({
 	id: z.string(),
