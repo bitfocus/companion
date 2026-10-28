@@ -135,6 +135,19 @@ generatedFile += `\trevision: string\n`
 generatedFile += '}\n\n'
 allDrawElementTypes.push('ButtonGraphicsRemoteDrawElement')
 
+generatedFile += `/**\n * An element already drawn by the backend, for the editor preview to composite in its place: see ElementRaster.ts.\n * Its bounds and rotation are those of the element it replaces. Only made by the backend, never configured\n */\n`
+generatedFile += `export interface ButtonGraphicsRasterDrawElement\n\textends ButtonGraphicsDrawBase, ButtonGraphicsDrawBounds, ButtonGraphicsDrawRotation {\n`
+generatedFile += `\ttype: 'raster'\n`
+generatedFile += `\t/** A png data url covering the whole preview canvas, with every transform of the element already applied */\n`
+generatedFile += `\timage: string\n`
+generatedFile += `\t/**\n\t * Where the element was when it was drawn, in canvas pixels. If it has moved since (eg its group has, which is\n\t * streamed separately), the image is transformed to where it is now until it is drawn again\n\t */\n`
+generatedFile += `\trenderedAt: ButtonGraphicsRasterGeometry\n`
+generatedFile += '}\n\n'
+generatedFile += `export interface ButtonGraphicsRasterBounds {\n\tx: number\n\ty: number\n\twidth: number\n\theight: number\n}\n\n`
+generatedFile += `/** The bounds of an element, and the rotations applied to it (outermost first) */\n`
+generatedFile += `export interface ButtonGraphicsRasterGeometry {\n\tbounds: ButtonGraphicsRasterBounds\n\trotations: { pivot: ButtonGraphicsRasterBounds; angle: number }[]\n}\n\n`
+allDrawElementTypes.push('ButtonGraphicsRasterDrawElement')
+
 generatedFile += `export type SomeButtonGraphicsDrawElement =\n`
 for (const typeName of allDrawElementTypes) generatedFile += `\t| ${typeName}\n`
 generatedFile += '\n'

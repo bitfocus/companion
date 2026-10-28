@@ -6,6 +6,7 @@ import type {
 	ButtonGraphicsGaugeDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsLineDrawElement,
+	ButtonGraphicsRasterDrawElement,
 	ButtonGraphicsRemoteDrawElement,
 	ButtonGraphicsTextDrawElement,
 	SomeButtonGraphicsDrawElement,
@@ -13,10 +14,12 @@ import type {
 import { ButtonGraphicsDecorationType } from '../Model/StyleModel.js'
 import { assertNever } from '../Util.js'
 import { ButtonDecorationRenderer } from './ButtonDecorationRenderer.js'
+import { pruneElementsToTarget } from './ElementRaster.js'
 import { buildGaugeColorModel, type GaugeColorRun, type GaugeRGBA } from './GaugeColorModel.js'
 import {
 	appendRotation,
 	computeSelectionMarkerLines,
+	transformBetweenPlacements,
 	type ElementGeometry,
 	type MarkerRotation,
 	type SelectedElementMarker,
@@ -33,6 +36,8 @@ const TEXT_OUTLINE_FACTOR = 1 / 16
 
 /** Once a button is tall enough, its top bar is this fraction of its height (as 1 / divisor) */
 const TOP_BAR_HEIGHT_DIVISOR = 5
+
+const emptySet: ReadonlySet<string> = new Set()
 
 export class GraphicsLayeredButtonRenderer {
 	static #computeTopBarBounds(outerBounds: DrawBounds): DrawBounds {
@@ -61,6 +66,28 @@ export class GraphicsLayeredButtonRenderer {
 		)
 	}
 
+	static #computeLayoutBounds(
+		img: ImageBase<any>,
+		drawStyle: RendererButtonStyle,
+		paddingPx: { x: number; y: number }
+	): { outerBounds: DrawBounds; topBarBounds: DrawBounds; drawBounds: DrawBounds; clipBounds: DrawBounds | null } {
+		const outerBounds = new DrawBounds(
+			paddingPx.x,
+			paddingPx.y,
+			img.width - paddingPx.x * 2,
+			img.height - paddingPx.y * 2
+		)
+
+		return {
+			outerBounds,
+			topBarBounds: this.#computeTopBarBounds(outerBounds),
+			// Read the resolved `decoration`, not the raw one off the canvas
+			drawBounds: this.computeContentBounds(outerBounds, drawStyle.decoration),
+			// Clip element drawing to the button rectangle, so that only the markers draw outside the bounds
+			clipBounds: paddingPx.x > 0 || paddingPx.y > 0 ? outerBounds : null,
+		}
+	}
+
 	static async draw(
 		img: ImageBase<any>,
 		drawStyle: RendererButtonStyle,
@@ -70,22 +97,11 @@ export class GraphicsLayeredButtonRenderer {
 	): Promise<ElementGeometry[]> {
 		const backgroundElement = drawStyle.elements[0]?.type === 'canvas' ? drawStyle.elements[0] : undefined
 
-		// Read the resolved `decoration`, not the raw one off the canvas
 		const decoration = drawStyle.decoration
-
-		const outerBounds = new DrawBounds(
-			paddingPx.x,
-			paddingPx.y,
-			img.width - paddingPx.x * 2,
-			img.height - paddingPx.y * 2
-		)
-		const topBarBounds = this.#computeTopBarBounds(outerBounds)
-		const drawBounds = this.computeContentBounds(outerBounds, decoration)
+		const { topBarBounds, drawBounds, clipBounds } = this.#computeLayoutBounds(img, drawStyle, paddingPx)
 
 		this.#drawBackgroundElement(img, drawBounds, backgroundElement)
 
-		// Clip element drawing to the button rectangle, so that only the markers draw outside the bounds
-		const clipBounds = paddingPx.x > 0 || paddingPx.y > 0 ? outerBounds : null
 		const elementGeometry: ElementGeometry[] = []
 		await img.usingClip(clipBounds, async () =>
 			this.#drawElements(
@@ -130,6 +146,32 @@ export class GraphicsLayeredButtonRenderer {
 		if (selectedMarker) this.#drawBoundsLines(img, selectedMarker)
 
 		return elementGeometry
+	}
+
+	/**
+	 * Draw a single element of a button in isolation, laid out exactly as `draw` would lay it out, including the
+	 * transforms of its parents. Nothing else is drawn: no siblings, decoration or status icons.
+	 * This is used to rasterise an element for the editor preview to composite (see `ElementRaster.ts`), so the
+	 * opacity of the element and its parents is left for the preview to apply.
+	 * @returns The geometry of the element, or null if it was not found
+	 */
+	static async drawSingleElement(
+		img: ImageBase<any>,
+		drawStyle: RendererButtonStyle,
+		elementId: string,
+		paddingPx: { x: number; y: number }
+	): Promise<ElementGeometry | null> {
+		const elements = pruneElementsToTarget(drawStyle.elements, elementId)
+		if (!elements) return null
+
+		const { drawBounds, clipBounds } = this.#computeLayoutBounds(img, drawStyle, paddingPx)
+
+		const elementGeometry: ElementGeometry[] = []
+		await img.usingClip(clipBounds, async () =>
+			this.#drawElements(img, elements, drawStyle.decodedImages, emptySet, drawBounds, false, [], elementGeometry)
+		)
+
+		return elementGeometry.find((entry) => entry.id === elementId) ?? null
 	}
 
 	/**
@@ -251,6 +293,9 @@ export class GraphicsLayeredButtonRenderer {
 							decodedImages?.get(element.id) ?? null,
 							skipDraw
 						)
+						break
+					case 'raster':
+						elementBounds = await this.#drawRasterElement(img, drawBounds, element, parentRotations, skipDraw)
 						break
 					default:
 						assertNever(element)
@@ -399,6 +444,38 @@ export class GraphicsLayeredButtonRenderer {
 				})
 			})
 		}
+
+		return drawBounds
+	}
+
+	/**
+	 * Draw an element the backend has already drawn. Its image has every transform applied, so is drawn at its own
+	 * size, moved only if the element is no longer where it was drawn for (eg its group moved, which is streamed
+	 * separately). It is drawn here, inside any parent temporary layers, so z-order and the parents' opacity compose
+	 * as for any other element
+	 */
+	static async #drawRasterElement(
+		img: ImageBase<any>,
+		parentBounds: DrawBounds,
+		element: ButtonGraphicsRasterDrawElement,
+		parentRotations: MarkerRotation[],
+		skipDraw: boolean
+	): Promise<DrawBounds> {
+		const drawBounds = parentBounds.compose(element.x, element.y, element.width, element.height)
+		if (skipDraw) return drawBounds
+
+		const transform = transformBetweenPlacements(element.renderedAt, {
+			bounds: drawBounds,
+			rotations: appendRotation(parentRotations, drawBounds, element.rotation),
+		})
+		if (!transform) return drawBounds
+
+		await img.usingAlpha(element.opacity, async () =>
+			img.usingTransform(transform, async () => {
+				// At its own size, from the origin
+				await img.drawBase64Image(element.image, 0, 0, img.width, img.height, 'left', 'top', 1)
+			})
+		)
 
 		return drawBounds
 	}

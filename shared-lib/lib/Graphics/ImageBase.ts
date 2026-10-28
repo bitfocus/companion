@@ -22,6 +22,7 @@ import type { MinimalLogger } from '../Logger.js'
 import type { DecodedRasterImage } from '../Model/Render.js'
 import type { ButtonGraphicsTextDrawElement } from '../Model/StyleLayersModel.js'
 import { resolveFontName } from './Fonts.js'
+import type { AffineTransform } from './Geometry.js'
 import {
 	computeTextLayout,
 	findBestFontSize,
@@ -178,6 +179,23 @@ export abstract class ImageBase<TDrawImageType extends { width: number; height: 
 				this.context2d.restore()
 			})
 		})
+	}
+
+	/**
+	 * Perform some drawing with a transform that replaces the current one (but not the clip or alpha)
+	 * @param transform Applied on top of the initial transform (eg any oversampling)
+	 */
+	async usingTransform<T>(transform: AffineTransform, fcn: () => Promise<T>): Promise<T> {
+		this.context2d.save()
+		this.context2d.resetTransform()
+		this.initialiseContext()
+		this.context2d.transform(...transform)
+
+		try {
+			return await fcn()
+		} finally {
+			this.context2d.restore()
+		}
 	}
 
 	/**
