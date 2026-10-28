@@ -1187,4 +1187,34 @@ describe('PreviewElementStream rasters', () => {
 
 		await sub.cleanup()
 	})
+
+	it('sends each render while changes arrive faster than it renders', async () => {
+		const harness = createHarness([makeTextEl()])
+		const render = vi.mocked(harness.graphicsController.renderElementRaster)
+		const fastRender = render.getMockImplementation()!
+		render.mockImplementation(async (...args) => {
+			await new Promise((resolve) => setTimeout(resolve, 40))
+			return fastRender(...args)
+		})
+		const sub = await harness.watch('text1')
+		await sub.next()
+
+		// A change every 15ms, so a newer one has always arrived by the time a render completes
+		const rotations: unknown[] = []
+		for (let i = 1; i <= 12; i++) {
+			harness.state.elements = [makeTextEl({ rotation: val(i) })]
+			harness.controlEvents.emit('layeredStyleElementChanged', CONTROL_ID, 'text1')
+			await new Promise((resolve) => setTimeout(resolve, 15))
+		}
+		for (;;) {
+			const element = (await sub.next()).element
+			rotations.push(element?.type === 'raster' ? element.rotation : null)
+			if (rotations.at(-1) === 12) break
+		}
+
+		// Renders were sent while the changes were still arriving, not only once they stopped
+		expect(rotations.length).toBeGreaterThan(2)
+
+		await sub.cleanup()
+	})
 })

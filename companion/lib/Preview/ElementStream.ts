@@ -535,6 +535,10 @@ class RasterView {
 	output: ElementStreamResult | null = null
 
 	#latest: EvaluatedElement | null = null
+	/** Counts the evaluations given to `update`, so a render can tell whether its output has been superseded */
+	#updateCount = 0
+	/** The `#updateCount` of the evaluation the output is from */
+	#outputUpdate = 0
 	#isRendering = false
 	#hasPendingRender = false
 	#lastRenderStart = 0
@@ -560,17 +564,19 @@ class RasterView {
 
 	update(evaluated: EvaluatedElement): void {
 		this.#latest = evaluated
+		this.#updateCount++
 
 		// Nothing to render, so there is nothing to throttle
 		if (!evaluated.element || evaluated.rasterIds.length === 0) {
-			this.#setOutput({ ok: true, element: evaluated.element })
+			this.#setOutput({ ok: true, element: evaluated.element }, this.#updateCount)
 			return
 		}
 
 		this.#schedule()
 	}
 
-	#setOutput(output: ElementStreamResult): void {
+	#setOutput(output: ElementStreamResult, fromUpdate: number): void {
+		this.#outputUpdate = fromUpdate
 		if (this.output && isEqual(this.output, output)) return
 		this.output = output
 		this.events.emit('output')
@@ -597,6 +603,7 @@ class RasterView {
 
 	async #performRender(): Promise<void> {
 		const evaluated = this.#latest
+		const fromUpdate = this.#updateCount
 		if (this.#disposed || !evaluated) return
 
 		this.#isRendering = true
@@ -605,8 +612,9 @@ class RasterView {
 
 		try {
 			const output = await this.#render(evaluated, this.#canvas)
-			// A newer evaluation without anything to render may have replaced it already
-			if (!this.#disposed && this.#latest === evaluated) this.#setOutput(output)
+			// Sent even if there is a newer evaluation to render, so a stream of changes still shows each render. But
+			// not if a newer evaluation without anything to render has replaced it already
+			if (!this.#disposed && fromUpdate > this.#outputUpdate) this.#setOutput(output, fromUpdate)
 		} catch (e) {
 			LogController.createLogger('Preview/ElementStream').error(`Error rendering element rasters:`, e)
 		} finally {
