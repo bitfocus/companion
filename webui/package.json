@@ -36,6 +36,7 @@
     "@types/sanitize-html": "^2.16.2",
     "@vitejs/plugin-legacy": "^8.2.3",
     "@vitejs/plugin-react": "^6.1.2",
+    "any-signal": "^4.2.0",
     "bowser": "^2.14.1",
     "classnames": "^2.5.1",
     "copy-to-clipboard": "^4.0.2",

@@ -1822,6 +1822,7 @@ __metadata:
     "@types/sanitize-html": "npm:^2.16.2"
     "@vitejs/plugin-legacy": "npm:^8.2.3"
     "@vitejs/plugin-react": "npm:^6.1.2"
+    any-signal: "npm:^4.2.0"
     bowser: "npm:^2.14.1"
     classnames: "npm:^2.5.1"
     copy-to-clipboard: "npm:^4.0.2"
@@ -9156,6 +9157,13 @@ __metadata:
   version: 4.3.1
   resolution: "ansis@npm:4.3.1"
   checksum: 10c0/d1a48090f9c33b18f254a3496e5336a20391a51140b552a1c0bc38710ae7c8bc36a62658f28759797d7bce15e89b893e9ef1962ea1ea42a291d112263f6e593c
+  languageName: node
+  linkType: hard
+
+"any-signal@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "any-signal@npm:4.2.0"
+  checksum: 10c0/765b8fd5270320bb1fd612cc9890cecb58ab044adc6d20e5ed35a2fc0d63fc09ec50abf513a2b75ef5fb9a81666dcdf60eb2b28f281d09859c06f8d10c9d3b34
   languageName: node
   linkType: hard
 

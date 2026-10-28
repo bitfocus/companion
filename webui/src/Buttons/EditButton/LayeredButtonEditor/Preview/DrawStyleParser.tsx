@@ -48,7 +48,7 @@ class LayeredButtonDrawStyleParser {
 	 * text) are drawn by the backend for its canvas, and streamed as `raster` elements
 	 */
 	readonly #contextId = nanoid()
-	/** Aborted on dispose, which ends the preview context */
+	/** Aborted on dispose, which ends the preview context and every stream */
 	readonly #abort = new AbortController()
 	#canvas: ElementRasterCanvas
 
@@ -104,14 +104,6 @@ class LayeredButtonDrawStyleParser {
 	dispose() {
 		this.#disposed = true
 		this.#abort.abort()
-
-		// End all streams
-		for (const sub of this.#elementValues.values()) {
-			sub.abort.abort()
-		}
-		for (const sub of this.#expressionValues.values()) {
-			sub.abort.abort()
-		}
 	}
 
 	updateStyle(style: SomeButtonGraphicsElement[]) {
@@ -194,7 +186,7 @@ class LayeredButtonDrawStyleParser {
 									console.error('Subscription to element errored:', error)
 									// TODO: handle error case
 								},
-								signal: abort.signal,
+								signal: AbortSignal.any([this.#abort.signal, abort.signal]),
 							}
 						)
 
@@ -269,7 +261,7 @@ class LayeredButtonDrawStyleParser {
 							clockSensitive: false,
 						})
 					},
-					signal: abort.signal,
+					signal: AbortSignal.any([this.#abort.signal, abort.signal]),
 				})
 
 				// Track the new value, to avoid duplication
