@@ -1,4 +1,4 @@
-import { single as fuzzySingle, type prepare as fuzzyPrepare } from 'fuzzysort'
+import { go as fuzzyGo, single as fuzzySingle, type prepare as fuzzyPrepare, type Key } from 'fuzzysort'
 
 /**
  * Filter and sort an array of items by fuzzy match score.
@@ -16,4 +16,19 @@ export function fuzzyFilterSort<T extends { fuzzy: ReturnType<typeof fuzzyPrepar
 	}, [])
 	scored.sort((a, b) => b.score - a.score)
 	return scored.map(({ item }) => item)
+}
+
+/**
+ * Search objects by one or more keys, best match first.
+ * @param threshold minimum score, 0 - 1
+ * @param limit max results, 0 for unlimited
+ */
+export function fuzzySearchByKeys<T>(
+	items: ReadonlyArray<T>,
+	filter: string,
+	keys: ReadonlyArray<Key<T>>,
+	threshold: number,
+	limit: number
+): T[] {
+	return fuzzyGo(filter, items, { keys, threshold, limit }).map((result) => result.obj)
 }

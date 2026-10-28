@@ -1830,7 +1830,7 @@ __metadata:
     csv-stringify: "npm:^6.9.0"
     dayjs: "npm:^1.11.23"
     fast-json-patch: "patch:fast-json-patch@npm%3A3.1.1#~/.yarn/patches/fast-json-patch-npm-3.1.1-7e8bb70a45.patch"
-    fuzzysort: "npm:^3.1.0"
+    fuzzysort: "npm:^4.0.2"
     human-id: "npm:^4.2.2"
     intersection-observer: "npm:^0.12.2"
     jsdom: "npm:^30.1.3"
@@ -13673,10 +13673,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fuzzysort@npm:^3.1.0":
-  version: 3.1.0
-  resolution: "fuzzysort@npm:3.1.0"
-  checksum: 10c0/da9bb32de16f2a5c2c000b99031d9f4f8a01380c12d5d3b67296443a1152c55987ce3c4ddbfe97481b0e9b6f2fb77d61dceba29a93ad36ee23ef5bab6a31afb8
+"fuzzysort@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "fuzzysort@npm:4.0.2"
+  checksum: 10c0/418b59d2ba8d84127e57b6ef7873addc0cb7fdf7610a58e8df4f2a42c1fe552811e51f23be350d81a0560c2dfe563500cf0d75161682c063cd798f7b36334827
   languageName: node
   linkType: hard
 
