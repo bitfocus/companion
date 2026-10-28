@@ -1,6 +1,6 @@
 import { describe, expect, it, test } from 'vitest'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	CompanionFieldVariablesSupport,
 	exprVal,
@@ -9,7 +9,11 @@ import {
 } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandlerApi.js'
-import { buildActionExecutionOverrides, visitEntityOptionsForVariables } from '../../lib/Variables/Util.js'
+import {
+	buildActionExecutionOverrides,
+	injectOverriddenLocalVariableValues,
+	visitEntityOptionsForVariables,
+} from '../../lib/Variables/Util.js'
 
 function createDefinition(
 	partial: Pick<ClientEntityDefinition, 'label' | 'options'> & Partial<ClientEntityDefinition>
@@ -698,5 +702,38 @@ describe('buildActionExecutionOverrides', () => {
 		const overrides = buildActionExecutionOverrides(makeExtras({ surfaceId: 'surface0', rotationDelta: null }))
 		expect(overrides['this:surface_id']).toBe('surface0')
 		expect(overrides['this:delta']).toBeUndefined()
+	})
+})
+
+describe('injectOverriddenLocalVariableValues', () => {
+	function makeLocalVariable(variableName: string, connectionId: string, definitionId: string): SomeEntityModel {
+		return {
+			id: variableName,
+			type: EntityModelType.Feedback,
+			connectionId,
+			definitionId,
+			upgradeIndex: undefined,
+			variableName,
+			options: { startup_value: exprVal(0) },
+		}
+	}
+
+	test('overrides the startup value of matching user values', () => {
+		const localVariables = [
+			makeLocalVariable('a', 'internal', 'user_value'),
+			makeLocalVariable('b', 'internal', 'user_value'),
+		]
+
+		expect(injectOverriddenLocalVariableValues(localVariables, { a: 5, missing: 1 })).toEqual({ a: 5 })
+		expect(localVariables[0].options.startup_value).toEqual(exprVal(5))
+		expect(localVariables[1].options.startup_value).toEqual(exprVal(0))
+	})
+
+	test('ignores local variables which are not user values', () => {
+		const localVariables = [makeLocalVariable('a', 'conn1', 'fb1'), makeLocalVariable('b', 'internal', 'other_fb')]
+
+		expect(injectOverriddenLocalVariableValues(localVariables, { a: 5, b: 6 })).toEqual({})
+		expect(localVariables[0].options.startup_value).toEqual(exprVal(0))
+		expect(localVariables[1].options.startup_value).toEqual(exprVal(0))
 	})
 })

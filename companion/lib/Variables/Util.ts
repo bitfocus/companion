@@ -19,7 +19,11 @@ import {
 } from '@companion-app/shared/Expressions.js'
 import { getCompiledIsVisibleExpressionFn } from '@companion-app/shared/IsVisible.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import {
+	EntityModelType,
+	isInternalUserValueFeedback,
+	type SomeEntityModel,
+} from '@companion-app/shared/Model/EntityModel.js'
 import {
 	exprVal,
 	isExpressionOrValue,
@@ -502,7 +506,8 @@ export function injectOverriddenLocalVariableValues(
 	const injectedValues: VariableValues = {}
 
 	for (const localVariable of localVariables) {
-		if (localVariable.type !== EntityModelType.Feedback) continue
+		// Only a user value has a startup value to override
+		if (localVariable.type !== EntityModelType.Feedback || !isInternalUserValueFeedback(localVariable)) continue
 
 		const variableName = localVariable.variableName
 		if (!variableName) continue
