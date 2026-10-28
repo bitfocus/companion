@@ -26,12 +26,14 @@ const DRAW_DEBOUNCE_MAX = 100
 const emptySet = new Set<string>()
 
 interface CachedElementValue {
-	unsub: () => void
+	/** Ends the stream */
+	abort: AbortController
 	value: ElementStreamResult | Promise<ElementStreamResult>
 }
 
 interface CachedExpressionValue {
-	unsub: () => void
+	/** Ends the stream */
+	abort: AbortController
 	value: ExecuteExpressionResult | Promise<ExecuteExpressionResult>
 }
 
@@ -103,12 +105,12 @@ class LayeredButtonDrawStyleParser {
 		this.#disposed = true
 		this.#abort.abort()
 
-		// Unsubscribe from all streams
+		// End all streams
 		for (const sub of this.#elementValues.values()) {
-			sub.unsub()
+			sub.abort.abort()
 		}
 		for (const sub of this.#expressionValues.values()) {
-			sub.unsub()
+			sub.abort.abort()
 		}
 	}
 
@@ -180,7 +182,8 @@ class LayeredButtonDrawStyleParser {
 							this.#recalculateStyle.trigger()
 						}
 
-						const sub = trpcClient.preview.elementStream.watchElement.subscribe(
+						const abort = new AbortController()
+						trpcClient.preview.elementStream.watchElement.subscribe(
 							{
 								contextId: this.#contextId,
 								elementId,
@@ -191,17 +194,13 @@ class LayeredButtonDrawStyleParser {
 									console.error('Subscription to element errored:', error)
 									// TODO: handle error case
 								},
+								signal: abort.signal,
 							}
 						)
 
-						if (this.#disposed) {
-							sub.unsubscribe()
-							return
-						}
-
 						// Track the new value, to avoid duplication
 						this.#elementValues.set(elementId, {
-							unsub: () => sub.unsubscribe(),
+							abort,
 							value: firstRunPromise.promise,
 						})
 
@@ -258,7 +257,8 @@ class LayeredButtonDrawStyleParser {
 					this.#recalculateStyle.trigger()
 				}
 
-				const sub = trpcClient.preview.expressionStream.watchExpression.subscribe(args, {
+				const abort = new AbortController()
+				trpcClient.preview.expressionStream.watchExpression.subscribe(args, {
 					onData: (result) => updateValue(result as ExecuteExpressionResult), // TODO - fix this type
 					onError: (error) => {
 						console.error('Subscription to expression errored:', error)
@@ -269,11 +269,12 @@ class LayeredButtonDrawStyleParser {
 							clockSensitive: false,
 						})
 					},
+					signal: abort.signal,
 				})
 
 				// Track the new value, to avoid duplication
 				this.#expressionValues.set(streamId, {
-					unsub: () => sub.unsubscribe(),
+					abort,
 					value: firstRunPromise.promise,
 				})
 
@@ -329,13 +330,13 @@ class LayeredButtonDrawStyleParser {
 			// Unsubscribe from any streams that are no longer used
 			for (const [elementId, sub] of this.#elementValues) {
 				if (!referencedElements.has(elementId)) {
-					sub.unsub()
+					sub.abort.abort()
 					this.#elementValues.delete(elementId)
 				}
 			}
 			for (const [expression, sub] of this.#expressionValues) {
 				if (!referencedExpressions.has(expression)) {
-					sub.unsub()
+					sub.abort.abort()
 					this.#expressionValues.delete(expression)
 				}
 			}
