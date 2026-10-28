@@ -1,7 +1,8 @@
 import EventEmitter from 'node:events'
 import { initTRPC } from '@trpc/server'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, test, vi } from 'vitest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
+import type { ElementRasterCanvas } from '@companion-app/shared/Graphics/ElementRaster.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
@@ -21,7 +22,7 @@ import type { GraphicsController } from '../../lib/Graphics/Controller.js'
 import { ImageResult } from '../../lib/Graphics/ImageResult.js'
 import type { CompositeElementDefinition, InstanceDefinitions } from '../../lib/Instance/Definitions.js'
 import type { IPageStore } from '../../lib/Page/Store.js'
-import { PreviewElementStream } from '../../lib/Preview/ElementStream.js'
+import { ElementRasterCanvasSchema, PreviewElementStream } from '../../lib/Preview/ElementStream.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
 import type { VariableValueData } from '../../lib/Variables/Util.js'
 import { VariablesAndExpressionParser } from '../../lib/Variables/VariablesAndExpressionParser.js'
@@ -183,6 +184,7 @@ const userconfig = mockUserConfig({ timezone: '' })
 
 const CONTROL_ID = 'control1'
 const CONTROL_LOCATION: ControlLocation = { pageNumber: 1, row: 0, column: 0 }
+const DEFAULT_CANVAS: ElementRasterCanvas = { width: 92, height: 92, paddingX: 10, paddingY: 10 }
 
 /**
  * A real PreviewElementStream, over mocked collaborators whose state each test can change.
@@ -267,7 +269,19 @@ function createHarness(initialElements: SomeButtonGraphicsElement[], initialVari
 		controlEvents,
 		renderClock
 	)
-	const caller = t.createCallerFactory(stream.createTrpcRouter())(createMockTrpcContext())
+	const createCaller = t.createCallerFactory(stream.createTrpcRouter())
+	const caller = createCaller(createMockTrpcContext())
+
+	/** The preview contexts opened for each control, which element streams are watched through */
+	const contexts = new Map<string, SubscriptionTester<unknown>>()
+	const openContext = async (controlId: string, canvas: ElementRasterCanvas = DEFAULT_CANVAS) => {
+		const context = new SubscriptionTester(
+			await caller.previewContext({ contextId: `context-${controlId}`, controlId, canvas })
+		)
+		await context.next()
+		contexts.set(controlId, context)
+		return context
+	}
 
 	/** How many times an element has been evaluated, as each evaluation creates one parser */
 	const evaluationCount = () => vi.mocked(controlsController.createVariablesAndExpressionParser).mock.calls.length
@@ -280,8 +294,15 @@ function createHarness(initialElements: SomeButtonGraphicsElement[], initialVari
 		evaluationCount,
 		tickClock: () => clockCallback?.(),
 		isClockSubscribed: () => clockCallback !== null,
-		watch: async (elementId: string, controlId = CONTROL_ID) =>
-			new SubscriptionTester(await caller.watchElement({ controlId, elementId })),
+		createCaller,
+		openContext,
+		closeContext: async (controlId: string) => contexts.get(controlId)?.cleanup(),
+		setCanvas: async (canvas: ElementRasterCanvas, controlId = CONTROL_ID) =>
+			caller.setPreviewCanvas({ contextId: `context-${controlId}`, canvas }),
+		watch: async (elementId: string, controlId = CONTROL_ID) => {
+			if (!contexts.has(controlId)) await openContext(controlId)
+			return new SubscriptionTester(await caller.watchElement({ contextId: `context-${controlId}`, elementId }))
+		},
 	}
 }
 
@@ -827,5 +848,71 @@ describe('PreviewElementStream.watchElement', () => {
 
 			await sub.cleanup()
 		})
+	})
+})
+
+describe('PreviewElementStream preview contexts', () => {
+	it('waits for its context to open', async () => {
+		const harness = createHarness([makeTextEl()])
+		const caller = harness.createCaller(createMockTrpcContext())
+		const sub = new SubscriptionTester(
+			await caller.watchElement({ contextId: `context-${CONTROL_ID}`, elementId: 'text1' })
+		)
+
+		const first = sub.next()
+		await settle()
+		await harness.openContext(CONTROL_ID)
+
+		await expect(first).resolves.toEqual({ ok: true, element: null })
+		expect((await sub.next()).element).toMatchObject({ type: 'text' })
+
+		await sub.cleanup()
+	})
+
+	it("can't use the context of another client", async () => {
+		const harness = createHarness([makeTextEl()])
+		await harness.openContext(CONTROL_ID)
+
+		const other = harness.createCaller(createMockTrpcContext({ clientId: 'other-client' }))
+		const sub = new SubscriptionTester(
+			await other.watchElement({ contextId: `context-${CONTROL_ID}`, elementId: 'text1' }),
+			{
+				timeoutMs: 100,
+			}
+		)
+		await expect(sub.next()).rejects.toThrow('timeout')
+		expect(await other.setPreviewCanvas({ contextId: `context-${CONTROL_ID}`, canvas: DEFAULT_CANVAS })).toBe(false)
+		expect(harness.evaluationCount()).toBe(0)
+	})
+
+	it('ends when its context ends', async () => {
+		const harness = createHarness([makeTextEl()])
+		const sub = await harness.watch('text1')
+		await sub.next()
+		await sub.next()
+
+		await harness.closeContext(CONTROL_ID)
+
+		await expect(sub.next()).rejects.toThrow('Subscription ended unexpectedly')
+	})
+})
+
+describe('ElementRasterCanvasSchema', () => {
+	const valid = (canvas: Record<string, number>) => ElementRasterCanvasSchema.safeParse(canvas).success
+
+	test('accepts a canvas with room for the button', () => {
+		expect(valid({ width: 92, height: 92, paddingX: 10, paddingY: 10 })).toBe(true)
+		expect(valid({ width: 3, height: 3, paddingX: 1, paddingY: 1 })).toBe(true)
+	})
+
+	test('rejects padding that leaves no room for the button', () => {
+		expect(valid({ width: 20, height: 92, paddingX: 10, paddingY: 10 })).toBe(false)
+		expect(valid({ width: 92, height: 20, paddingX: 10, paddingY: 10 })).toBe(false)
+		expect(valid({ width: 92, height: 92, paddingX: 50, paddingY: 0 })).toBe(false)
+	})
+
+	test('rejects a canvas that is too large or empty', () => {
+		expect(valid({ width: 100000, height: 92, paddingX: 0, paddingY: 0 })).toBe(false)
+		expect(valid({ width: 0, height: 92, paddingX: 0, paddingY: 0 })).toBe(false)
 	})
 })

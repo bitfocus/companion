@@ -13,17 +13,35 @@ import type { CompositeElementIdString, InstanceDefinitions } from '../Instance/
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
+import { PreviewContexts, type PreviewContext } from './PreviewContexts.js'
 
 export interface ElementStreamResult {
 	ok: true
 	element: SomeButtonGraphicsDrawElement | null
 }
 
-/**
- * Manages streaming of individual button graphics elements.
- * Provides real-time updates when element expressions change or when the element definition is modified.
- */
+/** Largest canvas an element can be rasterised for, to bound the work a client can request */
+const MAX_RASTER_CANVAS_SIZE = 4096
 
+/** A canvas to rasterise an element for, whose padding must leave some room for the button */
+export const ElementRasterCanvasSchema = z
+	.object({
+		width: z.number().int().min(1).max(MAX_RASTER_CANVAS_SIZE),
+		height: z.number().int().min(1).max(MAX_RASTER_CANVAS_SIZE),
+		paddingX: z.number().int().min(0),
+		paddingY: z.number().int().min(0),
+	})
+	.refine((canvas) => canvas.paddingX * 2 < canvas.width && canvas.paddingY * 2 < canvas.height, {
+		message: 'Canvas padding must leave room for the button',
+	})
+
+/**
+ * Manages streaming of individual button graphics elements, to the button editor preview.
+ * Provides real-time updates when element expressions change or when the element definition is modified.
+ *
+ * An element is evaluated by a session, shared by everyone watching it. The streams of a preview are attached to its
+ * preview context, and end with it.
+ */
 export class PreviewElementStream {
 	readonly #logger = LogController.createLogger('Preview/ElementStream')
 
@@ -33,6 +51,7 @@ export class PreviewElementStream {
 	readonly #controlsController: ControlsController
 	readonly #controlEvents: EventEmitter<ControlCommonEvents>
 
+	readonly #contexts = new PreviewContexts()
 	readonly #sessions = new Map<string, ElementStreamSession>()
 
 	readonly #unsubscribeRenderClock: () => void
@@ -66,69 +85,159 @@ export class PreviewElementStream {
 		const self = this
 		return router({
 			/**
-			 * Watch a specific element for changes.
+			 * Open a preview context, for element streams to attach to. It stays open for as long as this
+			 * subscription runs, and the element streams attached to it end with it.
+			 *
+			 * @param contextId - ID of the context, chosen by the client, so that it is unchanged after a reconnect
+			 * @param controlId - ID of the control being previewed
+			 * @param canvas - The canvas the preview draws the control on
+			 */
+			previewContext: publicProcedure
+				.input(
+					z.object({
+						contextId: z.string(),
+						controlId: z.string(),
+						canvas: ElementRasterCanvasSchema,
+					})
+				)
+				.subscription(async function* ({ input, signal, ctx }) {
+					const release = self.#contexts.open(ctx.clientId, input.contextId, input.controlId, input.canvas)
+					try {
+						yield { ok: true as const }
+
+						// Hold the context open until the client unsubscribes
+						if (signal && !signal.aborted) {
+							await new Promise<void>((resolve) => signal.addEventListener('abort', () => resolve(), { once: true }))
+						}
+					} finally {
+						release()
+					}
+				}),
+
+			/**
+			 * Change the canvas of a preview context, for the elements the backend draws for it
+			 */
+			setPreviewCanvas: publicProcedure
+				.input(
+					z.object({
+						contextId: z.string(),
+						canvas: ElementRasterCanvasSchema,
+					})
+				)
+				.mutation(({ input, ctx }) => self.#contexts.setCanvas(ctx.clientId, input.contextId, input.canvas)),
+
+			/**
+			 * Watch a specific element of the control of a preview context, for changes.
 			 * Returns a stream of ElementStreamResult objects containing the evaluated element.
 			 * Returns null if the element doesn't exist.
 			 *
-			 * @param controlId - ID of the control containing the element
+			 * @param contextId - ID of the preview context
 			 * @param elementId - ID of the element to watch
 			 */
 			watchElement: publicProcedure
 				.input(
 					z.object({
-						controlId: z.string(),
+						contextId: z.string(),
 						elementId: z.string(),
 					})
 				)
 				.subscription(async function* ({ input, signal, ctx }) {
-					const elementStreamId = `${input.controlId}::${input.elementId}`
-					let session = self.#sessions.get(elementStreamId)
+					// Owned here, so that listeners are removed however the subscription ends
+					const abort = new AbortController()
+					signal?.addEventListener('abort', () => abort.abort(), { once: true })
 
 					try {
-						if (!session) {
-							self.#logger.debug(`Client "${ctx.clientId}" subscribed to new element session: ${elementStreamId}`)
+						const context = await self.#contexts.waitFor(ctx.clientId, input.contextId, abort.signal)
+						if (!context) return
 
-							// Create session immediately with null value to prevent race conditions
-							session = {
-								elementStreamId,
-								controlId: input.controlId,
-								elementId: input.elementId,
-								trackedExpressions: new Set<string>(),
-								trackedCompositeElements: new Set(),
-								trackedReferencedLocations: new Set(),
-								isClockSensitive: false,
-								latestResult: { ok: true, element: null },
-								changes: new EventEmitter(),
-								isEvaluating: false,
-								hasPendingEvaluation: false,
-							}
-							self.#sessions.set(elementStreamId, session)
-
-							// Trigger async evaluation of the initial value
-							self.#triggerElementReEvaluation(session)
-						} else {
-							self.#logger.debug(`Client "${ctx.clientId}" subscribed to existing element session: ${elementStreamId}`)
-						}
-
-						const changes = toIterable(session.changes, 'change', signal)
-
-						yield session.latestResult
-
-						for await (const [change] of changes) {
-							yield change
-						}
+						yield* self.#runSubscription(context, input.elementId, ctx.clientId, abort.signal)
 					} finally {
-						self.#logger.debug(`Client "${ctx.clientId}" unsubscribed from element session: ${elementStreamId}`)
-
-						// Stop the session if no clients are left
-						if (session && session.changes.listenerCount('change') === 0) {
-							self.#sessions.delete(elementStreamId)
-
-							self.#logger.debug(`Element session "${elementStreamId}" has no more clients, terminated`)
-						}
+						abort.abort()
 					}
 				}),
 		})
+	}
+
+	/**
+	 * Stream an element for a preview context, until either ends
+	 */
+	async *#runSubscription(
+		context: PreviewContext,
+		elementId: string,
+		clientId: string,
+		signal: AbortSignal
+	): AsyncGenerator<ElementStreamResult> {
+		const session = this.#acquireSession(context.controlId, elementId, clientId)
+
+		const wake = new EventEmitter<{ wake: [] }>()
+		const onWake = () => wake.emit('wake')
+		context.events.on('ended', onWake)
+		session.changes.on('change', onWake)
+		const wakes = toIterable(wake, 'wake', signal)
+
+		try {
+			let lastYielded = session.latestResult
+			yield lastYielded
+
+			while (!context.ended) {
+				if (session.latestResult !== lastYielded) {
+					lastYielded = session.latestResult
+					yield lastYielded
+					continue
+				}
+
+				const next = await wakes.next()
+				if (next.done) return
+			}
+		} finally {
+			context.events.off('ended', onWake)
+			session.changes.off('change', onWake)
+			this.#releaseSession(session, clientId)
+		}
+	}
+
+	#acquireSession(controlId: string, elementId: string, clientId: string): ElementStreamSession {
+		const sessionId = `${controlId}::${elementId}`
+
+		let session = this.#sessions.get(sessionId)
+		if (session) {
+			this.#logger.debug(`Client "${clientId}" subscribed to existing element session: ${sessionId}`)
+			session.subscribers++
+			return session
+		}
+
+		this.#logger.debug(`Client "${clientId}" subscribed to new element session: ${sessionId}`)
+		session = {
+			sessionId,
+			controlId,
+			elementId,
+			subscribers: 1,
+			trackedExpressions: new Set<string>(),
+			trackedCompositeElements: new Set(),
+			trackedReferencedLocations: new Set(),
+			isClockSensitive: false,
+			latestResult: { ok: true, element: null },
+			changes: new EventEmitter(),
+			isEvaluating: false,
+			hasPendingEvaluation: false,
+		}
+		session.changes.setMaxListeners(0)
+		this.#sessions.set(sessionId, session)
+
+		// Trigger async evaluation of the initial value
+		this.#triggerElementReEvaluation(session)
+
+		return session
+	}
+
+	#releaseSession(session: ElementStreamSession, clientId: string): void {
+		this.#logger.debug(`Client "${clientId}" unsubscribed from element session: ${session.sessionId}`)
+
+		session.subscribers--
+		if (session.subscribers > 0) return
+
+		this.#sessions.delete(session.sessionId)
+		this.#logger.debug(`Element session "${session.sessionId}" has no more clients, terminated`)
 	}
 
 	#onRenderClockTick = (): void => {
@@ -188,10 +297,10 @@ export class PreviewElementStream {
 			// Re-evaluations often produce the same result (eg on a render clock tick), so skip resending those
 			if (!isEqual(session.latestResult.element, newValue.element)) {
 				session.latestResult = { ok: true, element: newValue.element }
-				session.changes.emit('change', session.latestResult)
+				session.changes.emit('change')
 			}
 		} catch (err) {
-			this.#logger.error(`Error re-evaluating element ${session.elementStreamId}:`, err)
+			this.#logger.error(`Error re-evaluating element ${session.sessionId}:`, err)
 		} finally {
 			// Mark evaluation as complete
 			session.isEvaluating = false
@@ -213,9 +322,7 @@ export class PreviewElementStream {
 			// Check if any of the changed variables are used by this element
 			if (session.trackedExpressions.isDisjointFrom(changed)) continue
 
-			this.#logger.silly(
-				`Re-evaluating element: ${elementStreamId} for ${session.changes.listenerCount('change')} clients`
-			)
+			this.#logger.silly(`Re-evaluating element: ${elementStreamId} for ${session.subscribers} clients`)
 
 			this.#triggerElementReEvaluation(session)
 		}
@@ -226,9 +333,7 @@ export class PreviewElementStream {
 			if (session.trackedCompositeElements.size === 0) continue
 			if (session.trackedCompositeElements.isDisjointFrom(elementIds)) continue
 
-			this.#logger.silly(
-				`Re-evaluating element: ${elementStreamId} for ${session.changes.listenerCount('change')} clients`
-			)
+			this.#logger.silly(`Re-evaluating element: ${elementStreamId} for ${session.subscribers} clients`)
 
 			this.#triggerElementReEvaluation(session)
 		}
@@ -329,9 +434,10 @@ export class PreviewElementStream {
 }
 
 interface ElementStreamSession {
-	readonly elementStreamId: string
+	readonly sessionId: string
 	readonly controlId: string
 	readonly elementId: string
+	subscribers: number
 	trackedExpressions: Set<string>
 	trackedCompositeElements: Set<CompositeElementIdString>
 	trackedReferencedLocations: Set<string>
@@ -339,7 +445,7 @@ interface ElementStreamSession {
 
 	latestResult: ElementStreamResult
 
-	readonly changes: EventEmitter<{ change: [ElementStreamResult] }>
+	readonly changes: EventEmitter<{ change: [] }>
 	isEvaluating: boolean
 	hasPendingEvaluation: boolean
 }

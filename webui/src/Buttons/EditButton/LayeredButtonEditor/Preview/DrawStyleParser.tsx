@@ -1,8 +1,10 @@
 import isEqual from 'fast-deep-equal'
 import { toJS } from 'mobx'
 import { useObserver } from 'mobx-react-lite'
-import { useEffect, useState } from 'react'
+import { nanoid } from 'nanoid'
+import { useEffect, useRef, useState } from 'react'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
+import type { ElementRasterCanvas } from '@companion-app/shared/Graphics/ElementRaster.js'
 import {
 	resolveButtonStyleProperties,
 	type ResolveButtonStylePropertiesConfig,
@@ -39,6 +41,13 @@ class LayeredButtonDrawStyleParser {
 	readonly #drawConfig: ResolveButtonStylePropertiesConfig
 	readonly #changed: (style: RendererButtonStyle) => void
 
+	/**
+	 * The preview context the element streams are attached to, which holds the canvas the preview draws on
+	 */
+	readonly #contextId = nanoid()
+	readonly #unsubContext: () => void
+	#canvas: ElementRasterCanvas
+
 	readonly #elementValues = new Map<string, CachedElementValue>()
 	readonly #expressionValues = new Map<string, CachedExpressionValue>()
 	#rawElements: SomeButtonGraphicsElement[] = []
@@ -49,16 +58,39 @@ class LayeredButtonDrawStyleParser {
 		controlId: string,
 		location: ControlLocation | undefined,
 		drawConfig: ResolveButtonStylePropertiesConfig,
-		changed: (style: RendererButtonStyle) => void
+		changed: (style: RendererButtonStyle) => void,
+		canvas: ElementRasterCanvas
 	) {
 		this.#controlId = controlId
 		this.#location = location
 		this.#drawConfig = drawConfig
 		this.#changed = changed
+		this.#canvas = canvas
+
+		const contextSub = trpcClient.preview.elementStream.previewContext.subscribe(
+			{ contextId: this.#contextId, controlId, canvas },
+			{
+				onError: (error) => {
+					console.error('Subscription to preview context errored:', error)
+				},
+			}
+		)
+		this.#unsubContext = () => contextSub.unsubscribe()
+	}
+
+	/** Change the canvas the elements are drawn for */
+	setCanvas(canvas: ElementRasterCanvas) {
+		if (this.#disposed || isEqual(this.#canvas, canvas)) return
+		this.#canvas = canvas
+
+		trpcClient.preview.elementStream.setPreviewCanvas
+			.mutate({ contextId: this.#contextId, canvas })
+			.catch((e) => console.error('Failed to set preview canvas', e))
 	}
 
 	dispose() {
 		this.#disposed = true
+		this.#unsubContext()
 
 		// Unsubscribe from all streams
 		for (const sub of this.#elementValues.values()) {
@@ -139,7 +171,7 @@ class LayeredButtonDrawStyleParser {
 
 						const sub = trpcClient.preview.elementStream.watchElement.subscribe(
 							{
-								controlId: this.#controlId,
+								contextId: this.#contextId,
 								elementId,
 							},
 							{
@@ -328,23 +360,27 @@ class LayeredButtonDrawStyleParser {
  * This subscribes to the necessary element streams on the backend, to update as the button should be redrawn
  * @param controlId ControlId of the button to draw, if this is a control
  * @param styleStore The store containing the style to be drawn
+ * @param canvas The canvas the button is drawn on, for the backend to draw the elements the preview can't for
  * @returns The parsed draw style, or null if not yet ready
  */
 export function useLayeredButtonDrawStyleParser(
 	controlId: string,
 	location: ControlLocation | undefined,
 	drawConfig: ResolveButtonStylePropertiesConfig,
-	styleStore: LayeredStyleStore
+	styleStore: LayeredStyleStore,
+	canvas: ElementRasterCanvas
 ): RendererButtonStyle | null {
 	const [drawStyle, setDrawStyle] = useState<RendererButtonStyle | null>(null)
 	const [parser, setParser] = useState<LayeredButtonDrawStyleParser | null>(null)
+	const canvasRef = useRef(canvas)
 
 	// Reset the draw style when the store changes
 	useEffect(() => setDrawStyle(null), [styleStore])
 
 	// This is weird, but we need the cleanup function, so can't use useMemo
 	useEffect(() => {
-		const parser = new LayeredButtonDrawStyleParser(controlId, location, drawConfig, setDrawStyle)
+		// Created with the canvas at the time, then kept up to date by the effect below rather than recreated
+		const parser = new LayeredButtonDrawStyleParser(controlId, location, drawConfig, setDrawStyle, canvasRef.current)
 		parser.updateStyle(toJS(styleStore.elements))
 
 		setParser(parser)
@@ -354,6 +390,11 @@ export function useLayeredButtonDrawStyleParser(
 			parser.dispose()
 		}
 	}, [controlId, location, styleStore, drawConfig, setDrawStyle])
+
+	useEffect(() => {
+		canvasRef.current = canvas
+		parser?.setCanvas(canvas)
+	}, [parser, canvas])
 
 	// Trigger the update whenever the style changes
 	useObserver(() => parser?.updateStyle(toJS(styleStore.elements)))

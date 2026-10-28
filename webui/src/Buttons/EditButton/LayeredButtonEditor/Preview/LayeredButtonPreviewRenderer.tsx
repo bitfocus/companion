@@ -53,8 +53,6 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 		[userConfig]
 	)
 
-	const drawStyle = useLayeredButtonDrawStyleParser(controlId, location, drawConfig, styleStore)
-
 	const [aspectRatio, setAspectRatio] = useLocalStorage('layered-button-preview-aspect-ratio', '1:1')
 
 	// The canvas is sized in JS to fit the measured container. It can't be done in CSS: the wrapper has to
@@ -68,6 +66,13 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 		() => fitCanvasSize(aspectRatio, containerWidth, containerHeight),
 		[aspectRatio, containerWidth, containerHeight]
 	)
+
+	// The canvas the preview draws on, which its element streams are told of
+	const previewCanvas = useMemo(
+		() => ({ width: width + PAD_X * 2, height: height + PAD_Y * 2, paddingX: PAD_X, paddingY: PAD_Y }),
+		[width, height]
+	)
+	const drawStyle = useLayeredButtonDrawStyleParser(controlId, location, drawConfig, styleStore, previewCanvas)
 
 	// Owned here rather than in the overlay: the toolbar toggles them and the overlay's drag math reads
 	// them. Refs are what the drag listeners read, since they're registered once per drag.
