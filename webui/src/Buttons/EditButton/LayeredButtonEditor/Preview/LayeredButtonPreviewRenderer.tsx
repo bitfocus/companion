@@ -398,7 +398,13 @@ const LayeredButtonCanvas = observer(function LayeredButtonCanvas({
 })
 
 class RendererDrawContext {
+	/**
+	 * Drawn offscreen, then copied to the canvas once complete: a draw waits on images to decode (eg each new raster of
+	 * an element), and the browser would otherwise paint the canvas while it is cleared and only partly drawn
+	 */
 	readonly #image: GraphicsImage
+	readonly #offscreen: HTMLCanvasElement
+	readonly #context2d: CanvasRenderingContext2D
 	readonly #textLayoutCache: TextLayoutCache
 	readonly #debounce: PromiseDebounce
 	readonly #onGeometry: (geometry: readonly ElementGeometry[]) => void
@@ -413,11 +419,20 @@ class RendererDrawContext {
 	#disposed = false
 
 	constructor(canvas: HTMLCanvasElement, onGeometry: (geometry: readonly ElementGeometry[]) => void) {
+		const context2d = canvas.getContext('2d')
+		if (!context2d) throw new Error('Failed to get 2d context')
+
+		const offscreen = document.createElement('canvas')
+		offscreen.width = canvas.width
+		offscreen.height = canvas.height
+
 		const textLayoutCache: TextLayoutCache = new QuickLRU({ maxSize: 200 })
-		const image = GraphicsImage.create(canvas, textLayoutCache)
+		const image = GraphicsImage.create(offscreen, textLayoutCache)
 		if (!image) throw new Error('Failed to create image')
 
 		this.#image = image
+		this.#offscreen = offscreen
+		this.#context2d = context2d
 		this.#textLayoutCache = textLayoutCache
 		this.#debounce = new PromiseDebounce(this.#debounceDraw, 1, 10)
 		this.#onGeometry = onGeometry
@@ -456,6 +471,10 @@ class RendererDrawContext {
 			)
 
 			this.#image.drawComplete()
+			if (this.#disposed) return
+
+			this.#context2d.clearRect(0, 0, this.canvas.width, this.canvas.height)
+			this.#context2d.drawImage(this.#offscreen, 0, 0)
 			this.#onGeometry(geometry)
 
 			if (!this.#disposed && this.#image.lastDrawWasAnimated && !this.#animationTimer) {
