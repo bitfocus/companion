@@ -13,6 +13,7 @@ import type {
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsLineDrawElement,
 	ButtonGraphicsRasterDrawElement,
+	ButtonGraphicsReferenceDrawElement,
 	ButtonGraphicsRemoteDrawElement,
 	ButtonGraphicsTextDrawElement,
 	SomeButtonGraphicsDrawElement,
@@ -2189,6 +2190,134 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			)
 
 			expect(rasterGeometry).toEqual(textGeometry)
+		})
+	})
+
+	describe('drawSingleElement', () => {
+		test('draws only the element, laid out as within the whole button', async () => {
+			const box = makeBoxElement({ id: 'target', x: 0.25, y: 0.25, width: 0.5, height: 0.5, color: 0x00ff00 })
+			const style = makeStyle({
+				decoration: ButtonGraphicsDecorationType.None,
+				elements: [
+					makeBoxElement({ id: 'sibling', color: 0xff0000 }),
+					makeGroupElement([box, makeBoxElement({ id: 'sibling-2', color: 0x0000ff })], {
+						x: 0.5,
+						width: 0.5,
+						rotation: 20,
+					}),
+				],
+			})
+
+			const single = Image.create(72, 58, 1, null)
+			const geometry = await GraphicsLayeredButtonRenderer.drawSingleElement(single, style, 'target', DEFAULT_PADDING)
+
+			const full = Image.create(72, 58, 1, null)
+			const fullGeometry = await GraphicsLayeredButtonRenderer.draw(
+				full,
+				style,
+				new Set(['sibling', 'sibling-2']),
+				null,
+				DEFAULT_PADDING
+			)
+
+			expect(single.buffer().equals(full.buffer())).toBe(true)
+			expect(geometry).toEqual(fullGeometry.find((entry) => entry.id === 'target'))
+		})
+
+		test('draws an element that a reference draws, laid out within the reference', async () => {
+			const reference: ButtonGraphicsReferenceDrawElement = {
+				...ELEMENT_BASE,
+				id: 'ref',
+				type: 'reference',
+				x: 0.25,
+				y: 0.1,
+				width: 0.75,
+				height: 0.8,
+				rotation: 15,
+				children: [
+					makeBoxElement({ id: 'remote-box', color: 0xff0000 }),
+					makeTextElement({ id: 'remote-text', width: 0.5, text: 'Hi', outlineColor: 0x000000 }),
+				],
+			}
+			const style = makeStyle({ decoration: ButtonGraphicsDecorationType.None, elements: [reference] })
+
+			const single = Image.create(72, 58, 1, null)
+			const geometry = await GraphicsLayeredButtonRenderer.drawSingleElement(
+				single,
+				style,
+				'remote-text',
+				DEFAULT_PADDING
+			)
+
+			const full = Image.create(72, 58, 1, null)
+			const fullGeometry = await GraphicsLayeredButtonRenderer.draw(
+				full,
+				style,
+				new Set(['remote-box']),
+				null,
+				DEFAULT_PADDING
+			)
+
+			expect(single.buffer().equals(full.buffer())).toBe(true)
+			expect(geometry).toEqual(fullGeometry.find((entry) => entry.id === 'remote-text'))
+		})
+
+		test("doesn't draw the decoration, but still lays out within the content area", async () => {
+			const style = makeStyle({
+				decoration: ButtonGraphicsDecorationType.TopBar,
+				pushed: true,
+				elements: [makeBoxElement({ id: 'target' })],
+			})
+
+			const img = Image.create(72, 58, 1, null)
+			const geometry = await GraphicsLayeredButtonRenderer.drawSingleElement(img, style, 'target', DEFAULT_PADDING)
+
+			const fullGeometry = await GraphicsLayeredButtonRenderer.draw(
+				Image.create(72, 58, 1, null),
+				style,
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			expect(geometry).toEqual(fullGeometry.find((entry) => entry.id === 'target'))
+
+			// The top bar area is left empty
+			const data = img.canvasImage.getContext('2d').getImageData(2, 2, 68, 1).data
+			expect(data.some((value, i) => i % 4 === 3 && value !== 0)).toBe(false)
+		})
+
+		test('ignores the opacity of the element and its parents, as the preview applies those', async () => {
+			const style = makeStyle({
+				decoration: ButtonGraphicsDecorationType.None,
+				elements: [
+					makeGroupElement(
+						[
+							makeBoxElement({ id: 'opaque', width: 0.5 }),
+							makeBoxElement({ id: 'faded', x: 0.5, width: 0.5, opacity: 0.5 }),
+						],
+						{ opacity: 0.25 }
+					),
+				],
+			})
+
+			const opaque = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.drawSingleElement(opaque, style, 'opaque', DEFAULT_PADDING)
+			expect(opaque.canvasImage.getContext('2d').getImageData(10, 29, 1, 1).data[3]).toBe(255)
+
+			const faded = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.drawSingleElement(faded, style, 'faded', DEFAULT_PADDING)
+			expect(faded.canvasImage.getContext('2d').getImageData(60, 29, 1, 1).data[3]).toBe(255)
+		})
+
+		test('returns null for an unknown element', async () => {
+			const img = Image.create(72, 58, 1, null)
+			const geometry = await GraphicsLayeredButtonRenderer.drawSingleElement(
+				img,
+				makeStyle({ elements: [makeBoxElement()] }),
+				'missing',
+				DEFAULT_PADDING
+			)
+			expect(geometry).toBeNull()
 		})
 	})
 })
