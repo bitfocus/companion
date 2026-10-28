@@ -217,7 +217,7 @@ interface StepPillProps {
 }
 
 function StepPill({ controlId, stepId, stepIndex, stepOptions, isSelected, isCurrent, onSelect }: StepPillProps) {
-	const name = stepOptions?.name || `Step ${stepIndex + 1}`
+	const name = stepOptions?.name ? `${stepOptions.name} (${stepIndex + 1})` : `Step ${stepIndex + 1}`
 	const renameStepMutation = useMutationExt(trpc.controls.steps.rename.mutationOptions())
 
 	const [isEditing, setIsEditing] = useState(false)
