@@ -26,7 +26,7 @@
   "author": "Bitfocus AS",
   "license": "MIT",
   "devDependencies": {
-    "@sentry/esbuild-plugin": "^11.8.0",
+    "@sentry/esbuild-plugin": "^11.9.0",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -58,7 +58,7 @@
     "@logtape/logtape": "^2.4.2",
     "@logtape/syslog": "patch:@logtape/syslog@npm%3A2.4.0#~/.yarn/patches/@logtape-syslog-npm-2.4.0-bd80e7483c.patch",
     "@napi-rs/canvas": "1.0.11",
-    "@sentry/node": "^11.8.0",
+    "@sentry/node": "^11.9.0",
     "@trpc/server": "^11.19.0",
     "bufferutil": "npm:@julusian/bufferutil@^4.1.0",
     "colord": "^2.10.0",

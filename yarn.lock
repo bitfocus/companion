@@ -1797,17 +1797,17 @@ __metadata:
     "@fortawesome/free-solid-svg-icons": "npm:^7.3.1"
     "@fortawesome/react-fontawesome": "npm:^3.5.0"
     "@monaco-editor/react": "npm:^4.8.0-rc.3"
-    "@sentry/react": "npm:^11.8.0"
-    "@sentry/vite-plugin": "npm:^11.8.0"
+    "@sentry/react": "npm:^11.9.0"
+    "@sentry/vite-plugin": "npm:^11.9.0"
     "@storybook/react-vite": "npm:^10.6.3"
     "@tailwindcss/vite": "npm:^4.3.3"
     "@tanstack/react-form": "npm:^1.33.5"
     "@tanstack/react-query": "npm:^5.104.5"
     "@tanstack/react-query-devtools": "npm:^5.104.5"
-    "@tanstack/react-router": "npm:^1.170.45"
+    "@tanstack/react-router": "npm:^1.170.46"
     "@tanstack/react-router-devtools": "npm:^1.167.2"
     "@tanstack/react-virtual": "npm:^3.14.22"
-    "@tanstack/router-plugin": "npm:^1.168.47"
+    "@tanstack/router-plugin": "npm:^1.168.48"
     "@tanstack/virtual-file-routes": "npm:^1.162.0"
     "@testing-library/dom": "npm:^10.4.2"
     "@testing-library/jest-dom": "npm:^7.0.1"
@@ -1853,7 +1853,7 @@ __metadata:
     react-idle-timer: "npm:^5.7.3"
     react-intersection-observer: "npm:^11.0.1"
     react-markdown: "npm:^10.1.0"
-    react-resizable-panels: "npm:^4.14.8"
+    react-resizable-panels: "npm:^4.15.0"
     react-spinners: "npm:^0.17.1"
     react-transition-group: "npm:^4.4.5"
     remark-gfm: "npm:^4.0.1"
@@ -6077,6 +6077,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry/browser-utils@npm:11.9.0":
+  version: 11.9.0
+  resolution: "@sentry/browser-utils@npm:11.9.0"
+  dependencies:
+    "@sentry/conventions": "npm:^0.27.0"
+    "@sentry/core": "npm:11.9.0"
+    web-vitals: "npm:^6.2.3"
+  checksum: 10c0/323fa0e12213d8753ceb47e5f6af1ce5ef1c6f2db5dee0458c07f751c7b0a461dbe8a0da6fa100032cfef3e0f108bb317d4621c8301426bcab7e6896fa41763b
+  languageName: node
+  linkType: hard
+
 "@sentry/browser@npm:11.8.0":
   version: 11.8.0
   resolution: "@sentry/browser@npm:11.8.0"
@@ -6091,11 +6102,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/bundler-plugins@npm:11.8.0":
-  version: 11.8.0
-  resolution: "@sentry/bundler-plugins@npm:11.8.0"
+"@sentry/browser@npm:11.9.0":
+  version: 11.9.0
+  resolution: "@sentry/browser@npm:11.9.0"
   dependencies:
-    "@sentry/core": "npm:11.8.0"
+    "@sentry/browser-utils": "npm:11.9.0"
+    "@sentry/conventions": "npm:^0.27.0"
+    "@sentry/core": "npm:11.9.0"
+    "@sentry/feedback": "npm:11.9.0"
+    "@sentry/replay": "npm:11.9.0"
+    "@sentry/replay-canvas": "npm:11.9.0"
+  checksum: 10c0/ca162c6691639e53baf35ac9bbdbeda753a477e91c21b8dc8449a8d2ddc3fd76c16e8c6e61643f3c1e0cf5a3137c2941de2bc98a061421b200f6cdc3d71ba65d
+  languageName: node
+  linkType: hard
+
+"@sentry/bundler-plugins@npm:11.9.0":
+  version: 11.9.0
+  resolution: "@sentry/bundler-plugins@npm:11.9.0"
+  dependencies:
+    "@sentry/core": "npm:11.9.0"
     dotenv: "npm:^17.4.2"
     glob: "npm:^13.0.6"
     magic-string: "npm:~0.30.8 || ^1.0.0"
@@ -6103,17 +6128,14 @@ __metadata:
     sentry: "npm:^0.45.0"
     supports-color: "npm:^8.1.1"
   peerDependencies:
-    "@babel/core": ^7.18.5
     rollup: ">=3.2.0"
     webpack: ">=5.1.0"
   peerDependenciesMeta:
-    "@babel/core":
-      optional: true
     rollup:
       optional: true
     webpack:
       optional: true
-  checksum: 10c0/61fc745c78dac2eda9678624af146496b7890ece75f80861642a18891e7d13aaaa2840a3bfb9180254d8f9fecc63927b0b61d220371f876cc0a6ba0de68cd770
+  checksum: 10c0/e0dfcf55ae761e86c4e66bf0eaf8995aafcf717d34d6beeec4d09daeea581cf1db732621ffeda1a52b41f76acba5112dd0d45f433033a60d48ccfa0e045886fb
   languageName: node
   linkType: hard
 
@@ -6140,6 +6162,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry/core@npm:11.9.0":
+  version: 11.9.0
+  resolution: "@sentry/core@npm:11.9.0"
+  dependencies:
+    "@sentry/conventions": "npm:^0.27.0"
+  checksum: 10c0/2c5c30acaad130ed7aca7a2f6a65c0c3ab682de086a17c88fc2cb24f1c0443e4c4f937dcffc453a463804b93c7778fa9ab2a9061c71c5a9607d0afebcee7499c
+  languageName: node
+  linkType: hard
+
 "@sentry/electron@npm:^8.3.0":
   version: 8.3.0
   resolution: "@sentry/electron@npm:8.3.0"
@@ -6158,12 +6189,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/esbuild-plugin@npm:^11.8.0":
-  version: 11.8.0
-  resolution: "@sentry/esbuild-plugin@npm:11.8.0"
+"@sentry/esbuild-plugin@npm:^11.9.0":
+  version: 11.9.0
+  resolution: "@sentry/esbuild-plugin@npm:11.9.0"
   dependencies:
-    "@sentry/bundler-plugins": "npm:11.8.0"
-  checksum: 10c0/72a6170ae5212a228d8044e834fa0f74c457236454af32fc70516a9cd8189c61cf5ea957597a0017b0c62cb7cea3115f20654f7a6e6652878248c88e31da1cd5
+    "@sentry/bundler-plugins": "npm:11.9.0"
+  checksum: 10c0/b2f21cd434a9a3239363492bb37555a00a969a9ed1d91e9db8de46ed1871d70db9311e4f6cdbedd0df1fd210123c095fefb555e084cc85d559428ff257f7bc68
   languageName: node
   linkType: hard
 
@@ -6176,7 +6207,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/node@npm:11.8.0, @sentry/node@npm:^11.8.0":
+"@sentry/feedback@npm:11.9.0":
+  version: 11.9.0
+  resolution: "@sentry/feedback@npm:11.9.0"
+  dependencies:
+    "@sentry/core": "npm:11.9.0"
+  checksum: 10c0/a5372b17a7c5d709492c56226fad7816212b7ac3627e75fd54acd1d46eef6bf07edd3d1ffe4728d72cac115ba6fd3c69aec6351918e8058bf540e989bc7c84e0
+  languageName: node
+  linkType: hard
+
+"@sentry/node@npm:11.8.0":
   version: 11.8.0
   resolution: "@sentry/node@npm:11.8.0"
   dependencies:
@@ -6188,6 +6228,21 @@ __metadata:
     "@sentry/server-runtime-injection": "npm:11.8.0"
     "@sentry/server-utils": "npm:11.8.0"
   checksum: 10c0/dbe7704128f3b6018460c7a8029b333dcb497eed1f97744a37925cb19d8c2caf67d83164d7f72e887e79c5711a4e6e0c73d8c4b838bca728eb303548a74ba6f3
+  languageName: node
+  linkType: hard
+
+"@sentry/node@npm:^11.9.0":
+  version: 11.9.0
+  resolution: "@sentry/node@npm:11.9.0"
+  dependencies:
+    "@opentelemetry/api": "npm:^1.9.1"
+    "@sentry/bundler-plugins": "npm:11.9.0"
+    "@sentry/conventions": "npm:^0.27.0"
+    "@sentry/core": "npm:11.9.0"
+    "@sentry/opentelemetry": "npm:11.9.0"
+    "@sentry/server-runtime-injection": "npm:11.9.0"
+    "@sentry/server-utils": "npm:11.9.0"
+  checksum: 10c0/b715509548759822dd0d060234629f3c93b7705874191d00ddf5798ebb6544f4c7d28c77bf33904427bcd0d4fb29c91d06df97643e57502eb58976c84b534bce
   languageName: node
   linkType: hard
 
@@ -6203,20 +6258,32 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/react@npm:^11.8.0":
-  version: 11.8.0
-  resolution: "@sentry/react@npm:11.8.0"
+"@sentry/opentelemetry@npm:11.9.0":
+  version: 11.9.0
+  resolution: "@sentry/opentelemetry@npm:11.9.0"
   dependencies:
-    "@sentry/browser": "npm:11.8.0"
     "@sentry/conventions": "npm:^0.27.0"
-    "@sentry/core": "npm:11.8.0"
+    "@sentry/core": "npm:11.9.0"
+  peerDependencies:
+    "@opentelemetry/api": ^1.9.0
+  checksum: 10c0/f6e68d5ec7af7cacf1c600cf84f1120fe28465821daa2e95de144ec0a27cfd7c1bd4b64e7f14e2209482be2f04acfc328149f7d6f0106e60b8e8cb9c99600ec2
+  languageName: node
+  linkType: hard
+
+"@sentry/react@npm:^11.9.0":
+  version: 11.9.0
+  resolution: "@sentry/react@npm:11.9.0"
+  dependencies:
+    "@sentry/browser": "npm:11.9.0"
+    "@sentry/conventions": "npm:^0.27.0"
+    "@sentry/core": "npm:11.9.0"
   peerDependencies:
     react: 17.x || 18.x || 19.x
     react-router: 6.x || 7.x || 8.x
   peerDependenciesMeta:
     react-router:
       optional: true
-  checksum: 10c0/eb2437dfb5f3acba51b83acee050eee6dc7e5be6ece45b228114f2d3d317f5c2d2f1ded92b92675a7ce5dc385c36b2319c33094415804c30e3f215f28fed85ff
+  checksum: 10c0/82c8bb97328c7b2fa7f15a0201badea8510a5939f93da610cd974b906e3a4e966343cf546640d0047a7f898d0a790762c5a3bb8d677281cca6d7e3f86eaae1d2
   languageName: node
   linkType: hard
 
@@ -6230,6 +6297,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry/replay-canvas@npm:11.9.0":
+  version: 11.9.0
+  resolution: "@sentry/replay-canvas@npm:11.9.0"
+  dependencies:
+    "@sentry/core": "npm:11.9.0"
+    "@sentry/replay": "npm:11.9.0"
+  checksum: 10c0/925f1cd3b0d72630dcca5c33c248dbc09a73f67f466cbd3cb5c182bc73a0cb6f3e2eabd9f743f60ccf0a95e5ef660ae98c9ff3435b52be384af1b11b5ae70a19
+  languageName: node
+  linkType: hard
+
 "@sentry/replay@npm:11.8.0":
   version: 11.8.0
   resolution: "@sentry/replay@npm:11.8.0"
@@ -6240,6 +6317,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@sentry/replay@npm:11.9.0":
+  version: 11.9.0
+  resolution: "@sentry/replay@npm:11.9.0"
+  dependencies:
+    "@sentry/browser-utils": "npm:11.9.0"
+    "@sentry/core": "npm:11.9.0"
+  checksum: 10c0/d27c591aa36e0b0b0273a0768ca59fd203534ab77afdfa711fe3cb8a6a08fa245764c9df8541e685c815ab38948022fb0cc089c9e1b0885d948062a6e4a3fe86
+  languageName: node
+  linkType: hard
+
 "@sentry/server-runtime-injection@npm:11.8.0":
   version: 11.8.0
   resolution: "@sentry/server-runtime-injection@npm:11.8.0"
@@ -6247,6 +6334,16 @@ __metadata:
     "@sentry/core": "npm:11.8.0"
     "@sentry/server-utils": "npm:11.8.0"
   checksum: 10c0/d23ef0bdc3c56e6b91a1d3ac0787a39dc5f385bac9d5d9d4d3ea07079227a84ef5736e7a5836140d736b6d373a57485f3fc4a3822fe60acfd0b2ddbce599004c
+  languageName: node
+  linkType: hard
+
+"@sentry/server-runtime-injection@npm:11.9.0":
+  version: 11.9.0
+  resolution: "@sentry/server-runtime-injection@npm:11.9.0"
+  dependencies:
+    "@sentry/core": "npm:11.9.0"
+    "@sentry/server-utils": "npm:11.9.0"
+  checksum: 10c0/59098b6e6c020667f593a374f333d8446d7b0de6ea7f08a08e0cd8c7d3cde639f5f774029ac0e57b9cf8333062efc22a056fab46c572f6c8f0b130fe187e6b24
   languageName: node
   linkType: hard
 
@@ -6261,12 +6358,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/vite-plugin@npm:^11.8.0":
-  version: 11.8.0
-  resolution: "@sentry/vite-plugin@npm:11.8.0"
+"@sentry/server-utils@npm:11.9.0":
+  version: 11.9.0
+  resolution: "@sentry/server-utils@npm:11.9.0"
   dependencies:
-    "@sentry/bundler-plugins": "npm:11.8.0"
-  checksum: 10c0/76a81e51a7373ff3be578697ea14ed02188f2044ae0a750353c9cc4d5982d77ffbef6df2649ac8ed0562df5679059ba3c86f84c7d03b638bb7b299d56222523d
+    "@opentelemetry/api": "npm:^1.9.1"
+    "@sentry/conventions": "npm:^0.27.0"
+    "@sentry/core": "npm:11.9.0"
+  checksum: 10c0/4de63a5f6a3de277aaf26ed116ddf00ea80f67b18fec0e1cbe64ca9919d66b0a9ee7b10bc2e7096099ae8926c3fe7d236f6206610dcd9e96c9b98bec12c5d69f
+  languageName: node
+  linkType: hard
+
+"@sentry/vite-plugin@npm:^11.9.0":
+  version: 11.9.0
+  resolution: "@sentry/vite-plugin@npm:11.9.0"
+  dependencies:
+    "@sentry/bundler-plugins": "npm:11.9.0"
+  checksum: 10c0/b3c6d48ad826aa75bdb2c506bc68b7cb31f5899144235a576da04aba8ea722a8bfa85d45650730bd24688a56066c858642ab6139d8e58a73b67b4cb211d372eb
   languageName: node
   linkType: hard
 
@@ -7061,18 +7169,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/react-router@npm:^1.170.45":
-  version: 1.170.45
-  resolution: "@tanstack/react-router@npm:1.170.45"
+"@tanstack/react-router@npm:^1.170.46":
+  version: 1.170.46
+  resolution: "@tanstack/react-router@npm:1.170.46"
   dependencies:
     "@tanstack/history": "npm:1.162.5"
     "@tanstack/react-store": "npm:^0.11.2"
-    "@tanstack/router-core": "npm:1.171.38"
+    "@tanstack/router-core": "npm:1.171.39"
     isbot: "npm:^5.1.22"
   peerDependencies:
     react: ">=18.0.0 || >=19.0.0"
     react-dom: ">=18.0.0 || >=19.0.0"
-  checksum: 10c0/e051516efbaea9348738c7fdc831cbc9444d1256e7e5e75f4357d908a701e28fb7993c40fe9e849adf7d2928283d89a7ba3e24eab936e339990d0101e4c73a1f
+  checksum: 10c0/3761084b58e3581f5ba22bdd46d87e2808bf0d517790b8826e31b2f036a7b4bbad5f1ee188c1a704b8c87c3c493e141138fdbee9836cb8bea921af4ce078b76f
   languageName: node
   linkType: hard
 
@@ -7101,15 +7209,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/router-core@npm:1.171.38":
-  version: 1.171.38
-  resolution: "@tanstack/router-core@npm:1.171.38"
+"@tanstack/router-core@npm:1.171.39":
+  version: 1.171.39
+  resolution: "@tanstack/router-core@npm:1.171.39"
   dependencies:
     "@tanstack/history": "npm:1.162.5"
     cookie-es: "npm:^3.0.0"
     seroval: "npm:^1.6.7"
     seroval-plugins: "npm:^1.6.7"
-  checksum: 10c0/296dc8e7caa0ade6002bc2f1696c3c2f3147642262274a5ccf572f7e92f1d6fa8d71762fc5ef8a127127bfa4d62da485f59ca7a32e5126d2f4cbd9395dea87ac
+  checksum: 10c0/2d67358028175051b3abd486581dd9bf74edced16f43ef5e14065c20b7aa5830f521a52ad43fdaf98dfda76232437260a544b3213f2c86b4f0d2bd0436109c4c
   languageName: node
   linkType: hard
 
@@ -7129,38 +7237,38 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/router-generator@npm:1.167.45":
-  version: 1.167.45
-  resolution: "@tanstack/router-generator@npm:1.167.45"
+"@tanstack/router-generator@npm:1.167.46":
+  version: 1.167.46
+  resolution: "@tanstack/router-generator@npm:1.167.46"
   dependencies:
     "@babel/types": "npm:^7.29.8"
-    "@tanstack/router-core": "npm:1.171.38"
+    "@tanstack/router-core": "npm:1.171.39"
     "@tanstack/router-utils": "npm:1.162.4"
     "@tanstack/virtual-file-routes": "npm:1.162.0"
     jiti: "npm:^2.7.0"
     magic-string: "npm:^0.30.21"
     prettier: "npm:^3.9.6"
     zod: "npm:^4.5.4"
-  checksum: 10c0/d321fc5dcccd61d4885b4ad86c6d9740865fd09405c6b3b3c9b04d5d51c9996a50df2d480ad098a72933141dee0267da4c514657da4277256d4fada8486108cf
+  checksum: 10c0/cfdfd31dab0a695588582a4d247a88eb10ab0776f8b1e388b2d3f5a0e468e918ffcc68e3e61a75d30b93c673b67b1ef7aa74887269afc1310c64517f8e0756e9
   languageName: node
   linkType: hard
 
-"@tanstack/router-plugin@npm:^1.168.47":
-  version: 1.168.47
-  resolution: "@tanstack/router-plugin@npm:1.168.47"
+"@tanstack/router-plugin@npm:^1.168.48":
+  version: 1.168.48
+  resolution: "@tanstack/router-plugin@npm:1.168.48"
   dependencies:
     "@babel/core": "npm:^7.29.7"
     "@babel/template": "npm:^7.29.7"
     "@babel/types": "npm:^7.29.8"
-    "@tanstack/router-core": "npm:1.171.38"
-    "@tanstack/router-generator": "npm:1.167.45"
+    "@tanstack/router-core": "npm:1.171.39"
+    "@tanstack/router-generator": "npm:1.167.46"
     "@tanstack/router-utils": "npm:1.162.4"
     chokidar: "npm:^5.0.0"
     unplugin: "npm:^3.3.0"
     zod: "npm:^4.5.4"
   peerDependencies:
     "@rsbuild/core": ">=1.0.2 || ^2.0.0"
-    "@tanstack/react-router": ^1.170.45
+    "@tanstack/react-router": ^1.170.46
     vite: ">=5.0.0 || >=6.0.0 || >=7.0.0 || >=8.0.0"
     vite-plugin-solid: ^2.11.10 || ^3.0.0-0
     webpack: ">=5.92.0"
@@ -7175,7 +7283,7 @@ __metadata:
       optional: true
     webpack:
       optional: true
-  checksum: 10c0/0c36fbb09f8ff649219b03a2954b46166a5d2533ef3b625306cf804f0acd1220e275bbfba0943d3c61280777a488df9440830d6d4f42f4974bac1fcf1c814e4b
+  checksum: 10c0/b89890237a932ac7d88fb2ae7ea1025b7148800ccda58daff01233902885144d9ed0ec4019c5d61178985e02e7aaf7f0012820f6081c1d0df7580f3cfc74b124
   languageName: node
   linkType: hard
 
@@ -10718,8 +10826,8 @@ __metadata:
     "@logtape/logtape": "npm:^2.4.2"
     "@logtape/syslog": "patch:@logtape/syslog@npm%3A2.4.0#~/.yarn/patches/@logtape-syslog-npm-2.4.0-bd80e7483c.patch"
     "@napi-rs/canvas": "npm:1.0.11"
-    "@sentry/esbuild-plugin": "npm:^11.8.0"
-    "@sentry/node": "npm:^11.8.0"
+    "@sentry/esbuild-plugin": "npm:^11.9.0"
+    "@sentry/node": "npm:^11.9.0"
     "@trpc/server": "npm:^11.19.0"
     "@types/compression": "npm:^1.8.1"
     "@types/cors": "npm:^2.8.19"
@@ -19957,13 +20065,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-resizable-panels@npm:^4.14.8":
-  version: 4.14.8
-  resolution: "react-resizable-panels@npm:4.14.8"
+"react-resizable-panels@npm:^4.15.0":
+  version: 4.15.0
+  resolution: "react-resizable-panels@npm:4.15.0"
   peerDependencies:
     react: ^18.0.0 || ^19.0.0
     react-dom: ^18.0.0 || ^19.0.0
-  checksum: 10c0/2042046e9631aa0c42c56ef557d8a5b80e371a7b113dea38a6e83e5920581ef18e7c78f4b206e0c5be30a15df1e03cfb67c42395376f681418f1d3a106ad715d
+  checksum: 10c0/f3a8832276260db4fdebd0ad8f43a9b77dbb799f1f355c5ef5ea7ccc539062e5899d1afec26da3ccdff9d4f5c9b096c1bb309d75f7385a91151f78e2018696e5
   languageName: node
   linkType: hard
 
