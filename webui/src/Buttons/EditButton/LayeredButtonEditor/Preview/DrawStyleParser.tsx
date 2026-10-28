@@ -71,6 +71,11 @@ class LayeredButtonDrawStyleParser {
 		const contextSub = trpcClient.preview.elementStream.previewContext.subscribe(
 			{ contextId: this.#contextId, controlId, canvas },
 			{
+				// The context has opened, with the canvas it was subscribed with (also when it reopens after a reconnect).
+				// A change since then may have arrived before it opened, so was dropped, so send it again
+				onData: () => {
+					if (!this.#disposed && !isEqual(this.#canvas, canvas)) this.#sendCanvas()
+				},
 				onError: (error) => {
 					console.error('Subscription to preview context errored:', error)
 				},
@@ -84,8 +89,12 @@ class LayeredButtonDrawStyleParser {
 		if (this.#disposed || isEqual(this.#canvas, canvas)) return
 		this.#canvas = canvas
 
+		this.#sendCanvas()
+	}
+
+	#sendCanvas() {
 		trpcClient.preview.elementStream.setPreviewCanvas
-			.mutate({ contextId: this.#contextId, canvas })
+			.mutate({ contextId: this.#contextId, canvas: this.#canvas })
 			.catch((e) => console.error('Failed to set preview canvas', e))
 	}
 
