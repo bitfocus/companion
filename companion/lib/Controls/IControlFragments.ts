@@ -114,6 +114,11 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	layeredStyleGetElementById(id: string): SomeButtonGraphicsElement | undefined
 
 	/**
+	 * Get every element of the layered style, as a tree
+	 */
+	layeredStyleGetElements(): readonly SomeButtonGraphicsElement[]
+
+	/**
 	 * Get the selected element IDs for each usage in the layered style
 	 */
 	layeredStyleSelectedElementIds(): { [usage in ButtonGraphicsElementUsage]: string | undefined }

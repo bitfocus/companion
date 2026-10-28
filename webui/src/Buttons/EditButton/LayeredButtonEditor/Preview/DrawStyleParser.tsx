@@ -42,7 +42,8 @@ class LayeredButtonDrawStyleParser {
 	readonly #changed: (style: RendererButtonStyle) => void
 
 	/**
-	 * The preview context the element streams are attached to, which holds the canvas the preview draws on
+	 * The preview context the element streams render for. Elements the preview can't draw identically itself (eg
+	 * text) are drawn by the backend for its canvas, and streamed as `raster` elements
 	 */
 	readonly #contextId = nanoid()
 	readonly #unsubContext: () => void
@@ -78,7 +79,7 @@ class LayeredButtonDrawStyleParser {
 		this.#unsubContext = () => contextSub.unsubscribe()
 	}
 
-	/** Change the canvas the elements are drawn for */
+	/** Change the canvas the elements are drawn for, which re-renders those drawn by the backend */
 	setCanvas(canvas: ElementRasterCanvas) {
 		if (this.#disposed || isEqual(this.#canvas, canvas)) return
 		this.#canvas = canvas

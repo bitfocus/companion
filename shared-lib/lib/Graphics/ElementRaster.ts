@@ -1,5 +1,12 @@
 import type { SomeButtonGraphicsDrawElement } from '../Model/StyleLayersModel.js'
 
+/**
+ * Element types the backend rasterises for the editor preview, sending it a `raster` element in their place, as
+ * the preview can't draw them identically itself. Text is here because font selection, measurement and shaping
+ * vary by browser and OS.
+ */
+export const RASTERISED_ELEMENT_TYPES: ReadonlySet<string> = new Set<SomeButtonGraphicsDrawElement['type']>(['text'])
+
 /** The canvas a raster is rendered for, which must match the one it is drawn into */
 export interface ElementRasterCanvas {
 	width: number

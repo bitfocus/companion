@@ -2,13 +2,19 @@ import EventEmitter from 'node:events'
 import isEqual from 'fast-deep-equal'
 import z from 'zod'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { RASTERISED_ELEMENT_TYPES, type ElementRasterCanvas } from '@companion-app/shared/Graphics/ElementRaster.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import type {
+	ButtonGraphicsRasterDrawElement,
+	SomeButtonGraphicsDrawElement,
+	SomeButtonGraphicsElement,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { RenderClock } from '../Controls/RenderClock.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../Graphics/ConvertGraphicsElements.js'
+import type { DrawnElementRaster } from '../Graphics/Renderer.js'
 import type { CompositeElementIdString, InstanceDefinitions } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
@@ -23,6 +29,9 @@ export interface ElementStreamResult {
 /** Largest canvas an element can be rasterised for, to bound the work a client can request */
 const MAX_RASTER_CANVAS_SIZE = 4096
 
+/** The least time between rendering the rasters of an element for a canvas, to bound the cost of rapid changes */
+const RASTER_RENDER_MIN_INTERVAL_MS = 50
+
 /** A canvas to rasterise an element for, whose padding must leave some room for the button */
 export const ElementRasterCanvasSchema = z
 	.object({
@@ -35,12 +44,32 @@ export const ElementRasterCanvasSchema = z
 		message: 'Canvas padding must leave room for the button',
 	})
 
+/** An element evaluated by a session, independent of any canvas */
+interface EvaluatedElement {
+	element: SomeButtonGraphicsDrawElement | null
+	/** The ids of the element and anything inside it to rasterise (see RASTERISED_ELEMENT_TYPES) */
+	rasterIds: string[]
+	/** The draw elements of the path to the element (the canvas and its ancestors), to rasterise from */
+	pathElements: SomeButtonGraphicsDrawElement[]
+	/** The ids of the button's own elements which a change to affects this one: itself, and if it is rasterised, its path */
+	dependsOnElementIds: ReadonlySet<string>
+}
+
+interface EvaluatedSession {
+	result: EvaluatedElement
+	referencedVariableIds: Set<string>
+	referencedCompositeElements: Set<CompositeElementIdString>
+	referencedLocations: Set<string>
+	clockSensitive: boolean
+}
+
 /**
  * Manages streaming of individual button graphics elements, to the button editor preview.
  * Provides real-time updates when element expressions change or when the element definition is modified.
  *
  * An element is evaluated by a session, shared by everyone watching it. The streams of a preview are attached to its
- * preview context, and end with it.
+ * preview context, and receive the elements in RASTERISED_ELEMENT_TYPES as `raster` elements, drawn by the backend
+ * for the canvas of their context. That is done by a view of the session for each canvas.
  */
 export class PreviewElementStream {
 	readonly #logger = LogController.createLogger('Preview/ElementStream')
@@ -115,7 +144,7 @@ export class PreviewElementStream {
 				}),
 
 			/**
-			 * Change the canvas of a preview context, for the elements the backend draws for it
+			 * Change the canvas of a preview context, re-rendering the rasters of its element streams
 			 */
 			setPreviewCanvas: publicProcedure
 				.input(
@@ -130,6 +159,7 @@ export class PreviewElementStream {
 			 * Watch a specific element of the control of a preview context, for changes.
 			 * Returns a stream of ElementStreamResult objects containing the evaluated element.
 			 * Returns null if the element doesn't exist.
+			 * Any of RASTERISED_ELEMENT_TYPES in it are replaced with `raster` elements, drawn for the canvas of the context.
 			 *
 			 * @param contextId - ID of the preview context
 			 * @param elementId - ID of the element to watch
@@ -168,21 +198,34 @@ export class PreviewElementStream {
 		signal: AbortSignal
 	): AsyncGenerator<ElementStreamResult> {
 		const session = this.#acquireSession(context.controlId, elementId, clientId)
+		let view = this.#acquireView(session, context.canvas)
 
 		const wake = new EventEmitter<{ wake: [] }>()
 		const onWake = () => wake.emit('wake')
+		context.events.on('canvasChanged', onWake)
 		context.events.on('ended', onWake)
-		session.changes.on('change', onWake)
+		view.events.on('output', onWake)
 		const wakes = toIterable(wake, 'wake', signal)
 
 		try {
-			let lastYielded = session.latestResult
+			// Start with a null element until the first evaluation, as a new client to an existing view gets its output
+			let lastYielded: ElementStreamResult = view.output ?? { ok: true, element: null }
 			yield lastYielded
 
 			while (!context.ended) {
-				if (session.latestResult !== lastYielded) {
-					lastYielded = session.latestResult
-					yield lastYielded
+				if (canvasKey(context.canvas) !== view.canvasKey) {
+					// Move to a view for the new canvas. Its output, if any, replaces what was sent for the old one
+					view.events.off('output', onWake)
+					this.#releaseView(session, view)
+					view = this.#acquireView(session, context.canvas)
+					view.events.on('output', onWake)
+				}
+
+				// Keep what was sent until there is something newer, so a view still rendering doesn't blank anything
+				const output = view.output
+				if (output && !isEqual(output, lastYielded)) {
+					lastYielded = output
+					yield output
 					continue
 				}
 
@@ -190,8 +233,10 @@ export class PreviewElementStream {
 				if (next.done) return
 			}
 		} finally {
+			context.events.off('canvasChanged', onWake)
 			context.events.off('ended', onWake)
-			session.changes.off('change', onWake)
+			view.events.off('output', onWake)
+			this.#releaseView(session, view)
 			this.#releaseSession(session, clientId)
 		}
 	}
@@ -215,13 +260,13 @@ export class PreviewElementStream {
 			trackedExpressions: new Set<string>(),
 			trackedCompositeElements: new Set(),
 			trackedReferencedLocations: new Set(),
+			dependsOnElementIds: new Set([elementId]),
 			isClockSensitive: false,
-			latestResult: { ok: true, element: null },
-			changes: new EventEmitter(),
+			latest: null,
+			views: new Map(),
 			isEvaluating: false,
 			hasPendingEvaluation: false,
 		}
-		session.changes.setMaxListeners(0)
 		this.#sessions.set(sessionId, session)
 
 		// Trigger async evaluation of the initial value
@@ -240,6 +285,43 @@ export class PreviewElementStream {
 		this.#logger.debug(`Element session "${session.sessionId}" has no more clients, terminated`)
 	}
 
+	#acquireView(session: ElementStreamSession, canvas: ElementRasterCanvas): RasterView {
+		const key = canvasKey(canvas)
+
+		let view = session.views.get(key)
+		if (!view) {
+			view = new RasterView(key, canvas, this.#renderRasters)
+			session.views.set(key, view)
+			if (session.latest) view.update(session.latest)
+		}
+		view.subscribers++
+
+		return view
+	}
+
+	#releaseView(session: ElementStreamSession, view: RasterView): void {
+		view.subscribers--
+		if (view.subscribers > 0) return
+
+		view.dispose()
+		if (session.views.get(view.canvasKey) === view) session.views.delete(view.canvasKey)
+	}
+
+	/** Render the rasters of an evaluated element for a canvas, replacing those elements with them */
+	#renderRasters = async (evaluated: EvaluatedElement, canvas: ElementRasterCanvas): Promise<ElementStreamResult> => {
+		if (!evaluated.element || evaluated.rasterIds.length === 0) return { ok: true, element: evaluated.element }
+
+		const images = new Map<string, DrawnElementRaster>()
+		await Promise.all(
+			evaluated.rasterIds.map(async (rasterId) => {
+				const raster = await this.#graphicsController.renderElementRaster(evaluated.pathElements, rasterId, canvas)
+				if (raster) images.set(rasterId, raster)
+			})
+		)
+
+		return { ok: true, element: replaceWithRasters(evaluated.element, images) }
+	}
+
 	#onRenderClockTick = (): void => {
 		for (const [, session] of this.#sessions) {
 			if (!session.isClockSensitive) continue
@@ -248,12 +330,11 @@ export class PreviewElementStream {
 	}
 
 	#onElementChanged = (controlId: string, elementId: string): void => {
-		// Find all sessions for this control and element
 		for (const [elementStreamId, session] of this.#sessions) {
-			if (session.controlId === controlId && session.elementId === elementId) {
-				this.#logger.silly(`Re-evaluating element: ${elementStreamId} due to element change`)
-				this.#triggerElementReEvaluation(session)
-			}
+			if (session.controlId !== controlId || !session.dependsOnElementIds.has(elementId)) continue
+
+			this.#logger.silly(`Re-evaluating element: ${elementStreamId} due to element change`)
+			this.#triggerElementReEvaluation(session)
 		}
 	}
 
@@ -285,19 +366,19 @@ export class PreviewElementStream {
 		session.hasPendingEvaluation = false
 
 		try {
-			// Re-evaluate the element
 			const newValue = await this.#evaluateElement(session.controlId, session.elementId)
 
 			// Update session with new value
 			session.trackedExpressions = newValue.referencedVariableIds
 			session.trackedCompositeElements = newValue.referencedCompositeElements
 			session.trackedReferencedLocations = newValue.referencedLocations
+			session.dependsOnElementIds = newValue.result.dependsOnElementIds
 			session.isClockSensitive = newValue.clockSensitive
 
-			// Re-evaluations often produce the same result (eg on a render clock tick), so skip resending those
-			if (!isEqual(session.latestResult.element, newValue.element)) {
-				session.latestResult = { ok: true, element: newValue.element }
-				session.changes.emit('change')
+			// Re-evaluations often produce the same result (eg on a render clock tick), so skip rendering those
+			if (!session.latest || !isSameEvaluation(session.latest, newValue.result)) {
+				session.latest = newValue.result
+				for (const view of session.views.values()) view.update(newValue.result)
 			}
 		} catch (err) {
 			this.#logger.error(`Error re-evaluating element ${session.sessionId}:`, err)
@@ -339,92 +420,77 @@ export class PreviewElementStream {
 		}
 	}
 
-	async #evaluateElement(
-		controlId: string,
-		elementId: string
-	): Promise<{
-		element: SomeButtonGraphicsDrawElement | null
-		referencedVariableIds: Set<string>
-		referencedCompositeElements: Set<CompositeElementIdString>
-		referencedLocations: Set<string>
-		clockSensitive: boolean
-	}> {
-		const control = this.#controlsController.getControl(controlId)
-		if (!control || !control.supportsLayeredStyle || !control.supportsEntities) {
-			return {
-				element: null,
-				referencedVariableIds: new Set(),
-				referencedCompositeElements: new Set(),
-				referencedLocations: new Set(),
-				clockSensitive: false,
-			}
+	async #evaluateElement(controlId: string, elementId: string): Promise<EvaluatedSession> {
+		const emptyResult: EvaluatedSession = {
+			result: { element: null, rasterIds: [], pathElements: [], dependsOnElementIds: new Set([elementId]) },
+			referencedVariableIds: new Set(),
+			referencedCompositeElements: new Set(),
+			referencedLocations: new Set(),
+			clockSensitive: false,
 		}
+
+		const control = this.#controlsController.getControl(controlId)
+		if (!control || !control.supportsLayeredStyle || !control.supportsEntities) return emptyResult
 
 		const elementDef = control.layeredStyleGetElementById(elementId)
-		if (!elementDef) {
-			return {
-				element: null,
-				referencedVariableIds: new Set(),
-				referencedCompositeElements: new Set(),
-				referencedLocations: new Set(),
-				clockSensitive: false,
-			}
-		}
+		if (!elementDef) return emptyResult
 
 		const feedbackOverrides = control.entities.getFeedbackStyleOverrides(control.drawing?.resolveDefaultNoTopBar())
-
-		if (!elementDef) {
-			return {
-				element: null,
-				referencedVariableIds: new Set(),
-				referencedCompositeElements: new Set(),
-				referencedLocations: new Set(),
-				clockSensitive: false,
-			}
-		}
-
 		const parser = this.#controlsController.createVariablesAndExpressionParser(controlId)
 
 		const controlLocation = this.#pageStore.getLocationOfControlId(controlId)
 		const currentLocationStr = controlLocation ? formatLocation(controlLocation) : null
 
+		const convert = async (elements: SomeButtonGraphicsElement[]) =>
+			ConvertSomeButtonGraphicsElementForDrawing(
+				this.#instanceDefinitions,
+				parser,
+				this.#graphicsController.renderPixelBuffers.bind(this.#graphicsController),
+				elements,
+				feedbackOverrides,
+				false, // onlyEnabled
+				null,
+				currentLocationStr,
+				(location) => this.#graphicsController.getCachedRender(location) ?? null
+			)
+
 		try {
 			// For group elements, clear children since they should be watched independently
 			// Reference elements keep their children (embedded from referenced control)
-			let elementDefToProcess = elementDef
-			if (elementDef.type === 'group') {
-				elementDefToProcess = { ...elementDef, children: [] }
-			}
+			const elementDefToProcess: SomeButtonGraphicsElement =
+				elementDef.type === 'group' ? { ...elementDef, children: [] } : elementDef
 
 			// Convert the single element to its draw representation
-			// We wrap it in an array since ConvertSomeButtonGraphicsElementForDrawing expects an array
-			const { elements, variables, compositeElements, referencedLocations, clockSensitive } =
-				await ConvertSomeButtonGraphicsElementForDrawing(
-					this.#instanceDefinitions,
-					parser,
-					this.#graphicsController.renderPixelBuffers.bind(this.#graphicsController),
-					[elementDefToProcess],
-					feedbackOverrides,
-					false, // onlyEnabled
-					null,
-					currentLocationStr,
-					(location) => this.#graphicsController.getCachedRender(location) ?? null
-				)
-
-			if (elements.length === 0) {
+			const converted = await convert([elementDefToProcess])
+			const element = converted.elements[0]
+			if (!element) {
 				throw new Error(
-					`Element conversion resulted in no elements (element id: ${elementDef.id ?? 'unknown'}, type: ${elementDef.type ?? 'unknown'})`
+					`Element conversion resulted in no elements (element id: ${elementDef.id}, type: ${elementDef.type})`
 				)
 			}
+
+			// A rasterised element is drawn with the layout of its parents, so that path is converted too, and
+			// a change to any of it affects the element
+			const rasterIds = collectRasterIds(element)
+			const rawPath =
+				rasterIds.length > 0 ? pruneRawElementsToTarget(control.layeredStyleGetElements(), elementId) : null
+			const fromPath = rawPath ? await convert(rawPath) : null
+
+			const references = fromPath ?? converted
 
 			// This path passes cache:null + onlyEnabled:false, so every element is drawn and the hidden sets
 			// are always empty; only the drawn half is meaningful here.
 			return {
-				element: elements[0],
-				referencedVariableIds: variables.drawn,
-				referencedCompositeElements: compositeElements.drawn,
-				referencedLocations: referencedLocations.drawn,
-				clockSensitive,
+				result: {
+					element,
+					rasterIds,
+					pathElements: fromPath?.elements ?? [],
+					dependsOnElementIds: new Set(rawPath ? collectRawIds(rawPath) : [elementId]),
+				},
+				referencedVariableIds: references.variables.drawn,
+				referencedCompositeElements: references.compositeElements.drawn,
+				referencedLocations: references.referencedLocations.drawn,
+				clockSensitive: references.clockSensitive,
 			}
 		} catch (error) {
 			this.#logger.error('Error evaluating element:', error)
@@ -441,11 +507,193 @@ interface ElementStreamSession {
 	trackedExpressions: Set<string>
 	trackedCompositeElements: Set<CompositeElementIdString>
 	trackedReferencedLocations: Set<string>
+	dependsOnElementIds: ReadonlySet<string>
 	isClockSensitive: boolean
 
-	latestResult: ElementStreamResult
+	/** The latest evaluation, or null until the first completes */
+	latest: EvaluatedElement | null
+	/** The views of the element, one for each canvas it is watched for */
+	readonly views: Map<string, RasterView>
 
-	readonly changes: EventEmitter<{ change: [] }>
 	isEvaluating: boolean
 	hasPendingEvaluation: boolean
+}
+
+/**
+ * An evaluated element as streamed for one canvas, with its rasters rendered for that canvas.
+ * Renders are throttled to at most one per RASTER_RENDER_MIN_INTERVAL_MS, always ending with the latest evaluation.
+ */
+class RasterView {
+	readonly canvasKey: string
+	readonly #canvas: ElementRasterCanvas
+	readonly #render: (evaluated: EvaluatedElement, canvas: ElementRasterCanvas) => Promise<ElementStreamResult>
+
+	readonly events = new EventEmitter<{ output: [] }>()
+	subscribers = 0
+
+	/** The latest output, or null until the first is ready */
+	output: ElementStreamResult | null = null
+
+	#latest: EvaluatedElement | null = null
+	#isRendering = false
+	#hasPendingRender = false
+	#lastRenderStart = 0
+	#timer: NodeJS.Timeout | null = null
+	#disposed = false
+
+	constructor(
+		canvasKey: string,
+		canvas: ElementRasterCanvas,
+		render: (evaluated: EvaluatedElement, canvas: ElementRasterCanvas) => Promise<ElementStreamResult>
+	) {
+		this.canvasKey = canvasKey
+		this.#canvas = canvas
+		this.#render = render
+		this.events.setMaxListeners(0)
+	}
+
+	dispose(): void {
+		this.#disposed = true
+		if (this.#timer) clearTimeout(this.#timer)
+		this.#timer = null
+	}
+
+	update(evaluated: EvaluatedElement): void {
+		this.#latest = evaluated
+
+		// Nothing to render, so there is nothing to throttle
+		if (!evaluated.element || evaluated.rasterIds.length === 0) {
+			this.#setOutput({ ok: true, element: evaluated.element })
+			return
+		}
+
+		this.#schedule()
+	}
+
+	#setOutput(output: ElementStreamResult): void {
+		if (this.output && isEqual(this.output, output)) return
+		this.output = output
+		this.events.emit('output')
+	}
+
+	#schedule(): void {
+		if (this.#disposed) return
+		if (this.#isRendering) {
+			this.#hasPendingRender = true
+			return
+		}
+		if (this.#timer) return
+
+		const delay = this.#lastRenderStart + RASTER_RENDER_MIN_INTERVAL_MS - Date.now()
+		if (delay > 0) {
+			this.#timer = setTimeout(() => {
+				this.#timer = null
+				void this.#performRender()
+			}, delay)
+		} else {
+			void this.#performRender()
+		}
+	}
+
+	async #performRender(): Promise<void> {
+		const evaluated = this.#latest
+		if (this.#disposed || !evaluated) return
+
+		this.#isRendering = true
+		this.#hasPendingRender = false
+		this.#lastRenderStart = Date.now()
+
+		try {
+			const output = await this.#render(evaluated, this.#canvas)
+			// A newer evaluation without anything to render may have replaced it already
+			if (!this.#disposed && this.#latest === evaluated) this.#setOutput(output)
+		} catch (e) {
+			LogController.createLogger('Preview/ElementStream').error(`Error rendering element rasters:`, e)
+		} finally {
+			this.#isRendering = false
+			if (this.#hasPendingRender) this.#schedule()
+		}
+	}
+}
+
+/** Whether two evaluations would stream the same, ignoring what they depend on */
+function isSameEvaluation(a: EvaluatedElement, b: EvaluatedElement): boolean {
+	return isEqual(a.element, b.element) && isEqual(a.rasterIds, b.rasterIds) && isEqual(a.pathElements, b.pathElements)
+}
+
+function canvasKey(canvas: ElementRasterCanvas): string {
+	return `${canvas.width}x${canvas.height}::${canvas.paddingX}x${canvas.paddingY}`
+}
+
+/** The ids of an element and its content (eg of a composite or reference) to rasterise */
+function collectRasterIds(element: SomeButtonGraphicsDrawElement): string[] {
+	if (RASTERISED_ELEMENT_TYPES.has(element.type)) return [element.id]
+	if (element.type === 'group' || element.type === 'reference') return element.children.flatMap(collectRasterIds)
+	return []
+}
+
+/** Replace the elements which have been rasterised with `raster` elements of their images */
+function replaceWithRasters(
+	element: SomeButtonGraphicsDrawElement,
+	images: ReadonlyMap<string, DrawnElementRaster>
+): SomeButtonGraphicsDrawElement {
+	const drawn = images.get(element.id)
+	if (drawn && element.type !== 'canvas') {
+		const raster: ButtonGraphicsRasterDrawElement = {
+			id: element.id,
+			type: 'raster',
+			usage: element.usage,
+			enabled: element.enabled,
+			opacity: element.opacity,
+			x: 'x' in element ? element.x : 0,
+			y: 'y' in element ? element.y : 0,
+			width: 'width' in element ? element.width : 1,
+			height: 'height' in element ? element.height : 1,
+			rotation: 'rotation' in element ? element.rotation : 0,
+			image: drawn.image,
+			renderedAt: drawn.renderedAt,
+			contentHash: element.contentHash,
+		}
+		return raster
+	}
+
+	if (element.type === 'group' || element.type === 'reference') {
+		return { ...element, children: element.children.map((child) => replaceWithRasters(child, images)) }
+	}
+	return element
+}
+
+function collectRawIds(elements: readonly SomeButtonGraphicsElement[]): string[] {
+	return elements.flatMap((element) => [
+		element.id,
+		...(element.type === 'group' ? collectRawIds(element.children) : []),
+	])
+}
+
+/**
+ * Reduce a button's elements to just the canvas (which sets the decoration, and so the content area) and the
+ * path to the given element, as nothing else affects how it is laid out
+ * @returns The pruned elements, or null if the element was not found
+ */
+export function pruneRawElementsToTarget(
+	elements: readonly SomeButtonGraphicsElement[],
+	elementId: string
+): SomeButtonGraphicsElement[] | null {
+	const prunePath = (elements: readonly SomeButtonGraphicsElement[]): SomeButtonGraphicsElement[] | null => {
+		for (const element of elements) {
+			if (element.id === elementId) return [element]
+
+			if (element.type === 'group') {
+				const children = prunePath(element.children)
+				if (children) return [{ ...element, children }]
+			}
+		}
+		return null
+	}
+
+	const path = prunePath(elements)
+	if (!path) return null
+
+	const canvasElement = elements.find((element) => element.type === 'canvas')
+	return canvasElement && canvasElement !== path[0] ? [canvasElement, ...path] : path
 }

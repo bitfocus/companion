@@ -67,7 +67,7 @@ export const LayeredButtonPreviewRenderer = observer(function LayeredButtonPrevi
 		[aspectRatio, containerWidth, containerHeight]
 	)
 
-	// The canvas the preview draws on, which its element streams are told of
+	// Text is drawn by the backend for exactly this canvas, so that it matches the real button
 	const previewCanvas = useMemo(
 		() => ({ width: width + PAD_X * 2, height: height + PAD_Y * 2, paddingX: PAD_X, paddingY: PAD_Y }),
 		[width, height]
