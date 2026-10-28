@@ -1192,28 +1192,34 @@ describe('PreviewElementStream rasters', () => {
 		const harness = createHarness([makeTextEl()])
 		const render = vi.mocked(harness.graphicsController.renderElementRaster)
 		const fastRender = render.getMockImplementation()!
+		// Each render waits to be released, so a newer change can always arrive before it completes
+		const inFlight: Array<() => void> = []
 		render.mockImplementation(async (...args) => {
-			await new Promise((resolve) => setTimeout(resolve, 40))
+			await new Promise<void>((resolve) => inFlight.push(resolve))
 			return fastRender(...args)
 		})
 		const sub = await harness.watch('text1')
 		await sub.next()
 
-		// A change every 15ms, so a newer one has always arrived by the time a render completes
-		const rotations: unknown[] = []
-		for (let i = 1; i <= 12; i++) {
-			harness.state.elements = [makeTextEl({ rotation: val(i) })]
-			harness.controlEvents.emit('layeredStyleElementChanged', CONTROL_ID, 'text1')
-			await new Promise((resolve) => setTimeout(resolve, 15))
-		}
-		for (;;) {
-			const element = (await sub.next()).element
-			rotations.push(element?.type === 'raster' ? element.rotation : null)
-			if (rotations.at(-1) === 12) break
+		const nextRasterRotation = async () => {
+			for (;;) {
+				const element = (await sub.next()).element
+				if (element?.type === 'raster') return element.rotation
+			}
 		}
 
-		// Renders were sent while the changes were still arriving, not only once they stopped
-		expect(rotations.length).toBeGreaterThan(2)
+		for (let i = 1; i <= 4; i++) {
+			await vi.waitFor(() => expect(inFlight).toHaveLength(i))
+
+			// The next change arrives while this render is in flight
+			harness.state.elements = [makeTextEl({ rotation: val(i) })]
+			harness.controlEvents.emit('layeredStyleElementChanged', CONTROL_ID, 'text1')
+			await settle()
+
+			// The render is sent regardless, rather than dropped for the newer change
+			inFlight[i - 1]()
+			expect(await nextRasterRotation()).toBe(i - 1)
+		}
 
 		await sub.cleanup()
 	})
