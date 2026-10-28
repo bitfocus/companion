@@ -147,6 +147,7 @@ if (process.env.ELECTRON !== '0') {
 			appId: 'test-companion.bitfocus.no',
 			dmg: {
 				artifactName: 'companion-mac-${arch}.dmg',
+				writeUpdateInfo: false, // The blockmap is only for electron-updater, which we don't use
 			},
 			mac: {
 				target: 'dmg',
@@ -261,6 +262,7 @@ if (process.env.ELECTRON !== '0') {
 			),
 			config: options,
 			projectDir: 'launcher',
+			publish: 'never',
 		})
 	} finally {
 		// undo the changes made
