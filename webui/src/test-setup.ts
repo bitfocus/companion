@@ -44,6 +44,9 @@ window.cancelAnimationFrame = () => {}
 // a noisy "Not implemented" error on every call. Stub it to return null directly — same behaviour, no noise.
 HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext
 
+// jsdom never loads images, and has no HTMLImageElement.decode. Never resolve it, as an image would never load
+HTMLImageElement.prototype.decode = async () => new Promise<void>(() => {})
+
 // TanStack Router's scroll restoration calls window.scrollTo on navigation, which jsdom doesn't implement and
 // reports as a "Not implemented" error each time. There is nothing to scroll in jsdom, so make it a no-op.
 window.scrollTo = () => {}

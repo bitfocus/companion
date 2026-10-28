@@ -1,4 +1,4 @@
-import { act, fireEvent, render } from '@testing-library/react'
+import { act, fireEvent, render, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
@@ -45,16 +45,8 @@ beforeEach(() => {
 	draggables.length = 0
 	dragOperationSource = null
 
-	// The previews are drawn only once the browser has the image, which jsdom will never report
-	vi.stubGlobal(
-		'Image',
-		class {
-			onload: (() => void) | null = null
-			set src(_value: string) {
-				this.onload?.()
-			}
-		}
-	)
+	// The previews are drawn only once the image is decoded, which jsdom never does
+	vi.spyOn(HTMLImageElement.prototype, 'decode').mockResolvedValue()
 })
 
 function setup(location: ControlLocation = at(1, 2), view = makeGridView()) {
@@ -92,11 +84,13 @@ const OCCUPIED: WrappedImage = {
 const EMPTY: WrappedImage = { image: null, isUsed: false, color: 'rgba(0, 0, 0, 1)', leds: null }
 
 describe('a cell on the main grid', () => {
-	it('draws the button that lives there', () => {
+	it('draws the button that lives there', async () => {
 		const { cell } = setup()
 		emitAll(OCCUPIED)
 
-		expect(cell.querySelector('.button-border')).toHaveStyle({ backgroundImage: `url(${OCCUPIED.image})` })
+		await waitFor(() =>
+			expect(cell.querySelector('.button-border')).toHaveStyle({ backgroundImage: `url(${OCCUPIED.image})` })
+		)
 	})
 
 	it('names an empty cell, so the grid can be read without counting', () => {
@@ -269,11 +263,13 @@ describe('which cells can be dragged', () => {
 })
 
 describe('the cells on the grids that are only picked from', () => {
-	it('draws the button at the location it was given', () => {
+	it('draws the button at the location it was given', async () => {
 		const { container } = render(<ButtonGridIcon pageNumber={2} row={1} column={3} left={0} top={0} />)
 		emitAll(OCCUPIED)
 
-		expect(container.querySelector('.button-border')).toHaveStyle({ backgroundImage: `url(${OCCUPIED.image})` })
+		await waitFor(() =>
+			expect(container.querySelector('.button-border')).toHaveStyle({ backgroundImage: `url(${OCCUPIED.image})` })
+		)
 		expect(container.querySelector('.button-border')).toHaveAttribute('title', '2/1/3')
 	})
 
