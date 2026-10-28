@@ -927,6 +927,24 @@ describe('PreviewElementStream preview contexts', () => {
 		expect(harness.evaluationCount()).toBe(0)
 	})
 
+	it('acquires nothing for a subscription that is already aborted', async () => {
+		const harness = createHarness([makeTextEl()])
+		await harness.openContext(CONTROL_ID)
+
+		const abort = new AbortController()
+		abort.abort()
+		const caller = harness.createCaller(createMockTrpcContext(), { signal: abort.signal })
+		const sub = new SubscriptionTester(
+			await caller.watchElement({ contextId: `context-${CONTROL_ID}`, elementId: 'text1' })
+		)
+		await expect(sub.next()).rejects.toThrow()
+
+		// No session was started, so nothing is evaluated or rendered
+		await settle()
+		expect(harness.evaluationCount()).toBe(0)
+		expect(harness.renderCount()).toBe(0)
+	})
+
 	it('ends when its context ends', async () => {
 		const harness = createHarness([makeTextEl()])
 		const sub = await harness.watch('text1')

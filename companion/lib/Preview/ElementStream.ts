@@ -197,17 +197,21 @@ export class PreviewElementStream {
 		clientId: string,
 		signal: AbortSignal
 	): AsyncGenerator<ElementStreamResult> {
+		// Already ended, so there is nothing to start
+		if (signal.aborted) return
+
 		const session = this.#acquireSession(context.controlId, elementId, clientId)
 		let view = this.#acquireView(session, context.canvas)
 
 		const wake = new EventEmitter<{ wake: [] }>()
 		const onWake = () => wake.emit('wake')
-		context.events.on('canvasChanged', onWake)
-		context.events.on('ended', onWake)
-		view.events.on('output', onWake)
-		const wakes = toIterable(wake, 'wake', signal)
 
 		try {
+			context.events.on('canvasChanged', onWake)
+			context.events.on('ended', onWake)
+			view.events.on('output', onWake)
+			const wakes = toIterable(wake, 'wake', signal)
+
 			// Start with a null element until the first evaluation, as a new client to an existing view gets its output
 			let lastYielded: ElementStreamResult = view.output ?? { ok: true, element: null }
 			yield lastYielded
