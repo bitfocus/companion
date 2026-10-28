@@ -23,7 +23,12 @@ const DEFAULT_FONTS = [
 ]
 const DEFAULT_FONTS_STR = DEFAULT_FONTS.join(',')
 
-export const ALL_FONTS: ReadonlySet<string> = new Set([...DEFAULT_FONTS, 'Companion-mono'])
+/**
+ * The fonts the web ui loads for drawing previews. Button text is rendered by the backend (see
+ * RASTERISED_ELEMENT_TYPES), so only enough is needed for what the ui still draws itself, such as the top bar.
+ * This avoids downloading the large symbol, CJK and emoji fonts.
+ */
+export const PREVIEW_UI_FONTS: ReadonlySet<string> = new Set(['Companion-sans', 'Companion-mono', FALLBACK_FONT])
 
 const FONT_STRINGS: ReadonlyMap<ButtonGraphicsTextDrawElement['font'], string> = new Map([
 	['companion-sans', DEFAULT_FONTS_STR],
