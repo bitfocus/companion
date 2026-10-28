@@ -1,5 +1,13 @@
 import type { SomeButtonGraphicsDrawElement } from '../Model/StyleLayersModel.js'
 
+/** The canvas a raster is rendered for, which must match the one it is drawn into */
+export interface ElementRasterCanvas {
+	width: number
+	height: number
+	paddingX: number
+	paddingY: number
+}
+
 /**
  * Reduce an element tree to just the path to the given element, so it can be drawn in isolation with its
  * parents' layout. The element can be inside a group, or inside the children a reference embeds.

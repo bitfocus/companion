@@ -21,6 +21,7 @@ import QuickLRU from 'quick-lru'
 import workerPool from 'workerpool'
 import { isLocationOnGrid, ParseControlId, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
 import { MAX_DECODED_IMAGE_BYTES, snapToRenderClock } from '@companion-app/shared/Graphics/AnimationTiming.js'
+import { pruneElementsToTarget, type ElementRasterCanvas } from '@companion-app/shared/Graphics/ElementRaster.js'
 import {
 	resolveButtonStyleProperties,
 	type ResolveButtonStylePropertiesConfig,
@@ -56,7 +57,7 @@ import { ImageCacheStore, type AnimationFrames, type RemoteImageSource } from '.
 import { ImageLibrary } from './ImageLibrary.js'
 import { getImageResultStats, ImageResult, setDrawNativeRenderObserver } from './ImageResult.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
-import { computeOversampling, GraphicsRenderer } from './Renderer.js'
+import { computeOversampling, GraphicsRenderer, type DrawnElementRaster } from './Renderer.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
@@ -1097,6 +1098,56 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		remainingAttempts: number = CRASHED_WORKER_RETRY_COUNT
 	): Promise<{ width: number; height: number; previewDataUrl: string }> {
 		return this.#poolExec('createImagePreview', [originalDataUrl], remainingAttempts)
+	}
+
+	/**
+	 * Rasterise a single element of a layered button in the worker pool, for the editor preview to composite.
+	 * @param elements The draw elements of the whole button
+	 */
+	async renderElementRaster(
+		elements: SomeButtonGraphicsDrawElement[],
+		elementId: string,
+		canvas: ElementRasterCanvas,
+		remainingAttempts: number = CRASHED_WORKER_RETRY_COUNT
+	): Promise<DrawnElementRaster | null> {
+		const prunedElements = pruneElementsToTarget(elements, elementId)
+		if (!prunedElements) return null
+
+		const drawStyle: RendererButtonStyle = {
+			style: 'button-layered',
+			drawType: 'button',
+
+			elements: prunedElements,
+
+			// The button state only affects the decoration, which isn't drawn
+			pushed: false,
+			button_status: undefined,
+			action_running: false,
+			stepCurrent: 1,
+			stepCount: 1,
+
+			// Resolved from the whole button, as the decoration changes the content area
+			...resolveButtonStyleProperties(this.#drawOptions, elements),
+
+			location: undefined,
+			decodedImages: null, // Resolved below
+		}
+
+		// The elements fill the content area, which is what is left of the button by its decoration
+		const contentSize = contentSizeOf(
+			{ width: canvas.width - canvas.paddingX * 2, height: canvas.height - canvas.paddingY * 2 },
+			drawStyle.decoration
+		)
+		// It is a still, so any animations show their first frame
+		const resolvedDrawStyle = await this.#imageCache.resolveDrawStyle(
+			drawStyle,
+			NO_ANIMATION_FRAMES.frameIndices,
+			contentSize,
+			this.#remoteImageSource,
+			true
+		)
+
+		return this.#poolExec('drawElementRaster', [resolvedDrawStyle, elementId, canvas], remainingAttempts)
 	}
 
 	async renderPixelBuffers(
