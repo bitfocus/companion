@@ -194,6 +194,7 @@ export class ImportExportController {
 			buttons: 'pages' in importObject,
 			customVariables: importContainsKey('custom_variables'),
 			expressionVariables: importContainsKey('expressionVariables'),
+			customActions: importContainsKey('customActions'),
 			surfacesKnown: importContainsKey('surfaces') || importContainsKey('surfaceGroups'),
 			surfacesInstances: importContainsKey('surfaceInstances'),
 			surfacesRemote: importContainsKey('surfacesRemote'),
@@ -667,6 +668,11 @@ export class ImportExportController {
 		if (shouldReset(config.expressionVariables)) {
 			this.#controlsController.replaceExpressionVariableCollections([])
 			await this.#controlsController.deleteAllControlsOfType('expression-variable')
+		}
+
+		if (shouldReset(config.customActions)) {
+			this.#controlsController.replaceCustomActionCollections([])
+			this.#controlsController.deleteAllControlsOfType('custom-action')
 		}
 
 		if (shouldReset(config.userconfig)) {

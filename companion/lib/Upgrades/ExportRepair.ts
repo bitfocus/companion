@@ -46,7 +46,7 @@ const ENTRY_LISTS = new Set([
 const ENVELOPE = new Set(['type', 'version', 'page'])
 
 /** The lists of controls of an export, which are repaired like a stored control */
-const CONTROL_LISTS = new Set(['triggers', 'expressionVariables'])
+const CONTROL_LISTS = new Set(['triggers', 'expressionVariables', 'customActions'])
 
 /**
  * Repair an export that failed to parse, so that one invalid part doesn't fail the whole import: an entity or style
