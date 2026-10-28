@@ -3017,6 +3017,72 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(refEl.children[0]).toMatchObject({ type: 'text', text: 'Hello from ref' })
 		})
 
+		test('prefixes the ids of the embedded elements, so two references to the same button are unique', async () => {
+			const referencedDrawElements: SomeButtonGraphicsDrawElement[] = [
+				makeTextDrawEl({ id: 'ref-text' }),
+				{
+					...makeTextDrawEl({ id: 'nested-ref' }),
+					type: 'reference',
+					children: [makeTextDrawEl({ id: 'nested-ref/deep' })],
+				} as unknown as SomeButtonGraphicsDrawElement,
+			]
+			const getRenderAtLocation = vi.fn(() => createMockImageResult(referencedDrawElements))
+
+			const elements: SomeButtonGraphicsElement[] = [
+				makeReferenceEl({ id: 'refA', location: val('1/0/1') }),
+				makeReferenceEl({ id: 'refB', location: val('1/0/1') }),
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			const ids = (element: SomeButtonGraphicsDrawElement): unknown =>
+				element.type === 'group' || element.type === 'reference'
+					? { [element.id]: element.children.map(ids) }
+					: element.id
+			expect(result.elements.map(ids)).toEqual([
+				{ refA: ['refA/ref-text', { 'refA/nested-ref': ['refA/nested-ref/deep'] }] },
+				{ refB: ['refB/ref-text', { 'refB/nested-ref': ['refB/nested-ref/deep'] }] },
+			])
+			// The referenced render is shared, so must not be changed
+			expect(ids(referencedDrawElements[0])).toBe('ref-text')
+			expect(ids(referencedDrawElements[1])).toEqual({ 'nested-ref': ['nested-ref/deep'] })
+		})
+
+		test("prefixes the ids of the embedded elements, so they can't collide with the button's own", async () => {
+			const getRenderAtLocation = vi.fn(() => createMockImageResult([makeTextDrawEl({ id: 'text1' })]))
+
+			const elements: SomeButtonGraphicsElement[] = [
+				makeTextEl({ id: 'text1' }),
+				makeReferenceEl({ id: 'ref1', location: val('1/0/1') }),
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			expect(result.elements[0].id).toBe('text1')
+			const refEl = result.elements[1] as ButtonGraphicsReferenceDrawElement
+			expect(refEl.children.map((child) => child.id)).toEqual(['ref1/text1'])
+		})
+
 		test('excludes canvas elements from the referenced location', async () => {
 			const canvasDrawEl: ButtonGraphicsCanvasDrawElement = {
 				id: 'canvas1',

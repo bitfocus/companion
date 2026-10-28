@@ -374,7 +374,7 @@ describe('PreviewElementStream.watchElement', () => {
 			const result = await sub.next()
 			expect(result.element).toMatchObject({ id: 'ref1', type: 'reference' })
 			expect(result.element?.type === 'reference' && result.element.children.map((child) => child.id)).toEqual([
-				'remote-box',
+				'ref1/remote-box',
 			])
 
 			await sub.cleanup()
@@ -601,7 +601,7 @@ describe('PreviewElementStream.watchElement', () => {
 
 			const result = await sub.next()
 			expect(result.element?.type === 'reference' && result.element.children.map((child) => child.id)).toEqual([
-				'remote-box-2',
+				'ref1/remote-box-2',
 			])
 
 			await sub.cleanup()

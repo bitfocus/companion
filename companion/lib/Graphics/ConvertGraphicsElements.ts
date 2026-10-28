@@ -393,8 +393,12 @@ async function convertReferenceElementForDrawing(
 					context.globalReferences.cyclicLocations.add(targetLocationStr)
 					drawElement.children = makeReferencePlaceholder(drawElement.id, '\u221e')
 				} else if (targetRender?.drawElements) {
-					// Embed the referenced button's draw elements (exclude canvas elements which are render-specific)
-					drawElement.children = targetRender.drawElements.filter((el) => el.type !== 'canvas')
+					// Embed the referenced button's draw elements (exclude canvas elements which are render-specific).
+					// Their ids are prefixed, as they are only unique within that button
+					drawElement.children = prefixElementIds(
+						targetRender.drawElements.filter((el) => el.type !== 'canvas'),
+						drawElement.id + '/'
+					)
 
 					// Track transitive referenced locations for loop detection in parent renders
 					for (const loc of targetRender.referencedLocations) {
@@ -414,6 +418,18 @@ async function convertReferenceElementForDrawing(
 	}
 
 	return { drawElement, references, compositeElement: null, referencedLocation: referencedLocationStr }
+}
+
+/**
+ * Prefix the ids of some draw elements and all their descendants, to keep them unique once embedded in another tree
+ */
+function prefixElementIds(elements: SomeButtonGraphicsDrawElement[], prefix: string): SomeButtonGraphicsDrawElement[] {
+	return elements.map((element) => {
+		if (element.type === 'group' || element.type === 'reference') {
+			return { ...element, id: prefix + element.id, children: prefixElementIds(element.children, prefix) }
+		}
+		return { ...element, id: prefix + element.id }
+	})
 }
 
 /** The background of the placeholder shown when a button can't show what it refers to: the app's warning yellow */
