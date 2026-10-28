@@ -470,9 +470,12 @@ export class GraphicsLayeredButtonRenderer {
 		})
 		if (!transform) return drawBounds
 
-		await img.usingAlpha(element.opacity, async () => {
-			await img.drawBase64ImageWithTransform(element.image, transform)
-		})
+		await img.usingAlpha(element.opacity, async () =>
+			img.usingTransform(transform, async () => {
+				// At its own size, from the origin
+				await img.drawBase64Image(element.image, 0, 0, img.width, img.height, 'left', 'top', 1)
+			})
+		)
 
 		return drawBounds
 	}
