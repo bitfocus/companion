@@ -1,6 +1,6 @@
 import z from 'zod'
 import { SomeButtonModelSchema } from '../ButtonModel.js'
-import { createCollectionSchema, EmptyCollectionDataSchema, EnabledCollectionDataSchema } from '../Collections.js'
+import { EmptyCollectionSchema, EnabledCollectionSchema } from '../Collections.js'
 import { CustomVariableDefinitionSchema } from '../CustomVariableModel.js'
 import { SomeEntityModelSchema } from '../EntityModel.js'
 import { ExpressionVariableModelSchema } from '../ExpressionVariableModel.js'
@@ -51,8 +51,8 @@ export const ExportV17InstanceSchema = z.object({
 	enabled: z.boolean().optional(),
 })
 const ExportV17InstancesSchema = z.record(z.string(), ExportV17InstanceSchema)
-const ExportV17EnabledCollectionsSchema = z.array(createCollectionSchema(EnabledCollectionDataSchema))
-const ExportV17EmptyCollectionsSchema = z.array(createCollectionSchema(EmptyCollectionDataSchema))
+const ExportV17EnabledCollectionsSchema = z.array(EnabledCollectionSchema)
+const ExportV17EmptyCollectionsSchema = z.array(EmptyCollectionSchema)
 /** An image of the library */
 const ExportV17ImageSchema = z.object({
 	info: ImageLibraryInfoSchema,

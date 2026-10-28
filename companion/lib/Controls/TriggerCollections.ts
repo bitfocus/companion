@@ -1,12 +1,10 @@
 import z from 'zod'
-import { createCollectionSchema, EnabledCollectionDataSchema } from '@companion-app/shared/Model/Collections.js'
+import { EnabledCollectionSchema } from '@companion-app/shared/Model/Collections.js'
 import type { TriggerCollection, TriggerCollectionData } from '@companion-app/shared/Model/TriggerModel.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { EnabledCollectionsBaseController } from '../Resources/EnabledCollectionsBase.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { TriggerEvents } from './TriggerEvents.js'
-
-const TriggerCollectionSchema = createCollectionSchema(EnabledCollectionDataSchema)
 
 export class TriggerCollections extends EnabledCollectionsBaseController<TriggerCollectionData> {
 	readonly #events: TriggerEvents
@@ -20,7 +18,7 @@ export class TriggerCollections extends EnabledCollectionsBaseController<Trigger
 		cleanUnknownCollectionIds: (validCollectionIds: Set<string>) => void,
 		recheckTriggersEnabled: (enabledCollectionIds: ReadonlySet<string>) => void
 	) {
-		super(db.getSchemaTableView('trigger_collections', TriggerCollectionSchema))
+		super(db.getSchemaTableView('trigger_collections', EnabledCollectionSchema))
 
 		this.#events = events
 		this.#cleanUnknownCollectionIds = cleanUnknownCollectionIds

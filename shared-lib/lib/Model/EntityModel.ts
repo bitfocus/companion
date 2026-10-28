@@ -211,10 +211,9 @@ const feedbackEntityObjectSchema = z.object({
 export const ActionEntityModelSchema: z.ZodType<ActionEntityModel> = actionEntityObjectSchema
 export const FeedbackEntityModelSchema: z.ZodType<FeedbackEntityModel> = feedbackEntityObjectSchema
 
-export const SomeEntityModelSchema: z.ZodType<SomeEntityModel> = z.discriminatedUnion('type', [
-	actionEntityObjectSchema,
-	feedbackEntityObjectSchema,
-])
+export const SomeEntityModelSchema: z.ZodType<SomeEntityModel> = z
+	.discriminatedUnion('type', [actionEntityObjectSchema, feedbackEntityObjectSchema])
+	.meta({ id: 'EntityModel' })
 
 export interface EntityOwner {
 	parentId: string

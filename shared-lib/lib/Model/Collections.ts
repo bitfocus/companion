@@ -9,8 +9,13 @@ export interface CollectionBase<T> {
 	metaData: T
 }
 
-export function createCollectionSchema<T>(metaDataSchema: z.ZodType<T>): z.ZodType<CollectionBase<T>> {
-	const schema: z.ZodType<CollectionBase<T>> = z.object({
+/**
+ * Create the schema of a collection, with the given metadata
+ * @param metaDataSchema The schema of the metadata of each collection
+ * @param id The name of the schema when it is described as a JSON schema, which must be unique
+ */
+function createCollectionSchema<T>(metaDataSchema: z.ZodType<T>, id: string): z.ZodType<CollectionBase<T>> {
+	const objectSchema = z.object({
 		id: z.string(),
 		label: z.string().default(''),
 		sortOrder: z.number().default(0),
@@ -19,6 +24,8 @@ export function createCollectionSchema<T>(metaDataSchema: z.ZodType<T>): z.ZodTy
 		},
 		metaData: metaDataSchema,
 	})
+	// The children are of this schema, so they refer to the named schema rather than an anonymous copy of it
+	const schema: z.ZodType<CollectionBase<T>> = objectSchema.meta({ id })
 	return schema
 }
 
@@ -37,3 +44,9 @@ export type EnabledCollectionData = z.output<typeof EnabledCollectionDataSchema>
 
 /** Metadata of collections that have none */
 export const EmptyCollectionDataSchema = z.null().default(null).catch(null)
+
+/** A collection which can be disabled */
+export const EnabledCollectionSchema = createCollectionSchema(EnabledCollectionDataSchema, 'EnabledCollection')
+
+/** A collection which has no metadata */
+export const EmptyCollectionSchema = createCollectionSchema(EmptyCollectionDataSchema, 'EmptyCollection')

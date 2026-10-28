@@ -1,17 +1,15 @@
 import z from 'zod'
-import { createCollectionSchema, EmptyCollectionDataSchema } from '@companion-app/shared/Model/Collections.js'
+import { EmptyCollectionSchema } from '@companion-app/shared/Model/Collections.js'
 import type { CustomVariableCollection } from '@companion-app/shared/Model/CustomVariableModel.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { CollectionsBaseController } from '../Resources/CollectionsBase.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
 
-const CustomVariableCollectionSchema = createCollectionSchema(EmptyCollectionDataSchema)
-
 export class CustomVariableCollections extends CollectionsBaseController<null> {
 	readonly #cleanUnknownCollectionIds: (validCollectionIds: ReadonlySet<string>) => void
 
 	constructor(db: DataDatabase, cleanUnknownCollectionIds: (validCollectionIds: ReadonlySet<string>) => void) {
-		super(db.getSchemaTableView('custom_variable_collections', CustomVariableCollectionSchema))
+		super(db.getSchemaTableView('custom_variable_collections', EmptyCollectionSchema))
 
 		this.#cleanUnknownCollectionIds = cleanUnknownCollectionIds
 	}

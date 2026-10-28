@@ -1,5 +1,5 @@
 import z from 'zod'
-import { createCollectionSchema, EnabledCollectionDataSchema } from '@companion-app/shared/Model/Collections.js'
+import { EnabledCollectionSchema } from '@companion-app/shared/Model/Collections.js'
 import type { ConnectionCollection, ConnectionCollectionData } from '@companion-app/shared/Model/Connections.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { DataDatabase } from '../../Data/Database.js'
@@ -7,15 +7,13 @@ import { EnabledCollectionsBaseController } from '../../Resources/EnabledCollect
 import { publicProcedure, router } from '../../UI/TRPC.js'
 import type { InstanceConfigStore } from '../ConfigStore.js'
 
-const ConnectionCollectionSchema = createCollectionSchema(EnabledCollectionDataSchema)
-
 export class ConnectionsCollections extends EnabledCollectionsBaseController<ConnectionCollectionData> {
 	readonly #emitUpdated: () => void
 
 	readonly #configStore: InstanceConfigStore
 
 	constructor(db: DataDatabase, configStore: InstanceConfigStore, emitUpdated: () => void) {
-		super(db.getSchemaTableView('connection_collections', ConnectionCollectionSchema))
+		super(db.getSchemaTableView('connection_collections', EnabledCollectionSchema))
 
 		this.#emitUpdated = emitUpdated
 		this.#configStore = configStore

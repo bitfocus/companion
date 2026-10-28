@@ -4,7 +4,10 @@ import type { CompanionOptionValues, CompanionPresetOptionValues } from '@compan
 import { ALL_CONTROL_ID_KINDS, type ControlIdKind } from '../ControlId.js'
 import type { DropdownChoice } from './Common.js'
 
+/** Any JSON value */
 export const JsonValueSchema: z.ZodType<JsonValue> = z.json()
+// Registered rather than `.meta()`, which would name a copy, not the schema that `z.json()` recurses through
+z.globalRegistry.add(JsonValueSchema, { id: 'JsonValue' })
 
 export const JsonObjectSchema = z.record(z.string(), JsonValueSchema.optional())
 

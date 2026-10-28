@@ -1,8 +1,7 @@
 import { initTRPC } from '@trpc/server'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import {
-	createCollectionSchema,
-	EnabledCollectionDataSchema,
+	EnabledCollectionSchema,
 	type CollectionBase,
 	type EnabledCollectionData,
 } from '@companion-app/shared/Model/Collections.js'
@@ -17,8 +16,6 @@ const t = initTRPC.context<TrpcContext>().create()
 const testCtx: TrpcContext = createMockTrpcContext()
 
 const TABLE = 'test_collections'
-const TestCollectionSchema = createCollectionSchema(EnabledCollectionDataSchema)
-
 type TestCollection = CollectionBase<EnabledCollectionData>
 
 /** Exposes the protected operations, and records what the base asks of its subclass */
@@ -27,7 +24,7 @@ class TestCollections extends EnabledCollectionsBaseController<EnabledCollection
 	readonly emitUpdateUserCalls = vi.fn()
 
 	constructor(db: DataDatabase) {
-		super(db.getSchemaTableView(TABLE, TestCollectionSchema))
+		super(db.getSchemaTableView(TABLE, EnabledCollectionSchema))
 	}
 
 	override removeUnknownCollectionReferences(): void {

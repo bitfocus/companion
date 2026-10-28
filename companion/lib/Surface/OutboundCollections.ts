@@ -1,11 +1,9 @@
 import z from 'zod'
-import { createCollectionSchema, EnabledCollectionDataSchema } from '@companion-app/shared/Model/Collections.js'
+import { EnabledCollectionSchema } from '@companion-app/shared/Model/Collections.js'
 import type { OutboundSurfaceCollection, OutboundSurfaceCollectionData } from '@companion-app/shared/Model/Surfaces.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { EnabledCollectionsBaseController } from '../Resources/EnabledCollectionsBase.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
-
-const OutboundSurfaceCollectionSchema = createCollectionSchema(EnabledCollectionDataSchema)
 
 export class OutboundSurfaceCollections extends EnabledCollectionsBaseController<OutboundSurfaceCollectionData> {
 	readonly #cleanUnknownCollectionIds: (validCollectionIds: Set<string>) => void
@@ -16,7 +14,7 @@ export class OutboundSurfaceCollections extends EnabledCollectionsBaseController
 		cleanUnknownCollectionIds: (validCollectionIds: Set<string>) => void,
 		emitUpdated: () => void
 	) {
-		super(db.getSchemaTableView('surfaces_remote_collections', OutboundSurfaceCollectionSchema))
+		super(db.getSchemaTableView('surfaces_remote_collections', EnabledCollectionSchema))
 
 		this.#emitUpdated = emitUpdated
 		this.#cleanUnknownCollectionIds = cleanUnknownCollectionIds

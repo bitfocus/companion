@@ -217,7 +217,8 @@ for (const [id, fields] of Object.entries(baseFieldGroups)) {
 	exportSchemaAndType(`ButtonGraphics${capitalize(id)}`, `z.object({\n${fields.map(fieldShape).join('')}})`)
 }
 
-// Each element's schema is built as an object, for the discriminated union, and exported annotated with its type
+// Each element's schema is built as an object, for the discriminated union, and exported annotated with its type.
+// They are named, so the JSON schema refers to each element by name
 const allElementObjectSchemas: string[] = []
 const allElementTypes: string[] = []
 for (const [id, sections] of Object.entries(elementSchemas)) {
@@ -256,7 +257,7 @@ for (const [id, sections] of Object.entries(elementSchemas)) {
 		generatedFile += `\tget children(): z.ZodDefault<z.ZodArray<z.ZodType<SomeButtonGraphicsElement>>> {\n`
 		generatedFile += `\t\treturn z.array(SomeButtonGraphicsElementSchema).default(() => [])\n`
 		generatedFile += `\t},\n`
-		generatedFile += `})\n\n`
+		generatedFile += `}).meta({ id: '${name}' })\n\n`
 	} else if (id === 'composite') {
 		shape += `\tconnectionId: z.string(),\n`
 		shape += `\telementId: z.string(),\n`
@@ -269,9 +270,9 @@ for (const [id, sections] of Object.entries(elementSchemas)) {
 		generatedFile += `\t/** Custom elements have options defined by their composite definition */\n`
 		generatedFile += `\t[customKey: CompositeElementOptionKey]: ExpressionOrValue<JsonValue | undefined> | undefined\n`
 		generatedFile += `}\n\n`
-		generatedFile += `const ${objectSchemaName} = ${knownSchemaName}.catchall(ExpressionOrJsonValueSchema.optional())\n\n`
+		generatedFile += `const ${objectSchemaName} = ${knownSchemaName}.catchall(ExpressionOrJsonValueSchema.optional()).meta({ id: '${name}' })\n\n`
 	} else {
-		generatedFile += `const ${objectSchemaName} = z.object({\n${shape}})\n\n`
+		generatedFile += `const ${objectSchemaName} = z.object({\n${shape}}).meta({ id: '${name}' })\n\n`
 		generatedFile += `export type ${name} = z.output<typeof ${objectSchemaName}>\n\n`
 	}
 	generatedFile += `export const ${name}Schema: z.ZodType<${name}> = ${objectSchemaName}\n\n`
@@ -280,9 +281,10 @@ for (const [id, sections] of Object.entries(elementSchemas)) {
 generatedFile += `export type SomeButtonGraphicsElement =\n`
 for (const name of allElementTypes) generatedFile += `\t| ${name}\n`
 generatedFile += '\n'
+// Named, so that the JSON schema of anything containing elements refers to it by name
 generatedFile += `export const SomeButtonGraphicsElementSchema: z.ZodType<SomeButtonGraphicsElement> = z.discriminatedUnion('type', [\n`
 for (const name of allElementObjectSchemas) generatedFile += `\t${name},\n`
-generatedFile += `])\n`
+generatedFile += `]).meta({ id: 'ButtonGraphicsElement' })\n`
 
 /** The generated file, before it is formatted */
 export const generatedGraphicsTypes = generatedFile

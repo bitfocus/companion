@@ -208,157 +208,165 @@ export const ButtonGraphicsRotationSchema = z.object({
 
 export type ButtonGraphicsRotation = z.output<typeof ButtonGraphicsRotationSchema>
 
-const buttonGraphicsTextElementObjectSchema = z.object({
-	type: z.literal('text'),
-	id: z.string(),
-	name: z.string().catch('Text'),
-	usage: z.enum(ButtonGraphicsElementUsage).catch(ButtonGraphicsElementUsage.Automatic),
-	/** Ids of the properties pinned to this button's pinned view */
-	pinnedProperties: z
-		.array(z.string())
-		.catch(() => ['text', 'fontsize', 'fontsizeAllowShrink', 'color', 'halign', 'valign']),
-	enabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: true })),
-	opacity: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	x: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	y: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	width: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	height: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	rotation: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	text: createExpressionOrValueSchema(z.string()).catch(() => ({ isExpression: false as const, value: '' as const })),
-	fontsize: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	fontsizeAllowShrink: createExpressionOrValueSchema(z.boolean()).catch(() => ({
-		isExpression: false as const,
-		value: true,
-	})),
-	font: createExpressionOrValueSchema(z.literal(['companion-sans', 'companion-mono'])).catch(() => ({
-		isExpression: false as const,
-		value: 'companion-sans' as const,
-	})),
-	weight: createExpressionOrValueSchema(z.literal(['normal', 'bold'])).catch(() => ({
-		isExpression: false as const,
-		value: 'normal' as const,
-	})),
-	styles: createExpressionOrValueSchema(z.array(z.literal(['italic', 'underline', 'strikethrough']))).catch(() => ({
-		isExpression: false as const,
-		value: [],
-	})),
-	color: createExpressionOrValueSchema(z.union([z.number(), z.string()])).catch(() => ({
-		isExpression: false as const,
-		value: 16777215,
-	})),
-	outlineColor: createExpressionOrValueSchema(z.union([z.number(), z.string()])).catch(() => ({
-		isExpression: false as const,
-		value: 0,
-	})),
-	halign: createExpressionOrValueSchema(z.literal(['left', 'center', 'right'])).catch(() => ({
-		isExpression: false as const,
-		value: 'center' as const,
-	})),
-	valign: createExpressionOrValueSchema(z.literal(['top', 'center', 'bottom'])).catch(() => ({
-		isExpression: false as const,
-		value: 'center' as const,
-	})),
-})
+const buttonGraphicsTextElementObjectSchema = z
+	.object({
+		type: z.literal('text'),
+		id: z.string(),
+		name: z.string().catch('Text'),
+		usage: z.enum(ButtonGraphicsElementUsage).catch(ButtonGraphicsElementUsage.Automatic),
+		/** Ids of the properties pinned to this button's pinned view */
+		pinnedProperties: z
+			.array(z.string())
+			.catch(() => ['text', 'fontsize', 'fontsizeAllowShrink', 'color', 'halign', 'valign']),
+		enabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: true })),
+		opacity: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		x: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		y: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		width: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		height: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		rotation: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		text: createExpressionOrValueSchema(z.string()).catch(() => ({ isExpression: false as const, value: '' as const })),
+		fontsize: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		fontsizeAllowShrink: createExpressionOrValueSchema(z.boolean()).catch(() => ({
+			isExpression: false as const,
+			value: true,
+		})),
+		font: createExpressionOrValueSchema(z.literal(['companion-sans', 'companion-mono'])).catch(() => ({
+			isExpression: false as const,
+			value: 'companion-sans' as const,
+		})),
+		weight: createExpressionOrValueSchema(z.literal(['normal', 'bold'])).catch(() => ({
+			isExpression: false as const,
+			value: 'normal' as const,
+		})),
+		styles: createExpressionOrValueSchema(z.array(z.literal(['italic', 'underline', 'strikethrough']))).catch(() => ({
+			isExpression: false as const,
+			value: [],
+		})),
+		color: createExpressionOrValueSchema(z.union([z.number(), z.string()])).catch(() => ({
+			isExpression: false as const,
+			value: 16777215,
+		})),
+		outlineColor: createExpressionOrValueSchema(z.union([z.number(), z.string()])).catch(() => ({
+			isExpression: false as const,
+			value: 0,
+		})),
+		halign: createExpressionOrValueSchema(z.literal(['left', 'center', 'right'])).catch(() => ({
+			isExpression: false as const,
+			value: 'center' as const,
+		})),
+		valign: createExpressionOrValueSchema(z.literal(['top', 'center', 'bottom'])).catch(() => ({
+			isExpression: false as const,
+			value: 'center' as const,
+		})),
+	})
+	.meta({ id: 'ButtonGraphicsTextElement' })
 
 export type ButtonGraphicsTextElement = z.output<typeof buttonGraphicsTextElementObjectSchema>
 
 export const ButtonGraphicsTextElementSchema: z.ZodType<ButtonGraphicsTextElement> =
 	buttonGraphicsTextElementObjectSchema
 
-const buttonGraphicsImageElementObjectSchema = z.object({
-	type: z.literal('image'),
-	id: z.string(),
-	name: z.string().catch('Image'),
-	usage: z.enum(ButtonGraphicsElementUsage).catch(ButtonGraphicsElementUsage.Automatic),
-	/** Ids of the properties pinned to this button's pinned view */
-	pinnedProperties: z.array(z.string()).catch(() => ['base64Image', 'halign', 'valign']),
-	enabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: true })),
-	opacity: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	x: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	y: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	width: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	height: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	rotation: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	base64Image: createExpressionOrValueSchema(z.string().nullable()).catch(() => ({
-		isExpression: false as const,
-		value: null,
-	})),
-	halign: createExpressionOrValueSchema(z.literal(['left', 'center', 'right'])).catch(() => ({
-		isExpression: false as const,
-		value: 'center' as const,
-	})),
-	valign: createExpressionOrValueSchema(z.literal(['top', 'center', 'bottom'])).catch(() => ({
-		isExpression: false as const,
-		value: 'center' as const,
-	})),
-	fillMode: createExpressionOrValueSchema(z.literal(['fit', 'fill', 'crop'])).catch(() => ({
-		isExpression: false as const,
-		value: 'fit' as const,
-	})),
-})
+const buttonGraphicsImageElementObjectSchema = z
+	.object({
+		type: z.literal('image'),
+		id: z.string(),
+		name: z.string().catch('Image'),
+		usage: z.enum(ButtonGraphicsElementUsage).catch(ButtonGraphicsElementUsage.Automatic),
+		/** Ids of the properties pinned to this button's pinned view */
+		pinnedProperties: z.array(z.string()).catch(() => ['base64Image', 'halign', 'valign']),
+		enabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: true })),
+		opacity: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		x: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		y: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		width: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		height: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		rotation: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		base64Image: createExpressionOrValueSchema(z.string().nullable()).catch(() => ({
+			isExpression: false as const,
+			value: null,
+		})),
+		halign: createExpressionOrValueSchema(z.literal(['left', 'center', 'right'])).catch(() => ({
+			isExpression: false as const,
+			value: 'center' as const,
+		})),
+		valign: createExpressionOrValueSchema(z.literal(['top', 'center', 'bottom'])).catch(() => ({
+			isExpression: false as const,
+			value: 'center' as const,
+		})),
+		fillMode: createExpressionOrValueSchema(z.literal(['fit', 'fill', 'crop'])).catch(() => ({
+			isExpression: false as const,
+			value: 'fit' as const,
+		})),
+	})
+	.meta({ id: 'ButtonGraphicsImageElement' })
 
 export type ButtonGraphicsImageElement = z.output<typeof buttonGraphicsImageElementObjectSchema>
 
 export const ButtonGraphicsImageElementSchema: z.ZodType<ButtonGraphicsImageElement> =
 	buttonGraphicsImageElementObjectSchema
 
-const buttonGraphicsBoxElementObjectSchema = z.object({
-	type: z.literal('box'),
-	id: z.string(),
-	name: z.string().catch('Box'),
-	usage: z.enum(ButtonGraphicsElementUsage).catch(ButtonGraphicsElementUsage.Automatic),
-	/** Ids of the properties pinned to this button's pinned view */
-	pinnedProperties: z.array(z.string()).catch(() => ['color']),
-	enabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: true })),
-	opacity: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	x: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	y: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	width: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	height: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	rotation: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	color: createExpressionOrValueSchema(z.union([z.number(), z.string()])).catch(() => ({
-		isExpression: false as const,
-		value: 0,
-	})),
-	cornerRadius: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	borderWidth: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	borderColor: createExpressionOrValueSchema(z.union([z.number(), z.string()])).catch(() => ({
-		isExpression: false as const,
-		value: 0,
-	})),
-	borderPosition: createExpressionOrValueSchema(z.literal(['inside', 'center', 'outside'])).catch(() => ({
-		isExpression: false as const,
-		value: 'inside' as const,
-	})),
-})
+const buttonGraphicsBoxElementObjectSchema = z
+	.object({
+		type: z.literal('box'),
+		id: z.string(),
+		name: z.string().catch('Box'),
+		usage: z.enum(ButtonGraphicsElementUsage).catch(ButtonGraphicsElementUsage.Automatic),
+		/** Ids of the properties pinned to this button's pinned view */
+		pinnedProperties: z.array(z.string()).catch(() => ['color']),
+		enabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: true })),
+		opacity: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		x: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		y: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		width: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		height: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		rotation: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		color: createExpressionOrValueSchema(z.union([z.number(), z.string()])).catch(() => ({
+			isExpression: false as const,
+			value: 0,
+		})),
+		cornerRadius: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		borderWidth: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		borderColor: createExpressionOrValueSchema(z.union([z.number(), z.string()])).catch(() => ({
+			isExpression: false as const,
+			value: 0,
+		})),
+		borderPosition: createExpressionOrValueSchema(z.literal(['inside', 'center', 'outside'])).catch(() => ({
+			isExpression: false as const,
+			value: 'inside' as const,
+		})),
+	})
+	.meta({ id: 'ButtonGraphicsBoxElement' })
 
 export type ButtonGraphicsBoxElement = z.output<typeof buttonGraphicsBoxElementObjectSchema>
 
 export const ButtonGraphicsBoxElementSchema: z.ZodType<ButtonGraphicsBoxElement> = buttonGraphicsBoxElementObjectSchema
 
-const buttonGraphicsLineElementObjectSchema = z.object({
-	type: z.literal('line'),
-	id: z.string(),
-	name: z.string().catch('Line'),
-	usage: z.enum(ButtonGraphicsElementUsage).catch(ButtonGraphicsElementUsage.Automatic),
-	/** Ids of the properties pinned to this button's pinned view */
-	pinnedProperties: z.array(z.string()).catch(() => ['borderColor', 'borderWidth']),
-	enabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: true })),
-	opacity: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	fromX: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	fromY: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	toX: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	toY: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	borderWidth: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 1 })),
-	borderColor: createExpressionOrValueSchema(z.union([z.number(), z.string()])).catch(() => ({
-		isExpression: false as const,
-		value: 0,
-	})),
-	borderPosition: createExpressionOrValueSchema(z.literal(['left', 'center', 'right'])).catch(() => ({
-		isExpression: false as const,
-		value: 'center' as const,
-	})),
-})
+const buttonGraphicsLineElementObjectSchema = z
+	.object({
+		type: z.literal('line'),
+		id: z.string(),
+		name: z.string().catch('Line'),
+		usage: z.enum(ButtonGraphicsElementUsage).catch(ButtonGraphicsElementUsage.Automatic),
+		/** Ids of the properties pinned to this button's pinned view */
+		pinnedProperties: z.array(z.string()).catch(() => ['borderColor', 'borderWidth']),
+		enabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: true })),
+		opacity: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		fromX: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		fromY: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		toX: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		toY: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		borderWidth: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 1 })),
+		borderColor: createExpressionOrValueSchema(z.union([z.number(), z.string()])).catch(() => ({
+			isExpression: false as const,
+			value: 0,
+		})),
+		borderPosition: createExpressionOrValueSchema(z.literal(['left', 'center', 'right'])).catch(() => ({
+			isExpression: false as const,
+			value: 'center' as const,
+		})),
+	})
+	.meta({ id: 'ButtonGraphicsLineElement' })
 
 export type ButtonGraphicsLineElement = z.output<typeof buttonGraphicsLineElementObjectSchema>
 
@@ -389,49 +397,53 @@ export type ButtonGraphicsGroupElement = z.output<typeof buttonGraphicsGroupElem
 	children: SomeButtonGraphicsElement[]
 }
 
-const buttonGraphicsGroupElementObjectSchema = buttonGraphicsGroupElementKnownSchema.extend({
-	get children(): z.ZodDefault<z.ZodArray<z.ZodType<SomeButtonGraphicsElement>>> {
-		return z.array(SomeButtonGraphicsElementSchema).default(() => [])
-	},
-})
+const buttonGraphicsGroupElementObjectSchema = buttonGraphicsGroupElementKnownSchema
+	.extend({
+		get children(): z.ZodDefault<z.ZodArray<z.ZodType<SomeButtonGraphicsElement>>> {
+			return z.array(SomeButtonGraphicsElementSchema).default(() => [])
+		},
+	})
+	.meta({ id: 'ButtonGraphicsGroupElement' })
 
 export const ButtonGraphicsGroupElementSchema: z.ZodType<ButtonGraphicsGroupElement> =
 	buttonGraphicsGroupElementObjectSchema
 
-const buttonGraphicsCircleElementObjectSchema = z.object({
-	type: z.literal('circle'),
-	id: z.string(),
-	name: z.string().catch('Circle'),
-	usage: z.enum(ButtonGraphicsElementUsage).catch(ButtonGraphicsElementUsage.Automatic),
-	/** Ids of the properties pinned to this button's pinned view */
-	pinnedProperties: z.array(z.string()).catch(() => ['color']),
-	enabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: true })),
-	opacity: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	x: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	y: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	width: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	height: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	color: createExpressionOrValueSchema(z.union([z.number(), z.string()])).catch(() => ({
-		isExpression: false as const,
-		value: 0,
-	})),
-	startAngle: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	endAngle: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 360 })),
-	drawSlice: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: false })),
-	borderWidth: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	borderColor: createExpressionOrValueSchema(z.union([z.number(), z.string()])).catch(() => ({
-		isExpression: false as const,
-		value: 0,
-	})),
-	borderPosition: createExpressionOrValueSchema(z.literal(['inside', 'center', 'outside'])).catch(() => ({
-		isExpression: false as const,
-		value: 'inside' as const,
-	})),
-	borderOnlyArc: createExpressionOrValueSchema(z.boolean()).catch(() => ({
-		isExpression: false as const,
-		value: false,
-	})),
-})
+const buttonGraphicsCircleElementObjectSchema = z
+	.object({
+		type: z.literal('circle'),
+		id: z.string(),
+		name: z.string().catch('Circle'),
+		usage: z.enum(ButtonGraphicsElementUsage).catch(ButtonGraphicsElementUsage.Automatic),
+		/** Ids of the properties pinned to this button's pinned view */
+		pinnedProperties: z.array(z.string()).catch(() => ['color']),
+		enabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: true })),
+		opacity: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		x: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		y: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		width: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		height: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		color: createExpressionOrValueSchema(z.union([z.number(), z.string()])).catch(() => ({
+			isExpression: false as const,
+			value: 0,
+		})),
+		startAngle: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		endAngle: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 360 })),
+		drawSlice: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: false })),
+		borderWidth: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		borderColor: createExpressionOrValueSchema(z.union([z.number(), z.string()])).catch(() => ({
+			isExpression: false as const,
+			value: 0,
+		})),
+		borderPosition: createExpressionOrValueSchema(z.literal(['inside', 'center', 'outside'])).catch(() => ({
+			isExpression: false as const,
+			value: 'inside' as const,
+		})),
+		borderOnlyArc: createExpressionOrValueSchema(z.boolean()).catch(() => ({
+			isExpression: false as const,
+			value: false,
+		})),
+	})
+	.meta({ id: 'ButtonGraphicsCircleElement' })
 
 export type ButtonGraphicsCircleElement = z.output<typeof buttonGraphicsCircleElementObjectSchema>
 
@@ -461,117 +473,132 @@ export type ButtonGraphicsCompositeElement = z.output<typeof buttonGraphicsCompo
 	[customKey: CompositeElementOptionKey]: ExpressionOrValue<JsonValue | undefined> | undefined
 }
 
-const buttonGraphicsCompositeElementObjectSchema = buttonGraphicsCompositeElementKnownSchema.catchall(
-	ExpressionOrJsonValueSchema.optional()
-)
+const buttonGraphicsCompositeElementObjectSchema = buttonGraphicsCompositeElementKnownSchema
+	.catchall(ExpressionOrJsonValueSchema.optional())
+	.meta({ id: 'ButtonGraphicsCompositeElement' })
 
 export const ButtonGraphicsCompositeElementSchema: z.ZodType<ButtonGraphicsCompositeElement> =
 	buttonGraphicsCompositeElementObjectSchema
 
-const buttonGraphicsCanvasElementObjectSchema = z.object({
-	// Note: this is the background element and can only be at the bottom of the stack
-	type: z.literal('canvas'),
-	id: z.string(),
-	name: z.string().catch('Canvas'),
-	usage: z.enum(ButtonGraphicsElementUsage).catch(ButtonGraphicsElementUsage.Automatic),
-	decoration: createExpressionOrValueSchema(z.enum(ButtonGraphicsDecorationType)).catch(() => ({
-		isExpression: false as const,
-		value: ButtonGraphicsDecorationType.FollowDefault,
-	})),
-	showStatusIcons: createExpressionOrValueSchema(z.literal(['default', 'all', 'none'])).catch(() => ({
-		isExpression: false as const,
-		value: 'default' as const,
-	})),
-})
+const buttonGraphicsCanvasElementObjectSchema = z
+	.object({
+		// Note: this is the background element and can only be at the bottom of the stack
+		type: z.literal('canvas'),
+		id: z.string(),
+		name: z.string().catch('Canvas'),
+		usage: z.enum(ButtonGraphicsElementUsage).catch(ButtonGraphicsElementUsage.Automatic),
+		decoration: createExpressionOrValueSchema(z.enum(ButtonGraphicsDecorationType)).catch(() => ({
+			isExpression: false as const,
+			value: ButtonGraphicsDecorationType.FollowDefault,
+		})),
+		showStatusIcons: createExpressionOrValueSchema(z.literal(['default', 'all', 'none'])).catch(() => ({
+			isExpression: false as const,
+			value: 'default' as const,
+		})),
+	})
+	.meta({ id: 'ButtonGraphicsCanvasElement' })
 
 export type ButtonGraphicsCanvasElement = z.output<typeof buttonGraphicsCanvasElementObjectSchema>
 
 export const ButtonGraphicsCanvasElementSchema: z.ZodType<ButtonGraphicsCanvasElement> =
 	buttonGraphicsCanvasElementObjectSchema
 
-const buttonGraphicsReferenceElementObjectSchema = z.object({
-	type: z.literal('reference'),
-	id: z.string(),
-	name: z.string().catch('Reference'),
-	usage: z.enum(ButtonGraphicsElementUsage).catch(ButtonGraphicsElementUsage.Automatic),
-	/** Ids of the properties pinned to this button's pinned view */
-	pinnedProperties: z.array(z.string()).catch(() => ['location']),
-	enabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: true })),
-	opacity: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	x: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	y: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	width: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	height: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	rotation: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	location: createExpressionOrValueSchema(z.string()).catch(() => ({
-		isExpression: false as const,
-		value: '' as const,
-	})),
-})
+const buttonGraphicsReferenceElementObjectSchema = z
+	.object({
+		type: z.literal('reference'),
+		id: z.string(),
+		name: z.string().catch('Reference'),
+		usage: z.enum(ButtonGraphicsElementUsage).catch(ButtonGraphicsElementUsage.Automatic),
+		/** Ids of the properties pinned to this button's pinned view */
+		pinnedProperties: z.array(z.string()).catch(() => ['location']),
+		enabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: true })),
+		opacity: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		x: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		y: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		width: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		height: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		rotation: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		location: createExpressionOrValueSchema(z.string()).catch(() => ({
+			isExpression: false as const,
+			value: '' as const,
+		})),
+	})
+	.meta({ id: 'ButtonGraphicsReferenceElement' })
 
 export type ButtonGraphicsReferenceElement = z.output<typeof buttonGraphicsReferenceElementObjectSchema>
 
 export const ButtonGraphicsReferenceElementSchema: z.ZodType<ButtonGraphicsReferenceElement> =
 	buttonGraphicsReferenceElementObjectSchema
 
-const buttonGraphicsGaugeElementObjectSchema = z.object({
-	type: z.literal('gauge'),
-	id: z.string(),
-	name: z.string().catch('Gauge'),
-	usage: z.enum(ButtonGraphicsElementUsage).catch(ButtonGraphicsElementUsage.Automatic),
-	/** Ids of the properties pinned to this button's pinned view */
-	pinnedProperties: z.array(z.string()).catch(() => ['value']),
-	enabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: true })),
-	opacity: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	x: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	y: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	width: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	height: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	rotation: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	value: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	min: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	max: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	origin: createExpressionOrValueSchema(z.number().nullable()).catch(() => ({
-		isExpression: false as const,
-		value: null,
-	})),
-	symmetric: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: false })),
-	orientation: createExpressionOrValueSchema(z.literal(['horizontal', 'vertical', 'ring'])).catch(() => ({
-		isExpression: false as const,
-		value: 'horizontal' as const,
-	})),
-	reverse: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: false })),
-	startAngle: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
-	endAngle: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 360 })),
-	ringWidth: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 20 })),
-	roundedEnds: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: true })),
-	fillEnabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: true })),
-	multiColour: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: true })),
-	fillWidth: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-	stops: createExpressionOrValueSchema(z.array(z.record(z.string(), JsonValueSchema))).catch(() => ({
-		isExpression: false as const,
-		value: [
-			{ value: 0, color: 65280, gradient: false },
-			{ value: 66, color: 16776960, gradient: false },
-			{ value: 85, color: 16711680, gradient: false },
-		],
-	})),
-	markerEnabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({
-		isExpression: false as const,
-		value: false,
-	})),
-	markerColor: createExpressionOrValueSchema(z.union([z.number(), z.string()])).catch(() => ({
-		isExpression: false as const,
-		value: 16777215,
-	})),
-	markerWidth: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 15 })),
-	trackStyle: createExpressionOrValueSchema(z.literal(['transparent', 'dimmed'])).catch(() => ({
-		isExpression: false as const,
-		value: 'transparent' as const,
-	})),
-	trackAmount: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 70 })),
-	trackWidth: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
-})
+const buttonGraphicsGaugeElementObjectSchema = z
+	.object({
+		type: z.literal('gauge'),
+		id: z.string(),
+		name: z.string().catch('Gauge'),
+		usage: z.enum(ButtonGraphicsElementUsage).catch(ButtonGraphicsElementUsage.Automatic),
+		/** Ids of the properties pinned to this button's pinned view */
+		pinnedProperties: z.array(z.string()).catch(() => ['value']),
+		enabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: true })),
+		opacity: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		x: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		y: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		width: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		height: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		rotation: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		value: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		min: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		max: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		origin: createExpressionOrValueSchema(z.number().nullable()).catch(() => ({
+			isExpression: false as const,
+			value: null,
+		})),
+		symmetric: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: false })),
+		orientation: createExpressionOrValueSchema(z.literal(['horizontal', 'vertical', 'ring'])).catch(() => ({
+			isExpression: false as const,
+			value: 'horizontal' as const,
+		})),
+		reverse: createExpressionOrValueSchema(z.boolean()).catch(() => ({ isExpression: false as const, value: false })),
+		startAngle: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 0 })),
+		endAngle: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 360 })),
+		ringWidth: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 20 })),
+		roundedEnds: createExpressionOrValueSchema(z.boolean()).catch(() => ({
+			isExpression: false as const,
+			value: true,
+		})),
+		fillEnabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({
+			isExpression: false as const,
+			value: true,
+		})),
+		multiColour: createExpressionOrValueSchema(z.boolean()).catch(() => ({
+			isExpression: false as const,
+			value: true,
+		})),
+		fillWidth: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+		stops: createExpressionOrValueSchema(z.array(z.record(z.string(), JsonValueSchema))).catch(() => ({
+			isExpression: false as const,
+			value: [
+				{ value: 0, color: 65280, gradient: false },
+				{ value: 66, color: 16776960, gradient: false },
+				{ value: 85, color: 16711680, gradient: false },
+			],
+		})),
+		markerEnabled: createExpressionOrValueSchema(z.boolean()).catch(() => ({
+			isExpression: false as const,
+			value: false,
+		})),
+		markerColor: createExpressionOrValueSchema(z.union([z.number(), z.string()])).catch(() => ({
+			isExpression: false as const,
+			value: 16777215,
+		})),
+		markerWidth: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 15 })),
+		trackStyle: createExpressionOrValueSchema(z.literal(['transparent', 'dimmed'])).catch(() => ({
+			isExpression: false as const,
+			value: 'transparent' as const,
+		})),
+		trackAmount: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 70 })),
+		trackWidth: createExpressionOrValueSchema(z.number()).catch(() => ({ isExpression: false as const, value: 100 })),
+	})
+	.meta({ id: 'ButtonGraphicsGaugeElement' })
 
 export type ButtonGraphicsGaugeElement = z.output<typeof buttonGraphicsGaugeElementObjectSchema>
 
@@ -590,15 +617,17 @@ export type SomeButtonGraphicsElement =
 	| ButtonGraphicsReferenceElement
 	| ButtonGraphicsGaugeElement
 
-export const SomeButtonGraphicsElementSchema: z.ZodType<SomeButtonGraphicsElement> = z.discriminatedUnion('type', [
-	buttonGraphicsTextElementObjectSchema,
-	buttonGraphicsImageElementObjectSchema,
-	buttonGraphicsBoxElementObjectSchema,
-	buttonGraphicsLineElementObjectSchema,
-	buttonGraphicsGroupElementObjectSchema,
-	buttonGraphicsCircleElementObjectSchema,
-	buttonGraphicsCompositeElementObjectSchema,
-	buttonGraphicsCanvasElementObjectSchema,
-	buttonGraphicsReferenceElementObjectSchema,
-	buttonGraphicsGaugeElementObjectSchema,
-])
+export const SomeButtonGraphicsElementSchema: z.ZodType<SomeButtonGraphicsElement> = z
+	.discriminatedUnion('type', [
+		buttonGraphicsTextElementObjectSchema,
+		buttonGraphicsImageElementObjectSchema,
+		buttonGraphicsBoxElementObjectSchema,
+		buttonGraphicsLineElementObjectSchema,
+		buttonGraphicsGroupElementObjectSchema,
+		buttonGraphicsCircleElementObjectSchema,
+		buttonGraphicsCompositeElementObjectSchema,
+		buttonGraphicsCanvasElementObjectSchema,
+		buttonGraphicsReferenceElementObjectSchema,
+		buttonGraphicsGaugeElementObjectSchema,
+	])
+	.meta({ id: 'ButtonGraphicsElement' })
