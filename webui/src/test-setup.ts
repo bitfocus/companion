@@ -42,6 +42,9 @@ window.cancelAnimationFrame = () => {}
 // a noisy "Not implemented" error on every call. Stub it to return null directly — same behaviour, no noise.
 HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext
 
+// jsdom never loads images, and has no HTMLImageElement.decode. Never resolve it, as an image would never load
+HTMLImageElement.prototype.decode = async () => new Promise<void>(() => {})
+
 // jsdom's CSS parser (rrweb-cssom) is far stricter than a browser and rejects some modern CSS in our
 // stylesheets (color-mix(), :has(), @layer, …). It skips the offending sheet and carries on, but
 // writes a noisy "Could not parse CSS stylesheet" straight to stderr — bypassing console, so

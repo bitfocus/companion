@@ -1,4 +1,4 @@
-import { act, render } from '@testing-library/react'
+import { act, render, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { WrappedImage } from '@companion-app/shared/Model/Common.js'
 import { ButtonGridViewProvider } from '../ButtonGridViewContext.js'
@@ -43,15 +43,7 @@ beforeEach(() => {
 	resetButtonImageCache()
 	subscribeMock.mockClear()
 	dragSource = null
-	vi.stubGlobal(
-		'Image',
-		class {
-			onload: (() => void) | null = null
-			set src(_value: string) {
-				this.onload?.()
-			}
-		}
-	)
+	vi.spyOn(HTMLImageElement.prototype, 'decode').mockResolvedValue()
 })
 
 function renderOverlay(selection: ReturnType<typeof at>[] = []): HTMLElement {
@@ -115,16 +107,18 @@ describe('the drag ghost', () => {
 		expect(container.querySelectorAll('.grid-drag-ghost-hole')).toHaveLength(1)
 	})
 
-	it('draws each button being carried', () => {
+	it('draws each button being carried', async () => {
 		const { container } = setup(at(1, 1), [at(1, 1), at(1, 2)])
 
 		emitAll({ image: 'data:image/png;base64,AAAA', isUsed: true })
 
-		const drawn = [...container.querySelectorAll('.button-border')].map(
-			(el) => (el as HTMLElement).style.backgroundImage
-		)
-		expect(drawn).toHaveLength(2)
-		expect(drawn.every((image) => image.includes('data:image/png;base64,AAAA'))).toBe(true)
+		await waitFor(() => {
+			const drawn = [...container.querySelectorAll('.button-border')].map(
+				(el) => (el as HTMLElement).style.backgroundImage
+			)
+			expect(drawn).toHaveLength(2)
+			expect(drawn.every((image) => image.includes('data:image/png;base64,AAAA'))).toBe(true)
+		})
 	})
 
 	it('counts them instead once the region is a screenful, rather than drawing them all', () => {
