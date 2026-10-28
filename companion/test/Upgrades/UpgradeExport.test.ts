@@ -274,6 +274,29 @@ describe('upgradeImport', () => {
 			expect(result.pages[1].pageVariables[1]).toMatchObject({ id: 'f2', ...placeholder })
 		})
 
+		test('repairs or skips a custom action', () => {
+			const input = { type: 'number', id: 'n', label: 'N', default: 1, min: 0, max: 10 }
+			const customAction = { type: 'custom-action', options: { name: 'C' }, inputs: [input], actions: [action] }
+			const result: any = upgradeImport(
+				{
+					type: 'full',
+					version: EXPORT_VERSION,
+					customActions: {
+						c1: { ...customAction, actions: [{ ...action, options: 'none' }] },
+						c2: { ...customAction, inputs: [{ ...input, type: 'secret-text' }] },
+						c3: { ...customAction, options: { sortOrder: 'first' } },
+						c4: customAction,
+					},
+				},
+				userConfig
+			)
+
+			expect(result.customActions.c1.actions[0]).toMatchObject({ id: 'a1', ...placeholder })
+			expect(result.customActions.c2.inputs[0]).toMatchObject({ type: 'static-text', id: 'n' })
+			expect(result.customActions.c3).toBeUndefined()
+			expect(result.customActions.c4).toMatchObject({ inputs: [input], actions: [action] })
+		})
+
 		test('resets an invalid property of an entry to its default, or drops an entry that is still invalid', () => {
 			const result: any = upgradeImport(
 				{

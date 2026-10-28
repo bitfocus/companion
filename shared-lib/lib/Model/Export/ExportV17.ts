@@ -1,6 +1,7 @@
 import z from 'zod'
 import { SomeButtonModelSchema } from '../ButtonModel.js'
 import { EmptyCollectionSchema, EnabledCollectionSchema } from '../Collections.js'
+import { CustomActionModelSchema } from '../CustomActionModel.js'
 import { CustomVariableDefinitionSchema } from '../CustomVariableModel.js'
 import { SomeEntityModelSchema } from '../EntityModel.js'
 import { ExpressionVariableModelSchema } from '../ExpressionVariableModel.js'
@@ -111,6 +112,8 @@ export const ExportV17FullSchema = z.object({
 	customVariablesCollections: ExportV17EmptyCollectionsSchema.optional(),
 	expressionVariables: z.record(z.string(), ExpressionVariableModelSchema).optional(),
 	expressionVariablesCollections: ExportV17EmptyCollectionsSchema.optional(),
+	customActions: z.record(z.string(), CustomActionModelSchema).optional(),
+	customActionCollections: ExportV17EmptyCollectionsSchema.optional(),
 	instances: ExportV17InstancesSchema.optional(),
 	connectionCollections: ExportV17EnabledCollectionsSchema.optional(),
 	surfaces: z.record(z.string(), ExportV17SurfaceSchema).optional(),

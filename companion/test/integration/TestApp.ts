@@ -6,12 +6,16 @@ import os from 'node:os'
 import path from 'node:path'
 import { initTRPC, type TRPCRouterCaller } from '@trpc/server'
 import type { BuildOptions } from 'esbuild'
+import { nanoid } from 'nanoid'
 import supertest from 'supertest'
+import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	EntityModelType,
+	type ActionEntityModel,
 	type EntityOwner,
+	type RawStoreResult,
 	type SomeSocketEntityLocation,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
@@ -94,6 +98,19 @@ export interface TestApp {
 		stepId: string,
 		definitionId: string,
 		options: Record<string, ExpressionOrValue<any>>
+	): string
+	/** Add an action from the internal connection to a custom action's action list */
+	addCustomActionAction(
+		controlId: string,
+		definitionId: string,
+		options: Record<string, ExpressionOrValue<any>>
+	): string
+	/** Add an action which runs a custom action, to the first step's 'down' set of a button */
+	addCustomActionCall(
+		controlId: string,
+		customActionControlId: string,
+		options: Record<string, ExpressionOrValue<any>>,
+		storeResult: RawStoreResult | null
 	): string
 	/** Add an action from the internal connection to a trigger's action list */
 	addTriggerAction(controlId: string, definitionId: string, options: Record<string, ExpressionOrValue<any>>): string
@@ -466,6 +483,29 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 				definitionId,
 				options
 			)
+		},
+
+		addCustomActionAction(controlId, definitionId, options) {
+			return addInternalEntity(controlId, 'custom_action_actions', null, EntityModelType.Action, definitionId, options)
+		},
+
+		addCustomActionCall(controlId, customActionControlId, options, storeResult) {
+			const parsedId = ParseControlId(customActionControlId)
+			if (parsedId?.type !== 'custom-action') throw new Error(`"${customActionControlId}" is not a custom action`)
+
+			const entityModel: ActionEntityModel = {
+				type: EntityModelType.Action,
+				id: nanoid(),
+				connectionId: CUSTOM_ACTIONS_CONNECTION_ID,
+				definitionId: parsedId.customActionId,
+				options,
+				upgradeIndex: undefined,
+				storeResult: storeResult ?? undefined,
+			}
+			if (!getEditableEntities(controlId).entityAdd(firstDownSet(controlId), null, entityModel))
+				throw new Error(`Failed to add custom action call to "${controlId}"`)
+
+			return entityModel.id
 		},
 
 		addTriggerAction(controlId, definitionId, options) {
