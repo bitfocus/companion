@@ -1,4 +1,5 @@
 import EventEmitter from 'node:events'
+import { aborted } from 'node:util'
 import isEqual from 'fast-deep-equal'
 import z from 'zod'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
@@ -134,10 +135,9 @@ export class PreviewElementStream {
 					try {
 						yield { ok: true as const }
 
-						// Hold the context open until the client unsubscribes
-						if (signal && !signal.aborted) {
-							await new Promise<void>((resolve) => signal.addEventListener('abort', () => resolve(), { once: true }))
-						}
+						// Hold the context open until the client unsubscribes. The signal is the resource held weakly, as it
+						// lives as long as the subscription
+						if (signal) await aborted(signal, signal)
 					} finally {
 						release()
 					}
@@ -172,15 +172,15 @@ export class PreviewElementStream {
 					})
 				)
 				.subscription(async function* ({ input, signal, ctx }) {
-					// Owned here, so that listeners are removed however the subscription ends
+					// Aborted here too, so that listeners are removed however the subscription ends
 					const abort = new AbortController()
-					signal?.addEventListener('abort', () => abort.abort(), { once: true })
+					const subscriptionSignal = signal ? AbortSignal.any([signal, abort.signal]) : abort.signal
 
 					try {
-						const context = await self.#contexts.waitFor(ctx.clientId, input.contextId, abort.signal)
+						const context = await self.#contexts.waitFor(ctx.clientId, input.contextId, subscriptionSignal)
 						if (!context) return
 
-						yield* self.#runSubscription(context, input.elementId, ctx.clientId, abort.signal)
+						yield* self.#runSubscription(context, input.elementId, ctx.clientId, subscriptionSignal)
 					} finally {
 						abort.abort()
 					}
