@@ -1,5 +1,6 @@
 import { faChevronLeft, faChevronRight, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import './ButtonEditorTabs.css'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
@@ -220,7 +221,7 @@ function StepPill({ controlId, stepId, stepIndex, stepOptions, isSelected, isCur
 	const name = stepOptions?.name ? `${stepOptions.name} (${stepIndex + 1})` : `Step ${stepIndex + 1}`
 	const renameStepMutation = useMutationExt(trpc.controls.steps.rename.mutationOptions())
 
-	const [isEditing, setIsEditing] = useState(false)
+	const [editingSize, setEditingSize] = useState<{ width: number; height: number } | null>(null)
 
 	const doRename = useCallback(
 		(newName: string) => {
@@ -231,12 +232,6 @@ function StepPill({ controlId, stepId, stepIndex, stepOptions, isSelected, isCur
 		[renameStepMutation, controlId, stepId]
 	)
 
-	const pillClassName = `flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all select-none ${
-		isSelected
-			? 'bg-selection-bg text-selection-text border border-selection-border'
-			: 'bg-surface hover:bg-surface-hover text-muted hover:text-body border border-border/70'
-	}`
-
 	const liveDot = isCurrent && (
 		<span
 			className={`w-1.5 h-1.5 rounded-full bg-tone-good-fill ${isSelected ? '' : 'animate-pulse'}`}
@@ -244,17 +239,21 @@ function StepPill({ controlId, stepId, stepIndex, stepOptions, isSelected, isCur
 		/>
 	)
 
-	if (isEditing) {
+	if (editingSize) {
 		return (
-			<div className={pillClassName}>
+			<div
+				className={`button button-pill button-sm button-step-rename${isSelected ? ' active' : ''}`}
+				style={editingSize}
+			>
 				{liveDot}
 				<TextInputFieldSimple
 					id={undefined}
 					value={stepOptions?.name ?? ''}
 					setValue={doRename}
-					onBlur={() => setIsEditing(false)}
+					tooltip="Step name"
+					onBlur={() => setEditingSize(null)}
 					onKeyDown={(e) => {
-						if (e.key === 'Enter' || e.key === 'Escape') setIsEditing(false)
+						if (e.key === 'Enter' || e.key === 'Escape') setEditingSize(null)
 					}}
 					autoFocus
 				/>
@@ -263,7 +262,16 @@ function StepPill({ controlId, stepId, stepIndex, stepOptions, isSelected, isCur
 	}
 
 	return (
-		<Button variant="pill" size="sm" active={isSelected} onClick={onSelect} onDoubleClick={() => setIsEditing(true)}>
+		<Button
+			variant="pill"
+			size="sm"
+			active={isSelected}
+			onClick={onSelect}
+			onDoubleClick={(e) => {
+				const { width, height } = e.currentTarget.getBoundingClientRect()
+				setEditingSize({ width, height })
+			}}
+		>
 			{liveDot}
 			<span>{name}</span>
 		</Button>
