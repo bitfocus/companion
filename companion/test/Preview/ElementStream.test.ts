@@ -321,8 +321,13 @@ describe('PreviewElementStream.watchElement', () => {
 			const sub = await harness.watch('missing')
 
 			await sub.expectValue({ ok: true, element: null })
-			await sub.expectValue({ ok: true, element: null })
+			await settle()
 			expect(harness.evaluationCount()).toBe(0)
+
+			// Its evaluation to null is not resent, so the next value is the element once it is added
+			harness.state.elements = [makeTextEl({ id: 'missing', text: val('Added') })]
+			harness.controlEvents.emit('layeredStyleElementChanged', CONTROL_ID, 'missing')
+			expect((await sub.next()).element).toMatchObject({ text: 'Added' })
 
 			await sub.cleanup()
 		})
@@ -333,7 +338,7 @@ describe('PreviewElementStream.watchElement', () => {
 			for (const controlId of ['unknown', 'not-layered', 'no-entities']) {
 				const sub = await harness.watch('text1', controlId)
 				await sub.expectValue({ ok: true, element: null })
-				await sub.expectValue({ ok: true, element: null })
+				await settle()
 				await sub.cleanup()
 			}
 
@@ -514,17 +519,27 @@ describe('PreviewElementStream.watchElement', () => {
 	})
 
 	describe('render clock', () => {
-		it('re-evaluates a clock sensitive element on each tick', async () => {
-			const harness = createHarness([makeTextEl({ text: expr('oscillate(1000)') })])
+		it('re-evaluates a clock sensitive element on each tick, sending only a changed result', async () => {
+			// oscillate() makes it clock sensitive, the variable lets a tick change the result deterministically
+			const harness = createHarness([makeTextEl({ text: expr('`${$(custom:a)} ${oscillate(1000) >= -1}`') })], {
+				custom: { a: 1 },
+			})
 			const sub = await harness.watch('text1')
 			await sub.next()
-			await sub.next()
+			expect((await sub.next()).element).toMatchObject({ text: '1 true' })
 			const evaluations = harness.evaluationCount()
 
+			// A tick that leaves the result unchanged is evaluated but not sent
+			harness.tickClock()
+			await settle()
+			expect(harness.evaluationCount()).toBe(evaluations + 1)
+
+			// Change the variable without notifying, so only the tick picks it up
+			harness.state.variables = { custom: { a: 2 } }
 			harness.tickClock()
 
-			expect((await sub.next()).element).toMatchObject({ id: 'text1', type: 'text' })
-			expect(harness.evaluationCount()).toBe(evaluations + 1)
+			expect((await sub.next()).element).toMatchObject({ text: '2 true' })
+			expect(harness.evaluationCount()).toBe(evaluations + 2)
 
 			await sub.cleanup()
 		})
@@ -730,6 +745,43 @@ describe('PreviewElementStream.watchElement', () => {
 
 			await settle()
 			expect(harness.evaluationCount()).toBe(evaluations + 2)
+
+			await sub.cleanup()
+		})
+
+		it('does not resend a result that is unchanged by a re-evaluation', async () => {
+			const harness = createHarness([makeTextEl({ text: val('Same') })])
+			const sub = await harness.watch('text1')
+			await sub.next()
+			expect((await sub.next()).element).toMatchObject({ text: 'Same' })
+
+			// Re-evaluated, but to the same result
+			harness.controlEvents.emit('layeredStyleElementChanged', CONTROL_ID, 'text1')
+			await settle()
+
+			// So the next value is the next real change
+			harness.state.elements = [makeTextEl({ text: val('Different') })]
+			harness.controlEvents.emit('layeredStyleElementChanged', CONTROL_ID, 'text1')
+			expect((await sub.next()).element).toMatchObject({ text: 'Different' })
+
+			await sub.cleanup()
+		})
+
+		it('updates what it tracks even when a re-evaluation leaves the result unchanged', async () => {
+			const harness = createHarness([makeTextEl({ text: expr('$(custom:a)') })], { custom: { a: 1, b: 1 } })
+			const sub = await harness.watch('text1')
+			await sub.next()
+			expect((await sub.next()).element).toMatchObject({ text: '1' })
+
+			// Switch to another variable with the same value, so the result is not resent
+			harness.state.elements = [makeTextEl({ text: expr('$(custom:b)') })]
+			harness.controlEvents.emit('layeredStyleElementChanged', CONTROL_ID, 'text1')
+			await settle()
+
+			// But the new variable is tracked
+			harness.state.variables = { custom: { a: 1, b: 2 } }
+			harness.stream.onVariablesChanged(new Set(['custom:b']), null)
+			expect((await sub.next()).element).toMatchObject({ text: '2' })
 
 			await sub.cleanup()
 		})

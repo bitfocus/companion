@@ -1,4 +1,5 @@
 import EventEmitter from 'node:events'
+import isEqual from 'fast-deep-equal'
 import z from 'zod'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -179,13 +180,16 @@ export class PreviewElementStream {
 			const newValue = await this.#evaluateElement(session.controlId, session.elementId)
 
 			// Update session with new value
-			session.latestResult = { ok: true, element: newValue.element }
 			session.trackedExpressions = newValue.referencedVariableIds
 			session.trackedCompositeElements = newValue.referencedCompositeElements
 			session.trackedReferencedLocations = newValue.referencedLocations
 			session.isClockSensitive = newValue.clockSensitive
 
-			session.changes.emit('change', { ok: true, element: newValue.element })
+			// Re-evaluations often produce the same result (eg on a render clock tick), so skip resending those
+			if (!isEqual(session.latestResult.element, newValue.element)) {
+				session.latestResult = { ok: true, element: newValue.element }
+				session.changes.emit('change', session.latestResult)
+			}
 		} catch (err) {
 			this.#logger.error(`Error re-evaluating element ${session.elementStreamId}:`, err)
 		} finally {
