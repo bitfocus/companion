@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
-import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
+import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import { CreateCustomActionControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import type { ExportInstances, ExportPageContent } from '@companion-app/shared/Model/Export/Latest.js'
 import type { ClientImportOrResetSelection, ImportOrResetType } from '@companion-app/shared/Model/ImportExport.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'
@@ -56,6 +57,8 @@ function createImportController() {
 	controls.importExpressionVariable.mockReturnValue(undefined)
 	controls.getAllControls.mockReturnValue(new Map())
 	controls.replaceExpressionVariableCollections.mockReturnValue(undefined)
+	controls.importCustomAction.mockReturnValue(true)
+	controls.replaceCustomActionCollections.mockReturnValue(undefined)
 	controls.replaceTriggerCollections.mockReturnValue(undefined)
 
 	graphics.clearAllForPage.mockReturnValue(undefined)
@@ -258,6 +261,7 @@ function fullConfig(overrides: Partial<ClientImportOrResetSelection> = {}): Clie
 		triggers: all,
 		customVariables: all,
 		expressionVariables: all,
+		customActions: all,
 		userconfig: 'reset',
 		imageLibrary: all,
 		...overrides,
@@ -278,6 +282,25 @@ describe('importFull config gating', () => {
 			customVariablesCollections: [],
 			expressionVariables: {},
 			expressionVariablesCollections: [],
+			customActions: {
+				ca1: {
+					type: 'custom-action',
+					options: { name: 'CA', description: '', sortOrder: 0, resultVariable: null },
+					inputs: [{ type: 'checkbox', id: 'flag', label: 'Flag', default: false }],
+					actions: [
+						{
+							type: 'action',
+							id: 'a1',
+							connectionId: 'internal',
+							definitionId: 'wait',
+							options: {},
+							upgradeIndex: undefined,
+						},
+					],
+					localVariables: [],
+				},
+			},
+			customActionCollections: [{ id: 'col', label: 'Col', sortOrder: 0, children: [], metaData: null }],
 			imageLibrary: [{ info: { name: 'i' } }],
 			imageLibraryCollections: [],
 		}
@@ -293,6 +316,41 @@ describe('importFull config gating', () => {
 		expect(controls.importTrigger).toHaveBeenCalledWith(CreateTriggerControlId('t1'), expect.any(Object))
 		expect(controls.importControl).toHaveBeenCalledWith({ pageNumber: 1, row: 0, column: 0 }, { type: 'pagenum' })
 		expect(graphics.imageLibrary.importImageLibrary).toHaveBeenCalledWith([], [{ info: { name: 'i' } }])
+		expect(controls.replaceCustomActionCollections).toHaveBeenCalledWith([
+			{ id: 'col', label: 'Col', sortOrder: 0, children: [], metaData: null },
+		])
+		expect(controls.importCustomAction).toHaveBeenCalledWith(
+			CreateCustomActionControlId('ca1'),
+			expect.objectContaining({
+				type: 'custom-action',
+				inputs: [{ type: 'checkbox', id: 'flag', label: 'Flag', default: false }],
+				actions: [expect.objectContaining({ id: 'a1', connectionId: 'internal', definitionId: 'wait' })],
+			})
+		)
+	})
+
+	test('keeps the actions which call a custom action', async () => {
+		const { controller, controls } = createImportController()
+
+		const data = baseData()
+		data.triggers.t1.actions = [
+			{
+				type: 'action',
+				id: 'call',
+				connectionId: CUSTOM_ACTIONS_CONNECTION_ID,
+				definitionId: 'ca1',
+				options: { flag: { isExpression: false, value: true } },
+			},
+		]
+
+		await controller.importFull(data, fullConfig())
+
+		expect(controls.importTrigger).toHaveBeenCalledWith(
+			CreateTriggerControlId('t1'),
+			expect.objectContaining({
+				actions: [expect.objectContaining({ id: 'call', connectionId: CUSTOM_ACTIONS_CONNECTION_ID })],
+			})
+		)
 	})
 
 	test('sections set to "unchanged" are not imported', async () => {
@@ -303,11 +361,14 @@ describe('importFull config gating', () => {
 			triggers: 'unchanged',
 			customVariables: 'unchanged',
 			expressionVariables: 'unchanged',
+			customActions: 'unchanged',
 			imageLibrary: 'unchanged',
 			surfaces: { known: 'unchanged', instances: 'unchanged', remote: 'unchanged' },
 		})
 
 		await controller.importFull(baseData(), config)
+
+		expect(controls.importCustomAction).not.toHaveBeenCalled()
 
 		expect(controls.importControl).not.toHaveBeenCalled()
 		expect(controls.importTrigger).not.toHaveBeenCalled()

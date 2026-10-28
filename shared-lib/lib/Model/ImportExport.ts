@@ -18,6 +18,7 @@ export const zodClientImportOrResetSelection = z.object({
 	triggers: zodImportOrResetType,
 	customVariables: zodImportOrResetType,
 	expressionVariables: zodImportOrResetType,
+	customActions: zodImportOrResetType,
 	connections: zodResetType, // Future: This should become zodImportOrResetType, once there is a plan for how that should work
 	userconfig: zodResetType, // Future: This should become zodImportOrResetType, or more likely an object describing subsections
 	imageLibrary: zodImportOrResetType,
@@ -41,6 +42,7 @@ export const zodClientExportSelection = z.object({
 	triggers: z.boolean(),
 	customVariables: z.boolean(),
 	expressionVariables: z.boolean(),
+	customActions: z.boolean(),
 	includeSecrets: z.boolean(),
 	imageLibrary: z.boolean(),
 })
@@ -97,6 +99,7 @@ export interface ClientImportObject {
 	triggers: Record<string, { name: string }> | null
 	customVariables: boolean
 	expressionVariables: boolean
+	customActions: boolean
 	imageLibrary: boolean
 	oldPageNumber?: number
 	page?: ClientPageInfo
