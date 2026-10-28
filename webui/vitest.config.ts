@@ -14,6 +14,7 @@ export default defineConfig({
 		exclude: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**'],
 		environment: 'jsdom',
 		pool: 'vmThreads',
+		isolate: true,
 		css: true,
 		setupFiles: ['./src/test-setup.ts'],
 	},

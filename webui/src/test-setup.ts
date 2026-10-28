@@ -44,6 +44,10 @@ window.cancelAnimationFrame = () => {}
 // a noisy "Not implemented" error on every call. Stub it to return null directly — same behaviour, no noise.
 HTMLCanvasElement.prototype.getContext = (() => null) as typeof HTMLCanvasElement.prototype.getContext
 
+// TanStack Router's scroll restoration calls window.scrollTo on navigation, which jsdom doesn't implement and
+// reports as a "Not implemented" error each time. There is nothing to scroll in jsdom, so make it a no-op.
+window.scrollTo = () => {}
+
 // jsdom's CSS parser (rrweb-cssom) is far stricter than a browser and rejects some modern CSS in our
 // stylesheets (color-mix(), :has(), @layer, …). It skips the offending sheet and carries on, but
 // writes a noisy "Could not parse CSS stylesheet" straight to stderr — bypassing console, so

@@ -23,6 +23,7 @@ export default defineConfig({
 			{
 				test: {
 					name: 'shared-lib',
+					isolate: true,
 					root: 'shared-lib',
 					exclude: [
 						'**/module-local-dev/**',
@@ -41,6 +42,8 @@ export default defineConfig({
 				test: {
 					name: 'companion',
 					root: 'companion',
+					// Deliberate: module-level state (eg the renderer's static caches) and vi.mock must not leak between files
+					isolate: true,
 					setupFiles: ['./test/setup.ts'],
 					exclude: [
 						'**/module-local-dev/**',
@@ -57,6 +60,7 @@ export default defineConfig({
 			{
 				test: {
 					name: 'satellite-protocol',
+					isolate: true,
 					root: 'satellite-protocol',
 					exclude: ['**/node_modules/**', '**/dist/**'],
 				},
@@ -65,6 +69,7 @@ export default defineConfig({
 			{
 				test: {
 					name: 'tools',
+					isolate: true,
 					root: 'tools',
 					exclude: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**'],
 				},
@@ -74,6 +79,7 @@ export default defineConfig({
 				ssr: ssrSourceResolve,
 				test: {
 					name: 'config-tool',
+					isolate: true,
 					root: 'config-tool',
 					exclude: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**'],
 				},
