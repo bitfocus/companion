@@ -8603,9 +8603,6 @@
 						},
 						"default": {
 							"type": "boolean"
-						},
-						"displayToggle": {
-							"type": "boolean"
 						}
 					},
 					"required": [
