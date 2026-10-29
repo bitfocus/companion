@@ -37,13 +37,10 @@ export function getCustomActionCallDefinition(
 export const CUSTOM_ACTION_INPUT_ID_PATTERN = /^[\w-]+$/
 
 /**
- * Schema of an input of a custom action.
- * An input must be a type of field which a user can author, and its visibility can only be an expression, as a
- * function would be code from the user run in the ui.
+ * Schema of an input of a custom action: a type of field which a user can author, with an id usable in a variable
  */
 export const CustomActionInputSchema = AuthorableInputFieldSchema.refine(
-	(field) =>
-		(!field.isVisibleUi || field.isVisibleUi.type === 'expression') && CUSTOM_ACTION_INPUT_ID_PATTERN.test(field.id),
+	(field) => CUSTOM_ACTION_INPUT_ID_PATTERN.test(field.id),
 	{ message: "Can't be used as an input of a custom action" }
 )
 

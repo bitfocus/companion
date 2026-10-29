@@ -275,10 +275,6 @@ describe('CustomActionModelSchema', () => {
 
 	test.each([
 		['a type for connection config', { type: 'secret-text', id: 'key', label: 'Key' }],
-		[
-			'a function for its visibility',
-			{ type: 'checkbox', id: 'a', label: 'A', default: false, isVisibleUi: { type: 'function', fn: 'return 1' } },
-		],
 		['an id which is not usable in a variable', { type: 'checkbox', id: 'a b', label: 'A', default: false }],
 	])('an input can not have %s', (_name, input) => {
 		expect(CustomActionModelSchema.safeParse({ type: 'custom-action', inputs: [input] }).success).toBe(false)

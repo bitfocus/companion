@@ -8451,29 +8451,6 @@
 						"description": {
 							"type": "string"
 						},
-						"isVisibleUi": {
-							"type": "object",
-							"properties": {
-								"type": {
-									"type": "string",
-									"enum": [
-										"function",
-										"expression"
-									]
-								},
-								"fn": {
-									"type": "string"
-								},
-								"data": {}
-							},
-							"required": [
-								"type",
-								"fn"
-							]
-						},
-						"disableAutoExpression": {
-							"type": "boolean"
-						},
 						"type": {
 							"type": "string",
 							"const": "textinput"
@@ -8528,29 +8505,6 @@
 						},
 						"description": {
 							"type": "string"
-						},
-						"isVisibleUi": {
-							"type": "object",
-							"properties": {
-								"type": {
-									"type": "string",
-									"enum": [
-										"function",
-										"expression"
-									]
-								},
-								"fn": {
-									"type": "string"
-								},
-								"data": {}
-							},
-							"required": [
-								"type",
-								"fn"
-							]
-						},
-						"disableAutoExpression": {
-							"type": "boolean"
 						},
 						"type": {
 							"type": "string",
@@ -8614,29 +8568,6 @@
 						"description": {
 							"type": "string"
 						},
-						"isVisibleUi": {
-							"type": "object",
-							"properties": {
-								"type": {
-									"type": "string",
-									"enum": [
-										"function",
-										"expression"
-									]
-								},
-								"fn": {
-									"type": "string"
-								},
-								"data": {}
-							},
-							"required": [
-								"type",
-								"fn"
-							]
-						},
-						"disableAutoExpression": {
-							"type": "boolean"
-						},
 						"type": {
 							"type": "string",
 							"const": "checkbox"
@@ -8669,29 +8600,6 @@
 						},
 						"description": {
 							"type": "string"
-						},
-						"isVisibleUi": {
-							"type": "object",
-							"properties": {
-								"type": {
-									"type": "string",
-									"enum": [
-										"function",
-										"expression"
-									]
-								},
-								"fn": {
-									"type": "string"
-								},
-								"data": {}
-							},
-							"required": [
-								"type",
-								"fn"
-							]
-						},
-						"disableAutoExpression": {
-							"type": "boolean"
 						},
 						"type": {
 							"type": "string",
@@ -8756,29 +8664,6 @@
 						},
 						"description": {
 							"type": "string"
-						},
-						"isVisibleUi": {
-							"type": "object",
-							"properties": {
-								"type": {
-									"type": "string",
-									"enum": [
-										"function",
-										"expression"
-									]
-								},
-								"fn": {
-									"type": "string"
-								},
-								"data": {}
-							},
-							"required": [
-								"type",
-								"fn"
-							]
-						},
-						"disableAutoExpression": {
-							"type": "boolean"
 						},
 						"type": {
 							"type": "string",
@@ -8856,29 +8741,6 @@
 						"description": {
 							"type": "string"
 						},
-						"isVisibleUi": {
-							"type": "object",
-							"properties": {
-								"type": {
-									"type": "string",
-									"enum": [
-										"function",
-										"expression"
-									]
-								},
-								"fn": {
-									"type": "string"
-								},
-								"data": {}
-							},
-							"required": [
-								"type",
-								"fn"
-							]
-						},
-						"disableAutoExpression": {
-							"type": "boolean"
-						},
 						"type": {
 							"type": "string",
 							"const": "colorpicker"
@@ -8949,29 +8811,6 @@
 						"description": {
 							"type": "string"
 						},
-						"isVisibleUi": {
-							"type": "object",
-							"properties": {
-								"type": {
-									"type": "string",
-									"enum": [
-										"function",
-										"expression"
-									]
-								},
-								"fn": {
-									"type": "string"
-								},
-								"data": {}
-							},
-							"required": [
-								"type",
-								"fn"
-							]
-						},
-						"disableAutoExpression": {
-							"type": "boolean"
-						},
 						"type": {
 							"type": "string",
 							"const": "expression"
@@ -9000,29 +8839,6 @@
 						},
 						"description": {
 							"type": "string"
-						},
-						"isVisibleUi": {
-							"type": "object",
-							"properties": {
-								"type": {
-									"type": "string",
-									"enum": [
-										"function",
-										"expression"
-									]
-								},
-								"fn": {
-									"type": "string"
-								},
-								"data": {}
-							},
-							"required": [
-								"type",
-								"fn"
-							]
-						},
-						"disableAutoExpression": {
-							"type": "boolean"
 						},
 						"type": {
 							"type": "string",
@@ -9056,29 +8872,6 @@
 						},
 						"description": {
 							"type": "string"
-						},
-						"isVisibleUi": {
-							"type": "object",
-							"properties": {
-								"type": {
-									"type": "string",
-									"enum": [
-										"function",
-										"expression"
-									]
-								},
-								"fn": {
-									"type": "string"
-								},
-								"data": {}
-							},
-							"required": [
-								"type",
-								"fn"
-							]
-						},
-						"disableAutoExpression": {
-							"type": "boolean"
 						},
 						"type": {
 							"type": "string",
@@ -9118,29 +8911,6 @@
 						"description": {
 							"type": "string"
 						},
-						"isVisibleUi": {
-							"type": "object",
-							"properties": {
-								"type": {
-									"type": "string",
-									"enum": [
-										"function",
-										"expression"
-									]
-								},
-								"fn": {
-									"type": "string"
-								},
-								"data": {}
-							},
-							"required": [
-								"type",
-								"fn"
-							]
-						},
-						"disableAutoExpression": {
-							"type": "boolean"
-						},
 						"type": {
 							"type": "string",
 							"const": "internal:custom_variable"
@@ -9172,29 +8942,6 @@
 						},
 						"description": {
 							"type": "string"
-						},
-						"isVisibleUi": {
-							"type": "object",
-							"properties": {
-								"type": {
-									"type": "string",
-									"enum": [
-										"function",
-										"expression"
-									]
-								},
-								"fn": {
-									"type": "string"
-								},
-								"data": {}
-							},
-							"required": [
-								"type",
-								"fn"
-							]
-						},
-						"disableAutoExpression": {
-							"type": "boolean"
 						},
 						"type": {
 							"type": "string",
