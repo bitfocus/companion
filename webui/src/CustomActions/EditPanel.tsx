@@ -276,10 +276,8 @@ function CustomActionInputsEditor({ controlId, inputs }: { controlId: string; in
 			removeField: (inputId) => {
 				removeMutation.mutateAsync({ controlId, inputId }).catch((e) => console.error('Failed to remove input', e))
 			},
-			moveField: (inputId, direction) => {
-				moveMutation
-					.mutateAsync({ controlId, inputId, direction })
-					.catch((e) => console.error('Failed to move input', e))
+			moveField: (inputId, index) => {
+				moveMutation.mutateAsync({ controlId, inputId, index }).catch((e) => console.error('Failed to move input', e))
 			},
 			updateField: (inputId, field) => {
 				updateMutation
@@ -290,7 +288,15 @@ function CustomActionInputsEditor({ controlId, inputs }: { controlId: string; in
 		[addMutation, removeMutation, moveMutation, updateMutation, controlId]
 	)
 
-	return <InputFieldDefinitionsEditor fields={inputs} service={service} readonly={false} localVariablesStore={null} />
+	return (
+		<InputFieldDefinitionsEditor
+			fields={inputs}
+			service={service}
+			readonly={false}
+			localVariablesStore={null}
+			collapseStorageId={`custom_action_inputs_${controlId}`}
+		/>
+	)
 }
 
 function TestRunButton({ controlId, name, running }: { controlId: string; name: string; running: boolean }) {
