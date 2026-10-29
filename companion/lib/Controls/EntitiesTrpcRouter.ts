@@ -141,6 +141,24 @@ export function createEntitiesTrpcRouter(
 				return getEditableEntities(control).entitySetRawStoreResult(entityLocation, entityId, target)
 			}),
 
+		setRawOutputTarget: publicProcedure
+			.input(
+				z.object({
+					controlId: z.string(),
+					entityLocation: zodEntityLocation,
+					entityId: z.string(),
+					outputId: z.string(),
+					// Optional rather than undefined, as tRPC drops undefined fields
+					target: zodRawStoreResult.optional(),
+				})
+			)
+			.mutation(async ({ input: { controlId, entityLocation, entityId, outputId, target } }) => {
+				const control = controlsMap.get(controlId)
+				if (!control) return false
+
+				return getEditableEntities(control).entitySetRawOutputTarget(entityLocation, entityId, outputId, target)
+			}),
+
 		setHeadline: publicProcedure
 			.input(
 				z.object({

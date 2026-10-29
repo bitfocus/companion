@@ -110,7 +110,7 @@ export interface TestApp {
 		controlId: string,
 		customActionControlId: string,
 		options: Record<string, ExpressionOrValue<any>>,
-		storeResult: RawStoreResult | null
+		outputTargets: Record<string, RawStoreResult> | null
 	): string
 	/** Add an action from the internal connection to a trigger's action list */
 	addTriggerAction(controlId: string, definitionId: string, options: Record<string, ExpressionOrValue<any>>): string
@@ -489,7 +489,7 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 			return addInternalEntity(controlId, 'custom_action_actions', null, EntityModelType.Action, definitionId, options)
 		},
 
-		addCustomActionCall(controlId, customActionControlId, options, storeResult) {
+		addCustomActionCall(controlId, customActionControlId, options, outputTargets) {
 			const parsedId = ParseControlId(customActionControlId)
 			if (parsedId?.type !== 'custom-action') throw new Error(`"${customActionControlId}" is not a custom action`)
 
@@ -500,7 +500,7 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 				definitionId: parsedId.customActionId,
 				options,
 				upgradeIndex: undefined,
-				storeResult: storeResult ?? undefined,
+				outputTargets: outputTargets ?? undefined,
 			}
 			if (!getEditableEntities(controlId).entityAdd(firstDownSet(controlId), null, entityModel))
 				throw new Error(`Failed to add custom action call to "${controlId}"`)

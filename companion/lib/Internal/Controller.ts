@@ -702,6 +702,7 @@ export class InternalController {
 
 						actionHasResult: !!action.actionHasResult,
 						actionExecutionTimeout: undefined, // Not applicable for internal actions
+						actionOutputs: null,
 
 						showButtonPreview: action.showButtonPreview ?? false,
 						supportsChildGroups: action.supportsChildGroups ?? [],
@@ -743,6 +744,7 @@ export class InternalController {
 
 						actionHasResult: undefined,
 						actionExecutionTimeout: undefined,
+						actionOutputs: null,
 
 						entityType: EntityModelType.Feedback,
 						showButtonPreview: feedback.showButtonPreview ?? false,

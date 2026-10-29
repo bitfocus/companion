@@ -149,6 +149,7 @@ export type InternalActionDefinition = SetOptional<
 		| 'hasLifecycleFunctions'
 		| 'feedbackAffectedProperties'
 		| 'actionExecutionTimeout'
+		| 'actionOutputs'
 	>,
 	| 'sortKey'
 	| 'hasLearn'
@@ -167,6 +168,7 @@ export type InternalFeedbackDefinition = SetOptional<
 		| 'optionsToMonitorForInvalidations'
 		| 'actionHasResult'
 		| 'actionExecutionTimeout'
+		| 'actionOutputs'
 	>,
 	'sortKey' | 'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups' | 'feedbackAffectedProperties'
 >

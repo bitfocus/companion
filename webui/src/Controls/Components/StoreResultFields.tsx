@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite'
-import { useCallback, useRef } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import { LocalVariableLocationOption } from '@companion-app/shared/ControlLocation.js'
 import {
@@ -282,6 +282,8 @@ const StoreResultTargetOption = {
 } as const satisfies CompanionInputFieldDropdownExtended
 
 interface StoreResultProps {
+	/** The label of the field which chooses where the value goes */
+	label: string
 	isLocatedInGrid: boolean
 	controlId: string
 	storeResult: RawStoreResult | undefined
@@ -291,6 +293,7 @@ interface StoreResultProps {
 }
 
 export const StoreResultFields = observer(function StoreResultFields({
+	label,
 	isLocatedInGrid,
 	controlId,
 	storeResult,
@@ -301,6 +304,8 @@ export const StoreResultFields = observer(function StoreResultFields({
 	const targetType: StoreType = storeResult?.type ?? 'discard'
 
 	const entityType = EntityModelType.Action
+
+	const targetOption = useMemo(() => ({ ...StoreResultTargetOption, label }), [label])
 
 	const localVariableTarget = useRef<RawStoreResultLocalVariable>(
 		storeResult?.type === 'local-variable'
@@ -361,7 +366,7 @@ export const StoreResultFields = observer(function StoreResultFields({
 				allowInternalFields={true}
 				isLocatedInGrid={isLocatedInGrid}
 				entityType={entityType}
-				option={StoreResultTargetOption}
+				option={targetOption}
 				value={exprVal(targetType)}
 				setValue={switchTargetType}
 				readonly={readonly}

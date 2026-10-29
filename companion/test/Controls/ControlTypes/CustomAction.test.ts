@@ -196,6 +196,7 @@ function createHarness(model: Partial<CustomActionModel>) {
 		inputs: [numberInput],
 		actions: [],
 		localVariables: [],
+		outputs: [],
 		...model,
 	}
 	const control = new ControlCustomAction(deps, CUSTOM_ACTION_CONTROL_ID, structuredClone(storage), false)
@@ -260,9 +261,10 @@ function createHarness(model: Partial<CustomActionModel>) {
 
 describe('ControlCustomAction', () => {
 	describe('action definition', () => {
-		test('describes the inputs and result', () => {
+		test('describes the inputs and outputs', () => {
 			const { control } = createHarness({
 				options: { ...ControlCustomAction.DefaultOptions, name: 'My action', description: 'desc' },
+				outputs: [{ id: 'count', label: 'Count', variableName: 'v' }],
 			})
 
 			const definition = control.toActionDefinition()
@@ -273,11 +275,9 @@ describe('ControlCustomAction', () => {
 				options: [numberInput],
 				optionsSupportExpressions: true,
 				actionHasResult: false,
+				actionOutputs: [{ id: 'count', label: 'Count' }],
 				hasLifecycleFunctions: false,
 			})
-
-			control.optionsSetField('resultVariable', 'out')
-			expect(control.toActionDefinition().actionHasResult).toBe(true)
 		})
 
 		test('emits a change when edited', () => {
@@ -474,56 +474,80 @@ describe('ControlCustomAction', () => {
 			expect(seen).toEqual([10])
 		})
 
-		test('the result is read from the result variable', async () => {
-			const { executeAction, localVariables, evaluate, createCaller, customActionInstances, controlStore } =
-				createHarness({
-					options: { ...ControlCustomAction.DefaultOptions, resultVariable: 'v' },
-					actions: [action('set')],
-					localVariables: [userValue('v', 0)],
-				})
+		test('an output is written to the target chosen by the caller each time it is set', async () => {
+			const { executeAction, localVariables, variablesController, runAsButton } = createHarness({
+				actions: [action('count')],
+				localVariables: [userValue('v', 0)],
+				outputs: [{ id: 'count', label: 'Count', variableName: 'v' }],
+			})
 			executeAction.mockImplementation(async (_action, extras) => {
 				const variable = localVariables.localVariableFor('this', 'v', extras)!
-				localVariables.setLocalVariable(variable, (evaluate(extras, '$(options:n)') as number) + 100)
-			})
-
-			const caller = createCaller([callAction({ n: exprVal(7) })])
-			const extras: RunActionExtras = {
-				controlId: caller.controlId,
-				surfaceId: undefined,
-				location: undefined,
-				abortDelayed: new AbortController().signal,
-				executionMode: 'concurrent',
-				rotationDelta: null,
-				frame: null,
-			}
-			const result = await customActionInstances.runCall(
-				caller.entities.getActionEntities()[0],
-				controlStore.createActionExecutionParser(extras),
-				extras
-			)
-
-			expect(result).toBe(107)
-		})
-
-		test('the result is stored by the caller', async () => {
-			const { executeAction, localVariables, variablesController, runAsButton } = createHarness({
-				options: { ...ControlCustomAction.DefaultOptions, resultVariable: 'v' },
-				actions: [action('set')],
-				localVariables: [userValue('v', 0)],
-			})
-			executeAction.mockImplementation(async (_action, extras) => {
-				localVariables.setLocalVariable(localVariables.localVariableFor('this', 'v', extras)!, 'done')
+				for (let i = 1; i <= 3; i++) localVariables.setLocalVariable(variable, i)
 			})
 			variablesController.custom.hasCustomVariable.mockReturnValue(true)
 
 			await runAsButton([
 				{
 					...callAction(),
-					storeResult: { type: 'custom-variable', variableName: exprVal('out'), createIfNotExists: false },
-				} as any,
+					outputTargets: {
+						count: { type: 'custom-variable', variableName: exprVal('out'), createIfNotExists: false },
+					},
+				},
 			])
 
-			expect(variablesController.custom.setValue).toHaveBeenCalledWith('out', 'done')
+			// Each value as it is set, then the final value once the run is done
+			expect(variablesController.custom.setValue.mock.calls).toEqual([
+				['out', 1],
+				['out', 2],
+				['out', 3],
+				['out', 3],
+			])
+		})
+
+		test('the final value of an output is written, which may be computed', async () => {
+			const { variablesController, runAsButton } = createHarness({
+				actions: [action('nothing')],
+				localVariables: [computedValue('double', '$(options:n) * 2')],
+				outputs: [{ id: 'double', label: 'Double', variableName: 'double' }],
+			})
+			variablesController.custom.hasCustomVariable.mockReturnValue(true)
+
+			await runAsButton([
+				{
+					...callAction({ n: exprVal(7) }),
+					outputTargets: {
+						double: { type: 'custom-variable', variableName: exprVal('out'), createIfNotExists: false },
+					},
+				},
+			])
+
+			expect(variablesController.custom.setValue).toHaveBeenCalledWith('out', 14)
+		})
+
+		test('an output without a target, or not from a local variable, is not written', async () => {
+			const { executeAction, localVariables, variablesController, runAsButton } = createHarness({
+				actions: [action('set')],
+				localVariables: [userValue('v', 0)],
+				outputs: [
+					{ id: 'discarded', label: 'Discarded', variableName: 'v' },
+					{ id: 'unbound', label: 'Unbound', variableName: '' },
+				],
+			})
+			executeAction.mockImplementation(async (_action, extras) => {
+				localVariables.setLocalVariable(localVariables.localVariableFor('this', 'v', extras)!, 1)
+			})
+			variablesController.custom.hasCustomVariable.mockReturnValue(true)
+
+			await runAsButton([
+				{
+					...callAction(),
+					outputTargets: {
+						unbound: { type: 'custom-variable', variableName: exprVal('out'), createIfNotExists: false },
+					},
+				},
+			])
+
+			expect(variablesController.custom.setValue).not.toHaveBeenCalled()
 		})
 
 		test('the caller waits for the custom action to finish', async () => {
@@ -583,6 +607,7 @@ describe('ControlCustomAction', () => {
 					inputs: [],
 					actions: [callAction()],
 					localVariables: [],
+					outputs: [],
 				},
 				false
 			)
@@ -741,7 +766,8 @@ describe('ControlCustomAction', () => {
 			return harness.customActionInstances.runCall(
 				callerEntity,
 				harness.controlStore.createActionExecutionParser(fullExtras),
-				fullExtras
+				fullExtras,
+				() => {}
 			)
 		}
 
@@ -950,6 +976,7 @@ describe('ControlCustomAction', () => {
 					inputs: [numberInput],
 					actions: [action('record')],
 					localVariables: [],
+					outputs: [],
 				},
 				false
 			)
@@ -981,6 +1008,7 @@ describe('ControlCustomAction', () => {
 					inputs: [],
 					actions: [callAction()],
 					localVariables: [],
+					outputs: [],
 				},
 				false
 			)
@@ -1013,6 +1041,7 @@ describe('ControlCustomAction', () => {
 						inputs: [],
 						actions: [callAction({}, `level-${i + 1}`)],
 						localVariables: [],
+						outputs: [],
 					},
 					false
 				)
