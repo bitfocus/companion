@@ -539,8 +539,14 @@ export const INPUT_FIELD_ID_PATTERN = /^[\w-]+$/
  */
 export const AuthorableInputFieldSchema = z
 	.discriminatedUnion('type', [
-		CompanionInputFieldTextInputExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES),
-		CompanionInputFieldNumberExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES),
+		// Variables are always parsed by the internal parser, as the other ways are only kept for modules
+		CompanionInputFieldTextInputExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES).extend({
+			useVariables: z.literal(CompanionFieldVariablesSupport.InternalParser).optional(),
+		}),
+		// The value is never 'auto', so the default is always a number
+		CompanionInputFieldNumberExtendedSchema.omit({ ...NOT_AUTHORABLE_FIELD_PROPERTIES, allowNull: true }).extend({
+			default: z.number(),
+		}),
 		CompanionInputFieldCheckboxExtendedSchema.omit({ ...NOT_AUTHORABLE_FIELD_PROPERTIES, displayToggle: true }),
 		CompanionInputFieldDropdownExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES),
 		CompanionInputFieldMultiDropdownExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES),

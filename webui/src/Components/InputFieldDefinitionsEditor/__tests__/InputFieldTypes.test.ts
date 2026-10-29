@@ -3,7 +3,7 @@ import {
 	AUTHORABLE_INPUT_FIELD_TYPES,
 	AuthorableInputFieldSchema,
 	SomeCompanionInputFieldSchema,
-	type SomeCompanionInputField,
+	type AuthorableInputField,
 } from '@companion-app/shared/Model/Options.js'
 import {
 	commonAdvancedProperties,
@@ -48,7 +48,7 @@ describe('properties', () => {
 	it('converts dropdown choices to and from table rows', () => {
 		const spec = getInputFieldTypeSpec('dropdown')!
 		const choices = spec.properties.find((p) => p.field.id === 'choices')!
-		const field: SomeCompanionInputField = {
+		const field: AuthorableInputField = {
 			type: 'dropdown',
 			id: 'a',
 			label: 'A',
@@ -74,7 +74,7 @@ describe('properties', () => {
 	it('removes a cleared optional property', () => {
 		const spec = getInputFieldTypeSpec('textinput')!
 		const placeholder = spec.advanced.find((p) => p.field.id === 'placeholder')!
-		const field: SomeCompanionInputField = { type: 'textinput', id: 'a', label: 'A', placeholder: 'abc' }
+		const field: AuthorableInputField = { type: 'textinput', id: 'a', label: 'A', placeholder: 'abc' }
 
 		const updated = setPropertyEditorValue(field, placeholder, '')
 		expect(updated).not.toHaveProperty('placeholder')
@@ -108,18 +108,18 @@ describe('ids', () => {
 	})
 
 	it('updates the id with the label while it has not been edited', () => {
-		const field: SomeCompanionInputField = { type: 'checkbox', id: 'input', label: 'Input', default: false }
+		const field: AuthorableInputField = { type: 'checkbox', id: 'input', label: 'Input', default: false }
 		const updated = setInputFieldLabel(field, 'Auto Take', new Set())
 		expect(updated).toMatchObject({ id: 'auto_take', label: 'Auto Take' })
 	})
 
 	it('keeps an edited id when the label changes', () => {
-		const field: SomeCompanionInputField = { type: 'checkbox', id: 'custom', label: 'Input', default: false }
+		const field: AuthorableInputField = { type: 'checkbox', id: 'custom', label: 'Input', default: false }
 		expect(setInputFieldLabel(field, 'Other', new Set())).toMatchObject({ id: 'custom', label: 'Other' })
 	})
 
 	it('keeps a following id unique', () => {
-		const field: SomeCompanionInputField = { type: 'checkbox', id: 'input', label: 'Input', default: false }
+		const field: AuthorableInputField = { type: 'checkbox', id: 'input', label: 'Input', default: false }
 		expect(setInputFieldLabel(field, 'Take', new Set(['take']))).toMatchObject({ id: 'take_2' })
 	})
 
