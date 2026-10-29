@@ -49,6 +49,7 @@ const PageVariablesEditor = observer(function PageVariablesEditor({ controlId }:
 			{dataReady && (
 				<MyErrorBoundary>
 					<LocalVariablesEditor
+						description={null}
 						heading={<h5 className="buttons-sidebar-heading">Page Variables</h5>}
 						controlId={controlId}
 						location={undefined}
