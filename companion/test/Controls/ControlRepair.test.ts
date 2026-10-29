@@ -1,21 +1,29 @@
 import { describe, expect, test } from 'vitest'
+import z from 'zod'
 import { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
 import { INVALID_ENTITY_DEFINITION_ID } from '@companion-app/shared/Model/EntityModel.js'
+import { AuthorableInputFieldSchema, INPUT_FIELD_ID_PATTERN } from '@companion-app/shared/Model/Options.js'
 import { repairControl } from '../../lib/Controls/ControlRepair.js'
 
 const action = { type: 'action', id: 'a1', definitionId: 'send', connectionId: 'conn1', options: {} }
 const feedback = { type: 'feedback', id: 'f1', definitionId: 'state', connectionId: 'conn1', options: {} }
 
+/** A control with input fields, as no control has them yet */
+const ControlWithInputsSchema = z.object({
+	type: z.literal('with-inputs'),
+	inputs: z.array(AuthorableInputFieldSchema),
+})
+
 /** Parse a control, repairing it if it fails, and check the result then parses */
-function parseRepaired(control: unknown) {
-	const first = SomeControlModelSchema.safeParse(control)
+function parseRepaired(control: unknown, schema: z.ZodType = SomeControlModelSchema) {
+	const first = schema.safeParse(control)
 	expect(first.success, 'the control should start invalid').toBe(false)
 	if (first.success) throw new Error('unreachable')
 
 	const result = repairControl(control, first.error.issues)
 	if (!result) return null
 
-	const second = SomeControlModelSchema.safeParse(result.control)
+	const second = schema.safeParse(result.control)
 	expect(second.error).toBeUndefined()
 	return { control: second.data as any, repairs: result.repairs }
 }
@@ -183,6 +191,49 @@ describe('repairControl', () => {
 			expect(group).toMatchObject({ type: 'group', id: 'g' })
 			expect(group.children[0]).toMatchObject({ type: 'box', id: 'b1' })
 			expect(group.children[1]).toMatchObject({ type: 'group', name: 'Invalid - No id' })
+		})
+	})
+
+	describe('input fields', () => {
+		const input = { type: 'number', id: 'n', label: 'N', default: 1, min: 0, max: 10 }
+
+		test('replaces an invalid input with static text, keeping its id and the others', () => {
+			const broken = { ...input, id: 'm', min: 'low' }
+			const result = parseRepaired({ type: 'with-inputs', inputs: [input, broken] }, ControlWithInputsSchema)
+
+			expect(result!.control.inputs).toEqual([
+				input,
+				{ type: 'static-text', id: 'm', label: "Couldn't be loaded - N", value: JSON.stringify(broken) },
+			])
+			expect(result!.repairs).toEqual(['Replaced the input at inputs.1'])
+		})
+
+		test('replaces an input which is a type of field that a user can not author', () => {
+			const secret = { type: 'secret-text', id: 'key', label: 'Key' }
+			const result = parseRepaired({ type: 'with-inputs', inputs: [secret, input] }, ControlWithInputsSchema)
+
+			expect(result!.control.inputs.map((field: any) => [field.type, field.id])).toEqual([
+				['static-text', 'key'],
+				['number', 'n'],
+			])
+		})
+
+		test('gives an input without a usable id a new one', () => {
+			const result = parseRepaired(
+				{ type: 'with-inputs', inputs: [{ ...input, id: 'not valid' }] },
+				ControlWithInputsSchema
+			)
+
+			const placeholder = result!.control.inputs[0]
+			expect(placeholder.type).toBe('static-text')
+			expect(placeholder.id).not.toBe('not valid')
+			expect(placeholder.id).toMatch(INPUT_FIELD_ID_PATTERN)
+		})
+
+		test('replaces something which is not an input at all', () => {
+			const result = parseRepaired({ type: 'with-inputs', inputs: [7] }, ControlWithInputsSchema)
+
+			expect(result!.control.inputs[0]).toMatchObject({ type: 'static-text', label: expect.any(String), value: '7' })
 		})
 	})
 
