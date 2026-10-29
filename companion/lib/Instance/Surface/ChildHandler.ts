@@ -554,7 +554,7 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 		}
 
 		// Send everything to the 'debug' page
-		this.#deps.debugLogLine(this.instanceId, msg.time, msg.source || '/', msg.level, stringifyLogValue(msg.message))
+		this.#deps.debugLogLine(this.instanceId, msg.time, msg.source || '', msg.level, stringifyLogValue(msg.message))
 	}
 
 	async #handleInputPress(msg: InputPressMessage): Promise<void> {
