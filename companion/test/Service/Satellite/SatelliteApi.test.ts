@@ -361,10 +361,28 @@ describe('ServiceSatelliteApi', () => {
 			expect(callArgs.gridSize).toEqual({ columns: 8, rows: 4 }) // LEGACY_MAX_BUTTONS=32 / LEGACY_BUTTONS_PER_ROW=8
 			expect(callArgs.surfaceManifestFromClient).toBe(false)
 			expect(callArgs.bitmapFormat).toBe('rgb') // default when BITMAP_FORMAT not specified
+			expect(callArgs.variableEncoding).toBe('string') // default when VARIABLE_ENCODING not specified
 
 			expect(socket.lastMessage).toContain('ADD-DEVICE')
 			expect(socket.lastMessage).toContain('OK')
 			expect(socket.lastMessage).toContain('DEVICEID="dev1"')
+		})
+
+		test.each([
+			['json', 'json'],
+			['string', 'string'],
+			['xml', 'string'],
+		])('negotiates VARIABLE_ENCODING=%s', (encoding, expected) => {
+			const { api, logger, surfaceController } = createService()
+			const { processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = mockDeep<SurfaceIPSatellite>(mockOptions)
+			surfaceController.addSatelliteDevice.mockReturnValueOnce(mockDevice)
+
+			processMessage(`ADD-DEVICE DEVICEID="dev1" PRODUCT_NAME="Test" VARIABLE_ENCODING=${encoding}\n`)
+
+			const callArgs = surfaceController.addSatelliteDevice.mock.calls[0][0]
+			expect(callArgs.variableEncoding).toBe(expected)
 		})
 
 		test.each(['png', 'webp'])('negotiates BITMAP_FORMAT=%s', (format) => {
@@ -1374,6 +1392,62 @@ describe('ServiceSatelliteApi', () => {
 			expect(mockDevice.setVariableValue).toHaveBeenCalledWith('myvar', 'hello world')
 			expect(socket.lastMessage).toContain('OK')
 			expect(socket.lastMessage).toContain('VARIABLE="myvar"')
+		})
+
+		test('a json value without ENCODING=json is taken as a string', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = addDeviceToSocket(api, logger, surfaceController, socket, processMessage, 'dev1')
+			mockDevice.setVariableValue.mockReturnValue(undefined)
+
+			const encoded = Buffer.from('123').toString('base64')
+			processMessage(`SET-VARIABLE-VALUE DEVICEID="dev1" VARIABLE="myvar" VALUE="${encoded}" ENCODING=string\n`)
+
+			expect(mockDevice.setVariableValue).toHaveBeenCalledWith('myvar', '123')
+			expect(socket.lastMessage).toContain('OK')
+		})
+
+		test.each([123, 1.5, true, null, 'text', [1, 'two'], { a: { b: 1 } }])('decodes %j with ENCODING=json', (value) => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = addDeviceToSocket(api, logger, surfaceController, socket, processMessage, 'dev1')
+			mockDevice.setVariableValue.mockReturnValue(undefined)
+
+			const encoded = Buffer.from(JSON.stringify(value)).toString('base64')
+			processMessage(`SET-VARIABLE-VALUE DEVICEID="dev1" VARIABLE="myvar" VALUE="${encoded}" ENCODING=json\n`)
+
+			expect(mockDevice.setVariableValue).toHaveBeenCalledWith('myvar', value)
+			expect(socket.lastMessage).toContain('OK')
+		})
+
+		test('error when ENCODING=json and VALUE is not json', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = addDeviceToSocket(api, logger, surfaceController, socket, processMessage, 'dev1')
+
+			const encoded = Buffer.from('not json').toString('base64')
+			processMessage(`SET-VARIABLE-VALUE DEVICEID="dev1" VARIABLE="myvar" VALUE="${encoded}" ENCODING=json\n`)
+
+			expect(mockDevice.setVariableValue).not.toHaveBeenCalled()
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Invalid VALUE')
+		})
+
+		test('error when ENCODING is unknown', () => {
+			const { api, logger, surfaceController } = createService()
+			const { socket, processMessage } = createSocketAndInit(api, logger)
+
+			const mockDevice = addDeviceToSocket(api, logger, surfaceController, socket, processMessage, 'dev1')
+
+			const encoded = Buffer.from('1').toString('base64')
+			processMessage(`SET-VARIABLE-VALUE DEVICEID="dev1" VARIABLE="myvar" VALUE="${encoded}" ENCODING=xml\n`)
+
+			expect(mockDevice.setVariableValue).not.toHaveBeenCalled()
+			expect(socket.lastMessage).toContain('ERROR')
+			expect(socket.lastMessage).toContain('Invalid ENCODING')
 		})
 	})
 

@@ -93,6 +93,12 @@ export const SATELLITE_FEATURES = {
 		description:
 			'The client can cache bitmaps (BITMAP-CACHE, BITMAP-COST, BITMAP-EVICT), so that KEY-STATE and SUB-STATE can refer to them by BITMAP_ID',
 	},
+	jsonVariableValues: {
+		since: '1.16.0',
+		capsFlag: null,
+		description:
+			'SET-VARIABLE-VALUE and VARIABLE-VALUE accept ENCODING=json. ADD-DEVICE accepts VARIABLE_ENCODING=json to receive JSON values',
+	},
 } as const satisfies Record<string, SatelliteFeatureDefinition>
 
 export type SatelliteFeatureId = keyof typeof SATELLITE_FEATURES

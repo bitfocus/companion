@@ -2,6 +2,7 @@ import { nanoid } from 'nanoid'
 import { z } from 'zod'
 import {
 	API_VERSION,
+	decodeSatelliteVariableValue,
 	formatSatelliteMessage,
 	isFalsey,
 	isTruthy,
@@ -10,6 +11,7 @@ import {
 	MAX_LINE_LENGTH,
 	parseLineParameters,
 	parseSatelliteBitmapFormat,
+	parseSatelliteVariableEncoding,
 	parseStringParamWithBooleanFallback,
 	SATELLITE_BITMAP_FORMATS,
 	SatelliteConfigFieldsSchema,
@@ -27,6 +29,7 @@ import {
 } from '@companion-app/satellite-protocol'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { GridSize, SurfaceSchemaLayoutDefinition } from '@companion-app/shared/Model/Surfaces.js'
+import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../../Data/UserConfig.js'
 import type { ReleaseDisplayedLocation } from '../../Graphics/DisplayedLocations.js'
@@ -223,6 +226,10 @@ export class ServiceSatelliteApi {
 		// (and any reporting a format we didn't advertise in CAPS) keep receiving raw rgb pixels.
 		const bitmapFormat = parseSatelliteBitmapFormat(params.BITMAP_FORMAT)
 
+		// The encoding of output variable values. Defaults to string when absent or unknown, so older satellites
+		// keep receiving the text of each value
+		const variableEncoding = parseSatelliteVariableEncoding(params.VARIABLE_ENCODING) ?? 'string'
+
 		const supportsBrightness = params.BRIGHTNESS === undefined || isTruthy(params.BRIGHTNESS)
 		const supportsLockedState =
 			params.PINCODE_LOCK !== undefined && (params.PINCODE_LOCK === 'FULL' || params.PINCODE_LOCK === 'PARTIAL')
@@ -273,6 +280,7 @@ export class ServiceSatelliteApi {
 			configFields: processedConfigFields,
 			canChangePage,
 			bitmapFormat,
+			variableEncoding,
 		})
 
 		this.#devices.set(id, {
@@ -618,7 +626,20 @@ export class ServiceSatelliteApi {
 			return this.#formatAndSendError(socket, messageName, id, 'Missing VALUE')
 		}
 
-		const variableValue = Buffer.from(encodedValue, 'base64').toString()
+		const encoding = parseSatelliteVariableEncoding(params.ENCODING)
+		if (!encoding) {
+			return this.#formatAndSendError(socket, messageName, id, 'Invalid ENCODING')
+		}
+
+		let variableValue: VariableValue
+		try {
+			variableValue = decodeSatelliteVariableValue(
+				Buffer.from(encodedValue, 'base64').toString(),
+				encoding
+			) as VariableValue
+		} catch {
+			return this.#formatAndSendError(socket, messageName, id, 'Invalid VALUE')
+		}
 
 		device.device.setVariableValue(variableName, variableValue)
 		socket.sendMessage(messageName, 'OK', id, { VARIABLE: variableName })
