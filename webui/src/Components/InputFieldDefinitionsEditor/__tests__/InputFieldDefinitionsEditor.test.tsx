@@ -22,7 +22,7 @@ function makeService(): InputFieldDefinitionsService {
 	}
 }
 
-function renderEditor(fields: AuthorableInputField[], service: InputFieldDefinitionsService, readonly = false) {
+function renderEditor(fields: AuthorableInputField[], service: InputFieldDefinitionsService, readonly: boolean) {
 	return render(
 		<RootAppStoreContext.Provider value={mockStore as RootAppStore}>
 			<MenuPortalContext.Provider value={document.body}>
@@ -51,7 +51,7 @@ const fields: AuthorableInputField[] = [
 describe('InputFieldDefinitionsEditor', () => {
 	it('adds a field of the chosen type', async () => {
 		const service = makeService()
-		renderEditor(fields, service)
+		renderEditor(fields, service, false)
 
 		await userEvent.click(screen.getByPlaceholderText('+ Add input'))
 		await userEvent.click(await screen.findByRole('option', { name: 'Checkbox' }))
@@ -66,7 +66,7 @@ describe('InputFieldDefinitionsEditor', () => {
 
 	it('shows each field with its type, and removes a field once confirmed', async () => {
 		const service = makeService()
-		renderEditor(fields, service)
+		renderEditor(fields, service, false)
 
 		expect(screen.getByText('Auto')).toBeTruthy()
 		expect(screen.getAllByText('Checkbox').length).toBeGreaterThan(0)
@@ -82,7 +82,7 @@ describe('InputFieldDefinitionsEditor', () => {
 	})
 
 	it('shows how to use a field with its label, and its id only in the more options', async () => {
-		renderEditor(fields.slice(0, 1), makeService())
+		renderEditor(fields.slice(0, 1), makeService(), false)
 
 		expect(screen.getByText('Use as $(options:input)')).toBeTruthy()
 		expect(screen.queryByText('Id')).toBeNull()
@@ -93,7 +93,7 @@ describe('InputFieldDefinitionsEditor', () => {
 
 	it('shows an id used by another field as invalid, rather than using it', async () => {
 		const service = makeService()
-		renderEditor(fields, service)
+		renderEditor(fields, service, false)
 
 		await userEvent.click(screen.getAllByTitle('Show more options')[0])
 		const idInput = screen.getByLabelText('Id')

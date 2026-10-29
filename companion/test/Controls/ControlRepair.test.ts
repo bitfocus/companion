@@ -15,7 +15,7 @@ const ControlWithInputsSchema = z.object({
 })
 
 /** Parse a control, repairing it if it fails, and check the result then parses */
-function parseRepaired(control: unknown, schema: z.ZodType = SomeControlModelSchema) {
+function parseRepaired(control: unknown, schema: z.ZodType) {
 	const first = schema.safeParse(control)
 	expect(first.success, 'the control should start invalid').toBe(false)
 	if (first.success) throw new Error('unreachable')
@@ -43,11 +43,14 @@ describe('repairControl', () => {
 	describe('entities', () => {
 		test('replaces an invalid action in a step, keeping the rest of the button', () => {
 			const broken = { ...action, id: 'a2', connectionId: 5 }
-			const result = parseRepaired({
-				type: 'button-layered',
-				steps: { '0': { action_sets: { down: [action, broken], up: [action] } } },
-				style: { layers: [{ type: 'canvas', id: 'canvas' }] },
-			})
+			const result = parseRepaired(
+				{
+					type: 'button-layered',
+					steps: { '0': { action_sets: { down: [action, broken], up: [action] } } },
+					style: { layers: [{ type: 'canvas', id: 'canvas' }] },
+				},
+				SomeControlModelSchema
+			)
 
 			const down = result!.control.steps['0'].action_sets.down
 			expect(down[0]).toMatchObject({ id: 'a1', definitionId: 'send' })
@@ -58,20 +61,26 @@ describe('repairControl', () => {
 
 		test('replaces an invalid action in a hold duration set', () => {
 			const broken = { ...action, id: 'held', options: 'none' }
-			const result = parseRepaired({
-				type: 'button-layered',
-				steps: { '0': { action_sets: { down: [], up: [], '500': [broken] } } },
-			})
+			const result = parseRepaired(
+				{
+					type: 'button-layered',
+					steps: { '0': { action_sets: { down: [], up: [], '500': [broken] } } },
+				},
+				SomeControlModelSchema
+			)
 
 			expect(result!.control.steps['0'].action_sets['500'][0]).toMatchObject(placeholderOf(broken, 'action', 'held'))
 		})
 
 		test('replaces an invalid feedback or local variable', () => {
-			const result = parseRepaired({
-				type: 'button-layered',
-				feedbacks: [feedback, { ...feedback, id: 'f2', definitionId: 3 }],
-				localVariables: [{ ...feedback, id: 'v1', variableName: 7 }],
-			})
+			const result = parseRepaired(
+				{
+					type: 'button-layered',
+					feedbacks: [feedback, { ...feedback, id: 'f2', definitionId: 3 }],
+					localVariables: [{ ...feedback, id: 'v1', variableName: 7 }],
+				},
+				SomeControlModelSchema
+			)
 
 			expect(result!.control.feedbacks[0]).toMatchObject({ id: 'f1', definitionId: 'state' })
 			expect(result!.control.feedbacks[1]).toMatchObject({
@@ -83,18 +92,21 @@ describe('repairControl', () => {
 
 		test('replaces only the invalid child of an entity', () => {
 			const brokenChild = { ...action, id: 'child', definitionId: null }
-			const result = parseRepaired({
-				type: 'button-layered',
-				steps: {
-					'0': {
-						action_sets: {
-							down: [
-								{ ...action, id: 'group', connectionId: 'internal', children: { default: [action, brokenChild] } },
-							],
+			const result = parseRepaired(
+				{
+					type: 'button-layered',
+					steps: {
+						'0': {
+							action_sets: {
+								down: [
+									{ ...action, id: 'group', connectionId: 'internal', children: { default: [action, brokenChild] } },
+								],
+							},
 						},
 					},
 				},
-			})
+				SomeControlModelSchema
+			)
 
 			const group = result!.control.steps['0'].action_sets.down[0]
 			expect(group).toMatchObject({ id: 'group', connectionId: 'internal' })
@@ -103,12 +115,15 @@ describe('repairControl', () => {
 		})
 
 		test('replaces an invalid action, condition or local variable of a trigger', () => {
-			const result = parseRepaired({
-				type: 'trigger',
-				actions: [{ ...action, id: 5 }],
-				condition: [{ ...feedback, isInverted: 'yes' }],
-				localVariables: [feedback],
-			})
+			const result = parseRepaired(
+				{
+					type: 'trigger',
+					actions: [{ ...action, id: 5 }],
+					condition: [{ ...feedback, isInverted: 'yes' }],
+					localVariables: [feedback],
+				},
+				SomeControlModelSchema
+			)
 
 			expect(result!.control.actions[0]).toMatchObject({ type: 'action', definitionId: INVALID_ENTITY_DEFINITION_ID })
 			expect(result!.control.condition[0]).toMatchObject({ type: 'feedback', id: 'f1', disabled: true })
@@ -116,13 +131,16 @@ describe('repairControl', () => {
 		})
 
 		test('replaces the invalid entity of an expression variable', () => {
-			const result = parseRepaired({ type: 'expression-variable', entity: { ...feedback, options: [] } })
+			const result = parseRepaired(
+				{ type: 'expression-variable', entity: { ...feedback, options: [] } },
+				SomeControlModelSchema
+			)
 
 			expect(result!.control.entity).toMatchObject({ type: 'feedback', id: 'f1', disabled: true })
 		})
 
 		test('gives an entity without a usable id a new one, and keeps something that is not an entity at all', () => {
-			const result = parseRepaired({ type: 'button-layered', feedbacks: ['not an entity'] })
+			const result = parseRepaired({ type: 'button-layered', feedbacks: ['not an entity'] }, SomeControlModelSchema)
 
 			expect(result!.control.feedbacks[0]).toMatchObject({
 				type: 'feedback',
@@ -133,13 +151,16 @@ describe('repairControl', () => {
 		})
 
 		test("keeps an entity's note, or else names what it was", () => {
-			const result = parseRepaired({
-				type: 'button-layered',
-				feedbacks: [
-					{ ...feedback, id: 'f2', headline: 'Tally', options: 'bad' },
-					{ ...feedback, id: 'f3', options: 'bad' },
-				],
-			})
+			const result = parseRepaired(
+				{
+					type: 'button-layered',
+					feedbacks: [
+						{ ...feedback, id: 'f2', headline: 'Tally', options: 'bad' },
+						{ ...feedback, id: 'f3', options: 'bad' },
+					],
+				},
+				SomeControlModelSchema
+			)
 
 			expect(result!.control.feedbacks[0].headline).toBe("Couldn't be loaded - Tally")
 			expect(result!.control.feedbacks[1].headline).toBe("Couldn't be loaded - conn1: state")
@@ -148,15 +169,18 @@ describe('repairControl', () => {
 
 	describe('style elements', () => {
 		test('replaces an invalid element with an empty, disabled group', () => {
-			const result = parseRepaired({
-				type: 'button-layered',
-				style: {
-					layers: [
-						{ type: 'canvas', id: 'canvas' },
-						{ type: 'sparkle', id: 'odd', name: 'Glitter' },
-					],
+			const result = parseRepaired(
+				{
+					type: 'button-layered',
+					style: {
+						layers: [
+							{ type: 'canvas', id: 'canvas' },
+							{ type: 'sparkle', id: 'odd', name: 'Glitter' },
+						],
+					},
 				},
-			})
+				SomeControlModelSchema
+			)
 
 			const layers = result!.control.style.layers
 			expect(layers[0]).toMatchObject({ type: 'canvas' })
@@ -171,21 +195,24 @@ describe('repairControl', () => {
 		})
 
 		test('replaces only the invalid child of a group', () => {
-			const result = parseRepaired({
-				type: 'button-layered',
-				style: {
-					layers: [
-						{
-							type: 'group',
-							id: 'g',
-							children: [
-								{ type: 'box', id: 'b1' },
-								{ type: 'box', name: 'No id' },
-							],
-						},
-					],
+			const result = parseRepaired(
+				{
+					type: 'button-layered',
+					style: {
+						layers: [
+							{
+								type: 'group',
+								id: 'g',
+								children: [
+									{ type: 'box', id: 'b1' },
+									{ type: 'box', name: 'No id' },
+								],
+							},
+						],
+					},
 				},
-			})
+				SomeControlModelSchema
+			)
 
 			const group = result!.control.style.layers[0]
 			expect(group).toMatchObject({ type: 'group', id: 'g' })
@@ -238,20 +265,23 @@ describe('repairControl', () => {
 	})
 
 	test('repairs several problems at once', () => {
-		const result = parseRepaired({
-			type: 'button-layered',
-			feedbacks: [{ ...feedback, id: 3 }],
-			steps: { '0': { action_sets: { down: [{ ...action, connectionId: [] }] } } },
-			style: { layers: [{ type: 'nope', id: 'x' }] },
-		})
+		const result = parseRepaired(
+			{
+				type: 'button-layered',
+				feedbacks: [{ ...feedback, id: 3 }],
+				steps: { '0': { action_sets: { down: [{ ...action, connectionId: [] }] } } },
+				style: { layers: [{ type: 'nope', id: 'x' }] },
+			},
+			SomeControlModelSchema
+		)
 
 		expect(result!.repairs).toHaveLength(3)
 	})
 
 	test('cannot repair a control which is not an entity or element that failed', () => {
-		expect(parseRepaired({ type: 'sparkle' })).toBeNull()
-		expect(parseRepaired({ type: 'trigger', options: { enabled: 'sometimes' } })).toBeNull()
-		expect(parseRepaired({ type: 'button-reference', options: {} })).toBeNull()
+		expect(parseRepaired({ type: 'sparkle' }, SomeControlModelSchema)).toBeNull()
+		expect(parseRepaired({ type: 'trigger', options: { enabled: 'sometimes' } }, SomeControlModelSchema)).toBeNull()
+		expect(parseRepaired({ type: 'button-reference', options: {} }, SomeControlModelSchema)).toBeNull()
 	})
 
 	test('does not change the control it is given', () => {

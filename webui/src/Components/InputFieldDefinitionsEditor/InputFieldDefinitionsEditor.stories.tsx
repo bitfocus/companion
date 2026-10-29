@@ -8,7 +8,7 @@ import { InputFieldDefinitionsEditor, type InputFieldDefinitionsService } from '
 
 const withPortal: Decorator = (Story) => (
 	<MenuPortalContext.Provider value={document.body}>
-		<div style={{ padding: 16, maxWidth: 700 }}>
+		<div className="p-4 max-w-2xl">
 			<Story />
 		</div>
 	</MenuPortalContext.Provider>
@@ -56,7 +56,7 @@ function StatefulEditor({
 					collapseStorageId="storybook_input_fields"
 				/>
 			</DragDropProvider>
-			<pre style={{ marginTop: 16, fontSize: 11 }}>{JSON.stringify(fields, null, 2)}</pre>
+			<pre className="mt-4 text-2xs">{JSON.stringify(fields, null, 2)}</pre>
 		</>
 	)
 }
