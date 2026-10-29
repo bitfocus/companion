@@ -141,6 +141,7 @@ export function fixupCustomActionControl(
 		inputs: structuredClone(control.inputs || []),
 		actions: fixupEntitiesRecursive(instanceIdMap, structuredClone(control.actions || [])),
 		localVariables: fixupEntitiesRecursive(instanceIdMap, structuredClone(control.localVariables || [])),
+		outputs: structuredClone(control.outputs),
 	}
 
 	new VisitorReferencesUpdater(

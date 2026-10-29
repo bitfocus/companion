@@ -4,12 +4,7 @@ import { useCallback, useContext, useId, useMemo } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import {
-	toCompanionInputField,
-	type AuthorableInputField,
-	type ExpressionOrValue,
-	type SomeCompanionInputField,
-} from '@companion-app/shared/Model/Options.js'
+import { toCompanionInputField, type AuthorableInputField } from '@companion-app/shared/Model/Options.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
 import { FormLabel } from '~/Components/Form.js'
@@ -24,7 +19,6 @@ import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 import { AddNoteButton, NotesStrip } from '~/Controls/Notes.js'
-import { OptionsInputField } from '~/Controls/OptionsInputField.js'
 import { useControlNotesSetter, useNotesEditor } from '~/Controls/useNotesEditor.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
@@ -32,6 +26,7 @@ import { MyErrorBoundary } from '~/Resources/Error.js'
 import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
+import { CustomActionOutputsEditor } from './OutputsEditor.js'
 
 interface EditCustomActionPanelProps {
 	controlId: string
@@ -71,12 +66,19 @@ interface CustomActionPanelContentProps {
 function CustomActionPanelContent({ config, controlId, testRunning }: CustomActionPanelContentProps): React.ReactNode {
 	const setControlNotes = useControlNotesSetter(controlId)
 	const notesState = useNotesEditor(controlId, config.options.notes, setControlNotes)
-	const [activeTab, setActiveTab] = useLocalStorage<'actions' | 'inputs' | 'variables'>(
+	const [activeTab, setActiveTab] = useLocalStorage<'actions' | 'inputs' | 'outputs' | 'variables'>(
 		'customActionEditor.activeTab',
 		'actions'
 	)
 
 	const inputFields = useMemo(() => config.inputs.map(toCompanionInputField), [config.inputs])
+	const localVariableNames = useMemo(
+		() =>
+			config.localVariables.flatMap((entity) =>
+				entity.type === EntityModelType.Feedback && entity.variableName ? [entity.variableName] : []
+			),
+		[config.localVariables]
+	)
 	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables, null, inputFields)
 
 	return (
@@ -102,6 +104,14 @@ function CustomActionPanelContent({ config, controlId, testRunning }: CustomActi
 								</span>
 							)}
 						</TabArea.Tab>
+						<TabArea.Tab value="outputs">
+							<span>Outputs</span>
+							{config.outputs.length > 0 && (
+								<span className="px-1.5 py-0.5 rounded-full text-3xs font-semibold bg-primary/20 text-primary">
+									{config.outputs.length}
+								</span>
+							)}
+						</TabArea.Tab>
 						<TabArea.Tab value="variables">
 							<span>Local Variables</span>
 							{config.localVariables.length > 0 && (
@@ -119,6 +129,16 @@ function CustomActionPanelContent({ config, controlId, testRunning }: CustomActi
 					{activeTab === 'inputs' && (
 						<MyErrorBoundary>
 							<CustomActionInputsEditor controlId={controlId} inputs={config.inputs} />
+						</MyErrorBoundary>
+					)}
+
+					{activeTab === 'outputs' && (
+						<MyErrorBoundary>
+							<CustomActionOutputsEditor
+								controlId={controlId}
+								outputs={config.outputs}
+								variableNames={localVariableNames}
+							/>
 						</MyErrorBoundary>
 					)}
 
@@ -181,32 +201,6 @@ function CustomActionDetails({ config, controlId }: { config: CustomActionModel;
 		[setOptionsFieldMutation, controlId]
 	)
 
-	const resultVariableNames = useMemo(
-		() =>
-			config.localVariables.flatMap((entity) =>
-				entity.type === EntityModelType.Feedback && entity.variableName ? [entity.variableName] : []
-			),
-		[config.localVariables]
-	)
-	const resultField = useMemo(
-		(): SomeCompanionInputField => ({
-			type: 'dropdown',
-			id: 'resultVariable',
-			label: 'Result',
-			tooltip: 'The local variable whose value at the end of a run is the result of the action',
-			// A disabled field shows no tooltip on hover, so say why it is disabled below it
-			description: resultVariableNames.length > 0 ? undefined : 'Add a local variable to choose it as the result',
-			default: '',
-			choices: [{ id: '', label: 'None' }, ...resultVariableNames.map((name) => ({ id: name, label: name }))],
-		}),
-		[resultVariableNames]
-	)
-	const setResultVariable = useCallback(
-		(_key: string, value: ExpressionOrValue<JsonValue | undefined>) =>
-			setOption('resultVariable', typeof value.value === 'string' && value.value !== '' ? value.value : null),
-		[setOption]
-	)
-
 	return (
 		<Grid.Row className="sm:gap-2">
 			<FormLabel htmlFor={nameId} sm={4} column="sm">
@@ -232,19 +226,6 @@ function CustomActionDetails({ config, controlId }: { config: CustomActionModel;
 					placeholder="Shown when choosing the action"
 				/>
 			</Grid.Col>
-
-			<OptionsInputField
-				allowInternalFields={false}
-				isLocatedInGrid={false}
-				entityType={null}
-				option={resultField}
-				value={{ isExpression: false, value: config.options.resultVariable ?? '' }}
-				setValue={setResultVariable}
-				visibility={true}
-				localVariablesStore={null}
-				fieldSupportsExpression={false}
-				readonly={resultVariableNames.length === 0}
-			/>
 		</Grid.Row>
 	)
 }
