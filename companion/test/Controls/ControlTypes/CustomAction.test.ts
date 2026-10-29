@@ -313,9 +313,12 @@ describe('ControlCustomAction', () => {
 			expect(control.inputAdd(checkbox)).toBe(true)
 			expect(control.inputs.map((input) => input.id)).toEqual(['n', 'flag'])
 
-			expect(control.inputMove('flag', -1)).toBe(true)
+			expect(control.inputMove('flag', 0)).toBe(true)
 			expect(control.inputs.map((input) => input.id)).toEqual(['flag', 'n'])
-			expect(control.inputMove('flag', -1)).toBe(false)
+			// Already there, or out of range
+			expect(control.inputMove('flag', 0)).toBe(false)
+			expect(control.inputMove('flag', 2)).toBe(false)
+			expect(control.inputMove('unknown', 1)).toBe(false)
 
 			expect(control.inputRemove('flag')).toBe(true)
 			expect(control.inputs.map((input) => input.id)).toEqual(['n'])
