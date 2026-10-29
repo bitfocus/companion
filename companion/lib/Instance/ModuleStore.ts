@@ -1,5 +1,4 @@
 import EventEmitter from 'node:events'
-import createClient, { type Client } from 'openapi-fetch'
 import semver from 'semver'
 import z from 'zod'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
@@ -14,10 +13,12 @@ import {
 	MODULE_BASE_VERSIONS,
 	SURFACE_BASE_VERSION,
 } from '@companion-app/shared/ModuleApiVersionCheck.js'
-import type {
-	components as ModuleStoreOpenApiComponents,
-	paths as ModuleStoreOpenApiPaths,
-} from '@companion-app/shared/OpenApi/ModuleStore.js'
+import { createClient, createConfig, type Client } from '@companion-app/shared/OpenApi/ModuleStore/client/index.js'
+import {
+	getCompanionModules,
+	getCompanionModuleVersions,
+	type CompanionModuleInfo,
+} from '@companion-app/shared/OpenApi/ModuleStore/index.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { Complete } from '@companion-module/base'
@@ -25,6 +26,7 @@ import type { DataCache, DataCacheDefaultTable } from '../Data/Cache.js'
 import type { DataStoreTableView } from '../Data/Tables/TableView.js'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
+import { throwTransportErrors } from '../Resources/OpenApiClient.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 
 /** Bump when the shape of the cached store list entries changes */
@@ -56,7 +58,7 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 	readonly #cacheStore: DataStoreTableView<DataCacheDefaultTable>
 	readonly #cacheTable: DataStoreTableView<Record<string, ModuleStoreModuleInfoStore>>
 
-	readonly #openApiClient: Client<ModuleStoreOpenApiPaths>
+	readonly #openApiClient: Client
 
 	/**
 	 */
@@ -97,15 +99,18 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 
 		this.#infoStore = new Map<any, ModuleStoreModuleInfoStore>(Object.entries(this.#cacheTable.all()))
 
-		this.#openApiClient = createClient<ModuleStoreOpenApiPaths>({
-			baseUrl,
-			headers: {
-				'User-Agent': `Companion ${appInfo.appVersion}`,
-				'Companion-App-Build': appInfo.appBuild,
-				'Companion-App-Version': appInfo.appVersion,
-				'Companion-Machine-Id': appInfo.machineId,
-			},
-		})
+		this.#openApiClient = createClient(
+			createConfig({
+				baseUrl,
+				headers: {
+					'User-Agent': `Companion ${appInfo.appVersion}`,
+					'Companion-App-Build': appInfo.appBuild,
+					'Companion-App-Version': appInfo.appVersion,
+					'Companion-Machine-Id': appInfo.machineId,
+				},
+			})
+		)
+		this.#openApiClient.interceptors.error.use(throwTransportErrors)
 
 		// If this is the first time we're running, refresh the store data now
 		if (
@@ -258,42 +263,37 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 				const increment = 0.25
 
 				const [connectionResult, surfaceResult] = await Promise.all([
-					this.#openApiClient
-						.GET('/v1/companion/modules/{moduleType}', {
-							params: {
-								path: {
-									moduleType: 'connection',
-								},
-								query: {
-									'module-api-version': MODULE_BASE_VERSIONS,
-								},
-							},
-						})
-						.then((res) => {
-							progress += increment
-							return res
-						}),
-					this.#openApiClient
-						.GET('/v1/companion/modules/{moduleType}', {
-							params: {
-								path: {
-									moduleType: 'surface',
-								},
-								query: {
-									'module-api-version': [SURFACE_BASE_VERSION],
-								},
-							},
-						})
-						.then((res) => {
-							progress += increment
-							return res
-						}),
+					getCompanionModules({
+						client: this.#openApiClient,
+						path: {
+							moduleType: 'connection',
+						},
+						query: {
+							'module-api-version': MODULE_BASE_VERSIONS,
+						},
+					}).then((res) => {
+						progress += increment
+						return res
+					}),
+					getCompanionModules({
+						client: this.#openApiClient,
+						path: {
+							moduleType: 'surface',
+						},
+						query: {
+							'module-api-version': [SURFACE_BASE_VERSION],
+						},
+					}).then((res) => {
+						progress += increment
+						return res
+					}),
 				])
 
 				this.emit('refreshProgress', null, 0.5, false)
 
-				const error = connectionResult.error || surfaceResult.error
-				if (error) throw new Error(`Failed to fetch module list: ${JSON.stringify(error)}`)
+				if (!connectionResult.data)
+					throw new Error(`Failed to fetch module list: ${JSON.stringify(connectionResult.error)}`)
+				if (!surfaceResult.data) throw new Error(`Failed to fetch module list: ${JSON.stringify(surfaceResult.error)}`)
 
 				this.#listStore = {
 					lastUpdated: Date.now(),
@@ -356,20 +356,16 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 		try {
 			this.emit('refreshProgress', { moduleType, moduleId }, 0, false)
 
-			const { data, error, response } = await this.#openApiClient.GET(
-				'/v1/companion/modules/{moduleType}/{moduleName}',
-				{
-					params: {
-						path: {
-							moduleType: moduleType,
-							moduleName: moduleId,
-						},
-					},
-				}
-			)
+			const { data, error, response } = await getCompanionModuleVersions({
+				client: this.#openApiClient,
+				path: {
+					moduleType: moduleType,
+					moduleName: moduleId,
+				},
+			})
 			this.emit('refreshProgress', { moduleType, moduleId }, 0.5, false)
 
-			if (response.status === 404) {
+			if (response?.status === 404) {
 				// If the store returns 404, then don't throw an error, this is normal
 				moduleData = {
 					id: moduleId,
@@ -469,9 +465,7 @@ function getLatestModuleVersionInfo(
 	}, null)
 }
 
-function transformApiModuleToCache(
-	data: ModuleStoreOpenApiComponents['schemas']['CompanionModuleInfo']
-): Complete<ModuleStoreListCacheEntry> {
+function transformApiModuleToCache(data: CompanionModuleInfo): Complete<ModuleStoreListCacheEntry> {
 	// Match what the on disk scanner generates
 	return {
 		id: data.id,

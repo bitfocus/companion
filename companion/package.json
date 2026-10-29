@@ -82,7 +82,6 @@
     "node-machine-id": "^1.1.12",
     "noise-handshake": "^4.2.0",
     "on-headers": "^1.1.0",
-    "openapi-fetch": "^0.17.0",
     "osc": "2.4.5",
     "p-debounce": "^6.0.0",
     "p-queue": "^10.0.0",

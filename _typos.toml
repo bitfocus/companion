@@ -25,6 +25,7 @@ extend-exclude = [
   "**/*.companionconfig",
   "assets/linux/*.rules",
   "shared-lib/lib/OpenApi/",
+  "shared-lib/openapi/",
   "launcher/assets/installer.nsh",
   # Generated module fixtures (minified bundles of @companion-module/base at pinned versions)
   "companion/test/integration/modules/fixtures/",
