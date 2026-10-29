@@ -1910,20 +1910,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@companion-module/base-old@npm:@companion-module/base@~1.14.1":
-  version: 1.14.1
-  resolution: "@companion-module/base@npm:1.14.1"
+"@companion-module/base-old@npm:@companion-module/base@~1.15.0":
+  version: 1.15.0
+  resolution: "@companion-module/base@npm:1.15.0"
   dependencies:
-    ajv: "npm:^8.17.1"
-    colord: "npm:^2.9.3"
+    ajv: "npm:^8.20.0"
+    colord: "npm:^2.10.0"
     ejson: "npm:^2.2.3"
     eventemitter3: "npm:^5.0.1"
     mimic-fn: "npm:^3.1.0"
-    nanoid: "npm:^3.3.11"
+    nanoid: "npm:^3.3.20"
     p-queue: "npm:^6.6.2"
     p-timeout: "npm:^4.1.0"
     tslib: "npm:^2.8.1"
-  checksum: 10c0/55296836c01197e811ccf5dac9faa2b815668532754315c00b5fc14193fc969f58da0fc2e62eb572f0a3cfc1901ad56574000b389a386f8d929f4a9c6237140f
+  checksum: 10c0/adc866b46bc43e86bf4afa8e304c178a90e58a9ca8ce7140c816cffa1519c43719dc108097e21429153c0fc8d5436654c1b8bb397ac3261906b7cec5e5c88dd1
   languageName: node
   linkType: hard
 
@@ -9130,7 +9130,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ajv@npm:^8.0.0, ajv@npm:^8.17.1, ajv@npm:^8.18.0, ajv@npm:^8.9.0":
+"ajv@npm:^8.0.0, ajv@npm:^8.17.1, ajv@npm:^8.18.0, ajv@npm:^8.20.0, ajv@npm:^8.9.0":
   version: 8.20.0
   resolution: "ajv@npm:8.20.0"
   dependencies:
@@ -10754,7 +10754,7 @@ __metadata:
   dependencies:
     "@asteasolutions/zod-to-openapi": "npm:^9.1.0"
     "@companion-app/shared": "npm:*"
-    "@companion-module/base-old": "npm:@companion-module/base@~1.14.1"
+    "@companion-module/base-old": "npm:@companion-module/base@~1.15.0"
     "@companion-module/host": "npm:1.2.1"
     "@companion-surface/host": "npm:1.4.2"
     "@julusian/bonjour-service": "npm:^1.4.6"
@@ -17710,7 +17710,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nanoid@npm:^3.3.11, nanoid@npm:^3.3.19":
+"nanoid@npm:^3.3.19, nanoid@npm:^3.3.20":
   version: 3.3.20
   resolution: "nanoid@npm:3.3.20"
   bin:
