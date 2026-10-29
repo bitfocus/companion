@@ -4,7 +4,7 @@ import { ParseControlId } from '../ControlId.js'
 import type { ObjectPatch } from '../Diff.js'
 import type { CollectionBase } from './Collections.js'
 import { SomeEntityModelSchema } from './EntityModel.js'
-import { AuthorableInputFieldSchema, type AuthorableInputField } from './Options.js'
+import { AuthorableInputFieldSchema, INPUT_FIELD_ID_PATTERN } from './Options.js'
 
 export type CustomActionCollection = CollectionBase<null>
 
@@ -31,31 +31,13 @@ export function getCustomActionCallDefinition(
 	return { connectionId: CUSTOM_ACTIONS_CONNECTION_ID, definitionId: parsedId.customActionId }
 }
 
-/** The pattern the id of an input of a custom action must match, as it is used in `$(options:<id>)` */
-export const CUSTOM_ACTION_INPUT_ID_PATTERN = /^[\w-]+$/
-
-/**
- * Schema of an input of a custom action: a type of field which a user can author, with an id usable in a variable
- */
-export const CustomActionInputSchema = AuthorableInputFieldSchema.refine(
-	(field) => CUSTOM_ACTION_INPUT_ID_PATTERN.test(field.id),
-	{ message: "Can't be used as an input of a custom action" }
-)
-
-/**
- * Check if an input field definition is valid for an input of a custom action
- */
-export function isValidCustomActionInput(field: unknown): field is AuthorableInputField {
-	return CustomActionInputSchema.safeParse(field).success
-}
-
 /**
  * An output of a custom action: one of its local variables, whose value is written to wherever the action which
  * calls it chooses, each time it is set during a run
  */
 export const CustomActionOutputSchema = z.object({
 	/** Used by the actions which call the custom action to say where the output goes */
-	id: z.string().regex(CUSTOM_ACTION_INPUT_ID_PATTERN),
+	id: z.string().regex(INPUT_FIELD_ID_PATTERN),
 	label: z.string(),
 	/** The name of the local variable of the custom action whose value is the output, or '' for none */
 	variableName: z.string().default(''),
@@ -71,7 +53,7 @@ export const CustomActionModelSchema = z.object({
 	options: CustomActionOptionsSchema.default(() => CustomActionOptionsSchema.parse({})),
 
 	/** The inputs of the action, available to its actions as `$(options:<id>)` */
-	inputs: z.array(CustomActionInputSchema).default(() => []),
+	inputs: z.array(AuthorableInputFieldSchema).default(() => []),
 
 	actions: z.array(SomeEntityModelSchema).default(() => []),
 

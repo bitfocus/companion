@@ -3,7 +3,6 @@ import { diffObject } from '@companion-app/shared/Diff.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import {
 	CustomActionOutputSchema,
-	isValidCustomActionInput,
 	type ClientCustomActionData,
 	type CustomActionModel,
 	type CustomActionOptions,
@@ -12,6 +11,7 @@ import {
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
+	AuthorableInputFieldSchema,
 	isExpressionOrValue,
 	toCompanionInputField,
 	type AuthorableInputField,
@@ -386,7 +386,7 @@ export class ControlCustomAction
 	 * Add an input
 	 */
 	inputAdd(field: AuthorableInputField): boolean {
-		if (!isValidCustomActionInput(field)) return false
+		if (!AuthorableInputFieldSchema.safeParse(field).success) return false
 		if (this.#inputs.some((input) => input.id === field.id)) return false
 
 		this.#inputs.push(structuredClone(field))
@@ -430,7 +430,7 @@ export class ControlCustomAction
 	 * @returns Whether the input was updated
 	 */
 	inputUpdate(inputId: string, field: AuthorableInputField): boolean {
-		if (!isValidCustomActionInput(field)) return false
+		if (!AuthorableInputFieldSchema.safeParse(field).success) return false
 
 		const index = this.#inputs.findIndex((input) => input.id === inputId)
 		if (index === -1) return false
