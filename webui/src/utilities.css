@@ -48,3 +48,8 @@
 .entity-value-pill {
 	max-width: 220px;
 }
+
+/* override tailwind setting of 100vh because that can cause cut off UI on mobile */
+.min-h-screen {
+	min-height: 100dvh;
+}
