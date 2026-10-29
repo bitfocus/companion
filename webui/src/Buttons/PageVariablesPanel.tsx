@@ -40,6 +40,7 @@ export const PageVariablesPanel = observer(function PageVariablesPanel({ pageNum
 			{dataReady && controlId && (
 				<MyErrorBoundary>
 					<LocalVariablesEditor
+						description={null}
 						// Cancels the heading row's top margin, so the title sits where the other sections' titles do
 						className="-mt-2"
 						heading={<h5 className="buttons-sidebar-heading">Page Variables</h5>}

@@ -16,6 +16,8 @@ interface LocalVariablesEditorProps {
 	variables: SomeEntityModel[]
 	localVariablesStore: LocalVariablesStore
 	heading?: React.JSX.Element | string | null
+	/** What the local variables are for, shown below the heading */
+	description: React.ReactNode
 	localVariablePrefix?: string
 }
 export function LocalVariablesEditor({
@@ -25,6 +27,7 @@ export function LocalVariablesEditor({
 	variables,
 	localVariablesStore,
 	heading = 'Local Variables',
+	description,
 	localVariablePrefix = 'local',
 }: LocalVariablesEditorProps): React.JSX.Element {
 	return (
@@ -33,10 +36,13 @@ export function LocalVariablesEditor({
 				className={className}
 				heading={heading}
 				subheading={
-					<span className="text-xs text-muted">
-						Local variables are supported on fields featuring the <FontAwesomeIcon icon={faGlobe} className="mx-0.5" />{' '}
-						icon.
-					</span>
+					<>
+						{description && <p className="text-sm text-muted mb-1">{description}</p>}
+						<span className="text-xs text-muted">
+							Local variables are supported on fields featuring the{' '}
+							<FontAwesomeIcon icon={faGlobe} className="mx-0.5" /> icon.
+						</span>
+					</>
 				}
 				controlId={controlId}
 				entities={variables}

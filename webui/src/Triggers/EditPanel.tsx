@@ -148,6 +148,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 					<div className="max-w-readable">
 						<MyErrorBoundary>
 							<LocalVariablesEditor
+								description={null}
 								controlId={controlId}
 								location={undefined}
 								variables={config.localVariables}

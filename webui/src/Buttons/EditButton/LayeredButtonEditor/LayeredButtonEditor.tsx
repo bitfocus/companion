@@ -103,6 +103,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 									<div className="button-editor-tab-content">
 										<MyErrorBoundary>
 											<LocalVariablesEditor
+												description={null}
 												controlId={controlId}
 												location={location}
 												variables={config.localVariables}
