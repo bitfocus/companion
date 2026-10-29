@@ -2,17 +2,17 @@ import { describe, expect, test } from 'vitest'
 import { ElementConversionCache, type ElementConversionCacheEntry } from '../../lib/Graphics/ElementConversionCache.js'
 import type { CompositeElementIdString } from '../../lib/Instance/Definitions.js'
 
-// Helper to create a minimal cache entry, folding `usedVariables`/`clockSensitive` into `references`
+// Helper to create a minimal cache entry, folding `usedVariables`/`clockCycleMs` into `references`
 function makeEntry(
 	overrides: Partial<Omit<ElementConversionCacheEntry, 'references'>> & {
 		usedVariables?: Set<string>
-		clockSensitive?: boolean
+		clockCycleMs?: number
 	} = {}
 ): ElementConversionCacheEntry {
-	const { usedVariables, clockSensitive, ...rest } = overrides
+	const { usedVariables, clockCycleMs, ...rest } = overrides
 	return {
 		drawElement: null,
-		references: { usedVariables: usedVariables ?? new Set(), clockSensitive: clockSensitive ?? false },
+		references: { usedVariables: usedVariables ?? new Set(), clockCycleMs: clockCycleMs ?? 0 },
 		compositeElement: null,
 		referencedLocation: null,
 		...rest,

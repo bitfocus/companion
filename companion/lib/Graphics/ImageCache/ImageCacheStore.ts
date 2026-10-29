@@ -1,4 +1,4 @@
-import { selectFrameIndex } from '@companion-app/shared/Graphics/AnimationTiming.js'
+import { selectFrameIndex, type CycleAnimation } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import type { DecodedRasterImage, RendererDrawStyle } from '@companion-app/shared/Model/Render.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { Logger } from '../../Log/Controller.js'
@@ -39,8 +39,8 @@ export interface RemoteImageSource {
 export interface AnimationFrames {
 	/** The frame to draw of each animated image, keyed by the id of its element */
 	readonly frameIndices: ReadonlyMap<string, number>
-	/** The longest loop of any of the animations, in ms. 0 when there are none */
-	readonly maxDurationMs: number
+	/** The animated images being drawn, for counting how many different renders they cycle through */
+	readonly animations: readonly CycleAnimation[]
 }
 
 interface CacheEntry {
@@ -111,7 +111,7 @@ export class ImageCacheStore {
 	 */
 	async selectAnimationFrames(elements: SomeButtonGraphicsDrawElement[], timeMs: number): Promise<AnimationFrames> {
 		const frameIndices = new Map<string, number>()
-		let maxDurationMs = 0
+		const animations: CycleAnimation[] = []
 
 		const visit = async (elements: SomeButtonGraphicsDrawElement[]): Promise<void> => {
 			await Promise.all(
@@ -123,9 +123,9 @@ export class ImageCacheStore {
 							const entry = await this.#getEntry(element.base64Image)
 							if (!entry || entry.result.type !== 'raster' || entry.result.frameCount <= 1) return
 
-							const { frameStartMs, durationMs } = entry.result
+							const { frameStartMs, durationMs, frameCount } = entry.result
 							frameIndices.set(element.id, selectFrameIndex(frameStartMs, durationMs, timeMs))
-							maxDurationMs = Math.max(maxDurationMs, durationMs)
+							animations.push({ frameCount, durationMs })
 							return
 						}
 						case 'group':
@@ -140,7 +140,7 @@ export class ImageCacheStore {
 		}
 		await visit(elements)
 
-		return { frameIndices, maxDurationMs }
+		return { frameIndices, animations }
 	}
 
 	/**

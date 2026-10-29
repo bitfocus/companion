@@ -87,6 +87,12 @@ export const SATELLITE_FEATURES = {
 		capsFlag: null,
 		description: 'DEVICE-APPEARANCE describes how to draw the face of the surface',
 	},
+	bitmapCache: {
+		since: '1.16.0',
+		capsFlag: 'BITMAP_CACHE',
+		description:
+			'The client can cache bitmaps (BITMAP-CACHE, BITMAP-COST, BITMAP-EVICT), so that KEY-STATE and SUB-STATE can refer to them by BITMAP_ID',
+	},
 } as const satisfies Record<string, SatelliteFeatureDefinition>
 
 export type SatelliteFeatureId = keyof typeof SATELLITE_FEATURES

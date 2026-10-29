@@ -326,7 +326,7 @@ function setReferenceRender(
 ) {
 	harness.state.renders.set(
 		location,
-		new ImageResult(undefined, null, async () => Buffer.alloc(0), drawElements, new Set())
+		new ImageResult(undefined, null, 1, 0, async () => Buffer.alloc(0), drawElements, new Set())
 	)
 }
 

@@ -38,11 +38,15 @@ import type { SurfaceController } from '../../Surface/Controller.js'
 import type { SatelliteTransferableValue, SurfaceIPSatellite } from '../../Surface/IP/Satellite.js'
 import { sanitizePluginConfigFields } from '../../Surface/PluginConfigFields.js'
 import type { ServiceApi } from '../ServiceApi.js'
+import { SatelliteBitmapCache } from './SatelliteBitmapCache.js'
 import { translateSatelliteConfigFields } from './SatelliteConfigFields.js'
-import { buildSatelliteStyleArgs } from './SatelliteRenderUtil.js'
+import { sendBitmapEvictions, sendSatelliteStyleMessage } from './SatelliteRenderUtil.js'
 
 export abstract class SatelliteSocketWrapper {
 	abstract readonly remoteAddress?: string
+
+	/** The bitmaps the client is caching for this connection, or null if it has not opted in to caching */
+	bitmapCache: SatelliteBitmapCache | null = null
 
 	protected abstract write(data: string): void
 
@@ -346,6 +350,12 @@ export class ServiceSatelliteApi {
 			case 'DEVICE-APPEARANCE':
 				this.#deviceAppearance(socket, params)
 				break
+			case 'BITMAP-CACHE':
+				this.#bitmapCacheSize(socket, params)
+				break
+			case 'BITMAP-COST':
+				this.#bitmapCost(socket, params)
+				break
 			case 'PING':
 				socket.sendMessage(`PONG ${body}`, null, null, {})
 				break
@@ -394,6 +404,7 @@ export class ServiceSatelliteApi {
 			NONSQUARE: true,
 			BITMAP_FORMATS: SATELLITE_BITMAP_FORMATS.join(','),
 			ROTARY_AMOUNT: true,
+			BITMAP_CACHE: true,
 		})
 
 		// Register the per-socket state only once the handshake has been sent, so a failure while
@@ -866,6 +877,58 @@ export class ServiceSatelliteApi {
 		socket.sendMessage(messageName, 'OK', null, { SUBID: subIdStr })
 	}
 
+	/**
+	 * Set the budget for the bitmaps the client caches for this connection: opting in, resizing or purging the cache.
+	 * This must be synchronous, so that no message can be sent between deciding what to evict and telling the client
+	 */
+	#bitmapCacheSize(socket: SatelliteSocketWrapper, params: ParsedParams): void {
+		const messageName = 'BITMAP-CACHE'
+
+		const budgetBytes = parseSatelliteByteCount(params.BYTES)
+		if (budgetBytes === null) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Invalid BYTES')
+		}
+
+		const cache = socket.bitmapCache
+		if (budgetBytes === 0) {
+			// Purge: everything goes, and the client may drop its cache once it has the OK
+			if (cache) socket.sendMessage('BITMAP-EVICT', null, null, { ALL: true })
+			socket.bitmapCache = null
+		} else if (cache) {
+			const evicted = cache.resize(budgetBytes)
+			if (evicted.length > 0 && cache.entryCount === 0) {
+				socket.sendMessage('BITMAP-EVICT', null, null, { ALL: true })
+			} else {
+				sendBitmapEvictions(socket, evicted)
+			}
+		} else {
+			socket.bitmapCache = new SatelliteBitmapCache(budgetBytes)
+		}
+
+		socket.sendMessage(messageName, 'OK', null, { BYTES: budgetBytes })
+	}
+
+	/**
+	 * The client reporting what a cached bitmap really costs it to store.
+	 * This must be synchronous, so that no message can be sent between deciding what to evict and telling the client
+	 */
+	#bitmapCost(socket: SatelliteSocketWrapper, params: ParsedParams): void {
+		const messageName = 'BITMAP-COST'
+
+		const bitmapId = params.BITMAP_ID
+		if (typeof bitmapId !== 'string' || !bitmapId) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Missing BITMAP_ID')
+		}
+		const bytes = parseSatelliteByteCount(params.BYTES)
+		if (bytes === null) {
+			return this.#formatAndSendError(socket, messageName, undefined, 'Invalid BYTES')
+		}
+
+		// A report for a bitmap which has since been evicted, or after caching was turned off, is harmless
+		const evicted = socket.bitmapCache?.setCost(bitmapId, bytes) ?? []
+		sendBitmapEvictions(socket, evicted)
+	}
+
 	async #sendSubState(
 		socket: SatelliteSocketWrapper,
 		subId: string,
@@ -873,12 +936,7 @@ export class ServiceSatelliteApi {
 		bitmapFormat: SatelliteBitmapFormat,
 		image: ImageResult
 	): Promise<void> {
-		const styleArgs = await buildSatelliteStyleArgs(image, style, null, bitmapFormat)
-
-		socket.sendMessage('SUB-STATE', null, null, {
-			SUBID: subId,
-			...styleArgs,
-		})
+		await sendSatelliteStyleMessage(socket, 'SUB-STATE', null, { SUBID: subId }, image, style, null, bitmapFormat)
 	}
 
 	/**
@@ -942,6 +1000,16 @@ interface SatelliteSocketState {
 /** Whether an edge of a STYLE bitmap is a size it can be drawn at: a whole pixel at least */
 function isUsableBitmapEdge(edge: number): boolean {
 	return Number.isFinite(edge) && Math.round(edge) >= 1
+}
+
+/**
+ * Read a BYTES parameter: a whole number of bytes, written as plain digits. Anything else (missing, empty, signed,
+ * fractional, hex or padded) is null
+ */
+function parseSatelliteByteCount(raw: string | true | undefined): number | null {
+	if (typeof raw !== 'string' || !/^\d+$/.test(raw)) return null
+	const bytes = Number(raw)
+	return Number.isSafeInteger(bytes) ? bytes : null
 }
 
 /**
