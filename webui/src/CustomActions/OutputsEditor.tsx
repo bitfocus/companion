@@ -1,4 +1,4 @@
-import { faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faArrowRightFromBracket, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useMemo, useRef } from 'react'
@@ -15,6 +15,7 @@ import {
 	setInputFieldLabel,
 } from '~/Components/InputFieldDefinitionsEditor/InputFieldTypes.js'
 import { ListHeading } from '~/Components/ListHeading.js'
+import { NonIdealState } from '~/Components/NonIdealState.js'
 import '~/Controls/Components/EntityList.css'
 import { OptionsInputField } from '~/Controls/OptionsInputField.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -99,12 +100,21 @@ export const CustomActionOutputsEditor = observer(function CustomActionOutputsEd
 				))}
 			</div>
 
-			<div className="add-dropdown-wrapper">
-				<Button color="secondary" size="sm" onClick={addOutput}>
-					<FontAwesomeIcon icon={faPlus} className="me-1" />
-					Add output
-				</Button>
-			</div>
+			{variableNames.length > 0 ? (
+				<div className="add-dropdown-wrapper">
+					<Button color="secondary" size="sm" onClick={addOutput}>
+						<FontAwesomeIcon icon={faPlus} className="me-1" />
+						Add output
+					</Button>
+				</div>
+			) : (
+				outputs.length === 0 && (
+					<NonIdealState
+						icon={faArrowRightFromBracket}
+						text="Add a local variable first, to have something to output"
+					/>
+				)
+			)}
 		</>
 	)
 })
