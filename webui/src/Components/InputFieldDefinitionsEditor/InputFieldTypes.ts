@@ -52,14 +52,12 @@ const choicesProperty: InputFieldPropertySpec = {
 			{ type: 'textinput', id: 'label', label: 'Label', default: '' },
 		],
 	},
+	// A row keeps the properties of a choice which aren't columns, such as disabled
 	toEditor: (value) =>
-		((value as DropdownChoice[] | undefined) ?? []).map((choice, i) => ({
-			_id: String(i),
-			id: choice.id,
-			label: choice.label,
-		})),
+		((value as DropdownChoice[] | undefined) ?? []).map((choice, i) => ({ ...choice, _id: String(i) })),
 	fromEditor: (value) =>
-		((value as Record<string, JsonValue>[] | undefined) ?? []).map((row): DropdownChoice => ({
+		((value as Record<string, JsonValue>[] | undefined) ?? []).map(({ _id, ...row }): DropdownChoice => ({
+			...row,
 			id: stringifyVariableValue(row.id) ?? '',
 			label: stringifyVariableValue(row.label) ?? '',
 		})),
@@ -86,9 +84,9 @@ function numberProperty(id: string, label: string, defaultValue: number | null):
 	}
 }
 
-function textProperty(id: string, label: string, multiline?: boolean): InputFieldPropertySpec {
+function textProperty(id: string, label: string): InputFieldPropertySpec {
 	return {
-		field: { type: 'textinput', id, label, default: '', multiline },
+		field: { type: 'textinput', id, label, default: '' },
 		fromEditor: (value) => (typeof value === 'string' && value !== '' ? value : undefined),
 	}
 }
@@ -194,7 +192,13 @@ export const InputFieldTypeSpecs: InputFieldTypeSpec[] = [
 		label: 'Static text',
 		hasDefault: false,
 		create: (common) => ({ ...common, type: 'static-text', value: '' }),
-		properties: [textProperty('value', 'Text', true)],
+		properties: [
+			{
+				// The text is required, so is kept when empty
+				field: { type: 'textinput', id: 'value', label: 'Text', default: '', multiline: true },
+				fromEditor: (value) => stringifyVariableValue(value) ?? '',
+			},
+		],
 		advanced: [],
 	},
 ]

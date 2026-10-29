@@ -1,3 +1,4 @@
+import type { JsonValue } from 'type-fest'
 import { describe, expect, it } from 'vitest'
 import {
 	AUTHORABLE_INPUT_FIELD_TYPES,
@@ -69,6 +70,31 @@ describe('properties', () => {
 				{ id: 'y', label: 'Y' },
 			],
 		})
+	})
+
+	it('keeps the properties of a choice which are not columns', () => {
+		const spec = getInputFieldTypeSpec('dropdown')!
+		const choices = spec.properties.find((p) => p.field.id === 'choices')!
+		const field: AuthorableInputField = {
+			type: 'dropdown',
+			id: 'a',
+			label: 'A',
+			default: 'x',
+			choices: [{ id: 'x', label: 'X', disabled: true }],
+		}
+
+		const rows = getPropertyEditorValue(field, choices) as Record<string, JsonValue>[]
+		const updated = setPropertyEditorValue(field, choices, [{ ...rows[0], label: 'Renamed' }])
+		expect(updated).toMatchObject({ choices: [{ id: 'x', label: 'Renamed', disabled: true }] })
+		expect((updated as { choices: object[] }).choices[0]).not.toHaveProperty('_id')
+	})
+
+	it('keeps the text of a static text field when it is cleared', () => {
+		const spec = getInputFieldTypeSpec('static-text')!
+		const text = spec.properties.find((p) => p.field.id === 'value')!
+		const field: AuthorableInputField = { type: 'static-text', id: 'a', label: 'A', value: 'abc' }
+
+		expect(setPropertyEditorValue(field, text, '')).toEqual({ ...field, value: '' })
 	})
 
 	it('removes a cleared optional property', () => {
