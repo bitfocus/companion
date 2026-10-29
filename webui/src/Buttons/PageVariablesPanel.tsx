@@ -39,6 +39,7 @@ export const PageVariablesPanel = observer(function PageVariablesPanel({ pageNum
 			{dataReady && controlId && (
 				<MyErrorBoundary>
 					<LocalVariablesEditor
+						description={null}
 						className="mt-0"
 						heading={null}
 						controlId={controlId}

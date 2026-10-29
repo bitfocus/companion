@@ -116,22 +116,14 @@ function CustomActionPanelContent({ config, controlId, testRunning }: CustomActi
 				<div className="max-w-readable">
 					{activeTab === 'inputs' && (
 						<MyErrorBoundary>
-							<TabIntro action={null}>
-								The inputs are the options of the action. Their values are available to the actions as{' '}
-								<code>$(options:id)</code>.
-							</TabIntro>
 							<CustomActionInputsEditor controlId={controlId} inputs={config.inputs} />
 						</MyErrorBoundary>
 					)}
 
 					{activeTab === 'variables' && (
 						<MyErrorBoundary>
-							<TabIntro action={null}>
-								Each run of the custom action starts with these variables at their startup values. Changes to them only
-								last for that run.
-							</TabIntro>
 							<LocalVariablesEditor
-								heading={null}
+								description="Each run of the custom action starts with these variables at their startup values. Changes to them only last for that run."
 								controlId={controlId}
 								location={undefined}
 								variables={config.localVariables}
@@ -142,13 +134,19 @@ function CustomActionPanelContent({ config, controlId, testRunning }: CustomActi
 
 					{activeTab === 'actions' && (
 						<MyErrorBoundary>
-							<TabIntro
-								action={<TestRunButton controlId={controlId} name={config.options.name} running={testRunning} />}
-							>
-								The actions run in order each time the custom action is called.
-							</TabIntro>
 							<ControlEntitiesEditor
-								heading={null}
+								heading="Actions"
+								subheading={
+									<p className="text-sm text-muted">The actions run in order each time the custom action is called.</p>
+								}
+								headingActions={[
+									<TestRunButton
+										key="test-run"
+										controlId={controlId}
+										name={config.options.name}
+										running={testRunning}
+									/>,
+								]}
 								controlId={controlId}
 								location={undefined}
 								listId="custom_action_actions"
@@ -163,18 +161,6 @@ function CustomActionPanelContent({ config, controlId, testRunning }: CustomActi
 					)}
 				</div>
 			</div>
-		</div>
-	)
-}
-
-/**
- * The description at the top of a tab, with an optional action beside it
- */
-function TabIntro({ action, children }: { action: React.ReactNode; children: React.ReactNode }) {
-	return (
-		<div className="flex items-center justify-between gap-2 mb-2">
-			<p className="text-sm text-muted">{children}</p>
-			{action}
 		</div>
 	)
 }
@@ -290,6 +276,14 @@ function CustomActionInputsEditor({ controlId, inputs }: { controlId: string; in
 
 	return (
 		<InputFieldDefinitionsEditor
+			heading="Inputs"
+			subheading={
+				<p className="text-sm text-muted">
+					The inputs are the options of the action. Their values are available to the actions as{' '}
+					<code>$(options:id)</code>.
+				</p>
+			}
+			headingActions={null}
 			fields={inputs}
 			service={service}
 			readonly={false}
