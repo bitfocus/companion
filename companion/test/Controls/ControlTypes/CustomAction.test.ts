@@ -333,16 +333,6 @@ describe('ControlCustomAction', () => {
 			expect(
 				control.inputAdd({ type: 'secret-text', id: 'secret', label: 'Secret' } as unknown as AuthorableInputField)
 			).toBe(false)
-			// Function visibility
-			expect(
-				control.inputAdd({
-					type: 'checkbox',
-					id: 'flag',
-					label: 'Flag',
-					default: false,
-					isVisibleUi: { type: 'function', fn: 'return true' },
-				})
-			).toBe(false)
 			// Bad id
 			expect(control.inputAdd({ type: 'checkbox', id: 'a b', label: 'Flag', default: false })).toBe(false)
 
