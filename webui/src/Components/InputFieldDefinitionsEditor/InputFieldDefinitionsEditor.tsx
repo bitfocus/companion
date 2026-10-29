@@ -56,9 +56,9 @@ export const InputFieldDefinitionsEditor = observer(function InputFieldDefinitio
 	localVariablesStore,
 	collapseStorageId,
 }: InputFieldDefinitionsEditorProps): React.JSX.Element {
-	const allIds = useMemo(() => new Set(fields.map((field) => field.id)), [fields])
-
 	const fieldIds = useMemo(() => fields.map((field) => field.id), [fields])
+	const allIds = useMemo(() => new Set(fieldIds), [fieldIds])
+
 	const panelCollapseHelper = usePanelCollapseHelperLite(collapseStorageId, fieldIds)
 
 	const addField = useCallback(
