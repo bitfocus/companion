@@ -8782,10 +8782,7 @@
 						},
 						"returnType": {
 							"type": "string",
-							"enum": [
-								"string",
-								"number"
-							]
+							"const": "string"
 						},
 						"presetColors": {
 							"type": "array",
