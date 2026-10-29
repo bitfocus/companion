@@ -62,8 +62,9 @@ export function repairControl(control: unknown, issues: readonly z.core.$ZodIssu
 		if (containedByAnother || replaced.has(id)) continue
 		replaced.add(id)
 
-		const original = (target.container as Record<PropertyKey, unknown>)[target.key]
-		;(target.container as Record<PropertyKey, unknown>)[target.key] = createPlaceholder(target, original)
+		const container = target.container as Record<PropertyKey, unknown>
+		const original = container[target.key]
+		container[target.key] = createPlaceholder(target, original)
 		repairs.push(`Replaced the ${describeTarget(target)} at ${id}`)
 	}
 
