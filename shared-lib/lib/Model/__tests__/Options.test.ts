@@ -1,6 +1,11 @@
 import { describe, expect, test } from 'vitest'
 import { elementSchemas } from '../../Graphics/ElementPropertiesSchemas.js'
-import { isFieldDisabledForControl, SomeCompanionInputFieldSchema, type SomeCompanionInputField } from '../Options.js'
+import {
+	AuthorableInputFieldSchema,
+	isFieldDisabledForControl,
+	SomeCompanionInputFieldSchema,
+	type SomeCompanionInputField,
+} from '../Options.js'
 
 describe('SomeCompanionInputFieldSchema', () => {
 	test('accepts every element property definition', () => {
@@ -108,5 +113,43 @@ describe('isFieldDisabledForControl', () => {
 	test('is validated by the schema', () => {
 		expect(SomeCompanionInputFieldSchema.safeParse(field).success).toBe(true)
 		expect(SomeCompanionInputFieldSchema.safeParse({ ...field, disabledForControlTypes: ['nope'] }).success).toBe(false)
+	})
+})
+
+describe('AuthorableInputFieldSchema', () => {
+	test('accepts a field a user can author, dropping the properties only used by Companion and modules', () => {
+		const field = {
+			type: 'number',
+			id: 'n',
+			label: 'N',
+			default: 1,
+			min: 0,
+			max: 10,
+			tooltip: 'kept',
+			width: 6,
+			deferParsing: true,
+			disabledForControlTypes: ['trigger'],
+			isVisibleUi: { type: 'expression', fn: 'true' },
+			disableAutoExpression: true,
+		}
+
+		expect(AuthorableInputFieldSchema.parse(field)).toEqual({
+			type: 'number',
+			id: 'n',
+			label: 'N',
+			default: 1,
+			min: 0,
+			max: 10,
+			tooltip: 'kept',
+		})
+	})
+
+	test.each([
+		['a field for connection config', { type: 'secret-text', id: 'a', label: 'A' }],
+		['an internal field', { type: 'internal:trigger', id: 'a', label: 'A' }],
+		['a table', { type: 'internal:table', id: 'a', label: 'A', default: [], columns: [] }],
+	])('rejects %s', (_name, field) => {
+		expect(SomeCompanionInputFieldSchema.safeParse(field).success).toBe(true)
+		expect(AuthorableInputFieldSchema.safeParse(field).success).toBe(false)
 	})
 })
