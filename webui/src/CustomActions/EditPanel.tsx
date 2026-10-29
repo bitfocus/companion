@@ -116,21 +116,22 @@ function CustomActionPanelContent({ config, controlId, testRunning }: CustomActi
 				<div className="max-w-readable">
 					{activeTab === 'inputs' && (
 						<MyErrorBoundary>
-							<p className="text-sm text-muted">
+							<TabIntro action={null}>
 								The inputs are the options of the action. Their values are available to the actions as{' '}
 								<code>$(options:id)</code>.
-							</p>
+							</TabIntro>
 							<CustomActionInputsEditor controlId={controlId} inputs={config.inputs} />
 						</MyErrorBoundary>
 					)}
 
 					{activeTab === 'variables' && (
 						<MyErrorBoundary>
-							<p className="text-sm text-muted">
+							<TabIntro action={null}>
 								Each run of the custom action starts with these variables at their startup values. Changes to them only
 								last for that run.
-							</p>
+							</TabIntro>
 							<LocalVariablesEditor
+								heading={null}
 								controlId={controlId}
 								location={undefined}
 								variables={config.localVariables}
@@ -141,11 +142,13 @@ function CustomActionPanelContent({ config, controlId, testRunning }: CustomActi
 
 					{activeTab === 'actions' && (
 						<MyErrorBoundary>
-							<div className="flex items-center justify-end mb-2">
-								<TestRunButton controlId={controlId} name={config.options.name} running={testRunning} />
-							</div>
+							<TabIntro
+								action={<TestRunButton controlId={controlId} name={config.options.name} running={testRunning} />}
+							>
+								The actions run in order each time the custom action is called.
+							</TabIntro>
 							<ControlEntitiesEditor
-								heading="Actions"
+								heading={null}
 								controlId={controlId}
 								location={undefined}
 								listId="custom_action_actions"
@@ -160,6 +163,18 @@ function CustomActionPanelContent({ config, controlId, testRunning }: CustomActi
 					)}
 				</div>
 			</div>
+		</div>
+	)
+}
+
+/**
+ * The description at the top of a tab, with an optional action beside it
+ */
+function TabIntro({ action, children }: { action: React.ReactNode; children: React.ReactNode }) {
+	return (
+		<div className="flex items-center justify-between gap-2 mb-2">
+			<p className="text-sm text-muted">{children}</p>
+			{action}
 		</div>
 	)
 }
