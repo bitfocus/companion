@@ -162,14 +162,12 @@ export function createCustomActionTrpcRouter(
 			}),
 
 		inputMove: publicProcedure
-			.input(
-				z.object({ controlId: z.string(), inputId: z.string(), direction: z.union([z.literal(-1), z.literal(1)]) })
-			)
+			.input(z.object({ controlId: z.string(), inputId: z.string(), index: z.number().int().min(0) }))
 			.mutation(({ input }) => {
 				const control = getCustomAction(input.controlId)
 				if (!control) return false
 
-				return control.inputMove(input.inputId, input.direction)
+				return control.inputMove(input.inputId, input.index)
 			}),
 
 		inputUpdate: publicProcedure

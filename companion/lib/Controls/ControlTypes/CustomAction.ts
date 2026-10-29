@@ -395,12 +395,13 @@ export class ControlCustomAction
 	}
 
 	/**
-	 * Move an input up or down the list
+	 * Move an input to a new position in the list
+	 * @param inputId The id of the input
+	 * @param target The index to move it to
 	 */
-	inputMove(inputId: string, direction: -1 | 1): boolean {
+	inputMove(inputId: string, target: number): boolean {
 		const index = this.#inputs.findIndex((input) => input.id === inputId)
-		const target = index + direction
-		if (index === -1 || target < 0 || target >= this.#inputs.length) return false
+		if (index === -1 || target < 0 || target >= this.#inputs.length || target === index) return false
 
 		const [input] = this.#inputs.splice(index, 1)
 		this.#inputs.splice(target, 0, input)
