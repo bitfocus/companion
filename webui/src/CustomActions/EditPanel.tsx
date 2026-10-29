@@ -114,7 +114,7 @@ function CustomActionPanelContent({ config, controlId, testRunning }: CustomActi
 				</TabArea.Root>
 			</div>
 
-			<div className="page-scroll p-4 pt-2">
+			<div className="page-scroll p-4 pt-0">
 				<div className="max-w-readable">
 					{activeTab === 'inputs' && (
 						<MyErrorBoundary>
