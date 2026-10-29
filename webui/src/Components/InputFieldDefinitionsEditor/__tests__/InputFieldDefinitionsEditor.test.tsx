@@ -81,6 +81,16 @@ describe('InputFieldDefinitionsEditor', () => {
 		expect(service.removeField).toHaveBeenCalledWith('auto')
 	})
 
+	it('shows how to use a field with its label, and its id only in the more options', async () => {
+		renderEditor(fields.slice(0, 1), makeService())
+
+		expect(screen.getByText('Use as $(options:input)')).toBeTruthy()
+		expect(screen.queryByText('Id')).toBeNull()
+
+		await userEvent.click(screen.getByTitle('Show more options'))
+		expect(screen.getByText('Id')).toBeTruthy()
+	})
+
 	it('hides the editing controls when readonly', () => {
 		renderEditor(fields, makeService(), true)
 		expect(screen.queryByPlaceholderText('+ Add input')).toBeNull()

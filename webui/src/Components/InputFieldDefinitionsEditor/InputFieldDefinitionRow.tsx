@@ -28,7 +28,13 @@ import {
 	type InputFieldPropertySpec,
 } from './InputFieldTypes.js'
 
-const labelField: SomeCompanionInputField = { type: 'textinput', id: 'label', label: 'Label', default: '' }
+const idField: SomeCompanionInputField = {
+	type: 'textinput',
+	id: 'id',
+	label: 'Id',
+	default: '',
+	regex: '/^[\\w-]+$/',
+}
 
 interface InputFieldDefinitionRowProps {
 	field: AuthorableInputField
@@ -75,14 +81,14 @@ export const InputFieldDefinitionRow = observer(function InputFieldDefinitionRow
 		return ids
 	}, [allIds, field.id])
 
-	const idField = useMemo(
+	// The id follows the label, so is shown with it rather than needing to be edited
+	const labelField = useMemo(
 		(): SomeCompanionInputField => ({
 			type: 'textinput',
-			id: 'id',
-			label: 'Id',
+			id: 'label',
+			label: 'Label',
 			default: '',
 			description: `Use as $(options:${field.id})`,
-			regex: '/^[\\w-]+$/',
 		}),
 		[field.id]
 	)
@@ -193,7 +199,6 @@ export const InputFieldDefinitionRow = observer(function InputFieldDefinitionRow
 								setValue={setHeaderValue}
 								readonly={readonly}
 							/>
-							<PlainOptionsInputField option={idField} value={field.id} setValue={setHeaderValue} readonly={readonly} />
 
 							{spec?.properties.map((property) => (
 								<PropertyInputField
@@ -238,6 +243,12 @@ export const InputFieldDefinitionRow = observer(function InputFieldDefinitionRow
 
 						{showAdvanced && (
 							<Form row className="sm:gap-2" onSubmit={PreventDefaultHandler}>
+								<PlainOptionsInputField
+									option={idField}
+									value={field.id}
+									setValue={setHeaderValue}
+									readonly={readonly}
+								/>
 								{advanced.map((property) => (
 									<PropertyInputField
 										key={property.field.id}
