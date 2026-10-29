@@ -529,6 +529,9 @@ const NOT_AUTHORABLE_FIELD_PROPERTIES = {
 	disableAutoExpression: true,
 } as const
 
+/** The pattern the id of an input field authored by a user must match, as it is used in a variable */
+export const INPUT_FIELD_ID_PATTERN = /^[\w-]+$/
+
 /**
  * Schema of an input field which a user can author, such as an input of a custom action. It is one of the types of
  * field which the input field editor offers, without the properties a user can't author, which are dropped when
@@ -546,6 +549,10 @@ export const AuthorableInputFieldSchema = z
 		CompanionInputFieldExpressionExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES),
 		CompanionInputFieldStaticTextExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES),
 	])
+	.refine((field) => INPUT_FIELD_ID_PATTERN.test(field.id), {
+		message: "Id can't be used in a variable",
+		path: ['id'],
+	})
 	.meta({ id: 'AuthorableInputField' })
 
 export type AuthorableInputField = z.infer<typeof AuthorableInputFieldSchema>

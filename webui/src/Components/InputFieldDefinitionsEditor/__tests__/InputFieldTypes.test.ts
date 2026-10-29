@@ -101,6 +101,7 @@ describe('ids', () => {
 
 	it('validates an id', () => {
 		expect(isInputFieldIdValid('abc_1', new Set())).toBe(true)
+		expect(isInputFieldIdValid('Abc-1', new Set())).toBe(true)
 		expect(isInputFieldIdValid('', new Set())).toBe(false)
 		expect(isInputFieldIdValid('a b', new Set())).toBe(false)
 		expect(isInputFieldIdValid('abc', new Set(['abc']))).toBe(false)

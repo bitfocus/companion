@@ -5,6 +5,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useMemo, useState } from 'react'
 import type { JsonValue } from 'type-fest'
 import {
+	INPUT_FIELD_ID_PATTERN,
 	toCompanionInputField,
 	type AuthorableInputField,
 	type ExpressionOrValue,
@@ -33,7 +34,7 @@ const idField: SomeCompanionInputField = {
 	id: 'id',
 	label: 'Id',
 	default: '',
-	regex: '/^[\\w-]+$/',
+	regex: INPUT_FIELD_ID_PATTERN.toString(),
 }
 
 interface InputFieldDefinitionRowProps {

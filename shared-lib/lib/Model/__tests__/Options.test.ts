@@ -144,6 +144,12 @@ describe('AuthorableInputFieldSchema', () => {
 		})
 	})
 
+	test("rejects an id which can't be used in a variable", () => {
+		const field = { type: 'checkbox', id: 'a b', label: 'A', default: false }
+		expect(SomeCompanionInputFieldSchema.safeParse(field).success).toBe(true)
+		expect(AuthorableInputFieldSchema.safeParse(field).success).toBe(false)
+	})
+
 	test.each([
 		['a field for connection config', { type: 'secret-text', id: 'a', label: 'A' }],
 		['an internal field', { type: 'internal:trigger', id: 'a', label: 'A' }],
