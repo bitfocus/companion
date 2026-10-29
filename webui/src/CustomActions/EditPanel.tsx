@@ -193,23 +193,26 @@ function CustomActionDetails({ config, controlId }: { config: CustomActionModel;
 		[setOptionsFieldMutation, controlId]
 	)
 
+	const resultVariableNames = useMemo(
+		() =>
+			config.localVariables.flatMap((entity) =>
+				entity.type === EntityModelType.Feedback && entity.variableName ? [entity.variableName] : []
+			),
+		[config.localVariables]
+	)
 	const resultField = useMemo(
 		(): SomeCompanionInputField => ({
 			type: 'dropdown',
 			id: 'resultVariable',
 			label: 'Result',
-			tooltip: 'The local variable whose value at the end of a run is the result of the action',
+			tooltip:
+				resultVariableNames.length > 0
+					? 'The local variable whose value at the end of a run is the result of the action'
+					: 'The result of the action is one of its local variables. Add a local variable to choose one',
 			default: '',
-			choices: [
-				{ id: '', label: 'None' },
-				...config.localVariables.flatMap((entity) =>
-					entity.type === EntityModelType.Feedback && entity.variableName
-						? [{ id: entity.variableName, label: entity.variableName }]
-						: []
-				),
-			],
+			choices: [{ id: '', label: 'None' }, ...resultVariableNames.map((name) => ({ id: name, label: name }))],
 		}),
-		[config.localVariables]
+		[resultVariableNames]
 	)
 	const setResultVariable = useCallback(
 		(_key: string, value: ExpressionOrValue<JsonValue | undefined>) =>
@@ -253,6 +256,7 @@ function CustomActionDetails({ config, controlId }: { config: CustomActionModel;
 				visibility={true}
 				localVariablesStore={null}
 				fieldSupportsExpression={false}
+				readonly={resultVariableNames.length === 0}
 			/>
 		</Grid.Row>
 	)
