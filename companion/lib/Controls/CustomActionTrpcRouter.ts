@@ -4,13 +4,12 @@ import z from 'zod'
 import { isCustomActionsConnectionId } from '@companion-app/shared/ConnectionId.js'
 import { CreateCustomActionControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import {
-	CustomActionInputSchema,
 	CustomActionOutputSchema,
 	type ClientCustomActionData,
 	type CustomActionsUpdate,
 	type CustomActionsUpdateInitOp,
 } from '@companion-app/shared/Model/CustomActionModel.js'
-import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
+import { AuthorableInputFieldSchema, type ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import type { ControlChangeEvents } from './ControlDependencies.js'
 import type { ControlStore } from './ControlStore.js'
@@ -181,7 +180,7 @@ export function createCustomActionTrpcRouter(
 		}),
 
 		inputAdd: publicProcedure
-			.input(z.object({ controlId: z.string(), field: CustomActionInputSchema }))
+			.input(z.object({ controlId: z.string(), field: AuthorableInputFieldSchema }))
 			.mutation(({ input }) => {
 				const control = getCustomAction(input.controlId)
 				if (!control) return false
@@ -208,7 +207,7 @@ export function createCustomActionTrpcRouter(
 			}),
 
 		inputUpdate: publicProcedure
-			.input(z.object({ controlId: z.string(), inputId: z.string(), field: CustomActionInputSchema }))
+			.input(z.object({ controlId: z.string(), inputId: z.string(), field: AuthorableInputFieldSchema }))
 			.mutation(({ input }) => {
 				const control = getCustomAction(input.controlId)
 				if (!control) return false
