@@ -11,6 +11,7 @@ import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityD
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	isExpressionOrValue,
+	toCompanionInputField,
 	type AuthorableInputField,
 	type ExpressionableOptionsObject,
 } from '@companion-app/shared/Model/Options.js'
@@ -216,7 +217,7 @@ export class ControlCustomAction
 			label: this.options.name || 'Custom action',
 			sortKey: null,
 			description: this.options.description || undefined,
-			options: structuredClone(this.#inputs),
+			options: this.#inputs.map((input) => toCompanionInputField(structuredClone(input))),
 			optionsToMonitorForInvalidations: null,
 			feedbackType: null,
 			feedbackStyle: undefined,

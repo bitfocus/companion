@@ -8751,10 +8751,6 @@
 						"enableAlpha": {
 							"type": "boolean"
 						},
-						"returnType": {
-							"type": "string",
-							"const": "string"
-						},
 						"presetColors": {
 							"type": "array",
 							"items": {
@@ -8786,8 +8782,7 @@
 						"label",
 						"type",
 						"default",
-						"enableAlpha",
-						"returnType"
+						"enableAlpha"
 					]
 				},
 				{
@@ -8850,118 +8845,6 @@
 						"label",
 						"type",
 						"value"
-					]
-				},
-				{
-					"type": "object",
-					"properties": {
-						"id": {
-							"type": "string"
-						},
-						"label": {
-							"type": "string"
-						},
-						"tooltip": {
-							"type": "string"
-						},
-						"description": {
-							"type": "string"
-						},
-						"type": {
-							"type": "string",
-							"const": "internal:page"
-						},
-						"default": {
-							"type": "number"
-						},
-						"includeStartup": {
-							"type": "boolean"
-						},
-						"includeDirection": {
-							"type": "boolean"
-						}
-					},
-					"required": [
-						"id",
-						"label",
-						"type",
-						"default",
-						"includeStartup",
-						"includeDirection"
-					]
-				},
-				{
-					"type": "object",
-					"properties": {
-						"id": {
-							"type": "string"
-						},
-						"label": {
-							"type": "string"
-						},
-						"tooltip": {
-							"type": "string"
-						},
-						"description": {
-							"type": "string"
-						},
-						"type": {
-							"type": "string",
-							"const": "internal:custom_variable"
-						},
-						"default": {
-							"not": {}
-						},
-						"includeNone": {
-							"type": "boolean"
-						}
-					},
-					"required": [
-						"id",
-						"label",
-						"type"
-					]
-				},
-				{
-					"type": "object",
-					"properties": {
-						"id": {
-							"type": "string"
-						},
-						"label": {
-							"type": "string"
-						},
-						"tooltip": {
-							"type": "string"
-						},
-						"description": {
-							"type": "string"
-						},
-						"type": {
-							"type": "string",
-							"const": "internal:connection_id"
-						},
-						"default": {
-							"type": "array",
-							"items": {
-								"type": "string"
-							}
-						},
-						"multiple": {
-							"type": "boolean"
-						},
-						"includeAll": {
-							"type": "boolean"
-						},
-						"filterActionsRecorder": {
-							"type": "boolean"
-						}
-					},
-					"required": [
-						"id",
-						"label",
-						"type",
-						"multiple"
 					]
 				}
 			]

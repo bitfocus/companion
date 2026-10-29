@@ -4,10 +4,11 @@ import { useCallback, useContext, useId, useMemo } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type {
-	AuthorableInputField,
-	ExpressionOrValue,
-	SomeCompanionInputField,
+import {
+	toCompanionInputField,
+	type AuthorableInputField,
+	type ExpressionOrValue,
+	type SomeCompanionInputField,
 } from '@companion-app/shared/Model/Options.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
@@ -75,7 +76,8 @@ function CustomActionPanelContent({ config, controlId, testRunning }: CustomActi
 		'actions'
 	)
 
-	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables, null, config.inputs)
+	const inputFields = useMemo(() => config.inputs.map(toCompanionInputField), [config.inputs])
+	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables, null, inputFields)
 
 	return (
 		<div className="flex-1 min-h-0 flex flex-col overflow-hidden">
