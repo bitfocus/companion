@@ -1,5 +1,5 @@
-import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import z from 'zod'
+import type { ObjectPatch } from '../Diff.js'
 import type { CollectionBase } from './Collections.js'
 import { SomeEntityModelSchema } from './EntityModel.js'
 
@@ -49,7 +49,7 @@ export interface ExpressionVariableUpdateUpdateOp {
 	type: 'update'
 	controlId: string
 
-	patch: JsonPatchOperation<ClientExpressionVariableData>[]
+	patch: ObjectPatch<ClientExpressionVariableData>
 }
 export interface ExpressionVariableUpdateAddOp {
 	type: 'add'

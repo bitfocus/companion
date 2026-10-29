@@ -1,5 +1,5 @@
-import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import z from 'zod'
+import type { ObjectPatch } from '../Diff.js'
 import type { CollectionBase, EnabledCollectionData } from './Collections.js'
 import { SomeEntityModelSchema } from './EntityModel.js'
 import { EventInstanceSchema } from './EventModel.js'
@@ -61,7 +61,7 @@ export interface TriggersUpdateUpdateOp {
 	type: 'update'
 	controlId: string
 
-	patch: JsonPatchOperation<ClientTriggerData>[]
+	patch: ObjectPatch<ClientTriggerData>
 }
 
 export type TriggerCollectionData = EnabledCollectionData

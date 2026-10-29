@@ -1,7 +1,7 @@
 import debounceFn from 'debounce-fn'
-import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
+import { diffObject } from '@companion-app/shared/Diff.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
@@ -585,7 +585,7 @@ export class ControlTrigger
 
 		if (this.deps.changeEvents.listenerCount('triggerChange') > 0) {
 			if (this.#lastSentTriggerJson) {
-				const patch = jsonPatch.compare(this.#lastSentTriggerJson || {}, newJson || {})
+				const patch = diffObject(this.#lastSentTriggerJson || {}, newJson || {})
 				if (patch.length > 0) {
 					this.deps.changeEvents.emit('triggerChange', this.controlId, {
 						type: 'update',

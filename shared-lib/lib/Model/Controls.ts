@@ -1,5 +1,5 @@
-import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import z from 'zod'
+import type { ObjectPatch } from '../Diff.js'
 import { SomeButtonModelSchema } from './ButtonModel.js'
 import { ExpressionVariableModelSchema } from './ExpressionVariableModel.js'
 import { PageControlModelSchema } from './PageControlModel.js'
@@ -26,12 +26,12 @@ export interface UIControlUpdateInit {
 export interface UIControlUpdateConfig {
 	type: 'config'
 
-	patch: JsonPatchOperation<SomeControlModel>[]
+	patch: ObjectPatch<SomeControlModel>
 }
 export interface UIControlUpdateRuntime {
 	type: 'runtime'
 
-	patch: JsonPatchOperation<Record<string, any>>[]
+	patch: ObjectPatch<Record<string, any>>
 }
 export interface UIControlUpdateDestroy {
 	type: 'destroy'

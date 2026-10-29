@@ -1,5 +1,5 @@
-import { applyPatch, type Operation as JsonPatchOperation } from 'fast-json-patch'
 import type { ObservableMap } from 'mobx'
+import { applyObjectPatch } from '@companion-app/shared/Diff.js'
 import type { ObjectsDiff } from '@companion-app/shared/Model/Common.js'
 
 export function ApplyDiffToStore<T extends object>(map: ObservableMap<string, T>, diff: ObjectsDiff<T>): void {
@@ -13,7 +13,7 @@ export function ApplyDiffToStore<T extends object>(map: ObservableMap<string, T>
 		const oldObj = map.get(id)
 		if (!oldObj) continue
 
-		applyPatch(oldObj, patch, false, true)
+		applyObjectPatch(oldObj, patch)
 	}
 
 	for (const [id, obj] of Object.entries(diff.added)) {
@@ -32,8 +32,4 @@ export function updateObjectInPlace<T extends object>(target: T, source: Partial
 	}
 	// Assign new/updated keys
 	Object.assign(target, source)
-}
-
-export function applyJsonPatchInPlace<T extends object>(target: T, patch: JsonPatchOperation<T>[]): void {
-	applyPatch(target, patch, false, true)
 }

@@ -1,5 +1,5 @@
-import { applyPatch } from 'fast-json-patch'
 import { action, observable } from 'mobx'
+import { applyObjectPatch } from '@companion-app/shared/Diff.js'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableCollection,
@@ -31,8 +31,7 @@ export class ExpressionVariablesListStore {
 			case 'update': {
 				const oldObj = this.expressionVariables.get(change.controlId)
 				if (!oldObj) throw new Error(`Got update for unknown ExpressionVariable: ${change.controlId}`)
-				const newObj = applyPatch(oldObj, change.patch, false, true)
-				this.expressionVariables.set(change.controlId, newObj.newDocument)
+				this.expressionVariables.set(change.controlId, applyObjectPatch(oldObj, change.patch))
 				break
 			}
 			default:

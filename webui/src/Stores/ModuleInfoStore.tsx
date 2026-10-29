@@ -1,5 +1,6 @@
 import { action, observable, runInAction } from 'mobx'
 import { nanoid } from 'nanoid'
+import { applyObjectPatch } from '@companion-app/shared/Diff.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type {
 	ClientModuleInfo,
@@ -13,7 +14,6 @@ import type {
 } from '@companion-app/shared/Model/ModulesStore.js'
 import { trpc } from '~/Resources/TRPC'
 import { assertNever } from '~/Resources/util.js'
-import { applyJsonPatchInPlace } from './ApplyDiffToMap'
 
 export type ModuleInfoId = `${ModuleInstanceType}:${string}`
 
@@ -100,7 +100,7 @@ export class ModuleInfoStore {
 				const oldObj = this.allModules.get(change.id)
 				if (!oldObj) throw new Error(`Got update for unknown module: ${change.id}`)
 
-				applyJsonPatchInPlace(oldObj, change.patch)
+				applyObjectPatch(oldObj, change.patch)
 				break
 			}
 			default:
