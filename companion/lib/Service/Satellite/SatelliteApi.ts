@@ -884,8 +884,8 @@ export class ServiceSatelliteApi {
 	#bitmapCacheSize(socket: SatelliteSocketWrapper, params: ParsedParams): void {
 		const messageName = 'BITMAP-CACHE'
 
-		const budgetBytes = Number(params.BYTES)
-		if (typeof params.BYTES !== 'string' || !Number.isSafeInteger(budgetBytes) || budgetBytes < 0) {
+		const budgetBytes = parseSatelliteByteCount(params.BYTES)
+		if (budgetBytes === null) {
 			return this.#formatAndSendError(socket, messageName, undefined, 'Invalid BYTES')
 		}
 
@@ -919,8 +919,8 @@ export class ServiceSatelliteApi {
 		if (typeof bitmapId !== 'string' || !bitmapId) {
 			return this.#formatAndSendError(socket, messageName, undefined, 'Missing BITMAP_ID')
 		}
-		const bytes = Number(params.BYTES)
-		if (typeof params.BYTES !== 'string' || !Number.isSafeInteger(bytes) || bytes < 0) {
+		const bytes = parseSatelliteByteCount(params.BYTES)
+		if (bytes === null) {
 			return this.#formatAndSendError(socket, messageName, undefined, 'Invalid BYTES')
 		}
 
@@ -1000,6 +1000,16 @@ interface SatelliteSocketState {
 /** Whether an edge of a STYLE bitmap is a size it can be drawn at: a whole pixel at least */
 function isUsableBitmapEdge(edge: number): boolean {
 	return Number.isFinite(edge) && Math.round(edge) >= 1
+}
+
+/**
+ * Read a BYTES parameter: a whole number of bytes, written as plain digits. Anything else (missing, empty, signed,
+ * fractional, hex or padded) is null
+ */
+function parseSatelliteByteCount(raw: string | true | undefined): number | null {
+	if (typeof raw !== 'string' || !/^\d+$/.test(raw)) return null
+	const bytes = Number(raw)
+	return Number.isSafeInteger(bytes) ? bytes : null
 }
 
 /**

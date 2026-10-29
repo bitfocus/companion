@@ -1714,16 +1714,19 @@ describe('ServiceSatelliteApi', () => {
 			expect(socket.bitmapCache).toBeNull()
 		})
 
-		test.each(['', 'BYTES=abc', 'BYTES=-1', 'BYTES=1.5', 'BYTES'])('rejects an invalid budget: %s', (args) => {
-			const { api, logger } = createService()
-			const { socket, processMessage } = createSocketAndInit(api, logger)
+		test.each(['', 'BYTES=abc', 'BYTES=-1', 'BYTES=1.5', 'BYTES', 'BYTES=', 'BYTES=0x10', 'BYTES=1e3'])(
+			'rejects an invalid budget: %s',
+			(args) => {
+				const { api, logger } = createService()
+				const { socket, processMessage } = createSocketAndInit(api, logger)
 
-			processMessage(`BITMAP-CACHE ${args}\n`)
+				processMessage(`BITMAP-CACHE ${args}\n`)
 
-			expect(socket.lastMessage).toContain('BITMAP-CACHE ERROR')
-			expect(socket.lastMessage).toContain('Invalid BYTES')
-			expect(socket.bitmapCache).toBeNull()
-		})
+				expect(socket.lastMessage).toContain('BITMAP-CACHE ERROR')
+				expect(socket.lastMessage).toContain('Invalid BYTES')
+				expect(socket.bitmapCache).toBeNull()
+			}
+		)
 	})
 
 	describe('BITMAP-COST', () => {
@@ -1771,6 +1774,7 @@ describe('ServiceSatelliteApi', () => {
 			['BYTES=10', 'Missing BITMAP_ID'],
 			['BITMAP_ID=a', 'Invalid BYTES'],
 			['BITMAP_ID=a BYTES=-5', 'Invalid BYTES'],
+			['BITMAP_ID=a BYTES=', 'Invalid BYTES'],
 		])('rejects invalid params: %s', (args, error) => {
 			const { api, logger } = createService()
 			const { socket, processMessage } = createSocketAndInit(api, logger)
