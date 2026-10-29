@@ -191,10 +191,9 @@ function CustomActionDetails({ config, controlId }: { config: CustomActionModel;
 			type: 'dropdown',
 			id: 'resultVariable',
 			label: 'Result',
-			tooltip:
-				resultVariableNames.length > 0
-					? 'The local variable whose value at the end of a run is the result of the action'
-					: 'The result of the action is one of its local variables. Add a local variable to choose one',
+			tooltip: 'The local variable whose value at the end of a run is the result of the action',
+			// A disabled field shows no tooltip on hover, so say why it is disabled below it
+			description: resultVariableNames.length > 0 ? undefined : 'Add a local variable to choose it as the result',
 			default: '',
 			choices: [{ id: '', label: 'None' }, ...resultVariableNames.map((name) => ({ id: name, label: name }))],
 		}),
