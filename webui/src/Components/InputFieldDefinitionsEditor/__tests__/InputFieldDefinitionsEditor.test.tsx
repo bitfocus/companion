@@ -91,6 +91,20 @@ describe('InputFieldDefinitionsEditor', () => {
 		expect(screen.getByText('Id')).toBeTruthy()
 	})
 
+	it('shows an id used by another field as invalid, rather than using it', async () => {
+		const service = makeService()
+		renderEditor(fields, service)
+
+		await userEvent.click(screen.getAllByTitle('Show more options')[0])
+		const idInput = screen.getByLabelText('Id')
+		await userEvent.clear(idInput)
+		await userEvent.type(idInput, 'auto')
+
+		expect(idInput.getAttribute('aria-invalid')).toBe('true')
+		expect(service.updateField).toHaveBeenCalledWith('input', expect.objectContaining({ id: 'aut' }))
+		expect(service.updateField).not.toHaveBeenCalledWith('input', expect.objectContaining({ id: 'auto' }))
+	})
+
 	it('hides the editing controls when readonly', () => {
 		renderEditor(fields, makeService(), true)
 		expect(screen.queryByPlaceholderText('+ Add input')).toBeNull()

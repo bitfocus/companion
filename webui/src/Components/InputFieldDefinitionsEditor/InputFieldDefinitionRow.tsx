@@ -2,10 +2,9 @@ import { useSortable } from '@dnd-kit/react/sortable'
 import { faChevronDown, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useId, useMemo, useState } from 'react'
 import type { JsonValue } from 'type-fest'
 import {
-	INPUT_FIELD_ID_PATTERN,
 	toCompanionInputField,
 	type AuthorableInputField,
 	type ExpressionOrValue,
@@ -17,7 +16,9 @@ import { OptionsInputField } from '~/Controls/OptionsInputField.js'
 import type { PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { Button } from '../Button.js'
-import { Form } from '../Form.js'
+import { Form, FormLabel } from '../Form.js'
+import { Grid } from '../Grid.js'
+import { TextInputFieldSimple } from '../TextInputField.js'
 import type { InputFieldDefinitionsService } from './InputFieldDefinitionsEditor.js'
 import {
 	commonAdvancedProperties,
@@ -28,14 +29,6 @@ import {
 	setPropertyEditorValue,
 	type InputFieldPropertySpec,
 } from './InputFieldTypes.js'
-
-const idField: SomeCompanionInputField = {
-	type: 'textinput',
-	id: 'id',
-	label: 'Id',
-	default: '',
-	regex: INPUT_FIELD_ID_PATTERN.toString(),
-}
 
 interface InputFieldDefinitionRowProps {
 	field: AuthorableInputField
@@ -82,39 +75,22 @@ export const InputFieldDefinitionRow = observer(function InputFieldDefinitionRow
 		return ids
 	}, [allIds, field.id])
 
-	// The id follows the label, so is shown with it rather than needing to be edited
-	const labelField = useMemo(
-		(): SomeCompanionInputField => ({
-			type: 'textinput',
-			id: 'label',
-			label: 'Label',
-			default: '',
-			description: `Use as $(options:${field.id})`,
-		}),
-		[field.id]
-	)
-
 	const update = useCallback(
 		(newField: AuthorableInputField) => service.updateField(field.id, newField),
 		[service, field]
 	)
 
-	const setHeaderValue = useCallback(
-		(key: string, value: ExpressionOrValue<JsonValue | undefined>) => {
-			const newValue = value.value
-			switch (key) {
-				case 'label':
-					update(setInputFieldLabel(field, stringifyVariableValue(newValue) ?? '', otherIds))
-					break
-				case 'id': {
-					const id = stringifyVariableValue(newValue) ?? ''
-					// Ignore ids which can't be used, so that the field keeps a usable id
-					if (isInputFieldIdValid(id, otherIds)) update({ ...field, id })
-					break
-				}
-			}
-		},
+	const setLabel = useCallback(
+		(label: string) => update(setInputFieldLabel(field, label, otherIds)),
 		[update, field, otherIds]
+	)
+	const checkIdValid = useCallback((id: string) => isInputFieldIdValid(id, otherIds), [otherIds])
+	const setId = useCallback(
+		(id: string) => {
+			// Ignore ids which can't be used, so that the field keeps a usable id
+			if (checkIdValid(id)) update({ ...field, id })
+		},
+		[update, field, checkIdValid]
 	)
 
 	const defaultField = useMemo((): SomeCompanionInputField | null => {
@@ -194,10 +170,13 @@ export const InputFieldDefinitionRow = observer(function InputFieldDefinitionRow
 				{!isCollapsed && (
 					<div className="editor-grid">
 						<Form row className="sm:gap-2" onSubmit={PreventDefaultHandler}>
-							<PlainOptionsInputField
-								option={labelField}
+							{/* The id follows the label, so how to use it is shown with the label */}
+							<DefinitionTextField
+								label="Label"
+								description={`Use as $(options:${field.id})`}
 								value={field.label}
-								setValue={setHeaderValue}
+								setValue={setLabel}
+								checkValid={null}
 								readonly={readonly}
 							/>
 
@@ -244,10 +223,12 @@ export const InputFieldDefinitionRow = observer(function InputFieldDefinitionRow
 
 						{showAdvanced && (
 							<Form row className="sm:gap-2" onSubmit={PreventDefaultHandler}>
-								<PlainOptionsInputField
-									option={idField}
+								<DefinitionTextField
+									label="Id"
+									description={null}
 									value={field.id}
-									setValue={setHeaderValue}
+									setValue={setId}
+									checkValid={checkIdValid}
 									readonly={readonly}
 								/>
 								{advanced.map((property) => (
@@ -323,5 +304,44 @@ function PlainOptionsInputField({ option, value, setValue, readonly }: PlainOpti
 			localVariablesStore={null}
 			fieldSupportsExpression={false}
 		/>
+	)
+}
+
+interface DefinitionTextFieldProps {
+	label: string
+	description: string | null
+	value: string
+	setValue: (value: string) => void
+	checkValid: ((value: string) => boolean) | null
+	readonly: boolean
+}
+
+/** A text field for a property which every field has, laid out like the fields for the other properties */
+function DefinitionTextField({
+	label,
+	description,
+	value,
+	setValue,
+	checkValid,
+	readonly,
+}: DefinitionTextFieldProps): React.JSX.Element {
+	const inputId = useId()
+
+	return (
+		<>
+			<FormLabel htmlFor={inputId} sm={4} column="sm">
+				{label}
+			</FormLabel>
+			<Grid.Col sm={8}>
+				<TextInputFieldSimple
+					id={inputId}
+					value={value}
+					setValue={setValue}
+					checkValid={checkValid ?? undefined}
+					disabled={readonly}
+				/>
+				{description && <div className="form-text">{description}</div>}
+			</Grid.Col>
+		</>
 	)
 }
