@@ -5,6 +5,7 @@ import { isCustomActionsConnectionId } from '@companion-app/shared/ConnectionId.
 import { CreateCustomActionControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import {
 	CustomActionInputSchema,
+	CustomActionOutputSchema,
 	type ClientCustomActionData,
 	type CustomActionsUpdate,
 	type CustomActionsUpdateInitOp,
@@ -47,6 +48,42 @@ export function renameCustomActionInputInCallers(
 				newOptions[key === fromId ? toId : key] = value
 			}
 			entity.setOptions(newOptions)
+			changed = true
+		}
+
+		if (changed) control.commitChange(false)
+	}
+}
+
+/**
+ * Update the actions which run a custom action, after one of its outputs has been renamed, so that they keep where
+ * the output is written
+ * @param controlStore The store of all the controls
+ * @param customActionControlId The control id of the custom action
+ * @param fromId The old id of the output
+ * @param toId The new id of the output
+ */
+export function renameCustomActionOutputInCallers(
+	controlStore: ControlStore,
+	customActionControlId: string,
+	fromId: string,
+	toId: string
+): void {
+	const parsedId = ParseControlId(customActionControlId)
+	if (parsedId?.type !== 'custom-action') return
+
+	for (const control of controlStore.controls.values()) {
+		if (!control.supportsEntities) continue
+
+		let changed = false
+		for (const entity of control.entities.getAllEntities()) {
+			if (!isCustomActionsConnectionId(entity.connectionId) || entity.definitionId !== parsedId.customActionId) continue
+
+			const target = entity.rawOutputTargets[fromId]
+			if (!target) continue
+
+			entity.setRawOutputTarget(fromId, undefined)
+			entity.setRawOutputTarget(toId, target)
 			changed = true
 		}
 
@@ -181,6 +218,49 @@ export function createCustomActionTrpcRouter(
 				// Make sure the actions using the custom action keep their value for a renamed input
 				if (input.field.id !== input.inputId) {
 					renameCustomActionInputInCallers(controlStore, input.controlId, input.inputId, input.field.id)
+				}
+
+				return true
+			}),
+
+		outputAdd: publicProcedure
+			.input(z.object({ controlId: z.string(), output: CustomActionOutputSchema }))
+			.mutation(({ input }) => {
+				const control = getCustomAction(input.controlId)
+				if (!control) return false
+
+				return control.outputAdd(input.output)
+			}),
+
+		outputRemove: publicProcedure
+			.input(z.object({ controlId: z.string(), outputId: z.string() }))
+			.mutation(({ input }) => {
+				const control = getCustomAction(input.controlId)
+				if (!control) return false
+
+				return control.outputRemove(input.outputId)
+			}),
+
+		outputMove: publicProcedure
+			.input(z.object({ controlId: z.string(), outputId: z.string(), index: z.number().int().min(0) }))
+			.mutation(({ input }) => {
+				const control = getCustomAction(input.controlId)
+				if (!control) return false
+
+				return control.outputMove(input.outputId, input.index)
+			}),
+
+		outputUpdate: publicProcedure
+			.input(z.object({ controlId: z.string(), outputId: z.string(), output: CustomActionOutputSchema }))
+			.mutation(({ input }) => {
+				const control = getCustomAction(input.controlId)
+				if (!control) return false
+
+				if (!control.outputUpdate(input.outputId, input.output)) return false
+
+				// Make sure the actions using the custom action keep where a renamed output is written
+				if (input.output.id !== input.outputId) {
+					renameCustomActionOutputInCallers(controlStore, input.controlId, input.outputId, input.output.id)
 				}
 
 				return true

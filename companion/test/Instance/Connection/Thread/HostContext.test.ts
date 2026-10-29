@@ -97,6 +97,7 @@ describe('HostContext setActionDefinitions', () => {
 			hasLearn: true,
 			learnTimeout: 5000,
 			actionHasResult: true,
+			actionOutputs: null,
 			showInvert: false,
 			showButtonPreview: false,
 			feedbackType: null,
@@ -115,6 +116,7 @@ describe('HostContext setActionDefinitions', () => {
 			hasLearn: false,
 			hasLifecycleFunctions: false,
 			actionHasResult: false,
+			actionOutputs: null,
 			optionsToMonitorForInvalidations: null,
 		})
 	})
@@ -182,6 +184,7 @@ describe('HostContext setFeedbackDefinitions', () => {
 			hasLearn: true,
 			learnTimeout: 1000,
 			actionHasResult: undefined,
+			actionOutputs: null,
 			optionsSupportExpressions: true,
 		})
 	})

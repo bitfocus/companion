@@ -2,10 +2,12 @@ import type { JsonValue } from 'type-fest'
 import { diffObject } from '@companion-app/shared/Diff.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import {
+	CustomActionOutputSchema,
 	isValidCustomActionInput,
 	type ClientCustomActionData,
 	type CustomActionModel,
 	type CustomActionOptions,
+	type CustomActionOutput,
 } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
@@ -92,7 +94,6 @@ export class ControlCustomAction
 		name: 'New custom action',
 		description: '',
 		sortOrder: 0,
-		resultVariable: null,
 		notes: '',
 	}
 
@@ -116,10 +117,19 @@ export class ControlCustomAction
 	 */
 	#inputs: AuthorableInputField[] = []
 
+	/**
+	 * The outputs of the custom action
+	 */
+	#outputs: CustomActionOutput[] = []
+
 	readonly entities: ControlEntityListPoolCustomAction
 
 	get inputs(): ReadonlyArray<AuthorableInputField> {
 		return this.#inputs
+	}
+
+	get outputs(): ReadonlyArray<CustomActionOutput> {
+		return this.#outputs
 	}
 
 	/**
@@ -163,6 +173,7 @@ export class ControlCustomAction
 			this.options = { ...this.options, ...storage.options }
 			// The inputs are checked by the schema of the custom action when it is loaded
 			this.#inputs = storage.inputs
+			this.#outputs = storage.outputs
 			this.entities.loadStorage(storage, true, isImport)
 
 			if (isImport) setImmediate(() => this.#postProcessImport())
@@ -227,7 +238,8 @@ export class ControlCustomAction
 			hasLearn: false,
 			learnTimeout: undefined,
 			showInvert: false,
-			actionHasResult: !!this.options.resultVariable,
+			actionHasResult: false,
+			actionOutputs: this.#outputs.map((output) => ({ id: output.id, label: output.label })),
 			feedbackAffectedProperties: undefined,
 			optionsSupportExpressions: true,
 			showButtonPreview: false,
@@ -271,18 +283,15 @@ export class ControlCustomAction
 	 * @param actions The actions to run, which are this custom action's own or a copy of them
 	 * @param frame The state of the run
 	 * @param extras The execution context of the caller
-	 * @returns The result of the custom action
 	 */
 	async runActions(
 		actions: ControlEntityInstance[],
 		frame: CustomActionRunFrame,
 		extras: RunActionExtras
-	): Promise<JsonValue | undefined> {
+	): Promise<void> {
 		const runExtras: CustomActionRunExtras = { ...extras, frame }
 
 		await this.deps.actionRunner.runMultipleActions(actions, runExtras, extras.executionMode === 'sequential')
-
-		return this.#readResult(runExtras)
 	}
 
 	/**
@@ -313,14 +322,18 @@ export class ControlCustomAction
 	}
 
 	/**
-	 * Get the result of a run, from the local variable chosen as the result
+	 * Get the value of a local variable during a run
+	 * @param frame The state of the run
+	 * @param extras The execution context of the caller
+	 * @param variableName The name of the local variable, without the `local:` prefix
 	 */
-	#readResult(extras: CustomActionRunExtras): JsonValue | undefined {
-		const resultVariable = this.options.resultVariable
-		if (!resultVariable) return undefined
-
-		const parser = this.createRunParser(extras, { allowClockSensitive: false })
-		const result = parser.executeExpression(`$(local:${resultVariable})`, undefined)
+	readRunLocalVariable(
+		frame: CustomActionRunFrame,
+		extras: RunActionExtras,
+		variableName: string
+	): JsonValue | undefined {
+		const parser = this.createRunParser({ ...extras, frame }, { allowClockSensitive: false })
+		const result = parser.executeExpression(`$(local:${variableName})`, undefined)
 		return result.ok ? result.value : undefined
 	}
 
@@ -436,6 +449,68 @@ export class ControlCustomAction
 	}
 
 	/**
+	 * Add an output
+	 */
+	outputAdd(output: CustomActionOutput): boolean {
+		if (!CustomActionOutputSchema.safeParse(output).success) return false
+		if (this.#outputs.some((existing) => existing.id === output.id)) return false
+
+		this.#outputs.push(structuredClone(output))
+
+		this.commitChange()
+		return true
+	}
+
+	/**
+	 * Remove an output
+	 */
+	outputRemove(outputId: string): boolean {
+		const index = this.#outputs.findIndex((output) => output.id === outputId)
+		if (index === -1) return false
+
+		this.#outputs.splice(index, 1)
+
+		this.commitChange()
+		return true
+	}
+
+	/**
+	 * Move an output to a new position in the list
+	 * @param outputId The id of the output
+	 * @param target The index to move it to
+	 */
+	outputMove(outputId: string, target: number): boolean {
+		const index = this.#outputs.findIndex((output) => output.id === outputId)
+		if (index === -1 || target < 0 || target >= this.#outputs.length || target === index) return false
+
+		const [output] = this.#outputs.splice(index, 1)
+		this.#outputs.splice(target, 0, output)
+
+		this.commitChange()
+		return true
+	}
+
+	/**
+	 * Replace an output. The caller is responsible for updating the actions which call this custom action, if the id
+	 * of the output changes
+	 * @returns Whether the output was updated
+	 */
+	outputUpdate(outputId: string, output: CustomActionOutput): boolean {
+		if (!CustomActionOutputSchema.safeParse(output).success) return false
+
+		const index = this.#outputs.findIndex((existing) => existing.id === outputId)
+		if (index === -1) return false
+
+		// Renaming, so the new id must be unused
+		if (output.id !== outputId && this.#outputs.some((existing) => existing.id === output.id)) return false
+
+		this.#outputs[index] = structuredClone(output)
+
+		this.commitChange()
+		return true
+	}
+
+	/**
 	 * Update the `$(options:<id>)` references to an input in the entities of this custom action
 	 */
 	#renameInputReferences(fromId: string, toId: string): void {
@@ -498,6 +573,7 @@ export class ControlCustomAction
 			inputs: this.#inputs,
 			actions: this.entities.getActionEntities().map((e) => e.asEntityModel(true)),
 			localVariables: this.entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
+			outputs: this.#outputs,
 		}
 		return clone ? structuredClone(obj) : obj
 	}
@@ -538,8 +614,6 @@ export class ControlCustomAction
 		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
 		if (BANNED_PROPS.has(key)) throw new Error(`Setting option "${key}" is not allowed`)
-
-		if (key === 'resultVariable' && value !== null && typeof value !== 'string') return false
 
 		// @ts-expect-error mismatch in types
 		this.options[key] = value

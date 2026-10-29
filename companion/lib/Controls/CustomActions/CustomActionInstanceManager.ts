@@ -16,7 +16,8 @@ import { ControlCustomAction } from '../ControlTypes/CustomAction.js'
 import { MAX_CUSTOM_ACTION_DEPTH, type CustomActionRunFrame } from '../CustomActionRunFrame.js'
 import type { ControlEntityInstance } from '../Entities/EntityInstance.js'
 import type { ControlEntityList } from '../Entities/EntityList.js'
-import type { EntityScope } from '../Entities/Types.js'
+import { resolveStoreResult } from '../Entities/EntitySpecialExpressionManager.js'
+import type { EntityScope, StoreResult } from '../Entities/Types.js'
 import type { IControlStore } from '../IControlStore.js'
 import type { RenderClock } from '../RenderClock.js'
 import { CustomActionEntityScope } from './CustomActionEntityScope.js'
@@ -138,8 +139,9 @@ export class CustomActionInstanceManager {
 	async runCall(
 		caller: ControlEntityInstance,
 		parser: VariablesAndExpressionParser,
-		extras: RunActionExtras
-	): Promise<JsonValue | undefined> {
+		extras: RunActionExtras,
+		storeOutput: (target: StoreResult, value: JsonValue | undefined) => void
+	): Promise<undefined> {
 		const copy = this.#copies.get(caller)
 		const copyScope = copy?.scope
 		if (!copy || !copyScope) {
@@ -176,14 +178,45 @@ export class CustomActionInstanceManager {
 			if (copyLists) this.#copyRuntimeValues(lists, `${caller.id}@${runId}/`, copyLists, `${caller.id}/`)
 		}
 
+		// Where each local variable of the run is written as an output, resolved in the context of the caller
+		const outputTargets = new Map<string, StoreResult[]>()
+		for (const output of customAction.outputs) {
+			if (!output.variableName) continue
+			const target = resolveStoreResult(caller.rawOutputTargets[output.id], parser, this.#logger)
+			if (!target) continue
+
+			const targets = outputTargets.get(output.variableName) ?? []
+			targets.push(target)
+			outputTargets.set(output.variableName, targets)
+		}
+
+		const writeOutput = (variableName: string) => {
+			const targets = outputTargets.get(variableName)
+			if (!targets) return
+
+			const value = customAction.readRunLocalVariable(frame, extras, variableName)
+			for (const target of targets) storeOutput(target, value)
+		}
+
 		const frame: CustomActionRunFrame = {
 			...scope.values,
 			getLocalVariableEntities: () => lists.localVariables.getDirectEntities(),
-			localValueChanged: (name) => scope.localValueChanged(name),
+			localValueChanged: (name) => {
+				scope.localValueChanged(name)
+				// Outputs are written as they change, so that the caller can see the progress of a run
+				writeOutput(name)
+			},
 		}
 
 		try {
-			return await customAction.runActions(lists.actions.getDirectEntities(), frame, extras)
+			await customAction.runActions(lists.actions.getDirectEntities(), frame, extras)
+
+			// Write the final value of each output, which covers those computed from other variables
+			if (!extras.abortDelayed.aborted) {
+				for (const variableName of outputTargets.keys()) writeOutput(variableName)
+			}
+
+			return undefined
 		} finally {
 			caller.removeTransientChildGroup(groupIds.actions)
 			caller.removeTransientChildGroup(groupIds.localVariables)

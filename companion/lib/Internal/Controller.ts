@@ -700,6 +700,7 @@ export class InternalController {
 						learnTimeout: action.learnTimeout,
 
 						actionHasResult: !!action.actionHasResult,
+						actionOutputs: null,
 
 						showButtonPreview: action.showButtonPreview ?? false,
 						supportsChildGroups: action.supportsChildGroups ?? [],
@@ -740,6 +741,7 @@ export class InternalController {
 						learnTimeout: feedback.learnTimeout,
 
 						actionHasResult: undefined,
+						actionOutputs: null,
 
 						entityType: EntityModelType.Feedback,
 						showButtonPreview: feedback.showButtonPreview ?? false,

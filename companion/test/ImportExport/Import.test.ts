@@ -285,7 +285,7 @@ describe('importFull config gating', () => {
 			customActions: {
 				ca1: {
 					type: 'custom-action',
-					options: { name: 'CA', description: '', sortOrder: 0, resultVariable: null },
+					options: { name: 'CA', description: '', sortOrder: 0 },
 					inputs: [{ type: 'checkbox', id: 'flag', label: 'Flag', default: false }],
 					actions: [
 						{

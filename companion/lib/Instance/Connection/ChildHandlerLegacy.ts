@@ -783,6 +783,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				learnTimeout: rawAction.learnTimeout,
 
 				actionHasResult: false,
+				actionOutputs: null,
 
 				showInvert: false,
 				showButtonPreview: false,
@@ -832,6 +833,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				showInvert: rawFeedback.showInvert ?? shouldShowInvertForFeedback(rawFeedback.options || []),
 
 				actionHasResult: undefined,
+				actionOutputs: null,
 
 				feedbackAffectedProperties: undefined,
 				feedbackDisableStyleOverrides: false,

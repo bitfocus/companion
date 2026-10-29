@@ -10,6 +10,7 @@ import type { VariablesController } from '../Variables/Controller.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
 import type { CustomActionInstanceManager } from './CustomActions/CustomActionInstanceManager.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
+import type { StoreResult } from './Entities/Types.js'
 import type { IControlStore } from './IControlStore.js'
 
 /**
@@ -84,22 +85,30 @@ export class ActionRunner {
 
 		// Store the result if necessary, then return.
 		const storeResult = action.storeResult
-		if (!storeResult) return
+		if (storeResult) this.storeValue(storeResult, result, extras)
+	}
 
-		switch (storeResult.type) {
+	/**
+	 * Write a value to where it is to be stored, such as the result of an action
+	 * @param target Where to store the value
+	 * @param value The value
+	 * @param extras The execution context of the action, which `this` in the target is relative to
+	 */
+	storeValue(target: StoreResult, value: JsonValue | undefined, extras: RunActionExtras): void {
+		switch (target.type) {
 			case 'local-variable': {
-				const { location, variableName: name } = storeResult
+				const { location, variableName: name } = target
 				const localVariable = this.#localVariablesController.localVariableFor(location, name, extras)
 				if (!localVariable) {
 					this.#logger.warn(`Local variable ${name} in location \`${location}\` is invalid`)
 					break
 				}
 
-				this.#localVariablesController.setLocalVariable(localVariable, result)
+				this.#localVariablesController.setLocalVariable(localVariable, value)
 				break
 			}
 			case 'page-variable': {
-				const { page, variableName: name } = storeResult
+				const { page, variableName: name } = target
 				const pageVariable = this.#localVariablesController.pageVariableFor(
 					page,
 					name,
@@ -110,17 +119,17 @@ export class ActionRunner {
 					break
 				}
 
-				this.#localVariablesController.setLocalVariable(pageVariable, result)
+				this.#localVariablesController.setLocalVariable(pageVariable, value)
 				break
 			}
 			case 'custom-variable': {
-				const variableName = storeResult.variableName
+				const variableName = target.variableName
 				if (variableName) {
 					const customVars = this.#variablesController.custom
 					if (customVars.hasCustomVariable(variableName)) {
-						customVars.setValue(variableName, result)
-					} else if (storeResult.createIfNotExists) {
-						customVars.createVariable(variableName, result)
+						customVars.setValue(variableName, value)
+					} else if (target.createIfNotExists) {
+						customVars.createVariable(variableName, value)
 					} else {
 						this.#logger.warn(`Custom variable "${variableName}" not found`)
 					}
@@ -128,8 +137,8 @@ export class ActionRunner {
 				break
 			}
 			default:
-				assertNever(storeResult)
-				this.#logger.warn(`Invalid store result target: ${JSON.stringify(storeResult)}`)
+				assertNever(target)
+				this.#logger.warn(`Invalid store target: ${JSON.stringify(target)}`)
 				break
 		}
 	}
@@ -139,7 +148,13 @@ export class ActionRunner {
 	 */
 	async #runCustomAction(action: ControlEntityInstance, extras: RunActionExtras): Promise<JsonValue | undefined> {
 		// The inputs are parsed in the execution context of the caller
-		return this.#customActionInstances.runCall(action, this.#controlStore.createActionExecutionParser(extras), extras)
+		return this.#customActionInstances.runCall(
+			action,
+			this.#controlStore.createActionExecutionParser(extras),
+			extras,
+			// The outputs are stored relative to the caller
+			(target, value) => this.storeValue(target, value, extras)
+		)
 	}
 
 	/**

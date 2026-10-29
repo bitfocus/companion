@@ -804,8 +804,7 @@
 								"default": {
 									"name": "New custom action",
 									"description": "",
-									"sortOrder": 0,
-									"resultVariable": null
+									"sortOrder": 0
 								},
 								"type": "object",
 								"properties": {
@@ -823,13 +822,6 @@
 									},
 									"collectionId": {
 										"type": "string"
-									},
-									"resultVariable": {
-										"default": null,
-										"type": [
-											"string",
-											"null"
-										]
 									},
 									"notes": {
 										"type": "string"
@@ -853,6 +845,30 @@
 								"type": "array",
 								"items": {
 									"$ref": "#/$defs/EntityModel"
+								}
+							},
+							"outputs": {
+								"default": [],
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"id": {
+											"type": "string",
+											"pattern": "^[\\w-]+$"
+										},
+										"label": {
+											"type": "string"
+										},
+										"variableName": {
+											"default": "",
+											"type": "string"
+										}
+									},
+									"required": [
+										"id",
+										"label"
+									]
 								}
 							}
 						},
@@ -2745,6 +2761,241 @@
 									]
 								}
 							]
+						},
+						"outputTargets": {
+							"type": "object",
+							"propertyNames": {
+								"type": "string"
+							},
+							"additionalProperties": {
+								"oneOf": [
+									{
+										"type": "object",
+										"properties": {
+											"type": {
+												"type": "string",
+												"const": "local-variable"
+											},
+											"location": {
+												"anyOf": [
+													{
+														"type": "object",
+														"properties": {
+															"value": {
+																"type": "string"
+															},
+															"isExpression": {
+																"type": "boolean",
+																"const": false
+															}
+														},
+														"required": [
+															"value",
+															"isExpression"
+														]
+													},
+													{
+														"type": "object",
+														"properties": {
+															"value": {
+																"type": "string"
+															},
+															"isExpression": {
+																"type": "boolean",
+																"const": true
+															}
+														},
+														"required": [
+															"value",
+															"isExpression"
+														]
+													}
+												]
+											},
+											"variableName": {
+												"anyOf": [
+													{
+														"type": "object",
+														"properties": {
+															"value": {
+																"type": "string"
+															},
+															"isExpression": {
+																"type": "boolean",
+																"const": false
+															}
+														},
+														"required": [
+															"value",
+															"isExpression"
+														]
+													},
+													{
+														"type": "object",
+														"properties": {
+															"value": {
+																"type": "string"
+															},
+															"isExpression": {
+																"type": "boolean",
+																"const": true
+															}
+														},
+														"required": [
+															"value",
+															"isExpression"
+														]
+													}
+												]
+											}
+										},
+										"required": [
+											"type",
+											"location",
+											"variableName"
+										]
+									},
+									{
+										"type": "object",
+										"properties": {
+											"type": {
+												"type": "string",
+												"const": "page-variable"
+											},
+											"page": {
+												"anyOf": [
+													{
+														"type": "object",
+														"properties": {
+															"value": {
+																"type": "string"
+															},
+															"isExpression": {
+																"type": "boolean",
+																"const": false
+															}
+														},
+														"required": [
+															"value",
+															"isExpression"
+														]
+													},
+													{
+														"type": "object",
+														"properties": {
+															"value": {
+																"type": "string"
+															},
+															"isExpression": {
+																"type": "boolean",
+																"const": true
+															}
+														},
+														"required": [
+															"value",
+															"isExpression"
+														]
+													}
+												]
+											},
+											"variableName": {
+												"anyOf": [
+													{
+														"type": "object",
+														"properties": {
+															"value": {
+																"type": "string"
+															},
+															"isExpression": {
+																"type": "boolean",
+																"const": false
+															}
+														},
+														"required": [
+															"value",
+															"isExpression"
+														]
+													},
+													{
+														"type": "object",
+														"properties": {
+															"value": {
+																"type": "string"
+															},
+															"isExpression": {
+																"type": "boolean",
+																"const": true
+															}
+														},
+														"required": [
+															"value",
+															"isExpression"
+														]
+													}
+												]
+											}
+										},
+										"required": [
+											"type",
+											"page",
+											"variableName"
+										]
+									},
+									{
+										"type": "object",
+										"properties": {
+											"type": {
+												"type": "string",
+												"const": "custom-variable"
+											},
+											"variableName": {
+												"anyOf": [
+													{
+														"type": "object",
+														"properties": {
+															"value": {
+																"type": "string"
+															},
+															"isExpression": {
+																"type": "boolean",
+																"const": false
+															}
+														},
+														"required": [
+															"value",
+															"isExpression"
+														]
+													},
+													{
+														"type": "object",
+														"properties": {
+															"value": {
+																"type": "string"
+															},
+															"isExpression": {
+																"type": "boolean",
+																"const": true
+															}
+														},
+														"required": [
+															"value",
+															"isExpression"
+														]
+													}
+												]
+											},
+											"createIfNotExists": {
+												"type": "boolean"
+											}
+										},
+										"required": [
+											"type",
+											"variableName",
+											"createIfNotExists"
+										]
+									}
+								]
+							}
 						}
 					},
 					"required": [

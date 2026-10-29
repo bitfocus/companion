@@ -261,10 +261,11 @@ describe('CustomActionModelSchema', () => {
 	test('a minimal custom action gets the defaults', () => {
 		expect(CustomActionModelSchema.parse({ type: 'custom-action' })).toEqual({
 			type: 'custom-action',
-			options: { name: 'New custom action', description: '', sortOrder: 0, resultVariable: null },
+			options: { name: 'New custom action', description: '', sortOrder: 0 },
 			inputs: [],
 			actions: [],
 			localVariables: [],
+			outputs: [],
 		})
 	})
 

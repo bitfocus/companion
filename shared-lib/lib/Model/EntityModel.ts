@@ -103,6 +103,12 @@ export interface ActionEntityModel extends EntityModelBase {
 	 * to.  (Absent means any result is discarded.)
 	 */
 	storeResult?: RawStoreResult
+
+	/**
+	 * When the action runs a custom action, the target each of its outputs is written to, by the id of the output.
+	 * (Absent means that output is discarded.)
+	 */
+	outputTargets?: Record<string, RawStoreResult>
 }
 
 export interface FeedbackEntityModel extends EntityModelBase {
@@ -195,6 +201,7 @@ const actionEntityObjectSchema = z.object({
 		return entityChildrenSchema()
 	},
 	storeResult: zodRawStoreResult.optional(),
+	outputTargets: z.record(z.string(), zodRawStoreResult).optional(),
 })
 
 const feedbackEntityObjectSchema = z.object({

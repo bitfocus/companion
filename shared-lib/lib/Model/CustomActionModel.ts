@@ -13,8 +13,6 @@ export const CustomActionOptionsSchema = z.object({
 	description: z.string().default(''),
 	sortOrder: z.number().default(0),
 	collectionId: z.string().optional(),
-	/** The name of the local variable whose value is the result of the action, if any */
-	resultVariable: z.string().nullable().default(null),
 	notes: z.string().optional(),
 })
 
@@ -52,7 +50,21 @@ export function isValidCustomActionInput(field: unknown): field is AuthorableInp
 }
 
 /**
- * A user defined action, made of a list of other actions, with user defined inputs
+ * An output of a custom action: one of its local variables, whose value is written to wherever the action which
+ * calls it chooses, each time it is set during a run
+ */
+export const CustomActionOutputSchema = z.object({
+	/** Used by the actions which call the custom action to say where the output goes */
+	id: z.string().regex(CUSTOM_ACTION_INPUT_ID_PATTERN),
+	label: z.string(),
+	/** The name of the local variable of the custom action whose value is the output, or '' for none */
+	variableName: z.string().default(''),
+})
+
+export type CustomActionOutput = z.output<typeof CustomActionOutputSchema>
+
+/**
+ * A user defined action, made of a list of other actions, with user defined inputs and outputs
  */
 export const CustomActionModelSchema = z.object({
 	type: z.literal('custom-action'),
@@ -65,6 +77,9 @@ export const CustomActionModelSchema = z.object({
 
 	/** The local variables of the action. Their values are scoped to each run of the action */
 	localVariables: z.array(SomeEntityModelSchema).default(() => []),
+
+	/** The outputs of the action, written to wherever each action which calls it chooses */
+	outputs: z.array(CustomActionOutputSchema).default(() => []),
 })
 
 export type CustomActionModel = z.output<typeof CustomActionModelSchema>

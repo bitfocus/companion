@@ -109,6 +109,14 @@ export interface EditableEntityListPool extends ControlEntityListPoolBase {
 	/** Set where this action's result will be stored (if at all) */
 	entitySetRawStoreResult(listId: SomeSocketEntityLocation, id: string, target: RawStoreResult | undefined): boolean
 
+	/** Set where an output of this action will be written (if at all) */
+	entitySetRawOutputTarget(
+		listId: SomeSocketEntityLocation,
+		id: string,
+		outputId: string,
+		target: RawStoreResult | undefined
+	): boolean
+
 	/**
 	 * Set the local variable name for an entity
 	 * @param id the id of the entity
@@ -411,6 +419,22 @@ export function WithEntityEditing<TBase extends AbstractConstructor<ControlEntit
 			if (!entity) return false
 
 			entity.setRawStoreResult(target)
+
+			this.reportChange({ redraw: false })
+
+			return true
+		}
+
+		entitySetRawOutputTarget(
+			listId: SomeSocketEntityLocation,
+			id: string,
+			outputId: string,
+			target: RawStoreResult | undefined
+		): boolean {
+			const entity = this.getEntityList(listId)?.findById(id)
+			if (!entity) return false
+
+			entity.setRawOutputTarget(outputId, target)
 
 			this.reportChange({ redraw: false })
 

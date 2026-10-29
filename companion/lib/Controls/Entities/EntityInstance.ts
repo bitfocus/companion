@@ -142,6 +142,15 @@ export class ControlEntityInstance {
 	}
 
 	/**
+	 * Get the raw targets of the outputs of this action, by the id of the output
+	 */
+	get rawOutputTargets(): Readonly<Record<string, RawStoreResult>> {
+		const data = this.#data
+		if (data.type !== EntityModelType.Action) return {}
+		return (data as ActionEntityModel).outputTargets ?? {}
+	}
+
+	/**
 	 * Get the raw isInverted value for this feedback
 	 */
 	get rawIsInverted(): ExpressionOrValue<boolean> | undefined {
@@ -542,6 +551,24 @@ export class ControlEntityInstance {
 		this.cleanup()
 		data.storeResult = target
 		this.subscribe(false)
+	}
+
+	/**
+	 * Set the target into which an output of this action is written
+	 * @param outputId The id of the output
+	 * @param target The target, or undefined to discard the output
+	 */
+	setRawOutputTarget(outputId: string, target: RawStoreResult | undefined): void {
+		if (this.type !== EntityModelType.Action) return
+
+		const data = this.#data as ActionEntityModel
+		const targets = { ...data.outputTargets }
+		if (target) {
+			targets[outputId] = target
+		} else {
+			delete targets[outputId]
+		}
+		data.outputTargets = Object.keys(targets).length > 0 ? targets : undefined
 	}
 
 	/**

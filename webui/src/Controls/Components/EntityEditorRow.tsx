@@ -204,6 +204,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 		(entityDefinition.entityType === EntityModelType.Action &&
 			!!entityDefinition.actionHasResult &&
 			!!entityService.setRawStoreResult) ||
+		(!!entityDefinition.actionOutputs?.length && !!entityService.setRawOutputTarget) ||
 		(entity.type === EntityModelType.Feedback &&
 			(!!localVariablePrefix ||
 				(entityDefinition.entityType === EntityModelType.Feedback &&

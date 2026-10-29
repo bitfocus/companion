@@ -82,7 +82,7 @@ describe('custom actions', () => {
 		await vi.waitFor(() => expect(app.getCustomVariableValue('out')).toBe('second'))
 	})
 
-	test('the result of a custom action is stored by the caller', async () => {
+	test('an output of a custom action is written where the caller chooses', async () => {
 		app.createCustomVariable('res', '')
 		const customActionId = await app.trpc().controls.customActions.create({ name: 'Double' })
 		await app.trpc().controls.customActions.inputAdd({
@@ -110,26 +110,21 @@ describe('custom actions', () => {
 			name: exprVal('doubled'),
 			value: exprExpr('$(options:n) * 2'),
 		})
-		await app.trpc().controls.setOptionsField({ controlId: customActionId, key: 'resultVariable', value: 'doubled' })
+		await app.trpc().controls.customActions.outputAdd({
+			controlId: customActionId,
+			output: { id: 'doubled', label: 'Doubled', variableName: 'doubled' },
+		})
 
 		const location = { pageNumber: 1, row: 2, column: 1 }
 		const buttonId = app.createButton(location)
-		const callId = app.addCustomActionCall(
+		app.addCustomActionCall(
 			buttonId,
 			customActionId,
 			{ n: exprVal(21) },
 			{
-				type: 'custom-variable',
-				variableName: exprVal('res'),
-				createIfNotExists: false,
+				doubled: { type: 'custom-variable', variableName: exprVal('res'), createIfNotExists: false },
 			}
 		)
-
-		// Where to store the result is resolved asynchronously
-		await vi.waitFor(() => {
-			const control = app.registry.controls.getControl(buttonId)
-			expect(control?.supportsEntities && control.entities.findEntityById(callId)?.storeResult).toBeTruthy()
-		})
 
 		app.pressButton(location, true)
 		await vi.waitFor(() => expect(app.getCustomVariableValue('res')).toBe(42))

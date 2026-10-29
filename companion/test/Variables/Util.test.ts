@@ -30,6 +30,7 @@ function createDefinition(
 		learnTimeout: undefined,
 		showInvert: false,
 		actionHasResult: false,
+		actionOutputs: null,
 		optionsSupportExpressions: false,
 		showButtonPreview: false,
 		supportsChildGroups: [],
