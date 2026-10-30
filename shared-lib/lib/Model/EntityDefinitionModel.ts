@@ -49,6 +49,12 @@ export interface ClientEntityDefinition {
 	actionOutputs: ClientEntityOutputDefinition[] | null
 
 	/**
+	 * Why the entity won't do all it says, such as a custom action which calls back into itself, to show the user.
+	 * Null when there is nothing wrong
+	 */
+	warning: string | null
+
+	/**
 	 * When an advanced feedback, the properties that should have overrides assigned
 	 */
 	feedbackAffectedProperties: string[] | undefined

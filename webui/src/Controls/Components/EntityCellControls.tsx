@@ -1,4 +1,4 @@
-import { faChevronDown, faPencil, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faChevronDown, faPencil, faTrash, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useState } from 'react'
@@ -33,6 +33,7 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	service,
 	entityTypeLabel,
 	entity,
+	entityDefinition,
 	connectionLabel,
 	ownerId,
 	isPanelCollapsed,
@@ -117,6 +118,13 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 							title={cleanHeadline}
 						>
 							{cleanHeadline}
+						</span>
+					)}
+
+					{entityDefinition?.warning && (
+						<span className="text-3xs text-tone-warning-text leading-snug">
+							<FontAwesomeIcon icon={faTriangleExclamation} className="me-1" />
+							{entityDefinition.warning}
 						</span>
 					)}
 

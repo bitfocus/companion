@@ -1,7 +1,9 @@
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
+import { ControlCustomAction } from '../../lib/Controls/ControlTypes/CustomAction.js'
 import { createMockTrpcContext } from '../Util.js'
 import { createTestApp, type TestApp } from './TestApp.js'
 
@@ -128,6 +130,53 @@ describe('custom actions', () => {
 
 		app.pressButton(location, true)
 		await vi.waitFor(() => expect(app.getCustomVariableValue('res')).toBe(42))
+	})
+
+	test('custom actions calling each other in a loop are reported', async () => {
+		const first = await app.trpc().controls.customActions.create({ name: 'First' })
+		const second = await app.trpc().controls.customActions.create({ name: 'Second' })
+		const idOf = (controlId: string) => controlId.slice('custom-action:'.length)
+
+		const addCall = async (controlId: string, calledControlId: string) => {
+			// The custom actions are published as actions after a short delay
+			await vi.waitFor(() =>
+				expect(
+					app.registry.instance.definitions.getEntityDefinition(
+						EntityModelType.Action,
+						CUSTOM_ACTIONS_CONNECTION_ID,
+						idOf(calledControlId)
+					)
+				).toBeTruthy()
+			)
+			const id = await app.trpc().controls.entities.add({
+				controlId,
+				entityLocation: 'custom_action_actions',
+				ownerId: null,
+				connectionId: CUSTOM_ACTIONS_CONNECTION_ID,
+				entityType: EntityModelType.Action,
+				entityDefinition: idOf(calledControlId),
+			})
+			expect(id).toBeTruthy()
+		}
+		await addCall(first, second)
+		await addCall(second, first)
+
+		await vi.waitFor(() => {
+			const definition = app.registry.instance.definitions.getEntityDefinition(
+				EntityModelType.Action,
+				CUSTOM_ACTIONS_CONNECTION_ID,
+				idOf(first)
+			)
+			expect(definition?.warning).toBe('It calls back into itself through "Second". That call back does nothing.')
+		})
+
+		const control = app.registry.controls.getControl(first)
+		if (!(control instanceof ControlCustomAction)) throw new Error('Expected a custom action')
+		expect(control.toClientJSON()).toMatchObject({
+			calledCustomActionIds: [idOf(first), idOf(second)].sort(),
+			callLoop: [idOf(first), idOf(second), idOf(first)],
+			nestedTooDeep: false,
+		})
 	})
 
 	test('custom actions survive an export and import', async () => {

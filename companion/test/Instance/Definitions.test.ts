@@ -66,6 +66,7 @@ function makeActionDefinition(overrides: Partial<ClientEntityDefinition> = {}): 
 		showInvert: false,
 		actionHasResult: false,
 		actionOutputs: null,
+		warning: null,
 		optionsSupportExpressions: false,
 		supportsChildGroups: [],
 		showButtonPreview: false,

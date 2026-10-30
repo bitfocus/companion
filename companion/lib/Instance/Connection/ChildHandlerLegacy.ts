@@ -784,6 +784,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 				actionHasResult: false,
 				actionOutputs: null,
+				warning: null,
 
 				showInvert: false,
 				showButtonPreview: false,
@@ -834,6 +835,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 				actionHasResult: undefined,
 				actionOutputs: null,
+				warning: null,
 
 				feedbackAffectedProperties: undefined,
 				feedbackDisableStyleOverrides: false,

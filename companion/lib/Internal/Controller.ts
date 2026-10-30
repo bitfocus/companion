@@ -701,6 +701,7 @@ export class InternalController {
 
 						actionHasResult: !!action.actionHasResult,
 						actionOutputs: null,
+						warning: null,
 
 						showButtonPreview: action.showButtonPreview ?? false,
 						supportsChildGroups: action.supportsChildGroups ?? [],
@@ -742,6 +743,7 @@ export class InternalController {
 
 						actionHasResult: undefined,
 						actionOutputs: null,
+						warning: null,
 
 						entityType: EntityModelType.Feedback,
 						showButtonPreview: feedback.showButtonPreview ?? false,

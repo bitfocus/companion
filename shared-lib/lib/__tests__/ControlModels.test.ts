@@ -7,7 +7,7 @@ import {
 	SomeButtonModelSchema,
 } from '../Model/ButtonModel.js'
 import { SomeControlModelSchema } from '../Model/Controls.js'
-import { CustomActionModelSchema } from '../Model/CustomActionModel.js'
+import { CustomActionModelSchema, getCustomActionCallsExcludedFrom } from '../Model/CustomActionModel.js'
 import { EventInstanceSchema } from '../Model/EventModel.js'
 import { ExpressionVariableModelSchema } from '../Model/ExpressionVariableModel.js'
 import { PageControlModelSchema } from '../Model/PageControlModel.js'
@@ -279,6 +279,27 @@ describe('CustomActionModelSchema', () => {
 		['an id which is not usable in a variable', { type: 'checkbox', id: 'a b', label: 'A', default: false }],
 	])('an input can not have %s', (_name, input) => {
 		expect(CustomActionModelSchema.safeParse({ type: 'custom-action', inputs: [input] }).success).toBe(false)
+	})
+})
+
+describe('getCustomActionCallsExcludedFrom', () => {
+	const customActions: [string, { calledCustomActionIds: string[] }][] = [
+		['custom-action:a', { calledCustomActionIds: ['b', 'c'] }],
+		['custom-action:b', { calledCustomActionIds: ['c'] }],
+		['custom-action:c', { calledCustomActionIds: [] }],
+	]
+
+	test('excludes the custom action itself, and any which call it', () => {
+		expect(getCustomActionCallsExcludedFrom('custom-action:c', customActions)).toEqual(
+			new Set(['__custom-actions__:c', '__custom-actions__:a', '__custom-actions__:b'])
+		)
+		expect(getCustomActionCallsExcludedFrom('custom-action:a', customActions)).toEqual(
+			new Set(['__custom-actions__:a'])
+		)
+	})
+
+	test('excludes nothing from a control which is not a custom action', () => {
+		expect(getCustomActionCallsExcludedFrom('bank:abc', customActions)).toEqual(new Set())
 	})
 })
 

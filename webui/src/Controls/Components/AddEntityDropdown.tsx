@@ -20,8 +20,8 @@ interface AddEntityDropdownProps {
 	entityType: EntityModelType
 	entityTypeLabel: string
 	feedbackListType: ClientEntityDefinition['feedbackType']
-	/** A definition which can't be added here, such as a custom action running itself */
-	excludedDefinition: { connectionId: string; definitionId: string } | null
+	/** The ids (`<connectionId>:<definitionId>`) of what can't be added here, such as a custom action running itself */
+	excludedIds: ReadonlySet<string>
 	disabled: boolean
 }
 export const AddEntityDropdown = observer(function AddEntityDropdown({
@@ -29,7 +29,7 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 	entityType,
 	entityTypeLabel,
 	feedbackListType,
-	excludedDefinition,
+	excludedIds,
 	disabled,
 }: AddEntityDropdownProps) {
 	const { entityDefinitions, connections } = useContext(RootAppStoreContext)
@@ -60,10 +60,6 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 			})
 		}
 
-		const excludedId = excludedDefinition
-			? `${excludedDefinition.connectionId}:${excludedDefinition.definitionId}`
-			: null
-
 		return [
 			...baseGroups,
 			{
@@ -73,9 +69,13 @@ export const AddEntityDropdown = observer(function AddEntityDropdown({
 				items: recents,
 			},
 		]
-			.map((group) => (excludedId ? { ...group, items: group.items.filter((item) => item.id !== excludedId) } : group))
+			.map((group) =>
+				excludedIds.size > 0
+					? { ...group, items: group.items.filter((item) => !excludedIds.has(String(item.id))) }
+					: group
+			)
 			.map(scopeGroupItemIds)
-	}, [baseGroups, definitions, connections, recentlyUsedStore.recentIds, feedbackListType, excludedDefinition])
+	}, [baseGroups, definitions, connections, recentlyUsedStore.recentIds, feedbackListType, excludedIds])
 	const collection = useComboboxCollection(options, getComboboxItemLabel)
 
 	const onChange = useCallback(

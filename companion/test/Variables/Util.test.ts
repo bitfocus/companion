@@ -31,6 +31,7 @@ function createDefinition(
 		showInvert: false,
 		actionHasResult: false,
 		actionOutputs: null,
+		warning: null,
 		optionsSupportExpressions: false,
 		showButtonPreview: false,
 		supportsChildGroups: [],

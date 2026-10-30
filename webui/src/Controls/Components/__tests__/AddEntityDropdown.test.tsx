@@ -28,7 +28,7 @@ const BASE_GROUPS: AddEntityGroup[] = [
 	{ id: '__common__', label: 'Common', showWhenUnfiltered: true, items: [option('internal:alpha', 'Alpha')] },
 ]
 
-function renderDropdown(excludedDefinition: { connectionId: string; definitionId: string } | null = null) {
+function renderDropdown(excludedIds: ReadonlySet<string> = new Set()) {
 	const onSelect = vi.fn()
 	const trackId = vi.fn()
 	// Deep partial of the root store - the dropdown only reaches for these
@@ -52,7 +52,7 @@ function renderDropdown(excludedDefinition: { connectionId: string; definitionId
 					entityType={EntityModelType.Action}
 					entityTypeLabel="action"
 					feedbackListType={null}
-					excludedDefinition={excludedDefinition}
+					excludedIds={excludedIds}
 					disabled={false}
 				/>
 			</MenuPortalContext.Provider>
@@ -115,7 +115,7 @@ describe('AddEntityDropdown — selection', () => {
 	})
 
 	it('omits an excluded entity', async () => {
-		const { user, input } = renderDropdown({ connectionId: 'conn1', definitionId: 'beta' })
+		const { user, input } = renderDropdown(new Set(['conn1:beta']))
 		await user.click(input)
 		await user.type(input, 'beta')
 		expect(within(screen.getByRole('listbox')).queryByRole('option', { name: 'Conn One: Beta' })).toBeNull()

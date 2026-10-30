@@ -52,6 +52,8 @@ import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
 import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
 import { CustomActionCollections } from './CustomActionCollections.js'
+import { MAX_CUSTOM_ACTION_DEPTH } from './CustomActionRunFrame.js'
+import { analyseCustomActionCalls, type CustomActionCallAnalysis } from './CustomActions/CustomActionCalls.js'
 import { createCustomActionTrpcRouter } from './CustomActionTrpcRouter.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
@@ -186,14 +188,28 @@ export class ControlsController {
 	 */
 	#publishCustomActionDefinitions = debounceFn(
 		(): void => {
-			const definitions: Record<string, ClientEntityDefinition> = {}
+			const customActions = new Map<string, ControlCustomAction>()
 			for (const control of this.#store.controls.values()) {
 				if (!(control instanceof ControlCustomAction)) continue
 
 				const parsedId = ParseControlId(control.controlId)
 				if (parsedId?.type !== 'custom-action') continue
 
-				definitions[parsedId.customActionId] = control.toActionDefinition()
+				customActions.set(parsedId.customActionId, control)
+			}
+
+			// Which custom actions call each other, so that the calls which can never run can be shown as such
+			const analysis = analyseCustomActionCalls(
+				new Map([...customActions].map(([id, control]) => [id, control.getCalledCustomActionIds()]))
+			)
+			for (const [id, control] of customActions) {
+				const callAnalysis = analysis.get(id)
+				if (callAnalysis) control.setCallAnalysis(callAnalysis, describeCallProblem(customActions, callAnalysis))
+			}
+
+			const definitions: Record<string, ClientEntityDefinition> = {}
+			for (const [id, control] of customActions) {
+				definitions[id] = control.toActionDefinition()
 			}
 
 			this.#deps.instance.definitions.setActionDefinitions(CUSTOM_ACTIONS_CONNECTION_ID, definitions)
@@ -889,4 +905,26 @@ export class ControlsController {
 	): VariablesAndExpressionParser {
 		return this.#store.createVariablesAndExpressionParser(controlId, overrideVariableValues ?? null, options)
 	}
+}
+
+/**
+ * Describe why some of the calls of a custom action can never run, for the user
+ */
+function describeCallProblem(
+	customActions: ReadonlyMap<string, ControlCustomAction>,
+	analysis: CustomActionCallAnalysis
+): string | null {
+	if (analysis.loop) {
+		const through = analysis.loop
+			.slice(1, -1)
+			.map((id) => `"${customActions.get(id)?.options.name || id}"`)
+			.join(', then ')
+		return through
+			? `It calls back into itself through ${through}. That call back does nothing.`
+			: 'It calls itself. That call does nothing.'
+	}
+	if (analysis.tooDeep) {
+		return `Its calls to other custom actions are nested more than ${MAX_CUSTOM_ACTION_DEPTH} deep. The deepest do nothing.`
+	}
+	return null
 }
