@@ -4,6 +4,7 @@ import {
 	faBorderAll,
 	faClock,
 	faCubes,
+	faCubesStacked,
 	faDollarSign,
 	faDownload,
 	faPlug,
@@ -68,7 +69,7 @@ export const CommandPalette = observer(function CommandPalette() {
 })
 
 const CommandPaletteContents = observer(function CommandPaletteContents() {
-	const { pages, connections, triggersList, customActionsList, variablesStore, notifier } =
+	const { pages, connections, triggersList, customActionsList, customFeedbacksList, variablesStore, notifier } =
 		useContext(RootAppStoreContext)
 	const navigate = useNavigate()
 
@@ -228,7 +229,25 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 			})
 		}
 
-		// 6. Pages
+		// 6. Custom feedbacks
+		for (const [controlId, customFeedback] of customFeedbacksList.customFeedbacks.entries()) {
+			const parsedId = ParseControlId(controlId)
+			if (parsedId?.type !== 'custom-feedback') continue
+
+			items.push({
+				id: controlId,
+				category: 'Quick Actions',
+				title: customFeedback.name || 'Custom feedback',
+				subtitle: customFeedback.description || 'Custom feedback',
+				icon: faCubesStacked,
+				onSelect: () => {
+					void navigate({ to: '/custom-feedbacks/$controlId', params: { controlId: parsedId.customFeedbackId } })
+					closePalette()
+				},
+			})
+		}
+
+		// 7. Pages
 		if (pages?.data) {
 			pages.data.forEach((page, index) => {
 				const pageNumber = index + 1
@@ -271,7 +290,17 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 		}
 
 		return items
-	}, [pages, connections, triggersList, customActionsList, variablesStore, navigate, closePalette, notifier])
+	}, [
+		pages,
+		connections,
+		triggersList,
+		customActionsList,
+		customFeedbacksList,
+		variablesStore,
+		navigate,
+		closePalette,
+		notifier,
+	])
 
 	// Fuzzy-filter items based on query
 	const filteredItems = useMemo(() => {

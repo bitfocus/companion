@@ -132,6 +132,7 @@ const defaultFullImportConfig: ClientImportSelection = {
 	customVariables: 'reset-and-import',
 	expressionVariables: 'reset-and-import',
 	customActions: 'reset-and-import',
+	customFeedbacks: 'reset-and-import',
 	imageLibrary: 'reset-and-import',
 }
 
@@ -491,6 +492,7 @@ function sanitiseSelection(
 		customVariables: processValue(snapshot.customVariables, values.customVariables),
 		expressionVariables: processValue(snapshot.expressionVariables, values.expressionVariables),
 		customActions: processValue(snapshot.customActions, values.customActions),
+		customFeedbacks: processValue(snapshot.customFeedbacks, values.customFeedbacks),
 		imageLibrary: processValue(snapshot.imageLibrary, values.imageLibrary),
 
 		// These are not user selectable, so simply vary depending on whether this is a full reset or not

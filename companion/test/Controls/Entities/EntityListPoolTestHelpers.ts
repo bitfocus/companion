@@ -96,6 +96,7 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 		renderClock: { subscribe: vi.fn(() => () => {}) } as any,
 		getPageVariableEntities: () => null,
 		customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
+		customFeedbackInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
 	}
 
 	return {

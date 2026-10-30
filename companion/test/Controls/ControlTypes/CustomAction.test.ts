@@ -3,7 +3,7 @@ import { describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
 import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import { CreateCustomActionControlId } from '@companion-app/shared/ControlId.js'
-import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
+import { getCustomActionCallDefinition, type CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
@@ -22,7 +22,8 @@ import {
 	CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP,
 	CustomActionInstanceManager,
 } from '../../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
-import { renameCustomActionInputInCallers } from '../../../lib/Controls/CustomActionTrpcRouter.js'
+import { renameCustomEntityInputInCallers } from '../../../lib/Controls/CustomEntities/CustomEntityTrpc.js'
+import { CustomFeedbackInstanceManager } from '../../../lib/Controls/CustomFeedbacks/CustomFeedbackInstanceManager.js'
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
 import type { RunActionExtras } from '../../../lib/Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../../../lib/Instance/Controller.js'
@@ -147,7 +148,8 @@ function createHarness(model: Partial<CustomActionModel>) {
 	}
 
 	const renderClock = { subscribe: vi.fn(() => () => {}) } as any
-	const customActionInstances = new CustomActionInstanceManager(controlStore, renderClock)
+	const customFeedbackInstances = new CustomFeedbackInstanceManager(controlStore, renderClock)
+	const customActionInstances = new CustomActionInstanceManager(controlStore, renderClock, customFeedbackInstances)
 
 	const actionRunner = new ActionRunner(
 		instanceController,
@@ -180,11 +182,12 @@ function createHarness(model: Partial<CustomActionModel>) {
 		controlsAccessor: controlStore,
 		linkButtons: null as any,
 		customActionInstances,
+		customFeedbackInstances,
 	}
 
 	// As the controls controller does, keep the copies held by calling actions up to date
 	deps.events.on('customActionDefinitionChanged', (controlId: string) =>
-		customActionInstances.onCustomActionChanged(controlId)
+		customActionInstances.onCustomEntityChanged(controlId)
 	)
 	variableValues.on('variablesChanged', (changed, _labels, controlId) =>
 		customActionInstances.onVariablesChanged(changed, controlId ? new Set([controlId]) : null)
@@ -363,7 +366,12 @@ describe('ControlCustomAction', () => {
 			caller.entities.entityAdd('custom_action_actions', null, callAction({ n: exprVal(6) }, 'other'))
 			controlStore.controls.set('custom-action:caller', caller)
 
-			renameCustomActionInputInCallers(controlStore, CUSTOM_ACTION_CONTROL_ID, 'n', 'count')
+			renameCustomEntityInputInCallers(
+				controlStore,
+				getCustomActionCallDefinition(CUSTOM_ACTION_CONTROL_ID)!,
+				'n',
+				'count'
+			)
 
 			const [renamed, untouched] = caller.entities.getActionEntities()
 			expect(renamed.rawOptions).toEqual({ count: exprVal(5) })

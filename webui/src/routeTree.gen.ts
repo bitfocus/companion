@@ -28,6 +28,7 @@ import { Route as AppButtonsRouteImport } from './routes/_app/buttons.tsx'
 import { Route as AppCloudRouteImport } from './routes/_app/cloud.tsx'
 import { Route as AppConnectionsRouteImport } from './routes/_app/connections.tsx'
 import { Route as AppCustomActionsRouteImport } from './routes/_app/custom-actions.tsx'
+import { Route as AppCustomFeedbacksRouteImport } from './routes/_app/custom-feedbacks.tsx'
 import { Route as AppImageLibraryRouteImport } from './routes/_app/image-library.tsx'
 import { Route as AppImportExportRouteImport } from './routes/_app/import-export.tsx'
 import { Route as AppLinkRouteImport } from './routes/_app/link.tsx'
@@ -42,6 +43,8 @@ import { Route as AppConnectionsConnectionIdRouteImport } from './routes/_app/co
 import { Route as AppConnectionsAddRouteImport } from './routes/_app/connections/add.tsx'
 import { Route as AppCustomActionsIndexRouteImport } from './routes/_app/custom-actions/index.tsx'
 import { Route as AppCustomActionsControlIdRouteImport } from './routes/_app/custom-actions/$controlId.tsx'
+import { Route as AppCustomFeedbacksIndexRouteImport } from './routes/_app/custom-feedbacks/index.tsx'
+import { Route as AppCustomFeedbacksControlIdRouteImport } from './routes/_app/custom-feedbacks/$controlId.tsx'
 import { Route as AppImageLibraryIndexRouteImport } from './routes/_app/image-library/index.tsx'
 import { Route as AppImageLibraryImageNameRouteImport } from './routes/_app/image-library/$imageName.tsx'
 import { Route as AppLinkIndexRouteImport } from './routes/_app/link/index.tsx'
@@ -191,6 +194,11 @@ const AppCustomActionsRoute = AppCustomActionsRouteImport.update({
   path: '/custom-actions',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCustomFeedbacksRoute = AppCustomFeedbacksRouteImport.update({
+  id: '/custom-feedbacks',
+  path: '/custom-feedbacks',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppImageLibraryRoute = AppImageLibraryRouteImport.update({
   id: '/image-library',
   path: '/image-library',
@@ -269,6 +277,17 @@ const AppCustomActionsControlIdRoute =
     id: '/$controlId',
     path: '/$controlId',
     getParentRoute: () => AppCustomActionsRoute,
+  } as any)
+const AppCustomFeedbacksIndexRoute = AppCustomFeedbacksIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppCustomFeedbacksRoute,
+} as any)
+const AppCustomFeedbacksControlIdRoute =
+  AppCustomFeedbacksControlIdRouteImport.update({
+    id: '/$controlId',
+    path: '/$controlId',
+    getParentRoute: () => AppCustomFeedbacksRoute,
   } as any)
 const AppImageLibraryIndexRoute = AppImageLibraryIndexRouteImport.update({
   id: '/',
@@ -607,6 +626,7 @@ export interface FileRoutesByFullPath {
   '/cloud': typeof AppCloudRoute
   '/connections': typeof AppConnectionsRouteWithChildren
   '/custom-actions': typeof AppCustomActionsRouteWithChildren
+  '/custom-feedbacks': typeof AppCustomFeedbacksRouteWithChildren
   '/image-library': typeof AppImageLibraryRouteWithChildren
   '/import-export': typeof AppImportExportRoute
   '/link': typeof AppLinkRouteWithChildren
@@ -620,6 +640,7 @@ export interface FileRoutesByFullPath {
   '/connections/$connectionId': typeof AppConnectionsConnectionIdRouteWithChildren
   '/connections/add': typeof AppConnectionsAddRoute
   '/custom-actions/$controlId': typeof AppCustomActionsControlIdRoute
+  '/custom-feedbacks/$controlId': typeof AppCustomFeedbacksControlIdRoute
   '/image-library/$imageName': typeof AppImageLibraryImageNameRoute
   '/link/$peerId': typeof AppLinkPeerIdRoute
   '/link/self': typeof AppLinkSelfRoute
@@ -645,6 +666,7 @@ export interface FileRoutesByFullPath {
   '/emulator/$emulatorId': typeof StandaloneEmulatorEmulatorIdDotlazyRoute
   '/connections/': typeof AppConnectionsIndexRoute
   '/custom-actions/': typeof AppCustomActionsIndexRoute
+  '/custom-feedbacks/': typeof AppCustomFeedbacksIndexRoute
   '/image-library/': typeof AppImageLibraryIndexRoute
   '/link/': typeof AppLinkIndexRoute
   '/modules/': typeof AppModulesIndexRoute
@@ -703,6 +725,7 @@ export interface FileRoutesByTo {
   '/connections/$connectionId': typeof AppConnectionsConnectionIdRouteWithChildren
   '/connections/add': typeof AppConnectionsAddRoute
   '/custom-actions/$controlId': typeof AppCustomActionsControlIdRoute
+  '/custom-feedbacks/$controlId': typeof AppCustomFeedbacksControlIdRoute
   '/image-library/$imageName': typeof AppImageLibraryImageNameRoute
   '/link/$peerId': typeof AppLinkPeerIdRoute
   '/link/self': typeof AppLinkSelfRoute
@@ -719,6 +742,7 @@ export interface FileRoutesByTo {
   '/emulator/$emulatorId': typeof StandaloneEmulatorEmulatorIdDotlazyRoute
   '/connections': typeof AppConnectionsIndexRoute
   '/custom-actions': typeof AppCustomActionsIndexRoute
+  '/custom-feedbacks': typeof AppCustomFeedbacksIndexRoute
   '/image-library': typeof AppImageLibraryIndexRoute
   '/link': typeof AppLinkIndexRoute
   '/modules': typeof AppModulesIndexRoute
@@ -773,6 +797,7 @@ export interface FileRoutesById {
   '/_app/cloud': typeof AppCloudRoute
   '/_app/connections': typeof AppConnectionsRouteWithChildren
   '/_app/custom-actions': typeof AppCustomActionsRouteWithChildren
+  '/_app/custom-feedbacks': typeof AppCustomFeedbacksRouteWithChildren
   '/_app/image-library': typeof AppImageLibraryRouteWithChildren
   '/_app/import-export': typeof AppImportExportRoute
   '/_app/link': typeof AppLinkRouteWithChildren
@@ -787,6 +812,7 @@ export interface FileRoutesById {
   '/_app/connections/$connectionId': typeof AppConnectionsConnectionIdRouteWithChildren
   '/_app/connections/add': typeof AppConnectionsAddRoute
   '/_app/custom-actions/$controlId': typeof AppCustomActionsControlIdRoute
+  '/_app/custom-feedbacks/$controlId': typeof AppCustomFeedbacksControlIdRoute
   '/_app/image-library/$imageName': typeof AppImageLibraryImageNameRoute
   '/_app/link/$peerId': typeof AppLinkPeerIdRoute
   '/_app/link/self': typeof AppLinkSelfRoute
@@ -812,6 +838,7 @@ export interface FileRoutesById {
   '/_standalone/emulator/$emulatorId': typeof StandaloneEmulatorEmulatorIdDotlazyRoute
   '/_app/connections/': typeof AppConnectionsIndexRoute
   '/_app/custom-actions/': typeof AppCustomActionsIndexRoute
+  '/_app/custom-feedbacks/': typeof AppCustomFeedbacksIndexRoute
   '/_app/image-library/': typeof AppImageLibraryIndexRoute
   '/_app/link/': typeof AppLinkIndexRoute
   '/_app/modules/': typeof AppModulesIndexRoute
@@ -867,6 +894,7 @@ export interface FileRouteTypes {
     | '/cloud'
     | '/connections'
     | '/custom-actions'
+    | '/custom-feedbacks'
     | '/image-library'
     | '/import-export'
     | '/link'
@@ -880,6 +908,7 @@ export interface FileRouteTypes {
     | '/connections/$connectionId'
     | '/connections/add'
     | '/custom-actions/$controlId'
+    | '/custom-feedbacks/$controlId'
     | '/image-library/$imageName'
     | '/link/$peerId'
     | '/link/self'
@@ -905,6 +934,7 @@ export interface FileRouteTypes {
     | '/emulator/$emulatorId'
     | '/connections/'
     | '/custom-actions/'
+    | '/custom-feedbacks/'
     | '/image-library/'
     | '/link/'
     | '/modules/'
@@ -963,6 +993,7 @@ export interface FileRouteTypes {
     | '/connections/$connectionId'
     | '/connections/add'
     | '/custom-actions/$controlId'
+    | '/custom-feedbacks/$controlId'
     | '/image-library/$imageName'
     | '/link/$peerId'
     | '/link/self'
@@ -979,6 +1010,7 @@ export interface FileRouteTypes {
     | '/emulator/$emulatorId'
     | '/connections'
     | '/custom-actions'
+    | '/custom-feedbacks'
     | '/image-library'
     | '/link'
     | '/modules'
@@ -1032,6 +1064,7 @@ export interface FileRouteTypes {
     | '/_app/cloud'
     | '/_app/connections'
     | '/_app/custom-actions'
+    | '/_app/custom-feedbacks'
     | '/_app/image-library'
     | '/_app/import-export'
     | '/_app/link'
@@ -1046,6 +1079,7 @@ export interface FileRouteTypes {
     | '/_app/connections/$connectionId'
     | '/_app/connections/add'
     | '/_app/custom-actions/$controlId'
+    | '/_app/custom-feedbacks/$controlId'
     | '/_app/image-library/$imageName'
     | '/_app/link/$peerId'
     | '/_app/link/self'
@@ -1071,6 +1105,7 @@ export interface FileRouteTypes {
     | '/_standalone/emulator/$emulatorId'
     | '/_app/connections/'
     | '/_app/custom-actions/'
+    | '/_app/custom-feedbacks/'
     | '/_app/image-library/'
     | '/_app/link/'
     | '/_app/modules/'
@@ -1246,6 +1281,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCustomActionsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/custom-feedbacks': {
+      id: '/_app/custom-feedbacks'
+      path: '/custom-feedbacks'
+      fullPath: '/custom-feedbacks'
+      preLoaderRoute: typeof AppCustomFeedbacksRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/image-library': {
       id: '/_app/image-library'
       path: '/image-library'
@@ -1350,6 +1392,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/custom-actions/$controlId'
       preLoaderRoute: typeof AppCustomActionsControlIdRouteImport
       parentRoute: typeof AppCustomActionsRoute
+    }
+    '/_app/custom-feedbacks/': {
+      id: '/_app/custom-feedbacks/'
+      path: '/'
+      fullPath: '/custom-feedbacks/'
+      preLoaderRoute: typeof AppCustomFeedbacksIndexRouteImport
+      parentRoute: typeof AppCustomFeedbacksRoute
+    }
+    '/_app/custom-feedbacks/$controlId': {
+      id: '/_app/custom-feedbacks/$controlId'
+      path: '/$controlId'
+      fullPath: '/custom-feedbacks/$controlId'
+      preLoaderRoute: typeof AppCustomFeedbacksControlIdRouteImport
+      parentRoute: typeof AppCustomFeedbacksRoute
     }
     '/_app/image-library/': {
       id: '/_app/image-library/'
@@ -1819,6 +1875,19 @@ const AppCustomActionsRouteChildren: AppCustomActionsRouteChildren = {
 const AppCustomActionsRouteWithChildren =
   AppCustomActionsRoute._addFileChildren(AppCustomActionsRouteChildren)
 
+interface AppCustomFeedbacksRouteChildren {
+  AppCustomFeedbacksControlIdRoute: typeof AppCustomFeedbacksControlIdRoute
+  AppCustomFeedbacksIndexRoute: typeof AppCustomFeedbacksIndexRoute
+}
+
+const AppCustomFeedbacksRouteChildren: AppCustomFeedbacksRouteChildren = {
+  AppCustomFeedbacksControlIdRoute: AppCustomFeedbacksControlIdRoute,
+  AppCustomFeedbacksIndexRoute: AppCustomFeedbacksIndexRoute,
+}
+
+const AppCustomFeedbacksRouteWithChildren =
+  AppCustomFeedbacksRoute._addFileChildren(AppCustomFeedbacksRouteChildren)
+
 interface AppImageLibraryRouteChildren {
   AppImageLibraryImageNameRoute: typeof AppImageLibraryImageNameRoute
   AppImageLibraryIndexRoute: typeof AppImageLibraryIndexRoute
@@ -2081,6 +2150,7 @@ interface AppRouteChildren {
   AppCloudRoute: typeof AppCloudRoute
   AppConnectionsRoute: typeof AppConnectionsRouteWithChildren
   AppCustomActionsRoute: typeof AppCustomActionsRouteWithChildren
+  AppCustomFeedbacksRoute: typeof AppCustomFeedbacksRouteWithChildren
   AppImageLibraryRoute: typeof AppImageLibraryRouteWithChildren
   AppImportExportRoute: typeof AppImportExportRoute
   AppLinkRoute: typeof AppLinkRouteWithChildren
@@ -2112,6 +2182,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCloudRoute: AppCloudRoute,
   AppConnectionsRoute: AppConnectionsRouteWithChildren,
   AppCustomActionsRoute: AppCustomActionsRouteWithChildren,
+  AppCustomFeedbacksRoute: AppCustomFeedbacksRouteWithChildren,
   AppImageLibraryRoute: AppImageLibraryRouteWithChildren,
   AppImportExportRoute: AppImportExportRoute,
   AppLinkRoute: AppLinkRouteWithChildren,

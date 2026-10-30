@@ -8,6 +8,7 @@ import {
 } from '../Model/ButtonModel.js'
 import { SomeControlModelSchema } from '../Model/Controls.js'
 import { CustomActionModelSchema } from '../Model/CustomActionModel.js'
+import { CustomFeedbackModelSchema } from '../Model/CustomFeedbackModel.js'
 import { EventInstanceSchema } from '../Model/EventModel.js'
 import { ExpressionVariableModelSchema } from '../Model/ExpressionVariableModel.js'
 import { PageControlModelSchema } from '../Model/PageControlModel.js'
@@ -282,6 +283,26 @@ describe('CustomActionModelSchema', () => {
 	})
 })
 
+describe('CustomFeedbackModelSchema', () => {
+	test('a minimal custom feedback gets the defaults', () => {
+		expect(CustomFeedbackModelSchema.parse({ type: 'custom-feedback' })).toEqual({
+			type: 'custom-feedback',
+			options: { name: 'New custom feedback', description: '', sortOrder: 0 },
+			inputs: [],
+			feedbacks: [],
+			localVariables: [],
+		})
+	})
+
+	test('an input must be a valid input field', () => {
+		const result = CustomFeedbackModelSchema.safeParse({
+			type: 'custom-feedback',
+			inputs: [{ type: 'sparkle', id: 'a' }],
+		})
+		expect(result.success).toBe(false)
+	})
+})
+
 describe('PageControlModelSchema', () => {
 	test('a page control without local variables has none', () => {
 		expect(PageControlModelSchema.parse({ type: 'page' })).toEqual({ type: 'page', localVariables: [] })
@@ -294,6 +315,7 @@ describe('SomeControlModelSchema', () => {
 		['trigger', { type: 'trigger' }],
 		['expression-variable', { type: 'expression-variable' }],
 		['custom-action', { type: 'custom-action' }],
+		['custom-feedback', { type: 'custom-feedback' }],
 		['page', { type: 'page' }],
 		['pageup', { type: 'pageup' }],
 	])('parses a %s control', (type, control) => {

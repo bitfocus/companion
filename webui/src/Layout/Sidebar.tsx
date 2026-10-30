@@ -8,6 +8,7 @@ import {
 	faClock,
 	faCloud,
 	faCubes,
+	faCubesStacked,
 	faDesktop,
 	faExternalLinkSquare,
 	faFileImport,
@@ -372,6 +373,7 @@ export const MySidebar = memo(function MySidebar() {
 					<SidebarMenuItem name="Buttons" icon={faTableCells} path="/buttons" />
 					<SidebarMenuItem name="Triggers" icon={faClock} path="/triggers" />
 					<SidebarMenuItem name="Custom Actions" icon={faCubes} path="/custom-actions" />
+					<SidebarMenuItem name="Custom Feedbacks" icon={faCubesStacked} path="/custom-feedbacks" />
 					<SidebarSectionNavGroup section={VARIABLES_SECTION} />
 					<SidebarMenuItem name="Action Recorder" icon={faVideoCamera} path="/action-recorder" />
 					<SidebarMenuItem name="Image Library" icon={faImages} path="/image-library" />

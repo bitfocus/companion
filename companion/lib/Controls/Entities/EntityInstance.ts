@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
 import {
 	isCustomActionsConnectionId,
+	isCustomFeedbacksConnectionId,
 	isInternalConnectionId,
 	isVirtualConnectionId,
 } from '@companion-app/shared/ConnectionId.js'
@@ -86,6 +87,11 @@ export class ControlEntityInstance {
 	 * which calls it). They are never persisted or shown in the ui, and parse their options in their own scope.
 	 */
 	#transientChildren = new Map<string, ControlEntityList>()
+
+	/**
+	 * Told when the feedback values of the entities in a transient child group change, by the id of the group
+	 */
+	#transientChildrenValueListeners = new Map<string, (changed: ControlEntityInstance[]) => void>()
 
 	/**
 	 * Get the id of this entity
@@ -319,6 +325,8 @@ export class ControlEntityInstance {
 			this.#internalModule.entityDelete(this.asEntityModel())
 		} else if (isCustomActionsConnectionId(this.#data.connectionId)) {
 			this.#scope.customActionInstances.entityDelete(this)
+		} else if (isCustomFeedbacksConnectionId(this.#data.connectionId)) {
+			this.#scope.customFeedbackInstances.entityDelete(this)
 		} else if (!isVirtualConnectionId(this.#data.connectionId)) {
 			this.#processManager.connectionEntityDelete(this.asEntityModel(), this.#controlId).catch((e) => {
 				this.#logger.silly(`entityDelete to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
@@ -345,13 +353,15 @@ export class ControlEntityInstance {
 	 * @param scope The scope the entities of the group parse their options in
 	 * @param listDefinition The type of entities in the group
 	 * @param entities The entities of the group. Their ids are used as is, so must be unique within the control
+	 * @param onValuesChanged Told when the feedback or isInverted values of any entities in the group change, or null
 	 * @returns The new group
 	 */
 	setTransientChildGroup(
 		groupId: string,
 		scope: EntityScope,
 		listDefinition: ControlEntityListDefinition,
-		entities: SomeEntityModel[]
+		entities: SomeEntityModel[],
+		onValuesChanged: ((changed: ControlEntityInstance[]) => void) | null
 	): ControlEntityList {
 		this.removeTransientChildGroup(groupId)
 
@@ -365,6 +375,7 @@ export class ControlEntityInstance {
 			listDefinition
 		)
 		this.#transientChildren.set(groupId, childGroup)
+		if (onValuesChanged) this.#transientChildrenValueListeners.set(groupId, onValuesChanged)
 
 		// A disabled entity has nothing subscribed, so neither should its children
 		childGroup.loadStorage(entities, this.disabled, false)
@@ -389,6 +400,7 @@ export class ControlEntityInstance {
 		if (!childGroup) return
 
 		this.#transientChildren.delete(groupId)
+		this.#transientChildrenValueListeners.delete(groupId)
 		childGroup.cleanup()
 	}
 
@@ -413,6 +425,9 @@ export class ControlEntityInstance {
 			} else if (isCustomActionsConnectionId(thisData.connectionId)) {
 				// Build or update the copy of the custom action held by this action
 				this.#scope.customActionInstances.entityUpdate(this, this.#controlId, this.#scope)
+			} else if (isCustomFeedbacksConnectionId(thisData.connectionId)) {
+				// Build or update the copy of the custom feedback held by this feedback
+				this.#scope.customFeedbackInstances.entityUpdate(this, this.#controlId, this.#scope)
 			} else if (!isVirtualConnectionId(thisData.connectionId)) {
 				// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
 				// The EntityManager will not subscribe disabled entities to the module.
@@ -1033,8 +1048,10 @@ export class ControlEntityInstance {
 			}
 		}
 
-		for (const childGroup of this.#transientChildren.values()) {
-			changed.push(...childGroup.updateFeedbackValues(connectionId, newValues))
+		for (const [groupId, childGroup] of this.#transientChildren) {
+			const childrenChanged = childGroup.updateFeedbackValues(connectionId, newValues)
+			if (childrenChanged.length > 0) this.#transientChildrenValueListeners.get(groupId)?.(childrenChanged)
+			changed.push(...childrenChanged)
 		}
 
 		for (const childGroup of this.#children.values()) {
@@ -1070,8 +1087,10 @@ export class ControlEntityInstance {
 			}
 		}
 
-		for (const childGroup of this.#transientChildren.values()) {
-			changed.push(...childGroup.updateIsInvertedValues(newValues))
+		for (const [groupId, childGroup] of this.#transientChildren) {
+			const childrenChanged = childGroup.updateIsInvertedValues(newValues)
+			if (childrenChanged.length > 0) this.#transientChildrenValueListeners.get(groupId)?.(childrenChanged)
+			changed.push(...childrenChanged)
 		}
 
 		for (const childGroup of this.#children.values()) {

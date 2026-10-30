@@ -1,6 +1,7 @@
 import classNames from 'classnames'
 import { useCallback, useMemo } from 'react'
 import { getCustomActionCallDefinition } from '@companion-app/shared/Model/CustomActionModel.js'
+import { getCustomFeedbackCallDefinition } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import type { EntityModelType, EntityOwner, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
@@ -25,8 +26,11 @@ export function AddEntityPanel({
 }: AddEntityPanelProps): React.JSX.Element {
 	const { serviceFactory, readonly, controlId } = useEntityEditorContext()
 
-	// A custom action can't contain an action which runs itself
-	const excludedDefinition = useMemo(() => getCustomActionCallDefinition(controlId), [controlId])
+	// A custom action or feedback can't contain an entity which uses itself
+	const excludedDefinition = useMemo(
+		() => getCustomActionCallDefinition(controlId) ?? getCustomFeedbackCallDefinition(controlId),
+		[controlId]
+	)
 
 	const panelCollapseHelper = usePanelCollapseHelperContext()
 

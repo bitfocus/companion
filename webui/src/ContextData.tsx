@@ -20,6 +20,7 @@ import { useGenericCollectionsSubscription } from './Hooks/useCollectionsSubscri
 import { useCompositeElementDefinitionsSubscription } from './Hooks/useCompositeElementDefinitionsSubscription.js'
 import { useConnectionsConfigSubscription } from './Hooks/useConnectionsConfigSubscription.js'
 import { useCustomActionsListSubscription } from './Hooks/useCustomActionsListSubscription.js'
+import { useCustomFeedbacksListSubscription } from './Hooks/useCustomFeedbacksListSubscription.js'
 import { useCustomVariableCollectionsSubscription } from './Hooks/useCustomVariableCollectionsSubscription.js'
 import { useCustomVariablesSubscription } from './Hooks/useCustomVariablesSubscription.js'
 import { useEntityDefinitionsSubscription } from './Hooks/useEntityDefinitionsSubscription.js'
@@ -42,6 +43,7 @@ import { useVariablesSubscription } from './Hooks/useVariablesSubscription.js'
 import { HelpModal, type HelpModalRef } from './Instances/HelpModal.js'
 import { trpc } from './Resources/TRPC.js'
 import { CustomActionsListStore } from './Stores/CustomActionsListStore.js'
+import { CustomFeedbacksListStore } from './Stores/CustomFeedbacksListStore.js'
 import { ExpressionVariablesListStore } from './Stores/ExpressionVariablesListStore.js'
 import { InstanceStatusesStore } from './Stores/InstanceStatusesStore.js'
 import { SurfaceInstancesStore } from './Stores/SurfaceInstancesStore.js'
@@ -99,6 +101,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 
 			customActionsList: new CustomActionsListStore(),
 
+			customFeedbacksList: new CustomFeedbacksListStore(),
+
 			userConfig: new UserConfigStore(),
 
 			imageLibrary: new ImageLibraryStore(),
@@ -152,6 +156,12 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 	const customActionCollectionsReady = useGenericCollectionsSubscription(
 		rootStore.customActionsList,
 		trpc.controls.customActions.collections.watchQuery,
+		undefined
+	)
+	const customFeedbacksListReady = useCustomFeedbacksListSubscription(rootStore.customFeedbacksList)
+	const customFeedbackCollectionsReady = useGenericCollectionsSubscription(
+		rootStore.customFeedbacksList,
+		trpc.controls.customFeedbacks.collections.watchQuery,
 		undefined
 	)
 	const { ready: pagesReady } = usePagesInfoSubscription(rootStore.pages)
@@ -210,6 +220,8 @@ export function ContextData({ children }: Readonly<ContextDataProps>): React.JSX
 		triggerGroupsReady,
 		customActionsListReady,
 		customActionCollectionsReady,
+		customFeedbacksListReady,
+		customFeedbackCollectionsReady,
 		entityDefinitionsReady,
 		compositeElementDefinitionsReady,
 		activeLearnRequestsReady,

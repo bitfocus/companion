@@ -1,6 +1,7 @@
 import type { PresetButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
 import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
+import type { CustomFeedbackModel } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import LogController from '../Log/Controller.js'
@@ -11,6 +12,7 @@ import { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 import { ControlButtonPresetReference } from './ControlTypes/Button/PresetReference.js'
 import { ControlButtonReference } from './ControlTypes/Button/Reference.js'
 import { ControlCustomAction } from './ControlTypes/CustomAction.js'
+import { ControlCustomFeedback } from './ControlTypes/CustomFeedback.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import { ControlPage } from './ControlTypes/Page.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
@@ -38,13 +40,13 @@ export class ControlsFactory {
 	/**
 	 * Create a new control class instance
 	 * @param controlId Id of the control
-	 * @param category 'button' | 'trigger' | 'expression-variable' | 'custom-action' | 'all'
+	 * @param category 'button' | 'trigger' | 'expression-variable' | 'custom-action' | 'custom-feedback' | 'all'
 	 * @param controlObj The existing configuration of the control, or string type if it is a new control. Note: the control must be given a clone of an object
 	 * @param isImport Whether this is an import, and needs additional processing
 	 */
 	createClassForControl(
 		controlId: string,
-		category: 'button' | 'trigger' | 'expression-variable' | 'custom-action' | 'all',
+		category: 'button' | 'trigger' | 'expression-variable' | 'custom-action' | 'custom-feedback' | 'all',
 		controlObj: SomeControlModel | string,
 		isImport: boolean
 	): SomeControl<any> | null {
@@ -86,6 +88,12 @@ export class ControlsFactory {
 			}
 		}
 
+		if (category === 'all' || category === 'custom-feedback') {
+			if (controlObj2?.type === 'custom-feedback' || (controlType === 'custom-feedback' && !controlObj2)) {
+				return new ControlCustomFeedback(this.#controlDeps, controlId, controlObj2, isImport)
+			}
+		}
+
 		if (category === 'all') {
 			if (controlObj2?.type === 'page' || (controlType === 'page' && !controlObj2)) {
 				return new ControlPage(this.#controlDeps, controlId, controlObj2, isImport)
@@ -110,6 +118,10 @@ export class ControlsFactory {
 
 	createCustomAction(controlId: string, storage: CustomActionModel | null = null): ControlCustomAction {
 		return new ControlCustomAction(this.#controlDeps, controlId, storage, !!storage)
+	}
+
+	createCustomFeedback(controlId: string, storage: CustomFeedbackModel | null = null): ControlCustomFeedback {
+		return new ControlCustomFeedback(this.#controlDeps, controlId, storage, !!storage)
 	}
 
 	createPresetControl(

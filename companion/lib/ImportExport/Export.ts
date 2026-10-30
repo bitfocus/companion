@@ -668,6 +668,26 @@ export class ExportController {
 			}
 		}
 
+		if (!config || config.customFeedbacks) {
+			exp.customFeedbacks = {}
+			exp.customFeedbackCollections = this.#controlsController.exportCustomFeedbackCollections()
+
+			for (const control of this.#controlsController.getAllCustomFeedbacks()) {
+				const parsedId = ParseControlId(control.controlId)
+				if (parsedId?.type === 'custom-feedback') {
+					exp.customFeedbacks[parsedId.customFeedbackId] = control.toJSON(false)
+
+					control.collectReferencedConnectionsAndVariables(
+						referencedConnectionIds,
+						referencedConnectionLabels,
+						referencedVariables
+					)
+				} else {
+					this.#logger.warn(`Control ${control.controlId} is not a valid custom feedback control!`)
+				}
+			}
+		}
+
 		if (!config || config.connections) {
 			exp.instances = this.#instancesController.exportAllConnections(!config || config.includeSecrets)
 			exp.connectionCollections = this.#instancesController.connectionCollections.collectionData

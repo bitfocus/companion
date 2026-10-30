@@ -14,6 +14,7 @@ import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
 import { ControlsController } from './Controls/Controller.js'
 import { ControlStore } from './Controls/ControlStore.js'
 import { CustomActionInstanceManager } from './Controls/CustomActions/CustomActionInstanceManager.js'
+import { CustomFeedbackInstanceManager } from './Controls/CustomFeedbacks/CustomFeedbackInstanceManager.js'
 import { RenderClock } from './Controls/RenderClock.js'
 import { DataController } from './Data/Controller.js'
 import { DataDatabase } from './Data/Database.js'
@@ -303,7 +304,12 @@ export class Registry {
 			LINK_BUILTIN_TRANSPORTS
 		)
 
-		const customActionInstances = new CustomActionInstanceManager(controlStore, this.#renderClock)
+		const customFeedbackInstances = new CustomFeedbackInstanceManager(controlStore, this.#renderClock)
+		const customActionInstances = new CustomActionInstanceManager(
+			controlStore,
+			this.#renderClock,
+			customFeedbackInstances
+		)
 
 		const actionRunner = new ActionRunner(
 			this.instance,
@@ -326,6 +332,7 @@ export class Registry {
 			renderClock: this.#renderClock,
 			linkButtons: this.link.buttonClient,
 			customActionInstances,
+			customFeedbackInstances,
 		})
 		this.preview = new PreviewController(
 			this.instance.definitions,

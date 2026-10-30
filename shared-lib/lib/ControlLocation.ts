@@ -20,6 +20,7 @@ export const LocalVariableLocationOption = {
 		trigger: 'this',
 		'expression-variable': 'this',
 		'custom-action': 'this',
+		'custom-feedback': 'this',
 		page: 'this',
 	},
 } as const satisfies CompanionInputFieldTextInputExtended

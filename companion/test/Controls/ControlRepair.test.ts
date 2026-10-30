@@ -259,7 +259,10 @@ describe('repairControl', () => {
 
 		test('repairs the inputs of a custom action, keeping its actions', () => {
 			const secret = { type: 'secret-text', id: 'key', label: 'Key' }
-			const result = parseRepaired({ type: 'custom-action', inputs: [secret, input], actions: [action] })
+			const result = parseRepaired(
+				{ type: 'custom-action', inputs: [secret, input], actions: [action] },
+				SomeControlModelSchema
+			)
 
 			expect(result!.control.inputs.map((field: any) => [field.type, field.id])).toEqual([
 				['static-text', 'key'],

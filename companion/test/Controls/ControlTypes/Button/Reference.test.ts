@@ -65,6 +65,7 @@ describe('ControlButtonReference', () => {
 			linkButtons: null as any,
 			controlsAccessor: controlsAccessor as any,
 			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() } as any,
+			customFeedbackInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() } as any,
 		}
 	})
 

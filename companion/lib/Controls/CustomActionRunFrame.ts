@@ -1,24 +1,18 @@
-import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { CustomEntityValues } from './CustomEntities/Types.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 
 /**
- * The maximum depth of custom actions calling custom actions, to stop a custom action from recursing forever
+ * The maximum depth of custom actions and feedbacks using each other, to stop one from recursing forever
  */
 export const MAX_CUSTOM_ACTION_DEPTH = 16
 
 /**
  * The values seen by the entities of a custom action: its inputs, and the values its local variables have been set to
  */
-export interface CustomActionValues {
+export interface CustomActionValues extends CustomEntityValues {
 	/** The control id of the custom action */
 	readonly customActionControlId: string
-	/** The values of the inputs of the custom action, exposed to its entities as `$(options:<id>)` */
-	readonly options: VariableValues
-	/**
-	 * The values of the local variables which have been set, by name (without the `local:` prefix).
-	 * A variable which has not been set has its startup value
-	 */
-	readonly localValues: Map<string, VariableValue>
 }
 
 /**
@@ -33,7 +27,7 @@ export interface CustomActionRunFrame extends CustomActionValues {
 }
 
 /**
- * Build the `$(options:*)` variables for a run of a custom action
+ * Build the `$(options:*)` variables for a run of a custom action, or a use of a custom feedback
  */
 export function buildCustomActionOptionsVariables(options: VariableValues): VariableValues {
 	const values: VariableValues = {}

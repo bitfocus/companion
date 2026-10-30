@@ -10,13 +10,7 @@ import {
 } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import {
-	AuthorableInputFieldSchema,
-	isExpressionOrValue,
-	toCompanionInputField,
-	type AuthorableInputField,
-	type ExpressionableOptionsObject,
-} from '@companion-app/shared/Model/Options.js'
+import type { AuthorableInputField, ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import type { RunActionExtras } from '../../Instance/Connection/ChildHandlerApi.js'
@@ -30,11 +24,9 @@ import type {
 import { ControlActionRunner } from '../ActionRunner.js'
 import { ControlBase } from '../ControlBase.js'
 import type { ControlDependencies } from '../ControlDependencies.js'
-import {
-	buildCustomActionOptionsVariables,
-	type CustomActionRunFrame,
-	type CustomActionValues,
-} from '../CustomActionRunFrame.js'
+import { buildCustomActionOptionsVariables, type CustomActionRunFrame } from '../CustomActionRunFrame.js'
+import { CustomEntityInputs } from '../CustomEntities/CustomEntityInputs.js'
+import type { CustomEntitySource, CustomEntityValues } from '../CustomEntities/Types.js'
 import type { ControlEntityInstance } from '../Entities/EntityInstance.js'
 import type { ControlEntityListChangeProps } from '../Entities/EntityListPoolBase.js'
 import { ControlEntityListPoolCustomAction } from '../Entities/EntityListPoolCustomAction.js'
@@ -74,7 +66,8 @@ export class ControlCustomAction
 		ControlWithoutLayeredStyle,
 		ControlWithoutActionSets,
 		ControlWithOptions,
-		ControlWithoutPushed
+		ControlWithoutPushed,
+		CustomEntitySource
 {
 	readonly type = 'custom-action'
 
@@ -115,7 +108,7 @@ export class ControlCustomAction
 	/**
 	 * The inputs of the custom action
 	 */
-	#inputs: AuthorableInputField[] = []
+	readonly #inputs = new CustomEntityInputs([])
 
 	/**
 	 * The outputs of the custom action
@@ -125,7 +118,7 @@ export class ControlCustomAction
 	readonly entities: ControlEntityListPoolCustomAction
 
 	get inputs(): ReadonlyArray<AuthorableInputField> {
-		return this.#inputs
+		return this.#inputs.inputs
 	}
 
 	get outputs(): ReadonlyArray<CustomActionOutput> {
@@ -156,7 +149,8 @@ export class ControlCustomAction
 			renderClock: deps.renderClock,
 			getPageVariableEntities: deps.getPageVariableEntities,
 			customActionInstances: deps.customActionInstances,
-			getDefaultOptionsVariables: () => buildCustomActionOptionsVariables(this.#getDefaultOptions()),
+			customFeedbackInstances: deps.customFeedbackInstances,
+			getDefaultOptionsVariables: () => buildCustomActionOptionsVariables(this.#inputs.getDefaultValues()),
 		})
 
 		this.options = structuredClone(ControlCustomAction.DefaultOptions)
@@ -172,7 +166,7 @@ export class ControlCustomAction
 
 			this.options = { ...this.options, ...storage.options }
 			// The inputs are checked by the schema of the custom action when it is loaded
-			this.#inputs = storage.inputs
+			this.#inputs = new CustomEntityInputs(storage.inputs)
 			this.#outputs = storage.outputs
 			this.entities.loadStorage(storage, true, isImport)
 
@@ -209,17 +203,6 @@ export class ControlCustomAction
 	}
 
 	/**
-	 * The values of the inputs when they have not been given
-	 */
-	#getDefaultOptions(): VariableValues {
-		const values: VariableValues = {}
-		for (const input of this.#inputs) {
-			values[input.id] = 'default' in input ? structuredClone(input.default) : undefined
-		}
-		return values
-	}
-
-	/**
 	 * The definition of the action which runs this custom action
 	 */
 	toActionDefinition(): ClientEntityDefinition {
@@ -228,7 +211,7 @@ export class ControlCustomAction
 			label: this.options.name || 'Custom action',
 			sortKey: null,
 			description: this.options.description || undefined,
-			options: this.#inputs.map((input) => toCompanionInputField(structuredClone(input))),
+			options: this.#inputs.toOptionFields(),
 			optionsToMonitorForInvalidations: null,
 			feedbackType: null,
 			feedbackStyle: undefined,
@@ -260,22 +243,7 @@ export class ControlCustomAction
 		parser: VariablesAndExpressionParser,
 		callerControlId: string | null
 	): { options: CompanionOptionValues; referencedVariableIds: ReadonlySet<string> } {
-		const optionsWithDefaults: ExpressionableOptionsObject = { ...rawOptions }
-		for (const input of this.#inputs) {
-			if (optionsWithDefaults[input.id] === undefined && 'default' in input) {
-				optionsWithDefaults[input.id] = { isExpression: false, value: input.default }
-			}
-		}
-
-		const parseRes = parser.parseEntityOptions(this.toActionDefinition(), optionsWithDefaults, callerControlId)
-		if (!parseRes.ok) {
-			this.logger.debug(`Using defaults for invalid inputs: ${JSON.stringify(parseRes.optionErrors)}`)
-		}
-
-		return {
-			options: parseRes.ok ? parseRes.parsedOptions : parseRes.parsedOptionsWithDefaults,
-			referencedVariableIds: parseRes.referencedVariableIds,
-		}
+		return this.#inputs.parseCallInputs(this.toActionDefinition(), rawOptions, parser, callerControlId, this.logger)
 	}
 
 	/**
@@ -302,7 +270,7 @@ export class ControlCustomAction
 
 		const frame: CustomActionRunFrame = {
 			customActionControlId: this.controlId,
-			options: this.#getDefaultOptions(),
+			options: this.#inputs.getDefaultValues(),
 			localValues: new Map(),
 			getLocalVariableEntities: () => this.entities.getLocalVariableEntities(),
 			// The entities of the custom action itself are not specific to a run
@@ -363,7 +331,7 @@ export class ControlCustomAction
 	 * @param options Options for the parser
 	 */
 	createCopyParser(
-		values: CustomActionValues,
+		values: CustomEntityValues,
 		callerControlId: string,
 		localVariableEntities: ControlEntityInstance[],
 		overrideVariableValues: VariableValues | null,
@@ -386,10 +354,7 @@ export class ControlCustomAction
 	 * Add an input
 	 */
 	inputAdd(field: AuthorableInputField): boolean {
-		if (!AuthorableInputFieldSchema.safeParse(field).success) return false
-		if (this.#inputs.some((input) => input.id === field.id)) return false
-
-		this.#inputs.push(structuredClone(field))
+		if (!this.#inputs.add(field)) return false
 
 		this.commitChange()
 		return true
@@ -399,10 +364,7 @@ export class ControlCustomAction
 	 * Remove an input
 	 */
 	inputRemove(inputId: string): boolean {
-		const index = this.#inputs.findIndex((input) => input.id === inputId)
-		if (index === -1) return false
-
-		this.#inputs.splice(index, 1)
+		if (!this.#inputs.remove(inputId)) return false
 
 		this.commitChange()
 		return true
@@ -414,11 +376,7 @@ export class ControlCustomAction
 	 * @param target The index to move it to
 	 */
 	inputMove(inputId: string, target: number): boolean {
-		const index = this.#inputs.findIndex((input) => input.id === inputId)
-		if (index === -1 || target < 0 || target >= this.#inputs.length || target === index) return false
-
-		const [input] = this.#inputs.splice(index, 1)
-		this.#inputs.splice(target, 0, input)
+		if (!this.#inputs.move(inputId, target)) return false
 
 		this.commitChange()
 		return true
@@ -430,19 +388,7 @@ export class ControlCustomAction
 	 * @returns Whether the input was updated
 	 */
 	inputUpdate(inputId: string, field: AuthorableInputField): boolean {
-		if (!AuthorableInputFieldSchema.safeParse(field).success) return false
-
-		const index = this.#inputs.findIndex((input) => input.id === inputId)
-		if (index === -1) return false
-
-		if (field.id !== inputId) {
-			// Renaming, so the new id must be unused
-			if (this.#inputs.some((input) => input.id === field.id)) return false
-
-			this.#renameInputReferences(inputId, field.id)
-		}
-
-		this.#inputs[index] = structuredClone(field)
+		if (!this.#inputs.update(inputId, field, this.entities.getAllEntities())) return false
 
 		this.commitChange()
 		return true
@@ -511,30 +457,6 @@ export class ControlCustomAction
 	}
 
 	/**
-	 * Update the `$(options:<id>)` references to an input in the entities of this custom action
-	 */
-	#renameInputReferences(fromId: string, toId: string): void {
-		const fromVariable = `$(options:${fromId})`
-		const toVariable = `$(options:${toId})`
-
-		for (const entity of this.entities.getAllEntities()) {
-			let changed = false
-			const newOptions: ExpressionableOptionsObject = {}
-
-			for (const [key, value] of Object.entries(entity.rawOptions)) {
-				if (isExpressionOrValue(value) && typeof value.value === 'string' && value.value.includes(fromVariable)) {
-					newOptions[key] = { ...value, value: value.value.replaceAll(fromVariable, toVariable) }
-					changed = true
-				} else {
-					newOptions[key] = value
-				}
-			}
-
-			if (changed) entity.setOptions(newOptions)
-		}
-	}
-
-	/**
 	 * Collect the instance ids, labels, and variables referenced by this control
 	 * @param foundConnectionIds - instance ids being referenced
 	 * @param foundConnectionLabels - instance labels being referenced
@@ -570,7 +492,7 @@ export class ControlCustomAction
 		const obj: CustomActionModel = {
 			type: this.type,
 			options: this.options,
-			inputs: this.#inputs,
+			inputs: this.#inputs.toJSON(),
 			actions: this.entities.getActionEntities().map((e) => e.asEntityModel(true)),
 			localVariables: this.entities.getLocalVariableEntities().map((e) => e.asEntityModel(true)),
 			outputs: this.#outputs,

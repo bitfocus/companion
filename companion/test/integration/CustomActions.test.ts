@@ -154,6 +154,7 @@ describe('custom actions', () => {
 				customVariables: 'reset-and-import',
 				expressionVariables: 'unchanged',
 				customActions: 'reset-and-import',
+				customFeedbacks: 'unchanged',
 				connections: 'unchanged',
 				userconfig: 'unchanged',
 				imageLibrary: 'unchanged',
