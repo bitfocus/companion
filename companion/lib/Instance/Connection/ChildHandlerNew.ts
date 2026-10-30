@@ -170,7 +170,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		for (const [controlId, control] of allControls.entries()) {
 			if (!control.supportsEntities) continue
 
-			for (const entity of control.entities.getAllEntities()) {
+			for (const entity of control.entities.getAllEntitiesWithTransient()) {
 				if (entity.connectionId !== this.connectionId) continue
 
 				if (entity.upgradeIndex === undefined) {
@@ -397,7 +397,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 			const result = await this.#ipcWrapper.sendWithCb('executeAction', {
 				action: {
-					id: action.id,
+					// The module knows the action by its subscription, if it has one
+					id: this.#entityManager.getSubscriptionId(action.id) ?? action.id,
 					controlId: extras?.controlId,
 					actionId: action.definitionId,
 					options: parseRes.parsedOptions,
@@ -566,14 +567,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	async #handleUpdateFeedbackValues(msg: UpdateFeedbackValuesMessage): Promise<void> {
 		this.#deps.trackFeedbackValuesReceived(this.connectionId, msg.values.length)
 
-		this.#deps.controls.updateFeedbackValues(
-			this.connectionId,
-			msg.values.map((val) => ({
-				entityId: val.id,
-				controlId: val.controlId,
-				value: val.value,
-			}))
-		)
+		// The values are for subscriptions, which can be shared by multiple entities
+		this.#entityManager.handleFeedbackValues(msg.values)
 	}
 
 	/**
@@ -760,7 +755,7 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 		for (const [id, value] of actions) {
 			if (value && !value.entity.disabled) {
 				updateMessage.actions[id] = {
-					id: value.entity.id,
+					id: id,
 					controlId: value.controlId,
 					actionId: value.entity.definitionId,
 					options: value.parsedOptions,
@@ -781,7 +776,7 @@ class ConnectionNewEntityManagerAdapter implements EntityManagerAdapter {
 				const control = this.#controlsStore.getControl(value.controlId)
 
 				updateMessage.feedbacks[id] = {
-					id: value.entity.id,
+					id: id,
 					controlId: value.controlId,
 					feedbackId: value.entity.definitionId,
 					options: value.parsedOptions,

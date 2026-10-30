@@ -9,6 +9,7 @@ import {
 	type LinkButtonModel,
 	type PresetReferenceButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
+import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExportTriggerContent } from '@companion-app/shared/Model/Export/Latest.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
@@ -111,6 +112,44 @@ export function fixupExpressionVariableControl(
 		outboundSurfaceIdRemap
 	).visitEntities([], result.localVariables)
 	if (result.entity) visitor.visitEntities([], [result.entity])
+
+	return result
+}
+
+export function fixupCustomActionControl(
+	internalModule: InternalController,
+	control: CustomActionModel,
+	instanceIdMap: InstanceAppliedRemappings,
+	outboundSurfaceIdRemap: Record<string, string>
+): CustomActionModel {
+	// Future: this does not feel durable
+
+	const connectionLabelRemap: Record<string, string> = {}
+	const connectionIdRemap: Record<string, string> = {}
+	for (const [oldId, info] of Object.entries(instanceIdMap)) {
+		if (info.oldLabel && info.label !== info.oldLabel) {
+			connectionLabelRemap[info.oldLabel] = info.label
+		}
+		if (info.id && info.id !== oldId) {
+			connectionIdRemap[oldId] = info.id
+		}
+	}
+
+	const result: CustomActionModel = {
+		type: 'custom-action',
+		options: structuredClone(control.options),
+		inputs: structuredClone(control.inputs || []),
+		actions: fixupEntitiesRecursive(instanceIdMap, structuredClone(control.actions || [])),
+		localVariables: fixupEntitiesRecursive(instanceIdMap, structuredClone(control.localVariables || [])),
+		outputs: structuredClone(control.outputs),
+	}
+
+	new VisitorReferencesUpdater(
+		internalModule,
+		connectionLabelRemap,
+		connectionIdRemap,
+		outboundSurfaceIdRemap
+	).visitEntities([], [...result.localVariables, ...result.actions])
 
 	return result
 }

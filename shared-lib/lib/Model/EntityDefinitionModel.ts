@@ -3,6 +3,14 @@ import type { ObjectsDiff } from './Common.js'
 import type { EntityModelType, EntitySupportedChildGroupDefinition, FeedbackEntitySubType } from './EntityModel.js'
 import type { SomeCompanionInputField } from './Options.js'
 
+/**
+ * An output of an action, which the action can be told where to write
+ */
+export interface ClientEntityOutputDefinition {
+	id: string
+	label: string
+}
+
 export interface ClientEntityDefinition {
 	entityType: EntityModelType
 	label: string
@@ -34,6 +42,17 @@ export interface ClientEntityDefinition {
 	 * `JsonValue` result.
 	 */
 	actionHasResult: boolean | undefined
+
+	/**
+	 * When an action which runs a custom action, its outputs. Each can be written to a target chosen on the action
+	 */
+	actionOutputs: ClientEntityOutputDefinition[] | null
+
+	/**
+	 * Why the entity won't do all it says, such as a custom action which calls back into itself, to show the user.
+	 * Null when there is nothing wrong
+	 */
+	warning: string | null
 
 	/**
 	 * When an advanced feedback, the properties that should have overrides assigned

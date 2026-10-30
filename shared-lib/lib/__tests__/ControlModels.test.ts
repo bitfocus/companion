@@ -7,6 +7,7 @@ import {
 	SomeButtonModelSchema,
 } from '../Model/ButtonModel.js'
 import { SomeControlModelSchema } from '../Model/Controls.js'
+import { CustomActionModelSchema, getCustomActionCallsExcludedFrom } from '../Model/CustomActionModel.js'
 import { EventInstanceSchema } from '../Model/EventModel.js'
 import { ExpressionVariableModelSchema } from '../Model/ExpressionVariableModel.js'
 import { PageControlModelSchema } from '../Model/PageControlModel.js'
@@ -256,6 +257,52 @@ describe('ExpressionVariableModelSchema', () => {
 	})
 })
 
+describe('CustomActionModelSchema', () => {
+	test('a minimal custom action gets the defaults', () => {
+		expect(CustomActionModelSchema.parse({ type: 'custom-action' })).toEqual({
+			type: 'custom-action',
+			options: { name: 'New custom action', description: '', sortOrder: 0 },
+			inputs: [],
+			actions: [],
+			localVariables: [],
+			outputs: [],
+		})
+	})
+
+	test('an input must be a valid input field', () => {
+		const result = CustomActionModelSchema.safeParse({ type: 'custom-action', inputs: [{ type: 'sparkle', id: 'a' }] })
+		expect(result.success).toBe(false)
+	})
+
+	test.each([
+		['a type for connection config', { type: 'secret-text', id: 'key', label: 'Key' }],
+		['an id which is not usable in a variable', { type: 'checkbox', id: 'a b', label: 'A', default: false }],
+	])('an input can not have %s', (_name, input) => {
+		expect(CustomActionModelSchema.safeParse({ type: 'custom-action', inputs: [input] }).success).toBe(false)
+	})
+})
+
+describe('getCustomActionCallsExcludedFrom', () => {
+	const customActions: [string, { calledCustomActionIds: string[] }][] = [
+		['custom-action:a', { calledCustomActionIds: ['b', 'c'] }],
+		['custom-action:b', { calledCustomActionIds: ['c'] }],
+		['custom-action:c', { calledCustomActionIds: [] }],
+	]
+
+	test('excludes the custom action itself, and any which call it', () => {
+		expect(getCustomActionCallsExcludedFrom('custom-action:c', customActions)).toEqual(
+			new Set(['__custom-actions__:c', '__custom-actions__:a', '__custom-actions__:b'])
+		)
+		expect(getCustomActionCallsExcludedFrom('custom-action:a', customActions)).toEqual(
+			new Set(['__custom-actions__:a'])
+		)
+	})
+
+	test('excludes nothing from a control which is not a custom action', () => {
+		expect(getCustomActionCallsExcludedFrom('bank:abc', customActions)).toEqual(new Set())
+	})
+})
+
 describe('PageControlModelSchema', () => {
 	test('a page control without local variables has none', () => {
 		expect(PageControlModelSchema.parse({ type: 'page' })).toEqual({ type: 'page', localVariables: [] })
@@ -267,6 +314,7 @@ describe('SomeControlModelSchema', () => {
 		['button-layered', { type: 'button-layered' }],
 		['trigger', { type: 'trigger' }],
 		['expression-variable', { type: 'expression-variable' }],
+		['custom-action', { type: 'custom-action' }],
 		['page', { type: 'page' }],
 		['pageup', { type: 'pageup' }],
 	])('parses a %s control', (type, control) => {

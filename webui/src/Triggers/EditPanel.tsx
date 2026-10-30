@@ -81,7 +81,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 		[setOptionsFieldMutation, controlId]
 	)
 
-	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables)
+	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables, null, null)
 
 	return (
 		<div className="flex-1 min-h-0 flex flex-col overflow-hidden">
@@ -148,6 +148,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 					<div className="max-w-readable">
 						<MyErrorBoundary>
 							<LocalVariablesEditor
+								description={null}
 								controlId={controlId}
 								location={undefined}
 								variables={config.localVariables}

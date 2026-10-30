@@ -73,6 +73,7 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 			setEnabled: undefined,
 			setHeadline: undefined,
 			setRawStoreResult: undefined,
+			setRawOutputTarget: undefined,
 
 			setInverted: (_entityId: string, _inverted: ExpressionOrValue<boolean>) => {
 				// Not supported

@@ -194,6 +194,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 						!!entityDefinition.actionHasResult &&
 						!!service.setRawStoreResult && (
 							<StoreResultFields
+								label="Store Action Result"
 								isLocatedInGrid={!!location}
 								controlId={controlId}
 								storeResult={entity.type === EntityModelType.Action ? entity.storeResult : undefined}
@@ -202,6 +203,21 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								localVariablesStore={localVariablesStore}
 							/>
 						)}
+
+					{entity.type === EntityModelType.Action &&
+						!!service.setRawOutputTarget &&
+						entityDefinition?.actionOutputs?.map((output) => (
+							<StoreResultFields
+								key={output.id}
+								label={`Store ${output.label || output.id}`}
+								isLocatedInGrid={!!location}
+								controlId={controlId}
+								storeResult={entity.outputTargets?.[output.id]}
+								setStoreResult={(target) => service.setRawOutputTarget?.(output.id, target)}
+								readonly={readonly}
+								localVariablesStore={localVariablesStore}
+							/>
+						))}
 
 					{!!entity &&
 						!!entityDefinition &&

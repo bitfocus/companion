@@ -18,12 +18,13 @@ import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
 } from '../../Variables/VariablesAndExpressionParser.js'
+import type { CustomActionInstancesForEntity } from '../CustomActions/CustomActionInstanceManager.js'
 import type { RenderClock } from '../RenderClock.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
 import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
 import { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
-import type { InstanceDefinitionsForEntity, NewFeedbackValue } from './Types.js'
+import type { EntityScope, InstanceDefinitionsForEntity, NewFeedbackValue } from './Types.js'
 
 export interface ControlEntityListChangeProps {
 	/** If true, do not save changes to the database/disk */
@@ -46,6 +47,8 @@ export interface ControlEntityListPoolProps {
 	renderClock: RenderClock
 	/** Resolve a page's local-variable entities, for `$(page:x)` injection (only used by button pools). */
 	getPageVariableEntities: (pageNumber: number) => ControlEntityInstance[] | null
+	/** Builds the copy of a custom action held by an action which calls it */
+	customActionInstances: CustomActionInstancesForEntity
 }
 
 /**
@@ -78,7 +81,7 @@ export abstract class ControlEntityListPoolBase {
 	readonly #processManager: InstanceProcessManager
 	protected readonly variableValues: VariablesValues
 	readonly #isLayeredDrawing: boolean
-	readonly #specialExpressionManager: EntityPoolSpecialExpressionManager
+	readonly #scope: EntityScope
 
 	protected readonly controlId: string
 
@@ -89,7 +92,13 @@ export abstract class ControlEntityListPoolBase {
 
 	// Public (not protected) so the editing mixins can extend this base via a generic constructor constraint.
 	// The class is abstract, so it still cannot be instantiated directly.
-	constructor(props: ControlEntityListPoolProps, isLayeredDrawing: boolean) {
+	/**
+	 * @param props The dependencies of the pool
+	 * @param isLayeredDrawing Whether the control is a layered button
+	 * @param customActionChain The custom actions the entities run inside, which is only the custom action itself for
+	 *   the pool of a custom action
+	 */
+	constructor(props: ControlEntityListPoolProps, isLayeredDrawing: boolean, customActionChain: ReadonlyArray<string>) {
 		this.logger = LogController.createLogger(`Controls/Fragments/EntityPool/${props.controlId}`)
 
 		this.controlId = props.controlId
@@ -101,7 +110,7 @@ export abstract class ControlEntityListPoolBase {
 		this.variableValues = props.variableValues
 		this.#isLayeredDrawing = isLayeredDrawing
 
-		this.#specialExpressionManager = new EntityPoolSpecialExpressionManager(
+		const specialExpressionManager = new EntityPoolSpecialExpressionManager(
 			props.controlId,
 			this.createVariablesAndExpressionParser.bind(this),
 			{
@@ -110,6 +119,12 @@ export abstract class ControlEntityListPoolBase {
 			},
 			props.renderClock
 		)
+		this.#scope = {
+			specialExpressionManager,
+			customActionChain,
+			customActionInstances: props.customActionInstances,
+			createVariablesAndExpressionParser: this.createVariablesAndExpressionParser.bind(this),
+		}
 	}
 
 	protected createEntityList(listDefinition: ControlEntityListDefinition): ControlEntityList {
@@ -117,7 +132,7 @@ export abstract class ControlEntityListPoolBase {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#processManager,
-			this.#specialExpressionManager,
+			this.#scope,
 			this.controlId,
 			null,
 			listDefinition
@@ -211,7 +226,7 @@ export abstract class ControlEntityListPoolBase {
 	 * @access public
 	 */
 	destroy(): void {
-		this.#specialExpressionManager.destroy()
+		this.#scope.specialExpressionManager.destroy()
 
 		for (const list of this.getAllEntityLists()) {
 			list.cleanup()
@@ -266,6 +281,14 @@ export abstract class ControlEntityListPoolBase {
 	 */
 	getAllEntities(): ControlEntityInstance[] {
 		return this.getAllEntityLists().flatMap((entityList) => entityList.getAllEntities())
+	}
+
+	/**
+	 * Recursively get all the entities, including those in transient child groups which are never persisted.
+	 * This is for things which run the entities, such as subscribing them to a connection.
+	 */
+	getAllEntitiesWithTransient(): ControlEntityInstance[] {
+		return this.getAllEntityLists().flatMap((entityList) => entityList.getAllEntitiesWithTransient())
 	}
 
 	/**
@@ -478,6 +501,6 @@ export abstract class ControlEntityListPoolBase {
 	 * @param changedVariables - variables with changes
 	 */
 	onVariablesChanged(changedVariables: ReadonlySet<string>): void {
-		this.#specialExpressionManager.onVariablesChanged(changedVariables)
+		this.#scope.specialExpressionManager.onVariablesChanged(changedVariables)
 	}
 }

@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import {
 	CreateBankControlId,
+	CreateCustomActionControlId,
 	CreateExpressionVariableControlId,
 	CreatePageControlId,
 	CreatePresetControlId,
@@ -153,6 +154,12 @@ describe('CreateExpressionVariableControlId', () => {
 	})
 })
 
+describe('CreateCustomActionControlId', () => {
+	test('prefixes id with "custom-action:"', () => {
+		expect(CreateCustomActionControlId('abc')).toBe('custom-action:abc')
+	})
+})
+
 describe('CreatePageControlId', () => {
 	test('prefixes id with "page:"', () => {
 		expect(CreatePageControlId('page-abc')).toBe('page:page-abc')
@@ -186,6 +193,10 @@ describe('ParseControlId', () => {
 			type: 'expression-variable',
 			variableId: 'myVar',
 		})
+	})
+
+	test('parses a custom-action control id', () => {
+		expect(ParseControlId('custom-action:abc')).toEqual({ type: 'custom-action', customActionId: 'abc' })
 	})
 
 	test('parses a page control id', () => {

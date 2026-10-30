@@ -3,6 +3,7 @@ import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import { nanoid } from 'nanoid'
 import z from 'zod'
+import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import {
 	CreateBankControlId,
 	CreatePageControlId,
@@ -14,6 +15,8 @@ import {
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
+import type { CustomActionCollection, CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
+import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type {
 	ExpressionVariableCollection,
 	ExpressionVariableModel,
@@ -41,12 +44,17 @@ import { createControlsTrpcRouter } from './ControlsTrpcRouter.js'
 import { ControlButtonLayered } from './ControlTypes/Button/Layered.js'
 import type { ControlButtonPreset } from './ControlTypes/Button/Preset.js'
 import { ControlButtonPresetReference } from './ControlTypes/Button/PresetReference.js'
+import { ControlCustomAction } from './ControlTypes/CustomAction.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import { ControlPage } from './ControlTypes/Page.js'
 import { ControlButtonPageDown } from './ControlTypes/PageDown.js'
 import { ControlButtonPageNumber } from './ControlTypes/PageNumber.js'
 import { ControlButtonPageUp } from './ControlTypes/PageUp.js'
 import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
+import { CustomActionCollections } from './CustomActionCollections.js'
+import { MAX_CUSTOM_ACTION_DEPTH } from './CustomActionRunFrame.js'
+import { analyseCustomActionCalls, type CustomActionCallAnalysis } from './CustomActions/CustomActionCalls.js'
+import { createCustomActionTrpcRouter } from './CustomActionTrpcRouter.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import { createEntitiesTrpcRouter } from './EntitiesTrpcRouter.js'
@@ -61,7 +69,12 @@ import { createStylesTrpcRouter } from './StylesTrpcRouter.js'
 import { TriggerCollections } from './TriggerCollections.js'
 import type { TriggerEvents } from './TriggerEvents.js'
 import { createTriggersTrpcRouter } from './TriggersTrpcRouter.js'
-import { validateBankControlId, validateExpressionVariableControlId, validateTriggerControlId } from './Util.js'
+import {
+	validateBankControlId,
+	validateCustomActionControlId,
+	validateExpressionVariableControlId,
+	validateTriggerControlId,
+} from './Util.js'
 
 /**
  * The class that manages the controls
@@ -103,6 +116,11 @@ export class ControlsController {
 	readonly #expressionVariableCollections: ExpressionVariableCollections
 
 	readonly #expressionVariableNamesMap: ExpressionVariableNameMap
+
+	/**
+	 * The custom action collections
+	 */
+	readonly #customActionCollections: CustomActionCollections
 
 	readonly #controlChangeEvents = new EventEmitter<ControlChangeEvents>()
 
@@ -146,7 +164,63 @@ export class ControlsController {
 		this.#expressionVariableCollections = new ExpressionVariableCollections(db, (validCollectionIds) =>
 			this.#cleanUnknownExpressionVariableCollectionIds(validCollectionIds)
 		)
+
+		this.#customActionCollections = new CustomActionCollections(db, (validCollectionIds) =>
+			this.#cleanUnknownCustomActionCollectionIds(validCollectionIds)
+		)
+
+		this.#controlEvents.on('customActionDefinitionChanged', (controlId) => {
+			this.#publishCustomActionDefinitions()
+			this.#deps.customActionInstances.onCustomActionChanged(controlId)
+		})
 	}
+
+	#cleanUnknownCustomActionCollectionIds(validCollectionIds: ReadonlySet<string>): void {
+		for (const control of this.#store.controls.values()) {
+			if (control instanceof ControlCustomAction) {
+				control.checkCollectionIdIsValid(validCollectionIds)
+			}
+		}
+	}
+
+	/**
+	 * Publish each custom action as an action, so that it can be used by other controls
+	 */
+	#publishCustomActionDefinitions = debounceFn(
+		(): void => {
+			const customActions = new Map<string, ControlCustomAction>()
+			for (const control of this.#store.controls.values()) {
+				if (!(control instanceof ControlCustomAction)) continue
+
+				const parsedId = ParseControlId(control.controlId)
+				if (parsedId?.type !== 'custom-action') continue
+
+				customActions.set(parsedId.customActionId, control)
+			}
+
+			// Which custom actions call each other, so that the calls which can never run can be shown as such
+			const analysis = analyseCustomActionCalls(
+				new Map([...customActions].map(([id, control]) => [id, control.getCalledCustomActionIds()]))
+			)
+			for (const [id, control] of customActions) {
+				const callAnalysis = analysis.get(id)
+				if (callAnalysis) control.setCallAnalysis(callAnalysis, describeCallProblem(customActions, callAnalysis))
+			}
+
+			const definitions: Record<string, ClientEntityDefinition> = {}
+			for (const [id, control] of customActions) {
+				definitions[id] = control.toActionDefinition()
+			}
+
+			this.#deps.instance.definitions.setActionDefinitions(CUSTOM_ACTIONS_CONNECTION_ID, definitions)
+		},
+		{
+			before: false,
+			after: true,
+			wait: 10,
+			maxWait: 50,
+		}
+	)
 
 	#cleanUnknownTriggerCollectionIds(validCollectionIds: ReadonlySet<string>): void {
 		for (const control of this.#store.controls.values()) {
@@ -228,6 +302,12 @@ export class ControlsController {
 			triggers: createTriggersTrpcRouter(
 				this.#controlChangeEvents,
 				this.#triggerCollections,
+				this.#store,
+				this.#factory
+			),
+			customActions: createCustomActionTrpcRouter(
+				this.#controlChangeEvents,
+				this.#customActionCollections,
 				this.#store,
 				this.#factory
 			),
@@ -339,6 +419,19 @@ export class ControlsController {
 			}
 		}
 		return variables
+	}
+
+	/**
+	 * Get all of the custom action controls
+	 */
+	getAllCustomActions(): ControlCustomAction[] {
+		const customActions: ControlCustomAction[] = []
+		for (const control of this.#store.controls.values()) {
+			if (control instanceof ControlCustomAction) {
+				customActions.push(control)
+			}
+		}
+		return customActions
 	}
 
 	/**
@@ -478,6 +571,30 @@ export class ControlsController {
 	}
 
 	/**
+	 * Import a custom action
+	 */
+	importCustomAction(controlId: string, definition: CustomActionModel): boolean {
+		if (!validateCustomActionControlId(controlId)) {
+			// Control id is not valid!
+			return false
+		}
+
+		if (this.#store.controls.has(controlId)) throw new Error(`Custom action ${controlId} already exists`)
+
+		const newControl = this.#factory.createClassForControl(controlId, 'custom-action', definition, true)
+		if (newControl) {
+			this.#store.controls.set(controlId, newControl)
+
+			// Ensure it is stored to the db
+			newControl.commitChange()
+
+			return true
+		}
+
+		return false
+	}
+
+	/**
 	 * Initialise the controls
 	 */
 	init(): void {
@@ -502,6 +619,16 @@ export class ControlsController {
 
 		this.#cleanUnknownExpressionVariableCollectionIds(this.#expressionVariableCollections.collectAllCollectionIds())
 
+		this.#cleanUnknownCustomActionCollectionIds(this.#customActionCollections.collectAllCollectionIds())
+
+		this.#publishCustomActionDefinitions()
+
+		// Now that every custom action is loaded, build the copies held by the actions which call them.
+		// Their connection entities are tracked by each connection when it starts
+		for (const control of this.#store.controls.values()) {
+			if (control.supportsEntities) control.entities.resubscribeEntities(undefined, CUSTOM_ACTIONS_CONNECTION_ID)
+		}
+
 		// Initialize expression variable names map
 		this.#expressionVariableNamesMap.rebuildMap()
 	}
@@ -512,6 +639,8 @@ export class ControlsController {
 	 */
 	onVariablesChanged(allChangedVariablesSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
 		this.#store.triggerEvents.emit('variables_changed', allChangedVariablesSet, controlIdFilter)
+
+		this.#deps.customActionInstances.onVariablesChanged(allChangedVariablesSet, controlIdFilter)
 
 		if (allChangedVariablesSet.size > 0) {
 			for (const control of this.#store.controls.values()) {
@@ -621,6 +750,14 @@ export class ControlsController {
 
 	replaceExpressionVariableCollections(collections: ExpressionVariableCollection[]): void {
 		this.#expressionVariableCollections.replaceCollections(collections)
+	}
+
+	exportCustomActionCollections(): CustomActionCollection[] {
+		return this.#customActionCollections.collectionData
+	}
+
+	replaceCustomActionCollections(collections: CustomActionCollection[]): void {
+		this.#customActionCollections.replaceCollections(collections)
 	}
 
 	/**
@@ -768,4 +905,26 @@ export class ControlsController {
 	): VariablesAndExpressionParser {
 		return this.#store.createVariablesAndExpressionParser(controlId, overrideVariableValues ?? null, options)
 	}
+}
+
+/**
+ * Describe why some of the calls of a custom action can never run, for the user
+ */
+function describeCallProblem(
+	customActions: ReadonlyMap<string, ControlCustomAction>,
+	analysis: CustomActionCallAnalysis
+): string | null {
+	if (analysis.loop) {
+		const through = analysis.loop
+			.slice(1, -1)
+			.map((id) => `"${customActions.get(id)?.options.name || id}"`)
+			.join(', then ')
+		return through
+			? `It calls back into itself through ${through}. That call back does nothing.`
+			: 'It calls itself. That call does nothing.'
+	}
+	if (analysis.tooDeep) {
+		return `Its calls to other custom actions are nested more than ${MAX_CUSTOM_ACTION_DEPTH} deep. The deepest do nothing.`
+	}
+	return null
 }

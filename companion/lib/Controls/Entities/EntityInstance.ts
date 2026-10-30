@@ -1,7 +1,11 @@
 import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
-import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
+import {
+	isCustomActionsConnectionId,
+	isInternalConnectionId,
+	isVirtualConnectionId,
+} from '@companion-app/shared/ConnectionId.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { LocalVariableNameRegex } from '@companion-app/shared/LocalVariable.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
@@ -21,14 +25,19 @@ import {
 	type SomeReplaceableEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { InternalVisitor } from '../../Internal/Types.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import { visitEntityModel } from '../../Resources/Visitors/EntityInstanceVisitor.js'
-import { ControlEntityList } from './EntityList.js'
-import type { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
+import type {
+	ExpressionParserOptions,
+	VariablesAndExpressionParser,
+} from '../../Variables/VariablesAndExpressionParser.js'
+import { ControlEntityList, type ControlEntityListDefinition } from './EntityList.js'
 import type { NewSpecialExpressionValue } from './SpecialExpressions.js'
 import type {
+	EntityScope,
 	FeedbackExecutionContext,
 	InstanceDefinitionsForEntity,
 	InternalControllerForEntity,
@@ -46,7 +55,7 @@ export class ControlEntityInstance {
 	readonly #instanceDefinitions: InstanceDefinitionsForEntity
 	readonly #internalModule: InternalControllerForEntity
 	readonly #processManager: ProcessManagerForEntity
-	readonly #specialExpressionManager: EntityPoolSpecialExpressionManager
+	readonly #scope: EntityScope
 
 	/**
 	 * Id of the control this belongs to
@@ -71,6 +80,12 @@ export class ControlEntityInstance {
 	#cachedStoreResult: StoreResult | undefined
 
 	#children = new Map<string, ControlEntityList>()
+
+	/**
+	 * Child groups which exist only while Companion is running (eg the copy of a custom action held by an action
+	 * which calls it). They are never persisted or shown in the ui, and parse their options in their own scope.
+	 */
+	#transientChildren = new Map<string, ControlEntityList>()
 
 	/**
 	 * Get the id of this entity
@@ -124,6 +139,15 @@ export class ControlEntityInstance {
 		const data = this.#data
 		if (data.type !== EntityModelType.Action) return undefined
 		return (data as ActionEntityModel).storeResult
+	}
+
+	/**
+	 * Get the raw targets of the outputs of this action, by the id of the output
+	 */
+	get rawOutputTargets(): Readonly<Record<string, RawStoreResult>> {
+		const data = this.#data
+		if (data.type !== EntityModelType.Action) return {}
+		return (data as ActionEntityModel).outputTargets ?? {}
 	}
 
 	/**
@@ -193,7 +217,7 @@ export class ControlEntityInstance {
 		instanceDefinitions: InstanceDefinitionsForEntity,
 		internalModule: InternalControllerForEntity,
 		processManager: ProcessManagerForEntity,
-		specialExpressionManager: EntityPoolSpecialExpressionManager,
+		scope: EntityScope,
 		controlId: string,
 		data: SomeEntityModel,
 		isCloned: boolean
@@ -203,7 +227,7 @@ export class ControlEntityInstance {
 		this.#instanceDefinitions = instanceDefinitions
 		this.#internalModule = internalModule
 		this.#processManager = processManager
-		this.#specialExpressionManager = specialExpressionManager
+		this.#scope = scope
 		this.#controlId = controlId
 
 		{
@@ -253,7 +277,7 @@ export class ControlEntityInstance {
 			this.#instanceDefinitions,
 			this.#internalModule,
 			this.#processManager,
-			this.#specialExpressionManager,
+			this.#scope,
 			this.#controlId,
 			{ parentId: this.id, childGroup: listDefinition.groupId },
 			listDefinition
@@ -293,13 +317,15 @@ export class ControlEntityInstance {
 		// Inform relevant module
 		if (isInternalConnectionId(this.#data.connectionId)) {
 			this.#internalModule.entityDelete(this.asEntityModel())
-		} else {
+		} else if (isCustomActionsConnectionId(this.#data.connectionId)) {
+			this.#scope.customActionInstances.entityDelete(this)
+		} else if (!isVirtualConnectionId(this.#data.connectionId)) {
 			this.#processManager.connectionEntityDelete(this.asEntityModel(), this.#controlId).catch((e) => {
 				this.#logger.silly(`entityDelete to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
 			})
 		}
 
-		this.#specialExpressionManager.forgetEntity(this.id)
+		this.#scope.specialExpressionManager.forgetEntity(this.id)
 
 		// Remove from cached feedback values
 		this.#cachedFeedbackValue = undefined
@@ -307,6 +333,63 @@ export class ControlEntityInstance {
 		for (const childGroup of this.#children.values()) {
 			childGroup.cleanup()
 		}
+		for (const childGroup of this.#transientChildren.values()) {
+			childGroup.cleanup()
+		}
+	}
+
+	/**
+	 * Set the entities of a transient child group, replacing any existing group with the same id.
+	 * The group is never persisted or shown in the ui, and its entities parse their options in the given scope.
+	 * @param groupId Id of the group
+	 * @param scope The scope the entities of the group parse their options in
+	 * @param listDefinition The type of entities in the group
+	 * @param entities The entities of the group. Their ids are used as is, so must be unique within the control
+	 * @returns The new group
+	 */
+	setTransientChildGroup(
+		groupId: string,
+		scope: EntityScope,
+		listDefinition: ControlEntityListDefinition,
+		entities: SomeEntityModel[]
+	): ControlEntityList {
+		this.removeTransientChildGroup(groupId)
+
+		const childGroup = new ControlEntityList(
+			this.#instanceDefinitions,
+			this.#internalModule,
+			this.#processManager,
+			scope,
+			this.#controlId,
+			{ parentId: this.id, childGroup: groupId },
+			listDefinition
+		)
+		this.#transientChildren.set(groupId, childGroup)
+
+		// A disabled entity has nothing subscribed, so neither should its children
+		childGroup.loadStorage(entities, this.disabled, false)
+
+		return childGroup
+	}
+
+	/**
+	 * Get a transient child group
+	 * @param groupId Id of the group
+	 */
+	getTransientChildGroup(groupId: string): ControlEntityList | undefined {
+		return this.#transientChildren.get(groupId)
+	}
+
+	/**
+	 * Remove a transient child group, cleaning up its entities
+	 * @param groupId Id of the group
+	 */
+	removeTransientChildGroup(groupId: string): void {
+		const childGroup = this.#transientChildren.get(groupId)
+		if (!childGroup) return
+
+		this.#transientChildren.delete(groupId)
+		childGroup.cleanup()
 	}
 
 	/**
@@ -324,8 +407,13 @@ export class ControlEntityInstance {
 
 			if (isInternalConnectionId(thisData.connectionId)) {
 				// Children-of-actions are cached here too, not just evaluated live - see getBooleanFeedbackValue.
-				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId)
-			} else {
+				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId, () =>
+					this.createVariablesAndExpressionParser(null)
+				)
+			} else if (isCustomActionsConnectionId(thisData.connectionId)) {
+				// Build or update the copy of the custom action held by this action
+				this.#scope.customActionInstances.entityUpdate(this, this.#controlId, this.#scope)
+			} else if (!isVirtualConnectionId(thisData.connectionId)) {
 				// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
 				// The EntityManager will not subscribe disabled entities to the module.
 				this.#processManager.connectionEntityUpdate(this, this.#controlId).catch((e) => {
@@ -334,15 +422,18 @@ export class ControlEntityInstance {
 			}
 
 			if (thisData.disabled) {
-				this.#specialExpressionManager.forgetEntity(this.id)
+				this.#scope.specialExpressionManager.forgetEntity(this.id)
 			} else {
 				const specialExpression = thisData.type === EntityModelType.Feedback ? 'isInverted' : 'storeResult'
-				this.#specialExpressionManager.trackEntity(this, specialExpression)
+				this.#scope.specialExpressionManager.trackEntity(this, specialExpression)
 			}
 		}
 
 		if (recursive) {
 			for (const childGroup of this.#children.values()) {
+				childGroup.subscribe(recursive, onlyType, onlyConnectionId)
+			}
+			for (const childGroup of this.#transientChildren.values()) {
 				childGroup.subscribe(recursive, onlyType, onlyConnectionId)
 			}
 		}
@@ -463,6 +554,24 @@ export class ControlEntityInstance {
 	}
 
 	/**
+	 * Set the target into which an output of this action is written
+	 * @param outputId The id of the output
+	 * @param target The target, or undefined to discard the output
+	 */
+	setRawOutputTarget(outputId: string, target: RawStoreResult | undefined): void {
+		if (this.type !== EntityModelType.Action) return
+
+		const data = this.#data as ActionEntityModel
+		const targets = { ...data.outputTargets }
+		if (target) {
+			targets[outputId] = target
+		} else {
+			delete targets[outputId]
+		}
+		data.outputTargets = Object.keys(targets).length > 0 ? targets : undefined
+	}
+
+	/**
 	 * Set the upgradeIndex for this entity or throw an error if it is already set
 	 */
 	setMissingUpgradeIndex(upgradeIndex: number): void {
@@ -500,6 +609,16 @@ export class ControlEntityInstance {
 
 		// Inform relevant module
 		this.subscribe(false)
+	}
+
+	/**
+	 * Create a parser for the options of this entity, using the variables of the scope it belongs to
+	 */
+	createVariablesAndExpressionParser(
+		overrideVariableValues: VariableValues | null,
+		options?: ExpressionParserOptions
+	): VariablesAndExpressionParser {
+		return this.#scope.createVariablesAndExpressionParser(overrideVariableValues, options)
 	}
 
 	getEntityDefinition(): ClientEntityDefinition | undefined {
@@ -557,6 +676,11 @@ export class ControlEntityInstance {
 	 */
 	findChildById(id: string): ControlEntityInstance | undefined {
 		for (const childGroup of this.#children.values()) {
+			const result = childGroup.findById(id)
+			if (result) return result
+		}
+		// Transient children are included, so that they can be found to be upgraded and given values
+		for (const childGroup of this.#transientChildren.values()) {
 			const result = childGroup.findById(id)
 			if (result) return result
 		}
@@ -651,6 +775,24 @@ export class ControlEntityInstance {
 
 		for (const childGroup of this.#children.values()) {
 			entities.push(...childGroup.getAllEntities())
+		}
+
+		return entities
+	}
+
+	/**
+	 * Recursively get all the child entities, including those in transient child groups
+	 */
+	getAllChildrenWithTransient(): ControlEntityInstance[] {
+		const entities: ControlEntityInstance[] = []
+
+		if (isInternalConnectionId(this.connectionId)) {
+			for (const childGroup of this.#children.values()) {
+				entities.push(...childGroup.getAllEntitiesWithTransient())
+			}
+		}
+		for (const childGroup of this.#transientChildren.values()) {
+			entities.push(...childGroup.getAllEntitiesWithTransient())
 		}
 
 		return entities
@@ -759,7 +901,7 @@ export class ControlEntityInstance {
 			changed = true
 		}
 
-		for (const childGroup of this.#children.values()) {
+		for (const childGroup of [...this.#children.values(), ...this.#transientChildren.values()]) {
 			if (childGroup.clearCachedValueForConnectionId(connectionId)) {
 				changed = true
 			}
@@ -770,7 +912,8 @@ export class ControlEntityInstance {
 
 	/**
 	 * Resolve the value of this feedback (boolean feedbacks as a boolean, otherwise the raw value).
-	 * `context` selects cached vs live evaluation - see {@link getBooleanFeedbackValue}.
+	 * `context` selects cached vs live evaluation - see {@link getBooleanFeedbackValue}. A user value is state
+	 * held by this entity rather than something computed, so it always comes from the cache.
 	 */
 	getResolvedFeedbackValue(context: FeedbackExecutionContext | null): any {
 		if (this.#data.type !== EntityModelType.Feedback) return null
@@ -779,9 +922,23 @@ export class ControlEntityInstance {
 
 		if (definition?.feedbackType === FeedbackEntitySubType.Boolean) {
 			return this.getBooleanFeedbackValue(context)
-		} else {
-			return this.feedbackValue
 		}
+
+		// Lazy path (internal feedbacks only); module feedbacks fall through to the cache below.
+		if (
+			context &&
+			!this.#data.disabled &&
+			isInternalConnectionId(this.#data.connectionId) &&
+			!isInternalUserValueFeedback(this)
+		) {
+			return this.#internalModule.evaluateFeedbackValue(
+				this.asEntityModel(false) as FeedbackEntityModel,
+				this.#controlId,
+				context.parser
+			)
+		}
+
+		return this.feedbackValue
 	}
 
 	/**
@@ -876,6 +1033,10 @@ export class ControlEntityInstance {
 			}
 		}
 
+		for (const childGroup of this.#transientChildren.values()) {
+			changed.push(...childGroup.updateFeedbackValues(connectionId, newValues))
+		}
+
 		for (const childGroup of this.#children.values()) {
 			const childrenChanged = childGroup.updateFeedbackValues(connectionId, newValues)
 			changed.push(...childrenChanged)
@@ -907,6 +1068,10 @@ export class ControlEntityInstance {
 				changed.push(this)
 				thisChanged = true
 			}
+		}
+
+		for (const childGroup of this.#transientChildren.values()) {
+			changed.push(...childGroup.updateIsInvertedValues(newValues))
 		}
 
 		for (const childGroup of this.#children.values()) {
@@ -941,12 +1106,25 @@ export class ControlEntityInstance {
 			}
 		}
 
-		for (const childGroup of this.#children.values()) {
+		for (const childGroup of [...this.#children.values(), ...this.#transientChildren.values()]) {
 			const childrenChanged = childGroup.updateStoreResultValues(newValues)
 			changed.push(...childrenChanged)
 		}
 
 		return changed
+	}
+
+	/**
+	 * Take the runtime values (feedback value, isInverted and storeResult) of another entity, which is a copy of the
+	 * same entity in the same circumstances. This lets a new copy be used straight away, without waiting for them to
+	 * be recomputed
+	 */
+	copyRuntimeValuesFrom(other: ControlEntityInstance): void {
+		if (other.type !== this.type || other.definitionId !== this.definitionId) return
+
+		this.#cachedFeedbackValue = other.#cachedFeedbackValue
+		this.#cachedIsInverted = other.#cachedIsInverted
+		this.#cachedStoreResult = other.#cachedStoreResult
 	}
 
 	/**

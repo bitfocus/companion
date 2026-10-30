@@ -82,6 +82,8 @@ interface FeedbackDependencyTracking {
 interface FeedbackEntityState extends FeedbackDependencyTracking {
 	controlId: string
 	location: ControlLocation | undefined
+	/** Create a parser for the options of the feedback, in the scope of the feedback */
+	createParser: () => VariablesAndExpressionParser
 
 	entityModel: FeedbackEntityModel
 }
@@ -267,16 +269,26 @@ export class InternalController {
 		return undefined
 	}
 
-	entityUpdate(entity: SomeEntityModel, controlId: string): void {
+	/**
+	 * An entity has changed, and state should be updated
+	 * @param entity The entity
+	 * @param controlId The control the entity belongs to
+	 * @param createParser Create a parser for the options of the entity, in the scope of the entity
+	 */
+	entityUpdate(entity: SomeEntityModel, controlId: string, createParser: () => VariablesAndExpressionParser): void {
 		if (entity.type === EntityModelType.Feedback) {
-			this.#feedbackUpdate(entity, controlId)
+			this.#feedbackUpdate(entity, controlId, createParser)
 		}
 	}
 
 	/**
 	 * A feedback has changed, and state should be updated
 	 */
-	#feedbackUpdate(feedback: FeedbackEntityModel, controlId: string): void {
+	#feedbackUpdate(
+		feedback: FeedbackEntityModel,
+		controlId: string,
+		createParser: () => VariablesAndExpressionParser
+	): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		if (!isInternalConnectionId(feedback.connectionId)) throw new Error(`Feedback is not for internal instance`)
@@ -287,6 +299,7 @@ export class InternalController {
 		const feedbackState: FeedbackEntityState = {
 			controlId,
 			location,
+			createParser,
 			referencedVariables: null,
 			clockSensitive: false,
 
@@ -347,11 +360,11 @@ export class InternalController {
 	}
 	/**
 	 * Get an updated value for a tracked (eagerly-cached) feedback.
-	 * Builds a parser for the control (with no execution-context overrides) and records the dependency
+	 * Builds a parser in the scope of the feedback (with no execution-context overrides) and records the dependency
 	 * tracking onto the {@link FeedbackEntityState} so it can be re-evaluated when its inputs change.
 	 */
 	#feedbackGetValue(feedbackState: FeedbackEntityState): FeedbackValue {
-		const parser = this.#controlsStore.createVariablesAndExpressionParser(feedbackState.controlId, null)
+		const parser = feedbackState.createParser()
 
 		return this.#computeFeedbackValue(
 			feedbackState.entityModel,
@@ -687,6 +700,8 @@ export class InternalController {
 						learnTimeout: action.learnTimeout,
 
 						actionHasResult: !!action.actionHasResult,
+						actionOutputs: null,
+						warning: null,
 
 						showButtonPreview: action.showButtonPreview ?? false,
 						supportsChildGroups: action.supportsChildGroups ?? [],
@@ -727,6 +742,8 @@ export class InternalController {
 						learnTimeout: feedback.learnTimeout,
 
 						actionHasResult: undefined,
+						actionOutputs: null,
+						warning: null,
 
 						entityType: EntityModelType.Feedback,
 						showButtonPreview: feedback.showButtonPreview ?? false,

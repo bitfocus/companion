@@ -2,8 +2,10 @@ import { describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { ActionRunner, ControlActionRunner } from '../../lib/Controls/ActionRunner.js'
+import type { CustomActionInstanceManager } from '../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
 import type { StoreResult } from '../../lib/Controls/Entities/Types.js'
+import type { IControlStore } from '../../lib/Controls/IControlStore.js'
 import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../../lib/Instance/Controller.js'
 import type { InternalController } from '../../lib/Internal/Controller.js'
@@ -56,6 +58,7 @@ function makeExtras(overrides: Partial<RunActionExtras> = {}): { extras: RunActi
 			abortDelayed: abort.signal,
 			executionMode: 'concurrent',
 			rotationDelta: null,
+			frame: null,
 			...overrides,
 		},
 	}
@@ -66,13 +69,31 @@ function createRunner() {
 	const internalModule = mock<InternalController>()
 	const variablesController = mockDeep<VariablesController>()
 	const localVariablesController = mock<LocalVariablesController>()
+	const controlStore = mock<IControlStore>()
 
-	const runner = new ActionRunner(instanceController, internalModule, variablesController, localVariablesController)
+	const customActionInstances = mock<CustomActionInstanceManager>()
+
+	const runner = new ActionRunner(
+		instanceController,
+		controlStore,
+		internalModule,
+		variablesController,
+		localVariablesController,
+		customActionInstances
+	)
 
 	const actionRun = vi.fn(async (): Promise<any> => undefined)
 	instanceController.processManager.getConnectionChild.mockReturnValue({ actionRun } as any)
 
-	return { runner, instanceController, internalModule, variablesController, localVariablesController, actionRun }
+	return {
+		runner,
+		instanceController,
+		controlStore,
+		internalModule,
+		variablesController,
+		localVariablesController,
+		actionRun,
+	}
 }
 
 function deferred<T = void>() {
@@ -361,7 +382,7 @@ describe('ActionRunner', () => {
 			const { runner, actionRun, localVariablesController } = createRunner()
 			const { extras } = makeExtras()
 			actionRun.mockResolvedValue('the-result')
-			const targetVariable = { controlId: 'control:target', name: 'myvar' }
+			const targetVariable = { controlId: 'control:target', name: 'myvar', frame: null }
 			localVariablesController.localVariableFor.mockReturnValue(targetVariable)
 
 			const action = fakeEntity({
@@ -377,7 +398,7 @@ describe('ActionRunner', () => {
 			const { runner, internalModule, localVariablesController } = createRunner()
 			const { extras } = makeExtras()
 			internalModule.executeAction.mockResolvedValue('internal-result')
-			const targetVariable = { controlId: 'control:target', name: 'myvar' }
+			const targetVariable = { controlId: 'control:target', name: 'myvar', frame: null }
 			localVariablesController.localVariableFor.mockReturnValue(targetVariable)
 
 			const action = fakeEntity({
@@ -441,7 +462,7 @@ describe('ActionRunner', () => {
 			const { runner, actionRun, localVariablesController } = createRunner()
 			const { extras } = makeExtras()
 			actionRun.mockResolvedValue('page-result')
-			const targetVariable = { controlId: 'page:abc', name: 'pv' }
+			const targetVariable = { controlId: 'page:abc', name: 'pv', frame: null }
 			localVariablesController.pageVariableFor.mockReturnValue(targetVariable)
 
 			const action = fakeEntity({
@@ -531,7 +552,7 @@ describe('ActionRunner', () => {
 			const { runner, actionRun, localVariablesController } = createRunner()
 			const { extras } = makeExtras()
 			actionRun.mockResolvedValue(undefined)
-			const targetVariable = { controlId: 'control:target', name: 'myvar' }
+			const targetVariable = { controlId: 'control:target', name: 'myvar', frame: null }
 			localVariablesController.localVariableFor.mockReturnValue(targetVariable)
 
 			const action = fakeEntity({
@@ -558,6 +579,7 @@ describe('ControlActionRunner', () => {
 			surfaceId: 'surface0',
 			location: { pageNumber: 1, row: 2, column: 3 },
 			rotationDelta: null,
+			frame: null,
 		}
 	}
 
@@ -580,6 +602,7 @@ describe('ControlActionRunner', () => {
 			executionMode: 'concurrent',
 			abortDelayed: expect.any(AbortSignal),
 			rotationDelta: null,
+			frame: null,
 		})
 	})
 

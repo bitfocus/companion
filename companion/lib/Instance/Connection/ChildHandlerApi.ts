@@ -4,6 +4,7 @@ import type { ActionEntityModel, SomeEntityModel } from '@companion-app/shared/M
 import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
 import type { ExpressionableOptionsObject, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { JsonValue } from '@companion-module/host'
+import type { CustomActionRunFrame } from '../../Controls/CustomActionRunFrame.js'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
 import type { RenderClock } from '../../Controls/RenderClock.js'
@@ -123,4 +124,9 @@ export interface RunActionExtras {
 	 * Exposed to expressions as `$(this:delta)`.
 	 */
 	rotationDelta: number | null
+	/**
+	 * The run of a custom action that this execution is part of, or `null` when it is not inside a custom action.
+	 * Exposes the inputs of the custom action as `$(options:x)`, and holds its local variables for the run.
+	 */
+	frame: CustomActionRunFrame | null
 }

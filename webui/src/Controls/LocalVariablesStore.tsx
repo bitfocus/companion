@@ -6,6 +6,7 @@ import type { Equal, Expect } from 'type-testing'
 import { CreatePageControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ThisLocationVariable, ThisPageVariable } from '@companion-app/shared/ControlLocation.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { DropdownChoiceInt } from '~/Components/DropdownChoices.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
@@ -41,6 +42,8 @@ export class LocalVariablesStore {
 	/** The variables owned by this control's page, exposed to it as `$(page:x)` (grid controls only). */
 	#pageVariables = observable.map<string, SomeEntityModel>()
 	#values = observable.map<string, VariableValue | undefined>()
+	/** The inputs of a custom action, exposed to it as `$(options:x)` */
+	#inputs = observable.array<SomeCompanionInputField>([], { deep: false })
 
 	constructor(controlId: string) {
 		this.controlId = controlId
@@ -48,7 +51,12 @@ export class LocalVariablesStore {
 		makeObservable(this, {
 			setEntities: action,
 			setPageVariables: action,
+			setInputs: action,
 		})
+	}
+
+	setInputs(inputs: SomeCompanionInputField[]): void {
+		this.#inputs.replace(inputs)
 	}
 
 	setEntities(localVariables: SomeEntityModel[]): void {
@@ -106,6 +114,12 @@ export class LocalVariablesStore {
 				if (choice) dynamicVariables.push(choice)
 			}
 
+			// A custom action can reference its inputs
+			for (const input of this.#inputs) {
+				if (input.type === 'static-text') continue
+				dynamicVariables.push({ value: `options:${input.id}`, label: input.label || input.id })
+			}
+
 			return [...fixedVariables, ...dynamicVariables]
 		}
 	)
@@ -136,13 +150,18 @@ function usePageVariableEntities(pageNumber: number | null | undefined): SomeEnt
 export function useLocalVariablesStore(
 	controlId: string,
 	localVariables: SomeEntityModel[] | null,
-	pageNumber?: number | null
+	pageNumber: number | null,
+	inputs: SomeCompanionInputField[] | null
 ): LocalVariablesStore {
 	const store = useMemo(() => new LocalVariablesStore(controlId), [controlId])
 
 	useEffect(() => {
 		if (localVariables) store.setEntities(localVariables)
 	}, [store, localVariables])
+
+	useEffect(() => {
+		store.setInputs(inputs ?? [])
+	}, [store, inputs])
 
 	const pageVariables = usePageVariableEntities(pageNumber)
 	useEffect(() => {

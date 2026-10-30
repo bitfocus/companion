@@ -30,6 +30,8 @@ function createDefinition(
 		learnTimeout: undefined,
 		showInvert: false,
 		actionHasResult: false,
+		actionOutputs: null,
+		warning: null,
 		optionsSupportExpressions: false,
 		showButtonPreview: false,
 		supportsChildGroups: [],
@@ -688,6 +690,7 @@ describe('buildActionExecutionOverrides', () => {
 			abortDelayed: new AbortController().signal,
 			executionMode: 'concurrent',
 			rotationDelta: null,
+			frame: null,
 			...overrides,
 		}
 	}
@@ -702,6 +705,27 @@ describe('buildActionExecutionOverrides', () => {
 		const overrides = buildActionExecutionOverrides(makeExtras({ surfaceId: 'surface0', rotationDelta: null }))
 		expect(overrides['this:surface_id']).toBe('surface0')
 		expect(overrides['this:delta']).toBeUndefined()
+	})
+
+	test('exposes the inputs of a custom action as options:*', () => {
+		const overrides = buildActionExecutionOverrides(
+			makeExtras({
+				frame: {
+					customActionControlId: 'custom-action:abc',
+					options: { count: 3, name: 'cam' },
+					localValues: new Map(),
+					getLocalVariableEntities: () => [],
+					localValueChanged: () => {},
+				},
+			})
+		)
+		expect(overrides['options:count']).toBe(3)
+		expect(overrides['options:name']).toBe('cam')
+	})
+
+	test('has no options:* outside of a custom action', () => {
+		const overrides = buildActionExecutionOverrides(makeExtras({}))
+		expect(Object.keys(overrides).filter((key) => key.startsWith('options:'))).toEqual([])
 	})
 })
 

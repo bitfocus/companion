@@ -176,7 +176,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 	const { connections, entityDefinitions } = useContext(RootAppStoreContext)
 
 	const connectionInfo = connections.getInfo(entity.connectionId)
-	const connectionLabel = connectionInfo?.label ?? entity.connectionId
+	const connectionLabel = connections.getLabel(entity.connectionId) ?? entity.connectionId
 
 	const entityDefinition = entityDefinitions.getEntityDefinition(entity.type, entity.connectionId, entity.definitionId)
 
@@ -204,6 +204,7 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 		(entityDefinition.entityType === EntityModelType.Action &&
 			!!entityDefinition.actionHasResult &&
 			!!entityService.setRawStoreResult) ||
+		(!!entityDefinition.actionOutputs?.length && !!entityService.setRawOutputTarget) ||
 		(entity.type === EntityModelType.Feedback &&
 			(!!localVariablePrefix ||
 				(entityDefinition.entityType === EntityModelType.Feedback &&

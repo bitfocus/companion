@@ -103,6 +103,7 @@ export abstract class ButtonControlRuntimeBase<
 				pageStore: deps.pageStore,
 				renderClock: deps.renderClock,
 				getPageVariableEntities: deps.getPageVariableEntities,
+				customActionInstances: deps.customActionInstances,
 			},
 			this.sendRuntimePropsChange.bind(this),
 			isLayered
@@ -312,6 +313,7 @@ export abstract class ButtonControlRuntimeBase<
 							surfaceId,
 							location,
 							rotationDelta: null,
+							frame: null,
 						})
 						.catch((e) => {
 							this.logger.error(`action execution failed: ${e}`)
@@ -359,6 +361,7 @@ export abstract class ButtonControlRuntimeBase<
 				surfaceId,
 				location,
 				rotationDelta: delta,
+				frame: null,
 			})
 			.catch((e) => {
 				this.logger.error(`action execution failed: ${e}`)

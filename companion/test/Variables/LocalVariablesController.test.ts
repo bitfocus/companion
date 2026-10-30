@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest'
+import type { CustomActionRunFrame } from '../../lib/Controls/CustomActionRunFrame.js'
 import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandlerApi.js'
 import { LocalVariablesController } from '../../lib/Variables/LocalVariablesController.js'
 import { createStore, threePages } from '../Page/Helpers.js'
@@ -70,11 +71,13 @@ describe('LocalVariablesController', () => {
 			expect(controller.localVariableFor('this', 'my_var', makeExtras())).toEqual({
 				controlId: 'control-self',
 				name: 'my_var',
+				frame: null,
 			})
 			// Case and whitespace insensitive
 			expect(controller.localVariableFor('  THIS ', 'my_var', makeExtras())).toEqual({
 				controlId: 'control-self',
 				name: 'my_var',
+				frame: null,
 			})
 		})
 
@@ -84,6 +87,7 @@ describe('LocalVariablesController', () => {
 			expect(controller.localVariableFor('2/1/2', 'my_var', makeExtras())).toEqual({
 				controlId: 'control-b1',
 				name: 'my_var',
+				frame: null,
 			})
 		})
 
@@ -93,6 +97,7 @@ describe('LocalVariablesController', () => {
 			expect(controller.localVariableFor('this', 42, makeExtras())).toEqual({
 				controlId: 'control-self',
 				name: '42',
+				frame: null,
 			})
 		})
 
@@ -123,6 +128,7 @@ describe('LocalVariablesController', () => {
 			expect(controller.pageVariableFor(2, 'my_var', 1)).toEqual({
 				controlId: 'page:page-b',
 				name: 'my_var',
+				frame: null,
 			})
 		})
 
@@ -132,6 +138,7 @@ describe('LocalVariablesController', () => {
 			expect(controller.pageVariableFor(0, 'my_var', 1)).toEqual({
 				controlId: 'page:page-a',
 				name: 'my_var',
+				frame: null,
 			})
 		})
 
@@ -153,6 +160,7 @@ describe('LocalVariablesController', () => {
 			expect(controller.pageVariableFor(3, 42, 1)).toEqual({
 				controlId: 'page:page-c',
 				name: '42',
+				frame: null,
 			})
 		})
 	})
@@ -163,7 +171,7 @@ describe('LocalVariablesController', () => {
 			const control = makeControl([entity])
 			const { controller } = createController({ 'control-a1': control })
 
-			controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var' }, 'new value')
+			controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var', frame: null }, 'new value')
 
 			expect(control.entities.entitySetVariableValue).toHaveBeenCalledWith('local-variables', entity.id, 'new value')
 		})
@@ -171,21 +179,25 @@ describe('LocalVariablesController', () => {
 		test('an unknown control is ignored', () => {
 			const { controller } = createController()
 
-			expect(() => controller.setLocalVariable({ controlId: 'missing', name: 'my_var' }, 'x')).not.toThrow()
+			expect(() =>
+				controller.setLocalVariable({ controlId: 'missing', name: 'my_var', frame: null }, 'x')
+			).not.toThrow()
 		})
 
 		test('a control without entity support is ignored', () => {
 			const control = { supportsEntities: false }
 			const { controller } = createController({ 'control-a1': control })
 
-			expect(() => controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var' }, 'x')).not.toThrow()
+			expect(() =>
+				controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var', frame: null }, 'x')
+			).not.toThrow()
 		})
 
 		test('an unknown variable name is ignored', () => {
 			const control = makeControl([makeVariableEntity('other_var')])
 			const { controller } = createController({ 'control-a1': control })
 
-			controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var' }, 'x')
+			controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var', frame: null }, 'x')
 
 			expect(control.entities.entitySetVariableValue).not.toHaveBeenCalled()
 		})
@@ -194,7 +206,7 @@ describe('LocalVariablesController', () => {
 			const control = makeControl([makeVariableEntity('my_var', { localVariableName: null })])
 			const { controller } = createController({ 'control-a1': control })
 
-			controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var' }, 'x')
+			controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var', frame: null }, 'x')
 
 			expect(control.entities.entitySetVariableValue).not.toHaveBeenCalled()
 		})
@@ -205,7 +217,7 @@ describe('LocalVariablesController', () => {
 			const control = makeControl([notUserValue, notInternal])
 			const { controller } = createController({ 'control-a1': control })
 
-			controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var' }, 'x')
+			controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var', frame: null }, 'x')
 
 			expect(control.entities.entitySetVariableValue).not.toHaveBeenCalled()
 		})
@@ -217,7 +229,7 @@ describe('LocalVariablesController', () => {
 			const control = makeControl([entity])
 			const { controller } = createController({ 'control-a1': control })
 
-			controller.resetLocalVariable({ controlId: 'control-a1', name: 'my_var' })
+			controller.resetLocalVariable({ controlId: 'control-a1', name: 'my_var', frame: null })
 
 			expect(control.entities.entitySetVariableValue).toHaveBeenCalledWith('local-variables', entity.id, 'startup')
 		})
@@ -229,7 +241,7 @@ describe('LocalVariablesController', () => {
 			const control = makeControl([entity])
 			const { controller } = createController({ 'control-a1': control })
 
-			controller.writeLocalVariableStartupValue({ controlId: 'control-a1', name: 'my_var' })
+			controller.writeLocalVariableStartupValue({ controlId: 'control-a1', name: 'my_var', frame: null })
 
 			expect(control.entities.entitySetOption).toHaveBeenCalledWith('local-variables', entity.id, 'startup_value', {
 				isExpression: false,
@@ -244,7 +256,7 @@ describe('LocalVariablesController', () => {
 			const control = makeControl([entity], false)
 			const { controller } = createController({ 'control-a1': control })
 
-			controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var' }, 'new value')
+			controller.setLocalVariable({ controlId: 'control-a1', name: 'my_var', frame: null }, 'new value')
 
 			expect(control.entities.entitySetVariableValue).toHaveBeenCalledWith('local-variables', entity.id, 'new value')
 		})
@@ -254,7 +266,7 @@ describe('LocalVariablesController', () => {
 			const control = makeControl([entity], false)
 			const { controller } = createController({ 'control-a1': control })
 
-			controller.resetLocalVariable({ controlId: 'control-a1', name: 'my_var' })
+			controller.resetLocalVariable({ controlId: 'control-a1', name: 'my_var', frame: null })
 
 			expect(control.entities.entitySetVariableValue).toHaveBeenCalledWith('local-variables', entity.id, 'startup')
 		})
@@ -264,9 +276,110 @@ describe('LocalVariablesController', () => {
 			const control = makeControl([entity], false)
 			const { controller } = createController({ 'control-a1': control })
 
-			controller.writeLocalVariableStartupValue({ controlId: 'control-a1', name: 'my_var' })
+			controller.writeLocalVariableStartupValue({ controlId: 'control-a1', name: 'my_var', frame: null })
 
 			expect(control.entities.entitySetOption).not.toHaveBeenCalled()
+		})
+	})
+
+	describe('inside a run of a custom action', () => {
+		function makeFrame(): CustomActionRunFrame {
+			return {
+				customActionControlId: 'custom-action:abc',
+				options: {},
+				localValues: new Map(),
+				getLocalVariableEntities: () => [],
+				localValueChanged: vi.fn(),
+			}
+		}
+
+		test('the location "this" resolves to the custom action and its run', () => {
+			const { controller } = createController()
+			const frame = makeFrame()
+
+			expect(controller.localVariableFor('this', 'my_var', { ...makeExtras(), frame })).toEqual({
+				controlId: 'custom-action:abc',
+				name: 'my_var',
+				frame,
+			})
+		})
+
+		test('an explicit location resolves to the control, not the run', () => {
+			const { controller } = createController()
+
+			expect(controller.localVariableFor('2/1/2', 'my_var', { ...makeExtras(), frame: makeFrame() })).toEqual({
+				controlId: 'control-b1',
+				name: 'my_var',
+				frame: null,
+			})
+		})
+
+		test('setLocalVariable only sets the value for the run', () => {
+			const entity = makeVariableEntity('my_var')
+			const control = makeControl([entity])
+			const { controller } = createController({ 'custom-action:abc': control })
+			const frame = makeFrame()
+
+			expect(controller.setLocalVariable({ controlId: 'custom-action:abc', name: 'my_var', frame }, 'value')).toBe(true)
+
+			expect(frame.localValues.get('my_var')).toBe('value')
+			expect(frame.localValueChanged).toHaveBeenCalledWith('my_var')
+			expect(control.entities.entitySetVariableValue).not.toHaveBeenCalled()
+		})
+
+		test('setLocalVariable rejects a variable which is not a user value', () => {
+			const control = makeControl([makeVariableEntity('my_var', { definitionId: 'something_else' })])
+			const { controller } = createController({ 'custom-action:abc': control })
+			const frame = makeFrame()
+
+			expect(controller.setLocalVariable({ controlId: 'custom-action:abc', name: 'my_var', frame }, 'value')).toBe(
+				false
+			)
+			expect(frame.localValues.size).toBe(0)
+			expect(frame.localValueChanged).not.toHaveBeenCalled()
+		})
+
+		test('resetLocalVariable forgets the value of the run', () => {
+			const control = makeControl([makeVariableEntity('my_var', { startupValue: 'startup' })])
+			const { controller } = createController({ 'custom-action:abc': control })
+			const frame = makeFrame()
+			frame.localValues.set('my_var', 'value')
+
+			expect(controller.resetLocalVariable({ controlId: 'custom-action:abc', name: 'my_var', frame })).toBe(true)
+
+			expect(frame.localValues.has('my_var')).toBe(false)
+			expect(frame.localValueChanged).toHaveBeenCalledWith('my_var')
+			expect(control.entities.entitySetVariableValue).not.toHaveBeenCalled()
+		})
+
+		test('writeLocalVariableStartupValue is rejected', () => {
+			const control = makeControl([makeVariableEntity('my_var', { feedbackValue: 'current' })])
+			const { controller } = createController({ 'custom-action:abc': control })
+
+			expect(
+				controller.writeLocalVariableStartupValue({
+					controlId: 'custom-action:abc',
+					name: 'my_var',
+					frame: makeFrame(),
+				})
+			).toBe(false)
+			expect(control.entities.entitySetOption).not.toHaveBeenCalled()
+		})
+
+		test('getLocalVariableContextFor uses the values of the run', () => {
+			const control = makeControl([
+				makeVariableEntity('my_var', { feedbackValue: 'startup' }),
+				makeVariableEntity('other', { feedbackValue: 'other startup' }),
+			])
+			const { controller } = createController({ 'custom-action:abc': control })
+			const frame = makeFrame()
+			frame.localValues.set('my_var', 'run value')
+
+			expect(controller.getLocalVariableContextFor({ controlId: 'custom-action:abc', name: 'my_var', frame })).toEqual({
+				'this:current': 'run value',
+				'target:my_var': 'run value',
+				'target:other': 'other startup',
+			})
 		})
 	})
 })

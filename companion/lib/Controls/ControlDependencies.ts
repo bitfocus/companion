@@ -1,6 +1,7 @@
 import type { EventEmitter } from 'node:events'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
+import type { CustomActionsUpdate } from '@companion-app/shared/Model/CustomActionModel.js'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableUpdate,
@@ -17,6 +18,7 @@ import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { ActionRunner } from './ActionRunner.js'
+import type { CustomActionInstanceManager } from './CustomActions/CustomActionInstanceManager.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import type { SomeControl } from './IControlFragments.js'
@@ -48,6 +50,9 @@ export interface ControlExternalDependencies {
 
 	/** Subscribes link buttons to the remote buttons they show */
 	readonly linkButtons: LinkButtonClient
+
+	/** Builds and runs the copies of custom actions held by the actions which call them */
+	readonly customActionInstances: CustomActionInstanceManager
 }
 
 export interface ControlDependencies extends ControlExternalDependencies {
@@ -75,6 +80,8 @@ export interface ControlCommonEvents {
 	invalidateControlRender: [controlId: string]
 	invalidateLocationRender: [location: ControlLocation]
 	expressionVariableDefinitionChanged: [id: string, info: ClientExpressionVariableData | null]
+	/** Emitted when a custom action is changed or deleted, so that its action definition can be updated */
+	customActionDefinitionChanged: [controlId: string]
 	layeredStyleElementChanged: [controlId: string, elementId: string]
 
 	presetDrawn: [controlId: string, render: ImageResult]
@@ -98,4 +105,5 @@ export interface ControlCommonEvents {
 export type ControlChangeEvents = {
 	triggerChange: [controlId: string, diff: TriggersUpdate]
 	expressionVariableChange: [controlId: string, diff: ExpressionVariableUpdate]
+	customActionChange: [controlId: string, diff: CustomActionsUpdate]
 }

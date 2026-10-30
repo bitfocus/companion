@@ -4,14 +4,18 @@ import {
 	EntityModelType,
 	type ActionEntityModel,
 	type FeedbackEntityModel,
+	type FeedbackValue,
 	type ReplaceableActionEntityModel,
 	type ReplaceableFeedbackEntityModel,
+	type SomeEntityModel,
 	type SomeReplaceableEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import { createStableObjectHash } from '@companion-app/shared/Util/Hash.js'
 import type { CompanionOptionValues } from '@companion-module/base'
 import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstance.js'
+import type { NewFeedbackValue } from '../../Controls/Entities/Types.js'
 import type { IControlStore } from '../../Controls/IControlStore.js'
 import type { RenderClock } from '../../Controls/RenderClock.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
@@ -39,9 +43,83 @@ interface EntityWrapper {
 	readonly controlId: string
 
 	state: EntityState
+	/** The id of the subscription this entity is a member of, if it is subscribed to the module */
+	subscriptionId?: string
+	/**
+	 * Whether the subscription must be sent to the module again even if it is unchanged, as something which isn't
+	 * part of its key has changed (eg the image size of a feedback)
+	 */
+	resendRequested?: boolean
 	lastReferencedVariableIds?: ReadonlySet<string>
 	/** Whether the last parsed options for this feedback entity depended on the render clock */
 	lastClockSensitive?: boolean
+}
+
+/**
+ * A subscription sent to the module. Entities in the same control which parse to the same options share a
+ * subscription, so the module only sees it once. Its id is random, so that when its options change it can be
+ * updated in place, letting the module see the change rather than a new subscription.
+ */
+interface EntitySubscription {
+	readonly controlId: string
+	readonly type: EntityModelType
+	/** What makes this subscription unique, from `getEntitySubscriptionKey` */
+	key: string
+	/** The ids of the entities which share this subscription */
+	readonly memberIds: Set<string>
+	/** The last value the module reported for this subscription, for a member which joins later */
+	lastValue?: { value: FeedbackValue }
+}
+
+/**
+ * A feedback value reported by the module, for a subscription
+ */
+export interface EntityManagerFeedbackValue {
+	/** The id of the subscription */
+	id: string
+	controlId: string
+	value: FeedbackValue
+}
+
+/**
+ * Get the key of the module subscription for an entity, from what makes the subscription unique
+ * @param controlId The control the entity belongs to
+ * @param entityModel The entity
+ * @param parsedOptions The options of the entity, as parsed for the module
+ */
+function getEntitySubscriptionKey(
+	controlId: string,
+	entityModel: SomeEntityModel,
+	parsedOptions: CompanionOptionValues
+): string {
+	// Inversion is not part of it, as Companion applies that to the value of each entity
+	return JSON.stringify([controlId, entityModel.type, entityModel.definitionId, createStableObjectHash(parsedOptions)])
+}
+
+/**
+ * Split a payload into batches of at most MAX_UPDATE_PER_BATCH entries
+ */
+function splitIntoBatches<T>(payload: ReadonlyMap<string, T>): Map<string, T>[] {
+	const batches: Map<string, T>[] = []
+	for (const entry of payload) {
+		let batch = batches.at(-1)
+		if (!batch || batch.size >= MAX_UPDATE_PER_BATCH) {
+			batch = new Map()
+			batches.push(batch)
+		}
+		batch.set(entry[0], entry[1])
+	}
+	return batches
+}
+
+/** An entity whose options no longer match its subscription, waiting to be placed in one */
+interface MovingEntity {
+	readonly entityId: string
+	readonly wrapper: EntityWrapper
+	readonly key: string
+	readonly payload: EntityManagerActionEntity | EntityManagerFeedbackEntity
+	/** The subscription the entity has left, if any */
+	readonly fromSubscriptionId: string | undefined
 }
 
 export interface EntityManagerActionEntity {
@@ -56,6 +134,7 @@ export interface EntityManagerFeedbackEntity {
 }
 
 export interface EntityManagerAdapter {
+	/** Send changes to the subscriptions, keyed by the id of each subscription. `null` deletes a subscription */
 	updateActions: (actions: Map<string, EntityManagerActionEntity | null>) => Promise<void>
 	updateFeedbacks: (feedbacks: Map<string, EntityManagerFeedbackEntity | null>) => Promise<void>
 
@@ -81,7 +160,11 @@ export class ConnectionEntityManager {
 	readonly #adapter: EntityManagerAdapter
 	readonly controlsStore: IControlStore
 
+	readonly #connectionId: string
 	readonly #entities = new Map<string, EntityWrapper>()
+	readonly #subscriptions = new Map<string, EntitySubscription>()
+	/** The id of the subscription for each key */
+	readonly #subscriptionIdsByKey = new Map<string, string>()
 
 	// Before the connection is ready, we need to not send any updates
 	#ready = false
@@ -101,6 +184,7 @@ export class ConnectionEntityManager {
 		renderClock: RenderClock
 	) {
 		this.#logger = LogController.createLogger(`Instance/Connection/EntityManager/${connectionId}`)
+		this.#connectionId = connectionId
 		this.#adapter = adapter
 		this.controlsStore = controlsStore
 		this.#unsubscribeRenderClock = renderClock.subscribe(() => this.onRenderClockTick())
@@ -115,8 +199,153 @@ export class ConnectionEntityManager {
 			let upgradeActions: Omit<EntityManagerActionEntity, 'parsedOptions'>[] = []
 			let upgradeFeedbacks: Omit<EntityManagerFeedbackEntity, 'parsedOptions'>[] = []
 
-			let updateActionsPayload = new Map<string, EntityManagerActionEntity | null>()
-			let updateFeedbacksPayload = new Map<string, EntityManagerFeedbackEntity | null>()
+			const updateActionsPayload = new Map<string, EntityManagerActionEntity | null>()
+			const updateFeedbacksPayload = new Map<string, EntityManagerFeedbackEntity | null>()
+
+			// Values of existing subscriptions, for entities which have joined them
+			const joinedFeedbackValues: NewFeedbackValue[] = []
+
+			const setSubscriptionPayload = (
+				subscriptionId: string,
+				payload: EntityManagerActionEntity | EntityManagerFeedbackEntity | null,
+				type: EntityModelType
+			) => {
+				switch (type) {
+					case EntityModelType.Action:
+						updateActionsPayload.set(subscriptionId, payload as EntityManagerActionEntity | null)
+						break
+					case EntityModelType.Feedback:
+						updateFeedbacksPayload.set(subscriptionId, payload as EntityManagerFeedbackEntity | null)
+						break
+					default:
+						assertNever(type)
+						this.#logger.warn('Unknown entity type', type)
+				}
+			}
+
+			// Subscriptions left empty by this run. Deleted at the end, unless reused for an entity whose options changed
+			const vacatedSubscriptionIds = new Set<string>()
+			// Placed once every entity has been processed, so that all those leaving a subscription are known
+			const movingEntities: MovingEntity[] = []
+
+			/** Remove an entity from its subscription */
+			const leaveSubscription = (entityId: string, wrapper: EntityWrapper) => {
+				const subscriptionId = wrapper.subscriptionId
+				if (subscriptionId === undefined) return
+				wrapper.subscriptionId = undefined
+
+				const subscription = this.#subscriptions.get(subscriptionId)
+				if (!subscription) return
+
+				subscription.memberIds.delete(entityId)
+				if (subscription.memberIds.size === 0) vacatedSubscriptionIds.add(subscriptionId)
+			}
+
+			/** Keep an entity in its subscription if its parsed options still match, otherwise queue it to move */
+			const subscribeEntity = (
+				entityId: string,
+				wrapper: EntityWrapper,
+				payload: EntityManagerActionEntity | EntityManagerFeedbackEntity,
+				resendRequested: boolean
+			) => {
+				const key = getEntitySubscriptionKey(wrapper.controlId, payload.entity, payload.parsedOptions)
+
+				const subscriptionId = wrapper.subscriptionId
+				if (subscriptionId !== undefined && this.#subscriptions.get(subscriptionId)?.key === key) {
+					// Unchanged. The key covers everything the module is sent, so it only needs sending again if asked for
+					if (resendRequested) setSubscriptionPayload(subscriptionId, payload, payload.entity.type)
+					return
+				}
+
+				leaveSubscription(entityId, wrapper)
+				movingEntities.push({ entityId, wrapper, key, payload, fromSubscriptionId: subscriptionId })
+			}
+
+			const addSubscriptionMembers = (subscriptionId: string, members: MovingEntity[]) => {
+				const subscription = this.#subscriptions.get(subscriptionId)!
+				for (const member of members) {
+					subscription.memberIds.add(member.entityId)
+					member.wrapper.subscriptionId = subscriptionId
+				}
+			}
+
+			/** Place the entities whose options have changed in the subscription for their new options */
+			const placeMovingEntities = () => {
+				const membersByKey = Map.groupBy(movingEntities, (member) => member.key)
+
+				// Join the existing subscriptions first, so that a vacated subscription isn't reused for options which already have one
+				const keysWithoutSubscription: string[] = []
+				for (const [key, members] of membersByKey) {
+					const subscriptionId = this.#subscriptionIdsByKey.get(key)
+					if (subscriptionId === undefined) {
+						keysWithoutSubscription.push(key)
+						continue
+					}
+
+					addSubscriptionMembers(subscriptionId, members)
+					vacatedSubscriptionIds.delete(subscriptionId)
+
+					// The module already knows about this subscription, so the entities can use its current value
+					const subscription = this.#subscriptions.get(subscriptionId)!
+					if (subscription.lastValue) {
+						for (const member of members) {
+							joinedFeedbackValues.push({
+								entityId: member.entityId,
+								controlId: subscription.controlId,
+								value: subscription.lastValue.value,
+							})
+						}
+					}
+				}
+
+				for (const key of keysWithoutSubscription) {
+					const members = membersByKey.get(key)!
+					const payload = members[0].payload
+
+					// Reuse a subscription these entities have emptied, so the module sees its options change
+					const reusedId = members.find(
+						(member) => member.fromSubscriptionId !== undefined && vacatedSubscriptionIds.has(member.fromSubscriptionId)
+					)?.fromSubscriptionId
+					if (reusedId !== undefined) {
+						vacatedSubscriptionIds.delete(reusedId)
+
+						const subscription = this.#subscriptions.get(reusedId)!
+						if (this.#subscriptionIdsByKey.get(subscription.key) === reusedId) {
+							this.#subscriptionIdsByKey.delete(subscription.key)
+						}
+						subscription.key = key
+						// The module will report a value for the new options
+						subscription.lastValue = undefined
+						this.#subscriptionIdsByKey.set(key, reusedId)
+
+						addSubscriptionMembers(reusedId, members)
+						setSubscriptionPayload(reusedId, payload, payload.entity.type)
+					} else {
+						const subscriptionId = nanoid()
+						this.#subscriptions.set(subscriptionId, {
+							controlId: payload.controlId,
+							type: payload.entity.type,
+							key,
+							memberIds: new Set(),
+						})
+						this.#subscriptionIdsByKey.set(key, subscriptionId)
+
+						addSubscriptionMembers(subscriptionId, members)
+						setSubscriptionPayload(subscriptionId, payload, payload.entity.type)
+					}
+				}
+
+				for (const subscriptionId of vacatedSubscriptionIds) {
+					const subscription = this.#subscriptions.get(subscriptionId)
+					if (!subscription || subscription.memberIds.size > 0) continue
+
+					this.#subscriptions.delete(subscriptionId)
+					if (this.#subscriptionIdsByKey.get(subscription.key) === subscriptionId) {
+						this.#subscriptionIdsByKey.delete(subscription.key)
+					}
+					setSubscriptionPayload(subscriptionId, null, subscription.type)
+				}
+			}
 
 			const pushEntityToUpgrade = (wrapper: EntityWrapper, entity: ControlEntityInstance) => {
 				this.#logger.silly(
@@ -172,21 +401,26 @@ export class ConnectionEntityManager {
 						if (!entity) {
 							this.#logger.warn(`Entity ${wrapper.wrapperId} has been garbage collected, skipping upgrade`)
 							this.#entities.delete(entityId)
+							leaveSubscription(entityId, wrapper)
 							continue
 						}
 
 						// The entity is unloaded, it either needs to be upgraded or loaded
 						if (entity.upgradeIndex === undefined || entity.upgradeIndex === this.#currentUpgradeIndex) {
 							wrapper.state = EntityState.READY
+							const resendRequested = !!wrapper.resendRequested
+							wrapper.resendRequested = false
 
 							if (entity.disabled) {
 								// Disabled entities should not be subscribed to the module
+								leaveSubscription(entityId, wrapper)
 								continue
 							}
 
 							const entityDefinition = entity.getEntityDefinition()
 							if (!entityDefinition || !entityDefinition.hasLifecycleFunctions) {
 								// The entity does not have lifecycle functions, so we can skip informing the module about it
+								leaveSubscription(entityId, wrapper)
 								continue
 							}
 
@@ -195,7 +429,7 @@ export class ConnectionEntityManager {
 							let updateOptions: CompanionOptionValues | undefined
 							try {
 								// Parse the options and track the variables referenced
-								const parser = this.controlsStore.createVariablesAndExpressionParser(wrapper.controlId, null)
+								const parser = entity.createVariablesAndExpressionParser(null)
 								const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options, wrapper.controlId)
 								if (!parseRes.ok) {
 									this.#logger.warn(
@@ -213,35 +447,20 @@ export class ConnectionEntityManager {
 								)
 							}
 
-							switch (entityModel.type) {
-								case EntityModelType.Action:
-									updateActionsPayload.set(
-										entityId,
-										updateOptions
-											? {
-													controlId: wrapper.controlId,
-													entity: entityModel,
-													parsedOptions: updateOptions,
-												}
-											: null
-									)
-									break
-								case EntityModelType.Feedback: {
-									updateFeedbacksPayload.set(
-										entityId,
-										updateOptions
-											? {
-													controlId: wrapper.controlId,
-													entity: entityModel,
-													parsedOptions: updateOptions,
-												}
-											: null
-									)
-									break
-								}
-								default:
-									assertNever(entityModel)
-									this.#logger.warn('Unknown entity type', entity.type)
+							if (updateOptions) {
+								subscribeEntity(
+									entityId,
+									wrapper,
+									{
+										controlId: wrapper.controlId,
+										entity: entityModel,
+										parsedOptions: updateOptions,
+									} as EntityManagerActionEntity | EntityManagerFeedbackEntity,
+									resendRequested
+								)
+							} else {
+								// The entity is inactive until its options can be parsed
+								leaveSubscription(entityId, wrapper)
 							}
 						} else {
 							wrapper.state = EntityState.UPGRADING
@@ -260,51 +479,28 @@ export class ConnectionEntityManager {
 						// Plan for deletion
 						this.#entities.delete(entityId)
 
-						const entity = wrapper.entity.deref()
-
-						if (entity) {
-							switch (entity.type) {
-								case EntityModelType.Action:
-									updateActionsPayload.set(entityId, null)
-									break
-								case EntityModelType.Feedback:
-									updateFeedbacksPayload.set(entityId, null)
-									break
-								default:
-									assertNever(entity.type)
-									this.#logger.warn('Unknown entity type', entity.type)
-							}
-						}
+						leaveSubscription(entityId, wrapper)
 						break
 					}
 
 					default:
 						assertNever(wrapper.state)
 				}
-
-				// If the payloads are getting large, send them now and reset
-				// We do this to avoid sending too much data in one go, which can cause issues with IPC
-				// The exact limits here are somewhat arbitrary, but should be sufficient for most use cases
-				if (updateActionsPayload.size > MAX_UPDATE_PER_BATCH) {
-					this.#queueUpdateActionsBatch(updateActionsPayload)
-
-					// Start a new batch
-					updateActionsPayload = new Map()
-				}
-				if (updateFeedbacksPayload.size > MAX_UPDATE_PER_BATCH) {
-					this.#queueUpdateFeedbacksBatch(updateFeedbacksPayload)
-
-					// Start a new batch
-					updateFeedbacksPayload = new Map()
-				}
 			}
 
-			// Start by sending the simple payloads
-			if (updateActionsPayload.size > 0) {
-				this.#queueUpdateActionsBatch(updateActionsPayload)
+			placeMovingEntities()
+
+			if (joinedFeedbackValues.length > 0) {
+				this.controlsStore.updateFeedbackValues(this.#connectionId, joinedFeedbackValues)
 			}
-			if (updateFeedbacksPayload.size > 0) {
-				this.#queueUpdateFeedbacksBatch(updateFeedbacksPayload)
+
+			// Start by sending the simple payloads, split up to avoid sending too much data in one go, which can cause issues with IPC
+			// The exact limits here are somewhat arbitrary, but should be sufficient for most use cases
+			for (const batch of splitIntoBatches(updateActionsPayload)) {
+				this.#queueUpdateActionsBatch(batch)
+			}
+			for (const batch of splitIntoBatches(updateFeedbacksPayload)) {
+				this.#queueUpdateFeedbacksBatch(batch)
 			}
 
 			// Now we need to send the upgrades
@@ -504,6 +700,8 @@ export class ConnectionEntityManager {
 		this.#debounceProcessPending.cancel()
 		this.#batchQueue.length = 0
 		this.#entities.clear()
+		this.#subscriptions.clear()
+		this.#subscriptionIdsByKey.clear()
 		this.#ready = false
 	}
 
@@ -513,17 +711,52 @@ export class ConnectionEntityManager {
 	 * If the entity already exists, it will be replaced and the new entity will be processed as needed.
 	 */
 	trackEntity(entity: ControlEntityInstance, controlId: string): void {
-		// This may replace an existing entity, if so it needs to restart the process
+		// This may replace an existing entity, if so it needs to restart the process.
+		// It stays in the subscription of what it replaced until it has been processed
 		this.#entities.set(entity.id, {
 			wrapperId: nanoid(),
 			entity: new WeakRef(entity),
 			controlId: controlId,
 			state: EntityState.UNLOADED,
+			subscriptionId: this.#entities.get(entity.id)?.subscriptionId,
+			resendRequested: this.#entities.get(entity.id)?.resendRequested,
 		})
 
 		this.#logger.silly(`Queued entity ${entity.id} in control ${controlId} as unloaded`)
 
 		this.#debounceProcessPending()
+	}
+
+	/**
+	 * Get the id of the module subscription an entity is a member of.
+	 * This is the id the module knows the entity by, which can be shared with other identical entities in the same control.
+	 * @param entityId The id of the entity
+	 * @returns The id of the subscription, or undefined if the entity is not subscribed
+	 */
+	getSubscriptionId(entityId: string): string | undefined {
+		return this.#entities.get(entityId)?.subscriptionId
+	}
+
+	/**
+	 * Handle feedback values reported by the module, passing each to every entity which shares the subscription
+	 * @param values The values for each subscription
+	 */
+	handleFeedbackValues(values: EntityManagerFeedbackValue[]): void {
+		const entityValues: NewFeedbackValue[] = []
+
+		for (const { id, controlId, value } of values) {
+			const subscription = this.#subscriptions.get(id)
+			// The subscription may have been removed while the value was in flight
+			if (!subscription || subscription.controlId !== controlId) continue
+
+			subscription.lastValue = { value }
+
+			for (const entityId of subscription.memberIds) {
+				entityValues.push({ entityId, controlId, value })
+			}
+		}
+
+		if (entityValues.length > 0) this.controlsStore.updateFeedbackValues(this.#connectionId, entityValues)
 	}
 
 	/**
@@ -550,6 +783,9 @@ export class ConnectionEntityManager {
 	resendFeedbacks(): void {
 		for (const entity of this.#entities.values()) {
 			if (entity.entity.deref()?.type !== EntityModelType.Feedback) continue
+
+			// The image size is not part of the subscription key, so it must be sent even though it looks unchanged
+			entity.resendRequested = true
 
 			switch (entity.state) {
 				case EntityState.UNLOADED:
@@ -646,6 +882,9 @@ export class ConnectionEntityManager {
 		for (const wrapper of this.#entities.values()) {
 			const entity = wrapper.entity.deref()
 			if (!entity || entity.type !== entityType) continue
+
+			// Send the subscriptions again even if they are unchanged, so the module sees them against its new definitions
+			wrapper.resendRequested = true
 
 			switch (wrapper.state) {
 				case EntityState.UNLOADED:

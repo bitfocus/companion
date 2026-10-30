@@ -19,6 +19,7 @@ export const LocalVariableLocationOption = {
 	defaultForControlType: {
 		trigger: 'this',
 		'expression-variable': 'this',
+		'custom-action': 'this',
 		page: 'this',
 	},
 } as const satisfies CompanionInputFieldTextInputExtended

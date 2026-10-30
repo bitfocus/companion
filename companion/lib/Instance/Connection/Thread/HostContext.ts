@@ -93,6 +93,8 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				learnTimeout: rawAction.learnTimeout,
 
 				actionHasResult: !!rawAction.hasResult,
+				actionOutputs: null,
+				warning: null,
 
 				showInvert: false,
 				showButtonPreview: false,
@@ -139,6 +141,8 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				showInvert: rawFeedback.showInvert ?? shouldShowInvertForFeedback(rawFeedback.options || []),
 
 				actionHasResult: undefined,
+				actionOutputs: null,
+				warning: null,
 
 				showButtonPreview: false,
 				supportsChildGroups: [],

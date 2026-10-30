@@ -64,6 +64,7 @@ describe('ControlButtonReference', () => {
 			renderClock: { subscribe: vi.fn(() => () => {}) } as any,
 			linkButtons: null as any,
 			controlsAccessor: controlsAccessor as any,
+			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() } as any,
 		}
 	})
 
