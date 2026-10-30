@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events'
-import jsonPatch from 'fast-json-patch'
+import { diffObject } from '@companion-app/shared/Diff.js'
 import type { UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { ControlDependencies } from './ControlDependencies.js'
@@ -79,7 +79,7 @@ export abstract class ControlBase<TJson> {
 
 		// Now broadcast to any interested clients
 		if (this.updateEvents.listenerCount('update') > 0) {
-			const patch = jsonPatch.compare<any>(this.#lastSentConfigJson || {}, newJson || {})
+			const patch = diffObject<any>(this.#lastSentConfigJson || {}, newJson || {})
 			if (patch.length > 0) {
 				this.updateEvents.emit('update', { type: 'config', patch })
 			}
@@ -129,7 +129,7 @@ export abstract class ControlBase<TJson> {
 
 		// Now broadcast to any interested clients
 		if (this.updateEvents.listenerCount('update') > 0) {
-			const patch = jsonPatch.compare(this.#lastSentRuntimeJson || {}, newJson || {})
+			const patch = diffObject(this.#lastSentRuntimeJson || {}, newJson || {})
 			if (patch.length > 0) {
 				this.updateEvents.emit('update', { type: 'runtime', patch })
 			}
@@ -183,6 +183,26 @@ export abstract class ControlBase<TJson> {
 	 */
 	rotateControl(_delta: number, _surfaceId: string | undefined): boolean {
 		return false
+	}
+
+	/**
+	 * Some variables changed. Controls whose own fields reference variables override this; entities and drawing are
+	 * told separately
+	 * @param _allChangedVariables The ids of the changed variables
+	 */
+	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {
+		// Nothing to do
+	}
+
+	/**
+	 * Abort the in progress action runs of this control. A remote button forwards it to the button it shows. Controls
+	 * that run no actions (the default) have nothing to abort
+	 * @param skip_up Mark the button as released
+	 * @param exceptSignal A run to leave running
+	 * @param linkHops How many installations the abort has come through over Link, so that a loop of remote buttons ends
+	 */
+	abortDelayedActions(_skip_up: boolean, _exceptSignal: AbortSignal | null, _linkHops: number): void {
+		// Nothing to do
 	}
 
 	/**

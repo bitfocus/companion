@@ -1,7 +1,13 @@
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
+import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
-import type { ExpressionableOptionsObject, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import {
+	getFieldDefaultForControl,
+	isFieldDisabledForControl,
+	type ExpressionableOptionsObject,
+	type ExpressionOrValue,
+} from '@companion-app/shared/Model/Options.js'
 import {
 	stringifyVariableValue,
 	type VariableValue,
@@ -223,10 +229,12 @@ export class VariablesAndExpressionParser {
 	/**
 	 * Parse any variables in the options object for an entity.
 	 * Note: this will drop any options that are not defined in the entity definition.
+	 * @param controlId The control the entity belongs to, for fields which are disabled on some kinds of control
 	 */
 	parseEntityOptions(
 		entityDefinition: ClientEntityDefinition,
-		options: ExpressionableOptionsObject
+		options: ExpressionableOptionsObject,
+		controlId: string | null
 	):
 		| {
 				ok: true
@@ -249,7 +257,14 @@ export class VariablesAndExpressionParser {
 		// the field default instead.
 		const hiddenFields = computeHiddenEntityOptionFields(entityDefinition, options)
 
+		const controlKind = controlId ? (ParseControlId(controlId)?.type ?? null) : null
+
 		const parsedOptions = visitEntityOptionsForVariables(entityDefinition, options, (field, optionValue, fieldType) => {
+			// Fields disabled on this kind of control have no meaning here; use the default for the control
+			if (isFieldDisabledForControl(field, controlKind)) {
+				return structuredClone(getFieldDefaultForControl(field, controlKind))
+			}
+
 			// For passthrough fields, skip all processing and just extract the raw value
 			if (fieldType === null) {
 				return optionValue?.value
@@ -275,7 +290,7 @@ export class VariablesAndExpressionParser {
 			}
 
 			// Track clock sensitivity
-			if (parsedValue.clockSensitive) clockSensitive = true
+			if (parsedValue.clockCycleMs > 0) clockSensitive = true
 
 			if (!parsedValue.ok) {
 				// The expression failed to evaluate; record the error and fall back to the field default
@@ -321,7 +336,7 @@ export class VariablesAndExpressionParser {
 		try {
 			// No object, so just return undefined
 			if (!rawValue) {
-				return { ok: true, value: undefined, variableIds: new Set(), clockSensitive: false }
+				return { ok: true, value: undefined, variableIds: new Set(), clockCycleMs: 0 }
 			}
 
 			if ((rawValue.isExpression && options.allowExpression) || options.forceExpression) {
@@ -333,10 +348,10 @@ export class VariablesAndExpressionParser {
 				// Note - we don't need to care about the granularity given in `useVariables`,
 				const parseResult = this.parseVariables(stringifyVariableValue(rawValue.value) ?? '')
 
-				return { ok: true, value: parseResult.text, variableIds: parseResult.variableIds, clockSensitive: false }
+				return { ok: true, value: parseResult.text, variableIds: parseResult.variableIds, clockCycleMs: 0 }
 			} else {
 				// 'expression-or-variables' with isExpression=false - just use the value as-is
-				return { ok: true, value: rawValue.value, variableIds: new Set(), clockSensitive: false }
+				return { ok: true, value: rawValue.value, variableIds: new Set(), clockCycleMs: 0 }
 			}
 		} catch (e) {
 			// Backstop: parseEntityOption must never throw, so callers can always rely on the result shape
@@ -344,7 +359,7 @@ export class VariablesAndExpressionParser {
 				ok: false,
 				error: stringifyError(e, true) || 'Unknown error',
 				variableIds: new Set(),
-				clockSensitive: false,
+				clockCycleMs: 0,
 			}
 		}
 	}

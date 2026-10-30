@@ -1,9 +1,10 @@
-import { faArrowLeft, faFileImport } from '@fortawesome/free-solid-svg-icons'
+import { faArrowLeft, faFileImport, faNoteSticky } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import './import-wizard.css'
 import type { ClientImportObject } from '@companion-app/shared/Model/ImportExport.js'
 import { Button } from '~/Components/Button'
+import { Note } from '~/Components/Note.js'
 import { PageHeader } from '~/Layout/PageHeader.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -61,6 +62,11 @@ export function ImportWizard({ importInfo, clearImport }: ImportWizardProps): Re
 			</div>
 
 			<div className="page-scroll">
+				{snapshot.notes !== null && (
+					<Note tone="neutral" icon={faNoteSticky} actions={null} className="mb-3">
+						<p className="mb-0 whitespace-pre-wrap break-words">{snapshot.notes}</p>
+					</Note>
+				)}
 				{isSinglePage ? (
 					<div className="import-wizard single-page p-1">
 						<ImportPageWizard

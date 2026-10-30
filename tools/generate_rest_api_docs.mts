@@ -24,7 +24,9 @@ interface Parameter {
 }
 
 interface SchemaObject {
+	$ref?: string
 	type?: string
+	format?: string
 	properties?: Record<string, SchemaObject>
 	items?: SchemaObject
 	required?: string[]
@@ -46,6 +48,7 @@ interface ResponseObject {
 }
 
 interface RequestBody {
+	description?: string
 	required?: boolean
 	content?: Record<string, MediaContent>
 }
@@ -82,6 +85,8 @@ function escapeTableCell(value: string): string {
 }
 
 function typeToMarkdown(schema: SchemaObject): string {
+	// Only a recursive reference is left unresolved, so name it
+	if (schema.$ref) return `\`${escapeTableCell(getSchemaRefName(schema.$ref))}\``
 	if (schema.enum) return schema.enum.map((v) => `\`${v}\``).join(' \\| ')
 
 	let type = schema.type ?? 'object'
@@ -130,6 +135,12 @@ function renderResponse(code: string, resp: ResponseObject): string {
 	const responseLabel = code === '200' ? '**Successful response** (`200`)' : '**Successful response**'
 	lines.push(`${responseLabel} — ${resp.description ?? ''}`)
 
+	const binaryContentTypes = getBinaryContentTypes(resp.content)
+	if (binaryContentTypes.length > 0) {
+		lines.push('')
+		lines.push(`Response body: the raw file, as ${formatContentTypes(binaryContentTypes)}`)
+	}
+
 	const jsonContent = resp.content?.['application/json']
 	if (jsonContent?.schema) {
 		const schema = jsonContent.schema
@@ -168,7 +179,25 @@ function renderRequestBody(body: RequestBody): string {
 		lines.push('')
 		lines.push(schemaToTable(jsonContent.schema, { showRequired: true }))
 	}
+
+	const binaryContentTypes = getBinaryContentTypes(body.content)
+	if (binaryContentTypes.length > 0) {
+		lines.push(`**Request body** (${formatContentTypes(binaryContentTypes)}):`)
+		lines.push('')
+		lines.push(body.description ?? 'The raw file.')
+	}
 	return lines.join('\n')
+}
+
+/** Content types whose body is a raw file rather than JSON */
+function getBinaryContentTypes(content: Record<string, MediaContent> | undefined): string[] {
+	return Object.entries(content ?? {})
+		.filter(([, media]) => media.schema?.format === 'binary')
+		.map(([contentType]) => contentType)
+}
+
+function formatContentTypes(contentTypes: string[]): string {
+	return contentTypes.map((contentType) => `\`${contentType}\``).join(', ')
 }
 
 function exampleValue(schema: SchemaObject | undefined, fieldName = 'value'): unknown {
@@ -279,7 +308,44 @@ if (process.platform === 'win32') {
 	usePowerShell() // to enable powershell
 }
 
-const doc = generateOpenApiDocument({ appVersion: '0.0.0-docs' })
+const SCHEMA_REF_PREFIX = '#/components/schemas/'
+
+function getSchemaRefName(ref: string): string {
+	return ref.startsWith(SCHEMA_REF_PREFIX) ? ref.slice(SCHEMA_REF_PREFIX.length) : ref
+}
+
+/**
+ * Replace each reference to a named schema with the schema itself, so the pages can render it like any other.
+ * A reference to a schema from inside itself is left in place, as it would never end
+ */
+function inlineSchemaRefs(value: unknown, schemas: Record<string, unknown>, expanding: ReadonlySet<string>): unknown {
+	if (Array.isArray(value)) return value.map((item) => inlineSchemaRefs(item, schemas, expanding))
+	if (!value || typeof value !== 'object') return value
+
+	const { $ref, ...rest } = value as Record<string, unknown>
+	const inlinedRest = Object.fromEntries(
+		Object.entries(rest).map(([key, item]) => [key, inlineSchemaRefs(item, schemas, expanding)])
+	)
+	if (typeof $ref !== 'string') return inlinedRest
+
+	const name = getSchemaRefName($ref)
+	const target = schemas[name]
+	if (!target || expanding.has(name)) return { $ref, ...inlinedRest }
+
+	// Properties beside the reference, such as its description, apply on top of the named schema
+	const inlinedTarget = inlineSchemaRefs(target, schemas, new Set([...expanding, name])) as Record<string, unknown>
+	return { ...inlinedTarget, ...inlinedRest }
+}
+
+const generatedDoc = generateOpenApiDocument({ appVersion: '0.0.0-docs' })
+const doc = {
+	...generatedDoc,
+	paths: inlineSchemaRefs(
+		generatedDoc.paths,
+		(generatedDoc.components?.schemas ?? {}) as Record<string, unknown>,
+		new Set()
+	) as typeof generatedDoc.paths,
+}
 
 // Start from a clean folder, so pages for removed tags don't linger
 fs.rmSync(OUT_DIR, { recursive: true, force: true })

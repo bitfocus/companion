@@ -11,10 +11,11 @@
 
 import type EventEmitter from 'node:events'
 import type { JsonValue } from 'type-fest'
-import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
+import z from 'zod'
+import { SurfaceGroupConfigSchema, type SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
@@ -26,15 +27,7 @@ export class SurfaceGroup {
 	/**
 	 * The defaults config for a group
 	 */
-	static readonly DefaultOptions: SurfaceGroupConfig = {
-		name: 'Unnamed group',
-		last_page_id: '',
-		startup_page_id: '',
-		use_last_page: true,
-		never_lock: false,
-		restrict_pages: false,
-		allowed_page_ids: [],
-	}
+	static readonly DefaultOptions: SurfaceGroupConfig = SurfaceGroupConfigSchema.parse({})
 
 	/**
 	 * Id of this group
@@ -82,7 +75,7 @@ export class SurfaceGroup {
 	/**
 	 * The surface group config database
 	 */
-	#dbTable: DataStoreTableView<Record<string, SurfaceGroupConfig>>
+	#dbTable: DataStoreSchemaTableView<typeof SurfaceGroupConfigSchema>
 	/**
 	 * The core page store
 	 */
@@ -96,7 +89,7 @@ export class SurfaceGroup {
 
 	constructor(
 		surfaceController: SurfaceController,
-		dbTable: DataStoreTableView<Record<string, SurfaceGroupConfig>>,
+		dbTable: DataStoreSchemaTableView<typeof SurfaceGroupConfigSchema>,
 		pageStore: IPageStore,
 		userconfig: DataUserConfig,
 		updateEvents: EventEmitter<UpdateEvents>,
@@ -117,17 +110,12 @@ export class SurfaceGroup {
 
 		// Load the appropriate config
 		if (soleHandler) {
-			this.groupConfig = soleHandler.getGroupConfig() ?? {}
-			if (!this.groupConfig.name) this.groupConfig.name = 'Auto group'
+			this.groupConfig = this.#parseAutoGroupConfig(soleHandler.getGroupConfig())
 
 			this.#isAutoGroup = true
 		} else {
-			this.groupConfig = this.#dbTable.getOrDefault(this.groupId, SurfaceGroup.DefaultOptions)
-		}
-		// Apply missing defaults
-		this.groupConfig = {
-			...structuredClone(SurfaceGroup.DefaultOptions),
-			...this.groupConfig,
+			this.groupConfig =
+				this.#dbTable.get(this.groupId) ?? this.#dbTable.set(this.groupId, structuredClone(SurfaceGroup.DefaultOptions))
 		}
 
 		// Live fixup the last_page config
@@ -476,6 +464,21 @@ export class SurfaceGroup {
 		this.#saveConfig()
 
 		this.#surfaceController.emit('group_name', this.groupId, this.groupConfig.name)
+	}
+
+	/**
+	 * An auto group's config is stored with its surface, so needs parsing here
+	 */
+	#parseAutoGroupConfig(rawConfig: unknown): SurfaceGroupConfig {
+		const config = rawConfig && typeof rawConfig === 'object' ? rawConfig : {}
+		const result = SurfaceGroupConfigSchema.safeParse({ name: 'Auto group', ...config })
+		if (result.success) {
+			if (!result.data.name) result.data.name = 'Auto group'
+			return result.data
+		}
+
+		this.#logger.warn(`Invalid group config, using the defaults: ${z.prettifyError(result.error)}`)
+		return { ...structuredClone(SurfaceGroup.DefaultOptions), name: 'Auto group' }
 	}
 
 	/**

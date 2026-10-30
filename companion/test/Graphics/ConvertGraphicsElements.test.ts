@@ -268,7 +268,7 @@ function createMockImageResult(
 	drawElements: SomeButtonGraphicsDrawElement[] = [],
 	referencedLocations: ReadonlySet<string> = new Set()
 ): ImageResult {
-	return new ImageResult(undefined, null, async () => Buffer.alloc(0), drawElements, referencedLocations)
+	return new ImageResult(undefined, null, 1, 0, async () => Buffer.alloc(0), drawElements, referencedLocations)
 }
 
 /**
@@ -1959,8 +1959,8 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 		})
 	})
 
-	describe('clockSensitive', () => {
-		test('reports clockSensitive when an element expression uses oscillate', async () => {
+	describe('clockCycleMs', () => {
+		test('reports the clock cycle when an element expression uses oscillate', async () => {
 			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: expr('oscillate(1000)') })]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -1975,10 +1975,10 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				null
 			)
 
-			expect(result.clockSensitive).toBe(true)
+			expect(result.clockCycleMs).toBe(1000)
 		})
 
-		test('reports clockSensitive false for a plain element', async () => {
+		test('reports no clock cycle for a plain element', async () => {
 			const elements: SomeButtonGraphicsElement[] = [makeTextEl({ text: val('Hello') })]
 
 			const result = await ConvertSomeButtonGraphicsElementForDrawing(
@@ -1993,7 +1993,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				null
 			)
 
-			expect(result.clockSensitive).toBe(false)
+			expect(result.clockCycleMs).toBe(0)
 		})
 
 		test('does not cache a clock-sensitive element, but does cache a plain one', async () => {
@@ -2015,12 +2015,43 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				null
 			)
 
-			expect(result.clockSensitive).toBe(true)
+			expect(result.clockCycleMs).toBe(1000)
 			// The clock-sensitive element must recompute each tick, so it is not cached
 			expect(cache.get('osc')).toBeUndefined()
 			// A plain element running alongside a clock-sensitive one is not itself
 			// clock-sensitive, so it is still cached
 			expect(cache.get('plain')).toBeDefined()
+		})
+
+		test('follows the clock cycle of a referenced button', async () => {
+			const target = new ImageResult(
+				undefined,
+				null,
+				1,
+				3000,
+				async () => Buffer.alloc(0),
+				[makeTextDrawEl({ id: 'ref-text', text: 'Hi' })],
+				new Set()
+			)
+			const elements: SomeButtonGraphicsElement[] = [
+				makeReferenceEl({ location: val('2/0/0') }),
+				makeTextEl({ id: 'osc', text: expr('oscillate(2000)') }),
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				vi.fn(() => target)
+			)
+
+			// The 3s cycle of the referenced button and the local 2s oscillate repeat together every 6s
+			expect(result.clockCycleMs).toBe(6000)
 		})
 
 		test('does not cache either of two clock-sensitive siblings', async () => {
@@ -2045,7 +2076,7 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 				null
 			)
 
-			expect(result.clockSensitive).toBe(true)
+			expect(result.clockCycleMs).toBe(2000)
 			expect(cache.get('osc1')).toBeUndefined()
 			expect(cache.get('osc2')).toBeUndefined()
 		})
@@ -3015,6 +3046,72 @@ describe('ConvertSomeButtonGraphicsElementForDrawing', () => {
 			expect(refEl.type).toBe('reference')
 			expect(refEl.children).toHaveLength(1)
 			expect(refEl.children[0]).toMatchObject({ type: 'text', text: 'Hello from ref' })
+		})
+
+		test('prefixes the ids of the embedded elements, so two references to the same button are unique', async () => {
+			const referencedDrawElements: SomeButtonGraphicsDrawElement[] = [
+				makeTextDrawEl({ id: 'ref-text' }),
+				{
+					...makeTextDrawEl({ id: 'nested-ref' }),
+					type: 'reference',
+					children: [makeTextDrawEl({ id: 'nested-ref/deep' })],
+				} as unknown as SomeButtonGraphicsDrawElement,
+			]
+			const getRenderAtLocation = vi.fn(() => createMockImageResult(referencedDrawElements))
+
+			const elements: SomeButtonGraphicsElement[] = [
+				makeReferenceEl({ id: 'refA', location: val('1/0/1') }),
+				makeReferenceEl({ id: 'refB', location: val('1/0/1') }),
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			const ids = (element: SomeButtonGraphicsDrawElement): unknown =>
+				element.type === 'group' || element.type === 'reference'
+					? { [element.id]: element.children.map(ids) }
+					: element.id
+			expect(result.elements.map(ids)).toEqual([
+				{ refA: ['refA/ref-text', { 'refA/nested-ref': ['refA/nested-ref/deep'] }] },
+				{ refB: ['refB/ref-text', { 'refB/nested-ref': ['refB/nested-ref/deep'] }] },
+			])
+			// The referenced render is shared, so must not be changed
+			expect(ids(referencedDrawElements[0])).toBe('ref-text')
+			expect(ids(referencedDrawElements[1])).toEqual({ 'nested-ref': ['nested-ref/deep'] })
+		})
+
+		test("prefixes the ids of the embedded elements, so they can't collide with the button's own", async () => {
+			const getRenderAtLocation = vi.fn(() => createMockImageResult([makeTextDrawEl({ id: 'text1' })]))
+
+			const elements: SomeButtonGraphicsElement[] = [
+				makeTextEl({ id: 'text1' }),
+				makeReferenceEl({ id: 'ref1', location: val('1/0/1') }),
+			]
+
+			const result = await ConvertSomeButtonGraphicsElementForDrawing(
+				createMockInstanceDefinitions(),
+				createMockParser(),
+				mockDrawPixelBuffers,
+				elements,
+				new Map(),
+				true,
+				null,
+				'1/0/0',
+				getRenderAtLocation
+			)
+
+			expect(result.elements[0].id).toBe('text1')
+			const refEl = result.elements[1] as ButtonGraphicsReferenceDrawElement
+			expect(refEl.children.map((child) => child.id)).toEqual(['ref1/text1'])
 		})
 
 		test('excludes canvas elements from the referenced location', async () => {

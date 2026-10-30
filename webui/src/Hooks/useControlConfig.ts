@@ -1,7 +1,7 @@
 import { useSubscription } from '@trpc/tanstack-react-query'
-import jsonPatch from 'fast-json-patch'
 import { runInAction } from 'mobx'
 import { useEffect, useState } from 'react'
+import { applyObjectPatch } from '@companion-app/shared/Diff.js'
 import type { SomeControlModel, UIControlUpdateInit } from '@companion-app/shared/Model/Controls.js'
 import { trpc } from '~/Resources/TRPC'
 import { assertNever } from '~/Resources/util'
@@ -44,7 +44,7 @@ export function useControlConfig(controlId: string | null | undefined): {
 
 									return {
 										...oldConfig,
-										config: jsonPatch.applyPatch(structuredClone(oldConfig.config), data.patch).newDocument,
+										config: applyObjectPatch(structuredClone(oldConfig.config), data.patch),
 									}
 								})
 								break
@@ -54,7 +54,7 @@ export function useControlConfig(controlId: string | null | undefined): {
 
 									return {
 										...oldConfig,
-										runtime: jsonPatch.applyPatch(structuredClone(oldConfig.runtime), data.patch).newDocument,
+										runtime: applyObjectPatch(structuredClone(oldConfig.runtime), data.patch),
 									}
 								})
 								break

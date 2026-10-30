@@ -1,3 +1,4 @@
+import type { DropdownChoice } from '../Model/Common.js'
 import { CompanionFieldVariablesSupport, type SomeCompanionInputField } from '../Model/Options.js'
 import type {
 	ButtonGraphicsBoxElement,
@@ -30,6 +31,13 @@ const LINE_SIDE_CHOICES = [
 	{ id: 'right', label: 'Right' },
 ]
 
+/**
+ * The properties of an element type, in the sections they are edited in.
+ *
+ * The `default` of each field is the value for an existing element which doesn't have the property, as it was saved
+ * before the property existed. So it must be the value which keeps the element drawing as it did. New elements are
+ * created with their own values instead, by `CreateElementOfType`, which can differ to show off what they can do.
+ */
 export interface ElementSchemaSection {
 	id: string
 	label: string
@@ -434,6 +442,21 @@ export const circleElementSchema: ElementSchemaSection[] = [
 	},
 ]
 
+/** The choices of decoration for a button, for its canvas or for a remote button */
+export const BUTTON_DECORATION_CHOICES: DropdownChoice[] = [
+	{ id: ButtonGraphicsDecorationType.FollowDefault, label: 'Follow default' },
+	{ id: ButtonGraphicsDecorationType.TopBar, label: 'Top bar' },
+	{ id: ButtonGraphicsDecorationType.Border, label: 'Border when pressed' },
+	{ id: ButtonGraphicsDecorationType.None, label: 'None' },
+]
+
+/** The choices of status icons for a button, for its canvas or for a remote button */
+export const BUTTON_STATUS_ICONS_CHOICES: DropdownChoice[] = [
+	{ id: ButtonGraphicsShowStatusIcons.FollowDefault, label: 'Follow default' },
+	{ id: ButtonGraphicsShowStatusIcons.ShowAll, label: 'Show all' },
+	{ id: ButtonGraphicsShowStatusIcons.None, label: 'None' },
+]
+
 export const canvasElementSchema: ElementSchemaSection[] = [
 	{
 		id: 'properties',
@@ -451,12 +474,7 @@ export const canvasElementSchema: ElementSchemaSection[] = [
 				type: 'dropdown',
 				id: 'decoration',
 				label: 'Decoration',
-				choices: [
-					{ id: ButtonGraphicsDecorationType.FollowDefault, label: 'Follow default' },
-					{ id: ButtonGraphicsDecorationType.TopBar, label: 'Top bar' },
-					{ id: ButtonGraphicsDecorationType.Border, label: 'Border when pressed' },
-					{ id: ButtonGraphicsDecorationType.None, label: 'None' },
-				],
+				choices: BUTTON_DECORATION_CHOICES,
 				default: ButtonGraphicsDecorationType.FollowDefault,
 			},
 			{
@@ -464,11 +482,7 @@ export const canvasElementSchema: ElementSchemaSection[] = [
 				id: 'showStatusIcons',
 				label: 'Show status icons',
 				tooltip: 'Whether to show status icons in the top right corner of the button',
-				choices: [
-					{ id: ButtonGraphicsShowStatusIcons.FollowDefault, label: 'Follow default' },
-					{ id: ButtonGraphicsShowStatusIcons.ShowAll, label: 'Show all' },
-					{ id: ButtonGraphicsShowStatusIcons.None, label: 'None' },
-				],
+				choices: BUTTON_STATUS_ICONS_CHOICES,
 				default: ButtonGraphicsShowStatusIcons.FollowDefault,
 			},
 		],

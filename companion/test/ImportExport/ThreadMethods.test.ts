@@ -5,7 +5,6 @@ import yaml from 'yaml'
 // Shrink the string-limit cap so the "too large" branch can be exercised without allocating
 // hundreds of megabytes.
 vi.mock('../../lib/ImportExport/Constants.js', () => ({
-	FILE_VERSION: 12,
 	MAX_IMPORT_FILE_SIZE: 1000,
 	MAX_DECOMPRESSED_FILE_SIZE: 1000,
 	MAX_STREAMED_DECOMPRESSED_FILE_SIZE: 1000,

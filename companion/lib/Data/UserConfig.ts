@@ -3,14 +3,57 @@ import { nanoid } from 'nanoid'
 import selfsigned from 'selfsigned'
 import z from 'zod'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
-import { ExportFormatDefault } from '@companion-app/shared/Model/ExportFormat.js'
-import { ButtonGraphicsDecorationType } from '@companion-app/shared/Model/StyleModel.js'
-import type { UserConfigModel, UserConfigUpdate } from '@companion-app/shared/Model/UserConfigModel.js'
+import {
+	UserConfigModelSchema,
+	type UserConfigModel,
+	type UserConfigUpdate,
+} from '@companion-app/shared/Model/UserConfigModel.js'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
-import type { DataDatabase, DataDatabaseDefaultTable } from './Database.js'
-import type { DataStoreTableView } from './StoreBase.js'
+import type { DataDatabase } from './Database.js'
+import type { DataStoreKeyedSchemaTableView } from './Tables/KeyedSchemaTableView.js'
+
+const UserConfigTableSchemas = {
+	userconfig: UserConfigModelSchema.default(() => UserConfigModelSchema.parse({})),
+}
+
+/**
+ * Reset each setting that fails to parse to its default, rather than every setting. A backup rule that fails is
+ * removed, rather than all of them
+ */
+function repairUserConfig(
+	row: unknown,
+	issues: readonly z.core.$ZodIssue[]
+): { row: unknown; repairs: string[] } | null {
+	if (!row || typeof row !== 'object' || Array.isArray(row)) return null
+
+	const repaired: Record<string, unknown> = { ...row }
+	const resetKeys = new Set<string>()
+	const removedBackups = new Set<number>()
+	for (const issue of issues) {
+		const [key, index] = issue.path
+		if (typeof key !== 'string') return null
+
+		if (key === 'backups' && typeof index === 'number' && Array.isArray(repaired.backups)) {
+			removedBackups.add(index)
+		} else {
+			resetKeys.add(key)
+		}
+	}
+
+	const repairs: string[] = []
+	for (const key of resetKeys) {
+		delete repaired[key]
+		repairs.push(`Reset the setting "${key}" to its default`)
+	}
+	if (removedBackups.size > 0 && Array.isArray(repaired.backups)) {
+		repaired.backups = repaired.backups.filter((_rule, index) => !removedBackups.has(index))
+		repairs.push(`Removed ${removedBackups.size} invalid backup rule(s)`)
+	}
+
+	return { row: repaired, repairs }
+}
 
 export interface DataUserConfigEvents {
 	keyChanged: [key: keyof UserConfigModel, value: any, checkControlsInBounds: boolean]
@@ -34,8 +77,7 @@ export interface DataUserConfigEvents {
 export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	readonly #logger = LogController.createLogger('Data/UserConfig')
 
-	readonly #db: DataDatabase
-	readonly #dbTable: DataStoreTableView<DataDatabaseDefaultTable>
+	readonly #dbTable: DataStoreKeyedSchemaTableView<typeof UserConfigTableSchemas>
 
 	/**
 	 * Launch-time overrides (e.g. from an environment variable). Keys present here are locked: their
@@ -47,102 +89,8 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	/**
 	 * The defaults for the user config fields
 	 */
-	static Defaults: UserConfigModel = {
-		setup_wizard: 0,
-		detailed_data_collection: true,
+	static Defaults: UserConfigModel = UserConfigModelSchema.parse({})
 
-		page_direction_flipped: false,
-		page_plusminus: false,
-		buttons_decoration: ButtonGraphicsDecorationType.TopBar,
-		buttons_status_icons: 'show',
-
-		usb_hotplug: true,
-		auto_enable_discovered_surfaces: true,
-
-		satellite_subscriptions_enabled: false,
-
-		pin_enable: false,
-		link_lockouts: false,
-		pin: '',
-		pin_timeout: 0,
-
-		http_api_enabled: true,
-		http_legacy_api_enabled: false,
-
-		rest_api_enabled: false,
-		prometheus_enabled: false,
-		prometheus_token: '',
-
-		tcp_enabled: false,
-		tcp_listen_port: 16759,
-		tcp_legacy_api_enabled: false,
-
-		udp_enabled: false,
-		udp_listen_port: 16759,
-		udp_legacy_api_enabled: false,
-
-		osc_enabled: false,
-		osc_listen_port: 12321,
-		osc_legacy_api_enabled: false,
-
-		rosstalk_enabled: false,
-
-		emberplus_enabled: false,
-
-		artnet_enabled: false,
-		artnet_universe: 1,
-		artnet_channel: 1,
-
-		https_enabled: false,
-		https_port: 8443,
-		https_cert_type: 'self',
-		https_self_cn: '',
-		https_self_expiry: 365,
-		https_self_cert: '',
-		https_self_cert_created: '',
-		https_self_cert_cn: '',
-		https_self_cert_expiry: '',
-		https_self_cert_private: '',
-		https_self_cert_public: '',
-		https_ext_private_key: '',
-		https_ext_certificate: '',
-		https_ext_chain: '',
-
-		admin_lockout: false,
-		admin_timeout: 5,
-		admin_password: '',
-
-		gridSize: {
-			minColumn: 0,
-			maxColumn: 7,
-			minRow: 0,
-			maxRow: 3,
-		},
-		gridSizePromptGrow: true,
-
-		installName: '',
-		mdns_announcements_enabled: true,
-		default_export_filename: '$(internal:hostname)_$(internal:date_iso)-$(internal:time_h)$(internal:time_m)',
-		default_export_format: ExportFormatDefault,
-
-		timezone: '',
-
-		backups: [
-			// Create a disabled backup rule by default
-			{
-				id: 'default',
-				enabled: false,
-				name: 'Daily Backup',
-				backupType: 'db',
-				backupPath: '', // Default
-				cron: '0 0 * * *', // Daily at midnight
-				backupNamePattern: 'backup-$(internal:date_iso)-$(internal:time_h)$(internal:time_m)',
-				keep: 5,
-				previousBackups: [],
-				lastRan: 0,
-			},
-		],
-	}
 	/**
 	 * The user configuration settings
 	 */
@@ -152,32 +100,15 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		super()
 		this.setMaxListeners(0)
 
-		this.#db = db
-		this.#dbTable = db.defaultTableView
+		this.#dbTable = db.getKeyedSchemaTableView('main', UserConfigTableSchemas, {
+			repair: { userconfig: repairUserConfig },
+		})
 
 		if (appInfo.options.installNameOverride !== undefined) {
 			this.#lockedOverrides.set('installName', appInfo.options.installNameOverride)
 		}
 
-		this.#data = this.#dbTable.getOrDefault('userconfig', structuredClone(DataUserConfig.Defaults))
-
-		this.#populateMissingForExistingDb()
-
-		let save = false
-		// copy default values. this will set newly added defaults too
-		for (const k0 in DataUserConfig.Defaults) {
-			const k = k0 as keyof UserConfigModel
-			if (this.#data[k] === undefined) {
-				// @ts-expect-error mismatch in key type
-				this.#data[k] = DataUserConfig.Defaults[k]
-				save = true
-			}
-		}
-
-		// make sure the db has an updated copy
-		if (save) {
-			this.#dbTable.set('userconfig', this.#data)
-		}
+		this.#data = this.#dbTable.get('userconfig')
 	}
 
 	/**
@@ -198,7 +129,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	createTrpcRouter() {
 		const self = this
 		const selfEvents: EventEmitter<DataUserConfigEvents> = self
-		const zodUserConfigKey = z.enum(Object.keys(DataUserConfig.Defaults) as [keyof UserConfigModel])
+		const zodUserConfigKey = UserConfigModelSchema.keyof()
 		return router({
 			sslCertificateCreate: publicProcedure.mutation(async () => {
 				return this.createSslCertificate()
@@ -263,77 +194,6 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 					return this.resetKey(input.key)
 				}),
 		})
-	}
-
-	/**
-	 * For an existing DB we need to check if some new settings are present
-	 */
-	#populateMissingForExistingDb(): void {
-		if (!this.#db.getIsFirstRun()) {
-			// This is an existing db, so setup the ports to match how it used to be
-			const legacy_config: Partial<UserConfigModel> = {
-				detailed_data_collection: true,
-
-				tcp_enabled: true,
-				tcp_listen_port: 51234,
-
-				udp_enabled: true,
-				udp_listen_port: 51235,
-
-				osc_enabled: true,
-				osc_listen_port: 12321,
-
-				emberplus_enabled: true,
-			}
-
-			// check if these fields have already been defined
-			let has_been_defined = false
-			for (const k in legacy_config) {
-				// @ts-expect-error mismatch in key type
-				if (this.#data[k] !== undefined) {
-					has_been_defined = true
-					break
-				}
-			}
-
-			// copy across the legacy values
-			if (!has_been_defined) {
-				this.#logger.info('Running one-time userconfig v2 upgrade')
-				for (const k in legacy_config) {
-					// @ts-expect-error mismatch in key type
-					if (this.#data[k] === undefined) {
-						// @ts-expect-error mismatch in key type
-						this.#data[k] = legacy_config[k]
-					}
-				}
-			}
-
-			// Preserve old behaviour
-			if (this.#data['usb_hotplug'] === undefined) {
-				this.#data['usb_hotplug'] = false
-			}
-
-			// Enable the legacy OSC api if OSC is enabled
-			if (this.#data.osc_enabled && this.#data.osc_legacy_api_enabled === undefined) {
-				this.#data.osc_legacy_api_enabled = true
-			}
-
-			// Enable the legacy TCP api if TCP is enabled
-			if (this.#data.tcp_enabled && this.#data.tcp_legacy_api_enabled === undefined) {
-				this.#data.tcp_legacy_api_enabled = true
-			}
-
-			// Enable the legacy UDP api if UDP is enabled
-			if (this.#data.udp_enabled && this.#data.udp_legacy_api_enabled === undefined) {
-				this.#data.udp_legacy_api_enabled = true
-			}
-
-			// Enable the http api (both modern and legacy)
-			if (this.#data.http_api_enabled === undefined) {
-				this.#data.http_api_enabled = true
-				this.#data.http_legacy_api_enabled = true
-			}
-		}
 	}
 
 	/**
@@ -508,14 +368,15 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	setKeyUnchecked(key: keyof UserConfigModel, value: any, save = true): void {
 		if (!key) throw new Error('Missing key')
 
-		let checkControlsInBounds = false
-		if (key === 'gridSize') {
-			// value = { ...value }
-
-			// value = Math.min(0, Number(value))
-			// if (isNaN(value)) return
-			checkControlsInBounds = true
+		const keySchema = (UserConfigModelSchema.shape as Record<string, z.ZodType | undefined>)[key]
+		if (!keySchema) throw new Error(`Unknown config key "${String(key)}"`)
+		const parsed = keySchema.safeParse(value)
+		if (!parsed.success) {
+			throw new Error(`Invalid value for config key "${String(key)}": ${z.prettifyError(parsed.error)}`)
 		}
+		value = parsed.data
+
+		const checkControlsInBounds = key === 'gridSize'
 
 		// @ts-expect-error mismatch in key type
 		this.#data[key] = value

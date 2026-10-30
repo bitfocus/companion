@@ -115,11 +115,7 @@ export abstract class ButtonControlRuntimeBase<
 	 */
 	protected abstract entityListReportChange(options: ControlEntityListChangeProps): void
 
-	/**
-	 * Abort pending delayed actions for a control
-	 * @param skip_up Mark button as released
-	 */
-	abortDelayedActions(skip_up: boolean, exceptSignal: AbortSignal | null): void {
+	override abortDelayedActions(skip_up: boolean, exceptSignal: AbortSignal | null, _linkHops: number): void {
 		if (skip_up) {
 			this.setPushed(false)
 		}

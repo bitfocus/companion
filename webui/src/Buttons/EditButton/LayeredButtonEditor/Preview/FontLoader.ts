@@ -1,4 +1,4 @@
-import { ALL_FONTS } from '@companion-app/shared/Graphics/Fonts.js'
+import { PREVIEW_UI_FONTS } from '@companion-app/shared/Graphics/Fonts.js'
 import { assertNever, makeAbsolutePath } from '~/Resources/util'
 
 type ListenerFn = () => void
@@ -41,7 +41,7 @@ class PreviewCanvasFontLoader {
 		console.log('FONTS: Loading fonts...')
 
 		Promise.allSettled(
-			ALL_FONTS.values().map(async (name) => {
+			PREVIEW_UI_FONTS.values().map(async (name) => {
 				const fontPath = makeAbsolutePath(`/int/graphics/font/${name}`)
 				const fontface = new FontFace(name, `url(${fontPath})`)
 				await fontface.load().catch((e) => {

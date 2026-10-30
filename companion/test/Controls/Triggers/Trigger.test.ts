@@ -379,7 +379,7 @@ describe('ControlTrigger', () => {
 				expect.objectContaining({
 					type: 'update',
 					controlId: CONTROL_ID,
-					patch: expect.arrayContaining([expect.objectContaining({ op: 'replace', path: '/name', value: 'Renamed' })]),
+					patch: expect.arrayContaining([expect.objectContaining({ op: 'set', path: ['name'], value: 'Renamed' })]),
 				})
 			)
 		})

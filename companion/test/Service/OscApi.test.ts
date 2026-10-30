@@ -883,4 +883,167 @@ describe('OscApi', () => {
 			})
 		})
 	})
+
+	describe('legacy', () => {
+		function createLegacyService() {
+			const ctx = createService()
+			ctx.userconfig.getKey.mockReturnValue(true)
+			return ctx
+		}
+
+		test('disabled', async () => {
+			const { router, serviceApi, userconfig } = createService()
+			userconfig.getKey.mockReturnValue(false)
+
+			await router.processMessage('/press/bank/1/2', { args: [] })
+			await router.processMessage('/rescan', { args: [] })
+
+			expect(userconfig.getKey).toHaveBeenCalledWith('osc_legacy_api_enabled')
+			expect(serviceApi.getControlIdAtOldBankIndex).toHaveBeenCalledTimes(0)
+			expect(serviceApi.triggerRescanForSurfaces).toHaveBeenCalledTimes(0)
+		})
+
+		describe('press bank', () => {
+			beforeEach(() => {
+				vi.useFakeTimers()
+			})
+
+			test('trigger', async () => {
+				const { router, serviceApi } = createLegacyService()
+				serviceApi.getControlIdAtOldBankIndex.mockReturnValue('control123')
+				serviceApi.pressControl.mockReturnValue(true)
+
+				await router.processMessage('/press/bank/1/2', { args: [] })
+
+				expect(serviceApi.getControlIdAtOldBankIndex).toHaveBeenCalledWith(1, 2)
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
+				expect(serviceApi.pressControl).toHaveBeenCalledWith('control123', true, 'osc')
+
+				vi.advanceTimersByTime(100)
+
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(2)
+				expect(serviceApi.pressControl).toHaveBeenLastCalledWith('control123', false, 'osc')
+			})
+
+			test('down', async () => {
+				const { router, serviceApi } = createLegacyService()
+				serviceApi.getControlIdAtOldBankIndex.mockReturnValue('control123')
+				serviceApi.pressControl.mockReturnValue(true)
+
+				await router.processMessage('/press/bank/1/2', { args: [{ type: 'i', value: 1 }] })
+
+				vi.advanceTimersByTime(100)
+
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
+				expect(serviceApi.pressControl).toHaveBeenCalledWith('control123', true, 'osc')
+			})
+
+			test('up', async () => {
+				const { router, serviceApi } = createLegacyService()
+				serviceApi.getControlIdAtOldBankIndex.mockReturnValue('control123')
+				serviceApi.pressControl.mockReturnValue(true)
+
+				await router.processMessage('/press/bank/1/2', { args: [{ type: 'i', value: 0 }] })
+
+				vi.advanceTimersByTime(100)
+
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
+				expect(serviceApi.pressControl).toHaveBeenCalledWith('control123', false, 'osc')
+			})
+
+			test('no control', async () => {
+				const { router, serviceApi } = createLegacyService()
+				serviceApi.getControlIdAtOldBankIndex.mockReturnValue(null)
+
+				await router.processMessage('/press/bank/1/2', { args: [] })
+
+				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
+			})
+
+			test('trailing slash', async () => {
+				const { router, serviceApi } = createLegacyService()
+				serviceApi.getControlIdAtOldBankIndex.mockReturnValue(null)
+
+				await router.processMessage('/press/bank/1/2/', { args: [] })
+
+				expect(serviceApi.getControlIdAtOldBankIndex).toHaveBeenCalledWith(1, 2)
+			})
+
+			test('extra segment', async () => {
+				const { router, serviceApi } = createLegacyService()
+
+				await router.processMessage('/press/bank/1/2/3', { args: [] })
+
+				expect(serviceApi.getControlIdAtOldBankIndex).toHaveBeenCalledTimes(0)
+			})
+		})
+
+		describe('style', () => {
+			function setupControl() {
+				const ctx = createLegacyService()
+				ctx.serviceApi.getControlIdAtOldBankIndex.mockReturnValue('control123')
+
+				const mockControl = mock<ServiceApiControl>({ setStyleFields: vi.fn() }, mockOptions)
+				ctx.serviceApi.getControl.mockReturnValue(mockControl)
+
+				return { ...ctx, mockControl }
+			}
+
+			test('bgcolor', async () => {
+				const { router, serviceApi, mockControl } = setupControl()
+
+				await router.processMessage('/style/bgcolor/1/2', {
+					args: [
+						{ type: 'i', value: 255 },
+						{ type: 'i', value: 0 },
+						{ type: 'i', value: 128 },
+					],
+				})
+
+				expect(serviceApi.getControlIdAtOldBankIndex).toHaveBeenCalledWith(1, 2)
+				expect(mockControl.setStyleFields).toHaveBeenCalledWith({ bgcolor: rgb(255, 0, 128) })
+			})
+
+			test('color', async () => {
+				const { router, serviceApi, mockControl } = setupControl()
+
+				await router.processMessage('/style/color/1/2', {
+					args: [
+						{ type: 'i', value: 0 },
+						{ type: 'i', value: 255 },
+						{ type: 'i', value: 128 },
+					],
+				})
+
+				expect(serviceApi.getControlIdAtOldBankIndex).toHaveBeenCalledWith(1, 2)
+				expect(mockControl.setStyleFields).toHaveBeenCalledWith({ color: rgb(0, 255, 128) })
+			})
+
+			test('color missing args', async () => {
+				const { router, mockControl } = setupControl()
+
+				await router.processMessage('/style/color/1/2', { args: [{ type: 'i', value: 0 }] })
+
+				expect(mockControl.setStyleFields).toHaveBeenCalledTimes(0)
+			})
+
+			test('text', async () => {
+				const { router, serviceApi, mockControl } = setupControl()
+
+				await router.processMessage('/style/text/1/2', { args: [{ type: 's', value: 'hello' }] })
+
+				expect(serviceApi.getControlIdAtOldBankIndex).toHaveBeenCalledWith(1, 2)
+				expect(mockControl.setStyleFields).toHaveBeenCalledWith({ text: 'hello' })
+			})
+		})
+
+		test('rescan', async () => {
+			const { router, serviceApi } = createLegacyService()
+			serviceApi.triggerRescanForSurfaces.mockResolvedValue(undefined)
+
+			await router.processMessage('/rescan', { args: [] })
+
+			expect(serviceApi.triggerRescanForSurfaces).toHaveBeenCalledTimes(1)
+		})
+	})
 })

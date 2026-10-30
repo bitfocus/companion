@@ -52,6 +52,20 @@ describe('fitCanvasSize', () => {
 		expect(height).toBeGreaterThan(0)
 	})
 
+	test('gives whole pixels, measured or not, as the backend draws for this canvas', () => {
+		for (const ratio of ['9:7', '7:9']) {
+			for (const [containerWidth, containerHeight] of [
+				[0, 0],
+				[333, 271],
+			]) {
+				const { width, height } = fitCanvasSize(ratio, containerWidth, containerHeight)
+
+				expect(Number.isInteger(width)).toBe(true)
+				expect(Number.isInteger(height)).toBe(true)
+			}
+		}
+	})
+
 	test('does not grow without bound on a very large container', () => {
 		const { width, height } = fitCanvasSize('1:1', 5000, 5000)
 

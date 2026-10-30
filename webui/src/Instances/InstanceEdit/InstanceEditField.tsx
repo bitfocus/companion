@@ -117,8 +117,7 @@ export function InstanceEditField({
 					id={inputId}
 					value={value as any}
 					setValue={setValue}
-					connectionId={instanceId}
-					queryId={definition.id}
+					source={{ type: 'connection', connectionId: instanceId, queryId: definition.id }}
 				/>
 			) : (
 				<p>Bonjour field not supported</p>

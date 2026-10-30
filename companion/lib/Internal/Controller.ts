@@ -10,6 +10,7 @@
  */
 
 import type EventEmitter from 'node:events'
+import { INTERNAL_CONNECTION_ID, isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
@@ -43,7 +44,6 @@ import type { AppInfo } from '../Registry.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
-import { buildActionExecutionOverrides } from '../Variables/Util.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { InternalActionRecorder } from './ActionRecorder.js'
@@ -51,6 +51,7 @@ import { InternalBuildingBlocks } from './BuildingBlocks.js'
 import { InternalControls } from './Controls.js'
 import { InternalCustomVariables } from './CustomVariables.js'
 import { InternalInstance } from './Instance.js'
+import { InternalInvalidEntity } from './InvalidEntity.js'
 import { InternalPage } from './Page.js'
 import { InternalSurface } from './Surface.js'
 import { InternalSystem } from './System.js'
@@ -153,7 +154,8 @@ export class InternalController {
 			new InternalSurface(surfaceController, this.#controlsStore, this.#pageStore),
 			new InternalSystem(appInfo, userConfigController, this.#variablesController, requestExit),
 			new InternalTriggers(controls),
-			new InternalVariables(localVariablesController)
+			new InternalVariables(localVariablesController),
+			new InternalInvalidEntity()
 		)
 
 		// Listen for events from the fragments
@@ -181,7 +183,7 @@ export class InternalController {
 		for (const control of allControls.values()) {
 			if (!control.supportsEntities) continue
 
-			control.entities.resubscribeEntities(undefined, 'internal')
+			control.entities.resubscribeEntities(undefined, INTERNAL_CONNECTION_ID)
 		}
 
 		// Make all variables values
@@ -277,7 +279,7 @@ export class InternalController {
 	#feedbackUpdate(feedback: FeedbackEntityModel, controlId: string): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		if (feedback.connectionId !== 'internal') throw new Error(`Feedback is not for internal instance`)
+		if (!isInternalConnectionId(feedback.connectionId)) throw new Error(`Feedback is not for internal instance`)
 		if (feedback.disabled) return
 
 		const location = this.#pageStore.getLocationOfControlId(controlId)
@@ -292,7 +294,7 @@ export class InternalController {
 		}
 		this.#feedbacks.set(feedback.id, feedbackState)
 
-		this.#controlsStore.updateFeedbackValues('internal', [
+		this.#controlsStore.updateFeedbackValues(INTERNAL_CONNECTION_ID, [
 			{
 				entityId: feedback.id,
 				controlId: controlId,
@@ -315,7 +317,7 @@ export class InternalController {
 		parser: VariablesAndExpressionParser
 	): FeedbackValue {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
-		if (entityModel.connectionId !== 'internal') throw new Error(`Feedback is not for internal instance`)
+		if (!isInternalConnectionId(entityModel.connectionId)) throw new Error(`Feedback is not for internal instance`)
 
 		const location = this.#pageStore.getLocationOfControlId(controlId)
 
@@ -327,7 +329,7 @@ export class InternalController {
 	entityDelete(entity: SomeEntityModel): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
-		if (entity.connectionId !== 'internal') throw new Error(`Feedback is not for internal instance`)
+		if (!isInternalConnectionId(entity.connectionId)) throw new Error(`Feedback is not for internal instance`)
 
 		if (entity.type !== EntityModelType.Feedback) return
 
@@ -379,7 +381,7 @@ export class InternalController {
 		try {
 			const entityDefinition = this.#instanceDefinitions.getEntityDefinition(
 				EntityModelType.Feedback,
-				'internal', // This is the internal instance code
+				INTERNAL_CONNECTION_ID,
 				entityModel.definitionId
 			)
 			if (!entityDefinition) {
@@ -395,7 +397,7 @@ export class InternalController {
 			// Parse the options if enabled
 			let parsedOptions: CompanionOptionValues
 			if (entityDefinition.optionsSupportExpressions) {
-				const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options)
+				const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options, controlId)
 
 				// Always track the dependencies, for accurate re-evaluation when something changes
 				if (tracking) {
@@ -476,7 +478,7 @@ export class InternalController {
 		const simpleInternalActions: ActionForVisitor[] = []
 
 		for (const entity of rawEntities) {
-			if (entity.connectionId !== 'internal') continue
+			if (!isInternalConnectionId(entity.connectionId)) continue
 
 			switch (entity.type) {
 				case EntityModelType.Feedback:
@@ -499,7 +501,7 @@ export class InternalController {
 			}
 		}
 		for (const entity of entities) {
-			if (entity.connectionId !== 'internal') continue
+			if (!isInternalConnectionId(entity.connectionId)) continue
 
 			switch (entity.type) {
 				case EntityModelType.Feedback:
@@ -541,31 +543,24 @@ export class InternalController {
 		try {
 			const entityDefinition = this.#instanceDefinitions.getEntityDefinition(
 				EntityModelType.Action,
-				'internal',
+				INTERNAL_CONNECTION_ID,
 				action.definitionId
 			)
 			if (!entityDefinition) return
 
-			const overrideVariableValues = buildActionExecutionOverrides(extras)
-			// Actions are sampled once at execution and never re-evaluated, so clock-sensitive
-			// expressions (e.g. oscillate()) would be misleading - reject them, matching module actions.
-			const parser = this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues, {
-				allowClockSensitive: false,
-			})
+			const parser = this.#controlsStore.createActionExecutionParser(extras)
 
 			// Context for lazily evaluating this action's child feedbacks. A parser snapshots local/page
 			// variable values at construction, so we build a fresh one per call rather than reusing the
 			// action's `parser`: logic_while re-checks its condition each iteration and must see values that
 			// its own body changed mid-loop.
 			const createFeedbackContext = (): FeedbackExecutionContext => ({
-				parser: this.#controlsStore.createVariablesAndExpressionParser(extras.controlId, overrideVariableValues, {
-					allowClockSensitive: false,
-				}),
+				parser: this.#controlsStore.createActionExecutionParser(extras),
 			})
 
 			let parsedOptions: CompanionOptionValues
 			if (entityDefinition.optionsSupportExpressions) {
-				const parseRes = parser.parseEntityOptions(entityDefinition, action.rawOptions)
+				const parseRes = parser.parseEntityOptions(entityDefinition, action.rawOptions, extras.controlId)
 				if (!parseRes.ok) {
 					this.#logger.warn(
 						`Failed to parse options for action ${action.definitionId} in control ${extras.controlId}: ${JSON.stringify(parseRes.optionErrors)}`
@@ -653,7 +648,7 @@ export class InternalController {
 			}
 		}
 
-		this.#controlsStore.updateFeedbackValues('internal', newValues)
+		this.#controlsStore.updateFeedbackValues(INTERNAL_CONNECTION_ID, newValues)
 	}
 	/**
 	 * Recheck all feedbacks of specified id
@@ -674,7 +669,7 @@ export class InternalController {
 			}
 		}
 
-		this.#controlsStore.updateFeedbackValues('internal', newValues)
+		this.#controlsStore.updateFeedbackValues(INTERNAL_CONNECTION_ID, newValues)
 	}
 	#regenerateActions(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
@@ -703,6 +698,7 @@ export class InternalController {
 						feedbackAffectedProperties: undefined,
 						feedbackDisableStyleOverrides: false,
 						feedbackStyleOverridesUnsupported: false,
+						hiddenFromPicker: action.hiddenFromPicker ?? false,
 
 						optionsSupportExpressions: action.optionsSupportExpressions ?? false,
 
@@ -712,7 +708,7 @@ export class InternalController {
 			}
 		}
 
-		this.#instanceDefinitions.setActionDefinitions('internal', actions)
+		this.#instanceDefinitions.setActionDefinitions(INTERNAL_CONNECTION_ID, actions)
 	}
 	#regenerateFeedbacks(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
@@ -738,6 +734,7 @@ export class InternalController {
 						feedbackAffectedProperties: feedback.feedbackAffectedProperties ?? undefined,
 						feedbackDisableStyleOverrides: feedback.feedbackDisableStyleOverrides ?? false,
 						feedbackStyleOverridesUnsupported: feedback.feedbackStyleOverridesUnsupported ?? false,
+						hiddenFromPicker: feedback.hiddenFromPicker ?? false,
 
 						optionsSupportExpressions: feedback.optionsSupportExpressions ?? false,
 
@@ -748,7 +745,7 @@ export class InternalController {
 			}
 		}
 
-		this.#instanceDefinitions.setFeedbackDefinitions('internal', feedbacks)
+		this.#instanceDefinitions.setFeedbackDefinitions(INTERNAL_CONNECTION_ID, feedbacks)
 	}
 	#regenerateVariables(): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
@@ -782,7 +779,7 @@ export class InternalController {
 			})
 		}
 
-		if (newValues.length > 0) this.#controlsStore.updateFeedbackValues('internal', newValues)
+		if (newValues.length > 0) this.#controlsStore.updateFeedbackValues(INTERNAL_CONNECTION_ID, newValues)
 	}
 
 	onVariablesChanged(changedVariablesSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
@@ -807,7 +804,7 @@ export class InternalController {
 			})
 		}
 
-		this.#controlsStore.updateFeedbackValues('internal', newValues)
+		this.#controlsStore.updateFeedbackValues(INTERNAL_CONNECTION_ID, newValues)
 	}
 
 	/**

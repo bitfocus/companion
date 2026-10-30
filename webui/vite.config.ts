@@ -127,8 +127,9 @@ export default defineConfig(({ mode }) => {
 			}),
 			reactPlugin(),
 			legacyPlugin({
-				// Browser floor: Safari 16.4+, Chrome 111+, Firefox 128+.
-				targets: [
+				// Browser floor: Safari 16.4+, Chrome 111+, Firefox 128+. Every browser in it loads ES modules, so the
+				// nomodule legacy chunks would never be used; the plugin is only here to inject the polyfills it needs.
+				modernTargets: [
 					'defaults',
 					'not dead',
 					'not safari < 16.4',
@@ -138,6 +139,7 @@ export default defineConfig(({ mode }) => {
 					'not firefox < 128',
 				],
 				modernPolyfills: true,
+				renderLegacyChunks: false,
 			}),
 			env.VITE_SENTRY_DSN
 				? sentryVitePlugin({

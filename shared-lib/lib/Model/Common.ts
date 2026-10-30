@@ -1,10 +1,10 @@
-import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import type { ObjectPatch } from '../Diff.js'
 import type { LedGaugeDescription } from '../Graphics/GaugeLeds.js'
 import type { SomeCompanionInputField } from './Options.js'
 
 export interface ObjectsDiff<T> {
 	added: Record<string, T>
-	changed: Record<string, JsonPatchOperation<T>[]>
+	changed: Record<string, ObjectPatch<T>>
 	removed: string[]
 }
 
@@ -63,6 +63,22 @@ export interface EmulatorLockedState {
 }
 
 export type EmulatorImageCache = Record<number, Record<number, string | false | undefined> | undefined>
+
+/** What a bonjour-device field discovers: the query of a connection's module, or of a Link transport type */
+export type BonjourQuerySource =
+	| { type: 'connection'; connectionId: string; queryId: string }
+	| { type: 'link-transport'; transportType: string; fieldId: string }
+
+/** A query for services to discover, as a module manifest or a Link transport type describes one */
+export interface BonjourQuery {
+	type: string
+	protocol: 'tcp' | 'udp'
+	port?: number
+	txt?: Record<string, string>
+	addressFamily?: 'ipv4' | 'ipv6' | 'ipv4+6'
+	/** Leave out services whose txt record has all of these values, eg this installation's own announcement */
+	excludeTxt?: Record<string, string>
+}
 
 export interface ClientBonjourService {
 	subId: string

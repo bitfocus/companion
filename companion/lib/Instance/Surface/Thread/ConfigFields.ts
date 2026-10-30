@@ -131,6 +131,7 @@ function translateCommonFields(
 	| 'deferParsing'
 	| 'contextVariableResolution'
 	| 'defaultForControlType'
+	| 'disabledForControlTypes'
 > {
 	return {
 		id: field.id,
@@ -152,5 +153,6 @@ function translateCommonFields(
 		deferParsing: undefined,
 		contextVariableResolution: undefined,
 		defaultForControlType: undefined,
+		disabledForControlTypes: undefined,
 	}
 }

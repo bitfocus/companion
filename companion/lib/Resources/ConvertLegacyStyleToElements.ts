@@ -1,4 +1,5 @@
 import type { JsonValue } from 'type-fest'
+import { INTERNAL_CONNECTION_ID, isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import {
 	FONTSIZE_SHRINK_DEFAULT,
 	getDefaultPinnedProperties,
@@ -357,7 +358,7 @@ export function ConvertLegacyStyleToElements(
 		let overrides: FeedbackEntityStyleOverride[]
 
 		// This is not a great check, but is hopefully reliable enough
-		if ('style' in fb && fb.style && (Object.keys(fb.style).length > 0 || fb.connectionId !== 'internal')) {
+		if ('style' in fb && fb.style && (Object.keys(fb.style).length > 0 || !isInternalConnectionId(fb.connectionId))) {
 			// Must be boolean, translate the props as such
 
 			const parsedStyle = ParseLegacyStyle(fb.style, resolvedNoTopBar)
@@ -385,7 +386,7 @@ export function ConvertLegacyStyleToElements(
 		}
 
 		// Special case to preserve behaviour of 'conditionalise existing feedbacks'
-		if (fb.connectionId === 'internal' && fb.definitionId === 'logic_conditionalise_advanced' && fb.children) {
+		if (isInternalConnectionId(fb.connectionId) && fb.definitionId === 'logic_conditionalise_advanced' && fb.children) {
 			const children = fb.children['feedbacks']
 			if (children && Array.isArray(children)) {
 				fb.children['feedbacks'] = children.map(updateFeedback)
@@ -415,7 +416,7 @@ export function ConvertLegacyStyleToElements(
 				type: EntityModelType.Feedback,
 				id: generateId(),
 				definitionId: 'check_expression',
-				connectionId: 'internal',
+				connectionId: INTERNAL_CONNECTION_ID,
 				options: {
 					expression: exprExpr(`true`), // Always true to enable the style
 				},

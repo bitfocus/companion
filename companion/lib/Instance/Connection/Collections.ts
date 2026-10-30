@@ -1,4 +1,5 @@
 import z from 'zod'
+import { EnabledCollectionSchema } from '@companion-app/shared/Model/Collections.js'
 import type { ConnectionCollection, ConnectionCollectionData } from '@companion-app/shared/Model/Connections.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { DataDatabase } from '../../Data/Database.js'
@@ -12,24 +13,10 @@ export class ConnectionsCollections extends EnabledCollectionsBaseController<Con
 	readonly #configStore: InstanceConfigStore
 
 	constructor(db: DataDatabase, configStore: InstanceConfigStore, emitUpdated: () => void) {
-		super(db.getTableView<Record<string, ConnectionCollection>>('connection_collections'))
+		super(db.getSchemaTableView('connection_collections', EnabledCollectionSchema))
 
 		this.#emitUpdated = emitUpdated
 		this.#configStore = configStore
-
-		// TODO: remove this soon - fixup existing data
-		const fixupCollections = (collections: ConnectionCollection[]) => {
-			for (const collection of collections) {
-				if (collection.metaData === undefined) {
-					collection.metaData = { enabled: true }
-				}
-				fixupCollections(collection.children || [])
-			}
-			return collections
-		}
-		fixupCollections(this.data)
-
-		this.rebuildEnabledCollectionIds()
 	}
 
 	/**

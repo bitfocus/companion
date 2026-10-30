@@ -1,4 +1,5 @@
 import type { JsonValue } from 'type-fest'
+import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
@@ -23,7 +24,7 @@ export class VisitorReferencesBase<T extends InternalVisitor> {
 		const pluckRawEntities = (entities: SomeEntityModel[]) => {
 			for (const entity of entities) {
 				flatRawEntities.push(entity)
-				if (entity.connectionId === 'internal' && entity.children) {
+				if (isInternalConnectionId(entity.connectionId) && entity.children) {
 					for (const children of Object.values(entity.children)) {
 						if (children) pluckRawEntities(children)
 					}

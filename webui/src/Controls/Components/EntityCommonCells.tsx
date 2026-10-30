@@ -1,8 +1,10 @@
 import { faQuestionCircle } from '@fortawesome/free-solid-svg-icons'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useId } from 'react'
+import { useCallback, useContext, useId, useMemo } from 'react'
 import type { JsonValue } from 'type-fest'
+import { isInternalConnectionId, isVirtualConnectionId } from '@companion-app/shared/ConnectionId.js'
+import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
@@ -10,7 +12,11 @@ import {
 	FeedbackEntitySubType,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import type { CompanionInputFieldCheckboxExtended, ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import {
+	isFieldDisabledForControl,
+	type CompanionInputFieldCheckboxExtended,
+	type ExpressionOrValue,
+} from '@companion-app/shared/Model/Options.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { CopyButton } from '~/Components/CopyButton.js'
 import { Form, FormLabel } from '~/Components/Form.js'
@@ -54,12 +60,18 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 	const { connections } = useContext(RootAppStoreContext)
 
 	const isConnectionEnabled =
-		entity.connectionId === 'internal' || !!connections.connections.get(entity.connectionId)?.enabled
+		isVirtualConnectionId(entity.connectionId) || !!connections.connections.get(entity.connectionId)?.enabled
 
-	const showButtonPreview = entity?.connectionId === 'internal' && entityDefinition?.showButtonPreview
+	const showButtonPreview = isInternalConnectionId(entity?.connectionId) && entityDefinition?.showButtonPreview
+
+	const controlKind = ParseControlId(controlId)?.type ?? null
+	const visibleOptions = useMemo(
+		() => entityDefinition?.options.filter((opt) => !isFieldDisabledForControl(opt, controlKind)),
+		[entityDefinition?.options, controlKind]
+	)
 
 	const optionVisibility = useOptionsVisibility(
-		entityDefinition?.options,
+		visibleOptions,
 		!!entityDefinition?.optionsSupportExpressions,
 		entity?.options
 	)
@@ -133,7 +145,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								<OptionsInputField
 									isLocatedInGrid={!!location}
 									entityType={entity.type}
-									allowInternalFields={entity.connectionId === 'internal'}
+									allowInternalFields={isVirtualConnectionId(entity.connectionId)}
 									controlId={controlId}
 									option={FeedbackInvertOption}
 									value={'isInverted' in entity ? entity.isInverted : undefined}
@@ -158,13 +170,13 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 						/>
 					)}
 
-					{entityDefinition?.options.map((opt, i) => (
+					{visibleOptions?.map((opt, i) => (
 						<MyErrorBoundary key={i}>
 							<OptionsInputField
 								key={i}
 								isLocatedInGrid={!!location}
 								entityType={entity.type}
-								allowInternalFields={entity.connectionId === 'internal'}
+								allowInternalFields={isVirtualConnectionId(entity.connectionId)}
 								controlId={controlId}
 								option={opt}
 								value={(entity.options || {})[opt.id]}
@@ -172,7 +184,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 								visibility={optionVisibility.get(opt.id) ?? true}
 								readonly={readonly}
 								localVariablesStore={localVariablesStore}
-								fieldSupportsExpression={entityDefinition.optionsSupportExpressions && !opt.disableAutoExpression}
+								fieldSupportsExpression={!!entityDefinition?.optionsSupportExpressions && !opt.disableAutoExpression}
 								allRawOptions={entity.options || {}}
 							/>
 						</MyErrorBoundary>
@@ -192,13 +204,14 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 						)}
 
 					{!!entity &&
+						!!entityDefinition &&
 						entity.type === EntityModelType.Feedback &&
 						feedbackListType === FeedbackEntitySubType.StyleOverride &&
-						!entityDefinition?.feedbackDisableStyleOverrides &&
-						!entityDefinition?.feedbackStyleOverridesUnsupported && (
+						!entityDefinition.feedbackDisableStyleOverrides &&
+						!entityDefinition.feedbackStyleOverridesUnsupported && (
 							<LayeredStylesOverrides
 								feedback={entity}
-								feedbackType={entityDefinition?.feedbackType}
+								feedbackType={entityDefinition.feedbackType}
 								service={service}
 								localVariablesStore={localVariablesStore}
 							/>
@@ -232,7 +245,7 @@ const EntityLocalVariableValueField = observer(function EntityLocalVariableValue
 				Current Value
 			</FormLabel>
 			<Grid.Col sm={8}>
-				{entity.connectionId === 'internal' && entity.definitionId === 'user_value' ? (
+				{isInternalConnectionId(entity.connectionId) && entity.definitionId === 'user_value' ? (
 					<VariableInputGroup
 						id={invertFieldId}
 						disabled={!entity.variableName || readonly}

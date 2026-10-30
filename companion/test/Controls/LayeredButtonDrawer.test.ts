@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { elementSchemas } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { LayeredButtonDrawer } from '../../lib/Controls/ControlTypes/Button/LayeredButtonDrawer.js'
 import type { CompositeElementIdString } from '../../lib/Instance/Definitions.js'
@@ -25,7 +26,7 @@ const sleep = async (ms: number): Promise<void> => {
 	await new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-/** A minimal conversion result; each set defaults to empty and `clockSensitive` to false. */
+/** A minimal conversion result; each set defaults to empty and `clockCycleMs` to 0. */
 function conversionResult(
 	opts: {
 		elements?: any[]
@@ -33,7 +34,7 @@ function conversionResult(
 		usedCompositeElements?: Set<string>
 		referencedLocations?: Set<string>
 		cyclicLocations?: Set<string>
-		clockSensitive?: boolean
+		clockCycleMs?: number
 		hiddenVariables?: Set<string>
 		hiddenCompositeElements?: Set<string>
 		hiddenReferencedLocations?: Set<string>
@@ -51,7 +52,7 @@ function conversionResult(
 			hidden: opts.hiddenReferencedLocations ?? new Set<string>(),
 		},
 		cyclicLocations: opts.cyclicLocations ?? new Set<string>(),
-		clockSensitive: opts.clockSensitive ?? false,
+		clockCycleMs: opts.clockCycleMs ?? 0,
 	}
 }
 
@@ -127,12 +128,12 @@ describe('LayeredButtonDrawer', () => {
 			expect(style.drawType).toBe('pageup')
 		})
 
-		it('maps a falsy clockSensitive to undefined and a truthy one through', async () => {
-			convertMock.mockResolvedValueOnce(conversionResult({ clockSensitive: false }))
-			expect((await drawer.getDrawStyle()).clockSensitive).toBeUndefined()
+		it('maps no clock cycle to undefined and passes one through', async () => {
+			convertMock.mockResolvedValueOnce(conversionResult({ clockCycleMs: 0 }))
+			expect((await drawer.getDrawStyle()).clockCycleMs).toBeUndefined()
 
-			convertMock.mockResolvedValueOnce(conversionResult({ clockSensitive: true }))
-			expect((await drawer.getDrawStyle()).clockSensitive).toBe(true)
+			convertMock.mockResolvedValueOnce(conversionResult({ clockCycleMs: 1000 }))
+			expect((await drawer.getDrawStyle()).clockCycleMs).toBe(1000)
 		})
 
 		it('passes referencedLocations through to the style', async () => {
@@ -507,6 +508,11 @@ describe('LayeredButtonDrawer', () => {
 	})
 
 	describe('loadElements / drawElements / visit', () => {
+		function fieldDefault(type: keyof typeof elementSchemas, fieldId: string): unknown {
+			const field = elementSchemas[type].flatMap((section) => section.fields).find((field) => field.id === fieldId)
+			return field && 'default' in field ? field.default : undefined
+		}
+
 		it('exposes loaded elements and normalises them', () => {
 			const clearSpy = vi.spyOn(cacheOf(drawer), 'clear')
 
@@ -516,6 +522,16 @@ describe('LayeredButtonDrawer', () => {
 			expect(drawer.drawElements).toHaveLength(1)
 			// Canvas gains its defaulted showStatusIcons during normalisation
 			expect((drawer.drawElements[0] as any).showStatusIcons).toBeDefined()
+		})
+
+		it('fills in the missing properties of an existing element with the defaults that keep its drawing', () => {
+			drawer.loadElements([{ id: 'b', type: 'box', x: { isExpression: false, value: 10 } } as any])
+
+			const box = drawer.drawElements[0] as any
+			expect(box.x).toEqual({ isExpression: false, value: 10 })
+			// Not the red a new box is created with
+			expect(box.color).toEqual({ isExpression: false, value: fieldDefault('box', 'color') })
+			expect(box.cornerRadius).toEqual({ isExpression: false, value: 0 })
 		})
 
 		it('normalises nested group children', () => {

@@ -70,7 +70,7 @@ setupConnectionLifecycle(trpcWsClient)
 
 export const trpcClient = createTRPCClient<AppRouter>({
 	links: [
-		...(import.meta.env.DEV ? [loggerLink()] : []), // Enable logger in debug
+		...(import.meta.env.DEV && import.meta.env.MODE !== 'test' ? [loggerLink()] : []), // Enable logger in debug, but not in tests
 		wsLink({
 			client: trpcWsClient,
 		}),

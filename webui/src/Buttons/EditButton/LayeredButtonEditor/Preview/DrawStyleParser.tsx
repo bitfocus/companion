@@ -1,8 +1,10 @@
 import isEqual from 'fast-deep-equal'
 import { toJS } from 'mobx'
 import { useObserver } from 'mobx-react-lite'
-import { useEffect, useState } from 'react'
+import { nanoid } from 'nanoid'
+import { useEffect, useRef, useState } from 'react'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
+import type { ElementRasterCanvas } from '@companion-app/shared/Graphics/ElementRaster.js'
 import {
 	resolveButtonStyleProperties,
 	type ResolveButtonStylePropertiesConfig,
@@ -24,12 +26,14 @@ const DRAW_DEBOUNCE_MAX = 100
 const emptySet = new Set<string>()
 
 interface CachedElementValue {
-	unsub: () => void
+	/** Ends the stream */
+	abort: AbortController
 	value: ElementStreamResult | Promise<ElementStreamResult>
 }
 
 interface CachedExpressionValue {
-	unsub: () => void
+	/** Ends the stream */
+	abort: AbortController
 	value: ExecuteExpressionResult | Promise<ExecuteExpressionResult>
 }
 
@@ -38,6 +42,15 @@ class LayeredButtonDrawStyleParser {
 	readonly #location: ControlLocation | undefined
 	readonly #drawConfig: ResolveButtonStylePropertiesConfig
 	readonly #changed: (style: RendererButtonStyle) => void
+
+	/**
+	 * The preview context the element streams render for. Elements the preview can't draw identically itself (eg
+	 * text) are drawn by the backend for its canvas, and streamed as `raster` elements
+	 */
+	readonly #contextId = nanoid()
+	/** Aborted on dispose, which ends the preview context and every stream */
+	readonly #abort = new AbortController()
+	#canvas: ElementRasterCanvas
 
 	readonly #elementValues = new Map<string, CachedElementValue>()
 	readonly #expressionValues = new Map<string, CachedExpressionValue>()
@@ -49,24 +62,48 @@ class LayeredButtonDrawStyleParser {
 		controlId: string,
 		location: ControlLocation | undefined,
 		drawConfig: ResolveButtonStylePropertiesConfig,
-		changed: (style: RendererButtonStyle) => void
+		changed: (style: RendererButtonStyle) => void,
+		canvas: ElementRasterCanvas
 	) {
 		this.#controlId = controlId
 		this.#location = location
 		this.#drawConfig = drawConfig
 		this.#changed = changed
+		this.#canvas = canvas
+
+		trpcClient.preview.elementStream.previewContext.subscribe(
+			{ contextId: this.#contextId, controlId, canvas },
+			{
+				// The context has opened, with the canvas it was subscribed with (also when it reopens after a reconnect).
+				// A change since then may have arrived before it opened, so was dropped, so send it again
+				onData: () => {
+					if (!this.#disposed && !isEqual(this.#canvas, canvas)) this.#sendCanvas()
+				},
+				onError: (error) => {
+					console.error('Subscription to preview context errored:', error)
+				},
+				signal: this.#abort.signal,
+			}
+		)
+	}
+
+	/** Change the canvas the elements are drawn for, which re-renders those drawn by the backend */
+	setCanvas(canvas: ElementRasterCanvas) {
+		if (this.#disposed || isEqual(this.#canvas, canvas)) return
+		this.#canvas = canvas
+
+		this.#sendCanvas()
+	}
+
+	#sendCanvas() {
+		trpcClient.preview.elementStream.setPreviewCanvas
+			.mutate({ contextId: this.#contextId, canvas: this.#canvas })
+			.catch((e) => console.error('Failed to set preview canvas', e))
 	}
 
 	dispose() {
 		this.#disposed = true
-
-		// Unsubscribe from all streams
-		for (const sub of this.#elementValues.values()) {
-			sub.unsub()
-		}
-		for (const sub of this.#expressionValues.values()) {
-			sub.unsub()
-		}
+		this.#abort.abort()
 	}
 
 	updateStyle(style: SomeButtonGraphicsElement[]) {
@@ -137,9 +174,10 @@ class LayeredButtonDrawStyleParser {
 							this.#recalculateStyle.trigger()
 						}
 
-						const sub = trpcClient.preview.elementStream.watchElement.subscribe(
+						const abort = new AbortController()
+						trpcClient.preview.elementStream.watchElement.subscribe(
 							{
-								controlId: this.#controlId,
+								contextId: this.#contextId,
 								elementId,
 							},
 							{
@@ -148,17 +186,13 @@ class LayeredButtonDrawStyleParser {
 									console.error('Subscription to element errored:', error)
 									// TODO: handle error case
 								},
+								signal: AbortSignal.any([this.#abort.signal, abort.signal]),
 							}
 						)
 
-						if (this.#disposed) {
-							sub.unsubscribe()
-							return
-						}
-
 						// Track the new value, to avoid duplication
 						this.#elementValues.set(elementId, {
-							unsub: () => sub.unsubscribe(),
+							abort,
 							value: firstRunPromise.promise,
 						})
 
@@ -182,7 +216,7 @@ class LayeredButtonDrawStyleParser {
 						ok: false,
 						error: 'Disposed',
 						variableIds: emptySet,
-						clockSensitive: false,
+						clockCycleMs: 0,
 					}
 
 				// Mark it as active, so we don't unsubscribe
@@ -215,7 +249,8 @@ class LayeredButtonDrawStyleParser {
 					this.#recalculateStyle.trigger()
 				}
 
-				const sub = trpcClient.preview.expressionStream.watchExpression.subscribe(args, {
+				const abort = new AbortController()
+				trpcClient.preview.expressionStream.watchExpression.subscribe(args, {
 					onData: (result) => updateValue(result as ExecuteExpressionResult), // TODO - fix this type
 					onError: (error) => {
 						console.error('Subscription to expression errored:', error)
@@ -223,14 +258,15 @@ class LayeredButtonDrawStyleParser {
 							ok: false,
 							error: 'Subscription failed',
 							variableIds: emptySet,
-							clockSensitive: false,
+							clockCycleMs: 0,
 						})
 					},
+					signal: AbortSignal.any([this.#abort.signal, abort.signal]),
 				})
 
 				// Track the new value, to avoid duplication
 				this.#expressionValues.set(streamId, {
-					unsub: () => sub.unsubscribe(),
+					abort,
 					value: firstRunPromise.promise,
 				})
 
@@ -286,13 +322,13 @@ class LayeredButtonDrawStyleParser {
 			// Unsubscribe from any streams that are no longer used
 			for (const [elementId, sub] of this.#elementValues) {
 				if (!referencedElements.has(elementId)) {
-					sub.unsub()
+					sub.abort.abort()
 					this.#elementValues.delete(elementId)
 				}
 			}
 			for (const [expression, sub] of this.#expressionValues) {
 				if (!referencedExpressions.has(expression)) {
-					sub.unsub()
+					sub.abort.abort()
 					this.#expressionValues.delete(expression)
 				}
 			}
@@ -328,23 +364,27 @@ class LayeredButtonDrawStyleParser {
  * This subscribes to the necessary element streams on the backend, to update as the button should be redrawn
  * @param controlId ControlId of the button to draw, if this is a control
  * @param styleStore The store containing the style to be drawn
+ * @param canvas The canvas the button is drawn on, for the backend to draw the elements the preview can't for
  * @returns The parsed draw style, or null if not yet ready
  */
 export function useLayeredButtonDrawStyleParser(
 	controlId: string,
 	location: ControlLocation | undefined,
 	drawConfig: ResolveButtonStylePropertiesConfig,
-	styleStore: LayeredStyleStore
+	styleStore: LayeredStyleStore,
+	canvas: ElementRasterCanvas
 ): RendererButtonStyle | null {
 	const [drawStyle, setDrawStyle] = useState<RendererButtonStyle | null>(null)
 	const [parser, setParser] = useState<LayeredButtonDrawStyleParser | null>(null)
+	const canvasRef = useRef(canvas)
 
 	// Reset the draw style when the store changes
 	useEffect(() => setDrawStyle(null), [styleStore])
 
 	// This is weird, but we need the cleanup function, so can't use useMemo
 	useEffect(() => {
-		const parser = new LayeredButtonDrawStyleParser(controlId, location, drawConfig, setDrawStyle)
+		// Created with the canvas at the time, then kept up to date by the effect below rather than recreated
+		const parser = new LayeredButtonDrawStyleParser(controlId, location, drawConfig, setDrawStyle, canvasRef.current)
 		parser.updateStyle(toJS(styleStore.elements))
 
 		setParser(parser)
@@ -354,6 +394,11 @@ export function useLayeredButtonDrawStyleParser(
 			parser.dispose()
 		}
 	}, [controlId, location, styleStore, drawConfig, setDrawStyle])
+
+	useEffect(() => {
+		canvasRef.current = canvas
+		parser?.setCanvas(canvas)
+	}, [parser, canvas])
 
 	// Trigger the update whenever the style changes
 	useObserver(() => parser?.updateStyle(toJS(styleStore.elements)))

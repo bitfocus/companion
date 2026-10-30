@@ -1,4 +1,4 @@
-import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import type { ObjectPatch } from '../Diff.js'
 import type { ModuleInstanceType } from './Instance.js'
 
 export interface ModuleDisplayInfo {
@@ -60,7 +60,7 @@ export interface ModuleInfoUpdateUpdateOp {
 	type: 'update'
 	id: ModuleInfoUpdateId
 
-	patch: JsonPatchOperation<ClientModuleInfo>[]
+	patch: ObjectPatch<ClientModuleInfo>
 }
 
 /**

@@ -15,28 +15,29 @@ import { stringify as csvStringify } from 'csv-stringify/sync'
 import type express from 'express'
 import type { RequestHandler } from 'express'
 import fs from 'fs-extra'
+import { nanoid } from 'nanoid'
 import type { ParsedQs } from 'qs'
 import yazl from 'yazl'
-import { ZodError } from 'zod'
 import { CreatePageControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
+import {
+	EXPORT_VERSION,
+	type ExportFull,
+	type ExportInstances,
+	type ExportPageContent,
+	type ExportPageModel,
+	type ExportTriggerContent,
+	type ExportTriggersList,
+	type SomeExport,
+} from '@companion-app/shared/Model/Export/Latest.js'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
-import type {
-	ExportFullv6,
-	ExportInstancesv6,
-	ExportPageContentv6,
-	ExportPageModelv6,
-	ExportTriggerContentv6,
-	ExportTriggersListv6,
-	SomeExportv6,
-} from '@companion-app/shared/Model/ExportModel.js'
 import type { ImageLibraryExportData } from '@companion-app/shared/Model/ImageLibraryModel.js'
-import { zodClientExportSelection, type ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
+import type { ClientExportRequest, ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
-import { unflattenQueryParams } from '@companion-app/shared/Util/QueryParamUtil.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { ControlTrigger } from '../Controls/ControlTypes/Triggers/Trigger.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -49,11 +50,24 @@ import { getTimestamp } from '../Resources/Util.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import { compileUpdatePayload } from '../UI/UpdatePayload.js'
 import type { VariablesController } from '../Variables/Controller.js'
-import { FILE_VERSION } from './Constants.js'
 import { formatAttachmentFilename, prepareExport, streamExport, type PreparedExport } from './Util.js'
+
+/** How long a prepared export can wait to be downloaded */
+const PENDING_DOWNLOAD_TIMEOUT = 60_000
+
+interface PendingDownload {
+	request: ClientExportRequest
+	clientKey: string
+	timeout: NodeJS.Timeout
+}
 
 export class ExportController {
 	readonly #logger = LogController.createLogger('ImportExport/Export')
+
+	/** Prepared exports waiting to be downloaded, by token */
+	readonly #pendingDownloads = new Map<string, PendingDownload>()
+	/** The token of each client's pending download, by client ip */
+	readonly #pendingDownloadTokens = new Map<string, string>()
 
 	readonly #appInfo: AppInfo
 	readonly #controlsController: ControlsController
@@ -85,140 +99,162 @@ export class ExportController {
 		this.#variablesController = variablesController
 
 		// Setup the API routes
-		apiRouter.get('/export/triggers/all', this.#exportTriggerListHandler)
-		apiRouter.get('/export/triggers/single/:id', this.#exportTriggerSingleHandler)
-		apiRouter.get('/export/page/:page', this.#exportPageSingleHandler)
-		apiRouter.get('/export/custom', this.#exportCustomHandler)
+		apiRouter.get('/export/download/:token', this.#exportDownloadHandler)
 		apiRouter.get('/export/full', this.#exportFullHandler)
 		apiRouter.get('/export/log', this.#exportLogHandler)
 		apiRouter.get('/export/support', this.#exportSupportBundleHandler)
 	}
 
-	#exportTriggerListHandler: RequestHandler = async (req, res, next) => {
-		const triggerControls = this.#controlsController.getAllTriggers()
-		const includeSecrets = req.query.includeSecrets !== 'false'
-		const exp = this.#generateTriggersExport(triggerControls, {
-			includeCollections: true,
-			includeSecrets: includeSecrets,
-		})
-
-		const filename = this.#generateFilename(String(req.query.filename as any), 'trigger_list', 'companionconfig')
-
-		await downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
-	}
-
-	#exportTriggerSingleHandler: RequestHandler = async (req, res, next) => {
-		const control = this.#controlsController.getTrigger(req.params.id)
-		if (control) {
-			const exp = this.#generateTriggersExport([control], {
-				includeCollections: false,
-				includeSecrets: false,
-			})
-
-			const triggerName = control.options.name.toLowerCase().replace(/\W/g, '')
-			const filename = this.#generateFilename(
-				String(req.query.filename as any),
-				`trigger_${triggerName}`,
-				'companionconfig'
-			)
-
-			await downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
-		} else {
-			next()
+	/**
+	 * Store an export request from the UI, returning a one-time token for downloading it from
+	 * `/export/download/:token`. Each client may only have one pending download, replacing any earlier one.
+	 */
+	prepareDownload(request: ClientExportRequest, clientIp: string | undefined): string {
+		// Check the target exists now, so the UI can report it rather than the download failing
+		if (request.target.type === 'page' && !this.#pagesStore.getPageInfo(request.target.pageNumber, true)) {
+			throw new Error(`Page "${request.target.pageNumber}" not found`)
+		} else if (request.target.type === 'trigger' && !this.#controlsController.getTrigger(request.target.triggerId)) {
+			throw new Error(`Trigger "${request.target.triggerId}" not found`)
 		}
+
+		const clientKey = clientIp ?? 'unknown'
+		const previousToken = this.#pendingDownloadTokens.get(clientKey)
+		if (previousToken) this.#takePendingDownload(previousToken)
+
+		const token = nanoid()
+		const timeout = setTimeout(() => this.#takePendingDownload(token), PENDING_DOWNLOAD_TIMEOUT)
+		timeout.unref()
+
+		this.#pendingDownloads.set(token, { request, clientKey, timeout })
+		this.#pendingDownloadTokens.set(clientKey, token)
+
+		return token
 	}
 
-	#exportPageSingleHandler: RequestHandler = async (req, res, next) => {
-		const page = Number(req.params.page)
-		if (isNaN(page)) {
-			next()
-		} else {
-			const pageInfo = this.#pagesStore.getPageInfo(page, true)
-			if (!pageInfo) throw new Error(`Page "${page}" not found!`)
+	#takePendingDownload(token: string): ClientExportRequest | undefined {
+		const pending = this.#pendingDownloads.get(token)
+		if (!pending) return undefined
 
-			const referencedConnectionIds = new Set<string>()
-			const referencedConnectionLabels = new Set<string>()
-			const referencedVariables = new Set<string>()
+		clearTimeout(pending.timeout)
+		this.#pendingDownloads.delete(token)
+		if (this.#pendingDownloadTokens.get(pending.clientKey) === token)
+			this.#pendingDownloadTokens.delete(pending.clientKey)
 
-			const pageExport = this.#generatePageExportInfo(
-				pageInfo,
-				referencedConnectionIds,
-				referencedConnectionLabels,
-				referencedVariables
-			)
+		return pending.request
+	}
 
-			// Collect referenced connections and  collections
-			const includeSecrets = req.query.includeSecrets !== 'false'
-			const connectionsExport = this.#generateReferencedConnectionConfigs(
-				referencedConnectionIds,
-				referencedConnectionLabels,
-				{
-					minimalExport: false,
-					includeSecrets: includeSecrets,
-				}
-			)
-			const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(connectionsExport))
-			const filteredConnectionCollections = this.#filterReferencedCollections(
-				this.#instancesController.connectionCollections.collectionData,
-				referencedConnectionCollectionIds
-			)
-
-			// Collect referenced image library items and collections
-			const referencedImages = this.#collectReferencedImages(referencedVariables)
-			const referencedImageLibraryCollectionIds = this.#collectReferencedCollectionIds(
-				referencedImages.map((img) => img.info)
-			)
-			const filteredImageLibraryCollections = this.#filterReferencedCollections(
-				this.#graphicsController.imageLibrary.exportCollections(),
-				referencedImageLibraryCollectionIds
-			)
-
-			// Export file protocol version
-			const exp: ExportPageModelv6 = {
-				version: FILE_VERSION,
-				type: 'page',
-				companionBuild: this.#appInfo.appBuild,
-				page: pageExport,
-				instances: connectionsExport,
-				connectionCollections: filteredConnectionCollections,
-				oldPageNumber: page,
-				imageLibrary: referencedImages,
-				imageLibraryCollections: filteredImageLibraryCollections,
-			}
-
-			const filename = this.#generateFilename(String(req.query.filename as any), `page${page}`, 'companionconfig')
-
-			await downloadBlob(this.#logger, res, next, exp, filename, String(req.query.format as any))
+	#exportDownloadHandler: RequestHandler = async (req, res, next) => {
+		const request = this.#takePendingDownload(String(req.params.token))
+		if (!request) {
+			res.status(404).send('This export has expired, please try again')
+			return
 		}
-	}
 
-	#exportCustomHandler: RequestHandler = async (req, res, next) => {
-		try {
-			// Convert flat dot-notation query params back to nested object
-			const unflattened = unflattenQueryParams(req.query)
+		const { target, output } = request
+		const notes = output.notes.trim() || undefined
 
-			// Validate with Zod schema - it handles type coercion!
-			const config = zodClientExportSelection.parse(unflattened)
-
-			const exp = this.generateCustomExport(config)
-
-			const filename = this.#generateFilename(config.filename ?? '', 'custom_config', 'companionconfig')
-
-			await downloadBlob(this.#logger, res, next, exp, filename, config.format)
-		} catch (error) {
-			if (error instanceof ZodError) {
-				res.status(400).json({
-					error: 'Invalid query parameters',
-					details: error.issues,
+		let exp: SomeExport
+		let exportType: string
+		switch (target.type) {
+			case 'custom':
+				exp = this.generateCustomExport(target.selection, notes)
+				exportType = 'custom_config'
+				break
+			case 'page':
+				exp = this.#generatePageExport(target.pageNumber, target.includeSecrets, notes)
+				exportType = `page${target.pageNumber}`
+				break
+			case 'triggers':
+				exp = this.#generateTriggersExport(this.#controlsController.getAllTriggers(), {
+					includeCollections: true,
+					includeSecrets: target.includeSecrets,
+					notes,
 				})
-			} else {
-				next(error)
+				exportType = 'trigger_list'
+				break
+			case 'trigger': {
+				const control = this.#controlsController.getTrigger(target.triggerId)
+				if (!control) {
+					res.status(404).send(`Trigger "${target.triggerId}" not found`)
+					return
+				}
+
+				exp = this.#generateTriggersExport([control], {
+					includeCollections: false,
+					includeSecrets: target.includeSecrets,
+					notes,
+				})
+				exportType = `trigger_${control.options.name.toLowerCase().replace(/\W/g, '')}`
+				break
 			}
+			default:
+				assertNever(target)
+				next()
+				return
+		}
+
+		const filename = this.#generateFilename(output.filename, exportType, 'companionconfig')
+
+		await downloadBlob(this.#logger, res, next, exp, filename, output.format)
+	}
+
+	#generatePageExport(pageNumber: number, includeSecrets: boolean, notes: string | undefined): ExportPageModel {
+		const pageInfo = this.#pagesStore.getPageInfo(pageNumber, true)
+		if (!pageInfo) throw new Error(`Page "${pageNumber}" not found!`)
+
+		const referencedConnectionIds = new Set<string>()
+		const referencedConnectionLabels = new Set<string>()
+		const referencedVariables = new Set<string>()
+
+		const pageExport = this.#generatePageExportInfo(
+			pageInfo,
+			referencedConnectionIds,
+			referencedConnectionLabels,
+			referencedVariables
+		)
+
+		// Collect referenced connections and  collections
+		const connectionsExport = this.#generateReferencedConnectionConfigs(
+			referencedConnectionIds,
+			referencedConnectionLabels,
+			{
+				minimalExport: false,
+				includeSecrets: includeSecrets,
+			}
+		)
+		const referencedConnectionCollectionIds = this.#collectReferencedCollectionIds(Object.values(connectionsExport))
+		const filteredConnectionCollections = this.#filterReferencedCollections(
+			this.#instancesController.connectionCollections.collectionData,
+			referencedConnectionCollectionIds
+		)
+
+		// Collect referenced image library items and collections
+		const referencedImages = this.#collectReferencedImages(referencedVariables)
+		const referencedImageLibraryCollectionIds = this.#collectReferencedCollectionIds(
+			referencedImages.map((img) => img.info)
+		)
+		const filteredImageLibraryCollections = this.#filterReferencedCollections(
+			this.#graphicsController.imageLibrary.exportCollections(),
+			referencedImageLibraryCollectionIds
+		)
+
+		// Export file protocol version
+		return {
+			version: EXPORT_VERSION,
+			type: 'page',
+			companionBuild: this.#appInfo.appBuild,
+			notes,
+			page: pageExport,
+			instances: connectionsExport,
+			connectionCollections: filteredConnectionCollections,
+			oldPageNumber: pageNumber,
+			imageLibrary: referencedImages,
+			imageLibraryCollections: filteredImageLibraryCollections,
 		}
 	}
 
 	#exportFullHandler: RequestHandler = async (req, res, next) => {
-		const exp = this.generateCustomExport(null)
+		const exp = this.generateCustomExport(null, undefined)
 
 		const filename = this.#generateFilename(
 			String(this.#userConfigController.getKey('default_export_filename')),
@@ -338,9 +374,10 @@ export class ExportController {
 		options: {
 			includeCollections: boolean
 			includeSecrets: boolean
+			notes: string | undefined
 		}
-	): ExportTriggersListv6 {
-		const triggersExport: ExportTriggerContentv6 = {}
+	): ExportTriggersList {
+		const triggersExport: Record<string, ExportTriggerContent> = {}
 		const referencedConnectionIds = new Set<string>()
 		const referencedConnectionLabels = new Set<string>()
 		const referencedVariables = new Set<string>()
@@ -397,10 +434,11 @@ export class ExportController {
 			referencedImageLibraryCollectionIds
 		)
 
-		const result: ExportTriggersListv6 = {
+		const result: ExportTriggersList = {
 			type: 'trigger_list',
-			version: FILE_VERSION,
+			version: EXPORT_VERSION,
 			companionBuild: this.#appInfo.appBuild,
+			notes: options.notes,
 			triggers: triggersExport,
 			triggerCollections: triggerCollections,
 			instances: connectionsExport,
@@ -458,29 +496,31 @@ export class ExportController {
 			minimalExport: boolean
 			includeSecrets: boolean
 		}
-	): ExportInstancesv6 {
-		const instancesExport: ExportInstancesv6 = {}
+	): ExportInstances {
+		const instancesExport: ExportInstances = {}
 
 		referencedConnectionIds.delete('internal') // Ignore the internal module
 		for (const connectionId of referencedConnectionIds) {
-			instancesExport[connectionId] = this.#instancesController.exportConnection(
+			const exported = this.#instancesController.exportConnection(
 				connectionId,
 				options.minimalExport,
 				true,
 				options.includeSecrets
 			)
+			if (exported) instancesExport[connectionId] = exported
 		}
 
 		referencedConnectionLabels.delete('internal') // Ignore the internal module
 		for (const label of referencedConnectionLabels) {
 			const connectionId = this.#instancesController.getIdForLabel(ModuleInstanceType.Connection, label)
 			if (connectionId) {
-				instancesExport[connectionId] = this.#instancesController.exportConnection(
+				const exported = this.#instancesController.exportConnection(
 					connectionId,
 					options.minimalExport,
 					true,
 					options.includeSecrets
 				)
+				if (exported) instancesExport[connectionId] = exported
 			}
 		}
 
@@ -492,8 +532,8 @@ export class ExportController {
 		referencedConnectionIds: Set<string>,
 		referencedConnectionLabels: Set<string>,
 		referencedVariables: Set<string>
-	): ExportPageContentv6 {
-		const pageExport: ExportPageContentv6 = {
+	): ExportPageContent {
+		const pageExport: ExportPageContent = {
 			id: pageInfo.id,
 			name: pageInfo.name,
 			controls: {},
@@ -533,12 +573,13 @@ export class ExportController {
 		return pageExport
 	}
 
-	generateCustomExport(config: ClientExportSelection | null): ExportFullv6 {
+	generateCustomExport(config: ClientExportSelection | null, notes: string | undefined): ExportFull {
 		// Export file protocol version
-		const exp: ExportFullv6 = {
-			version: FILE_VERSION,
+		const exp: ExportFull = {
+			version: EXPORT_VERSION,
 			type: 'full',
 			companionBuild: this.#appInfo.appBuild,
+			notes,
 		}
 
 		const referencedConnectionIds = new Set<string>()
@@ -560,7 +601,7 @@ export class ExportController {
 		}
 
 		if (!config || config.triggers) {
-			const triggersExport: ExportTriggerContentv6 = {}
+			const triggersExport: Record<string, ExportTriggerContent> = {}
 			const triggerControls = this.#controlsController.getAllTriggers()
 			for (const control of triggerControls) {
 				const parsedId = ParseControlId(control.controlId)
@@ -724,7 +765,7 @@ async function downloadBlob(
 	logger: Logger,
 	res: express.Response,
 	next: express.NextFunction,
-	data: SomeExportv6,
+	data: SomeExport,
 	filename: string,
 	formatStr: string
 ): Promise<void> {

@@ -114,6 +114,11 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	layeredStyleGetElementById(id: string): SomeButtonGraphicsElement | undefined
 
 	/**
+	 * Get every element of the layered style, as a tree
+	 */
+	layeredStyleGetElements(): readonly SomeButtonGraphicsElement[]
+
+	/**
 	 * Get the selected element IDs for each usage in the layered style
 	 */
 	layeredStyleSelectedElementIds(): { [usage in ButtonGraphicsElementUsage]: string | undefined }
@@ -137,12 +142,6 @@ export interface ControlWithoutEntities extends ControlBase<any> {
 
 export interface ControlWithActions extends ControlBase<any> {
 	readonly supportsActions: true
-
-	/**
-	 * Abort in progress action runs for a control
-	 * @param skip_up Mark button as released
-	 */
-	abortDelayedActions(skip_up: boolean, exceptSignal: AbortSignal | null): void
 
 	/**
 	 * Abort a single action run for a control

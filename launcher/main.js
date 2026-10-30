@@ -181,12 +181,8 @@ if (!lock) {
 
 	let companionRootPath = process.resourcesPath
 	if (!app.isPackaged) {
-		// // Try the dist folder above
-		// companionRootPath = path.join(__dirname, '../dist')
-		// if (!fs.pathExistsSync(path.join(companionRootPath, 'BUILD'))) {
-		// Finally, use the unbuilt parent
-		companionRootPath = fileURLToPath(new URL('../companion/dist', import.meta.url))
-		// }
+		// Run the backend from its TypeScript source, like `yarn dev`
+		companionRootPath = fileURLToPath(new URL('../companion', import.meta.url))
 	}
 
 	/** @type {import('@companion-app/shared/Model/LauncherAppInfo.js').LauncherAppInfo} */
@@ -968,7 +964,13 @@ if (!lock) {
 			let crashTimeout = null
 
 			// Find the node binary
-			const nodejsBasePath = path.join(companionRootPath, 'node-runtimes', 'node26')
+			const nodejsBasePath = app.isPackaged
+				? path.join(companionRootPath, 'node-runtimes', 'node26')
+				: path.join(
+						companionRootPath,
+						'../.cache/node-runtime',
+						`${process.platform}-${process.arch}-${fs.readJsonSync(path.join(companionRootPath, '../assets/nodejs-versions.json')).node26}`
+					)
 			const nodeBinPath = [
 				path.join(nodejsBasePath, 'bin/node'),
 				path.join(nodejsBasePath, 'node'),
@@ -1007,7 +1009,7 @@ if (!lock) {
 						// Build a new command string for each start
 						nodeBin,
 						disableSystemCa ? undefined : '--use-system-ca',
-						path.join(companionRootPath, 'main.js'),
+						...(app.isPackaged ? [path.join(companionRootPath, 'main.js')] : ['--import', 'tsx', 'lib/main.ts']),
 						`--machine-id=${machineId}`,
 						`--config-dir=${configDir}`,
 						`--admin-port=${uiConfig.get('http_port')}`,
@@ -1032,6 +1034,10 @@ if (!lock) {
 						...process.env,
 						COMPANION_IPC_PARENT: 1,
 						COMPANION_SKIP_SYSTEM_CA: disableSystemCa ? '1' : undefined,
+						// Resolve @companion-app/shared to its .ts sources, also in child node processes
+						NODE_OPTIONS: app.isPackaged
+							? process.env.NODE_OPTIONS
+							: `${process.env.NODE_OPTIONS ?? ''} --conditions=companion:source`.trim(),
 					},
 					maxRestarts: -1,
 					sleep: 1000,

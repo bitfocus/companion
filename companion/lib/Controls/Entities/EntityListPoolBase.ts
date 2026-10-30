@@ -195,6 +195,8 @@ export abstract class ControlEntityListPoolBase {
 			this.reportChange({
 				redraw: true,
 				noSave: true,
+				// Cleared values drop any style overrides they were applying
+				invalidateAllElements: true,
 			})
 	}
 

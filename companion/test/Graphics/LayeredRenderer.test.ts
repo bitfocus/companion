@@ -12,6 +12,9 @@ import type {
 	ButtonGraphicsGroupDrawElement,
 	ButtonGraphicsImageDrawElement,
 	ButtonGraphicsLineDrawElement,
+	ButtonGraphicsRasterDrawElement,
+	ButtonGraphicsReferenceDrawElement,
+	ButtonGraphicsRemoteDrawElement,
 	ButtonGraphicsTextDrawElement,
 	SomeButtonGraphicsDrawElement,
 } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -293,6 +296,135 @@ describe('GraphicsLayeredButtonRenderer', () => {
 
 	describe('element types', () => {
 		const drawOpts = { decoration: ButtonGraphicsDecorationType.Border, show_status_icons: false } as const
+
+		test('remote element draws its fetched image, fitted', async () => {
+			// A red 2:1 image, drawn into a squarer button
+			const buffer = new SharedArrayBuffer(4 * 2 * 4)
+			new Uint8Array(buffer).set(Array.from({ length: 8 }, () => [255, 0, 0, 255]).flat())
+			const remote: ButtonGraphicsRemoteDrawElement = {
+				...ELEMENT_BASE,
+				id: 'remote',
+				type: 'remote',
+				x: 0,
+				y: 0,
+				width: 1,
+				height: 1,
+				source: 'control1',
+				revision: 'r1',
+			}
+
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					...drawOpts,
+					elements: [remote],
+					decodedImages: new Map([['remote', { buffer, width: 4, height: 2, frameIndex: 0 }]]),
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+
+			// Nothing fetched for it, so nothing drawn
+			const empty = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				empty,
+				makeStyle({ ...drawOpts, elements: [remote] }),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			const blank = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(blank, makeStyle({ ...drawOpts }), new Set(), null, DEFAULT_PADDING)
+			expect(empty.buffer()).toEqual(blank.buffer())
+		})
+
+		test('remote element scaled much smaller is averaged, rather than aliased', async () => {
+			// 1px black and white stripes, drawn about 8.5 times smaller
+			const size = 512
+			const buffer = new SharedArrayBuffer(size * size * 4)
+			const pixels = new Uint8Array(buffer)
+			for (let i = 0; i < size * size; i++) pixels.set(i % 2 ? [255, 255, 255, 255] : [0, 0, 0, 255], i * 4)
+			const remote: ButtonGraphicsRemoteDrawElement = {
+				...ELEMENT_BASE,
+				id: 'remote',
+				type: 'remote',
+				x: 0,
+				y: 0,
+				width: 1,
+				height: 1,
+				source: 'control1',
+				revision: 'r1',
+			}
+
+			const img = Image.create(60, 60, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					decoration: ButtonGraphicsDecorationType.None,
+					show_status_icons: false,
+					elements: [remote],
+					decodedImages: new Map([['remote', { buffer, width: size, height: size, frameIndex: 0 }]]),
+				}),
+				new Set(),
+				null,
+				{ x: 0, y: 0 }
+			)
+
+			// Away from the edges, every pixel is close to grey
+			const out = img.buffer()
+			const greys: number[] = []
+			for (let y = 8; y < 52; y++) for (let x = 8; x < 52; x++) greys.push(out[(y * 60 + x) * 4])
+			expect(Math.min(...greys)).toBeGreaterThan(96)
+			expect(Math.max(...greys)).toBeLessThan(160)
+		})
+
+		test('remote element at its own size in an oversampled canvas is copied exactly, so resolves to its pixels', async () => {
+			// A 1px checkerboard of the button's own size, drawn 4 times oversampled
+			const size = 16
+			const buffer = new SharedArrayBuffer(size * size * 4)
+			const pixels = new Uint8Array(buffer)
+			for (let y = 0; y < size; y++)
+				for (let x = 0; x < size; x++)
+					pixels.set((x + y) % 2 ? [255, 255, 255, 255] : [0, 0, 0, 255], (y * size + x) * 4)
+			const remote: ButtonGraphicsRemoteDrawElement = {
+				...ELEMENT_BASE,
+				id: 'remote',
+				type: 'remote',
+				x: 0,
+				y: 0,
+				width: 1,
+				height: 1,
+				source: 'control1',
+				revision: 'r1',
+			}
+
+			const img = Image.create(size, size, 4, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					decoration: ButtonGraphicsDecorationType.None,
+					show_status_icons: false,
+					elements: [remote],
+					decodedImages: new Map([['remote', { buffer, width: size, height: size, frameIndex: 0 }]]),
+				}),
+				new Set(),
+				null,
+				{ x: 0, y: 0 }
+			)
+
+			// Each pixel of it is a whole 4x4 block of the canvas, which the oversampling averages back to that pixel
+			const out = img.buffer()
+			const canvasWidth = size * 4
+			for (let y = 0; y < canvasWidth; y++) {
+				for (let x = 0; x < canvasWidth; x++) {
+					const source = pixels[(Math.floor(y / 4) * size + Math.floor(x / 4)) * 4]
+					expect(out[(y * canvasWidth + x) * 4]).toBe(source)
+				}
+			}
+		})
 
 		test('text element', async () => {
 			const img = Image.create(72, 58, 1, null)
@@ -1910,6 +2042,282 @@ describe('GraphicsLayeredButtonRenderer', () => {
 			)
 
 			expect(geometry.map((entry) => entry.id)).toEqual(['hidden', 'off', 'shown'])
+		})
+	})
+
+	describe('raster element', () => {
+		/** A raster of a 16x16 green square, at the top left of the canvas */
+		function makeRasterElement(
+			overrides: Partial<ButtonGraphicsRasterDrawElement> = {}
+		): ButtonGraphicsRasterDrawElement {
+			return {
+				...ELEMENT_BASE,
+				id: 'raster-1',
+				type: 'raster',
+				x: 0.25,
+				y: 0.25,
+				width: 0.5,
+				height: 0.5,
+				rotation: 0,
+				image: makeDataUrl(16, 16, '#00ff00'),
+				renderedAt: { bounds: { x: 0, y: 0, width: 1, height: 1 }, rotations: [] },
+				...overrides,
+			}
+		}
+
+		function pixelAt(img: Image, x: number, y: number): number[] {
+			return Array.from(img.canvasImage.getContext('2d').getImageData(x, y, 1, 1).data)
+		}
+
+		/**
+		 * Draw a raster, as rendered when its element was placed by `renderedWithin`
+		 * @param within The elements of the button now, given the raster to place
+		 */
+		async function drawRaster(
+			within: (raster: ButtonGraphicsRasterDrawElement) => SomeButtonGraphicsDrawElement[],
+			renderedWithin: (raster: ButtonGraphicsRasterDrawElement) => SomeButtonGraphicsDrawElement[] = within,
+			overrides: Partial<ButtonGraphicsRasterDrawElement> = {},
+			hidden: ReadonlySet<string> = new Set()
+		): Promise<{ img: Image; geometry: ElementGeometry[] }> {
+			const makeStyleOf = (elements: SomeButtonGraphicsDrawElement[]) =>
+				makeStyle({ decoration: ButtonGraphicsDecorationType.None, elements })
+
+			// Where the element was placed when its raster was rendered
+			const renderedGeometry = await GraphicsLayeredButtonRenderer.draw(
+				Image.create(72, 58, 1, null),
+				makeStyleOf(renderedWithin(makeRasterElement(overrides))),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			const renderedAt = renderedGeometry.find((entry) => entry.id === 'raster-1')!
+
+			const img = Image.create(72, 58, 1, null)
+			const geometry = await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyleOf(within(makeRasterElement({ ...overrides, renderedAt }))),
+				hidden,
+				null,
+				DEFAULT_PADDING
+			)
+			return { img, geometry }
+		}
+
+		test('is drawn 1:1 at the origin when still where it was rendered, whatever its transforms', async () => {
+			const { img } = await drawRaster((raster) => [makeGroupElement([raster], { rotation: 45, x: 0.5 })], undefined, {
+				rotation: 30,
+			})
+
+			expect(pixelAt(img, 8, 8)).toEqual([0, 255, 0, 255])
+			expect(pixelAt(img, 15, 15)).toEqual([0, 255, 0, 255])
+			// Still within the clip to the button
+			expect(pixelAt(img, 1, 1)[3]).toBe(0)
+			expect(pixelAt(img, 16, 16)[3]).toBe(0)
+		})
+
+		test('follows its element when it has moved since it was rendered', async () => {
+			const { img } = await drawRaster(
+				(raster) => [makeGroupElement([raster], { x: 0.25 })],
+				(raster) => [makeGroupElement([raster], { x: 0 })]
+			)
+
+			// A quarter of the 68px content area to the right
+			expect(pixelAt(img, 8, 8)[3]).toBe(0)
+			expect(pixelAt(img, 8 + 17, 8)).toEqual([0, 255, 0, 255])
+			expect(pixelAt(img, 15 + 17, 15)).toEqual([0, 255, 0, 255])
+			expect(pixelAt(img, 16 + 17, 8)[3]).toBe(0)
+		})
+
+		test('follows its element when a parent has rotated since it was rendered', async () => {
+			const { img } = await drawRaster(
+				(raster) => [makeGroupElement([raster], { rotation: 90 })],
+				(raster) => [makeGroupElement([raster], { rotation: 0 })]
+			)
+
+			// Rotated a quarter turn about the centre of the group, which fills the content area (2, 2, 68, 54)
+			expect(pixelAt(img, 8, 8)[3]).toBe(0)
+			const [x, y] = [36 - (14.5 - 29), 29 + (14.5 - 36)]
+			expect(pixelAt(img, Math.floor(x), Math.floor(y))).toEqual([0, 255, 0, 255])
+		})
+
+		test('is drawn with its opacity, and that of its parents', async () => {
+			const { img } = await drawRaster((raster) => [makeGroupElement([raster], { opacity: 0.5 })], undefined, {
+				opacity: 0.5,
+			})
+
+			expect(pixelAt(img, 8, 8)[3]).toBeCloseTo(64, -1)
+		})
+
+		test('is not drawn when hidden or disabled', async () => {
+			const hidden = await drawRaster((raster) => [raster], undefined, {}, new Set(['raster-1']))
+			expect(pixelAt(hidden.img, 8, 8)[3]).toBe(0)
+
+			const disabled = await drawRaster((raster) => [raster], undefined, { enabled: false })
+			expect(pixelAt(disabled.img, 8, 8)[3]).toBe(0)
+		})
+
+		test('is not drawn when it was rendered with no area to map from', async () => {
+			const img = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.draw(
+				img,
+				makeStyle({
+					decoration: ButtonGraphicsDecorationType.None,
+					elements: [
+						makeRasterElement({ renderedAt: { bounds: { x: 0, y: 0, width: 0, height: 10 }, rotations: [] } }),
+					],
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			expect(pixelAt(img, 8, 8)[3]).toBe(0)
+		})
+
+		test('reports the geometry of the element it replaces', async () => {
+			const within = (element: SomeButtonGraphicsDrawElement) => [makeGroupElement([element], { rotation: 20 })]
+			const bounds = { x: 0.1, y: 0.2, width: 0.5, height: 0.3, rotation: 15 }
+
+			const { geometry: rasterGeometry } = await drawRaster((raster) => within(raster), undefined, bounds)
+			const textGeometry = await GraphicsLayeredButtonRenderer.draw(
+				Image.create(72, 58, 1, null),
+				makeStyle({
+					decoration: ButtonGraphicsDecorationType.None,
+					elements: within(makeTextElement({ id: 'raster-1', ...bounds })),
+				}),
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+
+			expect(rasterGeometry).toEqual(textGeometry)
+		})
+	})
+
+	describe('drawSingleElement', () => {
+		test('draws only the element, laid out as within the whole button', async () => {
+			const box = makeBoxElement({ id: 'target', x: 0.25, y: 0.25, width: 0.5, height: 0.5, color: 0x00ff00 })
+			const style = makeStyle({
+				decoration: ButtonGraphicsDecorationType.None,
+				elements: [
+					makeBoxElement({ id: 'sibling', color: 0xff0000 }),
+					makeGroupElement([box, makeBoxElement({ id: 'sibling-2', color: 0x0000ff })], {
+						x: 0.5,
+						width: 0.5,
+						rotation: 20,
+					}),
+				],
+			})
+
+			const single = Image.create(72, 58, 1, null)
+			const geometry = await GraphicsLayeredButtonRenderer.drawSingleElement(single, style, 'target', DEFAULT_PADDING)
+
+			const full = Image.create(72, 58, 1, null)
+			const fullGeometry = await GraphicsLayeredButtonRenderer.draw(
+				full,
+				style,
+				new Set(['sibling', 'sibling-2']),
+				null,
+				DEFAULT_PADDING
+			)
+
+			expect(single.buffer().equals(full.buffer())).toBe(true)
+			expect(geometry).toEqual(fullGeometry.find((entry) => entry.id === 'target'))
+		})
+
+		test('draws an element that a reference draws, laid out within the reference', async () => {
+			const reference: ButtonGraphicsReferenceDrawElement = {
+				...ELEMENT_BASE,
+				id: 'ref',
+				type: 'reference',
+				x: 0.25,
+				y: 0.1,
+				width: 0.75,
+				height: 0.8,
+				rotation: 15,
+				children: [
+					makeBoxElement({ id: 'remote-box', color: 0xff0000 }),
+					makeTextElement({ id: 'remote-text', width: 0.5, text: 'Hi', outlineColor: 0x000000 }),
+				],
+			}
+			const style = makeStyle({ decoration: ButtonGraphicsDecorationType.None, elements: [reference] })
+
+			const single = Image.create(72, 58, 1, null)
+			const geometry = await GraphicsLayeredButtonRenderer.drawSingleElement(
+				single,
+				style,
+				'remote-text',
+				DEFAULT_PADDING
+			)
+
+			const full = Image.create(72, 58, 1, null)
+			const fullGeometry = await GraphicsLayeredButtonRenderer.draw(
+				full,
+				style,
+				new Set(['remote-box']),
+				null,
+				DEFAULT_PADDING
+			)
+
+			expect(single.buffer().equals(full.buffer())).toBe(true)
+			expect(geometry).toEqual(fullGeometry.find((entry) => entry.id === 'remote-text'))
+		})
+
+		test("doesn't draw the decoration, but still lays out within the content area", async () => {
+			const style = makeStyle({
+				decoration: ButtonGraphicsDecorationType.TopBar,
+				pushed: true,
+				elements: [makeBoxElement({ id: 'target' })],
+			})
+
+			const img = Image.create(72, 58, 1, null)
+			const geometry = await GraphicsLayeredButtonRenderer.drawSingleElement(img, style, 'target', DEFAULT_PADDING)
+
+			const fullGeometry = await GraphicsLayeredButtonRenderer.draw(
+				Image.create(72, 58, 1, null),
+				style,
+				new Set(),
+				null,
+				DEFAULT_PADDING
+			)
+			expect(geometry).toEqual(fullGeometry.find((entry) => entry.id === 'target'))
+
+			// The top bar area is left empty
+			const data = img.canvasImage.getContext('2d').getImageData(2, 2, 68, 1).data
+			expect(data.some((value, i) => i % 4 === 3 && value !== 0)).toBe(false)
+		})
+
+		test('ignores the opacity of the element and its parents, as the preview applies those', async () => {
+			const style = makeStyle({
+				decoration: ButtonGraphicsDecorationType.None,
+				elements: [
+					makeGroupElement(
+						[
+							makeBoxElement({ id: 'opaque', width: 0.5 }),
+							makeBoxElement({ id: 'faded', x: 0.5, width: 0.5, opacity: 0.5 }),
+						],
+						{ opacity: 0.25 }
+					),
+				],
+			})
+
+			const opaque = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.drawSingleElement(opaque, style, 'opaque', DEFAULT_PADDING)
+			expect(opaque.canvasImage.getContext('2d').getImageData(10, 29, 1, 1).data[3]).toBe(255)
+
+			const faded = Image.create(72, 58, 1, null)
+			await GraphicsLayeredButtonRenderer.drawSingleElement(faded, style, 'faded', DEFAULT_PADDING)
+			expect(faded.canvasImage.getContext('2d').getImageData(60, 29, 1, 1).data[3]).toBe(255)
+		})
+
+		test('returns null for an unknown element', async () => {
+			const img = Image.create(72, 58, 1, null)
+			const geometry = await GraphicsLayeredButtonRenderer.drawSingleElement(
+				img,
+				makeStyle({ elements: [makeBoxElement()] }),
+				'missing',
+				DEFAULT_PADDING
+			)
+			expect(geometry).toBeNull()
 		})
 	})
 })

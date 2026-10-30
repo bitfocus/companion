@@ -13,17 +13,19 @@ import EventEmitter from 'node:events'
 import z from 'zod'
 import { isCustomVariableValid } from '@companion-app/shared/CustomVariable.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
-import type {
-	CustomVariableCollection,
-	CustomVariableDefinition,
-	CustomVariablesModel,
-	CustomVariableUpdate,
-	CustomVariableUpdateRemoveOp,
+import {
+	CustomVariableDefinitionSchema,
+	type CustomVariableCollection,
+	type CustomVariableDefinition,
+	type CustomVariablesModel,
+	type CustomVariableUpdate,
+	type CustomVariableUpdateRemoveOp,
 } from '@companion-app/shared/Model/CustomVariableModel.js'
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue, type VariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import LogController from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { CustomVariableCollections } from './CustomVariableCollections.js'
@@ -45,13 +47,13 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	 */
 	#custom_variables: CustomVariablesModel
 
-	readonly #dbTable: DataStoreTableView<Record<string, CustomVariableDefinition>>
+	readonly #dbTable: DataStoreSchemaTableView<typeof CustomVariableDefinitionSchema>
 
 	readonly #events = new EventEmitter<{ update: [CustomVariableUpdate[]] }>()
 
 	constructor(db: DataDatabase, variableValues: VariablesValues) {
 		super()
-		this.#dbTable = db.getTableView('custom_variables')
+		this.#dbTable = db.getSchemaTableView('custom_variables', CustomVariableDefinitionSchema)
 		this.#variableValues = variableValues
 		this.#collections = new CustomVariableCollections(db, (validCollectionIds) =>
 			this.#cleanUnknownCollectionIds(validCollectionIds)
@@ -301,27 +303,30 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	 * Replace all of the current custom variables with new ones
 	 */
 	replaceDefinitions(custom_variables: CustomVariablesModel): void {
-		const newValues: VariableValueEntry[] = []
-		// Mark the current variables as to be deleted
-		for (const name of Object.keys(this.#custom_variables || {})) {
-			newValues.push({ id: name, value: undefined })
-		}
-		// Determine the initial values of the variables
-		for (const [name, info] of Object.entries(custom_variables || {})) {
-			newValues.push({ id: name, value: info.defaultValue })
-		}
-
 		const namesBefore = Object.keys(this.#custom_variables)
 
-		this.#custom_variables = Object.assign(Object.create(null), custom_variables)
+		// Mark the current variables as to be deleted
+		const newValues: VariableValueEntry[] = namesBefore.map((name) => ({ id: name, value: undefined }))
+
+		this.#custom_variables = Object.create(null)
 
 		const changes: CustomVariableUpdate[] = []
 
 		// Add inserts
-		for (const [id, info] of Object.entries(this.#custom_variables)) {
-			if (!info) continue
+		for (const [id, rawInfo] of Object.entries(custom_variables || {})) {
+			if (!rawInfo) continue
 
-			this.#dbTable.set(id, info)
+			let info: CustomVariableDefinition
+			try {
+				info = this.#dbTable.set(id, rawInfo)
+			} catch (e) {
+				// Skip it, rather than abandon the rest
+				this.#logger.warn(`Skipping invalid custom variable "${id}": ${stringifyError(e)}`)
+				continue
+			}
+
+			this.#custom_variables[id] = info
+			newValues.push({ id, value: info.defaultValue })
 
 			changes.push({ type: 'update', itemId: id, info })
 

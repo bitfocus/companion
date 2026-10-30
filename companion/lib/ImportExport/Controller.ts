@@ -14,9 +14,15 @@ import type express from 'express'
 import { nanoid } from 'nanoid'
 import workerPool from 'workerpool'
 import z from 'zod'
-import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ExportFullv6, ExportPageContentv6 } from '@companion-app/shared/Model/ExportModel.js'
+import { isVirtualConnectionId } from '@companion-app/shared/ConnectionId.js'
 import {
+	EXPORT_VERSION,
+	type ExportFull,
+	type ExportPageContent,
+	type SomeExport,
+} from '@companion-app/shared/Model/Export/Latest.js'
+import {
+	zodClientExportRequest,
 	zodClientImportOrResetSelection,
 	type ClientImportObject,
 	type ClientImportOrResetSelection,
@@ -34,11 +40,11 @@ import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import { CreateElementOfType } from '../Controls/ControlTypes/Button/LayerDefaults.js'
+import { makeLinkButtonPreviewElements } from '../Controls/ControlTypes/Button/LinkButtonDrawer.js'
 import { pageDownElements } from '../Controls/ControlTypes/PageDown.js'
 import { pageNumberElements } from '../Controls/ControlTypes/PageNumber.js'
 import { pageUpElements } from '../Controls/ControlTypes/PageUp.js'
 import type { DataDatabase } from '../Data/Database.js'
-import { upgradeImport } from '../Data/Upgrade.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import { ConvertSomeButtonGraphicsElementForDrawing } from '../Graphics/ConvertGraphicsElements.js'
@@ -53,9 +59,10 @@ import { MultipartUploader } from '../Resources/MultipartUploader.js'
 import { resolveThreadEntrypoint } from '../Resources/Util.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import { publicProcedure, router, toIterable, type TrpcContext } from '../UI/TRPC.js'
+import { upgradeImport } from '../Upgrades/UpgradeExport.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import { BackupController } from './Backups.js'
-import { FILE_VERSION, MAX_IMPORT_FILE_SIZE } from './Constants.js'
+import { MAX_IMPORT_FILE_SIZE } from './Constants.js'
 import { ExportController } from './Export.js'
 import { ImportController } from './Import.js'
 import { parseImportBuffer, type ParseImportResult } from './ParseImport.js'
@@ -141,7 +148,12 @@ export class ImportExportController {
 	 * the minimal summary object sent back to the client.
 	 */
 	#buildClientImportObject(rawObject: unknown, sessionCtx: TrpcContext): [string | null, ClientImportObject | null] {
-		let importObject = upgradeImport(rawObject, this.#userConfigController.getAll())
+		let importObject: SomeExport
+		try {
+			importObject = upgradeImport(rawObject, this.#userConfigController.getAll())
+		} catch (e) {
+			return [stringifyError(e), null]
+		}
 
 		// fix any db instances missing the upgradeIndex property
 		if (importObject.instances) {
@@ -155,13 +167,14 @@ export class ImportExportController {
 		if (importObject.type === 'trigger_list') {
 			importObject = {
 				type: 'full',
-				version: FILE_VERSION,
+				version: EXPORT_VERSION,
 				companionBuild: importObject.companionBuild,
+				notes: importObject.notes,
 				triggers: importObject.triggers,
 				triggerCollections: importObject.triggerCollections,
 				instances: importObject.instances,
 				connectionCollections: importObject.connectionCollections,
-			} satisfies ExportFullv6
+			} satisfies ExportFull
 		}
 
 		// Store the object on the client
@@ -170,12 +183,13 @@ export class ImportExportController {
 			timeout: null, // TODO
 		}
 
-		const importContainsKey = (key: keyof (ExportFullv6 & ExportPageContentv6)): boolean =>
+		const importContainsKey = (key: keyof (ExportFull & ExportPageContent)): boolean =>
 			key in importObject && Object.keys(importObject[key as keyof typeof importObject] || {}).length > 0
 
 		// Build a minimal object to send back to the client
 		const clientObject: ClientImportObject = {
 			type: importObject.type,
+			notes: typeof importObject.notes === 'string' && importObject.notes.trim() ? importObject.notes : null,
 			connections: {},
 			buttons: 'pages' in importObject,
 			customVariables: importContainsKey('custom_variables'),
@@ -188,7 +202,7 @@ export class ImportExportController {
 		}
 
 		for (const [connectionId, connectionConfig] of Object.entries(importObject.instances || {})) {
-			if (!connectionConfig || connectionId === 'internal' || connectionId === 'bitfocus-companion') continue
+			if (!connectionConfig || isVirtualConnectionId(connectionId) || connectionId === 'bitfocus-companion') continue
 
 			clientObject.connections[connectionId] = {
 				moduleId: connectionConfig.moduleId,
@@ -198,7 +212,7 @@ export class ImportExportController {
 			}
 		}
 
-		function simplifyPageForClient(pageInfo: ExportPageContentv6): ClientPageInfo {
+		function simplifyPageForClient(pageInfo: ExportPageContent): ClientPageInfo {
 			return {
 				name: pageInfo.name,
 				gridSize: find_smallest_grid_for_page(pageInfo),
@@ -372,6 +386,10 @@ export class ImportExportController {
 				}
 			}),
 
+			prepareExport: publicProcedure.input(zodClientExportRequest).mutation(({ input, ctx }) => {
+				return this.#exportController.prepareDownload(input, ctx.clientIp)
+			}),
+
 			abort: publicProcedure.mutation(async ({ ctx }) => {
 				// Clear the pending import
 				delete ctx.pendingImport
@@ -398,7 +416,7 @@ export class ImportExportController {
 					const importObject = ctx.pendingImport?.object
 					if (!importObject) return null
 
-					let importPage: ExportPageContentv6 | undefined
+					let importPage: ExportPageContent | undefined
 					if (importObject.type === 'page') {
 						importPage = importObject.page
 					} else if (importObject.type === 'full') {
@@ -409,7 +427,7 @@ export class ImportExportController {
 					const controlObj = importPage.controls?.[input.location.row]?.[input.location.column]
 					if (!controlObj) return null
 
-					const controlObjLayered = controlObj as SomeButtonModel
+					const controlObjLayered = controlObj
 
 					let drawType: RendererButtonStyle['drawType']
 					let rawElements: SomeButtonGraphicsElement[]
@@ -428,6 +446,11 @@ export class ImportExportController {
 							rawElements = [referenceElement]
 							break
 						}
+						case 'link-button':
+							// The remote button can't be shown in the import preview
+							drawType = 'button'
+							rawElements = makeLinkButtonPreviewElements()
+							break
 						case 'pagenum':
 							drawType = 'pagenum'
 							rawElements = structuredClone(pageNumberElements)
@@ -491,7 +514,7 @@ export class ImportExportController {
 							if (!oldPageInfo) throw new Error('Invalid target page')
 						}
 
-						let pageInfo: ExportPageContentv6
+						let pageInfo: ExportPageContent
 
 						if (data.type === 'full' && data.pages) {
 							pageInfo = data.pages[frompage]

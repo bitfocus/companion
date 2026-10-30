@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { humanId } from 'human-id'
 import { observer } from 'mobx-react-lite'
 import { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { SUPPORTED_IMAGE_MIME_TYPES } from '@companion-app/shared/Graphics/ImageTypes.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button.js'
@@ -20,8 +21,6 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { DismissableAlert, StaticAlert } from './Alert.js'
 import { FileInputButton } from './FileInputButton.js'
-
-const allowedImageTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml']
 
 /**
  * Custom images are stored inline in the button, so are kept small.
@@ -186,7 +185,7 @@ const UploadToLibraryTab = observer(function UploadToLibraryTab({
 
 	const handleFile = useCallback(
 		(file: File) => {
-			if (!allowedImageTypes.includes(file.type)) {
+			if (!SUPPORTED_IMAGE_MIME_TYPES.includes(file.type)) {
 				setErrorMessage('Only PNG, JPEG, GIF, WebP or SVG files are supported.')
 				return
 			}
@@ -306,7 +305,7 @@ function CustomImageTab({
 
 	const handleFile = useCallback(
 		(file: File) => {
-			if (!allowedImageTypes.includes(file.type)) {
+			if (!SUPPORTED_IMAGE_MIME_TYPES.includes(file.type)) {
 				setErrorMessage('Only PNG, JPEG, GIF, WebP or SVG files are supported.')
 				return
 			}

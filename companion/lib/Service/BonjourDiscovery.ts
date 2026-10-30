@@ -3,11 +3,17 @@ import { isIPv4, isIPv6 } from 'node:net'
 import { Bonjour, type Browser, type DiscoveredService } from '@julusian/bonjour-service'
 import isEqual from 'fast-deep-equal'
 import z from 'zod'
-import type { ClientBonjourEvent, ClientBonjourService } from '@companion-app/shared/Model/Common.js'
+import type {
+	BonjourQuery,
+	BonjourQuerySource,
+	ClientBonjourEvent,
+	ClientBonjourService,
+} from '@companion-app/shared/Model/Common.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { InstanceController } from '../Instance/Controller.js'
+import type { LinkController } from '../Link/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { ServiceBase } from './Base.js'
 
@@ -28,6 +34,7 @@ import { ServiceBase } from './Base.js'
  */
 export class ServiceBonjourDiscovery extends ServiceBase {
 	readonly #instanceController: InstanceController
+	readonly #linkController: LinkController
 
 	readonly #serviceEvents = new EventEmitter<{ [id: string]: [ClientBonjourEvent] }>()
 
@@ -38,10 +45,19 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 
 	#server: Bonjour | undefined
 
-	constructor(userconfig: DataUserConfig, instanceController: InstanceController) {
+	constructor(userconfig: DataUserConfig, instanceController: InstanceController, linkController: LinkController) {
 		super(userconfig, 'Service/BonjourDiscovery', null, null)
 
 		this.#instanceController = instanceController
+		this.#linkController = linkController
+		// The Link id a Link session leaves out changes when it is regenerated
+		linkController.on('self', () => {
+			for (const session of this.#browsers.values()) {
+				if (session.source.type !== 'link-transport') continue
+				const queries = this.#getQueries(session.source)
+				session.queries.forEach((query, i) => (query.filter.excludeTxt = queries?.[i]?.excludeTxt))
+			}
+		})
 
 		this.init()
 	}
@@ -77,16 +93,16 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 		return router({
 			watchQuery: publicProcedure
 				.input(
-					z.object({
-						connectionId: z.string(),
-						queryId: z.string(),
-					})
+					z.discriminatedUnion('type', [
+						z.object({ type: z.literal('connection'), connectionId: z.string(), queryId: z.string() }),
+						z.object({ type: z.literal('link-transport'), transportType: z.string(), fieldId: z.string() }),
+					]) satisfies z.ZodType<BonjourQuerySource>
 				)
 				.subscription(async function* (opts) {
 					let session: BonjourBrowserSession | undefined
 					try {
 						// Join the session
-						session = self.#joinOrCreateSession(opts.input.connectionId, opts.input.queryId)
+						session = self.#joinOrCreateSession(opts.input)
 
 						// Start the changes listener
 						const changes = toIterable(self.#serviceEvents, session.id, opts.signal)
@@ -163,6 +179,10 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 			)
 			return null
 		}
+		if (filter.excludeTxt && Object.entries(filter.excludeTxt).every(([key, value]) => svc.txt?.[key] === value)) {
+			this.logger.silly(`Ignoring ${svc.fqdn}: its txt record matches the exclusion`)
+			return null
+		}
 		if (filter.port && svc.port !== filter.port) {
 			this.logger.debug(`Ignoring ${svc.fqdn}: port ${svc.port} does not match filter port ${filter.port}`)
 			return null
@@ -183,10 +203,13 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 	/**
 	 * Client is starting or joining a session
 	 */
-	#joinOrCreateSession(connectionId: string, queryId: string): BonjourBrowserSession {
+	#joinOrCreateSession(source: BonjourQuerySource): BonjourBrowserSession {
 		if (!this.#server) throw new Error('Bonjour not running')
 
-		const id = `${connectionId}::${queryId}`
+		const id =
+			source.type === 'connection'
+				? `${source.connectionId}::${source.queryId}`
+				: `link:${source.transportType}::${source.fieldId}`
 		const existingSession = this.#browsers.get(id)
 		if (existingSession) {
 			// If the session already exists, just return it
@@ -194,11 +217,8 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 			return existingSession
 		}
 
-		const manifest = this.#instanceController.getManifestForConnection(connectionId)
-		let bonjourQueries = manifest?.bonjourQueries?.[queryId]
+		const bonjourQueries = this.#getQueries(source)
 		if (!bonjourQueries) throw new Error('Missing bonjour query')
-
-		if (!Array.isArray(bonjourQueries)) bonjourQueries = [bonjourQueries]
 
 		const filters: BonjourBrowserFilter[] = []
 		for (const query of bonjourQueries) {
@@ -208,6 +228,7 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 				port: query.port,
 				txt: query.txt,
 				addressFamily: 'addressFamily' in query ? query.addressFamily : undefined,
+				excludeTxt: 'excludeTxt' in query ? query.excludeTxt : undefined,
 			}
 			if (typeof filter.type !== 'string' || !filter.type) throw new Error('Invalid type for bonjour query')
 			if (typeof filter.protocol !== 'string' || !filter.protocol) throw new Error('Invalid protocol for bonjour query')
@@ -217,6 +238,7 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 
 		const session: BonjourBrowserSession = {
 			id,
+			source,
 			queries: [],
 		}
 		for (const filter of filters) {
@@ -250,6 +272,23 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 		return session
 	}
 
+	#getQueries(source: BonjourQuerySource): readonly BonjourQuery[] | null {
+		switch (source.type) {
+			case 'connection': {
+				const queries = this.#instanceController.getManifestForConnection(source.connectionId)?.bonjourQueries?.[
+					source.queryId
+				]
+				if (!queries) return null
+				return Array.isArray(queries) ? queries : [queries]
+			}
+			case 'link-transport':
+				return this.#linkController.getBonjourQueries(source.transportType, source.fieldId)
+			default:
+				assertNever(source)
+				return null
+		}
+	}
+
 	/**
 	 * Client is leaving a session
 	 */
@@ -274,6 +313,7 @@ export class ServiceBonjourDiscovery extends ServiceBase {
 
 interface BonjourBrowserSession {
 	readonly id: string
+	readonly source: BonjourQuerySource
 	queries: Array<{
 		browser: Browser
 		filter: BonjourBrowserFilter
@@ -286,4 +326,5 @@ interface BonjourBrowserFilter {
 	port: number | undefined
 	txt: Record<string, string> | undefined
 	addressFamily: 'ipv4' | 'ipv6' | 'ipv4+6' | undefined
+	excludeTxt: Record<string, string> | undefined
 }

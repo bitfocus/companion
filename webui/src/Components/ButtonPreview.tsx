@@ -234,21 +234,33 @@ export const ButtonPreviewBase = memo(function ButtonPreview(props: ButtonPrevie
 // eslint-disable-next-line react-refresh/only-export-components
 export function useImagePreloader(imageUrl: string | null): string | null {
 	const [preloadedImage, setPreloadedImage] = useState<string | null>(imageUrl)
+	// The decoded image being shown, kept referenced so the browser keeps it decoded
+	const shownImageRef = useRef<HTMLImageElement | null>(null)
 	useEffect(() => {
 		let aborted = false
 
 		if (!imageUrl) {
+			shownImageRef.current = null
 			setPreloadedImage(imageUrl ?? null)
 			return
 		}
 
+		// Wait for it to be decoded, not just loaded: Firefox otherwise paints the background blank while it decodes
 		const image = new Image()
-		image.onload = () => {
-			if (!aborted) {
+		image.src = imageUrl
+		image.decode().then(
+			() => {
+				if (aborted) return
+				shownImageRef.current = image
+				setPreloadedImage(imageUrl)
+			},
+			() => {
+				// Not decodable, so leave it to the browser to show what it can
+				if (aborted) return
+				shownImageRef.current = null
 				setPreloadedImage(imageUrl)
 			}
-		}
-		image.src = imageUrl
+		)
 
 		return () => {
 			aborted = true

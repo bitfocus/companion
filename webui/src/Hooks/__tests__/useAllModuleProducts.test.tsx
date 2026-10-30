@@ -5,7 +5,7 @@ import type { ClientModuleInfo, ClientModuleVersionInfo } from '@companion-app/s
 import type { ModuleStoreListCacheEntry } from '@companion-app/shared/Model/ModulesStore.js'
 import type { ModuleStoreListCacheEntryExt } from '~/Stores/ModuleInfoStore.js'
 import { RootAppStoreContext, type RootAppStore } from '~/Stores/RootAppStore.js'
-import { useAllModuleProducts } from '../useFilteredProducts.js'
+import { filterProducts, useAllModuleProducts, type FuzzyProduct } from '../useFilteredProducts.js'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -311,5 +311,75 @@ describe('useAllModuleProducts', () => {
 			expect(result.current).toHaveLength(1)
 			expect(result.current[0].moduleType).toBe(ModuleInstanceType.Surface)
 		})
+	})
+})
+
+describe('filterProducts', () => {
+	function makeProduct(
+		moduleId: string,
+		manufacturer: string,
+		product: string,
+		keywords: string,
+		moduleType = ModuleInstanceType.Connection
+	): FuzzyProduct {
+		return {
+			moduleType,
+			moduleId,
+			installedInfo: null,
+			storeInfo: null,
+			manufacturer,
+			product,
+			label: `${manufacturer}: ${product}`,
+			keywords,
+			name: `${manufacturer} ${moduleId}`,
+			shortname: moduleId,
+			bugUrl: undefined,
+			helpUrl: undefined,
+		}
+	}
+
+	const products = [
+		makeProduct('bmd-atem', 'Blackmagic Design', 'ATEM', 'switcher;vision mixer'),
+		makeProduct('bmd-hyperdeck', 'Blackmagic Design', 'HyperDeck', 'recorder;playback'),
+		makeProduct('elgato-streamdeck', 'Elgato', 'Stream Deck', 'controller', ModuleInstanceType.Surface),
+		makeProduct('generic-http', 'Generic', 'HTTP Request', 'web;rest'),
+		makeProduct('obs-studio', 'OBS', 'OBS Studio', 'streaming;recording'),
+	]
+
+	function ids(result: FuzzyProduct[]) {
+		return result.map((p) => p.moduleId)
+	}
+
+	it('returns everything for an empty filter', () => {
+		expect(filterProducts(products, '', false)).toBe(products)
+	})
+
+	it('matches the label', () => {
+		expect(ids(filterProducts(products, 'hyperdeck', false))).toEqual(['bmd-hyperdeck'])
+	})
+
+	it('matches the manufacturer, best match first', () => {
+		expect(ids(filterProducts(products, 'blackmagic atem', false))).toEqual(['bmd-atem'])
+		expect(ids(filterProducts(products, 'blackmagic', false)).sort()).toEqual(['bmd-atem', 'bmd-hyperdeck'])
+	})
+
+	it('matches keywords', () => {
+		expect(ids(filterProducts(products, 'vision mixer', false))).toEqual(['bmd-atem'])
+		expect(ids(filterProducts(products, 'rest', false))).toEqual(['generic-http'])
+	})
+
+	it('drops weak matches', () => {
+		expect(filterProducts(products, 'zzz', false)).toEqual([])
+		expect(filterProducts(products, 'bkmgcatm', false)).toEqual([])
+	})
+
+	it('only matches the module type when asked', () => {
+		expect(ids(filterProducts(products, 'surface', false))).toEqual([])
+		expect(ids(filterProducts(products, 'surface', true))).toEqual(['elgato-streamdeck'])
+	})
+
+	it('returns every match, not just the first few', () => {
+		const many = Array.from({ length: 30 }, (_, i) => makeProduct(`acme-${i}`, 'Acme', `Widget ${i}`, ''))
+		expect(filterProducts(many, 'acme widget', false)).toHaveLength(30)
 	})
 })

@@ -12,7 +12,7 @@
     "@vitejs/plugin-react": "^6.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "lucide-react": "^1.59.0",
+    "lucide-react": "^1.61.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-error-boundary": "^6.1.6",
@@ -22,7 +22,7 @@
     "typescript": "npm:@typescript/typescript6@^6.0.2",
     "typescript-7": "npm:typescript@^7.0.2",
     "usehooks-ts": "^3.1.1",
-    "vite": "^8.3.4"
+    "vite": "^8.3.5"
   },
   "scripts": {
     "start": "vite --port 5177",

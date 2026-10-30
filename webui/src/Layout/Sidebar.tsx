@@ -12,6 +12,7 @@ import {
 	faFileImport,
 	faGamepad,
 	faImages,
+	faLink,
 	faPlug,
 	faPuzzlePiece,
 	faTableCells,
@@ -45,6 +46,7 @@ import { Tooltip } from '~/Components/Tooltip.js'
 import { useContextMenuState } from '~/Components/useContextMenuProps'
 import { useMobileMode } from '~/Hooks/useLayoutMode'
 import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
+import { LinkTabNotifyIcon } from '~/Link/LinkNotifyIcon.js'
 import { ConnectionsTabNotifyIcon, SurfacesTabNotifyIcon } from '~/Surfaces/TabNotifyIcon.js'
 import { matchedPageIdForPath, SETTINGS_SECTION, VARIABLES_SECTION, type NavSection } from './navRegistry.js'
 import { SidebarFooter, SidebarHeader } from './SidebarHeader'
@@ -382,6 +384,7 @@ export const MySidebar = memo(function MySidebar() {
 					/>
 					<SidebarMenuItem name="Surfaces" icon={faGamepad} notifications={SurfacesTabNotifyIcon} path="/surfaces" />
 					<SidebarMenuItem name="Modules" icon={faPuzzlePiece} path="/modules" />
+					<SidebarMenuItem name="Link" icon={faLink} notifications={LinkTabNotifyIcon} path="/link" />
 					<SidebarMenuItem name="Emulator" icon={faDesktop} path="/emulator" target="_blank" />
 					<SidebarMenuItem name="Web Buttons" icon={faTabletScreenButton} path="/tablet" target="_blank" />
 

@@ -65,6 +65,7 @@ describe('ControlButtonPreset', () => {
 			events: new EventEmitter() as any,
 			changeEvents: new EventEmitter() as any,
 			renderClock: { subscribe: vi.fn(() => () => {}) } as any,
+			linkButtons: null as any,
 			controlsAccessor: {
 				getControl: vi.fn(() => undefined),
 				pressControl: vi.fn(() => false),

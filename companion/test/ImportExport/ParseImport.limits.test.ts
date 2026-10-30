@@ -6,7 +6,6 @@ import type { ParseImportResult } from '../../lib/ImportExport/ParseImport.js'
 // gigabytes. Round-trip behaviour for normal (small) data is covered in ParseImport.test.ts, and
 // oversized-YAML rejection in ThreadMethods.test.ts.
 vi.mock('../../lib/ImportExport/Constants.js', () => ({
-	FILE_VERSION: 12,
 	MAX_IMPORT_FILE_SIZE: 1000,
 	MAX_DECOMPRESSED_FILE_SIZE: 1000,
 	MAX_STREAMED_DECOMPRESSED_FILE_SIZE: 1000,

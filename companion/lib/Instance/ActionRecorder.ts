@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events'
-import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
 import z from 'zod'
+import { diffObject } from '@companion-app/shared/Diff.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type {
@@ -297,10 +297,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 
 				if (this.#updateEvents.listenerCount(eventName) > 0) {
 					if (this.#lastSentSessionInfoJsons[sessionId] && newSessionBlob) {
-						const patch = jsonPatch.compare<RecordSessionInfo>(
-							this.#lastSentSessionInfoJsons[sessionId],
-							newSessionBlob
-						)
+						const patch = diffObject<RecordSessionInfo>(this.#lastSentSessionInfoJsons[sessionId], newSessionBlob)
 						if (patch.length > 0) {
 							this.#updateEvents.emit(eventName, {
 								type: 'patch',

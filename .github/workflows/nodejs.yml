@@ -12,6 +12,8 @@ permissions:
 
 env:
   API_PRODUCT: companion
+  # Sign (and for macOS, notarize) the builds that are kept (main and release tags), or a push whose head commit message contains [build-signed]. Forks cannot get the signing secrets.
+  SIGN_BUILD: ${{ github.repository == 'bitfocus/companion' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[build-signed]')) }}
 
 jobs:
   check-types:
@@ -22,6 +24,8 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          # Full history for the commit-count version number, but skip historical file contents
+          filter: blob:none
           persist-credentials: false
       - name: Use Node.js
         uses: actions/setup-node@v7
@@ -59,6 +63,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          filter: blob:none
           submodules: true
           persist-credentials: false
       - name: Use Node.js
@@ -166,6 +171,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          filter: blob:none
           submodules: true
           persist-credentials: false
       - name: Use Node.js
@@ -280,6 +286,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          filter: blob:none
           submodules: true
           persist-credentials: false
       - name: Use Node.js
@@ -305,11 +312,11 @@ jobs:
           yarn tsx tools/build/complete.mts darwin-x64
         env:
           CI: 1
-          CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLEID }}
-          APPLE_TEAM_ID: ${{ secrets.APPLETEAMID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLEIDPASS }}
+          CSC_LINK: ${{ env.SIGN_BUILD == 'true' && secrets.OSX_CSC_LINK || '' }}
+          CSC_KEY_PASSWORD: ${{ env.SIGN_BUILD == 'true' && secrets.OSX_CSC_KEY_PASSWORD || '' }}
+          APPLE_ID: ${{ env.SIGN_BUILD == 'true' && secrets.APPLEID || '' }}
+          APPLE_TEAM_ID: ${{ env.SIGN_BUILD == 'true' && secrets.APPLETEAMID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ env.SIGN_BUILD == 'true' && secrets.APPLEIDPASS || '' }}
           SENTRY_DSN: ${{ vars.SENTRY2_DSN }}
           VITE_SENTRY_DSN: ${{ vars.SENTRY2_UI_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
@@ -384,6 +391,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          filter: blob:none
           submodules: true
           persist-credentials: false
       - name: Use Node.js
@@ -412,11 +420,11 @@ jobs:
           yarn tsx tools/build/complete.mts darwin-arm64
         env:
           CI: 1
-          CSC_LINK: ${{ secrets.OSX_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.OSX_CSC_KEY_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLEID }}
-          APPLE_TEAM_ID: ${{ secrets.APPLETEAMID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLEIDPASS }}
+          CSC_LINK: ${{ env.SIGN_BUILD == 'true' && secrets.OSX_CSC_LINK || '' }}
+          CSC_KEY_PASSWORD: ${{ env.SIGN_BUILD == 'true' && secrets.OSX_CSC_KEY_PASSWORD || '' }}
+          APPLE_ID: ${{ env.SIGN_BUILD == 'true' && secrets.APPLEID || '' }}
+          APPLE_TEAM_ID: ${{ env.SIGN_BUILD == 'true' && secrets.APPLETEAMID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ env.SIGN_BUILD == 'true' && secrets.APPLEIDPASS || '' }}
           SENTRY_DSN: ${{ vars.SENTRY2_DSN }}
           VITE_SENTRY_DSN: ${{ vars.SENTRY2_UI_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
@@ -479,7 +487,10 @@ jobs:
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   win32-x64:
-    runs-on: ${{ (startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[build-signed]')) && fromJSON('["self-hosted", "Windows", "codecert", "X64"]') || 'windows-latest'}}
+    runs-on: windows-latest
+    permissions:
+      contents: read
+      id-token: write
     needs: check-types
     timeout-minutes: 60
     concurrency:
@@ -490,6 +501,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          filter: blob:none
           submodules: true
           persist-credentials: false
       - name: Use Node.js
@@ -515,18 +527,18 @@ jobs:
         env:
           CI: 1
 
-      - name: build & package (unsigned)
-        if: ${{ runner.environment != 'self-hosted' }}
-        run: |
-          yarn tsx tools/build/complete.mts win32-x64
-        env:
-          CI: 1
-          SENTRY_DSN: ${{ vars.SENTRY2_DSN }}
-          VITE_SENTRY_DSN: ${{ vars.SENTRY2_UI_DSN }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
+      - name: Setup code signing
+        id: codesign
+        if: ${{ env.SIGN_BUILD == 'true' }}
+        uses: bitfocus/actions/setup-windows-codesign@main
+        with:
+          workload-identity-provider: ${{ secrets.WINDOWS_CODESIGN_WIF_PROVIDER }}
+          service-account: ${{ secrets.WINDOWS_CODESIGN_SERVICE_ACCOUNT }}
+          kms-keyring: ${{ secrets.WINDOWS_CODESIGN_KMS_KEYRING }}
+          kms-key: ${{ secrets.WINDOWS_CODESIGN_KMS_KEY }}
+          certificate: ${{ secrets.WINDOWS_CODESIGN_CERTIFICATE }}
 
-      - name: build & package (signed)
-        if: ${{ runner.environment == 'self-hosted' }}
+      - name: build & package
         run: |
           yarn tsx tools/build/complete.mts win32-x64
         env:
@@ -534,11 +546,17 @@ jobs:
           SENTRY_DSN: ${{ vars.SENTRY2_DSN }}
           VITE_SENTRY_DSN: ${{ vars.SENTRY2_UI_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
-          CSC_LINK: c:\\actions-runner-bitfocusas\\codesign.cer
-          BF_CODECERT_KEY: ${{ secrets.BF_CODECERT_KEY }}
-          # the wincert machine has issues using the default cache location
-          ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
-          NODE_OPTIONS: --max_old_space_size=4096
+          BF_CODESIGN_ACCESS_TOKEN: ${{ steps.codesign.outputs.access-token }}
+
+      - name: Verify signature
+        if: ${{ env.SIGN_BUILD == 'true' }}
+        shell: pwsh
+        run: |
+          $Signature = Get-AuthenticodeSignature -LiteralPath electron-output/companion-win64.exe
+          if ($Signature.Status -ne 'Valid') {
+            throw "Installer signature is not valid: $($Signature.Status) $($Signature.StatusMessage)"
+          }
+          Write-Host "Installer signed by $($Signature.SignerCertificate.Subject)"
 
       - name: Determine files to upload
         id: filenames
@@ -596,7 +614,10 @@ jobs:
           api-secret: ${{ secrets.BITFOCUS_API_PROJECT_SECRET }}
 
   win32-arm64:
-    runs-on: ${{ (startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[build-signed]')) && fromJSON('["self-hosted", "Windows", "codecert", "X64"]') || 'windows-11-arm'}}
+    runs-on: windows-11-arm
+    permissions:
+      contents: read
+      id-token: write
     needs: check-types
     timeout-minutes: 60
     concurrency:
@@ -607,6 +628,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          filter: blob:none
           submodules: true
           persist-credentials: false
       - name: Use Node.js
@@ -632,18 +654,18 @@ jobs:
         env:
           CI: 1
 
-      - name: build & package (unsigned)
-        if: ${{ runner.environment != 'self-hosted' }}
-        run: |
-          yarn tsx tools/build/complete.mts win32-arm64
-        env:
-          CI: 1
-          SENTRY_DSN: ${{ vars.SENTRY2_DSN }}
-          VITE_SENTRY_DSN: ${{ vars.SENTRY2_UI_DSN }}
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
+      - name: Setup code signing
+        id: codesign
+        if: ${{ env.SIGN_BUILD == 'true' }}
+        uses: bitfocus/actions/setup-windows-codesign@main
+        with:
+          workload-identity-provider: ${{ secrets.WINDOWS_CODESIGN_WIF_PROVIDER }}
+          service-account: ${{ secrets.WINDOWS_CODESIGN_SERVICE_ACCOUNT }}
+          kms-keyring: ${{ secrets.WINDOWS_CODESIGN_KMS_KEYRING }}
+          kms-key: ${{ secrets.WINDOWS_CODESIGN_KMS_KEY }}
+          certificate: ${{ secrets.WINDOWS_CODESIGN_CERTIFICATE }}
 
-      - name: build & package (signed)
-        if: ${{ runner.environment == 'self-hosted' }}
+      - name: build & package
         run: |
           yarn tsx tools/build/complete.mts win32-arm64
         env:
@@ -651,13 +673,17 @@ jobs:
           SENTRY_DSN: ${{ vars.SENTRY2_DSN }}
           VITE_SENTRY_DSN: ${{ vars.SENTRY2_UI_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY2_AUTH_TOKEN }}
-          CSC_LINK: c:\\actions-runner-bitfocusas\\codesign.cer
-          BF_CODECERT_KEY: ${{ secrets.BF_CODECERT_KEY }}
-          # the wincert machine has issues using the default cache location
-          ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
-          NODE_OPTIONS: --max_old_space_size=4096
-          # x64 host cannot execute an arm64 node binary; the native windows-11-arm build is the launch gate
-          SKIP_LAUNCH_CHECK: true
+          BF_CODESIGN_ACCESS_TOKEN: ${{ steps.codesign.outputs.access-token }}
+
+      - name: Verify signature
+        if: ${{ env.SIGN_BUILD == 'true' }}
+        shell: pwsh
+        run: |
+          $Signature = Get-AuthenticodeSignature -LiteralPath electron-output/companion-winarm64.exe
+          if ($Signature.Status -ne 'Valid') {
+            throw "Installer signature is not valid: $($Signature.Status) $($Signature.StatusMessage)"
+          }
+          Write-Host "Installer signed by $($Signature.SignerCertificate.Subject)"
 
       - name: Determine files to upload
         id: filenames

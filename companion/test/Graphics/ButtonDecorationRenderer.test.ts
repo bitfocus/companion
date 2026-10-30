@@ -13,7 +13,9 @@ const FONTS_DIR = join(__dirname, '../../../assets/Fonts')
 
 /** Construct a minimal RendererButtonStyle for drawIcons tests. */
 function makeButtonStyle(
-	overrides: Partial<Pick<RendererButtonStyle, 'pushed' | 'button_status' | 'action_running'>> = {}
+	overrides: Partial<
+		Pick<RendererButtonStyle, 'pushed' | 'button_status' | 'action_running' | 'link_status' | 'decoration'>
+	> = {}
 ): RendererButtonStyle {
 	return {
 		style: 'button-layered',
@@ -185,6 +187,48 @@ describe('ButtonDecorationRenderer', () => {
 			await expect(img.canvasImage).toMatchImageSnapshot()
 		})
 
+		test('remote button - a link', async () => {
+			const { img, topBarBounds } = makeCanvas(72, 58)
+			ButtonDecorationRenderer.drawIcons(img, makeButtonStyle({ link_status: 'ok' }), topBarBounds)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('remote button unreachable - a red link, before the other icons', async () => {
+			const { img, topBarBounds } = makeCanvas(72, 58)
+			ButtonDecorationRenderer.drawIcons(
+				img,
+				makeButtonStyle({ link_status: 'unreachable', button_status: 'error' }),
+				topBarBounds
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
+		test('remote button without a top bar - no cloud', async () => {
+			const withCloud = makeCanvas(72, 58)
+			ButtonDecorationRenderer.drawIcons(
+				withCloud.img,
+				makeButtonStyle({ link_status: 'ok', decoration: ButtonGraphicsDecorationType.None }),
+				withCloud.topBarBounds
+			)
+			const without = makeCanvas(72, 58)
+			ButtonDecorationRenderer.drawIcons(
+				without.img,
+				makeButtonStyle({ decoration: ButtonGraphicsDecorationType.None }),
+				without.topBarBounds
+			)
+			expect(withCloud.img.buffer()).toEqual(without.img.buffer())
+		})
+
+		test('remote button - link beside a warning and action running', async () => {
+			const { img, topBarBounds } = makeCanvas(72, 58)
+			ButtonDecorationRenderer.drawIcons(
+				img,
+				makeButtonStyle({ link_status: 'ok', button_status: 'warning', action_running: true }),
+				topBarBounds
+			)
+			await expect(img.canvasImage).toMatchImageSnapshot()
+		})
+
 		test('error status with action running', async () => {
 			const { img, topBarBounds } = makeCanvas(72, 58)
 			ButtonDecorationRenderer.drawIcons(
@@ -201,6 +245,8 @@ describe('ButtonDecorationRenderer', () => {
 			[72, 58, 'standard 72x58'],
 			[144, 116, 'double 144x116'],
 			[36, 29, 'half 36x29'],
+			// Wide and short like a Neo's strip, where the label's inset is limited by the height
+			[248, 58, 'wide 248x58'],
 		]
 
 		for (const [w, h, label] of sizes) {

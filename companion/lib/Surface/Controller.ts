@@ -15,27 +15,29 @@ import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
 import type express from 'express'
 import isEqual from 'fast-deep-equal'
-import jsonPatch from 'fast-json-patch'
 import HID from 'node-hid'
 import pDebounce from 'p-debounce'
 import type { JsonValue } from 'type-fest'
 import { usb } from 'usb'
 import z from 'zod'
+import { diffObject } from '@companion-app/shared/Diff.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared/Model/Emulator.js'
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
-import type {
-	ClientDevicesListItem,
-	ClientSurfaceButtonSizesItem,
-	ClientSurfaceItem,
-	ClientSurfaceLayoutItem,
-	ClientSurfaceModelItem,
-	OutboundSurfaceInfo,
-	SurfaceConfig,
-	SurfaceGroupConfig,
-	SurfaceModelsUpdate,
-	SurfacePanelConfig,
-	SurfacesUpdate,
+import {
+	SurfaceConfigSchema,
+	SurfaceGroupConfigSchema,
+	type ClientDevicesListItem,
+	type ClientSurfaceButtonSizesItem,
+	type ClientSurfaceItem,
+	type ClientSurfaceLayoutItem,
+	type ClientSurfaceModelItem,
+	type OutboundSurfaceInfo,
+	type SurfaceConfig,
+	type SurfaceGroupConfig,
+	type SurfaceModelsUpdate,
+	type SurfacePanelConfig,
+	type SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
@@ -43,7 +45,7 @@ import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { Complete } from '@companion-module/base'
 import type { HIDDevice } from '@companion-surface/host'
 import type { DataDatabase } from '../Data/Database.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import type { SurfaceChildFeatures } from '../Instance/Surface/ChildHandler.js'
 import {
 	DiscoveredSurfaceRegistry,
@@ -106,8 +108,8 @@ export interface SurfaceControllerEvents {
 export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	readonly #logger = LogController.createLogger('Surface/Controller')
 
-	readonly #dbTableSurfaces: DataStoreTableView<Record<string, SurfaceConfig>>
-	readonly #dbTableGroups: DataStoreTableView<Record<string, SurfaceGroupConfig>>
+	readonly #dbTableSurfaces: DataStoreSchemaTableView<typeof SurfaceConfigSchema>
+	readonly #dbTableGroups: DataStoreSchemaTableView<typeof SurfaceGroupConfigSchema>
 	readonly #handlerDependencies: SurfaceHandlerDependencies
 
 	readonly #updateEvents = new EventEmitter<UpdateEvents>()
@@ -168,6 +170,11 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	#runningUsbHotplug: boolean = false
 
 	/**
+	 * Set once quit has been called, after which the db may be closed
+	 */
+	#hasQuit: boolean = false
+
+	/**
 	 * Whether this machine has usb available. When it doesn't, hotplug is never started
 	 */
 	readonly #usbAvailable: boolean
@@ -219,8 +226,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 		this.#usbAvailable = usbAvailable
 
-		this.#dbTableSurfaces = db.getTableView('surfaces')
-		this.#dbTableGroups = db.getTableView('surface_groups')
+		this.#dbTableSurfaces = db.getSchemaTableView('surfaces', SurfaceConfigSchema)
+		this.#dbTableGroups = db.getSchemaTableView('surface_groups', SurfaceGroupConfigSchema)
 		this.#handlerDependencies = handlerDependencies
 
 		this.#updateEvents.setMaxListeners(0)
@@ -1384,6 +1391,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	})
 
 	#updateDevicesList(): void {
+		if (this.#hasQuit) return
+
 		const newJsonArr = structuredClone(this.getDevicesList())
 
 		if (this.#updateEvents.listenerCount('emulatorList') > 0) {
@@ -1413,7 +1422,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						info,
 					})
 				} else {
-					const patch = jsonPatch.compare(lastInfo, info)
+					const patch = diffObject(lastInfo, info)
 					if (patch.length > 0) {
 						changes.push({
 							type: 'update',
@@ -1783,7 +1792,13 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				}
 			} else {
 				// Device is not loaded
-				this.setDeviceConfig(surfaceId, surfaceConfig)
+				try {
+					this.setDeviceConfig(surfaceId, surfaceConfig)
+				} catch (e) {
+					// Skip it, rather than abandon the rest
+					this.#logger.warn(`Skipping invalid surface "${surfaceId}": ${stringifyError(e)}`)
+					continue
+				}
 
 				if (surfaceId.startsWith('emulator:')) {
 					this.addEmulator(surfaceId.substring(9), undefined)
@@ -2010,7 +2025,10 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#outboundController.quit()
 
 		this.#surfaceHandlers.clear()
-		this.triggerUpdateDevicesList()
+
+		// The db is closed straight after this, so don't emit any further updates
+		this.#hasQuit = true
+		this.triggerUpdateDevicesList.cancel()
 	}
 
 	/**
