@@ -47,6 +47,13 @@ body {
 		);
 	}
 
+	.launcher-logo {
+		display: block;
+		width: 72px;
+		height: 72px;
+		object-fit: contain;
+	}
+
 	.launcher-ident {
 		display: flex;
 		flex-direction: column;

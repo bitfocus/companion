@@ -4,7 +4,6 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import type { MouseEventHandler } from 'react'
 import { Button } from '~/Components/Button.js'
-import '~/Components/LogoMark.css'
 import { makeAbsolutePath } from '~/Resources/util'
 import { CHANNEL_BADGE, channelFromVersionBuild } from './updateChannel.js'
 import { useCompanionVersion } from './useCompanionVersion'
@@ -15,7 +14,7 @@ export function SidebarHeader(): React.JSX.Element {
 			<div className="sidebar-brand w-full">
 				<div className="sidebar-brand-full w-full">
 					<div className="flex items-center justify-center gap-1.5">
-						<span className="logo-mark sidebar-logo-mark">
+						<span className="sidebar-logo-mark">
 							<img src={makeAbsolutePath('/img/logo-glass.png')} alt="Bitfocus Companion" />
 						</span>
 						<span>
@@ -24,7 +23,7 @@ export function SidebarHeader(): React.JSX.Element {
 					</div>
 				</div>
 				<div className="sidebar-brand-narrow">
-					<span className="logo-mark sidebar-logo-mark sidebar-logo-mark-narrow">
+					<span className="sidebar-logo-mark sidebar-logo-mark-narrow">
 						<img src={makeAbsolutePath('/img/logo-glass.png')} alt="Bitfocus Companion" />
 					</span>
 				</div>
