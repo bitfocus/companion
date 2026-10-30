@@ -1,4 +1,5 @@
 import type { JsonValue } from 'type-fest'
+import { isCustomActionsConnectionId } from '@companion-app/shared/ConnectionId.js'
 import { diffObject } from '@companion-app/shared/Diff.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import {
@@ -35,6 +36,7 @@ import {
 	type CustomActionRunFrame,
 	type CustomActionValues,
 } from '../CustomActionRunFrame.js'
+import type { CustomActionCallAnalysis } from '../CustomActions/CustomActionCalls.js'
 import type { ControlEntityInstance } from '../Entities/EntityInstance.js'
 import type { ControlEntityListChangeProps } from '../Entities/EntityListPoolBase.js'
 import { ControlEntityListPoolCustomAction } from '../Entities/EntityListPoolCustomAction.js'
@@ -121,6 +123,11 @@ export class ControlCustomAction
 	 * The outputs of the custom action
 	 */
 	#outputs: CustomActionOutput[] = []
+
+	/**
+	 * What it calls through the other custom actions, and why some of those calls can't run, if they can't
+	 */
+	#callAnalysis: { analysis: CustomActionCallAnalysis; problem: string | null } | null = null
 
 	readonly entities: ControlEntityListPoolCustomAction
 
@@ -240,6 +247,7 @@ export class ControlCustomAction
 			showInvert: false,
 			actionHasResult: false,
 			actionOutputs: this.#outputs.map((output) => ({ id: output.id, label: output.label })),
+			warning: this.#callAnalysis?.problem ?? null,
 			feedbackAffectedProperties: undefined,
 			optionsSupportExpressions: true,
 			showButtonPreview: false,
@@ -579,10 +587,36 @@ export class ControlCustomAction
 	}
 
 	toClientJSON(): ClientCustomActionData {
+		const analysis = this.#callAnalysis?.analysis
 		return {
 			type: this.type,
 			...this.options,
+			calledCustomActionIds: analysis ? [...analysis.calledIds].sort() : [],
+			callLoop: analysis?.loop ?? null,
+			nestedTooDeep: !!analysis?.tooDeep,
 		}
+	}
+
+	/**
+	 * Get the ids of the custom actions this calls directly, including from within other actions
+	 */
+	getCalledCustomActionIds(): Set<string> {
+		const ids = new Set<string>()
+		for (const entity of this.entities.getAllEntities()) {
+			if (isCustomActionsConnectionId(entity.connectionId)) ids.add(entity.definitionId)
+		}
+		return ids
+	}
+
+	/**
+	 * Set what this calls through the other custom actions
+	 * @param analysis What it calls
+	 * @param problem Why some of those calls can't run, for the user, or null if they all can
+	 */
+	setCallAnalysis(analysis: CustomActionCallAnalysis, problem: string | null): void {
+		this.#callAnalysis = { analysis, problem }
+
+		this.#sendClientJsonChange()
 	}
 
 	/**

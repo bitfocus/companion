@@ -795,6 +795,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				actionHasResult: false,
 				actionExecutionTimeout: undefined, // not supported from 1.x modules
 				actionOutputs: null,
+				warning: null,
 
 				showInvert: false,
 				showButtonPreview: false,
@@ -846,6 +847,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				actionHasResult: undefined,
 				actionExecutionTimeout: undefined, // not supported from 1.x modules
 				actionOutputs: null,
+				warning: null,
 
 				feedbackAffectedProperties: undefined,
 				feedbackDisableStyleOverrides: false,
