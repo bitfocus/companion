@@ -2,8 +2,9 @@ import { TriangleAlert } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Alert, AlertDescription } from '~/components/ui/alert'
 import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
+import { Switch } from '~/components/ui/switch'
 import { useConfig } from '~/hooks/useConfig'
+import { SettingsCard, SettingsRow } from './SettingsCard'
 
 export function DangerousFeaturesSection(): React.JSX.Element {
 	const { state, updateConfig } = useConfig()
@@ -33,73 +34,60 @@ export function DangerousFeaturesSection(): React.JSX.Element {
 		updateConfig({ enable_restricted_modules: checked })
 	}
 
+	// Saved when it loses focus, and only when changed, as each change restarts Companion
 	const handleTrustedProxiesBlur = () => {
-		updateConfig({ trusted_proxies: trustedProxies })
+		if (trustedProxies !== (config.trusted_proxies || '')) updateConfig({ trusted_proxies: trustedProxies })
 	}
 
 	return (
-		<div className="space-y-6">
-			<div>
-				<p className="text-muted-foreground mb-4 text-sm">
-					These features allow code to run on this computer. They are disabled by default and should only be enabled if
-					you understand and accept the risk - especially if Companion is reachable over a network.
-				</p>
-				<Alert className="mb-6" variant="destructive">
-					<TriangleAlert className="h-4 w-4" />
-					<AlertDescription className="leading-relaxed">
-						<p>Only enable these in a trusted environment. Changing these settings restarts Companion.</p>
-					</AlertDescription>
-				</Alert>
+		<>
+			<p className="text-muted-foreground text-sm">
+				These features allow code to run on this computer. They are disabled by default and should only be enabled if
+				you understand and accept the risk - especially if Companion is reachable over a network.
+			</p>
+			<Alert variant="destructive">
+				<TriangleAlert className="h-4 w-4" />
+				<AlertDescription className="leading-relaxed">Only enable these in a trusted environment.</AlertDescription>
+			</Alert>
 
-				<div className="space-y-4">
-					<div className="grid grid-cols-4 gap-4 items-center">
-						<Label htmlFor="enable-shell-command-support">Shell command support</Label>
-						<div className="flex items-center col-span-3">
-							<input
-								type="checkbox"
-								id="enable-shell-command-support"
-								checked={enableShellCommandSupport}
-								onChange={(e) => handleEnableShellCommandSupportChange(e.target.checked)}
-								className="rounded"
-							/>
-							<p className="text-sm text-muted-foreground ml-2">
-								Allows running shell commands on this computer (e.g. the internal "Run shell command" action).
-							</p>
-						</div>
-
-						<Label htmlFor="enable-restricted-modules">Restricted modules</Label>
-						<div className="flex items-center col-span-3">
-							<input
-								type="checkbox"
-								id="enable-restricted-modules"
-								checked={enableRestrictedModules}
-								onChange={(e) => handleEnableRestrictedModulesChange(e.target.checked)}
-								className="rounded"
-							/>
-							<p className="text-sm text-muted-foreground ml-2">
-								Allows loading modules that are otherwise held back for safety, such as importing custom modules from
-								remote clients. Importing from this computer is always allowed.
-							</p>
-						</div>
-
-						<Label htmlFor="trusted-proxies">Trusted proxies</Label>
-						<div className="col-span-3">
-							<Input
-								id="trusted-proxies"
-								type="text"
-								value={trustedProxies}
-								onChange={(e) => setTrustedProxies(e.target.value)}
-								onBlur={handleTrustedProxiesBlur}
-								placeholder="e.g. loopback, or a comma separated list of proxy ip addresses"
-							/>
-							<p className="text-sm text-muted-foreground mt-1">
-								Set this when running Companion behind a reverse proxy, so the real client address is used. Without it,
-								remote clients may appear to be local.
-							</p>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+			<SettingsCard>
+				<SettingsRow
+					label="Shell command support"
+					htmlFor="enable-shell-command-support"
+					help='Allows running shell commands on this computer (e.g. the internal "Run shell command" action).'
+				>
+					<Switch
+						id="enable-shell-command-support"
+						checked={enableShellCommandSupport}
+						onCheckedChange={(checked: boolean) => handleEnableShellCommandSupportChange(checked)}
+					/>
+				</SettingsRow>
+				<SettingsRow
+					label="Restricted modules"
+					htmlFor="enable-restricted-modules"
+					help="Allows loading modules that are otherwise held back for safety, such as importing custom modules from remote clients. Importing from this computer is always allowed."
+				>
+					<Switch
+						id="enable-restricted-modules"
+						checked={enableRestrictedModules}
+						onCheckedChange={(checked: boolean) => handleEnableRestrictedModulesChange(checked)}
+					/>
+				</SettingsRow>
+				<SettingsRow
+					label="Trusted proxies"
+					htmlFor="trusted-proxies"
+					help="Set this when running Companion behind a reverse proxy, so the real client address is used. Without it, remote clients may appear to be local."
+				>
+					<Input
+						id="trusted-proxies"
+						type="text"
+						value={trustedProxies}
+						onChange={(e) => setTrustedProxies(e.target.value)}
+						onBlur={handleTrustedProxiesBlur}
+						placeholder="e.g. loopback, or a comma separated list of proxy ip addresses"
+					/>
+				</SettingsRow>
+			</SettingsCard>
+		</>
 	)
 }

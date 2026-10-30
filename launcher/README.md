@@ -2,6 +2,26 @@
 
 This is the small 'launcher' window that shows when you run the desktop version of companion.
 
+### Development
+
+The launcher's windows are built from the `launcher-ui` package. Run its dev server alongside the launcher, each in
+its own terminal, as the dev server keeps running:
+
+1. In one terminal, start the `launcher-ui` dev server:
+
+   ```bash
+   yarn workspace @companion-app/launcher-ui dev
+   ```
+
+2. In a second terminal, start the launcher:
+
+   ```bash
+   yarn workspace @companion-app/launcher dev
+   ```
+
+Without the dev server running, the launcher falls back to a local build of `launcher-ui`
+(`yarn workspace @companion-app/launcher-ui build`).
+
 ### Background
 
 In 2.2 and earlier, this window was part of the same process as the rest of companion, but this resulted in it falling behind as a very outdated version of electron. This happened because updating electron often meant changing the version of node that companion was running with, and that would often break some modules.

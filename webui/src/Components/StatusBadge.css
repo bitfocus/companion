@@ -16,7 +16,7 @@
 	user-select: none;
 }
 
-/* Tone colours, from the shared --color-tone-* tokens in tailwind.css (which carry their own
+/* Tone colours, from the shared --color-tone-* tokens in theme-tokens.css (which carry their own
    dark-scheme values), so a badge and a filter pill of the same tone always agree. */
 .status-badge[data-tone='good'],
 .status-badge[data-tone='warning'],
