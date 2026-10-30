@@ -1,5 +1,12 @@
 name: Format check
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - "**"
+    # Only app releases, not the satellite-protocol library (satellite-protocol-v*)
+    tags:
+      - "v*"
+  pull_request:
 
 permissions:
   contents: read
