@@ -26,6 +26,10 @@ export class ImageWriteQueue<TKey extends string | number, TArgs extends any[]> 
 	 * Images pending being processed
 	 */
 	readonly #pendingImages: Array<{ key: TKey; args: TArgs }> = []
+	/**
+	 * The pending images by key, so that queueing one already pending doesn't search the list
+	 */
+	readonly #pendingByKey = new Map<TKey, { key: TKey; args: TArgs }>()
 
 	readonly #logger: Logger
 	readonly #callback: (key: TKey, ...args: TArgs) => Promise<void>
@@ -57,19 +61,14 @@ export class ImageWriteQueue<TKey extends string | number, TArgs extends any[]> 
 	 * @param args Arguments for the callback
 	 */
 	queue(key: TKey, ...args: TArgs): void {
-		let updated = false
-		// Try and replace an existing queued image first
-		for (const img of this.#pendingImages) {
-			if (img.key === key) {
-				img.args = args
-				updated = true
-				break
-			}
-		}
-
-		// If key isnt queued, then append
-		if (!updated) {
-			this.#pendingImages.push({ key: key, args: args })
+		// Replace an existing queued image, or append
+		const pending = this.#pendingByKey.get(key)
+		if (pending) {
+			pending.args = args
+		} else {
+			const image = { key, args }
+			this.#pendingImages.push(image)
+			this.#pendingByKey.set(key, image)
 		}
 
 		this.#tryDequeue()
@@ -92,6 +91,7 @@ export class ImageWriteQueue<TKey extends string | number, TArgs extends any[]> 
 			if (!nextImage) {
 				return
 			}
+			this.#pendingByKey.delete(nextImage.key)
 
 			// Track which key is being processed
 			this.#inProgress.add(nextImage.key)

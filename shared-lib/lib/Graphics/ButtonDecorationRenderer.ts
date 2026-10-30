@@ -1,6 +1,6 @@
 import { formatLocation } from '../ControlId.js'
 import type { RendererButtonStyle } from '../Model/Render.js'
-import type { DrawStyleButtonStateProps } from '../Model/StyleModel.js'
+import { ButtonGraphicsDecorationType, type DrawStyleButtonStateProps } from '../Model/StyleModel.js'
 import type { ImageBase } from './ImageBase.js'
 import type { DrawBounds } from './Util.js'
 
@@ -47,7 +47,8 @@ export class ButtonDecorationRenderer {
 			step = `.${drawStyle.stepCurrent}`
 		}
 
-		const locationDrawX = Math.round(topBarBounds.width * 0.05) + topBarBounds.x
+		// Inset by the width on square buttons, but clamped by the height so wide ones (eg a Neo's strip) aren't over-padded
+		const locationDrawX = Math.round(Math.min(topBarBounds.width * 0.05, topBarBounds.height * 0.3)) + topBarBounds.x
 		const locationDrawY = Math.round(topBarBounds.height * 0.15) + topBarBounds.y
 		const locationDrawSize = Math.round(topBarBounds.height * 0.65)
 
@@ -87,6 +88,22 @@ export class ButtonDecorationRenderer {
 		// next error or warning icon
 		const iconSize = Math.floor(topBarBounds.height * 0.65)
 		const iconPadding = Math.floor(topBarBounds.height * 0.175)
+
+		// first a link for a remote button, as it has a top bar to put it in. Small and dim, as a mark of what it is
+		// rather than a status, until it is unreachable
+		if (drawStyle.link_status && drawStyle.decoration === ButtonGraphicsDecorationType.TopBar) {
+			const linkWidth = Math.round(iconSize * 1.3)
+			const linkHeight = Math.round(iconSize * 0.6)
+			ButtonDecorationRenderer.#drawLink(
+				img,
+				rightMax - (linkWidth + iconPadding),
+				topBarBounds.y + iconPadding + (iconSize - linkHeight) / 2,
+				linkWidth,
+				linkHeight,
+				drawStyle.link_status === 'unreachable' ? 'red' : 'rgb(120, 120, 120)'
+			)
+			rightMax -= linkWidth + iconPadding
+		}
 
 		let statusColor: string | undefined
 		switch (drawStyle.button_status) {
@@ -134,6 +151,24 @@ export class ButtonDecorationRenderer {
 				iconcolor
 			)
 			rightMax -= iconSize
+		}
+	}
+
+	/** Two links of a chain side by side, overlapping, filling a box */
+	static #drawLink(img: ImageBase<any>, x: number, y: number, width: number, height: number, color: string): void {
+		const stroke = Math.max(1, height * 0.18)
+		const radius = (height - stroke) / 2
+		const centerY = y + height / 2
+		const linkLength = width * 0.6
+
+		for (const left of [x, x + width - linkLength]) {
+			const startX = left + stroke / 2 + radius
+			const endX = left + linkLength - stroke / 2 - radius
+			const style = { color, width: stroke }
+			img.arcStroke(startX, centerY, radius, Math.PI / 2, (Math.PI * 3) / 2, false, style)
+			img.arcStroke(endX, centerY, radius, -Math.PI / 2, Math.PI / 2, false, style)
+			img.line(startX, centerY - radius, endX, centerY - radius, style)
+			img.line(startX, centerY + radius, endX, centerY + radius, style)
 		}
 	}
 }

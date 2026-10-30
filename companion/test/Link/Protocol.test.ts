@@ -1,0 +1,164 @@
+import { describe, expect, test } from 'vitest'
+import { decodeLinkAnnouncement, encodeLinkAnnouncement } from '../../lib/Link/Protocol/Announcement.js'
+import { decodeLinkMessage, encodeLinkMessage } from '../../lib/Link/Protocol/v1/Schemas.js'
+import { LINK_PROTOCOL_VERSIONS, negotiateLinkProtocolVersion } from '../../lib/Link/Protocol/Versions.js'
+
+describe('message encoding', () => {
+	test('round trips a message', () => {
+		const payload = {
+			id: 'press-1',
+			expiresAt: 1_000,
+			button: { type: 'location', page: 1, row: 2, column: 3 },
+			pressed: true,
+			surfaceId: 'surface',
+		} as const
+		const decoded = decodeLinkMessage(encodeLinkMessage('button.press', payload))
+		expect(decoded).toEqual({ ok: true, message: { type: 'button.press', payload } })
+	})
+
+	test('accepts pages of a grid of a sane size, and rejects an inverted or huge one', () => {
+		const pages = (gridSize: { minRow: number; maxRow: number; minColumn: number; maxColumn: number }) =>
+			decodeLinkMessage(JSON.stringify({ type: 'pages', payload: { id: 'r1', gridSize, pages: [] } })).ok
+
+		expect(pages({ minRow: 0, maxRow: 3, minColumn: 0, maxColumn: 7 })).toBe(true)
+		expect(pages({ minRow: 3, maxRow: 0, minColumn: 0, maxColumn: 7 })).toBe(false)
+		// Each endpoint is within bounds, but the grid between them is too many buttons to lay out
+		expect(pages({ minRow: -10_000, maxRow: 10_000, minColumn: -10_000, maxColumn: 10_000 })).toBe(false)
+	})
+
+	test('rejects invalid json', () => {
+		expect(decodeLinkMessage('{nope')).toEqual({ ok: false, error: 'Invalid JSON' })
+	})
+
+	test('has no version in the envelope, so a version field is ignored like any other unknown property', () => {
+		const result = decodeLinkMessage(JSON.stringify({ version: 2, type: 'ping', payload: { nonce: 'n' } }))
+		expect(result.ok).toBe(true)
+	})
+
+	test('rejects an unknown message type', () => {
+		const result = decodeLinkMessage(JSON.stringify({ type: 'nonsense', payload: {} }))
+		expect(result.ok).toBe(false)
+	})
+
+	test('rejects a payload that does not match the schema', () => {
+		const result = decodeLinkMessage(
+			JSON.stringify({
+				type: 'button.press',
+				payload: { button: { type: 'location', page: 'one', row: 0, column: 0 } },
+			})
+		)
+		expect(result.ok).toBe(false)
+	})
+
+	test('ignores unknown properties, so that new optional fields are compatible', () => {
+		const result = decodeLinkMessage(
+			JSON.stringify({
+				type: 'unsubscribe',
+				payload: { buttons: [], somethingNew: 1 },
+			})
+		)
+		expect(result.ok).toBe(true)
+	})
+})
+
+describe('values added by a newer version', () => {
+	const sub = { button: { type: 'location', page: 1, row: 0, column: 0 }, width: 72, height: 72 }
+
+	test('leaves out an item of a list it cannot read, keeping the rest', () => {
+		const raw = JSON.stringify({
+			type: 'subscribe',
+			payload: {
+				buttons: [
+					{ ...sub, button: { type: 'future', id: 'x' }, have: null },
+					{ ...sub, have: null },
+				],
+			},
+		})
+		expect(decodeLinkMessage(raw)).toEqual({
+			ok: true,
+			message: { type: 'subscribe', payload: { buttons: [{ ...sub, have: null }] } },
+		})
+	})
+
+	test('reads a refusal for a reason added since as the peer being busy', () => {
+		const raw = JSON.stringify({ type: 'subscribe.refused', payload: { buttons: [{ ...sub, reason: 'future' }] } })
+		expect(decodeLinkMessage(raw)).toMatchObject({
+			ok: true,
+			message: { payload: { buttons: [{ reason: 'limit' }] } },
+		})
+	})
+
+	test('reads a status added since as none', () => {
+		const raw = JSON.stringify({
+			type: 'button.update',
+			payload: {
+				...sub,
+				revision: { stream: 's', seq: 1 },
+				image: { type: 'image', dataUrl: null },
+				pressed: false,
+				stepCurrent: 1,
+				stepCount: 1,
+				status: 'future',
+				actionRunning: false,
+				unreachable: false,
+				sourceChain: [],
+			},
+		})
+		expect(decodeLinkMessage(raw)).toMatchObject({ ok: true, message: { payload: { status: null } } })
+	})
+})
+
+describe('announcement', () => {
+	const announcement = {
+		name: 'Somewhere',
+		companionVersion: '5.0.0',
+		protocolVersions: ['1.0.0'],
+		announceIntervalMs: 15_000,
+	}
+
+	test('round trips', () => {
+		expect(decodeLinkAnnouncement(encodeLinkAnnouncement(announcement))).toEqual({ ok: true, announcement })
+	})
+
+	test('ignores unknown properties, so that new optional fields are readable by every version', () => {
+		const result = decodeLinkAnnouncement(JSON.stringify({ ...announcement, somethingNew: 1 }))
+		expect(result.ok).toBe(true)
+	})
+
+	test('cuts fields too long to be real, as they are stored and shown, rather than rejecting a later version', () => {
+		const decode = (fields: object) => decodeLinkAnnouncement(JSON.stringify({ ...announcement, ...fields }))
+		expect(decode({ companionVersion: 'x'.repeat(65) })).toMatchObject({
+			announcement: { companionVersion: 'x'.repeat(64) },
+		})
+		expect(decode({ protocolVersions: ['1.0.0'.padEnd(33, '0')] })).toMatchObject({
+			announcement: { protocolVersions: ['1.0.0'.padEnd(32, '0')] },
+		})
+		const versions = Array.from({ length: 17 }, (_, i) => `${i + 1}.0.0`)
+		expect(decode({ protocolVersions: versions })).toMatchObject({
+			announcement: { protocolVersions: versions.slice(0, 16) },
+		})
+		// So that a peer that has gone is not listed as reachable for long
+		expect(decode({ announceIntervalMs: 60_001 })).toMatchObject({ announcement: { announceIntervalMs: 60_000 } })
+	})
+})
+
+describe('versions', () => {
+	test('speaks one version per major', () => {
+		const majors = LINK_PROTOCOL_VERSIONS.map((v) => v.split('.')[0])
+		expect(new Set(majors).size).toBe(majors.length)
+		expect(negotiateLinkProtocolVersion(LINK_PROTOCOL_VERSIONS, LINK_PROTOCOL_VERSIONS)).not.toBeNull()
+	})
+
+	test('uses the highest major both speak, with the peer version of it', () => {
+		expect(negotiateLinkProtocolVersion(['1.0.0'], ['1.99.0'])).toBe('1.99.0')
+		expect(negotiateLinkProtocolVersion(['1.4.0', '2.0.0'], ['1.2.0'])).toBe('1.2.0')
+		expect(negotiateLinkProtocolVersion(['1.4.0', '2.0.0'], ['1.5.0', '2.1.0'])).toBe('2.1.0')
+		expect(negotiateLinkProtocolVersion(['2.0.0'], ['1.5.0', '2.1.0'])).toBe('2.1.0')
+	})
+
+	test('no shared major is incompatible', () => {
+		expect(negotiateLinkProtocolVersion(['1.0.0'], ['2.0.0'])).toBeNull()
+		expect(negotiateLinkProtocolVersion(['1.0.0'], ['0.9.0'])).toBeNull()
+		expect(negotiateLinkProtocolVersion(['1.0.0'], ['garbage'])).toBeNull()
+	})
+})

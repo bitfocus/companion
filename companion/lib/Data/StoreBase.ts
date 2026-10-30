@@ -1,9 +1,25 @@
 import path from 'node:path'
-import { DatabaseSync, backup as SqliteBackup, type StatementSync } from 'node:sqlite'
+import { DatabaseSync, backup as SqliteBackup } from 'node:sqlite'
 import fs from 'fs-extra'
+import type z from 'zod'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import { showErrorMessage, showFatalError } from '../Resources/Util.js'
+import {
+	DataStoreKeyedSchemaTableView,
+	type KeyedRowSchemas,
+	type KeyedSchemaTableViewOptions,
+} from './Tables/KeyedSchemaTableView.js'
+import { BROKEN_ROWS_TABLE } from './Tables/ParsedTableViewBase.js'
+import { DataStoreSchemaTableView, type SchemaTableViewOptions } from './Tables/SchemaTableView.js'
+import { DataStoreTableView } from './Tables/TableView.js'
+import {
+	DATABASE_OPERATIONS,
+	type DatabaseOperation,
+	type DataStoreTableViewBase,
+	type DataStoreTableViewHooks,
+	type TableOperationStats,
+} from './Tables/TableViewBase.js'
 
 enum DatabaseStartupState {
 	Normal = 0,
@@ -12,31 +28,8 @@ enum DatabaseStartupState {
 	Fatal = 3,
 }
 
-/**
- * The kinds of row-level operation a DataStoreTableView performs, used as a metrics label.
- * `get` = point read, `get_all` = full-table read, `set` = insert/update, `delete`/`clear` = removals.
- */
-export type DatabaseOperation = 'get' | 'get_all' | 'set' | 'delete' | 'clear'
-
-export const DATABASE_OPERATIONS: DatabaseOperation[] = ['get', 'get_all', 'set', 'delete', 'clear']
-
-/** Per-table operation and error counts, accumulated over the process lifetime for metrics. */
-export interface TableOperationStats {
-	table: string
-	counts: Record<DatabaseOperation, number>
-	errors: Record<DatabaseOperation, number>
-}
-
 /** Sink called with the timing of each completed SQLite operation. */
 export type OperationObserver = (table: string, operation: DatabaseOperation, seconds: number) => void
-
-/** Callbacks a table view invokes back into its owning store. */
-interface DataStoreTableViewHooks {
-	/** Mark the database as having unsaved changes. */
-	onDirty: () => void
-	/** Report the timing of a completed operation (table is filled in by the store). */
-	onOperation: (operation: DatabaseOperation, seconds: number) => void
-}
 
 /**
  * Abstract class to be extended by the DB classes.
@@ -113,6 +106,8 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 * Saved queries
 	 */
 	private tableCache = new Map<string, DataStoreTableView<any>>()
+	private schemaTableCache = new Map<string, DataStoreSchemaTableView<any>>()
+	private keyedSchemaTableCache = new Map<string, DataStoreKeyedSchemaTableView<any>>()
 	/**
 	 * Sink for per-operation timings. Required and injected at construction, so it is immutable for the
 	 * store's lifetime and cannot be forgotten when a new store type is added.
@@ -245,7 +240,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	protected startSQLite(): void {
 		if (this.cfgDir == ':memory:') {
 			this.store = new DatabaseSync(this.cfgDir)
-			this.tableCache.clear()
+			this.#clearTableViews()
 			this.create()
 			this.defaultTableView.get('test')
 			this.loadDefaults()
@@ -255,7 +250,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 
 				try {
 					this.store = this.#createDatabase(this.cfgFile)
-					this.tableCache.clear()
+					this.#clearTableViews()
 					this.defaultTableView.get('test')
 				} catch (_e) {
 					// Release our handle on the unreadable file before touching it on disk. Windows keeps a
@@ -285,7 +280,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 			} else if (fs.existsSync(this.cfgLegacyFile)) {
 				try {
 					this.store = this.#createDatabase(this.cfgFile)
-					this.tableCache.clear()
+					this.#clearTableViews()
 					this.logger.info(`Legacy ${this.cfgLegacyFile} exists.  Attempting migration to SQLite.`)
 					this.migrateFileToSqlite()
 					this.defaultTableView.get('test')
@@ -306,7 +301,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 		if (!this.store) {
 			try {
 				this.store = new DatabaseSync(':memory:')
-				this.tableCache.clear()
+				this.#clearTableViews()
 				this.setStartupState(DatabaseStartupState.RAM)
 				this.create()
 				this.defaultTableView.get('test')
@@ -375,7 +370,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 
 				fs.copyFileSync(this.cfgBakFile, this.cfgFile)
 				this.store = this.#createDatabase(this.cfgFile)
-				this.tableCache.clear()
+				this.#clearTableViews()
 				this.defaultTableView.get('test')
 			} catch (e) {
 				this.setStartupState(DatabaseStartupState.Reset)
@@ -401,7 +396,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 		} finally {
 			try {
 				this.store = this.#createDatabase(this.cfgFile)
-				this.tableCache.clear()
+				this.#clearTableViews()
 				this.create()
 				this.defaultTableView.get('test')
 				this.loadDefaults()
@@ -415,25 +410,139 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 		return this.getTableView(this.defaultTable)
 	}
 
+	/** Drop the cached table views, as they are bound to the previous SQLite handle */
+	#clearTableViews(): void {
+		this.tableCache.clear()
+		this.schemaTableCache.clear()
+		this.keyedSchemaTableCache.clear()
+	}
+
+	#createTableViewHooks(tableName: string): DataStoreTableViewHooks {
+		return {
+			onDirty: () => this.setDirty(),
+			// The view knows the table; the store adds the database name when forwarding to the observer.
+			onOperation: (operation, seconds) => this.operationObserver(tableName, operation, seconds),
+		}
+	}
+
 	public getTableView<TableContent extends Record<string, any>>(tableName: string): DataStoreTableView<TableContent> {
 		if (!tableName || typeof tableName !== 'string') throw new Error('Invalid table name')
 
 		const cachedTable = this.tableCache.get(tableName)
 		if (cachedTable) return cachedTable
 
-		const newTable = new DataStoreTableView<TableContent>(this.logger, this.store, tableName, {
-			onDirty: () => this.setDirty(),
-			// The view knows the table; the store adds the database name when forwarding to the observer.
-			onOperation: (operation, seconds) => this.operationObserver(tableName, operation, seconds),
-		})
+		const newTable = new DataStoreTableView<TableContent>(
+			this.logger,
+			this.store,
+			tableName,
+			this.#createTableViewHooks(tableName)
+		)
 		this.tableCache.set(tableName, newTable)
 
 		return newTable
 	}
 
-	/** Operation/error counts, for metrics. Only covers tables that have a cached view (i.e. seen traffic). */
+	/**
+	 * Get a view of a table whose rows are parsed with a schema when read and written.
+	 * Rows that fail to parse when read are moved to the broken rows table.
+	 * @param tableName - the table to view
+	 * @param schema - the schema for each row
+	 * @param options - how the view treats writes
+	 */
+	public getSchemaTableView<TSchema extends z.ZodType<Record<string, any>>>(
+		tableName: string,
+		schema: TSchema,
+		options?: SchemaTableViewOptions
+	): DataStoreSchemaTableView<TSchema> {
+		if (!tableName || typeof tableName !== 'string') throw new Error('Invalid table name')
+		if (tableName === BROKEN_ROWS_TABLE) throw new Error('Cannot view the broken rows table with a schema')
+
+		const cachedTable = this.schemaTableCache.get(tableName)
+		if (cachedTable) {
+			if (cachedTable.schema !== schema) throw new Error(`Table "${tableName}" already has a different schema`)
+			if (cachedTable.validateWrites !== (options?.validateWrites ?? true) || cachedTable.repair !== options?.repair) {
+				throw new Error(`Table "${tableName}" already has different options`)
+			}
+			return cachedTable
+		}
+
+		const newTable = new DataStoreSchemaTableView(
+			this.logger,
+			this.store,
+			tableName,
+			this.#createTableViewHooks(tableName),
+			this.getTableView(BROKEN_ROWS_TABLE),
+			schema,
+			options
+		)
+		this.schemaTableCache.set(tableName, newTable)
+
+		return newTable
+	}
+
+	/**
+	 * Get a view of a table with a fixed set of rows, each parsed with its own schema when read and written.
+	 * Rows that fail to parse when read are moved to the broken rows table.
+	 * @param tableName - the table to view
+	 * @param schemas - the schema for each row, by its key
+	 * @param options - how the view repairs rows
+	 */
+	public getKeyedSchemaTableView<TRows extends KeyedRowSchemas>(
+		tableName: string,
+		schemas: TRows,
+		options?: KeyedSchemaTableViewOptions<TRows>
+	): DataStoreKeyedSchemaTableView<TRows> {
+		if (!tableName || typeof tableName !== 'string') throw new Error('Invalid table name')
+		if (tableName === BROKEN_ROWS_TABLE) throw new Error('Cannot view the broken rows table with a schema')
+
+		const cachedTable = this.keyedSchemaTableCache.get(tableName)
+		if (cachedTable) {
+			if (cachedTable.schemas !== schemas) throw new Error(`Table "${tableName}" already has different schemas`)
+			if (cachedTable.repair !== options?.repair) throw new Error(`Table "${tableName}" already has different options`)
+			return cachedTable
+		}
+
+		const newTable = new DataStoreKeyedSchemaTableView(
+			this.logger,
+			this.store,
+			tableName,
+			this.#createTableViewHooks(tableName),
+			this.getTableView(BROKEN_ROWS_TABLE),
+			schemas,
+			options
+		)
+		this.keyedSchemaTableCache.set(tableName, newTable)
+
+		return newTable
+	}
+
+	/**
+	 * Operation/error counts, for metrics. Only covers tables that have a cached view (i.e. seen traffic).
+	 * A table with both a plain and a schema view reports their combined counts.
+	 */
 	public getTableOperationStats(): TableOperationStats[] {
-		return Array.from(this.tableCache.values(), (view) => view.collectOperationStats())
+		const merged = new Map<string, TableOperationStats>()
+
+		const views: DataStoreTableViewBase[] = [
+			...this.tableCache.values(),
+			...this.schemaTableCache.values(),
+			...this.keyedSchemaTableCache.values(),
+		]
+		for (const view of views) {
+			const stats = view.collectOperationStats()
+			const existing = merged.get(stats.table)
+			if (!existing) {
+				merged.set(stats.table, stats)
+				continue
+			}
+
+			for (const operation of DATABASE_OPERATIONS) {
+				existing.counts[operation] += stats.counts[operation]
+				existing.errors[operation] += stats.errors[operation]
+			}
+		}
+
+		return Array.from(merged.values())
 	}
 
 	/** Row count of every table, enumerated from `sqlite_master` so untouched tables are included too. */
@@ -581,248 +690,5 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 			this.logger.error(`Error merging tables "${oldTableName}" and "${newTableName}": ${stringifyError(e)}`)
 			throw e
 		}
-	}
-}
-
-type ValueIfJsonEncodable<T> = T extends number | { [key: string]: any } ? T : never
-type ValueIfString<T> = T extends string ? T : never
-
-export class DataStoreTableView<TableContent extends Record<string, any>> {
-	readonly #logger: Logger
-
-	readonly #store: DatabaseSync
-	readonly tableName: string
-	readonly #hooks: DataStoreTableViewHooks
-
-	readonly #opCounts: Record<DatabaseOperation, number> = { get: 0, get_all: 0, set: 0, delete: 0, clear: 0 }
-	readonly #opErrors: Record<DatabaseOperation, number> = { get: 0, get_all: 0, set: 0, delete: 0, clear: 0 }
-
-	readonly #deleteByIdQuery: StatementSync
-	readonly #emptyTableQuery: StatementSync
-	readonly #getAllQuery: StatementSync
-	readonly #getByIdQuery: StatementSync
-	readonly #setByIdQuery: StatementSync
-
-	constructor(logger: Logger, store: DatabaseSync, tableName: string, hooks: DataStoreTableViewHooks) {
-		this.#logger = logger.child({ source: tableName })
-		this.#store = store
-		this.tableName = tableName
-		this.#hooks = hooks
-
-		// Ensure the table exists
-		this.#store.prepare(`CREATE TABLE IF NOT EXISTS ${tableName} (id STRING UNIQUE, value STRING);`).run()
-
-		this.#deleteByIdQuery = this.#store.prepare(`DELETE FROM ${tableName} WHERE id = @id`)
-		this.#emptyTableQuery = this.#store.prepare(`DELETE FROM ${tableName}`)
-		this.#getAllQuery = this.#store.prepare(`SELECT id, value FROM ${tableName}`)
-		this.#getByIdQuery = this.#store.prepare(`SELECT value FROM ${tableName} WHERE id = @id`)
-		this.#setByIdQuery = this.#store.prepare(
-			`INSERT INTO ${tableName} (id, value) VALUES (@id, @value) ON CONFLICT(id) DO UPDATE SET value = @value`
-		)
-	}
-
-	private validateKey(key: string | number | symbol): asserts key is string {
-		if (!key || typeof key !== 'string') throw new Error(`Invalid key for "${this.tableName}": ${String(key)}`)
-	}
-
-	/**
-	 * Run a single SQLite statement, recording its count, timing, and (on throw) error against the operation.
-	 * Rethrows so the caller's existing error handling still logs and falls back.
-	 */
-	#runOp<T>(operation: DatabaseOperation, fn: () => T): T {
-		const start = process.hrtime.bigint()
-		try {
-			const result = fn()
-			this.#opCounts[operation]++
-			return result
-		} catch (e) {
-			this.#opErrors[operation]++
-			throw e
-		} finally {
-			this.#hooks.onOperation(operation, Number(process.hrtime.bigint() - start) / 1e9)
-		}
-	}
-
-	/** Snapshot of this table's accumulated operation and error counts, for metrics. */
-	collectOperationStats(): TableOperationStats {
-		return {
-			table: this.tableName,
-			counts: { ...this.#opCounts },
-			errors: { ...this.#opErrors },
-		}
-	}
-
-	/**
-	 * Get all rows from the table
-	 */
-	all(): TableContent {
-		// TODO - how to make this safe for json vs string?
-
-		const out: TableContent = {} as any
-
-		this.#logger.silly(`Get table`)
-
-		try {
-			const rows = this.#runOp('get_all', () => this.#getAllQuery.all())
-			for (const record of rows) {
-				try {
-					// @ts-expect-error can't use as index
-					out[record.id] = JSON.parse(record.value)
-				} catch (_e) {
-					// @ts-expect-error can't use as index
-					out[record.id] = record.value
-				}
-			}
-		} catch (e) {
-			this.#logger.warn(`Error getting: ${stringifyError(e)}`)
-		}
-
-		return out
-	}
-
-	private getTableKeyRaw(key: string): string | undefined {
-		this.#logger.silly(`Get table key: ${key}`)
-
-		try {
-			const row = this.#runOp('get', () => this.#getByIdQuery.get({ id: key }))
-			return row?.value as string | undefined
-		} catch (e) {
-			this.#logger.warn(`Error getting ${key}: ${stringifyError(e)}`)
-			return undefined
-		}
-	}
-
-	/**
-	 * Save/update a key/value pair to a table
-	 * @param key - the key to save under
-	 * @param value - the object to save
-	 */
-	private setTableKeyRaw(key: string, value: string): void {
-		this.#logger.silly(`Set table key ${key} - ${value}`)
-
-		try {
-			this.#runOp('set', () => this.#setByIdQuery.run({ id: key, value: value }))
-		} catch (e) {
-			this.#logger.warn(`Error updating ${key}: ${stringifyError(e)}`)
-		}
-
-		this.#hooks.onDirty()
-	}
-
-	/**
-	 * Get a value from the table
-	 * @param id - the key to be retrieved
-	 */
-	get<T extends keyof TableContent>(id: T): ValueIfJsonEncodable<TableContent[T]> | undefined {
-		this.validateKey(id)
-
-		const value = this.getTableKeyRaw(id)
-		if (!value) return undefined
-
-		try {
-			return JSON.parse(value)
-		} catch (e) {
-			this.#logger.warn(`Error parsing ${id}: ${stringifyError(e)}`)
-			return undefined
-		}
-	}
-
-	/**
-	 * Get a value from the table or set a default value
-	 * @param id - the key to be retrieved
-	 * @param defaultValue - the default value to store if the key doesn't exist
-	 */
-	getOrDefault<T extends keyof TableContent>(
-		id: T,
-		defaultValue: ValueIfJsonEncodable<TableContent[T]>
-	): ValueIfJsonEncodable<TableContent[T]> {
-		this.validateKey(id)
-
-		const value = this.getTableKeyRaw(id)
-		if (value === undefined) {
-			this.setTableKeyRaw(id, JSON.stringify(defaultValue))
-			return defaultValue
-		}
-
-		try {
-			return JSON.parse(value)
-		} catch (e) {
-			this.#logger.warn(`Error parsing ${String(id)}: ${stringifyError(e)}`)
-			return defaultValue
-		}
-	}
-
-	/**
-	 * Get a value from the table or set a default value
-	 * @param id - the key to be retrieved
-	 * @param defaultValue - the default value to store if the key doesn't exist
-	 */
-	getPrimitiveOrDefault<T extends keyof TableContent>(
-		id: T,
-		defaultValue: ValueIfString<TableContent[T]>
-	): ValueIfString<TableContent[T]> {
-		this.validateKey(id)
-
-		const value = this.getTableKeyRaw(id)
-		if (value === undefined) {
-			this.setTableKeyRaw(id, defaultValue)
-			return defaultValue
-		}
-		return value as any // The types match, but TS doesn't know that
-	}
-
-	/**
-	 * Set a value in the table
-	 * @param id - the key to be set
-	 * @param value - the value to be set
-	 */
-	set<T extends keyof TableContent>(id: T, value: ValueIfJsonEncodable<TableContent[T]>): void {
-		this.validateKey(id)
-
-		this.setTableKeyRaw(id, JSON.stringify(value))
-	}
-
-	/**
-	 * Set a value in the table
-	 * @param id - the key to be set
-	 * @param value - the value to be set
-	 */
-	setPrimitive<T extends keyof TableContent>(id: T, value: ValueIfString<TableContent[T]>): void {
-		this.validateKey(id)
-
-		this.setTableKeyRaw(id, value)
-	}
-
-	/**
-	 * Delete a value from the table
-	 * @param id - the key to be deleted
-	 */
-	delete(id: keyof TableContent): void {
-		this.validateKey(id)
-
-		this.#logger.silly(`Delete key: ${id}`)
-
-		try {
-			this.#runOp('delete', () => this.#deleteByIdQuery.run({ id }))
-		} catch (e) {
-			this.#logger.warn(`Error deleting ${id}: ${stringifyError(e)}`)
-		}
-
-		this.#hooks.onDirty()
-	}
-
-	/**
-	 * Clear all values from the table
-	 */
-	clear(): void {
-		this.#logger.silly(`Empty table`)
-
-		try {
-			this.#runOp('clear', () => this.#emptyTableQuery.run())
-		} catch (e) {
-			this.#logger.warn(`Error emptying: ${stringifyError(e)}`)
-		}
-
-		this.#hooks.onDirty()
 	}
 }

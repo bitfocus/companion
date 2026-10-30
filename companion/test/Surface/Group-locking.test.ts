@@ -1,11 +1,14 @@
 import EventEmitter from 'node:events'
 import { beforeEach, describe, expect, it } from 'vitest'
+import { SurfaceGroupConfigSchema } from '@companion-app/shared/Model/Surfaces.js'
 import { SurfaceGroup } from '../../lib/Surface/Group.js'
+import { FakeDataDatabase } from '../utils/FakeTableView.js'
 
 /**
  * These tests exercise the `never_lock` masking behaviour of `SurfaceGroup`:
  * `#isLocked` tracks the intended lock state, and `never_lock` suppresses it
  * only when pushing to the member surfaces.
+ * It also covers how a group loads its config.
  */
 
 interface FakeSurface {
@@ -40,13 +43,9 @@ function makeSurface(id: string, autoGroupConfig: any = {}): FakeSurface {
 }
 
 function makeDeps(storedGroupConfig: Record<string, any> = {}) {
-	const store = new Map<string, any>(Object.entries(storedGroupConfig))
-	const dbTable = {
-		getOrDefault: (id: string, def: any) => (store.has(id) ? store.get(id) : structuredClone(def)),
-		set: (id: string, val: any) => store.set(id, val),
-		delete: (id: string) => store.delete(id),
-		get: (id: string) => store.get(id),
-	}
+	const db = new FakeDataDatabase()
+	db.getTableView('surface_groups').data = structuredClone(storedGroupConfig)
+	const dbTable = db.getSchemaTableView('surface_groups', SurfaceGroupConfigSchema)
 	const pageStore = {
 		getFirstPageId: () => 'page-1',
 		isPageIdValid: (id: string) => id === 'page-1',
@@ -58,7 +57,7 @@ function makeDeps(storedGroupConfig: Record<string, any> = {}) {
 	const surfaceController = { emit: () => {} }
 	const updateEvents = new EventEmitter()
 
-	return { dbTable, pageStore, userconfig, surfaceController, updateEvents }
+	return { db, dbTable, pageStore, userconfig, surfaceController, updateEvents }
 }
 
 function makeGroup(opts: {
@@ -67,8 +66,17 @@ function makeGroup(opts: {
 	isLocked?: boolean
 	storedConfig?: Record<string, any>
 }): SurfaceGroup {
+	return makeGroupWithDeps(opts).group
+}
+
+function makeGroupWithDeps(opts: {
+	groupId: string
+	soleHandler?: FakeSurface | null
+	isLocked?: boolean
+	storedConfig?: Record<string, any>
+}) {
 	const deps = makeDeps(opts.storedConfig ?? {})
-	return new SurfaceGroup(
+	const group = new SurfaceGroup(
 		deps.surfaceController as any,
 		deps.dbTable as any,
 		deps.pageStore as any,
@@ -78,6 +86,7 @@ function makeGroup(opts: {
 		(opts.soleHandler ?? null) as any,
 		opts.isLocked ?? false
 	)
+	return { group, ...deps }
 }
 
 describe('SurfaceGroup never_lock masking', () => {
@@ -162,6 +171,60 @@ describe('SurfaceGroup never_lock masking', () => {
 			// Turning never_lock off restores the intended lock
 			group.setGroupConfigValue('never_lock', false)
 			expect(surface.lastLocked).toBe(true)
+		})
+	})
+})
+
+describe('SurfaceGroup config loading', () => {
+	const defaultsOnFirstPage = {
+		name: 'Unnamed group',
+		last_page_id: 'page-1',
+		startup_page_id: 'page-1',
+		use_last_page: true,
+		never_lock: false,
+		restrict_pages: false,
+		allowed_page_ids: [],
+	}
+
+	it('stores the defaults for a group without any config', () => {
+		const { group, db } = makeGroupWithDeps({ groupId: 'new' })
+
+		expect(group.groupConfig).toEqual(defaultsOnFirstPage)
+		expect(db.getTableView('surface_groups').data['new']).toMatchObject({ name: 'Unnamed group', never_lock: false })
+	})
+
+	it('fills in defaults for an old config', () => {
+		const group = makeGroup({ groupId: 'old', storedConfig: { old: { name: 'Desk', never_lock: true } } })
+
+		expect(group.groupConfig).toEqual({ ...defaultsOnFirstPage, name: 'Desk', never_lock: true })
+	})
+
+	describe('auto group', () => {
+		it('fills in defaults, naming it "Auto group"', () => {
+			const group = makeGroup({ groupId: 's1', soleHandler: makeSurface('s1', { never_lock: true }) })
+
+			expect(group.groupConfig).toEqual({ ...defaultsOnFirstPage, name: 'Auto group', never_lock: true })
+		})
+
+		it('an empty name is replaced', () => {
+			const group = makeGroup({ groupId: 's1', soleHandler: makeSurface('s1', { name: '' }) })
+
+			expect(group.groupConfig.name).toBe('Auto group')
+		})
+
+		it('keeps its name', () => {
+			const group = makeGroup({ groupId: 's1', soleHandler: makeSurface('s1', { name: 'Mine' }) })
+
+			expect(group.groupConfig.name).toBe('Mine')
+		})
+
+		it('an invalid config is replaced with the defaults', () => {
+			const group = makeGroup({
+				groupId: 's1',
+				soleHandler: makeSurface('s1', { name: 'Mine', never_lock: 'sometimes' }),
+			})
+
+			expect(group.groupConfig).toEqual({ ...defaultsOnFirstPage, name: 'Auto group' })
 		})
 	})
 })

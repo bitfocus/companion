@@ -39,63 +39,53 @@ function createUserConfig(
 
 describe('DataUserConfig', () => {
 	describe('setup', () => {
-		test('a first run uses and persists the defaults', () => {
+		test('a first run uses the defaults, storing nothing until a setting changes', () => {
 			const { userconfig, table } = createUserConfig({ firstRun: true })
 
 			expect(userconfig.getAll()).toEqual(DataUserConfig.Defaults)
-			expect(table.data['userconfig']).toEqual(DataUserConfig.Defaults)
+			expect(table.data['userconfig']).toBeUndefined()
+
+			userconfig.setKey('pin', '1234')
+			expect(table.data['userconfig']).toEqual({ ...DataUserConfig.Defaults, pin: '1234' })
 		})
 
-		test('an existing db without service fields gets the one-time v2 upgrade', () => {
+		test('missing settings are given their defaults, keeping the stored ones', () => {
 			const { userconfig } = createUserConfig({
 				firstRun: false,
-				existing: { setup_wizard: 22 },
+				existing: { setup_wizard: 22, osc_enabled: true },
 			})
 
-			// The legacy services are kept enabled with their old ports
-			expect(userconfig.getKey('tcp_enabled')).toBe(true)
-			expect(userconfig.getKey('tcp_listen_port')).toBe(51234)
-			expect(userconfig.getKey('udp_enabled')).toBe(true)
-			expect(userconfig.getKey('udp_listen_port')).toBe(51235)
-			expect(userconfig.getKey('osc_enabled')).toBe(true)
-			expect(userconfig.getKey('osc_listen_port')).toBe(12321)
-			expect(userconfig.getKey('emberplus_enabled')).toBe(true)
-
-			// Old behaviour is preserved
-			expect(userconfig.getKey('usb_hotplug')).toBe(false)
-			expect(userconfig.getKey('osc_legacy_api_enabled')).toBe(true)
-			expect(userconfig.getKey('tcp_legacy_api_enabled')).toBe(true)
-			expect(userconfig.getKey('udp_legacy_api_enabled')).toBe(true)
-			expect(userconfig.getKey('http_api_enabled')).toBe(true)
-			expect(userconfig.getKey('http_legacy_api_enabled')).toBe(true)
-
-			// And the original data is intact
-			expect(userconfig.getKey('setup_wizard')).toBe(22)
+			expect(userconfig.getAll()).toEqual({ ...DataUserConfig.Defaults, setup_wizard: 22, osc_enabled: true })
 		})
 
-		test('an existing db with any service field defined skips the v2 upgrade', () => {
-			const { userconfig } = createUserConfig({
-				firstRun: false,
-				existing: { setup_wizard: 22, osc_enabled: false, usb_hotplug: true },
-			})
-
-			// The other services get the modern defaults instead
-			expect(userconfig.getKey('tcp_enabled')).toBe(DataUserConfig.Defaults.tcp_enabled)
-			expect(userconfig.getKey('tcp_listen_port')).toBe(DataUserConfig.Defaults.tcp_listen_port)
-			expect(userconfig.getKey('usb_hotplug')).toBe(true)
-		})
-
-		test('newly added defaults are backfilled and saved', () => {
+		test('an invalid setting is reset to its default, keeping the others', () => {
 			const { userconfig, table } = createUserConfig({
 				firstRun: false,
-				existing: { setup_wizard: 22, osc_enabled: false },
+				existing: { setup_wizard: 22, artnet_channel: 'two' as any, gridSize: 'big' as any },
 			})
 
-			// Every default key is now present
-			for (const key of Object.keys(DataUserConfig.Defaults)) {
-				expect(userconfig.getKey(key as keyof UserConfigModel)).not.toBe(undefined)
-			}
-			expect(table.data['userconfig'].gridSize).toEqual(DataUserConfig.Defaults.gridSize)
+			expect(userconfig.getKey('setup_wizard')).toBe(22)
+			expect(userconfig.getKey('artnet_channel')).toBe(DataUserConfig.Defaults.artnet_channel)
+			expect(userconfig.getKey('gridSize')).toEqual(DataUserConfig.Defaults.gridSize)
+
+			// The repair is stored
+			expect(table.data['userconfig'].artnet_channel).toBe(DataUserConfig.Defaults.artnet_channel)
+		})
+
+		test('an invalid backup rule is removed, keeping the others', () => {
+			const validRule = { id: 'a', name: 'A' }
+			const { userconfig } = createUserConfig({
+				firstRun: false,
+				existing: { backups: [validRule, { name: 'No id' }, { id: 'c', keep: 'many' }] as any },
+			})
+
+			expect(userconfig.getKey('backups')).toEqual([expect.objectContaining({ id: 'a', name: 'A', keep: 5 })])
+		})
+
+		test('a config that is not an object reads as the defaults', () => {
+			const { userconfig } = createUserConfig({ firstRun: false, existing: 'nonsense' as any })
+
+			expect(userconfig.getAll()).toEqual(DataUserConfig.Defaults)
 		})
 	})
 
@@ -104,8 +94,8 @@ describe('DataUserConfig', () => {
 			const { userconfig, table } = createUserConfig({ installNameOverride: 'Studio A' })
 
 			expect(userconfig.getKey('installName')).toBe('Studio A')
-			// The db keeps the default, so removing the env var later restores normal behaviour
-			expect(table.data['userconfig'].installName).toBe(DataUserConfig.Defaults.installName)
+			// The db is left alone, so removing the env var later restores normal behaviour
+			expect(table.data['userconfig']).toBeUndefined()
 		})
 
 		test('override is not persisted even when another key is written', () => {
@@ -184,6 +174,19 @@ describe('DataUserConfig', () => {
 			expect(userconfig.getKey('pin')).toBe('1234')
 			expect(table.data['userconfig'].pin).toBe('1234')
 			expect(keyChanged).toHaveBeenCalledWith('pin', '1234', false)
+		})
+
+		test('an invalid value is refused, leaving the setting as it was', () => {
+			const { userconfig, table } = createUserConfig()
+			const keyChanged = vi.fn()
+			userconfig.on('keyChanged', keyChanged)
+
+			expect(() => userconfig.setKey('artnet_channel', 'two')).toThrow(/Invalid value for config key "artnet_channel"/)
+			expect(() => userconfig.setKey('not_a_setting' as any, 1)).toThrow(/Unknown config key "not_a_setting"/)
+
+			expect(userconfig.getKey('artnet_channel')).toBe(DataUserConfig.Defaults.artnet_channel)
+			expect(table.data['userconfig']).toBeUndefined()
+			expect(keyChanged).not.toHaveBeenCalled()
 		})
 
 		test('gridSize changes request a bounds check of controls', () => {

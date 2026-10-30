@@ -20,17 +20,23 @@ export interface DrawStyleLayeredButtonModel extends DrawStyleButtonStateProps {
 	elements: SomeButtonGraphicsDrawElement[]
 
 	/**
+	 * Set when the button shows a button of another installation (a remote button), to mark it as one in its status
+	 * icons when it has a top bar: `unreachable` while it shows the last image from an installation that has dropped out.
+	 * Undefined for any other button
+	 */
+	link_status?: 'ok' | 'unreachable'
+
+	/**
 	 * Location strings (e.g. '1/0/0') transitively referenced by this button's elements.
 	 * Only populated for layered buttons that went through reference element resolution.
 	 */
 	referencedLocations?: ReadonlySet<string>
 
 	/**
-	 * Whether any expression in this button's elements depends on the render clock (e.g. oscillate()).
-	 * When true, the button must be re-rendered on each clock tick and its style must NOT be included
-	 * in the graphics LRU cache key.
+	 * How long until every expression in this button's elements which depends on the render clock (e.g.
+	 * oscillate()) repeats, in ms. When set, the button must be re-rendered on each clock tick.
 	 */
-	clockSensitive?: boolean
+	clockCycleMs?: number
 }
 
 export interface DrawImageBuffer {

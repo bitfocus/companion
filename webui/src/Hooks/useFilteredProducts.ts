@@ -1,4 +1,3 @@
-import { go as fuzzySearch } from 'fuzzysort'
 import { useContext } from 'react'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { ClientModuleInfo } from '@companion-app/shared/Model/ModuleInfo.js'
@@ -7,6 +6,7 @@ import { getModuleProductEntries, getModuleProducts } from '~/Modules/ModuleCata
 import { getPreferredModuleVersion } from '~/Modules/ModuleInstallState.js'
 import { useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
+import { fuzzySearchByKeys } from '~/util/fuzzy.js'
 
 export function useAllModuleProducts(
 	onlyModuleType: ModuleInstanceType | null,
@@ -102,14 +102,8 @@ export function filterProducts(allProducts: FuzzyProduct[], filter: string, incl
 	const keys: Array<keyof FuzzyProduct> = ['label', 'name', 'keywords']
 	if (includeType) keys.push('moduleType')
 
-	const result = fuzzySearch(filter, allProducts, {
-		keys,
-		// threshold is 0 - 1, where 1 is "perfect". But note that even exact word matches may not get a score of 1!
-		// ("Elgato", for example scores 0.8 - 0.9. -- you may need the whole field to match for 1.0...)
-		// Version 2.0 of fuzzysort used a range of -Infinity to 0. Apparently the old value of 10,000 is equivalent to 0.5
-		threshold: 0.5, // 0.5 looks like a good "strict" threshold; 0.3 tolerates some typos.
-	})
-	return result.map((x) => x.obj)
+	// Even exact word matches may not score 1 ("Elgato" scores 0.8 - 0.9). 0.5 is a good "strict" threshold; 0.3 tolerates some typos.
+	return fuzzySearchByKeys(allProducts, filter, keys, 0.5, 0)
 }
 
 export interface FuzzyProduct {

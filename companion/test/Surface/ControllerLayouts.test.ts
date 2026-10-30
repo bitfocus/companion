@@ -45,12 +45,15 @@ const neoLayout: SurfaceSchemaLayoutDefinition = {
 function makeStoredConfig(partial: Partial<SurfaceConfig>): SurfaceConfig {
 	return {
 		config: { brightness: 100, rotation: 0, xOffset: 0, yOffset: 0, groupId: null },
+		enabled: true,
 		groupConfig: {
 			name: '',
 			last_page_id: '1',
 			startup_page_id: '1',
 			use_last_page: true,
 			never_lock: false,
+			restrict_pages: false,
+			allowed_page_ids: [],
 		},
 		groupId: null,
 		type: 'Stream Deck Neo',
@@ -99,6 +102,7 @@ function satelliteDeviceInfo(overrides: Partial<SatelliteDeviceInfo> = {}): Sate
 		configFields: undefined,
 		canChangePage: undefined,
 		bitmapFormat: 'rgb',
+		variableEncoding: 'string',
 		...overrides,
 	}
 }

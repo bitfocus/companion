@@ -1,7 +1,8 @@
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { Canvas, GlobalFonts } from '@napi-rs/canvas'
+import { Canvas, GlobalFonts, loadImage } from '@napi-rs/canvas'
 import { beforeAll, describe, expect, test, vi } from 'vitest'
+import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RendererButtonStyle } from '@companion-app/shared/Model/Render.js'
 import {
@@ -9,11 +10,15 @@ import {
 	ButtonGraphicsElementUsage,
 	type DrawImageBuffer,
 } from '@companion-app/shared/Model/StyleModel.js'
+import { Image } from '../../lib/Graphics/Image.js'
 import { decodeImage } from '../../lib/Graphics/ImageCache/DecodeImage.js'
-import { ImageCacheStore } from '../../lib/Graphics/ImageCache/ImageCacheStore.js'
+import { ImageCacheStore, type RemoteImageSource } from '../../lib/Graphics/ImageCache/ImageCacheStore.js'
 import { computeOversampling, GraphicsRenderer } from '../../lib/Graphics/Renderer.js'
 import type { Logger } from '../../lib/Log/Controller.js'
 import { makeAnimatedGif, toDataUrl } from './ImageCache/AnimatedImageFixtures.js'
+
+/** Where no remote element has an image */
+const NO_REMOTE_IMAGES: RemoteImageSource = { getImage: async () => null, onReleased: () => {} }
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const FONTS_DIR = join(__dirname, '../../../assets/Fonts')
@@ -263,7 +268,7 @@ describe('GraphicsRenderer', () => {
 					async (source) => decodeImage(source, 32 * 1024 * 1024),
 					64 * 1024 * 1024
 				)
-				return store.resolveDrawStyle(style, new Map())
+				return store.resolveDrawStyle(style, new Map(), { width: 72, height: 72 }, NO_REMOTE_IMAGES, true)
 			}
 
 			test.each(['fit', 'fill', 'crop'] as const)(
@@ -288,7 +293,18 @@ describe('GraphicsRenderer', () => {
 				const resolution = { width: 72, height: 72, oversampling: 1 }
 				const fromSource = await GraphicsRenderer.drawButtonImageBuffer(style, resolution, null, 'rgba')
 				const fromDecoded = await GraphicsRenderer.drawButtonImageBuffer(resolved, resolution, null, 'rgba')
-				expect(Buffer.from(fromDecoded).equals(Buffer.from(fromSource))).toBe(true)
+
+				// Skia scales down an Image source slightly differently to a Canvas, so allow the quadrant edges to differ
+				let diffPixels = 0
+				for (let i = 0; i < fromSource.length; i += 4) {
+					for (let c = 0; c < 4; c++) {
+						if (Math.abs(fromSource[i + c] - fromDecoded[i + c]) > 4) {
+							diffPixels++
+							break
+						}
+					}
+				}
+				expect(diffPixels / (fromSource.length / 4)).toBeLessThan(0.03)
 			})
 
 			test.each([
@@ -308,8 +324,14 @@ describe('GraphicsRenderer', () => {
 				const logger = { warn: vi.fn() } as unknown as Logger
 				const store = new ImageCacheStore(logger, async (source) => decodeImage(source, 1024 * 1024), 1024 * 1024)
 				const frames = await store.selectAnimationFrames(style.elements, timeMs)
-				expect(frames.maxDurationMs).toBe(300)
-				const resolved = await store.resolveDrawStyle(style, frames.frameIndices)
+				expect(frames.animations).toEqual([{ frameCount: 3, durationMs: 300 }])
+				const resolved = await store.resolveDrawStyle(
+					style,
+					frames.frameIndices,
+					{ width: 72, height: 72 },
+					NO_REMOTE_IMAGES,
+					true
+				)
 
 				const buffer = await GraphicsRenderer.drawButtonImageBuffer(
 					resolved,
@@ -420,5 +442,135 @@ describe('GraphicsRenderer', () => {
 			const result = await GraphicsRenderer.drawImageBuffers(false, [emptyEntry])
 			expect(result.startsWith('data:image/')).toBe(true)
 		})
+	})
+})
+
+describe('drawElementRaster', () => {
+	const canvas = { width: 92, height: 78, paddingX: 10, paddingY: 10 }
+
+	function makeText(overrides: Record<string, unknown> = {}) {
+		return {
+			id: 'text-1',
+			usage: ButtonGraphicsElementUsage.Automatic,
+			enabled: true,
+			opacity: 1,
+			contentHash: '',
+			type: 'text' as const,
+			x: 0.1,
+			y: 0.1,
+			width: 0.8,
+			height: 0.8,
+			rotation: 15,
+			text: 'Hello world, this text wraps',
+			fontsize: 30,
+			fontsizeAllowShrink: true,
+			font: 'companion-sans' as const,
+			weight: 'normal' as const,
+			styles: [],
+			color: 0xffffff,
+			outlineColor: 0xff0000,
+			halign: 'center' as const,
+			valign: 'center' as const,
+			...overrides,
+		}
+	}
+
+	test('composited at the origin, matches drawing the element within the whole button', async () => {
+		const style = makeStyle({
+			decoration: ButtonGraphicsDecorationType.None,
+			elements: [
+				{
+					id: 'group-1',
+					usage: ButtonGraphicsElementUsage.Automatic,
+					enabled: true,
+					opacity: 1,
+					contentHash: '',
+					type: 'group',
+					x: 0.1,
+					y: 0,
+					width: 0.9,
+					height: 1,
+					rotation: 20,
+					squareCoords: false,
+					children: [makeText()],
+				},
+			],
+		})
+
+		const raster = await GraphicsRenderer.drawElementRaster(style, 'text-1', canvas)
+		expect(raster).not.toBeNull()
+		expect(raster!.image.startsWith('data:image/png;base64,')).toBe(true)
+
+		// Composite the raster onto an empty canvas, as the preview does
+		const composited = new Canvas(canvas.width, canvas.height)
+		const compositedCtx = composited.getContext('2d')
+		compositedCtx.drawImage(await loadImage(raster!.image), 0, 0)
+
+		// Draw the whole button the normal way
+		const expected = Image.create(canvas.width, canvas.height, 1, null)
+		await GraphicsLayeredButtonRenderer.draw(expected, style, new Set(), null, {
+			x: canvas.paddingX,
+			y: canvas.paddingY,
+		})
+
+		const actualData = compositedCtx.getImageData(0, 0, canvas.width, canvas.height).data
+		const expectedData = expected.buffer()
+		let maxDiff = 0
+		for (let i = 0; i < actualData.length; i += 4) {
+			// Compare premultiplied, as the colour of a near-transparent pixel doesn't survive a round trip
+			const actualAlpha = actualData[i + 3]
+			const expectedAlpha = expectedData[i + 3]
+			maxDiff = Math.max(maxDiff, Math.abs(actualAlpha - expectedAlpha))
+			for (let c = 0; c < 3; c++) {
+				const a = (actualData[i + c] * actualAlpha) / 255
+				const e = (expectedData[i + c] * expectedAlpha) / 255
+				maxDiff = Math.max(maxDiff, Math.abs(a - e))
+			}
+		}
+		expect(maxDiff).toBeLessThanOrEqual(2)
+
+		// And reports where the element was drawn, as plain data
+		const geometry = await GraphicsLayeredButtonRenderer.draw(
+			Image.create(canvas.width, canvas.height, 1, null),
+			style,
+			new Set(),
+			null,
+			{ x: canvas.paddingX, y: canvas.paddingY }
+		)
+		const expectedGeometry = geometry.find((entry) => entry.id === 'text-1')!
+		const plain = ({ x, y, width, height }: { x: number; y: number; width: number; height: number }) => ({
+			x,
+			y,
+			width,
+			height,
+		})
+		expect(raster!.renderedAt).toEqual({
+			bounds: plain(expectedGeometry.bounds),
+			rotations: expectedGeometry.rotations.map(({ pivot, angle }) => ({ pivot: plain(pivot), angle })),
+		})
+	})
+
+	test('covers the whole canvas', async () => {
+		const style = makeStyle({
+			decoration: ButtonGraphicsDecorationType.None,
+			elements: [makeText({ x: 0.5, y: 0.5, width: 0.5, height: 0.5, rotation: 0, text: 'Hi' })],
+		})
+
+		const raster = await GraphicsRenderer.drawElementRaster(style, 'text-1', canvas)
+		const image = await loadImage(raster!.image)
+		expect({ width: image.width, height: image.height }).toEqual({ width: canvas.width, height: canvas.height })
+	})
+
+	test('is a transparent image when nothing is drawn, and null for a missing element', async () => {
+		const style = makeStyle({ elements: [makeText({ text: '' })] })
+
+		const raster = await GraphicsRenderer.drawElementRaster(style, 'text-1', canvas)
+		const decoded = new Canvas(canvas.width, canvas.height)
+		const decodedCtx = decoded.getContext('2d')
+		decodedCtx.drawImage(await loadImage(raster!.image), 0, 0)
+		const data = decodedCtx.getImageData(0, 0, canvas.width, canvas.height).data
+		expect(data.some((value, i) => i % 4 === 3 && value !== 0)).toBe(false)
+
+		expect(await GraphicsRenderer.drawElementRaster(style, 'missing', canvas)).toBeNull()
 	})
 })

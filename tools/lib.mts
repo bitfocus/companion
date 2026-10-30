@@ -24,9 +24,10 @@ export async function generateVersionString() {
 
 		let gitRef = await parseGitRef()
 
-		// In GitHub Actions, validate that tag matches package.json version
+		// In GitHub Actions, validate that an app release tag matches package.json version
+		// Other tags (eg satellite-protocol-v*) are for other packages, so are not checked
 		const githubRef = process.env.GITHUB_REF
-		if (githubRef && githubRef.startsWith('refs/tags/')) {
+		if (githubRef && githubRef.startsWith('refs/tags/v')) {
 			const tagName = githubRef.replace('refs/tags/', '')
 			const expectedTag = 'v' + packageVersion
 			if (tagName !== expectedTag) {

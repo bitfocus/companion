@@ -1,6 +1,6 @@
 import debounceFn from 'debounce-fn'
-import jsonPatch from 'fast-json-patch'
 import type { JsonValue } from 'type-fest'
+import { diffObject } from '@companion-app/shared/Diff.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
@@ -281,7 +281,7 @@ export class ControlExpressionVariable
 
 		if (this.deps.changeEvents.listenerCount('expressionVariableChange') > 0) {
 			if (this.#lastSentDefinitionJson) {
-				const patch = jsonPatch.compare(this.#lastSentDefinitionJson || {}, newJson || {})
+				const patch = diffObject(this.#lastSentDefinitionJson || {}, newJson || {})
 				if (patch.length > 0) {
 					this.deps.changeEvents.emit('expressionVariableChange', this.controlId, {
 						type: 'update',

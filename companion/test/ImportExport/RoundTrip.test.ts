@@ -4,11 +4,12 @@ import supertest from 'supertest'
 import { describe, expect, test } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
 import { CreateExpressionVariableControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
+import { EXPORT_VERSION } from '@companion-app/shared/Model/Export/Latest.js'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
+import type { ClientExportTarget } from '@companion-app/shared/Model/ImportExport.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { GraphicsController } from '../../lib/Graphics/Controller.js'
-import { FILE_VERSION } from '../../lib/ImportExport/Constants.js'
 import { ExportController } from '../../lib/ImportExport/Export.js'
 import { parseImportBuffer, type ParseImportResult } from '../../lib/ImportExport/ParseImport.js'
 import { ImportExportThreadMethods } from '../../lib/ImportExport/ThreadMethods.js'
@@ -214,7 +215,7 @@ describe('export/import round-trip', () => {
 		for (const format of ALL_FORMATS) {
 			test(`format=${format} round-trips to an identical object`, async () => {
 				const { controller } = createExportController()
-				const exp = controller.generateCustomExport(null)
+				const exp = controller.generateCustomExport(null, undefined)
 
 				const bytes = await serialiseAsDownload(exp, format)
 				const result = await parseImportBuffer(bytes, parseYaml)
@@ -226,12 +227,12 @@ describe('export/import round-trip', () => {
 
 		test('the exported object actually contains every major section', () => {
 			const { controller } = createExportController()
-			const exp = controller.generateCustomExport(null) as any
+			const exp = controller.generateCustomExport(null, undefined) as any
 
 			// Guard against a future refactor silently emptying the fixture (which would make the
 			// round-trip assertions vacuous).
 			expect(exp.type).toBe('full')
-			expect(exp.version).toBe(FILE_VERSION)
+			expect(exp.version).toBe(EXPORT_VERSION)
 			expect(Object.keys(exp.pages)).toHaveLength(1)
 			expect(exp.pages[1].controls[0][0].type).toBe('button-layered')
 			expect(Object.keys(exp.triggers)).toContain('trig-1')
@@ -248,19 +249,38 @@ describe('export/import round-trip', () => {
 	// ── download endpoints: all three formats parse back to the same object ──────
 
 	describe('every download format parses back to the same object', () => {
-		const endpoints = [
-			{ name: 'full', url: '/int/api/export/full', type: 'full' },
-			{ name: 'trigger list', url: '/int/api/export/triggers/all', type: 'trigger_list' },
-			{ name: 'single page', url: '/int/api/export/page/1', type: 'page' },
+		/** Prepare an export as the UI does, returning the url to download it from */
+		function preparedUrl(controller: ExportController, target: ClientExportTarget, format: ExportFormat): string {
+			const token = controller.prepareDownload({ target, output: { format, filename: '', notes: '' } }, '10.0.0.1')
+			return `/int/api/export/download/${token}`
+		}
+
+		const endpoints: {
+			name: string
+			type: string
+			url: (controller: ExportController, format: ExportFormat) => string
+		}[] = [
+			{ name: 'full', type: 'full', url: (_controller, format) => `/int/api/export/full?format=${format}` },
+			{
+				name: 'trigger list',
+				type: 'trigger_list',
+				url: (controller, format) => preparedUrl(controller, { type: 'triggers', includeSecrets: true }, format),
+			},
+			{
+				name: 'single page',
+				type: 'page',
+				url: (controller, format) =>
+					preparedUrl(controller, { type: 'page', pageNumber: 1, includeSecrets: true }, format),
+			},
 		]
 
 		for (const endpoint of endpoints) {
 			test(`${endpoint.name} export is format-equivalent and parses`, async () => {
-				const { app } = createExportController()
+				const { app, controller } = createExportController()
 
 				const parsed: Record<string, unknown> = {}
 				for (const format of ALL_FORMATS) {
-					const res = await download(app, `${endpoint.url}?format=${format}`)
+					const res = await download(app, endpoint.url(controller, format))
 					expect(res.status).toBe(200)
 
 					const result = await parseImportBuffer(res.body, parseYaml)
@@ -274,7 +294,7 @@ describe('export/import round-trip', () => {
 
 				// ...and it must be a well-formed export of the expected type
 				expect((parsed['json'] as any).type).toBe(endpoint.type)
-				expect((parsed['json'] as any).version).toBe(FILE_VERSION)
+				expect((parsed['json'] as any).version).toBe(EXPORT_VERSION)
 			})
 		}
 	})

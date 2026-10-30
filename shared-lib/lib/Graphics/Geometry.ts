@@ -40,7 +40,7 @@ export function appendRotation(parent: MarkerRotation[], pivot: DrawBounds, angl
  * match how the nested canvas transforms compose.
  */
 export function rotatePointThroughRotations(
-	rotations: readonly MarkerRotation[],
+	rotations: readonly PlacedRotation[],
 	x: number,
 	y: number
 ): [number, number] {
@@ -62,7 +62,7 @@ export function inverseRotatePointThroughRotations(
 	return [x, y]
 }
 
-function rotateAbout({ pivot, angle }: MarkerRotation, x: number, y: number, sign: 1 | -1): [number, number] {
+function rotateAbout({ pivot, angle }: PlacedRotation, x: number, y: number, sign: 1 | -1): [number, number] {
 	if (!angle) return [x, y]
 
 	const cx = pivot.x + pivot.width / 2
@@ -74,6 +74,65 @@ function rotateAbout({ pivot, angle }: MarkerRotation, x: number, y: number, sig
 	const dy = y - cy
 
 	return [cx + dx * cos - dy * sin, cy + dx * sin + dy * cos]
+}
+
+/** A rectangle, as plain data */
+export interface PlacedRect {
+	x: number
+	y: number
+	width: number
+	height: number
+}
+
+/** A rotation about the centre of `pivot`, as plain data */
+export interface PlacedRotation {
+	pivot: PlacedRect
+	angle: number
+}
+
+/** An element's bounds and the rotations applied to it (outermost first), as plain data */
+export interface PlacedElement {
+	bounds: PlacedRect
+	rotations: readonly PlacedRotation[]
+}
+
+/** A 2d affine transform, in the order of `CanvasRenderingContext2D.setTransform`: x' = ax + cy + e, y' = bx + dy + f */
+export type AffineTransform = [a: number, b: number, c: number, d: number, e: number, f: number]
+
+/** The transform mapping the unit square onto an element as placed, ie its own coordinate space onto the canvas */
+function placedElementTransform({ bounds, rotations }: PlacedElement): AffineTransform {
+	const [ox, oy] = rotatePointThroughRotations(rotations, bounds.x, bounds.y)
+	const [xx, xy] = rotatePointThroughRotations(rotations, bounds.x + bounds.width, bounds.y)
+	const [yx, yy] = rotatePointThroughRotations(rotations, bounds.x, bounds.y + bounds.height)
+	return [xx - ox, xy - oy, yx - ox, yy - oy, ox, oy]
+}
+
+/**
+ * The transform that moves something drawn for an element placed at `from` to where the element is placed at `to`
+ * @returns The transform, or null if `from` has no area so can't be mapped from
+ */
+export function transformBetweenPlacements(from: PlacedElement, to: PlacedElement): AffineTransform | null {
+	const [a, b, c, d, e, f] = placedElementTransform(from)
+	const det = a * d - b * c
+	if (!det) return null
+
+	// The inverse of `from`, then `to`
+	const inverse: AffineTransform = [d / det, -b / det, -c / det, a / det, (c * f - d * e) / det, (b * e - a * f) / det]
+	return multiplyTransforms(placedElementTransform(to), inverse)
+}
+
+/** Compose two transforms, applying `second` first and then `first` */
+function multiplyTransforms(first: AffineTransform, second: AffineTransform): AffineTransform {
+	const [a1, b1, c1, d1, e1, f1] = first
+	const [a2, b2, c2, d2, e2, f2] = second
+	return [
+		a1 * a2 + c1 * b2,
+		b1 * a2 + d1 * b2,
+		a1 * c2 + c1 * d2,
+		b1 * c2 + d1 * d2,
+		a1 * e2 + c1 * f2 + e1,
+		b1 * e2 + d1 * f2 + f1,
+	]
 }
 
 /** An element's rotated frame expressed as a single rotation of its box about its own centre */

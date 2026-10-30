@@ -1,4 +1,5 @@
 import z from 'zod'
+import { EmptyCollectionSchema } from '@companion-app/shared/Model/Collections.js'
 import type { ExpressionVariableCollection } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { CollectionsBaseController } from '../Resources/CollectionsBase.js'
@@ -8,7 +9,7 @@ export class ExpressionVariableCollections extends CollectionsBaseController<nul
 	readonly #cleanUnknownCollectionIds: (validCollectionIds: ReadonlySet<string>) => void
 
 	constructor(db: DataDatabase, cleanUnknownCollectionIds: (validCollectionIds: ReadonlySet<string>) => void) {
-		super(db.getTableView<Record<string, ExpressionVariableCollection>>('expressionVariableCollections'))
+		super(db.getSchemaTableView('expressionVariableCollections', EmptyCollectionSchema))
 
 		this.#cleanUnknownCollectionIds = cleanUnknownCollectionIds
 	}

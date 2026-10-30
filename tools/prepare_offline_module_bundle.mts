@@ -4,7 +4,6 @@ import path from 'path'
 import { Readable } from 'stream'
 import { promisify } from 'util'
 import { gunzip } from 'zlib'
-import createClient from 'openapi-fetch'
 import pQueue from 'p-queue'
 import pRetry, { AbortError } from 'p-retry'
 import * as tarfs from 'tar-fs'
@@ -13,7 +12,12 @@ import {
 	isModuleApiVersionCompatible,
 	isSurfaceApiVersionCompatible,
 } from '@companion-app/shared/ModuleApiVersionCheck.js'
-import type { components, paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
+import { createClient, createConfig } from '@companion-app/shared/OpenApi/ModuleStore/client/index.js'
+import {
+	getCompanionModules,
+	getCompanionModuleVersions,
+	type CompanionModuleInfo,
+} from '@companion-app/shared/OpenApi/ModuleStore/index.js'
 import { MAX_DECOMPRESSED_MODULE_TAR_SIZE, MAX_MODULE_TAR_SIZE } from '../companion/lib/Instance/Constants.js'
 import { generateVersionString } from './lib.mjs'
 
@@ -33,37 +37,34 @@ const baseUrl = process.env.STAGING_MODULE_API
 	: 'https://developer.bitfocus.io/api'
 
 const userAgent = `Companion offline-bundle ${await generateVersionString()}`
-const ModuleOpenApiClient = createClient<ModuleStoreOpenApiPaths>({
-	baseUrl,
-	headers: {
-		'User-Agent': userAgent,
-	},
-})
+const ModuleOpenApiClient = createClient(
+	createConfig({
+		baseUrl,
+		headers: {
+			'User-Agent': userAgent,
+		},
+	})
+)
 
 // prepare a new folder
 const offlinePath = path.join(import.meta.dirname, '../offline-bundle')
 await fs.rm(offlinePath, { recursive: true, force: true })
 await fs.mkdir(offlinePath, { recursive: true })
 
-const { data, error } = await ModuleOpenApiClient.GET('/v1/companion/modules/{moduleType}', {
-	params: {
-		path: {
-			moduleType: 'connection',
-		},
+const { data, error } = await getCompanionModules({
+	client: ModuleOpenApiClient,
+	path: {
+		moduleType: 'connection',
 	},
 })
-const { data: dataSurfaces, error: errorSurfaces } = await ModuleOpenApiClient.GET(
-	'/v1/companion/modules/{moduleType}',
-	{
-		params: {
-			path: {
-				moduleType: 'surface',
-			},
-		},
-	}
-)
+const { data: dataSurfaces, error: errorSurfaces } = await getCompanionModules({
+	client: ModuleOpenApiClient,
+	path: {
+		moduleType: 'surface',
+	},
+})
 
-if (error || errorSurfaces) {
+if (!data || !dataSurfaces) {
 	console.error('Error fetching modules:', error || errorSurfaces)
 	process.exit(1)
 }
@@ -74,7 +75,7 @@ const moduleQueue = new pQueue({
 	concurrency: 10,
 })
 const processModule = async (
-	moduleInfo: components['schemas']['CompanionModuleInfo'],
+	moduleInfo: CompanionModuleInfo,
 	moduleType: 'connection' | 'surface',
 	isCompatible: (version: string) => boolean,
 	dirPrefix?: string
@@ -93,14 +94,10 @@ const processModule = async (
 				await fs.rm(moduleDir, { recursive: true, force: true })
 				// await fs.mkdir(moduleDir, { recursive: true })
 
-				const { data: moduleInfoData, error } = await ModuleOpenApiClient.GET(
-					`/v1/companion/modules/{moduleType}/{moduleName}`,
-					{
-						params: {
-							path: { moduleType: moduleType, moduleName: moduleInfo.id },
-						},
-					}
-				)
+				const { data: moduleInfoData, error } = await getCompanionModuleVersions({
+					client: ModuleOpenApiClient,
+					path: { moduleType: moduleType, moduleName: moduleInfo.id },
+				})
 				if (error) {
 					throw new Error(`Error fetching module ${moduleInfo.id}: ${error}`)
 				}

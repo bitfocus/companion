@@ -13,7 +13,6 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useNavigate } from '@tanstack/react-router'
 import copy from 'copy-to-clipboard'
-import fuzzysort from 'fuzzysort'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -24,6 +23,7 @@ import { makeAbsolutePath, useComputed } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { THEME_CHOICES } from '~/Theme/themeChoices.js'
 import { themeStore } from '~/Theme/ThemeState.js'
+import { fuzzySearchByKeys } from '~/util/fuzzy.js'
 import { isTypingTarget } from '~/util/isTypingTarget.js'
 import { commandPaletteOpen } from './CommandPaletteState.js'
 import { ALL_NAV_PAGES } from './navRegistry.js'
@@ -257,13 +257,7 @@ const CommandPaletteContents = observer(function CommandPaletteContents() {
 			return allItems.slice(0, 40)
 		}
 
-		const results = fuzzysort.go(cleanQuery, allItems, {
-			keys: ['title', 'subtitle', 'category'],
-			threshold: -10000,
-			limit: 40,
-		})
-
-		return results.map((res) => res.obj)
+		return fuzzySearchByKeys(allItems, cleanQuery, ['title', 'subtitle', 'category'], 0, 40)
 	}, [allItems, query])
 
 	// Reset selected index on query change

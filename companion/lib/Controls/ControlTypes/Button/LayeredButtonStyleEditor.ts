@@ -230,6 +230,8 @@ export class LayeredButtonStyleEditor extends LayeredButtonDrawer {
 		targetElementArray.splice(newIndex, 0, element)
 
 		this.#host.commitChange(true)
+		// Moving into or out of a group changes the element's layout
+		this.#host.emitElementChanged(id)
 
 		return true
 	}

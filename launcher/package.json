@@ -8,26 +8,26 @@
 	"type": "module",
 	"scripts": {
 		"start": "electron main.js",
-		"dev": "electron dev.cjs"
+		"dev": "electron dev.js"
 	},
 	"dependencies": {
 		"@companion-app/shared": "*",
-		"@sentry/electron": "^8.2.0",
-		"chokidar": "^5.0.0",
+		"@sentry/electron": "^8.3.0",
+		"chokidar": "^6.0.0",
 		"debounce-fn": "^7.0.0",
-		"electron-store": "^11.0.2",
+		"electron-store": "^12.0.0",
 		"file-stream-rotator": "^1.0.0",
 		"fs-extra": "^11.4.1",
 		"nanoid": "^6.0.2",
 		"plist": "^5.0.0",
 		"semver": "^7.8.5",
 		"strip-ansi": "^7.2.0",
-		"systeminformation": "^5.33.15"
+		"systeminformation": "^5.33.16"
 	},
 	"devDependencies": {
 		"@types/plist": "^3.0.5",
-		"electron": "44.9.0",
-		"electron-builder": "26.16.1",
-		"electron-reloader": "^1.2.3"
+		"electron": "45.0.0",
+		"electron-builder": "26.18.1",
+		"electron-reloader": "^2.0.0"
 	}
 }

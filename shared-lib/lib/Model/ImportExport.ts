@@ -25,39 +25,55 @@ export const zodClientImportOrResetSelection = z.object({
 
 export type ClientImportOrResetSelection = z.infer<typeof zodClientImportOrResetSelection>
 
-const zodQueryBoolean = z.preprocess((val) => {
-	if (typeof val === 'string') {
-		return val === 'true' || val === '1'
-	}
-	return val
-}, z.boolean())
-const zodQueryNull = z.preprocess((val) => {
-	if (typeof val === 'string') {
-		return val === '' ? null : val
-	}
-	return val
-}, z.null())
+export const EXPORT_NOTES_MAX_LENGTH = 10000
 
+/** What a custom export includes */
 export const zodClientExportSelection = z.object({
-	buttons: zodQueryBoolean,
-	connections: zodQueryBoolean,
+	buttons: z.boolean(),
+	connections: z.boolean(),
 	surfaces: z
 		.object({
-			known: zodQueryBoolean,
-			instances: zodQueryBoolean,
-			remote: zodQueryBoolean,
+			known: z.boolean(),
+			instances: z.boolean(),
+			remote: z.boolean(),
 		})
-		.or(zodQueryNull),
-	triggers: zodQueryBoolean,
-	customVariables: zodQueryBoolean,
-	expressionVariables: zodQueryBoolean,
-	includeSecrets: zodQueryBoolean,
-	imageLibrary: zodQueryBoolean,
-	format: zodExportFormat,
-	filename: z.string().optional(),
+		.nullable(),
+	triggers: z.boolean(),
+	customVariables: z.boolean(),
+	expressionVariables: z.boolean(),
+	includeSecrets: z.boolean(),
+	imageLibrary: z.boolean(),
 })
 
 export type ClientExportSelection = z.infer<typeof zodClientExportSelection>
+
+/** How an export is written out, common to every kind of export */
+export const zodClientExportOutput = z.object({
+	format: zodExportFormat,
+	/** May contain variables. Blank for the generated default */
+	filename: z.string(),
+	/** Free-text notes saved in the file, shown when importing it. Blank for none */
+	notes: z.string().max(EXPORT_NOTES_MAX_LENGTH),
+})
+
+export type ClientExportOutput = z.infer<typeof zodClientExportOutput>
+
+/** What to export, for an export started from the UI */
+export const zodClientExportTarget = z.discriminatedUnion('type', [
+	z.object({ type: z.literal('custom'), selection: zodClientExportSelection }),
+	z.object({ type: z.literal('page'), pageNumber: z.number().int(), includeSecrets: z.boolean() }),
+	z.object({ type: z.literal('triggers'), includeSecrets: z.boolean() }),
+	z.object({ type: z.literal('trigger'), triggerId: z.string(), includeSecrets: z.boolean() }),
+])
+
+export type ClientExportTarget = z.infer<typeof zodClientExportTarget>
+
+export const zodClientExportRequest = z.object({
+	target: zodClientExportTarget,
+	output: zodClientExportOutput,
+})
+
+export type ClientExportRequest = z.infer<typeof zodClientExportRequest>
 
 export interface ClientPageInfo {
 	name: string
@@ -71,6 +87,8 @@ export interface ClientImportObjectInstance {
 }
 export interface ClientImportObject {
 	type: 'page' | 'full'
+	/** The notes written when the file was exported, or null if there are none */
+	notes: string | null
 	connections: Record<string, ClientImportObjectInstance>
 	buttons: boolean
 	surfacesKnown: boolean

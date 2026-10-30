@@ -196,7 +196,7 @@ export class ConnectionEntityManager {
 							try {
 								// Parse the options and track the variables referenced
 								const parser = this.controlsStore.createVariablesAndExpressionParser(wrapper.controlId, null)
-								const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options)
+								const parseRes = parser.parseEntityOptions(entityDefinition, entityModel.options, wrapper.controlId)
 								if (!parseRes.ok) {
 									this.#logger.warn(
 										`Failed to parse options for entity ${entity.id} in control ${wrapper.controlId}: ${JSON.stringify(parseRes.optionErrors)}`

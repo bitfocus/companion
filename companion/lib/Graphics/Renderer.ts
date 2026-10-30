@@ -10,20 +10,38 @@
  */
 
 import { isPromise } from 'node:util/types'
-import type * as imageRs from '@julusian/image-rs'
+import * as imageRs from '@julusian/image-rs'
 import { Canvas, loadImage } from '@napi-rs/canvas'
 import QuickLRU from 'quick-lru'
 import { ButtonDecorationRenderer } from '@companion-app/shared/Graphics/ButtonDecorationRenderer.js'
+import type { ElementRasterCanvas } from '@companion-app/shared/Graphics/ElementRaster.js'
 import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
 import { GraphicsLayeredButtonRenderer } from '@companion-app/shared/Graphics/LayeredRenderer.js'
 import { DrawBounds } from '@companion-app/shared/Graphics/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RendererDrawStyle } from '@companion-app/shared/Model/Render.js'
+import type {
+	ButtonGraphicsRasterBounds,
+	ButtonGraphicsRasterGeometry,
+} from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import { rotateResolution, transformButtonImage } from '../Resources/Util.js'
 import { Image } from './Image.js'
+import { ImagePools } from './ImagePools.js'
 import { ImageResult, type ImageResultProcessedStyle } from './ImageResult.js'
+
+/** An element rasterised for the editor preview */
+export interface DrawnElementRaster {
+	/** A png data url of the whole canvas */
+	image: string
+	/** Where the element was drawn */
+	renderedAt: ButtonGraphicsRasterGeometry
+}
+
+function toPlainRect({ x, y, width, height }: ButtonGraphicsRasterBounds): ButtonGraphicsRasterBounds {
+	return { x, y, width, height }
+}
 
 /**
  * Shared style for lock icon display
@@ -43,6 +61,9 @@ const LOCK_ICON_STYLE: ImageResultProcessedStyle = {
 }
 
 const emptySet: ReadonlySet<string> = new Set()
+
+/** How long the images for a size are kept for reuse after it was last drawn at */
+const IMAGE_POOL_MAX_IDLE_MS = 60_000
 
 /**
  * Choose an oversampling factor for a given render resolution.
@@ -73,7 +94,7 @@ export function computeOversampling(width: number, height: number, maxOversampli
 }
 
 export class GraphicsRenderer {
-	static #IMAGE_CACHE = new Map<string, Image[]>()
+	static #IMAGE_POOLS = new ImagePools<Image>(IMAGE_POOL_MAX_IDLE_MS, () => performance.now())
 
 	/** Static cache for text layout computations, shared across all Image instances */
 	static #textLayoutCache: TextLayoutCache = new QuickLRU({ maxSize: 5000 })
@@ -85,11 +106,7 @@ export class GraphicsRenderer {
 	static #getCachedImage<T>(width: number, height: number, oversampling: number, fcn: (image: Image) => T): T {
 		const key = `${width}x${height}x${oversampling}`
 
-		let pool = GraphicsRenderer.#IMAGE_CACHE.get(key)
-		if (!pool) {
-			pool = []
-			GraphicsRenderer.#IMAGE_CACHE.set(key, pool)
-		}
+		const pool = GraphicsRenderer.#IMAGE_POOLS.get(key)
 
 		const img = pool.pop() || Image.create(width, height, oversampling, GraphicsRenderer.#textLayoutCache)
 		img.clear()
@@ -121,7 +138,7 @@ export class GraphicsRenderer {
 			? `blank:${location ? `${location.pageNumber}/${location.row}/${location.column}` : 'bar'}`
 			: `blank:no-bar`
 
-		return new ImageResult(cacheKey, null, async (width, height, rotation, format) => {
+		return new ImageResult(cacheKey, null, 1, 0, async (width, height, rotation, format) => {
 			const dimensions = rotateResolution(width, height, rotation)
 			return GraphicsRenderer.#getCachedImage(
 				dimensions[0],
@@ -202,6 +219,46 @@ export class GraphicsRenderer {
 			resolution.height,
 			format
 		)
+	}
+
+	/**
+	 * Rasterise a single element for the editor preview to composite, laid out on a canvas of the given size
+	 * exactly as it would be within the whole button. The result covers the whole canvas, to be drawn 1:1 at its
+	 * origin; the transparent area compresses away, so cropping it isn't worth the extra work.
+	 * Encoded as png rather than webp, as it is about twice as fast to encode, at the cost of being larger.
+	 * @returns A png data url and where the element was drawn, or null if the element was not found
+	 */
+	static async drawElementRaster(
+		drawStyle: RendererDrawStyle,
+		elementId: string,
+		canvas: ElementRasterCanvas
+	): Promise<DrawnElementRaster | null> {
+		// Render at the target pixels, as the result is drawn 1:1
+		const drawn = await GraphicsRenderer.#getCachedImage(canvas.width, canvas.height, 1, async (img) => {
+			const geometry = await GraphicsLayeredButtonRenderer.drawSingleElement(img, drawStyle, elementId, {
+				x: canvas.paddingX,
+				y: canvas.paddingY,
+			})
+			if (!geometry) return null
+
+			return {
+				buffer: img.buffer(),
+				width: img.realwidth,
+				height: img.realheight,
+				renderedAt: {
+					bounds: toPlainRect(geometry.bounds),
+					rotations: geometry.rotations.map(({ pivot, angle }) => ({ pivot: toPlainRect(pivot), angle })),
+				},
+			}
+		})
+		if (!drawn) return null
+
+		return {
+			image: await imageRs.ImageTransformer.fromBuffer(drawn.buffer, drawn.width, drawn.height, 'rgba').toDataUrl(
+				'png'
+			),
+			renderedAt: drawn.renderedAt,
+		}
 	}
 
 	/**
@@ -289,7 +346,7 @@ export class GraphicsRenderer {
 	 */
 	static drawLockIcon(): ImageResult {
 		// The lock icon is an invariant render, so it has a single fixed content key.
-		return new ImageResult('lock-icon', LOCK_ICON_STYLE, async (width, height, rotation, format) => {
+		return new ImageResult('lock-icon', LOCK_ICON_STYLE, 1, 0, async (width, height, rotation, format) => {
 			const dimensions = rotateResolution(width, height, rotation)
 			return GraphicsRenderer.#getCachedImage(
 				dimensions[0],

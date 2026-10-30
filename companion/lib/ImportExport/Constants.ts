@@ -1,7 +1,5 @@
 import { constants as bufferConstants } from 'node:buffer'
 
-export const FILE_VERSION = 12
-
 // Uploads are held in memory as a single Buffer while being parsed (see MultipartUploader).
 // JSON (plain or gz) is parsed by streaming, so it is not bound by MAX_STRING_LENGTH - only by
 // available memory. 1GiB gives plenty of headroom for a large uncompressed JSON upload while

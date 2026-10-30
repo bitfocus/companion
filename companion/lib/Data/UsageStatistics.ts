@@ -10,7 +10,6 @@
  */
 
 import * as Sentry from '@sentry/node'
-import createClient, { type Client } from 'openapi-fetch'
 import pRetry, { AbortError } from 'p-retry'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type {
@@ -18,10 +17,11 @@ import type {
 	UserConfigGridSize,
 	UserConfigModel,
 } from '@companion-app/shared/Model/UserConfigModel.js'
-import type {
-	operations as CompanionUpdatesApiOperations,
-	paths as CompanionUpdatesApiPaths,
-} from '@companion-app/shared/OpenApi/CompanionUpdates.js'
+import { createClient, createConfig, type Client } from '@companion-app/shared/OpenApi/CompanionUpdates/client/index.js'
+import {
+	companionDetailedUsagePost,
+	type CompanionDetailedUsagePostData,
+} from '@companion-app/shared/OpenApi/CompanionUpdates/index.js'
 import type { Complete } from '@companion-module/host'
 import type { CloudController } from '../Cloud/Controller.js'
 import type { ControlsController } from '../Controls/Controller.js'
@@ -30,6 +30,7 @@ import type { InstanceController } from '../Instance/Controller.js'
 import LogController from '../Log/Controller.js'
 import type { PageController } from '../Page/Controller.js'
 import type { AppInfo } from '../Registry.js'
+import { throwTransportErrors } from '../Resources/OpenApiClient.js'
 import type { ServiceController } from '../Service/Controller.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
@@ -37,8 +38,7 @@ import { compileUpdatePayload } from '../UI/UpdatePayload.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { DataUserConfig } from './UserConfig.js'
 
-type DetailedUsagePayload =
-	CompanionUpdatesApiOperations['companion_detailed-usage_post']['requestBody']['content']['application/json']
+type DetailedUsagePayload = CompanionDetailedUsagePostData['body']
 
 const baseUrl = 'https://updates.companion.free'
 const REQUEST_TIMEOUT_MS = 20_000
@@ -57,7 +57,7 @@ export class DataUsageStatistics {
 	readonly #serviceController: ServiceController
 	readonly #userConfigController: DataUserConfig
 
-	readonly #openApiClient: Client<CompanionUpdatesApiPaths>
+	readonly #openApiClient: Client
 
 	#bindIp = ''
 
@@ -84,12 +84,15 @@ export class DataUsageStatistics {
 		this.#serviceController = serviceController
 		this.#userConfigController = userConfigController
 
-		this.#openApiClient = createClient<CompanionUpdatesApiPaths>({
-			baseUrl,
-			headers: {
-				'User-Agent': `Companion ${appInfo.appVersion}`,
-			},
-		})
+		this.#openApiClient = createClient(
+			createConfig({
+				baseUrl,
+				headers: {
+					'User-Agent': `Companion ${appInfo.appVersion}`,
+				},
+			})
+		)
+		this.#openApiClient.interceptors.error.use(throwTransportErrors)
 	}
 
 	updateBindIp(bindIp: string): void {
@@ -250,7 +253,8 @@ export class DataUsageStatistics {
 			// push metrics back home - if we can!
 			pRetry(
 				async () => {
-					const res = await this.#openApiClient.POST('/companion/detailed-usage', {
+					const res = await companionDetailedUsagePost({
+						client: this.#openApiClient,
 						body: payload,
 						signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
 					})

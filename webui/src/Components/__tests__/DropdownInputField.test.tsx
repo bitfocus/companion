@@ -77,6 +77,16 @@ function queryListbox() {
 // ---------------------------------------------------------------------------
 
 describe('Rendering (static)', () => {
+	it('is named by a label pointing at its htmlName', () => {
+		render(
+			<MenuPortalContext.Provider value={document.body}>
+				<label htmlFor="fruit-field">Fruit</label>
+				<DropdownInputField choices={CHOICES} htmlName="fruit-field" value="apple" setValue={vi.fn()} />
+			</MenuPortalContext.Provider>
+		)
+		expect(screen.getByLabelText('Fruit')).toBe(screen.getByRole('combobox'))
+	})
+
 	it('shows the label of the current value in the input', () => {
 		const { input } = renderField({ initialValue: 'banana' })
 		expect(input).toHaveValue('Banana')

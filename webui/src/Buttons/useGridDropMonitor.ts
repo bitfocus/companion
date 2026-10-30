@@ -1,9 +1,11 @@
 import { useDragDropMonitor } from '@dnd-kit/react'
-import { useCallback } from 'react'
+import { useCallback, useContext } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import type { ButtonGridStore } from './ButtonGridStore.js'
 import { GRID_BUTTON_DRAG_TYPE, type GridButtonDragItem } from './GridButtonDragItem.js'
 import { parseGridButtonDroppableId } from './GridButtonDroppableId.js'
@@ -51,6 +53,8 @@ export function useGridDropMonitor({ store, gridSize, isOccupied, actions }: Use
 	)
 
 	const importPresetMutation = useMutationExt(trpc.controls.importPreset.mutationOptions())
+	const importLinkButtonMutation = useMutationExt(trpc.controls.importLinkButton.mutationOptions())
+	const { notifier } = useContext(RootAppStoreContext)
 
 	useDragDropMonitor({
 		onDragOver(event) {
@@ -74,17 +78,31 @@ export function useGridDropMonitor({ store, gridSize, isOccupied, actions }: Use
 				if (!location) return
 
 				const dropData = source.data as PresetDragItem
-				importPresetMutation
-					.mutateAsync({
-						connectionId: dropData.connectionId,
-						presetId: dropData.presetId,
-						location,
-						variableValues: dropData.variableValues,
-						mode: dropData.mode,
-					})
-					.catch(() => {
-						console.error('Preset import failed')
-					})
+				switch (dropData.kind) {
+					case 'connection':
+						importPresetMutation
+							.mutateAsync({
+								connectionId: dropData.connectionId,
+								presetId: dropData.presetId,
+								location,
+								variableValues: dropData.variableValues,
+								mode: dropData.mode,
+							})
+							.catch(() => {
+								console.error('Preset import failed')
+							})
+						break
+					case 'link':
+						importLinkButtonMutation
+							.mutateAsync({ location, peerId: dropData.peerId, remoteLocation: dropData.location })
+							.catch((e) => {
+								notifier.show('Failed to place remote button', e?.message ?? String(e))
+							})
+						break
+					default:
+						assertNever(dropData)
+						break
+				}
 				return
 			}
 

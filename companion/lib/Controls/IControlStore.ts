@@ -1,4 +1,5 @@
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
@@ -59,6 +60,12 @@ export interface IControlStore {
 		overrideVariableValues: VariableValues | null,
 		options?: ExpressionParserOptions
 	): VariablesAndExpressionParser
+
+	/**
+	 * Create a parser for the options of an action being executed, and of an internal action's child feedbacks.
+	 * Actions are sampled once at execution and never re-evaluated, so clock-sensitive expressions are rejected
+	 */
+	createActionExecutionParser(extras: RunActionExtras): VariablesAndExpressionParser
 
 	/**
 	 * Clear any state tracked by controls for a connection (e.g. feedback values)

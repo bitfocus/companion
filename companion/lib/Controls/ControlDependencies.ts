@@ -1,17 +1,18 @@
 import type { EventEmitter } from 'node:events'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
+import type { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableUpdate,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import type { TriggersUpdate } from '@companion-app/shared/Model/TriggerModel.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import type { InternalController } from '../Internal/Controller.js'
+import type { LinkButtonClient } from '../Link/ButtonClient.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
@@ -44,10 +45,13 @@ export interface ControlExternalDependencies {
 	readonly actionRunner: ActionRunner
 
 	readonly renderClock: RenderClock
+
+	/** Subscribes link buttons to the remote buttons they show */
+	readonly linkButtons: LinkButtonClient
 }
 
 export interface ControlDependencies extends ControlExternalDependencies {
-	readonly dbTable: DataStoreTableView<Record<string, SomeControlModel>>
+	readonly dbTable: DataStoreSchemaTableView<typeof SomeControlModelSchema>
 
 	/** Narrow access to other controls (for controls that forward to or read a target control). */
 	readonly controlsAccessor: ControlsAccessor

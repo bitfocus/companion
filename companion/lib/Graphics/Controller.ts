@@ -20,7 +20,13 @@ import type Express from 'express'
 import QuickLRU from 'quick-lru'
 import workerPool from 'workerpool'
 import { isLocationOnGrid, ParseControlId, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
-import { MAX_DECODED_IMAGE_BYTES, snapToRenderClock } from '@companion-app/shared/Graphics/AnimationTiming.js'
+import {
+	countCycleRenders,
+	MAX_DECODED_IMAGE_BYTES,
+	RENDER_CLOCK_INTERVAL_MS,
+	snapToRenderClock,
+} from '@companion-app/shared/Graphics/AnimationTiming.js'
+import { pruneElementsToTarget, type ElementRasterCanvas } from '@companion-app/shared/Graphics/ElementRaster.js'
 import {
 	resolveButtonStyleProperties,
 	type ResolveButtonStylePropertiesConfig,
@@ -28,7 +34,11 @@ import {
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { RendererButtonStyle, RendererDrawStyle } from '@companion-app/shared/Model/Render.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
-import { ButtonGraphicsDecorationType, type DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
+import {
+	ButtonGraphicsDecorationType,
+	type DrawImageBuffer,
+	type DrawStyleButtonStateProps,
+} from '@companion-app/shared/Model/StyleModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ControlButtonPreset } from '../Controls/ControlTypes/Button/Preset.js'
@@ -40,17 +50,19 @@ import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import { ImageWriteQueue } from '../Resources/ImageWriteQueue.js'
-import { resolveThreadEntrypoint } from '../Resources/Util.js'
+import { resolveThreadEntrypoint, rotateResolution } from '../Resources/Util.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { VariablesValues, VariableValueEntry } from '../Variables/Values.js'
+import { contentSizeOf } from './ContentSize.js'
 import { collectContentHashes } from './ConvertGraphicsElements/Util.js'
-import { DisplayedLocations } from './DisplayedLocations.js'
+import { DisplayedLocations, type DisplayedSize } from './DisplayedLocations.js'
+import { EmbeddedLocations } from './EmbeddedLocations.js'
 import { FONT_DEFINITIONS } from './Fonts.js'
-import { ImageCacheStore, type AnimationFrames } from './ImageCache/ImageCacheStore.js'
+import { ImageCacheStore, type AnimationFrames, type RemoteImageSource } from './ImageCache/ImageCacheStore.js'
 import { ImageLibrary } from './ImageLibrary.js'
 import { getImageResultStats, ImageResult, setDrawNativeRenderObserver } from './ImageResult.js'
 import { GraphicsLayeredProcessedStyleGenerator } from './LayeredProcessedStyleGenerator.js'
-import { computeOversampling, GraphicsRenderer } from './Renderer.js'
+import { computeOversampling, GraphicsRenderer, type DrawnElementRaster } from './Renderer.js'
 import { GraphicsThreadMethods } from './ThreadMethods.js'
 
 const CRASHED_WORKER_RETRY_COUNT = 10
@@ -69,15 +81,27 @@ const RENDER_CACHE_RESIZE_DEBOUNCE_MS = 500
 // Decoded images are stored at their own size, so that a large image can be drawn in segments across many
 // buttons. Each is limited to MAX_DECODED_IMAGE_BYTES, so it can't push everything else out of the cache
 const IMAGE_CACHE_MAX_BYTES = 128 * 1024 * 1024
+// Images of remote buttons (Link) share it: only the newest of each button at each size is kept, while it is held
 
-// Renders of animations with a loop up to this long are kept in the render cache, so that they are reused on each
-// loop. Longer animations would push everything else out of the cache, so they are drawn again each time
-const RENDER_CACHE_MAX_ANIMATION_DURATION_MS = 5000
+// Renders of a button which cycles through up to this many different renders (eg an animation, or an oscillate()) are
+// kept in the render cache, so that they are reused on each loop. More would push everything else out of the cache,
+// so they are drawn again each time
+const RENDER_CACHE_MAX_CYCLE_RENDERS = 50
 
-const NO_ANIMATION_FRAMES: AnimationFrames = { frameIndices: new Map(), maxDurationMs: 0 }
+const NO_ANIMATION_FRAMES: AnimationFrames = { frameIndices: new Map(), animations: [] }
 
-function shouldCacheAnimationRenders(animationFrames: AnimationFrames): boolean {
-	return animationFrames.maxDurationMs <= RENDER_CACHE_MAX_ANIMATION_DURATION_MS
+/**
+ * Count how many different renders a button cycles through, from its animated images and from its expressions which
+ * depend on the render clock, which can change on every tick
+ * @param clockCycleMs How long until the expressions which depend on the render clock repeat, or 0 if there are none
+ */
+function countButtonCycleRenders(animationFrames: AnimationFrames, clockCycleMs: number): number {
+	if (clockCycleMs === 0) return countCycleRenders(animationFrames.animations)
+
+	return countCycleRenders([
+		...animationFrames.animations,
+		{ frameCount: clockCycleMs / RENDER_CLOCK_INTERVAL_MS, durationMs: clockCycleMs },
+	])
 }
 
 interface GraphicsControllerEvents {
@@ -95,6 +119,31 @@ interface RenderArgumentsPreset {
 	controlId: string
 }
 type RenderArguments = RenderArgumentsButton | RenderArgumentsPreset
+
+/** What a render of a button was drawn from, to draw it again without its decoration */
+interface ButtonRenderSource {
+	readonly drawStyle: RendererButtonStyle
+	readonly animationFrames: AnimationFrames
+}
+
+/** A render of the content of a button without its decoration, and the state to decorate it with */
+export interface UndecoratedRender {
+	/** Null when there is nothing to draw, eg there is no button there */
+	readonly render: ImageResult | null
+	/**
+	 * Identifies what the render looks like, apart from its state (eg pressed), which only its decoration shows: two
+	 * with the same key draw the same. Null when that can't be told
+	 */
+	readonly contentKey: string | null
+	/** Null when the render isn't of a button, eg a blank */
+	readonly state: UndecoratedButtonState | null
+}
+
+/** What the decoration of a button is drawn from */
+export interface UndecoratedButtonState extends DrawStyleButtonStateProps {
+	/** Set when the button is itself a remote button (see DrawStyleLayeredButtonModel) */
+	link_status: 'ok' | 'unreachable' | undefined
+}
 
 export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	readonly #logger = LogController.createLogger('Graphics/Controller')
@@ -139,6 +188,20 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * Which locations are being shown right now, and at what sizes
 	 */
 	readonly displayedLocations = new DisplayedLocations()
+
+	/** What each shown location's render embeds, which is shown wherever it is, at the same sizes */
+	readonly #embeddedLocations = new EmbeddedLocations(
+		this.displayedLocations,
+		(location) => this.getCachedRender(location)?.referencedLocations ?? null
+	)
+
+	/** Where the images of remote elements are fetched from */
+	readonly #remoteImageSource: RemoteImageSource
+
+	/** What each render of a button was drawn from */
+	readonly #renderSources = new WeakMap<ImageResult, ButtonRenderSource>()
+	/** The undecorated render of each render, made when first asked for */
+	readonly #undecoratedRenders = new WeakMap<ImageResult, UndecoratedRender>()
 
 	// null when render threading is disabled: the pool spawns its minWorkers eagerly at construction,
 	// so it must not be created at all when rendering runs in-process
@@ -279,9 +342,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		db: DataDatabase,
 		internalApiRouter: Express.Router,
 		metrics: MetricsRegistry,
-		renderClock: RenderClock
+		renderClock: RenderClock,
+		remoteImageSource: RemoteImageSource
 	) {
 		super()
+
+		this.#remoteImageSource = remoteImageSource
+		remoteImageSource.onReleased((slots) => this.#imageCache.releaseRemote(slots))
 
 		this.controlsStore = controlsStore
 		this.#pageStore = pageStore
@@ -323,7 +390,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							: NO_ANIMATION_FRAMES
 
 						// Track clock-sensitive presets so we can re-render them on each clock tick
-						if (buttonStyle && (buttonStyle.clockSensitive || animationFrames.frameIndices.size > 0)) {
+						if (buttonStyle && (buttonStyle.clockCycleMs || animationFrames.frameIndices.size > 0)) {
 							this.#clockSensitivePresets.add(args.controlId)
 						} else {
 							this.#clockSensitivePresets.delete(args.controlId)
@@ -334,11 +401,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							// Check if the image is already present in the render cache and if so, return it
 							// Use collected contentHashes instead of JSON.stringify on entire buttonStyle to avoid
 							// serializing large binary data (images can be 100KB+)
-							// clockSensitive is excluded from the cache key — it's metadata, not part of the visual output
-							const { clockSensitive: _cs, ...buttonStyleForKey } = buttonStyle
+							// clockCycleMs is part of the key even though it doesn't change what is drawn, so that a render is
+							// never reused with the cycle metadata of an older one
 							const cacheKey = JSON.stringify({
 								options: this.#drawOptions,
-								...buttonStyleForKey,
+								...buttonStyle,
 								elements: collectContentHashes(buttonStyle.elements),
 								animationFrames: [...animationFrames.frameIndices],
 							})
@@ -352,8 +419,16 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									decodedImages: null, // Resolved when drawn
 								}
 
-								render = this.#generateImageResult(cacheKey, renderStyle, animationFrames.frameIndices)
-								if (shouldCacheAnimationRenders(animationFrames)) this.#renderLRUCache.set(cacheKey, render)
+								const cycleRenderCount = countButtonCycleRenders(animationFrames, buttonStyle.clockCycleMs ?? 0)
+								render = this.#generateImageResult(
+									cacheKey,
+									renderStyle,
+									animationFrames,
+									cycleRenderCount,
+									buttonStyle.clockCycleMs ?? 0,
+									true
+								)
+								if (cycleRenderCount <= RENDER_CACHE_MAX_CYCLE_RENDERS) this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
 							render = GraphicsRenderer.generateBlankImage(
@@ -398,35 +473,39 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 						// Track clock-sensitive locations so we can re-render them on each clock tick
 						const locationKey = `${location.pageNumber}/${location.row}/${location.column}`
-						if (buttonStyle.clockSensitive || animationFrames.frameIndices.size > 0) {
+						if (buttonStyle.clockCycleMs || animationFrames.frameIndices.size > 0) {
 							this.#clockSensitiveLocations.set(locationKey, location)
 						} else {
 							this.#clockSensitiveLocations.delete(locationKey)
 						}
 
-						// clockSensitive must NOT appear in the cache key — it's metadata, not part of the visual output.
-						// The actual rendered content differs per clock tick and is content-hashed via elements.
+						// The rendered content differs per clock tick and is content-hashed via elements. clockCycleMs is part
+						// of the key even though it doesn't change what is drawn, so that a render is never reused with the
+						// cycle metadata of an older one
 						const cacheKeyObj: Record<string, unknown> = {
 							...renderStyle,
 							elements: collectContentHashes(buttonStyle.elements), // use hashes of elements for the key
 							referencedLocations: [...(buttonStyle.referencedLocations ?? [])].sort(), // Sets serialize as {} in JSON.stringify
 							animationFrames: [...animationFrames.frameIndices],
 						}
-						delete cacheKeyObj['clockSensitive']
 						const cacheKey = JSON.stringify(cacheKeyObj)
 
 						// Check if the image is already present in the render cache and if so, return it
 						render = this.#renderLRUCache.get(cacheKey)
 
 						if (!render) {
+							const cycleRenderCount = countButtonCycleRenders(animationFrames, buttonStyle.clockCycleMs ?? 0)
 							render = this.#generateImageResult(
 								cacheKey,
 								renderStyle,
-								animationFrames.frameIndices,
+								animationFrames,
+								cycleRenderCount,
+								buttonStyle.clockCycleMs ?? 0,
+								true,
 								buttonStyle.elements,
 								buttonStyle.referencedLocations
 							)
-							if (shouldCacheAnimationRenders(animationFrames)) this.#renderLRUCache.set(cacheKey, render)
+							if (cycleRenderCount <= RENDER_CACHE_MAX_CYCLE_RENDERS) this.#renderLRUCache.set(cacheKey, render)
 						}
 					} else {
 						render = GraphicsRenderer.generateBlankImage(
@@ -584,7 +663,10 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const previous = rowCache.get(location.column)
 		rowCache.set(location.column, render)
 
-		return !render.cacheKey || previous?.cacheKey !== render.cacheKey
+		const changed = !render.cacheKey || previous?.cacheKey !== render.cacheKey
+		// It may embed other locations now, or no longer
+		if (changed) this.#embeddedLocations.refresh(location)
+		return changed
 	}
 
 	/**
@@ -615,7 +697,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		// One-off preview: never cached or emitted, so it has no content key (never deduped).
 		// It is a still, so any animations show their first frame
-		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES.frameIndices)
+		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES, 1, 0, true)
 	}
 
 	/**
@@ -706,7 +788,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	discardAllOutOfBoundsControls(): void {
 		const { minColumn, maxColumn, minRow, maxRow } = this.#userConfigController.getKey('gridSize')
 
-		for (const page of this.#renderCache.values()) {
+		for (const [pageNumber, page] of this.#renderCache) {
 			for (const row of page.keys()) {
 				const rowObj = page.get(row)
 				if (!rowObj) continue
@@ -714,11 +796,13 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 				if (row < minRow || row > maxRow) {
 					// Row is out of bounds, delete it all
 					page.delete(row)
+					for (const column of rowObj.keys()) this.#embeddedLocations.refresh({ pageNumber, row, column })
 				} else {
 					for (const column of rowObj.keys()) {
 						if (column < minColumn || column > maxColumn) {
 							// Column is out of bounds
 							rowObj.delete(column)
+							this.#embeddedLocations.refresh({ pageNumber, row, column })
 						}
 					}
 				}
@@ -919,19 +1003,25 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	#generateImageResult(
 		cacheKey: string | undefined,
 		drawStyle: RendererButtonStyle,
-		animationFrameIndices: ReadonlyMap<string, number>,
+		animationFrames: AnimationFrames,
+		cycleRenderCount: number,
+		clockCycleMs: number,
+		waitForRemoteImages: boolean,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> | undefined = undefined
 	): ImageResult {
 		const processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 
-		return new ImageResult(
+		const render = new ImageResult(
 			cacheKey,
 			processedStyle,
+			cycleRenderCount,
+			clockCycleMs,
 			async (width, height, rotation, format) =>
 				this.#executePoolDrawButtonImageBuffer(
 					drawStyle,
-					animationFrameIndices,
+					animationFrames.frameIndices,
+					waitForRemoteImages,
 					{ width, height, oversampling: computeOversampling(width, height) },
 					rotation,
 					format,
@@ -939,6 +1029,69 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 				),
 			drawElements,
 			referencedLocations ?? new Set()
+		)
+		this.#renderSources.set(render, { drawStyle, animationFrames })
+		return render
+	}
+
+	/**
+	 * The content of a render of a button, without its decoration (top bar, border or status icons), and the state to
+	 * decorate it with. For a render that is decorated somewhere else, eg by a Link button showing it
+	 */
+	getUndecoratedRender(render: ImageResult): UndecoratedRender {
+		const cached = this.#undecoratedRenders.get(render)
+		if (cached) return cached
+
+		const source = this.#renderSources.get(render)
+		let undecorated: UndecoratedRender
+		if (source) {
+			const { drawStyle } = source
+			undecorated = {
+				render: this.#generateImageResult(
+					render.cacheKey && `undecorated:${render.cacheKey}`,
+					{
+						...drawStyle,
+						decoration: ButtonGraphicsDecorationType.None,
+						show_status_icons: false,
+						location: undefined,
+					},
+					source.animationFrames,
+					render.cycleRenderCount,
+					render.clockCycleMs,
+					// Served onwards (by Link), where it is better to send what is there and the rest when it comes, than
+					// to hold up serving every other button
+					false
+				),
+				// Without decoration, the state isn't drawn: only the elements, as they are on this frame of any animations
+				contentKey: JSON.stringify({
+					drawType: drawStyle.drawType,
+					elements: collectContentHashes(drawStyle.elements),
+					animationFrames: [...source.animationFrames.frameIndices],
+				}),
+				state: {
+					pushed: drawStyle.pushed,
+					stepCurrent: drawStyle.stepCurrent,
+					stepCount: drawStyle.stepCount,
+					button_status: drawStyle.button_status,
+					action_running: drawStyle.action_running,
+					link_status: drawStyle.link_status,
+				},
+			}
+		} else {
+			undecorated = { render: null, contentKey: 'blank', state: null }
+		}
+
+		this.#undecoratedRenders.set(render, undecorated)
+		return undecorated
+	}
+
+	/** The size of the content area of a button of a size, with a decoration (which can be to follow the default) */
+	getContentSize(size: DisplayedSize, decoration: ButtonGraphicsDecorationType): DisplayedSize {
+		return contentSizeOf(
+			size,
+			decoration === ButtonGraphicsDecorationType.FollowDefault
+				? this.#userConfigController.getKey('buttons_decoration')
+				: decoration
 		)
 	}
 
@@ -949,12 +1102,23 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	async #executePoolDrawButtonImageBuffer(
 		drawStyle: RendererDrawStyle,
 		animationFrameIndices: ReadonlyMap<string, number>,
+		waitForRemoteImages: boolean,
 		resolution: { width: number; height: number; oversampling: number },
 		rotation: SurfaceRotation | null,
 		format: imageRs.PixelFormat,
 		remainingAttempts: number
 	): Promise<Uint8Array> {
-		const resolvedDrawStyle = await this.#imageCache.resolveDrawStyle(drawStyle, animationFrameIndices)
+		// The elements fill the content area, which is what is left of the button by its decoration
+		const [drawWidth, drawHeight] = rotateResolution(resolution.width, resolution.height, rotation)
+		const contentSize = contentSizeOf({ width: drawWidth, height: drawHeight }, drawStyle.decoration)
+
+		const resolvedDrawStyle = await this.#imageCache.resolveDrawStyle(
+			drawStyle,
+			animationFrameIndices,
+			contentSize,
+			this.#remoteImageSource,
+			waitForRemoteImages
+		)
 
 		return this.#poolExec('drawButtonImageBuffer', [resolvedDrawStyle, resolution, rotation, format], remainingAttempts)
 	}
@@ -967,6 +1131,56 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		remainingAttempts: number = CRASHED_WORKER_RETRY_COUNT
 	): Promise<{ width: number; height: number; previewDataUrl: string }> {
 		return this.#poolExec('createImagePreview', [originalDataUrl], remainingAttempts)
+	}
+
+	/**
+	 * Rasterise a single element of a layered button in the worker pool, for the editor preview to composite.
+	 * @param elements The draw elements of the whole button
+	 */
+	async renderElementRaster(
+		elements: SomeButtonGraphicsDrawElement[],
+		elementId: string,
+		canvas: ElementRasterCanvas,
+		remainingAttempts: number = CRASHED_WORKER_RETRY_COUNT
+	): Promise<DrawnElementRaster | null> {
+		const prunedElements = pruneElementsToTarget(elements, elementId)
+		if (!prunedElements) return null
+
+		const drawStyle: RendererButtonStyle = {
+			style: 'button-layered',
+			drawType: 'button',
+
+			elements: prunedElements,
+
+			// The button state only affects the decoration, which isn't drawn
+			pushed: false,
+			button_status: undefined,
+			action_running: false,
+			stepCurrent: 1,
+			stepCount: 1,
+
+			// Resolved from the whole button, as the decoration changes the content area
+			...resolveButtonStyleProperties(this.#drawOptions, elements),
+
+			location: undefined,
+			decodedImages: null, // Resolved below
+		}
+
+		// The elements fill the content area, which is what is left of the button by its decoration
+		const contentSize = contentSizeOf(
+			{ width: canvas.width - canvas.paddingX * 2, height: canvas.height - canvas.paddingY * 2 },
+			drawStyle.decoration
+		)
+		// It is a still, so any animations show their first frame
+		const resolvedDrawStyle = await this.#imageCache.resolveDrawStyle(
+			drawStyle,
+			NO_ANIMATION_FRAMES.frameIndices,
+			contentSize,
+			this.#remoteImageSource,
+			true
+		)
+
+		return this.#poolExec('drawElementRaster', [resolvedDrawStyle, elementId, canvas], remainingAttempts)
 	}
 
 	async renderPixelBuffers(

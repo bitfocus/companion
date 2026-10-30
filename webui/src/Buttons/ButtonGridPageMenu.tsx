@@ -6,7 +6,6 @@ import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/Con
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Popover } from '~/Components/Popover.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
-import { makeAbsolutePath } from '~/Resources/util.js'
 import type { PagesStoreModel } from '~/Stores/PagesStore.js'
 import { EditPagePropertiesModal, type EditPagePropertiesModalRef } from './EditPageProperties.js'
 
@@ -36,7 +35,7 @@ export function ButtonGridPageMenu({ pageNumber, pageInfo }: ButtonGridPageMenuP
 			{
 				label: 'Export page',
 				icon: faFileExport,
-				do: () => exportModalRef.current?.show(makeAbsolutePath(`/int/export/page/${pageNumber}`)),
+				do: () => exportModalRef.current?.show({ type: 'page', pageNumber }),
 			},
 			{ isSeparator: true, label: 'Danger zone' },
 			{
@@ -78,7 +77,7 @@ export function ButtonGridPageMenu({ pageNumber, pageInfo }: ButtonGridPageMenuP
 		<>
 			<GenericConfirmModal ref={confirmRef} />
 			<EditPagePropertiesModal ref={editRef} includeName />
-			<ConfirmExportModal ref={exportModalRef} title="Export Page" />
+			<ConfirmExportModal ref={exportModalRef} />
 
 			<Popover.Root>
 				<Popover.Trigger color="secondary" className="ms-1" title="Page actions">

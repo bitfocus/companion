@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import type { JsonValue } from 'type-fest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { combineClockCycles } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import {
 	FONTSIZE_SHRINK_DEFAULT,
 	getElementSchemaProperty,
@@ -119,7 +120,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 		compositeElements: { drawn: new Set(), hidden: new Set() },
 		referencedLocations: { drawn: new Set(), hidden: new Set() },
 		cyclicLocations: new Set(),
-		clockSensitive: false,
+		clockCycleMs: 0,
 	}
 
 	// Track all processed element IDs (with prefixes) for cache purging
@@ -214,7 +215,7 @@ async function convertElements(
 
 				// Cache the result for cacheable element types (not groups/composites as they have children cached separately)
 				// Clock-sensitive elements are not cached since their output changes with the render clock
-				if (context.cache && !cacheEntry.references.clockSensitive) {
+				if (context.cache && cacheEntry.references.clockCycleMs === 0) {
 					context.cache.set(elementId, cacheEntry)
 				}
 			}
@@ -393,8 +394,15 @@ async function convertReferenceElementForDrawing(
 					context.globalReferences.cyclicLocations.add(targetLocationStr)
 					drawElement.children = makeReferencePlaceholder(drawElement.id, '\u221e')
 				} else if (targetRender?.drawElements) {
-					// Embed the referenced button's draw elements (exclude canvas elements which are render-specific)
-					drawElement.children = targetRender.drawElements.filter((el) => el.type !== 'canvas')
+					// Embed the referenced button's draw elements (exclude canvas elements which are render-specific).
+					// Their ids are prefixed, as they are only unique within that button
+					drawElement.children = prefixElementIds(
+						targetRender.drawElements.filter((el) => el.type !== 'canvas'),
+						drawElement.id + '/'
+					)
+
+					// The embedded elements change whenever the target's do, so this element follows the target's clock
+					references.clockCycleMs = combineClockCycles(references.clockCycleMs, targetRender.clockCycleMs)
 
 					// Track transitive referenced locations for loop detection in parent renders
 					for (const loc of targetRender.referencedLocations) {
@@ -416,6 +424,23 @@ async function convertReferenceElementForDrawing(
 	return { drawElement, references, compositeElement: null, referencedLocation: referencedLocationStr }
 }
 
+/**
+ * Prefix the ids of some draw elements and all their descendants, to keep them unique once embedded in another tree
+ */
+function prefixElementIds(elements: SomeButtonGraphicsDrawElement[], prefix: string): SomeButtonGraphicsDrawElement[] {
+	return elements.map((element) => {
+		if (element.type === 'group' || element.type === 'reference') {
+			return { ...element, id: prefix + element.id, children: prefixElementIds(element.children, prefix) }
+		}
+		return { ...element, id: prefix + element.id }
+	})
+}
+
+/** The background of the placeholder shown when a button can't show what it refers to: the app's warning yellow */
+export const PLACEHOLDER_BACKGROUND_COLOR = 0xf9b115
+/** The text of the placeholder */
+export const PLACEHOLDER_TEXT_COLOR = 0x3a2c0a
+
 export function makeReferencePlaceholder(
 	parentId: string,
 	text: string
@@ -431,7 +456,7 @@ export function makeReferencePlaceholder(
 		width: 1,
 		height: 1,
 		rotation: 0,
-		color: 0xf9b115, // Match the app's warning yellow.
+		color: PLACEHOLDER_BACKGROUND_COLOR,
 		cornerRadius: 0,
 		borderWidth: 0,
 		borderColor: 0,
@@ -457,7 +482,7 @@ export function makeReferencePlaceholder(
 		font: 'companion-sans',
 		weight: 'bold',
 		styles: [],
-		color: 0x3a2c0a,
+		color: PLACEHOLDER_TEXT_COLOR,
 		outlineColor: 'transparent',
 		halign: 'center',
 		valign: 'center',

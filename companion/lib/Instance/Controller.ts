@@ -13,10 +13,10 @@ import { EventEmitter } from 'node:events'
 import express from 'express'
 import type { UdevRuleDefinition } from 'udev-generator'
 import z from 'zod'
-import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
+import { isLabelValid } from '@companion-app/shared/Label.js'
 import type { ClientConnectionConfig, ClientConnectionsUpdate } from '@companion-app/shared/Model/Connections.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type { ExportInstanceFullv6, ExportInstanceMinimalv6 } from '@companion-app/shared/Model/ExportModel.js'
+import type { ExportInstance } from '@companion-app/shared/Model/Export/Latest.js'
 import {
 	InstanceVersionUpdatePolicy,
 	ModuleInstanceType,
@@ -24,6 +24,7 @@ import {
 } from '@companion-app/shared/Model/Instance.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
 import type { ModuleManifestExt } from '@companion-app/shared/Model/ModuleManifest.js'
+import { JsonObjectSchema } from '@companion-app/shared/Model/Options.js'
 import type {
 	ClientSurfaceInstanceConfig,
 	ClientSurfaceInstancesUpdate,
@@ -239,8 +240,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 						{
 							label: null,
 							enabled: null,
-							config,
-							secrets,
+							config: this.#jsonObjectFromModule(instanceId, 'config', config),
+							secrets: this.#jsonObjectFromModule(instanceId, 'secrets', secrets),
 							updatePolicy: null,
 							upgradeIndex,
 						},
@@ -700,8 +701,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		values: {
 			label: string | null
 			enabled: boolean | null
-			config: unknown | null
-			secrets: unknown | null
+			config: InstanceConfig['config'] | null
+			secrets: InstanceConfig['secrets'] | null
 			updatePolicy: InstanceVersionUpdatePolicy | null
 			upgradeIndex: number | null
 		},
@@ -733,7 +734,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			if (options?.patchConfig) {
 				// Patch the config, only updating those keys that are defined
 				connectionConfig.config = {
-					...(connectionConfig.config as any),
+					...connectionConfig.config,
 					...values.config,
 				}
 			} else {
@@ -746,7 +747,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 			if (options?.patchSecrets) {
 				// Patch the secrets, only updating those that are defined
 				connectionConfig.secrets = {
-					...(connectionConfig.secrets as any),
+					...connectionConfig.secrets,
 					...values.secrets,
 				}
 			} else {
@@ -1112,7 +1113,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		data: {
 			label: string | null
 			enabled: boolean | null
-			config: unknown | null
+			config: InstanceConfig['config'] | null
 			updatePolicy: InstanceVersionUpdatePolicy | null
 		}
 	): { ok: true } | { ok: false; message: string } {
@@ -1319,6 +1320,21 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		}
 	}
 
+	/** A config or secrets sent by a module, which must be a JSON object to be stored; anything else is ignored */
+	#jsonObjectFromModule(
+		instanceId: string,
+		kind: 'config' | 'secrets',
+		value: unknown
+	): InstanceConfig['config'] | null {
+		if (value === null || value === undefined) return null
+
+		const result = JsonObjectSchema.safeParse(value)
+		if (result.success) return result.data
+
+		this.#logger.warn(`Ignoring invalid ${kind} from connection ${instanceId}: ${z.prettifyError(result.error)}`)
+		return null
+	}
+
 	/**
 	 *
 	 */
@@ -1327,7 +1343,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		minimal = false,
 		clone = true,
 		includeSecrets = true
-	): ExportInstanceFullv6 | ExportInstanceMinimalv6 | undefined {
+	): ExportInstance | undefined {
 		const rawObj = this.#configStore.getConfigOfTypeForId(connectionId, ModuleInstanceType.Connection)
 		if (!rawObj) return undefined
 
@@ -1340,22 +1356,24 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 					updatePolicy: rawObj.updatePolicy,
 					sortOrder: rawObj.sortOrder,
 					collectionId: rawObj.collectionId,
-				} satisfies Complete<ExportInstanceMinimalv6>)
+				} satisfies Complete<
+					Omit<ExportInstance, 'moduleInstanceType' | 'config' | 'secrets' | 'isFirstInit' | 'enabled'>
+				>)
 			: ({
 					...rawObj,
 					moduleId: rawObj.moduleId, // Rename for export
 					moduleVersionId: rawObj.moduleVersionId ?? undefined,
 					secrets: includeSecrets ? rawObj.secrets : undefined,
-				} satisfies ExportInstanceFullv6)
+				} satisfies ExportInstance)
 
 		return clone ? structuredClone(obj) : obj
 	}
 
-	exportAllConnections(includeSecrets: boolean): Record<string, InstanceConfig | undefined> {
+	exportAllConnections(includeSecrets: boolean): Record<string, InstanceConfig> {
 		return this.#configStore.exportAllConnections(includeSecrets)
 	}
 
-	exportAllSurfaceInstances(): Record<string, InstanceConfig | undefined> {
+	exportAllSurfaceInstances(): Record<string, InstanceConfig> {
 		return this.#configStore.exportAllSurfaceInstances()
 	}
 
@@ -1402,7 +1420,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		if (config.moduleInstanceType === ModuleInstanceType.Connection) {
 			// Ensure that the label is valid according to the new rules
 			// This is excessive to do at every activation, but it needs to be done once everything is loaded, not when upgrades are run
-			const safeLabel = makeLabelSafe(config.label)
+			const safeLabel = this.#configStore.makeLabelValid(ModuleInstanceType.Connection, config.label, id)
 			if (safeLabel !== config.label) {
 				this.setConnectionLabelAndConfig(
 					id,

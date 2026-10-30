@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid'
+import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { assertNever, type JsonValue } from '@companion-module/host'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
@@ -56,7 +57,7 @@ export class ActionRunner {
 			throw new Error(`Cannot execute entity of type "${entityModel.type}" as an action`)
 
 		let result: JsonValue | undefined
-		if (action.connectionId === 'internal') {
+		if (isInternalConnectionId(action.connectionId)) {
 			result = await this.#internalModule.executeAction(action, extras)
 		} else {
 			const instance = this.#instanceController.processManager.getConnectionChild(action.connectionId)
@@ -186,7 +187,7 @@ export class ActionRunner {
 		]
 
 		for (const action of actions) {
-			if (action.connectionId === 'internal' && action.definitionId === 'wait') {
+			if (isInternalConnectionId(action.connectionId) && action.definitionId === 'wait') {
 				groupedActions.push({
 					waitAction: action,
 					actions: [],

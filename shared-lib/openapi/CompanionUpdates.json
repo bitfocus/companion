@@ -1,0 +1,627 @@
+{
+	"openapi": "3.1.0",
+	"info": { "title": "Companion Update API", "description": "Companion Update API", "version": "1.0.0" },
+	"components": {
+		"securitySchemes": {
+			"bearerAuth": {
+				"type": "http",
+				"scheme": "bearer",
+				"bearerFormat": "JWT",
+				"description": "Enter your bearer token"
+			}
+		},
+		"schemas": {}
+	},
+	"paths": {
+		"/updates": {
+			"post": {
+				"operationId": "updates_post",
+				"tags": ["Updates"],
+				"description": "Check if updates are available",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"id": { "type": "string", "description": "Unique identifier for the installation" },
+									"app": {
+										"type": "object",
+										"properties": {
+											"name": { "type": "string", "description": "Name of the application" },
+											"version": { "type": "string", "description": "Current version of the application" },
+											"build": { "type": "string", "description": "Full build number or identifier" }
+										},
+										"required": ["name", "version", "build"]
+									},
+									"os": {
+										"type": "object",
+										"properties": {
+											"platform": { "type": "string", "description": "Operating system platform" },
+											"arch": { "type": "string", "description": "System architecture" },
+											"release": { "type": "string", "description": "OS release version" }
+										},
+										"required": ["platform", "arch", "release"]
+									}
+								},
+								"required": ["id", "app", "os"],
+								"additionalProperties": false
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Default Response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"ok": {
+											"type": "boolean",
+											"description": "Indicates if the check was successful, or should be retried later"
+										},
+										"message": { "type": "string", "description": "Update message" },
+										"message2": {
+											"description": "Additional message (Supported since Companion 4.2)",
+											"type": "string"
+										},
+										"link": { "description": "Download URL", "type": "string", "format": "uri" }
+									},
+									"required": ["ok", "message"],
+									"additionalProperties": false
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Validation error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"statusCode": {
+											"type": "integer",
+											"minimum": -9007199254740991,
+											"maximum": 9007199254740991,
+											"description": "HTTP status code"
+										},
+										"code": { "description": "Error code", "type": "string" },
+										"error": { "type": "string", "description": "Error name" },
+										"message": { "type": "string", "description": "Error message" }
+									},
+									"required": ["statusCode", "error", "message"],
+									"additionalProperties": false,
+									"description": "Validation error"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"statusCode": {
+											"type": "integer",
+											"minimum": -9007199254740991,
+											"maximum": 9007199254740991,
+											"description": "HTTP status code"
+										},
+										"code": { "description": "Error code", "type": "string" },
+										"error": { "type": "string", "description": "Error name" },
+										"message": { "type": "string", "description": "Error message" }
+									},
+									"required": ["statusCode", "error", "message"],
+									"additionalProperties": false,
+									"description": "Internal server error"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/updates-old": {
+			"post": {
+				"operationId": "updates-old_post",
+				"tags": ["Updates"],
+				"description": "Check if updates are available (legacy endpoint)",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"id": { "type": "string", "description": "Unique identifier for the installation" },
+									"app_name": { "type": "string", "enum": ["companion"], "description": "Name of the application" },
+									"app_version": { "type": "string", "description": "Current version of the application" },
+									"app_build": { "type": "string", "description": "Full build number or identifier" },
+									"platform": { "type": "string", "description": "Operating system platform" },
+									"arch": { "type": "string", "description": "System architecture" },
+									"release": { "type": "string", "description": "OS release version" },
+									"tz": {},
+									"cpus": {},
+									"type": {}
+								},
+								"required": ["id", "app_name", "app_version", "app_build", "platform", "arch", "release"],
+								"additionalProperties": false
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Default Response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"message": { "type": "string", "description": "Update message" },
+										"link": { "description": "Download URL", "type": "string", "format": "uri" }
+									},
+									"required": ["message"],
+									"additionalProperties": false
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Validation error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"statusCode": {
+											"type": "integer",
+											"minimum": -9007199254740991,
+											"maximum": 9007199254740991,
+											"description": "HTTP status code"
+										},
+										"code": { "description": "Error code", "type": "string" },
+										"error": { "type": "string", "description": "Error name" },
+										"message": { "type": "string", "description": "Error message" }
+									},
+									"required": ["statusCode", "error", "message"],
+									"additionalProperties": false,
+									"description": "Validation error"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"statusCode": {
+											"type": "integer",
+											"minimum": -9007199254740991,
+											"maximum": 9007199254740991,
+											"description": "HTTP status code"
+										},
+										"code": { "description": "Error code", "type": "string" },
+										"error": { "type": "string", "description": "Error name" },
+										"message": { "type": "string", "description": "Error message" }
+									},
+									"required": ["statusCode", "error", "message"],
+									"additionalProperties": false,
+									"description": "Internal server error"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/companion/detailed-usage": {
+			"post": {
+				"operationId": "companion_detailed-usage_post",
+				"tags": ["Usage"],
+				"description": "Report detailed usage information",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"type": "object",
+								"properties": {
+									"id": { "type": "string", "description": "Unique identifier for the installation" },
+									"app": {
+										"type": "object",
+										"properties": {
+											"name": { "type": "string", "description": "Name of the application" },
+											"version": { "type": "string", "description": "Current version of the application" },
+											"build": { "type": "string", "description": "Full build number or identifier" }
+										},
+										"required": ["name", "version", "build"]
+									},
+									"os": {
+										"type": "object",
+										"properties": {
+											"platform": { "type": "string", "description": "Operating system platform" },
+											"arch": { "type": "string", "description": "System architecture" },
+											"release": { "type": "string", "description": "OS release version" }
+										},
+										"required": ["platform", "arch", "release"]
+									},
+									"uptime": { "type": "number", "description": "Uptime of the application in seconds" },
+									"surfaces": {
+										"type": "array",
+										"items": {
+											"type": "object",
+											"properties": {
+												"moduleId": {
+													"type": "string",
+													"description": "Type of surface module used (eg elgato-stream-deck, loupedeck"
+												},
+												"id": {
+													"type": "string",
+													"description": "Unique identifier for the surface (eg serial number)"
+												},
+												"description": {
+													"type": "string",
+													"description": "Human-readable description of the surface (eg Stream Deck XL)"
+												}
+											},
+											"required": ["moduleId", "id", "description"]
+										},
+										"description": "List of setup surfaces"
+									},
+									"surfaceModules": {
+										"type": "array",
+										"items": {
+											"type": "object",
+											"properties": {
+												"moduleId": {
+													"type": "string",
+													"description": "Type of surface module used (eg elgato-stream-deck, loupedeck)"
+												},
+												"counts": {
+													"type": "object",
+													"propertyNames": { "type": "string" },
+													"additionalProperties": { "type": "number" },
+													"description": "Map of surface module versions to count of instances"
+												}
+											},
+											"required": ["moduleId", "counts"]
+										},
+										"description": "List of setup surface modules"
+									},
+									"connections": {
+										"type": "array",
+										"items": {
+											"type": "object",
+											"properties": {
+												"moduleId": {
+													"type": "string",
+													"description": "Type of connection module used (eg bmd-atem, studiocoast-vmix)"
+												},
+												"counts": {
+													"type": "object",
+													"propertyNames": { "type": "string" },
+													"additionalProperties": { "type": "number" },
+													"description": "Map of connection versions to count of instances"
+												}
+											},
+											"required": ["moduleId", "counts"]
+										},
+										"description": "List of setup connections"
+									},
+									"features": {
+										"type": "object",
+										"properties": {
+											"isBoundToLoopback": {
+												"type": "boolean",
+												"description": "Indicates if the server is bound to loopback only"
+											},
+											"hasAdminPassword": { "type": "boolean", "description": "Indicates if an admin password is set" },
+											"hasPincodeLockout": {
+												"type": "boolean",
+												"description": "Indicates if pincode lockout is enabled"
+											},
+											"cloudEnabled": { "type": "boolean", "description": "Indicates if cloud features are enabled" },
+											"httpsEnabled": { "type": "boolean", "description": "Indicates if HTTPS is enabled" },
+											"buttonDecoration": {
+												"type": "string",
+												"enum": ["topbar", "border", "none"],
+												"description": "The default button decoration style"
+											},
+											"buttonStatusIcons": {
+												"description": "Whether surface status icons are shown on buttons",
+												"type": "string",
+												"enum": ["show", "none"]
+											},
+											"httpEnabled": { "type": "boolean", "description": "Indicates if the HTTP API is enabled" },
+											"httpDeprecatedEnabled": {
+												"type": "boolean",
+												"description": "Indicates if the deprecated HTTP API is enabled"
+											},
+											"tcpEnabled": { "type": "boolean", "description": "Indicates if TCP protocol is enabled" },
+											"tcpDeprecatedEnabled": {
+												"type": "boolean",
+												"description": "Indicates if deprecated TCP protocol is enabled"
+											},
+											"udpEnabled": { "type": "boolean", "description": "Indicates if UDP protocol is enabled" },
+											"udpDeprecatedEnabled": {
+												"type": "boolean",
+												"description": "Indicates if deprecated UDP protocol is enabled"
+											},
+											"oscEnabled": { "type": "boolean", "description": "Indicates if OSC protocol is enabled" },
+											"oscDeprecatedEnabled": {
+												"type": "boolean",
+												"description": "Indicates if deprecated OSC protocol is enabled"
+											},
+											"rossTalkEnabled": {
+												"type": "boolean",
+												"description": "Indicates if RossTalk protocol is enabled"
+											},
+											"emberPlusEnabled": {
+												"type": "boolean",
+												"description": "Indicates if Ember+ protocol is enabled"
+											},
+											"artnetEnabled": { "type": "boolean", "description": "Indicates if Art-Net protocol is enabled" },
+											"satelliteSubscriptionsEnabled": {
+												"type": "boolean",
+												"description": "Indicates if satellite subscriptions are enabled"
+											},
+											"mdnsAnnouncementsEnabled": {
+												"type": "boolean",
+												"description": "Indicates if mDNS announcements are enabled"
+											},
+											"connectionCount": { "type": "number", "description": "Number of active connections configured" },
+											"pageCount": { "type": "number", "description": "Number of pages configured" },
+											"buttonCount": { "type": "number", "description": "Number of buttons configured" },
+											"triggerCount": { "type": "number", "description": "Number of triggers configured" },
+											"surfaceGroupCount": { "type": "number", "description": "Number of surface groups configured" },
+											"customVariableCount": {
+												"type": "number",
+												"description": "Number of custom variables configured"
+											},
+											"expressionVariableCount": {
+												"type": "number",
+												"description": "Number of expression variables configured"
+											},
+											"gridSize": {
+												"type": "object",
+												"properties": {
+													"minCol": { "type": "number", "description": "Minimum grid column used" },
+													"maxCol": { "type": "number", "description": "Maximum grid column used" },
+													"minRow": { "type": "number", "description": "Minimum grid row used" },
+													"maxRow": { "type": "number", "description": "Maximum grid row used" }
+												},
+												"required": ["minCol", "maxCol", "minRow", "maxRow"],
+												"description": "Grid size details"
+											},
+											"connectedSatellites": {
+												"type": "number",
+												"description": "Number of connected satellite clients"
+											},
+											"imageLibraryCount": { "type": "number", "description": "Number of images in the image library" },
+											"enabledBackupRuleCount": { "type": "number", "description": "Number of enabled backup rules" },
+											"restApiEnabled": {
+												"type": "boolean",
+												"description": "Indicates if the REST API (/api/v2) is enabled"
+											},
+											"apiKeyCount": {
+												"type": "integer",
+												"minimum": 0,
+												"maximum": 9007199254740991,
+												"description": "Number of REST API keys configured"
+											},
+											"prometheusEnabled": {
+												"type": "boolean",
+												"description": "Indicates if the Prometheus metrics endpoint is enabled"
+											},
+											"pageVariableCount": {
+												"type": "integer",
+												"minimum": 0,
+												"maximum": 9007199254740991,
+												"description": "Total number of page variables across all pages"
+											},
+											"buttonReferenceCount": {
+												"type": "integer",
+												"minimum": 0,
+												"maximum": 9007199254740991,
+												"description": "Number of button-reference controls"
+											},
+											"presetReferenceCount": {
+												"type": "integer",
+												"minimum": 0,
+												"maximum": 9007199254740991,
+												"description": "Number of preset-reference controls"
+											},
+											"defaultExportFormat": {
+												"type": "string",
+												"enum": ["json", "json-gz", "yaml"],
+												"description": "The default export format"
+											}
+										},
+										"required": [
+											"isBoundToLoopback",
+											"hasAdminPassword",
+											"hasPincodeLockout",
+											"cloudEnabled",
+											"httpsEnabled",
+											"tcpEnabled",
+											"tcpDeprecatedEnabled",
+											"udpEnabled",
+											"udpDeprecatedEnabled",
+											"oscEnabled",
+											"oscDeprecatedEnabled",
+											"rossTalkEnabled",
+											"emberPlusEnabled",
+											"artnetEnabled",
+											"connectionCount",
+											"pageCount",
+											"buttonCount",
+											"triggerCount",
+											"surfaceGroupCount",
+											"customVariableCount",
+											"expressionVariableCount",
+											"gridSize",
+											"connectedSatellites"
+										],
+										"description": "Feature usage details"
+									}
+								},
+								"required": ["id", "app", "os", "uptime", "surfaces", "connections", "features"],
+								"additionalProperties": false
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Default Response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"ok": { "type": "boolean", "description": "Indicates if the report was received successfully" }
+									},
+									"required": ["ok"],
+									"additionalProperties": false
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Validation error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"statusCode": {
+											"type": "integer",
+											"minimum": -9007199254740991,
+											"maximum": 9007199254740991,
+											"description": "HTTP status code"
+										},
+										"code": { "description": "Error code", "type": "string" },
+										"error": { "type": "string", "description": "Error name" },
+										"message": { "type": "string", "description": "Error message" }
+									},
+									"required": ["statusCode", "error", "message"],
+									"additionalProperties": false,
+									"description": "Validation error"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"statusCode": {
+											"type": "integer",
+											"minimum": -9007199254740991,
+											"maximum": 9007199254740991,
+											"description": "HTTP status code"
+										},
+										"code": { "description": "Error code", "type": "string" },
+										"error": { "type": "string", "description": "Error name" },
+										"message": { "type": "string", "description": "Error message" }
+									},
+									"required": ["statusCode", "error", "message"],
+									"additionalProperties": false,
+									"description": "Internal server error"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/companion/old-metrics": {
+			"post": {
+				"operationId": "companion_old-metrics_post",
+				"tags": ["Usage"],
+				"description": "Legacy Api endpoint for detailed usage information",
+				"requestBody": { "required": true, "content": { "application/json": { "schema": {} } } },
+				"responses": {
+					"200": {
+						"description": "Default Response",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"ok": { "type": "boolean", "description": "Indicates if the report was received successfully" }
+									},
+									"required": ["ok"],
+									"additionalProperties": false
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Validation error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"statusCode": {
+											"type": "integer",
+											"minimum": -9007199254740991,
+											"maximum": 9007199254740991,
+											"description": "HTTP status code"
+										},
+										"code": { "description": "Error code", "type": "string" },
+										"error": { "type": "string", "description": "Error name" },
+										"message": { "type": "string", "description": "Error message" }
+									},
+									"required": ["statusCode", "error", "message"],
+									"additionalProperties": false,
+									"description": "Validation error"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal server error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"statusCode": {
+											"type": "integer",
+											"minimum": -9007199254740991,
+											"maximum": 9007199254740991,
+											"description": "HTTP status code"
+										},
+										"code": { "description": "Error code", "type": "string" },
+										"error": { "type": "string", "description": "Error name" },
+										"message": { "type": "string", "description": "Error message" }
+									},
+									"required": ["statusCode", "error", "message"],
+									"additionalProperties": false,
+									"description": "Internal server error"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"servers": [{ "url": "/", "description": "Production server" }],
+	"tags": []
+}

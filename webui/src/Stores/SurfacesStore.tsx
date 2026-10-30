@@ -1,4 +1,5 @@
 import { action, observable } from 'mobx'
+import { applyObjectPatch } from '@companion-app/shared/Diff.js'
 import type {
 	ClientDevicesListItem,
 	ClientSurfaceItem,
@@ -9,7 +10,7 @@ import type {
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { assertNever } from '~/Resources/util.js'
-import { applyJsonPatchInPlace, updateObjectInPlace } from './ApplyDiffToMap'
+import { updateObjectInPlace } from './ApplyDiffToMap'
 
 export class SurfacesStore {
 	readonly store = observable.map<string, ClientDevicesListItem>()
@@ -38,7 +39,7 @@ export class SurfacesStore {
 				case 'update': {
 					const oldObj = this.store.get(change.itemId)
 					if (!oldObj) throw new Error(`Got update for unknown surface item: ${change.itemId}`)
-					applyJsonPatchInPlace(oldObj, change.patch)
+					applyObjectPatch(oldObj, change.patch)
 					break
 				}
 				default:

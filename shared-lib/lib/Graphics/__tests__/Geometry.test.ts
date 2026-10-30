@@ -6,6 +6,8 @@ import {
 	inverseRotatePointThroughRotations,
 	resolveMarkerTransform,
 	rotatePointThroughRotations,
+	transformBetweenPlacements,
+	type AffineTransform,
 	type MarkerLine,
 	type SelectedElementMarker,
 } from '../Geometry.js'
@@ -244,5 +246,59 @@ describe('computeSelectionMarkerLines', () => {
 		expect(lines).toHaveLength(4)
 		expectLine(lines[0], [0, 6, 10, 6]) // top edge → bottom
 		expectLine(lines[1], [0, 2, 10, 2]) // bottom edge → top
+	})
+})
+
+describe('transformBetweenPlacements', () => {
+	const apply = ([a, b, c, d, e, f]: AffineTransform, x: number, y: number) => [a * x + c * y + e, b * x + d * y + f]
+	const expectPoint = (actual: number[], expected: number[]) => {
+		expect(actual[0]).toBeCloseTo(expected[0])
+		expect(actual[1]).toBeCloseTo(expected[1])
+	}
+	const box = { x: 10, y: 20, width: 30, height: 40 }
+
+	test('is the identity between the same placement', () => {
+		const placed = { bounds: box, rotations: [{ pivot: { x: 0, y: 0, width: 100, height: 100 }, angle: 33 }] }
+		const transform = transformBetweenPlacements(placed, placed)!
+		expectPoint(apply(transform, 7, 9), [7, 9])
+		expectPoint(apply(transform, 55, -3), [55, -3])
+	})
+
+	test('moves and scales between bounds', () => {
+		const transform = transformBetweenPlacements(
+			{ bounds: box, rotations: [] },
+			{ bounds: { x: 110, y: 20, width: 60, height: 20 }, rotations: [] }
+		)!
+		// The corners map onto each other, and the rest follows
+		expectPoint(apply(transform, 10, 20), [110, 20])
+		expectPoint(apply(transform, 40, 60), [170, 40])
+		expectPoint(apply(transform, 25, 40), [140, 30])
+	})
+
+	test('follows a rotation', () => {
+		const pivot = { x: 0, y: 0, width: 100, height: 100 }
+		const transform = transformBetweenPlacements(
+			{ bounds: box, rotations: [] },
+			{ bounds: box, rotations: [{ pivot, angle: 90 }] }
+		)!
+		// A quarter turn about (50, 50)
+		expectPoint(apply(transform, 50, 50), [50, 50])
+		expectPoint(apply(transform, 60, 50), [50, 60])
+		expectPoint(apply(transform, 50, 40), [60, 50])
+	})
+
+	test('maps from a rotated placement too', () => {
+		const pivot = { x: 0, y: 0, width: 100, height: 100 }
+		const from = { bounds: box, rotations: [{ pivot, angle: 90 }] }
+		const to = { bounds: { ...box, x: box.x + 5 }, rotations: [{ pivot, angle: 90 }] }
+		const transform = transformBetweenPlacements(from, to)!
+		// Moving 5px right within a frame rotated a quarter turn moves it 5px down on the canvas
+		expectPoint(apply(transform, 50, 50), [50, 55])
+	})
+
+	test('is null from a placement with no area', () => {
+		expect(
+			transformBetweenPlacements({ bounds: { ...box, width: 0 }, rotations: [] }, { bounds: box, rotations: [] })
+		).toBeNull()
 	})
 })

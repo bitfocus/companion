@@ -247,6 +247,10 @@ export class ControlButtonLayered
 		return this.drawing.getElementById(id)
 	}
 
+	layeredStyleGetElements(): readonly SomeButtonGraphicsElement[] {
+		return this.drawing.drawElements
+	}
+
 	layeredStyleSelectedElementIds(): { [usage in ButtonGraphicsElementUsage]: string | undefined } {
 		return this.drawing.selectedElementIds()
 	}

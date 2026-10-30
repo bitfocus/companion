@@ -7,8 +7,8 @@ import zlib from 'node:zlib'
 import disassembler from 'stream-json/disassembler.js'
 import stringer from 'stream-json/stringer.js'
 import yaml from 'yaml'
+import type { ExportPageContent, SomeExport } from '@companion-app/shared/Model/Export/Latest.js'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
-import type { ExportPageContentv6, SomeExportv6 } from '@companion-app/shared/Model/ExportModel.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 
 /** Error thrown when an export is too large to serialise in the requested (non-streamed) format. */
@@ -31,7 +31,7 @@ export type PreparedExport = { kind: 'buffer'; data: string | Buffer } | { kind:
  *
  * An undefined/unknown format defaults to `json-gz` (matching the historic behaviour).
  */
-export function prepareExport(data: SomeExportv6, format: ExportFormat | undefined): PreparedExport {
+export function prepareExport(data: SomeExport, format: ExportFormat | undefined): PreparedExport {
 	if (format === 'json') {
 		try {
 			return { kind: 'buffer', data: JSON.stringify(data, undefined, '\t') }
@@ -62,7 +62,7 @@ export function prepareExport(data: SomeExportv6, format: ExportFormat | undefin
  * @returns the number of bytes written to `destination`.
  */
 export async function streamExport(
-	data: SomeExportv6,
+	data: SomeExport,
 	format: 'json' | 'json-gz',
 	destination: Writable
 ): Promise<number> {
@@ -102,7 +102,7 @@ export async function streamExport(
  * @throws an `EEXIST` error when `filePath` already exists.
  */
 export async function writeExportToFile(
-	data: SomeExportv6,
+	data: SomeExport,
 	format: ExportFormat | undefined,
 	filePath: string
 ): Promise<number> {
@@ -158,7 +158,7 @@ async function publishFileNoClobber(tempPath: string, filePath: string): Promise
  * from inserting literal newlines into the value (the previous approach) - those survived a re-import
  * and corrupted the base64, so a YAML export did not round-trip. This does.
  */
-function stringifyExportAsYaml(data: SomeExportv6): string {
+function stringifyExportAsYaml(data: SomeExport): string {
 	const doc = new yaml.Document(data)
 
 	yaml.visit(doc, {
@@ -216,7 +216,7 @@ export function formatAttachmentFilename(filename: string): {
 	}
 }
 
-export const find_smallest_grid_for_page = (pageInfo: ExportPageContentv6): UserConfigGridSize => {
+export const find_smallest_grid_for_page = (pageInfo: ExportPageContent): UserConfigGridSize => {
 	const gridSize: UserConfigGridSize = {
 		minColumn: 0,
 		maxColumn: 7,

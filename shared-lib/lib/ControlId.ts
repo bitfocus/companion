@@ -114,6 +114,20 @@ export type ParsedControlIdType =
 
 export type ControlIdKind = ParsedControlIdType['type']
 
+/** Every kind of control id. Typed as a record so that a new kind must be added here */
+const CONTROL_ID_KINDS: Record<ControlIdKind, true> = {
+	bank: true,
+	trigger: true,
+	'expression-variable': true,
+	page: true,
+	preset: true,
+}
+
+/**
+ * All of the kinds of control id
+ */
+export const ALL_CONTROL_ID_KINDS = Object.keys(CONTROL_ID_KINDS) as [ControlIdKind, ...ControlIdKind[]]
+
 /**
  * Parse a controlId
  */

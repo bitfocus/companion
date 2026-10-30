@@ -5,15 +5,18 @@ export interface ExecuteExpressionResultOk {
 	ok: true
 	value: VariableValue | undefined
 	variableIds: ReadonlySet<string>
-	/** Whether this result depends on the render clock (e.g. oscillate() was called) */
-	clockSensitive: boolean
+	/**
+	 * How long until everything in this result which depends on the render clock (e.g. oscillate()) repeats,
+	 * in ms, or 0 if it doesn't depend on the render clock
+	 */
+	clockCycleMs: number
 }
 export interface ExecuteExpressionResultError {
 	ok: false
 	error: string
 	variableIds: ReadonlySet<string>
-	/** Whether this result depends on the render clock (e.g. oscillate() was called) */
-	clockSensitive: boolean
+	/** How long until this result repeats, as for {@link ExecuteExpressionResultOk.clockCycleMs} */
+	clockCycleMs: number
 }
 
 export type ExpressionStreamResult = ExpressionStreamResultOk | ExpressionStreamResultError

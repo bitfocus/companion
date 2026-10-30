@@ -350,6 +350,11 @@ export class ControlButtonPreset
 		return undefined
 	}
 
+	layeredStyleGetElements(): readonly SomeButtonGraphicsElement[] {
+		// Streaming elements is not supported
+		return []
+	}
+
 	layeredStyleSelectedElementIds(): { [usage in ButtonGraphicsElementUsage]: string | undefined } {
 		return {
 			[ButtonGraphicsElementUsage.Automatic]: undefined,

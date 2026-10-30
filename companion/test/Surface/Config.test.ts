@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import type { SurfaceConfig, SurfaceSchemaLayoutDefinition } from '@companion-app/shared/Model/Surfaces.js'
+import { SurfaceConfigSchema, type SurfaceSchemaLayoutDefinition } from '@companion-app/shared/Model/Surfaces.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
 import { createDefaultSurfacePanelConfig, createOrSanitizeSurfaceHandlerConfig } from '../../lib/Surface/Config.js'
 import type { SurfacePanel } from '../../lib/Surface/Types.js'
@@ -100,7 +100,7 @@ describe('createOrSanitizeSurfaceHandlerConfig', () => {
 	})
 
 	test('fills in the layout of a config saved before layouts were stored', () => {
-		const existing = {
+		const existing = SurfaceConfigSchema.parse({
 			config: { brightness: 50, rotation: 0, xOffset: 2, yOffset: 1, groupId: null },
 			groupConfig: {
 				name: '',
@@ -113,7 +113,7 @@ describe('createOrSanitizeSurfaceHandlerConfig', () => {
 			type: 'Test Deck',
 			integrationType: 'test',
 			gridSize: { columns: 1, rows: 1 },
-		} as unknown as SurfaceConfig
+		})
 
 		const config = createOrSanitizeSurfaceHandlerConfig('test', makePanel(), existing, defaultGridSize)
 
@@ -182,10 +182,11 @@ describe('createOrSanitizeSurfaceHandlerConfig', () => {
 	})
 
 	test('migrates the deprecated page fields into the group config', () => {
-		const existing = {
+		// The migration happens when the stored row is parsed
+		const existing = SurfaceConfigSchema.parse({
 			config: { brightness: 100, rotation: 0, xOffset: 0, yOffset: 0, groupId: null, page: 4 },
 			groupId: null,
-		} as unknown as SurfaceConfig
+		})
 
 		const config = createOrSanitizeSurfaceHandlerConfig('test', makePanel(), existing, defaultGridSize)
 
@@ -196,10 +197,10 @@ describe('createOrSanitizeSurfaceHandlerConfig', () => {
 	})
 
 	test('a config with no chosen page resumes on the last page', () => {
-		const existing = {
+		const existing = SurfaceConfigSchema.parse({
 			config: { brightness: 100, rotation: 0, xOffset: 0, yOffset: 0, groupId: null },
 			groupId: null,
-		} as unknown as SurfaceConfig
+		})
 
 		const config = createOrSanitizeSurfaceHandlerConfig('test', makePanel(), existing, defaultGridSize)
 
@@ -212,5 +213,44 @@ describe('createOrSanitizeSurfaceHandlerConfig', () => {
 		existing.enabled = false
 
 		expect(createOrSanitizeSurfaceHandlerConfig('test', makePanel(), existing, defaultGridSize).enabled).toBe(false)
+	})
+})
+
+describe('SurfaceConfigSchema', () => {
+	test('migrates a config from before panel config existed', () => {
+		const config = SurfaceConfigSchema.parse({ page: 3 })
+
+		expect(config.groupConfig).toMatchObject({ name: 'Auto group', startup_page: 1, use_last_page: true })
+		expect(config).not.toHaveProperty('page')
+		expect(config.config).toEqual({ brightness: 100, rotation: 0, xOffset: 0, yOffset: 0, groupId: null })
+	})
+
+	test('leaves an existing group config alone, dropping the old page fields', () => {
+		const config = SurfaceConfigSchema.parse({
+			page: 2,
+			config: { page: 2, use_last_page: false, custom: 'kept' },
+			groupConfig: { name: 'Mine', startup_page_id: 'p1' },
+		})
+
+		expect(config.groupConfig).toMatchObject({ name: 'Mine', startup_page_id: 'p1', use_last_page: true })
+		expect(config.config).toMatchObject({ custom: 'kept' })
+		expect(config.config).not.toHaveProperty('page')
+		expect(config.config).not.toHaveProperty('use_last_page')
+	})
+
+	test('keeps a valid layout, and drops an invalid layout or appearance', () => {
+		expect(SurfaceConfigSchema.parse({ layout }).layout).toEqual(layout)
+
+		const config = SurfaceConfigSchema.parse({ layout: { controls: 'none' }, appearance: { faces: 5 }, type: 'Deck' })
+		expect(config.layout).toBeUndefined()
+		expect(config.appearance).toBeUndefined()
+		// The rest of the surface is kept
+		expect(config.type).toBe('Deck')
+	})
+
+	test('parsing a parsed config changes nothing', () => {
+		const once = SurfaceConfigSchema.parse({ config: { page: 4, custom: 1 }, type: 'Deck' })
+
+		expect(SurfaceConfigSchema.parse(once)).toEqual(once)
 	})
 })

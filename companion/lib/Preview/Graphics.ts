@@ -19,6 +19,7 @@ import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
+import { DisplayedLocationsSet } from '../Graphics/DisplayedLocations.js'
 import { PREVIEW_RENDER_SIZE, type ImageResult } from '../Graphics/ImageResult.js'
 import { ParseLocationString } from '../Internal/Util.js'
 import LogController from '../Log/Controller.js'
@@ -211,13 +212,25 @@ export class PreviewGraphics {
 
 					// Send the preview image shortly after
 					const location = self.#pageStore.getLocationOfControlId(controlId)
-					const originalImg = location ? self.#graphicsController.getCachedRenderOrGeneratePlaceholder(location) : null
-					yield originalImg
-						? await originalImg.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
+					const releaseDisplayed = location
+						? self.#graphicsController.displayedLocations.acquire(location, {
+								width: PREVIEW_RENDER_SIZE,
+								height: PREVIEW_RENDER_SIZE,
+							})
 						: null
+					try {
+						const originalImg = location
+							? self.#graphicsController.getCachedRenderOrGeneratePlaceholder(location)
+							: null
+						yield originalImg
+							? await originalImg.drawNativeEncoded(PREVIEW_RENDER_SIZE, PREVIEW_RENDER_SIZE, null, 'png')
+							: null
 
-					for await (const [image] of changes) {
-						yield image
+						for await (const [image] of changes) {
+							yield image
+						}
+					} finally {
+						releaseDisplayed?.()
 					}
 				}),
 
@@ -294,13 +307,16 @@ export class PreviewGraphics {
 							: null
 
 						// Track the subscription, to allow it to be invalidated
-						self.#buttonReferencePreviews.set(id, {
+						const session: PreviewSession = {
 							id,
 							controlId,
 							options,
 							resolvedLocation: resolvedLocation,
 							referencedVariableIds: locationValue.variableIds,
-						})
+							displayed: new DisplayedLocationsSet(self.#graphicsController.displayedLocations),
+						}
+						self.#buttonReferencePreviews.set(id, session)
+						showReferencePreview(session)
 
 						// Emit the initial image
 						yield resolvedLocation
@@ -314,6 +330,7 @@ export class PreviewGraphics {
 						}
 					} finally {
 						// Cleanup the session on termination
+						self.#buttonReferencePreviews.get(id)?.displayed.clear()
 						self.#buttonReferencePreviews.delete(id)
 					}
 				}),
@@ -408,6 +425,7 @@ export class PreviewGraphics {
 
 			previewSession.referencedVariableIds = locationValue.variableIds
 			previewSession.resolvedLocation = resolvedLocation
+			showReferencePreview(previewSession)
 
 			if (!resolvedLocation) {
 				// Now has an invalid location
@@ -442,4 +460,12 @@ interface PreviewSession {
 	options: ExpressionableOptionsObject
 	resolvedLocation: ControlLocation | null
 	referencedVariableIds: ReadonlySet<string>
+	/** The location it shows, at the size it is drawn at */
+	readonly displayed: DisplayedLocationsSet
+}
+
+/** Note that the location a reference preview shows is shown, at the size it is drawn at */
+function showReferencePreview(session: PreviewSession): void {
+	const size = { width: PREVIEW_RENDER_SIZE, height: PREVIEW_RENDER_SIZE }
+	session.displayed.replace(session.resolvedLocation ? [{ location: session.resolvedLocation, size }] : [])
 }

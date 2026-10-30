@@ -1,4 +1,5 @@
 import z from 'zod'
+import { EnabledCollectionSchema } from '@companion-app/shared/Model/Collections.js'
 import type { TriggerCollection, TriggerCollectionData } from '@companion-app/shared/Model/TriggerModel.js'
 import type { DataDatabase } from '../Data/Database.js'
 import { EnabledCollectionsBaseController } from '../Resources/EnabledCollectionsBase.js'
@@ -17,25 +18,11 @@ export class TriggerCollections extends EnabledCollectionsBaseController<Trigger
 		cleanUnknownCollectionIds: (validCollectionIds: Set<string>) => void,
 		recheckTriggersEnabled: (enabledCollectionIds: ReadonlySet<string>) => void
 	) {
-		super(db.getTableView<Record<string, TriggerCollection>>('trigger_collections'))
+		super(db.getSchemaTableView('trigger_collections', EnabledCollectionSchema))
 
 		this.#events = events
 		this.#cleanUnknownCollectionIds = cleanUnknownCollectionIds
 		this.#recheckTriggersEnabled = recheckTriggersEnabled
-
-		// TODO: remove this soon - fixup existing data
-		const fixupCollections = (collections: TriggerCollection[]) => {
-			for (const collection of collections) {
-				if (collection.metaData === undefined) {
-					collection.metaData = { enabled: true }
-				}
-				fixupCollections(collection.children || [])
-			}
-			return collections
-		}
-		fixupCollections(this.data)
-
-		this.rebuildEnabledCollectionIds()
 	}
 
 	/**

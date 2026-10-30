@@ -104,6 +104,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				feedbackDisableStyleOverrides: false,
 				feedbackStyleOverridesUnsupported: false,
 
+				hiddenFromPicker: false,
 				optionsSupportExpressions: true,
 			} satisfies Complete<ClientEntityDefinition>
 		}
@@ -142,6 +143,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				showButtonPreview: false,
 				supportsChildGroups: [],
 
+				hiddenFromPicker: false,
 				optionsSupportExpressions: true,
 			} satisfies Complete<ClientEntityDefinition>
 		}

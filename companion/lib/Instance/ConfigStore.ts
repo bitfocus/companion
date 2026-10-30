@@ -1,14 +1,17 @@
-// import LogController from '../Log/Controller.js'
 import { nanoid } from 'nanoid'
-import { makeLabelSafe } from '@companion-app/shared/Label.js'
+import type z from 'zod'
+import { isLabelValid, makeLabelSafe } from '@companion-app/shared/Label.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
 import {
+	InstanceConfigSchema,
 	ModuleInstanceType,
 	type InstanceConfig,
 	type InstanceVersionUpdatePolicy,
 } from '@companion-app/shared/Model/Instance.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataDatabase } from '../Data/Database.js'
-import type { DataStoreTableView } from '../Data/StoreBase.js'
+import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
+import LogController from '../Log/Controller.js'
 
 export interface AddInstanceProps {
 	versionId: string | null
@@ -27,24 +30,38 @@ export interface MoveInstanceOperation {
 export type MoveInstancesResult =
 	{ ok: true } | { ok: false; operationIndex: number; reason: 'not_found' | 'invalid_position'; message: string }
 
-export class InstanceConfigStore {
-	// readonly #logger = LogController.createLogger('Instance/ConnectionConfigStore')
+/** A config or secrets that isn't a JSON object is reset, rather than losing the whole instance */
+function repairInstanceConfig(
+	row: unknown,
+	issues: readonly z.core.$ZodIssue[]
+): { row: unknown; repairs: string[] } | null {
+	if (!row || typeof row !== 'object') return null
 
-	readonly #dbTable: DataStoreTableView<Record<string, InstanceConfig>>
+	const repaired: Record<string, unknown> = { ...row }
+	const resetKeys = new Set<string>()
+	for (const issue of issues) {
+		const key = issue.path[0]
+		if (key !== 'config' && key !== 'secrets') return null
+		resetKeys.add(key)
+	}
+
+	for (const key of resetKeys) repaired[key] = {}
+	return { row: repaired, repairs: [...resetKeys].map((key) => `Reset the ${key}, which wasn't a JSON object`) }
+}
+
+export class InstanceConfigStore {
+	readonly #logger = LogController.createLogger('Instance/ConfigStore')
+
+	readonly #dbTable: DataStoreSchemaTableView<typeof InstanceConfigSchema>
 	readonly #afterSave: (instanceIds: string[], updateProcessManager: boolean) => void
 
 	#store: Map<string, InstanceConfig>
 
 	constructor(db: DataDatabase, afterSave: (instanceIds: string[], updateProcessManager: boolean) => void) {
-		this.#dbTable = db.getTableView('instances')
+		this.#dbTable = db.getSchemaTableView('instances', InstanceConfigSchema, { repair: repairInstanceConfig })
 		this.#afterSave = afterSave
 
 		this.#store = new Map(Object.entries(this.#dbTable.all()))
-
-		// Ensure all entries are defined
-		for (const [id, config] of this.#store) {
-			if (!config) this.#store.delete(id)
-		}
 	}
 
 	/**
@@ -54,7 +71,19 @@ export class InstanceConfigStore {
 		for (const instanceId of instanceIds) {
 			const entry = this.#store.get(instanceId)
 			if (entry) {
-				this.#dbTable.set(instanceId, entry)
+				try {
+					this.#dbTable.set(instanceId, entry)
+				} catch (e) {
+					// Discard the change, so the instance matches what is saved, rather than abandon saving the rest
+					this.#logger.error(`Discarding an invalid change to instance "${instanceId}": ${stringifyError(e)}`)
+
+					const saved = this.#dbTable.get(instanceId)
+					if (saved) {
+						this.#store.set(instanceId, saved)
+					} else {
+						this.#store.delete(instanceId)
+					}
+				}
 			} else {
 				this.#dbTable.delete(instanceId)
 			}
@@ -192,8 +221,8 @@ export class InstanceConfigStore {
 		this.commitChanges([id], true)
 	}
 
-	exportAllConnections(includeSecrets: boolean): Record<string, InstanceConfig | undefined> {
-		const result: Record<string, InstanceConfig | undefined> = {}
+	exportAllConnections(includeSecrets: boolean): Record<string, InstanceConfig> {
+		const result: Record<string, InstanceConfig> = {}
 
 		for (const [id, config] of this.#store) {
 			if (config.moduleInstanceType === ModuleInstanceType.Connection) {
@@ -201,7 +230,8 @@ export class InstanceConfigStore {
 					result[id] = config
 				} else {
 					const newConfig = structuredClone(config)
-					delete newConfig.secrets
+					// Left out of the export, rather than exported as empty
+					delete (newConfig as Partial<InstanceConfig>).secrets
 					result[id] = newConfig
 				}
 			}
@@ -210,8 +240,8 @@ export class InstanceConfigStore {
 		return result
 	}
 
-	exportAllSurfaceInstances(): Record<string, InstanceConfig | undefined> {
-		const result: Record<string, InstanceConfig | undefined> = {}
+	exportAllSurfaceInstances(): Record<string, InstanceConfig> {
+		const result: Record<string, InstanceConfig> = {}
 
 		for (const [id, config] of this.#store) {
 			if (config.moduleInstanceType === ModuleInstanceType.Surface) {
@@ -293,6 +323,17 @@ export class InstanceConfigStore {
 		}
 
 		return label
+	}
+
+	/**
+	 * Make a label valid according to the current rules, without changing it if it is already valid.
+	 * A label which is a reserved word is given a suffix, made unique against the other labels
+	 */
+	makeLabelValid(moduleType: ModuleInstanceType, label: string, ignoreId: string): string {
+		const safeLabel = makeLabelSafe(label)
+		if (!safeLabel || isLabelValid(safeLabel)) return safeLabel
+
+		return this.makeLabelUnique(moduleType, `${safeLabel}_1`, ignoreId)
 	}
 
 	moveInstance(

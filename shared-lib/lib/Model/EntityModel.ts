@@ -1,8 +1,10 @@
 import z from 'zod'
 import type { CompanionFeedbackButtonStyleResult, JsonValue } from '@companion-module/host'
+import { isInternalConnectionId } from '../ConnectionId.js'
 import type { ActionSetId } from './ActionModel.js'
 import {
 	createExpressionOrValueSchema,
+	ExpressionableOptionsObjectSchema,
 	ExpressionOrJsonValueSchema,
 	type ExpressionableOptionsObject,
 	type ExpressionOrValue,
@@ -39,10 +41,16 @@ export function isValidFeedbackEntitySubType(value: FeedbackEntitySubType | stri
 	return Object.values(FeedbackEntitySubType).includes(value as any)
 }
 
+/**
+ * The internal definition of the placeholder that replaces an entity which couldn't be loaded. It is kept disabled,
+ * with the original stored in its options, so that nothing is lost and it shows where the entity was
+ */
+export const INVALID_ENTITY_DEFINITION_ID = 'invalid_entity'
+
 export function isInternalUserValueFeedback(entity: EntityModelBase): boolean {
 	return (
 		entity.type === EntityModelType.Feedback &&
-		entity.connectionId === 'internal' &&
+		isInternalConnectionId(entity.connectionId) &&
 		entity.definitionId === 'user_value'
 	)
 }
@@ -158,6 +166,54 @@ export interface EntityModelBase {
 	 */
 	children?: Record<string, SomeEntityModel[] | undefined>
 }
+
+/** The fields every entity has, except its recursive children */
+const entityBaseShape = {
+	id: z.string(),
+	definitionId: z.string(),
+	connectionId: z.string(),
+	headline: z.string().optional(),
+	options: ExpressionableOptionsObjectSchema.default(() => ({})),
+	disabled: z.boolean().optional(),
+	// Stored without it when undefined; the transform makes the key present, as the type requires
+	upgradeIndex: z
+		.number()
+		.optional()
+		.transform((upgradeIndex) => upgradeIndex),
+}
+
+/** The type is recursive, so the schemas are annotated with the hand-written types above */
+function entityChildrenSchema() {
+	return z.record(z.string(), z.array(SomeEntityModelSchema).optional()).optional()
+}
+
+// Kept as object schemas for the discriminated union, and exported with the hand-written types below
+const actionEntityObjectSchema = z.object({
+	type: z.literal(EntityModelType.Action),
+	...entityBaseShape,
+	get children() {
+		return entityChildrenSchema()
+	},
+	storeResult: zodRawStoreResult.optional(),
+})
+
+const feedbackEntityObjectSchema = z.object({
+	type: z.literal(EntityModelType.Feedback),
+	...entityBaseShape,
+	get children() {
+		return entityChildrenSchema()
+	},
+	isInverted: createExpressionOrValueSchema(z.boolean()).optional(),
+	variableName: z.string().optional(),
+	styleOverrides: z.array(schemaFeedbackEntityStyleOverride).optional(),
+})
+
+export const ActionEntityModelSchema: z.ZodType<ActionEntityModel> = actionEntityObjectSchema
+export const FeedbackEntityModelSchema: z.ZodType<FeedbackEntityModel> = feedbackEntityObjectSchema
+
+export const SomeEntityModelSchema: z.ZodType<SomeEntityModel> = z
+	.discriminatedUnion('type', [actionEntityObjectSchema, feedbackEntityObjectSchema])
+	.meta({ id: 'EntityModel' })
 
 export interface EntityOwner {
 	parentId: string
