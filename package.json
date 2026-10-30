@@ -47,6 +47,7 @@
     "build:satellite-schema": "tsx ./tools/satellite_schema_compile.mts",
     "rest-api:update-stable-contract": "tsx ./tools/update_rest_api_stable_contract.mts",
     "draft:changelog": "tsx ./tools/draft_changelog.mts",
+    "release:satellite-protocol": "tsx ./tools/release_satellite_protocol.mts",
     "module:bulk": "zx ./tools/module_bulk.mjs",
     "build:watch": "tsc --build --watch",
     "check-types": "tsc --build",
