@@ -70,7 +70,7 @@ describe('Advanced settings', () => {
 
 		const nav = screen.getByRole('navigation', { name: 'Settings sections' })
 		const links = within(nav).getAllByRole('link')
-		expect(links.map((link) => link.textContent)).toEqual(['General', 'Syslog', 'Developer', 'Dangerous Features'])
+		expect(links.map((link) => link.textContent)).toEqual(['General', 'Dangerous Features', 'Developer', 'Syslog'])
 		expect(links[0].getAttribute('aria-current')).toBe('true')
 	})
 
