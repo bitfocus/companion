@@ -145,7 +145,7 @@ function SidebarMenuItemLabel(item: Omit<SidebarMenuItemProps, 'path'>) {
 
 			{item.target === '_blank' && (
 				// Hidden via the wrapper: FontAwesome's unlayered svg styles would override `.full-label` on the icon itself
-				<span className="ms-1 full-label">
+				<span className="ms-1 full-label nav-external-icon">
 					<FontAwesomeIcon icon={faExternalLinkSquare} />
 				</span>
 			)}

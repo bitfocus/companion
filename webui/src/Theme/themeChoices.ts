@@ -8,9 +8,9 @@ export interface ThemeChoice {
 	description: string
 }
 
-/** The theme choices, in the order every theme picker offers them */
+/** The color mode choices, in the order every picker offers them */
 export const THEME_CHOICES: readonly ThemeChoice[] = [
 	{ id: 'system', label: 'System', icon: faDesktop, description: "Follow this device's light or dark setting" },
-	{ id: 'light', label: 'Light', icon: faSun, description: 'Always use the light theme' },
-	{ id: 'dark', label: 'Dark', icon: faMoon, description: 'Always use the dark theme' },
+	{ id: 'light', label: 'Light', icon: faSun, description: 'Always use light mode' },
+	{ id: 'dark', label: 'Dark', icon: faMoon, description: 'Always use dark mode' },
 ]

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { useState } from 'react'
 import '~/Controls/Components/EntityList.css'
-import { EditorRow } from './EditorRow'
+import { EditorRow, useNoteEditor } from './EditorRow'
 
 interface ExampleRowProps {
 	badge: string | null
@@ -15,10 +15,10 @@ function ExampleRow({ badge, title, initialHeadline, canCollapse, readonly }: Ex
 	const [isCollapsed, setCollapsed] = useState(false)
 	const [enabled, setEnabled] = useState(true)
 	const [headline, setHeadline] = useState(initialHeadline)
-	const [editing, setEditing] = useState(false)
+	const note = useNoteEditor()
 
 	const toggleCollapsed = () => {
-		setEditing(false)
+		note.setEditing(false)
 		setCollapsed(!isCollapsed)
 	}
 	const collapsed = canCollapse && isCollapsed
@@ -30,13 +30,16 @@ function ExampleRow({ badge, title, initialHeadline, canCollapse, readonly }: Ex
 					onToggleCollapsed={canCollapse ? toggleCollapsed : null}
 					controls={
 						<>
-							{!editing && !collapsed && (
+							{!note.editing && !collapsed && (
 								<EditorRow.NoteButton
 									itemLabel="action"
 									hasNote={!!headline}
 									disabled={readonly}
-									onClick={() => setEditing(true)}
+									onClick={() => note.setEditing(true)}
 								/>
+							)}
+							{note.editing && !collapsed && (
+								<EditorRow.ClearNoteButton note={note} setHeadline={setHeadline} disabled={readonly || !headline} />
 							)}
 							<EditorRow.DuplicateButton itemLabel="action" disabled={readonly} onClick={() => {}} />
 							<EditorRow.RemoveButton itemLabel="action" disabled={readonly} onClick={() => {}} />
@@ -49,12 +52,11 @@ function ExampleRow({ badge, title, initialHeadline, canCollapse, readonly }: Ex
 				>
 					{badge && <EditorRow.Badge>{badge}</EditorRow.Badge>}
 					<div className="flex flex-col flex-1 min-w-0 gap-0.5">
-						<EditorRow.Title isCollapsed={collapsed}>{title}</EditorRow.Title>
-						<EditorRow.Headline
+						<EditorRow.Name
+							title={title}
 							headline={headline}
 							setHeadline={setHeadline}
-							editing={editing}
-							setEditing={setEditing}
+							note={note}
 							placeholder="Describe the intent of the action"
 							isCollapsed={collapsed}
 							readonly={readonly}

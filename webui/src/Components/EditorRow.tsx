@@ -1,7 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import { faChevronDown, faPencil, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faChevronDown, faPencil, faSort, faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { Button } from './Button.js'
 import { DuplicateIcon } from './DuplicateIcon.js'
 import { SwitchInputField } from './SwitchInputField.js'
@@ -107,62 +108,95 @@ function Title({ children, isCollapsed }: TitleProps): React.JSX.Element {
 	)
 }
 
-interface HeadlineProps {
+/** Whether the note of a row is being edited, shared by its `Name` and its `ClearNoteButton` */
+export interface NoteEditor {
+	editing: boolean
+	setEditing: (editing: boolean) => void
+	inputRef: React.RefObject<HTMLDivElement | null>
+	clearButtonRef: React.RefObject<HTMLButtonElement | null>
+	/** Stop editing, unless the focus moved between the note field and its clear button */
+	onBlur: (event: React.FocusEvent) => void
+}
+
+export function useNoteEditor(): NoteEditor {
+	const [editing, setEditing] = useState(false)
+	const inputRef = useRef<HTMLDivElement>(null)
+	const clearButtonRef = useRef<HTMLButtonElement>(null)
+
+	const onBlur = useCallback((event: React.FocusEvent) => {
+		const next = event.relatedTarget
+		if (next instanceof Node && (inputRef.current?.contains(next) || clearButtonRef.current?.contains(next))) return
+		setEditing(false)
+	}, [])
+
+	return useMemo(() => ({ editing, setEditing, inputRef, clearButtonRef, onBlur }), [editing, onBlur])
+}
+
+interface NameProps {
+	/** What the row is */
+	title: string
 	headline: string | undefined
 	/** Change the headline, or null when it can't be changed */
 	setHeadline: ((headline: string) => void) | null
-	/** Whether the headline is being edited, started by a `NoteButton` or by clicking the headline */
-	editing: boolean
-	setEditing: (editing: boolean) => void
+	/** Editing is started by a `NoteButton` or by clicking the headline */
+	note: NoteEditor
 	placeholder: string
 	/** A collapsed row is kept to one line, and its headline can't be edited */
 	isCollapsed: boolean
 	readonly: boolean
 }
 
-/** A note describing what a row is for, shown below its title, which can be edited in place */
-function Headline({
+/**
+ * The name of a row. A note describing what it is for leads, as it says more than what it is, which follows below.
+ * The note can be edited in place
+ */
+function Name({
+	title,
 	headline,
 	setHeadline,
-	editing,
-	setEditing,
+	note,
 	placeholder,
 	isCollapsed,
 	readonly,
-}: HeadlineProps): React.JSX.Element | null {
-	if (editing && !isCollapsed && setHeadline) {
-		return (
-			<div className="px-0.5 py-0.5">
-				<TextInputFieldSimple
-					id={undefined}
-					value={headline ?? ''}
-					placeholder={placeholder}
-					setValue={setHeadline}
-					autoFocus
-					onBlur={() => setEditing(false)}
-					onKeyDown={(event) => {
-						if (event.key === 'Enter' || event.key === 'Escape') event.currentTarget.blur()
-					}}
-				/>
-			</div>
-		)
-	}
+}: NameProps): React.JSX.Element {
+	const editing = note.editing && !isCollapsed && !!setHeadline
+	if (!editing && !headline) return <Title isCollapsed={isCollapsed}>{title}</Title>
 
-	if (!headline) return null
+	const wrapClass = isCollapsed ? 'truncate' : 'whitespace-normal break-words'
 
 	return (
-		<Button
-			variant="inline"
-			disabled={readonly || isCollapsed || !setHeadline}
-			onClick={() => setEditing(true)}
-			className={classNames(
-				'w-fit max-w-full leading-snug p-0 text-left text-3xs font-normal text-action-text hover:text-body disabled:hover:text-action-text disabled:cursor-default disabled:pointer-events-auto',
-				{ truncate: isCollapsed, 'whitespace-normal break-words': !isCollapsed }
+		<>
+			{editing ? (
+				<div ref={note.inputRef} className="px-0.5 py-0.5" onBlur={note.onBlur}>
+					<TextInputFieldSimple
+						id={undefined}
+						value={headline ?? ''}
+						placeholder={placeholder}
+						setValue={setHeadline}
+						autoFocus
+						onKeyDown={(event) => {
+							if (event.key === 'Enter' || event.key === 'Escape') event.currentTarget.blur()
+						}}
+					/>
+				</div>
+			) : (
+				<Button
+					variant="inline"
+					disabled={readonly || isCollapsed || !setHeadline}
+					onClick={() => note.setEditing(true)}
+					className={classNames(
+						'w-fit max-w-full leading-tight p-0 text-left text-xs font-semibold text-body disabled:cursor-default disabled:pointer-events-auto',
+						wrapClass
+					)}
+					title={isCollapsed ? headline : `Edit note: ${headline}`}
+				>
+					{headline}
+				</Button>
 			)}
-			title={isCollapsed ? headline : `Edit note: ${headline}`}
-		>
-			{headline}
-		</Button>
+			<span className={classNames('text-3xs text-muted leading-snug', wrapClass)} title={title}>
+				{title}
+			</span>
+		</>
 	)
 }
 
@@ -189,6 +223,35 @@ function NoteButton({
 			title={hasNote ? 'Edit note' : `Add note to ${itemLabel}`}
 		>
 			<FontAwesomeIcon icon={faPencil} className="text-xs" />
+		</Button>
+	)
+}
+
+interface ClearNoteButtonProps {
+	note: NoteEditor
+	setHeadline: (headline: string) => void
+	disabled: boolean
+}
+
+/** Shown in place of the `NoteButton` while the note is being edited */
+function ClearNoteButton({ note, setHeadline, disabled }: ClearNoteButtonProps): React.JSX.Element {
+	return (
+		<Button
+			ref={note.clearButtonRef}
+			variant="ghost"
+			size="sm"
+			className="p-1.5"
+			disabled={disabled}
+			// Keep the note field focused, so blurring it doesn't remove this button before the click lands
+			onMouseDown={(event) => event.preventDefault()}
+			onBlur={note.onBlur}
+			onClick={() => {
+				setHeadline('')
+				note.setEditing(false)
+			}}
+			title="Clear note"
+		>
+			<FontAwesomeIcon icon={faXmark} className="text-xs" />
 		</Button>
 	)
 }
@@ -275,8 +338,9 @@ export const EditorRow = {
 	Header,
 	Badge,
 	Title,
-	Headline,
+	Name,
 	NoteButton,
+	ClearNoteButton,
 	DuplicateButton,
 	RemoveButton,
 	EnabledSwitch,

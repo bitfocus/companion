@@ -270,6 +270,11 @@
 		}
 	}
 
+	.nav-external-icon {
+		font-size: 0.75rem;
+		color: var(--sidebar-nav-link-icon-color);
+	}
+
 	.nav-icon-bullet {
 		display: inline-block;
 		width: 0.3125rem;

@@ -351,7 +351,6 @@ const ModulesListRow = observer(function ModulesListRow({
 							Update available
 						</span>
 					)}
-					{deprecation && <ModuleDeprecationBadge deprecation={deprecation} />}
 				</div>
 			</td>
 			<td className="compact py-2.5 px-3 text-end">
@@ -361,7 +360,12 @@ const ModulesListRow = observer(function ModulesListRow({
 							{versionLabel}
 						</span>
 					)}
-					<ModuleInstallationBadge kind={installationKind} />
+					{/* Being deprecated matters more than how the module is installed, so it takes the status slot */}
+					{deprecation ? (
+						<ModuleDeprecationBadge deprecation={deprecation} />
+					) : (
+						<ModuleInstallationBadge kind={installationKind} />
+					)}
 				</div>
 			</td>
 		</tr>

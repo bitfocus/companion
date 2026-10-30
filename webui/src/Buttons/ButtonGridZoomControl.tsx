@@ -25,12 +25,12 @@ export function ButtonGridZoomControl({
 				<FontAwesomeIcon icon={faMagnifyingGlass} /> {useCompactButtons ? '' : `${Math.round(gridZoomValue)}%`}
 			</Popover.Trigger>
 			<Popover.Popup>
-				<InputGroup>
-					<Button onClick={() => gridZoomController.zoomOut()} title="Zoom out">
+				<div className="flex items-center gap-2 px-2 pt-2">
+					<Button variant="icon" onClick={() => gridZoomController.zoomOut()} title="Zoom out">
 						<FontAwesomeIcon icon={faMinus} />
 					</Button>
 					<SliderInputField
-						className="w-full self-center"
+						className="w-full"
 						min={ZOOM_MIN}
 						max={ZOOM_MAX}
 						step={ZOOM_STEP}
@@ -38,10 +38,10 @@ export function ButtonGridZoomControl({
 						value={gridZoomValue}
 						setValue={(val) => gridZoomController.setZoom(val)}
 					/>
-					<Button onClick={() => gridZoomController.zoomIn()} title="Zoom in">
+					<Button variant="icon" onClick={() => gridZoomController.zoomIn()} title="Zoom in">
 						<FontAwesomeIcon icon={faPlus} />
 					</Button>
-				</InputGroup>
+				</div>
 				<InputGroup className="py-2 px-2">
 					<NumberInputField
 						id={undefined}

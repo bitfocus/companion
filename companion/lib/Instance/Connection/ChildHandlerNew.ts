@@ -519,7 +519,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		}
 
 		// Send everything to the 'debug' page
-		this.#deps.debugLogLine(this.connectionId, msg.time, msg.source || '/', msg.level, stringifyLogValue(msg.message))
+		this.#deps.debugLogLine(this.connectionId, msg.time, msg.source || '', msg.level, stringifyLogValue(msg.message))
 	}
 
 	/**
