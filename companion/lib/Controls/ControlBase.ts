@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events'
-import jsonPatch from 'fast-json-patch'
+import { diffObject } from '@companion-app/shared/Diff.js'
 import type { UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { ControlDependencies } from './ControlDependencies.js'
@@ -79,7 +79,7 @@ export abstract class ControlBase<TJson> {
 
 		// Now broadcast to any interested clients
 		if (this.updateEvents.listenerCount('update') > 0) {
-			const patch = jsonPatch.compare<any>(this.#lastSentConfigJson || {}, newJson || {})
+			const patch = diffObject<any>(this.#lastSentConfigJson || {}, newJson || {})
 			if (patch.length > 0) {
 				this.updateEvents.emit('update', { type: 'config', patch })
 			}
@@ -129,7 +129,7 @@ export abstract class ControlBase<TJson> {
 
 		// Now broadcast to any interested clients
 		if (this.updateEvents.listenerCount('update') > 0) {
-			const patch = jsonPatch.compare(this.#lastSentRuntimeJson || {}, newJson || {})
+			const patch = diffObject(this.#lastSentRuntimeJson || {}, newJson || {})
 			if (patch.length > 0) {
 				this.updateEvents.emit('update', { type: 'runtime', patch })
 			}

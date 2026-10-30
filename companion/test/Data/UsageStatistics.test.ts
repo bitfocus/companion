@@ -370,7 +370,6 @@ describe('DataUsageStatistics', () => {
 		beforeEach(() => {
 			vi.useFakeTimers()
 			fetchMock = vi.fn(async (_req: Request) => okResponse())
-			// openapi-fetch captures fetch when the client is created, so stub before setup()
 			vi.stubGlobal('fetch', fetchMock)
 		})
 

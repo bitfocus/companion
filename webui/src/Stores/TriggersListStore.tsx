@@ -1,4 +1,5 @@
 import { action, observable } from 'mobx'
+import { applyObjectPatch } from '@companion-app/shared/Diff.js'
 import type {
 	ClientTriggerData,
 	TriggerCollection,
@@ -6,7 +7,7 @@ import type {
 	TriggersUpdate,
 } from '@companion-app/shared/Model/TriggerModel.js'
 import { assertNever } from '~/Resources/util.js'
-import { applyJsonPatchInPlace, updateObjectInPlace } from './ApplyDiffToMap'
+import { updateObjectInPlace } from './ApplyDiffToMap'
 import type { GenericCollectionsStore } from './GenericCollectionsStore'
 
 export class TriggersListStore implements GenericCollectionsStore<TriggerCollectionData> {
@@ -39,7 +40,7 @@ export class TriggersListStore implements GenericCollectionsStore<TriggerCollect
 			case 'update': {
 				const oldObj = this.triggers.get(change.controlId)
 				if (!oldObj) throw new Error(`Got update for unknown trigger: ${change.controlId}`)
-				applyJsonPatchInPlace(oldObj, change.patch)
+				applyObjectPatch(oldObj, change.patch)
 				break
 			}
 			default:

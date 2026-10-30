@@ -102,6 +102,7 @@ function satelliteDeviceInfo(overrides: Partial<SatelliteDeviceInfo> = {}): Sate
 		configFields: undefined,
 		canChangePage: undefined,
 		bitmapFormat: 'rgb',
+		variableEncoding: 'string',
 		...overrides,
 	}
 }

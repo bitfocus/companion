@@ -22,7 +22,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 		value?: unknown
 		error?: string
 		variableIds: Set<string>
-		clockSensitive?: boolean
+		clockCycleMs?: number
 	}
 	let mockParseExpressionResult: MockExprResult
 	let mockParseVariablesResult: ReturnType<VariablesAndExpressionParser['parseVariables']>
@@ -32,7 +32,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 			.fn<VariablesAndExpressionParser['executeExpression']>()
 			.mockImplementation(
 				(_expression: string, _type: string | undefined) =>
-					({ clockSensitive: false, ...mockParseExpressionResult }) as ReturnType<
+					({ clockCycleMs: 0, ...mockParseExpressionResult }) as ReturnType<
 						VariablesAndExpressionParser['executeExpression']
 					>
 			),
@@ -1477,7 +1477,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				ok: true,
 				value: false,
 				variableIds: new Set<string>(),
-				clockSensitive: true,
+				clockCycleMs: 1000,
 			}
 
 			const mockEntity = createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' })
@@ -1496,7 +1496,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				ok: true,
 				value: false,
 				variableIds: new Set<string>(),
-				clockSensitive: false,
+				clockCycleMs: 0,
 			}
 
 			const mockEntity = createMockFeedbackEntity('entity-static', { isExpression: true, value: 'true' })
@@ -1512,7 +1512,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				ok: true,
 				value: false,
 				variableIds: new Set<string>(),
-				clockSensitive: true,
+				clockCycleMs: 1000,
 			}
 
 			const mockEntity = createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' })
@@ -1531,7 +1531,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				ok: true,
 				value: false,
 				variableIds: new Set<string>(['custom:var']),
-				clockSensitive: false,
+				clockCycleMs: 0,
 			}
 
 			const mockEntity = createMockFeedbackEntity('entity-var', { isExpression: true, value: '$(custom:var)' })
@@ -1550,7 +1550,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				ok: true,
 				value: false,
 				variableIds: new Set<string>(),
-				clockSensitive: true,
+				clockCycleMs: 1000,
 			}
 
 			const oscEntity = createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' })
@@ -1578,7 +1578,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 				ok: true,
 				value: false,
 				variableIds: new Set<string>(),
-				clockSensitive: true,
+				clockCycleMs: 1000,
 			}
 
 			const mockEntity = createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' })

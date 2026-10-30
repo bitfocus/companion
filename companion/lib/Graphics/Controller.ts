@@ -20,7 +20,12 @@ import type Express from 'express'
 import QuickLRU from 'quick-lru'
 import workerPool from 'workerpool'
 import { isLocationOnGrid, ParseControlId, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
-import { MAX_DECODED_IMAGE_BYTES, snapToRenderClock } from '@companion-app/shared/Graphics/AnimationTiming.js'
+import {
+	countCycleRenders,
+	MAX_DECODED_IMAGE_BYTES,
+	RENDER_CLOCK_INTERVAL_MS,
+	snapToRenderClock,
+} from '@companion-app/shared/Graphics/AnimationTiming.js'
 import { pruneElementsToTarget, type ElementRasterCanvas } from '@companion-app/shared/Graphics/ElementRaster.js'
 import {
 	resolveButtonStyleProperties,
@@ -78,14 +83,25 @@ const RENDER_CACHE_RESIZE_DEBOUNCE_MS = 500
 const IMAGE_CACHE_MAX_BYTES = 128 * 1024 * 1024
 // Images of remote buttons (Link) share it: only the newest of each button at each size is kept, while it is held
 
-// Renders of animations with a loop up to this long are kept in the render cache, so that they are reused on each
-// loop. Longer animations would push everything else out of the cache, so they are drawn again each time
-const RENDER_CACHE_MAX_ANIMATION_DURATION_MS = 5000
+// Renders of a button which cycles through up to this many different renders (eg an animation, or an oscillate()) are
+// kept in the render cache, so that they are reused on each loop. More would push everything else out of the cache,
+// so they are drawn again each time
+const RENDER_CACHE_MAX_CYCLE_RENDERS = 50
 
-const NO_ANIMATION_FRAMES: AnimationFrames = { frameIndices: new Map(), maxDurationMs: 0 }
+const NO_ANIMATION_FRAMES: AnimationFrames = { frameIndices: new Map(), animations: [] }
 
-function shouldCacheAnimationRenders(animationFrames: AnimationFrames): boolean {
-	return animationFrames.maxDurationMs <= RENDER_CACHE_MAX_ANIMATION_DURATION_MS
+/**
+ * Count how many different renders a button cycles through, from its animated images and from its expressions which
+ * depend on the render clock, which can change on every tick
+ * @param clockCycleMs How long until the expressions which depend on the render clock repeat, or 0 if there are none
+ */
+function countButtonCycleRenders(animationFrames: AnimationFrames, clockCycleMs: number): number {
+	if (clockCycleMs === 0) return countCycleRenders(animationFrames.animations)
+
+	return countCycleRenders([
+		...animationFrames.animations,
+		{ frameCount: clockCycleMs / RENDER_CLOCK_INTERVAL_MS, durationMs: clockCycleMs },
+	])
 }
 
 interface GraphicsControllerEvents {
@@ -107,7 +123,7 @@ type RenderArguments = RenderArgumentsButton | RenderArgumentsPreset
 /** What a render of a button was drawn from, to draw it again without its decoration */
 interface ButtonRenderSource {
 	readonly drawStyle: RendererButtonStyle
-	readonly animationFrameIndices: ReadonlyMap<string, number>
+	readonly animationFrames: AnimationFrames
 }
 
 /** A render of the content of a button without its decoration, and the state to decorate it with */
@@ -374,7 +390,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							: NO_ANIMATION_FRAMES
 
 						// Track clock-sensitive presets so we can re-render them on each clock tick
-						if (buttonStyle && (buttonStyle.clockSensitive || animationFrames.frameIndices.size > 0)) {
+						if (buttonStyle && (buttonStyle.clockCycleMs || animationFrames.frameIndices.size > 0)) {
 							this.#clockSensitivePresets.add(args.controlId)
 						} else {
 							this.#clockSensitivePresets.delete(args.controlId)
@@ -385,11 +401,11 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 							// Check if the image is already present in the render cache and if so, return it
 							// Use collected contentHashes instead of JSON.stringify on entire buttonStyle to avoid
 							// serializing large binary data (images can be 100KB+)
-							// clockSensitive is excluded from the cache key — it's metadata, not part of the visual output
-							const { clockSensitive: _cs, ...buttonStyleForKey } = buttonStyle
+							// clockCycleMs is part of the key even though it doesn't change what is drawn, so that a render is
+							// never reused with the cycle metadata of an older one
 							const cacheKey = JSON.stringify({
 								options: this.#drawOptions,
-								...buttonStyleForKey,
+								...buttonStyle,
 								elements: collectContentHashes(buttonStyle.elements),
 								animationFrames: [...animationFrames.frameIndices],
 							})
@@ -403,8 +419,16 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 									decodedImages: null, // Resolved when drawn
 								}
 
-								render = this.#generateImageResult(cacheKey, renderStyle, animationFrames.frameIndices, true)
-								if (shouldCacheAnimationRenders(animationFrames)) this.#renderLRUCache.set(cacheKey, render)
+								const cycleRenderCount = countButtonCycleRenders(animationFrames, buttonStyle.clockCycleMs ?? 0)
+								render = this.#generateImageResult(
+									cacheKey,
+									renderStyle,
+									animationFrames,
+									cycleRenderCount,
+									buttonStyle.clockCycleMs ?? 0,
+									true
+								)
+								if (cycleRenderCount <= RENDER_CACHE_MAX_CYCLE_RENDERS) this.#renderLRUCache.set(cacheKey, render)
 							}
 						} else {
 							render = GraphicsRenderer.generateBlankImage(
@@ -449,36 +473,39 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 						// Track clock-sensitive locations so we can re-render them on each clock tick
 						const locationKey = `${location.pageNumber}/${location.row}/${location.column}`
-						if (buttonStyle.clockSensitive || animationFrames.frameIndices.size > 0) {
+						if (buttonStyle.clockCycleMs || animationFrames.frameIndices.size > 0) {
 							this.#clockSensitiveLocations.set(locationKey, location)
 						} else {
 							this.#clockSensitiveLocations.delete(locationKey)
 						}
 
-						// clockSensitive must NOT appear in the cache key — it's metadata, not part of the visual output.
-						// The actual rendered content differs per clock tick and is content-hashed via elements.
+						// The rendered content differs per clock tick and is content-hashed via elements. clockCycleMs is part
+						// of the key even though it doesn't change what is drawn, so that a render is never reused with the
+						// cycle metadata of an older one
 						const cacheKeyObj: Record<string, unknown> = {
 							...renderStyle,
 							elements: collectContentHashes(buttonStyle.elements), // use hashes of elements for the key
 							referencedLocations: [...(buttonStyle.referencedLocations ?? [])].sort(), // Sets serialize as {} in JSON.stringify
 							animationFrames: [...animationFrames.frameIndices],
 						}
-						delete cacheKeyObj['clockSensitive']
 						const cacheKey = JSON.stringify(cacheKeyObj)
 
 						// Check if the image is already present in the render cache and if so, return it
 						render = this.#renderLRUCache.get(cacheKey)
 
 						if (!render) {
+							const cycleRenderCount = countButtonCycleRenders(animationFrames, buttonStyle.clockCycleMs ?? 0)
 							render = this.#generateImageResult(
 								cacheKey,
 								renderStyle,
-								animationFrames.frameIndices,
+								animationFrames,
+								cycleRenderCount,
+								buttonStyle.clockCycleMs ?? 0,
 								true,
 								buttonStyle.elements,
 								buttonStyle.referencedLocations
 							)
-							if (shouldCacheAnimationRenders(animationFrames)) this.#renderLRUCache.set(cacheKey, render)
+							if (cycleRenderCount <= RENDER_CACHE_MAX_CYCLE_RENDERS) this.#renderLRUCache.set(cacheKey, render)
 						}
 					} else {
 						render = GraphicsRenderer.generateBlankImage(
@@ -670,7 +697,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 
 		// One-off preview: never cached or emitted, so it has no content key (never deduped).
 		// It is a still, so any animations show their first frame
-		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES.frameIndices, true)
+		return this.#generateImageResult(undefined, drawStyle, NO_ANIMATION_FRAMES, 1, 0, true)
 	}
 
 	/**
@@ -976,7 +1003,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	#generateImageResult(
 		cacheKey: string | undefined,
 		drawStyle: RendererButtonStyle,
-		animationFrameIndices: ReadonlyMap<string, number>,
+		animationFrames: AnimationFrames,
+		cycleRenderCount: number,
+		clockCycleMs: number,
 		waitForRemoteImages: boolean,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
 		referencedLocations: ReadonlySet<string> | undefined = undefined
@@ -986,10 +1015,12 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		const render = new ImageResult(
 			cacheKey,
 			processedStyle,
+			cycleRenderCount,
+			clockCycleMs,
 			async (width, height, rotation, format) =>
 				this.#executePoolDrawButtonImageBuffer(
 					drawStyle,
-					animationFrameIndices,
+					animationFrames.frameIndices,
 					waitForRemoteImages,
 					{ width, height, oversampling: computeOversampling(width, height) },
 					rotation,
@@ -999,7 +1030,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			drawElements,
 			referencedLocations ?? new Set()
 		)
-		this.#renderSources.set(render, { drawStyle, animationFrameIndices })
+		this.#renderSources.set(render, { drawStyle, animationFrames })
 		return render
 	}
 
@@ -1024,7 +1055,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						show_status_icons: false,
 						location: undefined,
 					},
-					source.animationFrameIndices,
+					source.animationFrames,
+					render.cycleRenderCount,
+					render.clockCycleMs,
 					// Served onwards (by Link), where it is better to send what is there and the rest when it comes, than
 					// to hold up serving every other button
 					false
@@ -1033,7 +1066,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 				contentKey: JSON.stringify({
 					drawType: drawStyle.drawType,
 					elements: collectContentHashes(drawStyle.elements),
-					animationFrames: [...source.animationFrameIndices],
+					animationFrames: [...source.animationFrames.frameIndices],
 				}),
 				state: {
 					pushed: drawStyle.pushed,

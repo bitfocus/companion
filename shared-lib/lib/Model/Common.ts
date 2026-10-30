@@ -1,10 +1,10 @@
-import type { Operation as JsonPatchOperation } from 'fast-json-patch'
+import type { ObjectPatch } from '../Diff.js'
 import type { LedGaugeDescription } from '../Graphics/GaugeLeds.js'
 import type { SomeCompanionInputField } from './Options.js'
 
 export interface ObjectsDiff<T> {
 	added: Record<string, T>
-	changed: Record<string, JsonPatchOperation<T>[]>
+	changed: Record<string, ObjectPatch<T>>
 	removed: string[]
 }
 

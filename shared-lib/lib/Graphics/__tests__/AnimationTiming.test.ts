@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'vitest'
 import {
 	AnimationFrameSampler,
+	clockCycleOfPeriod,
+	combineClockCycles,
+	countCycleRenders,
 	fitAnimationFrames,
 	selectFrameIndex,
 	shrinkToPixels,
@@ -138,5 +141,83 @@ describe('fitAnimationFrames', () => {
 		expect(sizes[10]).toEqual({ width: 30, height: 15 })
 		expect(sizes[19]).toEqual({ width: 30, height: 15 })
 		expect(20 * 30 * 15 * 4).toBeLessThanOrEqual(40_000)
+	})
+})
+
+describe('countCycleRenders', () => {
+	test('is 1 with no animations', () => {
+		expect(countCycleRenders([])).toBe(1)
+	})
+
+	test('is the frame count of a single animation, however slow', () => {
+		expect(countCycleRenders([{ frameCount: 4, durationMs: 10_000 }])).toBe(4)
+	})
+
+	test('counts the frames of each animation over their combined cycle', () => {
+		// They repeat together after 1.2s, in which the first shows 6 frames and the second 2
+		expect(
+			countCycleRenders([
+				{ frameCount: 2, durationMs: 400 },
+				{ frameCount: 1, durationMs: 600 },
+			])
+		).toBe(8)
+	})
+
+	test('is at most one per tick of the render clock', () => {
+		expect(
+			countCycleRenders([
+				{ frameCount: 3, durationMs: 300 },
+				{ frameCount: 3, durationMs: 300 },
+			])
+		).toBe(3)
+	})
+
+	test('is effectively endless when the loops barely line up', () => {
+		const count = countCycleRenders([
+			{ frameCount: 299, durationMs: 29_900 },
+			{ frameCount: 300, durationMs: 30_000 },
+			{ frameCount: 293, durationMs: 29_300 },
+			{ frameCount: 283, durationMs: 28_300 },
+		])
+		expect(count).toBeGreaterThan(1_000_000)
+		expect(Number.isSafeInteger(count)).toBe(true)
+	})
+})
+
+describe('clockCycleOfPeriod', () => {
+	test('is the period when it is a whole number of ticks', () => {
+		expect(clockCycleOfPeriod(1000)).toBe(1000)
+		expect(clockCycleOfPeriod(100)).toBe(100)
+	})
+
+	test('is the first whole number of ticks which is also a whole number of periods', () => {
+		// Seen every 100ms, a 150ms period shows the same positions again after 300ms
+		expect(clockCycleOfPeriod(150)).toBe(300)
+		expect(clockCycleOfPeriod(50)).toBe(100)
+	})
+
+	test('keeps a fractional period, rather than rounding it to one which lines up sooner', () => {
+		expect(clockCycleOfPeriod(100.25)).toBe(40_100)
+		expect(clockCycleOfPeriod(150.5)).toBe(30_100)
+	})
+})
+
+describe('combineClockCycles', () => {
+	test('is the time until both repeat together', () => {
+		expect(combineClockCycles(1000, 2000)).toBe(2000)
+		expect(combineClockCycles(400, 600)).toBe(1200)
+	})
+
+	test('treats 0 as never changing', () => {
+		expect(combineClockCycles(0, 600)).toBe(600)
+		expect(combineClockCycles(600, 0)).toBe(600)
+		expect(combineClockCycles(0, 0)).toBe(0)
+	})
+
+	test('is capped for loops which barely line up', () => {
+		let cycle = 0
+		for (const period of [29_900, 30_000, 29_300, 28_300, 27_700]) cycle = combineClockCycles(cycle, period)
+		expect(Number.isSafeInteger(cycle)).toBe(true)
+		expect(cycle).toBeGreaterThan(1_000_000_000)
 	})
 })

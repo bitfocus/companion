@@ -61,7 +61,7 @@ interface EvaluatedSession {
 	referencedVariableIds: Set<string>
 	referencedCompositeElements: Set<CompositeElementIdString>
 	referencedLocations: Set<string>
-	clockSensitive: boolean
+	clockCycleMs: number
 }
 
 /**
@@ -377,7 +377,7 @@ export class PreviewElementStream {
 			session.trackedCompositeElements = newValue.referencedCompositeElements
 			session.trackedReferencedLocations = newValue.referencedLocations
 			session.dependsOnElementIds = newValue.result.dependsOnElementIds
-			session.isClockSensitive = newValue.clockSensitive
+			session.isClockSensitive = newValue.clockCycleMs > 0
 
 			// Re-evaluations often produce the same result (eg on a render clock tick), so skip rendering those
 			if (!session.latest || !isSameEvaluation(session.latest, newValue.result)) {
@@ -430,7 +430,7 @@ export class PreviewElementStream {
 			referencedVariableIds: new Set(),
 			referencedCompositeElements: new Set(),
 			referencedLocations: new Set(),
-			clockSensitive: false,
+			clockCycleMs: 0,
 		}
 
 		const control = this.#controlsController.getControl(controlId)
@@ -494,7 +494,7 @@ export class PreviewElementStream {
 				referencedVariableIds: references.variables.drawn,
 				referencedCompositeElements: references.compositeElements.drawn,
 				referencedLocations: references.referencedLocations.drawn,
-				clockSensitive: references.clockSensitive,
+				clockCycleMs: references.clockCycleMs,
 			}
 		} catch (error) {
 			this.#logger.error('Error evaluating element:', error)

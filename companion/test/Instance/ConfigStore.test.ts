@@ -156,3 +156,32 @@ describe('InstanceConfigStore loading and saving', () => {
 		expect(afterSave).toHaveBeenCalledWith([badId, goodId], false)
 	})
 })
+
+describe('InstanceConfigStore.makeLabelValid', () => {
+	test('keeps a valid label', () => {
+		const { store } = createStore()
+		expect(store.makeLabelValid(ModuleInstanceType.Connection, 'my_label', 'A')).toBe('my_label')
+	})
+
+	test('sanitises invalid characters', () => {
+		const { store } = createStore()
+		expect(store.makeLabelValid(ModuleInstanceType.Connection, 'my label', 'A')).toBe('my_label')
+	})
+
+	test('adds a suffix to a reserved word', () => {
+		const { store } = createStore()
+		expect(store.makeLabelValid(ModuleInstanceType.Connection, 'options', 'A')).toBe('options_1')
+		expect(store.makeLabelValid(ModuleInstanceType.Connection, 'page', 'A')).toBe('page_1')
+	})
+
+	test('makes the suffixed label unique', () => {
+		const db = new FakeDataDatabase()
+		db.getTableView('instances').data = {
+			A: { ...makeConnection(0), label: 'options' },
+			B: { ...makeConnection(1), label: 'options_1' },
+		}
+		const store = new InstanceConfigStore(db.asDataDatabase(), vi.fn())
+
+		expect(store.makeLabelValid(ModuleInstanceType.Connection, 'options', 'A')).toBe('options_1_2')
+	})
+})

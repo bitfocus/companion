@@ -12,8 +12,8 @@
 import EventEmitter from 'node:events'
 import path from 'node:path'
 import type express from 'express'
-import jsonPatch from 'fast-json-patch'
 import z from 'zod'
+import { diffObject } from '@companion-app/shared/Diff.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type {
 	ClientModuleInfo,
@@ -338,7 +338,7 @@ export class InstanceModules {
 				id: changedModuleIdFull,
 			})
 		} else if (oldModuleJson) {
-			const patch = jsonPatch.compare(oldModuleJson, newModuleJson)
+			const patch = diffObject(oldModuleJson, newModuleJson)
 			if (patch.length > 0) {
 				this.#events.emit('modulesUpdate', {
 					type: 'update',

@@ -1,6 +1,6 @@
 import { useDragDropMonitor } from '@dnd-kit/react'
 import { isSortable, useSortable } from '@dnd-kit/react/sortable'
-import { faAnglesDown, faAnglesUp, faChevronDown, faPencil, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faChevronDown, faPencil, faSort, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
@@ -13,6 +13,7 @@ import { DuplicateIcon } from '~/Components/DuplicateIcon.js'
 import { Form } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
+import { ListHeading } from '~/Components/ListHeading.js'
 import { SwitchInputField } from '~/Components/SwitchInputField.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
@@ -72,39 +73,22 @@ export const TriggerEventEditor = observer(function TriggerEventEditor({
 			<GenericConfirmModal ref={confirmModal} />
 
 			{heading && (
-				<div className="flex items-center justify-between gap-2 mt-3 mb-2">
-					<div className="text-sm font-semibold text-body">{heading}</div>
-					{events.length > 1 && (
-						<div className="flex items-center gap-1 shrink-0">
-							{panelCollapseHelper.canExpandAll() && (
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={panelCollapseHelper.setAllExpanded}
-									title="Expand all events"
-									className="text-xs px-2 py-0.5 flex items-center gap-1.5"
-								>
-									<FontAwesomeIcon icon={faAnglesDown} className="text-2xs" />
-									<span className="text-3xs font-medium">Expand all</span>
-								</Button>
-							)}
-							{panelCollapseHelper.canCollapseAll() && (
-								<Button
-									variant="ghost"
-									size="sm"
-									onClick={panelCollapseHelper.setAllCollapsed}
-									title="Collapse all events"
-									className="text-xs px-2 py-0.5 flex items-center gap-1.5"
-								>
-									<FontAwesomeIcon icon={faAnglesUp} className="text-2xs" />
-									<span className="text-3xs font-medium">Collapse all</span>
-								</Button>
-							)}
-						</div>
-					)}
-				</div>
+				<ListHeading
+					heading={heading}
+					subheading={subheading}
+					actions={null}
+					collapse={
+						events.length > 1
+							? {
+									canExpandAll: panelCollapseHelper.canExpandAll(),
+									canCollapseAll: panelCollapseHelper.canCollapseAll(),
+									expandAll: panelCollapseHelper.setAllExpanded,
+									collapseAll: panelCollapseHelper.setAllCollapsed,
+								}
+							: null
+					}
+				/>
 			)}
-			{subheading}
 
 			<div className="entity-list">
 				{events.map((a, i) => (

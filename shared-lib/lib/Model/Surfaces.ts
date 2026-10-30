@@ -1,4 +1,3 @@
-import type { Operation as JsonPatchOperation } from 'fast-json-patch'
 import z from 'zod'
 import {
 	surfaceAppearanceSchema,
@@ -10,6 +9,7 @@ import {
 	type SurfaceSchemaLayoutDefinition,
 	type SurfaceSchemaLedsConfig,
 } from '@companion-surface/base'
+import type { ObjectPatch } from '../Diff.js'
 import type { CollectionBase, EnabledCollectionData } from './Collections.js'
 import type { DropdownChoice } from './Common.js'
 import type {
@@ -276,7 +276,7 @@ export interface SurfacesUpdateUpdateOp {
 	type: 'update'
 	itemId: string
 
-	patch: JsonPatchOperation<ClientDevicesListItem>[]
+	patch: ObjectPatch<ClientDevicesListItem>
 }
 
 /**

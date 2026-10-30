@@ -33,11 +33,10 @@ export interface DrawStyleLayeredButtonModel extends DrawStyleButtonStateProps {
 	referencedLocations?: ReadonlySet<string>
 
 	/**
-	 * Whether any expression in this button's elements depends on the render clock (e.g. oscillate()).
-	 * When true, the button must be re-rendered on each clock tick and its style must NOT be included
-	 * in the graphics LRU cache key.
+	 * How long until every expression in this button's elements which depends on the render clock (e.g.
+	 * oscillate()) repeats, in ms. When set, the button must be re-rendered on each clock tick.
 	 */
-	clockSensitive?: boolean
+	clockCycleMs?: number
 }
 
 export interface DrawImageBuffer {

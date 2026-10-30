@@ -1,9 +1,9 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import createClient from 'openapi-fetch'
 import pQueue from 'p-queue'
 import pRetry from 'p-retry'
-import type { paths as ModuleStoreOpenApiPaths } from '@companion-app/shared/OpenApi/ModuleStore.js'
+import { createClient, createConfig } from '@companion-app/shared/OpenApi/ModuleStore/client/index.js'
+import { getCompanionModuleVersions } from '@companion-app/shared/OpenApi/ModuleStore/index.js'
 import { isSurfaceApiVersionCompatible } from '../shared-lib/lib/ModuleApiVersionCheck.js'
 import { generateVersionString } from './lib.mts'
 
@@ -16,12 +16,14 @@ const baseUrl = process.env.STAGING_MODULE_API
 	: 'https://developer.bitfocus.io/api'
 
 const userAgent = `Companion builtin module scraper ${await generateVersionString()}`
-const ModuleOpenApiClient = createClient<ModuleStoreOpenApiPaths>({
-	baseUrl,
-	headers: {
-		'User-Agent': userAgent,
-	},
-})
+const ModuleOpenApiClient = createClient(
+	createConfig({
+		baseUrl,
+		headers: {
+			'User-Agent': userAgent,
+		},
+	})
+)
 
 console.log('existing modules:\n', existingModules)
 
@@ -34,15 +36,11 @@ for (const moduleId of Object.keys(existingModules)) {
 	moduleQueue.add(async () => {
 		await pRetry(
 			async () => {
-				const { data: moduleInfoData, error } = await ModuleOpenApiClient.GET(
-					`/v1/companion/modules/{moduleType}/{moduleName}`,
-					{
-						signal: AbortSignal.timeout(10000),
-						params: {
-							path: { moduleType: 'surface', moduleName: moduleId },
-						},
-					}
-				)
+				const { data: moduleInfoData, error } = await getCompanionModuleVersions({
+					client: ModuleOpenApiClient,
+					signal: AbortSignal.timeout(10000),
+					path: { moduleType: 'surface', moduleName: moduleId },
+				})
 				if (error) {
 					throw new Error(`Error fetching module ${moduleId}: ${error}`)
 				}

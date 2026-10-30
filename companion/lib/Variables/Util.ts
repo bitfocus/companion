@@ -17,6 +17,7 @@ import {
 	type GetVariableValueProps,
 	type ResolveExpressionLimits,
 } from '@companion-app/shared/Expressions.js'
+import { clockCycleOfPeriod, combineClockCycles } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import { getCompiledIsVisibleExpressionFn } from '@companion-app/shared/IsVisible.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
@@ -341,7 +342,7 @@ export function executeExpression(
 	allowClockSensitive = true
 ): ExecuteExpressionResult {
 	const referencedVariableIds = new Set<string>()
-	let clockSensitive = false
+	let clockCycleMs = 0
 
 	try {
 		const getVariableValue = (props: GetVariableValueProps): VariableValue | undefined => {
@@ -423,7 +424,7 @@ export function executeExpression(
 				getCycleFraction: (periodMs: number): number => {
 					if (!allowClockSensitive) throw new Error('oscillate() is not supported in this context')
 
-					clockSensitive = true
+					clockCycleMs = combineClockCycles(clockCycleMs, clockCycleOfPeriod(periodMs))
 					// Snap to the nearest 100ms grid to produce even steps regardless of when
 					// within the tick this is called. Aligned to the unix epoch so separate
 					// evaluations of the same period stay in sync.
@@ -479,7 +480,7 @@ export function executeExpression(
 				ok: false,
 				error: 'Unexpected return type',
 				variableIds: referencedVariableIds,
-				clockSensitive,
+				clockCycleMs,
 			}
 		}
 
@@ -487,14 +488,14 @@ export function executeExpression(
 			ok: true,
 			value,
 			variableIds: referencedVariableIds,
-			clockSensitive,
+			clockCycleMs,
 		}
 	} catch (e) {
 		return {
 			ok: false,
 			error: stringifyError(e, true) || 'Unknown error',
 			variableIds: referencedVariableIds,
-			clockSensitive,
+			clockCycleMs,
 		}
 	}
 }

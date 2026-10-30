@@ -1,11 +1,10 @@
 import { createHash } from 'node:crypto'
 import { EventEmitter } from 'node:events'
-import jsonPatch from 'fast-json-patch'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
 import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { ControlIdKind } from '@companion-app/shared/ControlId.js'
-import { diffObjects } from '@companion-app/shared/Diff.js'
+import { diffObject, diffObjects } from '@companion-app/shared/Diff.js'
 import type {
 	LayeredButtonModel,
 	PresetButtonModel,
@@ -787,7 +786,7 @@ export class InstanceDefinitions extends EventEmitter<InstanceDefinitionsEvents>
 					definitions: newUiDefinitions,
 				})
 			} else {
-				const diff = jsonPatch.compare(lastPresetDefinitions, newUiDefinitions)
+				const diff = diffObject(lastPresetDefinitions, newUiDefinitions)
 				if (diff && diff.length > 0) {
 					this.#events.emit('presets', { type: 'patch', connectionId, patch: diff })
 				}
