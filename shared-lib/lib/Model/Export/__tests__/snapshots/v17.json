@@ -8717,11 +8717,7 @@
 						},
 						"useVariables": {
 							"type": "string",
-							"enum": [
-								"internalParser",
-								"local",
-								"basic"
-							]
+							"const": "internalParser"
 						},
 						"placeholder": {
 							"type": "string"
@@ -8762,10 +8758,7 @@
 							"const": "number"
 						},
 						"default": {
-							"type": [
-								"number",
-								"null"
-							]
+							"type": "number"
 						},
 						"min": {
 							"type": "number"
@@ -8789,9 +8782,6 @@
 							"type": "boolean"
 						},
 						"asInteger": {
-							"type": "boolean"
-						},
-						"allowNull": {
 							"type": "boolean"
 						}
 					},
