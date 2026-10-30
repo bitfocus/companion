@@ -55,7 +55,7 @@ interface AddEntitiesModalProps {
 	entityType: EntityModelType
 	entityTypeLabel: string
 	/** A definition which can't be added here, such as a custom action running itself */
-	excludedDefinition: { connectionId: string; definitionId: string } | null
+	excludedIds: ReadonlySet<string>
 	disabled: boolean
 }
 const EntityTypeLabelContext = createContext<string>('')
@@ -132,7 +132,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 	feedbackListType,
 	entityType,
 	entityTypeLabel,
-	excludedDefinition,
+	excludedIds,
 	disabled,
 }: AddEntitiesModalProps) {
 	const { entityDefinitions } = useContext(RootAppStoreContext)
@@ -167,10 +167,9 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 
 	const customActionLeaves = definitions.buildConnectionLeaves(CUSTOM_ACTIONS_CONNECTION_ID, feedbackListType)
 	const allowedCustomActionLeaves = useMemo(() => {
-		if (!excludedDefinition) return customActionLeaves
-		const excludedId = `${excludedDefinition.connectionId}:${excludedDefinition.definitionId}`
-		return customActionLeaves.filter((leaf) => leaf.fullId !== excludedId)
-	}, [customActionLeaves, excludedDefinition])
+		if (excludedIds.size === 0) return customActionLeaves
+		return customActionLeaves.filter((leaf) => !excludedIds.has(leaf.fullId))
+	}, [customActionLeaves, excludedIds])
 	const customActionsNode = useCustomActionsTreeNode(allowedCustomActionLeaves)
 
 	const internalLeaves = definitions.buildConnectionLeaves('internal', feedbackListType)

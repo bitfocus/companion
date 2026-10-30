@@ -150,6 +150,7 @@ export type InternalActionDefinition = SetOptional<
 		| 'feedbackAffectedProperties'
 		| 'actionExecutionTimeout'
 		| 'actionOutputs'
+		| 'warning'
 	>,
 	| 'sortKey'
 	| 'hasLearn'
@@ -169,6 +170,7 @@ export type InternalFeedbackDefinition = SetOptional<
 		| 'actionHasResult'
 		| 'actionExecutionTimeout'
 		| 'actionOutputs'
+		| 'warning'
 	>,
 	'sortKey' | 'hasLearn' | 'learnTimeout' | 'showButtonPreview' | 'supportsChildGroups' | 'feedbackAffectedProperties'
 >

@@ -95,6 +95,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				actionHasResult: !!rawAction.hasResult,
 				actionExecutionTimeout: parseActionExecutionTimeout(rawAction.executionTimeout),
 				actionOutputs: null,
+				warning: null,
 
 				showInvert: false,
 				showButtonPreview: false,
@@ -143,6 +144,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				actionHasResult: undefined,
 				actionExecutionTimeout: undefined,
 				actionOutputs: null,
+				warning: null,
 
 				showButtonPreview: false,
 				supportsChildGroups: [],
