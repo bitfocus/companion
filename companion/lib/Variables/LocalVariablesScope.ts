@@ -1,12 +1,12 @@
 /**
- * The local variables of a copy of a custom action are its own, and can not be seen by the control which holds the
+ * The local variables of a copy of a custom action or feedback are its own, and can not be seen by the control which holds the
  * copy, nor can the copy see those of the control. As the entities of the copy live in that control, a reference to
  * one of the copy's local variables is tracked under an id which names the copy, so that a change to a local variable
  * of the control doesn't reach the entities of the copy, and a change to one of the copy reaches only its entities.
  */
 
 /**
- * The id a local variable of a copy of a custom action is tracked under, which can never be a real variable id
+ * The id a local variable of a copy of a custom action or feedback is tracked under, which can never be a real variable id
  * @param localVariablesScopeId The scope of the local variables of the copy
  * @param rawName The name of the variable, without the `local:` prefix
  */

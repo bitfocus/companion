@@ -2,7 +2,8 @@ import { faFolderOpen, faPlus, faSearch } from '@fortawesome/free-solid-svg-icon
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import { CUSTOM_ACTIONS_CONNECTION_ID, CUSTOM_FEEDBACKS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import { CreateCustomActionControlId, CreateCustomFeedbackControlId } from '@companion-app/shared/ControlId.js'
 import type { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { capitalize } from '@companion-app/shared/Util.js'
 import { Button } from '~/Components/Button.js'
@@ -20,7 +21,7 @@ import { useComputed } from '~/Resources/util'
 import { type EntityLeafItem } from '~/Stores/EntityDefinitionsStore.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { fuzzySearchByKeys } from '~/util/fuzzy.js'
-import { useCustomActionsTreeNode } from './useCustomActionsTreeNode.js'
+import { useCustomEntitiesTreeNode, type CustomEntitiesTreeSource } from './useCustomEntitiesTreeNode.js'
 import './AddEntitiesModal.css'
 
 const AddEntityGroupHeader = observer(function AddEntityGroupHeader({
@@ -127,6 +128,16 @@ const AddEntityLeaf = observer(function AddEntityLeaf({ leaf }: { leaf: EntityLe
 	)
 })
 
+/**
+ * Leave out the definitions which can't be added here, such as a custom action which would run itself
+ */
+function useAllowedLeaves(leaves: EntityLeafItem[], excludedIds: ReadonlySet<string>): EntityLeafItem[] {
+	return useMemo(() => {
+		if (excludedIds.size === 0) return leaves
+		return leaves.filter((leaf) => !excludedIds.has(leaf.fullId))
+	}, [leaves, excludedIds])
+}
+
 export const AddEntitiesModal = observer(function AddEntitiesModal({
 	addEntity,
 	feedbackListType,
@@ -135,7 +146,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 	excludedIds,
 	disabled,
 }: AddEntitiesModalProps) {
-	const { entityDefinitions } = useContext(RootAppStoreContext)
+	const { entityDefinitions, customActionsList, customFeedbacksList } = useContext(RootAppStoreContext)
 
 	const definitions = entityDefinitions.getEntityDefinitionsStore(entityType)
 	const recentlyUsed = entityDefinitions.getRecentlyUsedEntityDefinitionsStore(entityType)
@@ -165,12 +176,35 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 
 	const { nodes, ungroupedNodes } = useConnectionTreeNodes(getEntityLeaves)
 
-	const customActionLeaves = definitions.buildConnectionLeaves(CUSTOM_ACTIONS_CONNECTION_ID, feedbackListType)
-	const allowedCustomActionLeaves = useMemo(() => {
-		if (excludedIds.size === 0) return customActionLeaves
-		return customActionLeaves.filter((leaf) => !excludedIds.has(leaf.fullId))
-	}, [customActionLeaves, excludedIds])
-	const customActionsNode = useCustomActionsTreeNode(allowedCustomActionLeaves)
+	const customActionsSource = useMemo(
+		(): CustomEntitiesTreeSource => ({
+			connectionId: CUSTOM_ACTIONS_CONNECTION_ID,
+			label: 'Custom actions',
+			getCollectionId: (definitionId) =>
+				customActionsList.customActions.get(CreateCustomActionControlId(definitionId))?.collectionId || null,
+			rootCollections: () => customActionsList.rootCollections(),
+		}),
+		[customActionsList]
+	)
+	const customActionsNode = useCustomEntitiesTreeNode(
+		useAllowedLeaves(getEntityLeaves(CUSTOM_ACTIONS_CONNECTION_ID), excludedIds),
+		customActionsSource
+	)
+
+	const customFeedbacksSource = useMemo(
+		(): CustomEntitiesTreeSource => ({
+			connectionId: CUSTOM_FEEDBACKS_CONNECTION_ID,
+			label: 'Custom feedbacks',
+			getCollectionId: (definitionId) =>
+				customFeedbacksList.customFeedbacks.get(CreateCustomFeedbackControlId(definitionId))?.collectionId || null,
+			rootCollections: () => customFeedbacksList.rootCollections(),
+		}),
+		[customFeedbacksList]
+	)
+	const customFeedbacksNode = useCustomEntitiesTreeNode(
+		useAllowedLeaves(getEntityLeaves(CUSTOM_FEEDBACKS_CONNECTION_ID), excludedIds),
+		customFeedbacksSource
+	)
 
 	const internalLeaves = definitions.buildConnectionLeaves('internal', feedbackListType)
 	const internalNode = useMemo((): CollapsibleTreeNode<EntityLeafItem, ConnectionTreeNodeMeta> | null => {
@@ -195,7 +229,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 	const collapseHelper = usePanelCollapseHelper(`add_entities_${entityType}`, null, defaultCollapsedFn)
 
 	const browseNodes = useComputed(() => {
-		const rawNodes = [internalNode, customActionsNode, ...nodes].filter((node) => !!node)
+		const rawNodes = [internalNode, customActionsNode, customFeedbacksNode, ...nodes].filter((node) => !!node)
 
 		// If there are no collections visible, merge ungrouped nodes into the main list
 		// This hides the "Ungrouped Connections" header
@@ -208,7 +242,7 @@ export const AddEntitiesModal = observer(function AddEntitiesModal({
 		}
 
 		return { nodes: rawNodes, ungroupedNodes }
-	}, [nodes, ungroupedNodes, internalNode, customActionsNode])
+	}, [nodes, ungroupedNodes, internalNode, customActionsNode, customFeedbacksNode])
 
 	const allEntityResults = useComputed(() => {
 		const results: EntitySearchResult[] = []

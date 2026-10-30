@@ -51,11 +51,13 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		forgetEntity: vi.fn(),
 	} as any
 	const customActionInstances = { entityUpdate: vi.fn(), entityDelete: vi.fn() }
+	const customFeedbackInstances = { entityUpdate: vi.fn(), entityDelete: vi.fn() }
 	const scope: EntityScope = {
 		specialExpressionManager,
 		customActionChain: [],
 		customActionInstances,
 		localVariablesScopeId: null,
+		customFeedbackInstances,
 		createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
 	}
 	const internalController: InternalControllerForEntity = {
@@ -114,6 +116,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		processManager,
 		specialExpressionManager,
 		customActionInstances,
+		customFeedbackInstances,
 		scope,
 		newActionModel,
 		newAction,
@@ -2053,6 +2056,7 @@ describe('transient child groups', () => {
 			customActionChain: ['custom-action:1'],
 			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
 			localVariablesScopeId: 'copy-scope',
+			customFeedbackInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
 			createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
 		}
 	}

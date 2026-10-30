@@ -2,6 +2,7 @@ import z from 'zod'
 import type { ObjectPatch } from '../Diff.js'
 import { SomeButtonModelSchema } from './ButtonModel.js'
 import { CustomActionModelSchema } from './CustomActionModel.js'
+import { CustomFeedbackModelSchema } from './CustomFeedbackModel.js'
 import { ExpressionVariableModelSchema } from './ExpressionVariableModel.js'
 import { PageControlModelSchema } from './PageControlModel.js'
 import { TriggerModelSchema } from './TriggerModel.js'
@@ -11,6 +12,7 @@ export const SomeControlModelSchema = z.discriminatedUnion('type', [
 	TriggerModelSchema,
 	ExpressionVariableModelSchema,
 	CustomActionModelSchema,
+	CustomFeedbackModelSchema,
 	PageControlModelSchema,
 ])
 

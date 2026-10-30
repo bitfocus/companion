@@ -206,8 +206,9 @@ export class InternalVariables extends EventEmitter<InternalModuleFragmentEvents
 						id: 'persist_value',
 						default: false,
 						disableAutoExpression: true,
-						// The values of a custom action only last for a run of it, so can't be persisted
-						disabledForControlTypes: ['custom-action'],
+						// The values of a custom action only last for a run of it, and those of a custom feedback for a use
+						// of it, so can't be persisted
+						disabledForControlTypes: ['custom-action', 'custom-feedback'],
 					},
 					{
 						type: 'internal:variable_value',

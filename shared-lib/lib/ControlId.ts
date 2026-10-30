@@ -77,6 +77,13 @@ export function CreateCustomActionControlId(customActionId: string): string {
 }
 
 /**
+ * Create full custom feedback control id
+ */
+export function CreateCustomFeedbackControlId(customFeedbackId: string): string {
+	return `custom-feedback:${customFeedbackId}`
+}
+
+/**
  * Create the full control id for a page's local-variables control (one per page, keyed by page id).
  */
 export function CreatePageControlId(pageId: string): string {
@@ -106,6 +113,10 @@ export interface ParsedControlIdCustomAction {
 	type: 'custom-action'
 	customActionId: string
 }
+export interface ParsedControlIdCustomFeedback {
+	type: 'custom-feedback'
+	customFeedbackId: string
+}
 export interface ParsedControlIdPage {
 	type: 'page'
 	pageId: string
@@ -121,6 +132,7 @@ export type ParsedControlIdType =
 	| ParsedControlIdTrigger
 	| ParsedControlIdExpressionVariable
 	| ParsedControlIdCustomAction
+	| ParsedControlIdCustomFeedback
 	| ParsedControlIdPage
 	| ParsedControlIdPreset
 
@@ -132,6 +144,7 @@ const CONTROL_ID_KINDS: Record<ControlIdKind, true> = {
 	trigger: true,
 	'expression-variable': true,
 	'custom-action': true,
+	'custom-feedback': true,
 	page: true,
 	preset: true,
 }
@@ -175,6 +188,14 @@ export function ParseControlId(controlId: string): ParsedControlIdType | undefin
 			return {
 				type: 'custom-action',
 				customActionId: matchCustomAction[1],
+			}
+		}
+
+		const matchCustomFeedback = controlId.match(/^custom-feedback:(.*)$/)
+		if (matchCustomFeedback) {
+			return {
+				type: 'custom-feedback',
+				customFeedbackId: matchCustomFeedback[1],
 			}
 		}
 

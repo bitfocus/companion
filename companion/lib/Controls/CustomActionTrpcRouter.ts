@@ -5,54 +5,19 @@ import { isCustomActionsConnectionId } from '@companion-app/shared/ConnectionId.
 import { CreateCustomActionControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import {
 	CustomActionOutputSchema,
+	getCustomActionCallDefinition,
 	type ClientCustomActionData,
 	type CustomActionsUpdate,
 	type CustomActionsUpdateInitOp,
 } from '@companion-app/shared/Model/CustomActionModel.js'
-import { AuthorableInputFieldSchema, type ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import type { ControlChangeEvents } from './ControlDependencies.js'
 import type { ControlStore } from './ControlStore.js'
 import { ControlCustomAction } from './ControlTypes/CustomAction.js'
 import type { CustomActionCollections } from './CustomActionCollections.js'
+import { createCustomEntityInputsProcedures } from './CustomEntities/CustomEntityTrpc.js'
 import type { ControlsFactory } from './Factory.js'
 import { validateCustomActionControlId } from './Util.js'
-
-/**
- * Update the actions which run a custom action, after one of its inputs has been renamed
- * @param controlStore The store of all the controls
- * @param customActionControlId The control id of the custom action
- * @param fromId The old id of the input
- * @param toId The new id of the input
- */
-export function renameCustomActionInputInCallers(
-	controlStore: ControlStore,
-	customActionControlId: string,
-	fromId: string,
-	toId: string
-): void {
-	const parsedId = ParseControlId(customActionControlId)
-	if (parsedId?.type !== 'custom-action') return
-
-	for (const control of controlStore.controls.values()) {
-		if (!control.supportsEntities) continue
-
-		let changed = false
-		for (const entity of control.entities.getAllEntities()) {
-			if (!isCustomActionsConnectionId(entity.connectionId) || entity.definitionId !== parsedId.customActionId) continue
-			if (!(fromId in entity.rawOptions)) continue
-
-			const newOptions: ExpressionableOptionsObject = {}
-			for (const [key, value] of Object.entries(entity.rawOptions)) {
-				newOptions[key === fromId ? toId : key] = value
-			}
-			entity.setOptions(newOptions)
-			changed = true
-		}
-
-		if (changed) control.commitChange(false)
-	}
-}
 
 /**
  * Update the actions which run a custom action, after one of its outputs has been renamed, so that they keep where
@@ -179,48 +144,7 @@ export function createCustomActionTrpcRouter(
 			return true
 		}),
 
-		inputAdd: publicProcedure
-			.input(z.object({ controlId: z.string(), field: AuthorableInputFieldSchema }))
-			.mutation(({ input }) => {
-				const control = getCustomAction(input.controlId)
-				if (!control) return false
-
-				return control.inputAdd(input.field)
-			}),
-
-		inputRemove: publicProcedure
-			.input(z.object({ controlId: z.string(), inputId: z.string() }))
-			.mutation(({ input }) => {
-				const control = getCustomAction(input.controlId)
-				if (!control) return false
-
-				return control.inputRemove(input.inputId)
-			}),
-
-		inputMove: publicProcedure
-			.input(z.object({ controlId: z.string(), inputId: z.string(), index: z.number().int().min(0) }))
-			.mutation(({ input }) => {
-				const control = getCustomAction(input.controlId)
-				if (!control) return false
-
-				return control.inputMove(input.inputId, input.index)
-			}),
-
-		inputUpdate: publicProcedure
-			.input(z.object({ controlId: z.string(), inputId: z.string(), field: AuthorableInputFieldSchema }))
-			.mutation(({ input }) => {
-				const control = getCustomAction(input.controlId)
-				if (!control) return false
-
-				if (!control.inputUpdate(input.inputId, input.field)) return false
-
-				// Make sure the actions using the custom action keep their value for a renamed input
-				if (input.field.id !== input.inputId) {
-					renameCustomActionInputInCallers(controlStore, input.controlId, input.inputId, input.field.id)
-				}
-
-				return true
-			}),
+		...createCustomEntityInputsProcedures(controlStore, getCustomAction, getCustomActionCallDefinition),
 
 		outputAdd: publicProcedure
 			.input(z.object({ controlId: z.string(), output: CustomActionOutputSchema }))

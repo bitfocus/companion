@@ -1,4 +1,4 @@
-import { isCustomActionsConnectionId, isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
+import { isCustomActionsConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { getCustomActionCallDefinition, type CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
 import {
@@ -14,7 +14,8 @@ import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
 } from '../../Variables/VariablesAndExpressionParser.js'
-import type { CustomActionValues } from '../CustomActionRunFrame.js'
+import { containsCustomEntityCall, createCustomEntityParser } from '../CustomEntities/CustomEntityPool.js'
+import type { CustomEntityValues } from '../CustomEntities/Types.js'
 import { isInternalUserValueFeedback, type ControlEntityInstance } from './EntityInstance.js'
 import type { ControlEntityList } from './EntityList.js'
 import { ControlEntityListPoolBase, type ControlEntityListPoolProps } from './EntityListPoolBase.js'
@@ -97,37 +98,22 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 	 * @param options Options for the parser
 	 */
 	createRunParser(
-		frame: CustomActionValues,
+		frame: CustomEntityValues,
 		localVariableEntities: ControlEntityInstance[],
 		callerLocation: ControlLocation | null,
 		callerPageEntities: ControlEntityInstance[] | null,
 		overrideVariableValues: VariableValues,
 		options: ExpressionParserOptions
 	): VariablesAndExpressionParser {
-		const createParser = (values: VariableValues) =>
-			this.variableValues.createVariablesAndExpressionParser(callerLocation, null, values, callerPageEntities, options)
-
-		// The local variables are passed as overrides, which resolve when the parser has no local values of its own
-		const values: VariableValues = { ...overrideVariableValues }
-
-		// Resolve the variables in order, so that a computed variable can use the values of those before it
-		for (const entity of localVariableEntities) {
-			const name = entity.rawLocalVariableName
-			if (!name) continue
-
-			if (frame.localValues.has(name)) {
-				values[`local:${name}`] = frame.localValues.get(name)
-			} else if (isInternalUserValueFeedback(entity) || !isInternalConnectionId(entity.connectionId)) {
-				// A user value which has not been set in this run has its startup value, and a module feedback can
-				// only provide its cached value
-				values[`local:${name}`] = entity.getResolvedFeedbackValue(null)
-			} else {
-				// A computed variable is evaluated for this run, so that it sees the inputs and variables of the run
-				values[`local:${name}`] = entity.getResolvedFeedbackValue({ parser: createParser(values) })
-			}
-		}
-
-		return createParser(values)
+		return createCustomEntityParser(
+			this.variableValues,
+			frame,
+			localVariableEntities,
+			callerLocation,
+			callerPageEntities,
+			overrideVariableValues,
+			options
+		)
 	}
 
 	/**
@@ -157,13 +143,7 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 	 */
 	#containsSelfCall(entityModels: SomeEntityModel[]): boolean {
 		const selfCall = getCustomActionCallDefinition(this.controlId)
-		if (!selfCall) return false
-
-		return entityModels.some(
-			(entity) =>
-				(entity.connectionId === selfCall.connectionId && entity.definitionId === selfCall.definitionId) ||
-				Object.values(entity.children ?? {}).some((children) => this.#containsSelfCall(children ?? []))
-		)
+		return !!selfCall && containsCustomEntityCall(entityModels, selfCall)
 	}
 
 	/**

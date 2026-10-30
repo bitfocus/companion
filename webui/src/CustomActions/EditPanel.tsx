@@ -1,20 +1,14 @@
 import { faPlay } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useCallback, useContext, useId, useMemo } from 'react'
-import type { JsonValue } from 'type-fest'
+import { useCallback, useContext, useMemo } from 'react'
 import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { toCompanionInputField, type AuthorableInputField } from '@companion-app/shared/Model/Options.js'
+import { toCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
-import { FormLabel } from '~/Components/Form.js'
-import { Grid } from '~/Components/Grid.js'
-import {
-	InputFieldDefinitionsEditor,
-	type InputFieldDefinitionsService,
-} from '~/Components/InputFieldDefinitionsEditor/InputFieldDefinitionsEditor.js'
 import { TabArea } from '~/Components/TabArea.js'
-import { TextInputFieldSimple } from '~/Components/TextInputField.js'
+import { CustomEntityDetails } from '~/Controls/CustomEntityDetails.js'
+import { CustomEntityInputsEditor } from '~/Controls/CustomEntityInputsEditor.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { useLocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
@@ -84,7 +78,13 @@ function CustomActionPanelContent({ config, controlId, testRunning }: CustomActi
 	return (
 		<div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 			<div className="px-3 pt-2 shrink-0">
-				<CustomActionDetails config={config} controlId={controlId} />
+				<CustomEntityDetails
+					controlId={controlId}
+					name={config.options.name}
+					description={config.options.description}
+					namePlaceholder="Custom action name"
+					descriptionPlaceholder="Shown when choosing the action"
+				/>
 				<div className="flex justify-end">
 					<AddNoteButton state={notesState} />
 				</div>
@@ -128,7 +128,17 @@ function CustomActionPanelContent({ config, controlId, testRunning }: CustomActi
 				<div className="max-w-readable">
 					{activeTab === 'inputs' && (
 						<MyErrorBoundary>
-							<CustomActionInputsEditor controlId={controlId} inputs={config.inputs} />
+							<CustomEntityInputsEditor
+								controlId={controlId}
+								kind="customActions"
+								inputs={config.inputs}
+								subheading={
+									<p className="text-sm text-muted">
+										The inputs are the options of the action. Their values are available to the actions as{' '}
+										<code>$(options:id)</code>.
+									</p>
+								}
+							/>
 						</MyErrorBoundary>
 					)}
 
@@ -184,94 +194,6 @@ function CustomActionPanelContent({ config, controlId, testRunning }: CustomActi
 				</div>
 			</div>
 		</div>
-	)
-}
-
-function CustomActionDetails({ config, controlId }: { config: CustomActionModel; controlId: string }) {
-	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
-	const nameId = useId()
-	const descriptionId = useId()
-
-	const setOption = useCallback(
-		(key: string, value: JsonValue | undefined) => {
-			setOptionsFieldMutation.mutateAsync({ controlId, key, value }).catch((e) => {
-				console.error(`Set ${key} failed: ${e}`)
-			})
-		},
-		[setOptionsFieldMutation, controlId]
-	)
-
-	return (
-		<Grid.Row className="sm:gap-2">
-			<FormLabel htmlFor={nameId} sm={4} column="sm">
-				Name
-			</FormLabel>
-			<Grid.Col sm={8}>
-				<TextInputFieldSimple
-					id={nameId}
-					value={config.options.name}
-					setValue={(value) => setOption('name', value)}
-					placeholder="Custom action name"
-				/>
-			</Grid.Col>
-
-			<FormLabel htmlFor={descriptionId} sm={4} column="sm">
-				Description
-			</FormLabel>
-			<Grid.Col sm={8}>
-				<TextInputFieldSimple
-					id={descriptionId}
-					value={config.options.description}
-					setValue={(value) => setOption('description', value)}
-					placeholder="Shown when choosing the action"
-				/>
-			</Grid.Col>
-		</Grid.Row>
-	)
-}
-
-function CustomActionInputsEditor({ controlId, inputs }: { controlId: string; inputs: AuthorableInputField[] }) {
-	const addMutation = useMutationExt(trpc.controls.customActions.inputAdd.mutationOptions())
-	const removeMutation = useMutationExt(trpc.controls.customActions.inputRemove.mutationOptions())
-	const moveMutation = useMutationExt(trpc.controls.customActions.inputMove.mutationOptions())
-	const updateMutation = useMutationExt(trpc.controls.customActions.inputUpdate.mutationOptions())
-
-	const service = useMemo(
-		(): InputFieldDefinitionsService => ({
-			addField: (field) => {
-				addMutation.mutateAsync({ controlId, field }).catch((e) => console.error('Failed to add input', e))
-			},
-			removeField: (inputId) => {
-				removeMutation.mutateAsync({ controlId, inputId }).catch((e) => console.error('Failed to remove input', e))
-			},
-			moveField: (inputId, index) => {
-				moveMutation.mutateAsync({ controlId, inputId, index }).catch((e) => console.error('Failed to move input', e))
-			},
-			updateField: (inputId, field) => {
-				updateMutation
-					.mutateAsync({ controlId, inputId, field })
-					.catch((e) => console.error('Failed to update input', e))
-			},
-		}),
-		[addMutation, removeMutation, moveMutation, updateMutation, controlId]
-	)
-
-	return (
-		<InputFieldDefinitionsEditor
-			heading="Inputs"
-			subheading={
-				<p className="text-sm text-muted">
-					The inputs are the options of the action. Their values are available to the actions as{' '}
-					<code>$(options:id)</code>.
-				</p>
-			}
-			headingActions={null}
-			fields={inputs}
-			service={service}
-			readonly={false}
-			localVariablesStore={null}
-			collapseStorageId={`custom_action_inputs_${controlId}`}
-		/>
 	)
 }
 

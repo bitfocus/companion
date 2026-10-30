@@ -111,6 +111,7 @@ export class ControlExpressionVariable
 			renderClock: deps.renderClock,
 			getPageVariableEntities: deps.getPageVariableEntities,
 			customActionInstances: deps.customActionInstances,
+			customFeedbackInstances: deps.customFeedbackInstances,
 		})
 
 		this.options = structuredClone(ControlExpressionVariable.DefaultOptions)

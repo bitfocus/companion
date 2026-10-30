@@ -3,6 +3,7 @@ import { action, observable, type ObservableMap } from 'mobx'
 import { computedFn } from 'mobx-utils'
 import {
 	CUSTOM_ACTIONS_CONNECTION_ID,
+	CUSTOM_FEEDBACKS_CONNECTION_ID,
 	getVirtualConnectionLabel,
 	INTERNAL_CONNECTION_ID,
 } from '@companion-app/shared/ConnectionId.js'
@@ -179,6 +180,11 @@ export class EntityDefinitionsForTypeStore {
 			...this.#buildConnectionOptions(
 				CUSTOM_ACTIONS_CONNECTION_ID,
 				getVirtualConnectionLabel(CUSTOM_ACTIONS_CONNECTION_ID) ?? CUSTOM_ACTIONS_CONNECTION_ID,
+				feedbackListType
+			),
+			...this.#buildConnectionOptions(
+				CUSTOM_FEEDBACKS_CONNECTION_ID,
+				getVirtualConnectionLabel(CUSTOM_FEEDBACKS_CONNECTION_ID) ?? CUSTOM_FEEDBACKS_CONNECTION_ID,
 				feedbackListType
 			),
 		]

@@ -10,6 +10,7 @@ import {
 	type PresetReferenceButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
+import type { CustomFeedbackModel } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExportTriggerContent } from '@companion-app/shared/Model/Export/Latest.js'
 import type { ExpressionVariableModel } from '@companion-app/shared/Model/ExpressionVariableModel.js'
@@ -150,6 +151,43 @@ export function fixupCustomActionControl(
 		connectionIdRemap,
 		outboundSurfaceIdRemap
 	).visitEntities([], [...result.localVariables, ...result.actions])
+
+	return result
+}
+
+export function fixupCustomFeedbackControl(
+	internalModule: InternalController,
+	control: CustomFeedbackModel,
+	instanceIdMap: InstanceAppliedRemappings,
+	outboundSurfaceIdRemap: Record<string, string>
+): CustomFeedbackModel {
+	// Future: this does not feel durable
+
+	const connectionLabelRemap: Record<string, string> = {}
+	const connectionIdRemap: Record<string, string> = {}
+	for (const [oldId, info] of Object.entries(instanceIdMap)) {
+		if (info.oldLabel && info.label !== info.oldLabel) {
+			connectionLabelRemap[info.oldLabel] = info.label
+		}
+		if (info.id && info.id !== oldId) {
+			connectionIdRemap[oldId] = info.id
+		}
+	}
+
+	const result: CustomFeedbackModel = {
+		type: 'custom-feedback',
+		options: structuredClone(control.options),
+		inputs: structuredClone(control.inputs || []),
+		feedbacks: fixupEntitiesRecursive(instanceIdMap, structuredClone(control.feedbacks || [])),
+		localVariables: fixupEntitiesRecursive(instanceIdMap, structuredClone(control.localVariables || [])),
+	}
+
+	new VisitorReferencesUpdater(
+		internalModule,
+		connectionLabelRemap,
+		connectionIdRemap,
+		outboundSurfaceIdRemap
+	).visitEntities([], [...result.localVariables, ...result.feedbacks])
 
 	return result
 }

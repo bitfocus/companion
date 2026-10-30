@@ -2,6 +2,7 @@ import { nanoid } from 'nanoid'
 import { getVirtualConnectionIds, INTERNAL_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import {
 	CreateCustomActionControlId,
+	CreateCustomFeedbackControlId,
 	CreateExpressionVariableControlId,
 	CreateTriggerControlId,
 } from '@companion-app/shared/ControlId.js'
@@ -37,6 +38,7 @@ import type { VariablesController } from '../Variables/Controller.js'
 import {
 	fixupButtonReferenceControl,
 	fixupCustomActionControl,
+	fixupCustomFeedbackControl,
 	fixupExpressionVariableControl,
 	fixupLayeredButtonControl,
 	fixupLinkButtonControl,
@@ -211,6 +213,23 @@ export class ImportController {
 				)
 
 				this.#controlsController.importCustomAction(controlId, fixedControlObj)
+			}
+		}
+
+		// Import custom feedbacks
+		if (isImporting(config.customFeedbacks)) {
+			this.#controlsController.replaceCustomFeedbackCollections(data.customFeedbackCollections || [])
+
+			for (const [id, customFeedbackDefinition] of Object.entries(data.customFeedbacks || {})) {
+				const controlId = CreateCustomFeedbackControlId(id)
+				const fixedControlObj = fixupCustomFeedbackControl(
+					this.#internalModule,
+					customFeedbackDefinition,
+					instanceIdMap,
+					outboundSurfaceIdRemap
+				)
+
+				this.#controlsController.importCustomFeedback(controlId, fixedControlObj)
 			}
 		}
 

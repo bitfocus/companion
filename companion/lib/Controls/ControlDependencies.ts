@@ -2,6 +2,7 @@ import type { EventEmitter } from 'node:events'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
 import type { CustomActionsUpdate } from '@companion-app/shared/Model/CustomActionModel.js'
+import type { CustomFeedbacksUpdate } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import type {
 	ClientExpressionVariableData,
 	ExpressionVariableUpdate,
@@ -19,6 +20,7 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import type { ActionRunner } from './ActionRunner.js'
 import type { CustomActionInstanceManager } from './CustomActions/CustomActionInstanceManager.js'
+import type { CustomFeedbackInstanceManager } from './CustomFeedbacks/CustomFeedbackInstanceManager.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import type { SomeControl } from './IControlFragments.js'
@@ -53,6 +55,9 @@ export interface ControlExternalDependencies {
 
 	/** Builds and runs the copies of custom actions held by the actions which call them */
 	readonly customActionInstances: CustomActionInstanceManager
+
+	/** Builds the copies of custom feedbacks held by the feedbacks which use them, and gives those their values */
+	readonly customFeedbackInstances: CustomFeedbackInstanceManager
 }
 
 export interface ControlDependencies extends ControlExternalDependencies {
@@ -82,6 +87,8 @@ export interface ControlCommonEvents {
 	expressionVariableDefinitionChanged: [id: string, info: ClientExpressionVariableData | null]
 	/** Emitted when a custom action is changed or deleted, so that its action definition can be updated */
 	customActionDefinitionChanged: [controlId: string]
+	/** Emitted when a custom feedback is changed or deleted, so that its feedback definition can be updated */
+	customFeedbackDefinitionChanged: [controlId: string]
 	layeredStyleElementChanged: [controlId: string, elementId: string]
 
 	presetDrawn: [controlId: string, render: ImageResult]
@@ -106,4 +113,5 @@ export type ControlChangeEvents = {
 	triggerChange: [controlId: string, diff: TriggersUpdate]
 	expressionVariableChange: [controlId: string, diff: ExpressionVariableUpdate]
 	customActionChange: [controlId: string, diff: CustomActionsUpdate]
+	customFeedbackChange: [controlId: string, diff: CustomFeedbacksUpdate]
 }

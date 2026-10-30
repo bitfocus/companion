@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
 import {
 	isCustomActionsConnectionId,
+	isCustomFeedbacksConnectionId,
 	isInternalConnectionId,
 	isVirtualConnectionId,
 } from '@companion-app/shared/ConnectionId.js'
@@ -321,6 +322,8 @@ export class ControlEntityInstance {
 			this.#internalModule.entityDelete(this.asEntityModel())
 		} else if (isCustomActionsConnectionId(this.#data.connectionId)) {
 			this.#scope.customActionInstances.entityDelete(this)
+		} else if (isCustomFeedbacksConnectionId(this.#data.connectionId)) {
+			this.#scope.customFeedbackInstances.entityDelete(this)
 		} else if (!isVirtualConnectionId(this.#data.connectionId)) {
 			this.#processManager.connectionEntityDelete(this.asEntityModel(), this.#controlId).catch((e) => {
 				this.#logger.silly(`entityDelete to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
@@ -423,6 +426,9 @@ export class ControlEntityInstance {
 			} else if (isCustomActionsConnectionId(thisData.connectionId)) {
 				// Build or update the copy of the custom action held by this action
 				this.#scope.customActionInstances.entityUpdate(this, this.#controlId, this.#scope)
+			} else if (isCustomFeedbacksConnectionId(thisData.connectionId)) {
+				// Build or update the copy of the custom feedback held by this feedback
+				this.#scope.customFeedbackInstances.entityUpdate(this, this.#controlId, this.#scope)
 			} else if (!isVirtualConnectionId(thisData.connectionId)) {
 				// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
 				// The EntityManager will not subscribe disabled entities to the module.

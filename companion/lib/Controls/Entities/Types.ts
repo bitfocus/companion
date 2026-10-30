@@ -14,6 +14,7 @@ import type {
 	VariablesAndExpressionParser,
 } from '../../Variables/VariablesAndExpressionParser.js'
 import type { CustomActionInstancesForEntity } from '../CustomActions/CustomActionInstanceManager.js'
+import type { CustomFeedbackInstancesForEntity } from '../CustomFeedbacks/CustomFeedbackInstanceManager.js'
 import type { EntityPoolSpecialExpressionManager } from './EntitySpecialExpressionManager.js'
 
 export type { FeedbackExecutionContext } from '../../Internal/Types.js'
@@ -38,7 +39,7 @@ export interface EntityScope {
 	/** Tracks the expressions of the entities which are not part of their options, such as isInverted */
 	readonly specialExpressionManager: EntityPoolSpecialExpressionManager
 	/**
-	 * The control ids of the custom actions the entities are running inside, outermost first.
+	 * The control ids of the custom actions and feedbacks the entities are running inside, outermost first.
 	 * Empty for the entities of an ordinary control
 	 */
 	readonly customActionChain: ReadonlyArray<string>
@@ -49,6 +50,8 @@ export interface EntityScope {
 	 * of a custom action. See {@link scopeReferencedVariableIds}
 	 */
 	readonly localVariablesScopeId: string | null
+	/** Builds the copy of a custom feedback held by a feedback which uses it */
+	readonly customFeedbackInstances: CustomFeedbackInstancesForEntity
 	/** Create a parser for the options of the entities */
 	createVariablesAndExpressionParser(
 		overrideVariableValues: VariableValues | null,
