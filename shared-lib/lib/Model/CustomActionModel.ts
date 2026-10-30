@@ -32,6 +32,32 @@ export function getCustomActionCallDefinition(
 }
 
 /**
+ * The ids (`<connectionId>:<definitionId>`) of the custom actions which can't be added to a control, as running them
+ * there would come back to the custom action being edited: the custom action itself, and any which call it
+ * @param controlId The control being edited
+ * @param customActions Each custom action, by its control id
+ */
+export function getCustomActionCallsExcludedFrom(
+	controlId: string,
+	customActions: Iterable<[string, Pick<ClientCustomActionData, 'calledCustomActionIds'>]>
+): Set<string> {
+	const excluded = new Set<string>()
+
+	const self = getCustomActionCallDefinition(controlId)
+	if (!self) return excluded
+
+	excluded.add(`${self.connectionId}:${self.definitionId}`)
+	for (const [otherControlId, info] of customActions) {
+		const other = getCustomActionCallDefinition(otherControlId)
+		if (other && info.calledCustomActionIds.includes(self.definitionId)) {
+			excluded.add(`${other.connectionId}:${other.definitionId}`)
+		}
+	}
+
+	return excluded
+}
+
+/**
  * An output of a custom action: one of its local variables, whose value is written to wherever the action which
  * calls it chooses, each time it is set during a run
  */
@@ -68,6 +94,12 @@ export type CustomActionModel = z.output<typeof CustomActionModelSchema>
 
 export interface ClientCustomActionData extends CustomActionOptions {
 	type: 'custom-action'
+	/** The ids of every custom action it calls, directly or through others */
+	calledCustomActionIds: string[]
+	/** The ids along a path of calls which comes back to it, starting with it, or null if there is none */
+	callLoop: string[] | null
+	/** Whether a chain of calls from it nests more deeply than is allowed */
+	nestedTooDeep: boolean
 }
 
 export type CustomActionsUpdate =
