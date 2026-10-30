@@ -1,11 +1,11 @@
 import { useDragDropMonitor } from '@dnd-kit/react'
 import { isSortable, useSortable } from '@dnd-kit/react/sortable'
 import { observer } from 'mobx-react-lite'
-import { useCallback, useContext, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useMemo, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { optionsObjectToExpressionOptions, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
-import { EditorRow } from '~/Components/EditorRow.js'
+import { EditorRow, useNoteEditor } from '~/Components/EditorRow.js'
 import { Form } from '~/Components/Form.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { Grid } from '~/Components/Grid'
@@ -205,13 +205,13 @@ const EventEditor = observer(function EventEditor({
 
 	const canSetHeadline = !!service.setHeadline
 	const headline = event.headline
-	const [noteEditing, setNoteEditing] = useState(false)
-	const doEditHeadline = useCallback(() => setNoteEditing(true), [])
+	const note = useNoteEditor()
+	const doEditHeadline = useCallback(() => note.setEditing(true), [note])
 
 	const doCollapse = useCallback(() => {
-		setNoteEditing(false)
+		note.setEditing(false)
 		panelCollapseHelper.setPanelCollapsed(event.id, true)
-	}, [panelCollapseHelper, event.id])
+	}, [panelCollapseHelper, event.id, note])
 	const doExpand = useCallback(
 		() => panelCollapseHelper.setPanelCollapsed(event.id, false),
 		[panelCollapseHelper, event.id]
@@ -233,8 +233,11 @@ const EventEditor = observer(function EventEditor({
 				onToggleCollapsed={hasDetails ? (isCollapsed ? doExpand : doCollapse) : null}
 				controls={
 					<>
-						{canSetHeadline && !noteEditing && !isCollapsed && (
+						{canSetHeadline && !note.editing && !isCollapsed && (
 							<EditorRow.NoteButton itemLabel="event" hasNote={!!headline} disabled={false} onClick={doEditHeadline} />
+						)}
+						{note.editing && !isCollapsed && service.setHeadline && (
+							<EditorRow.ClearNoteButton note={note} setHeadline={service.setHeadline} disabled={!headline} />
 						)}
 						<EditorRow.DuplicateButton itemLabel="event" disabled={false} onClick={service.performDuplicate} />
 						<EditorRow.RemoveButton itemLabel="event" disabled={false} onClick={service.performDelete} />
@@ -252,12 +255,11 @@ const EventEditor = observer(function EventEditor({
 				}
 			>
 				<div className="flex flex-col flex-1 min-w-0 gap-0.5">
-					<EditorRow.Title isCollapsed={isCollapsed}>{name}</EditorRow.Title>
-					<EditorRow.Headline
+					<EditorRow.Name
+						title={name}
 						headline={headline}
 						setHeadline={service.setHeadline ?? null}
-						editing={noteEditing}
-						setEditing={setNoteEditing}
+						note={note}
 						placeholder="Describe the intent of the event"
 						isCollapsed={isCollapsed}
 						readonly={false}

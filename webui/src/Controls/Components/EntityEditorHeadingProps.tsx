@@ -23,16 +23,13 @@ export const EntityEditorHeading = observer(function EntityEditorHeading({
 
 	const ownerIdString = stringifyEntityOwnerId(ownerId)
 
-	// Only offered alongside a heading, which is where they are shown
-	const offerCollapse = !!heading || (!!headingActions && headingActions.length > 0)
-
 	return (
 		<ListHeading
 			heading={heading}
 			subheading={subheading}
-			actions={headingActions}
+			actions={headingActions && headingActions.length > 0 ? headingActions : null}
 			collapse={
-				offerCollapse && childEntityIds.length >= 1
+				childEntityIds.length >= 1
 					? {
 							canExpandAll: panelCollapseHelper.canExpandAll(ownerIdString, childEntityIds),
 							canCollapseAll: panelCollapseHelper.canCollapseAll(ownerIdString, childEntityIds),

@@ -186,16 +186,6 @@
 	min-width: 0;
 }
 
-.edit-button-panel .entity-editor-heading-actions .button {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 1.75rem;
-	height: 1.75rem;
-	padding: 0.25rem;
-	border-radius: 0.375rem;
-}
-
 .edit-button-panel .entity-category > .text-xs.text-muted {
 	display: block;
 	margin: -0.25rem 0 0.625rem;

@@ -5,14 +5,14 @@ import { THEME_CHOICES } from '~/Theme/themeChoices.js'
 import { themeStore } from '~/Theme/ThemeState.js'
 import { UserConfigHeadingRow } from '../Components/UserConfigHeadingRow.js'
 
-/** The light/dark theme. Kept in this browser rather than the user config, so each station can differ */
+/** The light/dark color mode. Kept in this browser rather than the user config, so each station can differ */
 export const AppearanceConfig = observer(function AppearanceConfig() {
 	return (
 		<>
 			<UserConfigHeadingRow label="Appearance" />
 			<tr>
 				<td>
-					Theme
+					Color mode
 					<div className="text-xs text-muted">Saved in this browser only.</div>
 				</td>
 				<td className="settings-value-end">

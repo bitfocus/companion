@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite'
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, type EntityOwner, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
-import { EditorRow } from '~/Components/EditorRow.js'
+import { EditorRow, useNoteEditor } from '~/Components/EditorRow.js'
 import { VariableValueDisplayPopover } from '~/Components/VariableValueDisplay.js'
 import type { IEntityEditorActionService } from '~/Services/Controls/ControlEntitiesService.js'
 import type { LocalVariablesStore } from '../LocalVariablesStore.js'
@@ -39,13 +39,13 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 	localVariablePrefix,
 }: EntityCellControlProps) {
 	const canSetHeadline = !!service.setHeadline
-	const [noteEditing, setNoteEditing] = useState(false)
+	const note = useNoteEditor()
 
 	const toggleCollapse = useCallback(() => {
 		if (!canCollapse) return
-		if (!isPanelCollapsed) setNoteEditing(false)
+		if (!isPanelCollapsed) note.setEditing(false)
 		setPanelCollapsed(!isPanelCollapsed)
-	}, [canCollapse, isPanelCollapsed, setPanelCollapsed])
+	}, [canCollapse, isPanelCollapsed, setPanelCollapsed, note])
 
 	// When a local variable is collapsed, show its name and current value instead of the definition name
 	const { headline, localVariableValueName } = getEntityRowHeaderDisplay(
@@ -78,12 +78,19 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 			onToggleCollapsed={canCollapse ? toggleCollapse : null}
 			controls={
 				<>
-					{canSetHeadline && !noteEditing && !isPanelCollapsed && (
+					{canSetHeadline && !note.editing && !isPanelCollapsed && (
 						<EditorRow.NoteButton
 							itemLabel={entityTypeLabel}
 							hasNote={!!entity.headline}
 							disabled={readonly}
-							onClick={() => setNoteEditing(true)}
+							onClick={() => note.setEditing(true)}
+						/>
+					)}
+					{note.editing && !isPanelCollapsed && service.setHeadline && (
+						<EditorRow.ClearNoteButton
+							note={note}
+							setHeadline={service.setHeadline}
+							disabled={readonly || !entity.headline}
 						/>
 					)}
 					<EditorRow.DuplicateButton
@@ -124,16 +131,14 @@ export const EntityRowHeader = observer(function EntityRowHeader({
 							/>
 						</div>
 					</div>
-				) : (
+				) : isCollapsedLocalVariable ? (
 					<EditorRow.Title isCollapsed={isPanelCollapsed}>{cleanHeadline}</EditorRow.Title>
-				)}
-
-				{!isCollapsedLocalVariable && (
-					<EditorRow.Headline
+				) : (
+					<EditorRow.Name
+						title={cleanHeadline}
 						headline={entity.headline}
 						setHeadline={service.setHeadline ?? null}
-						editing={noteEditing}
-						setEditing={setNoteEditing}
+						note={note}
 						placeholder={`Describe the intent of the ${entityTypeLabel}`}
 						isCollapsed={isPanelCollapsed}
 						readonly={readonly}

@@ -121,42 +121,44 @@ export const AddInstancePanel = observer(function AddInstancePanel({ service }: 
 	)
 
 	return (
-		<>
-			<div className="secondary-panel-simple-body">
-				{selectedModule ? (
+		<div className="add-instance-panel">
+			{selectedModule ? (
+				<div className="add-instance-scroll">
 					<AddInstanceConfigureStep
 						moduleInfo={selectedModule}
 						service={service}
 						onBack={() => setSelectedModule(null)}
 					/>
-				) : (
-					<div className="w-full">
-						<div className="mb-3 space-y-3 px-1 pt-1">
-							<SearchBox filter={filter} setFilter={setFilter} placeholder="Filter modules..." className="w-full h-9" />
-							<div className="flex flex-wrap items-center justify-between gap-2">
-								<div className="flex flex-wrap items-center gap-1.5">
-									<StatusFilterPill
-										label="All"
-										count={totalModulesCount}
-										isActive={typeFilter.visibility.available}
-										onClick={() => typeFilter.toggleVisibility('available', true)}
-									/>
-									<StatusFilterPill
-										label="Installed"
-										count={installedModulesCount}
-										isActive={!typeFilter.visibility.available}
-										onClick={() => typeFilter.toggleVisibility('available', false)}
-									/>
-								</div>
-								<div className="flex items-center gap-1.5 text-xs text-muted">
-									<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
-									<RefreshModulesList className="inline-flex h-7" />
-									<LinkButton to="/modules" color="secondary" size="sm" className="inline-flex h-7 items-center">
-										Modules Manager
-									</LinkButton>
-								</div>
+				</div>
+			) : (
+				<>
+					<div className="add-instance-filters space-y-3">
+						<SearchBox filter={filter} setFilter={setFilter} placeholder="Filter modules..." className="w-full h-9" />
+						<div className="flex flex-wrap items-center justify-between gap-2">
+							<div className="flex flex-wrap items-center gap-1.5">
+								<StatusFilterPill
+									label="All"
+									count={totalModulesCount}
+									isActive={typeFilter.visibility.available}
+									onClick={() => typeFilter.toggleVisibility('available', true)}
+								/>
+								<StatusFilterPill
+									label="Installed"
+									count={installedModulesCount}
+									isActive={!typeFilter.visibility.available}
+									onClick={() => typeFilter.toggleVisibility('available', false)}
+								/>
+							</div>
+							<div className="flex items-center gap-1.5 text-xs text-muted">
+								<LastUpdatedTimestamp timestamp={modules.storeUpdateInfo.lastUpdated} />
+								<RefreshModulesList className="inline-flex h-7" />
+								<LinkButton to="/modules" color="secondary" size="sm" className="inline-flex h-7 items-center">
+									Modules Manager
+								</LinkButton>
 							</div>
 						</div>
+					</div>
+					<div className="add-instance-scroll">
 						<div id="connection_add_search_results" className="list-card overflow-hidden">
 							{candidates}
 						</div>
@@ -182,9 +184,9 @@ export const AddInstancePanel = observer(function AddInstancePanel({ service }: 
 							</NonIdealState>
 						)}
 					</div>
-				)}
-			</div>
-		</>
+				</>
+			)}
+		</div>
 	)
 })
 
