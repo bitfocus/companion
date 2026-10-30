@@ -1,6 +1,6 @@
 {
   "name": "@companion-app/satellite-protocol",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Wire protocol definitions for the Bitfocus Companion Satellite API",
   "license": "MIT",
   "repository": {
