@@ -49,7 +49,7 @@
 	max-width: 220px;
 }
 
-/* override tailwind setting of 100vh because that can cause cut off UI on mobile */
-.min-h-screen {
+/* 100dvh makes layout on mobile adapt whether toolbars are visible or not */
+.min-h-dvh {
 	min-height: 100dvh;
 }
