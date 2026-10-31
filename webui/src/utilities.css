@@ -48,3 +48,8 @@
 .entity-value-pill {
 	max-width: 220px;
 }
+
+/* 100dvh makes layout on mobile adapt whether toolbars are visible or not */
+.min-h-dvh {
+	min-height: 100dvh;
+}
