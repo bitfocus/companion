@@ -1,5 +1,5 @@
 /**
- * Layout of the macOS DMG window, shared by the background generator (build_dmg_background.mts) and the
+ * Layout of the macOS DMG window, shared by the background generator (build_installer_art.mts) and the
  * electron-builder config (package.mts) so the drawn tiles and arrow line up with where Finder puts the icons.
  */
 /**

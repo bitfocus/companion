@@ -150,7 +150,7 @@ if (process.env.ELECTRON !== '0') {
 				artifactName: 'companion-mac-${arch}.dmg',
 				writeUpdateInfo: false, // The blockmap is only for electron-updater, which we don't use
 				// background.png / background@2x.png are picked up from buildResources and set the window size; see
-				// build_dmg_background.mts
+				// build_installer_art.mts
 				iconSize: DMG_ICON_SIZE,
 				contents: [
 					{ ...DMG_APP_POSITION, type: 'file' },
