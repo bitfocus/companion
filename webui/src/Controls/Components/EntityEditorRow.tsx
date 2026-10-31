@@ -1,8 +1,5 @@
 import { pointerIntersection } from '@dnd-kit/collision'
 import { useSortable } from '@dnd-kit/react/sortable'
-import { faSort } from '@fortawesome/free-solid-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
@@ -12,6 +9,7 @@ import {
 	type EntityOwner,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
+import { EditorRow } from '~/Components/EditorRow.js'
 import { LearnButton } from '~/Components/LearnButton.js'
 import { usePanelCollapseHelperContextForPanel } from '~/Helpers/CollapseHelper.js'
 import { useLazyMountWithHeight } from '~/Hooks/useLazyMountWithHeight.js'
@@ -128,30 +126,19 @@ export const EntityTableRowContent = observer(function EntityTableRowContent({
 	disableLazyMount,
 }: EntityTableRowContentProps): React.JSX.Element {
 	return (
-		<div
-			ref={rowRef}
-			className={classNames('entity-row', {
-				'entity-disabled': !!entity.disabled,
-				'entity-row-grabbing': isDragging,
-			})}
-		>
-			<div ref={dragRef} className="entity-row-reorder">
-				<FontAwesomeIcon icon={faSort} />
-			</div>
-			<div className="entity-row-content">
-				{entity.type === entityType ? (
-					<EntityEditorRowContent
-						ownerId={ownerId}
-						entityTypeLabel={entityTypeLabel}
-						entity={entity}
-						feedbackListType={feedbackListType}
-						disableLazyMount={disableLazyMount}
-					/>
-				) : (
-					<p>Entity is not a {entityTypeLabel}!</p>
-				)}
-			</div>
-		</div>
+		<EditorRow.Root rowRef={rowRef} dragRef={dragRef} disabled={!!entity.disabled} isDragging={!!isDragging}>
+			{entity.type === entityType ? (
+				<EntityEditorRowContent
+					ownerId={ownerId}
+					entityTypeLabel={entityTypeLabel}
+					entity={entity}
+					feedbackListType={feedbackListType}
+					disableLazyMount={disableLazyMount}
+				/>
+			) : (
+				<p>Entity is not a {entityTypeLabel}!</p>
+			)}
+		</EditorRow.Root>
 	)
 })
 

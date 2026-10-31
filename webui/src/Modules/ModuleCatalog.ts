@@ -64,10 +64,11 @@ export function groupModuleCatalog(
 		}
 		group.modules.push(module)
 	}
-	if (!searching) {
-		for (const group of groups.values()) {
-			group.modules.sort((a, b) => getModuleProductName(a).localeCompare(getModuleProductName(b)))
-		}
+	// Search results arrive best match first, so insertion order ranks each group by its best match
+	if (searching) return Array.from(groups.entries())
+
+	for (const group of groups.values()) {
+		group.modules.sort((a, b) => getModuleProductName(a).localeCompare(getModuleProductName(b)))
 	}
 	return Array.from(groups.entries()).sort(([a], [b]) => {
 		if (a === b) return 0

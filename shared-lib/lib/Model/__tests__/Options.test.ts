@@ -1,6 +1,13 @@
 import { describe, expect, test } from 'vitest'
 import { elementSchemas } from '../../Graphics/ElementPropertiesSchemas.js'
-import { isFieldDisabledForControl, SomeCompanionInputFieldSchema, type SomeCompanionInputField } from '../Options.js'
+import {
+	AuthorableInputFieldSchema,
+	CompanionFieldVariablesSupport,
+	isFieldDisabledForControl,
+	SomeCompanionInputFieldSchema,
+	toCompanionInputField,
+	type SomeCompanionInputField,
+} from '../Options.js'
 
 describe('SomeCompanionInputFieldSchema', () => {
 	test('accepts every element property definition', () => {
@@ -108,5 +115,83 @@ describe('isFieldDisabledForControl', () => {
 	test('is validated by the schema', () => {
 		expect(SomeCompanionInputFieldSchema.safeParse(field).success).toBe(true)
 		expect(SomeCompanionInputFieldSchema.safeParse({ ...field, disabledForControlTypes: ['nope'] }).success).toBe(false)
+	})
+})
+
+describe('AuthorableInputFieldSchema', () => {
+	test('accepts a field a user can author, dropping the properties only used by Companion and modules', () => {
+		const field = {
+			type: 'number',
+			id: 'n',
+			label: 'N',
+			default: 1,
+			min: 0,
+			max: 10,
+			tooltip: 'kept',
+			width: 6,
+			deferParsing: true,
+			disabledForControlTypes: ['trigger'],
+			isVisibleUi: { type: 'expression', fn: 'true' },
+			disableAutoExpression: true,
+		}
+
+		expect(AuthorableInputFieldSchema.parse(field)).toEqual({
+			type: 'number',
+			id: 'n',
+			label: 'N',
+			default: 1,
+			min: 0,
+			max: 10,
+			tooltip: 'kept',
+		})
+	})
+
+	test("rejects an id which can't be used in a variable", () => {
+		const field = { type: 'checkbox', id: 'a b', label: 'A', default: false }
+		expect(SomeCompanionInputFieldSchema.safeParse(field).success).toBe(true)
+		expect(AuthorableInputFieldSchema.safeParse(field).success).toBe(false)
+	})
+
+	test.each([
+		[
+			'a number which can be auto',
+			{ type: 'number', id: 'n', label: 'N', default: null, min: 0, max: 1, allowNull: true },
+		],
+		[
+			'old style parsing of variables',
+			{ type: 'textinput', id: 't', label: 'T', useVariables: CompanionFieldVariablesSupport.Basic },
+		],
+	])("rejects %s, which the editor can't author", (_name, field) => {
+		expect(SomeCompanionInputFieldSchema.safeParse(field).success).toBe(true)
+		expect(AuthorableInputFieldSchema.safeParse(field).success).toBe(false)
+	})
+
+	test.each([
+		['a field for connection config', { type: 'secret-text', id: 'a', label: 'A' }],
+		['an internal field', { type: 'internal:trigger', id: 'a', label: 'A' }],
+		['a table', { type: 'internal:table', id: 'a', label: 'A', default: [], columns: [] }],
+	])('rejects %s', (_name, field) => {
+		expect(SomeCompanionInputFieldSchema.safeParse(field).success).toBe(true)
+		expect(AuthorableInputFieldSchema.safeParse(field).success).toBe(false)
+	})
+})
+
+describe('toCompanionInputField', () => {
+	test('gives a colour as a CSS string', () => {
+		expect(
+			toCompanionInputField({ type: 'colorpicker', id: 'c', label: 'C', default: '#ffffff', enableAlpha: false })
+		).toEqual({
+			type: 'colorpicker',
+			id: 'c',
+			label: 'C',
+			default: '#ffffff',
+			enableAlpha: false,
+			returnType: 'string',
+		})
+	})
+
+	test('leaves other fields as they are', () => {
+		const field = { type: 'checkbox', id: 'b', label: 'B', default: true } as const
+		expect(toCompanionInputField(field)).toBe(field)
 	})
 })

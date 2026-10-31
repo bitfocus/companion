@@ -1,7 +1,7 @@
 // @ts-check
 import os from 'node:os'
 import path from 'node:path'
-import url, { fileURLToPath } from 'node:url'
+import { fileURLToPath } from 'node:url'
 import { getCurrentScope, init } from '@sentry/electron/main'
 import chokidar from 'chokidar'
 import debounceFn from 'debounce-fn'
@@ -14,12 +14,14 @@ import { parse as parsePlist } from 'plist'
 import semver from 'semver'
 import stripAnsi from 'strip-ansi'
 import systeminformation from 'systeminformation'
+import { LAUNCHER_STATUS_LABELS } from '@companion-app/shared/Model/LauncherAppInfo.js'
 import { ConfigReleaseDirs } from '@companion-app/shared/Paths.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
+import { loadLauncherUiPage } from './launcher-ui.js'
 import { getSettingsWindow, showSettings } from './settings.js'
 
 // Show a warning in the launcher window
-/** @type {string | null} */
+/** @type {import('@companion-app/shared/Model/LauncherAppInfo.js').LauncherVersionWarning | null} */
 let version_warning = null
 
 // Electron works on older versions of macos than nodejs, we should give a proper warning if we know companion will get stuck in a crash loop
@@ -40,12 +42,11 @@ if (process.platform === 'darwin') {
 			app.quit()
 		}
 
-		// Note: when updating this, the message inside window.html needs updating to match
 		const futureMinimumVersion = '13.5'
 		const futureSupportedVersions = new semver.Range(`>=${futureMinimumVersion}`)
 
 		if (productVersion && !futureSupportedVersions.test(productVersion)) {
-			version_warning = 'macos'
+			version_warning = { platform: 'macos', minimumVersion: futureMinimumVersion }
 		}
 	} catch (_e) {
 		// We can't figure out if its compatible, so assume it is
@@ -184,20 +185,13 @@ if (!lock) {
 		companionRootPath = fileURLToPath(new URL('../companion', import.meta.url))
 	}
 
-	/**
-	 * @type {{
-	 *   appVersion: string
-	 *   appStatus: string
-	 *   appURL: string
-	 *   appLaunch: string | null
-	 * }}
-	 */
+	/** @type {import('@companion-app/shared/Model/LauncherAppInfo.js').LauncherAppInfo} */
 	let appInfo = {
 		// The version number of the build was set to match the BUILD file
 		appVersion: app.getVersion(),
 
-		appStatus: 'Unknown',
-		appURL: 'Waiting for webserver..',
+		appStatus: 'starting',
+		appMessage: null,
 		appLaunch: null,
 	}
 
@@ -248,6 +242,8 @@ if (!lock) {
 		if (settingsWindow) {
 			settingsWindow.webContents.send('info', configData, appInfo, process.platform, os.hostname())
 		}
+
+		updateTrayMenu()
 	}
 
 	/** @type {RespawnMonitor} */
@@ -451,17 +447,9 @@ if (!lock) {
 			showWindow()
 		})
 
-		thisWindow
-			.loadURL(
-				url.format({
-					pathname: fileURLToPath(new URL('./window.html', import.meta.url)),
-					protocol: 'file:',
-					slashes: true,
-				})
-			)
-			.then(() => {
-				thisWindow.webContents.setBackgroundThrottling(false)
-			})
+		loadLauncherUiPage(thisWindow, 'launcher.html').then(() => {
+			thisWindow.webContents.setBackgroundThrottling(false)
+		})
 
 		let width = 0
 		ipcMain.on('setHeight', (e, height) => {
@@ -501,11 +489,16 @@ if (!lock) {
 			launchUI()
 		})
 
+		ipcMain.on('launcher-copy-url', () => {
+			if (appInfo.appLaunch) electron.clipboard.writeText(appInfo.appLaunch)
+		})
+
 		ipcMain.on('launcher-set-bind-ip', (e, msg) => {
 			if (!msg) return
 
 			console.log('changed bind ip:', msg)
 			uiConfig.set('bind_ip', msg)
+			sendAppInfo()
 
 			rebindHttp()
 		})
@@ -513,6 +506,8 @@ if (!lock) {
 		ipcMain.on('launcher-set-http-port', (e, msg) => {
 			const newPort = Number(msg)
 			if (isNaN(newPort) || newPort < 1024 || newPort > 65535) {
+				// Resend the unchanged config, so the launcher drops the rejected value
+				sendAppInfo()
 				electron.dialog
 					.showMessageBox(thisWindow, {
 						type: 'warning',
@@ -524,6 +519,7 @@ if (!lock) {
 
 			console.log('changed bind port:', newPort)
 			uiConfig.set('http_port', newPort)
+			sendAppInfo()
 
 			rebindHttp()
 		})
@@ -531,6 +527,7 @@ if (!lock) {
 		ipcMain.on('launcher-set-start-minimised', (e, msg) => {
 			console.log('changed start minimized:', msg)
 			uiConfig.set('start_minimised', msg)
+			sendAppInfo()
 		})
 
 		ipcMain.on('launcher-set-run-at-login', (e, msg) => {
@@ -539,6 +536,7 @@ if (!lock) {
 			app.setLoginItemSettings({
 				openAtLogin: !!msg,
 			})
+			sendAppInfo()
 		})
 
 		ipcMain.on('launcher-advanced-settings', (_e, _msg) => {
@@ -679,6 +677,10 @@ if (!lock) {
 			window = null
 		})
 
+		// The tray menu's show/hide item follows the window
+		window.on('show', updateTrayMenu)
+		window.on('hide', updateTrayMenu)
+
 		window.on('ready-to-show', () => {
 			if (!uiConfig.get('start_minimised')) {
 				showWindow()
@@ -703,44 +705,49 @@ if (!lock) {
 			tray.on('click', toggleWindow)
 		}
 
-		const menu = new electron.Menu()
-		menu.append(
-			new electron.MenuItem({
-				label: 'Show/Hide window',
-				click: toggleWindow,
-			})
+		updateTrayMenu()
+	}
+
+	/** Rebuild the tray (macOS menu bar) menu, which shows the current status and window state */
+	function updateTrayMenu() {
+		if (!tray) return
+
+		tray.setContextMenu(
+			electron.Menu.buildFromTemplate([
+				{
+					label: `Companion ${appInfo.appVersion} — ${LAUNCHER_STATUS_LABELS[appInfo.appStatus]}`,
+					enabled: false,
+				},
+				{ type: 'separator' },
+				{
+					label: 'Launch GUI',
+					enabled: appInfo.appStatus === 'running',
+					click: launchUI,
+				},
+				{
+					label: window?.isVisible() ? 'Hide Launcher' : 'Show Launcher',
+					click: toggleWindow,
+				},
+				{ type: 'separator' },
+				{
+					label: 'Scan USB Devices',
+					click: scanUsb,
+				},
+				{
+					label: 'Show Config Folder',
+					click: showConfigFolder,
+				},
+				{
+					label: 'Advanced Settings…',
+					click: () => showSettings(window),
+				},
+				{ type: 'separator' },
+				{
+					label: 'Quit Companion…',
+					click: promptToQuit,
+				},
+			])
 		)
-		menu.append(
-			new electron.MenuItem({
-				label: 'Launch GUI',
-				click: launchUI,
-			})
-		)
-		menu.append(
-			new electron.MenuItem({
-				label: 'Scan USB Devices',
-				click: scanUsb,
-			})
-		)
-		menu.append(
-			new electron.MenuItem({
-				label: 'Show config folder',
-				click: showConfigFolder,
-			})
-		)
-		menu.append(
-			new electron.MenuItem({
-				label: 'Advanced Settings',
-				click: () => showSettings(window),
-			})
-		)
-		menu.append(
-			new electron.MenuItem({
-				label: 'Quit',
-				click: promptToQuit,
-			})
-		)
-		tray.setContextMenu(menu)
 	}
 
 	function launchUI() {
@@ -1055,8 +1062,8 @@ if (!lock) {
 				appInfo = {
 					...appInfo,
 
-					appStatus: 'Unknown',
-					appURL: 'Waiting for webserver..',
+					appStatus: 'starting',
+					appMessage: null,
 					appLaunch: null,
 				}
 				sendAppInfo()

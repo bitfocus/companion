@@ -11,11 +11,15 @@
 
 import { Server as HttpServer } from 'node:http'
 import type express from 'express'
+import type { LauncherHttpStatusMessage } from '@companion-app/shared/Model/LauncherAppInfo.js'
 import LogController from '../Log/Controller.js'
 import { sendOverIpc } from '../Resources/Util.js'
 
 export class UIServer extends HttpServer {
 	readonly #logger = LogController.createLogger('UI/Server')
+
+	/** The 'error' listener of the current bind, replaced on each rebind as it reports that bind's address */
+	#errorListener: ((e: any) => void) | null = null
 
 	constructor(express: express.Express) {
 		super(express)
@@ -29,20 +33,29 @@ export class UIServer extends HttpServer {
 			this.close()
 		}
 		try {
-			this.on('error', (e: any) => {
-				if (e.code == 'EADDRNOTAVAIL') {
-					this.#logger.error(`Failed to bind to: ${bindIp}`)
-					sendOverIpc({
-						messageType: 'http-bind-status',
-						appStatus: 'Error',
-						appURL: `${bindIp} unavailable. Select another IP`,
-						appLaunch: null,
-					})
-				} else {
-					this.#logger.error(e)
+			if (this.#errorListener) this.off('error', this.#errorListener)
+			let listening = false
+			this.#errorListener = (e: any) => {
+				// Once listening, an error (eg EMFILE when accepting a connection) doesn't stop the server, so it is
+				// not a status for the launcher
+				if (listening) {
+					this.#logger.error(`http server error: ${e?.message ?? e}`)
+					return
 				}
-			})
+
+				this.#logger.error(`Failed to bind to ${bindIp}:${bindPort}: ${e?.message ?? e}`)
+				sendOverIpc({
+					messageType: 'http-bind-status',
+					appStatus: 'error',
+					appMessage: getBindErrorMessage(e, bindIp, bindPort),
+					appLaunch: null,
+				} satisfies LauncherHttpStatusMessage)
+			}
+			this.on('error', this.#errorListener)
+
 			this.listen(bindPort, bindIp, () => {
+				listening = true
+
 				const address0 = this.address()
 				const address = typeof address0 === 'object' ? address0 : undefined
 
@@ -52,16 +65,28 @@ export class UIServer extends HttpServer {
 				const url = `http://${ip}:${address?.port}/`
 				setTimeout(() => this.#logger.info(`new url: ${url}`), 2000)
 
-				const info = isBindGlobal ? `All Interfaces: e.g. ${url}` : url
 				sendOverIpc({
 					messageType: 'http-bind-status',
-					appStatus: 'Running',
-					appURL: info,
+					appStatus: 'running',
+					appMessage: isBindGlobal ? 'Listening on all network interfaces' : null,
 					appLaunch: url,
-				})
+				} satisfies LauncherHttpStatusMessage)
 			})
 		} catch (e) {
 			setTimeout(() => this.#logger.error(`http bind error: ${e}`), 2000)
 		}
+	}
+}
+
+function getBindErrorMessage(e: any, bindIp: string, bindPort: number): string {
+	switch (e?.code) {
+		case 'EADDRNOTAVAIL':
+			return `${bindIp} is unavailable. Select another interface.`
+		case 'EADDRINUSE':
+			return `Port ${bindPort} is already in use. Choose another port.`
+		case 'EACCES':
+			return `Not permitted to use port ${bindPort}. Choose another port.`
+		default:
+			return `Could not start the web server: ${e?.message ?? e}`
 	}
 }

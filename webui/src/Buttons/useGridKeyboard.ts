@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { isTypingTarget } from '~/util/isTypingTarget.js'
 import type { ButtonGridStore } from './ButtonGridStore.js'
 import type { GridToolActions } from './GridTools/index.js'
 import type { GridZoomController } from './GridZoom.js'
@@ -155,14 +156,4 @@ export function useGridKeyboard({
 		},
 		[store, actions, gridSize, pageNumber, pageCount, setPageNumber, zoom]
 	)
-}
-
-/** Whether this is somewhere text is being typed, where the keys belong to whatever is being typed in */
-export function isTypingTarget(target: EventTarget | null): boolean {
-	if (!(target instanceof HTMLElement)) return false
-
-	if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return true
-
-	// The expression editor, which is neither
-	return target.classList.contains('native-edit-context')
 }

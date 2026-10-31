@@ -2,6 +2,7 @@ import type { JsonValue } from 'type-fest'
 import z from 'zod'
 import type { CompanionOptionValues, CompanionPresetOptionValues } from '@companion-module/host'
 import { ALL_CONTROL_ID_KINDS, type ControlIdKind } from '../ControlId.js'
+import { assertNever } from '../Util.js'
 import type { DropdownChoice } from './Common.js'
 
 /** Any JSON value */
@@ -511,6 +512,82 @@ export const SomeCompanionInputFieldSchema: z.ZodType<SomeCompanionInputField> =
 	InternalInputFieldTableSchema,
 	InternalInputFieldListSchema,
 ])
+
+/**
+ * The properties of an input field which a user can't author: those only used by fields defined by Companion or a
+ * module, and visibility, as user authored fields are always shown and always allow expressions
+ */
+const NOT_AUTHORABLE_FIELD_PROPERTIES = {
+	expressionDescription: true,
+	width: true,
+	allowInvalidValues: true,
+	deferParsing: true,
+	contextVariableResolution: true,
+	disabledForControlTypes: true,
+	defaultForControlType: true,
+	isVisibleUi: true,
+	disableAutoExpression: true,
+} as const
+
+/** The pattern the id of an input field authored by a user must match, as it is used in a variable */
+export const INPUT_FIELD_ID_PATTERN = /^[\w-]+$/
+
+/**
+ * Schema of an input field which a user can author, such as an input of a custom action. It is one of the types of
+ * field which the input field editor offers, without the properties a user can't author, which are dropped when
+ * parsed
+ */
+export const AuthorableInputFieldSchema = z
+	.discriminatedUnion('type', [
+		// Variables are always parsed by the internal parser, as the other ways are only kept for modules
+		CompanionInputFieldTextInputExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES).extend({
+			useVariables: z.literal(CompanionFieldVariablesSupport.InternalParser).optional(),
+		}),
+		// The value is never 'auto', so the default is always a number
+		CompanionInputFieldNumberExtendedSchema.omit({ ...NOT_AUTHORABLE_FIELD_PROPERTIES, allowNull: true }).extend({
+			default: z.number(),
+		}),
+		CompanionInputFieldCheckboxExtendedSchema.omit({ ...NOT_AUTHORABLE_FIELD_PROPERTIES, displayToggle: true }),
+		CompanionInputFieldDropdownExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES),
+		CompanionInputFieldMultiDropdownExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES),
+		// The value of a colour is always a CSS string, so it isn't stored (see toCompanionInputField)
+		CompanionInputFieldColorExtendedSchema.omit({ ...NOT_AUTHORABLE_FIELD_PROPERTIES, returnType: true }),
+		CompanionInputFieldExpressionExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES),
+		CompanionInputFieldStaticTextExtendedSchema.omit(NOT_AUTHORABLE_FIELD_PROPERTIES),
+	])
+	.refine((field) => INPUT_FIELD_ID_PATTERN.test(field.id), {
+		message: "Id can't be used in a variable",
+		path: ['id'],
+	})
+	.meta({ id: 'AuthorableInputField' })
+
+export type AuthorableInputField = z.infer<typeof AuthorableInputFieldSchema>
+
+/**
+ * The full definition of an input field authored by a user, with what is implied by it not being stored
+ */
+export function toCompanionInputField(field: AuthorableInputField): SomeCompanionInputField {
+	switch (field.type) {
+		case 'colorpicker':
+			return { ...field, returnType: 'string' as const }
+		case 'textinput':
+		case 'number':
+		case 'checkbox':
+		case 'dropdown':
+		case 'multidropdown':
+		case 'expression':
+		case 'static-text':
+			return field
+		default:
+			assertNever(field)
+			return field
+	}
+}
+
+/** The types of input field which a user can author */
+export const AUTHORABLE_INPUT_FIELD_TYPES: ReadonlySet<AuthorableInputField['type']> = new Set(
+	AuthorableInputFieldSchema.options.map((option) => option.shape.type.value)
+)
 
 export type ExpressionOrValue<T> = { value: T; isExpression: false } | { value: string; isExpression: true }
 export type ExpressionableOptionsObject = {

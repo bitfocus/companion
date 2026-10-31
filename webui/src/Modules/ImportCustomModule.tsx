@@ -199,7 +199,7 @@ export function ImportModules(): React.JSX.Element {
 				<FileInputButton
 					color="primary"
 					variant="outline"
-					size="sm"
+					className="h-9 inline-flex items-center justify-center"
 					onFileSelected={loadModuleFile}
 					accept=".tgz"
 					disabled={!importAllowed}
@@ -213,7 +213,7 @@ export function ImportModules(): React.JSX.Element {
 				<FileInputButton
 					color="primary"
 					variant="outline"
-					size="sm"
+					className="h-9 inline-flex items-center justify-center"
 					onFileSelected={loadModuleBundle}
 					accept=".tgz,.gz"
 					disabled={!importAllowed}
