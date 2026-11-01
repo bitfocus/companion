@@ -216,7 +216,12 @@ const ComputeStoreResult: ComputeSpecialExpressionValueFn<'storeResult'> = (
 export class EntityPoolSpecialExpressionManager {
 	readonly #controlId: string
 	readonly #createVariablesAndExpressionParser: CreateVariablesAndExpressionParser
-	readonly #unsubscribeRenderClock: (() => void) | null
+	readonly #renderClock: RenderClock
+	/**
+	 * Only subscribed while some entity is clock-sensitive: most controls have none, and a tick for each of them
+	 * at 10hz adds up to a noticeable idle load on a slow machine with many buttons.
+	 */
+	#unsubscribeRenderClock: (() => void) | null = null
 	#destroyed = false
 
 	private readonly specialExpressions: {
@@ -240,7 +245,7 @@ export class EntityPoolSpecialExpressionManager {
 	) {
 		this.#controlId = controlId
 		this.#createVariablesAndExpressionParser = createVariablesAndExpressionParser
-		this.#unsubscribeRenderClock = renderClock.subscribe(() => this.onRenderClockTick()) ?? null
+		this.#renderClock = renderClock
 
 		this.specialExpressions = {
 			isInverted: {
@@ -312,6 +317,10 @@ export class EntityPoolSpecialExpressionManager {
 					updateFn(updatedValues)
 				}
 			}
+
+			if (!this.#unsubscribeRenderClock && this.#hasClockSensitiveEntity()) {
+				this.#unsubscribeRenderClock = this.#renderClock.subscribe(() => this.onRenderClockTick())
+			}
 		},
 		{
 			before: false,
@@ -329,6 +338,7 @@ export class EntityPoolSpecialExpressionManager {
 		this.#destroyed = true
 		this.#debounceProcessPending.cancel()
 		this.#unsubscribeRenderClock?.()
+		this.#unsubscribeRenderClock = null
 		for (const { entities } of Object.values(this.specialExpressions)) {
 			entities.clear()
 		}
@@ -382,7 +392,23 @@ export class EntityPoolSpecialExpressionManager {
 			}
 		}
 
-		if (anyInvalidated) this.#debounceProcessPending()
+		if (anyInvalidated) {
+			this.#debounceProcessPending()
+		} else {
+			// Nothing depends on the clock anymore (eg the entity was removed or changed), so stop ticking.
+			// Processing subscribes again if an entity becomes clock-sensitive
+			this.#unsubscribeRenderClock?.()
+			this.#unsubscribeRenderClock = null
+		}
+	}
+
+	#hasClockSensitiveEntity(): boolean {
+		for (const entities of this.#allEntityMaps) {
+			for (const wrapper of entities.values()) {
+				if (wrapper.dependsOnRenderClock) return true
+			}
+		}
+		return false
 	}
 
 	/**
