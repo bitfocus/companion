@@ -405,16 +405,23 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				)
 			}
 
-			const result = await this.#ipcWrapper.sendWithCb('executeAction', {
-				action: {
-					id: action.id,
-					controlId: extras?.controlId,
-					actionId: action.definitionId,
-					options: parseRes.parsedOptions,
-				},
+			const result = await this.#ipcWrapper.sendWithCb(
+				'executeAction',
+				{
+					action: {
+						id: action.id,
+						controlId: extras?.controlId,
+						actionId: action.definitionId,
+						options: parseRes.parsedOptions,
+					},
 
-				surfaceId: extras?.surfaceId,
-			})
+					surfaceId: extras?.surfaceId,
+				},
+				undefined,
+				0,
+				// Aborting the chain this action belongs to cancels it inside the module too
+				extras.abortDelayed
+			)
 
 			if (result.success) {
 				return result.result
@@ -424,6 +431,9 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			this.logger.warn(`Error executing action: ${message}`)
 			this.#sendToModuleLog('error', `Error executing action: ${message}`)
 		} catch (e) {
+			// The user aborted the chain, so the action stopping is expected rather than an error
+			if (extras.abortDelayed.aborted) return undefined
+
 			this.logger.warn(`Error executing action: ${stringifyError(e)}`)
 
 			if (e instanceof Error) {
