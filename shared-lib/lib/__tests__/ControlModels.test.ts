@@ -8,7 +8,7 @@ import {
 } from '../Model/ButtonModel.js'
 import { SomeControlModelSchema } from '../Model/Controls.js'
 import { CustomActionModelSchema, getCustomActionCallsExcludedFrom } from '../Model/CustomActionModel.js'
-import { CustomFeedbackModelSchema } from '../Model/CustomFeedbackModel.js'
+import { CustomFeedbackModelSchema, getCustomFeedbackCallsExcludedFrom } from '../Model/CustomFeedbackModel.js'
 import { EventInstanceSchema } from '../Model/EventModel.js'
 import { ExpressionVariableModelSchema } from '../Model/ExpressionVariableModel.js'
 import { PageControlModelSchema } from '../Model/PageControlModel.js'
@@ -321,6 +321,27 @@ describe('CustomFeedbackModelSchema', () => {
 			inputs: [{ type: 'sparkle', id: 'a' }],
 		})
 		expect(result.success).toBe(false)
+	})
+})
+
+describe('getCustomFeedbackCallsExcludedFrom', () => {
+	const customFeedbacks: [string, { calledCustomFeedbackIds: string[] }][] = [
+		['custom-feedback:a', { calledCustomFeedbackIds: ['b', 'c'] }],
+		['custom-feedback:b', { calledCustomFeedbackIds: ['c'] }],
+		['custom-feedback:c', { calledCustomFeedbackIds: [] }],
+	]
+
+	test('excludes the custom feedback itself, and any which use it', () => {
+		expect(getCustomFeedbackCallsExcludedFrom('custom-feedback:c', customFeedbacks)).toEqual(
+			new Set(['__custom-feedbacks__:c', '__custom-feedbacks__:a', '__custom-feedbacks__:b'])
+		)
+		expect(getCustomFeedbackCallsExcludedFrom('custom-feedback:a', customFeedbacks)).toEqual(
+			new Set(['__custom-feedbacks__:a'])
+		)
+	})
+
+	test('excludes nothing from a control which is not a custom feedback', () => {
+		expect(getCustomFeedbackCallsExcludedFrom('custom-action:c', customFeedbacks)).toEqual(new Set())
 	})
 })
 

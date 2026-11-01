@@ -207,14 +207,33 @@ export class ControlsController {
 	 */
 	#publishCustomFeedbackDefinitions = debounceFn(
 		(): void => {
-			const definitions: Record<string, ClientEntityDefinition> = {}
+			const customFeedbacks = new Map<string, ControlCustomFeedback>()
 			for (const control of this.#store.controls.values()) {
 				if (!(control instanceof ControlCustomFeedback)) continue
 
 				const parsedId = ParseControlId(control.controlId)
 				if (parsedId?.type !== 'custom-feedback') continue
 
-				definitions[parsedId.customFeedbackId] = control.toFeedbackDefinition()
+				customFeedbacks.set(parsedId.customFeedbackId, control)
+			}
+
+			// Which custom feedbacks use each other, so that the uses which can never work can be shown as such
+			const analysis = analyseCustomActionCalls(
+				new Map([...customFeedbacks].map(([id, control]) => [id, control.getCalledCustomFeedbackIds()]))
+			)
+			for (const [id, control] of customFeedbacks) {
+				const callAnalysis = analysis.get(id)
+				if (callAnalysis) {
+					control.setCallAnalysis(
+						callAnalysis,
+						describeCallProblem(customFeedbacks, callAnalysis, CUSTOM_FEEDBACK_CALL_WORDING)
+					)
+				}
+			}
+
+			const definitions: Record<string, ClientEntityDefinition> = {}
+			for (const [id, control] of customFeedbacks) {
+				definitions[id] = control.toFeedbackDefinition()
 			}
 
 			this.#deps.instance.definitions.setFeedbackDefinitions(CUSTOM_FEEDBACKS_CONNECTION_ID, definitions)
@@ -256,7 +275,12 @@ export class ControlsController {
 			)
 			for (const [id, control] of customActions) {
 				const callAnalysis = analysis.get(id)
-				if (callAnalysis) control.setCallAnalysis(callAnalysis, describeCallProblem(customActions, callAnalysis))
+				if (callAnalysis) {
+					control.setCallAnalysis(
+						callAnalysis,
+						describeCallProblem(customActions, callAnalysis, CUSTOM_ACTION_CALL_WORDING)
+					)
+				}
 			}
 
 			const definitions: Record<string, ClientEntityDefinition> = {}
@@ -1027,23 +1051,44 @@ export class ControlsController {
 }
 
 /**
- * Describe why some of the calls of a custom action can never run, for the user
+ * How to describe the problems with the calls of a custom action or feedback
+ */
+interface CallProblemWording {
+	loopThrough: (through: string) => string
+	loopSelf: string
+	tooDeep: string
+}
+
+const CUSTOM_ACTION_CALL_WORDING: CallProblemWording = {
+	loopThrough: (through) => `It calls back into itself through ${through}. That call back does nothing.`,
+	loopSelf: 'It calls itself. That call does nothing.',
+	tooDeep: `Its calls to other custom actions are nested more than ${MAX_CUSTOM_ACTION_DEPTH} deep. The deepest do nothing.`,
+}
+
+const CUSTOM_FEEDBACK_CALL_WORDING: CallProblemWording = {
+	loopThrough: (through) => `It uses itself through ${through}. That use is always false.`,
+	loopSelf: 'It uses itself. That use is always false.',
+	tooDeep: `Its uses of other custom feedbacks are nested more than ${MAX_CUSTOM_ACTION_DEPTH} deep. The deepest are always false.`,
+}
+
+/**
+ * Describe why some of the calls of a custom action or feedback can never work, for the user
+ * @param customEntities The custom actions or feedbacks of the kind, by their id
+ * @param analysis What the one being described calls
+ * @param wording How to describe it
  */
 function describeCallProblem(
-	customActions: ReadonlyMap<string, ControlCustomAction>,
-	analysis: CustomActionCallAnalysis
+	customEntities: ReadonlyMap<string, { readonly options: { readonly name: string } }>,
+	analysis: CustomActionCallAnalysis,
+	wording: CallProblemWording
 ): string | null {
 	if (analysis.loop) {
 		const through = analysis.loop
 			.slice(1, -1)
-			.map((id) => `"${customActions.get(id)?.options.name || id}"`)
+			.map((id) => `"${customEntities.get(id)?.options.name || id}"`)
 			.join(', then ')
-		return through
-			? `It calls back into itself through ${through}. That call back does nothing.`
-			: 'It calls itself. That call does nothing.'
+		return through ? wording.loopThrough(through) : wording.loopSelf
 	}
-	if (analysis.tooDeep) {
-		return `Its calls to other custom actions are nested more than ${MAX_CUSTOM_ACTION_DEPTH} deep. The deepest do nothing.`
-	}
+	if (analysis.tooDeep) return wording.tooDeep
 	return null
 }

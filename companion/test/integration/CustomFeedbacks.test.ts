@@ -3,6 +3,7 @@ import { CUSTOM_FEEDBACKS_CONNECTION_ID } from '@companion-app/shared/Connection
 import { ParseControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
+import { ControlCustomFeedback } from '../../lib/Controls/ControlTypes/CustomFeedback.js'
 import { createTestApp, type TestApp } from './TestApp.js'
 
 // Booting the application takes a few seconds, so the default timeouts are too tight
@@ -180,5 +181,55 @@ describe('custom feedbacks', () => {
 		app.pressButton(location, true)
 		await new Promise((resolve) => setTimeout(resolve, 200))
 		expect(app.getCustomVariableValue('out')).toBe('below')
+	})
+
+	test('custom feedbacks which use each other in a loop are told so', async () => {
+		const first = await app.trpc().controls.customFeedbacks.create({ name: 'First' })
+		const second = await app.trpc().controls.customFeedbacks.create({ name: 'Second' })
+		const idOf = (controlId: string) => {
+			const parsedId = ParseControlId(controlId)
+			if (parsedId?.type !== 'custom-feedback') throw new Error('Expected a custom feedback')
+			return parsedId.customFeedbackId
+		}
+
+		const addUseOf = async (controlId: string, usedControlId: string) => {
+			await vi.waitFor(() =>
+				expect(
+					app.registry.instance.definitions.getEntityDefinition(
+						EntityModelType.Feedback,
+						CUSTOM_FEEDBACKS_CONNECTION_ID,
+						idOf(usedControlId)
+					)
+				).toBeTruthy()
+			)
+			const id = await app.trpc().controls.entities.add({
+				controlId,
+				entityLocation: 'feedbacks',
+				ownerId: null,
+				connectionId: CUSTOM_FEEDBACKS_CONNECTION_ID,
+				entityType: EntityModelType.Feedback,
+				entityDefinition: idOf(usedControlId),
+			})
+			expect(id).toBeTruthy()
+		}
+		await addUseOf(first, second)
+		await addUseOf(second, first)
+
+		await vi.waitFor(() => {
+			const definition = app.registry.instance.definitions.getEntityDefinition(
+				EntityModelType.Feedback,
+				CUSTOM_FEEDBACKS_CONNECTION_ID,
+				idOf(first)
+			)
+			expect(definition?.warning).toBe('It uses itself through "Second". That use is always false.')
+		})
+
+		const control = app.registry.controls.getControl(first)
+		if (!(control instanceof ControlCustomFeedback)) throw new Error('Expected a custom feedback')
+		expect(control.toClientJSON()).toMatchObject({
+			calledCustomFeedbackIds: [idOf(first), idOf(second)].sort(),
+			callLoop: [idOf(first), idOf(second), idOf(first)],
+			nestedTooDeep: false,
+		})
 	})
 })

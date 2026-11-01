@@ -2,7 +2,7 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext } from 'react'
 import { getCustomActionCallsExcludedFrom } from '@companion-app/shared/Model/CustomActionModel.js'
-import { getCustomFeedbackCallDefinition } from '@companion-app/shared/Model/CustomFeedbackModel.js'
+import { getCustomFeedbackCallsExcludedFrom } from '@companion-app/shared/Model/CustomFeedbackModel.js'
 import type { EntityModelType, EntityOwner, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { usePanelCollapseHelperContext } from '~/Helpers/CollapseHelper.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
@@ -29,15 +29,16 @@ export const AddEntityPanel = observer(function AddEntityPanel({
 }: AddEntityPanelProps): React.JSX.Element {
 	const { serviceFactory, readonly, controlId } = useEntityEditorContext()
 
-	// A custom action can't contain an action which would run itself, directly or through another custom action, and
-	// a custom feedback can't use itself
-	const { customActionsList } = useContext(RootAppStoreContext)
-	const excludedIds = useComputed(() => {
-		const excluded = getCustomActionCallsExcludedFrom(controlId, customActionsList.customActions.entries())
-		const selfFeedback = getCustomFeedbackCallDefinition(controlId)
-		if (selfFeedback) excluded.add(`${selfFeedback.connectionId}:${selfFeedback.definitionId}`)
-		return excluded
-	}, [controlId, customActionsList])
+	// A custom action or feedback can't contain one which would come back to itself, directly or through others
+	const { customActionsList, customFeedbacksList } = useContext(RootAppStoreContext)
+	const excludedIds = useComputed(
+		() =>
+			new Set([
+				...getCustomActionCallsExcludedFrom(controlId, customActionsList.customActions.entries()),
+				...getCustomFeedbackCallsExcludedFrom(controlId, customFeedbacksList.customFeedbacks.entries()),
+			]),
+		[controlId, customActionsList, customFeedbacksList]
+	)
 
 	const panelCollapseHelper = usePanelCollapseHelperContext()
 

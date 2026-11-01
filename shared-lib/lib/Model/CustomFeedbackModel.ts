@@ -3,6 +3,7 @@ import { CUSTOM_FEEDBACKS_CONNECTION_ID } from '../ConnectionId.js'
 import { ParseControlId } from '../ControlId.js'
 import type { ObjectPatch } from '../Diff.js'
 import type { CollectionBase } from './Collections.js'
+import { getCustomEntityCallsExcludedFrom } from './CustomEntityCalls.js'
 import { SomeEntityModelSchema } from './EntityModel.js'
 import { AuthorableInputFieldSchema } from './Options.js'
 
@@ -32,6 +33,23 @@ export function getCustomFeedbackCallDefinition(
 }
 
 /**
+ * The ids (`<connectionId>:<definitionId>`) of the custom feedbacks which can't be added to a control, as using them
+ * there would come back to the custom feedback being edited: the custom feedback itself, and any which use it
+ * @param controlId The control being edited
+ * @param customFeedbacks Each custom feedback, by its control id
+ */
+export function getCustomFeedbackCallsExcludedFrom(
+	controlId: string,
+	customFeedbacks: Iterable<[string, Pick<ClientCustomFeedbackData, 'calledCustomFeedbackIds'>]>
+): Set<string> {
+	return getCustomEntityCallsExcludedFrom(
+		controlId,
+		Array.from(customFeedbacks, ([id, info]) => [id, { calledIds: info.calledCustomFeedbackIds }] as const),
+		getCustomFeedbackCallDefinition
+	)
+}
+
+/**
  * A user defined boolean feedback, which is true when all of its feedbacks are, with user defined inputs
  */
 export const CustomFeedbackModelSchema = z.object({
@@ -52,6 +70,12 @@ export type CustomFeedbackModel = z.output<typeof CustomFeedbackModelSchema>
 
 export interface ClientCustomFeedbackData extends CustomFeedbackOptions {
 	type: 'custom-feedback'
+	/** The ids of every custom feedback it uses, directly or through others */
+	calledCustomFeedbackIds: string[]
+	/** The ids along a path of uses which comes back to it, starting with it, or null if there is none */
+	callLoop: string[] | null
+	/** Whether a chain of uses from it nests more deeply than is allowed */
+	nestedTooDeep: boolean
 }
 
 export type CustomFeedbacksUpdate =

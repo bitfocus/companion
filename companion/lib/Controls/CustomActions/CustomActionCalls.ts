@@ -16,6 +16,7 @@ export interface CustomActionCallAnalysis {
  * Work out what each custom action calls, to find the calls which would never run: those which loop back into a custom
  * action already running, and those nested too deeply. A run refuses both (see `CustomActionInstanceManager`), so this
  * is so the user can be told, or kept from making them.
+ * The custom feedbacks which use each other are worked out the same way.
  * @param directCalls The ids of the custom actions each custom action calls directly, by its id
  */
 export function analyseCustomActionCalls(

@@ -3,6 +3,7 @@ import { CUSTOM_ACTIONS_CONNECTION_ID } from '../ConnectionId.js'
 import { ParseControlId } from '../ControlId.js'
 import type { ObjectPatch } from '../Diff.js'
 import type { CollectionBase } from './Collections.js'
+import { getCustomEntityCallsExcludedFrom } from './CustomEntityCalls.js'
 import { SomeEntityModelSchema } from './EntityModel.js'
 import { AuthorableInputFieldSchema, INPUT_FIELD_ID_PATTERN } from './Options.js'
 
@@ -41,20 +42,11 @@ export function getCustomActionCallsExcludedFrom(
 	controlId: string,
 	customActions: Iterable<[string, Pick<ClientCustomActionData, 'calledCustomActionIds'>]>
 ): Set<string> {
-	const excluded = new Set<string>()
-
-	const self = getCustomActionCallDefinition(controlId)
-	if (!self) return excluded
-
-	excluded.add(`${self.connectionId}:${self.definitionId}`)
-	for (const [otherControlId, info] of customActions) {
-		const other = getCustomActionCallDefinition(otherControlId)
-		if (other && info.calledCustomActionIds.includes(self.definitionId)) {
-			excluded.add(`${other.connectionId}:${other.definitionId}`)
-		}
-	}
-
-	return excluded
+	return getCustomEntityCallsExcludedFrom(
+		controlId,
+		Array.from(customActions, ([id, info]) => [id, { calledIds: info.calledCustomActionIds }] as const),
+		getCustomActionCallDefinition
+	)
 }
 
 /**

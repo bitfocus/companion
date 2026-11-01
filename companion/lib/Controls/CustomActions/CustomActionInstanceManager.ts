@@ -119,7 +119,10 @@ export class CustomActionInstanceManager extends CustomEntityCopyManager<Control
 		caller.removeTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
 	}
 
-	override onVariablesChanged(changedVariables: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+	override onVariablesChanged(
+		changedVariables: ReadonlySet<string>,
+		controlIdFilter: ReadonlySet<string> | null
+	): void {
 		super.onVariablesChanged(changedVariables, controlIdFilter)
 
 		// The inputs of a run are fixed, but its other expressions follow the variables they use

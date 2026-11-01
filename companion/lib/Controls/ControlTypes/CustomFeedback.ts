@@ -1,4 +1,5 @@
 import type { JsonValue } from 'type-fest'
+import { isCustomFeedbacksConnectionId } from '@companion-app/shared/ConnectionId.js'
 import { diffObject } from '@companion-app/shared/Diff.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type {
@@ -20,6 +21,7 @@ import type {
 import { ControlBase } from '../ControlBase.js'
 import type { ControlDependencies } from '../ControlDependencies.js'
 import { buildCustomActionOptionsVariables } from '../CustomActionRunFrame.js'
+import type { CustomActionCallAnalysis } from '../CustomActions/CustomActionCalls.js'
 import { CustomEntityInputs } from '../CustomEntities/CustomEntityInputs.js'
 import type { CustomEntitySource, CustomEntityValues } from '../CustomEntities/Types.js'
 import type { ControlEntityInstance } from '../Entities/EntityInstance.js'
@@ -94,6 +96,11 @@ export class ControlCustomFeedback
 	 * The inputs of the custom feedback
 	 */
 	readonly #inputs = new CustomEntityInputs([])
+
+	/**
+	 * What it uses through the other custom feedbacks, and why some of those uses can't work, if they can't
+	 */
+	#callAnalysis: { analysis: CustomActionCallAnalysis; problem: string | null } | null = null
 
 	readonly entities: ControlEntityListPoolCustomFeedback
 
@@ -187,7 +194,7 @@ export class ControlCustomFeedback
 			actionHasResult: undefined,
 			actionExecutionTimeout: undefined,
 			actionOutputs: null,
-			warning: null,
+			warning: this.#callAnalysis?.problem ?? null,
 			feedbackAffectedProperties: undefined,
 			optionsSupportExpressions: true,
 			showButtonPreview: false,
@@ -327,10 +334,36 @@ export class ControlCustomFeedback
 	}
 
 	toClientJSON(): ClientCustomFeedbackData {
+		const analysis = this.#callAnalysis?.analysis
 		return {
 			type: this.type,
 			...this.options,
+			calledCustomFeedbackIds: analysis ? [...analysis.calledIds].sort() : [],
+			callLoop: analysis?.loop ?? null,
+			nestedTooDeep: !!analysis?.tooDeep,
 		}
+	}
+
+	/**
+	 * Get the ids of the custom feedbacks this uses directly, including from within other feedbacks
+	 */
+	getCalledCustomFeedbackIds(): Set<string> {
+		const ids = new Set<string>()
+		for (const entity of this.entities.getAllEntities()) {
+			if (isCustomFeedbacksConnectionId(entity.connectionId)) ids.add(entity.definitionId)
+		}
+		return ids
+	}
+
+	/**
+	 * Set what this uses through the other custom feedbacks
+	 * @param analysis What it uses
+	 * @param problem Why some of those uses can't work, for the user, or null if they all can
+	 */
+	setCallAnalysis(analysis: CustomActionCallAnalysis, problem: string | null): void {
+		this.#callAnalysis = { analysis, problem }
+
+		this.#sendClientJsonChange()
 	}
 
 	/**
