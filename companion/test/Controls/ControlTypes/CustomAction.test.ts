@@ -870,6 +870,34 @@ describe('ControlCustomAction', () => {
 			await vi.waitFor(() => expect(copySubscriptions()).toBeGreaterThan(before))
 		})
 
+		test('the connection entities of the copy are re-parsed when the values of its connection are cleared', async () => {
+			const local = connectionLocal('camera')
+			const moduleAction: ActionEntityModel = {
+				type: EntityModelType.Action,
+				id: `module-${nextId++}`,
+				connectionId: 'conn1',
+				definitionId: 'do',
+				options: { text: exprVal('$(local:camera)') },
+				upgradeIndex: undefined,
+			}
+			const harness = createHarness({ actions: [moduleAction], localVariables: [local] })
+			const { createCaller, processManager } = harness
+
+			const caller = createCaller([callAction({ n: exprVal(5) })])
+			const callerEntity = caller.entities.getActionEntities()[0]
+
+			const copyActionId = `${callerEntity.id}/${moduleAction.id}`
+			const copySubscriptions = () =>
+				processManager.connectionEntityUpdate.mock.calls.filter(([entity]) => entity.id === copyActionId).length
+			// Let the debounced subscribing of the new copy finish
+			await new Promise((resolve) => setTimeout(resolve, 100))
+			const before = copySubscriptions()
+
+			caller.entities.clearConnectionState('conn1')
+
+			await vi.waitFor(() => expect(copySubscriptions()).toBeGreaterThan(before))
+		})
+
 		test('a run with different inputs to the copy does not start with its values', async () => {
 			const local = connectionLocal('camera')
 			const harness = createHarness({ actions: [action('record')], localVariables: [local] })

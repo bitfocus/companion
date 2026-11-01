@@ -912,9 +912,16 @@ export class ControlEntityInstance {
 			changed = true
 		}
 
-		for (const childGroup of [...this.#children.values(), ...this.#transientChildren.values()]) {
+		for (const childGroup of this.#children.values()) {
 			if (childGroup.clearCachedValueForConnectionId(connectionId).length > 0) {
 				changed = true
+			}
+		}
+		for (const [groupId, childGroup] of this.#transientChildren) {
+			const childrenChanged = childGroup.clearCachedValueForConnectionId(connectionId)
+			if (childrenChanged.length > 0) {
+				changed = true
+				this.#transientChildrenValueListeners.get(groupId)?.(childrenChanged)
 			}
 		}
 
