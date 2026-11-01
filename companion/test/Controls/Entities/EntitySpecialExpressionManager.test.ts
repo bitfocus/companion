@@ -66,9 +66,24 @@ describe('EntityPoolSpecialExpressionManager', () => {
 		} as ControlEntityInstance
 	}
 
+	/** The render clock listeners currently subscribed */
+	let renderClockListeners: Set<() => void>
+	let renderClock: { subscribe: (listener: () => void) => () => void }
+	const tickRenderClock = () => {
+		for (const listener of [...renderClockListeners]) listener()
+	}
+
 	// Reset mocks before each test
 	beforeEach(() => {
 		vi.clearAllMocks()
+
+		renderClockListeners = new Set()
+		renderClock = {
+			subscribe: (listener) => {
+				renderClockListeners.add(listener)
+				return () => renderClockListeners.delete(listener)
+			},
+		}
 
 		// Reset mock implementations to defaults
 		mockParseExpressionResult = {
@@ -90,7 +105,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 				isInverted: mockUpdateIsInvertedFn,
 				storeResult: mockUpdateStoreResultFn,
 			},
-			{ subscribe: vi.fn(() => () => {}) } as any
+			renderClock as any
 		)
 
 		vi.useFakeTimers()
@@ -1571,6 +1586,89 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			const updatedMap = mockUpdateIsInvertedFn.mock.calls[0][0]
 			expect(updatedMap.has('entity-other')).toBe(true)
 			expect(updatedMap.has('entity-osc')).toBe(false)
+		})
+
+		it('does not subscribe to the render clock without a clock-sensitive entity', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(['custom:var']),
+				clockSensitive: false,
+			}
+
+			manager.trackEntity(
+				createMockFeedbackEntity('entity-var', { isExpression: true, value: '$(custom:var)' }),
+				'isInverted'
+			)
+			vi.runAllTimers()
+
+			expect(renderClockListeners.size).toBe(0)
+		})
+
+		it('subscribes to the render clock once an entity is clock-sensitive, and recomputes it on a tick', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(),
+				clockSensitive: true,
+			}
+
+			manager.trackEntity(
+				createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' }),
+				'isInverted'
+			)
+			expect(renderClockListeners.size).toBe(0)
+			vi.runAllTimers()
+			expect(renderClockListeners.size).toBe(1)
+			mockUpdateIsInvertedFn.mockClear()
+
+			tickRenderClock()
+			vi.runAllTimers()
+
+			expect(mockUpdateIsInvertedFn).toHaveBeenCalledTimes(1)
+			// Still subscribed once only
+			expect(renderClockListeners.size).toBe(1)
+		})
+
+		it('unsubscribes from the render clock on a tick once nothing is clock-sensitive', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(),
+				clockSensitive: true,
+			}
+
+			manager.trackEntity(
+				createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' }),
+				'isInverted'
+			)
+			vi.runAllTimers()
+			expect(renderClockListeners.size).toBe(1)
+
+			manager.forgetEntity('entity-osc')
+			tickRenderClock()
+
+			expect(renderClockListeners.size).toBe(0)
+		})
+
+		it('unsubscribes from the render clock on destroy', () => {
+			mockParseExpressionResult = {
+				ok: true,
+				value: false,
+				variableIds: new Set<string>(),
+				clockSensitive: true,
+			}
+
+			manager.trackEntity(
+				createMockFeedbackEntity('entity-osc', { isExpression: true, value: 'oscillate(1000)' }),
+				'isInverted'
+			)
+			vi.runAllTimers()
+			expect(renderClockListeners.size).toBe(1)
+
+			manager.destroy()
+
+			expect(renderClockListeners.size).toBe(0)
 		})
 
 		it('is a no-op after destroy', () => {
