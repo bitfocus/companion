@@ -50,7 +50,7 @@ import type { PageController } from '../Page/Controller.js'
 import { zodLocation } from '../Preview/Graphics.js'
 import type { AppInfo } from '../Registry.js'
 import { MultipartUploader } from '../Resources/MultipartUploader.js'
-import { resolveThreadEntrypoint } from '../Resources/Util.js'
+import { resolveThreadEntrypoint, yieldToEventLoop } from '../Resources/Util.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import { publicProcedure, router, toIterable, type TrpcContext } from '../UI/TRPC.js'
 import type { VariablesController } from '../Variables/Controller.js'
@@ -589,7 +589,7 @@ export class ImportExportController {
 		const isImporting = (value: ImportOrResetType): boolean => value === 'reset-and-import'
 
 		if (shouldReset(config.buttons)) {
-			this.#controlsController.deleteAllControlsOfType('bank')
+			await this.#controlsController.deleteAllControlsOfType('bank')
 
 			// Reset page 1
 			this.#pagesController.resetPage(1) // Note: controls were already deleted above
@@ -603,6 +603,9 @@ export class ImportExportController {
 			const pageCount = this.#pagesController.store.getPageCount()
 			for (let pageNumber = pageCount; pageNumber >= 2; pageNumber--) {
 				this.#pagesController.deletePage(pageNumber) // Note: controls were already deleted above
+
+				// Yield between pages so resetting many doesn't block the event loop for the whole time
+				await yieldToEventLoop()
 			}
 
 			// reset the size
@@ -630,7 +633,7 @@ export class ImportExportController {
 		}
 
 		if (shouldReset(config.triggers)) {
-			this.#controlsController.deleteAllControlsOfType('trigger')
+			await this.#controlsController.deleteAllControlsOfType('trigger')
 			this.#controlsController.replaceTriggerCollections([])
 		}
 
@@ -640,7 +643,7 @@ export class ImportExportController {
 
 		if (shouldReset(config.expressionVariables)) {
 			this.#controlsController.replaceExpressionVariableCollections([])
-			this.#controlsController.deleteAllControlsOfType('expression-variable')
+			await this.#controlsController.deleteAllControlsOfType('expression-variable')
 		}
 
 		if (shouldReset(config.userconfig)) {
