@@ -1,15 +1,10 @@
 /* Layer for the native <input type="time"|"date"> fields on top of the shared `form-input` base
-   (Components/form.css). form-input supplies the chrome; this adds block layout, hides the browser's
-   built-in picker indicator to match the previous masked-input look, and colours the field red while
-   its value is invalid (e.g. required but nothing selected) — matching the text/number fields'
-   `invalid-value` style, driven here off the native :invalid state. */
+   (Components/form.css). form-input supplies the chrome; this adds block layout and colours the field
+   red while its value is invalid (e.g. required but nothing selected) — matching the text/number
+   fields' `invalid-value` style, driven here off the native :invalid state. */
 .datetime-input-field {
 	display: block;
 	width: 100%;
-
-	&::-webkit-calendar-picker-indicator {
-		display: none;
-	}
 
 	&:invalid {
 		color: var(--color-input-invalid);
