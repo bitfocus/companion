@@ -70,6 +70,7 @@ export function useActionRecorderActionService(sessionId: string): IEntityEditor
 			},
 
 			performLearn: undefined,
+			cancelLearn: undefined,
 			setEnabled: undefined,
 			setHeadline: undefined,
 			setRawStoreResult: undefined,

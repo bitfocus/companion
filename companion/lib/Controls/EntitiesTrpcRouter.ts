@@ -93,8 +93,8 @@ export function createEntitiesTrpcRouter(
 				if (!control) return false
 
 				const editable = getEditableEntities(control)
-				await activeLearningStore.runLearnRequest(entityId, async () => {
-					await editable.entityLearn(entityLocation, entityId).catch((e) => {
+				await activeLearningStore.runLearnRequest(entityId, async (signal) => {
+					await editable.entityLearn(entityLocation, entityId, signal).catch((e) => {
 						logger.error(`Learn failed: ${e}`)
 						throw e
 					})

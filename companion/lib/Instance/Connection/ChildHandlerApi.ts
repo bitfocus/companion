@@ -88,7 +88,11 @@ export interface ConnectionChildHandlerApi extends ChildProcessHandlerBase {
 	/**
 	 *
 	 */
-	entityLearnValues(entity: SomeEntityModel, controlId: string): Promise<ExpressionableOptionsObject | undefined | void>
+	entityLearnValues(
+		entity: SomeEntityModel,
+		controlId: string,
+		signal: AbortSignal
+	): Promise<ExpressionableOptionsObject | undefined | void>
 
 	/**
 	 * Inform the child instance class about an entity that has been deleted

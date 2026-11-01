@@ -268,9 +268,12 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 */
 	async entityLearnValues(
 		entity: SomeEntityModel,
-		controlId: string
+		controlId: string,
+		signal: AbortSignal
 	): Promise<ExpressionableOptionsObject | undefined | void> {
 		if (entity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
+
+		if (signal.aborted) return
 
 		try {
 			const entityDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
@@ -293,6 +296,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				throw new Error(`Failed to parse ${entity.type} options. One or more options were invalid`)
 			}
 
+			if (signal.aborted) return
+
 			switch (entity.type) {
 				case EntityModelType.Action: {
 					const msg = await this.#ipcWrapper.sendWithCb(
@@ -306,10 +311,11 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 							},
 						},
 						undefined,
-						learnTimeout
+						learnTimeout,
+						signal
 					)
 
-					if (!msg.options) return undefined
+					if (!msg.options || signal.aborted) return undefined
 
 					return {
 						...entity.options,
@@ -332,10 +338,11 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 							},
 						},
 						undefined,
-						learnTimeout
+						learnTimeout,
+						signal
 					)
 
-					if (!msg.options) return undefined
+					if (!msg.options || signal.aborted) return undefined
 
 					return {
 						...entity.options,
@@ -347,6 +354,9 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 					break
 			}
 		} catch (e) {
+			// A cancelled learn is not an error
+			if (signal.aborted) return
+
 			this.logger.warn('Error learning options: ' + stringifyError(e))
 			this.#sendToModuleLog('error', 'Error learning options: ' + stringifyError(e))
 		}

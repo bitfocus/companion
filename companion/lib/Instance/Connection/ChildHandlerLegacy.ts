@@ -446,9 +446,12 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 */
 	async entityLearnValues(
 		entity: SomeEntityModel,
-		controlId: string
+		controlId: string,
+		signal: AbortSignal
 	): Promise<ExpressionableOptionsObject | undefined | void> {
 		if (entity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
+
+		if (signal.aborted) return
 
 		const entityDefinition = this.#deps.instanceDefinitions.getEntityDefinition(
 			entity.type,
@@ -460,21 +463,25 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		try {
 			switch (entity.type) {
 				case EntityModelType.Action: {
-					const msg = await this.#ipcWrapper.sendWithCb(
-						'learnAction',
-						{
-							action: {
-								id: entity.id,
-								controlId: controlId,
-								actionId: entity.definitionId,
-								options: convertExpressionOptionsWithoutParsing(entity.options) as OptionsObject, // This is fine, there should be no expressions here
+					// The old ipc protocol can't cancel a call, so stop waiting for it instead
+					const msg = await rejectOnAbort(
+						this.#ipcWrapper.sendWithCb(
+							'learnAction',
+							{
+								action: {
+									id: entity.id,
+									controlId: controlId,
+									actionId: entity.definitionId,
+									options: convertExpressionOptionsWithoutParsing(entity.options) as OptionsObject, // This is fine, there should be no expressions here
 
-								upgradeIndex: null,
-								disabled: !!entity.disabled,
+									upgradeIndex: null,
+									disabled: !!entity.disabled,
+								},
 							},
-						},
-						undefined,
-						learnTimeout
+							undefined,
+							learnTimeout
+						),
+						signal
 					)
 
 					// This will replace any user expressions, if they were able to define any
@@ -483,25 +490,29 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				case EntityModelType.Feedback: {
 					const control = this.#deps.controls.getControl(controlId)
 
-					const msg = await this.#ipcWrapper.sendWithCb(
-						'learnFeedback',
-						{
-							feedback: {
-								id: entity.id,
-								controlId: controlId,
-								feedbackId: entity.definitionId,
-								options: convertExpressionOptionsWithoutParsing(entity.options) as OptionsObject, // This is fine, there should be no expressions here
+					// The old ipc protocol can't cancel a call, so stop waiting for it instead
+					const msg = await rejectOnAbort(
+						this.#ipcWrapper.sendWithCb(
+							'learnFeedback',
+							{
+								feedback: {
+									id: entity.id,
+									controlId: controlId,
+									feedbackId: entity.definitionId,
+									options: convertExpressionOptionsWithoutParsing(entity.options) as OptionsObject, // This is fine, there should be no expressions here
 
-								isInverted: !!entity.isInverted?.value, // This is fine, there should be no expressions here
+									isInverted: !!entity.isInverted?.value, // This is fine, there should be no expressions here
 
-								image: getFeedbackImageSizeForControl(control),
+									image: getFeedbackImageSizeForControl(control),
 
-								upgradeIndex: null,
-								disabled: !!entity.disabled,
+									upgradeIndex: null,
+									disabled: !!entity.disabled,
+								},
 							},
-						},
-						undefined,
-						learnTimeout
+							undefined,
+							learnTimeout
+						),
+						signal
 					)
 
 					// This will replace any user expressions, if they were able to define any
@@ -512,6 +523,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					break
 			}
 		} catch (e) {
+			// A cancelled learn is not an error
+			if (signal.aborted) return
+
 			this.logger.warn('Error learning options: ' + stringifyError(e))
 			this.#sendToModuleLog('error', 'Error learning options: ' + stringifyError(e))
 		}
@@ -1252,4 +1266,21 @@ function shouldShowInvertForFeedback(options: CompanionInputFieldBase[]): boolea
 
 	// Nothing looked to be a user defined invert field
 	return true
+}
+
+/**
+ * Reject when the signal aborts, without waiting for the promise to settle
+ */
+async function rejectOnAbort<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+	signal.throwIfAborted()
+
+	const aborted = Promise.withResolvers<never>()
+	const onAbort = () => aborted.reject(signal.reason)
+	signal.addEventListener('abort', onAbort, { once: true })
+
+	try {
+		return await Promise.race([promise, aborted.promise])
+	} finally {
+		signal.removeEventListener('abort', onAbort)
+	}
 }

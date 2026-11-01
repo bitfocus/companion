@@ -9,6 +9,7 @@ const meta = {
 	args: {
 		id: 'my-learn-id',
 		doLearn: () => console.log('learn triggered'),
+		doCancel: () => console.log('cancel triggered'),
 	},
 } satisfies Meta<typeof LearnButton>
 
@@ -25,6 +26,11 @@ const withActiveLearnDecorator: Decorator = (Story) => (
 
 export const Active: Story = {
 	decorators: [withActiveLearnDecorator],
+}
+
+export const ActiveWithoutCancel: Story = {
+	decorators: [withActiveLearnDecorator],
+	args: { doCancel: undefined },
 }
 
 export const Disabled: Story = {

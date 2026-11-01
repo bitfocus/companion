@@ -1000,12 +1000,13 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 	}
 	async connectionEntityLearnOptions(
 		entityModel: SomeEntityModel,
-		controlId: string
+		controlId: string,
+		signal: AbortSignal
 	): Promise<ExpressionableOptionsObject | undefined | void> {
 		const connection = this.getConnectionChild(entityModel.connectionId)
 		if (!connection) return undefined
 
-		return connection.entityLearnValues(entityModel, controlId)
+		return connection.entityLearnValues(entityModel, controlId, signal)
 	}
 }
 

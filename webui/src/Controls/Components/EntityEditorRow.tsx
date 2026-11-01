@@ -230,7 +230,12 @@ export const EntityEditorRowContent = observer(function EntityEditorRowContent({
 							</div>
 							{entityDefinition?.hasLearn && !!entityService.performLearn && (
 								<div>
-									<LearnButton id={entity.id} doLearn={entityService.performLearn} disabled={readonly} />
+									<LearnButton
+										id={entity.id}
+										doLearn={entityService.performLearn}
+										doCancel={entityService.cancelLearn}
+										disabled={readonly}
+									/>
 								</div>
 							)}
 						</div>

@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events'
+import z from 'zod'
 import type { ActiveLearnUpdate } from '@companion-app/shared/Model/ActiveLearn.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 
@@ -9,7 +10,7 @@ export class ActiveLearningStore {
 	/**
 	 * Active learn requests. Ids of actions & feedbacks
 	 */
-	readonly #activeLearnRequests = new Set<string>()
+	readonly #activeLearnRequests = new Map<string, AbortController>()
 
 	readonly #learnEvents = new EventEmitter<{ change: [change: ActiveLearnUpdate] }>()
 
@@ -25,13 +26,23 @@ export class ActiveLearningStore {
 
 				yield {
 					type: 'init',
-					ids: Array.from(self.#activeLearnRequests),
+					ids: self.#activeLearnRequests.keys().toArray(),
 				} satisfies ActiveLearnUpdate
 
 				for await (const [data] of changes) {
 					yield data
 				}
 			}),
+
+			abort: publicProcedure
+				.input(
+					z.object({
+						id: z.string(),
+					})
+				)
+				.mutation(async ({ input }) => {
+					this.#activeLearnRequests.get(input.id)?.abort()
+				}),
 		})
 	}
 
@@ -41,25 +52,27 @@ export class ActiveLearningStore {
 	 * @param callback - Callback that returns a promise to execute the learning logic
 	 * @returns Promise that resolves to true if learning was successful
 	 */
-	async runLearnRequest(id: string, callback: () => Promise<void>): Promise<void> {
+	async runLearnRequest(id: string, callback: (signal: AbortSignal) => Promise<void>): Promise<void> {
 		if (this.#activeLearnRequests.has(id)) {
 			throw new Error('Learn is already running')
 		}
 
+		const abort = new AbortController()
+
 		try {
-			this.#setIsLearning(id, true)
-			await callback()
+			this.#setIsLearning(id, abort)
+			await callback(abort.signal)
 		} finally {
-			this.#setIsLearning(id, false)
+			this.#setIsLearning(id, null)
 		}
 	}
 
 	/**
 	 * Set an item as learning, or not
 	 */
-	#setIsLearning(id: string, isActive: boolean): void {
-		if (isActive) {
-			this.#activeLearnRequests.add(id)
+	#setIsLearning(id: string, abortController: AbortController | null): void {
+		if (abortController) {
+			this.#activeLearnRequests.set(id, abortController)
 			this.#learnEvents.emit('change', {
 				type: 'add',
 				id,

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { EntityModelType, type SomeReplaceableEntityModel } from '@companion-app/shared/Model/EntityModel.js'
+import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityListChangeProps } from '../../../lib/Controls/Entities/EntityListPoolBase.js'
 import { actionModel, createPool, downSet, feedbackModel } from './EntityListPoolTestHelpers.js'
 
@@ -406,14 +407,16 @@ describe('EntityListPool - resubscribeEntities', () => {
 })
 
 describe('EntityListPool - entityLearn', () => {
+	const learnedOptions: ExpressionableOptionsObject = { learned: { isExpression: false, value: 1 } }
+
 	test('learns options and redraws for a feedback', async () => {
 		const { pool, reportChange, processManager } = createPool()
 		const feedback = feedbackModel()
 		pool.entityAdd('feedbacks', null, feedback)
-		processManager.connectionEntityLearnOptions.mockResolvedValue({ learned: { isExpression: false, value: 1 } })
+		processManager.connectionEntityLearnOptions.mockResolvedValue(learnedOptions)
 		reportChange.mockClear()
 
-		await expect(pool.entityLearn('feedbacks', feedback.id)).resolves.toBe(true)
+		await expect(pool.entityLearn('feedbacks', feedback.id, new AbortController().signal)).resolves.toBe(true)
 		expect(reportChange).toHaveBeenCalledWith({ redraw: true })
 	})
 
@@ -421,11 +424,27 @@ describe('EntityListPool - entityLearn', () => {
 		const { pool, reportChange, processManager } = createPool()
 		const action = actionModel()
 		pool.entityAdd(downSet(), null, action)
-		processManager.connectionEntityLearnOptions.mockResolvedValue({ learned: { isExpression: false, value: 1 } })
+		processManager.connectionEntityLearnOptions.mockResolvedValue(learnedOptions)
 		reportChange.mockClear()
 
-		await expect(pool.entityLearn(downSet(), action.id)).resolves.toBe(true)
+		await expect(pool.entityLearn(downSet(), action.id, new AbortController().signal)).resolves.toBe(true)
 		expect(reportChange).toHaveBeenCalledWith({ redraw: false })
+		expect(pool.findEntityById(action.id)?.rawOptions).toMatchObject(learnedOptions)
+	})
+
+	test('passes the signal through to the connection', async () => {
+		const { pool, processManager } = createPool()
+		const action = actionModel()
+		pool.entityAdd(downSet(), null, action)
+		const controller = new AbortController()
+
+		await pool.entityLearn(downSet(), action.id, controller.signal)
+
+		expect(processManager.connectionEntityLearnOptions).toHaveBeenCalledWith(
+			expect.objectContaining({ id: action.id }),
+			expect.any(String),
+			controller.signal
+		)
 	})
 
 	test('returns false when the connection reports no learned changes', async () => {
@@ -435,20 +454,66 @@ describe('EntityListPool - entityLearn', () => {
 		reportChange.mockClear()
 
 		// The default mock resolves null, i.e. nothing was learned
-		await expect(pool.entityLearn(downSet(), action.id)).resolves.toBe(false)
+		await expect(pool.entityLearn(downSet(), action.id, new AbortController().signal)).resolves.toBe(false)
 		expect(reportChange).not.toHaveBeenCalled()
+	})
+
+	test('discards learned options when aborted while the connection is learning', async () => {
+		const { pool, reportChange, processManager } = createPool()
+		const action = actionModel()
+		pool.entityAdd(downSet(), null, action)
+		const optionsBefore = structuredClone(pool.findEntityById(action.id)?.rawOptions)
+		const controller = new AbortController()
+		processManager.connectionEntityLearnOptions.mockImplementation(async () => {
+			// The learn is cancelled (e.g. superseded) before the connection replies
+			controller.abort()
+			return learnedOptions
+		})
+		reportChange.mockClear()
+
+		await expect(pool.entityLearn(downSet(), action.id, controller.signal)).resolves.toBe(false)
+		expect(reportChange).not.toHaveBeenCalled()
+		expect(pool.findEntityById(action.id)?.rawOptions).toEqual(optionsBefore)
+	})
+
+	test('returns false and reports no change when already aborted', async () => {
+		const { pool, reportChange, processManager } = createPool()
+		const action = actionModel()
+		pool.entityAdd(downSet(), null, action)
+		processManager.connectionEntityLearnOptions.mockResolvedValue(learnedOptions)
+		reportChange.mockClear()
+
+		await expect(pool.entityLearn(downSet(), action.id, AbortSignal.abort())).resolves.toBe(false)
+		expect(reportChange).not.toHaveBeenCalled()
+		expect(pool.findEntityById(action.id)?.rawOptions).not.toMatchObject(learnedOptions)
+	})
+
+	test('returns false when the entity is removed while learning', async () => {
+		const { pool, reportChange, processManager } = createPool()
+		const action = actionModel()
+		pool.entityAdd(downSet(), null, action)
+		processManager.connectionEntityLearnOptions.mockImplementation(async () => {
+			pool.entityRemove(downSet(), action.id)
+			return learnedOptions
+		})
+		reportChange.mockClear()
+
+		await expect(pool.entityLearn(downSet(), action.id, new AbortController().signal)).resolves.toBe(false)
+		expect(reportChange).not.toHaveBeenCalledWith({ redraw: false })
 	})
 
 	test('returns false for an unknown entity', async () => {
 		const { pool } = createPool()
 
-		await expect(pool.entityLearn(downSet(), 'nope')).resolves.toBe(false)
+		await expect(pool.entityLearn(downSet(), 'nope', new AbortController().signal)).resolves.toBe(false)
 	})
 
 	test('returns false for an unknown list', async () => {
 		const { pool } = createPool()
 
-		await expect(pool.entityLearn({ stepId: 'missing', setId: 'down' }, 'x')).resolves.toBe(false)
+		await expect(
+			pool.entityLearn({ stepId: 'missing', setId: 'down' }, 'x', new AbortController().signal)
+		).resolves.toBe(false)
 	})
 })
 
