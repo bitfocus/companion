@@ -187,17 +187,27 @@ export abstract class ControlEntityListPoolBase {
 	 * Remove any tracked state for a connection
 	 */
 	clearConnectionState(connectionId: string): void {
+		const localVariablesList = this.getLocalVariablesList()
+
 		let changed = false
+		let changedVariableEntities: ControlEntityInstance[] = []
 		for (const list of this.getAllEntityLists()) {
-			if (list.clearCachedValueForConnectionId(connectionId)) changed = true
+			const changedEntities = list.clearCachedValueForConnectionId(connectionId)
+			if (changedEntities.length === 0) continue
+
+			changed = true
+			if (list === localVariablesList) changedVariableEntities = changedEntities
 		}
-		if (changed)
-			this.reportChange({
-				redraw: true,
-				noSave: true,
-				// Cleared values drop any style overrides they were applying
-				invalidateAllElements: true,
-			})
+		if (!changed) return
+
+		this.reportChange({
+			redraw: true,
+			noSave: true,
+			// Cleared values drop any style overrides they were applying
+			invalidateAllElements: true,
+		})
+
+		this.tryTriggerLocalVariablesChanged(...changedVariableEntities)
 	}
 
 	/** Build a parser for this control's variables. The injected `this:*` context is control-type specific, so each pool provides its own. */
@@ -220,6 +230,7 @@ export abstract class ControlEntityListPoolBase {
 
 	protected abstract getEntityList(listId: SomeSocketEntityLocation): ControlEntityList | undefined
 	protected abstract getAllEntityLists(): ControlEntityList[]
+	protected abstract getLocalVariablesList(): ControlEntityList
 
 	abstract getLocalVariableEntities(): ControlEntityInstance[]
 

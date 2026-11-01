@@ -101,6 +101,10 @@ export class ControlEntityListPoolTrigger extends WithEntityEditing(ControlEntit
 		return undefined
 	}
 
+	protected getLocalVariablesList(): ControlEntityList {
+		return this.#localVariables
+	}
+
 	protected getAllEntityLists(): ControlEntityList[] {
 		return [this.#feedbacks, this.#actions, this.#localVariables]
 	}
