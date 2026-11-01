@@ -150,10 +150,14 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 		// Framed message transport over the child's data channel socket - one JSON.stringify per message and an
 		// exact wire byte count for metrics, no object-mode double-encode. Created before the IpcWrapper (its
 		// onMessage uses #ipcWrapper lazily; no message arrives until the child connects, after this constructor).
-		const transport = new HostFramedTransport(dataChannel, (msg, bytes) => {
-			this.#deps.trackIpcMessage(this.instanceId, 'received', bytes)
-			this.#ipcWrapper.receivedMessage(msg as IpcMessagePacket)
-		})
+		const transport = new HostFramedTransport(
+			dataChannel,
+			(msg, bytes) => {
+				this.#deps.trackIpcMessage(this.instanceId, 'received', bytes)
+				this.#ipcWrapper.receivedMessage(msg as IpcMessagePacket)
+			},
+			() => this.#rejectPendingIpc()
+		)
 
 		this.#ipcWrapper = new IpcWrapper(
 			funcs,
@@ -280,7 +284,17 @@ export class SurfaceChildHandler implements ChildProcessHandlerBase, SurfaceScan
 		this.cleanup()
 	}
 
+	/**
+	 * The child has gone away (or been replaced), so nothing sent to it can be answered any more. Fail those
+	 * calls now, rather than leaving each to run out its own timeout.
+	 */
+	#rejectPendingIpc(): void {
+		this.#ipcWrapper.rejectAllPending(new Error('Module process is no longer running'))
+	}
+
 	cleanup(): void {
+		this.#rejectPendingIpc()
+
 		this.#deps.invalidateClientJson(this.instanceId)
 		this.#deps.surfaceController.outbound.updateDefaultConfigForSurfaceInstance(this.instanceId, this.moduleId, null)
 		this.#deps.surfaceController.outbound.events.off(`startStop:${this.instanceId}`, this.#startStopConnections)

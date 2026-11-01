@@ -198,6 +198,81 @@ describe('IpcWrapper', () => {
 		})
 	})
 
+	describe('rejectAllPending', () => {
+		beforeEach(() => {
+			vi.useFakeTimers()
+		})
+		afterEach(() => {
+			vi.useRealTimers()
+		})
+
+		it('rejects every pending call without sending a cancel', async () => {
+			const { wrapper, sendMessage } = createWrapper()
+
+			const first = wrapper.sendWithCb('add', { a: 1, b: 2 })
+			const second = wrapper.sendWithCb('echo', 'hello')
+			sendMessage.mockClear()
+
+			wrapper.rejectAllPending(new Error('peer gone'))
+
+			await expect(first).rejects.toThrow('peer gone')
+			await expect(second).rejects.toThrow('peer gone')
+			expect(sendMessage).not.toHaveBeenCalled()
+		})
+
+		it('clears the timeouts and abort listeners of the rejected calls', async () => {
+			const { wrapper, sendMessage } = createWrapper()
+
+			const controller = new AbortController()
+			const promise = wrapper.sendWithCb('add', { a: 1, b: 2 }, undefined, 0, controller.signal)
+			wrapper.rejectAllPending(new Error('peer gone'))
+			await expect(promise).rejects.toThrow('peer gone')
+			sendMessage.mockClear()
+
+			// Neither the timeout nor a later abort should do anything for the already rejected call
+			controller.abort()
+			await vi.advanceTimersByTimeAsync(5000)
+			expect(sendMessage).not.toHaveBeenCalled()
+		})
+
+		it('ignores a late response for a rejected call', async () => {
+			const { wrapper } = createWrapper()
+
+			const promise = wrapper.sendWithCb('add', { a: 1, b: 2 })
+			wrapper.rejectAllPending(new Error('peer gone'))
+			await expect(promise).rejects.toThrow('peer gone')
+
+			expect(() =>
+				wrapper.receivedMessage({ direction: 'response', callbackId: 1, success: true, payload: 3 })
+			).not.toThrow()
+		})
+
+		it('aborts inbound calls that are still being handled, and suppresses their result', async () => {
+			let resolveHandler: ((v: string) => void) | undefined
+			let handlerSignal: AbortSignal | undefined
+			const { wrapper, sendMessage } = createWrapper(
+				makeHandlers({
+					slow: async (_data, signal) => {
+						handlerSignal = signal
+						return new Promise<string>((resolve) => {
+							resolveHandler = resolve
+						})
+					},
+				})
+			)
+
+			wrapper.receivedMessage({ direction: 'call', name: 'slow', payload: undefined, callbackId: 7 })
+			expect(handlerSignal?.aborted).toBe(false)
+
+			wrapper.rejectAllPending(new Error('peer gone'))
+			expect(handlerSignal?.aborted).toBe(true)
+
+			resolveHandler?.('late')
+			await vi.advanceTimersByTimeAsync(0)
+			expect(sendMessage).not.toHaveBeenCalled()
+		})
+	})
+
 	describe('sendWithNoCb', () => {
 		it('sends a call packet without a callbackId', () => {
 			const { wrapper, sendMessage } = createWrapper()

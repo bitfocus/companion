@@ -139,14 +139,35 @@ export class IpcWrapper<TOutbound extends { [key: string]: any }, TInbound exten
 	}
 
 	#rejectAndCancelPendingCallback(id: number, callbacks: PendingCallback, error: unknown): void {
+		this.#releasePendingCallback(id, callbacks)
+
+		this.#sendMessage({ direction: 'cancel', callbackId: id })
+		callbacks.reject(error)
+	}
+
+	#releasePendingCallback(id: number, callbacks: PendingCallback): void {
 		this.#pendingCallbacks.delete(id)
 		clearTimeout(callbacks.timeout)
 		if (callbacks.signal && callbacks.abortHandler) {
 			callbacks.signal.removeEventListener('abort', callbacks.abortHandler)
 		}
+	}
 
-		this.#sendMessage({ direction: 'cancel', callbackId: id })
-		callbacks.reject(error)
+	/**
+	 * Reject every outbound call still awaiting a response, and abort every inbound call still being handled.
+	 * For use when the peer has gone away (crashed, stopped or restarted), so that callers find out now rather
+	 * than when their timeout expires. No cancel is sent, as there is nobody left to receive it.
+	 */
+	rejectAllPending(error: Error): void {
+		for (const [id, callbacks] of this.#pendingCallbacks) {
+			this.#releasePendingCallback(id, callbacks)
+			callbacks.reject(error)
+		}
+
+		for (const abortController of this.#pendingInboundAbortControllers.values()) {
+			abortController.abort()
+		}
+		this.#pendingInboundAbortControllers.clear()
 	}
 
 	sendWithNoCb<T extends keyof TOutbound>(name: T, msg: ParamsIfReturnIsNever<TOutbound[T]>[0]): void {
