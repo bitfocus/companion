@@ -175,3 +175,93 @@ describe("the placeholder for an entity that couldn't be loaded", () => {
 		expect(controller.evaluateFeedbackValue(model, 'control1', stubParser({}))).toBe(false)
 	})
 })
+
+describe('onVariablesChanged', () => {
+	function makeFeedback(id: string): FeedbackEntityModel {
+		return {
+			type: EntityModelType.Feedback,
+			id,
+			connectionId: 'internal',
+			definitionId: 'check_expression',
+			options: {},
+			upgradeIndex: undefined,
+		}
+	}
+
+	/** Track a feedback on each of two controls, both referencing `local:x` */
+	function setup() {
+		const ctx = createController()
+
+		ctx.instanceController.definitions.getEntityDefinition.mockReturnValue({
+			entityType: EntityModelType.Feedback,
+			feedbackType: FeedbackEntitySubType.Boolean,
+			optionsSupportExpressions: true,
+		} as any)
+		ctx.controlStore.createVariablesAndExpressionParser.mockReturnValue({
+			parseEntityOptions: vi.fn(() => ({
+				ok: true,
+				parsedOptions: { expression: true },
+				referencedVariableIds: new Set(['local:x']),
+				clockSensitive: false,
+			})),
+		} as any)
+
+		ctx.controller.entityUpdate(makeFeedback('fb1'), 'control1')
+		ctx.controller.entityUpdate(makeFeedback('fb2'), 'control2')
+		ctx.controlStore.updateFeedbackValues.mockClear()
+
+		return ctx
+	}
+
+	function updatedEntityIds(controlStore: ReturnType<typeof createController>['controlStore']): string[] {
+		expect(controlStore.updateFeedbackValues).toHaveBeenCalledTimes(1)
+		return controlStore.updateFeedbackValues.mock.calls[0][1].map((v) => v.entityId)
+	}
+
+	test('a global change re-evaluates every feedback referencing the variable', () => {
+		const { controller, controlStore } = setup()
+
+		controller.onVariablesChanged(new Set(['local:x']), null)
+
+		expect(updatedEntityIds(controlStore)).toEqual(['fb1', 'fb2'])
+	})
+
+	test('a scoped change only re-evaluates the feedbacks of the targeted controls', () => {
+		const { controller, controlStore } = setup()
+
+		controller.onVariablesChanged(new Set(['local:x']), new Set(['control2']))
+
+		expect(updatedEntityIds(controlStore)).toEqual(['fb2'])
+	})
+
+	test('ignores changes to unreferenced variables', () => {
+		const { controller, controlStore } = setup()
+
+		controller.onVariablesChanged(new Set(['local:y']), new Set(['control1']))
+
+		expect(updatedEntityIds(controlStore)).toEqual([])
+	})
+
+	test('a deleted feedback is no longer re-evaluated', () => {
+		const { controller, controlStore } = setup()
+
+		controller.entityDelete(makeFeedback('fb1'))
+		controller.onVariablesChanged(new Set(['local:x']), new Set(['control1', 'control2']))
+
+		expect(updatedEntityIds(controlStore)).toEqual(['fb2'])
+	})
+
+	test('a feedback re-tracked on a different control follows it', () => {
+		const { controller, controlStore } = setup()
+
+		controller.entityUpdate(makeFeedback('fb1'), 'control2')
+		controlStore.updateFeedbackValues.mockClear()
+
+		controller.onVariablesChanged(new Set(['local:x']), new Set(['control1']))
+		expect(updatedEntityIds(controlStore)).toEqual([])
+
+		controlStore.updateFeedbackValues.mockClear()
+		controller.onVariablesChanged(new Set(['local:x']), new Set(['control2']))
+		expect(updatedEntityIds(controlStore).sort()).toEqual(['fb1', 'fb2'])
+	})
+})

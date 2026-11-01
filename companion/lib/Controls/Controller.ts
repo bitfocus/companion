@@ -513,13 +513,23 @@ export class ControlsController {
 	onVariablesChanged(allChangedVariablesSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
 		this.#store.triggerEvents.emit('variables_changed', allChangedVariablesSet, controlIdFilter)
 
-		if (allChangedVariablesSet.size > 0) {
-			for (const control of this.#store.controls.values()) {
-				if (controlIdFilter && !controlIdFilter.has(control.controlId)) continue
+		if (allChangedVariablesSet.size === 0) return
 
-				if (control.supportsEntities) control.entities.onVariablesChanged(allChangedVariablesSet)
-				control.drawing?.onVariablesChanged(allChangedVariablesSet)
-				control.onVariablesChanged(allChangedVariablesSet)
+		const notifyControl = (control: SomeControl<any>) => {
+			if (control.supportsEntities) control.entities.onVariablesChanged(allChangedVariablesSet)
+			control.drawing?.onVariablesChanged(allChangedVariablesSet)
+			control.onVariablesChanged(allChangedVariablesSet)
+		}
+
+		if (controlIdFilter) {
+			// The change is scoped to specific control(s), so only look at those
+			for (const controlId of controlIdFilter) {
+				const control = this.#store.controls.get(controlId)
+				if (control) notifyControl(control)
+			}
+		} else {
+			for (const control of this.#store.controls.values()) {
+				notifyControl(control)
 			}
 		}
 	}

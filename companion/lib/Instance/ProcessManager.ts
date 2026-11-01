@@ -276,12 +276,14 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 		all_changed_variables_set: ReadonlySet<string>,
 		controlIdFilter: ReadonlySet<string> | null
 	): void {
-		const changedVariableIds = Array.from(all_changed_variables_set)
+		// Only connections on the legacy flow need an array, so build it on demand and share it between them
+		let changedVariableIds: string[] | undefined
+		const getChangedVariableIds = () => (changedVariableIds ??= Array.from(all_changed_variables_set))
 
 		for (const child of this.#children.values()) {
 			if (child.handler && child.isReady && isConnectionChild(child.handler)) {
 				child.handler
-					.sendVariablesChanged(all_changed_variables_set, changedVariableIds, controlIdFilter)
+					.sendVariablesChanged(all_changed_variables_set, getChangedVariableIds, controlIdFilter)
 					.catch((e) => {
 						this.#logger.warn(`sendVariablesChanged failed for "${child.instanceId}": ${e}`)
 					})

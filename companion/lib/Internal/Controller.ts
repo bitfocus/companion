@@ -41,6 +41,7 @@ import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { AppInfo } from '../Registry.js'
+import { ControlScopedMap } from '../Resources/ControlScopedMap.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
@@ -94,7 +95,7 @@ export class InternalController {
 	readonly #instanceDefinitions: InstanceDefinitions
 	readonly #variablesController: VariablesController
 
-	readonly #feedbacks = new Map<string, FeedbackEntityState>()
+	readonly #feedbacks = new ControlScopedMap<FeedbackEntityState>()
 
 	readonly #unsubscribeRenderClock: () => void
 
@@ -789,21 +790,29 @@ export class InternalController {
 
 		const newValues: NewFeedbackValue[] = []
 
-		// Lookup feedbacks
-		for (const [id, feedback] of this.#feedbacks) {
-			if (!feedback.referencedVariables || !feedback.referencedVariables.size) continue
+		const checkFeedbacks = (feedbacks: Iterable<[string, FeedbackEntityState]>) => {
+			for (const [id, feedback] of feedbacks) {
+				if (!feedback.referencedVariables || !feedback.referencedVariables.size) continue
 
-			// If the change is scoped to specific control(s), only update feedbacks for those
-			if (controlIdFilter && !controlIdFilter.has(feedback.controlId)) continue
+				// Check a referenced variable was changed
+				if (feedback.referencedVariables.isDisjointFrom(changedVariablesSet)) continue
 
-			// Check a referenced variable was changed
-			if (feedback.referencedVariables.isDisjointFrom(changedVariablesSet)) continue
+				newValues.push({
+					entityId: id,
+					controlId: feedback.controlId,
+					value: this.#feedbackGetValue(feedback),
+				})
+			}
+		}
 
-			newValues.push({
-				entityId: id,
-				controlId: feedback.controlId,
-				value: this.#feedbackGetValue(feedback),
-			})
+		if (controlIdFilter) {
+			// The change is scoped to specific control(s), so only look at the feedbacks of those
+			for (const controlId of controlIdFilter) {
+				const feedbacks = this.#feedbacks.getForControl(controlId)
+				if (feedbacks) checkFeedbacks(feedbacks)
+			}
+		} else {
+			checkFeedbacks(this.#feedbacks)
 		}
 
 		this.#controlsStore.updateFeedbackValues(INTERNAL_CONNECTION_ID, newValues)

@@ -76,10 +76,11 @@ export interface ConnectionChildHandlerApi extends ChildProcessHandlerBase {
 	/**
 	 * Send the list of changed variables to the child process
 	 * @access public - called whenever variables change
+	 * @param getChangedVariableIds The changed ids as an array, built on first call and shared between connections
 	 */
 	sendVariablesChanged(
 		changedVariableIdSet: ReadonlySet<string>,
-		changedVariableIds: string[],
+		getChangedVariableIds: () => string[],
 		controlIdFilter: ReadonlySet<string> | null
 	): Promise<void>
 
