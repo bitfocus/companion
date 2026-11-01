@@ -838,6 +838,57 @@ describe('InstanceEntityManager', () => {
 			expect(subscribed[0]?.controlId).toBe('control-2')
 			expect(subscribed[0]?.parsedOptions).toEqual({ field1: 'changed' })
 		})
+
+		it('should follow the local variables of an entity which has its own, not those of its control', () => {
+			const mockEntity = {
+				id: 'entity-1',
+				type: EntityModelType.Feedback,
+				definitionId: 'feedback-1',
+				upgradeIndex: 5,
+				// Such as one in a copy of a custom action
+				localVariablesScopeId: 'copy-scope',
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-1',
+					type: EntityModelType.Feedback,
+					definitionId: 'feedback-1',
+					connectionId: 'connection-1',
+					options: {},
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+					optionsToIgnoreForSubscribe: [],
+				}),
+			}
+
+			mockVariablesParser.parseEntityOptions.mockImplementation((_entityDefinition, options) => ({
+				ok: true,
+				parsedOptions: options,
+				referencedVariableIds: new Set(['local:x']),
+			}))
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+			vi.runAllTimers()
+			mockAdapter.updateFeedbacks.mockClear()
+
+			// The variable changes, so that the entity parses to something else
+			mockVariablesParser.parseEntityOptions.mockImplementation(() => ({
+				ok: true,
+				parsedOptions: { field1: 'changed' },
+				referencedVariableIds: new Set(['local:x']),
+			}))
+
+			// A change to the local variable of the control must not invalidate it
+			entityManager.onVariablesChanged(new Set(['local:x']), new Set(['control-1']))
+			vi.runAllTimers()
+			expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
+
+			// A change to its own must
+			entityManager.onVariablesChanged(new Set(['local@copy-scope:x']), new Set(['control-1']))
+			vi.runAllTimers()
+			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledTimes(1)
+		})
 	})
 
 	describe('onRenderClockTick (render clock)', () => {

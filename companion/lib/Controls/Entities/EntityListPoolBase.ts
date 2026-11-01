@@ -123,6 +123,7 @@ export abstract class ControlEntityListPoolBase {
 			specialExpressionManager,
 			customActionChain,
 			customActionInstances: props.customActionInstances,
+			localVariablesScopeId: null,
 			createVariablesAndExpressionParser: this.createVariablesAndExpressionParser.bind(this),
 		}
 	}

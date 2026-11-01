@@ -45,6 +45,7 @@ import { ControlScopedMap } from '../Resources/ControlScopedMap.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
+import { scopeReferencedVariableIds } from '../Variables/LocalVariablesScope.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { InternalActionRecorder } from './ActionRecorder.js'
@@ -83,6 +84,8 @@ interface FeedbackDependencyTracking {
 interface FeedbackEntityState extends FeedbackDependencyTracking {
 	controlId: string
 	location: ControlLocation | undefined
+	/** The scope of the local variables the feedback sees, when they are not those of its control */
+	localVariablesScopeId: string | null
 	/** Create a parser for the options of the feedback, in the scope of the feedback */
 	createParser: () => VariablesAndExpressionParser
 
@@ -274,11 +277,17 @@ export class InternalController {
 	 * An entity has changed, and state should be updated
 	 * @param entity The entity
 	 * @param controlId The control the entity belongs to
+	 * @param localVariablesScopeId The scope of the local variables the entity sees, when they are not those of its control
 	 * @param createParser Create a parser for the options of the entity, in the scope of the entity
 	 */
-	entityUpdate(entity: SomeEntityModel, controlId: string, createParser: () => VariablesAndExpressionParser): void {
+	entityUpdate(
+		entity: SomeEntityModel,
+		controlId: string,
+		localVariablesScopeId: string | null,
+		createParser: () => VariablesAndExpressionParser
+	): void {
 		if (entity.type === EntityModelType.Feedback) {
-			this.#feedbackUpdate(entity, controlId, createParser)
+			this.#feedbackUpdate(entity, controlId, localVariablesScopeId, createParser)
 		}
 	}
 
@@ -288,6 +297,7 @@ export class InternalController {
 	#feedbackUpdate(
 		feedback: FeedbackEntityModel,
 		controlId: string,
+		localVariablesScopeId: string | null,
 		createParser: () => VariablesAndExpressionParser
 	): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
@@ -300,6 +310,7 @@ export class InternalController {
 		const feedbackState: FeedbackEntityState = {
 			controlId,
 			location,
+			localVariablesScopeId,
 			createParser,
 			referencedVariables: null,
 			clockSensitive: false,
@@ -367,13 +378,22 @@ export class InternalController {
 	#feedbackGetValue(feedbackState: FeedbackEntityState): FeedbackValue {
 		const parser = feedbackState.createParser()
 
-		return this.#computeFeedbackValue(
+		const value = this.#computeFeedbackValue(
 			feedbackState.entityModel,
 			feedbackState.controlId,
 			feedbackState.location,
 			parser,
 			feedbackState
 		)
+
+		if (feedbackState.referencedVariables) {
+			feedbackState.referencedVariables = scopeReferencedVariableIds(
+				feedbackState.referencedVariables,
+				feedbackState.localVariablesScopeId
+			)
+		}
+
+		return value
 	}
 
 	/**

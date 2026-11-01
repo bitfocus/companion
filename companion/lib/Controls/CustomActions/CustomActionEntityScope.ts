@@ -1,5 +1,8 @@
 import debounceFn from 'debounce-fn'
+import { nanoid } from 'nanoid'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { localVariableIdInScope } from '../../Variables/LocalVariablesScope.js'
+import { NO_CONNECTION_LABELS, type VariablesValues } from '../../Variables/Values.js'
 import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
@@ -23,9 +26,11 @@ export class CustomActionEntityScope implements EntityScope {
 	readonly specialExpressionManager: EntityPoolSpecialExpressionManager
 	readonly customActionChain: ReadonlyArray<string>
 	readonly customActionInstances: CustomActionInstancesForEntity
+	readonly localVariablesScopeId: string = nanoid()
 
 	readonly #customAction: ControlCustomAction
 	readonly #callerControlId: string
+	readonly #variableValues: Pick<VariablesValues, 'emit'>
 
 	#values: CustomActionValues
 	#actions: ControlEntityList | null = null
@@ -40,6 +45,7 @@ export class CustomActionEntityScope implements EntityScope {
 	 * @param callerControlId The control which holds the copy
 	 * @param customActionChain The custom actions this copy is running inside, ending with this one
 	 * @param customActionInstances For any copies of custom actions called by this copy
+	 * @param variableValues To report changes to the local variables of the copy
 	 * @param renderClock The render clock, for special expressions which depend on it
 	 * @param values The inputs and local variable values of the copy
 	 */
@@ -48,6 +54,7 @@ export class CustomActionEntityScope implements EntityScope {
 		callerControlId: string,
 		customActionChain: ReadonlyArray<string>,
 		customActionInstances: CustomActionInstancesForEntity,
+		variableValues: Pick<VariablesValues, 'emit'>,
 		renderClock: RenderClock,
 		values: CustomActionValues
 	) {
@@ -55,6 +62,7 @@ export class CustomActionEntityScope implements EntityScope {
 		this.#callerControlId = callerControlId
 		this.customActionChain = customActionChain
 		this.customActionInstances = customActionInstances
+		this.#variableValues = variableValues
 		this.#values = values
 
 		this.specialExpressionManager = new EntityPoolSpecialExpressionManager(
@@ -98,8 +106,10 @@ export class CustomActionEntityScope implements EntityScope {
 	localValueChanged(name: string): void {
 		this.specialExpressionManager.onVariablesChanged(new Set([`local:${name}`]))
 
+		// The entities of the copy track the variable under the scope of the copy, so only they are re-parsed
+		this.#pendingChangedVariables.add(localVariableIdInScope(this.localVariablesScopeId, name))
 		// A run may set its variables many times in quick succession
-		this.#debounceResubscribeEntities()
+		this.#debounceLocalVariablesChanged()
 	}
 
 	/**
@@ -114,7 +124,16 @@ export class CustomActionEntityScope implements EntityScope {
 		}
 	}
 
-	readonly #debounceResubscribeEntities = debounceFn(() => this.#resubscribeEntities(), { wait: 10, maxWait: 50 })
+	#pendingChangedVariables = new Set<string>()
+	readonly #debounceLocalVariablesChanged = debounceFn(
+		() => {
+			const changedVariables = this.#pendingChangedVariables
+			this.#pendingChangedVariables = new Set()
+
+			this.#variableValues.emit('variablesChanged', changedVariables, NO_CONNECTION_LABELS, this.#callerControlId)
+		},
+		{ wait: 5, maxWait: 10 }
+	)
 
 	#resubscribeEntities(): void {
 		this.#localVariables?.subscribe(true)
@@ -135,7 +154,7 @@ export class CustomActionEntityScope implements EntityScope {
 	}
 
 	destroy(): void {
-		this.#debounceResubscribeEntities.cancel()
+		this.#debounceLocalVariablesChanged.cancel()
 		this.specialExpressionManager.destroy()
 	}
 }

@@ -11,6 +11,8 @@ import {
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { RunActionExtras } from '../../Instance/Connection/ChildHandlerApi.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
+import { scopeReferencedVariableIds } from '../../Variables/LocalVariablesScope.js'
+import type { VariablesValues } from '../../Variables/Values.js'
 import type { VariablesAndExpressionParser } from '../../Variables/VariablesAndExpressionParser.js'
 import { ControlCustomAction } from '../ControlTypes/CustomAction.js'
 import { MAX_CUSTOM_ACTION_DEPTH, type CustomActionRunFrame } from '../CustomActionRunFrame.js'
@@ -68,6 +70,7 @@ export class CustomActionInstanceManager {
 	readonly #logger: Logger = LogController.createLogger('Controls/CustomActions/InstanceManager')
 
 	readonly #controlStore: Pick<IControlStore, 'getControl'>
+	readonly #variableValues: Pick<VariablesValues, 'emit'>
 	readonly #renderClock: RenderClock
 
 	/** The copies, by the action which calls the custom action */
@@ -79,8 +82,13 @@ export class CustomActionInstanceManager {
 	/** The custom actions which have changed, so their copies need rebuilding */
 	#changedCustomActionIds = new Set<string>()
 
-	constructor(controlStore: Pick<IControlStore, 'getControl'>, renderClock: RenderClock) {
+	constructor(
+		controlStore: Pick<IControlStore, 'getControl'>,
+		variableValues: Pick<VariablesValues, 'emit'>,
+		renderClock: RenderClock
+	) {
 		this.#controlStore = controlStore
+		this.#variableValues = variableValues
 		this.#renderClock = renderClock
 	}
 
@@ -164,6 +172,7 @@ export class CustomActionInstanceManager {
 			copy.controlId,
 			copyScope.customActionChain,
 			this,
+			this.#variableValues,
 			this.#renderClock,
 			{ customActionControlId: customAction.controlId, options, localValues: new Map() }
 		)
@@ -261,12 +270,15 @@ export class CustomActionInstanceManager {
 	 * @param controlIdFilter If set, only the controls the change applies to
 	 */
 	onVariablesChanged(changedVariables: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+		// The local variables of the control holding a copy can't be seen by it, it has its own
+		const visibleToCopies = new Set([...changedVariables].filter((id) => !id.startsWith('local:')))
+
 		// Re-parsing the inputs of a copy can replace the copies nested inside it, so work from a snapshot
 		for (const [caller, copy] of [...this.#copies]) {
 			if (this.#copies.get(caller) !== copy) continue
 			if (controlIdFilter && !controlIdFilter.has(copy.controlId)) continue
 
-			copy.scope?.specialExpressionManager.onVariablesChanged(changedVariables)
+			if (visibleToCopies.size > 0) copy.scope?.specialExpressionManager.onVariablesChanged(visibleToCopies)
 
 			if (!changedVariables.isDisjointFrom(copy.referencedVariableIds)) {
 				this.#refreshInputs(caller, copy)
@@ -276,7 +288,7 @@ export class CustomActionInstanceManager {
 		// The inputs of a run are fixed, but its other expressions follow the variables they use
 		for (const [scope, controlId] of this.#runScopes) {
 			if (controlIdFilter && !controlIdFilter.has(controlId)) continue
-			scope.specialExpressionManager.onVariablesChanged(changedVariables)
+			if (visibleToCopies.size > 0) scope.specialExpressionManager.onVariablesChanged(visibleToCopies)
 		}
 	}
 
@@ -307,13 +319,17 @@ export class CustomActionInstanceManager {
 			copy.callerScope.createVariablesAndExpressionParser(null),
 			copy.controlId
 		)
-		copy.referencedVariableIds = referencedVariableIds
+		copy.referencedVariableIds = scopeReferencedVariableIds(
+			referencedVariableIds,
+			copy.callerScope.localVariablesScopeId
+		)
 
 		const scope = new CustomActionEntityScope(
 			customAction,
 			copy.controlId,
 			[...chain, customActionControlId],
 			this,
+			this.#variableValues,
 			this.#renderClock,
 			{ customActionControlId, options, localValues: new Map() }
 		)
@@ -430,7 +446,10 @@ export class CustomActionInstanceManager {
 			copy.callerScope.createVariablesAndExpressionParser(null),
 			copy.controlId
 		)
-		copy.referencedVariableIds = referencedVariableIds
+		copy.referencedVariableIds = scopeReferencedVariableIds(
+			referencedVariableIds,
+			copy.callerScope.localVariablesScopeId
+		)
 
 		if (isEqual(options, scope.values.options)) return
 

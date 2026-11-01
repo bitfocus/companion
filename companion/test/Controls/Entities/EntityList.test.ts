@@ -55,6 +55,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		specialExpressionManager,
 		customActionChain: [],
 		customActionInstances,
+		localVariablesScopeId: null,
 		createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
 	}
 	const internalController: InternalControllerForEntity = {
@@ -1152,7 +1153,7 @@ describe('duplicateEntity', () => {
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
 		expect(connectionEntityUpdate).toHaveBeenCalledWith(newEntityChild, 'test01')
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(1)
-		expect(internalEntityUpdate).toHaveBeenCalledWith(newEntity!.asEntityModel(), 'test01', expect.any(Function))
+		expect(internalEntityUpdate).toHaveBeenCalledWith(newEntity!.asEntityModel(), 'test01', null, expect.any(Function))
 	})
 
 	test('duplicate deep when root is full', () => {
@@ -2015,7 +2016,7 @@ describe('scope', () => {
 		expect(scope.createVariablesAndExpressionParser).toHaveBeenCalledWith({ 'a:b': 1 }, undefined)
 
 		// The internal module is given the same scope
-		const createParser = internalEntityUpdate.mock.calls[0][2]
+		const createParser = internalEntityUpdate.mock.calls[0][3]
 		expect(createParser()).toBe(parser)
 	})
 })
@@ -2051,6 +2052,7 @@ describe('transient child groups', () => {
 			specialExpressionManager: { trackEntity: vi.fn(), forgetEntity: vi.fn() } as any,
 			customActionChain: ['custom-action:1'],
 			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
+			localVariablesScopeId: 'copy-scope',
 			createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
 		}
 	}

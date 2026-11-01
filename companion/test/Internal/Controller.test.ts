@@ -206,10 +206,10 @@ describe('onVariablesChanged', () => {
 			})),
 		} as any)
 
-		ctx.controller.entityUpdate(makeFeedback('fb1'), 'control1', () =>
+		ctx.controller.entityUpdate(makeFeedback('fb1'), 'control1', null, () =>
 			ctx.controlStore.createVariablesAndExpressionParser('control1', null)
 		)
-		ctx.controller.entityUpdate(makeFeedback('fb2'), 'control2', () =>
+		ctx.controller.entityUpdate(makeFeedback('fb2'), 'control2', null, () =>
 			ctx.controlStore.createVariablesAndExpressionParser('control2', null)
 		)
 		ctx.controlStore.updateFeedbackValues.mockClear()
@@ -258,7 +258,7 @@ describe('onVariablesChanged', () => {
 	test('a feedback re-tracked on a different control follows it', () => {
 		const { controller, controlStore } = setup()
 
-		controller.entityUpdate(makeFeedback('fb1'), 'control2', () =>
+		controller.entityUpdate(makeFeedback('fb1'), 'control2', null, () =>
 			controlStore.createVariablesAndExpressionParser('control2', null)
 		)
 		controlStore.updateFeedbackValues.mockClear()
@@ -269,5 +269,22 @@ describe('onVariablesChanged', () => {
 		controlStore.updateFeedbackValues.mockClear()
 		controller.onVariablesChanged(new Set(['local:x']), new Set(['control2']))
 		expect(updatedEntityIds(controlStore).sort()).toEqual(['fb1', 'fb2'])
+	})
+
+	test('a feedback with local variables of its own follows those, not the ones of its control', () => {
+		const { controller, controlStore } = setup()
+
+		// Such as one in a copy of a custom action, held by an action on control1
+		controller.entityUpdate(makeFeedback('copy-fb'), 'control1', 'copy-scope', () =>
+			controlStore.createVariablesAndExpressionParser('control1', null)
+		)
+		controlStore.updateFeedbackValues.mockClear()
+
+		controller.onVariablesChanged(new Set(['local:x']), new Set(['control1']))
+		expect(updatedEntityIds(controlStore)).toEqual(['fb1'])
+
+		controlStore.updateFeedbackValues.mockClear()
+		controller.onVariablesChanged(new Set(['local@copy-scope:x']), new Set(['control1']))
+		expect(updatedEntityIds(controlStore)).toEqual(['copy-fb'])
 	})
 })

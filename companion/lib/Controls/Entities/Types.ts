@@ -44,6 +44,11 @@ export interface EntityScope {
 	readonly customActionChain: ReadonlyArray<string>
 	/** Builds the copy of a custom action held by an action which calls it */
 	readonly customActionInstances: CustomActionInstancesForEntity
+	/**
+	 * The scope of the local variables the entities see, when they are not those of their control, such as for a copy
+	 * of a custom action. See {@link scopeReferencedVariableIds}
+	 */
+	readonly localVariablesScopeId: string | null
 	/** Create a parser for the options of the entities */
 	createVariablesAndExpressionParser(
 		overrideVariableValues: VariableValues | null,

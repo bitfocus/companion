@@ -148,7 +148,7 @@ function createHarness(model: Partial<CustomActionModel>) {
 	}
 
 	const renderClock = { subscribe: vi.fn(() => () => {}) } as any
-	const customActionInstances = new CustomActionInstanceManager(controlStore, renderClock)
+	const customActionInstances = new CustomActionInstanceManager(controlStore, variableValues, renderClock)
 
 	const actionRunner = new ActionRunner(
 		instanceController,
@@ -665,6 +665,7 @@ describe('ControlCustomAction', () => {
 			expect(internalModule.entityUpdate).toHaveBeenCalledWith(
 				expect.objectContaining({ id: `${callerEntity.id}/${recordAction.id}` }),
 				caller.controlId,
+				expect.any(String),
 				expect.any(Function)
 			)
 
@@ -705,6 +706,7 @@ describe('ControlCustomAction', () => {
 			expect(internalModule.entityUpdate).toHaveBeenCalledWith(
 				expect.objectContaining({ id: `${callerEntity.id}/${recordAction.id}` }),
 				caller.controlId,
+				expect.any(String),
 				expect.any(Function)
 			)
 		})
@@ -731,6 +733,7 @@ describe('ControlCustomAction', () => {
 			expect(internalModule.entityUpdate).toHaveBeenCalledWith(
 				expect.objectContaining({ id: `${callerEntity.id}/${recordAction.id}` }),
 				caller.controlId,
+				expect.any(String),
 				expect.any(Function)
 			)
 		})
@@ -839,64 +842,60 @@ describe('ControlCustomAction', () => {
 			expect(seen).toEqual(['live'])
 		})
 
-		test('the connection entities of the copy are re-parsed when a local variable fed by a connection changes', async () => {
-			const local = connectionLocal('camera')
-			const moduleAction: ActionEntityModel = {
-				type: EntityModelType.Action,
-				id: `module-${nextId++}`,
-				connectionId: 'conn1',
-				definitionId: 'do',
-				options: { text: exprVal('$(local:camera)') },
-				upgradeIndex: undefined,
-			}
-			const harness = createHarness({ actions: [moduleAction], localVariables: [local] })
-			const { createCaller, processManager } = harness
+		/** Collect the changes to the local variables of copies, which are reported scoped to the control holding them */
+		const watchCopyLocalChanges = (harness: ReturnType<typeof createHarness>, controlId: string) => {
+			const changed: string[] = []
+			harness.variableValues.on('variablesChanged', (variableIds, _labels, targetControlId) => {
+				if (targetControlId === controlId) changed.push(...variableIds)
+			})
+			return changed
+		}
 
-			const caller = createCaller([callAction({ n: exprVal(5) })])
-			const callerEntity = caller.entities.getActionEntities()[0]
-
-			const copyActionId = `${callerEntity.id}/${moduleAction.id}`
-			const copySubscriptions = () =>
-				processManager.connectionEntityUpdate.mock.calls.filter(([entity]) => entity.id === copyActionId).length
-			// Let the debounced subscribing of the new copy finish
-			await new Promise((resolve) => setTimeout(resolve, 100))
-			const before = copySubscriptions()
-
-			const copyLocalId = `${callerEntity.id}/${local.id}`
-			caller.entities.updateFeedbackValues(
-				'conn1',
-				new Map([[copyLocalId, { entityId: copyLocalId, controlId: caller.controlId, value: 'live' }]])
-			)
-
-			await vi.waitFor(() => expect(copySubscriptions()).toBeGreaterThan(before))
+		/** A module action of the custom action which uses a local variable, so that it must be re-parsed when it changes */
+		const moduleActionUsing = (variableName: string): ActionEntityModel => ({
+			type: EntityModelType.Action,
+			id: `module-${nextId++}`,
+			connectionId: 'conn1',
+			definitionId: 'do',
+			options: { text: exprVal(`$(local:${variableName})`) },
+			upgradeIndex: undefined,
 		})
 
-		test('the connection entities of the copy are re-parsed when the values of its connection are cleared', async () => {
+		test('a local variable of the copy fed by a connection reports its changes in the scope of the copy', async () => {
 			const local = connectionLocal('camera')
-			const moduleAction: ActionEntityModel = {
-				type: EntityModelType.Action,
-				id: `module-${nextId++}`,
-				connectionId: 'conn1',
-				definitionId: 'do',
-				options: { text: exprVal('$(local:camera)') },
-				upgradeIndex: undefined,
-			}
-			const harness = createHarness({ actions: [moduleAction], localVariables: [local] })
-			const { createCaller, processManager } = harness
+			const harness = createHarness({ actions: [moduleActionUsing('camera')], localVariables: [local] })
 
-			const caller = createCaller([callAction({ n: exprVal(5) })])
+			const caller = harness.createCaller([callAction({ n: exprVal(5) })])
 			const callerEntity = caller.entities.getActionEntities()[0]
+			const changed = watchCopyLocalChanges(harness, caller.controlId)
 
-			const copyActionId = `${callerEntity.id}/${moduleAction.id}`
-			const copySubscriptions = () =>
-				processManager.connectionEntityUpdate.mock.calls.filter(([entity]) => entity.id === copyActionId).length
-			// Let the debounced subscribing of the new copy finish
-			await new Promise((resolve) => setTimeout(resolve, 100))
-			const before = copySubscriptions()
+			const copyLocal = callerEntity
+				.getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)!
+				.getDirectEntities()[0]
+			caller.entities.updateFeedbackValues(
+				'conn1',
+				new Map([[copyLocal.id, { entityId: copyLocal.id, controlId: caller.controlId, value: 'live' }]])
+			)
 
+			// The entities of the copy track the variable under the scope of the copy, so only they are re-parsed
+			await vi.waitFor(() => expect(changed).toContain(`local@${copyLocal.localVariablesScopeId}:camera`))
+			expect(changed).not.toContain('local:camera')
+		})
+
+		test('a local variable of the copy reports its changes when the values of its connection are cleared', async () => {
+			const local = connectionLocal('camera')
+			const harness = createHarness({ actions: [moduleActionUsing('camera')], localVariables: [local] })
+
+			const caller = harness.createCaller([callAction({ n: exprVal(5) })])
+			const callerEntity = caller.entities.getActionEntities()[0]
+			const changed = watchCopyLocalChanges(harness, caller.controlId)
+
+			const copyLocal = callerEntity
+				.getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)!
+				.getDirectEntities()[0]
 			caller.entities.clearConnectionState('conn1')
 
-			await vi.waitFor(() => expect(copySubscriptions()).toBeGreaterThan(before))
+			await vi.waitFor(() => expect(changed).toContain(`local@${copyLocal.localVariablesScopeId}:camera`))
 		})
 
 		test('the expressions of a run follow the variables they use', async () => {
@@ -962,45 +961,37 @@ describe('ControlCustomAction', () => {
 			expect(seen).toEqual([[1, undefined]])
 		})
 
-		test('the connection entities of a run are re-parsed when its local variables change', async () => {
-			const moduleAction: ActionEntityModel = {
-				type: EntityModelType.Action,
-				id: `module-${nextId++}`,
-				connectionId: 'conn1',
-				definitionId: 'do',
-				options: { text: exprVal('$(local:v)') },
-				upgradeIndex: undefined,
-				// Not run, it is only here to be subscribed
-				disabled: true,
-			}
+		test('a local variable of a run reports its changes in the scope of the run', async () => {
 			const harness = createHarness({
-				actions: [action('set'), moduleAction, action('check')],
+				actions: [action('set'), moduleActionUsing('v'), action('check')],
 				localVariables: [userValue('v', 0)],
 			})
-			const { createCaller, executeAction, localVariables, processManager } = harness
+			const { createCaller, executeAction, localVariables } = harness
 
 			const caller = createCaller([callAction({ n: exprVal(5) })])
 			const callerEntity = caller.entities.getActionEntities()[0]
+			const changed = watchCopyLocalChanges(harness, caller.controlId)
 
-			const runSubscriptions = () =>
-				processManager.connectionEntityUpdate.mock.calls.filter(([entity]) => entity.id.includes('@')).length
-
-			let subscriptionsBeforeSet = 0
-			let subscriptionsAfterSet = 0
+			let runScopeId: string | null = null
 			executeAction.mockImplementation(async (entity, extras) => {
 				if (entity.definitionId === 'set') {
-					subscriptionsBeforeSet = runSubscriptions()
+					runScopeId = entity.localVariablesScopeId
 					localVariables.setLocalVariable(localVariables.localVariableFor('this', 'v', extras)!, 1)
 				} else if (entity.definitionId === 'check') {
-					await vi.waitFor(() => expect(runSubscriptions()).toBeGreaterThan(subscriptionsBeforeSet))
-					subscriptionsAfterSet = runSubscriptions()
+					await vi.waitFor(() => expect(changed).toContain(`local@${runScopeId}:v`))
 				}
 			})
 
 			await runCall(harness, caller, callerEntity)
 
-			expect(subscriptionsBeforeSet).toBe(1)
-			expect(subscriptionsAfterSet).toBe(2)
+			// The run has a scope of its own, separate to the copy held by the caller
+			const copyScopeId = callerEntity
+				.getTransientChildGroup(CUSTOM_ACTION_COPY_ACTIONS_GROUP)!
+				.getDirectEntities()[0].localVariablesScopeId
+			expect(runScopeId).toBeTruthy()
+			expect(runScopeId).not.toBe(copyScopeId)
+			expect(changed).toContain(`local@${runScopeId}:v`)
+			expect(changed).not.toContain('local:v')
 		})
 
 		test('the copy is rebuilt when the custom action changes', async () => {

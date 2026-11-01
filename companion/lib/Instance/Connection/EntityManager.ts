@@ -20,6 +20,7 @@ import type { IControlStore } from '../../Controls/IControlStore.js'
 import type { RenderClock } from '../../Controls/RenderClock.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import { ControlScopedMap } from '../../Resources/ControlScopedMap.js'
+import { scopeReferencedVariableIds } from '../../Variables/LocalVariablesScope.js'
 
 const MAX_UPDATE_PER_BATCH = 50 // Arbitrary limit to avoid sending too much data in one go
 
@@ -439,7 +440,10 @@ export class ConnectionEntityManager {
 								} else {
 									updateOptions = parseRes.parsedOptions
 								}
-								wrapper.lastReferencedVariableIds = parseRes.referencedVariableIds
+								wrapper.lastReferencedVariableIds = scopeReferencedVariableIds(
+									parseRes.referencedVariableIds,
+									entity.localVariablesScopeId
+								)
 								wrapper.lastClockSensitive =
 									entityModel.type === EntityModelType.Feedback ? parseRes.clockSensitive : false
 							} catch (e) {

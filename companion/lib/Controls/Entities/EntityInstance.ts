@@ -414,8 +414,11 @@ export class ControlEntityInstance {
 
 			if (isInternalConnectionId(thisData.connectionId)) {
 				// Children-of-actions are cached here too, not just evaluated live - see getBooleanFeedbackValue.
-				this.#internalModule.entityUpdate(this.asEntityModel(), this.#controlId, () =>
-					this.createVariablesAndExpressionParser(null)
+				this.#internalModule.entityUpdate(
+					this.asEntityModel(),
+					this.#controlId,
+					this.#scope.localVariablesScopeId,
+					() => this.createVariablesAndExpressionParser(null)
 				)
 			} else if (isCustomActionsConnectionId(thisData.connectionId)) {
 				// Build or update the copy of the custom action held by this action
@@ -620,6 +623,13 @@ export class ControlEntityInstance {
 
 		// Inform relevant module
 		this.subscribe(false)
+	}
+
+	/**
+	 * The scope of the local variables this entity sees, when they are not those of its control
+	 */
+	get localVariablesScopeId(): string | null {
+		return this.#scope.localVariablesScopeId
 	}
 
 	/**
