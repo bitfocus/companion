@@ -209,7 +209,7 @@
 	}
 }
 .page-emulator:has(.emulator-not-found) {
-	overflow-y:auto;
+	overflow-y: auto;
 }
 
 .emulator-not-found {
