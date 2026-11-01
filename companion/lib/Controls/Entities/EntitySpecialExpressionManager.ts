@@ -227,6 +227,8 @@ export class EntityPoolSpecialExpressionManager {
 			readonly logger: Logger
 		}
 	}
+	/** The entity maps of every special expression, so hot paths can walk them without allocating */
+	readonly #allEntityMaps: ReadonlyArray<Map<string, EntityWrapper>>
 
 	constructor(
 		controlId: string,
@@ -254,6 +256,7 @@ export class EntityPoolSpecialExpressionManager {
 				logger: LogController.createLogger(`Controls/${controlId}/EntityPoolSpecialExpressionManager/storeResult`),
 			},
 		}
+		this.#allEntityMaps = Object.values(this.specialExpressions).map((specialExpression) => specialExpression.entities)
 	}
 
 	readonly #debounceProcessPending = debounceFn(
@@ -369,7 +372,7 @@ export class EntityPoolSpecialExpressionManager {
 		if (this.#destroyed) return
 
 		let anyInvalidated = false
-		for (const { entities } of Object.values(this.specialExpressions)) {
+		for (const entities of this.#allEntityMaps) {
 			for (const wrapper of entities.values()) {
 				if (!wrapper.dependsOnRenderClock) continue
 
@@ -390,7 +393,7 @@ export class EntityPoolSpecialExpressionManager {
 		if (this.#destroyed) return
 
 		let anyInvalidated = false
-		for (const { entities } of Object.values(this.specialExpressions)) {
+		for (const entities of this.#allEntityMaps) {
 			for (const wrapper of entities.values()) {
 				// Check if already queued for processing
 				const referencedVariableIds = wrapper.referencedVariableIds

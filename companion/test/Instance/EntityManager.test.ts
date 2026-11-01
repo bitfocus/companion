@@ -708,6 +708,54 @@ describe('InstanceEntityManager', () => {
 			)
 			expect(mockAdapter.updateActions).not.toHaveBeenCalled()
 		})
+
+		it('should follow an entity that is re-tracked on a different control', () => {
+			const mockEntity = {
+				id: 'entity-1',
+				type: EntityModelType.Feedback,
+				definitionId: 'feedback-1',
+				upgradeIndex: 5,
+				asEntityModel: vi.fn().mockReturnValue({
+					id: 'entity-1',
+					type: EntityModelType.Feedback,
+					definitionId: 'feedback-1',
+					connectionId: 'connection-1',
+					options: {},
+				}),
+				getEntityDefinition: vi.fn().mockReturnValue({
+					hasLifecycleFunctions: true,
+					options: [],
+					optionsToIgnoreForSubscribe: [],
+				}),
+			}
+
+			mockVariablesParser.parseEntityOptions.mockImplementation((_entityDefinition, options) => ({
+				ok: true,
+				parsedOptions: options,
+				referencedVariableIds: new Set(['control-var']),
+			}))
+
+			entityManager.start(5)
+			entityManager.trackEntity(mockEntity as any, 'control-1')
+			vi.runAllTimers()
+
+			// The entity moves to control-2
+			entityManager.trackEntity(mockEntity as any, 'control-2')
+			vi.runAllTimers()
+			mockAdapter.updateFeedbacks.mockClear()
+
+			// A change scoped to the old control must not invalidate it
+			entityManager.onVariablesChanged(new Set(['control-var']), new Set(['control-1']))
+			vi.runAllTimers()
+			expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
+
+			// A change scoped to the new control must
+			entityManager.onVariablesChanged(new Set(['control-var']), new Set(['control-2']))
+			vi.runAllTimers()
+			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledTimes(1)
+			expect([...mockAdapter.updateFeedbacks.mock.calls[0][0].keys()]).toEqual(['entity-1'])
+			expect(mockAdapter.updateFeedbacks.mock.calls[0][0].get('entity-1')?.controlId).toBe('control-2')
+		})
 	})
 
 	describe('onRenderClockTick (render clock)', () => {

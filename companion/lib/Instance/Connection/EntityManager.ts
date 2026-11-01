@@ -15,6 +15,7 @@ import type { ControlEntityInstance } from '../../Controls/Entities/EntityInstan
 import type { IControlStore } from '../../Controls/IControlStore.js'
 import type { RenderClock } from '../../Controls/RenderClock.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
+import { ControlScopedMap } from '../../Resources/ControlScopedMap.js'
 
 const MAX_UPDATE_PER_BATCH = 50 // Arbitrary limit to avoid sending too much data in one go
 
@@ -81,7 +82,7 @@ export class ConnectionEntityManager {
 	readonly #adapter: EntityManagerAdapter
 	readonly controlsStore: IControlStore
 
-	readonly #entities = new Map<string, EntityWrapper>()
+	readonly #entities = new ControlScopedMap<EntityWrapper>()
 
 	// Before the connection is ready, we need to not send any updates
 	#ready = false
@@ -581,35 +582,42 @@ export class ConnectionEntityManager {
 	onVariablesChanged(variableIds: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
 		let anyInvalidated = false
 
-		for (const wrapper of this.#entities.values()) {
-			if (
-				wrapper.state === EntityState.UNLOADED ||
-				wrapper.state === EntityState.UPGRADING_INVALIDATED ||
-				wrapper.state === EntityState.UPGRADING ||
-				wrapper.state === EntityState.PENDING_DELETE
-			) {
-				// Nothing to do, the entity is not in the ready state
-				continue
-			}
+		const checkEntities = (wrappers: Iterable<EntityWrapper>) => {
+			for (const wrapper of wrappers) {
+				if (
+					wrapper.state === EntityState.UNLOADED ||
+					wrapper.state === EntityState.UPGRADING_INVALIDATED ||
+					wrapper.state === EntityState.UPGRADING ||
+					wrapper.state === EntityState.PENDING_DELETE
+				) {
+					// Nothing to do, the entity is not in the ready state
+					continue
+				}
 
-			if (controlIdFilter && !controlIdFilter.has(wrapper.controlId)) {
-				// The change is scoped to specific control(s), and this entity is not in one of them
-				continue
-			}
+				if (!wrapper.lastReferencedVariableIds || wrapper.lastReferencedVariableIds.size === 0) {
+					// No variables to check, nothing to do
+					continue
+				}
 
-			if (!wrapper.lastReferencedVariableIds || wrapper.lastReferencedVariableIds.size === 0) {
-				// No variables to check, nothing to do
-				continue
-			}
+				if (variableIds.isDisjointFrom(wrapper.lastReferencedVariableIds)) {
+					// No variables changed that we care about, nothing to do
+					continue
+				}
 
-			if (variableIds.isDisjointFrom(wrapper.lastReferencedVariableIds)) {
-				// No variables changed that we care about, nothing to do
-				continue
+				// The entity is ready, so we need to re-parse the options
+				wrapper.state = EntityState.UNLOADED
+				anyInvalidated = true
 			}
+		}
 
-			// The entity is ready, so we need to re-parse the options
-			wrapper.state = EntityState.UNLOADED
-			anyInvalidated = true
+		if (controlIdFilter) {
+			// The change is scoped to specific control(s), so only look at the entities of those
+			for (const controlId of controlIdFilter) {
+				const wrappers = this.#entities.getForControl(controlId)
+				if (wrappers) checkEntities(wrappers.values())
+			}
+		} else {
+			checkEntities(this.#entities.values())
 		}
 
 		if (anyInvalidated) this.#debounceProcessPending()

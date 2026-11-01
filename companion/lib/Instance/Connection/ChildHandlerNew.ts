@@ -252,7 +252,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 */
 	async sendVariablesChanged(
 		changedVariableIdSet: ReadonlySet<string>,
-		_changedVariableIds: string[],
+		_getChangedVariableIds: () => string[],
 		controlIdFilter: ReadonlySet<string> | null
 	): Promise<void> {
 		this.#entityManager.onVariablesChanged(changedVariableIdSet, controlIdFilter)
