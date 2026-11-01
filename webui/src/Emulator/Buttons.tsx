@@ -30,8 +30,8 @@ export const EmulatorButtons = observer(function EmulatorButtons({
 			gridTemplateColumns: 'minmax(0, 1fr) '.repeat(columns),
 			gridTemplateRows: 'minmax(0, 1fr) '.repeat(rows),
 			aspectRatio: `${columns} / ${rows}`,
-			height: `min(calc(100vw / ${columns} * ${rows}), 100vh)`,
-			width: `min(calc(100vh / ${rows} * ${columns}), 100vw)`,
+			height: `min(calc(100vw / ${columns} * ${rows}), 100dvh)`,
+			width: `min(calc(100dvh / ${rows} * ${columns}), 100vw)`,
 		}
 	}, [rows, columns])
 
