@@ -206,8 +206,12 @@ describe('onVariablesChanged', () => {
 			})),
 		} as any)
 
-		ctx.controller.entityUpdate(makeFeedback('fb1'), 'control1')
-		ctx.controller.entityUpdate(makeFeedback('fb2'), 'control2')
+		ctx.controller.entityUpdate(makeFeedback('fb1'), 'control1', () =>
+			ctx.controlStore.createVariablesAndExpressionParser('control1', null)
+		)
+		ctx.controller.entityUpdate(makeFeedback('fb2'), 'control2', () =>
+			ctx.controlStore.createVariablesAndExpressionParser('control2', null)
+		)
 		ctx.controlStore.updateFeedbackValues.mockClear()
 
 		return ctx
@@ -254,7 +258,9 @@ describe('onVariablesChanged', () => {
 	test('a feedback re-tracked on a different control follows it', () => {
 		const { controller, controlStore } = setup()
 
-		controller.entityUpdate(makeFeedback('fb1'), 'control2')
+		controller.entityUpdate(makeFeedback('fb1'), 'control2', () =>
+			controlStore.createVariablesAndExpressionParser('control2', null)
+		)
 		controlStore.updateFeedbackValues.mockClear()
 
 		controller.onVariablesChanged(new Set(['local:x']), new Set(['control1']))

@@ -817,6 +817,13 @@ describe('InstanceEntityManager', () => {
 			vi.runAllTimers()
 			mockAdapter.updateFeedbacks.mockClear()
 
+			// The variable changes, so that the entity parses to something else
+			mockVariablesParser.parseEntityOptions.mockImplementation(() => ({
+				ok: true,
+				parsedOptions: { field1: 'changed' },
+				referencedVariableIds: new Set(['control-var']),
+			}))
+
 			// A change scoped to the old control must not invalidate it
 			entityManager.onVariablesChanged(new Set(['control-var']), new Set(['control-1']))
 			vi.runAllTimers()
@@ -826,8 +833,10 @@ describe('InstanceEntityManager', () => {
 			entityManager.onVariablesChanged(new Set(['control-var']), new Set(['control-2']))
 			vi.runAllTimers()
 			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledTimes(1)
-			expect([...mockAdapter.updateFeedbacks.mock.calls[0][0].keys()]).toEqual(['entity-1'])
-			expect(mockAdapter.updateFeedbacks.mock.calls[0][0].get('entity-1')?.controlId).toBe('control-2')
+			const subscribed = [...mockAdapter.updateFeedbacks.mock.calls[0][0].values()].filter((entry) => entry !== null)
+			expect(subscribed).toHaveLength(1)
+			expect(subscribed[0]?.controlId).toBe('control-2')
+			expect(subscribed[0]?.parsedOptions).toEqual({ field1: 'changed' })
 		})
 	})
 
