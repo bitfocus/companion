@@ -246,6 +246,8 @@ export class ControlCustomAction
 			learnTimeout: undefined,
 			showInvert: false,
 			actionHasResult: false,
+			// A custom action runs until its actions have finished
+			actionExecutionTimeout: undefined,
 			actionOutputs: this.#outputs.map((output) => ({ id: output.id, label: output.label })),
 			warning: this.#callAnalysis?.problem ?? null,
 			feedbackAffectedProperties: undefined,
