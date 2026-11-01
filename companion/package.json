@@ -50,7 +50,7 @@
     "@companion-app/satellite-protocol": "*",
     "@companion-app/shared": "*",
     "@companion-module/base-old": "npm:@companion-module/base@~1.15.0",
-    "@companion-module/host": "1.2.1",
+    "@companion-module/host": "1.3.0-nightly-main-20261101-133634-8ffed90",
     "@companion-surface/host": "1.4.2",
     "@julusian/bonjour-service": "^1.4.6",
     "@julusian/image-rs": "^2.5.0",

@@ -93,6 +93,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				learnTimeout: rawAction.learnTimeout,
 
 				actionHasResult: !!rawAction.hasResult,
+				actionExecutionTimeout: parseActionExecutionTimeout(rawAction.executionTimeout),
 
 				showInvert: false,
 				showButtonPreview: false,
@@ -139,6 +140,7 @@ export class HostContext<TConfig, TSecrets> implements ModuleHostContext<TConfig
 				showInvert: rawFeedback.showInvert ?? shouldShowInvertForFeedback(rawFeedback.options || []),
 
 				actionHasResult: undefined,
+				actionExecutionTimeout: undefined,
 
 				showButtonPreview: false,
 				supportsChildGroups: [],
@@ -370,4 +372,11 @@ function areAffectedPropertiesEqual(
 	}
 
 	return true
+}
+
+/**
+ * Modules are plain JS, so the timeout may not be what the type says. Anything but a positive number means "use the default"
+ */
+function parseActionExecutionTimeout(timeout: number | undefined): number | undefined {
+	return timeout !== undefined && Number.isFinite(timeout) && timeout > 0 ? timeout : undefined
 }

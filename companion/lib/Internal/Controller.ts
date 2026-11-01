@@ -687,6 +687,7 @@ export class InternalController {
 						learnTimeout: action.learnTimeout,
 
 						actionHasResult: !!action.actionHasResult,
+						actionExecutionTimeout: undefined, // Not applicable for internal actions
 
 						showButtonPreview: action.showButtonPreview ?? false,
 						supportsChildGroups: action.supportsChildGroups ?? [],
@@ -727,6 +728,7 @@ export class InternalController {
 						learnTimeout: feedback.learnTimeout,
 
 						actionHasResult: undefined,
+						actionExecutionTimeout: undefined,
 
 						entityType: EntityModelType.Feedback,
 						showButtonPreview: feedback.showButtonPreview ?? false,

@@ -26,6 +26,7 @@ import type { DataChannelServer } from '../Common/DataChannelServer.js'
 import { HostFramedTransport } from '../Common/FramedMessageChannel.js'
 import { IpcWrapper, type IpcEventHandlers, type IpcMessagePacket } from '../Common/IpcWrapper.js'
 import type { ChildProcessHandlerBase } from '../ProcessManager.js'
+import { getActionExecutionTimeout } from './ActionExecutionTimeout.js'
 import type {
 	ConnectionChildHandlerApi,
 	ConnectionChildHandlerDependencies,
@@ -422,7 +423,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 					surfaceId: extras?.surfaceId,
 				},
 				undefined,
-				0,
+				getActionExecutionTimeout(actionDefinition),
 				// Aborting the chain this action belongs to cancels it inside the module too
 				extras.abortDelayed
 			)

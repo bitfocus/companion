@@ -59,6 +59,7 @@ describe('HostContext setActionDefinitions', () => {
 			optionsToMonitorForSubscribe: undefined,
 			hasLearn: false,
 			learnTimeout: undefined,
+			executionTimeout: undefined,
 			hasLifecycleFunctions: false,
 			...overrides,
 		}
@@ -118,6 +119,28 @@ describe('HostContext setActionDefinitions', () => {
 			optionsToMonitorForInvalidations: null,
 		})
 	})
+
+	test('passes through a positive executionTimeout', () => {
+		const { hostContext, sendWithNoCb } = createHostContext()
+
+		hostContext.setActionDefinitions([actionDefinition({ executionTimeout: 30_000 })])
+
+		const { actions } = lastPayloadFor(sendWithNoCb, 'setActionDefinitions')
+		expect(actions['my-action'].actionExecutionTimeout).toBe(30_000)
+	})
+
+	test.each([undefined, 0, -1, Number.NaN, Number.POSITIVE_INFINITY, '30000'])(
+		'ignores an executionTimeout of %s',
+		(executionTimeout) => {
+			const { hostContext, sendWithNoCb } = createHostContext()
+
+			// Modules are plain JS, so the value may not match the type
+			hostContext.setActionDefinitions([actionDefinition({ executionTimeout: executionTimeout as number })])
+
+			const { actions } = lastPayloadFor(sendWithNoCb, 'setActionDefinitions')
+			expect(actions['my-action'].actionExecutionTimeout).toBeUndefined()
+		}
+	)
 
 	test('translates the action option fields', () => {
 		const { hostContext, sendWithNoCb } = createHostContext()

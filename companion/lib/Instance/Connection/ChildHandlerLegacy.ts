@@ -796,6 +796,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				learnTimeout: rawAction.learnTimeout,
 
 				actionHasResult: false,
+				actionExecutionTimeout: undefined, // not supported from 1.x modules
 
 				showInvert: false,
 				showButtonPreview: false,
@@ -845,6 +846,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				showInvert: rawFeedback.showInvert ?? shouldShowInvertForFeedback(rawFeedback.options || []),
 
 				actionHasResult: undefined,
+				actionExecutionTimeout: undefined, // not supported from 1.x modules
 
 				feedbackAffectedProperties: undefined,
 				feedbackDisableStyleOverrides: false,

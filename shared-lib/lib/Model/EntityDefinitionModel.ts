@@ -36,6 +36,12 @@ export interface ClientEntityDefinition {
 	actionHasResult: boolean | undefined
 
 	/**
+	 * When an action, how long (in ms) its callback may run before it is cancelled. The host clamps this to a
+	 * maximum. Defaults to 5000ms when not set.
+	 */
+	actionExecutionTimeout: number | undefined
+
+	/**
 	 * When an advanced feedback, the properties that should have overrides assigned
 	 */
 	feedbackAffectedProperties: string[] | undefined
