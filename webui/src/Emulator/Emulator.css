@@ -4,7 +4,7 @@
 	background-color: var(--remote-bg);
 	color: var(--remote-accent);
 
-	height: 100vh;
+	height: 100dvh;
 
 	.loading {
 		margin: 20% 0;
@@ -12,13 +12,13 @@
 }
 
 .page-emulator-list {
-	height: 100vh;
+	height: 100dvh;
 	overflow-y: auto;
 
 	.emulator-list-inner {
 		max-width: 1040px;
 		margin: 0 auto;
-		padding: clamp(1.5rem, 4vh, 3.5rem) clamp(1rem, 4vw, 2.5rem) 3rem;
+		padding: clamp(1.5rem, 4dvh, 3.5rem) clamp(1rem, 4vw, 2.5rem) 3rem;
 		display: flex;
 		flex-direction: column;
 		min-height: 100%;
@@ -210,7 +210,7 @@
 }
 
 .page-emulator {
-	height: 100vh;
+	height: 100dvh;
 
 	display: grid;
 	grid-template-rows: auto 1fr;
@@ -249,13 +249,16 @@
 		}
 	}
 }
+.page-emulator:has(.emulator-not-found) {
+	overflow-y: auto;
+}
 
 .emulator-not-found {
 	width: 100%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	padding: 4vh 2vw;
+	padding: 4dvh 2vw;
 
 	code {
 		color: var(--color-warning);
@@ -275,7 +278,7 @@
 	margin: 0 auto;
 	color: var(--remote-fg) !important;
 	background: color-mix(in srgb, var(--remote-fg-strong) 2%, transparent);
-	padding: 4vh;
+	padding: 4dvh;
 	border-radius: 8px;
 	text-align: center;
 	max-width: 720px;
@@ -294,7 +297,7 @@
 	align-items: center;
 	justify-content: center;
 	background-color: var(--remote-bg);
-	padding: 2vh 2vw;
+	padding: 2dvh 2vw;
 	overflow: hidden;
 	grid-row: 2;
 
@@ -307,14 +310,14 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: clamp(0.5rem, 2vh, 4rem);
+		gap: clamp(0.5rem, 2dvh, 4rem);
 		max-width: 600px;
 		width: 100%;
 		max-height: 100%;
 
 		/* On short screens, reduce spacing further */
 		@media (max-height: 500px) {
-			gap: clamp(0.25rem, 1vh, 1rem);
+			gap: clamp(0.25rem, 1dvh, 1rem);
 		}
 	}
 
@@ -322,32 +325,32 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: clamp(0.5rem, 1.5vh, 2rem);
+		gap: clamp(0.5rem, 1.5dvh, 2rem);
 		color: var(--remote-fg);
 		flex-shrink: 0;
 
 		svg {
 			opacity: 0.9;
-			font-size: clamp(1.5rem, 6vh, 3rem);
+			font-size: clamp(1.5rem, 6dvh, 3rem);
 		}
 
 		h2 {
 			margin: 0;
-			font-size: clamp(1rem, 3vh, 2rem);
+			font-size: clamp(1rem, 3dvh, 2rem);
 			font-weight: 600;
 			color: var(--remote-fg);
 		}
 
 		/* On short screens, make header more compact */
 		@media (max-height: 500px) {
-			gap: clamp(0.25rem, 1vh, 0.75rem);
+			gap: clamp(0.25rem, 1dvh, 0.75rem);
 		}
 	}
 
 	.emulator-locked-dots {
 		display: flex;
 		gap: clamp(0.5rem, 1.5vw, 1rem);
-		min-height: clamp(1rem, 3vh, 1.5rem);
+		min-height: clamp(1rem, 3dvh, 1.5rem);
 		flex-shrink: 0;
 
 		.dot {
