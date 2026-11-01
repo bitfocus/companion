@@ -12,5 +12,7 @@ export default defineConfig({
 		name: 'launcher-ui',
 		exclude: ['**/node_modules/**', '**/dist/**', '**/build/**'],
 		environment: 'jsdom',
+		pool: 'vmThreads',
+		isolate: true,
 	},
 })
