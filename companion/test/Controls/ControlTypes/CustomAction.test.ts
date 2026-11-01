@@ -43,7 +43,8 @@ function getEntityDefinition(
 	if (entityType === EntityModelType.Feedback) {
 		return {
 			entityType,
-			feedbackType: FeedbackEntitySubType.Value,
+			feedbackType: definitionId === 'on_air' ? FeedbackEntitySubType.Boolean : FeedbackEntitySubType.Value,
+			showInvert: definitionId === 'on_air',
 			options: [],
 			optionsSupportExpressions: true,
 		} as Partial<ClientEntityDefinition> as any
@@ -896,6 +897,44 @@ describe('ControlCustomAction', () => {
 			caller.entities.clearConnectionState('conn1')
 
 			await vi.waitFor(() => expect(copySubscriptions()).toBeGreaterThan(before))
+		})
+
+		test('the expressions of a run follow the variables they use', async () => {
+			const onAir: FeedbackEntityModel = {
+				...connectionLocal('on_air'),
+				definitionId: 'on_air',
+				isInverted: exprExpr('$(test:num) == 1'),
+			}
+			const harness = createHarness({ actions: [action('first'), action('second')], localVariables: [onAir] })
+			const { createCaller, executeAction, evaluate, variableValues } = harness
+			variableValues.setVariableValues('test', [{ id: 'num', value: 0 }])
+
+			const caller = createCaller([callAction({ n: exprVal(5) })])
+			const callerEntity = caller.entities.getActionEntities()[0]
+
+			// The connection reports a value for the copy, which the run starts with
+			const copyLocalId = `${callerEntity.id}/${onAir.id}`
+			caller.entities.updateFeedbackValues(
+				'conn1',
+				new Map([[copyLocalId, { entityId: copyLocalId, controlId: caller.controlId, value: false }]])
+			)
+
+			const seen: any[] = []
+			executeAction.mockImplementation(async (entity, extras) => {
+				if (entity.definitionId === 'first') {
+					// Let the run evaluate its expressions before the variable changes
+					await new Promise((resolve) => setTimeout(resolve, 100))
+					seen.push(evaluate(extras, '$(local:on_air)'))
+					variableValues.setVariableValues('test', [{ id: 'num', value: 1 }])
+				} else {
+					await vi.waitFor(() => expect(evaluate(extras, '$(local:on_air)')).toBe(true))
+					seen.push(evaluate(extras, '$(local:on_air)'))
+				}
+			})
+
+			await runCall(harness, caller, callerEntity)
+
+			expect(seen).toEqual([false, true])
 		})
 
 		test('a run with different inputs to the copy does not start with its values', async () => {

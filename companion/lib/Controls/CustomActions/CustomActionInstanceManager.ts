@@ -73,6 +73,9 @@ export class CustomActionInstanceManager {
 	/** The copies, by the action which calls the custom action */
 	readonly #copies = new Map<ControlEntityInstance, PlacedCopy>()
 
+	/** The scopes of the runs in progress, with the control running each */
+	readonly #runScopes = new Map<CustomActionEntityScope, string>()
+
 	/** The custom actions which have changed, so their copies need rebuilding */
 	#changedCustomActionIds = new Set<string>()
 
@@ -171,6 +174,7 @@ export class CustomActionInstanceManager {
 			localVariables: `custom-action-run:${runId}:local-variables`,
 		}
 		const lists = this.#buildCopyLists(caller, scope, customAction, groupIds, `${caller.id}@${runId}/`)
+		this.#runScopes.set(scope, copy.controlId)
 
 		// When the run sees what the copy held by the caller sees, it can start with its values
 		if (isEqual(options, copyScope.values.options)) {
@@ -218,6 +222,7 @@ export class CustomActionInstanceManager {
 
 			return undefined
 		} finally {
+			this.#runScopes.delete(scope)
 			caller.removeTransientChildGroup(groupIds.actions)
 			caller.removeTransientChildGroup(groupIds.localVariables)
 			scope.destroy()
@@ -266,6 +271,12 @@ export class CustomActionInstanceManager {
 			if (!changedVariables.isDisjointFrom(copy.referencedVariableIds)) {
 				this.#refreshInputs(caller, copy)
 			}
+		}
+
+		// The inputs of a run are fixed, but its other expressions follow the variables they use
+		for (const [scope, controlId] of this.#runScopes) {
+			if (controlIdFilter && !controlIdFilter.has(controlId)) continue
+			scope.specialExpressionManager.onVariablesChanged(changedVariables)
 		}
 	}
 
