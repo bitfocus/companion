@@ -194,6 +194,45 @@ describe('EntityListPool - connection management', () => {
 		} satisfies ControlEntityListChangeProps)
 	})
 
+	test('clearConnectionState notifies dependents of a cleared local variable', () => {
+		const { pool, internalModule, variableValues, controlId } = createPool()
+		const variable = feedbackModel({ variableName: 'foo' })
+		pool.entityAdd('local-variables', null, variable)
+		pool.updateFeedbackValues('conn01', feedbackValues({ [variable.id]: true }))
+		vi.runAllTimers()
+		internalModule.onVariablesChanged.mockClear()
+		variableValues.emit.mockClear()
+
+		pool.clearConnectionState('conn01')
+
+		expect(pool.getLocalVariableValues()).toEqual({ foo: false })
+		expect(internalModule.onVariablesChanged).toHaveBeenCalledWith(new Set(['local:foo']), new Set([controlId]))
+		vi.runAllTimers()
+		expect(variableValues.emit).toHaveBeenCalledWith(
+			'variablesChanged',
+			new Set(['local:foo']),
+			expect.anything(),
+			controlId
+		)
+	})
+
+	test('clearConnectionState does not notify local variables when only a feedback was cleared', () => {
+		const { pool, internalModule, variableValues } = createPool()
+		pool.entityAdd('local-variables', null, feedbackModel({ variableName: 'foo', connectionId: 'conn02' }))
+		const feedback = feedbackModel()
+		pool.entityAdd('feedbacks', null, feedback)
+		pool.updateFeedbackValues('conn01', feedbackValues({ [feedback.id]: true }))
+		vi.runAllTimers()
+		internalModule.onVariablesChanged.mockClear()
+		variableValues.emit.mockClear()
+
+		pool.clearConnectionState('conn01')
+		vi.runAllTimers()
+
+		expect(internalModule.onVariablesChanged).not.toHaveBeenCalled()
+		expect(variableValues.emit).not.toHaveBeenCalled()
+	})
+
 	test('clearConnectionState for an unreferenced connection does not report a change', () => {
 		const { pool, reportChange } = createPool()
 

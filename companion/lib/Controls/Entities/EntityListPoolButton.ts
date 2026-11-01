@@ -194,6 +194,10 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 		return undefined
 	}
 
+	protected getLocalVariablesList(): ControlEntityList {
+		return this.#localVariables
+	}
+
 	protected getAllEntityLists(): ControlEntityList[] {
 		const entityLists: ControlEntityList[] = [this.#feedbacks, this.#localVariables]
 

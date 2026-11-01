@@ -759,7 +759,7 @@ export class ControlEntityInstance {
 		}
 
 		for (const childGroup of this.#children.values()) {
-			if (childGroup.clearCachedValueForConnectionId(connectionId)) {
+			if (childGroup.clearCachedValueForConnectionId(connectionId).length > 0) {
 				changed = true
 			}
 		}

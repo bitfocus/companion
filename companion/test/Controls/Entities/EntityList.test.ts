@@ -1292,13 +1292,13 @@ describe('getChildBooleanFeedbackValues', () => {
 	test('invalid for action list', () => {
 		const { list } = createList('test01', null, { type: EntityModelType.Action })
 
-		expect(list.clearCachedValueForConnectionId('internal')).toBe(false)
+		expect(list.clearCachedValueForConnectionId('internal')).toEqual([])
 	})
 
 	test('invalid for non boolean feedbacks list', () => {
 		const { list } = createList('test01', null, { type: EntityModelType.Feedback })
 
-		expect(list.clearCachedValueForConnectionId('internal')).toBe(false)
+		expect(list.clearCachedValueForConnectionId('internal')).toEqual([])
 	})
 
 	test('all disabled', () => {
@@ -1311,7 +1311,7 @@ describe('getChildBooleanFeedbackValues', () => {
 			entity.setEnabled(false)
 		}
 
-		expect(list.clearCachedValueForConnectionId('internal')).toBe(true)
+		expect(list.clearCachedValueForConnectionId('internal')).not.toHaveLength(0)
 	})
 
 	test('basic boolean values', () => {
@@ -1323,7 +1323,7 @@ describe('getChildBooleanFeedbackValues', () => {
 		expect(entity).not.toBeUndefined()
 		expect(entity!.feedbackValue).toBe(true)
 
-		expect(list.clearCachedValueForConnectionId(entity!.connectionId)).toBe(true)
+		expect(list.clearCachedValueForConnectionId(entity!.connectionId)).not.toHaveLength(0)
 
 		expect(entity!.feedbackValue).toBe(undefined)
 	})
@@ -1337,7 +1337,7 @@ describe('getChildBooleanFeedbackValues', () => {
 		expect(entity).not.toBeUndefined()
 		expect(entity!.feedbackValue).toBe('abc')
 
-		expect(list.clearCachedValueForConnectionId(entity!.connectionId)).toBe(true)
+		expect(list.clearCachedValueForConnectionId(entity!.connectionId)).not.toHaveLength(0)
 
 		expect(entity!.feedbackValue).toBe(undefined)
 	})

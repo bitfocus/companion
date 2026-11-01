@@ -363,13 +363,12 @@ export class ControlEntityList {
 		return changed
 	}
 
-	clearCachedValueForConnectionId(connectionId: string): boolean {
-		let changed = false
-		for (const entity of this.#entities) {
-			if (entity.clearCachedValueForConnectionId(connectionId)) changed = true
-		}
-
-		return changed
+	/**
+	 * Clear cached values for any feedback belonging to the given connection
+	 * @returns The top-level entities whose value (or that of a child) was cleared
+	 */
+	clearCachedValueForConnectionId(connectionId: string): ControlEntityInstance[] {
+		return this.#entities.filter((entity) => entity.clearCachedValueForConnectionId(connectionId))
 	}
 
 	/**

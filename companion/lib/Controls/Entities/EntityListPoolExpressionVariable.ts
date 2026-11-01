@@ -76,6 +76,10 @@ export class EntityListPoolExpressionVariable extends WithEntityEditing(ControlE
 		return undefined
 	}
 
+	protected getLocalVariablesList(): ControlEntityList {
+		return this.#localVariables
+	}
+
 	protected getAllEntityLists(): ControlEntityList[] {
 		return [this.#entities, this.#localVariables]
 	}
