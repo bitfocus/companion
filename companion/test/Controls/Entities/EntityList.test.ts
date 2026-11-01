@@ -2062,12 +2062,16 @@ describe('transient child groups', () => {
 		res.connectionEntityUpdate.mockClear()
 
 		const transientScope = createTransientScope()
-		const group = callerEntity.setTransientChildGroup('instance', transientScope, { type: EntityModelType.Action }, [
-			transientAction,
-			transientFeedback,
-		])
+		const onValuesChanged = vi.fn<(changed: ControlEntityInstance[]) => void>()
+		const group = callerEntity.setTransientChildGroup(
+			'instance',
+			transientScope,
+			{ type: EntityModelType.Action },
+			[transientAction, transientFeedback],
+			onValuesChanged
+		)
 
-		return { ...res, callerEntity, transientScope, group }
+		return { ...res, callerEntity, transientScope, group, onValuesChanged }
 	}
 
 	test('entities are subscribed, parsing their options in the scope of the group', () => {
@@ -2108,19 +2112,50 @@ describe('transient child groups', () => {
 		expect(list.findById(transientAction.id)).toBeTruthy()
 	})
 
-	test('feedback values reach the entities', () => {
-		const { list, group } = setup()
+	test('feedback values reach the entities, and the group is told of those which changed', () => {
+		const { list, group, onValuesChanged } = setup()
+		const values = new Map<string, NewFeedbackValue>([
+			[transientFeedback.id, { entityId: transientFeedback.id, controlId: 'test01', value: 'abc' }],
+		])
 
-		const changed = list.updateFeedbackValues(
+		const changed = list.updateFeedbackValues('conn01', values)
+
+		const feedback = group.findById(transientFeedback.id)!
+		expect(changed).toEqual([feedback])
+		expect(feedback.feedbackValue).toBe('abc')
+		expect(onValuesChanged).toHaveBeenCalledTimes(1)
+		expect(onValuesChanged.mock.calls[0][0][0]).toBe(feedback)
+
+		// The same value again isn't a change
+		list.updateFeedbackValues('conn01', values)
+		expect(onValuesChanged).toHaveBeenCalledTimes(1)
+	})
+
+	test('isInverted values reach the entities, and the group is told of those which changed', () => {
+		const { list, group, onValuesChanged } = setup()
+
+		list.updateIsInvertedValues(
+			new Map<string, NewSpecialExpressionValue<'isInverted'>>([
+				[transientFeedback.id, { entityId: transientFeedback.id, controlId: 'test01', value: true }],
+			])
+		)
+
+		expect(onValuesChanged).toHaveBeenCalledTimes(1)
+		expect(onValuesChanged.mock.calls[0][0][0]).toBe(group.findById(transientFeedback.id))
+	})
+
+	test('a removed group is no longer told of changed values', () => {
+		const { list, callerEntity, onValuesChanged } = setup()
+
+		callerEntity.removeTransientChildGroup('instance')
+		list.updateFeedbackValues(
 			'conn01',
 			new Map<string, NewFeedbackValue>([
 				[transientFeedback.id, { entityId: transientFeedback.id, controlId: 'test01', value: 'abc' }],
 			])
 		)
 
-		const feedback = group.findById(transientFeedback.id)!
-		expect(changed).toEqual([feedback])
-		expect(feedback.feedbackValue).toBe('abc')
+		expect(onValuesChanged).not.toHaveBeenCalled()
 	})
 
 	test('replacing the group cleans up the old entities', () => {
@@ -2133,7 +2168,8 @@ describe('transient child groups', () => {
 			{
 				type: EntityModelType.Action,
 			},
-			[transientAction]
+			[transientAction],
+			null
 		)
 
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(2)

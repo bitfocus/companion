@@ -1,8 +1,9 @@
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
+import { exprExpr, exprVal, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { ControlCustomAction } from '../../lib/Controls/ControlTypes/CustomAction.js'
 import { createMockTrpcContext } from '../Util.js'
 import { createTestApp, type TestApp } from './TestApp.js'
@@ -332,5 +333,119 @@ describe('custom actions using a connection', () => {
 		await setLastValue('beta')
 		await expectPressGives(alpha, false)
 		await expectPressGives(beta, true)
+	})
+})
+
+describe('custom actions with a local variable fed by a connection', () => {
+	let app: TestApp
+	beforeEach(async () => {
+		app = await createTestApp({
+			configDir: null,
+			extraModulePath: path.join(import.meta.dirname, 'modules/fixtures'),
+		})
+	})
+	afterEach(async () => {
+		await app.close()
+	})
+
+	/** Add the test connection, and a button which sets its last value */
+	async function setup() {
+		const label = 'tester'
+		const connectionId = await app
+			.trpc()
+			.instances.connections.add({ module: { type: 'test-module-2-1-3' }, label, versionId: 'dev' })
+		if (!connectionId) throw new Error('Failed to add the connection')
+		await vi.waitFor(() => {
+			expect(
+				app.registry.instance.definitions.getEntityDefinition(EntityModelType.Feedback, connectionId, 'last_value_is')
+			).toBeTruthy()
+		}, 30_000)
+
+		/** Add a local variable, which is whether the last value of the connection is `value` */
+		const addLocal = async (controlId: string, name: string, value: ExpressionOrValue<string>) => {
+			const id = await app.trpc().controls.entities.add({
+				controlId,
+				entityLocation: 'local-variables',
+				ownerId: null,
+				connectionId,
+				entityType: EntityModelType.Feedback,
+				entityDefinition: 'last_value_is',
+			})
+			if (!id) throw new Error('Failed to add the local variable')
+			await app
+				.trpc()
+				.controls.entities.setVariableName({ controlId, entityLocation: 'local-variables', entityId: id, name })
+			await app.trpc().controls.entities.setOption({
+				controlId,
+				entityLocation: 'local-variables',
+				entityId: id,
+				key: 'value',
+				value,
+			})
+		}
+
+		const setter = { pageNumber: 1, row: 2, column: 1 }
+		const setterId = app.createButton(setter)
+		const setterControl = app.registry.controls.getControl(setterId)
+		if (!setterControl?.supportsEntities || !setterControl.entities.isEditable) throw new Error('Expected a button')
+		const stepId = (setterControl.entities as unknown as { getStepIds(): string[] }).getStepIds()[0]
+		const setVarId = await app.trpc().controls.entities.add({
+			controlId: setterId,
+			entityLocation: { stepId, setId: 'down' },
+			ownerId: null,
+			connectionId,
+			entityType: EntityModelType.Action,
+			entityDefinition: 'set_var',
+		})
+		if (!setVarId) throw new Error('Failed to add the action')
+		const setLastValue = async (value: string) => {
+			await app.trpc().controls.entities.setOption({
+				controlId: setterId,
+				entityLocation: { stepId, setId: 'down' },
+				entityId: setVarId,
+				key: 'value',
+				value: exprVal(value),
+			})
+			app.pressButton(setter, true)
+			app.pressButton(setter, false)
+			await vi.waitFor(
+				() => expect(app.registry.variables.values.getVariableValue(label, 'last_value')).toBe(value),
+				10_000
+			)
+		}
+		return { addLocal, setLastValue }
+	}
+
+	/** Press a button until the custom action reports the expected value, as the connection updates asynchronously */
+	const pressUntil = async (location: ControlLocation, expected: boolean) => {
+		await vi.waitFor(async () => {
+			app.pressButton(location, true)
+			app.pressButton(location, false)
+			await new Promise((resolve) => setTimeout(resolve, 50))
+			expect(app.getCustomVariableValue('out')).toBe(expected)
+		}, 10_000)
+	}
+
+	test('a connection feedback whose option uses a local variable fed by a connection follows it', async () => {
+		const { addLocal, setLastValue } = await setup()
+		app.createCustomVariable('out', '')
+
+		const customActionId = await app.trpc().controls.customActions.create({ name: 'Check' })
+		await addLocal(customActionId, 'a', exprVal('true'))
+		// `b` depends on `a`, so is only true once the connection has given `a` its value and `b` has been re-parsed
+		await addLocal(customActionId, 'b', exprExpr("$(local:a) ? 'true' : 'nope'"))
+		app.addCustomActionAction(customActionId, 'custom_variable_set_value', {
+			name: exprVal('out'),
+			create: exprVal(false),
+			value: exprExpr('$(local:b)'),
+		})
+
+		const loc = { pageNumber: 1, row: 1, column: 1 }
+		app.addCustomActionCall(app.createButton(loc), customActionId, {}, null)
+
+		await setLastValue('other')
+		await pressUntil(loc, false)
+		await setLastValue('true')
+		await pressUntil(loc, true)
 	})
 })

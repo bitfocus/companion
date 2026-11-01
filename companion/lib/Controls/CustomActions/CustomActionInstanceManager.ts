@@ -340,7 +340,9 @@ export class CustomActionInstanceManager {
 			deriveEntityIds(
 				idPrefix,
 				customAction.entities.getLocalVariableEntities().map((entity) => entity.asEntityModel(true))
-			)
+			),
+			// The other entities of the copy may use these variables, such as one fed by a connection
+			(changed) => scope.localVariableEntitiesChanged(changed)
 		)
 		scope.setEntityLists(null, localVariables)
 
@@ -351,7 +353,8 @@ export class CustomActionInstanceManager {
 			deriveEntityIds(
 				idPrefix,
 				customAction.entities.getActionEntities().map((entity) => entity.asEntityModel(true))
-			)
+			),
+			null
 		)
 		scope.setEntityLists(actions, localVariables)
 

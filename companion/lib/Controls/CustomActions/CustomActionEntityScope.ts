@@ -6,6 +6,7 @@ import type {
 } from '../../Variables/VariablesAndExpressionParser.js'
 import type { ControlCustomAction } from '../ControlTypes/CustomAction.js'
 import type { CustomActionValues } from '../CustomActionRunFrame.js'
+import type { ControlEntityInstance } from '../Entities/EntityInstance.js'
 import type { ControlEntityList } from '../Entities/EntityList.js'
 import { EntityPoolSpecialExpressionManager } from '../Entities/EntitySpecialExpressionManager.js'
 import type { EntityScope } from '../Entities/Types.js'
@@ -99,6 +100,18 @@ export class CustomActionEntityScope implements EntityScope {
 
 		// A run may set its variables many times in quick succession
 		this.#debounceResubscribeEntities()
+	}
+
+	/**
+	 * The values of some local variables of the copy have changed, such as from a connection, so re-parse anything
+	 * which may use them
+	 * @param changed The local variable entities whose values changed
+	 */
+	localVariableEntitiesChanged(changed: ControlEntityInstance[]): void {
+		for (const entity of changed) {
+			const name = entity.rawLocalVariableName
+			if (name) this.localValueChanged(name)
+		}
 	}
 
 	readonly #debounceResubscribeEntities = debounceFn(() => this.#resubscribeEntities(), { wait: 10, maxWait: 50 })
