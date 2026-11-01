@@ -1,5 +1,5 @@
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import {
 	DisplayedLocationsSet,
 	displayedSizeKey,
@@ -14,7 +14,7 @@ import {
  */
 export class EmbeddedLocations {
 	readonly #displayed: DisplayedLocations
-	readonly #getEmbedded: (location: ControlLocation) => ReadonlySet<string> | null
+	readonly #getEmbedded: (location: ControlLocation) => ReadonlySet<ControlLocationString> | null
 
 	/** What each location shows of those it embeds, by location (see formatLocation) */
 	readonly #shown = new Map<string, { readonly set: DisplayedLocationsSet; entries: EmbeddedEntry[] }>()
@@ -23,15 +23,18 @@ export class EmbeddedLocations {
 	 * Those don't show what it embeds in turn: what something embeds already includes what that embeds, and two that
 	 * embed each other would otherwise keep each other shown for good
 	 */
-	readonly #shownByEmbedding = new Map<string, Map<string, number>>()
+	readonly #shownByEmbedding = new Map<ControlLocationString, Map<string, number>>()
 	/** Locations to refresh, done one at a time as showing one can change what another is shown at */
-	readonly #pending = new Map<string, ControlLocation>()
+	readonly #pending = new Map<ControlLocationString, ControlLocation>()
 	#refreshing = false
 
 	/**
 	 * @param getEmbedded - the locations a location's render embeds, in the form of formatLocation
 	 */
-	constructor(displayed: DisplayedLocations, getEmbedded: (location: ControlLocation) => ReadonlySet<string> | null) {
+	constructor(
+		displayed: DisplayedLocations,
+		getEmbedded: (location: ControlLocation) => ReadonlySet<ControlLocationString> | null
+	) {
 		this.#displayed = displayed
 		this.#getEmbedded = getEmbedded
 
@@ -54,7 +57,7 @@ export class EmbeddedLocations {
 		}
 	}
 
-	#refreshOne(key: string, location: ControlLocation): void {
+	#refreshOne(key: ControlLocationString, location: ControlLocation): void {
 		// Only the sizes it is shown at itself, not because something embeds it
 		const byEmbedding = this.#shownByEmbedding.get(key)
 		const sizes = this.#displayed
@@ -103,7 +106,7 @@ export class EmbeddedLocations {
 
 interface EmbeddedEntry {
 	/** The embedded location (see formatLocation) */
-	readonly key: string
+	readonly key: ControlLocationString
 	readonly location: ControlLocation
 	readonly size: DisplayedSize
 }

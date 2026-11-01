@@ -1,6 +1,6 @@
 import debounceFn from 'debounce-fn'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { makeReferencePlaceholder } from '../../../Graphics/ConvertGraphicsElements.js'
 import type { ImageResult } from '../../../Graphics/ImageResult.js'
@@ -28,7 +28,7 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 	readonly #getTargetLocation: () => { location: ControlLocation | null; referencedVariableIds: ReadonlySet<string> }
 
 	/** Locations the last draw depended on, so we know which `button_drawn` events must trigger a redraw. */
-	#lastReferencedLocations: ReadonlySet<string> | null = null
+	#lastReferencedLocations: ReadonlySet<ControlLocationString> | null = null
 
 	/** Variables the last location-resolution depended on, so a change to any (e.g. `$(page:x)`) redraws us. */
 	#lastLocationVariables: ReadonlySet<string> | null = null
@@ -94,7 +94,10 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 			return this.#storeAndReturn(this.#placeholder('∞'), new Set([targetLocationStr]))
 		}
 
-		const referencedLocations = new Set<string>([targetLocationStr, ...(targetStyle.referencedLocations ?? [])])
+		const referencedLocations = new Set<ControlLocationString>([
+			targetLocationStr,
+			...(targetStyle.referencedLocations ?? []),
+		])
 
 		return this.#storeAndReturn(
 			{
@@ -107,7 +110,7 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 
 	#storeAndReturn(
 		style: DrawStyleLayeredButtonModel,
-		referencedLocations: ReadonlySet<string> | null
+		referencedLocations: ReadonlySet<ControlLocationString> | null
 	): DrawStyleLayeredButtonModel {
 		this.#lastDrawStyle = style
 		this.#lastReferencedLocations = referencedLocations

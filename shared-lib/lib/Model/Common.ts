@@ -1,3 +1,4 @@
+import z from 'zod'
 import type { ObjectPatch } from '../Diff.js'
 import type { LedGaugeDescription } from '../Graphics/GaugeLeds.js'
 import type { SomeCompanionInputField } from './Options.js'
@@ -44,6 +45,16 @@ export interface ControlLocation {
 	row: number
 	column: number
 }
+
+/**
+ * A location as a `page/row/column` string, which its type comes from. It is branded so that one can only be made by
+ * `formatLocation` or this schema, rather than written by hand
+ */
+export const zodControlLocationString = z
+	.templateLiteral([z.number(), '/', z.number(), '/', z.number()])
+	.brand<'ControlLocationString', 'inout'>()
+
+export type ControlLocationString = z.output<typeof zodControlLocationString>
 
 export interface EmulatorConfig {
 	emulator_control_enable: boolean

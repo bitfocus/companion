@@ -156,15 +156,21 @@ describe('LayeredButtonDrawer', () => {
 			)
 			await drawer.getDrawStyle()
 
-			expect(index.getControlsReferencing('2/0/0')).toEqual(new Set([CONTROL_ID]))
-			expect(index.getControlsReferencing('3/0/0')).toEqual(new Set([CONTROL_ID]))
+			expect(index.getControlsReferencing(formatLocation({ pageNumber: 2, row: 0, column: 0 }))).toEqual(
+				new Set([CONTROL_ID])
+			)
+			expect(index.getControlsReferencing(formatLocation({ pageNumber: 3, row: 0, column: 0 }))).toEqual(
+				new Set([CONTROL_ID])
+			)
 
 			convertMock.mockResolvedValueOnce(conversionResult({ referencedLocations: new Set(['4/0/0']) }))
 			await drawer.getDrawStyle()
 
-			expect(index.getControlsReferencing('2/0/0')).toBeUndefined()
-			expect(index.getControlsReferencing('3/0/0')).toBeUndefined()
-			expect(index.getControlsReferencing('4/0/0')).toEqual(new Set([CONTROL_ID]))
+			expect(index.getControlsReferencing(formatLocation({ pageNumber: 2, row: 0, column: 0 }))).toBeUndefined()
+			expect(index.getControlsReferencing(formatLocation({ pageNumber: 3, row: 0, column: 0 }))).toBeUndefined()
+			expect(index.getControlsReferencing(formatLocation({ pageNumber: 4, row: 0, column: 0 }))).toEqual(
+				new Set([CONTROL_ID])
+			)
 		})
 
 		it('builds the parser and conversion call from the control location', async () => {

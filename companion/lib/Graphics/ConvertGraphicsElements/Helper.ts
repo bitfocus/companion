@@ -3,7 +3,7 @@ import type { JsonValue } from 'type-fest'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import { combineClockCycles } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import { isExpressionOrValue, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
@@ -35,9 +35,9 @@ export interface DrawnAndHidden<T> {
 export interface ExpressionReferences {
 	readonly variables: DrawnAndHidden<string>
 	readonly compositeElements: DrawnAndHidden<CompositeElementIdString>
-	readonly referencedLocations: DrawnAndHidden<string>
+	readonly referencedLocations: DrawnAndHidden<ControlLocationString>
 	/** Locations where a cycle was detected during this conversion (a subset of referencedLocations.drawn). */
-	readonly cyclicLocations: Set<string>
+	readonly cyclicLocations: Set<ControlLocationString>
 	/** How long until every expression evaluated during this conversion which depends on the render clock repeats, or 0 */
 	clockCycleMs: number
 }
@@ -516,7 +516,7 @@ export interface ParseElementsContext {
 	readonly drawPixelBuffers: DrawPixelBuffers
 
 	/** Location string of the button being drawn (e.g. '1/0/0'), used for loop detection */
-	readonly currentLocationStr: string | null
+	readonly currentLocationStr: ControlLocationString | null
 
 	/** Callback to fetch the last-rendered ImageResult for a given location */
 	readonly getRenderAtLocation: ((location: ControlLocation) => ImageResult | null) | null
@@ -551,7 +551,7 @@ export function createParseElementsContext(
 	cache: ElementConversionCache | null,
 	globalReferences: ExpressionReferences,
 	processedElementIds: Set<string>,
-	currentLocationStr: string | null,
+	currentLocationStr: ControlLocationString | null,
 	getRenderAtLocation: ((location: ControlLocation) => ImageResult | null) | null,
 	compositeAncestors: ReadonlySet<CompositeElementIdString>
 ): ParseElementsContext {

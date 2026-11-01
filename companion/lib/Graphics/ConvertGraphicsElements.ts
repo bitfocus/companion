@@ -6,7 +6,7 @@ import {
 	FONTSIZE_SHRINK_DEFAULT,
 	getElementSchemaProperty,
 } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type {
@@ -109,7 +109,7 @@ export async function ConvertSomeButtonGraphicsElementForDrawing(
 	feedbackOverrides: ReadonlyMap<string, ReadonlyMap<string, ResolvedFeedbackStyleOverride>>,
 	onlyEnabled: boolean,
 	cache: ElementConversionCache | null,
-	currentLocationStr: string | null = null,
+	currentLocationStr: ControlLocationString | null = null,
 	getRenderAtLocation: ((location: ControlLocation) => ImageResult | null) | null = null
 ): Promise<ConvertedElementsResult> {
 	// Apply any queued invalidations before processing
@@ -365,7 +365,7 @@ async function convertReferenceElementForDrawing(
 	drawElement.contentHash = computeElementContentHash(drawElement)
 
 	// Inline reference resolution using the provided render cache callback
-	let referencedLocationStr: string | null = null
+	let referencedLocationStr: ControlLocationString | null = null
 	if (locationStr) {
 		if (!context.getRenderAtLocation) {
 			// References are disabled (no render callback) — show a placeholder

@@ -1,5 +1,7 @@
 import * as imageRs from '@julusian/image-rs'
 import { describe, expect, test, vi } from 'vitest'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
+import type { ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import { getImageResultStats, ImageResult, type ImageResultProcessedStyle } from '../../lib/Graphics/ImageResult.js'
 
 /**
@@ -64,7 +66,10 @@ describe('ImageResult', () => {
 		})
 
 		test('referencedLocations is stored when provided', () => {
-			const locations = new Set(['1/0/0', '2/1/3'])
+			const locations = new Set<ControlLocationString>([
+				formatLocation({ pageNumber: 1, row: 0, column: 0 }),
+				formatLocation({ pageNumber: 2, row: 1, column: 3 }),
+			])
 			const image = new ImageResult(undefined, null, 1, 0, vi.fn(), null, locations)
 			expect(image.referencedLocations).toBe(locations)
 		})

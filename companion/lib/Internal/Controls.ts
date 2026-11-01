@@ -14,7 +14,7 @@ import { setTimeout } from 'node:timers/promises'
 import debounceFn from 'debounce-fn'
 import { formatLocation, ParseControlId } from '@companion-app/shared/ControlId.js'
 import { ControlLocationOption } from '@companion-app/shared/ControlLocation.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import {
 	FeedbackEntitySubType,
 	type ActionEntityModel,
@@ -55,7 +55,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 	/**
 	 * The dependencies of locations that should retrigger each feedback when buttons are drawn
 	 */
-	#buttonDrawnSubscriptions = new Map<string, string>()
+	#buttonDrawnSubscriptions = new Map<string, ControlLocationString>()
 
 	/**
 	 * The dependencies of locations that should retrigger each feedback when push state changes
@@ -74,7 +74,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		this.#controlsStore = controlsStore
 		this.#pageStore = pageStore
 
-		const pendingLocationInvalidations = new Set<string>()
+		const pendingLocationInvalidations = new Set<ControlLocationString>()
 		const debounceCheckFeedbacks = debounceFn(
 			() => {
 				// Find all feedbacks that are affected by the pending location invalidations

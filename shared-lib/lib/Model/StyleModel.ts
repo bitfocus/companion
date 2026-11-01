@@ -1,4 +1,5 @@
 import type { CompanionAlignment, CompanionTextSize } from '@companion-module/base'
+import type { ControlLocationString } from './Common.js'
 import type { SomeButtonGraphicsDrawElement } from './StyleLayersModel.js'
 
 export type DrawStyleModel = DrawStyleLayeredButtonModel
@@ -30,7 +31,7 @@ export interface DrawStyleLayeredButtonModel extends DrawStyleButtonStateProps {
 	 * Location strings (e.g. '1/0/0') transitively referenced by this button's elements.
 	 * Only populated for layered buttons that went through reference element resolution.
 	 */
-	referencedLocations?: ReadonlySet<string>
+	referencedLocations?: ReadonlySet<ControlLocationString>
 
 	/**
 	 * How long until every expression in this button's elements which depends on the render clock (e.g.

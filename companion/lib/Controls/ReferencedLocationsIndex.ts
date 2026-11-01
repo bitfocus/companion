@@ -1,3 +1,5 @@
+import type { ControlLocationString } from '@companion-app/shared/Model/Common.js'
+
 /**
  * Which controls referenced which button locations (e.g. '1/0/0') in their last draw, indexed both ways.
  *
@@ -9,14 +11,14 @@
  * drawer still checks the location against its own references, so a stale entry only costs a no-op call.
  */
 export class ReferencedLocationsIndex {
-	readonly #byControl = new Map<string, ReadonlySet<string>>()
-	readonly #byLocation = new Map<string, Set<string>>()
+	readonly #byControl = new Map<string, ReadonlySet<ControlLocationString>>()
+	readonly #byLocation = new Map<ControlLocationString, Set<string>>()
 
 	/**
 	 * Replace the locations referenced by a control
 	 * @param locations The referenced location strings, or null when it references none
 	 */
-	setControlReferences(controlId: string, locations: ReadonlySet<string> | null): void {
+	setControlReferences(controlId: string, locations: ReadonlySet<ControlLocationString> | null): void {
 		const previous = this.#byControl.get(controlId)
 		if (previous) {
 			for (const location of previous) {
@@ -51,11 +53,11 @@ export class ReferencedLocationsIndex {
 	}
 
 	/** The ids of the controls whose last draw referenced a location, or undefined if none did */
-	getControlsReferencing(location: string): ReadonlySet<string> | undefined {
+	getControlsReferencing(location: ControlLocationString): ReadonlySet<string> | undefined {
 		return this.#byLocation.get(location)
 	}
 
-	#removeFromLocation(location: string, controlId: string): void {
+	#removeFromLocation(location: ControlLocationString, controlId: string): void {
 		const controlIds = this.#byLocation.get(location)
 		if (!controlIds) return
 

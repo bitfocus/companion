@@ -31,7 +31,7 @@ import {
 	resolveButtonStyleProperties,
 	type ResolveButtonStylePropertiesConfig,
 } from '@companion-app/shared/Graphics/Util.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import type { RendererButtonStyle, RendererDrawStyle } from '@companion-app/shared/Model/Render.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import {
@@ -1008,7 +1008,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		clockCycleMs: number,
 		waitForRemoteImages: boolean,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
-		referencedLocations: ReadonlySet<string> | undefined = undefined
+		referencedLocations: ReadonlySet<ControlLocationString> | undefined = undefined
 	): ImageResult {
 		const processedStyle = GraphicsLayeredProcessedStyleGenerator.Generate(drawStyle)
 

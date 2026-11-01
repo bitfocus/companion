@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { CreatePageControlId } from '@companion-app/shared/ControlId.js'
+import { CreatePageControlId, formatLocation } from '@companion-app/shared/ControlId.js'
 import { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
 import { INVALID_ENTITY_DEFINITION_ID } from '@companion-app/shared/Model/EntityModel.js'
 import { ControlStore } from '../../lib/Controls/ControlStore.js'
@@ -165,10 +165,15 @@ describe('ControlStore', () => {
 
 		it('forgets the locations the control referenced', () => {
 			addControl('bank:1')
-			store.referencedLocations.setControlReferences('bank:1', new Set(['1/0/0']))
+			store.referencedLocations.setControlReferences(
+				'bank:1',
+				new Set([formatLocation({ pageNumber: 1, row: 0, column: 0 })])
+			)
 			store.deleteControl('bank:1')
 
-			expect(store.referencedLocations.getControlsReferencing('1/0/0')).toBeUndefined()
+			expect(
+				store.referencedLocations.getControlsReferencing(formatLocation({ pageNumber: 1, row: 0, column: 0 }))
+			).toBeUndefined()
 		})
 	})
 

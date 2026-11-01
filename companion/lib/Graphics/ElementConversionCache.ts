@@ -1,3 +1,4 @@
+import type { ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { CompositeElementIdString } from '../Instance/Definitions.js'
@@ -35,7 +36,7 @@ export interface ElementConversionCacheEntry {
 	 * before B has had a chance to re-render, embedding stale B content and triggering a redundant
 	 * extra redraw.
 	 */
-	readonly referencedLocation?: string | null
+	readonly referencedLocation?: ControlLocationString | null
 }
 
 /**
@@ -106,7 +107,7 @@ export class ElementConversionCache {
 	 * Queue all reference elements pointing to a given location for invalidation.
 	 * @param locationStr The location string (e.g. '1/0/0') whose referencing elements should be invalidated
 	 */
-	queueInvalidateReferencedLocation(locationStr: string): void {
+	queueInvalidateReferencedLocation(locationStr: ControlLocationString): void {
 		for (const [elementId, entry] of this.#cache) {
 			if ((entry.referencedLocation ?? null) === locationStr) {
 				this.#invalidationQueue.add(elementId)

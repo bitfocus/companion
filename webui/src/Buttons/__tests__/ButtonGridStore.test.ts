@@ -1169,7 +1169,9 @@ describe('ButtonGridStore', () => {
 		it('shows the end of a swap that empties, not just the one that fills', () => {
 			// Swapping with an empty cell is how a button is moved into one, and half of that is a cell
 			// becoming empty - which is only visible if the preview draws it
-			actions.isOccupied = vi.fn((location) => formatLocationKey(location) === '1/1/1')
+			actions.isOccupied = vi.fn(
+				(location) => formatLocationKey(location) === formatLocationKey({ pageNumber: 1, row: 1, column: 1 })
+			)
 			store.setTool('swap', actions)
 			store.handleTap(at(1, 1), NO_MODIFIERS, actions)
 
@@ -1395,7 +1397,9 @@ describe('ButtonGridStore', () => {
 	describe('clicking an empty cell', () => {
 		/** A grid where only 1/1/1 holds a button */
 		const onlyOneButton = () => {
-			actions.isOccupied = vi.fn((location) => formatLocationKey(location) === '1/1/1')
+			actions.isOccupied = vi.fn(
+				(location) => formatLocationKey(location) === formatLocationKey({ pageNumber: 1, row: 1, column: 1 })
+			)
 		}
 
 		it('is ignored by delete, rather than asking about nothing', () => {

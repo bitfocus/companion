@@ -1,6 +1,7 @@
 import * as imageRs from '@julusian/image-rs'
 import type { LedGaugeDescription } from '@companion-app/shared/Graphics/GaugeLeds.js'
 import type { HorizontalAlignment, VerticalAlignment } from '@companion-app/shared/Graphics/Util.js'
+import type { ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 
@@ -118,7 +119,7 @@ export class ImageResult {
 	 * The set of location strings (e.g. '1/0/0') transitively referenced by this render.
 	 * Used for loop detection when embedding reference elements.
 	 */
-	readonly referencedLocations: ReadonlySet<string>
+	readonly referencedLocations: ReadonlySet<ControlLocationString>
 
 	/**
 	 * Content identity of this render: two renders with the same non-undefined cacheKey are
@@ -145,7 +146,7 @@ export class ImageResult {
 		clockCycleMs: number,
 		drawNative: ImageResultNativeDrawFn,
 		drawElements: readonly SomeButtonGraphicsDrawElement[] | null = null,
-		referencedLocations: ReadonlySet<string> = new Set()
+		referencedLocations: ReadonlySet<ControlLocationString> = new Set()
 	) {
 		this.cacheKey = cacheKey
 		this.style = style

@@ -1,13 +1,14 @@
 import type { ActionSetId } from './Model/ActionModel.js'
-import type { ControlLocation } from './Model/Common.js'
+import type { ControlLocation, ControlLocationString } from './Model/Common.js'
 import type { UserConfigGridSize } from './Model/UserConfigModel.js'
 import { assertNever } from './Util.js'
 
 /**
  * Present a location as a string
  */
-export function formatLocation(location: ControlLocation): string {
-	return `${location.pageNumber ?? '?'}/${location.row ?? '?'}/${location.column ?? '?'}`
+export function formatLocation(location: ControlLocation): ControlLocationString {
+	// The only place a location string is made without being checked
+	return `${location.pageNumber ?? '?'}/${location.row ?? '?'}/${location.column ?? '?'}` as ControlLocationString
 }
 
 /**

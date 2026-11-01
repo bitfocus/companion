@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import { DisplayedLocations } from '../../lib/Graphics/DisplayedLocations.js'
 import { EmbeddedLocations } from '../../lib/Graphics/EmbeddedLocations.js'
 
@@ -13,7 +13,7 @@ const wide = { width: 200, height: 100 }
 function create() {
 	const displayed = new DisplayedLocations()
 	/** What each location embeds, as its render would say */
-	const embeds = new Map<string, Set<string>>()
+	const embeds = new Map<ControlLocationString, Set<ControlLocationString>>()
 	const embedded = new EmbeddedLocations(displayed, (location) => embeds.get(formatLocation(location)) ?? null)
 	const setEmbeds = (location: ControlLocation, others: ControlLocation[]) => {
 		embeds.set(formatLocation(location), new Set(others.map(formatLocation)))

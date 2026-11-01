@@ -1,6 +1,6 @@
 import debounceFn from 'debounce-fn'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
-import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import {
 	SomeButtonGraphicsElementSchema,
@@ -133,7 +133,7 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 		this.elementConversionCache.queueInvalidateCompositeType(changed)
 	)
 	/** Location strings (e.g. '1/0/0') of buttons referenced via reference elements in the last draw. */
-	readonly #referencedLocations = new DrawDependency<string>((changed) => {
+	readonly #referencedLocations = new DrawDependency<ControlLocationString>((changed) => {
 		for (const location of changed) this.elementConversionCache.queueInvalidateReferencedLocation(location)
 	})
 
@@ -400,7 +400,7 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 	/** Another located control finished rendering; if we reference it, invalidate and redraw. */
 	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
 		const locStr = formatLocation(location)
-		const changed: ReadonlySet<string> = new Set([locStr])
+		const changed: ReadonlySet<ControlLocationString> = new Set([locStr])
 
 		// Suppress ping-pong for an established cycle before anything else: if we're already drawing ∞ for
 		// this location AND the re-rendered target still references us back, no visible output would change.

@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { ElementConversionCache, type ElementConversionCacheEntry } from '../../lib/Graphics/ElementConversionCache.js'
 import type { CompositeElementIdString } from '../../lib/Instance/Definitions.js'
 
@@ -231,9 +232,9 @@ describe('ElementConversionCache', () => {
 	describe('queueInvalidateReferencedLocation', () => {
 		test('entries matching the location are queued and removed on apply', () => {
 			const cache = new ElementConversionCache()
-			cache.set('elem1', makeEntry({ referencedLocation: '1/0/0' }))
-			cache.set('elem2', makeEntry({ referencedLocation: '2/0/0' }))
-			cache.queueInvalidateReferencedLocation('1/0/0')
+			cache.set('elem1', makeEntry({ referencedLocation: formatLocation({ pageNumber: 1, row: 0, column: 0 }) }))
+			cache.set('elem2', makeEntry({ referencedLocation: formatLocation({ pageNumber: 2, row: 0, column: 0 }) }))
+			cache.queueInvalidateReferencedLocation(formatLocation({ pageNumber: 1, row: 0, column: 0 }))
 			cache.applyQueuedInvalidations()
 			expect(cache.get('elem1')).toBeUndefined()
 			expect(cache.get('elem2')).toBeDefined()
@@ -242,7 +243,7 @@ describe('ElementConversionCache', () => {
 		test('entries with null referencedLocation are not affected', () => {
 			const cache = new ElementConversionCache()
 			cache.set('elem1', makeEntry({ referencedLocation: null }))
-			cache.queueInvalidateReferencedLocation('1/0/0')
+			cache.queueInvalidateReferencedLocation(formatLocation({ pageNumber: 1, row: 0, column: 0 }))
 			cache.applyQueuedInvalidations()
 			expect(cache.get('elem1')).toBeDefined()
 		})
@@ -253,16 +254,16 @@ describe('ElementConversionCache', () => {
 			// Omit referencedLocation entirely by deleting it from the spread result
 			const { referencedLocation: _referencedLocation, ...entryWithoutRef } = entry
 			cache.set('elem1', entryWithoutRef)
-			cache.queueInvalidateReferencedLocation('1/0/0')
+			cache.queueInvalidateReferencedLocation(formatLocation({ pageNumber: 1, row: 0, column: 0 }))
 			cache.applyQueuedInvalidations()
 			expect(cache.get('elem1')).toBeDefined()
 		})
 
 		test('multiple entries can reference the same location', () => {
 			const cache = new ElementConversionCache()
-			cache.set('elem1', makeEntry({ referencedLocation: '1/0/0' }))
-			cache.set('elem2', makeEntry({ referencedLocation: '1/0/0' }))
-			cache.queueInvalidateReferencedLocation('1/0/0')
+			cache.set('elem1', makeEntry({ referencedLocation: formatLocation({ pageNumber: 1, row: 0, column: 0 }) }))
+			cache.set('elem2', makeEntry({ referencedLocation: formatLocation({ pageNumber: 1, row: 0, column: 0 }) }))
+			cache.queueInvalidateReferencedLocation(formatLocation({ pageNumber: 1, row: 0, column: 0 }))
 			cache.applyQueuedInvalidations()
 			expect(cache.get('elem1')).toBeUndefined()
 			expect(cache.get('elem2')).toBeUndefined()
