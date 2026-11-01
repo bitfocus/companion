@@ -140,7 +140,7 @@ function createHarness(model: Partial<CustomFeedbackModel>) {
 			const control = controlStore.getControl(CreateCustomFeedbackControlId(definitionId))
 			return control instanceof ControlCustomFeedback ? control.toFeedbackDefinition() : undefined
 		}
-		if (definitionId === 'check_expression') {
+		if (definitionId === 'check_expression' || definitionId === 'is_on') {
 			return {
 				entityType,
 				feedbackType: FeedbackEntitySubType.Boolean,
@@ -371,6 +371,27 @@ describe('ControlCustomFeedback', () => {
 			controlStore.updateFeedbackValues('conn', [
 				{ entityId: localVariable.id, controlId: CALLER_CONTROL_ID, value: 2 },
 			])
+			await expectValue(callerEntity, false)
+		})
+
+		test('follows the values of a connection feedback being cleared', async () => {
+			const { createCaller, controlStore } = createHarness({
+				feedbacks: [{ ...moduleValue('unused'), definitionId: 'is_on', variableName: undefined }],
+			})
+
+			const { caller, callerEntity } = createCaller(useFeedback())
+			// Let the copy be rebuilt for the creation of the custom feedback, so that it is not replaced below
+			await new Promise((resolve) => setTimeout(resolve, 150))
+			const [connectionFeedback] = callerEntity
+				.getTransientChildGroup('custom-feedback-copy:feedbacks')!
+				.getDirectEntities()
+			controlStore.updateFeedbackValues('conn', [
+				{ entityId: connectionFeedback.id, controlId: CALLER_CONTROL_ID, value: true },
+			])
+			await expectValue(callerEntity, true)
+
+			// eg the connection is disabled
+			caller.entities.clearConnectionState('conn')
 			await expectValue(callerEntity, false)
 		})
 
