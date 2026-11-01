@@ -203,8 +203,9 @@ export class UIHandler {
 				enabled: true,
 				// server ping message interval in milliseconds
 				pingMs: 30000,
-				// connection is terminated if pong message is not received in this many milliseconds
-				pongWaitMs: 5000,
+				// connection is terminated if pong message is not received in this many milliseconds.
+				// Generous, as a busy event loop (eg a large import on a Raspberry Pi) can't read the pong
+				pongWaitMs: 30000,
 			},
 			onError: (error) => {
 				this.#logger.error(`tRPC error: ${error.error.message} ${error.error.stack}`)
