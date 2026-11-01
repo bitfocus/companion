@@ -6,6 +6,7 @@ import { fetchBuiltinSurfaceModules } from '../fetch_builtin_modules.mts'
 import { fetchNodejs } from '../fetch_nodejs.mts'
 import { generateLegalArtifacts } from '../licenses/generate.mts'
 import { generateVersionString } from '../lib.mts'
+import { DMG_APP_POSITION, DMG_APPLICATIONS_POSITION, DMG_ICON_SIZE } from '../dmg_layout.mts'
 import { determinePlatformInfo } from './util.mts'
 
 $.verbose = true
@@ -148,6 +149,13 @@ if (process.env.ELECTRON !== '0') {
 			dmg: {
 				artifactName: 'companion-mac-${arch}.dmg',
 				writeUpdateInfo: false, // The blockmap is only for electron-updater, which we don't use
+				// background.png / background@2x.png are picked up from buildResources and set the window size; see
+				// build_installer_art.mts
+				iconSize: DMG_ICON_SIZE,
+				contents: [
+					{ ...DMG_APP_POSITION, type: 'file' },
+					{ ...DMG_APPLICATIONS_POSITION, type: 'link', path: '/Applications' },
+				],
 			},
 			mac: {
 				target: 'dmg',
