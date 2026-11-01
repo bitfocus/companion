@@ -58,6 +58,9 @@ export const trpcWsClient = createWSClient({
 	WebSocket: WebSocketWithConnectTimeout,
 	keepAlive: {
 		enabled: true,
+		// The backend can be busy for several seconds at a time (eg a large import on a Raspberry Pi), during
+		// which it can't answer the ping. The default 1s would drop (and reload) the UI part way through.
+		pongTimeoutMs: 30000,
 	},
 	onError: (error) => {
 		// This is probably pretty noisy, but there are some issues around here that need debugging
