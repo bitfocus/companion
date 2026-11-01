@@ -4,6 +4,7 @@ import type { PresetReferenceButtonModel } from '@companion-app/shared/Model/But
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlDependencies } from '../../../../lib/Controls/ControlDependencies.js'
 import { ControlButtonPresetReference } from '../../../../lib/Controls/ControlTypes/Button/PresetReference.js'
+import { ReferencedLocationsIndex } from '../../../../lib/Controls/ReferencedLocationsIndex.js'
 
 /** A feedback as it comes from the preset definition - its id is owned by the definition, not by any control */
 function makeDefinitionFeedback(id: string) {
@@ -79,6 +80,7 @@ describe('ControlButtonPresetReference', () => {
 			events: new EventEmitter() as any,
 			changeEvents: new EventEmitter() as any,
 			renderClock: { subscribe: vi.fn(() => () => {}) } as any,
+			referencedLocations: new ReferencedLocationsIndex(),
 			controlsAccessor: {
 				getControl: vi.fn(() => undefined),
 				pressControl: vi.fn(() => false),

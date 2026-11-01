@@ -8,6 +8,7 @@ import {
 	CreatePageControlId,
 	CreatePresetControlId,
 	CreateTriggerControlId,
+	formatLocation,
 	ParseControlId,
 	type ParsedControlIdType,
 } from '@companion-app/shared/ControlId.js'
@@ -138,6 +139,7 @@ export class ControlsController {
 			triggerEvents: this.#store.triggerEvents,
 			expressionVariableNamesMap: this.#expressionVariableNamesMap,
 			controlsAccessor: this.#store,
+			referencedLocations: this.#store.referencedLocations,
 		})
 
 		this.#triggerCollections = new TriggerCollections(
@@ -574,8 +576,13 @@ export class ControlsController {
 	 * @param render - the resulting render
 	 */
 	onButtonDrawn(location: ControlLocation, render: ImageResult): void {
-		for (const control of this.#store.controls.values()) {
-			control.drawing?.onButtonDrawn(location, render)
+		// Only the controls whose last draw referenced this location can be affected
+		const controlIds = this.#store.referencedLocations.getControlsReferencing(formatLocation(location))
+		if (!controlIds) return
+
+		// Copy, as a drawer may report new references (and so modify the set) while being notified
+		for (const controlId of [...controlIds]) {
+			this.#store.controls.get(controlId)?.drawing?.onButtonDrawn(location, render)
 		}
 	}
 
