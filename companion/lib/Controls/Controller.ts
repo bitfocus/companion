@@ -27,6 +27,7 @@ import type { ImageResult } from '../Graphics/ImageResult.js'
 import type { CompositeElementIdString } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
 import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
+import { yieldToEventLoop } from '../Resources/Util.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { injectOverriddenLocalVariableValues } from '../Variables/Util.js'
 import { NO_CONNECTION_LABELS } from '../Variables/Values.js'
@@ -62,6 +63,9 @@ import { TriggerCollections } from './TriggerCollections.js'
 import type { TriggerEvents } from './TriggerEvents.js'
 import { createTriggersTrpcRouter } from './TriggersTrpcRouter.js'
 import { validateBankControlId, validateExpressionVariableControlId, validateTriggerControlId } from './Util.js'
+
+/** How many controls to delete between yields to the event loop, when deleting them all */
+const DELETE_CONTROLS_BATCH_SIZE = 50
 
 /**
  * The class that manages the controls
@@ -607,12 +611,19 @@ export class ControlsController {
 	/**
 	 * Delete every control whose id is of the given type (see {@link ParseControlId})
 	 *
-	 * This parses the ids to ensure it is exhaustive and not relying on specific implementations of each type
+	 * This parses the ids to ensure it is exhaustive and not relying on specific implementations of each type.
+	 * It yields to the event loop as it goes, as deleting thousands of controls takes long enough to stall it
 	 */
-	deleteAllControlsOfType(type: ParsedControlIdType['type']): void {
+	async deleteAllControlsOfType(type: ParsedControlIdType['type']): Promise<void> {
+		let deleted = 0
+
 		for (const controlId of this.#store.controls.keys()) {
 			if (ParseControlId(controlId)?.type === type) {
 				this.deleteControl(controlId)
+
+				// Yield every now and then to avoid blocking thhe event loop
+				deleted++
+				if (deleted % DELETE_CONTROLS_BATCH_SIZE === 0) await yieldToEventLoop()
 			}
 		}
 	}
