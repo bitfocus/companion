@@ -33,7 +33,7 @@ export type CustomActionInstancesForEntity = Pick<CustomActionInstanceManager, '
 
 type CustomFeedbackInstancesForCustomActions = Pick<
 	CustomFeedbackInstanceManager,
-	'entityUpdate' | 'entityDelete' | 'copyRuntimeValues'
+	'entityUpdate' | 'entityDelete' | 'evaluateLive' | 'copyRuntimeValues'
 >
 
 /**

@@ -883,6 +883,77 @@
 						"$ref": "#/$defs/EmptyCollection"
 					}
 				},
+				"customFeedbacks": {
+					"type": "object",
+					"propertyNames": {
+						"type": "string"
+					},
+					"additionalProperties": {
+						"type": "object",
+						"properties": {
+							"type": {
+								"type": "string",
+								"const": "custom-feedback"
+							},
+							"options": {
+								"default": {
+									"name": "New custom feedback",
+									"description": "",
+									"sortOrder": 0
+								},
+								"type": "object",
+								"properties": {
+									"name": {
+										"default": "New custom feedback",
+										"type": "string"
+									},
+									"description": {
+										"default": "",
+										"type": "string"
+									},
+									"sortOrder": {
+										"default": 0,
+										"type": "number"
+									},
+									"collectionId": {
+										"type": "string"
+									},
+									"notes": {
+										"type": "string"
+									}
+								}
+							},
+							"inputs": {
+								"default": [],
+								"type": "array",
+								"items": {
+									"$ref": "#/$defs/AuthorableInputField"
+								}
+							},
+							"feedbacks": {
+								"type": "array",
+								"items": {
+									"$ref": "#/$defs/EntityModel"
+								}
+							},
+							"localVariables": {
+								"type": "array",
+								"items": {
+									"$ref": "#/$defs/EntityModel"
+								}
+							}
+						},
+						"required": [
+							"type"
+						]
+					}
+				},
+				"customFeedbackCollections": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/EmptyCollection"
+					}
+				},
 				"instances": {
 					"type": "object",
 					"propertyNames": {

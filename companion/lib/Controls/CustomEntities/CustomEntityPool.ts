@@ -50,7 +50,11 @@ export function createCustomEntityParser(
 			parserValues[`local:${name}`] = entity.getResolvedFeedbackValue(null)
 		} else {
 			// A computed variable is evaluated for this use, so that it sees the inputs and variables of the use
-			parserValues[`local:${name}`] = entity.getResolvedFeedbackValue({ parser: createParser(parserValues) })
+			parserValues[`local:${name}`] = entity.getResolvedFeedbackValue({
+				parser: createParser(parserValues),
+				executionVariables: {},
+				parserOptions: options,
+			})
 		}
 	}
 

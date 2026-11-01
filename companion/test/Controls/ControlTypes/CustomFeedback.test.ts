@@ -11,13 +11,14 @@ import {
 	type FeedbackEntityModel,
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
-import { exprVal, type AuthorableInputField } from '@companion-app/shared/Model/Options.js'
+import { exprExpr, exprVal, type AuthorableInputField } from '@companion-app/shared/Model/Options.js'
 import type { ControlDependencies } from '../../../lib/Controls/ControlDependencies.js'
 import { ControlStore } from '../../../lib/Controls/ControlStore.js'
 import { ControlCustomFeedback } from '../../../lib/Controls/ControlTypes/CustomFeedback.js'
 import { CustomActionInstanceManager } from '../../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
 import { CustomFeedbackInstanceManager } from '../../../lib/Controls/CustomFeedbacks/CustomFeedbackInstanceManager.js'
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
+import type { FeedbackExecutionContext } from '../../../lib/Controls/Entities/Types.js'
 import type { InternalController } from '../../../lib/Internal/Controller.js'
 import { VariablesValues } from '../../../lib/Variables/Values.js'
 import { mockUserConfig } from '../../utils/MockUserConfig.js'
@@ -421,6 +422,91 @@ describe('ControlCustomFeedback', () => {
 					CALLER_CONTROL_ID
 				)
 			)
+		})
+	})
+
+	describe('evaluated as the condition of an action', () => {
+		/** A context like the one an action gives the feedbacks it checks */
+		function actionContext(
+			variableValues: VariablesValues,
+			variables: Record<string, any>,
+			executionVariables: Record<string, any>
+		): FeedbackExecutionContext {
+			const parserOptions = { allowClockSensitive: false }
+			const parser = variableValues.createVariablesAndExpressionParser(
+				null,
+				null,
+				{ ...variables, ...executionVariables },
+				null,
+				parserOptions
+			)
+			return { parser, executionVariables, parserOptions }
+		}
+
+		test('parses its inputs in the context of the action, rather than using its cached value', async () => {
+			const { deps, createCaller } = createHarness({ feedbacks: [check('$(options:n) > 4')] })
+
+			// Outside of the action the variable doesn't exist, so the input has its default
+			const { callerEntity } = createCaller(useFeedback({ n: exprExpr('$(custom:level)') }))
+			await expectValue(callerEntity, false)
+
+			expect(callerEntity.getBooleanFeedbackValue(actionContext(deps.variableValues, { 'custom:level': 7 }, {}))).toBe(
+				true
+			)
+			expect(callerEntity.getBooleanFeedbackValue(actionContext(deps.variableValues, { 'custom:level': 2 }, {}))).toBe(
+				false
+			)
+		})
+
+		test('passes on the this variables of the execution to its feedbacks', async () => {
+			const { deps, createCaller } = createHarness({ feedbacks: [check("$(this:surface_id) == 'surface0'")] })
+
+			const { callerEntity } = createCaller(useFeedback())
+			await expectValue(callerEntity, false)
+
+			const pressedBy = (surfaceId: string) => actionContext(deps.variableValues, {}, { 'this:surface_id': surfaceId })
+			expect(callerEntity.getBooleanFeedbackValue(pressedBy('surface0'))).toBe(true)
+			expect(callerEntity.getBooleanFeedbackValue(pressedBy('surface1'))).toBe(false)
+		})
+
+		test('passes them on to a custom feedback it uses, and its inputs', async () => {
+			const { deps, controlStore, createCaller } = createHarness({
+				feedbacks: [useFeedback({ n: exprExpr('$(options:n) + 1') }, 'inner')],
+			})
+
+			const inner = new ControlCustomFeedback(deps, CreateCustomFeedbackControlId('inner'), null, false)
+			controlStore.controls.set(inner.controlId, inner)
+			inner.inputAdd(numberInput)
+			inner.entities.entityAdd('feedbacks', null, check("$(this:surface_id) == 'surface0' && $(options:n) == 6"))
+
+			const { callerEntity } = createCaller(useFeedback({ n: exprExpr('$(custom:level)') }))
+			await expectValue(callerEntity, false)
+
+			const context = actionContext(deps.variableValues, { 'custom:level': 5 }, { 'this:surface_id': 'surface0' })
+			expect(callerEntity.getBooleanFeedbackValue(context)).toBe(true)
+		})
+
+		test('sees the local variables of its copy, computed in the context', async () => {
+			const { deps, createCaller } = createHarness({
+				localVariables: [computedValue('double', '$(options:n) * 2')],
+				feedbacks: [check('$(local:double) == 14')],
+			})
+
+			const { callerEntity } = createCaller(useFeedback({ n: exprExpr('$(custom:level)') }))
+			await expectValue(callerEntity, false)
+
+			expect(callerEntity.getBooleanFeedbackValue(actionContext(deps.variableValues, { 'custom:level': 7 }, {}))).toBe(
+				true
+			)
+		})
+
+		test('is inverted', async () => {
+			const { deps, createCaller } = createHarness({ feedbacks: [check('true')] })
+
+			const { callerEntity } = createCaller({ ...useFeedback(), isInverted: exprVal(true) })
+			await expectValue(callerEntity, false)
+
+			expect(callerEntity.getBooleanFeedbackValue(actionContext(deps.variableValues, {}, {}))).toBe(false)
 		})
 	})
 })

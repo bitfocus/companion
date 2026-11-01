@@ -51,7 +51,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 		forgetEntity: vi.fn(),
 	} as any
 	const customActionInstances = { entityUpdate: vi.fn(), entityDelete: vi.fn() }
-	const customFeedbackInstances = { entityUpdate: vi.fn(), entityDelete: vi.fn() }
+	const customFeedbackInstances = { entityUpdate: vi.fn(), entityDelete: vi.fn(), evaluateLive: vi.fn() }
 	const scope: EntityScope = {
 		specialExpressionManager,
 		customActionChain: [],
@@ -1449,7 +1449,11 @@ describe('getChildBooleanFeedbackValues', () => {
 })
 
 describe('lazy feedback evaluation (with context)', () => {
-	const booleanContext = (): FeedbackExecutionContext => ({ parser: { marker: 'the-parser' } as any })
+	const booleanContext = (): FeedbackExecutionContext => ({
+		parser: { marker: 'the-parser' } as any,
+		executionVariables: {},
+		parserOptions: {},
+	})
 
 	/** A boolean feedback list, exercised via the lazy (non-null context) read path. */
 	function createBooleanFeedbackList(showInvert = false) {
@@ -2056,7 +2060,7 @@ describe('transient child groups', () => {
 			customActionChain: ['custom-action:1'],
 			customActionInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
 			localVariablesScopeId: 'copy-scope',
-			customFeedbackInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn() },
+			customFeedbackInstances: { entityUpdate: vi.fn(), entityDelete: vi.fn(), evaluateLive: vi.fn() },
 			createVariablesAndExpressionParser: vi.fn(() => ({}) as any),
 		}
 	}

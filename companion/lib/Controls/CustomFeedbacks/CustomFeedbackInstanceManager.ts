@@ -7,8 +7,8 @@ import { CustomEntityCopyManager, deriveEntityIds } from '../CustomEntities/Cust
 import { CustomEntityScope } from '../CustomEntities/CustomEntityScope.js'
 import type { CustomEntityValues } from '../CustomEntities/Types.js'
 import type { ControlEntityInstance } from '../Entities/EntityInstance.js'
-import type { EntityScope, NewFeedbackValue } from '../Entities/Types.js'
 import type { VariablesValues } from '../../Variables/Values.js'
+import type { EntityScope, FeedbackExecutionContext, NewFeedbackValue } from '../Entities/Types.js'
 import type { IControlStore } from '../IControlStore.js'
 import type { RenderClock } from '../RenderClock.js'
 
@@ -17,7 +17,10 @@ export const CUSTOM_FEEDBACK_COPY_FEEDBACKS_GROUP = 'custom-feedback-copy:feedba
 /** The transient child group of a calling feedback, holding the local variables of its copy of the custom feedback */
 export const CUSTOM_FEEDBACK_COPY_LOCAL_VARIABLES_GROUP = 'custom-feedback-copy:local-variables'
 
-export type CustomFeedbackInstancesForEntity = Pick<CustomFeedbackInstanceManager, 'entityUpdate' | 'entityDelete'>
+export type CustomFeedbackInstancesForEntity = Pick<
+	CustomFeedbackInstanceManager,
+	'entityUpdate' | 'entityDelete' | 'evaluateLive'
+>
 
 /**
  * Every feedback which uses a custom feedback holds a copy of the custom feedback's feedbacks and local variables,
@@ -95,13 +98,8 @@ export class CustomFeedbackInstanceManager extends CustomEntityCopyManager<Contr
 				idPrefix,
 				source.entities.getLocalVariableEntities().map((entity) => entity.asEntityModel(true))
 			),
-			(changed) => {
-				// Nothing is run to read the variables at the time, so anything using them must be told
-				for (const entity of changed) {
-					const name = entity.rawLocalVariableName
-					if (name) scope.localValueChanged(name)
-				}
-			}
+			// Nothing is run to read the variables at the time, so anything using them must be told
+			(changed) => scope.localVariableEntitiesChanged(changed)
 		)
 		scope.setEntityLists(null, localVariables)
 
@@ -126,6 +124,36 @@ export class CustomFeedbackInstanceManager extends CustomEntityCopyManager<Contr
 
 		// Without a copy, the feedback is false
 		this.#queueValueUpdate(caller)
+	}
+
+	/**
+	 * Evaluate a calling feedback now, in the execution context of an action it is a condition of, rather than using
+	 * its cached value. Its inputs are parsed in that context, so that they see what the action has just done, and
+	 * the internal feedbacks of its copy are evaluated with them and the `$(this:*)` variables of the execution.
+	 * As anywhere else, connection feedbacks can only provide their cached values, from the inputs of the copy
+	 * @param caller The feedback which uses a custom feedback
+	 * @param context The execution context
+	 */
+	evaluateLive(caller: ControlEntityInstance, context: FeedbackExecutionContext): boolean {
+		const copy = this.getPlacedCopy(caller)
+		if (!copy?.scope || !copy.sourceControlId) return false
+
+		const source = this.getSource(copy.sourceControlId)
+		if (!source) return false
+
+		const { options } = source.parseCallInputs(caller.rawOptions, context.parser, copy.controlId)
+		const parser = source.createCopyParser(
+			{ options, localValues: copy.scope.values.localValues },
+			copy.controlId,
+			caller.getTransientChildGroup(CUSTOM_FEEDBACK_COPY_LOCAL_VARIABLES_GROUP)?.getDirectEntities() ?? [],
+			context.executionVariables,
+			context.parserOptions
+		)
+
+		const values = caller
+			.getTransientChildGroup(CUSTOM_FEEDBACK_COPY_FEEDBACKS_GROUP)
+			?.getChildBooleanFeedbackValues({ ...context, parser })
+		return isAllTrue(values)
 	}
 
 	/**
@@ -190,9 +218,15 @@ export class CustomFeedbackInstanceManager extends CustomEntityCopyManager<Contr
 function computeCopyValue(caller: ControlEntityInstance, hasCopy: boolean): boolean {
 	if (!hasCopy) return false
 
-	const values = caller
-		.getTransientChildGroup(CUSTOM_FEEDBACK_COPY_FEEDBACKS_GROUP)
-		?.getChildBooleanFeedbackValues(null)
+	return isAllTrue(
+		caller.getTransientChildGroup(CUSTOM_FEEDBACK_COPY_FEEDBACKS_GROUP)?.getChildBooleanFeedbackValues(null)
+	)
+}
+
+/**
+ * The value of a custom feedback from the values of its feedbacks: true when it has some, and all of them are true
+ */
+function isAllTrue(values: boolean[] | undefined): boolean {
 	return !!values && values.length > 0 && values.every((value) => value)
 }
 

@@ -46,6 +46,7 @@ import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
 import { scopeReferencedVariableIds } from '../Variables/LocalVariablesScope.js'
+import { buildExecutionThisVariables } from '../Variables/Util.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
 import { InternalActionRecorder } from './ActionRecorder.js'
@@ -590,6 +591,8 @@ export class InternalController {
 			// its own body changed mid-loop.
 			const createFeedbackContext = (): FeedbackExecutionContext => ({
 				parser: this.#controlsStore.createActionExecutionParser(extras),
+				executionVariables: buildExecutionThisVariables(extras),
+				parserOptions: { allowClockSensitive: false },
 			})
 
 			let parsedOptions: CompanionOptionValues

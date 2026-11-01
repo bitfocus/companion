@@ -979,8 +979,8 @@ export class ControlEntityInstance {
 	 * Get the value of this feedback as a boolean.
 	 *
 	 * `context` null → cached value. Non-null → evaluate live with its parser so the running action's
-	 * `$(this:*)` are visible; internal feedbacks only, module feedbacks fall back to the cache. `isInverted`
-	 * always comes from the cache.
+	 * `$(this:*)` are visible; internal and custom feedbacks only, module feedbacks fall back to the cache.
+	 * `isInverted` always comes from the cache.
 	 *
 	 * A child-of-action internal feedback is therefore evaluated twice - eagerly cached, and live here (only
 	 * the live value sees the execution context). Skipping the eager caching for these (tracking whether a
@@ -1014,6 +1014,13 @@ export class ControlEntityInstance {
 			definition.feedbackType !== FeedbackEntitySubType.Boolean
 		)
 			return false
+
+		// A custom feedback is evaluated live too, so that its inputs and feedbacks see the execution
+		if (context && isCustomFeedbacksConnectionId(this.#data.connectionId)) {
+			const value = this.#scope.customFeedbackInstances.evaluateLive(this, context)
+			if (definition.showInvert && this.#cachedIsInverted) return !value
+			return value
+		}
 
 		// Lazy path (internal feedbacks only); module feedbacks fall through to the cache below.
 		if (context && isInternalConnectionId(this.#data.connectionId)) {

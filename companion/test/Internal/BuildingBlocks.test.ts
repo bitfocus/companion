@@ -59,7 +59,7 @@ describe('logic_if', () => {
 			else_actions: { getDirectEntities: () => [{ id: 'else' } as ControlEntityInstance] },
 		})
 
-		const context: FeedbackExecutionContext = { parser: {} as any }
+		const context: FeedbackExecutionContext = { parser: {} as any, executionVariables: {}, parserOptions: {} }
 		const createFeedbackContext = vi.fn(() => context)
 
 		await blocks.executeAction(action, makeExtras(), {} as any, createFeedbackContext)
@@ -81,7 +81,11 @@ describe('logic_if', () => {
 			else_actions: { getDirectEntities: () => [elseEntity] },
 		})
 
-		await blocks.executeAction(action, makeExtras(), {} as any, () => ({ parser: {} as any }))
+		await blocks.executeAction(action, makeExtras(), {} as any, () => ({
+			parser: {} as any,
+			executionVariables: {},
+			parserOptions: {},
+		}))
 
 		expect(runMultipleActions).toHaveBeenCalledTimes(1)
 		expect(runMultipleActions.mock.calls[0][0]).toEqual([elseEntity])
@@ -104,7 +108,7 @@ describe('logic_while', () => {
 			actions: { getDirectEntities: () => [{ id: 'repeat' } as ControlEntityInstance] },
 		})
 
-		const createFeedbackContext = vi.fn(() => ({ parser: {} as any }))
+		const createFeedbackContext = vi.fn(() => ({ parser: {} as any, executionVariables: {}, parserOptions: {} }))
 
 		await blocks.executeAction(action, makeExtras(), {} as any, createFeedbackContext)
 
@@ -128,7 +132,11 @@ describe('logic_while', () => {
 			actions: { getDirectEntities: () => [{ id: 'repeat' } as ControlEntityInstance] },
 		})
 
-		await blocks.executeAction(action, makeExtras(), {} as any, () => ({ parser: {} as any }))
+		await blocks.executeAction(action, makeExtras(), {} as any, () => ({
+			parser: {} as any,
+			executionVariables: {},
+			parserOptions: {},
+		}))
 
 		expect(runMultipleActions).not.toHaveBeenCalled()
 	})

@@ -4,14 +4,17 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { ActionEntityModel, FeedbackEntityModel, FeedbackValue } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
-import type { VariableDefinition, VariableValue } from '@companion-app/shared/Model/Variables.js'
+import type { VariableDefinition, VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues } from '@companion-module/base'
 import type { JsonValue } from '@companion-module/host'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { VisitorReferencesCollectorVisitor } from '../Resources/Visitors/ReferencesCollector.js'
 import type { VisitorReferencesUpdaterVisitor } from '../Resources/Visitors/ReferencesUpdater.js'
-import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
+import type {
+	ExpressionParserOptions,
+	VariablesAndExpressionParser,
+} from '../Variables/VariablesAndExpressionParser.js'
 
 export interface FeedbackForInternalExecution {
 	controlId: string
@@ -42,6 +45,13 @@ export interface ActionForInternalExecution {
  */
 export interface FeedbackExecutionContext {
 	readonly parser: VariablesAndExpressionParser
+	/**
+	 * The `$(this:*)` variables which only exist for this execution (eg the surface which pressed the button), so
+	 * that a custom feedback can pass them on to its own feedbacks, which are parsed in a scope of their own
+	 */
+	readonly executionVariables: VariableValues
+	/** The options the parser was created with, for any further parser created for the same evaluation */
+	readonly parserOptions: ExpressionParserOptions
 }
 
 export type InternalVisitor = VisitorReferencesCollectorVisitor | VisitorReferencesUpdaterVisitor
