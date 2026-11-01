@@ -42,9 +42,13 @@ import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
 import type { IPageStore } from '../Page/Store.js'
 import type { AppInfo } from '../Registry.js'
-import { ControlScopedMap } from '../Resources/ControlScopedMap.js'
 import type { SurfaceController } from '../Surface/Controller.js'
 import type { VariablesController } from '../Variables/Controller.js'
+import type {
+	VariableDependency,
+	VariableDependencyListener,
+	VariableDependencyRegistry,
+} from '../Variables/DependencyRegistry.js'
 import type { LocalVariablesController } from '../Variables/LocalVariablesController.js'
 import type { VariableValueEntry } from '../Variables/Values.js'
 import type { VariablesAndExpressionParser } from '../Variables/VariablesAndExpressionParser.js'
@@ -87,9 +91,12 @@ interface FeedbackEntityState extends FeedbackDependencyTracking {
 	location: ControlLocation | undefined
 
 	entityModel: FeedbackEntityModel
+
+	/** The variables referenced by the last evaluation, created when it first references any */
+	variables: VariableDependency<FeedbackEntityState> | null
 }
 
-export class InternalController {
+export class InternalController implements VariableDependencyListener<FeedbackEntityState> {
 	readonly #logger = LogController.createLogger('Internal/Controller')
 
 	readonly #controlsStore: IControlStore
@@ -97,7 +104,8 @@ export class InternalController {
 	readonly #instanceDefinitions: InstanceDefinitions
 	readonly #variablesController: VariablesController
 
-	readonly #feedbacks = new ControlScopedMap<FeedbackEntityState>()
+	readonly #feedbacks = new Map<string, FeedbackEntityState>()
+	readonly #variableDependencies: VariableDependencyRegistry
 
 	readonly #unsubscribeRenderClock: () => void
 
@@ -117,6 +125,7 @@ export class InternalController {
 		this.#pageStore = pageStore
 		this.#instanceDefinitions = instanceController.definitions
 		this.#variablesController = variablesController
+		this.#variableDependencies = variablesController.dependencies
 
 		this.#unsubscribeRenderClock = renderClock.subscribe(() => this.#onRenderClockTick())
 
@@ -295,7 +304,10 @@ export class InternalController {
 			clockSensitive: false,
 
 			entityModel: structuredClone(feedback),
+
+			variables: null,
 		}
+		this.#feedbacks.get(feedback.id)?.variables?.dispose()
 		this.#feedbacks.set(feedback.id, feedbackState)
 
 		this.#controlsStore.updateFeedbackValues(INTERNAL_CONNECTION_ID, [
@@ -337,6 +349,7 @@ export class InternalController {
 
 		if (entity.type !== EntityModelType.Feedback) return
 
+		this.#feedbacks.get(entity.id)?.variables?.dispose()
 		this.#feedbacks.delete(entity.id)
 
 		for (const fragment of this.#fragments) {
@@ -357,13 +370,21 @@ export class InternalController {
 	#feedbackGetValue(feedbackState: FeedbackEntityState): FeedbackValue {
 		const parser = this.#controlsStore.createVariablesAndExpressionParser(feedbackState.controlId, null)
 
-		return this.#computeFeedbackValue(
+		const value = this.#computeFeedbackValue(
 			feedbackState.entityModel,
 			feedbackState.controlId,
 			feedbackState.location,
 			parser,
 			feedbackState
 		)
+
+		// Register what was read, now that the evaluation has finished adding to the set
+		if (!feedbackState.variables && feedbackState.referencedVariables) {
+			feedbackState.variables = this.#variableDependencies.create(this, feedbackState.controlId, feedbackState)
+		}
+		feedbackState.variables?.set(feedbackState.referencedVariables)
+
+		return value
 	}
 
 	/**
@@ -788,40 +809,40 @@ export class InternalController {
 		if (newValues.length > 0) this.#controlsStore.updateFeedbackValues(INTERNAL_CONNECTION_ID, newValues)
 	}
 
+	/**
+	 * Re-evaluate the feedbacks referencing some changed variables, immediately and without notifying anything
+	 * else. The normal variable change dispatch reaches these feedbacks itself; this is for changes which
+	 * conditions must see before that happens (eg local variables, during an action run).
+	 * @param changedVariablesSet The variables that changed
+	 * @param controlIdFilter null for a global change, or the controls the change is scoped to
+	 */
 	onVariablesChanged(
 		changedVariablesSet: ReadonlySet<string>,
 		controlIdFilter: ReadonlySet<SomeControlId> | null
 	): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
+		this.#variableDependencies.dispatchTo(this, changedVariablesSet, controlIdFilter)
+	}
+
+	onVariableDependenciesChanged(
+		hits: ReadonlyArray<VariableDependency<FeedbackEntityState>>,
+		changed: ReadonlySet<string>
+	): void {
 		const newValues: NewFeedbackValue[] = []
 
-		const checkFeedbacks = (feedbacks: Iterable<[string, FeedbackEntityState]>) => {
-			for (const [id, feedback] of feedbacks) {
-				if (!feedback.referencedVariables || !feedback.referencedVariables.size) continue
+		for (const { data: feedback } of hits) {
+			// Check a referenced variable was changed
+			if (!feedback.referencedVariables || feedback.referencedVariables.isDisjointFrom(changed)) continue
 
-				// Check a referenced variable was changed
-				if (feedback.referencedVariables.isDisjointFrom(changedVariablesSet)) continue
-
-				newValues.push({
-					entityId: id,
-					controlId: feedback.controlId,
-					value: this.#feedbackGetValue(feedback),
-				})
-			}
+			newValues.push({
+				entityId: feedback.entityModel.id,
+				controlId: feedback.controlId,
+				value: this.#feedbackGetValue(feedback),
+			})
 		}
 
-		if (controlIdFilter) {
-			// The change is scoped to specific control(s), so only look at the feedbacks of those
-			for (const controlId of controlIdFilter) {
-				const feedbacks = this.#feedbacks.getForControl(controlId)
-				if (feedbacks) checkFeedbacks(feedbacks)
-			}
-		} else {
-			checkFeedbacks(this.#feedbacks)
-		}
-
-		this.#controlsStore.updateFeedbackValues(INTERNAL_CONNECTION_ID, newValues)
+		if (newValues.length > 0) this.#controlsStore.updateFeedbackValues(INTERNAL_CONNECTION_ID, newValues)
 	}
 
 	/**

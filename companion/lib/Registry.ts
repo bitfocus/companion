@@ -493,7 +493,6 @@ export class Registry {
 	 */
 	#dispatchVariablesChanged(changedSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<SomeControlId> | null): void {
 		this.variables.dependencies.dispatch(changedSet, controlIdFilter)
-		this.internalModule.onVariablesChanged(changedSet, controlIdFilter)
 		this.controls.onVariablesChanged(changedSet, controlIdFilter)
 		this.preview.onVariablesChanged(changedSet, controlIdFilter)
 

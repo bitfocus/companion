@@ -87,6 +87,25 @@ describe('VariableDependencyRegistry', () => {
 		expect(calls).toHaveLength(2)
 	})
 
+	test('dispatchTo only notifies the given listener', () => {
+		const registry = new VariableDependencyRegistry()
+		const first = createListener()
+		const second = createListener()
+
+		registry.create(first.listener, C1, 'a').set(new Set(['conn:x', 'local:y']))
+		registry.create(second.listener, C1, 'b').set(new Set(['conn:x', 'local:y']))
+		registry.create(first.listener, C2, 'c').set(new Set(['local:y']))
+
+		registry.dispatchTo(first.listener, new Set(['conn:x']), null)
+		registry.dispatchTo(first.listener, new Set(['local:y']), new Set([C1]))
+
+		expect(first.calls).toEqual([
+			{ hits: ['a'], changed: ['conn:x'] },
+			{ hits: ['a'], changed: ['local:y'] },
+		])
+		expect(second.calls).toHaveLength(0)
+	})
+
 	test('set replaces the variables', () => {
 		const registry = new VariableDependencyRegistry()
 		const { listener, calls } = createListener()

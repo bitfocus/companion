@@ -220,6 +220,29 @@ export class VariableDependencyRegistry {
 	 * @param controlIdFilter null for a global change, or the controls the change is scoped to
 	 */
 	dispatch(changed: ReadonlySet<string>, controlIdFilter: ReadonlySet<SomeControlId> | null): void {
+		this.#dispatch(changed, controlIdFilter, null)
+	}
+
+	/**
+	 * Notify a single listener of its dependencies affected by a change, without involving anyone else.
+	 * For a listener that must react to a change immediately, ahead of the normal dispatch.
+	 * @param listener The listener to notify
+	 * @param changed The variables that changed
+	 * @param controlIdFilter null for a global change, or the controls the change is scoped to
+	 */
+	dispatchTo(
+		listener: VariableDependencyListener<any>,
+		changed: ReadonlySet<string>,
+		controlIdFilter: ReadonlySet<SomeControlId> | null
+	): void {
+		this.#dispatch(changed, controlIdFilter, listener)
+	}
+
+	#dispatch(
+		changed: ReadonlySet<string>,
+		controlIdFilter: ReadonlySet<SomeControlId> | null,
+		onlyListener: VariableDependencyListener<any> | null
+	): void {
 		if (changed.size === 0) return
 
 		const epoch = ++this.#epoch
@@ -227,6 +250,7 @@ export class VariableDependencyRegistry {
 
 		const collect = (dependency: VariableDependency<any>, checkFilter: boolean) => {
 			if (dependency.epoch === epoch) return
+			if (onlyListener && dependency.listener !== onlyListener) return
 			if (checkFilter && controlIdFilter && !controlIdFilter.has(dependency.controlId)) return
 			dependency.epoch = epoch
 
