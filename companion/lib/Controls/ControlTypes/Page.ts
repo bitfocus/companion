@@ -82,6 +82,7 @@ export class ControlPage
 			variableValues: deps.variableValues,
 			pageStore: deps.pageStore,
 			renderClock: deps.renderClock,
+			variableDependencies: deps.variableDependencies,
 			getPageVariableEntities: deps.getPageVariableEntities,
 		})
 

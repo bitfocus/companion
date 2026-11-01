@@ -5,6 +5,7 @@ import type { ControlLocation, ControlLocationString } from '@companion-app/shar
 import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { MirrorButtonDrawer } from '../../lib/Controls/ControlTypes/Button/MirrorButtonDrawer.js'
 import { ReferencedLocationsIndex } from '../../lib/Controls/ReferencedLocationsIndex.js'
+import { VariableDependencyRegistry } from '../../lib/Variables/DependencyRegistry.js'
 
 const MY_LOCATION: ControlLocation = { pageNumber: 2, row: 0, column: 0 }
 const TARGET_LOCATION: ControlLocation = { pageNumber: 1, row: 0, column: 0 }
@@ -45,6 +46,7 @@ describe('MirrorButtonDrawer', () => {
 		deps = {
 			graphics,
 			events,
+			variableDependencies: new VariableDependencyRegistry(),
 			pageStore: {
 				getLocationOfControlId: vi.fn(() => MY_LOCATION),
 				getControlIdAt,
@@ -221,7 +223,7 @@ describe('MirrorButtonDrawer', () => {
 		const invalidateSpy = vi.fn()
 		events.on('invalidateControlRender', invalidateSpy)
 
-		drawer.onVariablesChanged(new Set([CreatePageControlId('test')]))
+		deps.variableDependencies.dispatch(new Set([CreatePageControlId('test')]), new Set([CreateBankControlId('2-0-0')]))
 		await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CreateBankControlId('2-0-0')))
 	})
 
@@ -238,7 +240,7 @@ describe('MirrorButtonDrawer', () => {
 		const invalidateSpy = vi.fn()
 		events.on('invalidateControlRender', invalidateSpy)
 
-		drawer.onVariablesChanged(new Set([CreatePageControlId('other')]))
+		deps.variableDependencies.dispatch(new Set([CreatePageControlId('other')]), new Set([CreateBankControlId('2-0-0')]))
 		await new Promise((resolve) => setTimeout(resolve, 30))
 		expect(invalidateSpy).not.toHaveBeenCalled()
 	})
@@ -252,12 +254,12 @@ describe('MirrorButtonDrawer', () => {
 	})
 
 	it('does not redraw on a variable change before the first draw', async () => {
-		const drawer = makeDrawer(() => TARGET_LOCATION, new Set([CreatePageControlId('test')]))
+		makeDrawer(() => TARGET_LOCATION, new Set([CreatePageControlId('test')]))
 
 		const invalidateSpy = vi.fn()
 		events.on('invalidateControlRender', invalidateSpy)
 
-		drawer.onVariablesChanged(new Set([CreatePageControlId('test')]))
+		deps.variableDependencies.dispatch(new Set([CreatePageControlId('test')]), new Set([CreateBankControlId('2-0-0')]))
 		await new Promise((resolve) => setTimeout(resolve, 30))
 		expect(invalidateSpy).not.toHaveBeenCalled()
 	})
@@ -287,7 +289,7 @@ describe('MirrorButtonDrawer', () => {
 		expect(invalidateSpy).not.toHaveBeenCalled()
 
 		// ...but a change to the location expression's own variables must still redraw us
-		drawer.onVariablesChanged(new Set([CreatePageControlId('test')]))
+		deps.variableDependencies.dispatch(new Set([CreatePageControlId('test')]), new Set([CreateBankControlId('2-0-0')]))
 		await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CreateBankControlId('2-0-0')))
 	})
 
@@ -304,7 +306,7 @@ describe('MirrorButtonDrawer', () => {
 		const invalidateSpy = vi.fn()
 		events.on('invalidateControlRender', invalidateSpy)
 
-		drawer.onVariablesChanged(new Set([CreatePageControlId('test')]))
+		deps.variableDependencies.dispatch(new Set([CreatePageControlId('test')]), new Set([CreateBankControlId('2-0-0')]))
 		await new Promise((resolve) => setTimeout(resolve, 30))
 		expect(invalidateSpy).not.toHaveBeenCalled()
 	})

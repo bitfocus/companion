@@ -15,6 +15,7 @@ import { LinkButtonLocationRefSchema } from '../../../Link/Protocol/v1/Schemas.j
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import { mangleReferenceSurfaceId } from '../../../Surface/ReferenceSurfaceId.js'
+import type { VariableDependency, VariableDependencyListener } from '../../../Variables/DependencyRegistry.js'
 import { ControlBase } from '../../ControlBase.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type {
@@ -68,7 +69,8 @@ export class ControlButtonLink
 		ControlWithoutActionSets,
 		ControlWithOptions<LinkButtonModel['options']>,
 		ControlWithPushed,
-		ControlWithoutConvert
+		ControlWithoutConvert,
+		VariableDependencyListener<null>
 {
 	readonly type = 'link-button'
 
@@ -91,7 +93,7 @@ export class ControlButtonLink
 	}
 
 	/** Variables the location depends on, so that it is resolved again when any of them change */
-	#locationVariables: ReadonlySet<string> = new Set()
+	readonly #locationVariables: VariableDependency<null>
 
 	/** Whether a location has been given that can't be resolved, which the link client isn't told about */
 	#locationInvalid = false
@@ -111,6 +113,7 @@ export class ControlButtonLink
 	constructor(deps: ControlDependencies, controlId: BankControlId, storage: LinkButtonModel | null, isImport: boolean) {
 		super(deps, controlId, 'Controls/Button/Link')
 
+		this.#locationVariables = deps.variableDependencies.create(this, controlId, null)
 		this.options = parseLinkButtonOptions({}).options
 
 		this.#drawing = new LinkButtonDrawer(
@@ -143,6 +146,7 @@ export class ControlButtonLink
 		this.deps.linkButtons.removeTarget(this.controlId)
 		this.#reportPushed(false)
 		this.#drawing.dispose()
+		this.#locationVariables.dispose()
 		super.destroy()
 	}
 
@@ -187,11 +191,11 @@ export class ControlButtonLink
 		if (location.isExpression) {
 			const res = parser.executeExpression(location.value, 'string')
 			raw = res.ok ? (stringifyVariableValue(res.value) ?? '') : ''
-			this.#locationVariables = res.variableIds
+			this.#locationVariables.set(res.variableIds)
 		} else {
 			const res = parser.parseVariables(location.value)
 			raw = res.text
-			this.#locationVariables = res.variableIds
+			this.#locationVariables.set(res.variableIds)
 		}
 
 		// `this` (and page 0) means the same location as this button, but on the remote installation
@@ -292,8 +296,12 @@ export class ControlButtonLink
 	}
 
 	/** The location can reference variables, so resolve it again when any of them change */
-	override onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
-		if (!this.#locationVariables.isDisjointFrom(allChangedVariables)) this.#updateTarget()
+	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
+		const locationVariables = this.#locationVariables.variableIds
+		if (locationVariables && !locationVariables.isDisjointFrom(allChangedVariables)) this.#updateTarget()
+	}
+	onVariableDependenciesChanged(_hits: ReadonlyArray<VariableDependency<null>>, changed: ReadonlySet<string>): void {
+		this.onVariablesChanged(changed)
 	}
 
 	/** The location can be relative to this button, so resolve it again */

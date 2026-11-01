@@ -14,6 +14,7 @@ import type { InternalController } from '../../Internal/Controller.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 import type { IPageStore } from '../../Page/Store.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
+import type { VariableDependencyRegistry } from '../../Variables/DependencyRegistry.js'
 import { NO_CONNECTION_LABELS, type VariablesValues } from '../../Variables/Values.js'
 import type {
 	ExpressionParserOptions,
@@ -45,6 +46,7 @@ export interface ControlEntityListPoolProps {
 	controlId: SomeControlId
 	reportChange: (options: ControlEntityListChangeProps) => void
 	renderClock: RenderClock
+	variableDependencies: VariableDependencyRegistry
 	/** Resolve a page's local-variable entities, for `$(page:x)` injection (only used by button pools). */
 	getPageVariableEntities: (pageNumber: number) => ControlEntityInstance[] | null
 }
@@ -109,7 +111,8 @@ export abstract class ControlEntityListPoolBase {
 				isInverted: this.updateIsInvertedValues.bind(this),
 				storeResult: this.updateStoreResultValues.bind(this),
 			},
-			props.renderClock
+			props.renderClock,
+			props.variableDependencies
 		)
 	}
 
@@ -483,13 +486,5 @@ export abstract class ControlEntityListPoolBase {
 		}
 
 		return connectionIds
-	}
-
-	/**
-	 * Propagate variable changes
-	 * @param changedVariables - variables with changes
-	 */
-	onVariablesChanged(changedVariables: ReadonlySet<string>): void {
-		this.#specialExpressionManager.onVariablesChanged(changedVariables)
 	}
 }

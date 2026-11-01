@@ -21,6 +21,7 @@ import { ElementConversionCache } from '../../../Graphics/ElementConversionCache
 import type { ImageResult } from '../../../Graphics/ImageResult.js'
 import type { CompositeElementIdString } from '../../../Instance/Definitions.js'
 import LogController, { type Logger } from '../../../Log/Controller.js'
+import type { VariableDependency, VariableDependencyListener } from '../../../Variables/DependencyRegistry.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
 import type { ControlEntityInstance } from '../../Entities/EntityInstance.js'
 import type { IButtonDrawer } from '../../IButtonDrawer.js'
@@ -114,7 +115,7 @@ class DrawDependency<T> {
  *
  * The `protected` element/cache/deps members are the surface that subclass exposes its editing operations on.
  */
-export class LayeredButtonDrawer implements IButtonDrawer {
+export class LayeredButtonDrawer implements IButtonDrawer, VariableDependencyListener<null> {
 	protected readonly logger: Logger
 	protected readonly deps: ControlDependencies
 	protected readonly controlId: BankControlId | PresetControlId
@@ -136,6 +137,14 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 	readonly #referencedLocations = new DrawDependency<ControlLocationString>((changed) => {
 		for (const location of changed) this.elementConversionCache.queueInvalidateReferencedLocation(location)
 	})
+
+	/**
+	 * The variables the last draw read, registered so we are told when one changes: those of drawn elements, and
+	 * those of preserved-but-hidden elements (kept apart to avoid building a union on every draw). The drawn one is
+	 * armed while a draw is in flight, so we hear about every change until we know what the draw read.
+	 */
+	readonly #drawnVariableDependency: VariableDependency<null>
+	readonly #hiddenVariableDependency: VariableDependency<null>
 
 	/**
 	 * Variable changes seen while a draw is in flight. `getDrawStyle` is async, so a change can land after
@@ -162,12 +171,16 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 		this.controlId = controlId
 		this.#host = host
 		this.#drawType = drawType
+		this.#drawnVariableDependency = deps.variableDependencies.create(this, controlId, null)
+		this.#hiddenVariableDependency = deps.variableDependencies.create(this, controlId, null)
 	}
 
 	dispose(): void {
 		// Cancel any redraw still queued so it can't fire after the owning control is gone
 		this.invalidate.cancel()
 		this.elementConversionCache.clear()
+		this.#drawnVariableDependency.dispose()
+		this.#hiddenVariableDependency.dispose()
 	}
 
 	/**
@@ -293,6 +306,7 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 		// so a single accumulator is safe.
 		const changedDuringDraw = new Set<string>()
 		this.#variablesChangedDuringDraw = changedDuringDraw
+		this.#drawnVariableDependency.arm()
 		try {
 			const injectedVariableValues: VariableValues = {}
 			const location = this.deps.pageStore.getLocationOfControlId(this.controlId)
@@ -322,6 +336,8 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 					(location) => this.deps.graphics.getCachedRender(location) ?? null
 				)
 			this.#variables.commit(variables)
+			this.#drawnVariableDependency.set(variables.drawn)
+			this.#hiddenVariableDependency.set(variables.hidden)
 			this.#compositeElements.commit(compositeElements)
 			this.#referencedLocations.commit(referencedLocations)
 			// Both kinds, as a change to a hidden reference still has to evict its stale cache entry
@@ -351,7 +367,13 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 			return result
 		} finally {
 			this.#variablesChangedDuringDraw = null
+			// In case the draw failed before setting the variables
+			this.#drawnVariableDependency.disarm()
 		}
+	}
+
+	onVariableDependenciesChanged(_hits: ReadonlyArray<VariableDependency<null>>, changed: ReadonlySet<string>): void {
+		this.onVariablesChanged(changed)
 	}
 
 	/** Propagate a variable change: invalidate affected cached elements and redraw if relevant. */

@@ -75,15 +75,11 @@ export interface ConnectionChildHandlerApi extends ChildProcessHandlerBase {
 	sendAllFeedbackInstances(): Promise<void>
 
 	/**
-	 * Send the list of changed variables to the child process
-	 * @access public - called whenever variables change
-	 * @param getChangedVariableIds The changed ids as an array, built on first call and shared between connections
+	 * Send the list of changed global variables to the child process. Only defined for modules which check
+	 * them themselves; the others are told what they read by the variable dependency registry
+	 * @access public - called whenever global variables change
 	 */
-	sendVariablesChanged(
-		changedVariableIdSet: ReadonlySet<string>,
-		getChangedVariableIds: () => string[],
-		controlIdFilter: ReadonlySet<SomeControlId> | null
-	): Promise<void>
+	readonly sendVariablesChanged?: (changedVariableIds: string[]) => void
 
 	entityUpdate(entity: ControlEntityInstance, controlId: SomeControlId): Promise<void>
 

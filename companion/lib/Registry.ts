@@ -311,6 +311,7 @@ export class Registry {
 			internalModule: this.internalModule,
 			instance: this.instance,
 			variableValues: this.variables.values,
+			variableDependencies: this.variables.dependencies,
 			userconfig: this.userconfig,
 			graphics: this.graphics,
 			actionRunner: actionRunner,
@@ -491,13 +492,14 @@ export class Registry {
 	 * global change, or the set of controls it applies to.
 	 */
 	#dispatchVariablesChanged(changedSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<SomeControlId> | null): void {
+		this.variables.dependencies.dispatch(changedSet, controlIdFilter)
 		this.internalModule.onVariablesChanged(changedSet, controlIdFilter)
 		this.controls.onVariablesChanged(changedSet, controlIdFilter)
-		this.instance.processManager.onVariablesChanged(changedSet, controlIdFilter)
 		this.preview.onVariablesChanged(changedSet, controlIdFilter)
 
-		// Surfaces only care about global changes, not control-scoped (local/page) variables
+		// Surfaces and modules only care about global changes, not control-scoped (local/page) variables
 		if (controlIdFilter === null) {
+			this.instance.processManager.onVariablesChanged(changedSet)
 			this.surfaces.onVariablesChanged(changedSet)
 		}
 	}

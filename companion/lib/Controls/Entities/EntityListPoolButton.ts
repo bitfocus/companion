@@ -17,6 +17,7 @@ import { assertNever } from '@companion-app/shared/Util.js'
 import type { CompanionFeedbackButtonStyleResult } from '@companion-module/base'
 import type { IPageStore } from '../../Page/Store.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
+import type { VariableDependency, VariableDependencyListener } from '../../Variables/DependencyRegistry.js'
 import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
@@ -35,7 +36,6 @@ interface CurrentStepFromExpression {
 	expression: string
 
 	lastStepId: string
-	lastVariables: ReadonlySet<string>
 }
 interface CurrentStepFromId {
 	type: 'id'
@@ -55,7 +55,10 @@ export interface ControlEntityListActionStep {
  * extend it as siblings, each setting `isEditable`. (Sibling, not parent/child, so each can pin the literal
  * discriminant without an override conflict.)
  */
-export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase {
+export abstract class ButtonEntityListPoolBase
+	extends ControlEntityListPoolBase
+	implements VariableDependencyListener<null>
+{
 	/**
 	 * The defaults options for a step
 	 */
@@ -77,6 +80,9 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 	 */
 	protected currentStep: CurrentStepFromExpression | CurrentStepFromId = { type: 'id', id: '0' }
 
+	/** The variables the step expression last read, when the current step comes from an expression */
+	readonly #stepVariables: VariableDependency<null>
+
 	#hasRotaryActions = false
 
 	get currentStepId(): string {
@@ -97,6 +103,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 		this.#pageStore = props.pageStore
 		this.#getPageVariableEntities = props.getPageVariableEntities
 		this.sendRuntimePropsChange = sendRuntimePropsChange
+		this.#stepVariables = props.variableDependencies.create(this, props.controlId, null)
 
 		this.#feedbacks = this.createEntityList({
 			type: EntityModelType.Feedback,
@@ -124,6 +131,12 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 		}
 
 		this.currentStep = { type: 'id', id: this.getStepIds()[0] } // TODO - other modes?
+		this.#stepVariables.set(null)
+	}
+
+	override destroy(): void {
+		super.destroy()
+		this.#stepVariables.dispose()
 	}
 
 	/**
@@ -440,16 +453,19 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 	 * Propagate variable changes
 	 */
 	onVariablesChanged(changedVariables: ReadonlySet<string>): void {
-		super.onVariablesChanged(changedVariables)
-
 		if (this.currentStep.type !== 'expression') return
 
-		if (this.currentStep.lastVariables.isDisjointFrom(changedVariables)) return
+		const stepVariables = this.#stepVariables.variableIds
+		if (!stepVariables || stepVariables.isDisjointFrom(changedVariables)) return
 
 		if (this.stepCheckExpression(true)) {
 			// Something changed, so redraw
 			this.reportChange({ redraw: true })
 		}
+	}
+
+	onVariableDependenciesChanged(_hits: ReadonlyArray<VariableDependency<null>>, changed: ReadonlySet<string>): void {
+		this.onVariablesChanged(changed)
 	}
 
 	/**
@@ -481,7 +497,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 
 			// Update the state
 			this.currentStep.lastStepId = newStepId
-			this.currentStep.lastVariables = latestValue.variableIds
+			this.#stepVariables.set(latestValue.variableIds)
 		} else {
 			// Lets always go to the first step, to ensure we have a sane and predictable value
 
@@ -494,7 +510,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 
 			// Update the state
 			this.currentStep.lastStepId = firstStepId
-			this.currentStep.lastVariables = latestValue.variableIds
+			this.#stepVariables.set(latestValue.variableIds)
 		}
 
 		// Inform clients of the change
@@ -515,7 +531,6 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 					type: 'expression',
 					expression: options.stepExpression || '',
 					lastStepId: this.getStepIds()[0],
-					lastVariables: new Set(),
 				}
 			} else {
 				this.currentStep.expression = options.stepExpression || ''
@@ -526,6 +541,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 			if (this.currentStep.type === 'expression') {
 				// Stick to whatever is currently selected
 				this.currentStep = { type: 'id', id: this.currentStepId }
+				this.#stepVariables.set(null)
 			}
 		}
 	}

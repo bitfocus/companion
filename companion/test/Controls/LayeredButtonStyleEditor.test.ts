@@ -4,6 +4,7 @@ import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { CreateElementOfType } from '../../lib/Controls/ControlTypes/Button/LayerDefaults.js'
 import { LayeredButtonStyleEditor } from '../../lib/Controls/ControlTypes/Button/LayeredButtonStyleEditor.js'
+import { VariableDependencyRegistry } from '../../lib/Variables/DependencyRegistry.js'
 
 // The element conversion is heavy and irrelevant to the editing operations under test
 vi.mock('../../lib/Graphics/ConvertGraphicsElements.js', () => ({
@@ -38,6 +39,7 @@ describe('LayeredButtonStyleEditor pinned properties', () => {
 		getCompositeElementDefinition = vi.fn(() => undefined)
 		const deps: any = {
 			events,
+			variableDependencies: new VariableDependencyRegistry(),
 			pageStore: { getLocationOfControlId: vi.fn(() => undefined) },
 			variableValues: { createVariablesAndExpressionParser: vi.fn(() => ({})) },
 			getPageVariableEntities: vi.fn(() => ({})),

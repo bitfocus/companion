@@ -12,6 +12,7 @@ import { DisplayedLocations } from '../../../../lib/Graphics/DisplayedLocations.
 import type { LinkButtonClient, LinkButtonState } from '../../../../lib/Link/ButtonClient.js'
 import type { LinkButtonImage } from '../../../../lib/Link/RemoteImageStore.js'
 import { mangleReferenceSurfaceId } from '../../../../lib/Surface/ReferenceSurfaceId.js'
+import { VariableDependencyRegistry } from '../../../../lib/Variables/DependencyRegistry.js'
 
 const MY_CONTROL_ID = CreateBankControlId('test01')
 
@@ -82,6 +83,7 @@ describe('ControlButtonLink', () => {
 			events: new EventEmitter() as any,
 			changeEvents: new EventEmitter() as any,
 			renderClock: { subscribe: vi.fn(() => () => {}) } as any,
+			variableDependencies: new VariableDependencyRegistry(),
 			controlsAccessor: null as any,
 			linkButtons: linkButtons as unknown as LinkButtonClient,
 			referencedLocations: new ReferencedLocationsIndex(),
@@ -187,13 +189,13 @@ describe('ControlButtonLink', () => {
 
 	it('resolves the location again when a variable it uses changes', () => {
 		parseVariables.mockImplementation(() => ({ text: '3/0/0', variableIds: new Set(['custom:page']) }))
-		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '$(custom:page)/0/0'), false)
+		new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '$(custom:page)/0/0'), false)
 		linkButtons.setTarget.mockClear()
 
-		control.onVariablesChanged(new Set(['custom:other']))
+		deps.variableDependencies.dispatch(new Set(['custom:other']), null)
 		expect(linkButtons.setTarget).not.toHaveBeenCalled()
 
-		control.onVariablesChanged(new Set(['custom:page']))
+		deps.variableDependencies.dispatch(new Set(['custom:page']), null)
 		expect(linkButtons.setTarget).toHaveBeenCalled()
 	})
 
@@ -399,5 +401,14 @@ describe('ControlButtonLink', () => {
 		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'), false)
 		control.destroy()
 		expect(linkButtons.removeTarget).toHaveBeenCalledWith(MY_CONTROL_ID)
+	})
+
+	it('stops tracking the variables its location reads when destroyed', () => {
+		parseVariables.mockImplementation(() => ({ text: '3/0/0', variableIds: new Set(['custom:page']) }))
+		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '$(custom:page)/0/0'), false)
+		expect(deps.variableDependencies.stats().keys).toBe(1)
+
+		control.destroy()
+		expect(deps.variableDependencies.stats()).toEqual({ keys: 0, controls: 0, dependencies: 0, armed: 0 })
 	})
 })

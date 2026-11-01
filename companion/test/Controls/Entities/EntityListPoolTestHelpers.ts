@@ -17,6 +17,7 @@ import { EntityListPoolExpressionVariable } from '../../../lib/Controls/Entities
 import { ControlEntityListPoolTrigger } from '../../../lib/Controls/Entities/EntityListPoolTrigger.js'
 import type { NewFeedbackValue } from '../../../lib/Controls/Entities/Types.js'
 import type { InternalController } from '../../../lib/Internal/Controller.js'
+import { VariableDependencyRegistry } from '../../../lib/Variables/DependencyRegistry.js'
 import type { VariablesValuesEvents } from '../../../lib/Variables/Values.js'
 
 /**
@@ -95,6 +96,7 @@ export function createPoolDeps(options: CreatePoolOptions = {}) {
 		controlId,
 		reportChange,
 		renderClock: { subscribe: vi.fn(() => () => {}) } as any,
+		variableDependencies: new VariableDependencyRegistry(),
 		getPageVariableEntities: () => null,
 	}
 

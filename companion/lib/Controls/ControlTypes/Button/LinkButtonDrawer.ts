@@ -228,9 +228,6 @@ export class LinkButtonDrawer implements IButtonDrawer {
 		return false
 	}
 
-	/** The remote image references no variables; the control resolves its location again itself */
-	onVariablesChanged(_allChangedVariables: ReadonlySet<string>): void {}
-
 	onCompositeElementsChanged(_allChangedElementIds: ReadonlySet<CompositeElementIdString>): void {}
 
 	onButtonDrawn(_location: ControlLocation, _render: ImageResult): void {}

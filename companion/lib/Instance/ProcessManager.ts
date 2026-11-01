@@ -271,24 +271,22 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 	}
 
 	/**
-	 * Send a list of changed variables to all active instances.
-	 * This will trigger feedbacks using variables to be rechecked
+	 * Send a list of changed global variables to the active instances which check them themselves (the old
+	 * flow). The others are told about the changes they read by the variable dependency registry
 	 */
-	onVariablesChanged(
-		all_changed_variables_set: ReadonlySet<string>,
-		controlIdFilter: ReadonlySet<SomeControlId> | null
-	): void {
-		// Only connections on the legacy flow need an array, so build it on demand and share it between them
-		let changedVariableIds: string[] | undefined
-		const getChangedVariableIds = () => (changedVariableIds ??= Array.from(all_changed_variables_set))
+	onVariablesChanged(changedVariableIds: ReadonlySet<string>): void {
+		// Only built when a connection needs it, and shared between them
+		let changedVariableIdsArray: string[] | undefined
 
 		for (const child of this.#children.values()) {
-			if (child.handler && child.isReady && isConnectionChild(child.handler)) {
-				child.handler
-					.sendVariablesChanged(all_changed_variables_set, getChangedVariableIds, controlIdFilter)
-					.catch((e: unknown) => {
-						this.#logger.warn(`sendVariablesChanged failed for "${child.instanceId}": ${stringifyError(e)}`)
-					})
+			if (!child.handler || !child.isReady || !isConnectionChild(child.handler)) continue
+			if (!child.handler.sendVariablesChanged) continue
+
+			changedVariableIdsArray ??= Array.from(changedVariableIds)
+			try {
+				child.handler.sendVariablesChanged(changedVariableIdsArray)
+			} catch (e) {
+				this.#logger.warn(`sendVariablesChanged failed for "${child.instanceId}": ${stringifyError(e)}`)
 			}
 		}
 	}
