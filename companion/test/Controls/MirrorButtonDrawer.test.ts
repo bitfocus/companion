@@ -4,6 +4,7 @@ import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { MirrorButtonDrawer } from '../../lib/Controls/ControlTypes/Button/MirrorButtonDrawer.js'
+import { ReferencedLocationsIndex } from '../../lib/Controls/ReferencedLocationsIndex.js'
 
 const MY_LOCATION: ControlLocation = { pageNumber: 2, row: 0, column: 0 }
 const TARGET_LOCATION: ControlLocation = { pageNumber: 1, row: 0, column: 0 }
@@ -49,6 +50,7 @@ describe('MirrorButtonDrawer', () => {
 				getControlIdAt,
 			},
 			controlsAccessor: { getControl },
+			referencedLocations: new ReferencedLocationsIndex(),
 		}
 	})
 
@@ -95,6 +97,28 @@ describe('MirrorButtonDrawer', () => {
 		expect(style.elements.map((el) => el.type)).toEqual(['canvas', 'text'])
 		// Tracks the target + its transitive references, so it redraws when either changes
 		expect([...(style.referencedLocations ?? [])].sort()).toEqual([formatLocation(TARGET_LOCATION), '3/0/0'].sort())
+	})
+
+	it('reports its referenced locations to the index, and clears them once unresolved', async () => {
+		const index: ReferencedLocationsIndex = deps.referencedLocations
+		getControlIdAt.mockReturnValue('bank:1-0-0')
+		const targetStyle = makeStyle(['3/0/0'])
+		getControl.mockReturnValue({
+			drawing: { getLastDrawStyle: () => targetStyle, getDrawStyle: async () => targetStyle },
+		})
+
+		let target: ControlLocation | null = TARGET_LOCATION
+		const drawer = makeDrawer(() => target)
+		await drawer.getDrawStyle()
+
+		expect(index.getControlsReferencing(formatLocation(TARGET_LOCATION))).toEqual(new Set(['bank:2-0-0']))
+		expect(index.getControlsReferencing('3/0/0')).toEqual(new Set(['bank:2-0-0']))
+
+		target = null
+		await drawer.getDrawStyle()
+
+		expect(index.getControlsReferencing(formatLocation(TARGET_LOCATION))).toBeUndefined()
+		expect(index.getControlsReferencing('3/0/0')).toBeUndefined()
 	})
 
 	it('shows a placeholder while the target has not drawn yet, without calling its getDrawStyle', async () => {

@@ -66,8 +66,7 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 		this.#lastLocationVariables = referencedVariableIds.size > 0 ? referencedVariableIds : null
 
 		if (!targetLocation) {
-			this.#lastReferencedLocations = null
-			return this.#storeAndReturn(this.#placeholder('Unresolved\nReference'))
+			return this.#storeAndReturn(this.#placeholder('Unresolved\nReference'), null)
 		}
 
 		const targetLocationStr = formatLocation(targetLocation)
@@ -76,8 +75,7 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 
 		// Direct self-reference
 		if (myLocationStr === targetLocationStr) {
-			this.#lastReferencedLocations = new Set([targetLocationStr])
-			return this.#storeAndReturn(this.#placeholder('∞'))
+			return this.#storeAndReturn(this.#placeholder('∞'), new Set([targetLocationStr]))
 		}
 
 		const targetControlId = this.#deps.pageStore.getControlIdAt(targetLocation)
@@ -88,27 +86,32 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 		// Not rendered yet (or gone): placeholder until the target's next `button_drawn` redraws us. Reading the
 		// cached style (never getDrawStyle) keeps this sync and recursion-free.
 		if (!targetStyle) {
-			this.#lastReferencedLocations = new Set([targetLocationStr])
-			return this.#storeAndReturn(this.#placeholder('Unresolved\nReference'))
+			return this.#storeAndReturn(this.#placeholder('Unresolved\nReference'), new Set([targetLocationStr]))
 		}
 
 		// Transitive cycle: the target's render references us back
 		if (myLocationStr && targetStyle.referencedLocations?.has(myLocationStr)) {
-			this.#lastReferencedLocations = new Set([targetLocationStr])
-			return this.#storeAndReturn(this.#placeholder('∞'))
+			return this.#storeAndReturn(this.#placeholder('∞'), new Set([targetLocationStr]))
 		}
 
 		const referencedLocations = new Set<string>([targetLocationStr, ...(targetStyle.referencedLocations ?? [])])
-		this.#lastReferencedLocations = referencedLocations
 
-		return this.#storeAndReturn({
-			...structuredClone(targetStyle),
-			referencedLocations,
-		})
+		return this.#storeAndReturn(
+			{
+				...structuredClone(targetStyle),
+				referencedLocations,
+			},
+			referencedLocations
+		)
 	}
 
-	#storeAndReturn(style: DrawStyleLayeredButtonModel): DrawStyleLayeredButtonModel {
+	#storeAndReturn(
+		style: DrawStyleLayeredButtonModel,
+		referencedLocations: ReadonlySet<string> | null
+	): DrawStyleLayeredButtonModel {
 		this.#lastDrawStyle = style
+		this.#lastReferencedLocations = referencedLocations
+		this.#deps.referencedLocations.setControlReferences(this.#controlId, this.#lastReferencedLocations)
 		return style
 	}
 

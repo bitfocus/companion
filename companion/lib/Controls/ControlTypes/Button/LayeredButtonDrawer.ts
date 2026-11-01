@@ -324,6 +324,11 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 			this.#variables.commit(variables)
 			this.#compositeElements.commit(compositeElements)
 			this.#referencedLocations.commit(referencedLocations)
+			// Both kinds, as a change to a hidden reference still has to evict its stale cache entry
+			this.deps.referencedLocations.setControlReferences(
+				this.controlId,
+				referencedLocations.drawn.union(referencedLocations.hidden)
+			)
 			this.#lastCyclicReferences = cyclicLocations.size > 0 ? cyclicLocations : null
 
 			// Re-check any variable changes that landed mid-draw against the now-committed sets: evict their

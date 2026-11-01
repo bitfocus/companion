@@ -5,6 +5,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ControlDependencies } from '../../../../lib/Controls/ControlDependencies.js'
 import { ControlButtonLink } from '../../../../lib/Controls/ControlTypes/Button/Link.js'
 import { LINK_ICON_SVG, LINK_SLASH_ICON_SVG } from '../../../../lib/Controls/ControlTypes/Button/LinkButtonIcons.js'
+import { ReferencedLocationsIndex } from '../../../../lib/Controls/ReferencedLocationsIndex.js'
 import { DisplayedLocations } from '../../../../lib/Graphics/DisplayedLocations.js'
 import type { LinkButtonClient, LinkButtonState } from '../../../../lib/Link/ButtonClient.js'
 import type { LinkButtonImage } from '../../../../lib/Link/RemoteImageStore.js'
@@ -81,6 +82,7 @@ describe('ControlButtonLink', () => {
 			renderClock: { subscribe: vi.fn(() => () => {}) } as any,
 			controlsAccessor: null as any,
 			linkButtons: linkButtons as unknown as LinkButtonClient,
+			referencedLocations: new ReferencedLocationsIndex(),
 		}
 	})
 

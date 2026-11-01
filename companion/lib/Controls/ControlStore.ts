@@ -17,6 +17,7 @@ import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { NewFeedbackValue } from './Entities/Types.js'
 import type { SomeControl } from './IControlFragments.js'
 import type { IControlStore } from './IControlStore.js'
+import { ReferencedLocationsIndex } from './ReferencedLocationsIndex.js'
 import { TriggerEvents } from './TriggerEvents.js'
 
 /**
@@ -31,6 +32,11 @@ export class ControlStore implements IControlStore {
 	 * Intentionally public so that ControlsController can mutate it.
 	 */
 	readonly controls = new Map<string, SomeControl<any>>()
+
+	/**
+	 * The button locations each control referenced in its last draw
+	 */
+	readonly referencedLocations = new ReferencedLocationsIndex()
 
 	/**
 	 * Triggers event bus
@@ -62,6 +68,7 @@ export class ControlStore implements IControlStore {
 	 */
 	deleteControl(controlId: string): void {
 		this.controls.delete(controlId)
+		this.referencedLocations.forgetControl(controlId)
 
 		this.dbTable.delete(controlId)
 	}

@@ -20,6 +20,7 @@ import type { ActionRunner } from './ActionRunner.js'
 import type { ControlEntityInstance } from './Entities/EntityInstance.js'
 import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import type { SomeControl } from './IControlFragments.js'
+import type { ReferencedLocationsIndex } from './ReferencedLocationsIndex.js'
 import type { RenderClock } from './RenderClock.js'
 import type { TriggerEvents } from './TriggerEvents.js'
 
@@ -68,6 +69,9 @@ export interface ControlDependencies extends ControlExternalDependencies {
 
 	/** The expression-variable name registry (used only by expression-variable controls). */
 	readonly expressionVariableNamesMap: ExpressionVariableNameMap
+
+	/** Where drawers report the button locations their last draw referenced, so only those get told of a render. */
+	readonly referencedLocations: ReferencedLocationsIndex
 }
 
 export interface ControlCommonEvents {

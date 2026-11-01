@@ -4,6 +4,7 @@ import type { ButtonReferenceButtonModel, LayeredButtonModel } from '@companion-
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ControlDependencies } from '../../../../lib/Controls/ControlDependencies.js'
 import { ControlButtonReference } from '../../../../lib/Controls/ControlTypes/Button/Reference.js'
+import { ReferencedLocationsIndex } from '../../../../lib/Controls/ReferencedLocationsIndex.js'
 import { mangleReferenceSurfaceId, MAX_REFERENCE_DEPTH } from '../../../../lib/Surface/ReferenceSurfaceId.js'
 
 const MY_CONTROL_ID = 'bank:test01'
@@ -63,6 +64,7 @@ describe('ControlButtonReference', () => {
 			changeEvents: new EventEmitter() as any,
 			renderClock: { subscribe: vi.fn(() => () => {}) } as any,
 			linkButtons: null as any,
+			referencedLocations: new ReferencedLocationsIndex(),
 			controlsAccessor: controlsAccessor as any,
 		}
 	})

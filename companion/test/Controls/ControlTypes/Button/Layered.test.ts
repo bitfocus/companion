@@ -13,6 +13,7 @@ import type { ControlDependencies } from '../../../../lib/Controls/ControlDepend
 import { ControlButtonLayered } from '../../../../lib/Controls/ControlTypes/Button/Layered.js'
 import type { NewSpecialExpressionValue } from '../../../../lib/Controls/Entities/SpecialExpressions.js'
 import type { NewFeedbackValue } from '../../../../lib/Controls/Entities/Types.js'
+import { ReferencedLocationsIndex } from '../../../../lib/Controls/ReferencedLocationsIndex.js'
 
 const CONTROL_ID = 'ctrl1'
 const CONNECTION_ID = 'conn01'
@@ -143,6 +144,7 @@ describe('ControlButtonLayered', () => {
 			changeEvents: new EventEmitter() as any,
 			renderClock: { subscribe: vi.fn(() => () => {}) } as any,
 			linkButtons: null as any,
+			referencedLocations: new ReferencedLocationsIndex(),
 			controlsAccessor: {
 				getControl: vi.fn(() => undefined),
 				pressControl: vi.fn(() => false),

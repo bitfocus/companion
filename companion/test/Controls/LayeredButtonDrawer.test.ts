@@ -4,6 +4,7 @@ import { formatLocation } from '@companion-app/shared/ControlId.js'
 import { elementSchemas } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { LayeredButtonDrawer } from '../../lib/Controls/ControlTypes/Button/LayeredButtonDrawer.js'
+import { ReferencedLocationsIndex } from '../../lib/Controls/ReferencedLocationsIndex.js'
 import type { CompositeElementIdString } from '../../lib/Instance/Definitions.js'
 
 // Control the (heavy) element conversion so we can shape its result and open/close the async draw window.
@@ -85,6 +86,7 @@ describe('LayeredButtonDrawer', () => {
 				getCachedRender: vi.fn(() => undefined),
 			},
 			userconfig: { getKey: vi.fn() },
+			referencedLocations: new ReferencedLocationsIndex(),
 		}
 		host = {
 			getButtonStateProps: () => ({
@@ -142,6 +144,27 @@ describe('LayeredButtonDrawer', () => {
 			const style = await drawer.getDrawStyle()
 
 			expect(style.referencedLocations).toEqual(new Set(['2/0/0']))
+		})
+
+		it('reports drawn and hidden referenced locations to the index, replacing the previous draw', async () => {
+			const index: ReferencedLocationsIndex = deps.referencedLocations
+			convertMock.mockResolvedValueOnce(
+				conversionResult({
+					referencedLocations: new Set(['2/0/0']),
+					hiddenReferencedLocations: new Set(['3/0/0']),
+				})
+			)
+			await drawer.getDrawStyle()
+
+			expect(index.getControlsReferencing('2/0/0')).toEqual(new Set([CONTROL_ID]))
+			expect(index.getControlsReferencing('3/0/0')).toEqual(new Set([CONTROL_ID]))
+
+			convertMock.mockResolvedValueOnce(conversionResult({ referencedLocations: new Set(['4/0/0']) }))
+			await drawer.getDrawStyle()
+
+			expect(index.getControlsReferencing('2/0/0')).toBeUndefined()
+			expect(index.getControlsReferencing('3/0/0')).toBeUndefined()
+			expect(index.getControlsReferencing('4/0/0')).toEqual(new Set([CONTROL_ID]))
 		})
 
 		it('builds the parser and conversion call from the control location', async () => {

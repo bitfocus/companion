@@ -162,6 +162,14 @@ describe('ControlStore', () => {
 			expect(store.getControl('bank:1')).toBeUndefined()
 			expect(tableView.delete).toHaveBeenCalledWith('bank:1')
 		})
+
+		it('forgets the locations the control referenced', () => {
+			addControl('bank:1')
+			store.referencedLocations.setControlReferences('bank:1', new Set(['1/0/0']))
+			store.deleteControl('bank:1')
+
+			expect(store.referencedLocations.getControlsReferencing('1/0/0')).toBeUndefined()
+		})
 	})
 
 	describe('renameVariables', () => {
