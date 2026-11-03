@@ -5,6 +5,7 @@ import type { PresetReferenceButtonModel } from '@companion-app/shared/Model/But
 import type { ControlLocation, DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple.js'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
@@ -48,7 +49,7 @@ export const PresetReferenceEditor = observer(function PresetReferenceEditor({
 		(value: DropdownChoiceId) => {
 			setConnectionMutation
 				.mutateAsync({ location, connectionId: String(value) })
-				.catch((err) => console.error(`Failed to switch preset reference connection: ${err}`))
+				.catch((err) => console.error(`Failed to switch preset reference connection: ${stringifyError(err)}`))
 		},
 		[setConnectionMutation, location]
 	)
@@ -130,7 +131,7 @@ function PresetReferenceVariableRow({ location, variableName, headline, value }:
 		(newValue: VariableValue | undefined) => {
 			setVariableMutation
 				.mutateAsync({ location, variableName, value: newValue })
-				.catch((e) => console.error(`Failed to set preset reference variable: ${e}`))
+				.catch((e) => console.error(`Failed to set preset reference variable: ${stringifyError(e)}`))
 		},
 		[setVariableMutation, location, variableName]
 	)

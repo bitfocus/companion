@@ -11,6 +11,7 @@
 
 import type Express from 'express'
 import onHeaders from 'on-headers'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController from '../../Log/Controller.js'
 
 export interface RewriteMiddlewareOptions {
@@ -141,7 +142,7 @@ export function createRewriteMiddleware(options: RewriteMiddlewareOptions = {}):
 			// Call next to let downstream handlers run
 			next()
 		} catch (error) {
-			logger.error(`Error in rewrite middleware for ${req.url}: ${error}`)
+			logger.error(`Error in rewrite middleware for ${req.url}: ${stringifyError(error)}`)
 			next(error)
 		}
 	}

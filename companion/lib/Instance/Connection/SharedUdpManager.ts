@@ -1,5 +1,6 @@
 import { createSocket, type RemoteInfo, type Socket } from 'node:dgram'
 import { nanoid } from 'nanoid'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController, { type Logger } from '../../Log/Controller.js'
 
 /**
@@ -147,7 +148,7 @@ class InstanceSharedUdpPort {
 		let hasBound = false
 
 		this.socket.on('error', (error) => {
-			this.#logger.warn(`Socket error: ${error?.message ?? error}`)
+			this.#logger.warn(`Socket error: ${stringifyError(error)}`)
 			destroyCallback()
 
 			if (hasBound) {

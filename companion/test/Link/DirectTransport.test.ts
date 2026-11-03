@@ -323,7 +323,7 @@ describe('direct transport', { timeout: 20_000 }, () => {
 		garbled.on('connection', (socket) => socket.send(Buffer.from('not a handshake')))
 		try {
 			const { ctx } = startClient(port)
-			await vi.waitFor(() => expect(ctx.state.message).toBe('Error: Handshake failed: Insufficient bytes, retrying'))
+			await vi.waitFor(() => expect(ctx.state.message).toBe('Handshake failed: Insufficient bytes, retrying'))
 		} finally {
 			for (const client of garbled.clients) client.terminate()
 			await new Promise((resolve) => garbled.close(resolve))

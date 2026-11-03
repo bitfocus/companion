@@ -48,6 +48,7 @@ import {
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
 import type { UserConfigKeyChange } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { ControlButtonPreset } from '../Controls/ControlTypes/Button/Preset.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { RenderClock } from '../Controls/RenderClock.js'
@@ -250,8 +251,9 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			return (GraphicsThreadMethods[key] as any)(...args)
 		}
 
-		return pool.exec(key, args).catch(async (e) => {
-			const isTermination = e instanceof workerPool.TerminateError || e?.message?.includes('Worker is terminated')
+		return pool.exec(key, args).catch(async (e: unknown) => {
+			const isTermination =
+				e instanceof workerPool.TerminateError || (e instanceof Error && e.message.includes('Worker is terminated'))
 			if (!isTermination) throw e
 
 			// Count every worker termination, including the one on the final attempt where we give up and
@@ -575,7 +577,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 						this.emit('button_drawn', location, render)
 					}
 				} catch (e) {
-					this.#logger.warn(`drawButtonImage failed: ${e}`)
+					this.#logger.warn(`drawButtonImage failed: ${stringifyError(e)}`)
 				}
 			},
 			5
@@ -613,7 +615,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 			this.#logger.debug(`Send font ${definition.name}`)
 			const stream = fs.createReadStream(definition.pathOnDisk)
 			stream.on('error', (err) => {
-				this.#logger.warn(`Failed to stream font ${definition.name}: ${err}`)
+				this.#logger.warn(`Failed to stream font ${definition.name}: ${stringifyError(err)}`)
 				if (!res.headersSent) res.status(500).end()
 				else res.destroy(err)
 			})

@@ -4,6 +4,7 @@ import React, { useCallback, useContext, useState } from 'react'
 import type { TriggerControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
@@ -69,7 +70,7 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 					value: name,
 				})
 				.catch((e) => {
-					console.error(`Set name failed: ${e}`)
+					console.error(`Set name failed: ${stringifyError(e)}`)
 				})
 		},
 		[setOptionsFieldMutation, controlId]

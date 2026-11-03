@@ -20,6 +20,7 @@ import {
 	type VariableValue,
 	type VariableValues,
 } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -285,7 +286,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 				this.emit('variablesChanged', all_changed_variables_set, connection_labels, null)
 			}
 		} catch (e) {
-			this.#logger.error(`Failed to process variables update: ${e}`)
+			this.#logger.error(`Failed to process variables update: ${stringifyError(e)}`)
 		}
 	}
 

@@ -15,6 +15,7 @@ import net from 'node:net'
 import { applyWSSHandler } from '@trpc/server/adapters/ws'
 import { nanoid } from 'nanoid'
 import { WebSocketServer } from 'ws'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController from '../Log/Controller.js'
 import type { AppInfo } from '../Registry.js'
 import { createTrpcWsContextFactory, makeIsTrustedProxyAddress, type AppRouter } from './TRPC.js'
@@ -208,7 +209,7 @@ export class UIHandler {
 				pongWaitMs: 30000,
 			},
 			onError: (error) => {
-				this.#logger.error(`tRPC error: ${error.error.message} ${error.error.stack}`)
+				this.#logger.error(`tRPC error: ${stringifyError(error.error)}`)
 			},
 		})
 

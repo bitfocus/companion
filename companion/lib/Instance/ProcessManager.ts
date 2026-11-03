@@ -14,6 +14,7 @@ import {
 	isSurfaceApiVersionCompatible,
 } from '@companion-app/shared/ModuleApiVersionCheck.js'
 import { RespawnMonitor } from '@companion-app/shared/Respawn.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { SurfaceModuleManifest } from '@companion-surface/host'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
@@ -262,8 +263,8 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 	resubscribeAllFeedbacks(): void {
 		for (const child of this.#children.values()) {
 			if (child.handler && child.isReady && isConnectionChild(child.handler)) {
-				child.handler.sendAllFeedbackInstances().catch((e) => {
-					this.#logger.warn(`sendAllFeedbackInstances failed for "${child.instanceId}": ${e}`)
+				child.handler.sendAllFeedbackInstances().catch((e: unknown) => {
+					this.#logger.warn(`sendAllFeedbackInstances failed for "${child.instanceId}": ${stringifyError(e)}`)
 				})
 			}
 		}
@@ -285,8 +286,8 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 			if (child.handler && child.isReady && isConnectionChild(child.handler)) {
 				child.handler
 					.sendVariablesChanged(all_changed_variables_set, getChangedVariableIds, controlIdFilter)
-					.catch((e) => {
-						this.#logger.warn(`sendVariablesChanged failed for "${child.instanceId}": ${e}`)
+					.catch((e: unknown) => {
+						this.#logger.warn(`sendVariablesChanged failed for "${child.instanceId}": ${stringifyError(e)}`)
 					})
 			}
 		}
@@ -339,7 +340,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 				try {
 					await child.handler.destroy()
 				} catch (e) {
-					console.error(`Destroy failed: ${e}`)
+					console.error(`Destroy failed: ${stringifyError(e)}`)
 				}
 				delete child.handler
 			}
@@ -441,11 +442,11 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 		// Queue the work
 		baseChild.lifeCycleQueue
 			.add(async () => {
-				await this.#queueRestartInstanceInner(instanceId, baseChild).catch((e) => {
-					this.#logger.error(`Unhandled error restarting instance: ${e}`)
+				await this.#queueRestartInstanceInner(instanceId, baseChild).catch((e: unknown) => {
+					this.#logger.error(`Unhandled error restarting instance: ${stringifyError(e)}`)
 				})
 			})
-			.catch((e) => {
+			.catch((e: unknown) => {
 				this.#logger.error(`Configured instance "${instanceId}" failed to start: `, e)
 			})
 	}
@@ -592,7 +593,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 				try {
 					dataChannel = await DataChannelServer.create(instanceId)
 				} catch (e) {
-					this.#logger.error(`Failed to open data channel for instance "${baseChild.lastLabel}": ${e}`)
+					this.#logger.error(`Failed to open data channel for instance "${baseChild.lastLabel}": ${stringifyError(e)}`)
 					this.#connectionDeps.instanceStatus.updateInstanceStatus(instanceId, 'system', 'Failed to start')
 					this.emit('childStateChange', instanceId)
 					return
@@ -669,7 +670,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 			try {
 				await this.#createHandlerAndWaitForInit(child, monitor, dataChannel, runtimeInfo, moduleInfo)
 			} catch (error) {
-				this.#logger.error(`Failed to initialize instance "${child.lastLabel}": ${error}`)
+				this.#logger.error(`Failed to initialize instance "${child.lastLabel}": ${stringifyError(error)}`)
 				throw error
 			}
 
@@ -793,14 +794,14 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 
 						resolveInit()
 					})
-					.catch((e) => {
-						this.#logger.warn(`Instance "${config.label || child.instanceId}" failed to init: ${e} ${e?.stack}`)
+					.catch((e: unknown) => {
+						this.#logger.warn(`Instance "${config.label || child.instanceId}" failed to init: ${stringifyError(e)}`)
 						this.#connectionDeps.debugLogLine(
 							child.instanceId,
 							Date.now(),
 							'System',
 							'error',
-							`Failed to init: ${e} ${e?.stack}`
+							`Failed to init: ${stringifyError(e)}`
 						)
 
 						forceRestart()
@@ -908,7 +909,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 						const moduleLibPackage = JSON.parse(await fs.readFile(moduleLibPackagePath, 'utf-8'))
 						moduleApiVersion = moduleLibPackage.version
 					} catch (e) {
-						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${e}`)
+						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${stringifyError(e)}`)
 						return { error: 'Invalid module' }
 					}
 				}
@@ -957,7 +958,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 						const moduleLibPackage = JSON.parse(await fs.readFile(moduleLibPackagePath, 'utf-8'))
 						moduleApiVersion = moduleLibPackage.version
 					} catch (e) {
-						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${e}`)
+						this.#logger.error(`Failed to get module api version: "${lastLabel}" ${stringifyError(e)}`)
 						return { error: 'Invalid module' }
 					}
 				}

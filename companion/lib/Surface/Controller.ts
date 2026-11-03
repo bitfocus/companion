@@ -181,8 +181,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	readonly #usbAvailable: boolean
 
 	readonly #hotplugRescan = new HotplugRescan(() => {
-		this.triggerRefreshDevices().catch((e) => {
-			this.#logger.warn(`Hotplug device refresh failed: ${e}`)
+		this.triggerRefreshDevices().catch((e: unknown) => {
+			this.#logger.warn(`Hotplug device refresh failed: ${stringifyError(e)}`)
 		})
 	})
 
@@ -291,7 +291,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			try {
 				usb.addEventListener('connect', this.triggerRefreshDevicesEvent)
 			} catch (e) {
-				this.#logger.error(`Failed to enable usb hotplug: ${e}`)
+				this.#logger.error(`Failed to enable usb hotplug: ${stringifyError(e)}`)
 			}
 			this.#runningUsbHotplug = true
 		}
@@ -325,7 +325,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					this.#runningUsbHotplug = true
 				}
 			} catch (e) {
-				this.#logger.warn(`Failed to enable/disable usb hotplug: ${e}`)
+				this.#logger.warn(`Failed to enable/disable usb hotplug: ${stringifyError(e)}`)
 			}
 		} else if (key === 'pin_enable' || key === 'pin_timeout') {
 			this.#startStopLockoutTimer()
@@ -1002,7 +1002,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 							// Directly open the surface using the cached handler
 							this.#logger.debug(`Enabling surface ${input.surfaceId}, opening directly via cached handler`)
 							openerInfo.opener.openDiscoveredSurface(openerInfo.surface, input.surfaceId).catch((e: unknown) => {
-								this.#logger.warn(`Error opening enabled surface ${input.surfaceId}: ${e}`)
+								this.#logger.warn(`Error opening enabled surface ${input.surfaceId}: ${stringifyError(e)}`)
 								// If direct open failed, fall back to a full refresh
 								this.triggerRefreshDevices().catch(() => {
 									this.#logger.warn('Device refresh after enable failed')
@@ -1581,8 +1581,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 							handler
 								.scanForSurfaces(sanitisedDevices)
 								.then((surfaces) => ({ instanceId, handler, surfaces }))
-								.catch((e) => {
-									this.#logger.warn(`Error during HID scan: ${e}`)
+								.catch((e: unknown) => {
+									this.#logger.warn(`Error during HID scan: ${stringifyError(e)}`)
 									return { instanceId, handler, surfaces: [] }
 								})
 						)
@@ -1635,8 +1635,8 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 						}
 
 						// Open the surface with the resolved ID
-						handler.openDiscoveredSurface(surface, resolvedSurfaceId).catch((e) => {
-							this.#logger.warn(`Error opening discovered surface ${resolvedSurfaceId}: ${e}`)
+						handler.openDiscoveredSurface(surface, resolvedSurfaceId).catch((e: unknown) => {
+							this.#logger.warn(`Error opening discovered surface ${resolvedSurfaceId}: ${stringifyError(e)}`)
 						})
 					}
 				}),
@@ -1646,7 +1646,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 
 			return undefined
 		} catch (e) {
-			this.#logger.silly('USB: scan failed ' + e)
+			this.#logger.silly('USB: scan failed ' + stringifyError(e))
 			return 'Scan failed'
 		}
 	}
@@ -2007,7 +2007,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			try {
 				usb.removeEventListener('connect', this.triggerRefreshDevicesEvent)
 			} catch (e) {
-				this.#logger.warn(`Failed to disable usb hotplug: ${e}`)
+				this.#logger.warn(`Failed to disable usb hotplug: ${stringifyError(e)}`)
 			}
 			this.#runningUsbHotplug = false
 		}

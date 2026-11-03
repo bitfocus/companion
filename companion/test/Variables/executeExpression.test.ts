@@ -552,7 +552,7 @@ describe('executeExpression', () => {
 			)
 			expect(res).toMatchObject({
 				ok: false,
-				error: 'Error: oscillate() is not supported in this context',
+				error: 'oscillate() is not supported in this context',
 				clockCycleMs: 0,
 			})
 		})

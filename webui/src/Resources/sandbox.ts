@@ -1,3 +1,5 @@
+import { stringifyError } from '@companion-app/shared/Stringify.js'
+
 const freezePrototypes = () => {
 	if (Object.isFrozen(console)) {
 		return
@@ -76,7 +78,7 @@ export function sandbox(serializedFn: string): (...args: any[]) => any {
 		}
 	} catch (error) {
 		// log error and gracefully exit
-		console.log(`Sandbox: ${error}`)
+		console.log(`Sandbox: ${stringifyError(error)}`)
 		return () => true
 	}
 }

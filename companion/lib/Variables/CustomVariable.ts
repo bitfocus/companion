@@ -599,7 +599,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 		try {
 			this.emit('custom_variable_definition_changed', name, info)
 		} catch (e) {
-			this.#logger.error(`Failed to emit changed custom variable definition: ${e}`)
+			this.#logger.error(`Failed to emit changed custom variable definition: ${stringifyError(e)}`)
 		}
 	}
 }

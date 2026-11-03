@@ -1,6 +1,7 @@
 import { faCompass, faEllipsis, faEraser, faFileExport, faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMemo, useRef } from 'react'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { PopoverActionMenu, type MenuItemProps } from '~/Components/ActionMenu.js'
 import { ConfirmExportModal, type ConfirmExportModalRef } from '~/Components/ConfirmExportModal.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -48,7 +49,7 @@ export function ButtonGridPageMenu({ pageNumber, pageInfo }: ButtonGridPageMenuP
 						'Recreate',
 						() => {
 							recreateNavMutation.mutateAsync({ pageNumber }).catch((e) => {
-								console.error(`Reset nav failed: ${e}`)
+								console.error(`Reset nav failed: ${stringifyError(e)}`)
 							})
 						}
 					)
@@ -64,7 +65,7 @@ export function ButtonGridPageMenu({ pageNumber, pageInfo }: ButtonGridPageMenuP
 						'Clear',
 						() => {
 							clearPageMutation.mutateAsync({ pageNumber }).catch((e) => {
-								console.error(`Clear page failed: ${e}`)
+								console.error(`Clear page failed: ${stringifyError(e)}`)
 							})
 						}
 					)

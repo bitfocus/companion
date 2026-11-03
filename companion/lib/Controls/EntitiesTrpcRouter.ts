@@ -13,6 +13,7 @@ import {
 	JsonValueSchema,
 } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
 import LogController from '../Log/Controller.js'
 import type { ActiveLearningStore } from '../Resources/ActiveLearningStore.js'
@@ -94,8 +95,8 @@ export function createEntitiesTrpcRouter(
 
 				const editable = getEditableEntities(control)
 				await activeLearningStore.runLearnRequest(entityId, async (signal) => {
-					await editable.entityLearn(entityLocation, entityId, signal).catch((e) => {
-						logger.error(`Learn failed: ${e}`)
+					await editable.entityLearn(entityLocation, entityId, signal).catch((e: unknown) => {
+						logger.error(`Learn failed: ${stringifyError(e)}`)
 						throw e
 					})
 				})

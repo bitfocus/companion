@@ -11,6 +11,7 @@ import type {
 } from '@companion-app/shared/Model/ButtonModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlBase } from '../../ControlBase.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
@@ -320,8 +321,8 @@ export abstract class ButtonControlRuntimeBase<
 							location,
 							rotationDelta: null,
 						})
-						.catch((e) => {
-							this.logger.error(`action execution failed: ${e}`)
+						.catch((e: unknown) => {
+							this.logger.error(`action execution failed: ${stringifyError(e)}`)
 						})
 				}
 
@@ -335,7 +336,7 @@ export abstract class ButtonControlRuntimeBase<
 								try {
 									runActionSet(time)
 								} catch (e) {
-									this.logger.warn(`hold actions execution failed: ${e}`)
+									this.logger.warn(`hold actions execution failed: ${stringifyError(e)}`)
 								}
 							}, time)
 						)
@@ -367,8 +368,8 @@ export abstract class ButtonControlRuntimeBase<
 				location,
 				rotationDelta: delta,
 			})
-			.catch((e) => {
-				this.logger.error(`action execution failed: ${e}`)
+			.catch((e: unknown) => {
+				this.logger.error(`action execution failed: ${stringifyError(e)}`)
 			})
 
 		return true

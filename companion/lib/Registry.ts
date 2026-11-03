@@ -8,6 +8,7 @@ import { getVirtualConnectionIds } from '@companion-app/shared/ConnectionId.js'
 import { CreatePageControlId, ParseControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { PageModelSchema } from '@companion-app/shared/Model/PageModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { CloudController } from './Cloud/Controller.js'
 import { ActionRunner } from './Controls/ActionRunner.js'
 import type { ControlCommonEvents } from './Controls/ControlDependencies.js'
@@ -563,7 +564,7 @@ export class Registry {
 							this.controls.triggerEvents.emit('locked', !!msg.status)
 						}
 					} catch (e) {
-						this.#logger.debug(`Failed to handle IPC message: ${e}`)
+						this.#logger.debug(`Failed to handle IPC message: ${stringifyError(e)}`)
 					}
 				})
 			}
@@ -572,12 +573,12 @@ export class Registry {
 				process.on('message', (msg: any): void => {
 					try {
 						if (msg.messageType === 'reload-extra-module') {
-							this.instance.modules.reloadExtraModule(msg.fullpath).catch((e) => {
-								this.#logger.warn(`Failed to reload module: ${e}`)
+							this.instance.modules.reloadExtraModule(msg.fullpath).catch((e: unknown) => {
+								this.#logger.warn(`Failed to reload module: ${stringifyError(e)}`)
 							})
 						}
 					} catch (e) {
-						this.#logger.debug(`Failed to handle IPC message: ${e}`)
+						this.#logger.debug(`Failed to handle IPC message: ${stringifyError(e)}`)
 					}
 				})
 			}
@@ -585,9 +586,8 @@ export class Registry {
 			// We aren't ready, but we need exit to work
 			this.#isReady = true
 
-			this.#logger.error(`Failed to start companion: ${e}`)
+			this.#logger.error(`Failed to start companion: ${stringifyError(e)}`)
 			this.#logger.debug(e)
-			this.#logger.debug((e as Error)?.stack)
 			this.exit(true, false)
 		} finally {
 			this.#isReady = true
@@ -616,8 +616,8 @@ export class Registry {
 		}
 
 		// Say goodbye to linked installations before the database closes
-		await this.link.stop().catch((e) => {
-			this.#logger.warn(`Failed to stop link: ${e}`)
+		await this.link.stop().catch((e: unknown) => {
+			this.#logger.warn(`Failed to stop link: ${stringifyError(e)}`)
 		})
 
 		this.ui.close()

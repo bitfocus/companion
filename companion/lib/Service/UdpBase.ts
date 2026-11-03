@@ -33,7 +33,7 @@ export abstract class ServiceUdpBase extends ServiceBase {
 				this.server = dgram.createSocket('udp4', this.processIncoming.bind(this))
 
 				this.server.on('error', (err) => {
-					this.logger.silly('UDP server error:', err.stack)
+					this.logger.silly(`UDP server error: ${stringifyError(err)}`)
 					//this.server.close();
 				})
 

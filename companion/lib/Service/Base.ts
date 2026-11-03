@@ -109,8 +109,7 @@ export abstract class ServiceBase {
 	/**
 	 * Process a socket error and disable the module.
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	protected handleSocketError(e: any): void {
+	protected handleSocketError(e: NodeJS.ErrnoException): void {
 		let message
 		let disable = false
 
@@ -124,7 +123,7 @@ export abstract class ServiceBase {
 				disable = true
 				break
 			default:
-				message = e.message
+				message = stringifyError(e)
 		}
 
 		this.logger.error(message)

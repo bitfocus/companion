@@ -657,7 +657,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		try {
 			await this.#ipcWrapper.sendWithCb('destroy', {})
 		} catch (e) {
-			console.warn(`Destroy for "${this.connectionId}" errored: ${e}`)
+			console.warn(`Destroy for "${this.connectionId}" errored: ${stringifyError(e)}`)
 		}
 
 		// Stop ipc commands being received
@@ -727,8 +727,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 					res.set(data.headers)
 					res.send(data.body)
 				})
-				.catch((err) => {
-					if (err.message.endsWith(timeoutMessage)) {
+				.catch((err: unknown) => {
+					if (err instanceof Error && err.message.endsWith(timeoutMessage)) {
 						res.status(504).send(JSON.stringify({ status: 504, message: 'Gateway Timeout' }))
 					} else {
 						res.status(500).send(JSON.stringify({ status: 500, message: 'Internal Server Error' }))
@@ -957,9 +957,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 			// This legacy handler only serves pre-2.0 modules, which should not be used as references due to ids not being very stable
 			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, presets, uiPresets, false)
 		} catch (e) {
-			this.logger.error(`setPresetDefinitions: ${e}`)
+			this.logger.error(`setPresetDefinitions: ${stringifyError(e)}`)
 
-			throw new Error(`Failed to set Preset Definitions: ${e}`)
+			throw new Error(`Failed to set Preset Definitions: ${stringifyError(e)}`)
 		}
 	}
 
@@ -994,7 +994,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				variableIds: Array.from(result.variableIds),
 			}
 		} catch (e) {
-			this.logger.error(`Parse variables failed: ${e}`)
+			this.logger.error(`Parse variables failed: ${stringifyError(e)}`)
 
 			throw new Error(`Failed to parse variables in string`)
 		}
@@ -1016,7 +1016,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				msg.uniquenessId ?? undefined
 			)
 		} catch (e) {
-			this.logger.error(`Record action failed: ${e}`)
+			this.logger.error(`Record action failed: ${stringifyError(e)}`)
 		}
 	}
 
@@ -1030,7 +1030,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				this.logger.warn(`Unable to set the value of variable $(custom:${msg.customVariableId}): ${failure}`)
 			}
 		} catch (e) {
-			this.logger.error(`Set custom variable failed: ${e}`)
+			this.logger.error(`Set custom variable failed: ${stringifyError(e)}`)
 		}
 	}
 
@@ -1094,7 +1094,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 				}
 			}
 		} catch (e) {
-			this.logger.error(`Upgrades failed to save: ${e}`)
+			this.logger.error(`Upgrades failed to save: ${stringifyError(e)}`)
 		}
 	}
 

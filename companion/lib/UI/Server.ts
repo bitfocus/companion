@@ -12,6 +12,7 @@
 import { Server as HttpServer } from 'node:http'
 import type express from 'express'
 import type { LauncherHttpStatusMessage } from '@companion-app/shared/Model/LauncherAppInfo.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController from '../Log/Controller.js'
 import { sendOverIpc } from '../Resources/Util.js'
 
@@ -19,7 +20,7 @@ export class UIServer extends HttpServer {
 	readonly #logger = LogController.createLogger('UI/Server')
 
 	/** The 'error' listener of the current bind, replaced on each rebind as it reports that bind's address */
-	#errorListener: ((e: any) => void) | null = null
+	#errorListener: ((e: NodeJS.ErrnoException) => void) | null = null
 
 	constructor(express: express.Express) {
 		super(express)
@@ -35,15 +36,15 @@ export class UIServer extends HttpServer {
 		try {
 			if (this.#errorListener) this.off('error', this.#errorListener)
 			let listening = false
-			this.#errorListener = (e: any) => {
+			this.#errorListener = (e: NodeJS.ErrnoException) => {
 				// Once listening, an error (eg EMFILE when accepting a connection) doesn't stop the server, so it is
 				// not a status for the launcher
 				if (listening) {
-					this.#logger.error(`http server error: ${e?.message ?? e}`)
+					this.#logger.error(`http server error: ${stringifyError(e)}`)
 					return
 				}
 
-				this.#logger.error(`Failed to bind to ${bindIp}:${bindPort}: ${e?.message ?? e}`)
+				this.#logger.error(`Failed to bind to ${bindIp}:${bindPort}: ${stringifyError(e)}`)
 				sendOverIpc({
 					messageType: 'http-bind-status',
 					appStatus: 'error',
@@ -73,13 +74,13 @@ export class UIServer extends HttpServer {
 				} satisfies LauncherHttpStatusMessage)
 			})
 		} catch (e) {
-			setTimeout(() => this.#logger.error(`http bind error: ${e}`), 2000)
+			setTimeout(() => this.#logger.error(`http bind error: ${stringifyError(e)}`), 2000)
 		}
 	}
 }
 
-function getBindErrorMessage(e: any, bindIp: string, bindPort: number): string {
-	switch (e?.code) {
+function getBindErrorMessage(e: NodeJS.ErrnoException, bindIp: string, bindPort: number): string {
+	switch (e.code) {
 		case 'EADDRNOTAVAIL':
 			return `${bindIp} is unavailable. Select another interface.`
 		case 'EADDRINUSE':
@@ -87,6 +88,6 @@ function getBindErrorMessage(e: any, bindIp: string, bindPort: number): string {
 		case 'EACCES':
 			return `Not permitted to use port ${bindPort}. Choose another port.`
 		default:
-			return `Could not start the web server: ${e?.message ?? e}`
+			return `Could not start the web server: ${stringifyError(e, true)}`
 	}
 }

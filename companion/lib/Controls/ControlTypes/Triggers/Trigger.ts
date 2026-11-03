@@ -9,6 +9,7 @@ import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { clamp } from '../../../Resources/Util.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
@@ -276,8 +277,8 @@ export class ControlTrigger
 				location: undefined,
 				rotationDelta: null,
 			})
-			.catch((e) => {
-				this.logger.error(`Failed to run actions: ${e.message}`)
+			.catch((e: unknown) => {
+				this.logger.error(`Failed to run actions: ${stringifyError(e)}`)
 			})
 	}
 
@@ -683,7 +684,7 @@ export class ControlTrigger
 				}
 				this.#conditionCheckLastValue = newStatus
 			} catch (e) {
-				this.logger.warn(`Failed to recheck condition: ${e}`)
+				this.logger.warn(`Failed to recheck condition: ${stringifyError(e)}`)
 			}
 		},
 		{

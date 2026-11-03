@@ -4,6 +4,7 @@ import type { JsonValue } from 'type-fest'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { StepExpressionBlockedVariables } from '@companion-app/shared/ControlLocation.js'
 import type { LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DropdownChoice } from '@companion-module/base'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
 import { ExpressionInputField } from '~/Components/ExpressionInputField'
@@ -38,7 +39,7 @@ export const ControlOptionsEditor = observer(function ControlOptionsEditor({
 		(key: string, value: JsonValue) => {
 			if (configRef.current === undefined || value !== configRef.current.options[key]) {
 				setOptionsFieldMutation.mutateAsync({ controlId, key, value }).catch((e) => {
-					console.error(`Set field failed: ${e}`)
+					console.error(`Set field failed: ${stringifyError(e)}`)
 				})
 			}
 		},

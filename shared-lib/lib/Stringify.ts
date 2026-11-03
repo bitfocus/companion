@@ -27,9 +27,11 @@ export function stringifyError(error: unknown, noStack = false): string {
 			}
 		}
 
-		// Is an instance of a class (like KeyboardEvent):
+		// Is an instance of a class (like KeyboardEvent). An Error's toString() already starts with its name
 		const instanceName = error.constructor?.name
-		if (instanceName && instanceName !== 'Object' && instanceName !== 'Array') str = `${instanceName}: ${str}`
+		if (!(error instanceof Error) && instanceName && instanceName !== 'Object' && instanceName !== 'Array') {
+			str = `${instanceName}: ${str}`
+		}
 	} else {
 		str = `${error}`
 	}

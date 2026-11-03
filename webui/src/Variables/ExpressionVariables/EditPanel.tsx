@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { FormLabel } from '~/Components/Form.js'
 import './EditPanel.css'
 import { useCallback, useContext, useId, useMemo, useRef } from 'react'
@@ -125,7 +126,7 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 					value,
 				})
 				.catch((e) => {
-					console.error(`Set field failed: ${e}`)
+					console.error(`Set field failed: ${stringifyError(e)}`)
 				})
 		},
 		[setOptionsFieldMutation, controlId]

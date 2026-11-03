@@ -2,6 +2,7 @@ import { nanoid } from 'nanoid'
 import { useCallback, useContext, useMemo, useState, useSyncExternalStore } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { MenuItemProps } from '~/Components/ActionMenu.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -82,14 +83,16 @@ export function useButtonContextMenu({
 					hotPressMutation
 						.mutateAsync({ location, direction: true, surfaceId: 'context-menu' })
 						.then(async () => hotPressMutation.mutateAsync({ location, direction: false, surfaceId: 'context-menu' }))
-						.catch((e) => console.error(`Hot press failed: ${e}`))
+						.catch((e) => console.error(`Hot press failed: ${stringifyError(e)}`))
 				},
 			},
 			{
 				label: 'Abort Actions',
 				disabled: isEmpty,
 				do: () => {
-					hotAbortMutation.mutateAsync({ location }).catch((e) => console.error(`Hot abort failed: ${e}`))
+					hotAbortMutation
+						.mutateAsync({ location })
+						.catch((e) => console.error(`Hot abort failed: ${stringifyError(e)}`))
 				},
 			},
 			{ isSeparator: true, label: 'Edit' },
@@ -139,7 +142,7 @@ export function useButtonContextMenu({
 						// Place a button that mirrors the copied button, rather than a full copy
 						createReferenceControlMutation
 							.mutateAsync({ fromLocation: clipboard.locations[0], toLocation: location })
-							.catch((e) => console.error(`Paste reference failed: ${e}`))
+							.catch((e) => console.error(`Paste reference failed: ${stringifyError(e)}`))
 						// A reference leaves the source in place, so clear a pending cut - it never completes otherwise
 						if (clipboard.mode === 'cut') store.clearClipboard()
 						setTabResetToken(nanoid())

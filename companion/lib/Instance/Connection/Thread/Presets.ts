@@ -427,7 +427,7 @@ function ConvertPresetDefinition(
 				return null
 		}
 	} catch (e) {
-		logger.warn(`Received invalid preset "${rawPreset.name}"(${presetId}): ${e}`)
+		logger.warn(`Received invalid preset "${rawPreset.name}"(${presetId}): ${stringifyError(e)}`)
 		return null
 	}
 }

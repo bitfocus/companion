@@ -1,5 +1,6 @@
 /* eslint-disable n/no-process-exit */
 import fs from 'node:fs/promises'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import {
 	createModuleLogger,
 	PluginWrapper,
@@ -272,8 +273,8 @@ ipcWrapper
 	.then(async () => {
 		logger.info(`Module-host accepted registration`)
 	})
-	.catch((err) => {
-		logger.error(`Module registration failed: ${err}`)
+	.catch((err: unknown) => {
+		logger.error(`Module registration failed: ${stringifyError(err)}`)
 
 		// Kill the process
 		process.exit(11)

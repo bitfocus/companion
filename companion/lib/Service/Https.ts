@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import _https from 'node:https'
 import type { UserConfigKeyChange } from '@companion-app/shared/Model/UserConfigModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { UIExpress } from '../UI/Express.js'
 import type { UIHandler } from '../UI/Handler.js'
@@ -83,15 +84,15 @@ export class ServiceHttps extends ServiceBase {
 								this.logger.silly(`Read chain file: ${chain}`)
 								credentials.ca = ca
 							} catch (e) {
-								this.logger.warn(`Couldn't read chain field: ${e}`)
-								this.logger.silly(`Couldn't read chain field: ${e}`)
+								this.logger.warn(`Couldn't read chain field: ${stringifyError(e)}`)
+								this.logger.silly(`Couldn't read chain field: ${stringifyError(e)}`)
 							}
 						}
 
 						this.startServer(credentials)
 					} catch (e) {
-						this.logger.error(`Could not start: ${e}`)
-						this.logger.silly(`Could not start: ${e}`)
+						this.logger.error(`Could not start: ${stringifyError(e)}`)
+						this.logger.silly(`Could not start: ${stringifyError(e)}`)
 					}
 				} else {
 					this.logger.error(`Could not start: Private Key and/or Certificate files not set`)
@@ -110,8 +111,8 @@ export class ServiceHttps extends ServiceBase {
 
 						this.startServer(credentials)
 					} catch (e) {
-						this.logger.error(`Could not start: ${e}`)
-						this.logger.silly(`Could not start: ${e}`)
+						this.logger.error(`Could not start: ${stringifyError(e)}`)
+						this.logger.silly(`Could not start: ${stringifyError(e)}`)
 					}
 				} else {
 					this.logger.error(`Could not start: Incomplete or no self-signed certificate on file`)
@@ -148,7 +149,7 @@ export class ServiceHttps extends ServiceBase {
 			this.logger.silly(`Listening at https://${this.#bindIP}:${this.port}`)
 		} catch (e) {
 			this.logger.error(`Couldn't bind to port ${this.port}`)
-			this.logger.silly(`Couldn't bind to port ${this.port}: ${e}`)
+			this.logger.silly(`Couldn't bind to port ${this.port}: ${stringifyError(e)}`)
 			this.#server = undefined
 		}
 	}

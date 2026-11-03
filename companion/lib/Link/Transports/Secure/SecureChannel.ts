@@ -2,6 +2,7 @@ import Noise from 'noise-handshake'
 import CipherState from 'noise-handshake/cipher.js'
 import type { KeyPair as NoiseKeyPair } from 'noise-handshake/dh.js'
 import { z } from 'zod'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { LinkIdentity } from '../../Identity.js'
 import { LINK_NAME_MAX_LENGTH } from '../../Protocol/Announcement.js'
 import type { MessagePipe } from './MessagePipe.js'
@@ -156,7 +157,7 @@ export class SecureChannel {
 						fail('Unexpected handshake message')
 					}
 				} catch (e) {
-					fail(`Handshake failed: ${e instanceof Error ? e.message : String(e)}`)
+					fail(`Handshake failed: ${stringifyError(e, true)}`)
 				}
 			}
 

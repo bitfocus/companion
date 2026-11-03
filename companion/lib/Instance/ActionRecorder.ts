@@ -14,6 +14,7 @@ import type {
 import { EntityModelType, type SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { ExpressionOrJsonValueSchema, optionsObjectToExpressionOptions } from '@companion-app/shared/Model/Options.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { CompanionOptionValues } from '@companion-module/host'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import LogController from '../Log/Controller.js'
@@ -543,8 +544,8 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 			const connection = this.#instanceController.processManager.getConnectionChild(connectionId)
 			if (connection) {
 				ps.push(
-					connection.startStopRecordingActions(true).catch((e) => {
-						this.#logger.warn(`Failed to start recording for "${connectionId}": ${e}`)
+					connection.startStopRecordingActions(true).catch((e: unknown) => {
+						this.#logger.warn(`Failed to start recording for "${connectionId}": ${stringifyError(e)}`)
 					})
 				)
 			}
@@ -556,8 +557,8 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 				const connection = this.#instanceController.processManager.getConnectionChild(connectionId)
 				if (connection) {
 					ps.push(
-						connection.startStopRecordingActions(false).catch((e) => {
-							this.#logger.warn(`Failed to stop recording for "${connectionId}": ${e}`)
+						connection.startStopRecordingActions(false).catch((e: unknown) => {
+							this.#logger.warn(`Failed to stop recording for "${connectionId}": ${stringifyError(e)}`)
 						})
 					)
 				}
@@ -567,8 +568,8 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 		this.#currentlyRecordingConnectionIds = targetRecordingConnectionIds
 
 		// Wait for them all to be synced
-		Promise.all(ps).catch((e) => {
-			this.#logger.error(`Failed to syncRecording: ${e}`)
+		Promise.all(ps).catch((e: unknown) => {
+			this.#logger.error(`Failed to syncRecording: ${stringifyError(e)}`)
 		})
 	}
 }

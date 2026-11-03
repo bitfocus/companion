@@ -4,6 +4,7 @@
  */
 
 import net from 'node:net'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 
 const CONNECT_ATTEMPTS = 10
 const CONNECT_RETRY_INTERVAL = 100
@@ -28,7 +29,7 @@ export async function connectDataChannel(socketPath: string): Promise<net.Socket
 		}
 	}
 
-	throw new Error(`Failed to connect to host data channel "${socketPath}": ${lastError}`)
+	throw new Error(`Failed to connect to host data channel "${socketPath}": ${stringifyError(lastError)}`)
 }
 
 async function connectOnce(socketPath: string): Promise<net.Socket> {

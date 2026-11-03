@@ -10,6 +10,7 @@ import {
 	type OutboundSurfaceInfo,
 	type OutboundSurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
 import LogController from '../Log/Controller.js'
@@ -108,7 +109,9 @@ export class SurfaceOutboundController {
 			try {
 				this.#startStopConnection(surfaceInfo)
 			} catch (e) {
-				this.#logger.error(`Unable to setup remote surface: ${surfaceInfo.displayName || surfaceInfo.id}: ${e}`)
+				this.#logger.error(
+					`Unable to setup remote surface: ${surfaceInfo.displayName || surfaceInfo.id}: ${stringifyError(e)}`
+				)
 			}
 		}
 	}
@@ -517,7 +520,7 @@ export class SurfaceOutboundController {
 
 			return false
 		} catch (e) {
-			this.#logger.warn(`Failed to process remoteConfigMatches expression: ${e}`)
+			this.#logger.warn(`Failed to process remoteConfigMatches expression: ${stringifyError(e)}`)
 			return false
 		}
 	}

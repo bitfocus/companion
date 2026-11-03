@@ -20,6 +20,7 @@ import type {
 	SurfacePanelConfig,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { resolveControlStylePreset, rotateXYForPanel, unrotateXYForPanel } from '@companion-app/shared/SurfaceLayout.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -457,7 +458,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 		try {
 			this.#surfaces.removeDevice(this.panel.info.surfaceId, { physicallyGone: true })
 		} catch (e) {
-			this.#logger.error(`Remove failed: ${e}`)
+			this.#logger.error(`Remove failed: ${stringifyError(e)}`)
 		}
 	}
 
@@ -525,7 +526,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				)
 			}
 		} catch (e) {
-			this.#logger.error(`Click failed: ${e}`)
+			this.#logger.error(`Click failed: ${stringifyError(e)}`)
 		}
 	}
 
@@ -540,7 +541,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 			this.#surfaces.devicePageSet(this.surfaceId, forward ? '+1' : '-1', true)
 			this.#logger.debug(`Change page ${pageNumber}: "${forward ? '+1' : '-1'}" initiated by ${name}`)
 		} catch (e) {
-			this.#logger.error(`Change page failed for ${name}: ${e}`)
+			this.#logger.error(`Change page failed for ${name}: ${stringifyError(e)}`)
 		}
 	}
 
@@ -582,7 +583,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 				// Ignore when locked out
 			}
 		} catch (e) {
-			this.#logger.error(`Click failed: ${e}`)
+			this.#logger.error(`Click failed: ${stringifyError(e)}`)
 		}
 	}
 

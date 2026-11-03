@@ -1,3 +1,4 @@
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ServiceApi } from './ServiceApi.js'
 import { ServiceUdpBase, type DgramRemoteInfo } from './UdpBase.js'
@@ -85,8 +86,8 @@ export class ServiceArtnet extends ServiceUdpBase {
 					}
 				}
 			}
-		} catch (err: any) {
-			this.logger.silly(`message error: ${err.toString()}`, err.stack)
+		} catch (err) {
+			this.logger.silly(`message error: ${stringifyError(err)}`)
 		}
 	}
 }

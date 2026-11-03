@@ -1,3 +1,4 @@
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ServiceApi } from './ServiceApi.js'
 import { ApiMessageError, ServiceTcpUdpApi } from './TcpUdpApi.js'
@@ -46,12 +47,12 @@ export class ServiceUdp extends ServiceUdpBase {
 			.then((res) => {
 				this.logger.silly(`UDP command succeeded: ${res}`)
 			})
-			.catch((e) => {
-				this.logger.silly(`UDP command failed: ${e}`)
+			.catch((e: unknown) => {
+				this.logger.silly(`UDP command failed: ${stringifyError(e)}`)
 				if (e instanceof ApiMessageError) {
-					this.logger.info(`UDP command failed: ${e} ${e.context}`)
+					this.logger.info(`UDP command failed: ${stringifyError(e)} ${e.context}`)
 				} else {
-					this.logger.info(`UDP command failed: ${e}`)
+					this.logger.info(`UDP command failed: ${stringifyError(e)}`)
 				}
 			})
 	}

@@ -9,6 +9,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 import './CreateButtonTypeButtons.css'
@@ -20,7 +21,7 @@ export function CreateButtonTypeButtons({ location }: { location: ControlLocatio
 		(newType: string) => {
 			// On an empty slot there is no existing type to convert from, so no warning is needed
 			resetControlsMutation.mutateAsync({ locations: [location], newType }).catch((e) => {
-				console.error(`Set type failed: ${e}`)
+				console.error(`Set type failed: ${stringifyError(e)}`)
 			})
 		},
 		[resetControlsMutation, location]

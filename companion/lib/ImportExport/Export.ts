@@ -38,6 +38,7 @@ import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
 import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
 import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { ControlTrigger } from '../Controls/ControlTypes/Triggers/Trigger.js'
@@ -297,7 +298,7 @@ export class ExportController {
 			zipfile.outputStream.pipe(res)
 
 			zipfile.outputStream.on('error', (err) => {
-				this.#logger.error(`Support bundle zip stream error: ${err}`)
+				this.#logger.error(`Support bundle zip stream error: ${stringifyError(err)}`)
 				next(err)
 			})
 
@@ -348,12 +349,12 @@ export class ExportController {
 				const out = JSON.stringify(payload)
 				zipfile.addBuffer(Buffer.from(out), 'user.json')
 			} catch (e) {
-				this.#logger.debug(`Support bundle append user: ${e}`)
+				this.#logger.debug(`Support bundle append user: ${stringifyError(e)}`)
 			}
 
 			zipfile.end()
 		} catch (err) {
-			this.#logger.error(`Support bundle creation error: ${err}`)
+			this.#logger.error(`Support bundle creation error: ${stringifyError(err)}`)
 			next(err)
 		}
 	}
@@ -797,7 +798,7 @@ async function downloadBlob(
 		await streamExport(data, prepared.format, res)
 	} catch (err) {
 		// Headers are already sent, so we cannot switch to a 500 - abort the socket and log.
-		logger.error(`Failed to stream export data: ${err}`)
+		logger.error(`Failed to stream export data: ${stringifyError(err)}`)
 		res.destroy()
 	}
 }

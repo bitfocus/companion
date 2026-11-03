@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import { backup as SqliteBackup } from 'node:sqlite'
 import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { DATA_VERSION, upgradeStartup } from '../Upgrades/UpgradeData.js'
 import { DataLegacyDatabase } from './Legacy/Database.js'
 import { createTables as createTablesV1 } from './Schema/v1.js'
@@ -88,7 +89,7 @@ export class DataDatabase extends DataStoreBase<DataDatabaseDefaultTable> {
 			const stats = await fs.stat(filePath)
 			return stats.size
 		} catch (error) {
-			this.logger.error(`Failed to get file size for backup: ${error}`)
+			this.logger.error(`Failed to get file size for backup: ${stringifyError(error)}`)
 			return 0
 		}
 	}

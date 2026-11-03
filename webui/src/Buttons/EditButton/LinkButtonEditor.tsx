@@ -11,6 +11,7 @@ import {
 import type { LinkButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { LinkButtonRuntimeProps } from '@companion-app/shared/Model/Link.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
 import { Form, FormLabel } from '~/Components/Form.js'
@@ -40,7 +41,7 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 		(key: 'peerId' | 'location' | 'decoration' | 'showStatusIcons', value: string | ExpressionOrValue<string>) => {
 			setOptionsFieldMutation
 				.mutateAsync({ controlId, key, value })
-				.catch((e) => console.error(`Failed to set link button ${key}: ${e}`))
+				.catch((e) => console.error(`Failed to set link button ${key}: ${stringifyError(e)}`))
 		},
 		[setOptionsFieldMutation, controlId]
 	)

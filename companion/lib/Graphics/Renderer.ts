@@ -26,6 +26,7 @@ import type {
 } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { DrawImageBuffer } from '@companion-app/shared/Model/StyleModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { rotateResolution, transformButtonImage } from '../Resources/Util.js'
 import { Image } from './Image.js'
 import { ImagePools } from './ImagePools.js'
@@ -314,7 +315,7 @@ export class GraphicsRenderer {
 				previewDataUrl,
 			}
 		} catch (e) {
-			throw new Error(`Failed to process image: ${e instanceof Error ? e.message : e}`, { cause: e })
+			throw new Error(`Failed to process image: ${stringifyError(e, true)}`, { cause: e })
 		}
 	}
 

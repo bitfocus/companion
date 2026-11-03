@@ -17,6 +17,7 @@ import nodeCron, { type ScheduledTask } from 'node-cron'
 import z from 'zod'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { BackupRulesConfig, PreviousBackupInfo } from '@companion-app/shared/Model/UserConfigModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataDatabase } from '../Data/Database.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController, { type Logger } from '../Log/Controller.js'
@@ -179,8 +180,8 @@ export class BackupController {
 
 			this.#userConfig.setKeyUnchecked('backups', newBackupRules)
 
-			this.cleanupOldBackups(updatedRule).catch((err) => {
-				this.#logger.error(`Failed to clean up old backups for rule ${ruleId}: ${err}`)
+			this.cleanupOldBackups(updatedRule).catch((err: unknown) => {
+				this.#logger.error(`Failed to clean up old backups for rule ${ruleId}: ${stringifyError(err)}`)
 			})
 		}
 	}
@@ -190,8 +191,8 @@ export class BackupController {
 	 * @param backupRules Backup rules configuration object
 	 */
 	initializeWithConfig(backupRules: BackupRulesConfig[]): void {
-		this.#ensureBackupDirExists().catch((err) => {
-			this.#logger.error(`Failed to ensure backup directory exists: ${err}`)
+		this.#ensureBackupDirExists().catch((err: unknown) => {
+			this.#logger.error(`Failed to ensure backup directory exists: ${stringifyError(err)}`)
 		})
 
 		this.#backupRules = backupRules
@@ -217,8 +218,8 @@ export class BackupController {
 	 */
 	#clearScheduledJobs(): void {
 		for (const [id, job] of this.#cronJobs.entries()) {
-			Promise.resolve(job.stop()).catch((err) => {
-				this.#logger.error(`Failed to stop cron job ${id}: ${err}`)
+			Promise.resolve(job.stop()).catch((err: unknown) => {
+				this.#logger.error(`Failed to stop cron job ${id}: ${stringifyError(err)}`)
 			})
 			this.#cronJobs.delete(id)
 		}
@@ -233,8 +234,8 @@ export class BackupController {
 			// Stop existing job if it exists
 			const existingJob = this.#cronJobs.get(rule.id)
 			if (existingJob) {
-				Promise.resolve(existingJob.stop()).catch((err) => {
-					this.#logger.error(`Failed to stop cron job ${rule.id}: ${err}`)
+				Promise.resolve(existingJob.stop()).catch((err: unknown) => {
+					this.#logger.error(`Failed to stop cron job ${rule.id}: ${stringifyError(err)}`)
 				})
 				this.#cronJobs.delete(rule.id)
 			}
@@ -261,7 +262,7 @@ export class BackupController {
 							logger.error(`Failed to create scheduled backup for rule`)
 						}
 					} catch (err) {
-						logger.error(`Error in scheduled backup: ${err}`)
+						logger.error(`Error in scheduled backup: ${stringifyError(err)}`)
 					}
 				},
 				{
@@ -273,7 +274,7 @@ export class BackupController {
 			this.#cronJobs.set(rule.id, job)
 			this.#logger.info(`Scheduled backup rule: ${rule.name} with cron: ${rule.cron}`)
 		} catch (err) {
-			this.#logger.error(`Failed to schedule backup rule ${rule.name}: ${err}`)
+			this.#logger.error(`Failed to schedule backup rule ${rule.name}: ${stringifyError(err)}`)
 		}
 	}
 
@@ -304,7 +305,7 @@ export class BackupController {
 					this.#logger.info(`Deleted old backup: ${backup.filePath}`)
 					return backup
 				} catch (err) {
-					this.#logger.warn(`Failed to delete backup file ${backup.filePath}: ${err}`)
+					this.#logger.warn(`Failed to delete backup file ${backup.filePath}: ${stringifyError(err)}`)
 					// Return null to indicate this backup wasn't deleted
 					return null
 				}
@@ -335,7 +336,7 @@ export class BackupController {
 				}
 			}
 		} catch (err) {
-			this.#logger.error(`Failed to clean up old backups for rule ${rule.name}: ${err}`)
+			this.#logger.error(`Failed to clean up old backups for rule ${rule.name}: ${stringifyError(err)}`)
 		}
 	}
 
@@ -419,9 +420,9 @@ export class BackupController {
 				default:
 					throw new Error(`Unsupported backup type: ${rule.backupType}`)
 			}
-		} catch (err: any) {
-			logger.error(`Failed to create backup: ${err}`)
-			throw new Error(`Failed to create backup: ${err.message || err}`)
+		} catch (err) {
+			logger.error(`Failed to create backup: ${stringifyError(err)}`)
+			throw new Error(`Failed to create backup: ${stringifyError(err, true)}`)
 		}
 	}
 
@@ -478,7 +479,7 @@ export class BackupController {
 				await fs.unlink(filePath)
 				this.#logger.info(`Deleted backup file: ${filePath}`)
 			} catch (err) {
-				this.#logger.warn(`Failed to delete backup file ${filePath}, but will remove from rule: ${err}`)
+				this.#logger.warn(`Failed to delete backup file ${filePath}, but will remove from rule: ${stringifyError(err)}`)
 			}
 
 			// Update backup rules to remove this backup from the specific rule
@@ -668,8 +669,8 @@ export class BackupController {
 			// Remove any scheduled job for this rule
 			const job = this.#cronJobs.get(ruleId)
 			if (job) {
-				Promise.resolve(job.stop()).catch((err) => {
-					this.#logger.error(`Failed to stop cron job ${ruleId}: ${err}`)
+				Promise.resolve(job.stop()).catch((err: unknown) => {
+					this.#logger.error(`Failed to stop cron job ${ruleId}: ${stringifyError(err)}`)
 				})
 				this.#cronJobs.delete(ruleId)
 			}

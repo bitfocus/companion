@@ -204,8 +204,8 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 				this.dirty = false
 				this.logger.info(`backup complete in ${saveDuration}ms`)
 			})
-			.catch((err) => {
-				this.logger.warn(`backup failed: ${err.message}`)
+			.catch((err: unknown) => {
+				this.logger.warn(`backup failed: ${stringifyError(err)}`)
 			})
 	}
 
@@ -274,7 +274,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 							this.logger.error(`${this.name} could not be parsed.  A copy could not be saved.`)
 						}
 					} catch (err) {
-						this.logger.silly(`${this.name} load Error making or deleting corrupted backup: ${err}`)
+						this.logger.silly(`${this.name} load Error making or deleting corrupted backup: ${stringifyError(err)}`)
 					}
 
 					this.startSQLiteWithBackup()
@@ -354,7 +354,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 		try {
 			db.exec('PRAGMA journal_mode = WAL')
 		} catch (err) {
-			this.logger.warn(`Error setting journal mode: ${err}`)
+			this.logger.warn(`Error setting journal mode: ${stringifyError(err)}`)
 		}
 
 		return db

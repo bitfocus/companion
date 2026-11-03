@@ -16,6 +16,7 @@ import {
 	type LineStyle,
 	type TextLayoutCache,
 } from '@companion-app/shared/Graphics/ImageBase.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import LogController from '../Log/Controller.js'
 import { uint8ArrayToBuffer } from '../Resources/Util.js'
 
@@ -142,8 +143,8 @@ export class Image extends ImageBase<CanvasImage | Canvas> {
 					? new Uint8ClampedArray(data)
 					: new Uint8ClampedArray(data.buffer, data.byteOffset, data.byteLength)
 			imageData = new ImageData(pixels, width, height)
-		} catch (error: any) {
-			this.logger.error(`Can't draw pixel buffer, creating ImageData from buffer failed: ` + error.stack)
+		} catch (error) {
+			this.logger.error(`Can't draw pixel buffer, creating ImageData from buffer failed: ${stringifyError(error)}`)
 			return null
 		}
 

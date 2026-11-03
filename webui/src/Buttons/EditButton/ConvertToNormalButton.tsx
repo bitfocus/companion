@@ -2,6 +2,7 @@ import { faPencil } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -21,7 +22,7 @@ export function ConvertToNormalButton({ location }: ConvertToNormalButtonProps):
 			'Convert',
 			() => {
 				convertControlMutation.mutateAsync({ location }).catch((e) => {
-					console.error(`Convert failed: ${e}`)
+					console.error(`Convert failed: ${stringifyError(e)}`)
 				})
 			}
 		)

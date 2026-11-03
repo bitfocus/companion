@@ -14,6 +14,7 @@ import { validateActionSetId, type SomeControlId } from '@companion-app/shared/C
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue, type VariableDefinition } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { ActionRecorder } from '../Instance/ActionRecorder.js'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import LogController from '../Log/Controller.js'
@@ -269,7 +270,7 @@ export class InternalActionRecorder
 						this.#actionRecorder.saveToControlId(controlId, stepId, setIdSafe, action.options.mode as any)
 					} catch (e) {
 						// We don't have a good way to present this to the user, so ignore it for now. They should notice that it didnt work
-						this.#logger.info(`action_recorder_save_to_button failed: ${e}`)
+						this.#logger.info(`action_recorder_save_to_button failed: ${stringifyError(e)}`)
 					}
 				}
 

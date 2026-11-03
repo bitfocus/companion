@@ -2,6 +2,7 @@ import { nanoid } from 'nanoid'
 import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever, type JsonValue } from '@companion-module/host'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../Instance/Controller.js'
@@ -143,8 +144,8 @@ export class ActionRunner {
 
 			for (const action of actions) {
 				if (extras.abortDelayed.aborted) break
-				await this.#runAction(action, extras).catch((e) => {
-					this.#logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
+				await this.#runAction(action, extras).catch((e: unknown) => {
+					this.#logger.silly(`Error executing action for ${action.connectionId}: ${stringifyError(e)}`)
 				})
 			}
 		} else {
@@ -157,8 +158,8 @@ export class ActionRunner {
 
 				if (waitAction) {
 					// Perform the wait action
-					await this.#runAction(waitAction, extras).catch((e) => {
-						this.#logger.silly(`Error executing action for ${waitAction.connectionId}: ${e.message ?? e}`)
+					await this.#runAction(waitAction, extras).catch((e: unknown) => {
+						this.#logger.silly(`Error executing action for ${waitAction.connectionId}: ${stringifyError(e)}`)
 					})
 				}
 
@@ -167,8 +168,8 @@ export class ActionRunner {
 				// Spawn all the actions in parallel
 				for (const action of actions) {
 					ps.push(
-						this.#runAction(action, extras).catch((e) => {
-							this.#logger.silly(`Error executing action for ${action.connectionId}: ${e.message ?? e}`)
+						this.#runAction(action, extras).catch((e: unknown) => {
+							this.#logger.silly(`Error executing action for ${action.connectionId}: ${stringifyError(e)}`)
 						})
 					)
 				}

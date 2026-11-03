@@ -8,6 +8,7 @@ import type {
 	UIPresetGroupSimple,
 	UIPresetSection,
 } from '@companion-app/shared/Model/Presets.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type {
 	CompanionButtonPresetDefinition,
 	CompanionPresetAction,
@@ -239,7 +240,7 @@ function ConvertPresetDefinition(
 
 		return presetDefinition
 	} catch (e) {
-		logger.warn(`Received invalid preset "${rawPreset.name}"(${presetId}): ${e}`)
+		logger.warn(`Received invalid preset "${rawPreset.name}"(${presetId}): ${stringifyError(e)}`)
 		return null
 	}
 }

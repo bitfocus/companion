@@ -1,6 +1,7 @@
 import { selectFrameIndex, type CycleAnimation } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import type { DecodedRasterImage, RendererDrawStyle } from '@companion-app/shared/Model/Render.js'
 import type { SomeButtonGraphicsDrawElement } from '@companion-app/shared/Model/StyleLayersModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { Logger } from '../../Log/Controller.js'
 import type { DecodeImageResult } from './DecodeImage.js'
 
@@ -291,8 +292,8 @@ export class ImageCacheStore {
 					})
 					return result
 				})
-				.catch((e) => {
-					this.#logger.warn(`Failed to decode remote image: ${e?.message ?? e}`)
+				.catch((e: unknown) => {
+					this.#logger.warn(`Failed to decode remote image: ${stringifyError(e)}`)
 					return null
 				})
 				.finally(() => {
@@ -328,9 +329,9 @@ export class ImageCacheStore {
 				this.#insert(source, newEntry)
 				return newEntry
 			})
-			.catch((e) => {
+			.catch((e: unknown) => {
 				// Don't cache the failure, as it could be the render thread crashing
-				this.#logger.warn(`Failed to decode image: ${e?.message ?? e}`)
+				this.#logger.warn(`Failed to decode image: ${stringifyError(e)}`)
 				return null
 			})
 			.finally(() => {

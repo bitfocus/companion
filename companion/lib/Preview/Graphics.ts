@@ -17,6 +17,7 @@ import {
 	type PreviewRenderSize,
 } from '@companion-app/shared/Model/Preview.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { GraphicsController } from '../Graphics/Controller.js'
@@ -445,7 +446,9 @@ export class PreviewGraphics {
 
 			this.#recheckQueue.queue(previewSession.id, previewSession.id, resolvedLocation)
 		} catch (e) {
-			this.#logger.error(`Error while rechecking preview session for control ${previewSession.controlId}: ${e}`)
+			this.#logger.error(
+				`Error while rechecking preview session for control ${previewSession.controlId}: ${stringifyError(e)}`
+			)
 		}
 	}
 }

@@ -10,6 +10,7 @@ import type { ButtonReferenceButtonModel } from '@companion-app/shared/Model/But
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button'
 import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
@@ -40,7 +41,7 @@ export const ButtonReferenceEditor = observer(function ButtonReferenceEditor({
 		(value: ExpressionOrValue<string>) => {
 			setOptionsFieldMutation
 				.mutateAsync({ controlId, key: 'location', value })
-				.catch((e) => console.error(`Failed to set reference location: ${e}`))
+				.catch((e) => console.error(`Failed to set reference location: ${stringifyError(e)}`))
 		},
 		[setOptionsFieldMutation, controlId]
 	)

@@ -295,8 +295,8 @@ export class ControlEntityInstance {
 		if (isInternalConnectionId(this.#data.connectionId)) {
 			this.#internalModule.entityDelete(this.asEntityModel())
 		} else {
-			this.#processManager.connectionEntityDelete(this.asEntityModel(), this.#controlId).catch((e) => {
-				this.#logger.silly(`entityDelete to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
+			this.#processManager.connectionEntityDelete(this.asEntityModel(), this.#controlId).catch((e: unknown) => {
+				this.#logger.silly(`entityDelete to connection "${this.connectionId}" failed: ${stringifyError(e)}`)
 			})
 		}
 
@@ -329,8 +329,8 @@ export class ControlEntityInstance {
 			} else {
 				// Always notify, even when disabled, so the EntityManager can run upgrade scripts.
 				// The EntityManager will not subscribe disabled entities to the module.
-				this.#processManager.connectionEntityUpdate(this, this.#controlId).catch((e) => {
-					this.#logger.silly(`entityUpdate to connection "${this.connectionId}" failed: ${e.message} ${e.stack}`)
+				this.#processManager.connectionEntityUpdate(this, this.#controlId).catch((e: unknown) => {
+					this.#logger.silly(`entityUpdate to connection "${this.connectionId}" failed: ${stringifyError(e)}`)
 				})
 			}
 

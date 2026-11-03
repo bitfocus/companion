@@ -172,8 +172,8 @@ const TransportEditForm = observer(function TransportEditForm({
 				}
 				// Start from the saved values, so the form is no longer dirty
 				formApi.reset(value)
-			} catch (err: any) {
-				setSaveError(`Failed to save: ${err?.message ?? String(err)}`)
+			} catch (err) {
+				setSaveError(`Failed to save: ${err instanceof Error ? err.message : String(err)}`)
 			}
 		},
 	})

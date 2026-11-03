@@ -329,7 +329,7 @@ function CustomImageTab({
 					})
 				})
 				.catch((err) => {
-					setErrorMessage(`Error reading file: ${err}`)
+					setErrorMessage(`Error reading file: ${stringifyError(err, true)}`)
 				})
 		},
 		[min, onSharedDataUrlChange]

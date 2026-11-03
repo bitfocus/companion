@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -18,7 +19,7 @@ export function ControlClearButton({ location }: { location: ControlLocation }):
 			'Clear',
 			() => {
 				resetControlsMutation.mutateAsync({ locations: [location], newType: null }).catch((e) => {
-					console.error(`Reset failed: ${e}`)
+					console.error(`Reset failed: ${stringifyError(e)}`)
 				})
 			}
 		)

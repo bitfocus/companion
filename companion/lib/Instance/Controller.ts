@@ -561,8 +561,8 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 		} else if (event == 'suspend') {
 			this.#logger.info('Power: Suspending')
 
-			this.processManager.queueStopAllInstances().catch((e) => {
-				this.#logger.debug(`Error suspending instances: ${e?.message ?? e}`)
+			this.processManager.queueStopAllInstances().catch((e: unknown) => {
+				this.#logger.debug(`Error suspending instances: ${stringifyError(e)}`)
 			})
 		}
 	}
@@ -798,7 +798,7 @@ export class InstanceController extends EventEmitter<InstanceControllerEvents> {
 
 		const updateInstance = !!values.label || ((values.config || values.secrets) && !options?.skipNotifyConnection)
 		if (updateInstance && instance) {
-			instance.updateConfigAndLabel(connectionConfig).catch((e) => {
+			instance.updateConfigAndLabel(connectionConfig).catch((e: unknown) => {
 				instance.logger.warn('Error updating instance configuration: ' + stringifyError(e))
 			})
 		}

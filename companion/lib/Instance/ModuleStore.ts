@@ -170,8 +170,8 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 
 					// Check if the data is stale enough to refresh
 					if (!data || data.lastUpdated < Date.now() - SUBSCRIBE_REFRESH_INTERVAL) {
-						self.#refreshStoreInfoData(input.moduleType, input.moduleId).catch((e) => {
-							self.#logger.error(`Failed to refresh store info for module "${input.moduleId}": ${e}`)
+						self.#refreshStoreInfoData(input.moduleType, input.moduleId).catch((e: unknown) => {
+							self.#logger.error(`Failed to refresh store info for module "${input.moduleId}": ${stringifyError(e)}`)
 						})
 					}
 
@@ -312,10 +312,10 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 					),
 				}
 			})
-			.catch((e) => {
+			.catch((e: unknown) => {
 				// This could be on an always offline system
 
-				this.#logger.warn(`Refreshing store module list failed: ${e?.message ?? e}`)
+				this.#logger.warn(`Refreshing store module list failed: ${stringifyError(e)}`)
 
 				this.#listStore.lastUpdateAttempt = Date.now()
 				this.#listStore.updateWarning = 'Failed to update the module list from the store'
@@ -444,8 +444,8 @@ export class ModuleStoreService extends EventEmitter<ModuleStoreServiceEvents> {
 	}
 
 	triggerRefreshStoreInfoData(moduleType: ModuleInstanceType, moduleId: string): void {
-		this.#refreshStoreInfoData(moduleType, moduleId).catch((e) => {
-			this.#logger.error(`Failed to refresh store info for module "${moduleType}-${moduleId}": ${e}`)
+		this.#refreshStoreInfoData(moduleType, moduleId).catch((e: unknown) => {
+			this.#logger.error(`Failed to refresh store info for module "${moduleType}-${moduleId}": ${stringifyError(e)}`)
 		})
 	}
 }

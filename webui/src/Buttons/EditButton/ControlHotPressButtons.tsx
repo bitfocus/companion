@@ -2,6 +2,7 @@ import { faPlay, faRedo, faStop, faUndo } from '@fortawesome/free-solid-svg-icon
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback } from 'react'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button, ButtonGroup } from '~/Components/Button'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
@@ -19,25 +20,25 @@ export function ControlHotPressButtons({
 	const hotPressDown = useCallback(() => {
 		hotPressMutation
 			.mutateAsync({ location, direction: true, surfaceId: 'edit' })
-			.catch((e) => console.error(`Hot press failed: ${e}`))
+			.catch((e) => console.error(`Hot press failed: ${stringifyError(e)}`))
 	}, [hotPressMutation, location])
 	const hotPressUp = useCallback(() => {
 		hotPressMutation
 			.mutateAsync({ location, direction: false, surfaceId: 'edit' })
-			.catch((e) => console.error(`Hot press failed: ${e}`))
+			.catch((e) => console.error(`Hot press failed: ${stringifyError(e)}`))
 	}, [hotPressMutation, location])
 	const hotRotateLeft = useCallback(() => {
 		hotRotateMutation
 			.mutateAsync({ location, delta: -1, surfaceId: 'edit' })
-			.catch((e) => console.error(`Hot rotate failed: ${e}`))
+			.catch((e) => console.error(`Hot rotate failed: ${stringifyError(e)}`))
 	}, [hotRotateMutation, location])
 	const hotRotateRight = useCallback(() => {
 		hotRotateMutation
 			.mutateAsync({ location, delta: 1, surfaceId: 'edit' })
-			.catch((e) => console.error(`Hot rotate failed: ${e}`))
+			.catch((e) => console.error(`Hot rotate failed: ${stringifyError(e)}`))
 	}, [hotRotateMutation, location])
 	const hotAbortActions = useCallback(() => {
-		hotAbortMutation.mutateAsync({ location }).catch((e) => console.error(`Hot abort failed: ${e}`))
+		hotAbortMutation.mutateAsync({ location }).catch((e) => console.error(`Hot abort failed: ${stringifyError(e)}`))
 	}, [hotAbortMutation, location])
 
 	return (

@@ -261,8 +261,8 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 						surfaceId: this.#surfaceInfo.surfaceId,
 						drawProps: [drawProps],
 					})
-					.catch((e) => {
-						this.#logger.debug(`Draw failed: ${e}`)
+					.catch((e: unknown) => {
+						this.#logger.debug(`Draw failed: ${stringifyError(e)}`)
 					})
 			} catch (e) {
 				this.#logger.debug(`scale image failed: ${stringifyError(e)}`)
@@ -303,8 +303,8 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 	}
 
 	clearDeck(): void {
-		this.#ipcWrapper.sendWithCb('blankSurface', { surfaceId: this.#surfaceInfo.surfaceId }).catch((e) => {
-			this.#logger.error(`Error clearing deck: ${e.message}`)
+		this.#ipcWrapper.sendWithCb('blankSurface', { surfaceId: this.#surfaceInfo.surfaceId }).catch((e: unknown) => {
+			this.#logger.error(`Error clearing deck: ${stringifyError(e)}`)
 		})
 	}
 
@@ -324,8 +324,8 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 					surfaceId: this.#surfaceInfo.surfaceId,
 					brightness: config.brightness,
 				})
-				.catch((e) => {
-					this.#logger.debug(`Set brightness failed: ${e}`)
+				.catch((e: unknown) => {
+					this.#logger.debug(`Set brightness failed: ${stringifyError(e)}`)
 				})
 		}
 
@@ -388,8 +388,8 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 							name,
 							value: expressionResult,
 						})
-						.catch((e) => {
-							this.#logger.error(`Failed updating variable ${name}: ${e.message}`)
+						.catch((e: unknown) => {
+							this.#logger.error(`Failed updating variable ${name}: ${stringifyError(e)}`)
 						})
 				},
 				{
@@ -414,8 +414,8 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 	quit(): void {
 		if (this.#closedByModule) return
 
-		this.#ipcWrapper.sendWithCb('closeSurface', { surfaceId: this.#surfaceInfo.surfaceId }).catch((e) => {
-			this.#logger.debug(`Close surface failed: ${e}`)
+		this.#ipcWrapper.sendWithCb('closeSurface', { surfaceId: this.#surfaceInfo.surfaceId }).catch((e: unknown) => {
+			this.#logger.debug(`Close surface failed: ${stringifyError(e)}`)
 		})
 	}
 
@@ -443,8 +443,8 @@ export class SurfacePluginPanel extends EventEmitter<SurfacePanelEvents> impleme
 				characterCount,
 				rotation,
 			})
-			.catch((e) => {
-				this.#logger.debug(`Set locked status failed: ${e}`)
+			.catch((e: unknown) => {
+				this.#logger.debug(`Set locked status failed: ${stringifyError(e)}`)
 			})
 	}
 

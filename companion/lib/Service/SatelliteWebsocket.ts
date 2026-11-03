@@ -1,4 +1,5 @@
 import { WebSocketServer, type WebSocket } from 'ws'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
 import { GLOBAL_BIND_ADDRESS } from '../Resources/Constants.js'
@@ -49,7 +50,7 @@ export class ServiceSatelliteWebsocket extends ServiceBase {
 				})
 
 				this.#server.on('error', (e) => {
-					this.logger.debug(`listen-socket error: ${e}`)
+					this.logger.debug(`listen-socket error: ${stringifyError(e)}`)
 				})
 
 				this.#server.on('connection', (socket, req) => {
@@ -92,7 +93,7 @@ export class ServiceSatelliteWebsocket extends ServiceBase {
 							api.processMessage(data.toString())
 						})
 					} catch (e) {
-						socketLogger.error(`Failed to initialise satellite connection: ${e}`)
+						socketLogger.error(`Failed to initialise satellite connection: ${stringifyError(e)}`)
 						socket.terminate()
 					}
 				})

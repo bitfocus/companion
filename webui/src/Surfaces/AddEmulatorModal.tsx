@@ -45,8 +45,8 @@ export const AddEmulatorModal = forwardRef<AddEmulatorModalRef>(function Surface
 					columns: value.columns,
 				})
 				setShow(false)
-			} catch (err: any) {
-				setSaveError(`Failed to add emulator: ${err?.message ?? err?.toString() ?? err}`)
+			} catch (err) {
+				setSaveError(`Failed to add emulator: ${err instanceof Error ? err.message : String(err)}`)
 			}
 		},
 	})

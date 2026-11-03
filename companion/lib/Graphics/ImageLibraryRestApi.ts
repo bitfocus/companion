@@ -4,6 +4,7 @@ import z from 'zod'
 import { SUPPORTED_IMAGE_MIME_TYPES } from '@companion-app/shared/Graphics/ImageTypes.js'
 import { makeLabelSafe } from '@companion-app/shared/Label.js'
 import type { ImageLibraryInfo } from '@companion-app/shared/Model/ImageLibraryModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { Logger } from '../Log/Controller.js'
 import { RestApiError } from '../Service/RestApi/errors.js'
 import {
@@ -480,7 +481,7 @@ const imageLibraryEndpointSpecs: RestEndpointSpec<ImageLibraryRestContext>[] = [
 				try {
 					await imageLibrary.setImageData(imageName, body.contentType, body.data)
 				} catch (e) {
-					logger.warn(`Failed to set data of image "${imageName}": ${e}`)
+					logger.warn(`Failed to set data of image "${imageName}": ${stringifyError(e)}`)
 					throw RestApiError.unprocessable('Image data could not be decoded')
 				}
 

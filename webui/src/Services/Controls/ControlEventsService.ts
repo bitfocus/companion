@@ -3,6 +3,7 @@ import type { JsonValue } from 'type-fest'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
@@ -46,14 +47,14 @@ export function useControlEventsEditorService(
 			},
 			moveCard: (dragIndex: number, hoverIndex: number) => {
 				reorderMutation.mutateAsync({ controlId, oldIndex: dragIndex, newIndex: hoverIndex }).catch((e) => {
-					console.error(`Move failed: ${e}`)
+					console.error(`Move failed: ${stringifyError(e)}`)
 				})
 			},
 
 			setValue: (eventId: string, event: EventInstance | undefined, key: string, value: JsonValue | undefined) => {
 				if (!event?.options || event.options[key] !== value) {
 					setOptionMutation.mutateAsync({ controlId, eventId, key, value }).catch((e) => {
-						console.error(`Set-option failed: ${e}`)
+						console.error(`Set-option failed: ${stringifyError(e)}`)
 					})
 				}
 			},
@@ -61,14 +62,14 @@ export function useControlEventsEditorService(
 			performDelete: (eventId: string) => {
 				confirmModal.current?.show('Delete event', 'Delete event?', 'Delete', () => {
 					removeMutation.mutateAsync({ controlId, eventId }).catch((e) => {
-						console.error(`Failed to delete event: ${e}`)
+						console.error(`Failed to delete event: ${stringifyError(e)}`)
 					})
 				})
 			},
 
 			performDuplicate: (eventId: string) => {
 				duplicateMutation.mutateAsync({ controlId, eventId }).catch((e) => {
-					console.error(`Failed to duplicate event: ${e}`)
+					console.error(`Failed to duplicate event: ${stringifyError(e)}`)
 				})
 			},
 

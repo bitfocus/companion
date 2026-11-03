@@ -4,6 +4,7 @@ import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { DEFAULT_PREVIEW_RENDER_SIZE } from '@companion-app/shared/Model/Preview.js'
 import type { UserConfigGridSize } from '@companion-app/shared/Model/UserConfigModel.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { ButtonPreview } from '~/Components/ButtonPreview.js'
 import { useButtonImageForLocation } from '~/Hooks/useButtonImageForLocation.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
@@ -32,7 +33,7 @@ export function SectionOfButtons({
 		(location: ControlLocation, pressed: boolean) => {
 			hotPressMutation
 				.mutateAsync({ location, direction: pressed, surfaceId: 'tablet' })
-				.catch((e) => console.error(`Hot press failed: ${e}`))
+				.catch((e) => console.error(`Hot press failed: ${stringifyError(e)}`))
 		},
 		[hotPressMutation]
 	)

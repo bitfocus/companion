@@ -37,8 +37,8 @@ export const AddSurfaceGroupModal = forwardRef<AddSurfaceGroupModalRef>(function
 					name: value.name,
 				})
 				setShow(false)
-			} catch (err: any) {
-				setSaveError(`Failed to add group: ${err?.message ?? err?.toString() ?? err}`)
+			} catch (err) {
+				setSaveError(`Failed to add group: ${err instanceof Error ? err.message : String(err)}`)
 			}
 		},
 	})

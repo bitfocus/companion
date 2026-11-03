@@ -1,4 +1,5 @@
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { ImageResult } from '../Graphics/ImageResult.js'
 import { decimalToRgb } from '../Resources/Util.js'
@@ -86,14 +87,14 @@ export class ServiceTcp extends ServiceTcpBase {
 					if (res) msg += ` ${res}`
 					client.socket.write(`${msg}\n`)
 				})
-				.catch((e) => {
-					this.logger.silly(`TCP command failed: ${e}`)
+				.catch((e: unknown) => {
+					this.logger.silly(`TCP command failed: ${stringifyError(e)}`)
 
 					if (e instanceof ApiMessageError) {
-						this.logger.info(`TCP command failed. ${e} ${e.context}`)
-						client.socket.write(`-ERR ${e?.message ?? ''}\n`)
+						this.logger.info(`TCP command failed. ${stringifyError(e)} ${e.context}`)
+						client.socket.write(`-ERR ${e.message}\n`)
 					} else {
-						this.logger.info(`TCP command failed. ${e}`)
+						this.logger.info(`TCP command failed. ${stringifyError(e)}`)
 						client.socket.write(`-ERR Internal Error\n`)
 					}
 				})

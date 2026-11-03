@@ -347,14 +347,14 @@ export class ConnectionEntityManager {
 
 	#queueUpdateActionsBatch(updateActionsPayload: Map<string, EntityManagerActionEntity | null>): void {
 		this.#queueBatch(async () =>
-			this.#adapter.updateActions(updateActionsPayload).catch((e) => {
+			this.#adapter.updateActions(updateActionsPayload).catch((e: unknown) => {
 				this.#logger.error('Error sending updateActions', e)
 			})
 		)
 	}
 	#queueUpdateFeedbacksBatch(updateFeedbacksPayload: Map<string, EntityManagerFeedbackEntity | null>): void {
 		this.#queueBatch(async () =>
-			this.#adapter.updateFeedbacks(updateFeedbacksPayload).catch((e) => {
+			this.#adapter.updateFeedbacks(updateFeedbacksPayload).catch((e: unknown) => {
 				this.#logger.error('Error sending updateFeedbacks', e)
 			})
 		)
@@ -370,7 +370,7 @@ export class ConnectionEntityManager {
 				.then((upgradedEntities) => {
 					this.#upgradeBatchResolve(entityIdsInThisBatch, upgradedEntities)
 				})
-				.catch((e) => {
+				.catch((e: unknown) => {
 					this.#logger.error('Error sending upgradeActions', e)
 
 					this.#upgradeBatchRetry(entityIdsInThisBatch)
@@ -387,7 +387,7 @@ export class ConnectionEntityManager {
 				.then((upgradedEntities) => {
 					this.#upgradeBatchResolve(entityIdsInThisBatch, upgradedEntities)
 				})
-				.catch((e) => {
+				.catch((e: unknown) => {
 					this.#logger.error('Error sending upgradeFeedbacks', e)
 
 					this.#upgradeBatchRetry(entityIdsInThisBatch)

@@ -1,4 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
+import { stringifyError } from '@companion-app/shared/Stringify.js'
 import './tablet.css'
 import { observer } from 'mobx-react-lite'
 import rangeParser from 'parse-numeric-range'
@@ -290,7 +291,7 @@ const InfiniteButtons = observer(function InfiniteButtons({
 		(location: ControlLocation, pressed: boolean) => {
 			hotPressMutation
 				.mutateAsync({ location, direction: pressed, surfaceId: 'tablet' })
-				.catch((e) => console.error(`Hot press failed: ${e}`))
+				.catch((e) => console.error(`Hot press failed: ${stringifyError(e)}`))
 		},
 		[hotPressMutation]
 	)

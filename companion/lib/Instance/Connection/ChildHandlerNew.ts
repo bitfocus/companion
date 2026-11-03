@@ -442,9 +442,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 			this.logger.warn(`Error executing action: ${stringifyError(e)}`)
 
-			if (e instanceof Error) {
-				this.#sendToModuleLog('error', `Error executing action: ${stringifyError(e.message)}`)
-			}
+			this.#sendToModuleLog('error', `Error executing action: ${stringifyError(e, true)}`)
 
 			throw e
 		}
@@ -461,7 +459,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 		try {
 			await this.#ipcWrapper.sendWithCb('destroy', {})
 		} catch (e) {
-			console.warn(`Destroy for "${this.connectionId}" errored: ${e}`)
+			console.warn(`Destroy for "${this.connectionId}" errored: ${stringifyError(e)}`)
 		}
 
 		// Stop ipc commands being received
@@ -532,8 +530,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 					res.set(msg.response.headers ?? {})
 					res.send(msg.response.body ?? '')
 				})
-				.catch((err) => {
-					if (err.message.endsWith(timeoutMessage)) {
+				.catch((err: unknown) => {
+					if (err instanceof Error && err.message.endsWith(timeoutMessage)) {
 						res.status(504).send(JSON.stringify({ status: 504, message: 'Gateway Timeout' }))
 					} else {
 						res.status(500).send(JSON.stringify({ status: 500, message: 'Internal Server Error' }))
@@ -656,9 +654,9 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			// This handler only serves 2.0+ modules, which all support presets being placed as references
 			this.#deps.instanceDefinitions.setPresetDefinitions(this.connectionId, presetsMap, msg.uiPresets, true)
 		} catch (e) {
-			this.logger.error(`setPresetDefinitions: ${e}`)
+			this.logger.error(`setPresetDefinitions: ${stringifyError(e)}`)
 
-			throw new Error(`Failed to set Preset Definitions: ${e}`)
+			throw new Error(`Failed to set Preset Definitions: ${stringifyError(e)}`)
 		}
 	}
 
@@ -667,10 +665,10 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 			this.#sendToModuleLog('debug', `Updating composite element definitions (${msg.definitions.length} elements)`)
 
 			this.#deps.instanceDefinitions.setCompositeElementDefinitions(this.connectionId, msg.definitions)
-		} catch (e: any) {
-			this.logger.error(`setCompositeElementDefinitions: ${e}`)
+		} catch (e) {
+			this.logger.error(`setCompositeElementDefinitions: ${stringifyError(e)}`)
 
-			throw new Error(`Failed to set Composite Graphics Element Definitions: ${e}`)
+			throw new Error(`Failed to set Composite Graphics Element Definitions: ${stringifyError(e)}`)
 		}
 	}
 
@@ -713,7 +711,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				msg.uniquenessId ?? undefined
 			)
 		} catch (e) {
-			this.logger.error(`Record action failed: ${e}`)
+			this.logger.error(`Record action failed: ${stringifyError(e)}`)
 		}
 	}
 
@@ -727,7 +725,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				this.logger.warn(`Unable to set the value of variable $(custom:${msg.customVariableId}): ${failure}`)
 			}
 		} catch (e) {
-			this.logger.error(`Set custom variable failed: ${e}`)
+			this.logger.error(`Set custom variable failed: ${stringifyError(e)}`)
 		}
 	}
 
