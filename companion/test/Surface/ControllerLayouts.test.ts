@@ -14,6 +14,7 @@ import type { SatelliteDeviceInfo } from '../../lib/Surface/IP/Satellite.js'
 import type { SurfaceHandlerDependencies } from '../../lib/Surface/Types.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
 import { createMockTrpcContext } from '../Util.js'
+import { mockGetKey } from '../utils/MockUserConfig.js'
 import { SubscriptionTester } from '../utils/SubscriptionTester.js'
 
 const t = initTRPC.context<TrpcContext>().create()
@@ -73,10 +74,9 @@ function createController() {
 		fallbackMockImplementation: () => undefined,
 	})
 	// The controller reads these while opening a surface
-	deps.userconfig.getKey.mockImplementation((key: string) => {
-		if (key === 'gridSize') return { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 }
-		return undefined
-	})
+	deps.userconfig.getKey.mockImplementation(
+		mockGetKey({ gridSize: { minColumn: 0, maxColumn: 7, minRow: 0, maxRow: 3 } }, 'default')
+	)
 	deps.pageStore.getFirstPageId.mockReturnValue('page1')
 	deps.graphics.displayedLocations.acquire.mockReturnValue(() => undefined)
 

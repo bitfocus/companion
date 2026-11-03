@@ -468,12 +468,12 @@ describe('DataUsageStatistics', () => {
 			const { config, stats } = setup()
 
 			config.detailed_data_collection = true
-			stats.updateUserConfig('detailed_data_collection', true)
+			stats.updateUserConfig({ key: 'detailed_data_collection', value: true })
 			await vi.advanceTimersByTimeAsync(120_000)
 			expect(fetchMock).toHaveBeenCalledTimes(1)
 
 			config.detailed_data_collection = false
-			stats.updateUserConfig('detailed_data_collection', false)
+			stats.updateUserConfig({ key: 'detailed_data_collection', value: false })
 			await vi.advanceTimersByTimeAsync(3 * 60 * 60 * 1000)
 			expect(fetchMock).toHaveBeenCalledTimes(1)
 		})
@@ -482,7 +482,7 @@ describe('DataUsageStatistics', () => {
 			const { config, stats } = setup()
 			config.detailed_data_collection = true
 
-			stats.updateUserConfig('tcp_enabled', true)
+			stats.updateUserConfig({ key: 'tcp_enabled', value: true })
 			await vi.advanceTimersByTimeAsync(3 * 60 * 60 * 1000)
 
 			expect(fetchMock).not.toHaveBeenCalled()

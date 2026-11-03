@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { UserConfigKeyChange, UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { LinkController } from '../../lib/Link/Controller.js'
 import type { AppInfo } from '../../lib/Registry.js'
@@ -40,9 +40,9 @@ function createService(config: Partial<UserConfigModel>) {
 	return {
 		service,
 		link,
-		set(key: keyof UserConfigModel, value: any) {
-			;(values as any)[key] = value
-			service.updateUserConfig(key, value)
+		set(change: UserConfigKeyChange) {
+			Object.assign(values, { [change.key]: change.value })
+			service.updateUserConfig(change)
 		},
 		setListening(value: boolean) {
 			listening = value
@@ -87,11 +87,11 @@ describe('ServiceMdnsAdvertise', () => {
 		vi.useFakeTimers()
 		const ctx = createService({ link_direct_enabled: false, link_direct_port: 1234 })
 
-		ctx.set('link_direct_enabled', true)
+		ctx.set({ key: 'link_direct_enabled', value: true })
 		await vi.advanceTimersByTimeAsync(100)
 		expect(ctx.published()).toContainEqual(expect.objectContaining({ type: 'companion-link-ws', port: 1234 }))
 
-		ctx.set('link_direct_port', 4321)
+		ctx.set({ key: 'link_direct_port', value: 4321 })
 		await vi.advanceTimersByTimeAsync(100)
 		expect(ctx.published()).toContainEqual(expect.objectContaining({ type: 'companion-link-ws', port: 4321 }))
 		expect(hoisted.instances.at(-2).unpublishAll).toHaveBeenCalled()

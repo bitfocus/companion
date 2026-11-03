@@ -1,6 +1,7 @@
 import os from 'node:os'
 import { Bonjour } from '@julusian/bonjour-service'
 import { API_VERSION as SATELLITE_API_VERSION } from '@companion-app/satellite-protocol'
+import type { UserConfigKeyChange } from '@companion-app/shared/Model/UserConfigModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { LinkController } from '../Link/Controller.js'
@@ -134,12 +135,12 @@ export class ServiceMdnsAdvertise extends ServiceBase {
 		}
 	}
 
-	override updateUserConfig(key: string, value: boolean | number | string): void {
+	override updateUserConfig(change: UserConfigKeyChange): void {
 		// Let the base class handle enable/disable via the mdns_announcements_enabled key
-		super.updateUserConfig(key, value)
+		super.updateUserConfig(change)
 
 		// The advertised services are derived from these, so republish when they change
-		if (REPUBLISH_KEYS.has(key)) this.#scheduleRepublish()
+		if (REPUBLISH_KEYS.has(change.key)) this.#scheduleRepublish()
 	}
 
 	#scheduleRepublish(): void {

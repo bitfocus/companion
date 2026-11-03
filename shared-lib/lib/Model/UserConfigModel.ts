@@ -157,8 +157,14 @@ export interface UserConfigUpdateInit {
 	type: 'init'
 	config: UserConfigModel
 }
-export interface UserConfigUpdateKey {
-	type: 'key'
-	key: keyof UserConfigModel
-	value: any
-}
+/** The settings whose value is a `T` */
+export type UserConfigKeyOfType<T> = {
+	[K in keyof UserConfigModel]: UserConfigModel[K] extends T ? K : never
+}[keyof UserConfigModel]
+
+/** A changed setting. Checking `key` narrows `value` to that setting's type */
+export type UserConfigKeyChange = {
+	[K in keyof UserConfigModel]: { key: K; value: UserConfigModel[K] }
+}[keyof UserConfigModel]
+
+export type UserConfigUpdateKey = { type: 'key' } & UserConfigKeyChange

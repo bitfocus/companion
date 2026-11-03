@@ -5,6 +5,7 @@ import { mockDeep } from 'vitest-mock-extended'
 import { DataMetrics } from '../../lib/Data/Metrics.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { AppInfo } from '../../lib/Registry.js'
+import { mockGetKey } from '../utils/MockUserConfig.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -17,11 +18,7 @@ describe('DataMetrics', () => {
 		const appInfo = { appVersion: '1.2.3', appBuild: 'abc123' } as AppInfo
 
 		const userconfig = mockDeep<DataUserConfig>(mockOptions, {
-			getKey: (key: keyof typeof config | string) => {
-				if (key === 'prometheus_enabled') return config.enabled
-				if (key === 'prometheus_token') return config.token
-				throw new Error(`unexpected key ${String(key)}`)
-			},
+			getKey: mockGetKey({ prometheus_enabled: config.enabled, prometheus_token: config.token }, 'throw'),
 		})
 
 		const metrics = new DataMetrics(appInfo, () => userconfig)

@@ -15,7 +15,7 @@ import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type {
 	BackupRulesConfig,
 	UserConfigGridSize,
-	UserConfigModel,
+	UserConfigKeyChange,
 } from '@companion-app/shared/Model/UserConfigModel.js'
 import { createClient, createConfig, type Client } from '@companion-app/shared/OpenApi/CompanionUpdates/client/index.js'
 import {
@@ -331,7 +331,7 @@ export class DataUsageStatistics {
 		this.#cycleStop?.()
 	}
 
-	updateUserConfig(key: keyof UserConfigModel, _value: boolean | number | string): void {
+	updateUserConfig({ key }: UserConfigKeyChange): void {
 		if (key === 'detailed_data_collection') {
 			this.startStopCycle()
 		}

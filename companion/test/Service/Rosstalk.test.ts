@@ -4,6 +4,7 @@ import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import { ServiceRosstalk } from '../../lib/Service/Rosstalk.js'
 import type { ServiceApi } from '../../lib/Service/ServiceApi.js'
+import { mockGetKey } from '../utils/MockUserConfig.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -18,7 +19,7 @@ describe('Rosstalk', () => {
 			pressControl: vi.fn(),
 		})
 		const userconfig = mockDeep<DataUserConfig>(mockOptions, {
-			getKey: () => false,
+			getKey: mockGetKey({ rosstalk_enabled: false }, 'throw'),
 		})
 
 		const service = new ServiceRosstalk(serviceApi, userconfig)

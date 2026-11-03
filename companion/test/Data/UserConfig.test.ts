@@ -173,7 +173,7 @@ describe('DataUserConfig', () => {
 
 			expect(userconfig.getKey('pin')).toBe('1234')
 			expect(table.data['userconfig'].pin).toBe('1234')
-			expect(keyChanged).toHaveBeenCalledWith('pin', '1234', false)
+			expect(keyChanged).toHaveBeenCalledWith({ key: 'pin', value: '1234' }, false)
 		})
 
 		test('an invalid value is refused, leaving the setting as it was', () => {
@@ -181,7 +181,9 @@ describe('DataUserConfig', () => {
 			const keyChanged = vi.fn()
 			userconfig.on('keyChanged', keyChanged)
 
-			expect(() => userconfig.setKey('artnet_channel', 'two')).toThrow(/Invalid value for config key "artnet_channel"/)
+			expect(() => userconfig.setKey('artnet_channel', 'two' as any)).toThrow(
+				/Invalid value for config key "artnet_channel"/
+			)
 			expect(() => userconfig.setKey('not_a_setting' as any, 1)).toThrow(/Unknown config key "not_a_setting"/)
 
 			expect(userconfig.getKey('artnet_channel')).toBe(DataUserConfig.Defaults.artnet_channel)
@@ -197,7 +199,7 @@ describe('DataUserConfig', () => {
 			const newSize = { minColumn: 0, maxColumn: 15, minRow: 0, maxRow: 7 }
 			userconfig.setKey('gridSize', newSize)
 
-			expect(keyChanged).toHaveBeenCalledWith('gridSize', newSize, true)
+			expect(keyChanged).toHaveBeenCalledWith({ key: 'gridSize', value: newSize }, true)
 		})
 
 		test('direct updates to backups are blocked', () => {

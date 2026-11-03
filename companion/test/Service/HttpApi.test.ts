@@ -11,6 +11,7 @@ import { rgb } from '../../lib/Resources/Util.js'
 import { ServiceHttpApi } from '../../lib/Service/HttpApi.js'
 import type { ServiceApi, ServiceApiControl } from '../../lib/Service/ServiceApi.js'
 import type { UIExpress } from '../../lib/UI/Express.js'
+import { mockGetKey } from '../utils/MockUserConfig.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -22,8 +23,7 @@ describe('HttpApi', () => {
 	function createService() {
 		const serviceApi = mockDeep<ServiceApi>(mockOptions)
 		const userconfig = mockDeep<DataUserConfig>(mockOptions, {
-			// Force config to return true
-			getKey: () => true,
+			getKey: mockGetKey({ http_api_enabled: true, http_legacy_api_enabled: true }, 'throw'),
 		})
 
 		let router = Express.Router()

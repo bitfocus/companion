@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import _https from 'node:https'
+import type { UserConfigKeyChange } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { UIExpress } from '../UI/Express.js'
 import type { UIHandler } from '../UI/Handler.js'
@@ -160,9 +161,10 @@ export class ServiceHttps extends ServiceBase {
 	/**
 	 * Process an update userconfig value and enable/disable the module, if necessary.
 	 */
-	updateUserConfig(key: string, value: boolean | number | string): void {
-		super.updateUserConfig(key, value)
+	updateUserConfig(change: UserConfigKeyChange): void {
+		super.updateUserConfig(change)
 
+		const { key } = change
 		if (key.substring(0, 6) == 'https_' && key != this.enableConfig && key != this.portConfig) {
 			this.restartModule()
 		}

@@ -413,13 +413,13 @@ export class Registry {
 		this.graphics.on('resubscribeFeedbacks', () => this.instance.processManager.resubscribeAllFeedbacks())
 		this.graphics.on('presetDrawn', (controlId, render) => controlEvents.emit('presetDrawn', controlId, render))
 
-		this.userconfig.on('keyChanged', (key, value, checkControlsInBounds) => {
+		this.userconfig.on('keyChanged', (change, checkControlsInBounds) => {
 			setImmediate(() => {
 				// give the change a chance to be pushed to the ui first
-				this.graphics.updateUserConfig(key, value)
-				this.services.updateUserConfig(key, value)
-				this.surfaces.updateUserConfig(key, value)
-				this.usageStatistics.updateUserConfig(key, value)
+				this.graphics.updateUserConfig(change)
+				this.services.updateUserConfig(change)
+				this.surfaces.updateUserConfig(change)
+				this.usageStatistics.updateUserConfig(change)
 			})
 
 			if (checkControlsInBounds) {

@@ -29,6 +29,7 @@ import type { IPageStore } from '../../lib/Page/Store.js'
 import type { AppInfo } from '../../lib/Registry.js'
 import type { SurfaceController } from '../../lib/Surface/Controller.js'
 import type { VariablesController } from '../../lib/Variables/Controller.js'
+import { mockGetKey } from '../utils/MockUserConfig.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -111,11 +112,9 @@ describe('ExportController', () => {
 		surfaces.exportAllGroups.mockReturnValue({})
 		surfaces.exportAllRemote.mockReturnValue({})
 
-		userconfig.getKey.mockImplementation((key: any) => {
-			if (key === 'default_export_filename') return DEFAULT_EXPORT_FILENAME
-			if (key === 'gridSize') return DEFAULT_GRID_SIZE
-			return undefined
-		})
+		userconfig.getKey.mockImplementation(
+			mockGetKey({ default_export_filename: DEFAULT_EXPORT_FILENAME, gridSize: DEFAULT_GRID_SIZE }, 'default')
+		)
 
 		variables.custom.getDefinitions.mockReturnValue({})
 		variables.custom.exportCollections.mockReturnValue([])

@@ -5,6 +5,7 @@ import z from 'zod'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import {
 	UserConfigModelSchema,
+	type UserConfigKeyChange,
 	type UserConfigModel,
 	type UserConfigUpdate,
 } from '@companion-app/shared/Model/UserConfigModel.js'
@@ -56,7 +57,7 @@ function repairUserConfig(
 }
 
 export interface DataUserConfigEvents {
-	keyChanged: [key: keyof UserConfigModel, value: any, checkControlsInBounds: boolean]
+	keyChanged: [change: UserConfigKeyChange, checkControlsInBounds: boolean]
 }
 
 /**
@@ -84,7 +85,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 * value is layered over the persisted config at read time and cannot be edited in the UI. The
 	 * override is never written to the db, so removing it restores the stored value.
 	 */
-	readonly #lockedOverrides = new Map<keyof UserConfigModel, any>()
+	readonly #lockedOverrides: Partial<UserConfigModel> = {}
 
 	/**
 	 * The defaults for the user config fields
@@ -105,7 +106,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		})
 
 		if (appInfo.options.installNameOverride !== undefined) {
-			this.#lockedOverrides.set('installName', appInfo.options.installNameOverride)
+			this.#lockedOverrides.installName = appInfo.options.installNameOverride
 		}
 
 		this.#data = this.#dbTable.get('userconfig')
@@ -116,14 +117,13 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 * unchanged (by reference) when there are no overrides.
 	 */
 	#applyOverrides(data: UserConfigModel): UserConfigModel {
-		if (this.#lockedOverrides.size === 0) return data
+		if (Object.keys(this.#lockedOverrides).length === 0) return data
 
-		const out = { ...data }
-		for (const [key, value] of this.#lockedOverrides) {
-			// @ts-expect-error mismatch in key type
-			out[key] = value
-		}
-		return out
+		return { ...data, ...this.#lockedOverrides }
+	}
+
+	#isLocked(key: keyof UserConfigModel): boolean {
+		return Object.hasOwn(this.#lockedOverrides, key)
 	}
 
 	createTrpcRouter() {
@@ -150,7 +150,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 			}),
 
 			getLockedKeys: publicProcedure.query(() => {
-				return [...this.#lockedOverrides.keys()]
+				return Object.keys(this.#lockedOverrides) as (keyof UserConfigModel)[]
 			}),
 
 			watchConfig: publicProcedure.subscription(async function* ({ signal }) {
@@ -158,8 +158,8 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 
 				yield { type: 'init', config: self.#applyOverrides(self.#data) } satisfies UserConfigUpdate
 
-				for await (const [key, value] of changes) {
-					yield { type: 'key', key, value } satisfies UserConfigUpdate
+				for await (const [change] of changes) {
+					yield { type: 'key', ...change } satisfies UserConfigUpdate
 				}
 			}),
 
@@ -167,21 +167,23 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 				.input(
 					z.object({
 						key: zodUserConfigKey,
-						value: z.any(),
+						value: z.unknown(),
 					})
 				)
 				.mutation(({ input }) => {
-					return this.setKey(input.key, input.value)
+					// The value is checked against the setting's schema
+					return this.#setKey(input.key, input.value, true)
 				}),
 
 			setConfigKeys: publicProcedure
 				.input(
 					z.object({
-						values: z.record(z.string(), z.any()),
+						values: z.partialRecord(zodUserConfigKey, z.unknown()),
 					})
 				)
 				.mutation(({ input }) => {
-					return this.setKeys(input.values)
+					// The values are checked against the settings' schemas
+					return this.#setKeys(input.values)
 				}),
 
 			resetConfigKey: publicProcedure
@@ -255,14 +257,11 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 * @param [clone = false] - <code>true</code> if a clone is needed instead of a link
 	 * @returns the config value
 	 */
-	getKey(key: keyof UserConfigModel, clone = false): any {
-		let out = this.#lockedOverrides.has(key) ? this.#lockedOverrides.get(key) : this.#data[key]
+	getKey<K extends keyof UserConfigModel>(key: K, clone = false): UserConfigModel[K] {
+		const override = this.#lockedOverrides[key]
+		const out = override !== undefined ? override : this.#data[key]
 
-		if (clone === true) {
-			out = structuredClone(out)
-		}
-
-		return out
+		return clone ? structuredClone(out) : out
 	}
 
 	/**
@@ -321,8 +320,12 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 * @param value - the object to save
 	 * @param save - <code>false</code> if a DB save is not necessary
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	setKey(key: keyof UserConfigModel, value: any, save = true): void {
+	setKey<K extends keyof UserConfigModel>(key: K, value: UserConfigModel[K], save = true): void {
+		this.#setKey(key, value, save)
+	}
+
+	/** Set a setting from a value of unknown type, which is checked against the setting's schema */
+	#setKey(key: keyof UserConfigModel, value: unknown, save: boolean): void {
 		if (!key) throw new Error('Missing key')
 
 		// Block direct updates to backup configuration
@@ -334,7 +337,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		}
 
 		// Block updates to any key that is locked by a launch-time override (e.g. an environment variable)
-		if (this.#lockedOverrides.has(key)) {
+		if (this.#isLocked(key)) {
 			this.#logger.warn(`Ignoring update to '${String(key)}': it is locked by a launch-time override`)
 			return
 		}
@@ -346,7 +349,7 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 			this.setKeyUnchecked('prometheus_token', nanoid(32), false)
 		}
 
-		this.setKeyUnchecked(key, value, save)
+		this.#setKeyUnchecked(key, value, save)
 	}
 
 	/**
@@ -364,8 +367,11 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 	 * @param value - the object to save
 	 * @param save - <code>false</code> if a DB save is not necessary
 	 */
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	setKeyUnchecked(key: keyof UserConfigModel, value: any, save = true): void {
+	setKeyUnchecked<K extends keyof UserConfigModel>(key: K, value: UserConfigModel[K], save = true): void {
+		this.#setKeyUnchecked(key, value, save)
+	}
+
+	#setKeyUnchecked(key: keyof UserConfigModel, value: unknown, save: boolean): void {
 		if (!key) throw new Error('Missing key')
 
 		const keySchema = (UserConfigModelSchema.shape as Record<string, z.ZodType | undefined>)[key]
@@ -374,12 +380,12 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		if (!parsed.success) {
 			throw new Error(`Invalid value for config key "${String(key)}": ${z.prettifyError(parsed.error)}`)
 		}
-		value = parsed.data
+		// Parsed by the schema for this key, so the value is the type of this key
+		const change = { key, value: parsed.data } as UserConfigKeyChange
 
 		const checkControlsInBounds = key === 'gridSize'
 
-		// @ts-expect-error mismatch in key type
-		this.#data[key] = value
+		this.#data = { ...this.#data, [change.key]: change.value }
 		if (save) {
 			this.#dbTable.set('userconfig', this.#data)
 		}
@@ -388,25 +394,26 @@ export class DataUserConfig extends EventEmitter<DataUserConfigEvents> {
 		if (key === 'prometheus_token') {
 			this.#logger.info(`set '${key}' to: <redacted>`)
 		} else {
-			this.#logger.info(`set '${key}' to: ${JSON.stringify(value)}`)
+			this.#logger.info(`set '${key}' to: ${JSON.stringify(change.value)}`)
 		}
 
-		this.emit('keyChanged', key, value, checkControlsInBounds)
+		this.emit('keyChanged', change, checkControlsInBounds)
 	}
 
 	/**
 	 * Save/update multiple key/value pairs to the user config
 	 * @param objects - the key/value pairs
 	 */
-	setKeys(objects: Record<string, any>): void {
-		if (objects !== undefined) {
-			for (const key in objects) {
-				// @ts-expect-error mismatch in key type
-				this.setKey(key, objects[key], false)
-			}
+	setKeys(values: Partial<UserConfigModel>): void {
+		this.#setKeys(values)
+	}
 
-			this.#dbTable.set('userconfig', this.#data)
+	#setKeys(values: Partial<Record<keyof UserConfigModel, unknown>>): void {
+		for (const key of Object.keys(values) as (keyof UserConfigModel)[]) {
+			this.#setKey(key, values[key], false)
 		}
+
+		this.#dbTable.set('userconfig', this.#data)
 	}
 
 	updateBindIp(bindIp: string): void {

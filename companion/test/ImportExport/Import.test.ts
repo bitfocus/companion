@@ -12,6 +12,7 @@ import type { InternalController } from '../../lib/Internal/Controller.js'
 import type { PageController } from '../../lib/Page/Controller.js'
 import type { SurfaceController } from '../../lib/Surface/Controller.js'
 import type { VariablesController } from '../../lib/Variables/Controller.js'
+import { mockGetKey } from '../utils/MockUserConfig.js'
 
 // These tests drive the real ImportController against mocked leaf controllers, but keep the genuine
 // fixup logic (ImportFixup + VisitorReferencesUpdater) in the loop. The focus is orchestration:
@@ -43,10 +44,7 @@ function createImportController() {
 	// ── Baseline stubs shared by most paths ──
 	internalModule.visitReferences.mockReturnValue(undefined)
 
-	userconfig.getKey.mockImplementation((key: any) => {
-		if (key === 'gridSize') return { ...DEFAULT_GRID_SIZE }
-		return undefined
-	})
+	userconfig.getKey.mockImplementation(mockGetKey({ gridSize: { ...DEFAULT_GRID_SIZE } }, 'default'))
 	userconfig.setKey.mockReturnValue(undefined)
 
 	controls.deleteControl.mockReturnValue(undefined)

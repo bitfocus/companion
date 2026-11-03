@@ -39,6 +39,7 @@ import {
 	type SurfacePanelConfig,
 	type SurfacesUpdate,
 } from '@companion-app/shared/Model/Surfaces.js'
+import type { UserConfigKeyChange } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
@@ -310,7 +311,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	 * @param key - the saved key
 	 * @param value - the saved value
 	 */
-	updateUserConfig(key: string, value: boolean | number | string): void {
+	updateUserConfig({ key, value }: UserConfigKeyChange): void {
 		if (key === 'usb_hotplug') {
 			try {
 				if (!value && this.#runningUsbHotplug) {

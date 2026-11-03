@@ -62,9 +62,9 @@ export class BackupController {
 		this.#exportController = exportController
 
 		// Listen for config changes
-		this.#userConfig.on('keyChanged', (key, value) => {
-			if (key === 'backups') {
-				this.#backupRules = value as BackupRulesConfig[]
+		this.#userConfig.on('keyChanged', (change) => {
+			if (change.key === 'backups') {
+				this.#backupRules = change.value
 				this.#scheduleBackups()
 			}
 		})

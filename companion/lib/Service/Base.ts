@@ -1,4 +1,4 @@
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import type { UserConfigKeyChange, UserConfigKeyOfType } from '@companion-app/shared/Model/UserConfigModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController, { type Logger } from '../Log/Controller.js'
@@ -30,7 +30,7 @@ export abstract class ServiceBase {
 	/**
 	 * The user config setting to track if the module should be enabled/disabled
 	 */
-	protected readonly enableConfig: keyof UserConfigModel | null
+	protected readonly enableConfig: UserConfigKeyOfType<boolean> | null
 	/**
 	 * Flag to track if the module is setup and ready to be enabled
 	 */
@@ -38,7 +38,7 @@ export abstract class ServiceBase {
 	/**
 	 * The user config setting to track if the module should be enabled/disabled
 	 */
-	protected readonly portConfig: keyof UserConfigModel | null
+	protected readonly portConfig: UserConfigKeyOfType<number> | null
 
 	/**
 	 * The port number to use for this service
@@ -56,8 +56,8 @@ export abstract class ServiceBase {
 	constructor(
 		userconfig: DataUserConfig,
 		debugNamespace: string,
-		enableConfig: keyof UserConfigModel | null,
-		portConfig: keyof UserConfigModel | null
+		enableConfig: UserConfigKeyOfType<boolean> | null,
+		portConfig: UserConfigKeyOfType<number> | null
 	) {
 		this.logger = LogController.createLogger(debugNamespace)
 		this.userconfig = userconfig
@@ -166,7 +166,7 @@ export abstract class ServiceBase {
 	 * @param key - the saved key
 	 * @param value - the saved value
 	 */
-	updateUserConfig(key: string, value: boolean | number | string): void {
+	updateUserConfig({ key, value }: UserConfigKeyChange): void {
 		if (this.enableConfig !== undefined && key == this.enableConfig) {
 			if (this.currentState == false && value == true) {
 				this.enableModule()

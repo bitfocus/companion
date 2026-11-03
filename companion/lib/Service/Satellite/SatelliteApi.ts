@@ -29,6 +29,7 @@ import {
 } from '@companion-app/satellite-protocol'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { GridSize, SurfaceSchemaLayoutDefinition } from '@companion-app/shared/Model/Surfaces.js'
+import type { UserConfigKeyChange } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DataUserConfig } from '../../Data/UserConfig.js'
@@ -964,7 +965,7 @@ export class ServiceSatelliteApi {
 	 * Process an updated userconfig value.
 	 * When the subscriptions feature is toggled, close all connections so clients reconnect and re-read CAPS.
 	 */
-	updateUserConfig(key: string, _value: boolean | number | string): void {
+	updateUserConfig({ key }: UserConfigKeyChange): void {
 		if (key === 'satellite_subscriptions_enabled') {
 			for (const socket of this.#socketStates.keys()) {
 				socket.destroy()

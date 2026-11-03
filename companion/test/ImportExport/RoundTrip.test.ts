@@ -23,6 +23,7 @@ import type { IPageStore } from '../../lib/Page/Store.js'
 import type { AppInfo } from '../../lib/Registry.js'
 import type { SurfaceController } from '../../lib/Surface/Controller.js'
 import type { VariablesController } from '../../lib/Variables/Controller.js'
+import { mockGetKey } from '../utils/MockUserConfig.js'
 
 // These tests exercise the real download → parse pipeline end-to-end: a config is exported (through
 // the actual serialisation used by the download route), then fed back through the real import parser
@@ -143,11 +144,9 @@ function createExportController() {
 		'remote-1': { id: 'remote-1', instanceId: 'si-1', moduleId: 'surface-mod', name: 'Remote' },
 	} as any)
 
-	userconfig.getKey.mockImplementation((key: any) => {
-		if (key === 'gridSize') return DEFAULT_GRID_SIZE
-		if (key === 'default_export_filename') return 'companion-config'
-		return undefined
-	})
+	userconfig.getKey.mockImplementation(
+		mockGetKey({ gridSize: DEFAULT_GRID_SIZE, default_export_filename: 'companion-config' }, 'default')
+	)
 
 	variables.custom.getDefinitions.mockReturnValue({
 		myvar: { description: 'A var', defaultValue: '42', sortOrder: 0, persistCurrentValue: false },

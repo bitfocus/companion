@@ -215,7 +215,7 @@ export class LinkController extends EventEmitter<LinkControllerEvents> {
 
 		for (const builtin of builtinTransports) this.#applyBuiltin(builtin)
 
-		this.#userconfig.on('keyChanged', (key) => {
+		this.#userconfig.on('keyChanged', ({ key }) => {
 			if (key === 'installName') {
 				this.emit('self', this.#getSelfInfo())
 				this.#announce(null)

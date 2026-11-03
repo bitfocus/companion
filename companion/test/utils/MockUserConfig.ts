@@ -1,5 +1,5 @@
 import { mockDeep } from 'vitest-mock-extended'
-import type { UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
+import { UserConfigModelSchema, type UserConfigModel } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 
 const throwOnUnmocked = {
@@ -23,9 +23,21 @@ const throwOnUnmocked = {
  */
 export function mockUserConfig(values: Partial<UserConfigModel> = {}): DataUserConfig {
 	return mockDeep<DataUserConfig>(throwOnUnmocked, {
-		getKey: (key: keyof UserConfigModel) => {
-			if (key in values) return values[key]
-			throw new Error(`UserConfig key "${String(key)}" is not supported by this mock`)
-		},
+		getKey: mockGetKey(values, 'throw'),
 	})
+}
+
+const DEFAULTS = UserConfigModelSchema.parse({})
+
+/**
+ * A `getKey` for a mocked `DataUserConfig`, reading `values` live. Any other key either throws, so a test declares
+ * the config it depends on, or reads its default
+ */
+export function mockGetKey(values: Partial<UserConfigModel>, otherKeys: 'throw' | 'default'): DataUserConfig['getKey'] {
+	return <K extends keyof UserConfigModel>(key: K): UserConfigModel[K] => {
+		// A key set to undefined is supported, and returns undefined
+		if (key in values) return values[key] as UserConfigModel[K]
+		if (otherKeys === 'default') return DEFAULTS[key]
+		throw new Error(`UserConfig key "${String(key)}" is not supported by this mock`)
+	}
 }

@@ -2349,7 +2349,7 @@ describe('ServiceSatelliteApi', () => {
 			api.initSocket(logger, socket1)
 			api.initSocket(logger, socket2)
 
-			api.updateUserConfig('satellite_subscriptions_enabled', true)
+			api.updateUserConfig({ key: 'satellite_subscriptions_enabled', value: true })
 
 			expect(socket1.destroyed).toBe(true)
 			expect(socket2.destroyed).toBe(true)
@@ -2360,7 +2360,7 @@ describe('ServiceSatelliteApi', () => {
 			const socket = new TestSocketWrapper()
 			api.initSocket(logger, socket)
 
-			api.updateUserConfig('some_other_key', true)
+			api.updateUserConfig({ key: 'tcp_enabled', value: true })
 
 			expect(socket.destroyed).toBe(false)
 		})

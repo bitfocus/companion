@@ -8,6 +8,7 @@ import type { LinkController } from '../../lib/Link/Controller.js'
 import { ServiceBonjourDiscovery } from '../../lib/Service/BonjourDiscovery.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
 import { createMockTrpcContext } from '../Util.js'
+import { mockGetKey } from '../utils/MockUserConfig.js'
 import { SubscriptionTester } from '../utils/SubscriptionTester.js'
 
 // ── bonjour-service mock ──────────────────────────────────────────────────────
@@ -84,7 +85,7 @@ function createService(
 	linkQueries: Record<string, BonjourQuery[]> = {}
 ) {
 	const userconfig = mockDeep<DataUserConfig>(mockOptions, {
-		getKey: () => false,
+		getKey: mockGetKey({}, 'throw'),
 	})
 	const instanceController = mockDeep<InstanceController>(mockOptions, {
 		getManifestForConnection: vi.fn().mockReturnValue({ bonjourQueries } as any),

@@ -46,6 +46,7 @@ import {
 	type DrawStyleButtonStateProps,
 } from '@companion-app/shared/Model/StyleModel.js'
 import type { SurfaceRotation } from '@companion-app/shared/Model/Surfaces.js'
+import type { UserConfigKeyChange } from '@companion-app/shared/Model/UserConfigModel.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { ControlButtonPreset } from '../Controls/ControlTypes/Button/Preset.js'
 import type { IControlStore } from '../Controls/IControlStore.js'
@@ -711,17 +712,17 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * @param key - the saved key
 	 * @param value - the saved value
 	 */
-	updateUserConfig(key: string, value: boolean | number | string): void {
-		if (key == 'buttons_decoration') {
-			this.#drawOptions.buttons_decoration = value as any
+	updateUserConfig(change: UserConfigKeyChange): void {
+		if (change.key === 'buttons_decoration') {
+			this.#drawOptions.buttons_decoration = change.value
 			this.#logger.silly('Button decoration changed')
 			// Delay redrawing to give connections a chance to adjust
 			setTimeout(() => {
 				this.emit('resubscribeFeedbacks')
 				this.triggerRegenerateAll()
 			}, 1000)
-		} else if (key === 'buttons_status_icons') {
-			this.#drawOptions.buttons_status_icons = String(value) as any
+		} else if (change.key === 'buttons_status_icons') {
+			this.#drawOptions.buttons_status_icons = change.value
 			this.triggerRegenerateAll()
 		}
 	}
