@@ -21,30 +21,26 @@ export interface ButtonEditorMainTabState {
 	setActiveTab: (tab: string) => void
 }
 
-/**
- * The editor's top level tabs: Actions plus the extra tabs. Pass null steps when the button has no editor
- * tabs, which leaves the remembered tab alone.
- */
+/** The editor's top level tabs: Actions plus the extra tabs */
 export function useButtonEditorMainTab(
-	steps: NormalButtonSteps | null,
+	steps: NormalButtonSteps,
 	extraTabs: ButtonEditorExtraTabs[]
 ): ButtonEditorMainTabState {
-	const stepCount = steps ? GetStepIds(steps).length : 0
+	const stepCount = GetStepIds(steps).length
 
 	const tabs = useMemo(() => {
-		if (!steps) return []
 		return [
 			...extraTabs.filter((tab) => tab.position === 'start').map((tab) => ({ id: tab.id, name: tab.name })),
 			{ id: 'actions', name: 'Actions', count: stepCount > 1 ? stepCount : undefined },
 			...extraTabs.filter((tab) => tab.position === 'end').map((tab) => ({ id: tab.id, name: tab.name })),
 		]
-	}, [steps, stepCount, extraTabs])
+	}, [stepCount, extraTabs])
 
 	const [activeTab, setActiveTab] = useLocalStorage('buttonEditor.activeMainTab', 'actions')
 
 	// Fallback to 'actions' if selected tab is invalid
 	useEffect(() => {
-		if (tabs.length > 0 && !tabs.some((t) => t.id === activeTab)) {
+		if (!tabs.some((t) => t.id === activeTab)) {
 			setActiveTab('actions')
 		}
 	}, [tabs, activeTab, setActiveTab])

@@ -1,19 +1,14 @@
 import { faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import { formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { Button } from '~/Components/Button'
-import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
+import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
-export function ControlClearButton({
-	location,
-	resetModalRef,
-}: {
-	location: ControlLocation
-	resetModalRef: React.RefObject<GenericConfirmModalRef | null>
-}): React.JSX.Element {
+export function ControlClearButton({ location }: { location: ControlLocation }): React.JSX.Element {
+	const resetModalRef = useRef<GenericConfirmModalRef>(null)
 	const resetControlsMutation = useMutationExt(trpc.controls.resetControls.mutationOptions())
 
 	const clearButton = useCallback(() => {
@@ -27,19 +22,22 @@ export function ControlClearButton({
 				})
 			}
 		)
-	}, [resetControlsMutation, location, resetModalRef])
+	}, [resetControlsMutation, location])
 
 	return (
-		<Button
-			className="edit-button-toolbar-action"
-			color="danger"
-			variant="ghost"
-			size="sm"
-			onClick={clearButton}
-			title="Clear Button"
-			aria-label="Clear button"
-		>
-			<FontAwesomeIcon icon={faTrashAlt} />
-		</Button>
+		<>
+			<GenericConfirmModal ref={resetModalRef} />
+			<Button
+				className="edit-button-toolbar-action"
+				color="danger"
+				variant="ghost"
+				size="sm"
+				onClick={clearButton}
+				title="Clear Button"
+				aria-label="Clear button"
+			>
+				<FontAwesomeIcon icon={faTrashAlt} />
+			</Button>
+		</>
 	)
 }
