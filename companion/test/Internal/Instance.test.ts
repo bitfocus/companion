@@ -343,6 +343,16 @@ describe('InternalInstance', () => {
 
 			expect(result).toEqual({ color: STATUS_COLORS.disabled_fg, bgcolor: STATUS_COLORS.disabled_bg })
 		})
+
+		it('parses a css color, and leaves out an invalid one', () => {
+			const { internal } = createHarness({ statuses: {} })
+
+			const result = internal.executeFeedback(
+				makeExecFeedback('instance_status', { instance_id: 'c1', disabled_fg: '#ff0000', disabled_bg: 'nope' })
+			)
+
+			expect(result).toEqual({ color: 0xff0000, bgcolor: undefined })
+		})
 	})
 
 	describe('executeFeedback - instance_custom_state', () => {

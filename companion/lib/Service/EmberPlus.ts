@@ -68,7 +68,7 @@ function buildPathForVariable(name: string, type: 'internal' | 'custom', variabl
 /**
  * Convert internal color to hex
  */
-function formatColorAsHex(color: any): string {
+function formatColorAsHex(color: number): string {
 	const newColor = parseColorToNumber(color)
 	if (newColor === false) return '#000000'
 	return `#${pad(newColor.toString(16).slice(-6), '0', 6)}`

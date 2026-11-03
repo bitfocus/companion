@@ -655,7 +655,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				if (theControlId) {
 					const control = this.#controlsStore.getControl(theControlId)
 					if (control && control.supportsLayeredStyle) {
-						const color = parseColorToNumber(action.options.color as any) || 0
+						const color = parseColorToNumber(action.options.color) || 0
 						control.layeredStyleUpdateFromLegacyProperties({ bgcolor: color })
 					}
 				}
@@ -666,7 +666,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				if (theControlId) {
 					const control = this.#controlsStore.getControl(theControlId)
 					if (control && control.supportsLayeredStyle) {
-						const color = parseColorToNumber(action.options.color as any) || 0
+						const color = parseColorToNumber(action.options.color) || 0
 						control.layeredStyleUpdateFromLegacyProperties({ color: color })
 					}
 				}

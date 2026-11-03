@@ -22,10 +22,11 @@ import {
 	type VariableDefinition,
 	type VariableValues,
 } from '@companion-app/shared/Model/Variables.js'
-import type { CompanionFeedbackButtonStyleResult } from '@companion-module/base'
+import type { CompanionFeedbackButtonStyleResult, CompanionOptionValues } from '@companion-module/base'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../Instance/Controller.js'
 import LogController from '../Log/Controller.js'
+import { parseColorToNumber } from '../Resources/Util.js'
 import type {
 	ActionForInternalExecution,
 	ActionForVisitor,
@@ -407,23 +408,14 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		if (feedback.definitionId === 'instance_status') {
 			if (feedback.options.instance_id == 'all') {
 				if (this.#instancesError > 0) {
-					return {
-						color: feedback.options.error_fg as any,
-						bgcolor: feedback.options.error_bg as any,
-					}
+					return statusColors(feedback.options, 'error')
 				}
 
 				if (this.#instancesWarning > 0) {
-					return {
-						color: feedback.options.warning_fg as any,
-						bgcolor: feedback.options.warning_bg as any,
-					}
+					return statusColors(feedback.options, 'warning')
 				}
 
-				return {
-					color: feedback.options.ok_fg as any,
-					bgcolor: feedback.options.ok_bg as any,
-				}
+				return statusColors(feedback.options, 'ok')
 			}
 
 			const instanceId = stringifyVariableValue(feedback.options.instance_id)
@@ -431,32 +423,17 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 			if (cur_instance !== undefined) {
 				switch (cur_instance.category) {
 					case 'error':
-						return {
-							color: feedback.options.error_fg as any,
-							bgcolor: feedback.options.error_bg as any,
-						}
+						return statusColors(feedback.options, 'error')
 					case 'warning':
-						return {
-							color: feedback.options.warning_fg as any,
-							bgcolor: feedback.options.warning_bg as any,
-						}
+						return statusColors(feedback.options, 'warning')
 					case 'good':
-						return {
-							color: feedback.options.ok_fg as any,
-							bgcolor: feedback.options.ok_bg as any,
-						}
+						return statusColors(feedback.options, 'ok')
 					default:
-						return {
-							color: feedback.options.disabled_fg as any,
-							bgcolor: feedback.options.disabled_bg as any,
-						}
+						return statusColors(feedback.options, 'disabled')
 				}
 			}
 			// disabled has no 'status' entry
-			return {
-				color: feedback.options.disabled_fg as any,
-				bgcolor: feedback.options.disabled_bg as any,
-			}
+			return statusColors(feedback.options, 'disabled')
 		} else if (feedback.definitionId === 'instance_custom_state') {
 			const instanceId = stringifyVariableValue(feedback.options.instance_id)
 			if (!instanceId) return false
@@ -570,4 +547,20 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 			}
 		}
 	}
+}
+
+/** The colours the instance_status feedback is configured to show for a status */
+function statusColors(
+	options: CompanionOptionValues,
+	status: 'ok' | 'warning' | 'error' | 'disabled'
+): CompanionFeedbackButtonStyleResult {
+	return {
+		color: colorOption(options[`${status}_fg`]),
+		bgcolor: colorOption(options[`${status}_bg`]),
+	}
+}
+
+function colorOption(value: unknown): number | undefined {
+	const color = parseColorToNumber(value)
+	return color === false ? undefined : color
 }

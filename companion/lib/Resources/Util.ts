@@ -69,7 +69,7 @@ export const rgb = (r: number | string, g: number | string, b: number | string, 
  * Parse a css color string to a number
  * Note: alpha is not preserved, and will be ignored
  */
-export const parseColorToNumber = (color: string | number | Uint8Array): number | false => {
+export const parseColorToNumber = (color: unknown): number | false => {
 	if (typeof color === 'string') {
 		const newColor = colord(color)
 		if (newColor.isValid()) {
