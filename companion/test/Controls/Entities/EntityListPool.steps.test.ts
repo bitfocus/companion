@@ -363,7 +363,7 @@ describe('EntityListPool - expression step progression', () => {
 		pool.stepExpressionUpdate({ stepProgression: 'expression', stepExpression: '2' })
 		expect(pool.getActiveStepIndex()).toBe(1)
 
-		pool.stepExpressionUpdate({ stepProgression: 'manual' })
+		pool.stepExpressionUpdate({ stepProgression: 'manual', stepExpression: '' })
 
 		// Frozen on the last evaluated step, and manual navigation works again
 		expect(pool.getActiveStepIndex()).toBe(1)

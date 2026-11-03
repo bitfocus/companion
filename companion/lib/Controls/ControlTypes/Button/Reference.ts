@@ -1,13 +1,16 @@
 import type { JsonValue } from 'type-fest'
+import type z from 'zod'
 import type { BankControlId } from '@companion-app/shared/ControlId.js'
-import type {
-	ButtonReferenceButtonModel,
-	LayeredButtonModel,
-	SomeButtonModel,
+import {
+	ButtonReferenceButtonOptionsSchema,
+	LayeredButtonOptionsSchema,
+	type ButtonReferenceButtonModel,
+	type LayeredButtonModel,
+	type SomeButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { NoRuntimeProps } from '@companion-app/shared/Model/Controls.js'
-import { exprVal, isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { ParseLocationString } from '../../../Internal/Util.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
@@ -55,7 +58,7 @@ export class ControlButtonReference
 		ControlWithoutActions,
 		ControlWithoutEvents,
 		ControlWithoutActionSets,
-		ControlWithOptions,
+		ControlWithOptions<ButtonReferenceButtonModel['options']>,
 		ControlWithoutPushed,
 		ControlWithConvert
 {
@@ -69,6 +72,8 @@ export class ControlButtonReference
 	readonly supportsLayeredStyle = false
 	readonly supportsOptions = true
 	readonly supportsPushed = false
+
+	readonly optionsSchema: z.ZodType<ButtonReferenceButtonModel['options']> = ButtonReferenceButtonOptionsSchema
 
 	options: ButtonReferenceButtonModel['options']
 
@@ -89,7 +94,7 @@ export class ControlButtonReference
 	) {
 		super(deps, controlId, 'Controls/Button/Reference')
 
-		this.options = { location: exprVal('') }
+		this.options = this.optionsSchema.parse({})
 
 		this.#drawing = new MirrorButtonDrawer(deps, controlId, () => this.#resolveTargetLocation())
 
@@ -207,7 +212,7 @@ export class ControlButtonReference
 
 		const blank: LayeredButtonModel = {
 			type: 'button-layered',
-			options: { stepProgression: 'auto', rotaryActions: false, canModifyStyleInApis: false },
+			options: LayeredButtonOptionsSchema.parse({}),
 			style: { layers: structuredClone(ControlButtonLayered.DefaultElements) },
 			feedbacks: [],
 			steps: {

@@ -1,13 +1,19 @@
 import debounceFn from 'debounce-fn'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
+import type z from 'zod'
 import type { TriggerControlId } from '@companion-app/shared/ControlId.js'
 import { diffObject } from '@companion-app/shared/Diff.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { NoRuntimeProps } from '@companion-app/shared/Model/Controls.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
+import {
+	TriggerOptionsSchema,
+	type ClientTriggerData,
+	type TriggerModel,
+	type TriggerOptions,
+} from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { clamp } from '../../../Resources/Util.js'
@@ -56,7 +62,7 @@ export class ControlTrigger
 		ControlWithEntities,
 		ControlWithoutLayeredStyle,
 		ControlWithoutActionSets,
-		ControlWithOptions,
+		ControlWithOptions<TriggerOptions>,
 		ControlWithoutPushed
 {
 	readonly type = 'trigger'
@@ -71,15 +77,7 @@ export class ControlTrigger
 	readonly supportsOptions = true
 	readonly supportsPushed = false
 
-	/**
-	 * The defaults options for a trigger
-	 */
-	static DefaultOptions: TriggerOptions = {
-		name: 'New Trigger',
-		enabled: false,
-		sortOrder: 0,
-		notes: '',
-	}
+	readonly optionsSchema: z.ZodType<TriggerOptions> = TriggerOptionsSchema
 
 	/**
 	 * Enabled condition_true or condition_false events
@@ -182,7 +180,7 @@ export class ControlTrigger
 			this.#setVariableRateLimited(limited)
 		)
 
-		this.options = structuredClone(ControlTrigger.DefaultOptions)
+		this.options = this.optionsSchema.parse({})
 		this.events = []
 
 		if (!storage) {

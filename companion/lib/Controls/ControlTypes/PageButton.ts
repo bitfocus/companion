@@ -139,7 +139,13 @@ export abstract class ControlButtonPage<TJson extends PageUpButtonModel | PageDo
 	): LayeredButtonModel {
 		return {
 			type: 'button-layered',
-			options: { stepProgression: 'auto', rotaryActions: false, canModifyStyleInApis: false },
+			options: {
+				stepProgression: 'auto',
+				stepExpression: '',
+				rotaryActions: false,
+				canModifyStyleInApis: false,
+				notes: '',
+			},
 			style: { layers: structuredClone(elements) },
 			feedbacks: [],
 			steps: {

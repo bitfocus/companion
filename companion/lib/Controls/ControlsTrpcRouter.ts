@@ -2,6 +2,7 @@ import type EventEmitter from 'node:events'
 import z from 'zod'
 import { formatLocation, isLocationOnGrid, zodSomeControlId } from '@companion-app/shared/ControlId.js'
 import {
+	ButtonReferenceButtonOptionsSchema,
 	parseLinkButtonOptions,
 	type ButtonReferenceButtonModel,
 	type SomeButtonModel,
@@ -95,9 +96,7 @@ export function createControlsTrpcRouter(
 				// Place a button that mirrors `fromLocation`. Stored as a plain (non-expression) location string.
 				const model: ButtonReferenceButtonModel = {
 					type: 'button-reference',
-					options: {
-						location: { value: fromStr, isExpression: false },
-					},
+					options: ButtonReferenceButtonOptionsSchema.parse({ location: { value: fromStr, isExpression: false } }),
 				}
 				return controlsController.importControl(input.toLocation, model)
 			}),

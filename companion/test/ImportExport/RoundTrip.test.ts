@@ -149,7 +149,7 @@ function createExportController() {
 	)
 
 	variables.custom.getDefinitions.mockReturnValue({
-		myvar: { description: 'A var', defaultValue: '42', sortOrder: 0, persistCurrentValue: false },
+		myvar: { description: 'A var', defaultValue: '42', sortOrder: 0, persistCurrentValue: false, notes: '' },
 	})
 	variables.custom.exportCollections.mockReturnValue([])
 	variables.values.createVariablesAndExpressionParser.mockReturnValue({

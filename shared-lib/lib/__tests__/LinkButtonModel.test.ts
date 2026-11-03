@@ -37,6 +37,7 @@ describe('parseLinkButtonOptions', () => {
 		const defaults = {
 			peerId: '',
 			location: { value: '', isExpression: false },
+			notes: '',
 			decoration: 'default',
 			showStatusIcons: 'default',
 		}

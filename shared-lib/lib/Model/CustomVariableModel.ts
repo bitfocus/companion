@@ -4,8 +4,8 @@ import { JsonValueSchema } from './Options.js'
 
 export const CustomVariableDefinitionSchema = z.object({
 	description: z.string().default(''),
-	/** Internal notes for whoever maintains the configuration. Absent on variables saved before notes existed */
-	notes: z.string().optional(),
+	/** Internal notes for whoever maintains the configuration. */
+	notes: z.string().default(''),
 	defaultValue: JsonValueSchema.optional(),
 	persistCurrentValue: z.boolean().default(false),
 	sortOrder: z.number().default(0),

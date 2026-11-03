@@ -10,7 +10,7 @@ export const TriggerOptionsSchema = z.object({
 	enabled: z.boolean().default(false),
 	sortOrder: z.number().default(0),
 	collectionId: z.string().optional(),
-	notes: z.string().optional(),
+	notes: z.string().default(''),
 })
 
 export type TriggerOptions = z.output<typeof TriggerOptionsSchema>

@@ -281,7 +281,7 @@ describe('repairControl', () => {
 	test('cannot repair a control which is not an entity or element that failed', () => {
 		expect(parseRepaired({ type: 'sparkle' }, SomeControlModelSchema)).toBeNull()
 		expect(parseRepaired({ type: 'trigger', options: { enabled: 'sometimes' } }, SomeControlModelSchema)).toBeNull()
-		expect(parseRepaired({ type: 'button-reference', options: {} }, SomeControlModelSchema)).toBeNull()
+		expect(parseRepaired({ type: 'button-reference', options: { location: 5 } }, SomeControlModelSchema)).toBeNull()
 	})
 
 	test('does not change the control it is given', () => {

@@ -353,8 +353,9 @@ function ConvertPresetDefinition(
 						options: {
 							rotaryActions: hasRotaryActions,
 							stepProgression: (rawPreset.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
+							stepExpression: '',
 							canModifyStyleInApis: false,
-							notes: rawPreset.notes,
+							notes: rawPreset.notes || '',
 						},
 
 						feedbacks: parsedStyle.feedbacks,
@@ -390,8 +391,9 @@ function ConvertPresetDefinition(
 						options: {
 							rotaryActions: hasRotaryActions,
 							stepProgression: (rawPreset.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
+							stepExpression: '',
 							canModifyStyleInApis: false,
-							notes: rawPreset.notes,
+							notes: rawPreset.notes || '',
 						},
 
 						style: {

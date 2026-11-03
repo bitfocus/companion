@@ -31,7 +31,13 @@ describe('LayeredButtonModelSchema', () => {
 			feedbacks: [],
 			localVariables: [],
 			steps: { '0': emptyStep },
-			options: { stepProgression: 'auto', rotaryActions: false, canModifyStyleInApis: false },
+			options: {
+				stepProgression: 'auto',
+				stepExpression: '',
+				rotaryActions: false,
+				canModifyStyleInApis: false,
+				notes: '',
+			},
 			style: { layers: [] },
 		})
 	})
@@ -165,8 +171,17 @@ describe('ButtonReferenceButtonModelSchema', () => {
 		})
 	})
 
-	test('rejects one without its location', () => {
-		expect(ButtonReferenceButtonModelSchema.safeParse({ type: 'button-reference', options: {} }).success).toBe(false)
+	test('gives one without its location an empty location', () => {
+		expect(ButtonReferenceButtonModelSchema.parse({ type: 'button-reference', options: {} })).toEqual({
+			type: 'button-reference',
+			options: { location: { value: '', isExpression: false }, notes: '' },
+		})
+	})
+
+	test('rejects one with an invalid location', () => {
+		expect(
+			ButtonReferenceButtonModelSchema.safeParse({ type: 'button-reference', options: { location: 5 } }).success
+		).toBe(false)
 	})
 })
 
@@ -194,7 +209,7 @@ describe('TriggerModelSchema', () => {
 	test('a minimal trigger is given every default', () => {
 		expect(TriggerModelSchema.parse({ type: 'trigger' })).toEqual({
 			type: 'trigger',
-			options: { name: 'New Trigger', enabled: false, sortOrder: 0 },
+			options: { name: 'New Trigger', enabled: false, sortOrder: 0, notes: '' },
 			actions: [],
 			condition: [],
 			events: [],
@@ -244,7 +259,7 @@ describe('ExpressionVariableModelSchema', () => {
 	test('a minimal expression variable is given every default', () => {
 		expect(ExpressionVariableModelSchema.parse({ type: 'expression-variable' })).toEqual({
 			type: 'expression-variable',
-			options: { variableName: '', description: 'An expression variable', sortOrder: 0 },
+			options: { variableName: '', description: 'An expression variable', sortOrder: 0, notes: '' },
 			entity: null,
 			localVariables: [],
 		})

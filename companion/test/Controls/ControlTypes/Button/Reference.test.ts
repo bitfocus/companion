@@ -12,7 +12,7 @@ const MY_CONTROL_ID = CreateBankControlId('test01')
 const MY_LOCATION: ControlLocation = { pageNumber: 1, row: 2, column: 3 }
 
 function makeModel(location: ButtonReferenceButtonModel['options']['location']): ButtonReferenceButtonModel {
-	return { type: 'button-reference', options: { location } }
+	return { type: 'button-reference', options: { location, notes: '' } }
 }
 
 function plainLocation(value: string): ButtonReferenceButtonModel['options']['location'] {
@@ -232,7 +232,13 @@ describe('ControlButtonReference', () => {
 		it('snapshots the target button, breaking the link', () => {
 			const targetModel: LayeredButtonModel = {
 				type: 'button-layered',
-				options: { stepProgression: 'auto', rotaryActions: false, canModifyStyleInApis: false },
+				options: {
+					stepProgression: 'auto',
+					stepExpression: '',
+					rotaryActions: false,
+					canModifyStyleInApis: false,
+					notes: '',
+				},
 				style: { layers: [] },
 				feedbacks: [],
 				steps: {},

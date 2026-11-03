@@ -21,7 +21,13 @@ function makeDefinitionFeedback(id: string) {
 function makeModel(overrides: Partial<PresetReferenceButtonModel> = {}): PresetReferenceButtonModel {
 	return {
 		type: 'preset-reference',
-		options: { rotaryActions: false, stepProgression: 'auto', canModifyStyleInApis: false },
+		options: {
+			rotaryActions: false,
+			stepProgression: 'auto',
+			stepExpression: '',
+			canModifyStyleInApis: false,
+			notes: '',
+		},
 		style: { layers: [] },
 		feedbacks: [],
 		steps: {

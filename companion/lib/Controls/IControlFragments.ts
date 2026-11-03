@@ -1,4 +1,5 @@
 import type { JsonObject, JsonValue } from 'type-fest'
+import type z from 'zod'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { SomeControlRuntimeProps } from '@companion-app/shared/Model/Controls.js'
@@ -16,7 +17,7 @@ export type SomeControl = ControlBase<SomeControlId, SomeControlJson, SomeContro
 	(ControlWithActions | ControlWithoutActions) &
 	(ControlWithEvents | ControlWithoutEvents) &
 	(ControlWithActionSets | ControlWithoutActionSets) &
-	(ControlWithOptions | ControlWithoutOptions) &
+	(ControlWithOptions<JsonObject> | ControlWithoutOptions) &
 	(ControlWithPushed | ControlWithoutPushed) &
 	(ControlWithConvert | ControlWithoutConvert)
 
@@ -224,10 +225,15 @@ export interface ControlWithoutActionSets extends ControlBase<SomeControlId, Som
 	readonly supportsActionSets: false
 }
 
-export interface ControlWithOptions extends ControlBase<SomeControlId, SomeControlJson, SomeControlRuntimeProps> {
+export interface ControlWithOptions<TOptions extends JsonObject> extends ControlBase<
+	SomeControlId,
+	SomeControlJson,
+	SomeControlRuntimeProps
+> {
 	readonly supportsOptions: true
 
-	options: JsonObject
+	readonly optionsSchema: z.ZodType<TOptions>
+	options: TOptions
 
 	/**
 	 * Update an option field of this control

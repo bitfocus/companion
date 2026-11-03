@@ -152,6 +152,7 @@ describe('ControlButtonLink', () => {
 		expect(control.toJSON().options).toEqual({
 			peerId: 'peer',
 			location: { value: '1/0/0', isExpression: false },
+			notes: '',
 			decoration: 'default',
 			showStatusIcons: 'default',
 		})

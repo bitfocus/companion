@@ -351,7 +351,7 @@ describe('fixupExpressionVariableControl', () => {
 	function makeExpressionVariable(overrides: Partial<ExpressionVariableModel> = {}): ExpressionVariableModel {
 		return {
 			type: 'expression-variable',
-			options: { variableName: 'myVar', description: '', sortOrder: 0 },
+			options: { variableName: 'myVar', description: '', sortOrder: 0, notes: '' },
 			entity: null,
 			localVariables: [],
 			...overrides,

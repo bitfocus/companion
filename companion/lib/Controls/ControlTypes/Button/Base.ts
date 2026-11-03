@@ -1,4 +1,5 @@
 import type { JsonValue } from 'type-fest'
+import type z from 'zod'
 import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
@@ -50,13 +51,7 @@ export abstract class ButtonControlRuntimeBase<
 	readonly supportsEntities = true
 	readonly supportsPushed = true
 
-	/**
-	 * The defaults options for a button
-	 */
-	static DefaultOptions: ButtonOptionsBase = {
-		stepProgression: 'auto',
-		stepExpression: '',
-	}
+	readonly optionsSchema: z.ZodType<TOptions>
 
 	/**
 	 * Button hold state for each surface
@@ -94,10 +89,12 @@ export abstract class ButtonControlRuntimeBase<
 		controlId: BankControlId,
 		debugNamespace: string,
 		isLayered: boolean,
-		EntityPoolClass: ButtonEntityPoolConstructor<TPool>
+		EntityPoolClass: ButtonEntityPoolConstructor<TPool>,
+		optionsSchema: z.ZodType<TOptions>
 	) {
 		super(deps, controlId, debugNamespace)
 
+		this.optionsSchema = optionsSchema
 		this.actionRunner = new ControlActionRunner(deps.actionRunner, this.controlId, this.triggerInvalidation.bind(this))
 
 		this.entities = new EntityPoolClass(
@@ -424,13 +421,19 @@ export abstract class ButtonControlRuntimeBase<
  */
 export abstract class ButtonControlBase<TJson extends LayeredButtonModel, TOptions extends ButtonOptionsBase>
 	extends ButtonControlRuntimeBase<TJson, TOptions, EditableControlEntityListPoolButton>
-	implements ControlWithOptions
+	implements ControlWithOptions<TOptions>
 {
 	readonly supportsConvert = false
 	readonly supportsOptions = true
 
-	constructor(deps: ControlDependencies, controlId: BankControlId, debugNamespace: string, isLayered: boolean) {
-		super(deps, controlId, debugNamespace, isLayered, EditableControlEntityListPoolButton)
+	constructor(
+		deps: ControlDependencies,
+		controlId: BankControlId,
+		debugNamespace: string,
+		isLayered: boolean,
+		optionsSchema: z.ZodType<TOptions>
+	) {
+		super(deps, controlId, debugNamespace, isLayered, EditableControlEntityListPoolButton, optionsSchema)
 	}
 
 	/**

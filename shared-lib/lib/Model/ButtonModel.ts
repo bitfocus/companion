@@ -39,7 +39,7 @@ export type NormalButtonSteps = z.output<typeof NormalButtonStepsSchema>
 
 export const ButtonOptionsBaseSchema = z.object({
 	stepProgression: z.enum(['auto', 'manual', 'expression']).default('auto'),
-	stepExpression: z.string().optional(),
+	stepExpression: z.string().default(''),
 })
 
 export type ButtonOptionsBase = z.output<typeof ButtonOptionsBaseSchema>
@@ -47,7 +47,7 @@ export type ButtonOptionsBase = z.output<typeof ButtonOptionsBaseSchema>
 export const LayeredButtonOptionsSchema = ButtonOptionsBaseSchema.extend({
 	rotaryActions: z.boolean().default(false),
 	canModifyStyleInApis: z.boolean().default(false),
-	notes: z.string().optional(),
+	notes: z.string().default(''),
 })
 
 export type LayeredButtonOptions = z.output<typeof LayeredButtonOptionsSchema>
@@ -128,6 +128,12 @@ export const PresetReferenceButtonModelSchema = z.object({
 
 export type PresetReferenceButtonModel = z.output<typeof PresetReferenceButtonModelSchema>
 
+export const ButtonReferenceButtonOptionsSchema = z.object({
+	/** The grid location (page/row/column) of the button to mirror. */
+	location: createExpressionOrValueSchema(z.string()).default({ value: '', isExpression: false }),
+	notes: z.string().default(''),
+})
+
 /**
  * A button that mirrors another button at a grid location. It has no style/entities of its own: it renders the
  * target button's full draw output (canvas, layers and runtime state) and forwards presses/rotation to the target.
@@ -137,11 +143,7 @@ export type PresetReferenceButtonModel = z.output<typeof PresetReferenceButtonMo
 export const ButtonReferenceButtonModelSchema = z.object({
 	type: z.literal('button-reference'),
 
-	options: z.object({
-		/** The grid location (page/row/column) of the button to mirror. */
-		location: createExpressionOrValueSchema(z.string()),
-		notes: z.string().optional(),
-	}),
+	options: ButtonReferenceButtonOptionsSchema,
 })
 
 export type ButtonReferenceButtonModel = z.output<typeof ButtonReferenceButtonModelSchema>
@@ -152,7 +154,7 @@ export const LinkButtonOptionsSchema = z.object({
 	peerId: z.string().default(''),
 	/** The grid location (page/row/column) of the button on that installation */
 	location: createExpressionOrValueSchema(z.string()).default({ value: '', isExpression: false }),
-	notes: z.string().optional(),
+	notes: z.string().default(''),
 	/** How the button is decorated here */
 	decoration: z.enum(ButtonGraphicsDecorationType).default(ButtonGraphicsDecorationType.FollowDefault),
 	/** Whether the button shows status icons here */

@@ -58,7 +58,9 @@ exports[`InstanceDefinitions > snapshot: full lifecycle > preset lifecycle: set 
   "localVariables": [],
   "options": {
     "canModifyStyleInApis": false,
+    "notes": "",
     "rotaryActions": false,
+    "stepExpression": "",
     "stepProgression": "auto",
   },
   "steps": {
@@ -142,12 +144,14 @@ exports[`InstanceDefinitions > snapshot: full lifecycle > preset lifecycle: set 
 
 exports[`InstanceDefinitions > snapshot: full lifecycle > preset lifecycle: set → convert → preview → update label → forget 2`] = `
 {
-  "checksum": "74fee40588eebbb5ad8a853e92837f6ce9f52669",
+  "checksum": "ef2ce9404636113d5d75a2b391b342eced7b6a52",
   "feedbacks": [],
   "localVariables": [],
   "options": {
     "canModifyStyleInApis": false,
+    "notes": "",
     "rotaryActions": false,
+    "stepExpression": "",
     "stepProgression": "auto",
   },
   "steps": {

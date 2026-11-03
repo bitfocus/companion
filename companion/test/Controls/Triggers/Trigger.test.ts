@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
-import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
+import { TriggerOptionsSchema, type TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { CompanionOptionValues } from '@companion-module/host'
 import { ControlTrigger } from '../../../lib/Controls/ControlTypes/Triggers/Trigger.js'
 import { TriggerExecutionSource } from '../../../lib/Controls/ControlTypes/Triggers/TriggerExecutionSource.js'
@@ -55,7 +55,7 @@ describe('ControlTrigger', () => {
 			expect(trigger.type).toBe('trigger')
 			expect(dbSet).toHaveBeenCalledWith(CONTROL_ID, {
 				type: 'trigger',
-				options: ControlTrigger.DefaultOptions,
+				options: TriggerOptionsSchema.parse({}),
 				actions: [],
 				condition: [],
 				events: [],

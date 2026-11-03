@@ -18,6 +18,7 @@ function makeDef(overrides: Partial<CustomVariableDefinition> = {}): CustomVaria
 		defaultValue: 'def',
 		persistCurrentValue: false,
 		sortOrder: 0,
+		notes: '',
 		...overrides,
 	}
 }
@@ -304,7 +305,7 @@ describe('VariablesCustomVariable', () => {
 			custom.init()
 
 			expect(custom.getDefinitions()).toEqual({
-				old: { description: '', defaultValue: 'old value', persistCurrentValue: false, sortOrder: 0 },
+				old: { description: '', notes: '', defaultValue: 'old value', persistCurrentValue: false, sortOrder: 0 },
 			})
 			expect(values.getCustomVariableValue('old')).toBe('old value')
 		})
@@ -345,7 +346,7 @@ describe('VariablesCustomVariable', () => {
 				after: makeDef({ sortOrder: 1 }),
 			} as any)
 
-			const normalised = { description: '', defaultValue: 'fresh', persistCurrentValue: false, sortOrder: 0 }
+			const normalised = { description: '', notes: '', defaultValue: 'fresh', persistCurrentValue: false, sortOrder: 0 }
 			expect(custom.getDefinitions()).toEqual({ partial: normalised, after: makeDef({ sortOrder: 1 }) })
 			expect(table.data['partial']).toEqual(normalised)
 			expect(table.data['invalid']).toBe(undefined)

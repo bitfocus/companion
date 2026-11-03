@@ -178,7 +178,9 @@ function ConvertPresetDefinition(
 				options: {
 					rotaryActions: rawPreset.options?.rotaryActions ?? false,
 					stepProgression: (rawPreset.options?.stepAutoProgress ?? true) ? 'auto' : 'manual',
+					stepExpression: '',
 					canModifyStyleInApis: false,
+					notes: '',
 				},
 
 				feedbacks: parsedStyle.feedbacks,

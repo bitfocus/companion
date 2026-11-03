@@ -85,7 +85,13 @@ function makeFeedbackDefinition(overrides: Partial<ClientEntityDefinition> = {})
 function makeButtonPresetModel(overrides: Partial<LayeredButtonModel> = {}): LayeredButtonModel {
 	return {
 		type: 'button-layered',
-		options: { rotaryActions: false, stepProgression: 'auto', canModifyStyleInApis: false },
+		options: {
+			rotaryActions: false,
+			stepProgression: 'auto',
+			stepExpression: '',
+			canModifyStyleInApis: false,
+			notes: '',
+		},
 		style: { layers: [] },
 		feedbacks: [],
 		steps: {

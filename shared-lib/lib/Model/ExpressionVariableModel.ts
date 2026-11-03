@@ -11,7 +11,7 @@ export const ExpressionVariableOptionsSchema = z.object({
 	description: z.string().default('An expression variable'),
 	sortOrder: z.number().default(0),
 	collectionId: z.string().optional(),
-	notes: z.string().optional(),
+	notes: z.string().default(''),
 })
 
 export type ExpressionVariableOptions = z.output<typeof ExpressionVariableOptionsSchema>

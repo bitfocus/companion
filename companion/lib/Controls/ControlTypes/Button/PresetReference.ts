@@ -1,10 +1,11 @@
 import type { JsonValue } from 'type-fest'
 import type { BankControlId } from '@companion-app/shared/ControlId.js'
-import type {
-	LayeredButtonModel,
-	LayeredButtonOptions,
-	NormalButtonRuntimeProps,
-	PresetReferenceButtonModel,
+import {
+	LayeredButtonOptionsSchema,
+	type LayeredButtonModel,
+	type LayeredButtonOptions,
+	type NormalButtonRuntimeProps,
+	type PresetReferenceButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
@@ -50,7 +51,7 @@ export class ControlButtonPresetReference
 		ControlWithActions,
 		ControlWithoutEvents,
 		ControlWithActionSets,
-		ControlWithOptions,
+		ControlWithOptions<LayeredButtonOptions>,
 		ControlWithConvert
 {
 	readonly type = 'preset-reference'
@@ -106,7 +107,14 @@ export class ControlButtonPresetReference
 		storage: PresetReferenceButtonModel,
 		isImport: boolean
 	) {
-		super(deps, controlId, `Controls/Button/PresetReference/${controlId}`, true, ControlEntityListPoolButton)
+		super(
+			deps,
+			controlId,
+			`Controls/Button/PresetReference/${controlId}`,
+			true,
+			ControlEntityListPoolButton,
+			LayeredButtonOptionsSchema
+		)
 
 		if (storage.type !== 'preset-reference')
 			throw new Error(`Invalid type given to ControlButtonPresetReference: "${storage.type}"`)
@@ -116,12 +124,7 @@ export class ControlButtonPresetReference
 		this.#presetId = storage.presetRef.presetId
 		this.#variableValues = storage.presetRef.variableValues
 
-		this.options = {
-			...structuredClone(ButtonControlRuntimeBase.DefaultOptions),
-			rotaryActions: false,
-			canModifyStyleInApis: false,
-			notes: '',
-		}
+		this.options = this.optionsSchema.parse({})
 
 		this.#drawing = new LayeredButtonDrawer(deps, controlId, {
 			getButtonStateProps: () => this.getDrawStyleButtonStateProps(),

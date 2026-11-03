@@ -238,6 +238,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 			defaultValue: defaultVal,
 			persistCurrentValue: false,
 			sortOrder: highestSortOrder + 1,
+			notes: '',
 		}
 
 		this.#dbTable.set(name, this.#custom_variables[name])

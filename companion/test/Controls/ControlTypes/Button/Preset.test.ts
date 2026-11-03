@@ -9,7 +9,13 @@ import { ReferencedLocationsIndex } from '../../../../lib/Controls/ReferencedLoc
 function makeStorage(overrides: Partial<PresetButtonModel> = {}): PresetButtonModel {
 	return {
 		type: 'preset:button',
-		options: { rotaryActions: false, stepProgression: 'auto', canModifyStyleInApis: false },
+		options: {
+			rotaryActions: false,
+			stepProgression: 'auto',
+			stepExpression: '',
+			canModifyStyleInApis: false,
+			notes: '',
+		},
 		style: { layers: [] },
 		feedbacks: [],
 		steps: {

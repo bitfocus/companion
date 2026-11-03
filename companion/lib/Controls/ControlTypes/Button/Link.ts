@@ -1,4 +1,5 @@
 import type { JsonValue } from 'type-fest'
+import type z from 'zod'
 import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import {
 	LinkButtonOptionsSchema,
@@ -65,7 +66,7 @@ export class ControlButtonLink
 		ControlWithoutActions,
 		ControlWithoutEvents,
 		ControlWithoutActionSets,
-		ControlWithOptions,
+		ControlWithOptions<LinkButtonModel['options']>,
 		ControlWithPushed,
 		ControlWithoutConvert
 {
@@ -79,6 +80,8 @@ export class ControlButtonLink
 	readonly supportsLayeredStyle = false
 	readonly supportsOptions = true
 	readonly supportsPushed = true
+
+	readonly optionsSchema: z.ZodType<LinkButtonModel['options']> = LinkButtonOptionsSchema
 
 	options: LinkButtonModel['options']
 

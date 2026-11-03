@@ -4,10 +4,11 @@ import {
 	FONTSIZE_SHRINK_DEFAULT,
 	getDefaultPinnedProperties,
 } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
-import type {
-	LayeredButtonModel,
-	LayeredButtonOptions,
-	NormalButtonRuntimeProps,
+import {
+	LayeredButtonOptionsSchema,
+	type LayeredButtonModel,
+	type LayeredButtonOptions,
+	type NormalButtonRuntimeProps,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -138,14 +139,9 @@ export class ControlButtonLayered
 		storage: LayeredButtonModel | null,
 		isImport: boolean
 	) {
-		super(deps, controlId, `Controls/Button/Normal/${controlId}`, true)
+		super(deps, controlId, `Controls/Button/Normal/${controlId}`, true, LayeredButtonOptionsSchema)
 
-		this.options = {
-			...structuredClone(ButtonControlBase.DefaultOptions),
-			rotaryActions: false,
-			canModifyStyleInApis: false,
-			notes: '',
-		}
+		this.options = this.optionsSchema.parse({})
 
 		this.#drawing = new LayeredButtonStyleEditor(deps, controlId, {
 			getButtonStateProps: () => this.getDrawStyleButtonStateProps(),

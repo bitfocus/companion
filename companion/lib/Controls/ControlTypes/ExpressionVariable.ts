@@ -1,15 +1,17 @@
 import debounceFn from 'debounce-fn'
 import type { JsonValue } from 'type-fest'
+import type z from 'zod'
 import type { ExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
 import { diffObject } from '@companion-app/shared/Diff.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import type { NoRuntimeProps } from '@companion-app/shared/Model/Controls.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import type {
-	ClientExpressionVariableData,
-	ExpressionVariableModel,
-	ExpressionVariableOptions,
+import {
+	ExpressionVariableOptionsSchema,
+	type ClientExpressionVariableData,
+	type ExpressionVariableModel,
+	type ExpressionVariableOptions,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
@@ -48,7 +50,7 @@ export class ControlExpressionVariable
 		ControlWithEntities,
 		ControlWithoutLayeredStyle,
 		ControlWithoutActionSets,
-		ControlWithOptions,
+		ControlWithOptions<ExpressionVariableOptions>,
 		ControlWithoutPushed
 {
 	readonly type = 'expression-variable'
@@ -62,17 +64,9 @@ export class ControlExpressionVariable
 	readonly supportsOptions = true
 	readonly supportsPushed = false
 
-	readonly #expressionVariableNameMap: ExpressionVariableNameMap
+	readonly optionsSchema: z.ZodType<ExpressionVariableOptions> = ExpressionVariableOptionsSchema
 
-	/**
-	 * The defaults options for a trigger
-	 */
-	static DefaultOptions: ExpressionVariableOptions = {
-		variableName: '',
-		description: 'An expression variable',
-		sortOrder: 0,
-		notes: '',
-	}
+	readonly #expressionVariableNameMap: ExpressionVariableNameMap
 
 	/**
 	 * The last sent expression-variable json object
@@ -114,7 +108,7 @@ export class ControlExpressionVariable
 			getPageVariableEntities: deps.getPageVariableEntities,
 		})
 
-		this.options = structuredClone(ControlExpressionVariable.DefaultOptions)
+		this.options = this.optionsSchema.parse({})
 
 		if (!storage) {
 			// New control

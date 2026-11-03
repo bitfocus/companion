@@ -1,10 +1,11 @@
 import type { JsonValue } from 'type-fest'
 import { CreatePresetControlId, type PresetControlId } from '@companion-app/shared/ControlId.js'
-import type {
-	ButtonStatus,
-	LayeredButtonOptions,
-	NormalButtonRuntimeProps,
-	PresetButtonModel,
+import {
+	LayeredButtonOptionsSchema,
+	type ButtonStatus,
+	type LayeredButtonOptions,
+	type NormalButtonRuntimeProps,
+	type PresetButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -26,7 +27,6 @@ import type {
 	ControlWithoutOptions,
 	ControlWithoutPushed,
 } from '../../IControlFragments.js'
-import { ButtonControlBase } from './Base.js'
 import { LayeredButtonDrawer } from './LayeredButtonDrawer.js'
 
 /**
@@ -131,12 +131,7 @@ export class ControlButtonPreset
 			false
 		)
 
-		this.options = {
-			...structuredClone(ButtonControlBase.DefaultOptions),
-			rotaryActions: false,
-			stepProgression: 'auto',
-			canModifyStyleInApis: false,
-		}
+		this.options = LayeredButtonOptionsSchema.parse({})
 
 		this.#drawing = new LayeredButtonDrawer(deps, controlId, {
 			getButtonStateProps: () => ({

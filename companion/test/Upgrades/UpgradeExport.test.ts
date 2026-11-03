@@ -154,6 +154,7 @@ describe('upgradeImport', () => {
 
 		expect(result.custom_variables.counter).toEqual({
 			description: 'Counts',
+			notes: '',
 			defaultValue: 5,
 			persistCurrentValue: false,
 			sortOrder: 0,
