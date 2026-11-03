@@ -3,7 +3,11 @@ import Express from 'express'
 import supertest from 'supertest'
 import { describe, expect, test } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
-import { CreateExpressionVariableControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
+import {
+	CreateBankControlId,
+	CreateExpressionVariableControlId,
+	CreateTriggerControlId,
+} from '@companion-app/shared/ControlId.js'
 import { EXPORT_VERSION } from '@companion-app/shared/Model/Export/Latest.js'
 import type { ExportFormat } from '@companion-app/shared/Model/ExportFormat.js'
 import type { ClientExportTarget } from '@companion-app/shared/Model/ImportExport.js'
@@ -90,13 +94,13 @@ function createExportController() {
 		options: { relativeDelay: false },
 	}
 
-	const pageOne = { id: 'page-1', name: 'Page One', controls: { 0: { 0: 'control-1' } } } as any
+	const pageOne = { id: 'page-1', name: 'Page One', controls: { 0: { 0: CreateBankControlId('control-1') } } } as any
 	pageStore.getAll.mockReturnValue({ 1: pageOne })
 	pageStore.getPageInfo.mockImplementation((pageNumber: number) => (pageNumber === 1 ? pageOne : undefined))
 	pageStore.getPageNumber.mockReturnValue(1)
 
 	controls.getControl.mockImplementation((id: string) => {
-		if (id === 'control-1') return makeControl(buttonJson)
+		if (id === CreateBankControlId('control-1')) return makeControl(buttonJson)
 		return undefined // page control (page:<id>) etc. -> no local variables
 	})
 	controls.getAllTriggers.mockReturnValue([makeTrigger('trig-1', 'My Trigger')])

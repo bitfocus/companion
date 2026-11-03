@@ -187,6 +187,10 @@ describe('diffObject', () => {
 		expect(diffObject({ a: 1, b: { c: [1, 2] } }, { a: 1, b: { c: [1, 2] } })).toEqual([])
 	})
 
+	it('replaces the whole object when there is no old value', () => {
+		expect(diffObject(undefined, { a: 1 })).toEqual([{ op: 'set', path: [], value: { a: 1 } }])
+	})
+
 	it('sets changed and added properties', () => {
 		expect(diffObject<Record<string, unknown>>({ a: 1 }, { a: 2, b: { c: 3 } })).toEqual([
 			{ op: 'set', path: ['a'], value: 2 },
@@ -290,6 +294,11 @@ describe('applyObjectPatch', () => {
 	it('returns the new value when the root is replaced', () => {
 		const patch: ObjectPatch<unknown> = [{ op: 'set', path: [], value: [1] }]
 		expect(applyObjectPatch<unknown>({ a: 1 }, patch)).toEqual([1])
+	})
+
+	it('drops keys the target has but the new value lacks, when diffed from no old value', () => {
+		const patch = diffObject<Record<string, number>>(undefined, { a: 2 })
+		expect(applyObjectPatch<Record<string, number>>({ a: 1, stale: 1 }, patch)).toEqual({ a: 2 })
 	})
 
 	it('throws when removing the root', () => {

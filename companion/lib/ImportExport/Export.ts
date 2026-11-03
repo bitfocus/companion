@@ -20,6 +20,7 @@ import type { ParsedQs } from 'qs'
 import yazl from 'yazl'
 import { CreatePageControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
 import type { CollectionBase } from '@companion-app/shared/Model/Collections.js'
+import { isControlModelForId } from '@companion-app/shared/Model/Controls.js'
 import {
 	EXPORT_VERSION,
 	type ExportFull,
@@ -543,9 +544,10 @@ export class ExportController {
 		for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
 			for (const [column, controlId] of Object.entries(rowObj)) {
 				const control = this.#controlsController.getControl(controlId)
-				if (controlId && control && control.type !== 'trigger') {
+				const config = control?.toJSON()
+				if (control && config && config.type !== 'preset:button' && isControlModelForId(controlId, config)) {
 					if (!pageExport.controls[Number(row)]) pageExport.controls[Number(row)] = {}
-					pageExport.controls[Number(row)][Number(column)] = control.toJSON(false)
+					pageExport.controls[Number(row)][Number(column)] = config
 
 					control.collectReferencedConnectionsAndVariables(
 						referencedConnectionIds,
@@ -559,8 +561,9 @@ export class ExportController {
 		// Include the page's local variables (from the page:<id> control, which is not on the grid).
 		if (pageInfo.id) {
 			const pageControl = this.#controlsController.getControl(CreatePageControlId(pageInfo.id))
-			if (pageControl && pageControl.type === 'page') {
-				pageExport.pageVariables = pageControl.toJSON(false).localVariables
+			const pageConfig = pageControl?.toJSON()
+			if (pageControl && pageConfig?.type === 'page') {
+				pageExport.pageVariables = pageConfig.localVariables
 
 				pageControl.collectReferencedConnectionsAndVariables(
 					referencedConnectionIds,

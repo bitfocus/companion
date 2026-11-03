@@ -14,9 +14,9 @@ export class ExpressionVariableNameMap {
 	>()
 
 	readonly #variableValuesController: VariablesValues
-	readonly #controls: Map<SomeControlId, SomeControl<any>>
+	readonly #controls: Map<SomeControlId, SomeControl>
 
-	constructor(variableValuesController: VariablesValues, controls: Map<SomeControlId, SomeControl<any>>) {
+	constructor(variableValuesController: VariablesValues, controls: Map<SomeControlId, SomeControl>) {
 		this.#variableValuesController = variableValuesController
 		this.#controls = controls
 	}

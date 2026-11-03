@@ -1,4 +1,5 @@
 import type { PageControlId } from '@companion-app/shared/ControlId.js'
+import type { NoRuntimeProps } from '@companion-app/shared/Model/Controls.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { PageControlModel } from '@companion-app/shared/Model/PageControlModel.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
@@ -34,7 +35,7 @@ import type {
  * this program.
  */
 export class ControlPage
-	extends ControlBase<PageControlModel, PageControlId>
+	extends ControlBase<PageControlId, PageControlModel, NoRuntimeProps>
 	implements
 		ControlWithoutActions,
 		ControlWithoutEvents,
@@ -133,6 +134,10 @@ export class ControlPage
 	 * To be sent to the client and written to the db
 	 * @param clone - Whether to return a cloned object
 	 */
+	toRuntimeJSON(): NoRuntimeProps {
+		return {}
+	}
+
 	toJSON(clone = true): PageControlModel {
 		const obj: PageControlModel = {
 			type: this.type,

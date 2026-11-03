@@ -7,13 +7,13 @@ import type { SomeControl } from './IControlFragments.js'
  * Resolve a control to its editable step surface, or throw. Narrows the step union on its `isEditable`
  * discriminant; read-only controls keep only the runtime navigation surface, gating the structural step edits.
  */
-function getEditableSteps(control: SomeControl<any>): ControlActionSetAndStepsEditor {
+function getEditableSteps(control: SomeControl): ControlActionSetAndStepsEditor {
 	if (control.supportsActionSets && control.actionSets.isEditable) return control.actionSets
 	throw new Error(`Control "${control.controlId}" does not support steps`)
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function createStepsTrpcRouter(controlsMap: Map<string, SomeControl<any>>) {
+export function createStepsTrpcRouter(controlsMap: Map<string, SomeControl>) {
 	return router({
 		add: publicProcedure
 			.input(

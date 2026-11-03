@@ -1,4 +1,10 @@
 import { describe, expect, test } from 'vitest'
+import {
+	CreateBankControlId,
+	CreatePageControlId,
+	CreatePresetControlId,
+	CreateTriggerControlId,
+} from '../ControlId.js'
 import { ActionSetsModelSchema } from '../Model/ActionModel.js'
 import {
 	ButtonReferenceButtonModelSchema,
@@ -6,7 +12,7 @@ import {
 	PresetReferenceButtonModelSchema,
 	SomeButtonModelSchema,
 } from '../Model/ButtonModel.js'
-import { SomeControlModelSchema } from '../Model/Controls.js'
+import { isControlModelForId, SomeControlModelSchema, zodStoredControlId } from '../Model/Controls.js'
 import { EventInstanceSchema } from '../Model/EventModel.js'
 import { ExpressionVariableModelSchema } from '../Model/ExpressionVariableModel.js'
 import { PageControlModelSchema } from '../Model/PageControlModel.js'
@@ -275,5 +281,33 @@ describe('SomeControlModelSchema', () => {
 
 	test('rejects a control of an unknown type', () => {
 		expect(SomeControlModelSchema.safeParse({ type: 'sparkle' }).success).toBe(false)
+	})
+})
+
+describe('isControlModelForId', () => {
+	test.each([
+		['button-layered', CreateBankControlId('1'), true],
+		['pageup', CreateBankControlId('1'), true],
+		['pagenum', CreateBankControlId('1'), true],
+		['trigger', CreateTriggerControlId('1'), true],
+		['page', CreatePageControlId('1'), true],
+		['trigger', CreateBankControlId('1'), false],
+		['button-layered', CreateTriggerControlId('1'), false],
+		['expression-variable', CreatePageControlId('1'), false],
+	] as const)('a %s control under %s is %s', (type, controlId, expected) => {
+		const config = SomeControlModelSchema.parse({ type })
+		expect(isControlModelForId(controlId, config)).toBe(expected)
+	})
+})
+
+describe('zodStoredControlId', () => {
+	test('accepts the ids of stored controls', () => {
+		expect(zodStoredControlId.safeParse(CreateBankControlId('1')).success).toBe(true)
+		expect(zodStoredControlId.safeParse(CreateTriggerControlId('1')).success).toBe(true)
+		expect(zodStoredControlId.safeParse(CreatePageControlId('1')).success).toBe(true)
+	})
+
+	test('rejects a preset id, which is not a stored control', () => {
+		expect(zodStoredControlId.safeParse(CreatePresetControlId('conn', 'preset', 'hash')).success).toBe(false)
 	})
 })

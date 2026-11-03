@@ -10,7 +10,6 @@ import {
 	CreateTriggerControlId,
 	formatLocation,
 	ParseControlId,
-	zodSomeControlId,
 	type BankControlId,
 	type ExpressionVariableControlId,
 	type ParsedControlIdType,
@@ -19,7 +18,7 @@ import {
 } from '@companion-app/shared/ControlId.js'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
+import { zodStoredControlId, type UIControlState, type UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 import type {
 	ExpressionVariableCollection,
 	ExpressionVariableModel,
@@ -192,11 +191,11 @@ export class ControlsController {
 		return this.#store.triggerEvents
 	}
 
-	getControl(controlId: SomeControlId): SomeControl<any> | undefined {
+	getControl(controlId: SomeControlId): SomeControl | undefined {
 		return this.#store.getControl(controlId)
 	}
 
-	getAllControls(): ReadonlyMap<SomeControlId, SomeControl<any>> {
+	getAllControls(): ReadonlyMap<SomeControlId, SomeControl> {
 		return this.#store.getAllControls()
 	}
 
@@ -272,23 +271,27 @@ export class ControlsController {
 			watchControl: publicProcedure
 				.input(
 					z.object({
-						controlId: zodSomeControlId,
+						controlId: zodStoredControlId,
 					})
 				)
-				.subscription(async function* ({ input, signal }) {
+				.subscription(async function* ({ input, signal }): AsyncGenerator<UIControlUpdate> {
 					const control = self.getControl(input.controlId)
 					if (!control) throw new Error(`Control ${input.controlId} not found`)
 
 					const changes = toIterable(control.updateEvents, 'update', signal)
 
+					const config = control.toJSON()
+					// The input only accepts the ids of stored controls, so this is never a preset
+					if (config.type === 'preset:button') throw new Error(`Control ${input.controlId} is a preset`)
 					yield {
 						type: 'init',
-						config: control.toJSON(false),
-						runtime: control.toRuntimeJSON(),
-					} satisfies UIControlUpdate
+						// Each control class sends the runtime props of its own type
+						control: { type: config.type, config, runtime: control.toRuntimeJSON() } as UIControlState,
+					}
 
 					for await (const [change] of changes) {
-						yield change
+						// Not a preset (checked above), so the patches are of a SomeControlModel
+						yield change as UIControlUpdate
 					}
 				}),
 		})
@@ -517,7 +520,7 @@ export class ControlsController {
 
 		if (allChangedVariablesSet.size === 0) return
 
-		const notifyControl = (control: SomeControl<any>) => {
+		const notifyControl = (control: SomeControl) => {
 			if (control.supportsEntities) control.entities.onVariablesChanged(allChangedVariablesSet)
 			control.drawing?.onVariablesChanged(allChangedVariablesSet)
 			control.onVariablesChanged(allChangedVariablesSet)

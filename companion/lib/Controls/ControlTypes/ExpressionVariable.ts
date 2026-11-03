@@ -4,6 +4,7 @@ import type { ExpressionVariableControlId } from '@companion-app/shared/ControlI
 import { diffObject } from '@companion-app/shared/Diff.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
+import type { NoRuntimeProps } from '@companion-app/shared/Model/Controls.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type {
 	ClientExpressionVariableData,
@@ -40,7 +41,7 @@ import type {
  * this program.
  */
 export class ControlExpressionVariable
-	extends ControlBase<ExpressionVariableModel, ExpressionVariableControlId>
+	extends ControlBase<ExpressionVariableControlId, ExpressionVariableModel, NoRuntimeProps>
 	implements
 		ControlWithoutActions,
 		ControlWithoutEvents,
@@ -191,6 +192,10 @@ export class ControlExpressionVariable
 	 * To be sent to the client and written to the db
 	 * @param clone - Whether to return a cloned object
 	 */
+	toRuntimeJSON(): NoRuntimeProps {
+		return {}
+	}
+
 	toJSON(clone = true): ExpressionVariableModel {
 		const obj: ExpressionVariableModel = {
 			type: this.type,

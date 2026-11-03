@@ -129,8 +129,7 @@ function usePageVariableEntities(pageNumber: number | null | undefined): SomeEnt
 	const pageControlId = pageInfo ? CreatePageControlId(pageInfo.id) : null
 
 	const { controlConfig } = useControlConfig(pageControlId)
-	const config = controlConfig?.config
-	return config?.type === 'page' ? config.localVariables : null
+	return controlConfig?.config.localVariables ?? null
 }
 
 export function useLocalVariablesStore(

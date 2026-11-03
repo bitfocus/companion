@@ -51,7 +51,7 @@ export class ControlsFactory {
 		category: 'button' | 'trigger' | 'expression-variable' | 'all',
 		controlObj: SomeControlModel | string,
 		isImport: boolean
-	): SomeControl<any> | null {
+	): SomeControl | null {
 		const controlType = typeof controlObj === 'object' ? controlObj.type : controlObj
 		const controlObj2 = typeof controlObj === 'object' ? controlObj : null
 		if ((category === 'all' || category === 'button') && isControlIdOfKind(controlId, 'bank')) {

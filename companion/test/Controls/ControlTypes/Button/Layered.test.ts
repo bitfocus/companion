@@ -246,7 +246,7 @@ describe('ControlButtonLayered', () => {
 		it('returns an independent deep clone when clone=true', () => {
 			const control = createControl(makeStorage([boxElement('box0')], [feedbackModel('fb1')]))
 
-			const json = control.toJSON(true)
+			const json = structuredClone(control.toJSON())
 			json.feedbacks.push(feedbackModel('injected'))
 			json.style.layers.push(boxElement('injected'))
 
@@ -259,6 +259,22 @@ describe('ControlButtonLayered', () => {
 			const control = createControl(makeStorage([boxElement('box0')]))
 
 			expect(control.toRuntimeJSON()).toEqual({ current_step_id: '0' })
+		})
+
+		it('replaces the whole config on the first change, then patches it', () => {
+			const control = createControl(makeStorage([boxElement('box0')]))
+			const updates: unknown[] = []
+			control.updateEvents.on('update', (change) => updates.push(change))
+
+			control.commitChange(false)
+			expect(updates).toEqual([{ type: 'config', patch: [{ op: 'set', path: [], value: control.toJSON() }] }])
+
+			updates.length = 0
+			control.options.rotaryActions = true
+			control.commitChange(false)
+			expect(updates).toEqual([
+				{ type: 'config', patch: [{ op: 'set', path: ['options', 'rotaryActions'], value: true }] },
+			])
 		})
 	})
 

@@ -16,7 +16,6 @@ import {
 	type SomeEntityModel,
 } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionVariableOptions } from '@companion-app/shared/Model/ExpressionVariableModel.js'
-import { StaticAlert } from '~/Components/Alert'
 import { EditSectionCard } from '~/Components/EditSectionCard.js'
 import { GenericConfirmModal, type GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { InlineHelpIcon } from '~/Components/InlineHelp'
@@ -60,10 +59,7 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 	const loadError = errors.length > 0 ? errors.join(', ') : null
 	const dataReady = !loadError && !!controlConfig
 
-	const localVariablesStore = useLocalVariablesStore(
-		controlId,
-		controlConfig?.config?.type === 'expression-variable' ? controlConfig.config.localVariables : null
-	)
+	const localVariablesStore = useLocalVariablesStore(controlId, controlConfig?.config.localVariables ?? null)
 
 	return (
 		<div className="edit-panel">
@@ -72,44 +68,36 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={reloadConfig} design="pulse" />
 			{controlConfig ? (
 				<div className={classNames({ hidden: !dataReady })}>
-					{controlConfig.config.type === 'expression-variable' ? (
-						<>
+					<MyErrorBoundary>
+						<ExpressionVariableConfig options={controlConfig.config.options} controlId={controlId} />
+					</MyErrorBoundary>
+
+					<EditSectionCard title="Value">
+						{/* The entity editor's styles are scoped to these classes, so they wrap just the editor */}
+						<div className="edit-button-panel flex-form expression-variable-value">
 							<MyErrorBoundary>
-								<ExpressionVariableConfig options={controlConfig.config.options} controlId={controlId} />
+								<ExpressionVariableEntityEditor
+									controlId={controlId}
+									entity={controlConfig.config.entity}
+									localVariablesStore={localVariablesStore}
+								/>
 							</MyErrorBoundary>
+						</div>
+					</EditSectionCard>
 
-							<EditSectionCard title="Value">
-								{/* The entity editor's styles are scoped to these classes, so they wrap just the editor */}
-								<div className="edit-button-panel flex-form expression-variable-value">
-									<MyErrorBoundary>
-										<ExpressionVariableEntityEditor
-											controlId={controlId}
-											entity={controlConfig.config.entity}
-											localVariablesStore={localVariablesStore}
-										/>
-									</MyErrorBoundary>
-								</div>
-							</EditSectionCard>
-
-							{!!controlConfig.config.entity && !isInternalUserValueFeedback(controlConfig.config.entity) && (
-								// The entity list draws its own heading (with help), so this is a bare section rather than a card
-								<section className="edit-section">
-									<div className="edit-button-panel flex-form">
-										<MyErrorBoundary>
-											<ExpressionVariableLocalVariablesEditor
-												controlId={controlId}
-												localVariables={controlConfig.config.localVariables}
-												localVariablesStore={localVariablesStore}
-											/>
-										</MyErrorBoundary>
-									</div>
-								</section>
-							)}
-						</>
-					) : (
-						<StaticAlert color="danger">
-							Invalid control type: {controlConfig.config.type}. Expected 'expression-variable'.
-						</StaticAlert>
+					{!!controlConfig.config.entity && !isInternalUserValueFeedback(controlConfig.config.entity) && (
+						// The entity list draws its own heading (with help), so this is a bare section rather than a card
+						<section className="edit-section">
+							<div className="edit-button-panel flex-form">
+								<MyErrorBoundary>
+									<ExpressionVariableLocalVariablesEditor
+										controlId={controlId}
+										localVariables={controlConfig.config.localVariables}
+										localVariablesStore={localVariablesStore}
+									/>
+								</MyErrorBoundary>
+							</div>
+						</section>
 					)}
 				</div>
 			) : (

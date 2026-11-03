@@ -72,7 +72,7 @@ export class ControlStore implements IControlStore {
 	 * The currently configured controls.
 	 * Intentionally public so that ControlsController can mutate it.
 	 */
-	readonly controls = new Map<SomeControlId, SomeControl<any>>()
+	readonly controls = new Map<SomeControlId, SomeControl>()
 
 	/**
 	 * The button locations each control referenced in its last draw
@@ -118,7 +118,7 @@ export class ControlStore implements IControlStore {
 	/**
 	 * Get a single control by id
 	 */
-	getControl(controlId: SomeControlId): SomeControl<any> | undefined {
+	getControl(controlId: SomeControlId): SomeControl | undefined {
 		if (!controlId) return undefined
 		return this.controls.get(controlId)
 	}
@@ -127,7 +127,7 @@ export class ControlStore implements IControlStore {
 	 * Get a control by id, following button-references through to the control they currently mirror.
 	 * Returns undefined for an unresolved reference or a reference cycle
 	 */
-	getControlFollowingReferences(controlId: SomeControlId | null): SomeControl<any> | undefined {
+	getControlFollowingReferences(controlId: SomeControlId | null): SomeControl | undefined {
 		const visited = new Set<string>()
 		while (controlId && !visited.has(controlId) && visited.size <= MAX_REFERENCE_DEPTH) {
 			visited.add(controlId)
@@ -146,7 +146,7 @@ export class ControlStore implements IControlStore {
 	/**
 	 * Get all populated controls
 	 */
-	getAllControls(): ReadonlyMap<SomeControlId, SomeControl<any>> {
+	getAllControls(): ReadonlyMap<SomeControlId, SomeControl> {
 		return this.controls // TODO - readonly?
 	}
 

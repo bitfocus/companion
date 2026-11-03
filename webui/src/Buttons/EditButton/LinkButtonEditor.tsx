@@ -26,7 +26,7 @@ import { linkPeerChoices, STATUS_EXPLANATIONS } from './LinkPeerChoices.js'
 interface LinkButtonEditorProps {
 	config: LinkButtonModel
 	controlId: SomeControlId
-	runtimeProps: Record<string, any> | false
+	runtimeProps: LinkButtonRuntimeProps
 }
 
 /** Editor for a link button: which installation and which of its buttons to show */
@@ -51,8 +51,7 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 		[link.peers, config.options.peerId]
 	)
 
-	const status = runtimeProps ? (runtimeProps as LinkButtonRuntimeProps).status : null
-	const explanation = status ? STATUS_EXPLANATIONS[status] : null
+	const explanation = STATUS_EXPLANATIONS[runtimeProps.status]
 
 	const peerFieldId = useId()
 	const locationFieldId = useId()

@@ -1,5 +1,5 @@
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
-import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { LayeredButtonModel, NormalButtonRuntimeProps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { useControlNotesSetter, useNotesEditor } from '~/Controls/useNotesEditor.js'
 import { ControlHotPressButtons } from './ControlHotPressButtons.js'
@@ -11,7 +11,7 @@ interface LayeredButtonPanelProps {
 	controlId: SomeControlId
 	location: ControlLocation
 	config: LayeredButtonModel
-	runtimeProps: Record<string, any>
+	runtimeProps: NormalButtonRuntimeProps
 }
 
 export function LayeredButtonPanel({

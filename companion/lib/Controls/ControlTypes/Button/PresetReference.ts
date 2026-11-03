@@ -352,8 +352,8 @@ export class ControlButtonPresetReference
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
 	 */
-	override toJSON(clone = true): PresetReferenceButtonModel {
-		const obj: PresetReferenceButtonModel = {
+	override toJSON(): PresetReferenceButtonModel {
+		return {
 			type: this.type,
 			style: { layers: [...this.drawing.drawElements] },
 			options: this.options,
@@ -369,8 +369,6 @@ export class ControlButtonPresetReference
 			// Persist the checksum so a reload keeps its baseline (and doesn't rebuild once on the first report).
 			checksum: this.#lastPresetChecksum ?? undefined,
 		}
-
-		return clone ? structuredClone(obj) : obj
 	}
 
 	override toRuntimeJSON(): NormalButtonRuntimeProps {

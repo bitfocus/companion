@@ -29,7 +29,7 @@ import type { TriggerEvents } from './TriggerEvents.js'
  * A narrow accessor letting one control reach other controls (to press/rotate a target, or read its model).
  */
 export interface ControlsAccessor {
-	getControl(controlId: SomeControlId): SomeControl<any> | undefined
+	getControl(controlId: SomeControlId): SomeControl | undefined
 	pressControl(controlId: SomeControlId, pressed: boolean, surfaceId: string | undefined, force?: boolean): boolean
 	rotateControl(controlId: SomeControlId, delta: number, surfaceId: string | undefined): boolean
 }

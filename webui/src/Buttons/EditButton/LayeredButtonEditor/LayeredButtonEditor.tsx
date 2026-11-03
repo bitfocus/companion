@@ -3,7 +3,11 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
-import type { LayeredButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type {
+	LayeredButtonModel,
+	NormalButtonRuntimeProps,
+	SomeButtonModel,
+} from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { LayeredStyleElementsProvider } from '~/Controls/Components/LayeredStyleElementsContext.js'
@@ -29,7 +33,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 }: {
 	config: LayeredButtonModel
 	controlId: SomeControlId
-	runtimeProps: Record<string, any> | false
+	runtimeProps: NormalButtonRuntimeProps
 	location: ControlLocation
 	activeMainTab: string
 }) {
@@ -53,88 +57,86 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 
 	return (
 		<div className="grow flex flex-col min-h-0">
-			{runtimeProps && (
-				<MyErrorBoundary>
-					<ButtonEditorTabs
-						location={location}
-						controlId={controlId}
-						steps={config.steps || {}}
-						runtimeProps={runtimeProps}
-						rotaryActions={config?.options?.rotaryActions}
-						activeMainTab={activeMainTab}
-						localVariablesStore={localVariablesStore}
-						disabledSetStep={config?.options?.stepProgression === 'expression'}
-					>
-						{(currentTab) => {
-							if (currentTab === 'style') {
-								return (
-									<div className="button-editor-tab-content h-full">
-										{/* Wrap the entity-category, for :first-child to work */}
-										<MyErrorBoundary>
-											<LayeredButtonEditorStyle
+			<MyErrorBoundary>
+				<ButtonEditorTabs
+					location={location}
+					controlId={controlId}
+					steps={config.steps || {}}
+					runtimeProps={runtimeProps}
+					rotaryActions={config?.options?.rotaryActions}
+					activeMainTab={activeMainTab}
+					localVariablesStore={localVariablesStore}
+					disabledSetStep={config?.options?.stepProgression === 'expression'}
+				>
+					{(currentTab) => {
+						if (currentTab === 'style') {
+							return (
+								<div className="button-editor-tab-content h-full">
+									{/* Wrap the entity-category, for :first-child to work */}
+									<MyErrorBoundary>
+										<LayeredButtonEditorStyle
+											controlId={controlId}
+											location={location}
+											styleStore={styleStore}
+											localVariablesStore={localVariablesStore}
+										/>
+									</MyErrorBoundary>
+								</div>
+							)
+						}
+
+						if (currentTab === 'feedbacks') {
+							return (
+								<div className="button-editor-tab-content">
+									<MyErrorBoundary>
+										<LayeredStyleElementsProvider styleStore={styleStore}>
+											<FeedbackOverridesTab
 												controlId={controlId}
 												location={location}
-												styleStore={styleStore}
+												feedbacks={config.feedbacks}
 												localVariablesStore={localVariablesStore}
 											/>
-										</MyErrorBoundary>
-									</div>
-								)
-							}
+										</LayeredStyleElementsProvider>
+									</MyErrorBoundary>
+								</div>
+							)
+						}
 
-							if (currentTab === 'feedbacks') {
-								return (
-									<div className="button-editor-tab-content">
-										<MyErrorBoundary>
-											<LayeredStyleElementsProvider styleStore={styleStore}>
-												<FeedbackOverridesTab
-													controlId={controlId}
-													location={location}
-													feedbacks={config.feedbacks}
-													localVariablesStore={localVariablesStore}
-												/>
-											</LayeredStyleElementsProvider>
-										</MyErrorBoundary>
-									</div>
-								)
-							}
+						if (currentTab === 'variables') {
+							return (
+								<div className="button-editor-tab-content">
+									<MyErrorBoundary>
+										<LocalVariablesEditor
+											controlId={controlId}
+											location={location}
+											variables={config.localVariables}
+											localVariablesStore={localVariablesStore}
+										/>
+									</MyErrorBoundary>
+								</div>
+							)
+						}
 
-							if (currentTab === 'variables') {
-								return (
-									<div className="button-editor-tab-content">
-										<MyErrorBoundary>
-											<LocalVariablesEditor
-												controlId={controlId}
-												location={location}
-												variables={config.localVariables}
-												localVariablesStore={localVariablesStore}
-											/>
-										</MyErrorBoundary>
-									</div>
-								)
-							}
+						if (currentTab === 'options') {
+							return (
+								<div className="button-editor-tab-content">
+									{/* Wrap the entity-category, for :first-child to work */}
+									<MyErrorBoundary>
+										<ControlOptionsEditor
+											options={config.options}
+											configRef={configRef}
+											controlId={controlId}
+											localVariablesStore={localVariablesStore}
+										/>
+									</MyErrorBoundary>
+								</div>
+							)
+						}
 
-							if (currentTab === 'options') {
-								return (
-									<div className="button-editor-tab-content">
-										{/* Wrap the entity-category, for :first-child to work */}
-										<MyErrorBoundary>
-											<ControlOptionsEditor
-												options={config.options}
-												configRef={configRef}
-												controlId={controlId}
-												localVariablesStore={localVariablesStore}
-											/>
-										</MyErrorBoundary>
-									</div>
-								)
-							}
-
-							return null
-						}}
-					</ButtonEditorTabs>
-				</MyErrorBoundary>
-			)}
+						return null
+					}}
+				</ButtonEditorTabs>
+			</MyErrorBoundary>
 		</div>
 	)
 })

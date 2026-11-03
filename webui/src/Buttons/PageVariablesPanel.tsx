@@ -36,12 +36,11 @@ export const PageVariablesPanel = observer(function PageVariablesPanel({ pageNum
 const PageVariablesEditor = observer(function PageVariablesEditor({ controlId }: { controlId: PageControlId }) {
 	const { controlConfig, error, reloadConfig } = useControlConfig(controlId)
 
-	const config = controlConfig?.config
-	const localVariables = config?.type === 'page' ? config.localVariables : null
+	const localVariables = controlConfig?.config.localVariables ?? null
 
 	const localVariablesStore = useLocalVariablesStore(controlId, localVariables)
 
-	const dataReady = !error && !!config && config.type === 'page'
+	const dataReady = !error && !!controlConfig
 
 	return (
 		// Once loaded, the editor draws the title so its expand/collapse controls sit beside it

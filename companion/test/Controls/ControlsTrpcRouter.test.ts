@@ -208,7 +208,7 @@ describe('createControlsTrpcRouter', () => {
 
 			expect(result).toBe(true)
 			// A clone is serialised from the source and imported at the destination
-			expect(controlsMap.get(CreateBankControlId('ctrlA')).toJSON).toHaveBeenCalledWith(true)
+			expect(controlsMap.get(CreateBankControlId('ctrlA')).toJSON).toHaveBeenCalled()
 			expect(controlsController.importControl).toHaveBeenCalledWith(loc(1, 0, 1), {
 				type: 'button',
 				__sourceId: CreateBankControlId('ctrlA'),

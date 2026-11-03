@@ -2,7 +2,13 @@ import type { JsonValue } from 'type-fest'
 import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
-import type { ButtonOptionsBase, ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
+import type {
+	ButtonOptionsBase,
+	ButtonStatus,
+	LayeredButtonModel,
+	NormalButtonRuntimeProps,
+	PresetReferenceButtonModel,
+} from '@companion-app/shared/Model/ButtonModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
@@ -33,11 +39,11 @@ import type { LayeredButtonDrawer } from './LayeredButtonDrawer.js'
  * this program.
  */
 export abstract class ButtonControlRuntimeBase<
-	TJson,
+	TJson extends LayeredButtonModel | PresetReferenceButtonModel,
 	TOptions extends ButtonOptionsBase,
 	TPool extends SomeButtonEntityPool,
 >
-	extends ControlBase<TJson, BankControlId>
+	extends ControlBase<BankControlId, TJson, NormalButtonRuntimeProps>
 	implements ControlWithEntities, ControlWithPushed
 {
 	readonly supportsEntities = true
@@ -415,7 +421,7 @@ export abstract class ButtonControlRuntimeBase<
  * (e.g. a preset reference) extend {@link ButtonControlRuntimeBase} directly so they cannot inherit this -
  * or any future control-level mutator added here.
  */
-export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBase>
+export abstract class ButtonControlBase<TJson extends LayeredButtonModel, TOptions extends ButtonOptionsBase>
 	extends ButtonControlRuntimeBase<TJson, TOptions, EditableControlEntityListPoolButton>
 	implements ControlWithOptions
 {

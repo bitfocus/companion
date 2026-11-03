@@ -1,13 +1,24 @@
 import { EventEmitter } from 'node:events'
 import { type BankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
-import { diffObject } from '@companion-app/shared/Diff.js'
-import type { UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
+import { diffObject, type ObjectPatch } from '@companion-app/shared/Diff.js'
+import type { PresetButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type {
+	SomeControlModel,
+	SomeControlRuntimeProps,
+	UIControlUpdateDestroy,
+} from '@companion-app/shared/Model/Controls.js'
 import LogController, { type Logger } from '../Log/Controller.js'
 import type { ControlDependencies } from './ControlDependencies.js'
 import type { IButtonDrawer } from './IButtonDrawer.js'
 
+/** A change to a control, for the ui to apply to the config and runtime props it was sent */
+export type ControlUpdate<TJson, TRuntime> =
+	| { type: 'config'; patch: ObjectPatch<TJson> }
+	| { type: 'runtime'; patch: ObjectPatch<TRuntime> }
+	| UIControlUpdateDestroy
+
 export type ControlUpdateEvents = {
-	update: [change: UIControlUpdate]
+	update: [change: ControlUpdate<SomeControlJson, SomeControlRuntimeProps>]
 }
 
 /**
@@ -25,7 +36,14 @@ export type ControlUpdateEvents = {
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export abstract class ControlBase<TJson, TControlId extends SomeControlId> {
+/** The config of any control. A preset is the one control whose config is not a {@link SomeControlModel} */
+export type SomeControlJson = SomeControlModel | PresetButtonModel
+
+export abstract class ControlBase<
+	TControlId extends SomeControlId,
+	TJson extends SomeControlJson,
+	TRuntime extends SomeControlRuntimeProps,
+> {
 	abstract readonly type: string
 
 	protected readonly logger: Logger
@@ -34,11 +52,11 @@ export abstract class ControlBase<TJson, TControlId extends SomeControlId> {
 	/**
 	 * The last sent config json object
 	 */
-	#lastSentConfigJson: TJson | null = null
+	#lastSentConfigJson: TJson | undefined
 	/**
 	 * The last sent runtime json object
 	 */
-	#lastSentRuntimeJson: Record<string, any> | null = null
+	#lastSentRuntimeJson: TRuntime | undefined
 
 	/**
 	 * Check the status of a control, and re-draw if needed
@@ -73,14 +91,15 @@ export abstract class ControlBase<TJson, TControlId extends SomeControlId> {
 		// Trigger redraw
 		if (redraw) this.triggerInvalidation()
 
-		const newJson = this.toJSON(true)
+		const newJson = structuredClone(this.toJSON())
 
 		// Save to db
-		if (!this.#noPersistence) this.deps.dbTable.set(this.controlId, newJson as any)
+		// A preset is never persisted, and is the one control whose config is not a SomeControlModel
+		if (!this.#noPersistence && newJson.type !== 'preset:button') this.deps.dbTable.set(this.controlId, newJson)
 
 		// Now broadcast to any interested clients
 		if (this.updateEvents.listenerCount('update') > 0) {
-			const patch = diffObject<any>(this.#lastSentConfigJson || {}, newJson || {})
+			const patch = diffObject(this.#lastSentConfigJson, newJson)
 			if (patch.length > 0) {
 				this.updateEvents.emit('update', { type: 'config', patch })
 			}
@@ -130,7 +149,7 @@ export abstract class ControlBase<TJson, TControlId extends SomeControlId> {
 
 		// Now broadcast to any interested clients
 		if (this.updateEvents.listenerCount('update') > 0) {
-			const patch = diffObject(this.#lastSentRuntimeJson || {}, newJson || {})
+			const patch = diffObject(this.#lastSentRuntimeJson, newJson)
 			if (patch.length > 0) {
 				this.updateEvents.emit('update', { type: 'runtime', patch })
 			}
@@ -144,15 +163,12 @@ export abstract class ControlBase<TJson, TControlId extends SomeControlId> {
 	 * To be sent to the client and written to the db
 	 * @param clone - Whether to return a cloned object
 	 */
-	abstract toJSON(clone: boolean): TJson
+	abstract toJSON(): TJson
 
 	/**
-	 * Get any volatile properties for the control
-	 * Not all controls have additional data
+	 * Get any volatile properties for the control, which the ui may want but are not persisted in toJSON()
 	 */
-	toRuntimeJSON(): Record<string, any> {
-		return {}
-	}
+	abstract toRuntimeJSON(): TRuntime
 
 	/**
 	 * React to a change to this control - invalidate the rendered graphic, re-check a trigger condition, etc.

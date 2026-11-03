@@ -42,7 +42,7 @@ import { LayeredButtonDrawer } from './LayeredButtonDrawer.js'
  * this program.
  */
 export class ControlButtonPreset
-	extends ControlBase<PresetButtonModel, PresetControlId>
+	extends ControlBase<PresetControlId, PresetButtonModel, NormalButtonRuntimeProps>
 	implements
 		ControlWithLayeredStyle,
 		ControlWithoutActions,
@@ -370,8 +370,8 @@ export class ControlButtonPreset
 	 * To be sent to the client and written to the db
 	 * @param clone - Whether to return a cloned object
 	 */
-	override toJSON(clone = true): PresetButtonModel {
-		const obj: PresetButtonModel = {
+	override toJSON(): PresetButtonModel {
+		return {
 			type: this.type,
 			style: {
 				layers: [...this.#drawing.drawElements],
@@ -382,8 +382,6 @@ export class ControlButtonPreset
 			localVariables: this.entities.getLocalVariableEntities().map((ent) => ent.asEntityModel(true)),
 			checksum: this.#lastPresetChecksum ?? undefined,
 		}
-
-		return clone ? structuredClone(obj) : obj
 	}
 
 	/**

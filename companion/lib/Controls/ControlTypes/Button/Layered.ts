@@ -317,8 +317,8 @@ export class ControlButtonLayered
 	 * Convert this control to JSON
 	 * To be sent to the client and written to the db
 	 */
-	override toJSON(clone = true): LayeredButtonModel {
-		const obj: LayeredButtonModel = {
+	override toJSON(): LayeredButtonModel {
+		return {
 			type: this.type,
 			style: { layers: [...this.drawing.drawElements] },
 			options: this.options,
@@ -326,8 +326,6 @@ export class ControlButtonLayered
 			steps: this.entities.asNormalButtonSteps(),
 			localVariables: this.entities.getLocalVariableEntities().map((ent) => ent.asEntityModel(true)),
 		}
-
-		return clone ? structuredClone(obj) : obj
 	}
 
 	/**

@@ -16,7 +16,6 @@ export interface ControlActionStepTabProps {
 	service: IControlActionStepsAndSetsService
 	controlId: SomeControlId
 	location: ControlLocation
-	runtimeProps: Record<string, any>
 	rotaryActions: boolean
 	stepKeys: string[]
 	selectedIndex: number

@@ -26,7 +26,7 @@ const MAX_BATCH_LOCATIONS = 4096
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createControlsTrpcRouter(
 	logger: Logger,
-	controlsMap: Map<string, SomeControl<any>>,
+	controlsMap: Map<string, SomeControl>,
 	pageStore: IPageStore,
 	instanceDefinitions: InstanceDefinitions,
 	controlEvents: EventEmitter<ControlCommonEvents>,
@@ -213,7 +213,7 @@ export function createControlsTrpcRouter(
 					if (placement.kind !== 'clone' || clonedJson.has(placement.sourceControlId)) continue
 
 					const control = controlsMap.get(placement.sourceControlId)
-					if (control) clonedJson.set(placement.sourceControlId, control.toJSON(true) as SomeButtonModel)
+					if (control) clonedJson.set(placement.sourceControlId, structuredClone(control.toJSON()) as SomeButtonModel)
 				}
 
 				// Where each control being moved started, so a change of page can be reported to it

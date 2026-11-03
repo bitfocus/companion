@@ -6,6 +6,7 @@ import type {
 	SomeButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { NoRuntimeProps } from '@companion-app/shared/Model/Controls.js'
 import { exprVal, isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { ParseLocationString } from '../../../Internal/Util.js'
@@ -47,7 +48,7 @@ import { MirrorButtonDrawer } from './MirrorButtonDrawer.js'
  * this program.
  */
 export class ControlButtonReference
-	extends ControlBase<ButtonReferenceButtonModel, BankControlId>
+	extends ControlBase<BankControlId, ButtonReferenceButtonModel, NoRuntimeProps>
 	implements
 		ControlWithoutLayeredStyle,
 		ControlWithoutEntities,
@@ -201,7 +202,7 @@ export class ControlButtonReference
 		const targetControlId = this.getReferenceTargetControlId()
 		const target = targetControlId ? this.deps.controlsAccessor.getControl(targetControlId) : undefined
 		if (target) {
-			return structuredClone(target.toJSON(true)) as SomeButtonModel
+			return structuredClone(target.toJSON()) as SomeButtonModel
 		}
 
 		const blank: LayeredButtonModel = {
@@ -250,6 +251,10 @@ export class ControlButtonReference
 
 	triggerLocationHasChanged(): void {
 		this.#drawing.invalidate()
+	}
+
+	toRuntimeJSON(): NoRuntimeProps {
+		return {}
 	}
 
 	toJSON(clone = true): ButtonReferenceButtonModel {

@@ -4,7 +4,6 @@ import React, { useCallback, useContext, useState } from 'react'
 import type { TriggerControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
-import { StaticAlert } from '~/Components/Alert.js'
 import { Button } from '~/Components/Button.js'
 import { TabArea } from '~/Components/TabArea.js'
 import { TextInputFieldSimple } from '~/Components/TextInputField.js'
@@ -38,13 +37,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JS
 			<LoadingRetryOrError dataReady={dataReady} error={loadError} doRetry={reloadConfig} design="pulse" />
 			{controlConfig ? (
 				<div className="flex-1 min-h-0 flex flex-col overflow-hidden" style={{ display: dataReady ? '' : 'none' }}>
-					{controlConfig.config.type === 'trigger' ? (
-						<TriggerPanelContent config={controlConfig.config} controlId={controlId} />
-					) : (
-						<StaticAlert color="danger">
-							Invalid control type: {controlConfig.config.type}. Expected 'trigger'.
-						</StaticAlert>
-					)}
+					<TriggerPanelContent config={controlConfig.config} controlId={controlId} />
 				</div>
 			) : (
 				''

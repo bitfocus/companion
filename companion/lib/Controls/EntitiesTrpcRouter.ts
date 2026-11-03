@@ -30,14 +30,14 @@ const zodEntityOwner: z.ZodSchema<EntityOwner> = z.object({
  * Narrows the pool union on its `isEditable` discriminant - on a read-only control (e.g. a preset reference)
  * the pool is the read-only type and genuinely lacks the mutators, so this is where the edits are gated.
  */
-function getEditableEntities(control: SomeControl<any>): EditableEntityListPool {
+function getEditableEntities(control: SomeControl): EditableEntityListPool {
 	if (control.supportsEntities && control.entities.isEditable) return control.entities
 	throw new Error(`Control "${control.controlId}" does not support editing entities`)
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createEntitiesTrpcRouter(
-	controlsMap: Map<string, SomeControl<any>>,
+	controlsMap: Map<string, SomeControl>,
 	instanceDefinitions: InstanceDefinitions,
 	activeLearningStore: ActiveLearningStore
 ) {

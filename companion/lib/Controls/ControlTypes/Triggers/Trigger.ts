@@ -4,6 +4,7 @@ import type { JsonValue } from 'type-fest'
 import type { TriggerControlId } from '@companion-app/shared/ControlId.js'
 import { diffObject } from '@companion-app/shared/Diff.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
+import type { NoRuntimeProps } from '@companion-app/shared/Model/Controls.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ClientTriggerData, TriggerModel, TriggerOptions } from '@companion-app/shared/Model/TriggerModel.js'
@@ -47,7 +48,7 @@ import { TriggerExecutionSource } from './TriggerExecutionSource.js'
  * this program.
  */
 export class ControlTrigger
-	extends ControlBase<TriggerModel, TriggerControlId>
+	extends ControlBase<TriggerControlId, TriggerModel, NoRuntimeProps>
 	implements
 		ControlWithActions,
 		ControlWithEvents,
@@ -314,6 +315,10 @@ export class ControlTrigger
 	 * To be sent to the client and written to the db
 	 * @param clone - Whether to return a cloned object
 	 */
+	toRuntimeJSON(): NoRuntimeProps {
+		return {}
+	}
+
 	toJSON(clone = true): TriggerModel {
 		const obj: TriggerModel = {
 			type: this.type,

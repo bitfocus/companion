@@ -58,7 +58,7 @@ const UNCONFIGURED_STATE: LinkButtonState = {
  * this program.
  */
 export class ControlButtonLink
-	extends ControlBase<LinkButtonModel, BankControlId>
+	extends ControlBase<BankControlId, LinkButtonModel, LinkButtonRuntimeProps>
 	implements
 		ControlWithoutLayeredStyle,
 		ControlWithoutEntities,

@@ -9,13 +9,13 @@ import type { SomeControl } from './IControlFragments.js'
  * `isEditable` discriminant - read-only controls (e.g. a preset reference) keep the runtime-only surface and
  * lack the mutators, so this is where the structural step/action-set edits are gated.
  */
-function getEditableActionSets(control: SomeControl<any>): ControlActionSetAndStepsEditor {
+function getEditableActionSets(control: SomeControl): ControlActionSetAndStepsEditor {
 	if (control.supportsActionSets && control.actionSets.isEditable) return control.actionSets
 	throw new Error(`Control "${control.controlId}" does not support this operation`)
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function createActionSetsTrpcRouter(controlsMap: Map<SomeControlId, SomeControl<any>>) {
+export function createActionSetsTrpcRouter(controlsMap: Map<SomeControlId, SomeControl>) {
 	return router({
 		add: publicProcedure
 			.input(

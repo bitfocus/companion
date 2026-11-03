@@ -1,6 +1,7 @@
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { LinkButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { LinkButtonRuntimeProps } from '@companion-app/shared/Model/Link.js'
 import { useControlNotesSetter, useNotesEditor } from '~/Controls/useNotesEditor.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
 import { ControlHotPressButtons } from './ControlHotPressButtons.js'
@@ -11,7 +12,7 @@ interface LinkButtonPanelProps {
 	controlId: SomeControlId
 	location: ControlLocation
 	config: LinkButtonModel
-	runtimeProps: Record<string, any>
+	runtimeProps: LinkButtonRuntimeProps
 }
 
 export function LinkButtonPanel({

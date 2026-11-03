@@ -6,7 +6,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GetStepIds } from '@companion-app/shared/Controls.js'
 import type { ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
-import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
+import type { NormalButtonRuntimeProps, NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { Button } from '~/Components/Button'
 import { DuplicateIcon } from '~/Components/DuplicateIcon.js'
@@ -46,7 +46,7 @@ interface ButtonEditorTabsProps {
 	location: ControlLocation
 	steps: NormalButtonSteps
 	disabledSetStep: boolean
-	runtimeProps: Record<string, any>
+	runtimeProps: NormalButtonRuntimeProps
 	rotaryActions: boolean
 	localVariablesStore: LocalVariablesStore
 	/** From useButtonEditorMainTab; the tab bar itself is rendered in the edit button summary card */
@@ -189,7 +189,6 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 								service={service}
 								controlId={controlId}
 								location={location}
-								runtimeProps={runtimeProps}
 								rotaryActions={rotaryActions}
 								stepKeys={stepKeys}
 								selectedIndex={selectedIndex}

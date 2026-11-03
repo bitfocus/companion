@@ -1,6 +1,13 @@
 import { nanoid } from 'nanoid'
 import type { BankControlId } from '@companion-app/shared/ControlId.js'
-import type { LayeredButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type {
+	LayeredButtonModel,
+	PageDownButtonModel,
+	PageNumberButtonModel,
+	PageUpButtonModel,
+	SomeButtonModel,
+} from '@companion-app/shared/Model/ButtonModel.js'
+import type { NoRuntimeProps } from '@companion-app/shared/Model/Controls.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
@@ -33,8 +40,8 @@ import { LayeredButtonDrawer } from './Button/LayeredButtonDrawer.js'
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export abstract class ControlButtonPage<TJson>
-	extends ControlBase<TJson, BankControlId>
+export abstract class ControlButtonPage<TJson extends PageUpButtonModel | PageDownButtonModel | PageNumberButtonModel>
+	extends ControlBase<BankControlId, TJson, NoRuntimeProps>
 	implements
 		ControlWithConvert,
 		ControlWithoutActions,
@@ -117,6 +124,10 @@ export abstract class ControlButtonPage<TJson>
 
 	renameVariables(_labelFrom: string, _labelTo: string): void {
 		// Nothing to do
+	}
+
+	toRuntimeJSON(): NoRuntimeProps {
+		return {}
 	}
 
 	abstract convertControl(): SomeButtonModel

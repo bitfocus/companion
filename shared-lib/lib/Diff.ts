@@ -14,8 +14,9 @@ export type ObjectPatch<T> = ObjectPatchOperation[] & { readonly __target?: T }
 
 /**
  * Diff two versions of an object. Arrays are compared index by index, so only grow or shrink at the end.
+ * With no old value, the patch replaces the whole object.
  */
-export function diffObject<T>(oldValue: T, newValue: T): ObjectPatch<T> {
+export function diffObject<T>(oldValue: T | undefined, newValue: T): ObjectPatch<T> {
 	const patch: ObjectPatchOperation[] = []
 	diffValue(patch, [], oldValue, newValue)
 	return patch

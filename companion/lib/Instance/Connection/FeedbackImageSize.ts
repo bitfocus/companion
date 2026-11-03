@@ -14,7 +14,7 @@ const moduleFeedbackSize = { width: 72, height: 72 - ButtonDecorationRenderer.DE
  * much still draws, and whose advanced feedbacks must still be given a size to render into.
  */
 export function getFeedbackImageSizeForControl(
-	control: SomeControl<any> | undefined
+	control: SomeControl | undefined
 ): { width: number; height: number } | undefined {
 	return control?.drawing ? moduleFeedbackSize : undefined
 }

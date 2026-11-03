@@ -18,18 +18,18 @@ export interface IControlStore {
 	/**
 	 * Get a single control by id
 	 */
-	getControl(controlId: SomeControlId): SomeControl<any> | undefined
+	getControl(controlId: SomeControlId): SomeControl | undefined
 
 	/**
 	 * Get a control by id, following button-references through to the control they currently mirror.
 	 * Returns undefined for an unresolved reference or a reference cycle
 	 */
-	getControlFollowingReferences(controlId: SomeControlId | null): SomeControl<any> | undefined
+	getControlFollowingReferences(controlId: SomeControlId | null): SomeControl | undefined
 
 	/**
 	 * Get all populated controls
 	 */
-	getAllControls(): ReadonlyMap<SomeControlId, SomeControl<any>>
+	getAllControls(): ReadonlyMap<SomeControlId, SomeControl>
 
 	/**
 	 * Remove any tracked state for a connection across all controls

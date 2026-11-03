@@ -3,10 +3,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import './EditButton.css'
 import { observer } from 'mobx-react-lite'
 import { useContext } from 'react'
-import type { SomeControlId } from '@companion-app/shared/ControlId.js'
+import type { BankControlId } from '@companion-app/shared/ControlId.js'
+import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import type { SomeControlModel } from '@companion-app/shared/Model/Controls.js'
-import { StaticAlert } from '~/Components/Alert.js'
+import type { UIControlState } from '@companion-app/shared/Model/Controls.js'
 import '~/Layout/PanelEmptyState.css'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { MyErrorBoundary } from '~/Resources/Error.js'
@@ -47,8 +47,7 @@ export const EditButton = observer(function EditButton({ location, onKeyUp, navi
 						<EditButtonPanel
 							controlId={controlId}
 							location={location}
-							config={controlConfig.config}
-							runtimeProps={controlConfig.runtime}
+							control={controlConfig}
 							navigateToControl={navigateToControl}
 						/>
 					)}
@@ -70,52 +69,54 @@ export const EditButton = observer(function EditButton({ location, onKeyUp, navi
 })
 
 interface EditButtonPanelProps {
-	controlId: SomeControlId
+	controlId: BankControlId
 	location: ControlLocation
-	config: SomeControlModel
-	runtimeProps: Record<string, any>
+	control: UIControlState<SomeButtonModel>
 	navigateToControl: ((location: ControlLocation) => void) | undefined
 }
 
 function EditButtonPanel({
 	controlId,
 	location,
-	config,
-	runtimeProps,
+	control,
 	navigateToControl,
 }: EditButtonPanelProps): React.JSX.Element | null {
-	switch (config.type) {
+	switch (control.type) {
 		case 'button-layered':
 			return (
-				<LayeredButtonPanel controlId={controlId} location={location} config={config} runtimeProps={runtimeProps} />
+				<LayeredButtonPanel
+					controlId={controlId}
+					location={location}
+					config={control.config}
+					runtimeProps={control.runtime}
+				/>
 			)
 		case 'preset-reference':
-			return <PresetReferencePanel controlId={controlId} location={location} config={config} />
+			return <PresetReferencePanel controlId={controlId} location={location} config={control.config} />
 		case 'button-reference':
 			return (
 				<ButtonReferencePanel
 					controlId={controlId}
 					location={location}
-					config={config}
+					config={control.config}
 					navigateToControl={navigateToControl}
 				/>
 			)
 		case 'link-button':
-			return <LinkButtonPanel controlId={controlId} location={location} config={config} runtimeProps={runtimeProps} />
+			return (
+				<LinkButtonPanel
+					controlId={controlId}
+					location={location}
+					config={control.config}
+					runtimeProps={control.runtime}
+				/>
+			)
 		case 'pageup':
 		case 'pagedown':
 		case 'pagenum':
-			return <PageButtonPanel controlId={controlId} location={location} type={config.type} />
-		case 'trigger':
-		case 'expression-variable':
-		case 'page':
-			return (
-				<StaticAlert color="warning">
-					An incompatible control was selected! This is likely a bug, please report it.
-				</StaticAlert>
-			)
+			return <PageButtonPanel controlId={controlId} location={location} type={control.type} />
 		default:
-			assertNever(config)
+			assertNever(control)
 			return null
 	}
 }
