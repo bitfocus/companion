@@ -1,4 +1,5 @@
 import debounceFn from 'debounce-fn'
+import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import { FONTSIZE_SHRINK_DEFAULT } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { LinkButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -152,7 +153,7 @@ function makePlaceholderElements(
  */
 export class LinkButtonDrawer implements IButtonDrawer {
 	readonly #deps: ControlDependencies
-	readonly #controlId: string
+	readonly #controlId: BankControlId
 	readonly #getState: () => LinkButtonState
 	readonly #getOptions: () => LinkButtonModel['options']
 
@@ -160,7 +161,7 @@ export class LinkButtonDrawer implements IButtonDrawer {
 
 	constructor(
 		deps: ControlDependencies,
-		controlId: string,
+		controlId: BankControlId,
 		getState: () => LinkButtonState,
 		getOptions: () => LinkButtonModel['options']
 	) {
@@ -248,7 +249,7 @@ export class LinkButtonDrawer implements IButtonDrawer {
  * drawn depends on the size it is drawn at, so it is fetched then, from the remote image store
  */
 function makeRemoteElement(
-	controlId: string,
+	controlId: BankControlId,
 	remoteKey: string | null,
 	images: readonly LinkButtonImage[]
 ): ButtonGraphicsRemoteDrawElement {

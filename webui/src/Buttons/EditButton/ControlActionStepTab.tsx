@@ -1,5 +1,6 @@
 import { faHandPointer, faPlus, faRotateLeft, faRotateRight } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { NormalButtonSteps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
@@ -13,7 +14,7 @@ import { EditActionsRelease } from './EditActionsRelease.js'
 
 export interface ControlActionStepTabProps {
 	service: IControlActionStepsAndSetsService
-	controlId: string
+	controlId: SomeControlId
 	location: ControlLocation
 	runtimeProps: Record<string, any>
 	rotaryActions: boolean

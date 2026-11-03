@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
-import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
+import { CreateBankControlId, CreateTriggerControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ExportInstances, ExportPageContent } from '@companion-app/shared/Model/Export/Latest.js'
 import type { ClientImportOrResetSelection, ImportOrResetType } from '@companion-app/shared/Model/ImportExport.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'
@@ -110,7 +110,7 @@ const oneConnection: ExportInstances = {
 describe('importSinglePage', () => {
 	test('creates new connections, resets the target page and imports its controls', async () => {
 		const { controller, controls, graphics, instance, page } = createImportController()
-		page.resetPage.mockReturnValue(['discarded-control'])
+		page.resetPage.mockReturnValue([CreateBankControlId('discarded-control')])
 
 		const pageInfo = pageControls({ 0: { 0: { type: 'pagenum' } }, 1: { 2: { type: 'pageup' } } })
 
@@ -126,7 +126,7 @@ describe('importSinglePage', () => {
 
 		// The old page was reset and its discarded controls deleted
 		expect(page.resetPage).toHaveBeenCalledWith(3)
-		expect(controls.deleteControl).toHaveBeenCalledWith('discarded-control')
+		expect(controls.deleteControl).toHaveBeenCalledWith(CreateBankControlId('discarded-control'))
 		expect(graphics.clearAllForPage).toHaveBeenCalledWith(3)
 		expect(page.setPageName).toHaveBeenCalledWith(3, 'Imported Page')
 
@@ -218,28 +218,30 @@ describe('importTriggers', () => {
 
 		const importedId = controls.importTrigger.mock.calls[0][0]
 		expect(importedId).not.toBe(CreateTriggerControlId('t1'))
-		expect(importedId.startsWith('trigger:')).toBe(true)
+		expect(importedId.startsWith(CreateTriggerControlId(''))).toBe(true)
 	})
 
 	test('replaceExisting deletes existing trigger controls first', () => {
 		const { controller, controls } = createImportController()
 		controls.getAllControls.mockReturnValue(
-			new Map<string, any>([
-				['trigger:existing', { type: 'trigger' }],
-				['bank:keep', { type: 'button' }],
+			new Map<SomeControlId, any>([
+				[CreateTriggerControlId('existing'), { type: 'trigger' }],
+				[CreateBankControlId('keep'), { type: 'button' }],
 			])
 		)
 
 		controller.importTriggers(undefined, {}, oneTrigger, ['t1'], true)
 
 		// Only the existing trigger is deleted, not the button
-		expect(controls.deleteControl).toHaveBeenCalledWith('trigger:existing')
-		expect(controls.deleteControl).not.toHaveBeenCalledWith('bank:keep')
+		expect(controls.deleteControl).toHaveBeenCalledWith(CreateTriggerControlId('existing'))
+		expect(controls.deleteControl).not.toHaveBeenCalledWith(CreateBankControlId('keep'))
 	})
 
 	test('replaceExisting=false leaves existing controls untouched', () => {
 		const { controller, controls } = createImportController()
-		controls.getAllControls.mockReturnValue(new Map<string, any>([['trigger:existing', { type: 'trigger' }]]))
+		controls.getAllControls.mockReturnValue(
+			new Map<SomeControlId, any>([[CreateTriggerControlId('existing'), { type: 'trigger' }]])
+		)
 
 		controller.importTriggers(undefined, {}, oneTrigger, ['t1'], false)
 

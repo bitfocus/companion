@@ -1,5 +1,6 @@
 import debounceFn from 'debounce-fn'
 import { nanoid } from 'nanoid'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
 	type ActionEntityModel,
@@ -37,7 +38,7 @@ interface EntityWrapper {
 	/** A unique id for this wrapper, so that we know if the entity was replaced/deleted */
 	readonly wrapperId: string
 	readonly entity: WeakRef<ControlEntityInstance>
-	readonly controlId: string
+	readonly controlId: SomeControlId
 
 	state: EntityState
 	lastReferencedVariableIds?: ReadonlySet<string>
@@ -46,12 +47,12 @@ interface EntityWrapper {
 }
 
 export interface EntityManagerActionEntity {
-	controlId: string
+	controlId: SomeControlId
 	entity: ActionEntityModel
 	parsedOptions: CompanionOptionValues
 }
 export interface EntityManagerFeedbackEntity {
-	controlId: string
+	controlId: SomeControlId
 	entity: FeedbackEntityModel
 	parsedOptions: CompanionOptionValues
 }
@@ -513,7 +514,7 @@ export class ConnectionEntityManager {
 	 * This will ensure that the entity is processed and sent to the module for subscription callbacks.
 	 * If the entity already exists, it will be replaced and the new entity will be processed as needed.
 	 */
-	trackEntity(entity: ControlEntityInstance, controlId: string): void {
+	trackEntity(entity: ControlEntityInstance, controlId: SomeControlId): void {
 		// This may replace an existing entity, if so it needs to restart the process
 		this.#entities.set(entity.id, {
 			wrapperId: nanoid(),
@@ -579,7 +580,7 @@ export class ConnectionEntityManager {
 	 * Inform the entity manager that some variables have changed.
 	 * This will cause any entities that reference those variables to be re-parsed and sent to the module.
 	 */
-	onVariablesChanged(variableIds: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+	onVariablesChanged(variableIds: ReadonlySet<string>, controlIdFilter: ReadonlySet<SomeControlId> | null): void {
 		let anyInvalidated = false
 
 		const checkEntities = (wrappers: Iterable<EntityWrapper>) => {

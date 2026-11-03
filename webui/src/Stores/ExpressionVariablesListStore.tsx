@@ -1,4 +1,5 @@
 import { action, observable } from 'mobx'
+import type { ExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
 import { applyObjectPatch } from '@companion-app/shared/Diff.js'
 import type {
 	ClientExpressionVariableData,
@@ -8,7 +9,7 @@ import type {
 import { assertNever } from '~/Resources/util'
 
 export class ExpressionVariablesListStore {
-	readonly expressionVariables = observable.map<string, ClientExpressionVariableData>()
+	readonly expressionVariables = observable.map<ExpressionVariableControlId, ClientExpressionVariableData>()
 	readonly collections = observable.map<string, ExpressionVariableCollection>()
 
 	public updateDefinitions = action((change: ExpressionVariableUpdate | null) => {

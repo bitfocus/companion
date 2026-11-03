@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId, useMemo } from 'react'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import {
 	BUTTON_DECORATION_CHOICES,
 	BUTTON_STATUS_ICONS_CHOICES,
@@ -24,7 +25,7 @@ import { linkPeerChoices, STATUS_EXPLANATIONS } from './LinkPeerChoices.js'
 
 interface LinkButtonEditorProps {
 	config: LinkButtonModel
-	controlId: string
+	controlId: SomeControlId
 	runtimeProps: Record<string, any> | false
 }
 

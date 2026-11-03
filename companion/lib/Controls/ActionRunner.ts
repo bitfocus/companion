@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { assertNever, type JsonValue } from '@companion-module/host'
 import type { RunActionExtras } from '../Instance/Connection/ChildHandlerApi.js'
@@ -209,7 +210,7 @@ interface GroupedActionEntityModels {
 export class ControlActionRunner {
 	readonly #logger: Logger
 	readonly #actionRunner: ActionRunner
-	readonly #controlId: string
+	readonly #controlId: SomeControlId
 	readonly #triggerRedraw: () => void
 
 	readonly #runningChains = new Map<string, AbortController>()
@@ -218,7 +219,7 @@ export class ControlActionRunner {
 		return this.#runningChains.size > 0
 	}
 
-	constructor(actionRunner: ActionRunner, controlId: string, triggerRedraw: () => void) {
+	constructor(actionRunner: ActionRunner, controlId: SomeControlId, triggerRedraw: () => void) {
 		this.#logger = LogController.createLogger(`Control/ActionRunner/${controlId}`)
 		this.#actionRunner = actionRunner
 		this.#controlId = controlId

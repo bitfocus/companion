@@ -47,7 +47,7 @@ export class VariablesCustomVariable extends EventEmitter<VariablesCustomVariabl
 	 */
 	#custom_variables: CustomVariablesModel
 
-	readonly #dbTable: DataStoreSchemaTableView<typeof CustomVariableDefinitionSchema>
+	readonly #dbTable: DataStoreSchemaTableView<typeof CustomVariableDefinitionSchema, string>
 
 	readonly #events = new EventEmitter<{ update: [CustomVariableUpdate[]] }>()
 

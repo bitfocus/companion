@@ -1,4 +1,5 @@
 import type { JsonValue } from 'type-fest'
+import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import type {
 	LayeredButtonModel,
 	LayeredButtonOptions,
@@ -99,7 +100,12 @@ export class ControlButtonPresetReference
 		return this.#presetId
 	}
 
-	constructor(deps: ControlDependencies, controlId: string, storage: PresetReferenceButtonModel, isImport: boolean) {
+	constructor(
+		deps: ControlDependencies,
+		controlId: BankControlId,
+		storage: PresetReferenceButtonModel,
+		isImport: boolean
+	) {
 		super(deps, controlId, `Controls/Button/PresetReference/${controlId}`, true, ControlEntityListPoolButton)
 
 		if (storage.type !== 'preset-reference')

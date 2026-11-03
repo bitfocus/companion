@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { ButtonModelBase } from '@companion-app/shared/Model/ButtonModel.js'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ControlEntityListChangeProps } from '../../../lib/Controls/Entities/EntityListPoolBase.js'
@@ -269,9 +270,13 @@ describe('EntityListPool - destroy', () => {
 
 describe('EntityListPool - read-only by construction', () => {
 	test('the isEditable discriminant distinguishes the two pools', () => {
-		const readonly = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'disc0' }).deps, vi.fn(), true)
+		const readonly = new ControlEntityListPoolButton(
+			createPoolDeps({ controlId: CreateBankControlId('disc0') }).deps,
+			vi.fn(),
+			true
+		)
 		const editable = new EditableControlEntityListPoolButton(
-			createPoolDeps({ controlId: 'disc1' }).deps,
+			createPoolDeps({ controlId: CreateBankControlId('disc1') }).deps,
 			vi.fn(),
 			vi.fn(),
 			true
@@ -282,7 +287,11 @@ describe('EntityListPool - read-only by construction', () => {
 	})
 
 	test('the read-only pool structurally lacks the edit mutators', () => {
-		const pool = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'ro00' }).deps, vi.fn(), true)
+		const pool = new ControlEntityListPoolButton(
+			createPoolDeps({ controlId: CreateBankControlId('ro00') }).deps,
+			vi.fn(),
+			true
+		)
 
 		// Compile-time: these properties do not exist on the read-only pool type.
 		// Runtime: confirm they are genuinely absent (not merely guarded).
@@ -298,7 +307,7 @@ describe('EntityListPool - read-only by construction', () => {
 
 	test('the editable pool has working edit mutators', () => {
 		const pool = new EditableControlEntityListPoolButton(
-			createPoolDeps({ controlId: 'rw00' }).deps,
+			createPoolDeps({ controlId: CreateBankControlId('rw00') }).deps,
 			vi.fn(),
 			vi.fn(),
 			true
@@ -312,7 +321,11 @@ describe('EntityListPool - read-only by construction', () => {
 	test('a local variable value can still be set on the read-only pool', () => {
 		// Setting a local variable's value is runtime state, not configuration - a preset reference must be
 		// able to drive its own local variables from the actions the preset carries.
-		const pool = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'ro02' }).deps, vi.fn(), true)
+		const pool = new ControlEntityListPoolButton(
+			createPoolDeps({ controlId: CreateBankControlId('ro02') }).deps,
+			vi.fn(),
+			true
+		)
 
 		const variable = feedbackModel({ connectionId: 'internal', definitionId: 'user_value', variableName: 'tap' })
 		pool.loadStorage({ feedbacks: [], steps: {}, localVariables: [variable] }, true, false)
@@ -322,7 +335,11 @@ describe('EntityListPool - read-only by construction', () => {
 	})
 
 	test('loading and runtime step navigation work on the read-only pool', () => {
-		const pool = new ControlEntityListPoolButton(createPoolDeps({ controlId: 'ro01' }).deps, vi.fn(), true)
+		const pool = new ControlEntityListPoolButton(
+			createPoolDeps({ controlId: CreateBankControlId('ro01') }).deps,
+			vi.fn(),
+			true
+		)
 
 		// Loading the cached data must work on a read-only pool
 		expect(() => pool.loadStorage({ feedbacks: [], steps: {}, localVariables: [] }, true, false)).not.toThrow()
@@ -401,7 +418,9 @@ describe('EntityListPool - updateIsInvertedValues (button)', () => {
 		pool.entityAdd('feedbacks', null, feedback)
 		reportChange.mockClear()
 
-		pool.updateIsInvertedValues(new Map([[feedback.id, { entityId: feedback.id, controlId: '', value: true }]]))
+		pool.updateIsInvertedValues(
+			new Map([[feedback.id, { entityId: feedback.id, controlId: CreateBankControlId('test'), value: true }]])
+		)
 
 		expect(reportChange).toHaveBeenCalledWith({ redraw: true, noSave: true, changedElementIds: undefined })
 	})
@@ -411,7 +430,9 @@ describe('EntityListPool - updateIsInvertedValues (button)', () => {
 		pool.entityAdd('feedbacks', null, feedbackModel())
 		reportChange.mockClear()
 
-		pool.updateIsInvertedValues(new Map([['unrelated-id', { entityId: 'unrelated-id', controlId: '', value: true }]]))
+		pool.updateIsInvertedValues(
+			new Map([['unrelated-id', { entityId: 'unrelated-id', controlId: CreateBankControlId('test'), value: true }]])
+		)
 
 		expect(reportChange).not.toHaveBeenCalled()
 	})
@@ -425,7 +446,9 @@ describe('EntityListPool - updateStoreResultValues (button)', () => {
 		reportChange.mockClear()
 
 		expect(() =>
-			pool.updateStoreResultValues(new Map([[action.id, { entityId: action.id, controlId: '', value: undefined }]]))
+			pool.updateStoreResultValues(
+				new Map([[action.id, { entityId: action.id, controlId: CreateBankControlId('test'), value: undefined }]])
+			)
 		).not.toThrow()
 	})
 })

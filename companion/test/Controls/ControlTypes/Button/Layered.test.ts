@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import {
 	EntityModelType,
@@ -15,7 +16,7 @@ import type { NewSpecialExpressionValue } from '../../../../lib/Controls/Entitie
 import type { NewFeedbackValue } from '../../../../lib/Controls/Entities/Types.js'
 import { ReferencedLocationsIndex } from '../../../../lib/Controls/ReferencedLocationsIndex.js'
 
-const CONTROL_ID = 'ctrl1'
+const CONTROL_ID = CreateBankControlId('ctrl1')
 const CONNECTION_ID = 'conn01'
 const STYLE_ELEMENT_CHANGED = 'layeredStyleElementChanged'
 const DEFAULT_ELEMENT_IDS = ['canvas', 'box0', 'text0']
@@ -82,7 +83,7 @@ function makeStorage(
 function feedbackValues(values: Record<string, any>): Map<string, NewFeedbackValue> {
 	const map = new Map<string, NewFeedbackValue>()
 	for (const [entityId, value] of Object.entries(values)) {
-		map.set(entityId, { entityId, controlId: '', value })
+		map.set(entityId, { entityId, controlId: CreateBankControlId('test'), value })
 	}
 	return map
 }
@@ -90,7 +91,7 @@ function feedbackValues(values: Record<string, any>): Map<string, NewFeedbackVal
 function invertedValues(values: Record<string, boolean>): Map<string, NewSpecialExpressionValue<'isInverted'>> {
 	const map = new Map<string, NewSpecialExpressionValue<'isInverted'>>()
 	for (const [entityId, value] of Object.entries(values)) {
-		map.set(entityId, { entityId, controlId: '', value })
+		map.set(entityId, { entityId, controlId: CreateBankControlId('test'), value })
 	}
 	return map
 }

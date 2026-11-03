@@ -5,6 +5,7 @@ import path from 'node:path'
 import fs from 'fs-extra'
 import { nanoid } from 'nanoid'
 import PQueue from 'p-queue'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { ModuleInstanceType, type InstanceConfig } from '@companion-app/shared/Model/Instance.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
@@ -274,7 +275,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 	 */
 	onVariablesChanged(
 		all_changed_variables_set: ReadonlySet<string>,
-		controlIdFilter: ReadonlySet<string> | null
+		controlIdFilter: ReadonlySet<SomeControlId> | null
 	): void {
 		// Only connections on the legacy flow need an array, so build it on demand and share it between them
 		let changedVariableIds: string[] | undefined
@@ -984,7 +985,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 		}
 	}
 
-	async connectionEntityUpdate(entity: ControlEntityInstance, controlId: string): Promise<boolean> {
+	async connectionEntityUpdate(entity: ControlEntityInstance, controlId: SomeControlId): Promise<boolean> {
 		const connection = this.getConnectionChild(entity.connectionId, true)
 		if (!connection) return false
 
@@ -992,7 +993,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 
 		return true
 	}
-	async connectionEntityDelete(entityModel: SomeEntityModel, _controlId: string): Promise<boolean> {
+	async connectionEntityDelete(entityModel: SomeEntityModel, _controlId: SomeControlId): Promise<boolean> {
 		const connection = this.getConnectionChild(entityModel.connectionId, true)
 		if (!connection) return false
 
@@ -1002,7 +1003,7 @@ export class InstanceProcessManager extends EventEmitter<InstanceProcessManagerE
 	}
 	async connectionEntityLearnOptions(
 		entityModel: SomeEntityModel,
-		controlId: string,
+		controlId: SomeControlId,
 		signal: AbortSignal
 	): Promise<ExpressionableOptionsObject | undefined | void> {
 		const connection = this.getConnectionChild(entityModel.connectionId)

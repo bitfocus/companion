@@ -3,6 +3,7 @@ import supertest from 'supertest'
 import type { JsonValue } from 'type-fest'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientConnectionConfig } from '../../../shared-lib/lib/Model/Connections.js'
 import { InstanceVersionUpdatePolicy, ModuleInstanceType } from '../../../shared-lib/lib/Model/Instance.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
@@ -345,7 +346,7 @@ describe('HttpApi', () => {
 
 			test('ok', async () => {
 				const { app, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
@@ -360,7 +361,7 @@ describe('HttpApi', () => {
 					column: 3,
 				})
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.pressControl).toHaveBeenCalledWith('control123', true, 'http')
+				expect(serviceApi.pressControl).toHaveBeenCalledWith(CreateBankControlId('control123'), true, 'http')
 			})
 
 			test('bad page', async () => {
@@ -442,7 +443,7 @@ describe('HttpApi', () => {
 
 			test('ok', async () => {
 				const { app, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
@@ -457,7 +458,7 @@ describe('HttpApi', () => {
 					column: 3,
 				})
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.pressControl).toHaveBeenCalledWith('control123', false, 'http')
+				expect(serviceApi.pressControl).toHaveBeenCalledWith(CreateBankControlId('control123'), false, 'http')
 			})
 
 			test('bad page', async () => {
@@ -543,7 +544,7 @@ describe('HttpApi', () => {
 
 			test('ok', async () => {
 				const { app, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
@@ -558,12 +559,12 @@ describe('HttpApi', () => {
 					column: 3,
 				})
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.pressControl).toHaveBeenCalledWith('control123', true, 'http')
+				expect(serviceApi.pressControl).toHaveBeenCalledWith(CreateBankControlId('control123'), true, 'http')
 
 				vi.advanceTimersByTime(100)
 
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(2)
-				expect(serviceApi.pressControl).toHaveBeenLastCalledWith('control123', false, 'http')
+				expect(serviceApi.pressControl).toHaveBeenLastCalledWith(CreateBankControlId('control123'), false, 'http')
 			})
 
 			test('bad page', async () => {
@@ -645,7 +646,7 @@ describe('HttpApi', () => {
 
 			test('ok', async () => {
 				const { app, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
@@ -660,7 +661,7 @@ describe('HttpApi', () => {
 					column: 3,
 				})
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', -1, 'http')
+				expect(serviceApi.rotateControl).toHaveBeenCalledWith(CreateBankControlId('control123'), -1, 'http')
 			})
 
 			test('bad page', async () => {
@@ -742,7 +743,7 @@ describe('HttpApi', () => {
 
 			test('ok', async () => {
 				const { app, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
@@ -757,7 +758,7 @@ describe('HttpApi', () => {
 					column: 3,
 				})
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', 1, 'http')
+				expect(serviceApi.rotateControl).toHaveBeenCalledWith(CreateBankControlId('control123'), 1, 'http')
 			})
 
 			test('bad page', async () => {
@@ -838,7 +839,7 @@ describe('HttpApi', () => {
 
 			test('no payload', async () => {
 				const { app, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('test')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('test'))
 
 				const mockControl = mock<ServiceApiControl>(
 					{
@@ -860,7 +861,7 @@ describe('HttpApi', () => {
 					column: 3,
 				})
 				expect(serviceApi.getControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControl).toHaveBeenCalledWith('test')
+				expect(serviceApi.getControl).toHaveBeenCalledWith(CreateBankControlId('test'))
 
 				expect(mockControl.setCurrentStep).toHaveBeenCalledTimes(1)
 				expect(mockControl.setCurrentStep).toHaveBeenCalledWith(NaN)
@@ -868,7 +869,7 @@ describe('HttpApi', () => {
 
 			test('ok', async () => {
 				const { app, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 
 				const mockControl = mock<ServiceApiControl>(
 					{
@@ -967,7 +968,7 @@ describe('HttpApi', () => {
 
 			test('control without style', async () => {
 				const { app, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('abc')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('abc'))
 
 				serviceApi.getControl.mockReturnValue({ abc: null } as any)
 
@@ -984,7 +985,7 @@ describe('HttpApi', () => {
 				})
 
 				expect(serviceApi.getControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControl).toHaveBeenCalledWith('abc')
+				expect(serviceApi.getControl).toHaveBeenCalledWith(CreateBankControlId('abc'))
 			})
 
 			test('bad page', async () => {
@@ -1043,7 +1044,7 @@ describe('HttpApi', () => {
 
 			async function testSetStyle(queryStr: string, body: JsonValue | undefined, expected: Record<string, any> | null) {
 				const { app, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('abc')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('abc'))
 
 				const mockControl = mock<ServiceApiControl>(
 					{
@@ -1071,7 +1072,7 @@ describe('HttpApi', () => {
 				})
 
 				expect(serviceApi.getControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControl).toHaveBeenCalledWith('abc')
+				expect(serviceApi.getControl).toHaveBeenCalledWith(CreateBankControlId('abc'))
 
 				if (expected) {
 					expect(mockControl.setStyleFields).toHaveBeenCalledTimes(1)

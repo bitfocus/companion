@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { CreateBankControlId, CreatePageControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType, type RawStoreResult } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
@@ -99,7 +100,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 
 		// Create a new instance for each test
 		manager = new EntityPoolSpecialExpressionManager(
-			'control-1',
+			CreateBankControlId('control-1'),
 			mockCreateVariablesAndExpressionParser,
 			{
 				isInverted: mockUpdateIsInvertedFn,
@@ -125,7 +126,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: true,
 						},
 					],
@@ -147,7 +148,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false,
 						},
 					],
@@ -169,7 +170,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false,
 						},
 					],
@@ -195,7 +196,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: true,
 						},
 					],
@@ -220,7 +221,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: true,
 						},
 					],
@@ -228,7 +229,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-2',
 						{
 							entityId: 'entity-2',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false,
 						},
 					],
@@ -288,7 +289,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-niner',
 						{
 							entityId: 'entity-niner',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: true,
 						},
 					],
@@ -353,7 +354,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-lion',
 						{
 							entityId: 'entity-lion',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false,
 						},
 					],
@@ -418,7 +419,7 @@ describe('EntityPoolSpecialExpressionManager', () => {
 						'entity-tiger',
 						{
 							entityId: 'entity-tiger',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false,
 						},
 					],
@@ -527,7 +528,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-batman',
 						{
 							entityId: 'entity-batman',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: true,
 						},
 					],
@@ -542,7 +543,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-robin',
 						{
 							entityId: 'entity-robin',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'custom-variable',
 								variableName: 'custom:variable-name',
@@ -576,7 +577,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: true,
 						},
 					],
@@ -601,7 +602,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: undefined,
 						},
 					],
@@ -637,7 +638,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-17',
 						{
 							entityId: 'entity-17',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'custom-variable',
 								variableName: 'overridden-parse-variables-result',
@@ -685,7 +686,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-17',
 						{
 							entityId: 'entity-17',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'local-variable',
 								location: '1/2/4',
@@ -705,7 +706,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 			}
 			mockParseVariablesResult = {
 				text: 'parsed-variable-name',
-				variableIds: new Set<string>(['page:foo']),
+				variableIds: new Set<string>([CreatePageControlId('foo')]),
 			}
 
 			const mockEntity = createMockActionEntity('entity-18', {
@@ -733,7 +734,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-18',
 						{
 							entityId: 'entity-18',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'page-variable',
 								page: '2',
@@ -764,7 +765,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false,
 						},
 					],
@@ -809,7 +810,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-42',
 						{
 							entityId: 'entity-42',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'local-variable',
 								location: '',
@@ -840,7 +841,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: true,
 						},
 					],
@@ -868,7 +869,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false,
 						},
 					],
@@ -904,7 +905,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'custom-variable',
 								variableName: 'will stringify to this',
@@ -960,7 +961,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-314',
 						{
 							entityId: 'entity-314',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'custom-variable',
 								variableName: 'foobar',
@@ -1059,7 +1060,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: true,
 						},
 					],
@@ -1105,7 +1106,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-86',
 						{
 							entityId: 'entity-86',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'local-variable',
 								location: 'expr-location',
@@ -1130,7 +1131,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 							'entity-86',
 							{
 								entityId: 'entity-86',
-								controlId: 'control-1',
+								controlId: CreateBankControlId('control-1'),
 								value: {
 									type: 'local-variable',
 									location: 'expr-location',
@@ -1173,7 +1174,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-86',
 						{
 							entityId: 'entity-86',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'custom-variable',
 								variableName: 'expr-variableName',
@@ -1198,7 +1199,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 							'entity-86',
 							{
 								entityId: 'entity-86',
-								controlId: 'control-1',
+								controlId: CreateBankControlId('control-1'),
 								value: {
 									type: 'custom-variable',
 									variableName: 'expr-variableName',
@@ -1342,7 +1343,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'custom-variable',
 								variableName: 'variable-name',
@@ -1354,7 +1355,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-2',
 						{
 							entityId: 'entity-2',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: {
 								type: 'local-variable',
 								location: '4/5/6',
@@ -1818,7 +1819,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false,
 						},
 					],
@@ -1845,7 +1846,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false, // empty string is falsy
 						},
 					],
@@ -1872,7 +1873,7 @@ storeResultW=${JSON.stringify(storeResultW)}, storeResultW.referencedVariableIds
 						'entity-1',
 						{
 							entityId: 'entity-1',
-							controlId: 'control-1',
+							controlId: CreateBankControlId('control-1'),
 							value: false, // undefined is falsy
 						},
 					],

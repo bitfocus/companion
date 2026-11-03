@@ -1,4 +1,5 @@
 import type { JsonValue } from 'type-fest'
+import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import {
 	LinkButtonOptionsSchema,
 	parseLinkButtonOptions,
@@ -57,7 +58,7 @@ const UNCONFIGURED_STATE: LinkButtonState = {
  * this program.
  */
 export class ControlButtonLink
-	extends ControlBase<LinkButtonModel>
+	extends ControlBase<LinkButtonModel, BankControlId>
 	implements
 		ControlWithoutLayeredStyle,
 		ControlWithoutEntities,
@@ -104,7 +105,7 @@ export class ControlButtonLink
 		this.#drawing.invalidate()
 	}
 
-	constructor(deps: ControlDependencies, controlId: string, storage: LinkButtonModel | null, isImport: boolean) {
+	constructor(deps: ControlDependencies, controlId: BankControlId, storage: LinkButtonModel | null, isImport: boolean) {
 		super(deps, controlId, 'Controls/Button/Link')
 
 		this.options = parseLinkButtonOptions({}).options

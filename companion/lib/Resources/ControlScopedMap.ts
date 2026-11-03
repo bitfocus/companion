@@ -1,3 +1,5 @@
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
+
 /**
  * A Map of items that each belong to a control, with a secondary index by controlId.
  *
@@ -6,7 +8,7 @@
  *
  * Iterating the map behaves like iterating a plain Map, including deleting the current entry mid-iteration.
  */
-export class ControlScopedMap<V extends { readonly controlId: string }> {
+export class ControlScopedMap<V extends { readonly controlId: SomeControlId }> {
 	readonly #items = new Map<string, V>()
 	readonly #byControl = new Map<string, Map<string, V>>()
 
@@ -61,11 +63,11 @@ export class ControlScopedMap<V extends { readonly controlId: string }> {
 	}
 
 	/** The items belonging to a control, or undefined if it has none */
-	getForControl(controlId: string): ReadonlyMap<string, V> | undefined {
+	getForControl(controlId: SomeControlId): ReadonlyMap<string, V> | undefined {
 		return this.#byControl.get(controlId)
 	}
 
-	#removeFromIndex(id: string, controlId: string): void {
+	#removeFromIndex(id: string, controlId: SomeControlId): void {
 		const controlItems = this.#byControl.get(controlId)
 		if (!controlItems) return
 

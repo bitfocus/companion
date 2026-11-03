@@ -4,7 +4,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId, useMemo } from 'react'
 import type { JsonValue } from 'type-fest'
 import { isInternalConnectionId, isVirtualConnectionId } from '@companion-app/shared/ConnectionId.js'
-import { ParseControlId } from '@companion-app/shared/ControlId.js'
+import { ParseControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
@@ -64,7 +64,7 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 
 	const showButtonPreview = isInternalConnectionId(entity?.connectionId) && entityDefinition?.showButtonPreview
 
-	const controlKind = ParseControlId(controlId)?.type ?? null
+	const controlKind = controlId ? (ParseControlId(controlId)?.type ?? null) : null
 	const visibleOptions = useMemo(
 		() => entityDefinition?.options.filter((opt) => !isFieldDisabledForControl(opt, controlKind)),
 		[entityDefinition?.options, controlKind]
@@ -88,14 +88,14 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 	return (
 		<>
 			<div className="entity-cells-wrapper">
-				{showButtonPreview && (
+				{showButtonPreview && controlId && (
 					<div className="cell-button-preview">
 						<OptionButtonPreview controlId={controlId} options={entity.options} />
 					</div>
 				)}
 
 				<Form row className="sm:gap-2 grow" onSubmit={PreventDefaultHandler}>
-					{entity.type === EntityModelType.Feedback && localVariablePrefix && (
+					{entity.type === EntityModelType.Feedback && localVariablePrefix && controlId && (
 						<>
 							<MyErrorBoundary>
 								<FormLabel htmlFor={variableNameId} sm={4} column="sm">
@@ -192,7 +192,8 @@ export const EntityCommonCells = observer(function EntityCommonCells({
 
 					{entityDefinition?.entityType === EntityModelType.Action &&
 						!!entityDefinition.actionHasResult &&
-						!!service.setRawStoreResult && (
+						!!service.setRawStoreResult &&
+						controlId && (
 							<StoreResultFields
 								isLocatedInGrid={!!location}
 								controlId={controlId}
@@ -229,7 +230,7 @@ const EntityLocalVariableValueField = observer(function EntityLocalVariableValue
 	readonly,
 	service,
 }: {
-	controlId: string
+	controlId: SomeControlId
 	entity: SomeEntityModel
 	localVariablesStore: LocalVariablesStore | null
 	readonly: boolean
@@ -265,7 +266,7 @@ const EntityLocalVariableValueField = observer(function EntityLocalVariableValue
 	)
 })
 
-function LocalVariableCurrentValue({ controlId, name }: { controlId: string; name: string }) {
+function LocalVariableCurrentValue({ controlId, name }: { controlId: SomeControlId; name: string }) {
 	const sub = useSubscription(
 		trpc.preview.expressionStream.watchExpression.subscriptionOptions(
 			{

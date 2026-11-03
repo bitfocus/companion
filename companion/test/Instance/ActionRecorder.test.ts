@@ -1,5 +1,6 @@
 import { initTRPC } from '@trpc/server'
 import { describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { ActionRecorder } from '../../lib/Instance/ActionRecorder.js'
 import type { TrpcContext } from '../../lib/UI/TRPC.js'
@@ -308,13 +309,13 @@ describe('ActionRecorder', () => {
 		test('append mode adds the actions to the control', () => {
 			const { recorder, controls } = createRecorder()
 			const control = makeEntityControl()
-			controls['control1'] = control
+			controls[CreateBankControlId('control1')] = control
 			recorder.setSelectedConnectionIds(['conn1'])
 			recorder.receiveAction('conn1', 'act1', {}, 0, undefined)
 			const actions = recorder.getSession().actions
 			const oldId = recorder.getSession().id
 
-			recorder.saveToControlId('control1', 'step1', 'down', 'append')
+			recorder.saveToControlId(CreateBankControlId('control1'), 'step1', 'down', 'append')
 
 			expect(control.entities.entityAdd).toHaveBeenCalledWith({ stepId: 'step1', setId: 'down' }, null, ...actions)
 
@@ -328,12 +329,12 @@ describe('ActionRecorder', () => {
 		test('replace mode replaces the actions on the control', () => {
 			const { recorder, controls } = createRecorder()
 			const control = makeEntityControl()
-			controls['control1'] = control
+			controls[CreateBankControlId('control1')] = control
 			recorder.setSelectedConnectionIds(['conn1'])
 			recorder.receiveAction('conn1', 'act1', {}, 0, undefined)
 			const actions = recorder.getSession().actions
 
-			recorder.saveToControlId('control1', 'step1', 0, 'replace')
+			recorder.saveToControlId(CreateBankControlId('control1'), 'step1', 0, 'replace')
 
 			expect(control.entities.entityReplaceAll).toHaveBeenCalledWith({ stepId: 'step1', setId: 0 }, actions)
 		})
@@ -341,7 +342,7 @@ describe('ActionRecorder', () => {
 		test.each(['append', 'replace'] as const)('%s mode saves to the trigger action list', (mode) => {
 			const { recorder, controls } = createRecorder()
 			const control = { ...makeEntityControl(), type: 'trigger' }
-			controls['trigger:test'] = control
+			controls[CreateTriggerControlId('test')] = control
 			control.entities.entityAdd.mockImplementation((...args: unknown[]) => args[0] === 'trigger_actions')
 			control.entities.entityReplaceAll.mockImplementation((...args: unknown[]) => args[0] === 'trigger_actions')
 			recorder.setSelectedConnectionIds(['conn1'])
@@ -349,7 +350,7 @@ describe('ActionRecorder', () => {
 			const actions = recorder.getSession().actions
 			const sessionId = recorder.getSession().id
 
-			recorder.saveToControlId('trigger:test', '', 0, mode)
+			recorder.saveToControlId(CreateTriggerControlId('test'), '', 0, mode)
 
 			if (mode === 'append') {
 				expect(control.entities.entityAdd).toHaveBeenCalledWith('trigger_actions', null, ...actions)
@@ -364,19 +365,31 @@ describe('ActionRecorder', () => {
 			const { recorder, controls } = createRecorder()
 			const sessionId = recorder.getSession().id
 
-			expect(() => recorder.saveToControlId('control1', 'step1', 'down', 'bad' as any)).toThrow(/Invalid mode/)
-			expect(() => recorder.saveToControlId('missing', 'step1', 'down', 'append')).toThrow(/Unknown control/)
+			expect(() => recorder.saveToControlId(CreateBankControlId('control1'), 'step1', 'down', 'bad' as any)).toThrow(
+				/Invalid mode/
+			)
+			expect(() => recorder.saveToControlId(CreateBankControlId('missing'), 'step1', 'down', 'append')).toThrow(
+				/Unknown control/
+			)
 
-			controls['no-entities'] = { supportsEntities: false }
-			expect(() => recorder.saveToControlId('no-entities', 'step1', 'down', 'append')).toThrow(/Not supported/)
-			expect(() => recorder.saveToControlId('no-entities', 'step1', 'down', 'replace')).toThrow(/Not supported/)
+			controls[CreateBankControlId('no-entities')] = { supportsEntities: false }
+			expect(() => recorder.saveToControlId(CreateBankControlId('no-entities'), 'step1', 'down', 'append')).toThrow(
+				/Not supported/
+			)
+			expect(() => recorder.saveToControlId(CreateBankControlId('no-entities'), 'step1', 'down', 'replace')).toThrow(
+				/Not supported/
+			)
 
 			const rejecting = makeEntityControl()
 			rejecting.entities.entityAdd.mockReturnValue(false)
 			rejecting.entities.entityReplaceAll.mockReturnValue(false)
-			controls['rejecting'] = rejecting
-			expect(() => recorder.saveToControlId('rejecting', 'step1', 'down', 'append')).toThrow(/Unknown set/)
-			expect(() => recorder.saveToControlId('rejecting', 'step1', 'down', 'replace')).toThrow(/Unknown set/)
+			controls[CreateBankControlId('rejecting')] = rejecting
+			expect(() => recorder.saveToControlId(CreateBankControlId('rejecting'), 'step1', 'down', 'append')).toThrow(
+				/Unknown set/
+			)
+			expect(() => recorder.saveToControlId(CreateBankControlId('rejecting'), 'step1', 'down', 'replace')).toThrow(
+				/Unknown set/
+			)
 
 			expect(recorder.getSession().id).toBe(sessionId)
 		})
@@ -530,14 +543,14 @@ describe('ActionRecorder', () => {
 		test('saveToControl saves and resets', async () => {
 			const { recorder, caller, controls } = createRecorder()
 			const control = makeEntityControl()
-			controls['control1'] = control
+			controls[CreateBankControlId('control1')] = control
 			const sessionId = recorder.getSession().id
 			recorder.setSelectedConnectionIds(['conn1'])
 			recorder.receiveAction('conn1', 'act1', {}, 0, undefined)
 
 			await caller.session.saveToControl({
 				sessionId,
-				controlId: 'control1',
+				controlId: CreateBankControlId('control1'),
 				stepId: 'step1',
 				setId: 'down',
 				mode: 'append',

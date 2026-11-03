@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC'
 
@@ -16,7 +17,7 @@ export interface IControlActionStepsAndSetsService {
 }
 
 export function useControlActionStepsAndSetsService(
-	controlId: string,
+	controlId: SomeControlId,
 	confirmModal: React.RefObject<GenericConfirmModalRef | null>,
 	setSelectedStep: (stepId: string) => void
 ): IControlActionStepsAndSetsService {

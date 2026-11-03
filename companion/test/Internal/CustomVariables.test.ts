@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import { exprExpr, exprVal, type ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
 import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandlerApi.js'
@@ -34,7 +35,7 @@ function makeAction(
 }
 
 const fakeExtras: RunActionExtras = {
-	controlId: 'ctrl1',
+	controlId: CreateBankControlId('ctrl1'),
 	surfaceId: undefined,
 	location: undefined,
 	abortDelayed: new AbortController().signal,

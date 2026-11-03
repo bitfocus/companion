@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 
 export interface NotesEditorState {
@@ -37,7 +38,7 @@ export function useNotesEditor(
 }
 
 /** Saves the notes of a control (a button, trigger or expression variable) */
-export function useControlNotesSetter(controlId: string): (notes: string) => void {
+export function useControlNotesSetter(controlId: SomeControlId): (notes: string) => void {
 	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
 
 	return useCallback(

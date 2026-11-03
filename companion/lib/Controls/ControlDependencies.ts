@@ -1,4 +1,5 @@
 import type { EventEmitter } from 'node:events'
+import type { BankControlId, PresetControlId, SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
 import type {
@@ -28,9 +29,9 @@ import type { TriggerEvents } from './TriggerEvents.js'
  * A narrow accessor letting one control reach other controls (to press/rotate a target, or read its model).
  */
 export interface ControlsAccessor {
-	getControl(controlId: string): SomeControl<any> | undefined
-	pressControl(controlId: string, pressed: boolean, surfaceId: string | undefined, force?: boolean): boolean
-	rotateControl(controlId: string, delta: number, surfaceId: string | undefined): boolean
+	getControl(controlId: SomeControlId): SomeControl<any> | undefined
+	pressControl(controlId: SomeControlId, pressed: boolean, surfaceId: string | undefined, force?: boolean): boolean
+	rotateControl(controlId: SomeControlId, delta: number, surfaceId: string | undefined): boolean
 }
 
 export interface ControlExternalDependencies {
@@ -52,7 +53,7 @@ export interface ControlExternalDependencies {
 }
 
 export interface ControlDependencies extends ControlExternalDependencies {
-	readonly dbTable: DataStoreSchemaTableView<typeof SomeControlModelSchema>
+	readonly dbTable: DataStoreSchemaTableView<typeof SomeControlModelSchema, SomeControlId>
 
 	/** Narrow access to other controls (for controls that forward to or read a target control). */
 	readonly controlsAccessor: ControlsAccessor
@@ -76,12 +77,12 @@ export interface ControlDependencies extends ControlExternalDependencies {
 
 export interface ControlCommonEvents {
 	updateButtonState: [location: ControlLocation, pushed: boolean, surfaceId: string | undefined]
-	invalidateControlRender: [controlId: string]
+	invalidateControlRender: [controlId: SomeControlId]
 	invalidateLocationRender: [location: ControlLocation]
 	expressionVariableDefinitionChanged: [id: string, info: ClientExpressionVariableData | null]
-	layeredStyleElementChanged: [controlId: string, elementId: string]
+	layeredStyleElementChanged: [controlId: SomeControlId, elementId: string]
 
-	presetDrawn: [controlId: string, render: ImageResult]
+	presetDrawn: [controlId: PresetControlId, render: ImageResult]
 
 	/**
 	 * Emitted when a control is added or removed, to notify that the total control count has changed
@@ -91,7 +92,7 @@ export interface ControlCommonEvents {
 	/**
 	 * Emitted when a control is placed at a grid location (create or import)
 	 */
-	controlPlacedAt: [location: ControlLocation, controlId: string]
+	controlPlacedAt: [location: ControlLocation, controlId: BankControlId]
 
 	/**
 	 * Emitted when a control is removed from a grid location (delete)
@@ -100,6 +101,6 @@ export interface ControlCommonEvents {
 }
 
 export type ControlChangeEvents = {
-	triggerChange: [controlId: string, diff: TriggersUpdate]
-	expressionVariableChange: [controlId: string, diff: ExpressionVariableUpdate]
+	triggerChange: [controlId: SomeControlId, diff: TriggersUpdate]
+	expressionVariableChange: [controlId: SomeControlId, diff: ExpressionVariableUpdate]
 }

@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { nanoid } from 'nanoid'
 import z from 'zod'
+import { zodSomeControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { diffObject } from '@companion-app/shared/Diff.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
@@ -265,7 +266,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 					.input(
 						z.object({
 							sessionId: z.string(),
-							controlId: z.string(),
+							controlId: zodSomeControlId,
 							stepId: z.string(),
 							setId: z.union([z.enum(['down', 'up', 'rotate_left', 'rotate_right']), z.number()]),
 							mode: z.enum(['replace', 'append']),
@@ -478,7 +479,7 @@ export class ActionRecorder extends EventEmitter<ActionRecorderEvents> {
 	/**
 	 * Save the recorded actions to a control
 	 */
-	saveToControlId(controlId: string, stepId: string, setId: ActionSetId, mode: 'replace' | 'append'): void {
+	saveToControlId(controlId: SomeControlId, stepId: string, setId: ActionSetId, mode: 'replace' | 'append'): void {
 		if (mode !== 'replace' && mode !== 'append') throw new Error(`Invalid mode: ${mode}`)
 
 		const control = this.#controlStore.getControl(controlId)

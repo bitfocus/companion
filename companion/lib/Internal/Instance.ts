@@ -11,6 +11,7 @@
 
 import { EventEmitter } from 'node:events'
 import debounceFn from 'debounce-fn'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { FeedbackEntitySubType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
@@ -360,7 +361,7 @@ export class InternalInstance extends EventEmitter<InternalModuleFragmentEvents>
 		}
 	}
 
-	feedbackUpgrade(feedback: FeedbackEntityModel, _controlId: string): FeedbackEntityModel | void {
+	feedbackUpgrade(feedback: FeedbackEntityModel, _controlId: SomeControlId): FeedbackEntityModel | void {
 		// The 'Disabled' choice of instance_custom_state used to be stored as `null`, which the
 		// dropdown in the UI cannot represent or select. Migrate it to the string 'null'.
 		if (feedback.definitionId === 'instance_custom_state' && feedback.options.state?.value === null) {

@@ -108,8 +108,8 @@ export interface SurfaceControllerEvents {
 export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	readonly #logger = LogController.createLogger('Surface/Controller')
 
-	readonly #dbTableSurfaces: DataStoreSchemaTableView<typeof SurfaceConfigSchema>
-	readonly #dbTableGroups: DataStoreSchemaTableView<typeof SurfaceGroupConfigSchema>
+	readonly #dbTableSurfaces: DataStoreSchemaTableView<typeof SurfaceConfigSchema, string>
+	readonly #dbTableGroups: DataStoreSchemaTableView<typeof SurfaceGroupConfigSchema, string>
 	readonly #handlerDependencies: SurfaceHandlerDependencies
 
 	readonly #updateEvents = new EventEmitter<UpdateEvents>()

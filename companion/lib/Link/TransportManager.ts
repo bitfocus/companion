@@ -60,8 +60,8 @@ export class LinkTransportManager {
 	readonly #logger = LogController.createLogger('Link/TransportManager')
 
 	readonly #definitions: ReadonlyMap<string, SomeLinkTransportDefinition>
-	readonly #configTable: DataStoreSchemaTableView<typeof StoredTransportSchema>
-	readonly #storageTable: DataStoreSchemaTableView<typeof TransportStorageSchema>
+	readonly #configTable: DataStoreSchemaTableView<typeof StoredTransportSchema, string>
+	readonly #storageTable: DataStoreSchemaTableView<typeof TransportStorageSchema, string>
 
 	readonly #configs = new Map<string, LinkTransportConfig>()
 	/** The types of the transports that are part of Link, which the user can't add */

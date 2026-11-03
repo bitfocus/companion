@@ -11,6 +11,7 @@
 
 import type EventEmitter from 'node:events'
 import { INTERNAL_CONNECTION_ID, isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
@@ -81,7 +82,7 @@ interface FeedbackDependencyTracking {
 }
 
 interface FeedbackEntityState extends FeedbackDependencyTracking {
-	controlId: string
+	controlId: SomeControlId
 	location: ControlLocation | undefined
 
 	entityModel: FeedbackEntityModel
@@ -201,7 +202,7 @@ export class InternalController {
 	 * @param controlId
 	 * @returns Updated entity if any changes were made
 	 */
-	entityUpgrade(entity: SomeEntityModel, controlId: string): SomeEntityModel | undefined {
+	entityUpgrade(entity: SomeEntityModel, controlId: SomeControlId): SomeEntityModel | undefined {
 		switch (entity.type) {
 			case EntityModelType.Feedback: {
 				return this.#feedbackUpgrade(entity, controlId)
@@ -221,7 +222,7 @@ export class InternalController {
 	 * @param controlId
 	 * @returns Updated action if any changes were made
 	 */
-	#actionUpgrade(action: ActionEntityModel, controlId: string): ActionEntityModel | undefined {
+	#actionUpgrade(action: ActionEntityModel, controlId: SomeControlId): ActionEntityModel | undefined {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		for (const fragment of this.#fragments) {
@@ -246,7 +247,7 @@ export class InternalController {
 	 * @param controlId
 	 * @returns Updated feedback if any changes were made
 	 */
-	#feedbackUpgrade(feedback: FeedbackEntityModel, controlId: string): FeedbackEntityModel | undefined {
+	#feedbackUpgrade(feedback: FeedbackEntityModel, controlId: SomeControlId): FeedbackEntityModel | undefined {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		for (const fragment of this.#fragments) {
@@ -268,7 +269,7 @@ export class InternalController {
 		return undefined
 	}
 
-	entityUpdate(entity: SomeEntityModel, controlId: string): void {
+	entityUpdate(entity: SomeEntityModel, controlId: SomeControlId): void {
 		if (entity.type === EntityModelType.Feedback) {
 			this.#feedbackUpdate(entity, controlId)
 		}
@@ -277,7 +278,7 @@ export class InternalController {
 	/**
 	 * A feedback has changed, and state should be updated
 	 */
-	#feedbackUpdate(feedback: FeedbackEntityModel, controlId: string): void {
+	#feedbackUpdate(feedback: FeedbackEntityModel, controlId: SomeControlId): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		if (!isInternalConnectionId(feedback.connectionId)) throw new Error(`Feedback is not for internal instance`)
@@ -314,7 +315,7 @@ export class InternalController {
 	 */
 	evaluateFeedbackValue(
 		entityModel: FeedbackEntityModel,
-		controlId: string,
+		controlId: SomeControlId,
 		parser: VariablesAndExpressionParser
 	): FeedbackValue {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
@@ -374,7 +375,7 @@ export class InternalController {
 	 */
 	#computeFeedbackValue(
 		entityModel: FeedbackEntityModel,
-		controlId: string,
+		controlId: SomeControlId,
 		location: ControlLocation | undefined,
 		parser: VariablesAndExpressionParser,
 		tracking: FeedbackDependencyTracking | null
@@ -785,7 +786,10 @@ export class InternalController {
 		if (newValues.length > 0) this.#controlsStore.updateFeedbackValues(INTERNAL_CONNECTION_ID, newValues)
 	}
 
-	onVariablesChanged(changedVariablesSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+	onVariablesChanged(
+		changedVariablesSet: ReadonlySet<string>,
+		controlIdFilter: ReadonlySet<SomeControlId> | null
+	): void {
 		if (!this.#initialized) throw new Error(`InternalController is not initialized`)
 
 		const newValues: NewFeedbackValue[] = []

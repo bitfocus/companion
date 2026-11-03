@@ -1,4 +1,5 @@
 import z from 'zod'
+import { zodSomeControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
 import type { ControlActionSetAndStepsEditor } from './Entities/ControlActionSetAndStepsManager.js'
 import type { SomeControl } from './IControlFragments.js'
@@ -14,12 +15,12 @@ function getEditableActionSets(control: SomeControl<any>): ControlActionSetAndSt
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export function createActionSetsTrpcRouter(controlsMap: Map<string, SomeControl<any>>) {
+export function createActionSetsTrpcRouter(controlsMap: Map<SomeControlId, SomeControl<any>>) {
 	return router({
 		add: publicProcedure
 			.input(
 				z.object({
-					controlId: z.string(),
+					controlId: zodSomeControlId,
 					stepId: z.string(),
 				})
 			)
@@ -33,7 +34,7 @@ export function createActionSetsTrpcRouter(controlsMap: Map<string, SomeControl<
 		remove: publicProcedure
 			.input(
 				z.object({
-					controlId: z.string(),
+					controlId: zodSomeControlId,
 					stepId: z.string(),
 					setId: z.number(),
 				})
@@ -48,7 +49,7 @@ export function createActionSetsTrpcRouter(controlsMap: Map<string, SomeControl<
 		rename: publicProcedure
 			.input(
 				z.object({
-					controlId: z.string(),
+					controlId: zodSomeControlId,
 					stepId: z.string(),
 					oldSetId: z.number(),
 					newSetId: z.number(),
@@ -64,7 +65,7 @@ export function createActionSetsTrpcRouter(controlsMap: Map<string, SomeControl<
 		setRunWhileHeld: publicProcedure
 			.input(
 				z.object({
-					controlId: z.string(),
+					controlId: zodSomeControlId,
 					stepId: z.string(),
 					setId: z.number(),
 					runWhileHeld: z.boolean(),

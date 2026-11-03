@@ -1,5 +1,6 @@
 import { observer } from 'mobx-react-lite'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { resolveMarkerTransform } from '@companion-app/shared/Graphics/Geometry.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
@@ -19,7 +20,7 @@ import { collectSnapTargets, snapAxis, thresholdFractionFor } from './snapping.j
 type Corner = 'nw' | 'ne' | 'sw' | 'se'
 
 interface SelectionOverlayProps {
-	controlId: string
+	controlId: SomeControlId
 	canvas: HTMLCanvasElement
 	selectedElement: SomeButtonGraphicsElement
 	/** The selection as the renderer drew it, used to outline selections the overlay can't edit */

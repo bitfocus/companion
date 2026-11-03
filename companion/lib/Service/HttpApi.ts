@@ -1,5 +1,5 @@
 import Express from 'express'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { formatLocation, type BankControlId } from '@companion-app/shared/ControlId.js'
 import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
@@ -352,7 +352,7 @@ export class ServiceHttpApi {
 	/**
 	 * Perform surfaces rescan
 	 */
-	#locationParse = (req: Express.Request): { location: ControlLocation; controlId: string | null } => {
+	#locationParse = (req: Express.Request): { location: ControlLocation; controlId: BankControlId | null } => {
 		const location = {
 			pageNumber: Number(req.params.page),
 			row: Number(req.params.row),

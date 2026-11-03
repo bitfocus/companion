@@ -12,7 +12,7 @@
 import EventEmitter from 'node:events'
 import { setTimeout } from 'node:timers/promises'
 import debounceFn from 'debounce-fn'
-import { formatLocation, ParseControlId } from '@companion-app/shared/ControlId.js'
+import { formatLocation, isControlIdOfKind, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { ControlLocationOption } from '@companion-app/shared/ControlLocation.js'
 import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import {
@@ -129,7 +129,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		options: CompanionOptionValues,
 		extras: RunActionExtras | FeedbackForInternalExecution
 	): {
-		theControlId: string | null
+		theControlId: SomeControlId | null
 		theLocation: ControlLocation | null
 	} {
 		const location = ParseLocationString(stringifyVariableValue(options.location), extras.location)
@@ -462,7 +462,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		}
 	}
 
-	feedbackUpgrade(feedback: FeedbackEntityModel, _controlId: string): FeedbackEntityModel | void {
+	feedbackUpgrade(feedback: FeedbackEntityModel, _controlId: SomeControlId): FeedbackEntityModel | void {
 		let changed = false
 
 		if (feedback.definitionId === 'bank_style' && feedback.styleOverrides) {
@@ -582,7 +582,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 		this.#pushStateSubscriptions.delete(feedback.id)
 	}
 
-	actionUpgrade(action: ActionEntityModel, _controlId: string): ActionEntityModel | void {
+	actionUpgrade(action: ActionEntityModel, _controlId: SomeControlId): ActionEntityModel | void {
 		// The separate rotate-left/right actions were merged into a single `button_rotate` action that takes a
 		// signed delta. Map the old direction onto -1 (left) / +1 (right), preserving the other options.
 		if (action.definitionId === 'button_rotate_left' || action.definitionId === 'button_rotate_right') {
@@ -734,7 +734,7 @@ export class InternalControls extends EventEmitter<InternalModuleFragmentEvents>
 				let controlId = rawControlId
 				if (controlId === 'self' || controlId?.startsWith('self:')) controlId = extras.controlId
 
-				if (controlId && ParseControlId(controlId)?.type === 'trigger') {
+				if (controlId && isControlIdOfKind(controlId, 'trigger')) {
 					const control = this.#controlsStore.getControl(controlId)
 					if (control && control.supportsActions) {
 						if (rawControlId === 'self') {

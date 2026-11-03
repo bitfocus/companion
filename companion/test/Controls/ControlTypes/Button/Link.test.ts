@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import { parseLinkButtonOptions, type LinkButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ControlDependencies } from '../../../../lib/Controls/ControlDependencies.js'
@@ -11,7 +12,7 @@ import type { LinkButtonClient, LinkButtonState } from '../../../../lib/Link/But
 import type { LinkButtonImage } from '../../../../lib/Link/RemoteImageStore.js'
 import { mangleReferenceSurfaceId } from '../../../../lib/Surface/ReferenceSurfaceId.js'
 
-const MY_CONTROL_ID = 'bank:test01'
+const MY_CONTROL_ID = CreateBankControlId('test01')
 
 const NO_DECORATION_STATE = {
 	remoteKey: 'peer/remote',

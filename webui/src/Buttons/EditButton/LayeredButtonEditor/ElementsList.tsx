@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useRef } from 'react'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { capitalize } from '@companion-app/shared/Util.js'
 import { Button, ButtonGroup } from '~/Components/Button.js'
@@ -93,7 +94,7 @@ export const ElementsList = observer(function ElementsList({
 	controlId,
 }: {
 	styleStore: LayeredStyleStore
-	controlId: string
+	controlId: SomeControlId
 }) {
 	const confirmModalRef = useRef<GenericConfirmModalRef>(null)
 	const moveElement = useMutationExt(trpc.controls.styles.moveElement.mutationOptions())
@@ -273,7 +274,7 @@ const ElementListItem = observer(function ElementListItem({
 	depth: number
 	group: string
 	styleStore: LayeredStyleStore
-	controlId: string
+	controlId: SomeControlId
 	confirmModalRef: React.RefObject<GenericConfirmModalRef | null>
 }) {
 	// Reorders on hover (see the monitor): target what's under the cursor, and dim the source row since

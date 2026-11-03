@@ -1,5 +1,5 @@
 import debounceFn from 'debounce-fn'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { formatLocation, type BankControlId, type PresetControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
 import {
@@ -117,7 +117,7 @@ class DrawDependency<T> {
 export class LayeredButtonDrawer implements IButtonDrawer {
 	protected readonly logger: Logger
 	protected readonly deps: ControlDependencies
-	protected readonly controlId: string
+	protected readonly controlId: BankControlId | PresetControlId
 	readonly #host: LayeredButtonDrawerHost
 
 	protected drawElementsList: SomeButtonGraphicsElement[] = []
@@ -153,7 +153,7 @@ export class LayeredButtonDrawer implements IButtonDrawer {
 
 	constructor(
 		deps: ControlDependencies,
-		controlId: string,
+		controlId: BankControlId | PresetControlId,
 		host: LayeredButtonDrawerHost,
 		drawType: DrawStyleLayeredButtonModel['drawType'] = 'button'
 	) {

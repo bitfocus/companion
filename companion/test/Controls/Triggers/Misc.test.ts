@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { TriggersEventMisc } from '../../../lib/Controls/ControlTypes/Triggers/Events/Misc.js'
 import { TriggerExecutionSource } from '../../../lib/Controls/ControlTypes/Triggers/TriggerExecutionSource.js'
 import { MockTriggerEventBus } from './Helpers.js'
@@ -6,7 +7,7 @@ import { MockTriggerEventBus } from './Helpers.js'
 function createMisc() {
 	const bus = new MockTriggerEventBus()
 	const executeActions = vi.fn()
-	const misc = new TriggersEventMisc(bus.asTriggerEvents(), 'trigger:test', executeActions)
+	const misc = new TriggersEventMisc(bus.asTriggerEvents(), CreateTriggerControlId('test'), executeActions)
 	return { bus, misc, executeActions }
 }
 
@@ -103,13 +104,13 @@ describe('TriggersEventMisc', () => {
 			misc.setEnabled(true)
 			misc.setControlPress('a', true)
 
-			bus.emit('control_press', 'bank:other', true, 'surface01')
+			bus.emit('control_press', CreateBankControlId('other'), true, 'surface01')
 			vi.runAllTimers()
 			expect(executeActions).toHaveBeenCalledTimes(1)
 			expect(executeActions).toHaveBeenCalledWith(Date.now(), TriggerExecutionSource.Other)
 
 			// A release does not match
-			bus.emit('control_press', 'bank:other', false, 'surface01')
+			bus.emit('control_press', CreateBankControlId('other'), false, 'surface01')
 			vi.runAllTimers()
 			expect(executeActions).toHaveBeenCalledTimes(1)
 		})
@@ -119,7 +120,7 @@ describe('TriggersEventMisc', () => {
 			misc.setEnabled(true)
 			misc.setControlPress('a', false)
 
-			bus.emit('control_press', 'bank:other', false, 'surface01')
+			bus.emit('control_press', CreateBankControlId('other'), false, 'surface01')
 			vi.runAllTimers()
 			expect(executeActions).toHaveBeenCalledTimes(1)
 		})
@@ -129,7 +130,7 @@ describe('TriggersEventMisc', () => {
 			misc.setEnabled(true)
 			misc.setControlPress('a', true)
 
-			bus.emit('control_press', 'bank:other', true, 'trigger:some-other-trigger')
+			bus.emit('control_press', CreateBankControlId('other'), true, CreateTriggerControlId('some-other-trigger'))
 			vi.runAllTimers()
 			expect(executeActions).not.toHaveBeenCalled()
 		})
@@ -139,7 +140,7 @@ describe('TriggersEventMisc', () => {
 			misc.setEnabled(true)
 			misc.setControlPress('a', true)
 
-			bus.emit('control_press', 'bank:other', true, undefined)
+			bus.emit('control_press', CreateBankControlId('other'), true, undefined)
 			vi.runAllTimers()
 			expect(executeActions).toHaveBeenCalledTimes(1)
 		})
@@ -150,7 +151,7 @@ describe('TriggersEventMisc', () => {
 			misc.setControlPress('a', true)
 			misc.setControlPress('b', true)
 
-			bus.emit('control_press', 'bank:other', true, 'surface01')
+			bus.emit('control_press', CreateBankControlId('other'), true, 'surface01')
 			vi.runAllTimers()
 			expect(executeActions).toHaveBeenCalledTimes(1)
 		})
@@ -159,7 +160,7 @@ describe('TriggersEventMisc', () => {
 			const { bus, misc, executeActions } = createMisc()
 			misc.setControlPress('a', true)
 
-			bus.emit('control_press', 'bank:other', true, 'surface01')
+			bus.emit('control_press', CreateBankControlId('other'), true, 'surface01')
 			vi.runAllTimers()
 			expect(executeActions).not.toHaveBeenCalled()
 		})
@@ -170,7 +171,7 @@ describe('TriggersEventMisc', () => {
 			misc.setControlPress('a', true)
 			misc.clearControlPress('a')
 
-			bus.emit('control_press', 'bank:other', true, 'surface01')
+			bus.emit('control_press', CreateBankControlId('other'), true, 'surface01')
 			vi.runAllTimers()
 			expect(executeActions).not.toHaveBeenCalled()
 		})
@@ -229,7 +230,7 @@ describe('TriggersEventMisc', () => {
 
 		bus.emit('startup')
 		bus.emit('client_connect')
-		bus.emit('control_press', 'bank:other', true, undefined)
+		bus.emit('control_press', CreateBankControlId('other'), true, undefined)
 		bus.emit('locked', true)
 		vi.runAllTimers()
 		expect(executeActions).not.toHaveBeenCalled()

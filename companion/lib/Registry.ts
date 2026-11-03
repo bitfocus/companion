@@ -5,7 +5,7 @@ import express from 'express'
 import fs from 'fs-extra'
 import type { PackageJson } from 'type-fest'
 import { getVirtualConnectionIds } from '@companion-app/shared/ConnectionId.js'
-import { CreatePageControlId, ParseControlId } from '@companion-app/shared/ControlId.js'
+import { CreatePageControlId, ParseControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import { PageModelSchema } from '@companion-app/shared/Model/PageModel.js'
 import { CloudController } from './Cloud/Controller.js'
@@ -479,7 +479,7 @@ export class Registry {
 
 		// Include the page control itself, so a page variable referencing a sibling as `$(page:x)` in its
 		// own expression re-evaluates
-		const targetControlIds = new Set(this.page.store.getAllControlIdsOnPage(pageNumber))
+		const targetControlIds = new Set<SomeControlId>(this.page.store.getAllControlIdsOnPage(pageNumber))
 		targetControlIds.add(CreatePageControlId(pageId))
 
 		this.#dispatchVariablesChanged(pageChangedSet, targetControlIds)
@@ -489,7 +489,7 @@ export class Registry {
 	 * Fan a variable change out to every consumer that scopes by control. `controlIdFilter` is null for a
 	 * global change, or the set of controls it applies to.
 	 */
-	#dispatchVariablesChanged(changedSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+	#dispatchVariablesChanged(changedSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<SomeControlId> | null): void {
 		this.internalModule.onVariablesChanged(changedSet, controlIdFilter)
 		this.controls.onVariablesChanged(changedSet, controlIdFilter)
 		this.instance.processManager.onVariablesChanged(changedSet, controlIdFilter)

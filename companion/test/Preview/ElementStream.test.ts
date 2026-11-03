@@ -1,7 +1,7 @@
 import EventEmitter from 'node:events'
 import { initTRPC } from '@trpc/server'
 import { describe, expect, it, test, vi } from 'vitest'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { CreateBankControlId, formatLocation, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ElementRasterCanvas } from '@companion-app/shared/Graphics/ElementRaster.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ResolvedFeedbackStyleOverride } from '@companion-app/shared/Model/EntityModel.js'
@@ -186,7 +186,7 @@ function findElement(
 const t = initTRPC.context<TrpcContext>().create()
 const userconfig = mockUserConfig({ timezone: '' })
 
-const CONTROL_ID = 'control1'
+const CONTROL_ID = CreateBankControlId('control1')
 const CONTROL_LOCATION: ControlLocation = { pageNumber: 1, row: 0, column: 0 }
 const DEFAULT_CANVAS: ElementRasterCanvas = { width: 92, height: 92, paddingX: 10, paddingY: 10 }
 
@@ -217,8 +217,10 @@ function createHarness(initialElements: SomeButtonGraphicsElement[], initialVari
 	const controlsController = {
 		getControl: vi.fn((controlId: string) => {
 			if (controlId === CONTROL_ID) return control
-			if (controlId === 'not-layered') return { supportsLayeredStyle: false, supportsEntities: true }
-			if (controlId === 'no-entities') return { supportsLayeredStyle: true, supportsEntities: false }
+			if (controlId === CreateBankControlId('not-layered'))
+				return { supportsLayeredStyle: false, supportsEntities: true }
+			if (controlId === CreateBankControlId('no-entities'))
+				return { supportsLayeredStyle: true, supportsEntities: false }
 			return undefined
 		}),
 		createVariablesAndExpressionParser: vi.fn(() => {
@@ -285,8 +287,8 @@ function createHarness(initialElements: SomeButtonGraphicsElement[], initialVari
 	const caller = createCaller(createMockTrpcContext())
 
 	/** The preview contexts opened for each control, which element streams are watched through */
-	const contexts = new Map<string, SubscriptionTester<unknown>>()
-	const openContext = async (controlId: string, canvas: ElementRasterCanvas = DEFAULT_CANVAS) => {
+	const contexts = new Map<SomeControlId, SubscriptionTester<unknown>>()
+	const openContext = async (controlId: SomeControlId, canvas: ElementRasterCanvas = DEFAULT_CANVAS) => {
 		const context = new SubscriptionTester(
 			await caller.previewContext({ contextId: `context-${controlId}`, controlId, canvas })
 		)
@@ -308,11 +310,11 @@ function createHarness(initialElements: SomeButtonGraphicsElement[], initialVari
 		isClockSubscribed: () => clockCallback !== null,
 		createCaller,
 		openContext,
-		closeContext: async (controlId: string) => contexts.get(controlId)?.cleanup(),
-		setCanvas: async (canvas: ElementRasterCanvas, controlId = CONTROL_ID) =>
+		closeContext: async (controlId: SomeControlId) => contexts.get(controlId)?.cleanup(),
+		setCanvas: async (canvas: ElementRasterCanvas, controlId: SomeControlId = CONTROL_ID) =>
 			caller.setPreviewCanvas({ contextId: `context-${controlId}`, canvas }),
 		renderCount: () => vi.mocked(graphicsController.renderElementRaster).mock.calls.length,
-		watch: async (elementId: string, controlId = CONTROL_ID) => {
+		watch: async (elementId: string, controlId: SomeControlId = CONTROL_ID) => {
 			if (!contexts.has(controlId)) await openContext(controlId)
 			return new SubscriptionTester(await caller.watchElement({ contextId: `context-${controlId}`, elementId }))
 		},
@@ -397,7 +399,11 @@ describe('PreviewElementStream.watchElement', () => {
 		it('yields a null element for an unknown control, or one without a layered style or entities', async () => {
 			const harness = createHarness([makeTextEl()])
 
-			for (const controlId of ['unknown', 'not-layered', 'no-entities']) {
+			for (const controlId of [
+				CreateBankControlId('unknown'),
+				CreateBankControlId('not-layered'),
+				CreateBankControlId('no-entities'),
+			] as const) {
 				const sub = await harness.watch('text1', controlId)
 				await sub.expectValue({ ok: true, element: null })
 				await settle()
@@ -481,7 +487,7 @@ describe('PreviewElementStream.watchElement', () => {
 			const evaluations = harness.evaluationCount()
 
 			harness.state.variables = { custom: { a: 2 } }
-			harness.stream.onVariablesChanged(new Set(['custom:a']), new Set(['other-control']))
+			harness.stream.onVariablesChanged(new Set(['custom:a']), new Set([CreateBankControlId('other-control')]))
 			await settle()
 			expect(harness.evaluationCount()).toBe(evaluations)
 
@@ -542,7 +548,7 @@ describe('PreviewElementStream.watchElement', () => {
 			const evaluations = harness.evaluationCount()
 
 			harness.controlEvents.emit('layeredStyleElementChanged', CONTROL_ID, 'text2')
-			harness.controlEvents.emit('layeredStyleElementChanged', 'other-control', 'text1')
+			harness.controlEvents.emit('layeredStyleElementChanged', CreateBankControlId('other-control'), 'text1')
 			await settle()
 
 			expect(harness.evaluationCount()).toBe(evaluations)

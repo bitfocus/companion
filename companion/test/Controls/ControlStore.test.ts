@@ -1,14 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { CreatePageControlId, formatLocation } from '@companion-app/shared/ControlId.js'
+import {
+	CreateBankControlId,
+	CreatePageControlId,
+	CreateTriggerControlId,
+	formatLocation,
+	type SomeControlId,
+} from '@companion-app/shared/ControlId.js'
 import { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
 import { INVALID_ENTITY_DEFINITION_ID } from '@companion-app/shared/Model/EntityModel.js'
 import { ControlStore } from '../../lib/Controls/ControlStore.js'
 import { DataDatabase } from '../../lib/Data/Database.js'
+import { BROKEN_ROWS_TABLE, type BrokenRowRecord } from '../../lib/Data/Tables/ParsedTableViewBase.js'
 
 /** A mock control exposing only what ControlStore touches, with vi.fn spies for the methods it calls. */
 function makeControl(
 	opts: {
-		controlId?: string
+		controlId?: SomeControlId
 		supportsEntities?: boolean
 		supportsActions?: boolean
 		rotateResult?: boolean
@@ -18,7 +25,7 @@ function makeControl(
 	} = {}
 ) {
 	return {
-		controlId: opts.controlId ?? 'bank:x',
+		controlId: opts.controlId ?? CreateBankControlId('x'),
 		supportsEntities: opts.supportsEntities ?? false,
 		supportsActions: opts.supportsActions ?? false,
 		renameVariables: vi.fn(),
@@ -58,7 +65,7 @@ describe('ControlStore', () => {
 		store = new ControlStore(db, variablesValues, pageStore)
 	})
 
-	function addControl(controlId: string, opts: Parameters<typeof makeControl>[0] = {}) {
+	function addControl(controlId: SomeControlId, opts: Parameters<typeof makeControl>[0] = {}) {
 		const control = makeControl({ ...opts, controlId })
 		store.controls.set(controlId, control as any)
 		return control
@@ -67,6 +74,7 @@ describe('ControlStore', () => {
 	describe('construction', () => {
 		it('opens the controls table, checked when read, and repaired if it fails', () => {
 			expect(getSchemaTableView).toHaveBeenCalledWith('controls', SomeControlModelSchema, {
+				key: expect.objectContaining({ schema: expect.anything() }),
 				validateWrites: false,
 				repair: expect.any(Function),
 			})
@@ -75,22 +83,44 @@ describe('ControlStore', () => {
 
 		it('repairs a stored control with an invalid entity, rather than losing it', () => {
 			const db = new DataDatabase(':memory:', () => {})
-			db.getTableView<Record<string, any>>('controls').set('bank:1', {
+			db.getTableView<Record<string, any>>('controls').set(CreateBankControlId('1'), {
 				type: 'button-layered',
 				feedbacks: [{ type: 'feedback', id: 'f1', definitionId: 'state', connectionId: 5, options: {} }],
 			})
 
 			const realStore = new ControlStore(db, {} as any, {} as any)
-			const control = realStore.dbTable.get('bank:1')
+			const control = realStore.dbTable.get(CreateBankControlId('1'))
 
 			expect(control).toMatchObject({
 				type: 'button-layered',
 				feedbacks: [{ type: 'feedback', id: 'f1', definitionId: INVALID_ENTITY_DEFINITION_ID, disabled: true }],
 			})
 			// And the repair is stored
-			expect(db.getTableView<Record<string, any>>('controls').get('bank:1').feedbacks[0].definitionId).toBe(
-				INVALID_ENTITY_DEFINITION_ID
-			)
+			expect(
+				db.getTableView<Record<string, any>>('controls').get(CreateBankControlId('1')).feedbacks[0].definitionId
+			).toBe(INVALID_ENTITY_DEFINITION_ID)
+			db.close()
+		})
+
+		it("moves aside a stored control whose id is invalid, or doesn't suit its type", () => {
+			const db = new DataDatabase(':memory:', () => {})
+			const rawControls = db.getTableView<Record<string, any>>('controls')
+			rawControls.set(CreateBankControlId('1'), { type: 'pageup' })
+			rawControls.set(CreateTriggerControlId('1'), { type: 'pageup' })
+			rawControls.set('nonsense', { type: 'pageup' })
+
+			const realStore = new ControlStore(db, {} as any, {} as any)
+
+			expect(realStore.dbTable.entries()).toEqual([[CreateBankControlId('1'), { type: 'pageup' }]])
+			expect(Object.keys(rawControls.all())).toEqual([CreateBankControlId('1')])
+			expect(
+				Object.values(db.getTableView<Record<string, BrokenRowRecord>>(BROKEN_ROWS_TABLE).all())
+					.map((row) => [row.rowId, row.reason])
+					.sort()
+			).toEqual([
+				['nonsense', expect.stringMatching(/^Invalid key/)],
+				[CreateTriggerControlId('1'), 'A control of type "pageup" must have a bank id'],
+			])
 			db.close()
 		})
 
@@ -101,41 +131,37 @@ describe('ControlStore', () => {
 
 	describe('getControl', () => {
 		it('returns a stored control', () => {
-			const control = addControl('bank:1')
-			expect(store.getControl('bank:1')).toBe(control)
+			const control = addControl(CreateBankControlId('1'))
+			expect(store.getControl(CreateBankControlId('1'))).toBe(control)
 		})
 
 		it('returns undefined for a missing control', () => {
-			expect(store.getControl('bank:missing')).toBeUndefined()
-		})
-
-		it('returns undefined for an empty id (without hitting the map)', () => {
-			expect(store.getControl('')).toBeUndefined()
+			expect(store.getControl(CreateBankControlId('missing'))).toBeUndefined()
 		})
 	})
 
 	describe('getControlFollowingReferences', () => {
 		it('returns a non-reference control directly', () => {
-			const control = addControl('bank:1')
-			expect(store.getControlFollowingReferences('bank:1')).toBe(control)
+			const control = addControl(CreateBankControlId('1'))
+			expect(store.getControlFollowingReferences(CreateBankControlId('1'))).toBe(control)
 		})
 
 		it('follows a chain of references to the target', () => {
-			addControl('bank:ref1', { referenceTargetControlId: 'bank:ref2' })
-			addControl('bank:ref2', { referenceTargetControlId: 'bank:target' })
-			const target = addControl('bank:target')
-			expect(store.getControlFollowingReferences('bank:ref1')).toBe(target)
+			addControl(CreateBankControlId('ref1'), { referenceTargetControlId: CreateBankControlId('ref2') })
+			addControl(CreateBankControlId('ref2'), { referenceTargetControlId: CreateBankControlId('target') })
+			const target = addControl(CreateBankControlId('target'))
+			expect(store.getControlFollowingReferences(CreateBankControlId('ref1'))).toBe(target)
 		})
 
 		it('returns undefined for a reference to a missing control', () => {
-			addControl('bank:ref', { referenceTargetControlId: 'bank:missing' })
-			expect(store.getControlFollowingReferences('bank:ref')).toBeUndefined()
+			addControl(CreateBankControlId('ref'), { referenceTargetControlId: CreateBankControlId('missing') })
+			expect(store.getControlFollowingReferences(CreateBankControlId('ref'))).toBeUndefined()
 		})
 
 		it('returns undefined for a reference cycle', () => {
-			addControl('bank:ref1', { referenceTargetControlId: 'bank:ref2' })
-			addControl('bank:ref2', { referenceTargetControlId: 'bank:ref1' })
-			expect(store.getControlFollowingReferences('bank:ref1')).toBeUndefined()
+			addControl(CreateBankControlId('ref1'), { referenceTargetControlId: CreateBankControlId('ref2') })
+			addControl(CreateBankControlId('ref2'), { referenceTargetControlId: CreateBankControlId('ref1') })
+			expect(store.getControlFollowingReferences(CreateBankControlId('ref1'))).toBeUndefined()
 		})
 
 		it('returns undefined for a null id', () => {
@@ -145,31 +171,31 @@ describe('ControlStore', () => {
 
 	describe('getAllControls', () => {
 		it('returns every stored control', () => {
-			const a = addControl('bank:1')
-			const b = addControl('bank:2')
+			const a = addControl(CreateBankControlId('1'))
+			const b = addControl(CreateBankControlId('2'))
 			const all = store.getAllControls()
 			expect(all.size).toBe(2)
-			expect(all.get('bank:1')).toBe(a)
-			expect(all.get('bank:2')).toBe(b)
+			expect(all.get(CreateBankControlId('1'))).toBe(a)
+			expect(all.get(CreateBankControlId('2'))).toBe(b)
 		})
 	})
 
 	describe('deleteControl', () => {
 		it('removes the control from the map and the db table', () => {
-			addControl('bank:1')
-			store.deleteControl('bank:1')
+			addControl(CreateBankControlId('1'))
+			store.deleteControl(CreateBankControlId('1'))
 
-			expect(store.getControl('bank:1')).toBeUndefined()
-			expect(tableView.delete).toHaveBeenCalledWith('bank:1')
+			expect(store.getControl(CreateBankControlId('1'))).toBeUndefined()
+			expect(tableView.delete).toHaveBeenCalledWith(CreateBankControlId('1'))
 		})
 
 		it('forgets the locations the control referenced', () => {
-			addControl('bank:1')
+			addControl(CreateBankControlId('1'))
 			store.referencedLocations.setControlReferences(
-				'bank:1',
+				CreateBankControlId('1'),
 				new Set([formatLocation({ pageNumber: 1, row: 0, column: 0 })])
 			)
-			store.deleteControl('bank:1')
+			store.deleteControl(CreateBankControlId('1'))
 
 			expect(
 				store.referencedLocations.getControlsReferencing(formatLocation({ pageNumber: 1, row: 0, column: 0 }))
@@ -179,8 +205,8 @@ describe('ControlStore', () => {
 
 	describe('renameVariables', () => {
 		it('renames across every control', () => {
-			const a = addControl('bank:1')
-			const b = addControl('bank:2')
+			const a = addControl(CreateBankControlId('1'))
+			const b = addControl(CreateBankControlId('2'))
 			store.renameVariables('old', 'new')
 
 			expect(a.renameVariables).toHaveBeenCalledWith('old', 'new')
@@ -190,8 +216,8 @@ describe('ControlStore', () => {
 
 	describe('forgetConnection', () => {
 		it('forgets the connection only on entity-backed controls', () => {
-			const withEntities = addControl('bank:1', { supportsEntities: true })
-			const withoutEntities = addControl('bank:2', { supportsEntities: false })
+			const withEntities = addControl(CreateBankControlId('1'), { supportsEntities: true })
+			const withoutEntities = addControl(CreateBankControlId('2'), { supportsEntities: false })
 
 			store.forgetConnection('conn1')
 
@@ -202,8 +228,8 @@ describe('ControlStore', () => {
 
 	describe('clearConnectionState', () => {
 		it('clears state only on entity-backed controls', () => {
-			const withEntities = addControl('bank:1', { supportsEntities: true })
-			const withoutEntities = addControl('bank:2', { supportsEntities: false })
+			const withEntities = addControl(CreateBankControlId('1'), { supportsEntities: true })
+			const withoutEntities = addControl(CreateBankControlId('2'), { supportsEntities: false })
 
 			store.clearConnectionState('conn1')
 
@@ -214,9 +240,9 @@ describe('ControlStore', () => {
 
 	describe('abortAllDelayedActions', () => {
 		it('aborts every control, forwarding the exempt signal', () => {
-			const withActions = addControl('bank:1', { supportsActions: true })
+			const withActions = addControl(CreateBankControlId('1'), { supportsActions: true })
 			// Eg a remote button, which forwards it
-			const withoutActions = addControl('bank:2', { supportsActions: false })
+			const withoutActions = addControl(CreateBankControlId('2'), { supportsActions: false })
 			const signal = new AbortController().signal
 
 			store.abortAllDelayedActions(signal)
@@ -226,7 +252,7 @@ describe('ControlStore', () => {
 		})
 
 		it('accepts a null signal', () => {
-			const withActions = addControl('bank:1', { supportsActions: true })
+			const withActions = addControl(CreateBankControlId('1'), { supportsActions: true })
 			store.abortAllDelayedActions(null)
 			expect(withActions.abortDelayedActions).toHaveBeenCalledWith(false, null, 0)
 		})
@@ -234,13 +260,13 @@ describe('ControlStore', () => {
 
 	describe('pressControl', () => {
 		it('emits control_press and forwards the press, returning true', () => {
-			const control = addControl('bank:1')
+			const control = addControl(CreateBankControlId('1'))
 			const pressListener = vi.fn()
 			store.triggerEvents.on('control_press', pressListener)
 
-			expect(store.pressControl('bank:1', true, 'surface1', true)).toBe(true)
+			expect(store.pressControl(CreateBankControlId('1'), true, 'surface1', true)).toBe(true)
 
-			expect(pressListener).toHaveBeenCalledWith('bank:1', true, 'surface1')
+			expect(pressListener).toHaveBeenCalledWith(CreateBankControlId('1'), true, 'surface1')
 			expect(control.pressControl).toHaveBeenCalledWith(true, 'surface1', true)
 		})
 
@@ -248,45 +274,45 @@ describe('ControlStore', () => {
 			const pressListener = vi.fn()
 			store.triggerEvents.on('control_press', pressListener)
 
-			expect(store.pressControl('bank:missing', true, 'surface1')).toBe(false)
+			expect(store.pressControl(CreateBankControlId('missing'), true, 'surface1')).toBe(false)
 			expect(pressListener).not.toHaveBeenCalled()
 		})
 	})
 
 	describe('rotateControl', () => {
 		it('forwards a valid rotation and returns the control result', () => {
-			const control = addControl('bank:1', { rotateResult: true })
-			expect(store.rotateControl('bank:1', 2, 'surface1')).toBe(true)
+			const control = addControl(CreateBankControlId('1'), { rotateResult: true })
+			expect(store.rotateControl(CreateBankControlId('1'), 2, 'surface1')).toBe(true)
 			expect(control.rotateControl).toHaveBeenCalledWith(2, 'surface1')
 		})
 
 		it('propagates a control that reports it did not handle the rotation', () => {
-			addControl('bank:1', { rotateResult: false })
-			expect(store.rotateControl('bank:1', -1, 'surface1')).toBe(false)
+			addControl(CreateBankControlId('1'), { rotateResult: false })
+			expect(store.rotateControl(CreateBankControlId('1'), -1, 'surface1')).toBe(false)
 		})
 
 		it('returns false for a missing control', () => {
-			expect(store.rotateControl('bank:missing', 1, 'surface1')).toBe(false)
+			expect(store.rotateControl(CreateBankControlId('missing'), 1, 'surface1')).toBe(false)
 		})
 
 		it.each([0, NaN, Infinity, -Infinity])('rejects a %s delta without touching the control', (delta) => {
-			const control = addControl('bank:1')
-			expect(store.rotateControl('bank:1', delta, 'surface1')).toBe(false)
+			const control = addControl(CreateBankControlId('1'))
+			expect(store.rotateControl(CreateBankControlId('1'), delta, 'surface1')).toBe(false)
 			expect(control.rotateControl).not.toHaveBeenCalled()
 		})
 	})
 
 	describe('updateFeedbackValues', () => {
 		it('is a no-op for an empty result set', () => {
-			const control = addControl('bank:1', { supportsEntities: true })
+			const control = addControl(CreateBankControlId('1'), { supportsEntities: true })
 			store.updateFeedbackValues('conn1', [])
 			expect(control.entities.updateFeedbackValues).not.toHaveBeenCalled()
 		})
 
 		it('groups values per control and dispatches to entity-backed controls', () => {
-			const control = addControl('bank:1', { supportsEntities: true })
-			const v1 = { controlId: 'bank:1', entityId: 'e1' } as any
-			const v2 = { controlId: 'bank:1', entityId: 'e2' } as any
+			const control = addControl(CreateBankControlId('1'), { supportsEntities: true })
+			const v1 = { controlId: CreateBankControlId('1'), entityId: 'e1' } as any
+			const v2 = { controlId: CreateBankControlId('1'), entityId: 'e2' } as any
 
 			store.updateFeedbackValues('conn1', [v1, v2])
 
@@ -298,11 +324,11 @@ describe('ControlStore', () => {
 		})
 
 		it('skips controls that do not support entities or are missing', () => {
-			const noEntities = addControl('bank:1', { supportsEntities: false })
+			const noEntities = addControl(CreateBankControlId('1'), { supportsEntities: false })
 
 			store.updateFeedbackValues('conn1', [
-				{ controlId: 'bank:1', entityId: 'e1' } as any,
-				{ controlId: 'bank:missing', entityId: 'e2' } as any,
+				{ controlId: CreateBankControlId('1'), entityId: 'e1' } as any,
+				{ controlId: CreateBankControlId('missing'), entityId: 'e2' } as any,
 			])
 
 			expect(noEntities.entities.updateFeedbackValues).not.toHaveBeenCalled()
@@ -315,10 +341,10 @@ describe('ControlStore', () => {
 	describe('createActionExecutionParser', () => {
 		it('uses the execution overrides and rejects clock sensitive expressions', () => {
 			const entityParser = {} as any
-			const control = addControl('bank:2', { supportsEntities: true, entityParser })
+			const control = addControl(CreateBankControlId('2'), { supportsEntities: true, entityParser })
 
 			const result = store.createActionExecutionParser({
-				controlId: 'bank:2',
+				controlId: CreateBankControlId('2'),
 				surfaceId: 'surface0',
 				location: undefined,
 				abortDelayed: new AbortController().signal,
@@ -338,11 +364,11 @@ describe('ControlStore', () => {
 		it('injects the grid location for a located control without an entity pool', () => {
 			const location = { pageNumber: 3, row: 1, column: 2 }
 			getLocationOfControlId.mockReturnValue(location)
-			addControl('bank:1', { supportsEntities: false })
+			addControl(CreateBankControlId('1'), { supportsEntities: false })
 
-			store.createVariablesAndExpressionParser('bank:1', null)
+			store.createVariablesAndExpressionParser(CreateBankControlId('1'), null)
 
-			expect(getLocationOfControlId).toHaveBeenCalledWith('bank:1')
+			expect(getLocationOfControlId).toHaveBeenCalledWith(CreateBankControlId('1'))
 			expect(createParser).toHaveBeenCalledWith(location, null, null, null, undefined)
 		})
 
@@ -350,7 +376,7 @@ describe('ControlStore', () => {
 			const location = { pageNumber: 1, row: 0, column: 0 }
 			getLocationOfControlId.mockReturnValue(location)
 
-			store.createVariablesAndExpressionParser('bank:9', null)
+			store.createVariablesAndExpressionParser(CreateBankControlId('9'), null)
 
 			expect(createParser).toHaveBeenCalledWith(location, null, null, null, undefined)
 		})
@@ -362,9 +388,9 @@ describe('ControlStore', () => {
 
 			const pageEntities = [{ id: 'pv1' }]
 			addControl(CreatePageControlId('page-abc'), { supportsEntities: true, localVariableEntities: pageEntities })
-			addControl('bank:1', { supportsEntities: false })
+			addControl(CreateBankControlId('1'), { supportsEntities: false })
 
-			store.createVariablesAndExpressionParser('bank:1', null)
+			store.createVariablesAndExpressionParser(CreateBankControlId('1'), null)
 
 			expect(getPageId).toHaveBeenCalledWith(3)
 			expect(createParser).toHaveBeenCalledWith(location, null, null, pageEntities, undefined)
@@ -387,10 +413,10 @@ describe('ControlStore', () => {
 
 		it('defers to the entity pool parser when the control supports entities', () => {
 			const entityParser = {} as any
-			const control = addControl('bank:2', { supportsEntities: true, entityParser })
+			const control = addControl(CreateBankControlId('2'), { supportsEntities: true, entityParser })
 			const overrides = { 'custom:y': 1 } as any
 
-			const result = store.createVariablesAndExpressionParser('bank:2', overrides)
+			const result = store.createVariablesAndExpressionParser(CreateBankControlId('2'), overrides)
 
 			expect(result).toBe(entityParser)
 			expect(control.entities.createVariablesAndExpressionParser).toHaveBeenCalledWith(overrides, undefined)

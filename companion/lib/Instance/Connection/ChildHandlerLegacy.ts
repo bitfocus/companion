@@ -1,5 +1,6 @@
 import type express from 'express'
 import semver from 'semver'
+import { isSomeControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
@@ -351,7 +352,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	async sendVariablesChanged(
 		changedVariableIdSet: ReadonlySet<string>,
 		getChangedVariableIds: () => string[],
-		controlIdFilter: ReadonlySet<string> | null
+		controlIdFilter: ReadonlySet<SomeControlId> | null
 	): Promise<void> {
 		if (this.#entityManager) {
 			this.#entityManager.onVariablesChanged(changedVariableIdSet, controlIdFilter)
@@ -396,7 +397,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		return allActions
 	}
 
-	async entityUpdate(entity: ControlEntityInstance, controlId: string): Promise<void> {
+	async entityUpdate(entity: ControlEntityInstance, controlId: SomeControlId): Promise<void> {
 		if (this.#entityManager) {
 			if (entity.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
 
@@ -416,7 +417,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	/**
 	 * Inform the child instance class about an updated feedback
 	 */
-	async #feedbackUpdate(feedback: FeedbackEntityModel, controlId: string): Promise<void> {
+	async #feedbackUpdate(feedback: FeedbackEntityModel, controlId: SomeControlId): Promise<void> {
 		if (feedback.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
 		if (feedback.disabled) return
 
@@ -446,7 +447,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	 */
 	async entityLearnValues(
 		entity: SomeEntityModel,
-		controlId: string,
+		controlId: SomeControlId,
 		signal: AbortSignal
 	): Promise<ExpressionableOptionsObject | undefined | void> {
 		if (entity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
@@ -568,7 +569,7 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 	/**
 	 * Inform the child instance class about an updated action
 	 */
-	async #actionUpdate(action: ActionEntityModel, controlId: string): Promise<void> {
+	async #actionUpdate(action: ActionEntityModel, controlId: SomeControlId): Promise<void> {
 		if (action.connectionId !== this.connectionId) throw new Error(`Action is for a different connection`)
 		if (action.disabled) return
 
@@ -873,11 +874,18 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 		this.#deps.controls.updateFeedbackValues(
 			this.connectionId,
-			msg.values.map((val) => ({
-				entityId: val.id,
-				controlId: val.controlId,
-				value: val.value,
-			}))
+			// The control ids come back from the module, so are only trusted once checked
+			msg.values.flatMap((val) =>
+				isSomeControlId(val.controlId)
+					? [
+							{
+								entityId: val.id,
+								controlId: val.controlId,
+								value: val.value,
+							},
+						]
+					: []
+			)
 		)
 	}
 
@@ -977,7 +985,8 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 		msg: ParseVariablesInStringMessage
 	): Promise<ParseVariablesInStringResponseMessage> {
 		try {
-			const parser = this.#deps.controls.createVariablesAndExpressionParser(msg.controlId, null)
+			const controlId = msg.controlId && isSomeControlId(msg.controlId) ? msg.controlId : null
+			const parser = this.#deps.controls.createVariablesAndExpressionParser(controlId, null)
 			const result = parser.parseVariables(msg.text)
 
 			return {
@@ -1039,7 +1048,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 			for (const feedback of Object.values(msg.updatedFeedbacks)) {
 				if (feedback) {
-					const control = this.#deps.controls.getControl(feedback.controlId)
+					const control = isSomeControlId(feedback.controlId)
+						? this.#deps.controls.getControl(feedback.controlId)
+						: undefined
 					const found =
 						control?.supportsEntities &&
 						control.entities.entityReplaceForUpgrade(
@@ -1062,7 +1073,9 @@ export class ConnectionChildHandlerLegacy implements ChildProcessHandlerBase, Co
 
 			for (const action of Object.values(msg.updatedActions)) {
 				if (action) {
-					const control = this.#deps.controls.getControl(action.controlId)
+					const control = isSomeControlId(action.controlId)
+						? this.#deps.controls.getControl(action.controlId)
+						: undefined
 					const found =
 						control?.supportsEntities &&
 						control.entities.entityReplaceForUpgrade(

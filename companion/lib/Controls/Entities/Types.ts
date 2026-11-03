@@ -1,3 +1,4 @@
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type {
 	FeedbackValue,
 	RawStoreResultCustomVariable,
@@ -25,7 +26,7 @@ export type InternalControllerForEntity = Pick<
 
 export interface NewFeedbackValue {
 	entityId: string
-	controlId: string
+	controlId: SomeControlId
 
 	value: FeedbackValue
 }

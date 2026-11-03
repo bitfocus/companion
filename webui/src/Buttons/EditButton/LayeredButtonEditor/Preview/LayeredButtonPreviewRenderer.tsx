@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import QuickLRU from 'quick-lru'
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { RENDER_CLOCK_INTERVAL_MS } from '@companion-app/shared/Graphics/AnimationTiming.js'
 import type { ElementGeometry } from '@companion-app/shared/Graphics/Geometry.js'
 import type { TextLayoutCache } from '@companion-app/shared/Graphics/ImageBase.js'
@@ -34,7 +35,7 @@ import { QuickActionsToolbar } from './QuickActionsToolbar.js'
 import { SelectionOverlay } from './SelectionOverlay.js'
 
 interface LayeredButtonPreviewRendererProps {
-	controlId: string
+	controlId: SomeControlId
 	location: ControlLocation
 	styleStore: LayeredStyleStore
 }
@@ -134,7 +135,7 @@ const ElementQuickActions = observer(function ElementQuickActions({
 	snapEnabled,
 	onToggleSnapEnabled,
 }: {
-	controlId: string
+	controlId: SomeControlId
 	styleStore: LayeredStyleStore
 	linked: boolean
 	onToggleLinked: () => void
@@ -237,7 +238,7 @@ interface LayeredButtonCanvasProps {
 	hiddenElements: ReadonlySet<string>
 	selectedElementId: string | null
 	className?: string
-	controlId: string
+	controlId: SomeControlId
 	styleStore: LayeredStyleStore
 	linkedRef: React.RefObject<boolean>
 	snapEnabledRef: React.RefObject<boolean>

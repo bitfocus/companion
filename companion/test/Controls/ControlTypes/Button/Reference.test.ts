@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { ButtonReferenceButtonModel, LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ControlDependencies } from '../../../../lib/Controls/ControlDependencies.js'
@@ -7,7 +8,7 @@ import { ControlButtonReference } from '../../../../lib/Controls/ControlTypes/Bu
 import { ReferencedLocationsIndex } from '../../../../lib/Controls/ReferencedLocationsIndex.js'
 import { mangleReferenceSurfaceId, MAX_REFERENCE_DEPTH } from '../../../../lib/Surface/ReferenceSurfaceId.js'
 
-const MY_CONTROL_ID = 'bank:test01'
+const MY_CONTROL_ID = CreateBankControlId('test01')
 const MY_LOCATION: ControlLocation = { pageNumber: 1, row: 2, column: 3 }
 
 function makeModel(location: ButtonReferenceButtonModel['options']['location']): ButtonReferenceButtonModel {
@@ -128,9 +129,9 @@ describe('ControlButtonReference', () => {
 
 	describe('getReferenceTargetControlId', () => {
 		it('returns the control at the resolved location', () => {
-			getControlIdAt.mockReturnValue('bank:target')
+			getControlIdAt.mockReturnValue(CreateBankControlId('target'))
 			const control = createControl(plainLocation('4/0/0'))
-			expect(control.getReferenceTargetControlId()).toBe('bank:target')
+			expect(control.getReferenceTargetControlId()).toBe(CreateBankControlId('target'))
 		})
 
 		it('returns null when the location does not resolve to a control', () => {
@@ -142,13 +143,13 @@ describe('ControlButtonReference', () => {
 
 	describe('pressControl', () => {
 		it('forwards to the resolved target with a mangled surfaceId', () => {
-			getControlIdAt.mockReturnValue('bank:target')
+			getControlIdAt.mockReturnValue(CreateBankControlId('target'))
 			const control = createControl(plainLocation('4/0/0'))
 
 			control.pressControl(true, 'surface1', false)
 
 			expect(controlsAccessor.pressControl).toHaveBeenCalledWith(
-				'bank:target',
+				CreateBankControlId('target'),
 				true,
 				mangleReferenceSurfaceId('surface1', MY_CONTROL_ID),
 				false
@@ -179,12 +180,12 @@ describe('ControlButtonReference', () => {
 		})
 
 		it('stops forwarding once the loop guard depth is reached', () => {
-			getControlIdAt.mockReturnValue('bank:target')
+			getControlIdAt.mockReturnValue(CreateBankControlId('target'))
 			const control = createControl(plainLocation('4/0/0'))
 
 			let deepSurfaceId = 'surface1'
 			for (let i = 0; i < MAX_REFERENCE_DEPTH; i++) {
-				deepSurfaceId = mangleReferenceSurfaceId(deepSurfaceId, 'bank:hop')
+				deepSurfaceId = mangleReferenceSurfaceId(deepSurfaceId, CreateBankControlId('hop'))
 			}
 
 			control.pressControl(true, deepSurfaceId)
@@ -194,12 +195,12 @@ describe('ControlButtonReference', () => {
 
 	describe('rotateControl', () => {
 		it('forwards and reports handled', () => {
-			getControlIdAt.mockReturnValue('bank:target')
+			getControlIdAt.mockReturnValue(CreateBankControlId('target'))
 			const control = createControl(plainLocation('4/0/0'))
 
 			expect(control.rotateControl(1, 'surface1')).toBe(true)
 			expect(controlsAccessor.rotateControl).toHaveBeenCalledWith(
-				'bank:target',
+				CreateBankControlId('target'),
 				1,
 				mangleReferenceSurfaceId('surface1', MY_CONTROL_ID)
 			)
@@ -214,12 +215,12 @@ describe('ControlButtonReference', () => {
 		})
 
 		it('reports not-handled once the loop guard depth is reached', () => {
-			getControlIdAt.mockReturnValue('bank:target')
+			getControlIdAt.mockReturnValue(CreateBankControlId('target'))
 			const control = createControl(plainLocation('4/0/0'))
 
 			let deepSurfaceId = 'surface1'
 			for (let i = 0; i < MAX_REFERENCE_DEPTH; i++) {
-				deepSurfaceId = mangleReferenceSurfaceId(deepSurfaceId, 'bank:hop')
+				deepSurfaceId = mangleReferenceSurfaceId(deepSurfaceId, CreateBankControlId('hop'))
 			}
 
 			expect(control.rotateControl(1, deepSurfaceId)).toBe(false)
@@ -237,7 +238,7 @@ describe('ControlButtonReference', () => {
 				steps: {},
 				localVariables: [],
 			}
-			getControlIdAt.mockReturnValue('bank:target')
+			getControlIdAt.mockReturnValue(CreateBankControlId('target'))
 			controlsAccessor.getControl.mockReturnValue({ toJSON: vi.fn(() => targetModel) })
 
 			const control = createControl(plainLocation('4/0/0'))

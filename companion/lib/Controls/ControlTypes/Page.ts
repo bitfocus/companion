@@ -1,3 +1,4 @@
+import type { PageControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { PageControlModel } from '@companion-app/shared/Model/PageControlModel.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
@@ -33,7 +34,7 @@ import type {
  * this program.
  */
 export class ControlPage
-	extends ControlBase<PageControlModel>
+	extends ControlBase<PageControlModel, PageControlId>
 	implements
 		ControlWithoutActions,
 		ControlWithoutEvents,
@@ -63,7 +64,12 @@ export class ControlPage
 	 * @param storage - persisted storage object
 	 * @param isImport - if this is importing a control, not creating at startup
 	 */
-	constructor(deps: ControlDependencies, controlId: string, storage: PageControlModel | null, isImport: boolean) {
+	constructor(
+		deps: ControlDependencies,
+		controlId: PageControlId,
+		storage: PageControlModel | null,
+		isImport: boolean
+	) {
 		super(deps, controlId, `Controls/ControlTypes/Page/${controlId}`)
 
 		this.entities = new EntityListPoolPage({

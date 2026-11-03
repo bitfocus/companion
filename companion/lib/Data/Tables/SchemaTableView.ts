@@ -1,5 +1,5 @@
 import type { DatabaseSync } from 'node:sqlite'
-import type z from 'zod'
+import z from 'zod'
 import type { Logger } from '../../Log/Controller.js'
 import {
 	DataStoreParsedTableViewBase,
@@ -8,6 +8,19 @@ import {
 } from './ParsedTableViewBase.js'
 import type { DataStoreTableView } from './TableView.js'
 import type { DataStoreTableViewHooks } from './TableViewBase.js'
+
+export interface SchemaTableViewKey<TKey extends string, TRow> {
+	/** The schema every key must match */
+	schema: z.ZodType<TKey>
+	/** Why a key doesn't suit its row, or null when it does */
+	matchesRow(key: TKey, row: TRow): string | null
+}
+
+/** Accepts any key */
+export const ANY_SCHEMA_TABLE_KEY: SchemaTableViewKey<string, unknown> = {
+	schema: z.string(),
+	matchesRow: () => null,
+}
 
 export interface SchemaTableViewOptions {
 	/**
@@ -29,10 +42,13 @@ export interface SchemaTableViewOptions {
  */
 export class DataStoreSchemaTableView<
 	TSchema extends z.ZodType<Record<string, any>>,
+	TKey extends string,
 > extends DataStoreParsedTableViewBase {
 	readonly schema: TSchema
 	readonly validateWrites: boolean
 	readonly repair: SchemaTableViewRepair | undefined
+	/** Checked as each row is read. A row whose key fails is moved to the broken rows table */
+	readonly key: SchemaTableViewKey<TKey, z.output<TSchema>>
 
 	constructor(
 		logger: Logger,
@@ -41,11 +57,13 @@ export class DataStoreSchemaTableView<
 		hooks: DataStoreTableViewHooks,
 		brokenRows: DataStoreTableView<Record<string, BrokenRowRecord>>,
 		schema: TSchema,
+		key: SchemaTableViewKey<TKey, z.output<TSchema>>,
 		options: SchemaTableViewOptions | undefined
 	) {
 		super(logger, store, tableName, hooks, brokenRows)
 
 		this.schema = schema
+		this.key = key
 		this.validateWrites = options?.validateWrites ?? true
 		this.repair = options?.repair
 	}
@@ -54,11 +72,18 @@ export class DataStoreSchemaTableView<
 	 * Get all valid rows from the table
 	 */
 	all(): Record<string, z.output<TSchema>> {
-		const out: Record<string, z.output<TSchema>> = {}
+		return Object.fromEntries(this.entries())
+	}
+
+	/**
+	 * Get all valid rows from the table, with their keys
+	 */
+	entries(): Array<[TKey, z.output<TSchema>]> {
+		const out: Array<[TKey, z.output<TSchema>]> = []
 
 		for (const [id, rawValue] of Object.entries(this.allRaw())) {
-			const value = this.parseRow(id, rawValue, this.schema, this.repair)
-			if (value !== undefined) out[id] = value
+			const entry = this.#parseEntry(id, rawValue)
+			if (entry) out.push(entry)
 		}
 
 		return out
@@ -68,13 +93,33 @@ export class DataStoreSchemaTableView<
 	 * Get a value from the table, if it exists and is valid
 	 * @param id - the key to be retrieved
 	 */
-	get(id: string): z.output<TSchema> | undefined {
+	get(id: TKey): z.output<TSchema> | undefined {
 		this.validateKey(id)
 
 		const rawValue = this.getRaw(id)
 		if (rawValue === undefined) return undefined
 
-		return this.parseRow(id, rawValue, this.schema, this.repair)
+		return this.#parseEntry(id, rawValue)?.[1]
+	}
+
+	/** Parse a stored row and check its key, moving it to the broken rows table if either fails */
+	#parseEntry(id: string, rawValue: string): [TKey, z.output<TSchema>] | undefined {
+		const value = this.parseRow(id, rawValue, this.schema, this.repair)
+		if (value === undefined) return undefined
+
+		const key = this.key.schema.safeParse(id)
+		if (!key.success) {
+			this.moveToBroken(id, rawValue, `Invalid key: ${z.prettifyError(key.error)}`)
+			return undefined
+		}
+
+		const mismatch = this.key.matchesRow(key.data, value)
+		if (mismatch !== null) {
+			this.moveToBroken(id, rawValue, mismatch)
+			return undefined
+		}
+
+		return [key.data, value]
 	}
 
 	/**
@@ -84,7 +129,7 @@ export class DataStoreSchemaTableView<
 	 * @returns the value that was stored
 	 * @throws if writes are validated and the value does not match the schema
 	 */
-	set(id: string, value: z.output<TSchema>): z.output<TSchema> {
+	set(id: TKey, value: z.output<TSchema>): z.output<TSchema> {
 		this.validateKey(id)
 
 		if (!this.validateWrites) {
@@ -99,7 +144,7 @@ export class DataStoreSchemaTableView<
 	 * Delete a value from the table
 	 * @param id - the key to be deleted
 	 */
-	delete(id: string): void {
+	delete(id: TKey): void {
 		this.validateKey(id)
 
 		this.deleteRaw(id)

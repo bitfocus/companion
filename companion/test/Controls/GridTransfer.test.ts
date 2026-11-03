@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { CreateBankControlId, formatLocation, type BankControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { GridTransferError, planGridTransfer, type GridPlacement } from '../../lib/Controls/GridTransfer.js'
 
@@ -10,9 +10,9 @@ function at(row: number, column: number, pageNumber = 1): ControlLocation {
 /** A grid where the given locations hold a control named after themselves */
 function gridWith(...occupied: ControlLocation[]) {
 	const ids = new Set(occupied.map(formatLocation))
-	return (location: ControlLocation): string | null => {
+	return (location: ControlLocation): BankControlId | null => {
 		const key = formatLocation(location)
-		return ids.has(key) ? `control:${key}` : null
+		return ids.has(key) ? CreateBankControlId(key) : null
 	}
 }
 
@@ -26,7 +26,9 @@ describe('planGridTransfer', () => {
 		it('clones the source into the destination, leaving the source alone', () => {
 			const plan = planGridTransfer('copy', [{ fromLocation: at(0, 0), toLocation: at(1, 1) }], gridWith(at(0, 0)))
 
-			expect(plan.placements).toEqual([{ location: at(1, 1), kind: 'clone', sourceControlId: 'control:1/0/0' }])
+			expect(plan.placements).toEqual([
+				{ location: at(1, 1), kind: 'clone', sourceControlId: CreateBankControlId('1/0/0') },
+			])
 			expect(plan.discardedControlIds).toEqual([])
 		})
 
@@ -37,7 +39,7 @@ describe('planGridTransfer', () => {
 				gridWith(at(0, 0), at(1, 1))
 			)
 
-			expect(plan.discardedControlIds).toEqual(['control:1/1/1'])
+			expect(plan.discardedControlIds).toEqual([CreateBankControlId('1/1/1')])
 		})
 
 		it('leaves the destination of a gap alone, rather than clearing it', () => {
@@ -52,11 +54,15 @@ describe('planGridTransfer', () => {
 			)
 
 			const placements = byLocation(plan.placements)
-			expect(placements['1/2/0']).toEqual({ location: at(2, 0), kind: 'clone', sourceControlId: 'control:1/0/0' })
+			expect(placements['1/2/0']).toEqual({
+				location: at(2, 0),
+				kind: 'clone',
+				sourceControlId: CreateBankControlId('1/0/0'),
+			})
 			// The gap set where the first button landed and then had nothing of its own to place, so the
 			// button it passed over keeps its place
 			expect(placements['1/2/1']).toBeUndefined()
-			expect(plan.discardedControlIds).toEqual(['control:1/2/0'])
+			expect(plan.discardedControlIds).toEqual([CreateBankControlId('1/2/0')])
 		})
 
 		it('does nothing at all when every source is empty', () => {
@@ -78,8 +84,16 @@ describe('planGridTransfer', () => {
 			)
 
 			const placements = byLocation(plan.placements)
-			expect(placements['1/0/1']).toEqual({ location: at(0, 1), kind: 'clone', sourceControlId: 'control:1/0/0' })
-			expect(placements['1/0/2']).toEqual({ location: at(0, 2), kind: 'clone', sourceControlId: 'control:1/0/1' })
+			expect(placements['1/0/1']).toEqual({
+				location: at(0, 1),
+				kind: 'clone',
+				sourceControlId: CreateBankControlId('1/0/0'),
+			})
+			expect(placements['1/0/2']).toEqual({
+				location: at(0, 2),
+				kind: 'clone',
+				sourceControlId: CreateBankControlId('1/0/1'),
+			})
 		})
 
 		it('copies between pages', () => {
@@ -89,7 +103,9 @@ describe('planGridTransfer', () => {
 				gridWith(at(0, 0, 1))
 			)
 
-			expect(plan.placements).toEqual([{ location: at(0, 0, 4), kind: 'clone', sourceControlId: 'control:1/0/0' }])
+			expect(plan.placements).toEqual([
+				{ location: at(0, 0, 4), kind: 'clone', sourceControlId: CreateBankControlId('1/0/0') },
+			])
 		})
 	})
 
@@ -98,7 +114,11 @@ describe('planGridTransfer', () => {
 			const plan = planGridTransfer('move', [{ fromLocation: at(0, 0), toLocation: at(1, 1) }], gridWith(at(0, 0)))
 
 			const placements = byLocation(plan.placements)
-			expect(placements['1/1/1']).toEqual({ location: at(1, 1), kind: 'existing', controlId: 'control:1/0/0' })
+			expect(placements['1/1/1']).toEqual({
+				location: at(1, 1),
+				kind: 'existing',
+				controlId: CreateBankControlId('1/0/0'),
+			})
 			expect(placements['1/0/0']).toEqual({ location: at(0, 0), kind: 'empty' })
 			expect(plan.discardedControlIds).toEqual([])
 		})
@@ -116,9 +136,21 @@ describe('planGridTransfer', () => {
 			)
 
 			const placements = byLocation(plan.placements)
-			expect(placements['1/0/1']).toEqual({ location: at(0, 1), kind: 'existing', controlId: 'control:1/0/0' })
-			expect(placements['1/0/2']).toEqual({ location: at(0, 2), kind: 'existing', controlId: 'control:1/0/1' })
-			expect(placements['1/0/3']).toEqual({ location: at(0, 3), kind: 'existing', controlId: 'control:1/0/2' })
+			expect(placements['1/0/1']).toEqual({
+				location: at(0, 1),
+				kind: 'existing',
+				controlId: CreateBankControlId('1/0/0'),
+			})
+			expect(placements['1/0/2']).toEqual({
+				location: at(0, 2),
+				kind: 'existing',
+				controlId: CreateBankControlId('1/0/1'),
+			})
+			expect(placements['1/0/3']).toEqual({
+				location: at(0, 3),
+				kind: 'existing',
+				controlId: CreateBankControlId('1/0/2'),
+			})
 			expect(placements['1/0/0']).toEqual({ location: at(0, 0), kind: 'empty' })
 
 			// Nothing was overwritten - every control found a new home
@@ -132,7 +164,7 @@ describe('planGridTransfer', () => {
 				gridWith(at(0, 0), at(1, 1))
 			)
 
-			expect(plan.discardedControlIds).toEqual(['control:1/1/1'])
+			expect(plan.discardedControlIds).toEqual([CreateBankControlId('1/1/1')])
 		})
 
 		it('leaves the destination of a gap alone, rather than clearing it', () => {
@@ -146,7 +178,11 @@ describe('planGridTransfer', () => {
 			)
 
 			const placements = byLocation(plan.placements)
-			expect(placements['1/2/0']).toEqual({ location: at(2, 0), kind: 'existing', controlId: 'control:1/0/0' })
+			expect(placements['1/2/0']).toEqual({
+				location: at(2, 0),
+				kind: 'existing',
+				controlId: CreateBankControlId('1/0/0'),
+			})
 			expect(placements['1/2/1']).toBeUndefined()
 			// Only the cell the button actually left is vacated
 			expect(placements['1/0/0']).toEqual({ location: at(0, 0), kind: 'empty' })
@@ -164,8 +200,16 @@ describe('planGridTransfer', () => {
 			)
 
 			const placements = byLocation(plan.placements)
-			expect(placements['1/1/1']).toEqual({ location: at(1, 1), kind: 'existing', controlId: 'control:1/0/0' })
-			expect(placements['1/0/0']).toEqual({ location: at(0, 0), kind: 'existing', controlId: 'control:1/1/1' })
+			expect(placements['1/1/1']).toEqual({
+				location: at(1, 1),
+				kind: 'existing',
+				controlId: CreateBankControlId('1/0/0'),
+			})
+			expect(placements['1/0/0']).toEqual({
+				location: at(0, 0),
+				kind: 'existing',
+				controlId: CreateBankControlId('1/1/1'),
+			})
 			expect(plan.discardedControlIds).toEqual([])
 		})
 
@@ -173,7 +217,11 @@ describe('planGridTransfer', () => {
 			const plan = planGridTransfer('swap', [{ fromLocation: at(0, 0), toLocation: at(1, 1) }], gridWith(at(0, 0)))
 
 			const placements = byLocation(plan.placements)
-			expect(placements['1/1/1']).toEqual({ location: at(1, 1), kind: 'existing', controlId: 'control:1/0/0' })
+			expect(placements['1/1/1']).toEqual({
+				location: at(1, 1),
+				kind: 'existing',
+				controlId: CreateBankControlId('1/0/0'),
+			})
 			expect(placements['1/0/0']).toEqual({ location: at(0, 0), kind: 'empty' })
 			expect(plan.discardedControlIds).toEqual([])
 		})
@@ -217,8 +265,16 @@ describe('planGridTransfer', () => {
 			)
 
 			const placements = byLocation(plan.placements)
-			expect(placements['1/1/1']).toEqual({ location: at(1, 1), kind: 'clone', sourceControlId: 'control:1/0/0' })
-			expect(placements['1/2/2']).toEqual({ location: at(2, 2), kind: 'clone', sourceControlId: 'control:1/0/0' })
+			expect(placements['1/1/1']).toEqual({
+				location: at(1, 1),
+				kind: 'clone',
+				sourceControlId: CreateBankControlId('1/0/0'),
+			})
+			expect(placements['1/2/2']).toEqual({
+				location: at(2, 2),
+				kind: 'clone',
+				sourceControlId: CreateBankControlId('1/0/0'),
+			})
 		})
 
 		it('rejects two buttons landing on the same cell', () => {
@@ -252,7 +308,11 @@ describe('planGridTransfer', () => {
 			)
 
 			const placements = byLocation(plan.placements)
-			expect(placements['1/0/0']).toEqual({ location: at(0, 0), kind: 'existing', controlId: 'control:1/0/1' })
+			expect(placements['1/0/0']).toEqual({
+				location: at(0, 0),
+				kind: 'existing',
+				controlId: CreateBankControlId('1/0/1'),
+			})
 		})
 	})
 })

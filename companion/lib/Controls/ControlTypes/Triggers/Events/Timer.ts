@@ -1,4 +1,5 @@
 import dayjs from 'dayjs'
+import type { TriggerControlId } from '@companion-app/shared/ControlId.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
@@ -117,7 +118,7 @@ export class TriggersEventTimer {
 	constructor(
 		userconfig: DataUserConfig,
 		eventBus: TriggerEvents,
-		controlId: string,
+		controlId: TriggerControlId,
 		executeActions: (nowTime: number, source: TriggerExecutionSource) => void
 	) {
 		this.#logger = LogController.createLogger(`Controls/Triggers/Events/Timer/${controlId}`)

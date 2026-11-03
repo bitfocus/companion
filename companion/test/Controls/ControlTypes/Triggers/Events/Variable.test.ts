@@ -1,10 +1,11 @@
 import { EventEmitter } from 'node:events'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import { TriggersEventVariables } from '../../../../../lib/Controls/ControlTypes/Triggers/Events/Variable.js'
 import { TriggerExecutionSource } from '../../../../../lib/Controls/ControlTypes/Triggers/TriggerExecutionSource.js'
 import type { TriggerEvents } from '../../../../../lib/Controls/TriggerEvents.js'
 
-const CONTROL_ID = 'control-1'
+const CONTROL_ID = CreateTriggerControlId('control-1')
 const WATCHED = 'custom:loop'
 const THROTTLE_MS = 50
 const RATE_LIMIT_CLEAR_MS = 1000

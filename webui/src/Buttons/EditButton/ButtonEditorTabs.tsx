@@ -1,5 +1,6 @@
 import { faChevronLeft, faChevronRight, faPlus, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import './ButtonEditorTabs.css'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -41,7 +42,7 @@ export function ButtonEditorTabBar({ tabs, activeTab, setActiveTab }: ButtonEdit
 }
 
 interface ButtonEditorTabsProps {
-	controlId: string
+	controlId: SomeControlId
 	location: ControlLocation
 	steps: NormalButtonSteps
 	disabledSetStep: boolean
@@ -208,7 +209,7 @@ export const ButtonEditorTabs = observer(function ButtonEditorTabs({
 })
 
 interface StepPillProps {
-	controlId: string
+	controlId: SomeControlId
 	stepId: string
 	stepIndex: number
 	stepOptions: ActionStepOptions | undefined

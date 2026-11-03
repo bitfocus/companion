@@ -1,5 +1,6 @@
 import debounceFn from 'debounce-fn'
 import type { JsonValue } from 'type-fest'
+import type { ExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
 import { diffObject } from '@companion-app/shared/Diff.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
@@ -39,7 +40,7 @@ import type {
  * this program.
  */
 export class ControlExpressionVariable
-	extends ControlBase<ExpressionVariableModel>
+	extends ControlBase<ExpressionVariableModel, ExpressionVariableControlId>
 	implements
 		ControlWithoutActions,
 		ControlWithoutEvents,
@@ -92,7 +93,7 @@ export class ControlExpressionVariable
 	 */
 	constructor(
 		deps: ControlDependencies,
-		controlId: string,
+		controlId: ExpressionVariableControlId,
 		storage: ExpressionVariableModel | null,
 		isImport: boolean
 	) {

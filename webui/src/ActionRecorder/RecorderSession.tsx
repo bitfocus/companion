@@ -15,15 +15,14 @@ interface RecorderSessionProps {
 export const RecorderSession = observer(function RecorderSession({ sessionId, sessionInfo }: RecorderSessionProps) {
 	const actionsService = useActionRecorderActionService(sessionId)
 
-	const recorderControlId = `action_recorder_${sessionInfo?.id ?? sessionId}`
-	useEntityListReorderMonitor(recorderControlId, EntityModelType.Action, actionsService)
+	useEntityListReorderMonitor(null, EntityModelType.Action, actionsService)
 
 	if (!sessionInfo || !sessionInfo.actions) return <LoadingRetryOrError dataReady={false} design="pulse" />
 
 	return (
 		<div className="recorder-actions-list">
 			<EntityEditorContextProvider
-				controlId={recorderControlId}
+				controlId={null}
 				location={undefined}
 				serviceFactory={actionsService}
 				readonly={!!sessionInfo.isRunning}

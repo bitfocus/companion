@@ -8,12 +8,12 @@ import { publicProcedure, toIterable } from '../UI/TRPC.js'
 
 export abstract class CollectionsBaseController<TCollectionMetadata> {
 	readonly #logger: Logger
-	readonly #dbTable: DataStoreSchemaTableView<z.ZodType<CollectionBase<TCollectionMetadata>>>
+	readonly #dbTable: DataStoreSchemaTableView<z.ZodType<CollectionBase<TCollectionMetadata>>, string>
 	readonly #events = new EventEmitter<{ change: [rows: CollectionBase<TCollectionMetadata>[]] }>()
 
 	protected data: CollectionBase<TCollectionMetadata>[]
 
-	constructor(dbTable: DataStoreSchemaTableView<z.ZodType<CollectionBase<TCollectionMetadata>>>) {
+	constructor(dbTable: DataStoreSchemaTableView<z.ZodType<CollectionBase<TCollectionMetadata>>, string>) {
 		this.#logger = LogController.createLogger(`Resources/Collections/${dbTable.tableName}`)
 		this.#dbTable = dbTable
 

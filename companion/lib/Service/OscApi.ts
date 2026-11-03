@@ -1,5 +1,5 @@
 import type { OscReceivedMessage } from 'osc'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { formatLocation, type BankControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
@@ -185,7 +185,7 @@ export class ServiceOscApi {
 	/**
 	 * Parse the location and controlId from a request
 	 */
-	#locationParse = (match: Record<string, string>): { location: ControlLocation; controlId: string | null } => {
+	#locationParse = (match: Record<string, string>): { location: ControlLocation; controlId: BankControlId | null } => {
 		const location = {
 			pageNumber: Number(match.page),
 			row: Number(match.row),

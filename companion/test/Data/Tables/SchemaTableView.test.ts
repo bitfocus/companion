@@ -6,6 +6,7 @@ import {
 	type BrokenRowRecord,
 	type SchemaTableViewRepair,
 } from '../../../lib/Data/Tables/ParsedTableViewBase.js'
+import type { SchemaTableViewKey } from '../../../lib/Data/Tables/SchemaTableView.js'
 import { setRawRow } from '../../utils/RawRows.js'
 
 const schema = z.object({ name: z.string(), count: z.number().default(0) })
@@ -203,6 +204,49 @@ describe('DataStoreSchemaTableView', () => {
 
 	test('refuses to view the broken rows table', () => {
 		expect(() => cache.getSchemaTableView(BROKEN_ROWS_TABLE, schema)).toThrow()
+	})
+
+	describe('key', () => {
+		// Keys are `<name>:<id>`, and must start with the name of their row
+		const key: SchemaTableViewKey<`${string}:${string}`, z.output<typeof schema>> = {
+			schema: z.templateLiteral([z.string(), ':', z.string()]),
+			matchesRow: (id, row) => (id.startsWith(`${row.name}:`) ? null : `Key must start with "${row.name}:"`),
+		}
+
+		test('gives the rows with their keys', () => {
+			setRaw('x:1', JSON.stringify({ name: 'x' }))
+
+			const view = cache.getSchemaTableView('tbl', schema, { key })
+			expect(view.entries()).toEqual([['x:1', { name: 'x', count: 0 }]])
+			expect(view.get('x:1')).toEqual({ name: 'x', count: 0 })
+		})
+
+		test('moves a row whose key fails its schema to the broken rows', () => {
+			setRaw('x:1', JSON.stringify({ name: 'x' }))
+			setRaw('bad', JSON.stringify({ name: 'x' }))
+
+			const view = cache.getSchemaTableView('tbl', schema, { key })
+			expect(view.all()).toEqual({ 'x:1': { name: 'x', count: 0 } })
+			expect(Object.keys(rawTable().all())).toEqual(['x:1'])
+			expect(brokenRows()).toEqual([
+				expect.objectContaining({ rowId: 'bad', value: '{"name":"x"}', reason: expect.stringMatching(/^Invalid key/) }),
+			])
+		})
+
+		test("moves a row whose key doesn't suit it to the broken rows", () => {
+			setRaw('y:1', JSON.stringify({ name: 'x' }))
+
+			const view = cache.getSchemaTableView('tbl', schema, { key })
+			expect(view.get('y:1')).toBeUndefined()
+			expect(rawTable().all()).toEqual({})
+			expect(brokenRows()).toEqual([expect.objectContaining({ rowId: 'y:1', reason: 'Key must start with "x:"' })])
+		})
+
+		test('refuses a view of the same table with a different key', () => {
+			cache.getSchemaTableView('tbl', schema, { key })
+
+			expect(() => cache.getSchemaTableView('tbl', schema)).toThrow('different options')
+		})
 	})
 })
 

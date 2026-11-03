@@ -1,5 +1,5 @@
 import type { JsonValue } from 'type-fest'
-import { CreatePresetControlId } from '@companion-app/shared/ControlId.js'
+import { CreatePresetControlId, type PresetControlId } from '@companion-app/shared/ControlId.js'
 import type {
 	ButtonStatus,
 	LayeredButtonOptions,
@@ -42,7 +42,7 @@ import { LayeredButtonDrawer } from './LayeredButtonDrawer.js'
  * this program.
  */
 export class ControlButtonPreset
-	extends ControlBase<PresetButtonModel>
+	extends ControlBase<PresetButtonModel, PresetControlId>
 	implements
 		ControlWithLayeredStyle,
 		ControlWithoutActions,
@@ -189,7 +189,7 @@ export class ControlButtonPreset
 		}
 	}
 
-	#updateLastRender = (controlId: string, render: ImageResult): void => {
+	#updateLastRender = (controlId: PresetControlId, render: ImageResult): void => {
 		if (controlId !== this.controlId) return
 		this.#lastRender = render
 	}

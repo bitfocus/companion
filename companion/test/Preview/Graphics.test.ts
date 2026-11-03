@@ -1,6 +1,7 @@
 import EventEmitter from 'node:events'
 import { initTRPC } from '@trpc/server'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
 import { DEFAULT_PREVIEW_RENDER_SIZE, type PreviewRenderSize } from '@companion-app/shared/Model/Preview.js'
 import type { ControlCommonEvents } from '../../lib/Controls/ControlDependencies.js'
@@ -44,7 +45,7 @@ describe('PreviewGraphics location subscription', () => {
 		}) as unknown as GraphicsController & EventEmitter
 		graphics.getCachedRenderOrGeneratePlaceholder = vi.fn(() => render)
 
-		const pageStore = { getControlIdAt: vi.fn(() => 'control-1') } as unknown as IPageStore
+		const pageStore = { getControlIdAt: vi.fn(() => CreateBankControlId('control-1')) } as unknown as IPageStore
 		const controls = {} as ControlsController
 		const controlEvents = new EventEmitter<ControlCommonEvents>()
 
@@ -158,7 +159,7 @@ describe('PreviewGraphics controlId subscription', () => {
 
 		const caller = t.createCallerFactory(preview.createTrpcRouter())(testCtx)
 		const sub = new SubscriptionTester(
-			(await caller.controlId({ controlId: 'control-1' })) as AsyncIterable<string | null>
+			(await caller.controlId({ controlId: CreateBankControlId('control-1') })) as AsyncIterable<string | null>
 		)
 		await sub.next()
 		expect(graphics.displayedLocations.getSizes(location)).toEqual([{ width: 288, height: 288 }])
@@ -187,7 +188,7 @@ describe('PreviewGraphics reference subscription', () => {
 		const caller = t.createCallerFactory(preview.createTrpcRouter())(testCtx)
 		const sub = new SubscriptionTester(
 			(await caller.reference({
-				controlId: 'control-1',
+				controlId: CreateBankControlId('control-1'),
 				options: { location: { value: '1/2/3', isExpression: false } },
 			})) as AsyncIterable<string | null>
 		)

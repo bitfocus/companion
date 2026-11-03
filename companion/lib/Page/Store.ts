@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { nanoid } from 'nanoid'
-import { oldBankIndexToXY } from '@companion-app/shared/ControlId.js'
+import { oldBankIndexToXY, type BankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { PageModel, PageModelSchema } from '@companion-app/shared/Model/PageModel.js'
 import type { DataStoreSchemaTableView } from '../Data/Tables/SchemaTableView.js'
@@ -10,7 +10,7 @@ interface PageStoreEvents {
 	pagecount: [count: number]
 	pageindexchange: [pageIds: Set<string>]
 
-	controlLocationChanged: [controlId: string, location: ControlLocation | undefined]
+	controlLocationChanged: [controlId: BankControlId, location: ControlLocation | undefined]
 	pageDataChanged: [pageNumber: number, pageInfo: PageModel | undefined]
 }
 
@@ -27,7 +27,7 @@ export interface IPageStore extends EventEmitter<PageStoreEvents> {
 	/**
 	 * Get all ControlIds on the specified page
 	 */
-	getAllControlIdsOnPage(pageNumber: number): string[]
+	getAllControlIdsOnPage(pageNumber: number): BankControlId[]
 
 	/**
 	 * Get all populated locations on the specified page
@@ -63,17 +63,17 @@ export interface IPageStore extends EventEmitter<PageStoreEvents> {
 	/**
 	 * Get the location of a controlId
 	 */
-	getLocationOfControlId(controlId: string): ControlLocation | undefined
+	getLocationOfControlId(controlId: SomeControlId): ControlLocation | undefined
 
 	/**
 	 * Get the controlId at a specific location
 	 */
-	getControlIdAt(location: ControlLocation): string | null
+	getControlIdAt(location: ControlLocation): BankControlId | null
 
 	/**
 	 * Get the controlId at a specific location using old bank index
 	 */
-	getControlIdAtOldBankIndex(pageNumber: number, bank: number): string | null
+	getControlIdAtOldBankIndex(pageNumber: number, bank: number): BankControlId | null
 
 	/**
 	 * Get the total number of pages
@@ -110,7 +110,7 @@ export interface IPageStore extends EventEmitter<PageStoreEvents> {
 	// /**
 	//  * Set the controlId at a specific location
 	//  */
-	// setControlIdAt(location: ControlLocation, controlId: string | null): boolean
+	// setControlIdAt(location: ControlLocation, controlId: BankControlId | null): boolean
 }
 
 /**
@@ -129,12 +129,12 @@ export interface IPageStore extends EventEmitter<PageStoreEvents> {
 export class PageStore extends EventEmitter<PageStoreEvents> implements IPageStore {
 	readonly #logger = LogController.createLogger('Page/Store')
 
-	readonly #dbTable: DataStoreSchemaTableView<typeof PageModelSchema>
+	readonly #dbTable: DataStoreSchemaTableView<typeof PageModelSchema, string>
 
 	/**
 	 * Cache the location of each control
 	 */
-	readonly #locationCache = new Map<string, ControlLocation>()
+	readonly #locationCache = new Map<SomeControlId, ControlLocation>()
 
 	/**
 	 * Pages data
@@ -158,7 +158,7 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 		return this.#createdDefaultPage
 	}
 
-	constructor(dbTable: DataStoreSchemaTableView<typeof PageModelSchema>) {
+	constructor(dbTable: DataStoreSchemaTableView<typeof PageModelSchema, string>) {
 		super()
 		this.setMaxListeners(0)
 
@@ -187,7 +187,7 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 	/**
 	 * Get all ControlIds on the specified page
 	 */
-	getAllControlIdsOnPage(pageNumber: number): string[] {
+	getAllControlIdsOnPage(pageNumber: number): BankControlId[] {
 		const page = this.getPageInfo(pageNumber)
 		if (page) {
 			return Object.values(page.controls)
@@ -268,14 +268,14 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 	/**
 	 * Get the location of a controlId
 	 */
-	getLocationOfControlId(controlId: string): ControlLocation | undefined {
+	getLocationOfControlId(controlId: SomeControlId): ControlLocation | undefined {
 		return this.#locationCache.get(controlId)
 	}
 
 	/**
 	 * Get the controlId at a specific location
 	 */
-	getControlIdAt(location: ControlLocation): string | null {
+	getControlIdAt(location: ControlLocation): BankControlId | null {
 		const page = this.getPageInfo(location.pageNumber)
 		if (page) {
 			return page.controls[location.row]?.[location.column]
@@ -287,7 +287,7 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 	/**
 	 * Get the controlId at a specific location using old bank index
 	 */
-	getControlIdAtOldBankIndex(pageNumber: number, bank: number): string | null {
+	getControlIdAtOldBankIndex(pageNumber: number, bank: number): BankControlId | null {
 		const xy = oldBankIndexToXY(bank)
 		if (xy) {
 			return this.getControlIdAt({
@@ -365,7 +365,7 @@ export class PageStore extends EventEmitter<PageStoreEvents> implements IPageSto
 	/**
 	 * Set the controlId at a specific location
 	 */
-	setControlIdAt(location: ControlLocation, controlId: string | null): boolean {
+	setControlIdAt(location: ControlLocation, controlId: BankControlId | null): boolean {
 		const page = this.getPageInfo(location.pageNumber)
 		if (page) {
 			if (!page.controls[location.row]) page.controls[location.row] = {}

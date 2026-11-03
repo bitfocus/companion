@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { ConnectionCollection } from '@companion-app/shared/Model/Connections.js'
 import { EntityModelType, type FeedbackEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { InstanceStatusEntry } from '@companion-app/shared/Model/InstanceStatus.js'
@@ -6,7 +7,7 @@ import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type { RunActionExtras } from '../../lib/Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../../lib/Instance/Controller.js'
 import { InternalInstance } from '../../lib/Internal/Instance.js'
-import type { ActionForInternalExecution } from '../../lib/Internal/Types.js'
+import type { ActionForInternalExecution, FeedbackForInternalExecution } from '../../lib/Internal/Types.js'
 
 // ---- helpers ----------------------------------------------------------------
 
@@ -82,7 +83,7 @@ function createHarness(opts: HarnessOptions = {}) {
 }
 
 const fakeExtras: RunActionExtras = {
-	controlId: 'ctrl1',
+	controlId: CreateBankControlId('ctrl1'),
 	surfaceId: undefined,
 	location: undefined,
 	abortDelayed: new AbortController().signal,
@@ -99,9 +100,9 @@ function makeAction(definitionId: string, options: Record<string, unknown>): Act
 	}
 }
 
-function makeExecFeedback(definitionId: string, options: Record<string, unknown>) {
+function makeExecFeedback(definitionId: string, options: Record<string, unknown>): FeedbackForInternalExecution {
 	return {
-		controlId: 'ctrl1',
+		controlId: CreateBankControlId('ctrl1'),
 		location: undefined,
 		id: 'fb1',
 		definitionId,
@@ -157,7 +158,7 @@ describe('InternalInstance', () => {
 			const internal = createInstance()
 			const feedback = makeFeedback('instance_custom_state', { state: exprVal(null), instance_id: exprVal('abc') })
 
-			const result = internal.feedbackUpgrade(feedback, 'ctrl1')
+			const result = internal.feedbackUpgrade(feedback, CreateBankControlId('ctrl1'))
 
 			expect(result).toBeTruthy()
 			expect(feedback.options.state).toEqual(exprVal('null'))
@@ -167,7 +168,7 @@ describe('InternalInstance', () => {
 			const internal = createInstance()
 			const feedback = makeFeedback('instance_custom_state', { state: exprVal('good'), instance_id: exprVal('abc') })
 
-			const result = internal.feedbackUpgrade(feedback, 'ctrl1')
+			const result = internal.feedbackUpgrade(feedback, CreateBankControlId('ctrl1'))
 
 			expect(result).toBeUndefined()
 			expect(feedback.options.state).toEqual(exprVal('good'))
@@ -177,7 +178,7 @@ describe('InternalInstance', () => {
 			const internal = createInstance()
 			const feedback = makeFeedback('instance_status', { state: exprVal(null) })
 
-			const result = internal.feedbackUpgrade(feedback, 'ctrl1')
+			const result = internal.feedbackUpgrade(feedback, CreateBankControlId('ctrl1'))
 
 			expect(result).toBeUndefined()
 		})

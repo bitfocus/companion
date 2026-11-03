@@ -1,4 +1,5 @@
 import z from 'zod'
+import { isControlIdOfKind, zodControlIds, type BankControlId } from '../ControlId.js'
 
 /** The entries of an object whose key is an integer and whose value is valid, dropping the rest */
 function validGridEntries(value: unknown, isValidValue: (entry: unknown) => boolean): Record<string, unknown> {
@@ -15,10 +16,10 @@ const PageControlsSchema = z.preprocess(
 		Object.fromEntries(
 			Object.entries(validGridEntries(rows, (row) => !!row && typeof row === 'object')).map(([rowIndex, row]) => [
 				rowIndex,
-				validGridEntries(row, (controlId) => typeof controlId === 'string'),
+				validGridEntries(row, (controlId) => typeof controlId === 'string' && isControlIdOfKind(controlId, 'bank')),
 			])
 		),
-	z.record(z.number(), z.record(z.number(), z.string()))
+	z.record(z.number(), z.record(z.number(), zodControlIds.bank))
 )
 
 /** Lenient for the same reason as its grid. A page without an id is given one when loaded */
@@ -52,5 +53,5 @@ export interface PageModelChangesItem {
 	id: string
 	name: string | null
 
-	controls: Array<{ row: number; column: number; controlId: string | null }>
+	controls: Array<{ row: number; column: number; controlId: BankControlId | null }>
 }

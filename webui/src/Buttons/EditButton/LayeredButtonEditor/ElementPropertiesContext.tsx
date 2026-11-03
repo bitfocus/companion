@@ -1,10 +1,11 @@
 import React, { createContext } from 'react'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
 
 export type IsPropertyOverridden = (elementId: string, elementProperty: string) => boolean
 
 export interface ElementPropertiesContextValue {
-	controlId: string
+	controlId: SomeControlId
 	localVariablesStore: LocalVariablesStore
 	isPropertyOverridden: IsPropertyOverridden
 	/**
@@ -18,7 +19,7 @@ export interface ElementPropertiesContextValue {
 export const ElementPropertiesContext = createContext<ElementPropertiesContextValue | null>(null)
 
 export interface ElementPropertiesProviderProps {
-	controlId: string
+	controlId: SomeControlId
 	localVariablesStore: LocalVariablesStore
 	isPropertyOverridden: IsPropertyOverridden
 	isPinnedView: boolean

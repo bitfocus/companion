@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { CreateElementOfType } from '../../lib/Controls/ControlTypes/Button/LayerDefaults.js'
 import { LayeredButtonStyleEditor } from '../../lib/Controls/ControlTypes/Button/LayeredButtonStyleEditor.js'
@@ -9,7 +10,7 @@ vi.mock('../../lib/Graphics/ConvertGraphicsElements.js', () => ({
 	ConvertSomeButtonGraphicsElementForDrawing: vi.fn(),
 }))
 
-const CONTROL_ID = 'bank:1-0-0'
+const CONTROL_ID = CreateBankControlId('1-0-0')
 
 function canvasElement(): SomeButtonGraphicsElement {
 	return {

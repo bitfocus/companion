@@ -9,7 +9,7 @@
  * this program.
  */
 
-import { CreatePageControlId } from '@companion-app/shared/ControlId.js'
+import { CreatePageControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { SomeSocketEntityLocation } from '@companion-app/shared/Model/EntityModel.js'
 import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import type { JsonValue } from '@companion-module/host'
@@ -23,7 +23,7 @@ import type { IPageStore } from '../Page/Store.js'
 const LocalVariablesList = 'local-variables' satisfies SomeSocketEntityLocation
 
 export type LocalVariable = {
-	readonly controlId: string
+	readonly controlId: SomeControlId
 	readonly name: string
 }
 
@@ -81,7 +81,7 @@ export class LocalVariablesController {
 	localVariableFor(
 		location: JsonValue | undefined,
 		name: JsonValue | undefined,
-		extras: Pick<RunActionExtras, 'controlId' | 'location'>
+		extras: { controlId: SomeControlId | null; location: RunActionExtras['location'] }
 	): LocalVariable | null {
 		if (!name) return null
 
@@ -93,6 +93,7 @@ export class LocalVariablesController {
 
 		if (locationStr?.trim().toLocaleLowerCase() === 'this') {
 			// This could be any type of control (button, trigger, etc)
+			if (!extras.controlId) return null
 			return { controlId: extras.controlId, name }
 		}
 

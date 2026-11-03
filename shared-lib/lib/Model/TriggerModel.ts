@@ -1,4 +1,5 @@
 import z from 'zod'
+import type { TriggerControlId } from '../ControlId.js'
 import type { ObjectPatch } from '../Diff.js'
 import type { CollectionBase, EnabledCollectionData } from './Collections.js'
 import { SomeEntityModelSchema } from './EntityModel.js'
@@ -44,22 +45,22 @@ export type TriggersUpdate =
 
 export interface TriggersUpdateInitOp {
 	type: 'init'
-	triggers: Record<string, ClientTriggerData>
+	triggers: Record<TriggerControlId, ClientTriggerData>
 }
 
 export interface TriggersUpdateRemoveOp {
 	type: 'remove'
-	controlId: string
+	controlId: TriggerControlId
 }
 export interface TriggersUpdateAddOp {
 	type: 'add'
-	controlId: string
+	controlId: TriggerControlId
 
 	info: ClientTriggerData
 }
 export interface TriggersUpdateUpdateOp {
 	type: 'update'
-	controlId: string
+	controlId: TriggerControlId
 
 	patch: ObjectPatch<ClientTriggerData>
 }

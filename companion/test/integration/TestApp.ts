@@ -7,7 +7,7 @@ import path from 'node:path'
 import { initTRPC, type TRPCRouterCaller } from '@trpc/server'
 import type { BuildOptions } from 'esbuild'
 import supertest from 'supertest'
-import { ParseControlId } from '@companion-app/shared/ControlId.js'
+import { ParseControlId, type BankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import {
 	EntityModelType,
@@ -78,36 +78,48 @@ export interface TestApp {
 	trpc(ctx?: TrpcContext): TestAppTrpcCaller
 
 	/** Create a button control at a grid location, returning its controlId */
-	createButton(location: ControlLocation): string
+	createButton(location: ControlLocation): BankControlId
 	/** Add an action from the internal connection to the first step's 'down' set of a button */
-	addInternalAction(controlId: string, definitionId: string, options: Record<string, ExpressionOrValue<any>>): string
+	addInternalAction(
+		controlId: SomeControlId,
+		definitionId: string,
+		options: Record<string, ExpressionOrValue<any>>
+	): string
 	/** Add a child action under a parent entity (e.g. into a logic_if group) in the first step's 'down' set */
 	addInternalChildAction(
-		controlId: string,
+		controlId: SomeControlId,
 		owner: EntityOwner,
 		definitionId: string,
 		options: Record<string, ExpressionOrValue<any>>
 	): string
 	/** Add an action from the internal connection to the 'down' set of a specific step of a button */
 	addInternalActionToStep(
-		controlId: string,
+		controlId: SomeControlId,
 		stepId: string,
 		definitionId: string,
 		options: Record<string, ExpressionOrValue<any>>
 	): string
 	/** Add an action from the internal connection to a trigger's action list */
-	addTriggerAction(controlId: string, definitionId: string, options: Record<string, ExpressionOrValue<any>>): string
+	addTriggerAction(
+		controlId: SomeControlId,
+		definitionId: string,
+		options: Record<string, ExpressionOrValue<any>>
+	): string
 	/** Add a feedback from the internal connection to a button (or a trigger, where it becomes a condition) */
-	addInternalFeedback(controlId: string, definitionId: string, options: Record<string, ExpressionOrValue<any>>): string
+	addInternalFeedback(
+		controlId: SomeControlId,
+		definitionId: string,
+		options: Record<string, ExpressionOrValue<any>>
+	): string
 	/** Add a child feedback under a parent entity (e.g. a logic_if condition) in the first step's 'down' set */
 	addInternalChildFeedback(
-		controlId: string,
+		controlId: SomeControlId,
 		owner: EntityOwner,
 		definitionId: string,
 		options: Record<string, ExpressionOrValue<any>>
 	): string
 	/** Read the current cached value of a feedback entity on a control */
-	getFeedbackValue(controlId: string, entityId: string): any
+	getFeedbackValue(controlId: SomeControlId, entityId: string): any
 	/** Press or release the button at a grid location */
 	pressButton(location: ControlLocation, pressed: boolean): void
 	/** Rotate the button at a grid location by `delta` steps (positive is right) */
@@ -391,7 +403,7 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 	// the websocket handler, and the router builders are side-effect free
 	const trpcCallerFactory = createTrpcCallerFactory(createTrpcRouter(registry))
 
-	const getEditableEntities = (controlId: string) => {
+	const getEditableEntities = (controlId: SomeControlId) => {
 		const control = registry.controls.getControl(controlId)
 		if (!control) throw new Error(`Control "${controlId}" does not exist`)
 		if (!control.supportsEntities || !control.entities.isEditable)
@@ -400,7 +412,7 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 	}
 
 	const addInternalEntity = (
-		controlId: string,
+		controlId: SomeControlId,
 		listId: SomeSocketEntityLocation,
 		owner: EntityOwner | null,
 		entityType: EntityModelType,
@@ -425,7 +437,7 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 		return entityModel.id
 	}
 
-	const firstDownSet = (controlId: string): SomeSocketEntityLocation => {
+	const firstDownSet = (controlId: SomeControlId): SomeSocketEntityLocation => {
 		// Only the button pool has steps, which the EditableEntityListPool interface doesn't expose
 		const entities = getEditableEntities(controlId) as unknown as { getStepIds?: () => string[] }
 		if (typeof entities.getStepIds !== 'function') throw new Error(`Control "${controlId}" does not have steps`)

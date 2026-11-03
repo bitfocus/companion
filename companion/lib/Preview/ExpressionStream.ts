@@ -2,7 +2,7 @@ import EventEmitter from 'node:events'
 import isEqual from 'fast-deep-equal'
 import type { JsonValue } from 'type-fest'
 import z from 'zod'
-import { ParseControlId } from '@companion-app/shared/ControlId.js'
+import { ParseControlId, zodSomeControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ExecuteExpressionResult, ExpressionStreamResult } from '@companion-app/shared/ExpressionResult.js'
 import { ExpressionOrJsonValueSchema, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
@@ -67,7 +67,7 @@ export class PreviewExpressionStream {
 				.input(
 					z.object({
 						expression: z.string(),
-						controlId: z.string().nullable(),
+						controlId: zodSomeControlId.nullable(),
 						requiredType: z.string().optional(),
 						isVariableString: z.boolean(),
 						contextResolution: contextResolutionSchema,
@@ -135,7 +135,7 @@ export class PreviewExpressionStream {
 		}
 	}
 
-	onVariablesChanged = (changed: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void => {
+	onVariablesChanged = (changed: ReadonlySet<string>, controlIdFilter: ReadonlySet<SomeControlId> | null): void => {
 		for (const [expressionId, session] of this.#sessions) {
 			// Always re-evaluate when the scoped change hits the resolved target control's local variables
 			const isTargetControlChange =
@@ -161,7 +161,7 @@ export class PreviewExpressionStream {
 	 * or vacated — those changes don't touch any tracked variableIds, so onVariablesChanged cannot
 	 * catch them. It also keeps sessions for a moved control fresh ($(this:page) etc).
 	 */
-	onControlIdsLocationChanged = (controlIds: string[]): void => {
+	onControlIdsLocationChanged = (controlIds: SomeControlId[]): void => {
 		const changedControlIds = new Set(controlIds)
 
 		for (const [expressionId, session] of this.#sessions) {
@@ -198,7 +198,7 @@ export class PreviewExpressionStream {
 	 * The page number of the previewed control, used to resolve the "This page" (0) choice of a
 	 * pageVariable context.
 	 */
-	#thisPageNumberFor(controlId: string | null): number | null {
+	#thisPageNumberFor(controlId: SomeControlId | null): number | null {
 		if (!controlId) return null
 		const parsed = ParseControlId(controlId)
 		if (parsed?.type === 'page') return this.#pageStore.getPageNumber(parsed.pageId)
@@ -240,7 +240,7 @@ export class PreviewExpressionStream {
 
 			// Map the location to a control.
 			const localVariable = this.#localVariables.localVariableFor(locationRes.value, nameRes.value, {
-				controlId: session.controlId || '',
+				controlId: session.controlId,
 				location: undefined,
 			})
 			if (!localVariable) {
@@ -350,12 +350,12 @@ export class PreviewExpressionStream {
 
 interface ExpressionStreamSession {
 	readonly expressionId: string
-	readonly controlId: string | null
+	readonly controlId: SomeControlId | null
 	readonly expression: string
 	readonly requiredType: string | undefined
 	readonly isVariableString: boolean
 	readonly contextResolution: ContextResolutionInput | undefined
-	resolvedTargetControlId: string | undefined
+	resolvedTargetControlId: SomeControlId | undefined
 
 	latestResult: ExecuteExpressionResult
 

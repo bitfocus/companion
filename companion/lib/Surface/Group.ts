@@ -75,7 +75,7 @@ export class SurfaceGroup {
 	/**
 	 * The surface group config database
 	 */
-	#dbTable: DataStoreSchemaTableView<typeof SurfaceGroupConfigSchema>
+	#dbTable: DataStoreSchemaTableView<typeof SurfaceGroupConfigSchema, string>
 	/**
 	 * The core page store
 	 */
@@ -89,7 +89,7 @@ export class SurfaceGroup {
 
 	constructor(
 		surfaceController: SurfaceController,
-		dbTable: DataStoreSchemaTableView<typeof SurfaceGroupConfigSchema>,
+		dbTable: DataStoreSchemaTableView<typeof SurfaceGroupConfigSchema, string>,
 		pageStore: IPageStore,
 		userconfig: DataUserConfig,
 		updateEvents: EventEmitter<UpdateEvents>,

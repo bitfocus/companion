@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events'
 import z from 'zod'
-import { CreatePageControlId } from '@companion-app/shared/ControlId.js'
+import { CreatePageControlId, type BankControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type {
 	PageModel,
@@ -18,7 +18,7 @@ import { default_nav_buttons_definitions } from './Defaults.js'
 import type { IPageStore, PageStore } from './Store.js'
 
 interface PageControllerEvents {
-	controlIdsMoved: [controlIds: string[]]
+	controlIdsMoved: [controlIds: BankControlId[]]
 
 	clientUpdate: [update: PageModelChangesUpdate]
 }
@@ -369,7 +369,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	/**
 	 * Set the controlId at a specific location
 	 */
-	setControlIdAt(location: ControlLocation, controlId: string | null): boolean {
+	setControlIdAt(location: ControlLocation, controlId: BankControlId | null): boolean {
 		const page = this.#store.getPageInfo(location.pageNumber)
 		if (!page) return false
 
@@ -396,7 +396,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 				],
 			})
 
-			const changedControlIds = [oldControlId, controlId].filter((id): id is string => !!id)
+			const changedControlIds = [oldControlId, controlId].filter((id): id is BankControlId => !!id)
 			this.emit('controlIdsMoved', changedControlIds)
 		}
 
@@ -409,7 +409,7 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	 * @param pageNumber - the page id
 	 * @returns ControlIds referenced on the page
 	 */
-	resetPage(pageNumber: number): string[] {
+	resetPage(pageNumber: number): BankControlId[] {
 		this.#logger.silly('Reset page ' + pageNumber)
 
 		// Fetch the page and ensure it exists
@@ -489,8 +489,8 @@ export class PageController extends EventEmitter<PageControllerEvents> {
 	/**
 	 * Finds all controls that are outside of the valid grid bounds
 	 */
-	findAllOutOfBoundsControls(): string[] {
-		const foundControlIds: string[] = []
+	findAllOutOfBoundsControls(): BankControlId[] {
+		const foundControlIds: BankControlId[] = []
 
 		const { minColumn, maxColumn, minRow, maxRow } = this.#userconfigController.getKey('gridSize')
 		const pagesById = this.#store.getPagesById()

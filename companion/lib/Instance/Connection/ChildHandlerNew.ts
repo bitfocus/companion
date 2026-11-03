@@ -1,5 +1,6 @@
 import type express from 'express'
 import semver from 'semver'
+import { isControlIdOfKind, isSomeControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
 	type ActionEntityModel,
@@ -257,12 +258,12 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	async sendVariablesChanged(
 		changedVariableIdSet: ReadonlySet<string>,
 		_getChangedVariableIds: () => string[],
-		controlIdFilter: ReadonlySet<string> | null
+		controlIdFilter: ReadonlySet<SomeControlId> | null
 	): Promise<void> {
 		this.#entityManager.onVariablesChanged(changedVariableIdSet, controlIdFilter)
 	}
 
-	async entityUpdate(entity: ControlEntityInstance, controlId: string): Promise<void> {
+	async entityUpdate(entity: ControlEntityInstance, controlId: SomeControlId): Promise<void> {
 		if (entity.connectionId !== this.connectionId) throw new Error(`Feedback is for a different connection`)
 
 		this.#entityManager.trackEntity(entity, controlId)
@@ -273,7 +274,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 */
 	async entityLearnValues(
 		entity: SomeEntityModel,
-		controlId: string,
+		controlId: SomeControlId,
 		signal: AbortSignal
 	): Promise<ExpressionableOptionsObject | undefined | void> {
 		if (entity.connectionId !== this.connectionId) throw new Error(`Entity is for a different connection`)
@@ -399,7 +400,7 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 				if (extras.surfaceId && extras.surfaceId.startsWith('trigger'))
 					location = `Trigger ${extras.surfaceId.split(':')[1]}`
 
-				if (extras.controlId && extras.controlId.startsWith('bank') && extras.location)
+				if (isControlIdOfKind(extras.controlId, 'bank') && extras.location)
 					location = `Button ${extras.location.pageNumber}/${extras.location.row}/${extras.location.column}`
 
 				this.logger.warn(
@@ -603,11 +604,18 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 
 		this.#deps.controls.updateFeedbackValues(
 			this.connectionId,
-			msg.values.map((val) => ({
-				entityId: val.id,
-				controlId: val.controlId,
-				value: val.value,
-			}))
+			// The control ids come back from the module, so are only trusted once checked
+			msg.values.flatMap((val) =>
+				isSomeControlId(val.controlId)
+					? [
+							{
+								entityId: val.id,
+								controlId: val.controlId,
+								value: val.value,
+							},
+						]
+					: []
+			)
 		)
 	}
 

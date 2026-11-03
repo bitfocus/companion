@@ -1,4 +1,5 @@
 import { describe, expect, it, test } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import {
@@ -683,7 +684,7 @@ describe('visitEntityOptionsForVariables', () => {
 describe('buildActionExecutionOverrides', () => {
 	function makeExtras(overrides: Partial<RunActionExtras>): RunActionExtras {
 		return {
-			controlId: 'control1',
+			controlId: CreateBankControlId('control1'),
 			surfaceId: undefined,
 			location: undefined,
 			abortDelayed: new AbortController().signal,

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId, type BankControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UndecoratedRender } from '../../lib/Graphics/Controller.js'
 import type { ImageResult } from '../../lib/Graphics/ImageResult.js'
@@ -63,7 +64,9 @@ function createServer() {
 	const displayed: string[] = []
 	const host = {
 		getCachedRenderOrGeneratePlaceholder: vi.fn((_location: ControlLocation) => fakeRender(false)),
-		getControlIdAt: vi.fn((location: ControlLocation): string | null => `control${location.column}`),
+		getControlIdAt: vi.fn((location: ControlLocation): BankControlId | null =>
+			CreateBankControlId(`control${location.column}`)
+		),
 		pressControl: vi.fn(() => true),
 		rotateControl: vi.fn(() => true),
 		abortControl: vi.fn(),
@@ -148,7 +151,7 @@ describe('LinkButtonServer', () => {
 					status: 'error',
 					actionRunning: true,
 					unreachable: false,
-					sourceChain: ['self/control2'],
+					sourceChain: ['self/bank:control2'],
 				},
 			},
 		})
@@ -450,13 +453,13 @@ describe('LinkButtonServer', () => {
 		await flush()
 
 		expect(decodeLinkMessage(ctx.sent[0].payload)).toMatchObject({
-			message: { payload: { sourceChain: ['other', 'self/control2'] } },
+			message: { payload: { sourceChain: ['other', 'self/bank:control2'] } },
 		})
 	})
 
 	test('presses with a surface id namespaced by the source', () => {
 		ctx.server.handlePress('peer', { id: nextId(), expiresAt: 1000, button, pressed: true, surfaceId: 'deck' }, 0)
-		expect(ctx.host.pressControl).toHaveBeenCalledWith('control2', true, 'link:peer:deck')
+		expect(ctx.host.pressControl).toHaveBeenCalledWith(CreateBankControlId('control2'), true, 'link:peer:deck')
 	})
 
 	test('drops presses that have been forwarded too many times', () => {
@@ -483,7 +486,7 @@ describe('LinkButtonServer', () => {
 		ctx.host.pressControl.mockClear()
 
 		ctx.server.revoke('peer')
-		expect(ctx.host.pressControl.mock.calls).toEqual([['control2', false, 'link:peer:deck']])
+		expect(ctx.host.pressControl.mock.calls).toEqual([[CreateBankControlId('control2'), false, 'link:peer:deck']])
 		expect(ctx.server.servedCount).toBe(1)
 
 		ctx.host.pressControl.mockClear()
@@ -541,12 +544,12 @@ describe('LinkButtonServer', () => {
 
 	test('rotates', () => {
 		ctx.server.handleRotate('peer', { id: nextId(), expiresAt: 1000, button, delta: -2, surfaceId: 'deck' }, 0)
-		expect(ctx.host.rotateControl).toHaveBeenCalledWith('control2', -2, 'link:peer:deck')
+		expect(ctx.host.rotateControl).toHaveBeenCalledWith(CreateBankControlId('control2'), -2, 'link:peer:deck')
 	})
 
 	test('aborts, counting the hop so that a loop of link buttons ends', () => {
 		ctx.server.handleAbort('peer', { id: nextId(), expiresAt: 1000, button, unlatch: true, hops: 2 }, 0)
-		expect(ctx.host.abortControl).toHaveBeenCalledWith('control2', true, 3)
+		expect(ctx.host.abortControl).toHaveBeenCalledWith(CreateBankControlId('control2'), true, 3)
 
 		ctx.server.handleAbort('peer', { id: nextId(), expiresAt: 1000, button, unlatch: true, hops: 100 }, 0)
 		expect(ctx.host.abortControl).toHaveBeenCalledTimes(1)

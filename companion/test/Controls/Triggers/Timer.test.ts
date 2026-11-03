@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { CompanionOptionValues } from '@companion-module/host'
 import { TriggersEventTimer } from '../../../lib/Controls/ControlTypes/Triggers/Events/Timer.js'
@@ -11,7 +12,12 @@ function createTimer(lastTick = 100, userconfig: DataUserConfig = mockUserConfig
 	const bus = new MockTriggerEventBus()
 	bus.setLastTickTime(lastTick)
 	const executeActions = vi.fn()
-	const timer = new TriggersEventTimer(userconfig, bus.asTriggerEvents(), 'trigger:test', executeActions)
+	const timer = new TriggersEventTimer(
+		userconfig,
+		bus.asTriggerEvents(),
+		CreateTriggerControlId('test'),
+		executeActions
+	)
 	return { bus, timer, executeActions }
 }
 
@@ -464,7 +470,7 @@ describe('TriggersEventTimer', () => {
 			const timer = new TriggersEventTimer(
 				mockUserConfig({ timezone }),
 				bus.asTriggerEvents(),
-				'trigger:probe',
+				CreateTriggerControlId('probe'),
 				executeActions
 			)
 			timer.setEnabled(true)

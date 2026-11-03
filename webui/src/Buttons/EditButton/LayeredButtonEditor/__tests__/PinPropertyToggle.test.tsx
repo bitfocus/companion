@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { ElementPropertiesProvider } from '../ElementPropertiesContext.js'
 import { PinPropertyToggle } from '../PinPropertyToggle.js'
@@ -16,7 +17,7 @@ beforeEach(() => mutateAsync.mockClear())
 function renderToggle(element: SomeButtonGraphicsElement, property: string, isPinnedView = false) {
 	return render(
 		<ElementPropertiesProvider
-			controlId="control0"
+			controlId={CreateBankControlId('control0')}
 			localVariablesStore={{} as never}
 			isPropertyOverridden={() => false}
 			isPinnedView={isPinnedView}
@@ -34,7 +35,7 @@ describe('PinPropertyToggle', () => {
 		renderToggle(textElement(['color']), 'color')
 		fireEvent.click(screen.getByRole('button'))
 		expect(mutateAsync).toHaveBeenCalledWith({
-			controlId: 'control0',
+			controlId: CreateBankControlId('control0'),
 			elementId: 'text0',
 			property: 'color',
 			pinned: false,
@@ -45,7 +46,7 @@ describe('PinPropertyToggle', () => {
 		renderToggle(textElement(['color']), 'weight')
 		fireEvent.click(screen.getByRole('button'))
 		expect(mutateAsync).toHaveBeenCalledWith({
-			controlId: 'control0',
+			controlId: CreateBankControlId('control0'),
 			elementId: 'text0',
 			property: 'weight',
 			pinned: true,

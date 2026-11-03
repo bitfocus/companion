@@ -1,4 +1,5 @@
 import EventEmitter from 'node:events'
+import type { BankControlId, SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { RecordSessionInfo } from '@companion-app/shared/Model/ActionRecorderModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ClientConnectionConfig } from '@companion-app/shared/Model/Connections.js'
@@ -167,30 +168,30 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 	/**
 	 * Get the if of the control at the given page and bank index
 	 */
-	getControlIdAtOldBankIndex(page: number, bank: number): string | null {
+	getControlIdAtOldBankIndex(page: number, bank: number): BankControlId | null {
 		return this.#pageStore.getControlIdAtOldBankIndex(page, bank)
 	}
 
 	/**
 	 * Get the id of the control at the given location
 	 */
-	getControlIdAt(location: ControlLocation): string | null {
+	getControlIdAt(location: ControlLocation): BankControlId | null {
 		return this.#pageStore.getControlIdAt(location)
 	}
 
-	pressControl(controlId: string, pressed: boolean, surfaceId: string): boolean {
+	pressControl(controlId: SomeControlId, pressed: boolean, surfaceId: string): boolean {
 		return this.#controlStore.pressControl(controlId, pressed, surfaceId)
 	}
 
-	rotateControl(controlId: string, delta: number, surfaceId: string): boolean {
+	rotateControl(controlId: SomeControlId, delta: number, surfaceId: string): boolean {
 		return this.#controlStore.rotateControl(controlId, delta, surfaceId)
 	}
 
-	abortControl(controlId: string, unlatch: boolean, linkHops: number): void {
+	abortControl(controlId: SomeControlId, unlatch: boolean, linkHops: number): void {
 		this.#controlStore.getControl(controlId)?.abortDelayedActions(unlatch, null, linkHops)
 	}
 
-	getControl(controlId: string): ServiceApiControl | null {
+	getControl(controlId: SomeControlId): ServiceApiControl | null {
 		const control = this.#controlStore.getControl(controlId)
 		if (!control) return null
 
@@ -287,7 +288,7 @@ export class ServiceApi extends EventEmitter<ServiceApiEvents> {
 }
 
 export interface ServiceApiControl {
-	readonly controlId: string
+	readonly controlId: SomeControlId
 
 	setCurrentStep: ((step: number) => boolean) | undefined
 

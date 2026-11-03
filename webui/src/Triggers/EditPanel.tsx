@@ -1,6 +1,7 @@
 import { faArrowDown, faBolt, faFilter, faPencil, faPlay } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React, { useCallback, useContext, useState } from 'react'
+import type { TriggerControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType, FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import { StaticAlert } from '~/Components/Alert.js'
@@ -21,7 +22,7 @@ import { useLocalVariablesStore } from '../Controls/LocalVariablesStore.js'
 import { TriggerEventEditor } from './EventEditor.js'
 
 interface EditTriggerPanelProps {
-	controlId: string
+	controlId: TriggerControlId
 }
 
 export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JSX.Element {
@@ -54,7 +55,7 @@ export function EditTriggerPanel({ controlId }: EditTriggerPanelProps): React.JS
 
 interface TriggerPanelContentProps {
 	config: TriggerModel
-	controlId: string
+	controlId: TriggerControlId
 }
 
 function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): React.ReactNode {
@@ -275,7 +276,13 @@ function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): R
 	)
 }
 
-function TestActionsButton({ controlId, triggerName }: { controlId: string; triggerName: string }): React.JSX.Element {
+function TestActionsButton({
+	controlId,
+	triggerName,
+}: {
+	controlId: TriggerControlId
+	triggerName: string
+}): React.JSX.Element {
 	const { notifier } = useContext(RootAppStoreContext)
 	const testActionsMutation = useMutationExt(trpc.controls.triggers.testActions.mutationOptions())
 

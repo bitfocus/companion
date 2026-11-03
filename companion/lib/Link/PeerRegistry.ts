@@ -106,13 +106,13 @@ export class LinkPeerRegistry extends EventEmitter<PeerRegistryEvents> {
 
 	readonly #peers = new Map<string, PeerRecord>()
 	#selfId: string
-	readonly #store: DataStoreSchemaTableView<typeof StoredPeerSchema>
+	readonly #store: DataStoreSchemaTableView<typeof StoredPeerSchema, string>
 	#expiryTimer: NodeJS.Timeout | null = null
 
 	/**
 	 * @param store - the peers seen before, which are listed as offline until they are heard from
 	 */
-	constructor(selfId: string, store: DataStoreSchemaTableView<typeof StoredPeerSchema>) {
+	constructor(selfId: string, store: DataStoreSchemaTableView<typeof StoredPeerSchema, string>) {
 		super()
 		this.setMaxListeners(0)
 		this.#selfId = selfId

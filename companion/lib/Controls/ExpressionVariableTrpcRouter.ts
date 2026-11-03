@@ -1,7 +1,7 @@
 import type EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 import z from 'zod'
-import { CreateExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
+import { CreateExpressionVariableControlId, zodControlIds } from '@companion-app/shared/ControlId.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type {
@@ -17,7 +17,6 @@ import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import type { ExpressionVariableCollections } from './ExpressionVariableCollections.js'
 import type { ExpressionVariableNameMap } from './ExpressionVariableNameMap.js'
 import type { ControlsFactory } from './Factory.js'
-import { validateExpressionVariableControlId } from './Util.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createExpressionVariableTrpcRouter(
@@ -90,54 +89,50 @@ export function createExpressionVariableTrpcRouter(
 			return controlId
 		}),
 
-		delete: publicProcedure.input(z.object({ controlId: z.string() })).mutation(({ input }) => {
-			const { controlId } = input
-			if (!validateExpressionVariableControlId(controlId)) {
-				// Control id is not valid!
+		delete: publicProcedure
+			.input(z.object({ controlId: zodControlIds['expression-variable'] }))
+			.mutation(({ input }) => {
+				const { controlId } = input
+
+				const control = controlStore.controls.get(controlId) as ControlExpressionVariable | undefined
+				if (control) {
+					control.destroy()
+
+					controlStore.deleteControl(controlId)
+
+					return true
+				}
+
 				return false
-			}
+			}),
 
-			const control = controlStore.controls.get(controlId) as ControlExpressionVariable | undefined
-			if (control) {
-				control.destroy()
+		clone: publicProcedure
+			.input(z.object({ controlId: zodControlIds['expression-variable'] }))
+			.mutation(({ input }) => {
+				const { controlId } = input
 
-				controlStore.deleteControl(controlId)
+				const newControlId = CreateExpressionVariableControlId(nanoid())
 
-				return true
-			}
+				const fromControl = controlStore.controls.get(controlId)
+				if (fromControl && fromControl instanceof ControlExpressionVariable) {
+					const controlJson = fromControl.toJSON(true)
 
-			return false
-		}),
+					const newControl = factory.createExpressionVariable(newControlId, controlJson)
+					controlStore.controls.set(newControlId, newControl)
 
-		clone: publicProcedure.input(z.object({ controlId: z.string() })).mutation(({ input }) => {
-			const { controlId } = input
-			if (!validateExpressionVariableControlId(controlId)) {
-				// Control id is not valid!
+					expressionVariableNamesMap.addExpressionVariable(newControlId, newControl.options.variableName)
+
+					return newControlId
+				}
+
 				return false
-			}
-
-			const newControlId = CreateExpressionVariableControlId(nanoid())
-
-			const fromControl = controlStore.controls.get(controlId)
-			if (fromControl && fromControl instanceof ControlExpressionVariable) {
-				const controlJson = fromControl.toJSON(true)
-
-				const newControl = factory.createExpressionVariable(newControlId, controlJson)
-				controlStore.controls.set(newControlId, newControl)
-
-				expressionVariableNamesMap.addExpressionVariable(newControlId, newControl.options.variableName)
-
-				return newControlId
-			}
-
-			return false
-		}),
+			}),
 
 		reorder: publicProcedure
 			.input(
 				z.object({
 					collectionId: z.string().nullable(),
-					controlId: z.string(),
+					controlId: zodControlIds['expression-variable'],
 					dropIndex: z.number(),
 				})
 			)

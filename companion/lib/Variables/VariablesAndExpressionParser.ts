@@ -1,5 +1,5 @@
 import type { JsonValue, ReadonlyDeep } from 'type-fest'
-import { ParseControlId } from '@companion-app/shared/ControlId.js'
+import { ParseControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
@@ -234,7 +234,7 @@ export class VariablesAndExpressionParser {
 	parseEntityOptions(
 		entityDefinition: ClientEntityDefinition,
 		options: ExpressionableOptionsObject,
-		controlId: string | null
+		controlId: SomeControlId | null
 	):
 		| {
 				ok: true

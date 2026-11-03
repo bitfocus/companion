@@ -11,7 +11,7 @@
 
 import EventEmitter from 'node:events'
 import z from 'zod'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { formatLocation, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ThisLocationVariable, ThisPageVariable } from '@companion-app/shared/ControlLocation.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -38,7 +38,7 @@ export interface VariablesValuesEvents {
 	variablesChanged: [
 		changed: ReadonlySet<string>,
 		connectionLabels: ReadonlySet<string>,
-		targetControlId: string | null,
+		targetControlId: SomeControlId | null,
 	]
 }
 
@@ -289,7 +289,7 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		}
 	}
 
-	triggerLocationVariablesChange(controlId: string): void {
+	triggerLocationVariablesChange(controlId: SomeControlId): void {
 		this.emit('variablesChanged', ThisLocationVariablesSet, NO_CONNECTION_LABELS, controlId)
 	}
 }

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import type { BankControlId, SomeControlId } from '@companion-app/shared/ControlId.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type { ControlButtonLayered } from '../../lib/Controls/ControlTypes/Button/Layered.js'
 import { createTestApp, type TestApp } from './TestApp.js'
@@ -21,12 +22,12 @@ describe('internal actions and feedbacks through button-references', () => {
 	const referenceLocation = { pageNumber: 1, row: 2, column: 1 }
 	const controllerLocation = { pageNumber: 1, row: 3, column: 1 }
 
-	function getControl(controlId: string): ControlButtonLayered {
+	function getControl(controlId: SomeControlId): ControlButtonLayered {
 		return app.registry.controls.getControl(controlId) as ControlButtonLayered
 	}
 
 	/** Create two-step target buttons, and a reference whose target is chosen by the `target` custom variable */
-	async function setupReference(): Promise<{ controlA: string; controlB: string }> {
+	async function setupReference(): Promise<{ controlA: BankControlId; controlB: BankControlId }> {
 		const controlA = app.createButton(targetA)
 		await app.trpc().controls.steps.add({ controlId: controlA })
 		const controlB = app.createButton(targetB)

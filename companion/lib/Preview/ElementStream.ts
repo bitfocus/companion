@@ -2,7 +2,7 @@ import EventEmitter from 'node:events'
 import { aborted } from 'node:util'
 import isEqual from 'fast-deep-equal'
 import z from 'zod'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { formatLocation, zodSomeControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { RASTERISED_ELEMENT_TYPES, type ElementRasterCanvas } from '@companion-app/shared/Graphics/ElementRaster.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type {
@@ -126,7 +126,7 @@ export class PreviewElementStream {
 				.input(
 					z.object({
 						contextId: z.string(),
-						controlId: z.string(),
+						controlId: zodSomeControlId,
 						canvas: ElementRasterCanvasSchema,
 					})
 				)
@@ -245,7 +245,7 @@ export class PreviewElementStream {
 		}
 	}
 
-	#acquireSession(controlId: string, elementId: string, clientId: string): ElementStreamSession {
+	#acquireSession(controlId: SomeControlId, elementId: string, clientId: string): ElementStreamSession {
 		const sessionId = `${controlId}::${elementId}`
 
 		let session = this.#sessions.get(sessionId)
@@ -333,7 +333,7 @@ export class PreviewElementStream {
 		}
 	}
 
-	#onElementChanged = (controlId: string, elementId: string): void => {
+	#onElementChanged = (controlId: SomeControlId, elementId: string): void => {
 		for (const [elementStreamId, session] of this.#sessions) {
 			if (session.controlId !== controlId || !session.dependsOnElementIds.has(elementId)) continue
 
@@ -400,7 +400,7 @@ export class PreviewElementStream {
 		}
 	}
 
-	onVariablesChanged = (changed: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void => {
+	onVariablesChanged = (changed: ReadonlySet<string>, controlIdFilter: ReadonlySet<SomeControlId> | null): void => {
 		for (const [elementStreamId, session] of this.#sessions) {
 			if (controlIdFilter && !controlIdFilter.has(session.controlId)) continue
 
@@ -424,7 +424,7 @@ export class PreviewElementStream {
 		}
 	}
 
-	async #evaluateElement(controlId: string, elementId: string): Promise<EvaluatedSession> {
+	async #evaluateElement(controlId: SomeControlId, elementId: string): Promise<EvaluatedSession> {
 		const emptyResult: EvaluatedSession = {
 			result: { element: null, rasterIds: [], pathElements: [], dependsOnElementIds: new Set([elementId]) },
 			referencedVariableIds: new Set(),
@@ -505,7 +505,7 @@ export class PreviewElementStream {
 
 interface ElementStreamSession {
 	readonly sessionId: string
-	readonly controlId: string
+	readonly controlId: SomeControlId
 	readonly elementId: string
 	subscribers: number
 	trackedExpressions: Set<string>

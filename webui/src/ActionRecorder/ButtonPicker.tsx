@@ -2,7 +2,7 @@ import { faHome } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { formatLocation, type BankControlId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation, DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
@@ -22,7 +22,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 interface ButtonPickerProps {
 	saving: boolean
 	selectButton: (
-		selectedControl: string,
+		selectedControl: BankControlId,
 		selectedStep: string,
 		selectedSet: ActionSetId,
 		mode: 'replace' | 'append'

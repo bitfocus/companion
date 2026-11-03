@@ -1,4 +1,5 @@
 import type EventEmitter from 'node:events'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlCommonEvents } from '../Controls/ControlDependencies.js'
 import type { ControlsController } from '../Controls/Controller.js'
 import type { RenderClock } from '../Controls/RenderClock.js'
@@ -50,12 +51,12 @@ export class PreviewController {
 		})
 	}
 
-	onControlIdsLocationChanged(controlIds: string[]): void {
+	onControlIdsLocationChanged(controlIds: SomeControlId[]): void {
 		this.#graphics.onControlIdsLocationChanged(controlIds)
 		this.#expressionStream.onControlIdsLocationChanged(controlIds)
 	}
 
-	onVariablesChanged(allChangedSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+	onVariablesChanged(allChangedSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<SomeControlId> | null): void {
 		this.#graphics.onVariablesChanged(allChangedSet, controlIdFilter)
 		this.#expressionStream.onVariablesChanged(allChangedSet, controlIdFilter)
 		this.#elementStream.onVariablesChanged(allChangedSet, controlIdFilter)

@@ -1,6 +1,7 @@
 import EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 import z from 'zod'
+import { zodSomeControlId, type BankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { parseColor } from '@companion-app/shared/Graphics/Util.js'
 import type { ControlLocation, WrappedImage } from '@companion-app/shared/Model/Common.js'
 import {
@@ -93,7 +94,7 @@ export class PreviewGraphics {
 	 */
 	readonly #watchedLocationSizes = new Map<string, Map<string, WatchedSize>>()
 
-	readonly #updateButtonQueue: ImageWriteQueue<string, [ControlLocation, string | null, ImageResult]>
+	readonly #updateButtonQueue: ImageWriteQueue<string, [ControlLocation, BankControlId | null, ImageResult]>
 	readonly #recheckQueue: ImageWriteQueue<string, [string, ControlLocation]>
 
 	constructor(
@@ -109,7 +110,7 @@ export class PreviewGraphics {
 
 		this.#updateButtonQueue = new ImageWriteQueue(
 			this.#logger,
-			async (locationId: string, location: ControlLocation, controlId: string | null, render: ImageResult) => {
+			async (locationId: string, location: ControlLocation, controlId: BankControlId | null, render: ImageResult) => {
 				if (controlId && this.#renderEvents.listenerCount(`controlId:${controlId}`) > 0) {
 					this.#renderEvents.emit(
 						`controlId:${controlId}`,
@@ -202,7 +203,7 @@ export class PreviewGraphics {
 			controlId: publicProcedure
 				.input(
 					z.object({
-						controlId: z.string(),
+						controlId: zodSomeControlId,
 					})
 				)
 				.subscription(async function* ({ signal, input }) {
@@ -280,7 +281,7 @@ export class PreviewGraphics {
 			reference: publicProcedure
 				.input(
 					z.object({
-						controlId: z.string(),
+						controlId: zodSomeControlId,
 						options: ExpressionableOptionsObjectSchema,
 					})
 				)
@@ -380,7 +381,7 @@ export class PreviewGraphics {
 		this.#updateButtonQueue.queue(getLocationSubId(location), location, controlId, render)
 	}
 
-	onControlIdsLocationChanged(controlIds: string[]): void {
+	onControlIdsLocationChanged(controlIds: SomeControlId[]): void {
 		const controlIdsSet = new Set(controlIds)
 
 		// Lookup any sessions
@@ -392,7 +393,7 @@ export class PreviewGraphics {
 		}
 	}
 
-	onVariablesChanged(allChangedSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+	onVariablesChanged(allChangedSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<SomeControlId> | null): void {
 		// Lookup any sessions
 		for (const previewSession of this.#buttonReferencePreviews.values()) {
 			if (!previewSession.referencedVariableIds || !previewSession.referencedVariableIds.size) continue
@@ -456,7 +457,7 @@ interface WatchedSize {
 
 interface PreviewSession {
 	readonly id: string
-	readonly controlId: string
+	readonly controlId: SomeControlId
 	options: ExpressionableOptionsObject
 	resolvedLocation: ControlLocation | null
 	referencedVariableIds: ReadonlySet<string>

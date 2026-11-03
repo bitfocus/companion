@@ -1,6 +1,7 @@
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useMemo, useRef } from 'react'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
@@ -20,7 +21,7 @@ import { findAllEntityIdsDeep } from './Util.js'
 
 interface ControlEntitiesEditorProps {
 	className?: string
-	controlId: string
+	controlId: SomeControlId
 	location: ControlLocation | undefined
 	listId: SomeSocketEntityLocation
 	entityType: EntityModelType

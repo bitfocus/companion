@@ -1,4 +1,5 @@
 import type { JsonValue } from 'type-fest'
+import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { ButtonOptionsBase, ButtonStatus } from '@companion-app/shared/Model/ButtonModel.js'
@@ -36,7 +37,7 @@ export abstract class ButtonControlRuntimeBase<
 	TOptions extends ButtonOptionsBase,
 	TPool extends SomeButtonEntityPool,
 >
-	extends ControlBase<TJson>
+	extends ControlBase<TJson, BankControlId>
 	implements ControlWithEntities, ControlWithPushed
 {
 	readonly supportsEntities = true
@@ -83,7 +84,7 @@ export abstract class ButtonControlRuntimeBase<
 
 	constructor(
 		deps: ControlDependencies,
-		controlId: string,
+		controlId: BankControlId,
 		debugNamespace: string,
 		isLayered: boolean,
 		EntityPoolClass: ButtonEntityPoolConstructor<TPool>
@@ -421,7 +422,7 @@ export abstract class ButtonControlBase<TJson, TOptions extends ButtonOptionsBas
 	readonly supportsConvert = false
 	readonly supportsOptions = true
 
-	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string, isLayered: boolean) {
+	constructor(deps: ControlDependencies, controlId: BankControlId, debugNamespace: string, isLayered: boolean) {
 		super(deps, controlId, debugNamespace, isLayered, EditableControlEntityListPoolButton)
 	}
 

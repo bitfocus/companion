@@ -1,11 +1,13 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useMemo } from 'react'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { IEntityEditorService } from '~/Services/Controls/ControlEntitiesService.js'
 import type { EntityListActionContext, LocalVariablesStore } from '../LocalVariablesStore.js'
 
 export interface EntityEditorContextType {
-	controlId: string
+	/** The control the entities belong to, or null when they don't belong to one (eg an action recording) */
+	controlId: SomeControlId | null
 	location: ControlLocation | undefined
 	serviceFactory: IEntityEditorService
 	readonly: boolean

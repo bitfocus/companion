@@ -1,3 +1,4 @@
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlEntityInstance } from './EntityInstance.js'
 import type { StoreResult } from './Types.js'
 
@@ -20,7 +21,7 @@ export type SpecialExpression = keyof SpecialExpressions
  */
 export type NewSpecialExpressionValue<Expression extends SpecialExpression> = {
 	readonly entityId: ControlEntityInstance['id']
-	readonly controlId: string
+	readonly controlId: SomeControlId
 	readonly value: SpecialExpressions[Expression]
 }
 

@@ -1,3 +1,4 @@
+import type { ExpressionVariableControlId, SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { VariablesValues } from '../Variables/Values.js'
 import { ControlExpressionVariable } from './ControlTypes/ExpressionVariable.js'
 import type { SomeControl } from './IControlFragments.js'
@@ -7,17 +8,20 @@ export class ExpressionVariableNameMap {
 	 * Map to track expression variable naming conflicts
 	 * Key: variableName, Value: { activeControlId, otherControlIds[] }
 	 */
-	readonly #expressionVariableNamesMap = new Map<string, { activeControlId: string; otherControlIds: string[] }>()
+	readonly #expressionVariableNamesMap = new Map<
+		string,
+		{ activeControlId: ExpressionVariableControlId; otherControlIds: ExpressionVariableControlId[] }
+	>()
 
 	readonly #variableValuesController: VariablesValues
-	readonly #controls: Map<string, SomeControl<any>>
+	readonly #controls: Map<SomeControlId, SomeControl<any>>
 
-	constructor(variableValuesController: VariablesValues, controls: Map<string, SomeControl<any>>) {
+	constructor(variableValuesController: VariablesValues, controls: Map<SomeControlId, SomeControl<any>>) {
 		this.#variableValuesController = variableValuesController
 		this.#controls = controls
 	}
 
-	getControlIdByName(name: string): string | undefined {
+	getControlIdByName(name: string): ExpressionVariableControlId | undefined {
 		const nameEntry = this.#expressionVariableNamesMap.get(name)
 		return nameEntry?.activeControlId
 	}
@@ -46,7 +50,7 @@ export class ExpressionVariableNameMap {
 	/**
 	 * Add an expression variable to the names map
 	 */
-	addExpressionVariable(controlId: string, variableName: string): void {
+	addExpressionVariable(controlId: ExpressionVariableControlId, variableName: string): void {
 		if (!variableName || variableName.length === 0) return
 
 		const existing = this.#expressionVariableNamesMap.get(variableName)
@@ -67,7 +71,7 @@ export class ExpressionVariableNameMap {
 	/**
 	 * Remove an expression variable from the names map
 	 */
-	removeExpressionVariable(controlId: string, variableName: string): void {
+	removeExpressionVariable(controlId: ExpressionVariableControlId, variableName: string): void {
 		if (!variableName || variableName.length === 0) return
 
 		const existing = this.#expressionVariableNamesMap.get(variableName)
@@ -104,7 +108,11 @@ export class ExpressionVariableNameMap {
 	/**
 	 * Update expression variable name in the map when a control's variableName changes
 	 */
-	updateExpressionVariableName(controlId: string, oldVariableName: string, newVariableName: string): void {
+	updateExpressionVariableName(
+		controlId: ExpressionVariableControlId,
+		oldVariableName: string,
+		newVariableName: string
+	): void {
 		// Remove from old name
 		this.removeExpressionVariable(controlId, oldVariableName)
 
@@ -115,7 +123,7 @@ export class ExpressionVariableNameMap {
 	/**
 	 * Check if an expression variable control is the active one for its variableName
 	 */
-	isExpressionVariableActive(controlId: string): boolean {
+	isExpressionVariableActive(controlId: ExpressionVariableControlId): boolean {
 		const control = this.#controls.get(controlId) as ControlExpressionVariable | undefined
 		if (!control || !control.options.variableName) return false
 

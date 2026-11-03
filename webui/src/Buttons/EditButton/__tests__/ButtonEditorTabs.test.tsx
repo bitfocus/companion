@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ComponentProps } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import { ButtonEditorTabs } from '../ButtonEditorTabs.js'
 
 const { renameMutation } = vi.hoisted(() => ({
@@ -24,7 +25,7 @@ type EditorProps = ComponentProps<typeof ButtonEditorTabs>
 
 function editorProps(name?: string): EditorProps {
 	return {
-		controlId: 'bank:1-0-0',
+		controlId: CreateBankControlId('1-0-0'),
 		location: { pageNumber: 1, row: 0, column: 0 },
 		steps: {
 			0: {
@@ -76,7 +77,7 @@ describe('inline step renaming', () => {
 		await user.clear(input)
 		await user.type(input, 'Opening')
 		expect(renameMutation.mutateAsync).toHaveBeenLastCalledWith({
-			controlId: 'bank:1-0-0',
+			controlId: CreateBankControlId('1-0-0'),
 			stepId: '0',
 			newName: 'Opening',
 		})

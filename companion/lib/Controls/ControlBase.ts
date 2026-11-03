@@ -1,4 +1,5 @@
 import { EventEmitter } from 'node:events'
+import { type BankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { diffObject } from '@companion-app/shared/Diff.js'
 import type { UIControlUpdate } from '@companion-app/shared/Model/Controls.js'
 import LogController, { type Logger } from '../Log/Controller.js'
@@ -24,7 +25,7 @@ export type ControlUpdateEvents = {
  * Individual Contributor License Agreement for Companion along with
  * this program.
  */
-export abstract class ControlBase<TJson> {
+export abstract class ControlBase<TJson, TControlId extends SomeControlId> {
 	abstract readonly type: string
 
 	protected readonly logger: Logger
@@ -45,14 +46,14 @@ export abstract class ControlBase<TJson> {
 	 */
 	checkButtonStatus: ((redraw?: boolean) => boolean) | undefined
 
-	readonly controlId: string
+	readonly controlId: TControlId
 
 	readonly updateEvents = new EventEmitter<ControlUpdateEvents>()
 
 	/** If true, the control will not be persisted */
 	#noPersistence: boolean
 
-	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string, noPersistence = false) {
+	constructor(deps: ControlDependencies, controlId: TControlId, debugNamespace: string, noPersistence = false) {
 		this.logger = LogController.createLogger(debugNamespace)
 		this.deps = deps
 		this.controlId = controlId
@@ -209,7 +210,7 @@ export abstract class ControlBase<TJson> {
 	 * The control id this control currently forwards to, for controls that mirror another (button-reference).
 	 * Controls that don't (the default) return null.
 	 */
-	getReferenceTargetControlId(): string | null {
+	getReferenceTargetControlId(): BankControlId | null {
 		return null
 	}
 }

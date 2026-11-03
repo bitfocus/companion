@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { CreateBankControlId, CreatePageControlId, formatLocation } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { MirrorButtonDrawer } from '../../lib/Controls/ControlTypes/Button/MirrorButtonDrawer.js'
@@ -58,7 +58,7 @@ describe('MirrorButtonDrawer', () => {
 		getTargetLocation: () => ControlLocation | null,
 		referencedVariableIds: ReadonlySet<string> = new Set()
 	): MirrorButtonDrawer {
-		return new MirrorButtonDrawer(deps, 'bank:2-0-0', () => ({
+		return new MirrorButtonDrawer(deps, CreateBankControlId('2-0-0'), () => ({
 			location: getTargetLocation(),
 			referencedVariableIds,
 		}))
@@ -84,7 +84,7 @@ describe('MirrorButtonDrawer', () => {
 	})
 
 	it('mirrors the target style and merges referenced locations', async () => {
-		getControlIdAt.mockReturnValue('bank:1-0-0')
+		getControlIdAt.mockReturnValue(CreateBankControlId('1-0-0'))
 		const targetStyle = makeStyle([formatLocation({ pageNumber: 3, row: 0, column: 0 })])
 		getControl.mockReturnValue({
 			drawing: { getLastDrawStyle: () => targetStyle, getDrawStyle: async () => targetStyle },
@@ -101,7 +101,7 @@ describe('MirrorButtonDrawer', () => {
 
 	it('reports its referenced locations to the index, and clears them once unresolved', async () => {
 		const index: ReferencedLocationsIndex = deps.referencedLocations
-		getControlIdAt.mockReturnValue('bank:1-0-0')
+		getControlIdAt.mockReturnValue(CreateBankControlId('1-0-0'))
 		const targetStyle = makeStyle([formatLocation({ pageNumber: 3, row: 0, column: 0 })])
 		getControl.mockReturnValue({
 			drawing: { getLastDrawStyle: () => targetStyle, getDrawStyle: async () => targetStyle },
@@ -111,9 +111,11 @@ describe('MirrorButtonDrawer', () => {
 		const drawer = makeDrawer(() => target)
 		await drawer.getDrawStyle()
 
-		expect(index.getControlsReferencing(formatLocation(TARGET_LOCATION))).toEqual(new Set(['bank:2-0-0']))
+		expect(index.getControlsReferencing(formatLocation(TARGET_LOCATION))).toEqual(
+			new Set([CreateBankControlId('2-0-0')])
+		)
 		expect(index.getControlsReferencing(formatLocation({ pageNumber: 3, row: 0, column: 0 }))).toEqual(
-			new Set(['bank:2-0-0'])
+			new Set([CreateBankControlId('2-0-0')])
 		)
 
 		target = null
@@ -124,7 +126,7 @@ describe('MirrorButtonDrawer', () => {
 	})
 
 	it('shows a placeholder while the target has not drawn yet, without calling its getDrawStyle', async () => {
-		getControlIdAt.mockReturnValue('bank:1-0-0')
+		getControlIdAt.mockReturnValue(CreateBankControlId('1-0-0'))
 		const getDrawStyle = vi.fn(async () => makeStyle())
 		getControl.mockReturnValue({ drawing: { getLastDrawStyle: () => null, getDrawStyle } })
 
@@ -137,7 +139,7 @@ describe('MirrorButtonDrawer', () => {
 	})
 
 	it('shows a cycle placeholder when the target references us back', async () => {
-		getControlIdAt.mockReturnValue('bank:1-0-0')
+		getControlIdAt.mockReturnValue(CreateBankControlId('1-0-0'))
 		// The target's cached style references this control's own location (an A -> B -> A cycle)
 		const targetStyle = makeStyle([formatLocation(MY_LOCATION)])
 		getControl.mockReturnValue({
@@ -151,7 +153,7 @@ describe('MirrorButtonDrawer', () => {
 	})
 
 	it('invalidates when a referenced location is drawn', async () => {
-		getControlIdAt.mockReturnValue('bank:1-0-0')
+		getControlIdAt.mockReturnValue(CreateBankControlId('1-0-0'))
 		const targetStyle = makeStyle()
 		getControl.mockReturnValue({
 			drawing: { getLastDrawStyle: () => targetStyle, getDrawStyle: async () => targetStyle },
@@ -165,11 +167,11 @@ describe('MirrorButtonDrawer', () => {
 
 		// A draw at the mirrored location should schedule a redraw
 		drawer.onButtonDrawn(TARGET_LOCATION, {} as any)
-		await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith('bank:2-0-0'))
+		await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CreateBankControlId('2-0-0')))
 	})
 
 	it('does not invalidate when an unrelated location is drawn', async () => {
-		getControlIdAt.mockReturnValue('bank:1-0-0')
+		getControlIdAt.mockReturnValue(CreateBankControlId('1-0-0'))
 		const targetStyle = makeStyle()
 		getControl.mockReturnValue({
 			drawing: { getLastDrawStyle: () => targetStyle, getDrawStyle: async () => targetStyle },
@@ -187,7 +189,7 @@ describe('MirrorButtonDrawer', () => {
 	})
 
 	it('cancels a queued redraw on dispose', async () => {
-		getControlIdAt.mockReturnValue('bank:1-0-0')
+		getControlIdAt.mockReturnValue(CreateBankControlId('1-0-0'))
 		const targetStyle = makeStyle()
 		getControl.mockReturnValue({
 			drawing: { getLastDrawStyle: () => targetStyle, getDrawStyle: async () => targetStyle },
@@ -207,36 +209,36 @@ describe('MirrorButtonDrawer', () => {
 	})
 
 	it('redraws when a variable its location depends on changes', async () => {
-		getControlIdAt.mockReturnValue('bank:1-0-0')
+		getControlIdAt.mockReturnValue(CreateBankControlId('1-0-0'))
 		const targetStyle = makeStyle()
 		getControl.mockReturnValue({
 			drawing: { getLastDrawStyle: () => targetStyle, getDrawStyle: async () => targetStyle },
 		})
 
-		const drawer = makeDrawer(() => TARGET_LOCATION, new Set(['page:test']))
+		const drawer = makeDrawer(() => TARGET_LOCATION, new Set([CreatePageControlId('test')]))
 		await drawer.getDrawStyle()
 
 		const invalidateSpy = vi.fn()
 		events.on('invalidateControlRender', invalidateSpy)
 
-		drawer.onVariablesChanged(new Set(['page:test']))
-		await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith('bank:2-0-0'))
+		drawer.onVariablesChanged(new Set([CreatePageControlId('test')]))
+		await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CreateBankControlId('2-0-0')))
 	})
 
 	it('does not redraw when an unrelated variable changes', async () => {
-		getControlIdAt.mockReturnValue('bank:1-0-0')
+		getControlIdAt.mockReturnValue(CreateBankControlId('1-0-0'))
 		const targetStyle = makeStyle()
 		getControl.mockReturnValue({
 			drawing: { getLastDrawStyle: () => targetStyle, getDrawStyle: async () => targetStyle },
 		})
 
-		const drawer = makeDrawer(() => TARGET_LOCATION, new Set(['page:test']))
+		const drawer = makeDrawer(() => TARGET_LOCATION, new Set([CreatePageControlId('test')]))
 		await drawer.getDrawStyle()
 
 		const invalidateSpy = vi.fn()
 		events.on('invalidateControlRender', invalidateSpy)
 
-		drawer.onVariablesChanged(new Set(['page:other']))
+		drawer.onVariablesChanged(new Set([CreatePageControlId('other')]))
 		await new Promise((resolve) => setTimeout(resolve, 30))
 		expect(invalidateSpy).not.toHaveBeenCalled()
 	})
@@ -250,12 +252,12 @@ describe('MirrorButtonDrawer', () => {
 	})
 
 	it('does not redraw on a variable change before the first draw', async () => {
-		const drawer = makeDrawer(() => TARGET_LOCATION, new Set(['page:test']))
+		const drawer = makeDrawer(() => TARGET_LOCATION, new Set([CreatePageControlId('test')]))
 
 		const invalidateSpy = vi.fn()
 		events.on('invalidateControlRender', invalidateSpy)
 
-		drawer.onVariablesChanged(new Set(['page:test']))
+		drawer.onVariablesChanged(new Set([CreatePageControlId('test')]))
 		await new Promise((resolve) => setTimeout(resolve, 30))
 		expect(invalidateSpy).not.toHaveBeenCalled()
 	})
@@ -272,7 +274,7 @@ describe('MirrorButtonDrawer', () => {
 	})
 
 	it('still tracks location variables when the target location is unresolved', async () => {
-		const drawer = makeDrawer(() => null, new Set(['page:test']))
+		const drawer = makeDrawer(() => null, new Set([CreatePageControlId('test')]))
 		const style = await drawer.getDrawStyle()
 		expect(placeholderText(style)).toBe('Unresolved\nReference')
 
@@ -285,12 +287,12 @@ describe('MirrorButtonDrawer', () => {
 		expect(invalidateSpy).not.toHaveBeenCalled()
 
 		// ...but a change to the location expression's own variables must still redraw us
-		drawer.onVariablesChanged(new Set(['page:test']))
-		await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith('bank:2-0-0'))
+		drawer.onVariablesChanged(new Set([CreatePageControlId('test')]))
+		await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CreateBankControlId('2-0-0')))
 	})
 
 	it('never redraws on variable changes when the location references no variables', async () => {
-		getControlIdAt.mockReturnValue('bank:1-0-0')
+		getControlIdAt.mockReturnValue(CreateBankControlId('1-0-0'))
 		const targetStyle = makeStyle()
 		getControl.mockReturnValue({
 			drawing: { getLastDrawStyle: () => targetStyle, getDrawStyle: async () => targetStyle },
@@ -302,13 +304,13 @@ describe('MirrorButtonDrawer', () => {
 		const invalidateSpy = vi.fn()
 		events.on('invalidateControlRender', invalidateSpy)
 
-		drawer.onVariablesChanged(new Set(['page:test']))
+		drawer.onVariablesChanged(new Set([CreatePageControlId('test')]))
 		await new Promise((resolve) => setTimeout(resolve, 30))
 		expect(invalidateSpy).not.toHaveBeenCalled()
 	})
 
 	it('invalidates when a transitively-referenced location is drawn', async () => {
-		getControlIdAt.mockReturnValue('bank:1-0-0')
+		getControlIdAt.mockReturnValue(CreateBankControlId('1-0-0'))
 		const targetStyle = makeStyle([formatLocation({ pageNumber: 3, row: 0, column: 0 })])
 		getControl.mockReturnValue({
 			drawing: { getLastDrawStyle: () => targetStyle, getDrawStyle: async () => targetStyle },
@@ -322,11 +324,11 @@ describe('MirrorButtonDrawer', () => {
 
 		// '3/0/0' is a reference of the target, so it is part of our tracked set: a draw there must redraw us
 		drawer.onButtonDrawn({ pageNumber: 3, row: 0, column: 0 }, {} as any)
-		await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith('bank:2-0-0'))
+		await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CreateBankControlId('2-0-0')))
 	})
 
 	it('references just the target when the target has no references of its own', async () => {
-		getControlIdAt.mockReturnValue('bank:1-0-0')
+		getControlIdAt.mockReturnValue(CreateBankControlId('1-0-0'))
 		const targetStyle = makeStyle() // no referencedLocations
 		getControl.mockReturnValue({
 			drawing: { getLastDrawStyle: () => targetStyle, getDrawStyle: async () => targetStyle },
@@ -339,7 +341,7 @@ describe('MirrorButtonDrawer', () => {
 	})
 
 	it('returns a deep clone of the target style, isolated from the source', async () => {
-		getControlIdAt.mockReturnValue('bank:1-0-0')
+		getControlIdAt.mockReturnValue(CreateBankControlId('1-0-0'))
 		const targetStyle = makeStyle()
 		getControl.mockReturnValue({
 			drawing: { getLastDrawStyle: () => targetStyle, getDrawStyle: async () => targetStyle },
@@ -354,7 +356,7 @@ describe('MirrorButtonDrawer', () => {
 	})
 
 	it('stops listening for the old target once re-targeted to an unresolved location', async () => {
-		getControlIdAt.mockReturnValue('bank:1-0-0')
+		getControlIdAt.mockReturnValue(CreateBankControlId('1-0-0'))
 		const targetStyle = makeStyle()
 		getControl.mockReturnValue({
 			drawing: { getLastDrawStyle: () => targetStyle, getDrawStyle: async () => targetStyle },
@@ -377,7 +379,7 @@ describe('MirrorButtonDrawer', () => {
 	})
 
 	it('ignores composite element changes (a mirror owns no elements)', async () => {
-		getControlIdAt.mockReturnValue('bank:1-0-0')
+		getControlIdAt.mockReturnValue(CreateBankControlId('1-0-0'))
 		const targetStyle = makeStyle()
 		getControl.mockReturnValue({
 			drawing: { getLastDrawStyle: () => targetStyle, getDrawStyle: async () => targetStyle },

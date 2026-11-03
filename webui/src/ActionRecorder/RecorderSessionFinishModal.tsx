@@ -3,7 +3,12 @@ import './RecorderSessionFinishModal.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useMutation } from '@tanstack/react-query'
 import { useCallback, useContext, useState } from 'react'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import {
+	formatLocation,
+	isControlIdOfKind,
+	type BankControlId,
+	type TriggerControlId,
+} from '@companion-app/shared/ControlId.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import { Modal } from '~/Components/Modal.js'
 import { TabArea } from '~/Components/TabArea.js'
@@ -29,9 +34,9 @@ export function RecorderSessionFinishModal({
 	)
 
 	const doSave = useCallback(
-		(controlId: string, stepId: string, setId: ActionSetId, mode: 'replace' | 'append') => {
+		(controlId: BankControlId | TriggerControlId, stepId: string, setId: ActionSetId, mode: 'replace' | 'append') => {
 			setSaveError(null)
-			const trigger = triggersList.triggers.get(controlId)
+			const trigger = isControlIdOfKind(controlId, 'trigger') ? triggersList.triggers.get(controlId) : undefined
 			let destination = trigger ? `trigger “${trigger.name}”` : 'the selected button'
 			if (!trigger) {
 				for (const [pageIndex, page] of pages.data.entries()) {

@@ -1,5 +1,6 @@
 import { render } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
@@ -22,11 +23,11 @@ const rootStore = { variablesStore: { allVariableDefinitions: { get: () => [] } 
 
 function localVariablesFor(option: any, actionContext: EntityListActionContext): string[] {
 	captured.length = 0
-	const store = new LocalVariablesStore('bank:1')
+	const store = new LocalVariablesStore(CreateBankControlId('1'))
 	render(
 		<RootAppStoreContext.Provider value={rootStore}>
 			<EntityEditorContextProvider
-				controlId="bank:1"
+				controlId={CreateBankControlId('1')}
 				location={{ pageNumber: 1, row: 0, column: 0 } as any}
 				serviceFactory={{} as any}
 				readonly={false}

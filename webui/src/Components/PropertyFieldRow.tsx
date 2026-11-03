@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import { useCallback, useId } from 'react'
 import type { JsonValue } from 'type-fest'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type {
 	ExpressionableOptionsObject,
@@ -38,7 +39,7 @@ export interface PropertyFieldRowProps {
 	/** The field definition, used to render the evaluated value preview when in expression mode */
 	fieldDefinition: SomeCompanionInputField
 	/** The control this field belongs to, for evaluating the expression preview */
-	controlId: string | null
+	controlId: SomeControlId | null
 	/** Sibling field values, used to resolve context-variable overrides for the preview */
 	allRawOptions: ExpressionableOptionsObject | undefined
 	isLocatedInGrid: boolean

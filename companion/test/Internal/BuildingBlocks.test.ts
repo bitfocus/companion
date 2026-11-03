@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { ActionRunner } from '../../lib/Controls/ActionRunner.js'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
 import type { FeedbackExecutionContext } from '../../lib/Controls/Entities/Types.js'
@@ -8,7 +9,7 @@ import type { ActionForInternalExecution } from '../../lib/Internal/Types.js'
 
 function makeExtras(overrides: Partial<RunActionExtras> = {}): RunActionExtras {
 	return {
-		controlId: 'control:test',
+		controlId: CreateBankControlId('test'),
 		surfaceId: 'surface1',
 		location: { pageNumber: 1, row: 0, column: 0 },
 		abortDelayed: new AbortController().signal,

@@ -10,7 +10,7 @@
  */
 
 import { EventEmitter } from 'node:events'
-import { validateActionSetId } from '@companion-app/shared/ControlId.js'
+import { validateActionSetId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { FeedbackEntitySubType } from '@companion-app/shared/Model/EntityModel.js'
 import { CompanionFieldVariablesSupport } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue, type VariableDefinition } from '@companion-app/shared/Model/Variables.js'
@@ -245,7 +245,7 @@ export class InternalActionRecorder
 				let page = Number(action.options.page)
 				const bank = Number(action.options.bank)
 				if (!isNaN(page) && !isNaN(bank) && setId && stepId) {
-					let controlId: string | null = null
+					let controlId: SomeControlId | null = null
 
 					if (page === 0) page = extras.location?.pageNumber ?? 0
 					if (bank === 0 && extras.location) {

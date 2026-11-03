@@ -1,4 +1,5 @@
 import debounceFn from 'debounce-fn'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ExecuteExpressionResultError } from '@companion-app/shared/ExpressionResult.js'
 import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
@@ -214,7 +215,7 @@ const ComputeStoreResult: ComputeSpecialExpressionValueFn<'storeResult'> = (
  * variables used within them change.
  */
 export class EntityPoolSpecialExpressionManager {
-	readonly #controlId: string
+	readonly #controlId: SomeControlId
 	readonly #createVariablesAndExpressionParser: CreateVariablesAndExpressionParser
 	readonly #renderClock: RenderClock
 	/**
@@ -236,7 +237,7 @@ export class EntityPoolSpecialExpressionManager {
 	readonly #allEntityMaps: ReadonlyArray<Map<string, EntityWrapper>>
 
 	constructor(
-		controlId: string,
+		controlId: SomeControlId,
 		createVariablesAndExpressionParser: CreateVariablesAndExpressionParser,
 		updateFns: {
 			[Expression in SpecialExpression]: UpdateSpecialExpressionValuesFn<Expression>

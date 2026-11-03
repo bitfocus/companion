@@ -1,4 +1,5 @@
 import type { JsonValue } from 'type-fest'
+import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import type {
 	ButtonReferenceButtonModel,
 	LayeredButtonModel,
@@ -46,7 +47,7 @@ import { MirrorButtonDrawer } from './MirrorButtonDrawer.js'
  * this program.
  */
 export class ControlButtonReference
-	extends ControlBase<ButtonReferenceButtonModel>
+	extends ControlBase<ButtonReferenceButtonModel, BankControlId>
 	implements
 		ControlWithoutLayeredStyle,
 		ControlWithoutEntities,
@@ -81,7 +82,7 @@ export class ControlButtonReference
 
 	constructor(
 		deps: ControlDependencies,
-		controlId: string,
+		controlId: BankControlId,
 		storage: ButtonReferenceButtonModel | null,
 		isImport: boolean
 	) {
@@ -138,7 +139,7 @@ export class ControlButtonReference
 		return { location: ParseLocationString(raw, myLocation ?? undefined), referencedVariableIds }
 	}
 
-	override getReferenceTargetControlId(): string | null {
+	override getReferenceTargetControlId(): BankControlId | null {
 		const { location } = this.#resolveTargetLocation()
 		return (location ? this.deps.pageStore.getControlIdAt(location) : null) ?? null
 	}

@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid'
+import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import type { LayeredButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
@@ -33,7 +34,7 @@ import { LayeredButtonDrawer } from './Button/LayeredButtonDrawer.js'
  * this program.
  */
 export abstract class ControlButtonPage<TJson>
-	extends ControlBase<TJson>
+	extends ControlBase<TJson, BankControlId>
 	implements
 		ControlWithConvert,
 		ControlWithoutActions,
@@ -61,7 +62,7 @@ export abstract class ControlButtonPage<TJson>
 		this.#drawing.invalidate()
 	}
 
-	constructor(deps: ControlDependencies, controlId: string, debugNamespace: string) {
+	constructor(deps: ControlDependencies, controlId: BankControlId, debugNamespace: string) {
 		super(deps, controlId, debugNamespace)
 
 		const { drawType, elements } = this.getDrawElements()

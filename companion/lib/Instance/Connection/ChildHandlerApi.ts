@@ -1,4 +1,5 @@
 import type express from 'express'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { ActionEntityModel, SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import type { InstanceConfig } from '@companion-app/shared/Model/Instance.js'
@@ -81,17 +82,17 @@ export interface ConnectionChildHandlerApi extends ChildProcessHandlerBase {
 	sendVariablesChanged(
 		changedVariableIdSet: ReadonlySet<string>,
 		getChangedVariableIds: () => string[],
-		controlIdFilter: ReadonlySet<string> | null
+		controlIdFilter: ReadonlySet<SomeControlId> | null
 	): Promise<void>
 
-	entityUpdate(entity: ControlEntityInstance, controlId: string): Promise<void>
+	entityUpdate(entity: ControlEntityInstance, controlId: SomeControlId): Promise<void>
 
 	/**
 	 *
 	 */
 	entityLearnValues(
 		entity: SomeEntityModel,
-		controlId: string,
+		controlId: SomeControlId,
 		signal: AbortSignal
 	): Promise<ExpressionableOptionsObject | undefined | void>
 
@@ -117,7 +118,7 @@ export interface ConnectionChildHandlerApi extends ChildProcessHandlerBase {
 }
 
 export interface RunActionExtras {
-	controlId: string
+	controlId: SomeControlId
 	surfaceId: string | undefined
 	location: ControlLocation | undefined
 	abortDelayed: AbortSignal

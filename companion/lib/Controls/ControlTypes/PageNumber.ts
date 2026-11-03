@@ -1,3 +1,4 @@
+import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import type { LayeredButtonModel, PageNumberButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
 import type {
@@ -96,7 +97,12 @@ export class ControlButtonPageNumber extends ControlButtonPage<PageNumberButtonM
 	 * @param storage - persisted storage object
 	 * @param isImport - if this is importing a button, not creating at startup
 	 */
-	constructor(deps: ControlDependencies, controlId: string, storage: PageNumberButtonModel | null, isImport: boolean) {
+	constructor(
+		deps: ControlDependencies,
+		controlId: BankControlId,
+		storage: PageNumberButtonModel | null,
+		isImport: boolean
+	) {
 		super(deps, controlId, 'Controls/Button/PageNumber')
 
 		if (!storage) {

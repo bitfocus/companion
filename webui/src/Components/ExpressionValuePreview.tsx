@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useInView } from 'react-intersection-observer'
 import { PulseLoader } from 'react-spinners'
 import type { JsonValue } from 'type-fest'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ExpressionStreamResult } from '@companion-app/shared/ExpressionResult.js'
 import { ParseExpression } from '@companion-app/shared/Expressions.js'
 import type {
@@ -33,7 +34,7 @@ type ContextResolutionForPreview =
 
 interface ExpressionValuePreviewProps {
 	expression: string
-	controlId: string | null
+	controlId: SomeControlId | null
 	fieldDefinition: SomeCompanionInputField
 	contextResolution?: ContextResolutionForPreview
 	/** When set, shows a compact validity status (valid / invalid / error) instead of the value, which is displayed elsewhere */

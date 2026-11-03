@@ -1,4 +1,5 @@
 import EventEmitter from 'node:events'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ElementRasterCanvas } from '@companion-app/shared/Graphics/ElementRaster.js'
 
 /**
@@ -6,7 +7,7 @@ import type { ElementRasterCanvas } from '@companion-app/shared/Graphics/Element
  * attached to it, and draw the elements the preview can't draw itself for its canvas.
  */
 export interface PreviewContext {
-	readonly controlId: string
+	readonly controlId: SomeControlId
 	canvas: ElementRasterCanvas
 	/** Set once the context has ended, so anything attached to it should end too */
 	ended: boolean
@@ -40,7 +41,7 @@ export class PreviewContexts {
 	 * Open a context, or hold open the existing one with this id
 	 * @returns A function to release it, which ends the context once nothing else holds it
 	 */
-	open(clientId: string, contextId: string, controlId: string, canvas: ElementRasterCanvas): () => void {
+	open(clientId: string, contextId: string, controlId: SomeControlId, canvas: ElementRasterCanvas): () => void {
 		const key = PreviewContexts.#key(clientId, contextId)
 
 		let entry = this.#contexts.get(key)

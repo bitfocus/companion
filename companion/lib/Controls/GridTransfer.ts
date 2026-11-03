@@ -1,4 +1,4 @@
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { formatLocation, type BankControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 
 export type GridTransferOperation = 'copy' | 'move' | 'swap'
@@ -12,15 +12,15 @@ export interface GridTransferPair {
 export type GridPlacement =
 	| { location: ControlLocation; kind: 'empty' }
 	/** An existing control moves here */
-	| { location: ControlLocation; kind: 'existing'; controlId: string }
+	| { location: ControlLocation; kind: 'existing'; controlId: BankControlId }
 	/** A fresh control, cloned from this one, is placed here */
-	| { location: ControlLocation; kind: 'clone'; sourceControlId: string }
+	| { location: ControlLocation; kind: 'clone'; sourceControlId: BankControlId }
 
 export interface GridTransferPlan {
 	/** Every location whose occupant changes, and what will be there afterwards */
 	placements: GridPlacement[]
 	/** Controls that end up nowhere once this is applied, and so must be deleted */
-	discardedControlIds: string[]
+	discardedControlIds: BankControlId[]
 }
 
 export class GridTransferError extends Error {}
@@ -37,7 +37,7 @@ export class GridTransferError extends Error {}
 export function planGridTransfer(
 	operation: GridTransferOperation,
 	pairs: GridTransferPair[],
-	getControlIdAt: (location: ControlLocation) => string | null
+	getControlIdAt: (location: ControlLocation) => BankControlId | null
 ): GridTransferPlan {
 	// A pair that goes nowhere is a no-op rather than an error, matching what the single-location
 	// endpoints have always done
@@ -73,7 +73,7 @@ export function planGridTransfer(
 		operation === 'swap' ? realPairs : realPairs.filter(({ fromLocation }) => !!getControlIdAt(fromLocation))
 
 	/** What is at each location we are about to touch, read before anything moves */
-	const occupantBefore = new Map<ControlLocationString, string | null>()
+	const occupantBefore = new Map<ControlLocationString, BankControlId | null>()
 	const rememberOccupant = (location: ControlLocation) => {
 		const key = formatLocation(location)
 		if (!occupantBefore.has(key)) occupantBefore.set(key, getControlIdAt(location))
@@ -146,7 +146,7 @@ export function planGridTransfer(
 	const survivingControlIds = new Set(
 		placements.flatMap((placement) => (placement.kind === 'existing' ? [placement.controlId] : []))
 	)
-	const discardedControlIds: string[] = []
+	const discardedControlIds: BankControlId[] = []
 	for (const [key, controlId] of occupantBefore) {
 		if (!controlId) continue
 		if (survivingControlIds.has(controlId)) continue

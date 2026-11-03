@@ -61,7 +61,7 @@ function hashToken(plaintext: string): string {
  */
 export class RestApiTokenStore implements ApiTokenStore {
 	readonly #logger: Logger
-	readonly #table: DataStoreSchemaTableView<typeof StoredApiKeySchema>
+	readonly #table: DataStoreSchemaTableView<typeof StoredApiKeySchema, string>
 	/** Invalid keys already warned about, as every request checks every key */
 	readonly #warnedInvalidKeyIds = new Set<string>()
 

@@ -3,6 +3,7 @@ import { toJS } from 'mobx'
 import { useObserver } from 'mobx-react-lite'
 import { nanoid } from 'nanoid'
 import { useEffect, useRef, useState } from 'react'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ExecuteExpressionResult } from '@companion-app/shared/ExpressionResult.js'
 import type { ElementRasterCanvas } from '@companion-app/shared/Graphics/ElementRaster.js'
 import {
@@ -38,7 +39,7 @@ interface CachedExpressionValue {
 }
 
 class LayeredButtonDrawStyleParser {
-	readonly #controlId: string
+	readonly #controlId: SomeControlId
 	readonly #location: ControlLocation | undefined
 	readonly #drawConfig: ResolveButtonStylePropertiesConfig
 	readonly #changed: (style: RendererButtonStyle) => void
@@ -59,7 +60,7 @@ class LayeredButtonDrawStyleParser {
 	#disposed = false
 
 	constructor(
-		controlId: string,
+		controlId: SomeControlId,
 		location: ControlLocation | undefined,
 		drawConfig: ResolveButtonStylePropertiesConfig,
 		changed: (style: RendererButtonStyle) => void,
@@ -368,7 +369,7 @@ class LayeredButtonDrawStyleParser {
  * @returns The parsed draw style, or null if not yet ready
  */
 export function useLayeredButtonDrawStyleParser(
-	controlId: string,
+	controlId: SomeControlId,
 	location: ControlLocation | undefined,
 	drawConfig: ResolveButtonStylePropertiesConfig,
 	styleStore: LayeredStyleStore,

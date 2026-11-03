@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid'
+import type { BankControlId, SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { UndecoratedRender } from '../Graphics/Controller.js'
 import type { DisplayedSize, ReleaseDisplayedLocation } from '../Graphics/DisplayedLocations.js'
@@ -21,14 +22,14 @@ import { LINK_SUBSCRIPTION_LEASE_MS } from './Protocol/v1/Timing.js'
 /** What the button server needs from the rest of Companion */
 export interface LinkButtonServerHost {
 	getCachedRenderOrGeneratePlaceholder(location: ControlLocation): ImageResult
-	getControlIdAt(location: ControlLocation): string | null
-	pressControl(controlId: string, pressed: boolean, surfaceId: string): boolean
-	rotateControl(controlId: string, delta: number, surfaceId: string): boolean
+	getControlIdAt(location: ControlLocation): BankControlId | null
+	pressControl(controlId: SomeControlId, pressed: boolean, surfaceId: string): boolean
+	rotateControl(controlId: SomeControlId, delta: number, surfaceId: string): boolean
 	/**
 	 * Abort the running actions of a control
 	 * @param hops - how many installations the abort has come through, to pass on if the control forwards it
 	 */
-	abortControl(controlId: string, unlatch: boolean, hops: number): void
+	abortControl(controlId: SomeControlId, unlatch: boolean, hops: number): void
 	/**
 	 * The installations the image at a location has come through, when the button there is itself linked to a
 	 * peer. Empty for a local button
@@ -120,7 +121,7 @@ export class LinkButtonServer {
 	readonly #renderQueue: ImageWriteQueue<string, [ImageResult, number]>
 
 	/** Buttons held by each peer, keyed by control and surface */
-	readonly #held = new Map<string, Map<string, { controlId: string; surfaceId: string }>>()
+	readonly #held = new Map<string, Map<string, { controlId: SomeControlId; surfaceId: string }>>()
 
 	/**
 	 * The ids of the presses and rotations acted on, by peer, with when to forget them (once a copy would be dropped

@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { TriggersEventVariables } from '../../../lib/Controls/ControlTypes/Triggers/Events/Variable.js'
 import { TriggerExecutionSource } from '../../../lib/Controls/ControlTypes/Triggers/TriggerExecutionSource.js'
 import { MockTriggerEventBus } from './Helpers.js'
 
-const CONTROL_ID = 'trigger:test'
+const CONTROL_ID = CreateTriggerControlId('test')
 
 function createVariables() {
 	const bus = new MockTriggerEventBus()
@@ -63,7 +64,7 @@ describe('TriggersEventVariables', () => {
 		variables.setEnabled(true)
 		variables.setVariableChanged('a', 'local:my_var')
 
-		bus.emit('variables_changed', new Set(['local:my_var']), new Set(['trigger:some-other-trigger']))
+		bus.emit('variables_changed', new Set(['local:my_var']), new Set([CreateTriggerControlId('some-other-trigger')]))
 		vi.runAllTimers()
 		expect(executeActions).not.toHaveBeenCalled()
 	})

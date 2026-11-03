@@ -7,6 +7,7 @@ import { FormLabel } from '~/Components/Form.js'
 import './EditPanel.css'
 import { useCallback, useContext, useId, useMemo, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
+import type { ExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import {
 	EntityModelType,
@@ -46,7 +47,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore'
 import { VariableReferenceRow } from '../VariableReferenceRow.js'
 
 interface EditExpressionVariablePanelProps {
-	controlId: string
+	controlId: ExpressionVariableControlId
 }
 
 export function EditExpressionVariablePanel({ controlId }: EditExpressionVariablePanelProps): React.JSX.Element {
@@ -119,7 +120,7 @@ export function EditExpressionVariablePanel({ controlId }: EditExpressionVariabl
 }
 
 interface ExpressionVariableConfigProps {
-	controlId: string
+	controlId: ExpressionVariableControlId
 	options: ExpressionVariableOptions
 }
 
@@ -183,7 +184,7 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 }
 
 interface ExpressionVariableEntityEditorProps {
-	controlId: string
+	controlId: ExpressionVariableControlId
 	entity: SomeEntityModel | null
 	localVariablesStore: LocalVariablesStore
 }
@@ -246,7 +247,7 @@ const ExpressionVariableAddRootEntity = observer(function ExpressionVariableAddR
 })
 
 interface ExpressionVariableSoleEntityEditorProps {
-	controlId: string
+	controlId: ExpressionVariableControlId
 	entity: SomeEntityModel
 }
 
@@ -292,7 +293,7 @@ const ExpressionVariableSoleEntityEditor = observer(function ExpressionVariableS
 })
 
 interface ExpressionVariableLocalVariablesEditorProps {
-	controlId: string
+	controlId: ExpressionVariableControlId
 	localVariables: SomeEntityModel[]
 	localVariablesStore: LocalVariablesStore
 }

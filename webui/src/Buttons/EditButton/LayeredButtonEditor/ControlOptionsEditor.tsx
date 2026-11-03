@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite'
-import { useCallback, useId, useRef, type MutableRefObject } from 'react'
+import { useCallback, useId, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { StepExpressionBlockedVariables } from '@companion-app/shared/ControlLocation.js'
 import type { LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import type { DropdownChoice } from '@companion-module/base'
@@ -17,9 +18,9 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 
 interface ControlOptionsEditorProps {
-	controlId: string
+	controlId: SomeControlId
 	options: LayeredButtonOptions
-	configRef: MutableRefObject<any> // TODO
+	configRef: React.RefObject<any> // TODO
 	localVariablesStore: LocalVariablesStore
 }
 

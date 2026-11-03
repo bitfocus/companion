@@ -1,3 +1,4 @@
+import z from 'zod'
 import type { ActionSetId } from './Model/ActionModel.js'
 import type { ControlLocation, ControlLocationString } from './Model/Common.js'
 import type { UserConfigGridSize } from './Model/UserConfigModel.js'
@@ -52,36 +53,37 @@ export function xyToOldBankIndex(x: number, y: number): number | null {
 /**
  * Create full bank control id
  */
-export function CreateBankControlId(id: string): string {
-	return `bank:${id}`
+export function CreateBankControlId(id: string): BankControlId {
+	// The creators are the only place a control id is made without being checked
+	return `bank:${id}` as BankControlId
 }
 
 /**
  * Create full trigger control id
  */
-export function CreateTriggerControlId(triggerId: string): string {
-	return `trigger:${triggerId}`
+export function CreateTriggerControlId(triggerId: string): TriggerControlId {
+	return `trigger:${triggerId}` as TriggerControlId
 }
 
 /**
  * Create full expression variable control id
  */
-export function CreateExpressionVariableControlId(variableId: string): string {
-	return `expression-variable:${variableId}`
+export function CreateExpressionVariableControlId(variableId: string): ExpressionVariableControlId {
+	return `expression-variable:${variableId}` as ExpressionVariableControlId
 }
 
 /**
  * Create the full control id for a page's local-variables control (one per page, keyed by page id).
  */
-export function CreatePageControlId(pageId: string): string {
-	return `page:${pageId}`
+export function CreatePageControlId(pageId: string): PageControlId {
+	return `page:${pageId}` as PageControlId
 }
 
 /**
  * Create preset control id
  */
-export function CreatePresetControlId(connectionId: string, presetId: string, variablesHash: string): string {
-	return `preset:${connectionId}:${presetId}:${variablesHash}`
+export function CreatePresetControlId(connectionId: string, presetId: string, variablesHash: string): PresetControlId {
+	return `preset:${connectionId}:${presetId}:${variablesHash}` as PresetControlId
 }
 
 export interface ParsedControlIdBank {
@@ -129,55 +131,115 @@ const CONTROL_ID_KINDS: Record<ControlIdKind, true> = {
  */
 export const ALL_CONTROL_ID_KINDS = Object.keys(CONTROL_ID_KINDS) as [ControlIdKind, ...ControlIdKind[]]
 
+/** The schema for the control ids of one kind, checked with {@link getControlIdKind} */
+function controlIdSchema<TKind extends ControlIdKind, TId extends `${TKind}:${string}` = `${TKind}:${string}`>(
+	kind: TKind
+) {
+	return z
+		.custom<TId>((value) => typeof value === 'string' && getControlIdKind(value) === kind, `Invalid ${kind} control id`)
+		.brand<TKind, 'inout'>()
+}
+
+/**
+ * The schema for the control ids of each kind, which their types come from. A preset id has the connection, preset
+ * and variables hash. The ids are branded, so that one can only be made by a `Create*ControlId` function, or by
+ * checking a string with {@link isSomeControlId}, {@link isControlIdOfKind} or a schema, rather than written by hand
+ */
+export const zodControlIds = {
+	bank: controlIdSchema('bank'),
+	trigger: controlIdSchema('trigger'),
+	'expression-variable': controlIdSchema('expression-variable'),
+	page: controlIdSchema('page'),
+	preset: controlIdSchema<'preset', `preset:${string}:${string}:${string}`>('preset'),
+} satisfies Record<ControlIdKind, z.ZodType>
+
+/** A control id of a specific kind */
+export type ControlIdOfKind<TKind extends ControlIdKind> = z.output<(typeof zodControlIds)[TKind]>
+
+export type BankControlId = ControlIdOfKind<'bank'>
+export type TriggerControlId = ControlIdOfKind<'trigger'>
+export type ExpressionVariableControlId = ControlIdOfKind<'expression-variable'>
+export type PageControlId = ControlIdOfKind<'page'>
+export type PresetControlId = ControlIdOfKind<'preset'>
+
+export type SomeControlId = ControlIdOfKind<ControlIdKind>
+
+/**
+ * The kind of a control id, or undefined if it is not a control id.
+ * This is the one place a control id is checked, everything else is built on it
+ */
+export function getControlIdKind(controlId: string): ControlIdKind | undefined {
+	if (typeof controlId !== 'string') return undefined
+
+	const separator = controlId.indexOf(':')
+	if (separator === -1) return undefined
+
+	const kind = controlId.slice(0, separator)
+	if (!Object.hasOwn(CONTROL_ID_KINDS, kind)) return undefined
+
+	// A preset id has two more parts after its connection id
+	if (kind === 'preset') {
+		const presetSeparator = controlId.indexOf(':', separator + 1)
+		if (presetSeparator === -1 || presetSeparator === controlId.lastIndexOf(':')) return undefined
+	}
+
+	return kind as ControlIdKind
+}
+
+/**
+ * Check whether a string is a control id of any kind
+ */
+export function isSomeControlId(controlId: string): controlId is SomeControlId {
+	return getControlIdKind(controlId) !== undefined
+}
+
+/**
+ * Check whether a string is a control id of a specific kind
+ */
+export function isControlIdOfKind<TKind extends ControlIdKind>(
+	controlId: string,
+	kind: TKind
+): controlId is ControlIdOfKind<TKind> {
+	return getControlIdKind(controlId) === kind
+}
+
+export const zodSomeControlId = z.custom<SomeControlId>(
+	(value) => typeof value === 'string' && isSomeControlId(value),
+	'Invalid control id'
+)
+
 /**
  * Parse a controlId
  */
 export function ParseControlId(controlId: string): ParsedControlIdType | undefined {
-	if (typeof controlId === 'string') {
-		const matchBank = controlId.match(/^bank:(.*)$/)
-		if (matchBank) {
-			return {
-				type: 'bank',
-				control: matchBank[1],
-			}
-		}
+	const kind = getControlIdKind(controlId)
+	if (!kind) return undefined
 
-		const matchTrigger = controlId.match(/^trigger:(.*)$/)
-		if (matchTrigger) {
-			return {
-				type: 'trigger',
-				trigger: matchTrigger[1],
-			}
-		}
-
-		const matchCv = controlId.match(/^expression-variable:(.*)$/)
-		if (matchCv) {
-			return {
-				type: 'expression-variable',
-				variableId: matchCv[1],
-			}
-		}
-
-		const matchPage = controlId.match(/^page:(.*)$/)
-		if (matchPage) {
-			return {
-				type: 'page',
-				pageId: matchPage[1],
-			}
-		}
-
-		const matchPreset = controlId.match(/^preset:(.*?):(.*):(.*)$/)
-		if (matchPreset) {
+	const value = controlId.slice(kind.length + 1)
+	switch (kind) {
+		case 'bank':
+			return { type: 'bank', control: value }
+		case 'trigger':
+			return { type: 'trigger', trigger: value }
+		case 'expression-variable':
+			return { type: 'expression-variable', variableId: value }
+		case 'page':
+			return { type: 'page', pageId: value }
+		case 'preset': {
+			// The connectionId stops at the first colon, and the variablesHash starts after the last
+			const first = value.indexOf(':')
+			const last = value.lastIndexOf(':')
 			return {
 				type: 'preset',
-				connectionId: matchPreset[1],
-				presetId: matchPreset[2],
-				variablesHash: matchPreset[3],
+				connectionId: value.slice(0, first),
+				presetId: value.slice(first + 1, last),
+				variablesHash: value.slice(last + 1),
 			}
 		}
+		default:
+			assertNever(kind)
+			return undefined
 	}
-
-	return undefined
 }
 
 export function validateActionSetId(setId: ActionSetId): ActionSetId | undefined {

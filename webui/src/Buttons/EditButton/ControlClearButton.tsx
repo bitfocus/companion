@@ -12,7 +12,7 @@ export function ControlClearButton({
 	resetModalRef,
 }: {
 	location: ControlLocation
-	resetModalRef: React.MutableRefObject<GenericConfirmModalRef | null>
+	resetModalRef: React.RefObject<GenericConfirmModalRef | null>
 }): React.JSX.Element {
 	const resetControlsMutation = useMutationExt(trpc.controls.resetControls.mutationOptions())
 

@@ -17,6 +17,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import React, { useCallback, useContext, useMemo, useState } from 'react'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { UICompositeElementDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { Accordion } from '~/Components/Accordion'
@@ -50,7 +51,7 @@ export function RemoveElementButton({
 	elementId,
 	confirmModalRef,
 }: {
-	controlId: string
+	controlId: SomeControlId
 	elementId: string
 	confirmModalRef: React.RefObject<GenericConfirmModalRef | null>
 }): React.JSX.Element {
@@ -80,7 +81,7 @@ export function DuplicateElementButton({
 	controlId,
 	elementId,
 }: {
-	controlId: string
+	controlId: SomeControlId
 	elementId: string
 }): React.JSX.Element {
 	const duplicateElementMutation = useMutationExt(trpc.controls.styles.duplicateElement.mutationOptions())
@@ -126,7 +127,7 @@ export function AddElementDropdownButton({
 	controlId,
 }: {
 	styleStore: LayeredStyleStore
-	controlId: string
+	controlId: SomeControlId
 }): React.JSX.Element {
 	return (
 		<Popover.Root>
@@ -148,7 +149,7 @@ function AddElementDropdownPopoverButton({
 	description,
 }: {
 	styleStore: LayeredStyleStore
-	controlId: string
+	controlId: SomeControlId
 	elementType: SomeButtonGraphicsElement['type'] | string
 	label: string
 	description: string | null
@@ -190,7 +191,7 @@ const CompositeElementConnectionGroup = observer(function CompositeElementConnec
 	group,
 }: {
 	styleStore: LayeredStyleStore
-	controlId: string
+	controlId: SomeControlId
 	group: CompositeElementGroup
 }) {
 	const [isOpen, setIsOpen] = useState(false)
@@ -228,7 +229,7 @@ const AddElementDropdownPopoverContent = observer(function AddElementDropdownPop
 	controlId,
 }: {
 	styleStore: LayeredStyleStore
-	controlId: string
+	controlId: SomeControlId
 }) {
 	const { compositeElementDefinitions, connections } = useContext(RootAppStoreContext)
 

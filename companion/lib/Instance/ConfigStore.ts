@@ -52,7 +52,7 @@ function repairInstanceConfig(
 export class InstanceConfigStore {
 	readonly #logger = LogController.createLogger('Instance/ConfigStore')
 
-	readonly #dbTable: DataStoreSchemaTableView<typeof InstanceConfigSchema>
+	readonly #dbTable: DataStoreSchemaTableView<typeof InstanceConfigSchema, string>
 	readonly #afterSave: (instanceIds: string[], updateProcessManager: boolean) => void
 
 	#store: Map<string, InstanceConfig>

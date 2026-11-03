@@ -1,4 +1,5 @@
 import z from 'zod'
+import type { ExpressionVariableControlId } from '../ControlId.js'
 import type { ObjectPatch } from '../Diff.js'
 import type { CollectionBase } from './Collections.js'
 import { SomeEntityModelSchema } from './EntityModel.js'
@@ -39,21 +40,21 @@ export type ExpressionVariableUpdate =
 
 export interface ExpressionVariableUpdateInitOp {
 	type: 'init'
-	variables: Record<string, ClientExpressionVariableData>
+	variables: Record<ExpressionVariableControlId, ClientExpressionVariableData>
 }
 export interface ExpressionVariableUpdateRemoveOp {
 	type: 'remove'
-	controlId: string
+	controlId: ExpressionVariableControlId
 }
 export interface ExpressionVariableUpdateUpdateOp {
 	type: 'update'
-	controlId: string
+	controlId: ExpressionVariableControlId
 
 	patch: ObjectPatch<ClientExpressionVariableData>
 }
 export interface ExpressionVariableUpdateAddOp {
 	type: 'add'
-	controlId: string
+	controlId: ExpressionVariableControlId
 
 	info: ClientExpressionVariableData
 }

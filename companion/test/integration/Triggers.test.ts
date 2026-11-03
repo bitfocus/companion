@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import type { TriggerControlId } from '@companion-app/shared/ControlId.js'
 import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
 import type { ControlTrigger } from '../../lib/Controls/ControlTypes/Triggers/Trigger.js'
 import { createTestApp, type TestApp } from './TestApp.js'
@@ -20,7 +21,7 @@ describe('trigger controls', () => {
 		await app?.close()
 	})
 
-	async function createTrigger(): Promise<{ triggerId: string; trigger: ControlTrigger }> {
+	async function createTrigger(): Promise<{ triggerId: TriggerControlId; trigger: ControlTrigger }> {
 		const triggerId = await app.trpc().controls.triggers.create()
 		const trigger = app.registry.controls.getControl(triggerId) as ControlTrigger
 		expect(trigger).toBeTruthy()

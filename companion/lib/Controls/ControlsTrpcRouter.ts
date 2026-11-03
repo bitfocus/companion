@@ -1,6 +1,6 @@
 import type EventEmitter from 'node:events'
 import z from 'zod'
-import { formatLocation, isLocationOnGrid } from '@companion-app/shared/ControlId.js'
+import { formatLocation, isLocationOnGrid, zodSomeControlId } from '@companion-app/shared/ControlId.js'
 import {
 	parseLinkButtonOptions,
 	type ButtonReferenceButtonModel,
@@ -364,7 +364,7 @@ export function createControlsTrpcRouter(
 		setOptionsField: publicProcedure
 			.input(
 				z.object({
-					controlId: z.string(),
+					controlId: zodSomeControlId,
 					key: z.string(),
 					value: JsonValueSchema.optional(),
 				})

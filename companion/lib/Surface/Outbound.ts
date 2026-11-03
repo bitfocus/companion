@@ -34,7 +34,7 @@ export class SurfaceOutboundController {
 	/**
 	 * The core database library
 	 */
-	readonly #dbTable: DataStoreSchemaTableView<typeof OutboundSurfaceInfoSchema>
+	readonly #dbTable: DataStoreSchemaTableView<typeof OutboundSurfaceInfoSchema, string>
 
 	#storage = new Map<string, OutboundSurfaceInfo>()
 

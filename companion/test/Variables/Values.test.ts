@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
@@ -410,7 +411,7 @@ describe('VariablesValues', () => {
 			const listener = vi.fn()
 			values.on('variablesChanged', listener)
 
-			values.triggerLocationVariablesChange('ctrl-1')
+			values.triggerLocationVariablesChange(CreateBankControlId('ctrl-1'))
 
 			expect(listener).toHaveBeenCalledOnce()
 		})
@@ -419,15 +420,15 @@ describe('VariablesValues', () => {
 			const listener = vi.fn()
 			values.on('variablesChanged', listener)
 
-			values.triggerLocationVariablesChange('my-control-id')
+			values.triggerLocationVariablesChange(CreateBankControlId('my-control-id'))
 
-			expect(listener.mock.calls[0][2]).toBe('my-control-id')
+			expect(listener.mock.calls[0][2]).toBe(CreateBankControlId('my-control-id'))
 		})
 
 		test('emitted variable IDs have the $(...) wrapper stripped', () => {
 			const listener = vi.fn()
 			values.on('variablesChanged', listener)
-			values.triggerLocationVariablesChange('ctrl-1')
+			values.triggerLocationVariablesChange(CreateBankControlId('ctrl-1'))
 
 			const [changedSet] = listener.mock.calls[0] as [ReadonlySet<string>]
 			for (const id of changedSet) {
@@ -439,7 +440,7 @@ describe('VariablesValues', () => {
 		test('emitted set contains all expected this:* variable names', () => {
 			const listener = vi.fn()
 			values.on('variablesChanged', listener)
-			values.triggerLocationVariablesChange('ctrl-1')
+			values.triggerLocationVariablesChange(CreateBankControlId('ctrl-1'))
 
 			const [changedSet] = listener.mock.calls[0] as [ReadonlySet<string>]
 			const expected = [

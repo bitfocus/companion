@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import { rgb } from '../../lib/Resources/Util.js'
 import type { ServiceApi, ServiceApiControl } from '../../lib/Service/ServiceApi.js'
@@ -149,7 +150,7 @@ describe('TcpUdpApi', () => {
 
 			test('ok', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
@@ -162,12 +163,12 @@ describe('TcpUdpApi', () => {
 					column: 3,
 				})
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.pressControl).toHaveBeenCalledWith('control123', true, 'fake-proto')
+				expect(serviceApi.pressControl).toHaveBeenCalledWith(CreateBankControlId('control123'), true, 'fake-proto')
 			})
 
 			test('bad page', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
@@ -179,7 +180,7 @@ describe('TcpUdpApi', () => {
 
 			test('bad row', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
@@ -191,7 +192,7 @@ describe('TcpUdpApi', () => {
 
 			test('bad column', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
@@ -226,7 +227,7 @@ describe('TcpUdpApi', () => {
 
 			test('ok', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
@@ -239,12 +240,12 @@ describe('TcpUdpApi', () => {
 					column: 3,
 				})
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.pressControl).toHaveBeenCalledWith('control123', false, 'fake-proto')
+				expect(serviceApi.pressControl).toHaveBeenCalledWith(CreateBankControlId('control123'), false, 'fake-proto')
 			})
 
 			test('bad page', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
@@ -256,7 +257,7 @@ describe('TcpUdpApi', () => {
 
 			test('bad row', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
@@ -268,7 +269,7 @@ describe('TcpUdpApi', () => {
 
 			test('bad column', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
@@ -304,7 +305,7 @@ describe('TcpUdpApi', () => {
 
 			test('ok', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
@@ -317,17 +318,17 @@ describe('TcpUdpApi', () => {
 					column: 3,
 				})
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.pressControl).toHaveBeenCalledWith('control123', true, 'fake-proto')
+				expect(serviceApi.pressControl).toHaveBeenCalledWith(CreateBankControlId('control123'), true, 'fake-proto')
 
 				vi.advanceTimersByTime(100)
 
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(2)
-				expect(serviceApi.pressControl).toHaveBeenLastCalledWith('control123', false, 'fake-proto')
+				expect(serviceApi.pressControl).toHaveBeenLastCalledWith(CreateBankControlId('control123'), false, 'fake-proto')
 			})
 
 			test('bad page', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
@@ -339,7 +340,7 @@ describe('TcpUdpApi', () => {
 
 			test('bad row', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
@@ -351,7 +352,7 @@ describe('TcpUdpApi', () => {
 
 			test('bad column', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.pressControl.mockReturnValue(true)
 
 				// Perform the request
@@ -383,7 +384,7 @@ describe('TcpUdpApi', () => {
 
 			test('ok', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
@@ -396,12 +397,12 @@ describe('TcpUdpApi', () => {
 					column: 3,
 				})
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', -1, 'fake-proto')
+				expect(serviceApi.rotateControl).toHaveBeenCalledWith(CreateBankControlId('control123'), -1, 'fake-proto')
 			})
 
 			test('bad page', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
@@ -416,7 +417,7 @@ describe('TcpUdpApi', () => {
 
 			test('bad row', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
@@ -431,7 +432,7 @@ describe('TcpUdpApi', () => {
 
 			test('bad column', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
@@ -466,7 +467,7 @@ describe('TcpUdpApi', () => {
 
 			test('ok', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
@@ -479,12 +480,12 @@ describe('TcpUdpApi', () => {
 					column: 3,
 				})
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.rotateControl).toHaveBeenCalledWith('control123', 1, 'fake-proto')
+				expect(serviceApi.rotateControl).toHaveBeenCalledWith(CreateBankControlId('control123'), 1, 'fake-proto')
 			})
 
 			test('bad page', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
@@ -499,7 +500,7 @@ describe('TcpUdpApi', () => {
 
 			test('bad row', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
@@ -514,7 +515,7 @@ describe('TcpUdpApi', () => {
 
 			test('bad column', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.rotateControl.mockReturnValue(true)
 
 				// Perform the request
@@ -549,7 +550,7 @@ describe('TcpUdpApi', () => {
 
 			test('no payload', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('test')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('test'))
 
 				const mockControl = mock<ServiceApiControl>({}, mockOptions)
 				serviceApi.getControl.mockReturnValue(mockControl)
@@ -564,7 +565,7 @@ describe('TcpUdpApi', () => {
 
 			test('ok', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 
 				const mockControl = mock<ServiceApiControl>({}, mockOptions)
 				serviceApi.getControl.mockReturnValue(mockControl)
@@ -585,7 +586,7 @@ describe('TcpUdpApi', () => {
 
 			test('bad page', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 
 				const mockControl = mock<ServiceApiControl>({}, mockOptions)
 				serviceApi.getControl.mockReturnValue(mockControl)
@@ -601,7 +602,7 @@ describe('TcpUdpApi', () => {
 
 			test('bad row', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 
 				const mockControl = mock<ServiceApiControl>({}, mockOptions)
 				serviceApi.getControl.mockReturnValue(mockControl)
@@ -617,7 +618,7 @@ describe('TcpUdpApi', () => {
 
 			test('bad column', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('control123')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('control123'))
 
 				const mockControl = mock<ServiceApiControl>({}, mockOptions)
 				serviceApi.getControl.mockReturnValue(mockControl)
@@ -652,7 +653,7 @@ describe('TcpUdpApi', () => {
 
 			test('ok', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('abc')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('abc'))
 
 				const mockControl = mock<ServiceApiControl>(
 					{
@@ -673,7 +674,7 @@ describe('TcpUdpApi', () => {
 				})
 
 				expect(serviceApi.getControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControl).toHaveBeenCalledWith('abc')
+				expect(serviceApi.getControl).toHaveBeenCalledWith(CreateBankControlId('abc'))
 
 				expect(mockControl.setStyleFields).toHaveBeenCalledTimes(1)
 				expect(mockControl.setStyleFields).toHaveBeenCalledWith({ text: 'def two' })
@@ -681,7 +682,7 @@ describe('TcpUdpApi', () => {
 
 			test('ok with slash', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('abc')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('abc'))
 
 				const mockControl = mock<ServiceApiControl>(
 					{
@@ -702,7 +703,7 @@ describe('TcpUdpApi', () => {
 				})
 
 				expect(serviceApi.getControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControl).toHaveBeenCalledWith('abc')
+				expect(serviceApi.getControl).toHaveBeenCalledWith(CreateBankControlId('abc'))
 
 				expect(mockControl.setStyleFields).toHaveBeenCalledTimes(1)
 				expect(mockControl.setStyleFields).toHaveBeenCalledWith({ text: 'de/f two' })
@@ -710,7 +711,7 @@ describe('TcpUdpApi', () => {
 
 			test('ok no text', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('abc')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('abc'))
 
 				const mockControl = mock<ServiceApiControl>(
 					{
@@ -731,7 +732,7 @@ describe('TcpUdpApi', () => {
 				})
 
 				expect(serviceApi.getControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControl).toHaveBeenCalledWith('abc')
+				expect(serviceApi.getControl).toHaveBeenCalledWith(CreateBankControlId('abc'))
 
 				expect(mockControl.setStyleFields).toHaveBeenCalledTimes(1)
 				expect(mockControl.setStyleFields).toHaveBeenCalledWith({ text: '' })
@@ -760,7 +761,7 @@ describe('TcpUdpApi', () => {
 				expect(expected).toBeTypeOf('number') // just to satisfy TS that expected is the right type for the mock call
 
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('abc')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('abc'))
 
 				const mockControl = mock<ServiceApiControl>(
 					{
@@ -781,7 +782,7 @@ describe('TcpUdpApi', () => {
 				})
 
 				expect(serviceApi.getControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControl).toHaveBeenCalledWith('abc')
+				expect(serviceApi.getControl).toHaveBeenCalledWith(CreateBankControlId('abc'))
 
 				expect(mockControl.setStyleFields).toHaveBeenCalledTimes(1)
 				expect(mockControl.setStyleFields).toHaveBeenCalledWith({ color: expected })
@@ -817,7 +818,7 @@ describe('TcpUdpApi', () => {
 				expect(expected).toBeTypeOf('number') // just to satisfy TS that expected is the right type for the mock call
 
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAt.mockReturnValue('abc')
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('abc'))
 
 				const mockControl = mock<ServiceApiControl>(
 					{
@@ -838,7 +839,7 @@ describe('TcpUdpApi', () => {
 				})
 
 				expect(serviceApi.getControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControl).toHaveBeenCalledWith('abc')
+				expect(serviceApi.getControl).toHaveBeenCalledWith(CreateBankControlId('abc'))
 
 				expect(mockControl.setStyleFields).toHaveBeenCalledTimes(1)
 				expect(mockControl.setStyleFields).toHaveBeenCalledWith({ bgcolor: expected })
@@ -1009,19 +1010,19 @@ describe('TcpUdpApi', () => {
 
 			test('ok', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAtOldBankIndex.mockReturnValue('control123')
+				serviceApi.getControlIdAtOldBankIndex.mockReturnValue(CreateBankControlId('control123'))
 				serviceApi.pressControl.mockReturnValue(true)
 
 				await router.processMessage('bank-press 1 2')
 
 				expect(serviceApi.getControlIdAtOldBankIndex).toHaveBeenCalledWith(1, 2)
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.pressControl).toHaveBeenCalledWith('control123', true, 'fake-proto')
+				expect(serviceApi.pressControl).toHaveBeenCalledWith(CreateBankControlId('control123'), true, 'fake-proto')
 
 				vi.advanceTimersByTime(100)
 
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(2)
-				expect(serviceApi.pressControl).toHaveBeenLastCalledWith('control123', false, 'fake-proto')
+				expect(serviceApi.pressControl).toHaveBeenLastCalledWith(CreateBankControlId('control123'), false, 'fake-proto')
 			})
 
 			test('no control', async () => {
@@ -1049,32 +1050,32 @@ describe('TcpUdpApi', () => {
 
 		test('bank-down', async () => {
 			const { router, serviceApi } = createService()
-			serviceApi.getControlIdAtOldBankIndex.mockReturnValue('control123')
+			serviceApi.getControlIdAtOldBankIndex.mockReturnValue(CreateBankControlId('control123'))
 			serviceApi.pressControl.mockReturnValue(true)
 
 			await router.processMessage('bank-down 1 2')
 
 			expect(serviceApi.getControlIdAtOldBankIndex).toHaveBeenCalledWith(1, 2)
 			expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
-			expect(serviceApi.pressControl).toHaveBeenCalledWith('control123', true, 'fake-proto')
+			expect(serviceApi.pressControl).toHaveBeenCalledWith(CreateBankControlId('control123'), true, 'fake-proto')
 		})
 
 		test('bank-up', async () => {
 			const { router, serviceApi } = createService()
-			serviceApi.getControlIdAtOldBankIndex.mockReturnValue('control123')
+			serviceApi.getControlIdAtOldBankIndex.mockReturnValue(CreateBankControlId('control123'))
 			serviceApi.pressControl.mockReturnValue(true)
 
 			await router.processMessage('bank-up 1 2')
 
 			expect(serviceApi.getControlIdAtOldBankIndex).toHaveBeenCalledWith(1, 2)
 			expect(serviceApi.pressControl).toHaveBeenCalledTimes(1)
-			expect(serviceApi.pressControl).toHaveBeenCalledWith('control123', false, 'fake-proto')
+			expect(serviceApi.pressControl).toHaveBeenCalledWith(CreateBankControlId('control123'), false, 'fake-proto')
 		})
 
 		describe('bank-step', () => {
 			test('ok', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAtOldBankIndex.mockReturnValue('control123')
+				serviceApi.getControlIdAtOldBankIndex.mockReturnValue(CreateBankControlId('control123'))
 
 				const mockControl = mock<ServiceApiControl>({ setCurrentStep: vi.fn(() => true) }, mockOptions)
 				serviceApi.getControl.mockReturnValue(mockControl)
@@ -1082,13 +1083,13 @@ describe('TcpUdpApi', () => {
 				await router.processMessage('bank-step 1 2 3')
 
 				expect(serviceApi.getControlIdAtOldBankIndex).toHaveBeenCalledWith(1, 2)
-				expect(serviceApi.getControl).toHaveBeenCalledWith('control123')
+				expect(serviceApi.getControl).toHaveBeenCalledWith(CreateBankControlId('control123'))
 				expect(mockControl.setCurrentStep).toHaveBeenCalledWith(3)
 			})
 
 			test('bad step', async () => {
 				const { router, serviceApi } = createService()
-				serviceApi.getControlIdAtOldBankIndex.mockReturnValue('control123')
+				serviceApi.getControlIdAtOldBankIndex.mockReturnValue(CreateBankControlId('control123'))
 
 				await expect(router.processMessage('bank-step 1 2 abc')).rejects.toEqual(
 					new ApiMessageError('Step out of range')
@@ -1099,7 +1100,7 @@ describe('TcpUdpApi', () => {
 		describe('style bank', () => {
 			function setupControl() {
 				const ctx = createService()
-				ctx.serviceApi.getControlIdAtOldBankIndex.mockReturnValue('control123')
+				ctx.serviceApi.getControlIdAtOldBankIndex.mockReturnValue(CreateBankControlId('control123'))
 
 				const mockControl = mock<ServiceApiControl>({ setStyleFields: vi.fn() }, mockOptions)
 				ctx.serviceApi.getControl.mockReturnValue(mockControl)

@@ -93,6 +93,12 @@ export abstract class DataStoreParsedTableViewBase extends DataStoreTableViewBas
 			reason = `Invalid JSON: ${stringifyError(e)}`
 		}
 
+		this.moveToBroken(id, rawValue, reason)
+		return undefined
+	}
+
+	/** Move an invalid row to {@link BROKEN_ROWS_TABLE}, so it isn't lost */
+	protected moveToBroken(id: string, rawValue: string, reason: string): void {
 		const moved = this.#brokenRows.set(nanoid(), {
 			table: this.tableName,
 			rowId: id,
@@ -107,8 +113,6 @@ export abstract class DataStoreParsedTableViewBase extends DataStoreTableViewBas
 			// Leave it in place rather than lose the only copy
 			this.logger.error(`Ignoring invalid row "${id}", unable to move it to ${BROKEN_ROWS_TABLE}: ${reason}`)
 		}
-
-		return undefined
 	}
 
 	/** Try to repair a row that failed to parse, storing it if that succeeds */

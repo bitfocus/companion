@@ -1,4 +1,5 @@
 import type { JsonValue } from 'type-fest'
+import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import {
 	FONTSIZE_SHRINK_DEFAULT,
 	getDefaultPinnedProperties,
@@ -131,7 +132,12 @@ export class ControlButtonLayered
 		return this.entities
 	}
 
-	constructor(deps: ControlDependencies, controlId: string, storage: LayeredButtonModel | null, isImport: boolean) {
+	constructor(
+		deps: ControlDependencies,
+		controlId: BankControlId,
+		storage: LayeredButtonModel | null,
+		isImport: boolean
+	) {
 		super(deps, controlId, `Controls/Button/Normal/${controlId}`, true)
 
 		this.options = {

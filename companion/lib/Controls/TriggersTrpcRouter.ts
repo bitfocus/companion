@@ -1,7 +1,7 @@
 import type EventEmitter from 'node:events'
 import { nanoid } from 'nanoid'
 import z from 'zod'
-import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
+import { CreateTriggerControlId, zodControlIds } from '@companion-app/shared/ControlId.js'
 import type {
 	ClientTriggerData,
 	TriggersUpdate,
@@ -14,7 +14,6 @@ import { ControlTrigger } from './ControlTypes/Triggers/Trigger.js'
 import { TriggerExecutionSource } from './ControlTypes/Triggers/TriggerExecutionSource.js'
 import type { ControlsFactory } from './Factory.js'
 import type { TriggerCollections } from './TriggerCollections.js'
-import { validateTriggerControlId } from './Util.js'
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createTriggersTrpcRouter(
@@ -71,12 +70,8 @@ export function createTriggersTrpcRouter(
 
 			return controlId
 		}),
-		delete: publicProcedure.input(z.object({ controlId: z.string() })).mutation(({ input }) => {
+		delete: publicProcedure.input(z.object({ controlId: zodControlIds.trigger })).mutation(({ input }) => {
 			const { controlId } = input
-			if (!validateTriggerControlId(controlId)) {
-				// Control id is not valid!
-				return false
-			}
 
 			const control = controlStore.controls.get(controlId)
 			if (control) {
@@ -89,12 +84,8 @@ export function createTriggersTrpcRouter(
 
 			return false
 		}),
-		clone: publicProcedure.input(z.object({ controlId: z.string() })).mutation(({ input }) => {
+		clone: publicProcedure.input(z.object({ controlId: zodControlIds.trigger })).mutation(({ input }) => {
 			const { controlId } = input
-			if (!validateTriggerControlId(controlId)) {
-				// Control id is not valid!
-				return false
-			}
 
 			const newControlId = CreateTriggerControlId(nanoid())
 
@@ -115,12 +106,8 @@ export function createTriggersTrpcRouter(
 
 			return false
 		}),
-		testActions: publicProcedure.input(z.object({ controlId: z.string() })).mutation(({ input }) => {
+		testActions: publicProcedure.input(z.object({ controlId: zodControlIds.trigger })).mutation(({ input }) => {
 			const { controlId } = input
-			if (!validateTriggerControlId(controlId)) {
-				// Control id is not valid!
-				return false
-			}
 
 			const control = controlStore.controls.get(controlId)
 			if (control && control instanceof ControlTrigger) {
@@ -133,7 +120,7 @@ export function createTriggersTrpcRouter(
 			.input(
 				z.object({
 					collectionId: z.string().nullable(),
-					controlId: z.string(),
+					controlId: zodControlIds.trigger,
 					dropIndex: z.number(),
 				})
 			)

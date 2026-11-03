@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CreateBankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
 	EntityModelType,
@@ -27,7 +28,11 @@ import {
 	getAllModelsInTree,
 } from './EntityListModels.js'
 
-function createList(controlId: string, ownerId?: EntityOwner | null, listId?: ControlEntityListDefinition | null) {
+function createList(
+	controlId: SomeControlId,
+	ownerId?: EntityOwner | null,
+	listId?: ControlEntityListDefinition | null
+) {
 	const getEntityDefinition = vi.fn<InstanceDefinitionsForEntity['getEntityDefinition']>()
 	const connectionEntityUpdate = vi.fn<ProcessManagerForEntity['connectionEntityUpdate']>(async () => false)
 	const connectionEntityDelete = vi.fn<ProcessManagerForEntity['connectionEntityDelete']>(async () => false)
@@ -110,7 +115,7 @@ function createList(controlId: string, ownerId?: EntityOwner | null, listId?: Co
 }
 
 test('construction', () => {
-	const { list } = createList('test01')
+	const { list } = createList(CreateBankControlId('test01'))
 
 	expect(list.getAllEntities()).toHaveLength(0)
 	expect(list.getDirectEntities()).toHaveLength(0)
@@ -118,7 +123,7 @@ test('construction', () => {
 
 describe('loadStorage', () => {
 	test('actions tree missing definition', () => {
-		const { list } = createList('test01')
+		const { list } = createList(CreateBankControlId('test01'))
 
 		const inputModels = ActionTree
 
@@ -140,7 +145,7 @@ describe('loadStorage', () => {
 	})
 
 	test('actions tree with definition', () => {
-		const { list, getEntityDefinition } = createList('test01')
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -161,7 +166,7 @@ describe('loadStorage', () => {
 	})
 
 	test('actions tree with definition and unknown child group', () => {
-		const { list, getEntityDefinition } = createList('test01')
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockReturnValueOnce({
 			entityType: EntityModelType.Action,
@@ -210,7 +215,7 @@ describe('loadStorage', () => {
 	})
 
 	test('actions tree with children on non-internal', () => {
-		const { list, getEntityDefinition } = createList('test01')
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		const inputModels = structuredClone(ActionTree)
 		for (const entity of inputModels) {
@@ -239,7 +244,7 @@ describe('loadStorage', () => {
 	})
 
 	test('ids when not cloned', () => {
-		const { list, getEntityDefinition } = createList('test01')
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -254,7 +259,7 @@ describe('loadStorage', () => {
 	})
 
 	test('ids when cloned', () => {
-		const { list, getEntityDefinition } = createList('test01')
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -274,7 +279,9 @@ describe('loadStorage', () => {
 	})
 
 	test('subscribe when enabled', () => {
-		const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList('test01')
+		const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList(
+			CreateBankControlId('test01')
+		)
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -287,7 +294,9 @@ describe('loadStorage', () => {
 })
 
 test('cleanup entities', () => {
-	const { list, getEntityDefinition, connectionEntityDelete, internalEntityDelete } = createList('test01')
+	const { list, getEntityDefinition, connectionEntityDelete, internalEntityDelete } = createList(
+		CreateBankControlId('test01')
+	)
 
 	getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -306,7 +315,9 @@ test('cleanup entities', () => {
 })
 
 describe('subscribe entities', () => {
-	const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList('test01')
+	const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList(
+		CreateBankControlId('test01')
+	)
 
 	getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -373,7 +384,7 @@ describe('subscribe entities', () => {
 })
 
 describe('findById', () => {
-	const { list, getEntityDefinition } = createList('test01')
+	const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 	getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -398,7 +409,7 @@ describe('findById', () => {
 })
 
 describe('findParentAndIndex', () => {
-	const { list, getEntityDefinition } = createList('test01')
+	const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 	getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -442,7 +453,7 @@ describe('addEntity', () => {
 	}
 
 	test('add action to action list', () => {
-		const { list } = createList('test01', null, { type: EntityModelType.Action })
+		const { list } = createList(CreateBankControlId('test01'), null, { type: EntityModelType.Action })
 
 		const newAction: ActionEntityModel = {
 			id: 'new01',
@@ -461,7 +472,7 @@ describe('addEntity', () => {
 	})
 
 	test('add action to feedback list', () => {
-		const { list } = createList('test01', null, { type: EntityModelType.Feedback })
+		const { list } = createList(CreateBankControlId('test01'), null, { type: EntityModelType.Feedback })
 
 		const newAction: ActionEntityModel = {
 			id: 'new01',
@@ -481,7 +492,7 @@ describe('addEntity', () => {
 	})
 
 	test('add feedback to action list', () => {
-		const { list } = createList('test01', null, { type: EntityModelType.Action })
+		const { list } = createList(CreateBankControlId('test01'), null, { type: EntityModelType.Action })
 
 		const newFeedback: FeedbackEntityModel = {
 			id: 'new01',
@@ -501,7 +512,9 @@ describe('addEntity', () => {
 	})
 
 	test('add feedback to feedback list', () => {
-		const { list, getEntityDefinition } = createList('test01', null, { type: EntityModelType.Feedback })
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'), null, {
+			type: EntityModelType.Feedback,
+		})
 
 		getEntityDefinition.mockReturnValueOnce({
 			entityType: EntityModelType.Feedback,
@@ -525,7 +538,7 @@ describe('addEntity', () => {
 	})
 
 	test('add unknown feedback to boolean feedback list', () => {
-		const { list } = createList('test01', null, {
+		const { list } = createList(CreateBankControlId('test01'), null, {
 			type: EntityModelType.Feedback,
 			feedbackListType: FeedbackEntitySubType.Boolean,
 		})
@@ -548,7 +561,7 @@ describe('addEntity', () => {
 	})
 
 	test('add advanced feedback to boolean feedback list', () => {
-		const { list, getEntityDefinition } = createList('test01', null, {
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'), null, {
 			type: EntityModelType.Feedback,
 			feedbackListType: FeedbackEntitySubType.Boolean,
 		})
@@ -579,7 +592,7 @@ describe('addEntity', () => {
 	})
 
 	test('add boolean feedback to boolean feedback list', () => {
-		const { list, getEntityDefinition } = createList('test01', null, {
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'), null, {
 			type: EntityModelType.Feedback,
 			feedbackListType: FeedbackEntitySubType.Boolean,
 		})
@@ -609,7 +622,7 @@ describe('addEntity', () => {
 	})
 
 	test('non-internal with children', () => {
-		const { list, getEntityDefinition } = createList('test01', null, {
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'), null, {
 			type: EntityModelType.Feedback,
 		})
 
@@ -654,9 +667,13 @@ describe('addEntity', () => {
 	})
 
 	test('internal with children', () => {
-		const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList('test01', null, {
-			type: EntityModelType.Feedback,
-		})
+		const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList(
+			CreateBankControlId('test01'),
+			null,
+			{
+				type: EntityModelType.Feedback,
+			}
+		)
 
 		getEntityDefinition.mockReturnValue({
 			entityType: EntityModelType.Feedback,
@@ -725,7 +742,9 @@ describe('addEntity', () => {
 	})
 
 	test('add cloned', () => {
-		const { list, getEntityDefinition } = createList('test01', null, { type: EntityModelType.Feedback })
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'), null, {
+			type: EntityModelType.Feedback,
+		})
 
 		getEntityDefinition.mockReturnValue({
 			entityType: EntityModelType.Feedback,
@@ -752,7 +771,7 @@ describe('addEntity', () => {
 	})
 
 	test('clone with children', () => {
-		const { list, getEntityDefinition } = createList('test01', null, {
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'), null, {
 			type: EntityModelType.Feedback,
 		})
 
@@ -806,7 +825,9 @@ describe('addEntity', () => {
 
 describe('removeEntity', () => {
 	test('remove from root', () => {
-		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
+		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList(
+			CreateBankControlId('test01')
+		)
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -826,11 +847,13 @@ describe('removeEntity', () => {
 		expect(list.findById('02')).toBeUndefined()
 		expect(internalEntityDelete).toHaveBeenCalledTimes(0)
 		expect(connectionEntityDelete).toHaveBeenCalledTimes(1)
-		expect(connectionEntityDelete).toHaveBeenCalledWith(ActionTree[1], 'test01')
+		expect(connectionEntityDelete).toHaveBeenCalledWith(ActionTree[1], CreateBankControlId('test01'))
 	})
 
 	test('remove from root with children', () => {
-		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
+		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList(
+			CreateBankControlId('test01')
+		)
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -853,7 +876,9 @@ describe('removeEntity', () => {
 	})
 
 	test('remove deep', () => {
-		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
+		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList(
+			CreateBankControlId('test01')
+		)
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -878,14 +903,16 @@ describe('removeEntity', () => {
 
 describe('popEntity', () => {
 	test('pop empty', () => {
-		const { list } = createList('test01')
+		const { list } = createList(CreateBankControlId('test01'))
 
 		const entity = list.popEntity(0)
 		expect(entity).toBeUndefined()
 	})
 
 	test('pop first', () => {
-		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
+		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList(
+			CreateBankControlId('test01')
+		)
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -915,7 +942,9 @@ describe('popEntity', () => {
 	})
 
 	test('pop negative', () => {
-		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
+		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList(
+			CreateBankControlId('test01')
+		)
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -938,7 +967,9 @@ describe('popEntity', () => {
 	})
 
 	test('after end', () => {
-		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
+		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList(
+			CreateBankControlId('test01')
+		)
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -961,7 +992,9 @@ describe('popEntity', () => {
 	})
 
 	test('with children', () => {
-		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList('test01')
+		const { list, getEntityDefinition, internalEntityDelete, connectionEntityDelete } = createList(
+			CreateBankControlId('test01')
+		)
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -993,7 +1026,7 @@ describe('popEntity', () => {
 
 describe('pushEntity', () => {
 	test('push to empty', () => {
-		const { list, newAction, internalEntityUpdate, connectionEntityUpdate } = createList('test01')
+		const { list, newAction, internalEntityUpdate, connectionEntityUpdate } = createList(CreateBankControlId('test01'))
 
 		expect(list.getAllEntities()).toHaveLength(0)
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(0)
@@ -1008,7 +1041,7 @@ describe('pushEntity', () => {
 	})
 
 	test('push front', () => {
-		const { list, newAction } = createList('test01')
+		const { list, newAction } = createList(CreateBankControlId('test01'))
 
 		list.loadStorage(structuredClone(ActionTree), true, false)
 
@@ -1024,7 +1057,7 @@ describe('pushEntity', () => {
 	})
 
 	test('push front - negative', () => {
-		const { list, newAction } = createList('test01')
+		const { list, newAction } = createList(CreateBankControlId('test01'))
 
 		list.loadStorage(structuredClone(ActionTree), true, false)
 
@@ -1040,7 +1073,7 @@ describe('pushEntity', () => {
 	})
 
 	test('push front - beyond end', () => {
-		const { list, newAction } = createList('test01')
+		const { list, newAction } = createList(CreateBankControlId('test01'))
 
 		list.loadStorage(structuredClone(ActionTree), true, false)
 
@@ -1056,7 +1089,7 @@ describe('pushEntity', () => {
 	})
 
 	test('push front - middle', () => {
-		const { list, newAction } = createList('test01')
+		const { list, newAction } = createList(CreateBankControlId('test01'))
 
 		list.loadStorage(structuredClone(ActionTree), true, false)
 
@@ -1076,7 +1109,7 @@ describe('pushEntity', () => {
 
 describe('duplicateEntity', () => {
 	test('duplicate missing', () => {
-		const { list, connectionEntityUpdate, internalEntityUpdate } = createList('test01')
+		const { list, connectionEntityUpdate, internalEntityUpdate } = createList(CreateBankControlId('test01'))
 
 		list.loadStorage(structuredClone(ActionTree), true, false)
 
@@ -1095,7 +1128,7 @@ describe('duplicateEntity', () => {
 	})
 
 	test('duplicate at root ', () => {
-		const { list, connectionEntityUpdate, internalEntityUpdate } = createList('test01')
+		const { list, connectionEntityUpdate, internalEntityUpdate } = createList(CreateBankControlId('test01'))
 
 		list.loadStorage(structuredClone(ActionTree), true, false)
 
@@ -1112,12 +1145,14 @@ describe('duplicateEntity', () => {
 		expect(afterIds[2]).toBe(newEntity!.id)
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
-		expect(connectionEntityUpdate).toHaveBeenCalledWith(newEntity, 'test01')
+		expect(connectionEntityUpdate).toHaveBeenCalledWith(newEntity, CreateBankControlId('test01'))
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(0)
 	})
 
 	test('duplicate deep', () => {
-		const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList('test01')
+		const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList(
+			CreateBankControlId('test01')
+		)
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -1140,16 +1175,20 @@ describe('duplicateEntity', () => {
 		expect(afterIds[6]).toBe(newEntityChild!.id)
 
 		expect(connectionEntityUpdate).toHaveBeenCalledTimes(1)
-		expect(connectionEntityUpdate).toHaveBeenCalledWith(newEntityChild, 'test01')
+		expect(connectionEntityUpdate).toHaveBeenCalledWith(newEntityChild, CreateBankControlId('test01'))
 		expect(internalEntityUpdate).toHaveBeenCalledTimes(1)
-		expect(internalEntityUpdate).toHaveBeenCalledWith(newEntity!.asEntityModel(), 'test01')
+		expect(internalEntityUpdate).toHaveBeenCalledWith(newEntity!.asEntityModel(), CreateBankControlId('test01'))
 	})
 
 	test('duplicate deep when root is full', () => {
-		const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList('test01', null, {
-			type: EntityModelType.Action,
-			maximumChildren: 3,
-		})
+		const { list, getEntityDefinition, connectionEntityUpdate, internalEntityUpdate } = createList(
+			CreateBankControlId('test01'),
+			null,
+			{
+				type: EntityModelType.Action,
+				maximumChildren: 3,
+			}
+		)
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -1175,7 +1214,7 @@ describe('duplicateEntity', () => {
 
 describe('forgetForConnection', () => {
 	test('cleanup nothing', () => {
-		const { list, getEntityDefinition } = createList('test01')
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -1191,7 +1230,7 @@ describe('forgetForConnection', () => {
 	})
 
 	test('remove from root', () => {
-		const { list, getEntityDefinition, connectionEntityDelete } = createList('test01')
+		const { list, getEntityDefinition, connectionEntityDelete } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -1208,7 +1247,7 @@ describe('forgetForConnection', () => {
 	})
 
 	test('remove deep', () => {
-		const { list, getEntityDefinition, connectionEntityDelete } = createList('test01')
+		const { list, getEntityDefinition, connectionEntityDelete } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -1227,7 +1266,7 @@ describe('forgetForConnection', () => {
 
 describe('verifyConnectionIds', () => {
 	test('cleanup nothing', () => {
-		const { list, getEntityDefinition } = createList('test01')
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -1244,7 +1283,7 @@ describe('verifyConnectionIds', () => {
 	})
 
 	test('remove from root', () => {
-		const { list, getEntityDefinition, connectionEntityDelete } = createList('test01')
+		const { list, getEntityDefinition, connectionEntityDelete } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -1263,7 +1302,7 @@ describe('verifyConnectionIds', () => {
 	})
 
 	test('remove deep', () => {
-		const { list, getEntityDefinition, connectionEntityDelete } = createList('test01')
+		const { list, getEntityDefinition, connectionEntityDelete } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -1283,20 +1322,20 @@ describe('verifyConnectionIds', () => {
 })
 
 describe('getChildBooleanFeedbackValues', () => {
-	const { list, getEntityDefinition } = createList('test01', null, {
+	const { list, getEntityDefinition } = createList(CreateBankControlId('test01'), null, {
 		type: EntityModelType.Feedback,
 		feedbackListType: FeedbackEntitySubType.Boolean,
 	})
 	getEntityDefinition.mockImplementation(FeedbackTreeEntityDefinitions)
 
 	test('invalid for action list', () => {
-		const { list } = createList('test01', null, { type: EntityModelType.Action })
+		const { list } = createList(CreateBankControlId('test01'), null, { type: EntityModelType.Action })
 
 		expect(list.clearCachedValueForConnectionId('internal')).toEqual([])
 	})
 
 	test('invalid for non boolean feedbacks list', () => {
-		const { list } = createList('test01', null, { type: EntityModelType.Feedback })
+		const { list } = createList(CreateBankControlId('test01'), null, { type: EntityModelType.Feedback })
 
 		expect(list.clearCachedValueForConnectionId('internal')).toEqual([])
 	})
@@ -1344,20 +1383,20 @@ describe('getChildBooleanFeedbackValues', () => {
 })
 
 describe('getBooleanFeedbackValue', () => {
-	const { list, getEntityDefinition } = createList('test01', null, {
+	const { list, getEntityDefinition } = createList(CreateBankControlId('test01'), null, {
 		type: EntityModelType.Feedback,
 		feedbackListType: FeedbackEntitySubType.Boolean,
 	})
 	getEntityDefinition.mockImplementation(FeedbackTreeEntityDefinitions)
 
 	test('invalid for action list', () => {
-		const { list } = createList('test01', null, { type: EntityModelType.Action })
+		const { list } = createList(CreateBankControlId('test01'), null, { type: EntityModelType.Action })
 
 		expect(() => list.getBooleanFeedbackValue(null)).toThrow('ControlEntityList is not boolean feedbacks')
 	})
 
 	test('invalid for non boolean feedbacks list', () => {
-		const { list } = createList('test01', null, { type: EntityModelType.Feedback })
+		const { list } = createList(CreateBankControlId('test01'), null, { type: EntityModelType.Feedback })
 
 		expect(() => list.getBooleanFeedbackValue(null)).toThrow('ControlEntityList is not boolean feedbacks')
 	})
@@ -1402,20 +1441,20 @@ describe('getBooleanFeedbackValue', () => {
 })
 
 describe('getChildBooleanFeedbackValues', () => {
-	const { list, getEntityDefinition } = createList('test01', null, {
+	const { list, getEntityDefinition } = createList(CreateBankControlId('test01'), null, {
 		type: EntityModelType.Feedback,
 		feedbackListType: FeedbackEntitySubType.Boolean,
 	})
 	getEntityDefinition.mockImplementation(FeedbackTreeEntityDefinitions)
 
 	test('invalid for action list', () => {
-		const { list } = createList('test01', null, { type: EntityModelType.Action })
+		const { list } = createList(CreateBankControlId('test01'), null, { type: EntityModelType.Action })
 
 		expect(() => list.getChildBooleanFeedbackValues(null)).toThrow('ControlEntityList is not boolean feedbacks')
 	})
 
 	test('invalid for non boolean feedbacks list', () => {
-		const { list } = createList('test01', null, { type: EntityModelType.Feedback })
+		const { list } = createList(CreateBankControlId('test01'), null, { type: EntityModelType.Feedback })
 
 		expect(() => list.getChildBooleanFeedbackValues(null)).toThrow('ControlEntityList is not boolean feedbacks')
 	})
@@ -1439,7 +1478,7 @@ describe('lazy feedback evaluation (with context)', () => {
 
 	/** A boolean feedback list, exercised via the lazy (non-null context) read path. */
 	function createBooleanFeedbackList(showInvert = false) {
-		const deps = createList('test01', null, {
+		const deps = createList(CreateBankControlId('test01'), null, {
 			type: EntityModelType.Feedback,
 			feedbackListType: FeedbackEntitySubType.Boolean,
 		})
@@ -1489,7 +1528,7 @@ describe('lazy feedback evaluation (with context)', () => {
 		expect(deps.internalEvaluateFeedbackValue).toHaveBeenCalledTimes(1)
 		expect(deps.internalEvaluateFeedbackValue).toHaveBeenCalledWith(
 			expect.objectContaining({ id: 'fb1', connectionId: 'internal', definitionId: 'my-feedback' }),
-			'test01',
+			CreateBankControlId('test01'),
 			context.parser
 		)
 	})
@@ -1551,12 +1590,12 @@ describe('lazy feedback evaluation (with context)', () => {
 		// Both children evaluated live with the same context parser
 		expect(deps.internalEvaluateFeedbackValue).toHaveBeenCalledWith(
 			expect.objectContaining({ id: 'child-a' }),
-			'test01',
+			CreateBankControlId('test01'),
 			context.parser
 		)
 		expect(deps.internalEvaluateFeedbackValue).toHaveBeenCalledWith(
 			expect.objectContaining({ id: 'child-b' }),
-			'test01',
+			CreateBankControlId('test01'),
 			context.parser
 		)
 
@@ -1585,7 +1624,7 @@ describe('lazy feedback evaluation (with context)', () => {
 
 describe('updateFeedbackValues', () => {
 	test('no values', () => {
-		const { list, getEntityDefinition } = createList('test01')
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -1598,7 +1637,7 @@ describe('updateFeedbackValues', () => {
 	})
 
 	test('try set value for action', () => {
-		const { list, getEntityDefinition } = createList('test01')
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -1623,7 +1662,7 @@ describe('updateFeedbackValues', () => {
 	})
 
 	test('set value for nested feedback', () => {
-		const { list, getEntityDefinition } = createList('test01')
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -1649,7 +1688,7 @@ describe('updateFeedbackValues', () => {
 	})
 
 	test('set value unchanged', () => {
-		const { list, getEntityDefinition } = createList('test01')
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -1673,7 +1712,7 @@ describe('updateFeedbackValues', () => {
 
 describe('getAllEnabledConnectionIds', () => {
 	test('default', () => {
-		const { list, getEntityDefinition } = createList('test01')
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -1690,7 +1729,7 @@ describe('getAllEnabledConnectionIds', () => {
 	})
 
 	test('all disabled', () => {
-		const { list, getEntityDefinition } = createList('test01')
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		getEntityDefinition.mockImplementation(ActionTreeEntityDefinitions)
 
@@ -1713,7 +1752,7 @@ describe('getAllEnabledConnectionIds', () => {
 
 describe('updateIsInvertedValues', () => {
 	test('update value for feedback', () => {
-		const { list, getEntityDefinition } = createList('test01')
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		// Mock definitions to allow inversion
 		getEntityDefinition.mockImplementation((...args) => {
@@ -1761,7 +1800,7 @@ describe('updateIsInvertedValues', () => {
 	})
 
 	test('update value unchanged', () => {
-		const { list, getEntityDefinition } = createList('test01')
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		// Mock definitions to allow inversion
 		getEntityDefinition.mockImplementation((...args) => {
@@ -1798,7 +1837,7 @@ describe('updateIsInvertedValues', () => {
 	})
 
 	test('update value for nested feedback', () => {
-		const { list, getEntityDefinition } = createList('test01')
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		// Mock definitions to allow inversion
 		getEntityDefinition.mockImplementation((...args) => {
@@ -1833,7 +1872,7 @@ describe('updateIsInvertedValues', () => {
 	})
 
 	test('update multiple values', () => {
-		const { list, getEntityDefinition } = createList('test01')
+		const { list, getEntityDefinition } = createList(CreateBankControlId('test01'))
 
 		// Mock definitions to allow inversion
 		getEntityDefinition.mockImplementation((...args) => {
@@ -1869,7 +1908,7 @@ describe('updateIsInvertedValues', () => {
 	})
 
 	test('lifecycle tracks inverted', () => {
-		const { list, specialExpressionManager, getEntityDefinition } = createList('test01', null, {
+		const { list, specialExpressionManager, getEntityDefinition } = createList(CreateBankControlId('test01'), null, {
 			type: EntityModelType.Feedback,
 			feedbackListType: FeedbackEntitySubType.Boolean,
 		})
@@ -1905,7 +1944,7 @@ describe('updateIsInvertedValues', () => {
 
 describe('moveEntity', () => {
 	test('move down', () => {
-		const { list } = createList('test01')
+		const { list } = createList(CreateBankControlId('test01'))
 
 		// Setup simple list
 		list.loadStorage(
@@ -1926,7 +1965,7 @@ describe('moveEntity', () => {
 	})
 
 	test('move up', () => {
-		const { list } = createList('test01')
+		const { list } = createList(CreateBankControlId('test01'))
 
 		// Setup simple list
 		list.loadStorage(
@@ -1946,7 +1985,7 @@ describe('moveEntity', () => {
 	})
 
 	test('move out of bounds', () => {
-		const { list } = createList('test01')
+		const { list } = createList(CreateBankControlId('test01'))
 		list.loadStorage(
 			[
 				{ id: '1', type: EntityModelType.Feedback, connectionId: 'i', options: {} } as any,
@@ -1973,7 +2012,7 @@ function translateIsInvertedValues(
 	for (const [entityId, isInverted] of Object.entries(oldValues)) {
 		map.set(entityId, {
 			entityId,
-			controlId: '',
+			controlId: CreateBankControlId('test'),
 			value: isInverted,
 		})
 	}
@@ -1985,7 +2024,7 @@ function translateFeedbackValues(oldValues: Record<string, any>): Map<string, Ne
 	for (const [entityId, value] of Object.entries(oldValues)) {
 		map.set(entityId, {
 			entityId,
-			controlId: '',
+			controlId: CreateBankControlId('test'),
 			value,
 		})
 	}

@@ -1,5 +1,6 @@
 import { useDragDropManager, useDragDropMonitor } from '@dnd-kit/react'
 import { isSortable } from '@dnd-kit/react/sortable'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import {
 	stringifySocketEntityLocation,
 	type EntityModelType,
@@ -43,7 +44,7 @@ interface ActiveEntityDrag {
 let activeDrag: ActiveEntityDrag | null = null
 
 export function useEntityListReorderMonitor(
-	controlId: string,
+	controlId: SomeControlId | null,
 	entityType: EntityModelType,
 	serviceFactory: IEntityEditorService
 ): void {

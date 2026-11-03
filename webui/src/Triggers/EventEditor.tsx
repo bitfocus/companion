@@ -3,6 +3,7 @@ import { isSortable, useSortable } from '@dnd-kit/react/sortable'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useMemo, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
+import type { TriggerControlId } from '@companion-app/shared/ControlId.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import { optionsObjectToExpressionOptions, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { EditorRow, useNoteEditor } from '~/Components/EditorRow.js'
@@ -26,7 +27,7 @@ import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { AddEventDropdown } from './AddEventDropdown.js'
 
 interface TriggerEventEditorProps {
-	controlId: string
+	controlId: TriggerControlId
 	events: EventInstance[]
 	heading: React.JSX.Element | string
 	subheading?: React.ReactNode

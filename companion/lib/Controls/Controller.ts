@@ -10,7 +10,12 @@ import {
 	CreateTriggerControlId,
 	formatLocation,
 	ParseControlId,
+	zodSomeControlId,
+	type BankControlId,
+	type ExpressionVariableControlId,
 	type ParsedControlIdType,
+	type SomeControlId,
+	type TriggerControlId,
 } from '@companion-app/shared/ControlId.js'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -63,7 +68,6 @@ import { createStylesTrpcRouter } from './StylesTrpcRouter.js'
 import { TriggerCollections } from './TriggerCollections.js'
 import type { TriggerEvents } from './TriggerEvents.js'
 import { createTriggersTrpcRouter } from './TriggersTrpcRouter.js'
-import { validateBankControlId, validateExpressionVariableControlId, validateTriggerControlId } from './Util.js'
 
 /** How many controls to delete between yields to the event loop, when deleting them all */
 const DELETE_CONTROLS_BATCH_SIZE = 50
@@ -188,19 +192,19 @@ export class ControlsController {
 		return this.#store.triggerEvents
 	}
 
-	getControl(controlId: string): SomeControl<any> | undefined {
+	getControl(controlId: SomeControlId): SomeControl<any> | undefined {
 		return this.#store.getControl(controlId)
 	}
 
-	getAllControls(): ReadonlyMap<string, SomeControl<any>> {
+	getAllControls(): ReadonlyMap<SomeControlId, SomeControl<any>> {
 		return this.#store.getAllControls()
 	}
 
-	pressControl(controlId: string, pressed: boolean, surfaceId: string | undefined, force?: boolean): boolean {
+	pressControl(controlId: SomeControlId, pressed: boolean, surfaceId: string | undefined, force?: boolean): boolean {
 		return this.#store.pressControl(controlId, pressed, surfaceId, force)
 	}
 
-	rotateControl(controlId: string, delta: number, surfaceId: string | undefined): boolean {
+	rotateControl(controlId: SomeControlId, delta: number, surfaceId: string | undefined): boolean {
 		return this.#store.rotateControl(controlId, delta, surfaceId)
 	}
 
@@ -268,7 +272,7 @@ export class ControlsController {
 			watchControl: publicProcedure
 				.input(
 					z.object({
-						controlId: z.string(),
+						controlId: zodSomeControlId,
 					})
 				)
 				.subscription(async function* ({ input, signal }) {
@@ -391,12 +395,11 @@ export class ControlsController {
 	/**
 	 * Import a control
 	 */
-	importControl(location: ControlLocation, definition: SomeButtonModel, forceControlId?: string): string | null {
-		if (forceControlId && !validateBankControlId(forceControlId)) {
-			// Control id is not valid!
-			return null
-		}
-
+	importControl(
+		location: ControlLocation,
+		definition: SomeButtonModel,
+		forceControlId?: BankControlId
+	): BankControlId | null {
 		// Delete old control at the coordinate
 		const oldControlId = this.#deps.pageStore.getControlIdAt(location)
 		if (oldControlId) {
@@ -424,12 +427,7 @@ export class ControlsController {
 	/**
 	 * Import a trigger
 	 */
-	importTrigger(controlId: string, definition: TriggerModel): boolean {
-		if (!validateTriggerControlId(controlId)) {
-			// Control id is not valid!
-			return false
-		}
-
+	importTrigger(controlId: TriggerControlId, definition: TriggerModel): boolean {
 		if (this.#store.controls.has(controlId)) throw new Error(`Trigger ${controlId} already exists`)
 
 		const newControl = this.#factory.createClassForControl(controlId, 'trigger', definition, true)
@@ -456,14 +454,9 @@ export class ControlsController {
 	 * Import an expression variable
 	 */
 	importExpressionVariable(
-		controlId: string,
+		controlId: ExpressionVariableControlId,
 		definition: ExpressionVariableModel
 	): ControlExpressionVariable | undefined {
-		if (!validateExpressionVariableControlId(controlId)) {
-			// Control id is not valid!
-			return undefined
-		}
-
 		if (this.#store.controls.has(controlId)) throw new Error(`ExpressionVariable ${controlId} already exists`)
 
 		const newControl = this.#factory.createClassForControl(controlId, 'expression-variable', definition, true)
@@ -488,8 +481,8 @@ export class ControlsController {
 	 */
 	init(): void {
 		// Init all the control classes
-		const config = this.#store.dbTable.all()
-		for (const [controlId, controlObj] of Object.entries(config)) {
+		// The table moves aside any control whose id is invalid, or doesn't suit its type
+		for (const [controlId, controlObj] of this.#store.dbTable.entries()) {
 			if (controlObj && controlObj.type) {
 				const inst = this.#factory.createClassForControl(controlId, 'all', controlObj, false)
 				if (inst) {
@@ -516,7 +509,10 @@ export class ControlsController {
 	 * Propagate variable changes to the controls and triggers. `controlIdFilter` is null for a global
 	 * change, or the set of controls the change is scoped to.
 	 */
-	onVariablesChanged(allChangedVariablesSet: ReadonlySet<string>, controlIdFilter: ReadonlySet<string> | null): void {
+	onVariablesChanged(
+		allChangedVariablesSet: ReadonlySet<string>,
+		controlIdFilter: ReadonlySet<SomeControlId> | null
+	): void {
 		this.#store.triggerEvents.emit('variables_changed', allChangedVariablesSet, controlIdFilter)
 
 		if (allChangedVariablesSet.size === 0) return
@@ -544,7 +540,7 @@ export class ControlsController {
 	 * A control moved to a different page, so its `$(page:x)` references now resolve against a different
 	 * page control - re-evaluate its page-variable feedbacks. No-op if the page is unchanged.
 	 */
-	notifyControlMovedPage(controlId: string, fromPageNumber: number, toPageNumber: number): void {
+	notifyControlMovedPage(controlId: BankControlId, fromPageNumber: number, toPageNumber: number): void {
 		const fromPageId = this.#deps.pageStore.getPageId(fromPageNumber)
 		const toPageId = this.#deps.pageStore.getPageId(toPageNumber)
 		if (!fromPageId || !toPageId || fromPageId === toPageId) return
@@ -592,7 +588,7 @@ export class ControlsController {
 	/**
 	 * Delete a control
 	 */
-	deleteControl(controlId: string): void {
+	deleteControl(controlId: SomeControlId): void {
 		const control = this.getControl(controlId)
 		if (control) {
 			control.destroy()
@@ -659,7 +655,7 @@ export class ControlsController {
 	 * @returns controlId
 	 * @access public
 	 */
-	createButtonControl(location: ControlLocation, newType: string): string | null {
+	createButtonControl(location: ControlLocation, newType: string): BankControlId | null {
 		if (!this.#deps.pageStore.isPageValid(location.pageNumber)) return null
 
 		const controlId = CreateBankControlId(nanoid())
@@ -790,7 +786,7 @@ export class ControlsController {
 	}
 
 	createVariablesAndExpressionParser(
-		controlId: string | null | undefined,
+		controlId: SomeControlId | null | undefined,
 		overrideVariableValues?: VariableValues | null,
 		options?: ExpressionParserOptions
 	): VariablesAndExpressionParser {

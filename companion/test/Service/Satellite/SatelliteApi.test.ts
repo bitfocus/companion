@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
 import { API_VERSION, MAX_KEYS_TOTAL, MAX_LINE_LENGTH, parseLineParameters } from '@companion-app/satellite-protocol'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import type { DataUserConfig } from '../../../lib/Data/UserConfig.js'
 import type { ImageResult } from '../../../lib/Graphics/ImageResult.js'
 import type { Logger } from '../../../lib/Log/Controller.js'
@@ -2188,7 +2189,7 @@ describe('ServiceSatelliteApi', () => {
 
 			const mockRender = mock<ImageResult>()
 			serviceApi.getCachedRenderOrGeneratePlaceholder.mockReturnValue(mockRender)
-			serviceApi.getControlIdAt.mockReturnValue('ctrl-abc')
+			serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('ctrl-abc'))
 			serviceApi.pressControl.mockReturnValue(true)
 
 			processMessage('ADD-SUB SUBID="sub1" LOCATION="1/2/3"\n')
@@ -2201,7 +2202,11 @@ describe('ServiceSatelliteApi', () => {
 				row: 2,
 				column: 3,
 			})
-			expect(serviceApi.pressControl).toHaveBeenCalledWith('ctrl-abc', true, expect.stringContaining('satellite-sub:'))
+			expect(serviceApi.pressControl).toHaveBeenCalledWith(
+				CreateBankControlId('ctrl-abc'),
+				true,
+				expect.stringContaining('satellite-sub:')
+			)
 			expect(socket.lastMessage).toContain('SUB-PRESS')
 			expect(socket.lastMessage).toContain('OK')
 			expect(socket.lastMessage).toContain('SUBID="sub1"')
@@ -2278,7 +2283,7 @@ describe('ServiceSatelliteApi', () => {
 
 			const mockRender = mock<ImageResult>()
 			serviceApi.getCachedRenderOrGeneratePlaceholder.mockReturnValue(mockRender)
-			serviceApi.getControlIdAt.mockReturnValue('ctrl-abc')
+			serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('ctrl-abc'))
 			serviceApi.rotateControl.mockReturnValue(true)
 
 			processMessage('ADD-SUB SUBID="sub1" LOCATION="1/2/3"\n')
@@ -2286,7 +2291,11 @@ describe('ServiceSatelliteApi', () => {
 
 			processMessage('SUB-ROTATE SUBID="sub1" DIRECTION=1\n')
 
-			expect(serviceApi.rotateControl).toHaveBeenCalledWith('ctrl-abc', 1, expect.stringContaining('satellite-sub:'))
+			expect(serviceApi.rotateControl).toHaveBeenCalledWith(
+				CreateBankControlId('ctrl-abc'),
+				1,
+				expect.stringContaining('satellite-sub:')
+			)
 			expect(socket.lastMessage).toContain('SUB-ROTATE')
 			expect(socket.lastMessage).toContain('OK')
 			expect(socket.lastMessage).toContain('SUBID="sub1"')
@@ -2298,7 +2307,7 @@ describe('ServiceSatelliteApi', () => {
 
 			const mockRender = mock<ImageResult>()
 			serviceApi.getCachedRenderOrGeneratePlaceholder.mockReturnValue(mockRender)
-			serviceApi.getControlIdAt.mockReturnValue('ctrl-abc')
+			serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('ctrl-abc'))
 			serviceApi.rotateControl.mockReturnValue(true)
 
 			processMessage('ADD-SUB SUBID="sub1" LOCATION="1/2/3"\n')
@@ -2306,7 +2315,11 @@ describe('ServiceSatelliteApi', () => {
 
 			processMessage('SUB-ROTATE SUBID="sub1" DIRECTION=-4\n')
 
-			expect(serviceApi.rotateControl).toHaveBeenCalledWith('ctrl-abc', -4, expect.stringContaining('satellite-sub:'))
+			expect(serviceApi.rotateControl).toHaveBeenCalledWith(
+				CreateBankControlId('ctrl-abc'),
+				-4,
+				expect.stringContaining('satellite-sub:')
+			)
 			expect(socket.lastMessage).toContain('OK')
 		})
 

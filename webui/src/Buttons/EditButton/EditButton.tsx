@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import './EditButton.css'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useRef } from 'react'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { formatLocation, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { StaticAlert } from '~/Components/Alert.js'
@@ -45,7 +45,7 @@ export const EditButton = observer(function EditButton({ location, onKeyUp, navi
 
 	const controlId = pages.getControlIdAtLocation(location)
 
-	const previewImage = useButtonImageForControlId(controlId || '', !controlId)
+	const previewImage = useButtonImageForControlId(controlId ?? null)
 
 	const { controlConfig, error: configError, reloadConfig } = useControlConfig(controlId)
 
@@ -119,7 +119,7 @@ function buttonTypeLabel(type: SomeButtonModel['type']): string {
 
 interface EditButtonContentProps {
 	resetModalRef: React.RefObject<GenericConfirmModalRef | null>
-	controlId: string
+	controlId: SomeControlId
 	location: ControlLocation
 	previewImage: string | null
 	config: SomeButtonModel

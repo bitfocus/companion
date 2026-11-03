@@ -19,7 +19,13 @@ import debounceFn from 'debounce-fn'
 import type Express from 'express'
 import QuickLRU from 'quick-lru'
 import workerPool from 'workerpool'
-import { isLocationOnGrid, ParseControlId, xyToOldBankIndex } from '@companion-app/shared/ControlId.js'
+import {
+	isControlIdOfKind,
+	isLocationOnGrid,
+	xyToOldBankIndex,
+	type PresetControlId,
+	type SomeControlId,
+} from '@companion-app/shared/ControlId.js'
 import {
 	countCycleRenders,
 	MAX_DECODED_IMAGE_BYTES,
@@ -106,7 +112,7 @@ function countButtonCycleRenders(animationFrames: AnimationFrames, clockCycleMs:
 
 interface GraphicsControllerEvents {
 	button_drawn: [location: ControlLocation, render: ImageResult]
-	presetDrawn: [controlId: string, render: ImageResult]
+	presetDrawn: [controlId: PresetControlId, render: ImageResult]
 	resubscribeFeedbacks: []
 }
 
@@ -116,7 +122,7 @@ interface RenderArgumentsButton {
 }
 interface RenderArgumentsPreset {
 	type: 'preset'
-	controlId: string
+	controlId: PresetControlId
 }
 type RenderArguments = RenderArgumentsButton | RenderArgumentsPreset
 
@@ -288,7 +294,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	 * Preset controlIds whose draw style depends on the render clock (e.g. contain oscillate() expressions).
 	 * Presets have no location, so they are tracked separately from {@link #clockSensitiveLocations}.
 	 */
-	readonly #clockSensitivePresets = new Set<string>()
+	readonly #clockSensitivePresets = new Set<PresetControlId>()
 
 	#unsubscribeRenderClock: (() => void) | null = null
 
@@ -723,7 +729,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	/**
 	 * Regenerate the render of a control
 	 */
-	invalidateControl(controlId: string): void {
+	invalidateControl(controlId: SomeControlId): void {
 		const location = this.#pageStore.getLocationOfControlId(controlId)
 		if (location) {
 			this.invalidateButton(location)
@@ -731,8 +737,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 		}
 
 		// Special case for presets as they don't have a location, but do have bitmaps
-		const parsedControlId = ParseControlId(controlId)
-		if (parsedControlId?.type === 'preset') {
+		if (isControlIdOfKind(controlId, 'preset')) {
 			this.#drawAndCachePreset(controlId)
 		}
 	}
@@ -778,7 +783,7 @@ export class GraphicsController extends EventEmitter<GraphicsControllerEvents> {
 	/**
 	 * Generate and cache
 	 */
-	#drawAndCachePreset(controlId: string, skipInvalidation = false): void {
+	#drawAndCachePreset(controlId: PresetControlId, skipInvalidation = false): void {
 		this.#renderQueue.queue(controlId, { type: 'preset', controlId }, skipInvalidation)
 	}
 

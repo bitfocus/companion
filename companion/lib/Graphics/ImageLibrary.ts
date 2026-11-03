@@ -40,7 +40,7 @@ export type ImageLibraryData = z.output<typeof ImageLibraryDataSchema>
 
 export class ImageLibrary {
 	readonly #logger = LogController.createLogger('Graphics/ImageLibrary')
-	readonly #dbTable: DataStoreSchemaTableView<typeof ImageLibraryDataSchema>
+	readonly #dbTable: DataStoreSchemaTableView<typeof ImageLibraryDataSchema, string>
 	readonly #multipartUploader: MultipartUploader<string, { imageName: string }>
 	readonly #graphicsController: GraphicsController
 	readonly #variablesController: VariablesController

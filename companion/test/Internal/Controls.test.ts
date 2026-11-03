@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import { EntityModelType, type ActionEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type { ControlCommonEvents } from '../../lib/Controls/ControlDependencies.js'
@@ -55,7 +56,7 @@ function makeExecAction(definitionId: string, options: Record<string, unknown>):
 }
 
 const fakeExtras: RunActionExtras = {
-	controlId: 'ctrl1',
+	controlId: CreateBankControlId('ctrl1'),
 	surfaceId: 'surface0',
 	location: undefined,
 	abortDelayed: new AbortController().signal,
@@ -67,7 +68,7 @@ describe('actionUpgrade', () => {
 	test('button_rotate_left becomes button_rotate with delta -1', () => {
 		const { controls } = createControls()
 
-		const upgraded = controls.actionUpgrade(makeStoredAction('button_rotate_left'), 'ctrl1')
+		const upgraded = controls.actionUpgrade(makeStoredAction('button_rotate_left'), CreateBankControlId('ctrl1'))
 
 		expect(upgraded).toBeDefined()
 		expect(upgraded?.definitionId).toBe('button_rotate')
@@ -79,7 +80,7 @@ describe('actionUpgrade', () => {
 	test('button_rotate_right becomes button_rotate with delta +1', () => {
 		const { controls } = createControls()
 
-		const upgraded = controls.actionUpgrade(makeStoredAction('button_rotate_right'), 'ctrl1')
+		const upgraded = controls.actionUpgrade(makeStoredAction('button_rotate_right'), CreateBankControlId('ctrl1'))
 
 		expect(upgraded?.definitionId).toBe('button_rotate')
 		expect(upgraded?.options.delta).toEqual({ value: 1, isExpression: false })
@@ -88,14 +89,14 @@ describe('actionUpgrade', () => {
 	test('leaves unrelated actions untouched', () => {
 		const { controls } = createControls()
 
-		expect(controls.actionUpgrade(makeStoredAction('button_press'), 'ctrl1')).toBeUndefined()
-		expect(controls.actionUpgrade(makeStoredAction('button_rotate'), 'ctrl1')).toBeUndefined()
+		expect(controls.actionUpgrade(makeStoredAction('button_press'), CreateBankControlId('ctrl1'))).toBeUndefined()
+		expect(controls.actionUpgrade(makeStoredAction('button_rotate'), CreateBankControlId('ctrl1'))).toBeUndefined()
 	})
 
 	test('button_pressrelease gains a zero hold duration, matching the old immediate release', () => {
 		const { controls } = createControls()
 
-		const upgraded = controls.actionUpgrade(makeStoredAction('button_pressrelease'), 'ctrl1')
+		const upgraded = controls.actionUpgrade(makeStoredAction('button_pressrelease'), CreateBankControlId('ctrl1'))
 
 		expect(upgraded?.definitionId).toBe('button_pressrelease')
 		expect(upgraded?.options.duration).toEqual({ value: 0, isExpression: false })
@@ -108,7 +109,7 @@ describe('actionUpgrade', () => {
 		const action = makeStoredAction('button_pressrelease')
 		action.options.duration = exprVal(500)
 
-		expect(controls.actionUpgrade(action, 'ctrl1')).toBeUndefined()
+		expect(controls.actionUpgrade(action, CreateBankControlId('ctrl1'))).toBeUndefined()
 	})
 })
 
@@ -122,7 +123,7 @@ describe('button_pressrelease execution', () => {
 
 	test('a zero duration presses and releases immediately', () => {
 		const { controls, controlsStore, pageStore } = createControls()
-		pageStore.getControlIdAt.mockReturnValue('control:target')
+		pageStore.getControlIdAt.mockReturnValue(CreateBankControlId('target'))
 
 		const result = controls.executeAction(
 			makeExecAction('button_pressrelease', { location: '1/2/3', force: false, duration: 0 }),
@@ -131,33 +132,33 @@ describe('button_pressrelease execution', () => {
 
 		expect(result).toEqual({ result: undefined })
 		expect(controlsStore.pressControl.mock.calls).toEqual([
-			['control:target', true, 'surface0', false],
-			['control:target', false, 'surface0', false],
+			[CreateBankControlId('target'), true, 'surface0', false],
+			[CreateBankControlId('target'), false, 'surface0', false],
 		])
 	})
 
 	test('holds the button for the duration before releasing', async () => {
 		const { controls, controlsStore, pageStore } = createControls()
-		pageStore.getControlIdAt.mockReturnValue('control:target')
+		pageStore.getControlIdAt.mockReturnValue(CreateBankControlId('target'))
 
 		const result = controls.executeAction(
 			makeExecAction('button_pressrelease', { location: '1/2/3', force: true, duration: 500 }),
 			fakeExtras
 		)
 
-		expect(controlsStore.pressControl.mock.calls).toEqual([['control:target', true, 'surface0', true]])
+		expect(controlsStore.pressControl.mock.calls).toEqual([[CreateBankControlId('target'), true, 'surface0', true]])
 
 		await vi.advanceTimersByTimeAsync(499)
 		expect(controlsStore.pressControl).toHaveBeenCalledTimes(1)
 
 		await vi.advanceTimersByTimeAsync(1)
-		expect(controlsStore.pressControl).toHaveBeenLastCalledWith('control:target', false, 'surface0', true)
+		expect(controlsStore.pressControl).toHaveBeenLastCalledWith(CreateBankControlId('target'), false, 'surface0', true)
 		await expect(result).resolves.toEqual({ result: undefined })
 	})
 
 	test('releases straight away when the run is aborted mid-hold', async () => {
 		const { controls, controlsStore, pageStore } = createControls()
-		pageStore.getControlIdAt.mockReturnValue('control:target')
+		pageStore.getControlIdAt.mockReturnValue(CreateBankControlId('target'))
 
 		const abort = new AbortController()
 		const result = controls.executeAction(
@@ -168,8 +169,8 @@ describe('button_pressrelease execution', () => {
 		abort.abort()
 		await expect(result).resolves.toEqual({ result: undefined })
 		expect(controlsStore.pressControl.mock.calls).toEqual([
-			['control:target', true, 'surface0', false],
-			['control:target', false, 'surface0', false],
+			[CreateBankControlId('target'), true, 'surface0', false],
+			[CreateBankControlId('target'), false, 'surface0', false],
 		])
 	})
 })
@@ -177,25 +178,25 @@ describe('button_pressrelease execution', () => {
 describe('button_rotate execution', () => {
 	test('rotates the target control by the signed delta', () => {
 		const { controls, controlsStore, pageStore } = createControls()
-		pageStore.getControlIdAt.mockReturnValue('control:target')
+		pageStore.getControlIdAt.mockReturnValue(CreateBankControlId('target'))
 
 		void controls.executeAction(makeExecAction('button_rotate', { location: '1/2/3', delta: 5 }), fakeExtras)
 
-		expect(controlsStore.rotateControl).toHaveBeenCalledWith('control:target', 5, 'surface0')
+		expect(controlsStore.rotateControl).toHaveBeenCalledWith(CreateBankControlId('target'), 5, 'surface0')
 	})
 
 	test('a negative delta rotates the other way', () => {
 		const { controls, controlsStore, pageStore } = createControls()
-		pageStore.getControlIdAt.mockReturnValue('control:target')
+		pageStore.getControlIdAt.mockReturnValue(CreateBankControlId('target'))
 
 		void controls.executeAction(makeExecAction('button_rotate', { location: '1/2/3', delta: -3 }), fakeExtras)
 
-		expect(controlsStore.rotateControl).toHaveBeenCalledWith('control:target', -3, 'surface0')
+		expect(controlsStore.rotateControl).toHaveBeenCalledWith(CreateBankControlId('target'), -3, 'surface0')
 	})
 
 	test('a zero or non-numeric delta does nothing', () => {
 		const { controls, controlsStore, pageStore } = createControls()
-		pageStore.getControlIdAt.mockReturnValue('control:target')
+		pageStore.getControlIdAt.mockReturnValue(CreateBankControlId('target'))
 
 		void controls.executeAction(makeExecAction('button_rotate', { location: '1/2/3', delta: 0 }), fakeExtras)
 		void controls.executeAction(makeExecAction('button_rotate', { location: '1/2/3', delta: 'nope' }), fakeExtras)
@@ -207,14 +208,14 @@ describe('button_rotate execution', () => {
 describe('step actions through button-references', () => {
 	function setupTarget() {
 		const ctx = createControls()
-		ctx.pageStore.getControlIdAt.mockReturnValue('control:ref')
+		ctx.pageStore.getControlIdAt.mockReturnValue(CreateBankControlId('ref'))
 
 		const target = {
 			supportsActionSets: true,
 			actionSets: { stepMakeCurrent: vi.fn(), stepAdvanceDelta: vi.fn(), getActiveStepIndex: () => 1 },
 		}
 		ctx.controlsStore.getControlFollowingReferences.mockImplementation((id) =>
-			id === 'control:ref' ? (target as any) : undefined
+			id === CreateBankControlId('ref') ? (target as any) : undefined
 		)
 		return { ...ctx, target }
 	}
@@ -257,12 +258,14 @@ describe('bank_pushed through button-references', () => {
 
 	function setup(pushed: boolean) {
 		const ctx = createControls()
-		ctx.pageStore.getControlIdAt.mockReturnValue('control:ref')
+		ctx.pageStore.getControlIdAt.mockReturnValue(CreateBankControlId('ref'))
 		ctx.pageStore.getLocationOfControlId.mockImplementation((id) =>
-			id === 'control:target' ? targetLocation : undefined
+			id === CreateBankControlId('target') ? targetLocation : undefined
 		)
 		ctx.controlsStore.getControlFollowingReferences.mockImplementation((id) =>
-			id === 'control:ref' ? ({ controlId: 'control:target', supportsPushed: true, pushed } as any) : undefined
+			id === CreateBankControlId('ref')
+				? ({ controlId: CreateBankControlId('target'), supportsPushed: true, pushed } as any)
+				: undefined
 		)
 
 		const checked: string[][] = []

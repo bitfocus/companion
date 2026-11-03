@@ -1,6 +1,7 @@
 import { EventEmitter } from 'node:events'
 import { describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
@@ -94,7 +95,7 @@ describe('evaluateFeedbackValue', () => {
 
 		// check_expression returns !!options.expression
 		const parser = stubParser({ expression: true })
-		const value = controller.evaluateFeedbackValue(model, 'control1', parser)
+		const value = controller.evaluateFeedbackValue(model, CreateBankControlId('control1'), parser)
 
 		expect(value).toBe(true)
 		// The lazy path must never push into the feedback value cache
@@ -119,8 +120,12 @@ describe('evaluateFeedbackValue', () => {
 			upgradeIndex: undefined,
 		}
 
-		expect(controller.evaluateFeedbackValue(model, 'control1', stubParser({ expression: true }))).toBe(true)
-		expect(controller.evaluateFeedbackValue(model, 'control1', stubParser({ expression: false }))).toBe(false)
+		expect(
+			controller.evaluateFeedbackValue(model, CreateBankControlId('control1'), stubParser({ expression: true }))
+		).toBe(true)
+		expect(
+			controller.evaluateFeedbackValue(model, CreateBankControlId('control1'), stubParser({ expression: false }))
+		).toBe(false)
 	})
 
 	test('throws for a non-internal feedback', () => {
@@ -135,7 +140,7 @@ describe('evaluateFeedbackValue', () => {
 			upgradeIndex: undefined,
 		}
 
-		expect(() => controller.evaluateFeedbackValue(model, 'control1', stubParser({}))).toThrow(
+		expect(() => controller.evaluateFeedbackValue(model, CreateBankControlId('control1'), stubParser({}))).toThrow(
 			'Feedback is not for internal instance'
 		)
 	})
@@ -172,7 +177,7 @@ describe("the placeholder for an entity that couldn't be loaded", () => {
 			upgradeIndex: undefined,
 		}
 
-		expect(controller.evaluateFeedbackValue(model, 'control1', stubParser({}))).toBe(false)
+		expect(controller.evaluateFeedbackValue(model, CreateBankControlId('control1'), stubParser({}))).toBe(false)
 	})
 })
 
@@ -206,8 +211,8 @@ describe('onVariablesChanged', () => {
 			})),
 		} as any)
 
-		ctx.controller.entityUpdate(makeFeedback('fb1'), 'control1')
-		ctx.controller.entityUpdate(makeFeedback('fb2'), 'control2')
+		ctx.controller.entityUpdate(makeFeedback('fb1'), CreateBankControlId('control1'))
+		ctx.controller.entityUpdate(makeFeedback('fb2'), CreateBankControlId('control2'))
 		ctx.controlStore.updateFeedbackValues.mockClear()
 
 		return ctx
@@ -229,7 +234,7 @@ describe('onVariablesChanged', () => {
 	test('a scoped change only re-evaluates the feedbacks of the targeted controls', () => {
 		const { controller, controlStore } = setup()
 
-		controller.onVariablesChanged(new Set(['local:x']), new Set(['control2']))
+		controller.onVariablesChanged(new Set(['local:x']), new Set([CreateBankControlId('control2')]))
 
 		expect(updatedEntityIds(controlStore)).toEqual(['fb2'])
 	})
@@ -237,7 +242,7 @@ describe('onVariablesChanged', () => {
 	test('ignores changes to unreferenced variables', () => {
 		const { controller, controlStore } = setup()
 
-		controller.onVariablesChanged(new Set(['local:y']), new Set(['control1']))
+		controller.onVariablesChanged(new Set(['local:y']), new Set([CreateBankControlId('control1')]))
 
 		expect(updatedEntityIds(controlStore)).toEqual([])
 	})
@@ -246,7 +251,10 @@ describe('onVariablesChanged', () => {
 		const { controller, controlStore } = setup()
 
 		controller.entityDelete(makeFeedback('fb1'))
-		controller.onVariablesChanged(new Set(['local:x']), new Set(['control1', 'control2']))
+		controller.onVariablesChanged(
+			new Set(['local:x']),
+			new Set([CreateBankControlId('control1'), CreateBankControlId('control2')])
+		)
 
 		expect(updatedEntityIds(controlStore)).toEqual(['fb2'])
 	})
@@ -254,14 +262,14 @@ describe('onVariablesChanged', () => {
 	test('a feedback re-tracked on a different control follows it', () => {
 		const { controller, controlStore } = setup()
 
-		controller.entityUpdate(makeFeedback('fb1'), 'control2')
+		controller.entityUpdate(makeFeedback('fb1'), CreateBankControlId('control2'))
 		controlStore.updateFeedbackValues.mockClear()
 
-		controller.onVariablesChanged(new Set(['local:x']), new Set(['control1']))
+		controller.onVariablesChanged(new Set(['local:x']), new Set([CreateBankControlId('control1')]))
 		expect(updatedEntityIds(controlStore)).toEqual([])
 
 		controlStore.updateFeedbackValues.mockClear()
-		controller.onVariablesChanged(new Set(['local:x']), new Set(['control2']))
+		controller.onVariablesChanged(new Set(['local:x']), new Set([CreateBankControlId('control2')]))
 		expect(updatedEntityIds(controlStore).sort()).toEqual(['fb1', 'fb2'])
 	})
 })

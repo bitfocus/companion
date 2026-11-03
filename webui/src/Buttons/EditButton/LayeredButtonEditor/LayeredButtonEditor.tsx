@@ -2,6 +2,7 @@ import { faLayerGroup } from '@fortawesome/free-solid-svg-icons'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { LayeredButtonModel, SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
@@ -27,7 +28,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 	activeMainTab,
 }: {
 	config: LayeredButtonModel
-	controlId: string
+	controlId: SomeControlId
 	runtimeProps: Record<string, any> | false
 	location: ControlLocation
 	activeMainTab: string
@@ -139,7 +140,7 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 })
 
 interface LayeredButtonEditorStyleProps {
-	controlId: string
+	controlId: SomeControlId
 	location: ControlLocation
 	styleStore: LayeredStyleStore
 	// previewImage: string | null

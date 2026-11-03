@@ -13,7 +13,7 @@ export abstract class EnabledCollectionsBaseController<
 		return this.#enabledCollectionIds
 	}
 
-	constructor(dbTable: DataStoreSchemaTableView<z.ZodType<CollectionBase<TCollectionMetadata>>>) {
+	constructor(dbTable: DataStoreSchemaTableView<z.ZodType<CollectionBase<TCollectionMetadata>>, string>) {
 		super(dbTable)
 
 		this.rebuildEnabledCollectionIds()

@@ -1,6 +1,6 @@
 import { EventEmitter } from 'node:events'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { CreateBankControlId, formatLocation } from '@companion-app/shared/ControlId.js'
 import { elementSchemas } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { LayeredButtonDrawer } from '../../lib/Controls/ControlTypes/Button/LayeredButtonDrawer.js'
@@ -13,7 +13,7 @@ vi.mock('../../lib/Graphics/ConvertGraphicsElements.js', () => ({
 	ConvertSomeButtonGraphicsElementForDrawing: (...args: any[]) => convertMock(...args),
 }))
 
-const CONTROL_ID = 'bank:1-0-0'
+const CONTROL_ID = CreateBankControlId('1-0-0')
 const LOCATION: ControlLocation = { pageNumber: 1, row: 0, column: 0 }
 const OTHER_LOCATION: ControlLocation = { pageNumber: 2, row: 0, column: 0 }
 
@@ -122,7 +122,7 @@ describe('LayeredButtonDrawer', () => {
 		})
 
 		it('reports the drawType passed to the constructor', async () => {
-			const pageDrawer = new LayeredButtonDrawer(deps, 'bank:1-0-0', host, 'pageup')
+			const pageDrawer = new LayeredButtonDrawer(deps, CreateBankControlId('1-0-0'), host, 'pageup')
 			convertMock.mockResolvedValueOnce(conversionResult())
 
 			const style = await pageDrawer.getDrawStyle()

@@ -1,4 +1,5 @@
 import type { JsonObject, JsonValue } from 'type-fest'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
@@ -8,7 +9,7 @@ import type { ControlBase } from './ControlBase.js'
 import type { SomeStepManager } from './Entities/ControlActionSetAndStepsManager.js'
 import type { SomeEntityPool } from './Entities/EntityListPoolEditingMixin.js'
 
-export type SomeControl<TJson> = ControlBase<TJson> &
+export type SomeControl<TJson> = ControlBase<TJson, SomeControlId> &
 	(ControlWithLayeredStyle | ControlWithoutLayeredStyle) &
 	(ControlWithEntities | ControlWithoutEntities) &
 	(ControlWithActions | ControlWithoutActions) &
@@ -18,11 +19,11 @@ export type SomeControl<TJson> = ControlBase<TJson> &
 	(ControlWithPushed | ControlWithoutPushed) &
 	(ControlWithConvert | ControlWithoutConvert)
 
-export interface ControlWithoutLayeredStyle extends ControlBase<any> {
+export interface ControlWithoutLayeredStyle extends ControlBase<any, SomeControlId> {
 	readonly supportsLayeredStyle: false
 }
 
-export interface ControlWithLayeredStyle extends ControlBase<any> {
+export interface ControlWithLayeredStyle extends ControlBase<any, SomeControlId> {
 	readonly supportsLayeredStyle: true
 
 	/**
@@ -124,7 +125,7 @@ export interface ControlWithLayeredStyle extends ControlBase<any> {
 	layeredStyleSelectedElementIds(): { [usage in ButtonGraphicsElementUsage]: string | undefined }
 }
 
-export interface ControlWithEntities extends ControlBase<any> {
+export interface ControlWithEntities extends ControlBase<any, SomeControlId> {
 	readonly supportsEntities: true
 
 	/**
@@ -136,11 +137,11 @@ export interface ControlWithEntities extends ControlBase<any> {
 	readonly entities: SomeEntityPool
 }
 
-export interface ControlWithoutEntities extends ControlBase<any> {
+export interface ControlWithoutEntities extends ControlBase<any, SomeControlId> {
 	readonly supportsEntities: false
 }
 
-export interface ControlWithActions extends ControlBase<any> {
+export interface ControlWithActions extends ControlBase<any, SomeControlId> {
 	readonly supportsActions: true
 
 	/**
@@ -150,11 +151,11 @@ export interface ControlWithActions extends ControlBase<any> {
 	abortDelayedActionsSingle(skip_up: boolean, exceptSignal: AbortSignal): void
 }
 
-export interface ControlWithoutActions extends ControlBase<any> {
+export interface ControlWithoutActions extends ControlBase<any, SomeControlId> {
 	readonly supportsActions: false
 }
 
-export interface ControlWithEvents extends ControlBase<any> {
+export interface ControlWithEvents extends ControlBase<any, SomeControlId> {
 	readonly supportsEvents: true
 
 	/**
@@ -198,11 +199,11 @@ export interface ControlWithEvents extends ControlBase<any> {
 	eventSetOptions(id: string, key: string, value: JsonValue | undefined): boolean
 }
 
-export interface ControlWithoutEvents extends ControlBase<any> {
+export interface ControlWithoutEvents extends ControlBase<any, SomeControlId> {
 	readonly supportsEvents: false
 }
 
-export interface ControlWithActionSets extends ControlBase<any> {
+export interface ControlWithActionSets extends ControlBase<any, SomeControlId> {
 	readonly supportsActionSets: true
 
 	/**
@@ -214,11 +215,11 @@ export interface ControlWithActionSets extends ControlBase<any> {
 	readonly actionSets: SomeStepManager
 }
 
-export interface ControlWithoutActionSets extends ControlBase<any> {
+export interface ControlWithoutActionSets extends ControlBase<any, SomeControlId> {
 	readonly supportsActionSets: false
 }
 
-export interface ControlWithOptions extends ControlBase<any> {
+export interface ControlWithOptions extends ControlBase<any, SomeControlId> {
 	readonly supportsOptions: true
 
 	options: JsonObject
@@ -229,11 +230,11 @@ export interface ControlWithOptions extends ControlBase<any> {
 	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean
 }
 
-export interface ControlWithoutOptions extends ControlBase<any> {
+export interface ControlWithoutOptions extends ControlBase<any, SomeControlId> {
 	readonly supportsOptions: false
 }
 
-export interface ControlWithPushed extends ControlBase<any> {
+export interface ControlWithPushed extends ControlBase<any, SomeControlId> {
 	readonly supportsPushed: true
 
 	readonly pushed: boolean
@@ -249,11 +250,11 @@ export interface ControlWithPushed extends ControlBase<any> {
 	setPushed(direction: boolean, surfaceId: string | undefined): boolean
 }
 
-export interface ControlWithoutPushed extends ControlBase<any> {
+export interface ControlWithoutPushed extends ControlBase<any, SomeControlId> {
 	readonly supportsPushed: false
 }
 
-export interface ControlWithConvert extends ControlBase<any> {
+export interface ControlWithConvert extends ControlBase<any, SomeControlId> {
 	readonly supportsConvert: true
 
 	/**
@@ -264,6 +265,6 @@ export interface ControlWithConvert extends ControlBase<any> {
 	convertControl(): SomeButtonModel
 }
 
-export interface ControlWithoutConvert extends ControlBase<any> {
+export interface ControlWithoutConvert extends ControlBase<any, SomeControlId> {
 	readonly supportsConvert: false
 }

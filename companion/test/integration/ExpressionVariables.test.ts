@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import type { ExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
 import { exprVal } from '@companion-app/shared/Model/Options.js'
 import type { ControlExpressionVariable } from '../../lib/Controls/ControlTypes/ExpressionVariable.js'
 import { createTestApp, type TestApp } from './TestApp.js'
@@ -17,7 +18,7 @@ describe('expression variables', () => {
 	})
 
 	/** Create an expression variable and configure it the way the ui does */
-	async function createExpressionVariable(name: string, expression: string): Promise<string> {
+	async function createExpressionVariable(name: string, expression: string): Promise<ExpressionVariableControlId> {
 		const controlId = await app.trpc().controls.expressionVariables.create({ variableName: name })
 
 		const control = app.registry.controls.getControl(controlId) as ControlExpressionVariable

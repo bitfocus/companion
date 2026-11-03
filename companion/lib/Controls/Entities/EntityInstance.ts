@@ -2,6 +2,7 @@ import isEqual from 'fast-deep-equal'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
 import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { LocalVariableNameRegex } from '@companion-app/shared/LocalVariable.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
@@ -51,7 +52,7 @@ export class ControlEntityInstance {
 	/**
 	 * Id of the control this belongs to
 	 */
-	readonly #controlId: string
+	readonly #controlId: SomeControlId
 
 	readonly #data: Omit<SomeEntityModel, 'children'>
 
@@ -194,7 +195,7 @@ export class ControlEntityInstance {
 		internalModule: InternalControllerForEntity,
 		processManager: ProcessManagerForEntity,
 		specialExpressionManager: EntityPoolSpecialExpressionManager,
-		controlId: string,
+		controlId: SomeControlId,
 		data: SomeEntityModel,
 		isCloned: boolean
 	) {

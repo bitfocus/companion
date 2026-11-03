@@ -1,5 +1,5 @@
 import debounceFn from 'debounce-fn'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { formatLocation, type BankControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation, ControlLocationString } from '@companion-app/shared/Model/Common.js'
 import type { DrawStyleLayeredButtonModel } from '@companion-app/shared/Model/StyleModel.js'
 import { makeReferencePlaceholder } from '../../../Graphics/ConvertGraphicsElements.js'
@@ -24,7 +24,7 @@ const emptyStateProps = {
 export class MirrorButtonDrawer implements IButtonDrawer {
 	readonly #logger: Logger
 	readonly #deps: ControlDependencies
-	readonly #controlId: string
+	readonly #controlId: BankControlId
 	readonly #getTargetLocation: () => { location: ControlLocation | null; referencedVariableIds: ReadonlySet<string> }
 
 	/** Locations the last draw depended on, so we know which `button_drawn` events must trigger a redraw. */
@@ -37,7 +37,7 @@ export class MirrorButtonDrawer implements IButtonDrawer {
 
 	constructor(
 		deps: ControlDependencies,
-		controlId: string,
+		controlId: BankControlId,
 		getTargetLocation: () => { location: ControlLocation | null; referencedVariableIds: ReadonlySet<string> }
 	) {
 		this.#logger = LogController.createLogger(`Controls/Button/MirrorDrawer/${controlId}`)

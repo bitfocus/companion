@@ -1,4 +1,5 @@
 import { action, makeObservable, observable, type ObservableMap } from 'mobx'
+import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { PageModel, PageModelChanges } from '@companion-app/shared/Model/PageModel.js'
 
@@ -7,7 +8,7 @@ export class PagesStoreModel {
 
 	name: string
 
-	readonly controls = observable.map<number, ObservableMap<number, string>>()
+	readonly controls = observable.map<number, ObservableMap<number, BankControlId>>()
 
 	constructor(id: string, name: string) {
 		this.id = id
@@ -34,11 +35,11 @@ export class PagesStore {
 		return this.store.length
 	}
 
-	public getControlIdAt(pageNumber: number, row: number, column: number): string | undefined {
+	public getControlIdAt(pageNumber: number, row: number, column: number): BankControlId | undefined {
 		return this.get(pageNumber)?.controls?.get(row)?.get(column)
 	}
 
-	public getControlIdAtLocation(location: ControlLocation): string | undefined {
+	public getControlIdAtLocation(location: ControlLocation): BankControlId | undefined {
 		return this.getControlIdAt(location.pageNumber, location.row, location.column)
 	}
 
@@ -73,7 +74,7 @@ export class PagesStore {
 			for (const controlChange of pageChange.controls) {
 				let rowObj = pageModel.controls.get(controlChange.row)
 				if (!rowObj) {
-					rowObj = observable.map<number, string>()
+					rowObj = observable.map<number, BankControlId>()
 					pageModel.controls.set(controlChange.row, rowObj)
 				}
 
@@ -104,7 +105,7 @@ export class PagesStore {
 			for (const [row, rowObj] of Object.entries(pageInfo.controls)) {
 				if (!rowObj) continue
 
-				const newRowObj = observable.map<number, string>()
+				const newRowObj = observable.map<number, BankControlId>()
 				newPageModel.controls.set(Number(row), newRowObj)
 
 				for (const [col, controlId] of Object.entries(rowObj)) {

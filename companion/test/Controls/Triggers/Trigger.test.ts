@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
+import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { TriggerModel } from '@companion-app/shared/Model/TriggerModel.js'
 import type { CompanionOptionValues } from '@companion-module/host'
@@ -6,7 +7,7 @@ import { ControlTrigger } from '../../../lib/Controls/ControlTypes/Triggers/Trig
 import { TriggerExecutionSource } from '../../../lib/Controls/ControlTypes/Triggers/TriggerExecutionSource.js'
 import { createMockControlDependencies, type MockControlDependencies } from './Helpers.js'
 
-const CONTROL_ID = 'trigger:test01'
+const CONTROL_ID = CreateTriggerControlId('test01')
 
 interface TriggerTestContext extends MockControlDependencies {
 	trigger: ControlTrigger

@@ -1,6 +1,8 @@
+import { skipToken } from '@tanstack/react-query'
 import { useSubscription } from '@trpc/tanstack-react-query'
 import { runInAction } from 'mobx'
 import { useEffect, useState } from 'react'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { applyObjectPatch } from '@companion-app/shared/Diff.js'
 import type { SomeControlModel, UIControlUpdateInit } from '@companion-app/shared/Model/Controls.js'
 import { trpc } from '~/Resources/TRPC'
@@ -11,7 +13,7 @@ interface ControlConfig {
 	runtime: Record<string, any>
 }
 
-export function useControlConfig(controlId: string | null | undefined): {
+export function useControlConfig(controlId: SomeControlId | null | undefined): {
 	controlConfig: ControlConfig | null
 	error: string | null
 	reloadConfig: () => void
@@ -20,59 +22,53 @@ export function useControlConfig(controlId: string | null | undefined): {
 	const [error, setError] = useState<string | null>(null)
 
 	const sub = useSubscription(
-		trpc.controls.watchControl.subscriptionOptions(
-			{
-				controlId: controlId ?? '',
+		trpc.controls.watchControl.subscriptionOptions(controlId ? { controlId } : skipToken, {
+			onStarted: () => {
+				setControlConfig(null)
 			},
-			{
-				enabled: !!controlId,
-				onStarted: () => {
-					setControlConfig(null)
-				},
-				onData: (data) => {
-					runInAction(() => {
-						switch (data.type) {
-							case 'init':
-								setControlConfig(data as UIControlUpdateInit) // TODO - how to avoid this cast?
-								break
-							case 'destroy':
-								setControlConfig(null)
-								break
-							case 'config':
-								setControlConfig((oldConfig) => {
-									if (!oldConfig) return oldConfig
+			onData: (data) => {
+				runInAction(() => {
+					switch (data.type) {
+						case 'init':
+							setControlConfig(data as UIControlUpdateInit) // TODO - how to avoid this cast?
+							break
+						case 'destroy':
+							setControlConfig(null)
+							break
+						case 'config':
+							setControlConfig((oldConfig) => {
+								if (!oldConfig) return oldConfig
 
-									return {
-										...oldConfig,
-										config: applyObjectPatch(structuredClone(oldConfig.config), data.patch),
-									}
-								})
-								break
-							case 'runtime':
-								setControlConfig((oldConfig) => {
-									if (!oldConfig) return oldConfig
+								return {
+									...oldConfig,
+									config: applyObjectPatch(structuredClone(oldConfig.config), data.patch),
+								}
+							})
+							break
+						case 'runtime':
+							setControlConfig((oldConfig) => {
+								if (!oldConfig) return oldConfig
 
-									return {
-										...oldConfig,
-										runtime: applyObjectPatch(structuredClone(oldConfig.runtime), data.patch),
-									}
-								})
-								break
+								return {
+									...oldConfig,
+									runtime: applyObjectPatch(structuredClone(oldConfig.runtime), data.patch),
+								}
+							})
+							break
 
-							default:
-								assertNever(data)
-								break
-						}
-					})
-				},
-				onError: (e) => {
-					console.error(`Failed to load control config for ${controlId}`, e)
+						default:
+							assertNever(data)
+							break
+					}
+				})
+			},
+			onError: (e) => {
+				console.error(`Failed to load control config for ${controlId}`, e)
 
-					setError('Failed to load control config')
-					setControlConfig(null)
-				},
-			}
-		)
+				setError('Failed to load control config')
+				setControlConfig(null)
+			},
+		})
 	)
 
 	// Clear data when the controlId changes

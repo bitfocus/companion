@@ -1,5 +1,6 @@
 import debounceFn from 'debounce-fn'
 import type { JsonValue } from 'type-fest'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import {
 	EntityModelType,
 	type FeedbackEntityStyleOverride,
@@ -41,7 +42,7 @@ export interface ControlEntityListPoolProps {
 	processManager: InstanceProcessManager
 	variableValues: VariablesValues
 	pageStore: IPageStore
-	controlId: string
+	controlId: SomeControlId
 	reportChange: (options: ControlEntityListChangeProps) => void
 	renderClock: RenderClock
 	/** Resolve a page's local-variable entities, for `$(page:x)` injection (only used by button pools). */
@@ -80,7 +81,7 @@ export abstract class ControlEntityListPoolBase {
 	readonly #isLayeredDrawing: boolean
 	readonly #specialExpressionManager: EntityPoolSpecialExpressionManager
 
-	protected readonly controlId: string
+	protected readonly controlId: SomeControlId
 
 	/**
 	 * Report changes to the database and disk

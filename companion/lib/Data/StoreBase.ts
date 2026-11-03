@@ -11,7 +11,12 @@ import {
 	type KeyedSchemaTableViewOptions,
 } from './Tables/KeyedSchemaTableView.js'
 import { BROKEN_ROWS_TABLE } from './Tables/ParsedTableViewBase.js'
-import { DataStoreSchemaTableView, type SchemaTableViewOptions } from './Tables/SchemaTableView.js'
+import {
+	ANY_SCHEMA_TABLE_KEY,
+	DataStoreSchemaTableView,
+	type SchemaTableViewKey,
+	type SchemaTableViewOptions,
+} from './Tables/SchemaTableView.js'
 import { DataStoreTableView } from './Tables/TableView.js'
 import {
 	DATABASE_OPERATIONS,
@@ -106,7 +111,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 * Saved queries
 	 */
 	private tableCache = new Map<string, DataStoreTableView<any>>()
-	private schemaTableCache = new Map<string, DataStoreSchemaTableView<any>>()
+	private schemaTableCache = new Map<string, DataStoreSchemaTableView<any, string>>()
 	private keyedSchemaTableCache = new Map<string, DataStoreKeyedSchemaTableView<any>>()
 	/**
 	 * Sink for per-operation timings. Required and injected at construction, so it is immutable for the
@@ -447,20 +452,36 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 	 * Rows that fail to parse when read are moved to the broken rows table.
 	 * @param tableName - the table to view
 	 * @param schema - the schema for each row
-	 * @param options - how the view treats writes
+	 * @param options - how the view treats writes, and what its keys must be
 	 */
 	public getSchemaTableView<TSchema extends z.ZodType<Record<string, any>>>(
 		tableName: string,
 		schema: TSchema,
 		options?: SchemaTableViewOptions
-	): DataStoreSchemaTableView<TSchema> {
+	): DataStoreSchemaTableView<TSchema, string>
+	public getSchemaTableView<TSchema extends z.ZodType<Record<string, any>>, TKey extends string>(
+		tableName: string,
+		schema: TSchema,
+		options: SchemaTableViewOptions & { key: SchemaTableViewKey<TKey, z.output<TSchema>> }
+	): DataStoreSchemaTableView<TSchema, TKey>
+	public getSchemaTableView<TSchema extends z.ZodType<Record<string, any>>>(
+		tableName: string,
+		schema: TSchema,
+		options?: SchemaTableViewOptions & { key?: SchemaTableViewKey<string, z.output<TSchema>> }
+	): DataStoreSchemaTableView<TSchema, string> {
+		const key = options?.key ?? ANY_SCHEMA_TABLE_KEY
+
 		if (!tableName || typeof tableName !== 'string') throw new Error('Invalid table name')
 		if (tableName === BROKEN_ROWS_TABLE) throw new Error('Cannot view the broken rows table with a schema')
 
 		const cachedTable = this.schemaTableCache.get(tableName)
 		if (cachedTable) {
 			if (cachedTable.schema !== schema) throw new Error(`Table "${tableName}" already has a different schema`)
-			if (cachedTable.validateWrites !== (options?.validateWrites ?? true) || cachedTable.repair !== options?.repair) {
+			if (
+				cachedTable.validateWrites !== (options?.validateWrites ?? true) ||
+				cachedTable.repair !== options?.repair ||
+				cachedTable.key !== key
+			) {
 				throw new Error(`Table "${tableName}" already has different options`)
 			}
 			return cachedTable
@@ -473,6 +494,7 @@ export abstract class DataStoreBase<TDefaultTableContent extends Record<string, 
 			this.#createTableViewHooks(tableName),
 			this.getTableView(BROKEN_ROWS_TABLE),
 			schema,
+			key,
 			options
 		)
 		this.schemaTableCache.set(tableName, newTable)

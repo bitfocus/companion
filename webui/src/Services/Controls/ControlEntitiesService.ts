@@ -1,5 +1,6 @@
 import { useMemo, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import {
 	stringifySocketEntityLocation,
 	type EntityModelType,
@@ -76,7 +77,7 @@ export interface IEntityEditorActionService {
 }
 
 export function useControlEntitiesEditorService(
-	controlId: string,
+	controlId: SomeControlId,
 	listId: SomeSocketEntityLocation,
 	confirmModal: React.RefObject<GenericConfirmModalRef | null>
 ): IEntityEditorService {

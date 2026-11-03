@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { expect, test, vi } from 'vitest'
+import { CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientTriggerData } from '@companion-app/shared/Model/TriggerModel.js'
 import { RootAppStoreContext, type RootAppStore } from '~/Stores/RootAppStore.js'
 import { TriggersListStore } from '~/Stores/TriggersListStore.js'
@@ -8,7 +9,7 @@ import { TriggerPicker } from '../TriggerPicker.js'
 
 test.each(['replace', 'append'] as const)('%s preserves the trigger control ID from the store', async (mode) => {
 	const triggersList = new TriggersListStore()
-	const controlId = 'trigger:_aBEKOIlAlz7YD0liSn4h'
+	const controlId = CreateTriggerControlId('_aBEKOIlAlz7YD0liSn4h')
 	triggersList.updateTriggers({
 		type: 'init',
 		triggers: { [controlId]: { name: 'Destination trigger' } as ClientTriggerData },

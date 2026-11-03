@@ -1,6 +1,7 @@
 import { faClock, faHand, faPencil, faStopwatch, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef } from 'react'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetsModel, ActionStepOptions } from '@companion-app/shared/Model/ActionModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
@@ -15,7 +16,7 @@ import {
 } from './EditDurationGroupPropertiesModal.js'
 
 interface EditActionsReleaseProps {
-	controlId: string
+	controlId: SomeControlId
 	location: ControlLocation
 	action_sets: ActionSetsModel
 	stepOptions: ActionStepOptions

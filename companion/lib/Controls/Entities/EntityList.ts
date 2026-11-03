@@ -1,3 +1,4 @@
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { canAddEntityToFeedbackList } from '@companion-app/shared/Entity.js'
 import {
 	EntityModelType,
@@ -32,7 +33,7 @@ export class ControlEntityList {
 	/**
 	 * Id of the control this belongs to
 	 */
-	readonly #controlId: string
+	readonly #controlId: SomeControlId
 
 	readonly #ownerId: EntityOwner | null
 
@@ -53,7 +54,7 @@ export class ControlEntityList {
 		internalModule: InternalControllerForEntity,
 		processManager: ProcessManagerForEntity,
 		specialExpressionManager: EntityPoolSpecialExpressionManager,
-		controlId: string,
+		controlId: SomeControlId,
 		ownerId: EntityOwner | null,
 		listDefinition: ControlEntityListDefinition
 	) {

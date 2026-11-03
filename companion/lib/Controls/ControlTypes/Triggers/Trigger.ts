@@ -1,6 +1,7 @@
 import debounceFn from 'debounce-fn'
 import { nanoid } from 'nanoid'
 import type { JsonValue } from 'type-fest'
+import type { TriggerControlId } from '@companion-app/shared/ControlId.js'
 import { diffObject } from '@companion-app/shared/Diff.js'
 import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
@@ -46,7 +47,7 @@ import { TriggerExecutionSource } from './TriggerExecutionSource.js'
  * this program.
  */
 export class ControlTrigger
-	extends ControlBase<TriggerModel>
+	extends ControlBase<TriggerModel, TriggerControlId>
 	implements
 		ControlWithActions,
 		ControlWithEvents,
@@ -153,7 +154,7 @@ export class ControlTrigger
 	 * @param storage - persisted storage object
 	 * @param isImport - if this is importing a button, not creating at startup
 	 */
-	constructor(deps: ControlDependencies, controlId: string, storage: TriggerModel | null, isImport: boolean) {
+	constructor(deps: ControlDependencies, controlId: TriggerControlId, storage: TriggerModel | null, isImport: boolean) {
 		super(deps, controlId, `Controls/ControlTypes/Triggers/${controlId}`)
 
 		const eventBus = deps.triggerEvents

@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { JsonValue } from 'type-fest'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { CreateBankControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import {
 	CompanionFieldVariablesSupport,
 	DEFAULT_COLOR_EXPRESSION_DESCRIPTION,
@@ -79,7 +80,7 @@ interface RenderOptions {
 	fieldSupportsExpression?: boolean
 	visibility?: boolean
 	readonly?: boolean
-	controlId?: string | null
+	controlId?: SomeControlId | null
 	allRawOptions?: ExpressionableOptionsObject
 	previewStatusOnly?: boolean
 }
@@ -106,7 +107,7 @@ function renderField(option: SomeCompanionInputField, opts: RenderOptions = {}) 
 	if (opts.previewStatusOnly !== undefined) {
 		field = (
 			<EntityEditorContextProvider
-				controlId="bank:1"
+				controlId={CreateBankControlId('1')}
 				location={undefined}
 				serviceFactory={{} as any}
 				readonly={false}
@@ -295,11 +296,15 @@ describe('OptionsInputField', () => {
 		})
 
 		it('renders a preview of the expression', () => {
-			renderField(textOption, { value: expr('$(a:b)'), fieldSupportsExpression: true, controlId: 'bank:1' })
+			renderField(textOption, {
+				value: expr('$(a:b)'),
+				fieldSupportsExpression: true,
+				controlId: CreateBankControlId('1'),
+			})
 			expect(screen.getByTestId('expression-preview')).toBeInTheDocument()
 			const props = captured.preview.at(-1)
 			expect(props.expression).toBe('$(a:b)')
-			expect(props.controlId).toBe('bank:1')
+			expect(props.controlId).toBe(CreateBankControlId('1'))
 			expect(props.fieldDefinition).toBe(textOption)
 			expect(props.statusOnly).toBe(false)
 		})

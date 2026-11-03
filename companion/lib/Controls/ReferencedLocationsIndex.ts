@@ -1,3 +1,4 @@
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ControlLocationString } from '@companion-app/shared/Model/Common.js'
 
 /**
@@ -11,14 +12,14 @@ import type { ControlLocationString } from '@companion-app/shared/Model/Common.j
  * drawer still checks the location against its own references, so a stale entry only costs a no-op call.
  */
 export class ReferencedLocationsIndex {
-	readonly #byControl = new Map<string, ReadonlySet<ControlLocationString>>()
-	readonly #byLocation = new Map<ControlLocationString, Set<string>>()
+	readonly #byControl = new Map<SomeControlId, ReadonlySet<ControlLocationString>>()
+	readonly #byLocation = new Map<ControlLocationString, Set<SomeControlId>>()
 
 	/**
 	 * Replace the locations referenced by a control
 	 * @param locations The referenced location strings, or null when it references none
 	 */
-	setControlReferences(controlId: string, locations: ReadonlySet<ControlLocationString> | null): void {
+	setControlReferences(controlId: SomeControlId, locations: ReadonlySet<ControlLocationString> | null): void {
 		const previous = this.#byControl.get(controlId)
 		if (previous) {
 			for (const location of previous) {
@@ -48,16 +49,16 @@ export class ReferencedLocationsIndex {
 	}
 
 	/** Forget everything a control referenced (eg it was deleted) */
-	forgetControl(controlId: string): void {
+	forgetControl(controlId: SomeControlId): void {
 		this.setControlReferences(controlId, null)
 	}
 
 	/** The ids of the controls whose last draw referenced a location, or undefined if none did */
-	getControlsReferencing(location: ControlLocationString): ReadonlySet<string> | undefined {
+	getControlsReferencing(location: ControlLocationString): ReadonlySet<SomeControlId> | undefined {
 		return this.#byLocation.get(location)
 	}
 
-	#removeFromLocation(location: ControlLocationString, controlId: string): void {
+	#removeFromLocation(location: ControlLocationString, controlId: SomeControlId): void {
 		const controlIds = this.#byLocation.get(location)
 		if (!controlIds) return
 

@@ -1,5 +1,6 @@
 import { useMemo, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { GenericConfirmModalRef } from '~/Components/GenericConfirmModal.js'
@@ -25,7 +26,7 @@ export interface IEventEditorEventService {
 }
 
 export function useControlEventsEditorService(
-	controlId: string,
+	controlId: SomeControlId,
 	confirmModal: React.RefObject<GenericConfirmModalRef | null>
 ): IEventEditorService {
 	const addMutation = useMutationExt(trpc.controls.events.add.mutationOptions())

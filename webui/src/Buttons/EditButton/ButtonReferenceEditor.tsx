@@ -4,7 +4,7 @@ import { useSubscription } from '@trpc/tanstack-react-query'
 import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useId } from 'react'
-import { formatLocation } from '@companion-app/shared/ControlId.js'
+import { formatLocation, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { ExpressionStreamResult } from '@companion-app/shared/ExpressionResult.js'
 import type { ButtonReferenceButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -21,7 +21,7 @@ import { ButtonLocationInput } from './ButtonLocationInput.js'
 
 interface ButtonReferenceEditorProps {
 	config: ButtonReferenceButtonModel
-	controlId: string
+	controlId: SomeControlId
 	navigateToControl: ((location: ControlLocation) => void) | undefined
 }
 
@@ -71,7 +71,7 @@ export const ButtonReferenceEditor = observer(function ButtonReferenceEditor({
 })
 
 interface ResolvedLocationRowProps {
-	controlId: string
+	controlId: SomeControlId
 	location: ExpressionOrValue<string>
 	navigateToControl: ((location: ControlLocation) => void) | undefined
 }
