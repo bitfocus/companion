@@ -1,11 +1,18 @@
 import z from 'zod'
 import { getControlIdKind, zodControlIds, type ControlIdKind, type ControlIdOfKind } from '../ControlId.js'
 import type { ObjectPatch } from '../Diff.js'
-import { SomeButtonModelSchema, type NormalButtonRuntimeProps } from './ButtonModel.js'
-import { ExpressionVariableModelSchema } from './ExpressionVariableModel.js'
+import type { KeyValueChange } from '../Util/KeyValue.js'
+import {
+	ButtonReferenceButtonOptionsSchema,
+	LayeredButtonOptionsSchema,
+	LinkButtonOptionsSchema,
+	SomeButtonModelSchema,
+	type NormalButtonRuntimeProps,
+} from './ButtonModel.js'
+import { ExpressionVariableModelSchema, ExpressionVariableOptionsSchema } from './ExpressionVariableModel.js'
 import type { LinkButtonRuntimeProps } from './Link.js'
 import { PageControlModelSchema } from './PageControlModel.js'
-import { TriggerModelSchema } from './TriggerModel.js'
+import { TriggerModelSchema, TriggerOptionsSchema } from './TriggerModel.js'
 
 export const SomeControlModelSchema = z.discriminatedUnion('type', [
 	...SomeButtonModelSchema.options,
@@ -117,3 +124,35 @@ export interface UIControlUpdateRuntime {
 export interface UIControlUpdateDestroy {
 	type: 'destroy'
 }
+
+/** The options schema of each type of control that has options */
+const CONTROL_OPTIONS_SCHEMAS = {
+	'button-layered': LayeredButtonOptionsSchema,
+	'preset-reference': LayeredButtonOptionsSchema,
+	'button-reference': ButtonReferenceButtonOptionsSchema,
+	'link-button': LinkButtonOptionsSchema,
+	trigger: TriggerOptionsSchema,
+	'expression-variable': ExpressionVariableOptionsSchema,
+} as const satisfies Partial<Record<SomeControlModel['type'], z.ZodObject>>
+
+export type ControlTypeWithOptions = keyof typeof CONTROL_OPTIONS_SCHEMAS
+
+/** The options of a type of control */
+export type ControlOptionsOfType<T extends ControlTypeWithOptions> = z.output<(typeof CONTROL_OPTIONS_SCHEMAS)[T]>
+
+/** A change to one option of a control, for the type of control it is. Checking `controlType` then `key` narrows `value` */
+export type ControlOptionsChange = {
+	[T in ControlTypeWithOptions]: { controlType: T } & KeyValueChange<ControlOptionsOfType<T>>
+}[ControlTypeWithOptions]
+
+/**
+ * Checks a {@link ControlOptionsChange}: the key must be an option of that type of control, and the value valid for it.
+ * It is built from the options schemas, so it checks exactly what the type describes
+ */
+export const zodControlOptionsChange = z.union(
+	Object.entries(CONTROL_OPTIONS_SCHEMAS).flatMap(([controlType, schema]) =>
+		Object.entries(schema.shape).map(([key, value]) =>
+			z.object({ controlType: z.literal(controlType), key: z.literal(key), value })
+		)
+	)
+) as unknown as z.ZodType<ControlOptionsChange, ControlOptionsChange>

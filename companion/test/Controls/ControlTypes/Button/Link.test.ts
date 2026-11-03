@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import { parseLinkButtonOptions, type LinkButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { ButtonGraphicsDecorationType, ButtonGraphicsShowStatusIcons } from '@companion-app/shared/Model/StyleModel.js'
 import type { ControlDependencies } from '../../../../lib/Controls/ControlDependencies.js'
 import { ControlButtonLink } from '../../../../lib/Controls/ControlTypes/Button/Link.js'
 import { LINK_ICON_SVG, LINK_SLASH_ICON_SVG } from '../../../../lib/Controls/ControlTypes/Button/LinkButtonIcons.js'
@@ -126,7 +127,7 @@ describe('ControlButtonLink', () => {
 			{ type: 'text', text: 'Remote\nbad location' },
 		])
 
-		control.optionsSetField('location', { value: '', isExpression: false })
+		control.optionsSetField({ key: 'location', value: { value: '', isExpression: false } })
 		expect(control.toRuntimeJSON().status).toBe('unconfigured')
 	})
 
@@ -140,10 +141,10 @@ describe('ControlButtonLink', () => {
 		const control = new ControlButtonLink(deps, MY_CONTROL_ID, null, false)
 		expect(linkButtons.setTarget).toHaveBeenLastCalledWith(MY_CONTROL_ID, null, expect.any(Function))
 
-		control.optionsSetField('peerId', 'peer')
+		control.optionsSetField({ key: 'peerId', value: 'peer' })
 		expect(linkButtons.setTarget).toHaveBeenLastCalledWith(MY_CONTROL_ID, null, expect.any(Function))
 
-		control.optionsSetField('location', { value: '1/0/0', isExpression: false })
+		control.optionsSetField({ key: 'location', value: { value: '1/0/0', isExpression: false } })
 		expect(linkButtons.setTarget).toHaveBeenLastCalledWith(
 			MY_CONTROL_ID,
 			{ peerId: 'peer', location: { pageNumber: 1, row: 0, column: 0 } },
@@ -177,11 +178,11 @@ describe('ControlButtonLink', () => {
 
 	it('rejects invalid options', () => {
 		const control = new ControlButtonLink(deps, MY_CONTROL_ID, null, false)
-		expect(control.optionsSetField('peerId', 5)).toBe(false)
-		expect(control.optionsSetField('location', 'nope')).toBe(false)
-		expect(control.optionsSetField('location', { value: 5, isExpression: false })).toBe(false)
-		expect(control.optionsSetField('location', { isExpression: true })).toBe(false)
-		expect(control.optionsSetField('other', 'x')).toBe(false)
+		expect(control.optionsSetField({ key: 'peerId', value: 5 } as any)).toBe(false)
+		expect(control.optionsSetField({ key: 'location', value: 'nope' } as any)).toBe(false)
+		expect(control.optionsSetField({ key: 'location', value: { value: 5, isExpression: false } } as any)).toBe(false)
+		expect(control.optionsSetField({ key: 'location', value: { isExpression: true } } as any)).toBe(false)
+		expect(control.optionsSetField({ key: 'other', value: 'x' } as any)).toBe(false)
 	})
 
 	it('resolves the location again when a variable it uses changes', () => {
@@ -285,10 +286,10 @@ describe('ControlButtonLink', () => {
 		const control = new ControlButtonLink(deps, MY_CONTROL_ID, makeModel('peer', '1/0/0'), false)
 		expect(linkButtons.setDecoration).toHaveBeenLastCalledWith(MY_CONTROL_ID, 'default')
 
-		expect(control.optionsSetField('decoration', 'bogus')).toBe(false)
-		expect(control.optionsSetField('showStatusIcons', 'bogus')).toBe(false)
-		expect(control.optionsSetField('decoration', 'none')).toBe(true)
-		expect(control.optionsSetField('showStatusIcons', 'all')).toBe(true)
+		expect(control.optionsSetField({ key: 'decoration', value: 'bogus' } as any)).toBe(false)
+		expect(control.optionsSetField({ key: 'showStatusIcons', value: 'bogus' } as any)).toBe(false)
+		expect(control.optionsSetField({ key: 'decoration', value: ButtonGraphicsDecorationType.None })).toBe(true)
+		expect(control.optionsSetField({ key: 'showStatusIcons', value: ButtonGraphicsShowStatusIcons.ShowAll })).toBe(true)
 		expect(linkButtons.setDecoration).toHaveBeenLastCalledWith(MY_CONTROL_ID, 'none')
 
 		expect((await control.drawing.getDrawStyle()).elements[0]).toMatchObject({

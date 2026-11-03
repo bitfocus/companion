@@ -1,4 +1,3 @@
-import type { JsonValue } from 'type-fest'
 import type z from 'zod'
 import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import {
@@ -12,6 +11,7 @@ import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { NoRuntimeProps } from '@companion-app/shared/Model/Controls.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { ParseLocationString } from '../../../Internal/Util.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
@@ -182,13 +182,13 @@ export class ControlButtonReference
 	/**
 	 * Update an option field. Only `location` (the mirrored target) and `notes` are editable.
 	 */
-	optionsSetField(key: string, value: JsonValue | undefined): boolean {
-		const parsed = parseOptionsField(this.optionsSchema, this.options, key, value)
-		if (!parsed) return false
+	optionsSetField(change: KeyValueChange<ButtonReferenceButtonModel['options']>): boolean {
+		const options = parseOptionsField(this.optionsSchema, this.options, change)
+		if (!options) return false
 
-		this.options = parsed.options
+		this.options = options
 
-		switch (parsed.key) {
+		switch (change.key) {
 			case 'notes':
 				this.commitChange(false)
 				break
@@ -196,7 +196,7 @@ export class ControlButtonReference
 				this.commitChange(true)
 				break
 			default:
-				assertNever(parsed.key)
+				assertNever(change)
 		}
 		return true
 	}

@@ -21,7 +21,7 @@ export function LinkButtonPanel({
 	config,
 	runtimeProps,
 }: LinkButtonPanelProps): React.JSX.Element {
-	const setControlNotes = useControlNotesSetter(controlId)
+	const setControlNotes = useControlNotesSetter(controlId, 'link-button')
 	const notesState = useNotesEditor(controlId, config.options.notes, setControlNotes)
 
 	return (

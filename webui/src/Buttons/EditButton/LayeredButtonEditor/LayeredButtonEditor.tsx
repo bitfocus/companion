@@ -3,11 +3,7 @@ import { observer } from 'mobx-react-lite'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { Group, Panel, Separator } from 'react-resizable-panels'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
-import type {
-	LayeredButtonModel,
-	NormalButtonRuntimeProps,
-	SomeButtonModel,
-} from '@companion-app/shared/Model/ButtonModel.js'
+import type { LayeredButtonModel, NormalButtonRuntimeProps } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { LayeredStyleElementsProvider } from '~/Controls/Components/LayeredStyleElementsContext.js'
@@ -37,8 +33,8 @@ export const LayeredButtonEditor = observer(function LayeredButtonEditor({
 	location: ControlLocation
 	activeMainTab: string
 }) {
-	const configRef = useRef<SomeButtonModel>(config || undefined)
-	configRef.current = config || undefined // update the ref every render
+	const configRef = useRef<LayeredButtonModel>(config)
+	configRef.current = config // update the ref every render
 
 	const [styleStore] = useState(() => {
 		console.log('new store')

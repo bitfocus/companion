@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import type { ControlTypeWithOptions } from '@companion-app/shared/Model/Controls.js'
+import { useControlOptionsSetter } from './useControlOptionsSetter.js'
 
 export interface NotesEditorState {
 	/** Whatever the notes belong to (a control, a custom variable), so switching to another closes the editor */
@@ -38,15 +39,18 @@ export function useNotesEditor(
 }
 
 /** Saves the notes of a control (a button, trigger or expression variable) */
-export function useControlNotesSetter(controlId: SomeControlId): (notes: string) => void {
-	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
+export function useControlNotesSetter(
+	controlId: SomeControlId,
+	controlType: ControlTypeWithOptions
+): (notes: string) => void {
+	const setOption = useControlOptionsSetter(controlId, controlType)
 
 	return useCallback(
 		(notes: string) => {
-			setOptionsFieldMutation.mutateAsync({ controlId, key: 'notes', value: notes }).catch((e) => {
+			setOption('notes', notes).catch((e) => {
 				console.error('Failed to set notes:', e)
 			})
 		},
-		[setOptionsFieldMutation, controlId]
+		[setOption]
 	)
 }

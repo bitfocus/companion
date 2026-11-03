@@ -16,6 +16,7 @@ import {
 } from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { clamp } from '../../../Resources/Util.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
@@ -553,16 +554,16 @@ export class ControlTrigger
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean {
-		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
+	optionsSetField(change: KeyValueChange<TriggerOptions>, forceSet?: boolean): boolean {
+		if (!forceSet && (change.key === 'sortOrder' || change.key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
 
-		const parsed = parseOptionsField(this.optionsSchema, this.options, key, value)
-		if (!parsed) return false
+		const options = parseOptionsField(this.optionsSchema, this.options, change)
+		if (!options) return false
 
-		this.options = parsed.options
+		this.options = options
 
-		if (parsed.key === 'enabled') {
+		if (change.key === 'enabled') {
 			// Pretend the collection changed, to re-trigger the events
 			this.setCollectionEnabled(this.#collectionEnabled)
 		}

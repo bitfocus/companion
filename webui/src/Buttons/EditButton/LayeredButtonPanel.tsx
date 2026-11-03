@@ -20,7 +20,7 @@ export function LayeredButtonPanel({
 	config,
 	runtimeProps,
 }: LayeredButtonPanelProps): React.JSX.Element {
-	const setControlNotes = useControlNotesSetter(controlId)
+	const setControlNotes = useControlNotesSetter(controlId, 'button-layered')
 	const notesState = useNotesEditor(controlId, config.options.notes, setControlNotes)
 	const editorTabs = useButtonEditorMainTab(config.steps, LayeredButtonExtraTabs)
 

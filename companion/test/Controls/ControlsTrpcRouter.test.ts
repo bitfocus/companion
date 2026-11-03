@@ -48,6 +48,7 @@ function setup(options: { cells?: Cell[]; validPages?: number[]; gridSize?: User
 	const controlsMap = new Map<string, any>()
 	for (const { controlId } of cells) {
 		controlsMap.set(controlId, {
+			type: 'button-layered',
 			toJSON: vi.fn((_clone: boolean) => ({ type: 'button', __sourceId: controlId })),
 			triggerLocationHasChanged: vi.fn(),
 			supportsOptions: true,
@@ -341,12 +342,44 @@ describe('createControlsTrpcRouter', () => {
 
 			const result = await caller.setOptionsField({
 				controlId: CreateBankControlId('ctrlA'),
-				key: 'text',
-				value: 'hello',
+				change: { controlType: 'button-layered', key: 'notes', value: 'hello' },
 			})
 
 			expect(result).toBe(true)
-			expect(controlsMap.get(CreateBankControlId('ctrlA')).optionsSetField).toHaveBeenCalledWith('text', 'hello')
+			expect(controlsMap.get(CreateBankControlId('ctrlA')).optionsSetField).toHaveBeenCalledWith({
+				controlType: 'button-layered',
+				key: 'notes',
+				value: 'hello',
+			})
+		})
+
+		it('refuses a change for another type of control', async () => {
+			const { caller, controlsMap } = setup({
+				cells: [{ location: loc(1, 0, 0), controlId: CreateBankControlId('ctrlA') }],
+			})
+
+			await expect(
+				caller.setOptionsField({
+					controlId: CreateBankControlId('ctrlA'),
+					change: { controlType: 'trigger', key: 'name', value: 'hello' },
+				})
+			).rejects.toThrow(/is a button-layered, not a trigger/)
+			expect(controlsMap.get(CreateBankControlId('ctrlA')).optionsSetField).not.toHaveBeenCalled()
+		})
+
+		it('refuses an option that type of control does not have, or a value the option does not allow', async () => {
+			const { caller } = setup({
+				cells: [{ location: loc(1, 0, 0), controlId: CreateBankControlId('ctrlA') }],
+			})
+
+			for (const change of [
+				{ controlType: 'button-layered', key: 'text', value: 'hello' },
+				{ controlType: 'button-layered', key: 'rotaryActions', value: 'yes' },
+			]) {
+				await expect(
+					caller.setOptionsField({ controlId: CreateBankControlId('ctrlA'), change: change as any })
+				).rejects.toThrow()
+			}
 		})
 
 		it('returns false when the control does not exist', async () => {
@@ -354,8 +387,7 @@ describe('createControlsTrpcRouter', () => {
 
 			const result = await caller.setOptionsField({
 				controlId: CreateBankControlId('missing'),
-				key: 'text',
-				value: 'hello',
+				change: { controlType: 'button-layered', key: 'notes', value: 'hello' },
 			})
 
 			expect(result).toBe(false)

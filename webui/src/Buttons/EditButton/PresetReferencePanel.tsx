@@ -15,7 +15,7 @@ interface PresetReferencePanelProps {
 }
 
 export function PresetReferencePanel({ controlId, location, config }: PresetReferencePanelProps): React.JSX.Element {
-	const setControlNotes = useControlNotesSetter(controlId)
+	const setControlNotes = useControlNotesSetter(controlId, 'preset-reference')
 	const notesState = useNotesEditor(controlId, config.options.notes, setControlNotes)
 
 	return (

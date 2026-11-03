@@ -1,5 +1,4 @@
 import debounceFn from 'debounce-fn'
-import type { JsonValue } from 'type-fest'
 import type z from 'zod'
 import type { ExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
 import { diffObject } from '@companion-app/shared/Diff.js'
@@ -12,6 +11,7 @@ import {
 	type ExpressionVariableModel,
 	type ExpressionVariableOptions,
 } from '@companion-app/shared/Model/ExpressionVariableModel.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { VisitorReferencesCollector } from '../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../Resources/Visitors/ReferencesUpdater.js'
 import { ControlBase } from '../ControlBase.js'
@@ -235,21 +235,21 @@ export class ControlExpressionVariable
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean {
-		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
+	optionsSetField(change: KeyValueChange<ExpressionVariableOptions>, forceSet?: boolean): boolean {
+		if (!forceSet && (change.key === 'sortOrder' || change.key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
 
-		const parsed = parseOptionsField(this.optionsSchema, this.options, key, value)
-		if (!parsed) return false
+		const options = parseOptionsField(this.optionsSchema, this.options, change)
+		if (!options) return false
 
 		const oldVariableName = this.options.variableName
-		const newVariableName = parsed.options.variableName
+		const newVariableName = options.variableName
 		// Make sure the new name is valid
-		if (parsed.key === 'variableName' && newVariableName !== '' && !isLabelValid(newVariableName)) return false
+		if (change.key === 'variableName' && newVariableName !== '' && !isLabelValid(newVariableName)) return false
 
-		this.options = parsed.options
+		this.options = options
 
-		if (parsed.key === 'variableName') {
+		if (change.key === 'variableName') {
 			// Update the names map through the dependency
 			this.#expressionVariableNameMap.updateExpressionVariableName(this.controlId, oldVariableName, newVariableName)
 		}

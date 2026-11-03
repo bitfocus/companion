@@ -39,7 +39,7 @@ describe('trigger controls', () => {
 			value: exprVal('triggered'),
 		})
 		trigger.eventAdd({ id: nanoid(), type: 'variable_changed', enabled: true, options: { variableId: 'custom:watch' } })
-		trigger.optionsSetField('enabled', true)
+		trigger.optionsSetField({ key: 'enabled', value: true })
 		await settle()
 
 		app.registry.variables.custom.setValue('watch', 'go')
@@ -70,7 +70,7 @@ describe('trigger controls', () => {
 		expect(app.getCustomVariableValue('result')).toBe('initial')
 
 		// Enabling afterwards and changing again proves the first change was dropped, without an arbitrary sleep
-		trigger.optionsSetField('enabled', true)
+		trigger.optionsSetField({ key: 'enabled', value: true })
 		await settle()
 		app.registry.variables.custom.setValue('watch', 'go again')
 		await vi.waitFor(() => {
@@ -91,7 +91,7 @@ describe('trigger controls', () => {
 			value: exprExpr('$(custom:count) + 1'),
 		})
 		trigger.eventAdd({ id: nanoid(), type: 'button_press', enabled: true, options: {} })
-		trigger.optionsSetField('enabled', true)
+		trigger.optionsSetField({ key: 'enabled', value: true })
 		await settle()
 
 		app.pressButton(location, true)
@@ -118,7 +118,7 @@ describe('trigger controls', () => {
 			expression: exprVal(`$(custom:flag) == 'yes'`),
 		})
 		trigger.eventAdd({ id: nanoid(), type: 'variable_changed', enabled: true, options: { variableId: 'custom:input' } })
-		trigger.optionsSetField('enabled', true)
+		trigger.optionsSetField({ key: 'enabled', value: true })
 		await settle()
 
 		// Condition false: the event fires but the actions must not run
@@ -145,7 +145,7 @@ describe('trigger controls', () => {
 			value: exprExpr('$(custom:count) + 1'),
 		})
 		trigger.eventAdd({ id: nanoid(), type: 'interval', enabled: true, options: { seconds: 1 } })
-		trigger.optionsSetField('enabled', true)
+		trigger.optionsSetField({ key: 'enabled', value: true })
 		await settle()
 
 		// The first fire lands roughly two 1s ticks after arming

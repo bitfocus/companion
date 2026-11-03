@@ -1,4 +1,4 @@
-import type { JsonObject, JsonValue } from 'type-fest'
+import type { JsonValue } from 'type-fest'
 import type z from 'zod'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { SomeButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
@@ -7,6 +7,7 @@ import type { EventInstance } from '@companion-app/shared/Model/EventModel.js'
 import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import type { ButtonGraphicsElementUsage, ButtonStyleProperties } from '@companion-app/shared/Model/StyleModel.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import type { ControlBase, SomeControlJson } from './ControlBase.js'
 import type { SomeStepManager } from './Entities/ControlActionSetAndStepsManager.js'
 import type { SomeEntityPool } from './Entities/EntityListPoolEditingMixin.js'
@@ -17,7 +18,7 @@ export type SomeControl = ControlBase<SomeControlId, SomeControlJson, SomeContro
 	(ControlWithActions | ControlWithoutActions) &
 	(ControlWithEvents | ControlWithoutEvents) &
 	(ControlWithActionSets | ControlWithoutActionSets) &
-	(ControlWithOptions<JsonObject> | ControlWithoutOptions) &
+	(ControlWithOptions<Record<string, JsonValue | undefined>> | ControlWithoutOptions) &
 	(ControlWithPushed | ControlWithoutPushed) &
 	(ControlWithConvert | ControlWithoutConvert)
 
@@ -225,7 +226,7 @@ export interface ControlWithoutActionSets extends ControlBase<SomeControlId, Som
 	readonly supportsActionSets: false
 }
 
-export interface ControlWithOptions<TOptions extends JsonObject> extends ControlBase<
+export interface ControlWithOptions<TOptions extends object> extends ControlBase<
 	SomeControlId,
 	SomeControlJson,
 	SomeControlRuntimeProps
@@ -238,7 +239,7 @@ export interface ControlWithOptions<TOptions extends JsonObject> extends Control
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean
+	optionsSetField(change: KeyValueChange<TOptions>, forceSet?: boolean): boolean
 }
 
 export interface ControlWithoutOptions extends ControlBase<SomeControlId, SomeControlJson, SomeControlRuntimeProps> {

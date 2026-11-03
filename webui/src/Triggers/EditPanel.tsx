@@ -11,6 +11,7 @@ import { TextInputFieldSimple } from '~/Components/TextInputField.js'
 import { ControlEntitiesEditor } from '~/Controls/EntitiesEditor.js'
 import { LocalVariablesEditor } from '~/Controls/LocalVariablesEditor.js'
 import { AddNoteButton, NotesStrip } from '~/Controls/Notes.js'
+import { useControlOptionsSetter } from '~/Controls/useControlOptionsSetter.js'
 import { useControlNotesSetter, useNotesEditor } from '~/Controls/useNotesEditor.js'
 import { useControlConfig } from '~/Hooks/useControlConfig.js'
 import { useLocalStorage } from '~/Hooks/useLocalStorage.js'
@@ -53,27 +54,21 @@ interface TriggerPanelContentProps {
 }
 
 function TriggerPanelContent({ config, controlId }: TriggerPanelContentProps): React.ReactNode {
-	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
+	const setOption = useControlOptionsSetter(controlId, 'trigger')
 	const triggerNameInputId = `trigger-name-${controlId}`
 	const [isEditingName, setIsEditingName] = useState(false)
 
-	const setControlNotes = useControlNotesSetter(controlId)
+	const setControlNotes = useControlNotesSetter(controlId, 'trigger')
 	const notesState = useNotesEditor(controlId, config.options.notes, setControlNotes)
 	const [activeTab, setActiveTab] = useLocalStorage<'behaviour' | 'variables'>('triggerEditor.activeTab', 'behaviour')
 
 	const setName = useCallback(
 		(name: string) => {
-			setOptionsFieldMutation
-				.mutateAsync({
-					controlId,
-					key: 'name',
-					value: name,
-				})
-				.catch((e) => {
-					console.error(`Set name failed: ${stringifyError(e)}`)
-				})
+			setOption('name', name).catch((e) => {
+				console.error(`Set name failed: ${stringifyError(e)}`)
+			})
 		},
-		[setOptionsFieldMutation, controlId]
+		[setOption]
 	)
 
 	const localVariablesStore = useLocalVariablesStore(controlId, config.localVariables)

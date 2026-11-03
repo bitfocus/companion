@@ -101,29 +101,29 @@ describe('ControlButtonReference', () => {
 	describe('optionsSetField', () => {
 		it('accepts a new location', () => {
 			const control = createControl()
-			expect(control.optionsSetField('location', plainLocation('5/0/0'))).toBe(true)
+			expect(control.optionsSetField({ key: 'location', value: plainLocation('5/0/0') })).toBe(true)
 			expect(control.toJSON().options.location).toEqual(plainLocation('5/0/0'))
 		})
 
 		it('accepts notes', () => {
 			const control = createControl()
-			expect(control.optionsSetField('notes', 'a note')).toBe(true)
+			expect(control.optionsSetField({ key: 'notes', value: 'a note' })).toBe(true)
 			expect(control.toJSON().options.notes).toBe('a note')
 		})
 
 		it('rejects a non-string notes value', () => {
 			const control = createControl()
-			expect(control.optionsSetField('notes', 5 as any)).toBe(false)
+			expect(control.optionsSetField({ key: 'notes', value: 5 as any })).toBe(false)
 		})
 
 		it('rejects a location that is not an expression-or-value', () => {
 			const control = createControl()
-			expect(control.optionsSetField('location', 'nope' as any)).toBe(false)
+			expect(control.optionsSetField({ key: 'location', value: 'nope' as any })).toBe(false)
 		})
 
 		it('rejects any other field', () => {
 			const control = createControl()
-			expect(control.optionsSetField('rotaryActions', true)).toBe(false)
+			expect(control.optionsSetField({ key: 'rotaryActions', value: true } as any)).toBe(false)
 		})
 	})
 

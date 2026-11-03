@@ -78,10 +78,10 @@ export function createExpressionVariableTrpcRouter(
 				}
 			}
 			const maxRank = Math.max(0, ...allExpressionVariables.map((control) => control.options.sortOrder))
-			newControl.optionsSetField('sortOrder', maxRank, true)
+			newControl.optionsSetField({ key: 'sortOrder', value: maxRank }, true)
 
 			expressionVariableNamesMap.addExpressionVariable(controlId, newControl.options.variableName)
-			newControl.optionsSetField('variableName', input.variableName)
+			newControl.optionsSetField({ key: 'variableName', value: input.variableName })
 
 			// Ensure it is stored to the db
 			newControl.commitChange()
@@ -146,7 +146,7 @@ export function createExpressionVariableTrpcRouter(
 
 				// update the collectionId of the expression variable being moved if needed
 				if (thisExpressionVariable.options.collectionId !== (collectionId ?? undefined)) {
-					thisExpressionVariable.optionsSetField('collectionId', collectionId ?? undefined, true)
+					thisExpressionVariable.optionsSetField({ key: 'collectionId', value: collectionId ?? undefined }, true)
 				}
 
 				// find all the other triggers with the matching collectionId
@@ -173,7 +173,7 @@ export function createExpressionVariableTrpcRouter(
 				sortedExpressionVariables.forEach((expressionVariable, index) => {
 					if (expressionVariable.options.sortOrder === index) return // No change
 
-					expressionVariable.optionsSetField('sortOrder', index, true)
+					expressionVariable.optionsSetField({ key: 'sortOrder', value: index }, true)
 				})
 
 				return true

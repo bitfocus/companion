@@ -8,9 +8,9 @@ import {
 	BUTTON_DECORATION_CHOICES,
 	BUTTON_STATUS_ICONS_CHOICES,
 } from '@companion-app/shared/Graphics/ElementPropertiesSchemas.js'
-import type { LinkButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
+import type { LinkButtonModel, LinkButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
 import type { LinkButtonRuntimeProps } from '@companion-app/shared/Model/Link.js'
-import type { ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import { ButtonGraphicsDecorationType, ButtonGraphicsShowStatusIcons } from '@companion-app/shared/Model/StyleModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { Button } from '~/Components/Button.js'
 import { DropdownInputField } from '~/Components/DropdownInputField.js'
@@ -18,7 +18,7 @@ import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
 import { Note } from '~/Components/Note.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { useControlOptionsSetter } from '~/Controls/useControlOptionsSetter.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { ButtonLocationInput } from './ButtonLocationInput.js'
@@ -36,14 +36,14 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 	controlId,
 	runtimeProps,
 }: LinkButtonEditorProps) {
-	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
+	const setOptionValue = useControlOptionsSetter(controlId, 'link-button')
 	const setOption = useCallback(
-		(key: 'peerId' | 'location' | 'decoration' | 'showStatusIcons', value: string | ExpressionOrValue<string>) => {
-			setOptionsFieldMutation
-				.mutateAsync({ controlId, key, value })
-				.catch((e) => console.error(`Failed to set link button ${key}: ${stringifyError(e)}`))
+		<K extends keyof LinkButtonOptions>(key: K, value: LinkButtonOptions[K]) => {
+			setOptionValue(key, value).catch((e) => {
+				console.error(`Failed to set link button ${key}: ${stringifyError(e)}`)
+			})
 		},
-		[setOptionsFieldMutation, controlId]
+		[setOptionValue]
 	)
 
 	const { link } = useContext(RootAppStoreContext)
@@ -114,7 +114,10 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 						htmlName={decorationFieldId}
 						choices={BUTTON_DECORATION_CHOICES}
 						value={config.options.decoration}
-						setValue={(value) => setOption('decoration', String(value))}
+						setValue={(value) => {
+							const decoration = Object.values(ButtonGraphicsDecorationType).find((v) => v === value)
+							if (decoration) setOption('decoration', decoration)
+						}}
 					/>
 				</Grid.Col>
 
@@ -126,7 +129,10 @@ export const LinkButtonEditor = observer(function LinkButtonEditor({
 						htmlName={statusIconsFieldId}
 						choices={BUTTON_STATUS_ICONS_CHOICES}
 						value={config.options.showStatusIcons}
-						setValue={(value) => setOption('showStatusIcons', String(value))}
+						setValue={(value) => {
+							const showStatusIcons = Object.values(ButtonGraphicsShowStatusIcons).find((v) => v === value)
+							if (showStatusIcons) setOption('showStatusIcons', showStatusIcons)
+						}}
 					/>
 					<div className="form-text">
 						The button is decorated here, as any button of this installation. With a top bar, a link among its status

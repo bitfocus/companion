@@ -158,7 +158,12 @@ describe('real module children across module-api versions', () => {
 			if (contract === 'v2') {
 				// The execution context reaches connection action options as $(this:*) variables. Only
 				// 2.x modules accept expressions in their options
-				expect(await app.trpc().controls.setOptionsField({ controlId, key: 'rotaryActions', value: true })).toBe(true)
+				expect(
+					await app.trpc().controls.setOptionsField({
+						controlId,
+						change: { controlType: 'button-layered', key: 'rotaryActions', value: true },
+					})
+				).toBe(true)
 				const rotateLocation = { stepId, setId: 'rotate_right' } as const
 				const rotateActionId = await app.trpc().controls.entities.add({
 					controlId,

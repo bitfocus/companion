@@ -40,8 +40,7 @@ describe('internal actions and feedbacks through button-references', () => {
 		if (!referenceId) throw new Error('Failed to create reference')
 		await app.trpc().controls.setOptionsField({
 			controlId: referenceId,
-			key: 'location',
-			value: exprVal('$(custom:target)'),
+			change: { controlType: 'button-reference', key: 'location', value: exprVal('$(custom:target)') },
 		})
 
 		return { controlA, controlB }

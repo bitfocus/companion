@@ -478,7 +478,7 @@ describe('ControlButtonLayered', () => {
 			const control = createControl(makeStorage([boxElement('box0')]))
 			const stepSpy = vi.spyOn(control.entities, 'stepExpressionUpdate')
 
-			control.optionsSetField('stepProgression', 'expression')
+			control.optionsSetField({ key: 'stepProgression', value: 'expression' })
 
 			expect(stepSpy).toHaveBeenCalled()
 		})
@@ -487,7 +487,7 @@ describe('ControlButtonLayered', () => {
 			const control = createControl(makeStorage([boxElement('box0')]))
 			const stepSpy = vi.spyOn(control.entities, 'stepExpressionUpdate')
 
-			control.optionsSetField('notes', 'hello')
+			control.optionsSetField({ key: 'notes', value: 'hello' })
 
 			expect(stepSpy).not.toHaveBeenCalled()
 		})
@@ -496,8 +496,8 @@ describe('ControlButtonLayered', () => {
 			const control = createControl(makeStorage([boxElement('box0')]))
 			const before = structuredClone(control.options)
 
-			expect(control.optionsSetField('stepProgression', 'sideways')).toBe(false)
-			expect(control.optionsSetField('rotaryActions', 'yes')).toBe(false)
+			expect(control.optionsSetField({ key: 'stepProgression', value: 'sideways' } as any)).toBe(false)
+			expect(control.optionsSetField({ key: 'rotaryActions', value: 'yes' } as any)).toBe(false)
 
 			expect(control.options).toEqual(before)
 		})
@@ -505,7 +505,7 @@ describe('ControlButtonLayered', () => {
 		it('rejects a key that is not an option', () => {
 			const control = createControl(makeStorage([boxElement('box0')]))
 
-			expect(control.optionsSetField('sparkle', true)).toBe(false)
+			expect(control.optionsSetField({ key: 'sparkle', value: true } as any)).toBe(false)
 			expect(control.options).not.toHaveProperty('sparkle')
 		})
 	})

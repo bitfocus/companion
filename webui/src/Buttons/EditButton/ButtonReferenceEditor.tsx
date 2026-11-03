@@ -16,7 +16,8 @@ import { Form, FormLabel } from '~/Components/Form.js'
 import { Grid } from '~/Components/Grid'
 import { InputValidityIcon, type InputValidity } from '~/Components/InputValidity.js'
 import { Note } from '~/Components/Note.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { useControlOptionsSetter } from '~/Controls/useControlOptionsSetter.js'
+import { trpc } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 import { ButtonLocationInput } from './ButtonLocationInput.js'
 
@@ -35,15 +36,13 @@ export const ButtonReferenceEditor = observer(function ButtonReferenceEditor({
 	controlId,
 	navigateToControl,
 }: ButtonReferenceEditorProps) {
-	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
+	const setOption = useControlOptionsSetter(controlId, 'button-reference')
 
 	const setLocation = useCallback(
 		(value: ExpressionOrValue<string>) => {
-			setOptionsFieldMutation
-				.mutateAsync({ controlId, key: 'location', value })
-				.catch((e) => console.error(`Failed to set reference location: ${stringifyError(e)}`))
+			setOption('location', value).catch((e) => console.error(`Failed to set reference location: ${stringifyError(e)}`))
 		},
-		[setOptionsFieldMutation, controlId]
+		[setOption]
 	)
 
 	const location = config.options.location

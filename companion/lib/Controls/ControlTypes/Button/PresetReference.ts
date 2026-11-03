@@ -1,4 +1,3 @@
-import type { JsonValue } from 'type-fest'
 import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import {
 	LayeredButtonOptionsSchema,
@@ -8,6 +7,7 @@ import {
 	type PresetReferenceButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { VariableValue, VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
@@ -272,13 +272,13 @@ export class ControlButtonPresetReference
 	 * metadata, not part of the preset, and are preserved across preset updates). Any other option is
 	 * rejected - so a reference stays read-only even as new option fields are added in the future.
 	 */
-	optionsSetField(key: string, value: JsonValue | undefined): boolean {
-		if (key !== 'notes') return false
+	optionsSetField(change: KeyValueChange<LayeredButtonOptions>): boolean {
+		if (change.key !== 'notes') return false
 
-		const parsed = parseOptionsField(this.optionsSchema, this.options, key, value)
-		if (!parsed) return false
+		const options = parseOptionsField(this.optionsSchema, this.options, change)
+		if (!options) return false
 
-		this.options = parsed.options
+		this.options = options
 		this.commitChange(false)
 		return true
 	}

@@ -1,4 +1,3 @@
-import type { JsonValue } from 'type-fest'
 import type z from 'zod'
 import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
@@ -12,6 +11,7 @@ import type {
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import type { DrawStyleButtonStateProps } from '@companion-app/shared/Model/StyleModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { ControlActionRunner } from '../../ActionRunner.js'
 import { ControlBase } from '../../ControlBase.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
@@ -439,16 +439,16 @@ export abstract class ButtonControlBase<TJson extends LayeredButtonModel, TOptio
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: JsonValue | undefined): boolean {
-		const parsed = parseOptionsField(this.optionsSchema, this.options, key, value)
-		if (!parsed) return false
+	optionsSetField(change: KeyValueChange<TOptions>): boolean {
+		const options = parseOptionsField(this.optionsSchema, this.options, change)
+		if (!options) return false
 
 		// Check if rotary_actions should be added/remove
-		if (parsed.key === 'rotaryActions') {
-			this.entities.setupRotaryActionSets(!!value, true)
+		if (change.key === 'rotaryActions') {
+			this.entities.setupRotaryActionSets(!!change.value, true)
 		}
 
-		this.options = parsed.options
+		this.options = options
 
 		this.commitChange()
 

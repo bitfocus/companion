@@ -18,6 +18,7 @@ import {
 	ButtonGraphicsShowStatusIcons,
 	type ButtonStyleProperties,
 } from '@companion-app/shared/Model/StyleModel.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
 import type { ControlDependencies } from '../../ControlDependencies.js'
@@ -299,10 +300,10 @@ export class ControlButtonLayered
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: JsonValue | undefined): boolean {
-		const changed = super.optionsSetField(key, value)
+	optionsSetField(change: KeyValueChange<LayeredButtonOptions>): boolean {
+		const changed = super.optionsSetField(change)
 
-		if (key === 'stepProgression' || key === 'stepExpression') {
+		if (change.key === 'stepProgression' || change.key === 'stepExpression') {
 			this.entities.stepExpressionUpdate(this.options)
 		}
 

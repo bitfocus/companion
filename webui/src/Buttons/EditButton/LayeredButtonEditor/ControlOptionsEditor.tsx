@@ -3,7 +3,11 @@ import { useCallback, useId, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import { StepExpressionBlockedVariables } from '@companion-app/shared/ControlLocation.js'
-import type { LayeredButtonOptions } from '@companion-app/shared/Model/ButtonModel.js'
+import {
+	LayeredButtonOptionsSchema,
+	type LayeredButtonModel,
+	type LayeredButtonOptions,
+} from '@companion-app/shared/Model/ButtonModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import type { DropdownChoice } from '@companion-module/base'
 import { SimpleDropdownInputField } from '~/Components/DropdownInputFieldSimple'
@@ -15,13 +19,13 @@ import { InlineHelpIcon } from '~/Components/InlineHelp.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
 import { InputFeatureIcons } from '~/Controls/InputFeatures'
 import { EntityListActionContext, type LocalVariablesStore } from '~/Controls/LocalVariablesStore.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
+import { useControlOptionsSetter } from '~/Controls/useControlOptionsSetter.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 
 interface ControlOptionsEditorProps {
 	controlId: SomeControlId
 	options: LayeredButtonOptions
-	configRef: React.RefObject<any> // TODO
+	configRef: React.RefObject<LayeredButtonModel>
 	localVariablesStore: LocalVariablesStore
 }
 
@@ -33,27 +37,30 @@ export const ControlOptionsEditor = observer(function ControlOptionsEditor({
 }: ControlOptionsEditorProps): React.JSX.Element | null {
 	const confirmRef = useRef<GenericConfirmModalRef>(null)
 
-	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
+	const setOption = useControlOptionsSetter(controlId, 'button-layered')
 
 	const setValueInner = useCallback(
-		(key: string, value: JsonValue) => {
-			if (configRef.current === undefined || value !== configRef.current.options[key]) {
-				setOptionsFieldMutation.mutateAsync({ controlId, key, value }).catch((e) => {
+		<K extends keyof LayeredButtonOptions>(key: K, value: LayeredButtonOptions[K]) => {
+			if (value !== configRef.current.options[key]) {
+				setOption(key, value).catch((e) => {
 					console.error(`Set field failed: ${stringifyError(e)}`)
 				})
 			}
 		},
-		[setOptionsFieldMutation, controlId, configRef]
+		[setOption, configRef]
 	)
 
 	const setStepProgressionValue = useCallback(
-		(val: JsonValue) => setValueInner('stepProgression', val),
+		(val: JsonValue) => {
+			const stepProgression = LayeredButtonOptionsSchema.shape.stepProgression.safeParse(val)
+			if (stepProgression.success) setValueInner('stepProgression', stepProgression.data)
+		},
 		[setValueInner]
 	)
 	const setStepExpressionValue = useCallback((val: string) => setValueInner('stepExpression', val), [setValueInner])
 	const setRotaryActions = useCallback(
 		(val: boolean) => {
-			if (!val && confirmRef.current && configRef.current && configRef.current.options.rotaryActions === true) {
+			if (!val && confirmRef.current && configRef.current.options.rotaryActions === true) {
 				confirmRef.current.show(
 					'Disable rotary actions',
 					'Are you sure? This will clear any rotary actions that have been defined.',

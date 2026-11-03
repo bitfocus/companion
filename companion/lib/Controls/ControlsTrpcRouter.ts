@@ -8,6 +8,7 @@ import {
 	type SomeButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { zodControlOptionsChange } from '@companion-app/shared/Model/Controls.js'
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import type { InstanceDefinitions } from '../Instance/Definitions.js'
@@ -364,19 +365,19 @@ export function createControlsTrpcRouter(
 			.input(
 				z.object({
 					controlId: zodSomeControlId,
-					key: z.string(),
-					value: JsonValueSchema.optional(),
+					change: zodControlOptionsChange,
 				})
 			)
 			.mutation(async ({ input }) => {
 				const control = controlsMap.get(input.controlId)
 				if (!control) return false
 
-				if (control.supportsOptions) {
-					return control.optionsSetField(input.key, input.value)
-				} else {
-					throw new Error(`Control "${input.controlId}" does not support options`)
+				if (!control.supportsOptions) throw new Error(`Control "${input.controlId}" does not support options`)
+				if (control.type !== input.change.controlType) {
+					throw new Error(`Control "${input.controlId}" is a ${control.type}, not a ${input.change.controlType}`)
 				}
+
+				return control.optionsSetField(input.change)
 			}),
 	}
 }

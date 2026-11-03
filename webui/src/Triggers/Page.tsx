@@ -28,6 +28,7 @@ import { NonIdealState } from '~/Components/NonIdealState.js'
 import { SearchBox } from '~/Components/SearchBox'
 import { StatusBadge } from '~/Components/StatusBadge.js'
 import { SwitchInputField } from '~/Components/SwitchInputField'
+import { useControlOptionsSetter } from '~/Controls/useControlOptionsSetter.js'
 import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper'
 import { useActivateOnKey } from '~/Hooks/useActivateOnKey.js'
 import { useTwoPanelMode } from '~/Hooks/useLayoutMode'
@@ -258,7 +259,7 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 	const deleteMutation = useMutationExt(trpc.controls.triggers.delete.mutationOptions())
 	const cloneMutation = useMutationExt(trpc.controls.triggers.clone.mutationOptions())
 
-	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
+	const setOption = useControlOptionsSetter(CreateTriggerControlId(item.id), 'trigger')
 
 	const { notifier } = useContext(RootAppStoreContext)
 	const testActionsMutation = useMutationExt(trpc.controls.triggers.testActions.mutationOptions())
@@ -281,17 +282,11 @@ const TriggersTableRow = observer(function TriggersTableRow2({ item }: TriggersT
 
 	const doEnableDisable = useCallback(
 		(enabled: boolean) => {
-			setOptionsFieldMutation
-				.mutateAsync({
-					controlId: CreateTriggerControlId(item.id),
-					key: 'enabled',
-					value: enabled,
-				})
-				.catch((e) => {
-					console.error('failed to toggle trigger state', e)
-				})
+			setOption('enabled', enabled).catch((e) => {
+				console.error('failed to toggle trigger state', e)
+			})
 		},
-		[setOptionsFieldMutation, item.id]
+		[setOption]
 	)
 
 	const doDelete = useCallback(() => {

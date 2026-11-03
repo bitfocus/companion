@@ -23,7 +23,7 @@ function createTrigger(storage: TriggerModel | null = null): TriggerTestContext 
 /** Create a trigger with both options.enabled and the parent collection enabled */
 function createEnabledTrigger(): TriggerTestContext {
 	const context = createTrigger()
-	context.trigger.optionsSetField('enabled', true)
+	context.trigger.optionsSetField({ key: 'enabled', value: true })
 	context.trigger.setCollectionEnabled(true)
 	vi.runAllTimers()
 	context.dbSet.mockClear()
@@ -128,7 +128,7 @@ describe('ControlTrigger', () => {
 
 		test('does nothing when enabled but the collection is disabled', () => {
 			const { trigger, runMultipleActions } = createTrigger()
-			trigger.optionsSetField('enabled', true)
+			trigger.optionsSetField({ key: 'enabled', value: true })
 			vi.runAllTimers()
 
 			trigger.executeActions(12345, TriggerExecutionSource.Other)
@@ -170,7 +170,7 @@ describe('ControlTrigger', () => {
 			const { trigger, dbSet } = createTrigger()
 			dbSet.mockClear()
 
-			expect(trigger.optionsSetField('name', 'Renamed')).toBe(true)
+			expect(trigger.optionsSetField({ key: 'name', value: 'Renamed' })).toBe(true)
 
 			expect(trigger.options.name).toBe('Renamed')
 			expect(dbSet).toHaveBeenCalledTimes(1)
@@ -179,26 +179,26 @@ describe('ControlTrigger', () => {
 		test('sortOrder and collectionId are rejected unless forced', () => {
 			const { trigger } = createTrigger()
 
-			expect(() => trigger.optionsSetField('sortOrder', 5)).toThrow()
-			expect(() => trigger.optionsSetField('collectionId', 'col1')).toThrow()
+			expect(() => trigger.optionsSetField({ key: 'sortOrder', value: 5 })).toThrow()
+			expect(() => trigger.optionsSetField({ key: 'collectionId', value: 'col1' })).toThrow()
 
-			expect(trigger.optionsSetField('sortOrder', 5, true)).toBe(true)
+			expect(trigger.optionsSetField({ key: 'sortOrder', value: 5 }, true)).toBe(true)
 			expect(trigger.options.sortOrder).toBe(5)
 		})
 
 		test('banned properties are rejected', () => {
 			const { trigger } = createTrigger()
 
-			expect(() => trigger.optionsSetField('__proto__', 1)).toThrow(/not allowed/)
+			expect(() => trigger.optionsSetField({ key: '__proto__', value: 1 } as any)).toThrow(/not allowed/)
 		})
 
 		test('a value the option does not allow, or a key that is not an option, is rejected', () => {
 			const { trigger, dbSet } = createTrigger()
 			dbSet.mockClear()
 
-			expect(trigger.optionsSetField('enabled', 'sometimes')).toBe(false)
-			expect(trigger.optionsSetField('name', 5)).toBe(false)
-			expect(trigger.optionsSetField('sparkle', true)).toBe(false)
+			expect(trigger.optionsSetField({ key: 'enabled', value: 'sometimes' } as any)).toBe(false)
+			expect(trigger.optionsSetField({ key: 'name', value: 5 } as any)).toBe(false)
+			expect(trigger.optionsSetField({ key: 'sparkle', value: true } as any)).toBe(false)
 
 			expect(trigger.options).toEqual(TriggerOptionsSchema.parse({}))
 			expect(dbSet).not.toHaveBeenCalled()
@@ -206,9 +206,9 @@ describe('ControlTrigger', () => {
 
 		test('an optional option can be cleared', () => {
 			const { trigger } = createTrigger()
-			trigger.optionsSetField('collectionId', 'col1', true)
+			trigger.optionsSetField({ key: 'collectionId', value: 'col1' }, true)
 
-			expect(trigger.optionsSetField('collectionId', undefined, true)).toBe(true)
+			expect(trigger.optionsSetField({ key: 'collectionId', value: undefined }, true)).toBe(true)
 			expect(trigger.options.collectionId).toBeUndefined()
 		})
 	})
@@ -393,7 +393,7 @@ describe('ControlTrigger', () => {
 			)
 
 			listener.mockClear()
-			trigger.optionsSetField('name', 'Renamed')
+			trigger.optionsSetField({ key: 'name', value: 'Renamed' })
 
 			expect(listener).toHaveBeenCalledWith(
 				CONTROL_ID,
@@ -481,7 +481,7 @@ describe('ControlTrigger', () => {
 			// The condition becomes true while the trigger is disabled
 			condition.mockReturnValue(true)
 
-			trigger.optionsSetField('enabled', true)
+			trigger.optionsSetField({ key: 'enabled', value: true })
 			trigger.setCollectionEnabled(true)
 			vi.runAllTimers()
 

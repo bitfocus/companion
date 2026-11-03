@@ -159,21 +159,21 @@ describe('ControlButtonPresetReference', () => {
 	describe('optionsSetField', () => {
 		it('allows editing notes', () => {
 			const control = createControl()
-			expect(control.optionsSetField('notes', 'my note')).toBe(true)
+			expect(control.optionsSetField({ key: 'notes', value: 'my note' })).toBe(true)
 			expect(control.toJSON().options.notes).toBe('my note')
 		})
 
 		it('rejects any option other than notes (stays read-only)', () => {
 			const control = createControl()
-			expect(control.optionsSetField('rotaryActions', true)).toBe(false)
-			expect(control.optionsSetField('stepProgression', 'manual')).toBe(false)
+			expect(control.optionsSetField({ key: 'rotaryActions', value: true })).toBe(false)
+			expect(control.optionsSetField({ key: 'stepProgression', value: 'manual' })).toBe(false)
 		})
 
 		it('preserves user notes across a preset refresh', () => {
 			definitions.convertPresetToReferenceControlModel.mockReturnValue(makeModel())
 			const control = createControl()
 
-			control.optionsSetField('notes', 'keep me')
+			control.optionsSetField({ key: 'notes', value: 'keep me' })
 			definitions.emit('updatePresets', 'conn1')
 
 			expect(control.toJSON().options.notes).toBe('keep me')
@@ -315,7 +315,7 @@ describe('ControlButtonPresetReference', () => {
 
 		it('carries the user notes into the converted button', () => {
 			const control = createControl()
-			control.optionsSetField('notes', 'remember this')
+			control.optionsSetField({ key: 'notes', value: 'remember this' })
 
 			const converted = control.convertControl()
 			expect(converted.options.notes).toBe('remember this')

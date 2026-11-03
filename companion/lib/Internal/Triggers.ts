@@ -127,7 +127,7 @@ export class InternalTriggers extends EventEmitter<InternalModuleFragmentEvents>
 				let newState = action.options.enable == 'true'
 				if (action.options.enable == 'toggle') newState = !control.options.enabled
 
-				control.optionsSetField('enabled', newState)
+				control.optionsSetField({ key: 'enabled', value: newState })
 
 				break
 			}

@@ -5,6 +5,7 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { FormLabel } from '~/Components/Form.js'
+import { useControlOptionsSetter } from '~/Controls/useControlOptionsSetter.js'
 import './EditPanel.css'
 import { useCallback, useContext, useId, useMemo, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
@@ -41,7 +42,7 @@ import { PanelCollapseHelperProvider } from '~/Helpers/CollapseHelper.js'
 import { useControlConfig } from '~/Hooks/useControlConfig'
 import { MyErrorBoundary } from '~/Resources/Error'
 import { LoadingBar, LoadingRetryOrError } from '~/Resources/Loading'
-import { trpc, useMutationExt } from '~/Resources/TRPC'
+import { trpc } from '~/Resources/TRPC'
 import { useControlEntitiesEditorService, useControlEntityService } from '~/Services/Controls/ControlEntitiesService.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore'
 import { VariableReferenceRow } from '../VariableReferenceRow.js'
@@ -114,22 +115,15 @@ interface ExpressionVariableConfigProps {
 }
 
 function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConfigProps) {
-	const setOptionsFieldMutation = useMutationExt(trpc.controls.setOptionsField.mutationOptions())
+	const setOption = useControlOptionsSetter(controlId, 'expression-variable')
 
 	const setValueInner = useCallback(
-		(key: keyof ExpressionVariableOptions, value: any) => {
-			console.log('set', controlId, key, value)
-			setOptionsFieldMutation
-				.mutateAsync({
-					controlId,
-					key,
-					value,
-				})
-				.catch((e) => {
-					console.error(`Set field failed: ${stringifyError(e)}`)
-				})
+		<K extends keyof ExpressionVariableOptions>(key: K, value: ExpressionVariableOptions[K]) => {
+			setOption(key, value).catch((e) => {
+				console.error(`Set field failed: ${stringifyError(e)}`)
+			})
 		},
-		[setOptionsFieldMutation, controlId]
+		[setOption]
 	)
 
 	const setName = useCallback((val: string) => setValueInner('variableName', val), [setValueInner])
@@ -137,7 +131,7 @@ function ExpressionVariableConfig({ controlId, options }: ExpressionVariableConf
 
 	const nameFieldId = useId()
 	const descriptionFieldId = useId()
-	const setNotes = useControlNotesSetter(controlId)
+	const setNotes = useControlNotesSetter(controlId, 'expression-variable')
 	const notesState = useNotesEditor(controlId, options.notes, setNotes)
 
 	return (

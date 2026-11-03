@@ -21,7 +21,7 @@ export function ButtonReferencePanel({
 	config,
 	navigateToControl,
 }: ButtonReferencePanelProps): React.JSX.Element {
-	const setControlNotes = useControlNotesSetter(controlId)
+	const setControlNotes = useControlNotesSetter(controlId, 'button-reference')
 	const notesState = useNotesEditor(controlId, config.options.notes, setControlNotes)
 
 	return (

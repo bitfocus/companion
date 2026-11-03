@@ -60,7 +60,7 @@ export function createTriggersTrpcRouter(
 				}
 			}
 			const maxRank = Math.max(0, ...allTriggers.map((control) => control.options.sortOrder))
-			newControl.optionsSetField('sortOrder', maxRank, true)
+			newControl.optionsSetField({ key: 'sortOrder', value: maxRank }, true)
 
 			// Ensure it is stored to the db
 			newControl.commitChange()
@@ -134,7 +134,7 @@ export function createTriggersTrpcRouter(
 
 				// update the collectionId of the trigger being moved if needed
 				if (thisTrigger.options.collectionId !== (collectionId ?? undefined)) {
-					thisTrigger.optionsSetField('collectionId', collectionId ?? undefined, true)
+					thisTrigger.optionsSetField({ key: 'collectionId', value: collectionId ?? undefined }, true)
 					thisTrigger.setCollectionEnabled(triggerCollections.isCollectionEnabled(collectionId))
 				}
 
@@ -162,7 +162,7 @@ export function createTriggersTrpcRouter(
 				sortedTriggers.forEach((trigger, index) => {
 					if (trigger.options.sortOrder === index) return // No change
 
-					trigger.optionsSetField('sortOrder', index, true)
+					trigger.optionsSetField({ key: 'sortOrder', value: index }, true)
 				})
 
 				return true

@@ -1,4 +1,3 @@
-import type { JsonValue } from 'type-fest'
 import type z from 'zod'
 import type { BankControlId } from '@companion-app/shared/ControlId.js'
 import {
@@ -9,6 +8,7 @@ import {
 import type { LinkButtonRuntimeProps } from '@companion-app/shared/Model/Link.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import type { KeyValueChange } from '@companion-app/shared/Util/KeyValue.js'
 import { ParseLocationString } from '../../../Internal/Util.js'
 import type { LinkButtonState, LinkButtonTarget } from '../../../Link/ButtonClient.js'
 import { LinkButtonLocationRefSchema } from '../../../Link/Protocol/v1/Schemas.js'
@@ -236,14 +236,14 @@ export class ControlButtonLink
 	/**
 	 * Update an option field: `peerId`, `location`, `notes`, `decoration` or `showStatusIcons`
 	 */
-	optionsSetField(key: string, value: JsonValue | undefined): boolean {
-		const parsed = parseOptionsField(this.optionsSchema, this.options, key, value)
-		if (!parsed) return false
+	optionsSetField(change: KeyValueChange<LinkButtonModel['options']>): boolean {
+		const options = parseOptionsField(this.optionsSchema, this.options, change)
+		if (!options) return false
 
-		this.options = parsed.options
+		this.options = options
 		this.commitChange(false)
 
-		switch (parsed.key) {
+		switch (change.key) {
 			case 'notes':
 				break
 			case 'showStatusIcons':
@@ -256,7 +256,7 @@ export class ControlButtonLink
 				this.#drawing.invalidate()
 				break
 			default:
-				assertNever(parsed.key)
+				assertNever(change)
 		}
 		return true
 	}
