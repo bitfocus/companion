@@ -491,6 +491,23 @@ describe('ControlButtonLayered', () => {
 
 			expect(stepSpy).not.toHaveBeenCalled()
 		})
+
+		it('rejects a value the option does not allow, leaving the options as they were', () => {
+			const control = createControl(makeStorage([boxElement('box0')]))
+			const before = structuredClone(control.options)
+
+			expect(control.optionsSetField('stepProgression', 'sideways')).toBe(false)
+			expect(control.optionsSetField('rotaryActions', 'yes')).toBe(false)
+
+			expect(control.options).toEqual(before)
+		})
+
+		it('rejects a key that is not an option', () => {
+			const control = createControl(makeStorage([boxElement('box0')]))
+
+			expect(control.optionsSetField('sparkle', true)).toBe(false)
+			expect(control.options).not.toHaveProperty('sparkle')
+		})
 	})
 
 	describe('references', () => {

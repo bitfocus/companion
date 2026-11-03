@@ -33,6 +33,7 @@ import type {
 	ControlWithoutLayeredStyle,
 	ControlWithoutPushed,
 } from '../../IControlFragments.js'
+import { parseOptionsField } from '../../OptionsField.js'
 import type { TriggerEvents } from '../../TriggerEvents.js'
 import { TriggersEventMisc } from './Events/Misc.js'
 import { TriggersEventTimer } from './Events/Timer.js'
@@ -555,12 +556,13 @@ export class ControlTrigger
 	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean {
 		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
-		if (BANNED_PROPS.has(key)) throw new Error(`Setting option "${key}" is not allowed`)
 
-		// @ts-expect-error mismatch in types
-		this.options[key] = value
+		const parsed = parseOptionsField(this.optionsSchema, this.options, key, value)
+		if (!parsed) return false
 
-		if (key === 'enabled') {
+		this.options = parsed.options
+
+		if (parsed.key === 'enabled') {
 			// Pretend the collection changed, to re-trigger the events
 			this.setCollectionEnabled(this.#collectionEnabled)
 		}

@@ -1,7 +1,6 @@
 import type { JsonValue } from 'type-fest'
 import type z from 'zod'
 import type { BankControlId } from '@companion-app/shared/ControlId.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type {
 	ButtonOptionsBase,
@@ -23,6 +22,7 @@ import {
 	type SomeButtonEntityPool,
 } from '../../Entities/EntityListPoolButton.js'
 import type { ControlWithEntities, ControlWithOptions, ControlWithPushed } from '../../IControlFragments.js'
+import { parseOptionsField } from '../../OptionsField.js'
 import type { LayeredButtonDrawer } from './LayeredButtonDrawer.js'
 
 /**
@@ -439,16 +439,16 @@ export abstract class ButtonControlBase<TJson extends LayeredButtonModel, TOptio
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: JsonValue): boolean {
-		if (BANNED_PROPS.has(key)) throw new Error(`Setting option "${key}" is not allowed`)
+	optionsSetField(key: string, value: JsonValue | undefined): boolean {
+		const parsed = parseOptionsField(this.optionsSchema, this.options, key, value)
+		if (!parsed) return false
 
 		// Check if rotary_actions should be added/remove
-		if (key === 'rotaryActions') {
+		if (parsed.key === 'rotaryActions') {
 			this.entities.setupRotaryActionSets(!!value, true)
 		}
 
-		// @ts-expect-error mismatch in key type
-		this.options[key] = value
+		this.options = parsed.options
 
 		this.commitChange()
 

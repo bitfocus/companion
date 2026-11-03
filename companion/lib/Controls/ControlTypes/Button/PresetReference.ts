@@ -22,6 +22,7 @@ import type {
 	ControlWithoutEvents,
 	ControlWithoutLayeredStyle,
 } from '../../IControlFragments.js'
+import { parseOptionsField } from '../../OptionsField.js'
 import { ButtonControlRuntimeBase } from './Base.js'
 import { LayeredButtonDrawer } from './LayeredButtonDrawer.js'
 
@@ -271,10 +272,13 @@ export class ControlButtonPresetReference
 	 * metadata, not part of the preset, and are preserved across preset updates). Any other option is
 	 * rejected - so a reference stays read-only even as new option fields are added in the future.
 	 */
-	optionsSetField(key: string, value: JsonValue): boolean {
-		if (key !== 'notes' || typeof value !== 'string') return false
+	optionsSetField(key: string, value: JsonValue | undefined): boolean {
+		if (key !== 'notes') return false
 
-		this.options.notes = value
+		const parsed = parseOptionsField(this.optionsSchema, this.options, key, value)
+		if (!parsed) return false
+
+		this.options = parsed.options
 		this.commitChange(false)
 		return true
 	}

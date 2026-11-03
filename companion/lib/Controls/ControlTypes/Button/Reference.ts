@@ -10,8 +10,8 @@ import {
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { NoRuntimeProps } from '@companion-app/shared/Model/Controls.js'
-import { isExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
+import { assertNever } from '@companion-app/shared/Util.js'
 import { ParseLocationString } from '../../../Internal/Util.js'
 import { VisitorReferencesCollector } from '../../../Resources/Visitors/ReferencesCollector.js'
 import { VisitorReferencesUpdater } from '../../../Resources/Visitors/ReferencesUpdater.js'
@@ -32,6 +32,7 @@ import type {
 	ControlWithoutLayeredStyle,
 	ControlWithoutPushed,
 } from '../../IControlFragments.js'
+import { parseOptionsField } from '../../OptionsField.js'
 import { ControlButtonLayered } from './Layered.js'
 import { MirrorButtonDrawer } from './MirrorButtonDrawer.js'
 
@@ -182,21 +183,22 @@ export class ControlButtonReference
 	 * Update an option field. Only `location` (the mirrored target) and `notes` are editable.
 	 */
 	optionsSetField(key: string, value: JsonValue | undefined): boolean {
-		if (key === 'notes') {
-			if (typeof value !== 'string') return false
-			this.options.notes = value
-			this.commitChange(false)
-			return true
-		}
+		const parsed = parseOptionsField(this.optionsSchema, this.options, key, value)
+		if (!parsed) return false
 
-		if (key === 'location') {
-			if (!isExpressionOrValue(value)) return false
-			this.options.location = value
-			this.commitChange(true)
-			return true
-		}
+		this.options = parsed.options
 
-		return false
+		switch (parsed.key) {
+			case 'notes':
+				this.commitChange(false)
+				break
+			case 'location':
+				this.commitChange(true)
+				break
+			default:
+				assertNever(parsed.key)
+		}
+		return true
 	}
 
 	/**

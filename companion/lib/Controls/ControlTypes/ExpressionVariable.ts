@@ -3,7 +3,6 @@ import type { JsonValue } from 'type-fest'
 import type z from 'zod'
 import type { ExpressionVariableControlId } from '@companion-app/shared/ControlId.js'
 import { diffObject } from '@companion-app/shared/Diff.js'
-import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { isLabelValid } from '@companion-app/shared/Label.js'
 import type { NoRuntimeProps } from '@companion-app/shared/Model/Controls.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
@@ -29,6 +28,7 @@ import type {
 	ControlWithoutLayeredStyle,
 	ControlWithoutPushed,
 } from '../IControlFragments.js'
+import { parseOptionsField } from '../OptionsField.js'
 
 /**
  * Class for an expression variable.
@@ -238,24 +238,20 @@ export class ControlExpressionVariable
 	optionsSetField(key: string, value: JsonValue | undefined, forceSet?: boolean): boolean {
 		if (!forceSet && (key === 'sortOrder' || key === 'collectionId'))
 			throw new Error('sortOrder cannot be set by the client')
-		if (BANNED_PROPS.has(key)) throw new Error(`Setting option "${key}" is not allowed`)
 
-		// Handle expression variable name changes
-		if (key === 'variableName') {
-			// Make sure the new name is valid
-			if (value != '' && (typeof value !== 'string' || !isLabelValid(value))) {
-				// throw new Error(`Invalid variable name "${stringifyVariableValue(value)}"`)
-				return false
-			}
+		const parsed = parseOptionsField(this.optionsSchema, this.options, key, value)
+		if (!parsed) return false
 
-			const oldVariableName = this.options.variableName
-			this.options[key] = value
+		const oldVariableName = this.options.variableName
+		const newVariableName = parsed.options.variableName
+		// Make sure the new name is valid
+		if (parsed.key === 'variableName' && newVariableName !== '' && !isLabelValid(newVariableName)) return false
 
+		this.options = parsed.options
+
+		if (parsed.key === 'variableName') {
 			// Update the names map through the dependency
-			this.#expressionVariableNameMap.updateExpressionVariableName(this.controlId, oldVariableName, value)
-		} else {
-			// @ts-expect-error mismatch in types
-			this.options[key] = value
+			this.#expressionVariableNameMap.updateExpressionVariableName(this.controlId, oldVariableName, newVariableName)
 		}
 
 		this.commitChange()

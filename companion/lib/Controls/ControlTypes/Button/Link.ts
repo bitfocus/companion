@@ -5,7 +5,6 @@ import {
 	LinkButtonOptionsSchema,
 	parseLinkButtonOptions,
 	type LinkButtonModel,
-	type LinkButtonOptions,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { LinkButtonRuntimeProps } from '@companion-app/shared/Model/Link.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
@@ -28,6 +27,7 @@ import type {
 	ControlWithoutLayeredStyle,
 	ControlWithPushed,
 } from '../../IControlFragments.js'
+import { parseOptionsField } from '../../OptionsField.js'
 import { LinkButtonDrawer } from './LinkButtonDrawer.js'
 
 const UNCONFIGURED_STATE: LinkButtonState = {
@@ -237,16 +237,13 @@ export class ControlButtonLink
 	 * Update an option field: `peerId`, `location`, `notes`, `decoration` or `showStatusIcons`
 	 */
 	optionsSetField(key: string, value: JsonValue | undefined): boolean {
-		if (!Object.hasOwn(LinkButtonOptionsSchema.shape, key)) return false
-		const optionKey = key as keyof LinkButtonOptions
+		const parsed = parseOptionsField(this.optionsSchema, this.options, key, value)
+		if (!parsed) return false
 
-		const parsed = LinkButtonOptionsSchema.shape[optionKey].safeParse(value)
-		if (!parsed.success) return false
-
-		this.options = { ...this.options, [optionKey]: parsed.data }
+		this.options = parsed.options
 		this.commitChange(false)
 
-		switch (optionKey) {
+		switch (parsed.key) {
 			case 'notes':
 				break
 			case 'showStatusIcons':
@@ -259,7 +256,7 @@ export class ControlButtonLink
 				this.#drawing.invalidate()
 				break
 			default:
-				assertNever(optionKey)
+				assertNever(parsed.key)
 		}
 		return true
 	}

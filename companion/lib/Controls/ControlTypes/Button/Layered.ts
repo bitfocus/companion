@@ -299,7 +299,7 @@ export class ControlButtonLayered
 	/**
 	 * Update an option field of this control
 	 */
-	optionsSetField(key: string, value: JsonValue): boolean {
+	optionsSetField(key: string, value: JsonValue | undefined): boolean {
 		const changed = super.optionsSetField(key, value)
 
 		if (key === 'stepProgression' || key === 'stepExpression') {

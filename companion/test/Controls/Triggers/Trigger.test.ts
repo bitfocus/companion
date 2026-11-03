@@ -191,6 +191,26 @@ describe('ControlTrigger', () => {
 
 			expect(() => trigger.optionsSetField('__proto__', 1)).toThrow(/not allowed/)
 		})
+
+		test('a value the option does not allow, or a key that is not an option, is rejected', () => {
+			const { trigger, dbSet } = createTrigger()
+			dbSet.mockClear()
+
+			expect(trigger.optionsSetField('enabled', 'sometimes')).toBe(false)
+			expect(trigger.optionsSetField('name', 5)).toBe(false)
+			expect(trigger.optionsSetField('sparkle', true)).toBe(false)
+
+			expect(trigger.options).toEqual(TriggerOptionsSchema.parse({}))
+			expect(dbSet).not.toHaveBeenCalled()
+		})
+
+		test('an optional option can be cleared', () => {
+			const { trigger } = createTrigger()
+			trigger.optionsSetField('collectionId', 'col1', true)
+
+			expect(trigger.optionsSetField('collectionId', undefined, true)).toBe(true)
+			expect(trigger.options.collectionId).toBeUndefined()
+		})
 	})
 
 	describe('event management', () => {
