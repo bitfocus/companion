@@ -1738,7 +1738,7 @@ __metadata:
     "@types/plist": "npm:^3.0.5"
     chokidar: "npm:^5.0.0"
     debounce-fn: "npm:^6.0.0"
-    electron: "npm:44.9.3"
+    electron: "npm:44.10.1"
     electron-builder: "npm:26.16.1"
     electron-reloader: "npm:^1.2.3"
     electron-store: "npm:^11.0.2"
@@ -1890,7 +1890,6 @@ __metadata:
     openapi-typescript: "npm:^7.13.0"
     p-retry: "npm:^8.0.1"
     prettier: "npm:^3.9.9"
-    socket: "npm:^1.10.0"
     tsx: "npm:^4.23.15"
     typescript: "npm:@typescript/typescript6@^6.0.2"
     typescript-7: "npm:typescript@^7.0.2"
@@ -6227,118 +6226,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@socketsecurity/socket-patch-android-arm64@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@socketsecurity/socket-patch-android-arm64@npm:2.0.0"
-  conditions: os=android & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"@socketsecurity/socket-patch-darwin-arm64@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@socketsecurity/socket-patch-darwin-arm64@npm:2.0.0"
-  conditions: os=darwin & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"@socketsecurity/socket-patch-darwin-x64@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@socketsecurity/socket-patch-darwin-x64@npm:2.0.0"
-  conditions: os=darwin & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@socketsecurity/socket-patch-linux-arm64@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@socketsecurity/socket-patch-linux-arm64@npm:2.0.0"
-  conditions: os=linux & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"@socketsecurity/socket-patch-linux-arm@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@socketsecurity/socket-patch-linux-arm@npm:2.0.0"
-  conditions: os=linux & cpu=arm
-  languageName: node
-  linkType: hard
-
-"@socketsecurity/socket-patch-linux-ia32@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@socketsecurity/socket-patch-linux-ia32@npm:2.0.0"
-  conditions: os=linux & cpu=ia32
-  languageName: node
-  linkType: hard
-
-"@socketsecurity/socket-patch-linux-x64@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@socketsecurity/socket-patch-linux-x64@npm:2.0.0"
-  conditions: os=linux & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@socketsecurity/socket-patch-win32-arm64@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@socketsecurity/socket-patch-win32-arm64@npm:2.0.0"
-  conditions: os=win32 & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"@socketsecurity/socket-patch-win32-ia32@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@socketsecurity/socket-patch-win32-ia32@npm:2.0.0"
-  conditions: os=win32 & cpu=ia32
-  languageName: node
-  linkType: hard
-
-"@socketsecurity/socket-patch-win32-x64@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@socketsecurity/socket-patch-win32-x64@npm:2.0.0"
-  conditions: os=win32 & cpu=x64
-  languageName: node
-  linkType: hard
-
-"@socketsecurity/socket-patch@npm:2.0.0":
-  version: 2.0.0
-  resolution: "@socketsecurity/socket-patch@npm:2.0.0"
-  dependencies:
-    "@socketsecurity/socket-patch-android-arm64": "npm:2.0.0"
-    "@socketsecurity/socket-patch-darwin-arm64": "npm:2.0.0"
-    "@socketsecurity/socket-patch-darwin-x64": "npm:2.0.0"
-    "@socketsecurity/socket-patch-linux-arm": "npm:2.0.0"
-    "@socketsecurity/socket-patch-linux-arm64": "npm:2.0.0"
-    "@socketsecurity/socket-patch-linux-ia32": "npm:2.0.0"
-    "@socketsecurity/socket-patch-linux-x64": "npm:2.0.0"
-    "@socketsecurity/socket-patch-win32-arm64": "npm:2.0.0"
-    "@socketsecurity/socket-patch-win32-ia32": "npm:2.0.0"
-    "@socketsecurity/socket-patch-win32-x64": "npm:2.0.0"
-    zod: "npm:^3.24.4"
-  dependenciesMeta:
-    "@socketsecurity/socket-patch-android-arm64":
-      optional: true
-    "@socketsecurity/socket-patch-darwin-arm64":
-      optional: true
-    "@socketsecurity/socket-patch-darwin-x64":
-      optional: true
-    "@socketsecurity/socket-patch-linux-arm":
-      optional: true
-    "@socketsecurity/socket-patch-linux-arm64":
-      optional: true
-    "@socketsecurity/socket-patch-linux-ia32":
-      optional: true
-    "@socketsecurity/socket-patch-linux-x64":
-      optional: true
-    "@socketsecurity/socket-patch-win32-arm64":
-      optional: true
-    "@socketsecurity/socket-patch-win32-ia32":
-      optional: true
-    "@socketsecurity/socket-patch-win32-x64":
-      optional: true
-  bin:
-    socket-patch: bin/socket-patch
-  checksum: 10c0/74f0a8db4f4a65661090b9c4ab9037dc2cd4763aa3691afd3e81fe18f21993d8315b09c2105b49f84a3a3e97d360dd64fe041bddda5ef2b840027e375f98379f
-  languageName: node
-  linkType: hard
-
 "@solid-primitives/event-listener@npm:^2.2.14, @solid-primitives/event-listener@npm:^2.4.6":
   version: 2.4.6
   resolution: "@solid-primitives/event-listener@npm:2.4.6"
@@ -8666,12 +8553,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/pretty-format@npm:5.0.3":
-  version: 5.0.3
-  resolution: "@vitest/pretty-format@npm:5.0.3"
+"@vitest/pretty-format@npm:5.0.5":
+  version: 5.0.5
+  resolution: "@vitest/pretty-format@npm:5.0.5"
   dependencies:
-    tinyrainbow: "npm:^3.1.1"
-  checksum: 10c0/fc08e3405a0427aa11bf5175b6658957a3bfd26ec68442380c84c1bf673f5d3c21b0e1d785cefc33abe0b36cac01fa2374dd260476c5a1f007875fe2a76ca78c
+    tinyrainbow: "npm:^3.2.0"
+  checksum: 10c0/7d484e42542e3e04ee669cfd2632c001ca3c4493477c4fc539c3c1465cb511b9c46789f63aacf0fd40c312c023add17933b0864eb02d8640e44b69ffdad853c5
   languageName: node
   linkType: hard
 
@@ -8692,18 +8579,18 @@ __metadata:
   linkType: hard
 
 "@vitest/ui@npm:^5.0.3":
-  version: 5.0.3
-  resolution: "@vitest/ui@npm:5.0.3"
+  version: 5.0.5
+  resolution: "@vitest/ui@npm:5.0.5"
   dependencies:
-    "@vitest/utils": "npm:5.0.3"
+    "@vitest/utils": "npm:5.0.5"
     fflate: "npm:^0.8.3"
     flatted: "npm:^3.4.4"
     pathe: "npm:^2.0.3"
     sirv: "npm:^3.0.2"
-    tinyrainbow: "npm:^3.1.1"
+    tinyrainbow: "npm:^3.2.0"
   peerDependencies:
-    vitest: 5.0.3
-  checksum: 10c0/8026238dde950bd17dac7f9f0c7a51614acb84e5e7849e7b25faf4787adb8eeba97f7d54c8a353f26c3cdb8917503ee19bb8ea2b7cf0a3b681f80c347eb67663
+    vitest: 5.0.5
+  checksum: 10c0/93f26d0fa82f5fd5a4ac1a830a23424f6dd060e88a1352818eef8bfc8441039be400b2b596c6ca14f54425173f6875dc23e8a233be681379a06abf6b91906b9e
   languageName: node
   linkType: hard
 
@@ -8718,14 +8605,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@vitest/utils@npm:5.0.3":
-  version: 5.0.3
-  resolution: "@vitest/utils@npm:5.0.3"
+"@vitest/utils@npm:5.0.5":
+  version: 5.0.5
+  resolution: "@vitest/utils@npm:5.0.5"
   dependencies:
-    "@vitest/pretty-format": "npm:5.0.3"
+    "@vitest/pretty-format": "npm:5.0.5"
     convert-source-map: "npm:^2.0.0"
-    tinyrainbow: "npm:^3.1.1"
-  checksum: 10c0/a357550a54f4dfbf7f36189f6612fc34a5c42f0631d358dac68a25b16cbeb0f4088277cc7d2cbd4f8ee82b0cab3f77fa04bc4680af7d2f9a57cc4d5433e5a43c
+    tinyrainbow: "npm:^3.2.0"
+  checksum: 10c0/424e7e2e8e2481385bc66a327531ae8c99fd63080778e17b8a75223bbd9d61d5c6d162db8e31ec7d6f17e6206cdc95e8d3d08b1fc8be3c9f50ee0ddf6862b641
   languageName: node
   linkType: hard
 
@@ -12183,9 +12070,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron@npm:44.9.3":
-  version: 44.9.3
-  resolution: "electron@npm:44.9.3"
+"electron@npm:44.10.1":
+  version: 44.10.1
+  resolution: "electron@npm:44.10.1"
   dependencies:
     "@electron-internal/extract-zip": "npm:^1.0.1"
     "@electron/get": "npm:^5.0.0"
@@ -12193,7 +12080,7 @@ __metadata:
   bin:
     electron: cli.js
     install-electron: install.js
-  checksum: 10c0/c3559aaa78f768dbf28b821b600e39e5753f4b316d3eeee30b2f1d72357c7d2a574fcd888353006a9f83968ac4fe2006071696078b23cbfcf1e23dabbc1f25fe
+  checksum: 10c0/658640fbba4d1c1bfec0bacaaac9a7ff0aef07c5bf956fc745d37a277c04787a2799e1b37973bb4f9c929f3493e7b8669bb569186b1ca168b918129cf2742541
   languageName: node
   linkType: hard
 
@@ -13564,7 +13451,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"form-data@npm:4.0.6, form-data@npm:^4.0.5":
+"form-data@npm:^4.0.5":
   version: 4.0.6
   resolution: "form-data@npm:4.0.6"
   dependencies:
@@ -21591,22 +21478,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"socket@npm:^1.10.0":
-  version: 1.10.0
-  resolution: "socket@npm:1.10.0"
-  dependencies:
-    "@socketsecurity/socket-patch": "npm:2.0.0"
-    form-data: "npm:4.0.6"
-  bin:
-    socket: bin/cli.js
-    socket-npm: bin/npm-cli.js
-    socket-npx: bin/npx-cli.js
-    socket-pnpm: bin/pnpm-cli.js
-    socket-yarn: bin/yarn-cli.js
-  checksum: 10c0/d9c51db22d6de6f9a17f8a9add48ba748c05b762425c5dee69808ce3c654f1f384ec9f05b36c4b5530899f4c54919335d7298c754f7437c1ee09b8b429873c90
-  languageName: node
-  linkType: hard
-
 "socketcluster-client@npm:^20.0.2":
   version: 20.0.2
   resolution: "socketcluster-client@npm:20.0.2"
@@ -22591,10 +22462,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tinyrainbow@npm:^3.1.1":
-  version: 3.1.1
-  resolution: "tinyrainbow@npm:3.1.1"
-  checksum: 10c0/f9d2743832c6191f753408f36224fe817620b8abcef572b2e570204c673a901d753ff84ca8e7b88f9c79e934295b3ffc6fcbc56a06f126e24e1ec6186dcad40d
+"tinyrainbow@npm:^3.1.1, tinyrainbow@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "tinyrainbow@npm:3.2.0"
+  checksum: 10c0/22d9c303cd807026898dcb5ac5ffbf725b5a2cc8d042449769aed8f1266be94de5e95206b76cac948f68facafba5b80e9a9257c82e5fed2651be3fecf2b624ab
   languageName: node
   linkType: hard
 
@@ -24591,13 +24462,6 @@ __metadata:
   peerDependencies:
     zod: ^3.25.0 || ^4.0.0
   checksum: 10c0/0ccfec48c46de1be440b719cd02044d4abb89ed0e14c13e637cd55bf29102f67ccdba373f25def0fc7130e5f15025be4d557a7edcc95d5a3811599aade689e1b
-  languageName: node
-  linkType: hard
-
-"zod@npm:^3.24.4":
-  version: 3.25.76
-  resolution: "zod@npm:3.25.76"
-  checksum: 10c0/5718ec35e3c40b600316c5b4c5e4976f7fee68151bc8f8d90ec18a469be9571f072e1bbaace10f1e85cf8892ea12d90821b200e980ab46916a6166a4260a983c
   languageName: node
   linkType: hard
 
