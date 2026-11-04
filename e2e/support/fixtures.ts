@@ -38,3 +38,18 @@ export async function gotoApp(page: Page, path: string): Promise<void> {
 	await page.goto(path)
 	await expect(page.locator('.sidebar-nav').first()).toBeVisible({ timeout: 30_000 })
 }
+
+/** Collect the console errors the page logs, to check none were logged */
+export function watchConsoleErrors(page: Page): string[] {
+	const errors: string[] = []
+	page.on('console', (message) => {
+		if (message.type() === 'error') errors.push(message.text())
+	})
+	return errors
+}
+
+/** Reload the page and wait for the app to finish loading */
+export async function reloadApp(page: Page): Promise<void> {
+	await page.reload()
+	await expect(page.locator('.sidebar-nav').first()).toBeVisible({ timeout: 30_000 })
+}

@@ -1,23 +1,9 @@
-import { expect, gotoApp, test, type Page } from '../support/fixtures.js'
+import { expect, gotoApp, reloadApp, test, watchConsoleErrors } from '../support/fixtures.js'
 
 /**
  * Edits made through the ui reach the backend and are kept. The backend checks each change against a schema, so a
  * field sending a value of the wrong shape would be refused, which the ui reports as a console error.
  */
-
-/** Collect the console errors the page logs, to check none were logged */
-function watchConsoleErrors(page: Page): string[] {
-	const errors: string[] = []
-	page.on('console', (message) => {
-		if (message.type() === 'error') errors.push(message.text())
-	})
-	return errors
-}
-
-async function reload(page: Page): Promise<void> {
-	await page.reload()
-	await expect(page.locator('.sidebar-nav').first()).toBeVisible({ timeout: 30_000 })
-}
 
 test('a regular button options persist', async ({ page }) => {
 	const errors = watchConsoleErrors(page)
@@ -34,7 +20,7 @@ test('a regular button options persist', async ({ page }) => {
 	await editor.getByRole('switch', { name: 'Allow style changes' }).click()
 	await expect(editor.getByRole('switch', { name: 'Rotary Actions' })).toBeChecked()
 
-	await reload(page)
+	await reloadApp(page)
 	await page.getByTitle('1/0/5').click()
 	await page.getByRole('tab', { name: 'Options' }).click()
 	await expect(editor.getByRole('combobox', { name: 'Step Progression' })).toHaveText(progression ?? '')
@@ -53,7 +39,7 @@ test('a settings dropdown persists', async ({ page }) => {
 	await page.getByRole('option', { name: /Border/ }).click()
 	await expect(row.getByRole('combobox')).toHaveValue(/Border/)
 
-	await reload(page)
+	await reloadApp(page)
 	await expect(row.getByRole('combobox')).toHaveValue(/Border/)
 
 	await row.getByTitle('Reset to default').click()
@@ -85,7 +71,7 @@ test('surface group settings persist', async ({ page }) => {
 	await expect(page.getByRole('switch', { name: 'Restrict pages accessible to this surface' })).toBeChecked()
 
 	// The selected surface is kept in the url, so its panel is still open after the reload
-	await reload(page)
+	await reloadApp(page)
 	await expect(page.getByRole('heading', { name: /Settings for Persist Emulator/ })).toBeVisible()
 	await expect(page.getByRole('switch', { name: 'Use Last Page At Startup' })).not.toBeChecked()
 	await expect(page.getByRole('switch', { name: 'Never pin code lock' })).toBeChecked()
@@ -114,7 +100,7 @@ test('a trigger name and enabled state persist', async ({ page }) => {
 	// The switch shows what the backend has, so this waits for the change to reach it
 	await expect(enable).toBeChecked({ checked: !wasEnabled })
 
-	await reload(page)
+	await reloadApp(page)
 	await expect(page.locator('.primary-panel').getByText('Persisted trigger')).toBeVisible()
 	await expect(
 		page
@@ -138,7 +124,7 @@ test('an expression variable persists', async ({ page }) => {
 	await expect(dialog).toHaveCount(0)
 
 	await expect(page.locator('.primary-panel').getByText('e2e_persist').first()).toBeVisible()
-	await reload(page)
+	await reloadApp(page)
 	await expect(page.locator('.primary-panel').getByText('e2e_persist').first()).toBeVisible()
 
 	expect(errors).toEqual([])
@@ -154,7 +140,7 @@ test('a backup rule edit persists', async ({ page }) => {
 	// The switch shows what the backend has, so this waits for the change to reach it
 	await expect(enable).toBeChecked({ checked: !wasEnabled })
 
-	await reload(page)
+	await reloadApp(page)
 	await expect(page.getByRole('switch', { name: /^(Enable|Disable) rule$/ }).first()).toBeChecked({
 		checked: !wasEnabled,
 	})
