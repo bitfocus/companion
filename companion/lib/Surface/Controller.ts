@@ -17,7 +17,6 @@ import type express from 'express'
 import isEqual from 'fast-deep-equal'
 import HID from 'node-hid'
 import pDebounce from 'p-debounce'
-import type { JsonValue } from 'type-fest'
 import { usb } from 'usb'
 import z from 'zod'
 import { diffObject } from '@companion-app/shared/Diff.js'
@@ -26,7 +25,8 @@ import type { EmulatorListItem, EmulatorPageConfig } from '@companion-app/shared
 import { JsonValueSchema } from '@companion-app/shared/Model/Options.js'
 import {
 	SurfaceConfigSchema,
-	SurfaceGroupConfigSchema,
+	SurfaceGroupConfigChangeSchema,
+	SurfaceGroupConfigStoredSchema,
 	type ClientDevicesListItem,
 	type ClientSurfaceButtonSizesItem,
 	type ClientSurfaceItem,
@@ -35,6 +35,7 @@ import {
 	type OutboundSurfaceInfo,
 	type SurfaceConfig,
 	type SurfaceGroupConfig,
+	type SurfaceGroupConfigStored,
 	type SurfaceModelsUpdate,
 	type SurfacePanelConfig,
 	type SurfacesUpdate,
@@ -57,7 +58,7 @@ import type { CheckDeviceInfo, IpcSurfaceModel } from '../Instance/Surface/IpcTy
 import LogController, { type Logger } from '../Log/Controller.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
 import { createOrSanitizeSurfaceHandlerConfig, PanelDefaults } from './Config.js'
-import { SurfaceGroup, validateGroupConfigValue } from './Group.js'
+import { SurfaceGroup, validateGroupConfigChange } from './Group.js'
 import { SurfaceHandler } from './Handler.js'
 import { HotplugRescan } from './HotplugRescan.js'
 import { EmulatorRoom, SurfaceIPElgatoEmulator } from './IP/ElgatoEmulator.js'
@@ -110,7 +111,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 	readonly #logger = LogController.createLogger('Surface/Controller')
 
 	readonly #dbTableSurfaces: DataStoreSchemaTableView<typeof SurfaceConfigSchema, string>
-	readonly #dbTableGroups: DataStoreSchemaTableView<typeof SurfaceGroupConfigSchema, string>
+	readonly #dbTableGroups: DataStoreSchemaTableView<typeof SurfaceGroupConfigStoredSchema, string>
 	readonly #handlerDependencies: SurfaceHandlerDependencies
 
 	readonly #updateEvents = new EventEmitter<UpdateEvents>()
@@ -228,7 +229,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		this.#usbAvailable = usbAvailable
 
 		this.#dbTableSurfaces = db.getSchemaTableView('surfaces', SurfaceConfigSchema)
-		this.#dbTableGroups = db.getSchemaTableView('surface_groups', SurfaceGroupConfigSchema)
+		this.#dbTableGroups = db.getSchemaTableView('surface_groups', SurfaceGroupConfigStoredSchema)
 		this.#handlerDependencies = handlerDependencies
 
 		this.#updateEvents.setMaxListeners(0)
@@ -824,23 +825,22 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 				.input(
 					z.object({
 						groupId: z.string(),
-						key: z.string(),
-						value: JsonValueSchema.optional(),
+						change: SurfaceGroupConfigChangeSchema,
 					})
 				)
 				.mutation(async ({ input }) => {
 					const group = this.#surfaceGroups.get(input.groupId)
 					if (group) {
-						return group.setGroupConfigValue(input.key, input.value)
+						return group.setGroupConfigValue(input.change)
 					}
 
 					// Perhaps this is an auto-group for an offline surface?
 					const surfaceConfig = this.#dbTableSurfaces.get(input.groupId)
 					if (surfaceConfig && !this.#surfaceHandlers.has(input.groupId)) {
 						try {
-							const newValue = validateGroupConfigValue(this.#handlerDependencies.pageStore, input.key, input.value)
+							validateGroupConfigChange(this.#handlerDependencies.pageStore, input.change)
 
-							;(surfaceConfig.groupConfig as any)[input.key] = newValue
+							Object.assign(surfaceConfig.groupConfig, { [input.change.key]: input.change.value })
 
 							this.#dbTableSurfaces.set(input.groupId, surfaceConfig)
 							this.#updateEvents.emit(`groupConfig:${input.groupId}`, surfaceConfig.groupConfig)
@@ -1721,7 +1721,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 		return this.#dbTableSurfaces.all()
 	}
 
-	exportAllGroups(): Record<number, SurfaceGroupConfig> {
+	exportAllGroups(): Record<number, SurfaceGroupConfigStored> {
 		return this.#dbTableGroups.all()
 	}
 
@@ -1754,7 +1754,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 			group.setName(surfaceGroup.name ?? '')
 			for (const [key, value] of Object.entries(surfaceGroup)) {
 				if (key === 'name') continue
-				group.setGroupConfigValue(key, value as JsonValue)
+				// An imported value is set only when it is valid for a setting that can be set
+				const change = SurfaceGroupConfigChangeSchema.safeParse({ key, value })
+				if (change.success) group.setGroupConfigValue(change.data)
 			}
 			group.clearPageHistory()
 		}
@@ -1787,7 +1789,9 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					group.setName(surfaceConfig.groupConfig?.name ?? '')
 					for (const [key, value] of Object.entries(surfaceConfig.groupConfig)) {
 						if (key === 'name') continue
-						group.setGroupConfigValue(key, value as JsonValue)
+						// An imported value is set only when it is valid for a setting that can be set
+						const change = SurfaceGroupConfigChangeSchema.safeParse({ key, value })
+						if (change.success) group.setGroupConfigValue(change.data)
 					}
 					group.clearPageHistory()
 				}
@@ -1807,7 +1811,7 @@ export class SurfaceController extends EventEmitter<SurfaceControllerEvents> {
 					if (surfaceConfig.groupConfig) {
 						// need the following to put the emulator on the "current" page, to match its export state
 						const group = this.#surfaceGroups.get(surfaceId)
-						group?.setGroupConfigValue('last_page_id', surfaceConfig.groupConfig.last_page_id)
+						group?.setGroupConfigValue({ key: 'last_page_id', value: surfaceConfig.groupConfig.last_page_id })
 						group?.clearPageHistory()
 					}
 				}

@@ -1,6 +1,6 @@
 import EventEmitter from 'node:events'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { SurfaceGroupConfigSchema } from '@companion-app/shared/Model/Surfaces.js'
+import { SurfaceGroupConfigStoredSchema } from '@companion-app/shared/Model/Surfaces.js'
 import { SurfaceGroup } from '../../lib/Surface/Group.js'
 import { FakeDataDatabase } from '../utils/FakeTableView.js'
 
@@ -45,11 +45,13 @@ function makeSurface(id: string, autoGroupConfig: any = {}): FakeSurface {
 function makeDeps(storedGroupConfig: Record<string, any> = {}) {
 	const db = new FakeDataDatabase()
 	db.getTableView('surface_groups').data = structuredClone(storedGroupConfig)
-	const dbTable = db.getSchemaTableView('surface_groups', SurfaceGroupConfigSchema)
+	const dbTable = db.getSchemaTableView('surface_groups', SurfaceGroupConfigStoredSchema)
+	// Pages 1 and 3 exist
 	const pageStore = {
 		getFirstPageId: () => 'page-1',
-		isPageIdValid: (id: string) => id === 'page-1',
-		getPageInfo: () => undefined,
+		isPageIdValid: (id: string) => id === 'page-1' || id === 'page-3',
+		getPageInfo: (pageNumber: number) =>
+			pageNumber === 1 || pageNumber === 3 ? { id: `page-${pageNumber}` } : undefined,
 		on: () => {},
 		off: () => {},
 	}
@@ -114,18 +116,18 @@ describe('SurfaceGroup never_lock masking', () => {
 			expect(s1.lastLocked).toBe(true)
 
 			// Turning never_lock on must push the surfaces unlocked...
-			group.setGroupConfigValue('never_lock', true)
+			group.setGroupConfigValue({ key: 'never_lock', value: true })
 			expect(s1.lastLocked).toBe(false)
 			expect(s2.lastLocked).toBe(false)
 
 			// ...without losing the intended locked state - turning it back off re-locks them
-			group.setGroupConfigValue('never_lock', false)
+			group.setGroupConfigValue({ key: 'never_lock', value: false })
 			expect(s1.lastLocked).toBe(true)
 			expect(s2.lastLocked).toBe(true)
 		})
 
 		it('never pushes a locked state while never_lock is on', () => {
-			group.setGroupConfigValue('never_lock', true)
+			group.setGroupConfigValue({ key: 'never_lock', value: true })
 			group.setLocked(true)
 			expect(s1.lastLocked).toBe(false)
 			expect(s2.lastLocked).toBe(false)
@@ -133,7 +135,7 @@ describe('SurfaceGroup never_lock masking', () => {
 
 		it('keeps a surface unlocked when it joins a never_lock group that intends to be locked', () => {
 			group.setLocked(true)
-			group.setGroupConfigValue('never_lock', true)
+			group.setGroupConfigValue({ key: 'never_lock', value: true })
 
 			const s3 = makeSurface('s3')
 			group.attachSurface(s3 as any)
@@ -169,7 +171,7 @@ describe('SurfaceGroup never_lock masking', () => {
 			expect(surface.lastLocked).toBe(false)
 
 			// Turning never_lock off restores the intended lock
-			group.setGroupConfigValue('never_lock', false)
+			group.setGroupConfigValue({ key: 'never_lock', value: false })
 			expect(surface.lastLocked).toBe(true)
 		})
 	})
@@ -199,7 +201,39 @@ describe('SurfaceGroup config loading', () => {
 		expect(group.groupConfig).toEqual({ ...defaultsOnFirstPage, name: 'Desk', never_lock: true })
 	})
 
+	it('converts the page numbers older versions stored into page ids', () => {
+		const group = makeGroup({
+			groupId: 'old',
+			storedConfig: { old: { use_last_page: true, last_page: 3, startup_page: 3, allowed_pages: [3] } },
+		})
+
+		expect(group.groupConfig).toEqual({ ...defaultsOnFirstPage, last_page_id: 'page-3', startup_page_id: 'page-3' })
+	})
+
+	it('keeps the page ids when an old page number is not a page', () => {
+		const group = makeGroup({
+			groupId: 'old',
+			storedConfig: {
+				old: { use_last_page: true, last_page_id: 'page-3', last_page: 9, startup_page_id: 'page-3', startup_page: 9 },
+			},
+		})
+
+		expect(group.groupConfig).toMatchObject({ last_page_id: 'page-3', startup_page_id: 'page-3' })
+		expect(group.groupConfig).not.toHaveProperty('last_page')
+		expect(group.groupConfig).not.toHaveProperty('startup_page')
+	})
+
 	describe('auto group', () => {
+		it('converts the page numbers older versions stored into page ids', () => {
+			const group = makeGroup({
+				groupId: 's1',
+				soleHandler: makeSurface('s1', { use_last_page: true, last_page: 3, startup_page: 3 }),
+			})
+
+			expect(group.groupConfig).toMatchObject({ last_page_id: 'page-3', startup_page_id: 'page-3' })
+			expect(group.groupConfig).not.toHaveProperty('last_page')
+		})
+
 		it('fills in defaults, naming it "Auto group"', () => {
 			const group = makeGroup({ groupId: 's1', soleHandler: makeSurface('s1', { never_lock: true }) })
 

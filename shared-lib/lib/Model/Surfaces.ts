@@ -10,6 +10,7 @@ import {
 	type SurfaceSchemaLedsConfig,
 } from '@companion-surface/base'
 import type { ObjectPatch } from '../Diff.js'
+import { zodKeyValueChange } from '../Util/KeyValue.js'
 import type { CollectionBase, EnabledCollectionData } from './Collections.js'
 import type { DropdownChoice } from './Common.js'
 import type {
@@ -154,15 +155,30 @@ export interface ClientDevicesListItem {
 	surfaces: ClientSurfaceItem[]
 }
 
-export const SurfaceGroupConfigSchema = z.object({
-	name: z.string().default('Unnamed group'),
+/** The settings of a surface group, which can each be changed */
+export const SurfaceGroupSettingsSchema = z.object({
 	last_page_id: z.string().default(''),
 	startup_page_id: z.string().default(''),
 	use_last_page: z.boolean().default(true),
 	never_lock: z.boolean().default(false),
 	restrict_pages: z.boolean().default(false),
 	allowed_page_ids: z.array(z.string()).default(() => []),
+})
 
+/** A change to one of the settings of a surface group */
+export const SurfaceGroupConfigChangeSchema = zodKeyValueChange(SurfaceGroupSettingsSchema)
+export type SurfaceGroupConfigChange = z.output<typeof SurfaceGroupConfigChangeSchema>
+
+/** A surface group's config: its name and its settings */
+export const SurfaceGroupConfigSchema = z.object({
+	name: z.string().default('Unnamed group'),
+	...SurfaceGroupSettingsSchema.shape,
+})
+
+export type SurfaceGroupConfig = z.output<typeof SurfaceGroupConfigSchema>
+
+/** A surface group's config as it is stored and exported, which can have the page numbers older versions used */
+export const SurfaceGroupConfigStoredSchema = SurfaceGroupConfigSchema.extend({
 	/** @deprecated. replaced by last_page_id but still used for export */
 	last_page: z.number().optional(),
 	/** @deprecated. replaced by startup_page_id but still used for export */
@@ -171,7 +187,7 @@ export const SurfaceGroupConfigSchema = z.object({
 	allowed_pages: z.array(z.number()).optional(),
 })
 
-export type SurfaceGroupConfig = z.output<typeof SurfaceGroupConfigSchema>
+export type SurfaceGroupConfigStored = z.output<typeof SurfaceGroupConfigStoredSchema>
 
 function isObject(value: unknown): value is Record<string, unknown> {
 	return !!value && typeof value === 'object' && !Array.isArray(value)
@@ -217,7 +233,7 @@ export const SurfaceConfigSchema = z.preprocess(
 	z.object({
 		config: SurfacePanelConfigSchema,
 		/** Only used when the surface is in its own automatic group */
-		groupConfig: SurfaceGroupConfigSchema.extend({ name: z.string().default('Auto group') }),
+		groupConfig: SurfaceGroupConfigStoredSchema.extend({ name: z.string().default('Auto group') }),
 
 		groupId: z.string().nullable().default(null),
 

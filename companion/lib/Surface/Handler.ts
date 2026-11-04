@@ -17,6 +17,7 @@ import type {
 	GridSize,
 	SurfaceConfig,
 	SurfaceGroupConfig,
+	SurfaceGroupConfigStored,
 	SurfacePanelConfig,
 } from '@companion-app/shared/Model/Surfaces.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
@@ -642,7 +643,7 @@ export class SurfaceHandler extends EventEmitter<SurfaceHandlerEvents> {
 	/**
 	 * Get the 'SurfaceGroup' config for this surface, when run as an auto group
 	 */
-	getGroupConfig(): SurfaceGroupConfig {
+	getGroupConfig(): SurfaceGroupConfigStored {
 		if (this.getGroupId()) throw new Error('Cannot retrieve the config from a non-auto surface')
 
 		return this.#surfaceConfig.groupConfig

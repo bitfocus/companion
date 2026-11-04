@@ -36,7 +36,7 @@ import type { ImageLibraryExportData } from '@companion-app/shared/Model/ImageLi
 import type { ClientExportRequest, ClientExportSelection } from '@companion-app/shared/Model/ImportExport.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { PageModel } from '@companion-app/shared/Model/PageModel.js'
-import type { SurfaceGroupConfig } from '@companion-app/shared/Model/Surfaces.js'
+import type { SurfaceGroupConfigStored } from '@companion-app/shared/Model/Surfaces.js'
 import type { TriggerCollection } from '@companion-app/shared/Model/TriggerModel.js'
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { assertNever } from '@companion-app/shared/Util.js'
@@ -674,7 +674,7 @@ export class ExportController {
 			const findPage = (id: string) => this.#pagesStore.getPageNumber(id)
 			// Convert internal page refs to page numbers.
 			// Note that `page`, which is a holdover from previous times, is already recorded as a number...
-			const setExportPageId = (groupConfig: SurfaceGroupConfig) => {
+			const setExportPageId = (groupConfig: SurfaceGroupConfigStored) => {
 				if (!groupConfig) return // Shouldn't happen but does
 
 				groupConfig.last_page = findPage(groupConfig.last_page_id) ?? 1

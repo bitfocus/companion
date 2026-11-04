@@ -10,7 +10,7 @@ import { JsonObjectSchema } from '../Options.js'
 import {
 	OutboundSurfaceInfoSchema,
 	SurfaceConfigSchema,
-	SurfaceGroupConfigSchema,
+	SurfaceGroupConfigStoredSchema,
 	SurfacePanelConfigSchema,
 } from '../Surfaces.js'
 import { TriggerModelSchema } from '../TriggerModel.js'
@@ -64,7 +64,7 @@ const ExportV17ImageSchema = z.object({
 const ExportV17ImageLibrarySchema = z.array(ExportV17ImageSchema)
 
 /** The config of a surface group. The import applies it field by field, over any existing group */
-const ExportV17SurfaceGroupConfigSchema = withoutDefaults(SurfaceGroupConfigSchema)
+const ExportV17SurfaceGroupConfigSchema = withoutDefaults(SurfaceGroupConfigStoredSchema)
 
 /** A surface. Its group config is only used when it is in its own automatic group */
 const ExportV17SurfaceSchema = withoutDefaults(SurfaceConfigSchema.out).extend({
