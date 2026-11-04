@@ -3,6 +3,7 @@ import { CreatePageControlId, type SomeControlId } from '@companion-app/shared/C
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
+import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { ControlButtonLayered } from '../../lib/Controls/ControlTypes/Button/Layered.js'
 import { createTestApp, type TestApp } from './TestApp.js'
 
@@ -162,13 +163,12 @@ describe('variable changes reach what reads them', () => {
 
 		await vi.waitFor(() => {
 			expect(renderedText(onPage1)).toBe('[p1]')
-			expect(renderedText(onPage2)).not.toBe('[p1]')
+			expect(renderedText(onPage2)).toBe(`[${VARIABLE_UNKNOWN_VALUE}]`)
 		})
-		const page2Before = renderedText(onPage2)
 
 		app.registry.variables.custom.setValue('page_src', 'p2')
 		await vi.waitFor(() => expect(renderedText(onPage1)).toBe('[p2]'))
-		expect(renderedText(onPage2)).toBe(page2Before)
+		expect(renderedText(onPage2)).toBe(`[${VARIABLE_UNKNOWN_VALUE}]`)
 	})
 
 	test('a step expression follows the variables it reads', async () => {
