@@ -192,15 +192,13 @@ function createHarness(model: Partial<CustomActionModel>) {
 		customActionInstances,
 	}
 
-	// As the controls controller does, keep the copies held by calling actions up to date
+	// As the app does, keep the copies held by calling actions up to date
 	deps.events.on('customActionDefinitionChanged', (controlId: CustomActionControlId) =>
 		customActionInstances.onCustomActionChanged(controlId)
 	)
-	variableValues.on('variablesChanged', (changed, _labels, controlId) => {
-		const controlIdFilter = controlId ? new Set([controlId]) : null
-		variableDependencies.dispatch(changed, controlIdFilter)
-		customActionInstances.onVariablesChanged(changed, controlIdFilter)
-	})
+	variableValues.on('variablesChanged', (changed, _labels, controlId) =>
+		variableDependencies.dispatch(changed, controlId ? new Set([controlId]) : null)
+	)
 
 	const storage: CustomActionModel = {
 		type: 'custom-action',
@@ -264,6 +262,7 @@ function createHarness(model: Partial<CustomActionModel>) {
 		processManager,
 		variablesController,
 		variableValues,
+		variableDependencies,
 		customActionInstances,
 		evaluate,
 		runAsButton,
@@ -744,6 +743,27 @@ describe('ControlCustomAction', () => {
 				caller.controlId,
 				expect.any(Function)
 			)
+		})
+
+		test('the variables used by the inputs are forgotten when the calling action is removed', () => {
+			const { createCaller, customActionInstances, variableValues, variableDependencies } = createHarness({
+				actions: [action('record')],
+			})
+			variableValues.setVariableValues('test', [{ id: 'num', value: 1 }])
+
+			const caller = createCaller([])
+			const dependenciesWithoutCopy = variableDependencies.stats().dependencies
+
+			caller.entities.entityAdd('custom_action_actions', null, callAction({ n: exprExpr('$(test:num) + 1') }))
+			const callerEntity = caller.entities.getActionEntities()[0]
+			expect(variableDependencies.stats().dependencies).toBeGreaterThan(dependenciesWithoutCopy)
+
+			const notified = vi.spyOn(customActionInstances, 'onVariableDependenciesChanged')
+			caller.entities.entityRemove('custom_action_actions', callerEntity.id)
+			variableValues.setVariableValues('test', [{ id: 'num', value: 2 }])
+
+			expect(notified).not.toHaveBeenCalled()
+			expect(variableDependencies.stats().dependencies).toBe(dependenciesWithoutCopy)
 		})
 
 		test('the copy is not re-subscribed when a variable change leaves its inputs the same', () => {

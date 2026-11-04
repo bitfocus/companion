@@ -636,8 +636,6 @@ export class ControlsController {
 		controlIdFilter: ReadonlySet<SomeControlId> | null
 	): void {
 		this.#store.triggerEvents.emit('variables_changed', allChangedVariablesSet, controlIdFilter)
-
-		this.#deps.customActionInstances.onVariablesChanged(allChangedVariablesSet, controlIdFilter)
 	}
 
 	/**
