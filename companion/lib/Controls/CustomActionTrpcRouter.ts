@@ -1,4 +1,5 @@
 import type EventEmitter from 'node:events'
+import { setTimeout } from 'node:timers/promises'
 import { nanoid } from 'nanoid'
 import z from 'zod'
 import { isCustomActionsConnectionId } from '@companion-app/shared/ConnectionId.js'
@@ -13,6 +14,8 @@ import {
 	type ClientCustomActionData,
 	type CustomActionsUpdate,
 	type CustomActionsUpdateInitOp,
+	type CustomActionUsage,
+	type CustomActionUse,
 } from '@companion-app/shared/Model/CustomActionModel.js'
 import { AuthorableInputFieldSchema, type ExpressionableOptionsObject } from '@companion-app/shared/Model/Options.js'
 import { publicProcedure, router, toIterable } from '../UI/TRPC.js'
@@ -20,6 +23,7 @@ import type { ControlChangeEvents } from './ControlDependencies.js'
 import type { ControlStore } from './ControlStore.js'
 import { ControlCustomAction } from './ControlTypes/CustomAction.js'
 import type { CustomActionCollections } from './CustomActionCollections.js'
+import type { CustomActionInstanceManager } from './CustomActions/CustomActionInstanceManager.js'
 import type { ControlsFactory } from './Factory.js'
 
 /**
@@ -126,12 +130,52 @@ export function renameCustomActionOutputInCallers(
 	}
 }
 
+/** How often the usage of a custom action is sent at most, as runs inside a loop start and finish rapidly */
+const USAGE_UPDATE_INTERVAL_MS = 100
+
+/**
+ * What calls a custom action, and its runs in progress
+ * @param controlStore The store of all the controls
+ * @param customActionInstances The copies and runs of the custom actions
+ * @param customActionControlId The control id of the custom action
+ */
+export function getCustomActionUsage(
+	controlStore: ControlStore,
+	customActionInstances: CustomActionInstanceManager,
+	customActionControlId: CustomActionControlId
+): CustomActionUsage {
+	const parsedId = ParseControlId(customActionControlId)
+	if (parsedId?.type !== 'custom-action') return { uses: [], otherRuns: [] }
+
+	const runsByUse = Map.groupBy(customActionInstances.getRuns(customActionControlId), (run) => run.useEntityId)
+
+	const uses: CustomActionUse[] = []
+	for (const control of controlStore.controls.values()) {
+		if (!control.supportsEntities) continue
+
+		for (const entity of control.entities.getAllEntities()) {
+			if (!isCustomActionsConnectionId(entity.connectionId) || entity.definitionId !== parsedId.customActionId) continue
+
+			uses.push({
+				controlId: control.controlId,
+				entityId: entity.id,
+				disabled: !!entity.disabled,
+				runs: (runsByUse.get(entity.id) ?? []).map(({ run }) => run),
+			})
+			runsByUse.delete(entity.id)
+		}
+	}
+
+	return { uses, otherRuns: [...runsByUse.values()].flat().map(({ run }) => run) }
+}
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function createCustomActionTrpcRouter(
 	changeEvents: EventEmitter<ControlChangeEvents>,
 	customActionCollections: CustomActionCollections,
 	controlStore: ControlStore,
-	factory: ControlsFactory
+	factory: ControlsFactory,
+	customActionInstances: CustomActionInstanceManager
 ) {
 	function getCustomAction(controlId: CustomActionControlId): ControlCustomAction | undefined {
 		const control = controlStore.controls.get(controlId)
@@ -158,6 +202,56 @@ export function createCustomActionTrpcRouter(
 				yield data satisfies CustomActionsUpdate
 			}
 		}),
+
+		watchUsage: publicProcedure
+			.input(z.object({ controlId: zodControlIds['custom-action'] }))
+			.subscription(async function* ({ input, signal }) {
+				// Send the latest when something has changed, rather than every change
+				let changed = true
+				let wake: (() => void) | null = null
+				const onChange = () => {
+					changed = true
+					wake?.()
+				}
+				customActionInstances.events.on('usageChanged', onChange)
+				const onAbort = () => wake?.()
+				signal?.addEventListener('abort', onAbort)
+
+				try {
+					while (!signal?.aborted) {
+						if (!changed) await new Promise<void>((resolve) => (wake = resolve))
+						wake = null
+						if (signal?.aborted) break
+
+						changed = false
+						yield getCustomActionUsage(controlStore, customActionInstances, input.controlId)
+
+						await setTimeout(USAGE_UPDATE_INTERVAL_MS)
+					}
+				} finally {
+					customActionInstances.events.off('usageChanged', onChange)
+					signal?.removeEventListener('abort', onAbort)
+				}
+			}),
+
+		abortUse: publicProcedure
+			.input(z.object({ controlId: zodControlIds['custom-action'], entityId: z.string() }))
+			.mutation(({ input }) => customActionInstances.abortRuns(input.controlId, input.entityId)),
+
+		abortAll: publicProcedure.input(z.object({ controlId: zodControlIds['custom-action'] })).mutation(({ input }) => {
+			getCustomAction(input.controlId)?.abortDelayedActions(false, null)
+			return customActionInstances.abortRuns(input.controlId, null)
+		}),
+
+		abortTestRun: publicProcedure
+			.input(z.object({ controlId: zodControlIds['custom-action'] }))
+			.mutation(({ input }) => {
+				const control = getCustomAction(input.controlId)
+				if (!control) return false
+
+				control.abortDelayedActions(false, null)
+				return true
+			}),
 
 		create: publicProcedure.input(z.object({ name: z.string() })).mutation(({ input }) => {
 			const controlId = CreateCustomActionControlId(nanoid())

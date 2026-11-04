@@ -8,6 +8,7 @@ import {
 	type SomeControlId,
 } from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import type { CustomActionUsage } from '@companion-app/shared/Model/CustomActionModel.js'
 import { EntityModelType, type EntityOwner } from '@companion-app/shared/Model/EntityModel.js'
 import { exprExpr, exprVal, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
 import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
@@ -735,6 +736,152 @@ describe('long running custom actions', () => {
 		})
 		expect(app.getCustomVariableValue('fromButton')).toBe('2/1/1 the page')
 		expect(app.getCustomVariableValue('fromCustomAction')).toBe(app.getCustomVariableValue('fromButton'))
+	})
+
+	/** The current usage of a custom action, as the editor sees it */
+	async function readUsage(customActionId: CustomActionControlId): Promise<CustomActionUsage> {
+		const iterable = await app.trpc().controls.customActions.watchUsage({ controlId: customActionId })
+		const iterator = iterable[Symbol.asyncIterator]()
+		try {
+			const { value } = await iterator.next()
+			return value as CustomActionUsage
+		} finally {
+			await iterator.return?.()
+		}
+	}
+
+	test('the uses of a custom action show the runs of each, which can be aborted on their own or all together', async () => {
+		app.createCustomVariable('first', 0)
+		app.createCustomVariable('second', 0)
+		const { controlId: customActionId } = await createCountingCustomAction(
+			'Forever',
+			'true',
+			'$(local:count) + $(options:step)',
+			100
+		)
+		const firstLocation = { pageNumber: 1, row: 1, column: 1 }
+		const firstId = addCountingButton(firstLocation, customActionId, {}, 'first')
+		const secondLocation = { pageNumber: 1, row: 1, column: 2 }
+		const secondId = addCountingButton(secondLocation, customActionId, {}, 'second')
+
+		// Not running yet
+		expect(await readUsage(customActionId)).toEqual({
+			uses: expect.arrayContaining([
+				{ controlId: firstId, entityId: findCallId(app, firstId), disabled: false, runs: [] },
+				{ controlId: secondId, entityId: findCallId(app, secondId), disabled: false, runs: [] },
+			]),
+			otherRuns: [],
+		})
+
+		app.pressButton(firstLocation, true)
+		app.pressButton(secondLocation, true)
+		await vi.waitFor(() => {
+			expect(app.getCustomVariableValue('first')).toBeGreaterThanOrEqual(2)
+			expect(app.getCustomVariableValue('second')).toBeGreaterThanOrEqual(2)
+		})
+
+		const running = await readUsage(customActionId)
+		for (const use of running.uses) {
+			expect(use.runs).toEqual([{ runId: expect.any(String), controlId: use.controlId, startedAt: expect.any(Number) }])
+		}
+
+		// Stopping the runs of the first leaves the second going
+		expect(
+			await app
+				.trpc()
+				.controls.customActions.abortUse({ controlId: customActionId, entityId: findCallId(app, firstId) })
+		).toBe(1)
+		const firstStoppedAt = app.getCustomVariableValue('first') as number
+		const secondBefore = app.getCustomVariableValue('second') as number
+		await new Promise((resolve) => setTimeout(resolve, 400))
+		expect(app.getCustomVariableValue('first')).toBeLessThanOrEqual(firstStoppedAt + 1)
+		expect(app.getCustomVariableValue('second')).toBeGreaterThan(secondBefore + 1)
+
+		const afterOne = await readUsage(customActionId)
+		expect(afterOne.uses.find((use) => use.controlId === firstId)?.runs).toEqual([])
+		expect(afterOne.uses.find((use) => use.controlId === secondId)?.runs).toHaveLength(1)
+
+		// And all of them stops the rest
+		expect(await app.trpc().controls.customActions.abortAll({ controlId: customActionId })).toBe(1)
+		await vi.waitFor(async () => {
+			const stopped = await readUsage(customActionId)
+			expect(stopped.uses.every((use) => use.runs.length === 0)).toBe(true)
+		})
+	})
+
+	test('a run inside another custom action is listed against the call in that custom action', async () => {
+		app.createCustomVariable('progress', 0)
+		const { controlId: innerId } = await createCountingCustomAction(
+			'Forever',
+			'true',
+			'$(local:count) + $(options:step)',
+			100
+		)
+		const outerId = await app.trpc().controls.customActions.create({ name: 'Outer' })
+		app.addLocalVariable(outerId, 'seen', 'user_value', { startup_value: exprVal(0) })
+		app.addCustomActionCall(
+			outerId,
+			innerId,
+			{},
+			{
+				count: { type: 'local-variable', location: exprVal('this'), variableName: exprVal('seen') },
+			}
+		)
+		await app.trpc().controls.customActions.outputAdd({
+			controlId: outerId,
+			output: { id: 'count', label: 'Seen', variableName: 'seen' },
+		})
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		const buttonId = addCountingButton(location, outerId, {}, 'progress')
+		app.pressButton(location, true)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('progress')).toBeGreaterThanOrEqual(2))
+
+		// The inner one is called from the outer, running from the button
+		const innerCallId = findCallId(app, outerId)
+		const usage = await readUsage(innerId)
+		expect(usage.uses).toEqual([
+			{
+				controlId: outerId,
+				entityId: innerCallId,
+				disabled: false,
+				runs: [{ runId: expect.any(String), controlId: buttonId, startedAt: expect.any(Number) }],
+			},
+		])
+		expect(usage.otherRuns).toEqual([])
+
+		// Stopping it there stops the loop
+		expect(await app.trpc().controls.customActions.abortUse({ controlId: innerId, entityId: innerCallId })).toBe(1)
+		const stoppedAt = app.getCustomVariableValue('progress') as number
+		await new Promise((resolve) => setTimeout(resolve, 400))
+		expect(app.getCustomVariableValue('progress')).toBeLessThanOrEqual(stoppedAt + 1)
+	})
+
+	test('a test run from the editor can be aborted', async () => {
+		app.createCustomVariable('tick', 0)
+		const { controlId: customActionId, body } = await createCountingCustomAction(
+			'Forever',
+			'true',
+			'$(local:count) + $(options:step)',
+			100
+		)
+		app.addCustomActionAction(customActionId, body, 'custom_variable_set_value', {
+			name: exprVal('tick'),
+			create: exprVal(false),
+			value: exprExpr('$(local:count)'),
+		})
+		const control = app.registry.controls.getControl(customActionId)
+		if (!(control instanceof ControlCustomAction)) throw new Error('Expected a custom action')
+
+		expect(await app.trpc().controls.customActions.testRun({ controlId: customActionId })).toBe(true)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('tick')).toBeGreaterThanOrEqual(2))
+		expect(control.toRuntimeJSON().testRunning).toBe(true)
+
+		expect(await app.trpc().controls.customActions.abortTestRun({ controlId: customActionId })).toBe(true)
+		await vi.waitFor(() => expect(control.toRuntimeJSON().testRunning).toBe(false))
+		const stoppedAt = app.getCustomVariableValue('tick') as number
+		await new Promise((resolve) => setTimeout(resolve, 400))
+		expect(app.getCustomVariableValue('tick')).toBeLessThanOrEqual(stoppedAt + 1)
 	})
 })
 

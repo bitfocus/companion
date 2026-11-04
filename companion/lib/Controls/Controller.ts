@@ -314,7 +314,8 @@ export class ControlsController {
 				this.#controlChangeEvents,
 				this.#customActionCollections,
 				this.#store,
-				this.#factory
+				this.#factory,
+				this.#deps.customActionInstances
 			),
 			expressionVariables: createExpressionVariableTrpcRouter(
 				this.#controlChangeEvents,
