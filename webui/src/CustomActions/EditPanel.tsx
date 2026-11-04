@@ -1,4 +1,4 @@
-import { faPlay } from '@fortawesome/free-solid-svg-icons'
+import { faPlay, faStop } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useContext, useId, useMemo } from 'react'
 import type { CustomActionControlId } from '@companion-app/shared/ControlId.js'
@@ -28,6 +28,7 @@ import { LoadingRetryOrError } from '~/Resources/Loading.js'
 import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { RootAppStoreContext } from '~/Stores/RootAppStore.js'
 import { CustomActionOutputsEditor } from './OutputsEditor.js'
+import { CustomActionUsesEditor } from './UsesEditor.js'
 
 interface EditCustomActionPanelProps {
 	controlId: CustomActionControlId
@@ -62,7 +63,7 @@ interface CustomActionPanelContentProps {
 function CustomActionPanelContent({ config, controlId, testRunning }: CustomActionPanelContentProps): React.ReactNode {
 	const setControlNotes = useControlNotesSetter(controlId, 'custom-action')
 	const notesState = useNotesEditor(controlId, config.options.notes, setControlNotes)
-	const [activeTab, setActiveTab] = useLocalStorage<'actions' | 'inputs' | 'outputs' | 'variables'>(
+	const [activeTab, setActiveTab] = useLocalStorage<'actions' | 'inputs' | 'outputs' | 'variables' | 'uses'>(
 		'customActionEditor.activeTab',
 		'actions'
 	)
@@ -116,6 +117,7 @@ function CustomActionPanelContent({ config, controlId, testRunning }: CustomActi
 								</span>
 							)}
 						</TabArea.Tab>
+						<TabArea.Tab value="uses">Uses</TabArea.Tab>
 					</TabArea.List>
 				</TabArea.Root>
 			</div>
@@ -135,6 +137,12 @@ function CustomActionPanelContent({ config, controlId, testRunning }: CustomActi
 								outputs={config.outputs}
 								variableNames={localVariableNames}
 							/>
+						</MyErrorBoundary>
+					)}
+
+					{activeTab === 'uses' && (
+						<MyErrorBoundary>
+							<CustomActionUsesEditor controlId={controlId} testRunning={testRunning} />
 						</MyErrorBoundary>
 					)}
 
@@ -288,6 +296,7 @@ function TestRunButton({
 }) {
 	const { notifier } = useContext(RootAppStoreContext)
 	const testRunMutation = useMutationExt(trpc.controls.customActions.testRun.mutationOptions())
+	const abortMutation = useMutationExt(trpc.controls.customActions.abortTestRun.mutationOptions())
 
 	const doTestRun = useCallback(() => {
 		testRunMutation.mutateAsync({ controlId }).catch((err) => {
@@ -295,10 +304,21 @@ function TestRunButton({
 		})
 	}, [testRunMutation, controlId, name, notifier])
 
-	return (
-		<Button size="sm" onClick={doTestRun} disabled={running} title="Run the actions now, with the default inputs">
+	const doAbort = useCallback(() => {
+		abortMutation.mutateAsync({ controlId }).catch((err) => {
+			notifier.show('Abort Failed', `Failed to abort "${name}": ${String(err)}`, 4000)
+		})
+	}, [abortMutation, controlId, name, notifier])
+
+	return running ? (
+		<Button size="sm" color="danger" onClick={doAbort} title="Stop the test run">
+			<FontAwesomeIcon icon={faStop} className="me-1.5 text-2xs" />
+			Abort Test Run
+		</Button>
+	) : (
+		<Button size="sm" onClick={doTestRun} title="Run the actions now, with the default inputs">
 			<FontAwesomeIcon icon={faPlay} className="me-1.5 text-2xs" />
-			{running ? 'Running…' : 'Test Run'}
+			Test Run
 		</Button>
 	)
 }
