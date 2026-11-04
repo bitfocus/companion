@@ -10,6 +10,7 @@ import { nanoid } from 'nanoid'
 import supertest from 'supertest'
 import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
 import {
+	isControlIdOfKind,
 	ParseControlId,
 	type BankControlId,
 	type CustomActionControlId,
@@ -108,13 +109,28 @@ export interface TestApp {
 		definitionId: string,
 		options: Record<string, ExpressionOrValue<any>>
 	): string
-	/** Add an action from the internal connection to a custom action's action list */
+	/** Add an action from the internal connection to a custom action's action list, or a child group in it */
 	addCustomActionAction(
 		controlId: CustomActionControlId,
+		owner: EntityOwner | null,
 		definitionId: string,
 		options: Record<string, ExpressionOrValue<any>>
 	): string
-	/** Add an action which runs a custom action, to the first step's 'down' set of a button */
+	/** Add a feedback from the internal connection to a child group in a custom action's action list (eg a condition) */
+	addCustomActionChildFeedback(
+		controlId: CustomActionControlId,
+		owner: EntityOwner,
+		definitionId: string,
+		options: Record<string, ExpressionOrValue<any>>
+	): string
+	/** Add a local variable from the internal connection (eg `user_value`, `expression_value`) to a control */
+	addLocalVariable(
+		controlId: SomeControlId,
+		name: string,
+		definitionId: string,
+		options: Record<string, ExpressionOrValue<any>>
+	): string
+	/** Add an action which runs a custom action, to the first step's 'down' set of a button, or to a custom action */
 	addCustomActionCall(
 		controlId: SomeControlId,
 		customActionControlId: CustomActionControlId,
@@ -502,8 +518,26 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 			)
 		},
 
-		addCustomActionAction(controlId, definitionId, options) {
-			return addInternalEntity(controlId, 'custom_action_actions', null, EntityModelType.Action, definitionId, options)
+		addCustomActionAction(controlId, owner, definitionId, options) {
+			return addInternalEntity(controlId, 'custom_action_actions', owner, EntityModelType.Action, definitionId, options)
+		},
+
+		addCustomActionChildFeedback(controlId, owner, definitionId, options) {
+			return addInternalEntity(
+				controlId,
+				'custom_action_actions',
+				owner,
+				EntityModelType.Feedback,
+				definitionId,
+				options
+			)
+		},
+
+		addLocalVariable(controlId, name, definitionId, options) {
+			const id = addInternalEntity(controlId, 'local-variables', null, EntityModelType.Feedback, definitionId, options)
+			if (!getEditableEntities(controlId).entitySetVariableName('local-variables', id, name))
+				throw new Error(`Failed to name local variable "${name}" on "${controlId}"`)
+			return id
 		},
 
 		addCustomActionCall(controlId, customActionControlId, options, outputTargets) {
@@ -519,7 +553,8 @@ export async function createTestApp(options: TestAppOptions): Promise<TestApp> {
 				upgradeIndex: undefined,
 				outputTargets: outputTargets ?? undefined,
 			}
-			if (!getEditableEntities(controlId).entityAdd(firstDownSet(controlId), null, entityModel))
+			const listId = isControlIdOfKind(controlId, 'custom-action') ? 'custom_action_actions' : firstDownSet(controlId)
+			if (!getEditableEntities(controlId).entityAdd(listId, null, entityModel))
 				throw new Error(`Failed to add custom action call to "${controlId}"`)
 
 			return entityModel.id
