@@ -26,7 +26,10 @@ import {
 	CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP,
 	CustomActionInstanceManager,
 } from '../../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
-import { renameCustomActionInputInCallers } from '../../../lib/Controls/CustomActionTrpcRouter.js'
+import {
+	removeCustomActionInputInCallers,
+	renameCustomActionInputInCallers,
+} from '../../../lib/Controls/CustomActionTrpcRouter.js'
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
 import { ReferencedLocationsIndex } from '../../../lib/Controls/ReferencedLocationsIndex.js'
 import type { RunActionExtras } from '../../../lib/Instance/Connection/ChildHandlerApi.js'
@@ -378,6 +381,21 @@ describe('ControlCustomAction', () => {
 
 			const [renamed, untouched] = caller.entities.getActionEntities()
 			expect(renamed.rawOptions).toEqual({ count: exprVal(5) })
+			expect(untouched.rawOptions).toEqual({ n: exprVal(6) })
+		})
+
+		test('removing an input removes the value given for it by the actions which call the custom action', () => {
+			const { deps, controlStore } = createHarness({})
+
+			const caller = new ControlCustomAction(deps, CALLER_CONTROL_ID, null, false)
+			caller.entities.entityAdd('custom_action_actions', null, callAction({ n: exprVal(5), m: exprVal(1) }))
+			caller.entities.entityAdd('custom_action_actions', null, callAction({ n: exprVal(6) }, 'other'))
+			controlStore.controls.set(CALLER_CONTROL_ID, caller)
+
+			removeCustomActionInputInCallers(controlStore, CUSTOM_ACTION_CONTROL_ID, 'n')
+
+			const [removed, untouched] = caller.entities.getActionEntities()
+			expect(removed.rawOptions).toEqual({ m: exprVal(1) })
 			expect(untouched.rawOptions).toEqual({ n: exprVal(6) })
 		})
 	})
