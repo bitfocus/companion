@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite'
-import { ParseControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { useCallback, useMemo, useRef } from 'react'
+import { ParseControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { LocalVariableLocationOption } from '@companion-app/shared/ControlLocation.js'
 import {
 	CustomVariableCreateIfNotExistsOption,

@@ -2,7 +2,11 @@ import { EventEmitter } from 'node:events'
 import { describe, expect, test, vi } from 'vitest'
 import { mock, mockDeep } from 'vitest-mock-extended'
 import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
-import { CreateCustomActionControlId } from '@companion-app/shared/ControlId.js'
+import {
+	CreateBankControlId,
+	CreateCustomActionControlId,
+	type CustomActionControlId,
+} from '@companion-app/shared/ControlId.js'
 import type { CustomActionModel } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import {
@@ -24,16 +28,19 @@ import {
 } from '../../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
 import { renameCustomActionInputInCallers } from '../../../lib/Controls/CustomActionTrpcRouter.js'
 import type { ControlEntityInstance } from '../../../lib/Controls/Entities/EntityInstance.js'
+import { ReferencedLocationsIndex } from '../../../lib/Controls/ReferencedLocationsIndex.js'
 import type { RunActionExtras } from '../../../lib/Instance/Connection/ChildHandlerApi.js'
 import type { InstanceController } from '../../../lib/Instance/Controller.js'
 import type { InternalController } from '../../../lib/Internal/Controller.js'
 import type { VariablesController } from '../../../lib/Variables/Controller.js'
+import { VariableDependencyRegistry } from '../../../lib/Variables/DependencyRegistry.js'
 import { LocalVariablesController } from '../../../lib/Variables/LocalVariablesController.js'
 import { VariablesValues } from '../../../lib/Variables/Values.js'
 import { mockUserConfig } from '../../utils/MockUserConfig.js'
 
 const CUSTOM_ACTION_ID = 'abc'
 const CUSTOM_ACTION_CONTROL_ID = CreateCustomActionControlId(CUSTOM_ACTION_ID)
+const CALLER_CONTROL_ID = CreateCustomActionControlId('caller')
 
 function getEntityDefinition(
 	entityType: EntityModelType,
@@ -147,7 +154,8 @@ function createHarness(model: Partial<CustomActionModel>) {
 	}
 
 	const renderClock = { subscribe: vi.fn(() => () => {}) } as any
-	const customActionInstances = new CustomActionInstanceManager(controlStore, renderClock)
+	const variableDependencies = new VariableDependencyRegistry()
+	const customActionInstances = new CustomActionInstanceManager(controlStore, renderClock, variableDependencies)
 
 	const actionRunner = new ActionRunner(
 		instanceController,
@@ -177,18 +185,22 @@ function createHarness(model: Partial<CustomActionModel>) {
 		events: new EventEmitter() as any,
 		changeEvents: new EventEmitter() as any,
 		renderClock,
+		variableDependencies,
 		controlsAccessor: controlStore,
 		linkButtons: null as any,
+		referencedLocations: new ReferencedLocationsIndex(),
 		customActionInstances,
 	}
 
 	// As the controls controller does, keep the copies held by calling actions up to date
-	deps.events.on('customActionDefinitionChanged', (controlId: string) =>
+	deps.events.on('customActionDefinitionChanged', (controlId: CustomActionControlId) =>
 		customActionInstances.onCustomActionChanged(controlId)
 	)
-	variableValues.on('variablesChanged', (changed, _labels, controlId) =>
-		customActionInstances.onVariablesChanged(changed, controlId ? new Set([controlId]) : null)
-	)
+	variableValues.on('variablesChanged', (changed, _labels, controlId) => {
+		const controlIdFilter = controlId ? new Set([controlId]) : null
+		variableDependencies.dispatch(changed, controlIdFilter)
+		customActionInstances.onVariablesChanged(changed, controlIdFilter)
+	})
 
 	const storage: CustomActionModel = {
 		type: 'custom-action',
@@ -210,7 +222,7 @@ function createHarness(model: Partial<CustomActionModel>) {
 
 	/** Run some actions as if they belong to a button */
 	const runAsButton = async (entities: SomeEntityModel[], extras: Partial<RunActionExtras> = {}) => {
-		const caller = new ControlCustomAction(deps, 'custom-action:caller', null, false)
+		const caller = new ControlCustomAction(deps, CALLER_CONTROL_ID, null, false)
 		for (const entity of entities) caller.entities.entityAdd('custom_action_actions', null, entity)
 
 		// The store result of an action is resolved asynchronously
@@ -222,7 +234,7 @@ function createHarness(model: Partial<CustomActionModel>) {
 		})
 
 		const fullExtras: RunActionExtras = {
-			controlId: 'bank:caller',
+			controlId: CreateBankControlId('caller'),
 			surfaceId: 'surface0',
 			location: { pageNumber: 2, row: 1, column: 3 },
 			abortDelayed: new AbortController().signal,
@@ -236,7 +248,7 @@ function createHarness(model: Partial<CustomActionModel>) {
 
 	/** Create a control holding some actions which call custom actions */
 	const createCaller = (entities: SomeEntityModel[]) => {
-		const caller = new ControlCustomAction(deps, 'custom-action:caller', null, false)
+		const caller = new ControlCustomAction(deps, CALLER_CONTROL_ID, null, false)
 		for (const entity of entities) caller.entities.entityAdd('custom_action_actions', null, entity)
 		controlStore.controls.set(caller.controlId, caller)
 		return caller
@@ -285,7 +297,7 @@ describe('ControlCustomAction', () => {
 			const listener = vi.fn()
 			deps.events.on('customActionDefinitionChanged', listener)
 
-			control.optionsSetField('name', 'Renamed')
+			control.optionsSetField({ key: 'name', value: 'Renamed' })
 
 			expect(listener).toHaveBeenCalledWith(CUSTOM_ACTION_CONTROL_ID)
 		})
@@ -358,10 +370,10 @@ describe('ControlCustomAction', () => {
 		test('renaming an input updates the actions which call the custom action', () => {
 			const { deps, controlStore } = createHarness({})
 
-			const caller = new ControlCustomAction(deps, 'custom-action:caller', null, false)
+			const caller = new ControlCustomAction(deps, CALLER_CONTROL_ID, null, false)
 			caller.entities.entityAdd('custom_action_actions', null, callAction({ n: exprVal(5) }))
 			caller.entities.entityAdd('custom_action_actions', null, callAction({ n: exprVal(6) }, 'other'))
-			controlStore.controls.set('custom-action:caller', caller)
+			controlStore.controls.set(CALLER_CONTROL_ID, caller)
 
 			renameCustomActionInputInCallers(controlStore, CUSTOM_ACTION_CONTROL_ID, 'n', 'count')
 

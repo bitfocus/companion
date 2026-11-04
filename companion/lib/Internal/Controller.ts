@@ -293,7 +293,11 @@ export class InternalController implements VariableDependencyListener<FeedbackEn
 	 * @param controlId The control the entity belongs to
 	 * @param createParser Create a parser for the options of the entity, in the scope of the entity
 	 */
-	entityUpdate(entity: SomeEntityModel, controlId: SomeControlId, createParser: () => VariablesAndExpressionParser): void {
+	entityUpdate(
+		entity: SomeEntityModel,
+		controlId: SomeControlId,
+		createParser: () => VariablesAndExpressionParser
+	): void {
 		if (entity.type === EntityModelType.Feedback) {
 			this.#feedbackUpdate(entity, controlId, createParser)
 		}

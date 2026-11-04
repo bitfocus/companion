@@ -1,4 +1,5 @@
 import { action, observable } from 'mobx'
+import type { CustomActionControlId } from '@companion-app/shared/ControlId.js'
 import { applyObjectPatch } from '@companion-app/shared/Diff.js'
 import type {
 	ClientCustomActionData,
@@ -8,7 +9,7 @@ import type {
 import { assertNever } from '~/Resources/util'
 
 export class CustomActionsListStore {
-	readonly customActions = observable.map<string, ClientCustomActionData>()
+	readonly customActions = observable.map<CustomActionControlId, ClientCustomActionData>()
 	readonly collections = observable.map<string, CustomActionCollection>()
 
 	public updateDefinitions = action((change: CustomActionsUpdate | null) => {

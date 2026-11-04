@@ -1,8 +1,12 @@
 import { describe, expect, test } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
-import { CreateBankControlId, CreateTriggerControlId, type SomeControlId } from '@companion-app/shared/ControlId.js'
 import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
-import { CreateCustomActionControlId, CreateTriggerControlId } from '@companion-app/shared/ControlId.js'
+import {
+	CreateBankControlId,
+	CreateCustomActionControlId,
+	CreateTriggerControlId,
+	type SomeControlId,
+} from '@companion-app/shared/ControlId.js'
 import type { ExportInstances, ExportPageContent } from '@companion-app/shared/Model/Export/Latest.js'
 import type { ClientImportOrResetSelection, ImportOrResetType } from '@companion-app/shared/Model/ImportExport.js'
 import type { ControlsController } from '../../lib/Controls/Controller.js'

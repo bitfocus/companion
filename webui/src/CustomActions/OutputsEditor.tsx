@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useMemo, useRef } from 'react'
 import type { JsonValue } from 'type-fest'
+import type { CustomActionControlId } from '@companion-app/shared/ControlId.js'
 import type { CustomActionOutput } from '@companion-app/shared/Model/CustomActionModel.js'
 import type { ExpressionOrValue, SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
@@ -22,7 +23,7 @@ import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { PreventDefaultHandler } from '~/Resources/util.js'
 
 interface CustomActionOutputsEditorProps {
-	controlId: string
+	controlId: CustomActionControlId
 	outputs: CustomActionOutput[]
 	/** The names of the local variables of the custom action, which an output can come from */
 	variableNames: string[]

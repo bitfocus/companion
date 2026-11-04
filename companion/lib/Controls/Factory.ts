@@ -1,5 +1,6 @@
 import {
 	isControlIdOfKind,
+	type CustomActionControlId,
 	type ExpressionVariableControlId,
 	type SomeControlId,
 	type TriggerControlId,
@@ -117,7 +118,7 @@ export class ControlsFactory {
 		return new ControlExpressionVariable(this.#controlDeps, controlId, storage, !!storage)
 	}
 
-	createCustomAction(controlId: string, storage: CustomActionModel | null = null): ControlCustomAction {
+	createCustomAction(controlId: CustomActionControlId, storage: CustomActionModel | null = null): ControlCustomAction {
 		return new ControlCustomAction(this.#controlDeps, controlId, storage, !!storage)
 	}
 

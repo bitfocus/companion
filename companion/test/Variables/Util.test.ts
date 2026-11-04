@@ -1,5 +1,5 @@
 import { describe, expect, it, test } from 'vitest'
-import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
+import { CreateBankControlId, CreateCustomActionControlId } from '@companion-app/shared/ControlId.js'
 import type { ClientEntityDefinition } from '@companion-app/shared/Model/EntityDefinitionModel.js'
 import { EntityModelType, type SomeEntityModel } from '@companion-app/shared/Model/EntityModel.js'
 import {
@@ -713,7 +713,7 @@ describe('buildActionExecutionOverrides', () => {
 		const overrides = buildActionExecutionOverrides(
 			makeExtras({
 				frame: {
-					customActionControlId: 'custom-action:abc',
+					customActionControlId: CreateCustomActionControlId('abc'),
 					options: { count: 3, name: 'cam' },
 					localValues: new Map(),
 					getLocalVariableEntities: () => [],

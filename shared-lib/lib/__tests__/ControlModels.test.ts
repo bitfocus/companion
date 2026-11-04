@@ -5,6 +5,7 @@ import {
 	CreatePageControlId,
 	CreatePresetControlId,
 	CreateTriggerControlId,
+	type CustomActionControlId,
 } from '../ControlId.js'
 import { ActionSetsModelSchema } from '../Model/ActionModel.js'
 import {
@@ -305,23 +306,27 @@ describe('CustomActionModelSchema', () => {
 })
 
 describe('getCustomActionCallsExcludedFrom', () => {
-	const customActions: [string, { calledCustomActionIds: string[] }][] = [
-		['custom-action:a', { calledCustomActionIds: ['b', 'c'] }],
-		['custom-action:b', { calledCustomActionIds: ['c'] }],
-		['custom-action:c', { calledCustomActionIds: [] }],
+	const customActions: [CustomActionControlId, { calledCustomActionIds: string[] }][] = [
+		[CreateCustomActionControlId('a'), { calledCustomActionIds: ['b', 'c'] }],
+		[CreateCustomActionControlId('b'), { calledCustomActionIds: ['c'] }],
+		[CreateCustomActionControlId('c'), { calledCustomActionIds: [] }],
 	]
 
 	test('excludes the custom action itself, and any which call it', () => {
-		expect(getCustomActionCallsExcludedFrom('custom-action:c', customActions)).toEqual(
+		expect(getCustomActionCallsExcludedFrom(CreateCustomActionControlId('c'), customActions)).toEqual(
 			new Set(['__custom-actions__:c', '__custom-actions__:a', '__custom-actions__:b'])
 		)
-		expect(getCustomActionCallsExcludedFrom('custom-action:a', customActions)).toEqual(
+		expect(getCustomActionCallsExcludedFrom(CreateCustomActionControlId('a'), customActions)).toEqual(
 			new Set(['__custom-actions__:a'])
 		)
 	})
 
 	test('excludes nothing from a control which is not a custom action', () => {
-		expect(getCustomActionCallsExcludedFrom('bank:abc', customActions)).toEqual(new Set())
+		expect(getCustomActionCallsExcludedFrom(CreateBankControlId('abc'), customActions)).toEqual(new Set())
+	})
+
+	test('excludes nothing when there is no control', () => {
+		expect(getCustomActionCallsExcludedFrom(null, customActions)).toEqual(new Set())
 	})
 })
 

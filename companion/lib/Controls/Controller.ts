@@ -12,6 +12,7 @@ import {
 	formatLocation,
 	ParseControlId,
 	type BankControlId,
+	type CustomActionControlId,
 	type ExpressionVariableControlId,
 	type ParsedControlIdType,
 	type SomeControlId,
@@ -570,12 +571,7 @@ export class ControlsController {
 	/**
 	 * Import a custom action
 	 */
-	importCustomAction(controlId: string, definition: CustomActionModel): boolean {
-		if (!validateCustomActionControlId(controlId)) {
-			// Control id is not valid!
-			return false
-		}
-
+	importCustomAction(controlId: CustomActionControlId, definition: CustomActionModel): boolean {
 		if (this.#store.controls.has(controlId)) throw new Error(`Custom action ${controlId} already exists`)
 
 		const newControl = this.#factory.createClassForControl(controlId, 'custom-action', definition, true)

@@ -1,5 +1,10 @@
 import type { EventEmitter } from 'node:events'
-import type { BankControlId, CustomActionControlId, PresetControlId, SomeControlId } from '@companion-app/shared/ControlId.js'
+import type {
+	BankControlId,
+	CustomActionControlId,
+	PresetControlId,
+	SomeControlId,
+} from '@companion-app/shared/ControlId.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
 import type { SomeControlModelSchema } from '@companion-app/shared/Model/Controls.js'
 import type { CustomActionsUpdate } from '@companion-app/shared/Model/CustomActionModel.js'

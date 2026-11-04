@@ -181,6 +181,10 @@ export class ControlEntityListPoolCustomAction extends WithEntityEditing(Control
 		return undefined
 	}
 
+	protected getLocalVariablesList(): ControlEntityList {
+		return this.#localVariables
+	}
+
 	protected getAllEntityLists(): ControlEntityList[] {
 		return [this.#actions, this.#localVariables]
 	}

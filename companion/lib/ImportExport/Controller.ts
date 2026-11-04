@@ -672,7 +672,7 @@ export class ImportExportController {
 
 		if (shouldReset(config.customActions)) {
 			this.#controlsController.replaceCustomActionCollections([])
-			this.#controlsController.deleteAllControlsOfType('custom-action')
+			await this.#controlsController.deleteAllControlsOfType('custom-action')
 		}
 
 		if (shouldReset(config.userconfig)) {

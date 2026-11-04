@@ -1,6 +1,6 @@
 import z from 'zod'
 import { CUSTOM_ACTIONS_CONNECTION_ID } from '../ConnectionId.js'
-import { ParseControlId } from '../ControlId.js'
+import { ParseControlId, type CustomActionControlId, type SomeControlId } from '../ControlId.js'
 import type { ObjectPatch } from '../Diff.js'
 import type { CollectionBase } from './Collections.js'
 import { SomeEntityModelSchema } from './EntityModel.js'
@@ -23,7 +23,7 @@ export type CustomActionOptions = z.output<typeof CustomActionOptionsSchema>
  * it would run itself
  */
 export function getCustomActionCallDefinition(
-	controlId: string
+	controlId: SomeControlId
 ): { connectionId: string; definitionId: string } | null {
 	const parsedId = ParseControlId(controlId)
 	if (parsedId?.type !== 'custom-action') return null
@@ -34,14 +34,15 @@ export function getCustomActionCallDefinition(
 /**
  * The ids (`<connectionId>:<definitionId>`) of the custom actions which can't be added to a control, as running them
  * there would come back to the custom action being edited: the custom action itself, and any which call it
- * @param controlId The control being edited
+ * @param controlId The control being edited, or null when it is not a control
  * @param customActions Each custom action, by its control id
  */
 export function getCustomActionCallsExcludedFrom(
-	controlId: string,
-	customActions: Iterable<[string, Pick<ClientCustomActionData, 'calledCustomActionIds'>]>
+	controlId: SomeControlId | null,
+	customActions: Iterable<[CustomActionControlId, Pick<ClientCustomActionData, 'calledCustomActionIds'>]>
 ): Set<string> {
 	const excluded = new Set<string>()
+	if (!controlId) return excluded
 
 	const self = getCustomActionCallDefinition(controlId)
 	if (!self) return excluded
@@ -102,26 +103,32 @@ export interface ClientCustomActionData extends CustomActionOptions {
 	nestedTooDeep: boolean
 }
 
+/** The properties of a custom action sent to the ui which are not persisted */
+export interface CustomActionRuntimeProps {
+	/** Whether a test run, started from the editor, is running */
+	testRunning: boolean
+}
+
 export type CustomActionsUpdate =
 	CustomActionsUpdateInitOp | CustomActionsUpdateAddOp | CustomActionsUpdateRemoveOp | CustomActionsUpdateUpdateOp
 
 export interface CustomActionsUpdateInitOp {
 	type: 'init'
-	customActions: Record<string, ClientCustomActionData>
+	customActions: Record<CustomActionControlId, ClientCustomActionData>
 }
 export interface CustomActionsUpdateRemoveOp {
 	type: 'remove'
-	controlId: string
+	controlId: CustomActionControlId
 }
 export interface CustomActionsUpdateUpdateOp {
 	type: 'update'
-	controlId: string
+	controlId: CustomActionControlId
 
 	patch: ObjectPatch<ClientCustomActionData>
 }
 export interface CustomActionsUpdateAddOp {
 	type: 'add'
-	controlId: string
+	controlId: CustomActionControlId
 
 	info: ClientCustomActionData
 }

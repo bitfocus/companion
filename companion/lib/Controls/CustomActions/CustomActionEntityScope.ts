@@ -1,5 +1,7 @@
 import debounceFn from 'debounce-fn'
+import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type { VariableValues } from '@companion-app/shared/Model/Variables.js'
+import type { VariableDependencyRegistry } from '../../Variables/DependencyRegistry.js'
 import type {
 	ExpressionParserOptions,
 	VariablesAndExpressionParser,
@@ -24,7 +26,7 @@ export class CustomActionEntityScope implements EntityScope {
 	readonly customActionInstances: CustomActionInstancesForEntity
 
 	readonly #customAction: ControlCustomAction
-	readonly #callerControlId: string
+	readonly #callerControlId: SomeControlId
 
 	#values: CustomActionValues
 	#actions: ControlEntityList | null = null
@@ -40,14 +42,16 @@ export class CustomActionEntityScope implements EntityScope {
 	 * @param customActionChain The custom actions this copy is running inside, ending with this one
 	 * @param customActionInstances For any copies of custom actions called by this copy
 	 * @param renderClock The render clock, for special expressions which depend on it
+	 * @param variableDependencies Where the special expressions register the variables they reference
 	 * @param values The inputs and local variable values of the copy
 	 */
 	constructor(
 		customAction: ControlCustomAction,
-		callerControlId: string,
+		callerControlId: SomeControlId,
 		customActionChain: ReadonlyArray<string>,
 		customActionInstances: CustomActionInstancesForEntity,
 		renderClock: RenderClock,
+		variableDependencies: VariableDependencyRegistry,
 		values: CustomActionValues
 	) {
 		this.#customAction = customAction
@@ -68,7 +72,8 @@ export class CustomActionEntityScope implements EntityScope {
 					this.#actions?.updateStoreResultValues(values)
 				},
 			},
-			renderClock
+			renderClock,
+			variableDependencies
 		)
 	}
 
@@ -95,7 +100,8 @@ export class CustomActionEntityScope implements EntityScope {
 	 * @param name The name of the variable, without the `local:` prefix
 	 */
 	localValueChanged(name: string): void {
-		this.specialExpressionManager.onVariablesChanged(new Set([`local:${name}`]))
+		// The values of the copy are its own, so the registry doesn't know of them
+		this.specialExpressionManager.onVariableDependenciesChanged([], new Set([`local:${name}`]))
 
 		// A run may set its variables many times in quick succession
 		this.#debounceResubscribeEntities()
