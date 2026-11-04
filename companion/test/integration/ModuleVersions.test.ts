@@ -188,6 +188,27 @@ describe('real module children across module-api versions', () => {
 				await vi.waitFor(() => {
 					expect(app.registry.variables.values.getVariableValue(label, 'last_value')).toBe('P-d=3 s=test-surface')
 				}, 30_000)
+
+				// A variable read by a feedback's options gets the options parsed again and sent to the module
+				const wantVariable = `want_${label}`
+				app.createCustomVariable(wantVariable, 'nothing yet')
+				expect(
+					await app.trpc().controls.entities.setOption({
+						controlId,
+						entityLocation: 'feedbacks',
+						entityId: feedbackId!,
+						key: 'value',
+						value: exprExpr(`$(custom:${wantVariable})`),
+					})
+				).toBe(true)
+				await vi.waitFor(() => {
+					expect(app.getFeedbackValue(controlId, feedbackId!)).toBe(false)
+				}, 30_000)
+
+				app.registry.variables.custom.setValue(wantVariable, 'P-d=3 s=test-surface')
+				await vi.waitFor(() => {
+					expect(app.getFeedbackValue(controlId, feedbackId!)).toBe(true)
+				}, 30_000)
 			}
 
 			// Behaviours that appeared in a specific api version are registered by the fixture only
