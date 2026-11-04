@@ -625,7 +625,7 @@ export class ControlsController {
 			if (ParseControlId(controlId)?.type === type) {
 				this.deleteControl(controlId)
 
-				// Yield every now and then to avoid blocking thhe event loop
+				// Yield every now and then to avoid blocking the event loop
 				deleted++
 				if (deleted % DELETE_CONTROLS_BATCH_SIZE === 0) await yieldToEventLoop()
 			}
