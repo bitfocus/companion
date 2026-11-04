@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import type { JsonValue } from 'type-fest'
+import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { ModuleInstanceType } from '@companion-app/shared/Model/Instance.js'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
@@ -79,7 +80,7 @@ export function InstanceEditField({
 					choices={definition.choices}
 					allowCustom={definition.allowCustom}
 					regex={definition.regex}
-					value={value as any}
+					value={value as DropdownChoiceId}
 					setValue={setValue}
 					checkValid={checkValid}
 				/>

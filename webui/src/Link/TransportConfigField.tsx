@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite'
 import { useCallback, useId } from 'react'
 import type { JsonValue } from 'type-fest'
+import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import type { LinkTransportConfigField } from '@companion-app/shared/Model/Link.js'
 import { stringifyVariableValue } from '@companion-app/shared/Model/Variables.js'
 import { validateInputValue } from '@companion-app/shared/ValidateInputValue.js'
@@ -108,7 +109,7 @@ export const TransportConfigField = observer(function TransportConfigField({
 					choices={definition.choices}
 					allowCustom={definition.allowCustom}
 					regex={definition.regex}
-					value={value as any}
+					value={value as DropdownChoiceId}
 					setValue={setValue}
 					checkValid={checkValid}
 				/>
