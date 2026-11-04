@@ -447,18 +447,6 @@ describe('page_variable_sync_to_default', () => {
 	})
 })
 
-describe('debug_action_result', () => {
-	it('returns the evaluated expression as the action result', () => {
-		const module = new InternalVariables(makeFullLocalVariablesController(null))
-
-		// optionsSupportExpressions parses the expression before executeAction, so options.expression
-		// is already the evaluated blob.
-		const action = makeAction('debug_action_result', { expression: { foo: 1 } }, { expression: exprExpr('{ foo: 1 }') })
-
-		expect(module.executeAction(action, fakeExtras, createParser())).toEqual({ result: { foo: 1 } })
-	})
-})
-
 describe('executeAction - unknown', () => {
 	it('returns null for an unrecognised action', () => {
 		const module = new InternalVariables(makeFullLocalVariablesController(null))
@@ -555,15 +543,6 @@ describe('executeFeedback - expression based', () => {
 
 	it('user_value is not evaluated here and returns false', () => {
 		expect(module.executeFeedback(makeFeedback('user_value', {}), createParser())).toBe(false)
-	})
-
-	it('debug_expression_value coerces non-objects to an empty style', () => {
-		expect(
-			module.executeFeedback(makeFeedback('debug_expression_value', { expression: 'not-an-object' }), createParser())
-		).toEqual({})
-		expect(
-			module.executeFeedback(makeFeedback('debug_expression_value', { expression: { color: 1 } }), createParser())
-		).toEqual({ color: 1 })
 	})
 })
 

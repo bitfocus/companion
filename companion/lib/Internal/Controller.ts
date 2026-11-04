@@ -52,6 +52,7 @@ import { InternalActionRecorder } from './ActionRecorder.js'
 import { InternalBuildingBlocks } from './BuildingBlocks.js'
 import { InternalControls } from './Controls.js'
 import { InternalCustomVariables } from './CustomVariables.js'
+import { InternalDebug } from './Debug.js'
 import { InternalInstance } from './Instance.js'
 import { InternalInvalidEntity } from './InvalidEntity.js'
 import { InternalPage } from './Page.js'
@@ -157,7 +158,8 @@ export class InternalController {
 			new InternalSystem(appInfo, userConfigController, this.#variablesController, requestExit),
 			new InternalTriggers(controls),
 			new InternalVariables(localVariablesController),
-			new InternalInvalidEntity()
+			new InternalInvalidEntity(),
+			new InternalDebug()
 		)
 
 		// Listen for events from the fragments
