@@ -23,7 +23,7 @@ import {
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
-import type { MetricsRegistry } from '../Data/Metrics.js'
+import type { LabeledValue, MetricsRegistry } from '../Data/Metrics.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
@@ -120,7 +120,11 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 	readonly #blinker: VariablesBlinker
 	#variableValues: VariableValueData = Object.create(null)
 
-	/** Per label, how many values have been reported, and how many of those were a change */
+	/**
+	 * Per label, how many values have been reported, and how many of those were a change. Kept for every label
+	 * ever seen, so a connection restarting, or a label reused after a delete or rename, carries on from its
+	 * totals rather than publishing a counter that went down.
+	 */
 	readonly #valueCounts = new Map<string, { reported: number; changed: number }>()
 
 	readonly #userconfig: DataUserConfig
@@ -308,14 +312,24 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 			'companion_variable_values_reported_total',
 			'Variable values reported (by a connection, or for custom/internal variables), changed or not',
 			['label'],
-			() => Array.from(this.#valueCounts, ([label, counts]) => ({ labels: { label }, value: counts.reported }))
+			() => this.#liveValueCounts('reported')
 		)
 		metrics.labeledCounter(
 			'companion_variable_values_changed_total',
 			'Reported variable values that differed from the previous value',
 			['label'],
-			() => Array.from(this.#valueCounts, ([label, counts]) => ({ labels: { label }, value: counts.changed }))
+			() => this.#liveValueCounts('changed')
 		)
+	}
+
+	/** The counts of the labels which currently hold values, so a removed connection's series is retired */
+	#liveValueCounts(kind: 'reported' | 'changed'): LabeledValue[] {
+		const out: LabeledValue[] = []
+		for (const [label, counts] of this.#valueCounts) {
+			if (this.#variableValues[label] === undefined) continue
+			out.push({ labels: { label }, value: counts[kind] })
+		}
+		return out
 	}
 
 	triggerLocationVariablesChange(controlId: SomeControlId): void {
