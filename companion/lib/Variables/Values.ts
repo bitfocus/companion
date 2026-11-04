@@ -23,6 +23,7 @@ import {
 import { stringifyError } from '@companion-app/shared/Stringify.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { ControlEntityInstance } from '../Controls/Entities/EntityInstance.js'
+import type { MetricsRegistry } from '../Data/Metrics.js'
 import type { DataUserConfig } from '../Data/UserConfig.js'
 import LogController from '../Log/Controller.js'
 import { publicProcedure, router } from '../UI/TRPC.js'
@@ -118,6 +119,9 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 
 	readonly #blinker: VariablesBlinker
 	#variableValues: VariableValueData = Object.create(null)
+
+	/** Per label, how many values have been reported, and how many of those were a change */
+	readonly #valueCounts = new Map<string, { reported: number; changed: number }>()
 
 	readonly #userconfig: DataUserConfig
 
@@ -255,12 +259,20 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		const moduleValues = this.#variableValues[label] ?? Object.create(null)
 		this.#variableValues[label] = moduleValues
 
+		let counts = this.#valueCounts.get(label)
+		if (!counts) {
+			counts = { reported: 0, changed: 0 }
+			this.#valueCounts.set(label, counts)
+		}
+		counts.reported += variables.length
+
 		const all_changed_variables_set = new Set<string>()
 		const connection_labels = new Set<string>()
 		for (const variable of variables) {
 			if (BANNED_PROPS.has(variable.id)) continue
 			if (moduleValues[variable.id] !== variable.value) {
 				moduleValues[variable.id] = variable.value
+				counts.changed++
 
 				all_changed_variables_set.add(`${label}:${variable.id}`)
 
@@ -288,6 +300,22 @@ export class VariablesValues extends EventEmitter<VariablesValuesEvents> {
 		} catch (e) {
 			this.#logger.error(`Failed to process variables update: ${stringifyError(e)}`)
 		}
+	}
+
+	/** Publish how many values are reported for each label, and how many of those actually change */
+	registerMetrics(metrics: MetricsRegistry): void {
+		metrics.labeledCounter(
+			'companion_variable_values_reported_total',
+			'Variable values reported (by a connection, or for custom/internal variables), changed or not',
+			['label'],
+			() => Array.from(this.#valueCounts, ([label, counts]) => ({ labels: { label }, value: counts.reported }))
+		)
+		metrics.labeledCounter(
+			'companion_variable_values_changed_total',
+			'Reported variable values that differed from the previous value',
+			['label'],
+			() => Array.from(this.#valueCounts, ([label, counts]) => ({ labels: { label }, value: counts.changed }))
+		)
 	}
 
 	triggerLocationVariablesChange(controlId: SomeControlId): void {

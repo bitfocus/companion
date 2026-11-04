@@ -2,10 +2,13 @@ import express from 'express'
 import supertest from 'supertest'
 import { describe, expect, test } from 'vitest'
 import { mockDeep } from 'vitest-mock-extended'
+import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
 import { DataMetrics } from '../../lib/Data/Metrics.js'
 import type { DataUserConfig } from '../../lib/Data/UserConfig.js'
 import type { AppInfo } from '../../lib/Registry.js'
-import { mockGetKey } from '../utils/MockUserConfig.js'
+import { VariableDependencyRegistry } from '../../lib/Variables/DependencyRegistry.js'
+import { VariablesValues } from '../../lib/Variables/Values.js'
+import { mockGetKey, mockUserConfig } from '../utils/MockUserConfig.js'
 
 const mockOptions = {
 	fallbackMockImplementation: () => {
@@ -92,6 +95,43 @@ describe('DataMetrics', () => {
 		counterSource = 8
 		const second = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
 		expect(second.text).toContain('companion_test_counter_total 8')
+	})
+
+	test('serves the variable dependency registry metrics', async () => {
+		const { app, metrics } = createService({ enabled: true, token: 'secret-token' })
+
+		const registry = new VariableDependencyRegistry()
+		registry.registerMetrics(metrics)
+		registry
+			.create({ onVariableDependenciesChanged: () => {} }, CreateBankControlId('c1'), null)
+			.set(new Set(['conn:x']))
+		registry.dispatch(new Set(['conn:x']), null)
+
+		const res = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(res.status).toBe(200)
+		expect(res.text).toContain('companion_variable_dependencies 1')
+		expect(res.text).toContain('companion_variable_dependency_keys 1')
+		expect(res.text).toContain('companion_variable_dependency_controls 1')
+		expect(res.text).toContain('companion_variable_dependencies_armed 0')
+		expect(res.text).toContain('companion_variable_change_dispatches_total 1')
+		expect(res.text).toContain('companion_variable_dependency_notifications_total 1')
+		expect(res.text).toMatch(/^companion_variable_change_dispatch_seconds_total \d/m)
+	})
+
+	test('serves the variable value metrics', async () => {
+		const { app, metrics } = createService({ enabled: true, token: 'secret-token' })
+
+		const values = new VariablesValues(mockUserConfig({ timezone: '' }))
+		values.registerMetrics(metrics)
+		values.setVariableValues('conn', [
+			{ id: 'a', value: 1 },
+			{ id: 'b', value: 2 },
+		])
+		values.setVariableValues('conn', [{ id: 'a', value: 1 }])
+
+		const res = await supertest(app).get('/api/metrics').set('Authorization', 'Bearer secret-token')
+		expect(res.text).toContain('companion_variable_values_reported_total{label="conn"} 3')
+		expect(res.text).toContain('companion_variable_values_changed_total{label="conn"} 2')
 	})
 
 	test('histograms record observations (count/sum/buckets)', async () => {

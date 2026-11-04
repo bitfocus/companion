@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 import { CreateBankControlId } from '@companion-app/shared/ControlId.js'
+import type { MetricsRegistry } from '../../lib/Data/Metrics.js'
 import {
 	VariableDependencyRegistry,
 	type VariableDependency,
@@ -280,5 +281,57 @@ describe('VariableDependencyRegistry', () => {
 			{ hits: ['inner'], changed: ['conn:y'] },
 			{ hits: ['also-inner'], changed: ['conn:x'] },
 		])
+	})
+
+	test('totals count dispatches, notifications and the time spent, without timing re-entrant ones twice', () => {
+		const registry = new VariableDependencyRegistry()
+		const inner = createListener()
+		registry.create(inner.listener, C2, 'inner').set(new Set(['conn:y']))
+		registry
+			.create<string>(
+				{ onVariableDependenciesChanged: () => registry.dispatch(new Set(['conn:y']), null) },
+				C1,
+				'outer'
+			)
+			.set(new Set(['conn:x']))
+
+		const before = performance.now()
+		registry.dispatch(new Set(['conn:x']), null)
+		registry.dispatch(new Set(['conn:nothing']), null)
+		registry.dispatch(new Set(), null)
+		const elapsedSeconds = (performance.now() - before) / 1000
+
+		const totals = registry.totals()
+		// The empty change isn't a dispatch; the re-entrant one is
+		expect(totals.dispatches).toBe(3)
+		expect(totals.notifications).toBe(2)
+		expect(totals.dispatchSeconds).toBeGreaterThan(0)
+		expect(totals.dispatchSeconds).toBeLessThanOrEqual(elapsedSeconds)
+	})
+
+	test('publishes its counts and totals as metrics', () => {
+		const registry = new VariableDependencyRegistry()
+		const readers = new Map<string, () => number>()
+		const metrics = {
+			gauge: (name: string, _help: string, getValue: () => number) => readers.set(name, getValue),
+			counter: (name: string, _help: string, getValue: () => number) => readers.set(name, getValue),
+		} as unknown as MetricsRegistry
+		registry.registerMetrics(metrics)
+
+		const { listener } = createListener()
+		const dep = registry.create(listener, C1, 'a')
+		dep.set(new Set(['conn:x', 'local:y']))
+		dep.arm()
+		registry.dispatch(new Set(['conn:x']), null)
+
+		expect(Object.fromEntries(Array.from(readers, ([name, read]) => [name, read()]))).toEqual({
+			companion_variable_dependencies: 1,
+			companion_variable_dependency_keys: 2,
+			companion_variable_dependency_controls: 1,
+			companion_variable_dependencies_armed: 1,
+			companion_variable_change_dispatches_total: 1,
+			companion_variable_dependency_notifications_total: 1,
+			companion_variable_change_dispatch_seconds_total: expect.any(Number),
+		})
 	})
 })

@@ -1,4 +1,5 @@
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
+import type { MetricsRegistry } from '../Data/Metrics.js'
 import LogController from '../Log/Controller.js'
 
 /**
@@ -199,6 +200,12 @@ export class VariableDependencyRegistry {
 	readonly #index = new DependencyIndex()
 	#epoch = 0
 
+	/** Dispatches in progress, so a re-entrant one isn't timed twice */
+	#dispatchDepth = 0
+	#dispatchCount = 0
+	#notificationCount = 0
+	#dispatchMilliseconds = 0
+
 	/** Create a dependency, initially referencing no variables */
 	create<T>(listener: VariableDependencyListener<T>, controlId: SomeControlId, data: T): VariableDependency<T> {
 		const dependency = new VariableDependency(this.#index, listener, controlId, data)
@@ -247,6 +254,27 @@ export class VariableDependencyRegistry {
 	): void {
 		if (changed.size === 0) return
 
+		this.#dispatchCount++
+		if (this.#dispatchDepth > 0) {
+			this.#collectAndNotify(changed, controlIdFilter, onlyListener)
+			return
+		}
+
+		const start = performance.now()
+		this.#dispatchDepth++
+		try {
+			this.#collectAndNotify(changed, controlIdFilter, onlyListener)
+		} finally {
+			this.#dispatchDepth--
+			this.#dispatchMilliseconds += performance.now() - start
+		}
+	}
+
+	#collectAndNotify(
+		changed: ReadonlySet<string>,
+		controlIdFilter: ReadonlySet<SomeControlId> | null,
+		onlyListener: VariableDependencyListener<any> | null
+	): void {
 		const epoch = ++this.#epoch
 		let hitsByListener: Map<VariableDependencyListener<any>, VariableDependency<any>[]> | null = null
 
@@ -299,6 +327,7 @@ export class VariableDependencyRegistry {
 			const liveHits = hits.filter((dependency) => !dependency.isDisposed)
 			if (liveHits.length === 0) continue
 
+			this.#notificationCount += liveHits.length
 			try {
 				listener.onVariableDependenciesChanged(liveHits, changed)
 			} catch (e) {
@@ -318,5 +347,53 @@ export class VariableDependencyRegistry {
 			dependencies,
 			armed: this.#index.armed.size,
 		}
+	}
+
+	/** Running totals since startup, for metrics */
+	totals(): { dispatches: number; notifications: number; dispatchSeconds: number } {
+		return {
+			dispatches: this.#dispatchCount,
+			notifications: this.#notificationCount,
+			dispatchSeconds: this.#dispatchMilliseconds / 1000,
+		}
+	}
+
+	/** Publish what is being tracked, and the cost of dispatching changes to it */
+	registerMetrics(metrics: MetricsRegistry): void {
+		metrics.gauge(
+			'companion_variable_dependencies',
+			'Things registered as reading variables (entities, drawn styles, step expressions, ...)',
+			() => this.stats().dependencies
+		)
+		metrics.gauge(
+			'companion_variable_dependency_keys',
+			'Distinct variables registered as read (control-relative ones counted per control)',
+			() => this.stats().keys
+		)
+		metrics.gauge(
+			'companion_variable_dependency_controls',
+			'Controls with something registered as reading variables',
+			() => this.stats().controls
+		)
+		metrics.gauge(
+			'companion_variable_dependencies_armed',
+			'Dependencies hearing every change while their asynchronous evaluation is in flight',
+			() => this.stats().armed
+		)
+		metrics.counter(
+			'companion_variable_change_dispatches_total',
+			'Variable changes dispatched to what reads them',
+			() => this.totals().dispatches
+		)
+		metrics.counter(
+			'companion_variable_dependency_notifications_total',
+			'Dependencies notified of a change to a variable they read',
+			() => this.totals().notifications
+		)
+		metrics.counter(
+			'companion_variable_change_dispatch_seconds_total',
+			'Time spent dispatching variable changes, including the re-evaluations they run synchronously',
+			() => this.totals().dispatchSeconds
+		)
 	}
 }

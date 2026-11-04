@@ -4,6 +4,7 @@ import { BANNED_PROPS } from '@companion-app/shared/Expressions.js'
 import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
 import { VARIABLE_UNKNOWN_VALUE } from '@companion-app/shared/Variables.js'
 import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
+import type { LabeledValue, MetricsRegistry } from '../../lib/Data/Metrics.js'
 import type { VariablesCache } from '../../lib/Variables/Util.js'
 import { InjectedVariablesForLocation, VariablesValues, type VariableValueEntry } from '../../lib/Variables/Values.js'
 import { mockUserConfig } from '../utils/MockUserConfig.js'
@@ -202,6 +203,25 @@ describe('VariablesValues', () => {
 			expect(values.getVariableValue('conn', 'a')).toBe(1)
 			expect(values.getVariableValue('conn', 'b')).toBe('two')
 			expect(values.getVariableValue('conn', 'c')).toBe(true)
+		})
+
+		test('counts the values reported and those that changed, per label', () => {
+			const counters = new Map<string, () => LabeledValue[]>()
+			values.registerMetrics({
+				labeledCounter: (name: string, _help: string, _labelNames: string[], getValues: () => LabeledValue[]) =>
+					counters.set(name, getValues),
+			} as unknown as MetricsRegistry)
+			const read = (name: string) =>
+				Object.fromEntries(counters.get(name)!().map(({ labels, value }) => [labels.label, value]))
+
+			values.setVariableValues('conn', [entry('a', 1), entry('b', 2)])
+			values.setVariableValues('conn', [entry('a', 1), entry('b', 3)])
+			values.setVariableValues('other', [entry('x', 'same')])
+			values.setVariableValues('other', [entry('x', 'same')])
+			values.setVariableValues('conn', [])
+
+			expect(read('companion_variable_values_reported_total')).toEqual({ conn: 4, other: 2 })
+			expect(read('companion_variable_values_changed_total')).toEqual({ conn: 3, other: 1 })
 		})
 	})
 

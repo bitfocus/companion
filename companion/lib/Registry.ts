@@ -236,7 +236,7 @@ export class Registry {
 		const activeLearningStore = new ActiveLearningStore()
 		const pageStore = new PageStore(this.db.getSchemaTableView('pages', PageModelSchema))
 
-		this.variables = new VariablesController(this.db, this.userconfig)
+		this.variables = new VariablesController(this.db, this.userconfig, this.metrics)
 		const controlStore = new ControlStore(this.db, this.variables.values, pageStore)
 
 		this.#renderClock = new RenderClock()

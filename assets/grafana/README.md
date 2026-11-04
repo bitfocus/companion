@@ -45,3 +45,9 @@ Prometheus data source when prompted.
   `companion_database_table_rows`) are labelled by `database`, `table` and `operation`. Because
   node:sqlite is synchronous, **Time spent in SQLite** (rate of the duration histogram's `_sum`) is
   the key panel — it reads as the fraction of wall-clock time the event loop is blocked in the DB.
+- The **Variables** row covers the variable dependency registry: how often variable changes are
+  dispatched, how many registered readers each one reaches, and the share of event-loop time spent
+  dispatching them (including the re-evaluations they run synchronously). **Registered variable
+  readers** should fall back when buttons or connections are removed; steady growth suggests a leak.
+  **Variable values reported vs changed** compares the values connections (and custom/internal
+  variables) report with those that actually changed; the gap is values re-sent unchanged.
