@@ -372,12 +372,11 @@ export class LayeredButtonDrawer implements IButtonDrawer, VariableDependencyLis
 		}
 	}
 
-	onVariableDependenciesChanged(_hits: ReadonlyArray<VariableDependency<null>>, changed: ReadonlySet<string>): void {
-		this.onVariablesChanged(changed)
-	}
-
 	/** Propagate a variable change: invalidate affected cached elements and redraw if relevant. */
-	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
+	onVariableDependenciesChanged(
+		_hits: ReadonlyArray<VariableDependency<null>>,
+		allChangedVariables: ReadonlySet<string>
+	): void {
 		// Record changes during an in-flight draw so getDrawStyle re-checks them (see #variablesChangedDuringDraw).
 		if (this.#variablesChangedDuringDraw) {
 			for (const variable of allChangedVariables) this.#variablesChangedDuringDraw.add(variable)

@@ -373,10 +373,6 @@ export class EntityPoolSpecialExpressionManager implements VariableDependencyLis
 		this.#variables.set(allVariableIds)
 	}
 
-	onVariableDependenciesChanged(_hits: ReadonlyArray<VariableDependency<null>>, changed: ReadonlySet<string>): void {
-		this.onVariablesChanged(changed)
-	}
-
 	/**
 	 * Track a special expression in an entity.  This ensures that the special
 	 * expression's new value is computed whenever the special expression, or the
@@ -448,7 +444,10 @@ export class EntityPoolSpecialExpressionManager implements VariableDependencyLis
 	 * Inform the entity manager that some variables have changed.
 	 * This will cause any entities that reference those variables to be re-parsed and sent to the module.
 	 */
-	onVariablesChanged(variableIds: ReadonlySet<string>): void {
+	onVariableDependenciesChanged(
+		_hits: ReadonlyArray<VariableDependency<null>>,
+		variableIds: ReadonlySet<string>
+	): void {
 		if (this.#destroyed) return
 
 		let anyInvalidated = false

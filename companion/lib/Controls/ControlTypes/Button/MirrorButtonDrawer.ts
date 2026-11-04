@@ -133,15 +133,15 @@ export class MirrorButtonDrawer implements IButtonDrawer, VariableDependencyList
 	// A mirror owns no elements, but its `location` field can reference variables (e.g. `$(page:x)`): when one
 	// of those changes the mirrored target may change, so redraw. The target's own variables are handled by
 	// redrawing off its render (see onButtonDrawn), not here.
-	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
+	onVariableDependenciesChanged(
+		_hits: ReadonlyArray<VariableDependency<null>>,
+		allChangedVariables: ReadonlySet<string>
+	): void {
 		const locationVariables = this.#locationVariables.variableIds
 		if (!locationVariables) return
 		if (locationVariables.isDisjointFrom(allChangedVariables)) return
 
 		this.invalidate()
-	}
-	onVariableDependenciesChanged(_hits: ReadonlyArray<VariableDependency<null>>, changed: ReadonlySet<string>): void {
-		this.onVariablesChanged(changed)
 	}
 	onCompositeElementsChanged(_allChangedElementIds: ReadonlySet<CompositeElementIdString>): void {}
 

@@ -296,12 +296,12 @@ export class ControlButtonLink
 	}
 
 	/** The location can reference variables, so resolve it again when any of them change */
-	onVariablesChanged(allChangedVariables: ReadonlySet<string>): void {
+	onVariableDependenciesChanged(
+		_hits: ReadonlyArray<VariableDependency<null>>,
+		allChangedVariables: ReadonlySet<string>
+	): void {
 		const locationVariables = this.#locationVariables.variableIds
 		if (locationVariables && !locationVariables.isDisjointFrom(allChangedVariables)) this.#updateTarget()
-	}
-	onVariableDependenciesChanged(_hits: ReadonlyArray<VariableDependency<null>>, changed: ReadonlySet<string>): void {
-		this.onVariablesChanged(changed)
 	}
 
 	/** The location can be relative to this button, so resolve it again */

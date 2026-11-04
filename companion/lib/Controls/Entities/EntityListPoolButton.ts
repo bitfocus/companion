@@ -452,7 +452,10 @@ export abstract class ButtonEntityListPoolBase
 	/**
 	 * Propagate variable changes
 	 */
-	onVariablesChanged(changedVariables: ReadonlySet<string>): void {
+	onVariableDependenciesChanged(
+		_hits: ReadonlyArray<VariableDependency<null>>,
+		changedVariables: ReadonlySet<string>
+	): void {
 		if (this.currentStep.type !== 'expression') return
 
 		const stepVariables = this.#stepVariables.variableIds
@@ -462,10 +465,6 @@ export abstract class ButtonEntityListPoolBase
 			// Something changed, so redraw
 			this.reportChange({ redraw: true })
 		}
-	}
-
-	onVariableDependenciesChanged(_hits: ReadonlyArray<VariableDependency<null>>, changed: ReadonlySet<string>): void {
-		this.onVariablesChanged(changed)
 	}
 
 	/**

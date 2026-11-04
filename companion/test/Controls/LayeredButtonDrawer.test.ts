@@ -259,9 +259,9 @@ describe('LayeredButtonDrawer', () => {
 		})
 	})
 
-	describe('onVariablesChanged', () => {
+	describe('variable changes', () => {
 		it('does nothing before any draw has happened', async () => {
-			drawer.onVariablesChanged(new Set(['local:x']))
+			deps.variableDependencies.dispatch(new Set(['local:x']), new Set([CONTROL_ID]))
 
 			await sleep(30)
 			expect(invalidateSpy).not.toHaveBeenCalled()
@@ -273,7 +273,7 @@ describe('LayeredButtonDrawer', () => {
 
 			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
 			const changed = new Set(['local:preset_name', 'internal:other'])
-			drawer.onVariablesChanged(changed)
+			deps.variableDependencies.dispatch(changed, new Set([CONTROL_ID]))
 
 			expect(queueSpy).toHaveBeenCalledWith(changed)
 			await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CONTROL_ID))
@@ -284,7 +284,7 @@ describe('LayeredButtonDrawer', () => {
 			await drawer.getDrawStyle()
 
 			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
-			drawer.onVariablesChanged(new Set(['internal:unrelated']))
+			deps.variableDependencies.dispatch(new Set(['internal:unrelated']), new Set([CONTROL_ID]))
 
 			expect(queueSpy).not.toHaveBeenCalled()
 			await sleep(30)
@@ -295,7 +295,7 @@ describe('LayeredButtonDrawer', () => {
 			convertMock.mockResolvedValueOnce(conversionResult({ usedVariables: new Set() }))
 			await drawer.getDrawStyle()
 
-			drawer.onVariablesChanged(new Set(['local:anything']))
+			deps.variableDependencies.dispatch(new Set(['local:anything']), new Set([CONTROL_ID]))
 
 			await sleep(30)
 			expect(invalidateSpy).not.toHaveBeenCalled()
@@ -310,7 +310,7 @@ describe('LayeredButtonDrawer', () => {
 
 			// The variable it depends on changes before #lastDrawVariables is committed. Previously this was
 			// tested against a null/stale #lastDrawVariables and silently dropped.
-			drawer.onVariablesChanged(new Set(['local:preset_name']))
+			deps.variableDependencies.dispatch(new Set(['local:preset_name']), new Set([CONTROL_ID]))
 
 			pending.resolve(conversionResult({ usedVariables: new Set(['local:preset_name']) }))
 			await drawPromise
@@ -323,7 +323,7 @@ describe('LayeredButtonDrawer', () => {
 			convertMock.mockReturnValueOnce(pending.promise)
 
 			const drawPromise = drawer.getDrawStyle()
-			drawer.onVariablesChanged(new Set(['internal:unrelated']))
+			deps.variableDependencies.dispatch(new Set(['internal:unrelated']), new Set([CONTROL_ID]))
 			pending.resolve(conversionResult({ usedVariables: new Set(['local:preset_name']) }))
 			await drawPromise
 
@@ -342,7 +342,7 @@ describe('LayeredButtonDrawer', () => {
 			await drawer.getDrawStyle()
 
 			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
-			drawer.onVariablesChanged(new Set(['connection:cam']))
+			deps.variableDependencies.dispatch(new Set(['connection:cam']), new Set([CONTROL_ID]))
 
 			// The stale cache entry must be evicted...
 			expect(queueSpy).toHaveBeenCalledWith(new Set(['connection:cam']))
@@ -362,7 +362,7 @@ describe('LayeredButtonDrawer', () => {
 
 			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
 			const changed = new Set(['local:this_step', 'connection:cam'])
-			drawer.onVariablesChanged(changed)
+			deps.variableDependencies.dispatch(changed, new Set([CONTROL_ID]))
 
 			expect(queueSpy).toHaveBeenCalledWith(changed)
 			await vi.waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith(CONTROL_ID))
@@ -374,7 +374,7 @@ describe('LayeredButtonDrawer', () => {
 
 			const drawPromise = drawer.getDrawStyle()
 			const queueSpy = vi.spyOn(cacheOf(drawer), 'queueInvalidateVariables')
-			drawer.onVariablesChanged(new Set(['connection:cam']))
+			deps.variableDependencies.dispatch(new Set(['connection:cam']), new Set([CONTROL_ID]))
 			pending.resolve(conversionResult({ hiddenVariables: new Set(['connection:cam']) }))
 			await drawPromise
 
@@ -394,7 +394,7 @@ describe('LayeredButtonDrawer', () => {
 			await drawer.getDrawStyle()
 
 			invalidateSpy.mockClear()
-			drawer.onVariablesChanged(new Set(['local:preset_name']))
+			deps.variableDependencies.dispatch(new Set(['local:preset_name']), new Set([CONTROL_ID]))
 
 			await sleep(30)
 			expect(invalidateSpy).not.toHaveBeenCalled()
