@@ -119,6 +119,29 @@ describe('OscApi', () => {
 				expect(mockFn).toHaveBeenCalledTimes(1)
 				expect(mockFn).toHaveBeenCalledWith('my-var-name', 'def')
 			})
+
+			test('a string, number or boolean', async () => {
+				const { router, serviceApi } = createService()
+				const mockFn = serviceApi.setCustomVariableValue
+				mockFn.mockReturnValue(null)
+
+				for (const value of ['abc', 12.5, true]) {
+					await router.processMessage('/custom-variable/my-var-name/value', { args: [{ value }] })
+					expect(mockFn).toHaveBeenLastCalledWith('my-var-name', value)
+				}
+			})
+
+			test('ignores a value that is not a string, number or boolean', async () => {
+				const { router, serviceApi } = createService()
+				const mockFn = serviceApi.setCustomVariableValue
+
+				// A blob, a 64-bit integer and a timetag, as osc.js decodes them
+				for (const value of [new Uint8Array([1, 2]), { high: 0, low: 5, unsigned: false }, { raw: [1, 2] }]) {
+					await router.processMessage('/custom-variable/my-var-name/value', { args: [{ value }] as any })
+				}
+
+				expect(mockFn).not.toHaveBeenCalled()
+			})
 		})
 	})
 
