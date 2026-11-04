@@ -828,8 +828,39 @@ describe('InstanceEntityManager', () => {
 			entityManager.trackEntity(makeFeedback('entity-2') as any, CreateBankControlId('control-2'))
 			vi.runAllTimers()
 
+			mockAdapter.updateFeedbacks.mockClear()
+
 			entityManager.destroy()
 			expect(variableDependencies.stats()).toEqual({ keys: 0, controls: 0, dependencies: 0, armed: 0 })
+
+			// Nothing is sent to a module being shut down
+			variableDependencies.dispatch(new Set(['var1']), null)
+			vi.runAllTimers()
+			expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
+		})
+
+		it('follows a re-parse that reads different variables', () => {
+			entityManager.start(5)
+			entityManager.trackEntity(makeFeedback('entity-1') as any, CreateBankControlId('control-1'))
+			vi.runAllTimers()
+
+			// The next parse, prompted by a change to what it read, reads something else
+			mockVariablesParser.parseEntityOptions.mockImplementation((_entityDefinition, options) => ({
+				ok: true,
+				parsedOptions: options,
+				referencedVariableIds: new Set(['other-var']),
+			}))
+			variableDependencies.dispatch(new Set(['var1']), null)
+			vi.runAllTimers()
+			mockAdapter.updateFeedbacks.mockClear()
+
+			variableDependencies.dispatch(new Set(['var1']), null)
+			vi.runAllTimers()
+			expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
+
+			variableDependencies.dispatch(new Set(['other-var']), null)
+			vi.runAllTimers()
+			expect(mockAdapter.updateFeedbacks).toHaveBeenCalledTimes(1)
 		})
 
 		it('ignores changes while an entity is not ready', () => {

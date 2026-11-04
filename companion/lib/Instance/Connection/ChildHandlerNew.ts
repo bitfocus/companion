@@ -443,7 +443,8 @@ export class ConnectionChildHandlerNew implements ChildProcessHandlerBase, Conne
 	 * Tell the child instance class to 'destroy' itself
 	 */
 	async destroy(): Promise<void> {
-		// Cleanup the system once the module is destroyed
+		// Stop sending entity updates first, so a variable change while the module shuts down can't reach it
+		this.#entityManager.destroy()
 
 		try {
 			await this.#ipcWrapper.sendWithCb('destroy', {})
