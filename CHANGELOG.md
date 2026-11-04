@@ -2,8 +2,6 @@
 
 ## Companion v5.1.2 - Release Notes
 
-<!-- DRAFT -->
-
 ### 📣 CORE FEATURES AND IMPROVEMENTS
 
 - allow modules using api 1.15
