@@ -1,5 +1,4 @@
 import { faFileArrowDown, faFileArrowUp, faFileLines, type IconDefinition } from '@fortawesome/free-solid-svg-icons'
-import { useCallback } from 'react'
 import type { SomeControlId } from '@companion-app/shared/ControlId.js'
 import type {
 	PageDownButtonModel,
@@ -7,9 +6,7 @@ import type {
 	PageUpButtonModel,
 } from '@companion-app/shared/Model/ButtonModel.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
-import { Button } from '~/Components/Button.js'
 import { NonIdealState } from '~/Components/NonIdealState.js'
-import { trpc, useMutationExt } from '~/Resources/TRPC.js'
 import { ConvertToNormalButton } from './ConvertToNormalButton.js'
 import { EditButtonLayout } from './EditButtonLayout.js'
 
@@ -42,13 +39,6 @@ interface PageButtonPanelProps {
 export function PageButtonPanel({ controlId, location, type }: PageButtonPanelProps): React.JSX.Element {
 	const info = PAGE_BUTTON_INFO[type]
 
-	const resetControlsMutation = useMutationExt(trpc.controls.resetControls.mutationOptions())
-	const changeToRegularButton = useCallback(() => {
-		resetControlsMutation.mutateAsync({ locations: [location], newType: 'button-layered' }).catch((e) => {
-			console.error('Failed to change button type', e)
-		})
-	}, [resetControlsMutation, location])
-
 	return (
 		<EditButtonLayout
 			controlId={controlId}
@@ -62,9 +52,6 @@ export function PageButtonPanel({ controlId, location, type }: PageButtonPanelPr
 			<NonIdealState icon={info.icon}>
 				<h4 className="my-1 font-semibold text-body">{info.label} button</h4>
 				<p className="my-2 text-sm text-muted">{info.description}</p>
-				<Button color="secondary" size="sm" onClick={changeToRegularButton} className="mt-2">
-					Change to regular button
-				</Button>
 			</NonIdealState>
 		</EditButtonLayout>
 	)
