@@ -1,10 +1,14 @@
 import path from 'node:path'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { CUSTOM_ACTIONS_CONNECTION_ID } from '@companion-app/shared/ConnectionId.js'
-import type { CustomActionControlId } from '@companion-app/shared/ControlId.js'
-import { EntityModelType } from '@companion-app/shared/Model/EntityModel.js'
-import { exprExpr, exprVal } from '@companion-app/shared/Model/Options.js'
+import type { BankControlId, CustomActionControlId, SomeControlId } from '@companion-app/shared/ControlId.js'
+import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
+import { EntityModelType, type EntityOwner } from '@companion-app/shared/Model/EntityModel.js'
+import { exprExpr, exprVal, type ExpressionOrValue } from '@companion-app/shared/Model/Options.js'
+import type { VariableValue } from '@companion-app/shared/Model/Variables.js'
 import { ControlCustomAction } from '../../lib/Controls/ControlTypes/CustomAction.js'
+import { CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP } from '../../lib/Controls/CustomActions/CustomActionInstanceManager.js'
+import type { ControlEntityInstance } from '../../lib/Controls/Entities/EntityInstance.js'
 import { createMockTrpcContext } from '../Util.js'
 import { createTestApp, type TestApp } from './TestApp.js'
 
@@ -27,7 +31,7 @@ describe('custom actions', () => {
 			controlId,
 			field: { type: 'textinput', id: 'text', label: 'Text', default: 'default' },
 		})
-		app.addCustomActionAction(controlId, 'custom_variable_set_value', {
+		app.addCustomActionAction(controlId, null, 'custom_variable_set_value', {
 			name: exprVal('out'),
 			create: exprVal(false),
 			value: exprExpr("concat($(options:text), '!')"),
@@ -59,8 +63,8 @@ describe('custom actions', () => {
 			controlId: customActionId,
 			field: { type: 'textinput', id: 'text', label: 'Text', default: '' },
 		})
-		app.addCustomActionAction(customActionId, 'wait', { time: exprExpr('300') })
-		app.addCustomActionAction(customActionId, 'custom_variable_set_value', {
+		app.addCustomActionAction(customActionId, null, 'wait', { time: exprExpr('300') })
+		app.addCustomActionAction(customActionId, null, 'custom_variable_set_value', {
 			name: exprVal('out'),
 			create: exprVal(false),
 			value: exprExpr('$(options:text)'),
@@ -108,7 +112,7 @@ describe('custom actions', () => {
 			entityId: variableId!,
 			name: 'doubled',
 		})
-		app.addCustomActionAction(customActionId, 'local_variable_set_value', {
+		app.addCustomActionAction(customActionId, null, 'local_variable_set_value', {
 			location: exprVal('this'),
 			name: exprVal('doubled'),
 			value: exprExpr('$(options:n) * 2'),
@@ -220,6 +224,560 @@ describe('custom actions', () => {
 	})
 })
 
+describe('long running custom actions', () => {
+	let app: TestApp
+	beforeEach(async () => {
+		app = await createTestApp({ configDir: null, extraModulePath: null })
+	})
+	afterEach(async () => {
+		await app.close()
+	})
+
+	/** Record each value a custom variable takes, as it changes */
+	function recordCustomVariable(name: string): VariableValue[] {
+		const history: VariableValue[] = []
+		app.registry.variables.values.on('variablesChanged', (changed) => {
+			if (changed.has(`custom:${name}`)) history.push(app.getCustomVariableValue(name))
+		})
+		return history
+	}
+
+	/**
+	 * Create a custom action which counts up in a loop: while `condition` is true it adds `$(options:step)` to its local
+	 * variable `count` and then sleeps. `count` is its output `count`, so the caller can see each step of the count.
+	 * Returns the custom action, and the owner of the loop's actions, for a test to add to them
+	 */
+	async function createCountingCustomAction(
+		name: string,
+		condition: string,
+		increment: string,
+		sleepMs: number
+	): Promise<{ controlId: CustomActionControlId; body: EntityOwner }> {
+		const controlId = await app.trpc().controls.customActions.create({ name })
+		await app.trpc().controls.customActions.inputAdd({
+			controlId,
+			field: { type: 'number', id: 'step', label: 'Step', default: 1, min: -1000, max: 1000 },
+		})
+		app.addLocalVariable(controlId, 'count', 'user_value', { startup_value: exprVal(0) })
+
+		const loopId = app.addCustomActionAction(controlId, null, 'logic_while', {})
+		app.addCustomActionChildFeedback(controlId, { parentId: loopId, childGroup: 'condition' }, 'check_expression', {
+			expression: exprVal(condition),
+		})
+		const body: EntityOwner = { parentId: loopId, childGroup: 'actions' }
+		app.addCustomActionAction(controlId, body, 'local_variable_set_value', {
+			location: exprVal('this'),
+			name: exprVal('count'),
+			value: exprExpr(increment),
+		})
+		app.addCustomActionAction(controlId, body, 'wait', { time: exprExpr(String(sleepMs)) })
+
+		await app.trpc().controls.customActions.outputAdd({
+			controlId,
+			output: { id: 'count', label: 'Count', variableName: 'count' },
+		})
+
+		return { controlId, body }
+	}
+
+	/** Add a button which calls a custom action, writing its `count` output to a custom variable */
+	function addCountingButton(
+		location: ControlLocation,
+		customActionId: CustomActionControlId,
+		options: Record<string, ExpressionOrValue<any>>,
+		outputVariable: string
+	): BankControlId {
+		const buttonId = app.createButton(location)
+		app.addCustomActionCall(buttonId, customActionId, options, {
+			count: { type: 'custom-variable', variableName: exprVal(outputVariable), createIfNotExists: false },
+		})
+		return buttonId
+	}
+
+	test('an output reaches the caller at each step of a loop, not only when the run ends', async () => {
+		app.createCustomVariable('progress', 0)
+		const history = recordCustomVariable('progress')
+		const { controlId: customActionId } = await createCountingCustomAction(
+			'Count',
+			'$(local:count) < 3',
+			'$(local:count) + $(options:step)',
+			150
+		)
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		addCountingButton(location, customActionId, {}, 'progress')
+
+		app.pressButton(location, true)
+
+		// The first step is seen while the run is still sleeping before the next
+		await vi.waitFor(() => expect(app.getCustomVariableValue('progress')).toBe(1))
+		expect(history).toEqual([1])
+
+		await vi.waitFor(() => expect(app.getCustomVariableValue('progress')).toBe(3))
+		expect(history).toEqual([1, 2, 3])
+	})
+
+	test('concurrent runs of a custom action count with their own local variables and inputs', async () => {
+		app.createCustomVariable('small', 0)
+		app.createCustomVariable('big', 0)
+		const smallHistory = recordCustomVariable('small')
+		const bigHistory = recordCustomVariable('big')
+		const { controlId: customActionId } = await createCountingCustomAction(
+			'Count',
+			'$(local:count) < 3 * $(options:step)',
+			'$(local:count) + $(options:step)',
+			100
+		)
+
+		const small = { pageNumber: 1, row: 1, column: 1 }
+		addCountingButton(small, customActionId, { step: exprVal(1) }, 'small')
+		const big = { pageNumber: 1, row: 1, column: 2 }
+		addCountingButton(big, customActionId, { step: exprVal(10) }, 'big')
+
+		// Both runs are part way through their loops at the same time
+		app.pressButton(small, true)
+		app.pressButton(big, true)
+
+		await vi.waitFor(() => {
+			expect(app.getCustomVariableValue('small')).toBe(3)
+			expect(app.getCustomVariableValue('big')).toBe(30)
+		})
+		expect(smallHistory).toEqual([1, 2, 3])
+		expect(bigHistory).toEqual([10, 20, 30])
+	})
+
+	test('pressing a button again while its custom action runs starts a second run, with its own local variables', async () => {
+		app.createCustomVariable('progress', 0)
+		app.createCustomVariable('log', '')
+		const { controlId: customActionId, body } = await createCountingCustomAction(
+			'Count',
+			'$(local:count) < 3',
+			'$(local:count) + $(options:step)',
+			150
+		)
+		// Both runs write the same output values, so each step is also logged, to see every step of both runs
+		app.addCustomActionAction(customActionId, body, 'custom_variable_set_value', {
+			name: exprVal('log'),
+			create: exprVal(false),
+			value: exprExpr('concat($(custom:log), $(local:count))'),
+		})
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		addCountingButton(location, customActionId, {}, 'progress')
+
+		app.pressButton(location, true)
+		app.pressButton(location, false)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('log')).toBe('1'))
+
+		// The first run is still sleeping, part way through its count
+		app.pressButton(location, true)
+		app.pressButton(location, false)
+
+		// Each run counts from the start, rather than carrying on from the other
+		const log = () => app.getCustomVariableValue('log') as string
+		await vi.waitFor(() => expect(log()).toHaveLength(6))
+		expect(log().split('').toSorted()).toEqual(['1', '1', '2', '2', '3', '3'])
+		expect(app.getCustomVariableValue('progress')).toBe(3)
+	})
+
+	test('a run keeps the inputs it started with, but sees the changes to other variables as it loops', async () => {
+		app.createCustomVariable('keepGoing', true)
+		app.createCustomVariable('base', 100)
+		app.createCustomVariable('progress', 0)
+		const history = recordCustomVariable('progress')
+		// The step is given from a variable, and the loop runs while another variable says so
+		const { controlId: customActionId } = await createCountingCustomAction(
+			'Count',
+			'$(custom:keepGoing)',
+			'$(local:count) + $(options:step)',
+			100
+		)
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		addCountingButton(location, customActionId, { step: exprExpr('$(custom:base)') }, 'progress')
+
+		app.pressButton(location, true)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('progress')).toBe(200))
+
+		// The input was fixed when the run started
+		app.registry.variables.custom.setValue('base', 1)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('progress')).toBe(300))
+
+		// But the condition sees the variable change, and stops the loop
+		app.registry.variables.custom.setValue('keepGoing', false)
+		const stoppedAt = history.length
+		await new Promise((resolve) => setTimeout(resolve, 400))
+		expect(history.length - stoppedAt).toBeLessThanOrEqual(1)
+		expect(history.every((value, i) => value === (i + 1) * 100)).toBe(true)
+
+		// The next run sees the new input
+		app.registry.variables.custom.setValue('keepGoing', true)
+		app.pressButton(location, false)
+		app.pressButton(location, true)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('progress')).toBe(2))
+		app.registry.variables.custom.setValue('keepGoing', false)
+	})
+
+	test('aborting the caller stops a custom action part way through its loop', async () => {
+		app.createCustomVariable('progress', 0)
+		const { controlId: customActionId } = await createCountingCustomAction(
+			'Forever',
+			'true',
+			'$(local:count) + $(options:step)',
+			100
+		)
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		const buttonId = addCountingButton(location, customActionId, {}, 'progress')
+
+		app.pressButton(location, true)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('progress')).toBe(2))
+
+		app.registry.controls.getControl(buttonId)?.abortDelayedActions(false, null, 0)
+		const stoppedAt = app.getCustomVariableValue('progress') as number
+
+		await new Promise((resolve) => setTimeout(resolve, 400))
+		// A step already past its sleep may still finish, but the loop goes no further
+		expect(app.getCustomVariableValue('progress')).toBeLessThanOrEqual(stoppedAt + 1)
+	})
+
+	test('the output of a nested custom action bubbles up through the custom action calling it', async () => {
+		app.createCustomVariable('progress', 0)
+		const history = recordCustomVariable('progress')
+
+		// The inner custom action counts up in a loop, reporting each step
+		const { controlId: innerId } = await createCountingCustomAction(
+			'Inner',
+			'$(local:count) < 3',
+			'$(local:count) + $(options:step)',
+			100
+		)
+
+		// The outer one calls it, writing its output to a local variable which is the outer's own output
+		const outerId = await app.trpc().controls.customActions.create({ name: 'Outer' })
+		app.addLocalVariable(outerId, 'seen', 'user_value', { startup_value: exprVal(0) })
+		await vi.waitFor(() =>
+			expect(
+				app.registry.instance.definitions.getEntityDefinition(
+					EntityModelType.Action,
+					CUSTOM_ACTIONS_CONNECTION_ID,
+					innerId.slice('custom-action:'.length)
+				)
+			).toBeTruthy()
+		)
+		app.addCustomActionCall(
+			outerId,
+			innerId,
+			{ step: exprVal(1) },
+			{
+				count: { type: 'local-variable', location: exprVal('this'), variableName: exprVal('seen') },
+			}
+		)
+		await app.trpc().controls.customActions.outputAdd({
+			controlId: outerId,
+			output: { id: 'count', label: 'Seen', variableName: 'seen' },
+		})
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		addCountingButton(location, outerId, {}, 'progress')
+
+		app.pressButton(location, true)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('progress')).toBe(3))
+		expect(history).toEqual([1, 2, 3])
+	})
+})
+
+describe('custom action scope and copies', () => {
+	let app: TestApp
+	beforeEach(async () => {
+		app = await createTestApp({ configDir: null, extraModulePath: null })
+	})
+	afterEach(async () => {
+		await app.close()
+	})
+
+	/** Find an entity on a control */
+	function getEntity(controlId: SomeControlId, entityId: string): ControlEntityInstance {
+		const control = app.registry.controls.getControl(controlId)
+		const entity = control?.supportsEntities ? control.entities.findEntityById(entityId) : undefined
+		if (!entity) throw new Error(`Entity "${entityId}" does not exist on "${controlId}"`)
+		return entity
+	}
+
+	/** The id of the only action which calls a custom action on a control. Entity ids are not kept across a restart */
+	function findCallId(controlId: SomeControlId): string {
+		const control = app.registry.controls.getControl(controlId)
+		const calls = control?.supportsEntities
+			? control.entities.getAllEntities().filter((entity) => entity.connectionId === CUSTOM_ACTIONS_CONNECTION_ID)
+			: []
+		if (calls.length !== 1) throw new Error(`Expected one call on "${controlId}", found ${calls.length}`)
+		return calls[0].id
+	}
+
+	/** The value of a local variable in the copy of a custom action held by an action which calls it */
+	function getCopyValue(controlId: SomeControlId, callId: string, variableName: string): unknown {
+		const copyLocals = getEntity(controlId, callId).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
+		const local = copyLocals?.getDirectEntities().find((entity) => entity.localVariableName === `local:${variableName}`)
+		return local ? local.feedbackValue : 'no copy'
+	}
+
+	/** The id of a local variable of a custom action itself */
+	function getStoredLocalVariableId(customActionId: CustomActionControlId, variableName: string): string {
+		const control = app.registry.controls.getControl(customActionId)
+		if (!(control instanceof ControlCustomAction)) throw new Error('Expected a custom action')
+		const local = control.entities
+			.getLocalVariableEntities()
+			.find((entity) => entity.localVariableName === `local:${variableName}`)
+		if (!local) throw new Error(`Expected the local variable "${variableName}"`)
+		return local.id
+	}
+
+	/** Create a custom action with an input `n`, and a local variable `double` computed from it */
+	async function createDoublingCustomAction(): Promise<CustomActionControlId> {
+		const controlId = await app.trpc().controls.customActions.create({ name: 'Double' })
+		await app.trpc().controls.customActions.inputAdd({
+			controlId,
+			field: { type: 'number', id: 'n', label: 'N', default: 1, min: -1000, max: 1000 },
+		})
+		app.addLocalVariable(controlId, 'double', 'expression_value', { expression: exprVal('$(options:n) * 2') })
+		await app.trpc().controls.customActions.outputAdd({
+			controlId,
+			output: { id: 'double', label: 'Double', variableName: 'double' },
+		})
+		return controlId
+	}
+
+	test('the local variables of a custom action are its own, and $(this:*) is the caller', async () => {
+		app.createCustomVariable('inner', '')
+		app.createCustomVariable('where', '')
+
+		const customActionId = await app.trpc().controls.customActions.create({ name: 'Scoped' })
+		const storedLocalId = app.addLocalVariable(customActionId, 'count', 'user_value', {
+			startup_value: exprVal(0),
+		})
+		// The actions of a button run concurrently, and those of the custom action with them, so these are in order
+		const groupId = app.addCustomActionAction(customActionId, null, 'action_group', {
+			execution_mode: exprVal('sequential'),
+		})
+		const inOrder = { parentId: groupId, childGroup: 'default' }
+		app.addCustomActionAction(customActionId, inOrder, 'local_variable_set_value', {
+			location: exprVal('this'),
+			name: exprVal('count'),
+			value: exprExpr('$(local:count) + 1'),
+		})
+		app.addCustomActionAction(customActionId, inOrder, 'custom_variable_set_value', {
+			name: exprVal('inner'),
+			create: exprVal(false),
+			value: exprExpr('$(local:count)'),
+		})
+		app.addCustomActionAction(customActionId, inOrder, 'custom_variable_set_value', {
+			name: exprVal('where'),
+			create: exprVal(false),
+			value: exprExpr("concat($(this:row), '/', $(this:column))"),
+		})
+
+		// The button has a local variable of the same name
+		const location = { pageNumber: 1, row: 2, column: 3 }
+		const buttonId = app.createButton(location)
+		const buttonLocalId = app.addLocalVariable(buttonId, 'count', 'user_value', { startup_value: exprVal(99) })
+		app.addCustomActionCall(buttonId, customActionId, {}, null)
+
+		app.pressButton(location, true)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('where')).toBe('2/3'))
+
+		// The custom action counted with its own variable, which neither the button nor the custom action itself keep
+		expect(app.getCustomVariableValue('inner')).toBe(1)
+		expect(app.getFeedbackValue(buttonId, buttonLocalId)).toBe(99)
+		expect(app.getFeedbackValue(customActionId, storedLocalId)).toBe(0)
+
+		// So the next run starts again from the startup value
+		app.registry.variables.custom.setValue('inner', '')
+		app.pressButton(location, false)
+		app.pressButton(location, true)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('inner')).toBe(1))
+		expect(app.getFeedbackValue(buttonId, buttonLocalId)).toBe(99)
+	})
+
+	test('a custom action writing to a local variable of its caller does so through an output only', async () => {
+		const customActionId = await app.trpc().controls.customActions.create({ name: 'Writer' })
+		app.addLocalVariable(customActionId, 'result', 'user_value', { startup_value: exprVal(0) })
+		app.addCustomActionAction(customActionId, null, 'local_variable_set_value', {
+			location: exprVal('this'),
+			name: exprVal('result'),
+			value: exprExpr('42'),
+		})
+		await app.trpc().controls.customActions.outputAdd({
+			controlId: customActionId,
+			output: { id: 'result', label: 'Result', variableName: 'result' },
+		})
+
+		// Two buttons with a local variable of the same name, only one of which takes the output
+		const withOutput = { pageNumber: 1, row: 1, column: 1 }
+		const withOutputId = app.createButton(withOutput)
+		const withOutputLocalId = app.addLocalVariable(withOutputId, 'result', 'user_value', {
+			startup_value: exprVal(0),
+		})
+		app.addCustomActionCall(
+			withOutputId,
+			customActionId,
+			{},
+			{
+				result: { type: 'local-variable', location: exprVal('this'), variableName: exprVal('result') },
+			}
+		)
+		const without = { pageNumber: 1, row: 1, column: 2 }
+		const withoutId = app.createButton(without)
+		const withoutLocalId = app.addLocalVariable(withoutId, 'result', 'user_value', { startup_value: exprVal(0) })
+		app.addCustomActionCall(withoutId, customActionId, {}, null)
+
+		app.pressButton(withOutput, true)
+		app.pressButton(without, true)
+		await vi.waitFor(() => expect(app.getFeedbackValue(withOutputId, withOutputLocalId)).toBe(42))
+
+		await new Promise((resolve) => setTimeout(resolve, 200))
+		expect(app.getFeedbackValue(withoutId, withoutLocalId)).toBe(0)
+	})
+
+	test('the copy held by each caller follows its own inputs, and only its own', async () => {
+		app.createCustomVariable('a', 1)
+		const customActionId = await createDoublingCustomAction()
+
+		const alphaId = app.createButton({ pageNumber: 1, row: 1, column: 1 })
+		const alphaCall = app.addCustomActionCall(alphaId, customActionId, { n: exprExpr('$(custom:a)') }, null)
+		const betaId = app.createButton({ pageNumber: 1, row: 1, column: 2 })
+		const betaCall = app.addCustomActionCall(betaId, customActionId, { n: exprVal(5) }, null)
+
+		await vi.waitFor(() => {
+			expect(getCopyValue(alphaId, alphaCall, 'double')).toBe(2)
+			expect(getCopyValue(betaId, betaCall, 'double')).toBe(10)
+		})
+		const betaCopy = getEntity(betaId, betaCall).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)
+
+		// A variable used by one caller's input only changes that caller's copy
+		app.registry.variables.custom.setValue('a', 3)
+		await vi.waitFor(() => expect(getCopyValue(alphaId, alphaCall, 'double')).toBe(6))
+		expect(getCopyValue(betaId, betaCall, 'double')).toBe(10)
+
+		// As does changing the options of one call
+		await app.trpc().controls.entities.setOption({
+			controlId: betaId,
+			entityLocation: { stepId: getStepId(betaId), setId: 'down' },
+			entityId: betaCall,
+			key: 'n',
+			value: exprVal(7),
+		})
+		await vi.waitFor(() => expect(getCopyValue(betaId, betaCall, 'double')).toBe(14))
+		expect(getCopyValue(alphaId, alphaCall, 'double')).toBe(6)
+
+		// The copy was updated in place, rather than rebuilt
+		expect(getEntity(betaId, betaCall).getTransientChildGroup(CUSTOM_ACTION_COPY_LOCAL_VARIABLES_GROUP)).toBe(betaCopy)
+	})
+
+	test('editing a custom action updates the copies held by its callers, and their runs', async () => {
+		app.createCustomVariable('out', '')
+		const customActionId = await createDoublingCustomAction()
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		const buttonId = app.createButton(location)
+		const callId = app.addCustomActionCall(buttonId, customActionId, { n: exprVal(4) }, null)
+		await vi.waitFor(() => expect(getCopyValue(buttonId, callId, 'double')).toBe(8))
+
+		// Change what the local variable computes, and add an action
+		const localId = getStoredLocalVariableId(customActionId, 'double')
+		await app.trpc().controls.entities.setOption({
+			controlId: customActionId,
+			entityLocation: 'local-variables',
+			entityId: localId,
+			key: 'expression',
+			value: exprVal('$(options:n) * 3'),
+		})
+		app.addCustomActionAction(customActionId, null, 'custom_variable_set_value', {
+			name: exprVal('out'),
+			create: exprVal(false),
+			value: exprExpr('$(local:double)'),
+		})
+
+		await vi.waitFor(() => expect(getCopyValue(buttonId, callId, 'double')).toBe(12))
+
+		app.pressButton(location, true)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('out')).toBe(12))
+	})
+
+	test('the inputs given by a caller, and where its outputs go, survive a restart', async () => {
+		app.createCustomVariable('res', 0)
+		const customActionId = await createDoublingCustomAction()
+
+		const location = { pageNumber: 1, row: 1, column: 1 }
+		const buttonId = app.createButton(location)
+		app.addCustomActionCall(
+			buttonId,
+			customActionId,
+			{ n: exprVal(21) },
+			{
+				double: { type: 'custom-variable', variableName: exprVal('res'), createIfNotExists: false },
+			}
+		)
+
+		const { configDir } = app
+		await app.close()
+		app = await createTestApp({ configDir, extraModulePath: null })
+
+		const restoredCallId = findCallId(buttonId)
+		const call = getEntity(buttonId, restoredCallId)
+		expect(call.rawOptions).toEqual({ n: exprVal(21) })
+		expect(call.rawOutputTargets).toEqual({
+			double: { type: 'custom-variable', variableName: exprVal('res'), createIfNotExists: false },
+		})
+
+		// The copy is rebuilt from the restored custom action and inputs
+		await vi.waitFor(() => expect(getCopyValue(buttonId, restoredCallId, 'double')).toBe(42))
+
+		app.pressButton(location, true)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('res')).toBe(42))
+	})
+
+	test('renaming an input keeps the value given by each caller, after a restart too', async () => {
+		const customActionId = await createDoublingCustomAction()
+
+		const buttonId = app.createButton({ pageNumber: 1, row: 1, column: 1 })
+		const callId = app.addCustomActionCall(buttonId, customActionId, { n: exprVal(6) }, null)
+		await vi.waitFor(() => expect(getCopyValue(buttonId, callId, 'double')).toBe(12))
+
+		await app.trpc().controls.customActions.inputUpdate({
+			controlId: customActionId,
+			inputId: 'n',
+			field: { type: 'number', id: 'count', label: 'Count', default: 1, min: -1000, max: 1000 },
+		})
+		// The local variable still refers to the old id, so point it at the new one
+		const localId = getStoredLocalVariableId(customActionId, 'double')
+		await app.trpc().controls.entities.setOption({
+			controlId: customActionId,
+			entityLocation: 'local-variables',
+			entityId: localId,
+			key: 'expression',
+			value: exprVal('$(options:count) * 2'),
+		})
+
+		expect(getEntity(buttonId, callId).rawOptions).toEqual({ count: exprVal(6) })
+		await vi.waitFor(() => expect(getCopyValue(buttonId, callId, 'double')).toBe(12))
+
+		const { configDir } = app
+		await app.close()
+		app = await createTestApp({ configDir, extraModulePath: null })
+
+		const restoredCallId = findCallId(buttonId)
+		expect(getEntity(buttonId, restoredCallId).rawOptions).toEqual({ count: exprVal(6) })
+		await vi.waitFor(() => expect(getCopyValue(buttonId, restoredCallId, 'double')).toBe(12))
+	})
+
+	/** The id of the first step of a button */
+	function getStepId(buttonId: SomeControlId): string {
+		const control = app.registry.controls.getControl(buttonId)
+		if (!control?.supportsEntities) throw new Error('Expected a button')
+		return (control.entities as unknown as { getStepIds(): string[] }).getStepIds()[0]
+	}
+})
+
 describe('custom actions using a connection', () => {
 	let app: TestApp
 	beforeEach(async () => {
@@ -273,7 +831,7 @@ describe('custom actions using a connection', () => {
 			key: 'value',
 			value: exprExpr('$(options:want)'),
 		})
-		app.addCustomActionAction(customActionId, 'custom_variable_set_value', {
+		app.addCustomActionAction(customActionId, null, 'custom_variable_set_value', {
 			name: exprVal('out'),
 			create: exprVal(false),
 			value: exprExpr('$(local:matches)'),
