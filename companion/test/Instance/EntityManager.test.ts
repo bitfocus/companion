@@ -2598,6 +2598,57 @@ describe('InstanceEntityManager', () => {
 			])
 		})
 
+		it.each([
+			['replaced', false],
+			['forgotten then tracked again', true],
+		])(
+			'should give the current value to a new instance of an entity which stays in its subscription, when %s',
+			(_name, forgetFirst) => {
+				const fb1 = createMockEntity('fb-1', EntityModelType.Feedback, { field1: 'a' })
+				const fb2 = createMockEntity('fb-2', EntityModelType.Feedback, { field1: 'a' })
+
+				entityManager.trackEntity(fb1 as any, CreateBankControlId('control-1'))
+				entityManager.trackEntity(fb2 as any, CreateBankControlId('control-1'))
+				vi.runAllTimers()
+				entityManager.handleFeedbackValues([
+					{ id: entityManager.getSubscriptionId('fb-1')!, controlId: CreateBankControlId('control-1'), value: 42 },
+				])
+				mockAdapter.updateFeedbacks.mockClear()
+				mockControlsController.updateFeedbackValues.mockClear()
+
+				// A new instance with the same id and options, such as when the copy of a custom action is rebuilt
+				if (forgetFirst) entityManager.forgetEntity('fb-1')
+				entityManager.trackEntity(
+					createMockEntity('fb-1', EntityModelType.Feedback, { field1: 'a' }) as any,
+					CreateBankControlId('control-1')
+				)
+				vi.runAllTimers()
+
+				// The module already has the subscription, and won't report its value again until it changes
+				expect(mockAdapter.updateFeedbacks).not.toHaveBeenCalled()
+				expect(mockControlsController.updateFeedbackValues).toHaveBeenCalledWith('test-connection-id', [
+					{ entityId: 'fb-1', controlId: CreateBankControlId('control-1'), value: 42 },
+				])
+			}
+		)
+
+		it('should not give the value again to an entity which is re-parsed unchanged', () => {
+			const fb1 = createMockEntity('fb-1', EntityModelType.Feedback, { field1: 'a' })
+
+			entityManager.trackEntity(fb1 as any, CreateBankControlId('control-1'))
+			vi.runAllTimers()
+			entityManager.handleFeedbackValues([
+				{ id: entityManager.getSubscriptionId('fb-1')!, controlId: CreateBankControlId('control-1'), value: 42 },
+			])
+			mockControlsController.updateFeedbackValues.mockClear()
+
+			// The same instance, re-tracked as when its options are set
+			entityManager.trackEntity(fb1 as any, CreateBankControlId('control-1'))
+			vi.runAllTimers()
+
+			expect(mockControlsController.updateFeedbackValues).not.toHaveBeenCalled()
+		})
+
 		it('should not give a value to an entity joining a subscription which has no value yet', () => {
 			const fb1 = createMockEntity('fb-1', EntityModelType.Feedback, { field1: 'a' })
 			const fb2 = createMockEntity('fb-2', EntityModelType.Feedback, { field1: 'a' })
