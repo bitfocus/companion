@@ -5,7 +5,7 @@ import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState } 
 import { formatLocation, type BankControlId } from '@companion-app/shared/ControlId.js'
 import type { ActionSetId } from '@companion-app/shared/Model/ActionModel.js'
 import type { LayeredButtonModel } from '@companion-app/shared/Model/ButtonModel.js'
-import type { ControlLocation, DropdownChoice, DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
+import type { ControlLocation, DropdownChoice } from '@companion-app/shared/Model/Common.js'
 import { ButtonGridHeader } from '~/Buttons/ButtonGridHeader.js'
 import { ButtonInfiniteGrid, type ButtonInfiniteGridRef } from '~/Buttons/ButtonInfiniteGrid.js'
 import { ButtonGridIcon } from '~/Buttons/GridButtonIcons.js'
@@ -98,7 +98,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton, savin
 	const actionSetOptions = useMemo(() => {
 		switch (controlInfo?.type) {
 			case 'button-layered': {
-				const sets: DropdownChoice[] = [
+				const sets: DropdownChoice<ActionSetId>[] = [
 					{
 						id: 'down',
 						label: 'Press',
@@ -156,7 +156,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton, savin
 			if (actionSetOptions.find((opt) => opt.id === oldSet)) {
 				return oldSet
 			} else {
-				return (actionSetOptions[0]?.id ?? null) as ActionSetId | null
+				return actionSetOptions[0]?.id ?? null
 			}
 		})
 	}, [actionSetOptions])
@@ -208,7 +208,7 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton, savin
 							id={stepInputId}
 							choices={actionStepOptions}
 							value={selectedStep ?? ''}
-							setValue={setSelectedStep as (val: DropdownChoiceId) => void}
+							setValue={setSelectedStep}
 							disabled={!controlInfo || saving}
 						/>
 					</div>
@@ -218,7 +218,8 @@ export const ButtonPicker = observer(function ButtonPicker({ selectButton, savin
 							id={setInputId}
 							choices={actionSetOptions}
 							value={selectedSet ?? ''}
-							setValue={setSelectedSet as (val: DropdownChoiceId) => void}
+							// '' is shown when no group is selected, and is never one of the choices
+							setValue={(value) => setSelectedSet(value === '' ? null : value)}
 							disabled={!controlInfo || saving}
 						/>
 					</div>

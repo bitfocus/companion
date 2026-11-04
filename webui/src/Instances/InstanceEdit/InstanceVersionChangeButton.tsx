@@ -6,10 +6,10 @@ import classNames from 'classnames'
 import { observer } from 'mobx-react-lite'
 import { useCallback, useContext, useId, useRef, useState } from 'react'
 import type { DropdownChoice } from '@companion-app/shared/Model/Common.js'
-import type {
-	ClientInstanceConfigBase,
+import {
 	InstanceVersionUpdatePolicy,
-	ModuleInstanceType,
+	type ClientInstanceConfigBase,
+	type ModuleInstanceType,
 } from '@companion-app/shared/Model/Instance.js'
 import { StaticAlert } from '~/Components/Alert'
 import { Button } from '~/Components/Button'
@@ -200,11 +200,11 @@ export function InstanceVersionChangeButton<TConfig extends ClientInstanceConfig
 												<SimpleDropdownInputField
 													id={policyFieldId}
 													value={field.state.value}
-													setValue={(value) => field.handleChange(value as InstanceVersionUpdatePolicy)}
+													setValue={(value) => field.handleChange(value)}
 													choices={[
-														{ id: 'manual', label: 'Manual updates' },
-														{ id: 'stable', label: 'Stable updates' },
-														{ id: 'beta', label: 'Stable + Beta updates' },
+														{ id: InstanceVersionUpdatePolicy.Manual, label: 'Manual updates' },
+														{ id: InstanceVersionUpdatePolicy.Stable, label: 'Stable updates' },
+														{ id: InstanceVersionUpdatePolicy.Beta, label: 'Stable + Beta updates' },
 													]}
 												/>
 											)}
@@ -356,7 +356,7 @@ const SelectedVersionDropdown = observer(function SelectedVersionDropdown({
 		<SimpleDropdownInputField
 			id={htmlName}
 			value={value as string}
-			setValue={(value) => onChange(value as string)}
+			setValue={(value) => onChange(value)}
 			onBlur={onBlur}
 			noOptionsMessage={choicesLoaded ? 'No compatible versions found' : 'Loading...'}
 			badOptionPrefix="Unknown version"

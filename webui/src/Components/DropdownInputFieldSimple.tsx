@@ -9,25 +9,22 @@ import type { DropdownChoiceId } from '@companion-app/shared/Model/Common.js'
 import { useDropdownChoicesForSelect, type DropdownChoicesOrGroups } from './DropdownChoices.js'
 import { MenuPortalContext } from './MenuPortalContext.js'
 
-interface SimpleDropdownInputFieldProps {
+interface SimpleDropdownInputFieldProps<TId extends DropdownChoiceId> {
 	id: string | undefined
 	className?: string
-	choices: DropdownChoicesOrGroups | ReadonlyDeep<DropdownChoicesOrGroups>
+	/** The value is always one of these ids */
+	choices: DropdownChoicesOrGroups<TId> | ReadonlyDeep<DropdownChoicesOrGroups<TId>>
 	tooltip?: string
-	value: DropdownChoiceId
-	setValue: (value: DropdownChoiceId) => void
+	value: TId
+	setValue: (value: TId) => void
 	disabled?: boolean
-	checkValid?: (value: DropdownChoiceId) => boolean | undefined
+	checkValid?: (value: TId) => boolean | undefined
 	noOptionsMessage?: string
 	badOptionPrefix?: string
 	onBlur?: React.FocusEventHandler<HTMLButtonElement>
 }
 
-/**
- * A simple and lightweight dropdown input field.
- * Does not support searching, multi-select, custom values or other features.
- */
-export const SimpleDropdownInputField = observer(function SimpleDropdownInputField({
+function SimpleDropdownInputFieldInner<TId extends DropdownChoiceId>({
 	id,
 	className,
 	choices,
@@ -39,7 +36,7 @@ export const SimpleDropdownInputField = observer(function SimpleDropdownInputFie
 	noOptionsMessage,
 	badOptionPrefix,
 	onBlur,
-}: SimpleDropdownInputFieldProps): React.JSX.Element {
+}: SimpleDropdownInputFieldProps<TId>): React.JSX.Element {
 	const menuPortal = useContext(MenuPortalContext)
 	const { options, flatOptions } = useDropdownChoicesForSelect(choices as DropdownChoicesOrGroups)
 
@@ -48,7 +45,8 @@ export const SimpleDropdownInputField = observer(function SimpleDropdownInputFie
 	const onChange = useCallback(
 		(v: DropdownChoiceId | null) => {
 			// Base UI can emit null (e.g. deselect, or value={null} after choices become empty) — ignore it
-			if (v !== null) setValue(v)
+			// The select only offers the choices and the current value, so what it gives is a TId
+			if (v !== null) setValue(v as TId)
 		},
 		[setValue]
 	)
@@ -142,4 +140,12 @@ export const SimpleDropdownInputField = observer(function SimpleDropdownInputFie
 			</Select.Root>
 		</div>
 	)
-})
+}
+
+/**
+ * A simple and lightweight dropdown input field. Its value is typed by the ids of the choices, so it can be an enum.
+ * Does not support searching, multi-select, custom values or other features.
+ */
+export const SimpleDropdownInputField = observer(SimpleDropdownInputFieldInner) as <TId extends DropdownChoiceId>(
+	props: SimpleDropdownInputFieldProps<TId>
+) => React.JSX.Element

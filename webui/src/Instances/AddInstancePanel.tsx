@@ -388,7 +388,7 @@ const AddInstanceConfigureStep = observer(function AddInstanceConfigureStep({
 						<SimpleDropdownInputField
 							id={versionFieldId}
 							value={selectedVersion as string}
-							setValue={(value) => setSelectedVersion(value as string)}
+							setValue={(value) => setSelectedVersion(value)}
 							noOptionsMessage={choicesLoaded ? 'No compatible versions found' : 'Loading...'}
 							choices={versionChoices}
 						/>

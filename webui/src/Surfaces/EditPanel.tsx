@@ -310,7 +310,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 	)
 
 	const surfaceGroupChoices = useComputed(() => {
-		const choices: DropdownChoice[] = [
+		const choices: DropdownChoice<string>[] = [
 			{ id: 'null', label: 'Standalone (Default)' },
 			...surfaces.store
 				.values()
@@ -383,7 +383,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 							<SimpleDropdownInputField
 								id={groupFieldId}
 								value={surfaceInfo.groupId || 'null'}
-								setValue={(value) => setSurfaceGroupId(value as string)}
+								setValue={(value) => setSurfaceGroupId(value)}
 								choices={surfaceGroupChoices}
 							/>
 						</Grid.Col>

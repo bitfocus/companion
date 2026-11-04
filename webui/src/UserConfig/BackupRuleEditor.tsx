@@ -162,7 +162,7 @@ export const BackupRuleEditor = observer(function BackupRuleEditor({ ruleId }: B
 						<SimpleDropdownInputField
 							id={backupTypeFieldId}
 							value={rule.backupType}
-							setValue={(value) => updateField('backupType', value as BackupRuleSettings['backupType'])}
+							setValue={(value) => updateField('backupType', value)}
 							choices={backupTypes}
 						/>
 					</div>
