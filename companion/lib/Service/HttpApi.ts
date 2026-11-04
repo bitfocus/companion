@@ -1,4 +1,5 @@
 import Express from 'express'
+import z from 'zod'
 import { formatLocation, type BankControlId } from '@companion-app/shared/ControlId.js'
 import { ParseAlignment } from '@companion-app/shared/Graphics/Util.js'
 import type { ControlLocation } from '@companion-app/shared/Model/Common.js'
@@ -10,6 +11,39 @@ import type { UIExpress } from '../UI/Express.js'
 import type { ServiceApi } from './ServiceApi.js'
 
 const HTTP_API_SURFACE_ID = 'http'
+
+/** A whole number from the path or query string: a page, row, column, bank or step */
+const zodIntString = z
+	.string()
+	.regex(/^-?\d+$/)
+	.transform(Number)
+
+const LocationParamsSchema = z.object({ page: zodIntString, row: zodIntString, column: zodIntString })
+const LegacyBankParamsSchema = z.object({ page: zodIntString, bank: zodIntString })
+const StepQuerySchema = z.object({ step: zodIntString })
+
+/** The style fields, each a single value: a query parameter given more than once arrives as an array */
+const StyleQuerySchema = z.object({
+	bgcolor: z.string().optional(),
+	color: z.string().optional(),
+	size: z.string().optional(),
+	text: z.string().optional(),
+	png64: z.string().optional(),
+	alignment: z.string().optional(),
+	pngalignment: z.string().optional(),
+})
+/** As the query, but a JSON body can also give a number */
+const StyleBodySchema = z.object({
+	bgcolor: z.union([z.string(), z.number()]).optional(),
+	color: z.union([z.string(), z.number()]).optional(),
+	size: z.union([z.string(), z.number()]).optional(),
+	text: z.union([z.string(), z.number()]).transform(String).optional(),
+	png64: z.string().optional(),
+	alignment: z.string().optional(),
+	pngalignment: z.string().optional(),
+})
+
+const ValueQuerySchema = z.object({ value: z.string().optional() })
 
 /**
  * Class providing the HTTP API.
@@ -108,7 +142,12 @@ export class ServiceHttpApi {
 
 			this.logger.info(`Got HTTP /press/bank/ (trigger) page ${req.params.page} button ${req.params.bank}`)
 
-			const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
+			const bank = LegacyBankParamsSchema.safeParse(req.params)
+			if (!bank.success) {
+				res.status(400).send('Bad location')
+				return
+			}
+			const controlId = this.#serviceApi.getControlIdAtOldBankIndex(bank.data.page, bank.data.bank)
 			if (!controlId) {
 				res.status(404)
 				res.send('No control at location')
@@ -138,7 +177,12 @@ export class ServiceHttpApi {
 			if (req.params.direction == 'down') {
 				this.logger.info(`Got HTTP /press/bank/ (DOWN) page ${req.params.page} button ${req.params.bank}`)
 
-				const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
+				const bank = LegacyBankParamsSchema.safeParse(req.params)
+				if (!bank.success) {
+					res.status(400).send('Bad location')
+					return
+				}
+				const controlId = this.#serviceApi.getControlIdAtOldBankIndex(bank.data.page, bank.data.bank)
 				if (!controlId) {
 					res.status(404)
 					res.send('No control at location')
@@ -151,7 +195,12 @@ export class ServiceHttpApi {
 			} else if (req.params.direction == 'up') {
 				this.logger.info(`Got HTTP /press/bank/ (UP) page ${req.params.page} button ${req.params.bank}`)
 
-				const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
+				const bank = LegacyBankParamsSchema.safeParse(req.params)
+				if (!bank.success) {
+					res.status(400).send('Bad location')
+					return
+				}
+				const controlId = this.#serviceApi.getControlIdAtOldBankIndex(bank.data.page, bank.data.bank)
 				if (!controlId) {
 					res.status(404)
 					res.send('No control at location')
@@ -200,7 +249,12 @@ export class ServiceHttpApi {
 
 			this.logger.info(`Got HTTP /style/bank ${req.params.page} button ${req.params.bank}`)
 
-			const controlId = this.#serviceApi.getControlIdAtOldBankIndex(Number(req.params.page), Number(req.params.bank))
+			const bank = LegacyBankParamsSchema.safeParse(req.params)
+			if (!bank.success) {
+				res.status(400).send('Bad location')
+				return
+			}
+			const controlId = this.#serviceApi.getControlIdAtOldBankIndex(bank.data.page, bank.data.bank)
 			if (!controlId) {
 				res.status(404)
 				res.send('No control at location')
@@ -215,57 +269,64 @@ export class ServiceHttpApi {
 				return
 			}
 
+			const query = StyleQuerySchema.safeParse(req.query)
+			if (!query.success) {
+				res.status(400).send('Bad style')
+				return
+			}
+			const style = query.data
+
 			const newFields: Partial<ButtonStyleProperties> = {}
 
-			if (req.query.bgcolor) {
-				const value = String(req.query.bgcolor as any).replace(/#/, '')
+			if (style.bgcolor) {
+				const value = style.bgcolor.replace(/#/, '')
 				const color = rgb(value.substr(0, 2), value.substr(2, 2), value.substr(4, 2), 16)
 				if (color !== false) {
 					newFields.bgcolor = color
 				}
 			}
 
-			if (req.query.color) {
-				const value = String(req.query.color as any).replace(/#/, '')
+			if (style.color) {
+				const value = style.color.replace(/#/, '')
 				const color = rgb(value.substr(0, 2), value.substr(2, 2), value.substr(4, 2), 16)
 				if (color !== false) {
 					newFields.color = color
 				}
 			}
 
-			if (req.query.size) {
-				const value = Number(String(req.query.size as any).replace(/pt/i, ''))
+			if (style.size) {
+				const value = Number(style.size.replace(/pt/i, ''))
 				newFields.size = value
 			}
 
-			if (req.query.text || req.query.text === '') {
-				newFields.text = String(req.query.text as any)
+			if (style.text !== undefined) {
+				newFields.text = style.text
 			}
 
-			if (req.query.png64 || req.query.png64 === '') {
-				if (req.query.png64 === '') {
+			if (style.png64 !== undefined) {
+				if (style.png64 === '') {
 					newFields.png64 = null
-				} else if (!String(req.query.png64 as any).match(/data:.*?image\/png/)) {
+				} else if (!style.png64.match(/data:.*?image\/png/)) {
 					res.status(400)
 					res.send('png64 must be a base64 encoded png file')
 					return
 				} else {
-					newFields.png64 = String(req.query.png64 as any)
+					newFields.png64 = style.png64
 				}
 			}
 
-			if (req.query.alignment) {
+			if (style.alignment) {
 				try {
-					const [, , alignment] = ParseAlignment(String(req.query.alignment as any))
+					const [, , alignment] = ParseAlignment(style.alignment)
 					newFields.alignment = alignment
 				} catch (_e) {
 					// Ignore
 				}
 			}
 
-			if (req.query.pngalignment) {
+			if (style.pngalignment) {
 				try {
-					const [, , alignment] = ParseAlignment(String(req.query.pngalignment as any))
+					const [, , alignment] = ParseAlignment(style.pngalignment)
 					newFields.pngalignment = alignment
 				} catch (_e) {
 					// Ignore
@@ -289,8 +350,14 @@ export class ServiceHttpApi {
 			res.header('Access-Control-Allow-Methods', 'GET,OPTIONS')
 			res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With')
 
-			this.logger.debug(`Got HTTP /set/custom-variable/ name ${req.params.name} to value ${req.query.value as any}`)
-			const result = this.#serviceApi.setCustomVariableValue(req.params.name, String(req.query.value as any))
+			const query = ValueQuerySchema.safeParse(req.query)
+			if (!query.success || query.data.value === undefined) {
+				res.status(400).send('No value')
+				return
+			}
+
+			this.logger.debug(`Got HTTP /set/custom-variable/ name ${req.params.name} to value ${query.data.value}`)
+			const result = this.#serviceApi.setCustomVariableValue(req.params.name, query.data.value)
 			if (result) {
 				res.send(result)
 			} else {
@@ -352,12 +419,16 @@ export class ServiceHttpApi {
 	/**
 	 * Perform surfaces rescan
 	 */
-	#locationParse = (req: Express.Request): { location: ControlLocation; controlId: BankControlId | null } => {
-		const location = {
-			pageNumber: Number(req.params.page),
-			row: Number(req.params.row),
-			column: Number(req.params.column),
+	#locationParse = (
+		req: Express.Request,
+		res: Express.Response
+	): { location: ControlLocation; controlId: BankControlId | null } | null => {
+		const params = LocationParamsSchema.safeParse(req.params)
+		if (!params.success) {
+			res.status(400).send('Bad location')
+			return null
 		}
+		const location = { pageNumber: params.data.page, row: params.data.row, column: params.data.column }
 
 		const controlId = this.#serviceApi.getControlIdAt(location)
 
@@ -371,7 +442,9 @@ export class ServiceHttpApi {
 	 * Perform control press
 	 */
 	#locationPress = (req: Express.Request, res: Express.Response): void => {
-		const { location, controlId } = this.#locationParse(req)
+		const parsed = this.#locationParse(req, res)
+		if (!parsed) return
+		const { location, controlId } = parsed
 		this.logger.info(`Got HTTP control press ${formatLocation(location)} - ${controlId}`)
 
 		if (!controlId) {
@@ -394,7 +467,9 @@ export class ServiceHttpApi {
 	 * Perform control down
 	 */
 	#locationDown = (req: Express.Request, res: Express.Response): void => {
-		const { location, controlId } = this.#locationParse(req)
+		const parsed = this.#locationParse(req, res)
+		if (!parsed) return
+		const { location, controlId } = parsed
 		this.logger.info(`Got HTTP control down ${formatLocation(location)} - ${controlId}`)
 
 		if (!controlId) {
@@ -411,7 +486,9 @@ export class ServiceHttpApi {
 	 * Perform control up
 	 */
 	#locationUp = (req: Express.Request, res: Express.Response): void => {
-		const { location, controlId } = this.#locationParse(req)
+		const parsed = this.#locationParse(req, res)
+		if (!parsed) return
+		const { location, controlId } = parsed
 		this.logger.info(`Got HTTP control up ${formatLocation(location)} - ${controlId}`)
 
 		if (!controlId) {
@@ -428,7 +505,9 @@ export class ServiceHttpApi {
 	 * Perform control rotate left
 	 */
 	#locationRotateLeft = (req: Express.Request, res: Express.Response): void => {
-		const { location, controlId } = this.#locationParse(req)
+		const parsed = this.#locationParse(req, res)
+		if (!parsed) return
+		const { location, controlId } = parsed
 		this.logger.info(`Got HTTP control rotate left ${formatLocation(location)} - ${controlId}`)
 
 		if (!controlId) {
@@ -445,7 +524,9 @@ export class ServiceHttpApi {
 	 * Perform control rotate right
 	 */
 	#locationRotateRight = (req: Express.Request, res: Express.Response): void => {
-		const { location, controlId } = this.#locationParse(req)
+		const parsed = this.#locationParse(req, res)
+		if (!parsed) return
+		const { location, controlId } = parsed
 		this.logger.info(`Got HTTP control rotate right ${formatLocation(location)} - ${controlId}`)
 
 		if (!controlId) {
@@ -462,8 +543,15 @@ export class ServiceHttpApi {
 	 * Set control step
 	 */
 	#locationStep = (req: Express.Request, res: Express.Response): void => {
-		const { location, controlId } = this.#locationParse(req)
-		const step = Number(req.query.step)
+		const parsed = this.#locationParse(req, res)
+		if (!parsed) return
+		const { location, controlId } = parsed
+		const stepQuery = StepQuerySchema.safeParse(req.query)
+		if (!stepQuery.success) {
+			res.status(400).send('Bad step')
+			return
+		}
+		const step = stepQuery.data.step
 
 		this.logger.info(`Got HTTP control step ${formatLocation(location)} - ${controlId} to ${step}`)
 		if (!controlId) {
@@ -489,7 +577,9 @@ export class ServiceHttpApi {
 	 * Perform control style change
 	 */
 	#locationStyle = (req: Express.Request, res: Express.Response): void => {
-		const { location, controlId } = this.#locationParse(req)
+		const parsed = this.#locationParse(req, res)
+		if (!parsed) return
+		const { location, controlId } = parsed
 		this.logger.info(`Got HTTP control style ${formatLocation(location)} - ${controlId}`)
 
 		if (!controlId) {
@@ -503,9 +593,16 @@ export class ServiceHttpApi {
 			return
 		}
 
+		const query = StyleQuerySchema.safeParse(req.query)
+		const body = StyleBodySchema.safeParse(req.body && typeof req.body === 'object' ? req.body : {})
+		if (!query.success || !body.success) {
+			res.status(400).send('Bad style')
+			return
+		}
+
 		const newFields: Partial<ButtonStyleProperties> = {}
 
-		const bgcolor = req.query.bgcolor || req.body?.bgcolor
+		const bgcolor = query.data.bgcolor || body.data.bgcolor
 		if (bgcolor !== undefined) {
 			const newColor = parseColorToNumber(bgcolor)
 			if (newColor !== false) {
@@ -513,7 +610,7 @@ export class ServiceHttpApi {
 			}
 		}
 
-		const fgcolor = req.query.color || req.body?.color
+		const fgcolor = query.data.color || body.data.color
 		if (fgcolor !== undefined) {
 			const newColor = parseColorToNumber(fgcolor)
 			if (newColor !== false) {
@@ -521,34 +618,34 @@ export class ServiceHttpApi {
 			}
 		}
 
-		const size = req.query.size || req.body?.size
+		const size = query.data.size || body.data.size
 		if (size !== undefined) {
-			const value = size === 'auto' ? 'auto' : parseInt(size)
+			const value = size === 'auto' ? 'auto' : typeof size === 'number' ? size : parseInt(size)
 
 			if (!isNaN(Number(value)) || typeof value === 'string') {
 				newFields.size = value
 			}
 		}
 
-		const text = req.query.text ?? req.body?.text
+		const text = query.data.text ?? body.data.text
 		if (text !== undefined) {
 			newFields.text = text
 		}
 
-		const png64 = req.query.png64 ?? req.body?.png64
+		const png64 = query.data.png64 ?? body.data.png64
 		if (png64 === '') {
 			newFields.png64 = null
 		} else if (png64 && png64.match(/data:.*?image\/png/)) {
 			newFields.png64 = png64
 		}
 
-		const alignment = req.query.alignment || req.body?.alignment
+		const alignment = query.data.alignment || body.data.alignment
 		if (alignment) {
 			const [, , tmpAlignment] = ParseAlignment(alignment, false)
 			newFields.alignment = tmpAlignment
 		}
 
-		const pngalignment = req.query.pngalignment || req.body?.pngalignment
+		const pngalignment = query.data.pngalignment || body.data.pngalignment
 		if (pngalignment) {
 			const [, , tmpAlignment] = ParseAlignment(pngalignment, false)
 			newFields.pngalignment = tmpAlignment
@@ -570,8 +667,14 @@ export class ServiceHttpApi {
 		let variableValue = null
 		let variableError = true
 
-		if (req.query.value !== undefined) {
-			variableValue = req.query.value
+		const query = ValueQuerySchema.safeParse(req.query)
+		if (!query.success) {
+			res.status(400).send('Bad value')
+			return
+		}
+
+		if (query.data.value !== undefined) {
+			variableValue = query.data.value
 			variableError = false
 		} else if (req.headers['content-type']?.toLowerCase() === 'application/json') {
 			if (

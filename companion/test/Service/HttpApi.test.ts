@@ -69,10 +69,9 @@ describe('HttpApi', () => {
 
 					// Perform the request
 					const res = await supertest(app).get('/set/custom-variable/my-var-name').send()
-					expect(res.status).toBe(200)
-					expect(res.text).toBe('ok')
-					expect(mockFn).toHaveBeenCalledTimes(1)
-					expect(mockFn).toHaveBeenCalledWith('my-var-name', 'undefined')
+					expect(res.status).toBe(400)
+					expect(res.text).toBe('No value')
+					expect(mockFn).not.toHaveBeenCalled()
 				})
 
 				test('ok from query', async () => {
@@ -105,6 +104,18 @@ describe('HttpApi', () => {
 					expect(mockFn).toHaveBeenCalledWith('unknown-var-name', '42')
 				})
 			})
+		})
+
+		test('refuses a bank location that is not numbers', async () => {
+			const { app, serviceApi } = createService()
+
+			for (const url of ['/press/bank/1a/2', '/press/bank/1/2a/down', '/style/bank/1/x?text=a']) {
+				const res = await supertest(app).get(url).send()
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
+			}
+
+			expect(serviceApi.getControlIdAtOldBankIndex).not.toHaveBeenCalled()
 		})
 	})
 
@@ -192,6 +203,18 @@ describe('HttpApi', () => {
 
 				expect(mockFn).toHaveBeenCalledTimes(1)
 				expect(mockFn).toHaveBeenCalledWith('my-var-name', 'def')
+			})
+
+			test('refuses a value given more than once', async () => {
+				const { app, serviceApi } = createService()
+
+				for (const query of ['value=a&value=b']) {
+					const res = await supertest(app).post(`/api/custom-variable/my-var-name/value?${query}`).send()
+					expect(res.status).toBe(400)
+					expect(res.text).toBe('Bad value')
+				}
+
+				expect(serviceApi.setCustomVariableValue).not.toHaveBeenCalled()
 			})
 		})
 
@@ -371,14 +394,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1a/2/3/down').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: NaN,
-					row: 2,
-					column: 3,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 
@@ -389,14 +408,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2a/3/down').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: NaN,
-					column: 3,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 
@@ -407,14 +422,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3a/down').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: 2,
-					column: NaN,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 		})
@@ -468,14 +479,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1a/2/3/up').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: NaN,
-					row: 2,
-					column: 3,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 
@@ -486,14 +493,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2a/3/up').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: NaN,
-					column: 3,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 
@@ -504,14 +507,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3a/up').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: 2,
-					column: NaN,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 		})
@@ -574,14 +573,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1a/2/3/press').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: NaN,
-					row: 2,
-					column: 3,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 
@@ -592,14 +587,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2a/3/press').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: NaN,
-					column: 3,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 
@@ -610,14 +601,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3a/press').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: 2,
-					column: NaN,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.pressControl).toHaveBeenCalledTimes(0)
 			})
 		})
@@ -671,14 +658,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1a/2/3/rotate-left').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: NaN,
-					row: 2,
-					column: 3,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
@@ -689,14 +672,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2a/3/rotate-left').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: NaN,
-					column: 3,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
@@ -707,14 +686,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3a/rotate-left').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: 2,
-					column: NaN,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 		})
@@ -768,14 +743,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1a/2/3/rotate-right').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: NaN,
-					row: 2,
-					column: 3,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
@@ -786,14 +757,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2a/3/rotate-right').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: NaN,
-					column: 3,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
@@ -804,14 +771,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3a/rotate-right').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: 2,
-					column: NaN,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 		})
@@ -860,11 +823,7 @@ describe('HttpApi', () => {
 					row: 2,
 					column: 3,
 				})
-				expect(serviceApi.getControl).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControl).toHaveBeenCalledWith(CreateBankControlId('test'))
-
-				expect(mockControl.setCurrentStep).toHaveBeenCalledTimes(1)
-				expect(mockControl.setCurrentStep).toHaveBeenCalledWith(NaN)
+				expect(mockControl.setCurrentStep).not.toHaveBeenCalled()
 			})
 
 			test('ok', async () => {
@@ -900,14 +859,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1a/2/3/step').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: NaN,
-					row: 2,
-					column: 3,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
@@ -918,14 +873,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2a/3/step').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: NaN,
-					column: 3,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
@@ -936,15 +887,24 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3a/step').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: 2,
-					column: NaN,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
+			})
+
+			test('a step that is not a whole number', async () => {
+				const { app, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('test'))
+				const mockControl = mock<ServiceApiControl>({ setCurrentStep: vi.fn() }, mockOptions)
+				serviceApi.getControl.mockReturnValue(mockControl)
+
+				const res = await supertest(app).post('/api/location/1/2/3/step?step=1.5').send()
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad step')
+
+				expect(mockControl.setCurrentStep).not.toHaveBeenCalled()
 			})
 		})
 
@@ -995,14 +955,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1a/2/3/style').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: NaN,
-					row: 2,
-					column: 3,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
@@ -1013,14 +969,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2a/3/style').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: NaN,
-					column: 3,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
@@ -1031,14 +983,10 @@ describe('HttpApi', () => {
 
 				// Perform the request
 				const res = await supertest(app).post('/api/location/1/2/3a/style').send()
-				expect(res.status).toBe(204)
+				expect(res.status).toBe(400)
+				expect(res.text).toBe('Bad location')
 
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledTimes(1)
-				expect(serviceApi.getControlIdAt).toHaveBeenCalledWith({
-					pageNumber: 1,
-					row: 2,
-					column: NaN,
-				})
+				expect(serviceApi.getControlIdAt).not.toHaveBeenCalled()
 				expect(serviceApi.rotateControl).toHaveBeenCalledTimes(0)
 			})
 
@@ -1161,6 +1109,25 @@ describe('HttpApi', () => {
 
 			test('set pngalignment', async () => {
 				await testSetStyle('', { pngalignment: 'left:top' }, { pngalignment: 'left:top' })
+			})
+
+			test('set text size number from a json body', async () => {
+				await testSetStyle('', { size: 20 }, { size: 20 })
+			})
+
+			test('refuses a style field given more than once', async () => {
+				const { app, serviceApi } = createService()
+				serviceApi.getControlIdAt.mockReturnValue(CreateBankControlId('abc'))
+				const mockControl = mock<ServiceApiControl>({ setStyleFields: vi.fn() }, mockOptions)
+				serviceApi.getControl.mockReturnValue(mockControl)
+
+				for (const query of ['text=a&text=b', 'color=red&color=blue']) {
+					const res = await supertest(app).post(`/api/location/1/2/3/style?${query}`).send()
+					expect(res.status).toBe(400)
+					expect(res.text).toBe('Bad style')
+				}
+
+				expect(mockControl.setStyleFields).not.toHaveBeenCalled()
 			})
 		})
 	})
