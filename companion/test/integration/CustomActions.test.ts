@@ -664,13 +664,36 @@ describe('long running custom actions', () => {
 		await vi.waitFor(() => expect(first.toClientJSON().nestedTooDeep).toBe(true))
 	})
 
-	test('moving the caller part way through a run is seen as it would be by the actions of a button', async () => {
-		await app.trpc().pages.insert({ asPageNumber: 2, pageNames: ['Second'] })
-		for (const pageNumber of [1, 2]) {
-			app.addLocalVariable(CreatePageControlId(app.registry.page.store.getPageId(pageNumber)!), 'name', 'user_value', {
-				startup_value: exprVal(`page ${pageNumber}`),
+	test('moving the caller part way through a run stops the run of the custom action', async () => {
+		app.createCustomVariable('progress', 0)
+		const { controlId: customActionId } = await createCountingCustomAction(
+			'Forever',
+			'true',
+			'$(local:count) + $(options:step)',
+			100
+		)
+		const from = { pageNumber: 1, row: 1, column: 1 }
+		addCountingButton(from, customActionId, {}, 'progress')
+
+		app.pressButton(from, true)
+		await vi.waitFor(() => expect(app.getCustomVariableValue('progress')).toBe(2))
+
+		expect(
+			await app.trpc().controls.gridBatchTransfer({
+				operation: 'move',
+				pairs: [{ fromLocation: from, toLocation: { pageNumber: 1, row: 2, column: 2 } }],
 			})
-		}
+		).toBe(true)
+		const stoppedAt = app.getCustomVariableValue('progress') as number
+
+		await new Promise((resolve) => setTimeout(resolve, 400))
+		expect(app.getCustomVariableValue('progress')).toBeLessThanOrEqual(stoppedAt + 1)
+	})
+
+	test('a change to where the caller is part way through a run is seen as it would be by the actions of a button', async () => {
+		app.addLocalVariable(CreatePageControlId(app.registry.page.store.getPageId(1)!), 'name', 'user_value', {
+			startup_value: exprVal('the page'),
+		})
 		app.createCustomVariable('fromButton', '')
 		app.createCustomVariable('fromCustomAction', '')
 		const where = "concat($(this:page), '/', $(this:row), '/', $(this:column), ' ', $(page:name))"
@@ -703,17 +726,14 @@ describe('long running custom actions', () => {
 
 		app.pressButton(from, true)
 		await new Promise((resolve) => setTimeout(resolve, 50))
-		expect(
-			await app.trpc().controls.gridBatchTransfer({
-				operation: 'move',
-				pairs: [{ fromLocation: from, toLocation: { pageNumber: 2, row: 2, column: 2 } }],
-			})
-		).toBe(true)
+		// A new first page renumbers the page the caller is on, without moving it
+		await app.trpc().pages.insert({ asPageNumber: 1, pageNames: ['New first'] })
 
 		await vi.waitFor(() => {
 			expect(app.getCustomVariableValue('fromButton')).not.toBe('')
 			expect(app.getCustomVariableValue('fromCustomAction')).not.toBe('')
 		})
+		expect(app.getCustomVariableValue('fromButton')).toBe('2/1/1 the page')
 		expect(app.getCustomVariableValue('fromCustomAction')).toBe(app.getCustomVariableValue('fromButton'))
 	})
 })
