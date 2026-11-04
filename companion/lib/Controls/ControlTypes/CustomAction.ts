@@ -363,7 +363,11 @@ export class ControlCustomAction
 	 * A parser for an action being executed as part of a run of this custom action
 	 */
 	createRunParser(extras: CustomActionRunExtras, options: ExpressionParserOptions): VariablesAndExpressionParser {
-		const location = extras.location ?? null
+		// Where the caller is now, as it may have moved since the run started, as the actions of a button would see
+		const location =
+			(extras.controlId ? this.deps.pageStore.getLocationOfControlId(extras.controlId) : undefined) ??
+			extras.location ??
+			null
 		const pageEntities = location ? this.deps.getPageVariableEntities(location.pageNumber) : null
 
 		return this.entities.createRunParser(
