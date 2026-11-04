@@ -3,7 +3,7 @@ const checkboardCache: Record<string, string | null> = {}
 interface CanvasLike {
 	width: number
 	height: number
-	getContext(contextId: '2d'): any
+	getContext(contextId: '2d'): CanvasRenderingContext2D
 	toDataURL(): string
 }
 

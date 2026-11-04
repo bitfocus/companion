@@ -102,10 +102,10 @@ export class ConnectionsStore implements GenericCollectionsStore<ConnectionColle
 
 		// Build an ordered list of collection ids following collection sortOrder
 		const orderedCollectionIds: string[] = []
-		const pushCollection = (col: any) => {
+		const pushCollection = (col: ConnectionCollection) => {
 			orderedCollectionIds.push(col.id)
 			if (col.children && col.children.length > 0) {
-				const children = Array.from(col.children).sort((a: any, b: any) => a.sortOrder - b.sortOrder)
+				const children = Array.from(col.children).sort((a, b) => a.sortOrder - b.sortOrder)
 				for (const c of children) pushCollection(c)
 			}
 		}

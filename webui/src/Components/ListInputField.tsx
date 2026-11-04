@@ -230,7 +230,7 @@ export const ListInputField = observer(function ListInputField({
 
 						const setCell = (newCell: ExpressionOrValue<JsonValue | undefined>) =>
 							updateCell(rowIndex, field.id, newCell)
-						const setCellValue = (v: JsonValue) => setCell({ isExpression: false, value: v })
+						const setCellValue = (v: JsonValue | undefined) => setCell({ isExpression: false, value: v })
 
 						const input = (
 							<OptionsInputControl

@@ -264,7 +264,7 @@ const SurfaceEditPanelContent = observer<SurfaceEditPanelContentProps>(function 
 
 	const setGroupConfigKeyMutation = useMutationExt(trpc.surfaces.groupSetConfigKey.mutationOptions())
 	const setGroupConfigValue = useCallback(
-		(key: string, value: JsonValue) => {
+		(key: string, value: JsonValue | undefined) => {
 			console.log('update group', key, value)
 			if (groupId) {
 				setGroupConfigKeyMutation

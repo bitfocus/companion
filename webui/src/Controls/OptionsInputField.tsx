@@ -76,11 +76,13 @@ export const OptionsInputField = observer(function OptionsInputField({
 	let isInExpressionMode = isExpression
 
 	const setControlValue = useCallback(
-		(val: JsonValue) =>
-			setValue(option.id, {
-				isExpression: isExpression,
-				value: val as any,
-			} satisfies ExpressionOrValue<JsonValue>),
+		(val: JsonValue | undefined) =>
+			setValue(
+				option.id,
+				isExpression
+					? { isExpression: true, value: stringifyVariableValue(val) || '' }
+					: { isExpression: false, value: val }
+			),
 		[option.id, setValue, isExpression]
 	)
 

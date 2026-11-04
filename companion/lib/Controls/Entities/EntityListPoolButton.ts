@@ -1,4 +1,3 @@
-import type { JsonValue } from 'type-fest'
 import { isInternalConnectionId } from '@companion-app/shared/ConnectionId.js'
 import { validateActionSetId } from '@companion-app/shared/ControlId.js'
 import { StepExpressionBlockedVariables } from '@companion-app/shared/ControlLocation.js'
@@ -7,6 +6,7 @@ import type { ButtonModelBase, ButtonOptionsBase, NormalButtonSteps } from '@com
 import {
 	EntityModelType,
 	FeedbackEntitySubType,
+	type FeedbackValue,
 	type ResolvedFeedbackStyleOverride,
 	type SomeEntityModel,
 	type SomeSocketEntityLocation,
@@ -14,6 +14,7 @@ import {
 import { exprExpr } from '@companion-app/shared/Model/Options.js'
 import { stringifyVariableValue, type VariableValues } from '@companion-app/shared/Model/Variables.js'
 import { assertNever } from '@companion-app/shared/Util.js'
+import type { CompanionFeedbackButtonStyleResult } from '@companion-module/base'
 import type { IPageStore } from '../../Page/Store.js'
 import { GetLegacyStyleProperty, ParseLegacyStyle } from '../../Resources/ConvertLegacyStyleToElements.js'
 import type {
@@ -284,7 +285,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 				case FeedbackEntitySubType.Advanced: {
 					// For advanced feedbacks, split out the value from the feedback and inject it into the map
 					const style = feedback.feedbackValue
-					if (!style || typeof style !== 'object') break
+					if (!isFeedbackStyle(style)) break
 
 					const parsedStyle = ParseLegacyStyle(style, defaultNoTopBar)
 					for (const override of overrides) {
@@ -305,7 +306,7 @@ export abstract class ButtonEntityListPoolBase extends ControlEntityListPoolBase
 					// The override is an expression transform of the feedback value, bound to `$(this:value)` and
 					// evaluated at draw time (undefined result = no override). Always coerce to an expression: an
 					// override from an untrusted source (module preset, imported config) could be a plain value.
-					const thisContext = { value: feedback.feedbackValue as JsonValue | undefined }
+					const thisContext = { value: feedback.feedbackValue }
 					for (const override of overrides) {
 						pushOverride(override.elementId, override.elementProperty, {
 							value: exprExpr(stringifyVariableValue(override.override.value) ?? ''),
@@ -760,3 +761,8 @@ export type ButtonEntityPoolConstructor<TPool extends SomeButtonEntityPool> = ne
 	sendRuntimePropsChange: () => void,
 	isLayeredButton: boolean
 ) => TPool
+
+/** An advanced feedback's value is the style the module gave, which can only be checked to be an object */
+function isFeedbackStyle(value: FeedbackValue): value is CompanionFeedbackButtonStyleResult {
+	return !!value && typeof value === 'object' && !Array.isArray(value)
+}

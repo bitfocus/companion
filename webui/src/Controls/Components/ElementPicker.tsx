@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import classNames from 'classnames'
 import React, { useCallback } from 'react'
 import type { SomeCompanionInputField } from '@companion-app/shared/Model/Options.js'
+import type { SomeButtonGraphicsElement } from '@companion-app/shared/Model/StyleLayersModel.js'
 import { FormLabel } from '~/Components/Form.js'
 import { useLayeredStyleElementsContext } from './LayeredStyleElementsContext.js'
 
@@ -27,7 +28,7 @@ function PropertyListItem({ option, isSelected, onSelect }: PropertyListItemProp
 }
 
 interface ElementTreeItemProps {
-	element: any
+	element: SomeButtonGraphicsElement
 	depth: number
 	selectedElementId: string
 	onElementSelect: (elementId: string) => void
@@ -59,7 +60,7 @@ function ElementTreeItem({
 			{element.type === 'group' &&
 				element.children &&
 				element.children
-					.map((child: any) => (
+					.map((child) => (
 						<ElementTreeItem
 							key={child.id}
 							element={child}

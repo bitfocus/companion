@@ -72,8 +72,15 @@ export function TableInputField({
 	)
 
 	const updateCell = useCallback(
-		(rowIndex: number, colId: string, cellValue: JsonValue) => {
-			setValue(sortedRowsRef.current.map((row, i) => (i === rowIndex ? { ...row, [colId]: cellValue } : row)))
+		(rowIndex: number, colId: string, cellValue: JsonValue | undefined) => {
+			setValue(
+				sortedRowsRef.current.map((row, i) => {
+					if (i !== rowIndex) return row
+					// A cleared cell has no value, as it would once sent as JSON
+					const { [colId]: _cleared, ...rest } = row
+					return cellValue === undefined ? rest : { ...rest, [colId]: cellValue }
+				})
+			)
 		},
 		[setValue]
 	)

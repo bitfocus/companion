@@ -48,17 +48,18 @@ function splitColor(color: number | string, enableAlpha: boolean) {
 
 const toReturnType = <T extends 'string' | 'number'>(
 	value: ColorResult,
-	returnType: 'string' | 'number',
+	returnType: T,
 	enableAlpha: boolean | undefined
 ): AsType<T> => {
+	// Checking returnType can't narrow T, so each branch is asserted to the type it is for
 	if (returnType === 'string') {
-		return `rgba(${value.rgb.r}, ${value.rgb.g}, ${value.rgb.b}, ${value.rgb.a ?? 1})` as any // TODO - typings
+		return `rgba(${value.rgb.r}, ${value.rgb.g}, ${value.rgb.b}, ${value.rgb.a ?? 1})` as AsType<T>
 	} else {
 		let colorNumber = parseInt(value.hex.slice(1, 7), 16)
 		if (enableAlpha && value.rgb.a !== undefined && value.rgb.a !== 1) {
 			colorNumber += 0x1000000 * Math.round(255 * (1 - value.rgb.a)) // add possible transparency to number
 		}
-		return colorNumber as any // TODO - typings
+		return colorNumber as AsType<T>
 	}
 }
 
@@ -66,11 +67,12 @@ type AsType<T extends 'string' | 'number'> = T extends 'string' ? string : numbe
 
 interface ColorInputFieldProps<T extends 'string' | 'number'> {
 	id: string | undefined
-	value: AsType<T>
+	/** Either form is shown, whatever the returnType */
+	value: number | string
 	setValue: (value: AsType<T>) => void
 	disabled?: boolean
 	enableAlpha?: boolean
-	returnType: 'string' | 'number'
+	returnType: T
 	presetColors?: CompanionColorPresetValue[]
 }
 

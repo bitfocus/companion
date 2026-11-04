@@ -139,5 +139,5 @@ export class PromiseDebounce<TResult = void, TArgs extends unknown[] = []> {
 
 interface Listener<TResult> {
 	resolve: (value: TResult) => void
-	reject: (reason?: any) => void
+	reject: (reason?: Error) => void
 }

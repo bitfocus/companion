@@ -22,6 +22,13 @@ import {
 	EntityListActionContext,
 	type LocalVariablesStore,
 } from './LocalVariablesStore.js'
+import {
+	optionValueAsChoiceId,
+	optionValueAsChoiceIds,
+	optionValueAsColor,
+	optionValueAsNumber,
+	optionValueAsString,
+} from './OptionFieldValues.js'
 import { StaticTextFieldText } from './StaticTextField.js'
 
 export interface OptionsInputControlProps {
@@ -31,7 +38,7 @@ export interface OptionsInputControlProps {
 	entityType: EntityModelType | null
 	option: SomeCompanionInputField
 	value: JsonValue | undefined
-	setValue: (value: any) => void
+	setValue: (value: JsonValue | undefined) => void
 	readonly?: boolean
 	localVariablesStore: LocalVariablesStore | null
 	features?: InputFeatureIconsProps
@@ -55,7 +62,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 	const checkValid = useCallback((value: JsonValue | undefined) => validateInputValue(option, value).validity, [option])
 
 	// For variable-name text fields, unwrap a pasted `$(namespace:name)` reference down to just the name
-	const pasteNamespace = option?.type === 'textinput' ? option.unwrapPastedVariableNamespace : undefined
+	const pasteNamespace = option.type === 'textinput' ? option.unwrapPastedVariableNamespace : undefined
 	const onPasteIntercept = useMemo(
 		() =>
 			pasteNamespace !== undefined
@@ -63,8 +70,6 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 				: undefined,
 		[pasteNamespace]
 	)
-
-	if (!option) return <p>Bad option</p>
 
 	switch (option.type) {
 		case 'textinput': {
@@ -86,7 +91,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 			return (
 				<TextInputField
 					id={inputId}
-					value={value as any}
+					value={optionValueAsString(value)}
 					placeholder={option.placeholder}
 					useVariables={(features?.variables ?? false) || !!option.deferParsing}
 					localVariables={allLocalVariables.length > 0 ? allLocalVariables : undefined}
@@ -109,7 +114,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 			return (
 				<ExpressionInputField
 					id={inputId}
-					value={value as any}
+					value={optionValueAsString(value)}
 					localVariables={localVariables}
 					disabled={readonly}
 					setValue={setValue}
@@ -120,7 +125,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 			return (
 				<DropdownInputField
 					htmlName={inputId}
-					value={value as any}
+					value={optionValueAsChoiceId(value)}
 					choices={option.choices}
 					allowCustom={option.allowCustom}
 					regex={option.regex}
@@ -134,7 +139,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 			return (
 				<MultiDropdownInputField
 					htmlName={inputId}
-					value={value as any}
+					value={optionValueAsChoiceIds(value)}
 					choices={option.choices}
 					allowCustom={option.allowCustom}
 					minSelection={option.minSelection}
@@ -159,14 +164,14 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 					/>
 				)
 			} else {
-				return <CheckboxInputField id={inputId} value={value as any} disabled={readonly} setValue={setValue} />
+				return <CheckboxInputField id={inputId} value={!!value} disabled={readonly} setValue={setValue} />
 			}
 		}
 		case 'colorpicker': {
 			return (
 				<ColorInputField
 					id={inputId}
-					value={value as any}
+					value={optionValueAsColor(value)}
 					disabled={readonly}
 					setValue={setValue}
 					enableAlpha={option.enableAlpha ?? false}
@@ -179,7 +184,7 @@ export const OptionsInputControl = observer(function OptionsInputControl({
 			return (
 				<NumberInputField
 					id={inputId}
-					value={value as any}
+					value={optionValueAsNumber(value)}
 					min={option.min}
 					max={option.max}
 					step={option.step}

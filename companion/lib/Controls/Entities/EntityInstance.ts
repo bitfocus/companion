@@ -136,7 +136,7 @@ export class ControlEntityInstance {
 		return (data as FeedbackEntityModel).isInverted
 	}
 
-	get feedbackValue(): any {
+	get feedbackValue(): FeedbackValue {
 		return this.#cachedFeedbackValue
 	}
 
@@ -777,7 +777,7 @@ export class ControlEntityInstance {
 	 * Resolve the value of this feedback (boolean feedbacks as a boolean, otherwise the raw value).
 	 * `context` selects cached vs live evaluation - see {@link getBooleanFeedbackValue}.
 	 */
-	getResolvedFeedbackValue(context: FeedbackExecutionContext | null): any {
+	getResolvedFeedbackValue(context: FeedbackExecutionContext | null): FeedbackValue {
 		if (this.#data.type !== EntityModelType.Feedback) return null
 
 		const definition = this.getEntityDefinition()
@@ -973,7 +973,7 @@ export class ControlEntityInstance {
 		return false
 	}
 
-	getUserValue(): any {
+	getUserValue(): JsonValue | undefined {
 		return this.#cachedFeedbackValue
 	}
 

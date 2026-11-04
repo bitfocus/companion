@@ -2,6 +2,7 @@ import { faChevronDown, faChevronUp, faTriangleExclamation } from '@fortawesome/
 import './VariableValueDisplay.css'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useCallback, useRef, useState } from 'react'
+import type { JsonValue } from 'type-fest'
 import type { PanelCollapseHelperLite } from '~/Helpers/CollapseHelper.js'
 import { VARIABLE_UNKNOWN_VALUE } from '~/Resources/Constants.js'
 import { StaticAlert } from './Alert.js'
@@ -12,7 +13,7 @@ import { VariableTypeIcon, type VariableTypeIconType } from './VariableTypeIcon.
 
 interface VariableValueDisplay {
 	/** Value to show */
-	value: any
+	value: JsonValue | undefined
 
 	/** An optional collapse helper for collapsing all items in the list, falls back to local state if omitted */
 	panelCollapseHelper?: PanelCollapseHelperLite
@@ -243,7 +244,7 @@ export const VariableValueDisplay: React.FC<VariableValueDisplay> = ({
 
 interface VariableValueDisplayPopoverProps {
 	/** Value to show */
-	value: any
+	value: JsonValue | undefined
 
 	/** An optional collapse helper for collapsing all items in the list, falls back to local state if omitted */
 	panelCollapseHelper?: PanelCollapseHelperLite
